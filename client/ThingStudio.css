@@ -4,3 +4,13 @@
 .connection-list {
 	display: inline;
 }
+
+#renderScreen {
+	display: inline;
+	border: solid;
+}
+
+#editScreen {
+	display: inline;
+	border: solid;
+}
