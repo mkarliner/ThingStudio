@@ -11,7 +11,10 @@ Schemas.Screen = new SimpleSchema({
 		max: 200
 	},
 	html: {
-		type: String
+		type: String,
+		autoform: {
+			rows: 10
+		}
 	}
 	
 	

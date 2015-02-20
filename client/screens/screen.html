@@ -1,8 +1,8 @@
 <template name="Screen">
 	<div id="renderScreen">
-		asdfsadf
+		{{> Template.dynamic template=currentScreen}}
 	</div>
 	<div id="editScreen">
-		{{this.html}}
+		{{> updateScreenForm}}
 	</div>
 </template>
