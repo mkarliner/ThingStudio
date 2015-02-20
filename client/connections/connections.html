@@ -1,0 +1,13 @@
+<template name="Connexions">
+
+	<ul>
+	{{#each connexions}}
+		<li class="connection-list">{{this.title}}</li><li class="connection-list"><button class="connect">Connect</button></li>
+	{{/each}}
+	</ul>
+	
+	<div id="connexion-status">
+		Status: {{connection_status}}
+	</div>
+	
+</template>

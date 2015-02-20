@@ -1,0 +1,38 @@
+<head>
+	<meta name="viewport" content="width=device-width">
+	<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+	<link rel="icon" href="/favicon.ico" type="image/x-icon">
+</head>
+
+<body>
+	
+</body>
+
+
+<template name="GeneralLayout">
+	
+  
+
+  <header>
+    <h1>{{title}}</h1>
+  </header>
+	
+	
+	<div class="container">
+		<div class="row clearfix">
+			<div class="col-md-12 column">
+				{{> TopNav }}
+			</div>
+			<div class="col-md-12 column">
+				{{> yield}}
+			</div>
+		</div>
+	</div>
+	
+
+  <footer>
+
+  </footer>
+  
+  
+</template>

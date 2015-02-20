@@ -1,0 +1,8 @@
+<template name="insertConnexionForm">
+  {{>quickForm collection="Connexions" id="insertConnexionForm" type="insert" buttonClasses="glyphicon glyphicon-ok btn btn-default" buttonContent="Save" }}
+</template>
+
+
+<template name="updateConnexionForm">
+  {{> quickForm collection="Connexions" id="updateConnexionForm" type="update" doc=this class="qkForm" buttonClasses="glyphicon glyphicon-ok btn btn-default btn-tick" buttonContent="Save" fields="name, instructions, status, maxTime" }}
+</template>
