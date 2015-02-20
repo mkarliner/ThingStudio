@@ -1,3 +1,5 @@
+
+
 Meteor.startup(function(){
 	
 	console.log("Subscribing");
@@ -18,5 +20,15 @@ Meteor.startup(function(){
 			console.log("Screens error", error);
 		}
 	});
+	
+	Meteor.subscribe("feeds", {
+		onReady: function(){
+			console.log("Feeds ready");
+		},
+		onError: function(error){
+			console.log("Feeds error", error);
+		}
+	});
+	
 	
 })

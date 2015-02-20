@@ -1,6 +1,7 @@
 AdminConfig={
   collections: {
     Connexions: {},
-	Screens: {}
+	Screens: {},
+	Feeds:{}
   }
 };

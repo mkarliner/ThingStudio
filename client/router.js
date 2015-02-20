@@ -34,3 +34,7 @@ Router.route("/screens/:_id", function(){
 Router.route("/screens", function(){
 	this.render("Screens");
 });
+
+Router.route("/feeds", function(){
+	this.render("Feeds");
+});

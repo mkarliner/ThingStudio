@@ -11,6 +11,10 @@
 	  Meteor.publish("screens", function(){
 	  	return Screens.find({});
 	  });
+	  Meteor.publish("feeds", function(){
+	  	return Feeds.find({});
+	  });
+	  
 	  
 	  
 
