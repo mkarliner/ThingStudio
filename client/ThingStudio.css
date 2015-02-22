@@ -6,11 +6,19 @@
 }
 
 #renderScreen {
-	display: inline;
 	border: solid;
 }
 
 #editScreen {
-	display: inline;
 	border: solid;
 }
+
+
+div.inline { float:left; }
+.clearBoth { clear:both; }
+
+#archy {
+	height: 300px;
+	width:  500px;
+}
+

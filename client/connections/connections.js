@@ -1,7 +1,7 @@
 
 mqttClient = {};
 
-Messages = new Mongo.Collection();
+Messages = new Mongo.Collection(null);
 
 Session.set("connectionStatus", false)
 Template.Connexions.helpers({

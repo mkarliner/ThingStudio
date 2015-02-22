@@ -2,6 +2,7 @@ Screens = new Mongo.Collection("screens");
 
 
 
+
 Schemas = {};
 
 Schemas.Screen = new SimpleSchema({
@@ -13,7 +14,12 @@ Schemas.Screen = new SimpleSchema({
 	html: {
 		type: String,
 		autoform: {
-			rows: 10
+			rows: 10,
+	        afFieldInput: {
+	          type: 'ace',
+	          class: 'editor' // optional
+	          // summernote options goes here
+	        }
 		}
 	}
 	
@@ -21,3 +27,5 @@ Schemas.Screen = new SimpleSchema({
 });
 
 Screens.attachSchema(Schemas.Screen);
+
+
