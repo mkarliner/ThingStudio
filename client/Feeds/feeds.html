@@ -1,7 +1,12 @@
 <template name="Feeds">
 	
 	<h1>Feeds</h1>
-	{{#each screenlist}}
-		<div><a  class="screenlink">{{this.title}}</a></div>
+	{{#each feedlist}}
+		<div><a  class="feedlink">{{this.title}}</a></div>
 	{{/each}}
+	
+	
+	<div>
+		<button id="subscribe-button">Subscribe all</button>
+	</div>
 </template>

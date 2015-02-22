@@ -43,7 +43,7 @@ Template.afAce.helpers({
 
 Template.afAce.rendered = function() {
     var editor;
-	console.log("RENDERED", this);
+	//console.log("RENDERED", this.findAll());
    Tracker.autorun(function (e) {
    editor = AceEditor.instance("archy", {
 	   theme: "twilight",
@@ -53,7 +53,7 @@ Template.afAce.rendered = function() {
    if(editor.loaded===true){
      e.stop();
    }
- });
+ }); 
 }
 
 
@@ -68,7 +68,7 @@ Template.Screen.helpers({
     myScreen: function() {
             scr =  Session.get("currentScreen");
             scn = Screens.findOne({title: "TestScreen"});
-            console.log("SCREEN:", scn);
+            // console.log("SCREEN:", scn);
             if(scn) {
                     // console.log("HTML: ", scn.html);
                     delete Template.faceplate;

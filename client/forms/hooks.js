@@ -13,7 +13,7 @@ compileTemplate = function(name, html_text) {
 				return "mike";
 		},
 		messages: function(feed){
-			return Messages.find({topic: feed});
+			return Messages.find({feed: feed});
 		}
 	});
   } catch (err){
@@ -44,7 +44,7 @@ AutoForm.hooks({
 				Session.set("currentScreen", 'faceplate')
 			}
 		}
-	},
+	}
 
 
 

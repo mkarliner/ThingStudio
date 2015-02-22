@@ -46,9 +46,11 @@ Template.Connexions.events({
 			i =0;
 			for(i=0; i<feeds.length; i++) {
 				console.log("Checking to ", feeds[i].subscription);
-				if(feeds[i].subscription == topic) {
+				regex = mqttregex(feeds[i].subscription).exec;
+				result = regex(topic);
+				if(result) {
 					console.log("Feed matched");
-					Messages.upsert({topic: topic}, {$set: {topic: topic, message: message.toString()}});
+					Messages.upsert({topic: topic}, {$set: {feed: feeds[i].title, topic: topic, message: message.toString()}});
 				}
 			}
 			
