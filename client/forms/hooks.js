@@ -1,5 +1,6 @@
 compileTemplate = function(name, html_text) {
 	try {
+		Session.set("compilationErrors", "");
 		var compiled = SpacebarsCompiler.compile(html_text, {
 			isTemplate: true
 		});
@@ -9,19 +10,16 @@ compileTemplate = function(name, html_text) {
 		Template[name] = new Template("Template." + name, renderer);
 		//Template.__define__(name, renderer);
 		Template['faceplate'].helpers({
-			ddd: function() {
-				console.log("Mike");
-				return "mike";
-			},
 			messages: function(feed) {
 				return Messages.find({
 					feed: feed
 				});
 			},
 			message: function(feed){
-				return Messages.findOne({
+				msg = Messages.findOne({
 					feed: feed
-				}).message;
+				});
+				return msg ? msg.message : "no data yet";
 			}
 		});
 		Template['faceplate'].events({
@@ -35,7 +33,7 @@ compileTemplate = function(name, html_text) {
 				console.log(feed);
 				mqttClient.publish(feed.subscription, message ? message.value : "click");
 			},
-			'click input': function(ev) {
+			'change input': function(ev) {
 				attr = ev.currentTarget.attributes;
 				console.log("TEMPLATE CHANGE: ", this, attr);
 				feed_name = attr.getNamedItem("data-feed");
@@ -54,6 +52,7 @@ compileTemplate = function(name, html_text) {
 	} catch (err) {
 		console.log('Error compiling template:' + html_text);
 		console.log(err.message);
+		Session.set("compilationErrors", err.message);
 	}
 };
 

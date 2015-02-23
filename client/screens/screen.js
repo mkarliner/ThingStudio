@@ -78,7 +78,8 @@ Template.Screen.helpers({
             } else {
                     return null;
             }
-
-
-    }
+    },
+	compilationErrors: function(){
+		return Session.get("compilationErrors")
+	}
 });
