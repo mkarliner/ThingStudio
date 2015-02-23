@@ -17,6 +17,11 @@ compileTemplate = function(name, html_text) {
 				return Messages.find({
 					feed: feed
 				});
+			},
+			message: function(feed){
+				return Messages.findOne({
+					feed: feed
+				}).message;
 			}
 		});
 		Template['faceplate'].events({
@@ -24,12 +29,17 @@ compileTemplate = function(name, html_text) {
 				attr = ev.currentTarget.attributes;
 				console.log("TEMPLATE CLICK: ", this, attr);
 				feed_name = attr.getNamedItem("data-feed");
-				console.log("FN: ", feed_name.value)
+				message = attr.getNamedItem("data-message");
+				console.log("FN: ", feed_name.value, message.value)
 				feed = Feeds.findOne({title: feed_name.value});
 				console.log(feed);
-				mqttClient.publish(feed.subscription, "doorbell");
+				mqttClient.publish(feed.subscription, message ? message.value : "click");
 			}
 		});
+		
+		Template['faceplate'].rendered = function(){
+			console.log("RENDERED: ", this.findAll("[data-feed]"));
+		}
 	} catch (err) {
 		console.log('Error compiling template:' + html_text);
 		console.log(err.message);
