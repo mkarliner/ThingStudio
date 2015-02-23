@@ -34,6 +34,17 @@ compileTemplate = function(name, html_text) {
 				feed = Feeds.findOne({title: feed_name.value});
 				console.log(feed);
 				mqttClient.publish(feed.subscription, message ? message.value : "click");
+			},
+			'click input': function(ev) {
+				attr = ev.currentTarget.attributes;
+				console.log("TEMPLATE CHANGE: ", this, attr);
+				feed_name = attr.getNamedItem("data-feed");
+				value = $(ev.target).val();
+				console.log("VALE", $(ev.target).val());			
+				console.log("SEND: ", feed_name, value);
+				feed = Feeds.findOne({title: feed_name.value});
+				console.log(feed);
+				mqttClient.publish(feed.subscription, value);
 			}
 		});
 		
