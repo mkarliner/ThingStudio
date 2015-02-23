@@ -6,6 +6,9 @@ Meteor.startup(function(){
 	Meteor.subscribe("connexions", {
 		onReady: function(){
 			console.log("Connexions ready");
+			conn = Connexions.findOne({autoConnect: true});
+			console.log("Autoconnect: ", conn);
+			connect(conn);
 		},
 		onError: function(error){
 			console.log("Connexions error", error);

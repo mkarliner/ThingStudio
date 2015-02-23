@@ -17,11 +17,16 @@ Schemas.Connexion = new SimpleSchema({
 	port: {
 		type: Number,
 		label: "Port",
-		defaultValue: 1883
+		// defaultValue: 3000
 	},
 	protocol: {
 		type: String,
-		allowedValues:["MQTT", "Websocket"]
+		allowedValues:["MQTT", "Websocket"],
+		defaultValue: "Websocket"
+	},
+	autoConnect: {
+		type: Boolean,
+		defaultValue: true
 	}
 	
 	
