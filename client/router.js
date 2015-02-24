@@ -62,6 +62,18 @@ Router.route("/screens", function(){
 	this.render("Screens");
 });
 
+Router.route("/themes/:_id", function(){
+	this.render("Theme", {
+		data: function(){
+			return Themes.findOne({_id: this.params._id});
+		}
+	});
+});
+
+Router.route("/themes", function(){
+	this.render("Themes");
+});
+
 Router.route("/feeds", function(){
 	this.render("Feeds");
 });

@@ -44,5 +44,16 @@ Meteor.startup(function(){
 		}
 	});
 	
+	Meteor.subscribe("themes", {
+		onReady: function(){
+			console.log("Themes ready");
+		},
+		onError: function(error){
+			console.log("Themes error", error);
+		}
+	});
+	
+	
+	
 	
 })

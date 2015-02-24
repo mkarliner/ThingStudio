@@ -2,6 +2,7 @@ AdminConfig={
   collections: {
     Connexions: {},
 	Screens: {},
-	Feeds:{}
+	Feeds:{},
+	Themes:{}
   }
 };

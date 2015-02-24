@@ -18,6 +18,15 @@
 //   }
 // };
 
+AutoForm.addInputType('acecss', {
+	template: 'afAceCss',
+	valueOut: function(obj) {
+		console.log("OUT: ", AceEditor.instance("archy").getValue())
+		return AceEditor.instance("archy").getValue();
+	}
+});
+
+
 AutoForm.addInputType('ace', {
 	template: 'afAce',
 	valueOut: function(obj) {
@@ -40,6 +49,21 @@ Template.afAce.helpers({
 
 	}
 });
+
+Template.afAceCss.rendered = function() {
+    var editor;
+	//console.log("RENDERED", this.findAll());
+   Tracker.autorun(function (e) {
+   editor = AceEditor.instance("archy", {
+	   theme: "twilight",
+	   mode: "css"
+   });
+   
+   if(editor.loaded===true){
+     e.stop();
+   }
+ }); 
+}
 
 Template.afAce.rendered = function() {
     var editor;

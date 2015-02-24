@@ -14,6 +14,10 @@
 	  Meteor.publish("feeds", function(){
 	  	return Feeds.find({});
 	  });
+	  Meteor.publish("themes", function(){
+	  	return Themes.find({});
+	  });
+	  
 	  
 	  
 	  
