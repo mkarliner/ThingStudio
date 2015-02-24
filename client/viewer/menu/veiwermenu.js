@@ -10,4 +10,5 @@ Template.ViewerMenu.events({
 		console.log(this);
 		Router.go("/viewer/screen/" + this._id);
 	}
-})
+});
+

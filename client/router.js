@@ -65,6 +65,7 @@ Router.route("/screens", function(){
 Router.route("/themes/:_id", function(){
 	this.render("Theme", {
 		data: function(){
+			Session.set("currentTheme", this.params._id);
 			return Themes.findOne({_id: this.params._id});
 		}
 	});
