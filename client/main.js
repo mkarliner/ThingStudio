@@ -18,6 +18,17 @@ Meteor.startup(function(){
 	Meteor.subscribe("screens", {
 		onReady: function(){
 			console.log("Screens ready");
+			scr = Session.get("currentScreen");
+			scn = Screens.findOne({title: "TestScreen"});
+			console.log("SCREEN:", scn);
+			if (scn) {
+				// console.log("HTML: ", scn.html);
+				delete Template.faceplate;
+				compileTemplate('faceplate', scn.html);
+				return scr;
+			} else {
+				return null;
+			}
 		},
 		onError: function(error){
 			console.log("Screens error", error);

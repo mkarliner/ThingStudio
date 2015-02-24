@@ -74,9 +74,9 @@ Template.Screen.helpers({
                     delete Template.faceplate;
                     compileTemplate('faceplate', scn.html);
 
-                    return scr;
+                    return "faceplate";
             } else {
-                    return null;
+                    return "faceplate";
             }
     },
 	compilationErrors: function(){
