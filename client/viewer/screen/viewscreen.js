@@ -1,7 +1,7 @@
 Template.ViewScreen.helpers({
 	myScreen: function(){
-		scr = Session.get("currentScreen");
-			return "faceplate";
+		scr = Session.get("currentScreenPage");
+			return scr;
 	}
 	
 }); 

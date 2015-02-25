@@ -27,7 +27,23 @@ Schemas.Connexion = new SimpleSchema({
 	autoConnect: {
 		type: Boolean,
 		defaultValue: true
+	},
+	owner: {
+		type: String,
+		autoform: {
+			omit: true
+		},
+		autoValue: function(){
+			if(this.isInsert) {
+				return Meteor.userId();
+			} else if(this.isUpsert) {
+				return {$setOnInsert: Meteor.userId};
+			} else {
+				this.unset();
+			}
+		}
 	}
+	
 	
 	
 });

@@ -40,6 +40,7 @@ Router.route("/viewer/screen/:_id", function(){
 	this.layout('ViewerLayout');
 	this.render("ViewScreen", {
 		data: function(){
+			Session.set("currentScreenPage", this.params._id);
 			return Screens.findOne({_id: this.params._id});
 		}
 	});
@@ -53,6 +54,7 @@ Router.route("/connexions", function(){
 Router.route("/screens/:_id", function(){
 	this.render("Screen", {
 		data: function(){
+			Session.set("currentScreenPage", this.params._id);
 			return Screens.findOne({_id: this.params._id});
 		}
 	});

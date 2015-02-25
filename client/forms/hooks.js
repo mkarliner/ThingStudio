@@ -9,7 +9,7 @@ compileTemplate = function(name, html_text) {
 		Template.__checkName(name);
 		Template[name] = new Template("Template." + name, renderer);
 		//Template.__define__(name, renderer);
-		Template['faceplate'].helpers({
+		Template[name].helpers({
 			messages: function(feed) {
 				return Messages.find({
 					feed: feed
@@ -22,7 +22,7 @@ compileTemplate = function(name, html_text) {
 				return msg ? msg.message : "no data yet";
 			}
 		});
-		Template['faceplate'].events({
+		Template[name].events({
 			'click button': function(ev){
 				attr = ev.currentTarget.attributes;
 				console.log("TEMPLATE CLICK: ", this, attr);
@@ -46,7 +46,7 @@ compileTemplate = function(name, html_text) {
 			}
 		});
 		
-		Template['faceplate'].rendered = function(){
+		Template[name].rendered = function(){
 			console.log("RENDERED: ", this.findAll("[data-feed]"));
 		}
 	} catch (err) {
@@ -69,13 +69,16 @@ AutoForm.hooks({
 		},
 		after: {
 			update: function(err, res, template) {
-				delete Template.faceplate; //Remove the existing template instance.
+				scr = Session.get("currentScreenPage");
+				name = Screens.findOne(scr).title;
+				console.log("SCR: ", name)
+				delete Template[name]; //Remove the existing template instance.
 				//console.log("Updated Screen", template.data.doc.html);
-				screen = Session.get("currentScreen");
-				compileTemplate('faceplate', template.data.doc.html);
 
-				Session.set("currentScreen", "rubbish")
-				Session.set("currentScreen", 'faceplate')
+				compileTemplate(name, template.data.doc.html);
+				//
+				// Session.set("currentScreenPage", "rubbish")
+				// Session.set("currentScreenPage", 'faceplate')
 			}
 		}
 	}

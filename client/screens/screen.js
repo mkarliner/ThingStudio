@@ -86,21 +86,19 @@ Template.afAce.rendered = function() {
 
 
 Template.Screen.helpers({
-	currentScreen: function(){
-		console.log("hello", this)
-	},
-    myScreen: function() {
-            scr =  Session.get("currentScreen");
-            scn = Screens.findOne({title: "TestScreen"});
+    currentScreen: function() {
+            scr =  Session.get("currentScreenPage");
+            scn = Screens.findOne(scr);
+			console.log("SCREENL ", scn.title)
             // console.log("SCREEN:", scn);
             if(scn) {
                     // console.log("HTML: ", scn.html);
-                    delete Template.faceplate;
-                    compileTemplate('faceplate', scn.html);
+                    delete Template[scn.title];
+                    compileTemplate(scn.title, scn.html);
 
-                    return "faceplate";
+                    return scn.title;
             } else {
-                    return "faceplate";
+                    return scn.title;
             }
     },
 	compilationErrors: function(){
