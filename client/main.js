@@ -8,7 +8,11 @@ Meteor.startup(function(){
 			console.log("Connexions ready");
 			conn = Connexions.findOne({autoConnect: true});
 			console.log("Autoconnect: ", conn);
-			connect(conn);
+			if(conn) {
+				connect(conn);
+			}
+				
+			
 		},
 		onError: function(error){
 			console.log("Connexions error", error);
