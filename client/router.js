@@ -54,6 +54,7 @@ Router.route("/connexions", function(){
 Router.route("/screens/:_id", function(){
 	this.render("Screen", {
 		data: function(){
+			console.log("Setting Current Screen", this.params._id);
 			Session.set("currentScreenPage", this.params._id);
 			return Screens.findOne({_id: this.params._id});
 		}
