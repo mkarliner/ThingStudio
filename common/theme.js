@@ -36,9 +36,25 @@ Schemas.Theme = new SimpleSchema({
 				this.unset();
 			}
 		}
+	},
+	public: {
+		type: Boolean,
+		defaultValue: false
 	}
 	
 	
 });
 
 Themes.attachSchema(Schemas.Theme);
+
+Themes.allow({
+	insert: function(userId, doc) {
+		return (userId && doc.owner === userId);
+	},
+	update: function(userId, doc) {
+		return (userId && doc.owner === userId);
+	},
+	remove: function(userId, doc) {
+		return (userId && doc.owner === userId);
+	}
+});

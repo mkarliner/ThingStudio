@@ -6,6 +6,7 @@ Router.configure({
 
 AccountsTemplates.configureRoute('signIn');
 
+
 Router.onBeforeAction(function() {
 	console.log("Signup");
 	if (!Meteor.user()) {
@@ -25,6 +26,10 @@ Router.route("/", function(){
 		this.render("Login");
 	}
 });
+
+Router.route("/logout", function(){
+	AccountsTemplates.logout();
+})
 
 
 Router.route("/home", function(){

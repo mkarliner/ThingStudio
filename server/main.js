@@ -7,17 +7,17 @@
 	  
 	  
 	  Meteor.publish("connexions", function(){
-	  	return Connexions.find({owner: this.userId});
+	  	return Connexions.find({$or: [{owner: this.userId}, {public: true}]});
 	  });
 
 	  Meteor.publish("screens", function(){
-	  	return Screens.find({owner: this.userId});
+	  	return Screens.find({$or: [{owner: this.userId}, {public: true}]});
 	  });
 	  Meteor.publish("feeds", function(){
-	  	return Feeds.find({owner: this.userId});
+	  	return Feeds.find({$or: [{owner: this.userId}, {public: true}]});
 	  });
 	  Meteor.publish("themes", function(){
-	  	return Themes.find({owner: this.userId});
+	  	return Themes.find({$or: [{owner: this.userId}, {public: true}]});
 	  });
 	  
 	  
