@@ -20,6 +20,14 @@ compileTemplate = function(name, html_text) {
 					feed: feed
 				});
 				return msg ? msg.message : "no data yet";
+			},
+			feedmatch: function(feedname, match){
+				feed = Feeds.findOne({title: feedname});
+				console.log("FEEDMATCH: ", feed, match);
+				regex = mqttregex(feed.subscription).exec;
+				params = regex(this.topic);
+				console.log(params);
+				return params[match];
 			}
 		});
 		Template[name].events({

@@ -16,17 +16,22 @@ connect = function (conn) {
 		feeds = Feeds.find({}).fetch();
 		i =0;
 		for(i=0; i<feeds.length; i++) {
-			console.log("Subscribing to ", feeds[i].subscription);
-			mqttClient.subscribe(feeds[i].subscription);
+			topic = mqttregex(feeds[i].subscription).topic;
+			topic = topic.substring(0, topic.length - 1);
+			console.log("Subscribing to ", topic);
+			mqttClient.subscribe(topic);
 		}
 	});
 	mqttClient.on("close", function(){
+		console.log("close");
 		Session.set("connectionStatus", false);
 	});
 	mqttClient.on("offline", function(){
+		console.log("offline");
 		Session.set("connectionStatus", false);
 	});
-	mqttClient.on("error", function(){
+	mqttClient.on("error", function(e){
+		console.log("connection error", e)
 		Session.set("connectionStatus", false);
 	});
 	mqttClient.on("message", function(topic, message){
@@ -39,7 +44,7 @@ connect = function (conn) {
 			regex = mqttregex(feeds[i].subscription).exec;
 			result = regex(topic);
 			if(result) {
-				console.log("Feed matched");
+				console.log("Feed matched", result);
 				Messages.upsert({topic: topic}, {$set: {feed: feeds[i].title, topic: topic, message: message.toString()}});
 			}
 		}

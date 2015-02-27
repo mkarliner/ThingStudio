@@ -17,7 +17,9 @@ At the moment there can be only one active connection at a time.
 Feeds represent subscriptions to one or more MQTT topics and how
 to treat data that is emitted by them. The subscription field is 
 the normal MQTT topic subscription and may include the wildcard characters
-"+" and "#", see MQTT documentation for details.
+"+" and "#", see MQTT documentation for details. Additionally, subscriptions
+may have a "tag" appened to the a "+" or "#" character, this will server
+to extract the matching field(s) when display data, see "feedmatch" below.
 
 The "action" field indicates how to treat the messages from the subscription.
 "Update" means that each message replaces any messages from the same topic,
@@ -37,20 +39,41 @@ when data is entered on a input or a button is clicked.
 ThingStudio uses Meteor "Spacebars" templates, which are based on 
 Moustache templates. {{ helpername params }} means insert dynamic data
 into the DOM using the helper helpername with optional parameters.
-There are currently two helpers:
+There are currently three helpers:
 
 #### messages <feedname>
 The messages helper returns an array of messages from feedname.
 The messages a object with the following JASON format.
-
+<pre>
 {
 	feed: <the feed name>
 	topic: <the name of the topic that sent the message>
 	message: < the body of the message>
 }
+</pre>
 
 #### message <feedname>
 	Returns the body of the first message from the feed.
+	
+#### feedmatch <feedname> <tag>
+	When display multiple messages using a handlebars
+	#each loop, you may want to extract the part of the
+	topic that is unique to each message. For this you 
+	use the feedmatch helper. An example will make it clear.
+	If a feed subscription looks like this: 
+	`/temperatures/#place`, and messages are being sent to the
+ 	topics `/temperatures/back_room` and `/temperatures/front_room`
+	the this template code
+	
+<pre>
+    {{#each messages "temps"}}
+       <tr><td>{{feedmatch "temps" "place"}}</td><td> {{this.message}}</td></tr>
+    {{/each}}
+</pre>
+
+  will output table rows with the content 
+  back_room 20.5
+  front_room 19.2
 	
 ####Initial Values
 It's important to remember that controls linked to incoming fields may not have 
