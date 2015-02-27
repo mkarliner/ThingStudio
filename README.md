@@ -9,6 +9,14 @@ Secure connections.
 
 # Usage
 
+
+#Modes
+ThingStudio has two modes, viewer and studio.
+When you login, you will be put into the viewer menu,
+this will give you buttons to view your screens, or to
+go to studio mode, where you can edit your connections, feeds
+screens and themes.
+
 ## Connections
 Connections construct a connection to an MQTT  broker.
 At the moment there can be only one active connection at a time.
@@ -18,7 +26,7 @@ Feeds represent subscriptions to one or more MQTT topics and how
 to treat data that is emitted by them. The subscription field is 
 the normal MQTT topic subscription and may include the wildcard characters
 "+" and "#", see MQTT documentation for details. Additionally, subscriptions
-may have a "tag" appened to the a "+" or "#" character, this will server
+may have a "tag" appended to the a "+" or "#" character, this will server
 to extract the matching field(s) when display data, see "feedmatch" below.
 
 The "action" field indicates how to treat the messages from the subscription.
@@ -63,7 +71,7 @@ The messages a object with the following JASON format.
 	If a feed subscription looks like this: 
 	`/temperatures/#place`, and messages are being sent to the
  	topics `/temperatures/back_room` and `/temperatures/front_room`
-	the this template code
+	then this template code
 	
 <pre>
     {{#each messages "temps"}}
@@ -72,8 +80,10 @@ The messages a object with the following JASON format.
 </pre>
 
   will output table rows with the content 
+ <pre>
   back_room 20.5
   front_room 19.2
+ </pre>
 	
 ####Initial Values
 It's important to remember that controls linked to incoming fields may not have 

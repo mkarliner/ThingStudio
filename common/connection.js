@@ -42,6 +42,10 @@ Schemas.Connexion = new SimpleSchema({
 				this.unset();
 			}
 		}
+	},
+	public: {
+		type: Boolean,
+		defaultValue: false
 	}
 	
 	
@@ -50,8 +54,14 @@ Schemas.Connexion = new SimpleSchema({
 
 Connexions.attachSchema(Schemas.Connexion);
 
-// Connexions.allow({
-// 	insert: function() {
-// 		return true;
-// 	}
-// })
+Connexions.allow({
+	insert: function(userId, doc) {
+		return (userId && doc.owner === userId);
+	},
+	update: function(userId, doc) {
+		return (userId && doc.owner === userId);
+	},
+	remove: function(userId, doc) {
+		return (userId && doc.owner === userId);
+	}
+});

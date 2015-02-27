@@ -16,7 +16,6 @@ iron:router
 useraccounts:bootstrap
 accounts-password
 fortawesome:fontawesome
-insecure
 yogiben:admin
 reactive-var
 spacebars-compiler
