@@ -61,10 +61,12 @@ Template.Connexions.helpers({
 	connexions: function(){
 		return Connexions.find({});
 	},
-	connection_status: function(){
-		return Session.get("connectionStatus") ? "connected" : "disconnected";
-	}
+	// connection_status: function(){
+	// 	return Session.get("connectionStatus") ? "connected" : "disconnected";
+	// }
 });
+
+
 
 
 Template.Connexions.events({

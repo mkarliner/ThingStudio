@@ -8,7 +8,6 @@ AccountsTemplates.configureRoute('signIn');
 
 
 Router.onBeforeAction(function() {
-	console.log("Signup");
 	if (!Meteor.user()) {
 		this.render("Login");
 		this.next();
