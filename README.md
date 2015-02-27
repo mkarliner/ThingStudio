@@ -52,6 +52,15 @@ The messages a object with the following JASON format.
 #### message <feedname>
 	Returns the body of the first message from the feed.
 	
+####Initial Values
+It's important to remember that controls linked to incoming fields may not have 
+a value until the first message that comes from MQTT, and this may have
+an unwanted effect on the UI. There are two ways round this.
+- Give the contol and initial value by setting the value attribute.
+- Configure your MQTT broker to provide the last good value upon subscription.
+Assuming that you can afford the memory implications, the latter is the preferable
+course, as you will have live data immediately.
+	
 ###Sending data
 ThingStudio templates use 'data' suffixed attributes to indicate
 which feeds should be updated. There are current two attributes:
