@@ -18,7 +18,6 @@ connect = function (conn) {
 		for(i=0; i<feeds.length; i++) {
 			topic = mqttregex(feeds[i].subscription).topic;
 			topic = topic.substring(0, topic.length - 1);
-			console.log("Subscribing to ", topic);
 			mqttClient.subscribe(topic);
 		}
 	});
