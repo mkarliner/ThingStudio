@@ -41,15 +41,23 @@ compileTemplate = function(name, html_text) {
 				console.log(feed);
 				mqttClient.publish(feed.subscription, message ? message.value : "click");
 			},
-			'change input': function(ev) {
+			'change input[type="checkbox"]': function(ev) {
 				attr = ev.currentTarget.attributes;
-				console.log("TEMPLATE CHANGE: ", this, attr);
+				feed_name = attr.getNamedItem("data-feed");
+				value = attr.getNamedItem("checked");
+				feed = Feeds.findOne({title: feed_name.value});
+				mqttClient.publish(feed.subscription, ev.target.checked.toString());
+				ev.stopImmediatePropagation();
+			},
+			'change input': function(ev) {
+				console.log("INPUT CHANGED", this, ev);
+				attr = ev.currentTarget.attributes;
+				
 				feed_name = attr.getNamedItem("data-feed");
 				value = $(ev.target).val();
-				console.log("VALE", $(ev.target).val());			
-				console.log("SEND: ", feed_name, value);
+
 				feed = Feeds.findOne({title: feed_name.value});
-				console.log(feed);
+				// console.log(feed);
 				mqttClient.publish(feed.subscription, value);
 			}
 		});

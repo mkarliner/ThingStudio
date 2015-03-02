@@ -10,7 +10,7 @@ Secure connections.
 # Usage
 
 
-#Modes
+## Modes
 ThingStudio has two modes, viewer and studio.
 When you login, you will be put into the viewer menu,
 this will give you buttons to view your screens, or to
@@ -80,10 +80,10 @@ The messages a object with the following JASON format.
 </pre>
 
   will output table rows with the content 
- <pre>
+<pre>
   back_room 20.5
   front_room 19.2
- </pre>
+</pre>
 	
 #### Initial Values
 It's important to remember that controls linked to incoming fields may not have 
@@ -106,3 +106,10 @@ is sent as the message.
 
 ##Themes
 Themes specify CSS that should be applied to the rendering of screens.
+
+# Custom control templates.
+We provide a set of custom controls that can be rendered by using an include 
+template directive like this {{> mytemplate }}
+
+|Name|Appearance|Functionality|Parameters|
+|iosSwitch|IOS style toggle switch|checkbox|color, size, feed, initialState|

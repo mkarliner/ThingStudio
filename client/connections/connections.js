@@ -34,7 +34,7 @@ connect = function (conn) {
 	});
 	mqttClient.on("message", function(topic, message){
 		//Actually do something useful.
-		// console.log("Message received", topic, message);
+		console.log("Message received", topic, message);
 		feeds = Feeds.find({}).fetch();
 		i =0;
 		for(i=0; i<feeds.length; i++) {
