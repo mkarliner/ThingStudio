@@ -11,7 +11,7 @@
 		  </div>
 		  <div class="navbar-collapse collapse">
 		    <ul class="nav navbar-nav navbar-left">
-
+				<li class="main-nav-btn" role="presentation"><a  href="/home">Home</a></li>
 				<li class="main-nav-btn" role="presentation"><a  href="/viewermenu">Viewer</a></li>
 				<li class="main-nav-btn" role="presentation"><a  href="/connexions">Connexions</a></li>
 				<li class="main-nav-btn" role="presentation"><a  href="/feeds">Feeds</a></li>
@@ -24,8 +24,10 @@
 			{{/if}}
 			
 		  <li class="list-right main-nav-btn" role="presentation"><a  href="/help">Help</a></li>
+		  {{#if currentUser}}
 	   	  <li class="list-right main-nav-btn" role="presentation"><a class="list-right" href="/logout">Logout</a></li>
-		   <li class="list-right ">{{connection_status}}</li>
+		  {{/if}}
+		   <li class="list-right "><span class="connection-status {{connection_status}}"></span></li>
 		    </ul>
 		  </div>
 		</nav>

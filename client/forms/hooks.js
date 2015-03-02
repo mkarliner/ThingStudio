@@ -23,20 +23,20 @@ compileTemplate = function(name, html_text) {
 			},
 			feedmatch: function(feedname, match){
 				feed = Feeds.findOne({title: feedname});
-				console.log("FEEDMATCH: ", feed, match);
+				// console.log("FEEDMATCH: ", feed, match);
 				regex = mqttregex(feed.subscription).exec;
 				params = regex(this.topic);
-				console.log(params);
+				// console.log(params);
 				return params[match];
 			}
 		});
 		Template[name].events({
 			'click button': function(ev){
 				attr = ev.currentTarget.attributes;
-				console.log("TEMPLATE CLICK: ", this, attr);
+				// console.log("TEMPLATE CLICK: ", this, attr);
 				feed_name = attr.getNamedItem("data-feed");
 				message = attr.getNamedItem("data-message");
-				console.log("FN: ", feed_name.value, message.value)
+				// console.log("FN: ", feed_name.value, message.value)
 				feed = Feeds.findOne({title: feed_name.value});
 				console.log(feed);
 				mqttClient.publish(feed.subscription, message ? message.value : "click");
@@ -55,7 +55,7 @@ compileTemplate = function(name, html_text) {
 		});
 		
 		Template[name].rendered = function(){
-			console.log("RENDERED: ", this.findAll("[data-feed]"));
+			// console.log("RENDERED: ", this.findAll("[data-feed]"));
 		}
 	} catch (err) {
 		console.log('Error compiling template:' + html_text);

@@ -9,20 +9,24 @@ AccountsTemplates.configureRoute('signIn');
 
 Router.onBeforeAction(function() {
 	if (!Meteor.user()) {
+		this.layout("HelpLayout");
 		this.render("Login");
 		this.next();
 	} else {
+		this.render("/viewermenu")
 		this.next();
 	}
-}, { except: ["help"]});
+}, { except: ["/", "/help/about"]});
 
 
 
 Router.route("/", function(){
-	if (Meteor.user()) {
-		Router.go("/viewermenu");
+	if (Meteor.user()  ) {
+		this.layout("ViewerLayout");
+		this.render("ViewerMenu");
 	} else {
-		this.render("Login");
+		this.layout('HomeLayout');
+		this.render("Home");
 	}
 });
 
@@ -32,6 +36,7 @@ Router.route("/logout", function(){
 
 
 Router.route("/home", function(){
+	this.layout("HelpLayout")
 	this.render("Home");
 });
 
@@ -58,7 +63,6 @@ Router.route("/connexions", function(){
 Router.route("/screens/:_id", function(){
 	this.render("Screen", {
 		data: function(){
-			console.log("Setting Current Screen", this.params._id);
 			Session.set("currentScreenPage", this.params._id);
 			return Screens.findOne({_id: this.params._id});
 		}
@@ -84,4 +88,9 @@ Router.route("/themes", function(){
 
 Router.route("/feeds", function(){
 	this.render("Feeds");
+});
+
+Router.route("/help/about", function(){
+	this.layout("HelpLayout");
+	this.render("HelpAbout");
 });

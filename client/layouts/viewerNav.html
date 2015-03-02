@@ -24,9 +24,11 @@
 		    </ul>
 		    <ul class="nav navbar-nav navbar-right">
 	   	  <!-- <li class="list-right main-nav-btn" role="presentation"><a  href="/admin">Admin</a></li> -->
-		  <li class="list-right main-nav-btn" role="presentation"><a  href="/help">Screens</a></li>
-		  <li class="list-right main-nav-btn" role="presentation"><a  href="/help">Help</a></li>
+		  <li class="list-right main-nav-btn" role="presentation"><a  href="/screens">Studio Mode</a></li>
+		  <li class="list-right main-nav-btn" role="presentation"><a  href="/help/about">Help</a></li>
+		  {{#if currentUser}}
 	   	  <li class="list-right main-nav-btn" role="presentation"><a class="list-right" href="/logout">Logout</a></li>
+		  {{/if}}
 		  <li class="list-right "><span class="connection-status {{connection_status}}"></span></li>
 		    </ul>
 		  </div>

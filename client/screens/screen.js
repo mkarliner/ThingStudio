@@ -89,8 +89,6 @@ Template.Screen.helpers({
     currentScreen: function() {
             scr =  Session.get("currentScreenPage");
             scn = Screens.findOne(scr);
-			console.log("SCREENL ", scn.title)
-            // console.log("SCREEN:", scn);
             if(scn) {
                     // console.log("HTML: ", scn.html);
                     delete Template[scn.title];
@@ -98,10 +96,15 @@ Template.Screen.helpers({
 
                     return scn.title;
             } else {
-                    return scn.title;
+                    return "NoScreen";
             }
     },
 	compilationErrors: function(){
 		return Session.get("compilationErrors")
+	},
+	accessStatus: function(){
+		if(this.owner != Meteor.userId) {
+			return "This Screen is read - only, you can make edits, but they will have no effect"
+		}
 	}
 });

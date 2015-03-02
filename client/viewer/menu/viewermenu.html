@@ -1,12 +1,15 @@
 <template name="ViewerMenu">
-	<h1>Screens</h1>
+	<h1>Your Screens</h1>
+	<table table>
+
 	{{#each screenlist}}
-	<div>
-		<button class="btn screenlink">{{this.title}}</button>
-	</div>
+			<tr>
+				<td>
+					<button class="btn screenlink">{{this.title}}</button>
+				</td>
+			</tr>
 	{{/each}}
 	
-	<div>
-		<button class="btn studiolink">Studio Mode</button>
-	</div>
+
+	</table>
 </template>

@@ -1,7 +1,10 @@
 <template name="Screens">
 	
 	<h1>Screens</h1>
+	<table class="table">
+	<tr><th>Title</th><th>Status</th></tr>
 	{{#each screenlist}}
-		<div><a  class="screenlink">{{this.title}}</a></div>
+		<tr><td><a  class="screenlink">{{this.title}}</a></td><td>{{status}}</td></tr>
 	{{/each}}
+	</table>
 </template>

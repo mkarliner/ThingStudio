@@ -1,7 +1,15 @@
 Template.Screens.helpers({
 	screenlist: function(){
-		console.log("screens")
 		return Screens.find({})
+	},
+	status: function(){
+		if(this.owner == Meteor.userId) {
+			return "Owner";
+		} else if(this.public == true) {
+			return("Public read-only")
+		} else {
+			return "Shouldn't happen"
+		}
 	}
 });
 

@@ -9,7 +9,6 @@ Session.set("connectionStatus", false);
 connect = function (conn) {
 	protocol = conn.protocol == "MQTT" ? "mqtt" : "ws";
 	connectionString = protocol + "://" + conn.host + ":" + conn.port;
-	console.log("Connecting", connectionString);
 	mqttClient = mqtt.connect(connectionString);
 	mqttClient.on("connect", function(){
 		Session.set("connectionStatus", true);
@@ -35,15 +34,15 @@ connect = function (conn) {
 	});
 	mqttClient.on("message", function(topic, message){
 		//Actually do something useful.
-		console.log("Message received", topic, message);
+		// console.log("Message received", topic, message);
 		feeds = Feeds.find({}).fetch();
 		i =0;
 		for(i=0; i<feeds.length; i++) {
-			console.log("Checking to ", feeds[i].subscription);
+			// console.log("Checking to ", feeds[i].subscription);
 			regex = mqttregex(feeds[i].subscription).exec;
 			result = regex(topic);
 			if(result) {
-				console.log("Feed matched", result);
+				// console.log("Feed matched", result);
 				Messages.upsert({topic: topic}, {$set: {feed: feeds[i].title, topic: topic, message: message.toString()}});
 			}
 		}

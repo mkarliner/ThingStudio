@@ -7,8 +7,6 @@ Template.ViewScreen.helpers({
     currentScreen: function() {
             scr =  Session.get("currentScreenPage");
             scn = Screens.findOne(scr);
-			console.log("SCREENL ", scn.title)
-            // console.log("SCREEN:", scn);
             if(scn) {
                     // console.log("HTML: ", scn.html);
                     delete Template[scn.title];
@@ -16,7 +14,7 @@ Template.ViewScreen.helpers({
 
                     return scn.title;
             } else {
-                    return scn.title;
+                    return "UnknownScreen";
             }
     },
 	
