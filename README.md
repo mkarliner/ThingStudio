@@ -85,7 +85,7 @@ The messages a object with the following JASON format.
   front_room 19.2
  </pre>
 	
-####Initial Values
+#### Initial Values
 It's important to remember that controls linked to incoming fields may not have 
 a value until the first message that comes from MQTT, and this may have
 an unwanted effect on the UI. There are two ways round this.

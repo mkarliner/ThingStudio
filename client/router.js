@@ -70,6 +70,7 @@ Router.route("/screens/:_id", function(){
 });
 
 Router.route("/screens", function(){
+	this.layout("GeneralLayout");
 	this.render("Screens");
 });
 
