@@ -472,3 +472,10 @@ input[type="checkbox"].green.ios-switch:checked + div > div {
   margin: 0 auto;
 }
 
+/* Media Queries */
+@media (min-width: 768px) {
+	.navbar-header .connection-status {
+		display: none;
+	}
+}
+
