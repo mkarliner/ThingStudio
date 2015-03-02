@@ -134,17 +134,17 @@ label {
 	background-color: rgb(226, 137, 119);
 }
 
-/* range selector styles */
+/* range selector styles: circle */
 
-input[type=range] {
+input[type=range].knob-slider {
   -webkit-appearance: none;
   margin: 1em 0 3em;
   width: 100%;
 }
-input[type=range]:focus {
+input[type=range].knob-slider:focus {
   outline: none;
 }
-input[type=range]::-webkit-slider-runnable-track {
+input[type=range].knob-slider::-webkit-slider-runnable-track {
   width: 100%;
   height: 3px;
   cursor: pointer;
@@ -152,7 +152,7 @@ input[type=range]::-webkit-slider-runnable-track {
   background: rgb(226, 137, 119);
   border-radius: 1.3px;
 }
-input[type=range]::-webkit-slider-thumb {
+input[type=range].knob-slider::-webkit-slider-thumb {
   border: 3px solid rgb(226, 137, 119);
   height: 2.2em;
   width: 2.2em;
@@ -162,10 +162,10 @@ input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none;
   margin-top: -15px;
 }
-input[type=range]:focus::-webkit-slider-runnable-track {
+input[type=range].knob-slider:focus::-webkit-slider-runnable-track {
   background: rgb(226, 137, 119);
 }
-input[type=range]::-moz-range-track {
+input[type=range].knob-slider::-moz-range-track {
   width: 100%;
   height: 3px;
   cursor: pointer;
@@ -173,7 +173,7 @@ input[type=range]::-moz-range-track {
   background: rgb(226, 137, 119);
   border-radius: 1.3px;
 }
-input[type=range]::-moz-range-thumb {
+input[type=range].knob-slider::-moz-range-thumb {
   border: 2px solid rgb(226, 137, 119);
   height: 2.2em;
   width: 2.2em;
@@ -181,7 +181,7 @@ input[type=range]::-moz-range-thumb {
   background: rgb(246, 209, 137);
   cursor: pointer;
 }
-input[type=range]::-ms-track {
+input[type=range].knob-slider::-ms-track {
   width: 100%;
   height: 3px;
   cursor: pointer;
@@ -191,15 +191,15 @@ input[type=range]::-ms-track {
   border-width: 16px 0;
   color: transparent;
 }
-input[type=range]::-ms-fill-lower {
+input[type=range].knob-slider::-ms-fill-lower {
   background: rgb(226, 137, 119);
   border-radius: 2.6px;
 }
-input[type=range]::-ms-fill-upper {
+input[type=range].knob-slider::-ms-fill-upper {
   background: rgb(226, 137, 119);
   border-radius: 2.6px;
 }
-input[type=range]::-ms-thumb {
+input[type=range].knob-slider::-ms-thumb {
   border: 2px solid rgb(226, 137, 119);
   height: 2.2em;
   width: 2.2em;
@@ -207,12 +207,112 @@ input[type=range]::-ms-thumb {
   background: rgb(246, 209, 137);
   cursor: pointer;
 }
-input[type=range]:focus::-ms-fill-lower {
+input[type=range].knob-slider:focus::-ms-fill-lower {
   background: rgb(226, 137, 119);
 }
-input[type=range]:focus::-ms-fill-upper {
+input[type=range].knob-slider:focus::-ms-fill-upper {
   background: rgb(226, 137, 119);
 }
+
+/* range selector styles: servo */
+
+input[type=range].servo-slider {
+  -webkit-appearance: none;
+  margin: 1em 0 3em;
+  width: 100%;
+  border-radius: 9px;
+  padding: 2.5em 1em;
+  border: 3px solid rgb(174, 216, 230);
+  background: rgb(231,255,255); /* Old browsers */
+  background: -moz-linear-gradient(left,  rgb(231,255,255) 0%, rgb(203,236,243) 100%); /* FF3.6+ */
+  background: -webkit-gradient(linear, left top, right top, color-stop(0%,rgb(231,255,255)), color-stop(100%,rgb(203,236,243))); /* Chrome,Safari4+ */
+  background: -webkit-linear-gradient(left,  rgb(231,255,255) 0%,rgb(203,236,243) 100%); /* Chrome10+,Safari5.1+ */
+  background: -o-linear-gradient(left,  rgb(231,255,255) 0%,rgb(203,236,243) 100%); /* Opera 11.10+ */
+  background: -ms-linear-gradient(left,  rgb(231,255,255) 0%,rgb(203,236,243) 100%); /* IE10+ */
+  background: linear-gradient(to right,  rgb(231,255,255) 0%,rgb(203,236,243) 100%); /* W3C */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e7ffff', endColorstr='#cbecf3',GradientType=1 ); /* IE6-9 */
+}
+input[type=range].servo-slider:focus {
+  outline: none;
+}
+input[type=range].servo-slider::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 0px;
+  cursor: pointer;
+  animate: 0.2s;
+  background: rgb(226, 137, 119);
+  border-radius: 1.3px;
+}
+input[type=range].servo-slider::-webkit-slider-thumb {
+  height: 4.166em;
+  width: 2.1em;
+  border-radius: 0.4444em;
+  cursor: pointer;
+  -webkit-appearance: none;
+  margin-top: -2em;
+  background: rgb(186,230,245); /* Old browsers */
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgb(186,230,245)), color-stop(100%,rgb(174,216,230))); /* Chrome,Safari4+ */
+  background: -webkit-linear-gradient(top,  rgb(186,230,245) 0%,rgb(174,216,230) 100%); /* Chrome10+,Safari5.1+ */
+  background: -o-linear-gradient(top,  rgb(186,230,245) 0%,rgb(174,216,230) 100%); /* Opera 11.10+ */
+  background: linear-gradient(to bottom,  rgb(186,230,245) 0%,rgb(174,216,230) 100%); /* W3C */
+}
+input[type=range].servo-slider:focus::-webkit-slider-runnable-track {
+  background: rgb(226, 137, 119);
+}
+input[type=range].servo-slider::-moz-range-track {
+  width: 100%;
+  height: 0px;
+  cursor: pointer;
+  animate: 0.2s;
+  background: rgb(226, 137, 119);
+  border-radius: 1.3px;
+}
+input[type=range].servo-slider::-moz-range-thumb {
+  border: 2px solid rgb(226, 137, 119);
+  height: 2.2em;
+  width: 2.2em;
+  border-radius: 50%;
+  cursor: pointer;
+  background: rgb(186,230,245); /* Old browsers */
+  background: -moz-linear-gradient(top,  rgb(186,230,245) 0%, rgb(174,216,230) 100%); /* FF3.6+ */
+  background: linear-gradient(to bottom,  rgb(186,230,245) 0%,rgb(174,216,230) 100%); /* W3C */
+}
+input[type=range].servo-slider::-ms-track {
+  width: 100%;
+  height: 0px;
+  cursor: pointer;
+  animate: 0.2s;
+  background: transparent;
+  border-color: transparent;
+  border-width: 16px 0;
+  color: transparent;
+}
+input[type=range].servo-slider::-ms-fill-lower {
+  background: rgb(226, 137, 119);
+  border-radius: 2.6px;
+}
+input[type=range].servo-slider::-ms-fill-upper {
+  background: rgb(226, 137, 119);
+  border-radius: 2.6px;
+}
+input[type=range].servo-slider::-ms-thumb {
+  border: 2px solid rgb(226, 137, 119);
+  height: 2.2em;
+  width: 2.2em;
+  border-radius: 50%;
+  cursor: pointer;
+  background: rgb(186,230,245); /* Old browsers */
+  background: -ms-linear-gradient(top,  rgb(186,230,245) 0%,rgb(174,216,230) 100%); /* IE10+ */
+  background: linear-gradient(to bottom,  rgb(186,230,245) 0%,rgb(174,216,230) 100%); /* W3C */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#bae6f5', endColorstr='#aed8e6',GradientType=0 ); /* IE6-9 */
+}
+input[type=range].servo-slider:focus::-ms-fill-lower {
+  background: rgb(226, 137, 119);
+}
+input[type=range].servo-slider:focus::-ms-fill-upper {
+  background: rgb(226, 137, 119);
+}
+
 /* checkbox styles */
 .image-checkbox {
     position: absolute;
@@ -221,22 +321,56 @@ input[type=range]:focus::-ms-fill-upper {
 }
 .image-checkbox-label {
     height: 50px;
-    background: url('data:image/svg+xml;utf8,<svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g stroke="#A486A0" stroke-width="4" stroke-dasharray="4"><g transform="translate(-33 -25) translate(33 25)"><rect width="48" height="48" rx="10"/></g></g></g></svg>') no-repeat;
+    /*background: url('data:image/svg+xml;utf8,<svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g stroke="#A486A0" stroke-width="4" stroke-dasharray="4"><g transform="translate(-33 -25) translate(33 25)"><rect width="48" height="48" rx="10"/></g></g></g></svg>') no-repeat;*/
     color: #7b7163;
+    border: rgb(164, 134, 160) dashed 3px;
+    border-radius: 9px;
 }
 .image-checkbox:checked + .image-checkbox-label {
-    background: url('data:image/svg+xml;utf8,<svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g><g><g transform="translate(0 0)"><rect stroke="#A486A0" stroke-width="4" width="48" height="48" rx="10"/><path d="M20.177 24.848l-2.61-5.864c-1.02-2.285-3.692-3.313-5.973-2.297l-1.188.53C8.12 18.233 7.1 20.906 8.118 23.19l5.79 13.003c.112.39.28.766.496 1.117l.103.23c.8 1.797 2.623 2.817 4.474 2.678 1.365.09 2.744-.442 3.7-1.528.563-.457.998-1.037 1.282-1.68l15.448-20.5c1.506-2 1.11-4.836-.885-6.34l-1.038-.78c-1.998-1.507-4.83-1.102-6.337.896L20.177 24.848z" fill="#A486A0"/></g></g></g></g></svg>') no-repeat;
+    background: url('data:image/svg+xml;utf8,<svg width="34" height="33" viewBox="0 0 34 33" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g><g><g transform="translate(-7 -8)"><rect stroke-opacity="0" stroke="#A486A0" stroke-width="2.118" width="48" height="48" rx="9.882"/><path d="M20.177 24.848l-2.61-5.864c-1.02-2.285-3.692-3.313-5.973-2.297l-1.188.53C8.12 18.233 7.1 20.906 8.118 23.19l5.79 13.003c.112.39.28.766.496 1.117l.103.23c.8 1.797 2.623 2.817 4.474 2.678 1.365.09 2.744-.442 3.7-1.528.563-.457.998-1.037 1.282-1.68l15.448-20.5c1.506-2 1.11-4.836-.885-6.34l-1.038-.78c-1.998-1.507-4.83-1.102-6.337.896L20.177 24.848z" fill="#A486A0"/></g></g></g></g></svg>') no-repeat;
     color: #c3b39c;
+    border: rgb(164, 134, 160) solid 3px;
+    background-position: 5px 5px;
 }
 .checkbox label {
-    padding-left: 60px;
+    padding-left: 44px;
     line-height: 50px;
     font-weight: bold;
     font-size: 2em;
+
 }
+/* binary outputs (non-checkbox) */
+/* light */
+.lightOutput {
+	width: 5.444em;
+	height: 5.444em;
+	border-radius: 50%;
+	margin-bottom: 1em;
+}
+.lightOutput i {
+	font-size: 3.5em;
+	display: block;
+	text-align: center;
+	padding-top: 0.23em;
+}
+.binary-off {
+	border: 3px solid rgb(174, 216, 230);
+	background-color: transparent;
+}
+.binary-off i {
+	color: rgb(174, 216, 230);
+}
+.binary-on {
+	border: 3px solid rgb(160, 227, 150);
+}
+.binary-on i {
+	color: rgb(160, 227, 150);
+}
+
 /* misc custom styles */
 
 #renderScreen {
 	border: none;
 	margin: 0 auto;
 }
+
