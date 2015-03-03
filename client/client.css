@@ -446,6 +446,9 @@ input[type="checkbox"].green.ios-switch:checked + div > div {
 }
 /* binary outputs (non-checkbox) */
 /* light */
+.binary {
+  background: red !important;
+}
 .lightOutput {
   width: 5.444em;
   height: 5.444em;
@@ -472,6 +475,7 @@ input[type="checkbox"].green.ios-switch:checked + div > div {
 .binary-on i {
   color: rgb(160, 227, 150);
 }
+
 
 /* misc custom styles */
 
