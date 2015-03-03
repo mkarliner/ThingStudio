@@ -3,6 +3,20 @@
 </template>
 
 
-<template name="updateScreenForm">
+<template name="OLdupdateScreenForm">
   {{> quickForm collection="Screens" id="updateScreenForm" type="update" doc=this class="qkForm" buttonClasses="glyphicon glyphicon-ok btn btn-default btn-tick" buttonContent="Update" }}
 </template>
+
+
+<template name="updateScreenForm">
+{{#autoForm collection="Screens" id="updateScreenForm" type="update" doc=this }}
+	<fieldset>
+		<legend>Edit Screen</legend>
+		{{>afQuickField name="title"}}
+		{{>afQuickField name="html"}}
+		{{>afQuickField name="public"}}
+	</fieldset>
+sadf
+{{/autoForm}}
+</template>
+
