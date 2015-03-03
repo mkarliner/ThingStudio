@@ -20,7 +20,8 @@ Schemas.Screen = new SimpleSchema({
 	          class: 'editor' // optional
 	          // summernote options goes here
 	        }
-		}
+		},
+		defaultValue: "<!-- Comment -->"
 	},
 	owner: {
 		type: String,

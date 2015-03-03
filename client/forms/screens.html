@@ -1,5 +1,5 @@
 <template name="insertScreenForm">
-  {{> quickForm collection="Screens" id="insertScreenForm" type="insert" buttonClasses="glyphicon glyphicon-ok btn btn-default" buttonContent="Save" }}
+  {{> quickForm collection="Screens" id="insertScreenForm" type="insert" buttonClasses="glyphicon glyphicon-ok btn btn-default" buttonContent="Save" omitFields="html"}}
 </template>
 
 
@@ -16,7 +16,7 @@
 		{{>afQuickField name="html"}}
 		{{>afQuickField name="public"}}
 	</fieldset>
-sadf
+	<button type="submit" class="btn btn-primary">Update</button>
 {{/autoForm}}
 </template>
 
