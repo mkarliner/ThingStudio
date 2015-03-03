@@ -1,4 +1,5 @@
 AdminConfig={
+	 nonAdminRedirectRoute: 'entrySignIn',
   collections: {
     Connections: {},
 	Screens: {},
