@@ -137,10 +137,11 @@ label {
 	margin-right: 0;
 }
 .btn {
-	border: none;
+  border-color: rgb(204, 204, 204);
 }
 .btn-success {
-	background-color: rgb(160, 227, 150);
+      background-color: rgb(160, 227, 150);
+      border-color: transparent;
 }
 .btn-warning {
 	background-color: rgb(246, 209, 137);
@@ -401,7 +402,7 @@ input[type="checkbox"].bigswitch.ios-switch + div > div {
 
 /* Checked Big Knob (Blue Style) */
 input[type="checkbox"].bigswitch.ios-switch:checked + div > div {
-  -webkit-transform: translate3d(29px, 0, 0);
+  -webkit-transform: translate3d(31px, 0, 0);
   -moz-transform: translate3d(16px, 0, 0);
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3), 0px 0px 0 1px rgba(8, 80, 172,1);
 }
@@ -446,9 +447,6 @@ input[type="checkbox"].green.ios-switch:checked + div > div {
 }
 /* binary outputs (non-checkbox) */
 /* light */
-.binary {
-  background: red !important;
-}
 .lightOutput {
   width: 5.444em;
   height: 5.444em;
@@ -460,13 +458,13 @@ input[type="checkbox"].green.ios-switch:checked + div > div {
   font-size: 3.5em;
   display: block;
   text-align: center;
-  padding-top: 0.23em;
+  padding-top: 0.05em;
 }
-.binary-off {
+.binary-off, .binary {
   border: 3px solid rgb(174, 216, 230);
   background-color: transparent;
 }
-.binary-off i {
+.binary-off i, .binary i {
   color: rgb(174, 216, 230);
 }
 .binary-on {
