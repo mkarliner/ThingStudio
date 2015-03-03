@@ -117,9 +117,9 @@ The messages a object with the following JASON format.
 
 ####Binary Value + Icon
     <pre>
-	    <div class="lightOutput binary-{{message "kitchenLight"}}">
+	    <button class="lightOutput binary-{{message "kitchenLight"}}">
       		    <i class="fa fa-lightbulb-o"></i>
-    	    </div>
+    	    </button>
     </pre>
 
 ####Status button (using Bootstrap classes for style)
