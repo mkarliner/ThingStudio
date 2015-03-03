@@ -1,10 +1,13 @@
 <template name="ViewerMenu">
+
+	<div id="screenList">
+		
 	<h1>Your Screens</h1>
-	<table table>
+	<table class="table centeredTable">
 
 	{{#each screenlist}}
 			<tr>
-				<td>
+				<td class="centerCell">
 					<button class="btn screenlink">{{this.title}}</button>
 				</td>
 			</tr>
@@ -12,4 +15,5 @@
 	
 
 	</table>
+		</div>
 </template>

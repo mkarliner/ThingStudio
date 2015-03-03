@@ -29,3 +29,19 @@ div.inline { float:left; }
 	max-width: 400px;
 }
 
+#screenList {
+	margin-left: auto;
+	margin-right: auto;
+	text-align: center;
+	max-width: 400px;
+}
+
+.centeredTable {
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.centerCell {
+	align: center;
+}
+
