@@ -149,6 +149,13 @@ label {
 .btn-danger {
 	background-color: rgb(226, 137, 119);
 }
+.btn.status-button {
+  cursor: default;
+}
+.btn.status-button:active {
+      -webkit-box-shadow: none;
+      box-shadow: none;
+}
 
 /* range selector styles: circle */
 
@@ -480,6 +487,12 @@ input[type="checkbox"].green.ios-switch:checked + div > div {
 #renderScreen {
   border: none;
   margin: 0 auto;
+}
+.access-error {
+  background: rgb(249, 242, 244);
+  color: rgb(199, 37, 78);
+  border: 1px solid rgb(169, 68, 66);
+  padding: 1em;
 }
 
 /* Media Queries */
