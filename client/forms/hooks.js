@@ -32,6 +32,7 @@ compileTemplate = function(name, html_text) {
 		});
 		Template[name].events({
 			'click button': function(ev){
+				ev.preventDefault();
 				attr = ev.currentTarget.attributes;
 				// console.log("TEMPLATE CLICK: ", this, attr);
 				feed_name = attr.getNamedItem("data-feed");
