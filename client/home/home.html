@@ -8,7 +8,12 @@
 		<p>You get the convenience of a cloud based service for the complex task of deisignin and managing UI's, and the privacy, speed and low latency of your own network handling your data</p>
 		<div>		<a href="/help/about">Find out more</a></div>
 		<div><a href="/viewermenu">See Demo</a></div>
-		<div><a href="/sign-in">Sign Up or In</a></div>
+		{{#unless currentUser}}
+			<div><a href="/sign-in">Sign Up or In</a></div>
+		{{/unless}}
+		{{#if currentUser}}
+			<div><a href="/screens">Enter</a></div>
+		{{/if}}
 
 	</div>
 
