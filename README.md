@@ -88,9 +88,9 @@ The messages a object with the following JASON format.
 ##Elements
 
 ####Rail Slider
-<pre>
-	<input class="knob-slider" id="sliderID" type="range" name="insert a value" min="0" max="100" value="{{message "message name here"}}">
-</pre>
+    <pre>
+	    <input class="knob-slider" id="sliderID" type="range" name="insert a value" min="0" max="100" value="{{message "message name here"}}">
+    </pre>
 
 ####Fat Slider
 <pre>
