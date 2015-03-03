@@ -1,6 +1,6 @@
 <template name="Screen">
 	{{> currentStyle }}
-	<div class="access-error">{{accessStatus}}</div>
+	{{accessStatus}}
 	<div id="renderScreen" class="inline">
 		{{> Template.dynamic template=currentScreen}}
 	</div>

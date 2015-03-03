@@ -43,7 +43,7 @@ Schemas.Screen = new SimpleSchema({
 		optional: true,
 		autoValue: function() {
 			var html = this.field("html");
-			if (content.isSet) {
+			if (html.isSet) {
 				if (this.isInsert) {
 					return [{
 						date: new Date,
@@ -66,7 +66,7 @@ Schemas.Screen = new SimpleSchema({
 		type: Date,
 		optional: true
 	},
-	'updatesHistory.$.content': {
+	'updatesHistory.$.html': {
 		type: String,
 		optional: true
 	},
