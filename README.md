@@ -84,6 +84,60 @@ The messages a object with the following JASON format.
   back_room 20.5
   front_room 19.2
 </pre>
+
+##Elements
+
+####Rail Slider
+<pre>
+	<input class="knob-slider" id="sliderID" type="range" name="insert a value" min="0" max="100" value="{{message "message name here"}}">
+</pre>
+
+####Fat Slider
+<pre>
+	<input class="servo-slider" id="sliderID" type="range" name="insert a value" min="0" max="100" value="{{message "message name here"}}">
+</pre>
+
+####Checkbox
+<pre>
+	<div class="checkbox">
+		<input id="remember-me" type="checkbox" class="image-checkbox"/>    
+		<label for="remember-me" class="image-checkbox-label"></label>
+    </div>
+</pre>
+
+####iOS Switch
+<pre>
+	<label>
+		<input type="checkbox" class="ios-switch green  bigswitch" checked />
+        	<div>
+	            <div></div>
+      		</div>
+    </label>
+</pre>
+
+####Binary Value + Icon
+
+<pre>
+	<div class="lightOutput binary-{{message "kitchenLight"}}">
+      		<i class="fa fa-lightbulb-o"></i>
+    	</div>
+</pre>
+
+####Status button (using Bootstrap classes for style)
+
+<pre>
+	<span class="btn status-button btn-{{message "ImportantStatus1"}}">Hull</span>
+</pre>
+
+####Progress bar
+
+<pre>
+	<div class="progress">
+		<div class="progress-bar" role="progressbar" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100" style="width:{{message "PercentFill"}}%">
+    			{{message "PercentFill"}}%
+        	</div>
+    </div>
+</pre>
 	
 #### Initial Values
 It's important to remember that controls linked to incoming fields may not have 
