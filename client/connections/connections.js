@@ -4,14 +4,14 @@ mqttClient = {};
 Messages = new Mongo.Collection(null);
 
 
-Session.set("connectionStatus", false);
+Session.set("ConnectionStatus", false);
 
 connect = function (conn) {
 	protocol = conn.protocol == "MQTT" ? "mqtt" : "ws";
-	connectionString = protocol + "://" + conn.host + ":" + conn.port;
-	mqttClient = mqtt.connect(connectionString);
+	ConnectionString = protocol + "://" + conn.host + ":" + conn.port;
+	mqttClient = mqtt.connect(ConnectionString);
 	mqttClient.on("connect", function(){
-		Session.set("connectionStatus", true);
+		Session.set("ConnectionStatus", true);
 		feeds = Feeds.find({}).fetch();
 		i =0;
 		for(i=0; i<feeds.length; i++) {
@@ -22,15 +22,15 @@ connect = function (conn) {
 	});
 	mqttClient.on("close", function(){
 		console.log("close");
-		Session.set("connectionStatus", false);
+		Session.set("ConnectionStatus", false);
 	});
 	mqttClient.on("offline", function(){
 		console.log("offline");
-		Session.set("connectionStatus", false);
+		Session.set("ConnectionStatus", false);
 	});
 	mqttClient.on("error", function(e){
-		console.log("connection error", e)
-		Session.set("connectionStatus", false);
+		console.log("Connection error", e)
+		Session.set("ConnectionStatus", false);
 	});
 	mqttClient.on("message", function(topic, message){
 		//Actually do something useful.
@@ -56,19 +56,19 @@ Meteor.startup(function(){
 });
 
 
-Template.Connexions.helpers({
-	connexions: function(){
-		return Connexions.find({});
+Template.Connections.helpers({
+	connections: function(){
+		return Connections.find({});
 	},
-	// connection_status: function(){
-	// 	return Session.get("connectionStatus") ? "connected" : "disconnected";
+	// Connection_status: function(){
+	// 	return Session.get("ConnectionStatus") ? "connected" : "disconnected";
 	// }
 });
 
 
 
 
-Template.Connexions.events({
+Template.Connections.events({
 	'click .connect': function(ev){
 		console.log("Connect button", ev, this);
 		connect(this);

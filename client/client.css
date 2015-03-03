@@ -55,7 +55,7 @@ label {
 	font-weight: 400;
 	font-size: 1.3em;
 }
-.connection-status {
+.Connection-status {
 	width: 1.958333em;
 	height: 1.958333em;
 	border-radius: 50%;
@@ -64,10 +64,10 @@ label {
 	float: right;
 	margin: 13px 15px 0 0;
 }
-.connection-status.connected {
+.Connection-status.connected {
 	background: rgb(160, 227, 150);
 }
-.connection-status.disconnected {
+.Connection-status.disconnected {
 	background: rgb(226, 137, 119);
 }
 
@@ -482,7 +482,7 @@ input[type="checkbox"].green.ios-switch:checked + div > div {
 
 /* Media Queries */
 @media (min-width: 768px) {
-	.navbar-header .connection-status {
+	.navbar-header .Connection-status {
 		display: none;
 	}
 }

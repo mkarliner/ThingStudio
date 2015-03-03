@@ -1,10 +1,10 @@
-Connexions = new Mongo.Collection("connexions");
+Connections = new Mongo.Collection("connections");
 
 
 
 Schemas = {};
 
-Schemas.Connexion = new SimpleSchema({
+Schemas.Connection = new SimpleSchema({
 	title: {
 		type: String,
 		label: "Name",
@@ -60,9 +60,9 @@ Schemas.Connexion = new SimpleSchema({
 	
 });
 
-Connexions.attachSchema(Schemas.Connexion);
+Connections.attachSchema(Schemas.Connection);
 
-Connexions.allow({
+Connections.allow({
 	insert: function(userId, doc) {
 		return (userId && doc.owner === userId);
 	},

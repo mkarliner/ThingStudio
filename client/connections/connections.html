@@ -1,18 +1,18 @@
-<template name="Connexions">
+<template name="Connections">
 
-<p>TODO: Make enable/disable on connections with autoconnect option.</p>
+<p>TODO: Make enable/disable on Connections with autoconnect option.</p>
 
 
 
 	<ul>
-	{{#each connexions}}
+	{{#each connections}}
 
-		<li class="connection-list">{{this.title}}</li><li class="connection-list"><button class="connect">Connect</button></li>
+		<li class="Connection-list">{{this.title}}</li><li class="Connection-list"><button class="connect">Connect</button></li>
 	{{/each}}
 	</ul>
 	
-	<div id="connexion-status">
-		Status: {{connection_status}}
+	<div id="connection-status">
+		Status: {{Connection_status}}
 	</div>
 	
 </template>

@@ -56,24 +56,24 @@ Router.route("/viewer/screen/:_id", function(){
 });
 
 
-Router.route("/connexions", function(){
-	this.render("Connexions");
+Router.route("/connections", function(){
+	this.render("Connections");
 });
 
-Router.route("/connexion", function(){
-		this.render("Connexion", {
+Router.route("/connection", function(){
+		this.render("Connection", {
 			data: function(){
-				console.log("CONN", Connexions.findOne());
-				conn = Connexions.findOne();
+				console.log("CONN", Connections.findOne());
+				conn = Connections.findOne();
 				if(conn) {
 					return conn;
 				} else {
-					Connexions.insert({
+					Connections.insert({
 						title: "Modern Industry", 
 						host: "mqtt.modern-industry.com", 
 						port: 9001, protocol: "Websocket", 
 						autoConnect: true});
-					return Connexions.findOne();
+					return Connections.findOne();
 				}
 				
 			}

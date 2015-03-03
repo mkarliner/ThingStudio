@@ -4,8 +4,8 @@ ThingStudio
 
 TODO List
 
-Name and password for connection
-Secure connections.
+Name and password for Connection
+Secure Connections.
 
 # Usage
 
@@ -14,12 +14,12 @@ Secure connections.
 ThingStudio has two modes, viewer and studio.
 When you login, you will be put into the viewer menu,
 this will give you buttons to view your screens, or to
-go to studio mode, where you can edit your connections, feeds
+go to studio mode, where you can edit your Connections, feeds
 screens and themes.
 
 ## Connections
-Connections construct a connection to an MQTT  broker.
-At the moment there can be only one active connection at a time.
+Connections construct a Connection to an MQTT  broker.
+At the moment there can be only one active Connection at a time.
 
 ## Feeds
 Feeds represent subscriptions to one or more MQTT topics and how

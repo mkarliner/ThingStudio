@@ -1,4 +1,4 @@
-Template.Connexion.helpers({
+Template.Connection.helpers({
 	
 	context: function() {
 		console.log("THJ ", this);

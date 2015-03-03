@@ -2,12 +2,12 @@
 
   Meteor.startup(function () {
     // code to run on server at startup
-	  console.log(Connexions.find({}).fetch());
+	  console.log(Connections.find({}).fetch());
 	  
 	  
 	  
-	  Meteor.publish("connexions", function(){
-	  	return Connexions.find({$or: [{owner: this.userId}, {public: true}]});
+	  Meteor.publish("connections", function(){
+	  	return Connections.find({$or: [{owner: this.userId}, {public: true}]});
 	  });
 
 	  Meteor.publish("screens", function(){

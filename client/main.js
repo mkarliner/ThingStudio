@@ -2,9 +2,9 @@
 
 Meteor.startup(function(){
 	
-	Meteor.subscribe("connexions", {
+	Meteor.subscribe("connections", {
 		onReady: function(){
-			conn = Connexions.findOne({autoConnect: true});
+			conn = Connections.findOne({autoConnect: true});
 			// console.log("Autoconnect: ", conn);
 			if(conn) {
 				connect(conn);
@@ -13,7 +13,7 @@ Meteor.startup(function(){
 			
 		},
 		onError: function(error){
-			console.log("Connexions error", error);
+			console.log("Connections error", error);
 		}
 	});
 	
