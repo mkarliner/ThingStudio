@@ -97,6 +97,13 @@ AutoForm.hooks({
 				// Session.set("currentScreenPage", 'faceplate')
 			}
 		}
+	},
+	updateFeedForm: {
+		after: {
+			insert: function(err, res, template) {
+				console.log("AFTER FEED IN ", err, res, template);
+			}
+		}
 	}
 
 

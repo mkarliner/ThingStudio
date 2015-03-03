@@ -11,7 +11,13 @@
 	<table class="table">
 	<tr><th>Title</th><th>Subscription</th></tr>
 	{{#each feedlist}}
-		<tr><td><a  class="screenlink">{{this.title}}</a></td><td>{{subscription}}</td>	</tr>
+		<tr>
+			<td><a  class="screenlink">{{this.title}}</a></td>
+			<td>{{subscription}}</td>	
+			<td>	{{#afModal class="btn btn-primary" collection="Feeds" doc=_id operation="update"}}
+	  Edit
+	{{/afModal}}</td>
+		</tr>
 	{{/each}}
 	</table>
 	

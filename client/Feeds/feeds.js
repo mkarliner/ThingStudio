@@ -20,8 +20,13 @@ Template.Feeds.events({
 });
 
 Meteor.startup(function(){
-	Feeds.before.insert(function(userId, doc) {
+	Feeds.after.insert(function(userId, doc) {
 		console.log("New Feed: ", userId, doc);
+		mqttClient.subscribe(doc.subscription);
+	});
+	Feeds.after.update(function(userId, doc) {
+		console.log("New Feed: ", userId, doc);
+		mqttClient.subscribe(doc.subscription);
 	});
 });
 
