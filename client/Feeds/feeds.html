@@ -1,10 +1,19 @@
+
+
+
 <template name="Feeds">
 	
-	<h1>Feeds</h1>
-	{{#each feedlist}}
-		<div><a  class="feedlink">{{this.title}}</a></div>
-	{{/each}}
+	{{#afModal class="btn btn-primary" collection="Feeds" operation="insert"}}
+	  Add a new feed
+	{{/afModal}}
 	
+	<h1>Your Feeds</h1>
+	<table class="table">
+	<tr><th>Title</th><th>Subscription</th></tr>
+	{{#each feedlist}}
+		<tr><td><a  class="screenlink">{{this.title}}</a></td><td>{{subscription}}</td>	</tr>
+	{{/each}}
+	</table>
 	
 	<div>
 		<button id="subscribe-button">Subscribe all</button>

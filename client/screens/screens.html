@@ -1,10 +1,14 @@
 <template name="Screens">
 	
+	{{#afModal class="btn btn-primary" collection="Screens" operation="insert"}}
+	  Add a new screen
+	{{/afModal}}
+	
 	<h1>Screens</h1>
 	<table class="table">
 	<tr><th>Title</th><th>Status</th></tr>
 	{{#each screenlist}}
-		<tr><td><a  class="screenlink">{{this.title}}</a></td><td>{{status}}</td></tr>
+		<tr><td><a  class="screenlink">{{this.title}}</a></td><td>{{status}}</td>	</tr>
 	{{/each}}
 	</table>
 </template>

@@ -8,7 +8,7 @@ Schemas.Connexion = new SimpleSchema({
 	title: {
 		type: String,
 		label: "Name",
-		max: 200
+		max: 200,
 	},
 	host: {
 		type: String,
@@ -17,12 +17,20 @@ Schemas.Connexion = new SimpleSchema({
 	port: {
 		type: Number,
 		label: "Port",
-		// defaultValue: 3000
+		defaultValue: 9001
 	},
 	protocol: {
 		type: String,
 		allowedValues:["MQTT", "Websocket"],
 		defaultValue: "Websocket"
+	},
+	username: {
+		type: String,
+		optional: true
+	},
+	password: {
+		type: String,
+		optional: true
 	},
 	autoConnect: {
 		type: Boolean,
@@ -37,16 +45,16 @@ Schemas.Connexion = new SimpleSchema({
 			if(this.isInsert) {
 				return Meteor.userId();
 			} else if(this.isUpsert) {
-				return {$setOnInsert: Meteor.userId};
+				return {$setOnInsert: Meteor.userId()};
 			} else {
 				this.unset();
 			}
 		}
 	},
-	public: {
-		type: Boolean,
-		defaultValue: false
-	}
+	// public: {
+	// 	type: Boolean,
+	// 	defaultValue: false
+	// }
 	
 	
 	

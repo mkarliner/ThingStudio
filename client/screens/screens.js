@@ -3,7 +3,7 @@ Template.Screens.helpers({
 		return Screens.find({})
 	},
 	status: function(){
-		if(this.owner == Meteor.userId) {
+		if(this.owner == Meteor.userId()) {
 			return "Owner";
 		} else if(this.public == true) {
 			return("Public read-only")

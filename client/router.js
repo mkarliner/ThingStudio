@@ -60,6 +60,27 @@ Router.route("/connexions", function(){
 	this.render("Connexions");
 });
 
+Router.route("/connexion", function(){
+		this.render("Connexion", {
+			data: function(){
+				console.log("CONN", Connexions.findOne());
+				conn = Connexions.findOne();
+				if(conn) {
+					return conn;
+				} else {
+					Connexions.insert({
+						title: "Modern Industry", 
+						host: "mqtt.modern-industry.com", 
+						port: 9001, protocol: "Websocket", 
+						autoConnect: true});
+					return Connexions.findOne();
+				}
+				
+			}
+		})
+});
+
+
 Router.route("/screens/:_id", function(){
 	this.render("Screen", {
 		data: function(){
