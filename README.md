@@ -106,6 +106,7 @@ The messages a object with the following JASON format.
 </pre>
 
 ####iOS Switch
+Add an iOS style switch
 <pre>
 	<label>
 		<input type="checkbox" class="ios-switch green  bigswitch" checked />
