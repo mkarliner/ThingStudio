@@ -100,3 +100,8 @@ div.inline { float:left; }
 	flex-grow: 1;
 }
 
+#renderScreen {
+	margin-left: 10px;
+	background: white;
+}
+
