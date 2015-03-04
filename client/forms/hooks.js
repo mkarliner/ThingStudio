@@ -60,6 +60,17 @@ compileTemplate = function(name, html_text) {
 				feed = Feeds.findOne({title: feed_name.value});
 				// console.log(feed);
 				mqttClient.publish(feed.subscription, value);
+			},
+			'input': function(ev) {
+				console.log("INPUT ", ev);
+				attr = ev.currentTarget.attributes;
+				feed_name = attr.getNamedItem("data-feed");
+				if(attr.getNamedItem("data-continuous")) {
+					value = $(ev.target).val();
+					feed = Feeds.findOne({title: feed_name.value});
+					mqttClient.publish(feed.subscription, value);
+				}
+				
 			}
 		});
 		
