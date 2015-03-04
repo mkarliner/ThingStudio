@@ -3,17 +3,13 @@
 	<div id="screenList">
 		
 	<h1>Your Screens</h1>
-	<table class="table centeredTable">
+	<div class="flex-column">
 
 	{{#each screenlist}}
-			<tr>
-				<td class="centerCell">
-					<button class="btn screenlink">{{this.title}}</button>
-				</td>
-			</tr>
+					<button class="flex-item btn screenlink">{{this.title}}</button>
 	{{/each}}
 	
 
-	</table>
+	</div>
 		</div>
 </template>
