@@ -40,14 +40,14 @@ compileTemplate = function(name, html_text) {
 				// console.log("FN: ", feed_name.value, message.value)
 				feed = Feeds.findOne({title: feed_name.value});
 				console.log(feed);
-				mqttClient.publish(feed.subscription, message ? message.value : "click");
+				publish(feed.subscription, message ? message.value : "click");
 			},
 			'change input[type="checkbox"]': function(ev) {
 				attr = ev.currentTarget.attributes;
 				feed_name = attr.getNamedItem("data-feed");
 				value = attr.getNamedItem("checked");
 				feed = Feeds.findOne({title: feed_name.value});
-				mqttClient.publish(feed.subscription, ev.target.checked.toString());
+				publish(feed.subscription, ev.target.checked.toString());
 				ev.stopImmediatePropagation();
 			},
 			'change input': function(ev) {
@@ -59,16 +59,16 @@ compileTemplate = function(name, html_text) {
 
 				feed = Feeds.findOne({title: feed_name.value});
 				// console.log(feed);
-				mqttClient.publish(feed.subscription, value);
+				publish(feed.subscription, value);
 			},
 			'input': function(ev) {
-				console.log("INPUT ", ev);
+				// console.log("INPUT ", ev);
 				attr = ev.currentTarget.attributes;
 				feed_name = attr.getNamedItem("data-feed");
 				if(attr.getNamedItem("data-continuous")) {
 					value = $(ev.target).val();
 					feed = Feeds.findOne({title: feed_name.value});
-					mqttClient.publish(feed.subscription, value);
+					publish(feed.subscription, value);
 				}
 				
 			}

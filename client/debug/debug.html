@@ -9,4 +9,13 @@
 			</tr>
 		{{/each}}
 	</table>
+<h1>	Raw Message Output </h1>
+	<table class="table">
+		{{#each outbox }}
+			<tr>
+				<td>{{topic}}</td>
+				<td>{{message}}</td>
+			</tr>
+		{{/each}}
+	</table>
 </template>

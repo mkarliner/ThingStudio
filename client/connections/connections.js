@@ -3,6 +3,14 @@ mqttClient = {};
 
 Messages = new Mongo.Collection(null);
 
+Outbox = new Mongo.Collection(null);
+
+publish = function(topic, message) {
+	Outbox.upsert({topic: topic}, {$set: { topic: topic, message: message}});
+	mqttClient.publish(topic, message);
+	
+}
+
 
 Session.set("ConnectionStatus", false);
 
