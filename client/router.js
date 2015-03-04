@@ -116,3 +116,8 @@ Router.route("/help/about", function(){
 	this.layout("HelpLayout");
 	this.render("HelpAbout");
 });
+
+Router.route("/debug", function(){
+	this.render("Debug");
+});
+

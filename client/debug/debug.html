@@ -1,0 +1,12 @@
+<template name="Debug">
+
+<h1>	Raw Message Feed </h1>
+	<table class="table">
+		{{#each messages }}
+			<tr>
+				<td>{{topic}}</td>
+				<td>{{message}}</td>
+			</tr>
+		{{/each}}
+	</table>
+</template>
