@@ -70,10 +70,10 @@ Schemas.Screen = new SimpleSchema({
 // 		type: String,
 // 		optional: true
 // 	},
-// 	public: {
-// 		type: Boolean,
-// 		defaultValue: false
-// 	}
+	public: {
+		type: Boolean,
+		defaultValue: false
+	}
 //
 	
 });
