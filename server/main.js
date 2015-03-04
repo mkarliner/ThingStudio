@@ -19,6 +19,9 @@
 	  Meteor.publish("themes", function(){
 	  	return Themes.find({$or: [{owner: this.userId}, {public: true}]});
 	  });
+	  Meteor.publish("help_pages", function(){
+	  	return HelpPages.find({}, {sort: {pagenumber: 1}});
+	  });
 	  
 	  
 	  

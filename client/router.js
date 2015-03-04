@@ -121,3 +121,15 @@ Router.route("/debug", function(){
 	this.render("Debug");
 });
 
+Router.route("/help", function() {
+	this.render("HelpMenu");
+});
+
+Router.route("/helppages/:urlstring", function(){
+	this.render("HelpPage", {
+		data: function(){
+			return HelpPages.findOne({urlstring: this.params.urlstring});
+		}
+	});
+});
+

@@ -44,6 +44,15 @@ Meteor.startup(function(){
 		}
 	});
 	
+	Meteor.subscribe("help_pages", {
+		onReady: function(){
+
+		},
+		onError: function(error){
+			console.log("HelpPages error", error);
+		}
+	});
+	
 	
 	
 	

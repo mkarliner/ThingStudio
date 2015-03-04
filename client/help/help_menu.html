@@ -1,0 +1,10 @@
+<template name="HelpMenu">
+	<h1>Help Pages</h1>
+	<table class="table">
+		{{#each helppages}}
+		<tr>
+			<td><a href="/helppages/{{urlstring}}">{{title}}</a></td>
+		</tr>
+		{{/each}}
+	</table>
+</template>

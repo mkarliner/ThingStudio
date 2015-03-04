@@ -4,6 +4,12 @@ AdminConfig={
     Connections: {},
 	Screens: {},
 	Feeds:{},
-	Themes:{}
+	Themes:{},
+	HelpPages:{
+		tableColumns: [
+		              {label: 'Page', name: 'pagenumber'},
+		                {label: 'Title', name: 'title'}
+		            ]
+	}
   }
 };

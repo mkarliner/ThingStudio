@@ -1,0 +1,10 @@
+<template name="HelpPage">
+	<a href="{{prevpage}}">Previous</a> <a href="/help">Help Index</a> <a href="{{nextpage}}">Next</a>
+	<h1>{{title}}</h1>
+
+	<div id="helpbody">
+		{{#markdown}}{{body}}{{/markdown}}
+	</div>
+</template>
+
+
