@@ -38,43 +38,43 @@ Schemas.Screen = new SimpleSchema({
 			}
 		}
 	},
-	updatesHistory: {
-		type: [Object],
-		optional: true,
-		autoValue: function() {
-			var html = this.field("html");
-			if (html.isSet) {
-				if (this.isInsert) {
-					return [{
-						date: new Date,
-						html: html.value
-					}];
-				} else {
-					return {
-						$push: {
-							date: new Date,
-							html: html.value
-						}
-					};
-				}
-			} else {
-				this.unset();
-			}
-		}
-	},
-	'updatesHistory.$.date': {
-		type: Date,
-		optional: true
-	},
-	'updatesHistory.$.html': {
-		type: String,
-		optional: true
-	},
-	public: {
-		type: Boolean,
-		defaultValue: false
-	}
-	
+	// updatesHistory: {
+// 		type: [Object],
+// 		optional: true,
+// 		autoValue: function() {
+// 			var html = this.field("html");
+// 			if (html.isSet) {
+// 				if (this.isInsert) {
+// 					return [{
+// 						date: new Date,
+// 						html: html.value
+// 					}];
+// 				} else {
+// 					return {
+// 						$push: {
+// 							date: new Date,
+// 							html: html.value
+// 						}
+// 					};
+// 				}
+// 			} else {
+// 				this.unset();
+// 			}
+// 		}
+// 	},
+// 	'updatesHistory.$.date': {
+// 		type: Date,
+// 		optional: true
+// 	},
+// 	'updatesHistory.$.html': {
+// 		type: String,
+// 		optional: true
+// 	},
+// 	public: {
+// 		type: Boolean,
+// 		defaultValue: false
+// 	}
+//
 	
 });
 

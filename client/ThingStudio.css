@@ -1,6 +1,8 @@
 /* CSS declarations go here */
 
 
+
+
 .Connection-list {
 	display: inline;
 }
@@ -39,9 +41,62 @@ div.inline { float:left; }
 .centeredTable {
 	margin-left: auto;
 	margin-right: auto;
+	border-spacing: 5px;
+	border-collapse: separate;
+	border: solid;
+	border-color: #527A7A;
+	margin-top: 10px;
+	margin-botton: 10px;
+	
 }
 
 .centerCell {
 	align: center;
+}
+
+@font-face {
+	font-family: 'Conv_TIMES_SQ';
+	src: url('fonts/TIMES_SQ.eot');
+	src: local('☺'), url('fonts/TIMES_SQ.woff') format('woff'), url('fonts/TIMES_SQ.ttf') format('truetype'), url('fonts/TIMES_SQ.svg') format('svg');
+	font-weight: normal;
+	font-style: normal;
+	font-color: red;
+}
+
+@font-face {
+	font-family: 'LCDBOLD';
+	src: local('☺'), url('fonts/LCDBOLD.woff') ;
+	font-weight: normal;
+	font-style: normal;
+	font-color: gray;
+}
+
+.ledDisplay {
+	font-family:'Conv_TIMES_SQ',Serif;
+	font-color: red;
+	color: red;
+	font-height: 1.5em;
+}
+
+
+.lcdDisplay {
+	font-family:'LCDBOLD',Serif;
+	font-color: #4E5656;
+	#color: dargray;
+	background: #C2D6D6;
+	font-height: 1.5em;
+}
+
+.flex-container {
+    display:flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-content: flex-start;
+    align-items: flex-start;
+}
+
+.flex-item {
+	flex-grow: 1;
 }
 
