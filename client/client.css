@@ -510,6 +510,11 @@ font-size: 4em;
   padding: 6px 0;
   text-indent: 14px;
 }
+
+.feeds-table td, .screens-table td, .themes-table td {
+  padding: 0.6em 0;
+}
+
 /* Media Queries */
 @media (min-width: 768px) {
 	.navbar-header .Connection-status {
