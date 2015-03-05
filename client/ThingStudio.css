@@ -8,7 +8,7 @@ div.inline { float:left; }
 
 #archy {
 	height: 300px;
-	width:  800px;
+	min-width:  600px;
 }
 
 #home-content {
