@@ -1,16 +1,7 @@
 /* CSS declarations go here */
-
-
-
-
 .Connection-list {
 	display: inline;
 }
-
-
-
-
-
 
 div.inline { float:left; }
 .clearBoth { clear:both; }
@@ -113,10 +104,10 @@ div.inline { float:left; }
 
 .control-label {
 	text-align: center;
+	padding: 0.4em 0;
 }
 
 #renderScreen {
-	margin-left: 10px;
 	margin-right: 10px;
 	background: #DAE6E6;
 	min-width: 300px;
@@ -131,7 +122,8 @@ div.inline { float:left; }
 #editScreen {
 		margin-left: 10px;
 		border: 1px solid gray;
-		border-radius: 30px;
+		border-radius: 6px;
+		padding: 1em;
 }
 
 #helpbody {
@@ -144,3 +136,8 @@ div.inline { float:left; }
 	margin: 5px;
 }
 
+.checkbox label {
+	font-size: 1em;
+	line-height: 23px;
+	margin-left: 0;
+}

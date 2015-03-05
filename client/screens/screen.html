@@ -1,6 +1,6 @@
 <template name="Screen">
 	{{> currentStyle }}
-	{{accessStatus}}
+	{{{accessStatus}}}
 
 	<div id="renderScreen" >
 			<div id="phoneStatus"></div>
@@ -8,7 +8,7 @@
 	</div>
 	<div id="editScreen" class="inline">
 		{{> updateScreenForm}}
-		<div>Errors: {{compilationErrors}}</div>
+		<div class="screen-errors">Errors: {{compilationErrors}}</div>
 	</div>
 	
 </template>

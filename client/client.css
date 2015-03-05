@@ -495,13 +495,21 @@ font-size: 4em;
 /* misc custom styles */
 
 
-.access-error {
+.access-error, .screen-errors {
   background: rgb(249, 242, 244);
   color: rgb(199, 37, 78);
   border: 1px solid rgb(169, 68, 66);
   padding: 1em;
 }
 
+.screen-errors {
+  margin-top: 1em;
+}
+
+.form-control {
+  padding: 6px 0;
+  text-indent: 14px;
+}
 /* Media Queries */
 @media (min-width: 768px) {
 	.navbar-header .Connection-status {
