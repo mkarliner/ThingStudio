@@ -7,13 +7,9 @@
 	display: inline;
 }
 
-#renderScreen {
-	border: solid;
-}
 
-#editScreen {
-	border: solid;
-}
+
+
 
 
 div.inline { float:left; }
@@ -108,10 +104,34 @@ div.inline { float:left; }
 .flex-item {
 	flex-grow: 1;
 }
+#phoneStatus {
+	min-height: 30px;
+	background: gray;
+	margin-bottom: 10px;
+	border-radius: 10px;
+}
+
+.control-label {
+	text-align: center;
+}
 
 #renderScreen {
 	margin-left: 10px;
-	background: white;
+	margin-right: 10px;
+	background: #DAE6E6;
+	min-width: 300px;
+	min-height: 600px;
+	border: 5px solid ;
+	border-color: #C2D6D6;
+	display: inline;
+	float: left;
+	border-radius: 10px;
+}
+
+#editScreen {
+		margin-left: 10px;
+		border: 1px solid gray;
+		border-radius: 30px;
 }
 
 #helpbody {

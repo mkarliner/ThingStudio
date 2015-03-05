@@ -11,9 +11,9 @@
 <template name="updateScreenForm">
 {{#autoForm collection="Screens" id="updateScreenForm" type="update" doc=this }}
 	<fieldset>
-		<legend>Edit Screen</legend>
-		{{>afQuickField name="title"}}
-		{{>afQuickField name="html"}}
+
+		{{>afQuickField name="title" class="centerField"}}
+		{{>afQuickField name="html" class="centerField"}}
 		{{>afQuickField name="public"}}
 		{{!-- >afQuickField name="updatesHistory"--}}
 	</fieldset>
