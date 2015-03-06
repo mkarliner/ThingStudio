@@ -52,8 +52,21 @@ Meteor.startup(function(){
 			console.log("HelpPages error", error);
 		}
 	});
+		
 	
-	
-	
-	
-})
+});
+
+
+AccountsTemplates.addField({
+    _id: "mailing_list",
+    type: "checkbox",
+    displayName: "Subscribe me to mailing List",
+});
+
+// Accounts.onCreateUser(function(options, user) {
+//     //pass the surname in the options
+//
+//     user.profile['opt_in'] = options.opt_in;
+//
+//     return user;
+// }
