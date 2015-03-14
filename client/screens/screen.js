@@ -1,22 +1,4 @@
-// var compileTemplate = function(name, html_text) {
-//   try {
-//     var compiled = SpacebarsCompiler.compile(html_text, { isTemplate:true });
-//       var renderer = eval(compiled);
-//       console.log('redered:',renderer);
-//           Template.__checkName(name);
-//       Template[name] = new Template("Template." + name,renderer);
-//       //Template.__define__(name, renderer);
-//         Template['faceplate'].helpers({
-//                 ddd: function() {
-//                         console.log("Mike");
-//                                 return "mike";
-//                         }
-//         });
-//   } catch (err){
-//     console.log('Error compiling template:' + html_text);
-//     console.log(err.message);
-//   }
-// };
+
 
 AutoForm.addInputType('acecss', {
 	template: 'afAceCss',
@@ -36,6 +18,21 @@ AutoForm.addInputType('ace', {
 });
 
 Template.afAce.helpers({
+	debug: function(obj){
+		console.log("DEBUG:", obj);
+	},
+	loadValue: function(editor){
+		// console.log("Setting value ", this.value)
+		// ace = AceEditor.instance("archy",{
+		//     theme:"dawn",
+		//     mode:"html"
+		// });
+		//  ace.setValue(this.value);
+
+	}
+});
+
+Template.afAceCss.helpers({
 	debug: function(obj){
 		console.log("DEBUG:", obj);
 	},

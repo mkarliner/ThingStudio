@@ -11,6 +11,22 @@ Schemas.Screen = new SimpleSchema({
 		label: "Name",
 		max: 200
 	},
+	theme: {
+		type: String,
+		optional: true,
+		autoform: {
+			type: "select",
+			options: function(){
+				themes = Themes.find({}).fetch();
+				options = [];
+				var i;
+				for(i=0; i<themes.length; i++) {
+					options[i] = { label: themes[i].title, value: themes[i]._id};
+				}
+				return(options);
+			}
+		}
+	},
 	html: {
 		label: " ",
 		type: String,

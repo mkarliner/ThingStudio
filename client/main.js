@@ -52,6 +52,14 @@ Meteor.startup(function(){
 			console.log("HelpPages error", error);
 		}
 	});
+	
+	Meteor.subscribe("userData", {
+		onReady: function(){
+		},
+		onError: function(error){
+			console.log("HelpPages error", error);
+		}
+	});
 		
 	
 });

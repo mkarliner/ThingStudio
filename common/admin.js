@@ -2,8 +2,18 @@ AdminConfig={
 	 nonAdminRedirectRoute: 'entrySignIn',
   collections: {
     Connections: {},
-	Screens: {},
-	Feeds:{},
+	Screens: {
+		tableColumns: [
+			{label: "Title", name: "title"},
+			{label: "Owner", name: "owner", template: "Owner"}
+		]
+	},
+	Feeds:{
+		tableColumns: [
+			{label: "Title", name: "title"},
+			{label: "Owner", name: "owner", template: "Owner"}
+		]
+	},
 	Themes:{},
 	HelpPages:{
 		tableColumns: [

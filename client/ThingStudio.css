@@ -119,6 +119,19 @@ div.inline { float:left; }
 	border-radius: 10px;
 }
 
+#viewerRenderScreen {
+	margin-right: 10px;
+	background: #DAE6E6;
+	width: 100%;
+	min-width: 300px;
+	min-height: 600px;
+	border: 5px solid ;
+	border-color: #C2D6D6;
+	display: inline;
+	float: left;
+	border-radius: 10px;
+}
+
 #editScreen {
 		margin-left: 10px;
 		border: 1px solid gray;

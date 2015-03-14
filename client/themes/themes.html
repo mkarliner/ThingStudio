@@ -9,18 +9,15 @@
 	
 	<h1>Your Themes</h1>
 	<table class="table themes-table">
-	<tr><th>Title</th><th>Subscription</th></tr>
+	<tr><th>Title</th></tr>
 	{{#each themelist}}
 		<tr>
-			<td><a  class="screenlink">{{this.title}}</a></td>
-			<td>{{subscription}}</td>	
-			<td>	{{#afModal class="btn btn-primary" collection="Themes" doc=_id operation="update"}} Edit	{{/afModal}}</td>
+			<td><a   class="themelink">{{this.title}}</a></td>
+			<td>{{status}}</td>	
 			<td>{{#afModal class="btn btn-danger" collection="Themes" operation="remove" doc=_id}} Delete  {{/afModal}}</td>
 		</tr>
 	{{/each}}
 	</table>
 	
-	<div>
-		<button id="subscribe-button">Subscribe all</button>
-	</div>
+
 </template>
