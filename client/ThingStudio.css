@@ -121,15 +121,15 @@ div.inline { float:left; }
 
 #viewerRenderScreen {
 	margin-right: 10px;
-	background: #DAE6E6;
 	width: 100%;
 	min-width: 300px;
 	min-height: 600px;
-	border: 5px solid ;
-	border-color: #C2D6D6;
+	border: 4px solid ;
+	border-color: rgba(0, 23, 54, 0.1);
 	display: inline;
 	float: left;
-	border-radius: 10px;
+	border-radius: 8px;
+	padding: 1em;
 }
 
 #editScreen {

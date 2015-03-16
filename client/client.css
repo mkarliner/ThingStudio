@@ -55,6 +55,12 @@ label {
 	font-weight: 400;
 	font-size: 1.3em;
 }
+li.conn-stat {
+  display: none;
+}
+li.conn-stat a {
+  padding-top: 10px;
+}
 .Connection-status {
 	width: 1.958333em;
 	height: 1.958333em;
@@ -62,7 +68,10 @@ label {
 	border: 3px solid white;
 	background: transparent;
 	float: right;
-	margin: 13px 15px 0 0;
+	margin: 0;
+}
+.navbar-header .Connection-status {
+  margin: 13px 15px 0 0;
 }
 .Connection-status.connected {
 	background: rgb(160, 227, 150);
@@ -520,5 +529,8 @@ font-size: 4em;
 	.navbar-header .Connection-status {
 		display: none;
 	}
+      li.conn-stat {
+        display: block;
+      }
 }
 
