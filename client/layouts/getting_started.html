@@ -1,0 +1,18 @@
+<template name="GettingStartedLayout">
+	<div class="container">
+	<div class="gs-div row">
+		<div class="gs-div col-md-3">
+		Checklist pane
+		{{>yield region="gs_checklist"}}
+		</div>
+		<div class="gs-div col-md-6">
+			Edit Pane
+			{{>yield region="gs_edit"}}
+		</div>
+		<div class="gs-div col-md-3">
+			Help Pane
+			{{>yield region="gs_help"}}
+		</div>
+	</div>
+	</div>
+</template>

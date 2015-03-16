@@ -154,3 +154,14 @@ div.inline { float:left; }
 	line-height: 23px;
 	margin-left: 0;
 }
+
+.gs-div {
+	border: solid;
+}
+
+#inlineradio1 {
+	background: green;
+	font-color: green;
+	border: solid;
+}
+

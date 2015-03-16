@@ -133,3 +133,13 @@ Router.route("/helppages/:urlstring", function(){
 	});
 });
 
+Router.route("/getting_started", {
+	layoutTemplate: "GettingStartedLayout", 
+	    yieldTemplates: {
+	      'gsChecklist': {to: 'gs_checklist'},
+	      'gsEdit': {to: 'gs_edit'},
+			'gsHelp': {to: 'gs_help'}
+	    }
+});
+
+
