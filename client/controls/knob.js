@@ -7,6 +7,6 @@ Template.jqKnob.helpers({
 		msg = Messages.findOne({
 			feed: feed
 		});
-		return msg ? msg.message : "no data yet";
+		return msg ? msg.message : "-";
 	},
 })

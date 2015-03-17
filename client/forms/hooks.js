@@ -19,7 +19,7 @@ compileTemplate = function(name, html_text) {
 				msg = Messages.findOne({
 					feed: feed
 				});
-				return msg ? msg.message : "no data yet";
+				return msg ? msg.message : "-";
 			},
 			feedmatch: function(feedname, match){
 				feed = Feeds.findOne({title: feedname});
