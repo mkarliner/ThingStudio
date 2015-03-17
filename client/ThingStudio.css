@@ -95,12 +95,6 @@ div.inline { float:left; }
 .flex-item {
 	flex-grow: 1;
 }
-#phoneStatus {
-	min-height: 30px;
-	background: gray;
-	margin-bottom: 10px;
-	border-radius: 10px;
-}
 
 .control-label {
 	text-align: center;
@@ -108,15 +102,15 @@ div.inline { float:left; }
 }
 
 #renderScreen {
-	margin-right: 10px;
-	background: #DAE6E6;
-	min-width: 300px;
+	margin-right: 2%;
+	width: 30%;
 	min-height: 600px;
-	border: 5px solid ;
-	border-color: #C2D6D6;
+	border: 4px solid ;
+	border-color: rgba(0, 23, 54, 0.1);
 	display: inline;
 	float: left;
-	border-radius: 10px;
+	border-radius: 8px;
+	padding: 1em;
 }
 
 #viewerRenderScreen {
@@ -133,10 +127,13 @@ div.inline { float:left; }
 }
 
 #editScreen {
-		margin-left: 10px;
 		border: 1px solid gray;
 		border-radius: 6px;
 		padding: 1em;
+		width: 68%;
+}
+#editScreen.fullWidth {
+	width: 100%;
 }
 
 #helpbody {

@@ -105,3 +105,11 @@ Template.Screen.helpers({
 		}
 	}
 });
+
+Template.Screen.events({
+	'click #togglePreview': function(ev){
+		$('#renderScreen').toggle();
+		$('#editScreen').toggleClass('fullWidth');
+		
+	}
+});
