@@ -509,8 +509,6 @@ input[type="checkbox"].green.ios-switch:checked + div > div {
 /* String readout styles */
 .string-display {
   background-color: rgb(160, 227, 150);
-  height: 4em;
-  line-height: 3.9em;
   text-align: center;
   color: white;
 }
