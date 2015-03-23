@@ -11,6 +11,9 @@ Schemas.Screen = new SimpleSchema({
 		label: "Name",
 		max: 200
 	},
+	apps: {
+		type: [String]
+	},
 	theme: {
 		type: String,
 		optional: true,

@@ -11,9 +11,18 @@
 <template name="updateScreenForm">
 {{#autoForm collection="Screens" id="updateScreenForm" type="update" doc=this }}
 	<fieldset>
+		<button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+		  Options
+		</button>
+		<div class="collapse" id="collapseExample">
+		  <div class="well">
+		    	{{>afQuickField name="title" class="centerField"}}
+				{{>afQuickField name="apps" class="centerField"}}
+				{{>afQuickField name="theme" class="centerField"}}
+		  </div>
+		</div>
+	
 
-		{{>afQuickField name="title" class="centerField"}}
-		{{>afQuickField name="theme" class="centerField"}}
 		{{>afQuickField name="html" class="centerField"}}
 		{{!-- >afQuickField name="updatesHistory"--}}
 	</fieldset>
