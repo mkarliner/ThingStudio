@@ -2,17 +2,34 @@
 Help page styles
 */
 
-#side-nav {
+.navigation {
     background: white;
     border-right: 1px solid rgba(0,0,0,0.14);
     color: #333;
-    display: block;
     left: 0;
     top: 0;
-    width: 240px;
-    z-index: 4;
+    width: 0;
+    overflow: hidden;
     position: fixed;
     height: 100%;
+    z-index: 4;
+}
+
+.page-wrap {
+  width: 100%;
+  float: right;
+}
+
+#main-navigation, .page-wrap {
+  transition: width 0.3s ease;
+}
+#main-navigation.open {
+  width: 20%;
+  min-width: 240px;
+}
+
+.open-menu i, .close-menu i {
+    padding: 1em;
 }
 
 #logo {
@@ -77,4 +94,10 @@ Help page styles
 /* show active nested list */
 .bs-docs-sidebar .nav>.active>ul.nav {
     display: block;           
+}
+
+@media (min-width: 768px) {
+    #main-navigation.open + .page-wrap {
+        width: 80%;
+    }
 }

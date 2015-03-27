@@ -1,16 +1,13 @@
 <template name="HelpContainer">
 	
 	<div class="container-fluid">
-		<!-- {{> navButton}} -->
+		{{> navButton}}
 		{{> sideNav }}
-		<div class="row clearfix">
-			<div class="col-md-10 col-md-offset-2">
-				<header>
-				    <h1>{{title}}</h1>
-				  </header>
-			</div>
-			<div class="col-md-10 col-md-offset-2">
-				{{> yield}}
+		<div class="page-wrap">
+			<div class="row clearfix">
+				<div class="col-md-8 col-md-offset-2">
+					{{> yield}}
+				</div>
 			</div>
 		</div>
 	</div>
