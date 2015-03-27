@@ -18,6 +18,10 @@ Schemas.HelpPage = new SimpleSchema({
 		type: Number,
 		label: "Page Number"
 	},
+	group: {
+		type: String,
+		label: "Group"
+	},
 	body: {
 		type: String,
 		label: "Body",
@@ -25,6 +29,13 @@ Schemas.HelpPage = new SimpleSchema({
 		autoform: {
 			rows: 5
 		}
+	},
+	updatedAt: {
+		type: Date,
+		autoValue: function () {
+			return new Date;
+		},
+		optional: true
 	}
 });
 

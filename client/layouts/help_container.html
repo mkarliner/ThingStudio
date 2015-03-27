@@ -1,0 +1,24 @@
+<template name="HelpContainer">
+	
+	<div class="container-fluid">
+		<!-- {{> navButton}} -->
+		{{> sideNav }}
+		<div class="row clearfix">
+			<div class="col-md-10 col-md-offset-2">
+				<header>
+				    <h1>{{title}}</h1>
+				  </header>
+			</div>
+			<div class="col-md-10 col-md-offset-2">
+				{{> yield}}
+			</div>
+		</div>
+	</div>
+	
+
+  <footer>
+
+  </footer>
+  
+  
+</template>

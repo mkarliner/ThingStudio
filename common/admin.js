@@ -19,7 +19,8 @@ AdminConfig={
 		tableColumns: [
 		              {label: 'Page', name: 'pagenumber'},
 		                {label: 'Title', name: 'title'}
-		            ]
+		            ],
+		omitFields: ['updatedAt']
 	}
   }
 };

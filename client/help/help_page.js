@@ -10,5 +10,8 @@ Template.HelpPage.helpers({
 		hp =  HelpPages.findOne({pagenumber: {$lt: this.pagenumber}});
 		console.log("HP: ", hp);
 		return hp.urlstring;
+	},
+	publishedDate: function(date) {
+		return moment(date).format('MMMM D, YYYY');
 	}
 })

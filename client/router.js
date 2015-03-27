@@ -122,10 +122,13 @@ Router.route("/debug", function(){
 });
 
 Router.route("/help", function() {
+	this.layout("HelpContainer");
 	this.render("HelpMenu");
+	
 });
 
 Router.route("/helppages/:urlstring", function(){
+	this.layout("HelpContainer");
 	this.render("HelpPage", {
 		data: function(){
 			return HelpPages.findOne({urlstring: this.params.urlstring});
