@@ -1,0 +1,37 @@
+<template name="navButton">
+	<a class="open-menu" href="#main-navigation"><i class="fa fa-bars"></i></a>
+</template>
+
+<template name="sideNav">
+	<div id="main-navigation" class="navigation">
+		<a class="close-menu" href="#"><i class="fa fa-times"></i></a>
+		<span id="logo">
+			<img src="/images/logo.svg" alt="ThingStudio">
+		</span>
+		<nav class="col-xs-12 bs-docs-sidebar">
+			<ul id="sidebar" class="nav nav-stacked fixed">
+				<li class="active top">
+					<a href="#GroupA">Basics</a>
+					<ul class="nav nav-stacked">
+						{{#each helppages group="basics"}}
+							<li>
+								<a href="/helppages/{{urlstring}}">{{title}}</a>
+							</li>
+						{{/each}}
+					</ul>
+				</li>
+				<li class="top">
+					<a href="#GroupB">User Interface</a>
+					<ul class="nav nav-stacked">
+						{{#each helppages group="ui"}}
+							<li>
+								<a href="/helppages/{{urlstring}}">{{title}}</a>
+							</li>
+						{{/each}}
+					</ul>
+				</li>
+			</ul>
+		</nav>
+	</div>
+</template>
+

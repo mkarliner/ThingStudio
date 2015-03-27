@@ -18,13 +18,12 @@ AdminConfig={
 	HelpPages:{
 		tableColumns: [
 		              {label: 'Page', name: 'pagenumber'},
-					  {label: "urlstring", name: "urlstring"},	
 		                {label: 'Title', name: 'title'}
-						
 		            ]
 	},
 	Users:{
 		
+		omitFields: ['updatedAt']
 	}
   }
 };
