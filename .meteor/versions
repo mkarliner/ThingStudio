@@ -54,7 +54,6 @@ minimongo@1.0.7
 mizzao:bootstrap-3@3.3.1_1
 mizzao:timesync@0.3.0
 mizzao:user-status@0.6.4
-mkarliner:mosca@0.0.4
 mkarliner:mqtt@0.0.6
 mkarliner:mqtt-regex@0.0.6
 mobile-status-bar@1.0.3

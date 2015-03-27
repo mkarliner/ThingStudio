@@ -32,6 +32,12 @@
 		<div class="row clearfix">
 			<div class="col-md-12 column">
 				{{> TopNav }}
+				<div>
+				{{#if isInRole 'admin'}}
+				    {{>onlineUsers}}
+						  
+				{{/if}}
+				</div>
 			</div>
 			<div class="col-md-12 column">
 				{{> yield}}

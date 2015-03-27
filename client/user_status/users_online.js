@@ -1,3 +1,10 @@
-Template.onlineUsers.usersOnline = function() {
-  return Meteor.users.find({ "status.online": true })
-};
+Template.onlineUsers.helpers ({
+	activeUsers: function() {
+  	  users =  Meteor.users.find({ "status.online": true })
+		console.log("ONL ", users.fetch())
+		return users;
+	}
+});
+
+
+
