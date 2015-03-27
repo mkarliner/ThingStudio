@@ -1,8 +1,13 @@
 <template name="onlineUsers">
 	Online: 
 	{{#each activeUsers}}
-	ddd
+	{{> userPill }}
 	{{/each}}
+</template>
+
+<template name="onlineAdmins">
+	Dev Chat: 
+		{{this}}
 </template>
 
 

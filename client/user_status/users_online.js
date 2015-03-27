@@ -6,5 +6,29 @@ Template.onlineUsers.helpers ({
 	}
 });
 
+Template.onlineAdmins.helpers ({
+	activeUsers: function() {
+		// Only needs one admin to be available.
+  	  user =  Meteor.users.findOne({ roles: "admin", "status.online": true })
+		if(user) {
+			return user.username;
+		} else {
+			return "offline"
+		}
+
+	}
+});
+
+Template.userPill.helpers({
+	labelClass: function() {
+  if (this.status.idle)
+    return "label-warning"
+  else if (this.status.online)
+    return "label-success"
+  else
+    return "label-default"
+	}
+});
+
 
 
