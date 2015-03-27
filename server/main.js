@@ -31,6 +31,10 @@
 		  }
 	  });
 	  
+	  Meteor.publish("userStatus", function() {
+	    return Meteor.users.find({ "status.online": true }, { fields: { emails: 1 } });
+	  });
+	  
 	  
 	  var ascoltatore = {
 	  	//using ascoltatore

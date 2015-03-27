@@ -22,6 +22,9 @@ AdminConfig={
 		                {label: 'Title', name: 'title'}
 						
 		            ]
+	},
+	Users:{
+		
 	}
   }
 };
