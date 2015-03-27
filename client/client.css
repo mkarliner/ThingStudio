@@ -55,14 +55,23 @@ label {
 	font-weight: 400;
 	font-size: 1.3em;
 }
+li.conn-stat {
+  display: none;
+}
+li.conn-stat a {
+  padding-top: 10px;
+}
 .Connection-status {
-	width: 1.958333em;
-	height: 1.958333em;
+	width: 2.758333em;
+	height: 2.758333em;
 	border-radius: 50%;
 	border: 3px solid white;
 	background: transparent;
 	float: right;
-	margin: 13px 15px 0 0;
+	margin: 0;
+}
+.navbar-header .Connection-status {
+  margin: 4px 15px 0 0;
 }
 .Connection-status.connected {
 	background: rgb(160, 227, 150);
@@ -76,21 +85,24 @@ label {
 .navbar-default {
 	background-color: rgb(174, 216, 230);
 	border: none;
-	padding: 1em 0 0.6em;
+	padding: 0.5em 0 0.8em;
 }
 .navbar-default .navbar-nav > li > a {
 	color: inherit;
 }
 .navbar-toggle {
 	float: left;
+      margin-top: 4px;
 }
 .navbar-default .navbar-toggle {
 	margin-left: 10px;
-	border: none;
+	border: 3px solid white;
+      border-radius: 50%;
+
 }
 .navbar-default .navbar-toggle .icon-bar {
 	background-color: white;
-	width: 34px;
+	width: 22px;
 	height: 4px;
 	border-radius: 2px;
 }
@@ -130,10 +142,10 @@ label {
 	padding: 0.6em 0;
 	text-transform: uppercase;
 	margin-right: 0.4em;
-	width: 31%;
+	width: 30.8%;
 	border-radius: 9px;
 }
-.status-button:nth-child(3) {
+.status-button:last-child {
 	margin-right: 0;
 }
 .btn {
@@ -155,6 +167,20 @@ label {
 .btn.status-button:active {
       -webkit-box-shadow: none;
       box-shadow: none;
+}
+.btn-top-nav {
+  font-size: 1.5em;
+  margin: 5px 8% 0;
+  background: transparent;
+  border: 3px solid white;
+  border-radius: 50%;
+  padding: 2px 7px;
+}
+.navbar-toggle.btn-top-nav {
+  padding: 2px 9px;
+}
+.btn-top-nav i {
+  color: white;
 }
 
 /* range selector styles: circle */
@@ -483,8 +509,6 @@ input[type="checkbox"].green.ios-switch:checked + div > div {
 /* String readout styles */
 .string-display {
   background-color: rgb(160, 227, 150);
-  height: 4em;
-  line-height: 3.9em;
   text-align: center;
   color: white;
 }
@@ -520,5 +544,11 @@ font-size: 4em;
 	.navbar-header .Connection-status {
 		display: none;
 	}
+      li.conn-stat {
+        display: block;
+      }
+      .btn-top-nav {
+        display: none;
+      }
 }
 

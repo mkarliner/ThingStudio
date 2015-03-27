@@ -7,7 +7,8 @@
 		      <span class="icon-bar"></span>
 		      <span class="icon-bar"></span>
 		      <span class="icon-bar"></span>
-		    </button>    
+		    </button>
+		    <a href="{{ pathFor 'connection' }}"><span class="Connection-status {{Connection_status}}"></span></a>
 		  </div>
 		  <div class="navbar-collapse collapse">
 		    <ul class="nav navbar-nav navbar-left">
@@ -29,7 +30,7 @@
 		  {{#if currentUser}}
 	   	  <li class="list-right main-nav-btn" role="presentation"><a class="list-right" href="/logout">Logout</a></li>
 		  {{/if}}
-		   <li class="list-right "><span class="Connection-status {{Connection_status}}"></span></li>
+		   <li class="list-right conn-stat"><a href="{{ pathFor 'connection' }}"><span class="Connection-status {{Connection_status}}"></span></a></li>
 		    </ul>
 		  </div>
 		</nav>
