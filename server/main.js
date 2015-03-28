@@ -7,7 +7,8 @@
 	  
 	  
 	  Meteor.publish("connections", function(){
-	  	return Connections.find({$or: [{owner: this.userId}]});
+	  	c = Connections.find({$or: [{owner: this.userId},  {public: true}]});
+		return c;
 	  });
 
 	  Meteor.publish("screens", function(){

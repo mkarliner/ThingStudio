@@ -7,7 +7,7 @@ Meteor.startup(function() {
 				conn = Connections.findOne({
 					autoConnect: true
 				});
-				// console.log("Autoconnect: ", conn);
+				console.log("Autoconnect: ", conn);
 				if (conn) {
 					connect(conn);
 				}
