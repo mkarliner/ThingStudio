@@ -65,6 +65,7 @@ mrt:moment@2.8.1
 npm-bcrypt@0.7.8_1
 observe-sequence@1.0.5
 okgrow:analytics@0.2.0
+olark@0.0.0
 ordered-dict@1.0.3
 raix:handlebar-helpers@0.2.4
 random@1.0.3

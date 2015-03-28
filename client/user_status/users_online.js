@@ -7,9 +7,10 @@ Template.onlineUsers.helpers ({
 });
 
 Template.onlineAdmins.helpers ({
-	activeUsers: function() {
+	activeAdmin: function() {
 		// Only needs one admin to be available.
-  	  user =  Meteor.users.findOne({ roles: "admin", "status.online": true })
+		user =  Meteor.users.findOne({ roles: "admin", "status.online": true });
+		console.log("AU  ", user)
 		if(user) {
 			return user.username;
 		} else {

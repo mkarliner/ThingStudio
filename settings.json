@@ -2,6 +2,9 @@
   "public": {
     "analyticsSettings": {
       "Google Analytics" : {"trackingId": "UA-60443781-4"}
+    },
+    "olark": {
+	"identity": "9694-347-10-9101"
     }
   }
 }
