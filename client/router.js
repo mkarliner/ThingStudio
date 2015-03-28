@@ -82,6 +82,7 @@ Router.route("/connection", function(){
 
 
 Router.route("/screens/:_id", function(){
+	this.layout("GeneralLayout");
 	this.render("Screen", {
 		data: function(){
 			Session.set("currentScreenPage", this.params._id);
