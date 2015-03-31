@@ -15,6 +15,10 @@ publish = function(topic, message) {
 Session.set("ConnectionStatus", false);
 
 connect = function (conn) {
+	if (typeof mqttClient.end == 'function') { 
+		console.log("Ending current client");
+	  mqttClient.end(); 
+	}
 	protocol = conn.protocol == "MQTT" ? "mqtt" : "ws";
 	ConnectionString = protocol + "://" + conn.host + ":" + conn.port;
 	mqttClient = mqtt.connect(ConnectionString);
