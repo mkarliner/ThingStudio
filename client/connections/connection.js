@@ -1,8 +1,11 @@
 Template.Connection.helpers({
 	
-	context: function() {
-		console.log("THJ ", this);
-		return this;
+	connection: function() {
+		Session.get("ConnectionStatus");
+	
+		c = Connections.findOne();
+		console.log("CS ", c);
+		return c;
 	}
 	
 });

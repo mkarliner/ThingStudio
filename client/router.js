@@ -61,6 +61,9 @@ Router.route("/connections", function(){
 });
 
 Router.route("/connection", function(){
+	this.layout("GeneralLayout");
+	this.wait(Meteor.subscribe("connections"));
+	if(this.ready()){
 		this.render("Connection", {
 			data: function(){
 				console.log("CONN", Connections.findOne());
@@ -70,14 +73,17 @@ Router.route("/connection", function(){
 				} else {
 					Connections.insert({
 						title: "Modern Industry", 
-						host: "mqtt.modern-industry.com", 
+						host: "mqtt.thingstud.io", 
 						port: 9001, protocol: "Websocket", 
+						owner: Meteor.userId(),
 						autoConnect: true});
 					return Connections.findOne();
 				}
 				
 			}
 		})
+	}
+		
 });
 
 

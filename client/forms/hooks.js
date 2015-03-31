@@ -116,6 +116,17 @@ AutoForm.hooks({
 				console.log("AFTER FEED IN ", err, res, template);
 			}
 		}
+	},
+	updateConnectionForm: {
+		after: {
+			update: function(err, res, template) {
+				console.log("AFTER CON UPDATE: ", err, res, template);
+				Session.set("ConnectionStatus", false);
+				connect(template.data.doc);
+				Router.go("/screens");
+				
+			}
+		}
 	}
 
 
