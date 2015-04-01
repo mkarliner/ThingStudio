@@ -34,7 +34,7 @@
 	  
 	  Meteor.publish("userStatus", function() {
 		  user = Meteor.users.findOne({_id: this.userId});
-		  if(user &&  user.roles && user.roles['admin']) {
+		  if(user &&  user.roles && user.roles.indexOf('admin')> -1) {
 		  	 return Meteor.users.find({ "status.online": true }, { fields: { status: 1, username: 1 } });
 		  } else {
 			 this.ready();
@@ -44,10 +44,12 @@
 	  
 	  Meteor.publish("userList", function() {
 		  user = Meteor.users.findOne({_id: this.userId});
-		  // console.log("ADM : ", user);
-		  if(user && user.roles && user.roles['admin']) {
+		  console.log("ADM : ", user);
+		  if(user && user.roles && user.roles.indexOf('admin')> -1) {
+			  console.log("ALLUSERS");
 		  	 return Meteor.users.find({  }, { fields: { status: 1, username: 1 } });
 		  } else {
+			  console.log("ONEUSER")
 			 this.ready();
 		  }
 	  })
