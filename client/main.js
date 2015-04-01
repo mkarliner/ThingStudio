@@ -60,13 +60,15 @@ Meteor.startup(function() {
 		});
 
 		Meteor.subscribe("userStatus");
+		
+		Meteor.subscribe("userList");
 
 	});
 
 		AccountsTemplates.addField({
-			_id: "mailing_list",
+			_id: "mailing_opt_out",
 			type: "checkbox",
-			displayName: "Subscribe me to mailing List",
+			displayName: "Do not subscribe me to the mailing list",
 		});
 
 		// Accounts.onCreateUser(function(options, user) {

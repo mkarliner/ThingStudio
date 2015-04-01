@@ -33,9 +33,8 @@
 	  });
 	  
 	  Meteor.publish("userStatus", function() {
-		  return Meteor.users.find({ "status.online": true }, { fields: { status: 1, username: 1 } });
-		  user = Meteor.users.find({_id: this.userId});
-		  if(user.roles && user.roles['admin']) {
+		  user = Meteor.users.findOne({_id: this.userId});
+		  if(user &&  user.roles && user.roles['admin']) {
 		  	 return Meteor.users.find({ "status.online": true }, { fields: { status: 1, username: 1 } });
 		  } else {
 			 this.ready();
@@ -43,12 +42,22 @@
 	    
 	  });
 	  
+	  Meteor.publish("userList", function() {
+		  user = Meteor.users.findOne({_id: this.userId});
+		  // console.log("ADM : ", user);
+		  if(user && user.roles && user.roles['admin']) {
+		  	 return Meteor.users.find({  }, { fields: { status: 1, username: 1 } });
+		  } else {
+			 this.ready();
+		  }
+	  })
+	  
 	  Meteor.publish("adminStatus", function() {
 	  	 return Meteor.users.find({roles: "admin", "status.online": true}, { fields: { status: 1, username: 1 } })
 	  });
 	  
 	  
-
+	  
 
   });
 

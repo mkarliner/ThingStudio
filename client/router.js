@@ -152,4 +152,12 @@ Router.route("/getting_started", {
 	    }
 });
 
+Router.route("/users", function(){
+	this.render("Users", {
+		data: function() {
+			return Meteor.users.find({});
+		}
+	});
+})
+
 
