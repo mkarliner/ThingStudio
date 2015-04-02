@@ -21,7 +21,8 @@ connect = function (conn) {
 	}
 	protocol = conn.protocol == "MQTT" ? "mqtt" : "ws";
 	ConnectionString = protocol + "://" + conn.host + ":" + conn.port;
-	mqttClient = mqtt.connect(ConnectionString);
+	console.log("Connecting: ", conn.username, conn.password);
+	mqttClient = mqtt.connect(ConnectionString, {username: conn.username, password: conn.password});
 	mqttClient.on("connect", function(){
 		Session.set("ConnectionStatus", true);
 		feeds = Feeds.find({}).fetch();

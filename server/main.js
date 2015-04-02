@@ -7,8 +7,12 @@
 	  
 	  
 	  Meteor.publish("connections", function(){
-	  	c = Connections.find({$or: [{owner: this.userId}]});
-		return c;
+		  if(this.userId) {
+	  	  	c = Connections.find({$or: [{owner: this.userId}]});
+		  } else {
+  	  	  	c = Connections.find({public: true});
+		  }
+		  return c;
 	  });
 
 	  Meteor.publish("screens", function(){
@@ -44,12 +48,12 @@
 	  
 	  Meteor.publish("userList", function() {
 		  user = Meteor.users.findOne({_id: this.userId});
-		  console.log("ADM : ", user);
+		  //console.log("ADM : ", user);
 		  if(user && user.roles && user.roles.indexOf('admin')> -1) {
-			  console.log("ALLUSERS");
+			  //console.log("ALLUSERS");
 		  	 return Meteor.users.find({  }, { fields: { status: 1, username: 1 } });
 		  } else {
-			  console.log("ONEUSER")
+			  //console.log("ONEUSER")
 			 this.ready();
 		  }
 	  })
