@@ -1,7 +1,13 @@
 AdminConfig={
 	 nonAdminRedirectRoute: 'entrySignIn',
   collections: {
-    Connections: {},
+    Connections: {
+		tableColumns: [
+			{label: "Title", name: "title"},
+			{label: "Public", name: "public"},
+			{label: "Owner", name: "owner", template: "Owner"}
+		]
+    },
 	Screens: {
 		tableColumns: [
 			{label: "Title", name: "title"},

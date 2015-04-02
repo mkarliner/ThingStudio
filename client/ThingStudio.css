@@ -11,11 +11,19 @@ div.inline { float:left; }
 	min-width:  600px;
 }
 
+#welcome_to_thingstudio {
+	text-align: center;
+}
+
 #home-content {
 	margin-left: auto;
 	margin-right: auto;
+/*	text-align: center;*/
+	max-width: 600px;
+}
+
+.home-links {
 	text-align: center;
-	max-width: 400px;
 }
 
 #screenList {

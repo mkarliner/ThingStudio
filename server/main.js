@@ -8,9 +8,20 @@
 	  
 	  Meteor.publish("connections", function(){
 		  if(this.userId) {
-	  	  	c = Connections.find({$or: [{owner: this.userId}]});
+	  	  	c = Connections.find({owner: this.userId});
+			if(!c) {
+				console.log("Creating connection for new user");
+				c = Connections.insert({
+					title: "Modern Industry", 
+					host: "mqtt.thingstud.io", 
+					port: 9001, protocol: "Websocket", 
+					owner: this.userId,
+					username: "guest",
+					password: "guest",
+					autoConnect: true});
+			}
 		  } else {
-  	  	  	c = Connections.find({public: true});
+		    c = Connections.find({public: true});
 		  }
 		  return c;
 	  });

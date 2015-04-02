@@ -42,6 +42,10 @@ Schemas.Connection = new SimpleSchema({
 			omit: true
 		},
 		autoValue: function(){
+			console.log("AV : ", this);
+			if(this.value) {
+				return;
+			}
 			if(this.isInsert) {
 				return Meteor.userId();
 			} else if(this.isUpsert) {

@@ -7,27 +7,27 @@ Router.configure({
 AccountsTemplates.configureRoute('signIn');
 
 
-Router.onBeforeAction(function() {
-	if (!Meteor.user()) {
+Router.onBeforeAction(function(par) {
+	console.log("Before action", par);
+	if (!Meteor.user() && !Meteor.loggingIn() ) {
 		this.layout("HelpLayout");
 		this.render("Login");
-		this.next();
 	} else {
-		this.render("/viewermenu")
 		this.next();
 	}
-}, { except: ["/", "/help/about"]});
+}, { except: ["Home", "Help", "Helppages"]});
 
 
 
 Router.route("/", function(){
 	if (Meteor.user()  ) {
-		this.layout("ViewerLayout");
-		this.render("ViewerMenu");
+		this.redirect("Screens");
 	} else {
 		this.layout('HomeLayout');
 		this.render("Home");
 	}
+}, {
+	name: "Home"
 });
 
 Router.route("/logout", function(){
@@ -76,6 +76,8 @@ Router.route("/connection", function(){
 						host: "mqtt.thingstud.io", 
 						port: 9001, protocol: "Websocket", 
 						owner: Meteor.userId(),
+						username: "guest",
+						password: "guest",
 						autoConnect: true});
 					return Connections.findOne();
 				}
@@ -100,6 +102,8 @@ Router.route("/screens/:_id", function(){
 Router.route("/screens", function(){
 	this.layout("GeneralLayout");
 	this.render("Screens");
+}, {
+	name: "Screens"
 });
 
 Router.route("/themes/:_id", function(){
@@ -132,6 +136,8 @@ Router.route("/help", function() {
 	this.layout("HelpContainer");
 	this.render("HelpMenu");
 	
+}, {
+	name: "Help"
 });
 
 Router.route("/helppages/:urlstring", function(){
@@ -141,6 +147,8 @@ Router.route("/helppages/:urlstring", function(){
 			return HelpPages.findOne({urlstring: this.params.urlstring});
 		}
 	});
+}, {
+	name: "Helppages"
 });
 
 Router.route("/getting_started", {
