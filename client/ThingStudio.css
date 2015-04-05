@@ -12,7 +12,10 @@ div.inline { float:left; }
 }
 
 #welcome_to_thingstudio {
+	display: block;
 	text-align: center;
+	margin-left: auto;
+	margin-right: auto;
 }
 
 #home-content {
@@ -23,6 +26,17 @@ div.inline { float:left; }
 }
 
 .home-links {
+	text-align: center;
+	margin-top: 10px;
+}
+
+#help-menu-title {
+	text-align: center;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.help-menu-item {
 	text-align: center;
 }
 

@@ -1,11 +1,13 @@
 <template name="HelpMenu">
-	<h1>Help Pages</h1>
-	<a href="http://www.thingstud.io">Watch the introductory screencast</a>
+	<h1 id="help-menu-title">Help Pages</h1>
 	
 	<table class="table">
+	    <tr>
+	        <td class="help-menu-item"><a href="http://www.thingstud.io/getting-started.html" target="_blank" class="help-menu-item">Watch the introductory screencast</a></td>
+	    </tr>
 		{{#each helppages}}
 		<tr>
-			<td><a href="/helppages/{{urlstring}}">{{title}}</a></td>
+			<td class="help-menu-item"><a href="/helppages/{{urlstring}}">{{title}}</a></td>
 		</tr>
 		{{/each}}
 	</table>

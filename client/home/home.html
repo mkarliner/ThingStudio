@@ -1,21 +1,23 @@
 <template name="Home">
 	<div id="home-content">
-		<h1 id="welcome_to_thingstudio">Welcome to ThingStudio</h1>
+		<img id="welcome_to_thingstudio" src=" logo-alpha-black.png" alt="Welcome to ThingStudio"/>
 		<p>ThingStudio is a UI editor and server for MQTT based networks. You can create dynamic, real-time UI's for the Internet of Things using only HTML based templates</p>
 	
 		<p>Unlike the majority of cloud platforms for the Internet of Things, ThingStudio does not require you to send home network data into a proprietary platform. Your IoT data stays within your network, and we just provide the UI's that you design.</p>
 	
 		<p>You get the convenience of a cloud based service for the complex task of designing and managing UI's, and the privacy, speed and low latency of your own network handling your data</p>
+		
+		<p><strong>ThingStudio is very new, so please, allow for this, and ask for help, send us bug reports, and give us suggestions!</strong></p>
 		<div class="home-links">		
-			<a href="/help">Find out more</a>
+			<button class="btn"><a href="/help">Help Pages</a></button>
 		</div>
 		<!-- <div><a href="/screens">See demo without registering</a></div> -->
 		{{#unless currentUser}}
-		<div class="home-links"><a href="/sign-in">Sign Up or In</a></div>
+		<div class="home-links"><button class="btn"><a href="/sign-in">Sign Up or In</a></button></div>
 		{{/unless}}
 		{{#if currentUser}}
 		<div class="home-links">
-			<a href="/screens">Enter</a>
+			<button class="btn"><a href="/screens">Enter</a></button>
 		</div>
 		{{/if}}
 
