@@ -56,7 +56,7 @@ connect = function (conn) {
 			result = regex(topic);
 			if(result) {
 				// console.log("Feed matched", result);
-				Messages.upsert({topic: topic}, {$set: {feed: feeds[i].title, topic: topic, message: message.toString()}});
+				Messages.upsert({topic: topic, feed: feeds[i].title}, {$set: {feed: feeds[i].title, topic: topic, message: message.toString()}});
 			}
 		}
 		
