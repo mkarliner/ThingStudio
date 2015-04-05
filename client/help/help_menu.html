@@ -11,4 +11,13 @@
 		</tr>
 		{{/each}}
 	</table>
+	
+	{{#unless currentUser}}
+	<div class="home-links"><button class="btn"><a href="/sign-in">Sign Up or In</a></button></div>
+	{{/unless}}
+	{{#if currentUser}}
+	<div class="home-links">
+		<button class="btn"><a href="/screens">Enter</a></button>
+	</div>
+	{{/if}}
 </template>
