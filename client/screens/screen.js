@@ -101,7 +101,7 @@ Template.Screen.helpers({
 	},
 	accessStatus: function(){
 		if(this.owner != Meteor.userId()) {
-			return "This Screen is read - only, you can make edits, but they will have no effect."
+			return "This Screen is read - only, you can make edits, but they will have no effect. Go to 'Screen' and click 'Add Screen' to edit your own."
 		}
 	}
 });
