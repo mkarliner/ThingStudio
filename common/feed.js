@@ -21,6 +21,7 @@ Schemas.Feed = new SimpleSchema({
 	},
 	owner: {
 		type: String,
+		index: true,
 		autoform: {
 			omit: true
 		},

@@ -13,6 +13,7 @@ Schemas.Screen = new SimpleSchema({
 	},
 	tags: {
 		type: [String],
+		index: true,
 		optional: true
 	},
 	theme: {
@@ -46,6 +47,7 @@ Schemas.Screen = new SimpleSchema({
 	},
 	owner: {
 		type: String,
+		index: true,
 		autoform: {
 			omit: true
 		},
