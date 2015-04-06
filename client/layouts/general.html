@@ -23,20 +23,18 @@
 	
   {{> autoformModals}}
 
-  <header>
+<!--   <header>
     <h1>{{title}}</h1>
-  </header>
+  </header> -->
 	
-	
-	<div class="container">
+	{{> TopNav }}
+	<div class="container-fluid">
 		<div class="row clearfix">
 			<div class="col-md-12 column">
-				{{> TopNav }}
 				<div>
 				<!-- {{> onlineAdmins }} -->
 				{{#if isInRole 'admin'}}
 				    {{>onlineUsers}}
-						  
 				{{/if}}
 				</div>
 			</div>
@@ -45,8 +43,6 @@
 			</div>
 		</div>
 	</div>
-	
-
   <footer>
 
   </footer>

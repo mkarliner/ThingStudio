@@ -86,6 +86,7 @@ li.conn-stat a {
 	background-color: rgb(174, 216, 230);
 	border: none;
 	padding: 0.5em 0 0.8em;
+      border-radius: 0;
 }
 .navbar-default .navbar-nav > li > a {
 	color: inherit;
