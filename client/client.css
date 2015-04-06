@@ -80,6 +80,10 @@ li.conn-stat a {
 	background: rgb(226, 137, 119);
 }
 
+.onlineUsers {
+  padding: 1em 0;
+}
+
 /* Bootstrap overrides */
 
 .navbar-default {
