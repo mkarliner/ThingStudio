@@ -1,5 +1,5 @@
 
-var mailingLists = new MailChimpLists();
+ mailingLists = new MailChimpLists();
 
 var merge_vars = {
     EMAIL: '/* E-MAIL ADDRESS */',
@@ -28,18 +28,31 @@ mcparams = {
 Accounts.onCreateUser(function(options, user){
 	// console.log("NEWUSER: ",options, "USER", user);
 
-	
+	mcparams.emails = [{email: options.email}];
+	info = mailingLists.call("member-info", mcparams);
+	console.log("MCINFO: ", info)
 	// console.log("MCP: ", mcparams);
 	if(options.profile.mailing_opt_out == false) {
-		mailingLists.subscribe({
+		try {
+			mailingLists.subscribe({
+				"email": {"email": options.email},
+				id: Meteor.settings.private.MailChimp.listId,
+				merge_vars: {
+					groupings:[{name: 'Subscription medium', groups: ["application"], }] 
+				}
+			});
+		}
+		catch(err) {
+			console.log("ERR:", err);
+		}
+
+		mailingLists.call("update-member", {
 			"email": {"email": options.email},
 			id: Meteor.settings.private.MailChimp.listId,
 			merge_vars: {
-				groupings:[{name: 'Subscription medium', groups: ["application"], }] 
+				groupings:[{name: 'Subscription medium', groups: ["application"], }]
 			}
-		}, function(err, obj){
-			console.log("MAILCHIMP: ", err, obj);
-		})
+		});
 	}
 	return user;
 });
