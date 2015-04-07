@@ -188,6 +188,13 @@ li.conn-stat a {
   color: white;
 }
 
+.at-input.checkbox label {
+  padding-left: 20px;
+  line-height: 20px;
+}
+
+
+
 /* range selector styles: circle */
 
 input[type=range].knob-slider {
