@@ -13,11 +13,11 @@
 	</table>
 	
 	{{#unless currentUser}}
-	<div class="home-links"><button class="btn"><a href="/sign-in">Sign Up or In</a></button></div>
+	<div class="home-links"><div class="btn"><a href="/sign-in">Sign Up or In</a></div></div>
 	{{/unless}}
 	{{#if currentUser}}
 	<div class="home-links">
-		<button class="btn"><a href="/screens">Enter Studio</a></button>
+		<div class="btn"><a href="/screens">Enter Studio</a></div>
 	</div>
 	{{/if}}
 </template>

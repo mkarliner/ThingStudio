@@ -9,15 +9,15 @@
 		
 		<p><strong>ThingStudio is very new, so please, allow for this, and ask for help, send us bug reports, and give us suggestions!</strong></p>
 		<div class="home-links">		
-			<button class="btn"><a href="/help">Help Pages</a></button>
+			<div class="btn"><a href="/help">Help Pages</a></div>
 		</div>
 		<!-- <div><a href="/screens">See demo without registering</a></div> -->
 		{{#unless currentUser}}
-		<div class="home-links"><button class="btn"><a href="/sign-in">Sign Up or In</a></button></div>
+		<div class="home-links"><div class="btn"><a href="/sign-in">Sign Up or In</a></div></div>
 		{{/unless}}
 		{{#if currentUser}}
 		<div class="home-links">
-			<button class="btn"><a href="/screens">Enter Studio</a></button>
+			<div class="btn"><a href="/screens">Enter Studio</a></div>
 		</div>
 		{{/if}}
 
