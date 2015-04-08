@@ -24,7 +24,8 @@ AdminConfig={
 	HelpPages:{
 		tableColumns: [
 		              {label: 'Page', name: 'pagenumber'},
-		                {label: 'Title', name: 'title'}
+		                {label: 'Title', name: 'title'},
+		                {label: 'Last Updated', name: 'updatedAt'}
 		            ]
 	},
 	Users:{
