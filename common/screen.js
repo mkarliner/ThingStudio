@@ -1,6 +1,15 @@
 Screens = new Mongo.Collection("screens");
 
 
+boilerplate = Screens.findOne({title: "VerySpecialSecretBoilerPlateScreen"});
+
+if(boilerplate) {
+	defaultScreenContent = boilerplate.html;
+} else {
+	defaultScreenContent = "<!-- Screen content here -->";
+}
+	
+
 
 
 Schemas = {};
@@ -43,7 +52,7 @@ Schemas.Screen = new SimpleSchema({
 	          // summernote options goes here
 	        }
 		},
-		defaultValue: "<!-- Comment -->"
+		defaultValue: defaultScreenContent
 	},
 	owner: {
 		type: String,
