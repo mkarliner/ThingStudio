@@ -29,8 +29,8 @@ Accounts.onCreateUser(function(options, user){
 	// console.log("NEWUSER: ",options, "USER", user);
 
 	mcparams.emails = [{email: options.email}];
-	info = mailingLists.call("member-info", mcparams);
-	console.log("MCINFO: ", info)
+	// info = mailingLists.call("member-info", mcparams);
+	//console.log("MCINFO: ", info)
 	// console.log("MCP: ", mcparams);
 	if(options.profile.mailing_opt_out == false) {
 		try {
@@ -45,14 +45,19 @@ Accounts.onCreateUser(function(options, user){
 		catch(err) {
 			console.log("ERR:", err);
 		}
+		try {
+			mailingLists.call("update-member", {
+				"email": {"email": options.email},
+				id: Meteor.settings.private.MailChimp.listId,
+				merge_vars: {
+					groupings:[{name: 'Subscription medium', groups: ["application"], }]
+				}
+			});
+		}
+		catch(err) {
+			console.log("ERR:", err);
+		}
 
-		mailingLists.call("update-member", {
-			"email": {"email": options.email},
-			id: Meteor.settings.private.MailChimp.listId,
-			merge_vars: {
-				groupings:[{name: 'Subscription medium', groups: ["application"], }]
-			}
-		});
 	}
 	return user;
 });
