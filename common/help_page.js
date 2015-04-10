@@ -27,7 +27,7 @@ Schemas.HelpPage = new SimpleSchema({
 		label: "Body",
 		optional: true,
 		autoform: {
-			rows: 5
+			rows: 30
 		}
 	},
 	updatedAt: {
