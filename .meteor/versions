@@ -67,7 +67,6 @@ mrt:moment@2.8.1
 npm-bcrypt@0.7.8_2
 observe-sequence@1.0.6
 okgrow:analytics@0.2.0
-olark@0.0.0
 ordered-dict@1.0.3
 raix:handlebar-helpers@0.2.4
 random@1.0.3
@@ -85,6 +84,7 @@ spacebars@1.0.6
 spacebars-compiler@1.0.6
 srp@1.0.3
 templating@1.1.1
+tkornblit:olark@0.9.1
 tracker@1.0.7
 ui@1.0.6
 underscore@1.0.3
