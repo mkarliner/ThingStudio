@@ -6,9 +6,10 @@
 	
 	<h1>Screens</h1>
 	<table class="table screens-table">
-	<tr><th>Title</th><th>Status</th></tr>
+	<tr><th>Title</th>Size<th>Status</th></tr>
 	{{#each screenlist}}
 		<tr><td><a  class="screenlink">{{this.title}}</a></td>
+			<td>{{html.length}}</td>
 			<td>{{status}}</td>	
 			<td>{{#afModal class="btn btn-danger" collection="Screens" operation="remove" doc=_id}} Delete {{/afModal}}</td>
 		</tr>

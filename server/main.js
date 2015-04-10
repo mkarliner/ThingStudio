@@ -1,7 +1,7 @@
 isAdmin = function(userId){
   user = Meteor.users.findOne({_id: userId});
   if(user &&  user.roles && user.roles.indexOf('admin')> -1) {
-	  console.log("Admin user", user);
+	  // console.log("Admin user", user);
   	 return true;
   } else {
 	 return false;
