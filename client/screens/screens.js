@@ -9,7 +9,7 @@ Template.Screens.helpers({
 			return("Public read-only")
 		} else {
 			u = Meteor.users.findOne(this.owner);
-			return u.username;
+			return u ? u.username : "Unknown";
 		}
 	}
 });
