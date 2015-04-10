@@ -8,7 +8,8 @@ Template.Screens.helpers({
 		} else if(this.public == true) {
 			return("Public read-only")
 		} else {
-			return "Shouldn't happen"
+			u = Meteor.users.findOne(this.owner);
+			return u.username;
 		}
 	}
 });

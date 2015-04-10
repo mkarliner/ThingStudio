@@ -43,7 +43,7 @@ Schemas.Connection = new SimpleSchema({
 			omit: true
 		},
 		autoValue: function(){
-			console.log("AV : ", this);
+			//console.log("AV : ", this);
 			if(this.value) {
 				return;
 			}

@@ -12,13 +12,13 @@ mcparams = {
 };
 
  mailingLists.interestGroupings(mcparams, function(err, obj){
-	console.log("GROUPS: ", err, obj, obj[0].groups);
+	//console.log("GROUPS: ", err, obj, obj[0].groups);
 });
  
  mailingLists.call("list", function(err, obj){
-	console.log("Lists: ", err, obj.data);
+	//console.log("Lists: ", err, obj.data);
     mailingLists.call("merge-vars",{id: {id: "04301b0b27"} }, function(err, obj){
-   	console.log("MERGEV: ", err, obj.data[0].merge_vars);
+   	//console.log("MERGEV: ", err, obj.data[0].merge_vars);
    });
 	
 });

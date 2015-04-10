@@ -1,4 +1,12 @@
-
+isAdmin = function(userId){
+  user = Meteor.users.findOne({_id: userId});
+  if(user &&  user.roles && user.roles.indexOf('admin')> -1) {
+	  console.log("Admin user", user);
+  	 return true;
+  } else {
+	 return false;
+  }
+}
 
   Meteor.startup(function () {
     // code to run on server at startup
@@ -27,7 +35,12 @@
 	  });
 
 	  Meteor.publish("screens", function(){
-	  	return Screens.find({$or: [{owner: this.userId}, {public: true}]});
+		  if(isAdmin(this.userId)) {
+			  return Screens.find({});
+		  } else {
+		  	  return Screens.find({$or: [{owner: this.userId}, {public: true}]});
+		  }
+	  	
 	  });
 	  Meteor.publish("feeds", function(){
 	  	return Feeds.find({$or: [{owner: this.userId}, {public: true}]});
