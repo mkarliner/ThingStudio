@@ -151,7 +151,7 @@ ThingStudio templates use 'data' suffixed attributes to indicate
 which feeds should be updated. There are current two attributes:
 
 data-feed: <the name of the feed to be updated>
-data-message: < the message to send (buttons only)>
+data-message: <the message to send (buttons only)>
 
 In the case of controls with a 'value' attribute, the value
 is sent as the message.
