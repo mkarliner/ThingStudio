@@ -123,7 +123,7 @@ Router.route("/feeds", function(){
 	this.render("Feeds");
 });
 
-Router.route("/help/about", function(){
+Router.route("/docs/about", function(){
 	this.layout("HelpLayout");
 	this.render("HelpAbout");
 });
@@ -132,15 +132,15 @@ Router.route("/debug", function(){
 	this.render("Debug");
 });
 
-Router.route("/help", function() {
+Router.route("/docs", function() {
 	this.layout("HelpContainer");
 	this.render("HelpMenu");
 	
 }, {
-	name: "Help"
+	name: "Docs"
 });
 
-Router.route("/helppages/:urlstring", function(){
+Router.route("/docs/:urlstring", function(){
 	this.layout("HelpContainer");
 	this.render("HelpPage", {
 		data: function(){
