@@ -1,6 +1,11 @@
 TunguskaGaugeThemePack = {};
 
 Meteor.startup(function() {
+	Meteor.call("foreignConnections", function(err, result){
+		Session.set("foreignConnections", result)
+		console.log("FC: ", err, result);
+		
+	})
 
 		Meteor.subscribe("connections", {
 			onReady: function() {
@@ -78,4 +83,3 @@ Meteor.startup(function() {
 		//
 		//     return user;
 		// }
-	

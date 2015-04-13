@@ -1,18 +1,15 @@
 <template name="Connections">
 
-<p>TODO: Make enable/disable on Connections with autoconnect option.</p>
 
 
 
-	<ul>
-	{{#each connections}}
 
-		<li class="Connection-list">{{this.title}}</li><li class="Connection-list"><button class="connect">Connect</button></li>
+	<table>
+	{{#each foreignConnections}}
+		<tr>
+			<td>{{host}}</td>
+			<td>{{username owner}}</td>
+		</tr>
 	{{/each}}
-	</ul>
-	
-	<div id="connection-status">
-		Status: {{Connection_status}}
-	</div>
-	
+	</table>
 </template>

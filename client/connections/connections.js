@@ -76,6 +76,14 @@ Template.Connections.helpers({
 	// Connection_status: function(){
 	// 	return Session.get("ConnectionStatus") ? "connected" : "disconnected";
 	// }
+	foreignConnections: function(){
+		fc = Session.get("foreignConnections");
+		console.log("TC: ", fc);
+		return fc;
+	},
+	username: function(id) {
+		return Meteor.users.findOne(id).username;
+	}
 });
 
 

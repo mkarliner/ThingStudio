@@ -6,6 +6,7 @@ Template.Connection.helpers({
 		c = Connections.findOne();
 		console.log("CS ", c);
 		return c;
-	}
+	},
 	
+
 });
