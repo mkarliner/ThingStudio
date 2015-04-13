@@ -1,5 +1,5 @@
 Template.sideNav.helpers({
-	helppages: function(group){
+	docs: function(group){
 		console.log(group.hash.group);
 		return HelpPages.find({group: group.hash.group}, {sort: {pagenumber: 1}});
 	}
