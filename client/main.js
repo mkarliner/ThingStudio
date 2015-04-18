@@ -1,9 +1,18 @@
 TunguskaGaugeThemePack = {};
 
+
 Meteor.startup(function() {
+	
+	window.onerror = function (errorMsg, url, lineNumber, column, errorObj) {
+	    alert('Error: ' + errorMsg + ' Script: ' + url + ' Line: ' + lineNumber
+	    + ' Column: ' + column + ' StackTrace: ' +  errorObj);
+		Session.set("runtimeErrors", errorMsg);
+	} 
+	
+	
 	Meteor.call("foreignConnections", function(err, result){
 		Session.set("foreignConnections", result)
-		console.log("FC: ", err, result);
+		// console.log("FC: ", err, result);
 		
 	})
 
@@ -12,7 +21,7 @@ Meteor.startup(function() {
 				conn = Connections.findOne({
 					autoConnect: true
 				});
-				console.log("Autoconnect: ", conn);
+				// console.log("Autoconnect: ", conn);
 				if (conn) {
 					connect(conn);
 				}
