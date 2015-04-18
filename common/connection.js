@@ -7,7 +7,7 @@ Schemas = {};
 Schemas.Connection = new SimpleSchema({
 	title: {
 		type: String,
-		label: "Name",
+		label: "Title",
 		max: 200,
 	},
 	host: {
