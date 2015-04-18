@@ -13,6 +13,7 @@ publish = function(topic, message) {
 
 
 Session.set("ConnectionStatus", false);
+Session.set("connectionErrors", null);
 
 connect = function (conn) {
 	if (typeof mqttClient.end == 'function') { 
@@ -22,9 +23,17 @@ connect = function (conn) {
 	protocol = conn.protocol == "MQTT" ? "mqtt" : "ws";
 	ConnectionString = protocol + "://" + conn.host + ":" + conn.port;
 	console.log("Connecting: ", conn.username, conn.password);
-	mqttClient = mqtt.connect(ConnectionString, {username: conn.username, password: conn.password});
+	try {
+		mqttClient = mqtt.connect(ConnectionString, {username: conn.username, password: conn.password});
+		console.log("MQQC:", mqttClient)
+	}
+	catch(err) {
+		console.log(err)
+		Session.set("connectionErrors", err);
+	}
 	mqttClient.on("connect", function(){
 		Session.set("ConnectionStatus", true);
+		Session.set("connectionErrors", null);
 		feeds = Feeds.find({}).fetch();
 		i =0;
 		for(i=0; i<feeds.length; i++) {
@@ -36,14 +45,17 @@ connect = function (conn) {
 	mqttClient.on("close", function(){
 		console.log("close");
 		Session.set("ConnectionStatus", false);
+		Session.set("connectionErrors", "Closed")
 	});
 	mqttClient.on("offline", function(){
 		console.log("offline");
 		Session.set("ConnectionStatus", false);
+		Session.set("connectionErrors", "Offline");
 	});
 	mqttClient.on("error", function(e){
 		console.log("Connection error", e)
 		Session.set("ConnectionStatus", false);
+		Session.set("connectionErrors", e);
 	});
 	mqttClient.on("message", function(topic, message){
 		//Actually do something useful.
