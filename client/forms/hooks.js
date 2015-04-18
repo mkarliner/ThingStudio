@@ -1,6 +1,15 @@
+var checkFeed = function(feed) {
+	f = Feeds.findOne({title: feed});
+	console.log("CF: ", feed)
+	if(!f) {
+		Session.set("runtimeErrors", "Unknown feed " + feed);
+	}
+}
+
 compileTemplate = function(name, html_text) {
 	try {
 		Session.set("compilationErrors", "");
+		Session.set("runtimeErrors", null);
 		var compiled = SpacebarsCompiler.compile(html_text, {
 			isTemplate: true
 		});
@@ -11,11 +20,13 @@ compileTemplate = function(name, html_text) {
 		//Template.__define__(name, renderer);
 		Template[name].helpers({
 			messages: function(feed) {
+				checkFeed(feed);
 				return Messages.find({
 					feed: feed
 				});
 			},
 			message: function(feed){
+				checkFeed(feed);
 				msg = Messages.findOne({
 					feed: feed
 				});
@@ -75,6 +86,7 @@ compileTemplate = function(name, html_text) {
 		});
 		
 		Template[name].rendered = function(){
+			console.log("RENDERED", this)			
 			// console.log("RENDERED: ", this.findAll("[data-feed]"));
 		}
 	} catch (err) {
