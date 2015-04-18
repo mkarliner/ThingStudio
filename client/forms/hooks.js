@@ -1,9 +1,13 @@
 var checkFeed = function(feed) {
-	f = Feeds.findOne({title: feed});
-	console.log("CF: ", feed)
-	if(!f) {
-		Session.set("runtimeErrors", "Unknown feed " + feed);
+	if(typeof feed != "string" ) {
+		Session.set("runtimeErrors", "Feedname needs to be a string");
+		return;
 	}
+	f = Feeds.findOne({title: feed});
+	console.log("CF: ", f)
+	if(typeof f == "undefined") {
+		Session.set("runtimeErrors", "Unknown feed " + feed);
+	} 
 }
 
 compileTemplate = function(name, html_text) {
@@ -86,7 +90,7 @@ compileTemplate = function(name, html_text) {
 		});
 		
 		Template[name].rendered = function(){
-			console.log("RENDERED", this)			
+			// console.log("RENDERED", this)
 			// console.log("RENDERED: ", this.findAll("[data-feed]"));
 		}
 	} catch (err) {

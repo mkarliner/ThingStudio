@@ -8,7 +8,7 @@ AccountsTemplates.configureRoute('signIn');
 
 
 Router.onBeforeAction(function(par) {
-	console.log("Before action", par);
+	// console.log("Before action", par);
 	if (!Meteor.user() && !Meteor.loggingIn() ) {
 		this.layout("HelpLayout");
 		this.render("Login");

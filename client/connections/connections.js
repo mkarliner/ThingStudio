@@ -25,7 +25,7 @@ connect = function (conn) {
 	console.log("Connecting: ", conn.username, conn.password);
 	try {
 		mqttClient = mqtt.connect(ConnectionString, {username: conn.username, password: conn.password});
-		console.log("MQQC:", mqttClient)
+		// console.log("MQQC:", mqttClient)
 	}
 	catch(err) {
 		console.log(err)
