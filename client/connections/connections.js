@@ -62,12 +62,12 @@ connect = function (conn) {
 		//console.log("Message received", topic, message);
 		//Convert message to JSON
 		try {
-			message = JSON.parse(rawmessage);
+			payload = JSON.parse(rawmessage);
 		}
 		catch(err) {
 			console.log("MERR: ", err);
 			Session.set("runtimeErrors", "Invalid MQTT message, payload not JSON: " + rawmessage.toString());
-			message = rawmessage.toString();
+			payload = rawmessage.toString();
 		}
 		feeds = Feeds.find({}).fetch();
 		i =0;
@@ -77,7 +77,7 @@ connect = function (conn) {
 			result = regex(topic);
 			if(result) {
 				// console.log("Feed matched", result);
-				Messages.upsert({topic: topic, feed: feeds[i].title}, {$set: {feed: feeds[i].title, topic: topic, message: message}});
+				Messages.upsert({topic: topic, feed: feeds[i].title}, {$set: {feed: feeds[i].title, topic: topic, payload: payload}});
 			}
 		}
 		

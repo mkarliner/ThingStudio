@@ -1,4 +1,4 @@
-var checkFeed = function(feed) {
+ checkFeed = function(feed) {
 	if(typeof feed != "string" ) {
 		Session.set("runtimeErrors", "Feedname needs to be a string");
 		return false;
@@ -36,10 +36,10 @@ compileTemplate = function(name, html_text) {
 				msg = Messages.findOne({
 					feed: feed
 				});
-				return msg ? msg.message : "-";
+				return msg ? msg.payload : "-";
 			},
-			feedmatch: function(feedname, match){
-				feed = Feeds.findOne({title: feedname});
+			feedmatch: function(match){
+				feed = Feeds.findOne({title: this.feed});
 				// console.log("FEEDMATCH: ", feed, match);
 				regex = mqttregex(feed.subscription).exec;
 				params = regex(this.topic);
