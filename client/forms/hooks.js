@@ -51,6 +51,9 @@ compileTemplate = function(name, html_text) {
 				attr = ev.currentTarget.attributes;
 				// console.log("TEMPLATE CLICK: ", this, attr);
 				feed_name = attr.getNamedItem("data-feed");
+				if(typeof feed_name == "undefined") {
+					return;
+				}
 				message = attr.getNamedItem("data-message");
 				// console.log("FN: ", feed_name.value, message.value)
 				feed = Feeds.findOne({title: feed_name.value});
@@ -68,11 +71,19 @@ compileTemplate = function(name, html_text) {
 			'change input': function(ev) {
 				console.log("INPUT CHANGED", this, ev);
 				attr = ev.currentTarget.attributes;
-				
 				feed_name = attr.getNamedItem("data-feed");
+				console.log("FEEDNAME: ", feed_name)
+				if(!feed_name) {
+					Session.set("runtimeErrors", "Missing feed name");
+					return;
+				}
 				value = $(ev.target).val();
-
+				checkFeed(feed_name);
 				feed = Feeds.findOne({title: feed_name.value});
+				
+				if(typeof feed == "undefined") {
+					return;
+				}
 				// console.log(feed);
 				publish(feed.subscription, value);
 			},
