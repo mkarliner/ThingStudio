@@ -22,3 +22,8 @@ AccountsTemplates.addFields([
 	  required: true
   }
 ]);
+
+
+AccountsTemplates.configure({
+		showForgotPasswordLink: true
+});
