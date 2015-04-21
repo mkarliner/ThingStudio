@@ -20,8 +20,13 @@ Router.onBeforeAction(function(par) {
 
 
 Router.route("/", function(){
-	if (Meteor.user()  ) {
-		this.redirect("Screens");
+	u = Meteor.user();
+	if (u) {
+		if(u.profile.showWelcome) {
+			this.redirect("/welcome");
+		} else {
+			this.redirect("Screens");
+		}
 	} else {
 		this.layout('HomeLayout');
 		this.render("Home");
@@ -166,6 +171,17 @@ Router.route("/users", function(){
 			return Meteor.users.find({});
 		}
 	});
+})
+
+Router.route("/welcome", function(){
+	this.layout("GeneralLayout");
+	this.render("Welcome", {
+		data: function() {
+			Meteor.users.update({_id: Meteor.userId()}, {$set: {"profile.showWelcome": false}});
+			u.profile.showWelcome = false;
+			return HelpPages.findOne({urlstring: "Welcome"});
+		}
+	})
 })
 
 

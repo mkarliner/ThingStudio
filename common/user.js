@@ -47,7 +47,11 @@ Schema.UserProfile = new SimpleSchema({
     country: {
         type: Schema.UserCountry,
         optional: true
-    }
+    },
+	showWelcome: {
+		type: Boolean,
+		defaultValue: true
+	}
 });
 
 Schema.User = new SimpleSchema({
