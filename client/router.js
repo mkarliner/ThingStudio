@@ -22,7 +22,7 @@ Router.onBeforeAction(function(par) {
 Router.route("/", function(){
 	u = Meteor.user();
 	if (u) {
-		if(u.profile.showWelcome) {
+		if(u.profile && u.profile.showWelcome) {
 			this.redirect("/welcome");
 		} else {
 			this.redirect("Screens");
