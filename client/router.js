@@ -178,7 +178,6 @@ Router.route("/welcome", function(){
 	this.render("Welcome", {
 		data: function() {
 			Meteor.users.update({_id: Meteor.userId()}, {$set: {"profile.showWelcome": false}});
-			u.profile.showWelcome = false;
 			return HelpPages.findOne({urlstring: "Welcome"});
 		}
 	})
