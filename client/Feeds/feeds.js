@@ -2,6 +2,9 @@ Template.Feeds.helpers({
 	feedlist: function(){
 		console.log("feeds")
 		return Feeds.find({})
+	},
+	ownerName: function(){
+		return Meteor.users.findOne({_id: this.owner}).username;
 	}
 });
 

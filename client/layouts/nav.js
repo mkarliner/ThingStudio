@@ -1,5 +1,5 @@
-Template.TopNav.helpers({
-	isInRole: function(role) {
+Template.registerHelper("isInRole",
+	 function(role) {
 		u = Meteor.user();
 		if(u) {
 			roles = u.roles;
@@ -11,5 +11,4 @@ Template.TopNav.helpers({
 		} else {
 			return false;
 		}
-	} 
-});
+	});

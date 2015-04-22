@@ -14,6 +14,10 @@
 		<tr>
 			<td><a  class="screenlink">{{this.title}}</a></td>
 			<td>{{subscription}}</td>	
+			{{#if isInRole 'admin'}}
+
+			<td>{{ownerName}}</td>
+			{{/if}}
 			<td>	{{#afModal class="btn btn-primary" collection="Feeds" doc=_id operation="update"}} Edit	{{/afModal}}</td>
 			<td>{{#afModal class="btn btn-danger" collection="Feeds" operation="remove" doc=_id}} Delete  {{/afModal}}</td>
 		</tr>
