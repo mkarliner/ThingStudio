@@ -1,6 +1,8 @@
 Feeds = new Mongo.Collection("feeds");
 
-
+SimpleSchema.messages({
+  "uniqueFeed": "Title must be unique"
+});
 
 Schemas = {};
 
@@ -8,6 +10,13 @@ Schemas.Feed = new SimpleSchema({
 	title: {
 		type: String,
 		label: "Title",
+		custom: function () {
+			f = Feeds.findOne({title: this.value});
+			console.log("FEEDSSS", f);
+			if(f) {
+				return "uniqueFeed";
+			}
+		},
 		max: 200
 	},
 	subscription: {
@@ -43,6 +52,8 @@ Schemas.Feed = new SimpleSchema({
 	
 	
 });
+
+
 
 Feeds.attachSchema(Schemas.Feed);
 

@@ -4,7 +4,8 @@ Template.Feeds.helpers({
 		return Feeds.find({})
 	},
 	ownerName: function(){
-		return Meteor.users.findOne({_id: this.owner}).username;
+		owner = Meteor.users.findOne({_id: this.owner});
+		return owner ? owner.username : "Owner Unknown";
 	}
 });
 

@@ -46,7 +46,7 @@ livedata@1.0.13
 localstorage@1.0.3
 logging@1.0.7
 markdown@1.0.4
-matb33:collection-hooks@0.7.11
+matb33:collection-hooks@0.7.13
 meteor@1.1.6
 meteor-platform@1.2.2
 minifiers@1.1.5
@@ -66,7 +66,7 @@ mpowaga:string-template@0.1.0
 mrt:moment@2.8.1
 npm-bcrypt@0.7.8_2
 observe-sequence@1.0.6
-okgrow:analytics@0.2.0
+okgrow:analytics@0.2.3
 ordered-dict@1.0.3
 raix:handlebar-helpers@0.2.4
 random@1.0.3
@@ -89,8 +89,8 @@ tracker@1.0.7
 ui@1.0.6
 underscore@1.0.3
 url@1.0.4
-useraccounts:bootstrap@1.8.1
-useraccounts:core@1.8.1
+useraccounts:bootstrap@1.9.1
+useraccounts:core@1.9.1
 webapp@1.2.0
 webapp-hashing@1.0.3
 yogiben:admin@1.1.0
