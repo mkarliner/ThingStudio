@@ -13,7 +13,7 @@ Schemas.Feed = new SimpleSchema({
 		custom: function () {
 			f = Feeds.findOne({title: this.value});
 			console.log("FEEDSSS", f);
-			if(f) {
+			if(f && f._id != this._id) {
 				return "uniqueFeed";
 			}
 		},
