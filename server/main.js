@@ -57,7 +57,8 @@ Meteor.startup(function() {
 
 	});
 	Meteor.publish("feeds", function() {
-		if (isAdmin(this.userId)) {
+		// if (isAdmin(this.userId)) {
+		if(false) {
 			return Feeds.find({});
 		} else {
 			return Feeds.find({

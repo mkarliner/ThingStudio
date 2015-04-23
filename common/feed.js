@@ -25,7 +25,7 @@ Schemas.Feed = new SimpleSchema({
 	},
 	action: {
 		type: String,
-		allowedValues:["Log", "Update"],
+		allowedValues:[ "Update"],
 		defaultValue: "Update"
 	},
 	owner: {
