@@ -11,11 +11,20 @@ Schemas.Feed = new SimpleSchema({
 		type: String,
 		label: "Title",
 		custom: function () {
-			f = Feeds.findOne({title: this.value});
-			console.log("FEEDSSS", f);
-			if(f && f._id != this._id) {
+			console.log(this.userId);
+			//First try to find my own duplicate.
+			f = Feeds.findOne({title: this.value, $or: [{owner: this.userId}, {public:true}]});
+			if(!f)
+			console.log("CKF ", f);
+			if(f  && this.isInsert) {
+				console.log("BOO")
 				return "uniqueFeed";
 			}
+			if(f && f._id != this.docId) {
+				console.log("Baa")
+				return "uniqueFeed";
+			}
+			console.log("ALLOK")
 		},
 		max: 200
 	},
@@ -46,7 +55,14 @@ Schemas.Feed = new SimpleSchema({
 	},
 	public: {
 		type: Boolean,
-		defaultValue: false
+		defaultValue: false,
+		custom: function(){
+			f = Feeds.findOne({title: this.field("title").value});
+			console.log("PUBCK", this.field("title"), f);
+			if(f && this.value == true) {
+				return "uniqueFeed";
+			}
+		}
 	}
 	
 	
