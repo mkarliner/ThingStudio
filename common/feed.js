@@ -1,7 +1,8 @@
 Feeds = new Mongo.Collection("feeds");
 
 SimpleSchema.messages({
-  "uniqueFeed": "Title must be unique"
+  "uniqueFeed": "Title must be unique",
+  "noPublicWildcard": "Wildcard feeds cannot be public"
 });
 
 Schemas = {};
@@ -57,6 +58,12 @@ Schemas.Feed = new SimpleSchema({
 		type: Boolean,
 		defaultValue: false,
 		custom: function(){
+			if(this.field("subscription").value.indexOf("#") > 0 && this.value == true) {
+				return "noPublicWildcard";
+			}
+			if(this.field("subscription").value.indexOf("+") > 0 && this.value == true) {
+				return "noPublicWildcard";
+			}
 			f = Feeds.findOne({title: this.field("title").value});
 			console.log("PUBCK", this.field("title"), f);
 			if(f && this.value == true) {
