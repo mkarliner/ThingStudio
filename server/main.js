@@ -57,16 +57,13 @@ Meteor.startup(function() {
 
 	});
 	Meteor.publish("feeds", function() {
-		// if (isAdmin(this.userId)) {
-		if(false) {
-			return Feeds.find({});
-		} else {
-			return Feeds.find({
+		return Feeds.find({
+			$or: [{
 				owner: this.userId
 			}, {
 				public: true
-			});
-		}
+			}]
+		});
 	});
 	Meteor.publish("themes", function() {
 		return Themes.find({
