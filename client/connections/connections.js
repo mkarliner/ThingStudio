@@ -57,9 +57,18 @@ connect = function (conn) {
 		Session.set("ConnectionStatus", false);
 		Session.set("connectionErrors", e);
 	});
-	mqttClient.on("message", function(topic, message){
+	mqttClient.on("message", function(topic, rawmessage){
 		//Actually do something useful.
 		//console.log("Message received", topic, message);
+		//Convert message to JSON
+		try {
+			payload = JSON.parse(rawmessage);
+		}
+		catch(err) {
+			console.log("MERR: ", err);
+			Session.set("runtimeErrors", "Invalid MQTT message, payload not JSON: " + rawmessage.toString());
+			payload = rawmessage.toString();
+		}
 		feeds = Feeds.find({}).fetch();
 		i =0;
 		for(i=0; i<feeds.length; i++) {
@@ -68,7 +77,7 @@ connect = function (conn) {
 			result = regex(topic);
 			if(result) {
 				// console.log("Feed matched", result);
-				Messages.upsert({topic: topic, feed: feeds[i].title}, {$set: {feed: feeds[i].title, topic: topic, message: message.toString()}});
+				Messages.upsert({topic: topic, feed: feeds[i].title}, {$set: {feed: feeds[i].title, topic: topic, payload: payload}});
 			}
 		}
 		

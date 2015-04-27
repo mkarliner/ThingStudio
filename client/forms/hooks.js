@@ -1,13 +1,15 @@
-var checkFeed = function(feed) {
+ checkFeed = function(feed) {
 	if(typeof feed != "string" ) {
 		Session.set("runtimeErrors", "Feedname needs to be a string");
-		return;
+		return false;
 	}
 	f = Feeds.findOne({title: feed});
-	console.log("CF: ", f)
+	//console.log("CF: ", f)
 	if(typeof f == "undefined") {
 		Session.set("runtimeErrors", "Unknown feed " + feed);
+		return false;
 	} 
+	return true;
 }
 
 compileTemplate = function(name, html_text) {
@@ -34,10 +36,10 @@ compileTemplate = function(name, html_text) {
 				msg = Messages.findOne({
 					feed: feed
 				});
-				return msg ? msg.message : "-";
+				return msg ? msg.payload : "-";
 			},
-			feedmatch: function(feedname, match){
-				feed = Feeds.findOne({title: feedname});
+			feedmatch: function(match){
+				feed = Feeds.findOne({title: this.feed});
 				// console.log("FEEDMATCH: ", feed, match);
 				regex = mqttregex(feed.subscription).exec;
 				params = regex(this.topic);
@@ -51,32 +53,30 @@ compileTemplate = function(name, html_text) {
 				attr = ev.currentTarget.attributes;
 				// console.log("TEMPLATE CLICK: ", this, attr);
 				feed_name = attr.getNamedItem("data-feed");
-				if(typeof feed_name == "undefined") {
+				console.log("FN: ", feed_name);
+				if(!checkFeed(feed_name.value)){
 					return;
-				}
+				};
 				message = attr.getNamedItem("data-message");
 				// console.log("FN: ", feed_name.value, message.value)
 				feed = Feeds.findOne({title: feed_name.value});
 				console.log(feed);
-				publish(feed.subscription, message ? message.value : "click");
+				publish(feed.subscription, JSON.stringify(message ? message.value : "click"));
 			},
 			'change input[type="checkbox"]': function(ev) {
 				attr = ev.currentTarget.attributes;
 				feed_name = attr.getNamedItem("data-feed");
+				checkFeed(feed_name.value);
 				value = attr.getNamedItem("checked");
 				feed = Feeds.findOne({title: feed_name.value});
-				publish(feed.subscription, ev.target.checked.toString());
+				publish(feed.subscription, JSON.stringify(ev.target.checked.toString()));
 				ev.stopImmediatePropagation();
 			},
 			'change input': function(ev) {
 				console.log("INPUT CHANGED", this, ev);
 				attr = ev.currentTarget.attributes;
 				feed_name = attr.getNamedItem("data-feed");
-				console.log("FEEDNAME: ", feed_name)
-				if(!feed_name) {
-					Session.set("runtimeErrors", "Missing feed name");
-					return;
-				}
+				checkFeed(feed_name.value);
 				value = $(ev.target).val();
 				checkFeed(feed_name);
 				feed = Feeds.findOne({title: feed_name.value});
@@ -85,16 +85,17 @@ compileTemplate = function(name, html_text) {
 					return;
 				}
 				// console.log(feed);
-				publish(feed.subscription, value);
+				publish(feed.subscription, JSON.stringify(value));
 			},
 			'input': function(ev) {
 				// console.log("INPUT ", ev);
 				attr = ev.currentTarget.attributes;
 				feed_name = attr.getNamedItem("data-feed");
+				checkFeed(feed_name.value);
 				if(attr.getNamedItem("data-continuous")) {
 					value = $(ev.target).val();
 					feed = Feeds.findOne({title: feed_name.value});
-					publish(feed.subscription, value);
+					publish(feed.subscription, JSON.stringify(value));
 				}
 				
 			}

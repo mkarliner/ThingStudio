@@ -1,0 +1,11 @@
+<template name="messagelist">
+    {{#each messages_list this}}
+        {{>UI.contentBlock this}}    
+    {{/each}}
+</template>
+
+
+<template name="_messagelist_noop">
+    <div><strong>Invalid Feed!</strong></div>
+    {{>UI.contentBlock}}    
+</template>
