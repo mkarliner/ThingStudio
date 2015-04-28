@@ -6,7 +6,7 @@
 			<tr>
 				<td>{{topic}}</td>
 				<td>{{feed}}</td>
-				<td>{{message}}</td>
+				<td>{{payload}}</td>
 			</tr>
 		{{/each}}
 	</table>
@@ -15,8 +15,9 @@
 		{{#each outbox }}
 			<tr>
 				<td>{{topic}}</td>
-				<td>{{message}}</td>
+				<td>{{payload}}</td>
 			</tr>
 		{{/each}}
 	</table>
+<div class="screen-errors">Runtime Errors: {{runtimeErrors}}</div>
 </template>

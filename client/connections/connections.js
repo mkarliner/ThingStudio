@@ -59,10 +59,11 @@ connect = function (conn) {
 	});
 	mqttClient.on("message", function(topic, rawmessage){
 		//Actually do something useful.
-		//console.log("Message received", topic, message);
+		//console.log("Message received", topic, rawmessage);
 		//Convert message to JSON
 		try {
 			payload = JSON.parse(rawmessage);
+			// console.log("Payload rx: ", payload);
 		}
 		catch(err) {
 			console.log("MERR: ", err);

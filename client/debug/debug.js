@@ -5,5 +5,8 @@ Template.Debug.helpers({
 	},
 	outbox: function(){
 		return Outbox.find({});
+	},
+	runtimeErrors: function(){
+		return Session.get("runtimeErrors");
 	}
 })
