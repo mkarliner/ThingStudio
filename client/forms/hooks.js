@@ -1,4 +1,5 @@
  checkFeed = function(feed) {
+	 // console.log("Check feed ", feed)
 	if(typeof feed != "string" ) {
 		Session.set("runtimeErrors", "Feedname needs to be a string");
 		return false;
@@ -73,12 +74,12 @@ compileTemplate = function(name, html_text) {
 				ev.stopImmediatePropagation();
 			},
 			'change input': function(ev) {
-				console.log("INPUT CHANGED", this, ev);
+				// console.log("INPUT CHANGED", this, ev);
 				attr = ev.currentTarget.attributes;
 				feed_name = attr.getNamedItem("data-feed");
 				checkFeed(feed_name.value);
 				value = $(ev.target).val();
-				checkFeed(feed_name);
+				checkFeed(feed_name.value);
 				feed = Feeds.findOne({title: feed_name.value});
 				
 				if(typeof feed == "undefined") {
