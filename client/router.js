@@ -15,7 +15,7 @@ Router.onBeforeAction(function(par) {
 	} else {
 		this.next();
 	}
-}, { except: ["Home", "Help", "Helppages"]});
+}, { except: ["Home", "Help", "Helppages", "ViewScreen"]});
 
 
 
@@ -58,6 +58,8 @@ Router.route("/viewer/screen/:_id", function(){
 			return Screens.findOne({_id: this.params._id});
 		}
 	});
+}, {
+	name: "ViewScreen"
 });
 
 
