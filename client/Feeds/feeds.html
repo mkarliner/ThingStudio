@@ -9,8 +9,25 @@
 	
 	<h1>Your Feeds</h1>
 	<table class="table feeds-table">
-	<tr cellpadding="10"><th>Title</th><th>Subscription</th></tr>
+	<tr cellpadding="10"><th>Title</th><th>Subscription</th><th>Public</th></tr>
 	{{#each feedlist}}
+		<tr>
+			<td><a  class="screenlink">{{this.title}}</a></td>
+			<td>{{subscription}}</td>	
+			<td>{{public}}</td>
+			{{#if isInRole 'admin'}}
+
+			<td>{{ownerName}}</td>
+			{{/if}}
+			<td>	{{#afModal class="btn btn-primary" collection="Feeds" doc=_id operation="update"}} Edit	{{/afModal}}</td>
+			<td>{{#afModal class="btn btn-danger" collection="Feeds" operation="remove" doc=_id}} Delete  {{/afModal}}</td>
+		</tr>
+	{{/each}}
+	</table>
+	<h1>Public Feeds</h1>
+	<table class="table feeds-table">
+	<tr cellpadding="10"><th>Title</th><th>Subscription</th></tr>
+	{{#each publicfeeds}}
 		<tr>
 			<td><a  class="screenlink">{{this.title}}</a></td>
 			<td>{{subscription}}</td>	
@@ -23,6 +40,5 @@
 		</tr>
 	{{/each}}
 	</table>
-	
 
 </template>
