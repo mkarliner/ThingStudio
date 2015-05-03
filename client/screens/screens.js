@@ -1,5 +1,11 @@
 Template.Screens.helpers({
 	screenlist: function(){
+		return Screens.find({public: false, owner: Meteor.userId()})
+	},
+	publicscreens: function() {
+		return Screens.find({public: true})
+	},
+	allscreens: function() {
 		return Screens.find({})
 	},
 	status: function(){
