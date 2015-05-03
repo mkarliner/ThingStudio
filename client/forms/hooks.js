@@ -26,7 +26,7 @@ compileTemplate = function(name, html_text) {
 		Template[name] = new Template("Template." + name, renderer);
 		//Template.__define__(name, renderer);
 		Template[name].helpers({
-			messages: function(feed) {
+			oldmessages: function(feed) {
 				checkFeed(feed);
 				return Messages.find({
 					feed: feed

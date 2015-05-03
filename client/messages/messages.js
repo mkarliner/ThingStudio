@@ -18,7 +18,7 @@
 // });
 
 
-Template.messagelist.helpers({
+Template.messages.helpers({
 	messages_list: function(feedname) {
 		// console.log("Feednamexxx", feedname);
 		msgs =  Messages.find({ feed: feedname}).fetch();
