@@ -1,6 +1,6 @@
 Template.Screens.helpers({
 	screenlist: function(){
-		return Screens.find({public: false, owner: Meteor.userId()})
+		return Screens.find({ owner: Meteor.userId()})
 	},
 	publicscreens: function() {
 		return Screens.find({public: true})
@@ -10,7 +10,7 @@ Template.Screens.helpers({
 	},
 	status: function(){
 		if(this.owner == Meteor.userId()) {
-			return "Owner";
+			return "Owner" + (this.public==true ? ",Public" : "");
 		} else if(this.public == true) {
 			return("Public read-only")
 		} else {
