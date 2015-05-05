@@ -20,11 +20,11 @@ connect = function (conn) {
 		console.log("Ending current client");
 	  mqttClient.end(); 
 	}
-	protocol = conn.protocol == "MQTT" ? "mqtt" : "ws";
+	protocol = conn.protocol == "Websocket" ? "ws" : "wss";
 	ConnectionString = protocol + "://" + conn.host + ":" + conn.port;
-	console.log("Connecting: ", conn.username, conn.password);
+	console.log("Connecting: ", protocol, conn.username, conn.password);
 	try {
-		mqttClient = mqtt.connect(ConnectionString, {username: conn.username, password: conn.password});
+		mqttClient = mqtt.connect(ConnectionString, { username: conn.username, password: conn.password});
 		// console.log("MQQC:", mqttClient)
 	}
 	catch(err) {

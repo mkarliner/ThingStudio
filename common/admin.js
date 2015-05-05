@@ -28,9 +28,9 @@ AdminConfig={
 		                {label: 'Last Updated', name: 'updatedAt'}
 		            ]
 	},
-	Users:{
-		
-		omitFields: ['updatedAt']
-	}
+	// Users:{
+	//
+	// 	omitFields: ['updatedAt']
+	// }
   }
 };

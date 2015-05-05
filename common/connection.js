@@ -21,7 +21,7 @@ Schemas.Connection = new SimpleSchema({
 	},
 	protocol: {
 		type: String,
-		allowedValues:["MQTT", "Websocket"],
+		allowedValues:["Websocket", "SecureWebsocket"],
 		defaultValue: "Websocket"
 	},
 	username: {
