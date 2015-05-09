@@ -70,6 +70,13 @@ Schemas.Screen = new SimpleSchema({
 			}
 		}
 	},
+	appId: {
+		type: String,
+		index: true,
+		autoform: {
+			omit: true
+		},
+	},
 	// updatesHistory: {
 // 		type: [Object],
 // 		optional: true,

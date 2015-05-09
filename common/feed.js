@@ -54,6 +54,13 @@ Schemas.Feed = new SimpleSchema({
 			}
 		}
 	},
+	appId: {
+		type: String,
+		index: true,
+		autoform: {
+			omit: true
+		},
+	},
 	public: {
 		type: Boolean,
 		defaultValue: false,

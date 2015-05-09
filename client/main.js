@@ -9,12 +9,14 @@ Meteor.startup(function() {
 	// 		Session.set("runtimeErrors", errorMsg);
 	// 	} 
 	
+
 	
 	Meteor.call("foreignConnections", function(err, result){
 		Session.set("foreignConnections", result)
 		// console.log("FC: ", err, result);
 		
-	})
+	});
+	
 
 		Meteor.subscribe("connections", {
 			onReady: function() {

@@ -37,6 +37,7 @@ Schemas.Connection = new SimpleSchema({
 		defaultValue: true
 	},
 	owner: {
+		optional: true, // Now ownership is a property of the containing app.
 		type: String,
 		index: true,
 		autoform: {
@@ -47,6 +48,9 @@ Schemas.Connection = new SimpleSchema({
 			if(this.value) {
 				return;
 			}
+			if(Meteor.isServer) {
+				return;
+			}
 			if(this.isInsert) {
 				return Meteor.userId();
 			} else if(this.isUpsert) {
@@ -55,6 +59,13 @@ Schemas.Connection = new SimpleSchema({
 				this.unset();
 			}
 		}
+	},
+	appId: {
+		type: String,
+		index: true,
+		autoform: {
+			omit: true
+		},
 	},
 	public: {
 		type: Boolean,

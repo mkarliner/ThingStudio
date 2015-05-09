@@ -38,12 +38,17 @@ Schemas.Theme = new SimpleSchema({
 			}
 		}
 	},
+	appId: {
+		type: String,
+		index: true,
+		autoform: {
+			omit: true
+		},
+	},
 	public: {
 		type: Boolean,
 		defaultValue: false
-	}
-	
-	
+	}	
 });
 
 Themes.attachSchema(Schemas.Theme);
