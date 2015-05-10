@@ -69,7 +69,7 @@ Router.route("/connections", function(){
 
 Router.route("/connection", function(){
 	this.layout("GeneralLayout");
-	this.wait(Meteor.subscribe("connections"));
+	this.wait(Meteor.subscribe("connections", Session.get("currentApp")._id));
 	if(this.ready()){
 		this.render("Connection", {
 			data: function(){
@@ -83,6 +83,7 @@ Router.route("/connection", function(){
 						host: "mqtt.thingstud.io", 
 						port: 9001, protocol: "Websocket", 
 						owner: Meteor.userId(),
+						appId: Session.get("currentApp")._id,
 						username: "guest",
 						password: "guest",
 						autoConnect: true});
@@ -105,6 +106,14 @@ Router.route("/screens/:_id", function(){
 		}
 	});
 });
+
+Router.route("/apps", function(){
+	this.layout("GeneralLayout");
+	this.render("Apps");
+}, {
+	name: "Apps"
+});
+
 
 Router.route("/screens", function(){
 	this.layout("GeneralLayout");

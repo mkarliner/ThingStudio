@@ -60,6 +60,14 @@ Schemas.Feed = new SimpleSchema({
 		autoform: {
 			omit: true
 		},
+		autoValue: function(that) {
+			console.log("APD: ", this, that)
+			if(Meteor.isClient) {
+				console.log("FEAIP ", Session.get("currentApp")._id);
+				return Session.get("currentApp")._id;
+			}
+			
+		}
 	},
 	public: {
 		type: Boolean,

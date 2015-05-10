@@ -17,7 +17,7 @@ Schemas.App = new SimpleSchema({
 		},
 		autoValue: function(){
 			if(Meteor.isServer) {
-				return;
+				return this.userId;
 			}
 			if(this.isInsert) {
 				return Meteor.userId();
