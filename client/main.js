@@ -30,7 +30,17 @@ Meteor.startup(function() {
 	  ca  = Session.get("currentApp");
 	  if(ca) {
 		  console.log("SUB: ", ca.title);
-		  Meteor.subscribe("connections",ca._id);
+		  Meteor.subscribe("connections",ca._id, {
+			onReady: function(){
+				conn = Connections.findOne({
+					autoConnect: true
+				});
+				// console.log("Autoconnect: ", conn);
+				if (conn) {
+					connect(conn);
+				}
+			}
+		});
 		  Meteor.subscribe("feeds", ca._id);
 		  Meteor.subscribe("screens", ca._id);
 		  Meteor.subscribe("themes", ca._id);
