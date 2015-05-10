@@ -1,6 +1,5 @@
 Template.Feeds.helpers({
 	feedlist: function(){
-		console.log("feeds")
 		return Feeds.find({owner: Meteor.userId()})
 	},
 	publicfeeds: function() {
