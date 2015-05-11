@@ -6,7 +6,7 @@
     "olark": {
 	"identity": "9694-347-10-9101"
     },
-	"domain": "demo.thingstud.io"
+	"domain": "localhost:3000"
   },
   "private": {
 	  "MailChimp": {

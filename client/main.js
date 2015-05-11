@@ -21,17 +21,19 @@ Meteor.startup(function() {
 	
 	Meteor.subscribe("apps",  {
 		onReady: function() {
+			// console.log("APPS READY")
 			initialApp = Apps.findOne({title: "defaultApp"});
 			if(initialApp) {
 				Session.set("currentApp", initialApp);
-			} else {
+			} else if(Meteor.userId()) {
+				console.log("Creating default app on ready", Meteor.userId())
 				appId = Apps.insert({
 					title: "defaultApp",
 					access: "Private",
 				});
 				Session.set("currentApp", Apps.findOne({_id: appId}));
 			}
-			
+
 		}
 	});
 	

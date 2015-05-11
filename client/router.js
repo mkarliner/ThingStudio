@@ -15,7 +15,7 @@ Router.onBeforeAction(function(par) {
 	} else {
 		this.next();
 	}
-}, { except: ["Home", "Help", "Helppages", "ViewScreen"]});
+}, { except: ["Home", "Help", "Helppages", "ViewScreen", "ViewApp"]});
 
 
 
@@ -43,6 +43,27 @@ Router.route("/logout", function(){
 Router.route("/home", function(){
 	this.layout("HelpLayout")
 	this.render("Home");
+});
+
+Router.route("/view/app/:_id",function(){
+	this.layout("ViewerLayout");
+	this.wait(Meteor.subscribe("apps", this.params._id));
+	if(this.ready()){
+		// this.render("ViewApp",{
+		// 	data: function(){
+		// 		app = Apps.findOne({_id: this.params._id});
+		// 		console.log("ViewAppRoute: ", this.params._id,  app);
+		// 		Session.set("currentApp", app);
+		// 		return app;
+		// 	}
+		// });
+		app = Apps.findOne({_id: this.params._id});
+		console.log("ViewAppRoute: ", this.params._id,  app);
+		Session.set("currentApp", app);
+		Router.go("/viewer/screen/" + app.home_page);
+	}
+}, {
+	name: "ViewApp"
 });
 
 Router.route("/viewermenu", function(){
@@ -105,6 +126,16 @@ Router.route("/screens/:_id", function(){
 		data: function(){
 			Session.set("currentScreenPage", this.params._id);
 			return Screens.findOne({_id: this.params._id});
+		}
+	});
+});
+
+
+Router.route("/apps/:_id/share", function(){
+	this.layout("GeneralLayout");
+	this.render("ShareApp", {
+		data: function(){
+			return Apps.findOne({_id: this.params._id});
 		}
 	});
 });

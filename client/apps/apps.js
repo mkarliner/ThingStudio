@@ -17,4 +17,5 @@ Template.Apps.events({
 		Session.set("currentApp",this);
 		ResetMessages();
 	}
+	
 })

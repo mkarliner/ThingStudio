@@ -17,6 +17,20 @@ Schemas.App = new SimpleSchema({
 			rows: 3
 		}
 	},
+	home_page: {
+		type: String,
+		optional: true,
+		autoform: {
+			options: function(){
+				scrs = Screens.find({}, {title: 1}).fetch();
+				options = scrs.map(function(ele, idx, arry){
+					return {label: ele.title, value: ele._id}
+				})
+				console.log("SCR OPTIONS ", options)
+				return options;
+			}
+		}
+	},
 	owner: {
 		type: String,
 		index: true,
@@ -24,7 +38,6 @@ Schemas.App = new SimpleSchema({
 			omit: true
 		},
 		autoValue: function(thing){
-			console.log("THING ", thing)
 			if(this.isInsert) {
 				return Meteor.userId();
 			} else if(this.isUpsert) {

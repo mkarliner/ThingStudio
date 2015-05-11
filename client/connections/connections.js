@@ -23,7 +23,10 @@ ResetMessages = function() {
 
 DisconnectMQTT = function() {
 	console.log("SHUTTING DOWN CLIENT")
-	mqttClient.end()
+	if (typeof mqttClient.end == 'function') { 
+		console.log("Ending current client");
+	    mqttClient.end(); 
+	}
 }
 
 UnsubscribeAll = function(){
@@ -39,7 +42,7 @@ UnsubscribeAll = function(){
 connect = function (conn) {
 	if (typeof mqttClient.end == 'function') { 
 		console.log("Ending current client");
-	  mqttClient.end(); 
+	    mqttClient.end(); 
 	}
 	protocol = conn.protocol == "Websocket" ? "ws" : "wss";
 	ConnectionString = protocol + "://" + conn.host + ":" + conn.port;

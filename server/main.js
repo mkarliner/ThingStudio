@@ -103,8 +103,13 @@ Meteor.startup(function() {
 	console.log("No app count: ", no_app_cnt);
 	console.log("App count: ", app_cnt);
 
-	Meteor.publish("apps", function() {
-		return Apps.find({owner: this.userId});
+	Meteor.publish("apps", function(appId) {
+		if(appId) {
+			return Apps.find({_id: appId});
+		} else {
+			return Apps.find({owner: this.userId});
+		}
+		
 	});
 
 	Meteor.publish("connections", function(appId) {
