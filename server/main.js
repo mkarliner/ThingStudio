@@ -32,7 +32,7 @@ Meteor.startup(function() {
 			//console.log("Found app ok");
 			app_cnt++;
 		} else {
-			//console.log("No apps, creating default");
+			console.log("No apps, creating default", u._id);
 			no_app_cnt++;
 			app = {};
 			app._id  = Apps.insert({
@@ -109,41 +109,18 @@ Meteor.startup(function() {
 
 	Meteor.publish("connections", function(appId) {
 		app = Apps.findOne({_id: appId});
-		console.log("Subscribing connections: ", appId,  app.access)
+		// console.log("Subscribing connections: ", appId,  app.access)
 		if(this.userId == app.owner || app.access == "Shareable") {
-			console.log("Returning connections: ", Connections.find({appId: appId}).fetch().length )
+			// console.log("Returning connections: ", Connections.find({appId: appId}).fetch().length )
 			return Connections.find({appId: appId});
 		}
-		// if (this.userId) {
-		// 	c = Connections.find({
-		// 		owner: this.userId
-		// 	});
-		// 	if (!c) {
-		// 		console.log("Creating connection for new user");
-		// 		c = Connections.insert({
-		// 			title: "Modern Industry",
-		// 			host: "mqtt.thingstud.io",
-		// 			port: 9001,
-		// 			protocol: "Websocket",
-		// 			owner: this.userId,
-		// 			username: "guest",
-		// 			password: "guest",
-		// 			autoConnect: true
-		// 		});
-		// 	}
-		// } else {
-		// 	c = Connections.find({
-		// 		public: true
-		// 	});
-		// }
-		// return c;
 	});
 
 	Meteor.publish("screens", function(appId) {
 		app = Apps.findOne({_id: appId});
-		console.log("Subscribing screens: ", appId,  app.access)
+		// console.log("Subscribing screens: ", appId,  app.access)
 		if(this.userId == app.owner || app.access == "Shareable") {
-			console.log("Returning screends: ", Screens.find({appId: appId}).fetch().length )
+			// console.log("Returning screends: ", Screens.find({appId: appId}).fetch().length )
 			return Screens.find({appId: appId});
 		}
 		// if (isAdmin(this.userId)) {
@@ -161,9 +138,9 @@ Meteor.startup(function() {
 	});
 	Meteor.publish("feeds", function(appId) {
 		app = Apps.findOne({_id: appId});
-		console.log("Subscribing feeds: ", appId,  app.access)
+		// console.log("Subscribing feeds: ", appId,  app.access)
 		if(this.userId == app.owner || app.access == "Shareable") {
-			console.log("Returning feeds: ", Feeds.find({appId: appId}).fetch().length )
+			// console.log("Returning feeds: ", Feeds.find({appId: appId}).fetch().length )
 			return Feeds.find({appId: appId});
 		}
 		// return Feeds.find({
@@ -176,9 +153,9 @@ Meteor.startup(function() {
 	});
 	Meteor.publish("themes", function(appId) {
 		app = Apps.findOne({_id: appId});
-		console.log("Subscribing themes: ", appId,  app.access)
+		// console.log("Subscribing themes: ", appId,  app.access)
 		if(this.userId == app.owner || app.access == "Shareable") {
-			console.log("Returning themes: ", Themes.find({appId: appId}).fetch().length )
+			// console.log("Returning themes: ", Themes.find({appId: appId}).fetch().length )
 			return Themes.find({appId: appId});
 		}
 	});
@@ -242,7 +219,7 @@ Meteor.startup(function() {
 				}
 			});
 		} else {
-			//console.log("ONEUSER")
+			//console.log("ONEUSER") 
 			this.ready();
 		}
 	})

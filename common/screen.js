@@ -117,6 +117,14 @@ Schemas.Screen = new SimpleSchema({
 	
 });
 
+Screens.before.insert(function(userId, doc) {
+	if(Meteor.isClient) {
+		// console.log("BEFOREHOOK ", userId, doc, Session.get("currentApp"));
+		doc.appId = Session.get("currentApp")._id;
+	}
+});
+
+
 Screens.attachSchema(Schemas.Screen);
 
 Screens.allow({

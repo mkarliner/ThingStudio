@@ -15,8 +15,8 @@ Schemas.Feed = new SimpleSchema({
 			console.log(this.userId);
 			//First try to find my own duplicate.
 			f = Feeds.findOne({title: this.value, $or: [{owner: this.userId}, {public:true}]});
-			if(!f)
-			console.log("CKF ", f);
+			// if(!f)
+			// console.log("CKF ", f);
 			if(f  && this.isInsert) {
 				console.log("BOO")
 				return "uniqueFeed";
@@ -32,6 +32,11 @@ Schemas.Feed = new SimpleSchema({
 	subscription: {
 		type: String,
 
+	},
+	pubsub: {
+		type: String,
+		allowedValues: ["Publish", "Subscribe"],
+		defaultValue: "Publish"
 	},
 	action: {
 		type: String,
@@ -60,14 +65,6 @@ Schemas.Feed = new SimpleSchema({
 		autoform: {
 			omit: true
 		},
-		autoValue: function(that) {
-			console.log("APD: ", this, that)
-			if(Meteor.isClient) {
-				console.log("FEAIP ", Session.get("currentApp")._id);
-				return Session.get("currentApp")._id;
-			}
-			
-		}
 	},
 	public: {
 		type: Boolean,
@@ -80,7 +77,7 @@ Schemas.Feed = new SimpleSchema({
 				return "noPublicWildcard";
 			}
 			f = Feeds.findOne({title: this.field("title").value});
-			console.log("PUBCK", this.field("title"), f);
+			// console.log("PUBCK", this.field("title"), f);
 			if(f && this.value == true) {
 				return "uniqueFeed";
 			}
@@ -89,6 +86,14 @@ Schemas.Feed = new SimpleSchema({
 	
 	
 	
+});
+
+
+Feeds.before.insert(function(userId, doc) {
+	if(Meteor.isClient) {
+		// console.log("BEFOREHOOK ", userId, doc, Session.get("currentApp"));
+		doc.appId = Session.get("currentApp")._id;
+	}
 });
 
 

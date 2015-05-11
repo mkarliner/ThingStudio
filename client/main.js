@@ -32,10 +32,12 @@ Meteor.startup(function() {
 		  console.log("SUB: ", ca.title);
 		  Meteor.subscribe("connections",ca._id, {
 			onReady: function(){
+				console.log("CONNECTIONS FOUND: ", Connections.find().fetch());
 				conn = Connections.findOne({
 					autoConnect: true
 				});
 				// console.log("Autoconnect: ", conn);
+				console.log("Connect: ", conn)
 				if (conn) {
 					connect(conn);
 				}

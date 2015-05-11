@@ -78,6 +78,7 @@ Router.route("/connection", function(){
 				if(conn) {
 					return conn;
 				} else {
+					console.log("CREATING CONNECTION");
 					Connections.insert({
 						title: "Modern Industry", 
 						host: "mqtt.thingstud.io", 

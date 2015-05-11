@@ -15,10 +15,8 @@ Schemas.App = new SimpleSchema({
 		autoform: {
 			omit: true
 		},
-		autoValue: function(){
-			if(Meteor.isServer) {
-				return this.userId;
-			}
+		autoValue: function(thing){
+			console.log("THING ", thing)
 			if(this.isInsert) {
 				return Meteor.userId();
 			} else if(this.isUpsert) {
@@ -30,9 +28,20 @@ Schemas.App = new SimpleSchema({
 	},
 	access: {
 		type: String,
+		defaultValue: "Private",
 		allowedValues: ["Private", "Shareable", "Published"]
 	}
 	
+});
+
+Apps.before.remove(function(userId, doc) {
+	if(Meteor.isServer) {
+		console.log("APP DESTROY");
+		Connections.remove({appId: doc._id});
+		Feeds.remove({appId: doc._id});
+		Screens.remove({appId: doc._id});
+		Themes.remove({appId: doc._id});
+	}
 });
 
 Apps.attachSchema(Schemas.App);

@@ -15,6 +15,12 @@ publish = function(topic, message) {
 Session.set("ConnectionStatus", false);
 Session.set("connectionErrors", null);
 
+ResetMessages = function() {
+	console.log("RESETTING ALL MSGS");
+	Messages.remove();
+	Outbox.remove();
+}
+
 connect = function (conn) {
 	if (typeof mqttClient.end == 'function') { 
 		console.log("Ending current client");
@@ -22,7 +28,7 @@ connect = function (conn) {
 	}
 	protocol = conn.protocol == "Websocket" ? "ws" : "wss";
 	ConnectionString = protocol + "://" + conn.host + ":" + conn.port;
-	console.log("Connecting: ", protocol, conn.username, conn.password);
+	console.log("CONNECTING: ", ConnectionString, protocol, conn.username, conn.password);
 	try {
 		mqttClient = mqtt.connect(ConnectionString, { username: conn.username, password: conn.password});
 		// console.log("MQQC:", mqttClient)
