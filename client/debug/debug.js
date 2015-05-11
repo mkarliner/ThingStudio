@@ -1,5 +1,8 @@
 
 Template.Debug.helpers({
+	feeds: function() {
+		return Feeds.find();
+	},
 	messages: function(){
 		return Messages.find({});
 	},

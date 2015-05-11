@@ -20,11 +20,11 @@ Schemas.Screen = new SimpleSchema({
 		label: "Title",
 		max: 200
 	},
-	tags: {
-		type: [String],
-		index: true,
-		optional: true
-	},
+	// tags: {
+	// 	type: [String],
+	// 	index: true,
+	// 	optional: true
+	// },
 	theme: {
 		type: String,
 		optional: true,
@@ -77,42 +77,11 @@ Schemas.Screen = new SimpleSchema({
 			omit: true
 		},
 	},
-	// updatesHistory: {
-// 		type: [Object],
-// 		optional: true,
-// 		autoValue: function() {
-// 			var html = this.field("html");
-// 			if (html.isSet) {
-// 				if (this.isInsert) {
-// 					return [{
-// 						date: new Date,
-// 						html: html.value
-// 					}];
-// 				} else {
-// 					return {
-// 						$push: {
-// 							date: new Date,
-// 							html: html.value
-// 						}
-// 					};
-// 				}
-// 			} else {
-// 				this.unset();
-// 			}
-// 		}
-// 	},
-// 	'updatesHistory.$.date': {
-// 		type: Date,
-// 		optional: true
-// 	},
-// 	'updatesHistory.$.html': {
-// 		type: String,
-// 		optional: true
-// 	},
-	public: {
-		type: Boolean,
-		defaultValue: false
-	}
+
+	// public: {
+	// 	type: Boolean,
+	// 	defaultValue: false
+	// }
 //
 	
 });

@@ -1,5 +1,6 @@
 
- mailingLists = new MailChimpLists();
+	mailingLists = new MailChimpLists();
+ 
 
 var merge_vars = {
     EMAIL: '/* E-MAIL ADDRESS */',

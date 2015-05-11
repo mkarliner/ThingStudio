@@ -67,7 +67,7 @@ Router.route("/connections", function(){
 	this.render("Connections");
 });
 
-Router.route("/connection", function(){
+Router.route("/connectionold", function(){
 	this.layout("GeneralLayout");
 	this.wait(Meteor.subscribe("connections", Session.get("currentApp")._id));
 	if(this.ready()){
@@ -77,19 +77,20 @@ Router.route("/connection", function(){
 				conn = Connections.findOne();
 				if(conn) {
 					return conn;
-				} else {
-					console.log("CREATING CONNECTION");
-					Connections.insert({
-						title: "Modern Industry", 
-						host: "mqtt.thingstud.io", 
-						port: 9001, protocol: "Websocket", 
-						owner: Meteor.userId(),
-						appId: Session.get("currentApp")._id,
-						username: "guest",
-						password: "guest",
-						autoConnect: true});
-					return Connections.findOne();
 				}
+				// } else {
+				// 	console.log("CREATING CONNECTION");
+				// 	Connections.insert({
+				// 		title: "Modern Industry",
+				// 		host: "mqtt.thingstud.io",
+				// 		port: 9001, protocol: "Websocket",
+				// 		owner: Meteor.userId(),
+				// 		appId: Session.get("currentApp")._id,
+				// 		username: "guest",
+				// 		password: "guest",
+				// 		autoConnect: true});
+				// 	return Connections.findOne();
+				// }
 				
 			}
 		})

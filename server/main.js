@@ -39,7 +39,7 @@ Meteor.startup(function() {
 				title: "defaultApp",
 				owner: u._id,
 				access: "Private"
-			});
+			},{getAutoValues: false});
 		}
 		//Hook any orphan connections to app.
 		conns = Connections.find({owner: u._id}).fetch();

@@ -17,8 +17,18 @@ Session.set("connectionErrors", null);
 
 ResetMessages = function() {
 	console.log("RESETTING ALL MSGS");
-	Messages.remove();
-	Outbox.remove();
+	Messages.remove({});
+	Outbox.remove({});
+}
+
+UnsubscribeAll = function(){
+	feeds = Feeds.find({}).fetch();
+	for(var f=0; f<feeds.length; f++) {
+		topic = mqttregex(feeds[f].subscription).topic;
+		topic = topic.substring(0, topic.length - 1);
+		console.log("Unsubscribing feed: ", feeds[f].title, topic);
+		mqttClient.unsubscribe(topic);
+	}
 }
 
 connect = function (conn) {
@@ -98,7 +108,8 @@ Meteor.startup(function(){
 
 
 Template.Connections.helpers({
-	connections: function(){
+	connectionlist: function(){
+		console.log("CONN FND: ", Connections.find({}).fetch())
 		return Connections.find({});
 	},
 	// Connection_status: function(){

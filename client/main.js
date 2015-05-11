@@ -22,7 +22,16 @@ Meteor.startup(function() {
 	Meteor.subscribe("apps",  {
 		onReady: function() {
 			initialApp = Apps.findOne({title: "defaultApp"});
-			Session.set("currentApp", initialApp);
+			if(initialApp) {
+				Session.set("currentApp", initialApp);
+			} else {
+				appId = Apps.insert({
+					title: "defaultApp",
+					access: "Private",
+				});
+				Session.set("currentApp", Apps.findOne({_id: appId}));
+			}
+			
 		}
 	});
 	
@@ -34,7 +43,7 @@ Meteor.startup(function() {
 			onReady: function(){
 				console.log("CONNECTIONS FOUND: ", Connections.find().fetch());
 				conn = Connections.findOne({
-					autoConnect: true
+					appId: ca._id
 				});
 				// console.log("Autoconnect: ", conn);
 				console.log("Connect: ", conn)
@@ -43,7 +52,11 @@ Meteor.startup(function() {
 				}
 			}
 		});
-		  Meteor.subscribe("feeds", ca._id);
+		  Meteor.subscribe("feeds", ca._id, {
+			  onReady: function(){
+				  console.log("SUBSCRIBING FEEDS");
+			  }
+		  });
 		  Meteor.subscribe("screens", ca._id);
 		  Meteor.subscribe("themes", ca._id);
 	}

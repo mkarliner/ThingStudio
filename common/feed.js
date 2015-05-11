@@ -35,6 +35,7 @@ Schemas.Feed = new SimpleSchema({
 	},
 	pubsub: {
 		type: String,
+		label: "Publish/Subscribe",
 		allowedValues: ["Publish", "Subscribe"],
 		defaultValue: "Publish"
 	},
@@ -66,23 +67,23 @@ Schemas.Feed = new SimpleSchema({
 			omit: true
 		},
 	},
-	public: {
-		type: Boolean,
-		defaultValue: false,
-		custom: function(){
-			if(this.field("subscription").value.indexOf("#") > 0 && this.value == true) {
-				return "noPublicWildcard";
-			}
-			if(this.field("subscription").value.indexOf("+") > 0 && this.value == true) {
-				return "noPublicWildcard";
-			}
-			f = Feeds.findOne({title: this.field("title").value});
-			// console.log("PUBCK", this.field("title"), f);
-			if(f && this.value == true) {
-				return "uniqueFeed";
-			}
-		}
-	}
+	// public: {
+	// 	type: Boolean,
+	// 	defaultValue: false,
+	// 	custom: function(){
+	// 		if(this.field("subscription").value.indexOf("#") > 0 && this.value == true) {
+	// 			return "noPublicWildcard";
+	// 		}
+	// 		if(this.field("subscription").value.indexOf("+") > 0 && this.value == true) {
+	// 			return "noPublicWildcard";
+	// 		}
+	// 		f = Feeds.findOne({title: this.field("title").value});
+	// 		// console.log("PUBCK", this.field("title"), f);
+	// 		if(f && this.value == true) {
+	// 			return "uniqueFeed";
+	// 		}
+	// 	}
+	// }
 	
 	
 	

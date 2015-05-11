@@ -67,10 +67,10 @@ Schemas.Connection = new SimpleSchema({
 			omit: true
 		},
 	},
-	public: {
-		type: Boolean,
-		defaultValue: false
-	}
+	// public: {
+	// 	type: Boolean,
+	// 	defaultValue: false
+	// }
 	
 	
 	

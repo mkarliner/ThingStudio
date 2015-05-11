@@ -9,6 +9,14 @@ Schemas.App = new SimpleSchema({
 		label: "Title",
 		max: 200
 	},
+	description: {
+		type: String,
+		label: "Description",
+		optional: true,
+		autoform: {
+			rows: 3
+		}
+	},
 	owner: {
 		type: String,
 		index: true,

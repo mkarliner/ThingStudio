@@ -12,6 +12,8 @@ Template.Apps.events({
 	'click #select-app': function(ev) {
 		ev.preventDefault();
 		console.log(this);
+		UnsubscribeAll();
 		Session.set("currentApp",this);
+		ResetMessages();
 	}
 })

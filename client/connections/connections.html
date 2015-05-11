@@ -1,9 +1,29 @@
+
+
 <template name="Connections">
+	
+	{{#afModal class="btn btn-primary" collection="Connections" operation="insert" omitFields=""}}
+	  Add a new connection
+	{{/afModal}}
+	
+	<h1>Your Connections</h1>
+	<table class="table connections-table">
+	<tr cellpadding="10"><th>Title</th></tr>
+	{{#each connectionlist}}
+		<tr>
+			<td><a  class="screenlink">{{this.title}}</a></td>
+			<td>{{host}}</td>
+			<td>{{port}}</td>
+			<td>{{protocol}}</td>
+			<td>	{{#afModal class="btn btn-primary" collection="Connections" doc=_id operation="update"}} Edit	{{/afModal}}</td>
+			<td>{{#afModal class="btn btn-danger" collection="Connections" operation="remove" doc=_id}} Delete  {{/afModal}}</td>
+		</tr>
+	{{/each}}
+	</table>
+</template>
 
 
-
-
-
+<template name="ConnectionsOLD">
 	<table class="table">
 	{{#each foreignConnections}}
 		<tr>
