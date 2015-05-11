@@ -13,6 +13,7 @@ Template.Apps.events({
 		ev.preventDefault();
 		console.log(this);
 		UnsubscribeAll();
+		DisconnectMQTT();
 		Session.set("currentApp",this);
 		ResetMessages();
 	}

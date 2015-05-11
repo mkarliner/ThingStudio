@@ -21,6 +21,11 @@ ResetMessages = function() {
 	Outbox.remove({});
 }
 
+DisconnectMQTT = function() {
+	console.log("SHUTTING DOWN CLIENT")
+	mqttClient.end()
+}
+
 UnsubscribeAll = function(){
 	feeds = Feeds.find({}).fetch();
 	for(var f=0; f<feeds.length; f++) {
@@ -39,6 +44,7 @@ connect = function (conn) {
 	protocol = conn.protocol == "Websocket" ? "ws" : "wss";
 	ConnectionString = protocol + "://" + conn.host + ":" + conn.port;
 	console.log("CONNECTING: ", ConnectionString, protocol, conn.username, conn.password);
+	Session.set("currentMQTTHost", conn.host);
 	try {
 		mqttClient = mqtt.connect(ConnectionString, { username: conn.username, password: conn.password});
 		// console.log("MQQC:", mqttClient)
@@ -58,10 +64,15 @@ connect = function (conn) {
 			mqttClient.subscribe(topic);
 		}
 	});
-	mqttClient.on("close", function(){
-		console.log("close");
-		Session.set("ConnectionStatus", false);
-		Session.set("connectionErrors", "Closed")
+	mqttClient.on("close", function(par){
+		if(Session.get("currentMQTTHost") == this.options.hostname) {
+			console.log("close", par, this);
+			Session.set("ConnectionStatus", false);
+			Session.set("connectionErrors", "Closed")
+		} else {
+			console.log("Stale MQTT client closed");
+		}
+
 	});
 	mqttClient.on("offline", function(){
 		console.log("offline");
