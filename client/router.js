@@ -6,6 +6,10 @@ Router.configure({
 
 AccountsTemplates.configureRoute('signIn');
 
+Accounts.onLogin(function(){
+	Router.go("/screens");
+})
+
 
 Router.onBeforeAction(function(par) {
 	// console.log("Before action", par);
@@ -15,7 +19,7 @@ Router.onBeforeAction(function(par) {
 	} else {
 		this.next();
 	}
-}, { except: ["Home", "Help", "Helppages", "ViewScreen"]});
+}, { except: [ "Help", "Helppages", "ViewScreen"]});
 
 
 
@@ -32,7 +36,14 @@ Router.route("/", function(){
 		this.render("Home");
 	}
 }, {
-	name: "Home"
+	name: "Root"
+});
+
+Router.route('/home', {where: 'server'}).get(function() {
+  this.response.writeHead(301, {
+    'Location': "http://www.thingstud.io"
+  });
+  this.response.end();
 });
 
 Router.route("/logout", function(){
@@ -40,10 +51,10 @@ Router.route("/logout", function(){
 })
 
 
-Router.route("/home", function(){
-	this.layout("HelpLayout")
-	this.render("Home");
-});
+// Router.route("/home", function(){
+// 	this.layout("HelpLayout")
+// 	this.render("Home");
+// });
 
 Router.route("/viewermenu", function(){
 	this.layout('ViewerLayout');
