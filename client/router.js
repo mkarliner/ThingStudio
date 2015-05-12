@@ -6,9 +6,9 @@ Router.configure({
 
 AccountsTemplates.configureRoute('signIn');
 
-Accounts.onLogin(function(){
-	Router.go("/screens");
-})
+// Accounts.onLogin(function(){
+// 	Router.go("/screens");
+// })
 
 
 Router.onBeforeAction(function(par) {
@@ -39,12 +39,14 @@ Router.route("/", function(){
 	name: "Root"
 });
 
-Router.route('/home', {where: 'server'}).get(function() {
-  this.response.writeHead(301, {
-    'Location': "http://www.thingstud.io"
-  });
-  this.response.end();
-});
+// Router.route('/home', {where: 'server'}).get(function() {
+//   this.response.writeHead(301, {
+//     'Location': "http://www.thingstud.io"
+//   });
+//   this.response.end();
+// });
+
+
 
 Router.route("/logout", function(){
 	AccountsTemplates.logout();
