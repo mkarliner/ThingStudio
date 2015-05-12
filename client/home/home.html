@@ -1,27 +1,270 @@
 <template name="Home">
-	<div id="home-content">
-		<img id="welcome_to_thingstudio" src=" logo-alpha-black.png" alt="Welcome to ThingStudio"/>
-		<p>ThingStudio is a UI editor and server for MQTT based networks. You can create dynamic, real-time UI's for the Internet of Things using only HTML based templates</p>
-	
-		<p>Unlike the majority of cloud platforms for the Internet of Things, ThingStudio does not require you to send home network data into a proprietary platform. Your IoT data stays within your network, and we just provide the UI's that you design.</p>
-	
-		<p>You get the convenience of a cloud based service for the complex task of designing and managing UI's, and the privacy, speed and low latency of your own network handling your data</p>
-		
-		<p><strong>ThingStudio is very new, so please, allow for this, and ask for help, send us bug reports, and give us suggestions!</strong></p>
-		<div class="home-links">		
-			<div class="btn"><a href="/docs">Documentation</a></div>
-		</div>
-		<!-- <div><a href="/screens">See demo without registering</a></div> -->
-		{{#unless currentUser}}
-		<div class="home-links"><div class="btn"><a href="/sign-in">Sign Up or In</a></div></div>
-		{{/unless}}
-		{{#if currentUser}}
-		<div class="home-links">
-			<div class="btn"><a href="/screens">Enter Studio</a></div>
-		</div>
-		{{/if}}
+<div class="preloader"></div>
 
+ <!-- Fixed navbar -->
+    
+
+<!-- Parallax Header Starts -->
+<main id="top" class="masthead" role="main">
+  <div class="container"> 
+    <!-- Startup Logo -->
+    <div class="logo"> <a href="#"><img src="images/logo-alpha.png" alt="ThingStudio Logo"></a> </div>
+    <!-- Hero Title -->
+    <h1><strong>Real time</strong> user interfaces <br>
+    for the Internet of Things</h1>
+    <!-- Mailchimp Subscribe form -->
+    <div class="row">
+    <div class="col-md-8 col-md-offset-2">
+    
+   <div class="signup-block has-margin-vertical">
+     <!-- <iframe src="//fast.wistia.net/embed/iframe/apiacbixtn" allowtransparency="true" frameborder="0" scrolling="no" class="wistia_embed" name="wistia_embed" allowfullscreen mozallowfullscreen webkitallowfullscreen oallowfullscreen msallowfullscreen width="711" height="400"></iframe><script src="//fast.wistia.net/assets/external/E-v1.js" async></script> -->
+     <div id="resizable_wrapper" style="max-width:900px;width:100%;">
+         <iframe src="//fast.wistia.net/embed/iframe/apiacbixtn?videoFoam=true" allowtransparency="true" frameborder="0" scrolling="no" class="wistia_embed" name="wistia_embed" allowfullscreen mozallowfullscreen webkitallowfullscreen oallowfullscreen msallowfullscreen width="711" height="400"></iframe><script src="//fast.wistia.net/assets/external/E-v1.js"></script>
+     </div>
+   </div>
+   <div class="multiple-btns text-center has-margin-vertical">
+	<a class="btn btn-success btn-lg btn-top" href="/getting-started.html">WATCH GETTING STARTED VIDEO</a>
+	<a class="btn btn-warning btn-lg btn-top" href="http://demo.thingstud.io/">SIGN-UP FREE</a>
+   </div>
+    </div>
+    
+      
+    </div>
+
+  </div>
+</main>
+<!-- // Parallax Header Ends --> 
+<!-- Container -->
+<div class="container" id="explore"> 
+  <!-- Hero Image -->
+  <div class="section-title">
+    <h2>The Internet of Things, the way it should be</h2>
+    <h4>No engineering (computer or electrical) degree needed. Plug in today.</h4>
+  </div>
+  <section class="row heroimg breath">
+    <div class="col-md-12 text-center"> <img src="images/thingstudio-screenshot.png" alt="ThingStudio Screenshot"></div>
+  </section>
+  <!-- //Hero Image --> 
+  
+  <!-- Features Section -->
+  <div class="section-title">
+    <h2>At your fingertips and at your command</h2>
+    <h4>Write HTML, control machine endpoints in real time</h4>
+  </div>
+  <section class="row features"> 
+    <!-- Feature 01 -->
+    <div class="col-sm-6 col-md-3">
+      <div class="thumbnail"> <img src="images/klsjdkljlks87.png" alt="analytics-icon">
+        <div class="caption">
+          <h3>HTML &lsaquo;&ndash;&rsaquo; IoT</h3>
+          <p>If you can write HTML you can control the Internet of Things. It's that simple.</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Feature 02 -->
+    <div class="col-sm-6 col-md-3">
+      <div class="thumbnail"> <img src="images/kjshdf.png" alt="analytics-icon">
+        <div class="caption">
+          <h3>Your data is <em>your</em> data</h3>
+          <p>Control your data's destiny: we never touch or see your data. Ever.</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Feature 03 -->
+    <div class="col-sm-6 col-md-3">
+      <div class="thumbnail"> <img src="images/lkjsdlfk98.png" alt="analytics-icon">
+        <div class="caption">
+          <h3>Fast. Like, <em>faaaaast</em></h3>
+          <p>Sub-second communications with your entire fleet of IoT devices.</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Feature 04 -->
+    
+    <div class="col-sm-6 col-md-3">
+      <div class="thumbnail"> <img src="images/sudiofkjw3.png" alt="analytics-icon">
+        <div class="caption">
+          <h3>Dynamic, real time UIs</h3>
+          <p>Real life happens in real time. ThingStudio provides the user interfaces to keep up.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- // Features Section Ends --> 
+  
+</div>
+<!-- // Container Ends --> 
+
+<!-- Container -->
+<div class="container"> 
+  <!-- Pricing -->
+  <div class="section-title">
+    <h2>Simple Pricing</h2>
+    <h4>From 'duinos &amp; Pi's to massive process control, we've got a plan for everyone.</h4>
+  </div>
+  <section class="row breath planpricing">
+    <div class="col-md-4">
+      <div class="pricing color1">
+        <div class="planname">Makers, Hackers &amp;  Designers</div>
+        <div class="price">Free. $0. Create great mobile UI's for the Internet of Things and connected devices. Hacker love.</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="pricing color2">
+        <div class="planname">Hardware Product Designers</div>
+        <div class="price">Get to market much more quickly and cheaply than building native apps and trying to get AppStore approval.</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="pricing color3">
+        <div class="planname">Industry &amp; Corporate</div>
+        <div class="price">Get more control and insight into your business and plant than you ever thought possible with sensible pricing.</div>
+      </div>
+    </div>
+  </section>
+  <!-- // End Pricing -->   
+  <!-- FAQ -->
+  <div class="section-title">
+    <h5>Frequently Asked Questions</h5>
+  </div>
+  <section class="row faq breath">
+    <div class="col-md-6">
+      <h6>What's all this now?</h6>
+      <p>We believe the Internet of Things is a completely transformative capability for our society, and that everyone (not just the technorati) should be able to harness its power.</p>
+      <p>The goal of ThingStudio is to make it easy for anyone who can manage a bit of HTML templating and a connected device to get started, while being flexible and scalable enough to control an entire fleet of connected devices.</p>
+      <h6>Cool! When do I get mine?</h6>
+      <p>You can sign up for a FREE account and <a href="http://demo.thingstud.io">try out ThingStudio right now</a>! We're still in alpha, and the alpha is singing. It does what it says on the tin, but if you've got feedback on what you'd like to see from ThingStudio, <a href="mailto:contact@thingstud.io">let us know!</a></p>
+    </div>
+    <div class="col-md-6">
+      <h6>How does this work?</h6>
+      <p>We leverage MQTT's simple sub / pub capabilities and Meteor.js real-time prowess to deliver low-latency communications between devices and, well, really anything.</p>
+      <p>To get started, simply setup your device to publish messages on a topic, create a connection between your device and ThingStudio via MQTT (we even provide a free MQTT desktop broker to get you started), and create a simple HTML template to publish your data to the web or an app in real time.</p>
+      <p>We recommend starting with <a href="http://blog.thingstud.io/recipes/how-to-use-a-plain-ol-arduino-with-thingstudio/">this tutorial on our blog</a> to walk you through this process.</p>
+      <h6>Have any other questions?</h6>
+      <p>Feel free to get in touch! If we've missed anything or you just want to say "Hi", shoot us an email at <a href="mailto:contact@thingstud.io">contact@thingstud.io</a>.</p>
+    </div>
+  </section>
+  <!-- // End FAQ --> 
+  
+</div>
+<!-- // Container Ends --> 
+
+<!-- Parallax Footer Starts -->
+<main class="footercta" role="main">
+  <div class="container"> 
+    
+    <!-- Hero Title -->
+    <h1>Get <strong>ThingStudio</strong> and be among the <strong>first</strong>
+	 to harness the <strong>real-time</strong> Internet of Things</h1>
+    <!-- Mailchimp Subscribe form -->
+    <div class="row">
+      <div class="col-md-8 subscribe col-md-offset-2">
+        <div class="signup-block">
+          <div class="row">
+	    <form class="form-horizontal" role="form" action="//thingstud.us10.list-manage.com/subscribe/post?u=09be84821eccd50341e8b7d31&amp;id=04301b0b27" id="subscribeForm" method="post" target="_blank">
+              <div class="col-sm-4">
+                <input class="form-control input-lg" name="FNAME" type="text" placeholder="Your name">
+              </div>
+              <div class="col-sm-4">
+                <input class="form-control input-lg" name="EMAIL" type="email" placeholder="Enter your email address">
+              </div>
+	      <input type="checkbox" id="group_8917" name="group[8917]" value="1" checked="checked" style="display:none">
+              <div class="col-sm-3">
+                <button type="submit" class="btn btn-success btn-lg gototop">KEEP ME POSTED</button>
+              </div>
+            </form>
+          </div>
+          <span id="result" class="alertMsg"></span>
 	</div>
+      </div>
+	<p class="text-centered">Or, you can get started now:</p>      
+        <a class="btn btn-warning btn-lg btn-top" href="http://demo.thingstud.io/">SIGN-UP FREE</a>
+    </div>
+  </div>
+</main>
+<!-- // Parallax Footer Ends --> 
+
+<!-- Container -->
+<div class="container">
+  <section class="row breath">
+    <div class="col-md-12 footerlinks"> <a href="http://demo.thingstud.io/">Sign In</a> <a href="http://blog.thingstud.io/">Blog</a> <a href="http://forum.thingstud.io">Forum</a> <a href="http://demo.thingstud.io/docs">Docs</a> <a href="mailto:contact@thingstud.io">Contact</a> <a href="#">Privacy</a> <a href="#">Terms</a>
+      <p>&copy; 2015 ThingStudio. All Rights Reserved</p>
+    </div>
+  </section>
+  <!-- // End Client Logos --> 
+  
+</div>
+<!-- // Container Ends --> 
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-62062520-1', 'auto');
+  ga('require', 'linkid', 'linkid.js');
+  ga('send', 'pageview');
+
+</script>
+<script type="text/javascript">
+	var $mcGoal = {'settings':{'uuid':'09be84821eccd50341e8b7d31','dc':'us10'}};
+	(function() {
+		 var sp = document.createElement('script'); sp.type = 'text/javascript'; sp.async = true; sp.defer = true;
+		sp.src = ('https:' == document.location.protocol ? 'https://s3.amazonaws.com/downloads.mailchimp.com' : 'http://downloads.mailchimp.com') + '/js/goal.min.js';
+		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(sp, s);
+	})(); 
+</script>
+
+
+<!-- JS and analytics only. --> 
+<!-- Bootstrap core JavaScript
+================================================== --> 
+<!-- Placed at the end of the document so the pages load faster --> 
+<script src="js/jquery.js"></script> 
+<script src="js/bootstrap.js"></script> 
+<script src="js/easing.js"></script> 
+<script src="js/typer.js"></script> 
+<!--<script src="js/nicescroll.js"></script> -->
+
+<!-- Typer --> 
+
+<script>
+    $(function () {
+      $('[data-typer-targets]').typer();
+    });
+  </script> 
+
+<!-- Scroll to Explore --> 
+
+<script>
+
+
+ // $(function() {
+ //    $('.scrollto, .gototop').bind('click',function(event){
+	// 	 var $anchor = $(this);
+	// 	 $('html, body').stop().animate({
+ //         scrollTop: $($anchor.attr('href')).offset().top
+ //          }, 1500,'easeInOutExpo');
+ //     event.preventDefault();
+ //      });
+ //  });
+        
+
+</script>
+
+<script src="//load.sumome.com/" data-sumo-site-id="2d17c574ad73723105d1d57bd586ffdd652dba110214714e786ec1f4d3d60cfe" async="async"></script>
+<script type="application/ld+json">
+    {  "@context" : "http://schema.org",
+       "@type" : "WebSite",
+       "name" : "ThingStudio",
+       "alternateName" : "ThingStudio",
+       "url" : "http://www.thingstud.io"
+    }
+</script>
 
 		
 
