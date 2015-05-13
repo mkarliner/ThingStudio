@@ -151,6 +151,7 @@ AutoForm.hooks({
 			update: function(err, res, template) {
 				console.log("AFTER CON UPDATE: ", err, res, template);
 				Session.set("ConnectionStatus", false);
+				Session.set("currentMQTTHost", template.data.doc.hostname)
 				connect(template.data.doc);
 				Router.go("/screens");
 				

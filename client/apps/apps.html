@@ -13,9 +13,12 @@
 	{{#each appslist}}
 		<tr>
 			<td class="appslink">{{this.title}}</td>
-			<td>{{status}}</td>	
 			<td><button class="btn" id="select-app">Select</button></td>
-			<td><a href="/apps/{{this._id}}/share"><button class="btn" id="share-app">Share</button></a></td>
+			{{#if shareable}}
+				<td><a href="/apps/{{this._id}}/share"><button class="btn" id="share-app">Share</button></a></td>
+			{{else}}
+				<td></td>
+			{{/if}}
 			<td>	{{#afModal class="btn btn-primary" collection="Apps" doc=_id operation="update"}} Edit	{{/afModal}}</td>
 			<td>{{#afModal class="btn btn-danger" collection="Apps" operation="remove" doc=_id}} Delete  {{/afModal}}</td>
 		</tr>

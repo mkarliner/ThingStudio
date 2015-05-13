@@ -105,7 +105,15 @@ Meteor.startup(function() {
 
 	Meteor.publish("apps", function(appId) {
 		if(appId) {
-			return Apps.find({_id: appId});
+			appcurr =  Apps.find({_id: appId});
+			app = appcurr.fetch()[0]; 
+			console.log("APPACC ", app.access)
+			if(app.access == "Shareable" || app.access == "Published") {
+				return appcurr;
+			} else {
+				console.log("Attempt to access private app", app)
+				return null;
+			}
 		} else {
 			return Apps.find({owner: this.userId});
 		}

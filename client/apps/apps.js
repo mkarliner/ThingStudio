@@ -2,9 +2,12 @@ Template.Apps.helpers({
 	appslist: function(){
 		return Apps.find({})
 	},
-	status: function(){
-		status = this.owner == Meteor.userId() ? "Owner" : "" 
-		status += this.access;
+	shareable: function(){
+		if(this.access == "Shareable" || this.access=="Published") {
+			return true;
+		} else {
+			return false;
+		}
 	}
 });
 

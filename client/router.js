@@ -60,7 +60,16 @@ Router.route("/view/app/:_id",function(){
 		app = Apps.findOne({_id: this.params._id});
 		console.log("ViewAppRoute: ", this.params._id,  app);
 		Session.set("currentApp", app);
-		Router.go("/viewer/screen/" + app.home_page);
+		if(app.home_page) {
+			Router.go("/viewer/screen/" + app.home_page);
+		} else {
+			this.render("ViewApp", {
+				data: function(){
+					return app;
+				}
+			})
+		}
+		
 	}
 }, {
 	name: "ViewApp"

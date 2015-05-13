@@ -1,5 +1,5 @@
 <template name="insertScreenForm">
-  {{> quickForm collection="Screens" id="insertScreenForm" type="insert" buttonClasses="glyphicon glyphicon-ok btn btn-default" buttonContent="Save" omitFields="html, public, tags"}}
+  {{> quickForm collection="Screens" id="insertScreenForm" type="insert" buttonClasses="glyphicon glyphicon-ok btn btn-default" buttonContent="Save" omitFields="html"}}
 </template>
 
 
@@ -18,7 +18,6 @@
 		<div class="collapse" id="collapseExample">
 		  <div class="well">
 		    	{{>afQuickField name="title" class="centerField"}}
-				{{>afQuickField name="tags" class="centerField"}}
 				{{>afQuickField name="theme" class="centerField"}}
 		  </div>
 		</div>

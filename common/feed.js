@@ -11,21 +11,26 @@ Schemas.Feed = new SimpleSchema({
 	title: {
 		type: String,
 		label: "Title",
+
 		custom: function () {
 			console.log(this.userId);
 			//First try to find my own duplicate.
-			f = Feeds.findOne({title: this.value, $or: [{owner: this.userId}, {public:true}]});
-			// if(!f)
-			// console.log("CKF ", f);
-			if(f  && this.isInsert) {
-				console.log("BOO")
-				return "uniqueFeed";
+			//f = Feeds.findOne({title: this.value, $or: [{owner: this.userId, appId: this.appId}, {public:true}]});
+			if(Meteor.isClient) {
+				f = Feeds.findOne({title: this.value});
+				console.log("CKF ", typeof f, this);
+				if(typeof f == "object"  && this.isInsert) {
+					console.log("BOO")
+					return "uniqueFeed";
+				}
+				if(typeof f == "object" && f._id != this.docId) {
+					console.log("Baa")
+					return "uniqueFeed";
+				}
+				console.log("ALLOK")
 			}
-			if(f && f._id != this.docId) {
-				console.log("Baa")
-				return "uniqueFeed";
-			}
-			console.log("ALLOK")
+
+			return;
 		},
 		max: 200
 	},
