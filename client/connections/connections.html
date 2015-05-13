@@ -2,7 +2,7 @@
 
 <template name="Connections">
 	
-	{{#afModal class="btn btn-primary" collection="Connections" operation="insert" omitFields=""}}
+	{{#afModal class="btn btn-primary" collection="Connections" operation="insert" }}
 	  Add a new connection
 	{{/afModal}}
 	
@@ -11,7 +11,7 @@
 	<tr cellpadding="10"><th>Title</th></tr>
 	{{#each connectionlist}}
 		<tr>
-			<td><a  class="screenlink">{{this.title}}</a></td>
+			<td>{{this.title}}</td>
 			<td>{{host}}</td>
 			<td>{{port}}</td>
 			<td>{{protocol}}</td>

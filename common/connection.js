@@ -21,7 +21,7 @@ Schemas.Connection = new SimpleSchema({
 	},
 	protocol: {
 		type: String,
-		allowedValues:["Websocket", "SecureWebsocket"],
+		allowedValues: ["Websocket", "SecureWebsocket"],
 		defaultValue: "Websocket"
 	},
 	username: {
@@ -37,29 +37,24 @@ Schemas.Connection = new SimpleSchema({
 		defaultValue: true
 	},
 	owner: {
-		optional: true, // Now ownership is a property of the containing app.
 		type: String,
 		index: true,
 		autoform: {
 			omit: true
 		},
-		autoValue: function(){
-			//console.log("AV : ", this);
-			if(this.value) {
-				return;
-			}
-			if(Meteor.isServer) {
-				return;
-			}
-			if(this.isInsert) {
+		autoValue: function() {
+			if (this.isInsert) {
 				return Meteor.userId();
-			} else if(this.isUpsert) {
-				return {$setOnInsert: Meteor.userId()};
+			} else if (this.isUpsert) {
+				return {
+					$setOnInsert: Meteor.userId
+				};
 			} else {
 				this.unset();
 			}
 		}
 	},
+
 	appId: {
 		type: String,
 		index: true,
@@ -71,9 +66,16 @@ Schemas.Connection = new SimpleSchema({
 	// 	type: Boolean,
 	// 	defaultValue: false
 	// }
-	
-	
-	
+
+
+
+});
+
+Connections.before.insert(function(userId, doc) {
+	if (Meteor.isClient) {
+		// console.log("BEFOREHOOK ", userId, doc, Session.get("currentApp"));
+		doc.appId = Session.get("currentApp")._id;
+	}
 });
 
 Connections.attachSchema(Schemas.Connection);
