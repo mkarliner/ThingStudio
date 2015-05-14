@@ -6,6 +6,10 @@ Router.configure({
 
 AccountsTemplates.configureRoute('signIn');
 
+// Accounts.onLogin(function(){
+// 	Router.go("/screens");
+// })
+
 
 Router.onBeforeAction(function(par) {
 	// console.log("Before action", par);
@@ -15,9 +19,8 @@ Router.onBeforeAction(function(par) {
 	} else {
 		this.next();
 	}
-}, {
-	except: ["Home", "Help", "Helppages", "ViewScreen", "ViewApp"]
-});
+}, { except: [ "Help", "Helppages", "ViewScreen"]});
+
 
 
 
@@ -34,18 +37,17 @@ Router.route("/", function() {
 		this.render("Home");
 	}
 }, {
-	name: "Home"
+	name: "Root"
 });
 
-Router.route("/logout", function() {
+
+
+
+Router.route("/logout", function(){
 	AccountsTemplates.logout();
 })
 
 
-Router.route("/home", function() {
-	this.layout("HelpLayout")
-	this.render("Home");
-});
 
 Router.route("/view/app/:_id", {
 	//To render a app, show the home page if it has one,
@@ -138,6 +140,15 @@ Router.route("/connectionold", function() {
 
 });
 
+Router.route("screens/:_id/edit", function(){
+	this.layout("GeneralLayout");
+	this.render("EditScreen", {
+		data: function(){
+			Session.set("currentScreenPage", this.params._id);
+			return Screens.findOne({_id: this.params._id});
+		}
+	});
+});
 
 Router.route("/screens/:_id", function() {
 	this.layout("GeneralLayout");

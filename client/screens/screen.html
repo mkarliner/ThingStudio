@@ -12,3 +12,17 @@
 	</div>
 	
 </template>
+
+
+<template name="EditScreen">
+	{{> currentStyle }}
+	{{{accessStatus}}}
+
+
+	<div id="editScreen" class="inline">
+		{{> updateScreenForm}}
+		<div class="screen-errors">HTML Errors: {{compilationErrors}}</div>
+		<div class="screen-errors">Runtime Errors: {{runtimeErrors}}</div>
+	</div>
+	
+</template>

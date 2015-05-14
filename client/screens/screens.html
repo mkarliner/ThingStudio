@@ -21,7 +21,7 @@
 			{{/if}}
 			<td>{{home_page}}</td>
 			<td>{{status}}</td>	
-			<td>{{#afModal class="btn btn-danger" collection="Screens" operation="remove" doc=_id}} Delete {{/afModal}}</td>
+			<td><button class="btn"><a href="/screens/{{this._id}}">Edit & Preview</a></button><button class="btn"><a href="/screens/{{this._id}}/edit">Safe Edit</a></button>{{#afModal class="btn btn-danger" collection="Screens" operation="remove" doc=_id}} Delete {{/afModal}}</td>
 		</tr>
 	{{/each}}
 	</table>
