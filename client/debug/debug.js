@@ -11,5 +11,8 @@ Template.Debug.helpers({
 	},
 	runtimeErrors: function(){
 		return Session.get("runtimeErrors");
+	},
+	payload: function(){
+		return JSON.stringify(this.payload);
 	}
 })

@@ -3,7 +3,16 @@
 	{{this.title}}
 	
 	</div>
-	<div>
-		No home page has been set for this app.
+		<div id="screenList">
+		
+		<h1>Your Screens</h1>
+		<div class="flex-column">
+
+		{{#each screenlist}}
+						<button class="flex-item btn screenlink">{{this.title}}</button>
+		{{/each}}
+	
+
+		</div>
 	</div>
 </template>

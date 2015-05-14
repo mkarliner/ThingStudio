@@ -10,6 +10,7 @@
 		{{#if isInRole 'admin'}}
 		<th>Size</th>
 		{{/if}}
+		<th>Home Page</th>
 		<th>Status</th>
 	</tr>
 	
@@ -18,6 +19,7 @@
 			{{#if isInRole 'admin'}}
 			<td>{{html.length}}</td>
 			{{/if}}
+			<td>{{home_page}}</td>
 			<td>{{status}}</td>	
 			<td>{{#afModal class="btn btn-danger" collection="Screens" operation="remove" doc=_id}} Delete {{/afModal}}</td>
 		</tr>

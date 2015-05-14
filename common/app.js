@@ -31,6 +31,22 @@ Schemas.App = new SimpleSchema({
 			}
 		}
 	},
+	connection: {
+		type: String,
+		optional: true,
+		autoform: {
+			type: "select",
+			options: function(){
+				connections = Connections.find({}).fetch();
+				options = [];
+				var i;
+				for(i=0; i<connections.length; i++) {
+					options[i] = { label: connections[i].title, value: connections[i]._id};
+				}
+				return(options);
+			}
+		}
+	},
 	owner: {
 		type: String,
 		index: true,

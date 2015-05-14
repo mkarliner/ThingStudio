@@ -13,11 +13,11 @@ Meteor.startup(function() {
 	
 
 	
-	Meteor.call("foreignConnections", function(err, result){
-		Session.set("foreignConnections", result)
-		// console.log("FC: ", err, result);
-		
-	});
+	// Meteor.call("foreignConnections", function(err, result){
+	// 	Session.set("foreignConnections", result)
+	// 	// console.log("FC: ", err, result);
+	//
+	// });
 	
 	Meteor.subscribe("apps",  {
 		onReady: function() {
@@ -43,14 +43,21 @@ Meteor.startup(function() {
 		  console.log("SUB: ", ca.title);
 		  Meteor.subscribe("connections",ca._id, {
 			onReady: function(){
-				console.log("CONNECTIONS FOUND: ", Connections.find().fetch());
-				conn = Connections.findOne({
-					appId: ca._id
-				});
+				connections = Connections.find().fetch();
+				console.log("CONNECTIONS FOUND: ", connections);
+				//If the app specifies a connection, use that
+				//if not, use any, or none.
+				if(ca.connection) {
+					conn = Connections.findOne({_id: ca.connection});
+				} else {
+					conn = Connections.findOne({});
+				}
 				// console.log("Autoconnect: ", conn);
 				console.log("Connect: ", conn)
 				if (conn) {
 					connect(conn);
+				} else {
+					disconnect();
 				}
 			}
 		});

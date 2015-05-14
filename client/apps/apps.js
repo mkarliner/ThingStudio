@@ -8,6 +8,13 @@ Template.Apps.helpers({
 		} else {
 			return false;
 		}
+	},
+	current_app: function(){
+		if(this._id == Session.get("currentApp")._id) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 });
 

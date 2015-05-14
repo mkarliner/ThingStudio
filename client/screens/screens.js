@@ -15,6 +15,10 @@ Template.Screens.helpers({
 			u = Meteor.users.findOne(this.owner);
 			return u ? u.username : "Unknown";
 		}
+	},
+	home_page: function(){
+		app = Session.get("currentApp");
+		return  this._id == app.home_page ? "yes" : "no";
 	}
 });
 

@@ -40,10 +40,7 @@ UnsubscribeAll = function(){
 }
 
 connect = function (conn) {
-	if (typeof mqttClient.end == 'function') { 
-		console.log("Ending current client");
-	    mqttClient.end(); 
-	}
+	disconnect();
 	protocol = conn.protocol == "Websocket" ? "ws" : "wss";
 	ConnectionString = protocol + "://" + conn.host + ":" + conn.port;
 	console.log("CONNECTING: ", ConnectionString, protocol, conn.username, conn.password);
@@ -114,6 +111,14 @@ connect = function (conn) {
 		
 	});
 	
+}
+
+disconnect = function(conn) {
+	console.log("DISCONNECTING");
+	if (typeof mqttClient.end == 'function') { 
+		console.log("Ending current client");
+	    mqttClient.end(); 
+	}
 }
 
 Meteor.startup(function(){
