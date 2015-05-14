@@ -133,6 +133,9 @@ AutoForm.hooks({
 				//console.log("Updated Screen", template.data.doc.html);
 
 				compileTemplate(name, template.data.doc.html);
+				if(scr.isWidget) {
+					Template[scr.title].registerElement(scr.widgetName);
+				}
 				//
 				// Session.set("currentScreenPage", "rubbish")
 				// Session.set("currentScreenPage", 'faceplate')

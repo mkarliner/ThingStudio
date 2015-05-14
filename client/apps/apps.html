@@ -3,7 +3,7 @@
 
 <template name="Apps">
 	
-	{{#afModal class="btn btn-primary" collection="Apps" operation="insert" }}
+	{{#afModal class="btn btn-primary" collection="Apps" operation="insert" omitFields="connection,home_page, description" }}
 	  Add a new App
 	{{/afModal}}
 	

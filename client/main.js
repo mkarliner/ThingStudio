@@ -66,7 +66,11 @@ Meteor.startup(function() {
 				  console.log("SUBSCRIBING FEEDS");
 			  }
 		  });
-		  Meteor.subscribe("screens", ca._id);
+		  Meteor.subscribe("screens", ca._id, {
+		  	  onReady: function(){
+				  InstantiateScreens();
+		  	  }
+		  });
 		  Meteor.subscribe("themes", ca._id);
 	}
 

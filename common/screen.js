@@ -77,7 +77,15 @@ Schemas.Screen = new SimpleSchema({
 			omit: true
 		},
 	},
-
+	isWidget: {
+		type: Boolean,
+		index: true,
+		defaultValue: false
+	},
+	widgetName: {
+		type: String,
+		optional: true
+	}
 	// public: {
 	// 	type: Boolean,
 	// 	defaultValue: false

@@ -28,3 +28,17 @@ Template.Screens.events({
 		Router.go("/screens/" + this._id);
 	}
 })
+
+
+InstantiateScreens = function(){
+	//Instantiate all screens
+	scrs = Screens.find().fetch();
+	for(var s=0; s<scrs.length; s++){
+		scr = scrs[s];
+		console.log("Compiling ", scr.title);
+		compileTemplate(scr.title, scr.html);
+		if(scr.isWidget) {
+			Template[scr.title].registerElement(scr.widgetName);
+		}
+	}
+}
