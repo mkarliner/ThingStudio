@@ -9,13 +9,11 @@ if(boilerplate) {
 	defaultScreenContent = "<!-- Screen content here -->";
 }
 
-
-boilerplate = Screens.findOne({title: "VerySpecialSecretBoilerPlateScreen"});
-
-if(boilerplate && boilerplate.js) {
+if(boilerplate) {
 	defaultJsContent = boilerplate.js;
+	console.log("DEFCON: ",boilerplate, defaultJsContent);
 } else {
-	defaultJsContent = "<!-- Javascript content here -->";
+	defaultJsContent = "//Javascript content here";
 }
 	
 
@@ -64,6 +62,7 @@ Schemas.Screen = new SimpleSchema({
 		defaultValue: defaultScreenContent
 	},
 	js: {
+		optional: true,
 		label: "Javascript",
 		type: String,
 		autoform: {

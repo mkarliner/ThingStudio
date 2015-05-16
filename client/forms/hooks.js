@@ -103,9 +103,10 @@ compileTemplate = function(name, html_text, javascript) {
 				
 			}
 		});
-		console.log("EVALLING JS")
-		jsout = eval(javascript)
-		console.log("JSOUT ", jsout);
+
+		if(javascript) {
+			jsout = eval(javascript)
+		}
 		Template[name].rendered = function(){
 			// console.log("RENDERED", this)
 			// console.log("RENDERED: ", this.findAll("[data-feed]"));
