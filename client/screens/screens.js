@@ -37,7 +37,7 @@ InstantiateScreens = function(){
 		scr = scrs[s];
 		if(scr.isWidget) {
 			console.log("Compiling ", scr.title);
-			compileTemplate(scr.title, scr.html, scn.js);
+			compileTemplate(scr.title, scr.html, scr.js);
 
 			Template[scr.title].registerElement(scr.widgetName);
 		}

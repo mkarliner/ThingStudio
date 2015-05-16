@@ -32,10 +32,10 @@ Schemas.Connection = new SimpleSchema({
 		type: String,
 		optional: true
 	},
-	autoConnect: {
-		type: Boolean,
-		defaultValue: true
-	},
+	// autoConnect: {
+	// 	type: Boolean,
+	// 	defaultValue: true
+	// },
 	owner: {
 		type: String,
 		index: true,
@@ -72,9 +72,12 @@ Schemas.Connection = new SimpleSchema({
 });
 
 Connections.before.insert(function(userId, doc) {
-	if (Meteor.isClient) {
-		// console.log("BEFOREHOOK ", userId, doc, Session.get("currentApp"));
+	if (Meteor.isClient) {		
 		doc.appId = Session.get("currentApp")._id;
+		console.log("BEFOREHOOK ", userId, doc, Session.get("currentApp"));
+		return true;
+	} else {
+		console.log("BEFOREHOOK Server", userId, doc);
 	}
 });
 

@@ -30,6 +30,10 @@ DisconnectMQTT = function() {
 }
 
 UnsubscribeAll = function(){
+	if (typeof mqttClient.unsubscribe != 'function') { 
+		console.log("No connection");
+	    return; 
+	}
 	feeds = Feeds.find({}).fetch();
 	for(var f=0; f<feeds.length; f++) {
 		topic = mqttregex(feeds[f].subscription).topic;
