@@ -8,6 +8,15 @@ if(boilerplate) {
 } else {
 	defaultScreenContent = "<!-- Screen content here -->";
 }
+
+
+boilerplate = Screens.findOne({title: "VerySpecialSecretBoilerPlateScreen"});
+
+if(boilerplate && boilerplate.js) {
+	defaultJsContent = boilerplate.js;
+} else {
+	defaultJsContent = "<!-- Javascript content here -->";
+}
 	
 
 
@@ -53,6 +62,19 @@ Schemas.Screen = new SimpleSchema({
 	        }
 		},
 		defaultValue: defaultScreenContent
+	},
+	js: {
+		label: "Javascript",
+		type: String,
+		autoform: {
+			rows: 10,
+	        afFieldInput: {
+	          type: 'acejs',
+	          class: 'editor' // optional
+	          // summernote options goes here
+	        }
+		},
+		defaultValue: defaultJsContent
 	},
 	owner: {
 		type: String,

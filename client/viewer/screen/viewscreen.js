@@ -10,7 +10,7 @@ Template.ViewScreen.helpers({
             if(scn) {
                     // console.log("HTML: ", scn.html);
                     delete Template[scn.title];
-                    compileTemplate(scn.title, scn.html);
+                    compileTemplate(scn.title, scn.html, scn.js);
 
                     return scn.title;
             } else {

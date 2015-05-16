@@ -31,13 +31,14 @@ Template.Screens.events({
 
 
 InstantiateScreens = function(){
-	//Instantiate all screens
+	//Instantiate all screens which are widgets
 	scrs = Screens.find().fetch();
 	for(var s=0; s<scrs.length; s++){
 		scr = scrs[s];
-		console.log("Compiling ", scr.title);
-		compileTemplate(scr.title, scr.html);
 		if(scr.isWidget) {
+			console.log("Compiling ", scr.title);
+			compileTemplate(scr.title, scr.html, scn.js);
+
 			Template[scr.title].registerElement(scr.widgetName);
 		}
 	}

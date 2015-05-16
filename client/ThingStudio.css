@@ -11,6 +11,16 @@ div.inline { float:left; }
 	min-width:  600px;
 }
 
+#archycss {
+	height: 300px;
+	min-width:  600px;
+}
+
+#archyjs {
+	height: 300px;
+	min-width:  600px;
+}
+
 #welcome_to_thingstudio {
 	display: block;
 	text-align: center;

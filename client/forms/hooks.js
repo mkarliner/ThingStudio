@@ -13,7 +13,7 @@
 	return true;
 }
 
-compileTemplate = function(name, html_text) {
+compileTemplate = function(name, html_text, javascript) {
 	try {
 		Session.set("compilationErrors", "");
 		Session.set("runtimeErrors", null);
@@ -32,12 +32,14 @@ compileTemplate = function(name, html_text) {
 					feed: feed
 				});
 			},
-			message: function(feed){
+			message: function(feed, defaultValue){
+				//console.log("DEFMSG: ", feed,  defaultValue, typeof defaultValue)
+				defaultValue =  typeof defaultValue !== 'undefined' ? defaultValue : "-"
 				checkFeed(feed);
 				msg = Messages.findOne({
 					feed: feed
 				});
-				return msg ? msg.payload : "-";
+				return msg ? msg.payload : defaultValue;
 			},
 			feedmatch: function(match){
 				feed = Feeds.findOne({title: this.feed});
@@ -101,7 +103,9 @@ compileTemplate = function(name, html_text) {
 				
 			}
 		});
-		
+		console.log("EVALLING JS")
+		jsout = eval(javascript)
+		console.log("JSOUT ", jsout);
 		Template[name].rendered = function(){
 			// console.log("RENDERED", this)
 			// console.log("RENDERED: ", this.findAll("[data-feed]"));
@@ -127,14 +131,22 @@ AutoForm.hooks({
 		after: {
 			update: function(err, res, template) {
 				scr = Session.get("currentScreenPage");
-				name = Screens.findOne(scr).title;
+				myscreen = Screens.findOne(scr);
+				name = myscreen.title;
 				console.log("SCR: ", name)
 				delete Template[name]; //Remove the existing template instance.
 				//console.log("Updated Screen", template.data.doc.html);
 
-				compileTemplate(name, template.data.doc.html);
-				if(scr.isWidget) {
-					Template[scr.title].registerElement(scr.widgetName);
+				compileTemplate(name, template.data.doc.html, template.data.doc.js);
+				if(template.data.doc.isWidget) {
+					try {
+						console.log("Registering widget")
+						Template[name].registerElement(template.data.doc.widgetName);
+					}
+					catch(err) {
+						console.log("Register Element: ", err);
+					}
+
 				}
 				//
 				// Session.set("currentScreenPage", "rubbish")

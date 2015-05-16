@@ -3,16 +3,23 @@
 AutoForm.addInputType('acecss', {
 	template: 'afAceCss',
 	valueOut: function(obj) {
-		console.log("OUT: ", AceEditor.instance("archy").getValue())
-		return AceEditor.instance("archy").getValue();
+		//console.log("OUT: ", AceEditor.instance("archycss").getValue())
+		return AceEditor.instance("archycss").getValue();
 	}
 });
 
+AutoForm.addInputType('acejs', {
+	template: 'afAceJs',
+	valueOut: function(obj) {
+		//console.log("OUT: ", AceEditor.instance("archyjs").getValue())
+		return AceEditor.instance("archyjs").getValue();
+	}
+});
 
 AutoForm.addInputType('ace', {
 	template: 'afAce',
 	valueOut: function(obj) {
-		console.log("OUT: ", AceEditor.instance("archy").getValue())
+		// console.log("OUT: ", AceEditor.instance("archy").getValue())
 		return AceEditor.instance("archy").getValue();
 	}
 });
@@ -47,11 +54,35 @@ Template.afAceCss.helpers({
 	}
 });
 
+Template.afAceJs.helpers({
+	debug: function(obj){
+		console.log("DEBUG:", obj);
+	},
+	loadValue: function(editor){
+
+	}
+});
+
+Template.afAceJs.rendered = function() {
+    var editor;
+	console.log("RENDERED", this.findAll());
+   Tracker.autorun(function (e) {
+   editor = AceEditor.instance("archyjs", {
+	   theme: "twilight",
+	   mode: "javascript"
+   });
+   
+   if(editor.loaded===true){
+     e.stop();
+   }
+ }); 
+}
+
 Template.afAceCss.rendered = function() {
     var editor;
-	//console.log("RENDERED", this.findAll());
+	console.log("RENDERED", this.findAll());
    Tracker.autorun(function (e) {
-   editor = AceEditor.instance("archy", {
+   editor = AceEditor.instance("archycss", {
 	   theme: "twilight",
 	   mode: "css"
    });
@@ -89,7 +120,7 @@ Template.Screen.helpers({
             if(scn) {
                     // console.log("HTML: ", scn.html);
                     delete Template[scn.title];
-                    compileTemplate(scn.title, scn.html);
+                    compileTemplate(scn.title, scn.html, scn.js);
 
                     return scn.title;
             } else {
