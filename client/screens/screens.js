@@ -1,6 +1,10 @@
 Template.Screens.helpers({
+	widgetlist: function(){
+		wl =  Screens.find({ owner: Meteor.userId(), isWidget: true})
+		return wl;
+	},
 	screenlist: function(){
-		return Screens.find({ owner: Meteor.userId()})
+		return Screens.find({ owner: Meteor.userId(), isWidget: false})
 	},
 	publicscreens: function() {
 		return Screens.find({public: true})
@@ -19,6 +23,9 @@ Template.Screens.helpers({
 	home_page: function(){
 		app = Session.get("currentApp");
 		return  this._id == app.home_page ? "yes" : "no";
+	},
+	widget: function(){
+		return( "aa" +this.isWidget)
 	}
 });
 

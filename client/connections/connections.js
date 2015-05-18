@@ -38,7 +38,7 @@ UnsubscribeAll = function(){
 	for(var f=0; f<feeds.length; f++) {
 		topic = mqttregex(feeds[f].subscription).topic;
 		topic = topic.substring(0, topic.length - 1);
-		console.log("Unsubscribing feed: ", feeds[f].title, topic);
+		// console.log("Unsubscribing feed: ", feeds[f].title, topic);
 		mqttClient.unsubscribe(topic);
 	}
 }
@@ -70,7 +70,7 @@ connect = function (conn) {
 	});
 	mqttClient.on("close", function(par){
 		if(Session.get("currentMQTTHost") == this.options.hostname) {
-			console.log("close", par, this);
+			// console.log("close", par, this);
 			Session.set("ConnectionStatus", false);
 			Session.set("connectionErrors", "Closed")
 		} else {

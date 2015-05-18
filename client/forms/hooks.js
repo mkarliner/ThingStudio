@@ -32,9 +32,12 @@ compileTemplate = function(name, html_text, javascript) {
 					feed: feed
 				});
 			},
-			message: function(feed, defaultValue){
-				//console.log("DEFMSG: ", feed,  defaultValue, typeof defaultValue)
-				defaultValue =  typeof defaultValue !== 'undefined' ? defaultValue : "-"
+			message: function(feed, defVal){
+				if(typeof defVal == "number" || typeof defVal == "string") {
+					defaultValue = defVal;
+				} else {
+					defaultValue = "-"
+				}
 				checkFeed(feed);
 				msg = Messages.findOne({
 					feed: feed
@@ -112,7 +115,7 @@ compileTemplate = function(name, html_text, javascript) {
 			// console.log("RENDERED: ", this.findAll("[data-feed]"));
 		}
 	} catch (err) {
-		console.log('Error compiling template:' + html_text);
+		// console.log('Error compiling template:' + html_text);
 		console.log(err.message);
 		Session.set("compilationErrors", err.message);
 	}

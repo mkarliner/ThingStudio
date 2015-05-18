@@ -65,7 +65,7 @@ Template.afAceJs.helpers({
 
 Template.afAceJs.rendered = function() {
     var editor;
-	console.log("RENDERED", this.findAll());
+	// console.log("RENDERED", this.findAll());
    Tracker.autorun(function (e) {
    editor = AceEditor.instance("archyjs", {
 	   theme: "twilight",
@@ -80,7 +80,7 @@ Template.afAceJs.rendered = function() {
 
 Template.afAceCss.rendered = function() {
     var editor;
-	console.log("RENDERED", this.findAll());
+	// console.log("RENDERED", this.findAll());
    Tracker.autorun(function (e) {
    editor = AceEditor.instance("archycss", {
 	   theme: "twilight",

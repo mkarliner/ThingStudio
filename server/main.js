@@ -137,7 +137,7 @@ Meteor.startup(function() {
 		apps = getAppTree(appId);
 		// console.log("Subscribing connections: ", appId,  app.access)
 		if(this.userId == app.owner || app.access == "Shareable") {
-			console.log("Returning connections: ", apps )
+			// console.log("Returning connections: ", apps )
 			return Connections.find({appId: {$in: apps}});
 		}
 	});
