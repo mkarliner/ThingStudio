@@ -175,7 +175,8 @@ Router.route("/apps/:_id/share", function() {
 });
 
 Router.route("/apps", function() {
-	this.layout("GeneralLayout");
+	//this.layout("GeneralLayout");
+	this.layout("MasterLayout");
 	this.render("Apps");
 }, {
 	name: "Apps"

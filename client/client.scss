@@ -1,0 +1,21 @@
+// $bg: #0000ff;
+// @mixin bground {
+// 	background: lighten($bg, 20%);
+// }
+
+// body {
+// 	@include bground;
+// }
+
+$white: #fff;
+$baseText: #858C9D;
+$fontSize: 12px;
+$fontFace: Avenir, Helvetica, sans-serif;
+$appBodyBG: #EBF3F6;
+
+body {
+	background-color: $white;
+	color: $baseText;
+	font-family: $fontFace;
+	font-size: $fontSize;
+}
