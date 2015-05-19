@@ -31,6 +31,23 @@ Schemas.App = new SimpleSchema({
 			}
 		}
 	},
+	ancestor: {
+		type: String,
+		label: "Parent App",
+		optional: true,
+		autoform: {
+			type: "select",
+			options: function(){
+				apps = Apps.find({}).fetch();
+				options = [];
+				var i;
+				for(i=0; i<apps.length; i++) {
+					options[i] = { label: apps[i].title, value: apps[i]._id};
+				}
+				return(options);
+			}
+		}
+	},
 	connection: {
 		type: String,
 		optional: true,

@@ -1,3 +1,5 @@
+
+
 Screens = new Mongo.Collection("screens");
 
 
@@ -7,6 +9,13 @@ if(boilerplate) {
 	defaultScreenContent = boilerplate.html;
 } else {
 	defaultScreenContent = "<!-- Screen content here -->";
+}
+
+if(boilerplate) {
+	defaultJsContent = boilerplate.js;
+	console.log("DEFCON: ",boilerplate, defaultJsContent);
+} else {
+	defaultJsContent = "//Javascript content here";
 }
 	
 
@@ -54,6 +63,20 @@ Schemas.Screen = new SimpleSchema({
 		},
 		defaultValue: defaultScreenContent
 	},
+	js: {
+		optional: true,
+		label: "Javascript",
+		type: String,
+		autoform: {
+			rows: 10,
+	        afFieldInput: {
+	          type: 'acejs',
+	          class: 'editor' // optional
+	          // summernote options goes here
+	        }
+		},
+		defaultValue: defaultJsContent
+	},
 	owner: {
 		type: String,
 		index: true,
@@ -77,7 +100,15 @@ Schemas.Screen = new SimpleSchema({
 			omit: true
 		},
 	},
-
+	isWidget: {
+		type: Boolean,
+		index: true,
+		defaultValue: false
+	},
+	widgetName: {
+		type: String,
+		optional: true
+	}
 	// public: {
 	// 	type: Boolean,
 	// 	defaultValue: false

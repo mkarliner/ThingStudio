@@ -22,9 +22,12 @@ Meteor.startup(function() {
 	Meteor.subscribe("apps",  {
 		onReady: function() {
 			// console.log("APPS READY")
-			initialApp = Apps.findOne({title: "defaultApp"});
+			initialApp = Session.get("currentApp");
+			if(!initialApp) {
+				initialApp = Apps.findOne({title: "defaultApp"});
+			}	
 			if(initialApp) {
-				Session.set("currentApp", initialApp);
+				Session.setPersistent("currentApp", initialApp);
 			} else if(Meteor.userId()) {
 				console.log("Creating default app on ready", Meteor.userId())
 				appId = Apps.insert({
@@ -44,7 +47,7 @@ Meteor.startup(function() {
 		  Meteor.subscribe("connections",ca._id, {
 			onReady: function(){
 				connections = Connections.find().fetch();
-				console.log("CONNECTIONS FOUND: ", connections);
+				// console.log(" CONNECTIONS FOUND: ", connections);
 				//If the app specifies a connection, use that
 				//if not, use any, or none.
 				if(ca.connection) {
@@ -66,7 +69,11 @@ Meteor.startup(function() {
 				  console.log("SUBSCRIBING FEEDS");
 			  }
 		  });
-		  Meteor.subscribe("screens", ca._id);
+		  Meteor.subscribe("screens", ca._id, {
+		  	  onReady: function(){
+				  InstantiateScreens();
+		  	  }
+		  });
 		  Meteor.subscribe("themes", ca._id);
 	}
 

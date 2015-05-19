@@ -1,5 +1,5 @@
 <template name="insertScreenForm">
-  {{> quickForm collection="Screens" id="insertScreenForm" type="insert" buttonClasses="glyphicon glyphicon-ok btn btn-default" buttonContent="Save" omitFields="html"}}
+  {{> quickForm collection="Screens" id="insertScreenForm" type="insert" buttonClasses="glyphicon glyphicon-ok btn btn-default" buttonContent="Save" omitFields="html, js"}}
 </template>
 
 
@@ -19,11 +19,14 @@
 		  <div class="well">
 		    	{{>afQuickField name="title" class="centerField"}}
 				{{>afQuickField name="theme" class="centerField"}}
+				{{>afQuickField name="isWidget" class="centerField"}}
+				{{>afQuickField name="widgetName" class="centerField"}}
 		  </div>
 		</div>
 	
 
 		{{>afQuickField name="html" class="centerField"}}
+		{{>afQuickField name="js" class="centerField"}}
 		{{!-- >afQuickField name="updatesHistory"--}}
 	</fieldset>
 	<button type="submit" class="btn btn-primary">Update</button>

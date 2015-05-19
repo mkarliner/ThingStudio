@@ -24,7 +24,7 @@ Template.Apps.events({
 		console.log(this);
 		UnsubscribeAll();
 		DisconnectMQTT();
-		Session.set("currentApp",this);
+		Session.setPersistent("currentApp",this);
 		ResetMessages();
 	}
 	

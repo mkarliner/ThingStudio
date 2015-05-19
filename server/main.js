@@ -10,6 +10,19 @@ isAdmin = function(userId) {
 	}
 }
 
+
+getAppTree = function(appId){
+	app = Apps.findOne({_id: appId});
+	baseApp = Apps.findOne({description: "24v86gqupNGbYz9Mv"});
+	apps = [app._id, baseApp._id];
+	while(app.ancestor) {
+		app = Apps.findOne({_id: app.ancestor})
+		apps.push(app._id);
+	}
+	return apps;
+}
+
+
 Meteor.startup(function() {
 	//Before anything, initialise defaultApp for all users 
 	//and connect any orphan resources.
@@ -121,20 +134,21 @@ Meteor.startup(function() {
 	});
 
 	Meteor.publish("connections", function(appId) {
-		app = Apps.findOne({_id: appId});
+		apps = getAppTree(appId);
 		// console.log("Subscribing connections: ", appId,  app.access)
 		if(this.userId == app.owner || app.access == "Shareable") {
-			// console.log("Returning connections: ", Connections.find({appId: appId}).fetch().length )
-			return Connections.find({appId: appId});
+			// console.log("Returning connections: ", apps )
+			return Connections.find({appId: {$in: apps}});
 		}
 	});
 
 	Meteor.publish("screens", function(appId) {
 		app = Apps.findOne({_id: appId});
+		apps = getAppTree(appId);
 		// console.log("Subscribing screens: ", appId,  app.access)
 		if(this.userId == app.owner || app.access == "Shareable") {
 			// console.log("Returning screends: ", Screens.find({appId: appId}).fetch().length )
-			return Screens.find({appId: appId});
+			return Screens.find({appId: {$in: apps}});
 		}
 		// if (isAdmin(this.userId)) {
 		// 	return Screens.find({});
@@ -151,10 +165,13 @@ Meteor.startup(function() {
 	});
 	Meteor.publish("feeds", function(appId) {
 		app = Apps.findOne({_id: appId});
+		apps = getAppTree(appId);
 		// console.log("Subscribing feeds: ", appId,  app.access)
 		if(this.userId == app.owner || app.access == "Shareable") {
 			// console.log("Returning feeds: ", Feeds.find({appId: appId}).fetch().length )
-			return Feeds.find({appId: appId});
+			return Feeds.find({appId: {$in
+				
+				: apps}});
 		}
 		// return Feeds.find({
 		// 	$or: [{
@@ -166,10 +183,11 @@ Meteor.startup(function() {
 	});
 	Meteor.publish("themes", function(appId) {
 		app = Apps.findOne({_id: appId});
+		apps = getAppTree(appId);
 		// console.log("Subscribing themes: ", appId,  app.access)
 		if(this.userId == app.owner || app.access == "Shareable") {
 			// console.log("Returning themes: ", Themes.find({appId: appId}).fetch().length )
-			return Themes.find({appId: appId});
+			return Themes.find({appId: {$in: apps}});
 		}
 	});
 	// Meteor.publish("themes", function() {
