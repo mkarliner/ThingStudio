@@ -213,6 +213,16 @@ Router.route("/docs/about", function() {
 	this.render("HelpAbout");
 });
 
+Router.route("/profile", function() {
+	this.render("Profile", {
+		data: function() {
+			return Meteor.user();
+		}
+	});
+}, {
+	name: "Profile"
+});
+
 Router.route("/debug", function() {
 	this.render("Debug");
 });

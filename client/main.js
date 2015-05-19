@@ -1,6 +1,6 @@
 TunguskaGaugeThemePack = {};
 
-
+AutoForm.debug();
 
 
 Meteor.startup(function() {
