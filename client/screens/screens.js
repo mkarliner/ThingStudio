@@ -20,6 +20,10 @@ Template.Screens.helpers({
 			return u ? u.username : "Unknown";
 		}
 	},
+	fromApp: function(){
+		app = Apps.findOne(this.appId);
+		return app.title;
+	},
 	home_page: function(){
 		app = Session.get("currentApp");
 		return  this._id == app.home_page ? "yes" : "no";

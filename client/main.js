@@ -1,7 +1,13 @@
 TunguskaGaugeThemePack = {};
 
-AutoForm.debug();
+// AutoForm.debug();
 
+Template.registerHelper("indexedArray",
+	function(arr) {
+  	  	return _.map(arr, function(value, index){
+    	  return {value: value, index: index};
+  });
+});
 
 Meteor.startup(function() {
 	

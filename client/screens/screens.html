@@ -7,7 +7,7 @@
 	<table class="table screens-table">
 	<tr>
 		<th>Title</th>
-
+		<th>App</th>
 		<th>Home Page</th>
 		<th>Status</th>
 	</tr>
@@ -17,6 +17,7 @@
 			<!-- {{#if isInRole 'admin'}}
 			<td>{{html.length}}</td>
 			{{/if}} -->
+			<td>{{fromApp}}</td>
 			<td>{{home_page}}</td>
 			<td>{{status}}</td>	
 			<td><button class="btn"><a href="/screens/{{this._id}}">Edit & Preview</a></button><button class="btn"><a href="/screens/{{this._id}}/edit">Safe Edit</a></button>{{#afModal class="btn btn-danger" collection="Screens" operation="remove" doc=_id}} Delete {{/afModal}}</td>
