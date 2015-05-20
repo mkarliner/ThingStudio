@@ -9,6 +9,20 @@ Template.registerHelper("indexedArray",
   });
 });
 
+Template.registerHelper("deviceOrientation", function(){
+	console.log("DEVO ", Session.get("deviceOrientation"))
+	return Session.get("deviceOrientation");
+})
+
+// devOrientHandler = function(ev) {
+// 	Session.set("deviceOrientation", ev);
+// }
+//
+// if (window.DeviceOrientationEvent) {
+//  console.log("DeviceOrientation is supported");
+//   window.addEventListener('deviceorientation', devOrientHandler, false);
+// }
+
 Meteor.startup(function() {
 	
 	// window.onerror = function (errorMsg, url, lineNumber, column, errorObj) {

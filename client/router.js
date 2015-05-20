@@ -133,20 +133,6 @@ Router.route("/connectionold", function() {
 				if (conn) {
 					return conn;
 				}
-				// } else {
-				// 	console.log("CREATING CONNECTION");
-				// 	Connections.insert({
-				// 		title: "Modern Industry",
-				// 		host: "mqtt.thingstud.io",
-				// 		port: 9001, protocol: "Websocket",
-				// 		owner: Meteor.userId(),
-				// 		appId: Session.get("currentApp")._id,
-				// 		username: "guest",
-				// 		password: "guest",
-				// 		autoConnect: true});
-				// 	return Connections.findOne();
-				// }
-
 			}
 		})
 	}
@@ -157,6 +143,10 @@ Router.route("screens/:_id/edit", function(){
 	this.layout("GeneralLayout");
 	this.render("EditScreen", {
 		data: function(){
+			if(!this.ready()) {
+				console.log("Not ready")
+				return;
+			}
 			Session.set("currentScreenPage", this.params._id);
 			return Screens.findOne({_id: this.params._id});
 		}
