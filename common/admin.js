@@ -1,6 +1,9 @@
 AdminConfig={
 	 nonAdminRedirectRoute: 'entrySignIn',
   collections: {
+  	Apps: {
+  		
+  	},
     Connections: {
 		tableColumns: [
 			{label: "Title", name: "title"},

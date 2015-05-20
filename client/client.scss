@@ -30,9 +30,10 @@ $dividerColor: #242938;
 $SBheaderSize: 10px;
 $SBitemSize: 12px;
 $SBcollapseBG: #424960;
+$picBorder: #9196A1 solid 2px;
 
 //Top Nav
-$navBorder: #DCDCDC;
+$navBorder: #DCDCDC 1px solid;
 
 @mixin fixedCenter {
 	position: fixed;
@@ -56,12 +57,98 @@ header, main, footer, nav.top-nav {
 
 nav {
 	background: $white;
-	border-bottom: $navBorder 1px solid;
+	border-bottom: $navBorder;
 	box-shadow: none;
 }
 
+.clearfix:after { visibility: hidden; display: block; font-size: 0; content: " "; clear: both; height: 0; }
+.clearfix { display: inline-block; }
+/* start commented backslash hack \*/
+* html .clearfix { height: 1%; }
+.clearfix { display: block; }
+/* close commented backslash hack */
+
 .divider {
 	background-color: $dividerColor;
+}
+
+.center-image {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.side-nav.fixed {
+	background-color: $darkBase;
+	& a {
+		color: $darkBaseText;
+		&:hover {
+			color: lighten($darkBaseText, 20%);
+		}
+	}
+	& p.section-header {
+		font-size: $SBheaderSize;
+		padding-left: 10px;
+		line-height: 10px;
+		margin-top: 0;
+	}
+	li {
+		line-height: $sidenavLiHeight;
+		text-transform: uppercase;
+		& a {
+			font-size: $fontSize;
+			line-height: $sidenavLiHeight;
+			height: $sidenavLiHeight;
+		}
+	}
+	& li:hover, & li.active {
+		background-color: $darkBaseBGHover;
+		& a {
+			color: lighten($darkBaseText, 20%);
+		}
+	}
+	& .sb-profile a {
+		display: inline;
+		padding: 0 8px;
+	}
+}
+
+.sb-profile {
+	& img {
+		margin-top: 10px;
+		margin-bottom: 6px;
+		border: $picBorder;
+	}
+	& span {
+		float: left;
+	}
+	& i {
+		font-size: 2.5 * $fontSize;
+	}
+}
+
+.dropdown-content li > span {
+	font-size: $fontSize;
+	color: $green;
+	padding: 0.5rem;
+}
+
+.side-nav .collapsible-body {
+	background-color: $SBcollapseBG;
+	padding-bottom: 8px;
+}
+
+.collapsible-body p {
+	padding: 0 0.7rem;
+}
+
+.sidenav-app-selector {
+	padding: 0 20px;
+}
+
+.select-wrapper input.select-dropdown {
+	border-bottom: none;
+	margin-bottom: 0;
 }
 
 .logo-container {
@@ -75,62 +162,4 @@ nav {
 .logo-section {
 	padding-top: 1.3rem;
 	padding-bottom: 0.7rem;
-}
-
-.side-nav {
-	background-color: $darkBase;
-	& p.section-header {
-		font-size: $SBheaderSize;
-		padding-left: 10px;
-		line-height: 10px;
-		margin-top: 0;
-	}
-}
-
-.side-nav li:hover, .side-nav li.active {
-	background-color: $darkBaseBGHover;
-}
-
-ul.side-nav.fixed li {
-	line-height: $sidenavLiHeight;
-	text-transform: uppercase;
-	&.active a {
-		color: lighten($darkBaseText, 20%);
-	}
-}
-
-.sidenav-app-selector {
-	padding: 0 20px;
-}
-
-.select-wrapper input.select-dropdown {
-	border-bottom: none;
-	margin-bottom: 0;
-}
-
-.dropdown-content li > a, .dropdown-content li > span {
-	font-size: $fontSize;
-	color: $green;
-	padding: 0.5rem;
-}
-
-.side-nav .collapsible-body {
-	background-color: $SBcollapseBG;
-}
-
-.collapsible-body p {
-	padding: 0 0.7rem;
-}
-
-ul.side-nav.fixed li a {
-	font-size: $fontSize;
-	line-height: $sidenavLiHeight;
-	height: $sidenavLiHeight;
-}
-
-.side-nav.fixed a {
-	color: $darkBaseText;
-	&:hover {
-		color: lighten($darkBaseText, 20%);
-	}
 }
