@@ -1,28 +1,30 @@
+Meteor.startup(function(){
+	AutoForm.addInputType('acecss', {
+		template: 'afAceCss',
+		valueOut: function(obj) {
+			//console.log("OUT: ", AceEditor.instance("archycss").getValue())
+			return AceEditor.instance("archycss").getValue();
+		}
+	});
+
+	AutoForm.addInputType('acejs', {
+		template: 'afAceJs',
+		valueOut: function(obj) {
+			//console.log("OUT: ", AceEditor.instance("archyjs").getValue())
+			return AceEditor.instance("archyjs").getValue();
+		}
+	});
+
+	AutoForm.addInputType('ace', {
+		template: 'afAce',
+		valueOut: function(obj) {
+			// console.log("OUT: ", AceEditor.instance("archy").getValue())
+			return AceEditor.instance("archy").getValue();
+		}
+	});
+})
 
 
-AutoForm.addInputType('acecss', {
-	template: 'afAceCss',
-	valueOut: function(obj) {
-		//console.log("OUT: ", AceEditor.instance("archycss").getValue())
-		return AceEditor.instance("archycss").getValue();
-	}
-});
-
-AutoForm.addInputType('acejs', {
-	template: 'afAceJs',
-	valueOut: function(obj) {
-		//console.log("OUT: ", AceEditor.instance("archyjs").getValue())
-		return AceEditor.instance("archyjs").getValue();
-	}
-});
-
-AutoForm.addInputType('ace', {
-	template: 'afAce',
-	valueOut: function(obj) {
-		// console.log("OUT: ", AceEditor.instance("archy").getValue())
-		return AceEditor.instance("archy").getValue();
-	}
-});
 
 Template.afAce.helpers({
 	debug: function(obj){
@@ -71,9 +73,13 @@ Template.afAceJs.rendered = function() {
 	   theme: "twilight",
 	   mode: "javascript"
    });
-   
+
    if(editor.loaded===true){
      e.stop();
+	 cs = Session.get("currentScreenPage");
+	 
+	 console.log("CSJ: ", cs)
+	 editor.setValue(Screens.findOne({_id: cs}).js, -1);
    }
  }); 
 }
@@ -86,7 +92,7 @@ Template.afAceCss.rendered = function() {
 	   theme: "twilight",
 	   mode: "css"
    });
-   
+
    if(editor.loaded===true){
      e.stop();
    }
@@ -104,6 +110,10 @@ Template.afAce.rendered = function() {
    
    if(editor.loaded===true){
      e.stop();
+	 cs = Session.get("currentScreenPage");
+	 
+	 console.log("CS: ", cs)
+	 editor.setValue(Screens.findOne({_id: cs}).html, -1);
    }
  }); 
 }

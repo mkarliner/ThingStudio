@@ -53,15 +53,27 @@ Router.route("/view/app/:_id", {
 	//To render a app, show the home page if it has one,
 	// if this is only one screen, show that.
 	// otherwise show a menu of screens.
-	waitOn: function() {
-		return [Meteor.subscribe("apps", this.params._id), Meteor.subscribe("screens", this.params._id)];
+	onBeforeAction: function(){
+		console.log("BA!!!!")
+		Session.set("currentAppId", this.params._id);
 	},
+	// waitOn: function() {
+	// 	console.log("Waiting for ", this.params._id);
+	// 	Session.set("currentAppId", this.params._id);
+	// 	Session.setPersistent("currentApp", {_id: this.params._id});
+	// 	return [Meteor.subscribe("apps", this.params._id), Meteor.subscribe("screens", this.params._id)];
+	// },
 	loadingTemplate: "Loading",
-	action: function() {
+
+	data: function() {
+		console.log("ACTION!")
 		this.layout("ViewerLayout");
 		app = Apps.findOne({
 			_id: this.params._id
 		});
+		if(!app) {
+			return;
+		}
 		console.log("ViewAppRoute: ", this.params._id, app);
 		Session.set("currentApp", app);
 		console.log("APP HOME PAGE: ", app.home_page);
@@ -121,20 +133,6 @@ Router.route("/connectionold", function() {
 				if (conn) {
 					return conn;
 				}
-				// } else {
-				// 	console.log("CREATING CONNECTION");
-				// 	Connections.insert({
-				// 		title: "Modern Industry",
-				// 		host: "mqtt.thingstud.io",
-				// 		port: 9001, protocol: "Websocket",
-				// 		owner: Meteor.userId(),
-				// 		appId: Session.get("currentApp")._id,
-				// 		username: "guest",
-				// 		password: "guest",
-				// 		autoConnect: true});
-				// 	return Connections.findOne();
-				// }
-
 			}
 		})
 	}
@@ -145,6 +143,10 @@ Router.route("screens/:_id/edit", function(){
 	this.layout("GeneralLayout");
 	this.render("EditScreen", {
 		data: function(){
+			if(!this.ready()) {
+				console.log("Not ready")
+				return;
+			}
 			Session.set("currentScreenPage", this.params._id);
 			return Screens.findOne({_id: this.params._id});
 		}
