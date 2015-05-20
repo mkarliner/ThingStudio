@@ -24,30 +24,53 @@ Meteor.startup(function() {
 	// 	// console.log("FC: ", err, result);
 	//
 	// });
-	
-	Meteor.subscribe("apps",  {
-		onReady: function() {
-			// console.log("APPS READY")
-			initialApp = Session.get("currentApp");
-			if(!initialApp) {
-				initialApp = Apps.findOne({title: "defaultApp"});
-			}	
-			if(initialApp) {
-				Session.setPersistent("currentApp", initialApp);
-			} else if(Meteor.userId()) {
-				console.log("Creating default app on ready", Meteor.userId())
-				appId = Apps.insert({
-					title: "defaultApp",
-					access: "Private",
-				});
-				Session.set("currentApp", Apps.findOne({_id: appId}));
-			}
+	Tracker.autorun(function () {	
+		console.log("Running subscribe", Session.get("currentAppId"))
+		Meteor.subscribe("apps", Session.get("currentAppId"), {
+			onReady: function() {
+				console.log("Apps Ready", Apps.find({}).fetch());
+				//Is there only one App available?
+				numApps = Apps.find().count();
+				if(numApps == 1) {
+					initialApp = Apps.findOne();
+					Session.setPersistent("currentApp", initialApp);
+					return;
+				}
+				// Are we returning to an existing App?
+				initialApp = Session.get("currentApp");	
+				if(initialApp) {
+					Session.setPersistent("currentApp", initialApp);
+					return;
+				} 
+				//Are we logged in, but have no Apps?
+				if(Meteor.userId() && numApps == 0) {
+					//If so, create first app.
+					console.log("Creating default app on ready", Meteor.userId())
+					appId = Apps.insert({
+						title: "defaultApp",
+						access: "Private",
+					});
+					Session.setPersistent("currentApp", Apps.findOne({_id: appId}));
+					return;
+				}
+				//Are we logged in, with Apps, but none current?
+				if(Meteor.userId) {
+					initialApp = Apps.findOne({title: "defaultApp"});
+					Session.setPersistent("currentApp", initialApp);
+					return;
+				}
+			
 
-		}
+			}
+		});
 	});
+		
+	
+
 	
 	Tracker.autorun(function () {
 	  ca  = Session.get("currentApp");
+	  Session.get("currentAppId");
 	  if(ca) {
 		  console.log("SUB: ", ca.title);
 		  Meteor.subscribe("connections",ca._id, {
@@ -75,6 +98,7 @@ Meteor.startup(function() {
 				  console.log("SUBSCRIBING FEEDS");
 			  }
 		  });
+		  console.log("SUBSCRIBING SCREENS");
 		  Meteor.subscribe("screens", ca._id, {
 		  	  onReady: function(){
 				  InstantiateScreens();

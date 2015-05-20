@@ -9,10 +9,16 @@
 	
 	<h1>Your Apps</h1>
 	<table class="table apps-table">
-	<tr><th>Title</th></tr>
+	<tr>
+		<th>Title</th>
+		<th>Based On</th>
+		<th>Access</th>
+	</tr>
 	{{#each appslist}}
 		<tr>
 			<td class="appslink">{{this.title}}</td>
+			<td>{{parentTitle}}</td>
+			<td>{{access}}</td>
 			<td><button class="btn" id="select-app">Select</button></td>
 
 			{{#if current_app}}

@@ -120,8 +120,9 @@ Meteor.startup(function() {
 		if(appId) {
 			appcurr =  Apps.find({_id: appId});
 			app = appcurr.fetch()[0]; 
-			console.log("APPACC ", app.access)
+			console.log("APPACC ", app.access, appId)
 			if(app.access == "Shareable" || app.access == "Published") {
+				// console.log("Returning app", appcurr.fetch())
 				return appcurr;
 			} else {
 				console.log("Attempt to access private app", app)
@@ -145,7 +146,7 @@ Meteor.startup(function() {
 	Meteor.publish("screens", function(appId) {
 		app = Apps.findOne({_id: appId});
 		apps = getAppTree(appId);
-		// console.log("Subscribing screens: ", appId,  app.access)
+		console.log("Subscribing screens: ", appId,  app.title, app.access)
 		if(this.userId == app.owner || app.access == "Shareable") {
 			// console.log("Returning screends: ", Screens.find({appId: appId}).fetch().length )
 			return Screens.find({appId: {$in: apps}});

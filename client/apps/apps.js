@@ -15,6 +15,9 @@ Template.Apps.helpers({
 		} else {
 			return false;
 		}
+	},
+	parentTitle: function(){
+		return(Apps.findOne({_id: this.parent})).title;
 	}
 });
 

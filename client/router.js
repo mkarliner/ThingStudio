@@ -53,15 +53,27 @@ Router.route("/view/app/:_id", {
 	//To render a app, show the home page if it has one,
 	// if this is only one screen, show that.
 	// otherwise show a menu of screens.
-	waitOn: function() {
-		return [Meteor.subscribe("apps", this.params._id), Meteor.subscribe("screens", this.params._id)];
+	onBeforeAction: function(){
+		console.log("BA!!!!")
+		Session.set("currentAppId", this.params._id);
 	},
+	// waitOn: function() {
+	// 	console.log("Waiting for ", this.params._id);
+	// 	Session.set("currentAppId", this.params._id);
+	// 	Session.setPersistent("currentApp", {_id: this.params._id});
+	// 	return [Meteor.subscribe("apps", this.params._id), Meteor.subscribe("screens", this.params._id)];
+	// },
 	loadingTemplate: "Loading",
-	action: function() {
+
+	data: function() {
+		console.log("ACTION!")
 		this.layout("ViewerLayout");
 		app = Apps.findOne({
 			_id: this.params._id
 		});
+		if(!app) {
+			return;
+		}
 		console.log("ViewAppRoute: ", this.params._id, app);
 		Session.set("currentApp", app);
 		console.log("APP HOME PAGE: ", app.home_page);
