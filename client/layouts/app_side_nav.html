@@ -1,17 +1,9 @@
 <!-- 
 Outstanding
 1. Icon export
-2. Linking apps to select dropdown
- - Show current app at the top √
- - Show apps list √
- - Remove current app from list √
- - Change app based on click √
- - Two problems:
-   - list does not always include full list of apps
-3. Decide on collapsibility
-4. Center name & droparrow
-5. Flip arrow when collapsible is open
-6. Remove extra padding on icon section
+2. Decide on collapsibility
+3. Center name & droparrow
+4. Flip arrow when collapsible is open
 -->
 <template name="AppSideNav">
 	<ul id="slide-out" class="side-nav fixed">
@@ -23,6 +15,7 @@ Outstanding
 					<div class="collapsible-body clearfix">
 						<p><a href="/settings">Settings</a></p>
 						<p><a href="/profile">Profile</a></p>
+						<p><a href="/logout">Logout</a></p>
 					</div>
 				</li>
 			</ul>
@@ -35,18 +28,9 @@ Outstanding
 		<div class="divider"></div>
 		<div class="section">
 			<p class="section-header">Apps</p>
-			<div class="input-field sidenav-app-selector">
-				<select>
-					{{#if current_app_name}}
-						<option value="{{ current_app_name._id}}" disabled selected>{{ current_app_name.title }}</option>
-					{{else}}
-						<option value="" disabled selected>Choose your app</option>
-					{{/if}}
-					{{#each appsList}}
-					<option value="{{this._id}}">{{this.title}}</option>
-					{{/each}}
-				</select>
-			</div>
+				<div class="select-parent">
+					{{> AppSideNavSelect}}
+				</div>
 			<li class="{{isActiveRoute regex='connections'}}"><a href="/connections">Connections</a></li>
 			<li class="{{isActiveRoute regex='feeds'}}"><a href="/feeds">Data Feeds</a></li>
 			<li class="{{isActiveRoute regex='templates'}}"><a href="/templates">Templates</a></li>
@@ -85,5 +69,19 @@ Outstanding
 				</svg>
 			</div>
 		</div>
+	</div>
+</template>
+<template name="AppSideNavSelect">
+	<div class="input-field sidenav-app-selector">
+		<select class="myselect">
+			{{#if current_app_name}}
+				<option value="{{ current_app_name._id}}" disabled selected>{{ current_app_name.title }}</option>
+			{{else}}
+				<option value="" disabled selected>Choose your app</option>
+			{{/if}}
+			{{#each appsList }}
+			<option value="{{this._id}}">{{this.title}}</option>
+			{{/each}}
+		</select>
 	</div>
 </template>

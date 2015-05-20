@@ -110,10 +110,12 @@ nav {
 	& .sb-profile a {
 		display: inline;
 		padding: 0 8px;
+		line-height: 36px;
 	}
 }
 
 .sb-profile {
+	padding-bottom: 0.4rem;
 	& img {
 		margin-top: 10px;
 		margin-bottom: 6px;

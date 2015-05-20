@@ -1,6 +1,12 @@
+
 Template.AppSideNav.onRendered(function() {
-    $('select').material_select();
     $('.collapsible').collapsible();
+});
+
+Template.AppSideNavSelect.onRendered(function() {
+	$('select').material_select();
+	
+	console.log('rendering!');
 });
 
 Template.AppSideNav.events({
@@ -12,20 +18,29 @@ Template.AppSideNav.events({
 		console.log(angle);
 		$(collapsibleIcon).css({'transform': 'rotate(' + angle + ')'});
 		// 
-	},
+	}
 	// 'click .collapsible li.active': function(e, tmpl) {
 	// 	console.log("close has been clicked");
 	// 	var collapsibleIcon= tmpl.find('i.mdi-hardware-keyboard-arrow-down');
 	// 	$(collapsibleIcon).css({'transform': 'rotate(360deg)'});
 	// },
+
+});
+
+Template.AppSideNavSelect.events({
 	'change .sidenav-app-selector select': function(e, tmpl) {
 		var myThing = tmpl.find(":selected");
 		var myThingVal = $(myThing).attr("value");
 		var app = Apps.findOne({_id: myThingVal});
 		UnsubscribeAll();
 		DisconnectMQTT();
+		console.log('About to set currentApp to: ' + app.title);
 		Session.setPersistent("currentApp",app);
+		console.log('Have just to set currentApp to: ' + app.title);
 		ResetMessages();
+		$('select').material_select('destroy');
+		$('.sidenav-app-selector').remove();
+		Blaze.render(Template.AppSideNavSelect, $('.select-parent')[0]);
 	}
 });
 
@@ -40,11 +55,14 @@ Template.AppSideNav.helpers({
 		} else {
 			return Meteor.user().username;
 		}
-	},
+	}
+	
+});
+Template.AppSideNavSelect.helpers({
 	appsList: function() {
 		var currId = Session.get("currentApp")._id;
 		console.log(currId);
-		return Apps.find({owner: Meteor.userId(), _id: {$ne: currId}});
+		return Apps.find({owner: Meteor.userId(), _id: {$nin: [currId]}});
 	},
 	current_app_name: function(){
 		if (  Session.get("currentApp") ) {
