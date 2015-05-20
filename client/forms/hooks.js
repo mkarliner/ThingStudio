@@ -13,7 +13,7 @@
 	return true;
 }
 
-compileTemplate = function(name, html_text) {
+compileTemplate = function(name, html_text, javascript) {
 	try {
 		Session.set("compilationErrors", "");
 		Session.set("runtimeErrors", null);
@@ -32,12 +32,17 @@ compileTemplate = function(name, html_text) {
 					feed: feed
 				});
 			},
-			message: function(feed){
+			message: function(feed, defVal){
+				if(typeof defVal == "number" || typeof defVal == "string") {
+					defaultValue = defVal;
+				} else {
+					defaultValue = "-"
+				}
 				checkFeed(feed);
 				msg = Messages.findOne({
 					feed: feed
 				});
-				return msg ? msg.payload : "-";
+				return msg ? msg.payload : defaultValue;
 			},
 			feedmatch: function(match){
 				feed = Feeds.findOne({title: this.feed});
@@ -101,13 +106,16 @@ compileTemplate = function(name, html_text) {
 				
 			}
 		});
-		
+
+		if(javascript) {
+			jsout = eval(javascript)
+		}
 		Template[name].rendered = function(){
 			// console.log("RENDERED", this)
 			// console.log("RENDERED: ", this.findAll("[data-feed]"));
 		}
 	} catch (err) {
-		console.log('Error compiling template:' + html_text);
+		// console.log('Error compiling template:' + html_text);
 		console.log(err.message);
 		Session.set("compilationErrors", err.message);
 	}
@@ -127,12 +135,23 @@ AutoForm.hooks({
 		after: {
 			update: function(err, res, template) {
 				scr = Session.get("currentScreenPage");
-				name = Screens.findOne(scr).title;
+				myscreen = Screens.findOne(scr);
+				name = myscreen.title;
 				console.log("SCR: ", name)
 				delete Template[name]; //Remove the existing template instance.
 				//console.log("Updated Screen", template.data.doc.html);
 
-				compileTemplate(name, template.data.doc.html);
+				compileTemplate(name, template.data.doc.html, template.data.doc.js);
+				if(template.data.doc.isWidget) {
+					try {
+						console.log("Registering widget")
+						Template[name].registerElement(template.data.doc.widgetName);
+					}
+					catch(err) {
+						console.log("Register Element: ", err);
+					}
+
+				}
 				//
 				// Session.set("currentScreenPage", "rubbish")
 				// Session.set("currentScreenPage", 'faceplate')

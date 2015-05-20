@@ -19,7 +19,7 @@ Router.onBeforeAction(function(par) {
 	} else {
 		this.next();
 	}
-}, { except: [ "Help", "Helppages", "ViewScreen"]});
+}, { except: [ "Help", "Helppages", "ViewScreen", "ViewApp"]});
 
 
 
@@ -66,6 +66,7 @@ Router.route("/view/app/:_id", {
 		Session.set("currentApp", app);
 		console.log("APP HOME PAGE: ", app.home_page);
 		screen_cnt = Screens.find().count();
+		InstantiateScreens();
 		console.log("SCRCNT: ", screen_cnt)
 		if (app.home_page) {
 			Router.go("/viewer/screen/" + app.home_page);
@@ -212,6 +213,16 @@ Router.route("/feeds", function() {
 Router.route("/docs/about", function() {
 	this.layout("HelpLayout");
 	this.render("HelpAbout");
+});
+
+Router.route("/profile", function() {
+	this.render("Profile", {
+		data: function() {
+			return Meteor.user();
+		}
+	});
+}, {
+	name: "Profile"
 });
 
 Router.route("/debug", function() {

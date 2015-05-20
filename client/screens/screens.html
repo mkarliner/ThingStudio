@@ -1,24 +1,23 @@
 <template name="Screens">
 	
-	{{#afModal class="btn btn-primary" collection="Screens" operation="insert" omitFields=" public, html"}}
+	{{#afModal class="btn btn-primary" collection="Screens" operation="insert" omitFields=" public, html,js"}}
 	  Add a new screen
 	{{/afModal}}
 	<h1>Your Screens</h1>
 	<table class="table screens-table">
 	<tr>
 		<th>Title</th>
-		{{#if isInRole 'admin'}}
-		<th>Size</th>
-		{{/if}}
+		<th>App</th>
 		<th>Home Page</th>
 		<th>Status</th>
 	</tr>
 	
 	{{#each screenlist}}
 		<tr><td><a  class="screenlink">{{this.title}}</a></td>
-			{{#if isInRole 'admin'}}
+			<!-- {{#if isInRole 'admin'}}
 			<td>{{html.length}}</td>
-			{{/if}}
+			{{/if}} -->
+			<td>{{fromApp}}</td>
 			<td>{{home_page}}</td>
 			<td>{{status}}</td>	
 			<td><button class="btn"><a href="/screens/{{this._id}}">Edit & Preview</a></button><button class="btn"><a href="/screens/{{this._id}}/edit">Safe Edit</a></button>{{#afModal class="btn btn-danger" collection="Screens" operation="remove" doc=_id}} Delete {{/afModal}}</td>
@@ -26,5 +25,19 @@
 	{{/each}}
 	</table>
 	
+	<h1>Your Widgets</h1>
+	<table class="table screens-table">
+	<tr>
+		<th>Title</th>
+		<th>Status</th>
+	</tr>
+	
+	{{#each widgetlist}}
+		<tr><td><a  class="screenlink">{{this.title}}</a></td>
+			<td>{{status}}</td>	
+			<td><button class="btn"><a href="/screens/{{this._id}}">Edit & Preview</a></button><button class="btn"><a href="/screens/{{this._id}}/edit">Safe Edit</a></button>{{#afModal class="btn btn-danger" collection="Screens" operation="remove" doc=_id}} Delete {{/afModal}}</td>
+		</tr>
+	{{/each}}
+	</table>
 
 </template>
