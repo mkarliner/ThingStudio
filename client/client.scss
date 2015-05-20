@@ -1,21 +1,136 @@
-// $bg: #0000ff;
-// @mixin bground {
-// 	background: lighten($bg, 20%);
-// }
-
-// body {
-// 	@include bground;
-// }
-
+//Global
 $white: #fff;
 $baseText: #858C9D;
 $fontSize: 12px;
 $fontFace: Avenir, Helvetica, sans-serif;
 $appBodyBG: #EBF3F6;
+$green: #76D4E1;
+
+//Fonts
+//$fwLight: 'Avenir 35 Light';
+$fwLight: 100;
+//$fwBook: 'Avenir 45 Book';
+$fwBook: 300;
+//$fwRoman: 'Avenir 55 Roman';
+$fwRoman: 400;
+//$fwMedium: 'Avenir 65 Medium';
+$fwMedium: 500;
+//$fwHeavy: 'Avenir 85 Heavy';
+$fwHeavy: 700;
+//$fwBlack: 'Avenir 95 Black';
+$fwBlack: 900;
+
+//Sidebar
+$sideNavWidth: 240px;
+$darkBase: #353C51;
+$darkBaseText: #B2B7C4;
+$darkBaseBGHover: #424960;
+$sidenavLiHeight: 36px;
+$dividerColor: #242938;
+$SBheaderSize: 10px;
+$SBitemSize: 12px;
+$SBcollapseBG: #424960;
+
+//Top Nav
+$navBorder: #DCDCDC;
+
+@mixin fixedCenter {
+	position: fixed;
+	left: 0;
+	right: 0;
+}
+
+html {
+	font-family: $fontFace;
+}
 
 body {
 	background-color: $white;
 	color: $baseText;
-	font-family: $fontFace;
 	font-size: $fontSize;
+}
+
+header, main, footer, nav.top-nav {
+	padding-left: $sideNavWidth;
+}
+
+nav {
+	background: $white;
+	border-bottom: $navBorder 1px solid;
+	box-shadow: none;
+}
+
+.divider {
+	background-color: $dividerColor;
+}
+
+.logo-container {
+	@include fixedCenter;
+	width: 240px;
+	bottom: 0px;
+	z-index: 1000;
+	background-color: $darkBase;
+}
+
+.logo-section {
+	padding-top: 1.3rem;
+	padding-bottom: 0.7rem;
+}
+
+.side-nav {
+	background-color: $darkBase;
+	& p.section-header {
+		font-size: $SBheaderSize;
+		padding-left: 10px;
+		line-height: 10px;
+		margin-top: 0;
+	}
+}
+
+.side-nav li:hover, .side-nav li.active {
+	background-color: $darkBaseBGHover;
+}
+
+ul.side-nav.fixed li {
+	line-height: $sidenavLiHeight;
+	text-transform: uppercase;
+	&.active a {
+		color: lighten($darkBaseText, 20%);
+	}
+}
+
+.sidenav-app-selector {
+	padding: 0 20px;
+}
+
+.select-wrapper input.select-dropdown {
+	border-bottom: none;
+	margin-bottom: 0;
+}
+
+.dropdown-content li > a, .dropdown-content li > span {
+	font-size: $fontSize;
+	color: $green;
+	padding: 0.5rem;
+}
+
+.side-nav .collapsible-body {
+	background-color: $SBcollapseBG;
+}
+
+.collapsible-body p {
+	padding: 0 0.7rem;
+}
+
+ul.side-nav.fixed li a {
+	font-size: $fontSize;
+	line-height: $sidenavLiHeight;
+	height: $sidenavLiHeight;
+}
+
+.side-nav.fixed a {
+	color: $darkBaseText;
+	&:hover {
+		color: lighten($darkBaseText, 20%);
+	}
 }

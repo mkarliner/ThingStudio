@@ -1,5 +1,11 @@
 <template name="MasterLayout">
-	{{> AppSideNav}}
-	{{> AppTopNav}}
-	{{> AppBody}}
+	<div class="row">
+		{{> AppSideNav}}
+		<div class="row">
+			{{> AppTopNav}}
+		</div>
+		<div class="row">
+			{{> AppBody}}
+		</div>
+	</div>
 </template>
