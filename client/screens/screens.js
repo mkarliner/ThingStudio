@@ -49,8 +49,14 @@ InstantiateScreens = function(){
 		if(scr.isWidget) {
 			console.log("Compiling ", scr.title);
 			compileTemplate(scr.title, scr.html, scr.js);
-
-			Template[scr.title].registerElement(scr.widgetName);
+			try {
+				console.log("Registering widget")
+				Template[scr.title].registerElement(scr.widgetName);
+			}
+			catch(err) {
+				console.log("Register Element: ", err);
+			}
+			
 		}
 	}
 }
