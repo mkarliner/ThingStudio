@@ -11,6 +11,8 @@ isAdmin = function(userId) {
 }
 
 
+
+
 getAppTree = function(appId){
 	app = Apps.findOne({_id: appId});
 	baseApp = Apps.findOne({description: "24v86gqupNGbYz9Mv"});

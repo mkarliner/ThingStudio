@@ -1,4 +1,3 @@
-TunguskaGaugeThemePack = {};
 
 // AutoForm.debug();
 
@@ -30,7 +29,28 @@ Meteor.startup(function() {
 	// 	    + ' Column: ' + column + ' StackTrace: ' +  errorObj);
 	// 		Session.set("runtimeErrors", errorMsg);
 	// 	} 
-	
+	Tracker.autorun(function(){
+		ca = Session.get("currentApp");
+		if(!ca){
+			return[];
+		}
+		appTree = [ca.title];
+		while(ca.parent) {
+			ca = Apps.findOne({_id: ca.parent});
+			//Apps may not be ready yet.
+			if(!ca){
+				break;
+			}
+			appTree.push(ca.title);
+		}
+		appTree.reverse();
+		Session.set("appTitles", appTree);
+	});
+
+	Template.registerHelper("appTitles", function(){
+		console.log("ATT", Session.get("appTitles"));
+		return Session.get("appTitles");
+	})
 
 	
 	// Meteor.call("foreignConnections", function(err, result){
@@ -73,7 +93,7 @@ Meteor.startup(function() {
 					Session.setPersistent("currentApp", initialApp);
 					return;
 				}
-			
+				
 
 			}
 		});

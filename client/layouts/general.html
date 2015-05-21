@@ -34,7 +34,10 @@
 				<div class="onlineUsers">
 				<!-- {{> onlineAdmins }} -->
 				{{#if isInRole 'admin'}}
-				    {{>onlineUsers}}
+				    {{>onlineUsers}} /Home
+					{{#each appTitles}}
+						/{{this}}
+					{{/each}}
 				{{/if}}
 				</div>
 			</div>
