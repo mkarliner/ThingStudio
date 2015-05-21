@@ -5,8 +5,6 @@ Template.AppSideNav.onRendered(function() {
 
 Template.AppSideNavSelect.onRendered(function() {
 	$('select').material_select();
-	
-	console.log('rendering!');
 });
 
 Template.AppSideNav.events({
@@ -34,9 +32,7 @@ Template.AppSideNavSelect.events({
 		var app = Apps.findOne({_id: myThingVal});
 		UnsubscribeAll();
 		DisconnectMQTT();
-		console.log('About to set currentApp to: ' + app.title);
 		Session.setPersistent("currentApp",app);
-		console.log('Have just to set currentApp to: ' + app.title);
 		ResetMessages();
 		$('select').material_select('destroy');
 		$('.sidenav-app-selector').remove();
@@ -61,7 +57,6 @@ Template.AppSideNav.helpers({
 Template.AppSideNavSelect.helpers({
 	appsList: function() {
 		var currId = Session.get("currentApp")._id;
-		console.log(currId);
 		return Apps.find({owner: Meteor.userId(), _id: {$nin: [currId]}});
 	},
 	current_app_name: function(){

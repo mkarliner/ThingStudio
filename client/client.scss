@@ -33,7 +33,7 @@ $SBcollapseBG: #424960;
 $picBorder: #9196A1 solid 2px;
 
 //Top Nav
-$navBorder: #DCDCDC 1px solid;
+$navBorder: #DCDCDC 1.5px solid;
 
 @mixin fixedCenter {
 	position: fixed;
@@ -125,7 +125,7 @@ nav {
 		float: left;
 	}
 	& i {
-		font-size: 2.5 * $fontSize;
+		font-size: 2.2 * $fontSize;
 	}
 }
 
@@ -164,4 +164,26 @@ nav {
 .logo-section {
 	padding-top: 1.3rem;
 	padding-bottom: 0.7rem;
+}
+
+//Top Nav Styles
+
+nav.top-nav {
+	height: 52px;
+}
+
+nav.top-nav ul a {
+	color: $baseText;
+	font-size: 1.5 * $fontSize;
+	line-height: 48px;
+}
+
+#tn-controls a {
+	border-left: $navBorder;
+	padding: 0 18px;
+}
+
+.bc-divider {
+	padding: 0 5px;
+	color: $baseText;
 }

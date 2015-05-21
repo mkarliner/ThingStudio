@@ -1,5 +1,3 @@
-// Template.AppTopNav.events({
-// 	'click .button-collapse': function () {
-// 		$(".button-collapse").sideNav();
-// 	}
-// });
+Template.AppTopNav.onRendered(function() {
+    $(".dropdown-button").dropdown();
+});
