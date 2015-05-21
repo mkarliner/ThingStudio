@@ -34,14 +34,14 @@ Meteor.startup(function() {
 		if(!ca){
 			return[];
 		}
-		appTree = [ca.title];
+		appTree = [{_id: ca._id, title: ca.title}];
 		while(ca.parent) {
 			ca = Apps.findOne({_id: ca.parent});
 			//Apps may not be ready yet.
 			if(!ca){
 				break;
 			}
-			appTree.push(ca.title);
+			appTree.push({id: ca._id, title: ca.title});
 		}
 		appTree.reverse();
 		Session.set("appTitles", appTree);

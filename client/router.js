@@ -119,7 +119,14 @@ Router.route("/viewer/screen/:_id", function() {
 
 
 Router.route("/connections", function() {
+	this.layout("MasterLayout");
+	this.render('PageBreadcrumbs', {
+		to: 'breadcrumbs'
+	});
 	this.render("Connections");
+	
+}, {
+	name: "Connections"
 });
 
 Router.route("/connectionold", function() {
@@ -180,6 +187,9 @@ Router.route("/apps/:_id/share", function() {
 Router.route("/apps", function() {
 	//this.layout("GeneralLayout");
 	this.layout("MasterLayout");
+	this.render('PageBreadcrumbs', {
+		to: 'breadcrumbs'
+	});
 	this.render("Apps");
 }, {
 	name: "Apps"
@@ -187,7 +197,10 @@ Router.route("/apps", function() {
 
 
 Router.route("/screens", function() {
-	this.layout("GeneralLayout");
+	this.layout("MasterLayout");
+	this.render('PageBreadcrumbs', {
+		to: 'breadcrumbs'
+	});
 	this.render("Screens");
 }, {
 	name: "Screens"
@@ -205,11 +218,23 @@ Router.route("/themes/:_id", function() {
 });
 
 Router.route("/themes", function() {
+	this.layout("MasterLayout");
 	this.render("Themes");
+	this.render('PageBreadcrumbs', {
+		to: 'breadcrumbs'
+	});
+}, {
+	name: "Themes"
 });
 
 Router.route("/feeds", function() {
+	this.layout("MasterLayout");
+	this.render('PageBreadcrumbs', {
+		to: 'breadcrumbs'
+	});
 	this.render("Feeds");
+}, {
+	name: "Data Feeds"
 });
 
 Router.route("/docs/about", function() {
@@ -232,24 +257,40 @@ Router.route("/debug", function() {
 });
 
 Router.route("/docs", function() {
-	this.layout("HelpContainer");
+	this.layout("MasterLayout");
+	this.render('PageBreadcrumbs', {
+		to: 'breadcrumbs'
+	});
 	this.render("HelpMenu");
 
 }, {
-	name: "Docs"
+	name: "Documentation"
 });
 
 Router.route("/docs/:urlstring", function() {
-	this.layout("HelpContainer");
-	this.render("HelpPage", {
+	this.layout("MasterLayout", {
 		data: function() {
 			return HelpPages.findOne({
 				urlstring: this.params.urlstring
 			});
 		}
 	});
+	this.render('PageBreadcrumbs', {
+		to: 'breadcrumbs'
+	});
+	this.render("HelpPage");
 }, {
-	name: "Helppages"
+	name: "Docs"
+});
+
+Router.route("/tutorials", function() {
+	this.layout("MasterLayout");
+	this.render('PageBreadcrumbs', {
+		to: 'breadcrumbs'
+	});
+	this.render("Tutorials");
+}, {
+	name: "Tutorials"
 });
 
 Router.route("/getting_started", {
@@ -274,6 +315,8 @@ Router.route("/users", function() {
 		}
 	});
 })
+
+
 
 Router.route("/welcome", function() {
 	this.layout("GeneralLayout");
