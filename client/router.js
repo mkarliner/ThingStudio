@@ -10,7 +10,6 @@ AccountsTemplates.configureRoute('signIn');
 // 	Router.go("/screens");
 // })
 
-
 Router.onBeforeAction(function(par) {
 	// console.log("Before action", par);
 	if (!Meteor.user() && !Meteor.loggingIn()) {
@@ -20,9 +19,6 @@ Router.onBeforeAction(function(par) {
 		this.next();
 	}
 }, { except: [ "Help", "Helppages", "ViewScreen", "ViewApp"]});
-
-
-
 
 Router.route("/", function() {
 	u = Meteor.user();
