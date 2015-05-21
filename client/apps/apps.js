@@ -31,4 +31,5 @@ Template.Apps.events({
 		ResetMessages();
 	}
 	
-})
+});
+
