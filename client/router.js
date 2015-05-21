@@ -237,12 +237,30 @@ Router.route("/feeds", function() {
 	name: "Data Feeds"
 });
 
+Router.route("/widgets", function() {
+	this.layout("MasterLayout");
+	this.render('PageBreadcrumbs', {
+		to: 'breadcrumbs'
+	});
+	this.render("Widgets", {
+		data: function() {
+			return Meteor.user();
+		}
+	});
+}, {
+	name: "Widgets"
+});
+
 Router.route("/docs/about", function() {
 	this.layout("HelpLayout");
 	this.render("HelpAbout");
 });
 
 Router.route("/profile", function() {
+	this.layout("MasterLayout");
+	this.render('PageBreadcrumbs', {
+		to: 'breadcrumbs'
+	});
 	this.render("Profile", {
 		data: function() {
 			return Meteor.user();
@@ -250,6 +268,34 @@ Router.route("/profile", function() {
 	});
 }, {
 	name: "Profile"
+});
+
+Router.route("/settings", function() {
+	this.layout("MasterLayout");
+	this.render('PageBreadcrumbs', {
+		to: 'breadcrumbs'
+	});
+	this.render("Settings", {
+		data: function() {
+			return Meteor.user();
+		}
+	});
+}, {
+	name: "Settings"
+});
+
+Router.route("/support", function() {
+	this.layout("MasterLayout");
+	this.render('PageBreadcrumbs', {
+		to: 'breadcrumbs'
+	});
+	this.render("Support", {
+		data: function() {
+			return Meteor.user();
+		}
+	});
+}, {
+	name: "Support"
 });
 
 Router.route("/debug", function() {
