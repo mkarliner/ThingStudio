@@ -1,4 +1,4 @@
-Template.Feeds.helpers({
+Template.FeedsBody.helpers({
 	feedlist: function(){
 		return Feeds.find({owner: Meteor.userId()})
 	},

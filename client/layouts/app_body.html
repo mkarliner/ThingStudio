@@ -1,11 +1,11 @@
 <template name="AppBodyLayout">
 	<header>
-		<p>header</p>
+		{{> yield "appHeader"}}
 	</header>
 	<main>
 		{{> yield}}
 	</main>
 	<footer>
-		<p>footer</p>
+		{{> yield "appFooter"}}
 	</footer>
 </template>

@@ -1,8 +1,13 @@
+<template name="AppsHeader">
+	{{#contentFor "appHeader"}}
+		<h1 class="left">Apps List</h1>
+		<a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>{{curr_app_name}}</a>
+		<a class="header-action-1 clearfix" href="#">Create a new app</a>
+	{{/contentFor}}
+</template>
 
+<template name="AppsBody">
 
-
-<template name="Apps">
-	
 	{{#afModal class="btn btn-primary" collection="Apps" operation="insert" omitFields="connection,home_page, description" }}
 	  Add a new App
 	{{/afModal}}
@@ -38,6 +43,11 @@
 		</tr>
 	{{/each}}
 	</table>
-	
 
+</template>
+
+<template name="Footer">
+	{{#contentFor "appFooter"}}
+		<p>Footer</p>
+	{{/contentFor}}
 </template>

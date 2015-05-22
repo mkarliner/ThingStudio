@@ -1,13 +1,17 @@
+<template name="FeedsHeader">
+	{{#contentFor "appHeader"}}
+		<h1 class="left">Data Feeds</h1>
+		<a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>BUTTON</a>
+		<a class="header-action-1 clearfix" href="#">Create a new data feed</a>
+	{{/contentFor}}
+</template>
 
-
-
-<template name="Feeds">
+<template name="FeedsBody">
 	
 	{{#afModal class="btn btn-primary" collection="Feeds" operation="insert" omitFields=""}}
 	  Add a new feed
 	{{/afModal}}
-	
-	<h1>Your Feeds</h1>
+
 	<table class="table feeds-table">
 	<tr cellpadding="10"><th>Title</th><th>Subscription</th></tr>
 	{{#each feedlist}}

@@ -1,12 +1,16 @@
+<template name="ConnectionsHeader">
+	{{#contentFor "appHeader"}}
+		<h1 class="left">Your Connections</h1>
+		<a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>BUTTON</a>
+		<a class="header-action-1 clearfix" href="#">Create a new connection</a>
+	{{/contentFor}}
+</template>
 
-
-<template name="Connections">
+<template name="ConnectionsBody">
 	
 	{{#afModal class="btn btn-primary" collection="Connections" operation="insert" }}
 	  Add a new connection
 	{{/afModal}}
-	
-	<h1>Your Connections</h1>
 	<table class="table connections-table">
 	<tr cellpadding="10"><th>Title</th></tr>
 	{{#each connectionlist}}

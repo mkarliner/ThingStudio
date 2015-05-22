@@ -119,8 +119,13 @@ Router.route("/connections", function() {
 	this.render('BreadcrumbsContent', {
 		to: 'breadcrumbs'
 	});
-	this.render("Connections");
-	
+	this.render("ConnectionsHeader", {
+		to: "appHeader"
+	});
+	this.render("ConnectionsBody");
+	this.render("Footer", {
+		to: "appFooter"
+	});
 }, {
 	name: "Connections"
 });
@@ -186,7 +191,13 @@ Router.route("/apps", function() {
 	this.render('BreadcrumbsContent', {
 		to: 'breadcrumbs'
 	});
-	this.render("Apps");
+	this.render("AppsHeader", {
+		to: "appHeader"
+	});
+	this.render("AppsBody");
+	this.render("Footer", {
+		to: "appFooter"
+	});
 }, {
 	name: "Apps"
 });
@@ -197,9 +208,15 @@ Router.route("/screens", function() {
 	this.render('BreadcrumbsContent', {
 		to: 'breadcrumbs'
 	});
-	this.render("Screens");
+	this.render("TemplatesHeader", {
+		to: "appHeader"
+	});
+	this.render("TemplatesBody");
+	this.render("Footer", {
+		to: "appFooter"
+	});
 }, {
-	name: "Screens"
+	name: "Templates"
 });
 
 Router.route("/themes/:_id", function() {
@@ -219,6 +236,13 @@ Router.route("/themes", function() {
 	this.render('BreadcrumbsContent', {
 		to: 'breadcrumbs'
 	});
+	this.render("ThemesHeader", {
+		to: "appHeader"
+	});
+	this.render("ThemesBody")
+	this.render("Footer", {
+		to: "appFooter"
+	});
 }, {
 	name: "Themes"
 });
@@ -228,7 +252,10 @@ Router.route("/feeds", function() {
 	this.render('BreadcrumbsContent', {
 		to: 'breadcrumbs'
 	});
-	this.render("Feeds");
+	this.render("FeedsHeader", {
+		to: "appHeader"
+	});
+	this.render("FeedsBody");
 }, {
 	name: "Data Feeds"
 });
@@ -238,10 +265,12 @@ Router.route("/widgets", function() {
 	this.render('BreadcrumbsContent', {
 		to: 'breadcrumbs'
 	});
-	this.render("Widgets", {
-		data: function() {
-			return Meteor.user();
-		}
+	this.render("WidgetsHeader", {
+		to: "appHeader"
+	});
+	this.render("WidgetsBody");
+	this.render("Footer", {
+		to: "appFooter"
 	});
 }, {
 	name: "Widgets"
@@ -285,11 +314,13 @@ Router.route("/support", function() {
 	this.render('BreadcrumbsContent', {
 		to: 'breadcrumbs'
 	});
-	this.render("Support", {
-		data: function() {
-			return Meteor.user();
-		}
-	});
+	this.render("SupportHeader", {
+		to: "appHeader"
+	})
+	this.render("SupportBody");
+	this.render("Footer", {
+		to: "appFooter"
+	})
 }, {
 	name: "Support"
 });
@@ -303,7 +334,13 @@ Router.route("/docs", function() {
 	this.render('BreadcrumbsContent', {
 		to: 'breadcrumbs'
 	});
-	this.render("HelpMenu");
+	this.render("DocumentationListHeader", {
+		to: "appHeader"
+	})
+	this.render("DocumentationListBody");
+	this.render("Footer", {
+		to: "appFooter"
+	})
 
 }, {
 	name: "Documentation"
@@ -330,7 +367,13 @@ Router.route("/tutorials", function() {
 	this.render('BreadcrumbsContent', {
 		to: 'breadcrumbs'
 	});
-	this.render("Tutorials");
+	this.render("TutorialsHeader", {
+		to: "appHeader"
+	})
+	this.render("TutorialsBody");
+	this.render("Footer", {
+		to: "appFooter"
+	})
 }, {
 	name: "Tutorials"
 });

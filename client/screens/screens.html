@@ -1,9 +1,16 @@
-<template name="Screens">
+<template name="TemplatesHeader">
+	{{#contentFor "appHeader"}}
+		<h1 class="left">{{curr_app_name}} Templates</h1>
+		<a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>BUTTON</a>
+		<a class="header-action-1 clearfix" href="#">Create a new template</a>
+	{{/contentFor}}
+</template>
+
+<template name="TemplatesBody">
 	
 	{{#afModal class="btn btn-primary" collection="Screens" operation="insert" omitFields=" public, html,js"}}
 	  Add a new screen
 	{{/afModal}}
-	<h1>Your Screens</h1>
 	<table class="table screens-table">
 	<tr>
 		<th>Title</th>

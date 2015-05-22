@@ -8,6 +8,8 @@ $fontSize: 12px;
 $fontFace: Avenir, Helvetica, sans-serif;
 $appBodyBG: #EBF3F6;
 $green: #76D4E1;
+$appPadding: 35px;
+$statusActive: #7ED321;
 
 //Fonts
 //$fwLight: 'Avenir 35 Light';
@@ -38,6 +40,10 @@ $picBorder: #9196A1 solid 2px;
 //Top Nav
 $navBorder: #DCDCDC 1.5px solid;
 
+// App Header
+$headerColor: #676975;
+$headerActionButton2Color: #DCDCDC;
+
 ///////////////////////////////////////////////////////////////////////////////////////
 // Global Styles, Mixins //
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -59,6 +65,11 @@ body {
 
 header, main, footer, nav.top-nav {
 	padding-left: $sideNavWidth;
+}
+
+header, main, footer {
+	padding-left: $appPadding + $sideNavWidth;
+	padding-right: $appPadding;
 }
 
 .clearfix:after { visibility: hidden; display: block; font-size: 0; content: " "; clear: both; height: 0; }
@@ -220,3 +231,63 @@ nav.top-nav {
 	line-height: 46px;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////
+// App Header //
+///////////////////////////////////////////////////////////////////////////////////////
+
+header {
+	padding-top: 5px;
+	padding-bottom: 50px;
+}
+
+h1 {
+	font-size: 2 * $fontSize;
+	font-weight: $fwBook;
+	color: $headerColor;
+	margin: 0;
+}
+
+a.header-action-1 {
+	color: $green;
+}
+
+.header-action-2 {
+	background-color: transparent;
+	border: 1px solid $headerActionButton2Color;
+	border-radius: 18px;
+	color: $baseText;
+	padding: 0 0.8rem;
+	height: 38px;
+	line-height: 37px;
+	box-shadow: none;
+}
+
+.ha2-status {
+	float: left;
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	margin-right: 6px;
+	margin-top: 10px;
+}
+
+.status-active {
+	background-color: $statusActive;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+// App Body //
+///////////////////////////////////////////////////////////////////////////////////////
+
+main {
+	background-color: $appBodyBG;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+// App Footer //
+///////////////////////////////////////////////////////////////////////////////////////
+footer {
+	background-color: $appBodyBG;
+	padding-top: 40px;
+	padding-bottom: 10px;
+}

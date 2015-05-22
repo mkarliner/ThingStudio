@@ -130,7 +130,7 @@ Meteor.startup(function(){
 });
 
 
-Template.Connections.helpers({
+Template.ConnectionsBody.helpers({
 	connectionlist: function(){
 		//console.log("CONN FND: ", Connections.find({}).fetch())
 		return Connections.find({});
@@ -151,7 +151,7 @@ Template.Connections.helpers({
 
 
 
-Template.Connections.events({
+Template.ConnectionsBody.events({
 	'click .connect': function(ev){
 		console.log("Connect button", ev, this);
 		connect(this);
