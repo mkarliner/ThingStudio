@@ -25,8 +25,10 @@
 		<li class="bcd"><span class="bcds">/</span></li>
 		{{#each route_base}}
 			<li><a href="{{this._id}}">{{this.title}}</a></li>
-			<li class="bcd"><span class="bcds">/</span></li>
 		{{/each}}
-		<li><a href="">{{breadcrumb}}</a></li>
+		{{#if breadcrumb}}
+			<li class="bcd"><span class="bcds">/</span></li>
+			<li><a href="">{{breadcrumb}}</a></li>
+		{{/if}}
 	{{/contentFor}}
 </template>

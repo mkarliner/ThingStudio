@@ -4,11 +4,15 @@ Template.AppTopNav.onRendered(function() {
 
 Template.BreadcrumbsContent.helpers({
 	route_base: function() {
-		var route = Router.current().route.getName();
-		if ( route == "Connections" || route =="Data Feeds" || route =="Screens" || route == "Themes") {
-			return Session.get("appTree");
+		var routeName = Router.current().route.getName();
+		var routePath = Router.current().route.path();
+		if ( routeName == "Connections" || routeName =="Data Feeds" || routeName =="Screens" || routeName == "Themes") {
+			console.log("triggering CDST")
+			return Session.get("appTreeList");
 		} else {
-			return route;
+			var routeObj = {_id: routePath, title: routeName};
+			console.log(routeObj);
+			return [routeObj];
 		}
 	},
 	breadcrumb: function() {
@@ -17,6 +21,8 @@ Template.BreadcrumbsContent.helpers({
 			return this.title;
 		} else if ( routeCrumb == "Connections" || routeCrumb == "Data Feeds" || routeCrumb == "Screens" || routeCrumb == "Themes") {
 			return routeCrumb;
+		} else {
+			return false;
 		}
 	}
 });
