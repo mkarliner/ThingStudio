@@ -58,10 +58,10 @@ Meteor.startup(function() {
 	//
 	// });
 	Tracker.autorun(function () {	
-		console.log("Running subscribe", Session.get("currentAppId"))
+		//console.log("Running subscribe", Session.get("currentAppId"))
 		Meteor.subscribe("apps", Session.get("currentAppId"), {
 			onReady: function() {
-				console.log("Apps Ready", Apps.find({}).fetch());
+				//console.log("Apps Ready", Apps.find({}).fetch());
 				//Is there only one App available?
 				numApps = Apps.find().count();
 				if(numApps == 1) {
@@ -78,7 +78,7 @@ Meteor.startup(function() {
 				//Are we logged in, but have no Apps?
 				if(Meteor.userId() && numApps == 0) {
 					//If so, create first app.
-					console.log("Creating default app on ready", Meteor.userId())
+					//console.log("Creating default app on ready", Meteor.userId())
 					appId = Apps.insert({
 						title: "defaultApp",
 						access: "Private",
@@ -105,7 +105,7 @@ Meteor.startup(function() {
 	  ca  = Session.get("currentApp");
 	  Session.get("currentAppId");
 	  if(ca) {
-		  console.log("SUB: ", ca.title);
+		  //console.log("SUB: ", ca.title);
 		  Meteor.subscribe("connections",ca._id, {
 			onReady: function(){
 				connections = Connections.find().fetch();
@@ -118,7 +118,7 @@ Meteor.startup(function() {
 					conn = Connections.findOne({});
 				}
 				// console.log("Autoconnect: ", conn);
-				console.log("Connect: ", conn)
+				//console.log("Connect: ", conn)
 				if (conn) {
 					connect(conn);
 				} else {
@@ -128,10 +128,10 @@ Meteor.startup(function() {
 		});
 		  Meteor.subscribe("feeds", ca._id, {
 			  onReady: function(){
-				  console.log("SUBSCRIBING FEEDS");
+				  //console.log("SUBSCRIBING FEEDS");
 			  }
 		  });
-		  console.log("SUBSCRIBING SCREENS");
+		  //console.log("SUBSCRIBING SCREENS");
 		  Meteor.subscribe("screens", ca._id, {
 		  	  onReady: function(){
 				  InstantiateScreens();
@@ -148,7 +148,7 @@ Meteor.startup(function() {
 
 			},
 			onError: function(error) {
-				console.log("HelpPages error", error);
+				//console.log("HelpPages error", error);
 			}
 		});
 
