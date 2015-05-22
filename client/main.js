@@ -44,12 +44,12 @@ Meteor.startup(function() {
 			appTree.push({id: ca._id, title: ca.title});
 		}
 		appTree.reverse();
-		Session.set("appTitles", appTree);
+		Session.set("appTree", appTree);
 	});
 
-	Template.registerHelper("appTitles", function(){
-		console.log("ATT", Session.get("appTitles"));
-		return Session.get("appTitles");
+	Template.registerHelper("appTree", function(){
+		console.log("ATT", Session.get("appTree"));
+		return Session.get("appTree");
 	})
 
 	

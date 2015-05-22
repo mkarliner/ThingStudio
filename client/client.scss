@@ -1,3 +1,6 @@
+///////////////////////////////////////////////////////////////////////////////////////
+// Variables //
+///////////////////////////////////////////////////////////////////////////////////////
 //Global
 $white: #fff;
 $baseText: #858C9D;
@@ -35,6 +38,9 @@ $picBorder: #9196A1 solid 2px;
 //Top Nav
 $navBorder: #DCDCDC 1.5px solid;
 
+///////////////////////////////////////////////////////////////////////////////////////
+// Global Styles, Mixins //
+///////////////////////////////////////////////////////////////////////////////////////
 @mixin fixedCenter {
 	position: fixed;
 	left: 0;
@@ -55,18 +61,10 @@ header, main, footer, nav.top-nav {
 	padding-left: $sideNavWidth;
 }
 
-nav {
-	background: $white;
-	border-bottom: $navBorder;
-	box-shadow: none;
-}
-
 .clearfix:after { visibility: hidden; display: block; font-size: 0; content: " "; clear: both; height: 0; }
 .clearfix { display: inline-block; }
-/* start commented backslash hack \*/
 * html .clearfix { height: 1%; }
 .clearfix { display: block; }
-/* close commented backslash hack */
 
 .divider {
 	background-color: $dividerColor;
@@ -77,6 +75,10 @@ nav {
 	margin-left: auto;
 	margin-right: auto;
 }
+
+///////////////////////////////////////////////////////////////////////////////////////
+// Sidebar //
+///////////////////////////////////////////////////////////////////////////////////////
 
 .side-nav.fixed {
 	background-color: $darkBase;
@@ -102,6 +104,7 @@ nav {
 		}
 	}
 	& i {
+		float: left;
 		font-size: 1.5 * $fontSize;
 		padding-right: 10px;
 	}
@@ -111,15 +114,15 @@ nav {
 			color: lighten($darkBaseText, 20%);
 		}
 	}
-	& .sb-profile a {
-		display: inline;
-		padding: 0 8px;
-		line-height: 36px;
-	}
 }
 
 .sb-profile {
 	padding-bottom: 0.4rem;
+	& a {
+		display: inline;
+		padding: 0 8px;
+		line-height: 36px;
+	}
 	& img {
 		margin-top: 10px;
 		margin-bottom: 6px;
@@ -148,13 +151,13 @@ nav {
 	padding: 0 0.7rem;
 }
 
-.sidenav-app-selector {
-	padding: 0 20px;
-}
-
 .select-wrapper input.select-dropdown {
 	border-bottom: none;
 	margin-bottom: 0;
+}
+
+.sidenav-app-selector {
+	padding: 0 20px;
 }
 
 .logo-container {
@@ -169,25 +172,51 @@ nav {
 	padding-top: 1.3rem;
 	padding-bottom: 0.7rem;
 }
-
-//Top Nav Styles
-
+///////////////////////////////////////////////////////////////////////////////////////
+// Top Nav //
+///////////////////////////////////////////////////////////////////////////////////////
 nav.top-nav {
 	height: 52px;
+	background: $white;
+	border-bottom: $navBorder;
+	box-shadow: none;
+	& a {
+		color: $baseText;
+		font-size: 1.2 * $fontSize;
+		line-height: 51px;
+		padding: 0 5px;
+	}
+	& a i {
+		font-size: 1.9 * $fontSize;
+	}
 }
 
-nav.top-nav ul a {
-	color: $baseText;
-	font-size: 1.5 * $fontSize;
-	line-height: 48px;
+//Breadcrumb
+
+.breadcrumb {
+	& li:first-child {
+		padding-left: 8px;
+		& i {
+			margin-right: 5px;
+			float: left;
+		}
+	}
+	& .bcd {
+		line-height: 51px;
+		font-weight: $fwBook;
+		font-size: 17px;
+	}
+	& .bcds {
+		padding: 0 2px;
+		color: $baseText;
+	}
 }
 
-#tn-controls a {
+// TopNav MQTT & Debug Dropdown controls
+
+#tnc a {
 	border-left: $navBorder;
-	padding: 0 18px;
+	padding: 0 16px;
+	line-height: 46px;
 }
 
-.bc-divider {
-	padding: 0 5px;
-	color: $baseText;
-}

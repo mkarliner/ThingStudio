@@ -116,7 +116,7 @@ Router.route("/viewer/screen/:_id", function() {
 
 Router.route("/connections", function() {
 	this.layout("MasterLayout");
-	this.render('PageBreadcrumbs', {
+	this.render('BreadcrumbsContent', {
 		to: 'breadcrumbs'
 	});
 	this.render("Connections");
@@ -183,7 +183,7 @@ Router.route("/apps/:_id/share", function() {
 Router.route("/apps", function() {
 	//this.layout("GeneralLayout");
 	this.layout("MasterLayout");
-	this.render('PageBreadcrumbs', {
+	this.render('BreadcrumbsContent', {
 		to: 'breadcrumbs'
 	});
 	this.render("Apps");
@@ -194,7 +194,7 @@ Router.route("/apps", function() {
 
 Router.route("/screens", function() {
 	this.layout("MasterLayout");
-	this.render('PageBreadcrumbs', {
+	this.render('BreadcrumbsContent', {
 		to: 'breadcrumbs'
 	});
 	this.render("Screens");
@@ -216,7 +216,7 @@ Router.route("/themes/:_id", function() {
 Router.route("/themes", function() {
 	this.layout("MasterLayout");
 	this.render("Themes");
-	this.render('PageBreadcrumbs', {
+	this.render('BreadcrumbsContent', {
 		to: 'breadcrumbs'
 	});
 }, {
@@ -225,7 +225,7 @@ Router.route("/themes", function() {
 
 Router.route("/feeds", function() {
 	this.layout("MasterLayout");
-	this.render('PageBreadcrumbs', {
+	this.render('BreadcrumbsContent', {
 		to: 'breadcrumbs'
 	});
 	this.render("Feeds");
@@ -235,7 +235,7 @@ Router.route("/feeds", function() {
 
 Router.route("/widgets", function() {
 	this.layout("MasterLayout");
-	this.render('PageBreadcrumbs', {
+	this.render('BreadcrumbsContent', {
 		to: 'breadcrumbs'
 	});
 	this.render("Widgets", {
@@ -254,7 +254,7 @@ Router.route("/docs/about", function() {
 
 Router.route("/profile", function() {
 	this.layout("MasterLayout");
-	this.render('PageBreadcrumbs', {
+	this.render('BreadcrumbsContent', {
 		to: 'breadcrumbs'
 	});
 	this.render("Profile", {
@@ -268,7 +268,7 @@ Router.route("/profile", function() {
 
 Router.route("/settings", function() {
 	this.layout("MasterLayout");
-	this.render('PageBreadcrumbs', {
+	this.render('BreadcrumbsContent', {
 		to: 'breadcrumbs'
 	});
 	this.render("Settings", {
@@ -282,7 +282,7 @@ Router.route("/settings", function() {
 
 Router.route("/support", function() {
 	this.layout("MasterLayout");
-	this.render('PageBreadcrumbs', {
+	this.render('BreadcrumbsContent', {
 		to: 'breadcrumbs'
 	});
 	this.render("Support", {
@@ -300,7 +300,7 @@ Router.route("/debug", function() {
 
 Router.route("/docs", function() {
 	this.layout("MasterLayout");
-	this.render('PageBreadcrumbs', {
+	this.render('BreadcrumbsContent', {
 		to: 'breadcrumbs'
 	});
 	this.render("HelpMenu");
@@ -317,7 +317,7 @@ Router.route("/docs/:urlstring", function() {
 			});
 		}
 	});
-	this.render('PageBreadcrumbs', {
+	this.render('BreadcrumbsContent', {
 		to: 'breadcrumbs'
 	});
 	this.render("HelpPage");
@@ -327,7 +327,7 @@ Router.route("/docs/:urlstring", function() {
 
 Router.route("/tutorials", function() {
 	this.layout("MasterLayout");
-	this.render('PageBreadcrumbs', {
+	this.render('BreadcrumbsContent', {
 		to: 'breadcrumbs'
 	});
 	this.render("Tutorials");

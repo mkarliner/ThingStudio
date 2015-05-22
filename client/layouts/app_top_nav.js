@@ -2,17 +2,7 @@ Template.AppTopNav.onRendered(function() {
     $(".dropdown-button").dropdown();
 });
 
-Template.AppTopNav.helpers({
-	curr_app: function() {
-		if (  Session.get("currentApp") ) {
-			return Session.get("currentApp");
-		} else {
-			return false;
-		}
-	},
-	
-});
-Template.PageBreadcrumbs.helpers({
+Template.BreadcrumbsContent.helpers({
 	route_base: function() {
 		var route = Router.current().route.getName();
 		if ( route == "Connections" || route =="Data Feeds" || route =="Screens" || route == "Themes") {
