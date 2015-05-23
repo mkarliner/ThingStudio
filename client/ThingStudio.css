@@ -7,8 +7,8 @@ div.inline { float:left; }
 .clearBoth { clear:both; }
 
 #archy {
-	height: 300px;
-	min-width:  600px;
+	height: 400px;
+	min-width:  800px;
 }
 
 #archycss {
@@ -17,7 +17,7 @@ div.inline { float:left; }
 }
 
 #archyjs {
-	height: 300px;
+	height: 400px;
 	min-width:  600px;
 }
 
