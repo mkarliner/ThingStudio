@@ -79,6 +79,7 @@ Template.afAceJs.rendered = function() {
 	 cs = Session.get("currentScreenPage");
 	 
 	 console.log("CSJ: ", cs)
+	 editor.$blockScrolling = Infinity;
 	 editor.setValue(Screens.findOne({_id: cs}).js, -1);
    }
  }); 
@@ -95,6 +96,7 @@ Template.afAceCss.rendered = function() {
 
    if(editor.loaded===true){
      e.stop();
+	 editor.$blockScrolling = Infinity; 
    }
  }); 
 }
@@ -105,7 +107,7 @@ Template.afAce.rendered = function() {
    Tracker.autorun(function (e) {
    editor = AceEditor.instance("archy", {
 	   theme: "twilight",
-	   mode: "handlebars"
+	   mode: "handlebars",
    });
    
    if(editor.loaded===true){
@@ -113,6 +115,7 @@ Template.afAce.rendered = function() {
 	 cs = Session.get("currentScreenPage");
 	 
 	 console.log("CS: ", cs)
+	 editor.$blockScrolling = Infinity;
 	 editor.setValue(Screens.findOne({_id: cs}).html, -1);
    }
  }); 
