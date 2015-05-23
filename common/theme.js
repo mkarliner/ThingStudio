@@ -3,7 +3,7 @@ Themes = new Mongo.Collection("themes");
 
 
 
-Schemas = {};
+// Schemas = {};
 
 Schemas.Theme = new SimpleSchema({
 	title: {
