@@ -5,7 +5,7 @@ SimpleSchema.messages({
   "noPublicWildcard": "Wildcard feeds cannot be public"
 });
 
-Schemas = {};
+// Schemas = {};
 
 Schemas.Feed = new SimpleSchema({
 	title: {
