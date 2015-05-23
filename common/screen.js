@@ -21,7 +21,7 @@ if(boilerplate) {
 
 
 
-Schemas = {};
+// Schemas = {};
 
 Schemas.Screen = new SimpleSchema({
 	title: {
