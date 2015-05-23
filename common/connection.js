@@ -2,7 +2,7 @@ Connections = new Mongo.Collection("connections");
 
 
 
-Schemas = {};
+// Schemas = {};
 
 Schemas.Connection = new SimpleSchema({
 	title: {
@@ -70,6 +70,8 @@ Schemas.Connection = new SimpleSchema({
 
 
 });
+
+
 
 Connections.before.insert(function(userId, doc) {
 	if (Meteor.isClient) {		
