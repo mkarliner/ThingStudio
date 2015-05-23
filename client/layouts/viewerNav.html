@@ -5,17 +5,17 @@
 		    <button type="button" class="navbar-toggle btn-top-nav" data-toggle="collapse" data-target=".navbar-collapse">
 			<i class="fa fa-bars"></i>
 		    </button>
-		    <button type="button" class="btn-top-nav">
-		    	<a href="{{ pathFor 'viewermenu'}}">
+		    <!-- <button type="button" class="btn-top-nav">
+		    	<a href="{{ pathFor 'Viewermenu'}}">
 		    		<i class="fa fa-list-alt"></i>
 		    	</a>
-		    </button>
+		    </button> -->
 		    <button class="btn-top-nav">
-		    	<a href="{{ pathFor 'screens'}}">
+		    	<a href="{{ pathFor 'Screens'}}">
 		    		<i class="fa fa-paint-brush"></i>
 		    	</a>
 		    </button>
-		      <a href="{{ pathFor 'connections' }}"><span class="Connection-status {{Connection_status}}"></span></a>
+		      <a href="{{ pathFor 'Connections' }}"><span class="Connection-status {{Connection_status}}"></span></a>
 		  </div>
 		  <div class="navbar-collapse collapse">
 		    <ul class="nav navbar-nav navbar-left">
@@ -35,7 +35,7 @@
 		  {{#if currentUser}}
 	   	  <li class="list-right main-nav-btn" role="presentation"><a class="list-right" href="/logout">Logout</a></li>
 		  {{/if}}
-		  <li class="list-right conn-stat"><a href="{{ pathFor 'connection' }}"><span class="Connection-status {{Connection_status}}"></span></a></li>
+		  <li class="list-right conn-stat"><!-- <a href="{{ pathFor 'Connection' }}"> --><span class="Connection-status {{Connection_status}}"></span><!-- </a> --></li>
 		    </ul>
 		  </div>
 		</nav>

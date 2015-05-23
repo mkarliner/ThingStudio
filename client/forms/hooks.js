@@ -144,11 +144,11 @@ AutoForm.hooks({
 				compileTemplate(name, template.data.doc.html, template.data.doc.js);
 				if(template.data.doc.isWidget) {
 					try {
-						console.log("Registering widget")
+						// console.log("Registering widget")
 						Template[name].registerElement(template.data.doc.widgetName);
 					}
 					catch(err) {
-						console.log("Register Element: ", err);
+						// console.log("Register Element: ", err);
 					}
 
 				}
@@ -174,6 +174,23 @@ AutoForm.hooks({
 				connect(template.data.doc);
 				Router.go("/screens");
 				
+			}
+		}
+	},
+	updateCredentialsForm: {
+		onSubmit: function(a,b,c) {
+			console.log("SUBMIT ", a, b, c)
+		},
+		// before: {
+		// 	update: function(docId, mod, template) {
+		// 		console.log("BEFORE CRED ", docId, mod, template);
+		//
+		// 	}
+		// },
+		after: {
+			update: function(err, res, temp) {
+				console.log("AFTER CRED UPDATE: ", err, res, temp);
+				Session.set("authReady", true);
 			}
 		}
 	}

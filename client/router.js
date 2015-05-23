@@ -56,6 +56,7 @@ Router.route("/view/app/:_id", {
 	onBeforeAction: function(){
 		console.log("BA!!!!")
 		Session.set("currentAppId", this.params._id);
+		this.next();
 	},
 	// waitOn: function() {
 	// 	console.log("Waiting for ", this.params._id);
@@ -66,7 +67,6 @@ Router.route("/view/app/:_id", {
 	loadingTemplate: "Loading",
 
 	data: function() {
-		console.log("ACTION!")
 		this.layout("ViewerLayout");
 		app = Apps.findOne({
 			_id: this.params._id
@@ -74,12 +74,42 @@ Router.route("/view/app/:_id", {
 		if(!app) {
 			return;
 		}
-		console.log("ViewAppRoute: ", this.params._id, app);
+
+		// Is there a connection specified for this app?
+		if(app.connection) {
+			conn = Connections.findOne(app.connection)
+			// Is the connection available yet?
+			if(!conn) {
+				console.log("CONNECTION NOT READY!!!")
+				return;
+			}
+			// Do I need to client authenticate?
+			if(conn.userAuth && conn.userAuth == true &&  Session.get("authReady") != true) {
+				console.log("NEED AUTH")
+				cred = Credentials.findOne({connection: conn._id});
+				if(cred) {	
+					console.log("CRED: ", cred)
+				} else {
+					cid = Credentials.upsert( {connection: conn._id}, {$set: {connection: conn._id, username: "dfa", password: "sadf", save: false}});
+					console.log("Creating credentials record")
+					cred = Credentials.findOne({connection: conn._id});
+				}
+				this.render("GetCredentials", {
+						data: function() {
+							console.log("CREDENTIALS: ", cred);
+							return cred;
+						}
+					});
+					return;
+			} else {
+				console.log("AUTH OK", conn)
+			}
+			
+		}
+
 		Session.set("currentApp", app);
-		console.log("APP HOME PAGE: ", app.home_page);
 		screen_cnt = Screens.find().count();
 		InstantiateScreens();
-		console.log("SCRCNT: ", screen_cnt)
 		if (app.home_page) {
 			Router.go("/viewer/screen/" + app.home_page);
 		} else if (screen_cnt == 1) {
@@ -120,6 +150,8 @@ Router.route("/viewer/screen/:_id", function() {
 
 Router.route("/connections", function() {
 	this.render("Connections");
+}, {
+	name: "Connections"
 });
 
 Router.route("/connectionold", function() {
@@ -163,6 +195,8 @@ Router.route("/screens/:_id", function() {
 			});
 		}
 	});
+}, {
+	name: "Screen"
 });
 
 

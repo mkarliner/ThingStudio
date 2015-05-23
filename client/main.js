@@ -1,6 +1,9 @@
 
 // AutoForm.debug();
 
+
+
+
 Template.registerHelper("indexedArray",
 	function(arr) {
   	  	return _.map(arr, function(value, index){
@@ -29,6 +32,13 @@ Meteor.startup(function() {
 	// 	    + ' Column: ' + column + ' StackTrace: ' +  errorObj);
 	// 		Session.set("runtimeErrors", errorMsg);
 	// 	} 
+
+	
+	
+	console.log("GROUND: ", Ground.ready());
+	// while(!Ground.ready()){
+	// 	console.log("Waiting for ground to be ready");
+	// }
 	Tracker.autorun(function(){
 		ca = Session.get("currentApp");
 		if(!ca){

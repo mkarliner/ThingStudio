@@ -6,7 +6,6 @@
 
 meteor-platform
 accounts-base
-aldeed:autoform
 aldeed:collection2
 aldeed:simple-schema
 aldeed:delete-button
@@ -37,3 +36,4 @@ jparker:gravatar
 numtel:webcomponent
 u2622:persistent-session
 ground:db
+aldeed:autoform
