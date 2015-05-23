@@ -32,6 +32,11 @@ Schemas.Connection = new SimpleSchema({
 		type: String,
 		optional: true
 	},
+	userAuth: {
+		//Ask user for credentials
+		type: Boolean,
+		defaultValue: true,
+	},
 	// autoConnect: {
 	// 	type: Boolean,
 	// 	defaultValue: true
@@ -70,6 +75,7 @@ Schemas.Connection = new SimpleSchema({
 
 
 });
+
 
 
 
