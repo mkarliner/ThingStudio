@@ -1,6 +1,6 @@
 HelpPages = new Mongo.Collection("help_pages");
 
-Schemas = {};
+// Schemas = {};
 
 Schemas.HelpPage = new SimpleSchema({
 	title: {
