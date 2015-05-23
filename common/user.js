@@ -1,6 +1,6 @@
-Schema = {};
+// Schema = {};
 
-Schema.UserCountry = new SimpleSchema({
+Schemas.UserCountry = new SimpleSchema({
     name: {
         type: String
     },
@@ -10,7 +10,7 @@ Schema.UserCountry = new SimpleSchema({
     }
 });
 
-Schema.UserProfile = new SimpleSchema({
+Schemas.UserProfile = new SimpleSchema({
     firstName: {
         type: String,
         regEx: /^[a-zA-Z-]{2,25}$/,
@@ -45,7 +45,7 @@ Schema.UserProfile = new SimpleSchema({
         optional: true
     },
     country: {
-        type: Schema.UserCountry,
+        type: Schemas.UserCountry,
         optional: true
     },
 	showWelcome: {
@@ -54,7 +54,7 @@ Schema.UserProfile = new SimpleSchema({
 	}
 });
 
-Schema.User = new SimpleSchema({
+Schemas.User = new SimpleSchema({
     username: {
         type: String,
         regEx: /^[a-z0-9A-Z_]{3,15}$/
@@ -76,7 +76,7 @@ Schema.User = new SimpleSchema({
         type: Date
     },
     profile: {
-        type: Schema.UserProfile,
+        type: Schemas.UserProfile,
         optional: true
     },
     services: {
@@ -111,4 +111,4 @@ Schema.User = new SimpleSchema({
 	}
 });
 
-Meteor.users.attachSchema(Schema.User);
+Meteor.users.attachSchema(Schemas.User);
