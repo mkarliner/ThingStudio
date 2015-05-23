@@ -256,6 +256,9 @@ Router.route("/feeds", function() {
 		to: "appHeader"
 	});
 	this.render("FeedsBody");
+	this.render("Footer", {
+		to: "appFooter"
+	});
 }, {
 	name: "Data Feeds"
 });

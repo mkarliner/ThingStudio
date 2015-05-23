@@ -1,32 +1,47 @@
 <template name="FeedsHeader">
-	{{#contentFor "appHeader"}}
-		<h1 class="left">Data Feeds</h1>
-		<a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>BUTTON</a>
-		<a class="header-action-1 clearfix" href="#">Create a new data feed</a>
-	{{/contentFor}}
+	<h1 class="left">Data Feeds</h1>
+	<a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>BUTTON</a>
+	<a class="header-action-1 clearfix" data-new="true" href="#">Create a new data feed</a>
 </template>
 
 <template name="FeedsBody">
 	
-	{{#afModal class="btn btn-primary" collection="Feeds" operation="insert" omitFields=""}}
+	{{#contentFor region="appHeader" template="FeedsHeader"}}{{/contentFor}}
+	
+	<!-- {{#afModal class="btn btn-primary" collection="Feeds" operation="insert" omitFields=""}}
 	  Add a new feed
-	{{/afModal}}
+	{{/afModal}} -->
 
-	<table class="table feeds-table">
-	<tr cellpadding="10"><th>Title</th><th>Subscription</th></tr>
-	{{#each feedlist}}
-		<tr>
-			<td><a  class="screenlink">{{this.title}}</a></td>
-			<td>{{subscription}}</td>	
-			{{#if isInRole 'admin'}}
-
-			<td>{{ownerName}}</td>
-			{{/if}}
-			<td>	{{#afModal class="btn btn-primary" collection="Feeds" doc=_id operation="update"}} Edit	{{/afModal}}</td>
-			<td>{{#afModal class="btn btn-danger" collection="Feeds" operation="remove" doc=_id}} Delete  {{/afModal}}</td>
-		</tr>
-	{{/each}}
-	</table>
+		<table class="table feeds-table">
+			<thead>
+				<tr cellpadding="10"><th>Feed Title</th><th>Subscription</th><th>Methods</th><th>Transport</th><th>Live Data</th><th>Pub/Sub</th><th>Action</th></tr>
+			</thead>
+			<tbody>
+					<tr class="tr-hidden">
+						{{#autoForm collection="Feeds" id="insertFeedForm" type="insert"}}
+							<td>{{> afQuickField name='title'}}</td>
+							<td>{{> afQuickField name='subscription'}}</td>
+							<td>{{> afQuickField name='action'}}</td>
+							<td>{{> afQuickField name='pubsub'}}</td>
+							<button type="submit" class="btn btn-primary">Insert</button>
+						{{/autoForm}}
+					</tr>
+					<tr class="spacer"><td></td></tr>
+				{{#each feedlist}}
+					<tr>
+						<td>{{this.title}}</td>
+						<td>{{subscription}}</td>	
+						<td>{{action}}</td>
+						<td>PH!</td>
+						<td>PH!</td>
+						<td>{{pubsub}}</td>
+						<td><a href="#" class="table-action-1"><span class="ha2-status status-active"></span></a><a href="#" class="table-action-2"><span class="ha2-status status-active"></span></a></td>
+						<!-- <td>{{#afModal class="btn btn-primary" collection="Feeds" doc=_id operation="update"}} Edit	{{/afModal}}</td>
+						<td>{{#afModal class="btn btn-danger" collection="Feeds" operation="remove" doc=_id}} Delete  {{/afModal}}</td> -->
+					</tr>
+				{{/each}}
+			</tbody>	
+		</table>
 	<!-- <h1>Public Feeds</h1>
 	<table class="table feeds-table">
 	<tr cellpadding="10"><th>Title</th><th>Subscription</th></tr>

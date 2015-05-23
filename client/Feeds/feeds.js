@@ -1,3 +1,13 @@
+Template.FeedsHeader.events({
+	"click .header-action-1": function(e, tmpl) {
+		e.preventDefault();
+		$("tr.spacer").show();
+	},
+	"click .tr-hidden": function(e, tmpl) {
+		console.log('clicked the hidden row');
+	}
+});
+
 Template.FeedsBody.helpers({
 	feedlist: function(){
 		return Feeds.find({owner: Meteor.userId()})
