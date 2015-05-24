@@ -72,23 +72,37 @@ Router.route("/view/app/:_id", {
 			_id: this.params._id
 		});
 		if(!app) {
+			this.render("Loading", {
+				data: "Application"
+			});
 			return;
 		}
 
 		// Is there a connection specified for this app?
 		if(app.connection) {
 			conn = Connections.findOne(app.connection)
-			// Is the connection available yet?
+			// Is the connection record available yet?
 			if(!conn) {
 				console.log("CONNECTION NOT READY!!!")
+				this.render("Loading", {
+					data: "Connection"
+				});
 				return;
 			}
 			// Do I need to client authenticate?
 			if(conn.userAuth && conn.userAuth == true &&  Session.get("authReady") != true) {
 				console.log("NEED AUTH")
+				if(!Ground.ready()) {
+					console.log("GROUND NOT READY")
+					this.render("Loading", {
+						data: "Authentication database"
+					});
+					return;
+				}
+				console.log("GROUND  READY")
 				cred = Credentials.findOne({connection: conn._id});
 				if(cred) {	
-					console.log("CRED: ", cred)
+					console.log("FOUND CRED: ", cred)
 				} else {
 					cid = Credentials.upsert( {connection: conn._id}, {$set: {connection: conn._id, username: "dfa", password: "sadf", save: false}});
 					console.log("Creating credentials record")
