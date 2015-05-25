@@ -15,7 +15,11 @@ isAdmin = function(userId) {
 
 getAppTree = function(appId){
 	app = Apps.findOne({_id: appId});
+	apps = [app._id];
 	baseApp = Apps.findOne({description: "24v86gqupNGbYz9Mv"});
+	if(baseApp) {
+		apps.push(baseApp._id);
+	}
 	apps = [app._id, baseApp._id];
 	while(app.ancestor) {
 		app = Apps.findOne({_id: app.ancestor})
@@ -59,22 +63,22 @@ Meteor.startup(function() {
 		//Hook any orphan connections to app.
 		conns = Connections.find({owner: u._id}).fetch();
 		//console.log("Connections", conns.length);
-		if(conns.length == 0) {
-			//console.log("Creating default connection for user: ", u.username);
-			no_connection_cnt++;
-			Connections.insert({
-				title: "Modern Industry",
-				host: "mqtt.thingstud.io",
-				port: 9001,
-				protocol: "Websocket",
-				owner: u._id,
-				appId: app._id,
-				username: "guest",
-				password: "guest",
-				autoConnect: true
-			});
-			conns = Connections.find({owner: u._id}).fetch();
-		}
+		// if(conns.length == 0) {
+		// 	//console.log("Creating default connection for user: ", u.username);
+		// 	no_connection_cnt++;
+		// 	Connections.insert({
+		// 		title: "Modern Industry",
+		// 		host: "mqtt.thingstud.io",
+		// 		port: 9001,
+		// 		protocol: "Websocket",
+		// 		owner: u._id,
+		// 		appId: app._id,
+		// 		username: "guest",
+		// 		password: "guest",
+		// 		autoConnect: true
+		// 	});
+		// 	conns = Connections.find({owner: u._id}).fetch();
+		// }
 		for(var c=0; c< conns.length; c++){
 			connection = conns[c];
 			if(connection.appId) {
