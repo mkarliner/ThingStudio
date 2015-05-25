@@ -4,6 +4,17 @@
 	<a class="header-action-1 clearfix" data-new="true" href="#">Create a new data feed</a>
 </template>
 
+<template name="FeedsTableWidths">
+	<colgroup>
+		<col style="width: 27%;">
+		<col style="width: 27%;">
+		<col style="width: 10%;">
+		<col style="width: 12%;">
+		<col style="width: 12%;">
+		<col style="width: 12%;">
+	</colgroup>
+</template>
+
 <template name="FeedsBody">
 	
 	{{#contentFor region="appHeader" template="FeedsHeader"}}{{/contentFor}}
@@ -13,26 +24,17 @@
 	{{/afModal}} -->
 
 		<table class="table feeds-table">
+			{{> FeedsTableWidths}}
 			<thead>
-				<tr cellpadding="10"><th>Feed Title</th><th>Subscription</th><th>Methods</th><th>Transport</th><th>Live Data</th><th>Pub/Sub</th><th>Action</th></tr>
+				<tr cellpadding="10"><th>Feed Title</th><th>Subscription</th><th>Methods</th><th>Transport</th><th>Pub/Sub</th><th>Action</th></tr>
 			</thead>
 			<tbody>
-					<tr class="tr-hidden">
-						{{#autoForm collection="Feeds" id="insertFeedForm" type="insert"}}
-							<td>{{> afQuickField name='title'}}</td>
-							<td>{{> afQuickField name='subscription'}}</td>
-							<td>{{> afQuickField name='action'}}</td>
-							<td>{{> afQuickField name='pubsub'}}</td>
-							<button type="submit" class="btn btn-primary">Insert</button>
-						{{/autoForm}}
-					</tr>
-					<tr class="spacer"><td></td></tr>
+				<tr id="form-insert" class="spacer td-closed"><td></td></tr>
 				{{#each feedlist}}
 					<tr>
 						<td>{{this.title}}</td>
 						<td>{{subscription}}</td>	
 						<td>{{action}}</td>
-						<td>PH!</td>
 						<td>PH!</td>
 						<td>{{pubsub}}</td>
 						<td><a href="#" class="table-action-1"><span class="ha2-status status-active"></span></a><a href="#" class="table-action-2"><span class="ha2-status status-active"></span></a></td>
@@ -42,21 +44,35 @@
 				{{/each}}
 			</tbody>	
 		</table>
-	<!-- <h1>Public Feeds</h1>
-	<table class="table feeds-table">
-	<tr cellpadding="10"><th>Title</th><th>Subscription</th></tr>
-	{{#!each publicfeeds}}
-		<tr>
-			<td><a  class="screenlink">{{this.title}}</a></td>
-			<td>{{subscription}}</td>
-			{{#if isInRole 'admin'}}
+		{{> FeedsNewItem}}
+</template>
 
-			<td>{{ownerName}}</td>
-			{{/if}}
-			<td>	{{#afModal class="btn btn-primary" collection="Feeds" doc=_id operation="update"}} Edit	{{/afModal}}</td>
-			<td>{{#afModal class="btn btn-danger" collection="Feeds" operation="remove" doc=_id}} Delete  {{/afModal}}</td>
-		</tr>
-	{{/each}}
-	</table> -->
+<template name="FeedsNewItem">
+	<div class="add-new-item">
+		{{#autoForm collection="Feeds" id="insertItemForm" type="insert"}}
+			<table>
+			{{> FeedsTableWidths}}
+				<tbody>
+					<tr>
+						<td>{{> afQuickField name='title' placeholder="Feed Title" class="first"}}</td>
+						<td>{{> afQuickField name='subscription' placeholder="Subscription Name"}}</td>
+						<td>{{> afQuickField name='action' options="allowed"}}</td>
+						<td></td>
+						<td>{{> afQuickField name='pubsub' options="allowed"}}</td>
+						<td>
+							<button type="submit"><span class="ha2-status status-active"><i class="mdi-navigation-check"></i></span></button><span class="cancel-new"><i class="mdi-navigation-close"></i></span>
+							<div><a href="">Advanced</a></div>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			{{> NewItemDivider}}
+		{{/autoForm}}
+	</div>
+</template>
 
+<template name="NewItemDivider">
+	<div class="div-container">
+		<div class="divider"></div>
+	</div>
 </template>

@@ -1,10 +1,13 @@
 Template.FeedsHeader.events({
 	"click .header-action-1": function(e, tmpl) {
 		e.preventDefault();
-		$("tr.spacer").show();
-	},
-	"click .tr-hidden": function(e, tmpl) {
-		console.log('clicked the hidden row');
+		menuOps();
+	}
+});
+
+Template.FeedsNewItem.events({
+	"click .cancel-new": function(e, tmpl) {
+		menuOps();
 	}
 });
 

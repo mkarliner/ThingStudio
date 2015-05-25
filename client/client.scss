@@ -10,7 +10,8 @@ $appBodyBG: #EBF3F6;
 $green: #76D4E1;
 $appPadding: 35px;
 $statusActive: #7ED321;
-
+$materializeInputBorderInactive: 1px solid #E1E4E8;
+$materializeInputBorderActive: 1px solid #4AAFE2;
 //Fonts
 //$fwLight: 'Avenir 35 Light';
 $fwLight: 100;
@@ -31,7 +32,7 @@ $darkBase: #353C51;
 $darkBaseText: #B2B7C4;
 $darkBaseBGHover: #424960;
 $sidenavLiHeight: 36px;
-$dividerColor: #242938;
+$sidebarDividerColor: #242938;
 $SBheaderSize: 10px;
 $SBitemSize: 12px;
 $SBcollapseBG: #424960;
@@ -44,6 +45,9 @@ $navBorder: #DCDCDC 1.5px solid;
 $headerColor: #676975;
 $headerActionButton2Color: #DCDCDC;
 
+//App Body
+$bodyDividerColor: #D0D3DC;
+
 ///////////////////////////////////////////////////////////////////////////////////////
 // Global Styles, Mixins //
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -52,6 +56,14 @@ $headerActionButton2Color: #DCDCDC;
 	position: fixed;
 	left: 0;
 	right: 0;
+}
+
+@mixin transition($property, $duration, $method:"") {
+	  -webkit-transition: $property $duration unquote($method);
+	  -moz-transition: $property $duration unquote($method);
+	  -o-transition: $property $duration unquote($method);
+	  -ms-transition: $property $duration unquote($method);
+	  transition: $property $duration unquote($method);
 }
 
 html {
@@ -79,13 +91,22 @@ header, footer {
 .clearfix { display: block; }
 
 .divider {
-	background-color: $dividerColor;
+	background-color: $sidebarDividerColor;
 }
 
 .center-image {
 	display: block;
 	margin-left: auto;
 	margin-right: auto;
+}
+
+input[type=text], input[type=password], input[type=email], input[type=url], input[type=time], input[type=date], input[type=datetime-local], input[type=tel], input[type=number], input[type=search], textarea.materialize-textarea {
+	border-bottom: $materializeInputBorderInactive;
+	margin-bottom: 0;
+}
+
+input[type=text]:focus:not([readonly]), input[type=password]:focus:not([readonly]), input[type=email]:focus:not([readonly]), input[type=url]:focus:not([readonly]), input[type=time]:focus:not([readonly]), input[type=date]:focus:not([readonly]), input[type=datetime-local]:focus:not([readonly]), input[type=tel]:focus:not([readonly]), input[type=number]:focus:not([readonly]), input[type=search]:focus:not([readonly]), textarea.materialize-textarea:focus:not([readonly]) {
+	border-bottom: $materializeInputBorderActive;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -125,6 +146,9 @@ header, footer {
 		& a {
 			color: lighten($darkBaseText, 20%);
 		}
+	}
+	& .divider {
+		background-color: $sidebarDividerColor;
 	}
 }
 
@@ -263,6 +287,9 @@ a.header-action-1 {
 	height: 38px;
 	line-height: 37px;
 	box-shadow: none;
+	&:hover {
+		background-color: transparent;
+	}
 }
 
 .ha2-status {
@@ -284,6 +311,7 @@ a.header-action-1 {
 
 main {
 	background-color: $appBodyBG;
+	position: relative;
 }
 
 thead {
@@ -296,16 +324,19 @@ th {
 	padding: 15px 0;
 }
 
-.tr-hidden {
-	display: none;
-}
-
-tr.spacer {
-	display: none;
+td {
+	padding: 6px 0;
 }
 
 tr.spacer td {
-	padding-top: 200px;
+	@include transition(padding-top, 0.1s, cubic-bezier(.55,0,.1,1));
+	padding-top: 0px;
+	will-change: padding-top;
+}
+
+tr.spacer.td-open td {
+	padding-top: 130px;
+	will-change: padding-top;
 }
 
 td:first-child, th:first-child {
@@ -314,6 +345,65 @@ td:first-child, th:first-child {
 
 td:last-child, th:last-child {
 	padding-right: $appPadding;
+}
+
+.add-new-item {
+	@include transition(opacity, 0.1s, cubic-bezier(.55,0,.1,1));
+	transition-delay: 0.05s;
+	position: absolute;
+	top: 50px;
+	width: calc(100% - #{$sideNavWidth});
+	display: none;
+	will-change: opacity, display;
+	& .divider {
+		background-color: $bodyDividerColor;
+		margin-top: 20px;
+		margin-bottom: 20px;
+	}
+}
+
+.div-container {
+	width: 80%;
+	margin: 0 auto;
+}
+
+.divider-decoration {
+	border-radius: 50%;
+	border: 1px solid black;
+	display: inline-block;
+	margin-left: 10px;
+	margin-right: 10px;
+	height: 20px;
+	width: 20px;
+}
+
+.add-new-item.open {
+	display: block;
+	will-change: opacity, display;
+}
+
+.add-new-item form {
+	padding-top: 20px;
+	padding-bottom: 20px;
+}
+
+.add-new-item .form-control {
+	padding: 0;
+}
+
+.add-new-item .select-wrapper i {
+	color: #4AAFE2;
+	font-size: 3 * $fontSize;
+	line-height: 44px;
+}
+
+.add-new-item .form-group {
+	margin-right: 30px;
+	background-color: $white;
+}
+
+.add-new-item .control-label {
+	display: none;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
