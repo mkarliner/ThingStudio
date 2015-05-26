@@ -68,10 +68,10 @@ $bodyDividerColor: #D0D3DC;
 
 html {
 	font-family: $fontFace;
+	background-color: $appBodyBG;
 }
 
 body {
-	background-color: $white;
 	color: $baseText;
 	font-size: $fontSize;
 }
@@ -269,6 +269,7 @@ nav.top-nav {
 header {
 	padding-top: 25px;
 	padding-bottom: 25px;
+	background-color: $white;
 }
 
 h1 {
@@ -314,7 +315,6 @@ a.header-action-1 {
 ///////////////////////////////////////////////////////////////////////////////////////
 
 main {
-	background-color: $appBodyBG;
 	position: relative;
 }
 
@@ -440,13 +440,15 @@ td:last-child, th:last-child {
 	border-radius: 50%;
 	width: 30px;
 	height: 30px;
+	display: inline-block;
 	background-color: transparent;
+	text-align: center;
+	color: $baseText;
 }
 
 .table-action i {
 	font-size: 1.6 * $fontSize;
-	line-height: 24px;
-	margin-left: -1px;
+	line-height: 27px;
 }
 
 .table-action:first-child {

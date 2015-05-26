@@ -263,6 +263,30 @@ Router.route("/feeds", function() {
 	name: "Data Feeds"
 });
 
+Router.route("/feeds/:_id", function() {
+	this.layout('MasterLayout', {
+		data: function() {
+			return Feeds.findOne({
+				_id: this.params._id
+			});
+		}
+	});
+	this.render('BreadcrumbsContent', {
+		to: 'breadcrumbs'
+	});
+	this.render("ViewFeedHeader", {
+		to: "appHeader"
+	});
+	this.render("ViewFeedBody", {
+		
+	});
+	this.render("Footer", {
+		to: "appFooter"
+	});
+}, {
+	name: "View Feed"
+});
+
 Router.route("/widgets", function() {
 	this.layout("MasterLayout");
 	this.render('BreadcrumbsContent', {

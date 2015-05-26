@@ -30,24 +30,24 @@ Outstanding
 				<div class="select-parent">
 					{{> AppSideNavSelect}}
 				</div>
-			<li class="{{isActiveRoute regex='connections'}}"><a href="/connections">Connections</a></li>
-			<li class="{{isActiveRoute regex='feeds'}}"><a href="/feeds">Data Feeds</a></li>
-			<li class="{{isActiveRoute regex='screens'}}"><a href="/screens">Templates</a></li>
-			<li class="{{isActiveRoute regex='themes'}}"><a href="/themes"><i class="mdi-image-brush"></i> Themes</a></li>
+			<li class="{{isActivePath regex='^\\/connections'}}"><a href="/connections">Connections</a></li>
+			<li class="{{isActivePath regex='^\\/feeds'}}"><a href="/feeds">Data Feeds</a></li>
+			<li class="{{isActivePath regex='^\\/screens'}}"><a href="/screens">Templates</a></li>
+			<li class="{{isActivePath regex='^\\/themes'}}"><a href="/themes"><i class="mdi-image-brush"></i> Themes</a></li>
 		</div>
 		<div class="divider"></div>
 		<div class="section">
 			<p class="section-header">Library</p>
-			<li class="{{isActiveRoute regex='widgets'}}"><a href="/widgets"><i class="mdi-image-tune"></i> Widgets</a></li>
-			<li class="{{isActiveRoute regex='apps'}}"><a href="/apps"><i class="mdi-navigation-apps"></i> Apps</a></li>
+			<li class="{{isActivePath regex='^\\/widgets'}}"><a href="/widgets"><i class="mdi-image-tune"></i> Widgets</a></li>
+			<li class="{{isActivePath regex='^\\/apps'}}"><a href="/apps"><i class="mdi-navigation-apps"></i> Apps</a></li>
 		</div>
 		<div class="divider"></div>
 		<div class="section">
 			<p class="section-header">Help</p>
-			<li class="{{isActiveRoute regex='video-tutorials'}}"><a href="/tutorials"><i class="mdi-action-account-balance"></i> Video Tutorials</a></li>
-			<li class="{{isActiveRoute regex='documentation'}}"><a href="/docs"><i class="mdi-editor-format-align-left"></i> Documentation</a></li>
-			<li class="{{isActiveRoute regex='support'}}"><a href="http://forum.thingstud.io"><i class="mdi-communication-forum"></i> Forum</a></li>
-			<li class="{{isActiveRoute regex='support'}}"><a href="/support"><i class="mdi-action-help"></i> Support</a></li>
+			<li class="{{isActivePath regex='^\\/video-tutorials'}}"><a href="/tutorials"><i class="mdi-action-account-balance"></i> Video Tutorials</a></li>
+			<li class="{{isActivePath regex='^\\/documentation|docs'}}"><a href="/docs"><i class="mdi-editor-format-align-left"></i> Documentation</a></li>
+			<li class="{{isActivePath regex='^\\/support'}}"><a href="http://forum.thingstud.io"><i class="mdi-communication-forum"></i> Forum</a></li>
+			<li class="{{isActivePath regex='^\\/support'}}"><a href="/support"><i class="mdi-action-help"></i> Support</a></li>
 		</div>
 	</ul>
 	<div class="divider"></div>
