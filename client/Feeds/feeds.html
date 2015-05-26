@@ -8,10 +8,10 @@
 	<colgroup>
 		<col style="width: 27%;">
 		<col style="width: 27%;">
+		<col style="width: 12%;">
+		<col style="width: 12%;">
+		<col style="width: 12%;">
 		<col style="width: 10%;">
-		<col style="width: 12%;">
-		<col style="width: 12%;">
-		<col style="width: 12%;">
 	</colgroup>
 </template>
 
@@ -37,7 +37,7 @@
 						<td>{{action}}</td>
 						<td>PH!</td>
 						<td>{{pubsub}}</td>
-						<td><a href="#" class="table-action-1"><span class="ha2-status status-active"></span></a><a href="#" class="table-action-2"><span class="ha2-status status-active"></span></a></td>
+						<td><button class="table-action table-edit-item"><i class="mdi-editor-mode-edit"></i></button><button class="table-action table-cancel-item"><i class="mdi-navigation-close"></i></button></td>
 						<!-- <td>{{#afModal class="btn btn-primary" collection="Feeds" doc=_id operation="update"}} Edit	{{/afModal}}</td>
 						<td>{{#afModal class="btn btn-danger" collection="Feeds" operation="remove" doc=_id}} Delete  {{/afModal}}</td> -->
 					</tr>
@@ -60,8 +60,8 @@
 						<td></td>
 						<td>{{> afQuickField name='pubsub' options="allowed"}}</td>
 						<td>
-							<button type="submit"><span class="ha2-status status-active"><i class="mdi-navigation-check"></i></span></button><span class="cancel-new"><i class="mdi-navigation-close"></i></span>
-							<div><a href="">Advanced</a></div>
+							<button type="submit" class="table-action table-save-new"><i class="mdi-navigation-check"></i></button><button class="table-action table-cancel-new"><i class="mdi-navigation-close"></i></button>
+							<div class="tae-cnt"><a href="#" class="table-advanced-edit">Advanced</a></div>
 						</td>
 					</tr>
 				</tbody>
@@ -74,5 +74,8 @@
 <template name="NewItemDivider">
 	<div class="div-container">
 		<div class="divider"></div>
+		<div class="dd-bg">
+			<span class="divider-decoration"><i class="mdi-navigation-expand-less"></i></span>
+		</div>
 	</div>
 </template>

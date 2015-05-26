@@ -6,7 +6,7 @@ Template.FeedsHeader.events({
 });
 
 Template.FeedsNewItem.events({
-	"click .cancel-new": function(e, tmpl) {
+	"click .table-cancel-new": function(e, tmpl) {
 		menuOps();
 	}
 });

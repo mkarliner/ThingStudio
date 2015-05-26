@@ -90,6 +90,10 @@ header, footer {
 * html .clearfix { height: 1%; }
 .clearfix { display: block; }
 
+.row {
+	margin-bottom: 0;
+}
+
 .divider {
 	background-color: $sidebarDividerColor;
 }
@@ -263,8 +267,8 @@ nav.top-nav {
 ///////////////////////////////////////////////////////////////////////////////////////
 
 header {
-	padding-top: 5px;
-	padding-bottom: 26px;
+	padding-top: 25px;
+	padding-bottom: 25px;
 }
 
 h1 {
@@ -328,6 +332,11 @@ td {
 	padding: 6px 0;
 }
 
+// th:last-child,
+// td:last-child {
+//     text-align: right;
+// }
+
 tr.spacer td {
 	@include transition(padding-top, 0.1s, cubic-bezier(.55,0,.1,1));
 	padding-top: 0px;
@@ -335,7 +344,7 @@ tr.spacer td {
 }
 
 tr.spacer.td-open td {
-	padding-top: 130px;
+	padding-top: 140px;
 	will-change: padding-top;
 }
 
@@ -363,18 +372,37 @@ td:last-child, th:last-child {
 }
 
 .div-container {
-	width: 80%;
-	margin: 0 auto;
+	// width: 80%;
+	margin: -7px auto 0;
+	padding: 1rem 0 0 0;
+	position: relative;
+	width: calc(100% - (2 * #{$appPadding}));
+}
+
+.dd-bg {
+	background-color: $appBodyBG;
+	padding: 0 2.6rem 0 1rem;
+	width: 40px;
+	position: absolute;
+	left:50%;
+	top: 68%;
 }
 
 .divider-decoration {
 	border-radius: 50%;
-	border: 1px solid black;
+	border: 1px solid #D0D3DC;
+	background-color: #FAFAFC;
 	display: inline-block;
-	margin-left: 10px;
-	margin-right: 10px;
-	height: 20px;
-	width: 20px;
+	height: 24px;
+	width: 24px;
+	
+}
+
+.divider-decoration i {
+	color: #B9BDC9;
+	font-size: 2 * $fontSize;
+	line-height: 22px;
+	margin-left: -1.1px;
 }
 
 .add-new-item.open {
@@ -383,8 +411,7 @@ td:last-child, th:last-child {
 }
 
 .add-new-item form {
-	padding-top: 20px;
-	padding-bottom: 20px;
+	padding-top: 24px;
 }
 
 .add-new-item .form-control {
@@ -404,6 +431,37 @@ td:last-child, th:last-child {
 
 .add-new-item .control-label {
 	display: none;
+}
+.add-new-item input.select-dropdown {
+	padding-left: 14px;
+}
+.table-action {
+	border: 1px solid $baseText;
+	border-radius: 50%;
+	width: 30px;
+	height: 30px;
+	background-color: transparent;
+}
+
+.table-action i {
+	font-size: 1.6 * $fontSize;
+	line-height: 24px;
+	margin-left: -1px;
+}
+
+.table-action:first-child {
+	margin-right: 5px;
+}
+
+.tae-cnt {
+	margin-top: 5px;
+}
+
+.table-advanced-edit {
+	color: $baseText;
+	font-weight: $fwBlack;
+	text-decoration: underline;
+	margin-top: 5px;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
