@@ -8,9 +8,7 @@
 	<colgroup>
 		<col style="width: 27%;">
 		<col style="width: 27%;">
-		<col style="width: 12%;">
-		<col style="width: 12%;">
-		<col style="width: 12%;">
+		<col style="width: 18%;">
 		<col style="width: 10%;">
 	</colgroup>
 </template>
@@ -26,7 +24,7 @@
 		<table class="table feeds-table">
 			{{> FeedsTableWidths}}
 			<thead>
-				<tr cellpadding="10"><th>Feed Title</th><th>Subscription</th><th>Methods</th><th>Transport</th><th>Pub/Sub</th><th>Action</th></tr>
+				<tr cellpadding="10"><th>Feed Title</th><th>Subscription</th><th>Methods</th><th>Pub/Sub</th><th>Action</th></tr>
 			</thead>
 			<tbody>
 				<tr id="form-insert" class="spacer td-closed"><td></td></tr>
@@ -34,8 +32,6 @@
 					<tr>
 						<td>{{this.title}}</td>
 						<td>{{subscription}}</td>	
-						<td>{{action}}</td>
-						<td>PH!</td>
 						<td>{{pubsub}}</td>
 						<td><button class="table-action table-edit-item"><i class="mdi-editor-mode-edit"></i></button><button class="table-action table-cancel-item"><i class="mdi-navigation-close"></i></button></td>
 						<!-- <td>{{#afModal class="btn btn-primary" collection="Feeds" doc=_id operation="update"}} Edit	{{/afModal}}</td>
@@ -56,8 +52,6 @@
 					<tr>
 						<td>{{> afQuickField name='title' placeholder="Feed Title" class="first"}}</td>
 						<td>{{> afQuickField name='subscription' placeholder="Subscription Name"}}</td>
-						<td>{{> afQuickField name='action' options="allowed"}}</td>
-						<td></td>
 						<td>{{> afQuickField name='pubsub' options="allowed"}}</td>
 						<td>
 							<button type="submit" class="table-action table-save-new"><i class="mdi-navigation-check"></i></button><button class="table-action table-cancel-new"><i class="mdi-navigation-close"></i></button>

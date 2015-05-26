@@ -8,6 +8,9 @@ Template.FeedsHeader.events({
 Template.FeedsNewItem.events({
 	"click .table-cancel-new": function(e, tmpl) {
 		menuOps();
+	},
+	"click .divider-decoration": function(e, tmpl) {
+		menuOps();
 	}
 });
 
