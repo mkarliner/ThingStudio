@@ -24,6 +24,11 @@ Schemas.Connection = new SimpleSchema({
 		allowedValues: ["Websocket", "SecureWebsocket"],
 		defaultValue: "Websocket"
 	},
+	serverCredentials: {
+		//Provide credentials from server store.
+		type: Boolean,
+		defaultValue: false,
+	},
 	username: {
 		type: String,
 		optional: true
