@@ -5,11 +5,10 @@ Router.route("/viewer/screen/:_id", {
 	where: "client"
 });
 
-Router.route("/view/app/:_id", function() {
+Router.route("/view/app/:_id", {
 	onBeforeAction: function(){
 		Session.set("currentAppId", this.params._id);
-	}
-}, {
+	},
 	action: "selectTemplate",
 	name: "ViewApp"
 });
