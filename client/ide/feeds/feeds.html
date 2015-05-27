@@ -1,19 +1,10 @@
-<template name="FeedsHeader">
+<template name="DataFeedsHeader">
 	<h1 class="left">Data Feeds</h1>
 	<a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>BUTTON</a>
 	<a class="header-action-1 clearfix" data-new="true" href="#">Create a new data feed</a>
 </template>
 
-<template name="FeedsTableWidths">
-	<colgroup>
-		<col style="width: 35%;">
-		<col style="width: 35%;">
-		<col style="width: 20%;">
-		<col style="width: 10%;">
-	</colgroup>
-</template>
-
-<template name="FeedsBody">
+<template name="DataFeedsBody">
 	
 	<div id="modal1" class="modal modal-fixed-footer">
 			<div class="modal-content">
@@ -49,11 +40,11 @@
 				{{/each}}
 			</tbody>	
 		</table>
-		{{> FeedsNewItem}}
+		{{> DataFeedsNewItem}}
 		
 </template>
 
-<template name="FeedsNewItem">
+<template name="DataFeedsNewItem">
 	<div class="add-new-item">
 		{{#autoForm collection="Feeds" id="insertItemForm" type="insert"}}
 			<table>
@@ -73,6 +64,15 @@
 			{{> NewItemDivider}}
 		{{/autoForm}}
 	</div>
+</template>
+
+<template name="FeedsTableWidths">
+	<colgroup>
+		<col style="width: 35%;">
+		<col style="width: 35%;">
+		<col style="width: 20%;">
+		<col style="width: 10%;">
+	</colgroup>
 </template>
 
 <template name="NewItemDivider">

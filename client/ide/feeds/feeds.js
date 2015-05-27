@@ -1,11 +1,11 @@
-Template.FeedsHeader.events({
+Template.DataFeedsHeader.events({
 	"click .header-action-1": function(e, tmpl) {
 		e.preventDefault();
 		menuOps();
 	}
 });
 
-Template.FeedsNewItem.events({
+Template.DataFeedsNewItem.events({
 	"click .table-cancel-new": function(e, tmpl) {
 		menuOps();
 	},
@@ -14,7 +14,7 @@ Template.FeedsNewItem.events({
 	}
 });
 
-Template.FeedsBody.helpers({
+Template.DataFeedsBody.helpers({
 	feedlist: function(){
 		return Feeds.find({owner: Meteor.userId()}, {sort: {createdAt: -1}})
 	},
@@ -49,20 +49,6 @@ Template.FeedsBody.helpers({
 	}
 });
 
-
-
-// Template.Feeds.events({
-// 	'click #subscribe-button': function(ev){
-// 		console.log("Boo");
-// 		feeds = Feeds.find({}).fetch();
-// 		i = 0;
-// 		for(i=0; i<feeds.length; i++){
-// 			console.log("Subscribing to " + feeds[i].subscription);
-// 			mqttClient.subscribe(feeds[i].subscription);
-// 		}
-// 	}
-// });
-
 Meteor.startup(function(){
 	Feeds.after.insert(function(userId, doc) {
 		// console.log("New Feed: ", userId, doc);
@@ -73,6 +59,3 @@ Meteor.startup(function(){
 		mqttClient.subscribe(doc.subscription);
 	});
 });
-
-
-

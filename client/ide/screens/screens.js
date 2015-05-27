@@ -1,4 +1,4 @@
-Template.TemplatesBody.helpers({
+Template.ScreensBody.helpers({
 	widgetlist: function(){
 		wl =  Screens.find({ owner: Meteor.userId(), isWidget: true})
 		return wl;
@@ -33,13 +33,12 @@ Template.TemplatesBody.helpers({
 	}
 });
 
-Template.TemplatesBody.events({
+Template.ScreensBody.events({
 	"click .screenlink": function(ev) {
 		console.log(this);
 		Router.go("/screens/" + this._id);
 	}
 })
-
 
 InstantiateScreens = function(){
 	//Instantiate all screens which are widgets

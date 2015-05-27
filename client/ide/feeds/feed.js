@@ -1,4 +1,4 @@
-Template.ViewFeedHeader.helpers({
+Template.ViewDataFeedHeader.helpers({
 	thisfeed: function() {
 		return this.title;
 	},
