@@ -10,6 +10,5 @@ AppViewerController = RouteController.extend({
 			Meteor.subscribe('screens', appId),
 			// Meteor.subscribe('themes', appId),
 		]
-	},
-
+	}
 });

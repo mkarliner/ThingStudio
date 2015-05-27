@@ -46,6 +46,7 @@ Router.route("/view/app/:_id", {
 
 
 Router.route("/viewer/screen/:_id", {
+	controller: "AppViewerController",
 	name: "ViewScreen",
 	action: function(){
 		this.render("ViewScreen", {
