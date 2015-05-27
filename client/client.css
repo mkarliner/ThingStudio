@@ -10,12 +10,7 @@ black:; rgb(0, 23, 54)
 */
 
 /* global styles */
-body {
-	background-color: rgb(232, 255, 255);
-	color: rgb(0, 23, 54);
-	font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;
-	font-size: 16px;
-}
+
 h1 {
 	font-size: 1.6em;
 	font-weight: 500;
@@ -547,10 +542,10 @@ font-size: 4em;
   text-indent: 14px;
 }
 
-.feeds-table td, .screens-table td, .themes-table td {
+/*.feeds-table td, .screens-table td, .themes-table td {
   padding: 0.6em 0;
 }
-
+*/
 #helpfooter {
   padding: 2em 0 0;
   clear: both;

@@ -1,0 +1,88 @@
+<!-- 
+Outstanding
+1. Icon export
+2. Decide on collapsibility
+3. Center name & droparrow
+4. Flip arrow when collapsible is open
+5. Jumpiness when select is destroyed (occasionally)
+6. Reexport logo with flattened text
+-->
+<template name="AppSideNav">
+	<ul id="slide-out" class="side-nav fixed">
+		<div class="section sb-profile">
+			<img class="circle center-image" src="{{gravatar}}">
+			<ul class="collapsible" data-collapsible="accordion">
+				<li>
+					<div class="collapsible-header"><div class="center-align"><span>{{myName}}</span><i class="mdi-hardware-keyboard-arrow-down" data-angle="0"></i></div></div>
+					<div class="collapsible-body clearfix">
+						<p><a href="/settings">Settings</a></p>
+						<p><a href="/profile">Profile</a></p>
+						<p><a href="/logout">Logout</a></p>
+					</div>
+				</li>
+			</ul>
+			<div class="clearfix">
+			</div>
+		</div>
+		<div class="divider"></div>
+		<div class="section">
+			<p class="section-header">Apps</p>
+				<div class="select-parent">
+					{{> AppSideNavSelect}}
+				</div>
+			<li class="{{isActivePath regex='^\\/connections'}}"><a href="/connections">Connections</a></li>
+			<li class="{{isActivePath regex='^\\/feeds'}}"><a href="/feeds">Data Feeds</a></li>
+			<li class="{{isActivePath regex='^\\/screens'}}"><a href="/screens">Templates</a></li>
+			<li class="{{isActivePath regex='^\\/themes'}}"><a href="/themes"><i class="mdi-image-brush"></i> Themes</a></li>
+		</div>
+		<div class="divider"></div>
+		<div class="section">
+			<p class="section-header">Library</p>
+			<li class="{{isActivePath regex='^\\/widgets'}}"><a href="/widgets"><i class="mdi-image-tune"></i> Widgets</a></li>
+			<li class="{{isActivePath regex='^\\/apps'}}"><a href="/apps"><i class="mdi-navigation-apps"></i> Apps</a></li>
+		</div>
+		<div class="divider"></div>
+		<div class="section">
+			<p class="section-header">Help</p>
+			<li class="{{isActivePath regex='^\\/video-tutorials'}}"><a href="/tutorials"><i class="mdi-action-account-balance"></i> Video Tutorials</a></li>
+			<li class="{{isActivePath regex='^\\/documentation|docs'}}"><a href="/docs"><i class="mdi-editor-format-align-left"></i> Documentation</a></li>
+			<li class="{{isActivePath regex='^\\/support'}}"><a href="http://forum.thingstud.io"><i class="mdi-communication-forum"></i> Forum</a></li>
+			<li class="{{isActivePath regex='^\\/support'}}"><a href="/support"><i class="mdi-action-help"></i> Support</a></li>
+		</div>
+	</ul>
+	<div class="divider"></div>
+	<div class="logo-container">
+		<div class="divider"></div>
+		<div class="section logo-section">
+			<div class="center-align logo">
+				<svg width="147px" height="25px" viewBox="0 0 147 25" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
+				    <g id="Abstract-Pastel" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
+				        <g id="Logo-Black" sketch:type="MSArtboardGroup" transform="translate(-130.000000, -316.000000)" fill="#B2B7C4">
+				            <g id="Logo-Copy" sketch:type="MSLayerGroup" transform="translate(130.000000, 313.000000)">
+				                <text id="ThingStudi" sketch:type="MSTextLayer" font-family="American Typewriter" font-size="23.8875" font-weight="normal">
+				                    <tspan x="2.296875" y="22">ThingStudi</tspan>
+				                </text>
+				                <path d="M137.851184,9.50959509 L137.851184,7.89473674 C137.851184,7.65959498 137.652344,7.46666667 137.407062,7.46666667 L136.380438,7.46666667 C136.14124,7.46666667 135.936316,7.65832016 135.936316,7.89473674 L135.936316,9.57898329 C134.941216,9.77074323 134.028961,10.2002539 133.258966,10.8071556 L132.004463,9.55265272 C131.838193,9.38638239 131.561171,9.39056282 131.38773,9.56400337 L130.661797,10.289936 C130.492659,10.4590745 130.483275,10.7394974 130.650447,10.9066692 L131.94944,12.2056622 C131.406539,12.9951076 131.034441,13.9147341 130.887589,14.9092324 L129.02182,14.9092324 C128.786678,14.9092324 128.59375,15.1080728 128.59375,15.3533548 L128.59375,16.3799786 C128.59375,16.6191764 128.785403,16.8241009 129.02182,16.8241009 L130.887589,16.8241009 C131.034441,17.8185992 131.406539,18.7382257 131.94944,19.5276712 L130.650447,20.8266641 C130.484176,20.9929345 130.488357,21.2699567 130.661797,21.4433973 L131.38773,22.16933 C131.556868,22.3384684 131.837291,22.3478524 132.004463,22.1806806 L133.258966,20.9261777 C134.028961,21.5330795 134.941216,21.9625901 135.936316,22.15435 L135.936316,23.8385966 C135.936316,24.0737384 136.135156,24.2666667 136.380438,24.2666667 L137.407062,24.2666667 C137.64626,24.2666667 137.851184,24.0750132 137.851184,23.8385966 L137.851184,22.2237382 C138.909732,22.0990283 139.888278,21.7077621 140.720089,21.1177331 L141.783037,22.1806806 C141.949307,22.3469509 142.226329,22.3427705 142.39977,22.16933 L143.125703,21.4433973 C143.294841,21.2742589 143.304225,20.9938359 143.137053,20.8266641 L142.097537,19.7871483 C142.742696,18.9426432 143.184295,17.9296339 143.347542,16.8241009 L144.76568,16.8241009 C145.000822,16.8241009 145.19375,16.6252606 145.19375,16.3799786 L145.19375,15.3533548 C145.19375,15.1141569 145.002097,14.9092324 144.76568,14.9092324 L143.347542,14.9092324 C143.184295,13.8036994 142.742696,12.7906902 142.097537,11.9461851 L143.137053,10.9066692 C143.303324,10.7403989 143.299143,10.4633766 143.125703,10.289936 L142.39977,9.56400337 C142.230632,9.39486495 141.950209,9.38548096 141.783037,9.55265272 L140.720089,10.6156002 C139.888278,10.0255713 138.909732,9.634305 137.851184,9.50959509 L137.851184,9.50959509 Z M137.148651,20.5403509 C139.672356,20.5403509 141.718224,18.4620096 141.718224,15.8982456 C141.718224,13.3344817 139.672356,11.2561404 137.148651,11.2561404 C134.624946,11.2561404 132.579079,13.3344817 132.579079,15.8982456 C132.579079,18.4620096 134.624946,20.5403509 137.148651,20.5403509 Z" id="Rectangle-17" sketch:type="MSShapeGroup"></path>
+				            </g>
+				        </g>
+				    </g>
+				</svg>
+			</div>
+		</div>
+	</div>
+</template>
+
+<template name="AppSideNavSelect">
+	<div class="input-field sidenav-app-selector">
+		<select class="myselect">
+			{{#if current_app_name}}
+				<option value="{{ current_app_name._id}}" disabled selected>{{ current_app_name.title }}</option>
+			{{else}}
+				<option value="" disabled selected>Choose your app</option>
+			{{/if}}
+			{{#each appsList }}
+			<option value="{{this._id}}">{{this.title}}</option>
+			{{/each}}
+		</select>
+	</div>
+</template>

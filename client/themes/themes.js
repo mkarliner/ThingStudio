@@ -1,4 +1,4 @@
-Template.Themes.helpers({
+Template.ThemesBody.helpers({
 	themelist: function(){
 		return Themes.find({})
 	},
@@ -13,7 +13,7 @@ Template.Themes.helpers({
 	}
 });
 
-Template.Themes.events({
+Template.ThemesBody.events({
 	"click .themelink": function(ev) {
 		console.log("Theme click")
 		Router.go("/themes/" + this._id);

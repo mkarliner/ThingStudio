@@ -1,6 +1,22 @@
-Template.Feeds.helpers({
+Template.FeedsHeader.events({
+	"click .header-action-1": function(e, tmpl) {
+		e.preventDefault();
+		menuOps();
+	}
+});
+
+Template.FeedsNewItem.events({
+	"click .table-cancel-new": function(e, tmpl) {
+		menuOps();
+	},
+	"click .divider-decoration": function(e, tmpl) {
+		menuOps();
+	}
+});
+
+Template.FeedsBody.helpers({
 	feedlist: function(){
-		return Feeds.find({owner: Meteor.userId()})
+		return Feeds.find({owner: Meteor.userId()}, {sort: {createdAt: -1}})
 	},
 	publicfeeds: function() {
 		return Feeds.find({public: true})
@@ -8,6 +24,28 @@ Template.Feeds.helpers({
 	ownerName: function(){
 		owner = Meteor.users.findOne({_id: this.owner});
 		return owner ? owner.username : "Owner Unknown";
+	},
+	beforeRemove: function () {
+		return function (collection, id) {
+			var doc = collection.findOne(id);
+			// if (confirm('Really delete "' + doc.title + '"?')) {
+			// 	
+			// }
+			$('#modal1').leanModal({
+				
+				dismissible: true, // Modal can be dismissed by clicking outside of the modal
+				opacity: .5, // Opacity of modal background
+				in_duration: 300, // Transition in duration
+				out_duration: 200, // Transition out duration
+				ready: function() {
+					console.log("This in the modal is: " + this);
+				 }, // Callback for Modal open
+				complete: function() { 
+					this.remove();
+				} // Callback for Modal close
+			});
+			$('#modal1').openModal();
+		};
 	}
 });
 

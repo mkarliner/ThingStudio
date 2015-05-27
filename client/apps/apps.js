@@ -1,4 +1,4 @@
-Template.Apps.helpers({
+Template.AppsBody.helpers({
 	appslist: function(){
 		return Apps.find({})
 	},
@@ -21,7 +21,7 @@ Template.Apps.helpers({
 	}
 });
 
-Template.Apps.events({
+Template.AppsBody.events({
 	'click #select-app': function(ev) {
 		ev.preventDefault();
 		console.log(this);

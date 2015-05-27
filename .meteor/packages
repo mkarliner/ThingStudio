@@ -11,9 +11,7 @@ aldeed:collection2
 aldeed:simple-schema
 aldeed:delete-button
 alanning:roles
-mizzao:bootstrap-3
 iron:router
-useraccounts:bootstrap
 accounts-password
 fortawesome:fontawesome
 yogiben:admin
@@ -32,7 +30,10 @@ mizzao:user-status
 mrt:moment
 miro:mailchimp
 miro:mailchimp-lists
-tkornblit:olark
+fourseven:scss
+materialize:materialize
+useraccounts:materialize
+zimme:iron-router-active
 jparker:gravatar
 numtel:webcomponent
 u2622:persistent-session

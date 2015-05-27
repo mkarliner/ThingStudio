@@ -1,4 +1,4 @@
-Template.Screens.helpers({
+Template.TemplatesBody.helpers({
 	widgetlist: function(){
 		wl =  Screens.find({ owner: Meteor.userId(), isWidget: true})
 		return wl;
@@ -33,7 +33,7 @@ Template.Screens.helpers({
 	}
 });
 
-Template.Screens.events({
+Template.TemplatesBody.events({
 	"click .screenlink": function(ev) {
 		console.log(this);
 		Router.go("/screens/" + this._id);

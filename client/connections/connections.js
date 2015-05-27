@@ -47,7 +47,7 @@ connect = function (conn) {
 	disconnect();
 	protocol = conn.protocol == "Websocket" ? "ws" : "wss";
 	ConnectionString = protocol + "://" + conn.host + ":" + conn.port;
-	console.log("CONNECTING: ", ConnectionString, protocol, conn.username, conn.password);
+	//console.log("CONNECTING: ", ConnectionString, protocol, conn.username, conn.password);
 	Session.set("currentMQTTHost", conn.host);
 	try {
 		mqttClient = mqtt.connect(ConnectionString, { username: conn.username, password: conn.password});
@@ -118,7 +118,7 @@ connect = function (conn) {
 }
 
 disconnect = function(conn) {
-	console.log("DISCONNECTING");
+	//console.log("DISCONNECTING");
 	if (typeof mqttClient.end == 'function') { 
 		console.log("Ending current client");
 	    mqttClient.end(); 
@@ -130,9 +130,9 @@ Meteor.startup(function(){
 });
 
 
-Template.Connections.helpers({
+Template.ConnectionsBody.helpers({
 	connectionlist: function(){
-		console.log("CONN FND: ", Connections.find({}).fetch())
+		//console.log("CONN FND: ", Connections.find({}).fetch())
 		return Connections.find({});
 	},
 	// Connection_status: function(){
@@ -151,7 +151,7 @@ Template.Connections.helpers({
 
 
 
-Template.Connections.events({
+Template.ConnectionsBody.events({
 	'click .connect': function(ev){
 		console.log("Connect button", ev, this);
 		connect(this);

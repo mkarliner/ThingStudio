@@ -26,6 +26,7 @@ ejson@1.0.6
 email@1.0.6
 fastclick@1.0.3
 fortawesome:fontawesome@4.3.0
+fourseven:scss@3.1.1
 geojson-utils@1.0.3
 html-tools@1.0.4
 htmljs@1.0.4
@@ -51,6 +52,7 @@ localstorage@1.0.3
 logging@1.0.7
 markdown@1.0.4
 matb33:collection-hooks@0.7.13
+materialize:materialize@0.96.1
 meteor@1.1.6
 meteor-platform@1.2.2
 meteorhacks:meteorx@1.0.2
@@ -59,7 +61,6 @@ minifiers@1.1.5
 minimongo@1.0.8
 miro:mailchimp@1.0.4
 miro:mailchimp-lists@1.0.0
-mizzao:bootstrap-3@3.3.1_1
 mizzao:timesync@0.3.1
 mizzao:user-status@0.6.4
 mkarliner:mqtt@0.1.0
@@ -91,15 +92,16 @@ spacebars@1.0.6
 spacebars-compiler@1.0.6
 srp@1.0.3
 templating@1.1.1
-tkornblit:olark@0.9.1
 tracker@1.0.7
 u2622:persistent-session@0.3.5
 ui@1.0.6
 underscore@1.0.3
+underscorestring:underscore.string@3.0.3_1
 url@1.0.4
-useraccounts:bootstrap@1.10.0
 useraccounts:core@1.10.0
+useraccounts:materialize@1.10.0
 webapp@1.2.0
 webapp-hashing@1.0.3
 yogiben:admin@1.1.2
 yogiben:autoform-modals@0.3.5
+zimme:iron-router-active@1.0.4

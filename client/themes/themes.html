@@ -1,7 +1,13 @@
+<template name="ThemesHeader">
+	{{#contentFor "appHeader"}}
+		<h1 class="left">{{curr_app_name}} Themes</h1>
+		<a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>BUTTON</a>
+		<a class="header-action-1 clearfix" href="#">Create a new theme</a>
+	{{/contentFor}}
+</template>
 
 
-
-<template name="Themes">
+<template name="ThemesBody">
 	
 	{{#afModal class="btn btn-primary" collection="Themes" operation="insert" omitFields=" public"}}
 	  Add a new theme

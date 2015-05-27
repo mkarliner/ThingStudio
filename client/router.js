@@ -10,7 +10,6 @@ AccountsTemplates.configureRoute('signIn');
 // 	Router.go("/screens");
 // })
 
-
 Router.onBeforeAction(function(par) {
 	// console.log("Before action", par);
 	if (!Meteor.user() && !Meteor.loggingIn()) {
@@ -20,9 +19,6 @@ Router.onBeforeAction(function(par) {
 		this.next();
 	}
 }, { except: [ "Help", "Helppages", "ViewScreen", "ViewApp"]});
-
-
-
 
 Router.route("/", function() {
 	u = Meteor.user();
@@ -119,7 +115,16 @@ Router.route("/viewer/screen/:_id", function() {
 
 
 Router.route("/connections", function() {
-	this.render("Connections");
+	this.layout("MasterLayout");
+	this.render('BreadcrumbsContent', {
+		to: 'breadcrumbs'
+	});
+	this.render("ConnectionsHeader", {
+		to: "appHeader"
+	});
+	this.render("ConnectionsBody");
+}, {
+	name: "Connections"
 });
 
 Router.route("/connectionold", function() {
@@ -178,18 +183,31 @@ Router.route("/apps/:_id/share", function() {
 });
 
 Router.route("/apps", function() {
-	this.layout("GeneralLayout");
-	this.render("Apps");
+	//this.layout("GeneralLayout");
+	this.layout("MasterLayout");
+	this.render('BreadcrumbsContent', {
+		to: 'breadcrumbs'
+	});
+	this.render("AppsHeader", {
+		to: "appHeader"
+	});
+	this.render("AppsBody");
 }, {
 	name: "Apps"
 });
 
 
 Router.route("/screens", function() {
-	this.layout("GeneralLayout");
-	this.render("Screens");
+	this.layout("MasterLayout");
+	this.render('BreadcrumbsContent', {
+		to: 'breadcrumbs'
+	});
+	this.render("TemplatesHeader", {
+		to: "appHeader"
+	});
+	this.render("TemplatesBody");
 }, {
-	name: "Screens"
+	name: "Templates"
 });
 
 Router.route("/themes/:_id", function() {
@@ -204,11 +222,50 @@ Router.route("/themes/:_id", function() {
 });
 
 Router.route("/themes", function() {
+	this.layout("MasterLayout");
 	this.render("Themes");
+	this.render('BreadcrumbsContent', {
+		to: 'breadcrumbs'
+	});
+	this.render("ThemesHeader", {
+		to: "appHeader"
+	});
+	this.render("ThemesBody")
+}, {
+	name: "Themes"
 });
 
 Router.route("/feeds", function() {
-	this.render("Feeds");
+	this.layout("MasterLayout");
+	this.render('BreadcrumbsContent', {
+		to: 'breadcrumbs'
+	});
+	this.render("FeedsHeader", {
+		to: "appHeader"
+	});
+	this.render("FeedsBody");
+}, {
+	name: "Data Feeds"
+});
+
+Router.route("/feeds/:_id", {
+	name: "View Feed",
+	controller: "FeedController",
+	action: "action",
+	where: "client"
+});
+
+Router.route("/widgets", function() {
+	this.layout("MasterLayout");
+	this.render('BreadcrumbsContent', {
+		to: 'breadcrumbs'
+	});
+	this.render("WidgetsHeader", {
+		to: "appHeader"
+	});
+	this.render("WidgetsBody");
+}, {
+	name: "Widgets"
 });
 
 Router.route("/docs/about", function() {
@@ -217,13 +274,50 @@ Router.route("/docs/about", function() {
 });
 
 Router.route("/profile", function() {
-	this.render("Profile", {
+	this.layout("MasterLayout", {
 		data: function() {
 			return Meteor.user();
 		}
 	});
+	this.render('BreadcrumbsContent', {
+		to: 'breadcrumbs'
+	});
+	this.render("ProfileHeader", {
+		to: "appHeader"
+	})
+	this.render("ProfileBody");
 }, {
 	name: "Profile"
+});
+
+Router.route("/settings", function() {
+	this.layout("MasterLayout", {
+		data: function() {
+			return Meteor.user();
+		}
+	});
+	this.render('BreadcrumbsContent', {
+		to: 'breadcrumbs'
+	});
+	this.render("SettingsHeader", {
+		to: "appHeader"
+	})
+	this.render("SettingsBody");
+}, {
+	name: "Settings"
+});
+
+Router.route("/support", function() {
+	this.layout("MasterLayout");
+	this.render('BreadcrumbsContent', {
+		to: 'breadcrumbs'
+	});
+	this.render("SupportHeader", {
+		to: "appHeader"
+	})
+	this.render("SupportBody");
+}, {
+	name: "Support"
 });
 
 Router.route("/debug", function() {
@@ -231,24 +325,45 @@ Router.route("/debug", function() {
 });
 
 Router.route("/docs", function() {
-	this.layout("HelpContainer");
-	this.render("HelpMenu");
-
+	this.layout("MasterLayout");
+	this.render('BreadcrumbsContent', {
+		to: 'breadcrumbs'
+	});
+	this.render("DocumentationListHeader", {
+		to: "appHeader"
+	})
+	this.render("DocumentationListBody");
 }, {
-	name: "Docs"
+	name: "Documentation"
 });
 
 Router.route("/docs/:urlstring", function() {
-	this.layout("HelpContainer");
-	this.render("HelpPage", {
+	this.layout("MasterLayout", {
 		data: function() {
 			return HelpPages.findOne({
 				urlstring: this.params.urlstring
 			});
 		}
 	});
+	this.render('BreadcrumbsContent', {
+		to: 'breadcrumbs'
+	});
+	this.render("HelpPage");
 }, {
-	name: "Helppages"
+	name: "Docs"
+});
+
+Router.route("/tutorials", function() {
+	this.layout("MasterLayout");
+	this.render('BreadcrumbsContent', {
+		to: 'breadcrumbs'
+	});
+	this.render("TutorialsHeader", {
+		to: "appHeader"
+	})
+	this.render("TutorialsBody");
+}, {
+	name: "Tutorials"
 });
 
 Router.route("/getting_started", {
@@ -273,6 +388,8 @@ Router.route("/users", function() {
 		}
 	});
 })
+
+
 
 Router.route("/welcome", function() {
 	this.layout("GeneralLayout");
