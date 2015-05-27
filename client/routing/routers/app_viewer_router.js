@@ -1,5 +1,3 @@
-
-
 Router.route("/view/app/:_id", {
 	onBeforeAction: function(){
 		console.log("OBA")
