@@ -14,6 +14,8 @@ isAdmin = function(userId) {
 
 
 getAppTree = function(appId){
+	console.log("GAT ", appId)
+
 	app = Apps.findOne({_id: appId});
 	apps = [app._id];
 	baseApp = Apps.findOne({description: "24v86gqupNGbYz9Mv"});

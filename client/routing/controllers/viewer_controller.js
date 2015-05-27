@@ -1,47 +1,15 @@
 AppViewerController = RouteController.extend({
-	layout: "ViewerLayout",
-	waitOn: function() {
+	layoutTemplate: "ViewerLayout",
+	subscriptions: function() {
+		console.log("WAITON")
 		var appId = Session.get("currentAppId");
-		[
+		return [
 			Meteor.subscribe('apps', appId),
 			Meteor.subscribe('connections', appId),
 			Meteor.subscribe('feeds', appId),
-			Meteor.subscribe('templates', appId),
-			Meteor.subscribe('themes', appId),
+			Meteor.subscribe('screens', appId),
+			// Meteor.subscribe('themes', appId),
 		]
 	},
-	data: function() {
-		return;
-	},
-	selectTemplate: function() {
-		app = getCurrentApp();
-		connection = Connections.findOne({_id: app.connection});
-		
-		// Connect if we found a connection, otherwise disconnect
-		// We may be jumping from the IDE to the Viewer, etc.
-		// This will also subscribe to all feeds associated with the connection
-		// See 'connect' for details
-		if (connection) {
-			connect(connection)
-		} else {
-			disconnect();
-		}
 
-		screen_cnt = Screens.find().count();
-		InstantiateScreens();
-		// If there is an app home page, go there
-		if (app.home_page) {
-			Router.go("/viewer/screen/" + app.home_page);
-		// If there is only one screen, go to the one screen
-		} else if (screen_cnt == 1) {
-			scr = Screens.findOne({});
-			Router.go("/viewer/screen/" + scr._id);
-		} else {
-			this.render("ViewApp", {
-				data: function() {
-					return app;
-				}
-			})
-		}
-	}
 });
