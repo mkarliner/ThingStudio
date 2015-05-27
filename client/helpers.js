@@ -8,3 +8,7 @@ Template.registerHelper(
 		return Session.get("currentApp").title;
 	}
 );
+
+getCurrentApp = function() { 
+	return Apps.findOne({_id: Session.get("currentAppId")});
+};
