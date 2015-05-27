@@ -2,10 +2,14 @@
 	<header>
 		{{> yield "appHeader"}}
 	</header>
-	<main>
+	<main class="clearfix">
 		{{> yield}}
 	</main>
 	<footer>
-		{{> yield "appFooter"}}
+		{{> Footer}}
 	</footer>
+</template>
+
+<template name="Footer">
+	<p>Footer</p>
 </template>

@@ -123,9 +123,6 @@ Router.route("/connections", function() {
 		to: "appHeader"
 	});
 	this.render("ConnectionsBody");
-	this.render("Footer", {
-		to: "appFooter"
-	});
 }, {
 	name: "Connections"
 });
@@ -195,9 +192,6 @@ Router.route("/apps", function() {
 		to: "appHeader"
 	});
 	this.render("AppsBody");
-	this.render("Footer", {
-		to: "appFooter"
-	});
 }, {
 	name: "Apps"
 });
@@ -212,9 +206,6 @@ Router.route("/screens", function() {
 		to: "appHeader"
 	});
 	this.render("TemplatesBody");
-	this.render("Footer", {
-		to: "appFooter"
-	});
 }, {
 	name: "Templates"
 });
@@ -240,9 +231,6 @@ Router.route("/themes", function() {
 		to: "appHeader"
 	});
 	this.render("ThemesBody")
-	this.render("Footer", {
-		to: "appFooter"
-	});
 }, {
 	name: "Themes"
 });
@@ -256,35 +244,15 @@ Router.route("/feeds", function() {
 		to: "appHeader"
 	});
 	this.render("FeedsBody");
-	this.render("Footer", {
-		to: "appFooter"
-	});
 }, {
 	name: "Data Feeds"
 });
 
-Router.route("/feeds/:_id", function() {
-	this.layout('MasterLayout', {
-		data: function() {
-			return Feeds.findOne({
-				_id: this.params._id
-			});
-		}
-	});
-	this.render('BreadcrumbsContent', {
-		to: 'breadcrumbs'
-	});
-	this.render("ViewFeedHeader", {
-		to: "appHeader"
-	});
-	this.render("ViewFeedBody", {
-		
-	});
-	this.render("Footer", {
-		to: "appFooter"
-	});
-}, {
-	name: "View Feed"
+Router.route("/feeds/:_id", {
+	name: "View Feed",
+	controller: "FeedController",
+	action: "action",
+	where: "client"
 });
 
 Router.route("/widgets", function() {
@@ -296,9 +264,6 @@ Router.route("/widgets", function() {
 		to: "appHeader"
 	});
 	this.render("WidgetsBody");
-	this.render("Footer", {
-		to: "appFooter"
-	});
 }, {
 	name: "Widgets"
 });
@@ -309,29 +274,35 @@ Router.route("/docs/about", function() {
 });
 
 Router.route("/profile", function() {
-	this.layout("MasterLayout");
-	this.render('BreadcrumbsContent', {
-		to: 'breadcrumbs'
-	});
-	this.render("Profile", {
+	this.layout("MasterLayout", {
 		data: function() {
 			return Meteor.user();
 		}
 	});
+	this.render('BreadcrumbsContent', {
+		to: 'breadcrumbs'
+	});
+	this.render("ProfileHeader", {
+		to: "appHeader"
+	})
+	this.render("ProfileBody");
 }, {
 	name: "Profile"
 });
 
 Router.route("/settings", function() {
-	this.layout("MasterLayout");
-	this.render('BreadcrumbsContent', {
-		to: 'breadcrumbs'
-	});
-	this.render("Settings", {
+	this.layout("MasterLayout", {
 		data: function() {
 			return Meteor.user();
 		}
 	});
+	this.render('BreadcrumbsContent', {
+		to: 'breadcrumbs'
+	});
+	this.render("SettingsHeader", {
+		to: "appHeader"
+	})
+	this.render("SettingsBody");
 }, {
 	name: "Settings"
 });
@@ -345,9 +316,6 @@ Router.route("/support", function() {
 		to: "appHeader"
 	})
 	this.render("SupportBody");
-	this.render("Footer", {
-		to: "appFooter"
-	})
 }, {
 	name: "Support"
 });
@@ -365,10 +333,6 @@ Router.route("/docs", function() {
 		to: "appHeader"
 	})
 	this.render("DocumentationListBody");
-	this.render("Footer", {
-		to: "appFooter"
-	})
-
 }, {
 	name: "Documentation"
 });
@@ -398,9 +362,6 @@ Router.route("/tutorials", function() {
 		to: "appHeader"
 	})
 	this.render("TutorialsBody");
-	this.render("Footer", {
-		to: "appFooter"
-	})
 }, {
 	name: "Tutorials"
 });
