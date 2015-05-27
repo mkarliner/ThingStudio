@@ -1,0 +1,203 @@
+/* CSS declarations go here */
+.Connection-list {
+	display: inline;
+}
+
+div.inline { float:left; }
+.clearBoth { clear:both; }
+
+#archy {
+	height: 400px;
+	min-width:  800px;
+}
+
+#archycss {
+	height: 300px;
+	min-width:  600px;
+}
+
+#archyjs {
+	height: 400px;
+	min-width:  600px;
+}
+
+#welcome_to_thingstudio {
+	display: block;
+	text-align: center;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+#home-content {
+	margin-left: auto;
+	margin-right: auto;
+/*	text-align: center;*/
+	max-width: 600px;
+}
+
+#accounts-form {
+	max-width: 600px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+#subscribeForm {
+	max-width: 600px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.home-links {
+	text-align: center;
+	margin-top: 10px;
+}
+
+#help-menu-title {
+	text-align: center;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.help-menu-item {
+	text-align: center;
+}
+
+#screenList {
+	margin-left: auto;
+	margin-right: auto;
+	text-align: center;
+	max-width: 400px;
+}
+
+.centeredTable {
+	margin-left: auto;
+	margin-right: auto;
+	border-spacing: 5px;
+	border-collapse: separate;
+	border: solid;
+	border-color: #527A7A;
+	margin-top: 10px;
+	margin-botton: 10px;
+	
+}
+
+.centerCell {
+	align: center;
+}
+
+@font-face {
+	font-family: 'Conv_TIMES_SQ';
+	src: url('fonts/TIMES_SQ.eot');
+	src: local('☺'), url('fonts/TIMES_SQ.woff') format('woff'), url('fonts/TIMES_SQ.ttf') format('truetype'), url('fonts/TIMES_SQ.svg') format('svg');
+	font-weight: normal;
+	font-style: normal;
+	font-color: red;
+}
+
+@font-face {
+	font-family: 'LCDBOLD';
+	src: local('☺'), url('fonts/LCDBOLD.woff') ;
+	font-weight: normal;
+	font-style: normal;
+	font-color: gray;
+}
+
+.ledDisplay {
+	font-family:'Conv_TIMES_SQ',Serif;
+	font-color: red;
+	color: red;
+	font-height: 1.5em;
+}
+
+
+.lcdDisplay {
+	font-family:'LCDBOLD',Serif;
+	font-color: #4E5656;
+	#color: dargray;
+	background: #C2D6D6;
+	font-height: 1.5em;
+}
+
+.flex-container {
+    display:flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-content: flex-start;
+    align-items: flex-start;
+}
+
+.flex-column {
+	    display:flex;
+	    flex-direction: column;
+	    flex-wrap: wrap;
+	    justify-content: flex-start;
+	    align-content: stretch;
+	    align-items: stretch;
+}
+
+.flex-item {
+	flex-grow: 1;
+}
+
+.control-label {
+	text-align: center;
+	padding: 0.4em 0;
+}
+
+#renderScreen {
+	margin-right: 2%;
+	width: 30%;
+	min-height: 600px;
+	border: 4px solid ;
+	background: white;
+	border-color: rgba(0, 23, 54, 0.1);
+	display: inline;
+	float: left;
+	border-radius: 8px;
+	padding: 1em;
+}
+
+#viewerRenderScreen {
+	margin-right: 10px;
+	width: 100%;
+	min-width: 300px;
+	min-height: 600px;
+/*	border: 4px solid ;*/
+/*	border-color: rgba(0, 23, 54, 0.1);*/
+	display: inline;
+	float: left;
+	border-radius: 8px;
+	padding: 1em;
+}
+
+#editScreen {
+		border: 1px solid gray;
+		border-radius: 6px;
+		padding: 1em;
+		width: 68%;
+}
+#editScreen.fullWidth {
+	width: 100%;
+}
+
+.screenlink {
+	margin: 5px;
+}
+
+.checkbox label {
+	font-size: 1em;
+	line-height: 23px;
+	margin-left: 0;
+}
+
+.gs-div {
+	border: solid;
+}
+
+#inlineradio1 {
+	background: green;
+	font-color: green;
+	border: solid;
+}
+

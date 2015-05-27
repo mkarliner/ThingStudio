@@ -1,0 +1,17 @@
+<template name="onlineUsers">
+	Online: 
+	{{#each activeUsers}}
+	{{> userPill }}
+	{{/each}}
+</template>
+
+<template name="onlineAdmins">
+	Dev Chat: 
+
+			
+</template>
+
+
+<template name="userPill">
+    <span class="label {{labelClass}}">{{username}}</span>
+</template>

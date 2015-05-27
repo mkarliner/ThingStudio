@@ -1,0 +1,16 @@
+<template name="Users">
+	<table class="table">
+		{{#each this}}
+		<tr>
+			<td>
+				{{username}}
+			</td>
+			<td>
+				{{num_feeds _id}}
+			</td>
+		</tr>
+		{{/each}}
+	</table>
+
+
+</template>

@@ -1,0 +1,30 @@
+<template name="DocumentationListHeader">
+	{{#contentFor "appHeader"}}
+		<h1 class="left">Documentation</h1>
+		<!-- <a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>{{curr_app_name}}</a>
+		<a class="header-action-1 clearfix" href="#">Create a new app</a> -->
+	{{/contentFor}}
+</template>
+
+<template name="DocumentationListBody">
+	
+	<table class="table">
+	    <tr>
+	        <td class="help-menu-item"><a href="http://www.thingstud.io/getting-started.html" target="_blank" class="help-menu-item">Watch the introductory screencast</a></td>
+	    </tr>
+		{{#each docs}}
+		<tr>
+			<td class="help-menu-item"><a href="/docs/{{urlstring}}">{{title}}</a></td>
+		</tr>
+		{{/each}}
+	</table>
+	
+	{{#unless currentUser}}
+	<div class="home-links"><div class="btn"><a href="/sign-in">Sign Up or In</a></div></div>
+	{{/unless}}
+	{{#if currentUser}}
+	<div class="home-links">
+		<div class="btn"><a href="/screens">Enter Studio</a></div>
+	</div>
+	{{/if}}
+</template>

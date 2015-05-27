@@ -1,0 +1,8 @@
+<template name="insertThemeForm">
+  {{> quickForm collection="Themes" id="insertThemeForm" type="insert" buttonClasses="glyphicon glyphicon-ok btn btn-default" buttonContent="Save" omitFields="public" }}
+</template>
+
+
+<template name="updateThemeForm">
+  {{> quickForm collection="Themes" id="updateThemeForm" type="update" doc=this class="qkForm" buttonClasses="glyphicon glyphicon-ok btn btn-default btn-tick" buttonContent="Update" omitFields="" }}
+</template>

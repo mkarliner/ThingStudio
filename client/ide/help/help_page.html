@@ -1,0 +1,16 @@
+<template name="HelpPage">	
+	<h1>{{title}}</h1>
+	<p class="text-muted"><em>Last updated: {{publishedDate updatedAt}}</em></p>
+
+	<div id="helpbody">
+		{{#markdown}}{{body}}{{/markdown}}
+		
+	</div>
+	<a class="pull-left btn btn-info" href="{{prevpage}}">Previous</a>
+	<a class="pull-right btn btn-info" href="{{nextpage}}">Next</a>
+	<div id="helpfooter">
+		<p>&copy; ThingStudio 2015</p>
+	</div>
+</template>
+
+
