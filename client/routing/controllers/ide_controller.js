@@ -12,15 +12,64 @@ IDEController = RouteController.extend({
 		myCurrAppId = Session.get('currentApp')._id;
 		return [
 			Meteor.subscribe('apps'),
-			Meteor.subscribe('feeds', myCurrAppId)
+			Meteor.subscribe('connections', myCurrAppId),
+			Meteor.subscribe('feeds', myCurrAppId),
+			Meteor.subscribe('screens', myCurrAppId)
 		]
 	},
 	data: function() {
-		return Feeds.findOne({	_id: this.params._id	});
+		return {
+			apps: Apps.find(),
+			connections: Connections.find(),
+			feeds: Feeds.find(),
+			screens: Screens.find()
+		}
+	}
+});
+
+SingleAppController = IDEController.extend({
+	data: function() {
+		return Apps.findOne({ _id: this.params._id });
+	}
+});
+
+SingleFeedController = IDEController.extend({
+	data: function() {
+		return Feeds.findOne({ _id: this.params._id });
+	}
+});
+
+SingleScreenController = IDEController.extend({
+	data: function() {
+		Session.set("currentScreenPage", this.params._id);
+		return Screens.findOne({ _id: this.params._id });
+	}
+});
+
+SingleThemeController = IDEController.extend({
+	data: function() {
+		Session.set("currentTheme", this.params._id);
+		return Themes.findOne({ _id: this.params._id });
+	}
+});
+
+ProfileController = IDEController.extend({
+	data: function() {
+		return Meteor.user();
+	}
+});
+
+DocsController = IDEController.extend({
+	subscriptions: function() {
+		Meteor.subscribe("help_pages");
 	},
-	action: function() {
-		this.render('BreadcrumbsContent', { to: 'breadcrumbs' });
-		this.render("ViewFeedHeader", { to: "appHeader" });
-		this.render("ViewFeedBody");
+	data: function() {
+		return Meteor.user();
+	}
+});
+
+SingleDocController = DocsController.extend({
+	data: function() {
+		return HelpPages.findOne({ urlstring: this.params.urlstring });
 	}
 });

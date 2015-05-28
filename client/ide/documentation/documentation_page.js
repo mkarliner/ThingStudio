@@ -1,4 +1,4 @@
-Template.HelpPage.helpers({
+Template.DocsBody.helpers({
 	nextpage: function(){
 		console.log("PN ", this.pagenumber)
 		hp =  HelpPages.findOne({pagenumber: {$gt: this.pagenumber}});

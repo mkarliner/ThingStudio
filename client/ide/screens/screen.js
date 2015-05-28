@@ -24,8 +24,6 @@ Meteor.startup(function(){
 	});
 })
 
-
-
 Template.afAce.helpers({
 	debug: function(obj){
 		console.log("DEBUG:", obj);
@@ -61,85 +59,83 @@ Template.afAceJs.helpers({
 		console.log("DEBUG:", obj);
 	},
 	loadValue: function(editor){
-
 	}
 });
 
 Template.afAceJs.rendered = function() {
-    var editor;
+	var editor;
 	// console.log("RENDERED", this.findAll());
-   Tracker.autorun(function (e) {
-   editor = AceEditor.instance("archyjs", {
-	   theme: "twilight",
-	   mode: "javascript"
-   });
+	Tracker.autorun(function (e) {
 
-   if(editor.loaded===true){
-     e.stop();
-	 cs = Session.get("currentScreenPage");
-	 
-	 console.log("CSJ: ", cs)
-	 editor.$blockScrolling = Infinity;
-	 editor.setValue(Screens.findOne({_id: cs}).js, -1);
-   }
- }); 
+		editor = AceEditor.instance("archyjs", {
+			theme: "twilight",
+			mode: "javascript"
+		});
+
+		if(editor.loaded===true){
+			e.stop();
+			cs = Session.get("currentScreenPage");
+
+			console.log("CSJ: ", cs)
+			editor.$blockScrolling = Infinity;
+			editor.setValue(Screens.findOne({_id: cs}).js, -1);
+		}
+	}); 
 }
 
 Template.afAceCss.rendered = function() {
-    var editor;
+	var editor;
 	// console.log("RENDERED", this.findAll());
-   Tracker.autorun(function (e) {
-   editor = AceEditor.instance("archycss", {
-	   theme: "twilight",
-	   mode: "css"
-   });
+	Tracker.autorun(function (e) {
 
-   if(editor.loaded===true){
-     e.stop();
-	 editor.$blockScrolling = Infinity; 
-   }
- }); 
+		editor = AceEditor.instance("archycss", {
+			theme: "twilight",
+			mode: "css"
+		});
+
+		if(editor.loaded===true){
+			e.stop();
+			editor.$blockScrolling = Infinity; 
+		}
+	}); 
 }
 
 Template.afAce.rendered = function() {
-    var editor;
+	var editor;
 	//console.log("RENDERED", this.findAll());
-   Tracker.autorun(function (e) {
-   editor = AceEditor.instance("archy", {
-	   theme: "twilight",
-	   mode: "handlebars",
-   });
-   
-   if(editor.loaded===true){
-     e.stop();
-	 cs = Session.get("currentScreenPage");
-	 
-	 console.log("CS: ", cs)
-	 editor.$blockScrolling = Infinity;
-	 editor.setValue(Screens.findOne({_id: cs}).html, -1);
-   }
- }); 
+	Tracker.autorun(function (e) {
+
+		editor = AceEditor.instance("archy", {
+			theme: "twilight",
+			mode: "handlebars",
+		});
+
+		if(editor.loaded===true){
+			e.stop();
+			cs = Session.get("currentScreenPage");
+
+			console.log("CS: ", cs)
+			editor.$blockScrolling = Infinity;
+			editor.setValue(Screens.findOne({_id: cs}).html, -1);
+		}
+	}); 
 }
 
+Template.SingleScreenBody.helpers({
+	currentScreen: function() {
+	        scr =  Session.get("currentScreenPage");
+	        scn = Screens.findOne(scr);
 
+	        if(scn) {
+	                // console.log("HTML: ", scn.html);
+	                delete Template[scn.title];
+	                compileTemplate(scn.title, scn.html, scn.js);
 
-
-
-
-Template.Screen.helpers({
-    currentScreen: function() {
-            scr =  Session.get("currentScreenPage");
-            scn = Screens.findOne(scr);
-            if(scn) {
-                    // console.log("HTML: ", scn.html);
-                    delete Template[scn.title];
-                    compileTemplate(scn.title, scn.html, scn.js);
-
-                    return scn.title;
-            } else {
-                    return "NoScreen";
-            }
-    },
+	                return scn.title;
+	        } else {
+	                return "NoScreen";
+	        }
+	},
 	compilationErrors: function(){
 		return Session.get("compilationErrors")
 	},
@@ -153,10 +149,9 @@ Template.Screen.helpers({
 	}
 });
 
-Template.Screen.events({
+Template.SingleScreenBody.events({
 	'click #togglePreview': function(ev){
 		$('#renderScreen').toggle();
 		$('#editScreen').toggleClass('fullWidth');
-		
 	}
 });

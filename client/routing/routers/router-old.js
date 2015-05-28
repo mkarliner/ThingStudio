@@ -1,106 +1,8 @@
-Router.route("screens/:_id/edit", function(){
-	this.layout("GeneralLayout");
-	this.render("EditScreen", {
-		data: function(){
-			if(!this.ready()) {
-				console.log("Not ready")
-				return;
-			}
-			Session.set("currentScreenPage", this.params._id);
-			return Screens.findOne({_id: this.params._id});
-		}
-	});
-});
-
-Router.route("/screens/:_id", function() {
-	this.layout("GeneralLayout");
-	this.render("Screen", {
-		data: function() {
-			Session.set("currentScreenPage", this.params._id);
-			return Screens.findOne({
-				_id: this.params._id
-			});
-		}
-	});
-});
-
-Router.route("/apps/:_id/share", function() {
-	this.layout("GeneralLayout");
-	this.render("ShareApp", {
-		data: function() {
-			return Apps.findOne({
-				_id: this.params._id
-			});
-		}
-	});
-});
-
-Router.route("/themes/:_id", function() {
-	this.layout("GeneralLayout");
-	this.render("Theme", {
-		data: function() {
-			Session.set("currentTheme", this.params._id);
-			return Themes.findOne({
-				_id: this.params._id
-			});
-		}
-	});
-});
-
-Router.route("/profile", function() {
-	this.layout("MasterLayout", {
-		data: function() {
-			return Meteor.user();
-		}
-	});
-	this.render('BreadcrumbsContent', {
-		to: 'breadcrumbs'
-	});
-	this.render("ProfileHeader", {
-		to: "appHeader"
-	})
-	this.render("ProfileBody");
-}, {
-	name: "Profile"
-});
-
-Router.route("/settings", function() {
-	this.layout("MasterLayout", {
-		data: function() {
-			return Meteor.user();
-		}
-	});
-	this.render('BreadcrumbsContent', {
-		to: 'breadcrumbs'
-	});
-	this.render("SettingsHeader", {
-		to: "appHeader"
-	})
-	this.render("SettingsBody");
-}, {
-	name: "Settings"
-});
-
-
 Router.route("/debug", function() {
 	this.render("Debug");
 });
 
-Router.route("/docs/:urlstring", function() {
-	this.layout("MasterLayout", {
-		data: function() {
-			return HelpPages.findOne({
-				urlstring: this.params.urlstring
-			});
-		}
-	});
-	this.render('BreadcrumbsContent', {
-		to: 'breadcrumbs'
-	});
-	this.render("HelpPage");
-}, {
-	name: "Docs"
-});
+
 
 Router.route("/getting_started", {
 	layoutTemplate: "GettingStartedLayout",
@@ -289,4 +191,101 @@ Router.route("/welcome", function() {
 // 	this.render("TutorialsBody");
 // }, {
 // 	name: "Tutorials"
+// });
+
+// Router.route("/profile", function() {
+// 	this.layout("MasterLayout", {
+// 		data: function() {
+// 			return Meteor.user();
+// 		}
+// 	});
+// 	this.render('BreadcrumbsContent', {
+// 		to: 'breadcrumbs'
+// 	});
+// 	this.render("ProfileHeader", {
+// 		to: "appHeader"
+// 	})
+// 	this.render("ProfileBody");
+// }, {
+// 	name: "Profile"
+// });
+
+// Router.route("/settings", function() {
+// 	this.layout("MasterLayout", {
+// 		data: function() {
+// 			return Meteor.user();
+// 		}
+// 	});
+// 	this.render('BreadcrumbsContent', {
+// 		to: 'breadcrumbs'
+// 	});
+// 	this.render("SettingsHeader", {
+// 		to: "appHeader"
+// 	})
+// 	this.render("SettingsBody");
+// }, {
+// 	name: "Settings"
+// });
+
+// Router.route("/docs/:urlstring", function() {
+// 	this.layout("MasterLayout", {
+// 		data: function() {
+// 			return HelpPages.findOne({
+// 				urlstring: this.params.urlstring
+// 			});
+// 		}
+// 	});
+// 	this.render('BreadcrumbsContent', {
+// 		to: 'breadcrumbs'
+// 	});
+// 	this.render("HelpPage");
+// }, {
+// 	name: "Docs"
+// });
+
+// Router.route("screens/:_id/edit", function(){
+// 	this.layout("GeneralLayout");
+// 	this.render("EditScreen", {
+// 		data: function(){
+// 			if(!this.ready()) {
+// 				console.log("Not ready")
+// 				return;
+// 			}
+// 			Session.set("currentScreenPage", this.params._id);
+// 			return Screens.findOne({_id: this.params._id});
+// 		}
+// 	});
+// });
+
+// Router.route("/screens/:_id", function() {
+// 	this.layout("GeneralLayout");
+// 	this.render("Screen", {
+// 		data: function() {
+// 			Session.set("currentScreenPage", this.params._id);
+// 			return Screens.findOne({ _id: this.params._id});
+// 		}
+// 	});
+// });
+
+// Router.route("/apps/:_id/share", function() {
+// 	this.layout("GeneralLayout");
+// 	this.render("ShareApp", {
+// 		data: function() {
+// 			return Apps.findOne({
+// 				_id: this.params._id
+// 			});
+// 		}
+// 	});
+// });
+
+// Router.route("/themes/:_id", function() {
+// 	this.layout("GeneralLayout");
+// 	this.render("Theme", {
+// 		data: function() {
+// 			Session.set("currentTheme", this.params._id);
+// 			return Themes.findOne({
+// 				_id: this.params._id
+// 			});
+// 		}
+// 	});
 // });

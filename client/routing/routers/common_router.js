@@ -1,6 +1,5 @@
 Router.configure({
 	loadingTemplate: 'Loading',
-	controller: 'IDEController'
 });
 
 AccountsTemplates.configureRoute('signIn');

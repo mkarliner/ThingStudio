@@ -1,4 +1,3 @@
-
 AppViewerController = RouteController.extend({
 	layoutTemplate: "ViewerLayout",
 	subscriptions: function() {
