@@ -1,3 +1,4 @@
+
 AppViewerController = RouteController.extend({
 	layoutTemplate: "ViewerLayout",
 	subscriptions: function() {
@@ -7,7 +8,7 @@ AppViewerController = RouteController.extend({
 			Meteor.subscribe('apps', appId),
 			Meteor.subscribe('connections', appId),
 			Meteor.subscribe('feeds', appId),
-			Meteor.subscribe('screens', appId),
+			Meteor.subscribe('screens', appId)
 			// Meteor.subscribe('themes', appId),
 		]
 	}

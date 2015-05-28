@@ -1,5 +1,6 @@
 
-// AutoForm.debug();
+AutoForm.debug();
+console.log("AUTOFORM DEBUG")
 
 Template.registerHelper("indexedArray",
 	function(arr) {
@@ -72,90 +73,90 @@ Meteor.startup(function() {
 	// 	// console.log("FC: ", err, result);
 	//
 	// });
-	Tracker.autorun(function () {	
-		//console.log("Running subscribe", Session.get("currentAppId"))
-		Meteor.subscribe("apps", Session.get("currentAppId"), {
-			onReady: function() {
-				//console.log("Apps Ready", Apps.find({}).fetch());
-				//Is there only one App available?
-				numApps = Apps.find().count();
-				if(numApps == 1) {
-					initialApp = Apps.findOne();
-					Session.setPersistent("currentApp", initialApp);
-					return;
-				}
-				// Are we returning to an existing App?
-				initialApp = Session.get("currentApp");	
-				if(initialApp) {
-					Session.setPersistent("currentApp", initialApp);
-					return;
-				} 
-				//Are we logged in, but have no Apps?
-				if(Meteor.userId() && numApps == 0) {
-					//If so, create first app.
-					//console.log("Creating default app on ready", Meteor.userId())
-					appId = Apps.insert({
-						title: "defaultApp",
-						access: "Private",
-					});
-					Session.setPersistent("currentApp", Apps.findOne({_id: appId}));
-					return;
-				}
-				//Are we logged in, with Apps, but none current?
-				if(Meteor.userId) {
-					initialApp = Apps.findOne({title: "defaultApp"});
-					Session.setPersistent("currentApp", initialApp);
-					return;
-				}
-				
-
-			}
-		});
-	});
+	// Tracker.autorun(function () {
+	// 	//console.log("Running subscribe", Session.get("currentAppId"))
+	// 	Meteor.subscribe("apps", Session.get("currentAppId"), {
+	// 		onReady: function() {
+	// 			//console.log("Apps Ready", Apps.find({}).fetch());
+	// 			//Is there only one App available?
+	// 			numApps = Apps.find().count();
+	// 			if(numApps == 1) {
+	// 				initialApp = Apps.findOne();
+	// 				Session.setPersistent("currentApp", initialApp);
+	// 				return;
+	// 			}
+	// 			// Are we returning to an existing App?
+	// 			initialApp = Session.get("currentApp");
+	// 			if(initialApp) {
+	// 				Session.setPersistent("currentApp", initialApp);
+	// 				return;
+	// 			}
+	// 			//Are we logged in, but have no Apps?
+	// 			if(Meteor.userId() && numApps == 0) {
+	// 				//If so, create first app.
+	// 				//console.log("Creating default app on ready", Meteor.userId())
+	// 				appId = Apps.insert({
+	// 					title: "defaultApp",
+	// 					access: "Private",
+	// 				});
+	// 				Session.setPersistent("currentApp", Apps.findOne({_id: appId}));
+	// 				return;
+	// 			}
+	// 			//Are we logged in, with Apps, but none current?
+	// 			if(Meteor.userId) {
+	// 				initialApp = Apps.findOne({title: "defaultApp"});
+	// 				Session.setPersistent("currentApp", initialApp);
+	// 				return;
+	// 			}
+	//
+	//
+	// 		}
+	// 	});
+	// });
 		
 	
 
 	
-	Tracker.autorun(function () {
-	  ca  = Session.get("currentApp");
-	  Session.get("currentAppId");
-	  if(ca) {
-		  //console.log("SUB: ", ca.title);
-		  Meteor.subscribe("connections",ca._id, {
-			onReady: function(){
-				connections = Connections.find().fetch();
-				// console.log(" CONNECTIONS FOUND: ", connections);
-				//If the app specifies a connection, use that
-				//if not, use any, or none.
-				if(ca.connection) {
-					conn = Connections.findOne({_id: ca.connection});
-				} else {
-					conn = Connections.findOne({});
-				}
-				// console.log("Autoconnect: ", conn);
-				//console.log("Connect: ", conn)
-				if (conn) {
-					connect(conn);
-				} else {
-					disconnect();
-				}
-			}
-		});
-		  Meteor.subscribe("feeds", ca._id, {
-			  onReady: function(){
-				  //console.log("SUBSCRIBING FEEDS");
-			  }
-		  });
-		  //console.log("SUBSCRIBING SCREENS");
-		  Meteor.subscribe("screens", ca._id, {
-		  	  onReady: function(){
-				  InstantiateScreens();
-		  	  }
-		  });
-		  Meteor.subscribe("themes", ca._id);
-	}
-
-	})
+	// Tracker.autorun(function () {
+	//   ca  = Session.get("currentApp");
+	//   Session.get("currentAppId");
+	//   if(ca) {
+	// 	  //console.log("SUB: ", ca.title);
+	// 	  Meteor.subscribe("connections",ca._id, {
+	// 		onReady: function(){
+	// 			connections = Connections.find().fetch();
+	// 			// console.log(" CONNECTIONS FOUND: ", connections);
+	// 			//If the app specifies a connection, use that
+	// 			//if not, use any, or none.
+	// 			if(ca.connection) {
+	// 				conn = Connections.findOne({_id: ca.connection});
+	// 			} else {
+	// 				conn = Connections.findOne({});
+	// 			}
+	// 			// console.log("Autoconnect: ", conn);
+	// 			//console.log("Connect: ", conn)
+	// 			if (conn) {
+	// 				connect(conn);
+	// 			} else {
+	// 				disconnect();
+	// 			}
+	// 		}
+	// 	});
+	// 	  Meteor.subscribe("feeds", ca._id, {
+	// 		  onReady: function(){
+	// 			  //console.log("SUBSCRIBING FEEDS");
+	// 		  }
+	// 	  });
+	// 	  //console.log("SUBSCRIBING SCREENS");
+	// 	  Meteor.subscribe("screens", ca._id, {
+	// 	  	  onReady: function(){
+	// 			  InstantiateScreens();
+	// 	  	  }
+	// 	  });
+	// 	  Meteor.subscribe("themes", ca._id);
+	// }
+	//
+	// })
 	
 
 		Meteor.subscribe("help_pages", {

@@ -176,7 +176,27 @@ AutoForm.hooks({
 				
 			}
 		}
-	}
+	},
+	
+	updateCredentialsForm: {
+			onSubmit: function(a,b,c) {
+				console.log("SUBMIT ", a, b, c)
+			},
+			// before: {
+			// 	update: function(docId, mod, template) {
+			// 		console.log("BEFORE CRED ", docId, mod, template);
+			//
+			// 	}
+			// },
+			after: {
+				update: function(err, res, temp) {
+					console.log("AFTER CRED UPDATE: ", err, res, temp);
+					Session.set("authReady", true);
+				}
+			}
+		}
+
+	
 
 
 
