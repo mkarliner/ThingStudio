@@ -52,7 +52,13 @@ Meteor.startup(function() {
 
 	
 	Tracker.autorun(function(){
+		//Probably short circuit for not logged in.
+		// This is not associated with any route.
 		//We decide what the initial app should be here.
+		initialApp = Session.get("currentAppId");
+		if(initialApp) {
+			return;
+		}
 		Meteor.subscribe("apps", {
 			onReady: function(){
 				console.log("Apps Ready", Apps.find({}).fetch());
@@ -60,15 +66,9 @@ Meteor.startup(function() {
 				numApps = Apps.find().count();
 				if(numApps == 1) {
 					initialApp = Apps.findOne();
-					Session.setPersistent("currentAppId", initialApp);
+					Session.setPersistent("currentAppId", initialApp._id);
 					return;
 				}
-				// // Are we returning to an existing App?
-				// initialApp = Session.get("currentAppId");
-				// if(initialApp) {
-				// 	Session.setPersistent("currentApp", initialApp);
-				// 	return;
-				// }
 				//Are we logged in, but have no Apps?
 				if(Meteor.userId() && numApps == 0) {
 					//If so, create first app.

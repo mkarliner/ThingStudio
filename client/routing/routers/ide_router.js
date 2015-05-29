@@ -65,7 +65,9 @@ Router.route("/feeds/:_id", {
 	controller: "SingleFeedController",
 	action: function() {
 		if ( !this.ready() ) {
-			this.render("LoadingIDE");
+			this.render("LoadingIDE", {
+				data: "Feeds"
+			});
 		} else {
 			renderYields(this, 'ViewFeed');
 		}
@@ -75,21 +77,23 @@ Router.route("/feeds/:_id", {
 Router.route("/feeds", function() {
 	this.layout("MasterLayout", {
 		data: function() {
-			console.log("Feeds data function!!");
-			if ( !this.ready() ) {
-				console.log("feeds data not ready yet")
-				this.render("LoadingIDE");
-			} else {
-				console.log("feeds data is now ready")
 				return Feeds.find();
 			}
-		}
-	})
+		})
 }, {
 	name: "Data Feeds",
 	controller: "IDEController",
 	action: function() {
-		renderYields(this, 'DataFeeds');
+		console.log("Feeds action function!!");
+		if ( !this.ready() ) {
+			console.log("feeds data not ready yet")
+			this.render("LoadingIDE");
+		} else {
+			console.log("feeds data is now ready")
+			console.log("FEEDACT", this);
+			renderYields(this, 'DataFeeds');
+		}
+
 		
 	}
 });
