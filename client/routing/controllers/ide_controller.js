@@ -1,6 +1,7 @@
 IDEController = RouteController.extend({
 	layoutTemplate: 'MasterLayout',
 	onBeforeAction: function() {
+		console.log('IDEController OBA');
 		if (!Meteor.user() && !Meteor.loggingIn()) {
 			this.layout("HelpLayout");
 			this.render("Login");
@@ -9,7 +10,8 @@ IDEController = RouteController.extend({
 		}
 	},
 	subscriptions: function() {
-		myCurrAppId = Session.get('currentApp')._id;
+		console.log('IDEController Subscribing')
+		myCurrAppId = Session.get('currentAppId');
 		return [
 			Meteor.subscribe('apps'),
 			Meteor.subscribe('connections', myCurrAppId),
@@ -18,6 +20,7 @@ IDEController = RouteController.extend({
 		]
 	},
 	data: function() {
+		console.log("IDEController data")
 		return {
 			apps: Apps.find(),
 			connections: Connections.find(),
@@ -29,47 +32,59 @@ IDEController = RouteController.extend({
 
 SingleAppController = IDEController.extend({
 	data: function() {
-		return Apps.findOne({ _id: this.params._id });
+		console.log("SingleAppController data")
+		return Apps.find({ _id: this.params._id });
 	}
 });
 
 SingleFeedController = IDEController.extend({
 	data: function() {
-		return Feeds.findOne({ _id: this.params._id });
+		console.log("SingleFeedController data")
+		return Feeds.find({ _id: this.params._id });
 	}
 });
 
 SingleScreenController = IDEController.extend({
 	data: function() {
+		console.log("SingleScreenController data")
 		Session.set("currentScreenPage", this.params._id);
-		return Screens.findOne({ _id: this.params._id });
+		return Screens.find({ _id: this.params._id });
 	}
 });
 
 SingleThemeController = IDEController.extend({
 	data: function() {
+		console.log("SingleThemeController data")
 		Session.set("currentTheme", this.params._id);
-		return Themes.findOne({ _id: this.params._id });
+		return Themes.find({ _id: this.params._id });
 	}
 });
 
 ProfileController = IDEController.extend({
+	subscriptions: function() {
+		console.log("ProfileController subscribe")
+		Meteor.subscribe("userData");
+	},
 	data: function() {
+		console.log("ProfileController data")
 		return Meteor.user();
 	}
 });
 
 DocsController = IDEController.extend({
 	subscriptions: function() {
+		console.log("DocsController subscriptions")
 		Meteor.subscribe("help_pages");
 	},
 	data: function() {
+		console.log("DocsController data")
 		return Meteor.user();
 	}
 });
 
 SingleDocController = DocsController.extend({
 	data: function() {
-		return HelpPages.findOne({ urlstring: this.params.urlstring });
+		console.log("SingleDocController data")
+		return HelpPages.find({ urlstring: this.params.urlstring });
 	}
 });

@@ -190,24 +190,24 @@ Meteor.startup(function() {
 		// 	}]
 		// });
 	});
-	Meteor.publish("feed", function(appId, feedId) {
-		app = Apps.findOne({_id: appId});
-		apps = getAppTree(appId);
-		// console.log("Subscribing feeds: ", appId,  app.access)
-		if(this.userId == app.owner || app.access == "Shareable") {
-			// console.log("Returning feeds: ", Feeds.find({appId: appId}).fetch().length )
-			return Feeds.find({_id: feedId, appId: {$in
+	// Meteor.publish("feed", function(appId, feedId) {
+	// 	app = Apps.findOne({_id: appId});
+	// 	apps = getAppTree(appId);
+	// 	// console.log("Subscribing feeds: ", appId,  app.access)
+	// 	if(this.userId == app.owner || app.access == "Shareable") {
+	// 		// console.log("Returning feeds: ", Feeds.find({appId: appId}).fetch().length )
+	// 		return Feeds.find({_id: feedId, appId: {$in
 				
-				: apps}});
-		}
-		// return Feeds.find({
-		// 	$or: [{
-		// 		owner: this.userId
-		// 	}, {
-		// 		public: true
-		// 	}]
-		// });
-	});
+	// 			: apps}});
+	// 	}
+	// 	// return Feeds.find({
+	// 	// 	$or: [{
+	// 	// 		owner: this.userId
+	// 	// 	}, {
+	// 	// 		public: true
+	// 	// 	}]
+	// 	// });
+	// });
 	Meteor.publish("themes", function(appId) {
 		app = Apps.findOne({_id: appId});
 		apps = getAppTree(appId);

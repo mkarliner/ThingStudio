@@ -2,33 +2,6 @@
 AutoForm.debug();
 console.log("AUTOFORM DEBUG")
 
-Template.registerHelper("indexedArray",
-	function(arr) {
-  	  	return _.map(arr, function(value, index){
-    	  return {value: value, index: index};
-  });
-});
-
-Template.registerHelper("menuOps", 
-	menuOps = function() {
-		if ( $('#form-insert').hasClass('td-open') ) {
-			//Is open
-			$('main tr#form-insert').toggleClass('td-open');
-			$('main div.add-new-item').removeClass('open').css({opacity: 1.0}).animate({opacity: 0.0}, 100);
-			$('#insertItemForm')[0].reset();
-		} else {
-			//Is closed
-			$('main tr#form-insert').toggleClass('td-open');
-			$('main div.add-new-item').addClass('open').css({opacity: 0.0}).animate({opacity: 1.0}, 100);
-			$('#insertItemForm input.first').focus();
-		}
-});
-
-Template.registerHelper("deviceOrientation", function(){
-	console.log("DEVO ", Session.get("deviceOrientation"))
-	return Session.get("deviceOrientation");
-})
-
 // devOrientHandler = function(ev) {
 // 	Session.set("deviceOrientation", ev);
 // }
@@ -63,6 +36,16 @@ Meteor.startup(function() {
 		Session.set("appTreeList", appTree);
 	});
 
+	Tracker.autorun(function() {
+		id = Session.get("currentAppId");
+		app = Apps.findOne({ _id: id });
+		if (app) {
+			Session.set("currentApp", app);
+		} else {
+			Session.set("currentApp", { _id: null })
+		}
+		
+	});
 	Template.registerHelper("appTreeList", function(){
 		return Session.get("appTreeList");
 	})

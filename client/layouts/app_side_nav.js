@@ -1,10 +1,15 @@
-
 Template.AppSideNav.onRendered(function() {
     $('.collapsible').collapsible();
 });
 
 Template.AppSideNavSelect.onRendered(function() {
-	$('select').material_select();
+	var currIdTest = Session.get("currentAppId");
+	var v = Apps.find({owner: Meteor.userId(), _id: {$nin: [currIdTest]}});
+	console.log(v);
+	setTimeout(function() {
+		$('select').material_select();
+	}, 2000)
+	
 });
 
 Template.AppSideNav.events({
