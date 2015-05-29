@@ -4,11 +4,11 @@ Template.AppSideNav.onRendered(function() {
 
 Template.AppSideNavSelect.onRendered(function() {
 	var currIdTest = Session.get("currentAppId");
-	var v = Apps.find({owner: Meteor.userId(), _id: {$nin: [currIdTest]}});
-	console.log(v);
-	setTimeout(function() {
+	// var v = Apps.find({owner: Meteor.userId(), _id: {$nin: [currIdTest]}});
+	// console.log(v);
+	// setTimeout(function() {
 		$('select').material_select();
-	}, 2000)
+	// }, 2000)
 	
 });
 
