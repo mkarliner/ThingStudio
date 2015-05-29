@@ -51,6 +51,46 @@ Meteor.startup(function() {
 	})
 
 	
+	Tracker.autorun(function(){
+		//We decide what the initial app should be here.
+		Meteor.subscribe("apps", {
+			onReady: function(){
+				console.log("Apps Ready", Apps.find({}).fetch());
+				//Is there only one App available?
+				numApps = Apps.find().count();
+				if(numApps == 1) {
+					initialApp = Apps.findOne();
+					Session.setPersistent("currentAppId", initialApp);
+					return;
+				}
+				// // Are we returning to an existing App?
+				// initialApp = Session.get("currentAppId");
+				// if(initialApp) {
+				// 	Session.setPersistent("currentApp", initialApp);
+				// 	return;
+				// }
+				//Are we logged in, but have no Apps?
+				if(Meteor.userId() && numApps == 0) {
+					//If so, create first app.
+					//console.log("Creating default app on ready", Meteor.userId())
+					appId = Apps.insert({
+						title: "defaultApp",
+						access: "Private",
+					});
+					Session.setPersistent("currentAppId", appId);
+					return;
+				}
+				//Are we logged in, with Apps, but none current?
+				//Just choose the 'defaultApp
+				if(Meteor.userId) {
+					initialApp = Apps.findOne({title: "defaultApp"});
+					Session.setPersistent("currentAppId", initialApp._id);
+					return;
+				}
+
+			}
+		})
+	})
 	// Meteor.call("foreignConnections", function(err, result){
 	// 	Session.set("foreignConnections", result)
 	// 	// console.log("FC: ", err, result);

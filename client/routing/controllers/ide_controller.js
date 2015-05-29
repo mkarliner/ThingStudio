@@ -8,7 +8,7 @@ IDEController = RouteController.extend({
 			this.next();
 		}
 	},
-	waitOn: function() {
+	subscriptions: function() {
 		console.log('IDEController Subscribing')
 		myCurrAppId = Session.get('currentAppId');
 		return [
@@ -18,15 +18,15 @@ IDEController = RouteController.extend({
 			Meteor.subscribe('screens', myCurrAppId)
 		]
 	},
-	data: function() {
-		console.log("IDEController data")
-		return {
-			apps: Apps.find(),
-			connections: Connections.find(),
-			feeds: Feeds.find(),
-			screens: Screens.find()
-		}
-	}
+	// data: function() {
+	// 	console.log("IDEController data")
+	// 	return {
+	// 		apps: Apps.find(),
+	// 		connections: Connections.find(),
+	// 		feeds: Feeds.find(),
+	// 		screens: Screens.find()
+	// 	}
+	// }
 });
 
 SingleAppController = IDEController.extend({
