@@ -36,11 +36,13 @@ Template.AppSideNavSelect.events({
 		Session.setPersistent("currentAppId", myThingVal);
 		// console.log('after setPersistent, currentAppId is: ', Session.get("currentAppId"));
 		ResetMessages();
-		$('select').material_select('destroy');
-		$('.sidenav-app-selector').remove();
-		setTimeout(function() {
-			Blaze.render(Template.AppSideNavSelect, $('.select-parent')[0]);
-		}, 100);
+		
+		Tracker.autorun(function() {
+			Session.get("currentAppId")
+			$('select').material_select('destroy');
+			$('.sidenav-app-selector').remove();
+			Blaze.render(Template.AppSideNavSelect, $('body div.select-parent')[0]);
+		})
 		
 	}
 });
@@ -66,7 +68,7 @@ Template.AppSideNavSelect.helpers({
 	},
 	current_app_name: function(){
 		if (  Session.get("currentApp") ) {
-			console.log("current_app_name, ", Session.get("currentApp"))
+			//console.log("current_app_name, ", Session.get("currentApp"))
 			return Session.get("currentApp");
 		} else {
 			return false;

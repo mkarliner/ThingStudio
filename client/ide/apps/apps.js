@@ -16,20 +16,22 @@ Template.AppsBody.helpers({
 			return false;
 		}
 	},
-	parentTitle: function(){
-		return(Apps.findOne({_id: this.parent})).title;
-	}
+	// parentTitle: function(){
+	// 	return(Apps.findOne({_id: this.parent})).title;
+	// }
 });
 
 Template.AppsBody.events({
 	'click #select-app': function(ev) {
 		ev.preventDefault();
-		console.log(this);
+		console.log(this._id);
 		UnsubscribeAll();
 		DisconnectMQTT();
-		Session.setPersistent("currentApp",this);
+		Session.setPersistent("currentAppId",this._id);
 		ResetMessages();
+		$('select').material_select('destroy');
+		$('.sidenav-app-selector').remove();
+		Blaze.render(Template.AppSideNavSelect, $('body div.select-parent')[0]);
 	}
-	
 });
 

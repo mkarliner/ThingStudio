@@ -196,6 +196,10 @@ input[type=text]:focus:not([readonly]), input[type=password]:focus:not([readonly
 	margin-bottom: 0;
 }
 
+.side-nav .select-parent {
+	height: 45px;
+}
+
 .sidenav-app-selector {
 	padding: 0 20px;
 }
