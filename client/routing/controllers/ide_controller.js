@@ -8,7 +8,7 @@ IDEController = RouteController.extend({
 			this.next();
 		}
 	},
-	subscriptions: function() {
+	waitOn: function() {
 		console.log('IDEController Subscribing')
 		myCurrAppId = Session.get('currentAppId');
 		return [

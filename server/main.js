@@ -139,7 +139,6 @@ Meteor.startup(function() {
 		} else {
 			return Apps.find({owner: this.userId});
 		}
-		
 	});
 
 	Meteor.publish("connections", function(appId) {
