@@ -74,28 +74,34 @@ Router.route("/feeds/:_id", {
 	}
 });
 
-Router.route("/feeds", function() {
-	this.layout("MasterLayout", {
-		data: function() {
-				return Feeds.find();
-			}
-		})
-}, {
+Router.route("/feeds", {
 	name: "Data Feeds",
 	controller: "IDEController",
-	action: function() {
-		console.log("Feeds action function!!");
-		if ( !this.ready() ) {
-			console.log("feeds data not ready yet")
-			this.render("LoadingIDE");
-		} else {
-			console.log("feeds data is now ready")
-			console.log("FEEDACT", this);
-			renderYields(this, 'DataFeeds');
-		}
-
-		
+	data: function() {
+			return Feeds.find();
+		},
+	action: function(){
+		this.render('BreadcrumbsContent', {
+			to: 'breadcrumbs'
+		});
+		this.render("DataFeedsHeader", {
+			to: "appHeader"
+		});
+		this.render("DataFeedsBody");
 	}
+	// action: function() {
+	// 	console.log("Feeds action function!!");
+	// 	if ( !this.ready() ) {
+	// 		console.log("feeds data not ready yet")
+	// 		this.render("LoadingIDE");
+	// 	} else {
+	// 		console.log("feeds data is now ready")
+	// 		console.log("FEEDACT", this);
+	// 		renderYields(this, 'DataFeeds');
+	// 	}
+	//
+	//
+	// }
 });
 
 Router.route("/screens/:_id/edit", {

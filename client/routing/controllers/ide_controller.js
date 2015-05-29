@@ -1,4 +1,5 @@
 IDEController = RouteController.extend({
+	layoutTemplate: "MasterLayout",
 	onBeforeAction: function() {
 		console.log('IDEController OBA');
 		if (!Meteor.user() && !Meteor.loggingIn()) {

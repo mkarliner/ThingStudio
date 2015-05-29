@@ -61,8 +61,10 @@ Template.AppSideNav.helpers({
 });
 Template.AppSideNavSelect.helpers({
 	appsList: function() {
-		var currId = Session.get("currentApp")._id;
-		return Apps.find({owner: Meteor.userId(), _id: {$nin: [currId]}});
+		var currId = Session.get("currentAppId");
+		apps =  Apps.find({owner: Meteor.userId(), _id: {$nin: [currId]}});
+		console.log("APPLIST: ", currId, apps.fetch() )
+		return apps;
 	},
 	current_app_name: function(){
 		if (  Session.get("currentApp") ) {
