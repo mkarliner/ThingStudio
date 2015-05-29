@@ -29,7 +29,7 @@ Template.DataFeedsBody.helpers({
 	// 	return function (collection, id) {
 	// 		var doc = collection.findOne(id);
 	// 		// if (confirm('Really delete "' + doc.title + '"?')) {
-	// 		// 	
+	// 		// 	this.remove();
 	// 		// }
 	// 		$('#modal1').leanModal({
 				

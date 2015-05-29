@@ -6,7 +6,7 @@
 
 meteor-platform
 accounts-base
-aldeed:autoform
+aldeed:autoform@5.3.0
 aldeed:collection2
 aldeed:simple-schema
 aldeed:delete-button
@@ -14,7 +14,7 @@ alanning:roles
 iron:router
 accounts-password
 fortawesome:fontawesome
-yogiben:admin
+#yogiben:admin
 reactive-var
 spacebars-compiler
 mkarliner:mqtt
@@ -23,7 +23,7 @@ mkarliner:mqtt-regex
 dburles:collection-helpers
 matb33:collection-hooks
 chuangbo:cookie
-yogiben:autoform-modals
+#yogiben:autoform-modals
 markdown
 okgrow:analytics
 mizzao:user-status
@@ -38,3 +38,4 @@ jparker:gravatar
 numtel:webcomponent
 u2622:persistent-session
 ground:db
+gildaspk:autoform-modals-materialize@0.0.6

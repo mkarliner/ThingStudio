@@ -20,7 +20,7 @@
 						<td>{{this.title}}</td>
 						<td>{{subscription}}</td>	
 						<td>{{pubsub}}</td>
-						<td><a class="table-action table-edit-item" href="{{pathFor 'View Feed'}}"><i class="mdi-editor-mode-edit"></i></a>{{#afModal class="table-action table-cancel-item" collection="Feeds" operation="remove" doc=_id}}<i class="mdi-navigation-close"></i>{{/afModal}}</td>
+						<td><a class="table-action table-edit-item" href="{{pathFor 'View Feed'}}"><i class="mdi-editor-mode-edit"></i></a>{{#afModal classes="table-action table-cancel-item" collection="Feeds" operation="remove" doc=_id title="Deleting Feed" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="mdi-navigation-close"></i>{{/afModal}}</td>
 					</tr>
 				{{/each}}
 			</tbody>	
