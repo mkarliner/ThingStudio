@@ -1,7 +1,6 @@
 IDEController = RouteController.extend({
 	layoutTemplate: "MasterLayout",
 	onBeforeAction: function() {
-		console.log('IDEController OBA');
 		if (!Meteor.user() && !Meteor.loggingIn()) {
 			this.layout("HelpLayout");
 			this.render("Login");
@@ -10,7 +9,6 @@ IDEController = RouteController.extend({
 		}
 	},
 	subscriptions: function() {
-		console.log('IDEController Subscribing')
 		myCurrAppId = Session.get('currentAppId');
 		return [
 			Meteor.subscribe('apps'),
@@ -18,16 +16,7 @@ IDEController = RouteController.extend({
 			Meteor.subscribe('feeds', myCurrAppId),
 			Meteor.subscribe('screens', myCurrAppId)
 		]
-	},
-	// data: function() {
-	// 	console.log("IDEController data")
-	// 	return {
-	// 		apps: Apps.find(),
-	// 		connections: Connections.find(),
-	// 		feeds: Feeds.find(),
-	// 		screens: Screens.find()
-	// 	}
-	// }
+	}
 });
 
 SingleAppController = IDEController.extend({

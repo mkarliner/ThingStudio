@@ -3,13 +3,7 @@ Template.AppSideNav.onRendered(function() {
 });
 
 Template.AppSideNavSelect.onRendered(function() {
-	var currIdTest = Session.get("currentAppId");
-	// var v = Apps.find({owner: Meteor.userId(), _id: {$nin: [currIdTest]}});
-	// console.log(v);
-	// setTimeout(function() {
-		$('select').material_select();
-	// }, 2000)
-	
+	$('select').material_select();
 });
 
 Template.AppSideNav.events({
@@ -20,28 +14,34 @@ Template.AppSideNav.events({
 		$(collapsibleIcon).data('angle', angle + 180);
 		console.log(angle);
 		$(collapsibleIcon).css({'transform': 'rotate(' + angle + ')'});
-		// 
 	}
 	// 'click .collapsible li.active': function(e, tmpl) {
 	// 	console.log("close has been clicked");
 	// 	var collapsibleIcon= tmpl.find('i.mdi-hardware-keyboard-arrow-down');
 	// 	$(collapsibleIcon).css({'transform': 'rotate(360deg)'});
 	// },
-
 });
 
 Template.AppSideNavSelect.events({
 	'change .sidenav-app-selector select': function(e, tmpl) {
 		var myThing = tmpl.find(":selected");
+		// console.log('this was selected: ', myThing)
 		var myThingVal = $(myThing).attr("value");
-		var app = Apps.findOne({_id: myThingVal});
+		// console.log('here is myThingVal: ', myThingVal)
+		// var appHere = Apps.findOne({_id: myThingVal});
+		// console.log('here is appHere: ', appHere)
 		UnsubscribeAll();
 		DisconnectMQTT();
-		Session.setPersistent("currentApp",app);
+		// console.log('before setPersistent, currentAppId is: ', Session.get("currentAppId"))
+		Session.setPersistent("currentAppId", myThingVal);
+		// console.log('after setPersistent, currentAppId is: ', Session.get("currentAppId"));
 		ResetMessages();
 		$('select').material_select('destroy');
 		$('.sidenav-app-selector').remove();
-		Blaze.render(Template.AppSideNavSelect, $('.select-parent')[0]);
+		setTimeout(function() {
+			Blaze.render(Template.AppSideNavSelect, $('.select-parent')[0]);
+		}, 100);
+		
 	}
 });
 
@@ -57,17 +57,16 @@ Template.AppSideNav.helpers({
 			return Meteor.user().username;
 		}
 	}
-	
 });
+
 Template.AppSideNavSelect.helpers({
 	appsList: function() {
 		var currId = Session.get("currentAppId");
-		apps =  Apps.find({owner: Meteor.userId(), _id: {$nin: [currId]}});
-		console.log("APPLIST: ", currId, apps.fetch() )
-		return apps;
+		return Apps.find({owner: Meteor.userId(), _id: {$nin: [currId]}});
 	},
 	current_app_name: function(){
 		if (  Session.get("currentApp") ) {
+			console.log("current_app_name, ", Session.get("currentApp"))
 			return Session.get("currentApp");
 		} else {
 			return false;

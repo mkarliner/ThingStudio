@@ -11,47 +11,40 @@ console.log("AUTOFORM DEBUG")
 //   window.addEventListener('deviceorientation', devOrientHandler, false);
 // }
 
-Meteor.startup(function() {
-	
-	// window.onerror = function (errorMsg, url, lineNumber, column, errorObj) {
-	// 	    alert('Error: ' + errorMsg + ' Script: ' + url + ' Line: ' + lineNumber
-	// 	    + ' Column: ' + column + ' StackTrace: ' +  errorObj);
-	// 		Session.set("runtimeErrors", errorMsg);
-	// 	} 
-	Tracker.autorun(function(){
-		ca = Session.get("currentApp");
+Tracker.autorun(function(){
+	caId = Session.get("currentAppId");
+	ca = Apps.findOne({_id: caId});
+
+	if(!ca){
+		return[];
+	}
+	appTree = [{_id: ca._id, title: ca.title}];
+	while(ca.parent) {
+		ca = Apps.findOne({_id: ca.parent});
+		//Apps may not be ready yet.
 		if(!ca){
-			return[];
+			break;
 		}
-		appTree = [{_id: ca._id, title: ca.title}];
-		while(ca.parent) {
-			ca = Apps.findOne({_id: ca.parent});
-			//Apps may not be ready yet.
-			if(!ca){
-				break;
-			}
-			appTree.push({id: ca._id, title: ca.title});
-		}
-		appTree.reverse();
-		Session.set("appTreeList", appTree);
-	});
+		appTree.push({id: ca._id, title: ca.title});
+	}
+	appTree.reverse();
 
-	Tracker.autorun(function() {
-		id = Session.get("currentAppId");
-		app = Apps.findOne({ _id: id });
-		if (app) {
-			Session.set("currentApp", app);
-		} else {
-			Session.set("currentApp", { _id: null })
-		}
-		
-	});
-	Template.registerHelper("appTreeList", function(){
-		return Session.get("appTreeList");
-	})
+	Session.set("appTreeList", appTree);
+	console.log("generating appTreeList", Session.get("appTreeList"))
+});
 
-	
-	Tracker.autorun(function(){
+Tracker.autorun(function() {
+	// Erase?
+	var id = Session.get("currentAppId");
+	var app = Apps.findOne({ _id: id });
+	if (app) {
+		Session.set("currentApp", app);
+	} else {
+		Session.set("currentApp", { _id: null })
+	}
+});
+
+Meteor.startup(function() {
 		//Probably short circuit for not logged in.
 		// This is not associated with any route.
 		//We decide what the initial app should be here.
@@ -90,7 +83,14 @@ Meteor.startup(function() {
 
 			}
 		})
-	})
+	// window.onerror = function (errorMsg, url, lineNumber, column, errorObj) {
+	// 	    alert('Error: ' + errorMsg + ' Script: ' + url + ' Line: ' + lineNumber
+	// 	    + ' Column: ' + column + ' StackTrace: ' +  errorObj);
+	// 		Session.set("runtimeErrors", errorMsg);
+	// 	} 
+
+	
+
 	// Meteor.call("foreignConnections", function(err, result){
 	// 	Session.set("foreignConnections", result)
 	// 	// console.log("FC: ", err, result);

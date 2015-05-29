@@ -1,19 +1,20 @@
-Template.registerHelper( 
-	"gravatar", function(){
-		return Gravatar.imageUrl(Meteor.user().emails[0].address);
-	}
-);
-Template.registerHelper(
-	"curr_app_name", function() {
-		return Session.get("currentApp").title;
-	}
-);
-
 getCurrentApp = function() { 
 	app =  Apps.findOne({_id: Session.get("currentAppId")});
 	console.log("GCA: ", app, Session.get("currentAppId"));
 	return app;
 };
+
+Template.registerHelper( 
+	"gravatar", function(){
+		return Gravatar.imageUrl(Meteor.user().emails[0].address);
+	}
+);
+
+Template.registerHelper(
+	"curr_app_name", function() {
+		return Session.get("currentApp").title;
+	}
+);
 
 Template.registerHelper("indexedArray",
 	function(arr) {
@@ -35,9 +36,14 @@ Template.registerHelper("menuOps",
 			$('main div.add-new-item').addClass('open').css({opacity: 0.0}).animate({opacity: 1.0}, 100);
 			$('#insertItemForm input.first').focus();
 		}
-});
+	}
+);
 
 Template.registerHelper("deviceOrientation", function(){
 	console.log("DEVO ", Session.get("deviceOrientation"))
 	return Session.get("deviceOrientation");
+})
+
+Template.registerHelper("appTreeList", function(){
+	return Session.get("appTreeList");
 })

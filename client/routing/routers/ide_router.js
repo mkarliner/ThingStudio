@@ -79,29 +79,21 @@ Router.route("/feeds", {
 	controller: "IDEController",
 	data: function() {
 			return Feeds.find();
-		},
+	},
 	action: function(){
-		this.render('BreadcrumbsContent', {
-			to: 'breadcrumbs'
-		});
-		this.render("DataFeedsHeader", {
-			to: "appHeader"
-		});
-		this.render("DataFeedsBody");
+		if ( !this.ready() ) {
+			this.render("LoadingIDE");
+		} else {
+			renderYields(this, 'DataFeeds');
+			// this.render('BreadcrumbsContent', {
+			// 	to: 'breadcrumbs'
+			// });
+			// this.render("DataFeedsHeader", {
+			// 	to: "appHeader"
+			// });
+			// this.render("DataFeedsBody");
+		}
 	}
-	// action: function() {
-	// 	console.log("Feeds action function!!");
-	// 	if ( !this.ready() ) {
-	// 		console.log("feeds data not ready yet")
-	// 		this.render("LoadingIDE");
-	// 	} else {
-	// 		console.log("feeds data is now ready")
-	// 		console.log("FEEDACT", this);
-	// 		renderYields(this, 'DataFeeds');
-	// 	}
-	//
-	//
-	// }
 });
 
 Router.route("/screens/:_id/edit", {
