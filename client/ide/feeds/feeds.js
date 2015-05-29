@@ -25,28 +25,28 @@ Template.DataFeedsBody.helpers({
 		owner = Meteor.users.findOne({_id: this.owner});
 		return owner ? owner.username : "Owner Unknown";
 	},
-	beforeRemove: function () {
-		return function (collection, id) {
-			var doc = collection.findOne(id);
-			// if (confirm('Really delete "' + doc.title + '"?')) {
-			// 	
-			// }
-			$('#modal1').leanModal({
+	// beforeRemove: function () {
+	// 	return function (collection, id) {
+	// 		var doc = collection.findOne(id);
+	// 		// if (confirm('Really delete "' + doc.title + '"?')) {
+	// 		// 	
+	// 		// }
+	// 		$('#modal1').leanModal({
 				
-				dismissible: true, // Modal can be dismissed by clicking outside of the modal
-				opacity: .5, // Opacity of modal background
-				in_duration: 300, // Transition in duration
-				out_duration: 200, // Transition out duration
-				ready: function() {
-					console.log("This in the modal is: " + this);
-				 }, // Callback for Modal open
-				complete: function() { 
-					this.remove();
-				} // Callback for Modal close
-			});
-			$('#modal1').openModal();
-		};
-	}
+	// 			dismissible: true, // Modal can be dismissed by clicking outside of the modal
+	// 			opacity: .5, // Opacity of modal background
+	// 			in_duration: 300, // Transition in duration
+	// 			out_duration: 200, // Transition out duration
+	// 			ready: function() {
+	// 				console.log("This in the modal is: " + this);
+	// 			 }, // Callback for Modal open
+	// 			complete: function() { 
+	// 				this.remove();
+	// 			} // Callback for Modal close
+	// 		});
+	// 		$('#modal1').openModal();
+	// 	};
+	// }
 });
 
 Meteor.startup(function(){

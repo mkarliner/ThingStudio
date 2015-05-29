@@ -62,12 +62,13 @@ Router.route("/connections", {
 
 Router.route("/feeds/:_id", {
 	name: "View Feed",
-	controller: "SingleFeedController",
+	controller: "IDEController",
+	data: function() {
+		return Feeds.findOne({_id: this.params._id});
+	},
 	action: function() {
 		if ( !this.ready() ) {
-			this.render("LoadingIDE", {
-				data: "Feeds"
-			});
+			this.render("LoadingIDE");
 		} else {
 			renderYields(this, 'ViewFeed');
 		}
@@ -85,13 +86,6 @@ Router.route("/feeds", {
 			this.render("LoadingIDE");
 		} else {
 			renderYields(this, 'DataFeeds');
-			// this.render('BreadcrumbsContent', {
-			// 	to: 'breadcrumbs'
-			// });
-			// this.render("DataFeedsHeader", {
-			// 	to: "appHeader"
-			// });
-			// this.render("DataFeedsBody");
 		}
 	}
 });

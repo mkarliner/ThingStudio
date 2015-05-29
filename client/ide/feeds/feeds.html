@@ -5,21 +5,8 @@
 </template>
 
 <template name="DataFeedsBody">
-	
-	<div id="modal1" class="modal modal-fixed-footer">
-			<div class="modal-content">
-				<h4>Modal Header</h4>
-				<p>A bunch of text</p>
-			</div>
-			<div class="modal-footer">
-				<a href="#!" class="modal-action modal-close waves-effect waves-green btn-flat ">Agree</a>
-			</div>
-		</div>
+	{{> autoformModals}}
 	{{#contentFor region="appHeader" template="DataFeedsHeader"}}{{/contentFor}}
-	
-	<!-- {{#afModal class="btn btn-primary" collection="Feeds" operation="insert" omitFields=""}}
-	  Add a new feed
-	{{/afModal}} -->
 
 		<table class="table feeds-table">
 			{{> FeedsTableWidths}}
@@ -33,9 +20,7 @@
 						<td>{{this.title}}</td>
 						<td>{{subscription}}</td>	
 						<td>{{pubsub}}</td>
-						<td><a class="table-action table-edit-item" href="{{pathFor 'View Feed'}}"><i class="mdi-editor-mode-edit"></i></a>{{#afModal class="table-action table-cancel-item" collection="Feeds" operation="remove" doc=_id}}<i class="mdi-navigation-close"></i>{{/afModal}}<!-- {{#quickRemoveButton data-target="modal1" class="table-action table-cancel-item" collection="Feeds" _id=this._id beforeRemove=beforeRemove}}{{/quickRemoveButton}} --></td>
-						<!-- <td>{{#afModal class="btn btn-primary" collection="Feeds" doc=_id operation="update"}} Edit	{{/afModal}}</td>
-						<td> Delete  </td> -->
+						<td><a class="table-action table-edit-item" href="{{pathFor 'View Feed'}}"><i class="mdi-editor-mode-edit"></i></a>{{#afModal class="table-action table-cancel-item" collection="Feeds" operation="remove" doc=_id}}<i class="mdi-navigation-close"></i>{{/afModal}}</td>
 					</tr>
 				{{/each}}
 			</tbody>	

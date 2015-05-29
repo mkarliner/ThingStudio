@@ -30,7 +30,10 @@ Template.AppSideNavSelect.events({
 		DisconnectMQTT();
 		Session.setPersistent("currentAppId", myThingVal);
 		ResetMessages();
-		redrawSideNavSelect();
+		Tracker.autorun(function() {
+			Session.get("currentApp")
+			redrawSideNavSelect();
+		})
 	}
 });
 

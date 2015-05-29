@@ -26,13 +26,6 @@ SingleAppController = IDEController.extend({
 	}
 });
 
-SingleFeedController = IDEController.extend({
-	data: function() {
-		console.log("SingleFeedController data")
-		return Feeds.find({ _id: this.params._id });
-	}
-});
-
 SingleScreenController = IDEController.extend({
 	data: function() {
 		console.log("SingleScreenController data")
