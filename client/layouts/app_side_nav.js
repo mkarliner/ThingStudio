@@ -25,25 +25,12 @@ Template.AppSideNav.events({
 Template.AppSideNavSelect.events({
 	'change .sidenav-app-selector select': function(e, tmpl) {
 		var myThing = tmpl.find(":selected");
-		// console.log('this was selected: ', myThing)
 		var myThingVal = $(myThing).attr("value");
-		// console.log('here is myThingVal: ', myThingVal)
-		// var appHere = Apps.findOne({_id: myThingVal});
-		// console.log('here is appHere: ', appHere)
 		UnsubscribeAll();
 		DisconnectMQTT();
-		// console.log('before setPersistent, currentAppId is: ', Session.get("currentAppId"))
 		Session.setPersistent("currentAppId", myThingVal);
-		// console.log('after setPersistent, currentAppId is: ', Session.get("currentAppId"));
 		ResetMessages();
-		
-		Tracker.autorun(function() {
-			Session.get("currentAppId")
-			$('select').material_select('destroy');
-			$('.sidenav-app-selector').remove();
-			Blaze.render(Template.AppSideNavSelect, $('body div.select-parent')[0]);
-		})
-		
+		redrawSideNavSelect();
 	}
 });
 
@@ -68,7 +55,6 @@ Template.AppSideNavSelect.helpers({
 	},
 	current_app_name: function(){
 		if (  Session.get("currentApp") ) {
-			//console.log("current_app_name, ", Session.get("currentApp"))
 			return Session.get("currentApp");
 		} else {
 			return false;

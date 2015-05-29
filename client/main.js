@@ -30,11 +30,10 @@ Tracker.autorun(function(){
 	appTree.reverse();
 
 	Session.set("appTreeList", appTree);
-	console.log("generating appTreeList", Session.get("appTreeList"))
 });
 
 Tracker.autorun(function() {
-	// Erase?
+	// Set currentApp based on currentAppId
 	var id = Session.get("currentAppId");
 	var app = Apps.findOne({ _id: id });
 	if (app) {

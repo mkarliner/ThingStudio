@@ -10,7 +10,7 @@ Template.AppsBody.helpers({
 		}
 	},
 	current_app: function(){
-		if(this._id == Session.get("currentApp")._id) {
+		if(this._id == Session.get("currentAppId")) {
 			return true;
 		} else {
 			return false;
@@ -29,9 +29,7 @@ Template.AppsBody.events({
 		DisconnectMQTT();
 		Session.setPersistent("currentAppId",this._id);
 		ResetMessages();
-		$('select').material_select('destroy');
-		$('.sidenav-app-selector').remove();
-		Blaze.render(Template.AppSideNavSelect, $('body div.select-parent')[0]);
+		redrawSideNavSelect();
 	}
 });
 

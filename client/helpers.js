@@ -4,6 +4,12 @@ getCurrentApp = function() {
 	return app;
 };
 
+redrawSideNavSelect = function() {
+	$('select').material_select('destroy');
+	$('.sidenav-app-selector').remove();
+	Blaze.render(Template.AppSideNavSelect, $('body div.select-parent')[0]);
+}
+
 Template.registerHelper( 
 	"gravatar", function(){
 		return Gravatar.imageUrl(Meteor.user().emails[0].address);
