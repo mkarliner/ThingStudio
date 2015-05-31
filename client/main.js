@@ -43,10 +43,6 @@ Tracker.autorun(function() {
 	}
 });
 
-Tracker.autorun(function() {
-	Session.get("currentAppId");
-});
-
 Meteor.startup(function() {
 		//Probably short circuit for not logged in.
 		// This is not associated with any route.

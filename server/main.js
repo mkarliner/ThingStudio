@@ -10,9 +10,6 @@ isAdmin = function(userId) {
 	}
 }
 
-
-
-
 getAppTree = function(appId){
 	console.log("GAT ", appId)
 
