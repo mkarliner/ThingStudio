@@ -3,7 +3,7 @@ Template.AppSideNav.onRendered(function() {
 });
 
 Template.AppSideNavSelect.onRendered(function() {
-	$('select').material_select();
+	$('.side-nav select').material_select();
 });
 
 Template.AppSideNav.events({

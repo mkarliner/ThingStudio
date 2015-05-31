@@ -24,7 +24,7 @@ Router.route("/dashboard", {
 	}
 });
 
-Router.route("/apps/:_id/share", {
+Router.route("/apps/:_id/", {
 	name: "EditSingleApp",
 	controller: "SingleAppController",
 	action: function() {

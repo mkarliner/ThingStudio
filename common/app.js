@@ -84,6 +84,11 @@ Schemas.App = new SimpleSchema({
 		type: String,
 		defaultValue: "Private",
 		allowedValues: ["Private", "Shareable", "Published"]
+	},
+	summary: {
+		type: String,
+		label: "Summary",
+		optional: true
 	}
 	
 });

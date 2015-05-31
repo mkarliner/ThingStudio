@@ -1,3 +1,20 @@
+Template.AppsHeader.events({
+	"click .header-action-1": function(e, tmpl) {
+		e.preventDefault();
+		menuOps();
+		$('.add-new-item select').material_select();
+	}
+});
+
+Template.AppsNewItem.events({
+	"click .table-cancel-new": function(e, tmpl) {
+		menuOps();
+	},
+	"click .divider-decoration": function(e, tmpl) {
+		menuOps();
+	}
+});
+
 Template.AppsBody.helpers({
 	appslist: function(){
 		return Apps.find({})
@@ -16,9 +33,15 @@ Template.AppsBody.helpers({
 			return false;
 		}
 	},
-	// parentTitle: function(){
-	// 	return(Apps.findOne({_id: this.parent})).title;
-	// }
+	parentTitle: function(){
+		if ( this.ancestor ) {
+			console.log('there is an ancestor')
+			return(Apps.findOne({_id: this.ancestor})).title;
+		} else {
+			return;
+		}
+		
+	}
 });
 
 Template.AppsBody.events({

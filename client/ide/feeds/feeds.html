@@ -7,31 +7,29 @@
 <template name="DataFeedsBody">
 	{{> autoformModals}}
 	{{#contentFor region="appHeader" template="DataFeedsHeader"}}{{/contentFor}}
-
-		<table>
-			{{> FeedsTableWidths}}
-			<thead>
-				<tr cellpadding="10"><th>Feed Title</th><th>Subscription</th><th>Pub/Sub</th><th>Action</th></tr>
-			</thead>
-			<tbody>
-				<tr id="form-insert" class="spacer td-closed"><td></td></tr>
-				{{#each feedlist}}
-					<tr>
-						<td>{{this.title}}</td>
-						<td>{{subscription}}</td>	
-						<td>{{pubsub}}</td>
-						<td><a class="table-action table-edit-item" href="{{pathFor 'View Feed'}}"><i class="mdi-editor-mode-edit"></i></a>{{#afModal classes="table-action table-cancel-item" collection="Feeds" operation="remove" doc=_id title="Deleting Feed" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="mdi-navigation-close"></i>{{/afModal}}</td>
-					</tr>
-				{{/each}}
-			</tbody>	
-		</table>
-		{{> DataFeedsNewItem}}
-		
+	<table>
+		{{> FeedsTableWidths}}
+		<thead>
+			<tr cellpadding="10"><th>Feed Title</th><th>Subscription</th><th>Pub/Sub</th><th>Action</th></tr>
+		</thead>
+		<tbody>
+			<tr id="item-insert" class="spacer td-closed"><td></td></tr>
+			{{#each feedlist}}
+				<tr>
+					<td>{{this.title}}</td>
+					<td>{{subscription}}</td>	
+					<td>{{pubsub}}</td>
+					<td><a class="table-action table-edit-item" href="{{pathFor 'View Feed'}}"><i class="mdi-editor-mode-edit"></i></a>{{#afModal classes="table-action table-cancel-item" collection="Feeds" operation="remove" doc=_id title="Deleting Feed" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="mdi-navigation-close"></i>{{/afModal}}</td>
+				</tr>
+			{{/each}}
+		</tbody>	
+	</table>
+	{{> DataFeedsNewItem}}
 </template>
 
 <template name="DataFeedsNewItem">
 	<div class="add-new-item">
-		{{#autoForm collection="Feeds" id="insertItemForm" type="insert"}}
+		{{#autoForm collection="Feeds" id="insertItemForm" type="insert" }}
 			<table>
 			{{> FeedsTableWidths}}
 				<tbody>
