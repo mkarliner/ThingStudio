@@ -1,13 +1,12 @@
 <template name="AppsHeader">
-	{{#contentFor "appHeader"}}
-		<h1 class="left">Apps List</h1>
-		<a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>{{curr_app_name}}</a>
-		<a class="header-action-1 clearfix" href="#">Create a new app</a>
-	{{/contentFor}}
+	<h1 class="left">Apps List</h1>
+	<a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>{{curr_app_name}}</a>
+	<a class="header-action-1 clearfix" href="#">Create a new app</a>
 </template>
 
 <template name="AppsBody">
-
+	{{> autoformModals}}
+	{{#contentFor region="appHeader" template="AppsHeader"}}{{/contentFor}}
 	<table class="table apps-table">
 	<tr>
 		<th>Title</th>

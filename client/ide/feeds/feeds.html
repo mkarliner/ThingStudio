@@ -1,14 +1,14 @@
 <template name="DataFeedsHeader">
 	<h1 class="left">Data Feeds</h1>
 	<a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>BUTTON</a>
-	<a class="header-action-1 clearfix" data-new="true" href="#">Create a new data feed</a>
+	<a class="header-action-1 clearfix" href="#">Create a new data feed</a>
 </template>
 
 <template name="DataFeedsBody">
 	{{> autoformModals}}
 	{{#contentFor region="appHeader" template="DataFeedsHeader"}}{{/contentFor}}
 
-		<table class="table feeds-table">
+		<table>
 			{{> FeedsTableWidths}}
 			<thead>
 				<tr cellpadding="10"><th>Feed Title</th><th>Subscription</th><th>Pub/Sub</th><th>Action</th></tr>
