@@ -12,6 +12,7 @@ $appPadding: 35px;
 $statusActive: #7ED321;
 $materializeInputBorderInactive: 1px solid #E1E4E8;
 $materializeInputBorderActive: 1px solid #4AAFE2;
+$actionColor1: #0098DC;
 //Fonts
 //$fwLight: 'Avenir 35 Light';
 $fwLight: 100;
@@ -145,6 +146,24 @@ input[type=text]:focus:not([readonly]), input[type=password]:focus:not([readonly
 		font-size: 1.5 * $fontSize;
 		padding-right: 10px;
 	}
+	& p.my-name {
+		position: relative;
+		margin-top: 0.5rem;
+		padding-top: 0.2rem;
+		padding-bottom: 0.7rem;
+		display: inline;
+		padding-right: 2em;
+		& i {
+			position: absolute;
+			right: 0;
+			top: 0px;
+			float: none;
+			display: inline;
+			padding: 0;
+			width: auto;
+			margin-right: 0;
+		}
+	}
 	& li:hover, & li.active {
 		background-color: $darkBaseBGHover;
 		& a {
@@ -165,11 +184,8 @@ input[type=text]:focus:not([readonly]), input[type=password]:focus:not([readonly
 	}
 	& img {
 		margin-top: 10px;
-		margin-bottom: 6px;
+		margin-bottom: 5px;
 		border: $picBorder;
-	}
-	& span {
-		float: left;
 	}
 	& i {
 		font-size: 2.2 * $fontSize;
@@ -320,6 +336,10 @@ a.header-action-1 {
 
 main {
 	position: relative;
+}
+
+.btn-share {
+	background-color: $actionColor1;
 }
 
 thead {

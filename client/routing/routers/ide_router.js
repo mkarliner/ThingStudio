@@ -48,6 +48,18 @@ Router.route("/apps", {
 	}
 });
 
+Router.route("/connections/:_id", {
+	name: "EditSingleConnection",
+	controller: "IDEController",
+	action: function() {
+		if ( !this.ready() ) {
+			this.render("LoadingIDE");
+		} else {
+			renderYields(this, 'EditSingleConnection');
+		}
+	}
+});
+
 Router.route("/connections", {
 	name: "Connections",
 	controller: "IDEController",

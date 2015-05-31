@@ -1,39 +1,72 @@
 <template name="ConnectionsHeader">
-	{{#contentFor "appHeader"}}
-		<h1 class="left">Your Connections</h1>
+		<h1 class="left">Connections</h1>
 		<a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>BUTTON</a>
 		<a class="header-action-1 clearfix" href="#">Create a new connection</a>
-	{{/contentFor}}
 </template>
 
 <template name="ConnectionsBody">
-	
-	{{#afModal class="btn btn-primary" collection="Connections" operation="insert" }}
-	  Add a new connection
-	{{/afModal}}
-	<table class="table connections-table">
-	<tr cellpadding="10"><th>Title</th></tr>
-	{{#each connectionlist}}
-		<tr>
-			<td>{{this.title}}</td>
-			<td>{{host}}</td>
-			<td>{{port}}</td>
-			<td>{{protocol}}</td>
-			<td>	{{#afModal class="btn btn-primary" collection="Connections" doc=_id operation="update"}} Edit	{{/afModal}}</td>
-			<td>{{#afModal class="btn btn-danger" collection="Connections" operation="remove" doc=_id}} Delete  {{/afModal}}</td>
-		</tr>
-	{{/each}}
+	{{> autoformModals}}
+	{{#contentFor region="appHeader" template="ConnectionsHeader"}}{{/contentFor}}
+	<table>
+		{{> ConnectionsTableWidths}}
+		<thead>
+			<tr cellpadding="10"><th>Connection Title</th><th>Hostname</th><th>Port</th><th>Username</th><th>Password</th><th>Action</th></tr>
+		</thead>
+		<tbody>
+			<tr id="item-insert" class="spacer td-closed"><td></td></tr>
+			{{#each connectionlist}}
+				<tr>
+					<td>{{title}}</td>
+					<td>{{host}}</td>
+					<td>{{port}}</td>
+					<td>{{showUsername}}</td>
+					<td>{{showObscuredPassword}}</td>
+					<td>
+						{{#if connectionIsActive}}
+							<a class="table-action table-make-active connect" href="#"><i class="mdi-image-brightness-1"></i></a>
+						{{else}}
+							<a class="table-action table-make-active connect" href="#"><i class="mdi-toggle-radio-button-off"></i></a>
+						{{/if}} 
+						<a class="table-action table-edit-item" href="{{pathFor 'EditSingleConnection'}}"><i class="mdi-editor-mode-edit"></i></a>
+						{{#afModal classes="table-action table-cancel-item" collection="Connections" operation="remove" doc=_id title="Deleting App" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="mdi-navigation-close"></i>{{/afModal}}
+					</td>
+				</tr>
+			{{/each}}
+		</tbody>
 	</table>
+	{{> ConnectionsNewItem}}
 </template>
 
+<template name="ConnectionsNewItem">
+	<div class="add-new-item">
+		{{#autoForm collection="Connections" id="insertItemForm" type="insert"}}
+			<table>
+			{{> ConnectionsTableWidths}}
+				<tbody>
+					<tr>
+						<td>{{> afQuickField name='title' placeholder="Connection Title" class="first"}}</td>
+						<td>{{> afQuickField name='host' placeholder="Hostname"}}</td>
+						<td>{{> afQuickField name='port'}}</td>
+						<td>{{> afQuickField name='username'}}</td>
+						<td>{{> afQuickField name='password'}}</td>
+						<td>
+							<button type="submit" class="table-action table-save-new"><i class="mdi-navigation-check"></i></button><button class="table-action table-cancel-new"><i class="mdi-navigation-close"></i></button>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			{{> NewItemDivider}}
+		{{/autoForm}}
+	</div>
+</template>
 
-<template name="ConnectionsOLD">
-	<table class="table">
-	{{#each foreignConnections}}
-		<tr>
-			<td>{{host}}</td>
-			<td>{{username owner}}</td>
-		</tr>
-	{{/each}}
-	</table>
+<template name="ConnectionsTableWidths">
+	<colgroup>
+		<col style="width: 22%;">
+		<col style="width: 22%;">
+		<col style="width: 8%;">
+		<col style="width: 15%;">
+		<col style="width: 15%;">
+		<col style="width: 18%;">
+	</colgroup>
 </template>

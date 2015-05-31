@@ -16,26 +16,24 @@
 			<tr id="item-insert" class="spacer td-closed"><td></td></tr>
 			{{#each appslist}}
 				<tr>
-					<td>{{this.title}}</td>
+					<td>{{title}}</td>
 					<!-- <td>{{parentTitle}}</td> -->
 					<td>{{access}}</td>
 					{{#if shareable}}
-						<td><a  href="/apps/{{this._id}}"><button class="btn" id="share-app">Share</button></a></td>
+						<td><a class="btn btn-share share-app" href="/apps/{{this._id}}">Share</a></td>
 					{{else}}
-						<td><a  href="#"><button class="btn disabled" id="share-app">Share</button></a></td>
+						<td><a class="btn disabled share-app" href="#">Share</a></td>
 					{{/if}}
 					<td>{{parentTitle}}</td>
 					<td>{{summary}}</td>
 					<td>
 						{{#if current_app}}
-							<a class="table-action table-make-active" id="select-app" href="#"><i class="mdi-image-brightness-1"></i></a>
+							<a class="table-action table-make-active select-app" href="#"><i class="mdi-image-brightness-1"></i></a>
 						{{else}}
-							<a class="table-action table-make-active" id="select-app" href="#"><i class="mdi-toggle-radio-button-off"></i></a>
+							<a class="table-action table-make-active select-app" href="#"><i class="mdi-toggle-radio-button-off"></i></a>
 						{{/if}} 
 						<a class="table-action table-edit-item" href="{{pathFor 'EditSingleApp'}}"><i class="mdi-editor-mode-edit"></i></a>
 						{{#afModal classes="table-action table-cancel-item" collection="Apps" operation="remove" doc=_id title="Deleting App" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="mdi-navigation-close"></i>{{/afModal}}
-						<!-- <td>{{#afModal class="btn btn-primary" collection="Apps" doc=_id operation="update"}} Edit	{{/afModal}}</td> -->
-						<!-- <td>{{#afModal class="btn btn-danger" collection="Apps" operation="remove" doc=_id}} Delete  {{/afModal}}</td> -->
 					</td>
 				</tr>
 			{{/each}}

@@ -15,6 +15,17 @@ Template.AppsNewItem.events({
 	}
 });
 
+Template.AppsBody.events({
+	'click .select-app': function(ev) {
+		ev.preventDefault();
+		UnsubscribeAll();
+		DisconnectMQTT();
+		Session.setPersistent("currentAppId",this._id);
+		ResetMessages();
+		redrawSideNavSelect();
+	}
+});
+
 Template.AppsBody.helpers({
 	appslist: function(){
 		return Apps.find({})
@@ -43,16 +54,3 @@ Template.AppsBody.helpers({
 		
 	}
 });
-
-Template.AppsBody.events({
-	'click #select-app': function(ev) {
-		ev.preventDefault();
-		console.log(this._id);
-		UnsubscribeAll();
-		DisconnectMQTT();
-		Session.setPersistent("currentAppId",this._id);
-		ResetMessages();
-		redrawSideNavSelect();
-	}
-});
-

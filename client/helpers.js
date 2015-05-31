@@ -1,15 +1,3 @@
-getCurrentApp = function() { 
-	app =  Apps.findOne({_id: Session.get("currentAppId")});
-	console.log("GCA: ", app, Session.get("currentAppId"));
-	return app;
-};
-
-redrawSideNavSelect = function() {
-	$('.side-nav select').material_select('destroy');
-	$('.sidenav-app-selector').remove();
-	Blaze.render(Template.AppSideNavSelect, $('.side-nav div.select-parent')[0]);
-}
-
 Template.registerHelper( 
 	"gravatar", function(){
 		return Gravatar.imageUrl(Meteor.user().emails[0].address);

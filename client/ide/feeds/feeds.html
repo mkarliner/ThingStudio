@@ -16,7 +16,7 @@
 			<tr id="item-insert" class="spacer td-closed"><td></td></tr>
 			{{#each feedlist}}
 				<tr>
-					<td>{{this.title}}</td>
+					<td>{{title}}</td>
 					<td>{{subscription}}</td>	
 					<td>{{pubsub}}</td>
 					<td><a class="table-action table-edit-item" href="{{pathFor 'View Feed'}}"><i class="mdi-editor-mode-edit"></i></a>{{#afModal classes="table-action table-cancel-item" collection="Feeds" operation="remove" doc=_id title="Deleting Feed" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="mdi-navigation-close"></i>{{/afModal}}</td>
@@ -29,7 +29,7 @@
 
 <template name="DataFeedsNewItem">
 	<div class="add-new-item">
-		{{#autoForm collection="Feeds" id="insertItemForm" type="insert" }}
+		{{#autoForm collection="Feeds" id="insertItemForm" type="insert"}}
 			<table>
 			{{> FeedsTableWidths}}
 				<tbody>
