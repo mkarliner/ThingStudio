@@ -27,6 +27,9 @@ Router.route("/dashboard", {
 Router.route("/apps/:_id/share", {
 	name: "EditSingleApp",
 	controller: "SingleAppController",
+	data: function() {
+		return Apps.findOne({_id: this.params._id});
+	},
 	action: function() {
 		if ( !this.ready() ) {
 			this.render("LoadingIDE");
