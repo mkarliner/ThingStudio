@@ -1,7 +1,4 @@
-
-
 Screens = new Mongo.Collection("screens");
-
 
 boilerplate = Screens.findOne({title: "VerySpecialSecretBoilerPlateScreen"});
 
@@ -17,9 +14,6 @@ if(boilerplate) {
 } else {
 	defaultJsContent = "//Javascript content here";
 }
-	
-
-
 
 // Schemas = {};
 

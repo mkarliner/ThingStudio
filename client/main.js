@@ -43,6 +43,15 @@ Tracker.autorun(function() {
 	}
 });
 
+Meteor.startup(function(){
+	Feeds.after.insert(function(userId, doc) {
+		mqttClient.subscribe(doc.subscription);
+	});
+	Feeds.after.update(function(userId, doc) {
+		mqttClient.subscribe(doc.subscription);
+	});
+});
+
 Meteor.startup(function() {
 		//Probably short circuit for not logged in.
 		// This is not associated with any route.

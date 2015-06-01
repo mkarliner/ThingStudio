@@ -114,6 +114,10 @@ input[type=text]:focus:not([readonly]), input[type=password]:focus:not([readonly
 	border-bottom: $materializeInputBorderActive;
 }
 
+h2 {
+	color: $baseText;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////
 // Sidebar //
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -176,7 +180,7 @@ input[type=text]:focus:not([readonly]), input[type=password]:focus:not([readonly
 }
 
 .sb-profile {
-	padding-bottom: 0.4rem;
+	padding-bottom: 0.2rem;
 	& a {
 		display: inline;
 		padding: 0 8px;
@@ -527,6 +531,47 @@ h4.modal-title {
 
 .top-row {
 	background-color: $white;
+}
+
+.single-page-container {
+	padding-left: $appPadding;
+	padding-right: $appPadding;
+}
+
+.btn-save {
+	background-color: $actionColor1;
+	border-radius: 24px;
+	color: $white;
+	margin-top: 2em;
+	padding: 0.5em 1.6em;
+	height: auto;
+}
+
+.single-page-container .control-label {
+	display: inline-block;
+	text-align: left;
+	width: 7em;
+	font-weight: $fwHeavy;
+	color: $baseText;
+}
+
+.single-page-container .form-group {
+	margin-bottom: 0.7rem;
+	border-bottom: 1px solid $bodyDividerColor;
+	padding-top: 1.5em;
+	padding-bottom: 2.7em;
+}
+
+.single-page-container input {
+	max-width: 300px;
+}
+
+.form-group input {
+	background: $white;
+}
+
+.fw-regular {
+	font-weight: $fwRoman;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////

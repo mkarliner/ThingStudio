@@ -51,6 +51,9 @@ Router.route("/apps", {
 Router.route("/connections/:_id", {
 	name: "EditSingleConnection",
 	controller: "IDEController",
+	data: function() {
+		return Connections.findOne({_id: this.params._id});
+	},
 	action: function() {
 		if ( !this.ready() ) {
 			this.render("LoadingIDE");
@@ -245,3 +248,15 @@ Router.route("/support", {
 		}
 	},
 });
+
+Router.route("/people/:username", {
+	name: "People",
+	controller: "IDEController",
+	action: function() {
+		if ( !this.ready() ) {
+			this.render("LoadingIDE");
+		} else {
+			renderYields(this, 'People');
+		}	
+	}
+})

@@ -1,7 +1,5 @@
 Connections = new Mongo.Collection("connections");
 
-
-
 // Schemas = {};
 
 Schemas.Connection = new SimpleSchema({
@@ -59,7 +57,6 @@ Schemas.Connection = new SimpleSchema({
 			}
 		}
 	},
-
 	appId: {
 		type: String,
 		index: true,

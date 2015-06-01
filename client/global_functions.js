@@ -13,7 +13,6 @@ publish = function(topic, message) {
 	mqttClient.publish(topic, message);	
 }
 
-
 Session.set("ConnectionStatus", false);
 Session.set("connectionErrors", null);
 
@@ -131,6 +130,13 @@ currentConnection = function() {
 ///////////////////////////////////////////////////////////////////////////////////////
 // App Management//
 ///////////////////////////////////////////////////////////////////////////////////////
+
+changeActiveApp = function(app) {
+	UnsubscribeAll();
+	DisconnectMQTT();
+	Session.setPersistent("currentAppId",app._id);
+	ResetMessages();
+};
 
 getCurrentApp = function() { 
 	app =  Apps.findOne({_id: Session.get("currentAppId")});

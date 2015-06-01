@@ -43,3 +43,7 @@ Template.registerHelper("deviceOrientation", function(){
 Template.registerHelper("appTreeList", function(){
 	return Session.get("appTreeList");
 })
+
+Template.registerHelper("themeOptions", function() {
+	return;
+});

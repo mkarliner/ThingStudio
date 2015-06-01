@@ -1,11 +1,58 @@
 <template name="WidgetsHeader">
-	{{#contentFor "appHeader"}}
-		<h1 class="left">Widgets</h1>
-		<a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>BUTTON</a>
-		<a class="header-action-1 clearfix" href="#">Create a new widget</a>
-	{{/contentFor}}
+	<h1 class="left">Widgets</h1>
+	<a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>BUTTON</a>
+	<a class="header-action-1 clearfix" href="#">Create a new widget</a>
 </template>
 
 <template name="WidgetsBody">
-	<p>Hi from the widgets template</p>
+	{{> autoformModals}}
+	{{#contentFor region="appHeader" template="WidgetsHeader"}}{{/contentFor}}
+	<table>
+		{{> WidgetsTableWidths}}
+		<thead>
+			<tr cellpadding="10"><th>Widget Name</th><th>Subscription</th><th>Pub/Sub</th><th>Action</th></tr>
+		</thead>
+		<tbody>
+			<tr id="item-insert" class="spacer td-closed"><td></td></tr>
+			{{#each widgetlist}}
+				<tr>
+					<td>{{this.title}}</td>
+					<td>{{status}}</td>
+					<td><button class="btn"><a href="/screens/{{this._id}}">Edit & Preview</a></button><button class="btn"><a href="/screens/{{this._id}}/edit">Safe Edit</a></button>{{#afModal class="btn btn-danger" collection="Screens" operation="remove" doc=_id}} Delete {{/afModal}}</td>
+				</tr>
+			{{/each}}
+		</tbody>
+	</table>
+	{{> WidgetsNewItem}}
+</template>
+
+<template name="WidgetsNewItem">
+	<div class="add-new-item">
+		{{#autoForm collection="Screens" id="insertItemForm" type="insert"}}
+			<table>
+			{{> WidgetsTableWidths}}
+				<tbody>
+					<tr>
+						<td>{{> afQuickField name='title' placeholder="Feed Title" class="first"}}</td>
+						<td>{{> afQuickField name='subscription' placeholder="Subscription Name"}}</td>
+						<td>{{> afQuickField name='pubsub' options="allowed"}}</td>
+						<td>
+							<button type="submit" class="table-action table-save-new"><i class="mdi-navigation-check"></i></button><button class="table-action table-cancel-new"><i class="mdi-navigation-close"></i></button>
+							<div class="tae-cnt"><a href="#" class="table-advanced-edit">Advanced</a></div>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			{{> NewItemDivider}}
+		{{/autoForm}}
+	</div>
+</template>
+
+<template name="WidgetsTableWidths">
+	<colgroup>
+		<col style="width: 35%;">
+		<col style="width: 35%;">
+		<col style="width: 21%;">
+		<col style="width: 9%;">
+	</colgroup>
 </template>

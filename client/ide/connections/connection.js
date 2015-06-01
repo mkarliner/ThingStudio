@@ -1,3 +1,9 @@
+Template.EditSingleConnectionHeader.helpers({
+	connectionName: function() {
+		console.log(this);
+	}
+});
+
 Template.EditSingleConnectionBody.helpers({	
 	connection: function() {
 		Session.get("ConnectionStatus");

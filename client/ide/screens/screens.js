@@ -1,3 +1,27 @@
+Template.ScreensHeader.events({
+	"click .header-action-1": function(e, tmpl) {
+		e.preventDefault();
+		menuOps();
+		$('.add-new-item select').material_select();
+	}
+});
+
+Template.ScreensNewItem.events({
+	"click .table-cancel-new": function(e, tmpl) {
+		menuOps();
+	},
+	"click .divider-decoration": function(e, tmpl) {
+		menuOps();
+	}
+});
+
+// Template.ScreensBody.events({
+// 	"click .screenlink": function(ev) {
+// 		console.log(this);
+// 		Router.go("/screens/" + this._id);
+// 	}
+// })
+
 Template.ScreensBody.helpers({
 	widgetlist: function(){
 		wl =  Screens.find({ owner: Meteor.userId(), isWidget: true})
@@ -5,6 +29,9 @@ Template.ScreensBody.helpers({
 	},
 	screenlist: function(){
 		return Screens.find({ owner: Meteor.userId(), isWidget: false})
+	},
+	owner: function() {
+		return 
 	},
 	publicscreens: function() {
 		return Screens.find({public: true})
@@ -32,13 +59,6 @@ Template.ScreensBody.helpers({
 		return( "aa" +this.isWidget)
 	}
 });
-
-Template.ScreensBody.events({
-	"click .screenlink": function(ev) {
-		console.log(this);
-		Router.go("/screens/" + this._id);
-	}
-})
 
 InstantiateScreens = function(){
 	//Instantiate all screens which are widgets

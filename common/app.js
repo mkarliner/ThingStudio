@@ -103,6 +103,12 @@ Apps.before.remove(function(userId, doc) {
 	}
 });
 
+Apps.after.insert(function(userId, doc) {
+	if(Meteor.isClient) {
+		changeActiveApp(doc);
+	}
+});
+
 Apps.attachSchema(Schemas.App);
 
 Apps.allow({

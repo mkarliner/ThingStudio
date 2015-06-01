@@ -1,29 +1,57 @@
 <template name="ThemesHeader">
-	{{#contentFor "appHeader"}}
-		<h1 class="left">{{curr_app_name}} Themes</h1>
-		<a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>BUTTON</a>
-		<a class="header-action-1 clearfix" href="#">Create a new theme</a>
-	{{/contentFor}}
+	<h1 class="left">Themes for {{curr_app_name}}</h1>
+	<a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>BUTTON</a>
+	<a class="header-action-1 clearfix" href="#">Create a new theme</a>
 </template>
 
 
 <template name="ThemesBody">
-	
-	{{#afModal class="btn btn-primary" collection="Themes" operation="insert" omitFields=" public"}}
-	  Add a new theme
-	{{/afModal}}
-	
-	<h1>Your Themes</h1>
-	<table class="table themes-table">
-	<tr><th>Title</th></tr>
-	{{#each themelist}}
-		<tr>
-			<td><a   class="themelink">{{this.title}}</a></td>
-			<td>{{status}}</td>	
-			<td>{{#afModal class="btn btn-danger" collection="Themes" operation="remove" doc=_id}} Delete  {{/afModal}}</td>
-		</tr>
-	{{/each}}
+	{{> autoformModals}}
+	{{#contentFor region="appHeader" template="ThemesHeader"}}{{/contentFor}}
+	<table>
+		{{> ThemesTableWidths}}
+		<thead>
+			<tr cellpadding="10"><th>Theme Title</th><th>Owner</th><th>Action</th></tr>
+		</thead>
+		<tbody>
+			<tr id="item-insert" class="spacer td-closed"><td></td></tr>
+			{{#each themelist}}
+				<tr>
+					<td><a   class="themelink">{{this.title}}</a></td>
+					<td>{{status}}</td>
+					<td>{{#afModal class="btn btn-danger" collection="Themes" operation="remove" doc=_id}} Delete  {{/afModal}}</td>
+				</tr>
+			{{/each}}
+		</tbody>
 	</table>
-	
+	{{> ThemesNewItem}}
+</template>
 
+<template name="ThemesNewItem">
+	<div class="add-new-item">
+		{{#autoForm collection="Themes" id="insertItemForm" type="insert"}}
+			<table>
+			{{> ThemesTableWidths}}
+				<tbody>
+					<tr>
+						<td>{{> afQuickField name='title' placeholder="Theme Title" class="first"}}</td>
+						<td>me</td>
+						<td>
+							<button type="submit" class="table-action table-save-new"><i class="mdi-navigation-check"></i></button><button class="table-action table-cancel-new"><i class="mdi-navigation-close"></i></button>
+							<div class="tae-cnt"><a href="#" class="table-advanced-edit">Advanced</a></div>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			{{> NewItemDivider}}
+		{{/autoForm}}
+	</div>
+</template>
+
+<template name="ThemesTableWidths">
+	<colgroup>
+		<col style="width: 25%;">
+		<col style="width: 66%;">
+		<col style="width: 9%;">
+	</colgroup>
 </template>
