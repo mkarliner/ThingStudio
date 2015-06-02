@@ -33,7 +33,7 @@ Router.route("/apps/:_id/", {
 	action: function() {
 		if ( !this.ready() ) {
 			this.render("Loading", {
-				data: "Database subscriptions"
+				data: "App"
 			});
 		} else {
 			renderYields(this, 'EditSingleApp');
@@ -47,7 +47,7 @@ Router.route("/apps", {
 	action: function() {
 		if ( !this.ready() ) {
 			this.render("Loading", {
-				data: "Database subscriptions"
+				data: "Apps"
 			});
 		} else {
 			renderYields(this, 'Apps');
@@ -64,7 +64,7 @@ Router.route("/connections/:_id", {
 	action: function() {
 		if ( !this.ready() ) {
 			this.render("Loading", {
-				data: "Database subscriptions"
+				data: "Connection"
 			});
 		} else {
 			renderYields(this, 'EditSingleConnection');
@@ -78,7 +78,7 @@ Router.route("/connections", {
 	action: function() {
 		if ( !this.ready() ) {
 			this.render("Loading", {
-				data: "Database subscriptions"
+				data: "Connections"
 			});
 		} else {
 			renderYields(this, 'Connections');
@@ -95,7 +95,7 @@ Router.route("/feeds/:_id", {
 	action: function() {
 		if ( !this.ready() ) {
 			this.render("Loading", {
-				data: "Database subscriptions"
+				data: "Feed"
 			});
 		} else {
 			renderYields(this, 'ViewFeed');
@@ -112,7 +112,7 @@ Router.route("/feeds", {
 	action: function(){
 		if ( !this.ready() ) {
 			this.render("Loading", {
-				data: "Database subscriptions"
+				data: "Feeds"
 			});
 		} else {
 			renderYields(this, 'DataFeeds');
@@ -130,7 +130,7 @@ Router.route("/screens/:_id/edit", {
 	action: function() {
 		if ( !this.ready() ) {
 			this.render("Loading", {
-				data: "Database subscriptions"
+				data: "Template"
 			});
 		} else {
 			renderYields(this, 'EditSingleScreen');
@@ -144,7 +144,7 @@ Router.route("/screens/:_id", {
 	action: function() {
 		if ( !this.ready() ) {
 			this.render("Loading", {
-				data: "Database subscriptions"
+				data: "Template"
 			});
 		} else {
 			renderYields(this, 'SingleScreen');
@@ -158,7 +158,7 @@ Router.route("/screens", {
 	action: function() {
 		if ( !this.ready() ) {
 			this.render("Loading", {
-				data: "Database subscriptions"
+				data: "Templates"
 			});
 		} else {
 			renderYields(this, 'Screens');
@@ -176,7 +176,7 @@ Router.route("/themes/:_id", {
 	action: function() {
 		if ( !this.ready() ) {
 			this.render("Loading", {
-				data: "Database subscriptions"
+				data: "Theme"
 			});
 		} else {
 			renderYields(this, 'SingleTheme');
@@ -190,7 +190,7 @@ Router.route("/themes", {
 	action: function() {
 		if ( !this.ready() ) {
 			this.render("Loading", {
-				data: "Database subscriptions"
+				data: "Themes"
 			});
 		} else {
 			renderYields(this, 'Themes');
@@ -204,7 +204,7 @@ Router.route("/widgets", {
 	action: function() {
 		if ( !this.ready() ) {
 			this.render("Loading", {
-				data: "Database subscriptions"
+				data: "Widgets"
 			});
 		} else {
 			renderYields(this, 'Widgets');
@@ -221,7 +221,7 @@ Router.route("/profile", {
 	action: function() {
 		if ( !this.ready() ) {
 			this.render("Loading", {
-				data: "Database subscriptions"
+				data: "Profile"
 			});
 		} else {
 			renderYields(this, 'Profile');
@@ -235,7 +235,7 @@ Router.route("/settings", {
 	action: function() {
 		if ( !this.ready() ) {
 			this.render("Loading", {
-				data: "Database subscriptions"
+				data: "Settings"
 			});
 		} else {
 			renderYields(this, 'Settings');
@@ -249,7 +249,7 @@ Router.route("/tutorials", {
 	action: function() {
 		if ( !this.ready() ) {
 			this.render("Loading", {
-				data: "Database subscriptions"
+				data: "Tutorials"
 			});
 		} else {
 			renderYields(this, 'Tutorials');
@@ -266,7 +266,7 @@ Router.route("/docs/:urlstring", {
 	action: function() {
 		if ( !this.ready() ) {
 			this.render("Loading", {
-				data: "Database subscriptions"
+				data: "Documenation"
 			});
 		} else {
 			renderYields(this, "Docs");
@@ -287,12 +287,9 @@ Router.route("/docs", {
 	action: function() {
 		if ( !this.ready() ) {
 			this.render("Loading", {
-				data: "Database subscriptions"
+				data: "Documenation"
 			});
 		} else {
-			this.render("Loading", {
-				data: "Database subscriptions"
-			});
 			renderYields(this, 'Documentation');
 		}
 	},
@@ -304,7 +301,7 @@ Router.route("/support", {
 	action: function() {
 		if ( !this.ready() ) {
 			this.render("Loading", {
-				data: "Database subscriptions"
+				data: "Support"
 			});
 		} else {
 			renderYields(this, 'Support');
@@ -318,7 +315,7 @@ Router.route("/people/:username", {
 	action: function() {
 		if ( !this.ready() ) {
 			this.render("Loading", {
-				data: "Database subscriptions"
+				data: "Profile"
 			});
 		} else {
 			renderYields(this, 'People');
