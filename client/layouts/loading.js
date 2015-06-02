@@ -1,6 +1,6 @@
 Template.Loading.helpers({
-	log: function() {
-		self = this;
-		console.dir(self);
-	}
+	// log: function() {
+	// 	self = this;
+	// 	console.dir(self);
+	// }
 })
