@@ -47,45 +47,55 @@ Tracker.autorun(function() {
 	Session.get("currentAppId");
 });
 
-Meteor.startup(function() {
-		//Probably short circuit for not logged in.
-		// This is not associated with any route.
-		//We decide what the initial app should be here.
-		initialApp = Session.get("currentAppId");
-		if(initialApp) {
-			return;
-		}
-		Meteor.subscribe("apps", {
-			onReady: function(){
-				console.log("Apps Ready", Apps.find({}).fetch());
-				//Is there only one App available?
-				numApps = Apps.find().count();
-				if(numApps == 1) {
-					initialApp = Apps.findOne();
-					Session.setPersistent("currentAppId", initialApp._id);
-					return;
-				}
-				//Are we logged in, but have no Apps?
-				if(Meteor.userId() && numApps == 0) {
-					//If so, create first app.
-					//console.log("Creating default app on ready", Meteor.userId())
-					appId = Apps.insert({
-						title: "defaultApp",
-						access: "Private",
-					});
-					Session.setPersistent("currentAppId", appId);
-					return;
-				}
-				//Are we logged in, with Apps, but none current?
-				//Just choose the 'defaultApp
-				if(Meteor.userId) {
-					initialApp = Apps.findOne({title: "defaultApp"});
-					Session.setPersistent("currentAppId", initialApp._id);
-					return;
-				}
 
+Accounts.onLogin(function(){
+	// This is not associated with any route.
+	//We decide what the initial app should be here.
+
+	initialApp = Session.get("currentAppId");
+	console.log("Initial App on Login ", initialApp);
+	if(initialApp) {
+		return;
+	}
+	Meteor.subscribe("apps", {
+		onReady: function(){
+			if (!Meteor.userId()) {
+				console.log("Not logged in at startup - bailing.")
+				return;
 			}
-		})
+			console.log("Apps Ready", Apps.find({}).fetch());
+			//Is there only one App available?
+			numApps = Apps.find().count();
+			if(numApps == 1) {
+				initialApp = Apps.findOne();
+				Session.setPersistent("currentAppId", initialApp._id);
+				return;
+			}
+			//Are we logged in, but have no Apps?
+			if(Meteor.userId() && numApps == 0) {
+				//If so, create first app.
+				//console.log("Creating default app on ready", Meteor.userId())
+				appId = Apps.insert({
+					title: "defaultApp",
+					access: "Private",
+				});
+				Session.setPersistent("currentAppId", appId);
+				return;
+			}
+			//Are we logged in, with Apps, but none current?
+			//Just choose the 'defaultApp
+			if(Meteor.userId) {
+				initialApp = Apps.findOne({title: "defaultApp"});
+				Session.setPersistent("currentAppId", initialApp._id);
+				return;
+			}
+
+		}
+	})
+})
+
+Meteor.startup(function() {
+
 	// window.onerror = function (errorMsg, url, lineNumber, column, errorObj) {
 	// 	    alert('Error: ' + errorMsg + ' Script: ' + url + ' Line: ' + lineNumber
 	// 	    + ' Column: ' + column + ' StackTrace: ' +  errorObj);
@@ -94,106 +104,14 @@ Meteor.startup(function() {
 
 	
 
-	// Meteor.call("foreignConnections", function(err, result){
-	// 	Session.set("foreignConnections", result)
-	// 	// console.log("FC: ", err, result);
-	//
-	// });
-	// Tracker.autorun(function () {
-	// 	//console.log("Running subscribe", Session.get("currentAppId"))
-	// 	Meteor.subscribe("apps", Session.get("currentAppId"), {
-	// 		onReady: function() {
-	// 			//console.log("Apps Ready", Apps.find({}).fetch());
-	// 			//Is there only one App available?
-	// 			numApps = Apps.find().count();
-	// 			if(numApps == 1) {
-	// 				initialApp = Apps.findOne();
-	// 				Session.setPersistent("currentApp", initialApp);
-	// 				return;
-	// 			}
-	// 			// Are we returning to an existing App?
-	// 			initialApp = Session.get("currentApp");
-	// 			if(initialApp) {
-	// 				Session.setPersistent("currentApp", initialApp);
-	// 				return;
-	// 			}
-	// 			//Are we logged in, but have no Apps?
-	// 			if(Meteor.userId() && numApps == 0) {
-	// 				//If so, create first app.
-	// 				//console.log("Creating default app on ready", Meteor.userId())
-	// 				appId = Apps.insert({
-	// 					title: "defaultApp",
-	// 					access: "Private",
-	// 				});
-	// 				Session.setPersistent("currentApp", Apps.findOne({_id: appId}));
-	// 				return;
-	// 			}
-	// 			//Are we logged in, with Apps, but none current?
-	// 			if(Meteor.userId) {
-	// 				initialApp = Apps.findOne({title: "defaultApp"});
-	// 				Session.setPersistent("currentApp", initialApp);
-	// 				return;
-	// 			}
-	//
-	//
-	// 		}
-	// 	});
-	// });
+	
 		
 	
 
 	
-	// Tracker.autorun(function () {
-	//   ca  = Session.get("currentApp");
-	//   Session.get("currentAppId");
-	//   if(ca) {
-	// 	  //console.log("SUB: ", ca.title);
-	// 	  Meteor.subscribe("connections",ca._id, {
-	// 		onReady: function(){
-	// 			connections = Connections.find().fetch();
-	// 			// console.log(" CONNECTIONS FOUND: ", connections);
-	// 			//If the app specifies a connection, use that
-	// 			//if not, use any, or none.
-	// 			if(ca.connection) {
-	// 				conn = Connections.findOne({_id: ca.connection});
-	// 			} else {
-	// 				conn = Connections.findOne({});
-	// 			}
-	// 			// console.log("Autoconnect: ", conn);
-	// 			//console.log("Connect: ", conn)
-	// 			if (conn) {
-	// 				connect(conn);
-	// 			} else {
-	// 				disconnect();
-	// 			}
-	// 		}
-	// 	});
-	// 	  Meteor.subscribe("feeds", ca._id, {
-	// 		  onReady: function(){
-	// 			  //console.log("SUBSCRIBING FEEDS");
-	// 		  }
-	// 	  });
-	// 	  //console.log("SUBSCRIBING SCREENS");
-	// 	  Meteor.subscribe("screens", ca._id, {
-	// 	  	  onReady: function(){
-	// 			  InstantiateScreens();
-	// 	  	  }
-	// 	  });
-	// 	  Meteor.subscribe("themes", ca._id);
-	// }
-	//
-	// })
 	
 
-		// Meteor.subscribe("help_pages", {
-		// 	onReady: function() {
-
-		// 	},
-		// 	onError: function(error) {
-		// 		//console.log("HelpPages error", error);
-		// 	}
-		// });
-
+	
 		Meteor.subscribe("userData", {
 			onReady: function() {},
 		});

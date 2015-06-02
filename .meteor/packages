@@ -6,7 +6,7 @@
 
 meteor-platform
 accounts-base
-aldeed:autoform
+aldeed:autoform@5.3.0
 aldeed:collection2
 aldeed:simple-schema
 aldeed:delete-button

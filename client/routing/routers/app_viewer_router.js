@@ -56,24 +56,33 @@ Router.route("/view/app/:_id", {
 			if (cred) {
 				console.log("FOUND CRED: ", cred)
 			} else {
-				cid = Credentials.upsert({
-					connection: connection._id
-				}, {
-					$set: {
+				// cid = Credentials.upsert({
+				// 	connection: connection._id
+				// }, {
+				// 	$set: {
+				// 		connection: connection._id,
+				// 		username: "dfa",
+				// 		password: "sadf",
+				// 		save: false
+				// 	}
+				// });
+				// console.log("Creating credentials record")
+				// cred = Credentials.findOne({
+				// 	connection: connection._id
+				// });
+				cred = {
 						connection: connection._id,
 						username: "dfa",
 						password: "sadf",
 						save: false
 					}
-				});
-				console.log("Creating credentials record")
-				cred = Credentials.findOne({
-					connection: connection._id
-				});
 			}
 
-			this.render("GetCredentials", {
+			this.render("GetMyCredentials", {
 				data: function() {
+					console.log("EVENTS", Template.GetMyCredentials.__events)
+					cred.connectionName = connection.title;
+					cred.connectionHost = connection.host;
 					console.log("CREDENTIALS: ", cred);
 					return cred;
 				}
