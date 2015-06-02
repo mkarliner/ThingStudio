@@ -44,14 +44,26 @@ UnsubscribeAll = function(){
 	}
 }
 
-connect = function (conn) {
+connect = function (conn, usr, pass) {
+	console.log("ENTERING CONN", conn, usr, pass)
 	disconnect();
+	if(usr) {
+		username = usr;
+	} else {
+		username = conn.username;
+	}
+	
+	if(pass) {
+		password = pass;
+	} else {
+		password = conn.password;
+	}
 	protocol = conn.protocol == "Websocket" ? "ws" : "wss";
 	ConnectionString = protocol + "://" + conn.host + ":" + conn.port;
-	//console.log("CONNECTING: ", ConnectionString, protocol, conn.username, conn.password);
+	console.log("CONNECTING: ", ConnectionString, protocol, username, password);
 	Session.set("currentMQTTHost", conn.host);
 	try {
-		mqttClient = mqtt.connect(ConnectionString, { username: conn.username, password: conn.password});
+		mqttClient = mqtt.connect(ConnectionString, { username: username, password: password});
 		// console.log("MQQC:", mqttClient)
 	}
 	catch(err) {
@@ -78,8 +90,8 @@ connect = function (conn) {
 			console.log("Stale MQTT client closed");
 		}
 	});
-	mqttClient.on("offline", function(){
-		console.log("offline");
+	mqttClient.on("offline", function(e){
+		console.log("offline", e);
 		Session.set("ConnectionStatus", false);
 		Session.set("connectionErrors", "Offline");
 	});

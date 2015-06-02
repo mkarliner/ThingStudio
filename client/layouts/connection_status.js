@@ -1,6 +1,10 @@
 Template.ConnectionStatus.helpers({
 	status: function(){
-		return  Session.get("ConnectionStatus");
+		if(Session.get("ConnectionStatus") == true) {
+			return  "Connected";
+		} else {
+			return "Disconnected"
+		}			
 	},
 	name: function(){
 		conn = Session.get("currentConnection");

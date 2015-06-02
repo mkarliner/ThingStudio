@@ -185,13 +185,14 @@ AutoForm.hooks({
 			// before: {
 			// 	update: function(docId, mod, template) {
 			// 		console.log("BEFORE CRED ", docId, mod, template);
-			//
+			// 		return mod;
 			// 	}
 			// },
 			after: {
 				update: function(err, res, temp) {
 					console.log("AFTER CRED UPDATE: ", this, err, res, temp);
-					Session.set("authReady", true);
+					cred = Credentials.findOne({_id: this.docId});
+					setCredentials({username: cred.username, password: cred.password})
 				}
 			}
 		}

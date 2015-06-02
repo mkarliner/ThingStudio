@@ -4,6 +4,15 @@ getCurrentApp = function() {
 	return app;
 };
 
+getCredentials = function(){
+	return Session.get("currentCredentials");
+}
+
+setCredentials = function(cred){
+	 Session.set("currentCredentials", cred);
+	 Session.set("authReady", true);
+}
+
 
 // startConnection = function(){
 // 	//Called from the onReady function of connections.

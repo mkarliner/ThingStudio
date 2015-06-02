@@ -65,7 +65,6 @@ Router.onBeforeAction(function () {
 
 		this.render("GetMyCredentials", {
 			data: function() {
-				console.log("EVENTS", Template.GetMyCredentials.__events)
 				cred.connectionName = connection.title;
 				cred.connectionHost = connection.host;
 				console.log("CREDENTIALS: ", cred);
@@ -74,8 +73,10 @@ Router.onBeforeAction(function () {
 		});
 		return;
 	} else {
+		// We have displayed the form, and the user has clicked connect... now use the credentials she has entered.
 		console.log("AUTH OK", connection)
-		connect(connection, "username", "password");
+		credentials = getCredentials();
+		connect(connection, credentials.username, credentials.password);
 	}
 	
 	this.next();

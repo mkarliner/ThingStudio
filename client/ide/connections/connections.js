@@ -37,21 +37,6 @@ Template.ConnectionsBody.helpers({
 	},
 	username: function(id) {
 		return Meteor.users.findOne(id).username;
-<<<<<<< HEAD
-	}
-});
-
-
-
-
-// Template.ConnectionsBody.events({
-// 	'click .connect': function(ev){
-// 		console.log("Connect button", ev, this);
-// 		connect(this);
-//
-// 	}
-// });
-=======
 	},
 	showUsername: function() {
 		if ( this.username ) {
@@ -71,5 +56,5 @@ Template.ConnectionsBody.helpers({
 		return currentConnection();
 	}
 });
->>>>>>> 26d40dcc5364be4fbbe200b3af87ea1321aee7dc
+
 

@@ -10,10 +10,10 @@ Meteor.startup(function(){
 	// Template.registerHelper("Schemas", Schemas);
 
 	//Credentials = new M.Collection(null);
-	Credentials = new Meteor.Collection(null);
-	GroundCredentials = new Ground.Collection("Credentials", Credentials, {
-		 cleanupLocalData: false,
-		 connection: null});
+	Credentials = new Ground.Collection(null);
+	// GroundCredentials = new Ground.Collection("Credentials", Credentials, {
+	// 	 cleanupLocalData: false,
+	// 	 connection: null});
 
 
 
