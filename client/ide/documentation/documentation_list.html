@@ -1,24 +1,83 @@
 <template name="DocumentationHeader">
 	{{#contentFor "appHeader"}}
 		<h1 class="left">Documentation</h1>
-		<!-- <a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>{{curr_app_name}}</a>
-		<a class="header-action-1 clearfix" href="#">Create a new app</a> -->
+		<!-- <a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>{{curr_app_name}}</a> -->
+		<div class="clearfix"></div>
 	{{/contentFor}}
 </template>
 
 <template name="DocumentationBody">
-	
-	<table class="table">
-	    <tr>
-	        <td class="help-menu-item"><a href="http://www.thingstud.io/getting-started.html" target="_blank" class="help-menu-item">Watch the introductory screencast</a></td>
-	    </tr>
-		{{#each docs}}
-		<tr>
-			<td class="help-menu-item"><a href="/docs/{{urlstring}}">{{title}}</a></td>
-		</tr>
-		{{/each}}
-	</table>
-	
+	{{> Loading}}
+	<div class="top-row">
+		<div class="col s6 tabs-container">
+			<ul class="tabs">
+				<li class="tab"><a href="#basics">Basics</a></li>
+				<li class="tab"><a href="#ui">User Interface</a></li>
+				<li class="tab"><a href="#hardware">Hardware</a></li>
+				<li class="tab"><a href="#components">Components</a></li>
+			</ul>
+		</div>
+		<div class="clearfix"></div>
+	</div>
+	<div id="basics">
+		<ul class="collection">
+			{{#each docs 'Basics'}}
+				<li class="collection-item avatar">
+					<img src="http://lorempixel.com/80/80/" alt="" class="circle">
+					<a href="/docs/{{urlstring}}"><span class="title">{{title}}</span></a>
+					<p>Summary: {{sumary}}<br>
+					Last updated: {{updatedAt}}, Page Number: {{pagenumber}}
+					</p>
+					<a href="#!" class="secondary-content"><i class="mdi-action-grade"></i> {{group}}</a>
+				</li>
+			{{/each}}
+		</ul>
+	</div>
+	<div id="ui">
+		<ul class="collection">
+			{{#each docs 'UI'}}
+			
+				<li class="collection-item avatar">
+					<img src="http://lorempixel.com/80/80/" alt="" class="circle">
+					<a href="/docs/{{urlstring}}"><span class="title">{{title}}</span></a>
+					<p>Topic: {{group}}<br>
+					Last updated: {{updatedAt}}, Page Number: {{pagenumber}}
+					</p>
+					<a href="#!" class="secondary-content"><i class="mdi-action-grade"></i> {{group}}</a>
+				</li>
+			{{/each}}
+		</ul>
+	</div>
+	<div id="hardware">
+		<ul class="collection">
+			{{#each docs 'Hardware Platforms'}}
+			
+				<li class="collection-item avatar">
+					<img src="http://lorempixel.com/80/80/" alt="" class="circle">
+					<a href="/docs/{{urlstring}}"><span class="title">{{title}}</span></a>
+					<p>Topic: {{group}}<br>
+					Last updated: {{updatedAt}}, Page Number: {{pagenumber}}
+					</p>
+					<a href="#!" class="secondary-content"><i class="mdi-action-grade"></i> {{group}}</a>
+				</li>
+			{{/each}}
+		</ul>
+	</div>
+	<div id="components">
+		<ul class="collection">
+			{{#each docs 'components'}}
+			
+				<li class="collection-item avatar">
+					<img src="http://lorempixel.com/80/80/" alt="" class="circle">
+					<a href="/docs/{{urlstring}}"><span class="title">{{title}}</span></a>
+					<p>Topic: {{group}}<br>
+					Last updated: {{updatedAt}}, Page Number: {{pagenumber}}
+					</p>
+					<a href="#!" class="secondary-content"><i class="mdi-action-grade"></i> {{group}}</a>
+				</li>
+			{{/each}}
+		</ul>
+	</div>
 	{{#unless currentUser}}
 	<div class="home-links"><div class="btn"><a href="/sign-in">Sign Up or In</a></div></div>
 	{{/unless}}

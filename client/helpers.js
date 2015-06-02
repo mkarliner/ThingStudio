@@ -48,14 +48,16 @@ Template.registerHelper("indexedArray",
 
 Template.registerHelper("menuOps", 
 	menuOps = function() {
-		if ( $('#form-insert').hasClass('td-open') ) {
+		if ( $('#item-insert').hasClass('td-open') ) {
 			//Is open
-			$('main tr#form-insert').toggleClass('td-open');
+			$('main tr#item-insert').toggleClass('td-open');
 			$('main div.add-new-item').removeClass('open').css({opacity: 1.0}).animate({opacity: 0.0}, 100);
-			$('#insertItemForm')[0].reset();
+			// $('#insertItemForm')[0].reset();
+			AutoForm.resetForm('insertItemForm');
+			redrawSideNavSelect();
 		} else {
 			//Is closed
-			$('main tr#form-insert').toggleClass('td-open');
+			$('main tr#item-insert').toggleClass('td-open');
 			$('main div.add-new-item').addClass('open').css({opacity: 0.0}).animate({opacity: 1.0}, 100);
 			$('#insertItemForm input.first').focus();
 		}
@@ -70,3 +72,7 @@ Template.registerHelper("deviceOrientation", function(){
 Template.registerHelper("appTreeList", function(){
 	return Session.get("appTreeList");
 })
+
+Template.registerHelper("themeOptions", function() {
+	return;
+});

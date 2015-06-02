@@ -1,50 +1,59 @@
 <template name="ScreensHeader">
-	{{#contentFor "appHeader"}}
-		<h1 class="left">{{curr_app_name}} Templates</h1>
-		<a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>BUTTON</a>
-		<a class="header-action-1 clearfix" href="#">Create a new template</a>
-	{{/contentFor}}
+	<h1 class="left">Templates for {{curr_app_name}}</h1>
+	<a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>BUTTON</a>
+	<a class="header-action-1 clearfix" href="#">Create a new template</a>
 </template>
 
 <template name="ScreensBody">
-	
-	{{#afModal class="btn btn-primary" collection="Screens" operation="insert" omitFields=" public, html,js"}}
-	  Add a new screen
-	{{/afModal}}
-	<table class="table screens-table">
-	<tr>
-		<th>Title</th>
-		<th>App</th>
-		<th>Home Page</th>
-		<th>Status</th>
-	</tr>
-	
-	{{#each screenlist}}
-		<tr><td><a  class="screenlink">{{this.title}}</a></td>
-			<!-- {{#if isInRole 'admin'}}
-			<td>{{html.length}}</td>
-			{{/if}} -->
-			<td>{{fromApp}}</td>
-			<td>{{home_page}}</td>
-			<td>{{status}}</td>	
-			<td><button class="btn"><a href="/screens/{{this._id}}">Edit & Preview</a></button><button class="btn"><a href="/screens/{{this._id}}/edit">Safe Edit</a></button>{{#afModal class="btn btn-danger" collection="Screens" operation="remove" doc=_id}} Delete {{/afModal}}</td>
-		</tr>
-	{{/each}}
+	{{> autoformModals}}
+	{{#contentFor region="appHeader" template="ScreensHeader"}}{{/contentFor}}
+	<table>
+		{{> ScreensTableWidths}}
+		<thead>
+			<tr cellpadding="10"><th>Template Title</th><th>Owner</th><th>Theme</th><th>Action</th></tr>
+		</thead>
+		<tbody>
+			<tr id="item-insert" class="spacer td-closed"><td></td></tr>
+			{{#each screenlist}}
+				<tr>
+					<td>{{title}}</td>
+					<td>{{owner}}</td>
+					<td>{{theme}}</td>
+					<td><a class="table-action table-edit-item" href="{{pathFor 'EditSingleScreen'}}"><i class="mdi-editor-mode-edit"></i></a>{{#afModal classes="table-action table-cancel-item" collection="Screens" operation="remove" doc=_id title="Deleting Feed" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="mdi-navigation-close"></i>{{/afModal}}</td>
+				</tr>
+			{{/each}}
+		</tbody>	
 	</table>
-	
-	<h1>Your Widgets</h1>
-	<table class="table screens-table">
-	<tr>
-		<th>Title</th>
-		<th>Status</th>
-	</tr>
-	
-	{{#each widgetlist}}
-		<tr><td><a  class="screenlink">{{this.title}}</a></td>
-			<td>{{status}}</td>	
-			<td><button class="btn"><a href="/screens/{{this._id}}">Edit & Preview</a></button><button class="btn"><a href="/screens/{{this._id}}/edit">Safe Edit</a></button>{{#afModal class="btn btn-danger" collection="Screens" operation="remove" doc=_id}} Delete {{/afModal}}</td>
-		</tr>
-	{{/each}}
-	</table>
+	{{> ScreensNewItem}}
+</template>
 
+<template name="ScreensNewItem">
+	<div class="add-new-item">
+		{{#autoForm collection="Screens" id="insertItemForm" type="insert"}}
+			<table>
+			{{> ScreensTableWidths}}
+				<tbody>
+					<tr>
+						<td>{{> afQuickField name='title' placeholder="Template Title" class="first"}}</td>
+						<td><!-- {{> afQuickField name='owner' placeholder="Owner"}} --></td>
+						<td>{{> afQuickField name='theme'}}</td>
+						<td>
+							<button type="submit" class="table-action table-save-new"><i class="mdi-navigation-check"></i></button><button class="table-action table-cancel-new"><i class="mdi-navigation-close"></i></button>
+							<div class="tae-cnt"><a href="#" class="table-advanced-edit">Advanced</a></div>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			{{> NewItemDivider}}
+		{{/autoForm}}
+	</div>
+</template>
+
+<template name="ScreensTableWidths">
+	<colgroup>
+		<col style="width: 35%;">
+		<col style="width: 35%;">
+		<col style="width: 21%;">
+		<col style="width: 9%;">
+	</colgroup>
 </template>

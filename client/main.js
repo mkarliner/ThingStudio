@@ -43,8 +43,13 @@ Tracker.autorun(function() {
 	}
 });
 
-Tracker.autorun(function() {
-	Session.get("currentAppId");
+Meteor.startup(function(){
+	Feeds.after.insert(function(userId, doc) {
+		mqttClient.subscribe(doc.subscription);
+	});
+	Feeds.after.update(function(userId, doc) {
+		mqttClient.subscribe(doc.subscription);
+	});
 });
 
 

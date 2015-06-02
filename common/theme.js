@@ -1,10 +1,5 @@
 Themes = new Mongo.Collection("themes");
 
-
-
-
-// Schemas = {};
-
 Schemas.Theme = new SimpleSchema({
 	title: {
 		type: String,

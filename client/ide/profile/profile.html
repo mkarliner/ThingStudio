@@ -1,8 +1,13 @@
-<template name="ProfileHeader"></template>
+<template name="ProfileHeader">
+	<h1 class="left">Profile</h1>
+	<a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>Save Profile</a>
+	<a class="header-action-1 clearfix" href="/people/{{username}}">http://www.thingstud.io/people/{{username}}</a>
+</template>
 
 <template name="ProfileBody">
+	<div class="single-page-container">
+		<div><img src="{{gravatar}}"></div>
+		{{>updateUserForm}}
+	</div>
 	
-	<div><img src="{{gravatar}}"></div>
-	
-	{{>updateUserForm}}
 </template>

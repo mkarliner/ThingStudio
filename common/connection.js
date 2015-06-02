@@ -1,7 +1,5 @@
 Connections = new Mongo.Collection("connections");
 
-
-
 // Schemas = {};
 
 Schemas.Connection = new SimpleSchema({
@@ -22,7 +20,8 @@ Schemas.Connection = new SimpleSchema({
 	protocol: {
 		type: String,
 		allowedValues: ["Websocket", "SecureWebsocket"],
-		defaultValue: "Websocket"
+		defaultValue: "Websocket",
+		optional: true
 	},
 	serverCredentials: {
 		//Provide credentials from server store.
@@ -59,7 +58,6 @@ Schemas.Connection = new SimpleSchema({
 			}
 		}
 	},
-
 	appId: {
 		type: String,
 		index: true,

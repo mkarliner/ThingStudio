@@ -1,17 +1,20 @@
 <template name="DocsHeader">
-	<h1>{{title}}</h1>
+	<!-- {{log}} -->
+	<h1 class="left">{{title}}</h1>
+	<div class="clearfix"></div>
+	<a class="pull-left btn header-action-2" href="{{prevpage}}">Previous</a>
+	<a class="pull-right btn header-action-2" href="{{nextpage}}">Next</a>
+	<div class="clearfix"></div>
 </template>
 
 <template name="DocsBody">	
-	<p class="text-muted"><em>Last updated: {{publishedDate updatedAt}}</em></p>
-
-	<div id="helpbody">
-		{{#markdown}}{{body}}{{/markdown}}
-		
-	</div>
-	<a class="pull-left btn btn-info" href="{{prevpage}}">Previous</a>
-	<a class="pull-right btn btn-info" href="{{nextpage}}">Next</a>
-	<div id="helpfooter">
-		<p>&copy; ThingStudio 2015</p>
+	<div class="single-page-container">
+		<div id="helpbody">
+			{{#markdown}}{{body}}{{/markdown}}
+		</div>
+		<p class="text-muted"><em>Last updated: {{publishedDate updatedAt}}</em></p>
+		<div id="helpfooter">
+			<p>&copy; ThingStudio 2015</p>
+		</div>
 	</div>
 </template>

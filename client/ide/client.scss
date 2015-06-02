@@ -12,6 +12,7 @@ $appPadding: 35px;
 $statusActive: #7ED321;
 $materializeInputBorderInactive: 1px solid #E1E4E8;
 $materializeInputBorderActive: 1px solid #4AAFE2;
+$actionColor1: #0098DC;
 //Fonts
 //$fwLight: 'Avenir 35 Light';
 $fwLight: 100;
@@ -27,7 +28,7 @@ $fwHeavy: 700;
 $fwBlack: 900;
 
 //Sidebar
-$sideNavWidth: 240px;
+$sideNavWidth: 220px;
 $darkBase: #353C51;
 $darkBaseText: #B2B7C4;
 $darkBaseBGHover: #424960;
@@ -113,9 +114,17 @@ input[type=text]:focus:not([readonly]), input[type=password]:focus:not([readonly
 	border-bottom: $materializeInputBorderActive;
 }
 
+h2 {
+	color: $baseText;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////
 // Sidebar //
 ///////////////////////////////////////////////////////////////////////////////////////
+
+.side-nav {
+	width: 220px;
+}
 
 .side-nav.fixed {
 	background-color: $darkBase;
@@ -145,6 +154,24 @@ input[type=text]:focus:not([readonly]), input[type=password]:focus:not([readonly
 		font-size: 1.5 * $fontSize;
 		padding-right: 10px;
 	}
+	& p.my-name {
+		position: relative;
+		margin-top: 0.5rem;
+		padding-top: 0.2rem;
+		padding-bottom: 0.7rem;
+		display: inline;
+		padding-right: 2em;
+		& i {
+			position: absolute;
+			right: 0;
+			top: 0px;
+			float: none;
+			display: inline;
+			padding: 0;
+			width: auto;
+			margin-right: 0;
+		}
+	}
 	& li:hover, & li.active {
 		background-color: $darkBaseBGHover;
 		& a {
@@ -157,7 +184,7 @@ input[type=text]:focus:not([readonly]), input[type=password]:focus:not([readonly
 }
 
 .sb-profile {
-	padding-bottom: 0.4rem;
+	padding-bottom: 0.2rem;
 	& a {
 		display: inline;
 		padding: 0 8px;
@@ -165,11 +192,8 @@ input[type=text]:focus:not([readonly]), input[type=password]:focus:not([readonly
 	}
 	& img {
 		margin-top: 10px;
-		margin-bottom: 6px;
+		margin-bottom: 5px;
 		border: $picBorder;
-	}
-	& span {
-		float: left;
 	}
 	& i {
 		font-size: 2.2 * $fontSize;
@@ -206,7 +230,7 @@ input[type=text]:focus:not([readonly]), input[type=password]:focus:not([readonly
 
 .logo-container {
 	@include fixedCenter;
-	width: 240px;
+	width: 220px;
 	bottom: 0px;
 	z-index: 999;
 	background-color: $darkBase;
@@ -277,7 +301,7 @@ header {
 }
 
 h1 {
-	font-size: 2 * $fontSize;
+	font-size: 2.25 * $fontSize;
 	font-weight: $fwBook;
 	color: $headerColor;
 	margin: 0;
@@ -322,11 +346,17 @@ main {
 	position: relative;
 }
 
+.btn-share {
+	background-color: $actionColor1;
+}
+
 thead {
 	border-bottom: $navBorder;
 }
 
 th {
+	font-size: 13px;
+	letter-spacing: 0.3px;
 	background: $white;
 	text-transform: uppercase;
 	padding: 15px 0;
@@ -376,7 +406,6 @@ td:last-child, th:last-child {
 }
 
 .div-container {
-	// width: 80%;
 	margin: -7px auto 0;
 	padding: 1rem 0 0 0;
 	position: relative;
@@ -399,7 +428,6 @@ td:last-child, th:last-child {
 	display: inline-block;
 	height: 24px;
 	width: 24px;
-	
 }
 
 .divider-decoration i {
@@ -439,6 +467,11 @@ td:last-child, th:last-child {
 .add-new-item input.select-dropdown {
 	padding-left: 14px;
 }
+
+table, .single-page-container {
+	font-size: 14px;
+}
+
 .table-action {
 	border: 1px solid $baseText;
 	border-radius: 50%;
@@ -455,8 +488,8 @@ td:last-child, th:last-child {
 	line-height: 27px;
 }
 
-.table-action:first-child {
-	margin-right: 5px;
+.table-action:not(:last-child) {
+	margin-right: 2px;
 }
 
 .tae-cnt {
@@ -471,11 +504,115 @@ td:last-child, th:last-child {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
+// App Body - Modals //
+///////////////////////////////////////////////////////////////////////////////////////
+
+.modal {
+	width: 400px;
+}
+
+.modal .modal-content {
+	padding: 0;
+}
+
+h4.modal-title {
+	background-color: #76D4E1;
+	color: $white;
+	padding: 4px 18px;
+	font-size: 1.2 * $fontSize;
+}
+
+.modal-close {
+	padding: 0;
+	color: white;
+}
+
+.modal .modal-footer {
+	height: 48px;
+	padding: 0;
+}
+
+.modal .modal-footer .btn-flat {
+	width: 90px;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
 // App Body - Item Pages //
 ///////////////////////////////////////////////////////////////////////////////////////
 
 .top-row {
 	background-color: $white;
+}
+
+.single-page-container {
+	padding-left: $appPadding;
+	padding-right: $appPadding;
+}
+
+.btn-save {
+	background-color: $actionColor1;
+	border-radius: 24px;
+	color: $white;
+	margin-top: 2em;
+	padding: 0.5em 1.6em;
+	height: auto;
+}
+
+.single-page-container .control-label {
+	display: inline-block;
+	text-align: left;
+	width: 7em;
+	font-weight: $fwHeavy;
+	color: $baseText;
+}
+
+.single-page-container .form-group {
+	margin-bottom: 0.7rem;
+	border-bottom: 1px solid $bodyDividerColor;
+	padding-top: 1.5em;
+	padding-bottom: 2.7em;
+}
+
+.single-page-container input {
+	max-width: 300px;
+}
+
+.form-group input {
+	background: $white;
+}
+
+.fw-regular {
+	font-weight: $fwRoman;
+}
+
+.row .tabs-container {
+	padding-left: 0;
+}
+
+.tabs .tab a {
+	color: $baseText;
+	font-weight: $fwBlack;
+}
+
+.tabs .indicator {
+	background-color: $actionColor1;
+	height: 3px;
+}
+
+.mdi-image-brightness-1 {
+	color: $statusActive;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+// Documentation //
+///////////////////////////////////////////////////////////////////////////////////////
+
+span.title {
+	color: darken($baseText, 10%);
+}
+
+.collection {
+	margin-top: 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -492,4 +629,18 @@ footer {
 	.side-nav.fixed {
 		left: 0;
 	}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+// Login Form & Preloader //
+///////////////////////////////////////////////////////////////////////////////////////
+
+.spinner-container {
+	float: left;
+}
+
+.loading-info {
+	font-size: 1.25 * $fontSize;
+	padding-top: 0.6em;
+	margin-left: 5.4em;
 }

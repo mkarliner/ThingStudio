@@ -1,6 +1,5 @@
 Apps = new Mongo.Collection("apps");
 
-
 Schemas = {};
 
 Schemas.App = new SimpleSchema({
@@ -84,6 +83,11 @@ Schemas.App = new SimpleSchema({
 		type: String,
 		defaultValue: "Private",
 		allowedValues: ["Private", "Shareable", "Published"]
+	},
+	summary: {
+		type: String,
+		label: "Summary",
+		optional: true
 	}
 	
 });
@@ -95,6 +99,12 @@ Apps.before.remove(function(userId, doc) {
 		Feeds.remove({appId: doc._id});
 		Screens.remove({appId: doc._id});
 		Themes.remove({appId: doc._id});
+	}
+});
+
+Apps.after.insert(function(userId, doc) {
+	if(Meteor.isClient) {
+		changeActiveApp(doc);
 	}
 });
 
