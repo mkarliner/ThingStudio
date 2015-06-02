@@ -4,6 +4,23 @@ getCurrentApp = function() {
 	return app;
 };
 
+
+// startConnection = function(){
+// 	//Called from the onReady function of connections.
+// 	app = getCurrentApp();
+// 	//Is there a connection defined for this app?
+// 	if(app.connection) {
+// 		connection = Connections.findOne({_id: app.connection})
+// 		Session.set("currentConnection", connection );
+// 		connect(connection);
+// 	}
+//
+// }
+
+getCurrentConnection = function() {
+	return Session.get("currentConnection");
+}
+
 redrawSideNavSelect = function() {
 	$('select').material_select('destroy');
 	$('.sidenav-app-selector').remove();

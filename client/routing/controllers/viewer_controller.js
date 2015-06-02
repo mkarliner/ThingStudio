@@ -7,7 +7,11 @@ AppViewerController = RouteController.extend({
 		if(appId){
 			return [
 				Meteor.subscribe('apps', appId),
-				Meteor.subscribe('connections', appId),
+				Meteor.subscribe('connections', appId, {
+					onReady: function(){
+						console.log("Connections READY!");
+					}
+				}),
 				Meteor.subscribe('feeds', appId),
 				Meteor.subscribe('screens', appId)
 				// Meteor.subscribe('themes', appId),

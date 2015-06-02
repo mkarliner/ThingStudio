@@ -151,11 +151,11 @@ Template.ConnectionsBody.helpers({
 
 
 
-Template.ConnectionsBody.events({
-	'click .connect': function(ev){
-		console.log("Connect button", ev, this);
-		connect(this);
-		
-	}
-});
+// Template.ConnectionsBody.events({
+// 	'click .connect': function(ev){
+// 		console.log("Connect button", ev, this);
+// 		connect(this);
+//
+// 	}
+// });
 

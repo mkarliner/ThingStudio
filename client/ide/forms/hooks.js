@@ -190,7 +190,7 @@ AutoForm.hooks({
 			// },
 			after: {
 				update: function(err, res, temp) {
-					console.log("AFTER CRED UPDATE: ", err, res, temp);
+					console.log("AFTER CRED UPDATE: ", this, err, res, temp);
 					Session.set("authReady", true);
 				}
 			}

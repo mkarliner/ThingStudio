@@ -23,75 +23,7 @@ Router.route("/view/app/:_id", {
 		// 	});
 		// 	return;
 		// }
-		connection = Connections.findOne({
-			// _id: app.connection
-		});
-		console.log("VIEWCONN ", app.connection, connection)
-		// Connect if we found a connection, otherwise disconnect
-		// We may be jumping from the IDE to the Viewer, etc.
-		// This will also subscribe to all feeds associated with the connection
-		// See 'connect' for details
-		// if (connection) {
-		// 	connect(connection)
-		// } else {
-		// 	disconnect();
-		// }
 		
-
-
-		// Do I need to the user to provide authentication credentials?
-		if ((!connection.serverCredentials || connection.serverCredentials == false) && Session.get("authReady") != true) {
-			console.log("NEED AUTH")
-			if (!Ground.ready()) {
-				console.log("GROUND NOT READY")
-				this.render("Loading", {
-					data: "Authentication database"
-				});
-				return;
-			}
-			console.log("GROUND  READY")
-			cred = Credentials.findOne({
-				connection: connection._id
-			});
-			if (cred) {
-				console.log("FOUND CRED: ", cred)
-			} else {
-				// cid = Credentials.upsert({
-				// 	connection: connection._id
-				// }, {
-				// 	$set: {
-				// 		connection: connection._id,
-				// 		username: "dfa",
-				// 		password: "sadf",
-				// 		save: false
-				// 	}
-				// });
-				// console.log("Creating credentials record")
-				// cred = Credentials.findOne({
-				// 	connection: connection._id
-				// });
-				cred = {
-						connection: connection._id,
-						username: "dfa",
-						password: "sadf",
-						save: false
-					}
-			}
-
-			this.render("GetMyCredentials", {
-				data: function() {
-					console.log("EVENTS", Template.GetMyCredentials.__events)
-					cred.connectionName = connection.title;
-					cred.connectionHost = connection.host;
-					console.log("CREDENTIALS: ", cred);
-					return cred;
-				}
-			});
-			return;
-		} else {
-			console.log("AUTH OK", connection)
-		}
-
 
 		screen_cnt = Screens.find().count();
 		InstantiateScreens();
