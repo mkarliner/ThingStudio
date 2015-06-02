@@ -1,5 +1,12 @@
+Template.DocumentationBody.onRendered(function() {
+    $('ul.tabs').tabs();
+});
+
 Template.DocumentationBody.helpers({
-	docs: function(){
-		return HelpPages.find({}, {sort: {pagenumber: 1}});
+	docs: function(category){
+		return HelpPages.find({group: category}, {sort: {pagenumber: 1}});
+	},
+	log: function() {
+		console.log(this)
 	}
 })

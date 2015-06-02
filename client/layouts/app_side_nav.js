@@ -2,9 +2,9 @@ Template.AppSideNav.onRendered(function() {
     $('.collapsible').collapsible();
 });
 
-Template.AppSideNavSelect.onRendered(function() {
-	$('.side-nav select').material_select();
-});
+// Template.AppSideNavSelect.onRendered(function() {
+// 	$('.side-nav select').material_select();
+// });
 
 Template.AppSideNav.events({
 	'click .collapsible': function(e, tmpl) {
@@ -22,20 +22,20 @@ Template.AppSideNav.events({
 	// },
 });
 
-Template.AppSideNavSelect.events({
-	'change .sidenav-app-selector select': function(e, tmpl) {
-		var myThing = tmpl.find(":selected");
-		var myThingVal = $(myThing).attr("value");
-		UnsubscribeAll();
-		DisconnectMQTT();
-		Session.setPersistent("currentAppId", myThingVal);
-		ResetMessages();
-		Tracker.autorun(function() {
-			Session.get("currentApp")
-			redrawSideNavSelect();
-		})
-	}
-});
+// Template.AppSideNavSelect.events({
+// 	'change .sidenav-app-selector select': function(e, tmpl) {
+// 		var myThing = tmpl.find(":selected");
+// 		var myThingVal = $(myThing).attr("value");
+// 		UnsubscribeAll();
+// 		DisconnectMQTT();
+// 		Session.setPersistent("currentAppId", myThingVal);
+// 		ResetMessages();
+// 		Tracker.autorun(function() {
+// 			Session.get("currentApp")
+// 			redrawSideNavSelect();
+// 		})
+// 	}
+// });
 
 Template.AppSideNav.helpers({
 	myName: function() {
@@ -51,11 +51,11 @@ Template.AppSideNav.helpers({
 	}
 });
 
-Template.AppSideNavSelect.helpers({
-	appsList: function() {
-		var currId = Session.get("currentAppId");
-		return Apps.find({owner: Meteor.userId(), _id: {$nin: [currId]}});
-	},
+Template.AppSideNav.helpers({
+	// appsList: function() {
+	// 	var currId = Session.get("currentAppId");
+	// 	return Apps.find({owner: Meteor.userId(), _id: {$nin: [currId]}});
+	// },
 	current_app_name: function(){
 		if (  Session.get("currentApp") ) {
 			return Session.get("currentApp");

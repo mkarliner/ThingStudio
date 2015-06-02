@@ -28,7 +28,7 @@ $fwHeavy: 700;
 $fwBlack: 900;
 
 //Sidebar
-$sideNavWidth: 240px;
+$sideNavWidth: 220px;
 $darkBase: #353C51;
 $darkBaseText: #B2B7C4;
 $darkBaseBGHover: #424960;
@@ -121,6 +121,10 @@ h2 {
 ///////////////////////////////////////////////////////////////////////////////////////
 // Sidebar //
 ///////////////////////////////////////////////////////////////////////////////////////
+
+.side-nav {
+	width: 220px;
+}
 
 .side-nav.fixed {
 	background-color: $darkBase;
@@ -226,7 +230,7 @@ h2 {
 
 .logo-container {
 	@include fixedCenter;
-	width: 240px;
+	width: 220px;
 	bottom: 0px;
 	z-index: 999;
 	background-color: $darkBase;
@@ -297,7 +301,7 @@ header {
 }
 
 h1 {
-	font-size: 2 * $fontSize;
+	font-size: 2.25 * $fontSize;
 	font-weight: $fwBook;
 	color: $headerColor;
 	margin: 0;
@@ -351,6 +355,8 @@ thead {
 }
 
 th {
+	font-size: 13px;
+	letter-spacing: 0.3px;
 	background: $white;
 	text-transform: uppercase;
 	padding: 15px 0;
@@ -461,6 +467,11 @@ td:last-child, th:last-child {
 .add-new-item input.select-dropdown {
 	padding-left: 14px;
 }
+
+table, .single-page-container {
+	font-size: 14px;
+}
+
 .table-action {
 	border: 1px solid $baseText;
 	border-radius: 50%;
@@ -477,8 +488,8 @@ td:last-child, th:last-child {
 	line-height: 27px;
 }
 
-.table-action:first-child {
-	margin-right: 5px;
+.table-action:not(:last-child) {
+	margin-right: 2px;
 }
 
 .tae-cnt {
@@ -572,6 +583,36 @@ h4.modal-title {
 
 .fw-regular {
 	font-weight: $fwRoman;
+}
+
+.row .tabs-container {
+	padding-left: 0;
+}
+
+.tabs .tab a {
+	color: $baseText;
+	font-weight: $fwBlack;
+}
+
+.tabs .indicator {
+	background-color: $actionColor1;
+	height: 3px;
+}
+
+.mdi-image-brightness-1 {
+	color: $statusActive;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+// Documentation //
+///////////////////////////////////////////////////////////////////////////////////////
+
+span.title {
+	color: darken($baseText, 10%);
+}
+
+.collection {
+	margin-top: 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////

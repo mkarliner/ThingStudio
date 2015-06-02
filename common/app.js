@@ -1,6 +1,5 @@
 Apps = new Mongo.Collection("apps");
 
-
 Schemas = {};
 
 Schemas.App = new SimpleSchema({

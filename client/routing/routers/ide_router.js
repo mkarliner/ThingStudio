@@ -26,10 +26,15 @@ Router.route("/dashboard", {
 
 Router.route("/apps/:_id/", {
 	name: "EditSingleApp",
-	controller: "SingleAppController",
+	controller: "IDEController",
+	data: function() {
+		return Apps.find({ _id: this.params._id });
+	},
 	action: function() {
 		if ( !this.ready() ) {
-			this.render("LoadingIDE");
+			this.render("Loading", {
+				data: "Database subscriptions"
+			});
 		} else {
 			renderYields(this, 'EditSingleApp');
 		}
@@ -41,7 +46,9 @@ Router.route("/apps", {
 	controller: "IDEController",
 	action: function() {
 		if ( !this.ready() ) {
-			this.render("LoadingIDE");
+			this.render("Loading", {
+				data: "Database subscriptions"
+			});
 		} else {
 			renderYields(this, 'Apps');
 		}
@@ -56,7 +63,9 @@ Router.route("/connections/:_id", {
 	},
 	action: function() {
 		if ( !this.ready() ) {
-			this.render("LoadingIDE");
+			this.render("Loading", {
+				data: "Database subscriptions"
+			});
 		} else {
 			renderYields(this, 'EditSingleConnection');
 		}
@@ -68,7 +77,9 @@ Router.route("/connections", {
 	controller: "IDEController",
 	action: function() {
 		if ( !this.ready() ) {
-			this.render("LoadingIDE");
+			this.render("Loading", {
+				data: "Database subscriptions"
+			});
 		} else {
 			renderYields(this, 'Connections');
 		}
@@ -83,7 +94,9 @@ Router.route("/feeds/:_id", {
 	},
 	action: function() {
 		if ( !this.ready() ) {
-			this.render("LoadingIDE");
+			this.render("Loading", {
+				data: "Database subscriptions"
+			});
 		} else {
 			renderYields(this, 'ViewFeed');
 		}
@@ -98,7 +111,9 @@ Router.route("/feeds", {
 	},
 	action: function(){
 		if ( !this.ready() ) {
-			this.render("LoadingIDE");
+			this.render("Loading", {
+				data: "Database subscriptions"
+			});
 		} else {
 			renderYields(this, 'DataFeeds');
 		}
@@ -107,10 +122,16 @@ Router.route("/feeds", {
 
 Router.route("/screens/:_id/edit", {
 	name: "EditSingleScreen",
-	controller: "SingleScreenController",
+	controller: "IDEController",
+	data: function() {
+		Session.set("currentScreenPage", this.params._id);
+		return Screens.find({ _id: this.params._id });
+	},
 	action: function() {
 		if ( !this.ready() ) {
-			this.render("LoadingIDE");
+			this.render("Loading", {
+				data: "Database subscriptions"
+			});
 		} else {
 			renderYields(this, 'EditSingleScreen');
 		}
@@ -122,7 +143,9 @@ Router.route("/screens/:_id", {
 	controller: "SingleScreenController",
 	action: function() {
 		if ( !this.ready() ) {
-			this.render("LoadingIDE");
+			this.render("Loading", {
+				data: "Database subscriptions"
+			});
 		} else {
 			renderYields(this, 'SingleScreen');
 		}
@@ -134,7 +157,9 @@ Router.route("/screens", {
 	controller: "IDEController",
 	action: function() {
 		if ( !this.ready() ) {
-			this.render("LoadingIDE");
+			this.render("Loading", {
+				data: "Database subscriptions"
+			});
 		} else {
 			renderYields(this, 'Screens');
 		}
@@ -143,10 +168,16 @@ Router.route("/screens", {
 
 Router.route("/themes/:_id", {
 	name: "SingleTheme",
-	controller: "SingleThemeController",
+	controller: "IDEController",
+	data: function() {
+		Session.set("currentTheme", this.params._id);
+		return Themes.find({ _id: this.params._id });
+	},
 	action: function() {
 		if ( !this.ready() ) {
-			this.render("LoadingIDE");
+			this.render("Loading", {
+				data: "Database subscriptions"
+			});
 		} else {
 			renderYields(this, 'SingleTheme');
 		}
@@ -158,7 +189,9 @@ Router.route("/themes", {
 	controller: "IDEController",
 	action: function() {
 		if ( !this.ready() ) {
-			this.render("LoadingIDE");
+			this.render("Loading", {
+				data: "Database subscriptions"
+			});
 		} else {
 			renderYields(this, 'Themes');
 		}
@@ -170,7 +203,9 @@ Router.route("/widgets", {
 	controller: "IDEController",
 	action: function() {
 		if ( !this.ready() ) {
-			this.render("LoadingIDE");
+			this.render("Loading", {
+				data: "Database subscriptions"
+			});
 		} else {
 			renderYields(this, 'Widgets');
 		}
@@ -180,9 +215,14 @@ Router.route("/widgets", {
 Router.route("/profile", {
 	name: "Profile",
 	controller: "ProfileController",
+	data: function() {
+		return Meteor.user();
+	},
 	action: function() {
 		if ( !this.ready() ) {
-			this.render("LoadingIDE");
+			this.render("Loading", {
+				data: "Database subscriptions"
+			});
 		} else {
 			renderYields(this, 'Profile');
 		}
@@ -194,7 +234,9 @@ Router.route("/settings", {
 	controller: "ProfileController",
 	action: function() {
 		if ( !this.ready() ) {
-			this.render("LoadingIDE");
+			this.render("Loading", {
+				data: "Database subscriptions"
+			});
 		} else {
 			renderYields(this, 'Settings');
 		}
@@ -206,7 +248,9 @@ Router.route("/tutorials", {
 	controller: "IDEController",
 	action: function() {
 		if ( !this.ready() ) {
-			this.render("LoadingIDE");
+			this.render("Loading", {
+				data: "Database subscriptions"
+			});
 		} else {
 			renderYields(this, 'Tutorials');
 		}
@@ -215,10 +259,15 @@ Router.route("/tutorials", {
 
 Router.route("/docs/:urlstring", {
 	name: "Docs",
-	controller: "SingleDocController",
+	controller: "DocsController",
+	data: function() {
+		return HelpPages.findOne({ urlstring: this.params.urlstring });
+	},
 	action: function() {
 		if ( !this.ready() ) {
-			this.render("LoadingIDE");
+			this.render("Loading", {
+				data: "Database subscriptions"
+			});
 		} else {
 			renderYields(this, "Docs");
 		}
@@ -228,10 +277,22 @@ Router.route("/docs/:urlstring", {
 Router.route("/docs", {
 	name: "Documentation",
 	controller: "DocsController",
+	data: function() {
+		return HelpPages.find({}, {
+			sort: {
+				pagenumber: 1
+			}
+		});
+	},
 	action: function() {
 		if ( !this.ready() ) {
-			this.render("LoadingIDE");
+			this.render("Loading", {
+				data: "Database subscriptions"
+			});
 		} else {
+			this.render("Loading", {
+				data: "Database subscriptions"
+			});
 			renderYields(this, 'Documentation');
 		}
 	},
@@ -242,7 +303,9 @@ Router.route("/support", {
 	controller: "IDEController",
 	action: function() {
 		if ( !this.ready() ) {
-			this.render("LoadingIDE");
+			this.render("Loading", {
+				data: "Database subscriptions"
+			});
 		} else {
 			renderYields(this, 'Support');
 		}
@@ -254,7 +317,9 @@ Router.route("/people/:username", {
 	controller: "IDEController",
 	action: function() {
 		if ( !this.ready() ) {
-			this.render("LoadingIDE");
+			this.render("Loading", {
+				data: "Database subscriptions"
+			});
 		} else {
 			renderYields(this, 'People');
 		}	

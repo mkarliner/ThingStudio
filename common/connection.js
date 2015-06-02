@@ -20,7 +20,8 @@ Schemas.Connection = new SimpleSchema({
 	protocol: {
 		type: String,
 		allowedValues: ["Websocket", "SecureWebsocket"],
-		defaultValue: "Websocket"
+		defaultValue: "Websocket",
+		optional: true
 	},
 	serverCredentials: {
 		//Provide credentials from server store.

@@ -27,13 +27,10 @@ Outstanding
 		<div class="divider"></div>
 		<div class="section">
 			<p class="section-header">Apps</p>
-				<div class="select-parent">
-					{{> AppSideNavSelect}}
-				</div>
 			<li class="{{isActivePath regex='^\\/connections'}}"><a href="/connections">Connections</a></li>
 			<li class="{{isActivePath regex='^\\/feeds'}}"><a href="/feeds">Feeds</a></li>
 			<li class="{{isActivePath regex='^\\/screens'}}"><a href="/screens">Templates</a></li>
-			<li class="{{isActivePath regex='^\\/themes'}}"><a href="/themes"><i class="mdi-image-brush"></i> Themes</a></li>
+			<!-- <li class="{{isActivePath regex='^\\/themes'}}"><a href="/themes"><i class="mdi-image-brush"></i> Themes</a></li> -->
 		</div>
 		<div class="divider"></div>
 		<div class="section">
@@ -45,9 +42,9 @@ Outstanding
 		<div class="divider"></div>
 		<div class="section">
 			<p class="section-header">Help</p>
+			<li class="{{isActivePath regex='^\\/support'}}"><a href="http://forum.thingstud.io" target="_blank"><i class="mdi-communication-forum"></i> Forum</a></li>
 			<li class="{{isActivePath regex='^\\/video-tutorials'}}"><a href="/tutorials"><i class="mdi-action-account-balance"></i> Video Tutorials</a></li>
 			<li class="{{isActivePath regex='^\\/documentation|docs'}}"><a href="/docs"><i class="mdi-editor-format-align-left"></i> Documentation</a></li>
-			<li class="{{isActivePath regex='^\\/support'}}"><a href="http://forum.thingstud.io"><i class="mdi-communication-forum"></i> Forum</a></li>
 			<li class="{{isActivePath regex='^\\/support'}}"><a href="/support"><i class="mdi-action-help"></i> Support</a></li>
 		</div>
 	</ul>
@@ -70,20 +67,5 @@ Outstanding
 				</svg>
 			</div>
 		</div>
-	</div>
-</template>
-
-<template name="AppSideNavSelect">
-	<div class="input-field sidenav-app-selector">
-		<select class="myselect">
-			{{#if current_app_name}}
-				<option value="{{ current_app_name._id}}" disabled selected>{{ current_app_name.title }}</option>
-			{{else}}
-				<option value="" disabled selected>Choose your app</option>
-			{{/if}}
-			{{#each appsList }}
-				<option value="{{this._id}}">{{this.title}}</option>
-			{{/each}}
-		</select>
 	</div>
 </template>

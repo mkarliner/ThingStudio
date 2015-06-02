@@ -1,3 +1,8 @@
+Template.EditSingleConnectionBody.onRendered(function() {
+    $('ul.tabs').tabs();
+});
+
+
 Template.EditSingleConnectionHeader.helpers({
 	connectionName: function() {
 		console.log(this);

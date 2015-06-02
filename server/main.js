@@ -223,11 +223,7 @@ Meteor.startup(function() {
 	// 	});
 	// });
 	Meteor.publish("help_pages", function() {
-		return HelpPages.find({}, {
-			sort: {
-				pagenumber: 1
-			}
-		});
+		return HelpPages.find({});
 	});
 	Meteor.publish("userData", function() {
 		user = Meteor.users.find({
