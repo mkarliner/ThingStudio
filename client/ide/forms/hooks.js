@@ -133,11 +133,12 @@ AutoForm.hooks({
 			// 	}
 		},
 		after: {
-			update: function(err, res, template) {
+			update: function(err, res) {
 				scr = Session.get("currentScreenPage");
 				myscreen = Screens.findOne(scr);
 				name = myscreen.title;
-				console.log("SCR: ", name)
+				// console.log("SCR: ", name, this)
+				template = this.template;
 				delete Template[name]; //Remove the existing template instance.
 				//console.log("Updated Screen", template.data.doc.html);
 

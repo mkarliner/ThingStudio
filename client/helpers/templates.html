@@ -1,5 +1,10 @@
-<template name="templates">
-    {{#each templates_list }}
+<template name="templatelist">
+    {{#each template_list }}
         {{>UI.contentBlock this}}    
     {{/each}}
+</template>
+
+<template name="_templatelist_noop">
+    <div><strong>No screens</strong></div>
+    {{>UI.contentBlock}}    
 </template>

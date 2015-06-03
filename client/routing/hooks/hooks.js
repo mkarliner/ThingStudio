@@ -27,6 +27,7 @@ Router.onBeforeAction(function () {
 			// No, just let them go on.
 			disconnect();
 			this.next();
+			return;
 		}
 	} 
 	// console.log("VIEWCONN ", app.connection, connection);
