@@ -16,6 +16,10 @@ Router.onBeforeAction(function () {
 	}
 	// console.log("OBA GLOBAL", this);
 	// Is there an existing connection?
+	if(mqttClient.connected == true) {
+		this.next();
+		return;
+	}
 	connection = getCurrentConnection();
 	if(!connection) {
 		// No, we have to decide which connection to use.

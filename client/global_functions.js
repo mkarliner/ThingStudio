@@ -47,7 +47,7 @@ UnsubscribeAll = function(){
 connect = function (conn, usr, pass) {
 	// console.log("ENTERING CONN", conn, usr, pass)
 	disconnect();
-	setCurrentConnection(conn);
+	setCurrentConnection(conn, "Connect");
 	if(usr) {
 		username = usr;
 	} else {

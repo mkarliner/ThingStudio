@@ -29,8 +29,8 @@ getCurrentConnection = function() {
 	return Session.get("currentConnection");
 }
 
-setCurrentConnection = function(conn){
-	console.log("Setting current connection to: ", conn);
+setCurrentConnection = function(conn, from){
+	console.log("Setting current connection to: ", from,  conn);
 	Session.set("currentConnection", conn);
 }
 
