@@ -77,7 +77,12 @@ Router.onBeforeAction(function () {
 		// We have displayed the form, and the user has clicked connect... now use the credentials she has entered.
 		// console.log("AUTH OK", connection)
 		credentials = getCredentials();
-		connect(connection, credentials.username, credentials.password);
+		if(connection.serverCredentials) {
+			connect(connection);
+		} else {
+			connect(connection, credentials.username, credentials.password);
+		}
+		
 	}
 	
 	this.next();
