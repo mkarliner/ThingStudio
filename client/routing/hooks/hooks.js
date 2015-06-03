@@ -4,6 +4,7 @@ Router.onBeforeAction(function () {
 	
   // all properties available in the route function
   // are also available here such as this.params
+	console.log("Running connection beforeaction")
 	app = getCurrentApp();
 	if(!app) {
 		this.next();

@@ -25,7 +25,7 @@ Schemas.App = new SimpleSchema({
 				options = scrs.map(function(ele, idx, arry){
 					return {label: ele.title, value: ele._id}
 				})
-				console.log("SCR OPTIONS ", options)
+				// console.log("SCR OPTIONS ", options)
 				return options;
 			}
 		}
@@ -105,6 +105,21 @@ Apps.before.remove(function(userId, doc) {
 Apps.after.insert(function(userId, doc) {
 	if(Meteor.isClient) {
 		changeActiveApp(doc);
+	}
+});
+
+Apps.after.update(function(userId, doc) {
+	if(Meteor.isClient) {
+		currConn = getCurrentConnection();
+		if(currConn._id != doc.connection) {
+			newConn = Connections.findOne({_id: doc.connection});
+			UnsubscribeAll();
+			DisconnectMQTT();
+			setCurrentConnection(false);
+			Session.set("authReady", false);
+			ResetMessages();
+			connect(newConn);
+		}
 	}
 });
 

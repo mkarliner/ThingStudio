@@ -101,6 +101,15 @@ Connections.before.insert(function(userId, doc) {
 	}
 });
 
+Connections.after.update(function(userId, doc) {
+	if(Meteor.isClient) {
+		currConn = getCurrentConnection();
+		if(currConn._id == doc._id) {
+			setCurrentConnection(doc);
+		}
+	}
+});
+
 Connections.attachSchema(Schemas.Connection);
 
 Connections.allow({
