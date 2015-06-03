@@ -1,6 +1,6 @@
 getCurrentApp = function() { 
 	app =  Apps.findOne({_id: Session.get("currentAppId")});
-	console.log("GCA: ", app, Session.get("currentAppId"));
+	// console.log("GCA: ", app, Session.get("currentAppId"));
 	return app;
 };
 
@@ -26,9 +26,9 @@ setCredentials = function(cred){
 //
 // }
 
-getCurrentConnection = function() {
-	return Session.get("currentConnection");
-}
+// getCurrentConnection = function() {
+// 	return Session.get("currentConnection");
+// }
 
 redrawSideNavSelect = function() {
 	// $('select').material_select('destroy');

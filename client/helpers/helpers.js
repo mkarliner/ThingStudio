@@ -29,6 +29,11 @@ getCurrentConnection = function() {
 	return Session.get("currentConnection");
 }
 
+setCurrentConnection = function(conn){
+	console.log("Setting current connection to: ", conn);
+	Session.set("currentConnection", conn);
+}
+
 redrawSideNavSelect = function() {
 	$('select').material_select('destroy');
 	$('.sidenav-app-selector').remove();
