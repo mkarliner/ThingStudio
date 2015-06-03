@@ -59,9 +59,7 @@ Template.registerHelper("menuOps",
 			//Is open
 			$('main tr#item-insert').toggleClass('td-open');
 			$('main div.add-new-item').removeClass('open').css({opacity: 1.0}).animate({opacity: 0.0}, 100);
-			// $('#insertItemForm')[0].reset();
 			AutoForm.resetForm('insertItemForm');
-			redrawSideNavSelect();
 		} else {
 			//Is closed
 			$('main tr#item-insert').toggleClass('td-open');
