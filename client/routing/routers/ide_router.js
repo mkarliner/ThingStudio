@@ -18,9 +18,32 @@ Router.route("/dashboard", {
 			if (u.profile && u.profile.showWelcome) {
 				this.redirect("/welcome");
 			} else {
-				this.render("DashboardBody");
+				if ( !this.ready() ) {
+					this.render("Loading", {
+						data: "Dashboard"
+					});
+				} else {
+					renderYields(this, 'Dashboard');
+				}		
 			}
 		}
+	}
+});
+
+Router.route("/credentials", {
+	name: "Credentials",
+	controller: "IDEController",
+	data: function() {
+		return;
+	},
+	action: function() {
+		if ( !this.ready() ) {
+			this.render("Loading", {
+				data: "App"
+			});
+		} else {
+			renderYields(this, 'Credentials');
+		}		
 	}
 });
 

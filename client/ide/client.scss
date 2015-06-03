@@ -13,6 +13,7 @@ $statusActive: #7ED321;
 $materializeInputBorderInactive: 1px solid #E1E4E8;
 $materializeInputBorderActive: 1px solid #4AAFE2;
 $actionColor1: #0098DC;
+$tableHover: #FDFDFD;
 //Fonts
 //$fwLight: 'Avenir 35 Light';
 $fwLight: 100;
@@ -22,8 +23,14 @@ $fwBook: 300;
 $fwRoman: 400;
 //$fwMedium: 'Avenir 65 Medium';
 $fwMedium: 500;
+.fwMedium {
+	font-weight: $fwMedium;
+}
 //$fwHeavy: 'Avenir 85 Heavy';
 $fwHeavy: 700;
+.fwHeavy {
+	font-weight: $fwHeavy;
+}
 //$fwBlack: 'Avenir 95 Black';
 $fwBlack: 900;
 
@@ -57,6 +64,12 @@ $bodyDividerColor: #D0D3DC;
 	position: fixed;
 	left: 0;
 	right: 0;
+}
+
+@mixin dropdownArrow {
+	color: #4AAFE2;
+	font-size: 3 * $fontSize;
+	line-height: 44px;
 }
 
 @mixin transition($property, $duration, $method:"") {
@@ -362,6 +375,10 @@ th {
 	padding: 15px 0;
 }
 
+table.hoverable tbody tr:hover {
+	background-color: lighten($appBodyBG, 4%);
+}
+
 td {
 	padding: 6px 0;
 }
@@ -451,9 +468,7 @@ td:last-child, th:last-child {
 }
 
 .add-new-item .select-wrapper i {
-	color: #4AAFE2;
-	font-size: 3 * $fontSize;
-	line-height: 44px;
+	@include dropdownArrow;
 }
 
 .add-new-item .form-group {
@@ -599,6 +614,10 @@ h4.modal-title {
 	font-weight: $fwBlack;
 }
 
+.tabs .tab a:hover {
+	color: $baseText; 
+}
+
 .tabs .indicator {
 	background-color: $actionColor1;
 	height: 3px;
@@ -606,6 +625,21 @@ h4.modal-title {
 
 .mdi-image-brightness-1 {
 	color: $statusActive;
+}
+
+.select-wrapper.form-control input.select-dropdown {
+	background-color: $white;
+	padding-left: 15px;
+}
+
+.select-wrapper.form-control .mdi-navigation-arrow-drop-down {
+	@include dropdownArrow;
+	line-height: 58px;
+	z-index: 1;
+
+}
+.select-wrapper.form-control {
+	display: inline-block;
 }
 
 [type="checkbox"].filled-in:not(:checked) + label:after {

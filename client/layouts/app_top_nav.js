@@ -1,5 +1,12 @@
 Template.AppTopNav.onRendered(function() {
     $(".dropdown-button").dropdown();
+    	$('.tnconn.tooltipped').tooltip({delay: 400});
+});
+
+Template.AppTopNav.helpers({
+	currentConnectionName: function() {
+		return getCurrentConnection().title;
+	}
 });
 
 Template.BreadcrumbsContent.helpers({

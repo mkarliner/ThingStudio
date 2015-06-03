@@ -14,7 +14,7 @@ alanning:roles
 iron:router
 accounts-password
 fortawesome:fontawesome
-#yogiben:admin
+yogiben:admin
 reactive-var
 spacebars-compiler
 mkarliner:mqtt
