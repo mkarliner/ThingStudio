@@ -24,9 +24,11 @@ ResetMessages = function() {
 
 DisconnectMQTT = function() {
 	console.log("SHUTTING DOWN CLIENT")
+	Session.set("authReady", false);
+	setCurrentConnection(false);
 	if (typeof mqttClient.end == 'function') { 
 		// console.log("Ending current client");
-	    mqttClient.end(); 
+		mqttClient.end(); 
 	}
 }
 
@@ -147,17 +149,11 @@ currentConnection = function() {
 changeActiveApp = function(app) {
 	UnsubscribeAll();
 	DisconnectMQTT();
-	Session.setPersistent("currentAppId",app._id);
+	Session.setPersistent("currentAppId", app);
 	ResetMessages();
 };
 
 getCurrentApp = function() { 
-	app =  Apps.findOne({_id: Session.get("currentAppId")});
+	app = Apps.findOne({_id: Session.get("currentAppId")});
 	return app;
-}
-
-redrawSideNavSelect = function() {
-	$('.side-nav select').material_select('destroy');
-	$('.sidenav-app-selector').remove();
-	Blaze.render(Template.AppSideNavSelect, $('.side-nav div.select-parent')[0]);
 }

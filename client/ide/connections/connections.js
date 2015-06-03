@@ -6,6 +6,13 @@ Template.ConnectionsHeader.events({
 	}
 });
 
+Template.ConnectionsHeader.helpers({
+	connectionName: function() {
+		return getCurrentConnection().title;
+		
+	}
+});
+
 Template.ConnectionsNewItem.events({
 	"click .table-cancel-new": function(e, tmpl) {
 		menuOps();

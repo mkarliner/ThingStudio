@@ -1,10 +1,10 @@
 <template name="DocsHeader">
-	<!-- {{log}} -->
 	<h1 class="left">{{title}}</h1>
-	<div class="clearfix"></div>
-	<a class="pull-left btn header-action-2" href="{{prevpage}}">Previous</a>
-	<a class="pull-right btn header-action-2" href="{{nextpage}}">Next</a>
-	<div class="clearfix"></div>
+	<div class="right">
+		<a class="btn header-action-2" href="{{prevpage}}">Previous</a>
+		<a class="btn header-action-2" href="{{nextpage}}">Next</a>
+	</div>
+	<p class="clearfix">Summary: {{summary}}</p>
 </template>
 
 <template name="DocsBody">	

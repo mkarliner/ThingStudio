@@ -22,11 +22,6 @@ Template.AppsNewItem.events({
 Template.AppsBody.events({
 	'click .select-app': function(ev) {
 		ev.preventDefault();
-		console.log(this._id);
-		// UnsubscribeAll();
-		// DisconnectMQTT();
-		// Session.setPersistent("currentAppId",this._id);
-		// ResetMessages();
 		changeActiveApp(this._id);
 	}
 });

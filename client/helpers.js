@@ -26,16 +26,6 @@ setCredentials = function(cred){
 //
 // }
 
-// getCurrentConnection = function() {
-// 	return Session.get("currentConnection");
-// }
-
-// redrawSideNavSelect = function() {
-// 	// $('select').material_select('destroy');
-// 	// $('.sidenav-app-selector').remove();
-// 	// Blaze.render(Template.AppSideNavSelect, $('body div.select-parent')[0]);
-// 	return;
-// }
 
 Template.registerHelper( 
 	"gravatar", function(){
