@@ -125,7 +125,7 @@ Router.route("/screens/:_id/edit", {
 	controller: "IDEController",
 	data: function() {
 		Session.set("currentScreenPage", this.params._id);
-		return Screens.find({ _id: this.params._id });
+		return Screens.findOne({ _id: this.params._id });
 	},
 	action: function() {
 		if ( !this.ready() ) {

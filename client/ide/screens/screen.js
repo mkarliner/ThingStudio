@@ -1,4 +1,5 @@
 Meteor.startup(function(){
+	console.log("THE BEGINNING")
 	AutoForm.addInputType('acecss', {
 		template: 'afAceCss',
 		valueOut: function(obj) {
@@ -10,7 +11,7 @@ Meteor.startup(function(){
 	AutoForm.addInputType('acejs', {
 		template: 'afAceJs',
 		valueOut: function(obj) {
-			//console.log("OUT: ", AceEditor.instance("archyjs").getValue())
+			console.log("OUT: ", AceEditor.instance("archyjs").getValue())
 			return AceEditor.instance("archyjs").getValue();
 		}
 	});
@@ -18,7 +19,7 @@ Meteor.startup(function(){
 	AutoForm.addInputType('ace', {
 		template: 'afAce',
 		valueOut: function(obj) {
-			// console.log("OUT: ", AceEditor.instance("archy").getValue())
+			console.log("OUT: ", AceEditor.instance("archy").getValue())
 			return AceEditor.instance("archy").getValue();
 		}
 	});
@@ -26,7 +27,7 @@ Meteor.startup(function(){
 
 Template.afAce.helpers({
 	debug: function(obj){
-		console.log("DEBUG:", obj);
+		console.log("DEBUG:", obj, this);
 	},
 	loadValue: function(editor){
 		// console.log("Setting value ", this.value)
@@ -56,7 +57,7 @@ Template.afAceCss.helpers({
 
 Template.afAceJs.helpers({
 	debug: function(obj){
-		console.log("DEBUG:", obj);
+		console.log("DEBUG:", obj, this);
 	},
 	loadValue: function(editor){
 	}
@@ -64,7 +65,7 @@ Template.afAceJs.helpers({
 
 Template.afAceJs.rendered = function() {
 	var editor;
-	// console.log("RENDERED", this.findAll());
+	console.log("RENDERED", this.findAll());
 	Tracker.autorun(function (e) {
 
 		editor = AceEditor.instance("archyjs", {
@@ -102,14 +103,14 @@ Template.afAceCss.rendered = function() {
 
 Template.afAce.rendered = function() {
 	var editor;
-	//console.log("RENDERED", this.findAll());
+	console.log("RENDERED", this.findAll());
 	Tracker.autorun(function (e) {
 
 		editor = AceEditor.instance("archy", {
 			theme: "twilight",
 			mode: "handlebars",
 		});
-
+		console.log("ELD ", editor.loaded)
 		if(editor.loaded===true){
 			e.stop();
 			cs = Session.get("currentScreenPage");
@@ -125,9 +126,9 @@ Template.SingleScreenBody.helpers({
 	currentScreen: function() {
 	        scr =  Session.get("currentScreenPage");
 	        scn = Screens.findOne(scr);
-
+			console.log("HTML: ", scn);
 	        if(scn) {
-	                // console.log("HTML: ", scn.html);
+	                console.log("HTML: ", scn.html);
 	                delete Template[scn.title];
 	                compileTemplate(scn.title, scn.html, scn.js);
 

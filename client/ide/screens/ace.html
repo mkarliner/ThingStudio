@@ -1,49 +1,25 @@
-<template name="afAce">
-
-	
-<!-- // <script>
-// 	console.log("In script", this.value);
-// 	editor = ace.edit();
-// 	editor.setTheme("ace/theme/twilight");
-// 	editor.setMode("ace/mode/html");
-// 	editor..setOptions({
-// 	  maxLines: 20,
-// 	 maxColumns: 80
-// 	});
-//
-// </script> -->
-	 <script>
-	     // editor = ace.edit("editor");
-	     // editor.setTheme("ace/theme/monokai");
-	     // editor.getSession().setMode("ace/mode/javascript");
-	 </script>
-	
-<pre id="archy" {{this.atts}}>
+<template name="afAce">	
+	<pre {{this.atts}}>
+	<pre  id="archy" >
+		 {{debug}}
 	 {{this.value }}
-</pre>
-
-
-	
+	</pre>
+	</pre>
 </template>
 
 
-<template name="afAceCss">
-
-	
-
-
-	
-<pre id="archycss" {{this.atts}}>
+<template name="afAceCss">	
+<pre {{this.atts}}  id="archycss">
 	 {{this.value }}
-</pre>
-
-
-	
+</pre>	
 </template>
 
 
 <template name="afAceJs">	
-<pre id="archyjs" {{this.atts}}>
+	<pre {{this.atts}}>
+<pre   id="archyjs">
+	 {{debug}}
 	 {{this.value }}
 </pre>
+	</pre>
 </template>

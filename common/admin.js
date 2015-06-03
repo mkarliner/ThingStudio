@@ -14,7 +14,7 @@ AdminConfig={
 	Screens: {
 		tableColumns: [
 			{label: "Title", name: "title"},
-			{label: "Owner", name: "owner", template: "Owner"}
+			// {label: "Owner", name: "owner", template: "Owner"}
 		]
 	},
 	Feeds:{
