@@ -25,7 +25,7 @@ ResetMessages = function() {
 DisconnectMQTT = function() {
 	console.log("SHUTTING DOWN CLIENT")
 	if (typeof mqttClient.end == 'function') { 
-		console.log("Ending current client");
+		// console.log("Ending current client");
 	    mqttClient.end(); 
 	}
 }
@@ -45,7 +45,7 @@ UnsubscribeAll = function(){
 }
 
 connect = function (conn, usr, pass) {
-	console.log("ENTERING CONN", conn, usr, pass)
+	// console.log("ENTERING CONN", conn, usr, pass)
 	disconnect();
 	if(usr) {
 		username = usr;
@@ -60,7 +60,7 @@ connect = function (conn, usr, pass) {
 	}
 	protocol = conn.protocol == "Websocket" ? "ws" : "wss";
 	ConnectionString = protocol + "://" + conn.host + ":" + conn.port;
-	console.log("CONNECTING: ", ConnectionString, protocol, username, password);
+	// console.log("CONNECTING: ", ConnectionString, protocol, username, password);
 	Session.set("currentMQTTHost", conn.host);
 	try {
 		mqttClient = mqtt.connect(ConnectionString, { username: username, password: password});
@@ -129,7 +129,7 @@ connect = function (conn, usr, pass) {
 
 disconnect = function(conn) {
 	if (typeof mqttClient.end == 'function') { 
-		console.log("Ending current client");
+		// console.log("Ending current client");
 		mqttClient.end(); 
 	}
 }
@@ -152,7 +152,6 @@ changeActiveApp = function(app) {
 
 getCurrentApp = function() { 
 	app =  Apps.findOne({_id: Session.get("currentAppId")});
-	console.log("GCA: ", app, Session.get("currentAppId"));
 	return app;
 }
 

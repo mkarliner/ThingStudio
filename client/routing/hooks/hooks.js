@@ -13,7 +13,7 @@ Router.onBeforeAction(function () {
 		this.next();
 		return;
 	}
-	console.log("OBA GLOBAL", this);
+	// console.log("OBA GLOBAL", this);
 	// Is there an existing connection?
 	connection = getCurrentConnection();
 	if(!connection) {
@@ -29,7 +29,7 @@ Router.onBeforeAction(function () {
 			this.next();
 		}
 	} 
-	console.log("VIEWCONN ", app.connection, connection);
+	// console.log("VIEWCONN ", app.connection, connection);
 	// Do I need to the user to provide authentication credentials?
 	if ((!connection.serverCredentials || connection.serverCredentials == false) && Session.get("authReady") != true) {
 		console.log("NEED AUTH")
@@ -74,7 +74,7 @@ Router.onBeforeAction(function () {
 		return;
 	} else {
 		// We have displayed the form, and the user has clicked connect... now use the credentials she has entered.
-		console.log("AUTH OK", connection)
+		// console.log("AUTH OK", connection)
 		credentials = getCredentials();
 		connect(connection, credentials.username, credentials.password);
 	}

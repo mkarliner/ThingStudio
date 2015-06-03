@@ -1,6 +1,6 @@
 
-AutoForm.debug();
-console.log("AUTOFORM DEBUG")
+// AutoForm.debug();
+
 
 // devOrientHandler = function(ev) {
 // 	Session.set("deviceOrientation", ev);

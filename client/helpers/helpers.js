@@ -1,6 +1,5 @@
 getCurrentApp = function() { 
 	app =  Apps.findOne({_id: Session.get("currentAppId")});
-	console.log("GCA: ", app, Session.get("currentAppId"));
 	return app;
 };
 

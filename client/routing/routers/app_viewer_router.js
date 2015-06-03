@@ -1,6 +1,5 @@
 Router.route("/view/app/:_id", {
 	onBeforeAction: function() {
-		console.log("OBA")
 		Session.set("currentAppId", this.params._id);
 		this.next();
 	},

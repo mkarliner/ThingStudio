@@ -1,5 +1,4 @@
 Meteor.startup(function(){
-	console.log("THE BEGINNING")
 	AutoForm.addInputType('acecss', {
 		template: 'afAceCss',
 		valueOut: function(obj) {
@@ -27,7 +26,7 @@ Meteor.startup(function(){
 
 Template.afAce.helpers({
 	debug: function(obj){
-		console.log("DEBUG:", obj, this);
+		// console.log("DEBUG:", obj, this);
 	},
 	loadValue: function(editor){
 		// console.log("Setting value ", this.value)
@@ -42,7 +41,7 @@ Template.afAce.helpers({
 
 Template.afAceCss.helpers({
 	debug: function(obj){
-		console.log("DEBUG:", obj);
+		// console.log("DEBUG:", obj);
 	},
 	loadValue: function(editor){
 		// console.log("Setting value ", this.value)
@@ -57,7 +56,7 @@ Template.afAceCss.helpers({
 
 Template.afAceJs.helpers({
 	debug: function(obj){
-		console.log("DEBUG:", obj, this);
+		// console.log("DEBUG:", obj, this);
 	},
 	loadValue: function(editor){
 	}
@@ -65,7 +64,7 @@ Template.afAceJs.helpers({
 
 Template.afAceJs.rendered = function() {
 	var editor;
-	console.log("RENDERED", this.findAll());
+	// console.log("RENDERED", this.findAll());
 	Tracker.autorun(function (e) {
 
 		editor = AceEditor.instance("archyjs", {
@@ -76,8 +75,6 @@ Template.afAceJs.rendered = function() {
 		if(editor.loaded===true){
 			e.stop();
 			cs = Session.get("currentScreenPage");
-
-			console.log("CSJ: ", cs)
 			editor.$blockScrolling = Infinity;
 			editor.setValue(Screens.findOne({_id: cs}).js, -1);
 		}
@@ -103,19 +100,16 @@ Template.afAceCss.rendered = function() {
 
 Template.afAce.rendered = function() {
 	var editor;
-	console.log("RENDERED", this.findAll());
+	// console.log("RENDERED", this.findAll());
 	Tracker.autorun(function (e) {
 
 		editor = AceEditor.instance("archy", {
 			theme: "twilight",
 			mode: "handlebars",
 		});
-		console.log("ELD ", editor.loaded)
 		if(editor.loaded===true){
 			e.stop();
 			cs = Session.get("currentScreenPage");
-
-			console.log("CS: ", cs)
 			editor.$blockScrolling = Infinity;
 			editor.setValue(Screens.findOne({_id: cs}).html, -1);
 		}
