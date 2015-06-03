@@ -17,7 +17,10 @@
 </template>
 
 <template name="materializeCheckbox">
-      <span class="control-label">Server</span>
       <input type="checkbox" value="true" {{atts}}/>
-      <label class="filled-in" for="{{atts.id}}">{{afFieldLabelText name=this.name}}</label>
+      <label class="filled-in" for="{{atts.id}}"></label>
 </template>
+<!-- 
+<template name="afInputPassword">
+  <input type="password" value="{{this.value}}" {{this.atts}}/>
+</template> -->
