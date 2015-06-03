@@ -1,4 +1,3 @@
-
 <template name="Connection">
 	
 		{{#with connection}}
@@ -28,6 +27,7 @@
 			{{> afQuickField name='title' placeholder="Connection title" class="first"}}
 			{{> afQuickField name='host' placeholder="Hostname"}}
 			{{> afQuickField name='port' placeholder="Port"}}
+			{{> afQuickField name='serverCredentials'}}
 			{{> afQuickField name='username' placeholder="Username (optional)"}}
 			{{> afQuickField name='password' placeholder="Password (optional)"}}
 			<button type="submit" class="btn btn-save">Save Connection</button>

@@ -56,11 +56,11 @@ Template.AppSideNav.helpers({
 	// 	var currId = Session.get("currentAppId");
 	// 	return Apps.find({owner: Meteor.userId(), _id: {$nin: [currId]}});
 	// },
-	current_app_name: function(){
-		if (  Session.get("currentApp") ) {
-			return Session.get("currentApp");
-		} else {
-			return false;
-		}
-	}
+	// current_app_name: function(){
+	// 	if (  Session.get("currentApp") ) {
+	// 		return Session.get("currentApp");
+	// 	} else {
+	// 		return false;
+	// 	}
+	// }
 });

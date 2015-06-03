@@ -28,7 +28,7 @@ Router.route("/apps/:_id/", {
 	name: "EditSingleApp",
 	controller: "IDEController",
 	data: function() {
-		return Apps.find({ _id: this.params._id });
+		return Apps.findOne({ _id: this.params._id });
 	},
 	action: function() {
 		if ( !this.ready() ) {

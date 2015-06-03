@@ -22,11 +22,11 @@
 					<td>{{showUsername}}</td>
 					<td>{{showObscuredPassword}}</td>
 					<td>
-						{{#if connectionIsActive}}
+						<!-- {{#if connectionIsActive}}
 							<a class="table-action table-make-active connect" href="#"><i class="mdi-image-brightness-1"></i></a>
-						{{else}}
-							<a class="table-action table-make-active connect" href="#"><i class="mdi-toggle-radio-button-off"></i></a>
-						{{/if}} 
+						{{else}} -->
+<!-- 							<a class="table-action table-make-active connect" href="#"><i class="mdi-toggle-radio-button-off"></i></a>
+						{{/if}}  -->
 						<a class="table-action table-edit-item" href="{{pathFor 'EditSingleConnection'}}"><i class="mdi-editor-mode-edit"></i></a>
 						{{#afModal classes="table-action table-cancel-item" collection="Connections" operation="remove" doc=_id title="Deleting App" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="mdi-navigation-close"></i>{{/afModal}}
 					</td>

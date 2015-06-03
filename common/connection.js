@@ -27,6 +27,14 @@ Schemas.Connection = new SimpleSchema({
 		//Provide credentials from server store.
 		type: Boolean,
 		defaultValue: false,
+		label: " ",
+		autoform: {
+			afFieldInput: {
+				type: 'boolean-checkbox-b'
+				// class: 'editor' // optional
+				// summernote options goes here
+			}
+		},
 	},
 	username: {
 		type: String,
