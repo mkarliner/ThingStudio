@@ -8,6 +8,10 @@ Schemas.HelpPage = new SimpleSchema({
 		label: "Title",
 		max: 200
 	},
+	excerpt: {
+		type: String,
+		label: "Summary"
+	},
 	urlstring: {
 		type: String,
 		label: "URL String",
