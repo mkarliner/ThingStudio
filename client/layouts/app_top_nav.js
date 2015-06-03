@@ -15,6 +15,8 @@ Template.BreadcrumbsContent.helpers({
 		var routePath = Router.current().route.path();
 		if ( routeName == "Connections" || routeName =="Data Feeds" || routeName =="Templates" || routeName == "Themes" || routeName == "View Feed" ) {
 			return Session.get("appTreeList");
+		} else if ( routeName == "Dashboard" ){
+			return false;
 		} else {
 			var routeObj = {_id: routePath, title: routeName};
 			return [routeObj];
