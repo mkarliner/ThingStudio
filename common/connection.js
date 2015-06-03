@@ -27,14 +27,14 @@ Schemas.Connection = new SimpleSchema({
 		//Provide credentials from server store.
 		type: Boolean,
 		defaultValue: false,
-		label: " ",
+		label: "Server Credentials",
 		autoform: {
 			afFieldInput: {
-				type: 'boolean-checkbox-b'
-				// class: 'editor' // optional
+				type: 'boolean-checkbox-b',
+				class: 'filled-in' // optional
 				// summernote options goes here
 			}
-		},
+		}
 	},
 	username: {
 		type: String,
@@ -42,7 +42,14 @@ Schemas.Connection = new SimpleSchema({
 	},
 	password: {
 		type: String,
-		optional: true
+		optional: true,
+		autoform: {
+			afFieldInput: {
+				type: 'password'
+				// class: 'filled-in' // optional
+				// summernote options goes here
+			}
+		}
 	},
 	// autoConnect: {
 	// 	type: Boolean,

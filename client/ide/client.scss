@@ -492,15 +492,20 @@ table, .single-page-container {
 	margin-right: 2px;
 }
 
-.tae-cnt {
-	margin-top: 5px;
-}
+// .tae-cnt {
+// 	margin-top: 5px;
+// }
 
-.table-advanced-edit {
-	color: $baseText;
-	font-weight: $fwBlack;
-	text-decoration: underline;
-	margin-top: 5px;
+// .table-advanced-edit {
+// 	color: $baseText;
+// 	font-weight: $fwBlack;
+// 	text-decoration: underline;
+// 	margin-top: 5px;
+// }
+
+.table-action.ta-disabled {
+	border-color: lighten($baseText, 20%);
+	color: lighten($baseText, 20%);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -603,8 +608,13 @@ h4.modal-title {
 	color: $statusActive;
 }
 
-span.control-label {
-	font-size: 1.3em;
+[type="checkbox"].filled-in:not(:checked) + label:after {
+	border: 2px solid $baseText;
+}
+
+[type="checkbox"].filled-in:checked + label:after {
+	border: 2px solid $actionColor1;
+  	background-color: $actionColor1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////

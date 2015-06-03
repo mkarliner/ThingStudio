@@ -1,3 +1,7 @@
+Template.AppsBody.onRendered(function() {
+	$('.tooltipped').tooltip({delay: 50});
+});
+
 Template.AppsHeader.events({
 	"click .header-action-1": function(e, tmpl) {
 		e.preventDefault();
@@ -18,11 +22,7 @@ Template.AppsNewItem.events({
 Template.AppsBody.events({
 	'click .select-app': function(ev) {
 		ev.preventDefault();
-		UnsubscribeAll();
-		DisconnectMQTT();
-		Session.setPersistent("currentAppId",this._id);
-		ResetMessages();
-		redrawSideNavSelect();
+		changeActiveApp(this._id);
 	}
 });
 

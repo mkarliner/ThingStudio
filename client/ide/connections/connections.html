@@ -1,6 +1,6 @@
 <template name="ConnectionsHeader">
 		<h1 class="left">Connections</h1>
-		<a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>BUTTON</a>
+		<a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>{{connectionName}}</a>
 		<a class="header-action-1 clearfix" href="#">Create a new connection</a>
 </template>
 
@@ -10,7 +10,7 @@
 	<table>
 		{{> ConnectionsTableWidths}}
 		<thead>
-			<tr cellpadding="10"><th>Connection Title</th><th>Hostname</th><th>Port</th><th>Username</th><th>Password</th><th>Action</th></tr>
+			<tr cellpadding="10"><th>Connection Title</th><th>Hostname</th><th>Port</th><th>Protocol</th><th>Username</th><th>Password</th><th>Action</th></tr>
 		</thead>
 		<tbody>
 			<tr id="item-insert" class="spacer td-closed"><td></td></tr>
@@ -19,6 +19,7 @@
 					<td>{{title}}</td>
 					<td>{{host}}</td>
 					<td>{{port}}</td>
+					<td>{{protocol}}</td>
 					<td>{{showUsername}}</td>
 					<td>{{showObscuredPassword}}</td>
 					<td>
@@ -47,6 +48,7 @@
 						<td>{{> afQuickField name='title' placeholder="Connection Title" class="first"}}</td>
 						<td>{{> afQuickField name='host' placeholder="Hostname"}}</td>
 						<td>{{> afQuickField name='port' placeholder="Port"}}</td>
+						<td>{{> afQuickField name='protocol' placeholder="Protocol"}}</td>
 						<td>{{> afQuickField name='username' placeholder="Username"}}</td>
 						<td>{{> afQuickField name='password' placeholder="Password"}}</td>
 						<td>
@@ -62,11 +64,12 @@
 
 <template name="ConnectionsTableWidths">
 	<colgroup>
-		<col style="width: 26%;">
-		<col style="width: 24%;">
+		<col style="width: 21%;">
+		<col style="width: 20%;">
 		<col style="width: 8%;">
-		<col style="width: 15%;">
-		<col style="width: 15%;">
+		<col style="width: 11%;">
+		<col style="width: 14%;">
+		<col style="width: 14%;">
 		<col style="width: 12%;">
 	</colgroup>
 </template>

@@ -10,7 +10,7 @@
 	<table>
 		{{> WidgetsTableWidths}}
 		<thead>
-			<tr cellpadding="10"><th>Widget Name</th><th>Subscription</th><th>Pub/Sub</th><th>Action</th></tr>
+			<tr cellpadding="10"><th>Widget Name</th><th>Subscription</th><th>Status</th><th>Action</th></tr>
 		</thead>
 		<tbody>
 			<tr id="item-insert" class="spacer td-closed"><td></td></tr>
@@ -35,7 +35,7 @@
 					<tr>
 						<td>{{> afQuickField name='title' placeholder="Feed Title" class="first"}}</td>
 						<td>{{> afQuickField name='subscription' placeholder="Subscription Name"}}</td>
-						<td>{{> afQuickField name='pubsub' options="allowed"}}</td>
+						<td>{{> afQuickField name='status' options="allowed"}}</td>
 						<td>
 							<button type="submit" class="table-action table-save-new"><i class="mdi-navigation-check"></i></button><button class="table-action table-cancel-new"><i class="mdi-navigation-close"></i></button>
 							<div class="tae-cnt"><a href="#" class="table-advanced-edit">Advanced</a></div>
