@@ -42,7 +42,7 @@ Schemas.Feed = new SimpleSchema({
 		type: String,
 		label: "Publish/Subscribe",
 		allowedValues: ["Publish", "Subscribe"],
-		defaultValue: "Publish"
+		defaultValue: "Subscribe"
 	},
 	action: {
 		type: String,

@@ -8,9 +8,13 @@ Messages = new Mongo.Collection(null);
 
 Outbox = new Mongo.Collection(null);
 
-publish = function(topic, message) {
-	Outbox.upsert({topic: topic}, {$set: { topic: topic, message: message}});
-	mqttClient.publish(topic, message);	
+publish = function(feed, message) {
+	if(feed.pubsub !="Publish") {
+		Session.set("runtimeErrors", "Attempt to publish to subcription feed: " +feed.title + " - " + JSON.stringyfy(message));
+	} else {
+		Outbox.upsert({topic: feed.subscription}, {$set: { topic: topic, message: message}});
+		mqttClient.publish(feed.subscription, message);	
+	}
 }
 
 Session.set("ConnectionStatus", false);
@@ -24,11 +28,9 @@ ResetMessages = function() {
 
 DisconnectMQTT = function() {
 	console.log("SHUTTING DOWN CLIENT")
-	Session.set("authReady", false);
-	setCurrentConnection(false);
 	if (typeof mqttClient.end == 'function') { 
 		// console.log("Ending current client");
-		mqttClient.end(); 
+	    mqttClient.end(); 
 	}
 }
 
@@ -76,7 +78,7 @@ connect = function (conn, usr, pass) {
 	mqttClient.on("connect", function(){
 		Session.set("ConnectionStatus", true);
 		Session.set("connectionErrors", null);
-		feeds = Feeds.find({}).fetch();
+		feeds = Feeds.find({pubsub: "Subscribe"}).fetch();
 		i =0;
 		for(i=0; i<feeds.length; i++) {
 			topic = mqttregex(feeds[i].subscription).topic;
@@ -149,11 +151,17 @@ currentConnection = function() {
 changeActiveApp = function(app) {
 	UnsubscribeAll();
 	DisconnectMQTT();
-	Session.setPersistent("currentAppId", app);
+	Session.setPersistent("currentAppId",app._id);
 	ResetMessages();
 };
 
 getCurrentApp = function() { 
-	app = Apps.findOne({_id: Session.get("currentAppId")});
+	app =  Apps.findOne({_id: Session.get("currentAppId")});
 	return app;
+}
+
+redrawSideNavSelect = function() {
+	$('.side-nav select').material_select('destroy');
+	$('.sidenav-app-selector').remove();
+	Blaze.render(Template.AppSideNavSelect, $('.side-nav div.select-parent')[0]);
 }

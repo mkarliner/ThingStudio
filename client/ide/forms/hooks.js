@@ -10,6 +10,10 @@
 		Session.set("runtimeErrors", "Unknown feed " + feed);
 		return false;
 	} 
+	if(f.pubsub == "Publish") {
+		Session.set("runtimeErrors", "Can't receive messages on publish feed" + feed);
+		return false;
+	}
 	return true;
 }
 
@@ -67,7 +71,7 @@ compileTemplate = function(name, html_text, javascript) {
 				// console.log("FN: ", feed_name.value, message.value)
 				feed = Feeds.findOne({title: feed_name.value});
 				console.log(feed);
-				publish(feed.subscription, JSON.stringify(message ? message.value : "click"));
+				publish(feed, JSON.stringify(message ? message.value : "click"));
 			},
 			'change input[type="checkbox"]': function(ev) {
 				attr = ev.currentTarget.attributes;
@@ -75,7 +79,7 @@ compileTemplate = function(name, html_text, javascript) {
 				checkFeed(feed_name.value);
 				value = attr.getNamedItem("checked");
 				feed = Feeds.findOne({title: feed_name.value});
-				publish(feed.subscription, JSON.stringify(ev.target.checked.toString()));
+				publish(feed, JSON.stringify(ev.target.checked.toString()));
 				ev.stopImmediatePropagation();
 			},
 			'change input': function(ev) {
@@ -91,7 +95,7 @@ compileTemplate = function(name, html_text, javascript) {
 					return;
 				}
 				// console.log(feed);
-				publish(feed.subscription, JSON.stringify(value));
+				publish(feed, JSON.stringify(value));
 			},
 			'input': function(ev) {
 				// console.log("INPUT ", ev);
@@ -101,7 +105,7 @@ compileTemplate = function(name, html_text, javascript) {
 				if(attr.getNamedItem("data-continuous")) {
 					value = $(ev.target).val();
 					feed = Feeds.findOne({title: feed_name.value});
-					publish(feed.subscription, JSON.stringify(value));
+					publish(feed, JSON.stringify(value));
 				}
 				
 			}
@@ -168,11 +172,11 @@ AutoForm.hooks({
 	},
 	updateConnectionForm: {
 		after: {
-			update: function(err, res, template) {
-				console.log("AFTER CON UPDATE: ", err, res, template);
+			update: function(err, res) {
+				console.log("AFTER CON UPDATE: ", err, res);
 				Session.set("ConnectionStatus", false);
 				Session.set("currentMQTTHost", this.template.data.doc.hostname)
-				connect(this.template.data.doc);
+				// connect(this.template.data.doc);
 			}
 		}
 	},

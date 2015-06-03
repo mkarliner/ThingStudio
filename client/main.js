@@ -45,10 +45,14 @@ Tracker.autorun(function() {
 
 Meteor.startup(function(){
 	Feeds.after.insert(function(userId, doc) {
-		mqttClient.subscribe(doc.subscription);
+		if(doc.pubsub == "Subscription") {
+			mqttClient.subscribe(doc.subscription);
+		}	
 	});
 	Feeds.after.update(function(userId, doc) {
-		mqttClient.subscribe(doc.subscription);
+		if(doc.pubsub == "Subscription") {
+			mqttClient.subscribe(doc.subscription);
+		}	
 	});
 });
 
