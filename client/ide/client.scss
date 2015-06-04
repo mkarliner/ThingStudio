@@ -80,6 +80,10 @@ $bodyDividerColor: #D0D3DC;
 	  transition: $property $duration unquote($method);
 }
 
+html, body {
+	height: 100%;
+}
+
 html {
 	font-family: $fontFace;
 	background-color: $appBodyBG;
@@ -682,6 +686,10 @@ footer {
 ///////////////////////////////////////////////////////////////////////////////////////
 // Login Form & Preloader //
 ///////////////////////////////////////////////////////////////////////////////////////
+
+.login-page-wrapper {
+	background: $darkBase;
+}
 
 .spinner-container {
 	float: left;

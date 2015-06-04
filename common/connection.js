@@ -30,7 +30,7 @@ Schemas.Connection = new SimpleSchema({
 		label: "Server Credentials",
 		autoform: {
 			afFieldInput: {
-				type: 'boolean-checkbox-b',
+				type: 'boolean-checkbox-M',
 				class: 'filled-in' // optional
 				// summernote options goes here
 			}

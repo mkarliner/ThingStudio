@@ -48,7 +48,7 @@ Router.route("/credentials", {
 });
 
 Router.route("/apps/:_id/", {
-	name: "EditSingleApp",
+	name: "EditApp",
 	controller: "IDEController",
 	data: function() {
 		return Apps.findOne({ _id: this.params._id });
@@ -59,7 +59,7 @@ Router.route("/apps/:_id/", {
 				data: "App"
 			});
 		} else {
-			renderYields(this, 'EditSingleApp');
+			renderYields(this, 'EditApp');
 		}
 	}
 });
