@@ -5,7 +5,12 @@ Template.AppTopNav.onRendered(function() {
 
 Template.AppTopNav.helpers({
 	currentConnectionName: function() {
-		return getCurrentConnection().title;
+		app = getCurrentConnection;
+		if (app) {
+			return getCurrentConnection().title;
+		} else {
+			return 'no app';
+		}
 	}
 });
 

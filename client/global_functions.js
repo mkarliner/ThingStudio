@@ -148,10 +148,10 @@ currentConnection = function() {
 // App Management//
 ///////////////////////////////////////////////////////////////////////////////////////
 
-changeActiveApp = function(app) {
+changeActiveApp = function(appId) {
 	UnsubscribeAll();
 	DisconnectMQTT();
-	Session.setPersistent("currentAppId",app._id);
+	Session.setPersistent("currentAppId",appId);
 	ResetMessages();
 };
 
