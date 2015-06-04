@@ -1,0 +1,1 @@
+Template.TSLogin.replaces("atPwdForm");

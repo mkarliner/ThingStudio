@@ -1,0 +1,17 @@
+<template name="TSLogin">
+  <div class="at-pwd-form">
+    <form role="form" id="at-pwd-form" class="{{disabled}}" novalidate action="#" method="POST">
+      {{#each fields}}
+        {{> atInput}}
+      {{/each}}
+      {{#if showReCaptcha}}
+        {{> atReCaptcha}}
+      {{/if}}
+
+      {{> atPwdFormBtn}}
+      {{#if showForgotPasswordLink}}
+        {{> atPwdLink}}
+      {{/if}}
+    </form>
+  </div>
+</template>
