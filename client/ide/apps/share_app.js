@@ -1,8 +1,9 @@
-Template.EditSingleAppBody.onRendered(function() {
+Template.EditAppBody.onRendered(function() {
 	$('select').material_select();
+	$('ul.tabs').tabs();
 });
 
-Template.EditSingleAppBody.helpers({
+Template.EditAppBody.helpers({
 	log: function(n) {
 		console.log(n);
 	},
@@ -13,7 +14,7 @@ Template.EditSingleAppBody.helpers({
 })
 
 Meteor.startup(function(){
-	AutoForm.addInputType("boolean-checkbox-b", {
+	AutoForm.addInputType("boolean-checkbox-M", {
 		template: "materializeCheckbox",
 		valueOut: function () {
 		return !!this.is(":checked");

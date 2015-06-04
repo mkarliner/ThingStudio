@@ -1,5 +1,5 @@
 Template.DocumentationBody.onRendered(function() {
-    $('ul.tabs').tabs();
+	$('ul.tabs').tabs();
 });
 
 Template.DocumentationBody.helpers({

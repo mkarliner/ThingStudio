@@ -3,7 +3,7 @@ IDEController = RouteController.extend({
 	onBeforeAction: function() {
 		if (!Meteor.user() && !Meteor.loggingIn()) {
 			this.layout("HelpLayout");
-			this.render("Login");
+			// this.render("Login");
 		} else {
 			this.next();
 		}

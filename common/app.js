@@ -82,7 +82,14 @@ Schemas.App = new SimpleSchema({
 	access: {
 		type: String,
 		defaultValue: "Private",
-		allowedValues: ["Private", "Shareable", "Published"]
+		allowedValues: ["Private", "Shareable", "Published"],
+		autoform: {
+			afFieldInput: {
+				type: 'select-radio-inline-M',
+				class: 'with-gap' // optional
+				// summernote options goes here
+			}
+		}
 	},
 	summary: {
 		type: String,
