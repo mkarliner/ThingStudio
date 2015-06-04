@@ -1,6 +1,6 @@
 Router.route("/view/app/:_id", {
 	onBeforeAction: function() {
-		Session.set("currentAppId", this.params._id);
+		Session.setPersistent("currentAppId", this.params._id);
 		this.next();
 	},
 	controller: "AppViewerController",
@@ -50,6 +50,14 @@ Router.route("/viewer/screen/:_id", {
 	controller: "AppViewerController",
 	name: "ViewScreen",
 	action: function() {
+		if(!this.ready()) {
+			console.log("SUB NOT READY")
+			this.render("Loading", {
+				data: "Database subscriptions"
+			});
+			return;
+		}
+
 		this.render("ViewScreen", {
 			data: function() {
 				Session.set("currentScreenPage", this.params._id);
