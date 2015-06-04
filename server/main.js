@@ -168,6 +168,18 @@ Meteor.startup(function() {
 		// }
 
 	});
+	
+	Meteor.publish("singleScreen", function(screenId) {
+		scr = Screens.findOne({_id: screenId});
+		app = Apps.findOne({_id: scr.appId});
+		apps = getAppTree(scr.appId);
+		console.log("Subscribing single scren screens: ", scr.appId,  app.title, app.access)
+		if(this.userId == app.owner || app.access == "Shareable") {
+			// console.log("Returning screends: ", Screens.find({appId: appId}).fetch().length )
+			return Screens.find({appId: {$in: apps}});
+		}
+	});
+	
 	Meteor.publish("feeds", function(appId) {
 		app = Apps.findOne({_id: appId});
 		apps = getAppTree(appId);
