@@ -14,6 +14,12 @@ $materializeInputBorderInactive: 1px solid #E1E4E8;
 $materializeInputBorderActive: 1px solid #4AAFE2;
 $actionColor1: #0098DC;
 $tableHover: #FDFDFD;
+
+//Buttons
+$btnSocialColor: #76D4E1;
+$twitterColor: #55ACEE;
+$facebookColor: #3B5998;
+$linkedInColor: #0077B5;
 //Fonts
 //$fwLight: 'Avenir 35 Light';
 $fwLight: 100;
@@ -363,6 +369,10 @@ main {
 	position: relative;
 }
 
+.single-page-container {
+	padding-top: 1em;
+}
+
 .btn-share {
 	background-color: $actionColor1;
 }
@@ -653,6 +663,65 @@ h4.modal-title {
 [type="checkbox"].filled-in:checked + label:after {
 	border: 2px solid $actionColor1;
   	background-color: $actionColor1;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+// Social Share Buttons //
+///////////////////////////////////////////////////////////////////////////////////////
+
+.btn-social {
+	padding: 0.3rem 1rem;
+	border-radius: 0;
+	text-transform: none;
+	height: auto;
+	background-color: $btnSocialColor;
+	&:hover {
+		background-color: saturate($btnSocialColor, 10%);
+	}
+}
+
+.btn-social:not(:last-child) {
+	margin-right: 15px;
+}
+
+.btn-twitter {
+	background-color: $twitterColor;
+	&:hover {
+		background-color: saturate($twitterColor, 10%);
+	}
+}
+
+.btn-facebook {
+	background-color: $facebookColor;
+	&:hover {
+		background-color: saturate($facebookColor, 10%);
+	}
+}
+
+.btn-linkedin {
+	background-color: $linkedInColor;
+	&:hover {
+		background-color: saturate($linkedInColor, 10%);
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+// App Detail //
+///////////////////////////////////////////////////////////////////////////////////////
+
+.app-detail .control-label {
+	display: none;
+}
+
+.app-detail .form-group {
+	padding-top: 0.2em;
+	padding-bottom: 2em;
+}
+
+.studio-url {
+	margin-top: 2em;
+	padding-bottom: 1em;
+	border-bottom: 1px solid $bodyDividerColor;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
