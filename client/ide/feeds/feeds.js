@@ -2,7 +2,7 @@ Template.DataFeedsHeader.events({
 	"click .header-action-1": function(e, tmpl) {
 		e.preventDefault();
 		menuOps();
-		$('.add-new-item select').material_select();
+		// $('.add-new-item select').material_select();
 	}
 });
 
