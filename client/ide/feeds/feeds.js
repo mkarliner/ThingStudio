@@ -1,3 +1,7 @@
+Template.DataFeedsHeader.onRendered(function() {
+	$('select').material_select();
+});
+
 Template.DataFeedsHeader.events({
 	"click .header-action-1": function(e, tmpl) {
 		e.preventDefault();

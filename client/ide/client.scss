@@ -5,7 +5,7 @@
 $white: #fff;
 $baseText: #858C9D;
 $fontSize: 12px;
-$fontFace: Avenir, Helvetica, sans-serif;
+$fontFace: AvenirLTStd-Roman, Helvetica, sans-serif;
 $appBodyBG: #EBF3F6;
 $green: #76D4E1;
 $appPadding: 35px;
@@ -101,6 +101,10 @@ html, body {
 html {
 	font-family: $fontFace;
 	background-color: $appBodyBG;
+	text-size-adjust: 100%;
+	text-rendering: optimizeLegibility;
+	-moz-osx-font-smoothing: grayscale;
+	-moz-font-feature-settings: "liga" on;
 }
 
 body {
@@ -173,6 +177,8 @@ label {
 		}
 	}
 	& p.section-header {
+		font-family: $fwHeavy;
+		letter-spacing: 0.05px;
 		font-size: $SBheaderSize;
 		padding-left: 10px;
 		line-height: 10px;
@@ -182,6 +188,7 @@ label {
 		line-height: $sidenavLiHeight;
 		text-transform: uppercase;
 		& a {
+			letter-spacing: 0.1px;
 			font-size: $fontSize;
 			line-height: $sidenavLiHeight;
 			height: $sidenavLiHeight;
@@ -284,6 +291,7 @@ label {
 ///////////////////////////////////////////////////////////////////////////////////////
 
 nav.top-nav {
+	overflow: hidden;
 	height: 52px;
 	background: $white;
 	border-bottom: $navBorder;
@@ -292,7 +300,7 @@ nav.top-nav {
 	& a {
 		color: $baseText;
 		font-size: 1.2 * $fontSize;
-		line-height: 51px;
+		line-height: 52px;
 		padding: 0 5px;
 	}
 	& a i {
@@ -306,12 +314,13 @@ nav.top-nav {
 	& li:first-child {
 		padding-left: 8px;
 		& i {
+			line-height: 46px;
 			margin-right: 5px;
 			float: left;
 		}
 	}
 	& .bcd {
-		line-height: 51px;
+		line-height: 56px;
 		font-family: $fwBook;
 		font-size: 17px;
 	}
@@ -347,17 +356,19 @@ h1 {
 }
 
 a.header-action-1 {
+	line-height: 5px;
+	font-family: $fwMedium;
 	color: $green;
 }
 
 .header-action-2 {
 	background-color: transparent;
 	border: 1px solid $headerActionButton2Color;
-	border-radius: 18px;
+	border-radius: 24px;
 	color: $baseText;
 	padding: 0 0.8rem;
-	height: 38px;
-	line-height: 37px;
+	height: 44px;
+	line-height: 45px;
 	box-shadow: none;
 	&:hover {
 		background-color: transparent;
@@ -370,7 +381,7 @@ a.header-action-1 {
 	height: 16px;
 	border-radius: 50%;
 	margin-right: 6px;
-	margin-top: 10px;
+	margin-top: 13px;
 }
 
 .status-active {
@@ -398,6 +409,7 @@ thead {
 }
 
 th {
+	font-family: $fwBlack;
 	font-size: 13px;
 	letter-spacing: 0.3px;
 	background: $white;
@@ -514,6 +526,7 @@ td:last-child, th:last-child {
 }
 
 table, .single-page-container {
+	font-family: $fwBook;
 	font-size: 14px;
 }
 
@@ -619,8 +632,8 @@ h4.modal-title {
 .single-page-container .form-group {
 	margin-bottom: 0.7rem;
 	border-bottom: 1px solid $bodyDividerColor;
-	padding-top: 1.5em;
-	padding-bottom: 2.7em;
+	padding-top: 1.2em;
+	padding-bottom: 2.4em;
 }
 
 .single-page-container input {
@@ -639,9 +652,14 @@ h4.modal-title {
 	padding-left: 0;
 }
 
+.tabs .tab {
+	letter-spacing: 0.6px;
+}
+
 .tabs .tab a {
 	color: $baseText;
 	font-family: $fwBlack;
+	font-size: $fontSize * 1.08333;
 }
 
 .tabs .tab a:hover {
