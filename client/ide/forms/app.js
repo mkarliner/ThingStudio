@@ -5,9 +5,21 @@ Template.materializeRadio.helpers({
 });
 
 Template.updateAppsForm.helpers({
+  log: function() {
+    console.log("updateAppsdata")
+    console.dir(this)
+  },
   share_url: function(){
     // console.log('share:' + this)
     return "http://" + Meteor.settings.public.domain + "/view/app/" + this._id;
+  },
+  studio_url: function() {
+    return "http://" + Meteor.settings.public.domain + "/apps/" + this._id;
+  },
+  screenCount: function() {
+    return Screens.find({
+      appId: this._id
+    }).count();
   }
 })
 
