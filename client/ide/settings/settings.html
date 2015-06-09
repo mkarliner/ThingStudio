@@ -6,25 +6,23 @@
 
 <template name="SettingsBody">
 	<div class="top-row">
-		<div class="col s3 tabs-container">
+		<div class="col s2 tabs-container">
 			<ul class="tabs">
 				<li class="tab col s3"><a class="active" href="#test1">Your Info</a></li>
-				<li class="tab col s3"><a href="#test2">Notifications</a></li>
 			</ul>
 		</div>
 		<div class="clearfix"></div>
 	</div>
 	<div class="single-page-container">
 		<div id="test1" class="col s12">
-			
-			{{#autoForm collection="Meteor.users" doc=this id="profileForm" type="update" omitFields="showWelcome"}}
+			<!-- {{#autoForm collection="Meteor.users" doc=this id="profileForm" type="update" omitFields="showWelcome, birthday, gender, organization, bio, country"}}
 				<div>
 					<img src="{{gravatar}}">
 				</div>
 			      {{> afObjectField name='profile'}}
 			      <button type="submit" class="btn btn-primary">Update</button>
-			{{/autoForm}}
+			{{/autoForm}} -->
+			{{> updateSettingsForm}}
 		</div>
-		<div id="test2" class="col s12">Test 2</div>
 	</div>
 </template>

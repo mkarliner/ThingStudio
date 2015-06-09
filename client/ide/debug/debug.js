@@ -1,5 +1,4 @@
-
-Template.Debug.helpers({
+Template.debugNew.helpers({
 	feeds: function() {
 		return Feeds.find();
 	},

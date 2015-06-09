@@ -21,24 +21,32 @@ $twitterColor: #55ACEE;
 $facebookColor: #3B5998;
 $linkedInColor: #0077B5;
 //Fonts
-//$fwLight: 'Avenir 35 Light';
-$fwLight: 100;
-//$fwBook: 'Avenir 45 Book';
-$fwBook: 300;
-//$fwRoman: 'Avenir 55 Roman';
-$fwRoman: 400;
-//$fwMedium: 'Avenir 65 Medium';
-$fwMedium: 500;
+
+$fwLight: 'AvenirLTStd-Light';
+.fwLight {
+	font-family: $fwLight;
+}
+$fwBook: 'AvenirLTStd-Book';
+.fwBook {
+	font-family: $fwBook;
+}
+$fwRoman: 'AvenirLTStd-Roman';
+.fwRoman {
+	font-family: $fwRoman;
+}
+$fwMedium: 'AvenirLTStd-Medium';
 .fwMedium {
-	font-weight: $fwMedium;
+	font-family: $fwMedium;
 }
-//$fwHeavy: 'Avenir 85 Heavy';
-$fwHeavy: 700;
+$fwHeavy: 'AvenirLTStd-Heavy';
 .fwHeavy {
-	font-weight: $fwHeavy;
+	font-family: $fwHeavy;
 }
-//$fwBlack: 'Avenir 95 Black';
-$fwBlack: 900;
+$fwBlack: 'AvenirLTStd-Black';
+.fwBlack {
+	font-family: $fwBlack;
+}
+
 
 //Sidebar
 $sideNavWidth: 220px;
@@ -98,6 +106,8 @@ html {
 body {
 	color: $baseText;
 	font-size: $fontSize;
+	font-weight: normal;
+	font-style: normal;
 }
 
 header, main, footer, nav.top-nav {
@@ -141,12 +151,17 @@ h2 {
 	color: $baseText;
 }
 
+label {
+	font-size: 1.1em;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////
 // Sidebar //
 ///////////////////////////////////////////////////////////////////////////////////////
 
 .side-nav {
 	width: 220px;
+	font-family: $fwBook;
 }
 
 .side-nav.fixed {
@@ -273,6 +288,7 @@ nav.top-nav {
 	background: $white;
 	border-bottom: $navBorder;
 	box-shadow: none;
+	font-family: $fwLight;
 	& a {
 		color: $baseText;
 		font-size: 1.2 * $fontSize;
@@ -296,7 +312,7 @@ nav.top-nav {
 	}
 	& .bcd {
 		line-height: 51px;
-		font-weight: $fwBook;
+		font-family: $fwBook;
 		font-size: 17px;
 	}
 	& .bcds {
@@ -325,7 +341,7 @@ header {
 
 h1 {
 	font-size: 2.25 * $fontSize;
-	font-weight: $fwBook;
+	font-family: $fwBook;
 	color: $headerColor;
 	margin: 0;
 }
@@ -527,7 +543,7 @@ table, .single-page-container {
 
 // .table-advanced-edit {
 // 	color: $baseText;
-// 	font-weight: $fwBlack;
+// 	font-family: $fwBlack;
 // 	text-decoration: underline;
 // 	margin-top: 5px;
 // }
@@ -595,8 +611,8 @@ h4.modal-title {
 .single-page-container .control-label {
 	display: inline-block;
 	text-align: left;
-	width: 7em;
-	font-weight: $fwHeavy;
+	width: 9em;
+	font-family: $fwHeavy;
 	color: $baseText;
 }
 
@@ -616,7 +632,7 @@ h4.modal-title {
 }
 
 .fw-regular {
-	font-weight: $fwRoman;
+	font-family: $fwRoman;
 }
 
 .row .tabs-container {
@@ -625,7 +641,7 @@ h4.modal-title {
 
 .tabs .tab a {
 	color: $baseText;
-	font-weight: $fwBlack;
+	font-family: $fwBlack;
 }
 
 .tabs .tab a:hover {
@@ -737,6 +753,26 @@ span.title {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
+// Prorifle & Settings //
+///////////////////////////////////////////////////////////////////////////////////////
+
+.panel-heading {
+	display: none;
+}
+
+.settings-picture {
+	height: 10em;
+	& label {
+		padding-top: 2em;
+	}
+	& img {
+		position: absolute;
+		border: $picBorder;
+	}
+
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
 // App Footer //
 ///////////////////////////////////////////////////////////////////////////////////////
 
@@ -756,9 +792,11 @@ footer {
 // Login Form & Preloader //
 ///////////////////////////////////////////////////////////////////////////////////////
 
-.login-page-wrapper {
-	background: $darkBase;
-}
+// .at-pwd-form {
+// 	background: $darkBase;
+// }
+
+
 
 .spinner-container {
 	float: left;

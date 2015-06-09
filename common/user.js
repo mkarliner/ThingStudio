@@ -21,6 +21,10 @@ Schemas.UserProfile = new SimpleSchema({
         regEx: /^[a-zA-Z]{2,25}$/,
         optional: true
     },
+    location: {
+        type: String,
+        optional: true
+    },
     birthday: {
         type: Date,
         optional: true
@@ -48,10 +52,10 @@ Schemas.UserProfile = new SimpleSchema({
         type: Schemas.UserCountry,
         optional: true
     },
-	showWelcome: {
-		type: Boolean,
-		defaultValue: true
-	}
+    showWelcome: {
+    	type: Boolean,
+    	defaultValue: true
+    }
 });
 
 Schemas.User = new SimpleSchema({
@@ -63,11 +67,14 @@ Schemas.User = new SimpleSchema({
         type: [Object],
         // this must be optional if you also use other login services like facebook,
         // but if you use only accounts-password, then it can be required
+        minCount: 1,
+        maxCount: 1,
         optional: true
     },
     "emails.$.address": {
         type: String,
-        regEx: SimpleSchema.RegEx.Email
+        regEx: SimpleSchema.RegEx.Email,
+        label: "Email address"
     },
     "emails.$.verified": {
         type: Boolean

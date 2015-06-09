@@ -1,11 +1,6 @@
 <template name="AppTopNav">
 
-	<ul id="dropdown1" class="dropdown-content">
-		<li><a href="#!">one</a></li>
-		<li><a href="#!">two</a></li>
-		<li class="divider"></li>
-		<li><a href="#!">three</a></li>
-	</ul>
+	{{> debugNew}}
 
 	<nav class="top-nav">
 		<ul class="breadcrumb">
@@ -21,7 +16,7 @@
 
 <template name="BreadcrumbsContent">
 	{{#contentFor "breadcrumbs"}}
-		<li><a href="/dashboard"><i class="mdi-action-home"></i><span class="fwBlack">Home</span></a></li>
+		<li><a href="/dashboard"><i class="mdi-action-home"></i><span class="fwHeavy">Home</span></a></li>
 		
 		{{#if route_base}}
 			{{#each route_base}}

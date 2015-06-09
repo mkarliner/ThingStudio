@@ -1,5 +1,5 @@
 Router.route("/debug", function() {
-	this.render("Debug");
+	this.render("debugNew");
 });
 
 

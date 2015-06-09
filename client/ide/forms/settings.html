@@ -1,0 +1,16 @@
+<template name="updateSettingsForm">
+	<div class="form-group settings-picture">
+		<label class="control-label">Picture</label>
+		<img class="circle" src="{{gravatar}}">
+	</div>
+	{{#autoForm collection="Meteor.users" id="settingsForm" type="update" doc=this}}
+		
+		{{> afObjectField name='profile' omitFields="profile.showWelcome, profile.birthday, profile.gender, profile.organization, profile.website, profile.bio, profile.country"}}
+		<!-- {{> afQuickField name='firstName' }}
+		{{> afQuickField name='lastName' }}
+		{{> afQuickField name='location' }} -->
+		{{> afQuickField name='emails' omitFields="emails.0.verified"}}
+		<a href="">Change password</a>
+		<button type="submit" class="btn">Save Settings</button>
+	{{/autoForm}}
+</template>

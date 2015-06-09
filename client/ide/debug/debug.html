@@ -1,4 +1,35 @@
-<template name="Debug">
+<template name="debugNew">
+	<div id="debug" class="debug">
+		<h2>Feeds Debugger</h2>
+		<h3>Publish Feeds</h3>
+		<table class="table">
+			<tr>
+				<th>Feed</th>
+				<th>Topic</th>
+				<th>Payload</th>
+			</tr>
+			{{#each messages }}
+				<tr>
+					<td>{{feed}}</td>
+					<td>{{topic}}</td>
+
+					<td>{{payload}}</td>
+				</tr>
+			{{/each}}
+		</table>
+		<h3>Subscribe Feeds</h3>
+		<table class="table">
+			{{#each outbox }}
+				<tr>
+					<td>{{topic}}</td>
+					<td>{{payload}}</td>
+				</tr>
+			{{/each}}
+		</table>
+		<div class="screen-errors">Runtime Errors: {{runtimeErrors}}</div>
+	</div>
+</template>
+<!-- <template name="Debug">
 
 <h1>	Messages In </h1>
 	<table class="table">
@@ -25,5 +56,5 @@
 			</tr>
 		{{/each}}
 	</table>
-<div class="screen-errors">Runtime Errors: {{runtimeErrors}}</div>
-</template>
+
+</template> -->
