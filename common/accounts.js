@@ -50,3 +50,4 @@ AccountsTemplates.configure({
     },
 });
 
+AccountsTemplates.configureRoute('changePwd');
