@@ -1,32 +1,52 @@
 <template name="debugNew">
-	<div id="debug" class="debug">
+	<div id="debug" class="debug z-depth-1">
 		<h2>Feeds Debugger</h2>
-		<h3>Publish Feeds</h3>
-		<table class="table">
-			<tr>
-				<th>Feed</th>
-				<th>Topic</th>
-				<th>Payload</th>
-			</tr>
-			{{#each messages }}
-				<tr>
-					<td>{{feed}}</td>
-					<td>{{topic}}</td>
+		
+		<div class="debug-body">
+		
+			<h3>Publish Feeds</h3>
+			<table class="striped">
+				<thead>
+					<tr>
+						<th>Feed Title</th>
+						<th>Topic</th>
+						<th>Payload</th>
+					</tr>
+				</thead>
+				<tbody>
+					{{#each messages }}
+						<tr>
+							<td>{{feed}}</td>
+							<td>{{topic}}</td>
 
-					<td>{{payload}}</td>
-				</tr>
-			{{/each}}
-		</table>
-		<h3>Subscribe Feeds</h3>
-		<table class="table">
-			{{#each outbox }}
-				<tr>
-					<td>{{topic}}</td>
-					<td>{{payload}}</td>
-				</tr>
-			{{/each}}
-		</table>
-		<div class="screen-errors">Runtime Errors: {{runtimeErrors}}</div>
+							<td>{{payload}}</td>
+						</tr>
+					{{/each}}
+				</tbody>
+			</table>
+
+			<h3>Subscribe Feeds</h3>
+			
+			<table class="striped">
+				<thead>
+					<tr>
+						<th>Feed Title</th>
+						<th>Topic</th>
+						<th>Payload</th>
+					</tr>
+				</thead>
+				<tbody>
+					{{#each outbox }}
+						<tr>
+							<td></td>
+							<td>{{topic}}</td>
+							<td>{{payload}}</td>
+						</tr>
+					{{/each}}
+				</tbody>
+			</table>
+			<div class="screen-errors">Runtime Errors: {{runtimeErrors}}</div>	
+		</div>
 	</div>
 </template>
 <!-- <template name="Debug">

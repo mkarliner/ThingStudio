@@ -14,6 +14,9 @@ $materializeInputBorderInactive: 1px solid #E1E4E8;
 $materializeInputBorderActive: 1px solid #4AAFE2;
 $actionColor1: #0098DC;
 $tableHover: #FDFDFD;
+$tableStripe: #FBFFFD;
+$errorBorderColor: #C3323E;
+$errorBorder: 1px solid $errorBorderColor;
 
 //Buttons
 $btnSocialColor: #76D4E1;
@@ -157,6 +160,10 @@ h2 {
 
 label {
 	font-size: 1.1em;
+}
+
+table.striped tbody tr:nth-child(odd) {
+	background-color: $tableStripe;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -338,6 +345,70 @@ nav.top-nav {
 	line-height: 46px;
 }
 
+.debug {
+	display: none;
+	background-color: $white;
+	z-index: 2;
+	position: absolute;
+	top: 52px;
+	right: 0;
+	width: 550px;
+	max-height: 700px;
+	border: $navBorder;
+	& table {
+		margin-bottom: 2em;
+	}
+	& h2 {
+		background-color: $appBodyBG;
+		font-family: $fwBook;
+		font-size: $fontSize * 1.666667;
+		color: $headerColor;
+		padding: 0.4em 15px;
+		margin: 0;
+	}
+	& h3 {
+		color: $headerColor;
+		text-transform: uppercase;
+		font-family: $fwBlack;
+		padding-left: 15px;
+		margin-top: 0.8em;
+		margin-bottom: 0em;
+	}
+	& th {
+		font-family: $fwHeavy;
+		text-transform: capitalize;
+		color: $headerColor;
+	}
+	& td {
+		padding-top: 4px;
+		padding-bottom: 4px;
+	}
+	& td:first-child, th:first-child {
+		padding-left: 15px;
+	}
+	& td:last-child, th:last-child {
+		padding-right: 15px;
+	}
+}
+
+.debug.debug-open {
+	display: block;
+}
+
+.debug-body {
+	
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+// Error Reporting //
+///////////////////////////////////////////////////////////////////////////////////////
+
+.access-error, .screen-errors {
+	border: $errorBorder;
+	color: $errorBorderColor;
+	background-color: lighten($errorBorderColor, 50%);
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////
 // App Header //
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -356,7 +427,8 @@ h1 {
 }
 
 a.header-action-1 {
-	line-height: 5px;
+	line-height: 7px;
+	font-size: $fontSize * 1.0833;
 	font-family: $fwMedium;
 	color: $green;
 }
@@ -641,6 +713,7 @@ h4.modal-title {
 }
 
 .form-group input {
+	font-family: $fwBook;
 	background: $white;
 }
 

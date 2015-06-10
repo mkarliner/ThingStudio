@@ -3,6 +3,19 @@ Template.AppTopNav.onRendered(function() {
     	$('.tnconn.tooltipped').tooltip({delay: 400});
 });
 
+Template.AppTopNav.events({
+	'click .debug-dropdown': function(e, tmpl) {
+		e.preventDefault();
+		debugOps();
+
+		// $(document).on('click', function(event) {
+		// 	if (!$(event.target).closest('.debug').length) {
+		// 		$('.debug').hide();
+		// 	}
+		// });
+	}
+});
+
 Template.AppTopNav.helpers({
 	currentConnectionName: function() {
 		app = getCurrentConnection;
