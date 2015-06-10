@@ -198,9 +198,20 @@ AutoForm.hooks({
 					setCredentials({username: cred.username, password: cred.password})
 				}
 			}
-		}
+		},
 
-	
+		updateSettingsForm: {
+			before: {
+				update: function(err, res){
+					console.log("BEFORE SETTINGS ", err, res, this )
+				}
+			},
+			after: {
+				update: function(err,res){
+					console.log("AFTER SETTINGS ", this, err, res)
+				}
+			}
+		}
 
 
 

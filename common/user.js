@@ -77,6 +77,7 @@ Schemas.User = new SimpleSchema({
         label: "Email address"
     },
     "emails.$.verified": {
+		optional: true,
         type: Boolean
     },
     createdAt: {
