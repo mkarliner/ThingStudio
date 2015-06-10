@@ -255,6 +255,9 @@ Router.route("/profile", {
 Router.route("/settings", {
 	name: "Settings",
 	controller: "ProfileController",
+	data: function() {
+		return Meteor.user();
+	},
 	action: function() {
 		if ( !this.ready() ) {
 			this.render("Loading", {
