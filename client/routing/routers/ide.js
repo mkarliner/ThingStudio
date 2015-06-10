@@ -348,3 +348,17 @@ Router.route("/people/:username", {
 		}	
 	}
 })
+
+Router.route("/debug", {
+	name: "Debug",
+	controller: "IDEController",
+	action: function() {
+		if ( !this.ready() ) {
+			this.render("Loading", {
+				data: "Debug"
+			});
+		} else {
+			renderYields(this, 'Debug')
+		}	
+	}
+})
