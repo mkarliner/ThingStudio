@@ -27,7 +27,7 @@ Schemas.Connection = new SimpleSchema({
 		//Provide credentials from server store.
 		type: Boolean,
 		defaultValue: false,
-		label: "Server Credentials",
+		label: "Use Server Credentials",
 		autoform: {
 			afFieldInput: {
 				type: 'boolean-checkbox-M',
