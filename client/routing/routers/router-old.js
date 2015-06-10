@@ -1,6 +1,6 @@
-Router.route("/debug", function() {
-	this.render("debugNew");
-});
+// Router.route("/debug", function() {
+// 	this.render("debugNew");
+// });
 
 
 
