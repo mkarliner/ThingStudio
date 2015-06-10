@@ -1,6 +1,7 @@
 Template.AppTopNav.onRendered(function() {
     $(".dropdown-button").dropdown();
-    	$('.tnconn.tooltipped').tooltip({delay: 400});
+    	$('.tooltipped').tooltip({delay: 400});
+    	// $('.tooltipped').tooltip({delay: 400});
 });
 
 Template.AppTopNav.events({
