@@ -819,8 +819,8 @@ pre[name="html"], pre[name="js"] {
 }
 
 pre.ace_editor {
-	line-height: 1.45em;
-	font-size: 14px;
+	line-height: 1.4em;
+	font-size: 13px;
 }
 
 pre[name="html"], pre[name="js"], pre.ace_editor {
@@ -831,6 +831,7 @@ pre[name="html"], pre[name="js"], pre.ace_editor {
 	// height: calc(100% - #{$sideNavWidth});
 	height: 500px;
 	min-width:  800px;
+	border-radius: 4px;
 }
 
 #archycss {
@@ -843,27 +844,27 @@ pre[name="html"], pre[name="js"], pre.ace_editor {
 	min-width:  600px;
 }
 
-.ace-cobalt .ace_meta.ace_tag {
+pre.ace-cobalt .ace_meta.ace_tag {
 	color: $editorBlue;
 }
 
-.ace-cobalt .ace_string {
+pre.ace-cobalt .ace_string {
 	color: $brightGreen;
 }
 
-.ace-cobalt .ace_keyword, .ace-cobalt .ace_meta {
+pre.ace-cobalt .ace_keyword, pre.ace-cobalt .ace_meta {
 	color: $editorGray;
 }
 
-.ace-cobalt .ace_entity {
+pre.ace-cobalt .ace_entity {
 	color: $green;
 }
 
-.ace-cobalt .ace_storage, .ace-cobalt .ace_variable {
+pre.ace-cobalt .ace_storage, pre.ace-cobalt .ace_variable {
 	color: $editorOrange;
 }
 
-.ace-cobalt .ace_constant, .ace-cobalt .ace_constant.ace_character, .ace-cobalt .ace_constant.ace_character.ace_escape, .ace-cobalt .ace_constant.ace_other {
+pre.ace-cobalt .ace_constant, pre.ace-cobalt .ace_constant.ace_character, pre.ace-cobalt .ace_constant.ace_character.ace_escape, pre.ace-cobalt .ace_constant.ace_other {
 	color: $white;
 }
 
