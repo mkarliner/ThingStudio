@@ -801,6 +801,13 @@ div.ace_content {
 	display: none;
 }
 
+#preview {
+	background-color: $darkBase;
+	max-width: 600px;
+	margin: 0 auto;
+	padding: 10px;
+}
+
 #html .form-group, #js .form-group {
 	padding-top: 0;
 	padding-bottom: 0;
