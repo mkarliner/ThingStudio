@@ -1,20 +1,6 @@
-
-// AutoForm.debug();
-
-
-// devOrientHandler = function(ev) {
-// 	Session.set("deviceOrientation", ev);
-// }
-//
-// if (window.DeviceOrientationEvent) {
-//  console.log("DeviceOrientation is supported");
-//   window.addEventListener('deviceorientation', devOrientHandler, false);
-// }
-
 Tracker.autorun(function(){
 	caId = Session.get("currentAppId");
 	ca = Apps.findOne({_id: caId});
-
 	if(!ca){
 		return[];
 	}
@@ -28,7 +14,6 @@ Tracker.autorun(function(){
 		appTree.push({id: ca._id, title: ca.title});
 	}
 	appTree.reverse();
-
 	Session.set("appTreeList", appTree);
 });
 
@@ -36,6 +21,7 @@ Tracker.autorun(function() {
 	// Set currentApp based on currentAppId
 	var id = Session.get("currentAppId");
 	var app = Apps.findOne({ _id: id });
+	
 	if (app) {
 		Session.set("currentApp", app);
 	} else {
@@ -52,10 +38,19 @@ Meteor.startup(function(){
 	Feeds.after.update(function(userId, doc) {
 		if(doc.pubsub == "Subscription") {
 			mqttClient.subscribe(doc.subscription);
-		}	
+		}
 	});
+	Meteor.subscribe("userData", {
+		onReady: function() {},
+	});
+	Meteor.subscribe("userStatus");
+	Meteor.subscribe("userList");
+	// window.onerror = function (errorMsg, url, lineNumber, column, errorObj) {
+	// 	    alert('Error: ' + errorMsg + ' Script: ' + url + ' Line: ' + lineNumber
+	// 	    + ' Column: ' + column + ' StackTrace: ' +  errorObj);
+	// 		Session.set("runtimeErrors", errorMsg);
+	// 	} 
 });
-
 
 Accounts.onLogin(function(){
 	// This is not associated with any route.
@@ -103,46 +98,21 @@ Accounts.onLogin(function(){
 	})
 })
 
-Meteor.startup(function() {
+// Accounts.onCreateUser(function(options, user) {
+//     //pass the surname in the options
+//
+//     user.profile['opt_in'] = options.opt_in;
+//
+//     return user;
+// }
 
-	// window.onerror = function (errorMsg, url, lineNumber, column, errorObj) {
-	// 	    alert('Error: ' + errorMsg + ' Script: ' + url + ' Line: ' + lineNumber
-	// 	    + ' Column: ' + column + ' StackTrace: ' +  errorObj);
-	// 		Session.set("runtimeErrors", errorMsg);
-	// 	} 
+// AutoForm.debug();
 
-	
-
-	
-		
-	
-
-	
-	
-
-	
-		Meteor.subscribe("userData", {
-			onReady: function() {},
-		});
-
-		Meteor.subscribe("userStatus");
-		
-		Meteor.subscribe("userList");
-
-	});
-
-		AccountsTemplates.addField({
-			_id: "mailing_opt_out",
-			type: "checkbox",
-			displayName: "Do not subscribe me to the mailing list",
-		});
-
-		// Accounts.onCreateUser(function(options, user) {
-		//     //pass the surname in the options
-		//
-		//     user.profile['opt_in'] = options.opt_in;
-		//
-		//     return user;
-		// }
-
-	
+// devOrientHandler = function(ev) {
+// 	Session.set("deviceOrientation", ev);
+// }
+//
+// if (window.DeviceOrientationEvent) {
+//  console.log("DeviceOrientation is supported");
+//   window.addEventListener('deviceorientation', devOrientHandler, false);
+// }

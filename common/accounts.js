@@ -51,3 +51,8 @@ AccountsTemplates.configure({
 });
 
 AccountsTemplates.configureRoute('changePwd');
+AccountsTemplates.addField({
+	_id: "mailing_opt_out",
+	type: "checkbox",
+	displayName: "Do not subscribe me to the mailing list",
+});

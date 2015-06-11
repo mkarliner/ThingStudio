@@ -61,6 +61,12 @@
 // 	}
 // );
 
+// redrawSideNavSelect = function() {
+// 	$('.side-nav select').material_select('destroy');
+// 	$('.sidenav-app-selector').remove();
+// 	Blaze.render(Template.AppSideNavSelect, $('.side-nav div.select-parent')[0]);
+// }
+
 // Template.registerHelper("deviceOrientation", function(){
 // 	console.log("DEVO ", Session.get("deviceOrientation"))
 // 	return Session.get("deviceOrientation");

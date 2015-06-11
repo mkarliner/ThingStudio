@@ -144,7 +144,7 @@ Router.route("/feeds", {
 });
 
 Router.route("/screens/:_id/edit", {
-	name: "EditSingleScreen",
+	name: "EditScreen",
 	controller: "IDEController",
 	data: function() {
 		Session.set("currentScreenPage", this.params._id);
@@ -156,7 +156,7 @@ Router.route("/screens/:_id/edit", {
 				data: "Template"
 			});
 		} else {
-			renderYields(this, 'EditSingleScreen');
+			renderYields(this, 'EditScreen');
 		}
 	}
 });

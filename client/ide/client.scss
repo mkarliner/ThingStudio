@@ -375,7 +375,7 @@ nav.top-nav {
 		margin-bottom: 0em;
 	}
 	& th {
-		font-family: $fwHeavy;
+		font-family: $fwMedium;
 		text-transform: capitalize;
 		color: $headerColor;
 	}
@@ -773,6 +773,64 @@ h4.modal-title {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
+// Template Editor //
+///////////////////////////////////////////////////////////////////////////////////////
+
+.ace_print-margin {
+	display: none;
+}
+
+div.ace_gutter {
+	background-color: $darkBase;
+}
+
+div.ace_layer.ace_gutter-layer.ace_folding-enabled {
+	background-color: darken($darkBase, 5%);
+}
+
+div.ace_content {
+	background-color: $darkBase;	
+}
+
+#html .control-label, #js .control-label {
+	display: none;
+}
+
+#html .form-group, #js .form-group {
+	padding-top: 0;
+	padding-bottom: 0;
+	margin-bottom: 0;
+}
+
+pre[name="html"], pre[name="js"] {
+	line-height: 0;
+}
+
+pre.ace_editor {
+	line-height: 1.2em;
+}
+
+pre[name="html"], pre[name="js"], pre.ace_editor {
+	margin: 0;
+}
+
+#archy {
+	// height: calc(100% - #{$sideNavWidth});
+	height: 500px;
+	min-width:  800px;
+}
+
+#archycss {
+	height: 300px;
+	min-width:  600px;
+}
+
+#archyjs {
+	height: 400px;
+	min-width:  600px;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
 // Social Share Buttons //
 ///////////////////////////////////////////////////////////////////////////////////////
 
@@ -886,7 +944,6 @@ footer {
 // .at-pwd-form {
 // 	background: $darkBase;
 // }
-
 
 
 .spinner-container {
