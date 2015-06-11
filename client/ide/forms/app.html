@@ -9,7 +9,8 @@
 		<p><span class="fwHeavy">App Title</span> &mdash; Give your application a name</p>
 		{{> afQuickField name='title' }}
 		<p><span class="fwHeavy">Access Details</span> &mdash; Control whether other users can access this application, and various publishing options</p>
-		{{> afQuickField name='access' noselect=true options="allowed" typetype="select-radio-inline-M"}}
+		<!-- {{> afQuickField name='access' noselect=true options="allowed" typetype="select-radio-inline-M"}} -->
+		{{> afQuickField name='shareable' }} {{> afQuickField name='public' }}
 		<p class="fwHeavy">Sharing Options</p>
 
 		<a href="{{share_url}}" class="btn btn-social">Share app URL</a><a href="" class="btn btn-social btn-twitter">Share on Twitter</a><a href="" class="btn btn-social btn-facebook">Share on Facebook</a><a href="" class="btn btn-social btn-linkedin">Share on LinkedIn</a>
