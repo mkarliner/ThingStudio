@@ -8,6 +8,11 @@ $fontSize: 12px;
 $fontFace: AvenirLTStd-Roman, Helvetica, sans-serif;
 $appBodyBG: #EBF3F6;
 $green: #76D4E1;
+$brightGreen: #75D781;
+$editorGray: #CCCCCC;
+$editorOrange: #E4A163;
+$editorBlue: #BECEE0;
+$editorRed: #FF628C;
 $appPadding: 35px;
 $statusActive: #7ED321;
 $materializeInputBorderInactive: 1px solid #E1E4E8;
@@ -807,7 +812,8 @@ pre[name="html"], pre[name="js"] {
 }
 
 pre.ace_editor {
-	line-height: 1.2em;
+	line-height: 1.27em;
+	font-size: 14px;
 }
 
 pre[name="html"], pre[name="js"], pre.ace_editor {
@@ -828,6 +834,30 @@ pre[name="html"], pre[name="js"], pre.ace_editor {
 #archyjs {
 	height: 400px;
 	min-width:  600px;
+}
+
+.ace-cobalt .ace_meta.ace_tag {
+	color: $editorBlue;
+}
+
+.ace-cobalt .ace_string {
+	color: $brightGreen;
+}
+
+.ace-cobalt .ace_keyword, .ace-cobalt .ace_meta {
+	color: $editorGray;
+}
+
+.ace-cobalt .ace_entity {
+	color: $green;
+}
+
+.ace-cobalt .ace_storage, .ace-cobalt .ace_variable {
+	color: $editorOrange;
+}
+
+.ace-cobalt .ace_constant, .ace-cobalt .ace_constant.ace_character, .ace-cobalt .ace_constant.ace_character.ace_escape, .ace-cobalt .ace_constant.ace_other {
+	color: $white;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
