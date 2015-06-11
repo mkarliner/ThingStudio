@@ -18,7 +18,7 @@
 				<tr>
 					<td>{{title}}</td>
 					<!-- <td>{{parentTitle}}</td> -->
-					<td>{{access}}</td>
+					<td>{{shareable}}</td>
 					{{#if shareable}}
 						<td><a class="btn btn-share share-app" href="/apps/{{this._id}}">Share</a></td>
 					{{else}}
@@ -51,7 +51,7 @@
 				<tbody>
 					<tr>
 						<td>{{> afQuickField name='title' placeholder="App Title" class="first"}}</td>
-						<td>{{> afQuickField name='access' options="allowed"}}</td>
+						<td>{{> afQuickField name='shareable' options="allowed"}}</td>
 						<td></td>
 						<td>{{> afQuickField name='ancestor' placeholder="Ancestor App"}}</td>
 						<td>{{> afQuickField name='summary' placeholder="Short summary"}}</td>

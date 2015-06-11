@@ -81,7 +81,7 @@ Accounts.onLogin(function(){
 				//console.log("Creating default app on ready", Meteor.userId())
 				appId = Apps.insert({
 					title: "defaultApp",
-					access: "Private",
+					shareable: false,
 				});
 				Session.setPersistent("currentAppId", appId);
 				return;

@@ -56,7 +56,7 @@ Meteor.startup(function() {
 			app._id  = Apps.insert({
 				title: "defaultApp",
 				owner: u._id,
-				access: "Private"
+				shareable: false,
 			},{getAutoValues: false});
 		}
 		//Hook any orphan connections to app.

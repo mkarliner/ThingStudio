@@ -12,9 +12,12 @@
 		<!-- {{> afQuickField name='access' noselect=true options="allowed" typetype="select-radio-inline-M"}} -->
 		{{> afQuickField name='shareable' }} {{> afQuickField name='public' }}
 		<p class="fwHeavy">Sharing Options</p>
-
+		{{#if this.shareable}}
 		<a href="{{share_url}}" class="btn btn-social">Share app URL</a><a href="" class="btn btn-social btn-twitter">Share on Twitter</a><a href="" class="btn btn-social btn-facebook">Share on Facebook</a><a href="" class="btn btn-social btn-linkedin">Share on LinkedIn</a>
 		<p class="studio-url"><span class="fwHeavy">Studio URL:</span> {{studio_url}}</p>
+		{{else}}
+		<p>Make shareable to get sharing options</p>
+		{{/if}}
 		<p class="fwHeavy">Connection</p>
 		{{> afQuickField name='connection'}}
 		<p><span class="fwHeavy">Screens in this app</span> &mdash; {{screenCount}} total</p>
