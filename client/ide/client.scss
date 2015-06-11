@@ -211,6 +211,7 @@ table.striped tbody tr:nth-child(odd) {
 		float: left;
 		font-size: 1.5 * $fontSize;
 		padding-right: 10px;
+		margin-top: -2px;
 	}
 	& p.my-name {
 		position: relative;
@@ -222,7 +223,7 @@ table.striped tbody tr:nth-child(odd) {
 		& i {
 			position: absolute;
 			right: 0;
-			top: -4px;
+			top: -2px;
 			float: none;
 			display: inline;
 			padding: 0;
