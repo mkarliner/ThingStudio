@@ -19,7 +19,7 @@ if(boilerplate) {
 // Schemas = {};
 
 SimpleSchema.messages({
-	"errorType widgetName": "Widget names must contain a - character"
+	"regEx widgetName": "Widget names must contain a - character"
 })
 
 Schemas.Screen = new SimpleSchema({
