@@ -31,7 +31,7 @@ Template.AppsBody.helpers({
 		return Apps.find({})
 	},
 	shareable: function(){
-		if(this.access == "Shareable" || this.access=="Published") {
+		if(this.shareable) {
 			return true;
 		} else {
 			return false;

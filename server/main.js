@@ -126,7 +126,7 @@ Meteor.startup(function() {
 			appcurr =  Apps.find({_id: appId});
 			app = appcurr.fetch()[0]; 
 			console.log("APPACC ", app.access, appId)
-			if(app.access == "Shareable" || app.access == "Published") {
+			if(app.shareable) {
 				// console.log("Returning app", appcurr.fetch())
 				return appcurr;
 			} else {
@@ -141,7 +141,7 @@ Meteor.startup(function() {
 	Meteor.publish("connections", function(appId) {
 		apps = getAppTree(appId);
 		// console.log("Subscribing connections: ", appId,  app.access)
-		if(this.userId == app.owner || app.access == "Shareable") {
+		if(this.userId == app.owner || app.shareable) {
 			// console.log("Returning connections: ", apps )
 			return Connections.find({appId: {$in: apps}});
 		}
@@ -151,7 +151,7 @@ Meteor.startup(function() {
 		app = Apps.findOne({_id: appId});
 		apps = getAppTree(appId);
 		console.log("Subscribing screens: ", appId,  app.title, app.access)
-		if(this.userId == app.owner || app.access == "Shareable") {
+		if(this.userId == app.owner || app.shareable) {
 			// console.log("Returning screends: ", Screens.find({appId: appId}).fetch().length )
 			return Screens.find({appId: {$in: apps}});
 		}
@@ -174,7 +174,7 @@ Meteor.startup(function() {
 		app = Apps.findOne({_id: scr.appId});
 		apps = getAppTree(scr.appId);
 		console.log("Subscribing single scren screens: ", scr.appId,  app.title, app.access)
-		if(this.userId == app.owner || app.access == "Shareable") {
+		if(this.userId == app.owner || app.shareable) {
 			// console.log("Returning screends: ", Screens.find({appId: appId}).fetch().length )
 			return Screens.find({appId: {$in: apps}});
 		}
@@ -184,7 +184,7 @@ Meteor.startup(function() {
 		app = Apps.findOne({_id: appId});
 		apps = getAppTree(appId);
 		// console.log("Subscribing feeds: ", appId,  app.access)
-		if(this.userId == app.owner || app.access == "Shareable") {
+		if(this.userId == app.owner || app.shareable) {
 			// console.log("Returning feeds: ", Feeds.find({appId: appId}).fetch().length )
 			return Feeds.find({appId: {$in
 				
@@ -220,7 +220,7 @@ Meteor.startup(function() {
 		app = Apps.findOne({_id: appId});
 		apps = getAppTree(appId);
 		// console.log("Subscribing themes: ", appId,  app.access)
-		if(this.userId == app.owner || app.access == "Shareable") {
+		if(this.userId == app.owner || app.shareable) {
 			// console.log("Returning themes: ", Themes.find({appId: appId}).fetch().length )
 			return Themes.find({appId: {$in: apps}});
 		}

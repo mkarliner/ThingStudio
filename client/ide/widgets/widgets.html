@@ -10,13 +10,14 @@
 	<table>
 		{{> WidgetsTableWidths}}
 		<thead>
-			<tr cellpadding="10"><th>Widget Name</th><th>Action</th></tr>
+			<tr cellpadding="10"><th>Widget Name</th><th>Tag</th><th>Action</th></tr>
 		</thead>
 		<tbody>
 			<tr id="item-insert" class="spacer td-closed"><td></td></tr>
 			{{#each widgetlist}}
 				<tr>
 					<td>{{title}}</td>
+					<td>{{widgetName}}</td>
 					<td>{{{widgetTag}}} {{{widgetEndTag}}}</td>
 					<td><button class="btn"><a href="/screens/{{this._id}}">Edit & Preview</a></button><button class="btn"><a href="/screens/{{this._id}}/edit">Safe Edit</a></button>{{#afModal class="btn btn-danger" collection="Screens" operation="remove" doc=_id}} Delete {{/afModal}}</td>
 				</tr>

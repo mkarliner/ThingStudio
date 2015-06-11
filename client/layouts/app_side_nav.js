@@ -48,6 +48,9 @@ Template.AppSideNav.helpers({
 		} else {
 			return Meteor.user().username;
 		}
+	},
+	currentAppId: function(){
+		return Session.get("currentAppId");
 	}
 });
 

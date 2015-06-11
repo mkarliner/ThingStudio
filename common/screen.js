@@ -1,5 +1,6 @@
 Screens = new Mongo.Collection("screens");
 
+
 boilerplate = Screens.findOne({title: "VerySpecialSecretBoilerPlateScreen"});
 
 if(boilerplate) {
@@ -16,6 +17,10 @@ if(boilerplate) {
 }
 
 // Schemas = {};
+
+SimpleSchema.messages({
+	"errorType widgetName": "Widget names must contain a - character"
+})
 
 Schemas.Screen = new SimpleSchema({
 	title: {
@@ -101,7 +106,8 @@ Schemas.Screen = new SimpleSchema({
 	},
 	widgetName: {
 		type: String,
-		optional: true
+		optional: true,
+		regEx: /^[a-zA-Z_]+-[a-zA-Z_]+$/,
 	}
 	// public: {
 	// 	type: Boolean,
