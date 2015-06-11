@@ -95,7 +95,7 @@ Template.afAceJs.rendered = function() {
 	Tracker.autorun(function (e) {
 
 		editor = AceEditor.instance("archyjs", {
-			theme: "twilight",
+			theme: "cobalt",
 			mode: "javascript"
 		});
 
@@ -114,7 +114,7 @@ Template.afAceCss.rendered = function() {
 	Tracker.autorun(function (e) {
 
 		editor = AceEditor.instance("archycss", {
-			theme: "twilight",
+			theme: "cobalt",
 			mode: "css"
 		});
 
