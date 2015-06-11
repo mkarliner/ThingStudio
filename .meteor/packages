@@ -40,3 +40,4 @@ u2622:persistent-session
 ground:db
 gildaspk:autoform-modals-materialize@0.0.6
 aldeed:template-extension
+reactive-dict

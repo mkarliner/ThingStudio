@@ -1,3 +1,21 @@
+Template.WidgetsBody.created = function(){
+	InstantiateScreens();
+}
+
+Template.WidgetsBody.helpers({
+	widgetlist: function(){
+		wl =  Screens.find({ owner: Meteor.userId(), isWidget: true})
+		return wl;
+	},
+	widgetTag: function(){
+		console.log("WT: ", this)
+		return "<"+this.widgetName+">";
+	},
+	widgetEndTag: function(){
+		return "</"+this.widgetName+">";
+	}
+});
+
 Template.WidgetsHeader.events({
 	"click .header-action-1": function(e, tmpl) {
 		e.preventDefault();
@@ -15,9 +33,3 @@ Template.WidgetsNewItem.events({
 	}
 });
 
-Template.WidgetsBody.helpers({
-	widgetlist: function(){
-		wl =  Screens.find({ owner: Meteor.userId(), isWidget: true})
-		return wl;
-	}
-});
