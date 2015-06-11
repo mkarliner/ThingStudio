@@ -221,7 +221,7 @@ table.striped tbody tr:nth-child(odd) {
 		& i {
 			position: absolute;
 			right: 0;
-			top: 0px;
+			top: -4px;
 			float: none;
 			display: inline;
 			padding: 0;
@@ -827,21 +827,11 @@ pre[name="html"], pre[name="js"], pre.ace_editor {
 	margin: 0;
 }
 
-#archy {
+#archy, #archyjs, #archycss {
 	// height: calc(100% - #{$sideNavWidth});
 	height: 500px;
 	min-width:  800px;
 	border-radius: 4px;
-}
-
-#archycss {
-	height: 300px;
-	min-width:  600px;
-}
-
-#archyjs {
-	height: 400px;
-	min-width:  600px;
 }
 
 pre.ace-cobalt .ace_meta.ace_tag {
