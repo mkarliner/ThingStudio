@@ -131,13 +131,13 @@ compileTemplate = function(name, html_text, javascript) {
 			// console.log("RENDERED", this)
 			// console.log("RENDERED: ", this.findAll("[data-feed]"));
 		}
+		return({type: 'template', status: 'success', message: 'Template updated'});
 	} catch (err) {
 		// console.log('Error compiling template:' + html_text);
 		console.log('Error!', err);
 		// console.log(err.message);
 		Session.set("compilationErrors", err.message)
-		Session.set("alerts", {type: 'template', status: 'warning', message: err.message});
-		throwAlert(Session.get("alerts"));
+		return({type: 'template', status: 'warning', message: err.message});
 	}
 };
 
@@ -162,8 +162,8 @@ AutoForm.hooks({
 				delete Template[name]; //Remove the existing template instance.
 				//console.log("Updated Screen", template.data.doc.html);
 
-				compileTemplate(name, template.data.doc.html, template.data.doc.js);
-				Session.set("alerts", {type: 'template', status: 'success', message: 'Template updated'})
+				compret = compileTemplate(name, template.data.doc.html, template.data.doc.js);
+				Session.set("alerts", compret);
 				renderAlert(Session.get("alerts"));
 				if(template.data.doc.isWidget) {
 					try {
