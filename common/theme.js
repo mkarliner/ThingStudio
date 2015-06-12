@@ -39,11 +39,17 @@ Schemas.Theme = new SimpleSchema({
 		autoform: {
 			omit: true
 		},
-	},
-	public: {
-		type: Boolean,
-		defaultValue: false
-	}	
+	},	
+});
+
+Themes.before.insert(function(userId, doc) {
+	if(Meteor.isClient) {
+		// console.log("BEFOREHOOK ", userId, doc, Session.get("currentApp"));
+		if(!doc.css) {
+			doc.css = "#Insert CSS here"
+		}
+		doc.appId = Session.get("currentApp")._id;
+	}
 });
 
 Themes.attachSchema(Schemas.Theme);

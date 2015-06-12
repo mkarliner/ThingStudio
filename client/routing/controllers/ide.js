@@ -14,7 +14,8 @@ IDEController = RouteController.extend({
 			Meteor.subscribe('apps'),
 			Meteor.subscribe('connections', myCurrAppId),
 			Meteor.subscribe('feeds', myCurrAppId),
-			Meteor.subscribe('screens', myCurrAppId)
+			Meteor.subscribe('screens', myCurrAppId),
+			Meteor.subscribe('themes', myCurrAppId)
 		]
 	}
 });

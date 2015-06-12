@@ -22,6 +22,9 @@ Template.EditScreenBody.helpers({
 		if(this.owner != Meteor.userId()) {
 			return "This Screen is read - only, you can make edits, but they will have no effect. Go to 'Screens' and click 'Add Screen' to edit your own."
 		}
+	},
+	safeEdit: function(){
+		return this.safeEdit;
 	}
 });
 
