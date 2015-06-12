@@ -106,7 +106,7 @@ Accounts.onLogin(function(){
 //     return user;
 // }
 
-// AutoForm.debug();
+ AutoForm.debug();
 
 // devOrientHandler = function(ev) {
 // 	Session.set("deviceOrientation", ev);

@@ -13,7 +13,8 @@ AppViewerController = RouteController.extend({
 					}
 				}),
 				Meteor.subscribe('feeds', appId),
-				Meteor.subscribe('screens', appId)
+				Meteor.subscribe('screens', appId),
+				Meteor.subscribe('themes', appId)
 				// Meteor.subscribe('themes', appId),
 			];
 		} else {

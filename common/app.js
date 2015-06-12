@@ -63,6 +63,22 @@ Schemas.App = new SimpleSchema({
 			}
 		}
 	},
+	theme: {
+		type: String,
+		optional: true,
+		autoform: {
+			type: "select",
+			options: function(){
+				themes = Themes.find({}).fetch();
+				options = [];
+				var i;
+				for(i=0; i<themes.length; i++) {
+					options[i] = { label: themes[i].title, value: themes[i]._id};
+				}
+				return(options);
+			}
+		}
+	},
 	owner: {
 		type: String,
 		index: true,
