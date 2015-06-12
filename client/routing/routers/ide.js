@@ -147,6 +147,9 @@ Router.route("/screens/:_id/edit", {
 	name: "EditScreen",
 	controller: "IDEController",
 	data: function() {
+		if(!this.ready()){
+			return {};
+		}
 		Session.set("currentScreenPage", this.params._id);
 		scr = Screens.findOne({ _id: this.params._id });
 		scr.safeEdit = false;
