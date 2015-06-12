@@ -164,7 +164,7 @@ AutoForm.hooks({
 
 				compileTemplate(name, template.data.doc.html, template.data.doc.js);
 				Session.set("alerts", {type: 'template', status: 'success', message: 'Template updated'})
-		renderAlert(Session.get("alerts"));
+				renderAlert(Session.get("alerts"));
 				if(template.data.doc.isWidget) {
 					try {
 						console.log("Registering widget")
