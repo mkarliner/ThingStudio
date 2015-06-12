@@ -126,9 +126,8 @@ compileTemplate = function(name, html_text, javascript) {
 		if(javascript) {
 			jsout = eval(javascript)
 		}
+
 		Template[name].rendered = function(){
-			Session.set("alerts", {type: 'template', status: 'success', message: 'Template updated'})
-			renderAlert(Session.get("alerts"));
 			// console.log("RENDERED", this)
 			// console.log("RENDERED: ", this.findAll("[data-feed]"));
 		}
@@ -164,6 +163,8 @@ AutoForm.hooks({
 				//console.log("Updated Screen", template.data.doc.html);
 
 				compileTemplate(name, template.data.doc.html, template.data.doc.js);
+				Session.set("alerts", {type: 'template', status: 'success', message: 'Template updated'})
+		renderAlert(Session.get("alerts"));
 				if(template.data.doc.isWidget) {
 					try {
 						console.log("Registering widget")

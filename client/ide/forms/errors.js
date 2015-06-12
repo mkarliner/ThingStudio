@@ -5,9 +5,7 @@ Template.Alerts.helpers({
 });
 
 Template.Alert.helpers({
-	alertStatus: function() {
-			return this.status
-	},
+	
 	alertType: function() {
 		if (this.type === 'template' && this.status === 'success') {
 			return 'Success: '
