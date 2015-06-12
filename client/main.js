@@ -30,16 +30,7 @@ Tracker.autorun(function() {
 });
 
 Meteor.startup(function(){
-	Feeds.after.insert(function(userId, doc) {
-		if(doc.pubsub == "Subscription") {
-			mqttClient.subscribe(doc.subscription);
-		}	
-	});
-	Feeds.after.update(function(userId, doc) {
-		if(doc.pubsub == "Subscription") {
-			mqttClient.subscribe(doc.subscription);
-		}
-	});
+
 	Meteor.subscribe("userData", {
 		onReady: function() {},
 	});

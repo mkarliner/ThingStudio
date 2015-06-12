@@ -148,7 +148,29 @@ Router.route("/screens/:_id/edit", {
 	controller: "IDEController",
 	data: function() {
 		Session.set("currentScreenPage", this.params._id);
-		return Screens.findOne({ _id: this.params._id });
+		scr = Screens.findOne({ _id: this.params._id });
+		scr.safeEdit = false;
+		return scr;
+	},
+	action: function() {
+		if ( !this.ready() ) {
+			this.render("Loading", {
+				data: "Template"
+			});
+		} else {
+			renderYields(this, 'EditScreen');
+		}
+	}
+});
+
+Router.route("/screens/:_id/safeedit", {
+	name: "SafeEditScreen",
+	controller: "IDEController",
+	data: function() {
+		Session.set("currentScreenPage", this.params._id);
+		scr =  Screens.findOne({ _id: this.params._id });
+		scr.safeEdit = true;
+		return scr;
 	},
 	action: function() {
 		if ( !this.ready() ) {
