@@ -28,7 +28,7 @@ Template.ScreensBody.helpers({
 		return wl;
 	},
 	screenlist: function(){
-		return Screens.find({ owner: Meteor.userId(), isWidget: false})
+		return Screens.find({ owner: Meteor.userId()})
 	},
 	owner: function() {
 		return 

@@ -202,17 +202,25 @@ AutoForm.hooks({
 			onSubmit: function(a,b,c) {
 				console.log("SUBMIT ", a, b, c)
 			},
-			// before: {
-			// 	update: function(docId, mod, template) {
-			// 		console.log("BEFORE CRED ", docId, mod, template);
-			// 		return mod;
-			// 	}
-			// },
+			before: {
+				update: function(mod) {
+					console.log("BEFORE CRED ", mod, mod.$set.username, mod.$set.password);
+					setCredentials({username: mod.$set.username, password: mod.$set.password});
+					if(mod.$set.save) {
+						console.log("Saving credentials")
+						return mod;
+					} else {
+						console.log("Not saving credentials")
+						return false;
+					}
+					
+				}
+			},
 			after: {
 				update: function(err, res, temp) {
 					console.log("AFTER CRED UPDATE: ", this, err, res, temp);
-					cred = Credentials.findOne({_id: this.docId});
-					setCredentials({username: cred.username, password: cred.password})
+					// cred = Credentials.findOne({_id: this.docId});
+					// setCredentials({username: cred.username, password: cred.password})
 				}
 			}
 		},

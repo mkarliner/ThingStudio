@@ -32,6 +32,7 @@ Meteor.startup(function(){
 	    },
 	    save: {
 	        type: Boolean,
+			defaultValue: false,
 	        label: "Save?",
 	    },
 		connection: {

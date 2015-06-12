@@ -185,7 +185,7 @@ Router.route("/screens/:_id/safeedit", {
 
 Router.route("/screens/:_id", {
 	name: "SingleScreen",
-	controller: "SingleScreenController",
+	controller: "IDEController",
 	action: function() {
 		if ( !this.ready() ) {
 			this.render("Loading", {
