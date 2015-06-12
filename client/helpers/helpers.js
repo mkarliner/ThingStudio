@@ -30,7 +30,7 @@ getCurrentConnection = function() {
 }
 
 setCurrentConnection = function(conn, from){
-	console.log("Setting current connection to: ", from,  conn);
+	//console.log("Setting current connection to: ", from,  conn);
 	Session.set("currentConnection", conn);
 }
 

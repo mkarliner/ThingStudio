@@ -1,27 +1,41 @@
-Template.errors.helpers({
-	Errors: function() {
-		return Errors.find();
+Template.Alerts.helpers({
+	alerts: function() {
+		return Alerts.find();
 	}
 });
 
-Template.error.helpers({
+Template.Alert.helpers({
+	alertStatus: function() {
+			return this.status
+	},
 	alertType: function() {
-		return 'success';
+		if (this.type === 'template' && this.status === 'success') {
+			return 'Success: '
+		} else if (this.type === 'template') {
+			return 'Template Error: '
+		} else if (this.type === 'runtime') {
+			return 'Runtime Error: '
+		} else {
+			console.log('alertType else case firing')
+		}
 	}
 });
 
-Template.error.events({
-	'click .alert .close': function(e, tmpl) {
-		console.log(this);
-		var myItem = tmpl.find(".error");
-		console.log(myItem)
-	}
-
-});
-
-// Template.error.onRendered(function() {
-// 	var error = this.data;
-// 	Meteor.setTimeout(function () {
-// 		Errors.remove(error._id);
-// 	}, 3000);
+// Template.Alert.events({
+// 	'click .alert .close': function(e, tmpl) {
+// 		console.log(this);
+// 		var myItem = tmpl.find(".alert");
+// 		console.log(myItem)
+// 	}
 // });
+
+Template.Alert.onRendered(function() {
+	var error = this.data;
+	if (error.status === 'success') {
+		Meteor.setTimeout(function () {
+			Alerts.remove(error._id);
+		}, 3000);
+		//Remove success alert from session variable
+	}
+	
+});

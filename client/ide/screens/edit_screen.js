@@ -132,12 +132,10 @@ Template.afAce.rendered = function() {
 	var editor;
 	// console.log("RENDERED", this.findAll());
 	Tracker.autorun(function (e) {
-
 		editor = AceEditor.instance("archy", {
 			theme: "cobalt",
 			mode: "handlebars"
 		});
-		console.log(editor)
 		if(editor.loaded===true){
 			e.stop();
 			cs = Session.get("currentScreenPage");

@@ -813,15 +813,18 @@ div.ace_content {
 	display: none;
 }
 
-.errors {
+.alerts {
 	position: absolute;
 	top: 0;
 	left: 0;
 	z-index: 10;
 	width: 100%;
 	display: block;
-	background-color: $white;
 	border-top-right-radius: 1px;
+}
+
+.alert {
+	background-color: $white;
 }
 
 .alert-type {
@@ -855,9 +858,9 @@ div.ace_content {
 	  margin-right: 9px;
 }
 
-// .alert {
-// 	animation: fadeOut 2700ms ease-in 0s 1 forwards;
-// }
+.alert.success {
+	animation: fadeOut 2700ms ease-in 0s 1 forwards;
+}
 
 #preview {
 	background-color: $darkBase;
@@ -1056,9 +1059,9 @@ footer {
 // Keyframe animations //
 ///////////////////////////////////////////////////////////////////////////////////////
 
-// @keyframes fadeOut {
-// 	0% {opacity: 0;}
-// 	10% {opacity: 1;}
-// 	90% {opacity: 1;}
-// 	100% {opacity: 0;}
-// }
+@keyframes fadeOut {
+	0% {opacity: 0;}
+	10% {opacity: 1;}
+	90% {opacity: 1;}
+	100% {opacity: 0;}
+}
