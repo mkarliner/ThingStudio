@@ -44,10 +44,27 @@ Schemas.Feed = new SimpleSchema({
 		allowedValues: ["Publish", "Subscribe"],
 		defaultValue: "Subscribe"
 	},
-	action: {
-		type: String,
-		allowedValues:[ "Update"],
-		defaultValue: "Update"
+	// action: {
+	// 	type: String,
+	// 	allowedValues:[ "Update"],
+	// 	defaultValue: "Update"
+	// },
+	doJournal: {
+		type: Boolean,
+		defaultValue: false,
+		label: "Keep Journal",
+	},
+	journal_limit: {
+		type: Number,
+		optional: true,
+		defaultValue: 50
+	},
+	journal: {
+		type: [Object],
+		optional: true,
+		autoform: {
+			omit: true
+		}
 	},
 	owner: {
 		type: String,

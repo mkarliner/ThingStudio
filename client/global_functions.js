@@ -12,7 +12,7 @@ publish = function(feed, message) {
 	if(feed.pubsub !="Publish") {
 		Session.set("runtimeErrors", "Attempt to publish to subcription feed: " +feed.title + " - " + JSON.stringify(message));
 	} else {
-		Outbox.upsert({topic: feed.subscription}, {$set: { topic: topic, payload: message}});
+		Outbox.upsert({topic: feed.subscription}, {$set: { feed: feed.title, topic: topic, payload: message}});
 		mqttClient.publish(feed.subscription, message);	
 	}
 }
@@ -118,7 +118,7 @@ connect = function (conn, usr, pass) {
 			Session.set("runtimeErrors", "Invalid MQTT message, payload not JSON: " + rawmessage.toString());
 			payload = rawmessage.toString();
 		}
-		feeds = Feeds.find({}).fetch();
+		feeds = Feeds.find({pubsub: "Subscribe"}).fetch();
 		i =0;
 		for(i=0; i<feeds.length; i++) {
 			// console.log("Checking to ", feeds[i].subscription);
@@ -127,6 +127,20 @@ connect = function (conn, usr, pass) {
 			if(result) {
 				// console.log("Feed matched", result);
 				Messages.upsert({topic: topic, feed: feeds[i].title}, {$set: {feed: feeds[i].title, topic: topic, payload: payload}});
+				if(feeds[i].doJournal) {
+					//Do journal stuff
+					Messages.update(
+					   {topic: topic, feed: feeds[i].title},
+					   {
+					     $push: {
+					       journal: {
+					         $each: [ payload.toString() ],
+					         $slice: -(feeds[i].journal_limit)
+					       }
+					     }
+					   }
+					)
+				}
 			}
 		}
 	});

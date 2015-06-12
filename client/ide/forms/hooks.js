@@ -1,4 +1,4 @@
- checkFeed = function(feed) {
+ checkFeed = function(feed, subscribe) {
 	 // console.log("Check feed ", feed)
 	if(typeof feed != "string" ) {
 		Session.set("runtimeErrors", "Feedname needs to be a string");
@@ -10,12 +10,15 @@
 		Session.set("runtimeErrors", "Unknown feed " + feed);
 		return false;
 	} 
-	if(f.pubsub == "Publish") {
-		Session.set("runtimeErrors", "Can't receive messages on publish feed" + feed);
-		return false;
-	}
+	if(subscribe && f.pubsub == "Publish") {
+			Session.set("runtimeErrors", "Can't receive messages on publish feed: " + feed);
+			return false;
+		}
+	
 	return true;
 }
+
+
 
 compileTemplate = function(name, html_text, javascript) {
 	try {
@@ -42,7 +45,7 @@ compileTemplate = function(name, html_text, javascript) {
 				} else {
 					defaultValue = "-"
 				}
-				checkFeed(feed);
+				checkFeed(feed, true);
 				msg = Messages.findOne({
 					feed: feed
 				});
@@ -55,6 +58,14 @@ compileTemplate = function(name, html_text, javascript) {
 				params = regex(this.topic);
 				// console.log(params);
 				return params[match];
+			},
+			journal: function(feed) {
+				console.log("JOURNAL: ", feed)
+				msg = Messages.findOne({
+					feed: feed
+				});
+				console.log("MSG: ", msg);
+				return msg && msg.journal ? msg.journal  : ["no values"];
 			}
 		});
 		Template[name].events({
@@ -64,7 +75,7 @@ compileTemplate = function(name, html_text, javascript) {
 				// console.log("TEMPLATE CLICK: ", this, attr);
 				feed_name = attr.getNamedItem("data-feed");
 				console.log("FN: ", feed_name);
-				if(!checkFeed(feed_name.value)){
+				if(!checkFeed(feed_name.value, false)){
 					return;
 				};
 				message = attr.getNamedItem("data-message");
@@ -76,7 +87,7 @@ compileTemplate = function(name, html_text, javascript) {
 			'change input[type="checkbox"]': function(ev) {
 				attr = ev.currentTarget.attributes;
 				feed_name = attr.getNamedItem("data-feed");
-				checkFeed(feed_name.value);
+				checkFeed(feed_name.value, false);
 				value = attr.getNamedItem("checked");
 				feed = Feeds.findOne({title: feed_name.value});
 				publish(feed, JSON.stringify(ev.target.checked.toString()));
@@ -86,9 +97,9 @@ compileTemplate = function(name, html_text, javascript) {
 				// console.log("INPUT CHANGED", this, ev);
 				attr = ev.currentTarget.attributes;
 				feed_name = attr.getNamedItem("data-feed");
-				checkFeed(feed_name.value);
+				checkFeed(feed_name.value, false);
 				value = $(ev.target).val();
-				checkFeed(feed_name.value);
+				checkFeed(feed_name.value, false);
 				feed = Feeds.findOne({title: feed_name.value});
 				
 				if(typeof feed == "undefined") {
@@ -101,7 +112,7 @@ compileTemplate = function(name, html_text, javascript) {
 				// console.log("INPUT ", ev);
 				attr = ev.currentTarget.attributes;
 				feed_name = attr.getNamedItem("data-feed");
-				checkFeed(feed_name.value);
+				checkFeed(feed_name.value, false);
 				if(attr.getNamedItem("data-continuous")) {
 					value = $(ev.target).val();
 					feed = Feeds.findOne({title: feed_name.value});

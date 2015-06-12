@@ -13,7 +13,13 @@ Template.Debug.helpers({
 	},
 	payload: function(){
 		try {
-			return JSON.stringify(this.payload).substring(0,15);
+			jstr = JSON.stringify(this.payload);
+			if(jstr.length > 15) {
+				return jstr.substring(0,15)+"...";
+			} else {
+				return jstr;
+			}
+			
 		}
 		catch(err){
 			return err + " " + this

@@ -19,11 +19,11 @@
 </template>
 <template name="Debug">
 	<div id="debug" class="debug z-depth-1">
-		<h2>Feeds Debugger</h2>
+		<h2> Debugger</h2>
 		
 		<div class="debug-body">
 		
-			<h3>Subscribe Feeds</h3>
+			<h3>Received Messages</h3>
 			<table class="striped">
 				<thead>
 					<tr>
@@ -44,7 +44,7 @@
 				</tbody>
 			</table>
 
-			<h3>Publish Feeds</h3>
+			<h3>Sent Messages</h3>
 			
 			<table class="striped">
 				<thead>
@@ -57,7 +57,7 @@
 				<tbody>
 					{{#each outbox }}
 						<tr>
-							<td></td>
+							<td>{{feed}}</td>
 							<td>{{topic}}</td>
 							<td>{{payload}}</td>
 						</tr>
