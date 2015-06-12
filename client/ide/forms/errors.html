@@ -1,0 +1,15 @@
+<template name="errors">
+	<div class="errors">
+		{{#each templateErrors}}
+			{{> error}}
+		{{/each}}
+	</div>
+</template>
+
+<template name="error">
+	<div class="alert z-depth-1" role="alert">
+		<div class="alert-type {{alertType}}">HTML Error:</div>
+		{{message}}
+		<button type="button" class="close right" data-dismiss="alert"><i class="mdi-navigation-close"></i></button>
+	</div>
+</template>

@@ -8,11 +8,13 @@ $fontSize: 12px;
 $fontFace: AvenirLTStd-Roman, Helvetica, sans-serif;
 $appBodyBG: #EBF3F6;
 $green: #76D4E1;
-$brightGreen: #75D781;
+$brightGreen: #A0E396;
 $editorGray: #CCCCCC;
 $editorOrange: #E4A163;
-$editorBlue: #BECEE0;
+$editorBlue: #AED8E6;
 $editorRed: #FF628C;
+$alertOrange: #F5702E;
+$alertGreen: #9ED466;
 $appPadding: 35px;
 $statusActive: #7ED321;
 $materializeInputBorderInactive: 1px solid #E1E4E8;
@@ -803,9 +805,59 @@ div.ace_content {
 	border-bottom: none;
 }
 
+#html, #js, #preview {
+	position: relative;
+}
+
 #html .control-label, #js .control-label {
 	display: none;
 }
+
+.errors {
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 10;
+	width: 100%;
+	display: block;
+	background-color: $white;
+	border-top-right-radius: 1px;
+}
+
+.alert-type {
+	display: inline-block;
+	color: $white;
+	height: 40px;
+	padding: 0 1rem;
+	line-height: 3.2em;
+	border-top-left-radius: 1px;
+	margin-right: 0.6rem;
+}
+
+.alert-type.warning {
+	background-color: $alertOrange;
+}
+
+.alert-type.success {
+	background-color: $alertGreen;
+}
+
+.alert button.close {
+	  border-radius: 50%;
+	  width: 21px;
+	  height: 21px;
+	  border: 1px solid #979797;
+	  line-height: 16px;
+	  padding-left: 1.5px;
+	  background-color: white;
+	  font-size: 17px;
+	  margin-top: 9px;
+	  margin-right: 9px;
+}
+
+// .alert {
+// 	animation: fadeOut 2700ms ease-in 0s 1 forwards;
+// }
 
 #preview {
 	background-color: $darkBase;
@@ -862,7 +914,7 @@ pre.ace-cobalt .ace_keyword, pre.ace-cobalt .ace_meta {
 }
 
 pre.ace-cobalt .ace_entity {
-	color: $green;
+	color: $editorBlue;
 }
 
 pre.ace-cobalt .ace_storage, pre.ace-cobalt .ace_variable {
@@ -872,6 +924,8 @@ pre.ace-cobalt .ace_storage, pre.ace-cobalt .ace_variable {
 pre.ace-cobalt .ace_constant, pre.ace-cobalt .ace_constant.ace_character, pre.ace-cobalt .ace_constant.ace_character.ace_escape, pre.ace-cobalt .ace_constant.ace_other {
 	color: $white;
 }
+
+
 
 ///////////////////////////////////////////////////////////////////////////////////////
 // Social Share Buttons //
@@ -998,3 +1052,13 @@ footer {
 	padding-top: 0.6em;
 	margin-left: 5.4em;
 }
+///////////////////////////////////////////////////////////////////////////////////////
+// Keyframe animations //
+///////////////////////////////////////////////////////////////////////////////////////
+
+// @keyframes fadeOut {
+// 	0% {opacity: 0;}
+// 	10% {opacity: 1;}
+// 	90% {opacity: 1;}
+// 	100% {opacity: 0;}
+// }
