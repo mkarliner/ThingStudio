@@ -18,11 +18,11 @@ Template.AppTopNav.events({
 
 Template.AppTopNav.helpers({
 	currentConnectionName: function() {
-		app = getCurrentConnection;
+		app = getCurrentConnection();
 		if (app) {
-			return getCurrentConnection().title;
+			return app.title;
 		} else {
-			return 'no app';
+			return 'no connection';
 		}
 	}
 });
