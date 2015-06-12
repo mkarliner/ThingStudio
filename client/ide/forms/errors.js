@@ -8,11 +8,11 @@ Template.Alert.helpers({
 	
 	alertType: function() {
 		if (this.type === 'template' && this.status === 'success') {
-			return 'Success: ';
+			return 'Success:';
 		} else if (this.type === 'template') {
-			return 'Template Error: ';
+			return 'Template Error:';
 		} else if (this.type === 'runtime') {
-			return 'Runtime Error: ';
+			return 'Runtime Error:';
 		} else {
 			console.log('alertType else case firing')
 		}
@@ -31,7 +31,6 @@ Template.Alert.onRendered(function() {
 		Meteor.setTimeout(function () {
 			Alerts.remove(error._id);
 		}, 3000);
-		//Remove success alert from session variable
 	}
 	
 });
