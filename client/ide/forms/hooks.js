@@ -22,8 +22,9 @@
 
 compileTemplate = function(name, html_text, javascript) {
 	try {
-		Session.set("compilationErrors", "");
+		Session.set("compilationErrors", '');
 		Session.set("runtimeErrors", null);
+		Session.set("alerts", {});
 		var compiled = SpacebarsCompiler.compile(html_text, {
 			isTemplate: true
 		});
@@ -126,13 +127,18 @@ compileTemplate = function(name, html_text, javascript) {
 			jsout = eval(javascript)
 		}
 		Template[name].rendered = function(){
+			Session.set("alerts", {type: 'template', status: 'success', message: 'Template updated'})
+			renderAlert(Session.get("alerts"));
 			// console.log("RENDERED", this)
 			// console.log("RENDERED: ", this.findAll("[data-feed]"));
 		}
 	} catch (err) {
 		// console.log('Error compiling template:' + html_text);
-		console.log(err.message);
-		Session.set("compilationErrors", err.message);
+		console.log('Error!', err);
+		// console.log(err.message);
+		Session.set("compilationErrors", err.message)
+		Session.set("alerts", {type: 'template', status: 'warning', message: err.message});
+		throwAlert(Session.get("alerts"));
 	}
 };
 
