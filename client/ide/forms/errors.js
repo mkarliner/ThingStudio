@@ -8,24 +8,25 @@ Template.Alert.helpers({
 	
 	alertType: function() {
 		if (this.type === 'template' && this.status === 'success') {
-			return 'Success: '
+			return 'Success: ';
 		} else if (this.type === 'template') {
-			return 'Template Error: '
+			return 'Template Error: ';
 		} else if (this.type === 'runtime') {
-			return 'Runtime Error: '
+			return 'Runtime Error: ';
 		} else {
 			console.log('alertType else case firing')
 		}
 	}
 });
 
-// Template.Alert.events({
-// 	'click .alert .close': function(e, tmpl) {
-// 		console.log(this);
-// 		var myItem = tmpl.find(".alert");
-// 		console.log(myItem)
-// 	}
-// });
+Template.Alert.events({
+	'click .alert .close': function(e, tmpl) {
+		console.log(this);
+		var myItem = tmpl.find(".alert");
+		console.log(myItem)
+		myItem.remove();
+	}
+});
 
 Template.Alert.onRendered(function() {
 	var error = this.data;
