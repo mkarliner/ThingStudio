@@ -1,6 +1,6 @@
 Template.errors.helpers({
-	templateErrors: function() {
-		return TemplateErrors.find();
+	Errors: function() {
+		return Errors.find();
 	}
 });
 
