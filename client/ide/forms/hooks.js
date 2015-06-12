@@ -61,11 +61,11 @@ compileTemplate = function(name, html_text, javascript) {
 				return params[match];
 			},
 			journal: function(feed) {
-				console.log("JOURNAL: ", feed)
+				// console.log("JOURNAL: ", feed)
 				msg = Messages.findOne({
 					feed: feed
 				});
-				console.log("MSG: ", msg);
+				// console.log("MSG: ", msg);
 				return msg && msg.journal ? msg.journal  : ["no values"];
 			}
 		});
