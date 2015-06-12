@@ -16,7 +16,7 @@
 					<li class="tab"><a href="#preview">Preview</a></li>
 				{{/unless}}
 				<li class="tab"><a href="#log">Log</a></li>
-				<li class="tab"><a href="#log">Properties</a></li>
+				<li class="tab"><a href="#properties">Properties</a></li>
 				<!-- <li class="tab"><a href="#css">CSS</a></li> -->
 			</ul>
 		</div>
@@ -41,7 +41,14 @@
 				</div>
 			{{/unless}}
 			<div id="log">
-				Hello from the log
+				<div class="alert-log">
+					{{#each alerts}}
+						<div class="alert {{status}} z-depth-1" role="alert">
+							<div class="alert-type {{status}}">{{alertType}}</div>{{message}}
+							<button type="button" class="dismiss close right" data-dismiss="alert">dismiss</button>
+						</div>
+					{{/each}}
+				</div>
 			</div>
 			<div id="properties">
 				Properties

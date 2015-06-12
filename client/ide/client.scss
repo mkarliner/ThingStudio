@@ -845,7 +845,7 @@ div.ace_content {
 	background-color: $alertGreen;
 }
 
-.alert button.close {
+.alert button.close:not(.dismiss) {
 	  border-radius: 50%;
 	  width: 21px;
 	  height: 21px;
@@ -859,8 +859,23 @@ div.ace_content {
 	  margin-right: 9px;
 }
 
+.alert button.close.dismiss {
+	border: none;
+	background-color: transparent;
+	line-height: 40px;
+	margin-right: 10px;
+}
+
 .alert.success {
 	animation: fadeOut 2700ms ease-in 0s 1 forwards;
+}
+
+.alert span {
+	font-family: $fwMedium;
+}
+
+.alert-log {
+
 }
 
 #preview {

@@ -1,19 +1,25 @@
  checkFeed = function(feed, subscribe) {
 	 // console.log("Check feed ", feed)
 	if(typeof feed != "string" ) {
-		Session.set("runtimeErrors", "Feedname needs to be a string");
+		// Session.set("runtimeErrors", "Feedname needs to be a string");
+		var message = "Feedname needs to be a string: " + feed;
+		Alerts.insert({type: 'runtime', status: 'warning', message: message});
 		return false;
 	}
 	f = Feeds.findOne({title: feed});
 	//console.log("CF: ", f)
 	if(typeof f == "undefined") {
-		Session.set("runtimeErrors", "Unknown feed " + feed);
+		// Session.set("runtimeErrors", "Unknown feed " + feed);
+		var message = 'Unknown feed ' + feed;
+		Alerts.insert({type: 'runtime', status: 'warning', message: message});
 		return false;
 	} 
 	if(subscribe && f.pubsub == "Publish") {
-			Session.set("runtimeErrors", "Can't receive messages on publish feed: " + feed);
-			return false;
-		}
+		// Session.set("runtimeErrors", "Can't receive messages on publish feed: " + feed);
+		var message = "Can't receive messages on publish feed " + feed;
+		Alerts.insert({type: 'runtime', status: 'warning', message: message});
+		return false;
+	}
 	
 	return true;
 }
@@ -136,8 +142,10 @@ compileTemplate = function(name, html_text, javascript) {
 		// console.log('Error compiling template:' + html_text);
 		console.log('Error!', err);
 		// console.log(err.message);
-		Session.set("compilationErrors", err.message)
-		return({type: 'template', status: 'warning', message: err.message});
+		// Session.set("compilationErrors", err.message)
+		var errObj = {type: 'template', status: 'warning', message: err.message};
+		Alerts.insert(errObj);
+		return(errObj);
 	}
 };
 
@@ -161,10 +169,10 @@ AutoForm.hooks({
 				template = this.template;
 				delete Template[name]; //Remove the existing template instance.
 				//console.log("Updated Screen", template.data.doc.html);
-
 				compret = compileTemplate(name, template.data.doc.html, template.data.doc.js);
-				Session.set("alerts", compret);
-				renderAlert(Session.get("alerts"));
+				// Session.set("alerts", compret);
+				// renderAlert(Session.get("alerts"));
+				Alerts.insert(compret);
 				if(template.data.doc.isWidget) {
 					try {
 						console.log("Registering widget")
@@ -173,7 +181,6 @@ AutoForm.hooks({
 					catch(err) {
 						console.log("Register Element: ", err);
 					}
-
 				}
 				//
 				// Session.set("currentScreenPage", "rubbish")

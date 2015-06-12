@@ -21,10 +21,7 @@ Template.Alert.helpers({
 
 Template.Alert.events({
 	'click .alert .close': function(e, tmpl) {
-		console.log(this);
-		var myItem = tmpl.find(".alert");
-		console.log(myItem)
-		myItem.remove();
+		tmpl.find(".alert").remove();
 	}
 });
 
