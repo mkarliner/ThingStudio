@@ -40,19 +40,16 @@ compileTemplate = function(name, html_text, javascript) {
 		Template[name] = new Template("Template." + name, renderer);
 		//Template.__define__(name, renderer);
 		Template[name].helpers({
-			oldmessages: function(feed) {
-				checkFeed(feed);
-				return Messages.find({
-					feed: feed
-				});
-			},
 			message: function(feed, defVal){
 				if(typeof defVal == "number" || typeof defVal == "string") {
 					defaultValue = defVal;
 				} else {
 					defaultValue = "-"
 				}
-				checkFeed(feed, true);
+				console.log("MH: ", this)
+				if(this.isWidget == false) {
+					checkFeed(feed, true);
+				}
 				msg = Messages.findOne({
 					feed: feed
 				});
