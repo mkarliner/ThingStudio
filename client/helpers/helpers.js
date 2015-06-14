@@ -62,6 +62,7 @@ Template.registerHelper("menuOps",
 			AutoForm.resetForm('insertItemForm');
 		} else {
 			//Is closed
+			$('#insertItemForm')[0].reset();
 			$('main tr#item-insert').toggleClass('td-open');
 			$('main div.add-new-item').addClass('open').css({opacity: 0.0}).animate({opacity: 1.0}, 100);
 			$('#insertItemForm input.first').focus();

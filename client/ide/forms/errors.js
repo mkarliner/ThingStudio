@@ -30,7 +30,7 @@ Template.Alert.onRendered(function() {
 	if (error.status === 'success') {
 		Meteor.setTimeout(function () {
 			Alerts.remove(error._id);
-		}, 3000);
+		}, 3500);
 	}
 	
 });

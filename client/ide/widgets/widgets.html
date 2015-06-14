@@ -7,7 +7,7 @@
 <template name="WidgetsBody">
 	{{> autoformModals}}
 	{{#contentFor region="appHeader" template="WidgetsHeader"}}{{/contentFor}}
-	<table>
+	<!-- <table>
 		{{> WidgetsTableWidths}}
 		<thead>
 			<tr cellpadding="10"><th>Widget Name</th><th>Tag</th><th>Action</th></tr>
@@ -23,8 +23,27 @@
 				</tr>
 			{{/each}}
 		</tbody>
-	</table>
+	</table> -->
 	{{> WidgetsNewItem}}
+	{{#each widgetlist}}
+		<div class="col s12 m4">
+			<div class="card small">
+				<div class="card-content">
+					<span class="card-title activator">{{widgetName}} <i class="mdi-navigation-more-vert right"></i></span>
+					{{{widgetTag}}} {{{widgetEndTag}}}
+				</div>
+				<div class="card-reveal">
+					<span class="card-title grey-text text-darken-4">{{widgetName}}<i class="mdi-navigation-close right"></i></span>
+					<p>Here is some more information about this product that is only revealed once clicked on.</p>
+				</div>
+				<div class="card-action">
+					<a href="/screens/{{this._id}}">Edit &amp; Preview</a>
+					<a href="/screens/{{this._id}}/edit">Safe Edit</a>
+					{{#afModal class="btn btn-danger" collection="Screens" operation="remove" doc=_id}} Delete {{/afModal}}
+				</div>
+			</div>
+		</div>
+	{{/each}}
 </template>
 
 <template name="WidgetsNewItem">

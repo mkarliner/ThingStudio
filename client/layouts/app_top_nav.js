@@ -1,6 +1,6 @@
 Template.AppTopNav.onRendered(function() {
-    $(".dropdown-button").dropdown();
-    	$('.tooltipped').tooltip({delay: 400});
+	$(".dropdown-button").dropdown();
+	$('.tooltipped').tooltip({delay: 400});
 });
 
 Template.AppTopNav.events({

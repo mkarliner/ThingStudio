@@ -477,6 +477,10 @@ main {
 	position: relative;
 }
 
+table {
+	table-layout: fixed;
+}
+
 .single-page-container {
 	padding-top: 1em;
 }
@@ -1004,6 +1008,20 @@ pre.ace-cobalt .ace_constant, pre.ace-cobalt .ace_constant.ace_character, pre.ac
 	padding-bottom: 1em;
 	border-bottom: 1px solid $bodyDividerColor;
 }
+
+///////////////////////////////////////////////////////////////////////////////////////
+// Widgets List //
+///////////////////////////////////////////////////////////////////////////////////////
+
+.card.small {
+	height: 220px;
+}
+
+.card .card-content .card-title {
+	color: $headerColor;
+}
+
+
 
 ///////////////////////////////////////////////////////////////////////////////////////
 // Documentation //
