@@ -108,6 +108,10 @@ Schemas.Screen = new SimpleSchema({
 		type: String,
 		optional: true,
 		regEx: /^[a-zA-Z_]+-[a-zA-Z_]+$/,
+	},
+	widgetInstructions: {
+		type: String,
+		optional: true
 	}
 	// public: {
 	// 	type: Boolean,

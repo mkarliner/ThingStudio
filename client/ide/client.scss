@@ -1014,13 +1014,27 @@ pre.ace-cobalt .ace_constant, pre.ace-cobalt .ace_constant.ace_character, pre.ac
 ///////////////////////////////////////////////////////////////////////////////////////
 
 .card.small {
-	height: 220px;
+	height: 250px;
+	& .card-content {
+		height: 198px;
+	}
 }
 
-.card .card-content .card-title {
+.card .card-content .card-title, .card .card-reveal .card-title {
 	color: $headerColor;
 }
 
+.widgets .card .card-action {
+	padding: 10px;
+}
+
+.card .card-action a,  {
+	color: $baseText;
+	margin-right: 2px;
+	&:hover {
+		color: $baseText;
+	}
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////////////

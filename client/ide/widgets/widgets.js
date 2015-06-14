@@ -1,3 +1,7 @@
+Template.WidgetsBody.onRendered(function() {
+	$('ul.tabs').tabs();
+});
+
 Template.WidgetsBody.created = function(){
 	InstantiateScreens();
 }

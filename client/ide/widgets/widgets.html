@@ -25,6 +25,17 @@
 		</tbody>
 	</table> -->
 	{{> WidgetsNewItem}}
+	<div class="top-row">
+		<div class="col s4 tabs-container">
+			<ul class="tabs">
+				<li class="tab"><a href="#global-widgets">Global Widgets</a></li>
+				<li class="tab"><a href="#my-widgets">My Widgets</a></li>				
+			</ul>
+		</div>
+		<div class="clearfix"></div>
+	</div>
+	<div class="single-page-container widgets">
+	<div id="global-widgets">
 	{{#each widgetlist}}
 		<div class="col s12 m4">
 			<div class="card small">
@@ -33,17 +44,27 @@
 					{{{widgetTag}}} {{{widgetEndTag}}}
 				</div>
 				<div class="card-reveal">
-					<span class="card-title grey-text text-darken-4">{{widgetName}}<i class="mdi-navigation-close right"></i></span>
-					<p>Here is some more information about this product that is only revealed once clicked on.</p>
+					<span class="card-title">{{widgetName}}<i class="mdi-navigation-close right"></i></span>
+					<p>{{widgetInstructions}}</p>
 				</div>
 				<div class="card-action">
-					<a href="/screens/{{this._id}}">Edit &amp; Preview</a>
+					<!-- <a href="/screens/{{this._id}}">Edit &amp; Preview</a>
 					<a href="/screens/{{this._id}}/edit">Safe Edit</a>
-					{{#afModal class="btn btn-danger" collection="Screens" operation="remove" doc=_id}} Delete {{/afModal}}
+					{{#afModal class="btn btn-danger" collection="Screens" operation="remove" doc=_id}} Delete {{/afModal}} -->
+					<div class="right">
+						<a class="table-action table-edit-item" href="{{pathFor 'EditScreen'}}"><i class="mdi-editor-mode-edit"></i></a>
+						<a class="table-action table-edit-item" href="{{pathFor 'SafeEditScreen'}}"><i class="mdi-action-visibility-off"></i></a>
+						{{#afModal classes="table-action table-cancel-item" collection="Screens" operation="remove" doc=_id title="Deleting Feed" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="mdi-navigation-close"></i>{{/afModal}}
+					</div>
 				</div>
 			</div>
 		</div>
 	{{/each}}
+	</div>
+	<div id="my-widgets">
+		
+	</div>
+	</div>
 </template>
 
 <template name="WidgetsNewItem">
