@@ -15,6 +15,12 @@ Router.route("/view/app/:_id", {
 		}
 		console.log("ACTION!")
 		app = getCurrentApp();
+		if(!app) {
+			this.render("Loading", {
+				data: "No such app or not shareable"
+			});
+			return;
+		}
 		console.log("Current APP", app)
 		// if(!app) {
 		// 	this.render("Loading", {

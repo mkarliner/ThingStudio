@@ -131,7 +131,7 @@ Meteor.startup(function() {
 				return appcurr;
 			} else {
 				console.log("Attempt to access private app", app)
-				return null;
+				return [];
 			}
 		} else {
 			return Apps.find({owner: this.userId});
@@ -144,6 +144,8 @@ Meteor.startup(function() {
 		if(this.userId == app.owner || app.shareable) {
 			// console.log("Returning connections: ", apps )
 			return Connections.find({appId: {$in: apps}});
+		} else {
+			return [];
 		}
 	});
 
@@ -154,6 +156,8 @@ Meteor.startup(function() {
 		if(this.userId == app.owner || app.shareable) {
 			// console.log("Returning screends: ", Screens.find({appId: appId}).fetch().length )
 			return Screens.find({appId: {$in: apps}});
+		} else {
+			return [];
 		}
 		// if (isAdmin(this.userId)) {
 		// 	return Screens.find({});
@@ -177,6 +181,8 @@ Meteor.startup(function() {
 		if(this.userId == app.owner || app.shareable) {
 			// console.log("Returning screends: ", Screens.find({appId: appId}).fetch().length )
 			return Screens.find({appId: {$in: apps}});
+		} else {
+			return[];
 		}
 	});
 	
@@ -189,6 +195,8 @@ Meteor.startup(function() {
 			return Feeds.find({appId: {$in
 				
 				: apps}});
+		} else {
+			return [];
 		}
 		// return Feeds.find({
 		// 	$or: [{
@@ -223,6 +231,8 @@ Meteor.startup(function() {
 		if(this.userId == app.owner || app.shareable) {
 			// console.log("Returning themes: ", Themes.find({appId: appId}).fetch().length )
 			return Themes.find({appId: {$in: apps}});
+		} else {
+			return[];
 		}
 	});
 	// Meteor.publish("themes", function() {
