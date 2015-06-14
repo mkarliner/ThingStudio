@@ -171,7 +171,7 @@ label {
 }
 
 table.striped tbody tr:nth-child(odd) {
-	background-color: $tableStripe;
+	background-color: lighten($appBodyBG, 2%);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -503,7 +503,7 @@ th {
 }
 
 table.hoverable tbody tr:hover {
-	background-color: lighten($appBodyBG, 3%);
+	background-color: lighten($appBodyBG, 2%);
 }
 
 td {
@@ -547,6 +547,7 @@ td:last-child, th:last-child {
 		margin-top: 20px;
 		margin-bottom: 20px;
 	}
+
 }
 
 .div-container {
@@ -770,8 +771,18 @@ h4.modal-title {
 	@include dropdownArrow;
 	line-height: 58px;
 	z-index: 1;
-
 }
+
+.add-new-item .select-wrapper.form-control .mdi-navigation-arrow-drop-down {
+	line-height: 46px;
+}
+
+.select-wrapper .mdi-navigation-arrow-drop-down {
+	right: -14px;
+}
+
+
+
 .select-wrapper.form-control {
 	display: inline-block;
 }
