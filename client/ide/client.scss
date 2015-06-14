@@ -521,7 +521,7 @@ tr.spacer td {
 	will-change: padding-top;
 }
 
-tr.spacer.td-open td {
+tr.spacer.form-open td {
 	padding-top: 140px;
 	will-change: padding-top;
 }
@@ -1013,6 +1013,16 @@ pre.ace-cobalt .ace_constant, pre.ace-cobalt .ace_constant.ace_character, pre.ac
 // Widgets List //
 ///////////////////////////////////////////////////////////////////////////////////////
 
+.single-page-container.widgets {
+	@include transition(padding-top, 0.1s, cubic-bezier(.55,0,.1,1));
+	padding-top: 1em;
+	will-change: padding-top;
+}
+
+.single-page-container.form-open {
+	padding-top: 140px;
+}
+
 .card.small {
 	height: 250px;
 	& .card-content {
@@ -1022,6 +1032,11 @@ pre.ace-cobalt .ace_constant, pre.ace-cobalt .ace_constant.ace_character, pre.ac
 
 .card .card-content .card-title, .card .card-reveal .card-title {
 	color: $headerColor;
+	line-height: 24px;
+}
+
+.card .card-title {
+	font-size: $fontSize * 1.75;
 }
 
 .widgets .card .card-action {

@@ -7,26 +7,9 @@
 <template name="WidgetsBody">
 	{{> autoformModals}}
 	{{#contentFor region="appHeader" template="WidgetsHeader"}}{{/contentFor}}
-	<!-- <table>
-		{{> WidgetsTableWidths}}
-		<thead>
-			<tr cellpadding="10"><th>Widget Name</th><th>Tag</th><th>Action</th></tr>
-		</thead>
-		<tbody>
-			<tr id="item-insert" class="spacer td-closed"><td></td></tr>
-			{{#each widgetlist}}
-				<tr>
-					<td>{{title}}</td>
-					<td>{{widgetName}}</td>
-					<td>{{{widgetTag}}} {{{widgetEndTag}}}</td>
-					<td><button class="btn"><a href="/screens/{{this._id}}">Edit & Preview</a></button><button class="btn"><a href="/screens/{{this._id}}/edit">Safe Edit</a></button>{{#afModal class="btn btn-danger" collection="Screens" operation="remove" doc=_id}} Delete {{/afModal}}</td>
-				</tr>
-			{{/each}}
-		</tbody>
-	</table> -->
 	{{> WidgetsNewItem}}
 	<div class="top-row">
-		<div class="col s4 tabs-container">
+		<div class="col s3 tabs-container">
 			<ul class="tabs">
 				<li class="tab"><a href="#global-widgets">Global Widgets</a></li>
 				<li class="tab"><a href="#my-widgets">My Widgets</a></li>				
@@ -35,35 +18,32 @@
 		<div class="clearfix"></div>
 	</div>
 	<div class="single-page-container widgets">
-	<div id="global-widgets">
-	{{#each widgetlist}}
-		<div class="col s12 m4">
-			<div class="card small">
-				<div class="card-content">
-					<span class="card-title activator">{{widgetName}} <i class="mdi-navigation-more-vert right"></i></span>
-					{{{widgetTag}}} {{{widgetEndTag}}}
-				</div>
-				<div class="card-reveal">
-					<span class="card-title">{{widgetName}}<i class="mdi-navigation-close right"></i></span>
-					<p>{{widgetInstructions}}</p>
-				</div>
-				<div class="card-action">
-					<!-- <a href="/screens/{{this._id}}">Edit &amp; Preview</a>
-					<a href="/screens/{{this._id}}/edit">Safe Edit</a>
-					{{#afModal class="btn btn-danger" collection="Screens" operation="remove" doc=_id}} Delete {{/afModal}} -->
-					<div class="right">
-						<a class="table-action table-edit-item" href="{{pathFor 'EditScreen'}}"><i class="mdi-editor-mode-edit"></i></a>
-						<a class="table-action table-edit-item" href="{{pathFor 'SafeEditScreen'}}"><i class="mdi-action-visibility-off"></i></a>
-						{{#afModal classes="table-action table-cancel-item" collection="Screens" operation="remove" doc=_id title="Deleting Feed" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="mdi-navigation-close"></i>{{/afModal}}
+		<div id="global-widgets">
+		{{#each widgetlist}}
+			<div class="col s12 m4">
+				<div class="card small">
+					<div class="card-content">
+						<span class="card-title activator">{{widgetName}} <i class="mdi-navigation-more-vert right"></i></span>
+						{{{widgetTag}}} {{{widgetEndTag}}}
+					</div>
+					<div class="card-reveal">
+						<span class="card-title">{{widgetName}}<i class="mdi-navigation-close right"></i></span>
+						<p>{{widgetInstructions}}</p>
+					</div>
+					<div class="card-action">
+						<div class="right">
+							<a class="table-action table-edit-item" href="{{pathFor 'EditScreen'}}"><i class="mdi-editor-mode-edit"></i></a>
+							<a class="table-action table-edit-item" href="{{pathFor 'SafeEditScreen'}}"><i class="mdi-action-visibility-off"></i></a>
+							{{#afModal classes="table-action table-cancel-item" collection="Screens" operation="remove" doc=_id title="Deleting Feed" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="mdi-navigation-close"></i>{{/afModal}}
+						</div>
 					</div>
 				</div>
 			</div>
+		{{/each}}
 		</div>
-	{{/each}}
-	</div>
-	<div id="my-widgets">
-		
-	</div>
+		<div id="my-widgets">
+			
+		</div>
 	</div>
 </template>
 

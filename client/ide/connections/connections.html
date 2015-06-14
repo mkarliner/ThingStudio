@@ -7,7 +7,7 @@
 <template name="ConnectionsBody">
 	{{> autoformModals}}
 	{{#contentFor region="appHeader" template="ConnectionsHeader"}}{{/contentFor}}
-	<table>
+	<table class="hoverable">
 		{{> ConnectionsTableWidths}}
 		<thead>
 			<tr cellpadding="10"><th>Connection Title</th><th>Hostname</th><th>Port</th><th>Protocol</th><th>Username</th><th>Password</th><th>Action</th></tr>
