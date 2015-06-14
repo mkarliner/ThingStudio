@@ -1,13 +1,23 @@
 <template name="ProfileHeader">
 	<h1 class="left">Profile</h1>
-	<a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>Save Profile</a>
+	<!-- <a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>Save Profile</a> -->
 	<a class="header-action-1 clearfix" href="/people/{{username}}">http://www.thingstud.io/people/{{username}}</a>
 </template>
 
 <template name="ProfileBody">
+<div class="top-row">
+		<div class="col s2 tabs-container">
+			<ul class="tabs">
+				<li class="tab"><a href="#profile">Your Public Profile</a></li>
+			</ul>
+		</div>
+		<div class="clearfix"></div>
+	</div>
+
 	<div class="single-page-container">
-		<div><img src="{{gravatar}}"></div>
-		{{>updateUserForm}}
+		<div id="profile">
+			{{>updateUserForm}}
+		</div>
 	</div>
 	
 </template>

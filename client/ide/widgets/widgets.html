@@ -54,7 +54,7 @@
 			{{> WidgetsTableWidths}}
 				<tbody>
 					<tr>
-						<td>{{> afQuickField name='title' placeholder="Widget Title" class="first"}}</td>
+						<td>{{> afQuickField name='title' placeholder="Widget Title" class="first"}} {{> afQuickField name="isWidget"}}</td>
 						<td>
 							<button type="submit" class="table-action table-save-new"><i class="mdi-navigation-check"></i></button><button class="table-action table-cancel-new"><i class="mdi-navigation-close"></i></button>
 						</td>
@@ -69,6 +69,6 @@
 <template name="WidgetsTableWidths">
 	<colgroup>
 		<col style="width: 91%;">
-		<col style="width: 9%;">
+		<col style="width: 109px;">
 	</colgroup>
 </template>
