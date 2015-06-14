@@ -1052,11 +1052,13 @@ pre.ace-cobalt .ace_constant, pre.ace-cobalt .ace_constant.ace_character, pre.ac
 
 .widgets .card .card-action {
 	padding: 10px;
+	background-color: rgba(160, 160, 160, 0.04);
 }
 
 .card .card-action a,  {
 	color: $baseText;
 	margin-right: 2px;
+	background-color: $white;
 	&:hover {
 		color: $baseText;
 	}
