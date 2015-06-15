@@ -129,7 +129,8 @@ Schemas.Screen = new SimpleSchema({
 		}
 	},
 	widgetParameters: {
-		type: [Schemas.WidgetParameter]
+		type: [Schemas.WidgetParameter],
+		optional: true
 	}
 	// public: {
 	// 	type: Boolean,
