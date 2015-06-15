@@ -24,6 +24,15 @@ Template.WidgetList.helpers({
 	},
 	widgetEndTag: function(){
 		return "</"+this.widgetName+">";
+	},
+	iAmOwner: function() {
+		if ( this.owner == Meteor.userId() ) {
+			console.log('yes, you own: ', this.widgetName)
+			return true;
+		} else {
+			console.log('no, you do not own: ', this.widgetName)
+			return false;
+		}
 	}
 });
 
