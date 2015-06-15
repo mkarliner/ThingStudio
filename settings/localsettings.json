@@ -6,7 +6,8 @@
     "olark": {
 	"identity": "9694-347-10-9101"
     },
-	"domain": "localhost:3000"
+   "domain": "localhost:3000",
+   "systemApp": "zBQmm7g9wyennQD7G"
   },
   "private": {
 	  "MailChimp": {

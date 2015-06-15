@@ -7,8 +7,12 @@ Template.WidgetsBody.created = function(){
 }
 
 Template.WidgetsBody.helpers({
-	widgetlist: function(){
-		wl =  Screens.find({ owner: Meteor.userId(), isWidget: true})
+	myWidgetList: function(){
+		wl =  Screens.find({  appId: {$ne: Meteor.settings.public.systemApp}, isWidget: true})
+		return wl;
+	},
+	systemWidgetList: function(){
+		wl =  Screens.find({ appId: Meteor.settings.public.systemApp, isWidget: true})
 		return wl;
 	},
 	widgetTag: function(){
