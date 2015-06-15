@@ -14,7 +14,10 @@ Template.WidgetsBody.helpers({
 	systemWidgetList: function(){
 		wl =  Screens.find({ appId: Meteor.settings.public.systemApp, isWidget: true})
 		return wl;
-	},
+	}
+});
+
+Template.WidgetList.helpers({
 	widgetTag: function(){
 		console.log("WT: ", this)
 		return "<"+this.widgetName+">";
