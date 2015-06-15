@@ -2,28 +2,33 @@ Template.WidgetsBody.onRendered(function() {
 	$('ul.tabs').tabs();
 });
 
-Template.WidgetsBody.created = function(){
-	InstantiateScreens();
+Template.EditWidgetHeader.onRendered(function() {
+	$('select').material_select();
+});
+
+Template.WidgetList.created = function(){
+		InstantiateWidgets();
 }
 
 Template.WidgetsBody.helpers({
 	myWidgetList: function(){
-		wl =  Screens.find({  appId: {$ne: Meteor.settings.public.systemApp}, isWidget: true})
+		wl =  Widgets.find({  appId: {$ne: Meteor.settings.public.systemApp}})
 		return wl;
 	},
 	systemWidgetList: function(){
-		wl =  Screens.find({ appId: Meteor.settings.public.systemApp, isWidget: true})
+		console.log("SWL System App Id", Meteor.settings.public.systemApp)
+		wl =  Widgets.find({ appId: Meteor.settings.public.systemApp})
 		return wl;
 	}
 });
 
 Template.WidgetList.helpers({
 	widgetTag: function(){
-		console.log("WT: ", this)
-		return "<"+this.widgetName+">";
+		console.log("WT: ", this.tagName)
+		return "<"+this.tagName+">";
 	},
 	widgetEndTag: function(){
-		return "</"+this.widgetName+">";
+		return "</"+this.tagName+">";
 	},
 	iAmOwner: function() {
 		if ( this.owner == Meteor.userId() ) {

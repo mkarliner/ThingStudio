@@ -214,6 +214,44 @@ Router.route("/screens", {
 	}
 });
 
+
+
+Router.route("/widgets/:_id/edit", {
+	name: "EditWidget",
+	controller: "IDEController",
+	data: function() {
+		if(!this.ready()){
+			return {};
+		}
+		// Session.set("currentScreenPage", this.params._id);
+		scr = Widgets.findOne({ _id: this.params._id });
+		return scr;
+	},
+	action: function() {
+		if ( !this.ready() ) {
+			this.render("Loading", {
+				data: "Template"
+			});
+		} else {
+			renderYields(this, 'EditWidget');
+		}
+	}
+});
+
+Router.route("/widgets/:_id", {
+	name: "SingleWidget",
+	controller: "IDEController",
+	action: function() {
+		if ( !this.ready() ) {
+			this.render("Loading", {
+				data: "Template"
+			});
+		} else {
+			renderYields(this, 'SingleWidget');
+		}
+	}
+});
+
 Router.route("/themes/:_id", {
 	name: "SingleTheme",
 	controller: "IDEController",

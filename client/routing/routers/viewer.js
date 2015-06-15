@@ -31,7 +31,7 @@ Router.route("/view/app/:_id", {
 		
 
 		screen_cnt = Screens.find().count();
-		InstantiateScreens();
+		InstantiateWidgets();
 		// If there is an app home page, go there
 		if (app.home_page) {
 			Router.go("/viewer/screen/" + app.home_page);
@@ -78,7 +78,7 @@ Router.route("/viewer/screen/:_id", {
 				data: "Application sub"
 			})		
 		}
-		InstantiateScreens();
+		InstantiateWidgets();
 		this.render("ViewScreen", {
 			data: function() {
 				Session.set("currentScreenPage", this.params._id);

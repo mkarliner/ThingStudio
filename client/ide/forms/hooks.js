@@ -150,34 +150,34 @@ compileTemplate = function(name, html_text, javascript) {
 AutoForm.hooks({
 	updateScreenForm: {
 		before: {
-			// update: function(docId, mod, template) {
-			// 		console.log("Before update")
-			// 		//doc.status = "Inactive";
-			// 		return mod;
-			// 	}
-		},
+			update: function(mod){
+				Alerts.remove({type: "template"});
+				return mod;
+				}
+			},
 		after: {
-			update: function(err, res) {
-				scr = Session.get("currentScreenPage");
-				myscreen = Screens.findOne(scr);
-				name = myscreen.title;
-				// console.log("SCR: ", name, this)
-				template = this.template;
-				delete Template[name]; //Remove the existing template instance.
-				//console.log("Updated Screen", template.data.doc.html);
-				compret = compileTemplate(name, template.data.doc.html, template.data.doc.js);
+			update: function(res) {
+				// console.log("ASU", this,  res)
+				// //scr = Session.get("currentScreenPage");
+				// myscreen = this.currentDoc;
+				// name = myscreen.title;
+				// // console.log("SCR: ", name, this)
+				// template = this.template;
+				// delete Template[name]; //Remove the existing template instance.
+				// //console.log("Updated Screen", template.data.doc.html);
+				// compret = compileTemplate(name, template.data.doc.html, template.data.doc.js);
 				// Session.set("alerts", compret);
 				// renderAlert(Session.get("alerts"));
-				Alerts.insert(compret);
-				if(template.data.doc.isWidget) {
-					try {
-						console.log("Registering widget")
-						Template[name].registerElement(template.data.doc.widgetName);
-					}
-					catch(err) {
-						console.log("Register Element: ", err);
-					}
-				}
+				// Alerts.insert(compret);
+				// if(template.data.doc.isWidget) {
+				// 	try {
+				// 		console.log("Registering widget")
+				// 		Template[name].registerElement(template.data.doc.widgetName);
+				// 	}
+				// 	catch(err) {
+				// 		console.log("Register Element: ", err);
+				// 	}
+				// }
 				//
 				// Session.set("currentScreenPage", "rubbish")
 				// Session.set("currentScreenPage", 'faceplate')
@@ -240,7 +240,8 @@ AutoForm.hooks({
 					console.log("AFTER SETTINGS ", this, err, res)
 				}
 			}
-		}
+		},
+		
 
 
 

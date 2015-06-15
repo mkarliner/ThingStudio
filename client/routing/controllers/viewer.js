@@ -26,6 +26,11 @@ AppViewerController = RouteController.extend({
 						console.log("Screens READY!");
 					}
 				}),
+				Meteor.subscribe('widgets', appId, {
+					onReady: function(){
+						console.log("Screens READY!");
+					}
+				}),
 				Meteor.subscribe('themes', appId, {
 					onReady: function(){
 						console.log("Themes READY!");

@@ -65,23 +65,7 @@ Meteor.startup(function() {
 		}
 		//Hook any orphan connections to app.
 		conns = Connections.find({owner: u._id}).fetch();
-		//console.log("Connections", conns.length);
-		// if(conns.length == 0) {
-		// 	//console.log("Creating default connection for user: ", u.username);
-		// 	no_connection_cnt++;
-		// 	Connections.insert({
-		// 		title: "Modern Industry",
-		// 		host: "mqtt.thingstud.io",
-		// 		port: 9001,
-		// 		protocol: "Websocket",
-		// 		owner: u._id,
-		// 		appId: app._id,
-		// 		username: "guest",
-		// 		password: "guest",
-		// 		autoConnect: true
-		// 	});
-		// 	conns = Connections.find({owner: u._id}).fetch();
-		// }
+
 		for(var c=0; c< conns.length; c++){
 			connection = conns[c];
 			if(connection.appId) {
@@ -163,18 +147,18 @@ Meteor.startup(function() {
 		} else {
 			return [];
 		}
-		// if (isAdmin(this.userId)) {
-		// 	return Screens.find({});
-		// } else {
-		// 	return Screens.find({
-		// 		$or: [{
-		// 			owner: this.userId
-		// 		}, {
-		// 			public: true
-		// 		}]
-		// 	});
-		// }
-
+	});
+	
+	Meteor.publish("widgets", function(appId) {
+		app = Apps.findOne({_id: appId});
+		apps = getAppTree(appId);
+		console.log("Subscribing widgets: ", appId,  app.title, app.access)
+		if(this.userId == app.owner || app.shareable) {
+			// console.log("Returning screends: ", Screens.find({appId: appId}).fetch().length )
+			return Widgets.find({appId: {$in: apps}});
+		} else {
+			return [];
+		}
 	});
 	
 	Meteor.publish("singleScreen", function(screenId) {

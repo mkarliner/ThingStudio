@@ -60,26 +60,29 @@ Template.ScreensBody.helpers({
 	}
 });
 
-InstantiateScreens = function(){
+InstantiateWidgets = function(){
 	//Instantiate all screens which are widgets
-	scrs = Screens.find({isWidget: true}).fetch();
-	for(var s=0; s<scrs.length; s++){
-		scr = scrs[s];
-		if(scr.isWidget) {
-			if(Template[scr.title]) {
-				console.log("Deleting: ", scr.title);
-				delete Template[scr.title]; //Remove the existing template.
-			}	
-			console.log("Compiling ", scr.title);
-			compileTemplate(scr.title, scr.html, scr.js);
-			try {
-				console.log("Registering widget")
-				Template[scr.title].registerElement(scr.widgetName);
-			}
-			catch(err) {
-				console.log("Register Element: ", err);
-			}
-			
+	wdgts = Widgets.find().fetch();
+	console.log("Instantiating Widgets", wdgts);
+	for(var s=0; s<wdgts.length; s++){
+		wgt = wdgts[s];
+		scr = Screens.findOne({_id: wgt.baseScreen});
+		if(!scr) {
+			break;
 		}
+		if(Template[scr.title]) {
+			console.log("Deleting: ", scr.title);
+			delete Template[scr.title]; //Remove the existing template.
+		}	
+		console.log("Compiling ", scr.title);
+		compileTemplate(scr.title, scr.html, scr.js);
+		try {
+			console.log("Registering widget")
+			Template[scr.title].registerElement(wgt.tagName);
+		}
+		catch(err) {
+			console.log("Register Element: ", err);
+		}
+			
 	}
 }

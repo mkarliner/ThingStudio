@@ -152,6 +152,22 @@ Screens.before.insert(function(userId, doc) {
 });
 
 
+Screens.after.update(function(userId, doc) {
+	if(Meteor.isClient){
+		console.log("ASUU", this,  doc)
+		myscreen = doc;
+		name = myscreen.title;
+		// console.log("SCR: ", name, this)
+		// template = this.template;
+		delete Template[name]; //Remove the existing template instance.
+		//console.log("Updated Screen", template.data.doc.html);
+		compret = compileTemplate(name, doc.html, doc.js);
+	}
+});
+
+
+
+
 Screens.attachSchema(Schemas.Screen);
 
 Screens.allow({
