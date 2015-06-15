@@ -34,7 +34,7 @@
 						<a class="table-action table-edit-item" href="{{pathFor 'SafeEditScreen'}}"><i class="mdi-action-visibility-off"></i></a>
 						{{#afModal classes="table-action table-cancel-item" collection="Screens" operation="remove" doc=_id title="Deleting Feed" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="mdi-navigation-close"></i>{{/afModal}}
 					{{else}}
-						<a class="table-action table-edit-item tooltipped" data-position="left" data-delay="50" data-tooltip="View the source for this widget" href="{{pathFor 'EditScreen'}}"><i class="mdi-action-visibility"></i></a>
+						<a class="table-action table-edit-item" href="{{pathFor 'EditScreen'}}"><i class="mdi-action-visibility"></i></a>
 					{{/if}}
 				</div>
 			</div>
