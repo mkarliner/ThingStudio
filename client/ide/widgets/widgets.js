@@ -1,6 +1,5 @@
 Template.WidgetsBody.onRendered(function() {
 	$('ul.tabs').tabs();
-	$('.tooltipped').tooltip({delay: 50});
 });
 
 Template.WidgetsBody.created = function(){

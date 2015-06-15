@@ -1043,6 +1043,46 @@ pre.ace-cobalt .ace_comment {
 	}
 }
 
+table.widget-item {
+	margin-top: 1em;
+	& thead {
+		font-family: $fwHeavy;
+		& td:first-child, th:first-child {
+			padding-left: 0px;
+		}
+		& td:last-child, th:last-child {
+			padding-right: 0px;
+		}
+	}
+	& tbody {
+		& td:first-child, th:first-child {
+			padding-left: 5px;
+		}
+		& td:last-child, th:last-child {
+			padding-right: 5px;
+		}
+	}
+}
+
+.usage {
+	margin: 0.5rem 0;
+}
+
+.usage-inner {
+	display: block;
+	background: $darkBase;
+	color: $white;
+	padding: 5px;
+}
+
+.element {
+	color: $editorBlue;
+}
+
+.parameter {
+	color: $editorOrange;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////
 // Documentation //
 ///////////////////////////////////////////////////////////////////////////////////////
