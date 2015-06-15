@@ -8,17 +8,12 @@
 	<div class="col s12 m4">
 		<div class="card small">
 			<div class="card-content">
-				<span class="card-title activator">{{widgetName}} <i class="mdi-navigation-more-vert right"></i></span>
+				<span class="card-title activator">{{title}} <i class="mdi-navigation-more-vert right"></i></span>
 				{{{widgetTag}}} {{{widgetEndTag}}}
 			</div>
 			<div class="card-reveal">
 				<span class="card-title">{{widgetName}}<i class="mdi-navigation-close right"></i></span>
-				<p>{{widgetInstructions}}</p>
-				<table >
-				{{#each widgetParameters}}
-				<tr><td>{{title}}</td><td>{{mandatory}}</td><td>{{description}}</td></tr>
-				{{/each}}
-				</table>
+				<!-- <p>{{widgetInstructions}}</p> -->
 				<p>Example invocation:</p>
 					&lt;{{widgetName}}  
 					{{#each widgetParameters}}
@@ -26,6 +21,14 @@
 					{{/each}}
 					&gt;
 					&lt;/{{widgetName}}&gt;
+				<table >
+					{{#each widgetParameters}}
+						<tr>
+							<td>{{title}}</td><td>{{mandatory}}</td><td>{{description}}</td>
+						</tr>
+					{{/each}}
+				</table>
+				
 			</div>
 			<div class="card-action">
 				<div class="right">
