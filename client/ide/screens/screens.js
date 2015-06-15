@@ -68,7 +68,7 @@ InstantiateScreens = function(){
 		if(scr.isWidget) {
 			if(Template[scr.title]) {
 				console.log("Deleting: ", scr.title);
-				delete Template[name]; //Remove the existing template.
+				delete Template[scr.title]; //Remove the existing template.
 			}	
 			console.log("Compiling ", scr.title);
 			compileTemplate(scr.title, scr.html, scr.js);
