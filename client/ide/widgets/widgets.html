@@ -16,16 +16,9 @@
 				<!-- <p>{{widgetInstructions}}</p> -->
 				<p class="fwHeavy usage">Usage:</p>
 					<span class="usage-inner">
-						<span class="element">&lt;{{widgetName}}</span>
-						<span class="parameter">
+						<span class="element">&lt;{{widgetName}}</span><span class="parameter">
 							{{#each widgetParameters}}
-								{{title}}=<span class="white-text">&quot;&quot;</span>
-							{{/each}}
-						</span>
-						<span class="element">
-							&gt;
-							&lt;/{{widgetName}}&gt;
-						</span>
+								{{title}}=<span class="white-text">&quot;&quot;</span>{{/each}}</span><span class="element">&gt;&lt;/{{widgetName}}&gt;</span>
 					</span>
 				{{#if widgetParameters}}
 					<table class="widget-item bordered striped">
