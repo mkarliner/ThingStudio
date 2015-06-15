@@ -1,5 +1,6 @@
 Template.WidgetsBody.onRendered(function() {
 	$('ul.tabs').tabs();
+	$('.tooltipped').tooltip({delay: 50});
 });
 
 Template.WidgetsBody.created = function(){
@@ -27,10 +28,8 @@ Template.WidgetList.helpers({
 	},
 	iAmOwner: function() {
 		if ( this.owner == Meteor.userId() ) {
-			console.log('yes, you own: ', this.widgetName)
 			return true;
 		} else {
-			console.log('no, you do not own: ', this.widgetName)
 			return false;
 		}
 	}
