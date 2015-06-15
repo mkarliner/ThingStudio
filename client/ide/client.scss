@@ -13,6 +13,7 @@ $editorGray: #CCCCCC;
 $editorOrange: #E4A163;
 $editorBlue: #AED8E6;
 $editorRed: #FF628C;
+$editorComment: #80ABD0;
 $alertOrange: #F5702E;
 $alertGreen: #9ED466;
 $alertGray: #979797;
@@ -918,6 +919,10 @@ pre.ace-cobalt .ace_constant, pre.ace-cobalt .ace_constant.ace_character, pre.ac
 	color: $white;
 }
 
+pre.ace-cobalt .ace_comment {
+	color: $editorComment;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////
 // Buttons //
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -998,8 +1003,10 @@ pre.ace-cobalt .ace_constant, pre.ace-cobalt .ace_constant.ace_character, pre.ac
 
 .single-page-container.widgets {
 	@include transition(padding-top, 0.1s, cubic-bezier(.55,0,.1,1));
-	padding-top: 1em;
+	padding-top: 1.7em;
 	will-change: padding-top;
+	padding-left: $appPadding - 10px;
+	padding-right: $appPadding - 10px;
 }
 
 .single-page-container.form-open {
