@@ -62,7 +62,7 @@ Template.ScreensBody.helpers({
 
 InstantiateScreens = function(){
 	//Instantiate all screens which are widgets
-	scrs = Screens.find().fetch();
+	scrs = Screens.find({isWidget: true}).fetch();
 	for(var s=0; s<scrs.length; s++){
 		scr = scrs[s];
 		if(scr.isWidget) {

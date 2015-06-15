@@ -130,7 +130,11 @@ Schemas.Screen = new SimpleSchema({
 	},
 	widgetParameters: {
 		type: [Schemas.WidgetParameter],
-		optional: true
+		optional: true,
+		autoform: {
+			minCount: 0,
+			initialCount: 0
+		}
 	}
 	// public: {
 	// 	type: Boolean,
