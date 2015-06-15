@@ -15,6 +15,7 @@ $editorBlue: #AED8E6;
 $editorRed: #FF628C;
 $alertOrange: #F5702E;
 $alertGreen: #9ED466;
+$alertGray: #979797;
 $appPadding: 35px;
 $statusActive: #7ED321;
 $materializeInputBorderInactive: 1px solid #E1E4E8;
@@ -31,8 +32,8 @@ $twitterColor: #55ACEE;
 $facebookColor: #3B5998;
 $linkedInColor: #0077B5;
 $updateButton: #19A1DE;
-//Fonts
 
+//Fonts
 $fwLight: 'AvenirLTStd-Light';
 .fwLight {
 	font-family: $fwLight;
@@ -57,7 +58,6 @@ $fwBlack: 'AvenirLTStd-Black';
 .fwBlack {
 	font-family: $fwBlack;
 }
-
 
 //Sidebar
 $sideNavWidth: 220px;
@@ -97,12 +97,17 @@ $bodyDividerColor: #D0D3DC;
 	line-height: 44px;
 }
 
+@mixin disabledStyle {
+	border-color: lighten($baseText, 20%);
+	color: lighten($baseText, 20%);
+}
+
 @mixin transition($property, $duration, $method:"") {
-	  -webkit-transition: $property $duration unquote($method);
-	  -moz-transition: $property $duration unquote($method);
-	  -o-transition: $property $duration unquote($method);
-	  -ms-transition: $property $duration unquote($method);
-	  transition: $property $duration unquote($method);
+	-webkit-transition: $property $duration unquote($method);
+	-moz-transition: $property $duration unquote($method);
+	-o-transition: $property $duration unquote($method);
+	-ms-transition: $property $duration unquote($method);
+	transition: $property $duration unquote($method);
 }
 
 html, body {
@@ -173,6 +178,14 @@ label {
 table.striped tbody tr:nth-child(odd) {
 	background-color: lighten($appBodyBG, 2%);
 }
+
+///////////////////////////////////////////////////////////////////////////////////////
+// Global DOM States //
+///////////////////////////////////////////////////////////////////////////////////////
+
+// a:hover {
+// 	color: darken($color, 20%);
+// }
 
 ///////////////////////////////////////////////////////////////////////////////////////
 // Sidebar //
@@ -404,10 +417,6 @@ nav.top-nav {
 	display: block;
 }
 
-.debug-body {
-	
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////
 // Error Reporting //
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -416,6 +425,71 @@ nav.top-nav {
 	border: $errorBorder;
 	color: $errorBorderColor;
 	background-color: lighten($errorBorderColor, 50%);
+}
+
+.alerts {
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 10;
+	width: 100%;
+	display: block;
+	border-top-right-radius: 1px;
+}
+
+.alert {
+	background-color: $white;
+	clear: both;
+}
+
+.alert-type {
+	display: inline-block;
+	color: $white;
+	height: 40px;
+	padding: 0 1rem;
+	line-height: 3.2em;
+	border-top-left-radius: 1px;
+	margin-right: 0.6rem;
+}
+
+.alert-type.warning {
+	background-color: $alertOrange;
+}
+
+.alert-type.success {
+	background-color: $alertGreen;
+}
+
+.alert a.close:not(.dismiss) {
+	  border-radius: 50%;
+	  width: 21px;
+	  height: 21px;
+	  border: 1px solid $alertGray;
+	  color: $alertGray;
+	  line-height: 16px;
+	  text-align: center;
+	  padding-top: 2px;
+	  background-color: white;
+	  font-size: 17px;
+	  margin-top: 9px;
+	  margin-right: 9px;
+	  text-align: center;
+}
+
+.alert a.close.dismiss {
+	border: none;
+	background-color: transparent;
+	color: $alertGray;
+	line-height: 40px;
+	margin-right: 10px;
+}
+
+.alert.success {
+	animation: fadeOut 2700ms ease-in 0s 1 forwards;
+}
+
+.alert span {
+	font-family: $fwMedium;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -485,10 +559,6 @@ table {
 	padding-top: 1em;
 }
 
-.btn-share {
-	background-color: $actionColor1;
-}
-
 thead {
 	border-bottom: $navBorder;
 }
@@ -509,11 +579,6 @@ table.hoverable tbody tr:hover {
 td {
 	padding: 6px 0;
 }
-
-// th:last-child,
-// td:last-child {
-//     text-align: right;
-// }
 
 tr.spacer td {
 	@include transition(padding-top, 0.1s, cubic-bezier(.55,0,.1,1));
@@ -547,7 +612,29 @@ td:last-child, th:last-child {
 		margin-top: 20px;
 		margin-bottom: 20px;
 	}
-
+	&.open {
+		display: block;
+		will-change: opacity, display;
+	}
+	& form {
+		padding-top: 24px;
+	}
+	& .form-group {
+		margin-right: 30px;
+		background-color: $white;
+	}
+	& .form-control {
+		padding: 0;
+	}
+	& .control-label {
+		display: none;
+	}
+	& .select-wrapper i {
+		@include dropdownArrow;
+	}
+	& input.select-dropdown {
+		padding-left: 14px;
+	}
 }
 
 .div-container {
@@ -562,7 +649,7 @@ td:last-child, th:last-child {
 	padding: 0 2.6rem 0 1rem;
 	width: 40px;
 	position: absolute;
-	left:50%;
+	left: 50%;
 	top: 68%;
 }
 
@@ -573,42 +660,12 @@ td:last-child, th:last-child {
 	display: inline-block;
 	height: 24px;
 	width: 24px;
-}
-
-.divider-decoration i {
-	color: #B9BDC9;
-	font-size: 2 * $fontSize;
-	line-height: 22px;
-	margin-left: -1.1px;
-}
-
-.add-new-item.open {
-	display: block;
-	will-change: opacity, display;
-}
-
-.add-new-item form {
-	padding-top: 24px;
-}
-
-.add-new-item .form-control {
-	padding: 0;
-}
-
-.add-new-item .select-wrapper i {
-	@include dropdownArrow;
-}
-
-.add-new-item .form-group {
-	margin-right: 30px;
-	background-color: $white;
-}
-
-.add-new-item .control-label {
-	display: none;
-}
-.add-new-item input.select-dropdown {
-	padding-left: 14px;
+	& i {
+		color: #B9BDC9;
+		font-size: 2 * $fontSize;
+		line-height: 22px;
+		margin-left: -1.1px;
+	}
 }
 
 table, .single-page-container {
@@ -625,31 +682,17 @@ table, .single-page-container {
 	background-color: transparent;
 	text-align: center;
 	color: $baseText;
+	&:not(:last-child) {
+		margin-right: 2px;
+	}
+	& i {
+		font-size: 1.6 * $fontSize;
+		line-height: 27px;
+	}
 }
 
-.table-action i {
-	font-size: 1.6 * $fontSize;
-	line-height: 27px;
-}
-
-.table-action:not(:last-child) {
-	margin-right: 2px;
-}
-
-// .tae-cnt {
-// 	margin-top: 5px;
-// }
-
-// .table-advanced-edit {
-// 	color: $baseText;
-// 	font-family: $fwBlack;
-// 	text-decoration: underline;
-// 	margin-top: 5px;
-// }
-
-.table-action.ta-disabled {
-	border-color: lighten($baseText, 20%);
-	color: lighten($baseText, 20%);
+.table-action.ta-disabled, .card .card-action a.ta-disabled {
+	@include disabledStyle;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -741,16 +784,14 @@ h4.modal-title {
 
 .tabs .tab {
 	letter-spacing: 0.6px;
-}
-
-.tabs .tab a {
-	color: $baseText;
-	font-family: $fwBlack;
-	font-size: $fontSize * 1.08333;
-}
-
-.tabs .tab a:hover {
-	color: $baseText; 
+	& a {
+		color: $baseText;
+		font-family: $fwBlack;
+		font-size: $fontSize * 1.08333;
+	}
+	& a:hover {
+		color: $baseText; 
+	}
 }
 
 .tabs .indicator {
@@ -762,29 +803,22 @@ h4.modal-title {
 	color: $statusActive;
 }
 
-.select-wrapper.form-control input.select-dropdown {
-	background-color: $white;
-	padding-left: 15px;
-}
-
-.select-wrapper.form-control .mdi-navigation-arrow-drop-down {
-	@include dropdownArrow;
-	line-height: 58px;
-	z-index: 1;
+.select-wrapper.form-control {
+	display: inline-block;
+	& input.select-dropdown {
+		background-color: $white;
+		padding-left: 15px;
+	}
+	& .mdi-navigation-arrow-drop-down {
+		@include dropdownArrow;
+		right: -14px;
+		line-height: 58px;
+		z-index: 1;
+	}	
 }
 
 .add-new-item .select-wrapper.form-control .mdi-navigation-arrow-drop-down {
 	line-height: 46px;
-}
-
-.select-wrapper .mdi-navigation-arrow-drop-down {
-	right: -14px;
-}
-
-
-
-.select-wrapper.form-control {
-	display: inline-block;
 }
 
 [type="checkbox"].filled-in:not(:checked) + label:after {
@@ -800,6 +834,15 @@ h4.modal-title {
 // Template Editor //
 ///////////////////////////////////////////////////////////////////////////////////////
 
+pre.ace_editor {
+	line-height: 1.4em;
+	font-size: 13px;
+}
+
+div.ace_content {
+	background-color: $darkBase;	
+}
+
 .ace_print-margin {
 	display: none;
 }
@@ -810,10 +853,6 @@ div.ace_gutter {
 
 div.ace_layer.ace_gutter-layer.ace_folding-enabled {
 	background-color: darken($darkBase, 5%);
-}
-
-div.ace_content {
-	background-color: $darkBase;	
 }
 
 .single-page-container #html .form-group, .single-page-container #js .form-group, .single-page-container #css .form-group, .single-page-container #preview .form-group {
@@ -828,69 +867,16 @@ div.ace_content {
 	display: none;
 }
 
-.alerts {
-	position: absolute;
-	top: 0;
-	left: 0;
-	z-index: 10;
-	width: 100%;
-	display: block;
-	border-top-right-radius: 1px;
+#html .form-group, #js .form-group {
+	padding-top: 0;
+	padding-bottom: 0;
+	margin-bottom: 0;
 }
 
-.alert {
-	background-color: $white;
-}
-
-.alert-type {
-	display: inline-block;
-	color: $white;
-	height: 40px;
-	padding: 0 1rem;
-	line-height: 3.2em;
-	border-top-left-radius: 1px;
-	margin-right: 0.6rem;
-}
-
-.alert-type.warning {
-	background-color: $alertOrange;
-}
-
-.alert-type.success {
-	background-color: $alertGreen;
-}
-
-.alert button.close:not(.dismiss) {
-	  border-radius: 50%;
-	  width: 21px;
-	  height: 21px;
-	  border: 1px solid #979797;
-	  line-height: 16px;
-	  text-align: center;
-	  padding-top: 2px;
-	  background-color: white;
-	  font-size: 17px;
-	  margin-top: 9px;
-	  margin-right: 9px;
-}
-
-.alert button.close.dismiss {
-	border: none;
-	background-color: transparent;
-	line-height: 40px;
-	margin-right: 10px;
-}
-
-.alert.success {
-	animation: fadeOut 2700ms ease-in 0s 1 forwards;
-}
-
-.alert span {
-	font-family: $fwMedium;
-}
-
-.alert-log {
-
+#archy, #archyjs, #archycss {
+	height: 500px;
+	min-width:  800px;
+	border-radius: 3px;
 }
 
 #preview {
@@ -900,39 +886,12 @@ div.ace_content {
 	padding: 10px;
 }
 
-#html .form-group, #js .form-group {
-	padding-top: 0;
-	padding-bottom: 0;
-	margin-bottom: 0;
-}
-
 pre[name="html"], pre[name="js"] {
 	line-height: 0;
 }
 
-pre.ace_editor {
-	line-height: 1.4em;
-	font-size: 13px;
-}
-
 pre[name="html"], pre[name="js"], pre.ace_editor {
 	margin: 0;
-}
-
-#archy, #archyjs, #archycss {
-	// height: calc(100% - #{$sideNavWidth});
-	height: 500px;
-	min-width:  800px;
-	border-radius: 3px;
-}
-
-.btn.btn-update {
-	margin-top: 1em;
-	background-color: $updateButton;
-	padding: 0 0.9rem;
-	height: 44px;
-	border-radius: 2px;
-	line-height:48px;
 }
 
 pre.ace-cobalt .ace_meta.ace_tag {
@@ -959,12 +918,25 @@ pre.ace-cobalt .ace_constant, pre.ace-cobalt .ace_constant.ace_character, pre.ac
 	color: $white;
 }
 
-
-
 ///////////////////////////////////////////////////////////////////////////////////////
-// Social Share Buttons //
+// Buttons //
 ///////////////////////////////////////////////////////////////////////////////////////
 
+// Common
+.btn-share {
+	background-color: $actionColor1;
+}
+
+.btn.btn-update {
+	margin-top: 1em;
+	background-color: $updateButton;
+	padding: 0 0.9rem;
+	height: 44px;
+	border-radius: 2px;
+	line-height:48px;
+}
+
+// Social share
 .btn-social {
 	padding: 0.3rem 1rem;
 	border-radius: 0;
@@ -1050,7 +1022,7 @@ pre.ace-cobalt .ace_constant, pre.ace-cobalt .ace_constant.ace_character, pre.ac
 	font-size: $fontSize * 1.75;
 }
 
-.widgets .card .card-action {
+.card .card-action {
 	padding: 10px;
 	background-color: rgba(136, 160, 160, 0.04);
 }
@@ -1063,7 +1035,6 @@ pre.ace-cobalt .ace_constant, pre.ace-cobalt .ace_constant.ace_character, pre.ac
 		color: $baseText;
 	}
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////////////
 // Documentation //
@@ -1120,7 +1091,6 @@ footer {
 // .at-pwd-form {
 // 	background: $darkBase;
 // }
-
 
 .spinner-container {
 	float: left;
