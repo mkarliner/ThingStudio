@@ -15,11 +15,15 @@ getAppTree = function(appId){
 
 	app = Apps.findOne({_id: appId});
 	apps = [app._id];
-	baseApp = Apps.findOne({description: "24v86gqupNGbYz9Mv"});
-	if(baseApp) {
-		apps.push(baseApp._id);
+	baseAppId = Meteor.settings.public.systemApp;
+	if(baseAppId) {
+		console.log("Set system app to ", baseAppId)
+		apps = [app._id, baseAppId];
+	} else {
+		console.log("NO SYSTEM APP DEFINED!!!!");
+		apps = [app._id];
 	}
-	apps = [app._id, baseApp._id];
+
 	while(app.ancestor) {
 		app = Apps.findOne({_id: app.ancestor})
 		apps.push(app._id);
