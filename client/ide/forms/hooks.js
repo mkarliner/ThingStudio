@@ -46,7 +46,6 @@ compileTemplate = function(name, html_text, javascript) {
 				} else {
 					defaultValue = "-"
 				}
-				console.log("MH: ", this)
 				if(this.isWidget == false) {
 					checkFeed(feed, true);
 				}

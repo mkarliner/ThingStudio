@@ -29,6 +29,18 @@
 					<div class="card-reveal">
 						<span class="card-title">{{widgetName}}<i class="mdi-navigation-close right"></i></span>
 						<p>{{widgetInstructions}}</p>
+						<table >
+						{{#each widgetParameters}}
+						<tr><td>{{title}}</td><td>{{mandatory}}</td><td>{{description}}</td></tr>
+						{{/each}}
+						</table>
+						<p>Example invocation:</p>
+							&lt;{{widgetName}}  
+							{{#each widgetParameters}}
+							{{title}}=&quot;&quot; 
+							{{/each}}
+							&gt;
+							&lt;/{{widgetName}}&gt;
 					</div>
 					<div class="card-action">
 						<div class="right">

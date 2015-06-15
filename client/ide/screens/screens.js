@@ -62,10 +62,14 @@ Template.ScreensBody.helpers({
 
 InstantiateScreens = function(){
 	//Instantiate all screens which are widgets
-	scrs = Screens.find().fetch();
+	scrs = Screens.find({isWidget: true}).fetch();
 	for(var s=0; s<scrs.length; s++){
 		scr = scrs[s];
 		if(scr.isWidget) {
+			if(Template[scr.title]) {
+				console.log("Deleting: ", scr.title);
+				delete Template[name]; //Remove the existing template.
+			}	
 			console.log("Compiling ", scr.title);
 			compileTemplate(scr.title, scr.html, scr.js);
 			try {

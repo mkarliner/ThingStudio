@@ -22,6 +22,18 @@ SimpleSchema.messages({
 	"regEx widgetName": "Widget names must contain a - character"
 })
 
+Schemas.WidgetParameter = new SimpleSchema({
+	title: {
+		type: String,
+	},
+	mandatory: {
+		type: Boolean
+	},
+	description: {
+		type: String
+	}
+})
+
 Schemas.Screen = new SimpleSchema({
 	title: {
 		type: String,
@@ -111,7 +123,18 @@ Schemas.Screen = new SimpleSchema({
 	},
 	widgetInstructions: {
 		type: String,
-		optional: true
+		optional: true,
+		autoform: {
+			rows: 10
+		}
+	},
+	widgetParameters: {
+		type: [Schemas.WidgetParameter],
+		optional: true,
+		autoform: {
+			minCount: 0,
+			initialCount: 0
+		}
 	}
 	// public: {
 	// 	type: Boolean,

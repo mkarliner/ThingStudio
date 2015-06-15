@@ -17,6 +17,28 @@ publish = function(feed, message) {
 	}
 }
 
+// The following functions are mostly used by widgets
+
+
+publishFeed = function(feedName, message) {
+	feed = Feeds.findOne({title: feedName});
+	publish(feed, message);
+}
+
+getFeed = function(feed, defVal){
+				retmsg = Messages.findOne({
+					feed: feed
+				});
+				return msg ? msg.payload : defaultValue;
+			}
+
+paddedNumber = function(num, size) {
+    var s = "000000000" + num;
+    return s.substr(s.length-size);
+}
+
+
+// End of Widget functions
 Session.set("ConnectionStatus", false);
 Session.set("connectionErrors", null);
 
