@@ -27,20 +27,22 @@
 							&lt;/{{widgetName}}&gt;
 						</span>
 					</span>
-				<table class="widget-item bordered striped">
-					<thead>
-						<tr>
-							<td>Parameter</td><td>Required</td><td>Description</td>
-						</tr>
-					</thead>
-					<tbody>
-						{{#each widgetParameters}}
+				{{#if widgetParameters}}
+					<table class="widget-item bordered striped">
+						<thead>
 							<tr>
-								<td>{{title}}</td><td>{{mandatory}}</td><td>{{description}}</td>
+								<td>Parameter</td><td>Required</td><td>Description</td>
 							</tr>
-						{{/each}}
-					</tbody>
-				</table>
+						</thead>
+						<tbody>
+							{{#each widgetParameters}}
+								<tr>
+									<td>{{title}}</td><td>{{mandatory}}</td><td>{{description}}</td>
+								</tr>
+							{{/each}}
+						</tbody>
+					</table>
+				{{/if}}
 			</div>
 			<div class="card-action">
 				<div class="right">
