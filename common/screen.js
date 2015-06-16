@@ -162,6 +162,7 @@ Screens.after.update(function(userId, doc) {
 		delete Template[name]; //Remove the existing template instance.
 		//console.log("Updated Screen", template.data.doc.html);
 		compret = compileTemplate(name, doc.html, doc.js);
+		Alerts.insert(compret);
 	}
 });
 

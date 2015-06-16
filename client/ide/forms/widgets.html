@@ -1,0 +1,24 @@
+<template name="updatdddeWidgetForm">
+  {{> quickForm collection="Widgets" class="app-detail" id="updateWidgetForm" type="update" doc=this class="qkForm" buttonClasses="glyphicon glyphicon-ok btn btn-default btn-tick" buttonContent="Save" }}
+</template>
+
+
+
+<template name="updateWidgetForm">
+	{{#autoForm collection="Widgets" class="qkForm"  id="updateAppForm" type="update" doc=this omitFields="" buttonContent="Save Widget"}}
+		<p><span class="fwHeavy">Widget Title</span> &mdash; Give your widget a name</p>
+		{{> afQuickField name='title' }}
+
+
+		<p class="fwHeavy">Base Screen</p>
+		{{> afQuickField name='baseScreen'}}
+		
+		<p class="fwHeavy">Parameters</p>
+		{{> afQuickField name='parameters'}}
+
+
+
+
+		<button type="submit" class="btn">Save</button>
+	{{/autoForm}}
+</template>

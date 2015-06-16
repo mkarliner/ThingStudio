@@ -140,7 +140,7 @@ compileTemplate = function(name, html_text, javascript) {
 		// console.log(err.message);
 		// Session.set("compilationErrors", err.message)
 		var errObj = {type: 'template', status: 'warning', message: err.message};
-		Alerts.insert(errObj);
+		//Alerts.insert(errObj);
 		return(errObj);
 	}
 };
