@@ -1029,6 +1029,20 @@ pre.ace-cobalt .ace_comment {
 	font-size: $fontSize * 1.75;
 }
 
+.svg-container {
+	position: relative;
+	width: 144px;
+	margin: 0 auto;
+}
+
+// .svg-container svg {
+// 	position: absolute;
+// 	top: 0;
+// 	left: 0;
+// 	width: 100%;
+// 	height: 87%;
+// }
+
 .card .card-action {
 	padding: 10px;
 	background-color: rgba(136, 160, 160, 0.04);
