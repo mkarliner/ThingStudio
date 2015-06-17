@@ -28,7 +28,7 @@ Template.ScreensBody.helpers({
 		return wl;
 	},
 	screenlist: function(){
-		return Screens.find({ owner: Meteor.userId()})
+		return Screens.find({ owner: Meteor.userId(), isWidget: false})
 	},
 	owner: function() {
 		return 
@@ -81,7 +81,7 @@ InstantiateWidgets = function(){
 			Template[scr.title].registerElement(wgt.tagName);
 		}
 		catch(err) {
-			console.log("Register Element: ", err);
+			console.log("Problem registering element: "+ wgt.tagName);
 		}
 			
 	}

@@ -6,6 +6,11 @@ Template.updateScreenForm.events({
 	'click .close': function(e, tmpl) {
 		tmpl.find(".alert").remove();
 		Alerts.remove(this._id);
+	},
+	'click #jstab': function(e, tmpl){
+		console.log("JSTAB")
+		AceEditor.instance("archyjs").resize();
+		// AceEditor.instance("archyjs").renderer.updateFull()
 	}
 });
 
