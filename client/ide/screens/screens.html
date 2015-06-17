@@ -7,6 +7,7 @@
 <template name="ScreensBody">
 	{{> autoformModals}}
 	{{#contentFor region="appHeader" template="ScreensHeader"}}{{/contentFor}}
+	<h2>Screen Templates</h2>
 	<table class="hoverable">
 		{{> ScreensTableWidths}}
 		<thead>
@@ -15,6 +16,26 @@
 		<tbody>
 			<tr id="item-insert" class="spacer td-closed"><td></td></tr>
 			{{#each screenlist}}
+				<tr>
+					<td>{{title}}</td>
+					<td>
+						<a class="table-action table-edit-item" href="{{pathFor 'EditScreen'}}"><i class="mdi-editor-mode-edit"></i></a>
+						<a class="table-action table-edit-item" href="{{pathFor 'SafeEditScreen'}}"><i class="mdi-action-visibility-off"></i></a>
+						{{#afModal classes="table-action table-cancel-item" collection="Screens" operation="remove" doc=_id title="Deleting Feed" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="mdi-navigation-close"></i>{{/afModal}}
+					</td>
+				</tr>
+			{{/each}}
+		</tbody>	
+	</table>
+	<h2>Widget Templates</h2>
+	<table class="hoverable">
+		{{> ScreensTableWidths}}
+		<thead>
+			<tr cellpadding="10"><th>Template Title</th><th>Action</th></tr>
+		</thead>
+		<tbody>
+			<tr id="item-insert" class="spacer td-closed"><td></td></tr>
+			{{#each widgetlist}}
 				<tr>
 					<td>{{title}}</td>
 					<td>
