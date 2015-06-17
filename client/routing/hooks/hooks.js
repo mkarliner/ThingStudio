@@ -26,7 +26,12 @@ Router.onBeforeAction(function () {
 		
 		//Does this app have an active connection defined?
 		if(app.connection) {
-			connection = Connections.findOne({_id: app.connection})
+			connection = Connections.findOne({_id: app.connection});
+			if(!connection) {
+				disconnect();
+				this.next();
+				return;
+			}
 			Session.set("currentConnection", connection );
 		} else {
 			// No, just let them go on.
@@ -35,7 +40,9 @@ Router.onBeforeAction(function () {
 			return;
 		}
 	} 
-	// console.log("VIEWCONN ", app.connection, connection);
+	
+	
+	console.log("VIEWCONN ", app.connection, connection);
 	// Do I need to the user to provide authentication credentials?
 	if ((!connection.serverCredentials || connection.serverCredentials == false) && Session.get("authReady") != true) {
 		console.log("NEED AUTH")
