@@ -109,11 +109,11 @@ Widgets.after.update(function(userId, doc) {
 			delete Template[name]; //Remove the existing template instance.
 			compret = compileTemplate(name, scr.html, scr.js);
 			Alerts.insert(compret);
-			console.log("Registering widget")
+			console.log("Registering widget: "+doc.tagName)
 			Template[scr.title].registerElement(doc.tagName);
 		}
 		catch(err) {
-			console.log("Register Element: ", err);
+			console.log("Problem registering element: ", doc.tagName);
 		}
 	}
 });
