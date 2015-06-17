@@ -1,0 +1,63 @@
+<template name="SingleWidgetHeader">
+	<h1>Hi from the SingleWidgetHeader</h1>
+</template>
+
+<template name="SingleWidgetBody">
+	{{#contentFor region="appHeader" template="SingleWidgetHeader"}}{{/contentFor}}
+	<div class="top-row">
+		<div class="col s3 tabs-container">
+			<ul class="tabs">
+				<li class="tab"><a href="#properties">Widget Info</a></li>
+				<li class="tab"><a href="#preview">Preview</a></li>
+				<!-- <li class="tab"><a href="#css">CSS</a></li> -->
+			</ul>
+		</div>
+		<div class="clearfix"></div>
+	</div>
+	<div class="single-page-container">
+		<div id="properties">
+			<p class="fwHeavy usage">To use this widget, simply copy the snippet below and paste in to your template{{#if parameters}}, changing the parameters {{/if}}
+			</p>
+					<span class="usage-inner">
+						<span class="element">&lt;{{tagName}}</span><span class="parameter">{{#each parameters}} {{title}}=<span class="white-text">&quot;{{dummyValue}}&quot;</span>{{/each}}</span><span class="element">&gt;&lt;/{{tagName}}&gt;</span>
+					</span>
+			{{#if instructions}}
+				<p class="fwHeavy">
+					{{instructions}}
+				</p>
+			{{/if}}
+			<p class="fwHeavy">Widget Parameters</p>
+			{{#if parameters}}
+				<table class="widget-item striped">
+					<thead>
+						<tr>
+							<td>Parameter</td><td>Required</td><td>Description</td>
+						</tr>
+					</thead>
+					<tbody>
+						{{#each parameters}}
+							<tr>
+								<td>{{title}}</td><td>{{mandatory}}</td><td>{{description}}</td>
+							</tr>
+						{{/each}}
+					</tbody>
+				</table>
+			{{/if}}
+			<p class="fwHeavy">To make your own copy of this widget which you can modify, start with the HTML and / or JavaScript below</p>
+			{{#if html}}
+				<p>HTML</p>
+				{{html}}
+			{{/if}}
+			{{#if js}}
+				<p>JS</p>
+				{{js}}
+			{{/if}}
+		</div>
+		<div id="preview">
+			{{> Template.dynamic template=currentScreen}}
+		</div>
+		<!-- <div id="css">
+			<p>Hi from CSS!</p>
+		</div> -->
+	</div>
+</template>

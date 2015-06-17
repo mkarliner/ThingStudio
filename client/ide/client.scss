@@ -616,6 +616,7 @@ td:last-child, th:last-child {
 	&.open {
 		display: block;
 		will-change: opacity, display;
+		z-index: 2;
 	}
 	& form {
 		padding-top: 24px;

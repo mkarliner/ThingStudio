@@ -26,8 +26,8 @@ Template.WidgetList.helpers({
 	widgetEndTag: function(){
 		return "</"+this.tagName+">";
 	},
-	iAmOwner: function() {
-		if ( this.owner == Meteor.userId() ) {
+	isSystemWidget: function() {
+		if ( this.appId == Meteor.settings.public.systemApp ) {
 			return true;
 		} else {
 			return false;

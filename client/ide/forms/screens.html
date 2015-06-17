@@ -27,15 +27,19 @@
 			<div id="html">
 				{{> Alerts}}
 				{{>afQuickField name="html" class="centerField"}}
+				<button type="submit" class="btn btn-update right">Update</button>
 			</div>
 			<div id="js">
+				{{> Alerts}}
 				{{>afQuickField name="js" class="centerField"}}
+				<button type="submit" class="btn btn-update right">Update</button>
 			</div>
 			{{#unless safeEdit}}
 				<div id="preview">
 					{{> Template.dynamic template=currentScreen}}
 				</div>
 			{{/unless}}
+		{{/autoForm}}
 			<div id="log">
 				<div class="alert-log">
 					{{#each alerts}}
@@ -47,16 +51,44 @@
 				</div>
 			</div>
 			<div id="properties">
-				{{> afQuickField name="title" class="centerField"}}
-				{{> afQuickField name="isWidget" class="centerField"}}
-				{{> afQuickField name="widgetName" class="centerField"}}
-				{{> afQuickField name="widgetInstructions" class="centerField"}}
-				{{> afQuickField name="widgetParameters" class="centerField"}}
+				{{#if isWidget}}
+					<div class="col s12 m6">
+						<h2>Template Properties</h2>
+						{{#autoForm collection="Screens" id="updateScreenForm" type="update" doc=this }}
+							{{> afQuickField name="title" class="centerField"}}
+							{{> afQuickField name="isWidget" class="centerField"}}
+							<button type="submit" class="btn">Save</button>
+						{{/autoForm}}
+					</div>
+					<div class="col s12 m6">
+						<h2>Widget Properties</h2>
+						{{#with widgetDoc}}
+							{{#autoForm collection="Widgets" class="qkForm"  id="updateWidgetForm" type="update" doc=this omitFields="" }}
+								<!-- {{> afQuickField name="widgetName" class="centerField"}}
+								{{> afQuickField name="widgetInstructions" class="centerField"}}
+								{{> afQuickField name="widgetParameters" class="centerField"}} -->
+								<p><span class="fwHeavy">Widget Title</span> &mdash; Give your widget a name</p>
+								{{> afQuickField name='title' }}
+								<p class="fwHeavy">Base Screen</p>
+								{{> afQuickField name='baseScreen'}}
+								<p class="fwHeavy">Element Name</p>
+								{{> afQuickField name='tagName'}}
+								<p class="fwHeavy">Parameters</p>
+								{{> afQuickField name='parameters'}}
+								<button type="submit" class="btn">Save Widget</button>
+							{{/autoForm}}
+						{{/with}}
+					</div>
+				{{else}}
+					{{#autoForm collection="Screens" id="updateScreenForm" type="update" doc=this }}
+						{{> afQuickField name="title" class="centerField"}}
+						{{> afQuickField name="isWidget" class="centerField"}}
+						<button type="submit" class="btn">Save</button>
+					{{/autoForm}}
+				{{/if}}
 			</div>
 			<!-- <div id="css">
 				<p>Hi from CSS!</p>
 			</div> -->
-			<button type="submit" class="btn btn-update right">Update</button>
-		{{/autoForm}}
 	</div>
 </template>

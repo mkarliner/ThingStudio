@@ -1,5 +1,6 @@
 Template.updateScreenForm.onRendered(function() {
 	$('ul.tabs').tabs();
+	$('select').material_select();
 });
 
 Template.updateScreenForm.events({
@@ -41,5 +42,8 @@ Template.updateScreenForm.helpers({
 		} else {
 			console.log('alertType else case firing')
 		}
+	},
+	widgetDoc: function() {
+		return Widgets.findOne({baseScreen: this._id});
 	}
 });

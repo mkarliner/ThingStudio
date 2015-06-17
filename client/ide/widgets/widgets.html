@@ -17,9 +17,9 @@
 				<span class="card-title">{{title}}<i class="mdi-navigation-close right"></i></span>
 				<!-- <p>{{widgetInstructions}}</p> -->
 				<p class="fwHeavy usage">Usage:</p>
-					<span class="usage-inner">
-						<span class="element">&lt;{{tagName}}</span><span class="parameter">{{#each parameters}} {{title}}=<span class="white-text">&quot;{{dummyValue}}&quot;</span>{{/each}}</span><span class="element">&gt;&lt;/{{tagName}}&gt;</span>
-					</span>
+				<span class="usage-inner">
+					<span class="element">&lt;{{tagName}}</span><span class="parameter">{{#each parameters}} {{title}}=<span class="white-text">&quot;{{dummyValue}}&quot;</span>{{/each}}</span><span class="element">&gt;&lt;/{{tagName}}&gt;</span>
+				</span>
 				{{#if parameters}}
 					<table class="widget-item bordered striped">
 						<thead>
@@ -39,11 +39,11 @@
 			</div>
 			<div class="card-action">
 				<div class="right">
-					{{#if iAmOwner}}
-						<a class="table-action table-edit-item" href="{{pathFor 'EditWidget'}}"><i class="mdi-editor-mode-edit"></i></a>
-						{{#afModal classes="table-action table-cancel-item" collection="Screens" operation="remove" doc=_id title="Deleting Feed" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="mdi-navigation-close"></i>{{/afModal}}
+					{{#if isSystemWidget}}
+						<a class="table-action table-edit-item" href="{{pathFor 'SingleWidget'}}"><i class="mdi-action-visibility"></i></a>
 					{{else}}
-						<a class="table-action table-edit-item" href="{{pathFor 'EditWidget'}}"><i class="mdi-action-visibility"></i></a>
+						<a class="table-action table-edit-item" href="/screens/{{baseScreen}}/edit"><i class="mdi-editor-mode-edit"></i></a>
+						{{#afModal classes="table-action table-cancel-item" collection="Screens" operation="remove" doc=_id title="Deleting Feed" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="mdi-navigation-close"></i>{{/afModal}}
 					{{/if}}
 				</div>
 			</div>
