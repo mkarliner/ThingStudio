@@ -11,7 +11,7 @@
 		<div class="col s6 tabs-container">
 			<ul class="tabs">
 				<li class="tab"><a href="#html">HTML</a></li>
-				<li class="tab" id="jstab"><a href="#js">JS</a></li>
+				<li class="tab" id="jstab"><a href="#js">JavaScript</a></li>
 				{{#unless safeEdit}}
 					<li class="tab"><a href="#preview">Preview</a></li>
 				{{/unless}}
@@ -24,10 +24,6 @@
 	</div>
 	<div class="single-page-container">
 		{{#autoForm collection="Screens" id="updateScreenForm" type="update" doc=this }}
-			
-			<!-- {{>afQuickField name="theme" class="centerField"}} -->
-			<!-- {{>afQuickField name="isWidget" class="centerField"}}
-			{{>afQuickField name="widgetName" class="centerField"}} -->
 			<div id="html">
 				{{> Alerts}}
 				{{>afQuickField name="html" class="centerField"}}
@@ -60,9 +56,6 @@
 			<!-- <div id="css">
 				<p>Hi from CSS!</p>
 			</div> -->
-			<!-- {{>afQuickField name="updatesHistory"}} -->
-			<!-- {{>afQuickField name="title" class="centerField"}}
-			{{>afQuickField name="widgetName" class="centerField"}} -->
 			<button type="submit" class="btn btn-update right">Update</button>
 		{{/autoForm}}
 	</div>

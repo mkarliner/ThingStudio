@@ -2,10 +2,6 @@ Widgets = new Mongo.Collection("widgets");
 
 
 
-
-
-
-
 Schemas.WidgetParameter = new SimpleSchema({
 	title: {
 		type: String,
@@ -117,9 +113,6 @@ Widgets.after.update(function(userId, doc) {
 		}
 	}
 });
-
-
-
 
 Widgets.attachSchema(Schemas.Widget);
 

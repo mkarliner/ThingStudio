@@ -2,10 +2,6 @@ Template.WidgetsBody.onRendered(function() {
 	$('ul.tabs').tabs();
 });
 
-Template.EditWidgetHeader.onRendered(function() {
-	$('select').material_select();
-});
-
 Template.WidgetList.created = function(){
 		InstantiateWidgets();
 }

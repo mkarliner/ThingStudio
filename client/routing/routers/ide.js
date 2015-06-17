@@ -241,6 +241,14 @@ Router.route("/widgets/:_id/edit", {
 Router.route("/widgets/:_id", {
 	name: "SingleWidget",
 	controller: "IDEController",
+	data: function() {
+		if(!this.ready()){
+			return {};
+		}
+		// Session.set("currentScreenPage", this.params._id);
+		scr = Widgets.findOne({ _id: this.params._id });
+		return scr;
+	},
 	action: function() {
 		if ( !this.ready() ) {
 			this.render("Loading", {
