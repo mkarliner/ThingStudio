@@ -43,7 +43,7 @@ Template.BreadcrumbsContent.helpers({
 			// Applies to: sub-app list pages, edit pages
 			var appTreeObj = Session.get("appTreeList")
 			console.log(appTreeObj)
-			appTreeObj.path = "/apps/";
+			appTreeObj[0].path = "/apps/" + this._id;
 			console.log(appTreeObj)
 			return appTreeObj;
 		} else if ( routeName == "Docs" ) {
@@ -73,7 +73,7 @@ Template.BreadcrumbsContent.helpers({
 			return [ { item: this.title, path: this._id } ];
 		} else if ( routeName == "Edit Feed" ) {
 			// Applies to: edit feed page
-			return [ { item: "Feeds", path: "/feeds" }, { item: routeName, path: "/feeds/" + this._id } ];
+			return [ { item: "Feeds", path: "/feeds" }, { item: this.title, path: "/feeds/" + this._id } ];
 		} else if ( routeName == "Edit Connection" ) {
 			// Applies to: edit connection page
 			return [ { item: "Connections", path: "/connections" }, { item: routeName, path: "/connections/" + this._id } ];
