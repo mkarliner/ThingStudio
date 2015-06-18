@@ -39,7 +39,7 @@
 			</div>
 			<div class="card-action">
 				<div class="right">
-					{{#if isSystemWidget}}
+					{{#if notOwner}}
 						<a class="table-action table-edit-item" href="{{pathFor 'SingleWidget'}}"><i class="mdi-action-visibility"></i></a>
 					{{else}}
 						<a class="table-action table-edit-item" href="/screens/{{baseScreen}}/edit"><i class="mdi-editor-mode-edit"></i></a>
