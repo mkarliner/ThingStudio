@@ -1,9 +1,9 @@
-Template.ViewFeedBody.onRendered(function() {
+Template.EditFeedBody.onRendered(function() {
     $('ul.tabs').tabs();
     $('select').material_select();
 });
 
-Template.ViewFeedHeader.helpers({
+Template.EditFeedHeader.helpers({
 	thisfeed: function() {
 		return this.title;
 	},

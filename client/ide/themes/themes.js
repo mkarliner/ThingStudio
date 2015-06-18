@@ -29,10 +29,3 @@ Template.ThemesBody.helpers({
 		}
 	}
 });
-
-Template.ThemesBody.events({
-	"click .themelink": function(ev) {
-		console.log("Theme click")
-		Router.go("/themes/" + this._id);
-	}
-})

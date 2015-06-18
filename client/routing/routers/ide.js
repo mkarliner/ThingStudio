@@ -79,7 +79,7 @@ Router.route("/apps", {
 });
 
 Router.route("/connections/:_id", {
-	name: "EditSingleConnection",
+	name: "Edit Connection",
 	controller: "IDEController",
 	data: function() {
 		return Connections.findOne({_id: this.params._id});
@@ -110,7 +110,7 @@ Router.route("/connections", {
 });
 
 Router.route("/feeds/:_id", {
-	name: "View Feed",
+	name: "Edit Feed",
 	controller: "IDEController",
 	data: function() {
 		return Feeds.findOne({_id: this.params._id});
@@ -121,13 +121,13 @@ Router.route("/feeds/:_id", {
 				data: "Feed"
 			});
 		} else {
-			renderYields(this, 'ViewFeed');
+			renderYields(this, 'EditFeed');
 		}
 	}
 });
 
 Router.route("/feeds", {
-	name: "Data Feeds",
+	name: "Feeds",
 	controller: "IDEController",
 	data: function() {
 			return Feeds.find();
@@ -138,13 +138,13 @@ Router.route("/feeds", {
 				data: "Feeds"
 			});
 		} else {
-			renderYields(this, 'DataFeeds');
+			renderYields(this, 'Feeds');
 		}
 	}
 });
 
-Router.route("/screens/:_id/edit", {
-	name: "EditScreen",
+Router.route("/templates/:_id/edit", {
+	name: "Edit Template",
 	controller: "IDEController",
 	data: function() {
 		if(!this.ready()){
@@ -166,8 +166,8 @@ Router.route("/screens/:_id/edit", {
 	}
 });
 
-Router.route("/screens/:_id/safeedit", {
-	name: "SafeEditScreen",
+Router.route("/templates/:_id/safeedit", {
+	name: "Safe Edit Template",
 	controller: "IDEController",
 	data: function() {
 		Session.set("currentScreenPage", this.params._id);
@@ -186,8 +186,8 @@ Router.route("/screens/:_id/safeedit", {
 	}
 });
 
-Router.route("/screens/:_id", {
-	name: "SingleScreen",
+Router.route("/templates/:_id", {
+	name: "View Template",
 	controller: "IDEController",
 	action: function() {
 		if ( !this.ready() ) {
@@ -200,8 +200,8 @@ Router.route("/screens/:_id", {
 	}
 });
 
-Router.route("/screens", {
-	name: "Screens",
+Router.route("/templates", {
+	name: "Templates",
 	controller: "IDEController",
 	action: function() {
 		if ( !this.ready() ) {
@@ -261,11 +261,11 @@ Router.route("/widgets/:_id", {
 });
 
 Router.route("/themes/:_id", {
-	name: "SingleTheme",
+	name: "Edit Theme",
 	controller: "IDEController",
 	data: function() {
 		Session.set("currentTheme", this.params._id);
-		return Themes.find({ _id: this.params._id });
+		return Themes.findOne({ _id: this.params._id });
 	},
 	action: function() {
 		if ( !this.ready() ) {

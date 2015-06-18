@@ -1,8 +1,8 @@
-Template.DataFeedsHeader.onRendered(function() {
+Template.FeedsHeader.onRendered(function() {
 	$('select').material_select();
 });
 
-Template.DataFeedsHeader.events({
+Template.FeedsHeader.events({
 	"click .header-action-1": function(e, tmpl) {
 		e.preventDefault();
 		menuOps();
@@ -10,7 +10,7 @@ Template.DataFeedsHeader.events({
 	}
 });
 
-Template.DataFeedsNewItem.events({
+Template.FeedsNewItem.events({
 	"click .table-cancel-new": function(e, tmpl) {
 		menuOps();
 	},
@@ -19,7 +19,7 @@ Template.DataFeedsNewItem.events({
 	}
 });
 
-Template.DataFeedsBody.helpers({
+Template.FeedsBody.helpers({
 	feedlist: function(){
 		return Feeds.find({owner: Meteor.userId()}, {sort: {createdAt: -1}})
 	},

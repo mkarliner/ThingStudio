@@ -14,16 +14,17 @@
 <template name="BreadcrumbsContent">
 	{{#contentFor "breadcrumbs"}}
 		<li><a href="/dashboard"><i class="mdi-action-home"></i><span class="fwHeavy">Home</span></a></li>
-		
 		{{#if route_base}}
 			{{#each route_base}}
 				<li class="bcd"><span class="bcds">/</span></li>
-				<li><a href="{{this._id}}">{{this.title}}</a></li>
+				<li><a href="{{path}}">{{this.title}}</a></li>
 			{{/each}}
 		{{/if}}
-		{{#if breadcrumb}}
-			<li class="bcd"><span class="bcds">/</span></li>
-			<li><a href="">{{breadcrumb}}</a></li>
+		{{#if route_extension}}
+			{{#each route_extension}}
+				<li class="bcd"><span class="bcds">/</span></li>
+				<li><a href="{{path}}">{{item}}</a></li>
+			{{/each}}
 		{{/if}}
 	{{/contentFor}}
 </template>

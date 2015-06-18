@@ -17,9 +17,12 @@
 			<tr id="item-insert" class="spacer td-closed"><td></td></tr>
 			{{#each themelist}}
 				<tr>
-					<td><a   class="themelink">{{this.title}}</a></td>
+					<td>{{this.title}}</td>
 					<td>{{status}}</td>
-					<td>{{#afModal class="btn btn-danger" collection="Themes" operation="remove" doc=_id}} Delete  {{/afModal}}</td>
+					<td>
+						<a class="table-action table-edit-item" href="{{pathFor 'Edit Theme'}}"><i class="mdi-editor-mode-edit"></i></a>
+						{{#afModal classes="table-action table-cancel-item" collection="Themes" operation="remove" doc=_id title="Deleting App" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="mdi-navigation-close"></i>{{/afModal}}
+					</td>
 				</tr>
 			{{/each}}
 		</tbody>

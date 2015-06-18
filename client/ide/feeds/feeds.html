@@ -1,12 +1,12 @@
-<template name="DataFeedsHeader">
+<template name="FeedsHeader">
 	<h1 class="left">Feeds</h1>
 	<!-- <a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>BUTTON</a> -->
 	<a class="header-action-1 clearfix" href="#">Create a new feed</a>
 </template>
 
-<template name="DataFeedsBody">
+<template name="FeedsBody">
 	{{> autoformModals}}
-	{{#contentFor region="appHeader" template="DataFeedsHeader"}}{{/contentFor}}
+	{{#contentFor region="appHeader" template="FeedsHeader"}}{{/contentFor}}
 	<table class="hoverable">
 		{{> FeedsTableWidths}}
 		<thead>
@@ -19,15 +19,15 @@
 					<td>{{title}}</td>
 					<td>{{subscription}}</td>	
 					<td>{{pubsub}}</td>
-					<td><a class="table-action table-edit-item" href="{{pathFor 'View Feed'}}"><i class="mdi-editor-mode-edit"></i></a>{{#afModal classes="table-action table-cancel-item" collection="Feeds" operation="remove" doc=_id title="Deleting Feed" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="mdi-navigation-close"></i>{{/afModal}}</td>
+					<td><a class="table-action table-edit-item" href="{{pathFor 'Edit Feed'}}"><i class="mdi-editor-mode-edit"></i></a>{{#afModal classes="table-action table-cancel-item" collection="Feeds" operation="remove" doc=_id title="Deleting Feed" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="mdi-navigation-close"></i>{{/afModal}}</td>
 				</tr>
 			{{/each}}
 		</tbody>
 	</table>
-	{{> DataFeedsNewItem}}
+	{{> FeedsNewItem}}
 </template>
 
-<template name="DataFeedsNewItem">
+<template name="FeedsNewItem">
 	<div class="add-new-item">
 		{{#autoForm collection="Feeds" id="insertItemForm" type="insert"}}
 			<table>
