@@ -13,6 +13,9 @@ Template.AppTopNav.events({
 		// 		$('.debug').hide();
 		// 	}
 		// });
+	},
+	'click .hide-header': function() {
+		headerVisibility();
 	}
 });
 

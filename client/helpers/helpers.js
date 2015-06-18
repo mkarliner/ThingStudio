@@ -102,3 +102,19 @@ Template.registerHelper("appTreeList", function(){
 Template.registerHelper("themeOptions", function() {
 	return;
 });
+
+headerVisibility = function() {
+	if (Session.get("headerVisibility") == "hidden") {
+		Session.set("headerVisibility", "visible");
+		$('header').slideDown({
+			duration: 100,
+			easing: "easeInOutCubic"
+		});
+	} else {
+		Session.set("headerVisibility", "hidden");
+		$('header').slideUp({
+			duration: 100,
+			easing: "easeInOutCubic"
+		});
+	}
+}
