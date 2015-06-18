@@ -9,7 +9,7 @@ Schemas.WidgetParameter = new SimpleSchema({
 	paramType: {
 		label: "Type",
 		type: String,
-		allowedValues: ["Number", "[Numbers]", "true/false"]
+		allowedValues: ["Number", "[Numbers]", "String"]
 	},
 	required: {
 		type: Boolean

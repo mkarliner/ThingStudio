@@ -24,13 +24,13 @@
 					<table class="widget-item bordered striped">
 						<thead>
 							<tr>
-								<td>Parameter</td><td>Required</td><td>Description</td>
+								<td>Parameter</td><td>Type</td><td>Required</td><td>Description</td>
 							</tr>
 						</thead>
 						<tbody>
 							{{#each parameters}}
 								<tr>
-									<td>{{title}}</td><td>{{mandatory}}</td><td>{{description}}</td>
+									<td>{{title}}</td><td>{{paramType}}</td><td>{{mandatory}}</td><td>{{description}}</td>
 								</tr>
 							{{/each}}
 						</tbody>
@@ -39,10 +39,9 @@
 			</div>
 			<div class="card-action">
 				<div class="right">
-					{{#if notOwner}}
 						<a class="table-action table-edit-item" href="{{pathFor 'SingleWidget'}}"><i class="mdi-action-visibility"></i></a>
-					{{else}}
-						<a class="table-action table-edit-item" href="/templates/{{baseScreen}}/edit"><i class="mdi-editor-mode-edit"></i></a>
+					{{#if owner}}
+						<a class="table-action table-edit-item" href="/screens/{{baseScreen}}/edit"><i class="mdi-editor-mode-edit"></i></a>
 						{{#afModal classes="table-action table-cancel-item" collection="Screens" operation="remove" doc=_id title="Deleting Feed" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="mdi-navigation-close"></i>{{/afModal}}
 					{{/if}}
 				</div>
