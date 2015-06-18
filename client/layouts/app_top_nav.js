@@ -43,7 +43,6 @@ Template.BreadcrumbsContent.helpers({
 			// Applies to: sub-app list pages, edit pages
 			var appTreeObj = Session.get("appTreeList")
 			appTreeObj[0].path = "/apps/" + appTreeObj[0]._id;
-			console.log(appTreeObj)
 			return appTreeObj;
 		} else if ( routeName == "Docs" ) {
 			// Applies to: Single documentation pages
@@ -75,13 +74,13 @@ Template.BreadcrumbsContent.helpers({
 			return [ { item: "Feeds", path: "/feeds" }, { item: this.title, path: "/feeds/" + this._id } ];
 		} else if ( routeName == "Edit Connection" ) {
 			// Applies to: edit connection page
-			return [ { item: "Connections", path: "/connections" }, { item: routeName, path: "/connections/" + this._id } ];
+			return [ { item: "Connections", path: "/connections" }, { item: this.title, path: "/connections/" + this._id } ];
 		} else if ( routeName == "Edit Template" ) {
 			// Applies to: edit connection page
-			return [ { item: "Templates", path: "/templates" }, { item: routeName, path: "/templates/" + this._id } ];
+			return [ { item: "Templates", path: "/templates" }, { item: this.title, path: "/templates/" + this._id } ];
 		} else if ( routeName == "Edit Theme" ) {
 			// Applies to: edit connection page
-			return [ { item: "Themes", path: "/themes" }, { item: routeName, path: "/themes/" + this._id } ];
+			return [ { item: "Themes", path: "/themes" }, { item: this.title, path: "/themes/" + this._id } ];
 		} else {
 			console.log("from breadcrumb, should not run")
 		}
