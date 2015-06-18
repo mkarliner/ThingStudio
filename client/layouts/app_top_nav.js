@@ -16,6 +16,10 @@ Template.AppTopNav.events({
 	},
 	'click .hide-header': function() {
 		headerVisibility();
+		// $(window).on('resize', function () {
+		//     resizeAce();
+		// });
+		resizeAce();
 	}
 });
 

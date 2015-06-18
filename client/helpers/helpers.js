@@ -103,6 +103,14 @@ Template.registerHelper("themeOptions", function() {
 	return;
 });
 
+Template.registerHelper('headerVisible', function() {
+	if (Session.get("headerVisibility") == "visible"){
+		return true;
+	} else {
+		return false;
+	}
+});
+
 headerVisibility = function() {
 	if (Session.get("headerVisibility") == "hidden") {
 		Session.set("headerVisibility", "visible");
@@ -118,3 +126,8 @@ headerVisibility = function() {
 		});
 	}
 }
+
+resizeAce = function() {
+    var h = window.innerHeight;
+        $('#archy').css('height', (h - 290).toString() + 'px');
+};
