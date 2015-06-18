@@ -42,7 +42,8 @@ Template.BreadcrumbsContent.helpers({
 			// If current route is a 'sub-route' of the app, then return the current app as the base of the breadcrumb
 			// Applies to: sub-app list pages, edit pages
 			var appTreeObj = Session.get("appTreeList")
-			appTreeObj[0].path = "/apps/" + this._id;
+			appTreeObj[0].path = "/apps/" + appTreeObj[0]._id;
+			console.log(appTreeObj)
 			return appTreeObj;
 		} else if ( routeName == "Docs" ) {
 			// Applies to: Single documentation pages
