@@ -744,6 +744,15 @@ table, .single-page-container {
 		font-size: 1.6 * $fontSize;
 		line-height: 27px;
 	}
+	& i[class^="icon-ts"] {
+		font-size: 16px;
+		line-height: 33px;
+		text-align: center;
+	}
+	& i.icon-ts-trash {
+		font-size: 18px;
+		line-height: 38px;
+	}
 }
 
 .table-action.ta-disabled, .card .card-action a.ta-disabled {
