@@ -354,8 +354,9 @@ Router.route("/tutorials", {
 	},
 });
 
+
 Router.route("/docsold/:urlstring", {
-	name: "Docs",
+	name: "OldDocs",
 	controller: "DocsController",
 	data: function() {
 		return HelpPages.findOne({ urlstring: this.params.urlstring });
@@ -372,8 +373,8 @@ Router.route("/docsold/:urlstring", {
 });
 
 Router.route("/docsold", {
-	name: "Documentation",
-	controller: "DocsController",
+	name: "OldDocumentation",
+	controller: "OldDocsController",
 	data: function() {
 		return HelpPages.find({}, {
 			sort: {
@@ -387,9 +388,44 @@ Router.route("/docsold", {
 				data: "Documenation"
 			});
 		} else {
+			renderYields(this, 'OldDocumentation');
+		}
+	},
+});
+
+
+Router.route("/docs", {
+	name: "Documentation",
+	controller: "DocsController",
+	data: function() {
+		return DocsIndex;
+	},
+	action: function() {
+		if ( !this.ready() ) {
+			this.render("Loading", {
+				data: "Documenation"
+			});
+		} else {
 			renderYields(this, 'Documentation');
 		}
 	},
+});
+
+Router.route("/docs/:urlstring", {
+	name: "Docs",
+	controller: "DocsController",
+	data: function() {
+		return Docs.findOne({ "attributes.urlstring": this.params.urlstring });
+	},
+	action: function() {
+		if ( !this.ready() ) {
+			this.render("Loading", {
+				data: "Documenation"
+			});
+		} else {
+			renderYields(this, "Docs");
+		}
+	}
 });
 
 Router.route("/support", {

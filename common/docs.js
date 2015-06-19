@@ -23,4 +23,4 @@
 
 
 Docs = new Meteor.Collection("docs");
-Docs.remove();
+

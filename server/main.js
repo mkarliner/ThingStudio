@@ -1,3 +1,4 @@
+
 isAdmin = function(userId) {
 	user = Meteor.users.findOne({
 		_id: userId
@@ -296,6 +297,7 @@ Meteor.startup(function() {
 		})
 	});
 
+
 	Docs.remove({});
 	Meteor.publish("docs", function(){
 		console.log("Subscribing Docs")
@@ -313,4 +315,6 @@ Meteor.startup(function() {
 		console.log("DCOS: ",Docs.findOne());
 	}
 
+
 });
+

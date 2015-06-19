@@ -102,6 +102,7 @@ Connections.before.insert(function(userId, doc) {
 });
 
 Connections.after.update(function(userId, doc) {
+	console.log("DIOC ", doc)
 	if(Meteor.isClient) {
 		currConn = getCurrentConnection();
 		if(currConn._id == doc._id) {

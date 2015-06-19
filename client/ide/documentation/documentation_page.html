@@ -9,9 +9,8 @@
 
 <template name="DocsBody">	
 	<div class="single-page-container">
-		{{> DocTable "asdfad"}}
 		<div id="helpbody">
-			{{#markdown}}{{body}}{{/markdown}}
+			{{#markdown}}{{> Template.dynamic template=currentDoc}}{{/markdown}}
 		</div>
 		<p class="text-muted"><em>Last updated: {{publishedDate updatedAt}}</em></p>
 		<div id="helpfooter">
@@ -19,3 +18,5 @@
 		</div>
 	</div>
 </template>
+
+

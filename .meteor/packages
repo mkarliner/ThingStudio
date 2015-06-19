@@ -24,7 +24,6 @@ dburles:collection-helpers
 matb33:collection-hooks
 chuangbo:cookie
 #yogiben:autoform-modals
-markdown
 okgrow:analytics
 mizzao:user-status
 mrt:moment
@@ -46,3 +45,4 @@ meteorhacks:npm
 
 npm-container
 pfafman:filesaver
+chuangbo:marked

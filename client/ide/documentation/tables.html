@@ -1,7 +1,20 @@
+
+
 <template name="DocTable">
-	<table>
-		<tr>
-			<td>{{this}}</td>
-		</tr>
-	</table>
+<table>
+<tr>
+{{#with tableheader this}}
+{{#each columns}}
+<th>{{key}}</th>
+{{/each}}
+{{/with}}
+</tr>
+{{#each tabledata this}}
+<tr>
+{{#each columns}}
+<td>{{value}}</td>
+{{/each}}
+</tr>
+{{/each}}
+</table>
 </template>
