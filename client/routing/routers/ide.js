@@ -354,7 +354,7 @@ Router.route("/tutorials", {
 	},
 });
 
-Router.route("/docs/:urlstring", {
+Router.route("/docsold/:urlstring", {
 	name: "Docs",
 	controller: "DocsController",
 	data: function() {
@@ -371,7 +371,7 @@ Router.route("/docs/:urlstring", {
 	}
 });
 
-Router.route("/docs", {
+Router.route("/docsold", {
 	name: "Documentation",
 	controller: "DocsController",
 	data: function() {

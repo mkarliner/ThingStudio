@@ -19,7 +19,7 @@
 					<td>{{title}}</td>
 					<td>{{subscription}}</td>	
 					<td>{{pubsub}}</td>
-					<td><a class="table-action table-edit-item" href="{{pathFor 'Edit Feed'}}"><i class="mdi-editor-mode-edit"></i></a>{{#afModal classes="table-action table-cancel-item" collection="Feeds" operation="remove" doc=_id title="Deleting Feed" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="mdi-navigation-close"></i>{{/afModal}}</td>
+					<td><a class="table-action table-edit-item" href="{{pathFor 'Edit Feed'}}"><i class="mdi-editor-mode-edit"></i></a>{{#afModal classes="table-action table-cancel-item" collection="Feeds" operation="remove" doc=_id title="Deleting Feed" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="icon-ts-trash"></i>{{/afModal}}</td>
 				</tr>
 			{{/each}}
 		</tbody>
@@ -38,7 +38,7 @@
 						<td>{{> afQuickField name='subscription' placeholder="Subscription Name"}}</td>
 						<td>{{> afQuickField name='pubsub' options="allowed"}}</td>
 						<td>
-							<button type="submit" class="table-action table-save-new"><i class="mdi-navigation-check"></i></button><button class="table-action table-cancel-new"><i class="mdi-navigation-close"></i></button>
+							<button type="submit" class="table-action table-save-new"><i class="icon-ts-checkmark"></i></button><button class="table-action table-cancel-new"><i class="icon-ts-cancel"></i></button>
 						</td>
 					</tr>
 				</tbody>

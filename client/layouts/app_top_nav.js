@@ -31,6 +31,13 @@ Template.AppTopNav.helpers({
 		} else {
 			return 'no connection';
 		}
+	},
+	isConnected: function() {
+		if ( Session.get( "ConnectionStatus" ) == true ) {
+			return 'connected';
+		} else {
+			return 'disconnected';
+		}
 	}
 });
 

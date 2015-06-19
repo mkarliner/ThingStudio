@@ -20,7 +20,7 @@
 					<td>
 						<a class="table-action table-edit-item" href="{{pathFor 'Edit Template'}}"><i class="mdi-editor-mode-edit"></i></a>
 						<a class="table-action table-edit-item" href="{{pathFor 'Safe Edit Template'}}"><i class="mdi-action-visibility-off"></i></a>
-						{{#afModal classes="table-action table-cancel-item" collection="Screens" operation="remove" doc=_id title="Deleting Feed" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="mdi-navigation-close"></i>{{/afModal}}
+						{{#afModal classes="table-action table-cancel-item" collection="Screens" operation="remove" doc=_id title="Deleting Feed" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="icon-ts-trash"></i>{{/afModal}}
 					</td>
 				</tr>
 			{{/each}}
@@ -58,7 +58,7 @@
 					<tr>
 						<td>{{> afQuickField name='title' placeholder="Template Title" class="first"}}</td>
 						<td>
-							<button type="submit" class="table-action table-save-new"><i class="mdi-navigation-check"></i></button><button class="table-action table-cancel-new"><i class="mdi-navigation-close"></i></button>
+							<button type="submit" class="table-action table-save-new"><i class="icon-ts-checkmark"></i></button><button class="table-action table-cancel-new"><i class="icon-ts-cancel"></i></button>
 						</td>
 					</tr>
 				</tbody>

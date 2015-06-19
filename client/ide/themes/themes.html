@@ -20,7 +20,7 @@
 					<td>{{status}}</td>
 					<td>
 						<a class="table-action table-edit-item" href="{{pathFor 'Edit Theme'}}"><i class="mdi-editor-mode-edit"></i></a>
-						{{#afModal classes="table-action table-cancel-item" collection="Themes" operation="remove" doc=_id title="Deleting App" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="mdi-navigation-close"></i>{{/afModal}}
+						{{#afModal classes="table-action table-cancel-item" collection="Themes" operation="remove" doc=_id title="Deleting App" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="icon-ts-trash"></i>{{/afModal}}
 					</td>
 				</tr>
 			{{/each}}
@@ -39,7 +39,7 @@
 						<td>{{> afQuickField name='title' placeholder="Theme Title" class="first"}}</td>
 						<td>me</td>
 						<td>
-							<button type="submit" class="table-action table-save-new"><i class="mdi-navigation-check"></i></button><button class="table-action table-cancel-new"><i class="mdi-navigation-close"></i></button>
+							<button type="submit" class="table-action table-save-new"><i class="icon-ts-checkmark"></i></button><button class="table-action table-cancel-new"><i class="icon-ts-cancel"></i></button>
 						</td>
 					</tr>
 				</tbody>

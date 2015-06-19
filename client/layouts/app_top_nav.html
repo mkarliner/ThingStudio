@@ -11,8 +11,8 @@
 					<i class="mdi-navigation-unfold-more"></i>
 				{{/if}}
 			</a></li>
-			<li><a class="tnconn tooltipped" data-position="bottom" data-delay="300" data-tooltip="Current connection: {{currentConnectionName}}" href=""><i class="mdi-action-language"></i></a></li>
-			<li><a class="debug-dropdown" href=""><i class="mdi-editor-merge-type"></i></a></li>
+			<li><a class="tnconn tooltipped" data-position="bottom" data-delay="300" data-tooltip="Current connection: {{currentConnectionName}}" href=""><i class="icon-ts-connection {{isConnected}}"></i></a></li>
+			<li><a class="debug-dropdown" href=""><i class="icon-ts-ekg"></i></a></li>
 		</ul>
 	</nav>
 	{{> Debug}}
