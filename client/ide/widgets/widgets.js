@@ -6,6 +6,21 @@ Template.WidgetList.created = function(){
 		InstantiateWidgets();
 }
 
+Template.WidgetsHeader.events({
+	'change input': function(e){
+		console.log("WIN ", e.originalEvent.srcElement.files);
+		file = e.originalEvent.srcElement.files[0];
+		reader = new FileReader();
+		reader.onload = function(thing) {
+			console.log("TJING", thing);
+			console.log("TSRC ", thing.srcElement.result)
+			// return function(e) {thing.src = e.target.result};)(img)
+		}
+		reader.readAsText(file)
+	}
+})
+
+
 Template.WidgetsBody.helpers({
 	myWidgetList: function(){
 		wl =  Widgets.find({  appId: {$ne: Meteor.settings.public.systemApp}})

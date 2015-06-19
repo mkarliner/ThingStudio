@@ -296,7 +296,21 @@ Meteor.startup(function() {
 		})
 	});
 
-
-
+	Docs.remove({});
+	Meteor.publish("docs", function(){
+		console.log("Subscribing Docs")
+		return Docs.find();
+	});
+	FM = Meteor.npmRequire("front-matter");
+	console.log("AFTERFM")
+	var fs = Npm.require('fs');
+	var files = fs.readdirSync('../../../../../private/docs');
+	console.log("docs", files)
+	for(var f=0; f<files.length; f++){
+		a = Assets.getText("docs/"+files[f]);
+		console.log("MYTXT ", FM(a));
+		Docs.insert(FM(a));
+		console.log("DCOS: ",Docs.findOne());
+	}
 
 });
