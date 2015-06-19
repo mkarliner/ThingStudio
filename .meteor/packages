@@ -41,3 +41,8 @@ ground:db
 gildaspk:autoform-modals-materialize@0.0.6
 aldeed:template-extension
 reactive-dict
+meteorhacks:npm
+
+
+npm-container
+pfafman:filesaver

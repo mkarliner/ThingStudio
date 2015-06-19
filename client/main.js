@@ -96,6 +96,7 @@ Accounts.onLogin(function(){
 //
 //     return user;
 // }
+Meteor.subscribe("docs");
 
  AutoForm.debug();
 
