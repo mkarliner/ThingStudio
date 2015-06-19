@@ -124,6 +124,7 @@ html {
 	text-rendering: optimizeLegibility;
 	-moz-osx-font-smoothing: grayscale;
 	-moz-font-feature-settings: "liga" on;
+	overflow-x: hidden;
 }
 
 body {
@@ -362,6 +363,7 @@ nav.top-nav {
 		line-height: 57px;
 	}
 	& a i.icon-ts-connection {
+		transition: background-color 0.1s cubic-bezier(0.55, 0, 0.1, 1);
 		border-radius: 50%;
 		font-size: 15px;
 		width: 22px;
@@ -411,15 +413,18 @@ nav.top-nav {
 }
 
 .debug {
-	display: none;
+	visibility: hidden;
+	transform: translateX(100%);
+	transition: all 0.2s cubic-bezier(0.55, 0, 0.1, 1);
 	background-color: $white;
-	z-index: 2;
+	z-index: 3;
 	position: absolute;
 	top: 52px;
 	right: 0;
 	width: 550px;
 	max-height: 700px;
 	border: $navBorder;
+	will-change: visibility, translateY, transform;
 	& table {
 		margin-bottom: 2em;
 	}
@@ -466,7 +471,8 @@ nav.top-nav {
 }
 
 .debug.debug-open {
-	display: block;
+	transform: translateX(0%);
+	visibility: visible;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
