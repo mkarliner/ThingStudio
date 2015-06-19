@@ -75,17 +75,11 @@ Template.registerHelper("menuOps",
 Template.registerHelper("debugOps",
 	debugOps = function() {
 		if ( $('.debug').hasClass('debug-open') ) {
-			console.log('debug is open before doing anything')
 			//Is open
 			$('body div.debug').toggleClass('debug-open');
-			// $('main div.add-new-item').removeClass('open').css({opacity: 1.0}).animate({opacity: 0.0}, 100);
-			// AutoForm.resetForm('insertItemForm');
 		} else {
 			//Is closed
-			console.log('debug is closed before doing anything')
 			$('body div.debug').toggleClass('debug-open');
-			// $('main div.add-new-item').addClass('open').css({opacity: 0.0}).animate({opacity: 1.0}, 100);
-			// $('#insertItemForm input.first').focus();
 		}
 	}
 );

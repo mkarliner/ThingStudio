@@ -142,7 +142,7 @@ a.hide-header {
 	color: $baseText;
 	font-size: $fontSize * 2;
 	line-height: 43px;
-	transition: color 0.1s cubic-bezier(0.55, 0, 0.1, 1);
+	transition: color 0.1s cubic-bezier(0.4, 0.0, 0.2, 1);
 	nav.top-nav &:active  {
 		color: rgba(0, 0, 0, 0.1);
 	}
@@ -363,14 +363,14 @@ nav.top-nav {
 		line-height: 57px;
 	}
 	& a i.icon-ts-connection {
-		transition: background-color 0.1s cubic-bezier(0.55, 0, 0.1, 1);
+		transition: background-color 0.1s cubic-bezier(0.4, 0.0, 0.2, 1);
 		border-radius: 50%;
 		font-size: 15px;
 		width: 22px;
 		height: 22px;
 		line-height: 29px;
 		display: inline-block;
-		margin-top: 13px;
+		margin-top: 14px;
 		text-align: center;
 		color: white;
 		&.connected {
@@ -409,13 +409,12 @@ nav.top-nav {
 #tnc a {
 	border-left: $navBorder;
 	padding: 0 16px;
-	line-height: 46px;
+	line-height: 50px;
 }
 
 .debug {
-	visibility: hidden;
 	transform: translateX(100%);
-	transition: all 0.2s cubic-bezier(0.55, 0, 0.1, 1);
+	transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
 	background-color: $white;
 	z-index: 3;
 	position: absolute;
@@ -424,7 +423,7 @@ nav.top-nav {
 	width: 550px;
 	max-height: 700px;
 	border: $navBorder;
-	will-change: visibility, translateY, transform;
+	will-change: translateY, transform;
 	& table {
 		margin-bottom: 2em;
 	}
@@ -437,12 +436,12 @@ nav.top-nav {
 		margin: 0;
 		& i {
 			position: absolute;
-			top: 11px;
+			top: 9px;
 			left: 13px;
 		}
 		& span {
 			display: block;
-			margin-left: 28px;
+			margin-left: 27px;
 		}
 	}
 	& h3 {
@@ -472,7 +471,6 @@ nav.top-nav {
 
 .debug.debug-open {
 	transform: translateX(0%);
-	visibility: visible;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -639,7 +637,7 @@ td {
 }
 
 tr.spacer td {
-	@include transition(padding-top, 0.1s, cubic-bezier(.55,0,.1,1));
+	@include transition(padding-top, 0.1s, cubic-bezier(0.4, 0.0, 0.2, 1));
 	padding-top: 0px;
 	will-change: padding-top;
 }
@@ -660,7 +658,7 @@ td:last-child, th:last-child {
 }
 
 .add-new-item {
-	@include transition(opacity, 0.1s, cubic-bezier(.55,0,.1,1));
+	@include transition(opacity, 0.1s, cubic-bezier(0.4, 0.0, 0.2, 1));
 	transition-delay: 0.05s;
 	position: absolute;
 	top: 50px;
@@ -1071,7 +1069,7 @@ pre.ace-cobalt .ace_comment {
 ///////////////////////////////////////////////////////////////////////////////////////
 
 .single-page-container.widgets {
-	@include transition(padding-top, 0.1s, cubic-bezier(.55,0,.1,1));
+	@include transition(padding-top, 0.1s, cubic-bezier(0.4, 0.0, 0.2, 1));
 	padding-top: 1.7em;
 	will-change: padding-top;
 	padding-left: $appPadding - 10px;
