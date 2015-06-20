@@ -28,15 +28,17 @@
 	</div>
 	<div id="basics">
 		<ul class="collection">
-			{{#each  docs "Basics"}}
+			{{#each  Basics}}
+				{{#with doc title}}
 				<li class="collection-item avatar">
 					<img src="http://lorempixel.com/80/80/" alt="" class="circle">
 					<a href="/docs/{{attributes.urlstring}}"><span class="title">{{attributes.title}}</span></a>
 					<p><span class="fwMedium">Summary:</span> {{excerpt}}<br>
 					<span class="fwMedium">Updated:</span> {{publishedDate}}
 					</p>
-					<a href="#!" class="secondary-content"><i class="mdi-action-grade"></i> {{group}}</a>
+					<a href="#!" class="secondary-content"><i class="mdi-action-grade"></i> {{group}}</a>	
 				</li>
+				{{/with}}
 			{{/each}}
 		</ul>
 	</div>
@@ -72,7 +74,7 @@
 	</div>
 	<div id="components">
 		<ul class="collection">
-			{{#each docs 'components'}}
+			{{#each  components}}
 			
 				<li class="collection-item avatar">
 					<img src="http://lorempixel.com/80/80/" alt="" class="circle">

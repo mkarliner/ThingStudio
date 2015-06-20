@@ -21,9 +21,17 @@ Template.OldDocumentationBody.helpers({
 
 
 Template.DocumentationBody.helpers({
-	docs: function(category){
-		d =  Docs.find({"attributes.group": category}, {sort: {pagenumber: 1}});
-		console.log("DCS ", d)
+	// docs: function(category){
+	// 	// d =  Docs.find({"attributes.group": category}, {sort: {pagenumber: 1}});
+	// 	console.log("DCS ", d)
+	// 	return d;
+	// },
+	doc: function(title) {
+		d =  Docs.findOne({"attributes.title": title});
+		if(!d) {
+			console.log("DANGER! Cannot find index entry: ", title)
+		}
+		console.log("Finding Doc ", title, d)
 		return d;
 	},
 	log: function() {

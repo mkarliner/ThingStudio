@@ -1,6 +1,0 @@
----
-asdf: "asdfaf"
-asdf: "sadfa"
----
-
-A bunch of content

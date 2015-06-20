@@ -1,0 +1,6 @@
+---
+title: "About ThingStudio"
+urlstring: "about-thing-studio"
+---
+
+A bunch of content

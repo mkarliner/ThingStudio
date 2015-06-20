@@ -6,7 +6,7 @@ DocsIndex = {
 			title: "About ThingStudio",	
 		},
 		{
-			title: "Apps"	
+			title: "About Apps"	
 		},
 		{
 			title: "Connections"	

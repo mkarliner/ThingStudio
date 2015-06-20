@@ -6,7 +6,7 @@ group: "Basics"
 
 
 
-{{>DocTable "HelpersTable"}}
+
 An app in ThingStudio is  simply a collection of connections, feeds, screens, and theme that together form an single application.
 Any time you are working in ThingStudio, it will be in terms of the context of the current app. The equivalent in other IDE's might
 be a project, or other term. 
