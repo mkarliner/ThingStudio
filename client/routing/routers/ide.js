@@ -355,9 +355,9 @@ Router.route("/tutorials", {
 });
 
 
-Router.route("/docsold/:urlstring", {
+Router.route("/olddocs/:urlstring", {
 	name: "OldDocs",
-	controller: "DocsController",
+	controller: "OldDocsController",
 	data: function() {
 		return HelpPages.findOne({ urlstring: this.params.urlstring });
 	},
@@ -367,7 +367,7 @@ Router.route("/docsold/:urlstring", {
 				data: "Documenation"
 			});
 		} else {
-			renderYields(this, "Docs");
+			renderYields(this, "OldDocs");
 		}
 	}
 });

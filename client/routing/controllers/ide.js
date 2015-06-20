@@ -31,7 +31,7 @@ ProfileController = IDEController.extend({
 
 OldDocsController = IDEController.extend({
 	subscriptions: function() {
-		console.log("DocsController subscriptions")
+		console.log("OldDocsController subscriptions")
 		Meteor.subscribe("help_pages")		
 	}
 });

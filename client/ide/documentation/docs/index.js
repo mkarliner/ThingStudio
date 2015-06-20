@@ -3,7 +3,7 @@
 DocsIndex = {
 	Basics: [
 		{
-			title: "About ThingStudio"	
+			title: "About ThingStudio",	
 		},
 		{
 			title: "Apps"	
