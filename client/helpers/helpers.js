@@ -26,7 +26,8 @@ setCredentials = function(cred){
 // }
 
 getCurrentConnection = function() {
-	return Session.get("currentConnection");
+	cc =  Session.get("currentConnection");
+	return cc ? cc : {title: "No connection"};
 }
 
 setCurrentConnection = function(conn, from){
@@ -36,7 +37,9 @@ setCurrentConnection = function(conn, from){
 
 Template.registerHelper( 
 	"gravatar", function(){
-		return Gravatar.imageUrl(Meteor.user().emails[0].address);
+		if(Meteor.user()) {
+			return Gravatar.imageUrl(Meteor.user().emails[0].address);
+		}
 	}
 );
 

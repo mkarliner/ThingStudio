@@ -39,14 +39,18 @@ Template.AppSideNav.events({
 
 Template.AppSideNav.helpers({
 	myName: function() {
-		var firstName = Meteor.user().profile.firstName || '';
-		var lastName = Meteor.user().profile.lastName || '';
+		u = Meteor.user();
+		if(!u) {
+			return("No name");
+		}
+		var firstName = u.profile.firstName || '';
+		var lastName = u.profile.lastName || '';
 		if ( firstName != '' && lastName != '' ) {
 			return firstName + " " + lastName;
 		} else if ( firstName ) {
 			return firstName;
 		} else {
-			return Meteor.user().username;
+			return u.username;
 		}
 	},
 	currentAppId: function(){

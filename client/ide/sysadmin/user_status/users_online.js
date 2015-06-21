@@ -1,3 +1,6 @@
+// UserStatus.startMonitor({threshold: 20000, interval: 10000});
+
+
 Template.onlineUsers.helpers ({
 	activeUsers: function() {
   	  users =  Meteor.users.find({ "status.online": true })
@@ -21,6 +24,9 @@ Template.onlineAdmins.helpers ({
 });
 
 Template.userPill.helpers({
+	idlestatus: function(){
+		console.log("IDL", this.status);
+	},
 	labelClass: function() {
   if (this.status.idle)
     return "label-warning"

@@ -62,6 +62,7 @@ Meteor.startup(function() {
 				title: "defaultApp",
 				owner: u._id,
 				shareable: false,
+				public: false
 			},{getAutoValues: false});
 		}
 		//Hook any orphan connections to app.
@@ -257,7 +258,9 @@ Meteor.startup(function() {
 			}, {
 				fields: {
 					status: 1,
-					username: 1
+					username: 1,
+					lastActivity: 1,
+					idle: 1
 				}
 			});
 		} else {

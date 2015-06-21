@@ -4,6 +4,7 @@ IDEController = RouteController.extend({
 		if (!Meteor.user() && !Meteor.loggingIn()) {
 			this.layout("HelpLayout");
 			// this.render("Login");
+			this.next();
 		} else {
 			this.next();
 		}
