@@ -135,7 +135,17 @@ Schemas.Screen = new SimpleSchema({
 			minCount: 0,
 			initialCount: 0
 		}
-	}
+	},
+    updatedAt: {
+      type: Date,
+      autoValue: function() {
+        if (this.isUpdate) {
+          return new Date();
+        }
+      },
+      denyInsert: true,
+      optional: true
+    },
 	// public: {
 	// 	type: Boolean,
 	// 	defaultValue: false
@@ -163,6 +173,15 @@ Screens.after.update(function(userId, doc) {
 		//console.log("Updated Screen", template.data.doc.html);
 		compret = compileTemplate(name, doc.html, doc.js);
 		Alerts.insert(compret);
+	}
+	if(Meteor.isServer) {
+		SysLogs.insert({
+			event: "ScreenUpdate",
+			title: doc.title,
+			date: new Date(),
+			id: doc._id,
+			owner: doc._owner,
+		})
 	}
 });
 

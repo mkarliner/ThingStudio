@@ -1,0 +1,62 @@
+SysLogs = new Mongo.Collection("syslogs");
+
+
+if(Meteor.isServer) {
+	Meteor.setInterval(function(){
+		now = new Date();
+		//purgeDate.setDate(now.getDate() - 1); //Yesterday
+		purgeDate = new Date(now.getTime() - 24 * 60 * 60000)
+		numremoved = SysLogs.remove({date: {$lt: purgeDate}});
+		console.log("Purged syslogs, removed ", numremoved);
+	
+	}, 1000 * 60);
+	
+}
+
+
+Schemas.SysLog = new SimpleSchema({
+	event: {
+		type: String
+	},
+	title: {
+		type: String
+	},
+	details: {
+		type: String,
+		optional: true
+	},
+	date: {
+		type: Date,
+	},
+	id: {
+		type: Number
+	},
+	userId: {
+		type: String
+	},
+	userName: {
+		type: String
+	}
+});
+
+SysLogs.before.insert(function(userId, doc) {
+	if(Meteor.isServer) {
+		doc.userName = Meteor.users.findOne({_id: userId}).username;
+		console.log("SL", doc);
+		return doc;
+	}
+});
+//
+// SysLogs.attachSchema(Schemas.SysLog);
+
+SysLogs.allow({
+	insert: function(userId, doc) {
+		return false;
+	},
+	update: function(userId, doc) {
+		return false;
+	},
+	remove: function(userId, doc) {
+		return false;
+	}
+});

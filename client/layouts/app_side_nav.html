@@ -46,6 +46,9 @@ Outstanding
 			<!-- <li class="{{isActivePath regex='^\\/video-tutorials'}}"><a href="/tutorials"><i class="mdi-action-account-balance"></i> Video Tutorials</a></li> -->
 			<li class="{{isActivePath regex='^\\/documentation|docsold'}}"><a href="/docsold"><i class="mdi-navigation-cancel"></i> Docs Old</a></li>
 			<li class="{{isActivePath regex='^\\/documentation|docs'}}"><a href="/docs"><i class="mdi-editor-format-align-left"></i> Documentation</a></li>
+			{{#if isInRole 'admin'}}
+			<li class="{{isActivePath regex='^\\/Sysadmin|sysadmin'}}"><a href="/sysadmin"><i class="mdi-editor-format-align-left"></i> SysAdmin</a></li>
+			{{/if}}
 			<li class="{{isActivePath regex='^\\/support'}}"><a href="/support"><i class="mdi-action-help"></i> Support</a></li>
 		</div>
 	</ul>

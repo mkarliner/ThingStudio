@@ -265,6 +265,9 @@ Meteor.startup(function() {
 		}
 
 	});
+	
+	
+	
 
 	Meteor.publish("userList", function() {
 		user = Meteor.users.findOne({
@@ -279,6 +282,21 @@ Meteor.startup(function() {
 					username: 1
 				}
 			});
+		} else {
+			//console.log("ONEUSER") 
+			this.ready();
+		}
+	})
+	
+
+	Meteor.publish("syslogs", function() {
+		user = Meteor.users.findOne({
+			_id: this.userId
+		});
+		//console.log("ADM : ", user);
+		if (user && user.roles && user.roles.indexOf('admin') > -1) {
+			//console.log("ALLUSERS");
+			return SysLogs.find({}, {sort: {date: -1}});
 		} else {
 			//console.log("ONEUSER") 
 			this.ready();

@@ -2,6 +2,7 @@
 
 <template name="DocTable">
 <table>
+<thead>
 <tr>
 {{#with tableheader this}}
 {{#each columns}}
@@ -9,6 +10,8 @@
 {{/each}}
 {{/with}}
 </tr>
+</thead>
+<tbody>
 {{#each tabledata this}}
 <tr>
 {{#each columns}}
@@ -16,5 +19,6 @@
 {{/each}}
 </tr>
 {{/each}}
+</tbody>
 </table>
 </template>

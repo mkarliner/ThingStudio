@@ -456,6 +456,20 @@ Router.route("/people/:username", {
 	}
 })
 
+Router.route("/sysadmin", {
+	name: "Sysadmin",
+	controller: "IDEController",
+	action: function() {
+		if ( !this.ready() ) {
+			this.render("Loading", {
+				data: "Sysadmin"
+			});
+		} else {
+			renderYields(this, 'Sysadmin')
+		}	
+	}
+})
+
 Router.route("/debug", {
 	name: "Debug",
 	controller: "IDEController",
