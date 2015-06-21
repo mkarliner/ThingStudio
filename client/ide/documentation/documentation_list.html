@@ -21,7 +21,7 @@
 				<li class="tab"><a href="#basics">Basics</a></li>
 				<li class="tab"><a href="#ui">User Interface</a></li>
 				<li class="tab"><a href="#hardware">Hardware</a></li>
-				<li class="tab"><a href="#components">Components</a></li>
+				<li class="tab"><a href="#reference">Reference</a></li>
 			</ul>
 		</div>
 		<div class="clearfix"></div>
@@ -72,18 +72,19 @@
 			{{/each}}
 		</ul>
 	</div>
-	<div id="components">
+	<div id="reference">
 		<ul class="collection">
-			{{#each  components}}
-			
+			{{#each  Reference}}
+				{{#with doc title}}
 				<li class="collection-item avatar">
 					<img src="http://lorempixel.com/80/80/" alt="" class="circle">
-					<a href="/docs/{{urlstring}}"><span class="title">{{title}}</span></a>
+					<a href="/docs/{{attributes.urlstring}}"><span class="title">{{attributes.title}}</span></a>
 					<p><span class="fwMedium">Summary:</span> {{excerpt}}<br>
 					<span class="fwMedium">Updated:</span> {{publishedDate}}
 					</p>
 					<a href="#!" class="secondary-content"><i class="mdi-action-grade"></i> {{group}}</a>
 				</li>
+				{{/with}}
 			{{/each}}
 		</ul>
 	</div>
@@ -91,9 +92,7 @@
 	<div class="home-links"><div class="btn"><a href="/sign-in">Sign Up or In</a></div></div>
 	{{/unless}}
 	{{#if currentUser}}
-	<div class="home-links">
-		<div class="btn"><a href="/screens">Enter Studio</a></div>
-	</div>
+
 	{{/if}}
 </template>
 

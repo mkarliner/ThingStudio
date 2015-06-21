@@ -1,6 +1,6 @@
 ---
-title: "About Apps"
-urlstring: "about-apps"
+title: "Apps"
+urlstring: "apps"
 group: "Basics"
 ---
 

@@ -3,10 +3,10 @@
 DocsIndex = {
 	Basics: [
 		{
-			title: "About ThingStudio",	
+			title: "About ThingStudio & MQTT",	
 		},
 		{
-			title: "About Apps"	
+			title: "Apps"	
 		},
 		{
 			title: "Connections"	
@@ -34,5 +34,13 @@ DocsIndex = {
 		{
 			title: "Raspberry Pi"	
 		},
+		],
+	Reference: [
+		{
+			title: "Template Helpers"
+		},
+		{
+			title: "Feed Attributes"
+		}
 		]
 }

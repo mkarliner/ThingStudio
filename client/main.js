@@ -98,6 +98,8 @@ Accounts.onLogin(function(){
 // }
 Meteor.subscribe("docs");
 
+
+
  AutoForm.debug();
 
 // devOrientHandler = function(ev) {

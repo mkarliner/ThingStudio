@@ -29,10 +29,13 @@ Template.DocumentationBody.helpers({
 	doc: function(title) {
 		d =  Docs.findOne({"attributes.title": title});
 		if(!d) {
-			console.log("DANGER! Cannot find index entry: ", title)
+			console.log("DANGER! Cannot find index entry: ", title);
+			return {attributes: {title: title+" MISSING PAGE!"}};
+		} else {
+			return d;
 		}
-		console.log("Finding Doc ", title, d)
-		return d;
+		//console.log("Finding Doc ", title, d)
+		
 	},
 	log: function() {
 		console.log(this)

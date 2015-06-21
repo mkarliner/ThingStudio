@@ -1,14 +1,36 @@
 
-Tables = {}
+
 
 Tables.HelpersTable = [
 	{
+		name: "",
+		params: "",
+		description: ""
+	},
+	{
 		name: "message",
-		params: "feedname"
+		params: "feedname",
+		description: "Returns the payload of the last message on the named feed"
+	},
+	{
+		name: "messages",
+		params: "feedname",
+		description: "Returns all messages from a given feed. This is mainly used with feeds that have wildcard subscriptions"
+	},
+	{
+		name: "journal",
+		params: "feedname",
+		description: "Return the last 'n' messages of a journalled feed. The feed's feed limit property specifies 'n';"
+	},
+	{
+		name: "indexArray",
+		params: "Array",
+		description: "Returns an array of objects with key and value properties. This is useful for interating over arrays of values in display widgets"
 	},
 	{
 		name: "feedmatch",
-		params: "can't remember"
+		params: "tag",
+		description: "Extracts the message that matches the tag in a feed's wildcard subscription"
 	}
 ];
 

@@ -1,5 +1,5 @@
 ---
-title: "About ThingStudio"
+title: "About ThingStudio & MQTT"
 urlstring: "about-thing-studio"
 ---
 
