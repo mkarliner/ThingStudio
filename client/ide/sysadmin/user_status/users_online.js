@@ -1,4 +1,15 @@
-// UserStatus.startMonitor({threshold: 20000, interval: 10000});
+ 
+Tracker.autorun(function(){
+	try {
+		 UserStatus.startMonitor({threshold: 20000, interval: 10000});
+	}
+	catch(e) {
+		console.log("Userstatus start monitor failed ", e);
+	}
+})
+ 	
+
+
 
 
 Template.onlineUsers.helpers ({
@@ -29,11 +40,9 @@ Template.userPill.helpers({
 	},
 	labelClass: function() {
   if (this.status.idle)
-    return "label-warning"
-  else if (this.status.online)
-    return "label-success"
+    return "status-idle"
   else
-    return "label-default"
+    return "status-active"
 	}
 });
 
