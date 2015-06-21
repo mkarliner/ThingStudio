@@ -297,6 +297,18 @@ Meteor.startup(function() {
 		})
 	});
 
+	DocFiles = [
+		"about-thing-studio.md",
+		"apps.md",
+		"attributes.md",
+		"connections.md",
+		"feeds.md",
+		"helpers.md",
+		"template-helpers.md",
+		"templates.md",
+		"themes.md",
+		"widgets.md"
+	];
 
 	Docs.remove({});
 	Meteor.publish("docs", function(){
@@ -304,15 +316,19 @@ Meteor.startup(function() {
 		return Docs.find();
 	});
 	FM = Meteor.npmRequire("front-matter");
-	console.log("AFTERFM")
-	var fs = Npm.require('fs');
-	var files = fs.readdirSync('../../../../../private/docs');
-	console.log("docs", files)
-	for(var f=0; f<files.length; f++){
-		a = Assets.getText("docs/"+files[f]);
-		console.log("MYTXT ", FM(a));
+	// console.log("AFTERFM")
+	// var fs = Npm.require('fs');
+	// console.log("BOOTSTRAP ", process.cwd())
+	// cwd = process.cwd == "/" ? "" : process.cwd();
+	// privateDir = cwd + "/../../../../../private/docs"
+	// console.log("PRIVATE DIR: ", fs.readdirSync(privateDir));
+	// var files = fs.readdirSync(privateDir);
+	console.log("docs", DocFiles)
+	for(var f=0; f<DocFiles.length; f++){
+		a = Assets.getText("docs/"+DocFiles[f]);
+		//console.log("MYTXT ", FM(a));
 		Docs.insert(FM(a));
-		console.log("DCOS: ",Docs.findOne());
+		//console.log("DCOS: ",Docs.findOne());
 	}
 
 
