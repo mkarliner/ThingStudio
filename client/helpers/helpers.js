@@ -26,8 +26,7 @@ setCredentials = function(cred){
 // }
 
 getCurrentConnection = function() {
-	cc =  Session.get("currentConnection");
-	return cc ? cc : {title: "No connection"};
+	return  Session.get("currentConnection");
 }
 
 setCurrentConnection = function(conn, from){

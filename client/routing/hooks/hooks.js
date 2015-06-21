@@ -21,6 +21,7 @@ Router.onBeforeAction(function () {
 		return;
 	}
 	connection = getCurrentConnection();
+	console.log("CURRCONN : ", connection)
 	if(!connection) {
 		// No, we have to decide which connection to use.
 		
