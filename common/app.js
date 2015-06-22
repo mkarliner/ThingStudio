@@ -109,11 +109,11 @@ Schemas.App = new SimpleSchema({
 	// },
 	shareable: {
 		type: Boolean,
-		defaultValue: false
+		defaultValue: false,
 	},
 	public: {
 		type: Boolean,
-		defaultValue: false
+		defaultValue: false,
 	},
 	summary: {
 		type: String,

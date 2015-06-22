@@ -58,6 +58,8 @@ setCredentials = function(cred){
 }
 
 
+
+
 // startConnection = function(){
 // 	//Called from the onReady function of connections.
 // 	app = getCurrentApp();

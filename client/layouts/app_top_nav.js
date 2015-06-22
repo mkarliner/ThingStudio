@@ -29,7 +29,7 @@ Template.AppTopNav.helpers({
 		if (app) {
 			return app.title;
 		} else {
-			return 'no connection';
+			return 'No connection. Have you set a connection in your App settings?';
 		}
 	},
 	isConnected: function() {
