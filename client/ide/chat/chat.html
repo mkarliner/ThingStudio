@@ -7,8 +7,8 @@
 		<div class="chat-messages">
 			{{#each chats}}
 				<div class="chat-entry {{isAdminHighlight}}">
-					<div class="chat-person chat-me">
-						{{username}}{{admin}}
+					<div class="chat-person chat-{{who}}">
+						{{username}}
 					</div>
 					<div class="chat-message">
 						<p>{{message}}</p>
