@@ -19,7 +19,8 @@ IDEController = RouteController.extend({
 			Meteor.subscribe('widgets', myCurrAppId),
 			Meteor.subscribe('themes', myCurrAppId),
 			Meteor.subscribe('userList'),
-			Meteor.subscribe('syslogs')
+			Meteor.subscribe('syslogs'),
+			Meteor.subscribe('chats')
 		]
 	}
 });

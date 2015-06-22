@@ -1,7 +1,16 @@
 <template name="ChatHeader">
-	
+	Welcome to the ThingStudio chat box. Please be aware that all chats are public.
 </template>
 
 <template name="ChatBody">
-	
+	<div>
+		{{#each chats}}
+			<div>
+				<span>{{time}}</span>:<span>{{username}}</span>: <span>{{message}}</span>
+			</div>
+		{{/each}}
+	</div>
+	<div>
+		{{> insertChatForm}}
+	</div>
 </template>

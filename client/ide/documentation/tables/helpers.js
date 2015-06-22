@@ -31,6 +31,11 @@ Tables.HelpersTable = [
 		name: "feedmatch",
 		params: "tag",
 		description: "Extracts the message that matches the tag in a feed's wildcard subscription"
+	},
+	{
+		name: "username",
+		params: "none",
+		description: "Returns the current user's name or 'anonymous' "
 	}
 ];
 

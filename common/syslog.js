@@ -9,7 +9,7 @@ if(Meteor.isServer) {
 		numremoved = SysLogs.remove({date: {$lt: purgeDate}});
 		console.log("Purged syslogs, removed ", numremoved);
 	
-	}, 1000 * 60);
+	}, 1000 * 60 * 10); //10 minute purge
 	
 }
 
