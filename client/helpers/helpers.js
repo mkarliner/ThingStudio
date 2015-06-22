@@ -8,7 +8,7 @@ Template.registerHelper(
 );
 
 Template.registerHelper( 
-	"username", function(){
+	"currentUsername", function(){
 		if(Meteor.user()) {
 			return Meteor.user().username;
 		}
