@@ -42,14 +42,25 @@ Outstanding
 		<div class="divider"></div>
 		<div class="section">
 			<p class="section-header">Help</p>
-			<li class="{{isActivePath regex='^\\/support'}}"><a href="http://forum.thingstud.io" target="_blank"><i class="mdi-communication-forum"></i> Forum</a></li>
-			<!-- <li class="{{isActivePath regex='^\\/video-tutorials'}}"><a href="/tutorials"><i class="mdi-action-account-balance"></i> Video Tutorials</a></li> -->
-			<li class="{{isActivePath regex='^\\/documentation|docsold'}}"><a href="/docsold"><i class="mdi-navigation-cancel"></i> Docs Old</a></li>
-			<li class="{{isActivePath regex='^\\/documentation|docs'}}"><a href="/docs"><i class="mdi-editor-format-align-left"></i> Documentation</a></li>
-			{{#if isInRole 'admin'}}
-			<li class="{{isActivePath regex='^\\/Sysadmin|sysadmin'}}"><a href="/sysadmin"><i class="mdi-editor-format-align-left"></i> SysAdmin</a></li>
-			{{/if}}
-			<li class="{{isActivePath regex='^\\/support'}}"><a href="/support"><i class="mdi-action-help"></i> Support</a></li>
+			<ul class="collapsible">
+				<li class="{{isActivePath regex='^\\/support'}}"><a href="http://forum.thingstud.io" target="_blank"><i class="mdi-communication-forum"></i> Forum</a></li>
+				<!-- <li class="{{isActivePath regex='^\\/video-tutorials'}}"><a href="/tutorials"><i class="mdi-action-account-balance"></i> Video Tutorials</a></li> -->
+				<li class="{{isActivePath regex='^\\/documentation|docsold'}}"><a href="/docsold"><i class="mdi-navigation-cancel"></i> Docs Old</a></li>
+				<li class="{{isActivePath regex='^\\/documentation|docs'}}"><a href="/docs"><i class="mdi-editor-format-align-left"></i> Documentation</a></li>
+				{{#if isInRole 'admin'}}
+					<li class="{{isActivePath regex='^\\/Sysadmin|sysadmin'}}">
+						<a class="collapsible-header no-pad"><i class="mdi-editor-format-align-left"></i> Admin</a>
+						<div class="collapsible-body">
+							<ul>
+								<li class="{{isActivePath regex='^\\/current-users'}}"><a href="/current-users">Current Users</a></li>
+								<li class="{{isActivePath regex='^\\/Sysadmin|sysadmin'}}"><a href="/sysadmin">System Admin</a></li>
+							</ul>
+						</div>
+					</li>
+				{{/if}}
+				<li class="{{isActivePath regex='^\\/chat'}}"><a href="/chat"><i class="mdi-action-help"></i> Chat</a></li>
+				<li class="{{isActivePath regex='^\\/support'}}"><a href="/support"><i class="mdi-action-help"></i> Support</a></li>
+			</ul>
 		</div>
 	</ul>
 	<div class="divider"></div>

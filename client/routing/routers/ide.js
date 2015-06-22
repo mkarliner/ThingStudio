@@ -456,6 +456,34 @@ Router.route("/people/:username", {
 	}
 })
 
+Router.route("/chat", {
+	name: "Chat",
+	controller: "IDEController",
+	action: function() {
+		if ( !this.ready() ) {
+			this.render("Loading", {
+				data: "Chat"
+			});
+		} else {
+			renderYields(this, 'Chat')
+		}	
+	}
+})
+
+Router.route("/current-users", {
+	name: "Current Users",
+	controller: "IDEController",
+	action: function() {
+		if ( !this.ready() ) {
+			this.render("Loading", {
+				data: "Current Users"
+			});
+		} else {
+			renderYields(this, 'CurrentUsers')
+		}	
+	}
+})
+
 Router.route("/sysadmin", {
 	name: "Sysadmin",
 	controller: "IDEController",

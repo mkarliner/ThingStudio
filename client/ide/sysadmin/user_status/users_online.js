@@ -11,10 +11,13 @@ Tracker.autorun(function(){
 })
  	
 
+Template.CurrentUsersBody.onRendered(function() {
+    $('ul.tabs').tabs();
+});
 
 
 
-Template.onlineUsers.helpers ({
+Template.CurrentUsersBody.helpers ({
 	activeUsers: function() {
   	  users =  Meteor.users.find({ "status.online": true })
 		// console.log("ONL ", users.fetch())
@@ -33,12 +36,17 @@ Template.onlineAdmins.helpers ({
 			return "offline"
 		}
 
+	},
+	idlestatus: function(){
+		console.log("IDL", this.status);
+		return this.idle;
 	}
 });
 
 Template.userPill.helpers({
 	idlestatus: function(){
 		console.log("IDL", this.status);
+		return this.idle;
 	},
 	labelClass: function() {
   if (this.status.idle)

@@ -325,6 +325,14 @@ table.striped tbody tr:nth-child(odd) {
 	padding: 0 20px;
 }
 
+a.collapsible-header.no-pad {
+	padding: 0;
+}
+
+.no-pad i.mdi-editor-format-align-left {
+	margin-right: 0;
+}
+
 .logo-container {
 	@include fixedCenter;
 	width: 220px;
@@ -414,9 +422,9 @@ nav.top-nav {
 
 .debug {
 	transform: translateX(100%);
-	transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+	transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
 	background-color: $white;
-	z-index: 3;
+	z-index: 11;
 	position: absolute;
 	top: 52px;
 	right: 0;
@@ -641,8 +649,6 @@ tr.spacer td {
 	padding-top: 0px;
 	will-change: padding-top;
 }
-
-
 
 tr.spacer.form-open td {
 	padding-top: 140px;
