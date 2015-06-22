@@ -304,7 +304,15 @@ Meteor.startup(function() {
 			//console.log("ONEUSER") 
 			this.ready();
 		}
-	})
+	});
+	
+	Meteor.publish("chats", function() {
+		if(this.userId) {
+			return Chats.find({});
+		} else {
+			this.ready();
+		}
+	});
 
 	Meteor.publish("adminStatus", function() {
 		return Meteor.users.find({
