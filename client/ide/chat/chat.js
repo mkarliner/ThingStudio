@@ -3,14 +3,17 @@ Template.ChatBody.helpers({
 		return this.date.getHours()+":"+this.date.getMinutes()+":"+this.date.getSeconds();
 	},
 	chats: function(){
-		return Chats.find({}, {sort: {date: 1}});
+		return Chats.find({}, {sort: {date: -1}});
 	},
-	isAdminHighlight: function() {
-		// console.log('here is username', username())
-
-	},
-	isMe: function() {
-		
+	admin: function(){
+		user = Meteor.users.findOne({_id: this.userid});
+				console.log("ADMIN", this.userid, user)
+		if(user.roles) {
+			admin =  user.roles.indexOf('admin') > -1;
+		} else {
+			admin = false;
+		}
+		return admin ? "Admin" : "Peon";
 	}
 });
 

@@ -270,6 +270,10 @@ Meteor.startup(function() {
 	});
 	
 	
+	Meteor.publish("admins", function(){
+		return Meteor.users.find({roles: "admin"});
+	})
+	
 	
 
 	Meteor.publish("userList", function() {

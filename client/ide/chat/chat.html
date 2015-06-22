@@ -10,7 +10,7 @@
 				<div class="chat-entry {{isAdminHighlight}} clearfix">
 					<div class="chat-person">
 						<img class="circle chat-img" src="{{gravatar}}">
-						<span class="clearfix">{{username}}</span>
+						<span class="clearfix">{{username}}{{admin}}</span>
 					</div>
 					<div class="chat-message">
 						<span>{{message}}</span><span class="right">{{time}}</span>
@@ -29,7 +29,7 @@
 	<div>
 		{{#each chats}}
 			<div>
-				<span>{{time}}</span>:<span>{{username}}</span>: <span>{{message}}</span>
+				<span>{{time}}</span>:<span>{{username}}-{{admin}}</span>: <span>{{message}}</span>
 			</div>
 		{{/each}}
 	</div>

@@ -15,7 +15,10 @@ Template.CurrentUsersBody.onRendered(function() {
     $('ul.tabs').tabs();
 });
 
-
+Template.registerHelper( 
+	"isAdmin", function(){
+		return(Meteor.user().roles.indexOf('admin') > -1);
+});
 
 Template.CurrentUsersBody.helpers ({
 	activeUsers: function() {

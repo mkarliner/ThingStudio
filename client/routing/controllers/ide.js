@@ -20,7 +20,8 @@ IDEController = RouteController.extend({
 			Meteor.subscribe('themes', myCurrAppId),
 			Meteor.subscribe('userList'),
 			Meteor.subscribe('syslogs'),
-			Meteor.subscribe('chats')
+			Meteor.subscribe('chats'),
+			Meteor.subscribe('admins')
 		]
 	}
 });
