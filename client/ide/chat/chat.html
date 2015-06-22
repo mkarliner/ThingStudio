@@ -14,3 +14,16 @@
 		{{> insertChatForm}}
 	</div>
 </template>
+
+
+
+<template name="ChatBox">
+	<div>
+		{{#each chats}}
+			<div>
+				<span>{{time}}</span>:<span>{{username}}</span>: <span>{{message}}</span>
+			</div>
+		{{/each}}
+	</div>
+</template>
+
