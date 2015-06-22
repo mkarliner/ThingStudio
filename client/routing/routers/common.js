@@ -17,6 +17,10 @@ AccountsTemplates.configureRoute('signIn', {
 //     layoutTemplate: 'myLayout',
 // });
 
+Router.route("/", function(){
+	this.redirect("/dashboard")
+})
+
 Router.route("/logout", function(){
 	AccountsTemplates.logout();
 });
