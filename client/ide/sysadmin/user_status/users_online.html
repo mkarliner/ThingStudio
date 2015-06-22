@@ -15,12 +15,13 @@
 	<div id="current-users">
 		<table>
 			<thead>
-				<th>Username</th><th>Active Now</th>
+				<th>Username</th>
 			</thead>
 			<tbody>
 				{{#each activeUsers}}
+				<tr>
 					<td>{{> userPill}}</td>
-					<td>{{idestatus}}</td>
+				</tr>
 				{{/each}}
 			</tbody>
 		</table>
