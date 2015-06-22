@@ -193,6 +193,10 @@ table.striped tbody tr:nth-child(odd) {
 	background-color: lighten($appBodyBG, 2%);
 }
 
+.white-bg {
+	background-color: $white;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////
 // Global DOM States //
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -832,7 +836,7 @@ h4.modal-title {
 	color: $baseText;
 }
 
-.single-page-container .form-group {
+.single-page-container .form-group, .single-page-container .info-group {
 	margin-bottom: 0.7rem;
 	border-bottom: 1px solid $bodyDividerColor;
 	padding-top: 1.2em;
@@ -1162,12 +1166,52 @@ table.widget-item {
 	padding: 5px;
 }
 
+.detail .usage-inner {
+	padding: 10px;
+}
+
 .element {
 	color: $editorBlue;
 }
 
 .parameter {
 	color: $editorOrange;
+}
+
+.info-group.detail {
+	padding-top: 0.2em;
+	padding-bottom: 2em;
+}
+
+.widget-view {
+	&.striped tbody tr:nth-child(odd) {
+		background-color: #FCFDFD;
+	}
+	& thead td {
+		font-family: $fwBlack;
+		padding-top: 1em;
+		padding-bottom: 1em;
+		text-transform: uppercase;
+		letter-spacing: 0.4px;
+	}
+	tbody td {
+		padding-top: 1em;
+		padding-bottom: 1em;
+		line-height: 20px;
+	}
+	& td:first-child, th:first-child {
+		padding-left: 25px;
+	}
+	& td:last-child, th:last-child {
+		padding-right: 25px;
+	}
+	
+}
+
+.code-preview {
+	background-color: $white;
+	color: $baseText;
+	padding: 1em;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////

@@ -16,41 +16,51 @@
 	</div>
 	<div class="single-page-container">
 		<div id="properties">
-			<p class="fwHeavy usage">To use this widget, simply copy the snippet below and paste in to your template{{#if parameters}}, changing the parameters {{/if}}
-			</p>
-					<span class="usage-inner">
-						<span class="element">&lt;{{tagName}}</span><span class="parameter">{{#each parameters}} {{title}}=<span class="white-text">&quot;{{dummyValue}}&quot;</span>{{/each}}</span><span class="element">&gt;&lt;/{{tagName}}&gt;</span>
-					</span>
+			<div class="form-group detail">				
+				<p class="usage"><span class="fwHeavy">Using this widget</span> &ndash; Copy the snippet below and paste in to your template{{#if parameters}}, changing the parameter values {{/if}}</p>
+				<span class="usage-inner">
+					<span class="element">&lt;{{tagName}}</span><span class="parameter">{{#each parameters}} {{title}}=<span class="white-text">&quot;{{dummyValue}}&quot;</span>{{/each}}</span><span class="element">&gt;&lt;/{{tagName}}&gt;</span>
+				</span>
+			</div>
 			{{#if instructions}}
-				<p class="fwHeavy">
-					{{instructions}}
-				</p>
+				<div class="form-group detail">
+					<p class="fwHeavy">
+						{{instructions}}
+					</p>
+				</div>
 			{{/if}}
-			<p class="fwHeavy">Widget Parameters</p>
+			
 			{{#if parameters}}
-				<table class="widget-item striped">
-					<thead>
-						<tr>
-							<td>Parameter</td><td>Type</td><td>Required</td><td>Description</td>
-						</tr>
-					</thead>
-					<tbody>
-						{{#each parameters}}
+				<div class="info-group detail">
+					<p><span class="fwHeavy">Widget Parameters</span> &ndash; Required and optional values to render the widget</p>
+					<table class="white-bg widget-view striped">
+						<thead>
 							<tr>
-								<td>{{title}}</td><td>{{paramType}}</td><td>{{mandatory}}</td><td>{{description}}</td>
+								<td>Parameter</td><td>Type</td><td>Required</td><td>Description</td>
 							</tr>
-						{{/each}}
-					</tbody>
-				</table>
+						</thead>
+						<tbody>
+							{{#each parameters}}
+								<tr>
+									<td>{{title}}</td><td>{{paramType}}</td><td>{{mandatory}}</td><td>{{description}}</td>
+								</tr>
+							{{/each}}
+						</tbody>
+					</table>
+				</div>
 			{{/if}}
-			<p class="fwHeavy">To make your own copy of this widget which you can modify, start with the HTML and / or JavaScript below</p>
+			<p><span class="fwHeavy">Create your own</span> &ndash; To make your own version of this widget which you can modify, copy with the HTML and / or JavaScript below</p>
 			{{#if html}}
-				<p>HTML</p>
-				<pre>{{html}}</pre>
+				<p class="fwBlack">HTML</p>
+				<div class="code-preview">
+					<pre>{{html}}</pre>
+				</div>
 			{{/if}}
 			{{#if js}}
-				<p>JS</p>
-				<pre>{{js}}</pre>
+				<p class="fwBlack">JS</p>
+				<div class="code-preview">
+					<pre>{{js}}</pre>
+				</div>
 			{{/if}}
 		</div>
 		<div id="preview">
