@@ -3,17 +3,16 @@
 </template>
 
 <template name="ChatBody">
-	<div class="area-one">
 	<div class="chat-window">
 		<div class="chat-messages">
 			{{#each chats}}
-				<div class="chat-entry {{isAdminHighlight}} clearfix">
-					<div class="chat-person">
-						<img class="circle chat-img" src="{{gravatar}}">
-						<span class="clearfix">{{username}}{{admin}}</span>
+				<div class="chat-entry {{isAdminHighlight}}">
+					<div class="chat-person chat-me">
+						{{username}}{{admin}}
 					</div>
 					<div class="chat-message">
-						<span>{{message}}</span><span class="right">{{time}}</span>
+						<p>{{message}}</p>
+						<span class="right">{{time}}</span>
 					</div>
 				</div>
 			{{/each}}
@@ -22,14 +21,13 @@
 			{{> insertChatForm}}
 		</div>
 	</div>
-	</div>
 </template>
 
 <template name="ChatBox">
 	<div>
 		{{#each chats}}
 			<div>
-				<span>{{time}}</span>:<span>{{username}}-{{admin}}</span>: <span>{{message}}</span>
+				<span>{{time}}</span>:<span>{{username}}</span>: <span>{{message}}</span>
 			</div>
 		{{/each}}
 	</div>
