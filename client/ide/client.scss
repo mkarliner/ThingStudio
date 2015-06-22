@@ -1295,23 +1295,24 @@ footer {
 // Chat //
 ///////////////////////////////////////////////////////////////////////////////////////
 
-.area-one {
-	
-}
-
 .chat-window {
+	height: 500px;
 }
 
 .chat-messages {
+	overflow-y: auto;
+	height: 460px;
+	padding-right: 1em;
+	padding-down: 1em;
 }
 
 .chat-entry {
-	padding: 0.5em;
+	clear: left;
 }
 
 .chat-person {
 	float: left;
-	width: 5em;
+	margin-right: 1em;
 }
 
 .chat-img {
@@ -1319,10 +1320,29 @@ footer {
 	height: 3em;
 }
 
-.chat-form {
+.chat-person, .chat-message {
+	padding: 0.5em;
 }
+
 .chat-message {
-	display: inline;
+	& p {
+		padding: 0;
+		margin: 0;
+	}	
+}
+
+.cb {
+	clear: both;
+}
+
+.chat-me {
+	background-color: #ee6e73;
+	color: $white;
+}
+
+.chat-other {
+	background: #6181B3;
+	color: white;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
