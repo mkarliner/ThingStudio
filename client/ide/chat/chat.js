@@ -1,3 +1,8 @@
+Template.ChatBody.onRendered(function() {
+	var myDiv = $(".chat-messages").get(0);
+	myDiv.scrollTop = myDiv.scrollHeight;
+});
+
 Template.ChatBody.helpers({
 	time: function() {
 		return this.date.getHours()+":"+this.date.getMinutes()+":"+this.date.getSeconds();

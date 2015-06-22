@@ -1336,17 +1336,17 @@ footer {
 }
 
 .chat-me {
-	background-color: #ee6e73;
-	color: $white;
+	background-color: $white;
+	color: $darkBase;
 }
 
 .chat-other {
-	background-color: #6181B3;
+	background-color: #56BEED;
 	color: white;
 }
 
 .chat-admin {
-	background-color: black;
+	background-color: #ee6e73;
 	color: white;
 }
 
@@ -1425,4 +1425,13 @@ footer {
 }
 .icon-ts-trash:before {
   content: "g";
+}
+
+@font-face {
+	font-family: "Orbitron";
+	src:
+		url("fonts/Orbitron-Regular.woff") format("woff"),
+		url("fonts/Orbitron-Regular.ttf") format("truetype");
+	font-weight: normal;
+	font-style: normal;
 }
