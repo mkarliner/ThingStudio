@@ -8,11 +8,9 @@ Template.AppSideNav.onRendered(function() {
 
 Template.AppSideNav.events({
 	'click .collapsible': function(e, tmpl) {
-		console.log("open has been clicked");
 		var collapsibleIcon= tmpl.find('i.mdi-hardware-keyboard-arrow-down');
 		var angle = $(collapsibleIcon).data('angle');
 		$(collapsibleIcon).data('angle', angle + 180);
-		console.log(angle);
 		$(collapsibleIcon).css({'transform': 'rotate(' + angle + ')'});
 	}
 	// 'click .collapsible li.active': function(e, tmpl) {

@@ -3,19 +3,27 @@
 </template>
 
 <template name="ChatBody">
-	<div>
-		{{#each chats}}
-			<div>
-				<span>{{time}}</span>:<span>{{username}}</span>: <span>{{message}}</span>
-			</div>
-		{{/each}}
+	<div class="area-one">
+	<div class="chat-window">
+		<div class="chat-messages">
+			{{#each chats}}
+				<div class="chat-entry {{isAdminHighlight}} clearfix">
+					<div class="chat-person">
+						<img class="circle chat-img" src="{{gravatar}}">
+						<span class="clearfix">{{username}}</span>
+					</div>
+					<div class="chat-message">
+						<span>{{message}}</span><span class="right">{{time}}</span>
+					</div>
+				</div>
+			{{/each}}
+		</div>
+		<div class="chat-form">
+			{{> insertChatForm}}
+		</div>
 	</div>
-	<div>
-		{{> insertChatForm}}
 	</div>
 </template>
-
-
 
 <template name="ChatBox">
 	<div>
@@ -27,3 +35,4 @@
 	</div>
 </template>
 
+<!-- Put highlight in for admin: isInRole -->
