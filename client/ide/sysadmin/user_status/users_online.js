@@ -1,7 +1,9 @@
  
 Tracker.autorun(function(){
 	try {
-		 UserStatus.startMonitor({threshold: 20000, interval: 10000});
+		if(!UserStatus.isMonitoring()) {
+			 UserStatus.startMonitor({threshold: 20000, interval: 10000});
+		}		
 	}
 	catch(e) {
 		console.log("Userstatus start monitor failed ", e);

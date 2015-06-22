@@ -100,6 +100,11 @@ compileTemplate = function(name, html_text, javascript) {
 				// console.log("INPUT CHANGED", this, ev);
 				attr = ev.currentTarget.attributes;
 				feed_name = attr.getNamedItem("data-feed");
+				dm = attr.getNamedItem("data-message");
+				if(dm) {
+					prefix = dm.value;
+				}
+				console.log("PREFIX: ", prefix)
 				checkFeed(feed_name.value, false);
 				value = $(ev.target).val();
 				checkFeed(feed_name.value, false);
@@ -109,7 +114,7 @@ compileTemplate = function(name, html_text, javascript) {
 					return;
 				}
 				// console.log(feed);
-				publish(feed, JSON.stringify(value));
+				publish(feed, JSON.stringify(prefix+value));
 			},
 			'input': function(ev) {
 				// console.log("INPUT ", ev);

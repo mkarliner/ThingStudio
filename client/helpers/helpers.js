@@ -1,43 +1,16 @@
-getCurrentApp = function() { 
-	app =  Apps.findOne({_id: Session.get("currentAppId")});
-	return app;
-};
-
-getCredentials = function(){
-	return Session.get("currentCredentials");
-}
-
-setCredentials = function(cred){
-	 Session.set("currentCredentials", cred);
-	 Session.set("authReady", true);
-}
-
-
-// startConnection = function(){
-// 	//Called from the onReady function of connections.
-// 	app = getCurrentApp();
-// 	//Is there a connection defined for this app?
-// 	if(app.connection) {
-// 		connection = Connections.findOne({_id: app.connection})
-// 		Session.set("currentConnection", connection );
-// 		connect(connection);
-// 	}
-//
-// }
-
-getCurrentConnection = function() {
-	return  Session.get("currentConnection");
-}
-
-setCurrentConnection = function(conn, from){
-	//console.log("Setting current connection to: ", from,  conn);
-	Session.set("currentConnection", conn);
-}
 
 Template.registerHelper( 
 	"gravatar", function(){
 		if(Meteor.user()) {
 			return Gravatar.imageUrl(Meteor.user().emails[0].address);
+		}
+	}
+);
+
+Template.registerHelper( 
+	"username", function(){
+		if(Meteor.user()) {
+			return Meteor.user().username;
 		}
 	}
 );
