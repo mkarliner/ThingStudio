@@ -61,6 +61,10 @@ $fwBlack: 'AvenirLTStd-Black';
 .fwBlack {
 	font-family: $fwBlack;
 }
+// LCD-type font
+.readout {
+	font-family: 'Orbitron', sans-serif;
+}
 
 //Sidebar
 $sideNavWidth: 220px;
