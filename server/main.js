@@ -77,7 +77,7 @@ Meteor.startup(function() {
 				//console.log("Connection AppId OK"); 
 			} else {
 				//console.log("Hooking connection: ", connection._id, " to app ", app._id);
-				Connections.update({_id: connection._id}, {$set: {appId: app._id}});
+				Connections.update({_id: connection._id}, {$set: {appId: app._id, serverCredentials: true}});
 			}
 		}
 		feeds = Feeds.find({owner: u._id}).fetch();
