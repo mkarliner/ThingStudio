@@ -58,7 +58,9 @@ Template.WidgetsHeader.events({
 		e.preventDefault();
 		menuOps();
 		$('.add-new-item select').material_select();
+		$('span.caret').not($('.select-wrapper span.caret')).remove();
 		$('.tab-my-widgets').trigger("click");
+
 	}
 });
 
