@@ -200,6 +200,15 @@ table.striped tbody tr:nth-child(odd) {
 	background-color: lighten($appBodyBG, 2%);
 }
 
+#lean-overlay {
+	background-color: #FFF;
+}
+
+.modal-content p {
+	padding: 0 1em;
+	font-size: 16px;
+}
+
 .white-bg {
 	background-color: $white;
 }
@@ -799,13 +808,19 @@ table, .single-page-container {
 h4.modal-title {
 	background-color: #76D4E1;
 	color: $white;
-	padding: 4px 18px;
+	padding: 4px 11px 2px;
 	font-size: 1.2 * $fontSize;
+	& i {
+		font-size: 2em;
+		position: absolute;
+	}
 }
 
 .modal-close {
 	padding: 0;
 	color: white;
+	font-size: 1.7em;
+	line-height: 1.7em;
 }
 
 .modal .modal-footer {
@@ -815,6 +830,18 @@ h4.modal-title {
 
 .modal .modal-footer .btn-flat {
 	width: 90px;
+	font-family: $fwHeavy;
+	color: $baseText;
+	width: 100%;
+	&:hover {
+		background-color: $white;
+	}
+}
+
+.modal-header {
+	padding-left: 2.1em;
+	font-size: 1.2em;
+	line-height: 2.3em;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////

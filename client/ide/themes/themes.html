@@ -20,7 +20,7 @@
 					<td>{{status}}</td>
 					<td>
 						<a class="table-action table-edit-item" href="{{pathFor 'Edit Theme'}}"><i class="mdi-editor-mode-edit"></i></a>
-						{{#afModal classes="table-action table-cancel-item" collection="Themes" operation="remove" doc=_id title="Deleting App" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="icon-ts-trash"></i>{{/afModal}}
+						{{#afModal classes="table-action table-cancel-item" collection="Themes" operation="remove" doc=_id title="<i class='mdi-alert-error'></i><span class='modal-header'>Deleting Theme</span>" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="icon-ts-trash"></i>{{/afModal}}
 					</td>
 				</tr>
 			{{/each}}

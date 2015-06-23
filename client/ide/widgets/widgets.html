@@ -42,7 +42,7 @@
 						<a class="table-action table-edit-item" href="{{pathFor 'SingleWidget'}}"><i class="mdi-action-visibility"></i></a>
 					{{#if owner}}
 						<a class="table-action table-edit-item" href="/templates/{{baseScreen}}/edit"><i class="mdi-editor-mode-edit"></i></a>
-						{{#afModal classes="table-action table-cancel-item" collection="Screens" operation="remove" doc=_id title="Deleting Feed" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="mdi-navigation-close"></i>{{/afModal}}
+						{{#afModal classes="table-action table-cancel-item" collection="Screens" operation="remove" doc=_id title="<i class='mdi-alert-error'></i><span class='modal-header'>Deleting Widget</span>" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="icon-ts-trash"></i>{{/afModal}}
 					{{/if}}
 				</div>
 			</div>
