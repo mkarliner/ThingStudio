@@ -40,6 +40,10 @@ Template.DocumentationBody.helpers({
 	log: function() {
 		console.log(this)
 	},
+	excerpt: function(){
+		console.log("DBE" , this)
+		return this.attributes.summary;
+	},
 	publishedDate: function(date) {
 		return moment(date).format('MMMM D, YYYY');
 	}

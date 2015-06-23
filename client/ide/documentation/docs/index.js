@@ -4,35 +4,42 @@ DocsIndex = {
 	Basics: [
 		{
 			title: "About ThingStudio & MQTT",	
+
 		},
 		{
-			title: "Apps"	
+			title: "Apps",	
+
 		},
 		{
-			title: "Connections"	
+			title: "Connections",
+			
 		},
 		{
-			title: "Feeds"	
+			title: "Feeds",
+			
 		},
 		{
-			title: "Templates"	
+			title: "Templates",	
+
 		},
 		{
-			title: "Widgets"	
+			title: "Widgets",
+
 		},
 		{
-			title: "Themes"	
+			title: "Themes",	
+
 		},
 			
 		],
 	UI: [
 		{
-			title: "Helpers"	
+			title: "Displaying data in your Templates"	
 		},
 		],
 	HardwarePlatforms: [
 		{
-			title: "Raspberry Pi"	
+			title: "Getting data between IoT devices and ThingStudio"	
 		},
 		],
 	Reference: [
