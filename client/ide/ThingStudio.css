@@ -6,6 +6,7 @@
 
 .viewer-body {
 	position:absolute;
+	top: 0px;
     margin:0; /* remove default margin */
     padding:0; /* remove default padding */
     width:100%; /* take full browser width */
@@ -111,13 +112,7 @@ div.inline { float:left; }
 }
 
 
-.lcdDisplay {
-	font-family:'LCDBOLD',Serif;
-	font-color: #4E5656;
-	#color: dargray;
-	background: #C2D6D6;
-	font-height: 1.5em;
-}
+
 
 .flex-container {
     display:flex;
