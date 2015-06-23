@@ -21,7 +21,7 @@ Template.FeedsNewItem.events({
 
 Template.FeedsBody.helpers({
 	feedlist: function(){
-		return Feeds.find({owner: Meteor.userId()}, {sort: {createdAt: -1}})
+		return Feeds.find({}, {sort: {createdAt: -1}})
 	},
 	publicfeeds: function() {
 		return Feeds.find({public: true})

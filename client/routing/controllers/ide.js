@@ -11,6 +11,7 @@ IDEController = RouteController.extend({
 	},
 	subscriptions: function() {
 		myCurrAppId = Session.get('currentAppId');
+		guestAppId = Session.get('guestAppId');
 		return [
 			Meteor.subscribe('apps'),
 			Meteor.subscribe('connections', myCurrAppId),

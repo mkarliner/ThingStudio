@@ -180,6 +180,7 @@ Screens.after.update(function(userId, doc) {
 			title: doc.title,
 			date: new Date(),
 			id: doc._id,
+			appId: doc.appId,
 			owner: doc._owner,
 		})
 	}

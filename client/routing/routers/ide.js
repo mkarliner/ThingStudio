@@ -148,6 +148,9 @@ Router.route("/templates/:_id/edit", {
 	name: "Edit Template",
 	controller: "IDEController",
 	data: function() {
+		// if(isAdmin()) {
+		// 	this.wait(Meteor.subscribe("singleScreen", this.params._id));
+		// }
 		if(!this.ready()){
 			return {};
 		}
@@ -166,6 +169,7 @@ Router.route("/templates/:_id/edit", {
 		}
 	}
 });
+
 
 Router.route("/templates/:_id/safeedit", {
 	name: "Safe Edit Template",
