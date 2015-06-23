@@ -1,3 +1,17 @@
+
+.view-wrapper {
+	background-color: black;
+	color: orange;
+}
+
+.viewer-body {
+	position:absolute;
+    margin:0; /* remove default margin */
+    padding:0; /* remove default padding */
+    width:100%; /* take full browser width */
+    height:100%; /* take full browser height*/
+}
+
 /* CSS declarations go here */
 /*.Connection-list {
 	display: inline;

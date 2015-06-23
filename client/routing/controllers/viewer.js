@@ -1,6 +1,9 @@
 AppViewerController = RouteController.extend({
 	layoutTemplate: "ViewerLayout",
 	loadingTemplate: "Loading",
+	onBeforeAction: function() {
+		$('body').addClass('viewer-body');
+	},
 	subscriptions: function() {
 		console.log("WAITON")
 		var appId = Session.get("currentAppId");
