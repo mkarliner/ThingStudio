@@ -41,6 +41,7 @@ Meteor.startup(function(){
 	// 	    + ' Column: ' + column + ' StackTrace: ' +  errorObj);
 	// 		Session.set("runtimeErrors", errorMsg);
 	// 	} 
+
 });
 
 Accounts.onLogin(function(){
@@ -50,44 +51,11 @@ Accounts.onLogin(function(){
 	initialApp = Session.get("currentAppId");
 	console.log("Initial App on Login ", initialApp);
 	if(initialApp) {
+		console.log("Found initial app ", initialApp)
 		return;
 	}
-	Meteor.subscribe("apps", {
-		onReady: function(){
-			if (!Meteor.userId()) {
-				console.log("Not logged in at startup - bailing.")
-				return;
-			}
-			console.log("Apps Ready", Apps.find({}).fetch());
-			//Is there only one App available?
-			numApps = Apps.find().count();
-			if(numApps == 1) {
-				initialApp = Apps.findOne();
-				Session.setPersistent("currentAppId", initialApp._id);
-				return;
-			}
-			//Are we logged in, but have no Apps?
-			if(Meteor.userId() && numApps == 0) {
-				//If so, create first app.
-				//console.log("Creating default app on ready", Meteor.userId())
-				appId = Apps.insert({
-					title: "defaultApp",
-					shareable: false,
-				});
-				Session.setPersistent("currentAppId", appId);
-				return;
-			}
-			//Are we logged in, with Apps, but none current?
-			//Just choose the 'defaultApp
-			if(Meteor.userId) {
-				initialApp = Apps.findOne({title: "defaultApp"});
-				Session.setPersistent("currentAppId", initialApp._id);
-				return;
-			}
-
-		}
-	})
-})
+	
+});
 
 // Accounts.onCreateUser(function(options, user) {
 //     //pass the surname in the options

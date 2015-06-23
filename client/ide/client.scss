@@ -630,6 +630,12 @@ a.header-action-1 {
 .status-active {
 	background-color: $statusActive;
 }
+.status-retry {
+	background-color: yellow;
+}
+.status-offline{
+	background-color: red;
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////
 // App Body//

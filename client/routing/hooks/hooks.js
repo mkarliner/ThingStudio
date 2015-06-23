@@ -21,7 +21,7 @@ Router.onBeforeAction(function () {
 		return;
 	}
 	connection = getCurrentConnection();
-	console.log("CURRCONN : ", connection)
+	//console.log("CURRCONN : ", connection)
 	if(!connection) {
 		// No, we have to decide which connection to use.
 		
@@ -43,7 +43,7 @@ Router.onBeforeAction(function () {
 	} 
 	
 	
-	console.log("VIEWCONN ", app.connection, connection);
+	//console.log("VIEWCONN ", app.connection, connection);
 	// Do I need to the user to provide authentication credentials?
 	if ((!connection.serverCredentials || connection.serverCredentials == false) && Session.get("authReady") != true) {
 		console.log("NEED AUTH")

@@ -16,12 +16,33 @@ Template.registerHelper(
 );
 
 
+Template.registerHelper(
+	"meteor_status", function(){
+		stat = Meteor.status();
+		console.log("MS: ", stat)
+		switch(stat.status) {
+		case "connected":
+			return "status-active";
+			break;
+		case "waiting":
+			return "status-retry";
+			break;
+		case "offline":
+			return "status-offline";
+			break;
+		default:
+			return "status-unknown";
+			break;
+		}
+	});
+
 
 
 
 Template.registerHelper(
 	"curr_app_name", function() {
-		return Session.get("currentApp").title;
+		title =  Session.get("currentApp").title;
+		return title ? title : "No current app - please select one"
 	}
 );
 

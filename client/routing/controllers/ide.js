@@ -13,7 +13,42 @@ IDEController = RouteController.extend({
 		myCurrAppId = Session.get('currentAppId');
 		guestAppId = Session.get('guestAppId');
 		return [
-			Meteor.subscribe('apps'),
+			Meteor.subscribe("apps", {
+				onReady: function(){
+					//Are we logged in.
+					if (!Meteor.userId()) {
+						console.log("Not logged in at startup - bailing.")
+						return;
+					}
+					console.log("Apps Ready", Apps.find({}).fetch());
+					//Is there only one App available?
+					numApps = Apps.find().count();
+					if(numApps == 1) {
+						initialApp = Apps.findOne();
+						Session.setPersistent("currentAppId", initialApp._id);
+						return;
+					}
+					//Are we logged in, but have no Apps?
+					if(Meteor.userId() && numApps == 0) {
+						//If so, create first app.
+						//console.log("Creating default app on ready", Meteor.userId())
+						appId = Apps.insert({
+							title: "defaultApp",
+							shareable: false,
+						});
+						Session.setPersistent("currentAppId", appId);
+						return;
+					}
+					//Are we logged in, with Apps, but none current?
+					//Just choose the 'defaultApp
+					if(Meteor.userId) {
+						initialApp = Apps.findOne({title: "defaultApp"});
+						Session.setPersistent("currentAppId", initialApp._id);
+						return;
+					}
+
+				}
+			}),
 			Meteor.subscribe('connections', myCurrAppId),
 			Meteor.subscribe('feeds', myCurrAppId),
 			Meteor.subscribe('screens', myCurrAppId),
