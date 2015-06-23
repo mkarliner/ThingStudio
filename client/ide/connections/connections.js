@@ -3,6 +3,7 @@ Template.ConnectionsHeader.events({
 		e.preventDefault();
 		menuOps();
 		$('.add-new-item select').material_select();
+		$('span.caret').not($('.select-wrapper span.caret')).remove();
 	}
 });
 
@@ -16,9 +17,11 @@ Template.ConnectionsHeader.helpers({
 Template.ConnectionsNewItem.events({
 	"click .table-cancel-new": function(e, tmpl) {
 		menuOps();
+		$('span.caret').not($('.select-wrapper span.caret')).remove();
 	},
 	"click .divider-decoration": function(e, tmpl) {
 		menuOps();
+		$('span.caret').not($('.select-wrapper span.caret')).remove();
 	}
 });
 

@@ -14,10 +14,6 @@ Template.afObjectField.onRendered(function() {
 });
 
 Template.updateScreenForm.onRendered(function() {
-	Tracker.autorun(function() {
-		Session.get("paulVar")
-	});
-
 	$('ul.tabs').tabs();
 	$('select').material_select();
 	$('span.caret').not($('.select-wrapper span.caret')).remove();
@@ -35,11 +31,6 @@ Template.updateScreenForm.events({
 	},
 	'click .clear-alerts': function(e, tmpl) {
 		Alerts.remove({});
-	},
-	'click .autoform-add-item': function(e, tmpl) {
-		 Session.set('paulVar', '' +
-        new Date().getTime() +
-        Math.floor(Math.random() * 1000000) );
 	}
 });
 
