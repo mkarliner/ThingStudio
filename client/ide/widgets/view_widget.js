@@ -21,5 +21,10 @@ Template.SingleWidgetBody.helpers({
 	},
 	js: function() {
 		return Screens.findOne({_id: this.baseScreen}).js;
+	},
+	mandatory: function() {
+		// return Widgets.findOne({_id: this.})
+		if (this.required)
+			return 'icon-ts-checkmark'
 	}
 });
