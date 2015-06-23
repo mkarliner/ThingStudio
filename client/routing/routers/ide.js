@@ -69,7 +69,7 @@ Router.route("/apps", {
 	controller: "IDEController",
 	action: function() {
 		if ( !this.ready() ) {
-			console.log("WAITING: ", this)
+			// console.log("WAITING: ", this)
 			this.render("Loading", {
 				data: "Apps"
 			});
