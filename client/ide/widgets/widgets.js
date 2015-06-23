@@ -3,7 +3,7 @@ Template.WidgetsBody.onRendered(function() {
 });
 
 Template.WidgetList.created = function(){
-		InstantiateWidgets();
+	InstantiateWidgets();
 }
 
 Template.WidgetsHeader.events({
@@ -58,6 +58,7 @@ Template.WidgetsHeader.events({
 		e.preventDefault();
 		menuOps();
 		$('.add-new-item select').material_select();
+		$('.tab-my-widgets').trigger("click");
 	}
 });
 

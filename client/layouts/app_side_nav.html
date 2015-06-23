@@ -55,13 +55,15 @@ Outstanding
 						</ul>
 					</div>
 				</li>
+			</ul>
+			<ul class="collapsible">
 				<li class="{{isActivePath regex='^\\/support'}}"><a href="/support"><i class="mdi-communication-email"></i> Support</a></li>
 				{{#if isInRole 'admin'}}
 					<li class="{{isActivePath regex='^\\/Sysadmin|sysadmin'}}">
-						<a class="collapsible-header no-pad"><i class="mdi-action-https"></i> Admin</a>
+						<a class="collapsible-header no-pad" ><i class="mdi-action-https"></i> Admin</a>
 						<div class="collapsible-body">
 							<ul>
-								<li class="{{isActivePath regex='^\\/current-users'}}"><a href="/current-users">Current Users</a></li>
+								<li class="{{isActivePath regex='^\\/current-users'}}"><a class="" href="/current-users">Current Users</a></li>
 								<li class="{{isActivePath regex='^\\/Sysadmin|sysadmin'}}"><a href="/sysadmin">System Admin</a></li>
 							</ul>
 						</div>

@@ -103,8 +103,8 @@ $bodyDividerColor: #D0D3DC;
 
 @mixin dropdownArrow {
 	color: #4AAFE2;
-	font-size: 3 * $fontSize;
-	line-height: 44px;
+	font-size: $fontSize;
+	line-height: 21px;
 }
 
 @mixin disabledStyle {
@@ -660,8 +660,13 @@ th {
 	padding: 15px 0;
 }
 
-table.hoverable tbody tr:hover {
-	background-color: lighten($appBodyBG, 2%);
+table.hoverable {
+	&:hover {
+		box-shadow: none;
+	}
+	& tbody tr:hover {
+		background-color: lighten($appBodyBG, 2%);
+	}
 }
 
 td {
@@ -718,9 +723,9 @@ td:last-child, th:last-child {
 	& .control-label {
 		display: none;
 	}
-	& .select-wrapper i {
-		@include dropdownArrow;
-	}
+	// & .select-wrapper i {
+	// 	@include dropdownArrow;
+	// }
 	& input.select-dropdown {
 		padding-left: 14px;
 	}
@@ -917,6 +922,15 @@ h4.modal-title {
 
 .mdi-image-brightness-1 {
 	color: $statusActive;
+}
+
+.select-wrapper span.caret {
+	@include dropdownArrow;
+	z-index: 1;
+}
+
+form[id^="update"] .select-wrapper span.caret {
+	line-height: 28px;
 }
 
 .select-wrapper.form-control {
