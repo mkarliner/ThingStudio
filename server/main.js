@@ -115,6 +115,7 @@ Meteor.startup(function() {
 	console.log("App count: ", app_cnt);
 
 	Meteor.publish("apps", function(appId) {
+		console.log("AppSub ", appId)
 		if(appId) {
 			appcurr =  Apps.find({_id: appId});
 			app = appcurr.fetch()[0]; 
@@ -123,7 +124,7 @@ Meteor.startup(function() {
 				this.ready();
 				return;
 			}
-			if(app.shareable) {
+			if(app.shareable || isAdmin(this.userId)) {
 				// console.log("Returning app", appcurr.fetch())
 				return appcurr;
 			} else {
@@ -146,7 +147,7 @@ Meteor.startup(function() {
 			this.ready(); //If there is not such app.
 			return;
 		}
-		if(this.userId == app.owner || app.shareable) {
+		if(this.userId == app.owner || app.shareable || isAdmin(this.userId)) {
 			// console.log("Returning connections: ", apps )
 			return Connections.find({appId: {$in: apps}});
 		} else {
@@ -163,7 +164,7 @@ Meteor.startup(function() {
 			return;
 		}
 		console.log("Subscribing screens: ", appId,  app.title, app.access)
-		if(this.userId == app.owner || app.shareable) {
+		if(this.userId == app.owner || app.shareable || isAdmin(this.userId)) {
 			// console.log("Returning screends: ", Screens.find({appId: appId}).fetch().length )
 			return Screens.find({appId: {$in: apps}});
 		} else {
@@ -180,7 +181,7 @@ Meteor.startup(function() {
 			return;
 		}
 		console.log("Subscribing widgets: ", appId,  app.title, app.access)
-		if(this.userId == app.owner || app.shareable) {
+		if(this.userId == app.owner || app.shareable || isAdmin(this.userId)) {
 			// console.log("Returning screends: ", Screens.find({appId: appId}).fetch().length )
 			return Widgets.find({appId: {$in: apps}});
 		} else {
@@ -196,10 +197,11 @@ Meteor.startup(function() {
 			return [];
 		}
 		console.log("Subscribing single scren screens: ", scr.appId,  app.title, app.access)
-		if(this.userId == app.owner || app.shareable) {
+		if(this.userId == app.owner || app.shareable || isAdmin(this.userId)) {
 			// console.log("Returning screends: ", Screens.find({appId: appId}).fetch().length )
 			return Screens.find({appId: {$in: apps}});
 		} else {
+			console.log("Attempt to access private app")
 			return[];
 		}
 	});
@@ -213,7 +215,7 @@ Meteor.startup(function() {
 			return;
 		}
 		// console.log("Subscribing feeds: ", appId,  app.access)
-		if(this.userId == app.owner || app.shareable) {
+		if(this.userId == app.owner || app.shareable || isAdmin(this.userId)) {
 			// console.log("Returning feeds: ", Feeds.find({appId: appId}).fetch().length )
 			return Feeds.find({appId: {$in
 				
@@ -256,7 +258,7 @@ Meteor.startup(function() {
 			return;
 		}
 		// console.log("Subscribing themes: ", appId,  app.access)
-		if(this.userId == app.owner || app.shareable) {
+		if(this.userId == app.owner || app.shareable || isAdmin(this.userId)) {
 			// console.log("Returning themes: ", Themes.find({appId: appId}).fetch().length )
 			return Themes.find({appId: {$in: apps}});
 		} else {

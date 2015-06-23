@@ -20,6 +20,10 @@ Template.registerHelper(
 		return(Meteor.user().roles.indexOf('admin') > -1);
 });
 
+isAdmin = function(){
+	return(Meteor.user().roles.indexOf('admin') > -1);
+}
+
 Template.CurrentUsersBody.helpers ({
 	activeUsers: function() {
   	  users =  Meteor.users.find({ "status.online": true })

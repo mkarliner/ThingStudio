@@ -24,11 +24,11 @@ Template.ScreensNewItem.events({
 
 Template.ScreensBody.helpers({
 	widgetlist: function(){
-		wl =  Screens.find({ owner: Meteor.userId(), isWidget: true})
+		wl =  Screens.find({  isWidget: true})
 		return wl;
 	},
 	screenlist: function(){
-		return Screens.find({ owner: Meteor.userId(), isWidget: false})
+		return Screens.find({ isWidget: false})
 	},
 	owner: function() {
 		return 

@@ -31,6 +31,10 @@ Schemas.SysLog = new SimpleSchema({
 	id: {
 		type: Number
 	},
+	appId: {
+		type: Number,
+		optional: true
+	},
 	userId: {
 		type: String
 	},
