@@ -12,6 +12,9 @@ Template.updateScreenForm.events({
 		console.log("JSTAB")
 		AceEditor.instance("archyjs").resize();
 		// AceEditor.instance("archyjs").renderer.updateFull()
+	},
+	'click .clear-alerts': function(e, tmpl) {
+		Alerts.remove({});
 	}
 });
 
@@ -45,5 +48,8 @@ Template.updateScreenForm.helpers({
 	},
 	widgetDoc: function() {
 		return Widgets.findOne({baseScreen: this._id});
+	},
+	alertCount: function() {
+		return Alerts.find().count();
 	}
 });

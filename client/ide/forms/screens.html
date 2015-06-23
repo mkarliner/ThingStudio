@@ -42,6 +42,9 @@
 		{{/autoForm}}
 			<div id="log">
 				<div class="alert-log">
+					<div class="form-group detail">				
+						<p class="usage"><span class="fwHeavy">Errors & Alerts</span> &ndash; Showing {{alertCount}} alerts. <a href="" class="clear-alerts">Clear Alerts</a></p>
+					</div>
 					{{#each alerts}}
 						<div class="alert {{status}} z-depth-1" role="alert">
 							<div class="alert-type {{status}}">{{alertType}}</div>{{message}}
