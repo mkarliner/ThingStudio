@@ -28,6 +28,9 @@ Template.DocsHeader.helpers({
 		hp =  HelpPages.findOne({pagenumber: {$lt: this.pagenumber}});
 		console.log("HP: ", hp);
 		return hp.urlstring;
+	},
+	summary: function(){
+		return this.attributes.summary;
 	}
 });
 
