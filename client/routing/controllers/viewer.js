@@ -3,6 +3,7 @@ AppViewerController = RouteController.extend({
 	loadingTemplate: "Loading",
 	onBeforeAction: function() {
 		$('body').addClass('viewer-body');
+		this.next();
 	},
 	subscriptions: function() {
 		console.log("WAITON")
