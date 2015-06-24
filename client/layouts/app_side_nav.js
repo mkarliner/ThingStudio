@@ -53,6 +53,17 @@ Template.AppSideNav.helpers({
 	},
 	currentAppId: function(){
 		return Session.get("currentAppId");
+	},
+	numChats: function(){
+		Session.set("newChats", true);
+		Meteor.setTimeout(function(){
+			Session.set("newChats", false);
+		}, 1200 * 1000)
+		return Chats.find().count();
+		
+	},
+	newChats: function(){
+		return Session.get("newChats") ? "New" : "";
 	}
 });
 

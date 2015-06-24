@@ -3,6 +3,18 @@ Template.ChatBody.onRendered(function() {
 	myDiv.scrollTop = myDiv.scrollHeight;
 });
 
+Template.ChatHeader.helpers({
+	onlineUsers: function() {
+  	  users =  Meteor.users.find({ "status.online": true })
+		console.log("ONL ", users.fetch())
+		return users;
+	},
+	status: function(){
+		console.log(this.status)
+		return this.status.idle ? "idle" : "active";
+	}
+})
+
 Template.ChatBody.helpers({
 	time: function() {
 		return this.date.getHours()+":"+this.date.getMinutes()+":"+this.date.getSeconds();

@@ -1,5 +1,12 @@
 <template name="ChatHeader">
 	Welcome to the ThingStudio chat box. Please be aware that all chats are public.
+	{{#if isInRole 'admin'}}
+	<div>
+		{{#each onlineUsers}}
+			<span class="online-user">{{this.username}}-{{status}}</span>
+		{{/each}}
+	</div>
+	{{/if}}
 </template>
 
 <template name="ChatBody">
