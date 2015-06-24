@@ -15,6 +15,10 @@ Template.ScreensNewItem.events({
 	}
 });
 
+Template.ScreensBody.created = function(){
+	InstantiateWidgets();
+}
+
 // Template.ScreensBody.events({
 // 	"click .screenlink": function(ev) {
 // 		console.log(this);
