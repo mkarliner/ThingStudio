@@ -17,16 +17,21 @@ Template.ChatHeader.helpers({
 
 Template.ChatBody.helpers({
 	time: function() {
-		return this.date.getHours()+":"+this.date.getMinutes()+":"+this.date.getSeconds();
+		if(this.date) {
+			return this.date.getHours()+":"+this.date.getMinutes()+":"+this.date.getSeconds();
+		} else {
+			return null;
+		}
+		
 	},
 	chats: function(){
 		return Chats.find({}, {sort: {date: 1}});
 	},
 	who: function(){	
 		user = Meteor.users.findOne({_id: this.userid});
-		if (user._id === Meteor.userId()) {
+		if (user && user._id === Meteor.userId()) {
 			return 'me';
-		} else if (user.roles && user.roles.indexOf('admin') > -1) {
+		} else if (user && user.roles && user.roles.indexOf('admin') > -1) {
 			return "admin";
 		} else {
 			return "other"

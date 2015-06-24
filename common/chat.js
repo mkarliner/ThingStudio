@@ -51,6 +51,8 @@ Chats.before.insert(function(userId, doc) {
 		doc.userid = userId;
 		console.log("SL", doc);
 		return doc;
+	} else {
+		new Audio('ding.mp3').play();
 	}
 });
 //
