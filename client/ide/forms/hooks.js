@@ -135,10 +135,11 @@ compileTemplate = function(name, html_text, javascript) {
 			jsout = eval(javascript)
 		}
 
-		Template[name].rendered = function(){
-			// console.log("RENDERED", this)
-			// console.log("RENDERED: ", this.findAll("[data-feed]"));
-		}
+		// Template[name].rendered = function(){
+		// 	console.log("RENDERED", this, Template.currentData(), Template.parentData())
+		//
+		// 	// console.log("RENDERED: ", this.findAll("[data-feed]"));
+		// }
 		return({type: 'template', status: 'success', message: 'Template updated'});
 	} catch (err) {
 		// console.log('Error compiling template:' + html_text);

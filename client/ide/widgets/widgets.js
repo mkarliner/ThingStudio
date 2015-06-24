@@ -37,12 +37,28 @@ Template.WidgetList.helpers({
 	widgetTag: function(){
 		console.log("WT: ", this.tagName)
 		paramString = " "
-		for(var p=0; p<this.parameters.length; p++) {
-			paramString += " " + this.parameters[p].title + "=\"" + this.parameters[p].dummyValue + "\"";
+		if(this.parameters) {
+			for(var p=0; p<this.parameters.length; p++) {
+				paramString += " " + this.parameters[p].title + "=\"" + this.parameters[p].dummyValue + "\"";
+			}
 		}
 		retstr =  "<"+this.tagName+ paramString + ">";
-		console.log("RS: ", retstr)
+
 		return retstr;
+	},
+	screenInstance: function(){
+		scr = Screens.findOne({_id: this.baseScreen});
+		return scr.title;
+		
+	},
+	dummyData: function(){
+		dd = {}
+		if(this.parameters){
+			for(var p=0; p < this.parameters.length; p++){
+				dd[this.parameters[p].title] = this.parameters[p].dummyValue;
+			}
+		}
+		return dd;
 	},
 	widgetEndTag: function(){
 		return "</"+this.tagName+">";
