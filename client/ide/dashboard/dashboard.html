@@ -34,7 +34,7 @@
 									<a class="table-action table-edit-item" href="{{pathFor 'EditApp'}}"><i class="mdi-editor-mode-edit"></i></a>
 								{{else}}
 									<a class="table-action table-make-active select-app tooltipped" data-position="top" data-delay="50" data-tooltip="Make app active" href=""><i class="mdi-toggle-radio-button-off"></i></a>
-									<a class="table-action table-edit-item ta-disabled tooltipped" data-position="top" data-delay="50" data-tooltip="Activative this app to edit" href=""><i class="mdi-editor-mode-edit"></i></a>
+									<a class="table-action table-edit-item ta-disabled tooltipped" data-position="top" data-delay="50" data-tooltip="Select this app to edit" href=""><i class="mdi-editor-mode-edit"></i></a>
 								{{/if}} 
 								{{#afModal classes="table-action table-cancel-item" collection="Apps" operation="remove" doc=_id title="Deleting App" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="mdi-navigation-close"></i>{{/afModal}}
 							</div>
