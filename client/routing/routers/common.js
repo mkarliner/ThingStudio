@@ -9,7 +9,7 @@ Router.configure({
 
 AccountsTemplates.configureRoute('signIn', {
 	// template: "TSLogin",
-	redirect: "/screens"
+	redirect: "/apps"
 });
 
 // AccountsTemplates.configureRoute('ensureSignedIn', {
