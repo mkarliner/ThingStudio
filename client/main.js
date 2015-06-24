@@ -48,12 +48,7 @@ Accounts.onLogin(function(){
 	// This is not associated with any route.
 	//We decide what the initial app should be here.
 
-	initialApp = Session.get("currentAppId");
-	console.log("Initial App on Login ", initialApp);
-	if(initialApp) {
-		console.log("Found initial app ", initialApp)
-		return;
-	}
+
 	
 });
 

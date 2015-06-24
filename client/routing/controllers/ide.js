@@ -21,6 +21,12 @@ IDEController = RouteController.extend({
 						console.log("Not logged in at startup - bailing.")
 						return;
 					}
+					initialApp = Session.get("currentAppId");
+					console.log("Initial App on Startup ", initialApp);
+					if(initialApp) {
+						console.log("Found initial app ", initialApp)
+						return;
+					}
 					console.log("Apps Ready", Apps.find({}).fetch());
 					//Is there only one App available?
 					numApps = Apps.find().count();
