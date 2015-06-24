@@ -52,7 +52,7 @@ Chats.before.insert(function(userId, doc) {
 		console.log("SL", doc);
 		return doc;
 	} else {
-		new Audio('ding.mp3').play();
+		new Audio('door_knock.mp3').play();
 	}
 });
 //
