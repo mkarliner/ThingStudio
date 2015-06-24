@@ -157,6 +157,15 @@ Router.route("/templates/:_id/edit", {
 		Session.set("currentScreenPage", this.params._id);
 		scr = Screens.findOne({ _id: this.params._id });
 		scr.safeEdit = false;
+		// Set any default values up.
+		widget = Widgets.findOne({baseScreen: this.params._id});
+		if(widget) {
+			for(var w = 0; w < widget.parameters.length; w++ ) {
+				p = widget.parameters[w];
+				console.log("PARAM: ", p);
+				scr[p.title] = p.dummyValue 
+			}
+		}
 		return scr;
 	},
 	action: function() {
