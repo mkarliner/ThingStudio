@@ -94,11 +94,13 @@ Meteor.startup(function() {
 				Screens.update({_id: scr._id}, {$set: {appId: app._id}});
 			}
 		}
-		themes = Themes.find({owner: u._id}).fetch();
-		for(var t=0; t<themes.length; t++) {
-			theme = themes[t];
-			if(!theme.appId) {
-				Themes.update({_id: theme._id}, {$set: {appId: app._id}});
+		if(u) {
+			themes = Themes.find({owner: u._id}).fetch();
+			for(var t=0; t<themes.length; t++) {
+				theme = themes[t];
+				if(!theme.appId) {
+					Themes.update({_id: theme._id}, {$set: {appId: app._id}});
+				}
 			}
 		}
 	}
