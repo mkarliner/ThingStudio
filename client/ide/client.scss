@@ -304,6 +304,7 @@ table.striped tbody tr:nth-child(odd) {
 	}
 }
 
+
 .sb-profile {
 	padding-bottom: 0.2rem;
 	& a {
@@ -319,6 +320,10 @@ table.striped tbody tr:nth-child(odd) {
 	& i {
 		font-size: 2.2 * $fontSize;
 	}
+}
+
+.side-nav .help .collapsible li {
+	padding: 0 15px;
 }
 
 .dropdown-content li > span {
@@ -952,6 +957,7 @@ form[id^="update"] .select-wrapper span.caret {
 	}
 	& .mdi-navigation-arrow-drop-down {
 		@include dropdownArrow;
+		font-size: 36px;
 		right: -14px;
 		line-height: 58px;
 		z-index: 1;

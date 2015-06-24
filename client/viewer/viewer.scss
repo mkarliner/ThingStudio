@@ -28,6 +28,25 @@ body.viewer-body {
 	& main {
 		flex: 1;
 	}
+	& a i.icon-ts-connection {
+		transition: background-color 0.1s cubic-bezier(0.4, 0.0, 0.2, 1);
+		border-radius: 50%;
+		font-size: 15px;
+		width: 22px;
+		height: 22px;
+		line-height: 29px;
+		display: inline-block;
+		margin-top: 10px;
+		margin-bottom: 7px;
+		text-align: center;
+		color: white;
+		&.connected {
+			background-color: $activeGreen;
+		}
+		&.disconnected {
+			background-color: $inactiveRed;
+		}
+	}
 }
 
 .view-wrapper {
@@ -77,22 +96,3 @@ body.viewer-body {
 	right: 0;
 }
 
-a i.icon-ts-connection {
-		transition: background-color 0.1s cubic-bezier(0.4, 0.0, 0.2, 1);
-		border-radius: 50%;
-		font-size: 15px;
-		width: 22px;
-		height: 22px;
-		line-height: 29px;
-		display: inline-block;
-		margin-top: 10px;
-		margin-bottom: 7px;
-		text-align: center;
-		color: white;
-		&.connected {
-			background-color: $activeGreen;
-		}
-		&.disconnected {
-			background-color: $inactiveRed;
-		}
-	}
