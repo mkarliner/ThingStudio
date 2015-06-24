@@ -159,7 +159,7 @@ Router.route("/templates/:_id/edit", {
 		scr.safeEdit = false;
 		// Set any default values up.
 		widget = Widgets.findOne({baseScreen: this.params._id});
-		if(widget) {
+		if(widget && widget.parameters) {
 			for(var w = 0; w < widget.parameters.length; w++ ) {
 				p = widget.parameters[w];
 				//console.log("PARAM: ", p);

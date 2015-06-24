@@ -7,7 +7,7 @@ Template.AppsHeader.events({
 		e.preventDefault();
 		menuOps();
 		$('.add-new-item select').material_select();
-		$('span.caret').not($('.select-wrapper span.caret')).remove();
+		// $('span.caret').not($('.select-wrapper span.caret')).remove();
 	}
 });
 
