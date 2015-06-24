@@ -1,6 +1,7 @@
 IDEController = RouteController.extend({
 	layoutTemplate: "MasterLayout",
 	onBeforeAction: function() {
+		$('body').removeClass('viewer-body');
 		if (!Meteor.user() && !Meteor.loggingIn()) {
 			this.layout("HelpLayout");
 			// this.render("Login");
