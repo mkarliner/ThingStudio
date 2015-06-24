@@ -200,7 +200,7 @@ table.striped tbody tr:nth-child(odd) {
 	background-color: lighten($appBodyBG, 2%);
 }
 
-#lean-overlay {
+.lean-overlay {
 	background-color: #FFF;
 }
 
@@ -824,6 +824,7 @@ h4.modal-title {
 	& i {
 		font-size: 2em;
 		position: absolute;
+		line-height: 36px;
 	}
 }
 
