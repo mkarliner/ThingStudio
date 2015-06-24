@@ -26,7 +26,7 @@ publishFeed = function(feedName, message) {
 }
 
 getFeed = function(feed, defVal){
-				retmsg = Messages.findOne({
+				msg = Messages.findOne({
 					feed: feed
 				});
 				return msg ? msg.payload : defaultValue;
@@ -35,6 +35,11 @@ getFeed = function(feed, defVal){
 paddedNumber = function(num, size) {
     var s = "000000000" + num;
     return s.substr(s.length-size);
+}
+
+mapValue = function(x, in_min, in_max, out_min, out_max)
+{
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
 

@@ -13,8 +13,8 @@
 		{{> afQuickField name='shareable' }} {{> afQuickField name='public' }}
 		<p class="fwHeavy">Sharing Options</p>
 		{{#if this.shareable}}
-		<a href="{{share_url}}" class="btn btn-social">Share app URL</a><a href="" class="btn btn-social btn-twitter">Share on Twitter</a><a href="" class="btn btn-social btn-facebook">Share on Facebook</a><a href="" class="btn btn-social btn-linkedin">Share on LinkedIn</a>
-		<p class="studio-url"><span class="fwHeavy">Studio URL:</span> {{studio_url}}</p>
+		<a href="{{share_url}}" class="btn btn-social">Visit App</a><a href="https://twitter.com/intent/tweet?text='I made an app with @ThingStudio. Click here {{share_url}} to see it " class="btn btn-social btn-twitter">Share on Twitter</a>
+		<p class="studio-url"><span class="fwHeavy">Viewer URL:</span> {{share_url}}</p>
 		{{else}}
 		<p>Make shareable to get sharing options</p>
 		{{/if}}

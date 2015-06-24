@@ -66,6 +66,10 @@ $fwBlack: 'AvenirLTStd-Black';
 	font-family: 'Orbitron', sans-serif;
 }
 
+.lcdDisplay {
+	font-family:'LCDBOLD',Serif;
+}
+
 //Sidebar
 $sideNavWidth: 220px;
 $darkBase: #353C51;
@@ -1480,6 +1484,15 @@ footer {
 	src:
 		url("fonts/Orbitron-Regular.woff") format("woff"),
 		url("fonts/Orbitron-Regular.ttf") format("truetype");
+	font-weight: normal;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: "LCDBOLD";
+	src:
+		url("fonts/LCDBOLD.woff") format("woff"),
+		url("fonts/LCDBOLD.ttf") format("truetype");
 	font-weight: normal;
 	font-style: normal;
 }

@@ -1,15 +1,14 @@
 <template name="ViewApp">
-	<div>
+	<div class="view-wrapper">
 	{{this.title}}
 	
 	</div>
-		<div id="screenList">
+		<div class="flex-container" id="screenList">
 		
-		<h1>Your Screens</h1>
+		
 		<div class="flex-column">
-
 		{{#each screenlist}}
-						<a href="/viewer/screen/{{this._id}}"><button class="flex-item btn screenlink">{{this.title}}</button></a>
+						<button class="flex-item btn screenlink"><a class="flex-item" style="color: orange" href="/viewer/screen/{{this._id}}">{{this.title}}</a></button>
 		{{/each}}
 	
 

@@ -103,8 +103,9 @@ compileTemplate = function(name, html_text, javascript) {
 				dm = attr.getNamedItem("data-message");
 				if(dm) {
 					prefix = dm.value;
+				} else {
+					prefix = ""
 				}
-				console.log("PREFIX: ", prefix)
 				checkFeed(feed_name.value, false);
 				value = $(ev.target).val();
 				checkFeed(feed_name.value, false);

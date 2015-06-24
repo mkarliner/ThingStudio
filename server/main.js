@@ -384,7 +384,9 @@ Meteor.startup(function() {
 		"template-helpers.md",
 		"templates.md",
 		"themes.md",
-		"widgets.md"
+		"widgets.md",
+		"display-data.md",
+		"data-in-and-out.md"
 	];
 
 	Docs.remove({});
@@ -402,6 +404,7 @@ Meteor.startup(function() {
 	// var files = fs.readdirSync(privateDir);
 	console.log("docs", DocFiles)
 	for(var f=0; f<DocFiles.length; f++){
+		console.log("Parsing: ", DocFiles[f]);
 		a = Assets.getText("docs/"+DocFiles[f]);
 		//console.log("MYTXT ", FM(a));
 		Docs.insert(FM(a));
