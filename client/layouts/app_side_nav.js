@@ -63,7 +63,11 @@ Template.AppSideNav.helpers({
 		
 	},
 	newChats: function(){
-		return Session.get("newChats") ? "New" : "";
+		if ( Session.get("newChats") ) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 });
 
