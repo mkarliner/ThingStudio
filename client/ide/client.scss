@@ -28,6 +28,7 @@ $tableHover: #FDFDFD;
 $tableStripe: #FBFFFD;
 $errorBorderColor: #C3323E;
 $errorBorder: 1px solid $errorBorderColor;
+$pink: #EE6E73;
 
 //Buttons
 $btnSocialColor: #76D4E1;
@@ -324,6 +325,12 @@ table.striped tbody tr:nth-child(odd) {
 
 .side-nav .help .collapsible li {
 	padding: 0 15px;
+	& ul li {
+		padding: 0;
+		& a {
+			padding: 0;
+		}
+	}
 }
 
 .dropdown-content li > span {
@@ -1176,10 +1183,16 @@ pre.ace-cobalt .ace_comment {
 }
 
 .svg-container {
-	position: relative;
-	width: 144px;
-	margin: 0 auto;
+	text-align: center;
+	height: 150px;
+	margin-bottom: 10px;
 }
+
+.svg-container svg{
+	max-height: 150px;
+	height: 100%;
+}
+
 
 // .svg-container svg {
 // 	position: absolute;
@@ -1406,6 +1419,15 @@ footer {
 .chat-admin {
 	background-color: #ee6e73;
 	color: white;
+}
+
+.chat-count {
+	background-color: $pink;
+	border-radius: 8px;
+	padding: 2px 8px 0;
+	color: white;
+	line-height: 18px;
+	display: inline-block;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
