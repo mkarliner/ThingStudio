@@ -26,5 +26,14 @@ Template.SingleWidgetBody.helpers({
 		// return Widgets.findOne({_id: this.})
 		if (this.required)
 			return 'icon-ts-checkmark'
+	},
+	dummyData: function(){
+		dd = {}
+		if(this.parameters){
+			for(var p=0; p < this.parameters.length; p++){
+				dd[this.parameters[p].title] = this.parameters[p].dummyValue;
+			}
+		}
+		return dd;
 	}
 });
