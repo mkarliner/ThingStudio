@@ -134,9 +134,17 @@ Feeds.before.insert(function(userId, doc) {
 	}
 });
 
-Feeds.after.insert(function(userId, doc) {
 
+
+Feeds.after.insert(function(userId, doc) {
+	if(Meteor.isClient){
+		console.log("Feed update", userId, doc)
+		if(doc.pubsub == "Subscription") {
+			mqttClient.subscribe(doc.subscription);
+		}	
+	}
 });
+
 Feeds.after.update(function(userId, doc) {
 	if(Meteor.isClient){
 		console.log("Feed update", userId, doc)
