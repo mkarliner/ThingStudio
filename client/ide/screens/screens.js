@@ -32,7 +32,7 @@ Template.ScreensBody.helpers({
 		return wl;
 	},
 	screenlist: function(){
-		return Screens.find({ })
+		return Screens.find({$or:[{owner: Meteor.userId()}, {isWidget: false} ] });
 	},
 	owner: function() {
 		return 
