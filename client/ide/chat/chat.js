@@ -1,10 +1,16 @@
 Template.ChatBody.onRendered(function() {
 	var myDiv = $(".chat-messages").get(0);
 	myDiv.scrollTop = myDiv.scrollHeight;
-	
-	Chats.find({}).observe({
-		added: function(doc) {
-			new Audio('door_knock.mp3').play();
+	Session.set("numChats", Chats.find().count());
+	console.log("CS1: ", Session.get("numChats"))
+	Chats.find({}).observeChanges({
+		added: function(id, fields) {
+			chats = Chats.find().count();
+			if(Session.get("numChats") != chats) {
+				new Audio('door_knock.mp3').play();	
+				Session.set("numChats", chats)
+					console.log("CS2: ", Session.get("numChats"))
+			}
 		}
 	})
 });
