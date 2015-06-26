@@ -51,9 +51,7 @@ Chats.before.insert(function(userId, doc) {
 		doc.userid = userId;
 		console.log("SL", doc);
 		return doc;
-	} else {
-		new Audio('door_knock.mp3').play();
-	}
+	} 
 });
 //
  Chats.attachSchema(Schemas.Chat);
