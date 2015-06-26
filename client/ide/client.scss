@@ -1021,15 +1021,15 @@ div.ace_layer.ace_gutter-layer.ace_folding-enabled {
 	border-bottom: none;
 }
 
-#html, #js, #preview {
+#html, #js, #preview, #css {
 	position: relative;
 }
 
-#html .control-label, #js .control-label {
+#html .control-label, #js .control-label, #css .control-label {
 	display: none;
 }
 
-#html .form-group, #js .form-group {
+#html .form-group, #js .form-group, #css .form-group {
 	padding-top: 0;
 	padding-bottom: 0;
 	margin-bottom: 0;
@@ -1048,11 +1048,11 @@ div.ace_layer.ace_gutter-layer.ace_folding-enabled {
 	padding: 10px;
 }
 
-pre[name="html"], pre[name="js"] {
+pre[name="html"], pre[name="js"], pre[name="css"] {
 	line-height: 0;
 }
 
-pre[name="html"], pre[name="js"], pre.ace_editor {
+pre[name="html"], pre[name="js"], pre.ace_editor, pre[name="css"] {
 	margin: 0;
 }
 
