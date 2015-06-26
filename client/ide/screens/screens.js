@@ -32,7 +32,7 @@ Template.ScreensBody.helpers({
 		return wl;
 	},
 	screenlist: function(){
-		return Screens.find({ isWidget: false})
+		return Screens.find({ })
 	},
 	owner: function() {
 		return 
@@ -58,6 +58,9 @@ Template.ScreensBody.helpers({
 	home_page: function(){
 		app = Session.get("currentApp");
 		return  this._id == app.home_page ? "yes" : "no";
+	},
+	isWidget: function(){
+		return this.isWidget ? "icon-ts-checkmark" : "";
 	},
 	widget: function(){
 		return( "aa" +this.isWidget)
