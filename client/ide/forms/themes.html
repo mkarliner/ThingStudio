@@ -1,8 +1,24 @@
-<template name="insertThemeForm">
-  {{> quickForm collection="Themes" id="insertThemeForm" type="insert" buttonClasses="glyphicon glyphicon-ok btn btn-default" buttonContent="Save" omitFields="public" }}
-</template>
-
-
 <template name="updateThemeForm">
-  {{> quickForm collection="Themes" id="updateThemeForm" type="update" doc=this class="qkForm" buttonClasses="glyphicon glyphicon-ok btn btn-default btn-tick" buttonContent="Update" omitFields="" }}
+	<div class="top-row">
+		<div class="col s2 tabs-container">
+			<ul class="tabs">
+				<li class="tab"><a href="#css">App-level CSS</a></li>
+				<li class="tab"><a href="#properties">Properties</a></li>
+			</ul>
+		</div>
+		<div class="clearfix"></div>
+	</div>
+	<div class="single-page-container">
+		{{#autoForm collection="Themes" id="updateThemeForm" type="update" doc=this }}
+			<div id="css">
+				{{> Alerts}}
+				{{>afQuickField name="css" class="centerField"}}
+				<button type="submit" class="btn btn-update right">Update</button>
+			</div>
+			<div id="properties">
+				{{> afQuickField name="title" class="centerField"}}
+				<button type="submit" class="btn btn-update right">Update</button>
+			</div>
+		{{/autoForm}}
+	</div>
 </template>

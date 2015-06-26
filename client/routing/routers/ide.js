@@ -287,7 +287,7 @@ Router.route("/themes/:_id", {
 				data: "Theme"
 			});
 		} else {
-			renderYields(this, 'SingleTheme');
+			renderYields(this, 'EditTheme');
 		}
 	}
 });

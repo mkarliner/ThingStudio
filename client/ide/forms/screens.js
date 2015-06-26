@@ -10,13 +10,13 @@ Template.afObjectField.onRendered(function() {
 	$('select').material_select('destroy');
 	// $('span.caret').not($('.select-wrapper span.caret')).remove();
 	$('select').material_select();
-	$('span.caret').not($('.select-wrapper span.caret')).remove();
+	// $('span.caret').not($('.select-wrapper span.caret')).remove();
 });
 
 Template.updateScreenForm.onRendered(function() {
 	$('ul.tabs').tabs();
 	$('select').material_select();
-	$('span.caret').not($('.select-wrapper span.caret')).remove();
+	// $('span.caret').not($('.select-wrapper span.caret')).remove();
 });
 
 Template.updateScreenForm.events({
