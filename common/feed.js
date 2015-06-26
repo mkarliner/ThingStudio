@@ -129,7 +129,7 @@ Schemas.Feed = new SimpleSchema({
 
 Feeds.before.insert(function(userId, doc) {
 	if(Meteor.isClient) {
-		// console.log("BEFOREHOOK ", userId, doc, Session.get("currentApp"));
+		console.log("BEFOREFEEDINHOOK ", userId, doc, Session.get("currentApp"));
 		doc.appId = Session.get("currentApp")._id;
 	}
 });
@@ -137,10 +137,13 @@ Feeds.before.insert(function(userId, doc) {
 
 
 Feeds.after.insert(function(userId, doc) {
+				console.log("Feed insert after", userId, doc, Meteor.isClient)
 	if(Meteor.isClient){
-		console.log("Feed update", userId, doc)
-		if(doc.pubsub == "Subscription") {
-			mqttClient.subscribe(doc.subscription);
+		if(doc.pubsub != "Publish") {
+			console.log("Feed insert subscription", userId, doc)
+			topic = mqttregex(doc.subscription).topic;
+			topic = topic.substring(0, topic.length - 1);
+			mqttClient.subscribe(topic);
 		}	
 	}
 });
@@ -148,8 +151,21 @@ Feeds.after.insert(function(userId, doc) {
 Feeds.after.update(function(userId, doc) {
 	if(Meteor.isClient){
 		console.log("Feed update", userId, doc)
-		if(doc.pubsub == "Subscription") {
-			mqttClient.subscribe(doc.subscription);
+		if(doc.pubsub != "Publish") {
+			topic = mqttregex(doc.subscription).topic;
+			topic = topic.substring(0, topic.length - 1);
+			mqttClient.subscribe(topic);
+		}	
+	}
+});
+
+Feeds.after.remove(function(userId, doc) {
+	if(Meteor.isClient){
+		console.log("Feed remove", userId, doc)
+		if(doc.pubsub != "Publish") {
+			topic = mqttregex(doc.subscription).topic;
+			topic = topic.substring(0, topic.length - 1);
+			mqttClient.unsubscribe(topic);
 		}	
 	}
 });
