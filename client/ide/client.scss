@@ -751,8 +751,11 @@ td:last-child, th:last-child {
 	& input.select-dropdown {
 		padding-left: 14px;
 	}
-}
 
+}
+.table-action.table-save-new i.icon-ts-checkmark {
+	line-height: 33px;
+}
 .div-container {
 	margin: -7px auto 0;
 	padding: 1rem 0 0 0;
@@ -810,6 +813,9 @@ table, .single-page-container {
 		line-height: 33px;
 		text-align: center;
 	}
+	& i.icon-ts-checkmark {
+		line-height: 37px;
+	}
 	& i.icon-ts-trash {
 		font-size: 18px;
 		line-height: 38px;
@@ -819,6 +825,8 @@ table, .single-page-container {
 .table-action.ta-disabled, .card .card-action a.ta-disabled {
 	@include disabledStyle;
 }
+
+
 
 ///////////////////////////////////////////////////////////////////////////////////////
 // App Body - Modals //
