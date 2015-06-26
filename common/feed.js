@@ -41,8 +41,7 @@ Schemas.Feed = new SimpleSchema({
 	pubsub: {
 		type: String,
 		label: "Publish/Subscribe",
-		allowedValues: ["Publish", "Subscribe"],
-		defaultValue: "Subscribe"
+		allowedValues: ["Publish", "Subscribe"]
 	},
 	// action: {
 	// 	type: String,
