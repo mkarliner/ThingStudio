@@ -38,12 +38,26 @@ Schemas.SysLog = new SimpleSchema({
 	userId: {
 		type: String
 	},
+	count: {
+		type: Number,
+		optional: true,
+		defaultValue: 0
+	},
 	userName: {
 		type: String
 	}
 });
 
 SysLogs.before.insert(function(userId, doc) {
+	if(Meteor.isServer) {
+		u =  Meteor.users.findOne({_id: userId});
+		doc.userName = u? u.username : "no one";
+		console.log("SL", doc);
+		return doc;
+	}
+});
+
+SysLogs.before.update(function(userId, doc) {
 	if(Meteor.isServer) {
 		u =  Meteor.users.findOne({_id: userId});
 		doc.userName = u? u.username : "no one";

@@ -175,14 +175,21 @@ Screens.after.update(function(userId, doc) {
 		Alerts.insert(compret);
 	}
 	if(Meteor.isServer) {
-		SysLogs.insert({
-			event: "ScreenUpdate",
-			title: doc.title,
-			date: new Date(),
-			id: doc._id,
-			appId: doc.appId,
-			owner: doc._owner,
-		})
+		SysLogs.upsert({event: "ScreenUpdate", id: doc._id},
+		{$set: 
+				{
+					event: "ScreenUpdate",
+					title: doc.title,
+					date: new Date(),
+					id: doc._id,
+					appId: doc.appId,
+					owner: doc._owner,
+				},
+			$inc: 
+				{
+					count: 1
+				}
+			})
 	}
 });
 
