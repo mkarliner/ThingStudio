@@ -48,8 +48,9 @@ Template.registerHelper(
 
 Template.registerHelper("indexedArray",
 	function(arr) {
+		length = arr.length
   	  	return _.map(arr, function(value, index){
-    	  return {value: value, index: index};
+    	  return {value: value, index: index, length: length};
   });
 });
 
