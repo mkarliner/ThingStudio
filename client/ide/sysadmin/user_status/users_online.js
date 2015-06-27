@@ -26,7 +26,8 @@ isAdmin = function(){
 
 Template.CurrentUsersBody.helpers ({
 	activeUsers: function() {
-  	  users =  Meteor.users.find({ "status.online": true })
+  	  //users =  Meteor.users.find({ "status.online": true })
+		users = Meteor.users.find({}, {sort: {'status.lastLogin.date': -1}, limit: 20})
 		console.log("ONL ", users.fetch())
 		return users;
 	}
