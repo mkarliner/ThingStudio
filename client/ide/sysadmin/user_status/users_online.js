@@ -57,7 +57,7 @@ Template.userPill.helpers({
 		return this.idle;
 	},
 	labelClass: function() {
-  if (this.status.online==false && this.status.idle)
+  if (this.status.online==false || this.status.idle)
     return "status-idle"
   else
     return "status-active"
