@@ -69,7 +69,7 @@ compileTemplate = function(name, html_text, javascript) {
 				});
 				// console.log("MSG: ", msg);
 				return msg && msg.journal ? JSON.stringify(msg.journal)  : ["no values"];
-			}
+			},
 		});
 		Template[name].events({
 			'click button': function(ev){
@@ -88,9 +88,19 @@ compileTemplate = function(name, html_text, javascript) {
 				publish(feed, JSON.stringify(message ? message.value : "click"));
 			},
 			'change input[type="checkbox"]': function(ev) {
+				console.log("CHKBOX ", ev, this)
 				attr = ev.currentTarget.attributes;
 				feed_name = attr.getNamedItem("data-feed");
 				checkFeed(feed_name.value, false);
+				message = attr.getNamedItem("data-message");
+				console.log("MV: ", message.value);
+				try {
+					pv = JSON.parse("{" + message.value + "}");
+				}
+				catch(ev) {
+					pv = message.value;
+				}
+				console.log("PV", pv)
 				value = attr.getNamedItem("checked");
 				feed = Feeds.findOne({title: feed_name.value});
 				publish(feed, JSON.stringify(ev.target.checked.toString()));
