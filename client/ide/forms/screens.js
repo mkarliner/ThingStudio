@@ -25,7 +25,7 @@ Template.updateScreenForm.events({
 		Alerts.remove(this._id);
 	},
 	'click #jstab': function(e, tmpl){
-		console.log("JSTAB")
+		// console.log("JSTAB")
 		AceEditor.instance("archyjs").resize();
 		// AceEditor.instance("archyjs").renderer.updateFull()
 	},
