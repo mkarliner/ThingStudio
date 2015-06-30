@@ -3,7 +3,7 @@ Template.WidgetsBody.onRendered(function() {
 });
 
 Template.WidgetList.created = function(){
-	InstantiateWidgets();
+	//InstantiateWidgets();
 }
 
 Template.WidgetsHeader.events({

@@ -59,7 +59,11 @@ IDEController = RouteController.extend({
 			Meteor.subscribe('connections', myCurrAppId),
 			Meteor.subscribe('feeds', myCurrAppId),
 			Meteor.subscribe('screens', myCurrAppId),
-			Meteor.subscribe('widgets', myCurrAppId),
+			Meteor.subscribe('widgets', myCurrAppId, {
+				onReady: function(){
+					InstantiateWidgets();
+				}
+			}),
 			Meteor.subscribe('themes', myCurrAppId),
 			Meteor.subscribe('userList'),
 			Meteor.subscribe('syslogs'),

@@ -16,7 +16,7 @@ Template.ScreensNewItem.events({
 });
 
 Template.ScreensBody.created = function(){
-	InstantiateWidgets();
+	//InstantiateWidgets();
 }
 
 // Template.ScreensBody.events({
