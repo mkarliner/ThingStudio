@@ -88,7 +88,7 @@ compileTemplate = function(name, html_text, javascript) {
 				publish(feed, JSON.stringify(message ? message.value : "click"));
 			},
 			'change input[type="checkbox"]': function(ev) {
-				console.log("CHKBOX ", ev, this)
+				// console.log("CHKBOX ", ev, this)
 				attr = ev.currentTarget.attributes;
 				feed_name = attr.getNamedItem("data-feed");
 				checkFeed(feed_name.value, false);
@@ -100,7 +100,7 @@ compileTemplate = function(name, html_text, javascript) {
 				catch(ev) {
 					pv = message.value;
 				}
-				console.log("PV", pv)
+				// console.log("PV", pv)
 				value = attr.getNamedItem("checked");
 				feed = Feeds.findOne({title: feed_name.value});
 				publish(feed, JSON.stringify(ev.target.checked.toString()));
