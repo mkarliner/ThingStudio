@@ -20,6 +20,7 @@ check@1.0.5
 chuangbo:cookie@1.1.0
 chuangbo:marked@0.3.5
 coffeescript@1.0.6
+comerc:autoform-selectize@2.2.3
 dburles:collection-helpers@1.0.3
 ddp@1.1.0
 deps@1.0.7
@@ -51,6 +52,7 @@ iron:location@1.0.9
 iron:middleware-stack@1.0.9
 iron:router@1.0.9
 iron:url@1.0.9
+jeremy:selectize@0.12.1_3
 jparker:crypto-core@0.1.0
 jparker:crypto-md5@0.1.1
 jparker:gravatar@0.3.1

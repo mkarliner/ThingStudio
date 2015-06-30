@@ -1,5 +1,5 @@
 Template.EditAppBody.onRendered(function() {
-	$('select').material_select();
+	// $('select').material_select();
 	$('ul.tabs').tabs();
 });
 

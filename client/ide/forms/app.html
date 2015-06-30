@@ -11,10 +11,13 @@
 		<p><span class="fwHeavy">Access Details</span> &mdash; Control whether other users can access this application, and various publishing options</p>
 		<!-- {{> afQuickField name='access' noselect=true options="allowed" typetype="select-radio-inline-M"}} -->
 		{{> afQuickField name='shareable' }} {{> afQuickField name='public' }}
-		<p class="fwHeavy">Sharing Options</p>
+		<p><span class="fwHeavy">Sharing Options</span> &mdash; Share your IoT app with the world! (must be public &amp; sharable)</p>
 		{{#if this.shareable}}
-		<a href="{{share_url}}" class="btn btn-social">Visit App</a><a href="https://twitter.com/intent/tweet?text='I made an app with @ThingStudio. Click here {{share_url}} to see it " class="btn btn-social btn-twitter">Share on Twitter</a>
-		<p class="studio-url"><span class="fwHeavy">Viewer URL:</span> {{share_url}}</p>
+		<a href="{{share_url}}" class="btn btn-social btn-flat" target="_blank">Visit App</a>
+		<a href="https://twitter.com/intent/tweet?text='I made an app with @ThingStudio. Click here {{share_url}} to see it " class="btn btn-social btn-twitter btn-flat" target="_blank">Share on Twitter</a>
+		<a href="https://www.facebook.com/dialog/feed?app_id=1443405589299169&display=popup&picture=http://www.thingstud.io/images/jkshdfkjhsjkdhf.png&caption={{title}}&description={{summary}}&link={{share_url}}&redirect_uri={{share_url}}" class="btn btn-social btn-facebook btn-flat" target="_blank">Share on Facebook</a>
+		<a href="https://www.linkedin.com/shareArticle?mini=true&url={{share_url}}&title={{title}}&summary={{summary}}&source=ThingStudio" class="btn btn-social btn-linkedin btn-flat" target="_blank">Share on LinkedIn</a>
+		<!-- <p class="studio-url"><span class="fwHeavy">Viewer URL:</span> <a href="{{share_url}}">{{share_url}}</a></p> -->
 		{{else}}
 		<p>Make shareable to get sharing options</p>
 		{{/if}}
@@ -22,10 +25,10 @@
 		{{> afQuickField name='connection'}}
 		<p class="fwHeavy">Theme</p>
 		{{> afQuickField name='theme'}}
-		<p><span class="fwHeavy">Screens in this app</span> &mdash; {{screenCount}} total</p>
+		<!-- <p><span class="fwHeavy">Screens in this app</span> &mdash; {{screenCount}} total</p> -->
 		
-		<p><span class="fwHeavy"></span>Home page &mdash; Which page should be first shown to users</p>
-		{{> afQuickField name='home_page'}}
+		<p><span class="fwHeavy">App Home Template</span> &mdash; Which template should users see first when loading your app?</p>
+		{{> afFormGroup name='home_page'}}
 		<p><span class="fwHeavy">Short Description</span> &mdash; Give a one line description of the purpose of this application</p>
 		{{> afQuickField name='summary' placeholder="Enter summary"}}
 		<p><span class="fwHeavy">Long Description</span> &mdash; Provide more information here, such as instructions, usage, etc.</p>
