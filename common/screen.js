@@ -164,7 +164,7 @@ Screens.before.insert(function(userId, doc) {
 
 Screens.after.update(function(userId, doc) {
 	if(Meteor.isClient){
-		console.log("ASUU", this,  doc)
+		//console.log("ASUU", this,  doc)
 		myscreen = doc;
 		name = myscreen.title;
 		// console.log("SCR: ", name, this)

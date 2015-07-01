@@ -210,6 +210,44 @@ connect = function (conn, usr, pass) {
 					   }
 					)
 				}
+				if(feeds[i].doMaxMinAvg){
+					//Only work with numeric values.
+					value = parseFloat(payload);
+					if(value != NaN) {
+						curr = Messages.findOne({topic: topic, feed: feeds[i].title });
+						if(curr) {
+							diff = value - curr.oldValue
+							// Check min
+							if(!curr.min || value < curr.min) {
+								min = value;
+							}
+							//Check max
+							if(!curr.max || value > curr.max ) {
+								max = value;
+							}
+							//Reset minMax?
+							//console.log("CC: ", curr.count);
+							count = curr.count ? curr.count : 0;
+							if( count >= feeds[i].maxMinAvgLimit) {
+								count = 0;
+								min = value;
+								max = value;
+								console.log("RESET MM", feeds[i].maxMinAvgLimit)
+							} else {
+								count +=1;
+							} 
+							//Generate exp moving average
+							tc = 0.1;
+							avg = tc * value + (1.0-tc)* (curr.avg ? curr.avg : value);
+							diffavg = tc * diff + (1.0-tc)* (curr.diffavg ? curr.diffavg : diff);
+							//console.log("minMax", value, "diff: ", diff, min, max, avg);
+							Messages.upsert({topic: topic, feed: feeds[i].title}, {$set: {oldValue: value, diff: diff, min: min, max: max, avg: avg, diffavg: diffavg, count: count}})
+						} else {
+							//console.log("minMaxInit", curr);
+							Message.insert({topic: topic, feed: feeds[i].title, oldValue: curr, diff: 0, min: 0, max: 0, avg: value, diffavg: diff, count: 0 })
+						}
+					}
+				}
 			}
 		}
 	});

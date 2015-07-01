@@ -1,9 +1,9 @@
  checkFeed = function(feed, subscribe) {
-	 // console.log("Check feed ", feed)
+	 console.log("Check feed ", feed)
 	if(typeof feed != "string" ) {
 		// Session.set("runtimeErrors", "Feedname needs to be a string");
 		var message = "Feedname needs to be a string: " + feed;
-		Alerts.insert({type: 'runtime', status: 'warning', message: message});
+		Alerts.upsert({type: 'runtime', status: "warning", message: message },{$set:{type: 'runtime', status: 'warning', message: message} ,$inc: {count: 1} } );
 		return false;
 	}
 	f = Feeds.findOne({title: feed});
@@ -17,7 +17,7 @@
 	if(subscribe && f.pubsub == "Publish") {
 		// Session.set("runtimeErrors", "Can't receive messages on publish feed: " + feed);
 		var message = "Can't receive messages on publish feed " + feed;
-		Alerts.insert({type: 'runtime', status: 'warning', message: message});
+		Alerts.upsert({type: 'runtime', status: "warning", message: message },{$set:{type: 'runtime', status: 'warning', message: message} ,$inc: {count: 1} } );
 		return false;
 	}
 	
@@ -46,7 +46,7 @@ compileTemplate = function(name, html_text, javascript) {
 				} else {
 					defaultValue = "-"
 				}
-				if(this.isWidget == false) {
+				if(this.isWidget != true) {
 					checkFeed(feed, true);
 				}
 				msg = Messages.findOne({
@@ -70,6 +70,10 @@ compileTemplate = function(name, html_text, javascript) {
 				// console.log("MSG: ", msg);
 				return msg && msg.journal ? JSON.stringify(msg.journal)  : ["no values"];
 			},
+			minmax: function(feed) {
+				msg = Messages.findOne({feed: feed});
+				return msg;
+			}
 		});
 		Template[name].events({
 			'click button': function(ev){
