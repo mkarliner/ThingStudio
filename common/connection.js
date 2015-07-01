@@ -1,7 +1,5 @@
 Connections = new Mongo.Collection("connections");
 
-// Schemas = {};
-
 Schemas.Connection = new SimpleSchema({
 	title: {
 		type: String,

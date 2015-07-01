@@ -386,11 +386,23 @@ table.striped tbody tr:nth-child(odd) {
 	border-color: $dropdownArrowBlue transparent transparent transparent;
 	margin-top: -5px;
 	border-width: 10px 8px 0px 8px;
+	transition: border-width 0.1s cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
 .selectize-control.single .selectize-input.dropdown-active:after {
 	border-color: transparent transparent $dropdownArrowBlue transparent;
 	border-width: 0 8px 10px 8px;
+}
+
+.single-page-container .selectize-control.form-control.single {
+	display: inline-block;
+	width: 300px;
+	vertical-align: middle;
+	margin-top: 6px;
+}
+
+.selectize-adjust {
+	margin-top: -6px;
 }
 
 .dropdown-content li > span {
@@ -1000,6 +1012,13 @@ h4.modal-title {
 .form-group input {
 	font-family: $fwBook;
 	background: $white;
+}
+
+// Handling extra padding for Selectize dropdowns on detail pages
+#updateConnectionForm .form-group:nth-child(4), #updateFeedForm .form-group:nth-child(3) {
+	padding-top: 0;
+	margin-top: -5px;
+	padding-bottom: 1em;
 }
 
 .fw-regular {

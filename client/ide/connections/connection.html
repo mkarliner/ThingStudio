@@ -4,10 +4,9 @@
 		{{/with}}
 </template>
 
-
 <template name="EditSingleConnectionHeader">	
 	<h1 class="left">Edit Connection: {{title}}</h1>
-	<a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>Not Active</a>
+	<!-- <a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>Not Active</a> -->
 	<a class="header-action-1 clearfix" href="/connections">Back to Connections</a>
 </template>
 
@@ -26,7 +25,7 @@
 			{{> afQuickField name='title' placeholder="Connection title" class="first"}}
 			{{> afQuickField name='host' placeholder="Hostname"}}
 			{{> afQuickField name='port' placeholder="Port"}}
-			{{> afQuickField name='protocol' placeholder="Port" options="allowed"}}
+			{{> afQuickField name='protocol' placeholder="Protocol"}}
 			{{> afQuickField name='serverCredentials'}}
 			{{> afQuickField name='username' placeholder="Username (optional)"}}
 			{{> afQuickField name='password' placeholder="Password (optional)"}}
