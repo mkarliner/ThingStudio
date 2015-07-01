@@ -28,3 +28,32 @@
 		<button type="submit" class="btn btn-update">Update App</button>
 	{{/autoForm}}
 </template>
+
+<!-- <template name="materializeRadio">
+  <div {{dsk}}>
+    
+    	<input type="radio" value="false" name="{{this.name}}" {{falseAtts}} />
+      <label>{{#with this.atts.falseLabel}}{{this}}{{else}}False{{/with}}</label>
+    
+      <input type="radio" value="true" name="{{this.name}}" {{trueAtts}} />
+      <label>{{#with this.atts.trueLabel}}{{this}}{{else}}True{{/with}}</label>
+    
+  </div>
+</template>
+
+<template name="materializeRadio">
+	<input type="checkbox" value="{{this.value}}" {{atts}} />
+	<label>{{afFieldLabelText name=this.name}}</label>
+</template> -->
+
+<template name="materializeRadio">
+	<div class="af-radio-group" {{dsk}}>
+		{{#each this.items}}
+			{{log}}
+			<!-- <input type="radio" value="Shareable" class="with-gap" name="access" typetype="select-radio-inline-M" id="rKAcTHsSe9WdyLSPR" required="">
+			<input type="radio" value="Published" class="with-gap" name="access" typetype="select-radio-inline-M" id="bXopbqYMjKGiza6QZ"> -->
+			<input type="radio" value="{{this.value}}" class="{{atts.class}}" name="{{this.name}}" typetype="{{atts.typetype}}" id="{{_id}}" {{atts.required}}/>
+			<label for="{{this._id}}"> {{this.label}}</label>
+		{{/each}}
+	</div>
+ </template> 
