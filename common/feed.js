@@ -70,6 +70,16 @@ Schemas.Feed = new SimpleSchema({
 			omit: true
 		}
 	},
+	doMaxMinAvg: {
+		type: Boolean,
+		defaultValue: false,
+		label: 'Calculate Max/Min etc'
+	},
+	maxMinAvgLimit: {
+		type: Number,
+		optional: true,
+		defaultValue: 50
+	},
 	owner: {
 		type: String,
 		index: true,
