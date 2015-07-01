@@ -12,9 +12,12 @@ body.viewer-body {
 	// padding: 0; remove default padding
 	// width: 100%; /* take full browser width */
 	// height: 100%; /* take full browser height*/
-	display: flex;
+	display:-webkit-flex;
+	display:flex;
 	min-height: 100vh;
+	-webkit-flex-direction: column;
 	flex-direction: column;
+
 	& header, main, footer {
 		padding: 0;
 		margin: 0;
@@ -26,7 +29,8 @@ body.viewer-body {
 		}
 	}
 	& main {
-		flex: 1;
+		-webkit-flex:1;
+		flex:1;
 	}
 	& a i.icon-ts-connection {
 		transition: background-color 0.1s cubic-bezier(0.4, 0.0, 0.2, 1);
@@ -56,25 +60,39 @@ body.viewer-body {
 }
 
 .flex-container {
+    display:-webkit-flex;
     display:flex;
+    -webkit-flex-direction: row;
     flex-direction: row;
+    -webkit-flex-wrap: wrap;
     flex-wrap: wrap;
+    -webkit-justify-content: flex-start;
     justify-content: flex-start;
+    -webkit-align-content: flex-start;
     align-content: flex-start;
+    -webkit-align-items: flex-start;
     align-items: flex-start;
 }
 
 .flex-column {
+	    display:-webkit-flex;
 	    display:flex;
+	    -webkit-flex-direction: column;
 	    flex-direction: column;
+	    -webkit-flex-wrap: wrap;
 	    flex-wrap: wrap;
+	    -webkit-justify-content: flex-start;
 	    justify-content: flex-start;
+	    -webkit-align-content: stretch;
 	    align-content: stretch;
+	    -webkit-align-items: stretch;
 	    align-items: stretch;
 }
 
 .flex-item {
+	-webkit-flex-grow: 1;
 	flex-grow: 1;
+	-webkit-align-self: stretch;
 	align-self: stretch;
 	
 }
