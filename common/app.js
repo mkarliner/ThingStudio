@@ -8,12 +8,17 @@ Schemas.App = new SimpleSchema({
 		label: "Title",
 		max: 200
 	},
+	summary: {
+		type: String,
+		label: "Summary",
+		optional: true
+	},
 	description: {
 		type: String,
 		label: "Description",
 		optional: true,
 		autoform: {
-			rows: 3
+			rows: 6
 		}
 	},
 	home_page: {
@@ -115,11 +120,6 @@ Schemas.App = new SimpleSchema({
 	public: {
 		type: Boolean,
 		defaultValue: false,
-	},
-	summary: {
-		type: String,
-		label: "Summary",
-		optional: true
 	}
 	
 });
