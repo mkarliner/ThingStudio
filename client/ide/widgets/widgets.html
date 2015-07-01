@@ -78,7 +78,7 @@
 </template>
 
 <template name="WidgetsNewItem">
-	<div class="add-new-item">
+	<div class="add-new-item new-widget">
 		{{#autoForm collection="Widgets" id="insertItemForm" type="insert"}}
 			<table>
 			{{> WidgetsTableWidths}}
@@ -86,7 +86,7 @@
 					<tr>
 						<td>{{> afQuickField name='title' placeholder="Widget Title"}} </td>
 						<td>{{> afQuickField name='tagName' placeholder="Element Name" }} </td>
-						<td>{{> afQuickField name='baseScreen' placeholder="Base Template" }} </td>
+						<td class="dropdown-td">{{> afQuickField name='baseScreen' placeholder="Base Template" }} </td>
 						<td>
 							<button type="submit" class="table-action table-save-new"><i class="icon-ts-checkmark"></i></button><button class="table-action table-cancel-new"><i class="icon-ts-cancel"></i></button>
 						</td>
@@ -100,9 +100,9 @@
 
 <template name="WidgetsTableWidths">
 	<colgroup>
-		<col style="width: 50%;">
+		<col style="width: 41%;">
 		<col style="width: 25%;">
-		<col style="width: 16%;">
+		<col style="width: 230px;">
 		<col style="width: 109px;">
 	</colgroup>
 </template>

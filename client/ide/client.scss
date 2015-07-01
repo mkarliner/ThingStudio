@@ -349,7 +349,7 @@ table.striped tbody tr:nth-child(odd) {
 
 .selectize-input {
 	border-radius: 0;
-	height: 47px;
+	height: 45px;
 	line-height: 47px;
 	padding: 0 8px;
 }
@@ -774,6 +774,11 @@ td:last-child, th:last-child {
 	padding-right: $appPadding;
 }
 
+td.dropdown-td {
+	margin-top: 6px;
+	display: inline-block;
+}
+
 .add-new-item {
 	@include transition(opacity, 0.1s, cubic-bezier(0.4, 0.0, 0.2, 1));
 	transition-delay: 0.05s;
@@ -797,13 +802,24 @@ td:last-child, th:last-child {
 	}
 	& .form-group {
 		margin-right: 30px;
-		background-color: $white;
 	}
 	& .form-control {
 		padding: 0;
 	}
 	& .control-label {
 		display: none;
+	}
+	&.new-feed .selectize-control.form-control.single {
+		width: 170px;
+	}
+	&.new-connection .selectize-control.form-control.single {
+		width: 180px;
+	}
+	&.new-app .selectize-control.form-control.single {
+		width: 160px;
+	}
+	&.new-widget .selectize-control.form-control.single {
+		width: 210px;
 	}
 	// & .select-wrapper i {
 	// 	@include dropdownArrow;

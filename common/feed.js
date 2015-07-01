@@ -11,23 +11,22 @@ Schemas.Feed = new SimpleSchema({
 	title: {
 		type: String,
 		label: "Title",
-
 		custom: function () {
 			console.log(this.userId);
 			//First try to find my own duplicate.
 			//f = Feeds.findOne({title: this.value, $or: [{owner: this.userId, appId: this.appId}, {public:true}]});
 			if(Meteor.isClient) {
 				f = Feeds.findOne({title: this.value});
-				console.log("CKF ", typeof f, this);
+				//console.log("CKF ", typeof f, this);
 				if(typeof f == "object"  && this.isInsert) {
-					console.log("BOO")
+					//console.log("BOO")
 					return "uniqueFeed";
 				}
 				if(typeof f == "object" && f._id != this.docId) {
-					console.log("Baa")
+					//console.log("Baa")
 					return "uniqueFeed";
 				}
-				console.log("ALLOK")
+				//console.log("ALLOK")
 			}
 
 			return;
@@ -41,7 +40,13 @@ Schemas.Feed = new SimpleSchema({
 	pubsub: {
 		type: String,
 		label: "Publish/Subscribe",
-		allowedValues: ["Publish", "Subscribe"]
+		autoform: {
+			type: "selectize",
+			options: function(){
+				options = [{label: "Publish", value: "Publish"}, {label: "Subscribe", value: "Subscribe"}];
+				return (options);
+			}
+		}
 	},
 	// action: {
 	// 	type: String,

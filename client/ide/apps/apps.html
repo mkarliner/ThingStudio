@@ -10,7 +10,7 @@
 	<table class="hoverable">
 		{{> AppsTableWidths}}
 		<thead>
-			<tr cellpadding="10"><th>App Title</th><th>Shareable</th><th>Share</th><th>Ancestor</th><th>Summary</th><th>Action</th></tr>
+			<tr cellpadding="10"><th>App Title</th><th>Shareable</th><th>Share</th><th>Based On</th><th>Summary</th><th>Action</th></tr>
 		</thead>
 		<tbody>
 			<tr id="item-insert" class="spacer td-closed"><td></td></tr>
@@ -44,7 +44,7 @@
 </template>
 
 <template name="AppsNewItem">
-	<div class="add-new-item">
+	<div class="add-new-item new-app">
 		{{#autoForm collection="Apps" id="insertItemForm" type="insert"}}
 			<table>
 			{{> AppsTableWidths}}
@@ -54,7 +54,7 @@
 						<!-- <td>{{> afQuickField name='shareable' }}</td> -->
 						<td></td>
 						<td><a class="btn disabled share-app" href="#">Share</a></td>
-						<td>{{> afQuickField name='ancestor' placeholder="Ancestor App"}}</td>
+						<td class="dropdown-td">{{> afQuickField name='ancestor' placeholder="Based On"}}</td>
 						<td>{{> afQuickField name='summary' placeholder="Short summary"}}</td>
 						<td>
 							<button type="submit" class="table-action table-save-new"><i class="icon-ts-checkmark"></i></button><button class="table-action table-cancel-new"><i class="icon-ts-cancel"></i></button>
@@ -70,10 +70,10 @@
 <template name="AppsTableWidths">
 	<colgroup>
 		<col style="width: 22%;">
-		<col style="width: 13%;">
+		<col style="width: 10%;">
 		<col style="width: 11%;">
-		<col style="width: 15%;">
-		<col style="width: 27%;">
+		<col style="width: 180px;">
+		<col style="width: 23%;">
 		<col style="width: 145px;">
 	</colgroup>
 </template>

@@ -28,7 +28,7 @@
 </template>
 
 <template name="FeedsNewItem">
-	<div class="add-new-item">
+	<div class="add-new-item new-feed">
 		{{#autoForm collection="Feeds" id="insertItemForm" type="insert"}}
 			<table>
 			{{> FeedsTableWidths}}
@@ -36,7 +36,7 @@
 					<tr>
 						<td>{{> afQuickField name='title' placeholder="Feed Title" class="first"}}</td>
 						<td>{{> afQuickField name='subscription' placeholder="Subscription Name"}}</td>
-						<td>{{> afQuickField name='pubsub' options="allowed"}}</td>
+						<td class="dropdown-td">{{> afQuickField name='pubsub'}}</td>
 						<td>
 							<button type="submit" class="table-action table-save-new"><i class="icon-ts-checkmark"></i></button><button class="table-action table-cancel-new"><i class="icon-ts-cancel"></i></button>
 						</td>
@@ -50,10 +50,10 @@
 
 <template name="FeedsTableWidths">
 	<colgroup>
-		<col style="width: 39%;">
-		<col style="width: 39%;">
-		<col style="width: 13%;">
-		<col style="width: 109px;">
+		<col style="width: 35%;">
+		<col style="width: 35%;">
+		<col style="width: 190px;">
+		<col style="width: 105px;">
 	</colgroup>
 </template>
 

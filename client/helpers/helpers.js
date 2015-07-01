@@ -50,7 +50,7 @@ Template.registerHelper("indexedArray",
 	function(arr) {
 		length = arr.length
   	  	return _.map(arr, function(value, index){
-    	  return {value: value, index: index, length: length};
+		return {value: value, index: index, length: length};
   });
 });
 
@@ -86,7 +86,7 @@ Template.registerHelper("debugOps",
 );
 
 Template.registerHelper("deviceOrientation", function(){
-	console.log("DEVO ", Session.get("deviceOrientation"))
+	//console.log("DEVO ", Session.get("deviceOrientation"))
 	return Session.get("deviceOrientation");
 })
 

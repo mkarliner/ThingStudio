@@ -39,7 +39,7 @@
 </template>
 
 <template name="ConnectionsNewItem">
-	<div class="add-new-item">
+	<div class="add-new-item new-connection">
 		{{#autoForm collection="Connections" id="insertItemForm" type="insert"}}
 			<table>
 			{{> ConnectionsTableWidths}}
@@ -48,7 +48,7 @@
 						<td>{{> afQuickField name='title' placeholder="Connection Title" class="first"}}</td>
 						<td>{{> afQuickField name='host' placeholder="Hostname"}}</td>
 						<td>{{> afQuickField name='port' placeholder="Port"}}</td>
-						<td>{{> afQuickField name='protocol' placeholder="Protocol" options="allowed"}}</td>
+						<td class="dropdown-td">{{> afQuickField name='protocol'}}</td>
 						<td>{{> afQuickField name='username' placeholder="Username"}}</td>
 						<td>{{> afQuickField name='password' placeholder="Password"}}</td>
 						<td>
@@ -64,12 +64,12 @@
 
 <template name="ConnectionsTableWidths">
 	<colgroup>
-		<col style="width: 21%;">
-		<col style="width: 18%;">
+		<col style="width: 16%;">
+		<col style="width: 14%;">
 		<col style="width: 8%;">
-		<col style="width: 13%;">
-		<col style="width: 14%;">
-		<col style="width: 14%;">
-		<col style="width: 109px;">
+		<col style="width: 180px;">
+		<col style="width: 11%;">
+		<col style="width: 11%;">
+		<col style="width: 105px;">
 	</colgroup>
 </template>

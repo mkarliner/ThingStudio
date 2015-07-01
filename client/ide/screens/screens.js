@@ -8,9 +8,11 @@ Template.ScreensHeader.events({
 
 Template.ScreensNewItem.events({
 	"click .table-cancel-new": function(e, tmpl) {
+		e.preventDefault();
 		menuOps();
 	},
 	"click .divider-decoration": function(e, tmpl) {
+		e.preventDefault();
 		menuOps();
 	}
 });

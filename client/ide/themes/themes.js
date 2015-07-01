@@ -2,15 +2,16 @@ Template.ThemesHeader.events({
 	"click .header-action-1": function(e, tmpl) {
 		e.preventDefault();
 		menuOps();
-		$('.add-new-item select').material_select();
 	}
 });
 
 Template.ThemesNewItem.events({
 	"click .table-cancel-new": function(e, tmpl) {
+		e.preventDefault();
 		menuOps();
 	},
 	"click .divider-decoration": function(e, tmpl) {
+		e.preventDefault();
 		menuOps();
 	}
 });

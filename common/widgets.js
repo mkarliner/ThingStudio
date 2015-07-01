@@ -55,7 +55,7 @@ Schemas.Widget = new SimpleSchema({
 	baseScreen: {
 		type: String,
 		autoform: {
-			type: "select", 
+			type: "selectize", 
 			options: function(){
 				scrs = Screens.find({}, {title: 1}).fetch();
 				options = scrs.map(function(ele, idx, arry){

@@ -19,9 +19,15 @@ Schemas.Connection = new SimpleSchema({
 	},
 	protocol: {
 		type: String,
-		allowedValues: ["Websocket", "SecureWebsocket"],
 		defaultValue: "Websocket",
-		optional: true
+		optional: true,
+		autoform: {
+			type: "selectize",
+			options: function(){
+				options = [{label: "Websocket", value: "Websocket"}, {label: "Secure Websocket", value: "SecureWebsocket"}];
+				return (options);
+			}
+		}
 	},
 	serverCredentials: {
 		//Provide credentials from server store.

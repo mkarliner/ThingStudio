@@ -2,32 +2,28 @@ Template.ConnectionsHeader.events({
 	"click .header-action-1": function(e, tmpl) {
 		e.preventDefault();
 		menuOps();
-		$('.add-new-item select').material_select();
-		$('span.caret').not($('.select-wrapper span.caret')).remove();
 	}
 });
 
 Template.ConnectionsHeader.helpers({
 	connectionName: function() {
 		return getCurrentConnection().title;
-		
 	}
 });
 
 Template.ConnectionsNewItem.events({
 	"click .table-cancel-new": function(e, tmpl) {
+		e.preventDefault();
 		menuOps();
-		$('span.caret').not($('.select-wrapper span.caret')).remove();
 	},
 	"click .divider-decoration": function(e, tmpl) {
+		e.preventDefault();
 		menuOps();
-		$('span.caret').not($('.select-wrapper span.caret')).remove();
 	}
 });
 
 Template.ConnectionsBody.events({
 	'click .connect': function(ev){
-		console.log("Connect button", ev, this);
 		connect(this);
 	}
 });
@@ -42,7 +38,6 @@ Template.ConnectionsBody.helpers({
 	// }
 	foreignConnections: function(){
 		fc = Session.get("foreignConnections");
-		console.log("TC: ", fc);
 		return fc;
 	},
 	username: function(id) {

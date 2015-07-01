@@ -79,8 +79,6 @@ Template.WidgetsHeader.events({
 	"click .header-action-1": function(e, tmpl) {
 		e.preventDefault();
 		menuOps();
-		$('.add-new-item select').material_select();
-		$('span.caret').not($('.select-wrapper span.caret')).remove();
 		if ( $('.add-new-item').hasClass('open')) {
 			$('.tab-my-widgets').trigger("click");
 		}
@@ -89,9 +87,11 @@ Template.WidgetsHeader.events({
 
 Template.WidgetsNewItem.events({
 	"click .table-cancel-new": function(e, tmpl) {
+		e.preventDefault();
 		menuOps();
 	},
 	"click .divider-decoration": function(e, tmpl) {
+		e.preventDefault();
 		menuOps();
 	}
 });
