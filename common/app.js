@@ -20,12 +20,13 @@ Schemas.App = new SimpleSchema({
 		type: String,
 		optional: true,
 		autoform: {
+			type: 'selectize',
 			options: function(){
 				scrs = Screens.find({}, {title: 1}).fetch();
 				options = scrs.map(function(ele, idx, arry){
 					return {label: ele.title, value: ele._id}
 				})
-				// console.log("SCR OPTIONS ", options)
+				console.log("SCR OPTIONS ", options)
 				return options;
 			}
 		}
@@ -35,7 +36,7 @@ Schemas.App = new SimpleSchema({
 		label: "Parent App",
 		optional: true,
 		autoform: {
-			type: "select",
+			type: "selectize",
 			options: function(){
 				apps = Apps.find({}).fetch();
 				options = [];
@@ -51,7 +52,7 @@ Schemas.App = new SimpleSchema({
 		type: String,
 		optional: true,
 		autoform: {
-			type: "select",
+			type: "selectize",
 			options: function(){
 				connections = Connections.find({}).fetch();
 				options = [];
@@ -67,7 +68,7 @@ Schemas.App = new SimpleSchema({
 		type: String,
 		optional: true,
 		autoform: {
-			type: "select",
+			type: "selectize",
 			options: function(){
 				themes = Themes.find({}).fetch();
 				options = [];

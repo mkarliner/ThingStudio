@@ -29,6 +29,7 @@ $tableStripe: #FBFFFD;
 $errorBorderColor: #C3323E;
 $errorBorder: 1px solid $errorBorderColor;
 $pink: #EE6E73;
+$dropdownArrowBlue: #4AAFE2;
 
 //Buttons
 $btnSocialColor: #76D4E1;
@@ -107,7 +108,7 @@ $bodyDividerColor: #D0D3DC;
 }
 
 @mixin dropdownArrow {
-	color: #4AAFE2;
+	color: $dropdownArrowBlue;
 	font-size: $fontSize;
 	line-height: 21px;
 }
@@ -331,6 +332,65 @@ table.striped tbody tr:nth-child(odd) {
 			padding: 0;
 		}
 	}
+}
+
+.selectize-dropdown {
+	padding: 0;
+	& .active {
+		color: $headerColor;
+	}
+}
+
+.selectize-dropdown, .selectize-input, .selectize-input input {
+	color: $baseText;
+	font-family: $fwRoman;
+	font-size: 15px;
+}
+
+.selectize-input {
+	border-radius: 0;
+	height: 47px;
+	line-height: 47px;
+	padding: 0 8px;
+}
+
+.selectize-control.single .selectize-input {
+	background-color: $white;
+	background-image: none;
+	background-repeat: no-repeat;
+}
+
+.selectize-control.single .selectize-input, .selectize-dropdown.single {
+	border-color: transparent;
+}
+
+.selectize-control {
+	max-width: 300px;
+}
+
+.selectize-control.form-control {
+	text-indent: 4px;
+}
+
+.selectize-dropdown [data-selectable], .selectize-dropdown .optgroup-header {
+	padding: 16px 3px 14px;
+	&.selected::after {
+		font-family: 'ts-icons';
+		content: "d";
+		vertical-align: middle;
+		margin-left: 1em;
+	}
+}
+
+.selectize-control.single .selectize-input:after, .selectize-control.single .selectize-input.dropdown-active:after {
+	border-color: $dropdownArrowBlue transparent transparent transparent;
+	margin-top: -5px;
+	border-width: 10px 8px 0px 8px;
+}
+
+.selectize-control.single .selectize-input.dropdown-active:after {
+	border-color: transparent transparent $dropdownArrowBlue transparent;
+	border-width: 0 8px 10px 8px;
 }
 
 .dropdown-content li > span {
@@ -1139,6 +1199,10 @@ pre.ace-cobalt .ace_comment {
 	}
 }
 
+.btn-flat {
+	color: $white;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////
 // App Detail //
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -1201,6 +1265,10 @@ pre.ace-cobalt .ace_comment {
 	height: 100%;
 	max-width: 100%;
 	background-color: #353C51;
+}
+
+.svg-container svg {
+	will-change: transform, fill;
 }
 
 

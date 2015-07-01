@@ -41,9 +41,9 @@ gildaspk:autoform-modals-materialize@0.0.6
 aldeed:template-extension
 reactive-dict
 meteorhacks:npm
-
-
 npm-container
 pfafman:filesaver
 chuangbo:marked
 materialize:materialize@=0.96.1
+jeremy:selectize
+comerc:autoform-selectize
