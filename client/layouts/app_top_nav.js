@@ -75,7 +75,7 @@ Template.BreadcrumbsContent.helpers({
 		} else if ( routeName == "View Doc" ) {
 			// Applies to: Single documentation pages
 			// return [ { item: this.title, path: this._id } ];
-			return [ { item: "Documentation", path: "/docs" }, { item: this.title, path: "/docs/" + this._id} ];
+			return [ { item: "Documentation", path: "/docs" }, { item: this.attributes.title, path: "/docs/" + this.attributes.urlstring} ];
 		} else if ( routeName == "Edit Feed" ) {
 			// Applies to: edit feed page
 			return [ { item: "Feeds", path: "/feeds" }, { item: this.title, path: "/feeds/" + this._id } ];
