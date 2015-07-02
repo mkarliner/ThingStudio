@@ -59,6 +59,7 @@ Template.AppSideNav.helpers({
 		
 	},
 	newChats: function(){
+		console.log("NC: ", Session.get("newChats"))
 		if ( Session.get("newChats") ) {
 			return true;
 		} else {

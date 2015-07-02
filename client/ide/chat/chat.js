@@ -7,17 +7,27 @@ Template.ChatBody.onRendered(function() {
 		added: function(id, fields) {
 			chats = Chats.find().count();
 			if(Session.get("numChats") != chats) {
-				new Audio('ding.mp3').play();	
+				
+				sound = new Audio('ding.mp3')
+				sound.volume = 0.2
+				sound.play();	
 				Session.set("numChats", chats)
 				console.log("CS2: ", Session.get("numChats"))
 				Session.set("newChats", true);
-				Meteor.setTimeout(function(){
-					Session.set("newChats", false);
-				},  60 * 1000 * 5)
 			}
 		}
 	})
 });
+
+Meteor.autorun(function(){
+	console.log("Before chat timeout")
+	if(Session.get("newChats")) {
+		console.log("Setting chat timeout")
+		Meteor.setTimeout(function(){
+			Session.set("newChats", false);
+		},  60 * 1000 * 5)
+	}
+})
 
 Template.ChatHeader.helpers({
 	onlineUsers: function() {
