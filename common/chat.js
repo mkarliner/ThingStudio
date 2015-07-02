@@ -53,6 +53,15 @@ Chats.before.insert(function(userId, doc) {
 		return doc;
 	} 
 });
+
+Chats.after.insert(function(){
+	if(Meteor.isClient){
+		Session.set("newChats", true);
+		Meteor.setTimeout(function(){
+			Session.set("newChats", false);
+		},  60 * 1000 * 5)
+	}
+})
 //
  Chats.attachSchema(Schemas.Chat);
 
