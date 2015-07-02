@@ -1112,6 +1112,11 @@ form[id^="update"] .select-wrapper span.caret {
   	background-color: $actionColor1;
 }
 
+[type="checkbox"]:checked + label:before {
+	border-right: 2px solid $updateButton;
+	border-bottom: 2px solid $updateButton;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////
 // Template Editor //
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -1220,6 +1225,13 @@ pre.ace-cobalt .ace_comment {
 	height: 44px;
 	border-radius: 2px;
 	line-height:48px;
+}
+
+.btn-plus {
+	background-color: $updateButton;
+	&:hover {
+		background-color: $updateButton;
+	}
 }
 
 // Social share

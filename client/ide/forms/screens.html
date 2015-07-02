@@ -57,10 +57,10 @@
 				{{#if isWidget}}
 					<div class="col s12 m6">
 						<h2>Template Properties</h2>
-						{{#autoForm collection="Screens" id="updateScreenForm" type="update" doc=this }}
+						{{#autoForm collection="Screens" id="updateScreenForm" type="update" doc=this buttonClasses="btn btn-update"}}
 							{{> afQuickField name="title" class="centerField"}}
 							{{> afQuickField name="isWidget" class="centerField"}}
-							<button type="submit" class="btn">Save</button>
+							<button type="submit" class="btn btn-update">Save Template</button>
 						{{/autoForm}}
 					</div>
 					<div class="col s12 m6">
@@ -76,9 +76,9 @@
 								{{> afQuickField name='baseScreen'}}
 								<p class="fwHeavy">Element Name</p>
 								{{> afQuickField name='tagName'}}
-								<p class="fwHeavy">Parameters</p>
+								<p><span class="fwHeavy">Parameters</span> &mdash; Click the plus to add widget parameters</p>
 								{{> afQuickField name='parameters' class="browser-default"}}
-								<button type="submit" class="btn">Save Widget</button>
+								<button type="submit" class="btn btn-update">Save Widget</button>
 							{{/autoForm}}
 						{{/with}}
 					</div>
