@@ -7,9 +7,13 @@ Template.ChatBody.onRendered(function() {
 		added: function(id, fields) {
 			chats = Chats.find().count();
 			if(Session.get("numChats") != chats) {
-				new Audio('door_knock.mp3').play();	
+				new Audio('ding.mp3').play();	
 				Session.set("numChats", chats)
-					console.log("CS2: ", Session.get("numChats"))
+				console.log("CS2: ", Session.get("numChats"))
+				Session.set("newChats", true);
+				Meteor.setTimeout(function(){
+					Session.set("newChats", false);
+				},  60 * 1000 * 5)
 			}
 		}
 	})
