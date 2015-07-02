@@ -1,3 +1,3 @@
-// Template.EditWidgetHeader.onRendered(function() {
-// 	$('select').material_select();
-// });
+Template.EditWidgetHeader.onRendered(function() {
+	$('ul.tabs').tabs();
+});
