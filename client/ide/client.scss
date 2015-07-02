@@ -1014,6 +1014,9 @@ h4.modal-title {
 
 .single-page-container input {
 	max-width: 300px;
+	&[type="password"] {
+		line-height: 49px;
+	}
 	&.wide-input {
 		max-width: 1200px;
 	}
