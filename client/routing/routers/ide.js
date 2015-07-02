@@ -48,7 +48,7 @@ Router.route("/credentials", {
 });
 
 Router.route("/apps/:_id/", {
-	name: "EditApp",
+	name: "Edit App",
 	controller: "IDEController",
 	data: function() {
 		return Apps.findOne({ _id: this.params._id });
@@ -231,7 +231,7 @@ Router.route("/templates", {
 
 
 Router.route("/widgets/:_id/edit", {
-	name: "EditWidget",
+	name: "Edit Widget",
 	controller: "IDEController",
 	data: function() {
 		if(!this.ready()){
@@ -253,7 +253,7 @@ Router.route("/widgets/:_id/edit", {
 });
 
 Router.route("/widgets/:_id", {
-	name: "SingleWidget",
+	name: "View Widget",
 	controller: "IDEController",
 	data: function() {
 		if(!this.ready()){
@@ -386,26 +386,26 @@ Router.route("/olddocs/:urlstring", {
 	}
 });
 
-Router.route("/docsold", {
-	name: "OldDocumentation",
-	controller: "OldDocsController",
-	data: function() {
-		return HelpPages.find({}, {
-			sort: {
-				pagenumber: 1
-			}
-		});
-	},
-	action: function() {
-		if ( !this.ready() ) {
-			this.render("Loading", {
-				data: "Documenation"
-			});
-		} else {
-			renderYields(this, 'OldDocumentation');
-		}
-	},
-});
+// Router.route("/docsold", {
+// 	name: "OldDocumentation",
+// 	controller: "OldDocsController",
+// 	data: function() {
+// 		return HelpPages.find({}, {
+// 			sort: {
+// 				pagenumber: 1
+// 			}
+// 		});
+// 	},
+// 	action: function() {
+// 		if ( !this.ready() ) {
+// 			this.render("Loading", {
+// 				data: "Documenation"
+// 			});
+// 		} else {
+// 			renderYields(this, 'OldDocumentation');
+// 		}
+// 	},
+// });
 
 
 Router.route("/docs", {
@@ -426,7 +426,7 @@ Router.route("/docs", {
 });
 
 Router.route("/docs/:urlstring", {
-	name: "Docs",
+	name: "View Doc",
 	controller: "DocsController",
 	data: function() {
 		return Docs.findOne({ "attributes.urlstring": this.params.urlstring });
@@ -499,7 +499,7 @@ Router.route("/current-users", {
 })
 
 Router.route("/sysadmin", {
-	name: "Sysadmin",
+	name: "System Admin",
 	controller: "IDEController",
 	action: function() {
 		if ( !this.ready() ) {
