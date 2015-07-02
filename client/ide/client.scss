@@ -372,6 +372,13 @@ table.striped tbody tr:nth-child(odd) {
 	text-indent: 4px;
 }
 
+.single-page-container .selectize-control.form-control {
+	text-indent: 0;
+	& .selectize-input {
+		text-indent: 2px;
+	}
+}
+
 .selectize-dropdown [data-selectable], .selectize-dropdown .optgroup-header {
 	padding: 16px 3px 14px;
 	&.selected::after {
