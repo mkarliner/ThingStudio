@@ -25,7 +25,7 @@ Meteor.autorun(function(){
 		console.log("Setting chat timeout")
 		Meteor.setTimeout(function(){
 			Session.set("newChats", false);
-		},  1000)
+		},  60 * 1000 * 5)
 	}
 })
 
