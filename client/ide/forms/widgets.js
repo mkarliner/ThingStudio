@@ -2,7 +2,6 @@ Template.afArrayField.onRendered(function() {
 	$('.autoform-add-item').addClass('btn-floating btn-plus')
 	$('.autoform-add-item').remove('.glyphicon')
 	$('.autoform-add-item').append('<i class="mdi-content-add"></i>')
-	
 });
 
 Template.afObjectField.onRendered(function() {
