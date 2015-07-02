@@ -67,11 +67,39 @@ IDEController = RouteController.extend({
 			Meteor.subscribe('themes', myCurrAppId),
 			Meteor.subscribe('userList'),
 			Meteor.subscribe('syslogs'),
-			Meteor.subscribe('chats'),
+			Meteor.subscribe('chats', {
+				onReady: function(){
+					Meteor.autorun(function(){
+						Chats.find({}, {limit: 1}).observeChanges({
+							addedBefore: function(id, fields) {
+								console.log("ADDED: ", id, fields)
+								chats = Chats.find().count();
+								if(Session.get("chatsReady") == true) {
+									sound = new Audio('ding.mp3')
+									sound.volume = 0.2
+									sound.play();	
+									Session.set("newChats", true);
+								}
+							}
+						})
+						Session.set("chatsReady", true);
+					})
+				}
+			}),
 			Meteor.subscribe('admins')
 		]
 	}
 });
+
+Meteor.autorun(function(){
+	if(Session.get("newChats") == true){
+		console.log("Setting chat timeout")
+		Meteor.setTimeout(function(){
+			console.log("Setting newchats false")
+			Session.set("newChats", false);
+		},  5 * 1000)
+	}
+})
 
 ProfileController = IDEController.extend({
 	subscriptions: function() {

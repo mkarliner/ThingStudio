@@ -1,3 +1,8 @@
+Template.ViewScreen.onRendered(function(){
+	console.log("VS: ", this)
+	Meteor.call("templateView", this.data._id);
+})
+
 Template.ViewScreen.helpers({
 	myScreen: function(){
 		scr = Session.get("currentScreenPage");

@@ -1,42 +1,18 @@
 Template.ChatBody.onRendered(function() {
 	var myDiv = $(".chat-messages").get(0);
 	myDiv.scrollTop = myDiv.scrollHeight;
-	Session.set("numChats", Chats.find().count());
-	console.log("CS1: ", Session.get("numChats"))
-	Chats.find({}).observeChanges({
-		added: function(id, fields) {
-			chats = Chats.find().count();
-			if(Session.get("numChats") != chats) {
-				
-				sound = new Audio('ding.mp3')
-				sound.volume = 0.2
-				sound.play();	
-				Session.set("numChats", chats)
-				console.log("CS2: ", Session.get("numChats"))
-				Session.set("newChats", true);
-			}
-		}
-	})
 });
 
-Meteor.autorun(function(){
-	console.log("Before chat timeout")
-	if(Session.get("newChats")) {
-		console.log("Setting chat timeout")
-		Meteor.setTimeout(function(){
-			Session.set("newChats", false);
-		},  60 * 1000 * 5)
-	}
-})
+
 
 Template.ChatHeader.helpers({
 	onlineUsers: function() {
   	  users =  Meteor.users.find({ "status.online": true })
-		console.log("ONL ", users.fetch())
+		// console.log("ONL ", users.fetch())
 		return users;
 	},
 	status: function(){
-		console.log(this.status)
+		// console.log(this.status)
 		return this.status.idle ? "idle" : "active";
 	}
 })

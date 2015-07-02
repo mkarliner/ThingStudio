@@ -16,5 +16,27 @@ Meteor.methods({
 			// console.log("FC: ", c)
 			return s;
 		}
+	},
+	templateView: function(id) {
+		doc = Screens.findOne({_id: id});
+		owner = Meteor.users.findOne({_id: doc.owner});
+		console.log("template view ", doc, owner)
+		
+		SysLogs.upsert({event: "TemplateView", id: doc._id},
+		{$set: 
+				{
+					event: "TemplateView",
+					title: doc.title,
+					date: new Date(),
+					id: doc._id,
+					appId: doc.appId,
+					owner: doc.owner,
+					details: "Author: " + owner.username
+				},
+			$inc: 
+				{
+					count: 1
+				}
+			})
 	}
-})
+});
