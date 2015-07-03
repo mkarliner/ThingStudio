@@ -369,22 +369,22 @@ Router.route("/tutorials", {
 });
 
 
-Router.route("/olddocs/:urlstring", {
-	name: "OldDocs",
-	controller: "OldDocsController",
-	data: function() {
-		return HelpPages.findOne({ urlstring: this.params.urlstring });
-	},
-	action: function() {
-		if ( !this.ready() ) {
-			this.render("Loading", {
-				data: "Documenation"
-			});
-		} else {
-			renderYields(this, "OldDocs");
-		}
-	}
-});
+// Router.route("/olddocs/:urlstring", {
+// 	name: "OldDocs",
+// 	controller: "OldDocsController",
+// 	data: function() {
+// 		return HelpPages.findOne({ urlstring: this.params.urlstring });
+// 	},
+// 	action: function() {
+// 		if ( !this.ready() ) {
+// 			this.render("Loading", {
+// 				data: "Documenation"
+// 			});
+// 		} else {
+// 			renderYields(this, "OldDocs");
+// 		}
+// 	}
+// });
 
 // Router.route("/docsold", {
 // 	name: "OldDocumentation",

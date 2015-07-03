@@ -9,3 +9,4 @@ Template.afObjectField.onRendered(function() {
 	$('.autoform-remove-item').remove('.glyphicon')
 	$('.autoform-remove-item').append('<i class="mdi-content-remove"></i>')
 });
+

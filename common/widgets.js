@@ -9,7 +9,14 @@ Schemas.WidgetParameter = new SimpleSchema({
 	paramType: {
 		label: "Type",
 		type: String,
-		allowedValues: ["Number", "[Numbers]", "String"]
+		// allowedValues: ["Number", "[Numbers]", "String"],
+		autoform: {
+			type: "selectize",
+			options: function(){
+				options = [{label: "Number", value: "Number"}, {label: "Array of Numbers", value: "[Numbers]"}, {label: "String", value: "String"}];
+				return (options);
+			}
+		}
 	},
 	required: {
 		type: Boolean
