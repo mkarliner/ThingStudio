@@ -10,9 +10,10 @@ Outbox = new Mongo.Collection(null);
 
 publish = function(feed, message) {
 	if(feed.pubsub !="Publish") {
-		Session.set("runtimeErrors", "Attempt to publish to subcription feed: " +feed.title + " - " + JSON.stringify(message));
+		message = "Attempt to publish to subcription feed: "+ feed.title; 
+		Alerts.upsert({type: 'runtime', status: "warning", message:  message},{$set:{type: 'runtime', status: 'warning', message: message} ,$inc: {count: 1} } );
 	} else {
-		Outbox.upsert({topic: feed.subscription}, {$set: { feed: feed.title, topic: topic, payload: message}});
+		Outbox.upsert({topic: feed.subscription}, {$set: { feed: feed.title, topic: feed.subscription, payload: message},$inc: {count: 1}});
 		mqttClient.publish(feed.subscription, message);	
 	}
 }
