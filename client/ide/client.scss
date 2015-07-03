@@ -318,6 +318,8 @@ table.striped tbody tr:nth-child(odd) {
 		margin-top: 10px;
 		margin-bottom: 5px;
 		border: $picBorder;
+		max-width: 84px;
+		max-height: auto;
 	}
 	& i {
 		font-size: 2.2 * $fontSize;
