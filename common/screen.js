@@ -173,6 +173,15 @@ Screens.after.update(function(userId, doc) {
 		//console.log("Updated Screen", template.data.doc.html);
 		compret = compileTemplate(name, doc.html, doc.js);
 		Alerts.insert(compret);
+		//Track on google analytics, if not admin
+		user = Meteor.users.findOne({_id: userId});
+		if(user.roles == undefined) {
+			console.log("GAUS: ", doc.title)
+			analytics.track("Update Template", {
+			  Title: doc.title,
+			  Username: user.username,
+			});
+		}
 	}
 	if(Meteor.isServer) {
 		SysLogs.upsert({event: "ScreenUpdate", id: doc._id},

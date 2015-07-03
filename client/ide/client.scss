@@ -727,6 +727,15 @@ a.header-action-1 {
 .status-active {
 	background-color: $statusActive;
 }
+
+.status-loggedout {
+//	background-color: gray;
+}
+
+.status-online {
+	background-color: lighten($statusActive, 30%);
+}
+
 .status-retry {
 	background-color: yellow;
 }
