@@ -31,7 +31,7 @@ Schemas.App = new SimpleSchema({
 				options = scrs.map(function(ele, idx, arry){
 					return {label: ele.title, value: ele._id}
 				})
-				console.log("SCR OPTIONS ", options)
+				//console.log("SCR OPTIONS ", options)
 				return options;
 			}
 		}
@@ -126,7 +126,7 @@ Schemas.App = new SimpleSchema({
 
 Apps.before.remove(function(userId, doc) {
 	if(Meteor.isServer) {
-		console.log("APP DESTROY");
+		//console.log("APP DESTROY");
 		Connections.remove({appId: doc._id});
 		Feeds.remove({appId: doc._id});
 		Screens.remove({appId: doc._id});
