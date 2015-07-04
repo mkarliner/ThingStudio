@@ -1238,9 +1238,14 @@ pre.ace-cobalt .ace_comment {
 	line-height:48px;
 }
 
-.btn-plus {
+.autoform-remove-item.btn {
+	padding: 0;
+	border-radius: 50%;
+}
+
+button.btn-plus, .autoform-remove-item.btn-primary {
 	background-color: $updateButton;
-	&:hover {
+	&:hover, &:focus {
 		background-color: $updateButton;
 	}
 }
