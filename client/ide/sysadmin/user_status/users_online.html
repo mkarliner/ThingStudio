@@ -16,12 +16,16 @@
 		<table>
 			<thead>
 				<th>Username</th>
+				<th>Last Active</th>
+				<th>Last Login</th>
 			</thead>
 			<tbody>
 				{{#each activeUsers}}
 				<tr>
 					<td>{{> userPill}}</td>
-					<td>{{ status.lastLogin.date}}</td>
+					<td>{{ lastActivity}}</td>
+					<td>{{ lastLogin}}</td>
+					<td>{{ status.lastLogin.ipAddr}}</td>
 				</tr>
 				{{/each}}
 			</tbody>

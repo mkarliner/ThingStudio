@@ -36,7 +36,15 @@
  		})
  		//console.log("ONL ", users.fetch())
  		return users;
- 	}
+ 	},
+	lastActivity: function(){
+		if(this.status.lastActivity) {
+			return moment(this.status.lastActivity).fromNow();
+		}
+	},
+	lastLogin: function() {
+		return moment(this.status.lastLogin.date).fromNow();
+	}
  });
 
  Template.onlineAdmins.helpers({
