@@ -120,7 +120,11 @@ Schemas.App = new SimpleSchema({
 	public: {
 		type: Boolean,
 		defaultValue: false,
-	}
+	},
+	// inAppStore: {
+	// 	type: Boolean,
+	// 	defaultValue: false
+	// }
 	
 });
 

@@ -1,9 +1,8 @@
 <template name="updateAppsForm">
 	{{#autoForm collection="Apps" class="app-detail" id="updateAppForm" type="update" doc=this omitFields="ancestor" buttonContent="Save Application"}}
-		<p><span class="fwHeavy">App Title</span> &mdash; Give your application a name</p>
-		{{> afQuickField name='title' }}
 		<p><span class="fwHeavy">Access Details</span> &mdash; Control whether other users can access this application, and various publishing options</p>
-		{{> afQuickField name='shareable' }} {{> afQuickField name='public' }}
+		<!-- {{> afQuickField name='shareable' }} {{> afQuickField name='public' }} -->
+		{{> appSharing}}
 		<p><span class="fwHeavy">Sharing Options</span> &mdash; Share your IoT app with the world! (must be public &amp; sharable)</p>
 		<div class="form-group">
 			{{#if this.shareable}}
@@ -21,6 +20,8 @@
 		{{> afQuickField name='theme'}}
 		<p><span class="fwHeavy">App Home Template</span> &mdash; Which template should users see first when loading your app?</p>
 		{{> afFormGroup name='home_page'}}
+		<p><span class="fwHeavy">App Title</span> &mdash; The name of your application (will show publicly if app is public)</p>
+		{{> afQuickField name='title' }}
 		<p><span class="fwHeavy">Short Description</span> &mdash; Give a one line description of the purpose of this application</p>
 		{{> afQuickField name='summary' placeholder="Enter summary" class="wide-input"}}
 		<p><span class="fwHeavy">Long Description</span> &mdash; Provide more information here, such as instructions, usage, etc.</p>
@@ -56,4 +57,16 @@
 			<label for="{{this._id}}"> {{this.label}}</label>
 		{{/each}}
 	</div>
- </template> 
+ </template>
+
+ <template name="appSharing">
+ 	<div class="form-group inline-checkboxes">
+		<div data-required="true" class="checkbox-left">
+			{{> afFieldInput name='shareable' type="boolean-checkbox" }}
+		</div>
+		<div data-required="true" class="checkbox-left">
+			{{> afFieldInput name='public' type="boolean-checkbox" }}
+		</div>
+		<div class="clearfix"></div>
+	</div>
+ </template>

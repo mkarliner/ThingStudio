@@ -1059,7 +1059,7 @@ h4.modal-title {
 }
 
 // Handling extra padding for Selectize dropdowns on detail pages
-#updateConnectionForm .form-group:nth-child(4), #updateFeedForm .form-group:nth-child(3) {
+#updateConnectionForm .form-group:nth-child(4), #updateFeedForm .form-group:nth-child(3), #updateAppForm .form-group:nth-child(5), #updateAppForm .form-group:nth-child(6), #updateAppForm .form-group:nth-child(7) {
 	padding-top: 0;
 	margin-top: -5px;
 	padding-bottom: 1em;
@@ -1317,7 +1317,12 @@ button.btn-plus, .autoform-remove-item.btn-primary {
 .app-detail .form-group {
 	padding-top: 0.2em;
 	padding-bottom: 2em;
+	&.inline-checkboxes {
+		padding-bottom: 0.6em;
+	}
 }
+
+
 
 .studio-url {
 	margin-top: 2em;
