@@ -198,7 +198,15 @@ h2 {
 	color: $baseText;
 }
 
-label {
+.h2-details {
+	font-family: $fwLight;
+	font-size: 15.4px;
+	font-style: italic;
+	display: inline-block;
+	margin-left: 0.6em;
+}
+
+label, form p {
 	font-size: 1.1em;
 }
 
@@ -1051,10 +1059,17 @@ h4.modal-title {
 }
 
 // Handling extra padding for Selectize dropdowns on detail pages
-#updateConnectionForm .form-group:nth-child(4), #updateFeedForm .form-group:nth-child(3) {
+#updateConnectionForm .form-group:nth-child(4), #updateFeedForm .form-group:nth-child(3), #updateAppForm .form-group:nth-child(5), #updateAppForm .form-group:nth-child(6), #updateAppForm .form-group:nth-child(7) {
 	padding-top: 0;
 	margin-top: -5px;
 	padding-bottom: 1em;
+}
+
+.checkbox-left {
+	float: left;
+	margin-right: 2em;
+	line-height: 50px;
+	width: 150px;
 }
 
 .fw-regular {
@@ -1238,9 +1253,14 @@ pre.ace-cobalt .ace_comment {
 	line-height:48px;
 }
 
-.btn-plus {
+.autoform-remove-item.btn {
+	padding: 0;
+	border-radius: 50%;
+}
+
+button.btn-plus, .autoform-remove-item.btn-primary {
 	background-color: $updateButton;
-	&:hover {
+	&:hover, &:focus {
 		background-color: $updateButton;
 	}
 }
@@ -1297,7 +1317,12 @@ pre.ace-cobalt .ace_comment {
 .app-detail .form-group {
 	padding-top: 0.2em;
 	padding-bottom: 2em;
+	&.inline-checkboxes {
+		padding-bottom: 0.6em;
+	}
 }
+
+
 
 .studio-url {
 	margin-top: 2em;

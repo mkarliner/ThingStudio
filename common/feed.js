@@ -73,7 +73,7 @@ Schemas.Feed = new SimpleSchema({
 	doMaxMinAvg: {
 		type: Boolean,
 		defaultValue: false,
-		label: 'Calculate Max/Min etc'
+		label: 'Do Calculations'
 	},
 	maxMinAvgLimit: {
 		type: Number,
