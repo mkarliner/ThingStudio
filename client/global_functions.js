@@ -23,14 +23,21 @@ publish = function(feed, message) {
 
 publishFeed = function(feedName, message) {
 	feed = Feeds.findOne({title: feedName});
-	publish(feed, message);
+	if(feed){
+		publish(feed, message);
+	} else {
+		message = "No such publish feed - " + feedName;
+		Alerts.upsert({type: 'runtime', status: "warning", message:  message},{$set:{type: 'runtime', status: 'warning', message: message} ,$inc: {count: 1} } );
+	}
+	
 }
 
 getFeed = function(feed, defVal){
+				defVal = typeof defVal !== 'undefined' ? defVal : "novalue";
 				msg = Messages.findOne({
 					feed: feed
 				});
-				return msg ? msg.payload : defaultValue;
+				return msg ? msg.payload : defVal;
 			}
 
 paddedNumber = function(num, size) {
@@ -196,7 +203,7 @@ connect = function (conn, usr, pass) {
 			result = regex(topic);
 			if(result) {
 				// console.log("Feed matched", result);
-				Messages.upsert({topic: topic, feed: feeds[i].title}, {$set: {feed: feeds[i].title, topic: topic, payload: payload}});
+				Messages.upsert({topic: topic, feed: feeds[i].title}, {$set: {feed: feeds[i].title, topic: topic, payload: payload}, $inc:{count: 1}});
 				if(feeds[i].doJournal) {
 					//Do journal stuff
 					Messages.update(
@@ -233,7 +240,7 @@ connect = function (conn, usr, pass) {
 								count = 0;
 								min = value;
 								max = value;
-								console.log("RESET MM", feeds[i].maxMinAvgLimit)
+								// console.log("RESET MM", feeds[i].maxMinAvgLimit)
 							} else {
 								count +=1;
 							} 
