@@ -126,14 +126,6 @@ $bodyDividerColor: #D0D3DC;
 	transition: $property $duration unquote($method);
 }
 
-@mixin vertical-align {
-	position: relative;
-	top: 50%;
-	-webkit-transform: translateY(-50%);
-	-ms-transform: translateY(-50%);
-	transform: translateY(-50%);
-}
-
 html, body {
 	height: 100% !important;
 }
