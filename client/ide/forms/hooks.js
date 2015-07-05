@@ -82,7 +82,7 @@ compileTemplate = function(name, html_text, javascript) {
 				// console.log("TEMPLATE CLICK: ", this, attr);
 				feed_name = attr.getNamedItem("data-feed");
 				console.log("FN: ", feed_name);
-				if(!checkFeed(feed_name.value, false)){
+				if(feed_name == null || !checkFeed(feed_name.value, false)){
 					return;
 				};
 				message = attr.getNamedItem("data-message");
