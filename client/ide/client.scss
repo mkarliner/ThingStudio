@@ -1056,6 +1056,7 @@ h4.modal-title {
 .form-group input {
 	font-family: $fwBook;
 	background: $white;
+	text-indent: 14px;
 }
 
 // Handling extra padding for Selectize dropdowns on detail pages
@@ -1253,12 +1254,7 @@ pre.ace-cobalt .ace_comment {
 	line-height:48px;
 }
 
-.autoform-remove-item.btn {
-	padding: 0;
-	border-radius: 50%;
-}
-
-button.btn-plus, .autoform-remove-item.btn-primary {
+button.btn-plus, {
 	background-color: $updateButton;
 	&:hover, &:focus {
 		background-color: $updateButton;
@@ -1362,23 +1358,33 @@ button.btn-plus, .autoform-remove-item.btn-primary {
 	font-size: $fontSize * 1.75;
 }
 
-.svg-container {
+.widget-container {
 	text-align: center;
 	height: 150px;
 	margin-bottom: 10px;
 }
 
-.svg-container svg{
+.widget-container svg {
 	max-height: 150px;
 	height: 100%;
 	max-width: 100%;
 	background-color: #353C51;
-}
-
-.svg-container svg {
 	will-change: transform, fill;
 }
 
+.widget-container outer {
+	width: 100%;
+	padding-top: 75%;
+	position: relative;
+}
+
+.widget-container inner {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+}
 
 // .svg-container svg {
 // 	position: absolute;
@@ -1480,6 +1486,28 @@ table.widget-item {
 	background-color: $white;
 	color: $baseText;
 	padding: 1em;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+// System Widgets //
+///////////////////////////////////////////////////////////////////////////////////////
+
+//Keypad
+
+.keypad-row {
+	margin-top: 0.6rem;
+	margin-bottom: 0.6rem;
+}
+
+.keypad .key {
+      width: 4rem;
+      height: 4rem;
+      line-height: 4.5rem;
+      font-size: 2rem;
+      &.asterisk {
+		font-size: 3rem;
+		line-height: 5.7rem;
+      }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////

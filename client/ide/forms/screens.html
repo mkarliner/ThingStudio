@@ -79,7 +79,7 @@
 								<p><span class="fwHeavy">HTML Element Name</span> &ndash; Your custom HTML element's name must include a hyphen</p>
 								{{> afQuickField name='tagName'}}
 								<p><span class="fwHeavy">Parameters</span> &ndash; Click the plus to add widget parameters</p>
-								{{> afQuickField name='parameters' class="browser-default"}}
+								{{> afArrayField name='parameters' template="widgets"}}
 								<button type="submit" class="btn btn-update">Save Widget</button>
 							{{/autoForm}}
 						{{/with}}
@@ -95,5 +95,37 @@
 			<!-- <div id="css">
 				<p>Hi from CSS!</p>
 			</div> -->
+	</div>
+</template>
+
+<template name="afArrayField_widgets">
+	<div class="panel panel-default">
+		<div class="panel-heading">{{afFieldLabelText name=this.atts.name}}</div>
+		{{#if afFieldIsInvalid name=this.atts.name}}
+			<div class="panel-body has-error">
+				<span class="help-block">{{{afFieldMessage name=this.atts.name}}}</span>
+			</div>
+		{{/if}}
+		<ul class="list-group">
+			{{#afEachArrayItem name=this.atts.name minCount=this.atts.minCount maxCount=this.atts.maxCount}}
+				<li class="list-group-item autoform-array-item">
+					<div>
+						<div class="autoform-remove-item-wrap">
+							{{#if afArrayFieldHasMoreThanMinimum name=../atts.name minCount=../atts.minCount maxCount=../atts.maxCount}}
+								<button type="button" class="btn btn-primary autoform-remove-item btn-floating btn-plus"><i class="mdi-content-remove"></i></button>
+							{{/if}}
+						</div>
+						<div class="autoform-array-item-body">
+							{{> afQuickField name=this.name}}
+						</div>
+					</div>
+				</li>
+			{{/afEachArrayItem}}
+			{{#if afArrayFieldHasLessThanMaximum name=this.atts.name minCount=this.atts.minCount maxCount=this.atts.maxCount}}
+				<li class="list-group-item">
+					<button type="button" class="btn btn-primary autoform-add-item btn-floating btn-plus" data-autoform-field="{{this.atts.name}}" data-autoform-minCount="{{this.atts.minCount}}" data-autoform-maxCount="{{this.atts.maxCount}}"><i class="mdi-content-add"></i></button>
+				</li>
+			{{/if}}
+		</ul>
 	</div>
 </template>
