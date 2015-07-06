@@ -1,1 +1,1 @@
-AutoForm.setDefaultTemplateForType('afCheckbox', 'materialise-checkbox');
+AutoForm.setDefaultTemplateForType('afCheckbox', 'materialiseCheckbox');
