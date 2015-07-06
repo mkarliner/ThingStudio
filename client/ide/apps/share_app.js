@@ -21,7 +21,7 @@ Template.EditAppHeader.helpers({
 
 Meteor.startup(function(){
 	AutoForm.addInputType("boolean-checkbox-M", {
-		template: "materializeCheckbox",
+		template: "afCheckbox_materialiseCheckbox",
 		valueOut: function () {
 		return !!this.is(":checked");
 	},

@@ -14,10 +14,3 @@ Template.afCheckbox_mCheckbox.onRendered(function() {
 	Template.instance().$("input").attr("id", uniqid)
 	Template.instance().$("label").attr("for", uniqid)
 })
-
-Template.afCheckbox_mCheckbox.helpers({
-	checkboxId: function() {
-		var uniqid = Date.now();
-		return {_id: uniqid};
-	}
-})
