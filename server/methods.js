@@ -38,5 +38,31 @@ Meteor.methods({
 					count: 1
 				}
 			})
-	}
+	},
+    sendShareLink: function (to, appId) {
+		if(!this.userId) {
+			console.log("Invalid user for email method!");
+			return;
+		}
+      check([to, from, subject, text, appId], [String]);
+	  app = Apps.findOne({_id: appId});
+	  if(!app) {
+	  	console.log("Failed to find email shared app", appId)
+		  return;
+	  }
+      // Let other method calls from the same client start running,
+      // without waiting for the email sending to complete.
+      this.unblock();
+	  domain = Meteor.settings.public.domain;
+	  url = "http://domain" + "/view/app/" + appId;
+	  link = "<a href=\""+url+">\"";
+      Email.send({
+        to: to,
+        from: "noreply@thingstud.io",
+        subject: "You've been sent a ThingStudio Application link",
+		  text: "Click " + link + "here</a> to access your app"
+      });
+    }
 });
+
+
