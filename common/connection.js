@@ -1,9 +1,5 @@
 Connections = new Mongo.Collection("connections");
 
-
-
-Schemas = {};
-
 Schemas.Connection = new SimpleSchema({
 	title: {
 		type: String,
@@ -21,8 +17,28 @@ Schemas.Connection = new SimpleSchema({
 	},
 	protocol: {
 		type: String,
-		allowedValues:["Websocket", "SecureWebsocket"],
-		defaultValue: "Websocket"
+		defaultValue: "Websocket",
+		optional: true,
+		autoform: {
+			type: "selectize",
+			options: function(){
+				options = [{label: "Websocket", value: "Websocket"}, {label: "Secure Websocket", value: "SecureWebsocket"}];
+				return (options);
+			}
+		}
+	},
+	serverCredentials: {
+		//Provide credentials from server store.
+		type: Boolean,
+		defaultValue: false,
+		label: "Use Server Credentials",
+		autoform: {
+			afFieldInput: {
+				type: 'boolean-checkbox-M',
+				class: 'filled-in' // optional
+				// summernote options goes here
+			}
+		}
 	},
 	username: {
 		type: String,
@@ -30,39 +46,73 @@ Schemas.Connection = new SimpleSchema({
 	},
 	password: {
 		type: String,
-		optional: true
+		optional: true,
+		autoform: {
+			afFieldInput: {
+				type: 'password'
+				// class: 'filled-in' // optional
+				// summernote options goes here
+			}
+		}
 	},
-	autoConnect: {
-		type: Boolean,
-		defaultValue: true
-	},
+	// autoConnect: {
+	// 	type: Boolean,
+	// 	defaultValue: true
+	// },
 	owner: {
 		type: String,
 		index: true,
 		autoform: {
 			omit: true
 		},
-		autoValue: function(){
-			//console.log("AV : ", this);
-			if(this.value) {
-				return;
-			}
-			if(this.isInsert) {
+		autoValue: function() {
+			if (this.isInsert) {
 				return Meteor.userId();
-			} else if(this.isUpsert) {
-				return {$setOnInsert: Meteor.userId()};
+			} else if (this.isUpsert) {
+				return {
+					$setOnInsert: Meteor.userId
+				};
 			} else {
 				this.unset();
 			}
 		}
 	},
-	public: {
-		type: Boolean,
-		defaultValue: false
+	appId: {
+		type: String,
+		index: true,
+		autoform: {
+			omit: true
+		},
+	},
+	// public: {
+	// 	type: Boolean,
+	// 	defaultValue: false
+	// }
+
+
+
+});
+
+
+
+Connections.before.insert(function(userId, doc) {
+	if (Meteor.isClient) {		
+		doc.appId = Session.get("currentApp")._id;
+		console.log("BEFOREHOOK ", userId, doc, Session.get("currentApp"));
+		return true;
+	} else {
+		console.log("BEFOREHOOK Server", userId, doc);
 	}
-	
-	
-	
+});
+
+Connections.after.update(function(userId, doc) {
+	console.log("DIOC ", doc)
+	if(Meteor.isClient) {
+		currConn = getCurrentConnection();
+		if(currConn._id == doc._id) {
+			setCurrentConnection(doc);
+		}
+	}
 });
 
 Connections.attachSchema(Schemas.Connection);

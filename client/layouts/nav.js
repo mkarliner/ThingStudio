@@ -12,3 +12,11 @@ Template.registerHelper("isInRole",
 			return false;
 		}
 	});
+	
+
+Template.TopNav.helpers({
+	currentApp: function() {
+		app = Session.get("currentApp");
+		return app ? app.title : "not set";
+	}
+})

@@ -1,0 +1,79 @@
+<template name="AppsHeader">
+	<h1 class="left">Apps List</h1>
+	<a href="#" class="btn right header-action-2"><span class="ha2-status {{meteor_status}}"></span>{{curr_app_name}}</a>
+	<a class="header-action-1 clearfix" href="#">Create a new app</a>
+</template>
+
+<template name="AppsBody">
+	{{> autoformModals}}
+	{{#contentFor region="appHeader" template="AppsHeader"}}{{/contentFor}}
+	<table class="hoverable">
+		{{> AppsTableWidths}}
+		<thead>
+			<tr cellpadding="10"><th>App Title</th><th>Shareable</th><th>Share</th><th>Based On</th><th>Summary</th><th>Action</th></tr>
+		</thead>
+		<tbody>
+			<tr id="item-insert" class="spacer td-closed"><td></td></tr>
+			{{#each appslist}}
+				<tr>
+					<td>{{title}}</td>
+					<!-- <td>{{parentTitle}}</td> -->
+					<td>{{shareable}}</td>
+					{{#if shareable}}
+						<td><a class="btn btn-share share-app" href="/apps/{{this._id}}">Share</a></td>
+					{{else}}
+						<td><a class="btn disabled share-app" href="#">Share</a></td>
+					{{/if}}
+					<td>{{parentTitle}}</td>
+					<td>{{summary}}</td>
+					<td>
+						{{#if current_app}}
+							<a class="table-action table-make-active" href="#"><i class="icon-ts-checkmark"></i></a>
+							<a class="table-action table-edit-item" href="{{pathFor 'Edit App'}}"><i class="mdi-editor-mode-edit"></i></a>
+						{{else}}
+							<a class="table-action table-make-active select-app" href="#"><i class="mdi-toggle-radio-button-off"></i></a>
+							<a class="table-action table-edit-item ta-disabled tooltipped" data-position="left" data-delay="50" data-tooltip="Select this app to edit" href=""><i class="mdi-editor-mode-edit"></i></a>
+						{{/if}} 
+						{{#afModal classes="table-action table-cancel-item" collection="Apps" operation="remove" doc=_id title="<i class='mdi-alert-error'></i><span class='modal-header'>Deleting App</span>" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="icon-ts-trash"></i>{{/afModal}}
+					</td>
+				</tr>
+			{{/each}}
+		</tbody>
+	</table>
+	{{> AppsNewItem}}
+</template>
+
+<template name="AppsNewItem">
+	<div class="add-new-item new-app">
+		{{#autoForm collection="Apps" id="insertItemForm" type="insert"}}
+			<table>
+			{{> AppsTableWidths}}
+				<tbody>
+					<tr>
+						<td>{{> afQuickField name='title' placeholder="App Title" class="first"}}</td>
+						<!-- <td>{{> afQuickField name='shareable' }}</td> -->
+						<td></td>
+						<td><a class="btn disabled share-app" href="#">Share</a></td>
+						<td class="dropdown-td">{{> afQuickField name='ancestor' placeholder="Based On"}}</td>
+						<td>{{> afQuickField name='summary' placeholder="Short summary"}}</td>
+						<td>
+							<button type="submit" class="table-action table-save-new"><i class="icon-ts-checkmark"></i></button><button class="table-action table-cancel-new"><i class="icon-ts-cancel"></i></button>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			{{> NewItemDivider}}
+		{{/autoForm}}
+	</div>
+</template>
+
+<template name="AppsTableWidths">
+	<colgroup>
+		<col style="width: 22%;">
+		<col style="width: 10%;">
+		<col style="width: 11%;">
+		<col style="width: 180px;">
+		<col style="width: 23%;">
+		<col style="width: 145px;">
+	</colgroup>
+</template>

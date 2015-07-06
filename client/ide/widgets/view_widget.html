@@ -1,0 +1,73 @@
+<template name="SingleWidgetHeader">
+	<h1>Widget Details &amp; Usage: {{title}}</h1>
+</template>
+
+<template name="SingleWidgetBody">
+	{{#contentFor region="appHeader" template="SingleWidgetHeader"}}{{/contentFor}}
+	<div class="top-row">
+		<div class="col s3 tabs-container">
+			<ul class="tabs">
+				<li class="tab"><a href="#properties">Widget Info</a></li>
+				<li class="tab"><a href="#preview">Preview</a></li>
+				<!-- <li class="tab"><a href="#css">CSS</a></li> -->
+			</ul>
+		</div>
+		<div class="clearfix"></div>
+	</div>
+	<div class="single-page-container">
+		<div id="properties">
+			<div class="form-group detail">				
+				<p class="usage"><span class="fwHeavy">Using this widget</span> &ndash; Copy the snippet below and paste in to your template{{#if parameters}}, changing the parameter values {{/if}}</p>
+				<span class="usage-inner">
+					<span class="element">&lt;{{tagName}}</span><span class="parameter">{{#each parameters}} {{title}}=<span class="white-text">&quot;{{dummyValue}}&quot;</span>{{/each}}</span><span class="element">&gt;&lt;/{{tagName}}&gt;</span>
+				</span>
+			</div>
+			{{#if instructions}}
+				<div class="form-group detail">
+					<p class="fwHeavy">
+						{{instructions}}
+					</p>
+				</div>
+			{{/if}}
+			
+			{{#if parameters}}
+				<div class="info-group detail">
+					<p><span class="fwHeavy">Widget Parameters</span> &ndash; Required and optional values to render the widget</p>
+					<table class="white-bg widget-view striped">
+						<thead>
+							<tr>
+								<td>Parameter</td><td>Type</td><td>Required</td><td>Description</td>
+							</tr>
+						</thead>
+						<tbody>
+							{{#each parameters}}
+								<tr>
+									<td>{{title}}</td><td>{{paramType}}</td><td><i class="{{mandatory}}"></i></td><td>{{description}}</td>
+								</tr>
+							{{/each}}
+						</tbody>
+					</table>
+				</div>
+			{{/if}}
+			<p><span class="fwHeavy">Create your own</span> &ndash; To make your own version of this widget which you can modify, copy with the HTML and / or JavaScript below</p>
+			{{#if html}}
+				<p class="fwBlack">HTML</p>
+				<div class="code-preview">
+					<pre>{{html}}</pre>
+				</div>
+			{{/if}}
+			{{#if js}}
+				<p class="fwBlack">JS</p>
+				<div class="code-preview">
+					<pre>{{js}}</pre>
+				</div>
+			{{/if}}
+		</div>
+		<div id="preview">
+			{{> Template.dynamic template=currentScreen data=dummyData}}
+		</div>
+		<!-- <div id="css">
+			<p>Hi from CSS!</p>
+		</div> -->
+	</div>
+</template>

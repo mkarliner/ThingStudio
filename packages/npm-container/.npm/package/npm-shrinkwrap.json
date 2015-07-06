@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "front-matter": {
+      "version": "1.0.0",
+      "dependencies": {
+        "yaml-js": {
+          "version": "0.1.1"
+        }
+      }
+    }
+  }
+}

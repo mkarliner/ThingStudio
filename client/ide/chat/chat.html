@@ -1,0 +1,43 @@
+<template name="ChatHeader">
+	Welcome to the ThingStudio chat box. Please be aware that all chats are public.
+	{{#if isInRole 'admin'}}
+	<div>
+		{{#each onlineUsers}}
+			<span class="online-user">{{this.username}}-{{status}}</span>
+		{{/each}}
+	</div>
+	{{/if}}
+</template>
+
+<template name="ChatBody">
+	<div class="chat-window">
+		<div class="chat-messages">
+			{{#each chats}}
+				<div class="chat-entry {{isAdminHighlight}}">
+					<div class="chat-person chat-{{who}}">
+						{{username}}
+					</div>
+					<div class="chat-message">
+						<p>{{message}}</p>
+						<span class="right">{{time}}</span>
+					</div>
+				</div>
+			{{/each}}
+		</div>
+		<div class="chat-form">
+			{{> insertChatForm}}
+		</div>
+	</div>
+</template>
+
+<template name="ChatBox">
+	<div>
+		{{#each chats}}
+			<div>
+				<span>{{time}}</span>:<span>{{username}}</span>: <span>{{message}}</span>
+			</div>
+		{{/each}}
+	</div>
+</template>
+
+<!-- Put highlight in for admin: isInRole -->

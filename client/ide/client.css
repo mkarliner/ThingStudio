@@ -1,0 +1,570 @@
+/*
+red: rgb(226, 137, 119)
+orange: rgb(246, 209, 137)
+yellow: rgb(245, 230, 161)
+green: rgb(160, 227, 150)
+light blue: rgb(232, 255, 255)
+dark blue: rgb(174, 216, 230)
+purple: rgb(164, 134, 160)
+black:; rgb(0, 23, 54)
+*/
+
+/* global styles */
+
+h1 {
+	font-size: 1.6em;
+	font-weight: 500;
+	line-height: 1.5em;
+}
+h2 {
+	font-size: 1.4em;
+	font-weight: 500;
+	line-height: 1.5em;	
+}
+h3 {
+	font-size: 1.2em;
+	font-weight: 500;
+	line-height: 1.5em;
+}
+p {
+	font-size: 1em;
+	font-weight: 400;
+	line-height: 1.4;
+	margin-bottom: 1em;
+}
+blockquote {
+	font-size: 21px;
+	font-style: normal;
+	font-variant: normal;
+	font-weight: 400;
+	line-height: 30px;
+}
+pre {
+	font-size: 0.9em;
+	font-style: normal;
+	font-variant: normal;
+	font-weight: 400;
+	line-height: 1.2em;
+}
+label {
+	font-weight: 400;
+	font-size: 1.3em;
+}
+li.conn-stat {
+  display: none;
+}
+li.conn-stat a {
+  padding-top: 10px;
+}
+.Connection-status {
+	width: 2.758333em;
+	height: 2.758333em;
+	border-radius: 50%;
+	border: 3px solid white;
+	background: transparent;
+	float: right;
+	margin: 0;
+}
+.navbar-header .Connection-status {
+  margin: 4px 15px 0 0;
+}
+.Connection-status.connected {
+	background: rgb(160, 227, 150);
+}
+.Connection-status.disconnected {
+	background: rgb(226, 137, 119);
+}
+
+.onlineUsers {
+  padding: 1em 0;
+}
+
+/* Bootstrap overrides */
+
+.navbar-default {
+	background-color: rgb(174, 216, 230);
+	border: none;
+	padding: 0.5em 0 0.8em;
+      border-radius: 0;
+}
+.navbar-default .navbar-nav > li > a {
+	color: inherit;
+}
+.navbar-toggle {
+	float: left;
+      margin-top: 4px;
+}
+.navbar-default .navbar-toggle {
+	margin-left: 10px;
+	border: 3px solid white;
+      border-radius: 50%;
+
+}
+.navbar-default .navbar-toggle .icon-bar {
+	background-color: white;
+	width: 22px;
+	height: 4px;
+	border-radius: 2px;
+}
+.navbar-toggle .icon-bar + .icon-bar {
+	margin-top: 5px;
+}
+.navbar-brand {
+	width: 12.33em;
+	position: absolute;
+	margin-left: auto;
+	margin-right: auto;
+	left: 0;
+	right: 0;
+	padding: 13px 0;
+}
+.navbar-brand > img {
+	max-width: 12.33em;
+}
+.progress {
+	height: 2.77778em;
+	background-color: white;
+	border-radius: 9px;
+	box-shadow: none;
+	border: 3px solid #E28977;
+}
+.progress-bar {
+	background-color: rgba(226, 137, 119, .69);
+	box-shadow: none;
+	border-right: 3px solid #E28977;
+	text-align: right;
+	font-size: 1.5em;
+	padding: 0.37em;
+	min-width: 20%;
+}
+.status-button {
+	font-size: 1.255556em;
+	padding: 0.6em 0;
+	text-transform: uppercase;
+	margin-right: 0.4em;
+	width: 30.8%;
+	border-radius: 9px;
+}
+.status-button:last-child {
+	margin-right: 0;
+}
+.btn {
+  border-color: rgb(204, 204, 204);
+}
+.btn-success {
+      background-color: rgb(160, 227, 150);
+      border-color: transparent;
+}
+.btn-warning {
+	background-color: rgb(246, 209, 137);
+}
+.btn-danger {
+	background-color: rgb(226, 137, 119);
+}
+.btn.status-button {
+  cursor: default;
+}
+.btn.status-button:active {
+      -webkit-box-shadow: none;
+      box-shadow: none;
+}
+.btn-top-nav {
+  font-size: 1.5em;
+  margin: 5px 8% 0;
+  background: transparent;
+  border: 3px solid white;
+  border-radius: 50%;
+  padding: 2px 7px;
+}
+.navbar-toggle.btn-top-nav {
+  padding: 2px 9px;
+}
+.btn-top-nav i {
+  color: white;
+}
+
+.at-input.checkbox label {
+  padding-left: 20px;
+  line-height: 20px;
+}
+
+
+
+/* range selector styles: circle */
+
+input[type=range].knob-slider {
+  -webkit-appearance: none;
+  margin: 1em 0 3em;
+  width: 100%;
+}
+input[type=range].knob-slider:focus {
+  outline: none;
+}
+input[type=range].knob-slider::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 3px;
+  cursor: pointer;
+  animate: 0.2s;
+  background: rgb(226, 137, 119);
+  border-radius: 1.3px;
+}
+input[type=range].knob-slider::-webkit-slider-thumb {
+  border: 3px solid rgb(226, 137, 119);
+  height: 2.2em;
+  width: 2.2em;
+  border-radius: 2em;
+  background: rgb(246, 209, 137);
+  cursor: pointer;
+  -webkit-appearance: none;
+  margin-top: -15px;
+}
+input[type=range].knob-slider:focus::-webkit-slider-runnable-track {
+  background: rgb(226, 137, 119);
+}
+input[type=range].knob-slider::-moz-range-track {
+  width: 100%;
+  height: 3px;
+  cursor: pointer;
+  animate: 0.2s;
+  background: rgb(226, 137, 119);
+  border-radius: 1.3px;
+}
+input[type=range].knob-slider::-moz-range-thumb {
+  border: 2px solid rgb(226, 137, 119);
+  height: 2.2em;
+  width: 2.2em;
+  border-radius: 50%;
+  background: rgb(246, 209, 137);
+  cursor: pointer;
+}
+input[type=range].knob-slider::-ms-track {
+  width: 100%;
+  height: 3px;
+  cursor: pointer;
+  animate: 0.2s;
+  background: transparent;
+  border-color: transparent;
+  border-width: 16px 0;
+  color: transparent;
+}
+input[type=range].knob-slider::-ms-fill-lower {
+  background: rgb(226, 137, 119);
+  border-radius: 2.6px;
+}
+input[type=range].knob-slider::-ms-fill-upper {
+  background: rgb(226, 137, 119);
+  border-radius: 2.6px;
+}
+input[type=range].knob-slider::-ms-thumb {
+  border: 2px solid rgb(226, 137, 119);
+  height: 2.2em;
+  width: 2.2em;
+  border-radius: 50%;
+  background: rgb(246, 209, 137);
+  cursor: pointer;
+}
+input[type=range].knob-slider:focus::-ms-fill-lower {
+  background: rgb(226, 137, 119);
+}
+input[type=range].knob-slider:focus::-ms-fill-upper {
+  background: rgb(226, 137, 119);
+}
+
+/* range selector styles: servo */
+
+input[type=range].servo-slider {
+  -webkit-appearance: none;
+  margin: 1em 0 3em;
+  width: 100%;
+  border-radius: 9px;
+  padding: 2.5em 1em;
+  border: 3px solid rgb(174, 216, 230);
+  background: rgb(231,255,255); /* Old browsers */
+  background: -moz-linear-gradient(left,  rgb(231,255,255) 0%, rgb(203,236,243) 100%); /* FF3.6+ */
+  background: -webkit-gradient(linear, left top, right top, color-stop(0%,rgb(231,255,255)), color-stop(100%,rgb(203,236,243))); /* Chrome,Safari4+ */
+  background: -webkit-linear-gradient(left,  rgb(231,255,255) 0%,rgb(203,236,243) 100%); /* Chrome10+,Safari5.1+ */
+  background: -o-linear-gradient(left,  rgb(231,255,255) 0%,rgb(203,236,243) 100%); /* Opera 11.10+ */
+  background: -ms-linear-gradient(left,  rgb(231,255,255) 0%,rgb(203,236,243) 100%); /* IE10+ */
+  background: linear-gradient(to right,  rgb(231,255,255) 0%,rgb(203,236,243) 100%); /* W3C */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e7ffff', endColorstr='#cbecf3',GradientType=1 ); /* IE6-9 */
+}
+input[type=range].servo-slider:focus {
+  outline: none;
+}
+input[type=range].servo-slider::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 0px;
+  cursor: pointer;
+  animate: 0.2s;
+  background: rgb(226, 137, 119);
+  border-radius: 1.3px;
+}
+input[type=range].servo-slider::-webkit-slider-thumb {
+  height: 4.166em;
+  width: 2.1em;
+  border-radius: 0.4444em;
+  cursor: pointer;
+  -webkit-appearance: none;
+  margin-top: -2em;
+  background: rgb(186,230,245); /* Old browsers */
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgb(186,230,245)), color-stop(100%,rgb(174,216,230))); /* Chrome,Safari4+ */
+  background: -webkit-linear-gradient(top,  rgb(186,230,245) 0%,rgb(174,216,230) 100%); /* Chrome10+,Safari5.1+ */
+  background: -o-linear-gradient(top,  rgb(186,230,245) 0%,rgb(174,216,230) 100%); /* Opera 11.10+ */
+  background: linear-gradient(to bottom,  rgb(186,230,245) 0%,rgb(174,216,230) 100%); /* W3C */
+}
+input[type=range].servo-slider:focus::-webkit-slider-runnable-track {
+  background: rgb(226, 137, 119);
+}
+input[type=range].servo-slider::-moz-range-track {
+  width: 100%;
+  height: 0px;
+  cursor: pointer;
+  animate: 0.2s;
+  background: rgb(226, 137, 119);
+  border-radius: 1.3px;
+}
+input[type=range].servo-slider::-moz-range-thumb {
+  border: 2px solid rgb(226, 137, 119);
+  height: 2.2em;
+  width: 2.2em;
+  border-radius: 50%;
+  cursor: pointer;
+  background: rgb(186,230,245); /* Old browsers */
+  background: -moz-linear-gradient(top,  rgb(186,230,245) 0%, rgb(174,216,230) 100%); /* FF3.6+ */
+  background: linear-gradient(to bottom,  rgb(186,230,245) 0%,rgb(174,216,230) 100%); /* W3C */
+}
+input[type=range].servo-slider::-ms-track {
+  width: 100%;
+  height: 0px;
+  cursor: pointer;
+  animate: 0.2s;
+  background: transparent;
+  border-color: transparent;
+  border-width: 16px 0;
+  color: transparent;
+}
+input[type=range].servo-slider::-ms-fill-lower {
+  background: rgb(226, 137, 119);
+  border-radius: 2.6px;
+}
+input[type=range].servo-slider::-ms-fill-upper {
+  background: rgb(226, 137, 119);
+  border-radius: 2.6px;
+}
+input[type=range].servo-slider::-ms-thumb {
+  border: 2px solid rgb(226, 137, 119);
+  height: 2.2em;
+  width: 2.2em;
+  border-radius: 50%;
+  cursor: pointer;
+  background: rgb(186,230,245); /* Old browsers */
+  background: -ms-linear-gradient(top,  rgb(186,230,245) 0%,rgb(174,216,230) 100%); /* IE10+ */
+  background: linear-gradient(to bottom,  rgb(186,230,245) 0%,rgb(174,216,230) 100%); /* W3C */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#bae6f5', endColorstr='#aed8e6',GradientType=0 ); /* IE6-9 */
+}
+input[type=range].servo-slider:focus::-ms-fill-lower {
+  background: rgb(226, 137, 119);
+}
+input[type=range].servo-slider:focus::-ms-fill-upper {
+  background: rgb(226, 137, 119);
+}
+/* iOS Switch Styles */
+/* Normal Track */
+input[type="checkbox"].ios-switch { 
+  position: absolute;
+  opacity: 0;
+}
+input[type="checkbox"].ios-switch + div {
+  vertical-align: middle;
+  width: 40px;
+  height: 20px;
+  border: 3px solid rgba(0,23,54,0.4);
+  border-radius: 999px;
+  background-color: rgba(0, 0, 0, 0.1);
+  -webkit-transition-duration: .4s;
+  -webkit-transition-property: background-color, box-shadow;
+  box-shadow: inset 0 0 0 0px rgba(0,0,0,0.4);
+}
+/* Checked Track (Blue) */
+input[type="checkbox"].ios-switch:checked + div {
+  width: 40px;
+  background-position: 0 0;
+  background-color: #3b89ec;
+  border: 1px solid #0e62cd;
+  box-shadow: inset 0 0 0 10px rgba(59,137,259,1);
+}
+
+
+/* Big Track */
+input[type="checkbox"].bigswitch.ios-switch + div {
+  width: 70px;
+  height: 40px;
+}
+
+/* Green Track */
+input[type="checkbox"].green.ios-switch:checked + div {
+  background-color: rgb(160, 227, 150);
+  border: 3px solid rgba(160, 227, 150,1);
+  box-shadow: inset 0 0 0 10px rgba(160, 227, 150, 1);
+}
+
+/* Normal Knob */
+input[type="checkbox"].ios-switch + div > div {
+  float: left;
+  width: 18px; height: 18px;
+  border-radius: inherit;
+  background: #ffffff;
+  -webkit-transition-timing-function: cubic-bezier(.54,1.85,.5,1);
+  -webkit-transition-duration: 0.4s;
+  -webkit-transition-property: transform, background-color, box-shadow;
+  -moz-transition-timing-function: cubic-bezier(.54,1.85,.5,1);
+  -moz-transition-duration: 0.4s;
+  -moz-transition-property: transform, background-color;
+  pointer-events: none;
+  margin-top: 1px;
+  margin-left: 1px;
+}
+
+/* Checked Knob (Blue Style) */
+input[type="checkbox"].ios-switch:checked + div > div {
+  -webkit-transform: translate3d(20px, 0, 0);
+  -moz-transform: translate3d(20px, 0, 0);
+  background-color: #ffffff;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.3), 0px 0px 0 1px rgba(8, 80, 172,1);
+}
+
+
+/* Big Knob */
+input[type="checkbox"].bigswitch.ios-switch + div > div {
+  width: 32px; height: 32px;
+  margin-top: 1px;
+}
+
+/* Checked Big Knob (Blue Style) */
+input[type="checkbox"].bigswitch.ios-switch:checked + div > div {
+  -webkit-transform: translate3d(31px, 0, 0);
+  -moz-transform: translate3d(16px, 0, 0);
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3), 0px 0px 0 1px rgba(8, 80, 172,1);
+}
+
+/* Green Knob */
+input[type="checkbox"].green.ios-switch:checked + div > div {
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0), 0 0 0 1px rgba(0, 162, 63,0);
+}
+
+
+/* checkbox styles */
+.image-checkbox {
+  position: absolute;
+  left: 100%;
+  visibility: hidden;
+}
+.image-checkbox-label {
+  height: 50px;
+  color: #7b7163;
+  border: rgb(164, 134, 160) dashed 3px;
+  border-radius: 9px;
+  background-image: url('data:image/svg+xml;utf8,<svg width="34" height="33" viewBox="0 0 34 33" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g><g><g transform="translate(-7 -8)"><rect stroke-opacity="0" stroke="#A486A0" stroke-width="2.118" width="48" height="48" rx="9.882"/><path d="M20.177 24.848l-2.61-5.864c-1.02-2.285-3.692-3.313-5.973-2.297l-1.188.53C8.12 18.233 7.1 20.906 8.118 23.19l5.79 13.003c.112.39.28.766.496 1.117l.103.23c.8 1.797 2.623 2.817 4.474 2.678 1.365.09 2.744-.442 3.7-1.528.563-.457.998-1.037 1.282-1.68l15.448-20.5c1.506-2 1.11-4.836-.885-6.34l-1.038-.78c-1.998-1.507-4.83-1.102-6.337.896L20.177 24.848z" fill="#A486A0"/></g></g></g></g></svg>');
+  background-repeat: no-repeat;
+  background-size: 0%;
+  background-position: center center;
+  -webkit-transition-timing-function: cubic-bezier(.54,1.85,.5,1);
+  -webkit-transition-duration: 0.2s;
+  -webkit-transition-property: background-size;
+}
+.image-checkbox:checked + .image-checkbox-label {
+  /*background: url('data:image/svg+xml;utf8,<svg width="34" height="33" viewBox="0 0 34 33" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g><g><g transform="translate(-7 -8)"><rect stroke-opacity="0" stroke="#A486A0" stroke-width="2.118" width="48" height="48" rx="9.882"/><path d="M20.177 24.848l-2.61-5.864c-1.02-2.285-3.692-3.313-5.973-2.297l-1.188.53C8.12 18.233 7.1 20.906 8.118 23.19l5.79 13.003c.112.39.28.766.496 1.117l.103.23c.8 1.797 2.623 2.817 4.474 2.678 1.365.09 2.744-.442 3.7-1.528.563-.457.998-1.037 1.282-1.68l15.448-20.5c1.506-2 1.11-4.836-.885-6.34l-1.038-.78c-1.998-1.507-4.83-1.102-6.337.896L20.177 24.848z" fill="#A486A0"/></g></g></g></g></svg>') no-repeat;*/
+  background-size: 75%;
+  color: #c3b39c;
+  border: rgb(164, 134, 160) solid 3px;
+  
+}
+.checkbox label {
+  padding-left: 44px;
+  line-height: 50px;
+  font-weight: bold;
+  font-size: 2em;
+}
+/* binary outputs (non-checkbox) */
+/* light */
+.lightOutput {
+  width: 5.444em;
+  height: 5.444em;
+  border-radius: 50%;
+  margin-bottom: 1em;
+  transition: all 0.1s ease;
+}
+.lightOutput i {
+  font-size: 3.5em;
+  display: block;
+  text-align: center;
+  padding-top: 0.05em;
+}
+.binary-off, .binary {
+  border: 3px solid rgb(174, 216, 230);
+  background-color: transparent;
+}
+.binary-off i, .binary i {
+  color: rgb(174, 216, 230);
+}
+.binary-on {
+  border: 3px solid rgb(160, 227, 150);
+}
+.binary-on i {
+  color: rgb(160, 227, 150);
+}
+/* String readout styles */
+.string-display {
+  background-color: rgb(160, 227, 150);
+  text-align: center;
+  color: white;
+}
+.string-display span {
+font-size: 4em;
+}
+
+/* misc custom styles */
+
+
+.access-error, .screen-errors {
+  background: rgb(249, 242, 244);
+  color: rgb(199, 37, 78);
+  border: 1px solid rgb(169, 68, 66);
+  padding: 1em;
+}
+
+.screen-errors {
+  margin-top: 1em;
+}
+
+.form-control {
+  padding: 6px 0;
+  text-indent: 14px;
+}
+
+/*.feeds-table td, .screens-table td, .themes-table td {
+  padding: 0.6em 0;
+}
+*/
+#helpfooter {
+  padding: 2em 0 0;
+  clear: both;
+}
+
+#helpfooter p {
+  margin-bottom: 0.5em;
+}
+
+/* Media Queries */
+@media (min-width: 768px) {
+	.navbar-header .Connection-status {
+		display: none;
+	}
+      li.conn-stat {
+        display: block;
+      }
+      .btn-top-nav {
+        display: none;
+      }
+}
+

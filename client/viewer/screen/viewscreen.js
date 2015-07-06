@@ -1,3 +1,8 @@
+Template.ViewScreen.onRendered(function(){
+	console.log("VS: ", this)
+	Meteor.call("templateView", this.data._id);
+})
+
 Template.ViewScreen.helpers({
 	myScreen: function(){
 		scr = Session.get("currentScreenPage");
@@ -10,7 +15,7 @@ Template.ViewScreen.helpers({
             if(scn) {
                     // console.log("HTML: ", scn.html);
                     delete Template[scn.title];
-                    compileTemplate(scn.title, scn.html);
+                    compileTemplate(scn.title, scn.html, scn.js);
 
                     return scn.title;
             } else {

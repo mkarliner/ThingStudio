@@ -1,0 +1,58 @@
+<template name="ThemesHeader">
+	<h1 class="left">Themes for {{curr_app_name}}</h1>
+	<a class="header-action-1 clearfix" href="#">Create a new theme</a>
+</template>
+
+
+<template name="ThemesBody">
+	{{> autoformModals}}
+	{{#contentFor region="appHeader" template="ThemesHeader"}}{{/contentFor}}
+	<table>
+		{{> ThemesTableWidths}}
+		<thead>
+			<tr cellpadding="10"><th>Theme Title</th><th>Owner</th><th>Action</th></tr>
+		</thead>
+		<tbody>
+			<tr id="item-insert" class="spacer td-closed"><td></td></tr>
+			{{#each themelist}}
+				<tr>
+					<td>{{this.title}}</td>
+					<td>{{status}}</td>
+					<td>
+						<a class="table-action table-edit-item" href="{{pathFor 'Edit Theme'}}"><i class="mdi-editor-mode-edit"></i></a>
+						{{#afModal classes="table-action table-cancel-item" collection="Themes" operation="remove" doc=_id title="<i class='mdi-alert-error'></i><span class='modal-header'>Deleting Theme</span>" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="icon-ts-trash"></i>{{/afModal}}
+					</td>
+				</tr>
+			{{/each}}
+		</tbody>
+	</table>
+	{{> ThemesNewItem}}
+</template>
+
+<template name="ThemesNewItem">
+	<div class="add-new-item">
+		{{#autoForm collection="Themes" id="insertItemForm" type="insert"}}
+			<table>
+			{{> ThemesTableWidths}}
+				<tbody>
+					<tr>
+						<td>{{> afQuickField name='title' placeholder="Theme Title" class="first"}}</td>
+						<td>me</td>
+						<td>
+							<button type="submit" class="table-action table-save-new"><i class="icon-ts-checkmark"></i></button><button class="table-action table-cancel-new"><i class="icon-ts-cancel"></i></button>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			{{> NewItemDivider}}
+		{{/autoForm}}
+	</div>
+</template>
+
+<template name="ThemesTableWidths">
+	<colgroup>
+		<col style="width: 25%;">
+		<col style="width: 66%;">
+		<col style="width: 105px;">
+	</colgroup>
+</template>

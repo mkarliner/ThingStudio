@@ -1,6 +1,22 @@
 <template name="ViewerLayout">
 	<!-- stuff for viewer layout goes here. -->
-	{{> currentStyle}}
-	{{> ViewerNav}}
-	{{>yield}}
+	<header>
+		<span><a class="right viewer-connection-stat" href=""><i class="icon-ts-connection {{isConnected}}"></i></a></span>
+		<h2><a href="http://www.thingstud.io">Made with ThingStudio</a></h2>
+	</header>
+	<main>
+		<div class="view-wrapper">
+			{{>yield}}
+			{{#if runtimeErrors}}
+				<div class="screen-errors">
+					<p>Runtime Errors</p>
+					{{runtimeErrors}}
+				</div>
+			{{/if}}
+		</div>
+	</main>
+	<footer>
+		<h2>&copy; ThingStudio 2015</h2>
+		{{> fontLicense}}
+	</footer>
 </template>

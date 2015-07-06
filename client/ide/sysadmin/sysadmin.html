@@ -1,0 +1,79 @@
+<template name="SysadminHeader">
+	  
+</template>
+
+
+<template name="SysadminBody">
+	{{> SysLogs}}
+</template>
+
+
+
+
+<template name="SysLogs">
+	<table>
+		<thead>
+			<th>
+				Event
+			</th>
+			<th>
+				User
+			</th>
+			<th>
+				Title
+			</th>
+			<th>
+				Details
+			</th>
+			<th>
+				Count
+			</th>
+			<th>
+				Time/Date
+			</th>
+		</thead>
+		<tbody>
+			{{#each syslogs}}
+				<tr>
+					<td>
+						{{event}}
+					</td>
+					<td>
+						{{userName}}
+					</td>
+					<td  class="select-app">
+						{{title}}
+					</td>
+					<td>
+						{{details}}
+					</td>
+					<td>
+						{{count}}
+					</td>
+					<td>
+						{{date}}
+					</td>
+				</tr>
+			{{/each}}
+		</tbody>
+	</table>
+</template>
+
+<template name="LatestScreenUpdates">
+	<table>
+		<thead>
+		</thead>
+		<tbody>
+			{{#each recentUpdates}}
+				<tr>
+					<td>
+						{{title}}
+					</td>
+					<td>
+						{{updatedAt}}
+					</td>
+				</tr>
+			{{/each}}
+		</tbody>
+	</table>
+</template>

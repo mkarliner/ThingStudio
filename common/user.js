@@ -1,6 +1,6 @@
-Schema = {};
+// Schema = {};
 
-Schema.UserCountry = new SimpleSchema({
+Schemas.UserCountry = new SimpleSchema({
     name: {
         type: String
     },
@@ -10,7 +10,7 @@ Schema.UserCountry = new SimpleSchema({
     }
 });
 
-Schema.UserProfile = new SimpleSchema({
+Schemas.UserProfile = new SimpleSchema({
     firstName: {
         type: String,
         regEx: /^[a-zA-Z-]{2,25}$/,
@@ -19,6 +19,10 @@ Schema.UserProfile = new SimpleSchema({
     lastName: {
         type: String,
         regEx: /^[a-zA-Z]{2,25}$/,
+        optional: true
+    },
+    location: {
+        type: String,
         optional: true
     },
     birthday: {
@@ -45,16 +49,16 @@ Schema.UserProfile = new SimpleSchema({
         optional: true
     },
     country: {
-        type: Schema.UserCountry,
+        type: Schemas.UserCountry,
         optional: true
     },
-	showWelcome: {
-		type: Boolean,
-		defaultValue: true
-	}
+    showWelcome: {
+    	type: Boolean,
+    	defaultValue: true
+    }
 });
 
-Schema.User = new SimpleSchema({
+Schemas.User = new SimpleSchema({
     username: {
         type: String,
         regEx: /^[a-z0-9A-Z_]{3,15}$/
@@ -63,20 +67,24 @@ Schema.User = new SimpleSchema({
         type: [Object],
         // this must be optional if you also use other login services like facebook,
         // but if you use only accounts-password, then it can be required
+        minCount: 1,
+        maxCount: 1,
         optional: true
     },
     "emails.$.address": {
         type: String,
-        regEx: SimpleSchema.RegEx.Email
+        regEx: SimpleSchema.RegEx.Email,
+        label: "Email address"
     },
     "emails.$.verified": {
+		optional: true,
         type: Boolean
     },
     createdAt: {
         type: Date
     },
     profile: {
-        type: Schema.UserProfile,
+        type: Schemas.UserProfile,
         optional: true
     },
     services: {
@@ -111,4 +119,4 @@ Schema.User = new SimpleSchema({
 	}
 });
 
-Meteor.users.attachSchema(Schema.User);
+Meteor.users.attachSchema(Schemas.User);

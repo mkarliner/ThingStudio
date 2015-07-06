@@ -1,0 +1,75 @@
+<template name="ConnectionsHeader">
+		<h1 class="left">Connections</h1>
+		<a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>{{connectionName}}</a>
+		<a class="header-action-1 clearfix" href="#">Create a new connection</a>
+</template>
+
+<template name="ConnectionsBody">
+	{{> autoformModals}}
+	{{#contentFor region="appHeader" template="ConnectionsHeader"}}{{/contentFor}}
+	<table class="hoverable">
+		{{> ConnectionsTableWidths}}
+		<thead>
+			<tr cellpadding="10"><th>Connection Title</th><th>Hostname</th><th>Port</th><th>Protocol</th><th>Username</th><th>Password</th><th>Action</th></tr>
+		</thead>
+		<tbody>
+			<tr id="item-insert" class="spacer td-closed"><td></td></tr>
+			{{#each connectionlist}}
+				<tr>
+					<td>{{title}}</td>
+					<td>{{host}}</td>
+					<td>{{port}}</td>
+					<td>{{protocol}}</td>
+					<td>{{showUsername}}</td>
+					<td>{{showObscuredPassword}}</td>
+					<td>
+						<!-- {{#if connectionIsActive}}
+							<a class="table-action table-make-active connect" href="#"><i class="mdi-image-brightness-1"></i></a>
+						{{else}} -->
+<!-- 							<a class="table-action table-make-active connect" href="#"><i class="mdi-toggle-radio-button-off"></i></a>
+						{{/if}}  -->
+						<a class="table-action table-edit-item" href="{{pathFor 'Edit Connection'}}"><i class="mdi-editor-mode-edit"></i></a>
+						{{#afModal classes="table-action table-cancel-item" collection="Connections" operation="remove" doc=_id title="<i class='mdi-alert-error'></i><span class='modal-header'>Deleting Connection</span>" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="icon-ts-trash"></i>{{/afModal}}
+					</td>
+				</tr>
+			{{/each}}
+		</tbody>
+	</table>
+	{{> ConnectionsNewItem}}
+</template>
+
+<template name="ConnectionsNewItem">
+	<div class="add-new-item new-connection">
+		{{#autoForm collection="Connections" id="insertItemForm" type="insert"}}
+			<table>
+			{{> ConnectionsTableWidths}}
+				<tbody>
+					<tr>
+						<td>{{> afQuickField name='title' placeholder="Connection Title" class="first"}}</td>
+						<td>{{> afQuickField name='host' placeholder="Hostname"}}</td>
+						<td>{{> afQuickField name='port' placeholder="Port"}}</td>
+						<td class="dropdown-td">{{> afQuickField name='protocol'}}</td>
+						<td>{{> afQuickField name='username' placeholder="Username"}}</td>
+						<td>{{> afQuickField name='password' placeholder="Password"}}</td>
+						<td>
+							<button type="submit" class="table-action table-save-new"><i class="icon-ts-checkmark"></i></button><button class="table-action table-cancel-new"><i class="icon-ts-cancel"></i></button>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			{{> NewItemDivider}}
+		{{/autoForm}}
+	</div>
+</template>
+
+<template name="ConnectionsTableWidths">
+	<colgroup>
+		<col style="width: 16%;">
+		<col style="width: 14%;">
+		<col style="width: 8%;">
+		<col style="width: 180px;">
+		<col style="width: 11%;">
+		<col style="width: 11%;">
+		<col style="width: 105px;">
+	</colgroup>
+</template>

@@ -5,7 +5,7 @@ SimpleSchema.messages({
   "noPublicWildcard": "Wildcard feeds cannot be public"
 });
 
-Schemas = {};
+// Schemas = {};
 
 Schemas.Feed = new SimpleSchema({
 	title: {
@@ -14,18 +14,22 @@ Schemas.Feed = new SimpleSchema({
 		custom: function () {
 			console.log(this.userId);
 			//First try to find my own duplicate.
-			f = Feeds.findOne({title: this.value, $or: [{owner: this.userId}, {public:true}]});
-			if(!f)
-			console.log("CKF ", f);
-			if(f  && this.isInsert) {
-				console.log("BOO")
-				return "uniqueFeed";
+			//f = Feeds.findOne({title: this.value, $or: [{owner: this.userId, appId: this.appId}, {public:true}]});
+			if(Meteor.isClient) {
+				f = Feeds.findOne({title: this.value});
+				//console.log("CKF ", typeof f, this);
+				if(typeof f == "object"  && this.isInsert) {
+					//console.log("BOO")
+					return "uniqueFeed";
+				}
+				if(typeof f == "object" && f._id != this.docId) {
+					//console.log("Baa")
+					return "uniqueFeed";
+				}
+				//console.log("ALLOK")
 			}
-			if(f && f._id != this.docId) {
-				console.log("Baa")
-				return "uniqueFeed";
-			}
-			console.log("ALLOK")
+
+			return;
 		},
 		max: 200
 	},
@@ -33,10 +37,48 @@ Schemas.Feed = new SimpleSchema({
 		type: String,
 
 	},
-	action: {
+	pubsub: {
 		type: String,
-		allowedValues:[ "Update"],
-		defaultValue: "Update"
+		label: "Publish/Subscribe",
+		autoform: {
+			type: "selectize",
+			options: function(){
+				options = [{label: "Publish", value: "Publish"}, {label: "Subscribe", value: "Subscribe"}];
+				return (options);
+			}
+		}
+	},
+	// action: {
+	// 	type: String,
+	// 	allowedValues:[ "Update"],
+	// 	defaultValue: "Update"
+	// },
+	doJournal: {
+		type: Boolean,
+		defaultValue: false,
+		label: "Keep Journal",
+	},
+	journal_limit: {
+		type: Number,
+		optional: true,
+		defaultValue: 50
+	},
+	journal: {
+		type: [Object],
+		optional: true,
+		autoform: {
+			omit: true
+		}
+	},
+	doMaxMinAvg: {
+		type: Boolean,
+		defaultValue: false,
+		label: 'Do Calculations'
+	},
+	maxMinAvgLimit: {
+		type: Number,
+		optional: true,
+		defaultValue: 50
 	},
 	owner: {
 		type: String,
@@ -54,29 +96,93 @@ Schemas.Feed = new SimpleSchema({
 			}
 		}
 	},
-	public: {
-		type: Boolean,
-		defaultValue: false,
-		custom: function(){
-			if(this.field("subscription").value.indexOf("#") > 0 && this.value == true) {
-				return "noPublicWildcard";
-			}
-			if(this.field("subscription").value.indexOf("+") > 0 && this.value == true) {
-				return "noPublicWildcard";
-			}
-			f = Feeds.findOne({title: this.field("title").value});
-			console.log("PUBCK", this.field("title"), f);
-			if(f && this.value == true) {
-				return "uniqueFeed";
+	appId: {
+		type: String,
+		index: true,
+		autoform: {
+			omit: true
+		},
+	},
+	createdAt: {
+		type: Date,
+		autoform: {
+			omit: true
+		},
+		autoValue: function() {
+			if (this.isInsert) {
+				return new Date;
+			} else if (this.isUpsert) {
+				return {$setOnInsert: new Date};
+			} else {
+				this.unset();
 			}
 		}
 	}
+	// public: {
+	// 	type: Boolean,
+	// 	defaultValue: false,
+	// 	custom: function(){
+	// 		if(this.field("subscription").value.indexOf("#") > 0 && this.value == true) {
+	// 			return "noPublicWildcard";
+	// 		}
+	// 		if(this.field("subscription").value.indexOf("+") > 0 && this.value == true) {
+	// 			return "noPublicWildcard";
+	// 		}
+	// 		f = Feeds.findOne({title: this.field("title").value});
+	// 		// console.log("PUBCK", this.field("title"), f);
+	// 		if(f && this.value == true) {
+	// 			return "uniqueFeed";
+	// 		}
+	// 	}
+	// }
 	
 	
 	
 });
 
 
+Feeds.before.insert(function(userId, doc) {
+	if(Meteor.isClient) {
+		console.log("BEFOREFEEDINHOOK ", userId, doc, Session.get("currentApp"));
+		doc.appId = Session.get("currentApp")._id;
+	}
+});
+
+
+
+Feeds.after.insert(function(userId, doc) {
+				console.log("Feed insert after", userId, doc, Meteor.isClient)
+	if(Meteor.isClient){
+		if(doc.pubsub != "Publish") {
+			console.log("Feed insert subscription", userId, doc)
+			topic = mqttregex(doc.subscription).topic;
+			topic = topic.substring(0, topic.length - 1);
+			mqttClient.subscribe(topic);
+		}	
+	}
+});
+
+Feeds.after.update(function(userId, doc) {
+	if(Meteor.isClient){
+		console.log("Feed update", userId, doc)
+		if(doc.pubsub != "Publish") {
+			topic = mqttregex(doc.subscription).topic;
+			topic = topic.substring(0, topic.length - 1);
+			mqttClient.subscribe(topic);
+		}	
+	}
+});
+
+Feeds.after.remove(function(userId, doc) {
+	if(Meteor.isClient){
+		console.log("Feed remove", userId, doc)
+		if(doc.pubsub != "Publish") {
+			topic = mqttregex(doc.subscription).topic;
+			topic = topic.substring(0, topic.length - 1);
+			mqttClient.unsubscribe(topic);
+		}	
+	}
+});
 
 Feeds.attachSchema(Schemas.Feed);
 

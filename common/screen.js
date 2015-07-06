@@ -8,11 +8,31 @@ if(boilerplate) {
 } else {
 	defaultScreenContent = "<!-- Screen content here -->";
 }
-	
 
+if(boilerplate) {
+	defaultJsContent = boilerplate.js;
+	console.log("DEFCON: ",boilerplate, defaultJsContent);
+} else {
+	defaultJsContent = "//Javascript content here";
+}
 
+// Schemas = {};
 
-Schemas = {};
+SimpleSchema.messages({
+	"regEx widgetName": "Widget names must contain a - character"
+})
+
+Schemas.WidgetParameter = new SimpleSchema({
+	title: {
+		type: String,
+	},
+	mandatory: {
+		type: Boolean
+	},
+	description: {
+		type: String
+	}
+})
 
 Schemas.Screen = new SimpleSchema({
 	title: {
@@ -20,11 +40,11 @@ Schemas.Screen = new SimpleSchema({
 		label: "Title",
 		max: 200
 	},
-	tags: {
-		type: [String],
-		index: true,
-		optional: true
-	},
+	// tags: {
+	// 	type: [String],
+	// 	index: true,
+	// 	optional: true
+	// },
 	theme: {
 		type: String,
 		optional: true,
@@ -54,6 +74,20 @@ Schemas.Screen = new SimpleSchema({
 		},
 		defaultValue: defaultScreenContent
 	},
+	js: {
+		optional: true,
+		label: "Javascript",
+		type: String,
+		autoform: {
+			rows: 10,
+	        afFieldInput: {
+	          type: 'acejs',
+	          class: 'editor' // optional
+	          // summernote options goes here
+	        }
+		},
+		defaultValue: defaultJsContent
+	},
 	owner: {
 		type: String,
 		index: true,
@@ -70,45 +104,106 @@ Schemas.Screen = new SimpleSchema({
 			}
 		}
 	},
-	// updatesHistory: {
-// 		type: [Object],
-// 		optional: true,
-// 		autoValue: function() {
-// 			var html = this.field("html");
-// 			if (html.isSet) {
-// 				if (this.isInsert) {
-// 					return [{
-// 						date: new Date,
-// 						html: html.value
-// 					}];
-// 				} else {
-// 					return {
-// 						$push: {
-// 							date: new Date,
-// 							html: html.value
-// 						}
-// 					};
-// 				}
-// 			} else {
-// 				this.unset();
-// 			}
-// 		}
-// 	},
-// 	'updatesHistory.$.date': {
-// 		type: Date,
-// 		optional: true
-// 	},
-// 	'updatesHistory.$.html': {
-// 		type: String,
-// 		optional: true
-// 	},
-	public: {
+	appId: {
+		type: String,
+		index: true,
+		autoform: {
+			omit: true
+		},
+	},
+	isWidget: {
 		type: Boolean,
+		index: true,
 		defaultValue: false
-	}
+	},
+	widgetName: {
+		type: String,
+		optional: true,
+		regEx: /^[a-zA-Z_]+-[a-zA-Z_]+$/,
+	},
+	widgetInstructions: {
+		type: String,
+		optional: true,
+		autoform: {
+			rows: 10
+		}
+	},
+	widgetParameters: {
+		type: [Schemas.WidgetParameter],
+		optional: true,
+		autoform: {
+			minCount: 0,
+			initialCount: 0
+		}
+	},
+    updatedAt: {
+      type: Date,
+      autoValue: function() {
+        if (this.isUpdate) {
+          return new Date();
+        }
+      },
+      denyInsert: true,
+      optional: true
+    },
+	// public: {
+	// 	type: Boolean,
+	// 	defaultValue: false
+	// }
 //
 	
 });
+
+Screens.before.insert(function(userId, doc) {
+	if(Meteor.isClient) {
+		// console.log("BEFOREHOOK ", userId, doc, Session.get("currentApp"));
+		doc.appId = Session.get("currentApp")._id;
+	}
+});
+
+
+Screens.after.update(function(userId, doc) {
+	if(Meteor.isClient){
+		//console.log("ASUU", this,  doc)
+		myscreen = doc;
+		name = myscreen.title;
+		// console.log("SCR: ", name, this)
+		// template = this.template;
+		delete Template[name]; //Remove the existing template instance.
+		//console.log("Updated Screen", template.data.doc.html);
+		compret = compileTemplate(name, doc.html, doc.js);
+		Alerts.insert(compret);
+		//Track on google analytics, if not admin
+		user = Meteor.users.findOne({_id: userId});
+		if(user.roles == undefined) {
+			console.log("GAUS: ", doc.title)
+			analytics.track("Update Template", {
+			  Title: doc.title,
+			  Username: user.username,
+			});
+		}
+	}
+	if(Meteor.isServer) {
+		SysLogs.upsert({event: "ScreenUpdate", id: doc._id},
+		{$set: 
+				{
+					event: "ScreenUpdate",
+					title: doc.title,
+					date: new Date(),
+					id: doc._id,
+					appId: doc.appId,
+					owner: doc._owner,
+				},
+			$inc: 
+				{
+					count: 1
+				}
+			})
+	}
+});
+
+
+
 
 Screens.attachSchema(Schemas.Screen);
 

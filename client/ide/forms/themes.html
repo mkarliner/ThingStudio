@@ -1,0 +1,24 @@
+<template name="updateThemeForm">
+	<div class="top-row">
+		<div class="col s3 tabs-container">
+			<ul class="tabs">
+				<li class="tab"><a href="#css">App-level CSS</a></li>
+				<li class="tab"><a href="#properties">Properties</a></li>
+			</ul>
+		</div>
+		<div class="clearfix"></div>
+	</div>
+	<div class="single-page-container">
+		{{#autoForm collection="Themes" id="updateThemeForm" type="update" doc=this }}
+			<div id="css">
+				{{> Alerts}}
+				{{>afQuickField name="css" class="centerField"}}
+				<button type="submit" class="btn btn-update right">Update</button>
+			</div>
+			<div id="properties">
+				{{> afQuickField name="title" class="centerField"}}
+				<button type="submit" class="btn btn-update right">Update</button>
+			</div>
+		{{/autoForm}}
+	</div>
+</template>

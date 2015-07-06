@@ -1,12 +1,16 @@
 HelpPages = new Mongo.Collection("help_pages");
 
-Schemas = {};
+// Schemas = {};
 
 Schemas.HelpPage = new SimpleSchema({
 	title: {
 		type: String,
 		label: "Title",
 		max: 200
+	},
+	excerpt: {
+		type: String,
+		label: "Summary"
 	},
 	urlstring: {
 		type: String,

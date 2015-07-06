@@ -1,0 +1,108 @@
+<template name="WidgetsHeader">
+	<h1 class="left">Widgets</h1>
+	<!-- <a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>Animate Widgets</a> -->
+	<a class="header-action-1 clearfix" href="#">Create a new widget</a>
+</template>
+
+<template name="WidgetList">
+	<div class="col s12 m4">
+		<div class="card small">
+			<div class="card-content">
+				<span class="card-title activator">{{title}} <i class="mdi-navigation-more-vert right"></i></span>
+					<div class="svg-container widget-container">
+						{{> Template.dynamic template=screenInstance data=dummyData}}
+					</div>
+			</div>
+			<div class="card-reveal">
+				<span class="card-title">{{title}}<i class="mdi-navigation-close right"></i></span>
+				<!-- <p>{{widgetInstructions}}</p> -->
+				<p class="fwHeavy usage">Example Usage:</p>
+				<span class="usage-inner">
+					<span class="element">&lt;{{tagName}}</span><span class="parameter">{{#each parameters}} {{title}}=<span class="white-text">&quot;{{dummyValue}}&quot;</span>{{/each}}</span><span class="element">&gt;&lt;/{{tagName}}&gt;</span>
+				</span>
+				{{#if parameters}}
+					<table class="widget-item bordered striped">
+						<thead>
+							<tr>
+								<td>Parameter</td><td>Type</td><td>Required</td><td>Description</td>
+							</tr>
+						</thead>
+						<tbody>
+							{{#each parameters}}
+								<tr>
+									<td>{{title}}</td><td>{{paramType}}</td><td>{{mandatory}}</td><td>{{description}}</td>
+								</tr>
+							{{/each}}
+						</tbody>
+					</table>
+				{{/if}}
+			</div>
+			<div class="card-action">
+				<div class="right">
+						<a class="table-action table-edit-item" href="{{pathFor 'View Widget'}}"><i class="mdi-action-visibility"></i></a>
+					{{#if owner}}
+						<a class="table-action table-edit-item" href="/templates/{{baseScreen}}/edit"><i class="mdi-editor-mode-edit"></i></a>
+						{{#afModal classes="table-action table-cancel-item" collection="Widgets" operation="remove" doc=_id title="<i class='mdi-alert-error'></i><span class='modal-header'>Deleting Widget</span>" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="icon-ts-trash"></i>{{/afModal}}
+					{{/if}}
+				</div>
+			</div>
+		</div>
+	</div>
+</template>
+
+<template name="WidgetsBody">
+	{{> autoformModals}}
+	{{#contentFor region="appHeader" template="WidgetsHeader"}}{{/contentFor}}
+	{{> WidgetsNewItem}}
+	<div class="top-row">
+		<div class="col s4 tabs-container">
+			<ul class="tabs">
+				<li class="tab"><a href="#global-widgets">System Widgets</a></li>
+				<li class="tab"><a href="#my-widgets" class="tab-my-widgets">My Widgets</a></li>				
+			</ul>
+		</div>
+		<div class="clearfix"></div>
+	</div>
+	<div class="single-page-container widgets">
+		<div id="global-widgets">
+		{{#each systemWidgetList}}
+			{{> WidgetList }}
+		{{/each}}
+		</div>
+		<div id="my-widgets">
+			{{#each myWidgetList}}
+				{{> WidgetList }}
+			{{/each}}
+		</div>
+	</div>
+</template>
+
+<template name="WidgetsNewItem">
+	<div class="add-new-item new-widget">
+		{{#autoForm collection="Widgets" id="insertItemForm" type="insert"}}
+			<table>
+			{{> WidgetsTableWidths}}
+				<tbody>
+					<tr>
+						<td>{{> afQuickField name='title' placeholder="Widget Title"}} </td>
+						<td>{{> afQuickField name='tagName' placeholder="Element Name" }} </td>
+						<td class="dropdown-td">{{> afQuickField name='baseScreen' placeholder="Base Template" }} </td>
+						<td>
+							<button type="submit" class="table-action table-save-new"><i class="icon-ts-checkmark"></i></button><button class="table-action table-cancel-new"><i class="icon-ts-cancel"></i></button>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			{{> NewItemDivider}}
+		{{/autoForm}}
+	</div>
+</template>
+
+<template name="WidgetsTableWidths">
+	<colgroup>
+		<col style="width: 41%;">
+		<col style="width: 25%;">
+		<col style="width: 230px;">
+		<col style="width: 109px;">
+	</colgroup>
+</template>

@@ -1,0 +1,12 @@
+<template name="EditThemeHeader">
+	<h1 class="left">Edit Theme: {{title}}</h1>
+	<!-- <a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>Not Active</a> -->
+	<a class="header-action-1 clearfix" href="/themes">Back to themes</a>
+</template>
+
+<template name="EditThemeBody">
+	{{{accessStatus}}}
+	{{> updateThemeForm}}
+	<!-- <div class="screen-errors">HTML Errors: {{compilationErrors}}</div>
+	<div class="screen-errors">Runtime Errors: {{runtimeErrors}}</div> -->
+</template>

@@ -1,0 +1,131 @@
+<template name="insertScreenForm">
+	{{> quickForm collection="Screens" id="insertScreenForm" type="insert" buttonClasses="glyphicon glyphicon-ok btn btn-default" buttonContent="Save" omitFields="html, js"}}
+</template>
+
+<template name="OLdupdateScreenForm">
+	{{> quickForm collection="Screens" id="updateScreenForm" type="update" doc=this class="qkForm" buttonClasses="glyphicon glyphicon-ok btn btn-default btn-tick" buttonContent="Update" }}
+</template>
+
+<template name="updateScreenForm">
+	<div class="top-row">
+		<div class="col s6 tabs-container">
+			<ul class="tabs">
+				<li class="tab"><a href="#html">HTML</a></li>
+				<li class="tab" id="jstab"><a href="#js">JavaScript</a></li>
+				{{#unless safeEdit}}
+					<li class="tab"><a href="#preview">Preview</a></li>
+				{{/unless}}
+				<li class="tab"><a href="#log">Log</a></li>
+				<li class="tab"><a href="#properties">Properties</a></li>
+				<!-- <li class="tab"><a href="#css">CSS</a></li> -->
+			</ul>
+		</div>
+		<div class="clearfix"></div>
+	</div>
+	<div class="single-page-container">
+		{{#autoForm collection="Screens" id="updateScreenForm" type="update" doc=this }}
+			<div id="html">
+				{{> Alerts}}
+				{{>afQuickField name="html" class="centerField"}}
+				<button type="submit" class="btn btn-update right">Update</button>
+			</div>
+			<div id="js">
+				{{> Alerts}}
+				{{>afQuickField name="js" class="centerField"}}
+				<button type="submit" class="btn btn-update right">Update</button>
+			</div>
+			{{#unless safeEdit}}
+				<div id="preview">
+					{{> Template.dynamic template=currentScreen}}
+				</div>
+			{{/unless}}
+		{{/autoForm}}
+			<div id="log">
+				<div class="alert-log">
+					<div class="form-group detail">				
+						<p class="usage"><span class="fwHeavy">Errors & Alerts</span> &ndash; Showing {{alertCount}} alerts. <a href="" class="clear-alerts">Clear Alerts</a></p>
+					</div>
+					{{#each alerts}}
+						<div class="alert {{status}} z-depth-1" role="alert">
+							<div class="alert-type {{status}}">{{alertType}}</div>{{message}}
+							<a type="button" class="dismiss close right" data-dismiss="alert">dismiss</a>
+						</div>
+					{{/each}}
+				</div>
+			</div>
+			<div id="properties">
+				{{#if isWidget}}
+					<div class="col s12 m6">
+						<h2>Template Properties</h2>
+						{{#autoForm collection="Screens" id="updateScreenForm" type="update" doc=this buttonClasses="btn btn-update"}}
+							{{> afQuickField name="title" class="centerField"}}
+							{{> afQuickField name="isWidget" class="centerField"}}
+							<button type="submit" class="btn btn-update">Save Template</button>
+						{{/autoForm}}
+					</div>
+					<div class="col s12 m6">
+						<h2>Widget Properties</h2>
+						{{#with widgetDoc}}
+							{{#autoForm collection="Widgets" class="qkForm"  id="updateWidgetForm" type="update" doc=this omitFields="" }}
+								<!-- {{> afQuickField name="widgetName" class="centerField"}}
+								{{> afQuickField name="widgetInstructions" class="centerField"}}
+								{{> afQuickField name="widgetParameters" class="centerField"}} -->
+								<p><span class="fwHeavy">Widget Title</span> &ndash; Give your widget a title</p>
+								{{> afQuickField name='title' }}
+								<p><span class="fwHeavy">Base Template</span> &ndash; Select the template from which this widget will inherit content</p>
+								{{> afQuickField name='baseScreen'}}
+								<p><span class="fwHeavy">Instructions</span> &ndash; How to use this widget</p>
+								{{> afQuickField name='instructions'}}
+								<p><span class="fwHeavy">HTML Element Name</span> &ndash; Your custom HTML element's name must include a hyphen</p>
+								{{> afQuickField name='tagName'}}
+								<p><span class="fwHeavy">Parameters</span> &ndash; Click the plus to add widget parameters</p>
+								{{> afArrayField name='parameters' template="widgets"}}
+								<button type="submit" class="btn btn-update">Save Widget</button>
+							{{/autoForm}}
+						{{/with}}
+					</div>
+				{{else}}
+					{{#autoForm collection="Screens" id="updateScreenForm" type="update" doc=this }}
+						{{> afQuickField name="title" class="centerField"}}
+						{{> afQuickField name="isWidget" class="centerField"}}
+						<button type="submit" class="btn">Save</button>
+					{{/autoForm}}
+				{{/if}}
+			</div>
+			<!-- <div id="css">
+				<p>Hi from CSS!</p>
+			</div> -->
+	</div>
+</template>
+
+<template name="afArrayField_widgets">
+	<div class="panel panel-default">
+		<div class="panel-heading">{{afFieldLabelText name=this.atts.name}}</div>
+		{{#if afFieldIsInvalid name=this.atts.name}}
+			<div class="panel-body has-error">
+				<span class="help-block">{{{afFieldMessage name=this.atts.name}}}</span>
+			</div>
+		{{/if}}
+		<ul class="list-group">
+			{{#afEachArrayItem name=this.atts.name minCount=this.atts.minCount maxCount=this.atts.maxCount}}
+				<li class="list-group-item autoform-array-item">
+					<div>
+						<div class="autoform-remove-item-wrap">
+							{{#if afArrayFieldHasMoreThanMinimum name=../atts.name minCount=../atts.minCount maxCount=../atts.maxCount}}
+								<button type="button" class="btn btn-primary autoform-remove-item btn-floating btn-plus"><i class="mdi-content-remove"></i></button>
+							{{/if}}
+						</div>
+						<div class="autoform-array-item-body">
+							{{> afQuickField name=this.name}}
+						</div>
+					</div>
+				</li>
+			{{/afEachArrayItem}}
+			{{#if afArrayFieldHasLessThanMaximum name=this.atts.name minCount=this.atts.minCount maxCount=this.atts.maxCount}}
+				<li class="list-group-item">
+					<button type="button" class="btn btn-primary autoform-add-item btn-floating btn-plus" data-autoform-field="{{this.atts.name}}" data-autoform-minCount="{{this.atts.minCount}}" data-autoform-maxCount="{{this.atts.maxCount}}"><i class="mdi-content-add"></i></button>
+				</li>
+			{{/if}}
+		</ul>
+	</div>
+</template>

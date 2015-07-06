@@ -1,0 +1,45 @@
+<template name="DocsHeader">
+	<h1 class="left">{{attributes.title}}</h1>
+	<div class="right">
+		<!-- <a class="btn header-action-2" href="{{prevpage}}">Previous</a>
+		<a class="btn header-action-2" href="{{nextpage}}">Next</a> -->
+	</div>
+	<p class="clearfix">Summary: {{summary}}</p>
+</template>
+
+<template name="DocsBody">	
+	<div class="single-page-container">
+		<div id="helpbody">
+			{{#markdown}}{{> Template.dynamic template=currentDoc}}{{/markdown}}
+		</div>
+		<p class="text-muted"><em>Last updated: {{publishedDate updatedAt}}</em></p>
+		<div id="helpfooter">
+			<p>&copy; ThingStudio 2015</p>
+		</div>
+	</div>
+</template>
+
+<template name="OldDocsHeader">
+	<h1 class="left">{{title}}</h1>
+	<div class="right">
+		<a class="btn header-action-2" href="{{prevpage}}">Previous</a>
+		<a class="btn header-action-2" href="{{nextpage}}">Next</a>
+	</div>
+	{{log}}
+	<p class="clearfix">Summary: {{excerpt}}</p>
+</template>
+
+<template name="OldDocsBody">	
+	<div class="single-page-container">
+		<div id="helpbody">
+			{{#markdown}}{{body}}{{/markdown}}
+		</div>
+		<p class="text-muted"><em>Last updated: {{publishedDate updatedAt}}</em></p>
+		<div id="helpfooter">
+			<p>&copy; ThingStudio 2015</p>
+		</div>
+	</div>
+</template>
+
+
+
