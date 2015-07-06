@@ -4,7 +4,7 @@ Widgets = new Mongo.Collection("widgets");
 
 Schemas.WidgetParameter = new SimpleSchema({
 	title: {
-		type: String,
+		type: String
 	},
 	paramType: {
 		label: "Type",
@@ -19,7 +19,14 @@ Schemas.WidgetParameter = new SimpleSchema({
 		}
 	},
 	required: {
-		type: Boolean
+		type: Boolean,
+		defaultValue: false,
+		autoform: {
+			afFieldInput: {
+				type: 'boolean-checkbox-M',
+				class: 'filled-in'
+			}
+		}
 	},
 	description: {
 		type: String
