@@ -11,6 +11,12 @@ Template.EditAppBody.helpers({
 		// console.log(this)
 		return "http://" + Meteor.settings.public.domain + "/view/app/" + this._id;
 	}
+});
+
+Template.EditAppHeader.helpers({
+	domain: function(){
+		return Meteor.settings.public.domain;
+	}
 })
 
 Meteor.startup(function(){
