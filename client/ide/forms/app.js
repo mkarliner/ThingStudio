@@ -4,6 +4,12 @@ Template.materializeRadio.helpers({
   }
 });
 
+Template.updateAppsForm.events({
+	'click .send-email': function() {
+		Meteor.call("sendShareLink", 'paul@loudnoises.us', 'noreply@thingstud.io', this._id)
+	}
+});
+
 Template.updateAppsForm.helpers({
   log: function() {
     console.log("updateAppsdata")

@@ -1024,6 +1024,10 @@ h4.modal-title {
 	color: $baseText;
 }
 
+.single-page-container .autoform-array-item .control-label {
+	padding-top: 10px;
+}
+
 .single-page-container .form-group, .single-page-container .info-group {
 	margin-bottom: 0.7rem;
 	border-bottom: 1px solid $bodyDividerColor;
@@ -1142,6 +1146,10 @@ form[id^="update"] .select-wrapper span.caret {
 [type="checkbox"]:checked + label:before {
 	border-right: 2px solid $updateButton;
 	border-bottom: 2px solid $updateButton;
+}
+
+.autoform-array-item [type="checkbox"] + label {
+	height: 15px;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
