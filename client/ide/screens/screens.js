@@ -85,13 +85,16 @@ InstantiateWidgets = function(){
 		}	
 		console.log("Compiling ", scr.title);
 		compileTemplate(scr.title, scr.html, scr.js);
-		try {
-			console.log("Registering widget")
-			Template[scr.title].registerElement(wgt.tagName);
+		if(wgt.widgetType == "Web Component") {
+			try {
+				console.log("Registering widget")
+				Template[scr.title].registerElement(wgt.tagName);
+			}
+			catch(err) {
+				console.log("Problem registering element: "+ wgt.tagName);
+			}
 		}
-		catch(err) {
-			console.log("Problem registering element: "+ wgt.tagName);
-		}
+
 			
 	}
 }

@@ -19,7 +19,11 @@
 			<div class="form-group detail">				
 				<p class="usage"><span class="fwHeavy">Using this widget</span> &ndash; Copy the snippet below and paste in to your template{{#if parameters}}, changing the parameter values {{/if}}</p>
 				<span class="usage-inner">
+					{{#if webComponent}}
 					<span class="element">&lt;{{tagName}}</span><span class="parameter">{{#each parameters}} {{title}}=<span class="white-text">&quot;{{dummyValue}}&quot;</span>{{/each}}</span><span class="element">&gt;&lt;/{{tagName}}&gt;</span>
+					{{else}}
+					<span class="element">{{| &gt;{{title}}</span><span class="parameter">{{#each parameters}} {{title}}=<span class="white-text">&quot;{{dummyValue}}&quot;</span>{{/each}}</span><span class="element">}}</span>
+					{{/if}}
 				</span>
 			</div>
 			{{#if instructions}}

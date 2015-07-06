@@ -80,9 +80,22 @@ Schemas.Widget = new SimpleSchema({
 			}
 		}
 	},
+	widgetType: {
+		type: String,
+		allowedValues: ["Web Component", "Library Template"],
+		defaultValue: "Web Component",
+		autoform: {
+			type: "selectize",
+			options: function(){
+				options = [{label: "Web Component", value: "Web Component"}, {label: "Library Template", value: "Library Template"}];
+				return (options);
+			}
+		}
+	},
 	tagName: {
 		type: String,
 		regEx: /^[a-zA-Z_]+-[a-zA-Z_]+$/,
+		optional: true
 	},
 	instructions: {
 		type: String,
