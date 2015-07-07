@@ -51,4 +51,4 @@ Finally, for ultimate control there is the templateForName helper, which looks l
 </pre>
 This gives you access to all the properties of a screen, including the html and javascript it contains.
 This is mainly useful for creating demo screens that show both a working interface and the code that
-creates it.
+creates it. 

@@ -391,12 +391,20 @@ Meteor.startup(function() {
 		"data-in-and-out.md"
 	];
 
-	Docs.remove({});
+	num = Docs.remove({lastUpdated: null});
+	//DocChanges.remove();
+	console.log("Removed docs ", num);
 	Meteor.publish("docs", function(){
 		console.log("Subscribing Docs")
 		return Docs.find();
 	});
+	
+	Meteor.publish("doc_changes", function(){
+		console.log("Subscribing DocChanges")
+		return DocChanges.find();
+	});
 	FM = Meteor.npmRequire("front-matter");
+	JsDiff = Meteor.npmRequire("diff");
 	// console.log("AFTERFM")
 	// var fs = Npm.require('fs');
 	// console.log("BOOTSTRAP ", process.cwd())
@@ -406,10 +414,40 @@ Meteor.startup(function() {
 	// var files = fs.readdirSync(privateDir);
 	console.log("docs", DocFiles)
 	for(var f=0; f<DocFiles.length; f++){
-		console.log("Parsing: ", DocFiles[f]);
+		// console.log("Parsing: ", DocFiles[f]);
 		a = Assets.getText("docs/"+DocFiles[f]);
+		doc = FM(a);
+		doc.filename = DocFiles[f];
+		doc.lastUpdated = new Date();
+		doc.newChanges =  true;
 		//console.log("MYTXT ", FM(a));
-		Docs.insert(FM(a));
+		olddoc = Docs.findOne({filename: doc.filename});
+		//check if the olddoc has changed.
+		// console.log("Check docs ", doc.attributes, olddoc ? olddoc.attributes :"nothing" );
+		diffs = JsDiff.diffLines(olddoc.body, doc.body);
+		for(var d=0; d<diffs.length; d++){
+			diff = diffs[d];
+			if(diff.added || diff.removed) {
+				console.log("DIFFS: ", doc.filename, diff);
+				DocChanges.insert({
+					title: doc.attributes.title,
+					file: doc.filename,
+					diff: diff,
+					date: new Date()
+				})
+			} else {
+				console.log("NODIFF", doc.filename)
+			}
+		}
+
+		
+		if(olddoc && olddoc.body == doc.body) {
+			//Nothing has changed.
+			Docs.update({filename: DocFiles[f]}, {$set: {newChanges: false}});
+		} else {		
+			Docs.upsert({filename: DocFiles[f]}, {$set: doc});
+		}
+		
 		//console.log("DCOS: ",Docs.findOne());
 	}
 

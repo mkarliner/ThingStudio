@@ -86,7 +86,9 @@ IDEController = RouteController.extend({
 					})
 				}
 			}),
-			Meteor.subscribe('admins')
+			Meteor.subscribe('admins'),
+			Meteor.subscribe("docs"),
+			Meteor.subscribe("doc_changes")
 		]
 	}
 });
