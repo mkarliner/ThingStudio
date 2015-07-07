@@ -39,6 +39,8 @@ $linkedInColor: #0077B5;
 $updateButton: #19A1DE;
 
 //Fonts
+
+
 $fwLight: 'AvenirLTStd-Light';
 .fwLight {
 	font-family: $fwLight;
@@ -772,7 +774,7 @@ thead {
 }
 
 th {
-	font-family: $fwBlack;
+	font-family: $fwHeavy;
 	font-size: 13px;
 	letter-spacing: 0.3px;
 	background: $white;
@@ -1064,7 +1066,7 @@ h4.modal-title {
 }
 
 // Handling extra padding for Selectize dropdowns on detail pages
-#updateConnectionForm .form-group:nth-child(4), #updateFeedForm .form-group:nth-child(3), #updateAppForm .form-group:nth-child(5), #updateAppForm .form-group:nth-child(6), #updateAppForm .form-group:nth-child(7) {
+#updateConnectionForm .form-group:nth-child(4), #updateFeedForm .form-group:nth-child(3) {
 	padding-top: 0;
 	margin-top: -5px;
 	padding-bottom: 1em;
@@ -1132,6 +1134,10 @@ form[id^="update"] .select-wrapper span.caret {
 
 .add-new-item .select-wrapper.form-control .mdi-navigation-arrow-drop-down {
 	line-height: 46px;
+}
+
+[type="checkbox"] + label {
+	color: $baseText;
 }
 
 [type="checkbox"].filled-in:not(:checked) + label:after {
@@ -1727,6 +1733,9 @@ footer {
 }
 .icon-ts-trash:before {
   content: "g";
+}
+.icon-ts-profile:before {
+  content: "h";
 }
 
 @font-face {
