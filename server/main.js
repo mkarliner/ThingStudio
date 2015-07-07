@@ -424,19 +424,23 @@ Meteor.startup(function() {
 		olddoc = Docs.findOne({filename: doc.filename});
 		//check if the olddoc has changed.
 		// console.log("Check docs ", doc.attributes, olddoc ? olddoc.attributes :"nothing" );
-		diffs = JsDiff.diffLines(olddoc.body, doc.body);
-		for(var d=0; d<diffs.length; d++){
-			diff = diffs[d];
-			if(diff.added || diff.removed) {
-				console.log("DIFFS: ", doc.filename, diff);
-				DocChanges.insert({
-					title: doc.attributes.title,
-					file: doc.filename,
-					diff: diff,
-					date: new Date()
-				})
-			} else {
-				console.log("NODIFF", doc.filename)
+
+		if(olddoc) {
+			//Workout what has changed	
+			diffs = JsDiff.diffLines(olddoc.body, doc.body);
+			for(var d=0; d<diffs.length; d++){
+				diff = diffs[d];
+				if(diff.added || diff.removed) {
+					console.log("DIFFS: ", doc.filename, diff);
+					DocChanges.insert({
+						title: doc.attributes.title,
+						file: doc.filename,
+						diff: diff,
+						date: new Date()
+					})
+				} else {
+					console.log("NODIFF", doc.filename)
+				}
 			}
 		}
 
@@ -444,7 +448,7 @@ Meteor.startup(function() {
 		if(olddoc && olddoc.body == doc.body) {
 			//Nothing has changed.
 			Docs.update({filename: DocFiles[f]}, {$set: {newChanges: false}});
-		} else {		
+		} else {	
 			Docs.upsert({filename: DocFiles[f]}, {$set: doc});
 		}
 		
