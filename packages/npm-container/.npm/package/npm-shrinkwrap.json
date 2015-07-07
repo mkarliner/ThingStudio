@@ -1,5 +1,8 @@
 {
   "dependencies": {
+    "diff": {
+      "version": "1.4.0"
+    },
     "front-matter": {
       "version": "1.0.0",
       "dependencies": {
