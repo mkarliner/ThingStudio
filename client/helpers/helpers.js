@@ -6,7 +6,7 @@ Template.registerHelper(
 			//encodedImageUrl = encodeURI(imageUrl);
 			return Gravatar.imageUrl(Meteor.user().emails[0].address, {
 				size: 84,
-				default: "http://www.thingstud.io/images/ts-profile.png"
+				default: "http://www.thingstud.io/images/ts-profile-new.png"
 			});
 		}
 	}
