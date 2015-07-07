@@ -28,7 +28,7 @@ Router.route("/users", function() {
 })
 
 Router.route("/welcome", function() {
-	this.layout("GeneralLayout");
+	this.layout("MasterLayout");
 	this.render("Welcome", {
 		data: function() {
 			Meteor.users.update({

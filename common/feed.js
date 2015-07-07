@@ -56,7 +56,7 @@ Schemas.Feed = new SimpleSchema({
 	doJournal: {
 		type: Boolean,
 		defaultValue: false,
-		label: "Keep Journal",
+		label: "Keep Journal"
 	},
 	journal_limit: {
 		type: Number,

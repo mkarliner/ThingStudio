@@ -2,7 +2,12 @@
 Template.registerHelper( 
 	"gravatar", function(){
 		if(Meteor.user()) {
-			return Gravatar.imageUrl(Meteor.user().emails[0].address);
+			//imageUrl = 'http://192.168.1.2:3000/images/jkshdfkjhsjkdhf.png';
+			//encodedImageUrl = encodeURI(imageUrl);
+			return Gravatar.imageUrl(Meteor.user().emails[0].address, {
+				size: 84,
+				default: "http://www.thingstud.io/images/ts-profile.png"
+			});
 		}
 	}
 );

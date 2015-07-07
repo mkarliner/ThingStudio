@@ -39,6 +39,8 @@ $linkedInColor: #0077B5;
 $updateButton: #19A1DE;
 
 //Fonts
+
+
 $fwLight: 'AvenirLTStd-Light';
 .fwLight {
 	font-family: $fwLight;
@@ -772,7 +774,7 @@ thead {
 }
 
 th {
-	font-family: $fwBlack;
+	font-family: $fwHeavy;
 	font-size: 13px;
 	letter-spacing: 0.3px;
 	background: $white;
@@ -1024,6 +1026,10 @@ h4.modal-title {
 	color: $baseText;
 }
 
+.single-page-container .autoform-array-item .control-label {
+	padding-top: 10px;
+}
+
 .single-page-container .form-group, .single-page-container .info-group {
 	margin-bottom: 0.7rem;
 	border-bottom: 1px solid $bodyDividerColor;
@@ -1060,7 +1066,7 @@ h4.modal-title {
 }
 
 // Handling extra padding for Selectize dropdowns on detail pages
-#updateConnectionForm .form-group:nth-child(4), #updateFeedForm .form-group:nth-child(3), #updateAppForm .form-group:nth-child(5), #updateAppForm .form-group:nth-child(6), #updateAppForm .form-group:nth-child(7) {
+#updateConnectionForm .form-group:nth-child(4), #updateFeedForm .form-group:nth-child(3) {
 	padding-top: 0;
 	margin-top: -5px;
 	padding-bottom: 1em;
@@ -1130,6 +1136,10 @@ form[id^="update"] .select-wrapper span.caret {
 	line-height: 46px;
 }
 
+[type="checkbox"] + label {
+	color: $baseText;
+}
+
 [type="checkbox"].filled-in:not(:checked) + label:after {
 	border: 2px solid $baseText;
 }
@@ -1142,6 +1152,10 @@ form[id^="update"] .select-wrapper span.caret {
 [type="checkbox"]:checked + label:before {
 	border-right: 2px solid $updateButton;
 	border-bottom: 2px solid $updateButton;
+}
+
+.autoform-array-item [type="checkbox"] + label {
+	height: 15px;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -1719,6 +1733,9 @@ footer {
 }
 .icon-ts-trash:before {
   content: "g";
+}
+.icon-ts-profile:before {
+  content: "h";
 }
 
 @font-face {
