@@ -1,8 +1,10 @@
+$baseText: #858C9D;
 $darkBase: #353C51;
 $alertOrange: #F5702E;
 $activeGreen: #7ED321;
 $inactiveRed: #B9513C;
 $darkBaseText: #B2B7C4;
+$headerColor: #676975;
 
 body.viewer-body {
 	background-color: $darkBase;
@@ -50,6 +52,31 @@ body.viewer-body {
 		&.disconnected {
 			background-color: $inactiveRed;
 		}
+	}
+	& .app-nav {
+		font-size: 2.7em;
+		margin-left: 10px;
+		margin-top: 21px;
+		line-height: 0;
+		color: $headerColor;
+		position: absolute;
+		&:focus {
+			outline: none;
+		}
+		&.hide-app-nav {
+			display: none !important;
+		}
+	}
+	& a.made-with {
+		color: $headerColor;
+
+	}
+	& #sidenav-overlay {
+		background-color: rgba(255, 255, 255, 0.5);
+	}
+	& .side-nav a {
+		height: 52px;
+		line-height: 52px;
 	}
 }
 
