@@ -392,7 +392,6 @@ Meteor.startup(function() {
 	];
 	
 	WidgetFiles = [
-		"TestLoadWidget.json",
 		"JustDial.json",
 		"Sparkline.json",
 		"StateButton.json"
