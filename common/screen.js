@@ -95,16 +95,13 @@ Schemas.Screen = new SimpleSchema({
 			omit: true
 		},
 		autoValue: function(){
-			if(Meteor.isClient) {
-				if(this.isInsert) {
-					return Meteor.userId();
-				} else if(this.isUpsert) {
-					return {$setOnInsert: Meteor.userId};
-				} else {
-					this.unset();
-				}
+			if(this.isInsert) {
+				return Meteor.userId();
+			} else if(this.isUpsert) {
+				return {$setOnInsert: Meteor.userId};
+			} else {
+			this.unset();
 			}
-			
 		}
 	},
 	appId: {
