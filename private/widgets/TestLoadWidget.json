@@ -13,8 +13,8 @@
         ]
     },
     "template": {
-        "title": "SysLibTemplate",
-        "html": "<!-- Replace this content with your own. -->\n\n\n\n<button class=\"btn\"> {{message feed}}</button>",
+        "title": "SysLibTemplate2",
+        "html": "<!-- Replace this content with your own. -->\n\n\n\n<button class=\"btn\"> Modified Again Widget</button>",
         "js": "//Javascript content here\n\n\n//Please note: Javascript is for advanced use only.\n//You do not need to put anything here for normal \n//ThingStudio apps.",
         "isWidget": true
     }

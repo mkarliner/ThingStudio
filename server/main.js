@@ -390,6 +390,10 @@ Meteor.startup(function() {
 		"display-data.md",
 		"data-in-and-out.md"
 	];
+	
+	WidgetFiles = [
+		"TestLoadWidget.json"
+	];
 
 	num = Docs.remove({lastUpdated: null});
 	//DocChanges.remove();
@@ -405,13 +409,8 @@ Meteor.startup(function() {
 	});
 	FM = Meteor.npmRequire("front-matter");
 	JsDiff = Meteor.npmRequire("diff");
-	// console.log("AFTERFM")
-	// var fs = Npm.require('fs');
-	// console.log("BOOTSTRAP ", process.cwd())
-	// cwd = process.cwd == "/" ? "" : process.cwd();
-	// privateDir = cwd + "/../../../../../private/docs"
-	// console.log("PRIVATE DIR: ", fs.readdirSync(privateDir));
-	// var files = fs.readdirSync(privateDir);
+
+	//Create all documentation and calculate changes
 	console.log("docs", DocFiles)
 	for(var f=0; f<DocFiles.length; f++){
 		// console.log("Parsing: ", DocFiles[f]);
@@ -455,6 +454,37 @@ Meteor.startup(function() {
 		//console.log("DCOS: ",Docs.findOne());
 	}
 
+	//Update all system widgets.
+	sysApp = Apps.findOne({_id: Meteor.settings.public.systemApp});
+	if(!sysApp) {
+		console.log("ERROR: No system app");
+	} else {
+		console.log("SYSAPP ", sysApp)
+	}
+	for(var w=0; w<WidgetFiles.length; w++){
+		text = Assets.getText("widgets/"+WidgetFiles[w]);
+		try {
+			dump = JSON.parse(text);
+		}
+		catch(ev) {
+			console.log("Widget Parsing failed on ", WidgetFiles[w], ev);
+		}
+		console.log("Widget Parse Success! ", WidgetFiles[w]);
+		widgetObj = dump.widget;
+		templateObj = dump.template;
+		templateObj.appId = sysApp._id;
+		templateObj.owner = sysApp.owner;
+		console.log("TMPO ", templateObj)
+		res = Screens.upsert({title: templateObj.title}, {$set: templateObj});
+		console.log("TemplatUpsert ", res);
+		baseScreen = Screens.findOne({title: templateObj.title});
+		widgetObj.baseScreen = baseScreen._id;
+		widgetObj.appId = sysApp._id;
+		widgetObj.owner = sysApp.owner;
+		res = Widgets.upsert({title: widgetObj.title}, {$set: widgetObj});
+		console.log("Widget Upsert", res);
+
+	}
 
 });
 

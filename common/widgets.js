@@ -50,12 +50,14 @@ Schemas.Widget = new SimpleSchema({
 			omit: true
 		},
 		autoValue: function(){
-			if(this.isInsert) {
-				return Meteor.userId();
-			} else if(this.isUpsert) {
-				return {$setOnInsert: Meteor.userId};
-			} else {
-				this.unset();
+			if(Meteor.isClient) {
+				if(this.isInsert) {
+					return Meteor.userId();
+				} else if(this.isUpsert) {
+					return {$setOnInsert: Meteor.userId};
+				} else {
+					this.unset();
+				}
 			}
 		}
 	},
