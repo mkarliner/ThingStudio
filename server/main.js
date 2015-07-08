@@ -392,7 +392,10 @@ Meteor.startup(function() {
 	];
 	
 	WidgetFiles = [
-		"TestLoadWidget.json"
+		"TestLoadWidget.json",
+		"JustDial.json",
+		"Sparkline.json",
+		"StateButton.json"
 	];
 
 	num = Docs.remove({lastUpdated: null});
