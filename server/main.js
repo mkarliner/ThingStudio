@@ -394,7 +394,8 @@ Meteor.startup(function() {
 	WidgetFiles = [
 		"JustDial.json",
 		"Sparkline.json",
-		"StateButton.json"
+		"StateButton.json",
+		"TwoSeventyDial.json"
 	];
 
 	num = Docs.remove({lastUpdated: null});
