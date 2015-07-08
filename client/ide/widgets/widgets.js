@@ -81,6 +81,9 @@ Template.WidgetList.helpers({
 		} else {
 			return false;
 		}
+	},
+	webComponent: function(){
+		return this.widgetType=="Web Component" ? true : false;
 	}
 });
 

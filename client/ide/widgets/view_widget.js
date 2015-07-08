@@ -35,6 +35,9 @@ Template.SingleWidgetBody.helpers({
 			}
 		}
 		return dd;
+	},
+	webComponent: function(){
+		return this.widgetType=="Web Component" ? true : false;
 	}
 });
 
