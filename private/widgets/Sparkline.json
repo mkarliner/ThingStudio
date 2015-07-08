@@ -8,7 +8,7 @@
                 "paramType": "[Numbers]",
                 "required": true,
                 "description": "Values to be displayed",
-                "dummyValue": "[23,25,23,22,21,30,35,22,32,37,38,39,23,10,11,33]"
+                "dummyValue": "[23,25,23,22,21,30,35,22,32,37,38,39,23,10,11,33,34]"
             },
             {
                 "title": "legend",
