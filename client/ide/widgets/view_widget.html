@@ -53,6 +53,10 @@
 					</table>
 				</div>
 			{{/if}}
+			{{#if isInRole 'admin'}}
+				<button class="btn" id="download-widget">Download</button>
+			{{/if}}
+			
 			<p><span class="fwHeavy">Create your own</span> &ndash; To make your own version of this widget which you can modify, copy with the HTML and / or JavaScript below</p>
 			{{#if html}}
 				<p class="fwBlack">HTML</p>

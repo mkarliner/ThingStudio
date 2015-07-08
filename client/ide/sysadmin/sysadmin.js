@@ -18,6 +18,9 @@ Template.SysLogs.helpers({
 		case "ScreenUpdate":
 			return "#";
 		}
+	},
+	date: function(){
+		return moment(this.date).fromNow();
 	}
 	
 });
