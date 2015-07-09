@@ -21,35 +21,15 @@
 					<div class="card small">
 						<div class="card-content">
 							<span class="card-title activator">{{title}} <i class="mdi-navigation-more-vert right"></i></span>
-							<p class="usage"><span class="fwHeavy">Summary:</span> {{summary}}</p>
-							<p class="usage"><span class="fwHeavy">Connection:</span> {{connection_title}}</p>
-							<p class="usage"><span class="fwHeavy">Home Screen:</span> {{home_screen}}</p>
-							<p class="usage"><span class="fwHeavy">Sharable:</span> {{sharable}}</p>
-							<p class="usage"><span class="fwHeavy">Public:</span> {{public}}</p>
+							<p class="usage"><span class="fwHeavy">Summary:</span> {{showSummary}}</p>
+							<p class="usage"><span class="fwHeavy">Connection:</span> {{showConnectionTitle}}</p>
+							<p class="usage"><span class="fwHeavy">Home Screen:</span> {{showHomePage}}</p>
+							<p class="usage"><span class="fwHeavy">Sharable:</span> {{showShareable}}</p>
+							<p class="usage"><span class="fwHeavy">Public:</span> {{showPublic}}</p>
 						</div>
 						<div class="card-reveal">
 							<span class="card-title">{{title}}<i class="mdi-navigation-close right"></i></span>
-							<!-- <p>{{widgetInstructions}}</p> -->
-							<p class="usage"><span class="fwHeavy">Description:</span> {{description}}</p>
-							<!-- <span class="usage-inner">
-								<span class="element">&lt;{{tagName}}</span><span class="parameter">{{#each parameters}} {{title}}=<span class="white-text">&quot;{{dummyValue}}&quot;</span>{{/each}}</span><span class="element">&gt;&lt;/{{tagName}}&gt;</span>
-							</span> -->
-							<!-- {{#if parameters}} -->
-								<!-- <table class="widget-item bordered striped">
-									<thead>
-										<tr>
-											<td>Parameter</td><td>Type</td><td>Required</td><td>Description</td>
-										</tr>
-									</thead>
-									<tbody>
-										{{#each parameters}}
-											<tr>
-												<td>{{title}}</td><td>{{paramType}}</td><td>{{mandatory}}</td><td>{{description}}</td>
-											</tr>
-										{{/each}}
-									</tbody>
-								</table> -->
-							<!-- {{/if}} -->
+							<p class="usage"><span class="fwHeavy">Description:</span> {{showDescription}}</p>
 						</div>
 						<div class="card-action">
 							<div class="right">

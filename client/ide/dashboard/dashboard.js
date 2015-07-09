@@ -22,12 +22,54 @@ Template.DashboardBody.helpers({
 			return false;
 		}
 	},
-	connection_title: function() {
-		connection = Connections.find({_id: this.connection}).fetch()
-		return connection[0].title
+	showSummary: function() {
+		var mySummary = this.summary
+		if ( mySummary ) {
+			return mySummary
+		} else {
+			return 'No summary set'
+		}
 	},
-	home_screen: function() {
-		home_screen = Screens.find({_id: this.home_page}).fetch()
-		return home_screen[0].title
-	}
+	showConnectionTitle: function() {
+		var connection = Connections.find({_id: this.connection}).fetch()
+		if ( connection.length > 0 ) {
+			connectionTitle = connection[0].title
+			return connectionTitle
+		} else {
+			return 'No home screen set'
+		}
+	},
+	showHomePage: function() {
+		var home = Screens.find({_id: this.home_page}).fetch()
+		if ( home.length > 0 ) {
+			homeTitle = home[0].title
+			return homeTitle
+		} else {
+			return 'No home screen set'
+		}
+	},
+	showShareable: function() {
+		var isShareable = this.shareable
+		if ( isShareable === true ) {
+			return 'Yes'
+		} else {
+			return 'No'
+		}
+	},
+	showPublic: function() {
+		var isPublic = this.public
+		if ( isPublic === true ) {
+			return 'Yes'
+		} else {
+			return 'No'
+		}
+	},
+	showDescription: function() {
+		var myDescription = this.description
+		if ( myDescription ) {
+			return myDescription
+		} else {
+			return 'No description set'
+		}
+	},
 });
