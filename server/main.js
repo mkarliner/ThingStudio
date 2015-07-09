@@ -397,7 +397,7 @@ Meteor.startup(function() {
 		"StateButton.json",
 		"TwoSeventyDial.json",
 		"Joystick.json",
-		// "Keypad.json"
+		"Keypad.json"
 	];
 
 	num = Docs.remove({lastUpdated: null});
