@@ -1733,6 +1733,7 @@ footer {
 		}
 		&[type=text].valid, &[type=text]:focus.valid, &[type=password].valid, &[type=password]:focus.valid, &[type=email].valid, &[type=email]:focus.valid {
 			border-bottom: 2px solid $registerColor;
+			box-shadow: none;
 		}
 	}
 	& label {
