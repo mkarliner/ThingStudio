@@ -1,0 +1,32 @@
+{
+    "widget": {
+        "title": "Joystick",
+        "tagName": "ts-joystick",
+        "widgetType": "Web Component",
+        "instructions": "This widget works like a physical joystick. Dragging the red knob will output a continuous stream of position objects on the publish feed.\n\nThe position objects have properties of x and y, scaled from 0 to 100.",
+        "parameters": [
+            {
+                "title": "feed",
+                "paramType": "Feed",
+                "required": false,
+                "description": "Feed to publish to",
+                "dummyValue": "JoyFeed"
+            }
+        ]
+    },
+    "template": {
+        "title": "Joystick",
+        "html": "<!-- Replace this content with your own. -->\n\n\t <!-- Replace this content with your own. -->\n<svg  class=\"mybox\" style=\"border: solid\" x=\"0\" y=\"0\"  viewBox=\"0, 0, 500, 500\">\n    <defs>\n    <filter id=\"blurFilter7\" x=\"-20\" y=\"-20\" width=\"200\" height=\"200\">\n        <feGaussianBlur in=\"SourceGraphic\" stdDeviation=\"7\" />\n    </filter>\n    </defs>\n\n <path d=\"M 250 250 l {{xdrag}} {{ydrag}} \" stroke=\"grey\" stroke-width=\"60\" stroke-linecap=\"round\" />\n <path d=\"M 250 250 l {{xdrag}} {{ydrag}} \" stroke=\"white\" stroke-width=\"5\" stroke-linecap=\"round\" style=\"filter: url(#blurFilter7);\" />     \n      <g id=\"Layer_1\" transform=\"translate({{xdrag}}, {{ydrag}})\">\n    <path d=\"M254,304 C226.386,304 204,281.614 204,254 C204,226.386 226.386,204 254,204 C281.614,204 304,226.386 304,254 C304,281.614 281.614,304 254,304 z\" fill=\"#FA0F0F\"/>\n    <path d=\"M240,252 C233.373,252 228,246.627 228,240 C228,233.373 233.373,228 240,228 C246.627,228 252,233.373 252,240 C252,246.627 246.627,252 240,252 z\"  style=\"filter: url(#blurFilter7);\" fill=\"#F8EDED\"/>\n  </g>\n  \n  \n</svg>",
+        "isWidget": true,
+        "js": "// Get point in global SVG space\nfunction cursorPoint(ev){\n  evt = ev.originalEvent;\n  svg = document.querySelector('svg');\n\n// Create an SVGPoint for future math\n  pt = svg.createSVGPoint();\n  pt.x = evt.clientX; pt.y = evt.clientY;\n  return pt.matrixTransform(svg.getScreenCTM().inverse());\n}\n\nfunction touchPoint(ev){\n  evt = ev.originalEvent.touches[0];\n  svg = document.querySelector('svg');\n\n// Create an SVGPoint for future math\n  pt = svg.createSVGPoint();\n  pt.x = evt.clientX; pt.y = evt.clientY;\n  return pt.matrixTransform(svg.getScreenCTM().inverse());\n}\n\n\t Template[name].events({\n    'mousedown': function(ev){\n        \n        console.log(\"MD: \", ev);\n        loc = cursorPoint(ev);\n        Session.set(\"mouseDownPos\", {x: loc.x, y: loc.y});\n        console.log(\"TRANS \", loc.x, loc.y);\n    },\n    'mousemove': function(ev){\n        if(ev.originalEvent.buttons !==0) {\n            origin = Session.get(\"mouseDownPos\");\n            \n            loc = cursorPoint(ev);\n            console.log(\"MV \", loc.x-origin.x, - loc.y-origin.y);\n            xout = mapValue(origin.x - loc.x, -250, 250, -100, 100);\n            yout = mapValue(origin.y- loc.y, -250, 250, -100, 100);\n            publishFeed(this.feed, {x:xout, y: yout});\n            Session.set(\"mouseDrag\", {x:origin.x - loc.x, y: origin.y- loc.y})\n        }\n        \n    },\n    'mouseup': function(ev){\n         console.log(\"MU: \", ev);\n        loc = cursorPoint(ev);\n        Session.set(\"mouseDrag\", {x: 0, y: 0});\n        publishFeed(this.feed, {x:0, y: 0});\n        console.log(\"TRANS \", loc.x, loc.y);\n    },\n    'touchstart': function(ev){\n        \n        console.log(\"MD: \", ev);\n        loc = touchPoint(ev);\n        Session.set(\"mouseDownPos\", {x: loc.x, y: loc.y});\n        console.log(\"TRANS \", loc.x, loc.y);\n    },\n    'touchmove': function(ev){\n    \n            origin = Session.get(\"mouseDownPos\");\n            \n            loc = touchPoint(ev);\n            console.log(\"MV \", loc.x-origin.x, - loc.y-origin.y);\n            publishFeed(this.feed, loc.x-origin.x, -loc.y-origin.y);\n            Session.set(\"mouseDrag\", {x:origin.x - loc.x, y: origin.y- loc.y})\n \n    },\n    'touchend': function(ev){\n         console.log(\"MU: \", ev);\n        // loc = touchPoint(ev);\n        publishFeed(this.feed, {x:0, y: 0});\n        Session.set(\"mouseDrag\", {x: 0, y: 0});\n        //console.log(\"TRANS \", loc.x, loc.y);\n    }\n})\n\t Template[name].helpers({\n   xdrag: function(){\n      drag =  Session.get(\"mouseDrag\")\n      return -drag.x;\n   },\n      ydrag: function(){\n      drag =  Session.get(\"mouseDrag\")\n      return -drag.y;\n   }\n});",
+        "widgetName": "ts-joystick",
+        "widgetParameters": [
+            null,
+            {
+                "title": "max",
+                "mandatory": false,
+                "description": "max"
+            }
+        ]
+    }
+}

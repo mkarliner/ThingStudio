@@ -8,6 +8,8 @@ Messages = new Mongo.Collection(null);
 
 Outbox = new Mongo.Collection(null);
 
+Feedhooks = {};
+
 publish = function(feed, message) {
 	if(feed.pubsub !="Publish") {
 		message = "Attempt to publish to subcription feed: "+ feed.title; 
@@ -24,7 +26,7 @@ publish = function(feed, message) {
 publishFeed = function(feedName, message) {
 	feed = Feeds.findOne({title: feedName});
 	if(feed){
-		publish(feed, message);
+		publish(feed, JSON.stringify(message));
 	} else {
 		message = "No such publish feed - " + feedName;
 		Alerts.upsert({type: 'runtime', status: "warning", message:  message},{$set:{type: 'runtime', status: 'warning', message: message} ,$inc: {count: 1} } );
@@ -256,7 +258,12 @@ connect = function (conn, usr, pass) {
 						}
 					}
 				}
+				if(Feedhooks[feeds[i].title]) {
+					Feedhooks[feeds[i].title](payload);	
+				}
 			}
+
+			
 		}
 	});
 }
