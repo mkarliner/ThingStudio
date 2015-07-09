@@ -24,6 +24,9 @@ publish = function(feed, message) {
 
 
 publishFeed = function(feedName, message) {
+	if(feedName == "dummyfeed") {
+		return;
+	}
 	feed = Feeds.findOne({title: feedName});
 	if(feed){
 		publish(feed, JSON.stringify(message));
