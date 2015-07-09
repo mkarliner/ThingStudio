@@ -1,0 +1,22 @@
+{
+    "widget": {
+        "title": "keypad",
+        "widgetType": "Library Template",
+        "instructions": "Embed this keypad, and change the name of the feed",
+        "parameters": [
+            {
+                "title": "feed",
+                "paramType": "String",
+                "required": true,
+                "description": "The feed on which to send data",
+                "dummyValue": "gate"
+            }
+        ]
+    },
+    "template": {
+        "title": "keypad",
+        "html": "<div class=\"keypad\">\n    <div class=\"outer\">\n        <div class=\"inner\">\n            <div class=\"divider\"></div>\n            <div class=\"section\">\n                <div class=\"row\">\n                    <div class=\"col s12 keypad-row\">\n                        <div class=\"col s4 center\">\n                            <button href=\"\" class=\"btn btn-floating waves-effect waves-circle waves-light key\" data-feed=\"{{this.feed}}\" data-message=\"1\">1</button>\n                        </div>\n                        <div class=\"col s4 center\">\n                            <a href=\"\" class=\"btn btn-floating waves-effect waves-circle waves-light key\" data-feed=\"gate-key\" data-message=\"2\">2</a>\n                        </div>\n                        <div class=\"col s4 center\">\n                            <a href=\"\" class=\"btn btn-floating waves-effect waves-circle waves-light key\" data-feed=\"gate-key\" data-message=\"3\">3</a>\n                        </div>\n                    </div>\n                </div>\n                <div class=\"row\">\n                    <div class=\"col s12 keypad-row\">\n                        <div class=\"col s4 center\">\n                            <a href=\"\" class=\"btn btn-floating waves-effect waves-circle waves-light key\" data-feed=\"gate-key\" data-message=\"4\">4</a>\n                        </div>\n                        <div class=\"col s4 center\">\n                            <a href=\"\" class=\"btn btn-floating waves-effect waves-circle waves-light key\" data-feed=\"gate-key\" data-message=\"5\">5</a>\n                        </div>\n                        <div class=\"col s4 center\">\n                            <a href=\"\" class=\"btn btn-floating waves-effect waves-circle waves-light key\" data-feed=\"gate-key\" data-message=\"6\">6</a>\n                        </div>\n                    </div>\n                </div>\n                <div class=\"row\">\n                    <div class=\"col s12 keypad-row\">\n                        <div class=\"col s4 center\">\n                            <a href=\"\" class=\"btn btn-floating waves-effect waves-circle waves-light key\" data-feed=\"gate-key\" data-message=\"7\">7</a>\n                        </div>\n                        <div class=\"col s4 center\">\n                            <a href=\"\" class=\"btn btn-floating waves-effect waves-circle waves-light key\" data-feed=\"gate-key\" data-message=\"8\">8</a>\n                        </div>\n                        <div class=\"col s4 center\">\n                            <a href=\"\" class=\"btn btn-floating waves-effect waves-circle waves-light key\" data-feed=\"gate-key\" data-message=\"9\">9</a>\n                        </div>\n                    </div>\n                </div>\n                <div class=\"row\">\n                    <div class=\"col s12 keypad-row\">\n                        <div class=\"col s4 center\">\n                            <a href=\"\" class=\"btn btn-floating waves-effect waves-circle waves-light key asterisk\" data-feed=\"gate-key\" data-message=\"*\">*</a>\n                        </div>\n                        <div class=\"col s4 center\">\n                            <a href=\"\" class=\"btn btn-floating waves-effect waves-circle waves-light key\" data-feed=\"gate-key\" data-message=\"0\">0</a>\n                        </div>\n                        <div class=\"col s4 center\">\n                            <a href=\"\" class=\"btn btn-floating waves-effect waves-circle waves-light key\" data-feed=\"gate-key\" data-message=\"#\">#</a>\n                        </div>\n                    </div>\n                </div>\n            </div>\n            <div class=\"divider\"></div>\n        </div>\n    </div>\n</div>",
+        "js": "Template[name].events({\n    'click a': function(e, tmpl) {\n        e.preventDefault();\n    }\n})\n\nTemplate[name].helpers({\n    \n});",
+        "isWidget": true
+    }
+}
