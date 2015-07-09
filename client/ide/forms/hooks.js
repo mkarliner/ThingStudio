@@ -72,7 +72,8 @@ compileTemplate = function(name, html_text, javascript) {
 			},
 			minmax: function(feed) {
 				msg = Messages.findOne({feed: feed});
-				return msg;
+				// console.log("MMM: ", msg);
+				return JSON.stringify(msg);
 			}
 		});
 		Template[name].events({

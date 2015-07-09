@@ -394,7 +394,9 @@ Meteor.startup(function() {
 	WidgetFiles = [
 		"JustDial.json",
 		"Sparkline.json",
-		"StateButton.json"
+		"StateButton.json",
+		"TwoSeventyDial.json",
+		"Joystick.json"
 	];
 
 	num = Docs.remove({lastUpdated: null});
@@ -476,14 +478,15 @@ Meteor.startup(function() {
 		templateObj = dump.template;
 		templateObj.appId = sysApp._id;
 		templateObj.owner = sysApp.owner;
+		templateObj.updatedAt = new Date();
 		console.log("TMPO ", templateObj)
-		res = Screens.upsert({title: templateObj.title}, {$set: templateObj});
+		res = Screens.upsert({title: templateObj.title}, {$set: templateObj}, {getAutoValues: false});
 		console.log("TemplatUpsert ", res);
 		baseScreen = Screens.findOne({title: templateObj.title});
 		widgetObj.baseScreen = baseScreen._id;
 		widgetObj.appId = sysApp._id;
 		widgetObj.owner = sysApp.owner;
-		res = Widgets.upsert({title: widgetObj.title}, {$set: widgetObj});
+		res = Widgets.upsert({title: widgetObj.title}, {$set: widgetObj}, {getAutoValues: false});
 		console.log("Widget Upsert", res);
 
 	}
