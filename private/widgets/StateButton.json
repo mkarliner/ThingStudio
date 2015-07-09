@@ -16,7 +16,7 @@
                 "paramType": "Feed",
                 "required": true,
                 "description": "Feed to subscribe to.",
-                "dummyValue": "StateSub"
+                "dummyValue": "dummyfeed"
             },
             {
                 "title": "legend",

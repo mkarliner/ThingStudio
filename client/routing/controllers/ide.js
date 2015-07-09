@@ -80,7 +80,7 @@ IDEController = RouteController.extend({
 								if(Session.get("chatsReady") == true) {
 									sound = new Audio('ding.mp3')
 									sound.volume = 0.2
-									sound.play();	
+									//sound.play();	
 									Session.set("newChats", true);
 								}
 							}
