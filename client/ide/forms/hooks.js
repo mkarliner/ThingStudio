@@ -77,20 +77,17 @@ compileTemplate = function(name, html_text, javascript) {
 			}
 		});
 		Template[name].events({
-			'click button': function(ev){
+			'click button, click a': function(ev){
 				ev.preventDefault();
 				attr = ev.currentTarget.attributes;
-				// console.log("TEMPLATE CLICK: ", this, attr);
 				feed_name = attr.getNamedItem("data-feed");
-				console.log("FN: ", feed_name);
 				if(feed_name == null || !checkFeed(feed_name.value, false)){
 					return;
 				};
 				message = attr.getNamedItem("data-message");
-				// console.log("FN: ", feed_name.value, message.value)
 				feed = Feeds.findOne({title: feed_name.value});
-				console.log(feed);
 				publish(feed, JSON.stringify(message ? message.value : "click"));
+				ev.stopImmediatePropagation();
 			},
 			'change input[type="checkbox"]': function(ev) {
 				// console.log("CHKBOX ", ev, this)
