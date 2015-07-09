@@ -390,29 +390,103 @@ Meteor.startup(function() {
 		"display-data.md",
 		"data-in-and-out.md"
 	];
+	
+	WidgetFiles = [
+		"JustDial.json",
+		"Sparkline.json",
+		"StateButton.json"
+	];
 
-	Docs.remove({});
+	num = Docs.remove({lastUpdated: null});
+	//DocChanges.remove();
+	console.log("Removed docs ", num);
 	Meteor.publish("docs", function(){
 		console.log("Subscribing Docs")
 		return Docs.find();
 	});
+	
+	Meteor.publish("doc_changes", function(){
+		console.log("Subscribing DocChanges")
+		return DocChanges.find();
+	});
 	FM = Meteor.npmRequire("front-matter");
-	// console.log("AFTERFM")
-	// var fs = Npm.require('fs');
-	// console.log("BOOTSTRAP ", process.cwd())
-	// cwd = process.cwd == "/" ? "" : process.cwd();
-	// privateDir = cwd + "/../../../../../private/docs"
-	// console.log("PRIVATE DIR: ", fs.readdirSync(privateDir));
-	// var files = fs.readdirSync(privateDir);
+	JsDiff = Meteor.npmRequire("diff");
+
+	//Create all documentation and calculate changes
 	console.log("docs", DocFiles)
 	for(var f=0; f<DocFiles.length; f++){
-		console.log("Parsing: ", DocFiles[f]);
+		// console.log("Parsing: ", DocFiles[f]);
 		a = Assets.getText("docs/"+DocFiles[f]);
+		doc = FM(a);
+		doc.filename = DocFiles[f];
+		doc.lastUpdated = new Date();
+		doc.newChanges =  true;
 		//console.log("MYTXT ", FM(a));
-		Docs.insert(FM(a));
+		olddoc = Docs.findOne({filename: doc.filename});
+		//check if the olddoc has changed.
+		// console.log("Check docs ", doc.attributes, olddoc ? olddoc.attributes :"nothing" );
+
+		if(olddoc) {
+			//Workout what has changed	
+			diffs = JsDiff.diffLines(olddoc.body, doc.body);
+			for(var d=0; d<diffs.length; d++){
+				diff = diffs[d];
+				if(diff.added || diff.removed) {
+					console.log("DIFFS: ", doc.filename, diff);
+					DocChanges.insert({
+						title: doc.attributes.title,
+						file: doc.filename,
+						diff: diff,
+						date: new Date()
+					})
+				} else {
+					console.log("NODIFF", doc.filename)
+				}
+			}
+		}
+
+		
+		if(olddoc && olddoc.body == doc.body) {
+			//Nothing has changed.
+			Docs.update({filename: DocFiles[f]}, {$set: {newChanges: false}});
+		} else {	
+			Docs.upsert({filename: DocFiles[f]}, {$set: doc});
+		}
+		
 		//console.log("DCOS: ",Docs.findOne());
 	}
 
+	//Update all system widgets.
+	sysApp = Apps.findOne({_id: Meteor.settings.public.systemApp});
+	if(!sysApp) {
+		console.log("ERROR: No system app");
+	} else {
+		console.log("SYSAPP ", sysApp)
+	}
+	for(var w=0; w<WidgetFiles.length; w++){
+		text = Assets.getText("widgets/"+WidgetFiles[w]);
+		try {
+			dump = JSON.parse(text);
+		}
+		catch(ev) {
+			console.log("Widget Parsing failed on ", WidgetFiles[w], ev);
+		}
+		console.log("Widget Parse Success! ", WidgetFiles[w]);
+		widgetObj = dump.widget;
+		templateObj = dump.template;
+		templateObj.appId = sysApp._id;
+		templateObj.owner = sysApp.owner;
+		console.log("TMPO ", templateObj)
+		res = Screens.upsert({title: templateObj.title}, {$set: templateObj});
+		console.log("TemplatUpsert ", res);
+		baseScreen = Screens.findOne({title: templateObj.title});
+		widgetObj.baseScreen = baseScreen._id;
+		widgetObj.appId = sysApp._id;
+		widgetObj.owner = sysApp.owner;
+		res = Widgets.upsert({title: widgetObj.title}, {$set: widgetObj});
+		console.log("Widget Upsert", res);
+
+	}
 
 });
 

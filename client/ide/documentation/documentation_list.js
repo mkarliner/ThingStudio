@@ -45,6 +45,17 @@ Template.DocumentationBody.helpers({
 		return this.attributes.summary;
 	},
 	publishedDate: function(date) {
-		return moment(date).format('MMMM D, YYYY');
+		return moment(this.lastUpdated).format('MMMM D, YYYY, hh:mm:ss a' );
+	},
+	recentChanges: function(){
+		return this.newChanges ? "RECENT CHANGES" : "";
+	},
+	changes: function(){
+		changes = DocChanges.find({},{sort: {date: -1}});
+		console.log("DocChanges ", changes.fetch())
+		return changes;
+	},
+	addedremoved: function(){
+		return this.diff.added ? "Addition" : "Removal";
 	}
 })

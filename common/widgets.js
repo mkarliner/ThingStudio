@@ -50,12 +50,14 @@ Schemas.Widget = new SimpleSchema({
 			omit: true
 		},
 		autoValue: function(){
-			if(this.isInsert) {
-				return Meteor.userId();
-			} else if(this.isUpsert) {
-				return {$setOnInsert: Meteor.userId};
-			} else {
-				this.unset();
+			if(Meteor.isClient) {
+				if(this.isInsert) {
+					return Meteor.userId();
+				} else if(this.isUpsert) {
+					return {$setOnInsert: Meteor.userId};
+				} else {
+					this.unset();
+				}
 			}
 		}
 	},
@@ -80,9 +82,22 @@ Schemas.Widget = new SimpleSchema({
 			}
 		}
 	},
+	widgetType: {
+		type: String,
+		allowedValues: ["Web Component", "Library Template"],
+		defaultValue: "Web Component",
+		autoform: {
+			type: "selectize",
+			options: function(){
+				options = [{label: "Web Component", value: "Web Component"}, {label: "Library Template", value: "Library Template"}];
+				return (options);
+			}
+		}
+	},
 	tagName: {
 		type: String,
 		regEx: /^[a-zA-Z_]+-[a-zA-Z_]+$/,
+		optional: true
 	},
 	instructions: {
 		type: String,

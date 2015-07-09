@@ -70,9 +70,12 @@ IDEController = RouteController.extend({
 			Meteor.subscribe('chats', {
 				onReady: function(){
 					Meteor.autorun(function(){
-						Chats.find({}, {limit: 1}).observeChanges({
-							addedBefore: function(id, fields) {
-								console.log("ADDED: ", id, fields)
+						Chats.find({}, {limit: 1, sort:{ date: -1}}).observeChanges({
+							addedBefore: function(id, fields, before) {
+								username = Meteor.user().username;
+								console.log("ADDED: message ", id, fields.message, username, before);
+								users = fields.message.match(/@([a-zA-Z0-9_-]+)\s/g)
+								console.log("USERS: ", users)
 								chats = Chats.find().count();
 								if(Session.get("chatsReady") == true) {
 									sound = new Audio('ding.mp3')
@@ -86,7 +89,9 @@ IDEController = RouteController.extend({
 					})
 				}
 			}),
-			Meteor.subscribe('admins')
+			Meteor.subscribe('admins'),
+			Meteor.subscribe("docs"),
+			Meteor.subscribe("doc_changes")
 		]
 	}
 });

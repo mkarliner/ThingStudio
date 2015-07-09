@@ -36,7 +36,7 @@ Template.DocsHeader.helpers({
 
 Template.DocsBody.helpers({
 	publishedDate: function(date) {
-		return moment(date).format('MMMM D, YYYY');
+		return moment(this.lastUpdated).format('MMMM D, YYYY, hh:mm:ss a' );
 	},
     currentDoc: function() {
 			doc = this.body

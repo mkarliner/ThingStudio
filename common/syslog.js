@@ -58,7 +58,7 @@ SysLogs.before.insert(function(userId, doc) {
 });
 
 SysLogs.before.update(function(userId, doc, fieldNames, modifier, options) {
-	console.log("BU: ", userId, doc)
+	//console.log("BU: ", userId, doc)
 	if(Meteor.isServer) {
 		u =  Meteor.users.findOne({_id: userId});
 	    modifier.$set = modifier.$set || {};

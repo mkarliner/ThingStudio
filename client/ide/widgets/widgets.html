@@ -18,7 +18,11 @@
 				<!-- <p>{{widgetInstructions}}</p> -->
 				<p class="fwHeavy usage">Example Usage:</p>
 				<span class="usage-inner">
-					<span class="element">&lt;{{tagName}}</span><span class="parameter">{{#each parameters}} {{title}}=<span class="white-text">&quot;{{dummyValue}}&quot;</span>{{/each}}</span><span class="element">&gt;&lt;/{{tagName}}&gt;</span>
+					{{#if webComponent}}
+						<span class="element">&lt;{{tagName}}</span><span class="parameter">{{#each parameters}} {{title}}=<span class="white-text">&quot;{{dummyValue}}&quot;</span>{{/each}}</span><span class="element">&gt;&lt;/{{tagName}}&gt;</span>
+					{{else}}
+						<span class="element">{{| &gt;  {{this.title}}</span><span class="parameter">{{#each parameters}} {{title}}=<span class="white-text">&quot;{{dummyValue}}&quot;</span>{{/each}}</span><span class="element">{{templateEnd}} }}</span>
+					{{/if}}
 				</span>
 				{{#if parameters}}
 					<table class="widget-item bordered striped">
@@ -55,15 +59,22 @@
 	{{#contentFor region="appHeader" template="WidgetsHeader"}}{{/contentFor}}
 	{{> WidgetsNewItem}}
 	<div class="top-row">
-		<div class="col s4 tabs-container">
+		<div class="col s9 tabs-container">
 			<ul class="tabs">
 				<li class="tab"><a href="#global-widgets">System Widgets</a></li>
-				<li class="tab"><a href="#my-widgets" class="tab-my-widgets">My Widgets</a></li>				
+				<li class="tab"><a href="#global-templates">System Library Templates</a></li>
+				<li class="tab"><a href="#my-widgets" class="tab-my-widgets">My Widgets</a></li>
+				<li class="tab"><a href="#my-templates" class="tab-my-widgets">My Library Templates</a></li>				
 			</ul>
 		</div>
 		<div class="clearfix"></div>
 	</div>
 	<div class="single-page-container widgets">
+		<div id="global-templates">
+		{{#each systemTemplateList}}
+			{{> WidgetList }}
+		{{/each}}
+		</div>
 		<div id="global-widgets">
 		{{#each systemWidgetList}}
 			{{> WidgetList }}
@@ -71,6 +82,11 @@
 		</div>
 		<div id="my-widgets">
 			{{#each myWidgetList}}
+				{{> WidgetList }}
+			{{/each}}
+		</div>
+		<div id="my-templates">
+			{{#each myTemplatesList}}
 				{{> WidgetList }}
 			{{/each}}
 		</div>
@@ -85,7 +101,7 @@
 				<tbody>
 					<tr>
 						<td>{{> afQuickField name='title' placeholder="Widget Title"}} </td>
-						<td>{{> afQuickField name='tagName' placeholder="Element Name" }} </td>
+						<td>{{> afQuickField name='widgetType' placeholder="Widget Type" }} </td>
 						<td class="dropdown-td">{{> afQuickField name='baseScreen' placeholder="Base Template" }} </td>
 						<td>
 							<button type="submit" class="table-action table-save-new"><i class="icon-ts-checkmark"></i></button><button class="table-action table-cancel-new"><i class="icon-ts-cancel"></i></button>

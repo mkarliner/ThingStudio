@@ -37,3 +37,25 @@ Template.SingleWidgetBody.helpers({
 		return dd;
 	}
 });
+
+Template.SingleWidgetBody.events({
+	'click #download-widget': function(ev){
+		console.log("clicked", this);
+		wgt = this;
+		scr = Screens.findOne({_id: wgt.baseScreen});
+		dump = {widget: wgt, template: scr};
+		delete dump.widget._id;
+		delete dump.widget.baseScreen;
+		delete dump.widget.appId;
+		delete dump.widget.owner;
+		delete dump.template._id;
+		delete dump.template.appId;
+		delete dump.template.owner;
+		delete dump.template.updatedAt;
+		json = JSON.stringify(dump, null, 4);
+		
+		blob = new Blob([json], {type: "application/json;charset=utf-8"});
+		saveAs(blob, this.title+".json")
+		ev.preventDefault();
+	}
+})

@@ -11,7 +11,7 @@ if(boilerplate) {
 
 if(boilerplate) {
 	defaultJsContent = boilerplate.js;
-	console.log("DEFCON: ",boilerplate, defaultJsContent);
+	//console.log("DEFCON: ",boilerplate, defaultJsContent);
 } else {
 	defaultJsContent = "//Javascript content here";
 }
@@ -95,13 +95,16 @@ Schemas.Screen = new SimpleSchema({
 			omit: true
 		},
 		autoValue: function(){
-			if(this.isInsert) {
-				return Meteor.userId();
-			} else if(this.isUpsert) {
-				return {$setOnInsert: Meteor.userId};
-			} else {
-				this.unset();
+			if(Meteor.isClient) {
+				if(this.isInsert) {
+					return Meteor.userId();
+				} else if(this.isUpsert) {
+					return {$setOnInsert: Meteor.userId};
+				} else {
+					this.unset();
+				}
 			}
+			
 		}
 	},
 	appId: {

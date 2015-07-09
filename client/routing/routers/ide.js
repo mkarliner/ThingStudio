@@ -15,7 +15,9 @@ Router.route("/dashboard", {
 		u = Meteor.user();
 		console.log("ACT ", u)
 		if (u) {
-			if (u.profile && u.profile.showWelcome) {
+			//Disable welcome page for the moment.
+			//if (u.profile && u.profile.showWelcome) {
+			if(false) {
 				this.redirect("/welcome");
 			} else {
 				if ( !this.ready() ) {

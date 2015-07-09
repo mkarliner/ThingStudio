@@ -1,5 +1,5 @@
  checkFeed = function(feed, subscribe) {
-	 console.log("Check feed ", feed)
+	 //console.log("Check feed ", feed)
 	if(typeof feed != "string" ) {
 		// Session.set("runtimeErrors", "Feedname needs to be a string");
 		var message = "Feedname needs to be a string: " + feed;

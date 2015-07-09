@@ -19,7 +19,11 @@
 			<div class="form-group detail">				
 				<p class="usage"><span class="fwHeavy">Using this widget</span> &ndash; Copy the snippet below and paste in to your template{{#if parameters}}, changing the parameter values {{/if}}</p>
 				<span class="usage-inner">
+					{{#if webComponent}}
 					<span class="element">&lt;{{tagName}}</span><span class="parameter">{{#each parameters}} {{title}}=<span class="white-text">&quot;{{dummyValue}}&quot;</span>{{/each}}</span><span class="element">&gt;&lt;/{{tagName}}&gt;</span>
+					{{else}}
+					<span class="element">{{| &gt;{{title}}</span><span class="parameter">{{#each parameters}} {{title}}=<span class="white-text">&quot;{{dummyValue}}&quot;</span>{{/each}}</span><span class="element">}}</span>
+					{{/if}}
 				</span>
 			</div>
 			{{#if instructions}}
@@ -49,6 +53,10 @@
 					</table>
 				</div>
 			{{/if}}
+			{{#if isInRole 'admin'}}
+				<button class="btn" id="download-widget">Download</button>
+			{{/if}}
+			
 			<p><span class="fwHeavy">Create your own</span> &ndash; To make your own version of this widget which you can modify, copy with the HTML and / or JavaScript below</p>
 			{{#if html}}
 				<p class="fwBlack">HTML</p>
