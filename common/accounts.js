@@ -66,7 +66,8 @@ AccountsTemplates.configure({
     // Texts
     texts: {
       button: {
-          signUp: "Register Now!"
+          signUp: "Register Now!",
+          forgotPwd: "Forgot Password?"
       },
       socialSignUp: "Register",
       socialIcons: {
