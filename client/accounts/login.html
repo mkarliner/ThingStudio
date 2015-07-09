@@ -1,17 +1,122 @@
-<template name="TSLogin">
-  <div class="at-pwd-form">
-    <form role="form" id="at-pwd-form" class="{{disabled}}" novalidate action="#" method="POST">
-      {{#each fields}}
-        {{> atInput}}
-      {{/each}}
-      {{#if showReCaptcha}}
-        {{> atReCaptcha}}
-      {{/if}}
+<template name="fullPageTSForm">
+	<div class="row login-wrapper">
+		<!-- {{> atMessage}} -->
+		<div class="top-error">
+			{{> atError}}
+		</div>
+		<div class="col s12 m8 offset-m2 l4 offset-l4 login-pad">
+			
+			{{> Logo}}
+			{{> atForm}}
+			<!-- {{> loggedOutNotice}} -->
+		</div>
+	</div>
+</template>
 
-      {{> atPwdFormBtn}}
-      {{#if showForgotPasswordLink}}
-        {{> atPwdLink}}
-      {{/if}}
-    </form>
-  </div>
+<template name="loggedOutNotice">
+	<span class="error-text">Signed Out</span>
+</template>
+
+<template name="TSTitle">
+	<div class="at-title">
+		<h3 class="header">{{title}}</h3>
+	</div>
+</template>
+
+<template name="TSForm">
+	{{#unless hide}}
+		<div class="at-form">
+			{{#if showTitle}}
+				{{> atTitle}}
+			{{/if}}
+			{{#if showOauthServices}}
+				{{> atOauth}}
+			{{/if}}
+			{{#if showServicesSeparator}}
+				{{> atSep}}
+			{{/if}}
+			<!-- {{#if showError}}
+				{{> atError}}
+			{{/if}} -->
+			{{#if showResult}}
+				{{> atResult}}
+			{{/if}}
+			{{#if showMessage}}
+				{{> atMessage}}
+			{{/if}}
+			{{#if showPwdForm}}
+				{{> atPwdForm}}
+			{{/if}}
+			<!-- {{#if showTermsLink}}
+				{{> atTermsLink}}
+			{{/if}} -->
+			{{#if showResendVerificationEmailLink}}
+				{{> atResendVerificationEmailLink}}
+			{{/if}}
+		</div>
+		{{#if showSignInLink}}
+			{{> atSigninLink}}
+		{{/if}}
+		{{#if showSignUpLink}}
+			{{> atSignupLink}}
+		{{/if}}
+	{{/unless}}
+</template>
+
+<template name="TSLogin">
+	<div class="at-pwd-form">
+		<form role="form" id="at-pwd-form" class="{{disabled}}" novalidate action="#" method="POST">
+			{{#each fields}}
+				{{> atInput}}
+			{{/each}}
+			{{#if showReCaptcha}}
+				{{> atReCaptcha}}
+			{{/if}}
+			{{> atPwdFormBtn}}
+			{{#if showForgotPasswordLink}}
+				{{> atPwdLink}}
+			{{/if}}
+		</form>
+	</div>
+</template>
+
+<template name="TSatTextInput">
+	<div class="at-input input-field">
+		{{#if showLabels}}
+			<label for="at-field-{{_id}}">
+				{{displayName}} {{#unless required}}{{optionalText}}{{/unless}}
+			</label>
+		{{/if}}
+		<input class="validate {{#if hasError}}invalid{{/if}} {{#if hasSuccess}}valid{{/if}}" type="{{type}}" id="at-field-{{_id}}" name="at-field-{{_id}}" placeholder="{{#unless showLabels}} {{placeholder}} {{/unless}}" autocapitalize="none" autocorrect="off">
+		{{#if hasIcon}}
+			<span class="{{iconClass}}"></span>
+		{{/if}}
+		{{#if hasError}}
+			<span class='red-text'>{{errorText}}</span>
+		{{/if}}
+	</div>
+</template>
+
+<template name="TSPwdFormBtn">
+	<button type="submit" class="at-btn submit {{submitDisabled}} waves-effect waves-light btn" id="at-btn">
+		Log In
+	</button>
+</template>
+
+<template name="TSSignupLink">
+	<div class="at-signup-link">
+		<p>
+			{{preText}}
+				<a href="{{signUpLink}}" id="at-signUp" class="at-link at-signup {{disabled}}">Sign up Free!</a>
+			{{suffText}}
+		</p>
+	</div>
+</template>
+
+<template name="TSError">
+	<div class="at-error card-panel">
+		{{#each error}}
+			<span class="error-text"><i class='mdi-alert-warning'></i> {{errorText}}</span>
+		{{/each}}
+	</div>
 </template>

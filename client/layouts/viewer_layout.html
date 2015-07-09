@@ -1,8 +1,14 @@
 <template name="ViewerLayout">
 	<!-- stuff for viewer layout goes here. -->
 	<header>
+		<ul id="slide-out" class="side-nav">
+			{{#each screenlist}}
+				<li><a href="/viewer/screen/{{this._id}}">{{this.title}}</a></li>
+			{{/each}}
+		</ul>
+		<a href="#" data-activates="slide-out" class="button-collapse show-on-large left app-nav {{appHamburger}}"><i class="mdi-navigation-menu"></i></a>
 		<span><a class="right viewer-connection-stat" href=""><i class="icon-ts-connection {{isConnected}}"></i></a></span>
-		<h2><a href="http://www.thingstud.io">Made with ThingStudio</a></h2>
+		<h2><a class="made-with" href="http://www.thingstud.io/" target="_blank">Made with ThingStudio</a></h2>
 	</header>
 	<main>
 		<div class="view-wrapper">

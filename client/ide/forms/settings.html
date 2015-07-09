@@ -10,7 +10,12 @@
 		{{> afQuickField name='lastName' }}
 		{{> afQuickField name='location' }} -->
 		<!-- {{> afQuickField name='emails' omitFields="emails.0.verified"}} -->
-		<a href="/change-password">Change password</a>
-		<button type="submit" class="btn">Save Settings</button>
+		
+		<div class="form-group change-pass">
+			<label for="change-password" class="control-label">Passord</label>
+    			<a href="/change-password">Change password</a>
+    			<!-- <input type="text" name="change-password" id="change-password" class="form-control"> -->
+		</div>
+		<button type="submit" class="btn btn-update">Save Settings</button>
 	{{/autoForm}}
 </template>

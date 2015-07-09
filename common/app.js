@@ -115,12 +115,17 @@ Schemas.App = new SimpleSchema({
 	// },
 	shareable: {
 		type: Boolean,
-		defaultValue: false,
+		defaultValue: false
 	},
 	public: {
 		type: Boolean,
 		defaultValue: false,
 	},
+	showHamburger: {
+		type: Boolean,
+		label: "Show Nav Menu in App Header",
+		defaultValue: true
+	}
 	// inAppStore: {
 	// 	type: Boolean,
 	// 	defaultValue: false

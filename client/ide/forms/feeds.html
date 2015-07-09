@@ -17,10 +17,10 @@
 			<p><span class="fwHeavy">Journaling</span> &ndash; Enabling this allows things like time-series data, etc.</p>
 			<div class="form-group{{#if afFieldIsInvalid name='doJournal'}} has-error{{/if}}">
 				<div data-required="true" class="checkbox-left">
-					{{> afFieldInput name='doJournal' type="boolean-checkbox" }}
+					{{> afFieldInput name='doJournal' }}
 				</div>
-				{{#if afFieldIsInvalid name='doJournal'}}
-					<span class="help-block">{{afFieldMessage name='doJournal'}}</span>
+				{{#if afFieldIsInvalid name='doJournal' }}
+					<span class="help-block">{{afFieldMessage name='doJournal' }}</span>
 				{{/if}}
 				<div data-required="true">
 					{{> afFieldInput name='journal_limit' placeholder="#values to record"}}

@@ -8,6 +8,7 @@ $fontSize: 12px;
 $fontFace: AvenirLTStd-Roman, Helvetica, sans-serif;
 $appBodyBG: #EBF3F6;
 $green: #76D4E1;
+$whiteOverGreen: #F7FAFF;
 $activeGreen: #7ED321;
 $inactiveRed: #B9513C;
 $brightGreen: #A0E396;
@@ -93,6 +94,11 @@ $headerActionButton2Color: #DCDCDC;
 
 //App Body
 $bodyDividerColor: #D0D3DC;
+
+//Login styles
+$registerColor: #D2D5D9;
+$forgotColor: #ADB4C5;
+$loginInputColor: #9e9e9e;
 
 ///////////////////////////////////////////////////////////////////////////////////////
 // Global Styles, Mixins //
@@ -772,7 +778,7 @@ thead {
 }
 
 th {
-	font-family: $fwBlack;
+	font-family: $fwHeavy;
 	font-size: 13px;
 	letter-spacing: 0.3px;
 	background: $white;
@@ -1024,6 +1030,10 @@ h4.modal-title {
 	color: $baseText;
 }
 
+.single-page-container .autoform-array-item .control-label {
+	padding-top: 10px;
+}
+
 .single-page-container .form-group, .single-page-container .info-group {
 	margin-bottom: 0.7rem;
 	border-bottom: 1px solid $bodyDividerColor;
@@ -1060,7 +1070,7 @@ h4.modal-title {
 }
 
 // Handling extra padding for Selectize dropdowns on detail pages
-#updateConnectionForm .form-group:nth-child(4), #updateFeedForm .form-group:nth-child(3), #updateAppForm .form-group:nth-child(5), #updateAppForm .form-group:nth-child(6), #updateAppForm .form-group:nth-child(7) {
+#updateConnectionForm .form-group:nth-child(4), #updateFeedForm .form-group:nth-child(3) {
 	padding-top: 0;
 	margin-top: -5px;
 	padding-bottom: 1em;
@@ -1130,6 +1140,10 @@ form[id^="update"] .select-wrapper span.caret {
 	line-height: 46px;
 }
 
+[type="checkbox"] + label {
+	color: $baseText;
+}
+
 [type="checkbox"].filled-in:not(:checked) + label:after {
 	border: 2px solid $baseText;
 }
@@ -1142,6 +1156,10 @@ form[id^="update"] .select-wrapper span.caret {
 [type="checkbox"]:checked + label:before {
 	border-right: 2px solid $updateButton;
 	border-bottom: 2px solid $updateButton;
+}
+
+.autoform-array-item [type="checkbox"] + label {
+	height: 15px;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -1539,7 +1557,10 @@ span.title {
 		position: absolute;
 		border: $picBorder;
 	}
+}
 
+.form-group.change-pass {
+	padding-top: 1.2em;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -1645,6 +1666,152 @@ footer {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
+// Login form //
+///////////////////////////////////////////////////////////////////////////////////////
+
+.login-wrapper {
+	background-color: $darkBase;
+	height: 100%;
+	& svg {
+		width: 300px;
+		height: 50px;
+		margin: 0 auto;
+		display: block;
+		margin-top: 20%;
+		#Icon-Export {
+			fill: $white;
+		}
+	}
+	& .header {
+		font-size: 2.7em;
+		margin-bottom: 0.5em;
+		text-align: center;
+		color: $headerColor;
+		font-family: $fwBook;
+	}
+	& .at-btn.submit {
+		font-family: $fwBook;
+		margin-top: 0.8em;
+		height: 60px;
+		background-color: $green;
+		text-transform: none;
+		font-size: 1.7em;
+		line-height: 3.1em;
+		-webkit-box-shadow: none;
+		box-shadow: none;
+		border-radius: 2px;
+	}
+}
+
+.login-pad {
+	padding: 0 20px;
+}
+
+.at-form {
+	background-color: $appBodyBG;
+	margin-top: 2em;
+	padding: 0.9em 4em 5em;
+}
+
+.at-pwd-form {
+	& input {
+		background-color: $white;
+		height: 60px;
+		border: 2px solid $registerColor;
+		color: $loginInputColor;
+		text-indent: 14px;
+		&:focus {
+			border-bottom: 2px solid $registerColor;
+		}
+		&:-webkit-autofill {
+			-webkit-box-shadow: 0 0 0px 1000px white inset;
+			-webkit-text-fill-color: $headerColor;
+			&:focus {
+				-webkit-box-shadow: 0 0 0px 1000px white inset;
+				-webkit-text-fill-color: $headerColor;
+			}
+		}
+		&[type=text].valid, &[type=text]:focus.valid, &[type=password].valid, &[type=password]:focus.valid, &[type=email].valid, &[type=email]:focus.valid {
+			border-bottom: 2px solid $registerColor;
+		}
+	}
+	& label {
+		font-size: 1.3rem;
+		top: 0.9em;
+		left: 14px;
+		color: $registerColor;
+		&.active {
+			transform: translateY(-40%);
+		}
+	}
+}
+.spinner-yellow-only {
+	border-color: $whiteOverGreen;
+}
+
+.login-spinner {
+	padding-top: 0.5em;
+	& span {
+		display: inline-block;
+		vertical-align: middle;
+		margin-top: -0.8em;
+		margin-left: 0.3em;
+	}
+}
+
+.at-signup-link, .at-signin-link {
+	font-family: $fwBook;
+	color: $registerColor;
+	text-align: center;
+	font-size: 1.6em;
+	& p {
+		margin-top: 1.4em;
+	}
+}
+
+a.at-signup, a.at-signin {
+	font-family: $fwBook;
+	color: $registerColor;
+	border-bottom: 2px solid $registerColor;
+}
+
+.at-pwd-link p {
+	text-align: center;
+	font-size: 1.5em;
+	& a {
+		color: $forgotColor;
+		border-bottom: 2px solid $forgotColor;
+	}
+}
+
+.top-error {
+	position: relative;
+	& .at-error.card-panel {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+	}
+}
+
+.at-error.card-panel {
+	background-color: $green;
+	margin: 0;
+	border-radius: 0;
+	padding: 0;
+	color: $whiteOverGreen;
+}
+
+.error-text {
+	display: block;
+	text-align: center;
+	font-size: 1.6em;
+	line-height: 280%;
+	height: 60px;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////
 // Keyframe animations //
 ///////////////////////////////////////////////////////////////////////////////////////
 
@@ -1719,6 +1886,9 @@ footer {
 }
 .icon-ts-trash:before {
   content: "g";
+}
+.icon-ts-profile:before {
+  content: "h";
 }
 
 @font-face {
