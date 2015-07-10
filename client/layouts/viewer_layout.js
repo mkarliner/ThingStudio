@@ -6,6 +6,7 @@ Template.ViewerLayout.helpers({
 	appHamburger: function() {
 		appId = Session.get("currentAppId")
 		app = Apps.findOne({_id: appId})
+		if ( !app ) { return }
 		showMenu = app.showHamburger
 		screenCount = Screens.find({}).count()
 		console.log('screencount', screenCount)
