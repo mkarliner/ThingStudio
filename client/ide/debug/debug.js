@@ -2,6 +2,12 @@ Template.DebugBody.onRendered(function() {
 	$('ul.tabs').tabs();
 });
 
+Template.DebugOverlay.events({
+	'click .view-full-debug': function(e, tmpl) {
+		debugOps();
+	}
+});
+
 Template.DebugBody.helpers({
 	feeds: function() {
 		return Feeds.find();
