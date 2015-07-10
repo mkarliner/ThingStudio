@@ -30,14 +30,14 @@
 
 <template name="DebugOverlay">
 	<div id="debug" class="debug z-depth-1">
-		<h2><i class="icon-ts-ekg"></i><span>Live Feeds Data</span></h2>
+		<h2><i class="icon-ts-ekg"></i><span>Live Feeds Data</span> <a href="/debug" class="right view-full-debug">Go to Debugger</a></h2>
 		<div class="debug-body">
 			<h3>Received Messages</h3>
 			{{> DebugSubscribe}}
 			<h3>Sent Messages</h3>
 			{{> DebugPublish}}
 			<!-- <div class="screen-errors">Runtime Errors: {{runtimeErrors}}</div> -->
-			<a href="/debug" class="btn btn-flat right view-full-debug">View as full page</a>
+			
 		</div>
 	</div>
 </template>

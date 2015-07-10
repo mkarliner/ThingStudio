@@ -597,13 +597,15 @@ nav.top-nav {
 		color: $headerColor;
 		padding: 0.3em 15px;
 		margin: 0;
+		display: inline-block;
+		width: 100%;
 		& i {
 			position: absolute;
 			top: 9px;
 			left: 13px;
 		}
 		& span {
-			display: block;
+			display: inline-block;
 			margin-left: 27px;
 		}
 	}
@@ -630,6 +632,14 @@ nav.top-nav {
 	& td:last-child, th:last-child {
 		padding-right: 15px;
 	}
+}
+
+a.view-full-debug {
+	color: $green;
+	border-bottom: 2px solid $green;
+	font-size: 0.7em;
+	line-height: 1.1em;
+	padding-top: 0.5em;
 }
 
 .debug.debug-open {
