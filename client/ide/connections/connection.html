@@ -26,7 +26,15 @@
 			{{> afQuickField name='host' placeholder="Hostname"}}
 			{{> afQuickField name='port' placeholder="Port"}}
 			{{> afQuickField name='protocol' placeholder="Protocol"}}
-			{{> afQuickField name='serverCredentials'}}
+			<div class="form-group{{#if afFieldIsInvalid name='serverCredentials'}} has-error{{/if}} pos-rel">
+				<div data-required="true" class="div-inline">
+					{{> afFieldInput name='serverCredentials' template="materialiseCheckbox"}}
+				</div>
+				<a class="tooltipped ts-tooltip" data-position="top" data-delay="50" data-tooltip="Store credentials at ThingStudio server" >?</a>
+				{{#if afFieldIsInvalid name='serverCredentials' }}
+					<span class="help-block">{{afFieldMessage name='serverCredentials' }}</span>
+				{{/if}}
+			</div>
 			{{> afQuickField name='username' placeholder="Username (optional)"}}
 			{{> afQuickField name='password' placeholder="Password (optional)"}}
 			<button type="submit" class="btn btn-update">Save Connection</button>

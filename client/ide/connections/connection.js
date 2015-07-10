@@ -1,5 +1,6 @@
 Template.EditSingleConnectionBody.onRendered(function() {
-    $('ul.tabs').tabs();
+	$('ul.tabs').tabs();
+	$('.tooltipped').tooltip({delay: 50});
 });
 
 

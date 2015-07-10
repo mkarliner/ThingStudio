@@ -233,8 +233,26 @@ table.striped tbody tr:nth-child(odd) {
 	background-color: $white;
 }
 
+.pos-rel {
+	position: relative;
+}
+
 .div-inline {
 	display: inline;
+}
+
+.ts-tooltip {
+	background-color: $baseText;
+	color: white;
+	height: 20px;
+	width: 20px;
+	text-align: center;
+	border-radius: 50%;
+	display: inline-block;
+	position: absolute;
+	top: 0.8em;
+	left: 6.5em;
+	padding-top: 0.15em;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
