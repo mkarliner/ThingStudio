@@ -616,6 +616,12 @@ nav.top-nav {
 	-webkit-transform: translateX(0%);
 }
 
+.debug-page {
+	& th {
+		background-color: transparent;
+	}
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////
 // Error Reporting //
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -784,6 +790,7 @@ th {
 	background: $white;
 	text-transform: uppercase;
 	padding: 15px 0;
+	border-radius: 0;
 }
 
 table.hoverable {
