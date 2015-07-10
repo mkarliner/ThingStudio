@@ -1,7 +1,27 @@
+<!-- This is the checkbox when we want the label to the left, and need to generate an ID -->
 <template name="afCheckbox_materialiseCheckbox">
-  <div><input type="checkbox" class="filled-in" {{atts}} /> <label for="{{atts.id}}">{{afFieldLabelText name=this.name}}</label></div>
+	<div class="mat-check">
+		<label for="{{atts.id}}" class="control-label">{{afFieldLabelText name=this.name}}</label>
+		<div class="div-inline"><input type="checkbox" class="filled-in" {{atts}} />
+			<label for="{{atts.id}}"></label>
+		</div>
+	</div>
 </template>
 
+<!-- This is the checkbox when want the label to the right, and do NOT need to generate an ID -->
+<!-- For example, when using afInputField -->
 <template name="afCheckbox_mCheckbox">
-  <div><input type="checkbox" class="filled-in" {{this.atts}} /> <label>{{afFieldLabelText name=this.name}}</label></div>
+	<div class="mat-check">
+		<input type="checkbox" class="filled-in" {{this.atts}} />
+		<label>{{afFieldLabelText name=this.name}}</label>
+	</div>
+</template>
+
+<!-- This is the checkbox when we want the label to the right, and need to generate and ID -->
+<!-- For Example, when using afQuickField -->
+<template name="afCheckbox_mCheckboxWithAutoformID">
+	<div>
+		<input type="checkbox" class="filled-in" {{this.atts}} />
+		<label for="{{atts.id}}">{{afFieldLabelText name=this.name}}</label>
+	</div>
 </template>
