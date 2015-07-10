@@ -36,7 +36,7 @@ Template.DashboardBody.helpers({
 			connectionTitle = connection[0].title
 			return connectionTitle
 		} else {
-			return 'No home screen set'
+			return 'No connection set'
 		}
 	},
 	showHomePage: function() {
