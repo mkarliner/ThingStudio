@@ -124,7 +124,8 @@ Schemas.App = new SimpleSchema({
 	showHamburger: {
 		type: Boolean,
 		label: "Show Nav Menu in App Header",
-		defaultValue: true
+		defaultValue: true,
+		optional: true
 	}
 	// inAppStore: {
 	// 	type: Boolean,
