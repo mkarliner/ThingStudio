@@ -59,6 +59,7 @@ IDEController = RouteController.extend({
 
 				}
 			}),
+			Meteor.subscribe('sharedApps'),
 			Meteor.subscribe('connections', myCurrAppId),
 			Meteor.subscribe('feeds', myCurrAppId),
 			Meteor.subscribe('screens', myCurrAppId),

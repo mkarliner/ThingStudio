@@ -55,6 +55,10 @@ Schemas.UserProfile = new SimpleSchema({
     showWelcome: {
     	type: Boolean,
     	defaultValue: true
+    },
+    showExample: {
+    	type: Boolean,
+    	defaultValue: true
     }
 });
 

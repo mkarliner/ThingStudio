@@ -3,11 +3,12 @@
     "analyticsSettings": {
       "Google Analytics" : {"trackingId": "UA-62062520-1"}
     },
-    "olark": {
+/*    "olark": {
 	"identity": "9694-347-10-9101"
-    },
+    },*/
 	"domain": "www.thingstud.io",
-  	"systemApp": "EErwPoxDbhpWrstwy"
+  	"systemApp": "EErwPoxDbhpWrstwy",
+	"basicExampleApp": "kNbDopWji2LHgKzqm"
   },
   "private": {
 	  "MailChimp": {
