@@ -55,6 +55,12 @@ Template.DocumentationBody.helpers({
 		console.log("DocChanges ", changes.fetch())
 		return changes;
 	},
+	docLink: function() {
+		return Docs.findOne({filename: this.file}).attributes.urlstring
+	},
+	changedDate: function() {
+		return moment(this.lastUpdated).format('MMMM D, YYYY, hh:mm:ss a' );
+	},
 	addedremoved: function(){
 		return this.diff.added ? "Addition" : "Removal";
 	}

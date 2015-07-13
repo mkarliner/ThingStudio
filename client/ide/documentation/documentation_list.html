@@ -94,11 +94,19 @@
 	<div id="changelog">
 		<ul class="collection">
 			{{#each  changes}}
-			<hr/>
+			<!-- <hr/>
 			<div>{{title}}</div>
 			<div>{{date}}</div>
 			<div>{{addedremoved}}</div>
-			<div>{{diff.value}}</div>
+			<div>{{diff.value}}</div> -->
+			<li class="collection-item avatar">
+				<img src="http://lorempixel.com/80/80/" alt="" class="circle">
+				<span class="title">Doc updated: <a href="/docs/{{docLink}}">{{title}}</a></span>
+				<p><span class="fwMedium">Diff log:</span> {{diff.value}}<br>
+				<span class="fwMedium">Type:</span> {{addedremoved}}
+				</p>
+				<a href="#!" class="secondary-content">Date: {{changedDate}}</a>
+			</li>
 
 			{{/each}}
 		</ul>
