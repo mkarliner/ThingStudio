@@ -13,7 +13,6 @@ Router.route("/dashboard", {
 	controller: "IDEController",
 	action: function() {
 		u = Meteor.user();
-		console.log("ACT ", u)
 		if (u) {
 			//Disable welcome page for the moment.
 			//if (u.profile && u.profile.showWelcome) {
