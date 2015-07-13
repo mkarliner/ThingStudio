@@ -50,15 +50,9 @@ IDEController = RouteController.extend({
 						return;
 					}
 					//Are we logged in, with Apps, but none current?
-<<<<<<< HEAD
-					//Just choose the 'My First App
-					if(Meteor.userId) {
-						initialApp = Apps.findOne({title: "My First App"});
-=======
 					//Just choose the any app.
 					if(Meteor.userId) {
 						initialApp = Apps.findOne();
->>>>>>> X-model
 						Session.setPersistent("currentAppId", initialApp._id);
 						return;
 					}
