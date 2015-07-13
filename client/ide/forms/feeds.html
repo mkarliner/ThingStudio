@@ -13,7 +13,7 @@
 		</div>
 		<div id="processing">
 			<!-- <h2><span class="fwHeavy">Feed Processing</span><span class="h2-details"> &ndash; Optional capabilities to add to your feed for use in Templates</span></h2> -->
-
+			{{> afQuickField name='jsonKey' placeholder="key to extract from JSON object"}}
 			<p><span class="fwHeavy">Journaling</span> &ndash; Enabling this allows things like time-series data, etc.</p>
 			<div class="form-group{{#if afFieldIsInvalid name='doJournal'}} has-error{{/if}}">
 				<div data-required="true" class="checkbox-left">

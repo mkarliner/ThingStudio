@@ -220,6 +220,9 @@ connect = function (conn, usr, pass) {
 			result = regex(topic);
 			if(result) {
 				// console.log("Feed matched", result);
+				if(feeds[i].jsonKey) {
+					payload = payload[feeds[i].jsonKey];
+				}
 				Messages.upsert({topic: topic, feed: feeds[i].title}, {$set: {feed: feeds[i].title, topic: topic, payload: payload}, $inc:{count: 1}});
 				if(feeds[i].doJournal) {
 					//Do journal stuff
