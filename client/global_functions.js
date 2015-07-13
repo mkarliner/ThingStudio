@@ -24,7 +24,7 @@ publish = function(feed, message) {
 
 
 publishFeed = function(feedName, message) {
-	if(feedName == "dummyfeed") {
+	if(feedNTame == "dummyfeed") {
 		return;
 	}
 	feed = Feeds.findOne({title: feedName});

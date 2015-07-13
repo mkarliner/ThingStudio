@@ -40,16 +40,16 @@ IDEController = RouteController.extend({
 						//If so, create first app.
 						//console.log("Creating default app on ready", Meteor.userId())
 						appId = Apps.insert({
-							title: "defaultApp",
+							title: "My First App",
 							shareable: false,
 						});
 						Session.setPersistent("currentAppId", appId);
 						return;
 					}
 					//Are we logged in, with Apps, but none current?
-					//Just choose the 'defaultApp
+					//Just choose the 'My First App
 					if(Meteor.userId) {
-						initialApp = Apps.findOne({title: "defaultApp"});
+						initialApp = Apps.findOne({title: "My First App"});
 						Session.setPersistent("currentAppId", initialApp._id);
 						return;
 					}

@@ -37,7 +37,7 @@ getAppTree = function(appId){
 
 
 Meteor.startup(function() {
-	//Before anything, initialise defaultApp for all users 
+	//Before anything, initialise My First App for all users 
 	//and connect any orphan resources.
 	no_connection_cnt = 0;
 	no_app_cnt = 0;
@@ -62,7 +62,7 @@ Meteor.startup(function() {
 			no_app_cnt++;
 			app = {};
 			app._id  = Apps.insert({
-				title: "defaultApp",
+				title: "My First App",
 				owner: u._id,
 				shareable: false,
 				public: false
