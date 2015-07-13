@@ -31,7 +31,6 @@ Router.route("/view/app/:_id", {
 		
 
 		screen_cnt = Screens.find({isWidget: false}).count();
-		InstantiateWidgets();
 		// If there is an app home page, go there
 		if (app.home_page) {
 			Router.go("/viewer/screen/" + app.home_page);
