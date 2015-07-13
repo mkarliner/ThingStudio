@@ -23,7 +23,7 @@ Tables.HelpersTable = [
 		description: "Return the last 'n' messages of a journalled feed. The feed's feed limit property specifies 'n';"
 	},
 	{
-		name: "indexArray",
+		name: "indexedArray",
 		params: "Array",
 		description: "Returns an array of objects with key and value properties. This is useful for interating over arrays of values in display widgets"
 	},

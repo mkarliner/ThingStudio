@@ -22,10 +22,13 @@ IDEController = RouteController.extend({
 						return;
 					}
 					initialApp = Session.get("currentAppId");
-					console.log("Initial App on Startup ", initialApp);
-					if(initialApp && Apps.findOne({_id: "currentAppId"})) {
+					ia = Apps.findOne({_id: "currentAppId"})
+					console.log("Initial App on Startup ", initialApp, ia);
+					if(initialApp && ia) {
 						console.log("Found initial app ", initialApp)
 						return;
+					} else {
+						Session.setPersistent("currentAppId", null);
 					}
 					console.log("Apps Ready", Apps.find({}).fetch());
 					//Is there only one App available?
@@ -47,9 +50,9 @@ IDEController = RouteController.extend({
 						return;
 					}
 					//Are we logged in, with Apps, but none current?
-					//Just choose the 'My First App
+					//Just choose the any app.
 					if(Meteor.userId) {
-						initialApp = Apps.findOne({title: "My First App"});
+						initialApp = Apps.findOne();
 						Session.setPersistent("currentAppId", initialApp._id);
 						return;
 					}
