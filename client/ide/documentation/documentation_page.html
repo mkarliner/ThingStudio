@@ -1,18 +1,23 @@
 <template name="DocsHeader">
-	<h1 class="left">{{attributes.title}}</h1>
-	<div class="right">
-		<!-- <a class="btn header-action-2" href="{{prevpage}}">Previous</a>
-		<a class="btn header-action-2" href="{{nextpage}}">Next</a> -->
+	<div class="center docheader">
+		<h1>{{attributes.title}}</h1>
+		<!-- <div class="right">
+			<a class="btn header-action-2" href="{{prevpage}}">Previous</a>
+			<a class="btn header-action-2" href="{{nextpage}}">Next</a>
+		</div> -->
+		<p>{{summary}}</p>
+		<div class="clearfix"></div>
 	</div>
-	<p class="clearfix">Summary: {{summary}}</p>
 </template>
 
 <template name="DocsBody">	
-	<div class="single-page-container">
+	<div class="single-page-container docpage">
 		<div id="helpbody">
-			{{#markdown}}{{> Template.dynamic template=currentDoc}}{{/markdown}}
+			<div class="col s8 offset-s2">
+				{{#markdown}}{{> Template.dynamic template=currentDoc}}{{/markdown}}
+			</div>
 		</div>
-		<p class="text-muted"><em>Last updated: {{publishedDate updatedAt}}</em></p>
+		<!-- <p class="text-muted"><em>Last updated: {{publishedDate updatedAt}}</em></p> -->
 		<div id="helpfooter">
 			<p>&copy; ThingStudio 2015</p>
 		</div>

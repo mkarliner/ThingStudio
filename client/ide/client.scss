@@ -73,6 +73,10 @@ $fwBlack: 'AvenirLTStd-Black';
 	font-family:'LCDBOLD',Serif;
 }
 
+strong {
+	font-family: $fwMedium;
+}
+
 //Sidebar
 $sideNavWidth: 220px;
 $darkBase: #353C51;
@@ -1578,6 +1582,51 @@ span.title {
 
 .collection {
 	margin-top: 0;
+}
+
+.docheader h1 {
+	margin-top: 1em;
+	font-family: $fwHeavy;
+	font-size: 2.6em;
+	margin-bottom: 0.3em;
+}
+
+.docheader p {
+	font-size: 1.5em;
+	font-family: $fwMedium;
+	margin: 0;
+}
+
+.single-page-container.docpage {
+	background-color: $white;
+}
+
+.docpage 
+	& p, & ul {
+	font-size: 1.285714em;
+	font-family: $fwLight;
+	line-height: 1.6em;
+	& ul {
+		margin: 0 0 0 2em;
+	}
+}
+
+.docpage h2 {
+	color: $headerColor;
+	font-size: 1.6em;
+	font-family: $fwHeavy;
+	letter-spacing: 0.1px;
+}
+
+.docpage h3 {
+	color: $headerColor;
+	font-size: 1.3em;
+	font-family: $fwHeavy;
+	letter-spacing: 0.1px;
+}
+
+.docpage ul li {
+	list-style: disc;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
