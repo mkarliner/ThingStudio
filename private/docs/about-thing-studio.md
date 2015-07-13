@@ -12,13 +12,13 @@ Therefore, the first step to getting up and running with ThingStudio is to run a
 
 Now for a little more background on MQTT. We've included a summary of MQTT from the manual page for the mosquitto broker on http://mosquitto.org.
 
-# Publish/Subscribe
+## Publish/Subscribe
 
 The MQTT protocol is based on the principle of publishing messages and subscribing to topics, or "pub/sub". Multiple clients connect to a broker and subscribe to topics that they are interested in. Clients also connect to the broker and publish messages to topics. Many clients may subscribe to the same topics and do with the information as they please.
 
 The broker and MQTT act as a simple, common interface for everything to connect to. This means that you if you have clients that dump subscribed messages to a database, to Twitter, Cosm or even a simple text file, then it becomes very simple to add new sensors or other data input to a database, Twitter or so on.
 
-# Topics/Subscriptions
+## Topics/Subscriptions
 
 Messages in MQTT are published on topics. There is no need to configure a topic, publishing on it is enough.
 

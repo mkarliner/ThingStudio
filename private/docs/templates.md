@@ -4,8 +4,6 @@ urlstring: "templates"
 summary: "Templates are HTML forms that show live data from your feeds NOTE: 'Screens' are now Templates!"
 ---
 
-#Important: Templates used to be called 'Screens' in previous versions of ThingStudio
-
 Templates are simple HTML templates that provide the structure of the view for your data.
 
 They are also where you specify how data **from** "Feeds" will be rendered, and what messages to publish **to** "Feeds" when data is entered on a input or a when button is clicked.

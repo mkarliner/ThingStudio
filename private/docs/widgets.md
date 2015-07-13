@@ -30,10 +30,4 @@ Web Components are different because they are used as HTML custom elements. This
 
 Web Component tag  names must have a '-' in them, this is a HTML5 requirement. The ThingStudio house widgets all start with 'ts-', so it's probably a good idea if you avoid using that prefix.
 
-
-
-
-
-
-
 Stay tuned for more information on making your own widgets.
