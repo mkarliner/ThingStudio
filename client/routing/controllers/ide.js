@@ -32,7 +32,7 @@ IDEController = RouteController.extend({
 					}
 					console.log("Apps Ready", Apps.find({}).fetch());
 					//Is there only one App available?
-					numApps = Apps.find().count();
+					numApps = Apps.find({owner: Meteor.userId()}).count();
 					if(numApps == 1) {
 						initialApp = Apps.findOne();
 						Session.setPersistent("currentAppId", initialApp._id);
