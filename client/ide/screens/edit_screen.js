@@ -20,7 +20,7 @@ Template.EditScreenBody.helpers({
 	},
 	accessStatus: function(){
 		if(this.owner != Meteor.userId()) {
-			return "This Screen is read - only, you can make edits, but they will have no effect. Go to 'Screens' and click 'Add Screen' to edit your own."
+			return "This template is read - only, you can make edits, but they will have no effect. "
 		}
 	},
 	safeEdit: function(){

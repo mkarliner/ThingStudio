@@ -75,6 +75,18 @@ setCredentials = function(cred){
 	 Session.set("authReady", true);
 }
 
+isEditable = function(obj) {
+	if(obj.owner == Meteor.userId()) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+Template.registerHelper("thisIsEditable", function(){
+	return thisIsEditable(this);
+})
+
 
 
 

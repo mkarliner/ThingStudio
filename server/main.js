@@ -178,9 +178,9 @@ Meteor.startup(function() {
 			this.ready(); //If there is not such app.
 			return;
 		}
-		console.log("Subscribing screens: ", appId,  app.title, app.access)
+		console.log("Subscribing screens: ", appId,  app.title, app.shareable)
 		if(this.userId == app.owner || app.shareable || isAdmin(this.userId)) {
-			// console.log("Returning screends: ", Screens.find({appId: appId}).fetch().length )
+			//console.log("Returning screends: ", Screens.find({appId: appId}).fetch().length )
 			return Screens.find({appId: {$in: apps}});
 		} else {
 			return [];
