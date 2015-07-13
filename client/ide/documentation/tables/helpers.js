@@ -1,12 +1,4 @@
-
-
-
 Tables.HelpersTable = [
-	{
-		name: "",
-		params: "",
-		description: ""
-	},
 	{
 		name: "message",
 		params: "feedname",

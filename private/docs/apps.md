@@ -29,10 +29,8 @@ If you have more than one screen in your app, and have not nominated a home scre
 If you would like to make your own navigation system for your app, nominate a home page and you can then use the following helpers to create links or buttons to send users to other screens in your app.
 <pre>
 {{|#templatelist }}
-<p><a href="{{|templateUrl}}">{{|this.title}}</a> {{|templateurl}}</p>
+  <p><a href="{{|templateUrl}}">{{|this.title}}</a> {{|templateurl}}</p>
 {{|/templatelist}}
-
-
 </pre>
 
 The  templatelist helper is a block helper that gives you a access to the list of screens in your app. The contents of the block, (in this example  the <p>...</p> element can use the templateUrl helper which returns the url of the screen, and the title property of the screen (this.screen) to make labels. This allows you to create your own menu page in any style you want.

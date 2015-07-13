@@ -1588,7 +1588,7 @@ span.title {
 	margin-top: 1em;
 	font-family: $fwHeavy;
 	font-size: 2.6em;
-	margin-bottom: 0.3em;
+	margin-bottom: 0.1em;
 }
 
 .docheader p {
@@ -1601,14 +1601,8 @@ span.title {
 	background-color: $white;
 }
 
-.docpage 
-	& p, & ul {
-	font-size: 1.285714em;
-	font-family: $fwLight;
-	line-height: 1.6em;
-	& ul {
-		margin: 0 0 0 2em;
-	}
+.docpage ul {
+	margin-left: 1em;
 }
 
 .docpage h2 {
@@ -1625,8 +1619,42 @@ span.title {
 	letter-spacing: 0.1px;
 }
 
+.docpage p,
+.docpage ul {
+	font-size: 1.285714em;
+	font-family: $fwLight;
+	line-height: 1.6em;
+}
+
 .docpage ul li {
 	list-style: disc;
+	line-height: 1.6em;
+}
+
+.docpage pre, .docpage code {
+	background-color: $appBodyBG;
+	padding: 30px;
+	border: solid 2px #DEE5E8;
+}
+
+.docpage thead {
+	border: 1px solid #d0d0d0;
+}
+
+.docpage thead th {
+	background-color: $appBodyBG;
+}
+
+.docpage table tr {
+	border-bottom: 1px solid #d0d0d0;
+}
+
+#helpfooter {
+	clear: both;
+	padding: 10em 0 1em;
+	& p {
+		text-align: center;
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -1658,8 +1686,8 @@ span.title {
 
 footer {
 	background-color: $appBodyBG;
-	padding-top: 40px;
-	padding-bottom: 10px;
+	// padding-top: 40px;
+	// padding-bottom: 10px;
 }
 
 @media only screen and (max-width: 992px) {

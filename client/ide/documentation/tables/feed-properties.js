@@ -1,10 +1,5 @@
 Tables.FeedProperties = [
 	{
-		name: "",
-		'type': "",
-		description: ""
-	},
-	{
 		name: "Title",
 		'type:': "String",
 		description: "Title for the feed to be shown in lists"

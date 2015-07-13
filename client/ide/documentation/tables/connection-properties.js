@@ -1,10 +1,5 @@
 Tables.ConnectionProperties = [
 	{
-		name: "",
-		'type': "",
-		description: ""
-	},
-	{
 		name: "Title",
 		'type:': "String",
 		description: "Title for the connection to be shown in lists"

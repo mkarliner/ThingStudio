@@ -17,25 +17,25 @@ They are also where you specify how data **from** "Feeds" will be rendered, and 
 Data is inserted from "Feeds" into your templates by using handlebars/mustache-style helpers (the use of double curly braces, i.e. '{{stuff}}') to HTML elements.
 
 The only difference between standard HTML5 and what you create in ThingStudio is the concept of these Handlebars helpers. If you haven't used Handlebars, here's how it works:
-
-    {{|message "feedTitleHere"}}
-
+<pre>
+{{|message "feedTitleHere"}}
+</pre>
 The code above will insert data in to your template **from** a Feed with the title "feedTitleHere".
 
 **Note**: We are using the feed title, **not** the topic/subscription.
 
 Simply add these Handlebars helpers anywhere you want to display live data from an MQTT topic. This can be in an paragraph tag, the value for a checkbox or a widget, a live update to a CSS value (i.e. setting classes or widths based on live data). Truly, the only limit is your imagination.
 
-
-
 ## Sending data to devices from your UIs
 
 Displaying live data is fun, but controlling your devices in real time is even more fun! And ThingStudio makes it easy.
 
 Send interaction data (clicks, input changes and more) and other data *to* your Feeds by simply adding data attributes to your HTML elements. The syntax resembles the following:
-
-    <button data-feed="Doorbell" data-message="doorbell">Bing Bong</button>
-
+<pre>
+	<code>
+		<button data-feed="Doorbell" data-message="doorbell">Bing Bong</button>
+	</code>
+</pre>
 Here we're creating a standard HTML button and adding two 'data' attributes:
 
 * data-feed

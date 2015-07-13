@@ -2,11 +2,6 @@ Tables = {};
 
 Tables.AttributesTable = [
 	{
-		name: "",
-		'publish/subscribe:': "",
-		description: ""
-	},
-	{
 		name: "data-feed",
 		'publish/subscribe:': "Both",
 		description: "The name of the feed to be used, either to display data from a subscription feed, \
