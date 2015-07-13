@@ -80,14 +80,14 @@ InstantiateWidgets = function(){
 			break;
 		}
 		if(Template[scr.title]) {
-			console.log("Deleting: ", scr.title);
+			// console.log("Deleting: ", scr.title);
 			delete Template[scr.title]; //Remove the existing template.
 		}	
-		console.log("Compiling ", scr.title);
+		// console.log("Compiling ", scr.title);
 		compileTemplate(scr.title, scr.html, scr.js);
 		if(wgt.widgetType == "Web Component") {
 			try {
-				console.log("Registering widget")
+				// console.log("Registering widget")
 				Template[scr.title].registerElement(wgt.tagName);
 			}
 			catch(err) {

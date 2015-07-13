@@ -137,7 +137,7 @@ Widgets.after.update(function(userId, doc) {
 			delete Template[name]; //Remove the existing template instance.
 			compret = compileTemplate(name, scr.html, scr.js);
 			Alerts.insert(compret);
-			console.log("Registering widget: "+doc.tagName)
+			// console.log("Registering widget: "+doc.tagName)
 			Template[scr.title].registerElement(doc.tagName);
 		}
 		catch(err) {

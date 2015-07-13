@@ -22,10 +22,13 @@ IDEController = RouteController.extend({
 						return;
 					}
 					initialApp = Session.get("currentAppId");
-					console.log("Initial App on Startup ", initialApp);
-					if(initialApp) {
+					ia = Apps.findOne({_id: initialApp})
+					console.log("Initial App on Startup ", initialApp, ia);
+					if(initialApp && ia) {
 						console.log("Found initial app ", initialApp)
 						return;
+					} else {
+						Session.setPersistent("currentAppId", null);
 					}
 					console.log("Apps Ready", Apps.find({}).fetch());
 					//Is there only one App available?
@@ -38,7 +41,7 @@ IDEController = RouteController.extend({
 					//Are we logged in, but have no Apps?
 					if(Meteor.userId() && numApps == 0) {
 						//If so, create first app.
-						//console.log("Creating default app on ready", Meteor.userId())
+						console.log("Creating default app on ready", Meteor.userId())
 						appId = Apps.insert({
 							title: "My First App",
 							shareable: false,
@@ -47,15 +50,22 @@ IDEController = RouteController.extend({
 						return;
 					}
 					//Are we logged in, with Apps, but none current?
+<<<<<<< HEAD
 					//Just choose the 'My First App
 					if(Meteor.userId) {
 						initialApp = Apps.findOne({title: "My First App"});
+=======
+					//Just choose the any app.
+					if(Meteor.userId) {
+						initialApp = Apps.findOne();
+>>>>>>> X-model
 						Session.setPersistent("currentAppId", initialApp._id);
 						return;
 					}
 
 				}
 			}),
+			Meteor.subscribe('sharedApps'),
 			Meteor.subscribe('connections', myCurrAppId),
 			Meteor.subscribe('feeds', myCurrAppId),
 			Meteor.subscribe('screens', myCurrAppId),
