@@ -22,7 +22,7 @@ IDEController = RouteController.extend({
 						return;
 					}
 					initialApp = Session.get("currentAppId");
-					ia = Apps.findOne({_id: "currentAppId"})
+					ia = Apps.findOne({_id: initialApp})
 					console.log("Initial App on Startup ", initialApp, ia);
 					if(initialApp && ia) {
 						console.log("Found initial app ", initialApp)
