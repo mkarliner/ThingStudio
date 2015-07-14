@@ -542,7 +542,11 @@ nav.top-nav {
 			background-color: $activeGreen;
 		}
 		&.disconnected {
-			background-color: $inactiveRed;
+			-webkit-animation: blink 3s 0s ease-in-out infinite;
+			-moz-animation: blink 3s 0s ease-in-out infinite;
+			-ms-animation: blink 3s 0s ease-in-out infinite;
+			-o-animation: blink 3s 0s ease-in-out infinite;
+			animation: blink 3s 0s ease-in-out infinite;
 		}
 	}
 }
@@ -1938,6 +1942,42 @@ a.at-signup, a.at-signin {
 	10% {opacity: 1;}
 	90% {opacity: 1;}
 	100% {opacity: 0;}
+}
+
+@-webkit-keyframes blink {
+	50% {
+		background-color: $inactiveRed;
+	}
+	100% {
+		background-color: transparent;
+	}
+}
+
+@-moz-keyframes blink {
+	50% {
+		background-color: $inactiveRed;
+	}
+	100% {
+		background-color: transparent;
+	}
+}
+
+@-ms-keyframes blink {
+	50% {
+		background-color: $inactiveRed;
+	}
+	100% {
+		background-color: transparent;
+	}
+}
+
+@keyframes blink {
+	50% {
+		background-color: $inactiveRed;
+	}
+	100% {
+		background-color: transparent;
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
