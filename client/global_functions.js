@@ -24,7 +24,7 @@ publish = function(feed, message) {
 
 
 publishFeed = function(feedName, message) {
-	if(feedNTame == "dummyfeed") {
+	if(feedName == "dummyfeed") {
 		return;
 	}
 	feed = Feeds.findOne({title: feedName});
@@ -205,7 +205,7 @@ connect = function (conn, usr, pass) {
 		//Convert message to JSON
 		try {
 			payload = JSON.parse(rawmessage);
-			// console.log("Payload rx: ", payload);
+			console.log("Payload rx: ", payload);
 		}
 		catch(err) {
 			console.log("MERR: ", err);
@@ -219,19 +219,23 @@ connect = function (conn, usr, pass) {
 			regex = mqttregex(feeds[i].subscription).exec;
 			result = regex(topic);
 			if(result) {
-				// console.log("Feed matched", result);
+				console.log("Feed matched", feeds[i].subscription, result);
 				if(feeds[i].jsonKey) {
-					payload = payload[feeds[i].jsonKey];
+					filteredPayload = payload[feeds[i].jsonKey];
+					jsonKey = feeds[i].jsonKey;
+				} else {
+					filteredPayload = payload
+					jsonKey = "none"
 				}
-				Messages.upsert({topic: topic, feed: feeds[i].title}, {$set: {feed: feeds[i].title, topic: topic, payload: payload}, $inc:{count: 1}});
+				Messages.upsert({topic: topic, feed: feeds[i].title,  jsonKey: jsonKey},  {$set: {feed: feeds[i].title, topic: topic, jsonKey: jsonKey, payload: filteredPayload}, $inc:{count: 1}});
 				if(feeds[i].doJournal) {
 					//Do journal stuff
 					Messages.update(
-					   {topic: topic, feed: feeds[i].title},
+					   {topic: topic, feed: feeds[i].title, jsonKey: jsonKey},
 					   {
 					     $push: {
 					       journal: {
-					         $each: [ payload.toString() ],
+					         $each: [ filteredPayload.toString() ],
 					         $slice: -(feeds[i].journal_limit)
 					       }
 					     }
@@ -240,9 +244,11 @@ connect = function (conn, usr, pass) {
 				}
 				if(feeds[i].doMaxMinAvg){
 					//Only work with numeric values.
-					value = parseFloat(payload);
+					value = parseFloat(filteredPayload);
+					console.log("VALL: ", jsonKey, value)
 					if(value != NaN) {
-						curr = Messages.findOne({topic: topic, feed: feeds[i].title });
+						curr = Messages.findOne({topic: topic, feed: feeds[i].title,  jsonKey: jsonKey });
+						//console.log("MMAV: ", feeds[i].title, curr)
 						if(curr) {
 							diff = value - curr.oldValue
 							// Check min
@@ -268,16 +274,18 @@ connect = function (conn, usr, pass) {
 							tc = 0.1;
 							avg = tc * value + (1.0-tc)* (curr.avg ? curr.avg : value);
 							diffavg = tc * diff + (1.0-tc)* (curr.diffavg ? curr.diffavg : diff);
-							//console.log("minMax", value, "diff: ", diff, min, max, avg);
-							Messages.upsert({topic: topic, feed: feeds[i].title}, {$set: {oldValue: value, diff: diff, min: min, max: max, avg: avg, diffavg: diffavg, count: count}})
+							console.log("UPSERGSD: ", feeds[i].title,  curr, " minMax", value, "diff: ", diff, min, max, avg);
+							Messages.upsert(
+								{topic: topic, feed: feeds[i].title, jsonKey: jsonKey}, 
+								{$set: {jsonKey: jsonKey, oldValue: value, diff: diff, min: min, max: max, avg: avg, diffavg: diffavg, count: count}})
 						} else {
-							//console.log("minMaxInit", curr);
-							Message.insert({topic: topic, feed: feeds[i].title, oldValue: curr, diff: 0, min: 0, max: 0, avg: value, diffavg: diff, count: 0 })
+							console.log("minMaxInit", jsonKey, curr);
+							Messages.insert({topic: topic, feed: feeds[i].title, jsonKey: jsonKey, oldValue: curr, diff: 0, min: 0, max: 0, avg: value, diffavg: diff, count: 0 })
 						}
 					}
 				}
 				if(Feedhooks[feeds[i].title]) {
-					Feedhooks[feeds[i].title](payload);	
+					Feedhooks[feeds[i].title](filteredPayload);	
 				}
 			}
 

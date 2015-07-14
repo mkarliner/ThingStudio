@@ -14,6 +14,7 @@ IDEController = RouteController.extend({
 		myCurrAppId = Session.get('currentAppId');
 		guestAppId = Session.get('guestAppId');
 		return [
+			Meteor.subscribe('sharedApps'),
 			Meteor.subscribe("apps", {
 				onReady: function(){
 					//Are we logged in.
@@ -59,7 +60,6 @@ IDEController = RouteController.extend({
 
 				}
 			}),
-			Meteor.subscribe('sharedApps'),
 			Meteor.subscribe('connections', myCurrAppId),
 			Meteor.subscribe('feeds', myCurrAppId),
 			Meteor.subscribe('screens', myCurrAppId),

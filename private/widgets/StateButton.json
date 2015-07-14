@@ -9,7 +9,7 @@
                 "paramType": "Feed",
                 "required": true,
                 "description": "Feed to publish to",
-                "dummyValue": "StatePub"
+                "dummyValue": "dummyfeed"
             },
             {
                 "title": "subfeed",

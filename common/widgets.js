@@ -13,7 +13,7 @@ Schemas.WidgetParameter = new SimpleSchema({
 		autoform: {
 			type: "selectize",
 			options: function(){
-				options = [{label: "Number", value: "Number"}, {label: "Array of Numbers", value: "[Numbers]"}, {label: "String", value: "String"}, {label: "Feed", value: "Feed"}];
+				options = [{label: "Number", value: "Number"}, {label: "Array of Numbers", value: "[Numbers]"}, {label: "String", value: "String"}, {label: "Feed", value: "Feed"}, {label: "JSON Object", value: "JSON Object"}];
 				return (options);
 			}
 		}

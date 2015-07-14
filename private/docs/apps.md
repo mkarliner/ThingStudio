@@ -43,9 +43,9 @@ Which will just return the URL for a screen of a given name.
 
 Finally, for ultimate control there is the templateForName helper, which looks like this.
 <pre>
-{{#with templateForName "TimeSeries"}}
-{{html}}
-{{/with}}
+{{|#with templateForName "TimeSeries"}}
+{{|html}}
+{{|/with}}
 </pre>
 This gives you access to all the properties of a screen, including the html and javascript it contains.
 This is mainly useful for creating demo screens that show both a working interface and the code that
