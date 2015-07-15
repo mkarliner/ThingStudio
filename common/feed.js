@@ -37,6 +37,10 @@ Schemas.Feed = new SimpleSchema({
 		type: String,
 
 	},
+	jsonKey: {
+		type: String,
+		optional: true
+	},
 	pubsub: {
 		type: String,
 		label: "Publish/Subscribe",

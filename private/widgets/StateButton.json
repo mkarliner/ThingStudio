@@ -9,7 +9,7 @@
                 "paramType": "Feed",
                 "required": true,
                 "description": "Feed to publish to",
-                "dummyValue": "StatePub"
+                "dummyValue": "dummyfeed"
             },
             {
                 "title": "subfeed",
@@ -26,7 +26,7 @@
                 "dummyValue": "Hall Light"
             }
         ],
-        "instructions": "IMPORTANT: WORK  IN PROGRESS! . Contact Mike.\n\nStateButton is both a command and a display widget.\nIt's designed for use where you have, say, a remote light, which may be switched on or off by more than one user.\nWhen first rendered, it enters 'unknown\" state and sends out a \"reqStatus\" message on it's publish feed. The remote device should reply with a current status - \"on\" or \"off\".\nWhen clicked, StateButton sends a toggleState message and enters \"waiting\" state, until the remote device has send a new status message.\n\nBackground color reflects state: \n-unknown - grey\n-on - green\n-off - red\n-waiting - white"
+        "instructions": "IMPORTANT: WORK  IN PROGRESS! . Contact Mike.\n\nStateButton is both a command and a display widget.\nIt's designed for use where you have, say, a remote light, which may be switched on or off by more than one user.\n\nWhen first rendered, it enters 'unknown\" state and sends out a \"reqStatus\" message on it's publish feed. The remote device should reply with a current status - \"on\" or \"off\".\n\nWhen clicked, StateButton sends a toggleState message and enters \"waiting\" state, until the remote device has send a new status message.\n\nBackground color reflects state: \n* unknown - grey\n* on - green\n* off - red\n* waiting - white"
     },
     "template": {
         "title": "StateButton",

@@ -12,39 +12,47 @@ Router.route("/dashboard", {
 	name: "Dashboard",
 	controller: "IDEController",
 	action: function() {
-		u = Meteor.user();
+		if ( !this.ready() ) {
+			// console.log("WAITING: ", this)
+			this.render("Loading", {
+				data: "Dashboard"
+			});
+		} else {
+			u = Meteor.user();
 		
-		if(u) {
-			//Set example app to current if first login.
-			example = Meteor.settings.public.basicExampleApp
-			console.log("FIRST Login test", u.profule, example)
-			if(u.profile && u.profile.showExample && example) {
-				Session.setPersistent("currentAppId", example);
-				Meteor.users.update({
-					_id: Meteor.userId()
-				}, {
-					$set: {
-						"profile.showExample": false
-					}
-				});
-			}
-		}
-		if (u) {
-			//Disable welcome page for the moment.
-			//if (u.profile && u.profile.showWelcome) {
-			if(false) {
-				this.redirect("/welcome");
-			} else {
-				if ( !this.ready() ) {
-					this.render("Loading", {
-						data: "Dashboard"
+			if(u) {
+				//Set example app to current if first login.
+				example = Meteor.settings.public.basicExampleApp
+				console.log("FIRST Login test", u.profule, example)
+				if(u.profile && u.profile.showExample && example) {
+					Session.setPersistent("currentAppId", example);
+					Meteor.users.update({
+						_id: Meteor.userId()
+					}, {
+						$set: {
+							"profile.showExample": false
+						}
 					});
+				}
+			}
+			if (u) {
+				//Disable welcome page for the moment.
+				//if (u.profile && u.profile.showWelcome) {
+				if(false) {
+					this.redirect("/welcome");
 				} else {
-					renderYields(this, 'Dashboard');
-				}		
+					if ( !this.ready() ) {
+						this.render("Loading", {
+							data: "Dashboard"
+						});
+					} else {
+						renderYields(this, 'Dashboard');
+					}		
+				}
 			}
 		}
 	}
+
 });
 
 Router.route("/credentials", {
@@ -176,13 +184,14 @@ Router.route("/templates/:_id/edit", {
 		scr.safeEdit = false;
 		// Set any default values up.
 		widget = Widgets.findOne({baseScreen: this.params._id});
-		if(widget && widget.parameters) {
-			for(var w = 0; w < widget.parameters.length; w++ ) {
-				p = widget.parameters[w];
-				//console.log("PARAM: ", p);
-				scr[p.title] = p.dummyValue; 
-			}
-		}
+		//Set up dummy data for widgets.
+		// if(widget && widget.parameters) {
+		// 	for(var w = 0; w < widget.parameters.length; w++ ) {
+		// 		p = widget.parameters[w];
+		// 		//console.log("PARAM: ", p);
+		// 		scr[p.title] = p.dummyValue;
+		// 	}
+		// }
 		return scr;
 	},
 	action: function() {
