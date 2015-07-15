@@ -1,4 +1,6 @@
 <template name="GetMyCredentials">
-	<h1>Please enter username and password for the connection to {{connectionHost}} ({{connectionName}})</h1>
- 	{{>updateCredentialsForm}}
+	<div class="credentials-form">
+		<h2>Please login to the connection {{connectionName}} ({{connectionHost}})</h2>
+	 	{{>updateCredentialsForm}}
+ 	</div>
 </template>
