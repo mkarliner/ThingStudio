@@ -184,13 +184,14 @@ Router.route("/templates/:_id/edit", {
 		scr.safeEdit = false;
 		// Set any default values up.
 		widget = Widgets.findOne({baseScreen: this.params._id});
-		if(widget && widget.parameters) {
-			for(var w = 0; w < widget.parameters.length; w++ ) {
-				p = widget.parameters[w];
-				//console.log("PARAM: ", p);
-				scr[p.title] = p.dummyValue; 
-			}
-		}
+		//Set up dummy data for widgets.
+		// if(widget && widget.parameters) {
+		// 	for(var w = 0; w < widget.parameters.length; w++ ) {
+		// 		p = widget.parameters[w];
+		// 		//console.log("PARAM: ", p);
+		// 		scr[p.title] = p.dummyValue;
+		// 	}
+		// }
 		return scr;
 	},
 	action: function() {

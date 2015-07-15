@@ -71,10 +71,10 @@ compileTemplate = function(name, html_text, javascript) {
 				return msg && msg.journal ? JSON.stringify(msg.journal)  : ["no values"];
 			},
 			minmax: function(feed) {
-				msg = Messages.findOne({feed: feed});
-				ret = msg ? JSON.stringify(msg) : JSON.stringify({min: 0, max: 0, avg: 0});
-				// console.log("MMM: ", ret);
-				return ret;
+				msg = OldMessages.findOne({feed: feed});
+				ret = msg ? msg : {min: 0, max: 0, avg: 0};
+				//console.log("MMM: ", ret);
+				return JSON.stringify(ret);
 			}
 		});
 		Template[name].events({

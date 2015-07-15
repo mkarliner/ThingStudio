@@ -28,8 +28,10 @@
 			</div>
 			{{#if instructions}}
 				<div class="form-group detail">
-					<p class="fwHeavy">
+					<p >
+						{{#markdown}}
 						{{instructions}}
+						{{/markdown}}
 					</p>
 				</div>
 			{{/if}}
@@ -57,7 +59,7 @@
 				<button class="btn" id="download-widget">Download</button>
 			{{/if}}
 			
-			<p><span class="fwHeavy">Create your own</span> &ndash; To make your own version of this widget which you can modify, copy with the HTML and / or JavaScript below</p>
+			<!-- <p><span class="fwHeavy">Create your own</span> &ndash; To make your own version of this widget which you can modify, copy with the HTML and / or JavaScript below</p>
 			{{#if html}}
 				<p class="fwBlack">HTML</p>
 				<div class="code-preview">
@@ -69,7 +71,7 @@
 				<div class="code-preview">
 					<pre>{{js}}</pre>
 				</div>
-			{{/if}}
+			{{/if}} -->
 		</div>
 		<div id="preview">
 			{{> Template.dynamic template=currentScreen data=dummyData}}
