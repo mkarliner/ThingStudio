@@ -1,5 +1,5 @@
 ---
-title: 'Getting data between IoT devices and ThingStudio'
+title: 'Sending data between IoT devices and ThingStudio'
 urlstring: 'getting-data-in-and-out'
 summary: 'How to transfer data between ThingStudio and your devices.'
 ---
