@@ -158,7 +158,13 @@ Screens.before.insert(function(userId, doc) {
 	if(Meteor.isClient) {
 		// console.log("BEFOREHOOK ", userId, doc, Session.get("currentApp"));
 		doc.appId = Session.get("currentApp")._id;
-	}
+	} else {
+		app = Apps.findOne(doc.appId);
+		if(app.owner != doc.owner) {
+			console.log("Attempt to create connection in someone else's app.")
+			return false;
+		}
+	} 
 });
 
 
@@ -212,10 +218,10 @@ Screens.allow({
 		return (userId && doc.owner === userId);
 	},
 	update: function(userId, doc) {
-		return (userId && doc.owner === userId);
+		return (userId && doc.owner === userId || isAdmin(userId));
 	},
 	remove: function(userId, doc) {
-		return (userId && doc.owner === userId);
+		return (userId && doc.owner === userId || isAdmin(userId));
 	}
 });
 

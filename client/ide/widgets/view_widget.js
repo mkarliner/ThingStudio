@@ -29,6 +29,7 @@ Template.SingleWidgetBody.helpers({
 	},
 	dummyData: function(){
 		dd = {}
+		return dd;
 		if(this.parameters){
 			for(var p=0; p < this.parameters.length; p++){
 				dd[this.parameters[p].title] = this.parameters[p].dummyValue;

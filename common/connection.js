@@ -101,7 +101,12 @@ Connections.before.insert(function(userId, doc) {
 		console.log("BEFOREHOOK ", userId, doc, Session.get("currentApp"));
 		return true;
 	} else {
-		console.log("BEFOREHOOK Server", userId, doc);
+		app = Apps.findOne(doc.appId);
+		if(app.owner != doc.owner) {
+			console.log("Attempt to create connection in someone else's app.")
+			return false;
+		} 
+		//console.log("BEFOREHOOK Server", userId, doc);
 	}
 });
 
@@ -122,9 +127,9 @@ Connections.allow({
 		return (userId && doc.owner === userId);
 	},
 	update: function(userId, doc) {
-		return (userId && doc.owner === userId);
+		return (userId && doc.owner === userId || isAdmin(userId));
 	},
 	remove: function(userId, doc) {
-		return (userId && doc.owner === userId);
+		return (userId && doc.owner === userId || isAdmin(userId));
 	}
 });

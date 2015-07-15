@@ -62,6 +62,7 @@ Template.WidgetList.helpers({
 	},
 	dummyData: function(){
 		dd = {}
+		return {};
 		if(this.parameters){
 			for(var p=0; p < this.parameters.length; p++){
 				dd[this.parameters[p].title] = this.parameters[p].dummyValue;
