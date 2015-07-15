@@ -1605,10 +1605,6 @@ span.title {
 	background-color: $white;
 }
 
-.docpage ul {
-	margin-left: 1em;
-}
-
 .docpage h2 {
 	color: $headerColor;
 	font-size: 1.6em;
@@ -1630,15 +1626,24 @@ span.title {
 	line-height: 1.6em;
 }
 
+.docpage ul {
+	margin-left: 1em;
+}
+
 .docpage ul li {
 	list-style: disc;
 	line-height: 1.6em;
+}
+
+.docpage p {
+	margin: 0;
 }
 
 .docpage pre, .docpage code {
 	background-color: $appBodyBG;
 	padding: 30px;
 	border: solid 2px #DEE5E8;
+	line-height: 1.75em;
 }
 
 .docpage thead {
