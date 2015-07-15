@@ -8,7 +8,7 @@ Template.ViewerLayout.helpers({
 		app = Apps.findOne({_id: appId})
 		if ( !app ) { return }
 		showMenu = app.showHamburger
-		screenCount = Screens.find({}).count()
+		screenCount = Screens.find({isWidget: false}).count()
 		console.log('screencount', screenCount)
 		if ( !showMenu ||  screenCount < 2) {
 			// Hide the nav
@@ -19,7 +19,7 @@ Template.ViewerLayout.helpers({
 		}
 	},
 	screenlist: function(){
-		return Screens.find({})
+		return Screens.find({isWidget: false})
 	},
 	runtimeErrors: function(){
 		return Session.get("runtimeErrors");

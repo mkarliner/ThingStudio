@@ -143,9 +143,13 @@ Meteor.startup(function() {
 	
 	Meteor.publish("sharedApps", function(){
 		basicExampleApp = Meteor.settings.public.basicExampleApp;
+		systemApp = Meteor.settings.public.systemApp;
 		if(basicExampleApp) {
 			applist = [],
 			applist.push(basicExampleApp);
+			if(isAdmin(this.userId))  {
+				applist.push(systemApp);
+			}
 			console.log("ALEXAM: ", applist);
 			return Apps.find({_id: {$in: applist}});
 		} else {
