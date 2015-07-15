@@ -201,9 +201,9 @@ Feeds.allow({
 		return (userId && doc.owner === userId);
 	},
 	update: function(userId, doc) {
-		(userId && doc.owner === userId || isAdmin(userId));
+		return (userId && doc.owner === userId || isAdmin(userId));
 	},
 	remove: function(userId, doc) {
-		(userId && doc.owner === userId || isAdmin(userId));
+		return (userId && doc.owner === userId || isAdmin(userId));
 	}
 });
