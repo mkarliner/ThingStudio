@@ -159,10 +159,10 @@ Widgets.allow({
 		return (userId && doc.owner === userId);
 	},
 	update: function(userId, doc) {
-		return (userId && doc.owner === userId);
+		(userId && doc.owner === userId || isAdmin(userId));
 	},
 	remove: function(userId, doc) {
-		return (userId && doc.owner === userId);
+		(userId && doc.owner === userId || isAdmin(userId));
 	}
 });
 
