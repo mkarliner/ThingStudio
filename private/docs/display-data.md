@@ -4,16 +4,14 @@ urlstring: "displaying-data-in-depth"
 summary: "More about displaying data"
 ---
 
-
 ThingStudio uses <a href="http://handlebarsjs.com/" target="_blank">Handlebars</a>-style helpers to insert live data in to your user interfaces based on Feeds you configure. Handlebars helpers look like this in templates:
 <pre>
-    {{| helpername params }} 
+{{| helpername params }} 
 </pre>
+
 The above means "insert dynamic data into the DOM using the helper _helpername_ with optional parameters."
 
 ## There are currently three helpers in ThingStudio: 'message', 'messages' & 'feedmatch'
-
-For a quick summary:
 
 * Use '**message**' when you are returning values from a Feed with no wild card topics
 * Use '**messages**' when you are returning values from a Feed containing wildcard topics
@@ -27,6 +25,7 @@ Lots more details on each of these below, so let's get started.
 <pre>
 {{| message "feedTitleHere" }}
 </pre>
+
 Returns the payload as a JSON object of the most recent message from the Feed with the title "feedTitleHere". In the case of simple values, that JSON object will just be a simple string. Simply be aware that if your device is sending more information, it may be a more complex object.
 
 We will cover more complex objects in another section.
@@ -38,13 +37,17 @@ Let's say we have a Feed saved with the following values:
 * Action: Update
 
 If the latest MQTT message  '20.17' is sent on the topic '/myHouse/gardenTemp' to the ThingStudio Feed  'GardenTemp', and  your template contains the following:
+
 <pre>
-    &lt;p&gt;Garden temp: {{|message GardenTemp}} degrees&lt;/p&gt;
+&lt;p&gt;Garden temp: {{|message GardenTemp}} degrees&lt;/p&gt;
 </pre>
-it will render like this:
+
+It will render like this:
+
 <pre>
 Garden temp: 20.17 degrees
 </pre>
+
 As new messages arrive from the MQTT broker on the topic '/myHouse/gardenTemp', the Screen will automatically be updated.
 
 **When to use**: Use this helper when you want to insert data in to your template from a Feed corresponding to a **non-wildcard** MQTT topic. For example:
@@ -61,9 +64,11 @@ If your MQTT topic contains wildcards (+ or #), use the 'messages' helper below,
 Displaying multiple values from an MQTT wildcard subscription is a little bit trickier, though still completely manageable for anyone comfortable with HTML. We'll approach this in small steps.
 
 First, the 'messages' helper itself:
+
 <pre>
-    {{| messages "feedTitleHere" }}
+{{| messages "feedTitleHere" }}
 </pre>
+
 Now, don't be scared off by this next sentence, which may or may not be more technical jargon than you want to handle (if it makes your eyes glaze over, keep reading, the example below will make it much more simple).
 
 The 'messages' helper returns an array of objects from the Feed "feedTitleHere". The 'messages' are objects in an array with the following JSON format:
@@ -74,7 +79,9 @@ The 'messages' helper returns an array of objects from the Feed "feedTitleHere".
     &quot;message&quot;: &quot;&lt; the body of the message&gt;&quot;
 }
 </pre>
+
 For instance, if we had a wildcard MQTT subscription of '/garden/temperatures/**#place**', (the '#' makes it wildcard, as would a '+') and had stored that subscription under the title 'temps' in ThingStudio, the JSON data returned could look like this:
+
 <pre>
 {
     "feed": "temps",
@@ -92,6 +99,7 @@ For instance, if we had a wildcard MQTT subscription of '/garden/temperatures/**
     "message": "11.36"
 }
 </pre>
+
 We've got our 'messages' helper in place, and ThingStudio knows which Feed we're interested in showing data from in our UI. BUT, what we want to do is display both the value and the 'place' that the data is coming from. We do this using 'feedmatch'.
 
 ### 3. Feedmatch
@@ -99,20 +107,25 @@ We've got our 'messages' helper in place, and ThingStudio knows which Feed we're
 Again, first the helper itself:
 
 <pre>
-    {{| feedmatch &lt;tag&gt; }}
+{{| feedmatch &lt;tag&gt; }}
 </pre>
+
 'feedmatch' serves to tell ThingStudio which part of the subscription '/garden/temperatures/#place' we are interested in rendering to the UI, and where to put it. Note: 'feedmatch' is only valid inside a messages block.
 
 We've spoken enough in the abstract about this, now let's make it clear with an example. Keep an eye out for 'messages' and 'feedmatch':
+
 <pre>
-    {{|#each messages "temps"}}
-       &lt;tr&gt;&lt;td&gt;{{|feedmatch &quot;place&quot;}}&lt;/td&gt;&lt;td&gt;{{|payload}}&lt;/td&gt;&lt;/tr&gt;
-    {{|/each}}
+{{|#each messages "temps"}}
+   &lt;tr&gt;&lt;td&gt;{{|feedmatch &quot;place&quot;}}&lt;/td&gt;&lt;td&gt;{{|payload}}&lt;/td&gt;&lt;/tr&gt;
+{{|/each}}
 </pre>
+
 Using the sample data from the JSON feed above, this code will output table rows with the content (HTML omitted to clarify the data itself):
+
 <pre>
-    strawberries 20.17
-    onions 19.62
-    flowers 11.36
+strawberries 20.17
+onions 19.62
+flowers 11.36
 </pre>
+
 We could have of course used any valid HTML markup instead of tables, but this is a simple example.

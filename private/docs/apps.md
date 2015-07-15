@@ -29,7 +29,7 @@ If you have more than one screen in your app, and have not nominated a home scre
 If you would like to make your own navigation system for your app, nominate a home page and you can then use the following helpers to create links or buttons to send users to other screens in your app.
 <pre>
 {{|#templatelist }}
-  <p><a href="{{|templateUrl}}">{{|this.title}}</a> {{|templateurl}}</p>
+	&lt;a href="{{|templateUrl}}"&gt;{{|this.title}}&lt;/a&gt; {{|templateurl}}
 {{|/templatelist}}
 </pre>
 
@@ -44,7 +44,7 @@ Which will just return the URL for a screen of a given name.
 Finally, for ultimate control there is the templateForName helper, which looks like this.
 <pre>
 {{|#with templateForName "TimeSeries"}}
-{{|html}}
+	{{|html}}
 {{|/with}}
 </pre>
 This gives you access to all the properties of a screen, including the html and javascript it contains.

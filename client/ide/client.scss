@@ -1635,7 +1635,7 @@ span.title {
 	line-height: 1.6em;
 }
 
-.docpage p {
+.docpage pre p {
 	margin: 0;
 }
 
@@ -1644,6 +1644,12 @@ span.title {
 	padding: 30px;
 	border: solid 2px #DEE5E8;
 	line-height: 1.75em;
+}
+
+.docpage pre code {
+	background-color: transparent;
+	padding: 0;
+	border: none;
 }
 
 .docpage thead {
