@@ -924,6 +924,8 @@ td.dropdown-td {
 .table-action.table-save-new i.icon-ts-checkmark {
 	line-height: 33px;
 }
+
+
 .div-container {
 	margin: -7px auto 0;
 	padding: 1rem 0 0 0;
@@ -990,7 +992,18 @@ table, .single-page-container {
 	}
 }
 
-.table-action.ta-disabled, .card .card-action a.ta-disabled {
+.card .card-action a.active-app {
+	background-color: $activeGreen;
+	border-color: $activeGreen;
+}
+
+.table-action.active-app i.icon-ts-checkmark {
+	color: $white;
+}
+
+.table-action.ta-disabled,
+.card .card-action a.ta-disabled,
+ {
 	@include disabledStyle;
 }
 
