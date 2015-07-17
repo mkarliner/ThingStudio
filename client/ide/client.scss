@@ -1409,7 +1409,7 @@ button.btn-plus, {
 // Widgets List //
 ///////////////////////////////////////////////////////////////////////////////////////
 
-.single-page-container.widgets {
+.single-page-container.widgets, .single-page-container.apps {
 	@include transition(padding-top, 0.1s, cubic-bezier(0.4, 0.0, 0.2, 1));
 	padding-top: 1.7em;
 	will-change: padding-top;
