@@ -131,6 +131,7 @@ Meteor.users.after.insert(function(userId, doc){
 		title: doc.username,
 		id: doc._id,
 		userName: doc.username,
-		details: doc.emails[0].address
+		details: doc.emails[0].address,
+		date: new Date()
 	});
 });
