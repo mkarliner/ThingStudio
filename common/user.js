@@ -124,3 +124,13 @@ Schemas.User = new SimpleSchema({
 });
 
 Meteor.users.attachSchema(Schemas.User);
+
+Meteor.users.after.insert(function(userId, doc){
+	SysLogs.insert({
+		event: "New User",
+		title: doc.username,
+		id: doc._id,
+		userName: doc.username,
+		details: doc.emails[0].address
+	});
+});
