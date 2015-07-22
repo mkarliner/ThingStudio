@@ -33,7 +33,7 @@ Accounts.onCreateUser(function(options, user){
 	// info = mailingLists.call("member-info", mcparams);
 	//console.log("MCINFO: ", info)
 	// console.log("MCP: ", mcparams);
-	if(options.profile && options.profile.mailing_opt_out == false) {
+	if(options.profile && options.profile.mailing_opt_out != true) {
 		try {
 			mailingLists.subscribe({
 				"email": {"email": options.email},
