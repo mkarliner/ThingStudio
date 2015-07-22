@@ -134,4 +134,14 @@ Meteor.users.after.insert(function(userId, doc){
 		details: doc.emails[0].address,
 		date: new Date()
 	});
+	console.log("Creating default app on ready", userId, doc)
+	appId = Apps.insert({
+		title: "My First App",
+		shareable: false,
+		public: false,
+		owner: doc._id
+	}, {getAutoValues: false});
+	
+	
+	
 });

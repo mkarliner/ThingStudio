@@ -7,7 +7,7 @@
  			});
  		}
  	} catch (e) {
- 		console.log("Userstatus start monitor failed ", e);
+ 		console.log("Userstatus start monitor failed ");
  	}
  })
 
