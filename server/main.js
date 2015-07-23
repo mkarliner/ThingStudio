@@ -1,4 +1,3 @@
-
 isAdmin = function(userId) {
 	user = Meteor.users.findOne({
 		_id: userId
@@ -414,7 +413,8 @@ Meteor.startup(function() {
 		"StateButton.json",
 		"TwoSeventyDial.json",
 		"Joystick.json",
-		"Keypad.json"
+		"Keypad.json",
+		"DeviceOrientation.json"
 	];
 
 	num = Docs.remove({lastUpdated: null});

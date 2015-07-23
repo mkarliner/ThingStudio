@@ -1,12 +1,22 @@
 {
     "widget": {
         "title": "DeviceOrientation",
-        "widgetType": "Library Template"
+        "widgetType": "Library Template",
+        "instructions": "This is an experimental widget, contact mike@thingstud.io with suggestions, problems etc.\nThis widget accesses the HTML5 Device Orientation API and outputs a stream of messages of the form \n{alpha: xx, beta: xx, gamma: xx}\nIt displays a message to indicate if the Device OrientationAPI is available and the current orientation data.\n\nUse this as a physical joystick control.",
+        "parameters": [
+            {
+                "title": "feed",
+                "paramType": "Feed",
+                "required": true,
+                "description": "The feed name to output to",
+                "dummyValue": "myFeed"
+            }
+        ]
     },
     "template": {
         "title": "DeviceOrientation",
         "html": "<!-- Replace this content with your own. -->\n<div>{{orientationSupported}}</div>\n{{#with orientationData }}\n    <div>Alpha: {{alpha}}</div>\n    <div>Beta: {{beta}}</div>\n    <div>Gamma: {{gamma}}</div>\n{{/with}}",
-        "js": "devOrientHandler = function(ev) {\n    console.log(\"OL: \", ev);\n    data = {alpha: ev.alpha, beta: ev.beta, gamma: ev.gamma};\n    publishFeed(\"Orientation\", {alpha: ev.alpha, beta: ev.beta, gamma: ev.gamma});\n    Session.set(\"DeviceOrientation\", data);\n};\n\n\n\nTemplate[name].onRendered(function(){\n    Session.set(\"DeviceOrientationFeed\", this.feed ? this.feed : \"dummyfeed\")\n});\n\n\nTemplate[name].helpers({\n    orientationSupported: function(){\n        if (window.DeviceOrientationEvent && Session.get(\"DeviceOrientation\").alpha != null) {\n            return \"Gyro outputs on\";\n        } else {\n            return \"Gyro output not supported.\"\n        }\n    },\n    orientationData: function(){\n        return Session.get(\"DeviceOrientation\");\n    }\n});\n\n\n\nif (window.DeviceOrientationEvent) {\n  // Listen for the event and handle DeviceOrientationEvent object\n  window.addEventListener('deviceorientation', devOrientHandler, false);\n}",
+        "js": "devOrientHandler = function(ev) {\n    //console.log(\"OL: \", ev);\n    data = {alpha: ev.alpha, beta: ev.beta, gamma: ev.gamma};\n    publishFeed(\"Orientation\", {alpha: ev.alpha, beta: ev.beta, gamma: ev.gamma});\n    Session.set(\"DeviceOrientation\", data);\n};\n\n\n\nTemplate[name].onRendered(function(){\n    Session.set(\"DeviceOrientationFeed\", this.feed ? this.feed : \"dummyfeed\")\n});\n\n\nTemplate[name].helpers({\n    orientationSupported: function(){\n        if (window.DeviceOrientationEvent && Session.get(\"DeviceOrientation\").alpha != null) {\n            return \"Gyro outputs on\";\n        } else {\n            return \"Gyro output not supported.\"\n        }\n    },\n    orientationData: function(){\n        return Session.get(\"DeviceOrientation\");\n    }\n});\n\n\n\nif (window.DeviceOrientationEvent) {\n  // Listen for the event and handle DeviceOrientationEvent object\n  window.addEventListener('deviceorientation', devOrientHandler, false);\n}",
         "isWidget": true
     }
 }
