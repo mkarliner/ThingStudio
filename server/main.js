@@ -311,7 +311,8 @@ Meteor.startup(function() {
 		user = Meteor.users.findOne({
 			_id: this.userId
 		});
-		if (user && user.roles && user.roles.indexOf('admin') > -1) {
+		//if (user && user.roles && user.roles.indexOf('admin') > -1) {
+			if(true) {
 			return Meteor.users.find({
 				"status.online": true
 			}, {
