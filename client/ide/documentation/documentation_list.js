@@ -59,7 +59,7 @@ Template.DocumentationBody.helpers({
 		return Docs.findOne({filename: this.file}).attributes.urlstring
 	},
 	changedDate: function() {
-		return moment(this.lastUpdated).format('MMMM D, YYYY, hh:mm:ss a' );
+		return moment(this.date).format('MMMM D, YYYY, hh:mm:ss a' );
 	},
 	addedremoved: function(){
 		return this.diff.added ? "Addition" : "Removal";

@@ -7,6 +7,17 @@ Template.LatestScreenUpdates.helpers({
 	
 });
 
+Template.SysadminHeader.helpers({
+	activeUsers: function(){
+		logs = SysLogs.find({}).fetch();
+		activeUsers = _.uniq(logs, false, function(d){ return d.userName})
+		return _.pluck(activeUsers, "userName").length-1;
+	},
+	newUsers: function(){
+		return SysLogs.find({event: "New User"}).count();
+	}
+});
+
 
 Template.SysLogs.helpers({
 	syslogs: function(){

@@ -1,4 +1,3 @@
-
 isAdmin = function(userId) {
 	user = Meteor.users.findOne({
 		_id: userId
@@ -312,7 +311,8 @@ Meteor.startup(function() {
 		user = Meteor.users.findOne({
 			_id: this.userId
 		});
-		if (user && user.roles && user.roles.indexOf('admin') > -1) {
+		//if (user && user.roles && user.roles.indexOf('admin') > -1) {
+			if(true) {
 			return Meteor.users.find({
 				"status.online": true
 			}, {
@@ -414,7 +414,8 @@ Meteor.startup(function() {
 		"StateButton.json",
 		"TwoSeventyDial.json",
 		"Joystick.json",
-		"Keypad.json"
+		"Keypad.json",
+		"DeviceOrientation.json"
 	];
 
 	num = Docs.remove({lastUpdated: null});

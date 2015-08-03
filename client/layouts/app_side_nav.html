@@ -46,12 +46,12 @@ Outstanding
 				<li class="{{isActivePath regex='^\\/chat'}}"><a href="/chat"><i class="mdi-action-face-unlock"></i> Chat {{#if newChats}}<span class="chat-count">{{numChats}}</span>{{/if}}</a>
 				</li>
 				<li class="{{isActivePath regex='^\\/support'}}"><a href="http://forum.thingstud.io" target="_blank"><i class="mdi-communication-forum"></i> Forum</a></li>
-				<!-- <li class="{{isActivePath regex='^\\/video-tutorials'}}"><a href="/tutorials"><i class="mdi-action-account-balance"></i> Video Tutorials</a></li> -->
+				<li class="{{isActivePath regex='^\\/video-tutorials'}}"><a href="/tutorials"><i class="mdi-action-account-balance"></i> Video Tutorials</a></li>
 				<li class="{{isActivePath regex='^\\/documentation|docs'}}"><a class="" href="/docs"><i class="mdi-maps-local-library"></i> Documentation</a></li>
 				<li class="{{isActivePath regex='^\\/support'}}"><a href="/support"><i class="mdi-communication-email"></i> Support</a></li>
 				{{#if isInRole 'admin'}}
 					<li class="{{isActivePath regex='^\\/current-users'}}"><a class="" href="/current-users">Current Users</a></li>
-					<li class="{{isActivePath regex='^\\/Sysadmin|sysadmin'}}"><a href="/sysadmin">System Admin</a></li>
+					<li class="{{isActivePath regex='^\\/Sysadmin|sysadmin'}}"><a href="/sysadmin">System Logs</a></li>
 				{{/if}}
 			</ul>
 		</div>

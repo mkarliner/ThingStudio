@@ -42,7 +42,7 @@ The  templatelist helper is a block helper that gives you a access to the list o
 There is also the templateURLForName helper which can be used like this:
 
 <pre>
-{{templateUrlForName "TimeSeries"}}
+{{|templateUrlForName "TimeSeries"}}
 </pre>
 
 Which will just return the URL for a screen of a given name.

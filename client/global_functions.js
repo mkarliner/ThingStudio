@@ -103,6 +103,20 @@ Template.registerHelper("thisIsEditable", function(){
 //
 // }
 
+
+
+isAdmin = function(userId) {
+	user = Meteor.users.findOne({
+		_id: userId
+	});
+	if (user && user.roles && user.roles.indexOf('admin') > -1) {
+		// console.log("Admin user", user);
+		return true;
+	} else {
+		return false;
+	}
+}
+
 getCurrentConnection = function() {
 	return  Session.get("currentConnection");
 }

@@ -1,6 +1,16 @@
 Widgets = new Mongo.Collection("widgets");
 
-
+isAdmin = function(userId) {
+	user = Meteor.users.findOne({
+		_id: userId
+	});
+	if (user && user.roles && user.roles.indexOf('admin') > -1) {
+		// console.log("Admin user", user);
+		return true;
+	} else {
+		return false;
+	}
+}
 
 Schemas.WidgetParameter = new SimpleSchema({
 	title: {
@@ -129,7 +139,7 @@ Widgets.before.insert(function(userId, doc) {
 		if(app.owner != doc.owner) {
 			console.log("Attempt to create connection in someone else's app.")
 			return false;
-		} 
+		}
 	}
 });
 
@@ -159,10 +169,10 @@ Widgets.allow({
 		return (userId && doc.owner === userId);
 	},
 	update: function(userId, doc) {
-		(userId && doc.owner === userId || isAdmin(userId));
+		return (userId && doc.owner === userId || isAdmin(userId));
 	},
 	remove: function(userId, doc) {
-		(userId && doc.owner === userId || isAdmin(userId));
+		return (userId && doc.owner === userId || isAdmin(userId));
 	}
 });
 

@@ -27,13 +27,15 @@ mcparams = {
 
 
 Accounts.onCreateUser(function(options, user){
-	// console.log("NEWUSER: ",options, "USER", user);
+	console.log("NEWUSER: ",options, "USER", user);
 
 	mcparams.emails = [{email: options.email}];
 	// info = mailingLists.call("member-info", mcparams);
 	//console.log("MCINFO: ", info)
-	// console.log("MCP: ", mcparams);
-	if(options.profile && options.profile.mailing_opt_out == false) {
+	console.log("MCP: ", mcparams, options);
+	//if(options.profile && options.profile.mailing_opt_out != true) {
+		if(true) {
+		console.log("Subscribe to mailchimp ", options.email);
 		try {
 			mailingLists.subscribe({
 				"email": {"email": options.email},
@@ -44,7 +46,7 @@ Accounts.onCreateUser(function(options, user){
 			});
 		}
 		catch(err) {
-			console.log("ERR:", err);
+			console.log("ERRSUB:", err);
 		}
 		try {
 			mailingLists.call("update-member", {
@@ -56,7 +58,7 @@ Accounts.onCreateUser(function(options, user){
 			});
 		}
 		catch(err) {
-			console.log("ERR:", err);
+			console.log("ERRUP:", err);
 		}
 
 	}

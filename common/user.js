@@ -124,3 +124,24 @@ Schemas.User = new SimpleSchema({
 });
 
 Meteor.users.attachSchema(Schemas.User);
+
+Meteor.users.after.insert(function(userId, doc){
+	SysLogs.insert({
+		event: "New User",
+		title: doc.username,
+		id: doc._id,
+		userName: doc.username,
+		details: doc.emails[0].address,
+		date: new Date()
+	});
+	console.log("Creating default app on ready", userId, doc)
+	appId = Apps.insert({
+		title: "My First App",
+		shareable: false,
+		public: false,
+		owner: doc._id
+	}, {getAutoValues: false});
+	
+	
+	
+});

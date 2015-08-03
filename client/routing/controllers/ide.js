@@ -106,7 +106,7 @@ Meteor.autorun(function(){
 		Meteor.setTimeout(function(){
 			console.log("Setting newchats false")
 			Session.set("newChats", false);
-		},  5 * 1000)
+		},  60 * 1000)
 	}
 })
 
