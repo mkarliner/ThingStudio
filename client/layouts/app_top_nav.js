@@ -64,7 +64,7 @@ Template.BreadcrumbsContent.helpers({
 		var routeName = Router.current().route.getName();
 		var routePath = Router.current().route.path();
 		var displayRoutes = [ "Connections", "Feeds", "Templates", "Themes" ];
-		var nonDisplayRoutes = [ "Support", "Widgets", "Apps", "Dashboard", "Chat", "Current Users", "System Admin", "Settings", "Documentation", "Debug" ];
+		var nonDisplayRoutes = [ "Support", "Widgets", "Apps", "Dashboard", "Chat", "Current Users", "System Admin", "Settings", "Documentation", "Debug", "Tutorials" ];
 
 		if ( _.contains( nonDisplayRoutes, routeName ) ) {
 			// Applies to: Dashboard, Apps list, Widgets list, Support, Chat, Current Users, System Admin, Settings, Documentation
