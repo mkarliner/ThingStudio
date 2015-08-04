@@ -633,12 +633,14 @@ nav.top-nav {
 	& td {
 		padding-top: 4px;
 		padding-bottom: 4px;
+		overflow: hidden;
 	}
 	& td:first-child, th:first-child {
 		padding-left: 15px;
 	}
 	& td:last-child, th:last-child {
 		padding-right: 15px;
+		padding-left: 15px;
 	}
 }
 
@@ -789,10 +791,6 @@ a.header-action-1 {
 	background-color: $statusActive;
 }
 
-.status-loggedout {
-//	background-color: gray;
-}
-
 .status-online {
 	background-color: lighten($statusActive, 30%);
 }
@@ -802,6 +800,28 @@ a.header-action-1 {
 }
 .status-offline{
 	background-color: red;
+}
+
+.topic-video {
+	font-size: 2.6em;
+	color: $baseText;
+	border: 1px solid $baseText;
+	line-height: 1em;
+	height: 34px;
+	width: 52px;
+	text-align: center;
+	border-radius: 9px;
+	margin-right: 15px;
+	background-color: transparent;
+	box-shadow: none;
+	padding: 0;
+	&:hover {
+		background-color: transparent;
+	}
+	& i {
+		font-size: 1em;
+		color: lighten($baseText, 5%);
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
