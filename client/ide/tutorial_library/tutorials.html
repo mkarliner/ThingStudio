@@ -1,34 +1,106 @@
 <template name="TutorialsHeader">
 	{{#contentFor "appHeader"}}
-		<h1 class="left">Tutorials</h1>
+		<h1 class="left">Video Tutorials</h1>
 		<!-- <a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>BUTTON</a> -->
 		<!-- <a class="header-action-1 clearfix" href="#">Create a new widget</a> -->
+		<div class="clearfix"></div>
 	{{/contentFor}}
 </template>
+
 <template name="TutorialsBody">
-	<table class="table">
-		<tr>
-			<td>
-				<div>
-					<iframe width="420" height="315" src="https://www.youtube.com/embed/piA3nT86Rn4" frameborder="0" allowfullscreen></iframe>
+	<div class="top-row">
+		<div class="col s2 tabs-container">
+			<ul class="tabs">
+				<li class="tab"><a href="#getting-started">Getting Started</a></li>
+			</ul>
+		</div>
+		<div class="clearfix"></div>
+	</div>
+	<div id="getting-started">
+		<div class="col s12 m6">
+			<div class="card">
+				<div class="card-image waves-effect waves-block waves-light">
+					<div class="videoWrapper">
+						<iframe width="560" height="315" src="https://www.youtube.com/embed/piA3nT86Rn4?list=PLCJk8f2xKwUvzdrYMI1U4dfIANzz4kSC2&amp;showinfo=0" frameborder="0" allowfullscreen></iframe>
+					</div>
 				</div>
-			</td>
-			<td>
-				<iframe width="420" height="315" src="https://www.youtube.com/embed/eMcUoa3hOso" frameborder="0" allowfullscreen></iframe>
-			</td>
-	   </tr>
-	   <tr>
-			<td>
-				<iframe width="420" height="315" src="https://www.youtube.com/embed/e0QFQ8mDRaU" frameborder="0" allowfullscreen></iframe>
-			</td>
-			<td>
-				<iframe width="420" height="315" src="https://www.youtube.com/embed/bkFMHEAxUhA" frameborder="0" allowfullscreen></iframe>
-			</td>
-				</tr>
-		<tr>
-			<td>
-				<iframe width="420" height="315" src="https://www.youtube.com/embed/HTGzSwwXCbs" frameborder="0" allowfullscreen></iframe>
-			</td>
-		</tr>
-	</table>
+				<div class="card-content">
+					<span class="card-title activator grey-text text-darken-4">ThingStudio IDE Tour<i class="mdi-navigation-more-vert right"></i></span>
+					<!-- <p><a href="#">This is a link</a></p> -->
+				</div>
+				<div class="card-reveal">
+					<span class="card-title grey-text text-darken-4">ThingStudio IDE Tour<i class="mdi-navigation-close right"></i></span>
+					<p>A quick tour of the ThingStudio IDE</p>
+				</div>
+			</div>
+		</div>
+		<div class="col s12 m6">
+			<div class="card">
+				<div class="card-image waves-effect waves-block waves-light">
+					<div class="videoWrapper">
+						<iframe width="560" height="315" src="https://www.youtube.com/embed/eMcUoa3hOso?list=PLCJk8f2xKwUvzdrYMI1U4dfIANzz4kSC2&amp;showinfo=0" frameborder="0" allowfullscreen></iframe>
+					</div>
+				</div>
+				<div class="card-content">
+					<span class="card-title activator grey-text text-darken-4">Getting Connected to MQTT <i class="mdi-navigation-more-vert right"></i></span>
+					<!-- <p><a href="#">This is a link</a></p> -->
+				</div>
+				<div class="card-reveal">
+					<span class="card-title grey-text text-darken-4">Getting Connected to MQTT<i class="mdi-navigation-close right"></i></span>
+					<p>How to connect a ThingStudio App to an MQTT broker</p>
+				</div>
+			</div>
+		</div>
+		<div class="col s12 m6">
+			<div class="card">
+				<div class="card-image waves-effect waves-block waves-light">
+					<div class="videoWrapper">
+						<iframe width="560" height="315" src="https://www.youtube.com/embed/e0QFQ8mDRaU?list=PLCJk8f2xKwUvzdrYMI1U4dfIANzz4kSC2&amp;showinfo=0" frameborder="0" allowfullscreen></iframe>
+					</div>
+				</div>
+				<div class="card-content">
+					<span class="card-title activator grey-text text-darken-4">Feed Basics: Getting data in &amp; out of ThingStudio<i class="mdi-navigation-more-vert right"></i></span>
+					<!-- <p><a href="#">This is a link</a></p> -->
+				</div>
+				<div class="card-reveal">
+					<span class="card-title grey-text text-darken-4">Feed Basics: Getting data in &amp; out of ThingStudio<i class="mdi-navigation-close right"></i></span>
+					<p>Learn how to setup Feeds to use MQTT data in ThingStudio. This video covers creating both subscribe and publish feeds, debugging with MQTT.fx and the debug overlay.</p>
+				</div>
+			</div>
+		</div>
+		<div class="col s12 m6">
+			<div class="card">
+				<div class="card-image waves-effect waves-block waves-light">
+					<div class="videoWrapper">
+						<iframe width="560" height="315" src="https://www.youtube.com/embed/bkFMHEAxUhA?list=PLCJk8f2xKwUvzdrYMI1U4dfIANzz4kSC2&amp;showinfo=0" frameborder="0" allowfullscreen></iframe>
+					</div>
+				</div>
+				<div class="card-content">
+					<span class="card-title activator grey-text text-darken-4">Your First UI: Displaying Live Data <i class="mdi-navigation-more-vert right"></i></span>
+					<!-- <p><a href="#">This is a link</a></p> -->
+				</div>
+				<div class="card-reveal">
+					<span class="card-title grey-text text-darken-4">Your First UI: Displaying Live Data<i class="mdi-navigation-close right"></i></span>
+					<p>Creating a User Interface that shows real time data from MQTT</p>
+				</div>
+			</div>
+		</div>
+		<div class="col s12 m6">
+			<div class="card">
+				<div class="card-image waves-effect waves-block waves-light">
+					<div class="videoWrapper">
+						<iframe width="560" height="315" src="https://www.youtube.com/embed/HTGzSwwXCbs?list=PLCJk8f2xKwUvzdrYMI1U4dfIANzz4kSC2&amp;showinfo=0" frameborder="0" allowfullscreen></iframe>
+					</div>
+				</div>
+				<div class="card-content">
+					<span class="card-title activator grey-text text-darken-4">Sending data from ThingStudio to the IoT<i class="mdi-navigation-more-vert right"></i></span>
+					<!-- <p><a href="#">This is a link</a></p> -->
+				</div>
+				<div class="card-reveal">
+					<span class="card-title grey-text text-darken-4">Sending data from ThingStudio to the IoT<i class="mdi-navigation-close right"></i></span>
+					<p>How to send data to an MQTT broker from ThingStudio</p>
+				</div>
+			</div>
+		</div>
+	</div>
 </template>
