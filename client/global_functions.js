@@ -61,6 +61,15 @@ mapValue = function(x, in_min, in_max, out_min, out_max)
 Session.set("ConnectionStatus", false);
 Session.set("connectionErrors", null);
 
+Meteor.setInterval(function(){
+	if(mqttClient.connected) {
+		Session.set("ConnectionStatus", true);
+	} else {
+		Session.set("ConnectionStatus", true);
+	}
+	
+}, 5000);
+
 
 getCurrentApp = function() { 
 	app =  Apps.findOne({_id: Session.get("currentAppId")});
@@ -159,7 +168,11 @@ UnsubscribeAll = function(){
 }
 
 connect = function (conn, usr, pass) {
-	// console.log("ENTERING CONN", conn, usr, pass)
+	// console.log("ENTERING CONN", conn, usr, pass, Session.get("currentMQTTHost"));
+	if(mqttClient.connected && conn._id == Session.get("currentMQTTHost")) {
+		console.log("ATTEMPT to connect to current connected connection");
+		return;
+	}
 	disconnect();
 	setCurrentConnection(conn, "Connect");
 	if(usr) {
@@ -176,9 +189,9 @@ connect = function (conn, usr, pass) {
 	protocol = conn.protocol == "Websocket" ? "ws" : "wss";
 	ConnectionString = protocol + "://" + conn.host + ":" + conn.port;
 	// console.log("CONNECTING: ", ConnectionString, protocol, username, password);
-	Session.set("currentMQTTHost", conn.host);
+	Session.set("currentMQTTHost", conn._id);
 	try {
-		mqttClient = mqtt.connect(ConnectionString, { username: username, password: password});
+		mqttClient = mqtt.connect(ConnectionString, { username: username, password: password, _id: conn._id});
 		// console.log("MQQC:", mqttClient)
 	}
 	catch(err) {
@@ -186,6 +199,7 @@ connect = function (conn, usr, pass) {
 		Session.set("connectionErrors", err);
 	}
 	mqttClient.on("connect", function(){
+		// console.log("CONNECTED to ", this);
 		Session.set("ConnectionStatus", true);
 		Session.set("connectionErrors", null);
 		feeds = Feeds.find({pubsub: "Subscribe"}).fetch();
@@ -197,8 +211,9 @@ connect = function (conn, usr, pass) {
 		}
 	});
 	mqttClient.on("close", function(par){
-		if(Session.get("currentMQTTHost") == this.options.hostname) {
-			// console.log("close", par, this);
+		//console.log("close", par, this);
+		if(Session.get("currentMQTTHost") == this.options._id) {
+
 			Session.set("ConnectionStatus", false);
 			Session.set("connectionErrors", "Closed")
 		} else {
@@ -251,7 +266,7 @@ connect = function (conn, usr, pass) {
 					   {
 					     $push: {
 					       journal: {
-					         $each: [ filteredPayload.toString() ],
+					         $each: [ filteredPayload ],
 					         $slice: -(feeds[i].journal_limit)
 					       }
 					     }

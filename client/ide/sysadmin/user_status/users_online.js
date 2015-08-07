@@ -32,7 +32,7 @@
  			sort: {
  				'status.lastLogin.date': -1
  			},
- 			limit: 20
+ 			limit: 50
  		})
  		//console.log("ONL ", users.fetch())
  		return users;

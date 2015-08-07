@@ -24,7 +24,7 @@ Template.ConnectionsNewItem.events({
 
 Template.ConnectionsBody.events({
 	'click .connect': function(ev){
-		connect(this);
+		connect(this); //Legacy connection click
 	}
 });
 

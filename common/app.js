@@ -160,7 +160,7 @@ Apps.after.update(function(userId, doc) {
 			setCurrentConnection(false);
 			Session.set("authReady", false);
 			ResetMessages();
-			connect(newConn);
+			connect(newConn); //App update
 		}
 	}
 });
