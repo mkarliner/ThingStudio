@@ -38,7 +38,7 @@ getAppTree = function(appId){
 Meteor.startup(function() {
 	//Before anything, initialise My First App for all users 
 	//and connect any orphan resources.
-	process.env.HTTP_FORWARDED_COUNT =";
+	process.env.HTTP_FORWARDED_COUNT ="1";
 	console.log("FORWARDED COUNT ", process.env.HTTP_FORWARDED_COUNT);
 	no_connection_cnt = 0;
 	no_app_cnt = 0;
