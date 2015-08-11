@@ -1,8 +1,9 @@
 <template name="ChatHeader">
 	Welcome to the ThingStudio chat box. Please be aware that all chats are public.
 	<div>
+		Users online:
 		{{#each onlineUsers}}
-			<span class="online-user">Users online: {{this.username}} ({{status}})</span>
+			<span class="online-user"> {{this.username}} ({{status}})</span>
 		{{/each}}
 	</div>
 
