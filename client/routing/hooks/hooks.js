@@ -46,7 +46,7 @@ Router.onBeforeAction(function () {
 	//console.log("VIEWCONN ", app.connection, connection);
 	// Do I need to the user to provide authentication credentials?
 	if ((!connection.serverCredentials || connection.serverCredentials == false) && Session.get("authReady") != true) {
-		console.log("NEED AUTH")
+		//console.log("NEED AUTH")
 		if (!Ground.ready()) {
 			console.log("GROUND NOT READY")
 			this.render("Loading", {
@@ -88,12 +88,12 @@ Router.onBeforeAction(function () {
 		return;
 	} else {
 		// We have displayed the form, and the user has clicked connect... now use the credentials she has entered.
-		// console.log("AUTH OK", connection)
+		//console.log("AUTH OK", connection)
 		credentials = getCredentials();
 		if(connection.serverCredentials) {
-			connect(connection);
+			connect(connection);   //server auth connection
 		} else {
-			connect(connection, credentials.username, credentials.password);
+			connect(connection, credentials.username, credentials.password); //Client auth connection
 		}
 		
 	}

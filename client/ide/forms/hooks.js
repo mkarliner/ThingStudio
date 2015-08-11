@@ -216,7 +216,7 @@ AutoForm.hooks({
 			update: function(err, res) {
 				console.log("AFTER CON UPDATE: ", err, res);
 				Session.set("ConnectionStatus", false);
-				Session.set("currentMQTTHost", this.template.data.doc.hostname)
+				Session.set("currentMQTTHost", this.template.data.doc._id)
 				// connect(this.template.data.doc);
 			}
 		}
