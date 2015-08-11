@@ -19,9 +19,20 @@ Template.SysadminHeader.helpers({
 });
 
 
+Template.SysLogs.events({
+	"change #showTemplateViews": function(event) {
+		Session.set("showTemplateViews", event.target.checked);
+	}
+})
+
 Template.SysLogs.helpers({
 	syslogs: function(){
-		return SysLogs.find({}, {sort: {date: -1}});
+		tmpl = Template.instance();
+		types = ["ScreenUpdate", "NewUser"];
+		if(Session.get("showTemplateViews")) {
+			types.push("TemplateView");
+		}		
+		return SysLogs.find({event: {$in: types}}, {sort: {date: -1}});
 	},
 	viewlink: function() {
 		console.log("VL: ", this);
