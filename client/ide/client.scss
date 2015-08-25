@@ -138,6 +138,7 @@ $loginInputColor: #9e9e9e;
 
 html, body {
 	height: 100% !important;
+	overflow-x: hidden;
 }
 
 html {
@@ -147,7 +148,7 @@ html {
 	text-rendering: optimizeLegibility;
 	-moz-osx-font-smoothing: grayscale;
 	-moz-font-feature-settings: "liga" on;
-	overflow-x: hidden;
+
 }
 
 body {
@@ -155,7 +156,12 @@ body {
 	font-size: $fontSize;
 	font-weight: normal;
 	font-style: normal;
+	position: relative;
 }
+
+// .outerist {
+// 	overflow-x: hidden;
+// }
 
 header, main, footer, nav.top-nav {
 	padding-left: $sideNavWidth;
@@ -1180,7 +1186,7 @@ h4.modal-title {
 		font-size: $fontSize * 1.08333;
 	}
 	& a:hover {
-		color: $baseText; 
+		color: $baseText;
 	}
 }
 
@@ -1214,7 +1220,7 @@ form[id^="update"] .select-wrapper span.caret {
 		right: -14px;
 		line-height: 58px;
 		z-index: 1;
-	}	
+	}
 }
 
 .add-new-item .select-wrapper.form-control .mdi-navigation-arrow-drop-down {
@@ -1253,7 +1259,7 @@ pre.ace_editor {
 }
 
 div.ace_content {
-	background-color: $darkBase;	
+	background-color: $darkBase;
 }
 
 .ace_print-margin {
@@ -1578,7 +1584,7 @@ table.widget-item {
 	& td:last-child, th:last-child {
 		padding-right: 25px;
 	}
-	
+
 }
 
 .code-preview {
@@ -1871,7 +1877,7 @@ footer {
 		padding: 0;
 		margin: 0;
 		margin-left: 6em;
-	}	
+	}
 }
 
 .cb {
