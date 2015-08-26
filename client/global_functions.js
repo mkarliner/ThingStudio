@@ -297,7 +297,12 @@ connect = function (conn, usr, pass) {
 						lastMessage = OldMessages.findOne({topic: topic, feed: feeds[i].title,  jsonKey: jsonKey });
 						//console.log("MMAV: ", feeds[i].title, lastMessage)
 						if(lastMessage) {
-							diff = value - lastMessage.value
+							diff = value - lastMessage.value;
+							if(isNaN(diff)) {
+								diff = 0.0;
+							}
+							console.log("DIFF: ", feeds[i].title, diff);
+
 							// Check min
 							if( value < lastMessage.min) {
 								min = value;
@@ -325,7 +330,8 @@ connect = function (conn, usr, pass) {
 							tc = 0.1;
 							avg = tc * value + (1.0-tc)* (lastMessage.avg ? lastMessage.avg : value);
 							diffavg = tc * diff + (1.0-tc)* (lastMessage.diffavg ? lastMessage.diffavg : diff);
-							//console.log("UPSERGSD: ", feeds[i].title,  lastMessage, " minMax", value, "diff: ", diff, min, max, avg);
+							// console.log('DIFFAV: ', feeds[i].title, diffavg);
+							//console.log("UPSERGSD: ", feeds[i].title,  lastMessage, " minMax", value, "diff: ", diff, min, max, avg, "diffavg", diffavg);
 							OldMessages.upsert(
 								{topic: topic, feed: feeds[i].title, jsonKey: jsonKey}, 
 								{$set: {jsonKey: jsonKey, value: value, diff: diff, min: min, max: max, avg: avg, diffavg: diffavg, count: count}})
