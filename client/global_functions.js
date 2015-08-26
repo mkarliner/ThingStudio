@@ -9,6 +9,8 @@ OldMessages = new Mongo.Collection(null);
 
 Outbox = new Mongo.Collection(null);
 
+SubscribedTopics = new Array();
+
 Feedhooks = {};
 
 publish = function(feed, message) {
@@ -19,6 +21,21 @@ publish = function(feed, message) {
 		Outbox.upsert({topic: feed.subscription}, {$set: { feed: feed.title, topic: feed.subscription, payload: message},$inc: {count: 1}});
 		mqttClient.publish(feed.subscription, message);	
 	}
+}
+
+mqttClientSubscribe = function(topic) {
+	console.log("MQTTSUB : ", topic, SubscribedTopics);
+	if(SubscribedTopics[topic]) {
+		return;
+	} else {
+		SubscribedTopics[topic] = topic;
+		mqttClient.subscribe(topic);
+	}
+}
+
+mqttClientUnsubscribe= function(topic) {
+	delete SubscribedTopics[topic];
+	mqttClient.unsubscribe(topic);
 }
 
 // The following functions are mostly used by widgets
@@ -154,7 +171,7 @@ DisconnectMQTT = function() {
 }
 
 UnsubscribeAll = function(){
-	if (typeof mqttClient.unsubscribe != 'function') { 
+	if (typeof  mqttClientUnsubscribe != 'function') { 
 		console.log("No connection");
 	    return; 
 	}
@@ -163,7 +180,7 @@ UnsubscribeAll = function(){
 		topic = mqttregex(feeds[f].subscription).topic;
 		topic = topic.substring(0, topic.length - 1);
 		// console.log("Unsubscribing feed: ", feeds[f].title, topic);
-		mqttClient.unsubscribe(topic);
+		 mqttClientUnsubscribe(topic);
 	}
 }
 
@@ -207,7 +224,7 @@ connect = function (conn, usr, pass) {
 		for(i=0; i<feeds.length; i++) {
 			topic = mqttregex(feeds[i].subscription).topic;
 			topic = topic.substring(0, topic.length - 1);
-			mqttClient.subscribe(topic);
+			 mqttClientSubscribe(topic);
 		}
 	});
 	mqttClient.on("close", function(par){
