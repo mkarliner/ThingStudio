@@ -1,5 +1,5 @@
 <template name="SysadminHeader">
-	 <div> Active Users: {{activeUsers}} New Users: {{newUsers}}</div>
+	 <div class="row"> Active Users: {{activeUsers}} New Users: {{newUsers}}</div>
 </template>
 
 
@@ -11,6 +11,10 @@
 
 
 <template name="SysLogs">
+	<div class="row">
+        <input type="checkbox" value="true" id="showTemplateViews"/>
+        <label class="filled-in" for="showTemplateViews">Show Template Views</label>
+	</div>
 	<table>
 		<thead>
 			<th>

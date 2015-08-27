@@ -72,7 +72,7 @@ compileTemplate = function(name, html_text, javascript) {
 			},
 			minmax: function(feed) {
 				msg = OldMessages.findOne({feed: feed});
-				ret = msg ? msg : {min: 0, max: 0, avg: 0};
+				ret = msg ? msg : {min: 0, max: 0, avg: 0, diffavg: 0};
 				//console.log("MMM: ", ret);
 				return JSON.stringify(ret);
 			}

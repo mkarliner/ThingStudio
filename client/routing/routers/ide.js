@@ -539,6 +539,20 @@ Router.route("/sysadmin", {
 	}
 })
 
+Router.route("/inactives", {
+	name: "Inactive Users",
+	controller: "IDEController",
+	action: function() {
+		if ( !this.ready() ) {
+			this.render("Loading", {
+				data: "Inactive Users"
+			});
+		} else {
+			renderYields(this, 'InactiveUsers')
+		}	
+	}
+})
+
 Router.route("/debug", {
 	name: "Debug",
 	controller: "IDEController",

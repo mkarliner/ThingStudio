@@ -27,7 +27,7 @@ Schemas.App = new SimpleSchema({
 		autoform: {
 			type: 'selectize',
 			options: function(){
-				scrs = Screens.find({}, {title: 1}).fetch();
+				scrs = Screens.find({isWidget: false}, {title: 1}).fetch();
 				options = scrs.map(function(ele, idx, arry){
 					return {label: ele.title, value: ele._id}
 				})

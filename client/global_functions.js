@@ -9,6 +9,8 @@ OldMessages = new Mongo.Collection(null);
 
 Outbox = new Mongo.Collection(null);
 
+SubscribedTopics = new Array();
+
 Feedhooks = {};
 
 publish = function(feed, message) {
@@ -19,6 +21,21 @@ publish = function(feed, message) {
 		Outbox.upsert({topic: feed.subscription}, {$set: { feed: feed.title, topic: feed.subscription, payload: message},$inc: {count: 1}});
 		mqttClient.publish(feed.subscription, message);	
 	}
+}
+
+mqttClientSubscribe = function(topic) {
+	console.log("MQTTSUB : ", topic, SubscribedTopics);
+	if(SubscribedTopics[topic]) {
+		return;
+	} else {
+		SubscribedTopics[topic] = topic;
+		mqttClient.subscribe(topic);
+	}
+}
+
+mqttClientUnsubscribe= function(topic) {
+	delete SubscribedTopics[topic];
+	mqttClient.unsubscribe(topic);
 }
 
 // The following functions are mostly used by widgets
@@ -154,7 +171,7 @@ DisconnectMQTT = function() {
 }
 
 UnsubscribeAll = function(){
-	if (typeof mqttClient.unsubscribe != 'function') { 
+	if (typeof  mqttClientUnsubscribe != 'function') { 
 		console.log("No connection");
 	    return; 
 	}
@@ -163,7 +180,7 @@ UnsubscribeAll = function(){
 		topic = mqttregex(feeds[f].subscription).topic;
 		topic = topic.substring(0, topic.length - 1);
 		// console.log("Unsubscribing feed: ", feeds[f].title, topic);
-		mqttClient.unsubscribe(topic);
+		 mqttClientUnsubscribe(topic);
 	}
 }
 
@@ -207,7 +224,7 @@ connect = function (conn, usr, pass) {
 		for(i=0; i<feeds.length; i++) {
 			topic = mqttregex(feeds[i].subscription).topic;
 			topic = topic.substring(0, topic.length - 1);
-			mqttClient.subscribe(topic);
+			 mqttClientSubscribe(topic);
 		}
 	});
 	mqttClient.on("close", function(par){
@@ -280,7 +297,12 @@ connect = function (conn, usr, pass) {
 						lastMessage = OldMessages.findOne({topic: topic, feed: feeds[i].title,  jsonKey: jsonKey });
 						//console.log("MMAV: ", feeds[i].title, lastMessage)
 						if(lastMessage) {
-							diff = value - lastMessage.value
+							diff = value - lastMessage.value;
+							if(isNaN(diff)) {
+								diff = 0.0;
+							}
+							console.log("DIFF: ", feeds[i].title, diff);
+
 							// Check min
 							if( value < lastMessage.min) {
 								min = value;
@@ -308,7 +330,8 @@ connect = function (conn, usr, pass) {
 							tc = 0.1;
 							avg = tc * value + (1.0-tc)* (lastMessage.avg ? lastMessage.avg : value);
 							diffavg = tc * diff + (1.0-tc)* (lastMessage.diffavg ? lastMessage.diffavg : diff);
-							//console.log("UPSERGSD: ", feeds[i].title,  lastMessage, " minMax", value, "diff: ", diff, min, max, avg);
+							// console.log('DIFFAV: ', feeds[i].title, diffavg);
+							//console.log("UPSERGSD: ", feeds[i].title,  lastMessage, " minMax", value, "diff: ", diff, min, max, avg, "diffavg", diffavg);
 							OldMessages.upsert(
 								{topic: topic, feed: feeds[i].title, jsonKey: jsonKey}, 
 								{$set: {jsonKey: jsonKey, value: value, diff: diff, min: min, max: max, avg: avg, diffavg: diffavg, count: count}})

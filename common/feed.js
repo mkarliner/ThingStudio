@@ -167,7 +167,7 @@ Feeds.after.insert(function(userId, doc) {
 			console.log("Feed insert subscription", userId, doc)
 			topic = mqttregex(doc.subscription).topic;
 			topic = topic.substring(0, topic.length - 1);
-			mqttClient.subscribe(topic);
+			 mqttClientSubscribe(topic);
 		}	
 	}
 });
@@ -178,7 +178,7 @@ Feeds.after.update(function(userId, doc) {
 		if(doc.pubsub != "Publish") {
 			topic = mqttregex(doc.subscription).topic;
 			topic = topic.substring(0, topic.length - 1);
-			mqttClient.subscribe(topic);
+			 mqttClientSubscribe(topic);
 		}	
 	}
 });
@@ -189,7 +189,7 @@ Feeds.after.remove(function(userId, doc) {
 		if(doc.pubsub != "Publish") {
 			topic = mqttregex(doc.subscription).topic;
 			topic = topic.substring(0, topic.length - 1);
-			mqttClient.unsubscribe(topic);
+			 mqttClientUnsubscribe(topic);
 		}	
 	}
 });

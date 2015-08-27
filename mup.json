@@ -35,7 +35,7 @@
 
   // Configure environment
   "env": {
-    "HTTP_FORWARDED_COUNT": 1,
+    "HTTP_FORWARDED_COUNT": "1",
     "ROOT_URL": "http://www.thingstud.io",
     "PORT": 3000,
     "MONGO_URL": "mongodb://thingstudio:electr1c@c196.capital.3.mongolayer.com:10196,capital.2.mongolayer.com:10196/ThingStudioProduction?replicaSet=set-5551f34f1e0a97cce4000c18"
