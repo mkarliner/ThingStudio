@@ -174,6 +174,22 @@ Meteor.startup(function() {
 			return [];
 		}
 	});
+	
+	Meteor.publish("http_connections", function(appId) {
+		console.log("Subscribing http_connections: ", appId)
+		apps = getAppTree(appId);
+		if(!apps) {
+			console.log("No such app conn ", appId)
+			this.ready(); //If there is not such app.
+			return;
+		}
+		if(this.userId == app.owner || app.shareable || isAdmin(this.userId)) {
+			// console.log("Returning connections: ", apps )
+			return HTTPConnections.find({appId: {$in: apps}});
+		} else {
+			return [];
+		}
+	});
 
 	Meteor.publish("screens", function(appId) {
 		app = Apps.findOne({_id: appId});
@@ -238,6 +254,32 @@ Meteor.startup(function() {
 		if(this.userId == app.owner || app.shareable || isAdmin(this.userId)) {
 			// console.log("Returning feeds: ", Feeds.find({appId: appId}).fetch().length )
 			return Feeds.find({appId: {$in
+				
+				: apps}});
+		} else {
+			return [];
+		}
+		// return Feeds.find({
+		// 	$or: [{
+		// 		owner: this.userId
+		// 	}, {
+		// 		public: true
+		// 	}]
+		// });
+	});
+	
+	Meteor.publish("http_feeds", function(appId) {
+		app = Apps.findOne({_id: appId});
+		apps = getAppTree(appId);
+		if(!apps) {
+			console.log("No such app feed ", appId)
+			this.ready(); //If there is not such app.
+			return;
+		}
+		// console.log("Subscribing feeds: ", appId,  app.access)
+		if(this.userId == app.owner || app.shareable || isAdmin(this.userId)) {
+			// console.log("Returning feeds: ", Feeds.find({appId: appId}).fetch().length )
+			return HTTPFeeds.find({appId: {$in
 				
 				: apps}});
 		} else {

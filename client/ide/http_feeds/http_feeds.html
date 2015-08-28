@@ -1,0 +1,70 @@
+<template name="HTTPFeedsHeader">
+	<h1 class="left">HTTPFeeds</h1>
+	<!-- <a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>BUTTON</a> -->
+	<a class="header-action-1 clearfix" href="#">Create a new http_feed</a>
+</template>
+
+<template name="HTTPFeedsBody">
+	{{> autoformModals}}
+	{{#contentFor region="appHeader" template="HTTPFeedsHeader"}}{{/contentFor}}
+	<table class="hoverable">
+		{{> HTTPFeedsTableWidths}}
+		<thead>
+			<tr cellpadding="10"><th>Feed Title</th><th>Connection</th><th>Path</th><th>Verb</th><th>Action</th></tr>
+		</thead>
+		<tbody>
+			<tr id="item-insert" class="spacer td-closed"><td></td></tr>
+			{{#each http_feedlist}}
+				<tr>
+					<td>{{title}}</td>
+					<td>{{connection}}</td>	
+					<td>{{path}}</td>	
+					<td>{{verb}}</td>
+					<td><a class="table-action table-edit-item" href="{{pathFor 'Edit Feed'}}"><i class="mdi-editor-mode-edit"></i></a>{{#afModal classes="table-action table-cancel-item" collection="HTTPFeeds" operation="remove" doc=_id title="<i class='mdi-alert-error'></i><span class='modal-header'>Deleting Feed</span>" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="icon-ts-trash"></i>{{/afModal}}</td>
+				</tr>
+			{{/each}}
+		</tbody>
+	</table>
+	{{> HTTPFeedsNewItem}}
+</template>
+
+<template name="HTTPFeedsNewItem">
+	<div class="add-new-item new-http_feed">
+		{{#autoForm collection="HTTPFeeds" id="insertItemForm" type="insert"}}
+			<table>
+			{{> HTTPFeedsTableWidths}}
+				<tbody>
+					<tr>
+						<td>{{> afQuickField name='title' placeholder="Feed Title" class="first"}}</td>
+						<td>{{> afQuickField name='connection' placeholder="Connection"}}</td>
+						<td >{{> afQuickField name='path'}}</td>
+						<td class="dropdown-td">{{> afQuickField name='verb'}}</td>
+						<td>
+							<button type="submit" class="table-action table-save-new"><i class="icon-ts-checkmark"></i></button><button class="table-action table-cancel-new"><i class="icon-ts-cancel"></i></button>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			{{> NewItemDivider}}
+		{{/autoForm}}
+	</div>
+</template>
+
+<template name="HTTPFeedsTableWidths">
+	<colgroup>
+		<col style="width: 25%;">
+		<col style="width: 15%;">
+		<col style="width: 15%;">
+		<col style="width: 15%;">
+		<col style="width: 10%;">
+	</colgroup>
+</template>
+
+<template name="NewItemDivider">
+	<div class="div-container">
+		<div class="divider"></div>
+		<div class="dd-bg">
+			<span class="divider-decoration"><i class="mdi-navigation-expand-less"></i></span>
+		</div>
+	</div>
+</template>

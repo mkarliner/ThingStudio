@@ -136,6 +136,37 @@ Router.route("/connections", {
 	}
 });
 
+Router.route("/http_connections", {
+	name: "HTTPConnections",
+	controller: "IDEController",
+	action: function() {
+		if ( !this.ready() ) {
+			this.render("Loading", {
+				data: "HTTPConnections"
+			});
+		} else {
+			renderYields(this, 'HTTPConnections');
+		}
+	}
+});
+
+Router.route("/http_connections/:_id", {
+	name: "Edit HTTPConnection",
+	controller: "IDEController",
+	data: function() {
+		return HTTPConnections.findOne({_id: this.params._id});
+	},
+	action: function() {
+		if ( !this.ready() ) {
+			this.render("Loading", {
+				data: "HTTPConnection"
+			});
+		} else {
+			renderYields(this, 'EditSingleHTTPConnection');
+		}
+	}
+});
+
 Router.route("/feeds/:_id", {
 	name: "Edit Feed",
 	controller: "IDEController",
@@ -166,6 +197,23 @@ Router.route("/feeds", {
 			});
 		} else {
 			renderYields(this, 'Feeds');
+		}
+	}
+});
+
+Router.route("/http_feeds", {
+	name: "HTTPFeeds",
+	controller: "IDEController",
+	data: function() {
+			return HTTPFeeds.find();
+	},
+	action: function(){
+		if ( !this.ready() ) {
+			this.render("Loading", {
+				data: "HTTPFeeds"
+			});
+		} else {
+			renderYields(this, 'HTTPFeeds');
 		}
 	}
 });

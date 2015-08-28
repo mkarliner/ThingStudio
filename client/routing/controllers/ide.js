@@ -61,7 +61,9 @@ IDEController = RouteController.extend({
 				}
 			}),
 			Meteor.subscribe('connections', myCurrAppId),
+			Meteor.subscribe('http_connections', myCurrAppId),
 			Meteor.subscribe('feeds', myCurrAppId),
+			Meteor.subscribe('http_feeds', myCurrAppId),
 			Meteor.subscribe('screens', myCurrAppId),
 			Meteor.subscribe('widgets', myCurrAppId, {
 				onReady: function(){
