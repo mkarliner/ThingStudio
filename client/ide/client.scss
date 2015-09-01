@@ -1737,6 +1737,19 @@ span.title {
 	margin: 30px 20px 20px;
 }
 
+.col.welcome-body {
+	padding-top: 55px;
+
+}
+
+h1.welcome-header {
+	padding: 0.5em 0;
+	text-align: center;
+	& span {
+		border-bottom: 2px solid #19A1DE;
+	}
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////
 // Prorifle & Settings //
 ///////////////////////////////////////////////////////////////////////////////////////

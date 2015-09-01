@@ -1,10 +1,16 @@
-<template name="Welcome">
+<template name="WelcomeHeader">
+	{{#contentFor "appHeader"}}
+		<h1 class="welcome-header">Welcome! Watch a <span class="emph">quick tour</span> of the ThingStudio IDE</h1>
+		<!-- <a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>BUTTON</a> -->
+		<!-- <a class="header-action-1 clearfix" href="#">Create a new widget</a> -->
+		<div class="clearfix"></div>
+	{{/contentFor}}
+</template>
 
-<div class="container">
-	<div class="row">
-		<div class="col-xs-12 col-md-8 col-md-offset-2">
-{{#markdown}}{{body}}{{/markdown}}
-</div>
+<template name="WelcomeBody">
+	<div class="col s12 m8 offset-m2 welcome-body">
+		<div class="videoWrapper">
+			<iframe width="560" height="315" src="https://www.youtube.com/embed/piA3nT86Rn4?list=PLCJk8f2xKwUvzdrYMI1U4dfIANzz4kSC2&amp;showinfo=0" frameborder="0" allowfullscreen></iframe>
+		</div>
 	</div>
-</div>
 </template>

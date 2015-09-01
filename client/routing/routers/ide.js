@@ -19,7 +19,7 @@ Router.route("/dashboard", {
 			});
 		} else {
 			u = Meteor.user();
-		
+
 			if(u) {
 				//show tutorials if first login.
 				example = Meteor.settings.public.basicExampleApp
@@ -48,7 +48,7 @@ Router.route("/dashboard", {
 						});
 					} else {
 						renderYields(this, 'Dashboard');
-					}		
+					}
 				}
 			}
 		}
@@ -69,7 +69,7 @@ Router.route("/credentials", {
 			});
 		} else {
 			renderYields(this, 'Credentials');
-		}		
+		}
 	}
 });
 
@@ -493,7 +493,7 @@ Router.route("/people/:username", {
 			});
 		} else {
 			renderYields(this, 'People');
-		}	
+		}
 	}
 })
 
@@ -507,7 +507,7 @@ Router.route("/chat", {
 			});
 		} else {
 			renderYields(this, 'Chat')
-		}	
+		}
 	}
 })
 
@@ -521,7 +521,7 @@ Router.route("/current-users", {
 			});
 		} else {
 			renderYields(this, 'CurrentUsers')
-		}	
+		}
 	}
 })
 
@@ -535,7 +535,7 @@ Router.route("/sysadmin", {
 			});
 		} else {
 			renderYields(this, 'Sysadmin')
-		}	
+		}
 	}
 })
 
@@ -549,7 +549,7 @@ Router.route("/inactives", {
 			});
 		} else {
 			renderYields(this, 'InactiveUsers')
-		}	
+		}
 	}
 })
 
@@ -563,6 +563,20 @@ Router.route("/debug", {
 			});
 		} else {
 			renderYields(this, 'Debug')
-		}	
+		}
+	}
+})
+
+Router.route("/welcome", {
+	name: "Welcome",
+	controller: "IDEController",
+	action: function() {
+		if ( !this.ready() ) {
+			this.render("Loading", {
+				data: "Welcome"
+			});
+		} else {
+			renderYields(this, 'Welcome')
+		}
 	}
 })
