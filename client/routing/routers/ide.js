@@ -19,27 +19,25 @@ Router.route("/dashboard", {
 			});
 		} else {
 			u = Meteor.user();
-
-			if(u) {
-				//show tutorials if first login.
-				example = Meteor.settings.public.basicExampleApp
-				console.log("FIRST Login test", u.profule, example)
-				if(u.profile && u.profile.showExample && example) {
-					this.redirect("/tutorials");
-					//Session.setPersistent("currentAppId", example);
-					Meteor.users.update({
-						_id: Meteor.userId()
-					}, {
-						$set: {
-							"profile.showExample": false
-						}
-					});
-				}
-			}
+			// if(u) {
+			// 	//show tutorials if first login.
+			// 	example = Meteor.settings.public.basicExampleApp
+			// 	console.log("FIRST Login test", u.profule, example)
+			// 	if(u.profile && u.profile.showExample && example) {
+			// 		this.redirect("/tutorials");
+			// 		//Session.setPersistent("currentAppId", example);
+			// 		Meteor.users.update({
+			// 			_id: Meteor.userId()
+			// 		}, {
+			// 			$set: {
+			// 				"profile.showExample": false
+			// 			}
+			// 		});
+			// 	}
+			// }
 			if (u) {
 				//Disable welcome page for the moment.
-				//if (u.profile && u.profile.showWelcome) {
-				if(false) {
+				if (u.profile && u.profile.showWelcome) {
 					this.redirect("/welcome");
 				} else {
 					if ( !this.ready() ) {
@@ -55,6 +53,30 @@ Router.route("/dashboard", {
 	}
 
 });
+
+Router.route("/welcome", {
+	name: "Welcome",
+	controller: "IDEController",
+	data: function() {
+		Meteor.users.update({
+			_id: Meteor.userId()
+		}, {
+			$set: {
+				"profile.showWelcome": false
+			}
+		});
+	},
+	action: function() {
+		if ( !this.ready() ) {
+			this.render("Loading", {
+				data: "Welcome"
+			});
+		} else {
+			renderYields(this, 'Welcome')
+		}
+	}
+})
+
 
 Router.route("/credentials", {
 	name: "Credentials",
@@ -563,20 +585,6 @@ Router.route("/debug", {
 			});
 		} else {
 			renderYields(this, 'Debug')
-		}
-	}
-})
-
-Router.route("/welcome", {
-	name: "Welcome",
-	controller: "IDEController",
-	action: function() {
-		if ( !this.ready() ) {
-			this.render("Loading", {
-				data: "Welcome"
-			});
-		} else {
-			renderYields(this, 'Welcome')
 		}
 	}
 })

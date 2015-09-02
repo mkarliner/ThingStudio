@@ -1407,6 +1407,15 @@ button.btn-plus, {
 	color: $white;
 }
 
+.btn-center {
+	margin: 1em auto;
+	display: block;
+}
+
+.btn-more-videos {
+	width: 180px;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////
 // App Detail //
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -1738,7 +1747,7 @@ span.title {
 }
 
 .col.welcome-body {
-	padding-top: 55px;
+	padding-top: 40px;
 
 }
 

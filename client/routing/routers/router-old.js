@@ -19,31 +19,31 @@ Router.route("/getting_started", {
 	}
 });
 
-Router.route("/users", function() {
-	this.render("Users", {
-		data: function() {
-			return Meteor.users.find({});
-		}
-	});
-})
+// Router.route("/users", function() {
+// 	this.render("Users", {
+// 		data: function() {
+// 			return Meteor.users.find({});
+// 		}
+// 	});
+// })
 
-Router.route("/welcome", function() {
-	this.layout("MasterLayout");
-	this.render("Welcome", {
-		data: function() {
-			Meteor.users.update({
-				_id: Meteor.userId()
-			}, {
-				$set: {
-					"profile.showWelcome": false
-				}
-			});
-			return HelpPages.findOne({
-				urlstring: "Welcome"
-			});
-		}
-	})
-})
+// Router.route("/welcome", function() {
+// 	this.layout("MasterLayout");
+// 	this.render("Welcome", {
+// 		data: function() {
+// 			Meteor.users.update({
+// 				_id: Meteor.userId()
+// 			}, {
+// 				$set: {
+// 					"profile.showWelcome": false
+// 				}
+// 			});
+// 			return HelpPages.findOne({
+// 				urlstring: "Welcome"
+// 			});
+// 		}
+// 	})
+// })
 
 // Router.route("/connections", function() {
 // 	this.layout("MasterLayout");
