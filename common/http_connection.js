@@ -27,6 +27,14 @@ Schemas.HTTPConnection = new SimpleSchema({
 			}
 		}
 	},
+	username: {
+		type: String,
+		optional: true
+	},
+	password: {
+		type: String,
+		optional: true
+	},
 	// serverCredentials: {
 	// 	//Provide credentials from server store.
 	// 	type: Boolean,

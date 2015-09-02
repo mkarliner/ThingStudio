@@ -10,7 +10,7 @@
 	<table class="hoverable">
 		{{> HTTPFeedsTableWidths}}
 		<thead>
-			<tr cellpadding="10"><th>Feed Title</th><th>Connection</th><th>Path</th><th>Verb</th><th>Action</th></tr>
+			<tr cellpadding="10"><th>Feed Title</th><th>Connection</th><th>Path</th><th>Verb</th><th>Interval</th><th>Processors</th><th>Action</th></tr>
 		</thead>
 		<tbody>
 			<tr id="item-insert" class="spacer td-closed"><td></td></tr>
@@ -20,7 +20,9 @@
 					<td>{{connection}}</td>	
 					<td>{{path}}</td>	
 					<td>{{verb}}</td>
-					<td><a class="table-action table-edit-item" href="{{pathFor 'Edit Feed'}}"><i class="mdi-editor-mode-edit"></i></a>{{#afModal classes="table-action table-cancel-item" collection="HTTPFeeds" operation="remove" doc=_id title="<i class='mdi-alert-error'></i><span class='modal-header'>Deleting Feed</span>" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="icon-ts-trash"></i>{{/afModal}}</td>
+					<td>{{polling_interval}}</td>
+					<td>{{processors}}</td>
+					<td><a class="table-action table-edit-item" href="{{pathFor 'Edit HttpFeed'}}"><i class="mdi-editor-mode-edit"></i></a>{{#afModal classes="table-action table-cancel-item" collection="HTTPFeeds" operation="remove" doc=_id title="<i class='mdi-alert-error'></i><span class='modal-header'>Deleting Feed</span>" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="icon-ts-trash"></i>{{/afModal}}</td>
 				</tr>
 			{{/each}}
 		</tbody>
@@ -39,6 +41,7 @@
 						<td>{{> afQuickField name='connection' placeholder="Connection"}}</td>
 						<td >{{> afQuickField name='path'}}</td>
 						<td class="dropdown-td">{{> afQuickField name='verb'}}</td>
+						<td >{{> afQuickField name='polling_interval'}}</td>
 						<td>
 							<button type="submit" class="table-action table-save-new"><i class="icon-ts-checkmark"></i></button><button class="table-action table-cancel-new"><i class="icon-ts-cancel"></i></button>
 						</td>
@@ -52,19 +55,20 @@
 
 <template name="HTTPFeedsTableWidths">
 	<colgroup>
-		<col style="width: 25%;">
-		<col style="width: 15%;">
-		<col style="width: 15%;">
+		<col style="width: 10%;">
+		<col style="width: 10%;">
+		<col style="width: 10%;">
 		<col style="width: 15%;">
 		<col style="width: 10%;">
+		<col style="width: 20%;">
 	</colgroup>
 </template>
 
-<template name="NewItemDivider">
+<!-- <template name="NewItemDivider">
 	<div class="div-container">
 		<div class="divider"></div>
 		<div class="dd-bg">
 			<span class="divider-decoration"><i class="mdi-navigation-expand-less"></i></span>
 		</div>
 	</div>
-</template>
+</template> -->

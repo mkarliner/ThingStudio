@@ -218,6 +218,23 @@ Router.route("/http_feeds", {
 	}
 });
 
+Router.route("/http_feeds/:_id", {
+	name: "Edit HttpFeed",
+	controller: "IDEController",
+	data: function() {
+		return HTTPFeeds.findOne({_id: this.params._id});
+	},
+	action: function() {
+		if ( !this.ready() ) {
+			this.render("Loading", {
+				data: "Feed"
+			});
+		} else {
+			renderYields(this, 'EditHttpFeed');
+		}
+	}
+});
+
 Router.route("/templates/:_id/edit", {
 	name: "Edit Template",
 	controller: "IDEController",

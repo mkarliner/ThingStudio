@@ -6,9 +6,9 @@ Template.HTTPConnectionsHeader.events({
 });
 
 Template.HTTPConnectionsHeader.helpers({
-	http_connectionName: function() {
-		return getCurrentHTTPConnection().title;
-	}
+	// http_connectionName: function() {
+	// 	return getCurrentHTTPConnection().title;
+	// }
 });
 
 Template.HTTPConnectionsNewItem.events({

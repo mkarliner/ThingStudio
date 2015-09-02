@@ -70,6 +70,26 @@ Schemas.HTTPFeed = new SimpleSchema({
 		},
 		defaultValue: "GET"
 	},
+	
+	polling_interval: {
+		type: Number,
+		defaultValue: 0
+	},
+	
+	processors: {
+		type: [String],
+		optional: true,
+		// autoform: {
+		// 	type: "selectize",
+		// 	options: function(){
+		// 		keys = Session.get("FeedProcessors");
+		// 		options = keys.map(function(val, index, arr){
+		// 			return {label: val, value: val};
+		// 		})
+		// 		return (options);
+		// 	}
+		// },
+	},
 
 	// action: {
 	// 	type: String,
@@ -141,26 +161,7 @@ Schemas.HTTPFeed = new SimpleSchema({
 			}
 		}
 	}
-	// public: {
-	// 	type: Boolean,
-	// 	defaultValue: false,
-	// 	custom: function(){
-	// 		if(this.field("subscription").value.indexOf("#") > 0 && this.value == true) {
-	// 			return "noPublicWildcard";
-	// 		}
-	// 		if(this.field("subscription").value.indexOf("+") > 0 && this.value == true) {
-	// 			return "noPublicWildcard";
-	// 		}
-	// 		f = HTTPFeeds.findOne({title: this.field("title").value});
-	// 		// console.log("PUBCK", this.field("title"), f);
-	// 		if(f && this.value == true) {
-	// 			return "uniqueFeed";
-	// 		}
-	// 	}
-	// }
-	
-	
-	
+
 });
 
 

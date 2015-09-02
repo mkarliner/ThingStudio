@@ -20,6 +20,9 @@ Template.HTTPFeedsBody.helpers({
 	http_feedlist: function(){
 		return HTTPFeeds.find({}, {sort: {createdAt: -1}})
 	},
+	connection: function(){
+		return HTTPConnections.findOne( this.connection).title;
+	},
 	publichttp_feeds: function() {
 		return HTTPFeeds.find({public: true})
 	},
