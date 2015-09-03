@@ -84,10 +84,10 @@ Template.BreadcrumbsContent.helpers({
 			return [ { item: "HTTP Feeds", path: "/http-feeds" }, { item: this.title, path: "/http-feeds/" + this._id } ];
 		} else if ( routeName == "Edit MQTT Connection" ) {
 			// Applies to: edit connection page
-			return [ { item: "Connections", path: "/mqtt-connections" }, { item: this.title, path: "/mqtt-connections/" + this._id } ];
+			return [ { item: "MQTT Connections", path: "/mqtt-connections" }, { item: this.title, path: "/mqtt-connections/" + this._id } ];
 		} else if ( routeName == "Edit HTTP Connection" ) {
 			// Applies to: edit connection page
-			return [ { item: "Connections", path: "/http-connections" }, { item: this.title, path: "/http-connections/" + this._id } ];
+			return [ { item: "HTTP Connections", path: "/http-connections" }, { item: this.title, path: "/http-connections/" + this._id } ];
 		} else if ( routeName == "Edit Template" ) {
 			// Applies to: edit template page
 			return [ { item: "Templates", path: "/templates" }, { item: this.title, path: "/templates/" + this._id + "/edit"} ];

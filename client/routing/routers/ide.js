@@ -241,7 +241,7 @@ Router.route("/http-feeds", {
 });
 
 Router.route("/http-feeds/:_id", {
-	name: "Edit Http Feed",
+	name: "Edit HTTP Feed",
 	controller: "IDEController",
 	data: function() {
 		return HTTPFeeds.findOne({_id: this.params._id});

@@ -1,6 +1,7 @@
 <template name="FeedsHeader">
-	<h1 class="left">Feeds</h1>
+	<h1 class="left">MQTT Feeds</h1>
 	<!-- <a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>BUTTON</a> -->
+	<!-- <a href="#" class="topic-video right btn tooltipped" data-position="left" data-delay="50" data-tooltip="Watch Feeds Tutorial" data-target=""><i class="mdi-av-play-arrow"></i></a> -->
 	<a class="header-action-1 clearfix" href="#">Create a new feed</a>
 </template>
 
@@ -17,9 +18,9 @@
 			{{#each feedlist}}
 				<tr>
 					<td>{{title}}</td>
-					<td>{{subscription}}</td>	
+					<td>{{subscription}}</td>
 					<td>{{pubsub}}</td>
-					<td><a class="table-action table-edit-item" href="{{pathFor 'Edit Feed'}}"><i class="mdi-editor-mode-edit"></i></a>{{#afModal classes="table-action table-cancel-item" collection="Feeds" operation="remove" doc=_id title="<i class='mdi-alert-error'></i><span class='modal-header'>Deleting Feed</span>" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="icon-ts-trash"></i>{{/afModal}}</td>
+					<td><a class="table-action table-edit-item" href="{{pathFor 'Edit MQTT Feed'}}"><i class="mdi-editor-mode-edit"></i></a>{{#afModal classes="table-action table-cancel-item" collection="Feeds" operation="remove" doc=_id title="<i class='mdi-alert-error'></i><span class='modal-header'>Deleting Feed</span>" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="icon-ts-trash"></i>{{/afModal}}</td>
 				</tr>
 			{{/each}}
 		</tbody>
@@ -28,7 +29,7 @@
 </template>
 
 <template name="FeedsNewItem">
-	<div class="add-new-item new-feed">
+	<div class="add-new-item new-mqtt-feed">
 		{{#autoForm collection="Feeds" id="insertItemForm" type="insert"}}
 			<table>
 			{{> FeedsTableWidths}}
@@ -62,6 +63,21 @@
 		<div class="divider"></div>
 		<div class="dd-bg">
 			<span class="divider-decoration"><i class="mdi-navigation-expand-less"></i></span>
+		</div>
+	</div>
+</template>
+
+<template name="ModalTutorialFeeds">
+	<div class="modal modal-fixed-bottom" id="modal-tutorial-feeds">
+		<div class="modal-content">
+			<h4 class="modal-title">
+				<a href="#" class="btn-flat modal-close secondary-content">×</a>
+				<i class="mdi-alert-error"></i><span class="modal-header">Video here!</span>
+			</h4>
+			<p>Are you sure?</p>
+		</div>
+		<div class="modal-footer">
+			<button class="waves-effect btn-flat modal-action">Delete</button>
 		</div>
 	</div>
 </template>
