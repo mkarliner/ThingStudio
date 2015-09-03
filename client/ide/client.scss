@@ -280,6 +280,10 @@ table.striped tbody tr:nth-child(odd) {
 .side-nav {
 	width: 220px;
 	font-family: $fwBook;
+	& a.collapsible-header {
+		margin: 0;
+		padding: 0 30px;
+	}
 }
 
 .side-nav.fixed {
@@ -351,7 +355,6 @@ table.striped tbody tr:nth-child(odd) {
 		background-color: $sidebarDividerColor;
 	}
 }
-
 
 .sb-profile {
 	padding-bottom: 0.2rem;
@@ -467,7 +470,7 @@ table.striped tbody tr:nth-child(odd) {
 }
 
 .side-nav .collapsible-body {
-	background-color: $SBcollapseBG;
+	background-color: $darkBase;
 	padding-bottom: 8px;
 }
 
@@ -927,10 +930,16 @@ td.dropdown-td {
 	& .control-label {
 		display: none;
 	}
-	&.new-feed .selectize-control.form-control.single {
+	&.new-mqtt-feed .selectize-control.form-control.single {
 		width: 170px;
 	}
-	&.new-connection .selectize-control.form-control.single {
+	&.new-http-feed .selectize-control.form-control.single.connection-dd {
+		width: 160px;
+	}
+	&.new-http-feed .selectize-control.form-control.single {
+		width: 90px;
+	}
+	&.new-mqtt-connection .selectize-control.form-control.single {
 		width: 180px;
 	}
 	&.new-app .selectize-control.form-control.single {

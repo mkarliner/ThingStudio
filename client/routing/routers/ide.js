@@ -127,8 +127,8 @@ Router.route("/apps", {
 	}
 });
 
-Router.route("/connections/:_id", {
-	name: "Edit Connection",
+Router.route("/mqtt-connections/:_id", {
+	name: "Edit MQTT Connection",
 	controller: "IDEController",
 	data: function() {
 		return Connections.findOne({_id: this.params._id});
@@ -144,8 +144,8 @@ Router.route("/connections/:_id", {
 	}
 });
 
-Router.route("/connections", {
-	name: "Connections",
+Router.route("/mqtt-connections", {
+	name: "MQTT Connections",
 	controller: "IDEController",
 	action: function() {
 		if ( !this.ready() ) {
@@ -158,13 +158,13 @@ Router.route("/connections", {
 	}
 });
 
-Router.route("/http_connections", {
-	name: "HTTPConnections",
+Router.route("/http-connections", {
+	name: "HTTP Connections",
 	controller: "IDEController",
 	action: function() {
 		if ( !this.ready() ) {
 			this.render("Loading", {
-				data: "HTTPConnections"
+				data: "HTTP Connections"
 			});
 		} else {
 			renderYields(this, 'HTTPConnections');
@@ -172,8 +172,8 @@ Router.route("/http_connections", {
 	}
 });
 
-Router.route("/http_connections/:_id", {
-	name: "Edit HTTPConnection",
+Router.route("/http-connections/:_id", {
+	name: "Edit HTTP Connection",
 	controller: "IDEController",
 	data: function() {
 		return HTTPConnections.findOne({_id: this.params._id});
@@ -189,8 +189,8 @@ Router.route("/http_connections/:_id", {
 	}
 });
 
-Router.route("/feeds/:_id", {
-	name: "Edit Feed",
+Router.route("/mqtt-feeds/:_id", {
+	name: "Edit MQTT Feed",
 	controller: "IDEController",
 	data: function() {
 		return Feeds.findOne({_id: this.params._id});
@@ -206,8 +206,8 @@ Router.route("/feeds/:_id", {
 	}
 });
 
-Router.route("/feeds", {
-	name: "Feeds",
+Router.route("/mqtt-feeds", {
+	name: "MQTT Feeds",
 	controller: "IDEController",
 	data: function() {
 			return Feeds.find();
@@ -223,8 +223,8 @@ Router.route("/feeds", {
 	}
 });
 
-Router.route("/http_feeds", {
-	name: "HTTPFeeds",
+Router.route("/http-feeds", {
+	name: "HTTP Feeds",
 	controller: "IDEController",
 	data: function() {
 			return HTTPFeeds.find();
@@ -232,7 +232,7 @@ Router.route("/http_feeds", {
 	action: function(){
 		if ( !this.ready() ) {
 			this.render("Loading", {
-				data: "HTTPFeeds"
+				data: "HTTP Feeds"
 			});
 		} else {
 			renderYields(this, 'HTTPFeeds');
@@ -240,8 +240,8 @@ Router.route("/http_feeds", {
 	}
 });
 
-Router.route("/http_feeds/:_id", {
-	name: "Edit HttpFeed",
+Router.route("/http-feeds/:_id", {
+	name: "Edit Http Feed",
 	controller: "IDEController",
 	data: function() {
 		return HTTPFeeds.findOne({_id: this.params._id});
@@ -249,7 +249,7 @@ Router.route("/http_feeds/:_id", {
 	action: function() {
 		if ( !this.ready() ) {
 			this.render("Loading", {
-				data: "Feed"
+				data: "HTTP Feed"
 			});
 		} else {
 			renderYields(this, 'EditHttpFeed');

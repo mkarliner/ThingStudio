@@ -1,7 +1,7 @@
 <template name="ConnectionsHeader">
-		<h1 class="left">Connections</h1>
-		<a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>{{connectionName}}</a>
-		<a class="header-action-1 clearfix" href="#">Create a new connection</a>
+	<h1 class="left">MQTT Connections</h1>
+	<a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>{{connectionName}}</a>
+	<a class="header-action-1 clearfix" href="#">Create a new connection</a>
 </template>
 
 <template name="ConnectionsBody">
@@ -39,7 +39,7 @@
 </template>
 
 <template name="ConnectionsNewItem">
-	<div class="add-new-item new-connection">
+	<div class="add-new-item new-mqtt-connection">
 		{{#autoForm collection="Connections" id="insertItemForm" type="insert"}}
 			<table>
 			{{> ConnectionsTableWidths}}

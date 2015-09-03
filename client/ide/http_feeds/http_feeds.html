@@ -1,7 +1,7 @@
 <template name="HTTPFeedsHeader">
-	<h1 class="left">HTTPFeeds</h1>
+	<h1 class="left">HTTP Feeds</h1>
 	<!-- <a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>BUTTON</a> -->
-	<a class="header-action-1 clearfix" href="#">Create a new http_feed</a>
+	<a class="header-action-1 clearfix" href="#">Create a new feed</a>
 </template>
 
 <template name="HTTPFeedsBody">
@@ -17,8 +17,8 @@
 			{{#each http_feedlist}}
 				<tr>
 					<td>{{title}}</td>
-					<td>{{connection}}</td>	
-					<td>{{path}}</td>	
+					<td>{{connection}}</td>
+					<td>{{path}}</td>
 					<td>{{verb}}</td>
 					<td>{{polling_interval}}</td>
 					<td>{{processors}}</td>
@@ -31,17 +31,18 @@
 </template>
 
 <template name="HTTPFeedsNewItem">
-	<div class="add-new-item new-http_feed">
+	<div class="add-new-item new-http-feed">
 		{{#autoForm collection="HTTPFeeds" id="insertItemForm" type="insert"}}
 			<table>
 			{{> HTTPFeedsTableWidths}}
 				<tbody>
 					<tr>
 						<td>{{> afQuickField name='title' placeholder="Feed Title" class="first"}}</td>
-						<td>{{> afQuickField name='connection' placeholder="Connection"}}</td>
-						<td >{{> afQuickField name='path'}}</td>
+						<td class="dropdown-td">{{> afQuickField name='connection' placeholder="Connection" class="connection-dd"}}</td>
+						<td >{{> afQuickField name='path' placeholder="Path"}}</td>
 						<td class="dropdown-td">{{> afQuickField name='verb'}}</td>
 						<td >{{> afQuickField name='polling_interval'}}</td>
+						<td></td>
 						<td>
 							<button type="submit" class="table-action table-save-new"><i class="icon-ts-checkmark"></i></button><button class="table-action table-cancel-new"><i class="icon-ts-cancel"></i></button>
 						</td>
@@ -55,12 +56,13 @@
 
 <template name="HTTPFeedsTableWidths">
 	<colgroup>
+		<col style="width: 18%;">
+		<col style="width: 18%;">
+		<col style="width: 18%;">
 		<col style="width: 10%;">
 		<col style="width: 10%;">
 		<col style="width: 10%;">
-		<col style="width: 15%;">
-		<col style="width: 10%;">
-		<col style="width: 20%;">
+		<col style="width: 105px;">
 	</colgroup>
 </template>
 
