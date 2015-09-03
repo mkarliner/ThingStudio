@@ -1,4 +1,84 @@
 ///////////////////////////////////////////////////////////////////////////////////////
+// HTTP  Management//
+///////////////////////////////////////////////////////////////////////////////////////
+
+
+HTTPFeedProcessors = {
+	
+}
+
+
+RegisterHTTPFeedProcessor = function(name, func) {
+	HTTPFeedProcessors[name] = func;
+}
+
+
+
+RegisterHTTPFeedProcessor("test", function(feed, error, result){
+	console.log("Test Feed Processor", feed, error, result)
+	try {
+		payload = JSON.parse(result.content);
+	}
+	catch(err) {
+		console.log("HERR: ", err);
+		Session.set("runtimeErrors", "Invalid MQTT message, payload not JSON: " + result.content.toString());
+		payload = result.content.toString();
+	}
+	console.log("payload", payload)
+	Messages.upsert(
+		{
+			topic: feed.path, 
+			feed: feed.title
+		}, 
+		{$set: 
+			{
+				feed: feed.title, 
+				topic: feed.path, 
+				payload: payload}, 
+				$inc:{count: 1
+			}
+		});
+});
+
+
+
+
+function checkHTTPFeeds(){
+	//console.log("HTTPCLOCK: ", HTTPClock);
+	HTTPClock++;
+	var feeds = HTTPFeeds.find().fetch();
+	//Check which feeds need to be polled.
+	for(var f=0; f<feeds.length; f++) {
+		if(HTTPClock % feeds[f].polling_interval == 0 ) {
+			var feed = feeds[f];
+			var conn = HTTPConnections.findOne(feed.connection);
+			var url = conn.protocol + "://" + conn.host+feed.path;
+			//console.log("HT: ", feed.title, conn, url);
+			HTTP.call(feed.verb, url, {timeout: (feed.interval-1)*1000}, function(error, result) {
+				//console.log("HRET: ", error, result);
+				//Call each feed processor in turn
+				for(var p=0; p<feed.processors.length; p++ ){
+					console.log("CALLING: ", HTTPFeedProcessors[feed.processors[p]])
+					HTTPFeedProcessors[feed.processors[p]](feed, error, result);
+				}
+			})
+		}
+	}
+	console.log("Resetting Interval")
+	Meteor.setTimeout(checkHTTPFeeds, 1000);
+}
+
+
+var HTTPClock = 0;
+Meteor.startup(function(){
+	Meteor.setTimeout(checkHTTPFeeds, 1000);
+	Session.set("FeedProcessors", Object.keys(HTTPFeedProcessors));
+});
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////
 // MQTT & Connection Management//
 ///////////////////////////////////////////////////////////////////////////////////////
 
@@ -12,6 +92,8 @@ Outbox = new Mongo.Collection(null);
 SubscribedTopics = new Array();
 
 Feedhooks = {};
+
+
 
 publish = function(feed, message) {
 	if(feed.pubsub !="Publish") {

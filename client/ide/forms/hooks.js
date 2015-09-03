@@ -6,7 +6,8 @@
 		Alerts.upsert({type: 'runtime', status: "warning", message: message },{$set:{type: 'runtime', status: 'warning', message: message} ,$inc: {count: 1} } );
 		return false;
 	}
-	f = Feeds.findOne({title: feed});
+	f = Feeds.findOne({title: feed}) || HTTPFeeds.findOne({title: feed});
+
 	//console.log("CF: ", f)
 	if(typeof f == "undefined") {
 		// Session.set("runtimeErrors", "Unknown feed " + feed);
