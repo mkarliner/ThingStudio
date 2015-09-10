@@ -28,7 +28,7 @@ Router.route("/view/app/:_id", {
 		// 	});
 		// 	return;
 		// }
-		
+
 
 		screen_cnt = Screens.find({isWidget: false}).count();
 		// If there is an app home page, go there
@@ -75,7 +75,7 @@ Router.route("/viewer/screen/:_id", {
 			Session.setPersistent("currentAppId", scr.appId);
 			this.render("Loading",{
 				data: "Application sub"
-			})		
+			})
 		}
 		InstantiateWidgets();
 		this.render("ViewScreen", {

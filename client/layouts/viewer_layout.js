@@ -1,3 +1,6 @@
+Template.appheader.registerElement('app-header');
+Template.appfooter.registerElement('app-footer');
+
 Template.ViewerLayout.onRendered(function() {
 	$(".button-collapse").sideNav();
 });
@@ -23,7 +26,10 @@ Template.ViewerLayout.helpers({
 	},
 	runtimeErrors: function(){
 		return Session.get("runtimeErrors");
-	},
+	}
+})
+
+Template.appheader.helpers({
 	isConnected: function() {
 		if ( Session.get( "ConnectionStatus" ) == true ) {
 			return 'connected';
