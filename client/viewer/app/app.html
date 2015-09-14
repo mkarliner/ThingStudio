@@ -2,6 +2,18 @@
 	<app-body></app-body>
 </template>
 
+	<div class="view-wrapper">
+	{{this.title}}
+
+	</div>
+		<div class="flex-container" id="screenList">
+
+
+		<div class="flex-column">
+		{{#each screenlist}}
+						<button class="flex-item btn screenlink"><a class="flex-item" style="color: orange" href="/app/{{this.appId}}/screen/{{this._id}}">{{this.title}}</a></button>
+		{{/each}}
+
 <template name="appViewerBody">
 	{{> appBodyStyles}}
 	<main>

@@ -43,8 +43,8 @@ RegisterHTTPFeedProcessor("test", function(feed, error, result){
 
 
 
-function checkHTTPFeeds(){
-	//console.log("HTTPCLOCK: ", HTTPClock);
+checkHTTPFeeds = function (){
+	console.log("INC HTTPCLOCK: ", HTTPClock);
 	HTTPClock++;
 	var feeds = HTTPFeeds.find().fetch();
 	//Check which feeds need to be polled.
@@ -53,8 +53,9 @@ function checkHTTPFeeds(){
 			var feed = feeds[f];
 			var conn = HTTPConnections.findOne(feed.connection);
 			var url = conn.protocol + "://" + conn.host+feed.path;
-			//console.log("HT: ", feed.title, conn, url);
-			HTTP.call(feed.verb, url, {timeout: (feed.interval-1)*1000}, function(error, result) {
+			timeout = (feed.polling_interval-1)*1000;
+			console.log("HT: ", feed.title, conn, url, timeout);
+			HTTP.call(feed.verb, url, {timeout: timeout }, function(error, result) {
 				//console.log("HRET: ", error, result);
 				//Call each feed processor in turn
 				for(var p=0; p<feed.processors.length; p++ ){
@@ -64,7 +65,7 @@ function checkHTTPFeeds(){
 			})
 		}
 	}
-	console.log("Resetting Interval")
+	console.log("HTTP Clock", HTTPClock)
 	Meteor.setTimeout(checkHTTPFeeds, 1000);
 }
 
@@ -117,7 +118,10 @@ mqttClientSubscribe = function(topic) {
 
 mqttClientUnsubscribe= function(topic) {
 	delete SubscribedTopics[topic];
-	mqttClient.unsubscribe(topic);
+	if(mqttClient.unsubscribe) {
+		mqttClient.unsubscribe(topic);
+	}
+	
 }
 
 // The following functions are mostly used by widgets
