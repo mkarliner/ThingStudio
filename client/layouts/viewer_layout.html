@@ -46,11 +46,14 @@
 </template>
 
 <template name="appfooter">
-	<style>
-
-	</style>
+	{{> appHeaderStyles}}
+	{{> appFooterStyles}}
 	<footer>
-		<h2>&copy; ThingStudio 2015</h2>
+		<ul>
+			<li><span><a class="right viewer-connection-stat" href=""><i class="icon-ts-connection {{isConnected}}"></i></a></span></li>
+			<li><span><a class="right viewer-connection-stat" href=""><i class="icon-ts-connection {{isConnected}}"></i></a></span></li>
+			<li><span><a class="right viewer-connection-stat" href=""><i class="icon-ts-connection {{isConnected}}"></i></a></span></li>
+		</ul>
 		{{> fontLicense}}
 	</footer>
 </template>
@@ -209,4 +212,12 @@
 		content: "h";
 	}
 </style>
+</template>
+
+<template name="appFooterStyles">
+	<style>
+		ul {
+			justify-content: space-around;
+		}
+	</style>
 </template>
