@@ -28,7 +28,7 @@ Router.route("/app/:appid", {
 		// 	});
 		// 	return;
 		// }
-
+		
 
 		screen_cnt = Screens.find({isWidget: false}).count();
 		// If there is an app home page, go there
@@ -55,7 +55,11 @@ Router.route("/app/:appid/screen/:_id", {
 	controller: "AppViewerController",
 	name: "ViewScreen",
 	onBeforeAction: function(){
-		Session.set("currentAppId", this.params.appid);
+		console.log("VS: ", Session.get("currentAppId"), this.params.appid)
+		if(Session.get("currentAppId") != this.params.appid) {
+			console.log("Setting AppID!!!!!!")
+			Session.set("currentAppId", this.params.appid);
+		}		
 		this.next();
 	},
 
@@ -71,12 +75,11 @@ Router.route("/app/:appid/screen/:_id", {
 		// Have we come straight to this URL?
 		if(!app) {
 			//Yes, we need to set up the current app.
-
 			// scr = Screens.findOne({_id: this.params._id});
 			// Session.setPersistent("currentAppId", scr.appId);
 			// this.render("Loading",{
 			// 	data: "Application sub"
-			// })
+			// })	
 			console.log("MISTAKE: Should have app.")
 		}
 		InstantiateWidgets();

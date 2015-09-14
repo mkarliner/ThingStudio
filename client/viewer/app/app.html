@@ -10,7 +10,7 @@
 				<ul>
 					{{#each screenlist}}
 						<li>
-							<a href="/app/{{this.appId}}/screen/{{this._id}}">
+							<a href="{{pathFor 'ViewScreen' data=screenparams }}">
 								<span class="letter-circle">W</span>
 								<div class="screen-desc">
 									<h2>{{this.title}}</h2>
