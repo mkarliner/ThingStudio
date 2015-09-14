@@ -7,8 +7,8 @@ Template.ViewerMenu.helpers({
 
 Template.ViewerMenu.events({
 	"click .screenlink": function(ev) {
-		console.log(this);
-		Router.go("/viewer/screen/" + this._id);
+		console.log("SCRL", this);
+		Router.go("/app/"+this.appid + "/screen/" + this._id);
 	},
 	"click .studiolink": function(ev) {
 		Router.go("/screens");
