@@ -71,6 +71,7 @@ Router.route("/viewer/screen/:_id", {
 		// Have we come straight to this URL?
 		if(!app) {
 			//Yes, we need to set up the current app.
+			console.log("We're hitting this!")
 			scr = Screens.findOne({_id: this.params._id});
 			Session.setPersistent("currentAppId", scr.appId);
 			this.render("Loading",{
