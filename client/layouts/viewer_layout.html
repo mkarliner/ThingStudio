@@ -8,7 +8,7 @@
 					min-height: calc( 100vh - 104px )
 				}
 			</style>
-			{{>yield}}
+			{{> yield}}
 			{{#if runtimeErrors}}
 				<div class="screen-errors">
 					<p>Runtime Errors</p>
@@ -18,10 +18,12 @@
 		</div>
 		<!--  Header intentionally added AFTER body. Addressed with flexbox -->
 		<div class="app-header-wrapper">
-			<app-header></app-header>
+			<!-- <app-header></app-header> -->
+			{{> appheader}}
 		</div>
 		<div class="app-footer-wrapper">
-			<app-footer></app-footer>
+			<!-- <app-footer></app-footer> -->
+			{{> appfooter}}
 		</div>
 	</div>
 </template>
@@ -29,19 +31,11 @@
 <template name="appheader">
 	{{> appHeaderStyles}}
 	<header>
-		<!-- <ul id="slide-out" class="side-nav">
-			{{#each screenlist}}
-				<li><a href="/viewer/screen/{{this._id}}">{{this.title}}</a></li>
-			{{/each}}
-		</ul> -->
 		<ul>
 			<li><a href="#" data-activates="slide-out" class="button-collapse show-on-large left app-nav {{appHamburger}}"><i class="mdi-navigation-menu"></i></a></li>
 			<li><a class="made-with" href="http://www.thingstud.io/" target="_blank">Made with ThingStudio</a></li>
 			<li><span><a class="right viewer-connection-stat" href=""><i class="icon-ts-connection {{isConnected}}"></i></a></span></li>
 		</ul>
-
-
-
 	</header>
 </template>
 
@@ -65,12 +59,19 @@
 	}
 	ul {
 		list-style-type: none;
-		display: flex;
+		display: -webkit-box;  /* OLD - iOS 6-, Safari 3.1-6, BB7 */
+		display: -ms-flexbox;  /* TWEENER - IE 10 */
+		display: -webkit-flex; /* NEW - Safari 6.1+. iOS 7.1+, BB10 */
+		display: flex;         /* NEW, Spec - Firefox, Chrome, Opera */
 		margin: 0;
 		padding: 0;
+		-webkit-justify-content: space-between;
+		-ms-flex-pack: space-between;
 		justify-content: space-between;
 	}
 	ul li {
+		-webkit-align-self: center;
+		-ms-flex-item-align: center;
 		align-self: center;
 	}
 	li:last-child {
@@ -217,6 +218,8 @@
 <template name="appFooterStyles">
 	<style>
 		ul {
+			-webkit-justify-content: space-around;
+			-ms-flex-pack: space-around;
 			justify-content: space-around;
 		}
 	</style>

@@ -38,18 +38,29 @@
 		list-style-type: none;
 		margin: 0;
 		padding: 0;
-		display: flex;
+		display: -webkit-box;  /* OLD - iOS 6-, Safari 3.1-6, BB7 */
+		display: -ms-flexbox;  /* TWEENER - IE 10 */
+		display: -webkit-flex; /* NEW - Safari 6.1+. iOS 7.1+, BB10 */
+		display: flex;         /* NEW, Spec - Firefox, Chrome, Opera */
+		-webkit-flex-direction: column;
+		-ms-flex-direction: column;
 		flex-direction: column;
+
 	}
 	ul li {
 		border-bottom: 2px solid #F0F0F0;
 	}
 	ul li a {
-		display: flex;
+		display: -webkit-box;  /* OLD - iOS 6-, Safari 3.1-6, BB7 */
+		display: -ms-flexbox;  /* TWEENER - IE 10 */
+		display: -webkit-flex; /* NEW - Safari 6.1+. iOS 7.1+, BB10 */
+		display: flex;         /* NEW, Spec - Firefox, Chrome, Opera */
 		text-decoration: none;
 		padding: 15px 20px;
 	}
 	.screen-desc {
+		-webkit-align-self: center;
+		-ms-flex-item-align: center;
 		align-self: center;
 	}
 	.screen-desc span {

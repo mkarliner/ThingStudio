@@ -4,47 +4,73 @@
 # 'meteor add' and 'meteor remove' will edit this file for you,
 # but you can also edit it by hand.
 
+########## Include Meteor ##########
 meteor-platform
+
+########## Accounts ##########
 accounts-base
+useraccounts:core
+useraccounts:iron-routing
+useraccounts:materialize
+accounts-password
+
+########## Autoform ##########
 aldeed:autoform@5.3.0
 aldeed:collection2
 aldeed:simple-schema
 aldeed:delete-button
 alanning:roles
+
+########## Iron Router ##########
 iron:router
-accounts-password
-fortawesome:fontawesome
-yogiben:admin
+zimme:iron-router-active
+
+########## Layout ##########
+#fortawesome:fontawesome
+fourseven:scss
+jparker:gravatar
+gildaspk:autoform-modals-materialize
+jeremy:selectize
+comerc:autoform-selectize
+miro:preloader
+
 reactive-var
 spacebars-compiler
+
+########## Connections ##########
 mkarliner:mqtt
-arch:ace-editor
 mkarliner:mqtt-regex
+http
+
+########## Schema ##########
 dburles:collection-helpers
 matb33:collection-hooks
-chuangbo:cookie
-#yogiben:autoform-modals
+
+########## IDE ##########
+arch:ace-editor
+mrt:moment
+
+########## Credentials ##########
+ground:db
+
+########## Analytics ##########
 okgrow:analytics
 mizzao:user-status
-mrt:moment
+u2622:persistent-session
+
+chuangbo:cookie
+
+########## Email ##########
 miro:mailchimp
 miro:mailchimp-lists
-fourseven:scss
-#materialize:materialize
-useraccounts:materialize
-zimme:iron-router-active
-jparker:gravatar
+
 numtel:webcomponent
-u2622:persistent-session
-ground:db
-gildaspk:autoform-modals-materialize@0.0.6
 aldeed:template-extension
 reactive-dict
 meteorhacks:npm
 npm-container
 pfafman:filesaver
 chuangbo:marked
-materialize:materialize@=0.96.1
-jeremy:selectize
-comerc:autoform-selectize
-http
+
+
+#ccorcos:transitioner

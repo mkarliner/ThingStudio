@@ -28,7 +28,7 @@ Router.route("/app/:appid", {
 		// 	});
 		// 	return;
 		// }
-		
+
 
 		screen_cnt = Screens.find({isWidget: false}).count();
 		// If there is an app home page, go there
@@ -59,7 +59,7 @@ Router.route("/app/:appid/screen/:_id", {
 		if(Session.get("currentAppId") != this.params.appid) {
 			console.log("Setting AppID!!!!!!")
 			Session.set("currentAppId", this.params.appid);
-		}		
+		}
 		this.next();
 	},
 
@@ -79,7 +79,7 @@ Router.route("/app/:appid/screen/:_id", {
 			// Session.setPersistent("currentAppId", scr.appId);
 			// this.render("Loading",{
 			// 	data: "Application sub"
-			// })	
+			// })
 			console.log("MISTAKE: Should have app.")
 		}
 		InstantiateWidgets();

@@ -1,5 +1,5 @@
-Template.appheader.registerElement('app-header');
-Template.appfooter.registerElement('app-footer');
+// Template.appheader.registerElement('app-header');
+// Template.appfooter.registerElement('app-footer');
 
 Template.ViewerLayout.onRendered(function() {
 	$(".button-collapse").sideNav();

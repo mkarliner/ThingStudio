@@ -1,13 +1,15 @@
-Template.ViewScreen.onRendered(function(){
+// Template.appScreen.registerElement('app-screen');
+
+Template.appScreen.onRendered(function(){
 	console.log("VS: ", this)
 	if ( this.data ) {
 		Meteor.call("templateView", this.data._id);
 	}
 })
 
-Template.ViewScreen.helpers({
+Template.appScreen.helpers({
 	myScreen: function(){
-		scr = Session.get("currentScreenPage");		
+		scr = Session.get("currentScreenPage");
 		return scr;
 	},
     currentScreen: function() {
@@ -23,5 +25,5 @@ Template.ViewScreen.helpers({
                     return "UnknownScreen";
             }
     },
-	
-}); 
+
+});

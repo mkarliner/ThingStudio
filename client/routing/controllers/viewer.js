@@ -1,5 +1,10 @@
 AppViewerController = RouteController.extend({
 	layoutTemplate: "ViewerLayout",
+	'preload': {
+		'verbose' : true,
+		'styles': '/client/viewer/viewer.scss',
+		'sync': '/client/ide/lazy_load/js/materialize.js'
+	},
 	loadingTemplate: "Loading",
 	onBeforeAction: function() {
 		$('body').addClass('viewer-body');

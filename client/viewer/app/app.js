@@ -1,4 +1,5 @@
 Template.appViewerBody.registerElement('app-body');
+// Template.appScreen.registerElement('app-screen');
 
 Template.appViewerBody.helpers({
 	screenlist: function(){

@@ -1,5 +1,10 @@
 IDEController = RouteController.extend({
 	layoutTemplate: "MasterLayout",
+	'preload': {
+		'verbose': true,
+		'styles': ['/client/ide/lazy_load/css/materialize.css', '/client/ide/client.scss'],
+		'sync': ['/client/ide/lazy_load/js/materialize.js']
+	},
 	onBeforeAction: function() {
 		$('body').removeClass('viewer-body');
 		if (!Meteor.user() && !Meteor.loggingIn()) {
@@ -86,7 +91,7 @@ IDEController = RouteController.extend({
 								if(Session.get("chatsReady") == true) {
 									sound = new Audio('ding.mp3')
 									sound.volume = 0.2
-									//sound.play();	
+									//sound.play();
 									Session.set("newChats", true);
 								}
 							}
@@ -123,13 +128,13 @@ ProfileController = IDEController.extend({
 OldDocsController = IDEController.extend({
 	subscriptions: function() {
 		//console.log("OldDocsController subscriptions")
-		Meteor.subscribe("help_pages")		
+		Meteor.subscribe("help_pages")
 	}
 });
 
 DocsController = IDEController.extend({
 	subscriptions: function() {
 		//console.log("DocsController subscriptions")
-		Meteor.subscribe("docs")		
+		Meteor.subscribe("docs")
 	}
 });
