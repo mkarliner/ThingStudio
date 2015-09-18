@@ -4,7 +4,7 @@
 
 
 HTTPFeedProcessors = {
-	
+
 }
 
 
@@ -27,14 +27,14 @@ RegisterHTTPFeedProcessor("test", function(feed, error, result){
 	console.log("payload", payload)
 	Messages.upsert(
 		{
-			topic: feed.path, 
+			topic: feed.path,
 			feed: feed.title
-		}, 
-		{$set: 
+		},
+		{$set:
 			{
-				feed: feed.title, 
-				topic: feed.path, 
-				payload: payload}, 
+				feed: feed.title,
+				topic: feed.path,
+				payload: payload},
 				$inc:{count: 1
 			}
 		});
@@ -44,7 +44,7 @@ RegisterHTTPFeedProcessor("test", function(feed, error, result){
 
 
 checkHTTPFeeds = function (){
-	console.log("INC HTTPCLOCK: ", HTTPClock);
+	// console.log("INC HTTPCLOCK: ", HTTPClock);
 	HTTPClock++;
 	var feeds = HTTPFeeds.find().fetch();
 	//Check which feeds need to be polled.
@@ -65,7 +65,7 @@ checkHTTPFeeds = function (){
 			})
 		}
 	}
-	console.log("HTTP Clock", HTTPClock)
+	// console.log("HTTP Clock", HTTPClock)
 	Meteor.setTimeout(checkHTTPFeeds, 1000);
 }
 
@@ -98,16 +98,16 @@ Feedhooks = {};
 
 publish = function(feed, message) {
 	if(feed.pubsub !="Publish") {
-		message = "Attempt to publish to subcription feed: "+ feed.title; 
+		message = "Attempt to publish to subcription feed: "+ feed.title;
 		Alerts.upsert({type: 'runtime', status: "warning", message:  message},{$set:{type: 'runtime', status: 'warning', message: message} ,$inc: {count: 1} } );
 	} else {
 		Outbox.upsert({topic: feed.subscription}, {$set: { feed: feed.title, topic: feed.subscription, payload: message},$inc: {count: 1}});
-		mqttClient.publish(feed.subscription, message);	
+		mqttClient.publish(feed.subscription, message);
 	}
 }
 
 mqttClientSubscribe = function(topic) {
-	console.log("MQTTSUB : ", topic, SubscribedTopics);
+	// console.log("MQTTSUB : ", topic, SubscribedTopics);
 	if(SubscribedTopics[topic]) {
 		return;
 	} else {
@@ -121,7 +121,7 @@ mqttClientUnsubscribe= function(topic) {
 	if(mqttClient.unsubscribe) {
 		mqttClient.unsubscribe(topic);
 	}
-	
+
 }
 
 // The following functions are mostly used by widgets
@@ -138,7 +138,7 @@ publishFeed = function(feedName, message) {
 		message = "No such publish feed - " + feedName;
 		Alerts.upsert({type: 'runtime', status: "warning", message:  message},{$set:{type: 'runtime', status: 'warning', message: message} ,$inc: {count: 1} } );
 	}
-	
+
 }
 
 getFeed = function(feed, defVal){
@@ -170,11 +170,11 @@ Meteor.setInterval(function(){
 	} else {
 		Session.set("ConnectionStatus", true);
 	}
-	
+
 }, 5000);
 
 
-getCurrentApp = function() { 
+getCurrentApp = function() {
 	app =  Apps.findOne({_id: Session.get("currentAppId")});
 	return app;
 };
@@ -250,16 +250,16 @@ ResetMessages = function() {
 
 DisconnectMQTT = function() {
 	console.log("SHUTTING DOWN CLIENT")
-	if (typeof mqttClient.end == 'function') { 
+	if (typeof mqttClient.end == 'function') {
 		// console.log("Ending current client");
-	    mqttClient.end(); 
+	    mqttClient.end();
 	}
 }
 
 UnsubscribeAll = function(){
-	if (typeof  mqttClientUnsubscribe != 'function') { 
+	if (typeof  mqttClientUnsubscribe != 'function') {
 		console.log("No connection");
-	    return; 
+	    return;
 	}
 	feeds = Feeds.find({}).fetch();
 	for(var f=0; f<feeds.length; f++) {
@@ -283,7 +283,7 @@ connect = function (conn, usr, pass) {
 	} else {
 		username = conn.username;
 	}
-	
+
 	if(pass) {
 		password = pass;
 	} else {
@@ -387,7 +387,7 @@ connect = function (conn, usr, pass) {
 							if(isNaN(diff)) {
 								diff = 0.0;
 							}
-							console.log("DIFF: ", feeds[i].title, diff);
+							// console.log("DIFF: ", feeds[i].title, diff);
 
 							// Check min
 							if( value < lastMessage.min) {
@@ -411,7 +411,7 @@ connect = function (conn, usr, pass) {
 								// console.log("RESET MM", feeds[i].maxMinAvgLimit)
 							} else {
 								count +=1;
-							} 
+							}
 							//Generate exp moving average
 							tc = 0.1;
 							avg = tc * value + (1.0-tc)* (lastMessage.avg ? lastMessage.avg : value);
@@ -419,7 +419,7 @@ connect = function (conn, usr, pass) {
 							// console.log('DIFFAV: ', feeds[i].title, diffavg);
 							//console.log("UPSERGSD: ", feeds[i].title,  lastMessage, " minMax", value, "diff: ", diff, min, max, avg, "diffavg", diffavg);
 							OldMessages.upsert(
-								{topic: topic, feed: feeds[i].title, jsonKey: jsonKey}, 
+								{topic: topic, feed: feeds[i].title, jsonKey: jsonKey},
 								{$set: {jsonKey: jsonKey, value: value, diff: diff, min: min, max: max, avg: avg, diffavg: diffavg, count: count}})
 						} else {
 							console.log("minMaxInit", jsonKey, lastMessage);
@@ -428,19 +428,19 @@ connect = function (conn, usr, pass) {
 					}
 				}
 				if(Feedhooks[feeds[i].title]) {
-					Feedhooks[feeds[i].title](payload);	
+					Feedhooks[feeds[i].title](payload);
 				}
 			}
 
-			
+
 		}
 	});
 }
 
 disconnect = function(conn) {
-	if (typeof mqttClient.end == 'function') { 
+	if (typeof mqttClient.end == 'function') {
 		// console.log("Ending current client");
-		mqttClient.end(); 
+		mqttClient.end();
 	}
 }
 
@@ -460,7 +460,7 @@ changeActiveApp = function(appId) {
 	ResetMessages();
 };
 
-getCurrentApp = function() { 
+getCurrentApp = function() {
 	app =  Apps.findOne({_id: Session.get("currentAppId")});
 	return app;
 }

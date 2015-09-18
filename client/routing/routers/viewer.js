@@ -13,7 +13,7 @@ Router.route("/app/:appid", {
 			});
 			return;
 		}
-		console.log("ACTION!")
+		// console.log("ACTION!")
 		app = getCurrentApp();
 		if(!app) {
 			this.render("Loading", {
@@ -21,7 +21,7 @@ Router.route("/app/:appid", {
 			});
 			return;
 		}
-		console.log("Current APP", app)
+		// console.log("Current APP", app)
 		// if(!app) {
 		// 	this.render("Loading", {
 		// 		data: "Current Application"

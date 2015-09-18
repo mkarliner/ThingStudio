@@ -3,11 +3,11 @@ Template.appViewerBody.registerElement('app-body');
 
 Template.appViewerBody.helpers({
 	screenlist: function(){
-		console.log("screens")
+		// console.log("screens")
 		return Screens.find({isWidget: false})
 	},
 	screenparams: function(){
-		console.log("SP", this);
+		// console.log("SP", this);
 		return {appid: this.appId, _id: this._id}
 	}
 });
