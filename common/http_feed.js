@@ -76,19 +76,36 @@ Schemas.HTTPFeed = new SimpleSchema({
 		defaultValue: 0
 	},
 	
-	processors: {
-		type: [String],
+	requestProcessor: {
+		type: String,
 		optional: true,
-		// autoform: {
-		// 	type: "selectize",
-		// 	options: function(){
-		// 		keys = Session.get("FeedProcessors");
-		// 		options = keys.map(function(val, index, arr){
-		// 			return {label: val, value: val};
-		// 		})
-		// 		return (options);
-		// 	}
-		// },
+		autoform: {
+			type: "selectize",
+			options: function(){
+				console.log("asdf", FeedProcessors.find({type: "HTTPRequest"}).fetch());
+				keys = FeedProcessors.find({type: "HTTPRequest"}).fetch();
+				options = keys.map(function(val, index, arr){
+					return {label: val.name, value: val.name};
+				})
+				return (options);
+			}
+		},
+	},
+	
+	responseProcessor: {
+		type: String,
+		optional: true,
+		autoform: {
+			type: "selectize",
+			options: function(){
+				console.log("asdf", FeedProcessors.find({type: "HTTPResponse"}).fetch());
+				keys = FeedProcessors.find({type: "HTTPResponse"}).fetch();
+				options = keys.map(function(val, index, arr){
+					return {label: val.name, value: val.name};
+				})
+				return (options);
+			}
+		},
 	},
 
 	// action: {

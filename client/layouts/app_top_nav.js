@@ -101,7 +101,7 @@ Template.BreadcrumbsContent.helpers({
 			// Applies to: edit theme page
 			return [ { item: "Themes", path: "/themes" }, { item: this.title, path: "/themes/" + this._id } ];
 		} else {
-			console.log("from breadcrumb, should not run");
+			//console.log("from breadcrumb, should not run");
 			return [{ item: "None", path: "/none" }, { item: "none", path: "/none/" + 2324 }]
 		}
 	}

@@ -2,20 +2,62 @@
 // HTTP  Management//
 ///////////////////////////////////////////////////////////////////////////////////////
 
-
-HTTPFeedProcessors = {
-	
+FeedProcessors = new Mongo.Collection(null);
+RegisterFeedProcessor = function(name,  type, func) {
+	// Type can be HTTPRequest, HTTPResponse
+	// HTTPFeedProcessors[name] = func;
+	FeedProcessors.insert({name: name, func: func, type: type})
 }
 
 
-RegisterHTTPFeedProcessor = function(name, func) {
-	HTTPFeedProcessors[name] = func;
-}
+// HTTPFeedProcessors = {
+//
+// }
 
 
 
-RegisterHTTPFeedProcessor("test", function(feed, error, result){
-	console.log("Test Feed Processor", feed, error, result)
+
+// RegisterHTTPFeedProcessor = function(name, func) {
+// 	HTTPFeedProcessors[name] = func;
+// }
+
+var HTTPClock = 0;
+
+RegisterFeedProcessor("testReq", "HTTPRequest", function(feed, error, result){
+	if(error) {
+		console.log("HRRPR: ", error.message );
+		return false;
+	}
+	try {
+		payload = JSON.parse(result.content);
+	}
+	catch(err) {
+		console.log("HERR: ", err);
+		Session.set("runtimeErrors", "Invalid MQTT message, payload not JSON: " + result.content.toString());
+		payload = result.content.toString();
+	}
+	console.log("payload", payload)
+	Messages.upsert(
+		{
+			topic: feed.path, 
+			feed: feed.title
+		}, 
+		{$set: 
+			{
+				feed: feed.title, 
+				topic: feed.path, 
+				payload: payload}, 
+				$inc:{count: 1
+			}
+		});
+	return (feed, error, result)
+});
+
+RegisterFeedProcessor("StdJSON", "HTTPResponse", function(feed, error, result){
+	if(error) {
+		console.log("HRRPR: ", error.message );
+		return;
+	}
 	try {
 		payload = JSON.parse(result.content);
 	}
@@ -40,13 +82,31 @@ RegisterHTTPFeedProcessor("test", function(feed, error, result){
 		});
 });
 
+function interval(func, wait, times){
+    var interv = function(w, t){
+        return function(){
+            if(typeof t === "undefined" || t-- > 0){
+                setTimeout(interv, w);
+                try{
+                    func.call(null);
+                }
+                catch(e){
+                    t = 0;
+                    throw e.toString();
+                }
+            }
+        };
+    }(wait, times);
 
+    setTimeout(interv, wait);
+};
 
 
 checkHTTPFeeds = function (){
-	console.log("INC HTTPCLOCK: ", HTTPClock);
+	//console.log("HTTP clock");
 	HTTPClock++;
 	var feeds = HTTPFeeds.find().fetch();
+	
 	//Check which feeds need to be polled.
 	for(var f=0; f<feeds.length; f++) {
 		if(HTTPClock % feeds[f].polling_interval == 0 ) {
@@ -54,27 +114,33 @@ checkHTTPFeeds = function (){
 			var conn = HTTPConnections.findOne(feed.connection);
 			var url = conn.protocol + "://" + conn.host+feed.path;
 			timeout = (feed.polling_interval-1)*1000;
-			console.log("HT: ", feed.title, conn, url, timeout);
+			//console.log("HT: ", feed.responseProcessor, conn, url, timeout);
 			HTTP.call(feed.verb, url, {timeout: timeout }, function(error, result) {
 				//console.log("HRET: ", error, result);
 				//Call each feed processor in turn
-				for(var p=0; p<feed.processors.length; p++ ){
-					console.log("CALLING: ", HTTPFeedProcessors[feed.processors[p]])
-					HTTPFeedProcessors[feed.processors[p]](feed, error, result);
-				}
+				// for(var p=0; p<feed.processors.length; p++ ){
+				// 	//console.log("CALLING: ", HTTPFeedProcessors[feed.processors[p]])
+				// 	HTTPFeedProcessors[feed.processors[p]](feed, error, result);
+				// }
+				var fp = FeedProcessors.findOne({type: "HTTPResponse", name: feed.responseProcessor});
+				//console.log("FP: ", fp, FeedProcessors.find().fetch());
+				fp.func(feed, error, result);
+				
 			})
 		}
 	}
-	console.log("HTTP Clock", HTTPClock)
-	Meteor.setTimeout(checkHTTPFeeds, 1000);
+	// console.log("HTTP Clock", HTTPClock)
 }
 
 
-var HTTPClock = 0;
-Meteor.startup(function(){
-	Meteor.setTimeout(checkHTTPFeeds, 1000);
-	Session.set("FeedProcessors", Object.keys(HTTPFeedProcessors));
-});
+
+Meteor.startup(function() {
+	console.log("Starting HTTP Check");
+	interval(checkHTTPFeeds, 1000);
+})
+
+
+	
 
 
 
