@@ -87,8 +87,9 @@ compileTemplate = function(name, html_text, javascript) {
 					return;
 				};
 				message = attr.getNamedItem("data-message");
-				feed = Feeds.findOne({title: feed_name.value});
-				publish(feed, JSON.stringify(message ? message.value : "click"));
+				// feed = Feeds.findOne({title: feed_name.value});
+				console.log("BLICK: ", feed_name.value)
+				publish(feed_name.value, JSON.stringify(message ? message.value : "click"));
 				ev.stopImmediatePropagation();
 			},
 			'change input[type="checkbox"]': function(ev) {

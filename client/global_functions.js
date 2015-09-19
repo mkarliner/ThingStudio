@@ -3,6 +3,23 @@
 ///////////////////////////////////////////////////////////////////////////////////////
 
 FeedProcessors = new Mongo.Collection(null);
+
+FeedList = new Mongo.Collection(null);
+Meteor.startup(function(){
+	Tracker.autorun(function(){
+		mqttFeeds = Feeds.find().fetch();
+		for(var m=0; m<mqttFeeds.length; m++) {
+			FeedList.insert({name: mqttFeeds[m].title, type: "MQTT"})
+		}
+		httpFeeds = HTTPFeeds.find().fetch();
+		for(var h=0; h<httpFeeds.length; h++) {
+			FeedList.insert({name: httpFeeds[h].title, type: "HTTP"})
+		}
+	});
+})
+
+
+
 RegisterFeedProcessor = function(name,  type, func) {
 	// Type can be HTTPRequest, HTTPResponse
 	// HTTPFeedProcessors[name] = func;
@@ -23,34 +40,11 @@ RegisterFeedProcessor = function(name,  type, func) {
 
 var HTTPClock = 0;
 
-RegisterFeedProcessor("testReq", "HTTPRequest", function(feed, error, result){
-	if(error) {
-		console.log("HRRPR: ", error.message );
-		return false;
-	}
-	try {
-		payload = JSON.parse(result.content);
-	}
-	catch(err) {
-		console.log("HERR: ", err);
-		Session.set("runtimeErrors", "Invalid MQTT message, payload not JSON: " + result.content.toString());
-		payload = result.content.toString();
-	}
-	console.log("payload", payload)
-	Messages.upsert(
-		{
-			topic: feed.path, 
-			feed: feed.title
-		}, 
-		{$set: 
-			{
-				feed: feed.title, 
-				topic: feed.path, 
-				payload: payload}, 
-				$inc:{count: 1
-			}
-		});
-	return (feed, error, result)
+RegisterFeedProcessor("testReq", "HTTPRequest", function(feed, message){
+	console.log("testReq Proc", feed, message)
+
+
+	return ({content: message})
 });
 
 RegisterFeedProcessor("StdJSON", "HTTPResponse", function(feed, error, result){
@@ -63,7 +57,7 @@ RegisterFeedProcessor("StdJSON", "HTTPResponse", function(feed, error, result){
 	}
 	catch(err) {
 		console.log("HERR: ", err);
-		Session.set("runtimeErrors", "Invalid MQTT message, payload not JSON: " + result.content.toString());
+		Session.set("runtimeErrors", "Invalid HTTP message, payload not JSON: " + result.content.toString());
 		payload = result.content.toString();
 	}
 	console.log("payload", payload)
@@ -162,14 +156,59 @@ Feedhooks = {};
 
 
 
-publish = function(feed, message) {
-	if(feed.pubsub !="Publish") {
-		message = "Attempt to publish to subcription feed: "+ feed.title; 
-		Alerts.upsert({type: 'runtime', status: "warning", message:  message},{$set:{type: 'runtime', status: 'warning', message: message} ,$inc: {count: 1} } );
-	} else {
-		Outbox.upsert({topic: feed.subscription}, {$set: { feed: feed.title, topic: feed.subscription, payload: message},$inc: {count: 1}});
-		mqttClient.publish(feed.subscription, message);	
+publish = function(feedName, message) {
+	if(typeof(feedName) != "string") {
+		console.log("NON-FEED NAME PASSED TO PUBLISH", feedName, typeof feedName);
+		return;
 	}
+	feedType = FeedList.findOne({name: feedName}).type;
+	if(!feedType) {
+		console.log("NO SUCH FEED: ", feedName)
+	}
+	switch(feedType) {
+	case "MQTT":
+		feed = Feeds.findOne(feedName);
+		if(feed.pubsub !="Publish") {
+			message = "Attempt to publish to subcription feed: "+ feed.title; 
+			Alerts.upsert({type: 'runtime', status: "warning", message:  message},{$set:{type: 'runtime', status: 'warning', message: message} ,$inc: {count: 1} } );
+		} else {
+			Outbox.upsert({topic: feed.subscription}, {$set: { feed: feed.title, topic: feed.subscription, payload: message},$inc: {count: 1}});
+			mqttClient.publish(feed.subscription, message);	
+		}
+		break;
+	case "HTTP":
+		feed = HTTPFeeds.findOne({title: feedName});
+		console.log("HTTP FEED Request", feedName, feed);
+		//Get the requestProcessor for this feed
+		var fp = FeedProcessors.findOne({name: feed.requestProcessor});		
+		//And call it to process the outgoing message
+		console.log("NOTE TO SELF - request feed processor need access to request!!!!!!!");
+		var options = fp.func(feed, message);
+		//Record that we have done this for debugging.
+		Outbox.upsert({topic: feed.path}, {$set: { feed: feed.title, topic: feed.path, payload: message},$inc: {count: 1}});
+		//Now actually do the deed.
+		var conn = HTTPConnections.findOne(feed.connection);
+		var url = conn.protocol + "://" + conn.host+feed.path;
+		timeout = 5*1000;
+				options.headers = {};
+				options.timeout = timeout;
+				//options.headers["Access-Control-Allow-Headers"] = "Access-Control-Allow-Origin, Origin, X-Requested-With, Content-Type, Accept";
+				//options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+		//options.headers['Access-Control-Allow-Origin'] = '*';
+		//options.headers["Access-Control-Allow-Headers"] = "Access-Control-Allow-Origin, Origin, X-Requested-With, Content-Type, Accept";
+		//options.headers['Content-Type'] = "application/json";
+		console.log("HTTPCALL: ", feed.verb, url, options )
+		HTTP.call(feed.verb, url, options, function(error, result) {
+			console.log("HEV: ", error, result)
+			var rp = FeedProcessors.findOne({type: "HTTPResponse", name: feed.responseProcessor});
+			//console.log("FP: ", fp, FeedProcessors.find().fetch());
+			rp.func(feed, error, result);		
+		})
+		break;
+	default:
+		console.log("UNKNOWN FEED TYPE: ", feedType)
+	}
+
 }
 
 mqttClientSubscribe = function(topic) {
