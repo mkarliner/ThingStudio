@@ -79,7 +79,7 @@ compileTemplate = function(name, html_text, javascript) {
 			}
 		});
 		Template[name].events({
-			'click button, click a': function(ev){
+			'click button, click anchorClass': function(ev){
 				ev.preventDefault();
 				attr = ev.currentTarget.attributes;
 				feed_name = attr.getNamedItem("data-feed");
@@ -107,8 +107,8 @@ compileTemplate = function(name, html_text, javascript) {
 				}
 				// console.log("PV", pv)
 				value = attr.getNamedItem("checked");
-				feed = Feeds.findOne({title: feed_name.value});
-				publish(feed, JSON.stringify(ev.target.checked.toString()));
+				//feed = Feeds.findOne({title: feed_name.value});
+				publish(feed_name.value, JSON.stringify(ev.target.checked.toString()));
 				ev.stopImmediatePropagation();
 			},
 			'change input': function(ev) {
@@ -124,13 +124,13 @@ compileTemplate = function(name, html_text, javascript) {
 				checkFeed(feed_name.value, false);
 				value = $(ev.target).val();
 				checkFeed(feed_name.value, false);
-				feed = Feeds.findOne({title: feed_name.value});
+				//feed = Feeds.findOne({title: feed_name.value});
 				
 				if(typeof feed == "undefined") {
 					return;
 				}
 				// console.log(feed);
-				publish(feed, JSON.stringify(prefix+value));
+				publish(feed_name.value, JSON.stringify(prefix+value));
 			},
 			'input': function(ev) {
 				// console.log("INPUT ", ev);
@@ -139,8 +139,8 @@ compileTemplate = function(name, html_text, javascript) {
 				checkFeed(feed_name.value, false);
 				if(attr.getNamedItem("data-continuous")) {
 					value = $(ev.target).val();
-					feed = Feeds.findOne({title: feed_name.value});
-					publish(feed, JSON.stringify(value));
+					//feed = Feeds.findOne({title: feed_name.value});
+					publish(feed_name.value, JSON.stringify(value));
 				}
 				
 			}

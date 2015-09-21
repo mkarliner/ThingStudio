@@ -36,11 +36,20 @@ DocsIndex = {
 		{
 			title: "Displaying data in your Templates"	
 		},
-		],
-	HardwarePlatforms: [
 		{
 			title: "Getting data between IoT devices and ThingStudio"	
-		},
+		}
+		],
+	// HardwarePlatforms: [
+	//
+	// 	],
+		Advanced: [
+			{
+				title: "Custom Helpers"
+			},
+			{
+				title: "Feed Processing"
+			}			
 		],
 	Reference: [
 		{

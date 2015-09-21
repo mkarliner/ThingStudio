@@ -449,7 +449,9 @@ Meteor.startup(function() {
 		"themes.md",
 		"widgets.md",
 		"display-data.md",
-		"data-in-and-out.md"
+		"data-in-and-out.md",
+		"custom_helpers.md",
+		"feed_processing.md"
 	];
 	
 	WidgetFiles = [
