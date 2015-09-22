@@ -4,22 +4,37 @@
 ///////////////////////////////////////////////////////////////////////////////////////
 
 
-HTTPFeedProcessors = {
+FeedProcessors = new Mongo.Collection(null);
 
+FeedList = new Mongo.Collection(null);
+Meteor.startup(function(){
+	Tracker.autorun(function(){
+		mqttFeeds = Feeds.find().fetch();
+		for(var m=0; m<mqttFeeds.length; m++) {
+			FeedList.insert({name: mqttFeeds[m].title, type: "MQTT"})
+		}
+		httpFeeds = HTTPFeeds.find().fetch();
+		for(var h=0; h<httpFeeds.length; h++) {
+			FeedList.insert({name: httpFeeds[h].title, type: "HTTP"})
+		}
+	});
+})
+
+
+
+RegisterFeedProcessor = function(name,  type, func) {
+	// Type can be HTTPRequest, HTTPResponse
+	// HTTPFeedProcessors[name] = func;
+	FeedProcessors.insert({name: name, func: func, type: type})
 }
-
 
 
 var HTTPClock = 0;
 
-RegisterFeedProcessor("testReq", "HTTPRequest", function(conn, feed, message){
+RegisterFeedProcessor("testReq", "HTTPRequest", function(feed, message){
 	console.log("testReq Proc", feed, message);
-	conn = GetConnection(feed);
-	headers = {}
-	header["X-Octoblue userid"] = conn.user
 	return ({
-		headers: headers
-		content: message;
+		content: message
 	})
 });
 
@@ -52,12 +67,31 @@ RegisterFeedProcessor("StdJSON", "HTTPResponse", function(feed, error, result){
 		});
 });
 
+function interval(func, wait, times){
+    var interv = function(w, t){
+        return function(){
+            if(typeof t === "undefined" || t-- > 0){
+                setTimeout(interv, w);
+                try{
+                    func.call(null);
+                }
+                catch(e){
+                    t = 0;
+                    throw e.toString();
+                }
+            }
+        };
+    }(wait, times);
 
+    setTimeout(interv, wait);
+};
 
 
 checkHTTPFeeds = function (){
+	//console.log("HTTP clock");
 	HTTPClock++;
 	var feeds = HTTPFeeds.find().fetch();
+	
 	//Check which feeds need to be polled.
 	for(var f=0; f<feeds.length; f++) {
 		if(HTTPClock % feeds[f].polling_interval == 0 ) {
@@ -65,17 +99,22 @@ checkHTTPFeeds = function (){
 			var conn = HTTPConnections.findOne(feed.connection);
 			var url = conn.protocol + "://" + conn.host+feed.path;
 			timeout = (feed.polling_interval-1)*1000;
-			console.log("HT: ", feed.title, conn, url, timeout);
+			//console.log("HT: ", feed.responseProcessor, conn, url, timeout);
 			HTTP.call(feed.verb, url, {timeout: timeout }, function(error, result) {
 				//console.log("HRET: ", error, result);
 				//Call each feed processor in turn
-				for(var p=0; p<feed.processors.length; p++ ){
-					console.log("CALLING: ", HTTPFeedProcessors[feed.processors[p]])
-					HTTPFeedProcessors[feed.processors[p]](feed, error, result);
-				}
+				// for(var p=0; p<feed.processors.length; p++ ){
+				// 	//console.log("CALLING: ", HTTPFeedProcessors[feed.processors[p]])
+				// 	HTTPFeedProcessors[feed.processors[p]](feed, error, result);
+				// }
+				var fp = FeedProcessors.findOne({type: "HTTPResponse", name: feed.responseProcessor});
+				//console.log("FP: ", fp, FeedProcessors.find().fetch());
+				fp.func(feed, error, result);
+				
 			})
 		}
 	}
+	// console.log("HTTP Clock", HTTPClock)
 }
 
 
@@ -84,7 +123,10 @@ checkHTTPFeeds = function (){
 // 	Meteor.setTimeout(checkHTTPFeeds, 1000);
 // 	Session.set("FeedProcessors", Object.keys(HTTPFeedProcessors));
 // });
-
+Meteor.startup(function() {
+	console.log("Starting HTTP Check");
+	interval(checkHTTPFeeds, 1000);
+})
 
 
 
@@ -520,5 +562,4 @@ getCurrentApp = function() {
 ///////////////////////////////////////////////////////////////////////////////////////
 // Alert Management//
 ///////////////////////////////////////////////////////////////////////////////////////
-=======
->>>>>>> External Changes
+

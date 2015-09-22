@@ -12,33 +12,33 @@ Template.ViewApp.helpers({
 	}
 });
 
-$.Velocity.RegisterEffect('transition.pushLeftIn', {
-  defaultDuration: 5000,
-  calls: [
-    [
-      {
-        translateX: ['0%', '-100%'],
-        translateZ: 0,
-        easing: "ease-in-out",
-        opacity: [1, 0]
-      }
-    ]
-  ]
-});
-
-$.Velocity.RegisterEffect('transition.pushLeftOut', {
-  defaultDuration: 5000,
-  calls: [
-    [
-      {
-        translateX: ['0%', '100%'],
-        translateZ: 0,
-        easing: "ease-in-out",
-        opacity: [0, 1]
-      }
-    ]
-  ]
-});
+// $.Velocity.RegisterEffect('transition.pushLeftIn', {
+//   defaultDuration: 5000,
+//   calls: [
+//     [
+//       {
+//         translateX: ['0%', '-100%'],
+//         translateZ: 0,
+//         easing: "ease-in-out",
+//         opacity: [1, 0]
+//       }
+//     ]
+//   ]
+// });
+//
+// $.Velocity.RegisterEffect('transition.pushLeftOut', {
+//   defaultDuration: 5000,
+//   calls: [
+//     [
+//       {
+//         translateX: ['0%', '100%'],
+//         translateZ: 0,
+//         easing: "ease-in-out",
+//         opacity: [0, 1]
+//       }
+//     ]
+//   ]
+// });
 
 Transitioner.transition({
     fromRoute: 'ViewApp',
