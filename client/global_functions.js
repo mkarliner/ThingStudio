@@ -223,7 +223,10 @@ mqttClientSubscribe = function(topic) {
 
 mqttClientUnsubscribe= function(topic) {
 	delete SubscribedTopics[topic];
-	mqttClient.unsubscribe(topic);
+	if(mqttClient.unsubscribe) {
+		mqttClient.unsubscribe(topic);
+	}
+	
 }
 
 // The following functions are mostly used by widgets
