@@ -121,6 +121,20 @@ Schemas.App = new SimpleSchema({
 		type: Boolean,
 		defaultValue: false,
 	},
+	js: {
+		optional: true,
+		label: "Javascript",
+		type: String,
+		autoform: {
+			rows: 10,
+	        afFieldInput: {
+	          type: 'acejs',
+	          class: 'editor' // optional
+	          // summernote options goes here
+	        }
+		},
+		defaultValue: "//Advanced Use Only"
+	},
 	showHamburger: {
 		type: Boolean,
 		label: "Show Nav Menu in App Header",
