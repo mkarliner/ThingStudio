@@ -13,7 +13,7 @@ Schemas.HTTPConnection = new SimpleSchema({
 	port: {
 		type: Number,
 		label: "Port",
-		defaultValue: 9001
+		defaultValue: 80
 	},
 	protocol: {
 		type: String,

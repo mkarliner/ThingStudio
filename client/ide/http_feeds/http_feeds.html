@@ -10,7 +10,7 @@
 	<table class="hoverable">
 		{{> HTTPFeedsTableWidths}}
 		<thead>
-			<tr cellpadding="10"><th>Feed Title</th><th>Connection</th><th>Path</th><th>Verb</th><th>Interval</th><th>Processors</th><th>Action</th></tr>
+			<tr cellpadding="10"><th>Feed Title</th><th>Connection</th><th>Path</th><th>Verb</th><th>Interval</th><th>Action</th></tr>
 		</thead>
 		<tbody>
 			<tr id="item-insert" class="spacer td-closed"><td></td></tr>
@@ -21,7 +21,6 @@
 					<td>{{path}}</td>
 					<td>{{verb}}</td>
 					<td>{{polling_interval}}</td>
-					<td>{{processors}}</td>
 					<td><a class="table-action table-edit-item" href="{{pathFor 'Edit HttpFeed'}}"><i class="mdi-editor-mode-edit"></i></a>{{#afModal classes="table-action table-cancel-item" collection="HTTPFeeds" operation="remove" doc=_id title="<i class='mdi-alert-error'></i><span class='modal-header'>Deleting Feed</span>" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="icon-ts-trash"></i>{{/afModal}}</td>
 				</tr>
 			{{/each}}
