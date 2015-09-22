@@ -3,12 +3,10 @@
 	<div class="app-wrapper">
 
 		<div class="app-body-wrapper">
-			<style>
-				.app-body-wrapper {
-					min-height: calc( 100vh - 104px )
-				}
-			</style>
-			{{> yield}}
+
+			{{#transitioner}}
+			  {{> yield}}
+			{{/transitioner}}
 			{{#if runtimeErrors}}
 				<div class="screen-errors">
 					<p>Runtime Errors</p>
@@ -18,209 +16,23 @@
 		</div>
 		<!--  Header intentionally added AFTER body. Addressed with flexbox -->
 		<div class="app-header-wrapper">
-			<!-- <app-header></app-header> -->
-			{{> appheader}}
+			<header>
+				<ul class="viewer-header">
+					<li></li>
+					<li><a class="made-with" href="http://www.thingstud.io/" target="_blank">Made with ThingStudio</a></li>
+					<li><span><a class="right viewer-connection-stat" href=""><i class="icon-ts-connection {{isConnected}}"></i></a></span></li>
+				</ul>
+			</header>
 		</div>
 		<div class="app-footer-wrapper">
-			<!-- <app-footer></app-footer> -->
-			{{> appfooter}}
+			<footer>
+				<ul>
+					<li><span><a class="right viewer-connection-stat" href=""><i class="icon-ts-connection {{isConnected}}"></i></a></span></li>
+					<li><span><a class="right viewer-connection-stat" href="{{pathFor 'ViewApp' data=appPathInfo}}"><i class="icon-ts-connection {{isConnected}}"></i></a></span></li>
+					<li><span><a class="right viewer-connection-stat" href=""><i class="icon-ts-connection {{isConnected}}"></i></a></span></li>
+				</ul>
+				{{> fontLicense}}
+			</footer>
 		</div>
 	</div>
-</template>
-
-<template name="appheader">
-	{{> appHeaderStyles}}
-	<header>
-		<ul>
-			<li><a href="#" data-activates="slide-out" class="button-collapse show-on-large left app-nav {{appHamburger}}"><i class="mdi-navigation-menu"></i></a></li>
-			<li><a class="made-with" href="http://www.thingstud.io/" target="_blank">Made with ThingStudio</a></li>
-			<li><span><a class="right viewer-connection-stat" href=""><i class="icon-ts-connection {{isConnected}}"></i></a></span></li>
-		</ul>
-	</header>
-</template>
-
-<template name="appfooter">
-	{{> appHeaderStyles}}
-	{{> appFooterStyles}}
-	<footer>
-		<ul>
-			<li><span><a class="right viewer-connection-stat" href=""><i class="icon-ts-connection {{isConnected}}"></i></a></span></li>
-			<li><span><a class="right viewer-connection-stat" href=""><i class="icon-ts-connection {{isConnected}}"></i></a></span></li>
-			<li><span><a class="right viewer-connection-stat" href=""><i class="icon-ts-connection {{isConnected}}"></i></a></span></li>
-		</ul>
-		{{> fontLicense}}
-	</footer>
-</template>
-
-<template name="appHeaderStyles">
-<style>
-	* {
-		font-family: 'AvenirLTStd-Light';
-	}
-	ul {
-		list-style-type: none;
-		display: -webkit-box;  /* OLD - iOS 6-, Safari 3.1-6, BB7 */
-		display: -ms-flexbox;  /* TWEENER - IE 10 */
-		display: -webkit-flex; /* NEW - Safari 6.1+. iOS 7.1+, BB10 */
-		display: flex;         /* NEW, Spec - Firefox, Chrome, Opera */
-		margin: 0;
-		padding: 0;
-		-webkit-justify-content: space-between;
-		-ms-flex-pack: space-between;
-		justify-content: space-between;
-	}
-	ul li {
-		-webkit-align-self: center;
-		-ms-flex-item-align: center;
-		align-self: center;
-	}
-	li:last-child {
-
-	}
-	a.made-with {
-		color: white;
-		font-size: 1.7em;
-		text-decoration: none;
-	}
-	a i.icon-ts-connection {
-		transition: background-color 0.1s cubic-bezier(0.4, 0.0, 0.2, 1);
-		border-radius: 50%;
-		font-size: 18px;
-		width: 36px;
-		height: 36px;
-		line-height: 42px;
-		display: inline-block;
-		text-align: center;
-		color: white;
-	}
-	a i.icon-ts-connection.connected {
-		background-color: #7ED321;
-	}
-	a i.icon-ts-connection.disconnected {
-		-webkit-animation: blink 3s 0s ease-in-out infinite;
-		-moz-animation: blink 3s 0s ease-in-out infinite;
-		-ms-animation: blink 3s 0s ease-in-out infinite;
-		-o-animation: blink 3s 0s ease-in-out infinite;
-		animation: blink 3s 0s ease-in-out infinite;
-	}
-
-	///////////////////////////////////////////////////////////////////////////////////////
-	// Keyframe animations //
-	///////////////////////////////////////////////////////////////////////////////////////
-
-	@-webkit-keyframes blink {
-		50% {
-			background-color: $inactiveRed;
-		}
-		100% {
-			background-color: transparent;
-		}
-	}
-
-	@-moz-keyframes blink {
-		50% {
-			background-color: $inactiveRed;
-		}
-		100% {
-			background-color: transparent;
-		}
-	}
-
-	@-ms-keyframes blink {
-		50% {
-			background-color: $inactiveRed;
-		}
-		100% {
-			background-color: transparent;
-		}
-	}
-
-	@keyframes blink {
-		50% {
-			background-color: $inactiveRed;
-		}
-		100% {
-			background-color: transparent;
-		}
-	}
-
-	///////////////////////////////////////////////////////////////////////////////////////
-	// Custom icon font //
-	///////////////////////////////////////////////////////////////////////////////////////
-
-	@charset "UTF-8";
-
-	@font-face {
-		font-family: "ts-icons";
-		src:url("fonts/ts-icons.eot");
-		src:url("fonts/ts-icons.eot?#iefix") format("embedded-opentype"),
-			url("fonts/ts-icons.woff") format("woff"),
-			url("fonts/ts-icons.ttf") format("truetype"),
-			url("fonts/ts-icons.svg#ts-icons") format("svg");
-		font-weight: normal;
-		font-style: normal;
-
-	}
-
-	[data-icon]:before {
-		font-family: "ts-icons" !important;
-		content: attr(data-icon);
-		font-style: normal !important;
-		font-weight: normal !important;
-		font-variant: normal !important;
-		text-transform: none !important;
-		speak: none;
-		line-height: 1;
-		-webkit-font-smoothing: antialiased;
-		-moz-osx-font-smoothing: grayscale;
-	}
-
-	[class^="icon-"]:before,
-	[class*=" icon-"]:before {
-		font-family: "ts-icons" !important;
-		font-style: normal !important;
-		font-weight: normal !important;
-		font-variant: normal !important;
-		text-transform: none !important;
-		speak: none;
-		line-height: 1;
-		-webkit-font-smoothing: antialiased;
-		-moz-osx-font-smoothing: grayscale;
-	}
-
-	.icon-ts-connection:before {
-		content: "a";
-	}
-	.icon-ts-cancel:before {
-		content: "b";
-	}
-	.icon-ts-checkmark:before {
-		content: "d";
-	}
-	.icon-ts-ekg:before {
-		content: "c";
-	}
-	.icon-ts-feeds:before {
-		content: "e";
-	}
-	.icon-ts-templates:before {
-		content: "f";
-	}
-	.icon-ts-trash:before {
-		content: "g";
-	}
-	.icon-ts-profile:before {
-		content: "h";
-	}
-</style>
-</template>
-
-<template name="appFooterStyles">
-	<style>
-		ul {
-			-webkit-justify-content: space-around;
-			-ms-flex-pack: space-around;
-			justify-content: space-around;
-		}
-	</style>
 </template>

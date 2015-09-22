@@ -33,7 +33,7 @@ gildaspk:autoform-modals-materialize
 jeremy:selectize
 comerc:autoform-selectize
 miro:preloader
-
+ccorcos:transitioner
 reactive-var
 spacebars-compiler
 
@@ -71,6 +71,3 @@ meteorhacks:npm
 npm-container
 pfafman:filesaver
 chuangbo:marked
-
-
-#ccorcos:transitioner

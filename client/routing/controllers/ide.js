@@ -1,9 +1,32 @@
-IDEController = RouteController.extend({
+IDEController = PreloadController.extend({
 	layoutTemplate: "MasterLayout",
 	'preload': {
-		'verbose': true,
-		'styles': ['/client/ide/lazy_load/css/materialize.css', '/client/ide/client.scss'],
-		'sync': ['/client/ide/lazy_load/js/materialize.js']
+		'timeOut' : 10000,
+		// 'styles': ['/public/css/materialize.css', '/public/css/ide.scss', '/public/css/viewer.css'],
+		'styles': ['/css/materialize.css', '/css/ide.css'],
+		'sync': ['/js/materialize.js'],
+		'onBeforeSync': function ( fileName ) {
+        // Return 'true' to continue normally, otherwise skip library
+				console.log("IDE onBeforeSync", fileName)
+				return true;
+    },
+
+    // (optional) User-defined method called on each synchronously
+    // loaded library to check whether it finished initialization
+    'onSync' : function ( fileName ) {
+        // Check and return `true` if `fileName` finished initialization
+				console.log("IDE onSync", fileName)
+				return true;
+    },
+
+    // (optional) User-defined method called AFTER each synchronously
+    // loaded library to allow additional processing
+    'onAfterSync': function ( fileName ) {
+        // Return 'true' to continue normally,
+        // otherwise don't mark library as loaded
+				console.log("IDE onAfterSync", fileName)
+				return true;
+    }
 	},
 	onBeforeAction: function() {
 		$('body').removeClass('viewer-body');

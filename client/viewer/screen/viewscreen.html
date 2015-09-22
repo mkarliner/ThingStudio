@@ -1,17 +1,9 @@
 <template name="ViewScreen">
-	{{> appScreen}}
-</template>
-
-<template name="appScreen">
-	<main>
-		<div class="view-wrapper-inner">
-			<div class="container-fluid">
-				<div class="row">
-					<div id="viewerRenderScreen">
-						{{> Template.dynamic template=currentScreen}}
-					</div>
-				</div>
+	<div>
+		<main>
+			<div id="viewerRenderScreen">
+				{{> Template.dynamic template=currentScreen}}
 			</div>
-		</div>
-	</main>
+		</main>
+	</div>
 </template>

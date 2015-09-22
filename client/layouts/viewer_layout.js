@@ -26,5 +26,12 @@ Template.ViewerLayout.helpers({
 	},
 	runtimeErrors: function(){
 		return Session.get("runtimeErrors");
+	},
+	appPathInfo: function(){
+		return {appid: Session.get("currentAppId")}
 	}
+	// log: function () {
+	// 	var hithere = Session.get("currentAppId")
+	// 	console.log('Here is this in the viewer', hithere)
+	// }
 })

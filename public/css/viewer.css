@@ -1,0 +1,311 @@
+.fwLight {
+  font-family: "AvenirLTStd-Light"; }
+
+.fwBook {
+  font-family: "AvenirLTStd-Book"; }
+
+.fwRoman {
+  font-family: "AvenirLTStd-Roman"; }
+
+.fwMedium {
+  font-family: "AvenirLTStd-Medium"; }
+
+.fwHeavy {
+  font-family: "AvenirLTStd-Heavy"; }
+
+.fwBlack {
+  font-family: "AvenirLTStd-Black"; }
+
+/* http://meyerweb.com/eric/tools/css/reset/
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed,
+figure, figcaption, footer, header, hgroup,
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font: inherit;
+  vertical-align: baseline; }
+
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure,
+footer, header, hgroup, menu, nav, section {
+  display: block; }
+
+body {
+  line-height: 1; }
+
+ol, ul {
+  list-style: none; }
+
+blockquote, q {
+  quotes: none; }
+
+blockquote:before, blockquote:after,
+q:before, q:after {
+  content: '';
+  content: none; }
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0; }
+
+body {
+  font-family: AvenirLTStd-Roman, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased; }
+
+.app-body-wrapper {
+  min-height: calc( 100vh - 112px);
+  -webkit-box-flex: 1;
+  -webkit-flex: 1;
+  -ms-flex: 1;
+  flex: 1;
+  background-color: #F8F8F8;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column; }
+
+.app-wrapper {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  min-height: 100vh;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column; }
+
+.app-header-wrapper {
+  -webkit-box-ordinal-group: 0;
+  -webkit-order: -1;
+  -ms-flex-order: -1;
+  order: -1;
+  background-color: #353C51;
+  padding: 10px 20px; }
+
+.app-footer-wrapper {
+  background-color: #353C51; }
+
+.animation-container {
+  width: 100%;
+  height: 100%; }
+
+header ul, footer ul {
+  list-style-type: none;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  margin: 0;
+  padding: 0;
+  -webkit-box-pack: justify;
+  -webkit-justify-content: space-between;
+  -ms-flex-pack: justify;
+  justify-content: space-between;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+  -webkit-flex-direction: row;
+  -ms-flex-direction: row;
+  flex-direction: row; }
+  header ul li, footer ul li {
+    -ms-flex-item-align: center;
+    -webkit-align-self: center;
+    align-self: center; }
+
+footer ul {
+  -webkit-justify-content: space-around;
+  -ms-flex-pack: distribute;
+  justify-content: space-around;
+  padding: 8px 0; }
+
+a.made-with {
+  font-family: "AvenirLTStd-Medium";
+  color: white;
+  font-size: 5vw;
+  text-decoration: none; }
+
+a i.icon-ts-connection {
+  transition: background-color 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 50%;
+  font-size: 18px;
+  width: 34px;
+  height: 34px;
+  line-height: 41px;
+  display: inline-block;
+  text-align: center;
+  color: white; }
+  a i.icon-ts-connection.connected {
+    background-color: #7ED321; }
+  a i.icon-ts-connection.disconnected {
+    -webkit-animation: blink 3s 0s ease-in-out infinite;
+    -moz-animation: blink 3s 0s ease-in-out infinite;
+    -ms-animation: blink 3s 0s ease-in-out infinite;
+    -o-animation: blink 3s 0s ease-in-out infinite;
+    animation: blink 3s 0s ease-in-out infinite; }
+
+h1.list-intro {
+  font-family: "AvenirLTStd-Medium";
+  font-size: 1.19em;
+  color: #2D3142;
+  border-bottom: 2px solid #F0F0F0;
+  padding: 24px 20px 16px;
+  margin: 0; }
+
+ul.screens-list {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column; }
+  ul.screens-list li {
+    border-bottom: 2px solid #F0F0F0; }
+  ul.screens-list li a {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    text-decoration: none;
+    padding: 15px 20px;
+    padding: 15px 4.3vw; }
+  ul.screens-list h2 {
+    font-family: "AvenirLTStd-Medium";
+    margin: 0;
+    color: #2D3142;
+    line-height: 1em; }
+
+.screen-desc {
+  -webkit-align-self: center;
+  -ms-flex-item-align: center;
+  align-self: center;
+  font-size: 1.19em; }
+
+.screen-desc span {
+  font-family: "AvenirLTStd-Book";
+  color: #848484;
+  font-size: 0.75em;
+  display: inline-block; }
+
+.letter-circle {
+  width: 50px;
+  height: 50px;
+  margin-right: 15px;
+  margin-right: 3vw;
+  border-radius: 50%;
+  background: #0DA3D1;
+  text-align: center;
+  line-height: 53px;
+  color: white;
+  font-size: 1.19em; }
+
+.transitioner {
+  -webkit-box-flex: 1;
+  -webkit-flex: 1;
+  -ms-flex: 1;
+  flex: 1; }
+
+@-webkit-keyframes blink {
+  50% {
+    background-color: #B9513C; }
+  100% {
+    background-color: transparent; } }
+
+@-moz-keyframes blink {
+  50% {
+    background-color: #B9513C; }
+  100% {
+    background-color: transparent; } }
+
+@-ms-keyframes blink {
+  50% {
+    background-color: #B9513C; }
+  100% {
+    background-color: transparent; } }
+
+@keyframes blink {
+  50% {
+    background-color: #B9513C; }
+  100% {
+    background-color: transparent; } }
+
+@font-face {
+  font-family: "ts-icons";
+  src: url("../fonts/ts-icons.eot");
+  src: url("../fonts/ts-icons.eot?#iefix") format("embedded-opentype"), url("../fonts/ts-icons.woff") format("woff"), url("../fonts/ts-icons.ttf") format("truetype"), url("../fonts/ts-icons.svg#ts-icons") format("svg");
+  font-weight: normal;
+  font-style: normal; }
+
+[data-icon]:before {
+  font-family: "ts-icons" !important;
+  content: attr(data-icon);
+  font-style: normal !important;
+  font-weight: normal !important;
+  font-variant: normal !important;
+  text-transform: none !important;
+  speak: none;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale; }
+
+[class^="icon-"]:before,
+[class*=" icon-"]:before {
+  font-family: "ts-icons" !important;
+  font-style: normal !important;
+  font-weight: normal !important;
+  font-variant: normal !important;
+  text-transform: none !important;
+  speak: none;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale; }
+
+.icon-ts-connection:before {
+  content: "a"; }
+
+.icon-ts-cancel:before {
+  content: "b"; }
+
+.icon-ts-checkmark:before {
+  content: "d"; }
+
+.icon-ts-ekg:before {
+  content: "c"; }
+
+.icon-ts-feeds:before {
+  content: "e"; }
+
+.icon-ts-templates:before {
+  content: "f"; }
+
+.icon-ts-trash:before {
+  content: "g"; }
+
+.icon-ts-profile:before {
+  content: "h"; }

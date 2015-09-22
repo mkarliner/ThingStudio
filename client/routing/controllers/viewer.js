@@ -1,8 +1,8 @@
 AppViewerController = PreloadController.extend({
 	layoutTemplate: "ViewerLayout",
 	'preload': {
-		'verbose' : true,
-		'styles': '/client/viewer/viewer.scss'
+		'timeOut': 10000,
+		'styles': ['/css/viewer.css']
 	},
 	loadingTemplate: "Loading",
 	onBeforeAction: function() {
