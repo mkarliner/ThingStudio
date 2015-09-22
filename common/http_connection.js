@@ -121,10 +121,10 @@ HTTPConnections.before.insert(function(userId, doc) {
 HTTPConnections.after.update(function(userId, doc) {
 	console.log("DIOC ", doc)
 	if(Meteor.isClient) {
-		currConn = getCurrentHTTPConnection();
-		if(currConn._id == doc._id) {
-			setCurrentHTTPConnection(doc);
-		}
+		// currConn = getCurrentHTTPConnection();
+		// if(currConn._id == doc._id) {
+		// 	setCurrentHTTPConnection(doc);
+		// }
 	}
 });
 

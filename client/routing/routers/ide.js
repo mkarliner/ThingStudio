@@ -223,6 +223,23 @@ Router.route("/mqtt-feeds", {
 	}
 });
 
+Router.route("/http-feeds/:_id", {
+	name: "Edit HTTP Feed",
+	controller: "IDEController",
+	data: function() {
+		return HTTPFeeds.findOne({_id: this.params._id});
+	},
+	action: function() {
+		if ( !this.ready() ) {
+			this.render("Loading", {
+				data: "HTTP Feed"
+			});
+		} else {
+			renderYields(this, 'EditHttpFeed');
+		}
+	}
+});
+
 Router.route("/http-feeds", {
 	name: "HTTP Feeds",
 	controller: "IDEController",
@@ -240,22 +257,7 @@ Router.route("/http-feeds", {
 	}
 });
 
-Router.route("/http-feeds/:_id", {
-	name: "Edit HTTP Feed",
-	controller: "IDEController",
-	data: function() {
-		return HTTPFeeds.findOne({_id: this.params._id});
-	},
-	action: function() {
-		if ( !this.ready() ) {
-			this.render("Loading", {
-				data: "HTTP Feed"
-			});
-		} else {
-			renderYields(this, 'EditHttpFeed');
-		}
-	}
-});
+
 
 Router.route("/templates/:_id/edit", {
 	name: "Edit Template",
