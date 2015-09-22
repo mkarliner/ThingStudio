@@ -1,15 +1,18 @@
-Template.ViewerLayout.onRendered(function() {
-	$(".button-collapse").sideNav();
-});
-
 Template.ViewerLayout.helpers({
+	isConnected: function() {
+		if ( Session.get( "ConnectionStatus" ) == true ) {
+			return 'connected';
+		} else {
+			return 'disconnected';
+		}
+	},
 	appHamburger: function() {
 		appId = Session.get("currentAppId")
 		app = Apps.findOne({_id: appId})
 		if ( !app ) { return }
 		showMenu = app.showHamburger
 		screenCount = Screens.find({isWidget: false}).count()
-		console.log('screencount', screenCount)
+		// console.log('screencount', screenCount)
 		if ( !showMenu ||  screenCount < 2) {
 			// Hide the nav
 			return 'hide-app-nav'
@@ -24,11 +27,11 @@ Template.ViewerLayout.helpers({
 	runtimeErrors: function(){
 		return Session.get("runtimeErrors");
 	},
-	isConnected: function() {
-		if ( Session.get( "ConnectionStatus" ) == true ) {
-			return 'connected';
-		} else {
-			return 'disconnected';
-		}
+	appPathInfo: function(){
+		return {appid: Session.get("currentAppId")}
 	}
+	// log: function () {
+	// 	var hithere = Session.get("currentAppId")
+	// 	console.log('Here is this in the viewer', hithere)
+	// }
 })

@@ -21,7 +21,7 @@ Tracker.autorun(function() {
 	// Set currentApp based on currentAppId
 	var id = Session.get("currentAppId");
 	var app = Apps.findOne({ _id: id });
-	
+
 	if (app) {
 		Session.set("currentApp", app);
 	} else {
@@ -40,7 +40,7 @@ Meteor.startup(function(){
 	// 	    alert('Error: ' + errorMsg + ' Script: ' + url + ' Line: ' + lineNumber
 	// 	    + ' Column: ' + column + ' StackTrace: ' +  errorObj);
 	// 		Session.set("runtimeErrors", errorMsg);
-	// 	} 
+	// 	}
 
 });
 
@@ -49,7 +49,7 @@ Accounts.onLogin(function(){
 	//We decide what the initial app should be here.
 
 
-	
+
 });
 
 // Accounts.onCreateUser(function(options, user) {

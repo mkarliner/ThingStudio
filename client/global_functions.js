@@ -1,50 +1,26 @@
+
 ///////////////////////////////////////////////////////////////////////////////////////
 // HTTP  Management//
 ///////////////////////////////////////////////////////////////////////////////////////
 
-FeedProcessors = new Mongo.Collection(null);
 
-FeedList = new Mongo.Collection(null);
-Meteor.startup(function(){
-	Tracker.autorun(function(){
-		mqttFeeds = Feeds.find().fetch();
-		for(var m=0; m<mqttFeeds.length; m++) {
-			FeedList.insert({name: mqttFeeds[m].title, type: "MQTT"})
-		}
-		httpFeeds = HTTPFeeds.find().fetch();
-		for(var h=0; h<httpFeeds.length; h++) {
-			FeedList.insert({name: httpFeeds[h].title, type: "HTTP"})
-		}
-	});
-})
+HTTPFeedProcessors = {
 
-
-
-RegisterFeedProcessor = function(name,  type, func) {
-	// Type can be HTTPRequest, HTTPResponse
-	// HTTPFeedProcessors[name] = func;
-	FeedProcessors.insert({name: name, func: func, type: type})
 }
 
 
-// HTTPFeedProcessors = {
-//
-// }
-
-
-
-
-// RegisterHTTPFeedProcessor = function(name, func) {
-// 	HTTPFeedProcessors[name] = func;
-// }
 
 var HTTPClock = 0;
 
-RegisterFeedProcessor("testReq", "HTTPRequest", function(feed, message){
-	console.log("testReq Proc", feed, message)
-
-
-	return ({content: message})
+RegisterFeedProcessor("testReq", "HTTPRequest", function(conn, feed, message){
+	console.log("testReq Proc", feed, message);
+	conn = GetConnection(feed);
+	headers = {}
+	header["X-Octoblue userid"] = conn.user
+	return ({
+		headers: headers
+		content: message;
+	})
 });
 
 RegisterFeedProcessor("StdJSON", "HTTPResponse", function(feed, error, result){
@@ -57,50 +33,31 @@ RegisterFeedProcessor("StdJSON", "HTTPResponse", function(feed, error, result){
 	}
 	catch(err) {
 		console.log("HERR: ", err);
-		Session.set("runtimeErrors", "Invalid HTTP message, payload not JSON: " + result.content.toString());
+		Session.set("runtimeErrors", "Invalid MQTT message, payload not JSON: " + result.content.toString());
 		payload = result.content.toString();
 	}
 	console.log("payload", payload)
 	Messages.upsert(
 		{
-			topic: feed.path, 
+			topic: feed.path,
 			feed: feed.title
-		}, 
-		{$set: 
+		},
+		{$set:
 			{
-				feed: feed.title, 
-				topic: feed.path, 
-				payload: payload}, 
+				feed: feed.title,
+				topic: feed.path,
+				payload: payload},
 				$inc:{count: 1
 			}
 		});
 });
 
-function interval(func, wait, times){
-    var interv = function(w, t){
-        return function(){
-            if(typeof t === "undefined" || t-- > 0){
-                setTimeout(interv, w);
-                try{
-                    func.call(null);
-                }
-                catch(e){
-                    t = 0;
-                    throw e.toString();
-                }
-            }
-        };
-    }(wait, times);
 
-    setTimeout(interv, wait);
-};
 
 
 checkHTTPFeeds = function (){
-	//console.log("HTTP clock");
 	HTTPClock++;
 	var feeds = HTTPFeeds.find().fetch();
-	
 	//Check which feeds need to be polled.
 	for(var f=0; f<feeds.length; f++) {
 		if(HTTPClock % feeds[f].polling_interval == 0 ) {
@@ -108,33 +65,25 @@ checkHTTPFeeds = function (){
 			var conn = HTTPConnections.findOne(feed.connection);
 			var url = conn.protocol + "://" + conn.host+feed.path;
 			timeout = (feed.polling_interval-1)*1000;
-			//console.log("HT: ", feed.responseProcessor, conn, url, timeout);
+			console.log("HT: ", feed.title, conn, url, timeout);
 			HTTP.call(feed.verb, url, {timeout: timeout }, function(error, result) {
 				//console.log("HRET: ", error, result);
 				//Call each feed processor in turn
-				// for(var p=0; p<feed.processors.length; p++ ){
-				// 	//console.log("CALLING: ", HTTPFeedProcessors[feed.processors[p]])
-				// 	HTTPFeedProcessors[feed.processors[p]](feed, error, result);
-				// }
-				var fp = FeedProcessors.findOne({type: "HTTPResponse", name: feed.responseProcessor});
-				//console.log("FP: ", fp, FeedProcessors.find().fetch());
-				fp.func(feed, error, result);
-				
+				for(var p=0; p<feed.processors.length; p++ ){
+					console.log("CALLING: ", HTTPFeedProcessors[feed.processors[p]])
+					HTTPFeedProcessors[feed.processors[p]](feed, error, result);
+				}
 			})
 		}
 	}
-	// console.log("HTTP Clock", HTTPClock)
 }
 
 
-
-Meteor.startup(function() {
-	console.log("Starting HTTP Check");
-	interval(checkHTTPFeeds, 1000);
-})
-
-
-	
+// var HTTPClock = 0;
+// Meteor.startup(function(){
+// 	Meteor.setTimeout(checkHTTPFeeds, 1000);
+// 	Session.set("FeedProcessors", Object.keys(HTTPFeedProcessors));
+// });
 
 
 
@@ -153,6 +102,7 @@ Outbox = new Mongo.Collection(null);
 SubscribedTopics = new Array();
 
 Feedhooks = {};
+
 
 
 
@@ -208,11 +158,9 @@ publish = function(feedName, message) {
 	default:
 		console.log("UNKNOWN FEED TYPE: ", feedType)
 	}
-
 }
-
 mqttClientSubscribe = function(topic) {
-	console.log("MQTTSUB : ", topic, SubscribedTopics);
+	// console.log("MQTTSUB : ", topic, SubscribedTopics);
 	if(SubscribedTopics[topic]) {
 		return;
 	} else {
@@ -226,7 +174,6 @@ mqttClientUnsubscribe= function(topic) {
 	if(mqttClient.unsubscribe) {
 		mqttClient.unsubscribe(topic);
 	}
-	
 }
 
 // The following functions are mostly used by widgets
@@ -243,7 +190,7 @@ publishFeed = function(feedName, message) {
 		message = "No such publish feed - " + feedName;
 		Alerts.upsert({type: 'runtime', status: "warning", message:  message},{$set:{type: 'runtime', status: 'warning', message: message} ,$inc: {count: 1} } );
 	}
-	
+
 }
 
 getFeed = function(feed, defVal){
@@ -275,11 +222,11 @@ Meteor.setInterval(function(){
 	} else {
 		Session.set("ConnectionStatus", true);
 	}
-	
+
 }, 5000);
 
 
-getCurrentApp = function() { 
+getCurrentApp = function() {
 	app =  Apps.findOne({_id: Session.get("currentAppId")});
 	return app;
 };
@@ -355,16 +302,16 @@ ResetMessages = function() {
 
 DisconnectMQTT = function() {
 	console.log("SHUTTING DOWN CLIENT")
-	if (typeof mqttClient.end == 'function') { 
+	if (typeof mqttClient.end == 'function') {
 		// console.log("Ending current client");
-	    mqttClient.end(); 
+	    mqttClient.end();
 	}
 }
 
 UnsubscribeAll = function(){
-	if (typeof  mqttClientUnsubscribe != 'function') { 
+	if (typeof  mqttClientUnsubscribe != 'function') {
 		console.log("No connection");
-	    return; 
+	    return;
 	}
 	feeds = Feeds.find({}).fetch();
 	for(var f=0; f<feeds.length; f++) {
@@ -388,7 +335,7 @@ connect = function (conn, usr, pass) {
 	} else {
 		username = conn.username;
 	}
-	
+
 	if(pass) {
 		password = pass;
 	} else {
@@ -492,7 +439,7 @@ connect = function (conn, usr, pass) {
 							if(isNaN(diff)) {
 								diff = 0.0;
 							}
-							console.log("DIFF: ", feeds[i].title, diff);
+							// console.log("DIFF: ", feeds[i].title, diff);
 
 							// Check min
 							if( value < lastMessage.min) {
@@ -516,7 +463,7 @@ connect = function (conn, usr, pass) {
 								// console.log("RESET MM", feeds[i].maxMinAvgLimit)
 							} else {
 								count +=1;
-							} 
+							}
 							//Generate exp moving average
 							tc = 0.1;
 							avg = tc * value + (1.0-tc)* (lastMessage.avg ? lastMessage.avg : value);
@@ -524,7 +471,7 @@ connect = function (conn, usr, pass) {
 							// console.log('DIFFAV: ', feeds[i].title, diffavg);
 							//console.log("UPSERGSD: ", feeds[i].title,  lastMessage, " minMax", value, "diff: ", diff, min, max, avg, "diffavg", diffavg);
 							OldMessages.upsert(
-								{topic: topic, feed: feeds[i].title, jsonKey: jsonKey}, 
+								{topic: topic, feed: feeds[i].title, jsonKey: jsonKey},
 								{$set: {jsonKey: jsonKey, value: value, diff: diff, min: min, max: max, avg: avg, diffavg: diffavg, count: count}})
 						} else {
 							console.log("minMaxInit", jsonKey, lastMessage);
@@ -533,19 +480,19 @@ connect = function (conn, usr, pass) {
 					}
 				}
 				if(Feedhooks[feeds[i].title]) {
-					Feedhooks[feeds[i].title](payload);	
+					Feedhooks[feeds[i].title](payload);
 				}
 			}
 
-			
+
 		}
 	});
 }
 
 disconnect = function(conn) {
-	if (typeof mqttClient.end == 'function') { 
+	if (typeof mqttClient.end == 'function') {
 		// console.log("Ending current client");
-		mqttClient.end(); 
+		mqttClient.end();
 	}
 }
 
@@ -565,7 +512,7 @@ changeActiveApp = function(appId) {
 	ResetMessages();
 };
 
-getCurrentApp = function() { 
+getCurrentApp = function() {
 	app =  Apps.findOne({_id: Session.get("currentAppId")});
 	return app;
 }
@@ -573,3 +520,5 @@ getCurrentApp = function() {
 ///////////////////////////////////////////////////////////////////////////////////////
 // Alert Management//
 ///////////////////////////////////////////////////////////////////////////////////////
+=======
+>>>>>>> External Changes

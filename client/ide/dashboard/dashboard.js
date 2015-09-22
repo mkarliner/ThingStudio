@@ -72,4 +72,7 @@ Template.DashboardBody.helpers({
 			return 'No description set'
 		}
 	},
+	appPathInfo: function(){
+		return {appid: this._id}
+	}
 });

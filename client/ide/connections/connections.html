@@ -1,7 +1,7 @@
 <template name="ConnectionsHeader">
-		<h1 class="left">Connections</h1>
-		<a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>{{connectionName}}</a>
-		<a class="header-action-1 clearfix" href="#">Create a new connection</a>
+	<h1 class="left">MQTT Connections</h1>
+	<a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>{{connectionName}}</a>
+	<a class="header-action-1 clearfix" href="#">Create a new connection</a>
 </template>
 
 <template name="ConnectionsBody">
@@ -28,7 +28,7 @@
 						{{else}} -->
 <!-- 							<a class="table-action table-make-active connect" href="#"><i class="mdi-toggle-radio-button-off"></i></a>
 						{{/if}}  -->
-						<a class="table-action table-edit-item" href="{{pathFor 'Edit Connection'}}"><i class="mdi-editor-mode-edit"></i></a>
+						<a class="table-action table-edit-item" href="{{pathFor 'Edit MQTT Connection'}}"><i class="mdi-editor-mode-edit"></i></a>
 						{{#afModal classes="table-action table-cancel-item" collection="Connections" operation="remove" doc=_id title="<i class='mdi-alert-error'></i><span class='modal-header'>Deleting Connection</span>" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="icon-ts-trash"></i>{{/afModal}}
 					</td>
 				</tr>
@@ -39,7 +39,7 @@
 </template>
 
 <template name="ConnectionsNewItem">
-	<div class="add-new-item new-connection">
+	<div class="add-new-item new-mqtt-connection">
 		{{#autoForm collection="Connections" id="insertItemForm" type="insert"}}
 			<table>
 			{{> ConnectionsTableWidths}}

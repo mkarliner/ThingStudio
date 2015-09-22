@@ -1,3 +1,4 @@
+// out: ./ide.css
 ///////////////////////////////////////////////////////////////////////////////////////
 // Variables //
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -2141,11 +2142,11 @@ a.at-signup, a.at-signin {
 
 @font-face {
   font-family: "ts-icons";
-  src:url("fonts/ts-icons.eot");
-  src:url("fonts/ts-icons.eot?#iefix") format("embedded-opentype"),
-    url("fonts/ts-icons.woff") format("woff"),
-    url("fonts/ts-icons.ttf") format("truetype"),
-    url("fonts/ts-icons.svg#ts-icons") format("svg");
+  src:url("../fonts/ts-icons.eot");
+  src:url("../fonts/ts-icons.eot?#iefix") format("embedded-opentype"),
+    url("../fonts/ts-icons.woff") format("woff"),
+    url("../fonts/ts-icons.ttf") format("truetype"),
+    url("../fonts/ts-icons.svg#ts-icons") format("svg");
   font-weight: normal;
   font-style: normal;
 

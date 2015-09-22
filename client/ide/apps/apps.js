@@ -46,7 +46,7 @@ Template.AppsBody.helpers({
 		} else {
 			return;
 		}
-		
+
 	}
 });
 
@@ -108,4 +108,7 @@ Template.AppList.helpers({
 			return 'No description set'
 		}
 	},
+	appPathInfo: function(){
+		return {appid: this._id}
+	}
 });

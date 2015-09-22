@@ -19,27 +19,25 @@ Router.route("/dashboard", {
 			});
 		} else {
 			u = Meteor.user();
-		
-			if(u) {
-				//show tutorials if first login.
-				example = Meteor.settings.public.basicExampleApp
-				console.log("FIRST Login test", u.profule, example)
-				if(u.profile && u.profile.showExample && example) {
-					this.redirect("/tutorials");
-					//Session.setPersistent("currentAppId", example);
-					Meteor.users.update({
-						_id: Meteor.userId()
-					}, {
-						$set: {
-							"profile.showExample": false
-						}
-					});
-				}
-			}
+			// if(u) {
+			// 	//show tutorials if first login.
+			// 	example = Meteor.settings.public.basicExampleApp
+			// 	console.log("FIRST Login test", u.profule, example)
+			// 	if(u.profile && u.profile.showExample && example) {
+			// 		this.redirect("/tutorials");
+			// 		//Session.setPersistent("currentAppId", example);
+			// 		Meteor.users.update({
+			// 			_id: Meteor.userId()
+			// 		}, {
+			// 			$set: {
+			// 				"profile.showExample": false
+			// 			}
+			// 		});
+			// 	}
+			// }
 			if (u) {
 				//Disable welcome page for the moment.
-				//if (u.profile && u.profile.showWelcome) {
-				if(false) {
+				if (u.profile && u.profile.showWelcome) {
 					this.redirect("/welcome");
 				} else {
 					if ( !this.ready() ) {
@@ -48,13 +46,37 @@ Router.route("/dashboard", {
 						});
 					} else {
 						renderYields(this, 'Dashboard');
-					}		
+					}
 				}
 			}
 		}
 	}
 
 });
+
+Router.route("/welcome", {
+	name: "Welcome",
+	controller: "IDEController",
+	data: function() {
+		Meteor.users.update({
+			_id: Meteor.userId()
+		}, {
+			$set: {
+				"profile.showWelcome": false
+			}
+		});
+	},
+	action: function() {
+		if ( !this.ready() ) {
+			this.render("Loading", {
+				data: "Welcome"
+			});
+		} else {
+			renderYields(this, 'Welcome')
+		}
+	}
+})
+
 
 Router.route("/credentials", {
 	name: "Credentials",
@@ -69,7 +91,7 @@ Router.route("/credentials", {
 			});
 		} else {
 			renderYields(this, 'Credentials');
-		}		
+		}
 	}
 });
 
@@ -105,8 +127,8 @@ Router.route("/apps", {
 	}
 });
 
-Router.route("/connections/:_id", {
-	name: "Edit Connection",
+Router.route("/mqtt-connections/:_id", {
+	name: "Edit MQTT Connection",
 	controller: "IDEController",
 	data: function() {
 		return Connections.findOne({_id: this.params._id});
@@ -122,8 +144,8 @@ Router.route("/connections/:_id", {
 	}
 });
 
-Router.route("/connections", {
-	name: "Connections",
+Router.route("/mqtt-connections", {
+	name: "MQTT Connections",
 	controller: "IDEController",
 	action: function() {
 		if ( !this.ready() ) {
@@ -136,13 +158,13 @@ Router.route("/connections", {
 	}
 });
 
-Router.route("/http_connections", {
-	name: "HTTPConnections",
+Router.route("/http-connections", {
+	name: "HTTP Connections",
 	controller: "IDEController",
 	action: function() {
 		if ( !this.ready() ) {
 			this.render("Loading", {
-				data: "HTTPConnections"
+				data: "HTTP Connections"
 			});
 		} else {
 			renderYields(this, 'HTTPConnections');
@@ -150,8 +172,8 @@ Router.route("/http_connections", {
 	}
 });
 
-Router.route("/http_connections/:_id", {
-	name: "Edit HTTPConnection",
+Router.route("/http-connections/:_id", {
+	name: "Edit HTTP Connection",
 	controller: "IDEController",
 	data: function() {
 		return HTTPConnections.findOne({_id: this.params._id});
@@ -167,8 +189,8 @@ Router.route("/http_connections/:_id", {
 	}
 });
 
-Router.route("/feeds/:_id", {
-	name: "Edit Feed",
+Router.route("/mqtt-feeds/:_id", {
+	name: "Edit MQTT Feed",
 	controller: "IDEController",
 	data: function() {
 		return Feeds.findOne({_id: this.params._id});
@@ -184,8 +206,8 @@ Router.route("/feeds/:_id", {
 	}
 });
 
-Router.route("/feeds", {
-	name: "Feeds",
+Router.route("/mqtt-feeds", {
+	name: "MQTT Feeds",
 	controller: "IDEController",
 	data: function() {
 			return Feeds.find();
@@ -201,8 +223,8 @@ Router.route("/feeds", {
 	}
 });
 
-Router.route("/http_feeds", {
-	name: "HTTPFeeds",
+Router.route("/http-feeds", {
+	name: "HTTP Feeds",
 	controller: "IDEController",
 	data: function() {
 			return HTTPFeeds.find();
@@ -210,7 +232,7 @@ Router.route("/http_feeds", {
 	action: function(){
 		if ( !this.ready() ) {
 			this.render("Loading", {
-				data: "HTTPFeeds"
+				data: "HTTP Feeds"
 			});
 		} else {
 			renderYields(this, 'HTTPFeeds');
@@ -218,8 +240,8 @@ Router.route("/http_feeds", {
 	}
 });
 
-Router.route("/http_feeds/:_id", {
-	name: "Edit HttpFeed",
+Router.route("/http-feeds/:_id", {
+	name: "Edit HTTP Feed",
 	controller: "IDEController",
 	data: function() {
 		return HTTPFeeds.findOne({_id: this.params._id});
@@ -227,7 +249,7 @@ Router.route("/http_feeds/:_id", {
 	action: function() {
 		if ( !this.ready() ) {
 			this.render("Loading", {
-				data: "Feed"
+				data: "HTTP Feed"
 			});
 		} else {
 			renderYields(this, 'EditHttpFeed');
@@ -558,7 +580,7 @@ Router.route("/people/:username", {
 			});
 		} else {
 			renderYields(this, 'People');
-		}	
+		}
 	}
 })
 
@@ -572,7 +594,7 @@ Router.route("/chat", {
 			});
 		} else {
 			renderYields(this, 'Chat')
-		}	
+		}
 	}
 })
 
@@ -586,7 +608,7 @@ Router.route("/current-users", {
 			});
 		} else {
 			renderYields(this, 'CurrentUsers')
-		}	
+		}
 	}
 })
 
@@ -600,7 +622,7 @@ Router.route("/sysadmin", {
 			});
 		} else {
 			renderYields(this, 'Sysadmin')
-		}	
+		}
 	}
 })
 
@@ -614,7 +636,7 @@ Router.route("/inactives", {
 			});
 		} else {
 			renderYields(this, 'InactiveUsers')
-		}	
+		}
 	}
 })
 
@@ -628,6 +650,6 @@ Router.route("/debug", {
 			});
 		} else {
 			renderYields(this, 'Debug')
-		}	
+		}
 	}
 })

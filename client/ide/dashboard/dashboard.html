@@ -35,13 +35,13 @@
 							<div class="right">
 								{{#if current_app}}
 									<a class="table-action table-make-active active-app" href="#"><i class="icon-ts-checkmark"></i></a>
-									<a class="table-action tooltipped" href="{{pathFor 'ViewApp'}}" data-position="top" data-delay="50" data-tooltip="Launch app viewer" target="_blank"><i class="mdi-hardware-smartphone"></i></a>
+									<a class="table-action tooltipped" href="{{pathFor 'ViewApp' data=appPathInfo}}" data-position="top" data-delay="50" data-tooltip="Launch app viewer" onclick="window.open(this.href,'targetWindow', 'toolbar=no, location=no, status=no, menubar=no, scrollbars=yes, resizable=yes, width=460, height=600'); return false;"><i class="mdi-hardware-smartphone"></i></a>
 									<a class="table-action table-edit-item tooltipped" href="{{pathFor 'Edit App'}}" data-position="top" data-delay="50" data-tooltip="Edit this app" ><i class="mdi-editor-mode-edit"></i></a>
 								{{else}}
 									<a class="table-action table-make-active select-app tooltipped" data-position="top" data-delay="50" data-tooltip="Make app active" href=""><i class="icon-ts-checkmark"></i></a>
-									<a class="table-action tooltipped" href="{{pathFor 'ViewApp'}}" data-position="top" data-delay="50" data-tooltip="Launch app viewer" target="_blank"><i class="mdi-hardware-smartphone"></i></a>
+									<a class="table-action tooltipped" href="{{pathFor 'ViewApp' data=appPathInfo}}" data-position="top" data-delay="50" data-tooltip="Launch app viewer" onclick="window.open(this.href,'targetWindow', 'toolbar=no, location=no, status=no, menubar=no, scrollbars=yes, resizable=yes, width=460, height=600'); return false;"><i class="mdi-hardware-smartphone"></i></a>
 									<a class="table-action table-edit-item ta-disabled tooltipped" data-position="top" data-delay="50" data-tooltip="Select this app to edit" href=""><i class="mdi-editor-mode-edit"></i></a>
-								{{/if}} 
+								{{/if}}
 								{{#afModal classes="table-action table-cancel-item" collection="Apps" operation="remove" doc=_id title="Deleting App" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="icon-ts-trash"></i>{{/afModal}}
 							</div>
 						</div>

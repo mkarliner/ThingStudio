@@ -1,5 +1,33 @@
-IDEController = RouteController.extend({
+IDEController = PreloadController.extend({
 	layoutTemplate: "MasterLayout",
+	'preload': {
+		'timeOut' : 10000,
+		// 'styles': ['/public/css/materialize.css', '/public/css/ide.scss', '/public/css/viewer.css'],
+		'styles': ['/css/materialize.css', '/css/ide.css'],
+		'sync': ['/js/materialize.js'],
+		'onBeforeSync': function ( fileName ) {
+        // Return 'true' to continue normally, otherwise skip library
+				console.log("IDE onBeforeSync", fileName)
+				return true;
+    },
+
+    // (optional) User-defined method called on each synchronously
+    // loaded library to check whether it finished initialization
+    'onSync' : function ( fileName ) {
+        // Check and return `true` if `fileName` finished initialization
+				console.log("IDE onSync", fileName)
+				return true;
+    },
+
+    // (optional) User-defined method called AFTER each synchronously
+    // loaded library to allow additional processing
+    'onAfterSync': function ( fileName ) {
+        // Return 'true' to continue normally,
+        // otherwise don't mark library as loaded
+				console.log("IDE onAfterSync", fileName)
+				return true;
+    }
+	},
 	onBeforeAction: function() {
 		$('body').removeClass('viewer-body');
 		if (!Meteor.user() && !Meteor.loggingIn()) {
@@ -86,7 +114,7 @@ IDEController = RouteController.extend({
 								if(Session.get("chatsReady") == true) {
 									sound = new Audio('ding.mp3')
 									sound.volume = 0.2
-									//sound.play();	
+									//sound.play();
 									Session.set("newChats", true);
 								}
 							}
@@ -123,13 +151,13 @@ ProfileController = IDEController.extend({
 OldDocsController = IDEController.extend({
 	subscriptions: function() {
 		//console.log("OldDocsController subscriptions")
-		Meteor.subscribe("help_pages")		
+		Meteor.subscribe("help_pages")
 	}
 });
 
 DocsController = IDEController.extend({
 	subscriptions: function() {
 		//console.log("DocsController subscriptions")
-		Meteor.subscribe("docs")		
+		Meteor.subscribe("docs")
 	}
 });
