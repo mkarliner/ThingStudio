@@ -1,8 +1,6 @@
 IDEController = PreloadController.extend({
 	layoutTemplate: "MasterLayout",
 	'preload': {
-		'timeOut' : 10000,
-		// 'styles': ['/public/css/materialize.css', '/public/css/ide.scss', '/public/css/viewer.css'],
 		'styles': ['/css/materialize.css', '/css/ide.css'],
 		'sync': ['/js/materialize.js'],
 		'onBeforeSync': function ( fileName ) {

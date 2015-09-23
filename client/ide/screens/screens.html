@@ -19,13 +19,13 @@
 					<td>{{title}}</td>
 					<td><i class="{{isWidget}}"></i></td>
 					<td>
-						<a class="table-action table-edit-item" href="{{pathFor 'Edit Template'}}"><i class="mdi-editor-mode-edit"></i></a>
-						<a class="table-action table-edit-item" href="{{pathFor 'Safe Edit Template'}}"><i class="mdi-action-visibility-off"></i></a>
-						{{#afModal classes="table-action table-cancel-item" collection="Screens" operation="remove" doc=_id title="<i class='mdi-alert-error'></i><span class='modal-header'>Deleting Template</span>" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="icon-ts-trash"></i>{{/afModal}}
+						<a class="table-action table-edit-item" href="{{pathFor 'Edit Template'}}"><i class="material-icons">mode_edit</i></a>
+						<a class="table-action table-edit-item" href="{{pathFor 'Safe Edit Template'}}"><i class="material-icons">visibility_off</i></a>
+						{{#afModal classes="table-action table-cancel-item" collection="Screens" operation="remove" doc=_id title="<i class='material-icons'>error_outline</i><span class='modal-header'>Deleting Template</span>" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="icon-ts-trash"></i>{{/afModal}}
 					</td>
 				</tr>
 			{{/each}}
-		</tbody>	
+		</tbody>
 	</table>
 	<!-- <h2>Widget Templates</h2>
 	<table class="hoverable">
@@ -45,7 +45,7 @@
 					</td>
 				</tr>
 			{{/each}}
-		</tbody>	
+		</tbody>
 	</table> -->
 	{{> ScreensNewItem}}
 </template>

@@ -1,6 +1,6 @@
 <template name="HTTPConnectionsHeader">
 		<h1 class="left">HTTP Connections</h1>
-		<a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>{{http_connectionName}}</a>
+		<!-- <a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>{{http_connectionName}}</a> -->
 		<a class="header-action-1 clearfix" href="#">Create a new connection</a>
 </template>
 
@@ -28,8 +28,8 @@
 						{{else}} -->
 <!-- 							<a class="table-action table-make-active http_connect" href="#"><i class="mdi-toggle-radio-button-off"></i></a>
 						{{/if}}  -->
-						<a class="table-action table-edit-item" href="{{pathFor 'Edit HTTP Connection'}}"><i class="mdi-editor-mode-edit"></i></a>
-						{{#afModal classes="table-action table-cancel-item" collection="HTTPConnections" operation="remove" doc=_id title="<i class='mdi-alert-error'></i><span class='modal-header'>Deleting HTTPConnection</span>" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="icon-ts-trash"></i>{{/afModal}}
+						<a class="table-action table-edit-item" href="{{pathFor 'Edit HTTP Connection'}}"><i class="material-icons">mode_edit</i></a>
+						{{#afModal classes="table-action table-cancel-item" collection="HTTPConnections" operation="remove" doc=_id title="<i class='material-icons'>error_outline</i><span class='modal-header'>Deleting HTTPConnection</span>" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="icon-ts-trash"></i>{{/afModal}}
 					</td>
 				</tr>
 			{{/each}}

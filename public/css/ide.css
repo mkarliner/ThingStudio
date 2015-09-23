@@ -107,6 +107,11 @@ h2 {
   display: inline-block;
   margin-left: 0.6em; }
 
+h3 {
+  font-size: 1.2em;
+  font-weight: 500;
+  line-height: 1.5em; }
+
 label, form p {
   font-size: 1.1em; }
 
@@ -175,13 +180,13 @@ table.striped tbody tr:nth-child(odd) {
       margin-left: 28px; }
   .side-nav.fixed i {
     float: left;
-    font-size: 18px;
+    font-size: 19.2px;
     padding-right: 10px;
-    margin-top: -2px; }
+    margin-top: 6px; }
   .side-nav.fixed i[class^="icon-ts"] {
     font-size: 16px;
     position: absolute;
-    top: 4px; }
+    top: -3px; }
   .side-nav.fixed p.my-name {
     position: relative;
     margin-top: 0.5rem;
@@ -750,7 +755,8 @@ table, .single-page-container {
 .table-action.ta-disabled,
 .card .card-action a.ta-disabled {
   border-color: #bec1ca;
-  color: #bec1ca; }
+  color: #bec1ca;
+  background-color: transparent; }
 
 .modal {
   width: 400px; }
@@ -1070,7 +1076,7 @@ button.btn-plus {
   padding-top: 140px; }
 
 .card.small {
-  height: 250px; }
+  height: 270px; }
   .card.small .card-content {
     height: 198px; }
 
@@ -1084,7 +1090,7 @@ button.btn-plus {
 .widget-container {
   text-align: center;
   height: 150px;
-  margin-bottom: 10px; }
+  margin: 10px 0; }
 
 .widget-container svg {
   max-height: 150px;

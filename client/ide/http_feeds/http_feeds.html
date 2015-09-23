@@ -21,7 +21,7 @@
 					<td>{{path}}</td>
 					<td>{{verb}}</td>
 					<td>{{polling_interval}}</td>
-					<td><a class="table-action table-edit-item" href="{{pathFor 'Edit HTTP Feed'}}"><i class="mdi-editor-mode-edit"></i></a>{{#afModal classes="table-action table-cancel-item" collection="HTTPFeeds" operation="remove" doc=_id title="<i class='mdi-alert-error'></i><span class='modal-header'>Deleting Feed</span>" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="icon-ts-trash"></i>{{/afModal}}</td>
+					<td><a class="table-action table-edit-item" href="{{pathFor 'Edit HTTP Feed'}}"><i class="material-icons">mode_edit</i></a>{{#afModal classes="table-action table-cancel-item" collection="HTTPFeeds" operation="remove" doc=_id title="<i class='material-icons'>error_outline</i><span class='modal-header'>Deleting Feed</span>" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="icon-ts-trash"></i>{{/afModal}}</td>
 				</tr>
 			{{/each}}
 		</tbody>

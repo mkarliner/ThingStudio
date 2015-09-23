@@ -223,6 +223,12 @@ h2 {
 	margin-left: 0.6em;
 }
 
+h3 {
+	font-size: 1.2em;
+	font-weight: 500;
+	line-height: 1.5em;
+}
+
 label, form p {
 	font-size: 1.1em;
 }
@@ -319,14 +325,14 @@ table.striped tbody tr:nth-child(odd) {
 	}
 	& i {
 		float: left;
-		font-size: 1.5 * $fontSize;
+		font-size: 1.6 * $fontSize;
 		padding-right: 10px;
-		margin-top: -2px;
+		margin-top: 6px;
 	}
 	& i[class^="icon-ts"] {
 		font-size: 16px;
 		position: absolute;
-		top: 4px;
+		top: -3px;
 	}
 	& p.my-name {
 		position: relative;
@@ -605,10 +611,10 @@ nav.top-nav {
 	max-height: 700px;
 	border: $navBorder;
 	will-change: translateY, transform;
-	& table {
+	table {
 		margin-bottom: 2em;
 	}
-	& h2 {
+	h2 {
 		background-color: $appBodyBG;
 		font-family: $fwBook;
 		font-size: $fontSize * 1.666667;
@@ -617,17 +623,17 @@ nav.top-nav {
 		margin: 0;
 		display: inline-block;
 		width: 100%;
-		& i {
+		i {
 			position: absolute;
 			top: 9px;
 			left: 13px;
 		}
-		& span {
+		span {
 			display: inline-block;
 			margin-left: 27px;
 		}
 	}
-	& h3 {
+	h3 {
 		color: $headerColor;
 		text-transform: uppercase;
 		font-family: $fwBlack;
@@ -635,20 +641,20 @@ nav.top-nav {
 		margin-top: 0.8em;
 		margin-bottom: 0em;
 	}
-	& th {
+	th {
 		font-family: $fwMedium;
 		text-transform: capitalize;
 		color: $headerColor;
 	}
-	& td {
+	td {
 		padding-top: 4px;
 		padding-bottom: 4px;
 		overflow: hidden;
 	}
-	& td:first-child, th:first-child {
+	td:first-child, th:first-child {
 		padding-left: 15px;
 	}
-	& td:last-child, th:last-child {
+	td:last-child, th:last-child {
 		padding-right: 15px;
 		padding-left: 15px;
 	}
@@ -669,7 +675,7 @@ a.view-full-debug {
 }
 
 .debug-page {
-	& th {
+	th {
 		background-color: transparent;
 	}
 }
@@ -1041,6 +1047,7 @@ table, .single-page-container {
 .card .card-action a.ta-disabled,
  {
 	@include disabledStyle;
+	background-color: transparent;
 }
 
 
@@ -1467,7 +1474,7 @@ button.btn-plus, {
 }
 
 .card.small {
-	height: 250px;
+	height: 270px;
 	& .card-content {
 		height: 198px;
 	}
@@ -1485,7 +1492,7 @@ button.btn-plus, {
 .widget-container {
 	text-align: center;
 	height: 150px;
-	margin-bottom: 10px;
+	margin: 10px 0;
 }
 
 .widget-container svg {
