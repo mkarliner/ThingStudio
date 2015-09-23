@@ -197,7 +197,7 @@ table.striped tbody tr:nth-child(odd) {
     .side-nav.fixed p.my-name i {
       position: absolute;
       right: 0;
-      top: -2px;
+      top: -15px;
       float: none;
       display: inline;
       padding: 0;
