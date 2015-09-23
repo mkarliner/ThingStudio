@@ -97,9 +97,9 @@ checkHTTPFeeds = function (){
 		if(HTTPClock % feeds[f].polling_interval == 0 ) {
 			var feed = feeds[f];
 			var conn = HTTPConnections.findOne(feed.connection);
-			var url = conn.protocol + "://" + conn.host+feed.path;
+			var url = conn.protocol + "://" + conn.host + ":" + conn.port + feed.path;
 			timeout = (feed.polling_interval-1)*1000;
-			//console.log("HT: ", feed.responseProcessor, conn, url, timeout);
+			console.log("HT: ", feed.responseProcessor, conn, url, timeout);
 			HTTP.call(feed.verb, url, {timeout: timeout }, function(error, result) {
 				//console.log("HRET: ", error, result);
 				//Call each feed processor in turn
