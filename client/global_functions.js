@@ -309,8 +309,8 @@ InitialiseApps = function(){
 	console.log("Initialising Apps", applist);
 	for(var a=0; a<applist.length; a++ ){
 		var app = Apps.findOne(applist[a]);
-		console.log("Initialising app ", app.title);
 		if(app && app.js) {
+			console.log("Initialising app ", app.title);
 			eval(app.js);
 		}
 	}
