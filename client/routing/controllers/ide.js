@@ -48,6 +48,7 @@ IDEController = PreloadController.extend({
 						console.log("Not logged in at startup - bailing.")
 						return;
 					}
+					InitialiseApps();
 					initialApp = Session.get("currentAppId");
 					ia = Apps.findOne({_id: initialApp})
 					console.log("Initial App on Startup ", initialApp, ia);

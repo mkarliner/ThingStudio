@@ -167,7 +167,7 @@ Apps.after.insert(function(userId, doc) {
 Apps.after.update(function(userId, doc) {
 	if(Meteor.isClient) {
 		currConn = getCurrentConnection();
-		if(currConn._id != doc.connection) {
+		if(currConn && currConn._id != doc.connection) {
 			newConn = Connections.findOne({_id: doc.connection});
 			UnsubscribeAll();
 			DisconnectMQTT();

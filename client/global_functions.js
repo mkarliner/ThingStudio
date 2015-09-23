@@ -274,6 +274,49 @@ getCurrentApp = function() {
 	return app;
 };
 
+getAppTree = function(appId){
+	//console.log("GAT ", appId)
+	baseAppId = Meteor.settings.public.systemApp;
+	app = Apps.findOne({_id: appId});
+	if(!app) {
+		return false;
+	}
+	apps = [app._id];
+	
+	if(baseAppId) {
+		console.log("Set system app to ", baseAppId)
+		apps = [app._id, baseAppId];
+	} else {
+		console.log("NO SYSTEM APP DEFINED!!!!");
+		apps = [app._id];
+	}
+
+	while(app.ancestor) {
+		app = Apps.findOne({_id: app.ancestor})
+		apps.push(app._id);
+	}
+	return apps;
+}
+
+InitialiseApps = function(){
+	FeedProcessors.remove();
+	FeedList.remove();
+	//First initialise the system App js.
+	
+	capp = getCurrentApp();
+	applist = getAppTree(capp._id);
+	
+	console.log("Initialising Apps", applist);
+	for(var a=0; a<applist.length; a++ ){
+		var app = Apps.findOne(applist[a]);
+		console.log("Initialising app ", app.title);
+		if(app && app.js) {
+			eval(app.js);
+		}
+	}
+}
+
+
 getCredentials = function(){
 	return Session.get("currentCredentials");
 }
