@@ -100,6 +100,7 @@ checkHTTPFeeds = function (){
 			var url = conn.protocol + "://" + conn.host + ":" + conn.port + feed.path;
 			timeout = (feed.polling_interval-1)*1000;
 			console.log("HT: ", feed.responseProcessor, conn, url, timeout);
+			console.log("DO REQUEST Processing");
 			HTTP.call(feed.verb, url, {timeout: timeout }, function(error, result) {
 				//console.log("HRET: ", error, result);
 				//Call each feed processor in turn
@@ -180,7 +181,7 @@ publish = function(feedName, message) {
 		Outbox.upsert({topic: feed.path}, {$set: { feed: feed.title, topic: feed.path, payload: message},$inc: {count: 1}});
 		//Now actually do the deed.
 		var conn = HTTPConnections.findOne(feed.connection);
-		var url = conn.protocol + "://" + conn.host+feed.path;
+		var url = conn.protocol + "://" + conn.host + ":" + conn.port +feed.path;
 		timeout = 5*1000;
 				options.headers = {};
 				options.timeout = timeout;
