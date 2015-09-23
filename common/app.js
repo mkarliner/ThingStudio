@@ -166,6 +166,7 @@ Apps.after.insert(function(userId, doc) {
 
 Apps.after.update(function(userId, doc) {
 	if(Meteor.isClient) {
+		InitialiseApps();
 		currConn = getCurrentConnection();
 		if(currConn && currConn._id != doc.connection) {
 			newConn = Connections.findOne({_id: doc.connection});
