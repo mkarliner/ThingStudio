@@ -527,6 +527,7 @@ Meteor.startup(function() {
 	sysApp = Apps.findOne({_id: Meteor.settings.public.systemApp});
 	if(!sysApp) {
 		console.log("ERROR: No system app");
+		return;
 	} else {
 		console.log("SYSAPP ", sysApp)
 	}
