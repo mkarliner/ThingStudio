@@ -29,7 +29,7 @@ IDEController = PreloadController.extend({
 	onBeforeAction: function() {
 		$('body').removeClass('viewer-body');
 		if (!Meteor.user() && !Meteor.loggingIn()) {
-			this.layout("HelpLayout");
+			this.layout("LoginLayout");
 			// this.render("Login");
 			this.next();
 		} else {
