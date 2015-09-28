@@ -7,6 +7,7 @@
 FeedProcessors = new Mongo.Collection(null);
 
 FeedList = new Mongo.Collection(null);
+
 Meteor.startup(function(){
 	Tracker.autorun(function(){
 		mqttFeeds = Feeds.find().fetch();
@@ -304,6 +305,9 @@ InitialiseApps = function(){
 	//First initialise the system App js.
 	
 	capp = getCurrentApp();
+	if(!capp) {
+		return;
+	}
 	applist = getAppTree(capp._id);
 	
 	console.log("Initialising Apps", applist);
