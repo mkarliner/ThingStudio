@@ -2,7 +2,6 @@
     "widget": {
         "title": "JustDial",
         "tagName": "ts-justdial",
-        "widgetType": "Web Component",
         "parameters": [
             {
                 "title": "value",
@@ -17,13 +16,42 @@
                 "required": false,
                 "description": "Label for values",
                 "dummyValue": "Impulse Power"
+            },
+            {
+                "title": "minvalue",
+                "paramType": "Number",
+                "required": false,
+                "description": "Minimum value",
+                "dummyValue": "0"
+            },
+            {
+                "title": "maxvalue",
+                "paramType": "Number",
+                "required": false,
+                "description": "Maximum value",
+                "dummyValue": "100"
+            },
+            {
+                "title": "orangevalue",
+                "paramType": "Number",
+                "required": false,
+                "description": "Max value to turn orange",
+                "dummyValue": "80"
+            },
+            {
+                "title": "greenvalue",
+                "paramType": "Number",
+                "required": false,
+                "description": "Max value for green",
+                "dummyValue": "60"
             }
-        ]
+        ],
+        "widgetType": "Web Component"
     },
     "template": {
         "title": "JustDial",
         "html": "<!-- Replace  -->\n<svg  class=\"mybox\"  x=\"0\" y=\"0\"  viewBox=\"0, 0, 500, 250\">\n  <g id=\"Layer_1\">\n \n        \n\t  \n\t  <circle cx=\"250\" cy=\"250\" r=\"250\" stroke=\"black\" stroke-width=\"0\" fill={{dialColor  value}} />\n\t  <circle cx=\"250\" cy=\"250\" r=\"200\" stroke=\"black\" stroke-width=\"0\" fill=\"#353c51\" />\n\t  <path  transform=\"rotate({{ mappedValue value}} 250 250)\"  d=\"M25 250 a200 200 0 1 1 450 0\" fill-opacity=\"0\" stroke=\"#303030\" stroke-width=\"53\"/>\n  \n  <text text-anchor=\"middle\"\n          x=\"250\" y=\"150\" style=\"font-size: 80px;\" fill=\"{{dialColor value}}\">{{ value}}</text>\n  <text text-anchor=\"middle\"\n          x=\"250\" y=\"220\" style=\"font-size: 30px;\" fill=\"{{dialColor value}}\">{{legend}}</text>\n  </g>\n</svg>",
-        "js": "Template[name].onCreated(function(){\n        this.data.legend = this.data.legend || \"Oven Temperature\";\n        this.data.value = this.data.value || 34.5\n        this.data.minvalue = this.data.minvalue || 0;\n        this.data.maxvalue = this.data.maxvalue || 100;\n        this.data.greenvalue = this.data.greenvalue || 50;\n        this.data.organgevalue = this.data.orangevalue || 80;\n})\n\nTemplate[name].helpers({\n   dialColor: function(value){\n\n\n       if(value < this.greenvalue) {\n           return \"#7FFF00\";\n       } else if(value < this.orangevalue){\n           return \"orange\" \n       } else {\n           return \"red\"\n       }\n   },\n   mappedValue: function(value) {\n        m =  mapValue(value, this.minvalue, this.maxvalue, 0, 180)\n        return m;\n    }\n});",
-        "isWidget": true
+        "isWidget": true,
+        "js": "Template[name].onCreated(function(){\n        this.data.legend = this.data.legend || \"Oven Temperature\";\n        this.data.value = this.data.value || 34.5\n        this.data.minvalue = this.data.minvalue || 0;\n        this.data.maxvalue = this.data.maxvalue || 100;\n        this.data.greenvalue = this.data.greenvalue || 50;\n        this.data.orangevalue = this.data.orangevalue || 80;\n})\n\nTemplate[name].helpers({\n   dialColor: function(value){\n\n\n       if(value < this.greenvalue) {\n           return \"#7FFF00\";\n       } else if(value < this.orangevalue){\n           return \"orange\" \n       } else {\n           return \"red\"\n       }\n   },\n   mappedValue: function(value) {\n        m =  mapValue(value, this.minvalue, this.maxvalue, 0, 180)\n        return m;\n    }\n});"
     }
 }
