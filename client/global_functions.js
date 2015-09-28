@@ -100,9 +100,10 @@ checkHTTPFeeds = function (){
 			var conn = HTTPConnections.findOne(feed.connection);
 			var url = conn.protocol + "://" + conn.host + ":" + conn.port + feed.path;
 			timeout = (feed.polling_interval-1)*1000;
-			console.log("HT: ", feed.responseProcessor, conn, url, timeout);
-			console.log("DO REQUEST Processing");
-			HTTP.call(feed.verb, url, {timeout: timeout }, function(error, result) {
+			console.log("HT: ", feed.responseProcessor, feed.requestProcessor, conn, url, timeout);
+			var reqProc = FeedProcessors.findOne({type: "HTTPRequest", name: feed.requestProcessor});
+			var options = reqProc.func(feed, "Null Message");
+			HTTP.call(feed.verb, url, options, function(error, result) {
 				//console.log("HRET: ", error, result);
 				//Call each feed processor in turn
 				// for(var p=0; p<feed.processors.length; p++ ){
