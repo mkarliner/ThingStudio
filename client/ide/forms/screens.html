@@ -23,26 +23,29 @@
 		<div class="clearfix"></div>
 	</div>
 	<div class="single-page-container">
-		{{#autoForm collection="Screens" id="updateScreenForm" type="update" doc=this }}
+
 			<div id="html">
-				{{> Alerts}}
-				{{>afQuickField name="html" class="centerField"}}
-				<button type="submit" class="btn btn-update right">Update</button>
+				{{#autoForm collection="Screens" id="updateScreenForm" type="update" doc=this }}
+					{{> Alerts}}
+					{{>afQuickField name="html" class="centerField"}}
+					<button type="submit" class="btn btn-update right">Update</button>
+				{{/autoForm}}
 			</div>
 			<div id="js">
-				{{> Alerts}}
-				{{>afQuickField name="js" class="centerField"}}
-				<button type="submit" class="btn btn-update right">Update</button>
+				{{#autoForm collection="Screens" id="updateScreenForm" type="update" doc=this }}
+					{{> Alerts}}
+					{{>afQuickField name="js" class="centerField"}}
+					<button type="submit" class="btn btn-update right">Update</button>
+				{{/autoForm}}
 			</div>
 			{{#unless safeEdit}}
 				<div id="preview">
 					{{> Template.dynamic template=currentScreen}}
 				</div>
 			{{/unless}}
-		{{/autoForm}}
 			<div id="log">
 				<div class="alert-log">
-					<div class="form-group detail">				
+					<div class="form-group detail">
 						<p class="usage"><span class="fwHeavy">Errors & Alerts</span> &ndash; Showing {{alertCount}} alerts. <a href="" class="clear-alerts">Clear Alerts</a></p>
 					</div>
 					{{#each alerts}}
