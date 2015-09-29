@@ -117,7 +117,7 @@
 					<div>
 						<div class="autoform-remove-item-wrap">
 							{{#if afArrayFieldHasMoreThanMinimum name=../atts.name minCount=../atts.minCount maxCount=../atts.maxCount}}
-								<button type="button" class="btn btn-primary autoform-remove-item btn-floating btn-plus"><i class="mdi-content-remove"></i></button>
+								<button type="button" class="btn btn-primary autoform-remove-item btn-floating btn-plus"><i class="material-icons">remove</i></button>
 							{{/if}}
 						</div>
 						<div class="autoform-array-item-body">
@@ -128,7 +128,7 @@
 			{{/afEachArrayItem}}
 			{{#if afArrayFieldHasLessThanMaximum name=this.atts.name minCount=this.atts.minCount maxCount=this.atts.maxCount}}
 				<li class="list-group-item">
-					<button type="button" class="btn btn-primary autoform-add-item btn-floating btn-plus" data-autoform-field="{{this.atts.name}}" data-autoform-minCount="{{this.atts.minCount}}" data-autoform-maxCount="{{this.atts.maxCount}}"><i class="mdi-content-add"></i></button>
+					<button type="button" class="btn btn-primary autoform-add-item btn-floating btn-plus" data-autoform-field="{{this.atts.name}}" data-autoform-minCount="{{this.atts.minCount}}" data-autoform-maxCount="{{this.atts.maxCount}}"><i class="material-icons">add</i></button>
 				</li>
 			{{/if}}
 		</ul>

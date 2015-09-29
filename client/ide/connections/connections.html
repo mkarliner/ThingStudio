@@ -23,11 +23,6 @@
 					<td>{{showUsername}}</td>
 					<td>{{showObscuredPassword}}</td>
 					<td>
-						<!-- {{#if connectionIsActive}}
-							<a class="table-action table-make-active connect" href="#"><i class="mdi-image-brightness-1"></i></a>
-						{{else}} -->
-<!-- 							<a class="table-action table-make-active connect" href="#"><i class="mdi-toggle-radio-button-off"></i></a>
-						{{/if}}  -->
 						<a class="table-action table-edit-item" href="{{pathFor 'Edit MQTT Connection'}}"><i class="material-icons">mode_edit</i></a>
 						{{#afModal classes="table-action table-cancel-item" collection="Connections" operation="remove" doc=_id title="<i class='material-icons'>error_outline</i><span class='modal-header'>Deleting Connection</span>" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="icon-ts-trash"></i>{{/afModal}}
 					</td>
