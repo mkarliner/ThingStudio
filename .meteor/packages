@@ -26,7 +26,6 @@ iron:router
 zimme:iron-router-active
 
 ########## Layout ##########
-#fortawesome:fontawesome
 fourseven:scss
 jparker:gravatar
 gildaspk:autoform-modals-materialize
