@@ -1,0 +1,42 @@
+{
+    "widget": {
+        "title": "Thermometer",
+        "widgetType": "Library Template",
+        "parameters": [
+            {
+                "title": "value",
+                "paramType": "Number",
+                "required": true,
+                "description": "Temperature Value",
+                "dummyValue": "22.5"
+            },
+            {
+                "title": "legend",
+                "paramType": "String",
+                "required": false,
+                "description": "Name of value",
+                "dummyValue": "Living room"
+            },
+            {
+                "title": "minvalue",
+                "paramType": "Number",
+                "required": false,
+                "description": "Minimum value",
+                "dummyValue": "0"
+            },
+            {
+                "title": "maxvalue",
+                "paramType": "Number",
+                "required": false,
+                "description": "Maximum value",
+                "dummyValue": "100"
+            }
+        ]
+    },
+    "template": {
+        "title": "Thermometer",
+        "html": "<div style=\"height: 300px; border: solid;\">\n    <svg  class=\"mybox\"  x=\"0\" y=\"0\" style=\"max-height: 100%\"  viewBox=\"0, 0, 200, 570\">\n  <g id=\"Layer_1\">\n        <rect x=\"10\" y=\"10\" width=\"190\" height=\"550\" fill=\"none\" stroke=\"white\" stroke-width=\"2\"/>\n        <path d=\"M85,350  a60,60,0,1,0,50 ,0 l 0,-300 l -50 0 l 0,300 z\" fill=\"#333333\" stroke-width=\"10\" stroke=\"orange\"/>\n        <path d=\"M97.5,367.5  a40,40,0,1,0,25 ,0 l 0,-{{mappedValue value }} l -25 0 l 0,{{mappedValue value}} z\" fill=\"green\" stroke-width=\"10\" stroke=\"green\"/>\n        <text x=\"15\" y=\"80\" font-family=\"Verdana\" font-size=\"20\" fill=\"red\" >100  </text>\n        <text x=\"15\" y=\"350\" font-family=\"Verdana\" font-size=\"20\" fill=\"red\" >0  </text>\n        <text x=\"110\" y=\"410\" text-anchor=\"middle\" font-family=\"Verdana\" font-size=\"20\" fill=\"red\" >{{ value }}  </text>\n        <text x=\"110\" y=\"500\" text-anchor=\"middle\" font-family=\"Verdana\" font-size=\"20\" fill=\"red\" >{{ legend }}  </text>\n  </g>\n</svg>\n</div>",
+        "js": "//Javascript is for advance usage.\n// You do not need to use javascript for normal ThingStudio usage\n\n\n\nTemplate[name].onCreated(function(){\n        this.data.legend = this.data.legend || \"Main Oven\";\n        this.data.value = this.data.value || 34.5\n        this.data.minvalue = this.data.minvalue || 0;\n        this.data.maxvalue = this.data.maxvalue || 100;\n        this.data.greenvalue = this.data.greenvalue || 50;\n        this.data.orangevalue = this.data.orangevalue || 80;\n})\n\nTemplate[name].helpers({\n   mercuryColor: function(value){\n\n\n       if(value < this.greenvalue) {\n           return \"#7FFF00\";\n       } else if(value < this.orangevalue){\n           return \"orange\" \n       } else {\n           return \"red\"\n       }\n   },\n   mappedValue: function(value) {\n        m =  mapValue(value, this.minvalue, this.maxvalue, 0, 300)\n        return m;\n    }\n});",
+        "isWidget": true
+    }
+}
