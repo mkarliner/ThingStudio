@@ -35,22 +35,24 @@
 
 
 <template name="updateAppJsForm">
+	<div id="appjs">
 	{{#autoForm collection="Apps" class="app-detail" id="updateAppForm" type="update" doc=this omitFields="ancestor" buttonContent="Save Application"}}
 			{{>afQuickField name="js" class="centerField"}}
-				<button type="submit" class="btn btn-update">Update App</button>
+				<button type="submit" class="btn btn-update right">Update App</button>
 	{{/autoForm}}
+	</div>
 </template>
 
 
 <!-- <template name="materializeRadio">
   <div {{dsk}}>
-    
+
     	<input type="radio" value="false" name="{{this.name}}" {{falseAtts}} />
       <label>{{#with this.atts.falseLabel}}{{this}}{{else}}False{{/with}}</label>
-    
+
       <input type="radio" value="true" name="{{this.name}}" {{trueAtts}} />
       <label>{{#with this.atts.trueLabel}}{{this}}{{else}}True{{/with}}</label>
-    
+
   </div>
 </template>
 

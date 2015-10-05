@@ -39,7 +39,7 @@ Template.BreadcrumbsContent.helpers({
 		// This function sets the base of the breadcrumb
 		var routeName = Router.current().route.getName();
 		var routePath = Router.current().route.path();
-		var appPrefixRoutes = [ "MQTT Connections", "HTTP Connections", "MQTT Feeds", "HTTP Feeds", "Templates", "Themes", "Edit MQTT Feed", "Edit HTTP Feed", "Edit MQTT Connection", "Edit HTTP Connection", "Edit Template", "Safe Edit Template", "Edit Theme" ];
+		var appPrefixRoutes = [ "MQTT Connections", "HTTP Connections", "Feeds", "MQTT Feeds", "HTTP Feeds", "Templates", "Themes", "Edit MQTT Feed", "Edit HTTP Feed", "Edit MQTT Connection", "Edit HTTP Connection", "Edit Template", "Safe Edit Template", "Edit Theme" ];
 		var nonDisplayRoutes = [ "Dashboard", "View Widget", "Edit App", "View Doc" ];
 		if ( _.contains( nonDisplayRoutes, routeName ) ) {
 			// Applies to: Dashboard, View Widget, Edit App
@@ -63,7 +63,7 @@ Template.BreadcrumbsContent.helpers({
 		// This function provides details of the route, not including the base, which is handled above
 		var routeName = Router.current().route.getName();
 		var routePath = Router.current().route.path();
-		var displayRoutes = [ "MQTT Connections", "HTTP Connections", "MQTT Feeds", "HTTP Feeds", "Templates", "Themes" ];
+		var displayRoutes = [ "Connections", "MQTT Connections", "HTTP Connections", "Feeds", "MQTT Feeds", "HTTP Feeds", "Templates", "Themes" ];
 		var nonDisplayRoutes = [ "Support", "Widgets", "Apps", "Dashboard", "Chat", "Current Users", "System Admin", "Settings", "Documentation", "Debug", "Tutorials", "Welcome" ];
 
 		if ( _.contains( nonDisplayRoutes, routeName ) ) {
@@ -78,16 +78,16 @@ Template.BreadcrumbsContent.helpers({
 			return [ { item: "Documentation", path: "/docs" }, { item: this.attributes.title, path: "/docs/" + this.attributes.urlstring} ];
 		} else if ( routeName == "Edit MQTT Feed" ) {
 			// Applies to: edit feed page
-			return [ { item: "MQTT Feeds", path: "/mqtt-feeds" }, { item: this.title, path: "/mqtt-feeds/" + this._id } ];
+			return [ { item: "MQTT Feeds", path: "/feeds" }, { item: this.title, path: "/feeds/" + this._id } ];
 		} else if ( routeName == "Edit HTTP Feed" ) {
 			// Applies to: edit feed page
-			return [ { item: "HTTP Feeds", path: "/http-feeds" }, { item: this.title, path: "/http-feeds/" + this._id } ];
+			return [ { item: "HTTP Feeds", path: "/feeds" }, { item: this.title, path: "/feeds/" + this._id } ];
 		} else if ( routeName == "Edit MQTT Connection" ) {
 			// Applies to: edit connection page
-			return [ { item: "MQTT Connections", path: "/mqtt-connections" }, { item: this.title, path: "/mqtt-connections/" + this._id } ];
+			return [ { item: "MQTT Connections", path: "/connections" }, { item: this.title, path: "/connections/" + this._id } ];
 		} else if ( routeName == "Edit HTTP Connection" ) {
 			// Applies to: edit connection page
-			return [ { item: "HTTP Connections", path: "/http-connections" }, { item: this.title, path: "/http-connections/" + this._id } ];
+			return [ { item: "HTTP Connections", path: "/connections" }, { item: this.title, path: "/connections/" + this._id } ];
 		} else if ( routeName == "Edit Template" ) {
 			// Applies to: edit template page
 			return [ { item: "Templates", path: "/templates" }, { item: this.title, path: "/templates/" + this._id + "/edit"} ];

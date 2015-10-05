@@ -1291,26 +1291,43 @@ div.ace_layer.ace_gutter-layer.ace_folding-enabled {
 	background-color: darken($darkBase, 5%);
 }
 
-.single-page-container #html .form-group, .single-page-container #js .form-group, .single-page-container #css .form-group, .single-page-container #preview .form-group {
+.single-page-container #html .form-group,
+.single-page-container #js .form-group,
+.single-page-container #css .form-group,
+.single-page-container #preview .form-group,
+.single-page-container #appjs .form-group {
 	border-bottom: none;
 }
 
-#html, #js, #preview, #css {
+#html,
+#js,
+#preview,
+#css,
+#appjs {
 	position: relative;
 }
 
-#html .control-label, #js .control-label, #css .control-label {
+#html .control-label,
+#js .control-label,
+#css .control-label,
+#appjs .control-label {
 	display: none;
 }
 
-#html .form-group, #js .form-group, #css .form-group {
+#html .form-group,
+#js .form-group,
+#css .form-group,
+#appjs .form-group {
 	padding-top: 0;
 	padding-bottom: 0;
 	margin-bottom: 0;
 }
 
-#archy, #archyjs, #archycss, #archyappjs {
-    border: solid;
+#archy,
+#archyjs,
+#archycss,
+#archyappjs {
+  border: solid;
 	height: 500px;
 	min-width:  800px;
 	border-radius: 3px;
@@ -1323,11 +1340,16 @@ div.ace_layer.ace_gutter-layer.ace_folding-enabled {
 	padding: 10px;
 }
 
-pre[name="html"], pre[name="js"], pre[name="css"] {
+pre[name="html"],
+pre[name="js"],
+pre[name="css"] {
 	line-height: 0;
 }
 
-pre[name="html"], pre[name="js"], pre.ace_editor, pre[name="css"] {
+pre[name="html"],
+pre[name="js"],
+pre.ace_editor,
+pre[name="css"] {
 	margin: 0;
 }
 
@@ -1339,7 +1361,8 @@ pre.ace-cobalt .ace_string {
 	color: $brightGreen;
 }
 
-pre.ace-cobalt .ace_keyword, pre.ace-cobalt .ace_meta {
+pre.ace-cobalt .ace_keyword,
+pre.ace-cobalt .ace_meta {
 	color: $editorGray;
 }
 
@@ -1347,11 +1370,15 @@ pre.ace-cobalt .ace_entity {
 	color: $editorBlue;
 }
 
-pre.ace-cobalt .ace_storage, pre.ace-cobalt .ace_variable {
+pre.ace-cobalt .ace_storage,
+pre.ace-cobalt .ace_variable {
 	color: $editorOrange;
 }
 
-pre.ace-cobalt .ace_constant, pre.ace-cobalt .ace_constant.ace_character, pre.ace-cobalt .ace_constant.ace_character.ace_escape, pre.ace-cobalt .ace_constant.ace_other {
+pre.ace-cobalt .ace_constant,
+pre.ace-cobalt .ace_constant.ace_character,
+pre.ace-cobalt .ace_constant.ace_character.ace_escape,
+pre.ace-cobalt .ace_constant.ace_other {
 	color: $white;
 }
 

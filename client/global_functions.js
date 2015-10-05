@@ -169,13 +169,8 @@ checkHTTPFeeds = function (){
 				// }
 				var fp = FeedProcessors.findOne({type: "HTTPResponse", name: feed.responseProcessor});
 				//console.log("FP: ", fp, FeedProcessors.find().fetch());
-<<<<<<< HEAD
-				fp.func(app, conn, feed, error, result);
-				
-=======
-				fp.func(feed, error, result);
 
->>>>>>> X-model-ui
+				fp.func(app, conn, feed, error, result);
 			})
 		}
 	}
@@ -261,11 +256,7 @@ publish = function(feedName, message) {
 			console.log("HEV: ", error, result)
 			var rp = FeedProcessors.findOne({type: "HTTPResponse", name: feed.responseProcessor});
 			//console.log("FP: ", fp, FeedProcessors.find().fetch());
-<<<<<<< HEAD
-			rp.func(app, conn, feed, error, result);		
-=======
-			rp.func(feed, error, result);
->>>>>>> X-model-ui
+			rp.func(app, conn, feed, error, result);
 		})
 		break;
 	default:
