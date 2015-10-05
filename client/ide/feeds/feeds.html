@@ -1,5 +1,5 @@
 <template name="FeedsHeader">
-	<h1 class="left">MQTT Feeds</h1>
+	<h1 class="left">Feeds</h1>
 	<a class="header-action-1 clearfix" href="#">Create a new feed</a>
 </template>
 
@@ -9,17 +9,36 @@
 	<table class="hoverable">
 		{{> FeedsTableWidths}}
 		<thead>
-			<tr cellpadding="10"><th>Feed Title</th><th>Subscription</th><th>Pub/Sub</th><th>Action</th></tr>
+			<tr cellpadding="10"><th>Transport</th><th>Feed Title</th><th>Details</th><th>Action</th></tr>
 		</thead>
 		<tbody>
 			<tr id="item-insert" class="spacer td-closed"><td></td></tr>
-			{{#each feedlist}}
+			<!-- {{#each feedlist}}
+			{{log}}
 				<tr>
 					<td>{{title}}</td>
 					<td>{{subscription}}</td>
 					<td>{{pubsub}}</td>
 					<td><a class="table-action table-edit-item" href="{{pathFor 'Edit MQTT Feed'}}"><i class="material-icons">mode_edit</i></a>{{#afModal classes="table-action table-cancel-item" collection="Feeds" operation="remove" doc=_id title="<i class='material-icons'>error_outline</i><span class='modal-header'>Deleting Feed</span>" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="icon-ts-trash"></i>{{/afModal}}</td>
 				</tr>
+			{{/each}} -->
+			{{#each mqttFeedsList}}
+			{{log}}
+			<tr>
+				<td>MQTT</td>
+				<td>{{title}}</td>
+				<td>{{mqttFeedDetails}}</td>
+				<td><a class="table-action table-edit-item" href="{{pathFor 'Edit MQTT Feed'}}"><i class="material-icons">mode_edit</i></a>{{#afModal classes="table-action table-cancel-item" collection="Feeds" operation="remove" doc=_id title="<i class='material-icons'>error_outline</i><span class='modal-header'>Deleting Feed</span>" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="icon-ts-trash"></i>{{/afModal}}</td>
+			</tr>
+			{{/each}}
+			{{#each httpFeedsList}}
+			{{log}}
+			<tr>
+				<td>HTTP</td>
+				<td>{{title}}</td>
+				<td>{{httpFeedDetails}}</td>
+				<td><a class="table-action table-edit-item" href="{{pathFor 'Edit HTTP Feed'}}"><i class="material-icons">mode_edit</i></a>{{#afModal classes="table-action table-cancel-item" collection="Feeds" operation="remove" doc=_id title="<i class='material-icons'>error_outline</i><span class='modal-header'>Deleting Feed</span>" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="icon-ts-trash"></i>{{/afModal}}</td>
+			</tr>
 			{{/each}}
 		</tbody>
 	</table>
@@ -49,9 +68,9 @@
 
 <template name="FeedsTableWidths">
 	<colgroup>
-		<col style="width: 35%;">
-		<col style="width: 35%;">
-		<col style="width: 190px;">
+		<col style="width: 12%;">
+		<col style="width: 15%;">
+		<col style="width: 43%;">
 		<col style="width: 105px;">
 	</colgroup>
 </template>

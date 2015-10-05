@@ -1,3 +1,57 @@
+///////////////////////////////////////////////////////////////////////////////////////
+// General Purpose Functions //
+///////////////////////////////////////////////////////////////////////////////////////
+
+arrayOfObjectsFromObject = function (obj) {
+// To make #each available with an object that is not an array
+	result = [];
+	for (var key in obj){
+			result.push({name:key,value:obj[key]});
+	}
+	return result;
+}
+
+// From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys
+if (!Object.keys) {
+  Object.keys = (function() {
+    'use strict';
+    var hasOwnProperty = Object.prototype.hasOwnProperty,
+        hasDontEnumBug = !({ toString: null }).propertyIsEnumerable('toString'),
+        dontEnums = [
+          'toString',
+          'toLocaleString',
+          'valueOf',
+          'hasOwnProperty',
+          'isPrototypeOf',
+          'propertyIsEnumerable',
+          'constructor'
+        ],
+        dontEnumsLength = dontEnums.length;
+
+    return function(obj) {
+      if (typeof obj !== 'object' && (typeof obj !== 'function' || obj === null)) {
+        throw new TypeError('Object.keys called on non-object');
+      }
+
+      var result = [], prop, i;
+
+      for (prop in obj) {
+        if (hasOwnProperty.call(obj, prop)) {
+          result.push(prop);
+        }
+      }
+
+      if (hasDontEnumBug) {
+        for (i = 0; i < dontEnumsLength; i++) {
+          if (hasOwnProperty.call(obj, dontEnums[i])) {
+            result.push(dontEnums[i]);
+          }
+        }
+      }
+      return result;
+    };
+  }());
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////
 // HTTP  Management//
@@ -93,7 +147,7 @@ checkHTTPFeeds = function (){
 	//console.log("HTTP clock");
 	HTTPClock++;
 	var feeds = HTTPFeeds.find().fetch();
-	
+
 	//Check which feeds need to be polled.
 	for(var f=0; f<feeds.length; f++) {
 		if(HTTPClock % feeds[f].polling_interval == 0 ) {
@@ -115,8 +169,13 @@ checkHTTPFeeds = function (){
 				// }
 				var fp = FeedProcessors.findOne({type: "HTTPResponse", name: feed.responseProcessor});
 				//console.log("FP: ", fp, FeedProcessors.find().fetch());
+<<<<<<< HEAD
 				fp.func(app, conn, feed, error, result);
 				
+=======
+				fp.func(feed, error, result);
+
+>>>>>>> X-model-ui
 			})
 		}
 	}
@@ -167,11 +226,11 @@ publish = function(feedName, message) {
 	case "MQTT":
 		feed = Feeds.findOne(feedName);
 		if(feed.pubsub !="Publish") {
-			message = "Attempt to publish to subcription feed: "+ feed.title; 
+			message = "Attempt to publish to subcription feed: "+ feed.title;
 			Alerts.upsert({type: 'runtime', status: "warning", message:  message},{$set:{type: 'runtime', status: 'warning', message: message} ,$inc: {count: 1} } );
 		} else {
 			Outbox.upsert({topic: feed.subscription}, {$set: { feed: feed.title, topic: feed.subscription, payload: message},$inc: {count: 1}});
-			mqttClient.publish(feed.subscription, message);	
+			mqttClient.publish(feed.subscription, message);
 		}
 		break;
 	case "HTTP":
@@ -180,7 +239,7 @@ publish = function(feedName, message) {
 		var conn = HTTPConnections.findOne(feed.connection);
 		console.log("HTTP FEED Request", feedName, feed);
 		//Get the requestProcessor for this feed
-		var fp = FeedProcessors.findOne({name: feed.requestProcessor});		
+		var fp = FeedProcessors.findOne({name: feed.requestProcessor});
 		//And call it to process the outgoing message
 		console.log("NOTE TO SELF - request feed processor need access to request!!!!!!!");
 		var options = fp.func(app, conn, feed, message);
@@ -202,7 +261,11 @@ publish = function(feedName, message) {
 			console.log("HEV: ", error, result)
 			var rp = FeedProcessors.findOne({type: "HTTPResponse", name: feed.responseProcessor});
 			//console.log("FP: ", fp, FeedProcessors.find().fetch());
+<<<<<<< HEAD
 			rp.func(app, conn, feed, error, result);		
+=======
+			rp.func(feed, error, result);
+>>>>>>> X-model-ui
 		})
 		break;
 	default:
@@ -289,7 +352,7 @@ getAppTree = function(appId){
 		return false;
 	}
 	apps = [app._id];
-	
+
 	if(baseAppId) {
 		console.log("Set system app to ", baseAppId)
 		apps = [app._id, baseAppId];
@@ -309,13 +372,13 @@ InitialiseApps = function(){
 	FeedProcessors.remove();
 	FeedList.remove();
 	//First initialise the system App js.
-	
+
 	capp = getCurrentApp();
 	if(!capp) {
 		return;
 	}
 	applist = getAppTree(capp._id);
-	
+
 	console.log("Initialising Apps", applist);
 	for(var a=0; a<applist.length; a++ ){
 		var app = Apps.findOne(applist[a]);
@@ -616,4 +679,3 @@ getCurrentApp = function() {
 ///////////////////////////////////////////////////////////////////////////////////////
 // Alert Management//
 ///////////////////////////////////////////////////////////////////////////////////////
-
