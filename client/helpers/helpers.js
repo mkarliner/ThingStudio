@@ -1,5 +1,4 @@
-
-Template.registerHelper( 
+Template.registerHelper(
 	"gravatar", function(){
 		if(Meteor.user()) {
 			//imageUrl = 'http://192.168.1.2:3000/images/jkshdfkjhsjkdhf.png';
@@ -12,7 +11,7 @@ Template.registerHelper(
 	}
 );
 
-Template.registerHelper( 
+Template.registerHelper(
 	"currentUsername", function(){
 		if(Meteor.user()) {
 			return Meteor.user().username;
@@ -59,7 +58,7 @@ Template.registerHelper("indexedArray",
   });
 });
 
-Template.registerHelper("menuOps", 
+Template.registerHelper("menuOps",
 	menuOps = function() {
 		if ( $('main div.add-new-item').hasClass('open') ) {
 			//Is open
