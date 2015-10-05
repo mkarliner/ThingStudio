@@ -32,14 +32,15 @@ RegisterFeedProcessor = function(name,  type, func) {
 
 var HTTPClock = 0;
 
-RegisterFeedProcessor("testReq", "HTTPRequest", function(feed, message){
+RegisterFeedProcessor("testReq", "HTTPRequest", function(app, conn, feed, message){
 	console.log("testReq Proc", feed, message);
 	return ({
 		content: message
 	})
 });
 
-RegisterFeedProcessor("StdJSON", "HTTPResponse", function(feed, error, result){
+RegisterFeedProcessor("StdJSON", "HTTPResponse", function(app, conn, feed, error, result){
+	console.log("RESPONSE: ", feed, error, result);
 	if(error) {
 		console.log("HRRPR: ", error.message );
 		return;
@@ -98,11 +99,13 @@ checkHTTPFeeds = function (){
 		if(HTTPClock % feeds[f].polling_interval == 0 ) {
 			var feed = feeds[f];
 			var conn = HTTPConnections.findOne(feed.connection);
+			var app = Apps.findOne({_id: conn.appId});
 			var url = conn.protocol + "://" + conn.host + ":" + conn.port + feed.path;
 			timeout = (feed.polling_interval-1)*1000;
 			console.log("HT: ", feed.responseProcessor, feed.requestProcessor, conn, url, timeout);
 			var reqProc = FeedProcessors.findOne({type: "HTTPRequest", name: feed.requestProcessor});
-			var options = reqProc.func(feed, "Null Message");
+			var options = reqProc.func(app, conn, feed, "Null Message");
+			console.log("BEFORE HTTP Poll:", feed.verb, url, options);
 			HTTP.call(feed.verb, url, options, function(error, result) {
 				//console.log("HRET: ", error, result);
 				//Call each feed processor in turn
@@ -112,7 +115,7 @@ checkHTTPFeeds = function (){
 				// }
 				var fp = FeedProcessors.findOne({type: "HTTPResponse", name: feed.responseProcessor});
 				//console.log("FP: ", fp, FeedProcessors.find().fetch());
-				fp.func(feed, error, result);
+				fp.func(app, conn, feed, error, result);
 				
 			})
 		}
@@ -172,17 +175,19 @@ publish = function(feedName, message) {
 		}
 		break;
 	case "HTTP":
-		feed = HTTPFeeds.findOne({title: feedName});
+		var feed = HTTPFeeds.findOne({title: feedName});
+		var app = getCurrentApp();
+		var conn = HTTPConnections.findOne(feed.connection);
 		console.log("HTTP FEED Request", feedName, feed);
 		//Get the requestProcessor for this feed
 		var fp = FeedProcessors.findOne({name: feed.requestProcessor});		
 		//And call it to process the outgoing message
 		console.log("NOTE TO SELF - request feed processor need access to request!!!!!!!");
-		var options = fp.func(feed, message);
+		var options = fp.func(app, conn, feed, message);
 		//Record that we have done this for debugging.
 		Outbox.upsert({topic: feed.path}, {$set: { feed: feed.title, topic: feed.path, payload: message},$inc: {count: 1}});
 		//Now actually do the deed.
-		var conn = HTTPConnections.findOne(feed.connection);
+
 		var url = conn.protocol + "://" + conn.host + ":" + conn.port +feed.path;
 		timeout = 5*1000;
 				options.headers = {};
@@ -197,7 +202,7 @@ publish = function(feedName, message) {
 			console.log("HEV: ", error, result)
 			var rp = FeedProcessors.findOne({type: "HTTPResponse", name: feed.responseProcessor});
 			//console.log("FP: ", fp, FeedProcessors.find().fetch());
-			rp.func(feed, error, result);		
+			rp.func(app, conn, feed, error, result);		
 		})
 		break;
 	default:

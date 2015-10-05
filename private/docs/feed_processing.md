@@ -29,7 +29,7 @@ The actually function to be executed.
 
 ##HTTP Feed Processors
 ### Request Processors
-HTTPRequest processors are called with parameters of __feed__, which is the feed that uses them,
+HTTPRequest processors are called with parameters of __app__ the current app, __conn__ the connection, __feed__, __feed__, which is the feed that uses them,
 and __message__ which is a JSON string to to be sent.
 
 They should return an object which contains a property of __content__, which
@@ -67,16 +67,18 @@ On the server, HTTP.call is implemented by using the npm request module. Any opt
 
 __Example__
 
+RegisterFeedProcessor("testReq", "HTTPRequest", function(app, conn, feed, message){
+	console.log("testReq Proc", feed, message);
+	return ({
+		content: message
+	})
+});
 
-	RegisterFeedProcessor("testReq", "HTTPRequest", function(feed, message){
-		console.log("testReq Proc", feed, message)
-		return ({content: message})
-	});
-	
+
 
 ### Response Processors	
 HTTPResponse processors manage the data coming back from the HTTP.call callback.
-They are called with parameters of __feed__, (the associated feed), __error__, any
+They are called with parameters of __app__ the current app, __conn__ the connection, __feed__, (the associated feed), __error__, any
 error conditions, and __result__, which is the returned data. Again, details of the 
 HTTP.call callback can be found here http://docs.meteor.com/#/full/http_call, but for convenience,
 here are the contents of the result object:
@@ -102,7 +104,8 @@ received message in the __Messages__ mini-mongo table as per the example below.
 
 __Example__
 
-	RegisterFeedProcessor("StdJSON", "HTTPResponse", function(feed, error, result){
+	RegisterFeedProcessor("StdJSON", "HTTPResponse", function(app, conn, feed, error, result){
+		console.log("RESPONSE: ", feed, error, result);
 		if(error) {
 			console.log("HRRPR: ", error.message );
 			return;
@@ -112,20 +115,20 @@ __Example__
 		}
 		catch(err) {
 			console.log("HERR: ", err);
-			Session.set("runtimeErrors", "Invalid HTTP message, payload not JSON: " + result.content.toString());
+			Session.set("runtimeErrors", "Invalid MQTT message, payload not JSON: " + result.content.toString());
 			payload = result.content.toString();
 		}
 		console.log("payload", payload)
 		Messages.upsert(
 			{
-				topic: feed.path, 
+				topic: feed.path,
 				feed: feed.title
-			}, 
-			{$set: 
+			},
+			{$set:
 				{
-					feed: feed.title, 
-					topic: feed.path, 
-					payload: payload}, 
+					feed: feed.title,
+					topic: feed.path,
+					payload: payload},
 					$inc:{count: 1
 				}
 			});
