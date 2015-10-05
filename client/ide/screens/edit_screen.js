@@ -44,6 +44,14 @@ Meteor.startup(function(){
 			return AceEditor.instance("archyjs").getValue();
 		}
 	});
+	
+	AutoForm.addInputType('aceappjs', {
+		template: 'afAceAppJs',
+		valueOut: function(obj) {
+			console.log("OUT: ", AceEditor.instance("archyappjs").getValue());
+			return AceEditor.instance("archyappjs").getValue();
+		}
+	});
 
 	AutoForm.addInputType('ace', {
 		template: 'afAce',
@@ -92,9 +100,17 @@ Template.afAceJs.helpers({
 	}
 });
 
+Template.afAceAppJs.helpers({
+	debug: function(obj){
+		// console.log("DEBUG:", obj, this);
+	},
+	loadValue: function(editor){
+	}
+});
+
 Template.afAceJs.rendered = function() {
 	var editor;
-	// console.log("RENDERED", this.findAll());
+	console.log("RENDERED", this.findAll());
 	Tracker.autorun(function (e) {
 
 		editor = AceEditor.instance("archyjs", {
@@ -107,6 +123,25 @@ Template.afAceJs.rendered = function() {
 			cs = Session.get("currentScreenPage");
 			editor.$blockScrolling = Infinity;
 			editor.setValue(Screens.findOne({_id: cs}).js, -1);
+		}
+	}); 
+}
+
+Template.afAceAppJs.rendered = function() {
+	var editor;
+	 console.log("APPJS RENDERED", this.findAll());
+	Tracker.autorun(function (e) {
+
+		editor = AceEditor.instance("archyappjs", {
+			theme: "cobalt",
+			mode: "javascript"
+		});
+
+		if(editor.loaded===true){
+			e.stop();
+			//cs = Session.get("currentScreenPage");
+			editor.$blockScrolling = Infinity;
+			//editor.setValue(Screens.findOne({_id: cs}).js, -1);
 		}
 	}); 
 }

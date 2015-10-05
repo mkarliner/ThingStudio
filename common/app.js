@@ -128,7 +128,7 @@ Schemas.App = new SimpleSchema({
 		autoform: {
 			rows: 10,
 	        afFieldInput: {
-	          type: 'acejs',
+	          type: 'aceappjs',
 	          class: 'editor' // optional
 	          // summernote options goes here
 	        }
