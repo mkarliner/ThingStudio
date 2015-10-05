@@ -189,7 +189,28 @@ Router.route("/http-connections/:_id", {
 	}
 });
 
-Router.route("/mqtt-feeds/:_id", {
+Router.route("/feeds", {
+	name: "Feeds",
+	controller: "IDEController",
+	data: function() {
+			return {
+				mqttFeeds: Feeds.find(),
+				httpFeeds: HTTPFeeds.find()
+			}
+			// return Feeds.find();
+	},
+	action: function(){
+		if ( !this.ready() ) {
+			this.render("Loading", {
+				data: "All Feeds"
+			});
+		} else {
+			renderYields(this, 'Feeds');
+		}
+	}
+});
+
+Router.route("/mqtt-feed/:_id", {
 	name: "Edit MQTT Feed",
 	controller: "IDEController",
 	data: function() {
@@ -206,7 +227,7 @@ Router.route("/mqtt-feeds/:_id", {
 	}
 });
 
-Router.route("/mqtt-feeds", {
+Router.route("/mqtt-feed", {
 	name: "MQTT Feeds",
 	controller: "IDEController",
 	data: function() {
@@ -223,7 +244,7 @@ Router.route("/mqtt-feeds", {
 	}
 });
 
-Router.route("/http-feeds/:_id", {
+Router.route("/http-feed/:_id", {
 	name: "Edit HTTP Feed",
 	controller: "IDEController",
 	data: function() {
@@ -240,7 +261,7 @@ Router.route("/http-feeds/:_id", {
 	}
 });
 
-Router.route("/http-feeds", {
+Router.route("/http-feed", {
 	name: "HTTP Feeds",
 	controller: "IDEController",
 	data: function() {
