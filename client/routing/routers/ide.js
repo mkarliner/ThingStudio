@@ -158,6 +158,23 @@ Router.route("/mqtt-connections", {
 	}
 });
 
+Router.route("/http-connections/:_id", {
+	name: "Edit HTTP Connection",
+	controller: "IDEController",
+	data: function() {
+		return HTTPConnections.findOne({_id: this.params._id});
+	},
+	action: function() {
+		if ( !this.ready() ) {
+			this.render("Loading", {
+				data: "HTTPConnection"
+			});
+		} else {
+			renderYields(this, 'EditSingleHTTPConnection');
+		}
+	}
+});
+
 Router.route("/http-connections", {
 	name: "HTTP Connections",
 	controller: "IDEController",
@@ -172,19 +189,52 @@ Router.route("/http-connections", {
 	}
 });
 
-Router.route("/http-connections/:_id", {
-	name: "Edit HTTP Connection",
+Router.route("/mqtt-feed/new", {
+	name: "New MQTT Feed",
+	controller: "IDEController",
+	action: function() {
+		renderYields(this, 'NewMQTTFeed');
+	}
+});
+
+Router.route("/http-feed/new", {
+	name: "New HTTP Feed",
+	controller: "IDEController",
+	action: function() {
+		renderYields(this, 'NewHTTPFeed');
+	}
+});
+
+Router.route("/mqtt-feed/:_id", {
+	name: "Edit MQTT Feed",
 	controller: "IDEController",
 	data: function() {
-		return HTTPConnections.findOne({_id: this.params._id});
+		return Feeds.findOne({_id: this.params._id});
 	},
 	action: function() {
 		if ( !this.ready() ) {
 			this.render("Loading", {
-				data: "HTTPConnection"
+				data: "Feed"
 			});
 		} else {
-			renderYields(this, 'EditSingleHTTPConnection');
+			renderYields(this, 'EditFeed');
+		}
+	}
+});
+
+Router.route("/http-feed/:_id", {
+	name: "Edit HTTP Feed",
+	controller: "IDEController",
+	data: function() {
+		return HTTPFeeds.findOne({_id: this.params._id});
+	},
+	action: function() {
+		if ( !this.ready() ) {
+			this.render("Loading", {
+				data: "HTTP Feed"
+			});
+		} else {
+			renderYields(this, 'EditHttpFeed');
 		}
 	}
 });
@@ -209,76 +259,6 @@ Router.route("/feeds", {
 		}
 	}
 });
-
-Router.route("/mqtt-feed/:_id", {
-	name: "Edit MQTT Feed",
-	controller: "IDEController",
-	data: function() {
-		return Feeds.findOne({_id: this.params._id});
-	},
-	action: function() {
-		if ( !this.ready() ) {
-			this.render("Loading", {
-				data: "Feed"
-			});
-		} else {
-			renderYields(this, 'EditFeed');
-		}
-	}
-});
-
-Router.route("/mqtt-feed", {
-	name: "MQTT Feeds",
-	controller: "IDEController",
-	data: function() {
-			return Feeds.find();
-	},
-	action: function(){
-		if ( !this.ready() ) {
-			this.render("Loading", {
-				data: "Feeds"
-			});
-		} else {
-			renderYields(this, 'Feeds');
-		}
-	}
-});
-
-Router.route("/http-feed/:_id", {
-	name: "Edit HTTP Feed",
-	controller: "IDEController",
-	data: function() {
-		return HTTPFeeds.findOne({_id: this.params._id});
-	},
-	action: function() {
-		if ( !this.ready() ) {
-			this.render("Loading", {
-				data: "HTTP Feed"
-			});
-		} else {
-			renderYields(this, 'EditHttpFeed');
-		}
-	}
-});
-
-Router.route("/http-feed", {
-	name: "HTTP Feeds",
-	controller: "IDEController",
-	data: function() {
-			return HTTPFeeds.find();
-	},
-	action: function(){
-		if ( !this.ready() ) {
-			this.render("Loading", {
-				data: "HTTP Feeds"
-			});
-		} else {
-			renderYields(this, 'HTTPFeeds');
-		}
-	}
-});
-
-
 
 Router.route("/templates/:_id/edit", {
 	name: "Edit Template",
@@ -411,6 +391,20 @@ Router.route("/widgets/:_id", {
 	}
 });
 
+Router.route("/widgets", {
+	name: "Widgets",
+	controller: "IDEController",
+	action: function() {
+		if ( !this.ready() ) {
+			this.render("Loading", {
+				data: "Widgets"
+			});
+		} else {
+			renderYields(this, 'Widgets');
+		}
+	},
+});
+
 Router.route("/themes/:_id", {
 	name: "Edit Theme",
 	controller: "IDEController",
@@ -441,20 +435,6 @@ Router.route("/themes", {
 			renderYields(this, 'Themes');
 		}
 	}
-});
-
-Router.route("/widgets", {
-	name: "Widgets",
-	controller: "IDEController",
-	action: function() {
-		if ( !this.ready() ) {
-			this.render("Loading", {
-				data: "Widgets"
-			});
-		} else {
-			renderYields(this, 'Widgets');
-		}
-	},
 });
 
 Router.route("/profile", {
@@ -505,45 +485,22 @@ Router.route("/tutorials", {
 	},
 });
 
-
-// Router.route("/olddocs/:urlstring", {
-// 	name: "OldDocs",
-// 	controller: "OldDocsController",
-// 	data: function() {
-// 		return HelpPages.findOne({ urlstring: this.params.urlstring });
-// 	},
-// 	action: function() {
-// 		if ( !this.ready() ) {
-// 			this.render("Loading", {
-// 				data: "Documenation"
-// 			});
-// 		} else {
-// 			renderYields(this, "OldDocs");
-// 		}
-// 	}
-// });
-
-// Router.route("/docsold", {
-// 	name: "OldDocumentation",
-// 	controller: "OldDocsController",
-// 	data: function() {
-// 		return HelpPages.find({}, {
-// 			sort: {
-// 				pagenumber: 1
-// 			}
-// 		});
-// 	},
-// 	action: function() {
-// 		if ( !this.ready() ) {
-// 			this.render("Loading", {
-// 				data: "Documenation"
-// 			});
-// 		} else {
-// 			renderYields(this, 'OldDocumentation');
-// 		}
-// 	},
-// });
-
+Router.route("/docs/:urlstring", {
+	name: "View Doc",
+	controller: "DocsController",
+	data: function() {
+		return Docs.findOne({ "attributes.urlstring": this.params.urlstring });
+	},
+	action: function() {
+		if ( !this.ready() ) {
+			this.render("Loading", {
+				data: "Documenation"
+			});
+		} else {
+			renderYields(this, "Docs");
+		}
+	}
+});
 
 Router.route("/docs", {
 	name: "Documentation",
@@ -560,23 +517,6 @@ Router.route("/docs", {
 			renderYields(this, 'Documentation');
 		}
 	},
-});
-
-Router.route("/docs/:urlstring", {
-	name: "View Doc",
-	controller: "DocsController",
-	data: function() {
-		return Docs.findOne({ "attributes.urlstring": this.params.urlstring });
-	},
-	action: function() {
-		if ( !this.ready() ) {
-			this.render("Loading", {
-				data: "Documenation"
-			});
-		} else {
-			renderYields(this, "Docs");
-		}
-	}
 });
 
 Router.route("/support", {

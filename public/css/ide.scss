@@ -297,6 +297,7 @@ table.striped tbody tr:nth-child(odd) {
 	background-color: $darkBase;
 	& a {
 		color: $darkBaseText;
+		padding: 0 8px;
 		&:hover {
 			color: lighten($darkBaseText, 20%);
 		}
@@ -907,6 +908,12 @@ td.dropdown-td {
 	display: inline-block;
 }
 
+.dropdown-content li > a,
+.dropdown-content li > span {
+	font-size: 1rem;
+	color: $green;
+}
+
 .add-new-item {
 	@include transition(opacity, 0.1s, cubic-bezier(0.4, 0.0, 0.2, 1));
 	transition-delay: 0.05s;
@@ -1014,7 +1021,7 @@ table, .single-page-container {
 	text-align: center;
 	color: $baseText;
 	&:not(:last-child) {
-		margin-right: 2px;
+		margin-right: 5px;
 	}
 	& i {
 		font-size: 1.6 * $fontSize;
@@ -1050,7 +1057,9 @@ table, .single-page-container {
 	background-color: transparent;
 }
 
-
+.feeds-list-action {
+	width: 94px;
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////
 // App Body - Modals //
@@ -1476,8 +1485,6 @@ button.btn-plus, {
 		padding-bottom: 0.6em;
 	}
 }
-
-
 
 .studio-url {
 	margin-top: 2em;
@@ -2025,6 +2032,35 @@ footer {
 		background-color: transparent;
 	}
 }
+
+///////////////////////////////////////////////////////////////////////////////////////
+// Media Queries //
+///////////////////////////////////////////////////////////////////////////////////////
+
+@media screen and (min-width: 900px) {
+	.feeds-list-action {
+		width: 83px;
+	}
+}
+
+@media screen and (min-width: 1024px) {
+	.feeds-list-action {
+		width: 80px;
+	}
+}
+
+@media screen and (min-width: 1200px) {
+	.feeds-list-action {
+		width: 78px;
+	}
+}
+
+@media screen and (min-width: 1300px) {
+	.feeds-list-action {
+		width: 77px;
+	}
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////
 // Custom icon font //

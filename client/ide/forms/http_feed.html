@@ -1,8 +1,20 @@
-
-
+<template name="insertHttpFeedForm">
+  <!-- {{>quickForm collection="Feeds" id="insertFeedForm" type="insert" buttonClasses="glyphicon glyphicon-ok btn btn-default" buttonContent="Save" omitFields="public"}} -->
+  {{#autoForm collection="HTTPFeeds" id="insertFeedForm" type="insert" }}
+  <div id="required">
+		{{> afQuickField name='title' placeholder="HttpFeed title" class="first"}}
+		{{> afQuickField name='connection' placeholder="Connection"}}
+		{{> afQuickField name='path' placeholder="Path"}}
+		{{> afQuickField name='verb' placeholder="Verb"}}
+		{{> afQuickField name='polling_interval' placeholder="Interval"}}
+		{{> afQuickField name='requestProcessor' placeholder="Feed Processors"}}
+		{{> afQuickField name='responseProcessor' placeholder="Feed Processors"}}
+  </div>
+  <button type="submit" class="btn btn-update">Create HTTP Feed</button>
+  {{/autoForm}}
+</template>
 
 <template name="updateHttpFeedForm">
-  <!-- {{> quickForm collection="HttpFeeds" id="updateHttpFeedForm" type="update" doc=this class="qkForm" buttonClasses="btn btn-update" buttonContent="Update HttpFeed" omitFields="public"}} -->
 	{{#autoForm collection="HTTPFeeds" id="updateHttpFeedForm" type="update" doc=this}}
 		<div id="required">
 			{{> afQuickField name='title' placeholder="HttpFeed title" class="first"}}
@@ -14,8 +26,8 @@
 			{{> afQuickField name='responseProcessor' placeholder="Feed Processors"}}
 		</div>
 		<div id="processing">
-			
+
 		</div>
-		<button type="submit" class="btn btn-update">Save HttpFeed</button>
+		<button type="submit" class="btn btn-update">Save HTTP Feed</button>
 	{{/autoForm}}
 </template>

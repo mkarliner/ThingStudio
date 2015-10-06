@@ -1,12 +1,3 @@
-<!--
-Outstanding
-1. Icon export
-2. Decide on collapsibility
-3. Center name & droparrow
-4. Flip arrow when collapsible is open
-5. Jumpiness when select is destroyed (occasionally)
-6. Reexport logo with flattened text
--->
 <template name="AppSideNav">
 	<ul id="slide-out" class="side-nav fixed">
 		<div class="section sb-profile">
@@ -27,8 +18,7 @@ Outstanding
 		<div class="divider"></div>
 		<div class="section">
 			<p class="section-header">Current App</p>
-			<!-- <li class="{{isActivePath regex='^\\/connections'}}"><a href="/connections"><i class="icon-ts-connection"></i><span>Connections</span></a></li>
-			<li class="{{isActivePath regex='^\\/connections'}}"><a href="/http_connections"><i class="icon-ts-connection"></i><span>HTTP Conns</span></a></li> -->
+			<!-- <li class="{{isActivePath regex='^\\/connections'}}"><a href="/http_connections"><i class="icon-ts-connection"></i><span>HTTP Conns</span></a></li> -->
 			<!-- <li class="{{isActivePath regex='^\\/connections'}}"><a href="/connections"><i class="icon-ts-connection"></i><span>Connections</span></a></li> -->
 			<li class="no-padding">
 				<ul class="collapsible collapsible-accordion">
@@ -65,8 +55,6 @@ Outstanding
 					</li>
 				</ul>
 			</li> -->
-			<!-- <li class="{{isActivePath regex='^\\/feeds'}}"><a href="/feeds"><i class="icon-ts-feeds"></i><span>Feeds</span></a></li>
-			<li class="{{isActivePath regex='^\\/http_feeds'}}"><a href="/http_feeds"><i class="icon-ts-feeds"></i><span>HTTP Feeds</span></a></li> -->
 			<li class="{{isActivePath regex='^\\/templates'}}"><a href="/templates"><i class="icon-ts-templates"></i><span>Templates</span></a></li>
 			<li class="{{isActivePath regex='^\\/themes'}}"><a href="/themes"><i class="material-icons">palette</i> Themes</a></li>
 		</div>
@@ -81,9 +69,8 @@ Outstanding
 		<div class="section help">
 			<p class="section-header">Help</p>
 			<ul class="collapsible">
-				<li class="{{isActivePath regex='^\\/chat'}}"><a href="/chat"><i class="material-icons">face</i> Chat {{#if newChats}}<span class="chat-count">{{numChats}}</span>{{/if}}</a>
-				</li>
-				<li class="{{isActivePath regex='^\\/support'}}"><a href="http://forum.thingstud.io" target="_blank"><i class="material-icons">forum</i> Forum</a></li>
+				<li class="{{isActivePath regex='^\\/chat'}}"><a href="/chat"><i class="material-icons">face</i> Chat {{#if newChats}}<span class="chat-count">{{numChats}}</span>{{/if}}</a></li>
+				<li class="{{isActivePath regex='^\\/forum'}}"><a href="http://forum.thingstud.io" target="_blank"><i class="material-icons">forum</i> Forum</a></li>
 				<li class="{{isActivePath regex='^\\/video-tutorials'}}"><a href="/tutorials"><i class="material-icons">video_library</i> Video Tutorials</a></li>
 				<li class="{{isActivePath regex='^\\/documentation|docs'}}"><a class="" href="/docs"><i class="material-icons">local_library</i> Documentation</a></li>
 				<li class="{{isActivePath regex='^\\/support'}}"><a href="/support"><i class="material-icons">email</i> Support</a></li>
