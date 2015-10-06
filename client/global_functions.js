@@ -86,14 +86,14 @@ RegisterFeedProcessor = function(name,  type, func) {
 
 var HTTPClock = 0;
 
-RegisterFeedProcessor("testReq", "HTTPRequest", function(app, conn, feed, message){
+RegisterFeedProcessor("JSONOut", "HTTPRequest", function(app, conn, feed, message){
 	console.log("testReq Proc", feed, message);
 	return ({
 		content: message
 	})
 });
 
-RegisterFeedProcessor("StdJSON", "HTTPResponse", function(app, conn, feed, error, result){
+RegisterFeedProcessor("JSONIn", "HTTPResponse", function(app, conn, feed, error, result){
 	console.log("RESPONSE: ", feed, error, result);
 	if(error) {
 		console.log("HRRPR: ", error.message );
