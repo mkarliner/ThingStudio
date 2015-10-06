@@ -21,7 +21,7 @@ $editorComment: #80ABD0;
 $alertOrange: #F5702E;
 $alertGreen: #9ED466;
 $alertGray: #979797;
-$appPadding: 35px;
+$appPadding: 25px;
 $statusActive: #7ED321;
 $materializeInputBorderInactive: 1px solid #E1E4E8;
 $materializeInputBorderActive: 1px solid #4AAFE2;
@@ -79,7 +79,7 @@ strong {
 }
 
 //Sidebar
-$sideNavWidth: 220px;
+$sideNavWidth: 200px;
 $darkBase: #353C51;
 $darkBaseText: #B2B7C4;
 $darkBaseBGHover: #424960;
@@ -164,8 +164,15 @@ body {
 // 	overflow-x: hidden;
 // }
 
-header, main, footer, nav.top-nav {
+main,
+nav.top-nav {
 	padding-left: $sideNavWidth;
+}
+
+header,
+footer {
+	padding-left: $appPadding + $sideNavWidth + 10;
+	padding-right: $appPadding;
 }
 
 a.hide-header {
@@ -178,10 +185,6 @@ a.hide-header {
 	}
 }
 
-header, footer {
-	padding-left: $appPadding + $sideNavWidth;
-	padding-right: $appPadding;
-}
 
 .clearfix:after { visibility: hidden; display: block; font-size: 0; content: " "; clear: both; height: 0; }
 .clearfix { display: inline-block; }
@@ -202,7 +205,17 @@ header, footer {
 	margin-right: auto;
 }
 
-input[type=text], input[type=password], input[type=email], input[type=url], input[type=time], input[type=date], input[type=datetime-local], input[type=tel], input[type=number], input[type=search], textarea.materialize-textarea {
+input[type=text],
+input[type=password],
+input[type=email],
+input[type=url],
+input[type=time],
+input[type=date],
+input[type=datetime-local],
+input[type=tel],
+input[type=number],
+input[type=search],
+textarea.materialize-textarea {
 	border-bottom: $materializeInputBorderInactive;
 	margin-bottom: 0;
 }
@@ -285,7 +298,7 @@ table.striped tbody tr:nth-child(odd) {
 ///////////////////////////////////////////////////////////////////////////////////////
 
 .side-nav {
-	width: 220px;
+	width: 200px;
 	font-family: $fwBook;
 	& a.collapsible-header {
 		margin: 0;
@@ -366,20 +379,23 @@ table.striped tbody tr:nth-child(odd) {
 
 .sb-profile {
 	padding-bottom: 0.2rem;
-	& a {
+	a {
 		display: inline;
 		padding: 0 8px;
 		line-height: 36px;
 	}
-	& img {
+	img {
 		margin-top: 10px;
 		margin-bottom: 5px;
 		border: $picBorder;
 		max-width: 84px;
 		max-height: auto;
 	}
-	& i {
+	i {
 		font-size: 2.2 * $fontSize;
+	}
+	.collapsible-header {
+		margin: 0;
 	}
 }
 
@@ -509,7 +525,7 @@ a.collapsible-header.no-pad {
 
 .logo-container {
 	@include fixedCenter;
-	width: 220px;
+	width: 200px;
 	bottom: 0px;
 	z-index: 999;
 	background-color: $darkBase;
@@ -762,7 +778,7 @@ a.view-full-debug {
 
 header {
 	padding-top: 25px;
-	padding-bottom: 25px;
+	padding-bottom: 0;
 	background-color: $white;
 }
 
@@ -896,7 +912,7 @@ tr.spacer.form-open td {
 }
 
 td:first-child, th:first-child {
-	padding-left: $appPadding;
+	padding-left: $appPadding + 10;
 }
 
 td:last-child, th:last-child {
@@ -1400,6 +1416,13 @@ pre.ace-cobalt .ace_comment {
 ///////////////////////////////////////////////////////////////////////////////////////
 
 // Common
+
+.new-list-item {
+	margin-top: -5px;
+	margin-left: 15px;
+	margin-bottom: 3px;
+}
+
 .btn-share {
 	background-color: $actionColor1;
 }
