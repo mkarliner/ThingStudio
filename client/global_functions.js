@@ -167,10 +167,12 @@ checkHTTPFeeds = function (){
 				// 	//console.log("CALLING: ", HTTPFeedProcessors[feed.processors[p]])
 				// 	HTTPFeedProcessors[feed.processors[p]](feed, error, result);
 				// }
-				var fp = FeedProcessors.findOne({type: "HTTPResponse", name: feed.responseProcessor});
-				//console.log("FP: ", fp, FeedProcessors.find().fetch());
-
-				fp.func(app, conn, feed, error, result);
+				console.log("FEEDDDD: ", feed)
+				for(var rpc=0; rpc<feed.responseProcessors.length; rpc++) {
+					var fp = FeedProcessors.findOne({type: "HTTPResponse", name: feed.responseProcessors[rpc]});
+					//console.log("FP: ", fp, FeedProcessors.find().fetch());
+					fp.func(app, conn, feed, error, result);
+				}
 			})
 		}
 	}
@@ -254,9 +256,11 @@ publish = function(feedName, message) {
 		console.log("HTTPCALL: ", feed.verb, url, options )
 		HTTP.call(feed.verb, url, options, function(error, result) {
 			console.log("HEV: ", error, result)
-			var rp = FeedProcessors.findOne({type: "HTTPResponse", name: feed.responseProcessor});
-			//console.log("FP: ", fp, FeedProcessors.find().fetch());
-			rp.func(app, conn, feed, error, result);
+			for(var rpc=0; rpc<feed.responseProcessors.length; rpc++) {
+				var fp = FeedProcessors.findOne({type: "HTTPResponse", name: feed.responseProcessors[rpc]});
+				//console.log("FP: ", fp, FeedProcessors.find().fetch());
+				fp.func(app, conn, feed, error, result);
+			}
 		})
 		break;
 	default:
