@@ -78,23 +78,23 @@ Schemas.HTTPFeed = new SimpleSchema({
 	
 	requestProcessor: {
 		type: String,
-		optional: true,
 		autoform: {
-			type: "selectize",
-			options: function(){
-				console.log("asdf", FeedProcessors.find({type: "HTTPRequest"}).fetch());
-				keys = FeedProcessors.find({type: "HTTPRequest"}).fetch();
-				options = keys.map(function(val, index, arr){
-					return {label: val.name, value: val.name};
-				})
-				return (options);
-			}
-		},
+					type: "selectize",
+					options: function(){
+						console.log("asdf", FeedProcessors.find({type: "HTTPRequest"}).fetch());
+						keys = FeedProcessors.find({type: "HTTPRequest"}).fetch();
+						options = keys.map(function(val, index, arr){
+							return {label: val.name, value: val.name};
+						})
+						return (options);
+					}
+				},
+	},	
+	responseProcessors: {
+		type: [String],
+		
 	},
-	
-	responseProcessor: {
-		type: String,
-		optional: true,
+	'responseProcessors.$': {
 		autoform: {
 			type: "selectize",
 			options: function(){
