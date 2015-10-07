@@ -39,7 +39,7 @@ Template.BreadcrumbsContent.helpers({
 		// This function sets the base of the breadcrumb
 		var routeName = Router.current().route.getName();
 		var routePath = Router.current().route.path();
-		var appPrefixRoutes = [ "MQTT Connections", "HTTP Connections", "Feeds", "MQTT Feeds", "HTTP Feeds", "Templates", "Themes", "Edit MQTT Feed", "Edit HTTP Feed", "Edit MQTT Connection", "Edit HTTP Connection", "Edit Template", "Safe Edit Template", "Edit Theme" ];
+		var appPrefixRoutes = [ "Connections", "MQTT Connections", "HTTP Connections", "Feeds", "MQTT Feeds", "HTTP Feeds", "Templates", "Themes", "Edit MQTT Feed", "Edit HTTP Feed", "Edit MQTT Connection", "Edit HTTP Connection", "Edit Template", "Safe Edit Template", "Edit Theme" ];
 		var nonDisplayRoutes = [ "Dashboard", "View Widget", "Edit App", "View Doc" ];
 		if ( _.contains( nonDisplayRoutes, routeName ) ) {
 			// Applies to: Dashboard, View Widget, Edit App

@@ -127,7 +127,16 @@ Router.route("/apps", {
 	}
 });
 
-Router.route("/mqtt-connections/:_id", {
+Router.route("/mqtt-connection/new", {
+	name: "New MQTT Connection",
+	controller: "IDEController",
+	action: function() {
+		renderYields(this, 'NewMQTTConnection');
+	}
+});
+
+
+Router.route("/mqtt-connection/:_id", {
 	name: "Edit MQTT Connection",
 	controller: "IDEController",
 	data: function() {
@@ -144,21 +153,15 @@ Router.route("/mqtt-connections/:_id", {
 	}
 });
 
-Router.route("/mqtt-connections", {
-	name: "MQTT Connections",
+Router.route("/http-connection/new", {
+	name: "New HTTP Connection",
 	controller: "IDEController",
 	action: function() {
-		if ( !this.ready() ) {
-			this.render("Loading", {
-				data: "Connections"
-			});
-		} else {
-			renderYields(this, 'Connections');
-		}
+		renderYields(this, 'NewHTTPConnection');
 	}
 });
 
-Router.route("/http-connections/:_id", {
+Router.route("/http-connection/:_id", {
 	name: "Edit HTTP Connection",
 	controller: "IDEController",
 	data: function() {
@@ -175,16 +178,16 @@ Router.route("/http-connections/:_id", {
 	}
 });
 
-Router.route("/http-connections", {
-	name: "HTTP Connections",
+Router.route("/connections", {
+	name: "Connections",
 	controller: "IDEController",
 	action: function() {
 		if ( !this.ready() ) {
 			this.render("Loading", {
-				data: "HTTP Connections"
+				data: "Connections"
 			});
 		} else {
-			renderYields(this, 'HTTPConnections');
+			renderYields(this, 'Connections');
 		}
 	}
 });
@@ -194,14 +197,6 @@ Router.route("/mqtt-feed/new", {
 	controller: "IDEController",
 	action: function() {
 		renderYields(this, 'NewMQTTFeed');
-	}
-});
-
-Router.route("/http-feed/new", {
-	name: "New HTTP Feed",
-	controller: "IDEController",
-	action: function() {
-		renderYields(this, 'NewHTTPFeed');
 	}
 });
 
@@ -219,6 +214,14 @@ Router.route("/mqtt-feed/:_id", {
 		} else {
 			renderYields(this, 'EditFeed');
 		}
+	}
+});
+
+Router.route("/http-feed/new", {
+	name: "New HTTP Feed",
+	controller: "IDEController",
+	action: function() {
+		renderYields(this, 'NewHTTPFeed');
 	}
 });
 
