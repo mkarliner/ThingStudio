@@ -1,5 +1,4 @@
 <template name="insertMqttFeedForm">
-  <!-- {{>quickForm collection="Feeds" id="insertFeedForm" type="insert" buttonClasses="glyphicon glyphicon-ok btn btn-default" buttonContent="Save" omitFields="public"}} -->
   {{#autoForm collection="Feeds" id="insertFeedForm" type="insert" }}
   <div id="required">
     {{> afQuickField name='title' placeholder="Feed title" class="first"}}
@@ -11,7 +10,6 @@
 </template>
 
 <template name="updateMqttFeedForm">
-  <!-- {{> quickForm collection="Feeds" id="updateFeedForm" type="update" doc=this class="qkForm" buttonClasses="btn btn-update" buttonContent="Update Feed" omitFields="public"}} -->
 	{{#autoForm collection="Feeds" id="updateFeedForm" type="update" doc=this}}
 		<div id="required">
 			{{> afQuickField name='title' placeholder="Feed title" class="first"}}
@@ -52,6 +50,6 @@
 				{{/if}}
 			</div>
 		</div>
-		<button type="submit" class="btn btn-update">Save Feed</button>
+		<button type="submit" class="btn btn-update">Save MQTT Feed</button>
 	{{/autoForm}}
 </template>

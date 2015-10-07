@@ -1,6 +1,6 @@
 Template.EditMqttConnectionBody.onRendered(function() {
 	$('ul.tabs').tabs();
-	$('.tooltipped').tooltip({delay: 50});
+	// $('.tooltipped').tooltip({delay: 50});
 });
 
 
@@ -10,7 +10,7 @@ Template.EditMqttConnectionHeader.helpers({
 	}
 });
 
-Template.EditMqttConnectionBody.helpers({	
+Template.EditMqttConnectionBody.helpers({
 	connection: function() {
 		Session.get("ConnectionStatus");
 		c = Connections.findOne();

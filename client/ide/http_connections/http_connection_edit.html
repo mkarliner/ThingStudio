@@ -1,10 +1,10 @@
-<template name="EditMqttConnectionHeader">
-	<h1 class="left">Edit MQTT Connection: {{title}}</h1>
+<template name="EditHttpConnectionHeader">
+	<h1 class="left">Edit HTTP Connection: {{title}}</h1>
 	<div class="clearfix"></div>
 </template>
 
-<template name="EditMqttConnectionBody">
-	{{#contentFor region="appHeader" template="EditMqttConnectionHeader"}}{{/contentFor}}
+<template name="EditHttpConnectionBody">
+	{{#contentFor region="appHeader" template="EditHttpConnectionHeader"}}{{/contentFor}}
 	<div class="top-row">
 		<div class="col s2 tabs-container">
 			<ul class="tabs">
@@ -14,6 +14,6 @@
 		<div class="clearfix"></div>
 	</div>
 	<div class="single-page-container" id="test1">
-		{{>updateMqttConnectionForm}}
+		{{>updateHttpConnectionForm}}
 	</div>
 </template>

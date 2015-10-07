@@ -54,6 +54,9 @@ Template.ConnectionsBody.helpers({
 			if (i === "host" || i === "port" || i === "protocol") {
 				result.push(i + ": " + this[i])
 			}
+      if (i === "username") {
+        result.push("authentication: true")
+      }
 		}
 		return result.join(", ");
 	},
@@ -63,12 +66,15 @@ Template.ConnectionsBody.helpers({
 			if (i === "host" || i === "port" || i === "protocol") {
 				result.push(i + ": " + this[i])
 			}
+      if (i === "username") {
+        result.push("authentication: true")
+      }
 		}
 		return result.join(", ");
 	},
-	log: function () {
-		console.log("in each, this is: ", this)
-	},
+	// log: function () {
+	// 	console.log("in each, this is: ", this)
+	// },
 	// Connection_status: function(){
 	// 	return Session.get("ConnectionStatus") ? "connected" : "disconnected";
 	// }

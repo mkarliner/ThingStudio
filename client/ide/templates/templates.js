@@ -37,7 +37,7 @@ Template.ScreensBody.helpers({
 		return Screens.find({$or:[{owner: Meteor.userId()}, {isWidget: false} ] });
 	},
 	owner: function() {
-		return 
+		return
 	},
 	publicscreens: function() {
 		return Screens.find({public: true})
@@ -72,7 +72,7 @@ Template.ScreensBody.helpers({
 InstantiateWidgets = function(){
 	//Instantiate all screens which are widgets
 	wdgts = Widgets.find().fetch();
-	console.log("Instantiating Widgets", wdgts);
+	// console.log("Instantiating Widgets", wdgts);
 	for(var s=0; s<wdgts.length; s++){
 		wgt = wdgts[s];
 		scr = Screens.findOne({_id: wgt.baseScreen});
@@ -82,7 +82,7 @@ InstantiateWidgets = function(){
 		if(Template[scr.title]) {
 			// console.log("Deleting: ", scr.title);
 			delete Template[scr.title]; //Remove the existing template.
-		}	
+		}
 		// console.log("Compiling ", scr.title);
 		compileTemplate(scr.title, scr.html, scr.js);
 		if(wgt.widgetType == "Web Component") {
@@ -95,6 +95,6 @@ InstantiateWidgets = function(){
 			}
 		}
 
-			
+
 	}
 }

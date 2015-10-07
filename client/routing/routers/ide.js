@@ -154,7 +154,7 @@ Router.route("/mqtt-connection/:_id", {
 });
 
 Router.route("/http-connection/new", {
-	name: "New Http Connection",
+	name: "New HTTP Connection",
 	controller: "IDEController",
 	action: function() {
 		renderYields(this, 'NewHttpConnection');
@@ -162,7 +162,7 @@ Router.route("/http-connection/new", {
 });
 
 Router.route("/http-connection/:_id", {
-	name: "Edit Http Connection",
+	name: "Edit HTTP Connection",
 	controller: "IDEController",
 	data: function() {
 		return HTTPConnections.findOne({_id: this.params._id});
