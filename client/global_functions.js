@@ -349,7 +349,7 @@ getAppTree = function(appId){
 	apps = [app._id];
 
 	if(baseAppId) {
-		console.log("Set system app to ", baseAppId)
+		// console.log("Set system app to ", baseAppId)
 		apps = [app._id, baseAppId];
 	} else {
 		console.log("NO SYSTEM APP DEFINED!!!!");
@@ -374,11 +374,11 @@ InitialiseApps = function(){
 	}
 	applist = getAppTree(capp._id);
 
-	console.log("Initialising Apps", applist);
+	// console.log("Initialising Apps", applist);
 	for(var a=0; a<applist.length; a++ ){
 		var app = Apps.findOne(applist[a]);
 		if(app && app.js) {
-			console.log("Initialising app ", app.title);
+			// console.log("Initialising app ", app.title);
 			eval(app.js);
 		}
 	}

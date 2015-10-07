@@ -71,3 +71,31 @@
 // 		}
 // 	},
 // });
+
+// Router.route("/mqtt-connections", {
+// 	name: "MQTT Connections",
+// 	controller: "IDEController",
+// 	action: function() {
+// 		if ( !this.ready() ) {
+// 			this.render("Loading", {
+// 				data: "Connections"
+// 			});
+// 		} else {
+// 			renderYields(this, 'Connections');
+// 		}
+// 	}
+// });
+
+// Router.route("/http-connections", {
+// 	name: "HTTP Connections",
+// 	controller: "IDEController",
+// 	action: function() {
+// 		if ( !this.ready() ) {
+// 			this.render("Loading", {
+// 				data: "HTTP Connections"
+// 			});
+// 		} else {
+// 			renderYields(this, 'HTTPConnections');
+// 		}
+// 	}
+// });

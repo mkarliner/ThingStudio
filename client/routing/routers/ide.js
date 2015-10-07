@@ -127,7 +127,16 @@ Router.route("/apps", {
 	}
 });
 
-Router.route("/mqtt-connections/:_id", {
+Router.route("/mqtt-connection/new", {
+	name: "New MQTT Connection",
+	controller: "IDEController",
+	action: function() {
+		renderYields(this, 'NewMqttConnection');
+	}
+});
+
+
+Router.route("/mqtt-connection/:_id", {
 	name: "Edit MQTT Connection",
 	controller: "IDEController",
 	data: function() {
@@ -139,13 +148,38 @@ Router.route("/mqtt-connections/:_id", {
 				data: "Connection"
 			});
 		} else {
-			renderYields(this, 'EditSingleConnection');
+			renderYields(this, 'EditMqttConnection');
 		}
 	}
 });
 
-Router.route("/mqtt-connections", {
-	name: "MQTT Connections",
+Router.route("/http-connection/new", {
+	name: "New HTTP Connection",
+	controller: "IDEController",
+	action: function() {
+		renderYields(this, 'NewHttpConnection');
+	}
+});
+
+Router.route("/http-connection/:_id", {
+	name: "Edit HTTP Connection",
+	controller: "IDEController",
+	data: function() {
+		return HTTPConnections.findOne({_id: this.params._id});
+	},
+	action: function() {
+		if ( !this.ready() ) {
+			this.render("Loading", {
+				data: "HTTPConnection"
+			});
+		} else {
+			renderYields(this, 'EditHttpConnection');
+		}
+	}
+});
+
+Router.route("/connections", {
+	name: "Connections",
 	controller: "IDEController",
 	action: function() {
 		if ( !this.ready() ) {
@@ -158,50 +192,11 @@ Router.route("/mqtt-connections", {
 	}
 });
 
-Router.route("/http-connections/:_id", {
-	name: "Edit HTTP Connection",
-	controller: "IDEController",
-	data: function() {
-		return HTTPConnections.findOne({_id: this.params._id});
-	},
-	action: function() {
-		if ( !this.ready() ) {
-			this.render("Loading", {
-				data: "HTTPConnection"
-			});
-		} else {
-			renderYields(this, 'EditSingleHTTPConnection');
-		}
-	}
-});
-
-Router.route("/http-connections", {
-	name: "HTTP Connections",
-	controller: "IDEController",
-	action: function() {
-		if ( !this.ready() ) {
-			this.render("Loading", {
-				data: "HTTP Connections"
-			});
-		} else {
-			renderYields(this, 'HTTPConnections');
-		}
-	}
-});
-
 Router.route("/mqtt-feed/new", {
 	name: "New MQTT Feed",
 	controller: "IDEController",
 	action: function() {
-		renderYields(this, 'NewMQTTFeed');
-	}
-});
-
-Router.route("/http-feed/new", {
-	name: "New HTTP Feed",
-	controller: "IDEController",
-	action: function() {
-		renderYields(this, 'NewHTTPFeed');
+		renderYields(this, 'NewMqttFeed');
 	}
 });
 
@@ -217,8 +212,16 @@ Router.route("/mqtt-feed/:_id", {
 				data: "Feed"
 			});
 		} else {
-			renderYields(this, 'EditFeed');
+			renderYields(this, 'EditMqttFeed');
 		}
+	}
+});
+
+Router.route("/http-feed/new", {
+	name: "New HTTP Feed",
+	controller: "IDEController",
+	action: function() {
+		renderYields(this, 'NewHttpFeed');
 	}
 });
 

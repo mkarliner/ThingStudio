@@ -1,8 +1,8 @@
-Template.EditFeedBody.onRendered(function() {
+Template.EditMqttFeedBody.onRendered(function() {
     $('ul.tabs').tabs();
 });
 
-Template.EditFeedHeader.helpers({
+Template.EditMqttFeedHeader.helpers({
 	thisfeed: function() {
 		return this.title;
 	},

@@ -5,7 +5,7 @@ Template.FeedsHeader.rendered = function() {
       constrain_width: false, // Does not change width of dropdown to that of the activator
       hover: false, // Activate on hover
       gutter: 15, // Spacing from edge
-      belowOrigin: true // Displays dropdown below the button
+      belowOrigin: false // Displays dropdown below the button
   });
 };
 

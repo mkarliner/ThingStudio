@@ -1,3 +1,3 @@
-Template.NewHTTPFeedBody.onRendered(function() {
+Template.NewHttpFeedBody.onRendered(function() {
     $('ul.tabs').tabs();
 });
