@@ -1,0 +1,15 @@
+<template name="insertHttpConnectionForm">
+
+</template>
+
+<template name="updateHttpConnectionForm">
+  {{#autoForm collection="HTTPConnections" id="updateHTTPConnectionForm" type="update" doc=this buttonContent="Save"}}
+    {{> afQuickField name='title' placeholder="HTTPConnection title" class="first"}}
+    {{> afQuickField name='host' placeholder="Hostname"}}
+    {{> afQuickField name='port' placeholder="Port"}}
+    {{> afQuickField name='protocol' placeholder="Protocol"}}
+    {{> afQuickField name='username' placeholder="Username (optional)"}}
+    {{> afQuickField name='password' placeholder="Password (optional)"}}
+    <button type="submit" class="btn btn-update">Save HTTP Connection</button>
+  {{/autoForm}}
+</template>

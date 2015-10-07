@@ -1,21 +1,21 @@
-<template name="EditFeedHeader">
+<template name="EditHttpFeedHeader">
 	<h1 class="left">Edit Feed: {{title}}</h1>
 	<div class="clearfix"></div>
 	<!-- <a class="header-action-1 clearfix" href="/connections">Back to Connections</a> -->
 </template>
 
-<template name="EditFeedBody">
-	{{#contentFor region="appHeader" template="EditFeedHeader"}}{{/contentFor}}
+<template name="EditHttpFeedBody">
+	{{#contentFor region="appHeader" template="EditHttpFeedHeader"}}{{/contentFor}}
 	<div class="top-row">
 		<div class="col s5 tabs-container">
 			<ul class="tabs">
 				<li class="tab"><a class="active" href="#required">Required Attributes</a></li>
-				<li class="tab"><a href="#processing">Feed Processing</a></li>
+				<li class="tab"><a href="#processing">HttpFeed Processing</a></li>
 			</ul>
 		</div>
 		<div class="clearfix"></div>
 	</div>
 	<div class="single-page-container">
-		{{> updateMqttFeedForm}}
+		{{> updateHttpFeedForm}}
 	</div>
 </template>

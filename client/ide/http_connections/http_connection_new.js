@@ -1,16 +1,16 @@
-Template.EditSingleHTTPConnectionBody.onRendered(function() {
+Template.EditHttpConnectionBody.onRendered(function() {
 	$('ul.tabs').tabs();
 	$('.tooltipped').tooltip({delay: 50});
 });
 
 
-Template.EditSingleHTTPConnectionHeader.helpers({
+Template.EditHttpConnectionHeader.helpers({
 	http_connectionName: function() {
 		console.log(this);
 	}
 });
 
-Template.EditSingleHTTPConnectionBody.helpers({	
+Template.EditHTTPConnectionBody.helpers({
 	http_connection: function() {
 		Session.get("HTTPConnectionStatus");
 		c = HTTPConnections.findOne();

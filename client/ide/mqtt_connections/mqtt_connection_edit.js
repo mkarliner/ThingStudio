@@ -1,16 +1,16 @@
-Template.EditSingleConnectionBody.onRendered(function() {
+Template.EditMqttConnectionBody.onRendered(function() {
 	$('ul.tabs').tabs();
 	$('.tooltipped').tooltip({delay: 50});
 });
 
 
-Template.EditSingleConnectionHeader.helpers({
+Template.EditMqttConnectionHeader.helpers({
 	connectionName: function() {
 		console.log(this);
 	}
 });
 
-Template.EditSingleConnectionBody.helpers({	
+Template.EditMqttConnectionBody.helpers({	
 	connection: function() {
 		Session.get("ConnectionStatus");
 		c = Connections.findOne();

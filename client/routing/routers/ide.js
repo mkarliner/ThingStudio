@@ -131,7 +131,7 @@ Router.route("/mqtt-connection/new", {
 	name: "New MQTT Connection",
 	controller: "IDEController",
 	action: function() {
-		renderYields(this, 'NewMQTTConnection');
+		renderYields(this, 'NewMqttConnection');
 	}
 });
 
@@ -148,21 +148,21 @@ Router.route("/mqtt-connection/:_id", {
 				data: "Connection"
 			});
 		} else {
-			renderYields(this, 'EditSingleConnection');
+			renderYields(this, 'EditMqttConnection');
 		}
 	}
 });
 
 Router.route("/http-connection/new", {
-	name: "New HTTP Connection",
+	name: "New Http Connection",
 	controller: "IDEController",
 	action: function() {
-		renderYields(this, 'NewHTTPConnection');
+		renderYields(this, 'NewHttpConnection');
 	}
 });
 
 Router.route("/http-connection/:_id", {
-	name: "Edit HTTP Connection",
+	name: "Edit Http Connection",
 	controller: "IDEController",
 	data: function() {
 		return HTTPConnections.findOne({_id: this.params._id});
@@ -173,7 +173,7 @@ Router.route("/http-connection/:_id", {
 				data: "HTTPConnection"
 			});
 		} else {
-			renderYields(this, 'EditSingleHTTPConnection');
+			renderYields(this, 'EditHttpConnection');
 		}
 	}
 });
@@ -196,7 +196,7 @@ Router.route("/mqtt-feed/new", {
 	name: "New MQTT Feed",
 	controller: "IDEController",
 	action: function() {
-		renderYields(this, 'NewMQTTFeed');
+		renderYields(this, 'NewMqttFeed');
 	}
 });
 
@@ -212,7 +212,7 @@ Router.route("/mqtt-feed/:_id", {
 				data: "Feed"
 			});
 		} else {
-			renderYields(this, 'EditFeed');
+			renderYields(this, 'EditMqttFeed');
 		}
 	}
 });
@@ -221,7 +221,7 @@ Router.route("/http-feed/new", {
 	name: "New HTTP Feed",
 	controller: "IDEController",
 	action: function() {
-		renderYields(this, 'NewHTTPFeed');
+		renderYields(this, 'NewHttpFeed');
 	}
 });
 

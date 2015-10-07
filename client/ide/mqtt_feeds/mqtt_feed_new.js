@@ -1,4 +1,4 @@
-Template.NewMQTTFeedBody.onRendered(function() {
+Template.NewMqttFeedBody.onRendered(function() {
     $('ul.tabs').tabs();
 });
 

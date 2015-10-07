@@ -1,0 +1,19 @@
+<template name="EditMqttConnectionHeader">
+	<h1 class="left">Edit Connection: {{title}}</h1>
+	<a class="header-action-1 clearfix" href="/connections">Back to Connections</a>
+</template>
+
+<template name="EditMqttConnectionBody">
+	{{#contentFor region="appHeader" template="EditMqttConnectionHeader"}}{{/contentFor}}
+	<div class="top-row">
+		<div class="col s2 tabs-container">
+			<ul class="tabs">
+				<li class="tab col s3"><a class="active" href="#test1">Connection Info</a></li>
+			</ul>
+		</div>
+		<div class="clearfix"></div>
+	</div>
+	<div class="single-page-container" id="test1">
+		{{>updateMqttConnectionForm}}
+	</div>
+</template>

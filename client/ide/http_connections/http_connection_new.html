@@ -1,0 +1,25 @@
+<!-- <template name="HTTPConnection">
+		{{#with http_connection}}
+			{{>updateHTTPConnectionForm}}
+		{{/with}}
+</template> -->
+
+<template name="EditHttpConnectionHeader">
+	<h1 class="left">Edit HTTP Connection: {{title}}</h1>
+	<!-- <a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>Not Active</a> -->
+	<!-- <a class="header-action-1 clearfix" href="/http_connections">Back to HTTPConnections</a> -->
+</template>
+
+<template name="EditHttpConnectionBody">
+	<div class="top-row">
+		<div class="col s2 tabs-container">
+			<ul class="tabs">
+				<li class="tab col s3"><a class="active" href="#test1">HTTP Connection Info</a></li>
+			</ul>
+		</div>
+		<div class="clearfix"></div>
+	</div>
+	<div class="single-page-container" id="test1">
+		{{>updateHttpConnectionForm}}
+	</div>
+</template>
