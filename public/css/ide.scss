@@ -1545,6 +1545,8 @@ button.btn-plus, {
 .card .card-content .card-title, .card .card-reveal .card-title {
 	color: $headerColor;
 	line-height: 24px;
+	display: block;
+	margin-bottom: 15px;
 }
 
 .card .card-title {
