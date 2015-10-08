@@ -58,7 +58,7 @@ Template.WidgetList.helpers({
 	screenInstance: function(){
 		scr = Screens.findOne({_id: this.baseScreen});
 		return scr.title;
-		
+
 	},
 	dummyData: function(){
 		dd = {}
@@ -98,14 +98,13 @@ Template.WidgetsHeader.events({
 	}
 });
 
-Template.WidgetsNewItem.events({
-	"click .table-cancel-new": function(e, tmpl) {
-		e.preventDefault();
-		menuOps();
-	},
-	"click .divider-decoration": function(e, tmpl) {
-		e.preventDefault();
-		menuOps();
-	}
-});
-
+// Template.WidgetsNewItem.events({
+// 	"click .table-cancel-new": function(e, tmpl) {
+// 		e.preventDefault();
+// 		menuOps();
+// 	},
+// 	"click .divider-decoration": function(e, tmpl) {
+// 		e.preventDefault();
+// 		menuOps();
+// 	}
+// });

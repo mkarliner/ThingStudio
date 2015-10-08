@@ -1,0 +1,18 @@
+<template name="NewAppHeader">
+	<h1 class="left">Create New App</h1>
+	<div class="clearfix"></div>
+</template>
+
+<template name="NewAppBody">
+  <div class="top-row">
+    <div class="col s2 tabs-container">
+      <ul class="tabs">
+        <li class="tab"><a href="#template-title">App Title</a></li>
+      </ul>
+    </div>
+    <div class="clearfix"></div>
+  </div>
+  <div class="single-page-container">
+    {{> insertAppForm}}
+  </div>
+</template>

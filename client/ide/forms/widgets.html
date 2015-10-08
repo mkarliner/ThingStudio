@@ -1,8 +1,16 @@
+<template name="insertWidgetForm">
+	<div id="template-title">
+		{{#autoForm collection="Widgets" id="insertWidgetForm" type="insert" }}
+			{{> afQuickField name="title" class="centerField"}}
+      {{> afQuickField name="baseScreen" class="centerField"}}
+			<button type="submit" class="btn btn-update right">Create New Widget</button>
+		{{/autoForm}}
+	</div>
+</template>
+
 <template name="updatdddeWidgetForm">
   {{> quickForm collection="Widgets" class="app-detail" id="updateWidgetForm" type="update" doc=this class="qkForm" buttonClasses="glyphicon glyphicon-ok btn btn-default btn-tick" buttonContent="Save" }}
 </template>
-
-
 
 <template name="updateWidgetForm">
 	{{#autoForm collection="Widgets" class="qkForm"  id="updateAppForm" type="update" doc=this omitFields="" buttonContent="Save Widget"}}
@@ -11,7 +19,7 @@
 
 		<p class="fwHeavy">Base Screen</p>
 		{{> afQuickField name='baseScreen'}}
-		
+
 		<p class="fwHeavy">Parameters</p>
 		{{> afQuickField name='parameters'}}
 

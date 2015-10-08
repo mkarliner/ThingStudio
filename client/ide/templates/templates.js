@@ -9,24 +9,24 @@
 //   });
 // };
 
-Template.ScreensHeader.events({
-	"click .header-action-1": function(e, tmpl) {
-		e.preventDefault();
-		menuOps();
-		$('.add-new-item select').material_select();
-	}
-});
-
-Template.ScreensNewItem.events({
-	"click .table-cancel-new": function(e, tmpl) {
-		e.preventDefault();
-		menuOps();
-	},
-	"click .divider-decoration": function(e, tmpl) {
-		e.preventDefault();
-		menuOps();
-	}
-});
+// Template.ScreensHeader.events({
+// 	"click .header-action-1": function(e, tmpl) {
+// 		e.preventDefault();
+// 		menuOps();
+// 		$('.add-new-item select').material_select();
+// 	}
+// });
+//
+// Template.ScreensNewItem.events({
+// 	"click .table-cancel-new": function(e, tmpl) {
+// 		e.preventDefault();
+// 		menuOps();
+// 	},
+// 	"click .divider-decoration": function(e, tmpl) {
+// 		e.preventDefault();
+// 		menuOps();
+// 	}
+// });
 
 Template.ScreensBody.created = function(){
 	//InstantiateWidgets();

@@ -1,7 +1,7 @@
 <template name="AppsHeader">
 	<h1 class="left">My Apps</h1>
-	<!-- <a href="#" class="btn right header-action-2"><span class="ha2-status {{meteor_status}}"></span>{{curr_app_name}}</a> -->
-	<a class="header-action-1 clearfix" href="#">Create a new app</a>
+	<a class='btn btn-floating waves-effect waves-light ts-green new-list-item' href="{{pathFor 'New App'}}"><i class="material-icons">add</i></a>
+	<div class="clearfix"></div>
 </template>
 
 <template name="AppList">
@@ -40,7 +40,6 @@
 <template name="AppsBody">
 	{{> autoformModals}}
 	{{#contentFor region="appHeader" template="AppsHeader"}}{{/contentFor}}
-	{{> AppsNewItem}}
 	<div class="top-row">
 		<div class="col s2 tabs-container">
 			<ul class="tabs">

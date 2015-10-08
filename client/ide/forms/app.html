@@ -1,3 +1,13 @@
+<template name="insertAppForm">
+	<div id="template-title">
+		{{#autoForm collection="Apps" id="insertAppForm" type="insert" }}
+			{{> afQuickField name="title" class="centerField"}}
+			<button type="submit" class="btn btn-update right">Create New App</button>
+		{{/autoForm}}
+	</div>
+</template>
+
+
 <template name="updateAppsForm">
 	{{#autoForm collection="Apps" class="app-detail" id="updateAppForm" type="update" doc=this omitFields="ancestor" buttonContent="Save Application"}}
 		<p><span class="fwHeavy">Access Details</span> &mdash; Control whether other users can access this application, and various publishing options</p>

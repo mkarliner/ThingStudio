@@ -1,7 +1,7 @@
 <template name="WidgetsHeader">
 	<h1 class="left">Widgets</h1>
-	<!-- <a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>Animate Widgets</a> -->
-	<a class="header-action-1 clearfix" href="#">Create a new widget</a>
+	<a class='btn btn-floating waves-effect waves-light ts-green new-list-item' href="{{pathFor 'New Widget'}}"><i class="material-icons">add</i></a>
+	<div class="clearfix"></div>
 </template>
 
 <template name="WidgetList">
@@ -57,7 +57,6 @@
 <template name="WidgetsBody">
 	{{> autoformModals}}
 	{{#contentFor region="appHeader" template="WidgetsHeader"}}{{/contentFor}}
-	{{> WidgetsNewItem}}
 	<div class="top-row">
 		<div class="col s9 tabs-container">
 			<ul class="tabs">
@@ -93,7 +92,7 @@
 	</div>
 </template>
 
-<template name="WidgetsNewItem">
+<!-- <template name="WidgetsNewItem">
 	<div class="add-new-item new-widget">
 		{{#autoForm collection="Widgets" id="insertItemForm" type="insert"}}
 			<table>
@@ -112,7 +111,7 @@
 			{{> NewItemDivider}}
 		{{/autoForm}}
 	</div>
-</template>
+</template> -->
 
 <template name="WidgetsTableWidths">
 	<colgroup>
