@@ -99,3 +99,31 @@
 // 		}
 // 	}
 // });
+
+// Router.route("/templates/:_id", {
+// 	name: "View Template",
+// 	controller: "IDEController",
+// 	action: function() {
+// 		if ( !this.ready() ) {
+// 			this.render("Loading", {
+// 				data: "Template"
+// 			});
+// 		} else {
+// 			renderYields(this, 'SingleScreen');
+// 		}
+// 	}
+// });
+
+// Router.route("/people/:username", {
+// 	name: "People",
+// 	controller: "IDEController",
+// 	action: function() {
+// 		if ( !this.ready() ) {
+// 			this.render("Loading", {
+// 				data: "Profile"
+// 			});
+// 		} else {
+// 			renderYields(this, 'People');
+// 		}
+// 	}
+// })

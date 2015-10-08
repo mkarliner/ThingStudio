@@ -263,6 +263,14 @@ Router.route("/feeds", {
 	}
 });
 
+Router.route("/template/new", {
+	name: "New Template",
+	controller: "IDEController",
+	action: function() {
+		renderYields(this, 'NewScreen');
+	}
+});
+
 Router.route("/templates/:_id/edit", {
 	name: "Edit Template",
 	controller: "IDEController",
@@ -316,20 +324,6 @@ Router.route("/templates/:_id/safeedit", {
 			});
 		} else {
 			renderYields(this, 'EditScreen');
-		}
-	}
-});
-
-Router.route("/templates/:_id", {
-	name: "View Template",
-	controller: "IDEController",
-	action: function() {
-		if ( !this.ready() ) {
-			this.render("Loading", {
-				data: "Template"
-			});
-		} else {
-			renderYields(this, 'SingleScreen');
 		}
 	}
 });
@@ -535,20 +529,6 @@ Router.route("/support", {
 		}
 	},
 });
-
-Router.route("/people/:username", {
-	name: "People",
-	controller: "IDEController",
-	action: function() {
-		if ( !this.ready() ) {
-			this.render("Loading", {
-				data: "Profile"
-			});
-		} else {
-			renderYields(this, 'People');
-		}
-	}
-})
 
 Router.route("/chat", {
 	name: "Chat",

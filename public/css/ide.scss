@@ -160,19 +160,14 @@ body {
 	position: relative;
 }
 
-// .outerist {
-// 	overflow-x: hidden;
-// }
-
-main,
-nav.top-nav {
+main {
 	padding-left: $sideNavWidth;
 }
 
 header,
 footer {
-	padding-left: $appPadding + $sideNavWidth + 10;
-	padding-right: $appPadding;
+	padding-left: $appPadding + $sideNavWidth;
+	padding-right: $appPadding - 10;
 }
 
 a.hide-header {
@@ -225,7 +220,11 @@ input[type=text]:focus:not([readonly]), input[type=password]:focus:not([readonly
 }
 
 h2 {
+	font-size: 1.7em;
+	font-weight: 400;
 	color: $baseText;
+	line-height: 1.5em;
+	font-family: $fwHeavy;
 }
 
 .h2-details {
@@ -547,6 +546,7 @@ nav.top-nav {
 	border-bottom: $navBorder;
 	box-shadow: none;
 	font-family: $fwLight;
+	padding-left: $sideNavWidth + 10;
 	& a {
 		color: $baseText;
 		font-size: 1.2 * $fontSize;
@@ -786,7 +786,7 @@ h1 {
 	font-size: 2.25 * $fontSize;
 	font-family: $fwBook;
 	color: $headerColor;
-	margin: 0;
+	margin: 0 0 6px;
 }
 
 a.header-action-1 {
@@ -912,11 +912,11 @@ tr.spacer.form-open td {
 }
 
 td:first-child, th:first-child {
-	padding-left: $appPadding + 10;
+	padding-left: $appPadding;
 }
 
 td:last-child, th:last-child {
-	padding-right: $appPadding;
+	padding-right: $appPadding - 10;
 }
 
 td.dropdown-td {
@@ -1074,7 +1074,7 @@ table, .single-page-container {
 }
 
 .feeds-list-action {
-	width: 94px;
+	width: 84px;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -1218,6 +1218,7 @@ h4.modal-title {
 
 .row .tabs-container {
 	padding-left: 0;
+	margin-top: 2px;
 }
 
 .tabs .tab {
@@ -1233,7 +1234,7 @@ h4.modal-title {
 }
 
 .tabs .indicator {
-	background-color: $actionColor1;
+	background-color: $updateButton;
 	height: 3px;
 }
 
@@ -1424,7 +1425,6 @@ pre.ace-cobalt .ace_comment {
 .new-list-item {
 	margin-top: -5px;
 	margin-left: 20px;
-	margin-bottom: 3px;
 }
 
 .btn-share {
@@ -2068,25 +2068,25 @@ footer {
 
 @media screen and (min-width: 900px) {
 	.feeds-list-action {
-		width: 83px;
+		width: 73px;
 	}
 }
 
 @media screen and (min-width: 1024px) {
 	.feeds-list-action {
-		width: 80px;
+		width: 70px;
 	}
 }
 
 @media screen and (min-width: 1200px) {
 	.feeds-list-action {
-		width: 78px;
+		width: 68px;
 	}
 }
 
 @media screen and (min-width: 1300px) {
 	.feeds-list-action {
-		width: 77px;
+		width: 67px;
 	}
 }
 
