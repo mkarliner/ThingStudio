@@ -1,13 +1,13 @@
 <template name="FeedsHeader">
 	<h1 class="left">Feeds</h1>
 	<!-- Dropdown Trigger -->
- <a class='dropdown-button btn btn-floating waves-effect waves-light ts-green new-list-item' href='#' data-activates='dropdown2'><i class="material-icons">add</i></a>
+	<a class='dropdown-button btn btn-floating waves-effect waves-light ts-green new-list-item' href='#' data-activates='dropdown2'><i class="material-icons">add</i></a>
 
- <!-- Dropdown Structure -->
- <ul id='dropdown2' class='dropdown-content'>
-	 <li><a href="{{pathFor 'New MQTT Feed'}}">New MQTT Feed</a></li>
-	 <li><a href="{{pathFor 'New HTTP Feed'}}">New HTTP Feed</a></li>
- </ul>
+	<!-- Dropdown Structure -->
+	<ul id='dropdown2' class='dropdown-content'>
+		<li><a href="{{pathFor 'New MQTT Feed'}}">New MQTT Feed</a></li>
+		<li><a href="{{pathFor 'New HTTP Feed'}}">New HTTP Feed</a></li>
+	</ul>
 	<div class="clearfix"></div>
 </template>
 
@@ -43,8 +43,8 @@
 
 <template name="FeedsTableWidths">
 	<colgroup>
-		<col style="width: 12%;">
-		<col style="width: 15%;">
+		<col style="width: 11%;">
+		<col style="width: 16%;">
 		<col style="width: 43%;">
 		<col class="feeds-list-action">
 	</colgroup>

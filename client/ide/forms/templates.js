@@ -13,6 +13,10 @@
 // 	// $('span.caret').not($('.select-wrapper span.caret')).remove();
 // });
 
+Template.insertScreenForm.onRendered(function() {
+	$('ul.tabs').tabs();
+});
+
 Template.updateScreenForm.onRendered(function() {
 	$('ul.tabs').tabs();
 });

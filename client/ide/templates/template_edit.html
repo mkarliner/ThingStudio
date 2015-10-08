@@ -1,11 +1,26 @@
 <template name="EditScreenHeader">
 	<h1 class="left">Edit Template: {{title}}</h1>
 	<div class="clearfix"></div>
-	<!-- <a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>Not Active</a> -->
-	<!-- <a class="header-action-1 clearfix" href="{{pathFor 'View Template'}}">View this template</a> -->
 </template>
 
 <template name="EditScreenBody">
 	{{{accessStatus}}}
-	{{> updateScreenForm}}
+	<div class="top-row">
+		<div class="col s6 tabs-container">
+			<ul class="tabs">
+				<li class="tab"><a href="#html">HTML</a></li>
+				<li class="tab" id="jstab"><a href="#js">JavaScript</a></li>
+				{{#unless safeEdit}}
+					<li class="tab"><a href="#preview">Preview</a></li>
+				{{/unless}}
+				<li class="tab"><a href="#log">Log</a></li>
+				<li class="tab"><a href="#properties">Properties</a></li>
+				<!-- <li class="tab"><a href="#css">CSS</a></li> -->
+			</ul>
+		</div>
+		<div class="clearfix"></div>
+	</div>
+	<div class="single-page-container">
+		{{> updateScreenForm}}
+	</div>
 </template>

@@ -64,6 +64,8 @@ Schemas.Screen = new SimpleSchema({
 	html: {
 		label: " ",
 		type: String,
+		defaultValue: '',
+		optional: true,
 		autoform: {
 			rows: 10,
 	        afFieldInput: {
@@ -151,7 +153,7 @@ Schemas.Screen = new SimpleSchema({
 	// 	defaultValue: false
 	// }
 //
-	
+
 });
 
 Screens.before.insert(function(userId, doc) {
@@ -164,7 +166,7 @@ Screens.before.insert(function(userId, doc) {
 			console.log("Attempt to create connection in someone else's app.")
 			return false;
 		}
-	} 
+	}
 });
 
 
@@ -191,7 +193,7 @@ Screens.after.update(function(userId, doc) {
 	}
 	if(Meteor.isServer) {
 		SysLogs.upsert({event: "ScreenUpdate", id: doc._id},
-		{$set: 
+		{$set:
 				{
 					event: "ScreenUpdate",
 					title: doc.title,
@@ -200,7 +202,7 @@ Screens.after.update(function(userId, doc) {
 					appId: doc.appId,
 					owner: doc._owner,
 				},
-			$inc: 
+			$inc:
 				{
 					count: 1
 				}
@@ -208,8 +210,11 @@ Screens.after.update(function(userId, doc) {
 	}
 });
 
-
-
+Screens.after.insert(function (userId, doc) {
+	if(Meteor.isClient){
+		Router.go('Edit Template', {_id: doc._id});
+	}
+})
 
 Screens.attachSchema(Schemas.Screen);
 
@@ -224,5 +229,3 @@ Screens.allow({
 		return (userId && doc.owner === userId || isAdmin(userId));
 	}
 });
-
-
