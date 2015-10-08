@@ -145,7 +145,7 @@ Schemas.App = new SimpleSchema({
 	// 	type: Boolean,
 	// 	defaultValue: false
 	// }
-	
+
 });
 
 Apps.before.remove(function(userId, doc) {
@@ -160,7 +160,8 @@ Apps.before.remove(function(userId, doc) {
 
 Apps.after.insert(function(userId, doc) {
 	if(Meteor.isClient) {
-		changeActiveApp(doc);
+		changeActiveApp(doc._id);
+		Router.go('Edit App', {_id: doc._id});
 	}
 });
 

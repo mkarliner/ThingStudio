@@ -95,6 +95,14 @@ Router.route("/credentials", {
 	}
 });
 
+Router.route("/app/new", {
+	name: "New App",
+	controller: "IDEController",
+	action: function() {
+		renderYields(this, 'NewApp');
+	}
+});
+
 Router.route("/apps/:_id/", {
 	name: "Edit App",
 	controller: "IDEController",
@@ -342,7 +350,13 @@ Router.route("/templates", {
 	}
 });
 
-
+Router.route("/widget/new", {
+	name: "New Widget",
+	controller: "IDEController",
+	action: function() {
+		renderYields(this, 'NewWidget');
+	}
+});
 
 Router.route("/widgets/:_id/edit", {
 	name: "Edit Widget",

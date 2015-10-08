@@ -79,7 +79,7 @@ Schemas.Widget = new SimpleSchema({
 	baseScreen: {
 		type: String,
 		autoform: {
-			type: "selectize", 
+			type: "selectize",
 			options: function(){
 				scrs = Screens.find({}, {title: 1}).fetch();
 				options = scrs.map(function(ele, idx, arry){
@@ -127,7 +127,7 @@ Schemas.Widget = new SimpleSchema({
 	// 	defaultValue: false
 	// }
 //
-	
+
 });
 
 Widgets.before.insert(function(userId, doc) {
@@ -162,6 +162,17 @@ Widgets.after.update(function(userId, doc) {
 	}
 });
 
+Widgets.after.insert(function (userId, doc) {
+	if(Meteor.isClient){
+		// Router.go('Edit Template', {_id: doc._id});
+		scr = Screens.findOne({_id: doc.baseScreen});
+		widgetedit = '/templates/' + scr._id + '/edit#properties';
+		console.log(widgetedit)
+		Router.go(widgetedit)
+	}
+})
+
+
 Widgets.attachSchema(Schemas.Widget);
 
 Widgets.allow({
@@ -175,5 +186,3 @@ Widgets.allow({
 		return (userId && doc.owner === userId || isAdmin(userId));
 	}
 });
-
-

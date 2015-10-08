@@ -873,6 +873,10 @@ table {
 	padding-top: 1em;
 }
 
+.row .col {
+	padding: 0 0.6rem;
+}
+
 thead {
 	border-bottom: $navBorder;
 }
@@ -1525,7 +1529,7 @@ button.btn-plus, {
 
 .single-page-container.widgets, .single-page-container.apps {
 	@include transition(padding-top, 0.1s, cubic-bezier(0.4, 0.0, 0.2, 1));
-	padding-top: 1.7em;
+	padding-top: 1.15em;
 	will-change: padding-top;
 	padding-left: $appPadding - 10px;
 	padding-right: $appPadding - 10px;
@@ -1533,6 +1537,10 @@ button.btn-plus, {
 
 .single-page-container.form-open {
 	padding-top: 140px;
+}
+
+.card {
+	margin: 0.5rem 0 0.8rem 0;
 }
 
 .card.small {
