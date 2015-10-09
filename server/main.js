@@ -122,6 +122,7 @@ Meteor.startup(function() {
 		if(appId) {
 			appcurr =  Apps.find({_id: appId});
 			app = appcurr.fetch()[0]; 
+			apps = getAppTree(appId);
 			if(!app) {
 				console.log("No such app: ", appId);
 				this.ready();
@@ -129,7 +130,7 @@ Meteor.startup(function() {
 			}
 			if(app.shareable || isAdmin(this.userId)) {
 				// console.log("Returning app", appcurr.fetch())
-				return appcurr;
+				return  Apps.find({_id: {$in: apps}});;
 			} else {
 				console.log("Attempt to access private app", app)
 				return [];
