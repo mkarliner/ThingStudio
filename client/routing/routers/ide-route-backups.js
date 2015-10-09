@@ -147,3 +147,35 @@
 // 		}
 // 	}
 // });
+
+// Router.route("/themes/:_id", {
+// 	name: "Edit Theme",
+// 	controller: "IDEController",
+// 	data: function() {
+// 		Session.set("currentTheme", this.params._id);
+// 		return Themes.findOne({ _id: this.params._id });
+// 	},
+// 	action: function() {
+// 		if ( !this.ready() ) {
+// 			this.render("Loading", {
+// 				data: "Theme"
+// 			});
+// 		} else {
+// 			renderYields(this, 'EditTheme');
+// 		}
+// 	}
+// });
+//
+// Router.route("/themes", {
+// 	name: "Themes",
+// 	controller: "IDEController",
+// 	action: function() {
+// 		if ( !this.ready() ) {
+// 			this.render("Loading", {
+// 				data: "Themes"
+// 			});
+// 		} else {
+// 			renderYields(this, 'Themes');
+// 		}
+// 	}
+// });
