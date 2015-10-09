@@ -10,7 +10,7 @@ $fontFace: AvenirLTStd-Roman, Helvetica, sans-serif;
 $appBodyBG: #EBF3F6;
 $green: #76D4E1;
 $whiteOverGreen: #F7FAFF;
-$activeGreen: #7ED321;
+$activeGreen: #8DE62C;
 $inactiveRed: #B9513C;
 $brightGreen: #A0E396;
 $editorGray: #CCCCCC;
@@ -22,7 +22,7 @@ $alertOrange: #F5702E;
 $alertGreen: #9ED466;
 $alertGray: #979797;
 $appPadding: 25px;
-$statusActive: #7ED321;
+$statusActive: #8DE62C;
 $materializeInputBorderInactive: 1px solid #E1E4E8;
 $materializeInputBorderActive: 1px solid #4AAFE2;
 $actionColor1: #0098DC;
@@ -870,7 +870,7 @@ table {
 }
 
 .single-page-container {
-	padding-top: 1em;
+	padding-top: 1.5em;
 }
 
 .row .col {
@@ -1429,6 +1429,11 @@ pre.ace-cobalt .ace_comment {
 .new-list-item {
 	margin-top: -5px;
 	margin-left: 20px;
+	box-shadow: none;
+	&:hover {
+		box-shadow: none;
+		background-color: lighten($green, 7%) !important;
+	}
 }
 
 .btn-share {
@@ -1442,6 +1447,7 @@ pre.ace-cobalt .ace_comment {
 	height: 44px;
 	border-radius: 2px;
 	line-height:48px;
+	margin-bottom: 5em;
 }
 
 button.btn-plus, {
@@ -1541,24 +1547,36 @@ button.btn-plus, {
 
 .card {
 	margin: 0.5rem 0 0.8rem 0;
+	box-shadow: none;
+	border: 1px solid rgba(160, 160, 160, 0.2);
+	border-radius: 0;
 }
 
 .card.small {
-	height: 270px;
+	height: 250px;
 	& .card-content {
 		height: 198px;
 	}
+}
+
+.card .card-content {
+	padding: 18px;
 }
 
 .card .card-content .card-title, .card .card-reveal .card-title {
 	color: $headerColor;
 	line-height: 24px;
 	display: block;
-	margin-bottom: 15px;
 }
 
 .card .card-title {
 	font-size: $fontSize * 1.75;
+	position: relative;
+	i {
+		position: absolute;
+		right: -9px;
+	}
+
 }
 
 #getting-started .card-title {
@@ -1567,7 +1585,7 @@ button.btn-plus, {
 
 .widget-container {
 	text-align: center;
-	height: 150px;
+	height: 123px;
 	margin: 10px 0;
 }
 
@@ -1603,7 +1621,7 @@ button.btn-plus, {
 
 .card .card-action {
 	padding: 10px;
-	background-color: rgba(136, 160, 160, 0.02);
+	background-color: rgba(130, 160, 160, 0.04);
 }
 
 .card .card-action a,  {

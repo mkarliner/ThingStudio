@@ -3,6 +3,10 @@ Template.DashboardBody.onRendered(function() {
 	$('.tooltipped').tooltip({delay: 50});
 });
 
+Template.DashboardBody.onDestroyed(function () {
+	$('.tooltipped').tooltip('remove');
+});
+
 Template.DashboardBody.events({
 	'click .select-app': function(ev) {
 		ev.preventDefault();

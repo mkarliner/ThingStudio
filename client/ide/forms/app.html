@@ -2,6 +2,7 @@
 	<div id="template-title">
 		{{#autoForm collection="Apps" id="insertAppForm" type="insert" }}
 			{{> afQuickField name="title" class="centerField"}}
+			{{> afQuickField name="ancestor" class="centerField"}}
 			<button type="submit" class="btn btn-update right">Create New App</button>
 		{{/autoForm}}
 	</div>
@@ -39,7 +40,7 @@
 		{{> afQuickField name='summary' placeholder="Enter summary" class="wide-input"}}
 		<p><span class="fwHeavy">Long Description</span> &mdash; Provide more information here, such as instructions, usage, etc.</p>
 		{{> afQuickField name='description' placeholder="Detailed application information"}}
-		<button type="submit" class="btn btn-update">Update App</button>
+		<button type="submit" class="btn btn-update right">Update App</button>
 	{{/autoForm}}
 </template>
 

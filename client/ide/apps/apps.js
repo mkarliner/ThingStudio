@@ -3,22 +3,8 @@ Template.AppsBody.onRendered(function() {
 	$('ul.tabs').tabs();
 });
 
-Template.AppsHeader.events({
-	"click .header-action-1": function(e, tmpl) {
-		e.preventDefault();
-		menuOps();
-	}
-});
-
-Template.AppsNewItem.events({
-	"click .table-cancel-new": function(e, tmpl) {
-		e.preventDefault();
-		menuOps();
-	},
-	"click .divider-decoration": function(e, tmpl) {
-		e.preventDefault();
-		menuOps();
-	}
+Template.AppList.onDestroyed(function () {
+	$('.tooltipped').tooltip('remove');
 });
 
 Template.AppsBody.events({
@@ -49,6 +35,12 @@ Template.AppsBody.helpers({
 
 	}
 });
+
+Template.AppList.events({
+	'click a.tooltipped': function (e, tmpl) {
+
+	}
+})
 
 Template.AppList.helpers({
 	current_app: function(){
