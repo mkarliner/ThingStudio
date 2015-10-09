@@ -2,6 +2,10 @@ Template.WidgetsBody.onRendered(function() {
 	$('ul.tabs').tabs();
 });
 
+Template.WidgetList.onDestroyed(function () {
+	$('.tooltipped').tooltip('remove');
+});
+
 Template.WidgetList.created = function(){
 	//InstantiateWidgets();
 }
