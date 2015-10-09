@@ -315,27 +315,6 @@ Router.route("/templates/:_id/edit", {
 	}
 });
 
-
-Router.route("/templates/:_id/safeedit", {
-	name: "Safe Edit Template",
-	controller: "IDEController",
-	data: function() {
-		Session.set("currentScreenPage", this.params._id);
-		scr =  Screens.findOne({ _id: this.params._id });
-		scr.safeEdit = true;
-		return scr;
-	},
-	action: function() {
-		if ( !this.ready() ) {
-			this.render("Loading", {
-				data: "Template"
-			});
-		} else {
-			renderYields(this, 'EditScreen');
-		}
-	}
-});
-
 Router.route("/templates", {
 	name: "Templates",
 	controller: "IDEController",

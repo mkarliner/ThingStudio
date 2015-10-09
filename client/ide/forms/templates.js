@@ -1,18 +1,3 @@
-// Template.afSelectMultiple.onRendered(function() {
-// 	$('select').material_select();
-// });
-
-// Template.afQuickField.onRendered(function() {
-// 	$('select').material_select();
-// });
-
-// Template.afObjectField.onRendered(function() {
-// 	$('select').material_select('destroy');
-// 	// $('span.caret').not($('.select-wrapper span.caret')).remove();
-// 	$('select').material_select();
-// 	// $('span.caret').not($('.select-wrapper span.caret')).remove();
-// });
-
 Template.insertScreenForm.onRendered(function() {
 	$('ul.tabs').tabs();
 });
@@ -37,19 +22,19 @@ Template.updateScreenForm.events({
 });
 
 Template.updateScreenForm.helpers({
-	currentScreen: function() {
-		scr =  Session.get("currentScreenPage");
-		scn = Screens.findOne(scr);
-		//console.log("HTML: ", scn);
-		if(scn) {
-			//console.log("HTML: ", scn.html);
-			delete Template[scn.title];
-			compileTemplate(scn.title, scn.html, scn.js);
-			return scn.title;
-		} else {
-			return "NoScreen";
-		}
-	},
+	// currentScreen: function() {
+	// 	scr =  Session.get("currentScreenPage");
+	// 	scn = Screens.findOne(scr);
+	// 	//console.log("HTML: ", scn);
+	// 	if(scn) {
+	// 		//console.log("HTML: ", scn.html);
+	// 		delete Template[scn.title];
+	// 		compileTemplate(scn.title, scn.html, scn.js);
+	// 		return scn.title;
+	// 	} else {
+	// 		return "NoScreen";
+	// 	}
+	// },
 	alerts: function() {
 		return Alerts.find();
 	},

@@ -1,77 +1,40 @@
-// Template.ScreensHeader.rendered = function() {
-//   this.$('.dropdown-button').dropdown({
-//       inDuration: 300,
-//       outDuration: 225,
-//       constrain_width: false, // Does not change width of dropdown to that of the activator
-//       hover: false, // Activate on hover
-//       gutter: 15, // Spacing from edge
-//       belowOrigin: false // Displays dropdown below the button
-//   });
-// };
-
-// Template.ScreensHeader.events({
-// 	"click .header-action-1": function(e, tmpl) {
-// 		e.preventDefault();
-// 		menuOps();
-// 		$('.add-new-item select').material_select();
-// 	}
-// });
-//
-// Template.ScreensNewItem.events({
-// 	"click .table-cancel-new": function(e, tmpl) {
-// 		e.preventDefault();
-// 		menuOps();
-// 	},
-// 	"click .divider-decoration": function(e, tmpl) {
-// 		e.preventDefault();
-// 		menuOps();
-// 	}
-// });
-
 Template.ScreensBody.created = function(){
 	//InstantiateWidgets();
 }
-
-// Template.ScreensBody.events({
-// 	"click .screenlink": function(ev) {
-// 		console.log(this);
-// 		Router.go("/screens/" + this._id);
-// 	}
-// })
 
 Template.ScreensBody.helpers({
 	widgetlist: function(){
 		wl =  Screens.find({  isWidget: true})
 		return wl;
 	},
-	screenlist: function(){
+	templatelist: function(){
 		return Screens.find({$or:[{owner: Meteor.userId()}, {isWidget: false} ] });
 	},
-	owner: function() {
-		return
-	},
-	publicscreens: function() {
-		return Screens.find({public: true})
-	},
-	allscreens: function() {
-		return Screens.find({})
-	},
-	status: function(){
-		if(this.owner == Meteor.userId()) {
-			return "Owner";
-		} else {
-			u = Meteor.users.findOne(this.owner);
-			return u ? u.username : "Unknown";
-		}
-	},
-	fromApp: function(){
-		app = Apps.findOne(this.appId);
-		return app.title;
-	},
-	home_page: function(){
-		app = Session.get("currentApp");
-		return  this._id == app.home_page ? "yes" : "no";
-	},
+	// owner: function() {
+	// 	return
+	// },
+	// publicscreens: function() {
+	// 	return Screens.find({public: true})
+	// },
+	// allscreens: function() {
+	// 	return Screens.find({})
+	// },
+	// status: function(){
+	// 	if(this.owner == Meteor.userId()) {
+	// 		return "Owner";
+	// 	} else {
+	// 		u = Meteor.users.findOne(this.owner);
+	// 		return u ? u.username : "Unknown";
+	// 	}
+	// },
+	// fromApp: function(){
+	// 	app = Apps.findOne(this.appId);
+	// 	return app.title;
+	// },
+	// home_page: function(){
+	// 	app = Session.get("currentApp");
+	// 	return  this._id == app.home_page ? "yes" : "no";
+	// },
 	isWidget: function(){
 		return this.isWidget ? "icon-ts-checkmark" : "";
 	},
@@ -105,7 +68,5 @@ InstantiateWidgets = function(){
 				console.log("Problem registering element: "+ wgt.tagName);
 			}
 		}
-
-
 	}
 }
