@@ -18,45 +18,9 @@
 		<div class="divider"></div>
 		<div class="section">
 			<p class="section-header">Current App</p>
-			<!-- <li class="{{isActivePath regex='^\\/connections'}}"><a href="/http_connections"><i class="icon-ts-connection"></i><span>HTTP Conns</span></a></li> -->
 			<li class="{{isActivePath regex='^\\/connections'}}"><a href="/connections"><i class="icon-ts-connection"></i><span>Connections</span></a></li>
-			<!-- <li class="no-padding">
-				<ul class="collapsible collapsible-accordion">
-					<li>
-						<a class="collapsible-header "><i class="icon-ts-connection"></i><span>Connections</span></a>
-						<div class="collapsible-body">
-							<ul>
-								<li>
-									<a href="/mqtt-connections">MQTT</a>
-								</li>
-								<li>
-									<a href="/http-connections">HTTP</a>
-								</li>
-							</ul>
-						</div>
-					</li>
-				</ul>
-			</li> -->
 			<li class="{{isActivePath regex='^\\/feeds'}}"><a href="/feeds"><i class="icon-ts-feeds"></i><span>Feeds</span></a></li>
-			<!-- <li class="no-padding">
-				<ul class="collapsible collapsible-accordion">
-					<li>
-						<a class="collapsible-header"><i class="icon-ts-feeds"></i><span>Feeds</span></a>
-						<div class="collapsible-body">
-							<ul>
-								<li>
-									<a href="/mqtt-feeds">MQTT</a>
-								</li>
-								<li>
-									<a href="/http-feeds">HTTP</a>
-								</li>
-							</ul>
-						</div>
-					</li>
-				</ul>
-			</li> -->
 			<li class="{{isActivePath regex='^\\/templates'}}"><a href="/templates"><i class="icon-ts-templates"></i><span>Templates</span></a></li>
-			<!-- <li class="{{isActivePath regex='^\\/themes'}}"><a href="/themes"><i class="material-icons">palette</i> Themes</a></li> -->
 		</div>
 		<div class="divider"></div>
 		<div class="section">
@@ -70,14 +34,14 @@
 			<p class="section-header">Help</p>
 			<ul class="collapsible">
 				<!-- <li class="{{isActivePath regex='^\\/chat'}}"><a href="/chat"><i class="material-icons">face</i> Chat {{#if newChats}}<span class="chat-count">{{numChats}}</span>{{/if}}</a></li> -->
-				<li class="{{isActivePath regex='^\\/forum'}}"><a href="http://forum.thingstud.io" target="_blank"><i class="material-icons">forum</i> Forum</a></li>
-				<li class="{{isActivePath regex='^\\/video-tutorials'}}"><a href="/tutorials"><i class="material-icons">video_library</i> Video Tutorials</a></li>
 				<li class="{{isActivePath regex='^\\/documentation|docs'}}"><a class="" href="/docs"><i class="material-icons">local_library</i> Documentation</a></li>
+				<li class="{{isActivePath regex='^\\/video-tutorials'}}"><a href="/tutorials"><i class="material-icons">video_library</i> Video Tutorials</a></li>
+				<li class="{{isActivePath regex='^\\/forum'}}"><a href="http://forum.thingstud.io" target="_blank"><i class="material-icons">forum</i> Forum</a></li>
 				<li class="{{isActivePath regex='^\\/support'}}"><a href="/support"><i class="material-icons">email</i> Support</a></li>
 				{{#if isInRole 'admin'}}
 					<li class="{{isActivePath regex='^\\/current-users'}}"><a class="" href="/current-users">Current Users</a></li>
 					<li class="{{isActivePath regex='^\\/Sysadmin|sysadmin'}}"><a href="/sysadmin">System Logs</a></li>
-					<li class="{{isActivePath regex='^\\/inactives'}}"><a href="/inactives">Inactives</a></li>
+					<!-- <li class="{{isActivePath regex='^\\/inactives'}}"><a href="/inactives">Inactives</a></li> -->
 				{{/if}}
 			</ul>
 		</div>

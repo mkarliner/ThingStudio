@@ -10,7 +10,7 @@ $fontFace: AvenirLTStd-Roman, Helvetica, sans-serif;
 $appBodyBG: #EBF3F6;
 $green: #76D4E1;
 $whiteOverGreen: #F7FAFF;
-$activeGreen: #7ED321;
+$activeGreen: #8DE62C;
 $inactiveRed: #B9513C;
 $brightGreen: #A0E396;
 $editorGray: #CCCCCC;
@@ -22,7 +22,7 @@ $alertOrange: #F5702E;
 $alertGreen: #9ED466;
 $alertGray: #979797;
 $appPadding: 25px;
-$statusActive: #7ED321;
+$statusActive: #8DEE2C;
 $materializeInputBorderInactive: 1px solid #E1E4E8;
 $materializeInputBorderActive: 1px solid #4AAFE2;
 $actionColor1: #0098DC;
@@ -1427,7 +1427,7 @@ pre.ace-cobalt .ace_comment {
 }
 
 .new-list-item {
-	margin-top: -4px;
+	margin-top: -5px;
 	margin-left: 20px;
 	box-shadow: none;
 	&:hover {
