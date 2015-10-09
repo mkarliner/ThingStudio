@@ -1427,8 +1427,13 @@ pre.ace-cobalt .ace_comment {
 }
 
 .new-list-item {
-	margin-top: -5px;
+	margin-top: -4px;
 	margin-left: 20px;
+	box-shadow: none;
+	&:hover {
+		box-shadow: none;
+		background-color: lighten($green, 7%) !important;
+	}
 }
 
 .btn-share {
