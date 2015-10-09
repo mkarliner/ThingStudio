@@ -438,6 +438,7 @@ Meteor.startup(function() {
 	});
 
 	DocFiles = [
+		"basic-concepts.md",
 		"about-thing-studio.md",
 		"apps.md",
 		"attributes.md",

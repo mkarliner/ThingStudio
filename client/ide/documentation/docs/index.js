@@ -3,7 +3,7 @@
 DocsIndex = {
 	Basics: [
 		{
-			title: "About ThingStudio & MQTT",	
+			title: "ThingStudio Basic Concepts",	
 
 		},
 		{
