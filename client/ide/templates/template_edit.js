@@ -1,6 +1,9 @@
 Template.EditScreenHeader.helpers({
 	log: function() {
 		console.log(this);
+	},
+	domain: function(){
+		return Meteor.settings.public.domain;
 	}
 });
 
@@ -44,7 +47,7 @@ Meteor.startup(function(){
 			return AceEditor.instance("archyjs").getValue();
 		}
 	});
-	
+
 	AutoForm.addInputType('aceappjs', {
 		template: 'afAceAppJs',
 		valueOut: function(obj) {
@@ -124,7 +127,7 @@ Template.afAceJs.rendered = function() {
 			editor.$blockScrolling = Infinity;
 			editor.setValue(Screens.findOne({_id: cs}).js, -1);
 		}
-	}); 
+	});
 }
 
 Template.afAceAppJs.rendered = function() {
@@ -143,7 +146,7 @@ Template.afAceAppJs.rendered = function() {
 			editor.$blockScrolling = Infinity;
 			//editor.setValue(Screens.findOne({_id: cs}).js, -1);
 		}
-	}); 
+	});
 }
 
 Template.afAceCss.rendered = function() {
@@ -158,9 +161,9 @@ Template.afAceCss.rendered = function() {
 
 		if(editor.loaded===true){
 			e.stop();
-			editor.$blockScrolling = Infinity; 
+			editor.$blockScrolling = Infinity;
 		}
-	}); 
+	});
 }
 
 Template.afAce.rendered = function() {
@@ -177,5 +180,5 @@ Template.afAce.rendered = function() {
 			editor.$blockScrolling = Infinity;
 			editor.setValue(Screens.findOne({_id: cs}).html, -1);
 		}
-	}); 
+	});
 }
