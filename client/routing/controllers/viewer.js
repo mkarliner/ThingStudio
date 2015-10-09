@@ -49,9 +49,9 @@ AppViewerController = PreloadController.extend({
 				// Meteor.subscribe('themes', appId),
 			];
 		} else {
-			screenId = Session.get("currentScreenId");
-			// console.log("Single screen subscription", screenId)
-			return Meteor.subscribe("singleScreen", screenId);
+			// screenId = Session.get("currentScreenId");
+			console.log("You don't have an app ID. Weird.")
+			// return Meteor.subscribe("singleScreen", screenId);
 		}
 
 	}

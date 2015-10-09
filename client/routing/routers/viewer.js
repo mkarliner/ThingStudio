@@ -56,10 +56,10 @@ Router.route("/app/:appid/screen/:_id", {
 	name: "ViewScreen",
 	onBeforeAction: function(){
 		console.log("VS: ", Session.get("currentAppId"), this.params.appid)
-		if(Session.get("currentAppId") != this.params.appid) {
+		// if(Session.get("currentAppId") != this.params.appid) {
 			console.log("Setting AppID!!!!!!")
 			Session.set("currentAppId", this.params.appid);
-		}
+		// }
 		this.next();
 	},
 
