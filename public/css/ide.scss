@@ -22,7 +22,7 @@ $alertOrange: #F5702E;
 $alertGreen: #9ED466;
 $alertGray: #979797;
 $appPadding: 25px;
-$statusActive: #8DEE2C;
+$statusActive: #8DE62C;
 $materializeInputBorderInactive: 1px solid #E1E4E8;
 $materializeInputBorderActive: 1px solid #4AAFE2;
 $actionColor1: #0098DC;
@@ -1546,6 +1546,7 @@ button.btn-plus, {
 
 .card {
 	margin: 0.5rem 0 0.8rem 0;
+	box-shadow: none;
 }
 
 .card.small {
