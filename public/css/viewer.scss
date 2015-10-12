@@ -9,6 +9,36 @@ $inactiveRed: #B9513C;
 // $headerColor: #676975;
 //
 
+// Material Design Colors
+$red: #F44336;
+$hotRed: #B71C1C;
+$pink: #E91E63;
+$deepPink: #880E4F;
+$purple: #9C27B0;
+$deepPurple: #673AB7;
+$royalPurple: #311B92;
+$indigo: #3F51B5;
+$actionBlue: #00B0FF;
+$blue: #2196F3;
+$lightBlue: #03A9F4;
+$cyan: #00BCD4;
+$darkCyan: #00838F;
+$teal: #009688;
+$green: #4CAF50;
+$lightGreen: #8BC34A;
+$foamGreen: #00E676;
+$lime: #CDDC39;
+$yellow: #FFEB3B;
+$amber: #FFC107;
+$autumnAmber: #FF6F00;
+$orange: #FF9800;
+$deepOrange: #FF5722;
+$brown: #795548;
+$grey: #9E9E9E;
+$blueGrey: #607D8B;
+$deepGrey: #263238;
+
+
 $fwLight: 'AvenirLTStd-Light';
 .fwLight {
 	font-family: $fwLight;
@@ -98,7 +128,7 @@ body {
 }
 
 .app-body-wrapper {
-	min-height: calc( 100vh - 112px );
+	min-height: calc( 100vh - 114px );
 	-webkit-box-flex: 1;
 	-webkit-flex: 1;
 	    -ms-flex: 1;
@@ -146,7 +176,24 @@ body {
 	height: 100%;
 }
 
-header ul, footer ul {
+///////////////////////////////////////////////////////////////////////////////////////
+// Buttons //
+///////////////////////////////////////////////////////////////////////////////////////
+
+.btn {
+	height: 44px;
+	line-height: 44px;
+	color: white;
+	text-decoration: none;
+	display: inline-block;
+}
+
+.btn-flat {
+
+}
+
+header ul,
+footer ul {
 	list-style-type: none;
 	display: -webkit-box;
 	display: -webkit-flex;
@@ -203,6 +250,37 @@ a i.icon-ts-connection {
 	}
 }
 
+///////////////////////////////////////////////////////////////////////////////////////
+// Letter Colors //
+///////////////////////////////////////////////////////////////////////////////////////
+
+a .letter-a { background-color: $red; }
+a .letter-b { background-color: $hotRed; }
+a .letter-c { background-color: $pink; }
+a .letter-d { background-color: $deepPink; }
+a .letter-e { background-color: $purple; }
+a .letter-f { background-color: $deepPurple; }
+a .letter-g { background-color: $royalPurple; }
+a .letter-h { background-color: $indigo; }
+a .letter-i { background-color: $actionBlue; }
+a .letter-h { background-color: $blue; }
+a .letter-j { background-color: $lightBlue; }
+a .letter-k { background-color: $cyan; }
+a .letter-l { background-color: $darkCyan; }
+a .letter-m { background-color: $teal; }
+a .letter-n { background-color: $green; }
+a .letter-o { background-color: $lightGreen; }
+a .letter-p { background-color: $foamGreen; }
+a .letter-q { background-color: $lime; }
+a .letter-r { background-color: $yellow; }
+a .letter-s { background-color: $amber; }
+a .letter-t { background-color: $autumnAmber; }
+a .letter-u { background-color: $orange; }
+a .letter-v { background-color: $deepOrange; }
+a .letter-w { background-color: $brown; }
+a .letter-x { background-color: $grey; }
+a .letter-y { background-color: $blueGrey; }
+a .letter-z { background-color: $deepGrey; }
 ///////////////////////////////////////////////////////////////////////////////////////
 // Template List Styles //
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -267,11 +345,12 @@ ul.screens-list {
 	margin-right: 15px;
 	margin-right: 3vw;
 	border-radius: 50%;
-	background: #0DA3D1;
+	background-color: orange;
 	text-align: center;
 	line-height: 53px;
 	color: white;
 	font-size: 1.19em;
+	text-transform: uppercase;
 }
 
 .transitioner {

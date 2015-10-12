@@ -68,7 +68,6 @@ Template.AppSideNav.helpers({
 	},
   appURL: function(){
     myappid = getCurrentApp()._id
-    console.log("Here is the current app id: ", myappid)
     return '/app/' + myappid;
 	}
 });

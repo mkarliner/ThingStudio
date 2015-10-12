@@ -9,7 +9,7 @@
 						{{#each screenlist}}
 							<li>
 								<a href="{{pathFor 'ViewScreen' data=screenparams }}">
-									<span class="letter-circle">W</span>
+									<span class="letter-circle letter-{{firstLetter}}">{{firstLetter}}</span>
 									<div class="screen-desc">
 										<h2>{{this.title}}</h2>
 										{{#if this.summary}}
