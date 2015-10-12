@@ -18,6 +18,7 @@
 		<div class="divider"></div>
 		<div class="section">
 			<p class="section-header">Current App</p>
+			<a href="{{appURL}}" onclick="window.open(this.href,'targetWindow', 'toolbar=no, location=no, status=no, menubar=no, scrollbars=yes, resizable=yes, width=460, height=600'); return false;" class="btn btn-view-app-sidebar">View App</a>
 			<li class="{{isActivePath regex='^\\/connections'}}"><a href="/connections"><i class="icon-ts-connection"></i><span>Connections</span></a></li>
 			<li class="{{isActivePath regex='^\\/feeds'}}"><a href="/feeds"><i class="icon-ts-feeds"></i><span>Feeds</span></a></li>
 			<li class="{{isActivePath regex='^\\/templates'}}"><a href="/templates"><i class="icon-ts-templates"></i><span>Templates</span></a></li>
