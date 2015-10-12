@@ -37,7 +37,7 @@ Router.route("/app/:appid", {
 			// If there is only one screen, go to the one screen
 		} else if (screen_cnt == 1) {
 			scr = Screens.findOne({});
-			Router.go("/app/"+app._id+"/" + scr._id);
+			Router.go("/app/"+app._id+"/screen/" + scr._id);
 		} else {
 			this.render("ViewApp", {
 				data: function() {

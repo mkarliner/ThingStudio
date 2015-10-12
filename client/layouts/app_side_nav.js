@@ -56,7 +56,7 @@ Template.AppSideNav.helpers({
 	},
 	numChats: function(){
 		return Chats.find().count();
-		
+
 	},
 	newChats: function(){
 		//console.log("NC: ", Session.get("newChats"))
@@ -65,6 +65,11 @@ Template.AppSideNav.helpers({
 		} else {
 			return false;
 		}
+	},
+  appURL: function(){
+    myappid = getCurrentApp()._id
+    console.log("Here is the current app id: ", myappid)
+    return '/app/' + myappid;
 	}
 });
 

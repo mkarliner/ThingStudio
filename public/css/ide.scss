@@ -1457,6 +1457,44 @@ button.btn-plus, {
 	}
 }
 
+// View App Sidebar Button
+
+.side-nav.fixed a.btn-view-app-sidebar {
+	position: relative;
+	color: $white;
+	border-radius: 0;
+	border: 1px solid $btnSocialColor;
+	background-color: transparent;
+	margin: 0 20px;
+	height: 36px;
+	line-height: 36px;
+	margin-bottom: 6px;
+	font-size: 12px;
+	-webkit-text-stroke: 0px white;
+	&:before {
+	  content: " ";
+	  position: absolute;
+	  z-index: -1;
+	  top: 3px;
+	  left: 3px;
+	  right: 3px;
+	  bottom: 3px;
+	  background-color: transparent;
+		transition: all 0.3s;
+	}
+	&:hover:before{
+		background-color: $btnSocialColor;
+	}
+	&:hover {
+		color: $darkBase;
+		-webkit-text-stroke: 1px $darkBase;
+
+	}
+	// &:hover {
+	// 	background-color: $btnSocialColor;
+	// }
+}
+
 // Social share
 .btn-social {
 	padding: 0.3rem 1rem;

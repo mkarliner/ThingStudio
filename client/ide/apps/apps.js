@@ -32,7 +32,6 @@ Template.AppsBody.helpers({
 		} else {
 			return;
 		}
-
 	}
 });
 
