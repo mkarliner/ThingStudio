@@ -10,7 +10,7 @@
 	<table class="hoverable">
 		{{> ScreensTableWidths}}
 		<thead>
-			<tr cellpadding="10"><th>Template Title</th><th>Widget</th><th></th><th>Action</th></tr>
+			<tr cellpadding="10"><th>Template Title</th><th>Widget</th><th>Summary</th><th>Action</th></tr>
 		</thead>
 		<tbody>
 			<tr id="item-insert" class="spacer td-closed"><td></td></tr>
@@ -18,7 +18,7 @@
 				<tr>
 					<td>{{title}}</td>
 					<td><i class="{{isWidget}}"></i></td>
-					<td></td>
+					<td>{{summary}}</td>
 					<td><a class="table-action table-edit-item" href="{{pathFor 'Edit Template'}}"><i class="material-icons">mode_edit</i></a>{{#afModal classes="table-action table-cancel-item" collection="Screens" operation="remove" doc=_id title="<i class='material-icons'>error_outline</i><span class='modal-header'>Deleting Template</span>" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="icon-ts-trash"></i>{{/afModal}}</td>
 				</tr>
 			{{/each}}
