@@ -40,6 +40,12 @@ Schemas.Screen = new SimpleSchema({
 		label: "Title",
 		max: 200
 	},
+	summary: {
+		type: String,
+		label: "Summary",
+		optional: true,
+		max: 100
+	},
 	// tags: {
 	// 	type: [String],
 	// 	index: true,

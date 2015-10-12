@@ -2,6 +2,7 @@
 	<div id="template-title">
 		{{#autoForm collection="Screens" id="insertScreenForm" type="insert" }}
 			{{> afQuickField name="title" class="centerField"}}
+			{{> afQuickField name="summary" class="centerField"}}
 			<button type="submit" class="btn btn-update right">Create New Template</button>
 		{{/autoForm}}
 	</div>
@@ -41,6 +42,7 @@
 					<h2>Template Properties</h2>
 					{{#autoForm collection="Screens" id="updateScreenForm" type="update" doc=this buttonClasses="btn btn-update"}}
 						{{> afQuickField name="title" class="centerField"}}
+						{{> afQuickField name="summary" class="centerField"}}
 						{{> afQuickField name="isWidget" class="centerField"}}
 						<button type="submit" class="btn btn-update">Save Template</button>
 					{{/autoForm}}
@@ -68,8 +70,9 @@
 			{{else}}
 				{{#autoForm collection="Screens" id="updateScreenForm" type="update" doc=this }}
 					{{> afQuickField name="title" class="centerField"}}
+					{{> afQuickField name="summary" class="centerField"}}
 					{{> afQuickField name="isWidget" class="centerField"}}
-					<button type="submit" class="btn">Save</button>
+					<button type="submit" class="btn btn-update">Save Template</button>
 				{{/autoForm}}
 			{{/if}}
 		</div>

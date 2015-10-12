@@ -9,6 +9,9 @@ Template.ViewApp.helpers({
 	screenparams: function(){
 		// console.log("SP", this);
 		return {appid: this.appId, _id: this._id}
+	},
+	firstLetter: function () {
+		return this.title.charAt(0).toLowerCase();
 	}
 });
 

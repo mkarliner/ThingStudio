@@ -9,10 +9,14 @@
 						{{#each screenlist}}
 							<li>
 								<a href="{{pathFor 'ViewScreen' data=screenparams }}">
-									<span class="letter-circle">W</span>
+									<span class="letter-circle letter-{{firstLetter}}">{{firstLetter}}</span>
 									<div class="screen-desc">
 										<h2>{{this.title}}</h2>
-										<span>Keeping tabs on the weather in London</span>
+										{{#if this.summary}}
+											<span>{{this.summary}}</span>
+										{{else}}
+											<span>No summary set for this template</span>
+										{{/if}}
 									</div>
 								</a>
 							</li>
