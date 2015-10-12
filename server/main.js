@@ -128,7 +128,8 @@ Meteor.startup(function() {
 				this.ready();
 				return;
 			}
-			if(app.shareable || isAdmin(this.userId)) {
+			console.log("VIEWAPP ", app, this.userId)
+			if(app.shareable || app.owner == this.userId || isAdmin(this.userId)) {
 				// console.log("Returning app", appcurr.fetch())
 				return  Apps.find({_id: {$in: apps}});;
 			} else {
