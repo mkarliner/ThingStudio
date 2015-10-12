@@ -11,7 +11,7 @@ DocsIndex = {
 
 		},
 		{
-			title: "Connections",
+			title: "MQTT Connections",
 			
 		},
 		{

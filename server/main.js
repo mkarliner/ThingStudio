@@ -444,7 +444,7 @@ Meteor.startup(function() {
 		"about-thing-studio.md",
 		"apps.md",
 		"attributes.md",
-		"connections.md",
+		"mqtt-connections.md",
 		"feeds.md",
 		"helpers.md",
 		"template-helpers.md",
