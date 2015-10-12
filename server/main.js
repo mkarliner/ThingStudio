@@ -40,6 +40,7 @@ Meteor.startup(function() {
 	//and connect any orphan resources.
 	process.env.HTTP_FORWARDED_COUNT ="1";
 	console.log("FORWARDED COUNT ", process.env.HTTP_FORWARDED_COUNT);
+	process.env.MAIL_URL="smtp://contact%40thingstud.io:j&45098Ksd!$@smtp.gmail.com:587"
 	no_connection_cnt = 0;
 	no_app_cnt = 0;
 	app_cnt = 0;
