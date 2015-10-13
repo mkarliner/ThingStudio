@@ -466,8 +466,8 @@ main {
 	display: inline-block;
 }
 
-.btn-flat {
-
+.btn.footer-menu {
+	padding: 8px 10px;
 }
 
 header ul,
@@ -498,7 +498,7 @@ footer ul {
 	-webkit-justify-content: space-around;
 	    				-ms-flex-pack: distribute;
 	        justify-content: space-around;
-	padding: 8px 0;
+	padding: 0;
 }
 a.made-with {
 	font-family: $fwMedium;
