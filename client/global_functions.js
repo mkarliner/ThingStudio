@@ -361,7 +361,7 @@ getAppTree = function(appId){
 		console.log("NO SYSTEM APP DEFINED!!!!");
 		apps = [app._id];
 	}
-	while(app.ancestor) {
+	while(app && app.ancestor) {
 		app = Apps.findOne({_id: app.ancestor});
 		if(app) {
 			apps.push(app._id);
