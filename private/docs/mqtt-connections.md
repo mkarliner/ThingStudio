@@ -1,7 +1,7 @@
 ---
-title: "Connections"
-urlstring: "connections"
-summary: "Connections specify your connection to an MQTT broker"	
+title: "MQTT Connections"
+urlstring: "mqtt-connections"
+summary: "MQTT Connections specify your connection to a broker"	
 ---
 
 ## Connections and MQTT

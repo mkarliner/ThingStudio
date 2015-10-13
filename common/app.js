@@ -39,6 +39,7 @@ Schemas.App = new SimpleSchema({
 	ancestor: {
 		type: String,
 		label: "Parent App",
+		index: 1,
 		optional: true,
 		autoform: {
 			type: "selectize",
@@ -150,6 +151,10 @@ Schemas.App = new SimpleSchema({
 
 Apps.before.remove(function(userId, doc) {
 	if(Meteor.isServer) {
+		//check for dependent apps.
+		if(Apps.findOne({ancestor: doc._id})) {
+			return false;
+		}
 		//console.log("APP DESTROY");
 		Connections.remove({appId: doc._id});
 		Feeds.remove({appId: doc._id});

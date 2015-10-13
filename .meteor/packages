@@ -26,7 +26,7 @@ iron:router
 zimme:iron-router-active
 
 ########## Layout ##########
-fourseven:scss
+#fourseven:scss
 jparker:gravatar
 gildaspk:autoform-modals-materialize
 jeremy:selectize
@@ -70,3 +70,4 @@ meteorhacks:npm
 npm-container
 pfafman:filesaver
 chuangbo:marked
+email

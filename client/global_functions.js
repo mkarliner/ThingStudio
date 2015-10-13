@@ -153,7 +153,13 @@ checkHTTPFeeds = function (){
 		if(HTTPClock % feeds[f].polling_interval == 0 ) {
 			var feed = feeds[f];
 			var conn = HTTPConnections.findOne(feed.connection);
+			if(!conn) {
+				return;
+			}
 			var app = Apps.findOne({_id: conn.appId});
+			if(!app) {
+				return;
+			}
 			var url = conn.protocol + "://" + conn.host + ":" + conn.port + feed.path;
 			timeout = (feed.polling_interval-1)*1000;
 			console.log("HT: ", feed.responseProcessor, feed.requestProcessor, conn, url, timeout);
@@ -355,7 +361,6 @@ getAppTree = function(appId){
 		console.log("NO SYSTEM APP DEFINED!!!!");
 		apps = [app._id];
 	}
-
 	while(app.ancestor) {
 		app = Apps.findOne({_id: app.ancestor})
 		apps.push(app._id);
