@@ -29,7 +29,6 @@ dispatch:request-animation-frame@0.0.1
 ejson@1.0.6
 email@1.0.6
 fastclick@1.0.3
-fourseven:scss@3.1.1
 geojson-utils@1.0.3
 gildaspk:autoform-materialize@0.0.20
 gildaspk:autoform-modals-materialize@0.0.7
