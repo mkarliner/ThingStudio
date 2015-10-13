@@ -362,8 +362,10 @@ getAppTree = function(appId){
 		apps = [app._id];
 	}
 	while(app.ancestor) {
-		app = Apps.findOne({_id: app.ancestor})
-		apps.push(app._id);
+		app = Apps.findOne({_id: app.ancestor});
+		if(app) {
+			apps.push(app._id);
+		}
 	}
 	return apps;
 }

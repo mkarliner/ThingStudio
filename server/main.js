@@ -1,3 +1,4 @@
+
 isAdmin = function(userId) {
 	user = Meteor.users.findOne({
 		_id: userId
@@ -40,7 +41,7 @@ Meteor.startup(function() {
 	//and connect any orphan resources.
 	process.env.HTTP_FORWARDED_COUNT ="1";
 	console.log("FORWARDED COUNT ", process.env.HTTP_FORWARDED_COUNT);
-	process.env.MAIL_URL="smtp://contact%40thingstud.io:j&45098Ksd!$@smtp.gmail.com:587"
+	process.env.MAIL_URL="smtp://contact%40thingstud.io:j&45098Ksd!$@smtp.gmail.com:587";
 	no_connection_cnt = 0;
 	no_app_cnt = 0;
 	app_cnt = 0;
@@ -123,16 +124,14 @@ Meteor.startup(function() {
 		if(appId) {
 			appcurr =  Apps.find({_id: appId});
 			app = appcurr.fetch()[0]; 
-			apps = getAppTree(appId);
 			if(!app) {
 				console.log("No such app: ", appId);
 				this.ready();
 				return;
 			}
-			console.log("VIEWAPP ", app, this.userId)
-			if(app.shareable || app.owner == this.userId || isAdmin(this.userId)) {
+			if(app.shareable || isAdmin(this.userId)) {
 				// console.log("Returning app", appcurr.fetch())
-				return  Apps.find({_id: {$in: apps}});;
+				return appcurr;
 			} else {
 				console.log("Attempt to access private app", app)
 				return [];
@@ -441,7 +440,6 @@ Meteor.startup(function() {
 	});
 
 	DocFiles = [
-		"basic-concepts.md",
 		"about-thing-studio.md",
 		"apps.md",
 		"attributes.md",
@@ -455,7 +453,8 @@ Meteor.startup(function() {
 		"display-data.md",
 		"data-in-and-out.md",
 		"custom_helpers.md",
-		"feed_processing.md"
+		"feed_processing.md",
+		"template-layout.md"
 	];
 	
 	WidgetFiles = [
@@ -562,4 +561,5 @@ Meteor.startup(function() {
 	}
 
 });
+
 

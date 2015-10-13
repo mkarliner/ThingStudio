@@ -38,6 +38,9 @@ DocsIndex = {
 		},
 		{
 			title: "Getting data between IoT devices and ThingStudio"	
+		},
+		{
+			title: "Laying out your templates"
 		}
 		],
 	// HardwarePlatforms: [
