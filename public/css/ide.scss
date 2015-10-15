@@ -1568,12 +1568,13 @@ button.btn-plus, {
 .app-detail .form-group {
 	padding-top: 0.2em;
 	padding-bottom: 2em;
-	margin-bottom: 3em;
+	margin-bottom: 2em;
 	&.app-access-checkboxes {
-		margin-bottom: 1.5em;
+		margin-bottom: 0;
+		padding-bottom: 1.4em;
 	}
 	&.field-dropdown {
-		margin-bottom: 2.1em;
+		margin-bottom: 1.1em;
 	}
 }
 
