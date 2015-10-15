@@ -46,13 +46,13 @@
 			<div class="clearfix"></div> -->
 			<p><span class="fwHeavy">Home Template</span> &mdash; The template users see whe first loading your app</p>
 			{{> afFormGroup name='home_page'}}
-			<p class="fwHeavy">MQTT Connection</p>
+			<p><span class="fwHeavy">MQTT Connection</span> &mdash; If your app uses MQTT, set the connection here</p>
 			{{> afFormGroup name='connection'}}
 		</div>
 		<div class="col s6">
 			<p><span class="fwHeavy">App Title</span> &mdash; The name of your application (will show publicly if app is Public)</p>
 			{{> afQuickField name='title' }}
-			<p><span class="fwHeavy">Short Description</span> &mdash; Give a one line description of the purpose of this application</p>
+			<p><span class="fwHeavy">Summary</span> &mdash; Give a one line description of the purpose of this application</p>
 			{{> afQuickField name='summary' placeholder="Enter summary" class="wide-input"}}
 			<p><span class="fwHeavy">Long Description</span> &mdash; Provide more information here, such as instructions, usage, etc.</p>
 			{{> afQuickField name='description' placeholder="Detailed application information"}}
