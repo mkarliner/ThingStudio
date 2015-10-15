@@ -1,3 +1,23 @@
+Template.EditAppBody.events({
+
+	'click #app-doc-tab': function(e, tmpl){
+		console.log("DOCTAB")
+		AceEditor.instance("archyappdoc").resize();
+		// AceEditor.instance("archyjs").renderer.updateFull()
+	},
+	'click #app-css-tab': function(e, tmpl){
+		console.log("DOCTAB")
+		AceEditor.instance("archyappcss").resize();
+		// AceEditor.instance("archyjs").renderer.updateFull()
+	},
+	'click #app-js-tab': function(e, tmpl){
+		console.log("DOCTAB")
+		AceEditor.instance("archyappjs").resize();
+		// AceEditor.instance("archyjs").renderer.updateFull()
+	},
+
+});
+
 Template.EditAppBody.onRendered(function() {
 	// $('select').material_select();
 	$('ul.tabs').tabs();

@@ -263,6 +263,16 @@ AutoForm.hooks({
 				}
 			}
 		},
+		removeAppForm: {
+			onSubmit: function() {
+				console.log("Removing App!!!!!!!")
+			},
+			before: {
+				remove: function(err,res) {
+					console.log("Removing App!!!!!!!")
+				}
+			}
+		}
 		
 
 
