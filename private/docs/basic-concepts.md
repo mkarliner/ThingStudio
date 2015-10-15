@@ -47,7 +47,7 @@ use by widgets like the Sparkline time series widget.
 You can write your own feed processors to add to those provided by the ThingStudio. The details are in the Advanced section of the documentation.
 
 #Templates
-Templates define how data from feeds are displayed and how user driven events (button pushes) are sent to feeds.
+Templates define how data from feeds are displayed and how user driven events (button pushes) are sent to tofeeds.
 They consist of HTML with [handlebars](http://handlebarsjs.com/)-style expressions. They will send and receive real-time data without you having to write any additional code as they will change the data displayed automatically as it comes in.
 This in itself is enough to provide rich real-time user interfaces with no further work, however
 ThingStudio templates are also exactly [Meteor](http://meteor.com) templates under the skin, and provide all the functionality and API's of Meteor if needed. To this end, you can write straight Meteor code in the javascript section of a template to provide enhanced functionality, although is only usually needed if you want to reuse your template as a widget.
