@@ -21,15 +21,6 @@ Router.route("/app/:appid", {
 			});
 			return;
 		}
-		// console.log("Current APP", app)
-		// if(!app) {
-		// 	this.render("Loading", {
-		// 		data: "Current Application"
-		// 	});
-		// 	return;
-		// }
-
-
 		screen_cnt = Screens.find({isWidget: false}).count();
 		// If there is an app home page, go there
 		if (app.home_page) {
@@ -48,9 +39,6 @@ Router.route("/app/:appid", {
 	}
 });
 
-
-
-
 Router.route("/app/:appid/screen/:_id", {
 	controller: "AppViewerController",
 	name: "ViewScreen",
@@ -62,7 +50,6 @@ Router.route("/app/:appid/screen/:_id", {
 		// }
 		this.next();
 	},
-
 	action: function() {
 		if(!this.ready()) {
 			console.log("SUB NOT READY")
@@ -91,7 +78,5 @@ Router.route("/app/:appid/screen/:_id", {
 				});
 			}
 		});
-
 	}
-
 });
