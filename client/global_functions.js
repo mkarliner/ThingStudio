@@ -11,6 +11,22 @@ arrayOfObjectsFromObject = function (obj) {
 	return result;
 }
 
+// Gives checkboxes with no autform ID a suitable reference ID
+makeCheckboxID = function () {
+	function makeid() {
+		var text = "";
+		var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+		for( var i=0; i < 5; i++ ) {
+			text += possible.charAt(Math.floor(Math.random() * possible.length));
+		}
+		return text;
+	}
+	var uniqid = makeid();
+	Template.instance().$(".mat-check input").attr("id", uniqid)
+	Template.instance().$(".mat-check label").attr("for", uniqid)
+}
+
 // From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys
 if (!Object.keys) {
   Object.keys = (function() {
