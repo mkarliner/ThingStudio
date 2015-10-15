@@ -74,7 +74,7 @@ Template.AppList.helpers({
 			homeTitle = home[0].title
 			return homeTitle
 		} else {
-			return 'No home screen set'
+			return 'None set'
 		}
 	},
 	showShareable: function() {
