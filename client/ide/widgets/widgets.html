@@ -8,14 +8,13 @@
 	<div class="col s12 m3">
 		<div class="card small">
 			<div class="card-content">
-				<span class="card-title activator">{{title}} <i class="material-icons right">more_vert</i></span>
+				<span class="card-title activator">{{title}} <!-- <i class="material-icons right">more_vert</i> --> </span>
 					<div class="svg-container widget-container">
 						{{> Template.dynamic template=screenInstance }}
 					</div>
 			</div>
-			<div class="card-reveal">
+			<!-- <div class="card-reveal">
 				<span class="card-title">{{title}}<i class="material-icons right">close</i></span>
-				<!-- <p>{{widgetInstructions}}</p> -->
 				<p class="fwHeavy usage">Example Usage:</p>
 				<span class="usage-inner">
 					{{#if webComponent}}
@@ -40,7 +39,7 @@
 						</tbody>
 					</table>
 				{{/if}}
-			</div>
+			</div> -->
 			<div class="card-action">
 				<div class="right">
 						<a class="table-action table-edit-item" href="{{pathFor 'View Widget'}}"><i class="material-icons">visibility</i></a>
