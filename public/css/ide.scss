@@ -1576,6 +1576,10 @@ button.btn-plus, {
 	&.field-dropdown {
 		margin-bottom: 1.1em;
 	}
+	&:last-of-type {
+		margin-bottom: 0;
+		padding-bottom: 1em;
+	}
 }
 
 
