@@ -71,6 +71,24 @@
 	</div>
 </template>
 
+<template name="updateAppCSSForm">
+	<div id="appcss">
+	{{#autoForm collection="Apps" class="app-detail" id="updateAppForm" type="update" doc=this omitFields="ancestor" buttonContent="Save Application"}}
+			{{>afQuickField name="css" class="centerField"}}
+			<button type="submit" class="btn btn-update right">Update App</button>
+	{{/autoForm}}
+	</div>
+</template>
+
+<template name="updateAppDocForm">
+	<div id="appdoc">
+	{{#autoForm collection="Apps" class="app-detail" id="updateAppForm" type="update" doc=this omitFields="ancestor" buttonContent="Save Application"}}
+			{{>afQuickField name="documentation" class="centerField"}}
+			<button type="submit" class="btn btn-update right">Update App</button>
+	{{/autoForm}}
+	</div>
+</template>
+
 
 <!-- <template name="materializeRadio">
   <div {{dsk}}>

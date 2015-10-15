@@ -1336,6 +1336,8 @@ div.ace_layer.ace_gutter-layer.ace_folding-enabled {
 .single-page-container #js .form-group,
 .single-page-container #css .form-group,
 .single-page-container #preview .form-group,
+.single-page-container #appcss .form-group,
+.single-page-container #appdoc .form-group,
 .single-page-container #appjs .form-group {
 	border-bottom: none;
 }
@@ -1344,21 +1346,27 @@ div.ace_layer.ace_gutter-layer.ace_folding-enabled {
 #js,
 #preview,
 #css,
-#appjs {
+#appjs,
+#appdoc,
+#appcss {
 	position: relative;
 }
 
 #html .control-label,
 #js .control-label,
 #css .control-label,
-#appjs .control-label {
+#appjs .control-label,
+#appdoc .control-label,
+#appcss .control-label {
 	display: none;
 }
 
 #html .form-group,
 #js .form-group,
 #css .form-group,
-#appjs .form-group {
+#appjs .form-group,
+#appdoc .form-group,
+#appcss .form-group {
 	padding-top: 0;
 	padding-bottom: 0;
 	margin-bottom: 0;
@@ -1367,7 +1375,9 @@ div.ace_layer.ace_gutter-layer.ace_folding-enabled {
 #archy,
 #archyjs,
 #archycss,
-#archyappjs {
+#archyappjs,
+#archyappdoc,
+#archyappcss {
   border: solid;
 	height: 500px;
 	min-width:  800px;

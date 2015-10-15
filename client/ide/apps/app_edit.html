@@ -1,25 +1,37 @@
 <template name="EditAppHeader">
-	<h1 class="left">{{title}} Properties</h1>
+	<h1 class="left">Edit App: {{title}}</h1>
 	<a class='btn btn-floating waves-effect waves-light ts-green new-list-item' href="http://{{domain}}/app/{{this._id}}" onclick="window.open(this.href,'targetWindow', 'toolbar=no, location=no, status=no, menubar=no, scrollbars=yes, resizable=yes, width=460, height=600'); return false;"><i class="material-icons">visibility</i></a>
 	<div class="clearfix"></div>
 </template>
 
 <template name="EditAppBody">
 	<div class="top-row">
-		<div class="col s4 tabs-container">
+		<div class="col s7 tabs-container">
 			<ul class="tabs">
-				<li class="tab"><a href="#application-details">App Details</a></li>
+				<li class="tab"><a href="#app-details">Properties</a></li>
+				<li class="tab"><a href="#app-sharing">Sharing</a></li>
+				<li class="tab"><a href="#app-css">CSS</a></li>
 				<li class="tab"><a href="#app-js">Javascript</a></li>
+				<li class="tab"><a href="#app-doc">Documentation</a></li>
 			</ul>
 		</div>
 		<div class="clearfix"></div>
 	</div>
 	<div class="single-page-container">
-		<div id="application-details">
+		<div id="app-details">
 			{{> updateAppsForm}}
+		</div>
+		<div id="app-sharing">
+			<!-- {{> updateAppsForm}} -->
+		</div>
+		<div id="app-css">
+			{{>updateAppCSSForm}}
 		</div>
 		<div id="app-js">
 			{{>updateAppJsForm}}
+		</div>
+		<div id="app-doc">
+			{{>updateAppDocForm}}
 		</div>
 	</div>
 </template>

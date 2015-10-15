@@ -144,6 +144,34 @@ Schemas.App = new SimpleSchema({
 		},
 		defaultValue: "//Advanced Use Only"
 	},
+	css: {
+		optional: true,
+		label: "CSS",
+		type: String,
+		autoform: {
+			rows: 10,
+	        afFieldInput: {
+	          type: 'aceappcss',
+	          class: 'editor' // optional
+	          // summernote options goes here
+	        }
+		},
+		defaultValue: "/* Add App-level CSS here */"
+	},
+	documentation: {
+		optional: true,
+		label: "Documentation",
+		type: String,
+		autoform: {
+			rows: 10,
+	        afFieldInput: {
+	          type: 'aceappdoc',
+	          class: 'editor' // optional
+	          // summernote options goes here
+	        }
+		},
+		defaultValue: "#Documentation in markdown here"
+	},
 	showHamburger: {
 		type: Boolean,
 		label: "Show Nav Menu in App Header",

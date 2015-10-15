@@ -56,6 +56,22 @@ Meteor.startup(function(){
 		}
 	});
 
+	AutoForm.addInputType('aceappcss', {
+		template: 'afAceAppCSS',
+		valueOut: function(obj) {
+			console.log("OUT: ", AceEditor.instance("archyappcss").getValue());
+			return AceEditor.instance("archyappcss").getValue();
+		}
+	});
+
+	AutoForm.addInputType('aceappdoc', {
+		template: 'afAceAppDoc',
+		valueOut: function(obj) {
+			console.log("OUT: ", AceEditor.instance("archyappdoc").getValue());
+			return AceEditor.instance("archyappdoc").getValue();
+		}
+	});
+
 	AutoForm.addInputType('ace', {
 		template: 'afAce',
 		valueOut: function(obj) {
@@ -142,9 +158,9 @@ Template.afAceAppJs.rendered = function() {
 
 		if(editor.loaded===true){
 			e.stop();
-			//cs = Session.get("currentScreenPage");
+			currentApp = getCurrentApp();
 			editor.$blockScrolling = Infinity;
-			//editor.setValue(Screens.findOne({_id: cs}).js, -1);
+			editor.setValue(Apps.findOne({_id: currentApp._id}).js, -1);
 		}
 	});
 }
@@ -162,6 +178,44 @@ Template.afAceCss.rendered = function() {
 		if(editor.loaded===true){
 			e.stop();
 			editor.$blockScrolling = Infinity;
+		}
+	});
+}
+
+Template.afAceAppCSS.rendered = function() {
+	var editor;
+	 console.log("APPCSS RENDERED", this.findAll());
+	Tracker.autorun(function (e) {
+
+		editor = AceEditor.instance("archyappcss", {
+			theme: "cobalt",
+			mode: "css"
+		});
+
+		if(editor.loaded===true){
+			e.stop();
+			currentApp = getCurrentApp();
+			editor.$blockScrolling = Infinity;
+			editor.setValue(Apps.findOne({_id: currentApp._id}).css, -1);
+		}
+	});
+}
+
+Template.afAceAppDoc.rendered = function() {
+	var editor;
+	 console.log("APPDOC RENDERED", this.findAll());
+	Tracker.autorun(function (e) {
+
+		editor = AceEditor.instance("archyappdoc", {
+			theme: "cobalt",
+			mode: "markdown"
+		});
+
+		if(editor.loaded===true){
+			e.stop();
+			currentApp = getCurrentApp();
+			editor.$blockScrolling = Infinity;
+			editor.setValue(Apps.findOne({_id: currentApp._id}).documentation, -1);
 		}
 	});
 }
