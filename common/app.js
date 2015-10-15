@@ -26,6 +26,9 @@ Schemas.App = new SimpleSchema({
 		optional: true,
 		autoform: {
 			type: 'selectize',
+			afFormGroup: {
+				'formgroup-class': 'field-dropdown'
+			},
 			options: function(){
 				scrs = Screens.find({isWidget: false}, {title: 1}).fetch();
 				options = scrs.map(function(ele, idx, arry){
@@ -59,6 +62,9 @@ Schemas.App = new SimpleSchema({
 		optional: true,
 		autoform: {
 			type: "selectize",
+			afFormGroup: {
+				'formgroup-class': 'field-dropdown'
+			},
 			options: function(){
 				connections = Connections.find({}).fetch();
 				options = [];
@@ -116,10 +122,12 @@ Schemas.App = new SimpleSchema({
 	// },
 	shareable: {
 		type: Boolean,
+		label: "Shareable: Accessible via anybody with app URL",
 		defaultValue: false
 	},
 	public: {
 		type: Boolean,
+		label: "Public: Include in global list of apps",
 		defaultValue: false,
 	},
 	js: {

@@ -1223,7 +1223,8 @@ p.shareable-tip {
 
 .checkbox-left,
 .checkbox-fw {
-	line-height: 50px;
+	line-height: 28px;
+	margin-bottom: 0.4em;
 }
 
 .fw-regular {
@@ -1568,10 +1569,15 @@ button.btn-plus, {
 	padding-top: 0.2em;
 	padding-bottom: 2em;
 	margin-bottom: 3em;
-	&.inline-checkboxes {
-		padding-bottom: 0.6em;
+	&.app-access-checkboxes {
+		margin-bottom: 1.5em;
+	}
+	&.field-dropdown {
+		margin-bottom: 2.1em;
 	}
 }
+
+
 
 .studio-url {
 	margin-top: 2em;
