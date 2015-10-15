@@ -8,6 +8,7 @@ $baseText: #858C9D;
 $fontSize: 12px;
 $fontFace: AvenirLTStd-Roman, Helvetica, sans-serif;
 $appBodyBG: #EBF3F6;
+// $appBodyBG: rgba(218,226,230,1);
 $green: #76D4E1;
 $whiteOverGreen: #F7FAFF;
 $activeGreen: #8DE62C;
@@ -875,7 +876,7 @@ table {
 }
 
 .row .col {
-	padding: 0 0.6rem;
+	padding: 0 0.5rem;
 }
 
 thead {
@@ -1201,6 +1202,10 @@ h4.modal-title {
 	font-family: $fwBook;
 	background: $white;
 	text-indent: 14px;
+}
+
+span.block {
+	display: block;
 }
 
 p.shareable-tip {
@@ -1578,13 +1583,14 @@ button.btn-plus, {
 .app-detail .form-group {
 	padding-top: 0.2em;
 	padding-bottom: 2em;
-	margin-bottom: 2em;
+	margin-bottom: 1em;
 	&.app-access-checkboxes {
 		margin-bottom: 0;
-		padding-bottom: 1.4em;
+		padding-bottom: 0.5em;
 	}
 	&.field-dropdown {
 		margin-bottom: 1.1em;
+		padding-bottom: 1.1em;
 	}
 	&:last-of-type {
 		margin-bottom: 0;
@@ -1617,7 +1623,7 @@ button.btn-plus, {
 }
 
 .card {
-	margin: 0.5rem 0 0.8rem 0;
+	margin: 0.2rem 0 0.8rem 0;
 	box-shadow: none;
 	border: 1px solid rgba(160, 160, 160, 0.2);
 	border-radius: 0;
