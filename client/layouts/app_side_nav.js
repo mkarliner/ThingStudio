@@ -67,8 +67,7 @@ Template.AppSideNav.helpers({
 		}
 	},
   appURL: function(){
-    myappid = getCurrentApp()._id
-    return '/app/' + myappid;
+    return '/app/' + Session.get("currentAppId");
 	}
 });
 

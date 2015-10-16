@@ -159,6 +159,7 @@ Template.afAceAppJs.rendered = function() {
 		if(editor.loaded===true){
 			e.stop();
 			currentApp = getCurrentApp();
+			console.log("Editor Loaded!!!!!!")
 			editor.$blockScrolling = Infinity;
 			editor.setValue(Apps.findOne({_id: currentApp._id}).js, -1);
 		}
