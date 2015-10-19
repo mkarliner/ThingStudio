@@ -3,22 +3,8 @@ Template.AppsBody.onRendered(function() {
 	$('ul.tabs').tabs();
 });
 
-Template.AppsHeader.events({
-	"click .header-action-1": function(e, tmpl) {
-		e.preventDefault();
-		menuOps();
-	}
-});
-
-Template.AppsNewItem.events({
-	"click .table-cancel-new": function(e, tmpl) {
-		e.preventDefault();
-		menuOps();
-	},
-	"click .divider-decoration": function(e, tmpl) {
-		e.preventDefault();
-		menuOps();
-	}
+Template.AppList.onDestroyed(function () {
+	$('.tooltipped').tooltip('remove');
 });
 
 Template.AppsBody.events({
@@ -46,7 +32,6 @@ Template.AppsBody.helpers({
 		} else {
 			return;
 		}
-		
 	}
 });
 
@@ -66,6 +51,14 @@ Template.AppList.helpers({
 			return 'No summary set'
 		}
 	},
+	templateCount: function () {
+		return Screens.find({appId: this._id}).count()
+	},
+	feedCount: function () {
+		mqttFeedCount = Feeds.find({appId: this._id}).count()
+		httpFeedCount = HTTPFeeds.find({appId: this._id}).count()
+		return mqttFeedCount + httpFeedCount;
+	},
 	showConnectionTitle: function() {
 		var connection = Connections.find({_id: this.connection}).fetch()
 		if ( connection.length > 0 ) {
@@ -81,24 +74,14 @@ Template.AppList.helpers({
 			homeTitle = home[0].title
 			return homeTitle
 		} else {
-			return 'No home screen set'
+			return 'None set'
 		}
 	},
 	showShareable: function() {
-		var isShareable = this.shareable
-		if ( isShareable === true ) {
-			return 'Yes'
-		} else {
-			return 'No'
-		}
+		return this.shareable ? "true" : "false";
 	},
 	showPublic: function() {
-		var isPublic = this.public
-		if ( isPublic === true ) {
-			return 'Yes'
-		} else {
-			return 'No'
-		}
+		return this.public ? "true" : "false";
 	},
 	showDescription: function() {
 		var myDescription = this.description
@@ -108,4 +91,7 @@ Template.AppList.helpers({
 			return 'No description set'
 		}
 	},
+	appPathInfo: function(){
+		return {appid: this._id}
+	}
 });

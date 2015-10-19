@@ -1,4 +1,220 @@
 ///////////////////////////////////////////////////////////////////////////////////////
+// General Purpose Functions //
+///////////////////////////////////////////////////////////////////////////////////////
+
+arrayOfObjectsFromObject = function (obj) {
+// To make #each available with an object that is not an array
+	result = [];
+	for (var key in obj){
+			result.push({name:key,value:obj[key]});
+	}
+	return result;
+}
+
+// Gives checkboxes with no autform ID a suitable reference ID
+makeCheckboxID = function () {
+	function makeid() {
+		var text = "";
+		var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+		for( var i=0; i < 5; i++ ) {
+			text += possible.charAt(Math.floor(Math.random() * possible.length));
+		}
+		return text;
+	}
+	var uniqid = makeid();
+	Template.instance().$(".mat-check input").attr("id", uniqid)
+	Template.instance().$(".mat-check label").attr("for", uniqid)
+}
+
+// From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys
+if (!Object.keys) {
+  Object.keys = (function() {
+    'use strict';
+    var hasOwnProperty = Object.prototype.hasOwnProperty,
+        hasDontEnumBug = !({ toString: null }).propertyIsEnumerable('toString'),
+        dontEnums = [
+          'toString',
+          'toLocaleString',
+          'valueOf',
+          'hasOwnProperty',
+          'isPrototypeOf',
+          'propertyIsEnumerable',
+          'constructor'
+        ],
+        dontEnumsLength = dontEnums.length;
+
+    return function(obj) {
+      if (typeof obj !== 'object' && (typeof obj !== 'function' || obj === null)) {
+        throw new TypeError('Object.keys called on non-object');
+      }
+
+      var result = [], prop, i;
+
+      for (prop in obj) {
+        if (hasOwnProperty.call(obj, prop)) {
+          result.push(prop);
+        }
+      }
+
+      if (hasDontEnumBug) {
+        for (i = 0; i < dontEnumsLength; i++) {
+          if (hasOwnProperty.call(obj, dontEnums[i])) {
+            result.push(dontEnums[i]);
+          }
+        }
+      }
+      return result;
+    };
+  }());
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+// HTTP  Management//
+///////////////////////////////////////////////////////////////////////////////////////
+
+
+FeedProcessors = new Mongo.Collection(null);
+
+FeedList = new Mongo.Collection(null);
+
+Meteor.startup(function(){
+	Tracker.autorun(function(){
+		mqttFeeds = Feeds.find().fetch();
+		for(var m=0; m<mqttFeeds.length; m++) {
+			FeedList.insert({name: mqttFeeds[m].title, type: "MQTT"})
+		}
+		httpFeeds = HTTPFeeds.find().fetch();
+		for(var h=0; h<httpFeeds.length; h++) {
+			FeedList.insert({name: httpFeeds[h].title, type: "HTTP"})
+		}
+	});
+})
+
+
+
+RegisterFeedProcessor = function(name,  type, func) {
+	// Type can be HTTPRequest, HTTPResponse
+	// HTTPFeedProcessors[name] = func;
+	FeedProcessors.insert({name: name, func: func, type: type})
+}
+
+
+var HTTPClock = 0;
+
+RegisterFeedProcessor("JSONOut", "HTTPRequest", function(app, conn, feed, message){
+	console.log("testReq Proc", feed, message);
+	return ({
+		content: message
+	})
+});
+
+RegisterFeedProcessor("JSONIn", "HTTPResponse", function(app, conn, feed, error, result){
+	console.log("RESPONSE: ", feed, error, result);
+	if(error) {
+		console.log("HRRPR: ", error.message );
+		return;
+	}
+	try {
+		payload = JSON.parse(result.content);
+	}
+	catch(err) {
+		console.log("HERR: ", err);
+		Session.set("runtimeErrors", "Invalid MQTT message, payload not JSON: " + result.content.toString());
+		payload = result.content.toString();
+	}
+	console.log("payload", payload)
+	Messages.upsert(
+		{
+			topic: feed.path,
+			feed: feed.title
+		},
+		{$set:
+			{
+				feed: feed.title,
+				topic: feed.path,
+				payload: payload},
+				$inc:{count: 1
+			}
+		});
+});
+
+function interval(func, wait, times){
+    var interv = function(w, t){
+        return function(){
+            if(typeof t === "undefined" || t-- > 0){
+                setTimeout(interv, w);
+                try{
+                    func.call(null);
+                }
+                catch(e){
+                    t = 0;
+                    throw e.toString();
+                }
+            }
+        };
+    }(wait, times);
+
+    setTimeout(interv, wait);
+};
+
+
+checkHTTPFeeds = function (){
+	//console.log("HTTP clock");
+	HTTPClock++;
+	var feeds = HTTPFeeds.find().fetch();
+
+	//Check which feeds need to be polled.
+	for(var f=0; f<feeds.length; f++) {
+		if(HTTPClock % feeds[f].polling_interval == 0 ) {
+			var feed = feeds[f];
+			var conn = HTTPConnections.findOne(feed.connection);
+			if(!conn) {
+				return;
+			}
+			var app = Apps.findOne({_id: conn.appId});
+			if(!app) {
+				return;
+			}
+			var url = conn.protocol + "://" + conn.host + ":" + conn.port + feed.path;
+			timeout = (feed.polling_interval-1)*1000;
+			console.log("HT: ", feed.responseProcessor, feed.requestProcessor, conn, url, timeout);
+			var reqProc = FeedProcessors.findOne({type: "HTTPRequest", name: feed.requestProcessor});
+			var options = reqProc.func(app, conn, feed, "Null Message");
+			console.log("BEFORE HTTP Poll:", feed.verb, url, options);
+			HTTP.call(feed.verb, url, options, function(error, result) {
+				//console.log("HRET: ", error, result);
+				//Call each feed processor in turn
+				// for(var p=0; p<feed.processors.length; p++ ){
+				// 	//console.log("CALLING: ", HTTPFeedProcessors[feed.processors[p]])
+				// 	HTTPFeedProcessors[feed.processors[p]](feed, error, result);
+				// }
+				console.log("FEEDDDD: ", feed)
+				for(var rpc=0; rpc<feed.responseProcessors.length; rpc++) {
+					var fp = FeedProcessors.findOne({type: "HTTPResponse", name: feed.responseProcessors[rpc]});
+					//console.log("FP: ", fp, FeedProcessors.find().fetch());
+					fp.func(app, conn, feed, error, result);
+				}
+			})
+		}
+	}
+	// console.log("HTTP Clock", HTTPClock)
+}
+
+
+// var HTTPClock = 0;
+// Meteor.startup(function(){
+// 	Meteor.setTimeout(checkHTTPFeeds, 1000);
+// 	Session.set("FeedProcessors", Object.keys(HTTPFeedProcessors));
+// });
+Meteor.startup(function() {
+	console.log("Starting HTTP Check");
+	interval(checkHTTPFeeds, 1000);
+})
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////
 // MQTT & Connection Management//
 ///////////////////////////////////////////////////////////////////////////////////////
 
@@ -13,18 +229,68 @@ SubscribedTopics = new Array();
 
 Feedhooks = {};
 
-publish = function(feed, message) {
-	if(feed.pubsub !="Publish") {
-		message = "Attempt to publish to subcription feed: "+ feed.title; 
-		Alerts.upsert({type: 'runtime', status: "warning", message:  message},{$set:{type: 'runtime', status: 'warning', message: message} ,$inc: {count: 1} } );
-	} else {
-		Outbox.upsert({topic: feed.subscription}, {$set: { feed: feed.title, topic: feed.subscription, payload: message},$inc: {count: 1}});
-		mqttClient.publish(feed.subscription, message);	
+
+
+
+publish = function(feedName, message) {
+	if(typeof(feedName) != "string") {
+		console.log("NON-FEED NAME PASSED TO PUBLISH", feedName, typeof feedName);
+		return;
+	}
+	feedType = FeedList.findOne({name: feedName}).type;
+	if(!feedType) {
+		console.log("NO SUCH FEED: ", feedName)
+	}
+	switch(feedType) {
+	case "MQTT":
+		feed = Feeds.findOne(feedName);
+		if(feed.pubsub !="Publish") {
+			message = "Attempt to publish to subcription feed: "+ feed.title;
+			Alerts.upsert({type: 'runtime', status: "warning", message:  message},{$set:{type: 'runtime', status: 'warning', message: message} ,$inc: {count: 1} } );
+		} else {
+			Outbox.upsert({topic: feed.subscription}, {$set: { feed: feed.title, topic: feed.subscription, payload: message},$inc: {count: 1}});
+			mqttClient.publish(feed.subscription, message);
+		}
+		break;
+	case "HTTP":
+		var feed = HTTPFeeds.findOne({title: feedName});
+		var app = getCurrentApp();
+		var conn = HTTPConnections.findOne(feed.connection);
+		console.log("HTTP FEED Request", feedName, feed);
+		//Get the requestProcessor for this feed
+		var fp = FeedProcessors.findOne({name: feed.requestProcessor});
+		//And call it to process the outgoing message
+		console.log("NOTE TO SELF - request feed processor need access to request!!!!!!!");
+		var options = fp.func(app, conn, feed, message);
+		//Record that we have done this for debugging.
+		Outbox.upsert({topic: feed.path}, {$set: { feed: feed.title, topic: feed.path, payload: message},$inc: {count: 1}});
+		//Now actually do the deed.
+
+		var url = conn.protocol + "://" + conn.host + ":" + conn.port +feed.path;
+		timeout = 5*1000;
+				options.headers = {};
+				options.timeout = timeout;
+				//options.headers["Access-Control-Allow-Headers"] = "Access-Control-Allow-Origin, Origin, X-Requested-With, Content-Type, Accept";
+				//options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+		//options.headers['Access-Control-Allow-Origin'] = '*';
+		//options.headers["Access-Control-Allow-Headers"] = "Access-Control-Allow-Origin, Origin, X-Requested-With, Content-Type, Accept";
+		//options.headers['Content-Type'] = "application/json";
+		console.log("HTTPCALL: ", feed.verb, url, options )
+		HTTP.call(feed.verb, url, options, function(error, result) {
+			console.log("HEV: ", error, result)
+			for(var rpc=0; rpc<feed.responseProcessors.length; rpc++) {
+				var fp = FeedProcessors.findOne({type: "HTTPResponse", name: feed.responseProcessors[rpc]});
+				//console.log("FP: ", fp, FeedProcessors.find().fetch());
+				fp.func(app, conn, feed, error, result);
+			}
+		})
+		break;
+	default:
+		console.log("UNKNOWN FEED TYPE: ", feedType)
 	}
 }
-
 mqttClientSubscribe = function(topic) {
-	console.log("MQTTSUB : ", topic, SubscribedTopics);
+	// console.log("MQTTSUB : ", topic, SubscribedTopics);
 	if(SubscribedTopics[topic]) {
 		return;
 	} else {
@@ -35,7 +301,9 @@ mqttClientSubscribe = function(topic) {
 
 mqttClientUnsubscribe= function(topic) {
 	delete SubscribedTopics[topic];
-	mqttClient.unsubscribe(topic);
+	if(mqttClient.unsubscribe) {
+		mqttClient.unsubscribe(topic);
+	}
 }
 
 // The following functions are mostly used by widgets
@@ -52,7 +320,7 @@ publishFeed = function(feedName, message) {
 		message = "No such publish feed - " + feedName;
 		Alerts.upsert({type: 'runtime', status: "warning", message:  message},{$set:{type: 'runtime', status: 'warning', message: message} ,$inc: {count: 1} } );
 	}
-	
+
 }
 
 getFeed = function(feed, defVal){
@@ -84,14 +352,61 @@ Meteor.setInterval(function(){
 	} else {
 		Session.set("ConnectionStatus", true);
 	}
-	
+
 }, 5000);
 
 
-getCurrentApp = function() { 
+getCurrentApp = function() {
 	app =  Apps.findOne({_id: Session.get("currentAppId")});
 	return app;
 };
+
+getAppTree = function(appId){
+	//console.log("GAT ", appId)
+	baseAppId = Meteor.settings.public.systemApp;
+	app = Apps.findOne({_id: appId});
+	if(!app) {
+		return false;
+	}
+	apps = [app._id];
+
+	if(baseAppId) {
+		// console.log("Set system app to ", baseAppId)
+		apps = [app._id, baseAppId];
+	} else {
+		console.log("NO SYSTEM APP DEFINED!!!!");
+		apps = [app._id];
+	}
+	while(app && app.ancestor) {
+		app = Apps.findOne({_id: app.ancestor});
+		if(app) {
+			apps.push(app._id);
+		}
+	}
+	return apps;
+}
+
+InitialiseApps = function(){
+	FeedProcessors.remove();
+	FeedList.remove();
+	//First initialise the system App js.
+
+	capp = getCurrentApp();
+	if(!capp) {
+		return;
+	}
+	applist = getAppTree(capp._id);
+
+	// console.log("Initialising Apps", applist);
+	for(var a=0; a<applist.length; a++ ){
+		var app = Apps.findOne(applist[a]);
+		if(app && app.js) {
+			// console.log("Initialising app ", app.title);
+			eval(app.js);
+		}
+	}
+}
+
 
 getCredentials = function(){
 	return Session.get("currentCredentials");
@@ -164,16 +479,16 @@ ResetMessages = function() {
 
 DisconnectMQTT = function() {
 	console.log("SHUTTING DOWN CLIENT")
-	if (typeof mqttClient.end == 'function') { 
+	if (typeof mqttClient.end == 'function') {
 		// console.log("Ending current client");
-	    mqttClient.end(); 
+	    mqttClient.end();
 	}
 }
 
 UnsubscribeAll = function(){
-	if (typeof  mqttClientUnsubscribe != 'function') { 
+	if (typeof  mqttClientUnsubscribe != 'function') {
 		console.log("No connection");
-	    return; 
+	    return;
 	}
 	feeds = Feeds.find({}).fetch();
 	for(var f=0; f<feeds.length; f++) {
@@ -197,7 +512,7 @@ connect = function (conn, usr, pass) {
 	} else {
 		username = conn.username;
 	}
-	
+
 	if(pass) {
 		password = pass;
 	} else {
@@ -301,7 +616,7 @@ connect = function (conn, usr, pass) {
 							if(isNaN(diff)) {
 								diff = 0.0;
 							}
-							console.log("DIFF: ", feeds[i].title, diff);
+							// console.log("DIFF: ", feeds[i].title, diff);
 
 							// Check min
 							if( value < lastMessage.min) {
@@ -325,7 +640,7 @@ connect = function (conn, usr, pass) {
 								// console.log("RESET MM", feeds[i].maxMinAvgLimit)
 							} else {
 								count +=1;
-							} 
+							}
 							//Generate exp moving average
 							tc = 0.1;
 							avg = tc * value + (1.0-tc)* (lastMessage.avg ? lastMessage.avg : value);
@@ -333,7 +648,7 @@ connect = function (conn, usr, pass) {
 							// console.log('DIFFAV: ', feeds[i].title, diffavg);
 							//console.log("UPSERGSD: ", feeds[i].title,  lastMessage, " minMax", value, "diff: ", diff, min, max, avg, "diffavg", diffavg);
 							OldMessages.upsert(
-								{topic: topic, feed: feeds[i].title, jsonKey: jsonKey}, 
+								{topic: topic, feed: feeds[i].title, jsonKey: jsonKey},
 								{$set: {jsonKey: jsonKey, value: value, diff: diff, min: min, max: max, avg: avg, diffavg: diffavg, count: count}})
 						} else {
 							console.log("minMaxInit", jsonKey, lastMessage);
@@ -342,19 +657,19 @@ connect = function (conn, usr, pass) {
 					}
 				}
 				if(Feedhooks[feeds[i].title]) {
-					Feedhooks[feeds[i].title](payload);	
+					Feedhooks[feeds[i].title](payload);
 				}
 			}
 
-			
+
 		}
 	});
 }
 
 disconnect = function(conn) {
-	if (typeof mqttClient.end == 'function') { 
+	if (typeof mqttClient.end == 'function') {
 		// console.log("Ending current client");
-		mqttClient.end(); 
+		mqttClient.end();
 	}
 }
 
@@ -374,7 +689,7 @@ changeActiveApp = function(appId) {
 	ResetMessages();
 };
 
-getCurrentApp = function() { 
+getCurrentApp = function() {
 	app =  Apps.findOne({_id: Session.get("currentAppId")});
 	return app;
 }

@@ -1,52 +1,63 @@
-AppViewerController = RouteController.extend({
+AppViewerController = PreloadController.extend({
 	layoutTemplate: "ViewerLayout",
+	'preload': {
+		'timeOut': 10000,
+		'styles': ['/css/viewer.css']
+	},
 	loadingTemplate: "Loading",
 	onBeforeAction: function() {
 		$('body').addClass('viewer-body');
+		if(this.params.appid) {
+			Session.setPersistent("currentAppId", this.params.appid);
+		}
 		this.next();
+		
 	},
 	subscriptions: function() {
-		console.log("WAITON")
+		// console.log("WAITON")
 		var appId = Session.get("currentAppId");
 		if(appId){
 			return [
 				Meteor.subscribe('apps', appId, {
 					onReady: function(){
-						console.log("Apps READY!");
+						InitialiseApps();
 					}
 				}),
 				Meteor.subscribe('connections', appId, {
 					onReady: function(){
-						console.log("Connections READY!");
+						// console.log("Connections READY!");
 					}
 				}),
+				Meteor.subscribe('http_connections', appId),
 				Meteor.subscribe('feeds', appId, {
 					onReady: function(){
-						console.log("Feeds READY!");
+						// console.log("Feeds READY!");
 					}
 				}),
+				Meteor.subscribe('http_feeds', appId),
 				Meteor.subscribe('screens', appId, {
 					onReady: function(){
-						console.log("Screens READY!");
+						// console.log("Screens READY!");
 					}
 				}),
 				Meteor.subscribe('widgets', appId, {
 					onReady: function(){
-						console.log("Screens READY!");
+						// console.log("Screens READY!");
 						InstantiateWidgets();
 					}
 				}),
 				Meteor.subscribe('themes', appId, {
 					onReady: function(){
-						console.log("Themes READY!");
+						// console.log("Themes READY!");
 					}
 				})
 				// Meteor.subscribe('themes', appId),
 			];
 		} else {
-			screenId = Session.get("currentScreenId");
-			console.log("Single screen subscription", screenId)
-			return Meteor.subscribe("singleScreen", screenId);
+			// screenId = Session.get("currentScreenId");
+			console.log("You don't have an app ID. Weird.")
+			// return Meteor.subscribe("singleScreen", screenId);
+			return false;
 		}
 
 	}

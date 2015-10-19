@@ -1,19 +1,10 @@
-<!-- 
-Outstanding
-1. Icon export
-2. Decide on collapsibility
-3. Center name & droparrow
-4. Flip arrow when collapsible is open
-5. Jumpiness when select is destroyed (occasionally)
-6. Reexport logo with flattened text
--->
 <template name="AppSideNav">
 	<ul id="slide-out" class="side-nav fixed">
 		<div class="section sb-profile">
 			<img class="circle center-image" src="{{gravatar}}">
 			<ul class="collapsible" data-collapsible="accordion">
 				<li>
-					<div class="collapsible-header"><div class="center-align"><p class="my-name">{{myName}}<i class="mdi-hardware-keyboard-arrow-down" data-angle="0"></i></p></div></div>
+					<div class="collapsible-header"><div class="center-align"><p class="my-name">{{myName}}<i class="material-icons">keyboard_arrow_down</i></p></div></div>
 					<div class="collapsible-body clearfix">
 						<p><a href="/settings">Settings</a></p>
 						<!-- <p><a href="/profile">Profile</a></p> -->
@@ -27,28 +18,27 @@ Outstanding
 		<div class="divider"></div>
 		<div class="section">
 			<p class="section-header">Current App</p>
+			<a href="{{appURL}}" onclick="window.open(this.href,'targetWindow', 'toolbar=no, location=no, status=no, menubar=no, scrollbars=yes, resizable=yes, width=360, height=640'); return false;" class="btn btn-view-app-sidebar">View App</a>
 			<li class="{{isActivePath regex='^\\/connections'}}"><a href="/connections"><i class="icon-ts-connection"></i><span>Connections</span></a></li>
-			<li class="{{isActivePath regex='^\\/feeds'}}"><a href="/feeds"><i class="icon-ts-feeds"></i><span>Feeds</span></a></li>		
+			<li class="{{isActivePath regex='^\\/feeds'}}"><a href="/feeds"><i class="icon-ts-feeds"></i><span>Feeds</span></a></li>
 			<li class="{{isActivePath regex='^\\/templates'}}"><a href="/templates"><i class="icon-ts-templates"></i><span>Templates</span></a></li>
-			<li class="{{isActivePath regex='^\\/themes'}}"><a href="/themes"><i class="mdi-image-palette"></i> Themes</a></li>
 		</div>
 		<div class="divider"></div>
 		<div class="section">
 			<p class="section-header">Library</p>
-			<li class="{{isActivePath regex='^\\/widgets'}}"><a href="/widgets"><i class="mdi-image-tune"></i> Widgets</a></li>
-			<li class="{{isActivePath regex='^\\/apps'}}"><a href="/apps"><i class="mdi-navigation-apps"></i> Apps</a></li>
+			<li class="{{isActivePath regex='^\\/widgets'}}"><a href="/widgets"><i class="material-icons">tune</i> Widgets</a></li>
+			<li class="{{isActivePath regex='^\\/apps'}}"><a href="/apps"><i class="material-icons">apps</i> Apps</a></li>
 			<!-- <li class="{{isActivePath regex='^\\/credentials'}}"><a href="/credentials"><i class="mdi-communication-vpn-key"></i> Credentials</a></li> -->
 		</div>
 		<div class="divider"></div>
 		<div class="section help">
 			<p class="section-header">Help</p>
 			<ul class="collapsible">
-				<li class="{{isActivePath regex='^\\/chat'}}"><a href="/chat"><i class="mdi-action-face-unlock"></i> Chat {{#if newChats}}<span class="chat-count">{{numChats}}</span>{{/if}}</a>
-				</li>
-				<li class="{{isActivePath regex='^\\/support'}}"><a href="http://forum.thingstud.io" target="_blank"><i class="mdi-communication-forum"></i> Forum</a></li>
-				<li class="{{isActivePath regex='^\\/video-tutorials'}}"><a href="/tutorials"><i class="mdi-action-account-balance"></i> Video Tutorials</a></li>
-				<li class="{{isActivePath regex='^\\/documentation|docs'}}"><a class="" href="/docs"><i class="mdi-maps-local-library"></i> Documentation</a></li>
-				<li class="{{isActivePath regex='^\\/support'}}"><a href="/support"><i class="mdi-communication-email"></i> Support</a></li>
+				<!-- <li class="{{isActivePath regex='^\\/chat'}}"><a href="/chat"><i class="material-icons">face</i> Chat {{#if newChats}}<span class="chat-count">{{numChats}}</span>{{/if}}</a></li> -->
+				<li class="{{isActivePath regex='^\\/documentation|docs'}}"><a class="" href="/docs"><i class="material-icons">local_library</i> Documentation</a></li>
+				<li class="{{isActivePath regex='^\\/video-tutorials'}}"><a href="/tutorials"><i class="material-icons">video_library</i> Video Tutorials</a></li>
+				<li class="{{isActivePath regex='^\\/forum'}}"><a href="http://forum.thingstud.io" target="_blank"><i class="material-icons">forum</i> Forum</a></li>
+				<li class="{{isActivePath regex='^\\/support'}}"><a href="/support"><i class="material-icons">email</i> Support</a></li>
 				{{#if isInRole 'admin'}}
 					<li class="{{isActivePath regex='^\\/current-users'}}"><a class="" href="/current-users">Current Users</a></li>
 					<li class="{{isActivePath regex='^\\/Sysadmin|sysadmin'}}"><a href="/sysadmin">System Logs</a></li>

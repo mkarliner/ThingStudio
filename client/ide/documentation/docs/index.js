@@ -3,7 +3,7 @@
 DocsIndex = {
 	Basics: [
 		{
-			title: "About ThingStudio & MQTT",	
+			title: "ThingStudio Basic Concepts",	
 
 		},
 		{
@@ -11,12 +11,11 @@ DocsIndex = {
 
 		},
 		{
-			title: "Connections",
+			title: "MQTT Connections & Feeds",
 			
 		},
 		{
-			title: "Feeds",
-			
+			title: "HTTP Connections & Feeds",
 		},
 		{
 			title: "Templates",	
@@ -36,11 +35,23 @@ DocsIndex = {
 		{
 			title: "Displaying data in your Templates"	
 		},
-		],
-	HardwarePlatforms: [
 		{
 			title: "Getting data between IoT devices and ThingStudio"	
 		},
+		{
+			title: "Laying out your templates"
+		}
+		],
+	// HardwarePlatforms: [
+	//
+	// 	],
+		Advanced: [
+			{
+				title: "Custom Helpers"
+			},
+			{
+				title: "Feed Processing"
+			}			
 		],
 	Reference: [
 		{

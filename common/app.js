@@ -26,6 +26,9 @@ Schemas.App = new SimpleSchema({
 		optional: true,
 		autoform: {
 			type: 'selectize',
+			afFormGroup: {
+				'formgroup-class': 'field-dropdown'
+			},
 			options: function(){
 				scrs = Screens.find({isWidget: false}, {title: 1}).fetch();
 				options = scrs.map(function(ele, idx, arry){
@@ -39,6 +42,7 @@ Schemas.App = new SimpleSchema({
 	ancestor: {
 		type: String,
 		label: "Parent App",
+		index: 1,
 		optional: true,
 		autoform: {
 			type: "selectize",
@@ -58,6 +62,9 @@ Schemas.App = new SimpleSchema({
 		optional: true,
 		autoform: {
 			type: "selectize",
+			afFormGroup: {
+				'formgroup-class': 'field-dropdown'
+			},
 			options: function(){
 				connections = Connections.find({}).fetch();
 				options = [];
@@ -115,11 +122,55 @@ Schemas.App = new SimpleSchema({
 	// },
 	shareable: {
 		type: Boolean,
+		label: "Shareable: Accessible via anybody with app URL",
 		defaultValue: false
 	},
 	public: {
 		type: Boolean,
+		label: "Public: Include in global list of apps",
 		defaultValue: false,
+	},
+	js: {
+		optional: true,
+		label: "Javascript",
+		type: String,
+		autoform: {
+			rows: 10,
+	        afFieldInput: {
+	          type: 'aceappjs',
+	          class: 'editor' // optional
+	          // summernote options goes here
+	        }
+		},
+		defaultValue: "//Advanced Use Only"
+	},
+	css: {
+		optional: true,
+		label: "CSS",
+		type: String,
+		autoform: {
+			rows: 10,
+	        afFieldInput: {
+	          type: 'aceappcss',
+	          class: 'editor' // optional
+	          // summernote options goes here
+	        }
+		},
+		defaultValue: "/* Add App-level CSS here */"
+	},
+	documentation: {
+		optional: true,
+		label: "Documentation",
+		type: String,
+		autoform: {
+			rows: 10,
+	        afFieldInput: {
+	          type: 'aceappdoc',
+	          class: 'editor' // optional
+	          // summernote options goes here
+	        }
+		},
+		defaultValue: "#Documentation in markdown here"
 	},
 	showHamburger: {
 		type: Boolean,
@@ -131,11 +182,15 @@ Schemas.App = new SimpleSchema({
 	// 	type: Boolean,
 	// 	defaultValue: false
 	// }
-	
+
 });
 
 Apps.before.remove(function(userId, doc) {
 	if(Meteor.isServer) {
+		//check for dependent apps.
+		if(Apps.findOne({ancestor: doc._id})) {
+			return false;
+		}
 		//console.log("APP DESTROY");
 		Connections.remove({appId: doc._id});
 		Feeds.remove({appId: doc._id});
@@ -146,14 +201,16 @@ Apps.before.remove(function(userId, doc) {
 
 Apps.after.insert(function(userId, doc) {
 	if(Meteor.isClient) {
-		changeActiveApp(doc);
+		changeActiveApp(doc._id);
+		Router.go('Edit App', {_id: doc._id});
 	}
 });
 
 Apps.after.update(function(userId, doc) {
 	if(Meteor.isClient) {
+		InitialiseApps();
 		currConn = getCurrentConnection();
-		if(currConn._id != doc.connection) {
+		if(currConn && currConn._id != doc.connection) {
 			newConn = Connections.findOne({_id: doc.connection});
 			UnsubscribeAll();
 			DisconnectMQTT();

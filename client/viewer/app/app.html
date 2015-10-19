@@ -1,17 +1,32 @@
 <template name="ViewApp">
-	<div class="view-wrapper">
-	{{this.title}}
-	
-	</div>
-		<div class="flex-container" id="screenList">
-		
-		
-		<div class="flex-column">
-		{{#each screenlist}}
-						<button class="flex-item btn screenlink"><a class="flex-item" style="color: orange" href="/viewer/screen/{{this._id}}">{{this.title}}</a></button>
-		{{/each}}
-	
-
-		</div>
+	<div>
+		<main>
+			<!-- {{#if freeApp}} -->
+			<!-- <h1 class="list-intro">Screens in this app</h1> -->
+			<!-- {{/if}} -->
+				<div class="list-wrapper">
+					<ul class="screens-list">
+						{{#if screenlist.count}}
+							{{#each screenlist}}
+								<li>
+									<a href="{{pathFor 'ViewScreen' data=screenparams }}">
+										<span class="letter-circle letter-{{firstLetter}}">{{firstLetter}}</span>
+										<div class="screen-desc">
+											<h2>{{this.title}}</h2>
+											{{#if this.summary}}
+												<span>{{this.summary}}</span>
+											{{else}}
+												<span>No summary set for this template</span>
+											{{/if}}
+										</div>
+									</a>
+								</li>
+							{{/each}}
+							{{else}}
+							<h1 class="nothing">No templates in this application.</h1>
+						{{/if}}
+					</ul>
+				</div>
+		</main>
 	</div>
 </template>

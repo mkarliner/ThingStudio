@@ -1,6 +1,6 @@
-Router.route("/view/app/:_id", {
+Router.route("/app/:appid", {
 	onBeforeAction: function() {
-		Session.setPersistent("currentAppId", this.params._id);
+		Session.setPersistent("currentAppId", this.params.appid);
 		this.next();
 	},
 	controller: "AppViewerController",
@@ -13,7 +13,7 @@ Router.route("/view/app/:_id", {
 			});
 			return;
 		}
-		console.log("ACTION!")
+		// console.log("ACTION!")
 		app = getCurrentApp();
 		if(!app) {
 			this.render("Loading", {
@@ -21,23 +21,14 @@ Router.route("/view/app/:_id", {
 			});
 			return;
 		}
-		console.log("Current APP", app)
-		// if(!app) {
-		// 	this.render("Loading", {
-		// 		data: "Current Application"
-		// 	});
-		// 	return;
-		// }
-		
-
 		screen_cnt = Screens.find({isWidget: false}).count();
 		// If there is an app home page, go there
 		if (app.home_page) {
-			Router.go("/viewer/screen/" + app.home_page);
+			Router.go("/app/"+app._id+"/screen/" + app.home_page);
 			// If there is only one screen, go to the one screen
 		} else if (screen_cnt == 1) {
 			scr = Screens.findOne({});
-			Router.go("/viewer/screen/" + scr._id);
+			Router.go("/app/"+app._id+"/screen/" + scr._id);
 		} else {
 			this.render("ViewApp", {
 				data: function() {
@@ -48,17 +39,17 @@ Router.route("/view/app/:_id", {
 	}
 });
 
-
-
-
-Router.route("/viewer/screen/:_id", {
+Router.route("/app/:appid/screen/:_id", {
 	controller: "AppViewerController",
 	name: "ViewScreen",
 	onBeforeAction: function(){
-		Session.set("currentScreenId", this.params._id);
+		//console.log("VS: ", Session.get("currentAppId"), this.params.appid)
+		// if(Session.get("currentAppId") != this.params.appid) {
+			//console.log("Setting AppID!!!!!!", this.params.appid)
+			Session.setPersistent("currentAppId", this.params.appid);
+		// }
 		this.next();
 	},
-
 	action: function() {
 		if(!this.ready()) {
 			console.log("SUB NOT READY")
@@ -71,11 +62,12 @@ Router.route("/viewer/screen/:_id", {
 		// Have we come straight to this URL?
 		if(!app) {
 			//Yes, we need to set up the current app.
-			scr = Screens.findOne({_id: this.params._id});
-			Session.setPersistent("currentAppId", scr.appId);
-			this.render("Loading",{
-				data: "Application sub"
-			})		
+			// scr = Screens.findOne({_id: this.params._id});
+			// Session.setPersistent("currentAppId", scr.appId);
+			// this.render("Loading",{
+			// 	data: "Application sub"
+			// })
+			console.log("MISTAKE: Should have app.")
 		}
 		InstantiateWidgets();
 		this.render("ViewScreen", {
@@ -86,7 +78,5 @@ Router.route("/viewer/screen/:_id", {
 				});
 			}
 		});
-
 	}
-
 });

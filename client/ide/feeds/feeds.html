@@ -1,7 +1,14 @@
 <template name="FeedsHeader">
 	<h1 class="left">Feeds</h1>
-	<!-- <a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>BUTTON</a> -->
-	<a class="header-action-1 clearfix" href="#">Create a new feed</a>
+	<!-- Dropdown Trigger -->
+	<a class='dropdown-button btn btn-floating waves-effect waves-light ts-green new-list-item' href='#' data-activates='dropdown2'><i class="material-icons">add</i></a>
+
+	<!-- Dropdown Structure -->
+	<ul id='dropdown2' class='dropdown-content'>
+		<li><a href="{{pathFor 'New MQTT Feed'}}">New MQTT Feed</a></li>
+		<li><a href="{{pathFor 'New HTTP Feed'}}">New HTTP Feed</a></li>
+	</ul>
+	<div class="clearfix"></div>
 </template>
 
 <template name="FeedsBody">
@@ -10,58 +17,50 @@
 	<table class="hoverable">
 		{{> FeedsTableWidths}}
 		<thead>
-			<tr cellpadding="10"><th>Feed Title</th><th>Subscription</th><th>Pub/Sub</th><th>Action</th></tr>
+			<tr cellpadding="10"><th>Transport</th><th>Feed Title</th><th>Details</th><th>Action</th></tr>
 		</thead>
 		<tbody>
 			<tr id="item-insert" class="spacer td-closed"><td></td></tr>
-			{{#each feedlist}}
-				<tr>
-					<td>{{title}}</td>
-					<td>{{subscription}}</td>	
-					<td>{{pubsub}}</td>
-					<td><a class="table-action table-edit-item" href="{{pathFor 'Edit Feed'}}"><i class="mdi-editor-mode-edit"></i></a>{{#afModal classes="table-action table-cancel-item" collection="Feeds" operation="remove" doc=_id title="<i class='mdi-alert-error'></i><span class='modal-header'>Deleting Feed</span>" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="icon-ts-trash"></i>{{/afModal}}</td>
-				</tr>
+			{{#each mqttFeedsList}}
+			<tr>
+				<td>MQTT</td>
+				<td>{{title}}</td>
+				<td>{{mqttFeedDetails}}</td>
+				<td><a class="table-action table-edit-item" href="{{pathFor 'Edit MQTT Feed'}}"><i class="material-icons">mode_edit</i></a>{{#afModal classes="table-action table-cancel-item" collection="Feeds" operation="remove" doc=_id title="<i class='material-icons'>error_outline</i><span class='modal-header'>Deleting Feed</span>" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="icon-ts-trash"></i>{{/afModal}}</td>
+			</tr>
+			{{/each}}
+			{{#each httpFeedsList}}
+			<tr>
+				<td>HTTP</td>
+				<td>{{title}}</td>
+				<td>{{httpFeedDetails}}</td>
+				<td><a class="table-action table-edit-item" href="{{pathFor 'Edit HTTP Feed'}}"><i class="material-icons">mode_edit</i></a>{{#afModal classes="table-action table-cancel-item" collection="HTTPFeeds" operation="remove" doc=_id title="<i class='material-icons'>error_outline</i><span class='modal-header'>Deleting Feed</span>" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="icon-ts-trash"></i>{{/afModal}}</td>
+			</tr>
 			{{/each}}
 		</tbody>
 	</table>
-	{{> FeedsNewItem}}
-</template>
-
-<template name="FeedsNewItem">
-	<div class="add-new-item new-feed">
-		{{#autoForm collection="Feeds" id="insertItemForm" type="insert"}}
-			<table>
-			{{> FeedsTableWidths}}
-				<tbody>
-					<tr>
-						<td>{{> afQuickField name='title' placeholder="Feed Title" class="first"}}</td>
-						<td>{{> afQuickField name='subscription' placeholder="Subscription Name"}}</td>
-						<td class="dropdown-td">{{> afQuickField name='pubsub'}}</td>
-						<td>
-							<button type="submit" class="table-action table-save-new"><i class="icon-ts-checkmark"></i></button><button class="table-action table-cancel-new"><i class="icon-ts-cancel"></i></button>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-			{{> NewItemDivider}}
-		{{/autoForm}}
-	</div>
 </template>
 
 <template name="FeedsTableWidths">
 	<colgroup>
-		<col style="width: 35%;">
-		<col style="width: 35%;">
-		<col style="width: 190px;">
-		<col style="width: 105px;">
+		<col style="width: 11%;">
+		<col style="width: 16%;">
+		<col style="width: 43%;">
+		<col class="feeds-list-action">
 	</colgroup>
 </template>
 
-<template name="NewItemDivider">
-	<div class="div-container">
-		<div class="divider"></div>
-		<div class="dd-bg">
-			<span class="divider-decoration"><i class="mdi-navigation-expand-less"></i></span>
+<!-- <template name="ModalTutorialFeeds">
+	<div class="modal modal-fixed-bottom" id="modal-tutorial-feeds">
+		<div class="modal-content">
+			<h4 class="modal-title">
+				<a href="#" class="btn-flat modal-close secondary-content">×</a>
+				<i class="mdi-alert-error"></i><span class="modal-header">Video here!</span>
+			</h4>
+			<p>Are you sure?</p>
+		</div>
+		<div class="modal-footer">
+			<button class="waves-effect btn-flat modal-action">Delete</button>
 		</div>
 	</div>
-</template>
+</template> -->

@@ -1,3 +1,4 @@
+
 isAdmin = function(userId) {
 	user = Meteor.users.findOne({
 		_id: userId
@@ -40,6 +41,7 @@ Meteor.startup(function() {
 	//and connect any orphan resources.
 	process.env.HTTP_FORWARDED_COUNT ="1";
 	console.log("FORWARDED COUNT ", process.env.HTTP_FORWARDED_COUNT);
+	process.env.MAIL_URL="smtp://contact%40thingstud.io:j&45098Ksd!$@smtp.gmail.com:587";
 	no_connection_cnt = 0;
 	no_app_cnt = 0;
 	app_cnt = 0;
@@ -174,6 +176,22 @@ Meteor.startup(function() {
 			return [];
 		}
 	});
+	
+	Meteor.publish("http_connections", function(appId) {
+		console.log("Subscribing http_connections: ", appId)
+		apps = getAppTree(appId);
+		if(!apps) {
+			console.log("No such app conn ", appId)
+			this.ready(); //If there is not such app.
+			return;
+		}
+		if(this.userId == app.owner || app.shareable || isAdmin(this.userId)) {
+			// console.log("Returning connections: ", apps )
+			return HTTPConnections.find({appId: {$in: apps}});
+		} else {
+			return [];
+		}
+	});
 
 	Meteor.publish("screens", function(appId) {
 		app = Apps.findOne({_id: appId});
@@ -238,6 +256,32 @@ Meteor.startup(function() {
 		if(this.userId == app.owner || app.shareable || isAdmin(this.userId)) {
 			// console.log("Returning feeds: ", Feeds.find({appId: appId}).fetch().length )
 			return Feeds.find({appId: {$in
+				
+				: apps}});
+		} else {
+			return [];
+		}
+		// return Feeds.find({
+		// 	$or: [{
+		// 		owner: this.userId
+		// 	}, {
+		// 		public: true
+		// 	}]
+		// });
+	});
+	
+	Meteor.publish("http_feeds", function(appId) {
+		app = Apps.findOne({_id: appId});
+		apps = getAppTree(appId);
+		if(!apps) {
+			console.log("No such app feed ", appId)
+			this.ready(); //If there is not such app.
+			return;
+		}
+		// console.log("Subscribing feeds: ", appId,  app.access)
+		if(this.userId == app.owner || app.shareable || isAdmin(this.userId)) {
+			// console.log("Returning feeds: ", Feeds.find({appId: appId}).fetch().length )
+			return HTTPFeeds.find({appId: {$in
 				
 				: apps}});
 		} else {
@@ -399,15 +443,18 @@ Meteor.startup(function() {
 		"about-thing-studio.md",
 		"apps.md",
 		"attributes.md",
-		"connections.md",
-		"feeds.md",
+		"mqtt-connections-and-feeds.md",
+		"http-connections-and-feeds.md",
 		"helpers.md",
 		"template-helpers.md",
 		"templates.md",
 		"themes.md",
 		"widgets.md",
 		"display-data.md",
-		"data-in-and-out.md"
+		"data-in-and-out.md",
+		"custom_helpers.md",
+		"feed_processing.md",
+		"template-layout.md"
 	];
 	
 	WidgetFiles = [
@@ -484,6 +531,7 @@ Meteor.startup(function() {
 	sysApp = Apps.findOne({_id: Meteor.settings.public.systemApp});
 	if(!sysApp) {
 		console.log("ERROR: No system app");
+		return;
 	} else {
 		console.log("SYSAPP ", sysApp)
 	}
@@ -514,4 +562,5 @@ Meteor.startup(function() {
 	}
 
 });
+
 

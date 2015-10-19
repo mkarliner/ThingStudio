@@ -20,7 +20,7 @@
 			<ul class="tabs">
 				<li class="tab"><a href="#basics">Basics</a></li>
 				<li class="tab"><a href="#ui">User Interface</a></li>
-				<li class="tab"><a href="#hardware">Hardware</a></li>
+				<li class="tab"><a href="#advanced">Advanced</a></li>
 				<li class="tab"><a href="#reference">Reference</a></li>
 				<li class="tab"><a href="#changelog">Change Log</a></li>
 			</ul>
@@ -37,7 +37,7 @@
 					<p><span class="fwMedium">Summary:</span> {{excerpt}}<br>
 					<span class="fwMedium">{{recentChanges}} Updated:</span> {{publishedDate}}
 					</p>
-					<a href="#!" class="secondary-content"><i class="mdi-action-grade"></i> {{group}}</a>	
+					<!-- <a href="#!" class="secondary-content"><i class="mdi-action-grade"></i> {{group}}</a>	 -->
 				</li>
 				{{/with}}
 			{{/each}}
@@ -53,15 +53,15 @@
 					<p><span class="fwMedium">Summary:</span> {{excerpt}}<br>
 					<span class="fwMedium">Updated:</span> {{publishedDate}}
 					</p>
-					<a href="#!" class="secondary-content"><i class="mdi-action-grade"></i> {{group}}</a>
+					<!-- <a href="#!" class="secondary-content"><i class="mdi-action-grade"></i> {{group}}</a> -->
 				</li>
 				{{/with}}
 			{{/each}}
 		</ul>
 	</div>
-	<div id="hardware">
+	<div id="advanced">
 		<ul class="collection">
-			{{#each HardwarePlatforms}}
+			{{#each Advanced}}
 				{{#with doc title}}
 				<li class="collection-item avatar">
 					<img src="http://lorempixel.com/80/80/" alt="" class="circle">
@@ -69,7 +69,7 @@
 					<p><span class="fwMedium">Summary:</span> {{excerpt}}<br>
 					<span class="fwMedium">Updated:</span> {{publishedDate}}
 					</p>
-					<a href="#!" class="secondary-content"><i class="mdi-action-grade"></i> {{group}}</a>
+					<!-- <a href="#!" class="secondary-content"><i class="mdi-action-grade"></i> {{group}}</a> -->
 				</li>
 				{{/with}}
 			{{/each}}
@@ -85,7 +85,7 @@
 					<p><span class="fwMedium">Summary:</span> {{excerpt}}<br>
 					<span class="fwMedium">Updated:</span> {{publishedDate}}
 					</p>
-					<a href="#!" class="secondary-content"><i class="mdi-action-grade"></i> {{group}}</a>
+					<!-- <a href="#!" class="secondary-content"><i class="mdi-action-grade"></i> {{group}}</a> -->
 				</li>
 				{{/with}}
 			{{/each}}
@@ -126,7 +126,7 @@
 			<ul class="tabs">
 				<li class="tab"><a href="#basics">Basics</a></li>
 				<li class="tab"><a href="#ui">User Interface</a></li>
-				<li class="tab"><a href="#hardware">Hardware</a></li>
+				<li class="tab"><a href="#advanced">Advanced</a></li>
 				<li class="tab"><a href="#components">Components</a></li>
 			</ul>
 		</div>
@@ -141,7 +141,7 @@
 					<p><span class="fwMedium">Summary:</span> {{excerpt}}<br>
 					<span class="fwMedium">Updated:</span> {{publishedDate}}
 					</p>
-					<a href="#!" class="secondary-content"><i class="mdi-action-grade"></i> {{group}}</a>
+					<!-- <a href="#!" class="secondary-content"><i class="mdi-action-grade"></i> {{group}}</a> -->
 				</li>
 			{{/each}}
 		</ul>
@@ -149,29 +149,29 @@
 	<div id="ui">
 		<ul class="collection">
 			{{#each  docs "UI"}}
-			
+
 				<li class="collection-item avatar">
 					<img src="http://lorempixel.com/80/80/" alt="" class="circle">
 					<a href="/olddocs/{{urlstring}}"><span class="title">{{title}}</span></a>
 					<p><span class="fwMedium">Summary:</span> {{excerpt}}<br>
 					<span class="fwMedium">Updated:</span> {{publishedDate}}
 					</p>
-					<a href="#!" class="secondary-content"><i class="mdi-action-grade"></i> {{group}}</a>
+					<!-- <a href="#!" class="secondary-content"><i class="mdi-action-grade"></i> {{group}}</a> -->
 				</li>
 			{{/each}}
 		</ul>
 	</div>
-	<div id="hardware">
+	<div id="advanced">
 		<ul class="collection">
-			{{#each docs "Hardware Platforms"}}
-			
+			{{#each docs "Advanced"}}
+
 				<li class="collection-item avatar">
 					<img src="http://lorempixel.com/80/80/" alt="" class="circle">
 					<a href="/olddocs/{{urlstring}}"><span class="title">{{title}}</span></a>
 					<p><span class="fwMedium">Summary:</span> {{excerpt}}<br>
 					<span class="fwMedium">Updated:</span> {{publishedDate}}
 					</p>
-					<a href="#!" class="secondary-content"><i class="mdi-action-grade"></i> {{group}}</a>
+					<!-- <a href="#!" class="secondary-content"><i class="mdi-action-grade"></i> {{group}}</a> -->
 				</li>
 			{{/each}}
 		</ul>
@@ -179,14 +179,14 @@
 	<div id="components">
 		<ul class="collection">
 			{{#each docs 'components'}}
-			
+
 				<li class="collection-item avatar">
 					<img src="http://lorempixel.com/80/80/" alt="" class="circle">
 					<a href="/olddocs/{{urlstring}}"><span class="title">{{title}}</span></a>
 					<p><span class="fwMedium">Summary:</span> {{excerpt}}<br>
 					<span class="fwMedium">Updated:</span> {{publishedDate}}
 					</p>
-					<a href="#!" class="secondary-content"><i class="mdi-action-grade"></i> {{group}}</a>
+					<!-- <a href="#!" class="secondary-content"><i class="mdi-action-grade"></i> {{group}}</a> -->
 				</li>
 			{{/each}}
 		</ul>

@@ -1,0 +1,24 @@
+<template name="EditScreenHeader">
+	<h1 class="left">Edit Template: {{title}}</h1>
+	<a class='btn btn-floating waves-effect waves-light ts-green new-list-item' href="/app/{{appId}}/screen/{{this._id}}"  onclick="window.open(this.href,'targetWindow', 'toolbar=no, location=no, status=no, menubar=no, scrollbars=yes, resizable=yes, width=360, height=640'); return false;"><i class="material-icons">visibility</i></a>
+	<div class="clearfix"></div>
+</template>
+
+<template name="EditScreenBody">
+	{{{accessStatus}}}
+	<div class="top-row">
+		<div class="col s5 tabs-container">
+			<ul class="tabs">
+				<li class="tab"><a href="#html">HTML</a></li>
+				<li class="tab" id="jstab"><a href="#js">JavaScript</a></li>
+				<li class="tab"><a href="#log">Log</a></li>
+				<li class="tab"><a href="#properties">Properties</a></li>
+				<!-- <li class="tab"><a href="#css">CSS</a></li> -->
+			</ul>
+		</div>
+		<div class="clearfix"></div>
+	</div>
+	<div class="single-page-container">
+		{{> updateScreenForm}}
+	</div>
+</template>

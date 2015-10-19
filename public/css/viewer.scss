@@ -1,0 +1,753 @@
+// out: ./viewer.css
+// $baseText: #858C9D;
+$fontFace: AvenirLTStd-Roman, Helvetica, sans-serif;
+$darkBase: #353C51;
+// $alertOrange: #F5702E;
+$activeGreen: #7ED321;
+$inactiveRed: #B9513C;
+// $darkBaseText: #B2B7C4;
+// $headerColor: #676975;
+//
+
+// Material Design Colors
+$red: #F44336;
+$hotRed: #B71C1C;
+$pink: #E91E63;
+$deepPink: #880E4F;
+$purple: #9C27B0;
+$deepPurple: #673AB7;
+$royalPurple: #311B92;
+$indigo: #3F51B5;
+$actionBlue: #00B0FF;
+$blue: #2196F3;
+$lightBlue: #03A9F4;
+$cyan: #00BCD4;
+$darkCyan: #00838F;
+$teal: #009688;
+$green: #4CAF50;
+$lightGreen: #8BC34A;
+$foamGreen: #00E676;
+$lime: #CDDC39;
+$yellow: #FFEB3B;
+$amber: #FFC107;
+$autumnAmber: #FF6F00;
+$orange: #FF9800;
+$deepOrange: #FF5722;
+$brown: #795548;
+$grey: #9E9E9E;
+$blueGrey: #607D8B;
+$deepGrey: #263238;
+
+
+$fwLight: 'AvenirLTStd-Light';
+.fwLight {
+	font-family: $fwLight;
+}
+$fwBook: 'AvenirLTStd-Book';
+.fwBook {
+	font-family: $fwBook;
+}
+$fwRoman: 'AvenirLTStd-Roman';
+.fwRoman {
+	font-family: $fwRoman;
+}
+$fwMedium: 'AvenirLTStd-Medium';
+.fwMedium {
+	font-family: $fwMedium;
+}
+$fwHeavy: 'AvenirLTStd-Heavy';
+.fwHeavy {
+	font-family: $fwHeavy;
+}
+$fwBlack: 'AvenirLTStd-Black';
+.fwBlack {
+	font-family: $fwBlack;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+// CSS RESET //
+///////////////////////////////////////////////////////////////////////////////////////
+
+
+/* http://meyerweb.com/eric/tools/css/reset/
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+
+html, body, div, span, h1, h2, h3, p, a, img, header, menu, nav {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+footer, header, menu, nav {
+	display: block;
+}
+body {
+	line-height: 1;
+}
+ol, ul {
+	list-style: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+.clearfix:after { visibility: hidden; display: block; font-size: 0; content: " "; clear: both; height: 0; }
+.clearfix { display: inline-block; }
+* html .clearfix { height: 1%; }
+.clearfix { display: block; }
+
+///////////////////////////////////////////////////////////////////////////////////////
+// App Frame //
+///////////////////////////////////////////////////////////////////////////////////////
+
+body {
+	font-family: $fontFace;
+	-webkit-font-smoothing: antialiased;
+}
+
+.app-body-wrapper {
+	min-height: calc( 100vh - 114px );
+	-webkit-box-flex: 1;
+	-webkit-flex: 1;
+	    -ms-flex: 1;
+	        flex: 1;
+	background-color: #F8F8F8;
+	display: -webkit-box;
+	display: -webkit-flex;
+	display: -ms-flexbox;
+	display: flex;
+	-webkit-box-orient: vertical;
+	-webkit-box-direction: normal;
+	-webkit-flex-direction: column;
+	    -ms-flex-direction: column;
+	        flex-direction: column;
+}
+
+.app-wrapper {
+	display: -webkit-box;
+	display: -webkit-flex;
+	display: -ms-flexbox;
+	display: flex;
+	min-height: 100vh;
+	-webkit-box-orient: vertical;
+	-webkit-box-direction: normal;
+	-webkit-flex-direction: column;
+	    -ms-flex-direction: column;
+	        flex-direction: column;
+}
+
+.app-header-wrapper {
+	-webkit-box-ordinal-group: 0;
+	-webkit-order: -1;
+	    -ms-flex-order: -1;
+	        order: -1;
+	background-color: $darkBase;
+	padding: 0px 20px;
+}
+
+.app-footer-wrapper {
+	background-color: $darkBase;
+}
+
+.animation-container {
+	width: 100%;
+	height: 100%;
+}
+
+main {
+	height: 100%;
+	&.template-view {
+		background-color: #353C51;
+	}
+}
+
+.transitioner {
+	-webkit-box-flex: 1;
+			-webkit-flex: 1;
+	    		-ms-flex: 1;
+	        		flex: 1;
+}
+
+h1.nothing {
+	margin: 2em 0;
+	text-align: center;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+// Simple Grid System //
+///////////////////////////////////////////////////////////////////////////////////////
+
+.row {
+	margin-left: auto;
+	margin-right: auto;
+}
+.row:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+.row .col {
+	float: left;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+	padding: 0 0.6rem;
+}
+.row .col.s1 {
+	width: 8.33333%;
+  margin-left: 0;
+}
+.row .col.s2 {
+	width: 16.66667%;
+  margin-left: 0;
+}
+.row .col.s3 {
+	width: 25%;
+	margin-left: 0;
+}
+.row .col.s4 {
+	width: 33.33333%;
+  margin-left: 0;
+}
+.row .col.s5 {
+	width: 41.66667%;
+	margin-left: 0;
+}
+.row .col.s6 {
+	width: 50%;
+	margin-left: 0;
+}
+.row .col.s7 {
+	width: 58.33333%;
+  margin-left: 0;
+}
+.row .col.s8 {
+	width: 66.66667%;
+  margin-left: 0;
+}
+.row .col.s9 {
+	width: 75%;
+  margin-left: 0;
+}
+.row .col.s10 {
+	width: 83.33333%;
+	margin-left: 0;
+}
+.row .col.s11 {
+	width: 91.66667%;
+	margin-left: 0;
+}
+.row .col.s12 {
+	width: 100%;
+  margin-left: 0;
+}
+
+.row .col.offset-s1 {
+	margin-left: 8.33333%;
+}
+.row .col.offset-s2 {
+	margin-left: 16.66667%;
+}
+.row .col.offset-s3 {
+	margin-left: 25%;
+}
+.row .col.offset-s4 {
+	margin-left: 33.33333%;
+}
+.row .col.offset-s5 {
+	margin-left: 41.66667%;
+}
+.row .col.offset-s6 {
+	margin-left: 50%;
+}
+.row .col.offset-s7 {
+	margin-left: 58.33333%;
+}
+.row .col.offset-s8 {
+	margin-left: 66.66667%;
+}
+.row .col.offset-s9 {
+	margin-left: 75%;
+}
+.row .col.offset-s10 {
+	margin-left: 83.33333%;
+}
+.row .col.offset-s11 {
+	margin-left: 91.66667%;
+}
+.row .col.offset-s12 {
+	margin-left: 100%;
+}
+
+@media only screen and (min-width: 601px) {
+	.row .col.m1 {
+	    width: 8.33333%;
+	    margin-left: 0;
+	}
+	.row .col.m2 {
+		width: 16.66667%;
+	  margin-left: 0;
+	}
+	.row .col.m3 {
+		width: 25%;
+		margin-left: 0;
+	}
+	.row .col.m4 {
+		width: 33.33333%;
+	  margin-left: 0;
+	}
+	.row .col.m5 {
+		width: 41.66667%;
+		margin-left: 0;
+	}
+	.row .col.m6 {
+		width: 50%;
+		margin-left: 0;
+	}
+	.row .col.m7 {
+		width: 58.33333%;
+	  margin-left: 0;
+	}
+	.row .col.m8 {
+		width: 66.66667%;
+	  margin-left: 0;
+	}
+	.row .col.m9 {
+		width: 75%;
+	  margin-left: 0;
+	}
+	.row .col.m10 {
+		width: 83.33333%;
+		margin-left: 0;
+	}
+	.row .col.m11 {
+		width: 91.66667%;
+		margin-left: 0;
+	}
+	.row .col.m12 {
+		width: 100%;
+	  margin-left: 0;
+	}
+	.row .col.offset-m1 {
+		margin-left: 8.33333%;
+	}
+	.row .col.offset-m2 {
+		margin-left: 16.66667%;
+	}
+	.row .col.offset-m3 {
+		margin-left: 25%;
+	}
+	.row .col.offset-m4 {
+		margin-left: 33.33333%;
+	}
+	.row .col.offset-m5 {
+		margin-left: 41.66667%;
+	}
+	.row .col.offset-m6 {
+		margin-left: 50%;
+	}
+	.row .col.offset-m7 {
+		margin-left: 58.33333%;
+	}
+	.row .col.offset-m8 {
+		margin-left: 66.66667%;
+	}
+	.row .col.offset-m9 {
+		margin-left: 75%;
+	}
+	.row .col.offset-m10 {
+		margin-left: 83.33333%;
+	}
+	.row .col.offset-m11 {
+		margin-left: 91.66667%;
+	}
+	.row .col.offset-m12 {
+		margin-left: 100%;
+	}
+}
+
+@media only screen and (min-width: 993px) {
+	.row .col.l1 {
+	    width: 8.33333%;
+	    margin-left: 0;
+	}
+	.row .col.l2 {
+		width: 16.66667%;
+	  margin-left: 0;
+	}
+	.row .col.l3 {
+		width: 25%;
+		margin-left: 0;
+	}
+	.row .col.l4 {
+		width: 33.33333%;
+	  margin-left: 0;
+	}
+	.row .col.l5 {
+		width: 41.66667%;
+		margin-left: 0;
+	}
+	.row .col.l6 {
+		width: 50%;
+		margin-left: 0;
+	}
+	.row .col.l7 {
+		width: 58.33333%;
+	  margin-left: 0;
+	}
+	.row .col.l8 {
+		width: 66.66667%;
+	  margin-left: 0;
+	}
+	.row .col.l9 {
+		width: 75%;
+	  margin-left: 0;
+	}
+	.row .col.l10 {
+		width: 83.33333%;
+		margin-left: 0;
+	}
+	.row .col.l11 {
+		width: 91.66667%;
+		margin-left: 0;
+	}
+	.row .col.l12 {
+		width: 100%;
+	  margin-left: 0;
+	}
+	.row .col.offset-l1 {
+		margin-left: 8.33333%;
+	}
+	.row .col.offset-l2 {
+		margin-left: 16.66667%;
+	}
+	.row .col.offset-l3 {
+		margin-left: 25%;
+	}
+	.row .col.offset-l4 {
+		margin-left: 33.33333%;
+	}
+	.row .col.offset-l5 {
+		margin-left: 41.66667%;
+	}
+	.row .col.offset-l6 {
+		margin-left: 50%;
+	}
+	.row .col.offset-l7 {
+		margin-left: 58.33333%;
+	}
+	.row .col.offset-l8 {
+		margin-left: 66.66667%;
+	}
+	.row .col.offset-l9 {
+		margin-left: 75%;
+	}
+	.row .col.offset-l10 {
+		margin-left: 83.33333%;
+	}
+	.row .col.offset-l11 {
+		margin-left: 91.66667%;
+	}
+	.row .col.offset-l12 {
+		margin-left: 100%;
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+// Buttons //
+///////////////////////////////////////////////////////////////////////////////////////
+
+.btn {
+	height: 44px;
+	line-height: 44px;
+	color: white;
+	text-decoration: none;
+	display: inline-block;
+}
+
+.btn.footer-menu {
+	padding: 8px 10px;
+}
+
+header ul,
+footer ul {
+									 list-style-type: none;
+									  display: -webkit-box;
+									 display: -webkit-flex;
+									  display: -ms-flexbox;
+													 display: flex;
+													 		 margin: 0;
+															padding: 0;
+		  				 -webkit-box-pack: justify;
+  -webkit-justify-content: space-between;
+	                -ms-flex-pack: justify;
+          justify-content: space-between;
+					-webkit-box-orient: horizontal;
+					 -webkit-box-direction: normal;
+					   -webkit-flex-direction: row;
+					       -ms-flex-direction: row;
+					           flex-direction: row;
+	li {
+	 -ms-flex-item-align: center;
+		-webkit-align-self: center;
+		        align-self: center;
+	}
+}
+footer ul {
+	-webkit-justify-content: space-around;
+	    				-ms-flex-pack: distribute;
+	        justify-content: space-around;
+														 padding: 0;
+}
+a.made-with {
+	font-family: $fwMedium;
+	color: white;
+	font-size: 5vw; //23.75px
+	text-decoration: none;
+}
+a i.icon-ts-connection {
+		transition: background-color 0.1s cubic-bezier(0.4, 0.0, 0.2, 1);
+		border-radius: 50%;
+		font-size: 18px;
+		width: 34px;
+		height: 34px;
+		line-height: 41px;
+		display: inline-block;
+		text-align: center;
+		color: white;
+	&.connected {
+		background-color: $activeGreen;
+	}
+	&.disconnected {
+		-webkit-animation: blink 3s 0s ease-in-out infinite;
+		-moz-animation: blink 3s 0s ease-in-out infinite;
+		-ms-animation: blink 3s 0s ease-in-out infinite;
+		-o-animation: blink 3s 0s ease-in-out infinite;
+		animation: blink 3s 0s ease-in-out infinite;
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+// Template List Styles //
+///////////////////////////////////////////////////////////////////////////////////////
+
+h1.list-intro {
+	font-family: $fwMedium;
+	font-size: 1.19em;
+	color: #2D3142;
+	border-bottom: 2px solid #F0F0F0;
+	padding: 24px 20px 16px;
+	margin: 0;
+}
+
+ul.screens-list {
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+	display: -webkit-box;
+	display: -webkit-flex;
+	display: -ms-flexbox;
+	display: flex;
+	-webkit-box-orient: vertical;
+	-webkit-box-direction: normal;
+	-webkit-flex-direction: column;
+	    -ms-flex-direction: column;
+	        flex-direction: column;
+	li {
+		border-bottom: 2px solid #F0F0F0;
+	}
+	li a {
+		display: -webkit-box;
+		display: -webkit-flex;
+		display: -ms-flexbox;
+		display: flex;
+		text-decoration: none;
+		padding: 15px 20px;
+		padding: 15px 4.3vw;
+	}
+	h2 {
+		font-family: $fwMedium;
+		margin: 0;
+		color: #2D3142;
+		line-height: 1em;
+	}
+}
+.screen-desc {
+	-webkit-align-self: center;
+ -ms-flex-item-align: center;
+	        align-self: center;
+	font-size: 1.19em;
+}
+.screen-desc span {
+	font-family: $fwBook;
+	color: #848484;
+	font-size: 0.75em;
+	display: inline-block;
+}
+
+.letter-circle {
+	width: 50px;
+	height: 50px;
+	margin-right: 15px;
+	margin-right: 3vw;
+	border-radius: 50%;
+	background-color: orange;
+	text-align: center;
+	line-height: 53px;
+	color: white;
+	font-size: 1.19em;
+	text-transform: uppercase;
+}
+///////////////////////////////////////////////////////////////////////////////////////
+// Letter Colors //
+///////////////////////////////////////////////////////////////////////////////////////
+
+a .letter-a { background-color: $red; }
+a .letter-b { background-color: $hotRed; }
+a .letter-c { background-color: $pink; }
+a .letter-d { background-color: $deepPink; }
+a .letter-e { background-color: $purple; }
+a .letter-f { background-color: $deepPurple; }
+a .letter-g { background-color: $royalPurple; }
+a .letter-h { background-color: $indigo; }
+a .letter-i { background-color: $actionBlue; }
+a .letter-h { background-color: $blue; }
+a .letter-j { background-color: $lightBlue; }
+a .letter-k { background-color: $cyan; }
+a .letter-l { background-color: $darkCyan; }
+a .letter-m { background-color: $teal; }
+a .letter-n { background-color: $green; }
+a .letter-o { background-color: $lightGreen; }
+a .letter-p { background-color: $foamGreen; }
+a .letter-q { background-color: $lime; }
+a .letter-r { background-color: $yellow; }
+a .letter-s { background-color: $amber; }
+a .letter-t { background-color: $autumnAmber; }
+a .letter-u { background-color: $orange; }
+a .letter-v { background-color: $deepOrange; }
+a .letter-w { background-color: $brown; }
+a .letter-x { background-color: $grey; }
+a .letter-y { background-color: $blueGrey; }
+a .letter-z { background-color: $deepGrey; }
+
+///////////////////////////////////////////////////////////////////////////////////////
+// Keyframe animations //
+///////////////////////////////////////////////////////////////////////////////////////
+
+@-webkit-keyframes blink {
+	50% {
+		background-color: $inactiveRed;
+	}
+	100% {
+		background-color: transparent;
+	}
+}
+
+@-moz-keyframes blink {
+	50% {
+		background-color: $inactiveRed;
+	}
+	100% {
+		background-color: transparent;
+	}
+}
+
+@-ms-keyframes blink {
+	50% {
+		background-color: $inactiveRed;
+	}
+	100% {
+		background-color: transparent;
+	}
+}
+
+@keyframes blink {
+	50% {
+		background-color: $inactiveRed;
+	}
+	100% {
+		background-color: transparent;
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+// Custom icon font //
+///////////////////////////////////////////////////////////////////////////////////////
+
+@charset "UTF-8";
+
+@font-face {
+	font-family: "ts-icons";
+	src:url("../fonts/ts-icons.eot");
+	src:url("../fonts/ts-icons.eot?#iefix") format("embedded-opentype"),
+		url("../fonts/ts-icons.woff") format("woff"),
+		url("../fonts/ts-icons.ttf") format("truetype"),
+		url("../fonts/ts-icons.svg#ts-icons") format("svg");
+	font-weight: normal;
+	font-style: normal;
+
+}
+
+[data-icon]:before {
+	font-family: "ts-icons" !important;
+	content: attr(data-icon);
+	font-style: normal !important;
+	font-weight: normal !important;
+	font-variant: normal !important;
+	text-transform: none !important;
+	speak: none;
+	line-height: 1;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+[class^="icon-"]:before,
+[class*=" icon-"]:before {
+	font-family: "ts-icons" !important;
+	font-style: normal !important;
+	font-weight: normal !important;
+	font-variant: normal !important;
+	text-transform: none !important;
+	speak: none;
+	line-height: 1;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+.icon-ts-connection:before {
+	content: "a";
+}
+.icon-ts-cancel:before {
+	content: "b";
+}
+.icon-ts-checkmark:before {
+	content: "d";
+}
+.icon-ts-ekg:before {
+	content: "c";
+}
+.icon-ts-feeds:before {
+	content: "e";
+}
+.icon-ts-templates:before {
+	content: "f";
+}
+.icon-ts-trash:before {
+	content: "g";
+}
+.icon-ts-profile:before {
+	content: "h";
+}

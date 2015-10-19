@@ -1,9 +1,33 @@
-IDEController = RouteController.extend({
+IDEController = PreloadController.extend({
 	layoutTemplate: "MasterLayout",
+	'preload': {
+		'styles': ['/css/materialize.css', '/css/ide.css'],
+		'sync': ['/js/materialize.js'],
+		// 'onBeforeSync': function ( fileName ) {
+    //     // Return 'true' to continue normally, otherwise skip library
+		// 		console.log("IDE onBeforeSync", fileName)
+		// 		return true;
+    // },
+    // (optional) User-defined method called on each synchronously
+    // loaded library to check whether it finished initialization
+    // 'onSync' : function ( fileName ) {
+    //     // Check and return `true` if `fileName` finished initialization
+		// 		console.log("IDE onSync", fileName)
+		// 		return true;
+    // },
+    // (optional) User-defined method called AFTER each synchronously
+    // loaded library to allow additional processing
+    // 'onAfterSync': function ( fileName ) {
+    //     // Return 'true' to continue normally,
+    //     // otherwise don't mark library as loaded
+		// 		console.log("IDE onAfterSync", fileName)
+		// 		return true;
+    // }
+	},
 	onBeforeAction: function() {
 		$('body').removeClass('viewer-body');
 		if (!Meteor.user() && !Meteor.loggingIn()) {
-			this.layout("HelpLayout");
+			this.layout("LoginLayout");
 			// this.render("Login");
 			this.next();
 		} else {
@@ -22,11 +46,12 @@ IDEController = RouteController.extend({
 						console.log("Not logged in at startup - bailing.")
 						return;
 					}
+					InitialiseApps();
 					initialApp = Session.get("currentAppId");
 					ia = Apps.findOne({_id: initialApp})
-					console.log("Initial App on Startup ", initialApp, ia);
+					// console.log("Initial App on Startup ", initialApp, ia);
 					if(initialApp && ia) {
-						console.log("Found initial app ", initialApp)
+						// console.log("Found initial app ", initialApp)
 						return;
 					} else {
 						Session.setPersistent("currentAppId", null);
@@ -61,7 +86,9 @@ IDEController = RouteController.extend({
 				}
 			}),
 			Meteor.subscribe('connections', myCurrAppId),
+			Meteor.subscribe('http_connections', myCurrAppId),
 			Meteor.subscribe('feeds', myCurrAppId),
+			Meteor.subscribe('http_feeds', myCurrAppId),
 			Meteor.subscribe('screens', myCurrAppId),
 			Meteor.subscribe('widgets', myCurrAppId, {
 				onReady: function(){
@@ -84,7 +111,7 @@ IDEController = RouteController.extend({
 								if(Session.get("chatsReady") == true) {
 									sound = new Audio('ding.mp3')
 									sound.volume = 0.2
-									//sound.play();	
+									//sound.play();
 									Session.set("newChats", true);
 								}
 							}
@@ -121,13 +148,13 @@ ProfileController = IDEController.extend({
 OldDocsController = IDEController.extend({
 	subscriptions: function() {
 		//console.log("OldDocsController subscriptions")
-		Meteor.subscribe("help_pages")		
+		Meteor.subscribe("help_pages")
 	}
 });
 
 DocsController = IDEController.extend({
 	subscriptions: function() {
 		//console.log("DocsController subscriptions")
-		Meteor.subscribe("docs")		
+		Meteor.subscribe("docs")
 	}
 });

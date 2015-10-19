@@ -6,10 +6,10 @@
 
 var mySubmitFunc = function(error, state){
 	// if (error) {
-	    	
+
 	//     	$('.top-error .at-error.card-panel').html('<span class="error-text"><i class=\'mdi-alert-warning\'></i> ' + error + '</span>')
 	// }
-  
+
 	if (!error) {
 		if (state === "signIn") {
 			$('.at-btn').html('<div class="login-spinner"><div class="preloader-wrapper small active"><div class="spinner-layer spinner-yellow-only"><div class="circle-clipper left"><div class="circle"></div></div><div class="gap-patch"><div class="circle"></div></div><div class="circle-clipper right"><div class="circle"></div></div></div></div><span>Logging in...</span></div>');
@@ -38,7 +38,7 @@ AccountsTemplates.configure({
     // Appearance
     showAddRemoveServices: false,
     showForgotPasswordLink: true,
-    showLabels: true,
+    showLabels: false,
     showPlaceholders: true,
     showResendVerificationEmailLink: false,
 

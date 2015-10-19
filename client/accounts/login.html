@@ -5,7 +5,7 @@
 			{{> atError}}
 		</div>
 		<div class="col s12 m8 offset-m2 l4 offset-l4 login-pad">
-			
+
 			{{> Logo}}
 			{{> atForm}}
 			<!-- {{> loggedOutNotice}} -->
@@ -24,6 +24,51 @@
 </template>
 
 <template name="TSForm">
+	<style media="screen" type="text/css">
+	/* http://meyerweb.com/eric/tools/css/reset/
+	   v2.0 | 20110126
+	   License: none (public domain)
+	*/
+
+	html, body, div, span, h1, h2, h3, h4, h5, h6, p, a, img, strong, b, i, ol, ul, li, fieldset, form, label, legend, footer {	margin: 0; padding: 0; border: 0;	font-size: 100%; font: inherit;	vertical-align: baseline; }
+	article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section {	display: block; }
+
+	body { line-height: 1; }
+	ol, ul { list-style: none; }
+	.row .col {
+    float: left;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    padding: 0 0.75rem;
+	}
+	.row .col.s12 {
+    width: 100%;
+    margin-left: 0;
+	}
+	@media only screen and (min-width: 601px) {
+		.row .col.m8 {
+	    width: 66.66667%;
+	    margin-left: 0;
+		}
+		.row .col.offset-m2 {
+		    margin-left: 16.66667%;
+		}
+
+	}
+	@media only screen and (min-width: 993px) {
+		.row .col.l4 {
+		    width: 33.33333%;
+		    margin-left: 0;
+		}
+	}
+	@media only screen and (min-width: 993px) {
+		.row .col.offset-l4 {
+		    margin-left: 33.33333%;
+		}
+	}
+
+	</style>
 	{{#unless hide}}
 		<div class="at-form">
 			{{#if showTitle}}
@@ -65,7 +110,7 @@
 
 <template name="TSLogin">
 	<div class="at-pwd-form">
-		<form role="form" id="at-pwd-form" class="{{disabled}}" novalidate action="#" method="POST">
+		<form role="form" id="at-pwd-form" class="{{disabled}}" novalidate action="#" autocomplete="off" method="POST">
 			{{#each fields}}
 				{{> atInput}}
 			{{/each}}
@@ -87,7 +132,7 @@
 				{{displayName}} {{#unless required}}{{optionalText}}{{/unless}}
 			</label>
 		{{/if}}
-		<input class="validate {{#if hasError}}invalid{{/if}} {{#if hasSuccess}}valid{{/if}}" type="{{type}}" id="at-field-{{_id}}" name="at-field-{{_id}}" placeholder="{{#unless showLabels}} {{placeholder}} {{/unless}}" autocapitalize="none" autocorrect="off">
+		<input class="validate {{#if hasError}}invalid{{/if}} {{#if hasSuccess}}valid{{/if}}" type="{{type}}" id="at-field-{{_id}}" name="at-field-{{_id}}" placeholder="{{#unless showLabels}}{{placeholder}}{{/unless}}" autocapitalize="none" autocorrect="off">
 		{{#if hasIcon}}
 			<span class="{{iconClass}}"></span>
 		{{/if}}
@@ -98,7 +143,7 @@
 </template>
 
 <template name="TSPwdFormBtn">
-	<button type="submit" class="at-btn submit {{submitDisabled}} waves-effect waves-light btn" id="at-btn">
+	<button type="submit" class="at-btn submit {{submitDisabled}} btn" id="at-btn">
 		Log In
 	</button>
 </template>
@@ -116,7 +161,7 @@
 <template name="TSError">
 	<div class="at-error card-panel">
 		{{#each error}}
-			<span class="error-text"><i class='mdi-alert-warning'></i> {{errorText}}</span>
+			<span class="error-text"><i class="material-icons">warning</i> {{errorText}}</span>
 		{{/each}}
 	</div>
 </template>
