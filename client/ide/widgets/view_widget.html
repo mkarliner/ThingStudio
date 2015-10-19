@@ -1,5 +1,6 @@
 <template name="SingleWidgetHeader">
 	<h1>Widget Details &amp; Usage: {{title}}</h1>
+	<div class="clearfix"></div>
 </template>
 
 <template name="SingleWidgetBody">
@@ -16,7 +17,7 @@
 	</div>
 	<div class="single-page-container">
 		<div id="properties">
-			<div class="form-group detail">				
+			<div class="form-group detail">
 				<p class="usage"><span class="fwHeavy">Using this widget</span> &ndash; Copy the snippet below and paste in to your template{{#if parameters}}, changing the parameter values {{/if}}</p>
 				<span class="usage-inner">
 					{{#if webComponent}}
@@ -35,7 +36,7 @@
 					</p>
 				</div>
 			{{/if}}
-			
+
 			{{#if parameters}}
 				<div class="info-group detail">
 					<p><span class="fwHeavy">Widget Parameters</span> &ndash; Required and optional values to render the widget</p>
@@ -58,7 +59,7 @@
 			{{#if isInRole 'admin'}}
 				<button class="btn" id="download-widget">Download</button>
 			{{/if}}
-			
+
 			<!-- <p><span class="fwHeavy">Create your own</span> &ndash; To make your own version of this widget which you can modify, copy with the HTML and / or JavaScript below</p>
 			{{#if html}}
 				<p class="fwBlack">HTML</p>

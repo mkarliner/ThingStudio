@@ -12,7 +12,7 @@
 <template name="updateAppsForm">
 	{{#autoForm collection="Apps" class="app-detail" id="updateAppForm" type="update" doc=this omitFields="ancestor" buttonContent="Save Application"}}
 		<div class="col s6">
-			<p><span class="fwHeavy">Access Details</span> &mdash; Control access the rendered application</p>
+			<p><span class="fwHeavy block">Access Details</span>Control access to the rendered application</p>
 			<!-- {{> afQuickField name='shareable' }} {{> afQuickField name='public' }} -->
 			<!-- {{> appSharing}} -->
 			<div class="form-group app-access-checkboxes">
@@ -44,17 +44,17 @@
 				</div>
 			</div>
 			<div class="clearfix"></div> -->
-			<p><span class="fwHeavy">Home Template</span> &mdash; The template users see whe first loading your app</p>
+			<p><span class="fwHeavy block">Home Template</span>The template users see whe first loading your app</p>
 			{{> afFormGroup name='home_page'}}
-			<p><span class="fwHeavy">MQTT Connection</span> &mdash; If your app uses MQTT, set the connection here</p>
+			<p><span class="fwHeavy block">MQTT Connection</span>If your app uses MQTT, set the connection here</p>
 			{{> afFormGroup name='connection'}}
 		</div>
 		<div class="col s6">
-			<p><span class="fwHeavy">App Title</span> &mdash; The name of your application (will show publicly if app is Public)</p>
+			<p><span class="fwHeavy block">App Title</span>The name of your application (will show publicly if app is Public)</p>
 			{{> afQuickField name='title' }}
-			<p><span class="fwHeavy">Summary</span> &mdash; Give a one line description of the purpose of this application</p>
+			<p><span class="fwHeavy block">Summary</span>Give a one line description of the purpose of this application</p>
 			{{> afQuickField name='summary' placeholder="Enter summary" class="wide-input"}}
-			<p><span class="fwHeavy">Long Description</span> &mdash; Provide more information here, such as instructions, usage, etc.</p>
+			<p><span class="fwHeavy block">Long Description</span>Provide more information here, such as instructions, usage, etc.</p>
 			{{> afQuickField name='description' placeholder="Detailed application information"}}
 		</div>
 		<button type="submit" class="btn btn-update right">Update App</button>

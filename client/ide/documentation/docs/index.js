@@ -16,7 +16,6 @@ DocsIndex = {
 		},
 		{
 			title: "HTTP Connections & Feeds",
-			
 		},
 		{
 			title: "Templates",	
