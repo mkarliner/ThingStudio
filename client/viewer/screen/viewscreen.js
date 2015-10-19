@@ -12,6 +12,9 @@ Template.ViewScreen.helpers({
 		scr = Session.get("currentScreenPage");
 		return scr;
 	},
+	appCSS: function () {
+		return getCurrentApp().css;
+	},
   currentScreen: function() {
           scr =  Session.get("currentScreenPage");
           scn = Screens.findOne(scr);
