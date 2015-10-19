@@ -11,11 +11,11 @@ DocsIndex = {
 
 		},
 		{
-			title: "MQTT Connections",
+			title: "MQTT Connections & Feeds",
 			
 		},
 		{
-			title: "Feeds",
+			title: "HTTP Connections & Feeds",
 			
 		},
 		{
