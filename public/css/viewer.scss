@@ -636,6 +636,8 @@ ul.screens-list {
 .letter-circle {
 	width: 50px;
 	height: 50px;
+	min-width: 50px;
+	min-height: 50px;
 	margin-right: 15px;
 	margin-right: 3vw;
 	border-radius: 50%;
