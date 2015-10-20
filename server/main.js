@@ -1,3 +1,4 @@
+
 isAdmin = function(userId) {
 	user = Meteor.users.findOne({
 		_id: userId
@@ -40,6 +41,7 @@ Meteor.startup(function() {
 	//and connect any orphan resources.
 	process.env.HTTP_FORWARDED_COUNT ="1";
 	console.log("FORWARDED COUNT ", process.env.HTTP_FORWARDED_COUNT);
+	process.env.MAIL_URL="smtp://contact%40thingstud.io:j&45098Ksd!$@smtp.gmail.com:587";
 	no_connection_cnt = 0;
 	no_app_cnt = 0;
 	app_cnt = 0;
@@ -441,8 +443,8 @@ Meteor.startup(function() {
 		"about-thing-studio.md",
 		"apps.md",
 		"attributes.md",
-		"connections.md",
-		"feeds.md",
+		"mqtt-connections-and-feeds.md",
+		"http-connections-and-feeds.md",
 		"helpers.md",
 		"template-helpers.md",
 		"templates.md",
@@ -451,7 +453,8 @@ Meteor.startup(function() {
 		"display-data.md",
 		"data-in-and-out.md",
 		"custom_helpers.md",
-		"feed_processing.md"
+		"feed_processing.md",
+		"template-layout.md"
 	];
 	
 	WidgetFiles = [
@@ -558,4 +561,5 @@ Meteor.startup(function() {
 	}
 
 });
+
 

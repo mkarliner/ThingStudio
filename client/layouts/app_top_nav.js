@@ -39,8 +39,8 @@ Template.BreadcrumbsContent.helpers({
 		// This function sets the base of the breadcrumb
 		var routeName = Router.current().route.getName();
 		var routePath = Router.current().route.path();
-		var appPrefixRoutes = [ "MQTT Connections", "HTTP Connections", "Feeds", "MQTT Feeds", "HTTP Feeds", "Templates", "Themes", "Edit MQTT Feed", "Edit HTTP Feed", "Edit MQTT Connection", "Edit HTTP Connection", "Edit Template", "Safe Edit Template", "Edit Theme" ];
-		var nonDisplayRoutes = [ "Dashboard", "View Widget", "Edit App", "View Doc" ];
+		var appPrefixRoutes = [ "Connections", "MQTT Connections", "HTTP Connections", "Feeds", "MQTT Feeds", "HTTP Feeds", "Templates", "Themes", "Edit MQTT Feed", "Edit HTTP Feed", "Edit MQTT Connection", "Edit HTTP Connection", "Edit Template", "Safe Edit Template", "Edit Theme" ];
+		var nonDisplayRoutes = [ "Dashboard", "View Widget", "Edit App", "View Doc", "New App", "New Widget", "New Template", "New MQTT Feed", "New HTTP Feed", "New MQTT Connection", "New HTTP Connection" ];
 		if ( _.contains( nonDisplayRoutes, routeName ) ) {
 			// Applies to: Dashboard, View Widget, Edit App
 			return false;
@@ -63,7 +63,7 @@ Template.BreadcrumbsContent.helpers({
 		// This function provides details of the route, not including the base, which is handled above
 		var routeName = Router.current().route.getName();
 		var routePath = Router.current().route.path();
-		var displayRoutes = [ "Connections", "MQTT Connections", "HTTP Connections", "Feeds", "MQTT Feeds", "HTTP Feeds", "Templates", "Themes" ];
+		var displayRoutes = [ "Connections", "MQTT Connections", "HTTP Connections", "Feeds", "MQTT Feeds", "HTTP Feeds", "Templates", "Themes", "New App", "New Widget", "New Template", "New MQTT Feed", "New HTTP Feed", "New MQTT Connection", "New HTTP Connection" ];
 		var nonDisplayRoutes = [ "Support", "Widgets", "Apps", "Dashboard", "Chat", "Current Users", "System Admin", "Settings", "Documentation", "Debug", "Tutorials", "Welcome" ];
 
 		if ( _.contains( nonDisplayRoutes, routeName ) ) {

@@ -1,0 +1,21 @@
+<template name="EditHttpFeedHeader">
+	<h1 class="left">Edit HTTP Feed: {{title}}</h1>
+	<div class="clearfix"></div>
+	<!-- <a class="header-action-1 clearfix" href="/connections">Back to Connections</a> -->
+</template>
+
+<template name="EditHttpFeedBody">
+	{{#contentFor region="appHeader" template="EditHttpFeedHeader"}}{{/contentFor}}
+	<div class="top-row">
+		<div class="col s2 tabs-container">
+			<ul class="tabs">
+				<li class="tab"><a class="active" href="#required">Required Atts</a></li>
+				<!-- <li class="tab"><a href="#processing">HTTP Feed Processing</a></li> -->
+			</ul>
+		</div>
+		<div class="clearfix"></div>
+	</div>
+	<div class="single-page-container">
+		{{> updateHttpFeedForm}}
+	</div>
+</template>

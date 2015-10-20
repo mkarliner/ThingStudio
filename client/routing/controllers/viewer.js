@@ -7,7 +7,11 @@ AppViewerController = PreloadController.extend({
 	loadingTemplate: "Loading",
 	onBeforeAction: function() {
 		$('body').addClass('viewer-body');
+		if(this.params.appid) {
+			Session.setPersistent("currentAppId", this.params.appid);
+		}
 		this.next();
+		
 	},
 	subscriptions: function() {
 		// console.log("WAITON")
@@ -16,7 +20,6 @@ AppViewerController = PreloadController.extend({
 			return [
 				Meteor.subscribe('apps', appId, {
 					onReady: function(){
-						// console.log("Apps READY!");
 						InitialiseApps();
 					}
 				}),
@@ -25,11 +28,13 @@ AppViewerController = PreloadController.extend({
 						// console.log("Connections READY!");
 					}
 				}),
+				Meteor.subscribe('http_connections', appId),
 				Meteor.subscribe('feeds', appId, {
 					onReady: function(){
 						// console.log("Feeds READY!");
 					}
 				}),
+				Meteor.subscribe('http_feeds', appId),
 				Meteor.subscribe('screens', appId, {
 					onReady: function(){
 						// console.log("Screens READY!");
@@ -49,9 +54,10 @@ AppViewerController = PreloadController.extend({
 				// Meteor.subscribe('themes', appId),
 			];
 		} else {
-			screenId = Session.get("currentScreenId");
-			// console.log("Single screen subscription", screenId)
-			return Meteor.subscribe("singleScreen", screenId);
+			// screenId = Session.get("currentScreenId");
+			console.log("You don't have an app ID. Weird.")
+			// return Meteor.subscribe("singleScreen", screenId);
+			return false;
 		}
 
 	}

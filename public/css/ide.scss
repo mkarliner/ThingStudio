@@ -7,10 +7,11 @@ $white: #fff;
 $baseText: #858C9D;
 $fontSize: 12px;
 $fontFace: AvenirLTStd-Roman, Helvetica, sans-serif;
-$appBodyBG: #EBF3F6;
+$appBodyBG: #E9F1F4;
+// $appBodyBG: rgba(218,226,230,1);
 $green: #76D4E1;
 $whiteOverGreen: #F7FAFF;
-$activeGreen: #7ED321;
+$activeGreen: #8DE62C;
 $inactiveRed: #B9513C;
 $brightGreen: #A0E396;
 $editorGray: #CCCCCC;
@@ -22,7 +23,7 @@ $alertOrange: #F5702E;
 $alertGreen: #9ED466;
 $alertGray: #979797;
 $appPadding: 25px;
-$statusActive: #7ED321;
+$statusActive: #8DE62C;
 $materializeInputBorderInactive: 1px solid #E1E4E8;
 $materializeInputBorderActive: 1px solid #4AAFE2;
 $actionColor1: #0098DC;
@@ -160,19 +161,14 @@ body {
 	position: relative;
 }
 
-// .outerist {
-// 	overflow-x: hidden;
-// }
-
-main,
-nav.top-nav {
+main {
 	padding-left: $sideNavWidth;
 }
 
 header,
 footer {
-	padding-left: $appPadding + $sideNavWidth + 10;
-	padding-right: $appPadding;
+	padding-left: $appPadding + $sideNavWidth;
+	padding-right: $appPadding - 10;
 }
 
 a.hide-header {
@@ -225,7 +221,11 @@ input[type=text]:focus:not([readonly]), input[type=password]:focus:not([readonly
 }
 
 h2 {
+	font-size: 1.7em;
+	font-weight: 400;
 	color: $baseText;
+	line-height: 1.5em;
+	font-family: $fwHeavy;
 }
 
 .h2-details {
@@ -388,6 +388,7 @@ table.striped tbody tr:nth-child(odd) {
 		margin-top: 10px;
 		margin-bottom: 5px;
 		border: $picBorder;
+		height: 84px;
 		max-width: 84px;
 		max-height: auto;
 	}
@@ -547,6 +548,7 @@ nav.top-nav {
 	border-bottom: $navBorder;
 	box-shadow: none;
 	font-family: $fwLight;
+	padding-left: $sideNavWidth + 10;
 	& a {
 		color: $baseText;
 		font-size: 1.2 * $fontSize;
@@ -786,7 +788,7 @@ h1 {
 	font-size: 2.25 * $fontSize;
 	font-family: $fwBook;
 	color: $headerColor;
-	margin: 0;
+	margin: 0 0 6px;
 }
 
 a.header-action-1 {
@@ -870,7 +872,11 @@ table {
 }
 
 .single-page-container {
-	padding-top: 1em;
+	padding-top: 1.5em;
+}
+
+.row .col {
+	padding: 0 0.5rem;
 }
 
 thead {
@@ -912,11 +918,11 @@ tr.spacer.form-open td {
 }
 
 td:first-child, th:first-child {
-	padding-left: $appPadding + 10;
+	padding-left: $appPadding;
 }
 
 td:last-child, th:last-child {
-	padding-right: $appPadding;
+	padding-right: $appPadding - 10;
 }
 
 td.dropdown-td {
@@ -1074,7 +1080,7 @@ table, .single-page-container {
 }
 
 .feeds-list-action {
-	width: 94px;
+	width: 84px;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -1165,7 +1171,7 @@ h4.modal-title {
 
 .single-page-container .form-group, .single-page-container .info-group {
 	margin-bottom: 0.7rem;
-	border-bottom: 1px solid $bodyDividerColor;
+	// border-bottom: 1px solid $bodyDividerColor;
 	padding-top: 0.5em;
 	padding-bottom: 1.9em;
 }
@@ -1198,6 +1204,15 @@ h4.modal-title {
 	text-indent: 14px;
 }
 
+span.block {
+	display: block;
+}
+
+p.shareable-tip {
+	margin-top: 0;
+	font-style: italic;
+}
+
 // Handling extra padding for Selectize dropdowns on detail pages
 #updateConnectionForm .form-group:nth-child(4), #updateFeedForm .form-group:nth-child(3) {
 	padding-top: 0;
@@ -1208,8 +1223,13 @@ h4.modal-title {
 .checkbox-left {
 	float: left;
 	margin-right: 2em;
-	line-height: 50px;
 	width: 150px;
+}
+
+.checkbox-left,
+.checkbox-fw {
+	line-height: 28px;
+	margin-bottom: 0.4em;
 }
 
 .fw-regular {
@@ -1218,6 +1238,7 @@ h4.modal-title {
 
 .row .tabs-container {
 	padding-left: 0;
+	margin-top: 2px;
 }
 
 .tabs .tab {
@@ -1233,7 +1254,7 @@ h4.modal-title {
 }
 
 .tabs .indicator {
-	background-color: $actionColor1;
+	background-color: $updateButton;
 	height: 3px;
 }
 
@@ -1320,6 +1341,8 @@ div.ace_layer.ace_gutter-layer.ace_folding-enabled {
 .single-page-container #js .form-group,
 .single-page-container #css .form-group,
 .single-page-container #preview .form-group,
+.single-page-container #appcss .form-group,
+.single-page-container #appdoc .form-group,
 .single-page-container #appjs .form-group {
 	border-bottom: none;
 }
@@ -1328,21 +1351,27 @@ div.ace_layer.ace_gutter-layer.ace_folding-enabled {
 #js,
 #preview,
 #css,
-#appjs {
+#appjs,
+#appdoc,
+#appcss {
 	position: relative;
 }
 
 #html .control-label,
 #js .control-label,
 #css .control-label,
-#appjs .control-label {
+#appjs .control-label,
+#appdoc .control-label,
+#appcss .control-label {
 	display: none;
 }
 
 #html .form-group,
 #js .form-group,
 #css .form-group,
-#appjs .form-group {
+#appjs .form-group,
+#appdoc .form-group,
+#appcss .form-group {
 	padding-top: 0;
 	padding-bottom: 0;
 	margin-bottom: 0;
@@ -1351,7 +1380,9 @@ div.ace_layer.ace_gutter-layer.ace_folding-enabled {
 #archy,
 #archyjs,
 #archycss,
-#archyappjs {
+#archyappjs,
+#archyappdoc,
+#archyappcss {
   border: solid;
 	height: 500px;
 	min-width:  800px;
@@ -1417,10 +1448,18 @@ pre.ace-cobalt .ace_comment {
 
 // Common
 
+.ts-green {
+	background-color: $green !important;
+}
+
 .new-list-item {
 	margin-top: -5px;
-	margin-left: 15px;
-	margin-bottom: 3px;
+	margin-left: 20px;
+	box-shadow: none;
+	&:hover {
+		box-shadow: none;
+		background-color: lighten($green, 7%) !important;
+	}
 }
 
 .btn-share {
@@ -1434,6 +1473,7 @@ pre.ace-cobalt .ace_comment {
 	height: 44px;
 	border-radius: 2px;
 	line-height:48px;
+	margin-bottom: 5em;
 }
 
 button.btn-plus, {
@@ -1441,6 +1481,45 @@ button.btn-plus, {
 	&:hover, &:focus {
 		background-color: $updateButton;
 	}
+}
+
+// View App Sidebar Button
+
+.side-nav.fixed a.btn-view-app-sidebar {
+	position: relative;
+	color: $white;
+	border-radius: 0;
+	border: 1px solid $btnSocialColor;
+	background-color: transparent;
+	margin: 0 20px;
+	height: 36px;
+	line-height: 36px;
+	margin-bottom: 8px;
+	font-size: 12px;
+	-webkit-text-stroke: 0px white;
+	box-shadow: none;
+	&:before {
+	  content: " ";
+	  position: absolute;
+	  z-index: -1;
+	  top: 3px;
+	  left: 3px;
+	  right: 3px;
+	  bottom: 3px;
+	  background-color: transparent;
+		transition: all 0.3s;
+	}
+	&:hover:before{
+		background-color: $btnSocialColor;
+	}
+	&:hover {
+		color: $darkBase;
+		-webkit-text-stroke: 1px $darkBase;
+
+	}
+	// &:hover {
+	// 	background-color: $btnSocialColor;
+	// }
 }
 
 // Social share
@@ -1504,10 +1583,22 @@ button.btn-plus, {
 .app-detail .form-group {
 	padding-top: 0.2em;
 	padding-bottom: 2em;
-	&.inline-checkboxes {
-		padding-bottom: 0.6em;
+	margin-bottom: 1em;
+	&.app-access-checkboxes {
+		margin-bottom: 0;
+		padding-bottom: 0.5em;
+	}
+	&.field-dropdown {
+		margin-bottom: 1.1em;
+		padding-bottom: 1.1em;
+	}
+	&:last-of-type {
+		margin-bottom: 0;
+		padding-bottom: 1em;
 	}
 }
+
+
 
 .studio-url {
 	margin-top: 2em;
@@ -1521,7 +1612,7 @@ button.btn-plus, {
 
 .single-page-container.widgets, .single-page-container.apps {
 	@include transition(padding-top, 0.1s, cubic-bezier(0.4, 0.0, 0.2, 1));
-	padding-top: 1.7em;
+	padding-top: 1.15em;
 	will-change: padding-top;
 	padding-left: $appPadding - 10px;
 	padding-right: $appPadding - 10px;
@@ -1531,20 +1622,38 @@ button.btn-plus, {
 	padding-top: 140px;
 }
 
+.card {
+	margin: 0.2rem 0 0.8rem 0;
+	box-shadow: none;
+	border: 1px solid rgba(160, 160, 160, 0.2);
+	border-radius: 0;
+}
+
 .card.small {
-	height: 270px;
+	height: 250px;
 	& .card-content {
 		height: 198px;
 	}
 }
 
+.card .card-content {
+	padding: 18px;
+}
+
 .card .card-content .card-title, .card .card-reveal .card-title {
 	color: $headerColor;
 	line-height: 24px;
+	display: block;
 }
 
 .card .card-title {
 	font-size: $fontSize * 1.75;
+	position: relative;
+	i {
+		position: absolute;
+		right: -9px;
+	}
+
 }
 
 #getting-started .card-title {
@@ -1553,7 +1662,7 @@ button.btn-plus, {
 
 .widget-container {
 	text-align: center;
-	height: 150px;
+	height: 123px;
 	margin: 10px 0;
 }
 
@@ -1589,7 +1698,7 @@ button.btn-plus, {
 
 .card .card-action {
 	padding: 10px;
-	background-color: rgba(136, 160, 160, 0.02);
+	background-color: rgba(130, 160, 160, 0.04);
 }
 
 .card .card-action a,  {
@@ -2062,25 +2171,25 @@ footer {
 
 @media screen and (min-width: 900px) {
 	.feeds-list-action {
-		width: 83px;
+		width: 73px;
 	}
 }
 
 @media screen and (min-width: 1024px) {
 	.feeds-list-action {
-		width: 80px;
+		width: 70px;
 	}
 }
 
 @media screen and (min-width: 1200px) {
 	.feeds-list-action {
-		width: 78px;
+		width: 68px;
 	}
 }
 
 @media screen and (min-width: 1300px) {
 	.feeds-list-action {
-		width: 77px;
+		width: 67px;
 	}
 }
 

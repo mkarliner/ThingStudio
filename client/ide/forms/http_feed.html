@@ -1,8 +1,7 @@
 <template name="insertHttpFeedForm">
-  <!-- {{>quickForm collection="Feeds" id="insertFeedForm" type="insert" buttonClasses="glyphicon glyphicon-ok btn btn-default" buttonContent="Save" omitFields="public"}} -->
   {{#autoForm collection="HTTPFeeds" id="insertFeedForm" type="insert" }}
   <div id="required">
-		{{> afQuickField name='title' placeholder="HttpFeed title" class="first"}}
+		{{> afQuickField name='title' placeholder="HTTP Feed title" class="first"}}
 		{{> afQuickField name='connection' placeholder="Connection"}}
 		{{> afQuickField name='path' placeholder="Path"}}
 		{{> afQuickField name='verb' placeholder="Verb"}}
@@ -17,7 +16,7 @@
 <template name="updateHttpFeedForm">
 	{{#autoForm collection="HTTPFeeds" id="updateHttpFeedForm" type="update" doc=this}}
 		<div id="required">
-			{{> afQuickField name='title' placeholder="HttpFeed title" class="first"}}
+			{{> afQuickField name='title' placeholder="HTTP Feed title" class="first"}}
 			{{> afQuickField name='connection' placeholder="Connection"}}
 			{{> afQuickField name='path' placeholder="Path"}}
 			{{> afQuickField name='verb' placeholder="Verb"}}

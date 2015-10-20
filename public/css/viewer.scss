@@ -9,6 +9,36 @@ $inactiveRed: #B9513C;
 // $headerColor: #676975;
 //
 
+// Material Design Colors
+$red: #F44336;
+$hotRed: #B71C1C;
+$pink: #E91E63;
+$deepPink: #880E4F;
+$purple: #9C27B0;
+$deepPurple: #673AB7;
+$royalPurple: #311B92;
+$indigo: #3F51B5;
+$actionBlue: #00B0FF;
+$blue: #2196F3;
+$lightBlue: #03A9F4;
+$cyan: #00BCD4;
+$darkCyan: #00838F;
+$teal: #009688;
+$green: #4CAF50;
+$lightGreen: #8BC34A;
+$foamGreen: #00E676;
+$lime: #CDDC39;
+$yellow: #FFEB3B;
+$amber: #FFC107;
+$autumnAmber: #FF6F00;
+$orange: #FF9800;
+$deepOrange: #FF5722;
+$brown: #795548;
+$grey: #9E9E9E;
+$blueGrey: #607D8B;
+$deepGrey: #263238;
+
+
 $fwLight: 'AvenirLTStd-Light';
 .fwLight {
 	font-family: $fwLight;
@@ -44,19 +74,7 @@ $fwBlack: 'AvenirLTStd-Black';
    License: none (public domain)
 */
 
-html, body, div, span, applet, object, iframe,
-h1, h2, h3, h4, h5, h6, p, blockquote, pre,
-a, abbr, acronym, address, big, cite, code,
-del, dfn, em, img, ins, kbd, q, s, samp,
-small, strike, strong, sub, sup, tt, var,
-b, u, i, center,
-dl, dt, dd, ol, ul, li,
-fieldset, form, label, legend,
-table, caption, tbody, tfoot, thead, tr, th, td,
-article, aside, canvas, details, embed,
-figure, figcaption, footer, header, hgroup,
-menu, nav, output, ruby, section, summary,
-time, mark, audio, video {
+html, body, div, span, h1, h2, h3, p, a, img, header, menu, nav {
 	margin: 0;
 	padding: 0;
 	border: 0;
@@ -65,8 +83,7 @@ time, mark, audio, video {
 	vertical-align: baseline;
 }
 /* HTML5 display-role reset for older browsers */
-article, aside, details, figcaption, figure,
-footer, header, hgroup, menu, nav, section {
+footer, header, menu, nav {
 	display: block;
 }
 body {
@@ -87,9 +104,13 @@ table {
 	border-collapse: collapse;
 	border-spacing: 0;
 }
+.clearfix:after { visibility: hidden; display: block; font-size: 0; content: " "; clear: both; height: 0; }
+.clearfix { display: inline-block; }
+* html .clearfix { height: 1%; }
+.clearfix { display: block; }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-// END CSS RESET //
+// App Frame //
 ///////////////////////////////////////////////////////////////////////////////////////
 
 body {
@@ -98,7 +119,7 @@ body {
 }
 
 .app-body-wrapper {
-	min-height: calc( 100vh - 112px );
+	min-height: calc( 100vh - 114px );
 	-webkit-box-flex: 1;
 	-webkit-flex: 1;
 	    -ms-flex: 1;
@@ -134,7 +155,7 @@ body {
 	    -ms-flex-order: -1;
 	        order: -1;
 	background-color: $darkBase;
-	padding: 10px 20px;
+	padding: 0px 20px;
 }
 
 .app-footer-wrapper {
@@ -146,23 +167,339 @@ body {
 	height: 100%;
 }
 
-header ul, footer ul {
-	list-style-type: none;
-	display: -webkit-box;
-	display: -webkit-flex;
-	display: -ms-flexbox;
-	display: flex;
-	margin: 0;
-	padding: 0;
+main {
+	height: 100%;
+	&.template-view {
+		background-color: #353C51;
+	}
+}
+
+.transitioner {
+	-webkit-box-flex: 1;
+			-webkit-flex: 1;
+	    		-ms-flex: 1;
+	        		flex: 1;
+}
+
+h1.nothing {
+	margin: 2em 0;
+	text-align: center;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+// Simple Grid System //
+///////////////////////////////////////////////////////////////////////////////////////
+
+.row {
+	margin-left: auto;
+	margin-right: auto;
+}
+.row:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+.row .col {
+	float: left;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+	padding: 0 0.6rem;
+}
+.row .col.s1 {
+	width: 8.33333%;
+  margin-left: 0;
+}
+.row .col.s2 {
+	width: 16.66667%;
+  margin-left: 0;
+}
+.row .col.s3 {
+	width: 25%;
+	margin-left: 0;
+}
+.row .col.s4 {
+	width: 33.33333%;
+  margin-left: 0;
+}
+.row .col.s5 {
+	width: 41.66667%;
+	margin-left: 0;
+}
+.row .col.s6 {
+	width: 50%;
+	margin-left: 0;
+}
+.row .col.s7 {
+	width: 58.33333%;
+  margin-left: 0;
+}
+.row .col.s8 {
+	width: 66.66667%;
+  margin-left: 0;
+}
+.row .col.s9 {
+	width: 75%;
+  margin-left: 0;
+}
+.row .col.s10 {
+	width: 83.33333%;
+	margin-left: 0;
+}
+.row .col.s11 {
+	width: 91.66667%;
+	margin-left: 0;
+}
+.row .col.s12 {
+	width: 100%;
+  margin-left: 0;
+}
+
+.row .col.offset-s1 {
+	margin-left: 8.33333%;
+}
+.row .col.offset-s2 {
+	margin-left: 16.66667%;
+}
+.row .col.offset-s3 {
+	margin-left: 25%;
+}
+.row .col.offset-s4 {
+	margin-left: 33.33333%;
+}
+.row .col.offset-s5 {
+	margin-left: 41.66667%;
+}
+.row .col.offset-s6 {
+	margin-left: 50%;
+}
+.row .col.offset-s7 {
+	margin-left: 58.33333%;
+}
+.row .col.offset-s8 {
+	margin-left: 66.66667%;
+}
+.row .col.offset-s9 {
+	margin-left: 75%;
+}
+.row .col.offset-s10 {
+	margin-left: 83.33333%;
+}
+.row .col.offset-s11 {
+	margin-left: 91.66667%;
+}
+.row .col.offset-s12 {
+	margin-left: 100%;
+}
+
+@media only screen and (min-width: 601px) {
+	.row .col.m1 {
+	    width: 8.33333%;
+	    margin-left: 0;
+	}
+	.row .col.m2 {
+		width: 16.66667%;
+	  margin-left: 0;
+	}
+	.row .col.m3 {
+		width: 25%;
+		margin-left: 0;
+	}
+	.row .col.m4 {
+		width: 33.33333%;
+	  margin-left: 0;
+	}
+	.row .col.m5 {
+		width: 41.66667%;
+		margin-left: 0;
+	}
+	.row .col.m6 {
+		width: 50%;
+		margin-left: 0;
+	}
+	.row .col.m7 {
+		width: 58.33333%;
+	  margin-left: 0;
+	}
+	.row .col.m8 {
+		width: 66.66667%;
+	  margin-left: 0;
+	}
+	.row .col.m9 {
+		width: 75%;
+	  margin-left: 0;
+	}
+	.row .col.m10 {
+		width: 83.33333%;
+		margin-left: 0;
+	}
+	.row .col.m11 {
+		width: 91.66667%;
+		margin-left: 0;
+	}
+	.row .col.m12 {
+		width: 100%;
+	  margin-left: 0;
+	}
+	.row .col.offset-m1 {
+		margin-left: 8.33333%;
+	}
+	.row .col.offset-m2 {
+		margin-left: 16.66667%;
+	}
+	.row .col.offset-m3 {
+		margin-left: 25%;
+	}
+	.row .col.offset-m4 {
+		margin-left: 33.33333%;
+	}
+	.row .col.offset-m5 {
+		margin-left: 41.66667%;
+	}
+	.row .col.offset-m6 {
+		margin-left: 50%;
+	}
+	.row .col.offset-m7 {
+		margin-left: 58.33333%;
+	}
+	.row .col.offset-m8 {
+		margin-left: 66.66667%;
+	}
+	.row .col.offset-m9 {
+		margin-left: 75%;
+	}
+	.row .col.offset-m10 {
+		margin-left: 83.33333%;
+	}
+	.row .col.offset-m11 {
+		margin-left: 91.66667%;
+	}
+	.row .col.offset-m12 {
+		margin-left: 100%;
+	}
+}
+
+@media only screen and (min-width: 993px) {
+	.row .col.l1 {
+	    width: 8.33333%;
+	    margin-left: 0;
+	}
+	.row .col.l2 {
+		width: 16.66667%;
+	  margin-left: 0;
+	}
+	.row .col.l3 {
+		width: 25%;
+		margin-left: 0;
+	}
+	.row .col.l4 {
+		width: 33.33333%;
+	  margin-left: 0;
+	}
+	.row .col.l5 {
+		width: 41.66667%;
+		margin-left: 0;
+	}
+	.row .col.l6 {
+		width: 50%;
+		margin-left: 0;
+	}
+	.row .col.l7 {
+		width: 58.33333%;
+	  margin-left: 0;
+	}
+	.row .col.l8 {
+		width: 66.66667%;
+	  margin-left: 0;
+	}
+	.row .col.l9 {
+		width: 75%;
+	  margin-left: 0;
+	}
+	.row .col.l10 {
+		width: 83.33333%;
+		margin-left: 0;
+	}
+	.row .col.l11 {
+		width: 91.66667%;
+		margin-left: 0;
+	}
+	.row .col.l12 {
+		width: 100%;
+	  margin-left: 0;
+	}
+	.row .col.offset-l1 {
+		margin-left: 8.33333%;
+	}
+	.row .col.offset-l2 {
+		margin-left: 16.66667%;
+	}
+	.row .col.offset-l3 {
+		margin-left: 25%;
+	}
+	.row .col.offset-l4 {
+		margin-left: 33.33333%;
+	}
+	.row .col.offset-l5 {
+		margin-left: 41.66667%;
+	}
+	.row .col.offset-l6 {
+		margin-left: 50%;
+	}
+	.row .col.offset-l7 {
+		margin-left: 58.33333%;
+	}
+	.row .col.offset-l8 {
+		margin-left: 66.66667%;
+	}
+	.row .col.offset-l9 {
+		margin-left: 75%;
+	}
+	.row .col.offset-l10 {
+		margin-left: 83.33333%;
+	}
+	.row .col.offset-l11 {
+		margin-left: 91.66667%;
+	}
+	.row .col.offset-l12 {
+		margin-left: 100%;
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+// Buttons //
+///////////////////////////////////////////////////////////////////////////////////////
+
+.btn {
+	height: 44px;
+	line-height: 44px;
+	color: white;
+	text-decoration: none;
+	display: inline-block;
+}
+
+.btn.footer-menu {
+	padding: 8px 10px;
+}
+
+header ul,
+footer ul {
+									 list-style-type: none;
+									  display: -webkit-box;
+									 display: -webkit-flex;
+									  display: -ms-flexbox;
+													 display: flex;
+													 		 margin: 0;
+															padding: 0;
 		  				 -webkit-box-pack: justify;
   -webkit-justify-content: space-between;
 	                -ms-flex-pack: justify;
           justify-content: space-between;
-	-webkit-box-orient: horizontal;
-	 -webkit-box-direction: normal;
-	   -webkit-flex-direction: row;
-	       -ms-flex-direction: row;
-	           flex-direction: row;
+					-webkit-box-orient: horizontal;
+					 -webkit-box-direction: normal;
+					   -webkit-flex-direction: row;
+					       -ms-flex-direction: row;
+					           flex-direction: row;
 	li {
 	 -ms-flex-item-align: center;
 		-webkit-align-self: center;
@@ -173,7 +510,7 @@ footer ul {
 	-webkit-justify-content: space-around;
 	    				-ms-flex-pack: distribute;
 	        justify-content: space-around;
-	padding: 8px 0;
+														 padding: 0;
 }
 a.made-with {
 	font-family: $fwMedium;
@@ -267,19 +604,45 @@ ul.screens-list {
 	margin-right: 15px;
 	margin-right: 3vw;
 	border-radius: 50%;
-	background: #0DA3D1;
+	background-color: orange;
 	text-align: center;
 	line-height: 53px;
 	color: white;
 	font-size: 1.19em;
+	text-transform: uppercase;
 }
+///////////////////////////////////////////////////////////////////////////////////////
+// Letter Colors //
+///////////////////////////////////////////////////////////////////////////////////////
 
-.transitioner {
-	-webkit-box-flex: 1;
-			-webkit-flex: 1;
-	    		-ms-flex: 1;
-	        		flex: 1;
-}
+a .letter-a { background-color: $red; }
+a .letter-b { background-color: $hotRed; }
+a .letter-c { background-color: $pink; }
+a .letter-d { background-color: $deepPink; }
+a .letter-e { background-color: $purple; }
+a .letter-f { background-color: $deepPurple; }
+a .letter-g { background-color: $royalPurple; }
+a .letter-h { background-color: $indigo; }
+a .letter-i { background-color: $actionBlue; }
+a .letter-h { background-color: $blue; }
+a .letter-j { background-color: $lightBlue; }
+a .letter-k { background-color: $cyan; }
+a .letter-l { background-color: $darkCyan; }
+a .letter-m { background-color: $teal; }
+a .letter-n { background-color: $green; }
+a .letter-o { background-color: $lightGreen; }
+a .letter-p { background-color: $foamGreen; }
+a .letter-q { background-color: $lime; }
+a .letter-r { background-color: $yellow; }
+a .letter-s { background-color: $amber; }
+a .letter-t { background-color: $autumnAmber; }
+a .letter-u { background-color: $orange; }
+a .letter-v { background-color: $deepOrange; }
+a .letter-w { background-color: $brown; }
+a .letter-x { background-color: $grey; }
+a .letter-y { background-color: $blueGrey; }
+a .letter-z { background-color: $deepGrey; }
+
 ///////////////////////////////////////////////////////////////////////////////////////
 // Keyframe animations //
 ///////////////////////////////////////////////////////////////////////////////////////

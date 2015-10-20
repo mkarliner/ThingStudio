@@ -5,18 +5,36 @@
 			<!-- <h1 class="list-intro">Screens in this app</h1> -->
 			<!-- {{/if}} -->
 				<div class="list-wrapper">
+					<style media="screen">
+						{{this.css}}
+					</style>
+				<style media="screen">
+					html body.viewer-body div.app-wrapper div.app-header-wrapper { display: block !important;	height: 54px !important; opacity: 1 !important;	width: auto !important;	z-index: 1 !important; background-color: #353C51 !important; color: white !important;	}
+					html body.viewer-body div.app-wrapper div.app-header-wrapper header { display: block !important;	height: 54px !important; opacity: 1 !important;	width: 100% !important;	z-index: 1 !important; background-color: #353C51 !important; color: white !important;	}
+					html body.viewer-body div.app-wrapper div.app-header-wrapper header ul.viewer-header { display: -webkit-box !important; display: -webkit-flex !important; display: -ms-flexbox !important; display: flex !important;	height: 54px !important; opacity: 1 !important;	width: 100% !important;	z-index: 1 !important; color: white !important; }
+					html body.viewer-body div.app-wrapper div.app-header-wrapper header ul.viewer-header li { display: list-item !important; height: auto !important; opacity: 1 !important;	width: auto !important;	z-index: 1 !important; color: white !important; }
+					html body.viewer-body div.app-wrapper div.app-header-wrapper header ul.viewer-header li a.made-width { display: inline-block !important; color: white !important; font-size: 5vw !important; opacity: 1 !important; width: auto !important; background-color: transparent !important; z-index: 1 !important;}
+				</style>
 					<ul class="screens-list">
-						{{#each screenlist}}
-							<li>
-								<a href="{{pathFor 'ViewScreen' data=screenparams }}">
-									<span class="letter-circle">W</span>
-									<div class="screen-desc">
-										<h2>{{this.title}}</h2>
-										<span>Keeping tabs on the weather in London</span>
-									</div>
-								</a>
-							</li>
-						{{/each}}
+						{{#if screenlist.count}}
+							{{#each screenlist}}
+								<li>
+									<a href="{{pathFor 'ViewScreen' data=screenparams }}">
+										<span class="letter-circle letter-{{firstLetter}}">{{firstLetter}}</span>
+										<div class="screen-desc">
+											<h2>{{this.title}}</h2>
+											{{#if this.summary}}
+												<span>{{this.summary}}</span>
+											{{else}}
+												<span>No summary set for this template</span>
+											{{/if}}
+										</div>
+									</a>
+								</li>
+							{{/each}}
+							{{else}}
+							<h1 class="nothing">No templates in this application.</h1>
+						{{/if}}
 					</ul>
 				</div>
 		</main>

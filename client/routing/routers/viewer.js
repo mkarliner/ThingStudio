@@ -21,15 +21,6 @@ Router.route("/app/:appid", {
 			});
 			return;
 		}
-		// console.log("Current APP", app)
-		// if(!app) {
-		// 	this.render("Loading", {
-		// 		data: "Current Application"
-		// 	});
-		// 	return;
-		// }
-
-
 		screen_cnt = Screens.find({isWidget: false}).count();
 		// If there is an app home page, go there
 		if (app.home_page) {
@@ -37,7 +28,7 @@ Router.route("/app/:appid", {
 			// If there is only one screen, go to the one screen
 		} else if (screen_cnt == 1) {
 			scr = Screens.findOne({});
-			Router.go("/app/"+app._id+"/" + scr._id);
+			Router.go("/app/"+app._id+"/screen/" + scr._id);
 		} else {
 			this.render("ViewApp", {
 				data: function() {
@@ -48,21 +39,17 @@ Router.route("/app/:appid", {
 	}
 });
 
-
-
-
 Router.route("/app/:appid/screen/:_id", {
 	controller: "AppViewerController",
 	name: "ViewScreen",
 	onBeforeAction: function(){
-		console.log("VS: ", Session.get("currentAppId"), this.params.appid)
-		if(Session.get("currentAppId") != this.params.appid) {
-			console.log("Setting AppID!!!!!!")
-			Session.set("currentAppId", this.params.appid);
-		}
+		//console.log("VS: ", Session.get("currentAppId"), this.params.appid)
+		// if(Session.get("currentAppId") != this.params.appid) {
+			//console.log("Setting AppID!!!!!!", this.params.appid)
+			Session.setPersistent("currentAppId", this.params.appid);
+		// }
 		this.next();
 	},
-
 	action: function() {
 		if(!this.ready()) {
 			console.log("SUB NOT READY")
@@ -91,7 +78,5 @@ Router.route("/app/:appid/screen/:_id", {
 				});
 			}
 		});
-
 	}
-
 });

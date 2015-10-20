@@ -3,6 +3,10 @@ Template.DashboardBody.onRendered(function() {
 	$('.tooltipped').tooltip({delay: 50});
 });
 
+Template.DashboardBody.onDestroyed(function () {
+	$('.tooltipped').tooltip('remove');
+});
+
 Template.DashboardBody.events({
 	'click .select-app': function(ev) {
 		ev.preventDefault();
@@ -30,6 +34,14 @@ Template.DashboardBody.helpers({
 			return 'No summary set'
 		}
 	},
+	templateCount: function () {
+		return Screens.find({appId: this._id}).count()
+	},
+	feedCount: function () {
+		mqttFeedCount = Feeds.find({appId: this._id}).count()
+		httpFeedCount = HTTPFeeds.find({appId: this._id}).count()
+		return mqttFeedCount + httpFeedCount;
+	},
 	showConnectionTitle: function() {
 		var connection = Connections.find({_id: this.connection}).fetch()
 		if ( connection.length > 0 ) {
@@ -45,24 +57,14 @@ Template.DashboardBody.helpers({
 			homeTitle = home[0].title
 			return homeTitle
 		} else {
-			return 'No home screen set'
+			return 'None set'
 		}
 	},
 	showShareable: function() {
-		var isShareable = this.shareable
-		if ( isShareable === true ) {
-			return 'Yes'
-		} else {
-			return 'No'
-		}
+		return this.shareable ? "true" : "false";
 	},
 	showPublic: function() {
-		var isPublic = this.public
-		if ( isPublic === true ) {
-			return 'Yes'
-		} else {
-			return 'No'
-		}
+		return this.public ? "true" : "false";
 	},
 	showDescription: function() {
 		var myDescription = this.description

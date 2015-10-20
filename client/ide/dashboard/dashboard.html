@@ -1,7 +1,8 @@
 <template name="DashboardHeader">
 	<h1 class="left">Dashboard</h1>
 	<!-- <a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>Animate Widgets</a> -->
-	<a class="header-action-1 clearfix" href="#">Welcome!</a>
+	<!-- <a class="header-action-1 clearfix" href="#">Welcome!</a> -->
+	<div class="clearfix"></div>
 </template>
 <template name="DashboardBody">
 	{{> autoformModals}}
@@ -17,29 +18,30 @@
 	<div class="single-page-container widgets">
 		<div id="overview">
 			{{#each appslist}}
-				<div class="col s12 m4">
+				<div class="col s12 m3">
 					<div class="card small">
 						<div class="card-content">
-							<span class="card-title activator">{{title}} <i class="material-icons right">more_vert</i></span>
+							<span class="card-title activator">{{title}} <!-- <i class="material-icons right">more_vert</i> --> </span>
 							<p class="usage"><span class="fwHeavy">Summary:</span> {{showSummary}}</p>
-							<p class="usage"><span class="fwHeavy">Connection:</span> {{showConnectionTitle}}</p>
-							<p class="usage"><span class="fwHeavy">Home Screen:</span> {{showHomePage}}</p>
-							<p class="usage"><span class="fwHeavy">Sharable:</span> {{showShareable}}</p>
-							<p class="usage"><span class="fwHeavy">Public:</span> {{showPublic}}</p>
+							<p class="usage"><span class="fwHeavy">Home Template:</span> {{showHomePage}}</p>
+							<p class="usage"><span class="fwHeavy">Templates:</span> {{templateCount}}</p>
+							<p class="usage"><span class="fwHeavy">Feeds:</span> {{feedCount}}</p>
+							<!-- <p class="usage"><span class="fwHeavy">Sharable:</span> {{showShareable}}</p>
+							<p class="usage"><span class="fwHeavy">Public:</span> {{showPublic}}</p> -->
 						</div>
-						<div class="card-reveal">
+						<!-- <div class="card-reveal">
 							<span class="card-title">{{title}}<i class="material-icons right">close</i></span>
 							<p class="usage"><span class="fwHeavy">Description:</span> {{showDescription}}</p>
-						</div>
+						</div> -->
 						<div class="card-action">
 							<div class="right">
 								{{#if current_app}}
 									<a class="table-action table-make-active active-app" href="#"><i class="icon-ts-checkmark"></i></a>
-									<a class="table-action tooltipped" href="{{pathFor 'ViewApp' data=appPathInfo}}" data-position="top" data-delay="50" data-tooltip="Launch app viewer" onclick="window.open(this.href,'targetWindow', 'toolbar=no, location=no, status=no, menubar=no, scrollbars=yes, resizable=yes, width=460, height=600'); return false;"><i class="material-icons">smartphone</i></a>
+									<a class="table-action tooltipped" href="{{pathFor 'ViewApp' data=appPathInfo}}" data-position="top" data-delay="50" data-tooltip="Launch app viewer" onclick="window.open(this.href,'targetWindow', 'toolbar=no, location=no, status=no, menubar=no, scrollbars=yes, resizable=yes, width=360, height=640'); return false;"><i class="material-icons">visibility</i></a>
 									<a class="table-action table-edit-item tooltipped" href="{{pathFor 'Edit App'}}" data-position="top" data-delay="50" data-tooltip="Edit this app" ><i class="material-icons">mode_edit</i></a>
 								{{else}}
 									<a class="table-action table-make-active select-app tooltipped" data-position="top" data-delay="50" data-tooltip="Make app active" href=""><i class="icon-ts-checkmark"></i></a>
-									<a class="table-action tooltipped" href="{{pathFor 'ViewApp' data=appPathInfo}}" data-position="top" data-delay="50" data-tooltip="Launch app viewer" onclick="window.open(this.href,'targetWindow', 'toolbar=no, location=no, status=no, menubar=no, scrollbars=yes, resizable=yes, width=460, height=600'); return false;"><i class="material-icons">smartphone</i></a>
+									<a class="table-action tooltipped" href="{{pathFor 'ViewApp' data=appPathInfo}}" data-position="top" data-delay="50" data-tooltip="Launch app viewer" onclick="window.open(this.href,'targetWindow', 'toolbar=no, location=no, status=no, menubar=no, scrollbars=yes, resizable=yes, width=360, height=640'); return false;"><i class="material-icons">visibility</i></a>
 									<a class="table-action table-edit-item ta-disabled tooltipped" data-position="top" data-delay="50" data-tooltip="Select this app to edit" href=""><i class="material-icons">mode_edit</i></a>
 								{{/if}}
 								{{#afModal classes="table-action table-cancel-item" collection="Apps" operation="remove" doc=_id title="<i class='material-icons'>error_outline</i><span class='modal-header'>Deleting App</span>" buttonContent="Delete" buttonCancelContent="Cancel"}}<i class="icon-ts-trash"></i>{{/afModal}}

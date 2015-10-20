@@ -1,0 +1,19 @@
+<template name="EditHttpConnectionHeader">
+	<h1 class="left">Edit HTTP Connection: {{title}}</h1>
+	<div class="clearfix"></div>
+</template>
+
+<template name="EditHttpConnectionBody">
+	{{#contentFor region="appHeader" template="EditHttpConnectionHeader"}}{{/contentFor}}
+	<div class="top-row">
+		<div class="col s2 tabs-container">
+			<ul class="tabs">
+				<li class="tab col s3"><a class="active" href="#test1">Required Atts</a></li>
+			</ul>
+		</div>
+		<div class="clearfix"></div>
+	</div>
+	<div class="single-page-container" id="test1">
+		{{>updateHttpConnectionForm}}
+	</div>
+</template>

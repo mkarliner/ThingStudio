@@ -25,7 +25,7 @@ iron:router
 zimme:iron-router-active
 
 ########## Layout ##########
-fourseven:scss
+#fourseven:scss
 jparker:gravatar
 jeremy:selectize
 comerc:autoform-selectize
@@ -67,8 +67,6 @@ reactive-dict
 meteorhacks:npm
 pfafman:filesaver
 chuangbo:marked
-
-
 npm-container
 standard-minifiers
 meteor-base
@@ -85,3 +83,4 @@ ejson
 spacebars
 check
 mkarliner:autoform-modals-materialize
+email

@@ -11,6 +11,22 @@ arrayOfObjectsFromObject = function (obj) {
 	return result;
 }
 
+// Gives checkboxes with no autform ID a suitable reference ID
+makeCheckboxID = function () {
+	function makeid() {
+		var text = "";
+		var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+		for( var i=0; i < 5; i++ ) {
+			text += possible.charAt(Math.floor(Math.random() * possible.length));
+		}
+		return text;
+	}
+	var uniqid = makeid();
+	Template.instance().$(".mat-check input").attr("id", uniqid)
+	Template.instance().$(".mat-check label").attr("for", uniqid)
+}
+
 // From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys
 if (!Object.keys) {
   Object.keys = (function() {
@@ -153,7 +169,13 @@ checkHTTPFeeds = function (){
 		if(HTTPClock % feeds[f].polling_interval == 0 ) {
 			var feed = feeds[f];
 			var conn = HTTPConnections.findOne(feed.connection);
+			if(!conn) {
+				return;
+			}
 			var app = Apps.findOne({_id: conn.appId});
+			if(!app) {
+				return;
+			}
 			var url = conn.protocol + "://" + conn.host + ":" + conn.port + feed.path;
 			timeout = (feed.polling_interval-1)*1000;
 			console.log("HT: ", feed.responseProcessor, feed.requestProcessor, conn, url, timeout);
@@ -349,16 +371,17 @@ getAppTree = function(appId){
 	apps = [app._id];
 
 	if(baseAppId) {
-		console.log("Set system app to ", baseAppId)
+		// console.log("Set system app to ", baseAppId)
 		apps = [app._id, baseAppId];
 	} else {
 		console.log("NO SYSTEM APP DEFINED!!!!");
 		apps = [app._id];
 	}
-
-	while(app.ancestor) {
-		app = Apps.findOne({_id: app.ancestor})
-		apps.push(app._id);
+	while(app && app.ancestor) {
+		app = Apps.findOne({_id: app.ancestor});
+		if(app) {
+			apps.push(app._id);
+		}
 	}
 	return apps;
 }
@@ -374,11 +397,11 @@ InitialiseApps = function(){
 	}
 	applist = getAppTree(capp._id);
 
-	console.log("Initialising Apps", applist);
+	// console.log("Initialising Apps", applist);
 	for(var a=0; a<applist.length; a++ ){
 		var app = Apps.findOne(applist[a]);
 		if(app && app.js) {
-			console.log("Initialising app ", app.title);
+			// console.log("Initialising app ", app.title);
 			eval(app.js);
 		}
 	}
