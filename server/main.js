@@ -441,6 +441,7 @@ Meteor.startup(function() {
 
 	DocFiles = [
 		"about-thing-studio.md",
+		"basic-concepts.md",
 		"apps.md",
 		"attributes.md",
 		"mqtt-connections-and-feeds.md",
