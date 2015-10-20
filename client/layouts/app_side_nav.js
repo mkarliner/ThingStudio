@@ -41,6 +41,9 @@ Template.AppSideNav.helpers({
 		if(!u) {
 			return("No name");
 		}
+		if(!u.profile || !u.profile.firstName) {
+			return("No name set");
+		}
 		var firstName = u.profile.firstName || '';
 		var lastName = u.profile.lastName || '';
 		if ( firstName != '' && lastName != '' ) {
