@@ -8,6 +8,22 @@
 	</div>
 </template>
 
+<template name="shareAppForm">
+	{{#autoForm collection="Apps" class="app-detail" id="shareAppForm" type="update" doc=this omitFields="ancestor" buttonContent="Save Application"}}
+		<div class="col s8">
+			{{#if this.shareable}}
+				<p><span class="fwHeavy block">Sharing Options</span>Share your IoT app with the world! (must be Public &amp; Sharable)</p>
+				<div class="form-group">
+					<a href="https://twitter.com/intent/tweet?text='I made an app with @ThingStudio. Click here {{share_url}} to see it " class="btn btn-social btn-twitter btn-flat" target="_blank">Share on Twitter</a>
+					<a href="https://www.facebook.com/dialog/feed?app_id=1443405589299169&display=popup&picture=http://www.thingstud.io/images/jkshdfkjhsjkdhf.png&caption={{title}}&description={{summary}}&link={{share_url}}&redirect_uri={{share_url}}" class="btn btn-social btn-facebook btn-flat" target="_blank">Share on Facebook</a>
+					<a href="https://www.linkedin.com/shareArticle?mini=true&url={{share_url}}&title={{title}}&summary={{summary}}&source=ThingStudio" class="btn btn-social btn-linkedin btn-flat" target="_blank">Share on LinkedIn</a>
+				</div>
+			{{else}}
+			<p><span class="fwHeavy block">This App Is Not Currently Shareable</span> For your app to be accessible to other users, it must be marked "Sharable" on the Properties tab</p>
+			{{/if}}
+		</div>
+	{{/autoForm}}
+</template>
 
 <template name="updateAppsForm">
 	{{#autoForm collection="Apps" class="app-detail" id="updateAppForm" type="update" doc=this omitFields="ancestor" buttonContent="Save Application"}}
@@ -27,16 +43,7 @@
 					<p class="shareable-tip">Make your app shareable to view sharing options</p>
 				{{/unless}}
 			</div>
-			<!-- {{#if this.shareable}}
-				<p><span class="fwHeavy">Sharing Options</span> &mdash; Share your IoT app with the world! (must be Public &amp; Sharable)</p>
-				<div class="form-group">
-					<a href="https://twitter.com/intent/tweet?text='I made an app with @ThingStudio. Click here {{share_url}} to see it " class="btn btn-social btn-twitter btn-flat" target="_blank">Share on Twitter</a>
-					<a href="https://www.facebook.com/dialog/feed?app_id=1443405589299169&display=popup&picture=http://www.thingstud.io/images/jkshdfkjhsjkdhf.png&caption={{title}}&description={{summary}}&link={{share_url}}&redirect_uri={{share_url}}" class="btn btn-social btn-facebook btn-flat" target="_blank">Share on Facebook</a>
-					<a href="https://www.linkedin.com/shareArticle?mini=true&url={{share_url}}&title={{title}}&summary={{summary}}&source=ThingStudio" class="btn btn-social btn-linkedin btn-flat" target="_blank">Share on LinkedIn</a>
-				</div>
-			{{else}}
 
-			{{/if}} -->
 			<!-- <p><span class="fwHeavy">Nav Menu in Viewer</span> &mdash; Recommend for apps containing multiple templates</p>
 			<div class="form-group">
 				<div data-required="true" class="checkbox-fw">
