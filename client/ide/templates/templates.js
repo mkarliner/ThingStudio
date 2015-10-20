@@ -4,11 +4,11 @@ Template.ScreensBody.created = function(){
 
 Template.ScreensBody.helpers({
 	widgetlist: function(){
-		wl =  Screens.find({  isWidget: true})
+		wl =  Screens.find({  isWidget: true}, {sort: {title: 1}})
 		return wl;
 	},
 	templatelist: function(){
-		return Screens.find({$or:[{owner: Meteor.userId()}, {isWidget: false} ] });
+		return Screens.find({$or:[{owner: Meteor.userId()}, {isWidget: false} ] }, {sort: {title: 1}});
 	},
 	// owner: function() {
 	// 	return
