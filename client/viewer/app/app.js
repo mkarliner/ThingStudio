@@ -4,7 +4,7 @@
 Template.ViewApp.helpers({
 	screenlist: function(){
 		// console.log("screens")
-		return Screens.find({isWidget: false})
+		return Screens.find({isWidget: false}, {sort: {title: 1}})
 	},
 	screenparams: function(){
 		// console.log("SP", this);

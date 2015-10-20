@@ -8,7 +8,7 @@ Template.ScreensBody.helpers({
 		return wl;
 	},
 	templatelist: function(){
-		return Screens.find({$or:[{owner: Meteor.userId()}, {isWidget: false} ] });
+		return Screens.find({$or:[{owner: Meteor.userId()}, {isWidget: false} ] }, {sort: {title: 1}});
 	},
 	// owner: function() {
 	// 	return
