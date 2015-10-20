@@ -1387,6 +1387,8 @@ div.ace_layer.ace_gutter-layer.ace_folding-enabled {
 	height: 500px;
 	min-width:  800px;
 	border-radius: 3px;
+	border: none;
+	margin: 0;
 }
 
 #preview {
@@ -1398,14 +1400,9 @@ div.ace_layer.ace_gutter-layer.ace_folding-enabled {
 
 pre[name="html"],
 pre[name="js"],
-pre[name="css"] {
+pre[name="css"],
+pre[name="documentation"] {
 	line-height: 0;
-}
-
-pre[name="html"],
-pre[name="js"],
-pre.ace_editor,
-pre[name="css"] {
 	margin: 0;
 }
 
