@@ -19,6 +19,14 @@ Template.registerHelper(
 	}
 );
 
+Template.registerHelper(
+	"appDocumentation", function () {
+		if(Meteor.user()) {
+			return Apps.findOne({_id: this.appId}).documentation;
+		}
+	}
+)
+
 
 Template.registerHelper(
 	"meteor_status", function(){
