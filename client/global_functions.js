@@ -315,7 +315,7 @@ publishFeed = function(feedName, message) {
 	}
 	feed = Feeds.findOne({title: feedName});
 	if(feed){
-		publish(feed, JSON.stringify(message));
+		publish(feedName, JSON.stringify(message));
 	} else {
 		message = "No such publish feed - " + feedName;
 		Alerts.upsert({type: 'runtime', status: "warning", message:  message},{$set:{type: 'runtime', status: 'warning', message: message} ,$inc: {count: 1} } );
