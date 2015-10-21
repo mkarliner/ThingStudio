@@ -28,8 +28,10 @@ Tables.HelpersTable = [
 		name: "username",
 		params: "none",
 		description: "Returns the current user's name or 'anonymous' "
+	},
+	{
+		name: "appDocumentation",
+		params: "none",
+		description: "Returns the current application's documentation property"
 	}
 ];
-
-
-
