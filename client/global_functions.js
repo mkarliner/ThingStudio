@@ -243,7 +243,8 @@ publish = function(feedName, message) {
 	}
 	switch(feedType) {
 	case "MQTT":
-		feed = Feeds.findOne(feedName);
+		feed = Feeds.findOne({title: feedName});
+		console.log("FEN: ", feed, feedName)
 		if(feed.pubsub !="Publish") {
 			message = "Attempt to publish to subcription feed: "+ feed.title;
 			Alerts.upsert({type: 'runtime', status: "warning", message:  message},{$set:{type: 'runtime', status: 'warning', message: message} ,$inc: {count: 1} } );
