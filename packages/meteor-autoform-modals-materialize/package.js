@@ -15,7 +15,7 @@ Package.on_use(function(api) {
         'coffeescript',
         'ui',
         'aldeed:autoform@5.3.0',
-        'gildaspk:autoform-materialize@0.0.20',
+        // 'gildaspk:autoform-materialize@0.0.20',
         'raix:handlebar-helpers@0.2.4',
         'mpowaga:string-template@0.1.0',
     ], 'client');
