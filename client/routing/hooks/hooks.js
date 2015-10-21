@@ -14,7 +14,7 @@ Router.onBeforeAction(function () {
 		this.next();
 		return;
 	}
-	// console.log("OBA GLOBAL", this);
+	console.log("OBA GLOBAL", this);
 	// Is there an existing connection?
 	if(mqttClient.connected == true) {
 		this.next();
@@ -22,11 +22,13 @@ Router.onBeforeAction(function () {
 	}
 	connection = getCurrentConnection();
 	//console.log("CURRCONN : ", connection)
+	console.log("MOVABLE FEAST1", this);
 	if(!connection) {
 		// No, we have to decide which connection to use.
-		
+							console.log("MOVABLE FEAST2", this);
 		//Does this app have an active connection defined?
 		if(app.connection) {
+								console.log("MOVABLE FEAST3", this);
 			connection = Connections.findOne({_id: app.connection});
 			if(!connection) {
 				disconnect();
@@ -36,14 +38,15 @@ Router.onBeforeAction(function () {
 			Session.set("currentConnection", connection );
 		} else {
 			// No, just let them go on.
+								console.log("MOVABLE FEAST4", this);
 			disconnect();
 			this.next();
 			return;
 		}
 	} 
+
 	
-	
-	//console.log("VIEWCONN ", app.connection, connection);
+	console.log("VIEWCONN ", app.connection, connection);
 	// Do I need to the user to provide authentication credentials?
 	if ((!connection.serverCredentials || connection.serverCredentials == false) && Session.get("authReady") != true) {
 		//console.log("NEED AUTH")

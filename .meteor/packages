@@ -84,3 +84,7 @@ spacebars
 check
 mkarliner:autoform-modals-materialize
 email
+ecmascript
+ecmascript-collections
+promise
+es5-shim

@@ -5,6 +5,7 @@ var renderYields = function(that, t) {
 	that.render(t + "Header", {
 		to: "appHeader"
 	});
+	console.log("MF6: ", that, t)
 	that.render(t + "Body");
 }
 
@@ -45,6 +46,7 @@ Router.route("/dashboard", {
 							data: "Dashboard"
 						});
 					} else {
+						console.log("MF5", this, Schemas.Credentials)
 						renderYields(this, 'Dashboard');
 					}
 				}
