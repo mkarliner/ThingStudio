@@ -11,7 +11,12 @@ Template.EditScreenBody.events({
 	'click #togglePreview': function(ev){
 		$('#renderScreen').toggle();
 		$('#editScreen').toggleClass('fullWidth');
-	}
+	},
+	'click #jstab': function(e, tmpl){
+		//console.log("JSTAB")
+		AceEditor.instance("archyjs").resize();
+		// AceEditor.instance("archyjs").renderer.updateFull()
+	},
 });
 
 Template.EditScreenBody.helpers({
