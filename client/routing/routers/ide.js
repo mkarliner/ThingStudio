@@ -559,4 +559,13 @@ Router.route("/debug", {
 			renderYields(this, 'Debug')
 		}
 	}
+});
+
+Router.route("/reset-password/:token", {
+	name:  "ResetPassword",
+	controller: "IDEController",
+	action: function() {
+		Session.set('resetPassword', this.params.token);
+		renderYields(this, "ResetPassword");
+	}
 })

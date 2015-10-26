@@ -47,10 +47,15 @@ Meteor.startup(function(){
 Accounts.onLogin(function(){
 	// This is not associated with any route.
 	//We decide what the initial app should be here.
-
-
-
 });
+
+
+ResetPassword = function(token){
+ 	console.log("RESET PASSWORD", token)
+}
+
+Accounts.onResetPasswordLink(ResetPassword);
+
 
 // Accounts.onCreateUser(function(options, user) {
 //     //pass the surname in the options

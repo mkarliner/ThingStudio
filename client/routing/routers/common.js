@@ -1,6 +1,6 @@
 
 Router.plugin('ensureSignedIn', {
-	except: ["ViewApp", "ViewScreen"]
+	except: ["ViewApp", "ViewScreen", "ResetPassword"]
 });
 
 Router.configure({

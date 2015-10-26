@@ -64,3 +64,14 @@ Accounts.onCreateUser(function(options, user){
 	}
 	return user;
 });
+
+
+Accounts.emailTemplates.from = "ThingStudio Accounts <contact@thingstud.io>";
+Accounts.emailTemplates.siteName = "ThingStudio";
+Accounts.emailTemplates.resetPassword.text = function(user, url) {
+	newUrl = url.replace("/#", "");
+	return "Hello\n"
+	+ " To reset your password on ThingStudio, simply click the link below\n"
+	+ newUrl + "\n"
+	+ "Thanks, the ThingStudio Team"
+}
