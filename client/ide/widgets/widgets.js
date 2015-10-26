@@ -26,24 +26,24 @@ Template.WidgetsHeader.events({
 
 
 Template.WidgetsBody.helpers({
-	myWidgetList: function(){
-		wl =  Widgets.find({  appId: {$ne: Meteor.settings.public.systemApp}, widgetType: "Web Component"})
-		return wl;
-	},
 	systemWidgetList: function(){
 		console.log("SWL System App Id", Meteor.settings.public.systemApp)
-		wl =  Widgets.find({ appId: Meteor.settings.public.systemApp, widgetType: "Web Component"})
+		wl =  Widgets.find({ appId: Meteor.settings.public.systemApp })
 		return wl;
 	},
-	systemTemplateList: function(){
-		console.log("SWL System App Id", Meteor.settings.public.systemApp)
-		wl =  Widgets.find({ appId: Meteor.settings.public.systemApp, widgetType: "Library Template"})
+	// systemTemplateList: function(){
+	// 	console.log("SWL System App Id", Meteor.settings.public.systemApp)
+	// 	wl =  Widgets.find({ appId: Meteor.settings.public.systemApp })
+	// 	return wl;
+	// },
+	myWidgetList: function(){
+		wl =  Widgets.find({ appId: { $ne: Meteor.settings.public.systemApp } } )
 		return wl;
 	},
-	myTemplatesList: function(){
-		wl =  Widgets.find({  appId: {$ne: Meteor.settings.public.systemApp}, widgetType: "Library Template"});
-		return wl;
-	}
+	// myTemplatesList: function(){
+	// 	wl =  Widgets.find({ appId: { $ne: Meteor.settings.public.systemApp } } )
+	// 	return wl;
+	// }
 });
 
 Template.WidgetList.helpers({
