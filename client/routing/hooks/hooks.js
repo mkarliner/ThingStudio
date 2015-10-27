@@ -6,6 +6,10 @@ Router.onBeforeAction(function () {
   // are also available here such as this.params
 	// console.log("Running connection beforeaction")
 	app = getCurrentApp();
+	if(Session.get("cmOperation") == "null") {
+		Session.set("cmOperation", undefined);
+		Session.set("cmCollection", undefined);
+	}
 	if(!app) {
 		this.next();
 		return;
