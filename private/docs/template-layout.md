@@ -15,45 +15,45 @@ We are using a standard 12 column fluid responsive grid system. The grid helps y
 
 Our standard grid has 12 columns. No matter the size of the browser, each of these columns will always have an equal width.
 
-<code>
-  <div class="row">
-    <div class="col s1">1</div>
-    <div class="col s1">2</div>
-    <div class="col s1">3</div>
-    <div class="col s1">4</div>
-    <div class="col s1">5</div>
-    <div class="col s1">6</div>
-    <div class="col s1">7</div>
-    <div class="col s1">8</div>
-    <div class="col s1">9</div>
-    <div class="col s1">10</div>
-    <div class="col s1">11</div>
-    <div class="col s1">12</div>
-  </div>
-</code>
+<pre>
+  &lt;div class="row"&gt;
+    &lt;div class="col s1"&gt;1&lt;/div&gt;
+    &lt;div class="col s1"&gt;2&lt;/div&gt;
+    &lt;div class="col s1"&gt;3&lt;/div&gt;
+    &lt;div class="col s1"&gt;4&lt;/div&gt;
+    &lt;div class="col s1"&gt;5&lt;/div&gt;
+    &lt;div class="col s1"&gt;6&lt;/div&gt;
+    &lt;div class="col s1"&gt;7&lt;/div&gt;
+    &lt;div class="col s1"&gt;8&lt;/div&gt;
+    &lt;div class="col s1"&gt;9&lt;/div&gt;
+    &lt;div class="col s1"&gt;10&lt;/div&gt;
+    &lt;div class="col s1"&gt;11&lt;/div&gt;
+    &lt;div class="col s1"&gt;12&lt;/div&gt;
+  &lt;/div&gt;
+</pre>
 
 ##Columns live inside Rows
 
 Remember when you are creating your layout that all columns must be contained inside a row and that you must add the col class to your inner divs to make them into columns
 
-<code>
-  <div class="row">
-    <div class="col s12">This div is 12-columns wide</div>
-    <div class="col s6">This div is 6-columns wide</div>
-    <div class="col s6">This div is 6-columns wide</div>
-  </div>
-</code>
+<pre>
+&lt;div class="row"&gt;
+  &lt;div class="col s12"&gt;This div is 12-columns wide&lt;/div&gt;
+  &lt;div class="col s6"&gt;This div is 6-columns wide&lt;/div&gt;
+  &lt;div class="col s6"&gt;This div is 6-columns wide&lt;/div&gt;
+&lt;/div&gt;
+</pre>
 
 ##Offsets
 
 To offset, simply add offset-s2 to the class where s signifies the screen class-prefix (s = small, m = medium, l = large) and the number after is the number of columns you want to offset by.
 
-<code>
-  <div class="row">
-    <div class="col s12 grid-example"><span class="flow-text">This div is 12-columns wide on all screen sizes</span></div>
-    <div class="col s6 offset-s6 grid-example"><span class="flow-text">6-columns (offset-by-6)</span></div>
-  </div>
-</code>
+<pre>
+  &lt;div class="row"&gt;
+    &lt;div class="col s12 grid-example"&gt;This div is 12-columns wide on all screen sizes&lt;/div&gt;
+    &lt;div class="col s6 offset-s6 grid-example"&gt;6-columns (offset-by-6)&lt;/div&gt;
+  &lt;/div&gt;
+</pre>
 
 ##Creating Responsive Layouts
 
@@ -62,4 +62,3 @@ Above we showed you how to layout elements using our grid system. Now we'll show
 Class prefix .s = Mobile Devices (screens less than 600px wide)
 Class prefix .m = Mobile Devices (screens less than 992px wide)
 Class prefix .l = Mobile Devices (screens greater than 992px wide)
-
