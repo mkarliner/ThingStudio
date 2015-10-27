@@ -4,7 +4,7 @@ Template.ScreensBody.created = function(){
 
 Template.ScreensBody.helpers({
 	widgetlist: function(){
-		wl =  Screens.find({  isWidget: true})
+		wl =  Screens.find({  isWidget: true}, {sort: {title: 1}})
 		return wl;
 	},
 	templatelist: function(){

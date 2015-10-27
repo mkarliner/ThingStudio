@@ -5,7 +5,6 @@
 # but you can also edit it by hand.
 
 ########## Include Meteor ##########
-meteor-platform
 
 ########## Accounts ##########
 accounts-base
@@ -28,7 +27,6 @@ zimme:iron-router-active
 ########## Layout ##########
 #fourseven:scss
 jparker:gravatar
-gildaspk:autoform-modals-materialize
 jeremy:selectize
 comerc:autoform-selectize
 miro:preloader
@@ -67,10 +65,32 @@ numtel:webcomponent
 aldeed:template-extension
 reactive-dict
 meteorhacks:npm
-npm-container
 pfafman:filesaver
 chuangbo:marked
+<<<<<<< HEAD
 #materialize:materialize@=0.96.1
 #jeremy:selectize
 #comerc:autoform-selectize
+=======
+npm-container
+standard-minifiers
+meteor-base
+mobile-experience
+mongo
+blaze-html-templates
+session
+jquery
+tracker
+logging
+reload
+random
+ejson
+spacebars
+check
+mkarliner:autoform-modals-materialize
+>>>>>>> X-model
 email
+ecmascript
+ecmascript-collections
+promise
+es5-shim

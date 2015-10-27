@@ -359,6 +359,7 @@ Meteor.setInterval(function(){
 
 getCurrentApp = function() {
 	app =  Apps.findOne({_id: Session.get("currentAppId")});
+	console.log("ATT" , app);
 	return app;
 };
 
@@ -501,6 +502,9 @@ UnsubscribeAll = function(){
 }
 
 connect = function (conn, usr, pass) {
+	if(!conn) {
+		return; //Pass on undefined connections.
+	}
 	// console.log("ENTERING CONN", conn, usr, pass, Session.get("currentMQTTHost"));
 	if(mqttClient.connected && conn._id == Session.get("currentMQTTHost")) {
 		console.log("ATTEMPT to connect to current connected connection");
