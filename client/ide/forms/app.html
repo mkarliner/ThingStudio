@@ -1,8 +1,12 @@
 <template name="insertAppForm">
 	<div id="template-title">
 		{{#autoForm collection="Apps" id="insertAppForm" type="insert" }}
-			{{> afQuickField name="title" class="centerField"}}
-			{{> afQuickField name="ancestor" class="centerField"}}
+			<p><span class="fwHeavy">App Title</span> &mdash; The name of your application (will show publicly if your app is set to Public).</p>
+			{{> afQuickField name='title' }}
+			<p><span class="fwHeavy">App Summary</span> &mdash; Set a quick summary of your app.</p>
+			{{> afQuickField name='summary' }}
+			<p><span class="fwHeavy">Inherit all properties from another app? (OPTIONAL)</span> &mdash; ***Leave this field blank*** unless you are SURE you want to inherit ALL of an app's properties.</p>
+			{{> afQuickField name='ancestor' }}
 			<button type="submit" class="btn btn-update right">Create New App</button>
 		{{/autoForm}}
 	</div>
