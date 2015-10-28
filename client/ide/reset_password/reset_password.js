@@ -2,16 +2,16 @@ if (Accounts._resetPasswordToken) {
   Session.set('resetPassword', Accounts._resetPasswordToken);
 }
 
-Template.ResetPassword.helpers({
+Template.ResetPasswordBody.helpers({
  resetPassword: function(){
   return Session.get('resetPassword');
  }
 });
 
-Template.ResetPassword.events({
+Template.ResetPasswordBody.events({
   'submit #resetPasswordForm': function(e, t) {
     e.preventDefault();
-    
+
     var resetPasswordForm = $(e.currentTarget),
         password = resetPasswordForm.find('#resetPasswordPassword').val(),
         passwordConfirm = resetPasswordForm.find('#resetPasswordPasswordConfirm').val();
@@ -23,6 +23,7 @@ Template.ResetPassword.events({
         } else {
           console.log('Your password has been changed. Welcome back!');
           Session.set('resetPassword', null);
+          Router.go('Dashboard')
         }
       });
     }
