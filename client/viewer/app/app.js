@@ -2,11 +2,11 @@
 // Template.appScreen.registerElement('app-screen');
 
 Template.ViewApp.helpers({
-	screenlist: function(){
+	templatelist: function(){
 		// console.log("screens")
-		return Screens.find({isWidget: false}, {sort: {title: 1}})
+		return Screens.find({isWidget: false}, {sort: {lowercaseTitle: 1}})
 	},
-	screenparams: function(){
+	templateparams: function(){
 		// console.log("SP", this);
 		return {appid: this.appId, _id: this._id}
 	},
