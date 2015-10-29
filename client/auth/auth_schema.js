@@ -37,6 +37,7 @@ Meteor.startup(function(){
 			label: "Save to local client",
 		},
 		connection: {
+			optional: true,
 			type: String,
 			autoform: {
 				// omit: true
