@@ -40,6 +40,23 @@ Schemas.Screen = new SimpleSchema({
 		label: "Title",
 		max: 200
 	},
+	lowercaseTitle: {
+		type: String,
+		optional: true,
+		max: 200,
+		autoform: {
+			omit: true
+		},
+		autoValue: function(){
+			title = this.siblingField("title").value
+			lowerTitle = title.toString().toLowerCase()
+			if(this.isInsert || this.isUpsert || this.isUpdate) {
+				return lowerTitle
+			} else {
+			this.unset();
+			}
+		}
+	},
 	summary: {
 		type: String,
 		label: "Summary",
