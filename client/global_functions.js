@@ -100,7 +100,18 @@ RegisterFeedProcessor = function(name,  type, func) {
 }
 
 
+var HTTPClock = 0;
+var HTTPFirstPolls = {};
 
+function initialPoll(feed) {
+	if(HTTPFirstPolls[feed.title] || feed.polling_interval == 0) {
+		return false;
+	} else {
+		console.log("First Poll for feed ", feed.title);
+		HTTPFirstPolls[feed.title] = feed.title;
+		return true;
+	}
+}
 
 RegisterFeedProcessor("JSONOut", "HTTPRequest", function(app, conn, feed, message){
 	console.log("testReq Proc", feed, message);

@@ -16,7 +16,7 @@
 	{{#autoForm collection="Apps" class="app-detail" id="shareAppForm" type="update" doc=this omitFields="ancestor" buttonContent="Save Application"}}
 		<div class="col s8">
 			{{#if this.shareable}}
-				<p><span class="fwHeavy block">Sharing Options</span>Share your IoT app with the world! (must be Public &amp; Sharable)</p>
+				<p><span class="fwHeavy block">Sharing Options</span>Share your IoT app with the world! (must be Sharable)</p>
 				<div class="form-group">
 					<a href="https://twitter.com/intent/tweet?text='I made an app with @ThingStudio. Click here {{share_url}} to see it " class="btn btn-social btn-twitter btn-flat" target="_blank">Share on Twitter</a>
 					<a href="https://www.facebook.com/dialog/feed?app_id=1443405589299169&display=popup&picture=http://www.thingstud.io/images/jkshdfkjhsjkdhf.png&caption={{title}}&description={{summary}}&link={{share_url}}&redirect_uri={{share_url}}" class="btn btn-social btn-facebook btn-flat" target="_blank">Share on Facebook</a>

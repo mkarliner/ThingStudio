@@ -18,14 +18,12 @@ Router.onBeforeAction(function () {
 		this.next();
 		return;
 	}
-	console.log("OBA GLOBAL", this);
 	// Is there an existing connection?
 	if(mqttClient.connected == true) {
 		this.next();
 		return;
 	}
 	connection = getCurrentConnection();
-	//console.log("CURRCONN : ", connection)
 	if(!connection) {
 		// No, we have to decide which connection to use.
 		//Does this app have an active connection defined?

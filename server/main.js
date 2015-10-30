@@ -129,7 +129,7 @@ Meteor.startup(function() {
 				this.ready();
 				return;
 			}
-			if(app.shareable || isAdmin(this.userId)) {
+			if(this.userId == app.owner || app.shareable || isAdmin(this.userId)) {
 				// console.log("Returning app", appcurr.fetch())
 				return appcurr;
 			} else {
@@ -201,7 +201,7 @@ Meteor.startup(function() {
 			this.ready(); //If there is not such app.
 			return;
 		}
-		console.log("Subscribing screens: ", appId,  app.title, app.shareable)
+		console.log("Subscribing screens: ", app.owner, this.userId, appId,  app.title, app.shareable)
 		if(this.userId == app.owner || app.shareable || isAdmin(this.userId)) {
 			//console.log("Returning screends: ", Screens.find({appId: appId}).fetch().length )
 			return Screens.find({appId: {$in: apps}});

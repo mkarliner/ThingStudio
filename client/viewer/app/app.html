@@ -13,10 +13,10 @@
 						html body.viewer-body div.app-wrapper div.app-header-wrapper header ul.viewer-header li a.made-width { display: inline-block !important; color: white !important; font-size: 5vw !important; opacity: 1 !important; width: auto !important; background-color: transparent !important; z-index: 1 !important;}
 					</style>
 					<ul class="screens-list">
-						{{#if screenlist.count}}
-							{{#each screenlist}}
+						{{#if templatelist.count}}
+							{{#each templatelist}}
 								<li>
-									<a href="{{pathFor 'ViewScreen' data=screenparams }}">
+									<a href="{{pathFor 'ViewScreen' data=templateparams }}">
 										<span class="letter-circle letter-{{firstLetter}}">{{firstLetter}}</span>
 										<div class="screen-desc">
 											<h2>{{this.title}}</h2>
