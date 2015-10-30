@@ -1,7 +1,6 @@
 Template.DashboardBody.onRendered(function() {
 	$('ul.tabs').tabs();
 	$('.tooltipped').tooltip({delay: 50});
-	console.log("MF7: ", this)
 });
 
 Template.DashboardBody.onDestroyed(function () {

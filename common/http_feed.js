@@ -81,7 +81,6 @@ Schemas.HTTPFeed = new SimpleSchema({
 		autoform: {
 					type: "selectize",
 					options: function(){
-						console.log("asdf", FeedProcessors.find({type: "HTTPRequest"}).fetch());
 						keys = FeedProcessors.find({type: "HTTPRequest"}).fetch();
 						options = keys.map(function(val, index, arr){
 							return {label: val.name, value: val.name};
@@ -98,7 +97,6 @@ Schemas.HTTPFeed = new SimpleSchema({
 		autoform: {
 			type: "selectize",
 			options: function(){
-				console.log("asdf", FeedProcessors.find({type: "HTTPResponse"}).fetch());
 				keys = FeedProcessors.find({type: "HTTPResponse"}).fetch();
 				options = keys.map(function(val, index, arr){
 					return {label: val.name, value: val.name};

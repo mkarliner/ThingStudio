@@ -101,6 +101,18 @@ RegisterFeedProcessor = function(name,  type, func) {
 
 
 var HTTPClock = 0;
+var HTTPClock = 0;
+var HTTPFirstPolls = {};
+
+function initialPoll(feed) {
+	if(HTTPFirstPolls[feed.title] || feed.polling_interval == 0) {
+		return false;
+	} else {
+		console.log("First Poll for feed ", feed.title);
+		HTTPFirstPolls[feed.title] = feed.title;
+		return true;
+	}
+}
 
 RegisterFeedProcessor("JSONOut", "HTTPRequest", function(app, conn, feed, message){
 	console.log("testReq Proc", feed, message);
@@ -166,7 +178,7 @@ checkHTTPFeeds = function (){
 
 	//Check which feeds need to be polled.
 	for(var f=0; f<feeds.length; f++) {
-		if(HTTPClock % feeds[f].polling_interval == 0 ) {
+		if(HTTPClock % feeds[f].polling_interval == 0 || initialPoll(feeds[f])) {
 			var feed = feeds[f];
 			var conn = HTTPConnections.findOne(feed.connection);
 			if(!conn) {
@@ -189,7 +201,6 @@ checkHTTPFeeds = function (){
 				// 	//console.log("CALLING: ", HTTPFeedProcessors[feed.processors[p]])
 				// 	HTTPFeedProcessors[feed.processors[p]](feed, error, result);
 				// }
-				console.log("FEEDDDD: ", feed)
 				for(var rpc=0; rpc<feed.responseProcessors.length; rpc++) {
 					var fp = FeedProcessors.findOne({type: "HTTPResponse", name: feed.responseProcessors[rpc]});
 					//console.log("FP: ", fp, FeedProcessors.find().fetch());
