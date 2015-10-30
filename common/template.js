@@ -46,15 +46,6 @@ Schemas.Screen = new SimpleSchema({
 		max: 200,
 		autoform: {
 			omit: true
-		},
-		autoValue: function(){
-			title = this.siblingField("title").value
-			lowerTitle = title.toString().toLowerCase()
-			if(this.isInsert || this.isUpsert || this.isUpdate) {
-				return lowerTitle
-			} else {
-			this.unset();
-			}
 		}
 	},
 	summary: {
@@ -183,6 +174,7 @@ Screens.before.insert(function(userId, doc) {
 	if(Meteor.isClient) {
 		// console.log("BEFOREHOOK ", userId, doc, Session.get("currentApp"));
 		doc.appId = Session.get("currentApp")._id;
+		doc.lowercaseTitle = doc.title.toString().toLowerCase()
 	} else {
 		app = Apps.findOne(doc.appId);
 		if(app.owner != doc.owner) {
@@ -192,6 +184,13 @@ Screens.before.insert(function(userId, doc) {
 	}
 });
 
+
+Screens.before.update(function (userId, doc, fieldNames, modifier, options) {
+	if(Meteor.isClient) {
+		modifier.$set.lowercaseTitle = doc.title.toString().toLowerCase()
+		// console.log("Here is the modifier: ", modifier)
+	}
+})
 
 Screens.after.update(function(userId, doc) {
 	if(Meteor.isClient){
