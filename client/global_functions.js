@@ -101,7 +101,6 @@ RegisterFeedProcessor = function(name,  type, func) {
 
 
 var HTTPClock = 0;
-var HTTPClock = 0;
 var HTTPFirstPolls = {};
 
 function initialPoll(feed) {
