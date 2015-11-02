@@ -502,8 +502,14 @@ h1.nothing {
 // Buttons //
 ///////////////////////////////////////////////////////////////////////////////////////
 
-.btn {
+button {
+	/* This is an assumption: iOS Safari breaks button elements with no background */
+ -webkit-appearance: none;
+}
 
+.btn {
+	/* This is an assumption: If you know to add .btn to an element, you probably want a pointer cursor*/
+	cursor: pointer;
 }
 
 .btn-footer-menu {
@@ -513,6 +519,7 @@ h1.nothing {
 	color: white;
 	text-decoration: none;
 	display: inline-block;
+	cursor: pointer;
 }
 
 header ul,
