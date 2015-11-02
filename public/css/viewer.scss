@@ -503,15 +503,16 @@ h1.nothing {
 ///////////////////////////////////////////////////////////////////////////////////////
 
 .btn {
+
+}
+
+.btn.footer-menu {
+	padding: 8px 10px;
 	height: 44px;
 	line-height: 44px;
 	color: white;
 	text-decoration: none;
 	display: inline-block;
-}
-
-.btn.footer-menu {
-	padding: 8px 10px;
 }
 
 header ul,
