@@ -122,6 +122,7 @@ footer, header, menu, nav {
 }
 body {
 	line-height: 1;
+	display: flex;
 }
 ol, ul {
 	list-style: none;
@@ -175,12 +176,20 @@ body {
 	display: -webkit-flex;
 	display: -ms-flexbox;
 	display: flex;
+	flex: 1;
+	opacity: 1;
 	min-height: 100vh;
 	-webkit-box-orient: vertical;
 	-webkit-box-direction: normal;
 	-webkit-flex-direction: column;
 	    -ms-flex-direction: column;
 	        flex-direction: column;
+					transition: all 300ms ease-in-out;
+}
+
+.app-wrapper.debug-open {
+	flex: 0.00001;
+	opacity: 0;
 }
 
 .app-header-wrapper {
@@ -200,6 +209,19 @@ body {
 	width: 100%;
 	height: 100%;
 }
+
+.debug-wrapper {
+	flex: 0.00001;
+	opacity: 0;
+	transition: all 300ms ease-in-out;
+}
+
+.debug-wrapper.debug-open {
+	flex: 1;
+	opacity: 1;
+}
+
+
 
 main {
 	height: 100%;
@@ -522,6 +544,10 @@ button {
 	cursor: pointer;
 }
 
+.debug-wrapper .btn-footer-menu.debug {
+	color: black;
+}
+
 header ul,
 footer ul {
 									 list-style-type: none;
@@ -555,8 +581,9 @@ footer ul {
 a.made-with {
 	font-family: $fwMedium;
 	color: white;
-	font-size: 5vw; //23.75px
+	font-size: 18px; //23.75px
 	text-decoration: none;
+  white-space: nowrap;
 }
 a i.icon-ts-connection {
 		transition: background-color 0.1s cubic-bezier(0.4, 0.0, 0.2, 1);
@@ -617,6 +644,7 @@ ul.screens-list {
 		text-decoration: none;
 		padding: 15px 20px;
 		padding: 15px 4.3vw;
+    white-space: nowrap;
 	}
 	h2 {
 		font-family: $fwMedium;
@@ -786,4 +814,7 @@ main {
 }
 .icon-ts-profile:before {
 	content: "h";
+}
+.icon-ts-debug:before {
+  content: "k";
 }

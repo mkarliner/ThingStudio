@@ -1,18 +1,17 @@
 <template name="ViewerLayout">
 	<!-- stuff for viewer layout goes here. -->
-	<div class="app-wrapper">
+	<div class="app-wrapper {{debugOpenClass}}">
 
 		<div class="app-body-wrapper">
-
 			{{#transitioner}}
 			  {{> yield}}
 			{{/transitioner}}
 			<style media="screen">
-				html body.viewer-body div.app-wrapper div.app-header-wrapper { display: block !important;	height: 54px !important; opacity: 1 !important;	width: auto !important;	z-index: 1 !important; background-color: #353C51 !important; color: white !important;	}
+				/*html body.viewer-body div.app-wrapper div.app-header-wrapper { display: block !important;	height: 54px !important; opacity: 1 !important;	width: auto !important;	z-index: 1 !important; background-color: #353C51 !important; color: white !important;	}
 				html body.viewer-body div.app-wrapper div.app-header-wrapper header { display: block !important;	height: 54px !important; opacity: 1 !important;	width: 100% !important;	z-index: 1 !important; background-color: #353C51 !important; color: white !important;	}
 				html body.viewer-body div.app-wrapper div.app-header-wrapper header ul.viewer-header { display: -webkit-box !important; display: -webkit-flex !important; display: -ms-flexbox !important; display: flex !important;	height: 54px !important; opacity: 1 !important;	width: 100% !important;	z-index: 1 !important; color: white !important; }
 				html body.viewer-body div.app-wrapper div.app-header-wrapper header ul.viewer-header li { display: list-item !important; height: auto !important; opacity: 1 !important;	width: auto !important;	z-index: 1 !important; color: white !important; }
-				html body.viewer-body div.app-wrapper div.app-header-wrapper header ul.viewer-header li a.made-width { display: inline-block !important; color: white !important; font-size: 5vw !important; opacity: 1 !important; width: auto !important; background-color: transparent !important; z-index: 1 !important;}
+				html body.viewer-body div.app-wrapper div.app-header-wrapper header ul.viewer-header li a.made-width { display: inline-block !important; color: white !important; font-size: 5vw !important; opacity: 1 !important; width: auto !important; background-color: transparent !important; z-index: 1 !important;}*/
 			</style>
 			{{#if runtimeErrors}}
 				<div class="screen-errors">
@@ -34,12 +33,22 @@
 		<div class="app-footer-wrapper">
 			<footer>
 				<ul>
-					<!-- <li><span><a class="right viewer-connection-stat" href=""><i class="icon-ts-connection {{isConnected}}"></i></a></span></li> -->
-					<li><a class="btn-footer-menu" href="{{pathFor 'ViewApp' data=appPathInfo}}">Menu</a></li>
-					<!-- <li><span><a class="right viewer-connection-stat" href=""><i class="icon-ts-connection {{isConnected}}"></i></a></span></li> -->
+					<li><a class="btn-footer-menu" href="">Apps</a></li>
+					<li><a class="btn-footer-menu" href="{{pathFor 'ViewApp' data=appPathInfo}}">Templates</a></li>
+					{{#if showDebugButton}}
+						<li><a class="btn-footer-menu debug" href="">Debug</a></li>
+					{{else}}
+						<li><a class="btn-footer-menu debug" href=""></a></li>
+					{{/if}}
 				</ul>
 				{{> fontLicense}}
 			</footer>
 		</div>
+	</div>
+	<div class="debug-wrapper {{debugOpenClass}}">
+		{{> DebugHeader}}
+
+		{{> DebugBody}}
+		<li><a class="btn-footer-menu debug" href="">Debug</a></li>
 	</div>
 </template>

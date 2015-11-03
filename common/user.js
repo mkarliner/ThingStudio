@@ -59,6 +59,10 @@ Schemas.UserProfile = new SimpleSchema({
     showExample: {
     	type: Boolean,
     	defaultValue: true
+    },
+    showViewerDebug: {
+      type: Boolean,
+      defaultValue: true
     }
 });
 
@@ -141,7 +145,7 @@ Meteor.users.after.insert(function(userId, doc){
 		public: false,
 		owner: doc._id
 	}, {getAutoValues: false});
-	
-	
-	
+
+
+
 });
