@@ -153,43 +153,45 @@ body {
 	-webkit-font-smoothing: antialiased;
 }
 
-.app-body-wrapper {
-	min-height: calc( 100vh - 114px );
-	-webkit-box-flex: 1;
-	-webkit-flex: 1;
-	    -ms-flex: 1;
-	        flex: 1;
-	background-color: #F8F8F8;
-	display: -webkit-box;
-	display: -webkit-flex;
-	display: -ms-flexbox;
+.app-wrapper {
 	display: flex;
-	-webkit-box-orient: vertical;
-	-webkit-box-direction: normal;
-	-webkit-flex-direction: column;
-	    -ms-flex-direction: column;
-	        flex-direction: column;
+	flex: 1;
+	min-height: 100vh;
+  flex-direction: column;
 }
 
-.app-wrapper {
-	display: -webkit-box;
-	display: -webkit-flex;
-	display: -ms-flexbox;
+.app-wrapper-inner {
+	display: flex;
+}
+
+.app-body-wrapper {
 	display: flex;
 	flex: 1;
 	opacity: 1;
-	min-height: 100vh;
-	-webkit-box-orient: vertical;
-	-webkit-box-direction: normal;
-	-webkit-flex-direction: column;
-	    -ms-flex-direction: column;
-	        flex-direction: column;
-					transition: all 300ms ease-in-out;
+	background-color: #F8F8F8;
+	min-height: calc( 100vh - 114px );
+  flex-direction: column;
+	transition: all 300ms ease-in-out;
 }
 
-.app-wrapper.debug-open {
+.app-body-wrapper.debug-open {
 	flex: 0.00001;
 	opacity: 0;
+}
+
+.debug-wrapper {
+	flex: 0.00001;
+	opacity: 0;
+	background-color: #F8F8F8;
+	color: #858C9D;
+	min-height: calc( 100vh - 114px );
+  flex-direction: column;
+	transition: all 300ms ease-in-out;
+}
+
+.debug-wrapper.debug-open {
+	flex: 1;
+	opacity: 1;
 }
 
 .app-header-wrapper {
@@ -210,18 +212,95 @@ body {
 	height: 100%;
 }
 
-.debug-wrapper {
-	flex: 0.00001;
-	opacity: 0;
-	transition: all 300ms ease-in-out;
+.debug-header {
+	background: white;
+	padding: 20px 10px;
 }
 
-.debug-wrapper.debug-open {
-	flex: 1;
-	opacity: 1;
+.debug-header h1 {
+	color: #676975;
+	font-size: 1.3rem;
+}
+
+.debug-body .tabs {
+	display: -webkit-box;
+	display: -moz-box;
+	display: -ms-flexbox;
+	display: -webkit-flex;
+	display: flex;
+	justify-content: flex-start;
+	padding: 0;
+	text-align: center;
+	height: 48px;
+	background-color: #fff;
+	margin: 0 auto;
+	white-space: nowrap;
+}
+
+.debug-body .tabs .tab {
+  flex-grow: 1;
+  line-height: 48px;
+  height: 45px;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.debug-body .tabs .tab a {
+	color: #858C9D;
+	font-family: "AvenirLTStd-Black";
+	font-size: 13px;
+	display: block;
+	height: 100%;
+	width: 100%;
+	text-decoration: none;
+	border-bottom: 3px solid transparent;
+}
+
+.debug-body .tabs .tab a:focus {
+	outline: none;
+}
+
+.debug-body .tabs .tab a.active {
+	border-bottom-color: #19A1DE;
+}
+
+.debug-page > div {
+	display: none;
+}
+
+.debug-wrapper table {
+	width: 100%;
+}
+
+.debug-wrapper thead {
+	border-bottom: #dcdcdc 1.5px solid;
+}
+
+.debug-wrapper table th:first-of-type,
+.debug-wrapper table td:first-of-type {
+	padding-left: 10px;
+}
+
+.debug-wrapper table th:last-of-type,
+.debug-wrapper table td:last-of-type {
+	padding-right: 10px;
 }
 
 
+.debug-wrapper table th {
+	font-family: "AvenirLTStd-Heavy";
+	text-align: left;
+	font-size: 13px;
+	letter-spacing: 0.3px;
+	text-transform: uppercase;
+	padding: 15px 0;
+}
+
+.debug-wrapper table td {
+	font-size: 3.5vw;
+	padding: 10px 0;
+	overflow: hidden;
+}
 
 main {
 	height: 100%;
@@ -583,7 +662,6 @@ a.made-with {
 	color: white;
 	font-size: 18px; //23.75px
 	text-decoration: none;
-  white-space: nowrap;
 }
 a i.icon-ts-connection {
 		transition: background-color 0.1s cubic-bezier(0.4, 0.0, 0.2, 1);

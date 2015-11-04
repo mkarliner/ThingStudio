@@ -1,21 +1,21 @@
 <template name="DebugHeader">
 	<h1 class="left">Debugger: Live Feed Data</h1>
-	<!-- <a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>Save Settings</a> -->
 	<div class="clearfix"></div>
 </template>
 <template name="DebugBody">
 	{{#contentFor region="appHeader" template="DebugHeader"}}{{/contentFor}}
 	<div class="top-row">
-		<div class="col s3 tabs-container">
+		<div class="tabs-container">
 			<ul class="tabs">
-				<li class="tab col s3"><a class="active" href="#subscribed">Subscribe</a></li>
-				<li class="tab col s3"><a class="active" href="#published">Publish	</a></li>
+				<li class="tab"><a class="active" href="#subscribed">Subscribe</a></li>
+				<li class="tab"><a href="#published">Publish</a></li>
+				<li class="tab"><a href="#runtime-errors">Runtime Errors</a></li>
 			</ul>
 		</div>
 		<div class="clearfix"></div>
 	</div>
 	<div class="debug-page">
-		{{> DebugContent}}	
+		{{> DebugContent}}
 	</div>
 </template>
 
@@ -25,6 +25,9 @@
 	</div>
 	<div id="published">
 		{{> DebugPublish}}
+	</div>
+	<div id="runtime-errors">
+		{{> DebugRuntime}}
 	</div>
 </template>
 
@@ -37,7 +40,7 @@
 			<h3>Sent Messages</h3>
 			{{> DebugPublish}}
 			<!-- <div class="screen-errors">Runtime Errors: {{runtimeErrors}}</div> -->
-			
+
 		</div>
 	</div>
 </template>
@@ -62,7 +65,7 @@
 				</tr>
 			{{/each}}
 		</tbody>
-	</table>	
+	</table>
 </template>
 
 <template name="DebugPublish">
@@ -86,4 +89,10 @@
 			{{/each}}
 		</tbody>
 	</table>
+</template>
+
+<template name="DebugRuntime">
+	<p>
+		Runtime errors coming soon...
+	</p>
 </template>
