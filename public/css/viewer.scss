@@ -268,6 +268,10 @@ body {
 	display: none;
 }
 
+.debug-page #subscribed {
+	display: block;
+}
+
 .debug-wrapper table {
 	width: 100%;
 }
@@ -822,6 +826,16 @@ main {
 	}
 	100% {
 		background-color: transparent;
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+// Media Queries //
+///////////////////////////////////////////////////////////////////////////////////////
+
+@media screen and ( min-width: 450px ) {
+	.debug-wrapper table td {
+		font-size: 15px;
 	}
 }
 
