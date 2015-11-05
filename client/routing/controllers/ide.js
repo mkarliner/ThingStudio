@@ -34,7 +34,7 @@ IDEController = PreloadController.extend({
 			if(trackUser(Meteor.user())) {
 				console.log("OBA:", this, this.route._path);
 				SysLogs.insert({
-					event: "New User",
+					event: "UserAction",
 					title: null,
 					id: null,
 					userName: Meteor.user().username,
