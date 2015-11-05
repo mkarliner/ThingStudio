@@ -1,5 +1,6 @@
 Template.DebugBody.onRendered(function() {
 	$('ul.tabs').tabs();
+
 });
 
 Template.DebugOverlay.events({
@@ -7,6 +8,35 @@ Template.DebugOverlay.events({
 		debugOps();
 	}
 });
+
+Template.DebugBody.events({
+	'click .tab': function (e, tmpl) {
+		var tabs = tmpl.findAll('.tab a')
+		$(tabs).removeClass('active')
+		var newTab = e.target
+		$thisTab = $(newTab)
+		$thisTab.addClass('active');
+		thisTabBlockID = $thisTab.attr('href')
+		$(".debug-page > div").css({"display": "none"})
+		$(".debug-page " + thisTabBlockID).css({"display": "block"})
+	}
+
+
+
+
+
+
+
+	// $('div.tldtabs div').click(function(){
+  //   var tab_id = $(this).attr('data-tab');
+	//
+	// 	$('div.tldtabs div').removeClass('current');
+	// 	$('.tab-content').removeClass('current');
+	//
+	// 	$(this).addClass('current');
+	// 	$("#"+tab_id).addClass('current');
+	// });
+})
 
 Template.DebugBody.helpers({
 	feeds: function() {
@@ -23,7 +53,7 @@ Template.DebugBody.helpers({
 			} else {
 				return jstr;
 			}
-			
+
 		}
 		catch(err){
 			return err + " " + this
@@ -43,7 +73,7 @@ Template.DebugSubscribe.helpers({
 			} else {
 				return jstr;
 			}
-			
+
 		}
 		catch(err){
 			return err + " " + this
@@ -63,7 +93,7 @@ Template.DebugPublish.helpers({
 			} else {
 				return jstr;
 			}
-			
+
 		}
 		catch(err){
 			return err + " " + this

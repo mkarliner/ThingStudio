@@ -1,3 +1,16 @@
+Template.ViewerLayout.events({
+	'click a.debug': function () {
+		if ( Session.get( "debugOpen", true ) ) {
+			Session.set( "debugOpen", false )
+		} else {
+			Session.set( "debugOpen", true )
+		}
+	},
+	'click .route': function () {
+		Session.set( "debugOpen", false )
+	}
+});
+
 Template.ViewerLayout.helpers({
 	isConnected: function() {
 		if ( Session.get( "ConnectionStatus" ) == true ) {
@@ -29,6 +42,16 @@ Template.ViewerLayout.helpers({
 	},
 	appPathInfo: function(){
 		return {appid: Session.get("currentAppId")}
+	},
+	debugOpen: function () {
+		return Session.get( "debugOpen" )
+	},
+	debugState: function () {
+		if ( Session.get( "debugOpen", true ) ) {
+			return 'debug-open';
+		} else {
+			return 'debug-closed';
+		}
 	}
 	// log: function () {
 	// 	var hithere = Session.get("currentAppId")
