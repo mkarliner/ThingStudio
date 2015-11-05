@@ -32,7 +32,7 @@ IDEController = PreloadController.extend({
 			this.next();
 		} else {
 			if(trackUser(Meteor.user())) {
-				console.log("OBA:", this, this.route._path);
+				//console.log("OBA:", this, this.route._path);
 				SysLogs.insert({
 					event: "UserAction",
 					title: null,

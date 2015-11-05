@@ -5,7 +5,7 @@
 	</div>
 	{{#autoForm collection="Meteor.users" id="settingsForm" type="update" doc=this}}
 		
-		{{> afObjectField name='profile' omitFields="profile.showWelcome, profile.birthday, profile.gender, profile.organization, profile.website, profile.bio, profile.country"}}
+		{{> afObjectField name='profile' omitFields="profile.trackUser, profile.showViewerDebug, profile.showExample, profile.showWelcome, profile.birthday, profile.gender, profile.organization, profile.website, profile.bio, profile.country"}}
 		<!-- {{> afQuickField name='firstName' }}
 		{{> afQuickField name='lastName' }}
 		{{> afQuickField name='location' }} -->

@@ -28,7 +28,7 @@ Template.SysLogs.events({
 Template.SysLogs.helpers({
 	syslogs: function(){
 		tmpl = Template.instance();
-		types = ["ScreenUpdate", "New User"];
+		types = ["ScreenUpdate", "New User", "UserAction"];
 		if(Session.get("showTemplateViews")) {
 			types.push("TemplateView");
 		}		
