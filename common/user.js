@@ -63,7 +63,7 @@ Schemas.UserProfile = new SimpleSchema({
 	trackUser: {
 		type: Boolean,
 		defaultValue: true
-	}
+	},
     showViewerDebug: {
       type: Boolean,
       defaultValue: true

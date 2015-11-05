@@ -38,7 +38,7 @@ IDEController = PreloadController.extend({
 					title: null,
 					id: null,
 					userName: Meteor.user().username,
-					details: this.route._path,
+					details: this.url,
 					date: new Date()
 				});
 			}
