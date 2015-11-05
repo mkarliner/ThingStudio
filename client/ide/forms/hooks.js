@@ -45,7 +45,7 @@ compileTemplate = function(name, html_text, javascript) {
 				if(typeof defVal == "number" || typeof defVal == "string") {
 					defaultValue = defVal;
 				} else {
-					defaultValue = "-"
+					defaultValue = null;
 				}
 				if(this.isWidget != true) {
 					checkFeed(feed, true);
