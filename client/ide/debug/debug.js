@@ -11,16 +11,12 @@ Template.DebugOverlay.events({
 
 Template.DebugBody.events({
 	'click .tab': function (e, tmpl) {
-		// console.log("tab click this: ", e, tmpl)
 		var tabs = tmpl.findAll('.tab a')
-		console.log("here is tabs", tabs)
 		$(tabs).removeClass('active')
 		var newTab = e.target
-		console.log("here is newTab", newTab)
 		$thisTab = $(newTab)
 		$thisTab.addClass('active');
 		thisTabBlockID = $thisTab.attr('href')
-		console.log("ID:", thisTabBlockID)
 		$(".debug-page > div").css({"display": "none"})
 		$(".debug-page " + thisTabBlockID).css({"display": "block"})
 	}

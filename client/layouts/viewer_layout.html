@@ -3,7 +3,7 @@
 	<div class="app-wrapper">
 		<div class="app-wrapper-inner">
 
-			<div class="app-body-wrapper  {{debugOpenClass}}">
+			<div class="app-body-wrapper {{debugState}}">
 				{{#transitioner}}
 				  {{> yield}}
 				{{/transitioner}}
@@ -21,7 +21,7 @@
 					</div>
 				{{/if}}
 			</div>
-			<div class="debug-wrapper {{debugOpenClass}}">
+			<div class="debug-wrapper {{debugState}}">
 				<div class="debug-body">
 					{{> DebugBody}}
 				</div>
@@ -40,13 +40,9 @@
 		<div class="app-footer-wrapper">
 			<footer>
 				<ul>
-					<li><a class="btn-footer-menu" href="">Apps</a></li>
-					<li><a class="btn-footer-menu" href="{{pathFor 'ViewApp' data=appPathInfo}}">Templates</a></li>
-					{{#if showDebugButton}}
-						<li><a class="btn-footer-menu debug" href="">Debug</a></li>
-					{{else}}
-						<li><a class="btn-footer-menu debug" href=""></a></li>
-					{{/if}}
+					<!-- <li><a class="btn-footer-menu route" href="">Apps</a></li> -->
+					<li><a class="btn-footer-menu route" href="{{pathFor 'ViewApp' data=appPathInfo}}">Templates</a></li>
+					<li><a class="btn-footer-menu debug" href="">Debug</a></li>
 				</ul>
 				{{> fontLicense}}
 			</footer>
