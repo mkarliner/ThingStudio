@@ -59,7 +59,11 @@ Schemas.UserProfile = new SimpleSchema({
     showExample: {
     	type: Boolean,
     	defaultValue: true
-    }
+    },
+	trackUser: {
+		type: Boolean,
+		defaultValue: true
+	}
 });
 
 Schemas.User = new SimpleSchema({

@@ -70,7 +70,7 @@ SysLogs.before.update(function(userId, doc, fieldNames, modifier, options) {
 
 SysLogs.allow({
 	insert: function(userId, doc) {
-		return false;
+		return true;
 	},
 	update: function(userId, doc) {
 		return false;

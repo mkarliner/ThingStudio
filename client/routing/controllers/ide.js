@@ -31,6 +31,18 @@ IDEController = PreloadController.extend({
 			// this.render("Login");
 			this.next();
 		} else {
+			if(trackUser(Meteor.user())) {
+				console.log("OBA:", this, this.route._path);
+				SysLogs.insert({
+					event: "New User",
+					title: null,
+					id: null,
+					userName: Meteor.user().username,
+					details: this.route._path,
+					date: new Date()
+				});
+			}
+			
 			this.next();
 		}
 	},

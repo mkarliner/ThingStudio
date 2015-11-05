@@ -470,6 +470,18 @@ isAdmin = function(userId) {
 	}
 }
 
+trackUser = function(user) {
+	//Don't track admins
+	if(user && user.roles && user.roles.indexOf('admin') > -1) {
+		return false;
+	}
+	if(user && user.profile && user.profile.trackUser) {
+		return true;
+	} else {
+		return true;
+	}
+}
+
 getCurrentConnection = function() {
 	return  Session.get("currentConnection");
 }
