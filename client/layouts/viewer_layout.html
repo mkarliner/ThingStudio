@@ -42,7 +42,11 @@
 				<ul>
 					<!-- <li><a class="btn-footer-menu route" href="">Apps</a></li> -->
 					<li><a class="btn-footer-menu route" href="{{pathFor 'ViewApp' data=appPathInfo}}">Templates</a></li>
-					<li><a class="btn-footer-menu debug" href="">Debug</a></li>
+					{{#if debugOpen}}
+						<li><a class="btn-footer-menu debug" href="">Back</a></li>
+					{{else}}
+						<li><a class="btn-footer-menu debug" href="">Debug</a></li>
+					{{/if}}
 				</ul>
 				{{> fontLicense}}
 			</footer>

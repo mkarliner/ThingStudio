@@ -43,6 +43,9 @@ Template.ViewerLayout.helpers({
 	appPathInfo: function(){
 		return {appid: Session.get("currentAppId")}
 	},
+	debugOpen: function () {
+		return Session.get( "debugOpen" )
+	},
 	debugState: function () {
 		if ( Session.get( "debugOpen", true ) ) {
 			return 'debug-open';
