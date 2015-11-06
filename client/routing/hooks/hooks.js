@@ -1,7 +1,7 @@
 Router.onBeforeAction(function () {
-	
+
 	//Get connection credentials if necessary
-	
+
   // all properties available in the route function
   // are also available here such as this.params
 	// console.log("Running connection beforeaction")
@@ -41,10 +41,9 @@ Router.onBeforeAction(function () {
 			this.next();
 			return;
 		}
-	} 
+	}
 
-	
-	console.log("VIEWCONN ", app.connection, connection);
+	// console.log("VIEWCONN ", app.connection, connection);
 	// Do I need to the user to provide authentication credentials?
 	if ((!connection.serverCredentials || connection.serverCredentials == false) && Session.get("authReady") != true) {
 		//console.log("NEED AUTH")
@@ -96,8 +95,8 @@ Router.onBeforeAction(function () {
 		} else {
 			connect(connection, credentials.username, credentials.password); //Client auth connection
 		}
-		
+
 	}
-	
+
 	this.next();
 });
