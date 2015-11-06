@@ -35,7 +35,7 @@ Schemas.Feed = new SimpleSchema({
 	},
 	subscription: {
 		type: String,
-
+    label: "Topic"
 	},
 	jsonKey: {
 		type: String,
@@ -139,9 +139,9 @@ Schemas.Feed = new SimpleSchema({
 	// 		}
 	// 	}
 	// }
-	
-	
-	
+
+
+
 });
 
 
@@ -154,7 +154,7 @@ Feeds.before.insert(function(userId, doc) {
 		if(app.owner != doc.owner) {
 			console.log("Attempt to create connection in someone else's app.")
 			return false;
-		} 
+		}
 	}
 });
 
@@ -168,7 +168,7 @@ Feeds.after.insert(function(userId, doc) {
 			topic = mqttregex(doc.subscription).topic;
 			topic = topic.substring(0, topic.length - 1);
 			 mqttClientSubscribe(topic);
-		}	
+		}
 	}
 });
 
@@ -179,7 +179,7 @@ Feeds.after.update(function(userId, doc) {
 			topic = mqttregex(doc.subscription).topic;
 			topic = topic.substring(0, topic.length - 1);
 			 mqttClientSubscribe(topic);
-		}	
+		}
 	}
 });
 
@@ -190,7 +190,7 @@ Feeds.after.remove(function(userId, doc) {
 			topic = mqttregex(doc.subscription).topic;
 			topic = topic.substring(0, topic.length - 1);
 			 mqttClientUnsubscribe(topic);
-		}	
+		}
 	}
 });
 

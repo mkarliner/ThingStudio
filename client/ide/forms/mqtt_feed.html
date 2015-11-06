@@ -2,7 +2,7 @@
   {{#autoForm collection="Feeds" id="insertFeedForm" type="insert" }}
   <div id="required">
     {{> afQuickField name='title' placeholder="Feed title" class="first"}}
-    {{> afQuickField name='subscription' placeholder="Subscription"}}
+    {{> afQuickField name='subscription' placeholder="Topic"}}
     {{> afQuickField name='pubsub' placeholder="Publish/Subscribe"}}
   </div>
   <button type="submit" class="btn btn-update">Create MQTT Feed</button>
@@ -13,7 +13,7 @@
 	{{#autoForm collection="Feeds" id="updateFeedForm" type="update" doc=this}}
 		<div id="required">
 			{{> afQuickField name='title' placeholder="Feed title" class="first"}}
-			{{> afQuickField name='subscription' placeholder="Subscription"}}
+			{{> afQuickField name='subscription' placeholder="Topic"}}
 			{{> afQuickField name='pubsub' placeholder="Publish/Subscribe"}}
 		</div>
 		<div id="processing">
