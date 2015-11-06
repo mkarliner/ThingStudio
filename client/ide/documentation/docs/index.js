@@ -4,22 +4,18 @@ DocsIndex = {
 	Basics: [
 		{
 			title: "ThingStudio Basic Concepts",
-
 		},
 		{
 			title: "Apps",
-
 		},
 		{
 			title: "MQTT Connections & Feeds",
-
 		},
 		{
 			title: "HTTP Connections & Feeds",
 		},
 		{
 			title: "Templates",
-
 		},
 		{
 			title: "Displaying data in your Templates"
@@ -32,13 +28,7 @@ DocsIndex = {
 		},
 		{
 			title: "Widgets",
-
-		},
-		{
-			title: "Themes",
-
-		},
-
+		}
 		],
 	// HardwarePlatforms: [
 	//
