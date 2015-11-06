@@ -1,5 +1,10 @@
 Connections = new Mongo.Collection("connections");
 
+SimpleSchema.messages({
+  "MQTTPortError": "1883 is the standard SOCKET port. You should be connecting via a WEB SOCKET port.",
+});
+
+
 Schemas.Connection = new SimpleSchema({
 	title: {
 		type: String,
@@ -12,8 +17,15 @@ Schemas.Connection = new SimpleSchema({
 	},
 	port: {
 		type: Number,
-		label: "Port",
-		defaultValue: 9001
+		label: "Websocket Port",
+		defaultValue: 9001,
+		custom: function () {
+			if ( this.value == 1883 ) {
+				return "MQTTPortError";
+			} else {
+				return 1;
+			}
+		}
 	},
 	protocol: {
 		type: String,
