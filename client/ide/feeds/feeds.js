@@ -32,9 +32,11 @@ Template.FeedsBody.helpers({
 	mqttFeedDetails: function () {
 		var result = [];
 		for (var i in this) {
-			if (i === "pubsub" || i === "subscription") {
+			if ( i === "pubsub" ) {
 				result.push(i + ": " + this[i])
-			}
+			} else if ( i === "subscription" ) {
+        result.push("topic: " + this[i])
+      }
 		}
 		return result.join(", ");
 	},
