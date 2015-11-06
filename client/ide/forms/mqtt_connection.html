@@ -1,43 +1,63 @@
 <template name="insertMqttConnectionForm">
   {{#autoForm collection="Connections" id="insertItemForm" type="insert"}}
   <div id="required">
-    {{> afQuickField name='title' placeholder="Connection title" class="first"}}
-    {{> afQuickField name='host' placeholder="Hostname"}}
-    {{> afQuickField name='Port' placeholder="Port"}}
-    {{> afQuickField name='protocol' placeholder="Protocol"}}
-    <div class="form-group{{#if afFieldIsInvalid name='serverCredentials'}} has-error{{/if}} pos-rel">
-      <div data-required="true" class="div-inline">
-        {{> afFieldInput name='serverCredentials' template="materialiseCheckbox"}}
+    <div class="row">
+      <div class="col s6">
+        {{> afQuickField name='title' placeholder="Connection title" class="first"}}
+        {{> afQuickField name='host' placeholder="Hostname"}}
+        {{> afQuickField name='port' placeholder="Port"}}
+        {{> afQuickField name='protocol' placeholder="Protocol"}}
       </div>
-      <a class="tooltipped ts-tooltip" data-position="top" data-delay="50" data-tooltip="Store credentials at ThingStudio" >?</a>
-      {{#if afFieldIsInvalid name='serverCredentials' }}
-        <span class="help-block">{{afFieldMessage name='serverCredentials' }}</span>
-      {{/if}}
+      <div class="col s6">
+        <div class="form-group{{#if afFieldIsInvalid name='serverCredentials'}} has-error{{/if}} pos-rel">
+          <div data-required="true" class="div-inline">
+            {{> afFieldInput name='serverCredentials' template="materialiseCheckbox"}}
+          </div>
+          <a class="tooltipped ts-tooltip" data-position="top" data-delay="50" data-tooltip="Store credentials at ThingStudio" >?</a>
+          {{#if afFieldIsInvalid name='serverCredentials' }}
+            <span class="help-block">{{afFieldMessage name='serverCredentials' }}</span>
+          {{/if}}
+        </div>
+        {{> afQuickField name='username' placeholder="Username (optional)"}}
+        {{> afQuickField name='password' placeholder="Password (optional)"}}
+        <div class="form-group{{#if afFieldIsInvalid name='makeActiveAppConnection'}} has-error{{/if}} pos-rel">
+          <div data-required="true" class="div-inline">
+            {{> afFieldInput name='makeActiveAppConnection' template="materialiseCheckbox"}}
+          </div>
+          {{#if afFieldIsInvalid name='serverCredentials' }}
+            <span class="help-block">{{afFieldMessage name='serverCredentials' }}</span>
+          {{/if}}
+        </div>
+      </div>
     </div>
-    {{> afQuickField name='username' placeholder="Username (optional)"}}
-    {{> afQuickField name='password' placeholder="Password (optional)"}}
-    <button type="submit" class="btn btn-update">Create Connection</button>
+    <button type="submit" class="btn btn-update right">Create Connection</button>
   </div>
   {{/autoForm}}
 </template>
 
 <template name="updateMqttConnectionForm">
   {{#autoForm collection="Connections" id="updateConnectionForm" type="update" doc=this buttonContent="Save"}}
-    {{> afQuickField name='title' placeholder="Connection title" class="first"}}
-    {{> afQuickField name='host' placeholder="Hostname"}}
-    {{> afQuickField name='port' placeholder="Port"}}
-    {{> afQuickField name='protocol' placeholder="Protocol"}}
-    <div class="form-group{{#if afFieldIsInvalid name='serverCredentials'}} has-error{{/if}} pos-rel">
-      <div data-required="true" class="div-inline">
-        {{> afFieldInput name='serverCredentials' template="materialiseCheckbox"}}
+    <div class="row">
+      <div class="col s6">
+        {{> afQuickField name='title' placeholder="Connection title" class="first"}}
+        {{> afQuickField name='host' placeholder="Hostname"}}
+        {{> afQuickField name='port' placeholder="Port"}}
+        {{> afQuickField name='protocol' placeholder="Protocol"}}
       </div>
-      <a class="tooltipped ts-tooltip" data-position="top" data-delay="50" data-tooltip="Store credentials at ThingStudio" >?</a>
-      {{#if afFieldIsInvalid name='serverCredentials' }}
-        <span class="help-block">{{afFieldMessage name='serverCredentials' }}</span>
-      {{/if}}
+      <div class="col s6">
+        <div class="form-group{{#if afFieldIsInvalid name='serverCredentials'}} has-error{{/if}} pos-rel">
+          <div data-required="true" class="div-inline">
+            {{> afFieldInput name='serverCredentials' template="materialiseCheckbox"}}
+          </div>
+          <a class="tooltipped ts-tooltip" data-position="top" data-delay="50" data-tooltip="Store credentials at ThingStudio" >?</a>
+          {{#if afFieldIsInvalid name='serverCredentials' }}
+            <span class="help-block">{{afFieldMessage name='serverCredentials' }}</span>
+          {{/if}}
+        </div>
+        {{> afQuickField name='username' placeholder="Username (optional)"}}
+        {{> afQuickField name='password' placeholder="Password (optional)"}}
+      </div>
     </div>
-    {{> afQuickField name='username' placeholder="Username (optional)"}}
-    {{> afQuickField name='password' placeholder="Password (optional)"}}
-    <button type="submit" class="btn btn-update">Save Connection</button>
+    <button type="submit" class="btn btn-update right">Update Connection</button>
   {{/autoForm}}
 </template>

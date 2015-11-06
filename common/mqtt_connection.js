@@ -55,6 +55,20 @@ Schemas.Connection = new SimpleSchema({
 			}
 		}
 	},
+	makeActiveAppConnection: {
+		//Provide credentials from server store.
+		type: Boolean,
+		optional: true,
+		defaultValue: true,
+		label: "Set as active app connection? (Recommended)",
+		autoform: {
+			afFieldInput: {
+				type: 'boolean-checkbox-M',
+				class: 'filled-in' // optional
+				// summernote options goes here
+			}
+		}
+	},
 	// autoConnect: {
 	// 	type: Boolean,
 	// 	defaultValue: true
@@ -96,22 +110,38 @@ Schemas.Connection = new SimpleSchema({
 
 
 Connections.before.insert(function(userId, doc) {
-	if (Meteor.isClient) {		
+	if (Meteor.isClient) {
 		doc.appId = Session.get("currentApp")._id;
-		console.log("BEFOREHOOK ", userId, doc, Session.get("currentApp"));
+		//console.log("BEFOREHOOK ", userId, doc, Session.get("currentApp"));
 		return true;
 	} else {
 		app = Apps.findOne(doc.appId);
 		if(app.owner != doc.owner) {
-			console.log("Attempt to create connection in someone else's app.")
+			//console.log("Attempt to create connection in someone else's app.")
 			return false;
-		} 
+		}
 		//console.log("BEFOREHOOK Server", userId, doc);
 	}
 });
 
+Connections.after.insert(function(userId, doc) {
+	connectionApp = Apps.findOne({_id: doc.appId});
+	if( Meteor.isServer ) {
+		Apps.update({_id: connectionApp._id},
+		{$set:
+				{
+					title: connectionApp.title,
+					connection: doc._id,
+					owner: connectionApp.owner,
+					shareable: connectionApp.shareable,
+					public: connectionApp.public
+
+				}
+			})
+	}
+})
+
 Connections.after.update(function(userId, doc) {
-	console.log("DIOC ", doc)
 	if(Meteor.isClient) {
 		currConn = getCurrentConnection();
 		if(currConn._id == doc._id) {
