@@ -1,23 +1,36 @@
 <template name="insertHttpConnectionForm">
   {{#autoForm collection="HTTPConnections" id="insertItemForm" type="insert"}}
-    {{> afQuickField name='title' placeholder="Connection title" class="first"}}
-    {{> afQuickField name='host' placeholder="Hostname"}}
-    {{> afQuickField name='port' placeholder="Port"}}
-    {{> afQuickField name='protocol' placeholder="Protocol"}}
-    {{> afQuickField name='username' placeholder="Username (optional)"}}
-    {{> afQuickField name='password' placeholder="Password (optional)"}}
-    <button type="submit" class="btn btn-update">Create Connection</button>
+    <div class="row">
+      <div class="col s6">
+        {{> afQuickField name='title' placeholder="Connection title" class="first"}}
+        {{> afQuickField name='host' placeholder="Hostname"}}
+        {{> afQuickField name='port' placeholder="Port"}}
+        {{> afQuickField name='protocol' placeholder="Protocol"}}
+      </div>
+      <div class="col s6">
+        {{> afQuickField name='username' placeholder="Username (optional)"}}
+        {{> afQuickField name='password' placeholder="Password (optional)"}}
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-update right">Create Connection</button>
   {{/autoForm}}
 </template>
 
 <template name="updateHttpConnectionForm">
   {{#autoForm collection="HTTPConnections" id="updateHTTPConnectionForm" type="update" doc=this buttonContent="Save"}}
-    {{> afQuickField name='title' placeholder="Connection title" class="first"}}
-    {{> afQuickField name='host' placeholder="Hostname"}}
-    {{> afQuickField name='port' placeholder="Port"}}
-    {{> afQuickField name='protocol' placeholder="Protocol"}}
-    {{> afQuickField name='username' placeholder="Username (optional)"}}
-    {{> afQuickField name='password' placeholder="Password (optional)"}}
-    <button type="submit" class="btn btn-update">Save Connection</button>
+    <div class="row">
+      <div class="col s6">
+        {{> afQuickField name='title' placeholder="Connection title" class="first"}}
+        {{> afQuickField name='host' placeholder="Hostname"}}
+        {{> afQuickField name='port' placeholder="Port"}}
+        {{> afQuickField name='protocol' placeholder="Protocol"}}
+      </div>
+      <div class="col s6">
+        {{> afQuickField name='username' placeholder="Username (optional)"}}
+        {{> afQuickField name='password' placeholder="Password (optional)"}}
+      </div>
+    </div>
+    <button type="submit" class="btn btn-update right">Update Connection</button>
   {{/autoForm}}
 </template>
