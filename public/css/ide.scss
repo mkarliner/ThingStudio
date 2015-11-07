@@ -84,7 +84,7 @@ $sideNavWidth: 200px;
 $darkBase: #353C51;
 $darkBaseText: #B2B7C4;
 $darkBaseBGHover: #3D4357;
-$sidenavLiHeight: 36px;
+$sidenavLiHeight: 37px;
 $sidebarDividerColor: #242938;
 $SBheaderSize: 10px;
 $SBitemSize: 12px;
@@ -330,9 +330,10 @@ table.striped tbody tr:nth-child(odd) {
 		position: relative;
 		& a {
 			letter-spacing: 0.1px;
-			font-size: $fontSize;
+			font-size: 1.08333333 * $fontSize;
 			line-height: $sidenavLiHeight;
 			height: $sidenavLiHeight;
+			text-transform: capitalize;
 		}
 		span {
 			margin-left: 28px;
@@ -356,6 +357,7 @@ table.striped tbody tr:nth-child(odd) {
 		padding-bottom: 0.7rem;
 		display: inline;
 		padding-right: 2em;
+		text-transform: capitalize;
 		& i {
 			position: absolute;
 			right: 0;
@@ -1509,6 +1511,7 @@ button.btn-plus, {
 	font-size: 12px;
 	-webkit-text-stroke: 0px white;
 	box-shadow: none;
+	text-transform: capitalize;
 	&:before {
 	  content: " ";
 	  position: absolute;
@@ -1525,8 +1528,6 @@ button.btn-plus, {
 	}
 	&:hover {
 		color: $darkBase;
-		-webkit-text-stroke: 1px $darkBase;
-
 	}
 	// &:hover {
 	// 	background-color: $btnSocialColor;
