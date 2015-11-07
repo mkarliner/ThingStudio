@@ -192,7 +192,7 @@ a.hide-header {
 }
 
 .divider {
-	background-color: $sidebarDividerColor;
+	background-color: transparent;
 }
 
 .center-image {
@@ -308,6 +308,7 @@ table.striped tbody tr:nth-child(odd) {
 
 .side-nav.fixed {
 	background-color: $darkBase;
+	box-shadow: none;
 	& a {
 		color: $darkBaseText;
 		padding: 0 8px;
@@ -373,7 +374,7 @@ table.striped tbody tr:nth-child(odd) {
 		}
 	}
 	& .divider {
-		background-color: $sidebarDividerColor;
+		background-color: transparent;
 	}
 }
 
@@ -545,7 +546,7 @@ nav.top-nav {
 	overflow: hidden;
 	height: 52px;
 	background: $white;
-	border-bottom: $navBorder;
+	border-bottom: transparent;
 	box-shadow: none;
 	font-family: $fwLight;
 	padding-left: $sideNavWidth + 10;
@@ -880,7 +881,7 @@ table {
 }
 
 thead {
-	border-bottom: $navBorder;
+	border-bottom: transparent;
 }
 
 th {
@@ -945,7 +946,7 @@ td.dropdown-td {
 	display: none;
 	will-change: opacity, display;
 	& .divider {
-		background-color: $bodyDividerColor;
+		background-color: transparent;
 		margin-top: 20px;
 		margin-bottom: 20px;
 	}
