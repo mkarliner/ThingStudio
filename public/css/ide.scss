@@ -84,7 +84,7 @@ $sideNavWidth: 200px;
 $darkBase: #353C51;
 $darkBaseText: #B2B7C4;
 $darkBaseBGHover: #3D4357;
-$sidenavLiHeight: 37px;
+$sidenavLiHeight: 39px;
 $sidebarDividerColor: #242938;
 $SBheaderSize: 10px;
 $SBitemSize: 12px;
@@ -348,7 +348,7 @@ table.striped tbody tr:nth-child(odd) {
 	& i[class^="icon-ts"] {
 		font-size: 16px;
 		position: absolute;
-		top: -3px;
+		top: -4px;
 	}
 	& p.my-name {
 		position: relative;
@@ -1656,10 +1656,11 @@ button.btn-plus, {
 	color: $headerColor;
 	line-height: 24px;
 	display: block;
+	margin-bottom: 9px;
 }
 
 .card .card-title {
-	font-size: $fontSize * 1.75;
+	font-size: $fontSize * 1.58333333;
 	position: relative;
 	i {
 		position: absolute;
