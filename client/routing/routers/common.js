@@ -10,7 +10,7 @@ Router.configure({
 AccountsTemplates.configureRoute('signIn', {
 	// template: "TSLogin",
 	layoutTemplate: "LoginLayout",
-	redirect: "/dashboard"
+	redirect: "/apps"
 });
 
 // AccountsTemplates.configureRoute('ensureSignedIn', {
@@ -19,7 +19,7 @@ AccountsTemplates.configureRoute('signIn', {
 // });
 
 Router.route("/", function(){
-	this.redirect("/dashboard")
+	this.redirect("/apps")
 })
 
 Router.route("/logout", function(){

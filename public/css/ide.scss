@@ -22,7 +22,7 @@ $editorComment: #80ABD0;
 $alertOrange: #F5702E;
 $alertGreen: #9ED466;
 $alertGray: #979797;
-$appPadding: 25px;
+$appPadding: 19px;
 $statusActive: #8DE62C;
 $materializeInputBorderInactive: 1px solid #E1E4E8;
 $materializeInputBorderActive: 1px solid #4AAFE2;
@@ -328,6 +328,7 @@ table.striped tbody tr:nth-child(odd) {
 		line-height: $sidenavLiHeight;
 		text-transform: uppercase;
 		position: relative;
+		padding: 0 13px;
 		& a {
 			letter-spacing: 0.1px;
 			font-size: 1.08333333 * $fontSize;
@@ -361,7 +362,7 @@ table.striped tbody tr:nth-child(odd) {
 		& i {
 			position: absolute;
 			right: 0;
-			top: -15px;
+			top: -16px;
 			float: none;
 			display: inline;
 			padding: 0;
@@ -551,7 +552,7 @@ nav.top-nav {
 	border-bottom: transparent;
 	box-shadow: none;
 	font-family: $fwLight;
-	padding-left: $sideNavWidth + 10;
+	padding-left: $sideNavWidth;
 	& a {
 		color: $baseText;
 		font-size: 1.2 * $fontSize;
@@ -593,7 +594,7 @@ nav.top-nav {
 
 .breadcrumb {
 	& li:first-child {
-		padding-left: 8px;
+		padding-left: 10px;
 		& i {
 			line-height: 46px;
 			margin-right: 5px;
@@ -1267,7 +1268,7 @@ p.shareable-tip {
 
 .tabs .indicator {
 	background-color: $updateButton;
-	height: 3px;
+	height: 2px;
 }
 
 .mdi-image-brightness-1 {
@@ -1462,7 +1463,7 @@ pre.ace-cobalt .ace_comment {
 }
 
 .new-list-item {
-	margin-top: -5px;
+	margin-top: -6px;
 	margin-left: 20px;
 	box-shadow: none;
 	&:hover {
@@ -1610,7 +1611,9 @@ button.btn-plus, {
 	}
 }
 
-
+div.col.s6 > p {
+	margin-top: 0;
+}
 
 .studio-url {
 	margin-top: 2em;
@@ -1637,7 +1640,7 @@ button.btn-plus, {
 .card {
 	margin: 0.2rem 0 0.8rem 0;
 	box-shadow: none;
-	border: 1px solid rgba(160, 160, 160, 0.2);
+	border: none;
 	border-radius: 0;
 }
 
@@ -1712,6 +1715,7 @@ button.btn-plus, {
 .card .card-action {
 	padding: 10px;
 	background-color: rgba(130, 160, 160, 0.04);
+	border-top: none;
 }
 
 .card .card-action a,  {
