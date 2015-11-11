@@ -466,7 +466,8 @@ Meteor.startup(function() {
 		"Joystick.json",
 		"Keypad.json",
 		"DeviceOrientation.json",
-		"Thermometer.json"
+		"Thermometer.json",
+		"StateSliderSwitch.json"
 	];
 
 	num = Docs.remove({lastUpdated: null});
