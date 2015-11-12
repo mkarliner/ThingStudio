@@ -24,7 +24,6 @@
 			{{#each  Basics}}
 				{{#with doc title}}
 				<li class="collection-item avatar">
-					<span class="letter-circle letter-{{firstLetter}}">{{firstLetter}}</span>
 					<a href="/docs/{{attributes.urlstring}}"><span class="title">{{attributes.title}}</span></a>
 					<p><span class="fwMedium">Summary:</span> {{excerpt}}<br>
 					<span class="fwMedium">{{recentChanges}} Updated:</span> {{publishedDate}}
@@ -55,7 +54,6 @@
 			{{#each Advanced}}
 				{{#with doc title}}
 				<li class="collection-item avatar">
-					<span class="letter-circle letter-{{firstLetter}}">{{firstLetter}}</span>
 					<a href="/docs/{{attributes.urlstring}}"><span class="title">{{attributes.title}}</span></a>
 					<p><span class="fwMedium">Summary:</span> {{excerpt}}<br>
 					<span class="fwMedium">Updated:</span> {{publishedDate}}
@@ -71,7 +69,6 @@
 			{{#each  Reference}}
 				{{#with doc title}}
 				<li class="collection-item avatar">
-					<span class="letter-circle letter-{{firstLetter}}">{{firstLetter}}</span>
 					<a href="/docs/{{attributes.urlstring}}"><span class="title">{{attributes.title}}</span></a>
 					<p><span class="fwMedium">Summary:</span> {{excerpt}}<br>
 					<span class="fwMedium">Updated:</span> {{publishedDate}}
@@ -86,7 +83,6 @@
 		<ul class="collection">
 			{{#each changes}}
 			<li class="collection-item avatar">
-				<span class="letter-circle letter-{{firstLetter}}">{{firstLetter}}</span>
 				<span class="title">Doc updated: <a href="/docs/{{docLink}}">{{title}}</a></span>
 				<p><span class="fwMedium">Diff log:</span> {{diff.value}}<br>
 				<span class="fwMedium">Type:</span> {{addedremoved}}

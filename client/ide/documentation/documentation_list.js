@@ -39,9 +39,5 @@ Template.DocumentationBody.helpers({
 	},
 	addedremoved: function(){
 		return this.diff.added ? "Addition" : "Removal";
-	},
-	firstLetter: function () {
-		console.log("docs this", this)
-		return this.attributes.title.charAt(0).toLowerCase();
 	}
 })
