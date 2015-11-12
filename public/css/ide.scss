@@ -1833,6 +1833,93 @@ table.widget-item {
 // Documentation //
 ///////////////////////////////////////////////////////////////////////////////////////
 
+// Material Design Colors
+$red: #F44336;
+$lightMarlboro: #C62828;
+$marlboro: #BC1010;
+$medRed: #D32F2F;
+$lightPurple: #EA80FC;
+$purple: #9C27B0;
+$deepPurple: #7C4DFF;
+$royalPurple: #512DA8;
+$indigo: #3F51B5;
+$actionBlue: #00B0FF;
+$blue: #2196F3;
+$lightBlue: #0277BD;
+$cyan: #00BCD4;
+$darkCyan: #00838F;
+$teal: #009688;
+$green: #7CB342;
+$lightGreen: #8BC34A;
+$mediumGreen: #689F38;
+$darkGreen: #2E7D32;
+$lime: #CDDC39;
+$yellow: #FFEB3B;
+$taxiYellow: #FFD600;
+$amber: #FFC107;
+$autumnAmber: #FF6F00;
+$orange: #FF9800;
+$deepOrange: #FF5722;
+$darkBlue: #283593;
+$deepGrey: #263238;
+$xGreen: #76D4E1;
+
+///////////////////////////////////////////////////////////////////////////////////////
+// Letter Colors //
+///////////////////////////////////////////////////////////////////////////////////////
+
+.letter-circle {
+	width: 42px;
+	height: 42px;
+	min-width: 42px;
+	min-height: 42px;
+	border-radius: 50%;
+	background-color: orange;
+	text-align: center;
+	line-height: 45px;
+	color: white;
+	font-size: 1.3em;
+	text-transform: uppercase;
+	display: block;
+	float: left;
+	margin-right: 18px;
+}
+
+.letter-a { background-color: $marlboro; }
+.letter-b { background-color: $lightMarlboro; }
+.letter-c { background-color: $medRed; }
+.letter-d { background-color: $red; }
+.letter-e { background-color: $deepOrange; }
+.letter-f { background-color: $autumnAmber; }
+.letter-g { background-color: $orange; }
+.letter-h { background-color: $amber; }
+.letter-i { background-color: $yellow; }
+.letter-j { background-color: $lime; }
+.letter-k { background-color: $lightGreen; }
+.letter-l { background-color: $green; }
+.letter-m { background-color: $mediumGreen; }
+.letter-n { background-color: $darkGreen; }
+.letter-o { background-color: $teal; }
+.letter-p { background-color: $darkCyan; }
+.letter-q { background-color: $cyan; }
+.letter-r { background-color: $actionBlue; }
+.letter-s { background-color: $blue; }
+.letter-t { background-color: $indigo; }
+.letter-u { background-color: $darkBlue; }
+.letter-v { background-color: $deepPurple; }
+.letter-w { background-color: $royalPurple; }
+.letter-x { background-color: transparent; border: 2px solid $xGreen; color: $darkBase; font-family: $fwHeavy; width: 48px; height: 48px;}
+.letter-y { background-color: $purple; }
+.letter-z { background-color: $lightPurple; }
+
+.collection .collection-item.avatar {
+	padding-left: 20px;
+}
+
+.collection .collection-item.avatar p {
+	margin-left: 60px;
+}
+
 span.title {
 	color: darken($baseText, 10%);
 }

@@ -1,11 +1,3 @@
-<template name="OldDocumentationHeader">
-	{{#contentFor "appHeader"}}
-		<h1 class="left">Documentation</h1>
-		<!-- <a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>{{curr_app_name}}</a> -->
-		<div class="clearfix"></div>
-	{{/contentFor}}
-</template>
-
 <template name="DocumentationHeader">
 	{{#contentFor "appHeader"}}
 		<h1 class="left">Documentation</h1>
@@ -32,7 +24,7 @@
 			{{#each  Basics}}
 				{{#with doc title}}
 				<li class="collection-item avatar">
-					<img src="http://lorempixel.com/80/80/" alt="" class="circle">
+					<span class="letter-circle letter-{{firstLetter}}">{{firstLetter}}</span>
 					<a href="/docs/{{attributes.urlstring}}"><span class="title">{{attributes.title}}</span></a>
 					<p><span class="fwMedium">Summary:</span> {{excerpt}}<br>
 					<span class="fwMedium">{{recentChanges}} Updated:</span> {{publishedDate}}
@@ -63,7 +55,7 @@
 			{{#each Advanced}}
 				{{#with doc title}}
 				<li class="collection-item avatar">
-					<img src="http://lorempixel.com/80/80/" alt="" class="circle">
+					<span class="letter-circle letter-{{firstLetter}}">{{firstLetter}}</span>
 					<a href="/docs/{{attributes.urlstring}}"><span class="title">{{attributes.title}}</span></a>
 					<p><span class="fwMedium">Summary:</span> {{excerpt}}<br>
 					<span class="fwMedium">Updated:</span> {{publishedDate}}
@@ -79,7 +71,7 @@
 			{{#each  Reference}}
 				{{#with doc title}}
 				<li class="collection-item avatar">
-					<img src="http://lorempixel.com/80/80/" alt="" class="circle">
+					<span class="letter-circle letter-{{firstLetter}}">{{firstLetter}}</span>
 					<a href="/docs/{{attributes.urlstring}}"><span class="title">{{attributes.title}}</span></a>
 					<p><span class="fwMedium">Summary:</span> {{excerpt}}<br>
 					<span class="fwMedium">Updated:</span> {{publishedDate}}
@@ -92,14 +84,9 @@
 	</div>
 	<div id="changelog">
 		<ul class="collection">
-			{{#each  changes}}
-			<!-- <hr/>
-			<div>{{title}}</div>
-			<div>{{date}}</div>
-			<div>{{addedremoved}}</div>
-			<div>{{diff.value}}</div> -->
+			{{#each changes}}
 			<li class="collection-item avatar">
-				<img src="http://lorempixel.com/80/80/" alt="" class="circle">
+				<span class="letter-circle letter-{{firstLetter}}">{{firstLetter}}</span>
 				<span class="title">Doc updated: <a href="/docs/{{docLink}}">{{title}}</a></span>
 				<p><span class="fwMedium">Diff log:</span> {{diff.value}}<br>
 				<span class="fwMedium">Type:</span> {{addedremoved}}
@@ -113,89 +100,4 @@
 	{{#unless currentUser}}
 	<div class="home-links"><div class="btn"><a href="/sign-in">Sign Up or In</a></div></div>
 	{{/unless}}
-	{{#if currentUser}}
-
-	{{/if}}
-</template>
-
-
-<template name="OldDocumentationBody">
-	<div class="top-row">
-		<div class="col s6 tabs-container">
-			<ul class="tabs">
-				<li class="tab"><a href="#basics">Basics</a></li>
-				<li class="tab"><a href="#ui">User Interface</a></li>
-				<li class="tab"><a href="#advanced">Advanced</a></li>
-				<li class="tab"><a href="#components">Components</a></li>
-			</ul>
-		</div>
-		<div class="clearfix"></div>
-	</div>
-	<div id="basics">
-		<ul class="collection">
-			{{#each  docs "Basics"}}
-				<li class="collection-item avatar">
-					<img src="http://lorempixel.com/80/80/" alt="" class="circle">
-					<a href="/olddocs/{{urlstring}}"><span class="title">{{title}}</span></a>
-					<p><span class="fwMedium">Summary:</span> {{excerpt}}<br>
-					<span class="fwMedium">Updated:</span> {{publishedDate}}
-					</p>
-					<!-- <a href="#!" class="secondary-content"><i class="mdi-action-grade"></i> {{group}}</a> -->
-				</li>
-			{{/each}}
-		</ul>
-	</div>
-	<div id="ui">
-		<ul class="collection">
-			{{#each  docs "UI"}}
-
-				<li class="collection-item avatar">
-					<img src="http://lorempixel.com/80/80/" alt="" class="circle">
-					<a href="/olddocs/{{urlstring}}"><span class="title">{{title}}</span></a>
-					<p><span class="fwMedium">Summary:</span> {{excerpt}}<br>
-					<span class="fwMedium">Updated:</span> {{publishedDate}}
-					</p>
-					<!-- <a href="#!" class="secondary-content"><i class="mdi-action-grade"></i> {{group}}</a> -->
-				</li>
-			{{/each}}
-		</ul>
-	</div>
-	<div id="advanced">
-		<ul class="collection">
-			{{#each docs "Advanced"}}
-
-				<li class="collection-item avatar">
-					<img src="http://lorempixel.com/80/80/" alt="" class="circle">
-					<a href="/olddocs/{{urlstring}}"><span class="title">{{title}}</span></a>
-					<p><span class="fwMedium">Summary:</span> {{excerpt}}<br>
-					<span class="fwMedium">Updated:</span> {{publishedDate}}
-					</p>
-					<!-- <a href="#!" class="secondary-content"><i class="mdi-action-grade"></i> {{group}}</a> -->
-				</li>
-			{{/each}}
-		</ul>
-	</div>
-	<div id="components">
-		<ul class="collection">
-			{{#each docs 'components'}}
-
-				<li class="collection-item avatar">
-					<img src="http://lorempixel.com/80/80/" alt="" class="circle">
-					<a href="/olddocs/{{urlstring}}"><span class="title">{{title}}</span></a>
-					<p><span class="fwMedium">Summary:</span> {{excerpt}}<br>
-					<span class="fwMedium">Updated:</span> {{publishedDate}}
-					</p>
-					<!-- <a href="#!" class="secondary-content"><i class="mdi-action-grade"></i> {{group}}</a> -->
-				</li>
-			{{/each}}
-		</ul>
-	</div>
-	{{#unless currentUser}}
-	<div class="home-links"><div class="btn"><a href="/sign-in">Sign Up or In</a></div></div>
-	{{/unless}}
-	{{#if currentUser}}
-	<div class="home-links">
-		<div class="btn"><a href="/screens">Enter Studio</a></div>
-	</div>
-	{{/if}}
 </template>
