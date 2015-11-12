@@ -124,6 +124,7 @@ footer, header, menu, nav {
 body {
 	line-height: 1;
 	display: flex;
+	overflow-x: hidden;
 }
 ol, ul {
 	list-style: none;
