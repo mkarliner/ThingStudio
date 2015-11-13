@@ -14,6 +14,12 @@ Router.onBeforeAction(function () {
 		this.next();
 		return;
 	}
+	// If this is not an MQTT app don't bother.
+	console.log("APPCONN", app.title, app.connection) 
+	if(!app.connection) {
+		console.log("RETAA")
+		return;
+	}
 	if(!this.ready){
 		this.next();
 		return;
@@ -34,7 +40,7 @@ Router.onBeforeAction(function () {
 				this.next();
 				return;
 			}
-			Session.set("currentConnection", connection );
+			setCurrentConnection(connection, "Before Action (common)" );
 		} else {
 			// No, just let them go on.
 			disconnect();
