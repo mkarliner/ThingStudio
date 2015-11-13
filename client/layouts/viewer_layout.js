@@ -19,6 +19,18 @@ Template.ViewerLayout.helpers({
 			return 'disconnected';
 		}
 	},
+	showMQTTStatus: function(){
+		app = getCurrentApp();
+		if(!app) {
+			return false;
+		}
+		console.log("showMQTTSTATS", app.connection, app.title)
+		if( app.connection == "none" || !app.connection ) {
+			return false;
+		} else {
+		return true;
+		}
+	},
 	appHamburger: function() {
 		appId = Session.get("currentAppId")
 		app = Apps.findOne({_id: appId})

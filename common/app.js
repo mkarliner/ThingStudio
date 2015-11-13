@@ -68,7 +68,7 @@ Schemas.App = new SimpleSchema({
 			options: function(){
 				connections = Connections.find({}).fetch();
 				options = [];
-				options.push({label: "No connection", value: false});
+				options.push({label: "No connection", value: "none"});
 				var i;
 				for(i=0; i<connections.length; i++) {
 					options.push({ label: connections[i].title, value: connections[i]._id});

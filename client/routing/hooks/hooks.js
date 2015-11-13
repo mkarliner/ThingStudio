@@ -15,9 +15,8 @@ Router.onBeforeAction(function () {
 		return;
 	}
 	// If this is not an MQTT app don't bother.
-	console.log("APPCONN", app.title, app.connection) 
-	if(!app.connection) {
-		console.log("RETAA")
+	if(!app.connection || app.connection == "none") {
+		this.next();
 		return;
 	}
 	if(!this.ready){

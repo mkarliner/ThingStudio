@@ -361,7 +361,7 @@ Meteor.setInterval(function(){
 	if(mqttClient.connected) {
 		Session.set("ConnectionStatus", true);
 	} else {
-		Session.set("ConnectionStatus", true);
+		Session.set("ConnectionStatus", false);
 	}
 
 }, 5000);
