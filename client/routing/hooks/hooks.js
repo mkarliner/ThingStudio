@@ -1,9 +1,9 @@
-Router.onBeforeAction(function () {
+SetMQTTCredentials = function (that) {
 
 	//Get connection credentials if necessary
 
   // all properties available in the route function
-  // are also available here such as this.params
+  // are also available here such as that.params
 	// console.log("Running connection beforeaction")
 	app = getCurrentApp();
 	if(Session.get("cmOperation") == "null") {
@@ -11,39 +11,39 @@ Router.onBeforeAction(function () {
 		Session.set("cmCollection", undefined);
 	}
 	if(!app) {
-		this.next();
+		that.next();
 		return;
 	}
-	// If this is not an MQTT app don't bother.
+	// If that is not an MQTT app don't bother.
 	if(!app.connection || app.connection == "none") {
-		this.next();
+		that.next();
 		return;
 	}
-	if(!this.ready){
-		this.next();
+	if(!that.ready){
+		that.next();
 		return;
 	}
 	// Is there an existing connection?
 	if(mqttClient.connected == true) {
-		this.next();
+		that.next();
 		return;
 	}
 	connection = getCurrentConnection();
 	if(!connection) {
 		// No, we have to decide which connection to use.
-		//Does this app have an active connection defined?
+		//Does that app have an active connection defined?
 		if(app.connection) {
 			connection = Connections.findOne({_id: app.connection});
 			if(!connection) {
 				disconnect();
-				this.next();
+				that.next();
 				return;
 			}
 			setCurrentConnection(connection, "Before Action (common)" );
 		} else {
 			// No, just let them go on.
 			disconnect();
-			this.next();
+			that.next();
 			return;
 		}
 	}
@@ -54,7 +54,7 @@ Router.onBeforeAction(function () {
 		//console.log("NEED AUTH")
 		if (!Ground.ready()) {
 			console.log("GROUND NOT READY")
-			this.render("Loading", {
+			that.render("Loading", {
 				data: "Authentication database"
 			});
 			return;
@@ -82,7 +82,7 @@ Router.onBeforeAction(function () {
 			})
 		}
 
-		this.render("GetMyCredentials", {
+		that.render("GetMyCredentials", {
 			data: function() {
 				cred.connectionName = connection.title;
 				cred.connectionHost = connection.host;
@@ -103,5 +103,5 @@ Router.onBeforeAction(function () {
 
 	}
 
-	this.next();
-});
+	that.next();
+}

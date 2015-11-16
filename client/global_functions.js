@@ -172,6 +172,9 @@ function interval(func, wait, times){
 
 checkHTTPFeeds = function (){
 	//console.log("HTTP clock");
+	if(Session.get("inIDE")) {
+		return;
+	}
 	HTTPClock++;
 	var feeds = HTTPFeeds.find().fetch();
 
