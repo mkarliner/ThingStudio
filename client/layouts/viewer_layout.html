@@ -33,9 +33,8 @@
 				<ul class="viewer-header">
 					<li></li>
 					<li><a class="made-with" href="http://www.thingstud.io/" target="_blank">Made with ThingStudio</a></li>
-					{{#if showMQTTStatus}}
-					<li><span><a class="right viewer-connection-stat" href=""><i class="icon-ts-connection {{isConnected}}"></i></a></span></li>
-					{{/if}}
+					<li><span>{{#if showMQTTStatus}}<a class="right viewer-connection-stat" href=""><i class="icon-ts-connection {{isConnected}}"></i></a>{{/if}}</span></li>
+					
 				</ul>
 			</header>
 		</div>
