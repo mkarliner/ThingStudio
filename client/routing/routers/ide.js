@@ -95,7 +95,7 @@ Router.route("/credentials", {
 	}
 });
 
-Router.route("/app/new", {
+Router.route("/apps/new", {
 	name: "New App",
 	controller: "IDEController",
 	action: function() {
@@ -271,7 +271,7 @@ Router.route("/feeds", {
 	}
 });
 
-Router.route("/template/new", {
+Router.route("/templates/new", {
 	name: "New Template",
 	controller: "IDEController",
 	action: function() {
@@ -329,7 +329,7 @@ Router.route("/templates", {
 	}
 });
 
-Router.route("/widget/new", {
+Router.route("/widgets/new", {
 	name: "New Widget",
 	controller: "IDEController",
 	action: function() {
@@ -533,33 +533,33 @@ Router.route("/sysadmin", {
 	}
 })
 
-Router.route("/inactives", {
-	name: "Inactive Users",
-	controller: "IDEController",
-	action: function() {
-		if ( !this.ready() ) {
-			this.render("Loading", {
-				data: "Inactive Users"
-			});
-		} else {
-			renderYields(this, 'InactiveUsers')
-		}
-	}
-})
+// Router.route("/inactives", {
+// 	name: "Inactive Users",
+// 	controller: "IDEController",
+// 	action: function() {
+// 		if ( !this.ready() ) {
+// 			this.render("Loading", {
+// 				data: "Inactive Users"
+// 			});
+// 		} else {
+// 			renderYields(this, 'InactiveUsers')
+// 		}
+// 	}
+// })
 
-Router.route("/debug", {
-	name: "Debug",
-	controller: "IDEController",
-	action: function() {
-		if ( !this.ready() ) {
-			this.render("Loading", {
-				data: "Debug"
-			});
-		} else {
-			renderYields(this, 'Debug')
-		}
-	}
-});
+// Router.route("/debug", {
+// 	name: "Debug",
+// 	controller: "IDEController",
+// 	action: function() {
+// 		if ( !this.ready() ) {
+// 			this.render("Loading", {
+// 				data: "Debug"
+// 			});
+// 		} else {
+// 			renderYields(this, 'Debug')
+// 		}
+// 	}
+// });
 
 Router.route("/reset-password/:token", {
 	name:  "ResetPassword",
