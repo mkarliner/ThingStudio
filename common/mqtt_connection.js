@@ -151,7 +151,15 @@ Connections.after.insert(function(userId, doc) {
 				}
 			})
 	}
-})
+});
+
+Connections.before.remove(function(userId, doc) {
+	if(Meteor.isServer) {
+		console.log("Removing references to deleted connection", doc._id);
+		console.log("Apps = ", Apps.find({connection: doc._id}).fetch());
+		Apps.update({connection: doc._id}, {$set: {connection: null}});
+	}
+});
 
 Connections.after.update(function(userId, doc) {
 	if(Meteor.isClient) {

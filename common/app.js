@@ -60,6 +60,7 @@ Schemas.App = new SimpleSchema({
 	connection: {
 		type: String,
 		optional: true,
+		index: true,
 		autoform: {
 			type: "selectize",
 			afFormGroup: {
