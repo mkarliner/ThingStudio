@@ -192,9 +192,9 @@ Screens.before.update(function (userId, doc, fieldNames, modifier, options) {
 	}
 })
 
-Screens.after.update(function(userId, doc) {
+Screens.after.update(function(userId, doc, fieldNames, modifier, options) {
 	if(Meteor.isClient){
-		//console.log("ASUU", this,  doc)
+		//console.log("ASUU", userId, this,  doc)
 		myscreen = doc;
 		name = myscreen.title;
 		// console.log("SCR: ", name, this)
@@ -214,15 +214,17 @@ Screens.after.update(function(userId, doc) {
 		}
 	}
 	if(Meteor.isServer) {
+        //console.log("SCRUOP: ", doc,userId, fieldNames, modifier, options);
 		SysLogs.upsert({event: "ScreenUpdate", id: doc._id},
 		{$set:
 				{
 					event: "ScreenUpdate",
 					title: doc.title,
 					date: new Date(),
+                    userName: Meteor.users.findOne({_id: doc.owner}).username,
 					id: doc._id,
 					appId: doc.appId,
-					owner: doc._owner,
+					owner: doc.owner,
 				},
 			$inc:
 				{

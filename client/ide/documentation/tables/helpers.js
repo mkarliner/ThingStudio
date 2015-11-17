@@ -5,9 +5,10 @@ Tables.HelpersTable = [
 		description: "Returns the payload of the last message on the named feed"
 	},
 	{
-		name: "messages",
+		name: "#messages",
 		params: "feedname",
-		description: "Returns all messages from a given feed. This is mainly used with feeds that have wildcard subscriptions"
+		description: "A block helper that iterates over all messages from a given feed. This is mainly used with feeds that have wildcard subscriptions"+
+        " Note that the usage is {{| #messsages}} ... {{| /messages}}"
 	},
 	{
 		name: "journal",

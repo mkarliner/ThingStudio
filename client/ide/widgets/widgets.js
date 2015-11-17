@@ -28,7 +28,7 @@ Template.WidgetsHeader.events({
 Template.WidgetsBody.helpers({
 	systemWidgetList: function(){
 		console.log("SWL System App Id", Meteor.settings.public.systemApp)
-		wl =  Widgets.find({ appId: Meteor.settings.public.systemApp })
+		wl =  Widgets.find({ appId: Meteor.settings.public.systemApp }, { sort: {updatedAt: 1} } )
 		return wl;
 	},
 	// systemTemplateList: function(){
