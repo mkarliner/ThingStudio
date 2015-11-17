@@ -23,8 +23,30 @@
                 "required": true,
                 "description": "Title to display on widget",
                 "dummyValue": "Title"
+            },
+            {
+                "title": "unknownColor",
+                "paramType": "String",
+                "required": false,
+                "description": "The color for the unknown state",
+                "dummyValue": "gray"
+            },
+            {
+                "title": "onColor",
+                "paramType": "String",
+                "required": false,
+                "description": "The color for the on state",
+                "dummyValue": "#5fcf80"
+            },
+            {
+                "title": "offColor",
+                "paramType": "String",
+                "required": false,
+                "description": "The color for the off state",
+                "dummyValue": "#A6ABB2"
             }
-        ]
+        ],
+        "instructions": "StateSliderSwitch is both a command and a display widget. It's designed for use where you have, say, a remote light, which may be switched on or off by more than one user.\n\nWhen first rendered, it enters 'unknown\" state and sends out a \"reqStatus\" message on it's publish feed. The remote device should reply with a current status - \"on\" or \"off\".\n\nWhen clicked, StateButton sends a toggleState message and enters \"waiting\" state, until the remote device has sent a new status message."
     },
     "template": {
         "title": "StateSliderSwitch",

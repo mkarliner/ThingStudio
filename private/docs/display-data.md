@@ -11,7 +11,7 @@ ThingStudio uses <a href="http://handlebarsjs.com/" target="_blank">Handlebars</
 
 The above means "insert dynamic data into the DOM using the helper _helpername_ with optional parameters."
 
-## There are currently three helpers in ThingStudio: 'message', 'messages' & 'feedmatch'
+##  helpers in ThingStudio: 'message', 'messages' & 'feedmatch'
 
 * Use '**message**' when you are returning values from a Feed with no wild card topics
 * Use '**messages**' when you are returning values from a Feed containing wildcard topics
@@ -66,12 +66,13 @@ Displaying multiple values from an MQTT wildcard subscription is a little bit tr
 First, the 'messages' helper itself:
 
 <pre>
-{{| messages "feedTitleHere" }}
+{{| #messages "feedTitleHere" }}
+...
+{{| /messages}}
 </pre>
 
-Now, don't be scared off by this next sentence, which may or may not be more technical jargon than you want to handle (if it makes your eyes glaze over, keep reading, the example below will make it much more simple).
-
-The 'messages' helper returns an array of objects from the Feed "feedTitleHere". The 'messages' are objects in an array with the following JSON format:
+You'll see that the messages helper has a quite different syntax from the other helpers. This is because it is a block 
+helper. The 'messages' helper allows iteration over an array of objects from the Feed "feedTitleHere". The 'messages' are objects in an array with the following JSON format:
 <pre>
 {
    &quot; feed&quot;: &quot;&lt;the feed title&gt;&quot;,
@@ -80,6 +81,7 @@ The 'messages' helper returns an array of objects from the Feed "feedTitleHere".
 }
 </pre>
 
+The '...' is the code you want to execute for every item in that list.
 For instance, if we had a wildcard MQTT subscription of '/garden/temperatures/**#place**', (the '#' makes it wildcard, as would a '+') and had stored that subscription under the title 'temps' in ThingStudio, the JSON data returned could look like this:
 
 <pre>
@@ -115,9 +117,9 @@ Again, first the helper itself:
 We've spoken enough in the abstract about this, now let's make it clear with an example. Keep an eye out for 'messages' and 'feedmatch':
 
 <pre>
-{{|#each messages "temps"}}
+{{| #messages "temps"}}
    &lt;tr&gt;&lt;td&gt;{{|feedmatch &quot;place&quot;}}&lt;/td&gt;&lt;td&gt;{{|payload}}&lt;/td&gt;&lt;/tr&gt;
-{{|/each}}
+{{| /messages}}
 </pre>
 
 Using the sample data from the JSON feed above, this code will output table rows with the content (HTML omitted to clarify the data itself):
