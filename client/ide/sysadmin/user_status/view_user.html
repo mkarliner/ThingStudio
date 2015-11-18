@@ -1,0 +1,25 @@
+<template name="ViewUserHeader">
+    
+</template>
+
+
+<template name="ViewUserBody">
+    {{#with userDetails}}
+        <h2>User</h2>
+        {{test}}
+        <div>{{user.username}}</div>
+        <div>{{email}}</div>
+        <h2>Apps</h2>
+        <table class="table">
+            {{#each apps}}
+            <tr>
+                <td class="select-app">{{title}}</td>
+                <td>{{_id}}</td>
+            </tr>
+            {{/each}}
+        </table>
+    {{/with}}
+    
+    
+    {{> SysLogs syslogs=syslogs}}
+</template>
