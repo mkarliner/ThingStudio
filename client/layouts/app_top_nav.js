@@ -1,38 +1,38 @@
-Template.AppTopNav.onRendered(function() {
-	$('.tooltipped').tooltip({delay: 400});
-});
+// Template.AppTopNav.onRendered(function() {
+// 	$('.tooltipped').tooltip({delay: 400});
+// });
 
-Template.AppTopNav.events({
-	'click .debug-dropdown': function(e, tmpl) {
-		e.preventDefault();
-		debugOps();
-	},
-	'click .hide-header': function() {
-		headerVisibility();
-		// $(window).on('resize', function () {
-		//     resizeAce();
-		// });
-		resizeAce();
-	}
-});
+// Template.AppTopNav.events({
+// 	'click .debug-dropdown': function(e, tmpl) {
+// 		e.preventDefault();
+// 		debugOps();
+// 	},
+// 	'click .hide-header': function() {
+// 		headerVisibility();
+// 		// $(window).on('resize', function () {
+// 		//     resizeAce();
+// 		// });
+// 		resizeAce();
+// 	}
+// });
 
-Template.AppTopNav.helpers({
-	currentConnectionName: function() {
-		app = getCurrentConnection();
-		if (app) {
-			return app.title;
-		} else {
-			return 'No connection. Have you set a connection in your App settings?';
-		}
-	},
-	isConnected: function() {
-		if ( Session.get( "ConnectionStatus" ) == true ) {
-			return 'connected';
-		} else {
-			return 'disconnected';
-		}
-	}
-});
+// Template.AppTopNav.helpers({
+// 	currentConnectionName: function() {
+// 		app = getCurrentConnection();
+// 		if (app) {
+// 			return app.title;
+// 		} else {
+// 			return 'No connection. Have you set a connection in your App settings?';
+// 		}
+// 	},
+// 	isConnected: function() {
+// 		if ( Session.get( "ConnectionStatus" ) == true ) {
+// 			return 'connected';
+// 		} else {
+// 			return 'disconnected';
+// 		}
+// 	}
+// });
 
 Template.BreadcrumbsContent.helpers({
 	route_base: function() {

@@ -85,18 +85,6 @@ Template.registerHelper("menuOps",
 	}
 );
 
-Template.registerHelper("debugOps",
-	debugOps = function() {
-		if ( $('.debug').hasClass('debug-open') ) {
-			//Is open
-			$('body div.debug').toggleClass('debug-open');
-		} else {
-			//Is closed
-			$('body div.debug').toggleClass('debug-open');
-		}
-	}
-);
-
 Template.registerHelper("deviceOrientation", function(){
 	//console.log("DEVO ", Session.get("deviceOrientation"))
 	return Session.get("deviceOrientation");
