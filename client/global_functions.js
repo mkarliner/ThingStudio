@@ -169,9 +169,8 @@ function interval(func, wait, times){
     setTimeout(interv, wait);
 };
 
+// Set global variable of inIDE true. Overridden in viewer controller.
 inIDE = true;
-
-
 
 checkHTTPFeeds = function (){
 	//console.log("HTTP clock");
