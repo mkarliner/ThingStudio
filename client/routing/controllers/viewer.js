@@ -10,9 +10,10 @@ AppViewerController = PreloadController.extend({
 		if(this.params.appid) {
 			Session.setPersistent("currentAppId", this.params.appid);
 		}
+        //Do not call this.next() SetMQTTCredentials does that.
 		SetMQTTCredentials(this);
         inIDE = false;
-		this.next();
+		//this.next();
 		
 	},
 	subscriptions: function() {
