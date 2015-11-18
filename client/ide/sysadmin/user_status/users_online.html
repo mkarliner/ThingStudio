@@ -38,5 +38,5 @@
 </template>
 
 <template name="userPill">
-    <span class="label {{labelClass}}">{{username}} {{idlestatus}}</span>
+    <span class="label {{labelClass}}"><a href={{pathFor 'ViewUser' id=this._id}}>{{username}}</a> {{idlestatus}}</span>
 </template>

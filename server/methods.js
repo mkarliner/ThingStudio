@@ -62,6 +62,18 @@ Meteor.methods({
         subject: "You've been sent a ThingStudio Application link",
 		  text: "Click " + link + "here</a> to access your app"
       });
+    },
+    userDetails: function(userId) {
+        console.log("Finding User", userId)
+        if(isAdmin(this.userId)) {
+            ret = {}
+            ret.user = Meteor.users.findOne({_id: userId});
+            ret.apps = Apps.find({owner: userId}).fetch();
+            return ret;
+        } else {
+            console.log("USER DATA ACCESS HACK ATTEMPTED")
+            return "Attempt to access priviledged user data"
+        }
     }
 });
 
