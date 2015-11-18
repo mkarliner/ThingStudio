@@ -11,9 +11,8 @@ AppViewerController = PreloadController.extend({
 			Session.setPersistent("currentAppId", this.params.appid);
 		}
 		SetMQTTCredentials(this);
-        inIDE = false;
+    inIDE = false;
 		this.next();
-		
 	},
 	subscriptions: function() {
 		// console.log("WAITON")

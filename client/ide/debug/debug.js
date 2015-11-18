@@ -1,14 +1,3 @@
-Template.DebugBody.onRendered(function() {
-	$('ul.tabs').tabs();
-
-});
-
-Template.DebugOverlay.events({
-	'click .view-full-debug': function(e, tmpl) {
-		debugOps();
-	}
-});
-
 Template.DebugBody.events({
 	'click .tab': function (e, tmpl) {
 		var tabs = tmpl.findAll('.tab a')
@@ -20,22 +9,6 @@ Template.DebugBody.events({
 		$(".debug-page > div").css({"display": "none"})
 		$(".debug-page " + thisTabBlockID).css({"display": "block"})
 	}
-
-
-
-
-
-
-
-	// $('div.tldtabs div').click(function(){
-  //   var tab_id = $(this).attr('data-tab');
-	//
-	// 	$('div.tldtabs div').removeClass('current');
-	// 	$('.tab-content').removeClass('current');
-	//
-	// 	$(this).addClass('current');
-	// 	$("#"+tab_id).addClass('current');
-	// });
 })
 
 Template.DebugBody.helpers({
