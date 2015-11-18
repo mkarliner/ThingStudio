@@ -36,6 +36,9 @@ Template.AppsBody.helpers({
 });
 
 Template.AppList.helpers({
+    username: function(){
+        return Meteor.users.findOne({_id: this.owner}).username; 
+    },
 	current_app: function(){
 		if(this._id == Session.get("currentAppId")) {
 			return true;
