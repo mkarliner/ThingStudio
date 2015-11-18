@@ -78,7 +78,7 @@ Template.WidgetList.helpers({
 		return "</"+this.tagName+">";
 	},
 	owner: function() {
-		return (this.owner == Meteor.userId())
+		return (this.owner == Meteor.userId() || isAdmin(Meteor.userId()))
 	},
 	isSystemWidget: function() {
 		if ( this.appId == Meteor.settings.public.systemApp ) {
