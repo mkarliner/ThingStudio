@@ -169,10 +169,13 @@ function interval(func, wait, times){
     setTimeout(interv, wait);
 };
 
+inIDE = true;
+
+
 
 checkHTTPFeeds = function (){
 	//console.log("HTTP clock");
-	if(Session.get("inIDE")) {
+	if(inIDE) {
 		return;
 	}
 	HTTPClock++;

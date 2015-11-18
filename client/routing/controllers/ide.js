@@ -42,7 +42,7 @@ IDEController = PreloadController.extend({
 					date: new Date()
 				});
 			}
-			Session.set("inIDE", true);
+			inIDE = true;
 			this.next();
 		}
 	},

@@ -11,6 +11,7 @@ AppViewerController = PreloadController.extend({
 			Session.setPersistent("currentAppId", this.params.appid);
 		}
 		SetMQTTCredentials(this);
+        inIDE = false;
 		this.next();
 		
 	},
