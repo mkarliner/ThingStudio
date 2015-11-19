@@ -1,11 +1,11 @@
-var renderYields = function(that, t) {
+var renderYields = function(that, t,  data) {
 	that.render('BreadcrumbsContent', {
 		to: 'breadcrumbs'
 	});
 	that.render(t + "Header", {
 		to: "appHeader"
 	});
-	that.render(t + "Body");
+	that.render(t + "Body", {data: data});
 }
 
 Router.route("/dashboard", {
@@ -532,6 +532,21 @@ Router.route("/sysadmin", {
 		}
 	}
 })
+
+Router.route("/view-user/:id", {
+	name: "ViewUser",
+	controller: "IDEController",
+	action: function() {
+		if ( !this.ready() ) {
+			this.render("Loading", {
+				data: "User"
+			});
+		} else {
+			renderYields(this, 'ViewUser', this.params.id)
+		}
+	}
+})
+
 
 // Router.route("/inactives", {
 // 	name: "Inactive Users",

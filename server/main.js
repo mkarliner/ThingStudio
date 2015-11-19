@@ -130,7 +130,7 @@ Meteor.startup(function() {
 				return;
 			}
 			if(this.userId == app.owner || app.shareable || isAdmin(this.userId)) {
-				// console.log("Returning app", appcurr.fetch())
+				console.log("Returning SINGLE app", appcurr.fetch())
 				return appcurr;
 			} else {
 				console.log("Attempt to access private app", app)
@@ -357,8 +357,7 @@ Meteor.startup(function() {
 		user = Meteor.users.findOne({
 			_id: this.userId
 		});
-		//if (user && user.roles && user.roles.indexOf('admin') > -1) {
-			if(true) {
+		if (user && user.roles && user.roles.indexOf('admin') > -1) {
 			return Meteor.users.find({
 				"status.online": true
 			}, {
@@ -391,6 +390,7 @@ Meteor.startup(function() {
 			//console.log("ALLUSERS");
 			return Meteor.users.find({}, {
 				fields: {
+                    _id: 1,
 					status: 1,
 					username: 1
 				}

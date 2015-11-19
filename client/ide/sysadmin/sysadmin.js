@@ -25,15 +25,19 @@ Template.SysLogs.events({
 	}
 })
 
-Template.SysLogs.helpers({
+Template.SysadminBody.helpers({
 	syslogs: function(){
 		tmpl = Template.instance();
 		types = ["ScreenUpdate", "New User", "UserAction"];
 		if(Session.get("showTemplateViews")) {
 			types.push("TemplateView");
 		}		
-		return SysLogs.find({event: {$in: types}}, {sort: {date: -1}});
+		return SysLogs.find({event: {$in: types}}, {sort: {date: -1}}).fetch();
 	},
+});
+
+
+Template.SysLogs.helpers({
 	viewlink: function() {
 		console.log("VL: ", this);
 		switch(this.event) {
@@ -43,7 +47,10 @@ Template.SysLogs.helpers({
 	},
 	date: function(){
 		return moment(this.date).fromNow();
-	}
+	},
+    foo: function(){
+        console.log("FOO", this)
+    }
 	
 });
 
