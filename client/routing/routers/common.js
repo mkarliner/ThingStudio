@@ -8,14 +8,12 @@ Router.configure({
 });
 
 AccountsTemplates.configureRoute('signIn', {
-	// template: "TSLogin",
 	layoutTemplate: "LoginLayout",
 	redirect: "/apps"
 });
 
 // AccountsTemplates.configureRoute('ensureSignedIn', {
-//     template: 'myLogin',
-//     layoutTemplate: 'myLayout',
+//     layoutTemplate: 'noErrorWrapper',
 // });
 
 Router.route("/", function(){
