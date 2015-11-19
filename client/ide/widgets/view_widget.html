@@ -6,10 +6,11 @@
 <template name="SingleWidgetBody">
 	{{#contentFor region="appHeader" template="SingleWidgetHeader"}}{{/contentFor}}
 	<div class="top-row">
-		<div class="col s3 tabs-container">
+		<div class="col s4 tabs-container">
 			<ul class="tabs">
 				<li class="tab"><a href="#properties">Widget Info</a></li>
 				<li class="tab"><a href="#preview">Preview</a></li>
+				<li class="tab"><a href="#advanced">Advanced</a></li>
 				<!-- <li class="tab"><a href="#css">CSS</a></li> -->
 			</ul>
 		</div>
@@ -18,7 +19,7 @@
 	<div class="single-page-container">
 		<div id="properties">
 			<div class="form-group detail">
-				<p class="usage"><span class="fwHeavy">Using this widget</span> &ndash; Copy the snippet below and paste in to your template{{#if parameters}}, changing the parameter values {{/if}}</p>
+				<p class="usage"><span class="fwHeavy">START HERE: Using this widget</span> &ndash; Copy the snippet below and paste in to your template{{#if parameters}}, changing the parameter values {{/if}}</p>
 				<span class="usage-inner">
 					{{#if webComponent}}
 					<span class="element">&lt;{{tagName}}</span><span class="parameter">{{#each parameters}} {{title}}=<span class="white-text">&quot;{{dummyValue}}&quot;</span>{{/each}}</span><span class="element">&gt;&lt;/{{tagName}}&gt;</span>
@@ -28,7 +29,6 @@
 				</span>
 			</div>
 			{{#if instructions}}
-
 					<p><span class="fwHeavy">Instructions</span> &ndash; Using this widget</p>
 <!-- These next lines must not be indented -->
 					<p>
@@ -36,9 +36,7 @@
 {{instructions}}
 {{/markdown}}
 					</p>
-				
 			{{/if}}
-
 			{{#if parameters}}
 				<div class="info-group detail">
 					<p><span class="fwHeavy">Widget Parameters</span> &ndash; Required and optional values to render the widget</p>
@@ -61,23 +59,26 @@
 			{{#if isInRole 'admin'}}
 				<button class="btn" id="download-widget">Download</button>
 			{{/if}}
-
-			<p><span class="fwHeavy">Create your own</span> &ndash; To make your own version of this widget which you can modify, copy with the HTML and / or JavaScript below</p>
-			{{#if html}}
-				<p class="fwBlack">HTML</p>
-				<div class="code-preview">
-					<pre>{{html}}</pre>
-				</div>
-			{{/if}}
-			{{#if js}}
-				<p class="fwBlack">JS</p>
-				<div class="code-preview">
-					<pre>{{js}}</pre>
-				</div>
-			{{/if}}
 		</div>
 		<div id="preview">
 			{{> Template.dynamic template=currentScreen data=dummyData}}
+		</div>
+		<div id="advanced">
+			<p><span class="fwHeavy">ADVANCED USE ONLY**</span> &ndash; To fork this widget and modify the source code, copy with the HTML and / or JavaScript below in to a new template. To simply USE the widget, copy the invokation above in to a new template.</p>
+			<ul class="collapsible widget-source" data-collapsible="accordion">
+				{{#if html}}
+				<li>
+					<div class="collapsible-header"><i class="material-icons">code</i>HTML</div>
+					<div class="collapsible-body"><pre>{{html}}</pre></div>
+				</li>
+				{{/if}}
+				{{#if js}}
+				<li>
+					<div class="collapsible-header"><i class="material-icons">code</i>JS</div>
+					<div class="collapsible-body"><pre>{{js}}</pre></div>
+				</li>
+				{{/if}}
+			</ul>
 		</div>
 		<!-- <div id="css">
 			<p>Hi from CSS!</p>

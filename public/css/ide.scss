@@ -1711,6 +1711,23 @@ div.col.s6 > p {
 	bottom: 0;
 }
 
+.collapsible.widget-source {
+	box-shadow: none;
+	border: none;
+}
+
+.widget-source .collapsible-header.active {
+	background-color: #FCFDFD;
+}
+
+.widget-source li {
+	background-color: white;
+}
+
+.widget-source .collapsible-body {
+	padding: 0 20px;
+}
+
 // .svg-container svg {
 // 	position: absolute;
 // 	top: 0;

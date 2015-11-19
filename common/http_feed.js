@@ -57,7 +57,7 @@ Schemas.HTTPFeed = new SimpleSchema({
 		type: String,
 		optional: true
 	},
-	
+
 	verb: {
 		type: String,
 		allowedValues: ["GET", "POST", "PUT", "DELETE"],
@@ -70,12 +70,12 @@ Schemas.HTTPFeed = new SimpleSchema({
 		},
 		defaultValue: "GET"
 	},
-	
+
 	polling_interval: {
 		type: Number,
 		defaultValue: 0
 	},
-	
+
 	requestProcessor: {
 		type: String,
 		autoform: {
@@ -88,10 +88,10 @@ Schemas.HTTPFeed = new SimpleSchema({
 						return (options);
 					}
 				},
-	},	
+	},
 	responseProcessors: {
 		type: [String],
-		
+
 	},
 	'responseProcessors.$': {
 		autoform: {
@@ -189,7 +189,7 @@ HTTPFeeds.before.insert(function(userId, doc) {
 		if(app.owner != doc.owner) {
 			console.log("Attempt to create connection in someone else's app.")
 			return false;
-		} 
+		}
 	}
 });
 
@@ -225,7 +225,7 @@ HTTPFeeds.after.remove(function(userId, doc) {
 		// 	topic = mqttregex(doc.subscription).topic;
 		// 	topic = topic.substring(0, topic.length - 1);
 		// 	 mqttClientUnsubscribe(topic);
-		// }	
+		// }
 	}
 });
 

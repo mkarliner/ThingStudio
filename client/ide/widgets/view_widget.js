@@ -1,5 +1,8 @@
 Template.SingleWidgetBody.onRendered(function() {
 	$('ul.tabs').tabs();
+	$('.collapsible').collapsible({
+		accordion : false // A setting that changes the collapsible behavior to expandable instead of the default accordion style
+	});
 });
 
 Template.SingleWidgetBody.helpers({
@@ -29,7 +32,7 @@ Template.SingleWidgetBody.helpers({
 	},
 	dummyData: function(){
 		dd = {}
-		return dd;
+		return dd; // !!!!!!!!!!!
 		if(this.parameters){
 			for(var p=0; p < this.parameters.length; p++){
 				dd[this.parameters[p].title] = this.parameters[p].dummyValue;
@@ -57,7 +60,7 @@ Template.SingleWidgetBody.events({
 		delete dump.template.owner;
 		delete dump.template.updatedAt;
 		json = JSON.stringify(dump, null, 4);
-		
+
 		blob = new Blob([json], {type: "application/json;charset=utf-8"});
 		saveAs(blob, this.title+".json")
 		ev.preventDefault();
