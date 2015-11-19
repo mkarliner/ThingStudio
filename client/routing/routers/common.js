@@ -8,7 +8,6 @@ Router.configure({
 });
 
 AccountsTemplates.configureRoute('signIn', {
-	// template: "TSLogin",
 	layoutTemplate: "LoginLayout",
 	redirect: "/apps"
 });
