@@ -37,6 +37,9 @@
  		//console.log("ONL ", users.fetch())
  		return users;
  	},
+    syslogs: function(){
+        return SysLogs.find({userName: this.username}).count();  
+    },
 	lastActivity: function(){
 		if(this.status.lastActivity) {
 			return moment(this.status.lastActivity).fromNow();

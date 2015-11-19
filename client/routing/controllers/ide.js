@@ -33,9 +33,11 @@ IDEController = PreloadController.extend({
 		} else {
 			if(trackUser(Meteor.user())) {
 				//console.log("OBA:", this, this.route._path);
+                app = getCurrentApp()
+                title = app ? app.title : "none"
 				SysLogs.insert({
 					event: "UserAction",
-					title: null,
+					title: "App: " + title,
 					id: null,
 					userName: Meteor.user().username,
 					details: this.url,

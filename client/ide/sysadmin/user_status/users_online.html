@@ -17,6 +17,7 @@
 			<thead>
 				<th>Username</th>
 				<th>Last Active</th>
+                <th>SysLogs</th>
 				<th>Last Login</th>
 			</thead>
 			<tbody>
@@ -24,6 +25,7 @@
 				<tr>
 					<td>{{> userPill}}</td>
 					<td>{{ lastActivity}}</td>
+                    <td>{{syslogs}}</td>
 					<td>{{ lastLogin}}</td>
 					<td>{{ status.lastLogin.ipAddr}}</td>
 				</tr>
