@@ -18,7 +18,7 @@ Template.ViewUserBody.helpers({
         console.log("TEST: ", this)
     },
 	syslogs: function(){
-		types = ["ScreenUpdate", "New User", "UserAction", "TemplateView"];	
+		types = ["ScreenUpdate", "New User", "UserAction", "TemplateView", "AppRemove"];	
         u = Session.get("UserDetails").user;
 		sl =  SysLogs.find({userName: u.username, event: {$in: types}}, {sort: {date: -1}}).fetch();
         console.log("SL: ", u.username,  sl)

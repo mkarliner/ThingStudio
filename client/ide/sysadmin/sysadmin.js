@@ -28,7 +28,7 @@ Template.SysLogs.events({
 Template.SysadminBody.helpers({
 	syslogs: function(){
 		tmpl = Template.instance();
-		types = ["ScreenUpdate", "New User", "UserAction"];
+		types = ["ScreenUpdate", "New User", "UserAction", "AppRemove"];
 		if(Session.get("showTemplateViews")) {
 			types.push("TemplateView");
 		}		
