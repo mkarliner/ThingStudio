@@ -193,6 +193,14 @@ Apps.before.remove(function(userId, doc) {
 		if(Apps.findOne({ancestor: doc._id})) {
 			return false;
 		}
+		SysLogs.insert({
+			event: "AppRemove",
+			title: doc.title,
+			id: doc._id,
+			userName: Meteor.users.findOne({_id: doc.owner}).username,
+			details: "",
+			date: new Date()
+		});
 		//console.log("APP DESTROY");
 		Connections.remove({appId: doc._id});
 		Feeds.remove({appId: doc._id});
@@ -200,6 +208,8 @@ Apps.before.remove(function(userId, doc) {
 		Themes.remove({appId: doc._id});
 	}
 });
+
+
 
 Apps.after.insert(function(userId, doc) {
 	if(Meteor.isClient) {
