@@ -26,6 +26,11 @@ $fwRoman: 'AvenirLTStd-Roman';
 // Login form //
 ///////////////////////////////////////////////////////////////////////////////////////
 
+.no-error .top-error {
+	display: none;
+}
+
+
 html, body {
   height: 100% !important;
 }
