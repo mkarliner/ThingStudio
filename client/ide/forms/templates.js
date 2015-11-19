@@ -12,7 +12,6 @@ Template.updateScreenForm.events({
 		Alerts.remove(this._id);
 	},
 	'click #jstab': function(e, tmpl){
-		console.log("JSTAB")
 		AceEditor.instance("archyjs").resize();
 		// AceEditor.instance("archyjs").renderer.updateFull()
 	},
@@ -22,19 +21,6 @@ Template.updateScreenForm.events({
 });
 
 Template.updateScreenForm.helpers({
-	// currentScreen: function() {
-	// 	scr =  Session.get("currentScreenPage");
-	// 	scn = Screens.findOne(scr);
-	// 	//console.log("HTML: ", scn);
-	// 	if(scn) {
-	// 		//console.log("HTML: ", scn.html);
-	// 		delete Template[scn.title];
-	// 		compileTemplate(scn.title, scn.html, scn.js);
-	// 		return scn.title;
-	// 	} else {
-	// 		return "NoScreen";
-	// 	}
-	// },
 	alerts: function() {
 		return Alerts.find();
 	},

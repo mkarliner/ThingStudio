@@ -11,7 +11,8 @@
       <div class="col s6">
         {{> afQuickField name='polling_interval' placeholder="Interval"}}
     		{{> afQuickField name='requestProcessor' placeholder="Feed Processors"}}
-    		{{> afQuickField name='responseProcessors' placeholder="Feed Processors"}}
+        <p><span class="fwHeavy">Response Processors</span> &ndash; Select response processors for this feed. Click the plus to for additional processors.</p>
+        {{> afArrayField name='responseProcessors' template="customAF"}}
       </div>
     </div>
   </div>
@@ -32,7 +33,8 @@
         <div class="col s6">
           {{> afQuickField name='polling_interval' placeholder="Interval"}}
     			{{> afQuickField name='requestProcessor' placeholder="Feed Processor"}}
-    			{{> afQuickField name='responseProcessors' placeholder="Feed Processors"}}
+          <p><span class="fwHeavy">Response Processors</span> &ndash; Select response processors for this feed. Click the plus to for additional processors.</p>
+          {{> afArrayField name='responseProcessors' template="customAF"}}
         </div>
       </div>
 		</div>

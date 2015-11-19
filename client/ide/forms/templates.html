@@ -62,7 +62,7 @@
 							<p><span class="fwHeavy">HTML Element Name</span> &ndash; Your custom HTML element's name must include a hyphen</p>
 							{{> afQuickField name='tagName'}}
 							<p><span class="fwHeavy">Parameters</span> &ndash; Click the plus to add widget parameters</p>
-							{{> afArrayField name='parameters' template="widgets"}}
+							{{> afArrayField name='parameters' template="customAF"}}
 							<button type="submit" class="btn btn-update">Save Widget</button>
 						{{/autoForm}}
 					{{/with}}
@@ -81,7 +81,7 @@
 		</div> -->
 </template>
 
-<template name="afArrayField_widgets">
+<template name="afArrayField_customAF">
 	<div class="panel panel-default">
 		<div class="panel-heading">{{afFieldLabelText name=this.atts.name}}</div>
 		{{#if afFieldIsInvalid name=this.atts.name}}

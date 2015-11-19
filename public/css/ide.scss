@@ -485,7 +485,6 @@ table.striped tbody tr:nth-child(odd) {
 	display: inline-block;
 	width: 300px;
 	vertical-align: middle;
-	margin-top: 6px;
 }
 
 .selectize-adjust {
@@ -1178,6 +1177,10 @@ h4.modal-title {
 	// border-bottom: 1px solid $bodyDividerColor;
 	padding-top: 0.5em;
 	padding-bottom: 1.9em;
+}
+
+.autoform-array-item-body .form-group {
+	padding-top: 0;
 }
 
 .single-page-container input {
