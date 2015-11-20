@@ -88,3 +88,5 @@ ecmascript
 ecmascript-collections
 promise
 es5-shim
+#fastclick
+markdown
