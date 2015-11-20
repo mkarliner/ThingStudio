@@ -1333,6 +1333,16 @@ form[id^="update"] .select-wrapper span.caret {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
+// New Item Pages //
+///////////////////////////////////////////////////////////////////////////////////////
+
+.warn {
+	background-color: #ffd466;
+	color: white;
+	padding: 1em;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
 // Template Editor //
 ///////////////////////////////////////////////////////////////////////////////////////
 
@@ -1604,10 +1614,6 @@ button.btn-plus, {
 	padding-top: 0.2em;
 	padding-bottom: 2em;
 	margin-bottom: 1em;
-	&.app-access-checkboxes {
-		margin-bottom: 0;
-		padding-bottom: 0.5em;
-	}
 	&.field-dropdown {
 		margin-bottom: 1.1em;
 		padding-bottom: 1.1em;
@@ -1626,6 +1632,25 @@ div.col.s6 > p {
 	margin-top: 2em;
 	padding-bottom: 1em;
 	border-bottom: 1px solid $bodyDividerColor;
+}
+
+#appdoc h2 {
+	font-family: "AvenirLTStd-Medium";
+	color: #5C6275;
+	margin-top: 0;
+	margin-bottom: 0;
+}
+
+#appdoc p {
+	margin-top: 0.3rem;
+	margin-bottom: 0;
+}
+
+#appdoc code {
+	background: white;
+	padding: 1rem;
+	margin: 1rem 0;
+	display: block;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////

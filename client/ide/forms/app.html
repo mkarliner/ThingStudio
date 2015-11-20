@@ -5,7 +5,7 @@
 			{{> afQuickField name='title' }}
 			<p><span class="fwHeavy">App Summary</span> &mdash; Set a quick summary of your app.</p>
 			{{> afQuickField name='summary' }}
-			<p><span class="fwHeavy">*OPTIONAL* Inherit all properties from another app?</span> &mdash; Leave BLANK unless you are CERTAIN you want to inherit ALL of an app's properties.</p>
+			<p><span class="fwHeavy"><span class="warn">OPTIONAL</span> Inherit all properties from another app?</span> &mdash; Leave blank unless you are certain you want to inherit all of an app's properties.</p>
 			{{> afQuickField name='ancestor' }}
 			<button type="submit" class="btn btn-update right">Create New App</button>
 		{{/autoForm}}
@@ -25,6 +25,16 @@
 			{{else}}
 			<p><span class="fwHeavy block">This App Is Not Currently Shareable</span> For your app to be accessible to other users, it must be marked "Sharable" on the Properties tab</p>
 			{{/if}}
+		</div>
+	{{/autoForm}}
+</template>
+
+<template name="advancedAppForm">
+	{{#autoForm collection="Apps" class="app-advanced" id="advancedAppForm" type="update" doc=this omitFields="ancestor" buttonContent="Save Application"}}
+		<div class="col s6">
+			<p><span class="fwHeavy block">Home Template</span>The template users see when first loading your app</p>
+			{{> afFormGroup name='home_page'}}
+			<button type="submit" class="btn btn-update right">Update App</button>
 		</div>
 	{{/autoForm}}
 </template>
@@ -52,8 +62,6 @@
 				</div>
 			</div>
 			<div class="clearfix"></div> -->
-			<p><span class="fwHeavy block">Home Template</span>The template users see when first loading your app</p>
-			{{> afFormGroup name='home_page'}}
 			<p><span class="fwHeavy block">MQTT Connection</span>If your app uses MQTT, set the connection here</p>
 			{{> afFormGroup name='connection'}}
 		</div>
@@ -62,8 +70,8 @@
 			{{> afQuickField name='title' }}
 			<p><span class="fwHeavy block">Summary</span>Give a one line description of the purpose of this application</p>
 			{{> afQuickField name='summary' placeholder="Enter summary" class="wide-input"}}
-			<p><span class="fwHeavy block">Long Description</span>Provide more information here, such as instructions, usage, etc.</p>
-			{{> afQuickField name='description' placeholder="Detailed application information"}}
+			<!-- <p><span class="fwHeavy block">Long Description</span>Provide more information here, such as instructions, usage, etc.</p>
+			{{> afQuickField name='description' placeholder="Detailed application information"}} -->
 		</div>
 		<button type="submit" class="btn btn-update right">Update App</button>
 	{{/autoForm}}
@@ -90,6 +98,9 @@
 
 <template name="updateAppDocForm">
 	<div id="appdoc">
+		<h2>Documentation for your app</h2>
+		<p>Create documentation of your own which is specific to your app. To display this documentation in your app, simply copy the following in to a new template:</p>
+		<code>{{|#markdown}}{{|appDocumentation}}{{|/markdown}}</code>
 	{{#autoForm collection="Apps" class="app-detail" id="updateAppForm" type="update" doc=this omitFields="ancestor" buttonContent="Save Application"}}
 			{{>afQuickField name="documentation" class="centerField"}}
 			<button type="submit" class="btn btn-update right">Update App</button>
