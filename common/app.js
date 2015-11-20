@@ -144,7 +144,7 @@ Schemas.App = new SimpleSchema({
 	          // summernote options goes here
 	        }
 		},
-		defaultValue: "//Advanced Use Only"
+		defaultValue: "//Advanced Use Only: **APP-LEVEL** JavaScript goes here. Add **TEMPLATE-LEVEL** JS in the JavaScipt tab of a template!"
 	},
 	css: {
 		optional: true,
