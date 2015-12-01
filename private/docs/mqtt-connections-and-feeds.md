@@ -8,6 +8,13 @@ summary: "How to create MQTT connections and feeds "
 Connections, fairly obviously, specify the connection to an MQTT broker.
 You can have as many connections as you want, but only one will be used
 in an App. You specify which connection to use in the App properties.
+
+You will normally send data from your devices to your MQTT broker on port 1883,
+which is the standard port for MQTT over regular sockets. 
+Your ThingStudio Apps will connect to the MQTT broker on some other port.
+Unfortunately, there is no standard port for MQTT over websockets, so you
+will need to specify that yourself. The free ThingStudio MQTT broker on
+mqtt.thingstud.io uses port 9001.
 ## Creating a connection
 
 {{>DocTable "ConnectionProperties"}}
