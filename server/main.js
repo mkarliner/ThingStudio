@@ -31,6 +31,7 @@ getAppTree = function(appId){
 	while(app.ancestor) {
 		app = Apps.findOne({_id: app.ancestor})
 		apps.push(app._id);
+        console.log("APP has ancestor: ", apps)
 	}
 	return apps;
 }
@@ -130,13 +131,16 @@ Meteor.startup(function() {
 				return;
 			}
 			if(this.userId == app.owner || app.shareable || isAdmin(this.userId)) {
-				console.log("Returning SINGLE app", appcurr.fetch())
-				return appcurr;
+                aptids = getAppTree(appId);
+				apts =  Apps.find({_id: {$in: aptids}});
+                console.log("Returning SINGLE app tree", appcurr.fetch(), apts.fetch())
+                return apts;
 			} else {
 				console.log("Attempt to access private app", app)
 				return [];
 			}
 		} else {
+            //FIXME - Apptree
 			apps = Apps.find({owner: this.userId});
 			console.log("Publish for ", this.userId)
 			return apps;
