@@ -1,7 +1,6 @@
 AppViewerController = PreloadController.extend({
 	layoutTemplate: "ViewerLayout",
 	'preload': {
-		'timeOut': 10000,
 		'styles': ['/css/viewer.css']
 	},
 	loadingTemplate: "Loading",
