@@ -64,7 +64,7 @@ Meteor.startup(function(){
 	AutoForm.addInputType('aceappcss', {
 		template: 'afAceAppCSS',
 		valueOut: function(obj) {
-			console.log("OUT: ", AceEditor.instance("archyappcss").getValue());
+			// console.log("OUT: ", AceEditor.instance("archyappcss").getValue());
 			return AceEditor.instance("archyappcss").getValue();
 		}
 	});
@@ -72,7 +72,7 @@ Meteor.startup(function(){
 	AutoForm.addInputType('aceappdoc', {
 		template: 'afAceAppDoc',
 		valueOut: function(obj) {
-			console.log("OUT: ", AceEditor.instance("archyappdoc").getValue());
+			// console.log("OUT: ", AceEditor.instance("archyappdoc").getValue());
 			return AceEditor.instance("archyappdoc").getValue();
 		}
 	});

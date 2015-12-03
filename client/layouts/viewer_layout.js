@@ -1,15 +1,23 @@
 Template.ViewerLayout.events({
+	// Don't set event maps on layouts!
+});
+
+Template.AppFooter.events({
 	'click a.debug': function () {
 		if ( Session.get( "debugOpen", true ) ) {
 			Session.set( "debugOpen", false )
 		} else {
 			Session.set( "debugOpen", true )
 		}
-	},
-	'click .route': function () {
-		Session.set( "debugOpen", false )
 	}
-});
+})
+
+Template.AppFooter.helpers({
+	appPathInfo: function(){
+		return {appid: Session.get("currentAppId")}
+	},
+
+})
 
 Template.ViewerLayout.helpers({
 	isConnected: function() {
@@ -21,24 +29,20 @@ Template.ViewerLayout.helpers({
 	},
 	showMQTTStatus: function(){
 		app = getCurrentApp();
-		if(!app) {
-			return false;
-		}
-		console.log("showMQTTSTATS", app.connection, app.title)
+		if( !app ) { return false; }
 		if( app.connection == "none" || !app.connection ) {
 			return false;
 		} else {
-		return true;
+			return true;
 		}
 	},
 	appHamburger: function() {
-		appId = Session.get("currentAppId")
-		app = Apps.findOne({_id: appId})
+		appId = Session.get( "currentAppId" )
+		app = Apps.findOne( {_id: appId} )
 		if ( !app ) { return }
 		showMenu = app.showHamburger
-		screenCount = Screens.find({isWidget: false}).count()
-		// console.log('screencount', screenCount)
-		if ( !showMenu ||  screenCount < 2) {
+		screenCount = Screens.find({ isWidget: false }).count()
+		if ( !showMenu ||  screenCount < 2 ) {
 			// Hide the nav
 			return 'hide-app-nav'
 		} else {
@@ -46,14 +50,16 @@ Template.ViewerLayout.helpers({
 			return ''
 		}
 	},
+	appCSS: function () {
+		app = Apps.findOne( {_id: Session.get( "currentAppId" ) } )
+		if ( !app ) { return }
+		return app.css
+	},
 	screenlist: function(){
-		return Screens.find({isWidget: false})
+		return Screens.find({ isWidget: false })
 	},
 	runtimeErrors: function(){
-		return Session.get("runtimeErrors");
-	},
-	appPathInfo: function(){
-		return {appid: Session.get("currentAppId")}
+		return Session.get( "runtimeErrors" );
 	},
 	debugOpen: function () {
 		return Session.get( "debugOpen" )

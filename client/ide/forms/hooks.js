@@ -14,14 +14,14 @@
 		var message = 'Unknown feed ' + feed;
 		Alerts.insert({type: 'runtime', status: 'warning', message: message});
 		return false;
-	} 
+	}
 	if(subscribe && f.pubsub == "Publish") {
 		// Session.set("runtimeErrors", "Can't receive messages on publish feed: " + feed);
 		var message = "Can't receive messages on publish feed " + feed;
 		Alerts.upsert({type: 'runtime', status: "warning", message: message },{$set:{type: 'runtime', status: 'warning', message: message} ,$inc: {count: 1} } );
 		return false;
 	}
-	
+
 	return true;
 }
 
@@ -125,7 +125,7 @@ compileTemplate = function(name, html_text, javascript) {
 				value = $(ev.target).val();
 				checkFeed(feed_name.value, false);
 				//feed = Feeds.findOne({title: feed_name.value});
-				
+
 				if(typeof feed == "undefined") {
 					return;
 				}
@@ -142,7 +142,7 @@ compileTemplate = function(name, html_text, javascript) {
 					//feed = Feeds.findOne({title: feed_name.value});
 					publish(feed_name.value, JSON.stringify(value));
 				}
-				
+
 			}
 		});
 
@@ -223,7 +223,7 @@ AutoForm.hooks({
 			}
 		}
 	},
-	
+
 	updateCredentialsForm: {
 			onSubmit: function(a,b,c) {
 				console.log("SUBMIT ", a, b, c)
@@ -239,7 +239,7 @@ AutoForm.hooks({
 						console.log("Not saving credentials")
 						return false;
 					}
-					
+
 				}
 			},
 			after: {
@@ -273,7 +273,7 @@ AutoForm.hooks({
 				}
 			}
 		}
-		
+
 
 
 
