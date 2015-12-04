@@ -17,12 +17,13 @@ AppViewerController = PreloadController.extend({
 	},
 	subscriptions: function() {
 		// console.log("WAITON")
+		var self = this;
 		var appId = Session.get( "currentAppId" );
 		if( appId ){
 			return [
 				Meteor.subscribe( 'apps', appId, {
 					onReady: function() {
-						InitialiseApps();
+						InitialiseApps(self);
 					}
 				}),
 				Meteor.subscribe( 'connections', appId, {

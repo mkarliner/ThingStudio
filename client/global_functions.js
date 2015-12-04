@@ -403,24 +403,41 @@ getAppTree = function(appId){
 	return apps;
 }
 
-InitialiseApps = function(){
+InitialiseApps = function( that ){
 	FeedProcessors.remove();
 	FeedList.remove();
 	//First initialise the system App js.
 
 	capp = getCurrentApp();
-	if(!capp) {
+	if( !capp ) {
 		return;
 	}
-	applist = getAppTree(capp._id);
-
-	// console.log("Initialising Apps", applist);
-	for(var a=0; a<applist.length; a++ ){
-		var app = Apps.findOne(applist[a]);
-		if(app && app.js) {
-			// console.log("Initialising app ", app.title);
-			eval(app.js);
+	applist = getAppTree( capp._id );
+	var syncLibraries = [];
+	var asyncLibraries = [];
+	for( var a=0; a<applist.length; a++ ){
+		var app = Apps.findOne( applist[a] );
+		if ( app && app.js ) {
+			eval( app.js );
 		}
+		if ( app && app.externalSyncLibraries ) {
+			syncLibraries = syncLibraries.concat( app.externalSyncLibraries );
+			console.log("collected Sync libraries")
+		}
+		if ( app && app.externalAsyncLibraries ) {
+			asyncLibraries = asyncLibraries.concat( app.externalAsyncLibraries );
+			console.log("collected Async libraries")
+		}
+	}
+	that.preload.sync = syncLibraries
+	that.preload.onSync = function ( file ) {
+		console.log("checking sync file: ", file)
+		return true;
+	}
+	that.preload.async = asyncLibraries
+	that.preload.onAsync = function ( error, result ) {
+		console.log("checking async file: ", result)
+
 	}
 }
 

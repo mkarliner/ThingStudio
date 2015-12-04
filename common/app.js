@@ -146,6 +146,16 @@ Schemas.App = new SimpleSchema({
 		},
 		defaultValue: "//Advanced Use Only: **APP-LEVEL** JavaScript goes here. Add **TEMPLATE-LEVEL** JS in the JavaScipt tab of a template!"
 	},
+	externalSyncLibraries: {
+		label: "External Synchronous JavaScript Libraries",
+		type: [String],
+		optional: true,
+	},
+	externalAsyncLibraries: {
+		label: "External Asynchronous JavaScript Libraries",
+		type: [String],
+		optional: true,
+	},
 	css: {
 		optional: true,
 		label: "CSS",
@@ -220,7 +230,6 @@ Apps.after.insert(function(userId, doc) {
 
 Apps.after.update(function(userId, doc) {
 	if(Meteor.isClient) {
-		InitialiseApps();
 		currConn = getCurrentConnection();
 		if(currConn && currConn._id != doc.connection) {
 			newConn = Connections.findOne({_id: doc.connection});
