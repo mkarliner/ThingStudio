@@ -10,3 +10,33 @@
 	</div>
 	{{> fontLicense}}
 </template>
+
+<!-- <template name="GeneralLayout">
+
+  {{> autoformModals}}
+
+	{{> TopNav }}
+	<div class="container-fluid">
+		<div class="row clearfix">
+			<div class="col-md-12 column">
+				<div class="onlineUsers">
+				{{> onlineAdmins }}
+				{{#if isInRole 'admin'}}
+				    {{>onlineUsers}} /Home
+					{{#each appTitles}}
+						/{{this}}
+					{{/each}}
+				{{/if}}
+				</div>
+			</div>
+			<div class="col-md-12 column">
+				{{> yield}}
+			</div>
+		</div>
+	</div>
+  <footer>
+
+  </footer>
+
+
+</template> -->
