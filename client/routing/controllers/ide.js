@@ -22,7 +22,6 @@ IDEController = PreloadController.extend({
 					date: new Date()
 				});
 			}
-			inIDE = true;
 			this.next();
 		}
 	},
