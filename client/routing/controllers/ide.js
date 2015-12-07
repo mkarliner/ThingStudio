@@ -34,12 +34,13 @@ IDEController = PreloadController.extend({
 			Meteor.subscribe( "apps", {
 				onReady: function(){
 					// NEEDS REFACTORING BIG TIME!
-					// Set example app as first current app for new users
-					//Are we logged in.
+
+					// Are we logged in?
 					if (!Meteor.userId()) {
-						// console.log("Not logged in at startup - bailing.")
 						return;
 					}
+
+					// ??
 					initialApp = Session.get( "currentAppId" );
 					ia = Apps.findOne( { _id: initialApp } )
 					if( initialApp && ia ) {
@@ -47,29 +48,24 @@ IDEController = PreloadController.extend({
 					} else {
 						Session.setPersistent( "currentAppId", null );
 					}
-					// console.log("Apps Ready", Apps.find({}).fetch());
-					//Is there only one App available?
+
+					// Is there only one App available WHICH THE USERS OWNS?
 					numApps = Apps.find( { owner: Meteor.userId() } ).count();
 					if( numApps == 1 ) {
 						initialApp = Apps.findOne();
 						Session.setPersistent( "currentAppId", initialApp._id );
 						return;
 					}
+
 					//Are we logged in, but have no Apps?
 					if( Meteor.userId() && numApps == 0 ) {
-						//If so, create first app.
-						// console.log("Creating default app on ready", Meteor.userId())
-						// For now, do not create a My Frist App
-							// appId = Apps.insert({
-							// 	title: "My First App",
-							// 	shareable: false,
-							// });
 						exampleAppId = Meteor.settings.public.basicExampleApp
 						Session.setPersistent( "currentAppId", exampleAppId );
 						return;
 					}
+
 					//Are we logged in, with Apps, but none current?
-					//Just choose the any app.
+					//Just choose any app.
 					if( Meteor.userId() ) {
 						initialApp = Apps.findOne();
 						Session.setPersistent( "currentAppId", initialApp._id );
@@ -137,18 +133,4 @@ ProfileController = IDEController.extend({
 		Meteor.subscribe( "userData" );
 	},
 
-});
-
-OldDocsController = IDEController.extend({
-	subscriptions: function() {
-		//console.log("OldDocsController subscriptions")
-		Meteor.subscribe("help_pages")
-	}
-});
-
-DocsController = IDEController.extend({
-	subscriptions: function() {
-		//console.log("DocsController subscriptions")
-		Meteor.subscribe("docs")
-	}
 });

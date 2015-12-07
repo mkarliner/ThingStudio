@@ -36,7 +36,7 @@
 
 // Router.route("/olddocs/:urlstring", {
 // 	name: "OldDocs",
-// 	controller: "OldDocsController",
+// 	controller: "IDEController",
 // 	data: function() {
 // 		return HelpPages.findOne({ urlstring: this.params.urlstring });
 // 	},
@@ -53,7 +53,7 @@
 
 // Router.route("/docsold", {
 // 	name: "OldDocumentation",
-// 	controller: "OldDocsController",
+// 	controller: "IDEController",
 // 	data: function() {
 // 		return HelpPages.find({}, {
 // 			sort: {

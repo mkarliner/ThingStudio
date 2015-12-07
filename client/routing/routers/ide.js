@@ -443,7 +443,7 @@ Router.route("/tutorials", {
 
 Router.route("/docs/:urlstring", {
 	name: "View Doc",
-	controller: "DocsController",
+	controller: "IDEController",
 	data: function() {
 		return Docs.findOne({ "attributes.urlstring": this.params.urlstring });
 	},
@@ -460,7 +460,7 @@ Router.route("/docs/:urlstring", {
 
 Router.route("/docs", {
 	name: "Documentation",
-	controller: "DocsController",
+	controller: "IDEController",
 	data: function() {
 		return DocsIndex;
 	},
