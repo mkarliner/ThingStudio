@@ -33,6 +33,8 @@ IDEController = PreloadController.extend({
 			Meteor.subscribe( 'sharedApps' ),
 			Meteor.subscribe( "apps", {
 				onReady: function(){
+					// NEEDS REFACTORING BIG TIME!
+					// Set example app as first current app for new users
 					//Are we logged in.
 					if (!Meteor.userId()) {
 						// console.log("Not logged in at startup - bailing.")
@@ -57,16 +59,18 @@ IDEController = PreloadController.extend({
 					if( Meteor.userId() && numApps == 0 ) {
 						//If so, create first app.
 						// console.log("Creating default app on ready", Meteor.userId())
-						appId = Apps.insert({
-							title: "My First App",
-							shareable: false,
-						});
-						Session.setPersistent( "currentAppId", appId );
+						// For now, do not create a My Frist App
+							// appId = Apps.insert({
+							// 	title: "My First App",
+							// 	shareable: false,
+							// });
+						exampleAppId = Meteor.settings.public.basicExampleApp
+						Session.setPersistent( "currentAppId", exampleAppId );
 						return;
 					}
 					//Are we logged in, with Apps, but none current?
 					//Just choose the any app.
-					if( Meteor.userId ) {
+					if( Meteor.userId() ) {
 						initialApp = Apps.findOne();
 						Session.setPersistent( "currentAppId", initialApp._id );
 						return;

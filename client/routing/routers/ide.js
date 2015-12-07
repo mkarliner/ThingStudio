@@ -53,7 +53,7 @@ Router.route("/welcome", {
 	action: function() {
 		if ( !this.ready() ) {
 			this.render("Loading", {
-				data: "Welcome"
+				data: "Welcome Video"
 			});
 		} else {
 			renderYields(this, 'Welcome')
