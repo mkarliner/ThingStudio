@@ -32,6 +32,7 @@ IDEController = PreloadController.extend({
 			Meteor.subscribe( 'sharedApps' ),
 			Meteor.subscribe( "apps", {
 				onReady: function(){
+
 					// NEEDS REFACTORING BIG TIME!
 
 					// Are we logged in?
@@ -39,12 +40,15 @@ IDEController = PreloadController.extend({
 						return;
 					}
 
-					// ??
+					// Grab the current App ID & App object
 					initialApp = Session.get( "currentAppId" );
 					ia = Apps.findOne( { _id: initialApp } )
+
+					// Just navigating around? Move along.
 					if( initialApp && ia ) {
 						return;
 					} else {
+						// What specific case does this handle?
 						Session.setPersistent( "currentAppId", null );
 					}
 
@@ -63,8 +67,7 @@ IDEController = PreloadController.extend({
 						return;
 					}
 
-					//Are we logged in, with Apps, but none current?
-					//Just choose any app.
+					//Are we logged in, with Apps, but none current? Just choose any app.
 					if( Meteor.userId() ) {
 						initialApp = Apps.findOne();
 						Session.setPersistent( "currentAppId", initialApp._id );
@@ -87,49 +90,13 @@ IDEController = PreloadController.extend({
 			Meteor.subscribe( 'admins' ),
 			Meteor.subscribe( "docs" ),
 			Meteor.subscribe( "doc_changes" )
-			// Meteor.subscribe('themes', myCurrAppId),
-
-			// Meteor.subscribe('chats', {
-			// 	onReady: function(){
-			// 		Meteor.autorun(function(){
-			// 			Chats.find({}, {limit: 1, sort:{ date: -1}}).observeChanges({
-			// 				addedBefore: function(id, fields, before) {
-			// 					username = Meteor.user().username;
-			// 					// console.log("ADDED: message ", id, fields.message, username, before);
-			// 					users = fields.message.match(/@([a-zA-Z0-9_-]+)\s/g)
-			// 					// console.log("USERS: ", users)
-			// 					chats = Chats.find().count();
-			// 					if(Session.get("chatsReady") == true) {
-			// 						sound = new Audio('ding.mp3')
-			// 						sound.volume = 0.2
-			// 						//sound.play();
-			// 						Session.set("newChats", true);
-			// 					}
-			// 				}
-			// 			})
-			// 			Session.set("chatsReady", true);
-			// 		})
-			// 	}
-			// }),
-
 		]
 	}
 });
-
-// Meteor.autorun(function(){
-// 	if(Session.get("newChats") == true){
-// 		console.log("Setting chat timeout")
-// 		Meteor.setTimeout(function(){
-// 			console.log("Setting newchats false")
-// 			Session.set("newChats", false);
-// 		},  60 * 1000)
-// 	}
-// })
 
 ProfileController = IDEController.extend({
 	subscriptions: function() {
 		// console.log("ProfileController subscribe")
 		Meteor.subscribe( "userData" );
-	},
-
+	}
 });
