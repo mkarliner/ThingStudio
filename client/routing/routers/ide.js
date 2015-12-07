@@ -8,51 +8,35 @@ var renderYields = function(that, t,  data) {
 	that.render(t + "Body", {data: data});
 }
 
-Router.route("/dashboard", {
-	name: "Dashboard",
-	controller: "IDEController",
-	action: function() {
-		if ( !this.ready() ) {
-			// console.log("WAITING: ", this)
-			this.render("Loading", {
-				data: "Dashboard"
-			});
-		} else {
-			u = Meteor.user();
-			// if(u) {
-			// 	//show tutorials if first login.
-			// 	example = Meteor.settings.public.basicExampleApp
-			// 	console.log("FIRST Login test", u.profule, example)
-			// 	if(u.profile && u.profile.showExample && example) {
-			// 		this.redirect("/tutorials");
-			// 		//Session.setPersistent("currentAppId", example);
-			// 		Meteor.users.update({
-			// 			_id: Meteor.userId()
-			// 		}, {
-			// 			$set: {
-			// 				"profile.showExample": false
-			// 			}
-			// 		});
-			// 	}
-			// }
-			if (u) {
-				//Disable welcome page for the moment.
-				if (u.profile && u.profile.showWelcome) {
-					this.redirect("/welcome");
-				} else {
-					if ( !this.ready() ) {
-						this.render("Loading", {
-							data: "Dashboard"
-						});
-					} else {
-						renderYields(this, 'Dashboard');
-					}
-				}
-			}
-		}
-	}
-
-});
+// Router.route("/dashboard", {
+// 	name: "Dashboard",
+// 	controller: "IDEController",
+// 	action: function() {
+// 		if ( !this.ready() ) {
+// 			// console.log("WAITING: ", this)
+// 			this.render("Loading", {
+// 				data: "Dashboard"
+// 			});
+// 		} else {
+// 			u = Meteor.user();
+// 			if (u) {
+// 				//Disable welcome page for the moment.
+// 				if (u.profile && u.profile.showWelcome) {
+// 					this.redirect("/welcome");
+// 				} else {
+// 					if ( !this.ready() ) {
+// 						this.render("Loading", {
+// 							data: "Dashboard"
+// 						});
+// 					} else {
+// 						renderYields(this, 'Dashboard');
+// 					}
+// 				}
+// 			}
+// 		}
+// 	}
+//
+// });
 
 Router.route("/welcome", {
 	name: "Welcome",
@@ -69,7 +53,7 @@ Router.route("/welcome", {
 	action: function() {
 		if ( !this.ready() ) {
 			this.render("Loading", {
-				data: "Welcome"
+				data: "Welcome Video"
 			});
 		} else {
 			renderYields(this, 'Welcome')
@@ -125,13 +109,27 @@ Router.route("/apps", {
 	controller: "IDEController",
 	action: function() {
 		if ( !this.ready() ) {
-			// console.log("WAITING: ", this)
 			this.render("Loading", {
 				data: "Apps"
 			});
 		} else {
-			renderYields(this, 'Apps');
+			u = Meteor.user();
+			if (u) {
+				//Disable welcome page for the moment.
+				if (u.profile && u.profile.showWelcome) {
+					this.redirect("/welcome");
+				} else {
+					if ( !this.ready() ) {
+						this.render("Loading", {
+							data: "Apps"
+						});
+					} else {
+						renderYields(this, 'Apps');
+					}
+				}
+			}
 		}
+
 	}
 });
 

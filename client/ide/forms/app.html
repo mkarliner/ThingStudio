@@ -31,11 +31,16 @@
 
 <template name="advancedAppForm">
 	{{#autoForm collection="Apps" class="app-advanced" id="advancedAppForm" type="update" doc=this omitFields="ancestor" buttonContent="Save Application"}}
-		<div class="col s6">
-			<p><span class="fwHeavy block">Home Template</span>The template users see when first loading your app</p>
-			{{> afFormGroup name='home_page'}}
-			<button type="submit" class="btn btn-update right">Update App</button>
+		<div class="">
+			<div class="col s12">
+				<p><span class="fwHeavy">External JavaScript Libraries</span> &ndash; Click the plus to add more JS libraries</p>
+				{{> afArrayField name='externalJSLibraries' template="customAFInline"}}
+				<p><span class="fwHeavy block">Home Template</span>The template users see when first loading your app</p>
+				{{> afFormGroup name='home_page'}}
+			</div>
 		</div>
+		<div class="clearfix"></div>
+		<button type="submit" class="btn btn-update right">Update App</button>
 	{{/autoForm}}
 </template>
 

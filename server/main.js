@@ -19,7 +19,7 @@ getAppTree = function(appId){
 		return false;
 	}
 	apps = [app._id];
-	
+
 	if(baseAppId) {
 		console.log("Set system app to ", baseAppId)
 		apps = [app._id, baseAppId];
@@ -38,7 +38,7 @@ getAppTree = function(appId){
 
 
 Meteor.startup(function() {
-	//Before anything, initialise My First App for all users 
+	//Before anything, initialise My First App for all users
 	//and connect any orphan resources.
 	process.env.HTTP_FORWARDED_COUNT ="1";
 	console.log("FORWARDED COUNT ", process.env.HTTP_FORWARDED_COUNT);
@@ -55,30 +55,31 @@ Meteor.startup(function() {
 	users = Meteor.users.find({}).fetch();
 	console.log("USERS:", users.length)
 	for(var i=0; i<users.length; i++) {
+		// comment
 		u = users[i];
 		//console.log("Checking user:\t", u.username);
 		app = Apps.findOne({owner: u._id });
-		if(app) {
-			//console.log("Found app ok");
-			app_cnt++;
-		} else {
-			console.log("No apps, creating default", u._id);
-			no_app_cnt++;
-			app = {};
-			app._id  = Apps.insert({
-				title: "My First App",
-				owner: u._id,
-				shareable: false,
-				public: false
-			},{getAutoValues: false});
-		}
+		// if(app) {
+		// 	//console.log("Found app ok");
+		// 	app_cnt++;
+		// } else {
+		// 	console.log("No apps, creating default", u._id);
+		// 	no_app_cnt++;
+		// 	app = {};
+		// 	app._id  = Apps.insert({
+		// 		title: "My First App",
+		// 		owner: u._id,
+		// 		shareable: false,
+		// 		public: false
+		// 	},{getAutoValues: false});
+		// }
 		//Hook any orphan connections to app.
 		conns = Connections.find({owner: u._id}).fetch();
 
 		for(var c=0; c< conns.length; c++){
 			connection = conns[c];
 			if(connection.appId) {
-				//console.log("Connection AppId OK"); 
+				//console.log("Connection AppId OK");
 			} else {
 				//console.log("Hooking connection: ", connection._id, " to app ", app._id);
 				Connections.update({_id: connection._id}, {$set: {appId: app._id}});
@@ -108,7 +109,7 @@ Meteor.startup(function() {
 			}
 		}
 	}
-	
+
 	orphan_connections_after = Connections.find({appId: {$exists: false}}).fetch().length;
 	orphan_feeds_after = Feeds.find({appId: {$exists: false}}).fetch().length;
 	orphan_screens_after = Screens.find({appId: {$exists: false}}).fetch().length;
@@ -124,7 +125,7 @@ Meteor.startup(function() {
 		console.log("AppSub ", appId)
 		if(appId) {
 			appcurr =  Apps.find({_id: appId});
-			app = appcurr.fetch()[0]; 
+			app = appcurr.fetch()[0];
 			if(!app) {
 				console.log("No such app: ", appId);
 				this.ready();
@@ -144,10 +145,10 @@ Meteor.startup(function() {
 			apps = Apps.find({owner: this.userId});
 			console.log("Publish for ", this.userId)
 			return apps;
-			
+
 		}
 	});
-	
+
 	Meteor.publish("sharedApps", function(){
 		basicExampleApp = Meteor.settings.public.basicExampleApp;
 		systemApp = Meteor.settings.public.systemApp;
@@ -180,7 +181,7 @@ Meteor.startup(function() {
 			return [];
 		}
 	});
-	
+
 	Meteor.publish("http_connections", function(appId) {
 		console.log("Subscribing http_connections: ", appId)
 		apps = getAppTree(appId);
@@ -213,7 +214,7 @@ Meteor.startup(function() {
 			return [];
 		}
 	});
-	
+
 	Meteor.publish("widgets", function(appId) {
 		app = Apps.findOne({_id: appId});
 		apps = getAppTree(appId);
@@ -230,7 +231,7 @@ Meteor.startup(function() {
 			return [];
 		}
 	});
-	
+
 	Meteor.publish("singleScreen", function(screenId) {
 		scr = Screens.findOne({_id: screenId});
 		app = Apps.findOne({_id: scr.appId});
@@ -247,7 +248,7 @@ Meteor.startup(function() {
 			return[];
 		}
 	});
-	
+
 	Meteor.publish("feeds", function(appId) {
 		app = Apps.findOne({_id: appId});
 		apps = getAppTree(appId);
@@ -260,7 +261,7 @@ Meteor.startup(function() {
 		if(this.userId == app.owner || app.shareable || isAdmin(this.userId)) {
 			// console.log("Returning feeds: ", Feeds.find({appId: appId}).fetch().length )
 			return Feeds.find({appId: {$in
-				
+
 				: apps}});
 		} else {
 			return [];
@@ -273,7 +274,7 @@ Meteor.startup(function() {
 		// 	}]
 		// });
 	});
-	
+
 	Meteor.publish("http_feeds", function(appId) {
 		app = Apps.findOne({_id: appId});
 		apps = getAppTree(appId);
@@ -286,7 +287,7 @@ Meteor.startup(function() {
 		if(this.userId == app.owner || app.shareable || isAdmin(this.userId)) {
 			// console.log("Returning feeds: ", Feeds.find({appId: appId}).fetch().length )
 			return HTTPFeeds.find({appId: {$in
-				
+
 				: apps}});
 		} else {
 			return [];
@@ -306,7 +307,7 @@ Meteor.startup(function() {
 	// 	if(this.userId == app.owner || app.access == "Shareable") {
 	// 		// console.log("Returning feeds: ", Feeds.find({appId: appId}).fetch().length )
 	// 		return Feeds.find({_id: feedId, appId: {$in
-				
+
 	// 			: apps}});
 	// 	}
 	// 	// return Feeds.find({
@@ -377,13 +378,13 @@ Meteor.startup(function() {
 		}
 
 	});
-	
-	
+
+
 	Meteor.publish("admins", function(){
 		return Meteor.users.find({roles: "admin"});
 	})
-	
-	
+
+
 
 	Meteor.publish("userList", function() {
 		user = Meteor.users.findOne({
@@ -400,33 +401,33 @@ Meteor.startup(function() {
 				}
 			});
 		} else {
-			console.log("ULIST") 
+			console.log("ULIST")
 			this.ready();
 		}
 	})
-	
+
 
 	Meteor.publish("syslogs", function() {
 		user = Meteor.users.findOne({
 			_id: this.userId
 		});
-		
+
 		console.log("SLO : ", this.userId);
 		if (user && user.roles && user.roles.indexOf('admin') > -1) {
 			//console.log("ALLUSERS");
 			return SysLogs.find({}, {sort: {date: -1}});
 		} else {
-			//console.log("ONEUSER") 
+			//console.log("ONEUSER")
 			this.ready();
 		}
 	});
-	
+
 	Meteor.publish("chats", function() {
 		console.log("CHAT : ", this.userId);
 		if(this.userId) {
 			return Chats.find({});
 		} else {
-			console.log("CHATS") 
+			console.log("CHATS")
 			this.ready();
 		}
 	});
@@ -461,7 +462,7 @@ Meteor.startup(function() {
 		"feed_processing.md",
 		"template-layout.md"
 	];
-	
+
 	WidgetFiles = [
 		"JustDial.json",
 		"Sparkline.json",
@@ -481,7 +482,7 @@ Meteor.startup(function() {
 		console.log("Subscribing Docs")
 		return Docs.find();
 	});
-	
+
 	Meteor.publish("doc_changes", function(){
 		console.log("Subscribing DocChanges")
 		return DocChanges.find();
@@ -504,7 +505,7 @@ Meteor.startup(function() {
 		// console.log("Check docs ", doc.attributes, olddoc ? olddoc.attributes :"nothing" );
 
 		if(olddoc) {
-			//Workout what has changed	
+			//Workout what has changed
 			diffs = JsDiff.diffLines(olddoc.body, doc.body);
 			for(var d=0; d<diffs.length; d++){
 				diff = diffs[d];
@@ -522,14 +523,14 @@ Meteor.startup(function() {
 			}
 		}
 
-		
+
 		if(olddoc && olddoc.body == doc.body) {
 			//Nothing has changed.
 			Docs.update({filename: DocFiles[f]}, {$set: {newChanges: false}});
-		} else {	
+		} else {
 			Docs.upsert({filename: DocFiles[f]}, {$set: doc});
 		}
-		
+
 		//console.log("DCOS: ",Docs.findOne());
 	}
 
@@ -568,5 +569,3 @@ Meteor.startup(function() {
 	}
 
 });
-
-

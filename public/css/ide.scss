@@ -1233,6 +1233,28 @@ p.shareable-tip {
 	font-style: italic;
 }
 
+.panel-inline .autoform-array-item-body .form-group {
+	display: inline;
+	float: left;
+}
+
+.panel-inline .form-group:first-of-type {
+	width: 70%;
+}
+
+.panel-inline input {
+	max-width: 80%;
+}
+
+.panel-inline .form-group > .control-label {
+	display: none;
+}
+
+.panel-inline .form-group:first-of-type > .control-label {
+	display: inline-block;
+}
+
+
 // Handling extra padding for Selectize dropdowns on detail pages
 #updateConnectionForm .form-group:nth-child(4), #updateFeedForm .form-group:nth-child(3) {
 	padding-top: 0;

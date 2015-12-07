@@ -10,13 +10,14 @@ AppViewerController = PreloadController.extend({
 			Session.setPersistent( "currentAppId", this.params.appid );
 		}
 
-        //Do not call this.next() SetMQTTCredentials does that.
-	        SetMQTTCredentials( this );
-        	inIDE = false;
+		//Do not call this.next() SetMQTTCredentials does that.
+		SetMQTTCredentials( this );
+		inIDE = false;
 		//this.next();
 	},
 	subscriptions: function() {
 		// console.log("WAITON")
+		var self = this;
 		var appId = Session.get( "currentAppId" );
 		if( appId ){
 			return [

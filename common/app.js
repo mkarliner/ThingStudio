@@ -2,6 +2,35 @@ Apps = new Mongo.Collection("apps");
 
 Schemas = {};
 
+Schemas.ExternalLibraryDetails = new SimpleSchema({
+	title: {
+		type: String,
+		label: "Source"
+	},
+	loadAsync: {
+		type: Boolean,
+		label: "Async",
+		defaultValue: false,
+		autoform: {
+			afFieldInput: {
+				type: 'boolean-checkbox-M',
+				class: 'filled-in'
+			}
+		}
+	},
+	loadDefer: {
+		type: Boolean,
+		label: "Defer",
+		defaultValue: false,
+		autoform: {
+			afFieldInput: {
+				type: 'boolean-checkbox-M',
+				class: 'filled-in'
+			}
+		}
+	}
+})
+
 Schemas.App = new SimpleSchema({
 	title: {
 		type: String,
@@ -146,6 +175,11 @@ Schemas.App = new SimpleSchema({
 		},
 		defaultValue: "//Advanced Use Only: **APP-LEVEL** JavaScript goes here. Add **TEMPLATE-LEVEL** JS in the JavaScipt tab of a template!"
 	},
+	externalJSLibraries: {
+		label: "External JavaScript Libraries",
+		type: [Schemas.ExternalLibraryDetails],
+		optional: true,
+	},
 	css: {
 		optional: true,
 		label: "CSS",
@@ -220,7 +254,6 @@ Apps.after.insert(function(userId, doc) {
 
 Apps.after.update(function(userId, doc) {
 	if(Meteor.isClient) {
-		InitialiseApps();
 		currConn = getCurrentConnection();
 		if(currConn && currConn._id != doc.connection) {
 			newConn = Connections.findOne({_id: doc.connection});

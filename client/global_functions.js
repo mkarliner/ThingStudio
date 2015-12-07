@@ -227,8 +227,6 @@ Meteor.startup(function() {
 	interval(checkHTTPFeeds, 1000);
 })
 
-
-
 ///////////////////////////////////////////////////////////////////////////////////////
 // MQTT & Connection Management//
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -409,19 +407,38 @@ InitialiseApps = function(){
 	//First initialise the system App js.
 
 	capp = getCurrentApp();
-	if(!capp) {
+	if( !capp ) {
 		return;
 	}
-	applist = getAppTree(capp._id);
-
-	// console.log("Initialising Apps", applist);
-	for(var a=0; a<applist.length; a++ ){
-		var app = Apps.findOne(applist[a]);
-		if(app && app.js) {
-			// console.log("Initialising app ", app.title);
-			eval(app.js);
+	applist = getAppTree( capp._id );
+	var syncLibraries = [];
+	var asyncLibraries = [];
+	for( var a=0; a<applist.length; a++ ){
+		var app = Apps.findOne( applist[a] );
+		if ( app && app.js ) {
+			eval( app.js );
+		}
+		if ( app && app.externalJSLibraries ) {
+			asyncLibs = app.externalJSLibraries
+			for ( var i = 0; i < asyncLibs.length; i++ ) {
+				asyncLibs[i].loadAsync ? asyncVal = ' async' : asyncVal = ''
+				asyncLibs[i].loadDefer ? deferVal = ' defer' : deferVal = ''
+				$( 'head' ).append('<script' + asyncVal + deferVal + ' src="' + asyncLibs[i].title + '"></script>')
+			}
 		}
 	}
+
+
+	// that.preload.sync = syncLibraries
+	// that.preload.onSync = function ( file ) {
+	// 	console.log("checking sync file: ", file)
+	// 	return true;
+	// }
+	// that.preload.async = asyncLibraries
+	// that.preload.onAsync = function ( error, result ) {
+	// 	console.log("checking async file: ", result)
+	//
+	// }
 }
 
 
