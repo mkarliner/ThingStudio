@@ -1176,10 +1176,6 @@ h4.modal-title {
 	padding-top: 10px;
 }
 
-.ext-js-libs .control-label {
-	display: none;
-}
-
 .single-page-container .form-group, .single-page-container .info-group {
 	margin-bottom: 0.7rem;
 	// border-bottom: 1px solid $bodyDividerColor;
@@ -1236,6 +1232,28 @@ p.shareable-tip {
 	margin-top: 0;
 	font-style: italic;
 }
+
+.panel-inline .autoform-array-item-body .form-group {
+	display: inline;
+	float: left;
+}
+
+.panel-inline .form-group:first-of-type {
+	width: 70%;
+}
+
+.panel-inline input {
+	max-width: 80%;
+}
+
+.panel-inline .form-group > .control-label {
+	display: none;
+}
+
+.panel-inline .form-group:first-of-type > .control-label {
+	display: inline-block;
+}
+
 
 // Handling extra padding for Selectize dropdowns on detail pages
 #updateConnectionForm .form-group:nth-child(4), #updateFeedForm .form-group:nth-child(3) {

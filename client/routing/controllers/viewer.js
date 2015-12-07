@@ -10,9 +10,9 @@ AppViewerController = PreloadController.extend({
 			Session.setPersistent( "currentAppId", this.params.appid );
 		}
 
-        //Do not call this.next() SetMQTTCredentials does that.
-	        SetMQTTCredentials( this );
-        	inIDE = false;
+		//Do not call this.next() SetMQTTCredentials does that.
+		SetMQTTCredentials( this );
+		inIDE = false;
 		//this.next();
 	},
 	subscriptions: function() {
@@ -23,7 +23,7 @@ AppViewerController = PreloadController.extend({
 			return [
 				Meteor.subscribe( 'apps', appId, {
 					onReady: function() {
-						InitialiseApps(self);
+						InitialiseApps();
 					}
 				}),
 				Meteor.subscribe( 'connections', appId, {
