@@ -27,6 +27,11 @@ Template.registerHelper(
 	}
 )
 
+Template.registerHelper(
+	"templateTitle", function () {
+		return this.title
+	}
+)
 
 Template.registerHelper(
 	"meteor_status", function(){

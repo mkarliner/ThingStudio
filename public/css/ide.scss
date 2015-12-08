@@ -1385,6 +1385,9 @@ form[id^="update"] .select-wrapper span.caret {
 	border-right-color: $green;
 	border-top-color: $green;
 	border-bottom-color: $green;
+	// -webkit-clip-path: polygon(0 0, 100% 20%, 100% 100%, 0% 80%);
+	// background-color: #76D4E1;
+	// color: white;
 }
 
 .template-filters li.current:first-of-type {
