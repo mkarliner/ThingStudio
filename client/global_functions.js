@@ -401,19 +401,17 @@ getAppTree = function(appId){
 	return apps;
 }
 
-InitialiseApps = function(){
+InitialiseApps = function() {
 	FeedProcessors.remove();
 	FeedList.remove();
-	//First initialise the system App js.
 
 	capp = getCurrentApp();
 	if( !capp ) {
 		return;
 	}
 	applist = getAppTree( capp._id );
-	var syncLibraries = [];
-	var asyncLibraries = [];
-	for( var a=0; a<applist.length; a++ ){
+
+	for( var a = 0; a < applist.length; a++ ){
 		var app = Apps.findOne( applist[a] );
 		if ( app && app.js ) {
 			eval( app.js );
@@ -423,24 +421,11 @@ InitialiseApps = function(){
 			for ( var i = 0; i < asyncLibs.length; i++ ) {
 				asyncLibs[i].loadAsync ? asyncVal = ' async' : asyncVal = ''
 				asyncLibs[i].loadDefer ? deferVal = ' defer' : deferVal = ''
-				$( 'head' ).append('<script' + asyncVal + deferVal + ' src="' + asyncLibs[i].title + '"></script>')
+				$( 'head' ).append( '<script' + asyncVal + deferVal + ' src="' + asyncLibs[i].title + '"></script>' )
 			}
 		}
 	}
-
-
-	// that.preload.sync = syncLibraries
-	// that.preload.onSync = function ( file ) {
-	// 	console.log("checking sync file: ", file)
-	// 	return true;
-	// }
-	// that.preload.async = asyncLibraries
-	// that.preload.onAsync = function ( error, result ) {
-	// 	console.log("checking async file: ", result)
-	//
-	// }
 }
-
 
 getCredentials = function(){
 	return Session.get("currentCredentials");

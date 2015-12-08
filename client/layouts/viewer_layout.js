@@ -53,7 +53,11 @@ Template.ViewerLayout.helpers({
 	appCSS: function () {
 		app = Apps.findOne( {_id: Session.get( "currentAppId" ) } )
 		if ( !app ) { return }
-		return app.css
+		if ( app.css ) {
+			return app.css
+		} else {
+			return
+		}
 	},
 	screenlist: function(){
 		return Screens.find({ isWidget: false })

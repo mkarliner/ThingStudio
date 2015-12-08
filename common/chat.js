@@ -7,10 +7,10 @@ if(Meteor.isServer) {
 		//purgeDate.setDate(now.getDate() - 1); //Yesterday
 		purgeDate = new Date(now.getTime() - 24 * 60 * 60000)
 		numremoved = Chats.remove({date: {$lt: purgeDate}});
-		console.log("Purged chats, removed ", numremoved);
-	
+		// console.log("Purged chats, removed ", numremoved);
+
 	}, 1000 * 60 * 10); //10 minute purge
-	
+
 }
 
 
@@ -41,7 +41,7 @@ Schemas.Chat = new SimpleSchema({
 		autoValue: function(){
 			return new Date();
 		}
-		
+
 	},
 });
 
@@ -51,7 +51,7 @@ Chats.before.insert(function(userId, doc) {
 		doc.userid = userId;
 		console.log("SL", doc);
 		return doc;
-	} 
+	}
 });
 
 
