@@ -1354,6 +1354,47 @@ form[id^="update"] .select-wrapper span.caret {
 	height: 15px;
 }
 
+.template-filters {
+	margin-top: -6px;
+}
+
+.template-filters li {
+	padding: 0 20px;
+	height: 37px;
+	line-height: 37px;
+	border-style: solid;
+	border-left-color: white;
+	border-left-width: 1px;
+	border-right-color: white;
+	border-right-width: 1px;
+	border-top-color: white;
+	border-top-width: 1px;
+	border-bottom-color: white;
+	border-bottom-width: 1px;
+	-webkit-transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+	transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+	color: $green;
+}
+
+.template-filters li:last-of-type {
+	border-right-color: transparent;
+}
+
+.template-filters .current {
+	border-left-color: $green;
+	border-right-color: $green;
+	border-top-color: $green;
+	border-bottom-color: $green;
+}
+
+.template-filters li.current:first-of-type {
+	border-left: 1px solid $green;
+}
+
+.template-filters li.current:last-of-type {
+	border-right: 1px solid $green;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////
 // New Item Pages //
 ///////////////////////////////////////////////////////////////////////////////////////

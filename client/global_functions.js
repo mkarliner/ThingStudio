@@ -427,6 +427,34 @@ InitialiseApps = function() {
 	}
 }
 
+InstantiateWidgets = function(){
+	//Instantiate all screens which are widgets
+	wdgts = Widgets.find().fetch();
+	// console.log("Instantiating Widgets", wdgts);
+	for(var s=0; s<wdgts.length; s++){
+		wgt = wdgts[s];
+		scr = Screens.findOne({_id: wgt.baseScreen});
+		if(!scr) {
+			break;
+		}
+		if(Template[scr.title]) {
+			// console.log("Deleting: ", scr.title);
+			delete Template[scr.title]; //Remove the existing template.
+		}
+		// console.log("Compiling ", scr.title);
+		compileTemplate(scr.title, scr.html, scr.js);
+		if(wgt.widgetType == "Web Component") {
+			try {
+				// console.log("Registering widget")
+				Template[scr.title].registerElement(wgt.tagName);
+			}
+			catch(err) {
+				console.log("Problem registering element: "+ wgt.tagName);
+			}
+		}
+	}
+}
+
 getCredentials = function(){
 	return Session.get("currentCredentials");
 }
