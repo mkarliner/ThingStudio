@@ -92,15 +92,15 @@ Template.WidgetList.helpers({
 	}
 });
 
-Template.WidgetsHeader.events({
-	"click .header-action-1": function(e, tmpl) {
-		e.preventDefault();
-		menuOps();
-		if ( $('.add-new-item').hasClass('open')) {
-			$('.tab-my-widgets').trigger("click");
-		}
-	}
-});
+// Template.WidgetsHeader.events({
+// 	"click .header-action-1": function(e, tmpl) {
+// 		e.preventDefault();
+// 		menuOps();
+// 		if ( $('.add-new-item').hasClass('open')) {
+// 			$('.tab-my-widgets').trigger("click");
+// 		}
+// 	}
+// });
 
 // Template.WidgetsNewItem.events({
 // 	"click .table-cancel-new": function(e, tmpl) {

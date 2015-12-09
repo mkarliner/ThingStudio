@@ -2,7 +2,6 @@ Template.DocumentationBody.onRendered(function() {
 	$('ul.tabs').tabs();
 });
 
-
 Template.DocumentationBody.helpers({
 	doc: function(title) {
 		d =  Docs.findOne({"attributes.title": title});
