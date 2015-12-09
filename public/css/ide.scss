@@ -7,7 +7,7 @@ $white: #fff;
 $baseText: #858C9D;
 $fontSize: 12px;
 $fontFace: AvenirLTStd-Roman, Helvetica, sans-serif;
-$appBodyBG: #E9F1F4;
+$appBodyBG: #E9EFF4;
 // $appBodyBG: rgba(218,226,230,1);
 $green: #76D4E1;
 $whiteOverGreen: #F7FAFF;
@@ -95,7 +95,7 @@ $picBorder: #9196A1 solid 2px;
 $navBorder: #DCDCDC 1.5px solid;
 
 // App Header
-$headerColor: #676975;
+$headerColor: #696B77;
 $headerActionButton2Color: #DCDCDC;
 
 //App Body
@@ -789,7 +789,7 @@ header {
 
 h1 {
 	font-size: 1.9166666667 * $fontSize;
-	font-family: $fwBook;
+	font-family: $fwMedium;
 	color: $headerColor;
 	margin: 0 0 10px;
 }
@@ -891,9 +891,9 @@ th {
 	font-size: 13px;
 	letter-spacing: 0.3px;
 	background: $white;
-	text-transform: uppercase;
 	padding: 15px 0;
 	border-radius: 0;
+	// color: lighten($baseText, 10% )
 }
 
 table.hoverable {
