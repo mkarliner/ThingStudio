@@ -1285,9 +1285,11 @@ p.shareable-tip {
 
 .tabs .tab {
 	letter-spacing: 0.6px;
+	text-transform: none;
+	font-family: $fwHeavy;
 	& a {
 		color: $baseText;
-		font-family: $fwBlack;
+
 		font-size: $fontSize * 1.08333;
 	}
 	& a:hover {
