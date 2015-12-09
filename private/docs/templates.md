@@ -1,14 +1,14 @@
 ---
 title: "Templates"
 urlstring: "templates"
-summary: "Templates are HTML forms that show live data from your feeds NOTE: 'Screens' are now Templates!"
+summary: "Templates are the user interface of your app: objects containing HTML & JS which show live data from your feeds"
 ---
 
 Templates are simple HTML templates that provide the structure of the view for your data.
 
 They are also where you specify how data **from** "Feeds" will be rendered, and what messages to publish **to** "Feeds" when data is entered on a input or a when button is clicked.
 
- The Template live editor in "Studio Mode" is where you'll spend most of your time in ThingStudio, at least while you are developing your user interface. 
+ The Template live editor in "Studio Mode" is where you'll spend most of your time in ThingStudio, at least while you are developing your user interface.
 
 
 
@@ -44,4 +44,3 @@ Here we're creating a standard HTML button and adding two 'data' attributes:
 'data-message' tells ThingStudio what the payload (i.e. content) of that message is. 'data-message' is not required for events that already have a value defined for the message, like a slider movement, which transmits the value of the slider.
 
 Think of this as an envelope you send through the mail; 'data-feed' is the address you put on the outside of the envelope, and 'data-message' is the letter you put inside.
-

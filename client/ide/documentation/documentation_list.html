@@ -24,10 +24,10 @@
 			{{#each  Basics}}
 				{{#with doc title}}
 				<li class="collection-item avatar">
+					<p class="right right-align">{{recentChanges}} Updated: {{publishedDate}}</p>
 					<a href="/docs/{{attributes.urlstring}}"><span class="title">{{attributes.title}}</span></a>
-					<p><span class="fwMedium">Summary:</span> {{excerpt}}<br>
-					<span class="fwMedium">{{recentChanges}} Updated:</span> {{publishedDate}}
-					</p>
+					<p><span class="">Summary:</span> {{excerpt}}</p>
+
 					<!-- <a href="#!" class="secondary-content"><i class="mdi-action-grade"></i> {{group}}</a>	 -->
 				</li>
 				{{/with}}
@@ -55,8 +55,8 @@
 				{{#with doc title}}
 				<li class="collection-item avatar">
 					<a href="/docs/{{attributes.urlstring}}"><span class="title">{{attributes.title}}</span></a>
-					<p><span class="fwMedium">Summary:</span> {{excerpt}}<br>
-					<span class="fwMedium">Updated:</span> {{publishedDate}}
+					<p><span class="">Summary:</span> {{excerpt}}<br>
+					<span class="">Updated:</span> {{publishedDate}}
 					</p>
 					<!-- <a href="#!" class="secondary-content"><i class="mdi-action-grade"></i> {{group}}</a> -->
 				</li>
@@ -70,8 +70,8 @@
 				{{#with doc title}}
 				<li class="collection-item avatar">
 					<a href="/docs/{{attributes.urlstring}}"><span class="title">{{attributes.title}}</span></a>
-					<p><span class="fwMedium">Summary:</span> {{excerpt}}<br>
-					<span class="fwMedium">Updated:</span> {{publishedDate}}
+					<p><span class="">Summary:</span> {{excerpt}}<br>
+					<span class="">Updated:</span> {{publishedDate}}
 					</p>
 					<!-- <a href="#!" class="secondary-content"><i class="mdi-action-grade"></i> {{group}}</a> -->
 				</li>
@@ -84,8 +84,8 @@
 			{{#each changes}}
 			<li class="collection-item avatar">
 				<span class="title">Doc updated: <a href="/docs/{{docLink}}">{{title}}</a></span>
-				<p><span class="fwMedium">Diff log:</span> {{diff.value}}<br>
-				<span class="fwMedium">Type:</span> {{addedremoved}}
+				<p><span class="">Diff log:</span> {{diff.value}}<br>
+				<span class="">Type:</span> {{addedremoved}}
 				</p>
 				<a href="#!" class="secondary-content">Date: {{changedDate}}</a>
 			</li>

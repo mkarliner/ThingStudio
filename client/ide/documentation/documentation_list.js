@@ -20,7 +20,7 @@ Template.DocumentationBody.helpers({
 		return this.attributes.summary;
 	},
 	publishedDate: function(date) {
-		return moment(this.lastUpdated).format('MMMM D, YYYY, hh:mm:ss a' );
+		return moment(this.lastUpdated).format('MMMM D, YYYY' );
 	},
 	recentChanges: function(){
 		return this.newChanges ? "RECENT CHANGES" : "";
