@@ -1,3 +1,8 @@
+Template.ScreensBody.onCreated(function () {
+		Session.set("templateListFilter", undefined)
+	}
+)
+
 Template.ScreensHeader.events({
 	'click li': function (e, tmpl) {
 		var $target = $(e.target)
@@ -10,11 +15,6 @@ Template.ScreensHeader.events({
 		Session.set("templateListFilter", dataAt)
 	}
 })
-
-Template.ScreensBody.onCreated(function () {
-		Session.set("templateListFilter", undefined)
-	}
-)
 
 Template.ScreensBody.helpers({
 	templatelist: function(){
