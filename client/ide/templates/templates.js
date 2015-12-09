@@ -7,22 +7,40 @@ Template.ScreensHeader.events({
 		$(li).removeClass("current")
 		$target.addClass("current")
 
-		console.log(dataAt)
+		Session.set("templateListFilter", dataAt)
 	}
 })
 
+Template.ScreensBody.onCreated(function () {
+		Session.set("templateListFilter", undefined)
+	}
+)
+
 Template.ScreensBody.helpers({
-	widgetlist: function(){
-		wl =  Screens.find({  isWidget: true}, {sort: {title: 1}})
-		return wl;
-	},
 	templatelist: function(){
-		return Screens.find({$or:[{owner: Meteor.userId()}, {isWidget: false} ] }, {sort: {lowercaseTitle: 1}});
+		tlf = Session.get( "templateListFilter" )
+		appId = Session.get( "currentAppId" )
+		var templatesToReturn = null
+
+		if ( tlf == "all" ) {
+			templatesToReturn = { appId: { $ne: Meteor.settings.public.systemApp } }
+		} else if ( tlf == "templates" || tlf == undefined ) {
+			templatesToReturn = { isWidget: false, appId: appId }
+		} else if ( tlf == "widgets" ) {
+			templatesToReturn = { isWidget: true, appId: appId }
+		} else if ( tlf == "inherited" ) {
+			templatesToReturn = { appId: { $nin: [ appId, Meteor.settings.public.systemApp ] } }
+		}
+		return Screens.find( templatesToReturn , { sort: { lowercaseTitle: 1 } } )
 	},
 	isWidget: function(){
-		return this.isWidget ? "icon-ts-checkmark" : "";
+		return this.isWidget ? "icon-ts-checkmark" : ""
 	},
-	widget: function(){
-		return( "aa" +this.isWidget)
-	}
+	// widgetlist: function(){
+	// 	wl =  Screens.find({  isWidget: true}, {sort: {title: 1}})
+	// 	return wl;
+	// },
+	// widget: function(){
+	// 	return( "aa" +this.isWidget)
+	// }
 });
