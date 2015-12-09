@@ -32,7 +32,7 @@ Displaying live data is fun, but controlling your devices in real time is even m
 
 Send interaction data (clicks, input changes and more) and other data *to* your Feeds by simply adding data attributes to your HTML elements. The syntax resembles the following:
 <pre>
-`<button data-feed="Doorbell" data-message="doorbell">Bing Bong</button>`
+&lt;button data-feed="Doorbell" data-message="doorbell"&gt;Bing Bong&lt;/button&gt;
 </pre>
 Here we're creating a standard HTML button and adding two 'data' attributes:
 
