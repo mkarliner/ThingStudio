@@ -714,7 +714,14 @@ a.made-with {
 	font-size: 18px; //23.75px
 	text-decoration: none;
 }
-a i.icon-ts-connection {
+a {
+	&.connected {
+		display: none;
+	}
+	&.disconnected {
+		display: inline;
+	}
+	i.icon-ts-connection {
 		transition: background-color 0.1s cubic-bezier(0.4, 0.0, 0.2, 1);
 		border-radius: 50%;
 		font-size: 18px;
@@ -724,15 +731,16 @@ a i.icon-ts-connection {
 		display: inline-block;
 		text-align: center;
 		color: white;
-	&.connected {
-		background-color: $activeGreen;
-	}
-	&.disconnected {
-		-webkit-animation: blink 3s 0s ease-in-out infinite;
-		-moz-animation: blink 3s 0s ease-in-out infinite;
-		-ms-animation: blink 3s 0s ease-in-out infinite;
-		-o-animation: blink 3s 0s ease-in-out infinite;
-		animation: blink 3s 0s ease-in-out infinite;
+		&.connected {
+			background-color: $activeGreen;
+		}
+		&.disconnected {
+			-webkit-animation: blink 2s 0s ease-in-out infinite;
+			-moz-animation: blink 2s 0s ease-in-out infinite;
+			-ms-animation: blink 2s 0s ease-in-out infinite;
+			-o-animation: blink 2s 0s ease-in-out infinite;
+			animation: blink 2s 0s ease-in-out infinite;
+		}
 	}
 }
 
