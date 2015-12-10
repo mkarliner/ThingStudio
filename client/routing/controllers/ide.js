@@ -14,7 +14,7 @@ IDEController = PreloadController.extend({
         app = getCurrentApp()
         title = app ? app.title : "none"
 				SysLogs.insert({
-					event: "UserAction",
+					event: "PageView",
 					title: "App: " + title,
 					id: null,
 					userName: Meteor.user().username,
