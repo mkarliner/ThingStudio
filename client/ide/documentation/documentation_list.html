@@ -1,17 +1,15 @@
 <template name="DocumentationHeader">
 	{{#contentFor "appHeader"}}
 		<h1 class="left">Documentation</h1>
-		<!-- <a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>{{curr_app_name}}</a> -->
 		<div class="clearfix"></div>
 	{{/contentFor}}
 </template>
 
 <template name="DocumentationBody">
 	<div class="top-row">
-		<div class="col s8 tabs-container">
+		<div class="col s7 tabs-container">
 			<ul class="tabs">
 				<li class="tab"><a href="#basics">Getting Started</a></li>
-				<!-- <li class="tab"><a href="#ui">User Interface</a></li> -->
 				<li class="tab"><a href="#advanced">Advanced</a></li>
 				<li class="tab"><a href="#reference">Reference</a></li>
 				<li class="tab"><a href="#changelog">Change Log</a></li>
@@ -27,28 +25,11 @@
 					<p class="right right-align">{{recentChanges}} Updated: {{publishedDate}}</p>
 					<a href="/docs/{{attributes.urlstring}}"><span class="title">{{attributes.title}}</span></a>
 					<p><span class="">Summary:</span> {{excerpt}}</p>
-
-					<!-- <a href="#!" class="secondary-content"><i class="mdi-action-grade"></i> {{group}}</a>	 -->
 				</li>
 				{{/with}}
 			{{/each}}
 		</ul>
 	</div>
-	<!-- <div id="ui">
-		<ul class="collection">
-			{{#each  UI}}
-				{{#with doc title}}
-				<li class="collection-item avatar">
-					<img src="http://lorempixel.com/80/80/" alt="" class="circle">
-					<a href="/docs/{{attributes.urlstring}}"><span class="title">{{attributes.title}}</span></a>
-					<p><span class="fwMedium">Summary:</span> {{excerpt}}<br>
-					<span class="fwMedium">Updated:</span> {{publishedDate}}
-					</p>
-				</li>
-				{{/with}}
-			{{/each}}
-		</ul>
-	</div> -->
 	<div id="advanced">
 		<ul class="collection">
 			{{#each Advanced}}
@@ -58,7 +39,6 @@
 					<p><span class="">Summary:</span> {{excerpt}}<br>
 					<span class="">Updated:</span> {{publishedDate}}
 					</p>
-					<!-- <a href="#!" class="secondary-content"><i class="mdi-action-grade"></i> {{group}}</a> -->
 				</li>
 				{{/with}}
 			{{/each}}
@@ -73,7 +53,6 @@
 					<p><span class="">Summary:</span> {{excerpt}}<br>
 					<span class="">Updated:</span> {{publishedDate}}
 					</p>
-					<!-- <a href="#!" class="secondary-content"><i class="mdi-action-grade"></i> {{group}}</a> -->
 				</li>
 				{{/with}}
 			{{/each}}
@@ -89,7 +68,6 @@
 				</p>
 				<a href="#!" class="secondary-content">Date: {{changedDate}}</a>
 			</li>
-
 			{{/each}}
 		</ul>
 	</div>

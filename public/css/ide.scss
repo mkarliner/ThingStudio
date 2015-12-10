@@ -76,7 +76,7 @@ $fwBlack: 'AvenirLTStd-Black';
 }
 
 strong {
-	font-family: $fwMedium;
+	font-family: $fwHeavy;
 }
 
 //Sidebar
@@ -1963,20 +1963,20 @@ span.title {
 .collection {
 	margin-top: 0;
 	a {
-		font-family: "AvenirLTStd-Heavy"
+		font-family: "AvenirLTStd-Medium"
 	}
 }
 
 .docheader h1 {
 	margin-top: 1em;
-	font-family: $fwHeavy;
+	font-family: $fwBlack;
 	font-size: 2.6em;
 	margin-bottom: 0.1em;
 }
 
 .docheader p {
 	font-size: 1.5em;
-	font-family: $fwMedium;
+	font-family: $fwLight;
 	margin: 0;
 }
 
@@ -2000,8 +2000,8 @@ span.title {
 
 .docpage p,
 .docpage ul {
-	font-size: 1.285714em;
-	font-family: $fwLight;
+	font-size: 1.14em;
+	font-family: $fwRoman;
 	line-height: 1.6em;
 }
 
