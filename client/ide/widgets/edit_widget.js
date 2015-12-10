@@ -1,3 +1,3 @@
-Template.EditWidgetHeader.onRendered(function() {
-	$('ul.tabs').tabs();
-});
+// Template.EditWidgetHeader.onRendered(function() {
+// 	$('ul.tabs').tabs();
+// });
