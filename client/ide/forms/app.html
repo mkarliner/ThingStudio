@@ -134,9 +134,6 @@
 <template name="materializeRadio">
 	<div class="af-radio-group" {{dsk}}>
 		{{#each this.items}}
-			{{log}}
-			<!-- <input type="radio" value="Shareable" class="with-gap" name="access" typetype="select-radio-inline-M" id="rKAcTHsSe9WdyLSPR" required="">
-			<input type="radio" value="Published" class="with-gap" name="access" typetype="select-radio-inline-M" id="bXopbqYMjKGiza6QZ"> -->
 			<input type="radio" value="{{this.value}}" class="{{atts.class}}" name="{{this.name}}" typetype="{{atts.typetype}}" id="{{_id}}" {{atts.required}}/>
 			<label for="{{this._id}}"> {{this.label}}</label>
 		{{/each}}

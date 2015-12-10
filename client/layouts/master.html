@@ -1,3 +1,16 @@
+<head>
+	<meta name="viewport" content="width=device-width" initial-scale="1">
+	<link rel="apple-touch-icon-precomposed" href="/images/apple-touch-icon-152x152-precomposed.png">
+	<link rel="icon" href="/images/favicon.png">
+	<!--[if IE]><link rel="shortcut icon" href="/images/favicon.ico"><![endif]-->
+	<meta name="msapplication-TileColor" content="#AED8E6">
+	<meta name="msapplication-TileImage" content="/images/tileicon.png">
+	<link href="//fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+
+<body>
+</body>
+
 <template name="MasterLayout">
 	<div class="row">
 		{{> AppSideNav}}
@@ -10,33 +23,3 @@
 	</div>
 	{{> fontLicense}}
 </template>
-
-<!-- <template name="GeneralLayout">
-
-  {{> autoformModals}}
-
-	{{> TopNav }}
-	<div class="container-fluid">
-		<div class="row clearfix">
-			<div class="col-md-12 column">
-				<div class="onlineUsers">
-				{{> onlineAdmins }}
-				{{#if isInRole 'admin'}}
-				    {{>onlineUsers}} /Home
-					{{#each appTitles}}
-						/{{this}}
-					{{/each}}
-				{{/if}}
-				</div>
-			</div>
-			<div class="col-md-12 column">
-				{{> yield}}
-			</div>
-		</div>
-	</div>
-  <footer>
-
-  </footer>
-
-
-</template> -->

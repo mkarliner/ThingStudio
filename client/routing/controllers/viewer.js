@@ -9,17 +9,15 @@ AppViewerController = PreloadController.extend({
 		if( this.params.appid ) {
 			Session.setPersistent( "currentAppId", this.params.appid );
 		}
-
 		//Do not call this.next() SetMQTTCredentials does that.
 		SetMQTTCredentials( this );
 		inIDE = false;
-		//this.next();
 	},
 	subscriptions: function() {
-		// console.log("WAITON")
 		var self = this;
 		var appId = Session.get( "currentAppId" );
-		if( appId ){
+
+		if( appId ) {
 			return [
 				Meteor.subscribe( 'apps', appId, {
 					onReady: function() {
@@ -48,20 +46,11 @@ AppViewerController = PreloadController.extend({
 						// console.log("Screens READY!");
 						InstantiateWidgets();
 					}
-				}),
-				Meteor.subscribe( 'themes', appId, {
-					onReady: function(){
-						// console.log("Themes READY!");
-					}
 				})
-				// Meteor.subscribe('themes', appId),
 			];
 		} else {
-			// screenId = Session.get("currentScreenId");
 			console.log( "You don't have an app ID. Weird." )
-			// return Meteor.subscribe("singleScreen", screenId);
 			return false;
 		}
-
 	}
 });
