@@ -27,6 +27,15 @@ Schemas.Connection = new SimpleSchema({
 			}
 		}
 	},
+    clientId: {
+        label: "Client ID",
+        type: String,
+        optional: true
+    },
+    // path: {
+    //     type: String,
+    //     optional: true
+    // },
 	protocol: {
 		type: String,
 		defaultValue: "Websocket",
@@ -162,7 +171,7 @@ Connections.before.remove(function(userId, doc) {
 });
 
 Connections.after.update(function(userId, doc) {
-	if(Meteor.isClient) {
+	if(Meteor.isClient && !inIDE) {
 		currConn = getCurrentConnection();
 		if(currConn._id == doc._id) {
 			setCurrentConnection(doc);

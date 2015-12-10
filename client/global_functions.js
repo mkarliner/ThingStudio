@@ -567,13 +567,23 @@ connect = function (conn, usr, pass) {
 	} else {
 		password = conn.password;
 	}
-	protocol = conn.protocol == "Websocket" ? "ws" : "wss";
-	ConnectionString = protocol + "://" + conn.host + ":" + conn.port;
-	// console.log("CONNECTING: ", ConnectionString, protocol, username, password);
+	var protocol = conn.protocol == "Websocket" ? "ws" : "wss";
+    // var path =  conn.path ? conn.path : ""
+	//ConnectionString = protocol + "://" + conn.host + ":" + conn.port + path;
+    ConnectionString = protocol + "://" + conn.host ;
+	console.log("CONNECTING: ", ConnectionString, protocol, username, password, conn.port);
 	Session.set("currentMQTTHost", conn._id);
+    clientId = conn.clientId ? conn.clientId : 'thingStudio_' + Math.random().toString(16).substr(2, 8);
 	try {
-		mqttClient = mqtt.connect(ConnectionString, { username: username, password: password, _id: conn._id});
-		// console.log("MQQC:", mqttClient)
+        mqttClient = mqtt.connect(ConnectionString,
+                    {
+                        username: username,
+                        password: password,
+                        port: conn.port,
+                        clientId: clientId,
+                        _id: conn._id
+                    });
+        //console.log("MQQC:", mqttClient)
 	}
 	catch(err) {
 		console.log(err)

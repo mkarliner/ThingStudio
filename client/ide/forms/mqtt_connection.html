@@ -20,6 +20,8 @@
         </div>
         {{> afQuickField name='username' placeholder="Username (optional)"}}
         {{> afQuickField name='password' placeholder="Password (optional)"}}
+        {{> afQuickField name='clientId' placeholder="ClientID (optional)"}}
+        <!-- {{> afQuickField name='path' placeholder="Path (optional)"}} -->
         <div class="form-group{{#if afFieldIsInvalid name='makeActiveAppConnection'}} has-error{{/if}} pos-rel">
           <div data-required="true" class="div-inline">
             {{> afFieldInput name='makeActiveAppConnection' template="materialiseCheckbox"}}
@@ -56,6 +58,8 @@
         </div>
         {{> afQuickField name='username' placeholder="Username (optional)"}}
         {{> afQuickField name='password' placeholder="Password (optional)"}}
+        {{> afQuickField name='clientId' placeholder="ClientID (optional)"}}
+        <!-- {{> afQuickField name='path' placeholder="Path (optional)"}} -->
       </div>
     </div>
     <button type="submit" class="btn btn-update right">Update Connection</button>
