@@ -314,23 +314,23 @@ Meteor.startup(function() {
 	// 	// 	}]
 	// 	// });
 	// });
-	Meteor.publish("themes", function(appId) {
-		app = Apps.findOne({_id: appId});
-		apps = getAppTree(appId);
-		if(!apps) {
-			console.log("No such app them ", appId)
-			this.ready(); //If there is not such app.
-			return;
-		}
-		// console.log("Subscribing themes: ", appId,  app.access)
-		if(this.userId == app.owner || app.shareable || isAdmin(this.userId)) {
-			// console.log("Returning themes: ", Themes.find({appId: appId}).fetch().length )
-			return Themes.find({appId: {$in: apps}});
-		} else {
-			this.ready();
-			return;
-		}
-	});
+	// Meteor.publish("themes", function(appId) {
+	// 	app = Apps.findOne({_id: appId});
+	// 	apps = getAppTree(appId);
+	// 	if(!apps) {
+	// 		console.log("No such app them ", appId)
+	// 		this.ready(); //If there is not such app.
+	// 		return;
+	// 	}
+	// 	// console.log("Subscribing themes: ", appId,  app.access)
+	// 	if(this.userId == app.owner || app.shareable || isAdmin(this.userId)) {
+	// 		// console.log("Returning themes: ", Themes.find({appId: appId}).fetch().length )
+	// 		return Themes.find({appId: {$in: apps}});
+	// 	} else {
+	// 		this.ready();
+	// 		return;
+	// 	}
+	// });
 	// Meteor.publish("themes", function() {
 	// 	return Themes.find({
 	// 		$or: [{
@@ -340,19 +340,19 @@ Meteor.startup(function() {
 	// 		}]
 	// 	});
 	// });
-	Meteor.publish("help_pages", function() {
-		return HelpPages.find({});
-	});
-	Meteor.publish("userData", function() {
-		user = Meteor.users.find({
-			_id: this.userId
-		});
-		if (user.roles && user.roles['admin']) {
-			return Meteor.users.find({});
-		} else {
-			this.ready();
-		}
-	});
+	// Meteor.publish("help_pages", function() {
+	// 	return HelpPages.find({});
+	// });
+	// Meteor.publish("userData", function() {
+	// 	user = Meteor.users.find({
+	// 		_id: this.userId
+	// 	});
+	// 	if (user.roles && user.roles['admin']) {
+	// 		return Meteor.users.find({});
+	// 	} else {
+	// 		this.ready();
+	// 	}
+	// });
 
 	Meteor.publish("userStatus", function() {
 		user = Meteor.users.findOne({
@@ -418,15 +418,15 @@ Meteor.startup(function() {
 		}
 	});
 
-	Meteor.publish("chats", function() {
-		console.log("CHAT : ", this.userId);
-		if(this.userId) {
-			return Chats.find({});
-		} else {
-			console.log("CHATS")
-			this.ready();
-		}
-	});
+	// Meteor.publish("chats", function() {
+	// 	console.log("CHAT : ", this.userId);
+	// 	if(this.userId) {
+	// 		return Chats.find({});
+	// 	} else {
+	// 		console.log("CHATS")
+	// 		this.ready();
+	// 	}
+	// });
 
 	Meteor.publish("adminStatus", function() {
 		return Meteor.users.find({

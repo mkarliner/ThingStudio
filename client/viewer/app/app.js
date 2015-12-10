@@ -11,7 +11,8 @@ Template.ViewApp.helpers({
 		return {appid: this.appId, _id: this._id}
 	},
 	templateRoute: function () {
-		return this.appId + '/screen/' + this._id
+		currentAppId = Session.get("currentAppId")
+		return currentAppId + '/screen/' + this._id
 	},
 	firstLetter: function () {
 		return this.title.charAt(0).toLowerCase();

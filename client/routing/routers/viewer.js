@@ -57,7 +57,8 @@ Router.route("/app/:appid/screen/:_id", {
 		// Have we come straight to this URL?
 		if(!app) {
 			//Yes, we need to set up the current app.
-			console.log("MISTAKE: Should have app.")
+			// Cordova: Capable of starting with no app. We need to address this route.
+			console.log("You are probably in Cordova: Pick an app.")
 		}
 
 		InstantiateWidgets();
