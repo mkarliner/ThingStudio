@@ -72,12 +72,6 @@ Template.ConnectionsBody.helpers({
 		}
 		return result.join(", ");
 	},
-	// log: function () {
-	// 	console.log("in each, this is: ", this)
-	// },
-	// Connection_status: function(){
-	// 	return Session.get("ConnectionStatus") ? "connected" : "disconnected";
-	// }
 	foreignConnections: function(){
 		fc = Session.get("foreignConnections");
 		return fc;

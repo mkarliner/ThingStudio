@@ -36,7 +36,7 @@
 
 // Router.route("/olddocs/:urlstring", {
 // 	name: "OldDocs",
-// 	controller: "OldDocsController",
+// 	controller: "IDEController",
 // 	data: function() {
 // 		return HelpPages.findOne({ urlstring: this.params.urlstring });
 // 	},
@@ -53,7 +53,7 @@
 
 // Router.route("/docsold", {
 // 	name: "OldDocumentation",
-// 	controller: "OldDocsController",
+// 	controller: "IDEController",
 // 	data: function() {
 // 		return HelpPages.find({}, {
 // 			sort: {
@@ -178,4 +178,34 @@
 // 			renderYields(this, 'Themes');
 // 		}
 // 	}
+// });
+
+// Router.route("/dashboard", {
+// 	name: "Dashboard",
+// 	controller: "IDEController",
+// 	action: function() {
+// 		if ( !this.ready() ) {
+// 			// console.log("WAITING: ", this)
+// 			this.render("Loading", {
+// 				data: "Dashboard"
+// 			});
+// 		} else {
+// 			u = Meteor.user();
+// 			if (u) {
+// 				//Disable welcome page for the moment.
+// 				if (u.profile && u.profile.showWelcome) {
+// 					this.redirect("/welcome");
+// 				} else {
+// 					if ( !this.ready() ) {
+// 						this.render("Loading", {
+// 							data: "Dashboard"
+// 						});
+// 					} else {
+// 						renderYields(this, 'Dashboard');
+// 					}
+// 				}
+// 			}
+// 		}
+// 	}
+//
 // });

@@ -1,3 +1,3 @@
-Template.SupportBody.onRendered(function() {
-	$('ul.tabs').tabs();
-});
+// Template.SupportBody.onRendered(function() {
+// 	$('ul.tabs').tabs();
+// });

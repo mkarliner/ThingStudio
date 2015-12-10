@@ -7,7 +7,7 @@ $white: #fff;
 $baseText: #858C9D;
 $fontSize: 12px;
 $fontFace: AvenirLTStd-Roman, Helvetica, sans-serif;
-$appBodyBG: #E9F1F4;
+$appBodyBG: #E9EFF4;
 // $appBodyBG: rgba(218,226,230,1);
 $green: #76D4E1;
 $whiteOverGreen: #F7FAFF;
@@ -76,7 +76,7 @@ $fwBlack: 'AvenirLTStd-Black';
 }
 
 strong {
-	font-family: $fwMedium;
+	font-family: $fwHeavy;
 }
 
 //Sidebar
@@ -95,7 +95,7 @@ $picBorder: #9196A1 solid 2px;
 $navBorder: #DCDCDC 1.5px solid;
 
 // App Header
-$headerColor: #676975;
+$headerColor: #696B77;
 $headerActionButton2Color: #DCDCDC;
 
 //App Body
@@ -789,7 +789,7 @@ header {
 
 h1 {
 	font-size: 1.9166666667 * $fontSize;
-	font-family: $fwBook;
+	font-family: $fwMedium;
 	color: $headerColor;
 	margin: 0 0 10px;
 }
@@ -891,9 +891,9 @@ th {
 	font-size: 13px;
 	letter-spacing: 0.3px;
 	background: $white;
-	text-transform: uppercase;
 	padding: 15px 0;
 	border-radius: 0;
+	// color: lighten($baseText, 10% )
 }
 
 table.hoverable {
@@ -1285,9 +1285,11 @@ p.shareable-tip {
 
 .tabs .tab {
 	letter-spacing: 0.6px;
+	text-transform: none;
+	font-family: $fwHeavy;
 	& a {
 		color: $baseText;
-		font-family: $fwBlack;
+
 		font-size: $fontSize * 1.08333;
 	}
 	& a:hover {
@@ -1352,6 +1354,52 @@ form[id^="update"] .select-wrapper span.caret {
 
 .autoform-array-item [type="checkbox"] + label {
 	height: 15px;
+}
+
+.template-filters {
+	margin-top: -6px;
+}
+
+.template-filters li {
+	padding: 0 20px;
+	height: 37px;
+	line-height: 37px;
+	border-style: solid;
+	border-left-color: white;
+	border-left-width: 1px;
+	border-right-color: white;
+	border-right-width: 1px;
+	border-top-color: white;
+	border-top-width: 1px;
+	border-bottom-color: white;
+	border-bottom-width: 1px;
+	-webkit-transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+	transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+	color: $green;
+	font-size: 13px;
+}
+
+.template-filters li:last-of-type {
+	border-right-color: transparent;
+}
+
+.template-filters .current {
+	border-left-color: $green;
+	border-right-color: $green;
+	border-top-color: $green;
+	border-bottom-color: $green;
+	color: $baseText;
+	// -webkit-clip-path: polygon(0 0, 100% 20%, 100% 100%, 0% 80%);
+	// background-color: #76D4E1;
+	// color: white;
+}
+
+.template-filters li.current:first-of-type {
+	border-left: 1px solid $green;
+}
+
+.template-filters li.current:last-of-type {
+	border-right: 1px solid $green;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -1914,18 +1962,21 @@ span.title {
 
 .collection {
 	margin-top: 0;
+	a {
+		font-family: "AvenirLTStd-Medium"
+	}
 }
 
 .docheader h1 {
 	margin-top: 1em;
-	font-family: $fwHeavy;
+	font-family: $fwBlack;
 	font-size: 2.6em;
 	margin-bottom: 0.1em;
 }
 
 .docheader p {
 	font-size: 1.5em;
-	font-family: $fwMedium;
+	font-family: $fwLight;
 	margin: 0;
 }
 
@@ -1949,8 +2000,8 @@ span.title {
 
 .docpage p,
 .docpage ul {
-	font-size: 1.285714em;
-	font-family: $fwLight;
+	font-size: 1.14em;
+	font-family: $fwRoman;
 	line-height: 1.6em;
 }
 
@@ -2060,52 +2111,6 @@ h1.welcome-header {
 
 .form-group.change-pass {
 	padding-top: 1.2em;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////
-// Credentials //
-///////////////////////////////////////////////////////////////////////////////////////
-
-.credentials-body header {
-	background-color: $appBodyBG;
-}
-
-.credentials-form {
-	max-width: 450px;
-	margin: 0 auto;
-	& h2{
-		font-family: $fwMedium;
-		color: $headerColor;
-		text-align: center;
-		font-size: 2em;
-	}
-	fieldset {
-		margin: 0;
-		padding: 0 4px 0 0;
-		border: none;
-	}
-	& input[type="text"], input[type="password"] {
-		height: 60px;
-		border: 2px solid #D2D5D9;
-		color: #9e9e9e;
-		text-indent: 14px;
-		margin-bottom: 1em;
-		font-size: 1rem;
-	}
-	.btn-login {
-		font-family: "AvenirLTStd-Book";
-		height: 60px;
-		background-color: #76D4E1;
-		margin-top: 0.8em;
-		text-transform: none;
-		font-size: 1.7em;
-		line-height: 3.1em;
-		-webkit-box-shadow: none;
-		box-shadow: none;
-		border-radius: 2px;
-		display: block;
-		width: 100%;
-	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////

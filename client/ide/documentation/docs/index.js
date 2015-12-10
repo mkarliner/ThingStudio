@@ -39,6 +39,9 @@ DocsIndex = {
 			},
 			{
 				title: "Feed Processing"
+			},
+			{
+				title: "Custom Navigation"
 			}
 		],
 	Reference: [

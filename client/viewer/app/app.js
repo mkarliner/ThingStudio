@@ -10,6 +10,10 @@ Template.ViewApp.helpers({
 		// console.log("SP", this);
 		return {appid: this.appId, _id: this._id}
 	},
+	templateRoute: function () {
+		currentAppId = Session.get("currentAppId")
+		return currentAppId + '/screen/' + this._id
+	},
 	firstLetter: function () {
 		return this.title.charAt(0).toLowerCase();
 	}

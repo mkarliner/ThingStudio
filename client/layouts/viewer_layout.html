@@ -15,12 +15,6 @@
 					html body.viewer-body div.app-wrapper div.app-header-wrapper header ul.viewer-header li, html body.credentials-body div.app-wrapper div.app-header-wrapper header ul.viewer-header li { display: list-item !important; height: auto !important; opacity: 1 !important;	width: auto !important;	z-index: 1 !important; color: white !important; }
 					html body.viewer-body div.app-wrapper div.app-header-wrapper header ul.viewer-header li a.made-width, html body.credentials-body div.app-wrapper div.app-header-wrapper header ul.viewer-header li a.made-width { display: inline-block !important; color: white !important; font-size: 5vw !important; opacity: 1 !important; width: auto !important; background-color: transparent !important; z-index: 1 !important;}
 				</style>
-				{{#if runtimeErrors}}
-					<div class="screen-errors">
-						<p>Runtime Errors</p>
-						{{runtimeErrors}}
-					</div>
-				{{/if}}
 			</div>
 			<div class="debug-wrapper {{debugState}}">
 				<div class="debug-body">
@@ -40,7 +34,7 @@
 			<ul class="viewer-header">
 				<li></li>
 				<li><a class="made-with" href="http://www.thingstud.io/" target="_blank">Made with ThingStudio</a></li>
-				<li><span>{{#if showMQTTStatus}}<a class="right viewer-connection-stat" href=""><i class="icon-ts-connection {{isConnected}}"></i></a>{{/if}}</span></li>
+				<li><span>{{#if appHasMQTTConnection}}<a class="right viewer-connection-stat {{isConnected}}" href=""><i class="icon-ts-connection {{isConnected}}"></i></a>{{/if}}</span></li>
 			</ul>
 		</header>
 	</div>
@@ -51,7 +45,7 @@
 		<footer>
 			<ul>
 				<!-- <li><a class="btn-footer-menu route" href="">Apps</a></li> -->
-				<li><a class="btn-footer-menu route" href="{{pathFor 'ViewApp' data=appPathInfo}}">Templates</a></li>
+				<li><a class="btn-footer-menu route" href="{{pathFor 'ViewApp' data=appPathInfo}}">Menu</a></li>
 				{{#if debugOpen}}
 					<li><a class="btn-footer-menu debug" href="">Back</a></li>
 				{{else}}

@@ -4,7 +4,7 @@ Template.LatestScreenUpdates.helpers({
 		date.setDate(date.getDate() - 1); //Yesterday
 		return Screens.find({updatedAt: {$gte: date }});
 	}
-	
+
 });
 
 Template.SysadminHeader.helpers({
@@ -28,10 +28,10 @@ Template.SysLogs.events({
 Template.SysadminBody.helpers({
 	syslogs: function(){
 		tmpl = Template.instance();
-		types = ["ScreenUpdate", "New User", "UserAction", "AppRemove"];
+		types = ["ScreenUpdate", "New User", "PageView", "AppRemove"];
 		if(Session.get("showTemplateViews")) {
 			types.push("TemplateView");
-		}		
+		}
 		return SysLogs.find({event: {$in: types}}, {sort: {date: -1}}).fetch();
 	},
 });
@@ -51,7 +51,7 @@ Template.SysLogs.helpers({
     foo: function(){
         console.log("FOO", this)
     }
-	
+
 });
 
 Template.SysLogs.events({
@@ -59,7 +59,7 @@ Template.SysLogs.events({
 		console.log("APPCL ", ev, this)
 		ev.preventDefault();
 		Meteor.subscribe("apps", this.appId);
-		Session.set("guestAppId", this.appId)	
+		Session.set("guestAppId", this.appId)
 		changeActiveApp(this.appId);
 	}
 })

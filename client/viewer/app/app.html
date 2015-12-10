@@ -6,7 +6,8 @@
 					{{#if templatelist.count}}
 						{{#each templatelist}}
 							<li>
-								<a href="{{pathFor 'ViewScreen' data=templateparams }}">
+								<!-- <a href="{{pathFor 'ViewScreen' data=templateparams }}"> -->
+								<a href="{{templateRoute}}">
 									<span class="letter-circle letter-{{firstLetter}}">{{firstLetter}}</span>
 									<div class="screen-desc">
 										<h2>{{this.title}}</h2>

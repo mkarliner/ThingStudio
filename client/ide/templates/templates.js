@@ -1,72 +1,46 @@
-Template.ScreensBody.created = function(){
-	//InstantiateWidgets();
-}
+Template.ScreensBody.onCreated(function () {
+		Session.set("templateListFilter", undefined)
+	}
+)
+
+Template.ScreensHeader.events({
+	'click li': function (e, tmpl) {
+		var $target = $(e.target)
+		var dataAt = $target.data('template-filter')
+		var li = tmpl.find("ul li.current")
+
+		$(li).removeClass("current")
+		$target.addClass("current")
+
+		Session.set("templateListFilter", dataAt)
+	}
+})
 
 Template.ScreensBody.helpers({
-	widgetlist: function(){
-		wl =  Screens.find({  isWidget: true}, {sort: {title: 1}})
-		return wl;
-	},
 	templatelist: function(){
-		return Screens.find({$or:[{owner: Meteor.userId()}, {isWidget: false} ] }, {sort: {lowercaseTitle: 1}});
-	},
-	// owner: function() {
-	// 	return
-	// },
-	// publicscreens: function() {
-	// 	return Screens.find({public: true})
-	// },
-	// allscreens: function() {
-	// 	return Screens.find({})
-	// },
-	// status: function(){
-	// 	if(this.owner == Meteor.userId()) {
-	// 		return "Owner";
-	// 	} else {
-	// 		u = Meteor.users.findOne(this.owner);
-	// 		return u ? u.username : "Unknown";
-	// 	}
-	// },
-	// fromApp: function(){
-	// 	app = Apps.findOne(this.appId);
-	// 	return app.title;
-	// },
-	// home_page: function(){
-	// 	app = Session.get("currentApp");
-	// 	return  this._id == app.home_page ? "yes" : "no";
-	// },
-	isWidget: function(){
-		return this.isWidget ? "icon-ts-checkmark" : "";
-	},
-	widget: function(){
-		return( "aa" +this.isWidget)
-	}
-});
+		tlf = Session.get( "templateListFilter" )
+		appId = Session.get( "currentAppId" )
+		var templatesToReturn = null
 
-InstantiateWidgets = function(){
-	//Instantiate all screens which are widgets
-	wdgts = Widgets.find().fetch();
-	// console.log("Instantiating Widgets", wdgts);
-	for(var s=0; s<wdgts.length; s++){
-		wgt = wdgts[s];
-		scr = Screens.findOne({_id: wgt.baseScreen});
-		if(!scr) {
-			break;
+		if ( tlf == "all" ) {
+			templatesToReturn = { appId: { $ne: Meteor.settings.public.systemApp } }
+		} else if ( tlf == "templates" || tlf == undefined ) {
+			templatesToReturn = { isWidget: false, appId: appId }
+		} else if ( tlf == "widgets" ) {
+			templatesToReturn = { isWidget: true, appId: appId }
+		} else if ( tlf == "inherited" ) {
+			templatesToReturn = { appId: { $nin: [ appId, Meteor.settings.public.systemApp ] } }
 		}
-		if(Template[scr.title]) {
-			// console.log("Deleting: ", scr.title);
-			delete Template[scr.title]; //Remove the existing template.
-		}
-		// console.log("Compiling ", scr.title);
-		compileTemplate(scr.title, scr.html, scr.js);
-		if(wgt.widgetType == "Web Component") {
-			try {
-				// console.log("Registering widget")
-				Template[scr.title].registerElement(wgt.tagName);
-			}
-			catch(err) {
-				console.log("Problem registering element: "+ wgt.tagName);
-			}
-		}
-	}
-}
+		return Screens.find( templatesToReturn , { sort: { lowercaseTitle: 1 } } )
+	},
+	isWidget: function(){
+		return this.isWidget ? "icon-ts-checkmark" : ""
+	},
+	// widgetlist: function(){
+	// 	wl =  Screens.find({  isWidget: true}, {sort: {title: 1}})
+	// 	return wl;
+	// },
+	// widget: function(){
+	// 	return( "aa" +this.isWidget)
+	// }
+});

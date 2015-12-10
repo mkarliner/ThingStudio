@@ -8,36 +8,6 @@ var renderYields = function(that, t,  data) {
 	that.render(t + "Body", {data: data});
 }
 
-// Router.route("/dashboard", {
-// 	name: "Dashboard",
-// 	controller: "IDEController",
-// 	action: function() {
-// 		if ( !this.ready() ) {
-// 			// console.log("WAITING: ", this)
-// 			this.render("Loading", {
-// 				data: "Dashboard"
-// 			});
-// 		} else {
-// 			u = Meteor.user();
-// 			if (u) {
-// 				//Disable welcome page for the moment.
-// 				if (u.profile && u.profile.showWelcome) {
-// 					this.redirect("/welcome");
-// 				} else {
-// 					if ( !this.ready() ) {
-// 						this.render("Loading", {
-// 							data: "Dashboard"
-// 						});
-// 					} else {
-// 						renderYields(this, 'Dashboard');
-// 					}
-// 				}
-// 			}
-// 		}
-// 	}
-//
-// });
-
 Router.route("/welcome", {
 	name: "Welcome",
 	controller: "IDEController",
@@ -256,7 +226,6 @@ Router.route("/feeds", {
 				mqttFeeds: Feeds.find(),
 				httpFeeds: HTTPFeeds.find()
 			}
-			// return Feeds.find();
 	},
 	action: function(){
 		if ( !this.ready() ) {
@@ -281,9 +250,6 @@ Router.route("/templates/:_id/edit", {
 	name: "Edit Template",
 	controller: "IDEController",
 	data: function() {
-		// if(isAdmin()) {
-		// 	this.wait(Meteor.subscribe("singleScreen", this.params._id));
-		// }
 		if(!this.ready()){
 			return {};
 		}
@@ -342,7 +308,6 @@ Router.route("/widgets/:_id/edit", {
 		if(!this.ready()){
 			return {};
 		}
-		// Session.set("currentScreenPage", this.params._id);
 		scr = Widgets.findOne({ _id: this.params._id });
 		return scr;
 	},
@@ -443,7 +408,7 @@ Router.route("/tutorials", {
 
 Router.route("/docs/:urlstring", {
 	name: "View Doc",
-	controller: "DocsController",
+	controller: "IDEController",
 	data: function() {
 		return Docs.findOne({ "attributes.urlstring": this.params.urlstring });
 	},
@@ -460,7 +425,7 @@ Router.route("/docs/:urlstring", {
 
 Router.route("/docs", {
 	name: "Documentation",
-	controller: "DocsController",
+	controller: "IDEController",
 	data: function() {
 		return DocsIndex;
 	},

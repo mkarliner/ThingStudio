@@ -59,7 +59,7 @@ SetMQTTCredentials = function (that) {
 			});
 			return;
 		}
-		console.log("GROUND  READY")
+		console.log("GROUND READY")
 		cred = Credentials.findOne({
 			connection: connection._id
 		});
