@@ -3,15 +3,12 @@ Template.ViewerLayout.events({
 });
 
 Template.AppHeader.helpers({
-	showMQTTStatus: function() {
+	appHasMQTTConnection: function() {
 		app = getCurrentApp()
-		console.log("running showMQTTStatus")
 		if( !app ) { return false; }
 		if( app.connection == "none" || !app.connection ) {
-			console.log("returning false")
 			return false
 		} else {
-			console.log("returning true")
 			return true
 		}
 	},
