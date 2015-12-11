@@ -1978,6 +1978,7 @@ span.title {
 	font-size: 1.5em;
 	font-family: $fwLight;
 	margin: 0;
+	padding-bottom: 2em;
 }
 
 .single-page-container.docpage {
@@ -1990,6 +1991,9 @@ span.title {
 	font-family: $fwHeavy;
 	letter-spacing: 0.1px;
 	margin-bottom: 0.1em;
+	&:first-of-type {
+		margin-top: 0;
+	}
 }
 
 .docpage h3 {
