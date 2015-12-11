@@ -10,6 +10,17 @@ Template.registerHelper(
 );
 
 Template.registerHelper(
+	"userGravatar", function() {
+		if( isAdmin ) {
+			return Gravatar.imageUrl( Meteor.users.findOne({_id: this.user._id}).emails[0].address, {
+				size: 84,
+				default: "http://www.thingstud.io/images/ts-profile-new.png"
+			});
+		}
+	}
+);
+
+Template.registerHelper(
 	"currentUsername", function() {
 		if( Meteor.user() ) {
 			return Meteor.user().username
