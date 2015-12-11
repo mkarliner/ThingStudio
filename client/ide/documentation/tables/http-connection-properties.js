@@ -1,38 +1,38 @@
 Tables.HTTPConnectionProperties = [
 	{
-		name: "Title",
-		type: "String",
-		"required?": "requred",
-		description: "Title for the connection."
+		Name: "Title",
+		Type: "String",
+		"Required?": "requred",
+		Description: "Title for the connection."
 	},
 	{
-		name: "Hostname",
-		type: "String",
-		"required?": "requred",
-		description: "The hostname or IP address for your web service."
+		Name: "Hostname",
+		Type: "String",
+		"Required?": "requred",
+		Description: "The hostname or IP address for your web service."
 	},
 	{
-		name: "Port",
-		type: "Number",
-		"required?": "requred",
-		description: "The port your web service is listening on for HTTP connections. Default port 80."
+		Name: "Port",
+		Type: "Number",
+		"Required?": "requred",
+		Description: "The port your web service is listening on for HTTP connections. Default port 80."
 	},
 	{
-		name: "Protocol",
-		type: "Select",
-		"required?": "requred",
-		description: "This can be either HTTP or HTTPS."
+		Name: "Protocol",
+		Type: "Select",
+		"Required?": "requred",
+		Description: "This can be either HTTP or HTTPS."
 	},
 	{
-		name: "Username",
-		type: "String",
-		"required?": "optional",
-		description: "Username for HTTP basic auth or feed processing."
+		Name: "Username",
+		Type: "String",
+		"Required?": "optional",
+		Description: "Username for HTTP basic auth or feed processing."
 	},
 	{
-		name: "Password",
-		type: "String",
-		"required?": "optional",
-		description: "Password for HTTP basic auth or feed processing."
+		Name: "Password",
+		Type: "String",
+		"Required?": "optional",
+		Description: "Password for HTTP basic auth or feed processing."
 	},
 ]
