@@ -183,7 +183,7 @@ Feeds.after.update(function(userId, doc) {
 			topic = topic.substring(0, topic.length - 1);
 			 mqttClientSubscribe(topic);
 		}
-    sAlert.success( 'MQTT Feed updated.', { onRouteClose, false } );
+    sAlert.success( 'MQTT Feed updated.', { onRouteClose: false } );
     Router.go( "Feeds" )
 	}
 });

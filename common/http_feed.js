@@ -217,7 +217,7 @@ HTTPFeeds.after.update(function(userId, doc) {
 		// 	topic = topic.substring(0, topic.length - 1);
 		// 	 mqttClientSubscribe(topic);
 		// }
-    sAlert.success( 'HTTP Feed updated.', { onRouteClose, false } );
+    sAlert.success( 'HTTP Feed updated.', { onRouteClose: false } );
     Router.go( "Feeds" )
 	}
 });
