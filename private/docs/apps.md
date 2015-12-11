@@ -11,7 +11,7 @@ be a project, or maybe a folder.
 
 ## Inheritance
 
-Apps can inherit resources (connections, feeds, templates, etc.) from another app. __All__ apps invisibly inherit resources from the __System App__. The System App defines the connection to the open ThingStudio MQTT broker, and it also contains all of the system-defined widgets.
+Apps can inherit resources (connections, feeds, templates, etc.) from another app. __All__ apps invisibly inherit resources from the __System App__. The System App defines the connection to the free ThingStudio MQTT broker, and it also contains all of the system-defined widgets.
 
 This inheritance gives you a variety of convenient ways to organize your work. For example, you might want to create one app on which to base all of your other apps. The "base" app could contain only the details of the connection to your home MQTT broker or an HTTP server, along with any custom widgets that you might have created, saving you the trouble of creating and maintaining these in each subsequent app.
 

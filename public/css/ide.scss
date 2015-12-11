@@ -1986,16 +1986,18 @@ span.title {
 
 .docpage h2 {
 	color: $headerColor;
-	font-size: 1.6em;
+	font-size: 1.7em;
 	font-family: $fwHeavy;
 	letter-spacing: 0.1px;
+	margin-bottom: 0.1em;
 }
 
 .docpage h3 {
 	color: $headerColor;
-	font-size: 1.3em;
+	font-size: 1.2em;
 	font-family: $fwHeavy;
 	letter-spacing: 0.1px;
+	margin-bottom: 0.2em;
 }
 
 .docpage p,
@@ -2003,6 +2005,7 @@ span.title {
 	font-size: 1.14em;
 	font-family: $fwRoman;
 	line-height: 1.6em;
+	margin-top: 0;
 }
 
 .docpage ul {
@@ -2029,6 +2032,10 @@ span.title {
 	background-color: transparent;
 	padding: 0;
 	border: none;
+}
+
+.docpage table {
+	margin-top: 1em;
 }
 
 .docpage thead {

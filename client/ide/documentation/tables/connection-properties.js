@@ -1,37 +1,44 @@
 Tables.ConnectionProperties = [
 	{
 		name: "Title",
-		'type:': "String",
-		description: "Title for the connection to be shown in lists"
+		type: "String",
+		"required?": "required",
+		description: "Title for the connection."
 	},
 	{
 		name: "Hostname",
-		'type:': "String",
-		description: "The hostname or IP address for your MQTT broker"
+		type: "String",
+		"required?": "required",
+		description: "The hostname or IP address for your MQTT broker."
 	},
 	{
 		name: "Port",
-		'type:': "Number",
-		description: "The port your MQTT broker is listening on for websocket connections. This is NOT 1883. Your MQTT broker must support websocket connections"
+		type: "Number",
+		"required?": "required",
+		description: "The port your MQTT broker is listening on for WEBSOCKET connections. This is NOT 1883. Your MQTT broker MUST support websocket connections."
 	},
 	{
 		name: "Protocol",
-		'type:': "Select",
+		type: "Select",
+		"required?": "required",
 		description: "This can be either regular websockets or secure websockets using TLS."
 	},
 	{
 		name: "Use Server Credentials",
-		'type:': "String",
-		description: "If checked, the username and password below will not be used, but users will be prompted for a username and password. Check this box if you are using an open broker"
+		type: "String",
+		"required?": "optional",
+		description: "If checked, the username and password below will be used to authenticate with the MQTT broker, AND stored on the ThingStudio servers. This is obviously INSECURE and NOT RECOMMENDED for production. If unchecked, users will be prompted for a username and password each time they bring up the app viewer. You probably want to check this box if you are using an open broker to avoid the credentials form."
 	},
 	{
 		name: "Username",
-		'type:': "String",
-		description: "Username for access to your broker, if needed"
+		type: "String",
+		"required?": "optional",
+		description: "Username to access your broker, if needed."
 	},
 	{
 		name: "Password",
-		'type:': "String",
-		description: "Password for access to your broker, if needed"
+		type: "String",
+		"required?": "optional",
+		description: "Password to access your broker, if needed."
 	},
 ]

@@ -16,6 +16,11 @@ Tables.HelpersTable = [
 		description: "Return the last 'n' messages of a journalled feed. The feed's feed limit property specifies 'n'"
 	},
 	{
+		name: "minmax",
+		params: "feedname",
+		description: "Generates minimum, maximum and running average values over the last 'n' messages, where 'n' is specified under 'Do Calculations' on the feed. NOTE: Currently MQTT feeds only."
+	},
+	{
 		name: "indexedArray",
 		params: "Array",
 		description: "Returns an array of objects with key and value properties. This is useful for interating over arrays of values in display widgets"
