@@ -16,7 +16,7 @@ Template.ViewUserHeader.helpers({
     },
     since: function () {
       since = Meteor.users.findOne({_id: this.user._id}).createdAt
-      return moment(since).format('MMMM D, YYYY, hh:mm:ss a' )
+      return moment(since).format('MMMM D, YYYY, hh:mm a' )
     }
 })
 
