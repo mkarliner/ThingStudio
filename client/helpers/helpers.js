@@ -102,6 +102,14 @@ Template.registerHelper("indexedArray",
 	}
 )
 
+Template.registerHelper("accessStatus",
+	function () {
+		if(this.owner != Meteor.userId()) {
+			sAlert.info('FYI: This app is read-only. It is for demonstration purposes. Once you feel comfortable, go to Apps and make one of your own!');
+		}
+	}
+)
+
 // Template.registerHelper("menuOps",
 // 	menuOps = function() {
 // 		if ( $('main div.add-new-item').hasClass('open') ) {

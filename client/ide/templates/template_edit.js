@@ -26,11 +26,11 @@ Template.EditScreenBody.helpers({
 	runtimeErrors: function(){
 		return Session.get("runtimeErrors");
 	},
-	accessStatus: function(){
-		if(this.owner != Meteor.userId()) {
-			sAlert.info('FYI: This app is read-only. It is for demonstration purposes. Once you feel comfortable, go to Apps and make one of your own!');
-		}
-	},
+	// accessStatus: function(){
+	// 	if(this.owner != Meteor.userId()) {
+	// 		sAlert.info('FYI: This app is read-only. It is for demonstration purposes. Once you feel comfortable, go to Apps and make one of your own!');
+	// 	}
+	// },
 	safeEdit: function(){
 		return this.safeEdit;
 	}
