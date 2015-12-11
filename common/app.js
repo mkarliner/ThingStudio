@@ -270,6 +270,7 @@ Apps.before.remove(function(userId, doc) {
 Apps.after.remove( function(userId, doc) {
 	if( Meteor.isClient ) {
     sAlert.success( "App deleted." );
+		Session.set( "currentAppId", Meteor.settings.public.basicExampleApp )
 	}
 });
 
