@@ -104,29 +104,41 @@ Schemas.HTTPConnection = new SimpleSchema({
 
 
 HTTPConnections.before.insert(function(userId, doc) {
-	if (Meteor.isClient) {		
+	if (Meteor.isClient) {
 		doc.appId = Session.get("currentApp")._id;
-		console.log("BEFOREHOOK ", userId, doc, Session.get("currentApp"));
+		// console.log("BEFOREHOOK ", userId, doc, Session.get("currentApp"));
 		return true;
 	} else {
 		app = Apps.findOne(doc.appId);
 		if(app.owner != doc.owner) {
 			console.log("Attempt to create http_connection in someone else's app.")
 			return false;
-		} 
+		}
 		//console.log("BEFOREHOOK Server", userId, doc);
 	}
 });
 
+HTTPConnections.after.insert(function (userId, doc) {
+	if ( Meteor.isClient ) {
+    sAlert.success( 'HTTP Connection created.', { onRouteClose: false } )
+    Router.go( "Connections" )
+  }
+})
+
 HTTPConnections.after.update(function(userId, doc) {
-	console.log("DIOC ", doc)
+	// console.log("DIOC ", doc)
 	if(Meteor.isClient) {
-		// currConn = getCurrentHTTPConnection();
-		// if(currConn._id == doc._id) {
-		// 	setCurrentHTTPConnection(doc);
-		// }
+		sAlert.success( 'HTTP Connection updated.', { onRouteClose: false } )
+    Router.go( "Connections" )
 	}
 });
+
+HTTPConnections.after.remove(function (userId, docs) {
+  if ( Meteor.isClient ) {
+    sAlert.success( 'HTTP Connection deleted.' )
+  }
+})
+
 
 HTTPConnections.attachSchema(Schemas.HTTPConnection);
 

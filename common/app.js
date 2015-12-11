@@ -221,6 +221,30 @@ Schemas.App = new SimpleSchema({
 
 });
 
+Apps.after.insert(function(userId, doc) {
+	if(Meteor.isClient) {
+		changeActiveApp(doc._id);
+		sAlert.success( "App created.", { onRouteClose: false } );
+		Router.go('Edit App', {_id: doc._id});
+	}
+});
+
+Apps.after.update(function(userId, doc) {
+	if(Meteor.isClient) {
+		currConn = getCurrentConnection();
+		if(currConn && currConn._id != doc.connection) {
+			newConn = Connections.findOne({_id: doc.connection});
+			UnsubscribeAll();
+			DisconnectMQTT();
+			setCurrentConnection(false);
+			Session.set("authReady", false);
+			ResetMessages();
+			connect(newConn); //App update
+		}
+		sAlert.success( "App updated.", { timeout: 1500 } );
+	}
+});
+
 Apps.before.remove(function(userId, doc) {
 	if(Meteor.isServer) {
 		//check for dependent apps.
@@ -243,27 +267,9 @@ Apps.before.remove(function(userId, doc) {
 	}
 });
 
-
-
-Apps.after.insert(function(userId, doc) {
-	if(Meteor.isClient) {
-		changeActiveApp(doc._id);
-		Router.go('Edit App', {_id: doc._id});
-	}
-});
-
-Apps.after.update(function(userId, doc) {
-	if(Meteor.isClient) {
-		currConn = getCurrentConnection();
-		if(currConn && currConn._id != doc.connection) {
-			newConn = Connections.findOne({_id: doc.connection});
-			UnsubscribeAll();
-			DisconnectMQTT();
-			setCurrentConnection(false);
-			Session.set("authReady", false);
-			ResetMessages();
-			connect(newConn); //App update
-		}
+Apps.after.remove( function(userId, doc) {
+	if( Meteor.isClient ) {
+    sAlert.success( "App deleted." );
 	}
 });
 

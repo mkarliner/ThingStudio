@@ -128,10 +128,8 @@ Schemas.Connection = new SimpleSchema({
 
 });
 
-
-
 Connections.before.insert(function(userId, doc) {
-	if (Meteor.isClient) {
+	if ( Meteor.isClient ) {
 		doc.appId = Session.get("currentApp")._id;
 		//console.log("BEFOREHOOK ", userId, doc, Session.get("currentApp"));
 		return true;
@@ -145,11 +143,11 @@ Connections.before.insert(function(userId, doc) {
 	}
 });
 
-Connections.after.insert(function(userId, doc) {
+Connections.after.insert( function(userId, doc) {
 	connectionApp = Apps.findOne({_id: doc.appId});
 	if( Meteor.isServer ) {
 		Apps.update({_id: connectionApp._id},
-		{$set:
+		{ $set:
 				{
 					title: connectionApp.title,
 					connection: doc._id,
@@ -160,24 +158,37 @@ Connections.after.insert(function(userId, doc) {
 				}
 			})
 	}
+  if ( Meteor.isClient ) {
+    sAlert.success( 'MQTT Connection created.', { onRouteClose: false } )
+    Router.go( "Connections" )
+  }
 });
 
-Connections.before.remove(function(userId, doc) {
-	if(Meteor.isServer) {
-		console.log("Removing references to deleted connection", doc._id);
-		console.log("Apps = ", Apps.find({connection: doc._id}).fetch());
-		Apps.update({connection: doc._id}, {$set: {connection: null}});
-	}
-});
-
-Connections.after.update(function(userId, doc) {
-	if(Meteor.isClient && !inIDE) {
+Connections.after.update( function(userId, doc) {
+	if( Meteor.isClient && !inIDE ) {
 		currConn = getCurrentConnection();
 		if(currConn._id == doc._id) {
 			setCurrentConnection(doc);
 		}
+    sAlert.success( 'MQTT Connection updated.', { onRouteClose: false } )
+    Router.go( "Connections" )
 	}
 });
+
+Connections.before.remove( function(userId, doc) {
+	if( Meteor.isServer ) {
+		// console.log("Removing references to deleted connection", doc._id);
+		// console.log("Apps = ", Apps.find({connection: doc._id}).fetch());
+		Apps.update({connection: doc._id}, {$set: {connection: null}});
+	}
+});
+
+Connections.after.remove( function (userId, docs) {
+  if ( Meteor.isClient ) {
+    sAlert.success( 'MQTT Connection deleted.' )
+  }
+})
+
 
 Connections.attachSchema(Schemas.Connection);
 

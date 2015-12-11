@@ -155,6 +155,7 @@ Meteor.startup(function() {
 		if(basicExampleApp) {
 			applist = [],
 			applist.push(basicExampleApp);
+			// console.log("here is applist: ", applist)
 			if(isAdmin(this.userId))  {
 				applist.push(systemApp);
 			}

@@ -28,7 +28,7 @@ Template.EditScreenBody.helpers({
 	},
 	accessStatus: function(){
 		if(this.owner != Meteor.userId()) {
-			return "This template is read - only, you can make edits, but they will have no effect. "
+			sAlert.info('FYI: This app is read-only. It is for demonstration purposes. Once you feel comfortable, go to Apps and make one of your own!');
 		}
 	},
 	safeEdit: function(){
