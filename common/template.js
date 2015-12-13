@@ -54,11 +54,6 @@ Schemas.Screen = new SimpleSchema({
 		optional: true,
 		max: 100
 	},
-	// tags: {
-	// 	type: [String],
-	// 	index: true,
-	// 	optional: true
-	// },
 	theme: {
 		type: String,
 		optional: true,
@@ -161,13 +156,7 @@ Schemas.Screen = new SimpleSchema({
       },
       denyInsert: true,
       optional: true
-    },
-	// public: {
-	// 	type: Boolean,
-	// 	defaultValue: false
-	// }
-//
-
+    }
 });
 
 Screens.before.insert(function(userId, doc) {
@@ -185,7 +174,7 @@ Screens.before.insert(function(userId, doc) {
 });
 
 Screens.after.insert(function (userId, doc) {
-	if(Meteor.isClient){
+	if( Meteor.isClient ){
 		sAlert.success( "Template created.", { onRouteClose: false } );
 		Router.go('Edit Template', {_id: doc._id});
 	}

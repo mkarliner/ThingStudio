@@ -27,15 +27,11 @@ Schemas.Connection = new SimpleSchema({
 			}
 		}
 	},
-    clientId: {
-        label: "Client ID",
-        type: String,
-        optional: true
-    },
-    // path: {
-    //     type: String,
-    //     optional: true
-    // },
+  clientId: {
+      label: "Client ID",
+      type: String,
+      optional: true
+  },
 	protocol: {
 		type: String,
 		defaultValue: "Websocket",
@@ -57,7 +53,6 @@ Schemas.Connection = new SimpleSchema({
 			afFieldInput: {
 				type: 'boolean-checkbox-M',
 				class: 'filled-in' // optional
-				// summernote options goes here
 			}
 		}
 	},
@@ -71,8 +66,6 @@ Schemas.Connection = new SimpleSchema({
 		autoform: {
 			afFieldInput: {
 				type: 'password'
-				// class: 'filled-in' // optional
-				// summernote options goes here
 			}
 		}
 	},
@@ -86,14 +79,9 @@ Schemas.Connection = new SimpleSchema({
 			afFieldInput: {
 				type: 'boolean-checkbox-M',
 				class: 'filled-in' // optional
-				// summernote options goes here
 			}
 		}
 	},
-	// autoConnect: {
-	// 	type: Boolean,
-	// 	defaultValue: true
-	// },
 	owner: {
 		type: String,
 		index: true,
@@ -118,14 +106,7 @@ Schemas.Connection = new SimpleSchema({
 		autoform: {
 			omit: true
 		},
-	},
-	// public: {
-	// 	type: Boolean,
-	// 	defaultValue: false
-	// }
-
-
-
+	}
 });
 
 Connections.before.insert(function(userId, doc) {
@@ -170,15 +151,15 @@ Connections.after.update( function(userId, doc) {
 		if(currConn._id == doc._id) {
 			setCurrentConnection(doc);
 		}
+	}
+  if ( Meteor.isClient ) {
     sAlert.success( 'MQTT Connection updated.', { onRouteClose: false } )
     Router.go( "Connections" )
-	}
+  }
 });
 
 Connections.before.remove( function(userId, doc) {
 	if( Meteor.isServer ) {
-		// console.log("Removing references to deleted connection", doc._id);
-		// console.log("Apps = ", Apps.find({connection: doc._id}).fetch());
 		Apps.update({connection: doc._id}, {$set: {connection: null}});
 	}
 });
