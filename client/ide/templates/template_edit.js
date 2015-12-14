@@ -26,11 +26,6 @@ Template.EditScreenBody.helpers({
 	runtimeErrors: function(){
 		return Session.get("runtimeErrors");
 	},
-	// accessStatus: function(){
-	// 	if(this.owner != Meteor.userId()) {
-	// 		sAlert.info('FYI: This app is read-only. It is for demonstration purposes. Once you feel comfortable, go to Apps and make one of your own!');
-	// 	}
-	// },
 	safeEdit: function(){
 		return this.safeEdit;
 	}
@@ -40,7 +35,6 @@ Meteor.startup(function(){
 	AutoForm.addInputType('acecss', {
 		template: 'afAceCss',
 		valueOut: function(obj) {
-			//console.log("OUT: ", AceEditor.instance("archycss").getValue())
 			return AceEditor.instance("archycss").getValue();
 		}
 	});
@@ -48,7 +42,6 @@ Meteor.startup(function(){
 	AutoForm.addInputType('acejs', {
 		template: 'afAceJs',
 		valueOut: function(obj) {
-			// console.log("OUT: ", AceEditor.instance("archyjs").getValue())
 			return AceEditor.instance("archyjs").getValue();
 		}
 	});
@@ -56,7 +49,6 @@ Meteor.startup(function(){
 	AutoForm.addInputType('aceappjs', {
 		template: 'afAceAppJs',
 		valueOut: function(obj) {
-			console.log("OUT: ", AceEditor.instance("archyappjs").getValue());
 			return AceEditor.instance("archyappjs").getValue();
 		}
 	});
@@ -64,7 +56,6 @@ Meteor.startup(function(){
 	AutoForm.addInputType('aceappcss', {
 		template: 'afAceAppCSS',
 		valueOut: function(obj) {
-			// console.log("OUT: ", AceEditor.instance("archyappcss").getValue());
 			return AceEditor.instance("archyappcss").getValue();
 		}
 	});
@@ -72,7 +63,6 @@ Meteor.startup(function(){
 	AutoForm.addInputType('aceappdoc', {
 		template: 'afAceAppDoc',
 		valueOut: function(obj) {
-			// console.log("OUT: ", AceEditor.instance("archyappdoc").getValue());
 			return AceEditor.instance("archyappdoc").getValue();
 		}
 	});
@@ -80,7 +70,6 @@ Meteor.startup(function(){
 	AutoForm.addInputType('ace', {
 		template: 'afAce',
 		valueOut: function(obj) {
-			// console.log("OUT: ", AceEditor.instance("archy").getValue())
 			return AceEditor.instance("archy").getValue();
 		}
 	});
@@ -88,37 +77,20 @@ Meteor.startup(function(){
 
 Template.afAce.helpers({
 	debug: function(obj){
-		// console.log("DEBUG:", obj, this);
 	},
 	loadValue: function(editor){
-		// console.log("Setting value ", this.value)
-		// ace = AceEditor.instance("archy",{
-		//     theme:"dawn",
-		//     mode:"html"
-		// });
-		//  ace.setValue(this.value);
-
 	}
 });
 
 Template.afAceCss.helpers({
 	debug: function(obj){
-		// console.log("DEBUG:", obj);
 	},
 	loadValue: function(editor){
-		// console.log("Setting value ", this.value)
-		// ace = AceEditor.instance("archy",{
-		//     theme:"dawn",
-		//     mode:"html"
-		// });
-		//  ace.setValue(this.value);
-
 	}
 });
 
 Template.afAceJs.helpers({
 	debug: function(obj){
-		// console.log("DEBUG:", obj, this);
 	},
 	loadValue: function(editor){
 	}
@@ -126,7 +98,6 @@ Template.afAceJs.helpers({
 
 Template.afAceAppJs.helpers({
 	debug: function(obj){
-		// console.log("DEBUG:", obj, this);
 	},
 	loadValue: function(editor){
 	}
@@ -134,7 +105,7 @@ Template.afAceAppJs.helpers({
 
 Template.afAceJs.rendered = function() {
 	var editor;
-	console.log("RENDERED", this.findAll());
+	// console.log("RENDERED", this.findAll());
 	Tracker.autorun(function (e) {
 
 		editor = AceEditor.instance("archyjs", {
@@ -153,7 +124,7 @@ Template.afAceJs.rendered = function() {
 
 Template.afAceAppJs.rendered = function() {
 	var editor;
-	 console.log("APPJS RENDERED", this.findAll());
+
 	Tracker.autorun(function (e) {
 
 		editor = AceEditor.instance("archyappjs", {
@@ -164,7 +135,6 @@ Template.afAceAppJs.rendered = function() {
 		if(editor.loaded===true){
 			e.stop();
 			currentApp = getCurrentApp();
-			console.log("Editor Loaded!!!!!!")
 			editor.$blockScrolling = Infinity;
 			editor.setValue(Apps.findOne({_id: currentApp._id}).js, -1);
 		}
@@ -173,7 +143,7 @@ Template.afAceAppJs.rendered = function() {
 
 Template.afAceCss.rendered = function() {
 	var editor;
-	// console.log("RENDERED", this.findAll());
+
 	Tracker.autorun(function (e) {
 
 		editor = AceEditor.instance("archycss", {
@@ -190,7 +160,7 @@ Template.afAceCss.rendered = function() {
 
 Template.afAceAppCSS.rendered = function() {
 	var editor;
-	 console.log("APPCSS RENDERED", this.findAll());
+
 	Tracker.autorun(function (e) {
 
 		editor = AceEditor.instance("archyappcss", {
@@ -209,7 +179,7 @@ Template.afAceAppCSS.rendered = function() {
 
 Template.afAceAppDoc.rendered = function() {
 	var editor;
-	 console.log("APPDOC RENDERED", this.findAll());
+
 	Tracker.autorun(function (e) {
 
 		editor = AceEditor.instance("archyappdoc", {
@@ -228,7 +198,7 @@ Template.afAceAppDoc.rendered = function() {
 
 Template.afAce.rendered = function() {
 	var editor;
-	// console.log("RENDERED", this.findAll());
+
 	Tracker.autorun(function (e) {
 		editor = AceEditor.instance("archy", {
 			theme: "cobalt",
