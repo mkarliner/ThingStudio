@@ -1,0 +1,15 @@
+<template name="TutorialHeader">
+	{{#contentFor "appHeader"}}
+		<h1 class="welcome-header">Welcome! Watch a <span class="emph">quick tour</span> of the ThingStudio IDE</h1>
+		<div class="clearfix"></div>
+	{{/contentFor}}
+</template>
+
+<template name="TutorialBody">
+	<div class="col s12 m8 offset-m2 welcome-body">
+		<div class="videoWrapper">
+			<iframe width="560" height="315" src="https://www.youtube.com/embed/piA3nT86Rn4?list=PLCJk8f2xKwUvzdrYMI1U4dfIANzz4kSC2&amp;showinfo=0" frameborder="0" allowfullscreen></iframe>
+      <!-- <iframe width="560" height="315" src="{{videoURL}}&amp;showinfo=0" frameborder="0" allowfullscreen></iframe> -->
+		</div>
+	</div>
+</template>

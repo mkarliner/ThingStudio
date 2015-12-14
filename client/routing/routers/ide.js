@@ -406,6 +406,20 @@ Router.route("/tutorials", {
 	},
 });
 
+Router.route("/tutorials/:urlstring", {
+	name: "Tutorial Item",
+	controller: "IDEController",
+	action: function() {
+		if ( !this.ready() ) {
+			this.render("Loading", {
+				data: "your tutorias"
+			});
+		} else {
+			renderYields(this, 'Tutorial');
+		}
+	},
+});
+
 Router.route("/docs/:urlstring", {
 	name: "View Doc",
 	controller: "IDEController",
