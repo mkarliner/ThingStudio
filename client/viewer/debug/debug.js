@@ -26,7 +26,6 @@ Template.DebugBody.helpers({
 			} else {
 				return jstr;
 			}
-
 		}
 		catch(err){
 			return err + " " + this
@@ -46,7 +45,6 @@ Template.DebugSubscribe.helpers({
 			} else {
 				return jstr;
 			}
-
 		}
 		catch(err){
 			return err + " " + this
@@ -66,10 +64,15 @@ Template.DebugPublish.helpers({
 			} else {
 				return jstr;
 			}
-
 		}
 		catch(err){
 			return err + " " + this
 		}
 	}
 });
+
+Template.DebugRuntime.helpers({
+	runTimeErrorLog: function () {
+		return Session.get("runtimeErrors")
+	}
+})

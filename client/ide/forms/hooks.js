@@ -1,22 +1,17 @@
  checkFeed = function(feed, subscribe) {
-	 //console.log("Check feed ", feed)
 	if(typeof feed != "string" ) {
-		// Session.set("runtimeErrors", "Feedname needs to be a string");
 		var message = "Feedname needs to be a string: " + feed;
 		Alerts.upsert({type: 'runtime', status: "warning", message: message }, {$set: {type: 'runtime', status: 'warning', message: message}, $inc: {count: 1} } );
 		return false;
 	}
 	f = Feeds.findOne({title: feed}) || HTTPFeeds.findOne({title: feed});
 
-	//console.log("CF: ", f)
 	if(typeof f == "undefined") {
-		// Session.set("runtimeErrors", "Unknown feed " + feed);
 		var message = 'Unknown feed ' + feed;
 		Alerts.insert({type: 'runtime', status: 'warning', message: message});
 		return false;
 	}
 	if(subscribe && f.pubsub == "Publish") {
-		// Session.set("runtimeErrors", "Can't receive messages on publish feed: " + feed);
 		var message = "Can't receive messages on publish feed " + feed;
 		Alerts.upsert({type: 'runtime', status: "warning", message: message }, {$set: {type: 'runtime', status: 'warning', message: message}, $inc: {count: 1} } );
 		return false;
