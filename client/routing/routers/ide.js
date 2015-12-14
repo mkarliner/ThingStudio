@@ -393,7 +393,7 @@ Router.route("/settings", {
 });
 
 Router.route("/tutorials/:urlstring", {
-	name: "Tutorial Item",
+	name: "View Tutorial",
 	controller: "IDEController",
 	data: function() {
 		return Tutorials.findOne({ urlstring: this.params.urlstring });
