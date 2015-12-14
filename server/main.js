@@ -571,4 +571,40 @@ Meteor.startup(function() {
 
 	}
 
+	Tutorials.remove({})
+	Tutorials.insert({
+		title: "ThingStudio IDE Tour",
+		url: "https://www.youtube.com/embed/piA3nT86Rn4",
+		urlstring: "thingstudio-ide-tour",
+		summary: "A quick tour of the ThingStudio IDE"
+		})
+	Tutorials.insert({
+		title: "Getting Connected to MQTT",
+		url: "https://www.youtube.com/embed/eMcUoa3hOso",
+		urlstring: "getting-connected-to-mqtt",
+		summary: "How to connect a ThingStudio App to an MQTT broker"
+	})
+	Tutorials.insert({
+		title: "Feed Basics: Getting data in and out of ThingStudio",
+		url: "https://www.youtube.com/embed/e0QFQ8mDRaU",
+		urlstring: "feed-basics-getting-data-in-and-out-of-thingstudio",
+		summary: "Learn how to setup Feeds to use MQTT data in ThingStudio. This video covers creating both subscribe and publish feeds, debugging with MQTT.fx and the debug overlay."
+	})
+	Tutorials.insert({
+		title: "Your First UI: Displaying Live Data",
+		url: "https://www.youtube.com/embed/bkFMHEAxUhA",
+		urlstring: "your-first-ui-displaying-live-data",
+		summary: "Creating a User Interface that shows real time data from MQTT"
+	})
+	Tutorials.insert({
+		title: "Sending data from ThingStudio to the IoT",
+		url: "https://www.youtube.com/embed/HTGzSwwXCbs",
+		urlstring: "sending-data-from-thingstud-to-the-iot",
+		summary: "How to send data to an MQTT broker from ThingStudio"
+	})
+
+	Meteor.publish( "tutorials", function () {
+		return Tutorials.find();
+	})
+
 });

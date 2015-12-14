@@ -1,11 +1,11 @@
-var renderYields = function(that, t,  data) {
-	that.render('BreadcrumbsContent', {
-		to: 'breadcrumbs'
+var renderYields = function( that, template, data ) {
+	that.render( "BreadcrumbsContent", {
+		to: "breadcrumbs"
 	});
-	that.render(t + "Header", {
+	that.render( template + "Header", {
 		to: "appHeader"
 	});
-	that.render(t + "Body", {data: data});
+	that.render( template + "Body", { data: data } );
 }
 
 Router.route("/welcome", {
@@ -392,6 +392,23 @@ Router.route("/settings", {
 	}
 });
 
+Router.route("/tutorials/:urlstring", {
+	name: "Tutorial Item",
+	controller: "IDEController",
+	data: function() {
+		return Tutorials.findOne({ urlstring: this.params.urlstring });
+	},
+	action: function() {
+		if ( !this.ready() ) {
+			this.render("Loading", {
+				data: "your tutorias"
+			});
+		} else {
+			renderYields(this, 'Tutorial');
+		}
+	},
+});
+
 Router.route("/tutorials", {
 	name: "Tutorials",
 	controller: "IDEController",
@@ -402,20 +419,6 @@ Router.route("/tutorials", {
 			});
 		} else {
 			renderYields(this, 'Tutorials');
-		}
-	},
-});
-
-Router.route("/tutorials/:urlstring", {
-	name: "Tutorial Item",
-	controller: "IDEController",
-	action: function() {
-		if ( !this.ready() ) {
-			this.render("Loading", {
-				data: "your tutorias"
-			});
-		} else {
-			renderYields(this, 'Tutorial');
 		}
 	},
 });
