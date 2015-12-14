@@ -150,7 +150,6 @@ html {
 	text-rendering: optimizeLegibility;
 	-moz-osx-font-smoothing: grayscale;
 	-moz-font-feature-settings: "liga" on;
-
 }
 
 body {
@@ -250,10 +249,6 @@ table.striped tbody tr:nth-child(odd) {
 	background-color: lighten($appBodyBG, 2%);
 }
 
-#lean-overlay {
-	background-color: #FFF;
-}
-
 .modal-content p {
 	padding: 0 1em;
 	font-size: 16px;
@@ -284,14 +279,6 @@ table.striped tbody tr:nth-child(odd) {
 	left: 6.5em;
 	padding-top: 0.15em;
 }
-
-///////////////////////////////////////////////////////////////////////////////////////
-// Global DOM States //
-///////////////////////////////////////////////////////////////////////////////////////
-
-// a:hover {
-// 	color: darken($color, 20%);
-// }
 
 ///////////////////////////////////////////////////////////////////////////////////////
 // Sidebar //
@@ -611,172 +598,6 @@ nav.top-nav {
 	}
 }
 
-// TopNav MQTT & Debug Dropdown controls
-
-#tnc a {
-	border-left: $navBorder;
-	padding: 0 16px;
-	line-height: 50px;
-}
-
-.debug {
-	transform: translateX(100%);
-	-ms-transform: translateX(100%);
-	-webkit-transform: translateX(100%);
-	transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-	background-color: $white;
-	z-index: 11;
-	position: absolute;
-	top: 52px;
-	right: 0;
-	width: 550px;
-	max-height: 700px;
-	border: $navBorder;
-	will-change: translateY, transform;
-	table {
-		margin-bottom: 2em;
-	}
-	h2 {
-		background-color: $appBodyBG;
-		font-family: $fwBook;
-		font-size: $fontSize * 1.666667;
-		color: $headerColor;
-		padding: 0.3em 15px;
-		margin: 0;
-		display: inline-block;
-		width: 100%;
-		i {
-			position: absolute;
-			top: 9px;
-			left: 13px;
-		}
-		span {
-			display: inline-block;
-			margin-left: 27px;
-		}
-	}
-	h3 {
-		color: $headerColor;
-		text-transform: uppercase;
-		font-family: $fwBlack;
-		padding-left: 15px;
-		margin-top: 0.8em;
-		margin-bottom: 0em;
-	}
-	th {
-		font-family: $fwMedium;
-		text-transform: capitalize;
-		color: $headerColor;
-	}
-	td {
-		padding-top: 4px;
-		padding-bottom: 4px;
-		overflow: hidden;
-	}
-	td:first-child, th:first-child {
-		padding-left: 15px;
-	}
-	td:last-child, th:last-child {
-		padding-right: 15px;
-		padding-left: 15px;
-	}
-}
-
-a.view-full-debug {
-	color: $green;
-	border-bottom: 2px solid $green;
-	font-size: 0.7em;
-	line-height: 1.1em;
-	padding-top: 0.5em;
-}
-
-.debug.debug-open {
-	transform: translateX(0%);
-	-ms-transform: translateX(0%);
-	-webkit-transform: translateX(0%);
-}
-
-.debug-page {
-	th {
-		background-color: transparent;
-	}
-}
-
-///////////////////////////////////////////////////////////////////////////////////////
-// Error Reporting //
-///////////////////////////////////////////////////////////////////////////////////////
-
-.access-error, .screen-errors {
-	border: $errorBorder;
-	color: $errorBorderColor;
-	background-color: lighten($errorBorderColor, 50%);
-}
-
-.alerts {
-	position: absolute;
-	top: 0;
-	left: 0;
-	z-index: 10;
-	width: 100%;
-	display: block;
-	border-top-right-radius: 1px;
-}
-
-.alert {
-	background-color: $white;
-	clear: both;
-}
-
-.alert-type {
-	display: inline-block;
-	color: $white;
-	height: 40px;
-	padding: 0 1rem;
-	line-height: 3.2em;
-	border-top-left-radius: 1px;
-	margin-right: 0.6rem;
-}
-
-.alert-type.warning {
-	background-color: $alertOrange;
-}
-
-.alert-type.success {
-	background-color: $alertGreen;
-}
-
-.alert a.close:not(.dismiss) {
-	  border-radius: 50%;
-	  width: 21px;
-	  height: 21px;
-	  border: 1px solid $alertGray;
-	  color: $alertGray;
-	  line-height: 16px;
-	  text-align: center;
-	  padding-top: 2px;
-	  background-color: white;
-	  font-size: 17px;
-	  margin-top: 9px;
-	  margin-right: 9px;
-	  text-align: center;
-}
-
-.alert a.close.dismiss {
-	border: none;
-	background-color: transparent;
-	color: $alertGray;
-	line-height: 40px;
-	margin-right: 10px;
-}
-
-.alert.success {
-	animation: fadeOut 2700ms ease-in 0s 1 forwards;
-}
-
-.alert span {
-	font-family: $fwMedium;
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////
 // App Header //
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -840,28 +661,6 @@ a.header-action-1 {
 	background-color: red;
 }
 
-.topic-video {
-	font-size: 2.6em;
-	color: $baseText;
-	border: 1px solid $baseText;
-	line-height: 1em;
-	height: 34px;
-	width: 52px;
-	text-align: center;
-	border-radius: 9px;
-	margin-right: 15px;
-	background-color: transparent;
-	box-shadow: none;
-	padding: 0;
-	&:hover {
-		background-color: transparent;
-	}
-	& i {
-		font-size: 1em;
-		color: lighten($baseText, 5%);
-	}
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////
 // App Body//
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -893,7 +692,6 @@ th {
 	background: $white;
 	padding: 15px 0;
 	border-radius: 0;
-	// color: lighten($baseText, 10% )
 }
 
 table.hoverable {
@@ -939,66 +737,9 @@ td.dropdown-td {
 	color: $green;
 }
 
-.add-new-item {
-	@include transition(opacity, 0.1s, cubic-bezier(0.4, 0.0, 0.2, 1));
-	transition-delay: 0.05s;
-	position: absolute;
-	top: 50px;
-	width: calc(100% - #{$sideNavWidth});
-	display: none;
-	will-change: opacity, display;
-	& .divider {
-		background-color: transparent;
-		margin-top: 20px;
-		margin-bottom: 20px;
-	}
-	&.open {
-		display: block;
-		will-change: opacity, display;
-		z-index: 2;
-	}
-	& form {
-		padding-top: 24px;
-	}
-	& .form-group {
-		margin-right: 30px;
-	}
-	& .form-control {
-		padding: 0;
-	}
-	& .control-label {
-		display: none;
-	}
-	&.new-mqtt-feed .selectize-control.form-control.single {
-		width: 170px;
-	}
-	&.new-http-feed .selectize-control.form-control.single.connection-dd {
-		width: 160px;
-	}
-	&.new-http-feed .selectize-control.form-control.single {
-		width: 90px;
-	}
-	&.new-mqtt-connection .selectize-control.form-control.single {
-		width: 180px;
-	}
-	&.new-app .selectize-control.form-control.single {
-		width: 160px;
-	}
-	&.new-widget .selectize-control.form-control.single {
-		width: 210px;
-	}
-	// & .select-wrapper i {
-	// 	@include dropdownArrow;
-	// }
-	& input.select-dropdown {
-		padding-left: 14px;
-	}
-
-}
 .table-action.table-save-new i.icon-ts-checkmark {
 	line-height: 33px;
 }
-
 
 .div-container {
 	margin: -7px auto 0;
@@ -1254,7 +995,6 @@ p.shareable-tip {
 	display: inline-block;
 }
 
-
 // Handling extra padding for Selectize dropdowns on detail pages
 #updateConnectionForm .form-group:nth-child(4), #updateFeedForm .form-group:nth-child(3) {
 	padding-top: 0;
@@ -1389,9 +1129,6 @@ form[id^="update"] .select-wrapper span.caret {
 	border-top-color: $green;
 	border-bottom-color: $green;
 	color: $baseText;
-	// -webkit-clip-path: polygon(0 0, 100% 20%, 100% 100%, 0% 80%);
-	// background-color: #76D4E1;
-	// color: white;
 }
 
 .template-filters li.current:first-of-type {
@@ -1617,9 +1354,6 @@ button.btn-plus, {
 	&:hover {
 		color: $darkBase;
 	}
-	// &:hover {
-	// 	background-color: $btnSocialColor;
-	// }
 }
 
 // Social share
@@ -1771,7 +1505,6 @@ div.col.s6 > p {
 		position: absolute;
 		right: -9px;
 	}
-
 }
 
 #getting-started .card-title {
@@ -1822,14 +1555,6 @@ div.col.s6 > p {
 .widget-source .collapsible-body {
 	padding: 0 20px;
 }
-
-// .svg-container svg {
-// 	position: absolute;
-// 	top: 0;
-// 	left: 0;
-// 	width: 100%;
-// 	height: 87%;
-// }
 
 .card .card-action {
 	padding: 10px;
@@ -1917,7 +1642,6 @@ table.widget-item {
 	& td:last-child, th:last-child {
 		padding-right: 25px;
 	}
-
 }
 
 .code-preview {
@@ -2144,10 +1868,6 @@ footer {
 // Login Form & Preloader //
 ///////////////////////////////////////////////////////////////////////////////////////
 
-// .at-pwd-form {
-// 	background: $darkBase;
-// }
-
 .spinner-container {
 	float: left;
 }
@@ -2156,74 +1876,6 @@ footer {
 	font-size: 1.25 * $fontSize;
 	padding-top: 0.6em;
 	margin-left: 5.4em;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////
-// Chat //
-///////////////////////////////////////////////////////////////////////////////////////
-
-.chat-window {
-	height: 500px;
-}
-
-.chat-messages {
-	overflow-y: auto;
-	height: 460px;
-	padding-right: 1em;
-	padding-down: 1em;
-}
-
-.chat-entry {
-	clear: left;
-}
-
-.chat-person {
-	float: left;
-}
-
-.chat-img {
-	width: 3em;
-	height: 3em;
-}
-
-.chat-person, .chat-message {
-	padding: 0.5em;
-}
-
-.chat-message {
-	& p {
-		padding: 0;
-		margin: 0;
-		margin-left: 6em;
-	}
-}
-
-.cb {
-	clear: both;
-}
-
-.chat-me {
-	background-color: #C9F0FD;
-	color: $darkBase;
-}
-
-.chat-other {
-	background-color: #56BEED;
-	color: white;
-}
-
-.chat-admin {
-	background-color: #ee6e73;
-	color: white;
-}
-
-.chat-count {
-	background-color: $pink;
-	border-radius: 8px;
-	padding: 2px 8px 0;
-	color: white;
-	line-height: 18px;
-	display: inline-block;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////

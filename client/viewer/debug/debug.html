@@ -1,8 +1,3 @@
-<!-- <template name="DebugHeader">
-	<h1 class="left">Debugger: Live Feed Data</h1>
-	<div class="clearfix"></div>
-</template> -->
-
 <template name="DebugBody">
 	{{#contentFor region="appHeader" template="DebugHeader"}}{{/contentFor}}
 	<div class="top-row">
@@ -31,20 +26,6 @@
 		{{> DebugRuntime}}
 	</div>
 </template>
-
-<!-- <template name="DebugOverlay">
-	<div id="debug" class="debug z-depth-1">
-		<h2><i class="icon-ts-ekg"></i><span>Live Feeds Data</span> <a href="/debug" class="right view-full-debug">Go to Debugger</a></h2>
-		<div class="debug-body">
-			<h3>Received Messages</h3>
-			{{> DebugSubscribe}}
-			<h3>Sent Messages</h3>
-			{{> DebugPublish}}
-			<div class="screen-errors">Runtime Errors: {{runtimeErrors}}</div>
-
-		</div>
-	</div>
-</template> -->
 
 <template name="DebugSubscribe">
 	<table class="striped">

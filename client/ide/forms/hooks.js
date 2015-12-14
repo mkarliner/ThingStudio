@@ -3,7 +3,7 @@
 	if(typeof feed != "string" ) {
 		// Session.set("runtimeErrors", "Feedname needs to be a string");
 		var message = "Feedname needs to be a string: " + feed;
-		Alerts.upsert({type: 'runtime', status: "warning", message: message },{$set:{type: 'runtime', status: 'warning', message: message} ,$inc: {count: 1} } );
+		Alerts.upsert({type: 'runtime', status: "warning", message: message }, {$set: {type: 'runtime', status: 'warning', message: message}, $inc: {count: 1} } );
 		return false;
 	}
 	f = Feeds.findOne({title: feed}) || HTTPFeeds.findOne({title: feed});
@@ -18,14 +18,11 @@
 	if(subscribe && f.pubsub == "Publish") {
 		// Session.set("runtimeErrors", "Can't receive messages on publish feed: " + feed);
 		var message = "Can't receive messages on publish feed " + feed;
-		Alerts.upsert({type: 'runtime', status: "warning", message: message },{$set:{type: 'runtime', status: 'warning', message: message} ,$inc: {count: 1} } );
+		Alerts.upsert({type: 'runtime', status: "warning", message: message }, {$set: {type: 'runtime', status: 'warning', message: message}, $inc: {count: 1} } );
 		return false;
 	}
-
 	return true;
 }
-
-
 
 compileTemplate = function(name, html_text, javascript) {
 	try {
@@ -88,7 +85,7 @@ compileTemplate = function(name, html_text, javascript) {
 				};
 				message = attr.getNamedItem("data-message");
 				// feed = Feeds.findOne({title: feed_name.value});
-				console.log("BLICK: ", feed_name.value)
+				// console.log("BLICK: ", feed_name.value)
 				publish(feed_name.value, JSON.stringify(message ? message.value : "click"));
 				ev.stopImmediatePropagation();
 			},
@@ -98,7 +95,7 @@ compileTemplate = function(name, html_text, javascript) {
 				feed_name = attr.getNamedItem("data-feed");
 				checkFeed(feed_name.value, false);
 				message = attr.getNamedItem("data-message");
-				console.log("MV: ", message.value);
+				// console.log("MV: ", message.value);
 				try {
 					pv = JSON.parse("{" + message.value + "}");
 				}
@@ -142,19 +139,11 @@ compileTemplate = function(name, html_text, javascript) {
 					//feed = Feeds.findOne({title: feed_name.value});
 					publish(feed_name.value, JSON.stringify(value));
 				}
-
 			}
 		});
-
 		if(javascript) {
 			jsout = eval(javascript)
 		}
-
-		// Template[name].rendered = function(){
-		// 	console.log("RENDERED", this, Template.currentData(), Template.parentData())
-		//
-		// 	// console.log("RENDERED: ", this.findAll("[data-feed]"));
-		// }
 		return({type: 'template', status: 'success', message: 'Template updated'});
 	} catch (err) {
 		// console.log('Error compiling template:' + html_text);
@@ -166,8 +155,6 @@ compileTemplate = function(name, html_text, javascript) {
 		return(errObj);
 	}
 };
-
-
 
 AutoForm.hooks({
 	updateScreenForm: {
@@ -209,72 +196,60 @@ AutoForm.hooks({
 	updateFeedForm: {
 		after: {
 			insert: function(err, res, template) {
-				console.log("AFTER FEED IN ", err, res, template);
+				// console.log("AFTER FEED IN ", err, res, template);
 			}
 		}
 	},
 	updateConnectionForm: {
 		after: {
 			update: function(err, res) {
-				console.log("AFTER CON UPDATE: ", err, res);
 				Session.set("ConnectionStatus", false);
 				Session.set("currentMQTTHost", this.template.data.doc._id)
-				// connect(this.template.data.doc);
 			}
 		}
 	},
-
 	updateCredentialsForm: {
 			onSubmit: function(a,b,c) {
-				console.log("SUBMIT ", a, b, c)
+				// console.log("SUBMIT ", a, b, c)
 			},
 			before: {
 				update: function(mod) {
-					console.log("BEFORE CRED ", mod, mod.$set.username, mod.$set.password);
 					setCredentials({username: mod.$set.username, password: mod.$set.password});
 					if(mod.$set.save) {
-						console.log("Saving credentials")
 						return mod;
 					} else {
-						console.log("Not saving credentials")
 						return false;
 					}
-
 				}
 			},
 			after: {
 				update: function(err, res, temp) {
-					console.log("AFTER CRED UPDATE: ", this, err, res, temp);
+					// console.log("AFTER CRED UPDATE: ", this, err, res, temp);
 					// cred = Credentials.findOne({_id: this.docId});
 					// setCredentials({username: cred.username, password: cred.password})
 				}
 			}
 		},
-
 		updateSettingsForm: {
 			before: {
 				update: function(err, res){
-					console.log("BEFORE SETTINGS ", err, res, this )
+					// console.log("BEFORE SETTINGS ", err, res, this )
 				}
 			},
 			after: {
 				update: function(err,res){
-					console.log("AFTER SETTINGS ", this, err, res)
+					// console.log("AFTER SETTINGS ", this, err, res)
 				}
 			}
 		},
 		removeAppForm: {
 			onSubmit: function() {
-				console.log("Removing App!!!!!!!")
+				// console.log("Removing App!!!!!!!")
 			},
 			before: {
 				remove: function(err,res) {
-					console.log("Removing App!!!!!!!")
+					// console.log("Removing App!!!!!!!")
 				}
 			}
 		}
-
-
-
-
 });
