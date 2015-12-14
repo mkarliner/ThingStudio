@@ -355,7 +355,7 @@ h1.nothing {
 		text-indent: 14px;
 		margin-bottom: 1em;
 		font-size: 1rem;
-		width: 100%;
+		width: calc(100% - 2px);
 		transition: all 0.3s;
 		&:focus {
 			outline: none;
