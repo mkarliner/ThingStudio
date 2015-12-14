@@ -8,7 +8,6 @@ $baseText: #858C9D;
 $fontSize: 12px;
 $fontFace: AvenirLTStd-Roman, Helvetica, sans-serif;
 $appBodyBG: #E9EFF4;
-// $appBodyBG: rgba(218,226,230,1);
 $green: #76D4E1;
 $whiteOverGreen: #F7FAFF;
 $activeGreen: #8DE62C;
@@ -40,6 +39,33 @@ $twitterColor: #55ACEE;
 $facebookColor: #3B5998;
 $linkedInColor: #0077B5;
 $updateButton: #19A1DE;
+
+//Sidebar
+$sideNavWidth: 200px;
+$darkBase: #353C51;
+$darkBaseText: #B2B7C4;
+$darkBaseBGHover: #3D4357;
+$sidenavLiHeight: 39px;
+$sidebarDividerColor: #242938;
+$SBheaderSize: 10px;
+$SBitemSize: 12px;
+$SBcollapseBG: #424960;
+$picBorder: #9196A1 solid 2px;
+
+//Top Nav
+$navBorder: #DCDCDC 1.5px solid;
+
+// App Header
+$headerColor: #696B77;
+$headerActionButton2Color: #DCDCDC;
+
+//App Body
+$bodyDividerColor: #D0D3DC;
+
+//Login styles
+$registerColor: #D2D5D9;
+$forgotColor: #ADB4C5;
+$loginInputColor: #9e9e9e;
 
 //Fonts
 $fwLight: 'AvenirLTStd-Light';
@@ -79,33 +105,6 @@ strong {
 	font-family: $fwHeavy;
 }
 
-//Sidebar
-$sideNavWidth: 200px;
-$darkBase: #353C51;
-$darkBaseText: #B2B7C4;
-$darkBaseBGHover: #3D4357;
-$sidenavLiHeight: 39px;
-$sidebarDividerColor: #242938;
-$SBheaderSize: 10px;
-$SBitemSize: 12px;
-$SBcollapseBG: #424960;
-$picBorder: #9196A1 solid 2px;
-
-//Top Nav
-$navBorder: #DCDCDC 1.5px solid;
-
-// App Header
-$headerColor: #696B77;
-$headerActionButton2Color: #DCDCDC;
-
-//App Body
-$bodyDividerColor: #D0D3DC;
-
-//Login styles
-$registerColor: #D2D5D9;
-$forgotColor: #ADB4C5;
-$loginInputColor: #9e9e9e;
-
 ///////////////////////////////////////////////////////////////////////////////////////
 // Global Styles, Mixins //
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -138,7 +137,8 @@ $loginInputColor: #9e9e9e;
 	transition: $property $duration unquote($method);
 }
 
-html, body {
+html,
+body {
 	height: 100% !important;
 	overflow-x: hidden;
 }
@@ -215,7 +215,17 @@ textarea.materialize-textarea {
 	margin-bottom: 0;
 }
 
-input[type=text]:focus:not([readonly]), input[type=password]:focus:not([readonly]), input[type=email]:focus:not([readonly]), input[type=url]:focus:not([readonly]), input[type=time]:focus:not([readonly]), input[type=date]:focus:not([readonly]), input[type=datetime-local]:focus:not([readonly]), input[type=tel]:focus:not([readonly]), input[type=number]:focus:not([readonly]), input[type=search]:focus:not([readonly]), textarea.materialize-textarea:focus:not([readonly]) {
+input[type=text]:focus:not([readonly]),
+input[type=password]:focus:not([readonly]),
+input[type=email]:focus:not([readonly]),
+input[type=url]:focus:not([readonly]),
+input[type=time]:focus:not([readonly]),
+input[type=date]:focus:not([readonly]),
+input[type=datetime-local]:focus:not([readonly]),
+input[type=tel]:focus:not([readonly]),
+input[type=number]:focus:not([readonly]),
+input[type=search]:focus:not([readonly]),
+textarea.materialize-textarea:focus:not([readonly]) {
 	border-bottom: $materializeInputBorderActive;
 }
 
@@ -241,7 +251,8 @@ h3 {
 	line-height: 1.5em;
 }
 
-label, form p {
+label,
+form p {
 	font-size: 1.1em;
 }
 
@@ -287,7 +298,7 @@ table.striped tbody tr:nth-child(odd) {
 .side-nav {
 	width: 200px;
 	font-family: $fwBook;
-	& a.collapsible-header {
+	a.collapsible-header {
 		margin: 0;
 		padding: 0 30px;
 	}
@@ -296,14 +307,14 @@ table.striped tbody tr:nth-child(odd) {
 .side-nav.fixed {
 	background-color: $darkBase;
 	box-shadow: none;
-	& a {
+	a {
 		color: $darkBaseText;
 		padding: 0 8px;
 		&:hover {
 			color: lighten($darkBaseText, 20%);
 		}
 	}
-	& p.section-header {
+	p.section-header {
 		font-family: $fwHeavy;
 		letter-spacing: 0.05px;
 		font-size: $SBheaderSize;
@@ -311,12 +322,12 @@ table.striped tbody tr:nth-child(odd) {
 		line-height: 10px;
 		margin-top: 0;
 	}
-	& li {
+	li {
 		line-height: $sidenavLiHeight;
 		text-transform: uppercase;
 		position: relative;
 		padding: 0 13px;
-		& a {
+		a {
 			letter-spacing: 0.1px;
 			font-size: 1.08333333 * $fontSize;
 			line-height: $sidenavLiHeight;
@@ -327,18 +338,18 @@ table.striped tbody tr:nth-child(odd) {
 			margin-left: 28px;
 		}
 	}
-	& i {
+	i {
 		float: left;
 		font-size: 1.6 * $fontSize;
 		padding-right: 10px;
 		margin-top: 6px;
 	}
-	& i[class^="icon-ts"] {
+	i[class^="icon-ts"] {
 		font-size: 16px;
 		position: absolute;
 		top: -4px;
 	}
-	& p.my-name {
+	p.my-name {
 		position: relative;
 		margin-top: 0.5rem;
 		padding-top: 0.2rem;
@@ -346,7 +357,7 @@ table.striped tbody tr:nth-child(odd) {
 		display: inline;
 		padding-right: 2em;
 		text-transform: capitalize;
-		& i {
+		i {
 			position: absolute;
 			right: 0;
 			top: -16px;
@@ -357,13 +368,14 @@ table.striped tbody tr:nth-child(odd) {
 			margin-right: 0;
 		}
 	}
-	& li:hover, & li.active {
+	li:hover,
+	li.active {
 		background-color: $darkBaseBGHover;
-		& a {
+		a {
 			color: lighten($darkBaseText, 20%);
 		}
 	}
-	& .divider {
+	.divider {
 		background-color: transparent;
 	}
 }
@@ -393,9 +405,9 @@ table.striped tbody tr:nth-child(odd) {
 
 .side-nav .help .collapsible li {
 	padding: 0 15px;
-	& ul li {
+	ul li {
 		padding: 0;
-		& a {
+		a {
 			padding: 0;
 		}
 	}
@@ -403,12 +415,14 @@ table.striped tbody tr:nth-child(odd) {
 
 .selectize-dropdown {
 	padding: 0;
-	& .active {
+	.active {
 		color: $headerColor;
 	}
 }
 
-.selectize-dropdown, .selectize-input, .selectize-input input {
+.selectize-dropdown,
+.selectize-input,
+.selectize-input input {
 	color: $baseText;
 	font-family: $fwRoman;
 	font-size: 15px;
@@ -427,7 +441,8 @@ table.striped tbody tr:nth-child(odd) {
 	background-repeat: no-repeat;
 }
 
-.selectize-control.single .selectize-input, .selectize-dropdown.single {
+.selectize-control.single .selectize-input,
+.selectize-dropdown.single {
 	border-color: transparent;
 }
 
@@ -441,12 +456,13 @@ table.striped tbody tr:nth-child(odd) {
 
 .single-page-container .selectize-control.form-control {
 	text-indent: 0;
-	& .selectize-input {
+	.selectize-input {
 		text-indent: 2px;
 	}
 }
 
-.selectize-dropdown [data-selectable], .selectize-dropdown .optgroup-header {
+.selectize-dropdown [data-selectable],
+.selectize-dropdown .optgroup-header {
 	padding: 16px 3px 14px;
 	&.selected::after {
 		font-family: 'ts-icons';
@@ -456,7 +472,8 @@ table.striped tbody tr:nth-child(odd) {
 	}
 }
 
-.selectize-control.single .selectize-input:after, .selectize-control.single .selectize-input.dropdown-active:after {
+.selectize-control.single .selectize-input:after,
+.selectize-control.single .selectize-input.dropdown-active:after {
 	border-color: $dropdownArrowBlue transparent transparent transparent;
 	margin-top: -5px;
 	border-width: 10px 8px 0px 8px;
@@ -539,60 +556,38 @@ nav.top-nav {
 	box-shadow: none;
 	font-family: $fwLight;
 	padding-left: $sideNavWidth;
-	& a {
+	a {
 		color: $baseText;
 		font-size: 1.2 * $fontSize;
 		line-height: 52px;
 		padding: 0 5px;
 	}
-	& a i {
+	a i {
 		font-size: 1.9 * $fontSize;
 	}
-	& a i[class^="icon-ts"] {
+	a i[class^="icon-ts"] {
 		font-size: 1.5 * $fontSize;
 		line-height: 57px;
-	}
-	& a i.icon-ts-connection {
-		transition: background-color 0.1s cubic-bezier(0.4, 0.0, 0.2, 1);
-		border-radius: 50%;
-		font-size: 15px;
-		width: 22px;
-		height: 22px;
-		line-height: 29px;
-		display: inline-block;
-		margin-top: 14px;
-		text-align: center;
-		color: white;
-		&.connected {
-			background-color: $activeGreen;
-		}
-		&.disconnected {
-			-webkit-animation: blink 3s 0s ease-in-out infinite;
-			-moz-animation: blink 3s 0s ease-in-out infinite;
-			-ms-animation: blink 3s 0s ease-in-out infinite;
-			-o-animation: blink 3s 0s ease-in-out infinite;
-			animation: blink 3s 0s ease-in-out infinite;
-		}
 	}
 }
 
 //Breadcrumb
 
 .breadcrumb {
-	& li:first-child {
+	li:first-child {
 		padding-left: 10px;
-		& i {
+		i {
 			line-height: 46px;
 			margin-right: 5px;
 			float: left;
 		}
 	}
-	& .bcd {
+	.bcd {
 		line-height: 56px;
 		font-family: $fwBook;
 		font-size: 17px;
 	}
-	& .bcds {
+	.bcds {
 		padding: 0 2px;
 		color: $baseText;
 	}
@@ -698,7 +693,7 @@ table.hoverable {
 	&:hover {
 		box-shadow: none;
 	}
-	& tbody tr:hover {
+	tbody tr:hover {
 		background-color: lighten($appBodyBG, 2%);
 	}
 }
@@ -764,7 +759,7 @@ td.dropdown-td {
 	display: inline-block;
 	height: 24px;
 	width: 24px;
-	& i {
+	i {
 		color: #B9BDC9;
 		font-size: 2 * $fontSize;
 		line-height: 22px;
@@ -772,7 +767,8 @@ td.dropdown-td {
 	}
 }
 
-table, .single-page-container {
+table,
+.single-page-container {
 	font-family: $fwBook;
 	font-size: 14px;
 }
@@ -789,19 +785,19 @@ table, .single-page-container {
 	&:not(:last-child) {
 		margin-right: 5px;
 	}
-	& i {
+	i {
 		font-size: 1.6 * $fontSize;
 		line-height: 27px;
 	}
-	& i[class^="icon-ts"] {
+	i[class^="icon-ts"] {
 		font-size: 16px;
 		line-height: 33px;
 		text-align: center;
 	}
-	& i.icon-ts-checkmark {
+	i.icon-ts-checkmark {
 		line-height: 37px;
 	}
-	& i.icon-ts-trash {
+	i.icon-ts-trash {
 		font-size: 18px;
 		line-height: 38px;
 	}
@@ -844,7 +840,7 @@ h4.modal-title {
 	color: $white;
 	padding: 4px 11px 2px;
 	font-size: 1.2 * $fontSize;
-	& i {
+	i {
 		font-size: 2em;
 		position: absolute;
 		line-height: 36px;
@@ -917,9 +913,9 @@ h4.modal-title {
 	padding-top: 10px;
 }
 
-.single-page-container .form-group, .single-page-container .info-group {
+.single-page-container .form-group,
+.single-page-container .info-group {
 	margin-bottom: 0.7rem;
-	// border-bottom: 1px solid $bodyDividerColor;
 	padding-top: 0.5em;
 	padding-bottom: 1.9em;
 }
@@ -996,7 +992,8 @@ p.shareable-tip {
 }
 
 // Handling extra padding for Selectize dropdowns on detail pages
-#updateConnectionForm .form-group:nth-child(4), #updateFeedForm .form-group:nth-child(3) {
+#updateConnectionForm .form-group:nth-child(4),
+#updateFeedForm .form-group:nth-child(3) {
 	padding-top: 0;
 	margin-top: -5px;
 	padding-bottom: 1em;
@@ -1027,12 +1024,11 @@ p.shareable-tip {
 	letter-spacing: 0.6px;
 	text-transform: none;
 	font-family: $fwHeavy;
-	& a {
+	a {
 		color: $baseText;
-
 		font-size: $fontSize * 1.08333;
 	}
-	& a:hover {
+	a:hover {
 		color: $baseText;
 	}
 }
@@ -1057,11 +1053,11 @@ form[id^="update"] .select-wrapper span.caret {
 
 .select-wrapper.form-control {
 	display: inline-block;
-	& input.select-dropdown {
+	input.select-dropdown {
 		background-color: $white;
 		padding-left: 15px;
 	}
-	& .mdi-navigation-arrow-drop-down {
+	.mdi-navigation-arrow-drop-down {
 		@include dropdownArrow;
 		font-size: 36px;
 		right: -14px;
@@ -1314,9 +1310,10 @@ pre.ace-cobalt .ace_comment {
 	margin-bottom: 5em;
 }
 
-button.btn-plus, {
+button.btn-plus {
 	background-color: $updateButton;
-	&:hover, &:focus {
+	&:hover,
+	&:focus {
 		background-color: $updateButton;
 	}
 }
@@ -1348,7 +1345,7 @@ button.btn-plus, {
 	  background-color: transparent;
 		transition: all 0.3s;
 	}
-	&:hover:before{
+	&:hover:before {
 		background-color: $btnSocialColor;
 	}
 	&:hover {
@@ -1461,7 +1458,8 @@ div.col.s6 > p {
 // Widgets List //
 ///////////////////////////////////////////////////////////////////////////////////////
 
-.single-page-container.widgets, .single-page-container.apps {
+.single-page-container.widgets,
+.single-page-container.apps {
 	@include transition(padding-top, 0.1s, cubic-bezier(0.4, 0.0, 0.2, 1));
 	padding-top: 1.15em;
 	will-change: padding-top;
@@ -1482,7 +1480,7 @@ div.col.s6 > p {
 
 .card.small {
 	height: 250px;
-	& .card-content {
+	.card-content {
 		height: 198px;
 	}
 }
@@ -1491,7 +1489,8 @@ div.col.s6 > p {
 	padding: 18px;
 }
 
-.card .card-content .card-title, .card .card-reveal .card-title {
+.card .card-content .card-title,
+.card .card-reveal .card-title {
 	color: $headerColor;
 	line-height: 24px;
 	display: block;
@@ -1573,20 +1572,24 @@ div.col.s6 > p {
 
 table.widget-item {
 	margin-top: 1em;
-	& thead {
+	thead {
 		font-family: $fwHeavy;
-		& td:first-child, th:first-child {
+		td:first-child,
+		th:first-child {
 			padding-left: 0px;
 		}
-		& td:last-child, th:last-child {
+		td:last-child,
+		th:last-child {
 			padding-right: 0px;
 		}
 	}
-	& tbody {
-		& td:first-child, th:first-child {
+	tbody {
+		td:first-child,
+		th:first-child {
 			padding-left: 5px;
 		}
-		& td:last-child, th:last-child {
+		td:last-child,
+		th:last-child {
 			padding-right: 5px;
 		}
 	}
@@ -1624,7 +1627,7 @@ table.widget-item {
 	&.striped tbody tr:nth-child(odd) {
 		background-color: #FCFDFD;
 	}
-	& thead td {
+	thead td {
 		font-family: $fwBlack;
 		padding-top: 1em;
 		padding-bottom: 1em;
@@ -1636,10 +1639,12 @@ table.widget-item {
 		padding-bottom: 1em;
 		line-height: 20px;
 	}
-	& td:first-child, th:first-child {
+	td:first-child,
+	th:first-child {
 		padding-left: 25px;
 	}
-	& td:last-child, th:last-child {
+	td:last-child,
+	th:last-child {
 		padding-right: 25px;
 	}
 }
@@ -1662,14 +1667,14 @@ table.widget-item {
 }
 
 .keypad .key {
-      width: 4rem;
-      height: 4rem;
-      line-height: 4.5rem;
-      font-size: 2rem;
-      &.asterisk {
+	width: 4rem;
+	height: 4rem;
+	line-height: 4.5rem;
+	font-size: 2rem;
+	&.asterisk {
 		font-size: 3rem;
 		line-height: 5.7rem;
-      }
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -1749,7 +1754,8 @@ span.title {
 	margin: 0;
 }
 
-.docpage pre, .docpage code {
+.docpage pre,
+.docpage code {
 	background-color: $appBodyBG;
 	padding: 30px;
 	border: solid 2px #DEE5E8;
@@ -1781,7 +1787,7 @@ span.title {
 #helpfooter {
 	clear: both;
 	padding: 10em 0 1em;
-	& p {
+	p {
 		text-align: center;
 	}
 }
@@ -1820,7 +1826,7 @@ span.title {
 h1.welcome-header {
 	padding: 0.5em 0;
 	text-align: center;
-	& span {
+	span {
 		border-bottom: 2px solid #19A1DE;
 	}
 }
@@ -1835,10 +1841,10 @@ h1.welcome-header {
 
 .settings-picture {
 	height: 10em;
-	& label {
+	label {
 		padding-top: 2em;
 	}
-	& img {
+	img {
 		position: absolute;
 		border: $picBorder;
 	}
@@ -1854,8 +1860,6 @@ h1.welcome-header {
 
 footer {
 	background-color: $appBodyBG;
-	// padding-top: 40px;
-	// padding-bottom: 10px;
 }
 
 @media only screen and (max-width: 992px) {
@@ -1965,7 +1969,6 @@ img.logs-profile {
 	}
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////////////
 // Custom icon font //
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -1981,7 +1984,6 @@ img.logs-profile {
     url("../fonts/ts-icons.svg#ts-icons") format("svg");
   font-weight: normal;
   font-style: normal;
-
 }
 
 [data-icon]:before {
