@@ -309,7 +309,9 @@ mqttClientSubscribe = function(topic) {
 		return;
 	} else {
 		SubscribedTopics[topic] = topic;
-		mqttClient.subscribe(topic);
+		mqttClient.subscribe(topic,function(err, granted){
+		    console.log("MQTTSubcribe", err, granted)
+		});
 	}
 }
 
