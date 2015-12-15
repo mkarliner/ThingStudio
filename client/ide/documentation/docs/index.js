@@ -27,7 +27,7 @@ DocsIndex = {
 			title: "Templates 4: Laying out your templates"
 		},
 		{
-			title: "Widgets",
+			title: "Templates 5: Widgets",
 		}
 		],
 	// HardwarePlatforms: [
