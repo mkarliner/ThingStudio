@@ -1,8 +1,32 @@
 <template name="TutorialsHeader">
+	<h1 class="left">Video Tutorials</h1>
+	<div class="clearfix"></div>
+</template>
+
+<template name="TutorialsBody">
+	<div class="top-row">
+		<div class="col s1 tabs-container">
+			<ul class="tabs">
+				<li class="tab"><a href="#basics">Tutorials</a></li>
+			</ul>
+		</div>
+		<div class="clearfix"></div>
+	</div>
+	<div id="basics">
+		<ul class="collection">
+			{{#each tuts}}
+				<li class="collection-item avatar">
+					<a href="/tutorials/{{urlstring}}"><span class="title">{{title}}</span></a>
+					<p><span class="">Summary:</span> {{summary}}</p>
+				</li>
+			{{/each}}
+		</ul>
+	</div>
+</template>
+
+<!-- <template name="TutorialsHeader">
 	{{#contentFor "appHeader"}}
 		<h1 class="left">Video Tutorials</h1>
-		<!-- <a href="#" class="btn right header-action-2"><span class="ha2-status status-active"></span>BUTTON</a> -->
-		<!-- <a class="header-action-1 clearfix" href="#">Create a new widget</a> -->
 		<div class="clearfix"></div>
 	{{/contentFor}}
 </template>
@@ -26,7 +50,6 @@
 				</div>
 				<div class="card-content">
 					<span class="card-title activator grey-text text-darken-4">ThingStudio IDE Tour<i class="material-icons right">more_vert</i></span>
-					<!-- <p><a href="#">This is a link</a></p> -->
 				</div>
 				<div class="card-reveal">
 					<span class="card-title grey-text text-darken-4">ThingStudio IDE Tour<i class="material-icons right">close</i></span>
@@ -43,7 +66,6 @@
 				</div>
 				<div class="card-content">
 					<span class="card-title activator grey-text text-darken-4">Getting Connected to MQTT <i class="material-icons right">more_vert</i></span>
-					<!-- <p><a href="#">This is a link</a></p> -->
 				</div>
 				<div class="card-reveal">
 					<span class="card-title grey-text text-darken-4">Getting Connected to MQTT<i class="material-icons right">close</i></span>
@@ -60,7 +82,6 @@
 				</div>
 				<div class="card-content">
 					<span class="card-title activator grey-text text-darken-4">Feed Basics: Getting data in &amp; out of ThingStudio<i class="material-icons right">more_vert</i></span>
-					<!-- <p><a href="#">This is a link</a></p> -->
 				</div>
 				<div class="card-reveal">
 					<span class="card-title grey-text text-darken-4">Feed Basics: Getting data in &amp; out of ThingStudio<i class="material-icons right">close</i></span>
@@ -77,7 +98,6 @@
 				</div>
 				<div class="card-content">
 					<span class="card-title activator grey-text text-darken-4">Your First UI: Displaying Live Data<i class="material-icons right">more_vert</i></span>
-					<!-- <p><a href="#">This is a link</a></p> -->
 				</div>
 				<div class="card-reveal">
 					<span class="card-title grey-text text-darken-4">Your First UI: Displaying Live Data<i class="material-icons right">close</i></span>
@@ -94,7 +114,6 @@
 				</div>
 				<div class="card-content">
 					<span class="card-title activator grey-text text-darken-4">Sending data from ThingStudio to the IoT<i class="material-icons right">more_vert</i></span>
-					<!-- <p><a href="#">This is a link</a></p> -->
 				</div>
 				<div class="card-reveal">
 					<span class="card-title grey-text text-darken-4">Sending data from ThingStudio to the IoT<i class="material-icons right">close</i></span>
@@ -103,4 +122,4 @@
 			</div>
 		</div>
 	</div>
-</template>
+</template> -->

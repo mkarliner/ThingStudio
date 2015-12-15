@@ -7,10 +7,7 @@ if(Meteor.isServer) {
 		//purgeDate.setDate(now.getDate() - 1); //Yesterday
 		purgeDate = new Date(now.getTime() - 24 * 60 * 60000)
 		numremoved = SysLogs.remove({date: {$lt: purgeDate}});
-		// console.log("Purged syslogs, removed ", numremoved);
-
 	}, 1000 * 60 * 10); //10 minute purge
-
 }
 
 

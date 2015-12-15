@@ -54,11 +54,6 @@ Schemas.Screen = new SimpleSchema({
 		optional: true,
 		max: 100
 	},
-	// tags: {
-	// 	type: [String],
-	// 	index: true,
-	// 	optional: true
-	// },
 	theme: {
 		type: String,
 		optional: true,
@@ -161,13 +156,7 @@ Schemas.Screen = new SimpleSchema({
       },
       denyInsert: true,
       optional: true
-    },
-	// public: {
-	// 	type: Boolean,
-	// 	defaultValue: false
-	// }
-//
-
+    }
 });
 
 Screens.before.insert(function(userId, doc) {
@@ -184,6 +173,12 @@ Screens.before.insert(function(userId, doc) {
 	}
 });
 
+Screens.after.insert(function (userId, doc) {
+	if( Meteor.isClient ){
+		sAlert.success( "Template created.", { onRouteClose: false } );
+		Router.go('Edit Template', {_id: doc._id});
+	}
+})
 
 Screens.before.update(function (userId, doc, fieldNames, modifier, options) {
 	if(Meteor.isClient) {
@@ -202,7 +197,7 @@ Screens.after.update(function(userId, doc, fieldNames, modifier, options) {
 		delete Template[name]; //Remove the existing template instance.
 		//console.log("Updated Screen", template.data.doc.html);
 		compret = compileTemplate(name, doc.html, doc.js);
-		Alerts.insert(compret);
+		// Alerts.insert(compret);
 		//Track on google analytics, if not admin
 		user = Meteor.users.findOne({_id: userId});
 		if(user.roles == undefined) {
@@ -212,6 +207,7 @@ Screens.after.update(function(userId, doc, fieldNames, modifier, options) {
 			  Username: user.username,
 			});
 		}
+		sAlert.success( "Template updated.", { timeout: 1500 } );
 	}
 	if(Meteor.isServer) {
         //console.log("SCRUOP: ", doc,userId, fieldNames, modifier, options);
@@ -234,11 +230,12 @@ Screens.after.update(function(userId, doc, fieldNames, modifier, options) {
 	}
 });
 
-Screens.after.insert(function (userId, doc) {
+Screens.after.remove( function(userId, doc) {
 	if(Meteor.isClient){
-		Router.go('Edit Template', {_id: doc._id});
+    sAlert.success( "Templated deleted." );
 	}
-})
+});
+
 
 Screens.attachSchema(Schemas.Screen);
 

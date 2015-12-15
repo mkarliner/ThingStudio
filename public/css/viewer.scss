@@ -11,32 +11,6 @@ $inactiveRed: #B9513C;
 // $headerColor: #676975;
 //
 
-$fwLight: 'AvenirLTStd-Light';
-.fwLight {
-	font-family: $fwLight;
-}
-$fwBook: 'AvenirLTStd-Book';
-.fwBook {
-	font-family: $fwBook;
-}
-$fwRoman: 'AvenirLTStd-Roman';
-.fwRoman {
-	font-family: $fwRoman;
-}
-$fwMedium: 'AvenirLTStd-Medium';
-.fwMedium {
-	font-family: $fwMedium;
-}
-$fwHeavy: 'AvenirLTStd-Heavy';
-.fwHeavy {
-	font-family: $fwHeavy;
-}
-$fwBlack: 'AvenirLTStd-Black';
-.fwBlack {
-	font-family: $fwBlack;
-}
-
-
 // Material Design Colors
 $red: #F44336;
 $lightMarlboro: #C62828;
@@ -95,11 +69,34 @@ a .letter-t { background-color: $indigo; }
 a .letter-u { background-color: $darkBlue; }
 a .letter-v { background-color: $deepPurple; }
 a .letter-w { background-color: $royalPurple; }
-a .letter-x { background-color: transparent; border: 2px solid $xGreen; color: $darkBase; font-family: $fwHeavy; width: 48px; height: 48px;}
+a .letter-x { background-color: transparent; border: 2px solid $xGreen; color: $darkBase; width: 48px; height: 48px; }
 a .letter-y { background-color: $purple; }
 a .letter-z { background-color: $lightPurple; }
 
-
+$fwLight: 'AvenirLTStd-Light';
+.fwLight {
+	font-family: $fwLight;
+}
+$fwBook: 'AvenirLTStd-Book';
+.fwBook {
+	font-family: $fwBook;
+}
+$fwRoman: 'AvenirLTStd-Roman';
+.fwRoman {
+	font-family: $fwRoman;
+}
+$fwMedium: 'AvenirLTStd-Medium';
+.fwMedium {
+	font-family: $fwMedium;
+}
+$fwHeavy: 'AvenirLTStd-Heavy';
+.fwHeavy {
+	font-family: $fwHeavy;
+}
+$fwBlack: 'AvenirLTStd-Black';
+.fwBlack {
+	font-family: $fwBlack;
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////
 // CSS RESET //
@@ -111,7 +108,19 @@ a .letter-z { background-color: $lightPurple; }
    License: none (public domain)
 */
 
-html, body, div, span, h1, h2, h3, p, a, img, header, menu, nav {
+html,
+body,
+div,
+span,
+h1,
+h2,
+h3,
+p,
+a,
+img,
+header,
+menu,
+nav {
 	margin: 0;
 	padding: 0;
 	border: 0;
@@ -120,7 +129,10 @@ html, body, div, span, h1, h2, h3, p, a, img, header, menu, nav {
 	vertical-align: baseline;
 }
 /* HTML5 display-role reset for older browsers */
-footer, header, menu, nav {
+footer,
+header,
+menu,
+nav {
 	display: block;
 }
 body {
@@ -128,14 +140,18 @@ body {
 	display: flex;
 	overflow-x: hidden;
 }
-ol, ul {
+ol,
+ul {
 	list-style: none;
 }
-blockquote, q {
+blockquote,
+q {
 	quotes: none;
 }
-blockquote:before, blockquote:after,
-q:before, q:after {
+blockquote:before,
+blockquote:after,
+q:before,
+q:after {
 	content: '';
 	content: none;
 }
@@ -147,241 +163,6 @@ table {
 .clearfix { display: inline-block; }
 * html .clearfix { height: 1%; }
 .clearfix { display: block; }
-
-///////////////////////////////////////////////////////////////////////////////////////
-// App Frame //
-///////////////////////////////////////////////////////////////////////////////////////
-
-body {
-	font-family: $fontFace;
-	-webkit-font-smoothing: antialiased;
-}
-
-.app-wrapper {
-	display: flex;
-	flex: 1;
-	min-height: 100vh;
-  flex-direction: column;
-}
-
-.app-wrapper-inner {
-	display: flex;
-}
-
-.app-body-wrapper {
-	display: flex;
-	flex: 1;
-	opacity: 1;
-	background-color: #F8F8F8;
-	min-height: calc( 100vh - 114px );
-  flex-direction: column;
-	transition: all 300ms ease-in-out;
-}
-
-.debug-wrapper {
-	display: flex;
-	flex: 0.0001;
-	min-width: 0;
-	opacity: 1;
-	background-color: #F8F8F8;
-	color: #858C9D;
-	min-height: calc( 100vh - 114px );
-  flex-direction: column;
-	transition: all 300ms ease-in-out;
-}
-
-.app-body-wrapper.debug-open {
-	flex: 0.0001;
-	opacity: 1;
-}
-
-
-.debug-wrapper.debug-open {
-	flex: 1;
-	opacity: 1;
-}
-
-.app-header-wrapper {
-  order: -1;
-	background-color: $darkBase;
-	padding: 0px 20px;
-}
-
-.app-footer-wrapper {
-	background-color: $darkBase;
-}
-
-.animation-container {
-	width: 100%;
-	height: 100%;
-}
-
-.debug-header {
-	background: white;
-	padding: 20px 10px;
-}
-
-.debug-header h1 {
-	color: #676975;
-	font-size: 1.3rem;
-}
-
-.debug-body .tabs {
-	display: flex;
-	justify-content: flex-start;
-	padding: 0;
-	text-align: center;
-	height: 48px;
-	background-color: #fff;
-	margin: 0 auto;
-	white-space: nowrap;
-}
-
-.debug-body .tabs .tab {
-  flex-grow: 1;
-  line-height: 48px;
-  height: 45px;
-  margin: 0;
-  text-transform: uppercase;
-}
-
-.debug-body .tabs .tab a {
-	color: #858C9D;
-	font-family: "AvenirLTStd-Black";
-	font-size: 13px;
-	display: block;
-	height: 100%;
-	width: 100%;
-	text-decoration: none;
-	border-bottom: 3px solid transparent;
-}
-
-.debug-body .tabs .tab a:focus {
-	outline: none;
-}
-
-.debug-body .tabs .tab a.active {
-	border-bottom-color: #19A1DE;
-}
-
-.debug-page > div {
-	display: none;
-}
-
-.debug-page #subscribed {
-	display: block;
-}
-
-.debug-wrapper table {
-	width: 100%;
-}
-
-.debug-wrapper thead {
-	border-bottom: #dcdcdc 1.5px solid;
-}
-
-.debug-wrapper table th:first-of-type,
-.debug-wrapper table td:first-of-type {
-	padding-left: 10px;
-}
-
-.debug-wrapper table th:last-of-type,
-.debug-wrapper table td:last-of-type {
-	padding-right: 10px;
-}
-
-
-.debug-wrapper table th {
-	font-family: "AvenirLTStd-Heavy";
-	text-align: left;
-	font-size: 13px;
-	letter-spacing: 0.3px;
-	text-transform: uppercase;
-	padding: 15px 0;
-}
-
-.debug-wrapper table td {
-	font-size: 3.5vw;
-	padding: 10px 0;
-	overflow: hidden;
-}
-
-main {
-	height: 100%;
-	overflow-y: scroll;
-}
-
-.transitioner {
-	flex: 1;
-}
-
-h1.nothing {
-	margin: 2em 0;
-	text-align: center;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////
-// Credentials //
-///////////////////////////////////////////////////////////////////////////////////////
-
-.credentials-body header {
-	background-color: $appBodyBG;
-}
-
-.credentials-form {
-	padding: 0 10px;
-	max-width: 450px;
-	margin: 0 auto;
-	h2{
-		font-family: $fwMedium;
-		color: $headerColor;
-		text-align: center;
-		font-size: 1em;
-		margin: 1rem;
-		line-height: 140%;
-	}
-	fieldset {
-		margin: 0;
-		padding: 0 4px 0 0;
-		border: none;
-	}
-	label {
-		color: #676975;
-	}
-	input[type="text"], input[type="password"] {
-		height: 60px;
-		border: 2px solid #D2D5D9;
-		color: #9e9e9e;
-		text-indent: 14px;
-		margin-bottom: 1em;
-		font-size: 1rem;
-		width: 100%;
-		transition: all 0.3s;
-		&:focus {
-			outline: none;
-			border-bottom: 2px solid #4AAFE2;
-		}
-	}
-	.btn-login {
-		font-family: "AvenirLTStd-Book";
-		height: 60px;
-		background-color: #76D4E1;
-		margin-top: 0.8em;
-		text-transform: none;
-		font-size: 20px;
-		line-height: 150%;
-		border-radius: 2px;
-		display: block;
-		width: 100%;
-		outline: none;
-		border: none;
-		color: white;
-		transition: background-color 0.3s;
-		&:hover {
-			background-color: lighten(#76D4E1, 5%);
-		}
-	}
-}
 
 ///////////////////////////////////////////////////////////////////////////////////////
 // Simple Grid System //
@@ -664,6 +445,241 @@ h1.nothing {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
+// App Frame //
+///////////////////////////////////////////////////////////////////////////////////////
+
+body {
+	font-family: $fontFace;
+	-webkit-font-smoothing: antialiased;
+}
+
+.app-wrapper {
+	display: flex;
+	flex: 1;
+	min-height: 100vh;
+  flex-direction: column;
+}
+
+.app-wrapper-inner {
+	display: flex;
+}
+
+.app-body-wrapper {
+	display: flex;
+	flex: 1;
+	opacity: 1;
+	background-color: #F8F8F8;
+	min-height: calc( 100vh - 114px );
+  flex-direction: column;
+	transition: all 300ms ease-in-out;
+}
+
+.debug-wrapper {
+	display: flex;
+	flex: 0.0001;
+	min-width: 0;
+	opacity: 1;
+	background-color: #F8F8F8;
+	color: #858C9D;
+	min-height: calc( 100vh - 114px );
+  flex-direction: column;
+	transition: all 300ms ease-in-out;
+}
+
+.app-body-wrapper.debug-open {
+	flex: 0.0001;
+	opacity: 1;
+}
+
+.debug-wrapper.debug-open {
+	flex: 1;
+	opacity: 1;
+}
+
+.app-header-wrapper {
+  order: -1;
+	background-color: $darkBase;
+	padding: 0px 20px;
+}
+
+.app-footer-wrapper {
+	background-color: $darkBase;
+}
+
+.animation-container {
+	width: 100%;
+	height: 100%;
+}
+
+.debug-header {
+	background: white;
+	padding: 20px 10px;
+}
+
+.debug-header h1 {
+	color: #676975;
+	font-size: 1.3rem;
+}
+
+.debug-body .tabs {
+	display: flex;
+	justify-content: flex-start;
+	padding: 0;
+	text-align: center;
+	height: 48px;
+	background-color: #fff;
+	margin: 0 auto;
+	white-space: nowrap;
+}
+
+.debug-body .tabs .tab {
+  flex-grow: 1;
+  line-height: 48px;
+  height: 45px;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.debug-body .tabs .tab a {
+	color: #858C9D;
+	font-family: "AvenirLTStd-Black";
+	font-size: 13px;
+	display: block;
+	height: 100%;
+	width: 100%;
+	text-decoration: none;
+	border-bottom: 3px solid transparent;
+}
+
+.debug-body .tabs .tab a:focus {
+	outline: none;
+}
+
+.debug-body .tabs .tab a.active {
+	border-bottom-color: #19A1DE;
+}
+
+.debug-page > div {
+	display: none;
+}
+
+.debug-page #subscribed {
+	display: block;
+}
+
+.debug-wrapper table {
+	width: 100%;
+}
+
+.debug-wrapper thead {
+	border-bottom: #dcdcdc 1.5px solid;
+}
+
+.debug-wrapper table th:first-of-type,
+.debug-wrapper table td:first-of-type {
+	padding-left: 10px;
+}
+
+.debug-wrapper table th:last-of-type,
+.debug-wrapper table td:last-of-type {
+	padding-right: 10px;
+}
+
+
+.debug-wrapper table th {
+	font-family: "AvenirLTStd-Heavy";
+	text-align: left;
+	font-size: 13px;
+	letter-spacing: 0.3px;
+	text-transform: uppercase;
+	padding: 15px 0;
+}
+
+.debug-wrapper table td {
+	font-size: 3.5vw;
+	padding: 10px 0;
+	overflow: hidden;
+}
+
+main {
+	height: 100%;
+	overflow-y: scroll;
+}
+
+.transitioner {
+	flex: 1;
+}
+
+h1.nothing {
+	margin: 2em 0;
+	text-align: center;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+// Credentials //
+///////////////////////////////////////////////////////////////////////////////////////
+
+.credentials-body header {
+	background-color: $appBodyBG;
+}
+
+.credentials-form {
+	padding: 0 10px;
+	max-width: 450px;
+	margin: 0 auto;
+	h2{
+		font-family: $fwMedium;
+		color: $headerColor;
+		text-align: center;
+		font-size: 1em;
+		margin: 1rem;
+		line-height: 140%;
+	}
+	fieldset {
+		margin: 0;
+		padding: 0 4px 0 0;
+		border: none;
+	}
+	label {
+		color: #676975;
+	}
+	input[type="text"],
+	input[type="password"] {
+		height: 60px;
+		border: 2px solid #D2D5D9;
+		color: #9e9e9e;
+		text-indent: 14px;
+		margin-bottom: 1em;
+		font-size: 1rem;
+		width: calc(100% - 2px);
+		transition: all 0.3s;
+		&:focus {
+			outline: none;
+			border-bottom: 2px solid #4AAFE2;
+		}
+	}
+	.btn-login {
+		font-family: "AvenirLTStd-Book";
+		height: 60px;
+		background-color: #76D4E1;
+		margin-top: 0.8em;
+		text-transform: none;
+		font-size: 20px;
+		line-height: 150%;
+		border-radius: 2px;
+		display: block;
+		width: 100%;
+		outline: none;
+		border: none;
+		color: white;
+		transition: background-color 0.3s;
+		&:hover {
+			background-color: lighten(#76D4E1, 5%);
+		}
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
 // Buttons //
 ///////////////////////////////////////////////////////////////////////////////////////
 
@@ -811,7 +827,8 @@ ul.screens-list {
 // Remove vertical scrollbar on Windows Chrome //
 ///////////////////////////////////////////////////////////////////////////////////////
 
-.app-body-wrapper, .list-wrapper {
+.app-body-wrapper,
+.list-wrapper {
 	width: 100%;
 	height: calc( 100vh - 114px);
 }

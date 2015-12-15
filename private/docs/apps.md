@@ -5,29 +5,28 @@ group: "Basics"
 summary: "Apps are the basic unit of work in ThingStudio"
 ---
 
-An app in ThingStudio is  simply a collection of connections, feeds, screens, and theme that together form an single application.
-Any time you are working in ThingStudio, it will be in terms of the context of the current app. The equivalent in other IDE's might
-be a project, or something similar.
+An app in ThingStudio is simply a collection of connections, feeds and templates that together form a single application.
+Any time you are working in ThingStudio, it will be in the context of the "current app". The equivalent in other IDE's might
+be a project, or even a folder.
 
 ## Inheritance
 
-Apps can created to inherit resources (connections, feeds etc) from another app.  All apps inherit resources from the System App.
-This app defines the connection to the free ThingStudio MQTT broker, and also all the system defined widgets.
+Apps can inherit resources (connections, feeds, templates, etc.) from another app. __All__ apps invisibly inherit resources from the __System App__. The System App defines the connection to the free ThingStudio MQTT broker, and it also contains all of the system-defined widgets.
 
-Inheritance gives you a variety of convenient ways of organizing your work. For example, you might want to create a app on which to base all your apps, which contains just the details of the connection to your home network, and any widgets that you might have designed so you don't have to define them again in each app.
+This inheritance gives you a variety of convenient ways to organize your work. For example, you might want to create one app on which to base all of your other apps. The "base" app could contain only the details of the connection to your home MQTT broker or an HTTP web service, along with any custom widgets that you might have created, thereby saving you the trouble of creating and maintaining these in each subsequent app.
 
 ## Sharing Apps
 
-Apps are toggleable as private / shareable. If an app is marked "sharable" or "public" you can send anyone the share URL of your app and they will be able to access it immediately without logging into the system.
+Apps can be marked as private (default) or shareable. If an app is marked "sharable" you can send anyone the share URL of your app and they will be able to access it immediately.
 
-If you want to have better control of your users than just sharing or not sharing, you can setup user credentials in the connection to your MQTT broker, (see [MQTT Connections & Feeds](/docs/mqtt-connections-and-feeds)). That way even if an app is shareable, users with the share URL will also have to prodivde a username and password to connect to your MQTT broker.
+If you want to have finer control over access to your app, you can setup user credentials in the connection to your MQTT broker, (see [MQTT Connections & Feeds](/docs/mqtt-connections-and-feeds)). That way even if an app is marked as shareable, users with the share URL will still have to provide a username and password to connect to your MQTT broker.
 
-Access control can be simiarly configured via HTTP, if that is your data transport of choice (see [HTTP Connections & Feeds](/docs/http-connections-and-feeds)).
+Access control can be similarly configured via HTTP (via basic auth or perhaps .htaccess), if this is your data transport of choice (see [HTTP Connections & Feeds](/docs/http-connections-and-feeds)).
 
 ## Navigating around your app
 
-If you have more than one template in your app, you can nominate one of them to be the 'home page' which a user will be sent to when they access the share URL.
+If you have more than one template in your app, you can nominate one of them to be the 'home page', which will be the first thing a user sees upon loading your app.
 
-If, again, you do have more than one screen in your app, and have <strong>not</strong> nominated a home screen, users will be shown a default menu listing all the screens in your app which will enable them to pick one.
+If you do not nominate a home template, users will be shown a default menu listing all the templates in your app.
 
 To make your own custom navigation, [read this doc](/docs/custom-navigation).

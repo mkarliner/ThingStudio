@@ -132,16 +132,23 @@ Meteor.startup(function() {
 				return;
 			}
 			if(this.userId == app.owner || app.shareable || isAdmin(this.userId)) {
+<<<<<<< HEAD
                 		aptids = getAppTree(appId);
 				apts =  Apps.find({_id: {$in: aptids}});
                 		console.log("Returning SINGLE app tree", appcurr.fetch(), apts.fetch())
                 		return apts;
+=======
+        aptids = getAppTree(appId);
+				apts =  Apps.find({_id: {$in: aptids}});
+        console.log("Returning SINGLE app tree", appcurr.fetch(), apts.fetch())
+        return apts;
+>>>>>>> 6a47428c8030ae22ef6384e5ff69d429e1954d21
 			} else {
 				console.log("Attempt to access private app", app)
 				return [];
 			}
 		} else {
-            //FIXME - Apptree
+	    //FIXME - Apptree
 			apps = Apps.find({owner: this.userId});
 			// console.log("Publish for ", this.userId)
 			return apps;
@@ -155,6 +162,7 @@ Meteor.startup(function() {
 		if(basicExampleApp) {
 			applist = [],
 			applist.push(basicExampleApp);
+			// console.log("here is applist: ", applist)
 			if(isAdmin(this.userId))  {
 				applist.push(systemApp);
 			}
@@ -569,5 +577,41 @@ Meteor.startup(function() {
 		// console.log("Widget Upsert", res);
 
 	}
+
+	Tutorials.remove({})
+	Tutorials.insert({
+		title: "ThingStudio IDE Tour",
+		url: "https://www.youtube.com/embed/piA3nT86Rn4",
+		urlstring: "thingstudio-ide-tour",
+		summary: "A quick tour of the ThingStudio IDE"
+		})
+	Tutorials.insert({
+		title: "Getting Connected to MQTT",
+		url: "https://www.youtube.com/embed/eMcUoa3hOso",
+		urlstring: "getting-connected-to-mqtt",
+		summary: "How to connect a ThingStudio App to an MQTT broker"
+	})
+	Tutorials.insert({
+		title: "Feed Basics: Getting data in and out of ThingStudio",
+		url: "https://www.youtube.com/embed/e0QFQ8mDRaU",
+		urlstring: "feed-basics-getting-data-in-and-out-of-thingstudio",
+		summary: "Learn how to setup Feeds to use MQTT data in ThingStudio. This video covers creating both subscribe and publish feeds, debugging with MQTT.fx and the debug overlay."
+	})
+	Tutorials.insert({
+		title: "Your First UI: Displaying Live Data",
+		url: "https://www.youtube.com/embed/bkFMHEAxUhA",
+		urlstring: "your-first-ui-displaying-live-data",
+		summary: "Creating a User Interface that shows real time data from MQTT"
+	})
+	Tutorials.insert({
+		title: "Sending data from ThingStudio to the IoT",
+		url: "https://www.youtube.com/embed/HTGzSwwXCbs",
+		urlstring: "sending-data-from-thingstud-to-the-iot",
+		summary: "How to send data to an MQTT broker from ThingStudio"
+	})
+
+	Meteor.publish( "tutorials", function () {
+		return Tutorials.find();
+	})
 
 });

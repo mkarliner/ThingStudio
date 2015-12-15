@@ -8,7 +8,6 @@ $baseText: #858C9D;
 $fontSize: 12px;
 $fontFace: AvenirLTStd-Roman, Helvetica, sans-serif;
 $appBodyBG: #E9EFF4;
-// $appBodyBG: rgba(218,226,230,1);
 $green: #76D4E1;
 $whiteOverGreen: #F7FAFF;
 $activeGreen: #8DE62C;
@@ -40,6 +39,33 @@ $twitterColor: #55ACEE;
 $facebookColor: #3B5998;
 $linkedInColor: #0077B5;
 $updateButton: #19A1DE;
+
+//Sidebar
+$sideNavWidth: 200px;
+$darkBase: #353C51;
+$darkBaseText: #B2B7C4;
+$darkBaseBGHover: #3D4357;
+$sidenavLiHeight: 39px;
+$sidebarDividerColor: #242938;
+$SBheaderSize: 10px;
+$SBitemSize: 12px;
+$SBcollapseBG: #424960;
+$picBorder: #9196A1 solid 2px;
+
+//Top Nav
+$navBorder: #DCDCDC 1.5px solid;
+
+// App Header
+$headerColor: #696B77;
+$headerActionButton2Color: #DCDCDC;
+
+//App Body
+$bodyDividerColor: #D0D3DC;
+
+//Login styles
+$registerColor: #D2D5D9;
+$forgotColor: #ADB4C5;
+$loginInputColor: #9e9e9e;
 
 //Fonts
 $fwLight: 'AvenirLTStd-Light';
@@ -79,33 +105,6 @@ strong {
 	font-family: $fwHeavy;
 }
 
-//Sidebar
-$sideNavWidth: 200px;
-$darkBase: #353C51;
-$darkBaseText: #B2B7C4;
-$darkBaseBGHover: #3D4357;
-$sidenavLiHeight: 39px;
-$sidebarDividerColor: #242938;
-$SBheaderSize: 10px;
-$SBitemSize: 12px;
-$SBcollapseBG: #424960;
-$picBorder: #9196A1 solid 2px;
-
-//Top Nav
-$navBorder: #DCDCDC 1.5px solid;
-
-// App Header
-$headerColor: #696B77;
-$headerActionButton2Color: #DCDCDC;
-
-//App Body
-$bodyDividerColor: #D0D3DC;
-
-//Login styles
-$registerColor: #D2D5D9;
-$forgotColor: #ADB4C5;
-$loginInputColor: #9e9e9e;
-
 ///////////////////////////////////////////////////////////////////////////////////////
 // Global Styles, Mixins //
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -138,7 +137,8 @@ $loginInputColor: #9e9e9e;
 	transition: $property $duration unquote($method);
 }
 
-html, body {
+html,
+body {
 	height: 100% !important;
 	overflow-x: hidden;
 }
@@ -150,7 +150,6 @@ html {
 	text-rendering: optimizeLegibility;
 	-moz-osx-font-smoothing: grayscale;
 	-moz-font-feature-settings: "liga" on;
-
 }
 
 body {
@@ -216,7 +215,17 @@ textarea.materialize-textarea {
 	margin-bottom: 0;
 }
 
-input[type=text]:focus:not([readonly]), input[type=password]:focus:not([readonly]), input[type=email]:focus:not([readonly]), input[type=url]:focus:not([readonly]), input[type=time]:focus:not([readonly]), input[type=date]:focus:not([readonly]), input[type=datetime-local]:focus:not([readonly]), input[type=tel]:focus:not([readonly]), input[type=number]:focus:not([readonly]), input[type=search]:focus:not([readonly]), textarea.materialize-textarea:focus:not([readonly]) {
+input[type=text]:focus:not([readonly]),
+input[type=password]:focus:not([readonly]),
+input[type=email]:focus:not([readonly]),
+input[type=url]:focus:not([readonly]),
+input[type=time]:focus:not([readonly]),
+input[type=date]:focus:not([readonly]),
+input[type=datetime-local]:focus:not([readonly]),
+input[type=tel]:focus:not([readonly]),
+input[type=number]:focus:not([readonly]),
+input[type=search]:focus:not([readonly]),
+textarea.materialize-textarea:focus:not([readonly]) {
 	border-bottom: $materializeInputBorderActive;
 }
 
@@ -242,16 +251,13 @@ h3 {
 	line-height: 1.5em;
 }
 
-label, form p {
+label,
+form p {
 	font-size: 1.1em;
 }
 
 table.striped tbody tr:nth-child(odd) {
 	background-color: lighten($appBodyBG, 2%);
-}
-
-#lean-overlay {
-	background-color: #FFF;
 }
 
 .modal-content p {
@@ -286,21 +292,13 @@ table.striped tbody tr:nth-child(odd) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-// Global DOM States //
-///////////////////////////////////////////////////////////////////////////////////////
-
-// a:hover {
-// 	color: darken($color, 20%);
-// }
-
-///////////////////////////////////////////////////////////////////////////////////////
 // Sidebar //
 ///////////////////////////////////////////////////////////////////////////////////////
 
 .side-nav {
 	width: 200px;
 	font-family: $fwBook;
-	& a.collapsible-header {
+	a.collapsible-header {
 		margin: 0;
 		padding: 0 30px;
 	}
@@ -309,14 +307,14 @@ table.striped tbody tr:nth-child(odd) {
 .side-nav.fixed {
 	background-color: $darkBase;
 	box-shadow: none;
-	& a {
+	a {
 		color: $darkBaseText;
 		padding: 0 8px;
 		&:hover {
 			color: lighten($darkBaseText, 20%);
 		}
 	}
-	& p.section-header {
+	p.section-header {
 		font-family: $fwHeavy;
 		letter-spacing: 0.05px;
 		font-size: $SBheaderSize;
@@ -324,12 +322,12 @@ table.striped tbody tr:nth-child(odd) {
 		line-height: 10px;
 		margin-top: 0;
 	}
-	& li {
+	li {
 		line-height: $sidenavLiHeight;
 		text-transform: uppercase;
 		position: relative;
 		padding: 0 13px;
-		& a {
+		a {
 			letter-spacing: 0.1px;
 			font-size: 1.08333333 * $fontSize;
 			line-height: $sidenavLiHeight;
@@ -340,18 +338,18 @@ table.striped tbody tr:nth-child(odd) {
 			margin-left: 28px;
 		}
 	}
-	& i {
+	i {
 		float: left;
 		font-size: 1.6 * $fontSize;
 		padding-right: 10px;
 		margin-top: 6px;
 	}
-	& i[class^="icon-ts"] {
+	i[class^="icon-ts"] {
 		font-size: 16px;
 		position: absolute;
 		top: -4px;
 	}
-	& p.my-name {
+	p.my-name {
 		position: relative;
 		margin-top: 0.5rem;
 		padding-top: 0.2rem;
@@ -359,7 +357,7 @@ table.striped tbody tr:nth-child(odd) {
 		display: inline;
 		padding-right: 2em;
 		text-transform: capitalize;
-		& i {
+		i {
 			position: absolute;
 			right: 0;
 			top: -16px;
@@ -370,13 +368,14 @@ table.striped tbody tr:nth-child(odd) {
 			margin-right: 0;
 		}
 	}
-	& li:hover, & li.active {
+	li:hover,
+	li.active {
 		background-color: $darkBaseBGHover;
-		& a {
+		a {
 			color: lighten($darkBaseText, 20%);
 		}
 	}
-	& .divider {
+	.divider {
 		background-color: transparent;
 	}
 }
@@ -406,9 +405,9 @@ table.striped tbody tr:nth-child(odd) {
 
 .side-nav .help .collapsible li {
 	padding: 0 15px;
-	& ul li {
+	ul li {
 		padding: 0;
-		& a {
+		a {
 			padding: 0;
 		}
 	}
@@ -416,12 +415,14 @@ table.striped tbody tr:nth-child(odd) {
 
 .selectize-dropdown {
 	padding: 0;
-	& .active {
+	.active {
 		color: $headerColor;
 	}
 }
 
-.selectize-dropdown, .selectize-input, .selectize-input input {
+.selectize-dropdown,
+.selectize-input,
+.selectize-input input {
 	color: $baseText;
 	font-family: $fwRoman;
 	font-size: 15px;
@@ -440,7 +441,8 @@ table.striped tbody tr:nth-child(odd) {
 	background-repeat: no-repeat;
 }
 
-.selectize-control.single .selectize-input, .selectize-dropdown.single {
+.selectize-control.single .selectize-input,
+.selectize-dropdown.single {
 	border-color: transparent;
 }
 
@@ -454,12 +456,13 @@ table.striped tbody tr:nth-child(odd) {
 
 .single-page-container .selectize-control.form-control {
 	text-indent: 0;
-	& .selectize-input {
+	.selectize-input {
 		text-indent: 2px;
 	}
 }
 
-.selectize-dropdown [data-selectable], .selectize-dropdown .optgroup-header {
+.selectize-dropdown [data-selectable],
+.selectize-dropdown .optgroup-header {
 	padding: 16px 3px 14px;
 	&.selected::after {
 		font-family: 'ts-icons';
@@ -469,7 +472,8 @@ table.striped tbody tr:nth-child(odd) {
 	}
 }
 
-.selectize-control.single .selectize-input:after, .selectize-control.single .selectize-input.dropdown-active:after {
+.selectize-control.single .selectize-input:after,
+.selectize-control.single .selectize-input.dropdown-active:after {
 	border-color: $dropdownArrowBlue transparent transparent transparent;
 	margin-top: -5px;
 	border-width: 10px 8px 0px 8px;
@@ -552,229 +556,41 @@ nav.top-nav {
 	box-shadow: none;
 	font-family: $fwLight;
 	padding-left: $sideNavWidth;
-	& a {
+	a {
 		color: $baseText;
 		font-size: 1.2 * $fontSize;
 		line-height: 52px;
 		padding: 0 5px;
 	}
-	& a i {
+	a i {
 		font-size: 1.9 * $fontSize;
 	}
-	& a i[class^="icon-ts"] {
+	a i[class^="icon-ts"] {
 		font-size: 1.5 * $fontSize;
 		line-height: 57px;
-	}
-	& a i.icon-ts-connection {
-		transition: background-color 0.1s cubic-bezier(0.4, 0.0, 0.2, 1);
-		border-radius: 50%;
-		font-size: 15px;
-		width: 22px;
-		height: 22px;
-		line-height: 29px;
-		display: inline-block;
-		margin-top: 14px;
-		text-align: center;
-		color: white;
-		&.connected {
-			background-color: $activeGreen;
-		}
-		&.disconnected {
-			-webkit-animation: blink 3s 0s ease-in-out infinite;
-			-moz-animation: blink 3s 0s ease-in-out infinite;
-			-ms-animation: blink 3s 0s ease-in-out infinite;
-			-o-animation: blink 3s 0s ease-in-out infinite;
-			animation: blink 3s 0s ease-in-out infinite;
-		}
 	}
 }
 
 //Breadcrumb
 
 .breadcrumb {
-	& li:first-child {
+	li:first-child {
 		padding-left: 10px;
-		& i {
+		i {
 			line-height: 46px;
 			margin-right: 5px;
 			float: left;
 		}
 	}
-	& .bcd {
+	.bcd {
 		line-height: 56px;
 		font-family: $fwBook;
 		font-size: 17px;
 	}
-	& .bcds {
+	.bcds {
 		padding: 0 2px;
 		color: $baseText;
 	}
-}
-
-// TopNav MQTT & Debug Dropdown controls
-
-#tnc a {
-	border-left: $navBorder;
-	padding: 0 16px;
-	line-height: 50px;
-}
-
-.debug {
-	transform: translateX(100%);
-	-ms-transform: translateX(100%);
-	-webkit-transform: translateX(100%);
-	transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-	background-color: $white;
-	z-index: 11;
-	position: absolute;
-	top: 52px;
-	right: 0;
-	width: 550px;
-	max-height: 700px;
-	border: $navBorder;
-	will-change: translateY, transform;
-	table {
-		margin-bottom: 2em;
-	}
-	h2 {
-		background-color: $appBodyBG;
-		font-family: $fwBook;
-		font-size: $fontSize * 1.666667;
-		color: $headerColor;
-		padding: 0.3em 15px;
-		margin: 0;
-		display: inline-block;
-		width: 100%;
-		i {
-			position: absolute;
-			top: 9px;
-			left: 13px;
-		}
-		span {
-			display: inline-block;
-			margin-left: 27px;
-		}
-	}
-	h3 {
-		color: $headerColor;
-		text-transform: uppercase;
-		font-family: $fwBlack;
-		padding-left: 15px;
-		margin-top: 0.8em;
-		margin-bottom: 0em;
-	}
-	th {
-		font-family: $fwMedium;
-		text-transform: capitalize;
-		color: $headerColor;
-	}
-	td {
-		padding-top: 4px;
-		padding-bottom: 4px;
-		overflow: hidden;
-	}
-	td:first-child, th:first-child {
-		padding-left: 15px;
-	}
-	td:last-child, th:last-child {
-		padding-right: 15px;
-		padding-left: 15px;
-	}
-}
-
-a.view-full-debug {
-	color: $green;
-	border-bottom: 2px solid $green;
-	font-size: 0.7em;
-	line-height: 1.1em;
-	padding-top: 0.5em;
-}
-
-.debug.debug-open {
-	transform: translateX(0%);
-	-ms-transform: translateX(0%);
-	-webkit-transform: translateX(0%);
-}
-
-.debug-page {
-	th {
-		background-color: transparent;
-	}
-}
-
-///////////////////////////////////////////////////////////////////////////////////////
-// Error Reporting //
-///////////////////////////////////////////////////////////////////////////////////////
-
-.access-error, .screen-errors {
-	border: $errorBorder;
-	color: $errorBorderColor;
-	background-color: lighten($errorBorderColor, 50%);
-}
-
-.alerts {
-	position: absolute;
-	top: 0;
-	left: 0;
-	z-index: 10;
-	width: 100%;
-	display: block;
-	border-top-right-radius: 1px;
-}
-
-.alert {
-	background-color: $white;
-	clear: both;
-}
-
-.alert-type {
-	display: inline-block;
-	color: $white;
-	height: 40px;
-	padding: 0 1rem;
-	line-height: 3.2em;
-	border-top-left-radius: 1px;
-	margin-right: 0.6rem;
-}
-
-.alert-type.warning {
-	background-color: $alertOrange;
-}
-
-.alert-type.success {
-	background-color: $alertGreen;
-}
-
-.alert a.close:not(.dismiss) {
-	  border-radius: 50%;
-	  width: 21px;
-	  height: 21px;
-	  border: 1px solid $alertGray;
-	  color: $alertGray;
-	  line-height: 16px;
-	  text-align: center;
-	  padding-top: 2px;
-	  background-color: white;
-	  font-size: 17px;
-	  margin-top: 9px;
-	  margin-right: 9px;
-	  text-align: center;
-}
-
-.alert a.close.dismiss {
-	border: none;
-	background-color: transparent;
-	color: $alertGray;
-	line-height: 40px;
-	margin-right: 10px;
-}
-
-.alert.success {
-	animation: fadeOut 2700ms ease-in 0s 1 forwards;
-}
-
-.alert span {
-	font-family: $fwMedium;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -840,28 +656,6 @@ a.header-action-1 {
 	background-color: red;
 }
 
-.topic-video {
-	font-size: 2.6em;
-	color: $baseText;
-	border: 1px solid $baseText;
-	line-height: 1em;
-	height: 34px;
-	width: 52px;
-	text-align: center;
-	border-radius: 9px;
-	margin-right: 15px;
-	background-color: transparent;
-	box-shadow: none;
-	padding: 0;
-	&:hover {
-		background-color: transparent;
-	}
-	& i {
-		font-size: 1em;
-		color: lighten($baseText, 5%);
-	}
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////
 // App Body//
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -893,14 +687,13 @@ th {
 	background: $white;
 	padding: 15px 0;
 	border-radius: 0;
-	// color: lighten($baseText, 10% )
 }
 
 table.hoverable {
 	&:hover {
 		box-shadow: none;
 	}
-	& tbody tr:hover {
+	tbody tr:hover {
 		background-color: lighten($appBodyBG, 2%);
 	}
 }
@@ -939,66 +732,9 @@ td.dropdown-td {
 	color: $green;
 }
 
-.add-new-item {
-	@include transition(opacity, 0.1s, cubic-bezier(0.4, 0.0, 0.2, 1));
-	transition-delay: 0.05s;
-	position: absolute;
-	top: 50px;
-	width: calc(100% - #{$sideNavWidth});
-	display: none;
-	will-change: opacity, display;
-	& .divider {
-		background-color: transparent;
-		margin-top: 20px;
-		margin-bottom: 20px;
-	}
-	&.open {
-		display: block;
-		will-change: opacity, display;
-		z-index: 2;
-	}
-	& form {
-		padding-top: 24px;
-	}
-	& .form-group {
-		margin-right: 30px;
-	}
-	& .form-control {
-		padding: 0;
-	}
-	& .control-label {
-		display: none;
-	}
-	&.new-mqtt-feed .selectize-control.form-control.single {
-		width: 170px;
-	}
-	&.new-http-feed .selectize-control.form-control.single.connection-dd {
-		width: 160px;
-	}
-	&.new-http-feed .selectize-control.form-control.single {
-		width: 90px;
-	}
-	&.new-mqtt-connection .selectize-control.form-control.single {
-		width: 180px;
-	}
-	&.new-app .selectize-control.form-control.single {
-		width: 160px;
-	}
-	&.new-widget .selectize-control.form-control.single {
-		width: 210px;
-	}
-	// & .select-wrapper i {
-	// 	@include dropdownArrow;
-	// }
-	& input.select-dropdown {
-		padding-left: 14px;
-	}
-
-}
 .table-action.table-save-new i.icon-ts-checkmark {
 	line-height: 33px;
 }
-
 
 .div-container {
 	margin: -7px auto 0;
@@ -1023,7 +759,7 @@ td.dropdown-td {
 	display: inline-block;
 	height: 24px;
 	width: 24px;
-	& i {
+	i {
 		color: #B9BDC9;
 		font-size: 2 * $fontSize;
 		line-height: 22px;
@@ -1031,7 +767,8 @@ td.dropdown-td {
 	}
 }
 
-table, .single-page-container {
+table,
+.single-page-container {
 	font-family: $fwBook;
 	font-size: 14px;
 }
@@ -1048,19 +785,19 @@ table, .single-page-container {
 	&:not(:last-child) {
 		margin-right: 5px;
 	}
-	& i {
+	i {
 		font-size: 1.6 * $fontSize;
 		line-height: 27px;
 	}
-	& i[class^="icon-ts"] {
+	i[class^="icon-ts"] {
 		font-size: 16px;
 		line-height: 33px;
 		text-align: center;
 	}
-	& i.icon-ts-checkmark {
+	i.icon-ts-checkmark {
 		line-height: 37px;
 	}
-	& i.icon-ts-trash {
+	i.icon-ts-trash {
 		font-size: 18px;
 		line-height: 38px;
 	}
@@ -1103,7 +840,7 @@ h4.modal-title {
 	color: $white;
 	padding: 4px 11px 2px;
 	font-size: 1.2 * $fontSize;
-	& i {
+	i {
 		font-size: 2em;
 		position: absolute;
 		line-height: 36px;
@@ -1176,9 +913,9 @@ h4.modal-title {
 	padding-top: 10px;
 }
 
-.single-page-container .form-group, .single-page-container .info-group {
+.single-page-container .form-group,
+.single-page-container .info-group {
 	margin-bottom: 0.7rem;
-	// border-bottom: 1px solid $bodyDividerColor;
 	padding-top: 0.5em;
 	padding-bottom: 1.9em;
 }
@@ -1254,9 +991,9 @@ p.shareable-tip {
 	display: inline-block;
 }
 
-
 // Handling extra padding for Selectize dropdowns on detail pages
-#updateConnectionForm .form-group:nth-child(4), #updateFeedForm .form-group:nth-child(3) {
+#updateConnectionForm .form-group:nth-child(4),
+#updateFeedForm .form-group:nth-child(3) {
 	padding-top: 0;
 	margin-top: -5px;
 	padding-bottom: 1em;
@@ -1287,12 +1024,11 @@ p.shareable-tip {
 	letter-spacing: 0.6px;
 	text-transform: none;
 	font-family: $fwHeavy;
-	& a {
+	a {
 		color: $baseText;
-
 		font-size: $fontSize * 1.08333;
 	}
-	& a:hover {
+	a:hover {
 		color: $baseText;
 	}
 }
@@ -1317,11 +1053,11 @@ form[id^="update"] .select-wrapper span.caret {
 
 .select-wrapper.form-control {
 	display: inline-block;
-	& input.select-dropdown {
+	input.select-dropdown {
 		background-color: $white;
 		padding-left: 15px;
 	}
-	& .mdi-navigation-arrow-drop-down {
+	.mdi-navigation-arrow-drop-down {
 		@include dropdownArrow;
 		font-size: 36px;
 		right: -14px;
@@ -1389,9 +1125,6 @@ form[id^="update"] .select-wrapper span.caret {
 	border-top-color: $green;
 	border-bottom-color: $green;
 	color: $baseText;
-	// -webkit-clip-path: polygon(0 0, 100% 20%, 100% 100%, 0% 80%);
-	// background-color: #76D4E1;
-	// color: white;
 }
 
 .template-filters li.current:first-of-type {
@@ -1577,9 +1310,10 @@ pre.ace-cobalt .ace_comment {
 	margin-bottom: 5em;
 }
 
-button.btn-plus, {
+button.btn-plus {
 	background-color: $updateButton;
-	&:hover, &:focus {
+	&:hover,
+	&:focus {
 		background-color: $updateButton;
 	}
 }
@@ -1611,15 +1345,12 @@ button.btn-plus, {
 	  background-color: transparent;
 		transition: all 0.3s;
 	}
-	&:hover:before{
+	&:hover:before {
 		background-color: $btnSocialColor;
 	}
 	&:hover {
 		color: $darkBase;
 	}
-	// &:hover {
-	// 	background-color: $btnSocialColor;
-	// }
 }
 
 // Social share
@@ -1727,7 +1458,8 @@ div.col.s6 > p {
 // Widgets List //
 ///////////////////////////////////////////////////////////////////////////////////////
 
-.single-page-container.widgets, .single-page-container.apps {
+.single-page-container.widgets,
+.single-page-container.apps {
 	@include transition(padding-top, 0.1s, cubic-bezier(0.4, 0.0, 0.2, 1));
 	padding-top: 1.15em;
 	will-change: padding-top;
@@ -1748,7 +1480,7 @@ div.col.s6 > p {
 
 .card.small {
 	height: 250px;
-	& .card-content {
+	.card-content {
 		height: 198px;
 	}
 }
@@ -1757,7 +1489,8 @@ div.col.s6 > p {
 	padding: 18px;
 }
 
-.card .card-content .card-title, .card .card-reveal .card-title {
+.card .card-content .card-title,
+.card .card-reveal .card-title {
 	color: $headerColor;
 	line-height: 24px;
 	display: block;
@@ -1771,7 +1504,6 @@ div.col.s6 > p {
 		position: absolute;
 		right: -9px;
 	}
-
 }
 
 #getting-started .card-title {
@@ -1823,14 +1555,6 @@ div.col.s6 > p {
 	padding: 0 20px;
 }
 
-// .svg-container svg {
-// 	position: absolute;
-// 	top: 0;
-// 	left: 0;
-// 	width: 100%;
-// 	height: 87%;
-// }
-
 .card .card-action {
 	padding: 10px;
 	background-color: rgba(130, 160, 160, 0.04);
@@ -1848,20 +1572,24 @@ div.col.s6 > p {
 
 table.widget-item {
 	margin-top: 1em;
-	& thead {
+	thead {
 		font-family: $fwHeavy;
-		& td:first-child, th:first-child {
+		td:first-child,
+		th:first-child {
 			padding-left: 0px;
 		}
-		& td:last-child, th:last-child {
+		td:last-child,
+		th:last-child {
 			padding-right: 0px;
 		}
 	}
-	& tbody {
-		& td:first-child, th:first-child {
+	tbody {
+		td:first-child,
+		th:first-child {
 			padding-left: 5px;
 		}
-		& td:last-child, th:last-child {
+		td:last-child,
+		th:last-child {
 			padding-right: 5px;
 		}
 	}
@@ -1899,7 +1627,7 @@ table.widget-item {
 	&.striped tbody tr:nth-child(odd) {
 		background-color: #FCFDFD;
 	}
-	& thead td {
+	thead td {
 		font-family: $fwBlack;
 		padding-top: 1em;
 		padding-bottom: 1em;
@@ -1911,13 +1639,14 @@ table.widget-item {
 		padding-bottom: 1em;
 		line-height: 20px;
 	}
-	& td:first-child, th:first-child {
+	td:first-child,
+	th:first-child {
 		padding-left: 25px;
 	}
-	& td:last-child, th:last-child {
+	td:last-child,
+	th:last-child {
 		padding-right: 25px;
 	}
-
 }
 
 .code-preview {
@@ -1938,14 +1667,14 @@ table.widget-item {
 }
 
 .keypad .key {
-      width: 4rem;
-      height: 4rem;
-      line-height: 4.5rem;
-      font-size: 2rem;
-      &.asterisk {
+	width: 4rem;
+	height: 4rem;
+	line-height: 4.5rem;
+	font-size: 2rem;
+	&.asterisk {
 		font-size: 3rem;
 		line-height: 5.7rem;
-      }
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -1970,7 +1699,7 @@ span.title {
 .docheader h1 {
 	margin-top: 1em;
 	font-family: $fwBlack;
-	font-size: 2.6em;
+	font-size: 3em;
 	margin-bottom: 0.1em;
 }
 
@@ -1978,6 +1707,7 @@ span.title {
 	font-size: 1.5em;
 	font-family: $fwLight;
 	margin: 0;
+	padding-bottom: 2em;
 }
 
 .single-page-container.docpage {
@@ -1986,16 +1716,21 @@ span.title {
 
 .docpage h2 {
 	color: $headerColor;
-	font-size: 1.6em;
+	font-size: 1.7em;
 	font-family: $fwHeavy;
 	letter-spacing: 0.1px;
+	margin-bottom: 0.1em;
+	&:first-of-type {
+		margin-top: 0;
+	}
 }
 
 .docpage h3 {
 	color: $headerColor;
-	font-size: 1.3em;
+	font-size: 1.2em;
 	font-family: $fwHeavy;
 	letter-spacing: 0.1px;
+	margin-bottom: 0.2em;
 }
 
 .docpage p,
@@ -2003,6 +1738,7 @@ span.title {
 	font-size: 1.14em;
 	font-family: $fwRoman;
 	line-height: 1.6em;
+	margin-top: 0;
 }
 
 .docpage ul {
@@ -2018,7 +1754,8 @@ span.title {
 	margin: 0;
 }
 
-.docpage pre, .docpage code {
+.docpage pre,
+.docpage code {
 	background-color: $appBodyBG;
 	padding: 30px;
 	border: solid 2px #DEE5E8;
@@ -2029,6 +1766,10 @@ span.title {
 	background-color: transparent;
 	padding: 0;
 	border: none;
+}
+
+.docpage table {
+	margin-top: 1em;
 }
 
 .docpage thead {
@@ -2046,7 +1787,7 @@ span.title {
 #helpfooter {
 	clear: both;
 	padding: 10em 0 1em;
-	& p {
+	p {
 		text-align: center;
 	}
 }
@@ -2085,7 +1826,7 @@ span.title {
 h1.welcome-header {
 	padding: 0.5em 0;
 	text-align: center;
-	& span {
+	span {
 		border-bottom: 2px solid #19A1DE;
 	}
 }
@@ -2100,10 +1841,10 @@ h1.welcome-header {
 
 .settings-picture {
 	height: 10em;
-	& label {
+	label {
 		padding-top: 2em;
 	}
-	& img {
+	img {
 		position: absolute;
 		border: $picBorder;
 	}
@@ -2119,8 +1860,6 @@ h1.welcome-header {
 
 footer {
 	background-color: $appBodyBG;
-	// padding-top: 40px;
-	// padding-bottom: 10px;
 }
 
 @media only screen and (max-width: 992px) {
@@ -2133,10 +1872,6 @@ footer {
 // Login Form & Preloader //
 ///////////////////////////////////////////////////////////////////////////////////////
 
-// .at-pwd-form {
-// 	background: $darkBase;
-// }
-
 .spinner-container {
 	float: left;
 }
@@ -2148,71 +1883,15 @@ footer {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-// Chat //
+// Sys Logs //
 ///////////////////////////////////////////////////////////////////////////////////////
 
-.chat-window {
-	height: 500px;
-}
-
-.chat-messages {
-	overflow-y: auto;
-	height: 460px;
-	padding-right: 1em;
-	padding-down: 1em;
-}
-
-.chat-entry {
-	clear: left;
-}
-
-.chat-person {
-	float: left;
-}
-
-.chat-img {
-	width: 3em;
-	height: 3em;
-}
-
-.chat-person, .chat-message {
-	padding: 0.5em;
-}
-
-.chat-message {
-	& p {
-		padding: 0;
-		margin: 0;
-		margin-left: 6em;
-	}
-}
-
-.cb {
-	clear: both;
-}
-
-.chat-me {
-	background-color: #C9F0FD;
-	color: $darkBase;
-}
-
-.chat-other {
-	background-color: #56BEED;
-	color: white;
-}
-
-.chat-admin {
-	background-color: #ee6e73;
-	color: white;
-}
-
-.chat-count {
-	background-color: $pink;
-	border-radius: 8px;
-	padding: 2px 8px 0;
-	color: white;
-	line-height: 18px;
-	display: inline-block;
+img.logs-profile {
+	margin-right: 10px;
+	border: #9196A1 solid 2px;
+	height: 84px;
+	max-width: 84px;
+	max-height: auto;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -2290,7 +1969,6 @@ footer {
 	}
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////////////
 // Custom icon font //
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -2306,7 +1984,6 @@ footer {
     url("../fonts/ts-icons.svg#ts-icons") format("svg");
   font-weight: normal;
   font-style: normal;
-
 }
 
 [data-icon]:before {

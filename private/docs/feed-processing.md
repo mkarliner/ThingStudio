@@ -1,14 +1,14 @@
 ---
 title: "Feed Processing"
 urlstring: "feed_processing"
-summary: "Custom Feed Processors"	
+summary: "Custom Feed Processors"
 ---
 
 ##Basics
 Feed processor are routines that change the data going in and out of a feed into a form that can be managed by the rest of ThingStudio.
-There generally two types of feed processor for each transport, processors that manage incoming data, and processors that manage incoming data.
+There generally two types of feed processor for each transport, processors that manage outgoing data, and processors that manage incoming data.
 
-Feed processors need to be registered, that is, declared somewhere in your App's javascript. 
+Feed processors need to be __registered__, that is, declared somewhere in your App-level JavaScript.
 They are registered by a call to 'RegisterFeedProcessor', which takes the following parameters
 
 __name__
@@ -20,8 +20,6 @@ __type__
 There are generally two types of feed processor for each transport. For example,
 for the HTTP transport, type can be HTTPRequest, or HTTPResponse, to process the outgoing
 and incoming data respectively.
-
-
 
 __function__
 
@@ -76,10 +74,10 @@ RegisterFeedProcessor("testReq", "HTTPRequest", function(app, conn, feed, messag
 
 
 
-### Response Processors	
+### Response Processors
 HTTPResponse processors manage the data coming back from the HTTP.call callback.
 They are called with parameters of __app__ the current app, __conn__ the connection, __feed__, (the associated feed), __error__, any
-error conditions, and __result__, which is the returned data. Again, details of the 
+error conditions, and __result__, which is the returned data. Again, details of the
 HTTP.call callback can be found here http://docs.meteor.com/#/full/http_call, but for convenience,
 here are the contents of the result object:
 
@@ -133,5 +131,3 @@ __Example__
 				}
 			});
 	});
-	
-	

@@ -1,0 +1,15 @@
+<template name="TutorialHeader">
+		<h1 class="welcome-header">{{title}}</h1>
+		<div class="clearfix"></div>
+</template>
+
+<template name="TutorialBody">
+	<div class="col s12 m8 offset-m2 welcome-body">
+		<div class="videoWrapper">
+      {{log}}
+      {{#if url}}
+        <iframe width="560" height="315" src="{{url}}" frameborder="0" allowfullscreen></iframe>
+      {{/if}}
+		</div>
+	</div>
+</template>

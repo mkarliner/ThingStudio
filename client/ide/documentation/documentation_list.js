@@ -16,7 +16,7 @@ Template.DocumentationBody.helpers({
 		console.log(this)
 	},
 	excerpt: function(){
-		console.log("DBE" , this)
+		// console.log("DBE" , this)
 		return this.attributes.summary;
 	},
 	publishedDate: function(date) {
@@ -27,7 +27,6 @@ Template.DocumentationBody.helpers({
 	},
 	changes: function(){
 		changes = DocChanges.find({},{sort: {date: -1}});
-		console.log("DocChanges ", changes.fetch())
 		return changes;
 	},
 	docLink: function() {

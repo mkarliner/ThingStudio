@@ -10,6 +10,17 @@ Template.registerHelper(
 );
 
 Template.registerHelper(
+	"userGravatar", function() {
+		if( isAdmin ) {
+			return Gravatar.imageUrl( Meteor.users.findOne({_id: this.user._id}).emails[0].address, {
+				size: 84,
+				default: "http://www.thingstud.io/images/ts-profile-new.png"
+			});
+		}
+	}
+);
+
+Template.registerHelper(
 	"currentUsername", function() {
 		if( Meteor.user() ) {
 			return Meteor.user().username
@@ -99,6 +110,14 @@ Template.registerHelper("indexedArray",
   	return _.map( arr, function( value, index ){
 			return { value: value, index: index, length: length }
   	})
+	}
+)
+
+Template.registerHelper("accessStatus",
+	function () {
+		if(this.owner != Meteor.userId()) {
+			sAlert.info('FYI: This app is read-only. It is for demonstration purposes. Once you feel comfortable, go to Apps and make one of your own!');
+		}
 	}
 )
 

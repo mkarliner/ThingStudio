@@ -1,32 +1,38 @@
 Tables.HTTPConnectionProperties = [
 	{
-		name: "Title",
-		'type:': "String",
-		description: "Title for the connection to be shown in lists"
+		Name: "Title",
+		Type: "String",
+		"Required?": "requred",
+		Description: "Title for the connection."
 	},
 	{
-		name: "Hostname",
-		'type:': "String",
-		description: "The hostname or IP address for your web service"
+		Name: "Hostname",
+		Type: "String",
+		"Required?": "requred",
+		Description: "The hostname or IP address for your web service."
 	},
 	{
-		name: "Port",
-		'type:': "Number",
-		description: "The port your webs service is listening on for http connections. Default port 80"
+		Name: "Port",
+		Type: "Number",
+		"Required?": "requred",
+		Description: "The port your web service is listening on for HTTP connections. Default port 80."
 	},
 	{
-		name: "Protocol",
-		'type:': "Select",
-		description: "This can be either http or https."
+		Name: "Protocol",
+		Type: "Select",
+		"Required?": "requred",
+		Description: "This can be either HTTP or HTTPS."
 	},
 	{
-		name: "Username",
-		'type:': "String",
-		description: "Username for http basic auth or feed processing"
+		Name: "Username",
+		Type: "String",
+		"Required?": "optional",
+		Description: "Username for HTTP basic auth or feed processing."
 	},
 	{
-		name: "Password",
-		'type:': "String",
-		description: "Password for for http basic auth or feed processing"
+		Name: "Password",
+		Type: "String",
+		"Required?": "optional",
+		Description: "Password for HTTP basic auth or feed processing."
 	},
 ]

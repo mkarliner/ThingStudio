@@ -40,7 +40,7 @@ Template.BreadcrumbsContent.helpers({
 		var routeName = Router.current().route.getName();
 		var routePath = Router.current().route.path();
 		var appPrefixRoutes = [ "Connections", "MQTT Connections", "HTTP Connections", "Feeds", "MQTT Feeds", "HTTP Feeds", "Templates", "Themes", "Edit MQTT Feed", "Edit HTTP Feed", "Edit MQTT Connection", "Edit HTTP Connection", "Edit Template", "Safe Edit Template", "Edit Theme" ];
-		var nonDisplayRoutes = [ "Dashboard", "View Widget", "Edit App", "View Doc", "New App", "New Widget", "New Template", "New MQTT Feed", "New HTTP Feed", "New MQTT Connection", "New HTTP Connection" ];
+		var nonDisplayRoutes = [ "Dashboard", "View Widget", "Edit App", "View Doc", "New App", "New Widget", "New Template", "New MQTT Feed", "New HTTP Feed", "New MQTT Connection", "New HTTP Connection", "View Tutorial", "View Tutorial" ];
 		if ( _.contains( nonDisplayRoutes, routeName ) ) {
 			// Applies to: Dashboard, View Widget, Edit App
 			return false;
@@ -50,9 +50,11 @@ Template.BreadcrumbsContent.helpers({
 			var appTreeObj = Session.get("appTreeList")
 			appTreeObj[0].path = "/apps/" + appTreeObj[0]._id;
 			return appTreeObj;
-		} else if ( routeName == "View Doc" ) {
-			// Applies to: Single documentation pages
-			return [ { path: '/docs', title: "Documentation" } ];
+		// } else if ( routeName == "View Doc" ) {
+		// 	// Applies to: Single documentation pages
+		// 	return [ { path: '/docs', title: "Documentation" } ];
+		// } else if ( routeName == "View Tutorial" ) {
+		// 	return [ { path: '/tutorials', title: "Tutorials" } ];
 		} else {
 			// Applies to: Widgets list, Apps list, Documenation, Support, Settings, Chat, Current Users, Sys admin
 			var routeObj = {_id: routePath, title: routeName};
@@ -74,8 +76,10 @@ Template.BreadcrumbsContent.helpers({
 			return [ { item: routeName, path: routePath } ];
 		} else if ( routeName == "View Doc" ) {
 			// Applies to: Single documentation pages
-			// return [ { item: this.title, path: this._id } ];
 			return [ { item: "Documentation", path: "/docs" }, { item: this.attributes.title, path: "/docs/" + this.attributes.urlstring} ];
+		} else if ( routeName == "View Tutorial" ) {
+			// Applies to: Single tutorials pages
+			return [ { item: "Tutorials", path: "/tutorials" }, { item: this.title, path: "/tutorials/" + this.urlstring} ];
 		} else if ( routeName == "Edit MQTT Feed" ) {
 			// Applies to: edit feed page
 			return [ { item: "MQTT Feeds", path: "/feeds" }, { item: this.title, path: "/feeds/" + this._id } ];

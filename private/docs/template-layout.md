@@ -1,5 +1,5 @@
 ---
-title: "Laying out your templates"
+title: "Templates 4: Laying out your templates"
 urlstring: "template-layout"
 group: "Basics"
 summary: "How to arrange your controls and widgets in a template"

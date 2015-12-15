@@ -1,12 +1,12 @@
 ---
-title: 'Displaying data in your Templates'
+title: 'Templates 2: Displaying data in your Templates'
 urlstring: "displaying-data-in-depth"
 summary: "More about displaying data"
 ---
 
 ThingStudio uses <a href="http://handlebarsjs.com/" target="_blank">Handlebars</a>-style helpers to insert live data in to your user interfaces based on Feeds you configure. Handlebars helpers look like this in templates:
 <pre>
-{{| helpername params }} 
+{{| helpername params }}
 </pre>
 
 The above means "insert dynamic data into the DOM using the helper _helpername_ with optional parameters."
@@ -71,7 +71,7 @@ First, the 'messages' helper itself:
 {{| /messages}}
 </pre>
 
-You'll see that the messages helper has a quite different syntax from the other helpers. This is because it is a block 
+You'll see that the messages helper has a quite different syntax from the other helpers. This is because it is a block
 helper. The 'messages' helper allows iteration over an array of objects from the Feed "feedTitleHere". The 'messages' are objects in an array with the following JSON format:
 <pre>
 {

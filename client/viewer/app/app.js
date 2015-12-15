@@ -1,6 +1,3 @@
-// Template.appViewerBody.registerElement('app-body');
-// Template.appScreen.registerElement('app-screen');
-
 Template.ViewApp.helpers({
 	templatelist: function(){
 		// console.log("screens")

@@ -89,7 +89,8 @@ IDEController = PreloadController.extend({
 			Meteor.subscribe( 'syslogs' ),
 			Meteor.subscribe( 'admins' ),
 			Meteor.subscribe( "docs" ),
-			Meteor.subscribe( "doc_changes" )
+			Meteor.subscribe( "doc_changes" ),
+			Meteor.subscribe( "tutorials" )
 		]
 	}
 });

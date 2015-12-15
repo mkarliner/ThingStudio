@@ -1,25 +1,68 @@
 <template name="ViewUserHeader">
   {{#with userDetails}}
-    <h1 class="left">User: {{user.username}} - {{email}}</h1>
-
+    <img class="circle left logs-profile" src="{{userGravatar}}">
+    <h1 class="left">Username: {{user.username}} <br /> Email: {{email}} <br /> Since: {{since}}</h1>
     <div class="clearfix"></div>
   {{/with}}
 </template>
 
 
 <template name="ViewUserBody">
-  {{#with userDetails}}
-    <table class="table">
-      <th>
-        <td>Apps</td>
-      </th>
-      {{#each apps}}
-        <tr>
-          <td class="select-app"><a href="">{{title}}</a> - {{_id}}</td>
-        </tr>
-      {{/each}}
-    </table>
-  {{/with}}
-
-    {{> SysLogs syslogs=syslogs}}
+  <div class="top-row">
+		<div class="col s4 tabs-container">
+			<ul class="tabs">
+				<li class="tab"><a href="#syslogs">Sys Logs</a></li>
+				<li class="tab"><a href="#apps">Apps</a></li>
+        <li class="tab"><a href="#goals">Goals</a></li>
+			</ul>
+		</div>
+		<div class="clearfix"></div>
+	</div>
+    <div id="syslogs">
+      {{> SysLogs syslogs=syslogs}}
+    </div>
+    <div id="apps">
+      {{#with userDetails}}
+        <table class="table">
+          <thead>
+            <tr>
+              <th>App</th>
+              <th>App ID</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each apps}}
+              <tr>
+                <td class="select-app">{{@index}}. <a href="">{{title}}</a></td>
+                <td>{{_id}}</td>
+              </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      {{/with}}
+    </div>
+    <div id="goals">
+      <table class="">
+        <thead>
+          <tr>
+            <th>Read docs</th>
+            <th>Make App</th>
+            <th>Create connection</th>
+            <th>Create feed</th>
+            <th>Update template</th>
+            <th>View App</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Docs read: 5</td>
+            <td>Apps: 2</td>
+            <td>Connections: 3</td>
+            <td>Feeds: 10</td>
+            <td>Template updates: 192</td>
+            <td>Viewed apps: 1029</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 </template>

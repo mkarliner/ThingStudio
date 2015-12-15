@@ -182,7 +182,7 @@ Schemas.HTTPFeed = new SimpleSchema({
 
 HTTPFeeds.before.insert(function(userId, doc) {
 	if(Meteor.isClient) {
-		console.log("BEFOREFEEDINHOOK ", userId, doc, Session.get("currentApp"));
+		// console.log("BEFOREFEEDINHOOK ", userId, doc, Session.get("currentApp"));
 		doc.appId = Session.get("currentApp")._id;
 	} else {
 		app = Apps.findOne(doc.appId);
@@ -196,7 +196,7 @@ HTTPFeeds.before.insert(function(userId, doc) {
 
 
 HTTPFeeds.after.insert(function(userId, doc) {
-				console.log("Feed insert after", userId, doc, Meteor.isClient)
+	// console.log("Feed insert after", userId, doc, Meteor.isClient)
 	if(Meteor.isClient){
 		// if(doc.pubsub != "Publish") {
 		// 	console.log("Feed insert subscription", userId, doc)
@@ -204,28 +204,33 @@ HTTPFeeds.after.insert(function(userId, doc) {
 		// 	topic = topic.substring(0, topic.length - 1);
 		// 	 mqttClientSubscribe(topic);
 		// }
+    sAlert.success( "HTTP Feed created.", { onRouteClose: false } );
+    Router.go( "Feeds" )
 	}
 });
 
 HTTPFeeds.after.update(function(userId, doc) {
 	if(Meteor.isClient){
-		console.log("Feed update", userId, doc)
+		// console.log("Feed update", userId, doc)
 		// if(doc.pubsub != "Publish") {
 		// 	topic = mqttregex(doc.subscription).topic;
 		// 	topic = topic.substring(0, topic.length - 1);
 		// 	 mqttClientSubscribe(topic);
 		// }
+    sAlert.success( 'HTTP Feed updated.', { onRouteClose: false } );
+    Router.go( "Feeds" )
 	}
 });
 
 HTTPFeeds.after.remove(function(userId, doc) {
 	if(Meteor.isClient){
-		console.log("Feed remove", userId, doc)
+		// console.log("Feed remove", userId, doc)
 		// if(doc.pubsub != "Publish") {
 		// 	topic = mqttregex(doc.subscription).topic;
 		// 	topic = topic.substring(0, topic.length - 1);
 		// 	 mqttClientUnsubscribe(topic);
 		// }
+    sAlert.success( "HTTP Feed deleted." );
 	}
 });
 
