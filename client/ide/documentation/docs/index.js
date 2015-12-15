@@ -15,16 +15,16 @@ DocsIndex = {
 			title: "HTTP Connections & Feeds",
 		},
 		{
-			title: "Templates",
+			title: "Templates 1: The basics",
 		},
 		{
-			title: "Displaying data in your Templates"
+			title: "Templates 2: Displaying data in your Templates"
 		},
 		{
-			title: "Getting data between IoT devices and ThingStudio"
+			title: "Templates 3: Sending data to IoT devices from ThingStudio"
 		},
 		{
-			title: "Laying out your templates"
+			title: "Templates 4: Laying out your templates"
 		},
 		{
 			title: "Widgets",

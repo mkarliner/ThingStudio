@@ -1,5 +1,5 @@
 ---
-title: "Templates"
+title: "Templates 1: The basics"
 urlstring: "templates"
 summary: "Templates are the user interface of your app"
 ---

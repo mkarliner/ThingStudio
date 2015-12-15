@@ -1,5 +1,5 @@
 ---
-title: 'Getting data between IoT devices and ThingStudio'
+title: 'Templates 3: Sending data to IoT devices from ThingStudio'
 urlstring: 'getting-data-in-and-out'
 summary: 'How to transfer data between ThingStudio and your devices.'
 ---
@@ -42,5 +42,3 @@ mapValue = function(x, in_min, in_max, out_min, out_max) {
 	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 </pre>
-
-
