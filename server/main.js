@@ -132,17 +132,10 @@ Meteor.startup(function() {
 				return;
 			}
 			if(this.userId == app.owner || app.shareable || isAdmin(this.userId)) {
-<<<<<<< HEAD
-                		aptids = getAppTree(appId);
+    		aptids = getAppTree(appId);
 				apts =  Apps.find({_id: {$in: aptids}});
-                		console.log("Returning SINGLE app tree", appcurr.fetch(), apts.fetch())
-                		return apts;
-=======
-        aptids = getAppTree(appId);
-				apts =  Apps.find({_id: {$in: aptids}});
-        console.log("Returning SINGLE app tree", appcurr.fetch(), apts.fetch())
-        return apts;
->>>>>>> 6a47428c8030ae22ef6384e5ff69d429e1954d21
+    		console.log("Returning SINGLE app tree", appcurr.fetch(), apts.fetch())
+    		return apts;
 			} else {
 				console.log("Attempt to access private app", app)
 				return [];
