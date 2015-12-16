@@ -310,7 +310,9 @@ mqttClientSubscribe = function(topic) {
 	} else {
 		SubscribedTopics[topic] = topic;
 		try {
-				mqttClient.subscribe(topic);
+			mqttClient.subscribe(topic,function(err, granted){
+		    		console.log("MQTTSubcribe", err, granted)
+			});
 		} catch (e) {
 			sAlert.warning('You have no MQTT connection for this feed to subscribe on. Go create one.');
 		}
