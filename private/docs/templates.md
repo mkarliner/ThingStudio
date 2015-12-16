@@ -9,6 +9,8 @@ Templates, at their simplest, are just HTML that provide the structure of the vi
 Templates are also incredibly extensible, as under the hood they are JS objects containing not only your HTML, but also the full richness of Meteor's JavaScript runtime and the ability to be reused as [Widgets](/docs/widgets).
 
 ## An important note on MQTT vs. HTTP feeds in templates
+There is a bit of subtlety you should be aware of between usage of MQTT & HTTP feeds in templates.
+
 ### MQTT
 MQTT feeds are always either delineated as Subscribe or Publish - they can only be one or the other. There is a whole doc on MQTT feeds [you can read here](/docs/mqtt-connections-and-feeds), but the distinction to be aware of in the context of templates is that you cannot expect to _receive_ data on a Publish feed, nor can you expect to _transmit_ data on a Subscribe feed.
 
@@ -20,7 +22,7 @@ Pay attention to this distinction when deciding which feeds to use where in your
 With HTTP feeds, data can be both transmitted and received on the same feed, so this distinction does not exist for HTTP.
 
 ## Rendering live data in your UIs
-Data is inserted from feeds into your templates adding Handlebars / mustache-style helpers (i.e. '{{|stuff}}') to HTML elements. The only difference between standard HTML5 and what you create in ThingStudio is the concept of these Handlebars helpers. If you haven't used Handlebars, here's how it works:
+Data is inserted from feeds into your templates adding Handlebars / mustache-style helpers to HTML elements. The only difference between standard HTML5 and what you create in ThingStudio is the concept of these Handlebars helpers. If you haven't used Handlebars, here's how it works:
 
 <pre>
 {{|message "feedTitle"}}
@@ -28,7 +30,7 @@ Data is inserted from feeds into your templates adding Handlebars / mustache-sty
 
 The code above will use the [built-in helper](/docs/template-helpers-reference) called "message" to render incoming data from a subscribe feed titled "feedTitle" into your template.
 
-**Note**: It is important to note that we are using the feed **title**, and NOT the associated topic/subscription (were this an MQTT feed).
+**Note**: It is important to note that we are using the feed **title** in our helper, and NOT the associated topic/subscription (were this an MQTT feed).
 
 Add a helper to your HTML anywhere you want to display or leverage data from an MQTT _subscribe_ feed, or, any HTTP feed. This could be in a paragraph tag, as the state for a checkbox or a widget, or even a live update to a CSS value (i.e. setting classes based on live data). Below are examples of each of the above:
 

@@ -1,15 +1,15 @@
 ---
 title: "Custom Helpers"
 urlstring: "custom_helpers"
-summary: "Making your own helpers"
+summary: "Making your own template helpers"
 ---
 
-Our built-in [template helpers](/docs/template-helpers-reference) help you do accomplish the most common tasks in your templates, such as displaying real-time data, min, max and average values, etc.
+Our built-in [template helpers](/docs/template-helpers-reference) help you accomplish the most common tasks in your templates, such as displaying real-time data, min, max and average values, etc.
 
-However, you may want to do your own custom manipulations on message data before you display it. Changing Centigrade temperatures to Fahrenheit, for example. To do this, you can write your own helpers.
+However, you may want to do your own custom manipulations on message data before you display it. For example, changing Centigrade temperatures to Fahrenheit. To do this, you can write your own helpers.
 
 ##Defining custom helpers
-Custom helpers are defined in template-level JavaScript. Here is an example which does the Centigrade to Fahrenheit conversion, and vice versa.
+Custom helpers are defined in template-level JavaScript. Here are two examples, the first does the Centigrade to Fahrenheit conversion, and the second converts Fahrenheit to Centigrade.
 
 <pre>
 Template[name].helpers({

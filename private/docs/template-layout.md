@@ -7,13 +7,11 @@ summary: "How to arrange your controls and widgets in a template"
 
 
 
-#Laying Out Your Templates
+To make it easy for you to create a beautiful, well-structured user interface for your app, we have made available for you a standard 12 column responsive grid system. As our responsive grid is based on the Materialize code base, we have leveraged and (slightly) adapted their documentation as well. Hat tip to the Materialize team and the various contributors.
 
-We are using a standard 12 column fluid responsive grid system. The grid helps you layout your page in an ordered, easy fashion. As our responsive grid is based on the Materialize code base, we have leveraged and (slightly) adapted their documentation as well. Hat tip to the Materialize team and the various contributors.
+##A 12 Column, Responsive Grid
 
-##12 Columns
-
-Our standard grid has 12 columns. No matter the size of the browser, each of these columns will always have an equal width.
+Our standard grid has 12 columns. No matter the size of the viewport, each of these columns will always have an equal width. To see the grid in action, you can copy the code below in to a template and use the app viewer to see the responsive grid in action.
 
 <pre>
 &lt;div class="row"&gt;
@@ -32,9 +30,26 @@ Our standard grid has 12 columns. No matter the size of the browser, each of the
 &lt;/div&gt;
 </pre>
 
-##Columns live inside Rows
+##Creating Responsive Layouts
 
-Remember when you are creating your layout that all columns must be contained inside a row and that you must add the col class to your inner divs to make them into columns
+Above we showed you how to layout elements using our grid system. Now we'll show you how to design your layouts so that they look great on all screen sizes.
+
+The first thing to be aware of is that you can set different column counts for different screen sizes. A common case is to have a block of content span 12 columns on small screens (), 9 columns on medium screens and 6 columns on large screens. This would be accomplished by doing the following:
+
+<pre>
+&lt;div class="row"&gt;
+  &lt;div class="col s12 m9 l6"&gt;This div is 12-columns wide on small screens, 9 columns wide on medium screens, and 6 columns wide on large screens.&lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+Here are the breakpoints for the various screen sizes:
+
+* Class prefix .s = Mobile Devices (screens less than 600px wide)
+* Class prefix .m = Tablet Devices (screens less than 992px wide)
+* Class prefix .l = Desktop Devices (screens greater than 992px wide)
+
+### Columns must be inside rows
+Remember when you are creating your layout that all columns must be contained inside a _row_ and that you must add the _col_ class to your inner divs, in addition to a screen-size value (s = small, m = medium, l = large, plus a number 1 - 12) to make them into columns.
 
 <pre>
 &lt;div class="row"&gt;
@@ -46,7 +61,7 @@ Remember when you are creating your layout that all columns must be contained in
 
 ##Offsets
 
-To offset, simply add offset-s2 to the class where s signifies the screen class-prefix (s = small, m = medium, l = large) and the number after is the number of columns you want to offset by.
+To start a group of columns somewhere other than the absolute left edge of your template, simply add _offset-sX_ to the class where s signifies the screen class-prefix and X signifies the number of columns by which you want to offset the content.
 
 <pre>
 &lt;div class="row"&gt;
@@ -54,11 +69,3 @@ To offset, simply add offset-s2 to the class where s signifies the screen class-
   &lt;div class="col s6 offset-s6 grid-example"&gt;6-columns (offset-by-6)&lt;/div&gt;
 &lt;/div&gt;
 </pre>
-
-##Creating Responsive Layouts
-
-Above we showed you how to layout elements using our grid system. Now we'll show you how to design your layouts so that they look great on all screen sizes.
-
-Class prefix .s = Mobile Devices (screens less than 600px wide)
-Class prefix .m = Mobile Devices (screens less than 992px wide)
-Class prefix .l = Mobile Devices (screens greater than 992px wide)
