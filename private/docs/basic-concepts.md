@@ -18,7 +18,7 @@ ThingStudio has a few basic concepts:
 + Templates
 + Applications
 
-##Privay
+##Privacy
 We begin with the privacy aspect of ThingStudio because it is both surprising and critically important. Surprising in that we are a cloud service which _doesn't_ want your data (gasp), and critically important for a number of reasons.
 
 First, it saves us the trouble of building the infrastructure to support massive amounts of IoT data. Second, and much more important, it's the right answer for IoT. Your IoT data will record the day-to-day, minute-to-minute events of your either / both your life and your business. This data is yours, and with ThingStudio it is up to you just how private and secure you decide to make that data.
