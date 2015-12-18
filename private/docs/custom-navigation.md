@@ -5,6 +5,12 @@ group: "Advanced"
 summary: "Create custom navigation for your app to override the default behavior and styles"
 ---
 
+## Navigating around your app
+
+If you have more than one template in your app, you can nominate one of them to be the 'home page', which will be the first thing a user sees upon loading your app.
+
+If you do not nominate a home template, users will be shown a default menu listing all the templates in your app.
+
 ## Custom navigation
 
 If you would like to make your own navigation system for your app, nominate a home page and you can then use the following helpers to create links or buttons to send users to other screens in your app.

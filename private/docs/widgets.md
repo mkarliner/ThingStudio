@@ -4,9 +4,11 @@ urlstring: "widgets"
 summary: "Widgets are special templates that can be used inside other templates to show custom gauges and buttons"
 ---
 
+Templates, at their simplest, are just HTML that provide the structure of the view for your data, however, they are also incredibly extensible, as under the hood they are JS objects containing not only your HTML, but also the full richness of Meteor's JavaScript runtime and, as we describe below, the ability to be reused as [Widgets](/docs/widgets).
+
 __Note:__ widgets currently come in two flavors, as detailed below, though this document will be updated in Q1 2016 to reflect the fact that, going forward, widgets will be in library template format only. We recommend that any widgets you create use the library template method, and not web components.
 
-## Widget come in two flavours, Library Templates and Web Components.
+## Widget come in two flavors, Library Templates and Web Components.
 
 Library Templates are referenced like this:
 <pre>

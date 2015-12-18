@@ -6,6 +6,9 @@ DocsIndex = {
 			title: "ThingStudio Basic Concepts",
 		},
 		{
+			title: "Privacy & Security"
+		},
+		{
 			title: "Apps",
 		},
 		{

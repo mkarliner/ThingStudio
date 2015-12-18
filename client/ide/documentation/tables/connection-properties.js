@@ -41,4 +41,10 @@ Tables.ConnectionProperties = [
 		"Required?": "optional",
 		Description: "Password to access your broker, if needed."
 	},
+	{
+		Name: "Client ID",
+		Type: "String",
+		"Required?": "optional",
+		Description: "MQTT client ID."
+	}
 ]

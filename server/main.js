@@ -453,6 +453,7 @@ Meteor.startup(function() {
 		"mqtt-connections-and-feeds.md",
 		"http-connections-and-feeds.md",
 		"helpers.md",
+		"privacy.md",
 		"template-helpers.md",
 		"templates.md",
 		"themes.md",

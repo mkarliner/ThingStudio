@@ -4,25 +4,13 @@ urlstring: "templates"
 summary: "Templates are the user interface of your app"
 ---
 
-Templates, at their simplest, are just HTML that provide the structure of the view for your data; they are where you specify how incoming data from feeds will be rendered, and what outgoing messages will be sent from your apps via feeds, for example, when a button is clicked, a joystick is moved or data is submitted via an input.
+ThingStudio templates are plain HTML5 with the additional of Handlebars-style helpers, which specify what data from your devices will be displayed and what data is sent to your devices.
 
-Templates are also incredibly extensible, as under the hood they are JS objects containing not only your HTML, but also the full richness of Meteor's JavaScript runtime and the ability to be reused as [Widgets](/docs/widgets).
+## Real-time out of the box
+Templates are declarative, and display and deliver data dynamically without your needing to code event handlers, etc.
 
-## An important note on MQTT vs. HTTP feeds in templates
-There is a bit of subtlety you should be aware of between usage of MQTT & HTTP feeds in templates.
-
-### MQTT
-MQTT feeds are always either delineated as Subscribe or Publish - they can only be one or the other. There is a whole doc on MQTT feeds [you can read here](/docs/mqtt-connections-and-feeds), but the distinction to be aware of in the context of templates is that you cannot expect to _receive_ data on a Publish feed, nor can you expect to _transmit_ data on a Subscribe feed.
-
-You can always and only _receive_ data on a Subscribe feed and _transmit_ data on a Publish feed.
-
-Pay attention to this distinction when deciding which feeds to use where in your templates. Again, this is for MQTT only.
-
-### HTTP
-With HTTP feeds, data can be both transmitted and received on the same feed, so this distinction does not exist for HTTP.
-
-## Rendering live data in your UIs
-Data is inserted from feeds into your templates adding Handlebars / mustache-style helpers to HTML elements. The only difference between standard HTML5 and what you create in ThingStudio is the concept of these Handlebars helpers. If you haven't used Handlebars, here's how it works:
+## Displaying data in your UIs
+Data is inserted from feeds into your templates by adding Handlebars / mustache-style helpers to HTML elements. The only difference between standard HTML5 and what you create in ThingStudio is the concept of these Handlebars helpers. If you haven't used Handlebars, here's how it works:
 
 <pre>
 {{|message "feedTitle"}}
@@ -53,8 +41,11 @@ Setting a CSS class on an element, allowing us to style the content based on pre
 
 These are far from the only possibilities, and we encourage you to think creatively about how to use real-time data to make your UIs pop. If you come up with a template or an app that you are particularly happy with, let us know on the [forum](http://forum.thingstud.io/)!
 
-## Sending data to devices from your UIs
-Transmit data (clicks, value changes, etc.) to your feeds by adding a couple of data attributes to your HTML elements. The syntax resembles the following:
+## Template helpers
+We have created a number of built-in template helpers to help you do accomplish the most common tasks in your templates. To learn more about these helpers, [read this doc](/docs/template-helpers-reference).
+
+## Transmitting data from your UIs
+Transmit data (clicks, value changes, etc.) to your feeds by adding custom attributes to your HTML elements. Custom attributes are always prefixed by 'data-'. The syntax resembles the following:
 
 <pre>
 &lt;button data-feed="Doorbell" data-message="doorbell"&gt;Bing Bong&lt;/button&gt;
@@ -62,17 +53,25 @@ Transmit data (clicks, value changes, etc.) to your feeds by adding a couple of 
 
 Here we're creating a standard HTML button and adding two 'data' attributes:
 
-* data-feed
-* data-message
+* data-feed: the title (not the topic) of the feed on which we want to transmit data.
+* data-message: tells ThingStudio what the payload (i.e. content) of that message is. 'data-message' is not required for events that already have a value defined for the message, like a slider movement, which transmits the value of the slider.
 
-'data-feed' is the title (not the topic) of the feed on which we want to transmit data.
+You can think of this as an envelope you send through the mail: 'data-feed' is the address you put on the outside of the envelope, and 'data-message' is the letter you put inside.
 
-'data-message' tells ThingStudio what the payload (i.e. content) of that message is. 'data-message' is not required for events that already have a value defined for the message, like a slider movement, which transmits the value of the slider.
+For more information on feed attributes, [read this doc](/docs/attributes-reference).
 
-Think of this as an envelope you send through the mail; 'data-feed' is the address you put on the outside of the envelope, and 'data-message' is the letter you put inside.
+## An important note on MQTT vs. HTTP feeds in templates
+There is a bit of subtlety you should be aware of between usage of MQTT & HTTP feeds in templates.
 
-## Template helpers
-We have created a number of built-in template helpers to help you do accomplish the most common tasks in your templates. To learn more about these helpers, [read this doc](/docs/template-helpers-reference).
+### MQTT
+MQTT feeds are always either delineated as Subscribe or Publish - they can only be one or the other. There is a whole doc on MQTT feeds [you can read here](/docs/mqtt-connections-and-feeds), but the distinction to be aware of in the context of templates is that you cannot expect to _receive_ data on a Publish feed, nor can you expect to _transmit_ data on a Subscribe feed.
+
+You can always and only _receive_ data on a Subscribe feed and _transmit_ data on a Publish feed.
+
+Pay attention to this distinction when deciding which feeds to use where in your templates. Again, this is for MQTT only.
+
+### HTTP
+With HTTP feeds, data can be both transmitted and received on the same feed, so this distinction does not exist for HTTP.
 
 ## Learning more
 If you want to learn about templates in greater detail, read the [Meteor documentation on templates](http://docs.meteor.com/#/basic/defining-templates).

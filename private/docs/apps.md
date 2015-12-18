@@ -15,18 +15,14 @@ Apps can inherit resources (connections, feeds, templates, etc.) from another ap
 
 This inheritance gives you a variety of convenient ways to organize your work. For example, you might want to create one app on which to base all of your other apps. The "base" app could contain only the details of the connection to your home MQTT broker or an HTTP web service, along with any custom widgets that you might have created, thereby saving you the trouble of creating and maintaining these in each subsequent app.
 
-## Sharing Apps
-
+##Sharing Apps
 Apps can be marked as private (default) or shareable. If an app is marked "sharable" you can send anyone the share URL of your app and they will be able to access it immediately.
 
 If you want to have finer control over access to your app, you can setup user credentials in the connection to your MQTT broker, (see [MQTT Connections & Feeds](/docs/mqtt-connections-and-feeds)). That way even if an app is marked as shareable, users with the share URL will still have to provide a username and password to connect to your MQTT broker.
 
 Access control can be similarly configured via HTTP (via basic auth or perhaps .htaccess), if this is your data transport of choice (see [HTTP Connections & Feeds](/docs/http-connections-and-feeds)).
 
-## Navigating around your app
+##App-Level CSS & JavaScript
+By and large JavaScript programming in ThingStudio is only for advanced use, where you might create [feed processors](/docs/feed_processing) or [widgets](/docs/widgets).
 
-If you have more than one template in your app, you can nominate one of them to be the 'home page', which will be the first thing a user sees upon loading your app.
-
-If you do not nominate a home template, users will be shown a default menu listing all the templates in your app.
-
-To make your own custom navigation, [read this doc](/docs/custom-navigation).
+App-level CSS is more commonly used to create a customized look and feel for your application. By default, we do not make any assumptions about the styles of the body of your app, to provide you with maximum flexibility in customizing your app.
