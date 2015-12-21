@@ -136,6 +136,22 @@ compileTemplate = function(name, html_text, javascript) {
 				}
 			}
 		});
+        Template[name].onRendered(function(){
+            var elements = this.findAll('*');
+            console.log("ELEMENTS: ", elements);
+            for(var e=0; e< elements.length; e++) {
+                var element = elements[e];
+                console.log("ELE: ", element.attributes);
+                var attr = element.attributes;
+                    console.log("ATTR: ", attr)
+                    var feed_name = attr.getNamedItem("data-renderedfeed");
+    				if(feed_name == null || !checkFeed(feed_name.value, false)){
+    					return;
+    				};
+    				var message = attr.getNamedItem("data-renderedmessage");
+    				publish(feed_name.value, JSON.stringify(message ? message.value : "rendered"));
+            }
+        });
 		if(javascript) {
 			jsout = eval(javascript)
 		}
