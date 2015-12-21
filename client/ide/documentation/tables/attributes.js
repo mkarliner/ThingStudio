@@ -26,4 +26,14 @@ Tables.AttributesTable = [
 		'Publish / Subscribe': "Publish",
 		description: "The payload of the message to be sent when this element is rendered"
 	},
+	{
+		Name: "data-variable",
+		'Publish / Subscribe': "n/a",
+		description: "The name  of a run-time variable to set"
+	},
+	{
+		Name: "data-value",
+		'Publish / Subscribe': "n/a",
+		description: "The value of a run-time variable to set."
+	},
 ]
