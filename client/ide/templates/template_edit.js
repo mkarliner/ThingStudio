@@ -23,9 +23,6 @@ Template.EditScreenBody.helpers({
 	compilationErrors: function(){
 		return Session.get("compilationErrors")
 	},
-	runtimeErrors: function(){
-		return Session.get("runtimeErrors");
-	},
 	safeEdit: function(){
 		return this.safeEdit;
 	}

@@ -28,6 +28,7 @@ Template.AppFooter.events({
 		} else {
 			Session.set( "debugOpen", true )
 		}
+		sAlert.closeAll();
 	}
 })
 

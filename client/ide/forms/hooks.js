@@ -7,9 +7,10 @@
 	f = Feeds.findOne({title: feed}) || HTTPFeeds.findOne({title: feed});
 
 	if(typeof f == "undefined") {
-		var message = 'Unknown feed ' + feed;
-		Alerts.insert({type: 'runtime', status: 'warning', message: message});
-		return false;
+		var message = 'Unknown feed ' + feed
+    throwRuntimeError("No such feed", feed, "none")
+    sAlert.warning('The "' + feed + '" referred to by this template does not exist.', {timeout: "none"});
+		return false
 	}
 	if(subscribe && f.pubsub == "Publish") {
 		var message = "Can't receive messages on publish feed " + feed;

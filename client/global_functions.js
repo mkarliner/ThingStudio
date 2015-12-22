@@ -131,7 +131,7 @@ RegisterFeedProcessor("JSONIn", "HTTPResponse", function(app, conn, feed, error,
 	}
 	catch(err) {
 		console.log("HERR: ", err);
-		Session.set("runtimeErrors", "Invalid MQTT message, payload not JSON: " + result.content.toString());
+		Session.set("runtimeErrors", "Invalid HTTP message, payload not JSON: " + result.content.toString());
 		payload = result.content.toString();
 	}
 	console.log("payload", payload)
@@ -140,13 +140,17 @@ RegisterFeedProcessor("JSONIn", "HTTPResponse", function(app, conn, feed, error,
 			topic: feed.path,
 			feed: feed.title
 		},
-		{$set:
-			{
-				feed: feed.title,
-				topic: feed.path,
-				payload: payload},
-				$inc:{count: 1
-			}
+		{
+			$set:
+				{
+					feed: feed.title,
+					topic: feed.path,
+					payload: payload
+				},
+			$inc:
+				{
+					count: 1
+				}
 		});
 });
 
@@ -776,12 +780,54 @@ getCurrentApp = function() {
 // Alert Management//
 ///////////////////////////////////////////////////////////////////////////////////////
 
+// Create client-only collection for runtime errors
+RuntimeErrors = new Mongo.Collection(null)
+
+Schemas.RuntimeError = new SimpleSchema({
+	type: {
+		type: String
+	},
+	message: {
+		type: String
+	},
+	lastMessage: {
+		type: Date
+	},
+	count: {
+		type: Number,
+		optional: true
+	}
+})
+
+RuntimeErrors.attachSchema(Schemas.RuntimeError);
+
+throwRuntimeError = function(type, message) {
+	return RuntimeErrors.upsert(
+		{
+			type: type,
+			message: message,
+		},
+		{
+		$set:
+			{
+				type: type,
+				message: message,
+				lastMessage: new Date
+			},
+		$inc:
+			{
+				count: 1
+			}
+		}
+	);
+}
+
 Meteor.startup(function () {
 
     sAlert.config({
         effect: 'jelly',
         position: 'top',
-        timeout: 5000,
+        timeout: 3000,
         html: false,
         onRouteClose: true,
         stack: true,

@@ -74,5 +74,19 @@
 </template>
 
 <template name="DebugRuntime">
-	{{runTimeErrorLog}}
+	<ul class="runtime-errors">
+		{{#each runTimeErrorLog}}
+			<li>
+				<div class="runtime-message">
+					<span>{{type}}:</span> {{message}}
+				</div>
+				<div class="clearfix"></div>
+				<div class="runtime-timestamp">
+					Count: {{count}} &ndash; Last message: {{moFormat lastMessage 'lll'}}
+				</div>
+				<div class="clearfix"></div>
+			</li>
+		{{/each}}
+	</ul>
+	<a href="" class="runtime-clear">Clear Runtime Errors</a>
 </template>

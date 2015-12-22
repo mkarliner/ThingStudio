@@ -15,9 +15,6 @@ Template.DebugBody.helpers({
 	feeds: function() {
 		return Feeds.find();
 	},
-	runtimeErrors: function(){
-		return Session.get("runtimeErrors");
-	},
 	payload: function(){
 		try {
 			jstr = JSON.stringify(this.payload);
@@ -71,8 +68,15 @@ Template.DebugPublish.helpers({
 	}
 });
 
+Template.DebugRuntime.events({
+	'click .runtime-clear': function (e, tmpl) {
+		e.preventDefault();
+		RuntimeErrors.remove({})
+	}
+})
+
 Template.DebugRuntime.helpers({
 	runTimeErrorLog: function () {
-		return Session.get("runtimeErrors")
+		return RuntimeErrors.find()
 	}
 })

@@ -476,6 +476,7 @@ body {
 
 .debug-wrapper {
 	display: flex;
+	position: relative;
 	flex: 0.0001;
 	min-width: 0;
 	opacity: 1;
@@ -585,7 +586,6 @@ body {
 	padding-right: 10px;
 }
 
-
 .debug-wrapper table th {
 	font-family: "AvenirLTStd-Heavy";
 	text-align: left;
@@ -599,6 +599,54 @@ body {
 	font-size: 3.5vw;
 	padding: 10px 0;
 	overflow: hidden;
+}
+
+.runtime-errors {
+	font-size: 0.9rem;
+	margin: 0;
+	padding: 0;
+	li {
+		padding: 8px;
+		border-bottom: 2px solid #F0F0F0;
+		color: #2D3142;
+	}
+}
+
+.runtime-message {
+	display: inline;
+	font-style: italic;
+	span {
+		font-style: normal;
+		display: inline-block;
+		background-color: #ed5a5a;
+		padding: 6px;
+		color: white;
+	}
+}
+
+.runtime-count {
+	float: right;
+	border-radius: 6px;
+	padding: 6px;
+	border: 2px #36ADD1 solid;
+}
+
+.runtime-timestamp {
+	margin-top: 8px;
+}
+
+.runtime-clear {
+	position: absolute;
+  bottom: 0;
+  background-color: #19A1DE;
+  display: block;
+  text-align: center;
+  color: white;
+  left: 0;
+  right: 0;
+  height: 40px;
+  line-height: 40px;
+  text-decoration: none;
 }
 
 main {
