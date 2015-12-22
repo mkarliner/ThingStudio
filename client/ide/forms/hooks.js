@@ -9,7 +9,7 @@
 	if(typeof f == "undefined") {
 		var message = 'Unknown feed ' + feed
     throwRuntimeError("No such feed", feed)
-    sAlert.warning('The "' + feed + '" referred to by this template does not exist.', {timeout: "none"});
+    sAlert.warning('The "' + feed + '" feed referred to by this template does not exist.', {timeout: "none"});
 		return false
 	}
 	if(subscribe && f.pubsub == "Publish") {
