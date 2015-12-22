@@ -167,7 +167,7 @@ compileTemplate = function(name, html_text, javascript) {
 		}
 		return({type: 'template', status: 'success', message: 'Template updated'});
 	} catch (err) {
-		// console.log('Error compiling template:' + html_text);
+		sAlert.warning('Error compiling template:' + err);
 		console.log('Error!', err);
 		// console.log(err.message);
 		// Session.set("compilationErrors", err.message)
