@@ -2,10 +2,7 @@
 
 Template.ViewScreen.events({
 	'click a': function (e, tmpl) {
-		console.log('clicked')
-		alert('click!');
 	}
-
 })
 
 Template.ViewScreen.onRendered(function(){
