@@ -34,6 +34,23 @@
 					<span class="help-block">{{afFieldMessage name='journal_limit'}}</span>
 				{{/if}}
 			</div>
+            
+			<p><span class="fwHeavy">Rostering</span> &ndash; Enabling this allows generation of devices lists etc</p>
+			<div class="form-group{{#if afFieldIsInvalid name='doRoster'}} has-error{{/if}}">
+				<div data-required="true" class="checkbox-left">
+					{{> afFieldInput name='doRoster' }}
+				</div>
+				{{#if afFieldIsInvalid name='doRoster' }}
+					<span class="help-block">{{afFieldMessage name='doRoster' }}</span>
+				{{/if}}
+				<div data-required="true">
+					{{> afFieldInput name='rosterProperty' placeholder="index property"}}
+				</div>
+				{{#if afFieldIsInvalid name='rosterProperty'}}
+					<span class="help-block">{{afFieldMessage name='rosterProperty'}}</span>
+				{{/if}}
+			</div>
+
 			<p><span class="fwHeavy">Calculations</span> &ndash; Process incoming data and create the following values: 'min', 'max', 'avg' over the last 'n' values (specify 'n' below).</p>
 			<div class="form-group{{#if afFieldIsInvalid name='doMaxMinAvg'}} has-error{{/if}}">
 				<div data-required="true" class="checkbox-left">

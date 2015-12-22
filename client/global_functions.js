@@ -709,6 +709,19 @@ connect = function (conn, usr, pass) {
 					   }
 					)
 				}
+                if(feeds[i].doRoster) {
+                    Messages.update(
+                        {topic: topic, feed: feeds[i].title},
+                        {
+                            $addToSet: {
+                                roster: {
+                                    $each: [filteredPayload]
+                                }
+                            }
+                            
+                        }
+                    )
+                }
 				if(feeds[i].doMaxMinAvg){
 					//Only work with numeric values.
 					value = parseFloat(filteredPayload);

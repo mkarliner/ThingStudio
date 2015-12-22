@@ -63,6 +63,10 @@ compileTemplate = function(name, html_text, javascript) {
 				// console.log("MSG: ", msg);
 				return msg && msg.journal ? JSON.stringify(msg.journal)  : ["no values"];
 			},
+            roster: function(feed) {
+                msg = Messages.findOne({feed: feed});
+                return msg && msg.roster ? msg.roster  : [];
+            },
 			minmax: function(feed) {
 				msg = OldMessages.findOne({feed: feed});
 				ret = msg ? msg : {min: 0, max: 0, avg: 0, diffavg: 0};

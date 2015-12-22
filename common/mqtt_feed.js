@@ -75,6 +75,23 @@ Schemas.Feed = new SimpleSchema({
 			omit: true
 		}
 	},
+    doRoster: {
+        type: Boolean,
+        defaultValue: false,
+        label: "Keep Roster" 
+    },
+    rosterProperty: {
+        type: String,
+        optional: true,
+        label: "Roster Index Property"
+    },
+    roster: {
+        type: [Object],
+        optional: true,
+        autoform: {
+            omit: true
+        }
+    },
 	doMaxMinAvg: {
 		type: Boolean,
 		defaultValue: false,
