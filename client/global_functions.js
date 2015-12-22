@@ -9,6 +9,11 @@ setRuntimeVariable = function(name, value){
     RuntimeVariables.upsert({name: name}, {$set: {name: name, value: value}});
 }
 
+getRuntimeVariable = function(name) {
+    var rtv = RuntimeVariables.findOne();
+    return rtv ? rtv.value : null;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////
 // General Purpose Functions //
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -273,6 +278,13 @@ publish = function(feedName, message) {
 			message = "Attempt to publish to subcription feed: "+ feed.title;
 			Alerts.upsert({type: 'runtime', status: "warning", message:  message},{$set:{type: 'runtime', status: 'warning', message: message} ,$inc: {count: 1} } );
 		} else {
+            //Substitute any runtime variables
+            var rtv = feed.subscription.match(/\(([A-z]+)\)/);
+            console.log("RTVM", rtv)
+            if(rtv) {
+                console.log("Hasdf", rtv[0])
+                feed.subscription = feed.subscription.replace(rtv[0], getRuntimeVariable(rtv[1]))
+            }
 			Outbox.upsert({topic: feed.subscription}, {$set: { feed: feed.title, topic: feed.subscription, payload: message},$inc: {count: 1}});
 			mqttClient.publish(feed.subscription, message);
 		}
@@ -322,6 +334,9 @@ mqttClientSubscribe = function(topic) {
 		SubscribedTopics[topic] = topic;
 		try {
 			mqttClient.subscribe(topic,function(err, granted){
+                if(err) {
+                    sAlert.warning('MQTT subscription failed ' + err)
+                }
 		    		console.log("MQTTSubcribe", err, granted)
 			});
 		} catch (e) {
