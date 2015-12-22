@@ -75,8 +75,8 @@ compileTemplate = function(name, html_text, javascript) {
 			}
 		});
 		Template[name].events({
-			'click button, click anchorClass': function(ev){
-                ev.preventDefault();
+			'click button, click .anchorClass': function(ev){
+                // ev.preventDefault();
                 // Feed messages
 				attr = ev.currentTarget.attributes;
 				feed_name = attr.getNamedItem("data-feed");
@@ -90,7 +90,7 @@ compileTemplate = function(name, html_text, javascript) {
     				var val = attr.getNamedItem("data-value").value;
     				setRuntimeVariable(variable_name.value, val);
 				};
-				ev.stopImmediatePropagation();
+				//ev.stopImmediatePropagation();
 			},
 			'change input[type="checkbox"]': function(ev) {
 				// console.log("CHKBOX ", ev, this)
