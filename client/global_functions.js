@@ -740,7 +740,10 @@ connect = function (conn, usr, pass) {
 					jsonKey = "none"
 				}
 				// console.log("Feed matched", result);
-				Messages.upsert({topic: topic, feed: feeds[i].title}, {$set: {feed: feeds[i].title, topic: topic, payload: filteredPayload}, $inc:{count: 1}});
+				Messages.upsert({
+                    topic: topic, 
+                    //feed: feeds[i].title
+                }, {$set: {feed: feeds[i].title, topic: topic, payload: filteredPayload}, $inc:{count: 1}});
 				if(feeds[i].doJournal) {
 					//Do journal stuff
 					Messages.update(
