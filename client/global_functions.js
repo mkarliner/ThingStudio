@@ -208,6 +208,13 @@ checkHTTPFeeds = function (){
 			if(!app) {
 				return;
 			}
+            //Substitute any runtime variables
+            var rtv = feed.path.match(/<([A-z]+)>/);
+            console.log("HTTPRTVM", rtv)
+            if(rtv) {
+                console.log("HTTP", rtv[0])
+                feed.path = feed.path.replace(rtv[0], getRuntimeVariable(rtv[1]))
+            }
 			var url = conn.protocol + "://" + conn.host + ":" + conn.port + feed.path;
 			timeout = (feed.polling_interval-1)*1000;
 			console.log("HT: ", feed.responseProcessor, feed.requestProcessor, conn, url, timeout);
@@ -279,7 +286,7 @@ publish = function(feedName, message) {
 			Alerts.upsert({type: 'runtime', status: "warning", message:  message},{$set:{type: 'runtime', status: 'warning', message: message} ,$inc: {count: 1} } );
 		} else {
             //Substitute any runtime variables
-            var rtv = feed.subscription.match(/\(([A-z]+)\)/);
+            var rtv = feed.subscription.match(/<([A-z]+)>/);
             console.log("RTVM", rtv)
             if(rtv) {
                 console.log("Hasdf", rtv[0])
@@ -294,6 +301,13 @@ publish = function(feedName, message) {
 		var app = getCurrentApp();
 		var conn = HTTPConnections.findOne(feed.connection);
 		console.log("HTTP FEED Request", feedName, feed);
+        //Substitute any runtime variables
+        var rtv = feed.path.match(/<([A-z]+)>/);
+        console.log("HTTPRTVM", rtv)
+        if(rtv) {
+            console.log("HTTP", rtv[0])
+            feed.path = feed.path.replace(rtv[0], getRuntimeVariable(rtv[1]))
+        }
 		//Get the requestProcessor for this feed
 		var fp = FeedProcessors.findOne({name: feed.requestProcessor});
 		//And call it to process the outgoing message
