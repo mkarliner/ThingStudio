@@ -254,7 +254,7 @@ OldMessages = new Mongo.Collection(null);
 
 Outbox = new Mongo.Collection(null);
 
-SubscribedTopics = new Array();
+SubscribedTopics = {};
 
 Feedhooks = {};
 
@@ -283,10 +283,10 @@ publish = function(feedName, message) {
             console.log("RTVM", rtv)
             if(rtv) {
                 console.log("Hasdf", rtv[0])
-                feed.subscription = feed.subscription.replace(rtv[0], getRuntimeVariable(rtv[1]))
+                var topic = feed.subscription.replace(rtv[0], getRuntimeVariable(rtv[1]))
             }
-			Outbox.upsert({topic: feed.subscription}, {$set: { feed: feed.title, topic: feed.subscription, payload: message},$inc: {count: 1}});
-			mqttClient.publish(feed.subscription, message);
+			Outbox.upsert({topic: topic}, {$set: { feed: feed.title, topic: topic, payload: message},$inc: {count: 1}});
+			mqttClient.publish(topic, message);
 		}
 		break;
 	case "HTTP":
@@ -326,13 +326,14 @@ publish = function(feedName, message) {
 		console.log("UNKNOWN FEED TYPE: ", feedType)
 	}
 }
-mqttClientSubscribe = function(topic) {
-	// console.log("MQTTSUB : ", topic, SubscribedTopics);
+
+clientSubscribe = function(topic) {
 	if(SubscribedTopics[topic]) {
 		return;
 	} else {
 		SubscribedTopics[topic] = topic;
 		try {
+            console.log("SUBSCRIBINGTO ", topic)
 			mqttClient.subscribe(topic,function(err, granted){
                 if(err) {
                     sAlert.warning('MQTT subscription failed ' + err)
@@ -343,6 +344,39 @@ mqttClientSubscribe = function(topic) {
 			sAlert.warning('You have no MQTT connection for this feed to subscribe on. Go create one.');
 		}
 	}
+}
+
+mqttClientSubscribe = function(feed) {
+	console.log("MQTTSUB : ", feed.subscription);
+    //Expand regexs
+	var topic = mqttregex(feed.subscription).topic;
+	topic = topic.substring(0, topic.length - 1);
+    //Expand runtime variables
+    var rtv = topic.match(/<([A-z]+)>/);
+    if(rtv) {
+        console.log("Runtime sub", rtv)
+        var varName = rtv[1];
+        var varValue = getRuntimeVariable(varName);
+        topic = topic.replace(rtv[0], varValue);
+        Tracker.autorun(function(){
+            console.log("MQAR: ", feed.subscription, topic, varName);
+            var vv = getRuntimeVariable(varName);
+            if(!vv) {
+                console.log("Bailing", varName);
+                return;
+            }
+            var tp = feed.subscription;
+            var ftp = tp.replace(rtv[0], vv);
+            console.log("FTP ", ftp, rtv[0], vv)
+            clientSubscribe(ftp);
+        })
+    }
+    if(rtv && !varValue) {
+        //Don't attempt to subscribe dynamic feeds that have no value
+        console.log("SKIPPING: ", feed.title)
+        return;
+    }
+    clientSubscribe(topic);
 }
 
 mqttClientUnsubscribe= function(topic) {
@@ -641,9 +675,7 @@ connect = function (conn, usr, pass) {
 		feeds = Feeds.find({pubsub: "Subscribe"}).fetch();
 		i =0;
 		for(i=0; i<feeds.length; i++) {
-			topic = mqttregex(feeds[i].subscription).topic;
-			topic = topic.substring(0, topic.length - 1);
-			 mqttClientSubscribe(topic);
+			 mqttClientSubscribe(feeds[i]);
 		}
 	});
 	mqttClient.on("close", function(par){
