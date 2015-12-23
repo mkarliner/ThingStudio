@@ -22,7 +22,7 @@ Template.DebugBody.helpers({
 		try {
 			jstr = JSON.stringify(this.payload);
 			if(jstr.length > 15) {
-				return jstr.substring(0,15)+"...";
+				return jstr.substring(0,150)+"...";
 			} else {
 				return jstr;
 			}
@@ -41,7 +41,7 @@ Template.DebugSubscribe.helpers({
 		try {
 			jstr = JSON.stringify(this.payload);
 			if(jstr.length > 15) {
-				return jstr.substring(0,15)+"...";
+				return jstr.substring(0,150)+"...";
 			} else {
 				return jstr;
 			}

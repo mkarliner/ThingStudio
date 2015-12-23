@@ -153,8 +153,8 @@ RegisterFeedProcessor("JSONIn", "HTTPResponse", function(app, conn, feed, error,
 	console.log("payload", payload)
 	Messages.upsert(
 		{
-			topic: feed.path,
-			//feed: feed.title
+			// topic: feed.path,
+			feed: feed.title
 		},
 		{$set:
 			{
@@ -321,6 +321,7 @@ publish = function(feedName, message) {
 		timeout = 5*1000;
 				options.headers = {};
 				options.timeout = timeout;
+				options.data = message;
 				//options.headers["Access-Control-Allow-Headers"] = "Access-Control-Allow-Origin, Origin, X-Requested-With, Content-Type, Accept";
 				//options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
 		//options.headers['Access-Control-Allow-Origin'] = '*';
@@ -741,8 +742,8 @@ connect = function (conn, usr, pass) {
 				}
 				// console.log("Feed matched", result);
 				Messages.upsert({
-                    topic: topic, 
-                    //feed: feeds[i].title
+                    // topic: topic,
+                    feed: feeds[i].title
                 }, {$set: {feed: feeds[i].title, topic: topic, payload: filteredPayload}, $inc:{count: 1}});
 				if(feeds[i].doJournal) {
 					//Do journal stuff
@@ -767,7 +768,7 @@ connect = function (conn, usr, pass) {
                                     $each: [filteredPayload]
                                 }
                             }
-                            
+
                         }
                     )
                 }

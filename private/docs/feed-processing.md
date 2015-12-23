@@ -119,8 +119,8 @@ __Example__
 		console.log("payload", payload)
 		Messages.upsert(
 			{
-				topic: feed.path,
-				//feed: feed.title
+				//topic: feed.path,
+				feed: feed.title
 			},
 			{$set:
 				{
