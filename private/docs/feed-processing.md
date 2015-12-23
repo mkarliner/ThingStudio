@@ -120,7 +120,7 @@ __Example__
 		Messages.upsert(
 			{
 				topic: feed.path,
-				feed: feed.title
+				//feed: feed.title
 			},
 			{$set:
 				{

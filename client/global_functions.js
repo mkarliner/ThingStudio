@@ -154,7 +154,7 @@ RegisterFeedProcessor("JSONIn", "HTTPResponse", function(app, conn, feed, error,
 	Messages.upsert(
 		{
 			topic: feed.path,
-			feed: feed.title
+			//feed: feed.title
 		},
 		{$set:
 			{
