@@ -133,7 +133,7 @@ compileTemplate = function(name, html_text, javascript) {
     				setRuntimeVariable(variable_name.value, value);
 				};
 				// console.log(feed);
-				
+
 			},
 			'input': function(ev) {
 				// console.log("INPUT ", ev);
@@ -153,7 +153,7 @@ compileTemplate = function(name, html_text, javascript) {
             for(var e=0; e< elements.length; e++) {
                 var element = elements[e];
                 var attr = element.attributes;
-                    console.log("ATTR: ", attr)
+                    // console.log("ATTR: ", attr)
                     var feed_name = attr.getNamedItem("data-renderedfeed");
     				if(feed_name == null || !checkFeed(feed_name.value, false)){
     					return;

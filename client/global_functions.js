@@ -123,34 +123,37 @@ function initialPoll(feed) {
 	if(HTTPFirstPolls[feed.title] || feed.polling_interval == 0) {
 		return false;
 	} else {
-		console.log("First Poll for feed ", feed.title);
+		// console.log("First Poll for feed ", feed.title);
 		HTTPFirstPolls[feed.title] = feed.title;
 		return true;
 	}
 }
 
 RegisterFeedProcessor("JSONOut", "HTTPRequest", function(app, conn, feed, message){
-	console.log("testReq Proc", feed, message);
+	// console.log("testReq Proc", feed, message);
 	return ({
 		content: message
 	})
 });
 
 RegisterFeedProcessor("JSONIn", "HTTPResponse", function(app, conn, feed, error, result){
-	console.log("RESPONSE: ", feed, error, result);
+	// console.log("RESPONSE: ", feed, error, result);
 	if(error) {
 		console.log("HRRPR: ", error.message );
 		return;
 	}
 	try {
+		console.log("trying")
+		console.log("result: ", result.content)
 		payload = JSON.parse(result.content);
+
 	}
 	catch(err) {
 		// console.log("HERR: ", err);
-		Session.set("runtimeErrors", "Invalid MQTT message, payload not JSON: " + result.content.toString());
+		Session.set("runtimeErrors", "Invalid HTTP message, payload not JSON: " + result.content.toString());
 		payload = result.content.toString();
 	}
-	console.log("payload", payload)
+	// console.log("payload", payload)
 	Messages.upsert(
 		{
 			// topic: feed.path,
@@ -210,17 +213,17 @@ checkHTTPFeeds = function (){
 			}
             //Substitute any runtime variables
             var rtv = feed.path.match(/<([A-z]+)>/);
-            console.log("HTTPRTVM", rtv)
+            // console.log("HTTPRTVM", rtv)
             if(rtv) {
-                console.log("HTTP", rtv[0])
+                // console.log("HTTP", rtv[0])
                 feed.path = feed.path.replace(rtv[0], getRuntimeVariable(rtv[1]))
             }
 			var url = conn.protocol + "://" + conn.host + ":" + conn.port + feed.path;
 			timeout = (feed.polling_interval-1)*1000;
-			console.log("HT: ", feed.responseProcessor, feed.requestProcessor, conn, url, timeout);
+			// console.log("HT: ", feed.responseProcessor, feed.requestProcessor, conn, url, timeout);
 			var reqProc = FeedProcessors.findOne({type: "HTTPRequest", name: feed.requestProcessor});
 			var options = reqProc.func(app, conn, feed, "Null Message");
-			console.log("BEFORE HTTP Poll:", feed.verb, url, options);
+			// console.log("BEFORE HTTP Poll:", feed.verb, url, options);
 			HTTP.call(feed.verb, url, options, function(error, result) {
 				//console.log("HRET: ", error, result);
 				//Call each feed processor in turn
@@ -246,7 +249,7 @@ checkHTTPFeeds = function (){
 // 	Session.set("FeedProcessors", Object.keys(HTTPFeedProcessors));
 // });
 Meteor.startup(function() {
-	console.log("Starting HTTP Check");
+	// console.log("Starting HTTP Check");
 	interval(checkHTTPFeeds, 1000);
 })
 

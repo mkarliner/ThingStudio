@@ -113,7 +113,7 @@ __Example__
 		}
 		catch(err) {
 			console.log("HERR: ", err);
-			Session.set("runtimeErrors", "Invalid MQTT message, payload not JSON: " + result.content.toString());
+			Session.set("runtimeErrors", "Invalid HTTP message, payload not JSON: " + result.content.toString());
 			payload = result.content.toString();
 		}
 		console.log("payload", payload)
