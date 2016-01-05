@@ -146,7 +146,7 @@ RegisterFeedProcessor("JSONIn", "HTTPResponse", function(app, conn, feed, error,
 		payload = JSON.parse(result.content);
 	}
 	catch(err) {
-		console.log("HERR: ", err);
+		// console.log("HERR: ", err);
 		Session.set("runtimeErrors", "Invalid MQTT message, payload not JSON: " + result.content.toString());
 		payload = result.content.toString();
 	}
