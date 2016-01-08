@@ -1,15 +1,10 @@
 // out: ./viewer.css
-// $baseText: #858C9D;
 $appBodyBG: #E9F1F4;
 $headerColor: #676975;
 $fontFace: AvenirLTStd-Roman, Helvetica, sans-serif;
 $darkBase: #353C51;
-// $alertOrange: #F5702E;
 $activeGreen: #7ED321;
 $inactiveRed: #B9513C;
-// $darkBaseText: #B2B7C4;
-// $headerColor: #676975;
-//
 
 // Material Design Colors
 $red: #F44336;
@@ -272,8 +267,8 @@ table {
 
 @media only screen and (min-width: 601px) {
 	.row .col.m1 {
-	    width: 8.33333%;
-	    margin-left: 0;
+    width: 8.33333%;
+    margin-left: 0;
 	}
 	.row .col.m2 {
 		width: 16.66667%;
@@ -359,8 +354,8 @@ table {
 
 @media only screen and (min-width: 993px) {
 	.row .col.l1 {
-	    width: 8.33333%;
-	    margin-left: 0;
+    width: 8.33333%;
+    margin-left: 0;
 	}
 	.row .col.l2 {
 		width: 16.66667%;
@@ -453,53 +448,90 @@ body {
 	-webkit-font-smoothing: antialiased;
 }
 
-.app-wrapper {
-	display: flex;
-	flex: 1;
+.app-wrapper-outer {
 	min-height: 100vh;
-  flex-direction: column;
+	display: 	-webkit-box;
+	display: -webkit-flex;
+	display: 	-ms-flexbox;
+	display: 				 flex;
+	-webkit-box-flex: 1;
+	-webkit-flex: 		1;
+	    -ms-flex: 		1;
+	        flex: 		1;
+  -webkit-box-orient: 	vertical;
+  -webkit-box-direction:  normal;
+  -webkit-flex-direction: column;
+      -ms-flex-direction: column;
+          flex-direction: column;
 }
 
 .app-wrapper-inner {
-	display: flex;
+	overflow-x: hidden;
+	display:  -webkit-box;
+	display: -webkit-flex;
+	display:  -ms-flexbox;
+	display: 				 flex;
 }
 
-.app-body-wrapper {
-	display: flex;
-	flex: 1;
-	opacity: 1;
-	background-color: #F8F8F8;
+.contents-wrapper,
+.debug-wrapper {
 	min-height: calc( 100vh - 114px );
-  flex-direction: column;
-	transition: all 300ms ease-in-out;
+	min-width: 0;
+	display: 	-webkit-box;
+	display: -webkit-flex;
+	display: 	-ms-flexbox;
+	display: 				 flex;
+  -webkit-box-orient: 	vertical;
+  -webkit-box-direction:  normal;
+  -webkit-flex-direction: column;
+      -ms-flex-direction: column;
+          flex-direction: column;
+	-webkit-transition: all 300ms ease-in-out;
+	transition: 				all 300ms ease-in-out;
+}
+
+.contents-wrapper {
+	background-color: #F8F8F8;
+	opacity: 1;
+	-webkit-box-flex: 1;
+	-webkit-flex: 		1;
+	    -ms-flex: 		1;
+	        flex: 		1;
 }
 
 .debug-wrapper {
-	display: flex;
-	flex: 0.0001;
-	min-width: 0;
-	opacity: 1;
-	background-color: #F8F8F8;
 	color: #858C9D;
-	min-height: calc( 100vh - 114px );
-  flex-direction: column;
-	transition: all 300ms ease-in-out;
+	background-color: #F8F8F8;
+	opacity: 0;
+	-webkit-box-flex: 0.0001;
+	-webkit-flex:		  0.0001;
+	    -ms-flex: 		0.0001;
+	        flex: 		0.0001;
 }
 
-.app-body-wrapper.debug-open {
-	flex: 0.0001;
-	opacity: 1;
+.contents-wrapper.debug-open {
+	opacity: 0;
+	-webkit-box-flex: 0.0001;
+	-webkit-flex:		  0.0001;
+	    -ms-flex: 		0.0001;
+	        flex:     0.0001;
 }
 
 .debug-wrapper.debug-open {
-	flex: 1;
 	opacity: 1;
+	-webkit-box-flex: 1;
+	-webkit-flex: 		1;
+	    -ms-flex: 		1;
+	        flex: 		1;
 }
 
 .app-header-wrapper {
-  order: -1;
 	background-color: $darkBase;
 	padding: 0px 20px;
+	-webkit-box-ordinal-group: 0;
+  					 -webkit-order: -1;
+            -ms-flex-order: -1;
+          					 order: -1;
 }
 
 .app-footer-wrapper {
@@ -510,6 +542,92 @@ body {
 	width: 100%;
 	height: 100%;
 }
+
+main {
+	overflow-y: scroll;
+	height: 100%;
+}
+
+.transitioner {
+	-webkit-box-flex: 1;
+	-webkit-flex:     1;
+	    -ms-flex: 		1;
+	        flex: 		1;
+}
+
+h1.nothing {
+	text-align: center;
+	margin: 2em 0;
+}
+
+header ul,
+footer ul {
+	display: 	-webkit-box;
+	display: -webkit-flex;
+	display: 	-ms-flexbox;
+	display: 				 flex;
+	margin: 0;
+	padding: 0;
+	-webkit-box-pack: 						 justify;
+	-webkit-justify-content: space-between;
+	    						-ms-flex-pack: justify;
+	        justify-content: space-between;
+	-webkit-box-orient: horizontal;
+	-webkit-box-direction:  normal;
+	-webkit-flex-direction:    row;
+	    -ms-flex-direction:    row;
+	        flex-direction:    row;
+	li {
+	 -ms-flex-item-align: center;
+		-webkit-align-self: center;
+		        align-self: center;
+	}
+}
+footer ul {
+	padding: 0;
+	-webkit-justify-content: space-around;
+	    -ms-flex-pack: 				 distribute;
+	        justify-content: space-around;
+}
+
+a.made-with {
+	font-family: $fwMedium;
+	color: white;
+	font-size: 18px; //23.75px
+	text-decoration: none;
+}
+
+a {
+	&.connected {
+		display: none;
+	}
+	&.disconnected {
+		display: inline;
+	}
+	i.icon-ts-connection {
+		-webkit-transition: background-color 0.1s cubic-bezier(0.4, 0.0, 0.2, 1);
+		transition:         background-color 0.1s cubic-bezier(0.4, 0.0, 0.2, 1);
+		border-radius: 50%;
+		font-size: 18px;
+		width: 34px;
+		height: 34px;
+		line-height: 41px;
+		display: inline-block;
+		text-align: center;
+		color: white;
+		&.connected {
+			background-color: $activeGreen;
+		}
+		&.disconnected {
+			-webkit-animation: blink 2s 0s ease-in-out infinite;
+			animation: 				 blink 2s 0s ease-in-out infinite;
+		}
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+// Debug Styles //
+///////////////////////////////////////////////////////////////////////////////////////
 
 .debug-header {
 	background: white;
@@ -522,33 +640,42 @@ body {
 }
 
 .debug-body .tabs {
-	display: flex;
-	justify-content: flex-start;
-	padding: 0;
-	text-align: center;
-	height: 48px;
 	background-color: #fff;
-	margin: 0 auto;
 	white-space: nowrap;
+	text-align: center;
+	margin: 0 auto;
+	padding: 0;
+	height: 48px;
+	display:  -webkit-box;
+	display: -webkit-flex;
+	display:  -ms-flexbox;
+	display: 				 flex;
+	-webkit-box-pack:						  start;
+	-webkit-justify-content: flex-start;
+	    -ms-flex-pack: 						start;
+	        justify-content: flex-start;
 }
 
 .debug-body .tabs .tab {
-  flex-grow: 1;
-  line-height: 48px;
+	text-transform: uppercase;
+	line-height: 48px;
   height: 45px;
   margin: 0;
-  text-transform: uppercase;
+	-webkit-box-flex: 		 1;
+  -webkit-flex-grow:     1;
+      -ms-flex-positive: 1;
+          flex-grow:     1;
 }
 
 .debug-body .tabs .tab a {
-	color: #858C9D;
+	border-bottom: 3px solid transparent;
 	font-family: "AvenirLTStd-Black";
+	text-decoration: none;
 	font-size: 13px;
+	color: #858C9D;
 	display: block;
 	height: 100%;
 	width: 100%;
-	text-decoration: none;
-	border-bottom: 3px solid transparent;
 }
 
 .debug-body .tabs .tab a:focus {
@@ -585,34 +712,19 @@ body {
 	padding-right: 10px;
 }
 
-
 .debug-wrapper table th {
 	font-family: "AvenirLTStd-Heavy";
+	text-transform: uppercase;
+	letter-spacing: 0.3px;
 	text-align: left;
 	font-size: 13px;
-	letter-spacing: 0.3px;
-	text-transform: uppercase;
 	padding: 15px 0;
 }
 
 .debug-wrapper table td {
 	font-size: 3.5vw;
-	padding: 10px 0;
 	overflow: hidden;
-}
-
-main {
-	height: 100%;
-	overflow-y: scroll;
-}
-
-.transitioner {
-	flex: 1;
-}
-
-h1.nothing {
-	margin: 2em 0;
-	text-align: center;
+	padding: 10px 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -707,58 +819,6 @@ button {
 	color: black;
 }
 
-header ul,
-footer ul {
-	display: flex;
-	margin: 0;
-	padding: 0;
-	justify-content: space-between;
-	flex-direction: row;
-	li {
-	 -ms-flex-item-align: center;
-		-webkit-align-self: center;
-		        align-self: center;
-	}
-}
-footer ul {
-	justify-content: space-around;
-	padding: 0;
-}
-a.made-with {
-	font-family: $fwMedium;
-	color: white;
-	font-size: 18px; //23.75px
-	text-decoration: none;
-}
-a {
-	&.connected {
-		display: none;
-	}
-	&.disconnected {
-		display: inline;
-	}
-	i.icon-ts-connection {
-		transition: background-color 0.1s cubic-bezier(0.4, 0.0, 0.2, 1);
-		border-radius: 50%;
-		font-size: 18px;
-		width: 34px;
-		height: 34px;
-		line-height: 41px;
-		display: inline-block;
-		text-align: center;
-		color: white;
-		&.connected {
-			background-color: $activeGreen;
-		}
-		&.disconnected {
-			-webkit-animation: blink 2s 0s ease-in-out infinite;
-			-moz-animation: blink 2s 0s ease-in-out infinite;
-			-ms-animation: blink 2s 0s ease-in-out infinite;
-			-o-animation: blink 2s 0s ease-in-out infinite;
-			animation: blink 2s 0s ease-in-out infinite;
-		}
-	}
-}
 
 ///////////////////////////////////////////////////////////////////////////////////////
 // Template List Styles //
@@ -796,10 +856,12 @@ ul.screens-list {
 		line-height: 1em;
 	}
 }
+
 .screen-desc {
   align-self: center;
 	font-size: 1.19em;
 }
+
 .screen-desc span {
 	font-family: $fwBook;
 	color: #848484;
@@ -827,7 +889,7 @@ ul.screens-list {
 // Remove vertical scrollbar on Windows Chrome //
 ///////////////////////////////////////////////////////////////////////////////////////
 
-.app-body-wrapper,
+.contents-wrapper,
 .list-wrapper {
 	width: 100%;
 	height: calc( 100vh - 114px);
