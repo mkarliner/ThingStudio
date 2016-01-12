@@ -172,82 +172,73 @@ RegisterFeedProcessor("JSONIn", "HTTPResponse", function(app, conn, feed, error,
 		});
 });
 
-function interval(func, wait, times){
-    var interv = function(w, t){
-        return function(){
-            if(typeof t === "undefined" || t-- > 0){
-                setTimeout(interv, w);
-                try{
-                    func.call(null);
-                }
-                catch(e){
-                    t = 0;
-                    throw e.toString();
-                }
-            }
-        };
-    }(wait, times);
+function interval( func, wait, times ) {
+  var interv = function( w, t ){
+    return function() {
+    if( typeof t === "undefined" || t-- > 0 ){
+      setTimeout( interv, w )
+      try {
+        func.call( null )
+      }
+      catch( e ) {
+        t = 0
+        throw e.toString()
+      }
+      }
+    }
+  }( wait, times )
 
-    setTimeout(interv, wait);
+  setTimeout( interv, wait )
 };
 
 // Set global variable of inIDE true. Overridden in viewer controller.
-inIDE = true;
+inIDE = true
 
 checkHTTPFeeds = function (){
 	//console.log("HTTP clock");
-	if(inIDE) {
-		return;
+	if( inIDE ) {
+		return
 	}
-	HTTPClock++;
-	var feeds = HTTPFeeds.find().fetch();
+	HTTPClock++
+	var feeds = HTTPFeeds.find().fetch()
 
 	//Check which feeds need to be polled.
-	for(var f=0; f<feeds.length; f++) {
-		if(HTTPClock % feeds[f].polling_interval == 0 || initialPoll(feeds[f])) {
-			var feed = feeds[f];
-			var conn = HTTPConnections.findOne(feed.connection);
+	for( var f=0; f<feeds.length; f++ ) {
+		if( HTTPClock % feeds[f].polling_interval == 0 || initialPoll( feeds[f] ) ) {
+			var feed = feeds[f]
+			var conn = HTTPConnections.findOne( feed.connection )
 			if(!conn) {
-				return;
+				return
 			}
-			var app = Apps.findOne({_id: conn.appId});
-			if(!app) {
-				return;
+			var app = Apps.findOne( { _id: conn.appId } )
+			if( !app ) {
+				return
 			}
-            //Substitute any runtime variables
-            var rtv = feed.path.match(/<([A-z]+)>/);
-            // console.log("HTTPRTVM", rtv)
-            if(rtv) {
-				runtimeValue = getRuntimeVariable(rtv[1]);
+      //Substitute any runtime variables
+      var rtv = feed.path.match(/<([A-z]+)>/)
+
+      if(rtv) {
+				runtimeValue = getRuntimeVariable( rtv[1] )
 				//If runtime variable is not set, abort this feed.
 				if(!runtimeValue) {
 					break;
 				}
-                // console.log("HTTP", rtv[0])
-                feed.path = feed.path.replace(rtv[0], getRuntimeVariable(rtv[1]));
-            }
-			var url = conn.protocol + "://" + conn.host + ":" + conn.port + feed.path;
-			timeout = (feed.polling_interval-1)*1000;
-			// console.log("HT: ", feed.responseProcessor, feed.requestProcessor, conn, url, timeout);
-			var reqProc = FeedProcessors.findOne({type: "HTTPRequest", name: feed.requestProcessor});
-			var options = reqProc.func(app, conn, feed, "Null Message");
-			// console.log("BEFORE HTTP Poll:", feed.verb, url, options);
-			HTTP.call(feed.verb, url, options, function(error, result) {
-				//console.log("HRET: ", error, result);
-				//Call each feed processor in turn
-				// for(var p=0; p<feed.processors.length; p++ ){
-				// 	//console.log("CALLING: ", HTTPFeedProcessors[feed.processors[p]])
-				// 	HTTPFeedProcessors[feed.processors[p]](feed, error, result);
-				// }
-				for(var rpc=0; rpc<feed.responseProcessors.length; rpc++) {
-					var fp = FeedProcessors.findOne({type: "HTTPResponse", name: feed.responseProcessors[rpc]});
-					//console.log("FP: ", fp, FeedProcessors.find().fetch());
-					fp.func(app, conn, feed, error, result);
-				}
-			})
+        feed.path = feed.path.replace( rtv[0], getRuntimeVariable( rtv[1] ) )
+      }
+			var url = conn.protocol + "://" + conn.host + ":" + conn.port + feed.path
+			timeout = ( feed.polling_interval - 1 ) * 1000
+			var reqProc = FeedProcessors.findOne( { type: "HTTPRequest", name: feed.requestProcessor } )
+			var options = reqProc.func( app, conn, feed, "Null Message" )
+      (function ( feed ) {
+  			HTTP.call( feed.verb, url, options, function( error, result ) {
+  				for ( var rpc=0; rpc<feed.responseProcessors.length; rpc++ ) {
+  					var fp = FeedProcessors.findOne( { type: "HTTPResponse", name: feed.responseProcessors[rpc] } )
+  					fp.func( app, conn, feed, error, result )
+  				}
+  			})
+      }( feed ))
 		}
 	}
-	// console.log("HTTP Clock", HTTPClock)
 }
 
 
