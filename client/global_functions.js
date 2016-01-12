@@ -291,6 +291,7 @@ publish = function(feedName, message) {
 	switch(feedType) {
 	case "MQTT":
 		feed = Feeds.findOne({title: feedName});
+		var topic = feed.subscription;
 		console.log("FEN: ", feed, feedName)
 		if(feed.pubsub !="Publish") {
 			message = "Attempt to publish to subcription feed: "+ feed.title;
@@ -304,7 +305,7 @@ publish = function(feedName, message) {
 				if(!runtimeValue) {
 					break;
 				}
-                var topic = feed.subscription.replace(rtv[0], runtimeValue)
+                topic = feed.subscription.replace(rtv[0], runtimeValue)
             }
 			Outbox.upsert({topic: topic}, {$set: { feed: feed.title, topic: topic, payload: message},$inc: {count: 1}});
 			mqttClient.publish(topic, message);
