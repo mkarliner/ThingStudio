@@ -16,4 +16,24 @@ Tables.AttributesTable = [
 		'Publish / Subscribe': "Publish",
 		Description: "For inputs that can generate 'value changed' events (i.e. sliders), publish the events continuously as the value changes, rather than just when the mouse button is released."
 	},
+    {
+        Name: "data-renderedFeed",
+        'Publish / Subscribe': "Publish",
+        Description: "The name of a feed to send a message to when this element is rendered."
+    },
+	{
+		Name: "data-renderedMessage",
+		'Publish / Subscribe': "Publish",
+		description: "The payload of the message to be sent when this element is rendered"
+	},
+	{
+		Name: "data-variable",
+		'Publish / Subscribe': "n/a",
+		description: "The name  of a run-time variable to set"
+	},
+	{
+		Name: "data-value",
+		'Publish / Subscribe': "n/a",
+		description: "The value of a run-time variable to set."
+	},
 ]

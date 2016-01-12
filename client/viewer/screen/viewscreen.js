@@ -3,6 +3,7 @@
 Template.ViewScreen.events({
 	'click a': function (e, tmpl) {
 	}
+
 })
 
 Template.ViewScreen.onRendered(function(){

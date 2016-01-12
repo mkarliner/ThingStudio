@@ -1,4 +1,20 @@
 ///////////////////////////////////////////////////////////////////////////////////////
+// Runtime Variable//
+///////////////////////////////////////////////////////////////////////////////////////
+
+RuntimeVariables = new Mongo.Collection(null);
+
+setRuntimeVariable = function(name, value){
+    console.log("RTV: ", name, value)
+    RuntimeVariables.upsert({name: name}, {$set: {name: name, value: value}});
+}
+
+getRuntimeVariable = function(name) {
+    var rtv = RuntimeVariables.findOne();
+    return rtv ? rtv.value : null;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
 // General Purpose Functions //
 ///////////////////////////////////////////////////////////////////////////////////////
 
@@ -107,37 +123,39 @@ function initialPoll(feed) {
 	if(HTTPFirstPolls[feed.title] || feed.polling_interval == 0) {
 		return false;
 	} else {
-		console.log("First Poll for feed ", feed.title);
+		// console.log("First Poll for feed ", feed.title);
 		HTTPFirstPolls[feed.title] = feed.title;
 		return true;
 	}
 }
 
 RegisterFeedProcessor("JSONOut", "HTTPRequest", function(app, conn, feed, message){
-	console.log("testReq Proc", feed, message);
+	// console.log("testReq Proc", feed, message);
 	return ({
 		content: message
 	})
 });
 
 RegisterFeedProcessor("JSONIn", "HTTPResponse", function(app, conn, feed, error, result){
-	console.log("RESPONSE: ", feed, error, result);
+	// console.log("RESPONSE: ", feed, error, result);
 	if(error) {
 		console.log("HRRPR: ", error.message );
 		return;
 	}
 	try {
+		console.log("trying")
+		console.log("result: ", result.content)
 		payload = JSON.parse(result.content);
+
 	}
 	catch(err) {
-		console.log("HERR: ", err);
 		Session.set("runtimeErrors", "Invalid HTTP message, payload not JSON: " + result.content.toString());
 		payload = result.content.toString();
 	}
-	console.log("payload", payload)
+	// console.log("payload", payload)
 	Messages.upsert(
 		{
-			topic: feed.path,
+			// topic: feed.path,
 			feed: feed.title
 		},
 		{
@@ -196,12 +214,19 @@ checkHTTPFeeds = function (){
 			if(!app) {
 				return;
 			}
+            //Substitute any runtime variables
+            var rtv = feed.path.match(/<([A-z]+)>/);
+            // console.log("HTTPRTVM", rtv)
+            if(rtv) {
+                // console.log("HTTP", rtv[0])
+                feed.path = feed.path.replace(rtv[0], getRuntimeVariable(rtv[1]))
+            }
 			var url = conn.protocol + "://" + conn.host + ":" + conn.port + feed.path;
 			timeout = (feed.polling_interval-1)*1000;
-			console.log("HT: ", feed.responseProcessor, feed.requestProcessor, conn, url, timeout);
+			// console.log("HT: ", feed.responseProcessor, feed.requestProcessor, conn, url, timeout);
 			var reqProc = FeedProcessors.findOne({type: "HTTPRequest", name: feed.requestProcessor});
 			var options = reqProc.func(app, conn, feed, "Null Message");
-			console.log("BEFORE HTTP Poll:", feed.verb, url, options);
+			// console.log("BEFORE HTTP Poll:", feed.verb, url, options);
 			HTTP.call(feed.verb, url, options, function(error, result) {
 				//console.log("HRET: ", error, result);
 				//Call each feed processor in turn
@@ -227,7 +252,7 @@ checkHTTPFeeds = function (){
 // 	Session.set("FeedProcessors", Object.keys(HTTPFeedProcessors));
 // });
 Meteor.startup(function() {
-	console.log("Starting HTTP Check");
+	// console.log("Starting HTTP Check");
 	interval(checkHTTPFeeds, 1000);
 })
 
@@ -242,7 +267,7 @@ OldMessages = new Mongo.Collection(null);
 
 Outbox = new Mongo.Collection(null);
 
-SubscribedTopics = new Array();
+SubscribedTopics = {};
 
 Feedhooks = {};
 
@@ -266,8 +291,15 @@ publish = function(feedName, message) {
 			message = "Attempt to publish to subcription feed: "+ feed.title;
 			Alerts.upsert({type: 'runtime', status: "warning", message:  message},{$set:{type: 'runtime', status: 'warning', message: message} ,$inc: {count: 1} } );
 		} else {
-			Outbox.upsert({topic: feed.subscription}, {$set: { feed: feed.title, topic: feed.subscription, payload: message},$inc: {count: 1}});
-			mqttClient.publish(feed.subscription, message);
+            //Substitute any runtime variables
+            var rtv = feed.subscription.match(/<([A-z]+)>/);
+            console.log("RTVM", rtv)
+            if(rtv) {
+                console.log("Hasdf", rtv[0])
+                var topic = feed.subscription.replace(rtv[0], getRuntimeVariable(rtv[1]))
+            }
+			Outbox.upsert({topic: topic}, {$set: { feed: feed.title, topic: topic, payload: message},$inc: {count: 1}});
+			mqttClient.publish(topic, message);
 		}
 		break;
 	case "HTTP":
@@ -275,6 +307,13 @@ publish = function(feedName, message) {
 		var app = getCurrentApp();
 		var conn = HTTPConnections.findOne(feed.connection);
 		console.log("HTTP FEED Request", feedName, feed);
+        //Substitute any runtime variables
+        var rtv = feed.path.match(/<([A-z]+)>/);
+        console.log("HTTPRTVM", rtv)
+        if(rtv) {
+            console.log("HTTP", rtv[0])
+            feed.path = feed.path.replace(rtv[0], getRuntimeVariable(rtv[1]))
+        }
 		//Get the requestProcessor for this feed
 		var fp = FeedProcessors.findOne({name: feed.requestProcessor});
 		//And call it to process the outgoing message
@@ -288,6 +327,7 @@ publish = function(feedName, message) {
 		timeout = 5*1000;
 				options.headers = {};
 				options.timeout = timeout;
+				options.data = message;
 				//options.headers["Access-Control-Allow-Headers"] = "Access-Control-Allow-Origin, Origin, X-Requested-With, Content-Type, Accept";
 				//options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
 		//options.headers['Access-Control-Allow-Origin'] = '*';
@@ -307,20 +347,57 @@ publish = function(feedName, message) {
 		console.log("UNKNOWN FEED TYPE: ", feedType)
 	}
 }
-mqttClientSubscribe = function(topic) {
-	// console.log("MQTTSUB : ", topic, SubscribedTopics);
+
+clientSubscribe = function(topic) {
 	if(SubscribedTopics[topic]) {
 		return;
 	} else {
 		SubscribedTopics[topic] = topic;
 		try {
+            console.log("SUBSCRIBINGTO ", topic)
 			mqttClient.subscribe(topic,function(err, granted){
+                if(err) {
+                    sAlert.warning('MQTT subscription failed ' + err)
+                }
 		    		console.log("MQTTSubcribe", err, granted)
 			});
 		} catch (e) {
 			sAlert.warning('You have no MQTT connection for this feed to subscribe on. Go create one.');
 		}
 	}
+}
+
+mqttClientSubscribe = function(feed) {
+	console.log("MQTTSUB : ", feed.subscription);
+    //Expand regexs
+	var topic = mqttregex(feed.subscription).topic;
+	topic = topic.substring(0, topic.length - 1);
+    //Expand runtime variables
+    var rtv = topic.match(/<([A-z]+)>/);
+    if(rtv) {
+        console.log("Runtime sub", rtv)
+        var varName = rtv[1];
+        var varValue = getRuntimeVariable(varName);
+        topic = topic.replace(rtv[0], varValue);
+        Tracker.autorun(function(){
+            console.log("MQAR: ", feed.subscription, topic, varName);
+            var vv = getRuntimeVariable(varName);
+            if(!vv) {
+                console.log("Bailing", varName);
+                return;
+            }
+            var tp = feed.subscription;
+            var ftp = tp.replace(rtv[0], vv);
+            console.log("FTP ", ftp, rtv[0], vv)
+            clientSubscribe(ftp);
+        })
+    }
+    if(rtv && !varValue) {
+        //Don't attempt to subscribe dynamic feeds that have no value
+        console.log("SKIPPING: ", feed.title)
+        return;
+    }
+    clientSubscribe(topic);
 }
 
 mqttClientUnsubscribe= function(topic) {
@@ -619,9 +696,7 @@ connect = function (conn, usr, pass) {
 		feeds = Feeds.find({pubsub: "Subscribe"}).fetch();
 		i =0;
 		for(i=0; i<feeds.length; i++) {
-			topic = mqttregex(feeds[i].subscription).topic;
-			topic = topic.substring(0, topic.length - 1);
-			 mqttClientSubscribe(topic);
+			 mqttClientSubscribe(feeds[i]);
 		}
 	});
 	mqttClient.on("close", function(par){
@@ -672,7 +747,10 @@ connect = function (conn, usr, pass) {
 					jsonKey = "none"
 				}
 				// console.log("Feed matched", result);
-				Messages.upsert({topic: topic, feed: feeds[i].title}, {$set: {feed: feeds[i].title, topic: topic, payload: filteredPayload}, $inc:{count: 1}});
+				Messages.upsert({
+                    // topic: topic,
+                    feed: feeds[i].title
+                }, {$set: {feed: feeds[i].title, topic: topic, payload: filteredPayload}, $inc:{count: 1}});
 				if(feeds[i].doJournal) {
 					//Do journal stuff
 					Messages.update(
@@ -687,6 +765,19 @@ connect = function (conn, usr, pass) {
 					   }
 					)
 				}
+                if(feeds[i].doRoster) {
+                    Messages.update(
+                        {topic: topic, feed: feeds[i].title},
+                        {
+                            $addToSet: {
+                                roster: {
+                                    $each: [filteredPayload]
+                                }
+                            }
+
+                        }
+                    )
+                }
 				if(feeds[i].doMaxMinAvg){
 					//Only work with numeric values.
 					value = parseFloat(filteredPayload);

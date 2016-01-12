@@ -75,6 +75,23 @@ Schemas.Feed = new SimpleSchema({
 			omit: true
 		}
 	},
+    doRoster: {
+        type: Boolean,
+        defaultValue: false,
+        label: "Keep Roster" 
+    },
+    rosterProperty: {
+        type: String,
+        optional: true,
+        label: "Roster Index Property"
+    },
+    roster: {
+        type: [Object],
+        optional: true,
+        autoform: {
+            omit: true
+        }
+    },
 	doMaxMinAvg: {
 		type: Boolean,
 		defaultValue: false,
@@ -166,9 +183,7 @@ Feeds.after.insert(function(userId, doc) {
 	if(Meteor.isClient){
 		if(doc.pubsub != "Publish") {
 			// console.log("Feed insert subscription", userId, doc)
-			topic = mqttregex(doc.subscription).topic;
-			topic = topic.substring(0, topic.length - 1);
-			 mqttClientSubscribe(topic);
+			 mqttClientSubscribe(doc);
 		}
     sAlert.success( "MQTT Feed created.", { onRouteClose: false } );
     Router.go( "Feeds" )
@@ -179,9 +194,7 @@ Feeds.after.update(function(userId, doc) {
 	if(Meteor.isClient){
 		// console.log("Feed update", userId, doc)
 		if(doc.pubsub != "Publish") {
-			topic = mqttregex(doc.subscription).topic;
-			topic = topic.substring(0, topic.length - 1);
-			 mqttClientSubscribe(topic);
+			 mqttClientSubscribe(doc);
 		}
     sAlert.success( 'MQTT Feed updated.', { onRouteClose: false } );
     Router.go( "Feeds" )
@@ -192,9 +205,7 @@ Feeds.after.remove(function(userId, doc) {
 	if(Meteor.isClient){
 		// console.log("Feed remove", userId, doc)
 		if(doc.pubsub != "Publish") {
-			topic = mqttregex(doc.subscription).topic;
-			topic = topic.substring(0, topic.length - 1);
-			 mqttClientUnsubscribe(topic);
+			 mqttClientUnsubscribe(doc);
 		}
     sAlert.success( "MQTT Feed deleted." );
 	}

@@ -64,6 +64,10 @@ compileTemplate = function(name, html_text, javascript) {
 				// console.log("MSG: ", msg);
 				return msg && msg.journal ? JSON.stringify(msg.journal)  : ["no values"];
 			},
+            roster: function(feed) {
+                msg = Messages.findOne({feed: feed});
+                return msg && msg.roster ? msg.roster  : [];
+            },
 			minmax: function(feed) {
 				msg = OldMessages.findOne({feed: feed});
 				ret = msg ? msg : {min: 0, max: 0, avg: 0, diffavg: 0};
@@ -72,18 +76,22 @@ compileTemplate = function(name, html_text, javascript) {
 			}
 		});
 		Template[name].events({
-			'click button, click anchorClass': function(ev){
-				ev.preventDefault();
+			'click button, click .anchorClass': function(ev){
+                // ev.preventDefault();
+                // Feed messages
 				attr = ev.currentTarget.attributes;
 				feed_name = attr.getNamedItem("data-feed");
-				if(feed_name == null || !checkFeed(feed_name.value, false)){
-					return;
+				if(feed_name != null && checkFeed(feed_name.value, false)){
+    				message = attr.getNamedItem("data-message");
+    				publish(feed_name.value, JSON.stringify(message ? message.value : "click"));
 				};
-				message = attr.getNamedItem("data-message");
-				// feed = Feeds.findOne({title: feed_name.value});
-				// console.log("BLICK: ", feed_name.value)
-				publish(feed_name.value, JSON.stringify(message ? message.value : "click"));
-				ev.stopImmediatePropagation();
+                //Variables
+				variable_name = attr.getNamedItem("data-variable");
+				if(variable_name != null && typeof variable_name.value  == "string") {
+    				var val = attr.getNamedItem("data-value").value;
+    				setRuntimeVariable(variable_name.value, val);
+				};
+				//ev.stopImmediatePropagation();
 			},
 			'change input[type="checkbox"]': function(ev) {
 				// console.log("CHKBOX ", ev, this)
@@ -107,42 +115,60 @@ compileTemplate = function(name, html_text, javascript) {
 			'change input': function(ev) {
 				// console.log("INPUT CHANGED", this, ev);
 				attr = ev.currentTarget.attributes;
+                value = $(ev.target).val();
 				feed_name = attr.getNamedItem("data-feed");
-				dm = attr.getNamedItem("data-message");
-				if(dm) {
-					prefix = dm.value;
-				} else {
-					prefix = ""
-				}
-				checkFeed(feed_name.value, false);
-				value = $(ev.target).val();
-				checkFeed(feed_name.value, false);
-				//feed = Feeds.findOne({title: feed_name.value});
-
-				if(typeof feed == "undefined") {
-					return;
-				}
+                if(feed_name != null && checkFeed(feed_name.value, false)){
+                    dm = attr.getNamedItem("data-message");
+    				if(dm) {
+    					prefix = dm.value;
+    				} else {
+    					prefix = ""
+    				}
+                    publish(feed_name.value, JSON.stringify(prefix+value));
+                }
+                //Variables
+				variable_name = attr.getNamedItem("data-variable");
+				if(variable_name != null && typeof variable_name.value  == "string") {
+                    console.log("VN ", variable_name.value);
+    				// var val = attr.getNamedItem("data-value").value;
+    				setRuntimeVariable(variable_name.value, value);
+				};
 				// console.log(feed);
-				publish(feed_name.value, JSON.stringify(prefix+value));
+
 			},
 			'input': function(ev) {
 				// console.log("INPUT ", ev);
 				attr = ev.currentTarget.attributes;
 				feed_name = attr.getNamedItem("data-feed");
-				checkFeed(feed_name.value, false);
-				if(attr.getNamedItem("data-continuous")) {
-					value = $(ev.target).val();
-					//feed = Feeds.findOne({title: feed_name.value});
-					publish(feed_name.value, JSON.stringify(value));
-				}
+                if(feed_name != null && checkFeed(feed_name.value, false)){
+    				if(attr.getNamedItem("data-continuous")) {
+    					value = $(ev.target).val();
+    					//feed = Feeds.findOne({title: feed_name.value});
+    					publish(feed_name.value, JSON.stringify(value));
+    				}
+                }
 			}
 		});
+        Template[name].onRendered(function(){
+            var elements = this.findAll('*');
+            for(var e=0; e< elements.length; e++) {
+                var element = elements[e];
+                var attr = element.attributes;
+                    // console.log("ATTR: ", attr)
+                    var feed_name = attr.getNamedItem("data-renderedfeed");
+    				if(feed_name == null || !checkFeed(feed_name.value, false)){
+    					return;
+    				};
+    				var message = attr.getNamedItem("data-renderedmessage");
+    				publish(feed_name.value, JSON.stringify(message ? message.value : "rendered"));
+            }
+        });
 		if(javascript) {
 			jsout = eval(javascript)
 		}
 		return({type: 'template', status: 'success', message: 'Template updated'});
 	} catch (err) {
-		// console.log('Error compiling template:' + html_text);
+		sAlert.warning('Error compiling template:' + err);
 		console.log('Error!', err);
 		// console.log(err.message);
 		// Session.set("compilationErrors", err.message)
