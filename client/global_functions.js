@@ -218,8 +218,13 @@ checkHTTPFeeds = function (){
             var rtv = feed.path.match(/<([A-z]+)>/);
             // console.log("HTTPRTVM", rtv)
             if(rtv) {
+				runtimeValue = getRuntimeVariable(rtv[1]);
+				//If runtime variable is not set, abort this feed.
+				if(!runtimeValue) {
+					break;
+				}
                 // console.log("HTTP", rtv[0])
-                feed.path = feed.path.replace(rtv[0], getRuntimeVariable(rtv[1]))
+                feed.path = feed.path.replace(rtv[0], getRuntimeVariable(rtv[1]));
             }
 			var url = conn.protocol + "://" + conn.host + ":" + conn.port + feed.path;
 			timeout = (feed.polling_interval-1)*1000;
@@ -295,8 +300,11 @@ publish = function(feedName, message) {
             var rtv = feed.subscription.match(/<([A-z]+)>/);
             console.log("RTVM", rtv)
             if(rtv) {
-                console.log("Hasdf", rtv[0])
-                var topic = feed.subscription.replace(rtv[0], getRuntimeVariable(rtv[1]))
+                var runtimeValue = getRuntimeVariable(rtv[1]);
+				if(!runtimeValue) {
+					break;
+				}
+                var topic = feed.subscription.replace(rtv[0], runtimeValue)
             }
 			Outbox.upsert({topic: topic}, {$set: { feed: feed.title, topic: topic, payload: message},$inc: {count: 1}});
 			mqttClient.publish(topic, message);
@@ -311,8 +319,12 @@ publish = function(feedName, message) {
         var rtv = feed.path.match(/<([A-z]+)>/);
         console.log("HTTPRTVM", rtv)
         if(rtv) {
-            console.log("HTTP", rtv[0])
-            feed.path = feed.path.replace(rtv[0], getRuntimeVariable(rtv[1]))
+            var runtimeValue = getRuntimeVariable(rtv[1]);
+			if(!runtimeValue) {
+				break;
+			}
+            //console.log("HTTP", rtv[0])
+            feed.path = feed.path.replace(rtv[0], runtimeValue)
         }
 		//Get the requestProcessor for this feed
 		var fp = FeedProcessors.findOne({name: feed.requestProcessor});
