@@ -89,7 +89,6 @@ if (!Object.keys) {
 // HTTP  Management//
 ///////////////////////////////////////////////////////////////////////////////////////
 
-
 FeedProcessors = new Mongo.Collection(null);
 
 FeedList = new Mongo.Collection(null);
@@ -106,8 +105,6 @@ Meteor.startup(function(){
 		}
 	});
 })
-
-
 
 RegisterFeedProcessor = function(name,  type, func) {
 	// Type can be HTTPRequest, HTTPResponse
