@@ -73,6 +73,9 @@ compileTemplate = function(name, html_text, javascript) {
 				ret = msg ? msg : {min: 0, max: 0, avg: 0, diffavg: 0};
 				//console.log("MMM: ", ret);
 				return JSON.stringify(ret);
+			},
+			runtimeVariable: function(name) {
+				return getRuntimeVariable(name);
 			}
 		});
 		Template[name].events({

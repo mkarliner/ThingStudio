@@ -140,8 +140,8 @@ RegisterFeedProcessor("JSONIn", "HTTPResponse", function(app, conn, feed, error,
 		return;
 	}
 	try {
-		console.log("trying")
-		console.log("result: ", result.content)
+		// console.log("trying")
+		// console.log("result: ", result.content)
 		payload = JSON.parse(result.content);
 
 	}
@@ -179,7 +179,8 @@ function interval( func, wait, times ) {
       }
       catch( e ) {
         t = 0
-        throw e.toString()
+		sAlert.error("Interval timer error " +  e.toString())
+        //throw e.toString()
       }
       }
     }
@@ -203,6 +204,7 @@ checkHTTPFeeds = function (){
 	for( var f=0; f<feeds.length; f++ ) {
 		if( HTTPClock % feeds[f].polling_interval == 0 || initialPoll( feeds[f] ) ) {
 			var feed = feeds[f]
+			//console.log("Checking feed: ", feed.title)
 			var conn = HTTPConnections.findOne( feed.connection )
 			if(!conn) {
 				return
@@ -225,12 +227,23 @@ checkHTTPFeeds = function (){
 			var url = conn.protocol + "://" + conn.host + ":" + conn.port + feed.path
 			timeout = ( feed.polling_interval - 1 ) * 1000
 			var reqProc = FeedProcessors.findOne( { type: "HTTPRequest", name: feed.requestProcessor } )
-			var options = reqProc.func( app, conn, feed, "Null Message" )
+			try {
+				var options = reqProc.func( app, conn, feed, "Null Message" )
+			}
+			catch(e) {
+				sAlert.warning("Request processor error: " + e.toString())
+			}
+			
       (function ( feed ) {
   			HTTP.call( feed.verb, url, options, function( error, result ) {
   				for ( var rpc=0; rpc<feed.responseProcessors.length; rpc++ ) {
   					var fp = FeedProcessors.findOne( { type: "HTTPResponse", name: feed.responseProcessors[rpc] } )
-  					fp.func( app, conn, feed, error, result )
+					try {
+						fp.func( app, conn, feed, error, result )
+					}
+  					catch(e) {
+  						sAlert.warning("Response processor error: " + e.toString())
+  					}
   				}
   			})
       }( feed ))
@@ -245,7 +258,7 @@ checkHTTPFeeds = function (){
 // 	Session.set("FeedProcessors", Object.keys(HTTPFeedProcessors));
 // });
 Meteor.startup(function() {
-	// console.log("Starting HTTP Check");
+	console.log("Starting HTTP Check");
 	interval(checkHTTPFeeds, 1000);
 })
 
@@ -328,7 +341,8 @@ publish = function(feedName, message) {
 		timeout = 5*1000;
 				options.headers = {};
 				options.timeout = timeout;
-				options.data = message;
+				options.params = {message: message};
+				options.content = message;
 				//options.headers["Access-Control-Allow-Headers"] = "Access-Control-Allow-Origin, Origin, X-Requested-With, Content-Type, Accept";
 				//options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
 		//options.headers['Access-Control-Allow-Origin'] = '*';
