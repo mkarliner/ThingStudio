@@ -15,7 +15,10 @@ Template.AppsBody.events({
 });
 
 Template.AppsBody.helpers({
-	appslist: function(){
+	galleryAppsList: function(){
+		return Apps.find({})
+	},
+	myAppsList: function(){
 		return Apps.find({})
 	},
 	shareable: function(){
@@ -37,7 +40,7 @@ Template.AppsBody.helpers({
 
 Template.AppList.helpers({
     username: function(){
-        return Meteor.users.findOne({_id: this.owner}).username; 
+        return Meteor.users.findOne({_id: this.owner}).username;
     },
 	current_app: function(){
 		if(this._id == Session.get("currentAppId")) {

@@ -45,16 +45,22 @@
 	{{> autoformModals}}
 	{{#contentFor region="appHeader" template="AppsHeader"}}{{/contentFor}}
 	<div class="top-row">
-		<div class="col s2 tabs-container">
+		<div class="col s3 tabs-container">
 			<ul class="tabs">
+				<li class="tab"><a href="#gallery-apps">Gallery</a></li>
 				<li class="tab"><a href="#my-apps">My Apps</a></li>
 			</ul>
 		</div>
 		<div class="clearfix"></div>
 	</div>
 	<div class="single-page-container apps">
+		<div id="gallery-apps">
+			{{#each galleryAppsList}}
+				{{> AppList }}
+			{{/each}}
+		</div>
 		<div id="my-apps">
-			{{#each appslist}}
+			{{#each myAppsList}}
 				{{> AppList }}
 			{{/each}}
 		</div>
