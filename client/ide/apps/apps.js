@@ -1,10 +1,12 @@
 Template.AppsBody.onRendered(function() {
 	$( '.tooltipped' ).tooltip( { delay: 50 } );
 	$( 'ul.tabs' ).tabs();
+	// Get last used tab, find tab container
 	var activeTabHref = Session.get( "activeAppTab" )
 	var $tabContainer = this.$( ".tabs" )
 	var $activeTabHref = $tabContainer.find( '.active' ).attr( "href" )
 
+	// Make last used tab active, if not gallery
 	if ( $activeTabHref != activeTabHref ) {
 		var $targetElement = $tabContainer.find( "a[href='" + activeTabHref + "']" )
 		var $targetTab = $( $targetElement )
