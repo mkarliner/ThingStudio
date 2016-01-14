@@ -1,6 +1,15 @@
 Template.AppsBody.onRendered(function() {
-	$('.tooltipped').tooltip({delay: 50});
-	$('ul.tabs').tabs();
+	$( '.tooltipped' ).tooltip( { delay: 50 } );
+	$( 'ul.tabs' ).tabs();
+	var activeTabHref = Session.get( "activeAppTab" )
+	var $tabContainer = this.$( ".tabs" )
+	var $activeTabHref = $tabContainer.find( '.active' ).attr( "href" )
+
+	if ( $activeTabHref != activeTabHref ) {
+		var $targetElement = $tabContainer.find( "a[href='" + activeTabHref + "']" )
+		var $targetTab = $( $targetElement )
+		$targetTab.click()
+	}
 });
 
 Template.AppList.onDestroyed(function () {
@@ -8,9 +17,13 @@ Template.AppList.onDestroyed(function () {
 });
 
 Template.AppsBody.events({
-	'click .select-app': function(ev) {
-		ev.preventDefault();
+	'click .select-app': function(e, tmpl) {
+		e.preventDefault();
 		changeActiveApp(this._id);
+	},
+	'click .tab': function (e, tmpl) {
+		var clickedTabHref = $(e.target).attr("href")
+		Session.set("activeAppTab", clickedTabHref)
 	}
 });
 
