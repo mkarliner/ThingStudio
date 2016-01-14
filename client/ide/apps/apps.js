@@ -16,10 +16,10 @@ Template.AppsBody.events({
 
 Template.AppsBody.helpers({
 	galleryAppsList: function(){
-		return Apps.find({})
+		return Apps.find({owner: {$ne: Meteor.userId()}})
 	},
 	myAppsList: function(){
-		return Apps.find({})
+		return Apps.find({owner: Meteor.userId()})
 	},
 	shareable: function(){
 		if(this.shareable) {
