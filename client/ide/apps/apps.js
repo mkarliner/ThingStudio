@@ -1,22 +1,40 @@
 Template.AppsBody.onRendered(function() {
-	$('.tooltipped').tooltip({delay: 50});
-	$('ul.tabs').tabs();
+	$( '.tooltipped' ).tooltip( { delay: 50 } );
+	$( 'ul.tabs' ).tabs();
+	// Get last used tab, find tab container
+	var sessionTabHref = Session.get( "activeAppTab" )
+	var $tabContainer = this.$( ".tabs" )
+	var activeTabHref = $tabContainer.find( '.active' ).attr( "href" )
+
+	// Make last used tab active, if not gallery
+	if ( activeTabHref != sessionTabHref ) {
+		var $targetElement = $tabContainer.find( "a[href='" + sessionTabHref + "']" )
+		var $targetTab = $( $targetElement )
+		$targetTab.click()
+	}
 });
 
-Template.AppList.onDestroyed(function () {
-	$('.tooltipped').tooltip('remove');
+Template.AppList.onDestroyed( function () {
+	$( '.tooltipped' ).tooltip( 'remove' );
 });
 
 Template.AppsBody.events({
-	'click .select-app': function(ev) {
-		ev.preventDefault();
-		changeActiveApp(this._id);
+	'click .select-app': function( e, tmpl ) {
+		e.preventDefault();
+		changeActiveApp( this._id );
+	},
+	'click .tab': function ( e, tmpl ) {
+		var clickedTabHref = $( e.target ).attr( "href" )
+		Session.set( "activeAppTab", clickedTabHref )
 	}
 });
 
 Template.AppsBody.helpers({
-	appslist: function(){
-		return Apps.find({})
+	galleryAppsList: function(){
+		return Apps.find({owner: {$ne: Meteor.userId()}})
+	},
+	myAppsList: function(){
+		return Apps.find({owner: Meteor.userId()})
 	},
 	shareable: function(){
 		if(this.shareable) {
@@ -37,7 +55,7 @@ Template.AppsBody.helpers({
 
 Template.AppList.helpers({
     username: function(){
-        return Meteor.users.findOne({_id: this.owner}).username; 
+        return Meteor.users.findOne({_id: this.owner}).username;
     },
 	current_app: function(){
 		if(this._id == Session.get("currentAppId")) {
