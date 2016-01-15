@@ -526,6 +526,7 @@ body {
 }
 
 .app-header-wrapper {
+	height: 54px;
 	background-color: $darkBase;
 	padding: 0px 20px;
 	-webkit-box-ordinal-group: 0;
@@ -546,6 +547,11 @@ body {
 main {
 	overflow-y: scroll;
 	height: 100%;
+ 	position: relative;
+}
+
+main:not(.template-view) {
+	overflow: hidden;
 }
 
 .transitioner {
@@ -893,11 +899,6 @@ ul.screens-list {
 .list-wrapper {
 	width: 100%;
 	height: calc( 100vh - 114px);
-}
-
-main {
- position: relative;
- overflow: hidden;
 }
 
 .list-wrapper {
