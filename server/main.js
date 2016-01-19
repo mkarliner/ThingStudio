@@ -148,24 +148,59 @@ Meteor.startup(function() {
 
 		}
 	});
-
+	
+	
 	Meteor.publish("sharedApps", function(){
-		basicExampleApp = Meteor.settings.public.basicExampleApp;
-		systemApp = Meteor.settings.public.systemApp;
-		if(basicExampleApp) {
-			applist = [],
-			applist.push(basicExampleApp);
-			// console.log("here is applist: ", applist)
-			if(isAdmin(this.userId))  {
-				applist.push(systemApp);
+			basicExampleApp = Meteor.settings.public.basicExampleApp;
+			systemApp = Meteor.settings.public.systemApp;
+			if(basicExampleApp) {
+				applist = [],
+				applist.push(basicExampleApp);
+				// console.log("here is applist: ", applist)
+				if(isAdmin(this.userId))  {
+					applist.push(systemApp);
+				}
+				// console.log("ALEXAM: ", applist);
+				return Apps.find({_id: {$in: applist}});
+			} else {
+				this.ready();
 			}
-			// console.log("ALEXAM: ", applist);
-			return Apps.find({_id: {$in: applist}});
-		} else {
-			this.ready();
-		}
 
-	});
+		});
+		
+	    Meteor.publish("sharedApps", function() {
+	    	var applist = [];
+	    	basicExampleApp = Meteor.settings["public"].basicExampleApp;
+	    	if (basicExampleApp) {
+	    		applist.push(basicExampleApp);
+	    	}
+	    	var galleryApps = Meteor.settings["public"].galleryApps;
+	    	console.log("Gallery Apps", galleryApps);
+	    	if (galleryApps) {
+	    		applist = applist.concat(galleryApps);
+	    	}
+	    	if (isAdmin(this.userId)) {
+	    		applist.push(Meteor.settings["public"].systemApp);
+	    	}
+	    	if (applist) {
+	    		return Apps.find({
+	    			_id: {
+	    				$in: applist
+	    			}
+	    		}, {
+	    			sort: {
+	    				title: 1
+	    			}
+	    		});
+	    	} else {
+	    		//This allows the system to bootstrap                               
+	    		this.ready();
+	    	}
+	    });
+
+	
+
+
 
 	Meteor.publish("connections", function(appId) {
 		// console.log("Subscribing connections: ", appId)
