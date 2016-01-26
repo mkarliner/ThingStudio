@@ -5,7 +5,7 @@ Schemas = {};
 Schemas.ExternalLibraryDetails = new SimpleSchema({
 	title: {
 		type: String,
-		label: "Source"
+		label: "URL"
 	},
 	loadAsync: {
 		type: Boolean,
@@ -28,6 +28,13 @@ Schemas.ExternalLibraryDetails = new SimpleSchema({
 				class: 'filled-in'
 			}
 		}
+	}
+})
+
+Schemas.ExternalCSSDetails = new SimpleSchema({
+	title: {
+		type: String,
+		label: "URL"
 	}
 })
 
@@ -179,6 +186,11 @@ Schemas.App = new SimpleSchema({
 		label: "External JavaScript Libraries",
 		type: [Schemas.ExternalLibraryDetails],
 		optional: true,
+	},
+	externalCSSLibraries: {
+		label: "External CSS Libraries",
+		type: [Schemas.ExternalCSSDetails],
+		optional: true
 	},
 	css: {
 		optional: true,

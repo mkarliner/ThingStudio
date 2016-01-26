@@ -235,7 +235,7 @@ checkHTTPFeeds = function (){
 			catch(e) {
 				sAlert.warning("Request processor error: " + e.toString())
 			}
-			
+
       (function ( feed ) {
   			HTTP.call( feed.verb, url, options, function( error, result ) {
   				for ( var rpc=0; rpc<feed.responseProcessors.length; rpc++ ) {
@@ -528,6 +528,12 @@ InitialiseApps = function() {
 				$( 'head' ).append( '<script' + asyncVal + deferVal + ' src="' + asyncLibs[i].title + '"></script>' )
 			}
 		}
+    if ( app && app.externalCSSLibraries ) {
+      cssLibs = app.externalCSSLibraries
+      for ( var i = 0; i < cssLibs.length; i++ ) {
+        $( 'head' ).append( '<link rel="stylesheet" type="text/css" href="' + cssLibs[i].title + '">' )
+      }
+    }
 	}
 }
 

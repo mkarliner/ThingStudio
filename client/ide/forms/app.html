@@ -33,8 +33,10 @@
 	{{#autoForm collection="Apps" class="app-advanced" id="advancedAppForm" type="update" doc=this omitFields="ancestor" buttonContent="Save Application"}}
 		<div class="">
 			<div class="col s12">
-				<p><span class="fwHeavy">External JavaScript Libraries</span> &ndash; Click the plus to add more JS libraries</p>
+				<p><span class="fwHeavy">External JavaScript Libraries</span> &ndash; Click the plus icon to include additional JS libraries</p>
 				{{> afArrayField name='externalJSLibraries' template="customAFInline"}}
+				<p><span class="fwHeavy">External CSS Libraries</span> &ndash; Click the plus icon to include additional CSS libraries</p>
+				{{> afArrayField name='externalCSSLibraries' template="customAFInline"}}
 				<p><span class="fwHeavy block">Home Template</span>The template users see when first loading your app</p>
 				{{> afFormGroup name='home_page'}}
 			</div>
