@@ -137,6 +137,8 @@ RegisterFeedProcessor("JSONIn", "HTTPResponse", function(app, conn, feed, error,
 	// console.log("RESPONSE: ", feed, error, result);
 	if(error) {
 		console.log("HRRPR: ", error.message );
+		throwRuntimeError("HTTP Feed Error", error.message);
+		sAlert.warning(feed.title + ":" + error.message)
 		return;
 	}
 	try {

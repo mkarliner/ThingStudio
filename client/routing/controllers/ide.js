@@ -34,7 +34,7 @@ IDEController = PreloadController.extend({
 				onReady: function(){
 
 					// NEEDS REFACTORING BIG TIME!
-
+					InitialiseApps();
 					// Are we logged in?
 					if (!Meteor.userId()) {
 						return;
