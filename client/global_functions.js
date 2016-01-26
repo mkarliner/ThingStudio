@@ -10,7 +10,7 @@ setRuntimeVariable = function(name, value){
 }
 
 getRuntimeVariable = function(name) {
-    var rtv = RuntimeVariables.findOne();
+    var rtv = RuntimeVariables.findOne({name: name});
     return rtv ? rtv.value : null;
 }
 
@@ -341,7 +341,7 @@ publish = function(feedName, message) {
 
 		var url = conn.protocol + "://" + conn.host + ":" + conn.port +feed.path;
 		timeout = 5*1000;
-				options.headers = {};
+				options.headers = options.headers || {};
 				options.timeout = timeout;
 				options.params = {message: message};
 				options.content = message;
