@@ -62,7 +62,7 @@ compileTemplate = function(name, html_text, javascript) {
 					feed: feed
 				});
 				// console.log("MSG: ", msg);
-				return msg && msg.journal ? JSON.stringify(msg.journal)  : ["no values"];
+				return msg && msg.journal ? msg.journal  : ["no values"];
 			},
             roster: function(feed) {
                 msg = Messages.findOne({feed: feed});
