@@ -243,16 +243,6 @@ Apps.after.insert(function(userId, doc) {
 
 Apps.after.update(function(userId, doc) {
 	if(Meteor.isClient) {
-		currConn = getCurrentConnection();
-		if(currConn && currConn._id != doc.connection) {
-			newConn = Connections.findOne({_id: doc.connection});
-			UnsubscribeAll();
-			DisconnectMQTT();
-			setCurrentConnection(false);
-			Session.set("authReady", false);
-			ResetMessages();
-			connect(newConn); //App update
-		}
 		sAlert.success( "App updated.", { timeout: 1500 } );
 	}
 });
