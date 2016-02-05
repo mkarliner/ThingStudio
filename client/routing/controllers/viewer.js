@@ -19,6 +19,7 @@ AppViewerController = PreloadController.extend({
 
 		if( appId ) {
 			return [
+				Meteor.subscribe( 'sharedApps' ),
 				Meteor.subscribe( 'apps', appId, {
 					onReady: function() {
 						InitialiseApps();

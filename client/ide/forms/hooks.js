@@ -163,6 +163,7 @@ compileTemplate = function(name, html_text, javascript) {
     					return;
     				};
     				var message = attr.getNamedItem("data-renderedmessage");
+					console.log("DRF: ", feed_name.value, message)
     				publish(feed_name.value, JSON.stringify(message ? message.value : "rendered"));
             }
         });

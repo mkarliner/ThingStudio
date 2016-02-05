@@ -10,19 +10,6 @@ Template.FeedsHeader.rendered = function() {
 };
 
 Template.FeedsBody.helpers({
-	// allfeedslist: function(){
-	// 	var mqttfeeds = Feeds.find().fetch();
-	// 	for (var i = 0; i < mqttfeeds.length; i++) {
-	// 		mqttfeeds[i].transport = "mqtt"
-	// 	}
-	// 	var httpfeeds = HTTPFeeds.find().fetch();
-	// 	for (var i = 0; i < httpfeeds.length; i++) {
-	// 		httpfeeds[i].transport = "http"
-	// 	}
-	// 	var combinedlist = mqttfeeds.concat(httpfeeds);
-	// 	// console.log("here is combinedlist: ", combinedlist);
-	// 	return combinedlist;
-	// },
 	mqttFeedsList: function () {
 		return Feeds.find().fetch();
 	},
@@ -60,3 +47,15 @@ Template.FeedsBody.helpers({
 		return owner ? owner.username : "Owner Unknown";
 	}
 });
+
+Template.FeedsHeader.events({
+	'click #new-mqtt-feed': function(e, templ){
+		e.preventDefault();
+		var app = getCurrentApp();
+		if( app.connection == "none" || !app.connection ) {
+			sAlert.warning("You must select an MQTT connection for your App first, go to App properties");
+		} else {
+			Router.go('New MQTT Feed');
+		}
+	}
+})
