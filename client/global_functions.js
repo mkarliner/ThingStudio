@@ -162,7 +162,8 @@ RegisterFeedProcessor("JSONIn", "HTTPResponse", function(app, conn, feed, error,
 				{
 					feed: feed.title,
 					topic: feed.path,
-					payload: payload
+					payload: payload,
+          timestamp: new Date()
 				},
 			$inc:
 				{
@@ -310,7 +311,7 @@ publish = function(feedName, message) {
 				}
                 topic = feed.subscription.replace(rtv[0], runtimeValue)
             }
-			Outbox.upsert({topic: topic}, {$set: { feed: feed.title, topic: topic, payload: message},$inc: {count: 1}});
+			Outbox.upsert({topic: topic}, {$set: { feed: feed.title, topic: topic, payload: message, timestamp: new Date()},$inc: {count: 1}});
 			mqttClient.publish(topic, message);
 		}
 		break;
@@ -336,7 +337,7 @@ publish = function(feedName, message) {
 		console.log("NOTE TO SELF - request feed processor need access to request!!!!!!!");
 		var options = fp.func(app, conn, feed, message);
 		//Record that we have done this for debugging.
-		Outbox.upsert({topic: feed.path}, {$set: { feed: feed.title, topic: feed.path, payload: message},$inc: {count: 1}});
+		Outbox.upsert({topic: feed.path}, {$set: { feed: feed.title, topic: feed.path, payload: message, timestamp: new Date()},$inc: {count: 1}});
 		//Now actually do the deed.
 
 		var url = conn.protocol + "://" + conn.host + ":" + conn.port +feed.path;
@@ -773,7 +774,7 @@ connect = function (conn, usr, pass) {
 				Messages.upsert({
                     // topic: topic,
                     feed: feeds[i].title
-                }, {$set: {feed: feeds[i].title, topic: topic, payload: filteredPayload}, $inc:{count: 1}});
+                }, {$set: {feed: feeds[i].title, topic: topic, payload: filteredPayload, timestamp: new Date()}, $inc:{count: 1}});
 				if(feeds[i].doJournal) {
 					//Do journal stuff
 					Messages.update(

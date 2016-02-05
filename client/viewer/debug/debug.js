@@ -1,31 +1,28 @@
 Template.DebugBody.events({
-	'click .tab': function (e, tmpl) {
-		var tabs = tmpl.findAll('.tab a')
-		$(tabs).removeClass('active')
+	'click .tab': function ( e, tmpl ) {
+		var tabs = tmpl.findAll( '.tab a' )
+		$( tabs ).removeClass( 'active' )
 		var newTab = e.target
-		$thisTab = $(newTab)
-		$thisTab.addClass('active');
-		thisTabBlockID = $thisTab.attr('href')
-		$(".debug-page > div").css({"display": "none"})
-		$(".debug-page " + thisTabBlockID).css({"display": "block"})
+		$thisTab = $( newTab )
+		$thisTab.addClass( 'active' );
+		thisTabBlockID = $thisTab.attr( 'href' )
+		$( ".debug-page > div" ).css( { "display" : "none" } )
+		$( ".debug-page " + thisTabBlockID ).css( { "display" : "block" } )
 	}
 })
 
-Template.DebugBody.helpers({
-	feeds: function() {
-		return Feeds.find();
-	},
-	payload: function(){
-		try {
-			jstr = JSON.stringify(this.payload);
-			if(jstr.length > 15) {
-				return jstr.substring(0,150)+"...";
-			} else {
-				return jstr;
-			}
-		}
-		catch(err){
-			return err + " " + this
+Template.DebugSubscribe.events({
+	'click .feed-items li': function ( e, tmpl ) {
+		var items = tmpl.findAll( 'li' )
+		$target = $( e.target.closest( 'li' ) )
+
+		if ( $target.hasClass( 'expanded' ) ) {
+			$(".expanded .details").animate({"height": 0, "margin-top": "-0.5em"}, 200 );
+			$target.removeClass( 'expanded' )
+		} else {
+			$( items ).removeClass( 'expanded' )
+			$target.addClass( 'expanded' )
+			$(".expanded .details").animate({"height": $(".expanded .details").get(0).scrollHeight, "margin-top": "0.6em"}, 200 );
 		}
 	}
 })
@@ -36,47 +33,52 @@ Template.DebugSubscribe.helpers({
 	},
 	payload: function(){
 		try {
-			jstr = JSON.stringify(this.payload);
-			if(jstr.length > 15) {
-				return jstr.substring(0,150)+"...";
-			} else {
-				return jstr;
-			}
+			jstr = JSON.stringify( this.payload );
+			return jstr;
 		}
 		catch(err){
 			return err + " " + this
 		}
+	},
+	showSubDebugSing: function() {
+		if ( Session.get( "showFeedDebugDetails" ) == true ) {
+			return 'expanded';
+		} else {
+			return 'collapsed';
+		}
+	},
+	lastSeen: function() {
+		return moment( this.timestamp ).format( 'lll' )
 	}
 });
 
 Template.DebugPublish.helpers({
-	outbox: function(){
-		return Outbox.find({});
+	outbox: function() {
+		return Outbox.find( {} );
 	},
-	payload: function(){
+	payload: function() {
 		try {
-			jstr = JSON.stringify(this.payload);
-			if(jstr.length > 15) {
-				return jstr.substring(0,15)+"...";
-			} else {
-				return jstr;
-			}
+			jstr = JSON.stringify( this.payload );
+			return jstr;
 		}
 		catch(err){
 			return err + " " + this
 		}
+	},
+	lastSeen: function () {
+		return moment( this.timestamp ).format( 'lll' )
 	}
 });
 
 Template.DebugRuntime.events({
-	'click .runtime-clear': function (e, tmpl) {
+	'click .runtime-clear': function( e, tmpl ) {
 		e.preventDefault();
-		RuntimeErrors.remove({})
+		RuntimeErrors.remove( {} )
 	}
 })
 
 Template.DebugRuntime.helpers({
-	runTimeErrorLog: function () {
+	runTimeErrorLog: function() {
 		return RuntimeErrors.find()
 	}
 })

@@ -28,30 +28,28 @@
 </template>
 
 <template name="DebugSubscribe">
-	<table class="striped">
-		<thead>
-			<tr>
-				<th>Feed Title</th>
-				<th>Topic</th>
-				<th>Payload</th>
-				<th>Count</th>
-			</tr>
-		</thead>
-		<tbody>
-			{{#each messages }}
-				<tr>
-					<td>{{feed}}</td>
-					<td>{{topic}}</td>
-					<td>{{payload}}</td>
-					<td>{{count}}</td>
-				</tr>
-			{{/each}}
-		</tbody>
-	</table>
+	<!-- {{#unless showSubDebugSing}} -->
+	<ul class="feed-items">
+		{{#each messages }}
+			<li class="title">
+				<span class="primary">{{feed}}</span>
+				<span class="secondary">
+					Count: {{count}}<br />
+					Last: {{lastSeen}}
+				</span>
+				<span class="details">
+					{{payload}}
+				</span>
+			</li>
+		{{/each}}
+	</ul>
+	<!-- {{else}}
+		<p>showSubDebugSing is true!</p>
+	{{/unless}} -->
 </template>
 
 <template name="DebugPublish">
-	<table class="striped">
+	<!-- <table class="striped">
 		<thead>
 			<tr>
 				<th>Feed Title</th>
@@ -70,7 +68,16 @@
 				</tr>
 			{{/each}}
 		</tbody>
-	</table>
+	</table> -->
+	{{#unless showSubDebugSing}}
+	<ul class="feed-items">
+		{{#each outbox }}
+			<li class="title">{{feed}}<span>Count: {{count}}<br /> Last: {{lastSeen}}</span></li>
+		{{/each}}
+	</ul>
+	{{else}}
+		<p>showSubDebugSing is true!</p>
+	{{/unless}}
 </template>
 
 <template name="DebugRuntime">
