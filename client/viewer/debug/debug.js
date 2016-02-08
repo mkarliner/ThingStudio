@@ -33,7 +33,7 @@ Template.DebugSubscribe.helpers({
 	},
 	payload: function(){
 		try {
-			jstr = JSON.stringify( this.payload );
+			jstr = JSON.stringify( this.payload, null, 2 );
 			return jstr;
 		}
 		catch(err){
@@ -75,7 +75,7 @@ Template.DebugPublish.helpers({
 	},
 	payload: function() {
 		try {
-			jstr = JSON.stringify( this.payload );
+			jstr = JSON.stringify( this.payload, null, 2 );
 			return jstr;
 		}
 		catch(err){
