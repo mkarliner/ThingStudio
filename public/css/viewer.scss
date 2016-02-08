@@ -830,11 +830,6 @@ a {
   text-decoration: none;
 }
 
-main {
-	height: 100%;
-	overflow-y: scroll;
-}
-
 h1.nothing {
 	margin: 2em 0;
 	text-align: center;
@@ -1002,7 +997,8 @@ ul.screens-list {
 
 .contents-wrapper,
 .list-wrapper,
-.debug-wrapper {
+.debug-wrapper,
+#viewerRenderScreen {
 	width: 100%;
 	height: calc( 100vh - 110px);
 }
@@ -1015,17 +1011,19 @@ ul.screens-list {
 
 main {
  position: relative;
- overflow: hidden;
+ height: 100%;
 }
 
-.list-wrapper {
+.list-wrapper,
+#viewerRenderScreen {
  position: absolute;
  left: 0;
  overflow-x: hidden;
  overflow-y: scroll;
 }
 
-.list-wrapper::-webkit-scrollbar {
+.list-wrapper::-webkit-scrollbar,
+#viewerRenderScreen::-webkit-scrollbar {
  display: none;
 }
 
