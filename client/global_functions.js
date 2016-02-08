@@ -753,6 +753,7 @@ connect = function (conn, usr, pass) {
 		}
 		catch(err) {
 			console.log("MERR: ", err);
+			throwRuntimeError("Non-JSON message: ", rawmessage.toString());
 			Session.set("runtimeErrors", "Invalid MQTT message, payload not JSON: " + rawmessage.toString());
 			payload = rawmessage.toString();
 		}
@@ -765,6 +766,9 @@ connect = function (conn, usr, pass) {
 			if(result) {
 				if(feeds[i].jsonKey) {
 					filteredPayload = payload[feeds[i].jsonKey];
+					if(filteredPayload === undefined) {
+						throwRuntimeError("Missing key " + feeds[i].jsonKey +  " in message ", rawmessage.toString());
+					}
 					jsonKey = feeds[i].jsonKey
 				} else {
 					filteredPayload = payload;
