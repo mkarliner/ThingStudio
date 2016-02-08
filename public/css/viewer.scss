@@ -576,6 +576,7 @@ footer ul {
 a.made-with {
 	color: white;
 	text-decoration: none;
+	font-family: 'Burlingame W01 Cn X Black';
 }
 
 a {
@@ -621,7 +622,7 @@ a {
 }
 
 .debug-body .tabs {
-	font-family: "Burlingame W01 Cn X Bold";
+	font-family: 'Burlingame W01';
 	background-color: rgba(73,80,101,1);
 	white-space: nowrap;
 	text-align: center;
@@ -690,8 +691,8 @@ a {
 	li {
 		display: block;
 		line-height: 1.3;
-		margin-bottom: 0.5em;
-		font-family: "Burlingame W01 Cn Semi Bold";
+		margin-bottom: 0.4em;
+		font-family: 'Burlingame W01 Cn Medium';
 		background-color: #353C51;
 		color: white;
 		padding: 10px;
@@ -707,10 +708,10 @@ a {
 		flex-flow: row wrap;
 		.secondary,
 		.details {
-			font-family:'Burlingame W01 Cn Semi Bold';
+			font-family:'Burlingame W01 Cn Medium';
 			background-color: white;
 			padding: 3px 6px;
-			border-radius: 6px;
+			border-radius: 2px;
 			color: #353C51;
 			font-size: 0.875em;
 		}
