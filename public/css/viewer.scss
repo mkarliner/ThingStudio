@@ -69,30 +69,30 @@ a .letter-y { color: $purple; border: 1px solid $purple; }
 a .letter-z { color: $lightPurple; border: 1px solid $lightPurple; }
 
 
-$fwLight: 'AvenirLTStd-Light';
-.fwLight {
-	font-family: $fwLight;
-}
-$fwBook: 'AvenirLTStd-Book';
-.fwBook {
-	font-family: $fwBook;
-}
-$fwRoman: 'AvenirLTStd-Roman';
-.fwRoman {
-	font-family: $fwRoman;
-}
-$fwMedium: 'AvenirLTStd-Medium';
-.fwMedium {
-	font-family: $fwMedium;
-}
-$fwHeavy: 'AvenirLTStd-Heavy';
-.fwHeavy {
-	font-family: $fwHeavy;
-}
-$fwBlack: 'AvenirLTStd-Black';
-.fwBlack {
-	font-family: $fwBlack;
-}
+// $fwLight: 'AvenirLTStd-Light';
+// .fwLight {
+// 	font-family: $fwLight;
+// }
+// $fwBook: 'AvenirLTStd-Book';
+// .fwBook {
+// 	font-family: $fwBook;
+// }
+// $fwRoman: 'AvenirLTStd-Roman';
+// .fwRoman {
+// 	font-family: $fwRoman;
+// }
+// $fwMedium: 'AvenirLTStd-Medium';
+// .fwMedium {
+// 	font-family: $fwMedium;
+// }
+// $fwHeavy: 'AvenirLTStd-Heavy';
+// .fwHeavy {
+// 	font-family: $fwHeavy;
+// }
+// $fwBlack: 'AvenirLTStd-Black';
+// .fwBlack {
+// 	font-family: $fwBlack;
+// }
 
 ///////////////////////////////////////////////////////////////////////////////////////
 // CSS RESET //
@@ -508,6 +508,7 @@ body {
 
 .app-header-wrapper {
 	background-color: $darkBase;
+	height: 54px !important;
 	padding: 0px 20px;
 	-webkit-box-ordinal-group: 0;
   					 -webkit-order: -1;
@@ -846,7 +847,7 @@ h1.nothing {
 	max-width: 28.125em;
 	margin: 0 auto;
 	h2{
-		font-family: $fwMedium;
+		// font-family: $fwMedium;
 		color: $headerColor;
 		text-align: center;
 		font-size: 1em;
