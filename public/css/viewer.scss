@@ -716,7 +716,7 @@ a {
     justify-content: space-between;
 		flex-flow: row wrap;
 		&:last-of-type {
-			padding-bottom:0;
+			margin-bottom:0;
 		}
 		.secondary,
 		.details {
