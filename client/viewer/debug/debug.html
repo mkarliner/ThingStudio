@@ -69,15 +69,20 @@
 			{{/each}}
 		</tbody>
 	</table> -->
-	{{#unless showSubDebugSing}}
 	<ul class="feed-items">
 		{{#each outbox }}
-			<li class="title">{{feed}}<span>Count: {{count}}<br /> Last: {{lastSeen}}</span></li>
+			<li class="title">
+				<span class="primary">{{feed}}</span>
+				<span class="secondary">
+					Count: {{count}}<br />
+					Last: {{lastSeen}}
+				</span>
+				<span class="details">
+					{{payload}}
+				</span>
+			</li>
 		{{/each}}
 	</ul>
-	{{else}}
-		<p>showSubDebugSing is true!</p>
-	{{/unless}}
 </template>
 
 <template name="DebugRuntime">

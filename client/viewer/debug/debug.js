@@ -52,6 +52,23 @@ Template.DebugSubscribe.helpers({
 	}
 });
 
+Template.DebugPublish.events({
+	'click .feed-items li': function ( e, tmpl ) {
+		var items = tmpl.findAll( 'li' )
+		$target = $( e.target.closest( 'li' ) )
+
+		if ( $target.hasClass( 'expanded' ) ) {
+			$(".expanded .details").animate({"height": 0, "margin-top": "-0.5em"}, 200 );
+			$target.removeClass( 'expanded' )
+		} else {
+			$( items ).removeClass( 'expanded' )
+			$target.addClass( 'expanded' )
+			$(".expanded .details").animate({"height": $(".expanded .details").get(0).scrollHeight, "margin-top": "0.6em"}, 200 );
+		}
+	}
+})
+
+
 Template.DebugPublish.helpers({
 	outbox: function() {
 		return Outbox.find( {} );
@@ -65,7 +82,14 @@ Template.DebugPublish.helpers({
 			return err + " " + this
 		}
 	},
-	lastSeen: function () {
+	showSubDebugSing: function() {
+		if ( Session.get( "showFeedDebugDetails" ) == true ) {
+			return 'expanded';
+		} else {
+			return 'collapsed';
+		}
+	},
+	lastSeen: function() {
 		return moment( this.timestamp ).format( 'lll' )
 	}
 });
