@@ -726,6 +726,7 @@ a {
 			pre {
 				margin: 0;
 				line-height: 2em;
+				word-wrap: break-word;
 			}
 		}
 		&.expanded .details {
