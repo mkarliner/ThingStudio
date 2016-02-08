@@ -763,13 +763,28 @@ connect = function (conn, usr, pass) {
 			// console.log("Checking to ", feeds[i].subscription);
 			regex = mqttregex(feeds[i].subscription).exec;
 			result = regex(topic);
+			// Should we process this feed?
 			if(result) {
+				//Yes.
 				if(feeds[i].jsonKey) {
-					filteredPayload = payload[feeds[i].jsonKey];
-					if(filteredPayload === undefined) {
-						throwRuntimeError("Missing key " + feeds[i].jsonKey +  " in message ", rawmessage.toString());
+
+					if(Array.isArray(payload)) {
+						console.log("MESSAGE TYPE ", feeds[i].title, Array.isArray(payload) ? "Array" : "Not Array");
+						filteredPayload = payload.map(function(obj){
+							var ret = obj[feeds[i].jsonKey];
+							if(ret) {
+								return ret;
+							} else {
+								throwRuntimeError("Missing key " + feeds[i].jsonKey +  " in message ", rawmessage.toString());
+							} 
+						});
+					} else {
+						filteredPayload = payload[feeds[i].jsonKey];
+						if(filteredPayload === undefined) {
+							throwRuntimeError("Missing key " + feeds[i].jsonKey +  " in message ", rawmessage.toString());
+						}
+						jsonKey = feeds[i].jsonKey
 					}
-					jsonKey = feeds[i].jsonKey
 				} else {
 					filteredPayload = payload;
 					jsonKey = "none"
