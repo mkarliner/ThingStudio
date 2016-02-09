@@ -775,13 +775,13 @@ connect = function (conn, usr, pass) {
 							if(ret) {
 								return ret;
 							} else {
-								throwRuntimeError("Missing key " + feeds[i].jsonKey +  " in message ", rawmessage.toString());
+								throwRuntimeError("Missing key " + feeds[i].jsonKey.toString() +  " in message ", rawmessage.toString());
 							} 
 						});
 					} else {
 						filteredPayload = payload[feeds[i].jsonKey];
 						if(filteredPayload === undefined) {
-							throwRuntimeError("Missing key " + feeds[i].jsonKey +  " in message ", rawmessage.toString());
+							throwRuntimeError("Missing key " + feeds[i].jsonKey.toString() +  " in message ", rawmessage.toString());
 						}
 						jsonKey = feeds[i].jsonKey
 					}
