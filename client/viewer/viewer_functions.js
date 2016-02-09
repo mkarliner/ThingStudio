@@ -1,4 +1,4 @@
-toggleDebugFeedView = function (e, tmpl) {
+toggleDebugFeedDetails = function ( e, tmpl ) {
   items = tmpl.findAll( 'li' )
   $target = $( e.target.closest( 'li' ) )
   $targetDetails = $target.find( '.details' )

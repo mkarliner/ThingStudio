@@ -13,15 +13,21 @@ Template.DebugBody.events({
 
 Template.DebugSubscribe.events({
 	'click .feed-items li': function ( e, tmpl ) {
-		toggleDebugFeedView(e, tmpl);
+		toggleDebugFeedDetails( e, tmpl );
+	}
+})
+
+Template.DebugPublish.events({
+	'click .feed-items li': function ( e, tmpl ) {
+		toggleDebugFeedDetails( e, tmpl );
 	}
 })
 
 Template.DebugSubscribe.helpers({
-	messages: function(){
-		return Messages.find({});
+	messages: function() {
+		return Messages.find( {} );
 	},
-	payload: function(){
+	payload: function() {
 		try {
 			jstr = JSON.stringify( this.payload, null, 2 );
 			return jstr;
@@ -41,13 +47,6 @@ Template.DebugSubscribe.helpers({
 		return moment( this.timestamp ).format( 'lll' )
 	}
 });
-
-Template.DebugPublish.events({
-	'click .feed-items li': function ( e, tmpl ) {
-		toggleDebugFeedView(e, tmpl);
-	}
-})
-
 
 Template.DebugPublish.helpers({
 	outbox: function() {
