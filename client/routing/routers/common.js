@@ -12,6 +12,11 @@ AccountsTemplates.configureRoute('signIn', {
 	redirect: "/apps"
 });
 
+AccountsTemplates.configureRoute('resetPwd', {
+	layoutTemplate: "ResetPwdLayout",
+	redirect: "/apps"
+});
+
 AccountsTemplates.configure({
     texts: {
         errors: {
