@@ -209,3 +209,17 @@
 // 	}
 //
 // });
+
+// Router.route("/chat", {
+// 	name: "Chat",
+// 	controller: "IDEController",
+// 	action: function() {
+// 		if ( !this.ready() ) {
+// 			this.render("Loading", {
+// 				data: "Chat"
+// 			});
+// 		} else {
+// 			renderYields(this, 'Chat')
+// 		}
+// 	}
+// })

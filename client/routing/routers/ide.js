@@ -471,20 +471,6 @@ Router.route("/support", {
 	},
 });
 
-Router.route("/chat", {
-	name: "Chat",
-	controller: "IDEController",
-	action: function() {
-		if ( !this.ready() ) {
-			this.render("Loading", {
-				data: "Chat"
-			});
-		} else {
-			renderYields(this, 'Chat')
-		}
-	}
-})
-
 Router.route("/current-users", {
 	name: "Current Users",
 	controller: "IDEController",
@@ -556,11 +542,11 @@ Router.route("/view-user/:id", {
 // 	}
 // });
 
-Router.route("/reset-password/:token", {
-	name:  "ResetPassword",
-	controller: "IDEController",
-	action: function() {
-		Session.set('resetPassword', this.params.token);
-		renderYields(this, "ResetPassword");
-	}
-})
+// Router.route("/reset-password/:token", {
+// 	name:  "ResetPassword",
+// 	controller: "IDEController",
+// 	action: function() {
+// 		Session.set('resetPassword', this.params.token);
+// 		// renderYields(this, "ResetPassword");
+// 	}
+// })

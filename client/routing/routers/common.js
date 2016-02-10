@@ -1,18 +1,18 @@
 
 Router.plugin('ensureSignedIn', {
-	except: ["ViewApp", "ViewScreen", "ResetPassword"]
+	except: ["ViewApp", "ViewScreen", "atResetPwd"]
 });
 
 Router.configure({
 	loadingTemplate: 'Loading',
 });
 
-AccountsTemplates.configureRoute('signIn', {
+AccountsTemplates.configureRoute( 'signIn', {
 	layoutTemplate: "LoginLayout",
 	redirect: "/apps"
 });
 
-AccountsTemplates.configureRoute('resetPwd', {
+AccountsTemplates.configureRoute( 'resetPwd', {
 	layoutTemplate: "ResetPwdLayout",
 	redirect: "/apps"
 });
