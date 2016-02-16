@@ -13,7 +13,7 @@ AccountsTemplates.configureRoute( 'signIn', {
 });
 
 AccountsTemplates.configureRoute( 'resetPwd', {
-	layoutTemplate: "ResetPwdLayout",
+	layoutTemplate: "LoginLayout",
 	redirect: "/apps"
 });
 
