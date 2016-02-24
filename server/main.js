@@ -406,6 +406,7 @@ Meteor.startup(function() {
 					status: 1,
 					username: 1,
 					lastActivity: 1,
+					createdAt: 1,
 					idle: 1
 				}
 			});
