@@ -434,7 +434,8 @@ Meteor.startup(function() {
 				fields: {
                     _id: 1,
 					status: 1,
-					username: 1
+					username: 1,
+					createdAt: 1
 				}
 			});
 		} else {

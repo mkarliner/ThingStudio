@@ -704,6 +704,8 @@ connect = function (conn, usr, pass) {
                         username: username,
                         password: password,
                         port: conn.port,
+						reconnectPeriod: 3000,
+						keepalive: 30,
                         clientId: clientId,
                         _id: conn._id
                     });
@@ -714,7 +716,7 @@ connect = function (conn, usr, pass) {
 		Session.set("connectionErrors", err);
 	}
 	mqttClient.on("connect", function(){
-		// console.log("CONNECTED to ", this);
+		console.log("CONNECTED to ", this);
 		Session.set("ConnectionStatus", true);
 		Session.set("connectionErrors", null);
 		feeds = Feeds.find({pubsub: "Subscribe"}).fetch();
