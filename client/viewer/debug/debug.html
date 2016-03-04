@@ -28,30 +28,26 @@
 </template>
 
 <template name="DebugSubscribe">
-	<table class="striped">
-		<thead>
-			<tr>
-				<th>Feed Title</th>
-				<th>Topic</th>
-				<th>Payload</th>
-				<th>Count</th>
-			</tr>
-		</thead>
-		<tbody>
-			{{#each messages }}
-				<tr>
-					<td>{{feed}}</td>
-					<td>{{topic}}</td>
-					<td>{{payload}}</td>
-					<td>{{count}}</td>
-				</tr>
-			{{/each}}
-		</tbody>
-	</table>
+	<!-- {{#unless showSubDebugSing}} -->
+	<ul class="feed-items">
+		{{#each messages }}
+			<li class="title">
+				<span class="primary">{{feed}}</span>
+				<span class="secondary">
+					Count: {{count}}<br />
+					Last: {{lastSeen}}
+				</span>
+				<span class="details"><pre>{{payload}}</pre></span>
+			</li>
+		{{/each}}
+	</ul>
+	<!-- {{else}}
+		<p>showSubDebugSing is true!</p>
+	{{/unless}} -->
 </template>
 
 <template name="DebugPublish">
-	<table class="striped">
+	<!-- <table class="striped">
 		<thead>
 			<tr>
 				<th>Feed Title</th>
@@ -70,9 +66,35 @@
 				</tr>
 			{{/each}}
 		</tbody>
-	</table>
+	</table> -->
+	<ul class="feed-items">
+		{{#each outbox }}
+			<li class="title">
+				<span class="primary">{{feed}}</span>
+				<span class="secondary">
+					Count: {{count}}<br />
+					Last: {{lastSeen}}
+				</span>
+				<span class="details"><pre>{{payload}}</pre></span>
+			</li>
+		{{/each}}
+	</ul>
 </template>
 
 <template name="DebugRuntime">
-	{{runTimeErrorLog}}
+	<ul class="runtime-errors">
+		{{#each runTimeErrorLog}}
+			<li>
+				<div class="runtime-message">
+					<span>{{type}}:</span> {{message}}
+				</div>
+				<div class="clearfix"></div>
+				<div class="runtime-timestamp">
+					Count: {{count}} &ndash; Last message: {{moFormat lastMessage 'lll'}}
+				</div>
+				<div class="clearfix"></div>
+			</li>
+		{{/each}}
+	</ul>
+	<a href="" class="runtime-clear">Clear Runtime Errors</a>
 </template>

@@ -49,12 +49,12 @@ Accounts.onLogin(function(){
 	//We decide what the initial app should be here.
 });
 
-
-ResetPassword = function(token){
- 	console.log("RESET PASSWORD", token)
-}
-
-Accounts.onResetPasswordLink(ResetPassword);
+//
+// ResetPasswordFunc = function(token){
+//  	console.log("RESET PASSWORD", token)
+// }
+//
+// Accounts.onResetPasswordLink(ResetPasswordFunc);
 
 
 // Accounts.onCreateUser(function(options, user) {

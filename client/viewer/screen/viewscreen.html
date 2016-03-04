@@ -12,7 +12,9 @@ html body.viewer-body div.app-wrapper div.app-header-wrapper header ul.viewer-he
 	<div>
 		<main class="template-view">
 			<div id="viewerRenderScreen">
-				{{> Template.dynamic template=currentScreen}}
+				<div class="template-inner">
+					{{> Template.dynamic template=currentScreen}}
+				</div>
 			</div>
 		</main>
 	</div>

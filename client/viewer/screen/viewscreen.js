@@ -1,10 +1,8 @@
 // Template.appScreen.registerElement('app-screen');
 
 Template.ViewScreen.events({
-    // 'click a': function (e, tmpl) {
-    //     console.log('clicked')
-    //     alert('click!');
-    // }
+	'click a': function (e, tmpl) {
+	}
 
 })
 

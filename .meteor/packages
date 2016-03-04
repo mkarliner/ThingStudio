@@ -33,6 +33,7 @@ miro:preloader
 ccorcos:transitioner
 reactive-var
 spacebars-compiler
+lbee:moment-helpers
 
 ########## Connections ##########
 mkarliner:mqtt

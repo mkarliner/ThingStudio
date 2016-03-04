@@ -209,3 +209,55 @@
 // 	}
 //
 // });
+
+// Router.route("/chat", {
+// 	name: "Chat",
+// 	controller: "IDEController",
+// 	action: function() {
+// 		if ( !this.ready() ) {
+// 			this.render("Loading", {
+// 				data: "Chat"
+// 			});
+// 		} else {
+// 			renderYields(this, 'Chat')
+// 		}
+// 	}
+// })
+
+
+// Router.route("/inactives", {
+// 	name: "Inactive Users",
+// 	controller: "IDEController",
+// 	action: function() {
+// 		if ( !this.ready() ) {
+// 			this.render("Loading", {
+// 				data: "Inactive Users"
+// 			});
+// 		} else {
+// 			renderYields(this, 'InactiveUsers')
+// 		}
+// 	}
+// })
+
+// Router.route("/debug", {
+// 	name: "Debug",
+// 	controller: "IDEController",
+// 	action: function() {
+// 		if ( !this.ready() ) {
+// 			this.render("Loading", {
+// 				data: "Debug"
+// 			});
+// 		} else {
+// 			renderYields(this, 'Debug')
+// 		}
+// 	}
+// });
+
+// Router.route("/reset-password/:token", {
+// 	name:  "ResetPassword",
+// 	controller: "IDEController",
+// 	action: function() {
+// 		Session.set('resetPassword', this.params.token);
+// 		// renderYields(this, "ResetPassword");
+// 	}
+// })

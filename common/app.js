@@ -5,7 +5,7 @@ Schemas = {};
 Schemas.ExternalLibraryDetails = new SimpleSchema({
 	title: {
 		type: String,
-		label: "Source"
+		label: "URL"
 	},
 	loadAsync: {
 		type: Boolean,
@@ -28,6 +28,13 @@ Schemas.ExternalLibraryDetails = new SimpleSchema({
 				class: 'filled-in'
 			}
 		}
+	}
+})
+
+Schemas.ExternalCSSDetails = new SimpleSchema({
+	title: {
+		type: String,
+		label: "URL"
 	}
 })
 
@@ -180,6 +187,11 @@ Schemas.App = new SimpleSchema({
 		type: [Schemas.ExternalLibraryDetails],
 		optional: true,
 	},
+	externalCSSLibraries: {
+		label: "External CSS Libraries",
+		type: [Schemas.ExternalCSSDetails],
+		optional: true
+	},
 	css: {
 		optional: true,
 		label: "CSS",
@@ -231,16 +243,6 @@ Apps.after.insert(function(userId, doc) {
 
 Apps.after.update(function(userId, doc) {
 	if(Meteor.isClient) {
-		currConn = getCurrentConnection();
-		if(currConn && currConn._id != doc.connection) {
-			newConn = Connections.findOne({_id: doc.connection});
-			UnsubscribeAll();
-			DisconnectMQTT();
-			setCurrentConnection(false);
-			Session.set("authReady", false);
-			ResetMessages();
-			connect(newConn); //App update
-		}
 		sAlert.success( "App updated.", { timeout: 1500 } );
 	}
 });

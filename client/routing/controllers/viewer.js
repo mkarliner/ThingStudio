@@ -19,9 +19,30 @@ AppViewerController = PreloadController.extend({
 
 		if( appId ) {
 			return [
+				Meteor.subscribe( 'sharedApps' ),
 				Meteor.subscribe( 'apps', appId, {
 					onReady: function() {
-						InitialiseApps();
+						Tracker.autorun(function(){
+							//If the app properties change re-initialise
+							var aid = Session.get("currentAppId");
+							app = Apps.findOne({_id: aid});
+							InitialiseApps();
+							currConn = false;
+							Tracker.nonreactive(function() {
+								currConn = getCurrentConnection();
+							})
+							console.log("Connection updated ", currConn)
+							newConn = Connections.findOne({_id: app.connection});
+							if(currConn != newConn) {
+								UnsubscribeAll();
+								DisconnectMQTT();
+								setCurrentConnection(false);
+								Session.set("authReady", false);
+								ResetMessages();
+								connect(newConn); //App update
+							}
+
+						})
 					}
 				}),
 				Meteor.subscribe( 'connections', appId, {
@@ -54,3 +75,5 @@ AppViewerController = PreloadController.extend({
 		}
 	}
 });
+
+

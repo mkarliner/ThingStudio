@@ -7,9 +7,10 @@
 	f = Feeds.findOne({title: feed}) || HTTPFeeds.findOne({title: feed});
 
 	if(typeof f == "undefined") {
-		var message = 'Unknown feed ' + feed;
-		Alerts.insert({type: 'runtime', status: 'warning', message: message});
-		return false;
+		var message = 'Unknown feed ' + feed
+    throwRuntimeError("No such feed", feed)
+    sAlert.warning('The "' + feed + '" feed referred to by this template does not exist.', {timeout: "none"});
+		return false
 	}
 	if(subscribe && f.pubsub == "Publish") {
 		var message = "Can't receive messages on publish feed " + feed;
@@ -61,7 +62,7 @@ compileTemplate = function(name, html_text, javascript) {
 					feed: feed
 				});
 				// console.log("MSG: ", msg);
-				return msg && msg.journal ? JSON.stringify(msg.journal)  : ["no values"];
+				return msg && msg.journal ? msg.journal  : ["no values"];
 			},
             roster: function(feed) {
                 msg = Messages.findOne({feed: feed});
@@ -72,6 +73,9 @@ compileTemplate = function(name, html_text, javascript) {
 				ret = msg ? msg : {min: 0, max: 0, avg: 0, diffavg: 0};
 				//console.log("MMM: ", ret);
 				return JSON.stringify(ret);
+			},
+			runtimeVariable: function(name) {
+				return getRuntimeVariable(name);
 			}
 		});
 		Template[name].events({
@@ -159,6 +163,7 @@ compileTemplate = function(name, html_text, javascript) {
     					return;
     				};
     				var message = attr.getNamedItem("data-renderedmessage");
+					console.log("DRF: ", feed_name.value, message)
     				publish(feed_name.value, JSON.stringify(message ? message.value : "rendered"));
             }
         });

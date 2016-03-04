@@ -10,7 +10,7 @@ setRuntimeVariable = function(name, value){
 }
 
 getRuntimeVariable = function(name) {
-    var rtv = RuntimeVariables.findOne();
+    var rtv = RuntimeVariables.findOne({name: name});
     return rtv ? rtv.value : null;
 }
 
@@ -89,7 +89,6 @@ if (!Object.keys) {
 // HTTP  Management//
 ///////////////////////////////////////////////////////////////////////////////////////
 
-
 FeedProcessors = new Mongo.Collection(null);
 
 FeedList = new Mongo.Collection(null);
@@ -106,8 +105,6 @@ Meteor.startup(function(){
 		}
 	});
 })
-
-
 
 RegisterFeedProcessor = function(name,  type, func) {
 	// Type can be HTTPRequest, HTTPResponse
@@ -140,16 +137,17 @@ RegisterFeedProcessor("JSONIn", "HTTPResponse", function(app, conn, feed, error,
 	// console.log("RESPONSE: ", feed, error, result);
 	if(error) {
 		console.log("HRRPR: ", error.message );
+		throwRuntimeError("HTTP Feed Error", error.message);
+		sAlert.warning(feed.title + ":" + error.message)
 		return;
 	}
 	try {
-		console.log("trying")
-		console.log("result: ", result.content)
+		// console.log("trying")
+		// console.log("result: ", result.content)
 		payload = JSON.parse(result.content);
 
 	}
 	catch(err) {
-		// console.log("HERR: ", err);
 		Session.set("runtimeErrors", "Invalid HTTP message, payload not JSON: " + result.content.toString());
 		payload = result.content.toString();
 	}
@@ -159,87 +157,101 @@ RegisterFeedProcessor("JSONIn", "HTTPResponse", function(app, conn, feed, error,
 			// topic: feed.path,
 			feed: feed.title
 		},
-		{$set:
-			{
-				feed: feed.title,
-				topic: feed.path,
-				payload: payload},
-				$inc:{count: 1
-			}
+		{
+			$set:
+				{
+					feed: feed.title,
+					topic: feed.path,
+					payload: payload,
+          timestamp: new Date()
+				},
+			$inc:
+				{
+					count: 1
+				}
 		});
 });
 
-function interval(func, wait, times){
-    var interv = function(w, t){
-        return function(){
-            if(typeof t === "undefined" || t-- > 0){
-                setTimeout(interv, w);
-                try{
-                    func.call(null);
-                }
-                catch(e){
-                    t = 0;
-                    throw e.toString();
-                }
-            }
-        };
-    }(wait, times);
+function interval( func, wait, times ) {
+  var interv = function( w, t ){
+    return function() {
+    if( typeof t === "undefined" || t-- > 0 ){
+      setTimeout( interv, w )
+      try {
+        func.call( null )
+      }
+      catch( e ) {
+        t = 0
+		sAlert.error("Interval timer error " +  e.toString())
+        //throw e.toString()
+      }
+      }
+    }
+  }( wait, times )
 
-    setTimeout(interv, wait);
+  setTimeout( interv, wait )
 };
 
 // Set global variable of inIDE true. Overridden in viewer controller.
-inIDE = true;
+inIDE = true
 
 checkHTTPFeeds = function (){
 	//console.log("HTTP clock");
-	if(inIDE) {
-		return;
+	if( inIDE ) {
+		return
 	}
-	HTTPClock++;
-	var feeds = HTTPFeeds.find().fetch();
+	HTTPClock++
+	var feeds = HTTPFeeds.find().fetch()
 
 	//Check which feeds need to be polled.
-	for(var f=0; f<feeds.length; f++) {
-		if(HTTPClock % feeds[f].polling_interval == 0 || initialPoll(feeds[f])) {
-			var feed = feeds[f];
-			var conn = HTTPConnections.findOne(feed.connection);
+	for( var f=0; f<feeds.length; f++ ) {
+		if( HTTPClock % feeds[f].polling_interval == 0 || initialPoll( feeds[f] ) ) {
+			var feed = feeds[f]
+			//console.log("Checking feed: ", feed.title)
+			var conn = HTTPConnections.findOne( feed.connection )
 			if(!conn) {
-				return;
+				return
 			}
-			var app = Apps.findOne({_id: conn.appId});
-			if(!app) {
-				return;
+			var app = Apps.findOne( { _id: conn.appId } )
+			if( !app ) {
+				return
 			}
-            //Substitute any runtime variables
-            var rtv = feed.path.match(/<([A-z]+)>/);
-            // console.log("HTTPRTVM", rtv)
-            if(rtv) {
-                // console.log("HTTP", rtv[0])
-                feed.path = feed.path.replace(rtv[0], getRuntimeVariable(rtv[1]))
-            }
-			var url = conn.protocol + "://" + conn.host + ":" + conn.port + feed.path;
-			timeout = (feed.polling_interval-1)*1000;
-			// console.log("HT: ", feed.responseProcessor, feed.requestProcessor, conn, url, timeout);
-			var reqProc = FeedProcessors.findOne({type: "HTTPRequest", name: feed.requestProcessor});
-			var options = reqProc.func(app, conn, feed, "Null Message");
-			// console.log("BEFORE HTTP Poll:", feed.verb, url, options);
-			HTTP.call(feed.verb, url, options, function(error, result) {
-				//console.log("HRET: ", error, result);
-				//Call each feed processor in turn
-				// for(var p=0; p<feed.processors.length; p++ ){
-				// 	//console.log("CALLING: ", HTTPFeedProcessors[feed.processors[p]])
-				// 	HTTPFeedProcessors[feed.processors[p]](feed, error, result);
-				// }
-				for(var rpc=0; rpc<feed.responseProcessors.length; rpc++) {
-					var fp = FeedProcessors.findOne({type: "HTTPResponse", name: feed.responseProcessors[rpc]});
-					//console.log("FP: ", fp, FeedProcessors.find().fetch());
-					fp.func(app, conn, feed, error, result);
+      //Substitute any runtime variables
+      var rtv = feed.path.match(/<([A-z]+)>/)
+
+      if(rtv) {
+				runtimeValue = getRuntimeVariable( rtv[1] )
+				//If runtime variable is not set, abort this feed.
+				if(!runtimeValue) {
+					break;
 				}
-			})
+        feed.path = feed.path.replace( rtv[0], getRuntimeVariable( rtv[1] ) )
+      }
+			var url = conn.protocol + "://" + conn.host + ":" + conn.port + feed.path
+			timeout = ( feed.polling_interval - 1 ) * 1000
+			var reqProc = FeedProcessors.findOne( { type: "HTTPRequest", name: feed.requestProcessor } )
+			try {
+				var options = reqProc.func( app, conn, feed, "Null Message" )
+			}
+			catch(e) {
+				sAlert.warning("Request processor error: " + e.toString())
+			}
+
+      (function ( feed ) {
+  			HTTP.call( feed.verb, url, options, function( error, result ) {
+  				for ( var rpc=0; rpc<feed.responseProcessors.length; rpc++ ) {
+  					var fp = FeedProcessors.findOne( { type: "HTTPResponse", name: feed.responseProcessors[rpc] } )
+					try {
+						fp.func( app, conn, feed, error, result )
+					}
+  					catch(e) {
+  						sAlert.warning("Response processor error: " + e.toString())
+  					}
+  				}
+  			})
+      }( feed ))
 		}
 	}
-	// console.log("HTTP Clock", HTTPClock)
 }
 
 
@@ -249,7 +261,7 @@ checkHTTPFeeds = function (){
 // 	Session.set("FeedProcessors", Object.keys(HTTPFeedProcessors));
 // });
 Meteor.startup(function() {
-	// console.log("Starting HTTP Check");
+	console.log("Starting HTTP Check");
 	interval(checkHTTPFeeds, 1000);
 })
 
@@ -283,6 +295,7 @@ publish = function(feedName, message) {
 	switch(feedType) {
 	case "MQTT":
 		feed = Feeds.findOne({title: feedName});
+		var topic = feed.subscription;
 		console.log("FEN: ", feed, feedName)
 		if(feed.pubsub !="Publish") {
 			message = "Attempt to publish to subcription feed: "+ feed.title;
@@ -292,10 +305,13 @@ publish = function(feedName, message) {
             var rtv = feed.subscription.match(/<([A-z]+)>/);
             console.log("RTVM", rtv)
             if(rtv) {
-                console.log("Hasdf", rtv[0])
-                var topic = feed.subscription.replace(rtv[0], getRuntimeVariable(rtv[1]))
+                var runtimeValue = getRuntimeVariable(rtv[1]);
+				if(!runtimeValue) {
+					break;
+				}
+                topic = feed.subscription.replace(rtv[0], runtimeValue)
             }
-			Outbox.upsert({topic: topic}, {$set: { feed: feed.title, topic: topic, payload: message},$inc: {count: 1}});
+			Outbox.upsert({topic: topic}, {$set: { feed: feed.title, topic: topic, payload: message, timestamp: new Date()},$inc: {count: 1}});
 			mqttClient.publish(topic, message);
 		}
 		break;
@@ -308,8 +324,12 @@ publish = function(feedName, message) {
         var rtv = feed.path.match(/<([A-z]+)>/);
         console.log("HTTPRTVM", rtv)
         if(rtv) {
-            console.log("HTTP", rtv[0])
-            feed.path = feed.path.replace(rtv[0], getRuntimeVariable(rtv[1]))
+            var runtimeValue = getRuntimeVariable(rtv[1]);
+			if(!runtimeValue) {
+				break;
+			}
+            //console.log("HTTP", rtv[0])
+            feed.path = feed.path.replace(rtv[0], runtimeValue)
         }
 		//Get the requestProcessor for this feed
 		var fp = FeedProcessors.findOne({name: feed.requestProcessor});
@@ -317,14 +337,15 @@ publish = function(feedName, message) {
 		console.log("NOTE TO SELF - request feed processor need access to request!!!!!!!");
 		var options = fp.func(app, conn, feed, message);
 		//Record that we have done this for debugging.
-		Outbox.upsert({topic: feed.path}, {$set: { feed: feed.title, topic: feed.path, payload: message},$inc: {count: 1}});
+		Outbox.upsert({topic: feed.path}, {$set: { feed: feed.title, topic: feed.path, payload: message, timestamp: new Date()},$inc: {count: 1}});
 		//Now actually do the deed.
 
 		var url = conn.protocol + "://" + conn.host + ":" + conn.port +feed.path;
 		timeout = 5*1000;
-				options.headers = {};
+				options.headers = options.headers || {};
 				options.timeout = timeout;
-				options.data = message;
+				options.params = options.params || {message: message};
+				options.content = message;
 				//options.headers["Access-Control-Allow-Headers"] = "Access-Control-Allow-Origin, Origin, X-Requested-With, Content-Type, Accept";
 				//options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
 		//options.headers['Access-Control-Allow-Origin'] = '*';
@@ -508,6 +529,12 @@ InitialiseApps = function() {
 				$( 'head' ).append( '<script' + asyncVal + deferVal + ' src="' + asyncLibs[i].title + '"></script>' )
 			}
 		}
+    if ( app && app.externalCSSLibraries ) {
+      cssLibs = app.externalCSSLibraries
+      for ( var i = 0; i < cssLibs.length; i++ ) {
+        $( 'head' ).append( '<link rel="stylesheet" type="text/css" href="' + cssLibs[i].title + '">' )
+      }
+    }
 	}
 }
 
@@ -677,6 +704,8 @@ connect = function (conn, usr, pass) {
                         username: username,
                         password: password,
                         port: conn.port,
+						reconnectPeriod: 3000,
+						keepalive: 30,
                         clientId: clientId,
                         _id: conn._id
                     });
@@ -687,7 +716,7 @@ connect = function (conn, usr, pass) {
 		Session.set("connectionErrors", err);
 	}
 	mqttClient.on("connect", function(){
-		// console.log("CONNECTED to ", this);
+		console.log("CONNECTED to ", this);
 		Session.set("ConnectionStatus", true);
 		Session.set("connectionErrors", null);
 		feeds = Feeds.find({pubsub: "Subscribe"}).fetch();
@@ -726,6 +755,7 @@ connect = function (conn, usr, pass) {
 		}
 		catch(err) {
 			console.log("MERR: ", err);
+			throwRuntimeError("Non-JSON message: ", rawmessage.toString());
 			Session.set("runtimeErrors", "Invalid MQTT message, payload not JSON: " + rawmessage.toString());
 			payload = rawmessage.toString();
 		}
@@ -735,10 +765,28 @@ connect = function (conn, usr, pass) {
 			// console.log("Checking to ", feeds[i].subscription);
 			regex = mqttregex(feeds[i].subscription).exec;
 			result = regex(topic);
+			// Should we process this feed?
 			if(result) {
+				//Yes.
 				if(feeds[i].jsonKey) {
-					filteredPayload = payload[feeds[i].jsonKey];
-					jsonKey = feeds[i].jsonKey
+
+					if(Array.isArray(payload)) {
+						console.log("MESSAGE TYPE ", feeds[i].title, Array.isArray(payload) ? "Array" : "Not Array");
+						filteredPayload = payload.map(function(obj){
+							var ret = obj[feeds[i].jsonKey];
+							if(ret) {
+								return ret;
+							} else {
+								throwRuntimeError("Missing key " + feeds[i].jsonKey.toString() +  " in message ", rawmessage.toString());
+							} 
+						});
+					} else {
+						filteredPayload = payload[feeds[i].jsonKey];
+						if(filteredPayload === undefined) {
+							throwRuntimeError("Missing key " + feeds[i].jsonKey.toString() +  " in message ", rawmessage.toString());
+						}
+						jsonKey = feeds[i].jsonKey
+					}
 				} else {
 					filteredPayload = payload;
 					jsonKey = "none"
@@ -747,7 +795,7 @@ connect = function (conn, usr, pass) {
 				Messages.upsert({
                     // topic: topic,
                     feed: feeds[i].title
-                }, {$set: {feed: feeds[i].title, topic: topic, payload: filteredPayload}, $inc:{count: 1}});
+                }, {$set: {feed: feeds[i].title, topic: topic, payload: filteredPayload, timestamp: new Date()}, $inc:{count: 1}});
 				if(feeds[i].doJournal) {
 					//Do journal stuff
 					Messages.update(
@@ -868,12 +916,54 @@ getCurrentApp = function() {
 // Alert Management//
 ///////////////////////////////////////////////////////////////////////////////////////
 
+// Create client-only collection for runtime errors
+RuntimeErrors = new Mongo.Collection(null)
+
+Schemas.RuntimeError = new SimpleSchema({
+	type: {
+		type: String
+	},
+	message: {
+		type: String
+	},
+	lastMessage: {
+		type: Date
+	},
+	count: {
+		type: Number,
+		optional: true
+	}
+})
+
+RuntimeErrors.attachSchema(Schemas.RuntimeError);
+
+throwRuntimeError = function(type, message) {
+	return RuntimeErrors.upsert(
+		{
+			type: type,
+			message: message,
+		},
+		{
+		$set:
+			{
+				type: type,
+				message: message,
+				lastMessage: new Date
+			},
+		$inc:
+			{
+				count: 1
+			}
+		}
+	);
+}
+
 Meteor.startup(function () {
 
     sAlert.config({
         effect: 'jelly',
         position: 'top',
-        timeout: 5000,
+        timeout: 3000,
         html: false,
         onRouteClose: true,
         stack: true,
