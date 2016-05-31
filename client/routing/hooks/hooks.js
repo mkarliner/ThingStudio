@@ -71,8 +71,12 @@ SetMQTTCredentials = function (that) {
 			}, {
 				$set: {
 					connection: connection._id,
-					username: "username",
+					host: connection.host,
+					port: connection.port,
+					protocol: connection.protocol,
+					username: connection.username,
 					password: "password",
+					clientId: connection.clientId,
 					save: false
 				}
 			});
@@ -93,12 +97,12 @@ SetMQTTCredentials = function (that) {
 		return;
 	} else {
 		// We have displayed the form, and the user has clicked connect... now use the credentials she has entered.
-		//console.log("AUTH OK", connection)
 		credentials = getCredentials();
+		console.log("AUTH OK", connection, credentials)
 		if(connection.serverCredentials) {
 			connect(connection);   //server auth connection
 		} else {
-			connect(connection, credentials.username, credentials.password); //Client auth connection
+			connect(credentials, credentials.username, credentials.password); //Client auth connection
 		}
 
 	}

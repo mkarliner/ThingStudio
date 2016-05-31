@@ -240,7 +240,14 @@ AutoForm.hooks({
 			},
 			before: {
 				update: function(mod) {
-					setCredentials({username: mod.$set.username, password: mod.$set.password});
+					setCredentials({
+						host: mod.$set.host,
+						port: mod.$set.port,
+						protocol: mod.$set.protocol,
+						username: mod.$set.username, 
+						password: mod.$set.password,
+						clientId: mod.$set.clientId,
+					});
 					if(mod.$set.save) {
 						return mod;
 					} else {

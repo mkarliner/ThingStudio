@@ -13,6 +13,39 @@ Meteor.startup(function(){
 	// 	 connection: null});
 
 	Schemas.Credentials = new SimpleSchema({
+		host: {
+			type: String,
+			label: "Hostname"
+		},
+		port: {
+			type: Number,
+			label: "Websocket Port",
+			defaultValue: 9001,
+			custom: function () {
+				if ( this.value == 1883 ) {
+					return "MQTTPortError";
+				} else {
+					return 1;
+				}
+			}
+		},
+	  clientId: {
+	      label: "Client ID",
+	      type: String,
+	      optional: true
+	  },
+		protocol: {
+			type: String,
+			defaultValue: "Websocket",
+			optional: true,
+			autoform: {
+				type: "selectize",
+				options: function(){
+					options = [{label: "Websocket", value: "Websocket"}, {label: "Secure Websocket", value: "SecureWebsocket"}];
+					return (options);
+				}
+			}
+		},
 		username: {
 			type: String,
 			label: "Username",
@@ -34,7 +67,7 @@ Meteor.startup(function(){
 		save: {
 			type: Boolean,
 			defaultValue: false,
-			label: "Save to local client",
+			label: "Save details locally",
 		},
 		connection: {
 			optional: true,

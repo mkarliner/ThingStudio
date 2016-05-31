@@ -1,6 +1,7 @@
 Template.GetMyCredentials.helpers({
 	
 	connectionName: function() {
+		console.log("CONTEXT", this)
 		return this.connectionName;
 	},
 	connectionHost: function(){
