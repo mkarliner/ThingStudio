@@ -5,6 +5,7 @@ $fontFace: AvenirLTStd-Roman, Helvetica, sans-serif;
 $darkBase: #353C51;
 $activeGreen: #7ED321;
 $inactiveRed: #B9513C;
+$credentialsFieldBorder: #EDF0F4;
 
 // Material Design Colors
 $red: #F44336;
@@ -850,9 +851,52 @@ h1.nothing {
 }
 
 .credentials-form {
+
 	padding: 0 0.625em;
 	max-width: 28.125em;
 	margin: 0 auto;
+	label, input {
+		display: inline-block;
+		font-family: 'Burlingame W01';
+	}
+	label {
+		width: 80px;
+		font-size: 13px;
+		line-height: 16px;
+		vertical-align: middle;
+	}
+	input {
+
+	}
+	.selectize-control {
+		display: inline-block;
+		width: calc(100% - 85px);
+		margin-bottom: 0.8em;
+	}
+	.selectize-control.single .selectize-input {
+		background-color: #fff;
+		background-image: none;
+		background-repeat: no-repeat;
+		border: 0.125em solid $credentialsFieldBorder;
+	}
+	.selectize-input {
+		height: 46px;
+		line-height: 32px;
+		border-radius: 0;
+		text-indent: 0.25em;
+		color: #9e9e9e;
+		font-size: 1em;
+		line-height: 26px;
+		input {
+			position: absolute;
+		}
+	}
+	.selectize-dropdown.single {
+		border: 0.125em solid $credentialsFieldBorder;
+	}
+	.protocol label {
+		margin-top: -40px;
+	}
 	h2{
 		// font-family: $fwMedium;
 		color: $headerColor;
@@ -870,22 +914,27 @@ h1.nothing {
 		color: #676975;
 	}
 	input[type="text"],
-	input[type="password"] {
-		height: 3.75em;
-		border: 0.125em solid #D2D5D9;
+	input[type="password"],
+	input[type="number"] {
+		height: 2.5em;
+		border: 0.125em solid $credentialsFieldBorder;
 		color: #9e9e9e;
 		text-indent: 0.875em;
-		margin-bottom: 1em;
+		margin-bottom: 0.8em;
 		font-size: 1em;
-		width: calc(100% - 0.125em);
+		width: calc(100% - 90px);
 		transition: all 0.3s;
 		&:focus {
 			outline: none;
 			border-bottom: 0.125em solid #4AAFE2;
 		}
 	}
+	.save-creds label {
+		width: inherit;
+	}
 	.btn-login {
-		height: 3.75em;
+		font-family: 'Burlingame W01';
+		height: 2.75em;
 		background-color: #76D4E1;
 		margin-top: 0.8em;
 		text-transform: none;
