@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Thingstudio POC-A -- WebSerial deploy harness</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #161a21;
+    --border: #2a3140;
+    --text: #d8dee9;
+    --dim: #7c8698;
+    --accent: #4f9eff;
+    --good: #4caf50;
+    --bad: #e05555;
+    --warn: #e0a855;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    margin: 0;
+    padding: 20px;
+    font-size: 13px;
+  }
+  h1 { font-size: 16px; margin: 0 0 4px; }
+  .sub { color: var(--dim); margin: 0 0 16px; font-size: 12px; }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+  button {
+    background: var(--panel);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+  }
+  button:hover:not(:disabled) { border-color: var(--accent); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.primary { border-color: var(--accent); color: var(--accent); }
+  button.danger { border-color: var(--bad); color: var(--bad); }
+  .pill {
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    font-size: 11px;
+  }
+  .pill.connected { border-color: var(--good); color: var(--good); }
+  .pill.disconnected { border-color: var(--bad); color: var(--bad); }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 16px;
+  }
+  .panel h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--dim); margin: 0 0 10px; }
+  #console {
+    height: 260px;
+    overflow-y: auto;
+    background: #0a0c10;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    line-height: 1.5;
+  }
+  #console .l { }
+  #console .t { color: var(--dim); }
+  #console .ok { color: var(--good); }
+  #console .err { color: var(--bad); }
+  #console .mem { color: var(--warn); }
+  .metrics { display: flex; gap: 24px; flex-wrap: wrap; }
+  .metric { min-width: 160px; }
+  .metric .n { font-size: 26px; font-weight: 600; }
+  .metric .lbl { color: var(--dim); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--border); }
+  th { color: var(--dim); font-weight: 500; text-transform: uppercase; font-size: 10px; }
+  tr.err td { color: var(--bad); }
+  #stressTable { max-height: 300px; overflow-y: auto; display: block; }
+  .summary { margin-top: 10px; font-size: 12px; }
+  .summary b { color: var(--accent); }
+  input[type=file] { display: none; }
+  label.filebtn {
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--dim);
+    font-size: 13px;
+  }
+  label.filebtn:hover { border-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body>
+
+<h1>Thingstudio POC-A</h1>
+<p class="sub">Bare-bones WebSerial harness -- no editor, no compiler. Deploys raw .py source, exec()'d on-device. See design doc &sect;15.1.</p>
+
+<div class="row">
+  <button id="btnConnect" class="primary">Connect</button>
+  <button id="btnDisconnect" disabled>Disconnect</button>
+  <span id="pill" class="pill disconnected">disconnected</span>
+  <span style="flex:1"></span>
+  <label class="filebtn">Load different payload .py&hellip;<input type="file" id="fileInput" accept=".py"></label>
+  <span id="payloadName" class="sub" style="margin:0;">using built-in payload.py</span>
+</div>
+
+<div class="row">
+  <button id="btnDeploy" disabled>Deploy test program</button>
+  <button id="btnStress" disabled>Run 50&times; redeploy stress test</button>
+  <button id="btnClear">Clear console</button>
+  <button id="btnCsv" disabled>Download stress-test CSV</button>
+</div>
+
+<div class="panel">
+  <h2>Last deploy</h2>
+  <div class="metrics">
+    <div class="metric"><div id="mRt" class="n">&mdash;</div><div class="lbl">click &rarr; DEPLOY_OK (ms)</div></div>
+    <div class="metric"><div id="mBehavior" class="n">&mdash;</div><div class="lbl">click &rarr; first TOGGLE (ms)</div></div>
+    <div class="metric"><div id="mMemBefore" class="n">&mdash;</div><div class="lbl">gc.mem_free() before</div></div>
+    <div class="metric"><div id="mMemAfter" class="n">&mdash;</div><div class="lbl">gc.mem_free() after</div></div>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>Raw serial console</h2>
+  <div id="console"></div>
+</div>
+
+<div class="panel">
+  <h2>50&times; redeploy stress test</h2>
+  <div id="stressTable">
+    <table>
+      <thead><tr><th>#</th><th>click&rarr;OK (ms)</th><th>click&rarr;TOGGLE (ms)</th><th>mem before</th><th>mem after</th><th>status</th></tr></thead>
+      <tbody id="stressBody"></tbody>
+    </table>
+  </div>
+  <div id="stressSummary" class="summary"></div>
+</div>
+
+<script>
+"use strict";
+
+const BEGIN = "###DEPLOY-BEGIN###\n";
+const END = "###DEPLOY-END###\n";
+
+// Kept in sync by hand with device/payload.py. Use "Load different payload
+// .py..." above to send some other file instead without touching this page.
+const DEFAULT_PAYLOAD = `import machine
+import utime
+
+led = machine.Pin(12, machine.Pin.OUT)
+btn = machine.Pin(9, machine.Pin.IN, machine.Pin.PULL_UP)
+
+async def blink():
+    n = 0
+    while True:
+        led.value(not led.value())
+        n += 1
+        if n == 1:
+            print("TOGGLE t=%d" % utime.ticks_ms())
+        await asyncio.sleep_ms(400)
+
+async def poll_btn():
+    while True:
+        print("BTN value=%d t=%d" % (btn.value(), utime.ticks_ms()))
+        await asyncio.sleep_ms(700)
+
+spawn(blink())
+spawn(poll_btn())
+print("PAYLOAD_STARTED")
+`;
+
+let currentPayload = DEFAULT_PAYLOAD;
+
+let port = null;
+let writer = null;
+let keepReading = false;
+let readClosedPromise = null;
+let lineWaiters = []; // { match(line)->bool, resolve, reject, timer }
+
+const el = (id) => document.getElementById(id);
+const consoleEl = el("console");
+
+function logLine(text, cls) {
+  const row = document.createElement("div");
+  row.className = "l";
+  const now = new Date();
+  const ts = now.toLocaleTimeString(undefined, { hour12: false }) + "." + String(now.getMilliseconds()).padStart(3, "0");
+  const span = document.createElement("span");
+  span.className = "t";
+  span.textContent = "[" + ts + "] ";
+  row.appendChild(span);
+  const body = document.createElement("span");
+  if (cls) body.className = cls;
+  body.textContent = text;
+  row.appendChild(body);
+  consoleEl.appendChild(row);
+  consoleEl.scrollTop = consoleEl.scrollHeight;
+}
+
+function classify(line) {
+  if (line.startsWith("DEPLOY_OK")) return "ok";
+  if (line.startsWith("DEPLOY_ERR")) return "err";
+  if (line.startsWith("MEM ")) return "mem";
+  return "";
+}
+
+function onLine(line) {
+  logLine(line, classify(line));
+  const arrivalTime = performance.now();
+  lineWaiters = lineWaiters.filter((w) => {
+    if (w.match(line)) {
+      clearTimeout(w.timer);
+      w.resolve({ line, arrivalTime });
+      return false;
+    }
+    return true;
+  });
+}
+
+function waitForLine(match, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      lineWaiters = lineWaiters.filter((w) => w.timer !== timer);
+      reject(new Error("timeout"));
+    }, timeoutMs);
+    lineWaiters.push({ match, resolve, reject, timer });
+  });
+}
+
+async function readLoop() {
+  const decoder = new TextDecoder();
+  let buf = "";
+  keepReading = true;
+  while (port && port.readable && keepReading) {
+    const reader = port.readable.getReader();
+    try {
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        if (value) {
+          buf += decoder.decode(value, { stream: true });
+          let idx;
+          while ((idx = buf.indexOf("\n")) >= 0) {
+            let line = buf.slice(0, idx);
+            buf = buf.slice(idx + 1);
+            if (line.endsWith("\r")) line = line.slice(0, -1);
+            if (line.length) onLine(line);
+          }
+        }
+      }
+    } catch (e) {
+      logLine("[read error] " + e, "err");
+    } finally {
+      reader.releaseLock();
+    }
+  }
+}
+
+async function connect() {
+  try {
+    port = await navigator.serial.requestPort();
+    await port.open({ baudRate: 115200 });
+  } catch (e) {
+    logLine("[connect failed] " + e, "err");
+    return;
+  }
+  writer = port.writable.getWriter();
+  readClosedPromise = readLoop();
+  el("pill").textContent = "connected";
+  el("pill").className = "pill connected";
+  el("btnConnect").disabled = true;
+  el("btnDisconnect").disabled = false;
+  el("btnDeploy").disabled = false;
+  el("btnStress").disabled = false;
+  logLine("[connected @ 115200 baud -- waiting for HARNESS_READY]", "");
+}
+
+async function disconnect() {
+  keepReading = false;
+  try {
+    if (writer) { writer.releaseLock(); writer = null; }
+    if (port) { await port.close(); }
+  } catch (e) {
+    logLine("[disconnect error] " + e, "err");
+  }
+  port = null;
+  el("pill").textContent = "disconnected";
+  el("pill").className = "pill disconnected";
+  el("btnConnect").disabled = false;
+  el("btnDisconnect").disabled = true;
+  el("btnDeploy").disabled = true;
+  el("btnStress").disabled = true;
+  logLine("[disconnected]", "");
+}
+
+async function writeFrame(source) {
+  const body = source.replace(/\r\n/g, "\n").trimEnd() + "\n";
+  const frame = BEGIN + body + END;
+  const enc = new TextEncoder();
+  await writer.write(enc.encode(frame));
+}
+
+// One deploy: send the frame, race a DEPLOY_OK/DEPLOY_ERR line and a first
+// TOGGLE line against timeouts, return timing + parsed mem numbers.
+async function deployOnce(source, timeoutMs = 4000) {
+  const clickT = performance.now();
+  const okP = waitForLine((l) => l.startsWith("DEPLOY_OK") || l.startsWith("DEPLOY_ERR"), timeoutMs)
+    .catch(() => ({ timeout: true }));
+  const toggleP = waitForLine((l) => l.startsWith("TOGGLE"), timeoutMs)
+    .catch(() => ({ timeout: true }));
+  await writeFrame(source);
+
+  const okRes = await okP;
+  const toggleRes = await toggleP;
+
+  const result = {
+    clickT,
+    ok: false,
+    error: null,
+    rtMs: null,
+    behaviorMs: null,
+    memBefore: null,
+    memAfter: null,
+  };
+
+  if (okRes && !okRes.timeout) {
+    result.rtMs = Math.round(okRes.arrivalTime - clickT);
+    if (okRes.line.startsWith("DEPLOY_OK")) {
+      result.ok = true;
+      const m = okRes.line.match(/before=(\-?\d+) after=(\-?\d+) dt_ms=(\-?\d+)/);
+      if (m) {
+        result.memBefore = parseInt(m[1], 10);
+        result.memAfter = parseInt(m[2], 10);
+      }
+    } else {
+      result.error = okRes.line;
+    }
+  } else {
+    result.error = "timeout waiting for DEPLOY_OK/DEPLOY_ERR";
+  }
+
+  if (toggleRes && !toggleRes.timeout) {
+    result.behaviorMs = Math.round(toggleRes.arrivalTime - clickT);
+  }
+
+  return result;
+}
+
+async function onDeployClick() {
+  el("btnDeploy").disabled = true;
+  try {
+    const r = await deployOnce(currentPayload);
+    el("mRt").textContent = r.rtMs !== null ? r.rtMs : "timeout";
+    el("mBehavior").textContent = r.behaviorMs !== null ? r.behaviorMs : "n/a";
+    el("mMemBefore").textContent = r.memBefore !== null ? r.memBefore : "--";
+    el("mMemAfter").textContent = r.memAfter !== null ? r.memAfter : "--";
+    if (!r.ok) logLine("[deploy failed] " + (r.error || "unknown"), "err");
+  } finally {
+    el("btnDeploy").disabled = false;
+  }
+}
+
+let stressRows = [];
+
+async function onStressClick() {
+  el("btnStress").disabled = true;
+  el("btnDeploy").disabled = true;
+  el("stressBody").innerHTML = "";
+  el("stressSummary").textContent = "";
+  el("btnCsv").disabled = true;
+  stressRows = [];
+
+  const N = 50;
+  for (let i = 1; i <= N; i++) {
+    const r = await deployOnce(currentPayload);
+    const row = { i, rtMs: r.rtMs, behaviorMs: r.behaviorMs, memBefore: r.memBefore, memAfter: r.memAfter, ok: r.ok, error: r.error };
+    stressRows.push(row);
+    const tr = document.createElement("tr");
+    if (!r.ok) tr.className = "err";
+    tr.innerHTML = `<td>${i}</td><td>${r.rtMs ?? "timeout"}</td><td>${r.behaviorMs ?? "n/a"}</td><td>${r.memBefore ?? "--"}</td><td>${r.memAfter ?? "--"}</td><td>${r.ok ? "ok" : "FAIL: " + (r.error || "?")}</td>`;
+    el("stressBody").appendChild(tr);
+    el("stressBody").parentElement.parentElement.scrollTop = 1e9;
+    await new Promise((res) => setTimeout(res, 150)); // small gap between redeploys
+  }
+
+  const ok = stressRows.filter((r) => r.ok);
+  const failed = stressRows.filter((r) => !r.ok);
+  const rts = ok.map((r) => r.rtMs).filter((v) => v !== null);
+  const avg = (arr) => (arr.length ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : NaN);
+  const max = (arr) => (arr.length ? Math.max(...arr) : NaN);
+  const firstMem = ok.length ? ok[0].memAfter : null;
+  const lastMem = ok.length ? ok[ok.length - 1].memAfter : null;
+  const drift = firstMem !== null && lastMem !== null ? lastMem - firstMem : null;
+
+  el("stressSummary").innerHTML =
+    `${N} redeploys: <b>${ok.length} ok</b>, <b>${failed.length} failed/timed out</b>. ` +
+    `Latency (click&rarr;OK): avg <b>${avg(rts)}ms</b>, max <b>${max(rts)}ms</b>. ` +
+    `mem_free after: first <b>${firstMem ?? "--"}</b>, last <b>${lastMem ?? "--"}</b>, drift <b>${drift ?? "--"}</b> bytes.`;
+
+  el("btnStress").disabled = false;
+  el("btnDeploy").disabled = false;
+  el("btnCsv").disabled = stressRows.length === 0;
+}
+
+function downloadCsv() {
+  const header = "iteration,rt_ms,behavior_ms,mem_before,mem_after,ok,error\n";
+  const body = stressRows
+    .map((r) => [r.i, r.rtMs ?? "", r.behaviorMs ?? "", r.memBefore ?? "", r.memAfter ?? "", r.ok, (r.error || "").replace(/,/g, ";")].join(","))
+    .join("\n");
+  const blob = new Blob([header + body], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "poc-a-stress-test-" + Date.now() + ".csv";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+el("btnConnect").addEventListener("click", connect);
+el("btnDisconnect").addEventListener("click", disconnect);
+el("btnDeploy").addEventListener("click", onDeployClick);
+el("btnStress").addEventListener("click", onStressClick);
+el("btnCsv").addEventListener("click", downloadCsv);
+el("btnClear").addEventListener("click", () => { consoleEl.innerHTML = ""; });
+el("fileInput").addEventListener("change", async (ev) => {
+  const f = ev.target.files[0];
+  if (!f) return;
+  currentPayload = await f.text();
+  el("payloadName").textContent = "using " + f.name;
+});
+
+if (!("serial" in navigator)) {
+  logLine("[Web Serial API not available -- use Chrome or Edge over http(s):// or file://]", "err");
+  el("btnConnect").disabled = true;
+}
+</script>
+
+</body>
+</html>
