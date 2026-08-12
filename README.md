@@ -48,7 +48,7 @@ docs/
 poc-a/ poc-b/ poc-c/ poc-d/     proof-of-concept spikes, each self-contained with its own README
 ```
 
-Real v1's repo layout (single monorepo: editor, device runtime glue, node library) is still an open decision — see the "code structure and conventions" task in `docs/working-notes/mvp-planning-briefing.md`.
+Real v1's repo layout (single monorepo: editor, device runtime glue, node library) has a target shape now, not yet executed — see `docs/working-notes/repo-structure-and-conventions.md`.
 
 ## Documentation index
 
@@ -57,6 +57,7 @@ Real v1's repo layout (single monorepo: editor, device runtime glue, node librar
 - `docs/working-notes/mvp-feature-priorities.md` — the prioritized v1 feature list, tiered by dependency.
 - `docs/working-notes/node-definition-model.md` — how a node is actually defined (editor descriptor + device-side codegen), grounded in `poc-d`'s real compiler.
 - `docs/working-notes/validation/mvp-validation-plan.md` — how each tier of the feature list gets confirmed done, including the two-board hardware-in-the-loop test rig design.
+- `docs/working-notes/repo-structure-and-conventions.md` — the target repo layout, language/tooling choices, and CI split this "Project layout" section is working toward.
 
 ## License
 
