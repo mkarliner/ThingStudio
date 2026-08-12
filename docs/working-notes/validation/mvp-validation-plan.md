@@ -124,7 +124,36 @@ the README-per-component convention.
 - **Off-device, per node type:** generated Python is syntactically valid
   and cross-compiles cleanly via `mpy-cross.wasm` (POC-B's toolchain) for
   every node type in isolation, before any graph-level test.
-- **Results:** _(pending — fill in once built)_
+- **Results (2026-08-12):** `editor/src/compiler` built — a per-node-type
+  codegen registry (`node-definition.ts`) plus a topological compiler
+  (`compile.ts`), replacing `poc-d/compiler.js`'s hardcoded 3-node
+  special case. Regression check passed: POC-D's exact
+  `inject → function → gpio_out` graph recompiles and, run against mock
+  `machine`/`runtime` modules under real CPython (this sandbox has no
+  MicroPython — not a substitute for the real headless unix-port check,
+  the closest thing achievable here), produces the same physical outcome
+  POC-D verified on hardware (`PIN_INIT 12 OUT`, `PIN_VALUE 12 1`).
+  Adversarial coverage: unknown node type, no source node, disconnected
+  node, fan-out, fan-in, a cycle with no source, a cycle disconnected
+  from an otherwise-valid chain, a node placed after a sink, an
+  out-of-range pin, and an empty function body — all rejected with a
+  clear `CompileError`, all as automated tests
+  (`editor/test/compiler.adversarial.test.ts`). Confirmed generalizing
+  beyond POC-D's single hardcoded shape: multiple independent sources
+  compile to independent spawned coroutines, and a multi-node transform
+  chain (two function nodes before the sink) compiles and runs correctly
+  — neither shape was possible in `poc-d/compiler.js`
+  (`editor/test/compiler.general.test.ts`). One real bug caught by this
+  testing, not just a design worry: an early version nested the
+  sleep/yield inside the same `if msg is not None:` block as downstream
+  calls, which would have skipped the yield entirely whenever a chain
+  short-circuited — exactly the non-yielding-event-loop hazard class §5
+  and POC-D's hardware bugs warn about. Fixed before this was ever run
+  against real hardware, which is the point of catching it here. 23/23
+  tests passing, `tsc --noEmit` clean. mpy-cross cross-compilation of the
+  generated output not yet exercised (POC-B's WASM toolchain isn't
+  vendored into `mpy-cross-wasm/` yet) — real next step for this
+  section, not done as part of this pass.
 
 ### Real `msg` envelope + type system
 
