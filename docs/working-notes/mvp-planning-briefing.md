@@ -1,6 +1,6 @@
 # Briefing: MVP feature prioritization + code structure/conventions
 
-For the next chat. Read `thingstudio-design-doc.md` in full before proposing
+For the next chat. Read `../thingstudio-design-doc.md` in full before proposing
 anything — this is a pointer/summary, not a replacement for it.
 
 ## Where things stand
