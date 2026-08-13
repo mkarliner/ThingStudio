@@ -119,8 +119,10 @@ the README-per-component convention.
   compiler didn't lose anything the hardcoded version already proved.
 - **Adversarial graph shapes**, each expected to fail with a clear compile
   error rather than misbehave silently: cycles, disconnected nodes,
-  unknown node types, multiple nodes of a type the graph doesn't expect,
-  fan-out (one output wired to multiple inputs).
+  unknown node types, multiple nodes of a type the graph doesn't expect.
+  Fan-out and fan-in are NOT on this list — see the 2026-08-13 Results
+  entry below; both are real, supported DAG shapes, matching Node-RED's
+  own basic wiring model, not adversarial cases to reject.
 - **Off-device, per node type:** generated Python is syntactically valid
   and cross-compiles cleanly via `mpy-cross.wasm` (POC-B's toolchain) for
   every node type in isolation, before any graph-level test.
@@ -154,6 +156,54 @@ the README-per-component convention.
   generated output not yet exercised (POC-B's WASM toolchain isn't
   vendored into `mpy-cross-wasm/` yet) — real next step for this
   section, not done as part of this pass.
+- **Results (2026-08-13, DAG generalization):** the compiler above was
+  deliberately conservative — fan-out and fan-in were rejected as
+  adversarial shapes rather than built, a Tier 0 scoping call, not an
+  oversight. Revisited before Tier 1 node work started: Tier 1's own
+  node types (boolean logic, comparators) are exactly the kind of node a
+  real flow wants to fan out from (one sensor reading feeding both a
+  threshold check and a debug node) or fan into, and building that node
+  variety against a compiler that structurally couldn't express either
+  shape would mean redoing it once fan-out/fan-in inevitably got added
+  anyway — so this had to come first, matching Tier 0's own "foundations
+  before variety" reasoning. `compile.ts` reworked from "one straight-line
+  chain per source" to a real DAG walk: any node's output can fan out to
+  multiple downstream inputs (every branch beyond the first gets its own
+  shallow copy of `msg`, cloned *before* any branch runs — matching real
+  Node-RED's send-time cloning, not an assumption; an early version
+  interleaved "clone branch 2" with "run branch 1," which let branch 1's
+  in-place mutation of `msg` leak into branch 2's clone since the clone
+  was taken too late — caught by
+  `compiler.general.test.ts`'s fan-out test before this ever got near
+  real hardware), and any node's input can be fed by multiple upstream
+  outputs (fan-in needs no synchronization, matching Node-RED — a shared
+  downstream node's Python function is generated exactly once, memoized
+  by node ID, and simply called from every path that reaches it, however
+  many times that ends up being per run). Cycle detection generalized
+  from "at most one incoming link per node structurally rules out a
+  reachable cycle" (no longer true once fan-in is allowed) to real 3-color
+  DFS from every source. The two adversarial tests that used to assert
+  fan-out/fan-in were *rejected* were replaced with positive tests
+  asserting they compile and behave correctly (`compiler.general.test.ts`:
+  one inject fanning out to two independent sinks; fan-out clone isolation
+  verified by mutating one branch and confirming the sibling branch's
+  value is untouched; two independent sources sharing one sink, confirmed
+  called once per source with its Python function generated exactly once
+  and its pin-claim setup statement deduplicated); a new adversarial test
+  covers a genuine cycle reachable from a real source (2 → 3 → 2, both
+  downstream of a real inject), the case fan-in newly makes constructible
+  and that cycle detection now has to catch for real rather than
+  defensively. All existing Tier 0 compiler tests (regression,
+  fault-isolation, adversarial) still pass unchanged against the rewrite.
+  88/88 editor tests passing, `tsc --noEmit` clean. Stale, gitignored
+  `.js` build artifacts left over in `editor/src`/`editor/test` from an
+  earlier non-`--noEmit`-respecting `tsc` invocation were found shadowing
+  the `.ts` sources during this pass (Vite/Node ESM resolution prefers a
+  literal `.js` file on disk over resolving a `.js` import specifier to a
+  same-named `.ts` file) — removed; worth a periodic
+  `find editor/src editor/test -name '*.js'` sanity check given `.gitignore`
+  can only stop these from being committed, not stop them from being
+  generated and silently shadowing real changes in a local working copy.
 
 ### Real `msg` envelope + type system
 

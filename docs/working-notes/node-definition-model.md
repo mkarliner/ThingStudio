@@ -122,16 +122,27 @@ Pattern 3) or the whole runtime image (native primitives, Pattern 1/2).
 Worth being honest about, since it's the actual v1-scope work, not proven
 yet:
 
-- **Exactly one hardcoded graph shape.** `compiler.js` checks for exactly 1
-  inject, 1 function, 1 gpio_out, wired in that exact chain, and rejects
-  anything else with a compile error. No topological sort, no arbitrary
-  wiring, no fan-in/fan-out.
-- **No per-node-type codegen registry.** The three patterns above are all
-  bespoke string-building in one file (`compiler.js`), not something a new
-  node type could plug into without editing the compiler itself. The real
-  §6 compiler needs each node type to own its codegen (a template or
-  function keyed by node type, called during a graph walk), not one
-  function that already knows about all three node types by name.
+- ~~**Exactly one hardcoded graph shape.**~~ **Resolved.** `editor/src/compiler/compile.ts`
+  is a real DAG walk over arbitrary graphs now: topological ordering from
+  any number of independent sources, and both fan-out (one output wired
+  to multiple downstream inputs, with `msg` cloned per branch beyond the
+  first, before any branch runs — matching Node-RED's own send-time
+  cloning) and fan-in (one input fed by multiple upstream outputs, no
+  synchronization needed — a shared node's function is generated once and
+  called from every path that reaches it) are supported, not rejected.
+  Cycles are still rejected, via real cycle detection (3-color DFS from
+  every source) rather than as a side effect of "at most one incoming
+  link per node," which is what made a reachable cycle structurally
+  impossible before fan-in was allowed. See
+  `docs/working-notes/validation/mvp-validation-plan.md`'s 2026-08-13
+  Results entry for the full detail, including a real msg-cloning-order
+  bug this generalization caught before it ever reached hardware.
+- ~~**No per-node-type codegen registry.**~~ **Resolved.** Each node type
+  owns its codegen via the `NodeDefinition` interface
+  (`editor/src/compiler/node-definition.ts`), registered in
+  `editor/src/node-library/registry.ts` and looked up by node type during
+  the graph walk — not one function that already knows every node type by
+  name.
 - **One flow, not several.** No node-ID-uniqueness-across-flows bookkeeping
   (§6's multi-flow section already flags this as v2-scope, not v1).
 - **No resource-conflict checking.** Two `gpio_out` nodes both claiming pin

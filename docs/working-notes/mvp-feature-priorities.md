@@ -138,6 +138,29 @@ Assistant auto-discovery, a self-hosted dashboard, multi-device flows, a
 companion server. All v2/v3 per §10's existing phasing — nothing here
 changes that.
 
+Added 2026-08-13, flagged during Tier 1 node-set planning rather than
+built: **stateful nodes and cross-message synchronization** — a
+Node-RED-style `join` node that buffers messages arriving on separate
+wires and fires once N of them have arrived (or once a
+correlating key's whole set has), and the broader class of node holding
+state *across separate trigger events within one deployed flow's
+lifetime* (not to be confused with §5's already-real flash-backed
+variable store, which persists a single node's value across redeploys
+and power cycles, keyed by node ID -- this is a different thing: e.g. "AND
+of live wire A's last value and live wire B's last value," or "don't fire
+until both a motion sensor and a door sensor have each reported once").
+Real fan-in (this session, see `node-definition-model.md`) makes the
+wiring shape expressible -- multiple upstream nodes CAN already feed one
+downstream node -- but the downstream node re-firing once per independent
+arrival, with no memory of what arrived before, is Node-RED's own basic
+fan-in semantics, not a join. A real join/synchronization primitive is
+its own design problem (buffering semantics, timeout/partial-set
+behavior, what "N" means when wiring is edited) worth scoping properly
+whenever it's picked up, not bolted onto a single node type ad hoc. Not
+blocking Tier 1's software-only node batch (boolean/arithmetic/
+comparator/variable-get-set/debug all ship stateless for now), but worth
+tracking here so it doesn't get rediscovered from scratch later.
+
 ## One sequencing call worth flagging rather than assuming
 
 Tier 1 and Tier 2 are written as separate tiers for clarity, but they

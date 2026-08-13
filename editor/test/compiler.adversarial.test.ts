@@ -1,9 +1,17 @@
 // Adversarial graph shapes the compiler must reject with a clear error
 // rather than misbehave silently -- the exact list from
 // docs/working-notes/validation/mvp-validation-plan.md's Tier 0 section:
-// cycles, disconnected nodes, unknown node types, fan-out. Plus a couple
-// more the general compiler introduces beyond POC-D's hardcoded version:
-// fan-in, no source at all, and a source with an incoming connection.
+// cycles, disconnected nodes, unknown node types. Plus a couple more the
+// general compiler introduces beyond POC-D's hardcoded version: no
+// source at all, and a source with an incoming connection.
+//
+// Fan-out and fan-in are NOT on this list -- both are real, supported DAG
+// shapes now (compile.ts), matching Node-RED's own basic wiring model.
+// Their positive tests live in compiler.general.test.ts. What's still
+// rejected here is a genuine cycle, including one actually reachable from
+// a real source -- previously structurally impossible before fan-in was
+// allowed (see "rejects a cycle reachable from a real source" below),
+// now a real case cycle detection has to catch for real.
 
 import { describe, expect, it } from "vitest";
 import { compile } from "../src/compiler/compile.js";
@@ -46,34 +54,27 @@ describe("general compiler: adversarial graph shapes", () => {
     expect(() => compile(graph, registry)).toThrow(/disconnected/);
   });
 
-  it("rejects fan-out (one output wired to two inputs)", () => {
+  it("rejects a cycle reachable from a real source", () => {
+    // Before fan-in was allowed, "at most one incoming link per node"
+    // made a source-reachable cycle structurally impossible (see the old
+    // comment this replaces, still visible in compiler.general.test.ts's
+    // git history) -- now that a node can have more than one incoming
+    // link, this is a real shape cycle detection has to catch for real,
+    // not just defensively. 2 -> 3 -> 2, both reachable from source 1.
     const graph: GraphData = {
       nodes: [
         { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
-        { id: 2, type: "thingstudio/gpio_out", properties: { pin: 12 } },
-        { id: 3, type: "thingstudio/gpio_out", properties: { pin: 13 } },
+        { id: 2, type: "thingstudio/function", properties: passthroughFn },
+        { id: 3, type: "thingstudio/function", properties: passthroughFn },
       ],
       links: [
         [1, 1, 0, 2, 0, "bool"],
-        [2, 1, 0, 3, 0, "bool"], // node 1's output wired a second time
+        [2, 2, 0, 3, 0, "bool"],
+        [3, 3, 0, 2, 0, "bool"], // closes the loop back onto node 2
       ],
     };
-    expect(() => compile(graph, registry)).toThrow(/fan-out/);
-  });
-
-  it("rejects fan-in (two outputs wired to one input)", () => {
-    const graph: GraphData = {
-      nodes: [
-        { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
-        { id: 2, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "false", repeat: "manual" } },
-        { id: 3, type: "thingstudio/gpio_out", properties: { pin: 12 } },
-      ],
-      links: [
-        [1, 1, 0, 3, 0, "bool"],
-        [2, 2, 0, 3, 0, "bool"], // node 3's input wired a second time
-      ],
-    };
-    expect(() => compile(graph, registry)).toThrow(/fan-in/);
+    expect(() => compile(graph, registry)).toThrow(CompileError);
+    expect(() => compile(graph, registry)).toThrow(/cycle/);
   });
 
   it("rejects a cycle with no source feeding it", () => {

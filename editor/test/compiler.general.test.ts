@@ -104,4 +104,74 @@ describe("general compiler: shapes POC-D's hardcoded compiler could never accept
     const leadingSpaces = (l: string) => l!.match(/^\s*/)![0].length;
     expect(leadingSpaces(sleepLine!)).toBe(leadingSpaces(buildMsgLine!));
   });
+
+  it("fans one inject's output out to two independent gpio_out sinks", () => {
+    const graph: GraphData = {
+      nodes: [
+        { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: 2, type: "thingstudio/gpio_out", properties: { pin: 12 } },
+        { id: 3, type: "thingstudio/gpio_out", properties: { pin: 13 } },
+      ],
+      links: [
+        [1, 1, 0, 2, 0, "bool"], // node 1's output wired to both...
+        [2, 1, 0, 3, 0, "bool"], // ...node 2 and node 3
+      ],
+    };
+    const { source } = compile(graph, buildRegistry());
+    const output = runGenerated(source);
+    expect(output).toContain("PIN_VALUE 12 1");
+    expect(output).toContain("PIN_VALUE 13 1");
+  });
+
+  it("fan-out clones msg per branch: one branch's mutation doesn't leak into a sibling", () => {
+    const graph: GraphData = {
+      nodes: [
+        { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        // branch A: flips payload to false before its sink
+        { id: 2, type: "thingstudio/function", properties: { code: "msg['payload'] = False\nreturn msg\n" } },
+        { id: 3, type: "thingstudio/gpio_out", properties: { pin: 12 } },
+        // branch B: untouched, straight to its own sink
+        { id: 4, type: "thingstudio/gpio_out", properties: { pin: 13 } },
+      ],
+      links: [
+        [1, 1, 0, 2, 0, "bool"], // node 1 -> branch A's function
+        [2, 1, 0, 4, 0, "bool"], // node 1 -> branch B's sink directly
+        [3, 2, 0, 3, 0, "bool"], // branch A's function -> its sink
+      ],
+    };
+    const { source } = compile(graph, buildRegistry());
+    expect(source).toContain("dict(msg)"); // the clone for the second branch
+    const output = runGenerated(source);
+    expect(output).toContain("PIN_VALUE 12 0"); // branch A: mutated to false
+    expect(output).toContain("PIN_VALUE 13 1"); // branch B: still the original true
+  });
+
+  it("fan-in: two independent sources sharing one gpio_out sink each call it once, function generated once", () => {
+    const graph: GraphData = {
+      nodes: [
+        { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: 2, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "false", repeat: "manual" } },
+        { id: 3, type: "thingstudio/gpio_out", properties: { pin: 12 } },
+      ],
+      links: [
+        [1, 1, 0, 3, 0, "bool"], // source 1 -> shared sink
+        [2, 2, 0, 3, 0, "bool"], // source 2 -> the same shared sink
+      ],
+    };
+    const { source } = compile(graph, buildRegistry());
+    // The shared sink's Python function is defined exactly once, even
+    // though two different sources call it.
+    expect(source.match(/^def _gpio_out\(msg\):/gm)?.length).toBe(1);
+    expect(source.match(/^runtime\.spawn\(/gm)?.length).toBe(2);
+
+    const output = runGenerated(source);
+    // pymock's spawn() runs each source's chain to completion sequentially
+    // (see compiler.fault-isolation.test.ts's comment) -- both calls to
+    // the shared sink still show up, one per source, in source order.
+    expect(output).toContain("PIN_VALUE 12 1");
+    expect(output).toContain("PIN_VALUE 12 0");
+    // Only one PIN_INIT -- the pin-claim setup statement is deduplicated
+    // by key regardless of how many sources reach the node that claims it.
+    expect(output.match(/PIN_INIT 12/g)?.length).toBe(1);
+  });
 });
