@@ -144,7 +144,7 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
         const t = nodeDef.codegenTransform(node, ctx);
         mergeSetup(t, imports, setupStatements);
         functionDefs.push(`def ${t.functionName}(msg):\n${indent(t.functionBody, 4)}`);
-        steps.push({ kind: "transform", call: `msg = ${t.functionName}(msg)` });
+        steps.push({ kind: "transform", call: nodeCallWithFaultBoundary(node.id, `msg = ${t.functionName}(msg)`) });
       } else if (nodeDef.kind === "sink") {
         if (!nodeDef.codegenSink) {
           throw new CompileError(`node type "${node.type}" declares kind "sink" but has no codegenSink`);
@@ -152,7 +152,7 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
         const sres = nodeDef.codegenSink(node, ctx);
         mergeSetup(sres, imports, setupStatements);
         functionDefs.push(`def ${sres.functionName}(msg):\n${indent(sres.functionBody, 4)}`);
-        steps.push({ kind: "sink", call: `${sres.functionName}(msg)` });
+        steps.push({ kind: "sink", call: nodeCallWithFaultBoundary(node.id, `${sres.functionName}(msg)`) });
         sinkSeen = true;
       } else {
         throw new CompileError(`node ${node.id} (${node.type}) of kind "${nodeDef.kind}" cannot appear mid-chain (only "transform" and "sink" can)`);
@@ -175,7 +175,11 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
 
     const coroName = ctx.uniqueName(`flow_${chainIndex}`);
     coroutines.push(`async def ${coroName}():\n${indent(loopBody, 4)}`);
-    spawnCalls.push(`runtime.spawn(${coroName}())`);
+    // Second arg is the fallback node ID design doc §5's per-task boundary
+    // (device-runtime/src/runtime.py) attributes an exception to when it
+    // happens outside any node's own try/except below -- e.g. a bug in
+    // buildMsg itself, before any node-specific call runs.
+    spawnCalls.push(`runtime.spawn(${coroName}(), "${source.id}")`);
   });
 
   const lines: string[] = [
@@ -225,6 +229,25 @@ function mergeSetup(
   for (const stmt of result.statements ?? []) {
     if (!setupStatements.has(stmt.key)) setupStatements.set(stmt.key, stmt.code);
   }
+}
+
+/**
+ * Wraps one node's generated call in a try/except that tags any exception
+ * with this node's own ID before re-raising, via runtime.NodeError
+ * (device-runtime/src/runtime.py) -- design doc §5/§11's "named per-node
+ * functions/variables tied to node IDs... makes §13's NODE_ERROR reports
+ * actually traceable back to the node that failed," made concrete. Without
+ * this, an exception anywhere in a multi-node chain (one coroutine per
+ * chain, not per node -- see the spawnCalls comment above) could only be
+ * blamed on the whole chain's source node, not the specific node that
+ * actually raised -- which is exactly what the validation plan's
+ * fault-isolation bar checks ("confirm NODE_ERROR reports the correct
+ * node ID," mvp-validation-plan.md). `call` is NOT indented; the caller
+ * (assembleChain) handles indentation for the whole multi-line result the
+ * same way it already does for a single-line call.
+ */
+function nodeCallWithFaultBoundary(nodeId: number, call: string): string {
+  return `try:\n${indent(call, 4)}\nexcept Exception as _e:\n    raise runtime.NodeError("${nodeId}", _e)`;
 }
 
 function indent(code: string, spaces: number): string {

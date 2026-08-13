@@ -282,6 +282,27 @@ the README-per-component convention.
   constraint every prior hardware-touching piece of this project has
   hit and documented the same way.
 
+  **Update (2026-08-13, fault-isolation-briefing.md's session):** both
+  gaps above are now closed on the code side, tracked here separately
+  from the "Fault isolation" section's own Results entry per this
+  session's briefing ("don't conflate the write-ups"). The device-side
+  listener now exists (`device-runtime/src/listener.py` +
+  `{cbor,framing,messages,protocol}.py`) and round-trips all 8 message
+  types against real MicroPython (`device-runtime/test/test_protocol.py`,
+  `test_framing.py`) — closing "both sides" at the code level. The
+  editor's own missing half — a real WebSerial transport client — is also
+  now built (`editor/src/protocol/transport.ts`, base64/line-framed to
+  match `listener.py`'s contract; 7 tests in `editor/test/transport.test.ts`
+  against fake in-memory streams, not a real port). The **hardware pass
+  itself is still (pending)** — genuinely real device round-tripping real
+  messages over a real WebSerial connection hasn't happened; what's new is
+  that both sides of that connection now exist in code and have been
+  exercised against each other over a real (non-WebSerial) byte stream —
+  see the "Fault isolation" section's Results entry for
+  `test_listener_integration.py`'s pipe-based end-to-end coverage, which
+  is the closest either side has gotten to this without a browser or a
+  board.
+
 ### Fault isolation
 
 - Per-task boundary: deploy a multi-node flow containing one deliberately
@@ -303,7 +324,102 @@ the README-per-component convention.
   not the DUT's own printed heartbeat — POC-D's actual bug was the event
   loop wedging entirely, taking its own heartbeat print down with it, so
   self-reported liveness can't be trusted for exactly this test.
-- **Results:** _(pending)_
+- **Results (2026-08-13):** Code complete for both halves of §5 plus the
+  real device-side listener (`device-runtime/src/{errors,cbor,framing,
+  messages,protocol,runtime,listener}.py`) and the editor's WebSerial
+  transport client (`editor/src/protocol/transport.ts`) — verified
+  off-device against **real MicroPython** (a unix-port build from stock
+  `micropython/micropython`, not this project's own dependency — see
+  `device-runtime/test/README.md` for the build recipe), not just CPython
+  mocking. Hardware pass against the actual witness+DUT rig is
+  **(pending)** — Mike is wiring the boards now; `test/hil/
+  run_fault_isolation_checks.py` is the push-button driver script ready to
+  run once they're up, and this entry gets a second dated addendum once it
+  has. Honest about what today's pass does and doesn't cover:
+
+  **Per-task boundary (half 1):** `device-runtime/src/runtime.py`'s
+  `spawn()` now wraps every coroutine in a real exception boundary
+  (`_guarded`), and `editor/src/compiler/compile.ts` now wraps every
+  transform/sink node's generated call in a try/except that raises
+  `runtime.NodeError(node_id, exc)` before it can unwind past that node's
+  own call site — needed because the compiler emits one coroutine per
+  *chain* (source→...→sink), not per node, so without this an exception
+  could only be blamed on a chain's source, not the specific node that
+  raised. `device-runtime/test/test_runtime.py` (7 tests, real `uasyncio`)
+  confirms: a `NodeError` is reported with its own node ID, not the
+  chain's; an un-wrapped exception falls back to the chain's source node
+  ID rather than being lost; a redeploy's `CancelledError` is never
+  reported as a fault; a reporting-callback failure can't itself kill a
+  task; and — the actual design doc §5 claim, made concrete — **a second,
+  independent task keeps running correctly after the first one fails**,
+  under real `uasyncio` scheduling. `editor/test/compiler.fault-isolation.test.ts`
+  (3 tests) confirms the compiler-generated code attributes a failure to
+  the correct node ID end-to-end (broken function node → `NODE_ERROR
+  node=2`, not `node=1`), that a passthrough node ahead of a working sink
+  emits no spurious NODE_ERROR, and that one failing chain doesn't stop an
+  independent second chain's own output. Real hardware still needed for
+  the actual per-task *timing* under real scheduling load, per this
+  section's own "inherently about `uasyncio` task behavior under real
+  scheduling" framing — the unix-port tests are real `uasyncio`, just not
+  real silicon.
+
+  **Listener/transport hardening (half 2):** a hand-rolled CBOR codec
+  (`cbor.py` — no MicroPython-maintained CBOR package exists; see that
+  file's own header for why hand-rolling beats a dependency here) and
+  framing module (`framing.py`) mirror `editor/src/protocol/{codec,
+  framing}.ts` field-for-field and byte-layout-for-byte-layout (same
+  message-type-byte table from `messages.ts`, same big-endian
+  length-covers-type+body framing). `messages.py`/`protocol.py` round-trip
+  all 8 message types and reject every adversarial case
+  `protocol.roundtrip.test.ts` and `framing.adversarial.test.ts` cover,
+  ported 1:1 to Python (`device-runtime/test/test_cbor.py`: 18 tests,
+  including 50 pseudo-random garbage inputs; `test_framing.py`: 18 tests,
+  including the 50-malformed-frame soak case; `test_protocol.py`: 15
+  tests) — all run against real MicroPython, not CPython. The real
+  listener (`listener.py`) rides binary frames on `readline()` as base64
+  text lines (prefix `F64:`), per this task's own briefing's stated
+  default ("unless a given port proves otherwise") — **the raw-binary
+  alternative was not attempted**; that's the first thing worth actually
+  trying once hardware is up, per the briefing's "Verify per-port" note,
+  not assumed settled by this pass. The dispatch loop never dies on an
+  unhandled exception (every phase wrapped, logged, loop continues) and
+  every blocking read is time-bounded (`asyncio.wait_for`,
+  `READ_TIMEOUT_S=8`, matching POC-D's own proven value) — plus one
+  hardening gap this task's own soak testing *found*, not assumed: a
+  frame-length header that's structurally plausible but never actually
+  completes (garbage that "declares a plausible but wrong length," which
+  `framing.py`/`framing.ts` both document as legitimately ambiguous from
+  garbage) can wedge the decoder's buffer indefinitely without the task
+  itself dying or hanging — fixed with a stall counter that force-resets
+  the decoder after a few non-progressing pushes, a real "every *wait*
+  must be time-bounded" case beyond just blocking reads.
+
+  **End-to-end integration (`device-runtime/test/test_listener_integration.py`,
+  4 tests, real MicroPython + real `mpy-cross`-compiled bytecode over a
+  real stdin/stdout pipe — the closest thing to the hardware pass
+  achievable without a board):** `HELLO` sent on boot with real
+  `gc.mem_free()`/`os.statvfs()` figures; a real compiled flow deployed
+  over the real protocol actually runs (`DEPLOY` → `DEPLOY_ACK` →
+  observable print output); a real compiled flow's `NodeError` produces a
+  `NODE_ERROR` frame on the wire with the correct node ID, exception type,
+  and message, and the listener answers a second `DEPLOY` normally
+  afterward; and 50 malformed `F64:` lines in a row (bad base64, garbage
+  frame bytes) never crash the listener, which still accepts a real
+  `DEPLOY` immediately after.
+
+  **Not covered by any of the above, honestly still open:** real silicon
+  timing; the witness rig's own `HEARTBEAT_WATCH`/`WATCH_EDGES`/
+  `MEASURE_PWM` physically observing the DUT (`test/hil/witness_firmware.py`
+  is built and its command-parsing/PWM-math logic is unit-tested
+  off-device — 17 tests in `test/hil/test_witness_firmware.py` — but real
+  IRQ-triggered edge capture is inherently a hardware-only concern, never
+  attempted off-device); whether base64/`readline()` is actually necessary
+  on this specific board/port versus provably-safe raw binary reads; and
+  `test/hil/run_fault_isolation_checks.py` itself, which is written
+  against this same protocol stack and structurally checked (`python3 -m
+  py_compile`) but has not been run against real hardware in this
+  environment. I2C is deliberately not wired (per `test/hil/pin-map.md`'s
+  own fallback recommendation) — out of scope for this task regardless.
 
 ## Tier 1 — node set
 

@@ -51,6 +51,19 @@ shipped in any built editor artifact.
 Litegraph is the other known future addition (design doc §11) once canvas
 work starts; add it here the same day it's installed.
 
+## `test/hil/` tooling (Python, not npm)
+
+Not gated by `CLAUDE.md`'s npm-specific install-flag rule (this isn't a
+Node/npm package), but tracked here anyway per this file's own stated
+scope ("runtime/platform components, editor build tooling, and anything
+vendored") — a real third-party dependency of test infrastructure this
+repo now contains code for, even though it isn't installed in any CI
+environment or committed as a pinned requirement file yet.
+
+| Package | Role | License | Notes |
+|---|---|---|---|
+| pyserial | Serial port I/O for `test/hil/run_fault_isolation_checks.py` (talks to both the witness and DUT boards) | BSD-3-Clause | Not yet pinned to a specific version or added to a `requirements.txt` — this repo has no Python dependency-lockfile convention yet (device-runtime's own MicroPython code has no third-party dependencies at all, by design — see `cbor.py`'s own header on why). Worth a `requirements.txt` (or equivalent) the next time `test/hil/` tooling grows, rather than assumed fine indefinitely as an unpinned `pip install` in a README. |
+
 ## Vendored in the POCs (frozen historical reference, not live v1 dependencies)
 
 Physically present in `pocs/`, evaluated and validated there, but not

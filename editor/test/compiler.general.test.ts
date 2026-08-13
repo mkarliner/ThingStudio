@@ -91,8 +91,11 @@ describe("general compiler: shapes POC-D's hardcoded compiler could never accept
     // sleep line's indentation against the msg-construction line's --
     // both sit directly inside the coroutine's `while True:`, so they
     // must match; a sleep nested inside the `if msg is not None:` block
-    // would be indented 4 spaces further.
-    expect(source).toMatch(/if msg is not None:\n\s+_gpio_out\(msg\)/);
+    // would be indented 4 spaces further. The sink call itself is now
+    // wrapped in a try/except (nodeCallWithFaultBoundary, §5's per-node
+    // NODE_ERROR attribution) rather than a bare call, hence matching
+    // "try:" as the first nested line instead of the call directly.
+    expect(source).toMatch(/if msg is not None:\n\s+try:\n\s+_gpio_out\(msg\)/);
     const lines = source.split("\n");
     const buildMsgLine = lines.find((l) => l.includes("msg = {'payload'"));
     const sleepLine = lines.find((l) => l.includes("asyncio.sleep_ms"));

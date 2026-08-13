@@ -5,30 +5,124 @@
 # the real, named successor to pocs/poc-a's and pocs/poc-d's harness.py
 # (see the naming decision in
 # docs/working-notes/repo-structure-and-conventions.md: no
-# "harness" in real v1 code). Deliberately minimal right now: this is the
-# contract the compiler's generated code (editor/src/compiler) already
-# depends on -- spawn() and a shared asyncio handle -- not yet the real
-# listener/protocol handler or fault isolation from design doc §5. Those
-# need real hardware validation (docs/working-notes/validation/) that
-# can't happen in this environment; this stub exists so the compiler's
-# output has something real to import and its assumptions are written
-# down, not implicit.
+# "harness" in real v1 code).
 #
-# TODO (Tier 0, needs real hardware to build/validate against, see
-# validation plan): the real listener/protocol handler (§13's CBOR
-# framing), per-task fault isolation reporting NODE_ERROR, and the
-# transport-task hardening POC-D's hardware run forced (never let the
-# dispatch loop die, time-bound every blocking read, no read(n)/
-# readexactly(n) without re-verifying against this port's known hang).
+# Design doc §5, "Fault isolation" -- half 1 (per-task exception boundary),
+# implemented here: "An uncaught exception inside a node's coroutine is
+# caught at the per-task boundary (uasyncio surfaces exceptions on task
+# completion) instead of crashing the whole event loop. The failing
+# subgraph's task stops and reports a structured error back over the
+# transport... while the rest of the flow keeps running."
+#
+# Two things had to change from the pre-hardware stub (see git history)
+# to make that real:
+#
+# 1. spawn() now wraps every coroutine in _guarded(), which catches at
+#    task completion instead of letting uasyncio's "Task exception wasn't
+#    retrieved" default kill the task silently. Catching inside the task
+#    itself (rather than via some external supervisor) is what lets the
+#    task return normally afterward -- an unretrieved exception is exactly
+#    the failure mode POC-D's listener hit (see listener.py's own header),
+#    and the fix there and here is the same shape: never let a bare
+#    exception be the last thing a task does.
+#
+# 2. NodeError exists so a *specific node's* failure inside a multi-node
+#    chain can be reported accurately. The current compiler
+#    (editor/src/compiler/compile.ts) generates one coroutine per
+#    independently-triggered chain (source -> transform* -> sink), not one
+#    coroutine per node (§5: "each node, or more likely each
+#    independently-triggered subgraph... is a coroutine") -- so without
+#    this, an exception anywhere in a multi-node chain could only be
+#    blamed on the whole chain, not the one node that actually raised.
+#    compile.ts now wraps each transform/sink node's call in a
+#    try/except that raises NodeError(node_id, original_exception) before
+#    it can unwind past that node's own call site; _guarded() below is
+#    what turns that back into an accurate NODE_ERROR report. An exception
+#    NOT wrapped in NodeError (e.g. a bug in buildMsg itself, before any
+#    node-specific call) still gets reported, blamed on the chain's source
+#    node as a documented fallback rather than silently lost.
 
 import uasyncio as asyncio
 
 _tasks = []  # tasks spawned by the deployed flow -- tracked so a redeploy
              # can cancel exactly these, same bookkeeping as pocs/poc-a and pocs/poc-d.
 
+# Set by listener.py once it's importable (device-runtime/src/listener.py)
+# so this module stays independently importable/testable without ever
+# needing to import the listener itself -- avoids a runtime<->listener
+# circular import, and keeps this file's own off-device tests
+# (device-runtime/test/test_runtime.py) free of any transport/serial
+# dependency. Signature: on_node_error(node_id: str, exception_type: str,
+# exception_message: str) -> None. Must never raise -- see _report_error's
+# own try/except around calling it.
+on_node_error = None
 
-def spawn(coro):
-    t = asyncio.create_task(coro)
+
+class NodeError(Exception):
+    """Raised by compiler-generated per-node call wrappers (see this file's
+    header) to tag which node an exception happened in before the per-task
+    boundary in _guarded() catches it. `node_id` matches NODE_ERROR's wire
+    field (messages.py): always a string, even though graph node IDs are
+    numeric in the compiler (editor/src/compiler/graph.ts) -- stringified
+    at codegen time."""
+
+    def __init__(self, node_id, orig):
+        super().__init__(node_id, orig)
+        self.node_id = node_id
+        self.orig = orig
+
+
+def _exception_type_name(exc):
+    # type(exc).__name__ is confirmed identical in shape between CPython
+    # and the MicroPython unix-port build used for this project's
+    # off-device tests (device-runtime/test/README.md) -- both give the
+    # bare class name (e.g. "ZeroDivisionError"), matching NODE_ERROR's
+    # exceptionType field (messages.py / editor/src/protocol/messages.ts).
+    return type(exc).__name__
+
+
+def _report_error(node_id, exc):
+    node_label = node_id if node_id is not None else "unknown"
+    exc_type = _exception_type_name(exc)
+    exc_message = str(exc)
+    # Always printed, independent of on_node_error -- keeps a human-
+    # readable trail on the serial console even before/without a listener
+    # attached, same spirit as every prior POC's plain print()-based
+    # status lines.
+    print("NODE_ERROR node=%s type=%s msg=%s" % (node_label, exc_type, exc_message))
+    if on_node_error is not None:
+        try:
+            on_node_error(str(node_label), exc_type, exc_message)
+        except Exception as e:  # noqa: BLE001 -- reporting itself must never be able to kill a task
+            print("NODE_ERROR report callback failed: %r" % (e,))
+
+
+async def _guarded(coro, fallback_node_id):
+    """The actual per-task exception boundary. Runs `coro` to completion;
+    any exception it raises is caught HERE, inside the task, so the task
+    itself always completes normally -- uasyncio never sees an unretrieved
+    exception, and every other task on the event loop is completely
+    unaffected (design doc §5's own claim, made concretely true by this
+    function existing)."""
+    try:
+        await coro
+    except asyncio.CancelledError:
+        raise  # a redeploy cancelling this task is not a fault -- must propagate normally
+    except NodeError as e:
+        _report_error(e.node_id, e.orig)
+    except Exception as e:  # noqa: BLE001 -- this IS the fault boundary; anything not already a NodeError is still reported, not silently dropped
+        _report_error(fallback_node_id, e)
+
+
+def spawn(coro, node_id=None):
+    """Spawn a flow-generated coroutine under the per-task fault boundary.
+    `node_id` (a string) is the chain's source node -- used only as the
+    fallback attribution for an exception that happens outside any
+    NodeError-wrapped call (see this file's header, point 2). Compiler-
+    generated code always passes it; it's optional here so hand-written
+    coroutines (this file's own off-device tests, or a POC-style throwaway
+    script) can still call spawn() without a node graph behind them."""
+    t = asyncio.create_task(_guarded(coro, node_id))
     _tasks.append(t)
     return t
 
