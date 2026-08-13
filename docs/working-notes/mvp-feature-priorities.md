@@ -82,7 +82,14 @@ Sequenced by risk and dependency, not just copied from §6's list order:
    thresholds, variable get/set, inject, debug, the function node. No
    physical I/O, so they're the cheapest way to exercise the new general
    compiler against real variety (multiple types, non-trivial wiring)
-   before anything hardware-dependent is in the mix.
+   before anything hardware-dependent is in the mix. **Done as of
+   2026-08-13** — inject/function were already ported from POC-D; boolean,
+   arithmetic, comparator, variable get/set, and debug landed this
+   session (`docs/working-notes/validation/mvp-validation-plan.md`'s
+   dated Results entry). Variable get/set's state is in-RAM only for
+   now, not yet the flash-backed store §5 describes — that's still Tier
+   2's unbuilt "flow persistence" work, noted in each node file's own
+   header rather than silently assumed done.
 2. **GPIO/timers** — GPIO in/out + PWM, timers/intervals. Real I/O, but on
    exactly the mechanism POC-A/D already proved reliable on hardware.
 3. **I2C/SPI sensor nodes** — a handful of common sensors, each wrapping

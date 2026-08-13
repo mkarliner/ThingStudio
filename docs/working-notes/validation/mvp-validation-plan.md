@@ -601,7 +601,48 @@ the README-per-component convention.
   ("kitchen sink"), soak-run for an extended period. Per-node tests won't
   catch cross-node interaction bugs; POC-A/D's own bug lists were
   disproportionately this kind of issue.
-- **Results:** _(pending — likely one dated entry per node type as they land)_
+- **Results (2026-08-13, software-only batch):** the first Tier 1 batch
+  from `mvp-feature-priorities.md`'s "software-only nodes" item: boolean
+  (`thingstudio/boolean` — not/and/or/xor against a configured constant),
+  arithmetic (`thingstudio/arithmetic` — scale+offset/round/abs/clamp),
+  comparator (`thingstudio/comparator` — gt/lt/gte/lte/eq/ne against a
+  configured threshold, any of §6's typed payload set), variable get/set
+  (`thingstudio/variable_get`/`thingstudio/variable_set` — a flow-wide,
+  in-RAM, name-keyed store; explicitly NOT the flash-backed store §5
+  describes, that's still Tier 2's unbuilt "flow persistence" work — see
+  each file's own header), and debug (`thingstudio/debug` — prints to the
+  serial console; real `VALUE_STREAM` inspector wiring is Tier 2). No
+  physical I/O in any of these five, so no hardware pass applies (matches
+  this section's own bar: hardware is non-negotiable for I2C/sensor and
+  network nodes specifically, not blanket-required for every node type).
+  Per-node-type off-device codegen tests, one file per type
+  (`editor/test/node-{boolean,arithmetic,comparator,variable,debug}.test.ts`),
+  each compiling a small real graph and running the generated Python for
+  real against pymock (`editor/test/fixtures/pymock/`) — not yet the real
+  headless MicroPython unix-port build this section calls for, same
+  already-flagged gap as Tier 0's compiler tests, not a new one. Notable
+  cases actually exercised, not just "it compiles": xor and the and/or
+  short-circuit cases stay real Python bools on both sides; clamp/round/
+  abs against negative and boundary values; comparator boundary
+  inclusivity (`lte` at equality true, `lt` at equality false) and string
+  equality, not just numeric; variable get/set's cross-chain sharing
+  (a value set by one independently-spawned chain read back by a
+  `variable_get` in a separate chain — relies on and directly exercises
+  this session's DAG/fan-in work, see the Tier 0 compiler section above),
+  its configured-default fallback when nothing's been set yet, and that
+  two different variable names in the same flow don't collide in the
+  shared store; the shared store dict itself is declared exactly once
+  even with several get/set node instances in one flow (setup-statement
+  dedup, same mechanism gpio_out's pin claims already used). Every new
+  node type also rejects its own invalid configuration with a clear
+  `CompileError` (unknown operator, non-numeric numeric property, empty
+  variable name, `clamp`'s min > max) rather than emitting broken Python
+  silently. 125/125 editor tests passing (up from 88), `tsc --noEmit`
+  clean. Not yet done: mpy-cross cross-compilation of any of this output
+  (same standing gap as the Tier 0 compiler entry — `mpy-cross-wasm/`
+  isn't vendored yet); the Tier 1 "kitchen sink" tier-level gate, which
+  needs the rest of Tier 1's node types (GPIO/timers next) to mean
+  anything.
 
 ## Tier 2 — live values + persistence
 

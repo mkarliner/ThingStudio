@@ -11,33 +11,16 @@
 import { CompileError } from "../compiler/errors.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, NodeDefinition, SourceCodegenResult } from "../compiler/node-definition.js";
+import { pyPayloadLiteral } from "./py-literals.js";
 
 const REPEAT_MS: Record<string, number> = { manual: 0, "1s": 1000, "5s": 5000, "30s": 30000 };
-
-function pyStringLiteral(s: string): string {
-  return JSON.stringify(String(s)); // double-quoted + escaping matches Python's for basic ASCII
-}
-
-function pyPayloadLiteral(payloadType: string, rawValue: unknown): string {
-  switch (payloadType) {
-    case "bool":
-      return rawValue === "true" || rawValue === true ? "True" : "False";
-    case "number": {
-      const n = Number(rawValue);
-      if (Number.isNaN(n)) throw new CompileError(`inject payload value "${String(rawValue)}" is not a valid number`);
-      return String(n);
-    }
-    default:
-      return pyStringLiteral(String(rawValue));
-  }
-}
 
 export const injectNode: NodeDefinition = {
   type: "thingstudio/inject",
   kind: "source",
   codegenSource(node: GraphNode, _ctx: CodegenContext): SourceCodegenResult {
     const payloadType = (node.properties.payloadType as string | undefined) ?? "bool";
-    const payloadLiteral = pyPayloadLiteral(payloadType, node.properties.payloadValue);
+    const payloadLiteral = pyPayloadLiteral(payloadType, node.properties.payloadValue, "inject payload");
     const repeat = (node.properties.repeat as string | undefined) ?? "manual";
     const repeatMs = REPEAT_MS[repeat];
     if (repeatMs === undefined) throw new CompileError(`unknown inject repeat value "${repeat}"`);
