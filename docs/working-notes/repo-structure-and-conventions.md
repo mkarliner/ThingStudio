@@ -133,12 +133,16 @@ file exists; not adopted yet either.
 Done since this note was written: the `LICENSE` file and SPDX header
 convention, the node codegen registry's concrete interface
 (`editor/src/compiler/node-definition.ts`), the real
-`package.json`/`vite.config.ts`/`tsconfig.json` scaffolding, and
-`.github/workflows/ci.yml`. Still open:
+`package.json`/`vite.config.ts`/`tsconfig.json` scaffolding,
+`.github/workflows/ci.yml`, and the real wire protocol (§13) — CBOR
+framing, message types, the version-handshake matrix
+(`editor/src/protocol/{errors,messages,framing,codec,version,protocol}.ts`,
+`cborg` added as the CBOR dependency; see
+`validation/mvp-validation-plan.md`'s dated Results entry). Still open:
 
-- The real wire protocol (§13) — CBOR framing, message types, the
-  version-handshake matrix. Next up per
-  `working-notes/mvp-feature-priorities.md`'s Tier 0.
+- The real wire protocol's device-side half — the actual listener/
+  protocol handler on `device-runtime`, needs hardware to build against
+  safely (see "Fault isolation" in the validation plan).
 - `device-runtime`'s headless MicroPython unix-port test setup — nothing
   wired up yet, `ci.yml` has a placeholder job comment rather than a fake
   job for it.

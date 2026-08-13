@@ -184,7 +184,103 @@ the README-per-component convention.
 - Hardware pass: real device round-trips real messages over real
   WebSerial, confirming the off-device expectations actually hold — the
   "hardware is still authoritative" check.
-- **Results:** _(pending)_
+- **Results (2026-08-13):** `editor/src/protocol/{errors,messages,framing,
+  codec,version,protocol}.ts` built — the real §13 wire protocol
+  replacing POC-A/D's ad hoc text/base64 protocol, on the browser/JS side
+  only (see honest scope note below). `cborg` 6.1.1 (Apache-2.0) chosen as
+  the CBOR library — the open gap `repo-structure-and-conventions.md`
+  flagged — for its strict-by-default decode (rejects indefinite-length
+  items, non-minimal int/length encodings, duplicate map keys), which
+  matches this task's own adversarial bar more directly than a permissive
+  decoder would; flagged to Mike and approved before installing per
+  `CLAUDE.md`, installed with `npm install --ignore-scripts`, added to
+  `docs/third-party-licenses.md` in the same change. Two gaps in §13's own
+  sketch had to be filled with explicit, documented (not silent)
+  decisions rather than blocking on them: numeric type-byte values for
+  each message (`MessageType` in `messages.ts`, assigned 1–8 in §13's own
+  listed order — the real device-side listener, whenever built, has to
+  match this table exactly, since it's the only source of truth right
+  now) and the 2-byte length header's byte order/coverage (big-endian,
+  counting the 1-byte type plus CBOR body together, capping a single
+  frame's type+body at 65535 bytes — a real, small ceiling inherited
+  directly from §13's own 2-byte-header sketch, worth flagging as a
+  concrete limitation rather than something this pass silently worked
+  around: a `DEPLOY` payload larger than ~65KB doesn't fit in one frame
+  under the protocol exactly as specified today).
+
+  CBOR round-trip: all 8 message types round-trip through
+  `encodeMessageBody`/`decodeMessageBody` and through the full
+  `encodeMessage`/`ProtocolStreamDecoder` frame path, including each
+  `VALUE_STREAM` payload type (bool/number/string/bytes) and both
+  `STATE_READ` forms (request, with `value` omitted; response, with it
+  present — §13 lists `STATE_READ` but not a distinct response type, so
+  this is this session's interpretation, documented in `messages.ts`, not
+  something the design doc fixed). Confirmed bytes fields (`DEPLOY`'s
+  `bytecode`/`staticData`) round-trip as native CBOR byte strings, not
+  base64 — deliberately different from `envelope.ts`'s `BytesValue`
+  base64 wrapper, which exists only because the flow-file *JSON* format
+  has no native bytes type; CBOR does, so no wrapping is needed at the
+  wire layer, closing the open question `envelope.ts`'s own comment
+  flagged.
+
+  Adversarial framing (`framing.adversarial.test.ts`, 18 cases): truncated
+  frames (mid-payload, and mid-length-header) wait for more bytes without
+  emitting anything, erroring, or blocking; multiple frames in one read
+  are all extracted in order; one frame split byte-by-byte across many
+  reads reassembles correctly; a length header too short to hold even the
+  type byte is rejected with a `FramingError` and the buffer is dropped
+  rather than left corrupting future parses; 50 consecutive malformed
+  frames in a row never crash and never prevent a subsequent good frame
+  from decoding correctly (the JS-side analog of the fault-isolation
+  soak test, though not the same test — that one needs real hardware and
+  the witness rig, still pending per Tier 0's fault-isolation section);
+  garbage (non-CBOR) payload bytes still frame correctly, since framing.ts
+  never inspects payload content — confirming the framing/codec boundary
+  is where the spec says it should be. Honest limitation documented in
+  `framing.ts`'s own comments, not glossed over: this is a length-prefixed
+  protocol with no resync marker, so if the length header itself is
+  corrupted (as opposed to the payload), there's no way to know where the
+  next real frame boundary is — the decoder detects the untrustworthy
+  header and drops its buffer rather than guessing, but can't always
+  recover mid-stream without the caller reconnecting.
+
+  Version-handshake matrix (`version.matrix.test.ts`): a real 125×125
+  cartesian matrix (major/minor/patch each drawn from {0,1,2,5,10}, so
+  15,625 device/editor pairs, not spot-checked examples) confirms the
+  invariant `allowed === (device.major === editorTarget.major)` holds for
+  every pair, plus that `wipeRisk` is always the exact inverse of
+  `allowed`. Representative-case tests cover the specific wording in
+  §5/§11 directly (same major with an older/newer minor or patch on
+  either side stays safe; a major mismatch in either direction blocks and
+  flags wipe risk).
+
+  `decodeMessageBody` also rejects (all under `MessageDecodeError`, never
+  a raw exception): an unknown message-type byte, a non-map CBOR body,
+  missing required fields, wrong-typed fields, a negative byte count, a
+  malformed nested version map, truncated/garbage CBOR bytes outright,
+  and an empty body — one test per case, plus confirmation that cborg's
+  `strict: true` (this codec's actual configured setting) rejects
+  non-minimal integer encoding using a hand-built byte fixture (cborg's
+  own encoder never produces non-minimal output, so exercising the
+  rejection needs a raw fixture rather than a round-trip).
+
+  76 tests total in this repo now pass (23 pre-existing + 53 new:
+  18 framing + 25 codec/protocol round-trip + 10 version-handshake),
+  `tsc --noEmit` clean.
+
+  **Honest scope gaps, not silently glossed over:** per this task's own
+  briefing, only the browser/JS side is built — there is still no real
+  device-side protocol listener anywhere in this repo
+  (`device-runtime/src/runtime.py` remains the minimal `spawn()` stub),
+  so "both sides" round-trip (the validation plan's original wording
+  above) isn't met yet; that's real, separate Tier 0 work (see "Fault
+  isolation" section) needing hardware to build against safely, not
+  something this pass could or should have forced. The hardware pass
+  (real device round-tripping real messages over real WebSerial) is
+  correspondingly **(pending)** for the same reason. No sandbox
+  MicroPython/hardware was available in this environment, same
+  constraint every prior hardware-touching piece of this project has
+  hit and documented the same way.
 
 ### Fault isolation
 

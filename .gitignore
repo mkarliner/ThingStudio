@@ -5,3 +5,11 @@ dist/
 *.trash
 __pycache__/
 *.pyc
+
+# editor/src and editor/test are TypeScript-only; tsconfig.json has no
+# outDir, so a tsc invocation that doesn't actually respect --noEmit
+# (some npx invocations in sandboxed shells swallow the flag -- use
+# ./node_modules/.bin/tsc directly if in doubt) emits .js next to every
+# .ts file instead of erroring. Never intentional, never committed.
+editor/src/**/*.js
+editor/test/**/*.js

@@ -1,6 +1,7 @@
 # Third-party software in use
 
-Status: living document, last updated 2026-08-13. Tracks every third-party
+Status: living document, last updated 2026-08-13 (this update: `cborg`
+added). Tracks every third-party
 dependency this project actually uses — runtime/platform components,
 editor build tooling, and anything vendored — with its license, so the
 license-compliance due diligence design doc §12 calls for before any
@@ -41,10 +42,14 @@ shipped in any built editor artifact.
 | vitest | 4.1.10 | MIT |
 | @types/node | 26.2.0 | MIT |
 
-No runtime `dependencies` yet — `editor/package.json` has none. Litegraph
-and a CBOR library are the two known future additions (design doc §11,
-§13) once canvas/protocol work actually starts; add them here the same
-day they're installed, not after.
+## Editor runtime dependencies (`editor/package.json`)
+
+| Package | Version installed | License | Notes |
+|---|---|---|---|
+| cborg | 6.1.1 | Apache-2.0 | CBOR codec for the §13 wire protocol (`editor/src/protocol/`). Chosen over cbor-x/cbor2 for strict-by-default decode (rejects indefinite-length items, non-minimal int encodings, duplicate map keys) — matches the wire protocol's adversarial-input requirement more directly than a permissive-by-default decoder would. Zero runtime dependencies, Apache-2.0 (matches this project's own license), ships its own TS types. Installed with `npm install --ignore-scripts`; no install script present in the package. |
+
+Litegraph is the other known future addition (design doc §11) once canvas
+work starts; add it here the same day it's installed.
 
 ## Vendored in the POCs (frozen historical reference, not live v1 dependencies)
 
