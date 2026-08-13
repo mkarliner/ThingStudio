@@ -74,6 +74,7 @@
 # the field).
 
 import sys
+import gc
 import utime
 
 try:
@@ -84,6 +85,21 @@ except ImportError:
 
 def _pin_in(pin_num):
     return machine.Pin(pin_num, machine.Pin.IN)
+
+
+def _arm_irq(pin, handler):
+    """Arms an edge IRQ on `pin`. A real hardware run of this task's own
+    driver script hit a MemoryError ("allocating 16384 bytes") on the
+    FIRST WATCH_EDGES/MEASURE_PWM/HEARTBEAT_WATCH call in a session --
+    almost certainly ESP32's GPIO interrupt service needing a one-time
+    chunk of memory on first use, hitting heap fragmentation (a later
+    call using the identical pin.irq() pattern succeeded once that cost
+    had already been paid). gc.collect() right before arming maximizes
+    contiguous free heap for that one-time allocation -- cheap, and
+    exactly the kind of defensive move worth having regardless of the
+    precise root cause."""
+    gc.collect()
+    pin.irq(trigger=machine.Pin.IRQ_RISING | machine.Pin.IRQ_FALLING, handler=handler)
 
 
 def _pin_out(pin_num):
@@ -136,7 +152,7 @@ def _cmd_watch_edges(args):
 
     try:
         pin = _pin_in(pin_num)
-        pin.irq(trigger=machine.Pin.IRQ_RISING | machine.Pin.IRQ_FALLING, handler=_on_edge)
+        _arm_irq(pin, _on_edge)
     except Exception as e:  # noqa: BLE001
         return ["EDGES_ERR %r" % (e,)]
 
@@ -171,7 +187,7 @@ def _cmd_measure_pwm(args):
 
     try:
         pin = _pin_in(pin_num)
-        pin.irq(trigger=machine.Pin.IRQ_RISING | machine.Pin.IRQ_FALLING, handler=_on_edge)
+        _arm_irq(pin, _on_edge)
     except Exception as e:  # noqa: BLE001
         return ["PWM_ERR %r" % (e,)]
 
@@ -239,7 +255,7 @@ def _cmd_heartbeat_watch(args):
 
     try:
         pin = _pin_in(pin_num)
-        pin.irq(trigger=machine.Pin.IRQ_RISING | machine.Pin.IRQ_FALLING, handler=_on_edge)
+        _arm_irq(pin, _on_edge)
     except Exception as e:  # noqa: BLE001
         return ["HEARTBEAT_ERR %r" % (e,)]
 

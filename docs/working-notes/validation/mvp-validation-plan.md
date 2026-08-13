@@ -303,6 +303,20 @@ the README-per-component convention.
   is the closest either side has gotten to this without a browser or a
   board.
 
+  **Update (2026-08-13, same session, after real hardware went up):** the
+  device-side half of this protocol is now confirmed against real
+  hardware too — `run_fault_isolation_checks.py` round-trips real `HELLO`/
+  `DEPLOY`/`DEPLOY_ACK`/`NODE_ERROR` frames with a real ESP32-C3 over a
+  real serial port (see the "Fault isolation" section's own hardware
+  Results entry for the full detail). What's still literally untested is
+  the **browser** half specifically — `editor/src/protocol/transport.ts`
+  driven by an actual Chrome/Edge tab via `navigator.serial`, not this
+  session's Python/`pyserial` driver script. The wire bytes and framing
+  are identical either way (both go through the same
+  `protocol.encode_message`/`ProtocolStreamDecoder` shapes), so the
+  remaining gap is specifically "does `navigator.serial` behave the same
+  as `pyserial` for this board" — plausible, not yet verified.
+
 ### Fault isolation
 
 - Per-task boundary: deploy a multi-node flow containing one deliberately
@@ -407,19 +421,108 @@ the README-per-component convention.
   frame bytes) never crash the listener, which still accepts a real
   `DEPLOY` immediately after.
 
-  **Not covered by any of the above, honestly still open:** real silicon
-  timing; the witness rig's own `HEARTBEAT_WATCH`/`WATCH_EDGES`/
-  `MEASURE_PWM` physically observing the DUT (`test/hil/witness_firmware.py`
-  is built and its command-parsing/PWM-math logic is unit-tested
-  off-device — 17 tests in `test/hil/test_witness_firmware.py` — but real
-  IRQ-triggered edge capture is inherently a hardware-only concern, never
-  attempted off-device); whether base64/`readline()` is actually necessary
-  on this specific board/port versus provably-safe raw binary reads; and
+  **Not covered by any of the above, honestly still open (as of the
+  first pass):** real silicon timing; the witness rig's own
+  `HEARTBEAT_WATCH`/`WATCH_EDGES`/`MEASURE_PWM` physically observing the
+  DUT (`test/hil/witness_firmware.py` is built and its command-parsing/
+  PWM-math logic is unit-tested off-device — 17 tests in
+  `test/hil/test_witness_firmware.py` — but real IRQ-triggered edge
+  capture is inherently a hardware-only concern, never attempted
+  off-device); whether base64/`readline()` is actually necessary on this
+  specific board/port versus provably-safe raw binary reads; and
   `test/hil/run_fault_isolation_checks.py` itself, which is written
   against this same protocol stack and structurally checked (`python3 -m
   py_compile`) but has not been run against real hardware in this
   environment. I2C is deliberately not wired (per `test/hil/pin-map.md`'s
   own fallback recommendation) — out of scope for this task regardless.
+
+  **Results (2026-08-13, real hardware — two LuatOS CORE-ESP32-C3 boards,
+  MicroPython v1.28.0, wired per `test/hil/pin-map.md`'s GPIO/PWM/heartbeat
+  rows): ALL SIX of `run_fault_isolation_checks.py`'s checks pass.** This
+  is the actual hardware pass the entry above left `(pending)` — Mike
+  wired and flashed both boards; getting from first attempt to a clean run
+  surfaced three real, worth-recording findings, none of them bugs in the
+  listener/protocol code itself:
+
+  - This board class has no auto-reset-on-serial-open circuit (the same
+    quirk `pocs/poc-d/README.md` documented) — `HELLO` fires once at boot,
+    so opening a fresh connection doesn't trigger a fresh one. Fixed by
+    having the driver script prompt for a physical reset at the right
+    moment instead of racing a `HELLO` that may have already fired before
+    anyone was listening.
+  - The "malformed frame mid-transfer" check's first draft sent a
+    genuinely *truncated* frame (a real length header promising more bytes
+    than were sent) immediately followed by a real `DEPLOY`. On real
+    hardware this permanently desynced the stream — a truncated frame
+    legitimately waits for its own completion (framing.py/framing.ts's
+    documented, accepted limitation: no resync marker), so the following
+    `DEPLOY`'s bytes got consumed as "the rest of" the abandoned frame
+    instead of parsed fresh. The listener's own logging showed exactly
+    what happened (`MessageDecodeError`s, never a crash) — this was a test
+    design bug, not a listener bug. Fixed by sending one complete,
+    self-contained malformed frame (correct length header, garbage body)
+    instead, matching the shape the soak test and
+    `framing.adversarial.test.ts` already use successfully.
+  - The 50-frame soak test's first draft sent all 50 lines back-to-back
+    with no pacing and produced corrupted-looking lines partway through (a
+    bare `F64` with no payload, two lines' bytes fused together) —
+    consistent with the ESP32-C3's small USB-CDC RX buffer overflowing
+    under an unpaced burst before the device-side loop could drain it, a
+    transport/hardware limit no amount of application-level parsing can
+    defend against. Fixed with a small (20ms) pacing delay between sends,
+    which tests the actual property under test (does the listener survive
+    50 malformed frames without dying) rather than an unrealistic maximum
+    burst rate.
+  - One real firmware bug, on the witness side (not the DUT/product code):
+    `WATCH_EDGES` failed its first call with `MemoryError: memory
+    allocation failed, allocating 16384 bytes` — almost certainly ESP32's
+    GPIO interrupt service needing a one-time chunk of memory on first
+    use, hit heap fragmentation (a later call using the identical
+    `pin.irq()` pattern, `HEARTBEAT_WATCH`, succeeded once that cost had
+    already been paid elsewhere). Fixed with `gc.collect()` immediately
+    before arming any IRQ in `witness_firmware.py` (`_arm_irq()`), applied
+    to all three IRQ-using commands.
+
+  Per-task boundary: `NODE_ERROR` reported `nodeId=99` (the broken
+  function node), `exceptionType=ValueError`,
+  `exceptionMessage='hil check: deliberately broken'` — correct on every
+  count. The independent chain's GPIO12→witness-GPIO3 transition was
+  physically observed (`WATCH_EDGES` returned edge data including a
+  `value=1` transition), confirming the working chain kept running while
+  the broken one failed, on real silicon under real `uasyncio` scheduling
+  — closing the one gap no off-device test could reach. Worth recording
+  honestly rather than glossing over: the capture returned ~2418 edges
+  clustered in a ~36.5ms burst (not spread across the full 2s watch
+  window) with only one reading `value=1` before settling back to
+  `value=0` readings — real electrical ringing on the GPIO12↔witness-GPIO3
+  jumper, not a software issue. Expected on this specific rig: it's a
+  breadboard setup with quite long patch wires between the two boards,
+  which is exactly the kind of physical layout that turns a fast MCU GPIO
+  edge into visible ringing on an unterminated line. The check only needed
+  to see *a* transition (`any(line.startswith("EDGE ") ...)`), which it
+  did, so this didn't affect the pass/fail result here — but it's a real
+  signal-integrity limit of the current physical rig, not the protocol or
+  firmware, worth fixing (shorter leads, or a series resistor) before this
+  rig is load-bearing for anything needing precise edge *counts* rather
+  than "at least one transition happened." Listener hardening: recovered
+  from the malformed frame and answered the following `DEPLOY` normally
+  (`DEPLOY_ACK`, `freeFlashBytes=1998848, freeRamBytes=152992`).
+  Fault-injection soak: the witness's independent `HEARTBEAT_WATCH`
+  confirmed 4 liveness transitions on the DUT's dedicated heartbeat pin
+  (GPIO10→witness GPIO0) throughout the 50-frame soak — not the DUT's own
+  self-reported output — and the listener answered a further `DEPLOY`
+  immediately afterward (`DEPLOY_ACK`,
+  `freeFlashBytes=1998848, freeRamBytes=152944`), confirming no memory
+  leak across the soak (RAM delta: 48 bytes, noise).
+
+  **Genuinely still open after this pass:** whether base64/`readline()`
+  is actually *necessary* on this port versus provably-safe raw binary
+  reads was not tested either way (this pass validated the briefing's
+  stated default works, not that the alternative doesn't); the
+  breadboard/patch-wire ringing noted above is worth cleaning up (shorter
+  leads or a series resistor) before the rig is load-bearing for anything
+  needing precise edge counts rather than just "did a transition happen";
+  and I2C remains unwired, unchanged from the code-complete entry above.
 
 ## Tier 1 — node set
 

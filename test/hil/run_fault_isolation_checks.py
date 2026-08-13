@@ -207,21 +207,33 @@ def check_per_task_boundary(dut, witness, mpy_cross, tmpdir, results):
 
 def check_listener_hardening_regression(dut, mpy_cross, tmpdir, results):
     """mvp-validation-plan.md: "send a malformed frame mid-transfer,
-    confirm the listener logs and recovers rather than dying." Sends a
-    truncated §13 frame (a real length header promising more bytes than
-    actually follow on the line -- i.e. valid base64 of too few bytes for
-    the length it declares), then confirms a subsequent, valid DEPLOY
-    still succeeds."""
-    # A syntactically-plausible but truncated frame: length header says 20
-    # bytes of type+body follow; only 3 are actually sent.
-    truncated_frame = bytes([0x00, 0x14, 0x02, 0xAA, 0xBB])
-    dut.send_raw_line(F64_PREFIX + base64.b64encode(truncated_frame).decode("ascii"))
+    confirm the listener logs and recovers rather than dying." Sends one
+    complete, self-contained malformed frame (a real length header that
+    exactly matches the bytes sent, with a garbage/wrong-shape body) --
+    NOT a truncated one: framing.py (matching framing.ts's own documented
+    design) treats a genuinely truncated frame as "waiting for more
+    bytes", not an error, so anything sent right after gets consumed as
+    that same frame's continuation rather than parsed fresh -- a real,
+    accepted protocol limitation (no resync marker) this task's own first
+    hardware run surfaced by picking the wrong kind of "malformed" input
+    here. A complete garbage-content frame is both a faithful regression
+    case (POC-D's actual historical bug was an old listener choking on a
+    binary frame *shape* it didn't understand, not a truncated one) and
+    doesn't desync anything that follows -- same shape
+    check_fault_injection_soak already uses successfully, and the same
+    fixture framing.adversarial.test.ts's own "garbage payload... still
+    framed correctly" case uses.
+    """
+    # length=4 (type + 3 payload bytes), type=DEPLOY(2), 3 garbage payload
+    # bytes -- not valid CBOR, but a complete, correctly-bounded frame.
+    malformed_frame = bytes([0x00, 0x04, 0x02, 0xAA, 0xBB, 0xCC])
+    dut.send_raw_line(F64_PREFIX + base64.b64encode(malformed_frame).decode("ascii"))
 
     ok_source = "import runtime\nasync def _flow_0():\n    print('HIL_RECOVERY_CHECK_OK')\nruntime.spawn(_flow_0(), '1')\n"
     bytecode = compile_flow(mpy_cross, tmpdir, "flow_recovery", ok_source)
     dut.send_message({"type": "DEPLOY", "bytecode": bytecode, "staticData": b""})
-    ack = dut.wait_for_message(lambda m: m["type"] == "DEPLOY_ACK", timeout_s=8, description="DEPLOY_ACK after a truncated-frame recovery")
-    results.append(("listener hardening: recovers from a truncated mid-transfer frame and still deploys", ack is not None, ack))
+    ack = dut.wait_for_message(lambda m: m["type"] == "DEPLOY_ACK", timeout_s=8, description="DEPLOY_ACK after a malformed-frame recovery")
+    results.append(("listener hardening: recovers from a malformed mid-transfer frame and still deploys", ack is not None, ack))
 
 
 def check_fault_injection_soak(dut, witness, mpy_cross, tmpdir, results):
@@ -242,6 +254,21 @@ def check_fault_injection_soak(dut, witness, mpy_cross, tmpdir, results):
         else:
             garbage = base64.b64encode(bytes([i % 256]) * 5).decode("ascii")
             dut.send_raw_line(F64_PREFIX + garbage)
+        # A small pacing delay -- this task's own first hardware run sent
+        # all 50 lines back-to-back with zero delay and saw corrupted-
+        # looking lines partway through (e.g. a bare "F64" with no
+        # payload, two lines' bytes fused together) that don't match any
+        # bug in the receive-side parsing (framing.py/cbor.py both bounds-
+        # check everything and log cleanly on real malformed input) --
+        # consistent with the ESP32-C3's small USB-CDC RX buffer
+        # overflowing under an unpaced 50-line burst before the device-side
+        # loop can drain it, a transport/hardware limit no amount of
+        # application-level hardening can defend against. This test's
+        # actual question is "does the listener survive 50 malformed
+        # frames without dying", not "can it survive a burst rate that
+        # exceeds the physical RX buffer" -- pacing tests the former
+        # without conflating it with the latter.
+        time.sleep(0.02)
 
     heartbeat_reply = None
     deadline = time.time() + 5
@@ -274,6 +301,18 @@ def main():
         dut = DutLink(args.dut_port)
         witness = WitnessLink(args.witness_port)
         try:
+            # This board class has no auto-reset-on-serial-open circuit
+            # (confirmed on real hardware during this task's own bring-up,
+            # same quirk pocs/poc-d/README.md documents) -- HELLO is sent
+            # exactly once, at boot, so opening this connection is not
+            # itself a "connect" event the DUT can react to. Rather than
+            # race a boot-time HELLO that may have already fired before
+            # this script started listening, discard whatever's sitting in
+            # the OS-level input buffer from before this connection and
+            # prompt for a physical reset now, so the HELLO wait below is
+            # actually waiting for something that hasn't happened yet.
+            dut.ser.reset_input_buffer()
+            input("Press the DUT board's physical RESET button now, then press Enter here to continue...")
             dut.wait_for_message(lambda m: m["type"] == "HELLO", timeout_s=8, description="DUT's boot-time HELLO")
             pong = witness.command("PING", ["PONG", "ERR"])
             results.append(("witness responds to PING", pong and pong[-1] == "PONG", pong))
