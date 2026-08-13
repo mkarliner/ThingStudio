@@ -32,7 +32,7 @@ device-runtime/                 MicroPython: listener, fault isolation, state st
 mpy-cross-wasm/                 POC-B's build recipe + build artifacts, vendored (not an npm package)
 test/hil/                       witness firmware, pin-map config, hardware-in-the-loop scripts (manual, not CI)
 tools/                          license-scan script, build scripts
-poc-a/ poc-b/ poc-c/ poc-d/     kept as-is, frozen, historical reference
+pocs/poc-a/ pocs/poc-b/ pocs/poc-c/ pocs/poc-d/     kept as-is, frozen, historical reference
 .github/workflows/
 ```
 

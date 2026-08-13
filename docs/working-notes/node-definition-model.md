@@ -3,8 +3,8 @@
 Status: reference note, not a spec. Written 2026-08-11 during MVP planning, to
 have something concrete to point at when node-related architecture calls come
 up, rather than re-deriving this from §6/§7 of the design doc each time.
-Grounded in what POC-D actually built (`poc-d/nodes.js`, `poc-d/compiler.js`,
-`poc-d/harness.py`), generalized toward what the real v1 compiler (§6) needs.
+Grounded in what POC-D actually built (`pocs/poc-d/nodes.js`, `pocs/poc-d/compiler.js`,
+`pocs/poc-d/harness.py`), generalized toward what the real v1 compiler (§6) needs.
 Update this note as that generalization actually happens — it should track
 reality, not the other way around.
 
@@ -15,7 +15,7 @@ have to agree with each other, matching §7's "small JSON descriptor for the
 editor... and a Python module implementing the node's behavior":
 
 1. **Editor descriptor** — currently a hand-written Litegraph node class
-   (`poc-d/nodes.js`): a `properties` object (the node's configurable state —
+   (`pocs/poc-d/nodes.js`): a `properties` object (the node's configurable state —
    `pin`, `code`, `payloadValue`), typed input/output ports declared via
    `addInput`/`addOutput` (the type string is what §6's wire-connect-time
    type check reads), and widgets that edit `properties` from the canvas.
@@ -34,7 +34,7 @@ editor... and a Python module implementing the node's behavior":
 
 ## Three codegen patterns POC-D already demonstrates
 
-`poc-d/compiler.js` is a hardcoded compiler for exactly one graph shape
+`pocs/poc-d/compiler.js` is a hardcoded compiler for exactly one graph shape
 (`inject → function → gpio_out`), not a general per-node-type registry — see
 "What POC-D deliberately doesn't generalize" below. But the *shape* of what
 it emits per node type is real signal for what the general case needs to
@@ -105,9 +105,9 @@ inter-node contract, more than any shared function signature.
 
 Worth having straight, since it shapes what a node's device-side code can
 assume: the whole compiled flow is one generated Python module
-(`poc-d/compiler.js`'s output), cross-compiled client-side to one `.mpy` file,
+(`pocs/poc-d/compiler.js`'s output), cross-compiled client-side to one `.mpy` file,
 written to `/_flow.mpy` on the device, and `import`ed as a whole
-(`poc-d/harness.py`'s `_deploy_mpy`) — its top-level code runs immediately on
+(`pocs/poc-d/harness.py`'s `_deploy_mpy`) — its top-level code runs immediately on
 import, which is what calls `harness_api.spawn(...)` to register the flow's
 coroutines with the runtime's task tracking (needed so a redeploy can cancel
 exactly those tasks). There's no per-node deploy step and no per-node module

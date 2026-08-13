@@ -1,8 +1,9 @@
 # device-runtime/src/runtime.py
 #
 # The device-side module a compiled flow imports to reach the scheduler --
-# the real, named successor to poc-a/poc-d's harness.py (see the naming
-# decision in docs/working-notes/repo-structure-and-conventions.md: no
+# the real, named successor to pocs/poc-a's and pocs/poc-d's harness.py
+# (see the naming decision in
+# docs/working-notes/repo-structure-and-conventions.md: no
 # "harness" in real v1 code). Deliberately minimal right now: this is the
 # contract the compiler's generated code (editor/src/compiler) already
 # depends on -- spawn() and a shared asyncio handle -- not yet the real
@@ -22,7 +23,7 @@
 import uasyncio as asyncio
 
 _tasks = []  # tasks spawned by the deployed flow -- tracked so a redeploy
-             # can cancel exactly these, same bookkeeping as poc-a/poc-d.
+             # can cancel exactly these, same bookkeeping as pocs/poc-a and pocs/poc-d.
 
 
 def spawn(coro):

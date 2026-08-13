@@ -1,6 +1,6 @@
 // editor/src/node-library/inject.ts
 //
-// Ported from poc-d/nodes.js (editor descriptor) and poc-d/compiler.js
+// Ported from pocs/poc-d/nodes.js (editor descriptor) and pocs/poc-d/compiler.js
 // (codegen), generalized onto the real registry contract
 // (compiler/node-definition.ts). Pattern 2 from node-definition-model.md:
 // folded into control flow, not a callable -- inject's properties become

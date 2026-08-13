@@ -32,10 +32,10 @@ Not built yet. The v1 runtime is a MicroPython-based image flashed once via USB;
 
 Nothing production-shaped exists, but the POC folders are real, runnable code, each with its own README (scope, setup, and dated results):
 
-- **`poc-a/`** — the core live-redeploy loop: a hand-written MicroPython program deployed to real ESP32-C3 hardware over WebSerial, no compiler involved. The central latency/reliability claim, measured.
-- **`poc-b/`** — `mpy-cross` running as WASM, entirely client-side in a browser tab, compiling real Python to real bytecode.
-- **`poc-c/`** — the node/wire canvas, comparing Litegraph.js against Drawflow with mocked node behavior (no device involved).
-- **`poc-d/`** — the full pipeline merged: canvas → real compiler → real bytecode → real WebSerial deploy → running on real ESP32-C3 hardware.
+- **`pocs/poc-a/`** — the core live-redeploy loop: a hand-written MicroPython program deployed to real ESP32-C3 hardware over WebSerial, no compiler involved. The central latency/reliability claim, measured.
+- **`pocs/poc-b/`** — `mpy-cross` running as WASM, entirely client-side in a browser tab, compiling real Python to real bytecode.
+- **`pocs/poc-c/`** — the node/wire canvas, comparing Litegraph.js against Drawflow with mocked node behavior (no device involved).
+- **`pocs/poc-d/`** — the full pipeline merged: canvas → real compiler → real bytecode → real WebSerial deploy → running on real ESP32-C3 hardware.
 
 Each POC is fully self-contained (its own vendored dependencies) — deliberate for throwaway independence, not a pattern real v1 will follow (design doc §14).
 
@@ -45,7 +45,7 @@ Each POC is fully self-contained (its own vendored dependencies) — deliberate 
 docs/
   thingstudio-design-doc.md    the design doc — read this in full before proposing architecture changes
   working-notes/                active planning: MVP scope, node-authoring model, validation plan
-poc-a/ poc-b/ poc-c/ poc-d/     proof-of-concept spikes, each self-contained with its own README
+pocs/poc-a/ pocs/poc-b/ pocs/poc-c/ pocs/poc-d/     proof-of-concept spikes, each self-contained with its own README
 ```
 
 Real v1's repo layout (single monorepo: editor, device runtime glue, node library) has a target shape now, not yet executed — see `docs/working-notes/repo-structure-and-conventions.md`.

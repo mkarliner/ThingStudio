@@ -19,15 +19,15 @@ design doc and each `poc-*/README.md`:
   question is resolved: Litegraph.js.** It gave type-checked wiring, live
   value propagation, and multi-select natively; Drawflow needed all three
   hand-rolled and still can't do multi-select. Full comparison in
-  `poc-c/README.md`.
+  `pocs/poc-c/README.md`.
 - **POC-D** — the full pipeline merged: canvas → real compiler → real
   `.mpy` bytecode → real WebSerial deploy → runs on real ESP32-C3 hardware,
   confirmed working. Getting there surfaced real hardware-only bugs (see
-  "Hard-won constraints" below) — worth reading `poc-d/README.md`'s "What
+  "Hard-won constraints" below) — worth reading `pocs/poc-d/README.md`'s "What
   broke and how it was fixed" before designing v1's protocol/runtime.
 
-Nothing resembling a real v1 repo exists yet — only the throwaway `poc-a/`
-through `poc-d/` folders plus the design doc. This is greenfield.
+Nothing resembling a real v1 repo exists yet — only the throwaway `pocs/poc-a/`
+through `pocs/poc-d/` folders plus the design doc. This is greenfield.
 
 ## Task 1: prioritize the MVP feature list
 

@@ -5,7 +5,7 @@
 //
 // "Behaviorally identical" -- not textually identical. The general
 // compiler is expected to produce different variable/function names and
-// module structure than poc-d/compiler.js's hardcoded version (it uses
+// module structure than pocs/poc-d/compiler.js's hardcoded version (it uses
 // `runtime` not `harness_api`, generates `_function`/`_gpio_out` not
 // `_node_function`/`_node_gpio_out`, etc.) -- what has to match is what
 // the code actually does when run: initialize pin 12 as an output, then
@@ -28,11 +28,11 @@ import { buildRegistry } from "../src/node-library/registry.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// The exact graph poc-d/compiler.js hardcoded support for -- see
-// poc-d/compiler.js and poc-d/nodes.js's default properties: inject's
+// The exact graph pocs/poc-d/compiler.js hardcoded support for -- see
+// pocs/poc-d/compiler.js and pocs/poc-d/nodes.js's default properties: inject's
 // default bool payload `true` and `manual` repeat, function as a
 // passthrough, gpio_out on pin 12 (this board's onboard LED, per
-// poc-a/poc-d's own comments about GPIO12/13 being the wired ones).
+// pocs/poc-a's and pocs/poc-d's own comments about GPIO12/13 being the wired ones).
 function pocDGraph(): GraphData {
   return {
     nodes: [

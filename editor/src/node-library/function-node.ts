@@ -1,6 +1,6 @@
 // editor/src/node-library/function-node.ts
 //
-// Ported from poc-d/nodes.js and poc-d/compiler.js. Pattern 3 from
+// Ported from pocs/poc-d/nodes.js and pocs/poc-d/compiler.js. Pattern 3 from
 // node-definition-model.md: the one node type whose device-side
 // implementation is written by the flow author, not the node's
 // implementer -- the `code` property is inlined verbatim as the

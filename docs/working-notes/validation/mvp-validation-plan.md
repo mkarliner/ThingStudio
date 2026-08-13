@@ -126,7 +126,7 @@ the README-per-component convention.
   every node type in isolation, before any graph-level test.
 - **Results (2026-08-12):** `editor/src/compiler` built — a per-node-type
   codegen registry (`node-definition.ts`) plus a topological compiler
-  (`compile.ts`), replacing `poc-d/compiler.js`'s hardcoded 3-node
+  (`compile.ts`), replacing `pocs/poc-d/compiler.js`'s hardcoded 3-node
   special case. Regression check passed: POC-D's exact
   `inject → function → gpio_out` graph recompiles and, run against mock
   `machine`/`runtime` modules under real CPython (this sandbox has no
@@ -142,7 +142,7 @@ the README-per-component convention.
   beyond POC-D's single hardcoded shape: multiple independent sources
   compile to independent spawned coroutines, and a multi-node transform
   chain (two function nodes before the sink) compiles and runs correctly
-  — neither shape was possible in `poc-d/compiler.js`
+  — neither shape was possible in `pocs/poc-d/compiler.js`
   (`editor/test/compiler.general.test.ts`). One real bug caught by this
   testing, not just a design worry: an early version nested the
   sleep/yield inside the same `if msg is not None:` block as downstream

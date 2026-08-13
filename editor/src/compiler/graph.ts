@@ -2,7 +2,7 @@
 //
 // The graph input shape the compiler consumes: Litegraph's
 // `LGraph.serialize()` output (`{ nodes, links }`) -- the same format
-// poc-d/compiler.js already used. Keeping this shape means whatever the
+// pocs/poc-d/compiler.js already used. Keeping this shape means whatever the
 // real canvas integration produces later doesn't need translating.
 
 export interface GraphNode {

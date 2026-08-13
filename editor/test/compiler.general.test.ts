@@ -1,6 +1,6 @@
 // Beyond the POC-D regression: proof the compiler actually generalizes
 // past a single hardcoded 3-node chain, since that's the whole point of
-// replacing poc-d/compiler.js (docs/working-notes/mvp-feature-priorities.md's
+// replacing pocs/poc-d/compiler.js (docs/working-notes/mvp-feature-priorities.md's
 // Tier 0: "a topological walk over arbitrary graphs... instead of one
 // function that already knows every node type by name").
 

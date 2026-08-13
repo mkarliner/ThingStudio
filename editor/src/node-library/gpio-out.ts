@@ -1,6 +1,6 @@
 // editor/src/node-library/gpio-out.ts
 //
-// Ported from poc-d/nodes.js and poc-d/compiler.js. Pattern 1 from
+// Ported from pocs/poc-d/nodes.js and pocs/poc-d/compiler.js. Pattern 1 from
 // node-definition-model.md: a native primitive call, parameterized by
 // the node's configured property (`pin`) -- no separately-shipped
 // "gpio_out module", the codegen IS the device-side implementation.

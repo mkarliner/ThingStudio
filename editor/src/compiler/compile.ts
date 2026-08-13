@@ -1,7 +1,7 @@
 // editor/src/compiler/compile.ts
 //
 // The general graph -> Python compiler (design doc §6), replacing
-// poc-d/compiler.js, which only knew exactly one hardcoded 3-node shape
+// pocs/poc-d/compiler.js, which only knew exactly one hardcoded 3-node shape
 // (`inject -> function -> gpio_out`, checked for by literally counting
 // each type). This walks an arbitrary graph via a per-node-type codegen
 // registry instead -- the contract in node-definition.ts, made real from
