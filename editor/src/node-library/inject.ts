@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 // editor/src/node-library/inject.ts
 //
 // Ported from pocs/poc-d/nodes.js (editor descriptor) and pocs/poc-d/compiler.js

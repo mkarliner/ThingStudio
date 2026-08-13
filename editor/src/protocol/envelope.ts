@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 // editor/src/protocol/envelope.ts
 //
 // The msg envelope every node's generated code reads and writes, per

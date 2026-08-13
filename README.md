@@ -58,6 +58,7 @@ Real v1's repo layout (single monorepo: editor, device runtime glue, node librar
 - `docs/working-notes/node-definition-model.md` — how a node is actually defined (editor descriptor + device-side codegen), grounded in `poc-d`'s real compiler.
 - `docs/working-notes/validation/mvp-validation-plan.md` — how each tier of the feature list gets confirmed done, including the two-board hardware-in-the-loop test rig design.
 - `docs/working-notes/repo-structure-and-conventions.md` — the target repo layout, language/tooling choices, and CI split this "Project layout" section is working toward.
+- `docs/third-party-licenses.md` — every third-party dependency in use (runtime/platform, editor tooling, vendored), with its license. Living document, kept current per `CLAUDE.md`.
 
 ## License
 

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 // editor/src/compiler/compile.ts
 //
 // The general graph -> Python compiler (design doc §6), replacing

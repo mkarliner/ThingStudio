@@ -1,0 +1,34 @@
+name: CI
+
+# Runs what's actually automatable per docs/working-notes/validation/mvp-validation-plan.md:
+# off-device tests only. Hardware-in-the-loop tests (test/hil/) need the
+# physical witness+DUT rig and stay a manual, documented local gate --
+# see docs/working-notes/repo-structure-and-conventions.md's CI section.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  editor:
+    name: editor (typecheck + test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: editor
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: editor/package-lock.json
+      - run: npm ci --ignore-scripts
+      - run: npx tsc --noEmit
+      - run: npm test
+
+  # device-runtime: headless MicroPython unix-port tests -- not added yet.
+  # device-runtime/test/ is still a placeholder (no unix-port build wired
+  # up in this environment). Add a job here once that exists; don't run
+  # this job against real hardware under any circumstances -- that's
+  # test/hil/'s job, and it's deliberately excluded from CI.

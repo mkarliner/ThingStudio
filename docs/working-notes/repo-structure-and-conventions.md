@@ -130,10 +130,18 @@ file exists; not adopted yet either.
 
 ## Open follow-ups this note doesn't resolve
 
-- Creating the actual `LICENSE` file and header convention.
-- The node codegen registry's concrete interface (flagged as
-  uncommitted in `node-definition-model.md` — needs to go from sketch to
-  real TypeScript types before the first node type is built against it).
-- First real `package.json`/`vite.config.ts`/`tsconfig.json` scaffolding
-  — this note describes the target shape, doesn't create it.
-- The actual `.github/workflows/` CI file.
+Done since this note was written: the `LICENSE` file and SPDX header
+convention, the node codegen registry's concrete interface
+(`editor/src/compiler/node-definition.ts`), the real
+`package.json`/`vite.config.ts`/`tsconfig.json` scaffolding, and
+`.github/workflows/ci.yml`. Still open:
+
+- The real wire protocol (§13) — CBOR framing, message types, the
+  version-handshake matrix. Next up per
+  `working-notes/mvp-feature-priorities.md`'s Tier 0.
+- `device-runtime`'s headless MicroPython unix-port test setup — nothing
+  wired up yet, `ci.yml` has a placeholder job comment rather than a fake
+  job for it.
+- Everything needing physical hardware (fault isolation validation, the
+  witness+DUT rig itself) — blocked on that, tracked in the validation
+  plan, not something to force from here.

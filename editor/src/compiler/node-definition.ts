@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 // editor/src/compiler/node-definition.ts
 //
 // The node codegen registry contract sketched in

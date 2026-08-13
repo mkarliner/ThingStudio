@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 // editor/src/compiler/graph.ts
 //
 // The graph input shape the compiler consumes: Litegraph's

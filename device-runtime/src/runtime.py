@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 # device-runtime/src/runtime.py
 #
 # The device-side module a compiled flow imports to reach the scheduler --

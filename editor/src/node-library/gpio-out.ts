@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 // editor/src/node-library/gpio-out.ts
 //
 // Ported from pocs/poc-d/nodes.js and pocs/poc-d/compiler.js. Pattern 1 from

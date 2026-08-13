@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import type { NodeDefinition } from "../compiler/node-definition.js";
 import { functionNode } from "./function-node.js";
 import { gpioOutNode } from "./gpio-out.js";

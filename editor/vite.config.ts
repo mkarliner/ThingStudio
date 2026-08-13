@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /// <reference types="vitest/config" />
 import { defineConfig } from "vite";
 

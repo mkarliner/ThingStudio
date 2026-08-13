@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "description": "Thingstudio browser editor: canvas, compiler, protocol client, node library, flow file handling.",
+  "license": "Apache-2.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

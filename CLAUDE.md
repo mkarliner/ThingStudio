@@ -20,3 +20,7 @@ Warn Mike before installing or adding any npm/Node.js package (dependency or dev
 - **Always run `npx` with `--no`** (e.g. `npx --no <pkg>`) when the package isn't already a project dependency, even for a "just checking something quickly" one-off. Without `--no`, npm's own docs say it normally prompts before installing a missing package — but in a non-interactive shell (exactly what this environment is) it silently assumes `--yes` and installs without asking. `--no` makes npm refuse and error instead, which is the actual enforcement mechanism behind the rule above, not just a reminder to be careful.
 
 Not every practice in that doc applies here — the maintainer-side items (2FA, provenance/OIDC publishing) are only relevant if this project ever publishes its own packages, not to installing dependencies.
+
+## Third-party software tracking
+
+`docs/third-party-licenses.md` is the running ledger of every third-party dependency in use — runtime/platform components, editor build tooling, and anything vendored — with its license. Keep it current in the same change, not batched up for later: any new npm package (already requires the flag-and-approve step above), any newly vendored library, or any platform/runtime component decision (a different ESP-IDF version, a different MicroPython fork, etc.) gets a line added or updated there immediately, pulling version/license straight from the installed package metadata rather than from memory.
