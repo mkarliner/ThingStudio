@@ -267,6 +267,48 @@ pipeline driven by hardcoded buttons.
     actually fire correctly against real hardware, both with and without
     a reset after Connect) still Mike's to do, same as this session's
     other device-touching changes.
+  - **2026-08-14 (later session, policy question raised directly by
+    Mike, not a build): how closely should the canvas copy Node-RED?**
+    Motivating example: Node-RED lets you drag a node and drop it onto a
+    wire to auto-splice it into the flow; Thingstudio today only offers
+    click-on-wire → menu insert. Rather than a blanket "match Node-RED"
+    or "stay distinct" call, settled on three separate axes, each with
+    its own answer, so this doesn't get re-litigated per feature:
+    - **Mental model / semantics** — the `msg` envelope, nodes-and-wires
+      as the unit of programming, one Deploy button pushing the whole
+      flow, a debug sidebar. Always match Node-RED — this isn't really
+      "copying visuals," it's §1/§2's actual value proposition and
+      already the design doc's committed position, not open to a
+      distinct-identity argument.
+    - **High-frequency interaction affordances** (drag-to-splice,
+      multi-select, double-click to edit) — a case-by-case cost-vs-
+      frequency call, not a blanket policy either way. Drag-to-splice
+      specifically: genuinely one of Node-RED's best-known, most-used
+      gestures (argues for eventually matching it), but Litegraph has no
+      built-in support for it — POC-C's library comparison never tested
+      for it, since neither candidate offered it, so building it means
+      real custom canvas code (hit-testing a node drag against nearby
+      links mid-drag, splitting the link, rewiring two new ones),
+      comparable in scope to the already-deferred compact-node-appearance
+      item above. Not core-loop-blocking, though — click-on-wire-to-
+      insert is a slower fallback, not a broken one — so this is a real,
+      scoped, worth-eventually item, same tier as compact-node-
+      appearance, not urgent. Not scoped as a design yet, not started.
+    - **Visual chrome** (colors, fonts, exact node pixel shape) — free to
+      diverge, arguably better to: costs nothing functionally, Node-RED
+      users already expect visual variety across flow tools, and
+      matching too closely risks implying feature parity Thingstudio
+      doesn't have (a genuinely different runtime model — compiled
+      MicroPython on-device, not a Node.js server — behind a
+      look-alike UI invites the wrong expectations). The already-deferred
+      compact-node-appearance item above falls in this bucket -- free to
+      pursue whenever, not required for Node-RED users to feel at home.
+    - **One hard constraint across all three axes**: never copy an
+      affordance that implies a capability that isn't actually there
+      (e.g., don't visually suggest live in-place editing if it's
+      secretly a full redeploy underneath) — a UX-level version of
+      `CLAUDE.md`'s fault-handling priority, applied to honesty-of-
+      affordance rather than error handling.
 
 ## Explicitly still out of v1 (§10, unchanged by this session)
 

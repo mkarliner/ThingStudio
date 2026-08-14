@@ -117,12 +117,19 @@ his own browser against his flashed board, reporting back what he sees.
   addendum. Deliberately kept separate from that entry's harder
   join/synchronization half (buffering, timeouts, N-way waits) — plain
   context get/set needs none of that. Not started.
-- **Untried hands-on**: a real repeat-interval `inject` (`1s`/`5s`/`30s`,
-  not `manual`) — lower priority, was on the open list before this
-  session and never actually gotten to, since timer/error-attribution/
-  save-load took priority instead. Also untried: disconnect mid-flow,
-  reconnect behavior, and anything I2C/SPI (still gated on hardware
-  availability, unchanged from earlier briefings).
+- ~~**Untried hands-on**: a real repeat-interval `inject`.~~ **Confirmed
+  hands-on, later session (2026-08-14 continuation):** `inject` with
+  `repeat: "1s"` deployed and fired on its own, no redeploy needed per
+  tick — the `repeatMs > 0` branch (compiler wraps it in
+  `while True: ... await asyncio.sleep_ms(...)`), previously only
+  exercised off-device. Distinct from the flashing-LED `context` case
+  above, which used `manual` repeat and toggled via redeploy, not an
+  on-device timer loop — worth being precise about since it's an easy
+  mix-up (confirmed by asking directly rather than assuming). `5s`/`30s`
+  not separately re-tried — same code path, same `REPEAT_MS` table
+  (`inject.ts`), no reason to expect a different result. Still untried:
+  disconnect mid-flow, reconnect behavior, and anything I2C/SPI (still
+  gated on hardware availability, unchanged from earlier briefings).
 - **Three medium-term infra needs**, raised out of sequence, not scoped
   as designs yet: static site for editor hosting, a documentation site,
   and a Tasmota-style runtime install page (which turns out to need
