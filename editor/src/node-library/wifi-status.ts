@@ -27,6 +27,20 @@
 // legitimately query/drive the same one physical interface through
 // different Python object handles -- see mqtt-shared.ts for the detail).
 //
+// Possible future enhancement, not built: every network node in this
+// batch (this one, http-request.ts, and -- more deeply, see
+// mqtt-shared.ts -- the MQTT nodes) hardcodes exactly one interface,
+// network.WLAN(network.STA_IF), with no per-node way to pick a different
+// one. Fine for every board in design doc §3 today (one WiFi radio each,
+// no Ethernet in scope), but the most likely real case that would need
+// it is a board with both WiFi and a wired Ethernet add-on (e.g. a
+// WIZnet W5500 over SPI) wanting network traffic over Ethernet instead
+// of/alongside WiFi. Adding that would mean an "interface" property on
+// each network node, keying the shared setup statement by interface
+// instead of the fixed "wifi-sta" string, and -- the harder part --
+// working around mqtt_as's own internal STA_IF hardcoding for the MQTT
+// nodes specifically (see mqtt-shared.ts). Not scoped or started.
+//
 // Known gap, not silently assumed away: if two network nodes in one flow
 // configure *different* ssid/password values, mergeSetup's dedup keeps
 // whichever node's code was generated first and silently drops the rest

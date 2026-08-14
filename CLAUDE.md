@@ -2,6 +2,10 @@
 
 Orientation for anyone (human or Claude) picking this project up: `docs/thingstudio-design-doc.md` is the design doc, `docs/working-notes/` is active planning. Read the design doc in full before proposing architecture changes.
 
+## Engineering priority: fault handling over happy-path behavior
+
+The measure of a good system is not how well it works but how well it fails. When a design or implementation choice trades off clarity/robustness of fault handling against the happy path, fault handling generally takes priority — timeouts, error attribution, degradation behavior, and recovery paths are not secondary polish added once the happy path works, they're load-bearing. This is already the working convention this project applies to hardware/protocol work (§5's fault isolation, the wire protocol's adversarial framing tests, bounded timeouts on network I/O) — worth stating explicitly so it's applied consistently to new work too, not just re-derived per feature.
+
 ## Commits
 
 Prompt Mike at suitable points to commit — don't assume auto-commit and don't let uncommitted work pile up silently. Suitable points: after a coherent unit of work lands (a doc section resolved, a feature/module working), before starting something new or risky, and at the end of a work session regardless of how small the change was.

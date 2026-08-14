@@ -120,4 +120,75 @@ describe("thingstudio/mqtt_publish node", () => {
     expect(result.statements?.[0]?.code).toContain("_cfg['port'] = 1883");
     expect(result.functionBody).toContain("qos=0");
   });
+
+  // The "connect wifi, connect mqtt, then do mqtt things" ordering
+  // question: within one node's own function body this is trivially true
+  // (ordinary sequential Python), but the interesting case is TWO
+  // independently-triggered chains sharing one broker client, both
+  // reaching mqttEnsureConnectedSnippet's "not connected yet" check
+  // before either has actually finished connecting. Every other test in
+  // this file only proves "already connected, skip" (pymock's spawn()
+  // runs each spawned chain to completion via its own asyncio.run() call
+  // before the next one starts -- see that fixture's own header -- so
+  // two chains never actually race there). This test bypasses compile()/
+  // spawn() entirely and drives both function bodies through a REAL
+  // concurrent asyncio.gather(), with an artificial delay inside
+  // connect() (pymock's MQTTClient.CONNECT_DELAY_S) long enough to give
+  // a genuine window for both coroutines to reach the "not connected"
+  // check before either has set the flag -- proving the
+  // mqttEnsureConnectedSnippet double-checked-lock actually serializes
+  // real contention, not just reasoned about on paper.
+  it("two chains racing to connect the same client only actually connect once", () => {
+    // A real dedup'd ctx (matching compile.ts's own uniqueName logic), not
+    // the fixed `(hint) => "_"+hint` used elsewhere in this file -- that
+    // fixed version is fine when only one codegen call ever happens per
+    // test, but here TWO codegenSink calls need genuinely distinct
+    // function names, exactly as real compilation would produce. Using
+    // the fixed version here silently caused the second `async def`
+    // to redefine (shadow) the first at module scope -- caught by this
+    // test's own first run, not assumed safe.
+    const used = new Set<string>();
+    const ctxShared: CodegenContext = {
+      uniqueName(hint: string): string {
+        let candidate = `_${hint}`;
+        let i = 1;
+        while (used.has(candidate)) candidate = `_${hint}_${i++}`;
+        used.add(candidate);
+        return candidate;
+      },
+    };
+    const cfg = { broker: "shared.broker", port: 1883, topic: "t1", ssid: "s" };
+    const resultA = mqttPublishNode.codegenSink!(node(cfg), ctxShared);
+    const resultB = mqttPublishNode.codegenSink!(node({ ...cfg, topic: "t2" }), ctxShared);
+    // Both nodes target the same broker/port, so both proposed setup
+    // statements are byte-identical (mqtt-shared.ts's whole point) --
+    // emit it once, exactly like compile.ts's mergeSetup dedup would.
+    expect(resultA.statements?.[0]?.code).toBe(resultB.statements?.[0]?.code);
+
+    const lines = [
+      "import asyncio",
+      ...(resultA.imports ?? []),
+      resultA.statements![0]!.code,
+      "",
+      `async def ${resultA.functionName}(msg):`,
+      ...resultA.functionBody.split("\n").map((l) => `    ${l}`),
+      "",
+      `async def ${resultB.functionName}(msg):`,
+      ...resultB.functionBody.split("\n").map((l) => `    ${l}`),
+      "",
+      "async def _main():",
+      "    mqtt_as.MQTTClient.CONNECT_DELAY_S = 0.05",
+      `    await asyncio.gather(${resultA.functionName}({'payload': 'a', 'topic': ''}), ${resultB.functionName}({'payload': 'b', 'topic': ''}))`,
+      "    print('CONNECT_CALLS', mqtt_as.CLIENTS[-1].connect_calls)",
+      "",
+      "asyncio.run(_main())",
+    ];
+    const output = runGenerated(lines.join("\n"));
+    expect(output).toContain("CONNECT_CALLS 1");
+    // Both still actually published -- the second chain wasn't dropped or
+    // errored while waiting on the lock, just delayed until connect()
+    // (started by the first chain) finished.
+    expect(output).toContain("MQTT_PUBLISH topic='t1'");
+    expect(output).toContain("MQTT_PUBLISH topic='t2'");
+  });
 });

@@ -186,6 +186,88 @@ blocking Tier 1's software-only node batch (boolean/arithmetic/
 comparator/variable-get-set/debug all ship stateless for now), but worth
 tracking here so it doesn't get rediscovered from scratch later.
 
+Added 2026-08-14, flagged during network-node review rather than built:
+**connection-state gate/router nodes.** Raised as a possible answer to
+"how does a flow author explicitly react to WiFi/MQTT not being ready
+yet," distinct from the lazy-connect-and-lock handling already built into
+`http_request`/`mqtt_publish`/`mqtt_subscribe` (`mqtt-shared.ts`'s
+`mqttEnsureConnectedSnippet`, verified under real concurrent contention --
+see `mvp-validation-plan.md`'s 2026-08-14 addendum) -- that mechanism
+makes network nodes correct with nothing extra wired, this is about
+giving a flow author visibility/control on top of that, not a
+prerequisite for it. Two shapes, different cost:
+
+- **Single-output pass-or-drop gate** (`wifi_status`/`mqtt_status` as a
+  *transform* rather than only a source): checks `.isconnected()` and
+  either returns `msg` unchanged or `None` to drop it. Effectively free --
+  `compile.ts` already supports a transform returning `None` to stop
+  propagation (the function node's `return None` case, exercised by
+  `compiler.general.test.ts`), so this needs no compiler change, just a
+  new node (or a second codegen mode on the existing `wifi_status` node)
+  and its off-device tests.
+- **Two-output status router** (route to one of two wires depending on
+  connected/not-connected, rather than pass-or-drop on one wire): a
+  materially bigger feature, not a bigger version of the gate above.
+  Nothing in the current model supports it -- every `NodeDefinition`
+  produces exactly one output; fan-out (already built, see the DAG work
+  above) *broadcasts* the same message to every wire a node's output
+  feeds, it doesn't *route* to a specific wire based on a condition.
+  `node-definition.ts`'s `SourceCodegenResult`/`TransformCodegenResult`/
+  `SinkCodegenResult` and the graph model (`graph.ts`'s `GraphLink`,
+  which already carries an `origin_slot` -- currently always `0`) would
+  need a real multi-output-port contract. Worth designing as a generic
+  switch/router primitive (Node-RED's own `switch` node is the obvious
+  precedent) rather than something wifi/mqtt-specific, since "route by a
+  condition" is a need that'll recur (comparator results, HTTP status
+  codes, anything) -- building a one-off wifi/mqtt version now would
+  likely need redoing once a real router exists.
+
+Neither started. Listed here for prioritization, not scoped as a design
+yet.
+
+**Refinement, same day:** the motivating use case is a stream of
+hardware-event messages (a GPIO/timer/sensor source firing repeatedly)
+with no network connection available yet -- and "drop" is only one of
+three real policies worth wanting for what happens to a message that
+arrives while disconnected:
+
+- **Drop** -- the pass-or-drop gate above covers this exactly, as
+  described.
+- **Keep only the latest** -- coalesce to one slot: each new message
+  overwrites whatever's held, and the held value gets sent once the
+  connection returns. Cheap, fixed (one message's worth) memory --
+  the natural default for something like "publish current sensor
+  reading," where only the most recent value matters.
+- **Save all, bounded** -- queue up to N messages while disconnected,
+  flush in order once reconnected, drop-oldest (not drop-newest, not an
+  unbounded grow) once full. The vendored `mqtt_as`'s own `MsgQueue`
+  (`device-runtime/src/vendor/mqtt_as/`) already implements exactly this
+  eviction shape for *inbound* subscribed messages waiting to be read --
+  a validated precedent for the bounded-ring-buffer pattern, though it
+  isn't directly reusable here: that queue holds messages arriving from
+  the broker waiting to be consumed by our code, this would hold
+  outgoing messages waiting to be sent -- same shape of solution, not the
+  same data path.
+
+Both "latest" and "save all" are a bigger step than the plain gate: a
+gate only needs to look at current status on each incoming message: pass
+or drop, no memory between calls, so a `msg -> msg|None` transform already
+covers it. Buffering to replay later needs actual state that outlives a
+single message -- which node-instance-scoped state under redeploy do we
+even have today? None of the flash-backed per-node state §5 describes
+covers "arbitrary in-RAM buffer, cleared or not on redeploy," so this is
+a real *instance* of the "stateful nodes and cross-message
+synchronization" gap already flagged above (2026-08-13), not a separate
+problem -- worth designing together with a join/synchronization node
+rather than bolted onto a wifi/mqtt-specific node ad hoc, per that
+entry's own reasoning. One wrinkle specific to this use case, beyond
+plain state-holding: something has to actually notice the connection
+coming back and trigger a flush -- none of the three sources currently
+in the node set (polling, a repeat interval, an inbound wire) obviously
+fits "fire once, exactly when a status transition happens," so that's
+worth treating as an open sub-question of its own, not assumed solved by
+"just add a buffer."
+
 ## One sequencing call worth flagging rather than assuming
 
 Tier 1 and Tier 2 are written as separate tiers for clarity, but they

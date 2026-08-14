@@ -60,14 +60,25 @@ PUBLISHED = []
 
 
 class MQTTClient:
+    # Test-controllable: an artificial await inside connect(), long enough
+    # to give a real event-loop yield point for a second coroutine to try
+    # (and correctly block on) connecting concurrently -- see
+    # node-mqtt-publish.test.ts's "two chains racing to connect" test.
+    # Zero by default so every other test's connect() resolves instantly.
+    CONNECT_DELAY_S = 0
+
     def __init__(self, cfg):
         self.cfg = dict(cfg)
         self.connected = False
+        self.connect_calls = 0
         self.queue = _MsgQueue()
         self.subscriptions = []
         CLIENTS.append(self)
 
     async def connect(self, quick=False):
+        self.connect_calls += 1
+        if MQTTClient.CONNECT_DELAY_S:
+            await asyncio.sleep(MQTTClient.CONNECT_DELAY_S)
         print("MQTT_CONNECT server=%s port=%s" % (self.cfg.get("server"), self.cfg.get("port")))
         self.connected = True
 

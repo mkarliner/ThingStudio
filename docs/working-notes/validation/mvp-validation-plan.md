@@ -894,6 +894,33 @@ the README-per-component convention.
   setup, since it needs a WiFi network the DUT board can actually join,
   not just wired GPIO/PWM pins.
 
+  **Addendum (2026-08-14, same day):** the "connect wifi, then connect
+  mqtt, then do mqtt things" sequencing question was raised and verified
+  properly rather than left as reasoned-but-unproven. Every prior test in
+  this batch only exercises the "already connected, skip reconnect" fast
+  path (pymock's `runtime.spawn()` runs each chain to completion via its
+  own `asyncio.run()` before the next starts, so two chains never
+  actually race there -- a real gap, not assumed safe). A new test
+  (`node-mqtt-publish.test.ts`, "two chains racing to connect the same
+  client only actually connect once") bypasses `compile()`/`spawn()`
+  entirely and drives both node's generated functions through a genuine
+  concurrent `asyncio.gather()`, with an artificial delay inside pymock's
+  `mqtt_as.MQTTClient.connect()` (`CONNECT_DELAY_S`) long enough to open a
+  real window where both coroutines reach `mqttEnsureConnectedSnippet`'s
+  "not connected yet" check before either has finished connecting.
+  Confirmed: `connect()` fires exactly once, and the second chain's
+  publish still completes correctly once the first's connect() finishes
+  (the double-checked lock correctly serializes contention, not just
+  reasoned to on paper). One real test-authoring bug caught building
+  this, not a codegen bug: the test's first draft used a fixed
+  `(hint) => "_"+hint` ctx (fine when a test only calls codegen once) for
+  two separate `codegenSink` calls, which silently gave both generated
+  functions the SAME name -- the second `async def` shadowed the first at
+  module scope, so both gather() branches ended up calling only the
+  second node's function. Fixed by using a real dedup'd ctx matching
+  `compile.ts`'s own `uniqueName` logic. 187/187 editor tests passing (up
+  from 186), `tsc --noEmit` clean.
+
 ## Tier 2 — live values + persistence
 
 - Live value streaming: inject a known value sequence, confirm the

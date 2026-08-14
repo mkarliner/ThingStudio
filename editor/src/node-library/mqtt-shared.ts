@@ -35,6 +35,18 @@
 // the same one physical station interface, so wifi_status's own handle
 // still reports accurate `isconnected()`/`ifconfig()` state regardless of
 // which code path actually brought the link up.
+//
+// Possible future enhancement, not built: the vendored mqtt_as hardcodes
+// `network.WLAN(network.STA_IF)` inside its own `MQTT_base.__init__` --
+// unlike wifi-status.ts/http-request.ts's interface choice (also
+// hardcoded today, but only on our side), this one lives in third-party
+// code we don't control. The most likely real case wanting a different
+// interface is a board with WiFi plus a wired Ethernet add-on (e.g. a
+// WIZnet W5500 over SPI) that wants MQTT traffic over Ethernet instead of
+// WiFi. Doing that would need a fork/patch of the vendored file (or
+// upstream support for it), not just a config change here -- a real
+// enough lift that it's worth confirming there's an actual board/use case
+// before starting, not speculatively built now.
 
 import { CompileError } from "../compiler/errors.js";
 import { pyStringLiteral } from "./py-literals.js";
