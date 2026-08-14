@@ -103,28 +103,47 @@ el("btnClear").addEventListener("click", () => (consoleEl.innerHTML = ""));
 // ---------------------------------------------------------------------
 // mpy-cross WASM (vendored -- see editor/public/vendor/mpy-cross, copied
 // byte-for-byte from mpy-cross-wasm/, hashes verified at copy time).
-// Loaded via a dynamic import of a public-dir URL, not a static `import`,
-// so Vite doesn't try to resolve/bundle a public asset at build time --
-// the runtime string is left alone and just becomes a normal browser
-// fetch of that path in both `vite dev` and a built `vite build`.
+//
+// NOT imported from this source file -- a first attempt at a dynamic
+// `import()` of the public-dir URL hit Vite's own guard against exactly
+// that ("This file is in /public ... should not be imported from source
+// code. It can only be referenced via HTML tags."). So instead,
+// index.html loads a tiny bridge script
+// (public/vendor/mpy-cross/load.mjs) via a real HTML `<script
+// type="module">` tag -- outside Vite's module graph entirely, the same
+// unbundled way pocs/poc-d/app.js loaded this exact file -- which
+// imports the real mpy-cross.mjs and publishes its factory on
+// `window.__thingstudioCreateMpyCross`. This file just waits for that
+// global to show up.
 // ---------------------------------------------------------------------
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let MpyModule: any = null;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type CreateMpyCross = (opts: { print: (t: string) => void; printErr: (t: string) => void }) => Promise<any>;
+
+async function waitForMpyCrossFactory(timeoutMs: number): Promise<CreateMpyCross> {
+  const w = window as unknown as { __thingstudioCreateMpyCross?: CreateMpyCross };
+  const deadline = Date.now() + timeoutMs;
+  while (!w.__thingstudioCreateMpyCross) {
+    if (Date.now() > deadline) {
+      throw new Error("mpy-cross loader (public/vendor/mpy-cross/load.mjs) never populated window.__thingstudioCreateMpyCross -- check the browser console for a script-load error");
+    }
+    await new Promise((r) => setTimeout(r, 20));
+  }
+  return w.__thingstudioCreateMpyCross;
+}
+
 const mpyReadyPromise: Promise<void> = (async () => {
-  // A non-literal specifier (not a bare string) so TS's module resolution
-  // doesn't try (and fail) to statically resolve a public-dir runtime URL
-  // that has no corresponding module/types in this project -- the actual
-  // resolution happens in the browser at runtime, same as any other
-  // `fetch()` of a public asset would.
-  const mpyCrossUrl = "/vendor/mpy-cross/mpy-cross.mjs";
-  const mod = await import(/* @vite-ignore */ mpyCrossUrl);
-  const createMpyCross = mod.default;
+  const createMpyCross = await waitForMpyCrossFactory(10000);
   MpyModule = await createMpyCross({
     print: (t: string) => logLine("[mpy-cross] " + t, ""),
     printErr: (t: string) => logLine("[mpy-cross] " + t, "err"),
   });
   logLine("[mpy-cross WASM ready]", "ok");
-})();
+})().catch((err) => {
+  logLine(`[mpy-cross load error] ${err instanceof Error ? err.message : String(err)}`, "err");
+});
 
 function compileToMpy(source: string): Uint8Array {
   if (!MpyModule) throw new Error("mpy-cross not ready yet");
