@@ -95,7 +95,9 @@ describe("general compiler: shapes POC-D's hardcoded compiler could never accept
     // wrapped in a try/except (nodeCallWithFaultBoundary, §5's per-node
     // NODE_ERROR attribution) rather than a bare call, hence matching
     // "try:" as the first nested line instead of the call directly.
-    expect(source).toMatch(/if msg is not None:\n\s+try:\n\s+_gpio_out\(msg\)/);
+    // Sink calls are `await`-ed since transform/sink functions compile to
+    // `async def` (see compile.ts's header comment on why).
+    expect(source).toMatch(/if msg is not None:\n\s+try:\n\s+await _gpio_out\(msg\)/);
     const lines = source.split("\n");
     const buildMsgLine = lines.find((l) => l.includes("msg = {'payload'"));
     const sleepLine = lines.find((l) => l.includes("asyncio.sleep_ms"));
@@ -160,8 +162,9 @@ describe("general compiler: shapes POC-D's hardcoded compiler could never accept
     };
     const { source } = compile(graph, buildRegistry());
     // The shared sink's Python function is defined exactly once, even
-    // though two different sources call it.
-    expect(source.match(/^def _gpio_out\(msg\):/gm)?.length).toBe(1);
+    // though two different sources call it. `async def` since transform/
+    // sink functions compile async (see compile.ts's header comment).
+    expect(source.match(/^async def _gpio_out\(msg\):/gm)?.length).toBe(1);
     expect(source.match(/^runtime\.spawn\(/gm)?.length).toBe(2);
 
     const output = runGenerated(source);

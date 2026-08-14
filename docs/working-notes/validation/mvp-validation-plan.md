@@ -755,6 +755,145 @@ the README-per-component convention.
   against a real interpreter. GPIO/timer batch's hardware bar is now
   fully met. Not yet committed as of this entry.
 
+- **Results (2026-08-14, network batch — off-device only, hardware pass
+  still pending):** the fourth and last Tier 1 batch:
+  `thingstudio/wifi_status` (source, polling `network.WLAN(STA_IF)
+  .isconnected()`/`.ifconfig()`, doubling as the flow's WiFi-connect step
+  when `ssid` is configured), `thingstudio/http_request` (transform,
+  hand-rolled HTTP/1.1 GET/POST over `asyncio.open_connection` -- no
+  vendored library, contrast with MQTT below), `thingstudio/mqtt_publish`
+  (sink) and `thingstudio/mqtt_subscribe` (source), both built on a newly
+  vendored `mqtt_as` (`device-runtime/src/vendor/mqtt_as/`, MIT,
+  `peterhinch/micropython-mqtt`) rather than the more commonly-cited
+  `umqtt.simple` -- chosen specifically for non-blocking I/O and built-in
+  WiFi/broker reconnection; see that vendor directory's own README for the
+  full rationale, including why this one case departs from `cbor.py`'s
+  hand-rolled-over-dependency precedent. `docs/third-party-licenses.md`
+  updated in the same change.
+
+  **Real compiler change, not just new node types:** `compile.ts` now
+  emits `async def`/`await` for every transform/sink node (was
+  synchronous `def`) -- narrowly justified, not a blanket rewrite for
+  hypothetical future need: source coroutines were already `async def`
+  from day one, so `wifi_status` and `mqtt_subscribe` (both sources) never
+  needed this and just `await` real I/O inside `buildMsg` directly, zero
+  compiler changes required. Only `http_request` (transform) and
+  `mqtt_publish` (sink) actually needed transform/sink functions to become
+  awaitable, to avoid stalling every other node sharing the flow's one
+  event loop during a real network call. This was a real, considered fork
+  (see `compile.ts`'s own header comment for the three options weighed --
+  uniform async, an opt-in per-node flag, or plain blocking sockets with
+  no compiler change -- and why uniform async won) rather than the first
+  idea that worked. All 12 pre-existing node types' generated output
+  changes only cosmetically (`async def`/`await` added, `functionBody`
+  text itself untouched) -- confirmed by the existing regression suite
+  needing exactly two source-text-assertion updates (the added keywords),
+  zero behavioral changes, all previously-passing tests still passing
+  after the fix.
+
+  **wifi_status:** off-device codegen tests
+  (`editor/test/node-wifi-status.test.ts`) against a new pymock
+  `network.py` fixture (`WLAN` stub, test-controlled `CONNECTED`/
+  `IFCONFIG`). Covers: connected/disconnected payload+ip reporting,
+  default-false with nothing driven, `connect()` only called when `ssid`
+  is configured, pollMs validation/defaulting, and setup-statement dedup
+  across two `wifi_status` nodes (first one's ssid/password wins,
+  documented, same class of gap as pin-claim conflicts). Shares a
+  `wifi-sta` setup key with `http_request` (`wifi-status.ts`'s exported
+  `wifiSetupStatement`/`WIFI_SETUP_KEY`) so either node type brings the
+  station interface up regardless of which one is present in a given flow.
+
+  **http_request:** off-device tests
+  (`editor/test/node-http-request.test.ts`) against a **real local HTTP
+  server** (Node's own `http` module, loopback, random port) rather than a
+  mock socket layer -- exercises the actual generated request-building/
+  response-parsing logic over a real TCP connection, the closest this
+  batch gets to the validation plan's own "local, controllable HTTP test
+  server" bar without a device. Two real things this caught, not just
+  hypothetical risks: (1) the first draft used `execFileSync` to run
+  generated Python against the in-process test server, which deadlocks --
+  `execFileSync` blocks Node's entire single-threaded event loop until the
+  child exits, but the http.Server needing to *answer* the request lives
+  on that same event loop, so it can never respond while blocked; the
+  client then hangs until its own timeout, indistinguishable from "server
+  never responds" from the Python side. Reproduced outside vitest entirely
+  (a plain Node script) before concluding it wasn't a codegen bug; fixed
+  by switching to async `execFile`. (2) Node's `http` module defaults to
+  chunked transfer-encoding whenever a handler doesn't set `Content-Length`
+  itself -- and `http_request`'s hand-rolled client deliberately doesn't
+  support chunked (documented v1 gap, alongside no HTTPS/TLS and no
+  redirect-following), so even this "plain" local test server needed an
+  explicit `Content-Length` header to be usable, a real interoperability
+  note worth remembering for any other local test server stood up against
+  this node later. Covers: GET/POST, non-200 status, POST body
+  transmission, Content-Length:0 on GET, a real timeout against a server
+  that never responds (`asyncio.wait_for` actually bounding every
+  read/write, not just the initial connect), URL parsing (host/port/path,
+  defaulting path to `/`), and rejecting `https://` and unsupported
+  methods.
+
+  **mqtt_publish/mqtt_subscribe:** off-device tests
+  (`editor/test/node-mqtt-publish.test.ts`,
+  `editor/test/node-mqtt-subscribe.test.ts`) against a new pymock
+  `mqtt_as.py` fixture (records `PUBLISHED` messages, test-injectable
+  incoming-message queue via `_MsgQueue._inject`) -- not a real broker;
+  this batch's job is confirming the generated code drives the vendored
+  library correctly, not re-proving `mqtt_as` itself works (that's the
+  library's own upstream testing, and this project's hardware pass,
+  below). A real correctness issue caught during design, before any code
+  was written, not left as a documented gap: naive per-node-type setup
+  codegen would have let `mergeSetup`'s dedup ("first writer under a key
+  wins, no consistency check" -- `compile.ts`) silently produce a broker
+  client with no event/queue support if a `mqtt_publish` node happened to
+  compile before a `mqtt_subscribe` node sharing its broker, since only
+  the subscribe side has an obvious reason to ask for one. Fixed
+  architecturally, not by convention: both node types call the same
+  shared `mqtt-shared.ts` helper with the same broker config, which always
+  requests the queue interface (`queue_len = 20`) regardless of which
+  node type is asking -- so which one wins the dedup race is a non-issue
+  by construction, confirmed by a same-broker publish+subscribe test.
+  `mqtt_subscribe`'s `repeatMs` is fixed at 10ms, not configurable --
+  documented in its own header as not a real poll interval (`queue
+  .__anext__()` already blocks until a message arrives) but the mandatory
+  yield the source-loop wrapper needs, since the vendored `MsgQueue
+  .__anext__()` returns immediately with no internal `await` whenever the
+  queue is already non-empty, which could otherwise let a burst of queued
+  messages process back-to-back with no yield at all -- the same
+  non-yielding-event-loop hazard class §5/POC-D's hardware bugs warn
+  about. mqtt_publish/mqtt_subscribe manage their own WiFi connection via
+  `mqtt_as`'s `connect()` (real outage recovery) rather than sharing
+  `wifi_status`'s plain-`network.WLAN` setup key -- deliberate, not an
+  inconsistency; see `mqtt-shared.ts`'s header for the detail, including
+  why `ssid` is required (not optional-with-fallback, unlike
+  `wifi_status`/`http_request`) for these two node types specifically.
+  Covers: connect-once-then-publish, retain/qos, setup dedup across two
+  publish nodes and across publish+subscribe on the same broker, incoming-
+  message delivery (payload/topic decode, retained flag), per-instance
+  subscribe (two subscribe nodes on one shared client, independent
+  topics), and validation of broker/ssid/topic/port/qos.
+
+  38 new tests across the four node files (186/186 total, up from 148),
+  `tsc --noEmit` clean. **Not yet done:** mpy-cross cross-compilation of
+  any of this output (same standing gap as every prior batch --
+  `mpy-cross-wasm/` isn't vendored into the compiler pipeline yet); the
+  real device-side half of anything network-related has never run against
+  real MicroPython at all (contrast the wire-protocol/fault-isolation
+  work, which has a real headless-unix-port pass) -- `import network`,
+  `import mqtt_as`, and `asyncio.open_connection`/`wait_for` are all
+  assumed compatible with the target ports' real `uasyncio` based on
+  `mqtt_as`'s own documented platform support (`device-runtime/src/vendor/
+  mqtt_as/README.md`) and MicroPython's own `network`/`socket` module
+  docs, not confirmed by any test in this repo yet; and the Tier 1
+  "kitchen sink" tier-level gate, which needs a real hardware pass on
+  every node type (this batch included) to mean anything. The hardware
+  pass itself -- per this section's own bar, non-negotiable for network
+  nodes -- needs a real local MQTT broker (e.g. Mosquitto) and a real
+  local HTTP test server reachable from actual ESP32-C3 hardware, neither
+  of which has been set up yet; worth scoping as its own next session
+  rather than assumed to be a small addition to the existing witness-rig
+  setup, since it needs a WiFi network the DUT board can actually join,
+  not just wired GPIO/PWM pins.
+
 ## Tier 2 — live values + persistence
 
 - Live value streaming: inject a known value sequence, confirm the

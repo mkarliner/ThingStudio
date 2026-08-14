@@ -1,7 +1,7 @@
 # Third-party software in use
 
-Status: living document, last updated 2026-08-13 (this update: `cborg`
-added). Tracks every third-party
+Status: living document, last updated 2026-08-14 (this update: `mqtt_as`
+vendored). Tracks every third-party
 dependency this project actually uses — runtime/platform components,
 editor build tooling, and anything vendored — with its license, so the
 license-compliance due diligence design doc §12 calls for before any
@@ -50,6 +50,17 @@ shipped in any built editor artifact.
 
 Litegraph is the other known future addition (design doc §11) once canvas
 work starts; add it here the same day it's installed.
+
+## Vendored in `device-runtime/` (Python, not npm)
+
+Manual vendoring, same discipline as `mpy-cross-wasm/`'s (hash-recorded,
+provenance documented alongside the code) — not gated by `CLAUDE.md`'s
+npm-specific install-flag rule since it isn't a Node/npm package, but
+flagged to Mike and approved before adding, same spirit.
+
+| Package | Version installed | License | Notes |
+|---|---|---|---|
+| mqtt_as | 0.8.5 (upstream `VERSION` const; not pinned to an exact commit SHA — see its own README) | MIT | `device-runtime/src/vendor/mqtt_as/__init__.py`. Asynchronous, `uasyncio`-native MQTT client from [peterhinch/micropython-mqtt](https://github.com/peterhinch/micropython-mqtt), used by the `mqtt_publish`/`mqtt_subscribe` nodes. Chosen over `umqtt.simple` specifically for non-blocking I/O and built-in WiFi/broker reconnection — see `device-runtime/src/vendor/mqtt_as/README.md` for the full rationale, including why this one case departs from `cbor.py`'s hand-rolled-over-dependency precedent. |
 
 ## `test/hil/` tooling (Python, not npm)
 

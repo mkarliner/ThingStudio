@@ -103,7 +103,20 @@ Sequenced by risk and dependency, not just copied from §6's list order:
 4. **Network nodes** — WiFi status/HTTP request, then MQTT publish/
    subscribe. Last within this tier since they carry the most external
    moving parts (radio bring-up, broker availability) relative to the
-   node-authoring work itself.
+   node-authoring work itself. **Off-device done as of 2026-08-14**
+   (`mvp-validation-plan.md`'s dated Results entry) — wifi_status,
+   http_request, mqtt_publish, mqtt_subscribe all landed, tested against
+   pymock and (http_request) a real local HTTP server. Vendored `mqtt_as`
+   (MIT) for the MQTT nodes rather than hand-rolling or using blocking
+   `umqtt.simple` — see `device-runtime/src/vendor/mqtt_as/README.md`.
+   Required a real compiler change: transform/sink codegen now compiles to
+   `async def`/`await` (was synchronous `def`) so http_request/mqtt_publish
+   can await real non-blocking I/O without stalling the flow's one event
+   loop — mechanical for every other node type, see `compile.ts`'s own
+   header comment. **Hardware pass against a real local MQTT
+   broker/HTTP test server still pending** — this section's own validation
+   bar treats that as non-negotiable for network nodes, not optional
+   polish; nothing here has touched a real device or a real broker yet.
 
 ## Tier 2 — the "feels like Node-RED" layer
 

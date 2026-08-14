@@ -27,6 +27,20 @@
 // inject/timer-style chains in one flow) ARE supported -- each becomes
 // its own spawned coroutine, matching §5's "each independently-triggered
 // subgraph is a coroutine."
+//
+// Transform/sink functions compile to `async def`, called with `await`
+// (added for the network node batch -- see docs/working-notes/
+// mvp-validation-plan.md's Tier 1 network-nodes entry for the full
+// reasoning). Source coroutines were already `async def` from day one, so
+// this makes the whole generated call graph uniformly async rather than a
+// synchronous island inside an async flow. This is purely mechanical for
+// every node type that never awaits anything internally (all 12 existing
+// node types, plus wifi_status) -- their functionBody text is unchanged,
+// they just now run inside an `async def` instead of a `def`. It's load-
+// bearing for http_request and mqtt_publish specifically, which need to
+// `await` real non-blocking I/O without stalling every other node sharing
+// the flow's single event loop (design doc §5/§6's "single global event
+// loop" fact, not a per-flow one).
 
 import { CompileError } from "./errors.js";
 import type { GraphData, GraphLink, GraphNode } from "./graph.js";
@@ -150,7 +164,7 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
       if (!def.codegenTransform) throw new CompileError(`node type "${node.type}" declares kind "transform" but has no codegenTransform`);
       t = def.codegenTransform(node, ctx);
       mergeSetup(t, imports, setupStatements);
-      functionDefs.push(`def ${t.functionName}(msg):\n${indent(t.functionBody, 4)}`);
+      functionDefs.push(`async def ${t.functionName}(msg):\n${indent(t.functionBody, 4)}`);
       transformCodegen.set(node.id, t);
     }
     return t;
@@ -163,7 +177,7 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
       if (!def.codegenSink) throw new CompileError(`node type "${node.type}" declares kind "sink" but has no codegenSink`);
       s = def.codegenSink(node, ctx);
       mergeSetup(s, imports, setupStatements);
-      functionDefs.push(`def ${s.functionName}(msg):\n${indent(s.functionBody, 4)}`);
+      functionDefs.push(`async def ${s.functionName}(msg):\n${indent(s.functionBody, 4)}`);
       sinkCodegen.set(node.id, s);
     }
     return s;
@@ -182,7 +196,7 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
 
     if (kind === "sink") {
       const s = getSink(node);
-      return nodeCallWithFaultBoundary(node.id, `${s.functionName}(${msgVar})`);
+      return nodeCallWithFaultBoundary(node.id, `await ${s.functionName}(${msgVar})`);
     }
     if (kind !== "transform") {
       // Defensive, not reachable in practice: a "source"-kind node
@@ -194,7 +208,7 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
     }
 
     const t = getTransform(node);
-    const callLine = nodeCallWithFaultBoundary(node.id, `${msgVar} = ${t.functionName}(${msgVar})`);
+    const callLine = nodeCallWithFaultBoundary(node.id, `${msgVar} = await ${t.functionName}(${msgVar})`);
 
     const children = childrenOf.get(nodeId) ?? [];
     const branchesBody = emitChildren(children, msgVar);

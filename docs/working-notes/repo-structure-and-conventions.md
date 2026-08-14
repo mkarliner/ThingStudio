@@ -28,6 +28,9 @@ editor/                         the browser app — one package, not a workspace
   vite.config.ts
 device-runtime/                 MicroPython: listener, fault isolation, state store, native glue
   src/
+    vendor/                     manually-vendored third-party MicroPython packages (mqtt_as/, added
+                                 2026-08-14) -- same hash-recorded/provenance-documented discipline as
+                                 mpy-cross-wasm/, not an npm-installable dependency
   test/                         headless MicroPython unix-port tests
 mpy-cross-wasm/                 POC-B's build recipe + build artifacts, vendored (not an npm package)
 test/hil/                       witness firmware, pin-map config, hardware-in-the-loop scripts (manual, not CI)
