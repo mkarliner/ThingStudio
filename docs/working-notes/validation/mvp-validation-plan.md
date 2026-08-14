@@ -695,6 +695,27 @@ the README-per-component convention.
   breadboard wiring cleanup the witness-rig status note already flags,
   given `MEASURE_PWM` is exactly the measurement the current ringing
   would corrupt), and a real elapsed-time check against `timer`.
+- **Results (2026-08-14, hardware driver script — code complete, not yet
+  run):** `test/hil/run_gpio_pwm_timer_checks.py` built, following
+  `run_fault_isolation_checks.py`'s exact pattern (shared link classes
+  factored into the new `test/hil/hil_common.py` rather than duplicated
+  a second time). Deploys hand-written flows matching
+  gpio-in.ts/pwm-out.ts/timer.ts's real codegen shape over the real §13
+  protocol; drives/observes via the witness's `DRIVE_GPIO`/
+  `WATCH_EDGES`/`MEASURE_PWM`. Same honest status every prior
+  hardware-touching piece of this project has carried when written
+  without boards attached: **not yet run against real hardware.**
+  Verified as far as this sandbox allows: all three hand-written flow
+  sources are syntactically valid (`ast.parse`); the `pwm_out` flow
+  (the one source here with no repeating loop, so pymock can actually
+  run it end to end, same constraint the node-level tests hit) produces
+  byte-for-byte the expected output against the extended pymock fixture
+  (`PIN_INIT 6 OUT`, `PWM_INIT 6 freq=1000`, `PWM_DUTY 6 32767` for a 0.5
+  duty payload); the `WATCH_EDGES`/`MEASURE_PWM` reply-line parsing was
+  checked by hand against `witness_firmware.py`'s exact documented output
+  format. This is the closest thing to verification achievable without
+  the boards; the real pass is the next action, on the rig, per
+  `test/hil/README.md`'s run instructions.
 
 ## Tier 2 — live values + persistence
 

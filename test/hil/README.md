@@ -9,7 +9,9 @@ Not run in CI (needs physical hardware, per `../../docs/working-notes/repo-struc
 - `pin-map.md` -- which physical GPIO goes where on both boards, and why (strapping pins avoided, the I2C/PWM pin conflict and its resolution). **Currently wired: `gpio_out`, `gpio_in`, PWM, and heartbeat rows only** -- I2C is deliberately not wired yet (pin-map.md's own fallback recommendation: wire the digital rows now, decide I2C's pins when the slave-mode spike is actually scheduled, since fault isolation doesn't need it).
 - `witness_firmware.py` -- the witness board's firmware. One image, flashed once, driven over its own USB serial link with the line-based command protocol below. See its own header comment for the full command reference; summary here.
 - `test_witness_firmware.py` -- off-device tests for the firmware's command parsing and PWM math, run against the headless MicroPython unix-port build (`../../device-runtime/test/README.md` has the build recipe). Real IRQ-triggered timing is a hardware-only concern by nature; not attempted off-device.
+- `hil_common.py` -- shared DUT/witness serial-link helpers (`DutLink`, `WitnessLink`, `compile_flow`), used by both driver scripts below. Not runnable on its own.
 - `run_fault_isolation_checks.py` -- the driver script that actually exercises `../../docs/working-notes/validation/mvp-validation-plan.md`'s "Fault isolation" scenarios against real witness+DUT hardware over real serial ports. Push-button once both boards are flashed and wired, not manual typing into two terminal sessions.
+- `run_gpio_pwm_timer_checks.py` -- the driver script for Tier 1's GPIO/timer node batch's hardware pass (gpio_in, pwm_out, timer -- gpio_out was already covered indirectly by the fault-isolation script's own GPIO12 use). Same pattern as `run_fault_isolation_checks.py`: deploys hand-written flows matching the real node codegen (`editor/src/node-library/{gpio-in,pwm-out,timer}.ts`) over the real §13 protocol, drives/observes via the witness's `DRIVE_GPIO`/`WATCH_EDGES`/`MEASURE_PWM` commands.
 
 ## Witness firmware: command protocol
 
@@ -40,6 +42,14 @@ python3 run_fault_isolation_checks.py --witness-port /dev/ttyUSB0 --dut-port /de
 ```
 
 Runs, in order, the validation plan's three "Fault isolation" scenarios (per-task boundary, listener/transport hardening regression, 50-frame fault-injection soak test with witness-verified liveness) and prints a pass/fail summary plus the exact numbers to paste into `mvp-validation-plan.md`'s dated Results entry. See that script's own header for what each check actually asserts.
+
+For the GPIO/timer node batch's hardware pass, same setup, different script:
+
+```sh
+python3 run_gpio_pwm_timer_checks.py --witness-port /dev/ttyUSB0 --dut-port /dev/ttyUSB1 --mpy-cross /path/to/mpy-cross
+```
+
+Runs, in order: `gpio_in` (witness drives DUT GPIO4 both HIGH and LOW via `DRIVE_GPIO`, confirms a real deployed gpio_in→gpio_out mirror flow reads and propagates each correctly, observed via `WATCH_EDGES`), `pwm_out` (deploys a fixed 1000Hz/50%-duty flow, confirms via `MEASURE_PWM` within a loose tolerance -- this rig's own documented breadboard ringing, see `pin-map.md`, means don't expect lab-instrument precision here), and `timer` (deploys a 300ms-interval flow toggling a pin, confirms via `WATCH_EDGES`'s edge timestamps that the actual inter-edge interval is close to configured). Same pass/fail summary format as the fault-isolation script.
 
 ## Open items this doc doesn't resolve
 
