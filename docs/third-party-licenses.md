@@ -1,7 +1,8 @@
 # Third-party software in use
 
-Status: living document, last updated 2026-08-14 (this update: `mqtt_as`
-vendored). Tracks every third-party
+Status: living document, last updated 2026-08-14 (this update: Litegraph.js
+and the mpy-cross WASM build vendored into `editor/` for the bare-minimum
+canvas editor). Tracks every third-party
 dependency this project actually uses — runtime/platform components,
 editor build tooling, and anything vendored — with its license, so the
 license-compliance due diligence design doc §12 calls for before any
@@ -48,8 +49,24 @@ shipped in any built editor artifact.
 |---|---|---|---|
 | cborg | 6.1.1 | Apache-2.0 | CBOR codec for the §13 wire protocol (`editor/src/protocol/`). Chosen over cbor-x/cbor2 for strict-by-default decode (rejects indefinite-length items, non-minimal int encodings, duplicate map keys) — matches the wire protocol's adversarial-input requirement more directly than a permissive-by-default decoder would. Zero runtime dependencies, Apache-2.0 (matches this project's own license), ships its own TS types. Installed with `npm install --ignore-scripts`; no install script present in the package. |
 
-Litegraph is the other known future addition (design doc §11) once canvas
-work starts; add it here the same day it's installed.
+## Vendored in `editor/` (static assets, not npm packages)
+
+Copied byte-for-byte from an already-evaluated/hash-verified source
+(`sha256sum` checked against the source file at copy time, same
+discipline as `mpy-cross-wasm/`'s own provenance doc), not installed via
+`npm install` -- so not gated by `CLAUDE.md`'s npm-specific install-flag
+rule, but flagged here in the same change per that rule's own spirit
+(and the placeholder note this table used to carry). Served as plain
+static files from `editor/public/vendor/` (Vite's public-dir convention
+-- copied as-is into any build, not bundled/transformed), loaded via a
+`<script>` tag (Litegraph) or a runtime dynamic `import()` of the public
+URL (mpy-cross, so Vite doesn't try to statically resolve/bundle a
+public asset at build time).
+
+| Library | Version | License | Where | Notes |
+|---|---|---|---|---|
+| Litegraph.js | 0.7.18 | MIT | `editor/public/vendor/litegraph/` | Copied from `pocs/poc-c/litegraph.min.js`/`pocs/poc-d/litegraph.min.js` (design doc §11/§15.3's chosen canvas library) -- now a real, live `editor/` dependency for the first time, not just a POC evaluation copy. Vendored as a static file rather than `npm install`'d: avoids an install-script trust decision entirely (this project's own stated preference, `CLAUDE.md`) for a library that's already a settled, unmodified single minified file with no further updates expected before v1 ships. |
+| mpy-cross (WASM build) | matches the MicroPython version `mpy-cross-wasm/README.md` was built against | MIT | `editor/public/vendor/mpy-cross/` | Byte-identical copy of `mpy-cross-wasm/mpy-cross.wasm` + `mpy-cross.mjs` (hashes verified equal at copy time) -- that build was previously validated but not consumed by any live code; the bare-minimum editor's Deploy button is the first real caller, doing the actual graph -> Python -> `.mpy` bytecode cross-compile in-browser before a DEPLOY is sent. See `mpy-cross-wasm/README.md` for the Emscripten build provenance; this is a plain copy, not a rebuild. |
 
 ## Vendored in `device-runtime/` (Python, not npm)
 
@@ -84,7 +101,7 @@ not because any current build depends on them.
 
 | Library | Version | License | Where |
 |---|---|---|---|
-| Litegraph.js | 0.7.18 | MIT | `pocs/poc-c/litegraph.min.js`, `pocs/poc-d/litegraph.min.js` — chosen per design doc §11/§15.3 as the real v1 canvas library, not yet an actual `editor/` dependency |
+| Litegraph.js | 0.7.18 | MIT | `pocs/poc-c/litegraph.min.js`, `pocs/poc-d/litegraph.min.js` — chosen per design doc §11/§15.3 as the real v1 canvas library. **Now also a live dependency**, copied into `editor/public/vendor/litegraph/` — see the "Vendored in `editor/`" table above; this POC copy is kept as the historical/frozen reference the live copy was taken from, not a second independent instance. |
 | Drawflow | 0.0.60 | MIT | `pocs/poc-c/drawflow/` — **evaluated and dropped** (§11/§15.3: needed hand-rolled type-checking, execution engine, and can't reach multi-select at all); kept only as the comparison record, not a candidate going forward |
 
 ## How this stays current

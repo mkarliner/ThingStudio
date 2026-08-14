@@ -154,6 +154,16 @@ pipeline driven by hardcoded buttons.
   surfaced from `NODE_ERROR`, live values from `VALUE_STREAM`. Replaces
   POC-D's "couple hardcoded buttons," which was correctly out of scope for
   a pipeline spike but isn't a v1 deliverable as-is.
+  - 2026-08-14: a first **bare-minimum** pass now exists (`editor/index.html`
+    + `editor/src/app/`) — real canvas (Litegraph, vendored into
+    `editor/public/vendor/`), four real node types (inject/function/debug/
+    gpio_out) wired to the actual node-library/compiler registry (not a
+    hardcoded shape), real mpy-cross WASM cross-compile, real WebSerial
+    `DEPLOY` via `transport.ts`. Deliberately still missing, by explicit
+    scope choice for this first hands-on pass: the `HELLO`/version
+    pre-flight gate (`version.ts` exists, not wired in), file save/load,
+    the git-friendly flow file format, and any inspector polish beyond a
+    plain scrolling device console. This entry stays open until those land.
 
 ## Explicitly still out of v1 (§10, unchanged by this session)
 
