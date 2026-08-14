@@ -643,6 +643,58 @@ the README-per-component convention.
   isn't vendored yet); the Tier 1 "kitchen sink" tier-level gate, which
   needs the rest of Tier 1's node types (GPIO/timers next) to mean
   anything.
+- **Results (2026-08-14, GPIO/timer batch — off-device only, hardware
+  pass still pending):** the second Tier 1 batch: `thingstudio/gpio_in`
+  (polling source, same coroutine mechanism POC-A already proved on
+  hardware — §15.1), `thingstudio/pwm_out` (sink, `machine.PWM`'s
+  `duty_u16` API, portable across both target chip families per §3),
+  `thingstudio/timer` (source, arbitrary interval + an incrementing tick
+  count, distinct from inject's fixed presets). This section's own bar
+  calls for a real hardware pass through the witness rig for GPIO/PWM/
+  timer nodes — **not done in this pass**; everything below is off-device
+  only, flagged explicitly rather than left ambiguous. gpio_in and timer
+  are both always-repeating sources (`repeatMs > 0`), which pymock
+  structurally can't run end-to-end: `runtime.py` aliases CPython's real
+  `asyncio`, which has no `sleep_ms`, and even a stubbed one would hang
+  `asyncio.run()` forever on a real `while True` loop with no external
+  cancellation. Worked around by calling each node's `codegenSource`
+  directly and running just the returned setup/buildMsg snippet — real
+  behavior against pymock's `machine` module (extended with a
+  test-controllable `Pin.INPUT_VALUES` map standing in for a driven
+  stimulus, and a `PWM` mock recording `duty_u16` calls), without the
+  unrelated concern of repeating-loop scheduling, which is
+  `device-runtime/test/test_runtime.py`'s job against real `uasyncio`.
+  One real bug this caught before it was hardware's problem: the first
+  version of the timer test called `buildMsg`'s `global` statement at
+  bare module scope, which is a Python `SyntaxError` ("assigned to before
+  global declaration") — module-level code is its own block for that
+  check, same as a function body, and the counter's `= 0` init and the
+  `global` referencing it collided in that shared block. The REAL
+  compiled flow doesn't have this problem (`compile.ts` inlines buildMsg
+  into the coroutine's own function body, a genuinely separate scope) —
+  this was purely a test-harness artifact from stripping the function
+  wrapper for convenience, not a codegen bug; fixed by wrapping the test
+  snippet in an actual function, matching real usage more faithfully in
+  the process. pwm_out (a sink, not a repeating source) runs through the
+  full compiler + a one-shot inject, same as every other sink node type,
+  no workaround needed. Also addressed here, ahead of the hardware pass
+  rather than discovered by it: gpio_in and pwm_out claim pins using their
+  own mode-specific setup-statement keys/variable names
+  (`pin-N-in`/`_pin_N_in`, `pin-N-pwm`/`_pwm_N`), distinct from
+  gpio_out's (now `pin-N-out`, changed from the bare `pin-N` this session
+  to make room) — so a flow that (incorrectly) wires the same physical
+  pin as two different modes gets two independently-correct Pin objects
+  instead of one silently misconfigured one; real pin-conflict *rejection*
+  (erroring out, not just avoiding silent misconfiguration) is still the
+  documented open gap in `node-definition-model.md`, unchanged by this.
+  23 new tests across `node-gpio-in.test.ts`, `node-pwm-out.test.ts`,
+  `node-timer.test.ts` (148/148 total, up from 125), `tsc --noEmit`
+  clean. Next real step for this batch: the actual witness-rig hardware
+  pass this section requires — `DRIVE_GPIO` into a real `gpio_in` flow,
+  `MEASURE_PWM` against a real `pwm_out` flow (worth doing after the
+  breadboard wiring cleanup the witness-rig status note already flags,
+  given `MEASURE_PWM` is exactly the measurement the current ringing
+  would corrupt), and a real elapsed-time check against `timer`.
 
 ## Tier 2 — live values + persistence
 

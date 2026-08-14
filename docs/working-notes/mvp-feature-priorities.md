@@ -92,6 +92,11 @@ Sequenced by risk and dependency, not just copied from §6's list order:
    header rather than silently assumed done.
 2. **GPIO/timers** — GPIO in/out + PWM, timers/intervals. Real I/O, but on
    exactly the mechanism POC-A/D already proved reliable on hardware.
+   **Off-device done as of 2026-08-14** (`mvp-validation-plan.md`'s dated
+   Results entry) — gpio_in, pwm_out, timer landed (gpio_out was already
+   in from POC-D). **Hardware pass through the witness rig still
+   pending** — this section's own validation bar treats that as
+   non-negotiable for GPIO/PWM/timer nodes, not optional polish.
 3. **I2C/SPI sensor nodes** — a handful of common sensors, each wrapping
    an existing MicroPython driver per §7. Gated on having the actual
    sensor hardware on hand for each one, not just a codegen exercise.

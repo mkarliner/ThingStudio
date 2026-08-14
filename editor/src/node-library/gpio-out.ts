@@ -5,6 +5,13 @@
 // node-definition-model.md: a native primitive call, parameterized by
 // the node's configured property (`pin`) -- no separately-shipped
 // "gpio_out module", the codegen IS the device-side implementation.
+//
+// Setup-statement key is `pin-N-out`, not just `pin-N` -- namespaced by
+// mode since gpio-in.ts and pwm-out.ts (Tier 1's GPIO/timer batch) claim
+// pins too now. See gpio-in.ts's header for why: without the mode in the
+// key, a flow that (incorrectly) wires the same physical pin as both an
+// input and an output would silently dedup onto ONE wrongly-configured
+// Pin object instead of two independently-correct ones.
 
 import { CompileError } from "../compiler/errors.js";
 import type { GraphNode } from "../compiler/graph.js";
@@ -21,7 +28,7 @@ export const gpioOutNode: NodeDefinition = {
     const pinVar = `_pin_${pin}`;
     return {
       imports: ["import machine"],
-      statements: [{ key: `pin-${pin}`, code: `${pinVar} = machine.Pin(${pin}, machine.Pin.OUT)` }],
+      statements: [{ key: `pin-${pin}-out`, code: `${pinVar} = machine.Pin(${pin}, machine.Pin.OUT)` }],
       functionName: ctx.uniqueName("gpio_out"),
       functionBody: `${pinVar}.value(1 if msg.get('payload') else 0)`,
     };
