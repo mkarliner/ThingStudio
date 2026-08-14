@@ -20,6 +20,13 @@
 // impossible. Name collisions across unrelated variable nodes are the
 // flow author's responsibility to avoid, same trust model as §6's
 // unsandboxed function node.
+//
+// This same dict also backs `flow` scope inside a function node's own
+// generated code (function-node.ts, mvp-feature-priorities.md's
+// 2026-08-14 addendum) -- `flow.get('x')`/`flow.set('x', ...)` there
+// reads/writes this exact `_flow_vars`, not a second store, so a
+// variable_get/variable_set node and a function node's `flow` object
+// interoperate on the same name directly.
 
 import { CompileError } from "../compiler/errors.js";
 import type { GraphNode } from "../compiler/graph.js";
