@@ -83,8 +83,20 @@ except ImportError:
     machine = None  # lets this file be imported (not run) off-device for a syntax/structure check
 
 
-def _pin_in(pin_num):
-    return machine.Pin(pin_num, machine.Pin.IN)
+def _pin_in(pin_num, pull=None):
+    """`pull` matters for the watching commands below (WATCH_EDGES,
+    MEASURE_PWM, HEARTBEAT_WATCH): a real hardware run observed a steady,
+    very regular ~27-29us-spaced edge burst on the watch pin even before
+    any flow had been deployed on the DUT -- i.e. while the DUT's
+    corresponding output pin was still undriven/floating. A floating input
+    with no pull is an antenna; that pattern (near-constant period, no
+    correlation with any real DUT activity) is more consistent with
+    picked-up ambient EMI than with a real signal or true crosstalk. A
+    defined idle level via an internal pull-down should hold the pin
+    steady until something actually drives it. If this doesn't fully
+    resolve it, the ESP32's internal pulls are weak (~45k ohm) and a
+    physical ~4.7k external pull-down would be the next step."""
+    return machine.Pin(pin_num, machine.Pin.IN, pull)
 
 
 def _arm_irq(pin, handler):
@@ -107,6 +119,22 @@ def _pin_out(pin_num):
 
 
 _output_pins = {}  # pin_num -> configured machine.Pin(OUT), reused across DRIVE_GPIO calls
+
+# A real GPIO transition is 1-2 edges; even a fast PWM signal captured for
+# a couple seconds is a few hundred. This bounds the worst case instead:
+# a real hardware run (docs/working-notes/validation/mvp-validation-plan.md's
+# dated Results entry) hit real electrical noise on a jumper -- 352 edges
+# in just a 10ms window, all reading the same value, i.e. the interrupt
+# re-firing without a real level change -- and without a cap, WATCH_EDGES'
+# and MEASURE_PWM's `edges` list grows without bound for as long as the
+# noise continues, eventually exhausting the heap (that run's actual
+# failure: a MemoryError raised repeatedly from inside the edge handler
+# itself, badly enough that even MicroPython's own exception-message
+# formatting broke under the memory pressure). Hitting this cap always
+# means "stop and report a clear, bounded error," never "silently return
+# a truncated-but-plausible-looking result" -- a noise storm looks nothing
+# like a real signal, so there's no reasonable partial answer to salvage.
+_MAX_WATCH_EDGES = 2000
 
 
 def _cmd_ping(args):
@@ -146,18 +174,37 @@ def _cmd_watch_edges(args):
         return ["EDGES_ERR duration_ms must be positive"]
 
     edges = []
+    stopped_early = [False]  # boxed, same closure-mutation pattern _cmd_heartbeat_watch already uses
 
     def _on_edge(p):
         edges.append((utime.ticks_us(), p.value()))
+        if len(edges) >= _MAX_WATCH_EDGES:
+            stopped_early[0] = True
+            p.irq(handler=None)
 
     try:
-        pin = _pin_in(pin_num)
+        pin = _pin_in(pin_num, pull=machine.Pin.PULL_DOWN)
         _arm_irq(pin, _on_edge)
     except Exception as e:  # noqa: BLE001
         return ["EDGES_ERR %r" % (e,)]
 
-    utime.sleep_ms(duration_ms)
+    # Polls in short increments rather than one long sleep_ms(duration_ms)
+    # specifically so hitting the cap can return early instead of still
+    # waiting out the rest of a multi-second duration_ms once there's
+    # nothing more to learn -- same style _cmd_measure_pwm's own
+    # early-stop-on-enough-cycles loop already uses below.
+    deadline = utime.ticks_add(utime.ticks_ms(), duration_ms)
+    while utime.ticks_diff(deadline, utime.ticks_ms()) > 0:
+        if stopped_early[0]:
+            break
+        utime.sleep_ms(5)
     pin.irq(handler=None)
+
+    if stopped_early[0]:
+        return [
+            "EDGES_ERR too many edges (>= %d) captured on pin %d -- likely signal noise or a bad connection, not a clean transition; capture stopped early"
+            % (_MAX_WATCH_EDGES, pin_num)
+        ]
 
     out = ["EDGES %d %d" % (pin_num, len(edges))]
     out += ["EDGE %d %d" % (t, v) for t, v in edges]
@@ -178,15 +225,24 @@ def _cmd_measure_pwm(args):
         return ["PWM_ERR n_cycles must be at least 1"]
 
     edges = []  # (ticks_us, value)
+    stopped_early = [False]
 
     def _on_edge(p):
         edges.append((utime.ticks_us(), p.value()))
         rising = [t for t, v in edges if v == 1]
         if len(rising) >= n_cycles + 1:
             p.irq(handler=None)  # captured enough full periods -- stop early rather than waiting out the full timeout
+        elif len(edges) >= _MAX_WATCH_EDGES:
+            # A real PWM signal reaches n_cycles rising edges long before
+            # this many total edges accumulate -- getting here means
+            # something (not a clean PWM waveform) kept the IRQ firing
+            # without ever completing n_cycles periods. Same cap/reasoning
+            # as _cmd_watch_edges above.
+            stopped_early[0] = True
+            p.irq(handler=None)
 
     try:
-        pin = _pin_in(pin_num)
+        pin = _pin_in(pin_num, pull=machine.Pin.PULL_DOWN)
         _arm_irq(pin, _on_edge)
     except Exception as e:  # noqa: BLE001
         return ["PWM_ERR %r" % (e,)]
@@ -194,10 +250,16 @@ def _cmd_measure_pwm(args):
     deadline = utime.ticks_add(utime.ticks_ms(), timeout_ms)
     while utime.ticks_diff(deadline, utime.ticks_ms()) > 0:
         rising = [t for t, v in edges if v == 1]
-        if len(rising) >= n_cycles + 1:
+        if len(rising) >= n_cycles + 1 or stopped_early[0]:
             break
         utime.sleep_ms(5)
     pin.irq(handler=None)
+
+    if stopped_early[0]:
+        return [
+            "PWM_ERR too many edges (>= %d) captured on pin %d before reaching %d cycles -- likely signal noise or a bad connection, not a clean PWM waveform"
+            % (_MAX_WATCH_EDGES, pin_num, n_cycles)
+        ]
 
     return _pwm_result_from_edges(pin_num, edges, timeout_ms)
 
@@ -254,7 +316,7 @@ def _cmd_heartbeat_watch(args):
         transitions[0] += 1
 
     try:
-        pin = _pin_in(pin_num)
+        pin = _pin_in(pin_num, pull=machine.Pin.PULL_DOWN)
         _arm_irq(pin, _on_edge)
     except Exception as e:  # noqa: BLE001
         return ["HEARTBEAT_ERR %r" % (e,)]

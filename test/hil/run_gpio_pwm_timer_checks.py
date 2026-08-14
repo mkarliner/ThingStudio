@@ -47,6 +47,56 @@ DUT_PWM_PIN = 6  # -> witness GPIO7 (MEASURE_PWM)
 WITNESS_PWM_WATCH_PIN = 7
 
 
+def warm_up_witness_irq(witness):
+    """Pays witness_firmware.py's own documented one-time cost up front:
+    "a real hardware run of this task's own driver script hit a
+    MemoryError... on the FIRST WATCH_EDGES/MEASURE_PWM/HEARTBEAT_WATCH
+    call in a session -- almost certainly ESP32's GPIO interrupt service
+    needing a one-time chunk of memory on first use... a later call using
+    the identical pin.irq() pattern succeeded once that cost had already
+    been paid" (witness_firmware.py's _arm_irq comment). That file's
+    gc.collect()-before-arming mitigation reduces the odds but isn't a
+    guaranteed fix under heap fragmentation -- this run's own first
+    WATCH_EDGES call still hit it (a 9296-byte allocation failure, a
+    different size than the originally-documented 16384 bytes, consistent
+    with fragmentation-dependent, not deterministic). Rather than let
+    that land on whichever real check happens to run first, spend it here
+    on a throwaway 10ms watch on the already-wired edge-watch pin, before
+    any check that actually asserts on the result depends on it
+    succeeding on the first try."""
+    print("Warming up witness IRQ subsystem (documented first-call memory allocation quirk)...")
+    try:
+        reply = witness.command("WATCH_EDGES %d 10" % WITNESS_EDGE_WATCH_PIN, ["EDGES_DONE", "EDGES_ERR"], timeout_s=3)
+        # Logged rather than silently discarded -- a prior version of this
+        # function didn't check/print this, which meant a run where the
+        # warm-up call itself ate the MemoryError (instead of "paying the
+        # cost" the way it's meant to) would look identical to a run where
+        # it succeeded, from this script's own output. Worth knowing which
+        # happened when a later real WATCH_EDGES call still hits it.
+        print("  warm-up result: %r" % (reply,))
+    except TimeoutError as e:
+        print("  warm-up call itself timed out (%r) -- continuing anyway, best-effort" % (e,))
+
+
+def check_no_early_node_error(dut, context, results, timeout_s=1.5):
+    """DEPLOY_ACK only confirms the bytecode was accepted and loaded, not
+    that the flow's own code ran without raising -- a node's codegen can
+    be syntactically fine (confirmed off-device, editor/test/node-*.test.ts)
+    and still hit a real hardware/API surprise pymock can't reproduce by
+    definition. Waits briefly for a NODE_ERROR after a deploy; a clean
+    timeout (nothing arrived) is the expected/passing case, not an error
+    itself, so this doesn't raise -- it reports into `results` either way
+    so a look at the output tells you whether "no observed effect" was a
+    DUT-side exception or something else (wiring, the witness's own
+    observation) worth checking instead."""
+    try:
+        err = dut.wait_for_message(lambda m: m["type"] == "NODE_ERROR", timeout_s=timeout_s, description="(early-error check, not expected to find one)")
+    except TimeoutError:
+        err = None
+    results.append(("%s: DUT flow started without raising a NODE_ERROR" % context, err is None, err))
+    return err
+
+
 def check_gpio_in(dut, witness, mpy_cross, tmpdir, results):
     """mvp-validation-plan.md's gpio_in bar, via pin-map.md's DUT
     GPIO4 <- witness GPIO5 pair: the witness drives a known signal, a
@@ -92,12 +142,25 @@ def check_gpio_in(dut, witness, mpy_cross, tmpdir, results):
 
         # Arm before DEPLOY -- see docstring above and
         # check_per_task_boundary's identical note in
-        # run_fault_isolation_checks.py.
+        # run_fault_isolation_checks.py. A settle delay AFTER writing the
+        # arm command and BEFORE triggering the stimulus, added after a
+        # real run surfaced the race this closes: writing the command
+        # only means the witness has RECEIVED it, not that it's finished
+        # gc.collect() + pin.irq() setup yet (_arm_irq in
+        # witness_firmware.py) -- if the DUT's transition happens faster
+        # than that setup completes, the edge is simply missed with no
+        # error at all (a real run showed exactly this: WATCH_EDGES armed
+        # cleanly, zero edges captured). 300ms is a guess at "comfortably
+        # longer than one gc.collect() pass on this board," not a
+        # measured number -- revisit if this specific race recurs with
+        # it in place.
         witness.ser.write(("WATCH_EDGES %d 2000\n" % WITNESS_EDGE_WATCH_PIN).encode("ascii"))
         witness.ser.flush()
+        time.sleep(0.3)
 
         dut.send_message({"type": "DEPLOY", "bytecode": bytecode, "staticData": b""})
         dut.wait_for_message(lambda m: m["type"] == "DEPLOY_ACK", timeout_s=8, description="DEPLOY_ACK for the gpio_in mirror flow (%s)" % label)
+        check_no_early_node_error(dut, "gpio_in (%s)" % label, results)
 
         edge_lines = []
         deadline = time.time() + 3
@@ -157,6 +220,12 @@ def check_pwm_out(dut, mpy_cross, tmpdir, witness, results):
 
     dut.send_message({"type": "DEPLOY", "bytecode": bytecode, "staticData": b""})
     dut.wait_for_message(lambda m: m["type"] == "DEPLOY_ACK", timeout_s=8, description="DEPLOY_ACK for the pwm_out flow")
+    early_error = check_no_early_node_error(dut, "pwm_out", results)
+    if early_error is not None:
+        # No point calling MEASURE_PWM if the DUT never actually
+        # configured the peripheral -- would just add a confusing
+        # PWM_ERR timeout on top of the real, already-reported cause.
+        return
 
     reply = witness.command("MEASURE_PWM %d 10 5000" % WITNESS_PWM_WATCH_PIN, ["PWM_RESULT", "PWM_ERR"], timeout_s=8)
     last = reply[-1] if reply else ""
@@ -210,9 +279,11 @@ def check_timer(dut, witness, mpy_cross, tmpdir, results):
     watch_duration_ms = interval_ms * 7  # enough headroom for several ticks past startup jitter
     witness.ser.write(("WATCH_EDGES %d %d\n" % (WITNESS_EDGE_WATCH_PIN, watch_duration_ms)).encode("ascii"))
     witness.ser.flush()
+    time.sleep(0.3)  # same arm/trigger race as check_gpio_in -- see its comment
 
     dut.send_message({"type": "DEPLOY", "bytecode": bytecode, "staticData": b""})
     dut.wait_for_message(lambda m: m["type"] == "DEPLOY_ACK", timeout_s=8, description="DEPLOY_ACK for the timer flow")
+    check_no_early_node_error(dut, "timer", results)
 
     edge_lines = []
     deadline = time.time() + (watch_duration_ms / 1000.0) + 3
@@ -261,6 +332,7 @@ def main():
             dut.wait_for_message(lambda m: m["type"] == "HELLO", timeout_s=8, description="DUT's boot-time HELLO")
             pong = witness.command("PING", ["PONG", "ERR"])
             results.append(("witness responds to PING", pong and pong[-1] == "PONG", pong))
+            warm_up_witness_irq(witness)
 
             check_gpio_in(dut, witness, args.mpy_cross, tmpdir, results)
             check_pwm_out(dut, args.mpy_cross, tmpdir, witness, results)

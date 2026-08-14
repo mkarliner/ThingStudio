@@ -43,6 +43,7 @@ class _FakePin:
         self.num = num
         self.mode = mode
         self._value = 0
+        self._handler = None
 
     def value(self, v=None):
         if v is None:
@@ -50,7 +51,46 @@ class _FakePin:
         self._value = v
 
     def irq(self, trigger=0, handler=None):
-        pass  # real edge-triggered capture is a hardware-only concern here -- see this file's header
+        # Real edge-triggered TIMING is a hardware-only concern (this
+        # file's header) -- but storing/invoking the handler synchronously
+        # is enough to drive the edge-count-cap logic in
+        # _cmd_watch_edges/_cmd_measure_pwm off-device (test_..._cap_stops_...
+        # below), which is really just "does this list stop growing once
+        # it hits N", not a timing question at all.
+        self._handler = handler
+
+    def fire(self, value):
+        """Test helper: simulates one interrupt firing with `value` as the
+        pin's level at that instant. No-op if nothing's currently armed
+        (mirrors real hardware after `.irq(handler=None)`)."""
+        self._value = value
+        if self._handler is not None:
+            self._handler(self)
+
+
+class _NoisyFakePin(_FakePin):
+    """A fake pin whose irq() immediately fires a whole burst of synthetic
+    edges (values from `pattern`, in order) as soon as it's armed -- enough
+    to drive _MAX_WATCH_EDGES's cap logic (witness_firmware.py) off-device
+    without needing real concurrent interrupt timing, which this file's
+    header already scopes out as hardware-only. The cap itself exists
+    because of a real hardware run
+    (docs/working-notes/validation/mvp-validation-plan.md's dated Results
+    entry) that hit exactly this: a jumper picking up 352 spurious edges
+    in a 10ms window, cascading into a MemoryError inside the edge
+    handler once a real multi-second capture ran."""
+
+    def __init__(self, num, mode, pattern):
+        super().__init__(num, mode)
+        self._pattern = pattern
+
+    def irq(self, trigger=0, handler=None):
+        super().irq(trigger, handler)
+        if handler is not None:
+            for v in self._pattern:
+                if self._handler is None:  # disarmed itself mid-storm (p.irq(handler=None)) -- matches the real early-stop behavior under test
+                    break
+                self.fire(v)
 
 
 class _FakeMachine:
@@ -207,6 +247,57 @@ def test_pwm_math_handles_ticks_us_wraparound():
     assert "duty_pct=25.00" in line
 
 
+# --- edge-count cap: a real noise storm must stop cleanly, not exhaust memory ---
+
+
+def test_watch_edges_stops_early_on_a_noise_storm():
+    storm = [1] * (witness_firmware._MAX_WATCH_EDGES + 50)  # constant value=1, same shape the real hardware run actually hit
+    noisy = _NoisyFakePin(3, _FakePin.IN, pattern=storm)
+    original_pin_in = witness_firmware._pin_in
+    witness_firmware._pin_in = lambda pin_num: noisy
+    try:
+        out = witness_firmware.handle_line("WATCH_EDGES 3 1000")
+    finally:
+        witness_firmware._pin_in = original_pin_in
+    assert len(out) == 1
+    assert out[0].startswith("EDGES_ERR")
+    assert "too many edges" in out[0]
+
+
+def test_watch_edges_does_not_cap_a_normal_small_edge_count():
+    # Confirms the cap doesn't false-positive on an ordinary result --
+    # a real gpio_out-style single transition (one edge) reports normally.
+    noisy = _NoisyFakePin(3, _FakePin.IN, pattern=[1])
+    original_pin_in = witness_firmware._pin_in
+    witness_firmware._pin_in = lambda pin_num: noisy
+    try:
+        out = witness_firmware.handle_line("WATCH_EDGES 3 1000")
+    finally:
+        witness_firmware._pin_in = original_pin_in
+    assert out[0] == "EDGES 3 1"
+    assert out[1] == "EDGE 0 1"
+    assert out[2] == "EDGES_DONE"
+
+
+def test_measure_pwm_stops_early_on_a_noise_storm_instead_of_hanging_or_exhausting_memory():
+    # Alternating 1/0 -- a shape that would otherwise look like real PWM
+    # edges -- but with a requested n_cycles so high the edge-count cap
+    # has to be what stops this, not the normal "enough cycles observed"
+    # success path. Isolates the cap specifically, rather than relying on
+    # "MEASURE_PWM handles a noisy signal by coincidence."
+    storm = [i % 2 for i in range(witness_firmware._MAX_WATCH_EDGES + 50)]
+    noisy = _NoisyFakePin(7, _FakePin.IN, pattern=storm)
+    original_pin_in = witness_firmware._pin_in
+    witness_firmware._pin_in = lambda pin_num: noisy
+    try:
+        out = witness_firmware.handle_line("MEASURE_PWM 7 999999 1000")
+    finally:
+        witness_firmware._pin_in = original_pin_in
+    assert len(out) == 1
+    assert out[0].startswith("PWM_ERR")
+    assert "too many edges" in out[0]
+
+
 minitest.run(
     [
         test_ping,
@@ -226,5 +317,8 @@ minitest.run(
         test_pwm_math_25_percent_duty_2khz,
         test_pwm_math_too_few_edges_reports_error_not_garbage,
         test_pwm_math_handles_ticks_us_wraparound,
+        test_watch_edges_stops_early_on_a_noise_storm,
+        test_watch_edges_does_not_cap_a_normal_small_edge_count,
+        test_measure_pwm_stops_early_on_a_noise_storm_instead_of_hanging_or_exhausting_memory,
     ]
 )

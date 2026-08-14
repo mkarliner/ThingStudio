@@ -716,6 +716,44 @@ the README-per-component convention.
   format. This is the closest thing to verification achievable without
   the boards; the real pass is the next action, on the rig, per
   `test/hil/README.md`'s run instructions.
+- **Results (2026-08-14, real hardware — two LuatOS CORE-ESP32-C3 boards,
+  ALL PASS):** `run_gpio_pwm_timer_checks.py` run to completion against
+  the witness+DUT rig. `gpio_in`: witness drove GPIO5 HIGH then LOW, DUT
+  read it and mirrored onto its own gpio_out pin (GPIO12), witness
+  observed exactly one clean edge each direction (`EDGES 3 1`), no
+  `NODE_ERROR` either direction. `pwm_out`: fixed 1000Hz/50%-duty flow
+  measured at 1016.98Hz / 49.36% duty — within tolerance. `timer`:
+  300ms-interval flow measured at an average 300.0ms inter-edge gap across
+  4 gaps (299.906–300.001ms range).
+  Took three hardware runs to get a clean pass, and what broke along the
+  way is worth recording since none of it was a codegen or node-logic
+  bug: (1) the witness's first `.irq()` arm in a session can MemoryError
+  under heap fragmentation (pre-existing, worked around by a `gc.collect()`
+  + throwaway warm-up call before the real checks); (2) a real
+  arm-then-trigger race — the driver script's "arm complete" only meant
+  "witness received the command," not "the IRQ is actually live" — fixed
+  with a 0.3s settle delay between arming and triggering; (3) the actual
+  root cause of the worst failures (a MemoryError storm severe enough to
+  corrupt MicroPython's own exception-message formatting): a floating
+  witness input pin picking up what looked like ambient EMI rather than a
+  real signal — a steady ~27–29us-spaced edge burst present even before
+  any DUT flow was deployed, i.e. with nothing on the DUT side driving
+  anything yet. Diagnosed from the pattern's regularity (inconsistent with
+  either a real transition or true wire-to-wire crosstalk from the nearby
+  PWM jumper, which was tried first and moved further away with no
+  effect). Fixed by giving the witness's watching pins (`WATCH_EDGES`/
+  `MEASURE_PWM`/`HEARTBEAT_WATCH`, all sharing `_pin_in`) an internal
+  `PULL_DOWN` — confirmed by a clean, zero-edge warm-up capture on the
+  next run. Independently, `witness_firmware.py`'s `WATCH_EDGES`/
+  `MEASURE_PWM` handlers got a `_MAX_WATCH_EDGES = 2000` cap with a clear
+  `EDGES_ERR`/`PWM_ERR "likely signal noise or a bad connection"` message
+  — kept regardless of the pull-down fix, since a noise storm degrading
+  cleanly instead of exhausting the heap has value on its own. New
+  off-device tests for the cap in `test/hil/test_witness_firmware.py`
+  (`_NoisyFakePin` synthetic-storm harness); syntax-checked only in this
+  sandbox (no MicroPython unix-port build available here), not yet run
+  against a real interpreter. GPIO/timer batch's hardware bar is now
+  fully met. Not yet committed as of this entry.
 
 ## Tier 2 — live values + persistence
 
