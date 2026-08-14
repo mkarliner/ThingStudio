@@ -171,6 +171,74 @@ pipeline driven by hardcoded buttons.
     open item this bare-minimum pass existed to prove; it's now proven.
     Still doesn't close this entry — HELLO/version gate, save/load, flow
     file format, inspector polish are all still missing, per above.
+  - 2026-08-14 (same session, cosmetic question raised, not built):
+    node-red-style compact node appearance (fixed-height pill shape, icon
+    + label only, no inline config — properties edited in a separate
+    panel/dialog instead) was asked about. Port placement itself needs no
+    work — Litegraph's default `addInput`/`addOutput` rendering already
+    puts slots as edge-of-box dots, left for inputs/right for outputs,
+    matching Node-RED. The node *shape* is the real gap: current nodes
+    (`editor/src/app/nodes.ts`) are tall cards with config as inline
+    `addWidget` rows (`inject`'s type/value/repeat, `gpio_out`'s pin).
+    Vendored Litegraph (`editor/public/vendor/litegraph`) does support
+    what a compact look needs — `ROUND_SHAPE`/`CARD_SHAPE` node shapes,
+    `onDrawForeground`/`onDrawBackground` override hooks — and the
+    "config lives outside the node body" pattern already exists once,
+    for `function`'s "edit code…" button opening `#code-modal`
+    (`main.ts`). Making all four node types look like Node-RED would mean
+    generalizing that one-off modal into a shared properties panel and
+    stripping the inline widgets from `inject`/`gpio_out`. Contained to
+    `nodes.ts` + a modest `main.ts` addition, no compiler/protocol
+    changes. Deferred — cosmetic, not blocking the hardware-proof work
+    above.
+  - 2026-08-14 (same session, real gap hit hands-on, not built): a
+    `function` node with invalid MicroPython produces an `mpy-cross`
+    `SyntaxError` with only a raw line number in the generated source
+    (`main.ts`'s device console just prints `mpy-cross`'s stderr
+    verbatim) — nothing maps that back to which node on the canvas is
+    actually broken. Fine with one function node, unworkable once a flow
+    has several — this is squarely the "error attribution" case
+    `CLAUDE.md`'s fault-handling priority already names as load-bearing,
+    not polish, so it's worth taking seriously rather than filing as
+    generic UI polish.
+    - Ruled out: an embedded local variable (e.g. `_node_id = "42"`
+      inside the generated function body) — useless, since a
+      `SyntaxError` is a parse-time failure and no code ever executes to
+      bind it; and it'd be redundant for real runtime errors anyway,
+      since `nodeCallWithFaultBoundary` (`compile.ts`) already attributes
+      those correctly via a literal node ID at the *call site*
+      (`raise runtime.NodeError("${nodeId}", _e)`), independent of
+      anything inside the function.
+    - Ruled out as the attribution mechanism (though still worth adding
+      for readability): a `# node:<id>` comment above each generated
+      `async def`, resolved by scanning backward from the error line for
+      the nearest marker. Works, but is at the mercy of the function
+      node's body being *verbatim user-typed MicroPython* dropped in
+      unmodified — a user comment that happens to collide with the
+      marker format could misattribute. Low-probability, but avoidable.
+    - Preferred approach: have `compile()` return a structured
+      `{ nodeId, startLine, endLine }[]` table computed while it
+      assembles the source, rather than parsed back out of generated
+      text at read time. Cheap to add — `compile.ts`'s
+      `transformCodegen`/`sinkCodegen` maps are already keyed by
+      `node.id` in the same order `functionDefs` is built, so tracking
+      cumulative line counts alongside that costs almost nothing, and
+      it's precise regardless of what a user types inside their own
+      function body (no text-parsing, no collision risk). Matches this
+      codebase's existing preference for typed contracts over
+      string-sniffing (the same reasoning `node-definition.ts`'s registry
+      replaced POC-D's hardcoded compiler for). The `# node:<id>` comment
+      is still worth emitting too, purely as human-readable documentation
+      in the "Compiled source" preview panel — just not relied on for the
+      actual attribution logic.
+    - Once the line→node mapping exists, `main.ts` would parse
+      `mpy-cross`'s `File "/in.py", line N` out of its stderr, look up the
+      owning node ID, and flag that node on the canvas — Litegraph nodes
+      already support recoloring at runtime (`node.color`/`node.bgcolor`,
+      same mechanism each node type's default color already uses in
+      `nodes.ts`), so highlighting it red is a small addition once the ID
+      is known.
+    - Not started.
 
 ## Explicitly still out of v1 (§10, unchanged by this session)
 

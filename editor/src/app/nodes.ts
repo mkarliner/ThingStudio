@@ -4,15 +4,26 @@
 // Litegraph canvas node classes for the bare-minimum editor
 // (docs/working-notes/mvp-feature-priorities.md's "actually create, edit
 // and run a flow" goal). Ported from pocs/poc-d/nodes.js, generalized
-// from that POC's hardcoded 3-type set to the four types this editor
-// exposes (inject/function/debug/gpio_out) and wired against the REAL
-// node-library/compiler.ts registry instead of poc-d/compiler.js's
+// from that POC's hardcoded 3-type set to the five types this editor
+// exposes (inject/function/debug/gpio_out/timer) and wired against the
+// REAL node-library/compiler.ts registry instead of poc-d/compiler.js's
 // hardcoded single-shape compiler -- so `node.properties` here has to
 // match exactly what each node-library/*.ts's codegen* reads:
 //   - inject:   payloadType, payloadValue, repeat        (node-library/inject.ts)
 //   - function: code                                     (node-library/function-node.ts)
 //   - debug:    (none -- debug.ts reads only node.id)     (node-library/debug.ts)
 //   - gpio_out: pin                                       (node-library/gpio-out.ts)
+//   - timer:    intervalMs                                (node-library/timer.ts)
+//
+// timer added 2026-08-14, same session as the hardware round-trip proof --
+// already existed in the compiler registry and was already HIL-validated
+// (run_gpio_pwm_timer_checks.py), just never had a canvas node class or
+// toolbar button, by the original bare-minimum pass's deliberate 4-type
+// scope cut. Genuinely stateful (a real incrementing counter, see
+// timer.ts's own header) unlike inject, which was the actual answer to
+// "why doesn't my inject -> invert -> gpio_out flow flash the LED" --
+// inject rebuilds the same literal payload from scratch every tick, so
+// there's nothing for a downstream function to remember between ticks.
 //
 // No `@types/litegraph` dependency exists for this vendored 0.7.18 build
 // (see editor/public/vendor/litegraph/LITEGRAPH-LICENSE for provenance),
@@ -101,4 +112,19 @@ export function registerCanvasNodeTypes(): void {
   GpioOutNode.title = "gpio out";
   GpioOutNode.desc = "Real digital GPIO output once deployed -- bool-only input";
   LG.registerNodeType("thingstudio/gpio_out", GpioOutNode);
+
+  // ---------------------------------------------------------------------
+  // timer
+  // ---------------------------------------------------------------------
+  function TimerNode(this: any) {
+    this.properties = { intervalMs: 1000 };
+    this.addOutput("msg", "*");
+    this.addWidget("number", "interval (ms)", this.properties.intervalMs, "intervalMs", { min: 1, step: 100, precision: 0 });
+    this.color = "#5b3b6e";
+    this.bgcolor = "#331f3f";
+    this.size = [190, 76];
+  }
+  TimerNode.title = "timer";
+  TimerNode.desc = "Emits an incrementing tick count every intervalMs -- unlike inject, genuinely stateful across ticks (see node-library/timer.ts)";
+  LG.registerNodeType("thingstudio/timer", TimerNode);
 }
