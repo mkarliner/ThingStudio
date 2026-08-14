@@ -271,6 +271,64 @@ blocking Tier 1's software-only node batch (boolean/arithmetic/
 comparator/variable-get-set/debug all ship stateless for now), but worth
 tracking here so it doesn't get rediscovered from scratch later.
 
+**Addendum, 2026-08-14 (editor hands-on session):** a concrete, simpler
+motivating case for part of the gap above, distinct from the join/
+synchronization problem — worth tracking separately so the two don't get
+conflated into one harder design than either actually is. Hit hands-on:
+"why doesn't an `inject` → invert-payload `function` → `gpio_out` flow
+flash the LED" — it can't, because `inject` rebuilds the same literal
+payload from scratch every tick, so a downstream function always inverts
+the same starting value to the same result. The `timer` node (added this
+session) works around it for that one case (a real incrementing counter,
+`global`-scoped per node instance), but that's a single hardcoded
+mechanism baked into one node type, not something a flow author can reach
+for generally. Node-RED's answer to this whole class of problem is
+[context](https://nodered.org/docs/user-guide/context): `context`/`flow`/
+`global` objects with `get(key)`/`set(key, value)`, available directly
+inside a Function node's own code, at three scopes (node-private,
+flow-wide, global-across-flows), backed by a pluggable store (in-memory
+by default, optional persistence). Worth building something shaped like
+that here rather than one-off state hacks per node type.
+
+This is NOT starting from nothing: `variable_get`/`variable_set`
+(`node-library/variable-{get,set}.ts`) already implement almost exactly
+Node-RED's *flow* scope — a single flow-wide in-RAM dict (`_flow_vars`),
+keyed by a user-chosen name string, shared between a set node and a get
+node anywhere in the flow. What's missing against the Node-RED shape:
+(1) no *node* scope (state private to one node instance, e.g. a counter
+a single function node keeps entirely to itself, no risk of a name
+collision with an unrelated node elsewhere in the flow); (2) no way for a
+`function` node's own verbatim code to reach the store directly —
+today only the dedicated `variable_get`/`variable_set` node types touch
+`_flow_vars` at all, `function`'s generated code has no `context`/`flow`
+object available, so the flashing-LED case can't be solved inside a
+single function node the way a real Node-RED user would reach for
+(`flow.get('count')`/`flow.set('count', ...)` directly in Function node
+code) without wiring three separate nodes (get → function → set) around
+it. Closing that second gap is probably the smaller, higher-value half:
+expose `context`/`flow` objects with `get`/`set` methods to `function`'s
+generated code, backed by the same dict-per-scope mechanism
+`variable-set.ts` already established, plus a second node-instance-keyed
+dict for `context` scope. `global` scope is moot for now (§6: single flow
+per device in v1, nothing to be global *across*), so this really only
+needs two scopes to start, not three.
+
+Relationship to already-tracked work, so this doesn't get scoped as
+bigger than it is: the *persistence* half (surviving redeploy/power
+cycle) is already Tier 2's flash-backed state store (§5), unchanged by
+this — Node-RED's own context is in-memory-by-default with optional
+pluggable persistence too, same shape, not a new idea. The *buffering/
+timeout/N-way* half (the join node, "wait until both branches have each
+fired once") is the harder, separate problem the entry above already
+flags — plain `get`/`set` context access doesn't need any of that
+machinery, it's just "read a value, write a value, the flow author's
+code decides when and why." Not started, not scoped as a real design
+(exact API shape inside generated MicroPython, how node-scope keys avoid
+colliding with `variable_get`/`variable_set`'s flow-scope dict, whether
+`variable_get`/`variable_set` become redundant once `function` can do
+this directly or stay as a convenience GUI-only path the way Node-RED
+keeps both its Change node UI and raw Function-node context access).
+
 Added 2026-08-14, flagged during network-node review rather than built:
 **connection-state gate/router nodes.** Raised as a possible answer to
 "how does a flow author explicitly react to WiFi/MQTT not being ready
