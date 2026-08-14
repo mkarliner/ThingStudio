@@ -161,8 +161,9 @@ pipeline driven by hardcoded buttons.
     hardcoded shape), real mpy-cross WASM cross-compile, real WebSerial
     `DEPLOY` via `transport.ts`. Deliberately still missing, by explicit
     scope choice for this first hands-on pass: the `HELLO`/version
-    pre-flight gate (`version.ts` exists, not wired in), file save/load,
-    the git-friendly flow file format, and any inspector polish beyond a
+    pre-flight gate (`version.ts` exists, not wired in — **landed, see
+    the 2026-08-14 later-session bullet below**), file save/load, the
+    git-friendly flow file format, and any inspector polish beyond a
     plain scrolling device console. This entry stays open until those land.
   - 2026-08-14 (same session, later): first real Connect/Deploy round-trip
     confirmed by hand against real hardware — inject → gpio_out (GPIO12,
@@ -239,6 +240,33 @@ pipeline driven by hardcoded buttons.
       `nodes.ts`), so highlighting it red is a small addition once the ID
       is known.
     - Not started.
+  - 2026-08-14 (later session, editor-hands-on continuation): `HELLO`/
+    version pre-flight gate wired in (`main.ts`), closing that item from
+    this bullet's "deliberately still missing" list above. Real gap hit
+    while wiring it: `device-runtime/src/listener.py` sends `HELLO`
+    exactly once, from a task spawned at listener *boot*, with no
+    periodic resend and nothing that re-triggers it on a new client
+    connection — opening a WebSerial port doesn't reset the board, so a
+    device already running when Connect fires (the normal case, since a
+    deployed flow persists across power cycles per §5) has no fresh
+    `HELLO` for that connection to see; only a physical reset produces
+    one. Decided (Mike, asked directly rather than assumed): editor-only
+    fix, not a device-runtime protocol change. The gate is soft on
+    absence, hard on mismatch — no `HELLO` seen yet allows Deploy with a
+    visible "unverified" warning (`main.ts` waits `HELLO_WAIT_MS=3000`ms
+    after Connect before logging that warning, then re-warns on every
+    Deploy attempt made without one), while a real `HELLO` reporting an
+    incompatible major version blocks Deploy outright before any compile
+    work runs, via the already-built `decideDeploy` (`version.ts`,
+    unchanged — this session only wired its existing, already-tested
+    logic in). A real fix — an explicit `HELLO_REQUEST` message the
+    editor could send on connect instead of depending on a maybe-reset —
+    would touch `messages.ts`/`messages.py`/`listener.py` and need a
+    hardware pass; flagged here, deliberately not built this session.
+    `tsc --noEmit` clean; hands-on confirmation (does the warning/block
+    actually fire correctly against real hardware, both with and without
+    a reset after Connect) still Mike's to do, same as this session's
+    other device-touching changes.
 
 ## Explicitly still out of v1 (§10, unchanged by this session)
 
@@ -328,6 +356,31 @@ colliding with `variable_get`/`variable_set`'s flow-scope dict, whether
 `variable_get`/`variable_set` become redundant once `function` can do
 this directly or stay as a convenience GUI-only path the way Node-RED
 keeps both its Change node UI and raw Function-node context access).
+
+**Resolved 2026-08-14 (later the same session).** The smaller,
+higher-value half above is built: `function-node.ts` now exposes
+`context` (node-instance-private, a fresh dict per instance keyed via
+`ctx.uniqueName`, same collision-avoidance mechanism `timer.ts` already
+uses) and `flow` (flow-wide, backed by the exact same `_flow_vars` dict
+`variable_get`/`variable_set` read/write — not a second store, so a
+function node's `flow.get('x')`/`flow.set('x', ...)` interoperates
+directly with a `variable_get`/`variable_set` node named `"x"`). Both
+exposed as a small shared `_Store` class (`get`/`set`, matching
+Node-RED's own API shape), deduped once regardless of function-node
+count, bound as plain local names at the top of the generated function
+body (no `global` needed — nothing rebinds the module-level object,
+only calls methods on it). Confirmed hands-on: `inject` → `function`
+(`context.set('on', not context.get('on', False))`) → `gpio_out` flashes
+the LED on repeated manual redeploys, the original motivating case,
+without `timer`'s workaround. Tests: `editor/test/node-function.test.ts`
+(context persistence across repeated calls, per-instance isolation,
+both directions of `flow`/variable-node interop) — `tsc --noEmit` clean,
+`npm test` still Mike's to run per `CLAUDE.md`'s sandbox/vitest note.
+`variable_get`/`variable_set` were left as-is, not redesigned — still a
+convenience GUI-only path onto the same flow-scope dict, per the "stay
+as a convenience" option flagged above; revisit only if that turns out
+wrong in practice. The API-shape open questions from the paragraph above
+are answered by the actual implementation now, not just proposed.
 
 Added 2026-08-14, flagged during network-node review rather than built:
 **connection-state gate/router nodes.** Raised as a possible answer to

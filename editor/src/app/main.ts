@@ -5,19 +5,20 @@
 // via nodes.ts) -> real compiler (compiler/compile.ts, the same one the
 // off-device tests exercise) -> real mpy-cross WASM cross-compile
 // (vendored from mpy-cross-wasm/, see editor/public/vendor/mpy-cross) ->
-// real §13 DEPLOY over WebSerial (protocol/transport.ts). No save/load,
-// no HELLO/version pre-flight gate (version.ts exists but is deliberately
-// not wired in here -- explicit scope decision for this first hands-on
-// pass, per the "bare minimum" brief), no polish. The goal is exactly
-// "build a flow, deploy it, see it run" -- everything else is out of
-// scope until that round-trip is proven by hand.
+// real §13 DEPLOY over WebSerial (protocol/transport.ts). No save/load
+// gap remains (flow-file/ is wired in below); the HELLO/version gate
+// (version.ts) is now wired in too -- see the "WebSerial connect /
+// deploy" section below for the caveat that shapes how it's wired (a
+// device already running when Connect fires has no fresh HELLO to gate
+// on, since opening a WebSerial port doesn't reset the board).
 
 import { compile } from "../compiler/compile.js";
 import type { NodeLineRange } from "../compiler/compile.js";
 import type { GraphData } from "../compiler/graph.js";
 import { buildRegistry } from "../node-library/registry.js";
 import { WebSerialTransport, type WebSerialPort } from "../protocol/transport.js";
-import type { Message } from "../protocol/messages.js";
+import type { Message, ProtocolVersion } from "../protocol/messages.js";
+import { decideDeploy } from "../protocol/version.js";
 import { registerCanvasNodeTypes } from "./nodes.js";
 import { buildFlowFile, parseFlowFile, serializeFlowFileText, FlowFileError, type FlowFile, type FlowFileEdge, type CanvasNodeSnapshot } from "../flow-file/flow-file.js";
 import { saveFlowFileToDisk, openFlowFileFromDisk } from "../flow-file/file-io.js";
@@ -390,8 +391,29 @@ setInterval(refreshPreview, 1000);
 // ---------------------------------------------------------------------
 // WebSerial connect / deploy -- real §13 protocol via transport.ts, no
 // hand-rolled framing here (that's exactly what transport.ts exists to
-// own). Deliberately no HELLO/version-gate check (version.ts) in this
-// bare-minimum pass -- see this file's header.
+// own). HELLO/version-gate check (version.ts) wired in below.
+//
+// Real constraint this wiring has to live with, not a hypothetical:
+// device-runtime/src/listener.py sends HELLO exactly once, from a task
+// spawned in main() at listener *boot* -- there's no periodic resend and
+// nothing re-triggers it on a new client connection, because opening a
+// WebSerial port is silent to the device (no DTR-style reset the way
+// esptool's own best-effort reset trick, already used elsewhere in this
+// app, exploits when it works at all). So a device that was already
+// running before Connect was clicked -- the normal case, since a
+// deployed flow persists across power cycles per §5 -- has no fresh
+// HELLO for this connection to see; only a physical reset (the console
+// already hints at this today) produces one. Blocking Deploy outright
+// whenever no HELLO has arrived would make Deploy unusable in that
+// ordinary case, so the gate is soft on absence and hard on mismatch:
+// no HELLO yet -> allow Deploy with a visible "unverified" warning, a
+// real HELLO reporting an incompatible major version -> block, per §5's
+// "a version-checked editor refusing to send a DEPLOY the device can't
+// parse prevents this specific trigger before it starts." Fixing the
+// underlying gap for real (an explicit HELLO_REQUEST the editor can send
+// on connect instead of waiting on a maybe-reset) is a device-runtime
+// protocol change, out of scope here -- flagged, not silently worked
+// around forever.
 // ---------------------------------------------------------------------
 let waiters: { match: (m: Message) => boolean; resolve: (m: Message) => void; timer: ReturnType<typeof setTimeout> }[] = [];
 
@@ -405,10 +427,32 @@ function waitForMessage(match: (m: Message) => boolean, timeoutMs: number): Prom
   });
 }
 
+// The runtime version this editor's compiler/codegen currently targets
+// (version.ts's `editorTarget`). Has to be mirrored by hand against
+// device-runtime/src/listener.py's `_RUNTIME_VERSION` -- no shared
+// config file between the two projects/languages, same "has to be
+// mirrored, flagged rather than silently duplicated" reasoning
+// messages.ts's own header already applies to the MessageType table.
+const EDITOR_TARGET_VERSION: ProtocolVersion = { major: 0, minor: 1, patch: 0 };
+
+const HELLO_WAIT_MS = 3000; // generous over a real boot's timing; only gates the "unverified" warning below, never blocks Connect itself
+
+// Set from the most recent HELLO this connection has seen; null means
+// "no HELLO yet this connection" (either still waiting, or the device
+// was already running and none is coming -- see the constraint above).
+// Reset on every fresh Connect and on disconnect so a stale version from
+// a previous device never silently carries over to a new one.
+let lastHelloVersion: ProtocolVersion | null = null;
+
 const transport = new WebSerialTransport({
   onMessage(message) {
     logLine(`[${message.type}] ${JSON.stringify(message, (_k, v) => (v instanceof Uint8Array ? `<${v.length} bytes>` : v))}`, "ok");
     if (message.type === "NODE_ERROR") highlightNodeFromNodeError(message.nodeId);
+    if (message.type === "HELLO") {
+      lastHelloVersion = message.runtimeVersion;
+      const decision = decideDeploy(message.runtimeVersion, EDITOR_TARGET_VERSION);
+      logLine(`[version check] ${decision.reason}`, decision.allowed ? "ok" : "err");
+    }
     waiters = waiters.filter((w) => {
       if (w.match(message)) {
         clearTimeout(w.timer);
@@ -426,6 +470,7 @@ const transport = new WebSerialTransport({
   },
   onDisconnect(reason) {
     logLine(`[disconnected] ${reason ? String(reason) : "(clean)"}`, "");
+    lastHelloVersion = null;
     setConnectedUi(false);
   },
 });
@@ -444,6 +489,7 @@ el("btnConnect").addEventListener("click", async () => {
     logLine("[Web Serial API not available -- use Chrome or Edge, served over http(s)://]", "err");
     return;
   }
+  lastHelloVersion = null;
   try {
     const port = await nav.serial.requestPort();
     await transport.connect(port);
@@ -454,6 +500,19 @@ el("btnConnect").addEventListener("click", async () => {
   setConnectedUi(true);
   logLine("[connected @ 115200 baud -- opening the port does not reset the board]", "");
   logLine("[if nothing appears below, the board's listener may not be running -- press its physical reset button]", "");
+
+  // Only gates the warning below -- transport.onMessage already handles
+  // (and logs) a HELLO whenever it actually arrives, on its own schedule,
+  // independent of this wait. See this section's header comment for why
+  // a timeout here is expected and not itself an error.
+  try {
+    await waitForMessage((m) => m.type === "HELLO", HELLO_WAIT_MS);
+  } catch {
+    logLine(
+      "[no HELLO received yet -- version compatibility is unverified; Deploy will proceed without the check until one arrives (reset the board to get one now)]",
+      "",
+    );
+  }
 });
 
 el("btnDisconnect").addEventListener("click", async () => {
@@ -468,6 +527,22 @@ el("btnDeploy").addEventListener("click", async () => {
   btn.disabled = true;
   clearNodeHighlights(); // stale red from a previous failed attempt shouldn't linger past a new one
   try {
+    // Gate the attempt itself, before any compile work -- §5's own
+    // framing for why this check exists. Soft on absence (no HELLO seen
+    // this connection -- proceed, warned), hard on a real mismatch (a
+    // HELLO reporting an incompatible major version -- refuse outright).
+    // See the "WebSerial connect / deploy" section header for why
+    // absence is common and not itself a red flag.
+    if (lastHelloVersion) {
+      const decision = decideDeploy(lastHelloVersion, EDITOR_TARGET_VERSION);
+      if (!decision.allowed) {
+        logLine(`[deploy blocked -- version mismatch] ${decision.reason}`, "err");
+        return;
+      }
+    } else {
+      logLine("[deploying without a version check -- no HELLO received this connection]", "");
+    }
+
     const preview = refreshPreview();
     if ("error" in preview) {
       logLine(`[compile error] ${preview.error}`, "err");
