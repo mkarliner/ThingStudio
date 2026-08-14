@@ -25,6 +25,12 @@ Warn Mike before installing or adding any npm/Node.js package (dependency or dev
 
 Not every practice in that doc applies here — the maintainer-side items (2FA, provenance/OIDC publishing) are only relevant if this project ever publishes its own packages, not to installing dependencies.
 
+## Git writes from the agent sandbox
+
+Same underlying cause as the `node_modules` cross-platform corruption bug (`editor-hands-on-briefing.md`): the agent sandbox and Mike's real Mac share the same live-mounted repo, and the sandbox cannot delete files it just created on that mount (`Operation not permitted` on unlink) — confirmed for `.git/index.lock`, `.git/HEAD.lock`, and `.git/objects/*/tmp_obj_*`. `git add`/`git commit` from the sandbox routinely leave one of these behind, which then blocks the *next* git command (from either side) until someone with real delete permission — Mike, in a real Terminal — removes it.
+
+Read-only git commands from the sandbox (`status`, `log`, `diff`) are fine. For writes (`add`, `commit`), hand Mike the exact command(s) to run himself in a real Terminal, rather than running `git commit` from the sandbox — cheaper than the repeated "run `rm -f .git/*.lock`, retry" cycle this cost a full session before the pattern was recognized.
+
 ## Third-party software tracking
 
 `docs/third-party-licenses.md` is the running ledger of every third-party dependency in use — runtime/platform components, editor build tooling, and anything vendored — with its license. Keep it current in the same change, not batched up for later: any new npm package (already requires the flag-and-approve step above), any newly vendored library, or any platform/runtime component decision (a different ESP-IDF version, a different MicroPython fork, etc.) gets a line added or updated there immediately, pulling version/license straight from the installed package metadata rather than from memory.
