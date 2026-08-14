@@ -164,6 +164,13 @@ pipeline driven by hardcoded buttons.
     pre-flight gate (`version.ts` exists, not wired in), file save/load,
     the git-friendly flow file format, and any inspector polish beyond a
     plain scrolling device console. This entry stays open until those land.
+  - 2026-08-14 (same session, later): first real Connect/Deploy round-trip
+    confirmed by hand against real hardware — inject → gpio_out (GPIO12,
+    the onboard LED) deployed and ran correctly, including a fan-out case
+    (inject wired to both gpio_out AND debug simultaneously). This was the
+    open item this bare-minimum pass existed to prove; it's now proven.
+    Still doesn't close this entry — HELLO/version gate, save/load, flow
+    file format, inspector polish are all still missing, per above.
 
 ## Explicitly still out of v1 (§10, unchanged by this session)
 
