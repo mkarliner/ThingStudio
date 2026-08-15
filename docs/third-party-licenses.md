@@ -1,8 +1,9 @@
 # Third-party software in use
 
-Status: living document, last updated 2026-08-14 (this update: Litegraph.js
-and the mpy-cross WASM build vendored into `editor/` for the bare-minimum
-canvas editor). Tracks every third-party
+Status: living document, last updated 2026-08-15 (this update: 7 npm
+packages installed for the `pocs/poc-rete/` Rete.js evaluation spike —
+Litegraph.js and the mpy-cross WASM build's `editor/` entries below are
+unchanged from 2026-08-14). Tracks every third-party
 dependency this project actually uses — runtime/platform components,
 editor build tooling, and anything vendored — with its license, so the
 license-compliance due diligence design doc §12 calls for before any
@@ -91,6 +92,32 @@ environment or committed as a pinned requirement file yet.
 | Package | Role | License | Notes |
 |---|---|---|---|
 | pyserial | Serial port I/O for `test/hil/run_fault_isolation_checks.py` (talks to both the witness and DUT boards) | BSD-3-Clause | Not yet pinned to a specific version or added to a `requirements.txt` — this repo has no Python dependency-lockfile convention yet (device-runtime's own MicroPython code has no third-party dependencies at all, by design — see `cbor.py`'s own header on why). Worth a `requirements.txt` (or equivalent) the next time `test/hil/` tooling grows, rather than assumed fine indefinitely as an unpinned `pip install` in a README. |
+
+## POC-only npm dependencies (`pocs/poc-rete/`)
+
+Real `npm install`, not a hand-vendored single file like Litegraph/Drawflow
+above — Rete.js ships as several small interdependent ESM packages with real
+peer dependencies, which doesn't suit vendoring a UMD build the way poc-c's
+libraries did. Flagged and approved per `CLAUDE.md` before install (all 8
+individually, including a mid-flight correction — react/react-dom/
+rete-react-plugin/styled-components were flagged first, then swapped for
+Vue's equivalents per direct steer, never actually installed into a
+committed lockfile). Installed with `npm install --ignore-scripts`; `rete`'s
+own `postinstall.js` was inspected before relying on that flag (a harmless
+console banner, no network/filesystem effects). See `pocs/poc-rete/README.md`
+for the full spike write-up. Not a live `editor/` dependency — same status
+Litegraph/Drawflow had before Litegraph's 2026-08-14 promotion into
+`editor/public/vendor/`.
+
+| Package | Version installed | License | Notes |
+|---|---|---|---|
+| rete | 2.0.6 | MIT | Headless core. Registry's own `time` field: this exact version published 2025-06-30 and is still the `latest` dist-tag — over a year stale by npm-publish-date, a correction against the spike briefing's looser "actively maintained, June 2026" framing. |
+| rete-area-plugin | 2.3.2 | MIT | Canvas rendering surface; published 2026-07-08, genuinely current |
+| rete-connection-plugin | 2.0.5 | MIT | Wire drag gesture; published 2024-08-30 |
+| rete-render-utils | 2.0.3 | MIT | Shared rendering utilities, peer dep of rete-vue-plugin; published 2024-08-30 |
+| rete-vue-plugin | 2.1.3 | MIT | Vue 3 node/control renderer; published 2026-07-10, genuinely current |
+| rete-dock-plugin | 2.0.4 | MIT | Palette drag-and-drop plugin; published 2025-04-27 |
+| vue | 3.5.41 | MIT | Peer dep of rete-vue-plugin |
 
 ## Vendored in the POCs (frozen historical reference, not live v1 dependencies)
 
