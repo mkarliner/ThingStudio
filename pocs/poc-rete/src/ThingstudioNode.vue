@@ -74,6 +74,12 @@ import { NODE_PALETTE, DEFAULT_KIND_STYLE, type NodeKind } from "./palette";
 const props = defineProps<{
   data: AnyThingstudioNode & { selected?: boolean };
   emit: (data: unknown) => unknown;
+  // Injected automatically by rete-vue-plugin's own render wrapper (a
+  // fresh `Math.random()` on every render — confirmed in the installed
+  // bundle) — not used for display, only read (in `status` below) to give
+  // Vue's reactivity something that actually changes to depend on. See
+  // that computed's own comment for why this is necessary at all.
+  seed?: number;
 }>();
 
 // Shared with App.vue's toolbar buttons — see palette.ts's own header for
@@ -87,7 +93,13 @@ const nodeStyles = computed(() => ({
   // this component preserves that contract for nodes.ts's NODE_HEIGHT.
   width: Number.isFinite(props.data.width) ? `${props.data.width}px` : "",
   height: Number.isFinite(props.data.height) ? `${props.data.height}px` : "",
-  borderColor: palette.value.color,
+  // Selected state computed here rather than left to the scoped `.selected`
+  // class alone — an inline style always wins over a stylesheet rule for
+  // the same CSS property regardless of class specificity, so a class-only
+  // `.ts-node.selected { outline-color: ... }` would never actually show
+  // through this element's own inline `outline-color`. (`box-shadow` below
+  // stays in the stylesheet since nothing inline sets it.)
+  outlineColor: props.data.selected ? "#ff8f0e" : palette.value.color,
   background: palette.value.bgcolor,
 }));
 
@@ -97,20 +109,62 @@ function sortByIndex(entries: [string, { index?: number }][]) {
 const inputs = computed(() => sortByIndex(Object.entries(props.data.inputs)));
 const outputs = computed(() => sortByIndex(Object.entries(props.data.outputs)));
 
+// Must match ThingstudioSocket.vue's own `.ts-socket-dot` width/height —
+// there's no shared import for it since it's read by rete-render-utils
+// purely from the rendered DOM (`offsetWidth`/`offsetHeight`, see below),
+// not from this constant directly; this only needs to agree with the CSS
+// value there, which the comment on that file's style block also notes.
+const SOCKET_SIZE = 10;
+
 // Distributes N ports evenly down the pill's vertical edge instead of
 // hardcoding "always centered" — matches real Node-RED's layout for
 // multi-port nodes (e.g. a switch node's several outputs stacked down the
 // right edge). None of this spike's 5 node types currently has more than
-// one input or one output (a single port just lands at 50%, the same place
-// a hardcoded center would), but the math doesn't assume that stays true.
+// one input or one output (a single port just lands at center, the same
+// place a hardcoded 50% would), but the math doesn't assume that stays
+// true.
+//
+// Computed as an absolute pixel `top`, deliberately NOT `top: 50%` plus a
+// `transform: translateY(-50%)` centering trick — found hands-on (Mike's
+// screenshot, 2026-08-15) that this was the actual cause of misaligned
+// wires, not the socket-sizing bug the previous fix addressed. Root cause,
+// confirmed by reading rete-render-utils' own source (getElementCenter in
+// rete-render-utils.esm.js): wire endpoints are computed from
+// `offsetLeft`/`offsetTop`/`offsetWidth`/`offsetHeight`, walking up the
+// `offsetParent` chain — the *pre-transform* CSS layout box. A `transform`
+// shifts where an element visually renders without moving its layout box
+// at all, so the dot rendered exactly where `translateY(-50%)` put it
+// on-screen, but the wire endpoint math measured the box's un-transformed
+// position instead — consistently off by roughly half the anchor's height.
+// (The pan/zoom transform on the canvas's own content layer *doesn't* hit
+// this problem: `nodeView.position.x/y`, added separately in
+// rete-render-utils' `listen()`, is plain tracked state, not measured from
+// CSS, and every node's socket offsets are computed relative to that same
+// transformed ancestor consistently — it's an extra *local* transform like
+// this one, with nothing else compensating for it, that breaks.)
 function portStyle(index: number, count: number): { top: string } {
-  const pct = count <= 1 ? 50 : ((index + 1) / (count + 1)) * 100;
-  return { top: `${pct}%` };
+  const height = Number.isFinite(props.data.height) ? (props.data.height as number) : 34;
+  const centerFraction = count <= 1 ? 0.5 : (index + 1) / (count + 1);
+  return { top: `${centerFraction * height - SOCKET_SIZE / 2}px` };
 }
 
 type Status = { text: string; dotClass: string } | null;
 
 const status = computed<Status>(() => {
+  // Real reactive dependency, not a no-op read — `data` is `markRaw`'d by
+  // rete-vue-plugin (confirmed in its installed bundle's `create()`), so
+  // mutating `lastValue`/`lastLabel` in place on that same object
+  // reference, as editor-setup.ts's `propagate()` does, never triggers
+  // Vue's reactivity on its own: `data` itself never changes reference, so
+  // nothing here would otherwise re-run. `seed` is a fresh random number
+  // the plugin injects on every `area.update()`-driven re-render
+  // specifically to give consumers something to depend on for exactly
+  // this — same pattern PropertyPanel.vue already uses via store.ts's
+  // `propertyVersion` for the same off-Vue-mutation problem. Found hands-
+  // on via the Chrome extension (2026-08-15): the status line never
+  // appeared without this, despite `propagate()` correctly setting the
+  // field and calling `area.update()`.
+  void props.seed;
   const d = props.data;
   if (d.kind === "gpio_out") {
     if (d.lastValue === undefined) return null;
@@ -149,7 +203,20 @@ const statusPosition = computed(() => ({
 <style scoped>
 .ts-node {
   box-sizing: border-box;
-  border: 1.5px solid #555;
+  /* `outline`, not `border` — deliberately. `.ts-node` is `position:
+     relative`, making it the containing block for `.ts-port`'s absolute
+     children; per spec, an absolutely positioned descendant's `top`/`left`
+     resolve against the containing block's *padding* edge, not its border's
+     outer edge. A `border` here would inset that origin by the border
+     width, throwing off portStyle()'s pixel math by a couple of px — found
+     hands-on (Mike's screenshot, 2026-08-15: "nearly, not quite" after the
+     transform-vs-offsetTop fix already landed). `outline` doesn't
+     participate in the box model at all (no containing-block/layout effect,
+     just painted on top), so it can't reintroduce this — `outline-offset`
+     pulls it inward so it still reads as a pill border rather than a ring
+     floating outside the rounded corners. */
+  outline: 1.5px solid #555;
+  outline-offset: -1.5px;
   border-radius: 6px;
   cursor: pointer;
   position: relative;
@@ -163,7 +230,8 @@ const statusPosition = computed(() => ({
   filter: brightness(1.15);
 }
 .ts-node.selected {
-  border-color: #ff8f0e;
+  /* outline-color handled inline (nodeStyles) — see that computed's
+     comment for why a stylesheet rule alone wouldn't win here. */
   box-shadow: 0 0 0 1px #ff8f0e, 0 0 6px rgba(255, 143, 14, 0.6);
 }
 .ts-icon {
@@ -189,20 +257,25 @@ const statusPosition = computed(() => ({
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* Pure positioning anchor — no size/color of its own. This is the `Ref`
+   wrapper `Ref.vue` mounts (see that component's own header); the actual
+   visible dot is ThingstudioSocket.vue, rendered *inside* this wrapper by
+   VuePlugin once `Ref` emits its `render` signal, sized on its own terms.
+   Deliberately no explicit width/height here: with only `top` + one of
+   `left`/`right` set (never both), a `position: absolute` block shrinks to
+   fit its child instead of stretching, so this anchor hugs the socket dot
+   exactly rather than needing to duplicate its size. Learned the hard way —
+   see editor-setup.ts's customize.socket comment for what this replaced.
+
+   No `transform` here, deliberately — `top` is already a pre-computed
+   pixel value from `portStyle()` accounting for the anchor's own height,
+   not a `top: 50%` + `translateY(-50%)` centering trick. See that
+   function's comment for why a transform-based approach breaks wire
+   endpoints specifically (rete-render-utils measures pre-transform layout
+   position, not the transformed visual position). */
 :deep(.ts-port) {
   position: absolute;
-  transform: translateY(-50%);
-  width: 10px;
-  height: 10px;
-  border-radius: 6px;
-  border: 1px solid #fff;
-  background: #96b38a;
-  box-sizing: border-box;
-  cursor: pointer;
   z-index: 2;
-}
-:deep(.ts-port:hover) {
-  border-width: 2px;
 }
 :deep(.ts-port.in) {
   left: -5px;

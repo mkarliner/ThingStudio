@@ -35,6 +35,7 @@ import { installConnectionValidation } from "./validation";
 import { installInsertableNodes } from "./insert-node";
 import { selectedNode, logDebug, bumpPropertyVersion } from "./store";
 import ThingstudioNode from "./ThingstudioNode.vue";
+import ThingstudioSocket from "./ThingstudioSocket.vue";
 
 export async function createThingstudioEditor(container: HTMLElement) {
   const editor = new NodeEditor<Schemes>();
@@ -50,7 +51,17 @@ export async function createThingstudioEditor(container: HTMLElement) {
   // handles every kind (ThingstudioNode.vue switches internally on
   // `context.payload.kind`, already set on every node instance) instead of
   // five near-identical files.
-  render.addPreset(VuePresets.classic.setup({ customize: { node: () => ThingstudioNode } }));
+  //
+  // `socket` is overridden too, not just `node` — a real bug found hands-on
+  // (Mike's screenshot, 2026-08-15): ThingstudioNode.vue's port wrapper only
+  // controls *where* a socket sits; the visible circle is a separate
+  // component VuePlugin mounts inside that wrapper, and without this it was
+  // still the default classic preset's Socket.vue (a fixed 24×24 circle
+  // with a 6px margin), which the wrapper's sizing had no power over —
+  // rendered as oversized green balls hanging off a barely-visible
+  // correctly-positioned anchor, not a CSS specificity problem. See
+  // ThingstudioSocket.vue's own header for the detail.
+  render.addPreset(VuePresets.classic.setup({ customize: { node: () => ThingstudioNode, socket: () => ThingstudioSocket } }));
   connection.addPreset(ConnectionPresets.classic.setup());
 
   editor.use(area);
