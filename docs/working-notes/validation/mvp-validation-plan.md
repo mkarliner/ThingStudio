@@ -22,6 +22,34 @@ work," matching how §15's POC success criteria were written. Each
 section below gets a dated Results subsection appended once actually
 verified, same as a POC's README.
 
+## Multi-board target coverage (standing convention, added 2026-08-15)
+
+Distinct from the witness+DUT rig below — that's test infrastructure (two
+boards of the *same* class, wired together, one driving/observing the
+other). This is about target-*platform* coverage: confirming the runtime
+and node set actually behave correctly across the chip families §3
+claims to support, not just automating I/O checks on one of them.
+
+Per `../architecture-review-briefing.md`'s 2026-08-15 session: Mike now
+has RP2040, RP2350, and other ESP32-family boards in hand, closing the
+"no Pico-family hardware yet" gap §3 itself flagged as the reason its RAM
+floor call stayed provisional. Standing convention from here on: **a real
+hardware pass on at least two different boards/board families at every
+major milestone**, not deferred to a single end-of-project multi-board
+pass. `gc.mem_free()` should be sampled as a matter of course during these
+passes (not a separate spike) — this is also how the module-scope-state
+RAM cost question (timer counters, `_flow_vars`, per-function `context`
+dicts — no hands-on number exists yet on any platform) gets answered over
+time, per the same session's discussion.
+
+RP2040 support is soft-committed, not a hard requirement — acceptable to
+drop it if headroom or anything else proves it not worth carrying, per
+§3's own already-named fallback (raise the Pico-family floor to RP2350,
+which is barely more expensive). The point of the two-board convention
+isn't "save RP2040 specifically," it's "don't let ESP32-C3-only bring-up
+data quietly stand in for cross-platform validation" the way it has for
+every tier's Results entries so far.
+
 ## Hardware-in-the-loop rig: witness + DUT
 
 Two ESP32-C3 boards (same class as POC-A/D's LuatOS CORE-ESP32-C3, for

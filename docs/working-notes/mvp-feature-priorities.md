@@ -309,6 +309,35 @@ pipeline driven by hardcoded buttons.
       secretly a full redeploy underneath) — a UX-level version of
       `CLAUDE.md`'s fault-handling priority, applied to honesty-of-
       affordance rather than error handling.
+    - **Addendum, 2026-08-15 (decisions/assumptions review session):
+      drag-to-splice reclassified, axis 2 → axis 1.** Raised during a
+      review/discussion session, not a build session — this is a policy
+      correction, not new work being started. The original axis-2
+      placement ("case-by-case cost-vs-frequency," "not core-loop-
+      blocking, not urgent") was reasoned from Litegraph's specific
+      engineering cost: real custom hit-testing/link-splitting code, no
+      library support. Two things changed since, independently of each
+      other, both pointing the same direction:
+      1. Mike's own diagnosis of the cost sharpened. Not "click-to-insert
+         feels bad" (a UX-quality question, genuinely axis-2 territory)
+         but "doesn't match Node-RED muscle memory" (an audience-fit
+         question). Axis 1's own stated justification for "always match"
+         is exactly this — serving an audience already fluent in
+         Node-RED, per §2. A gesture this iconic to that specific
+         audience not transferring is a hit against that promise
+         directly, not a generic affordance nicety worth weighing
+         case-by-case — so it reads as axis-1 territory, not axis-2.
+      2. Separately, an in-progress evaluation of Rete.js as a possible
+         Litegraph replacement (not yet decided — raised this same
+         session, not scoped as a spike yet) found an official plugin
+         (`connection-mastery-plugin`) that gives drag-to-splice close to
+         free. That materially lowers the engineering cost the original
+         axis-2 placement was reasoned from, regardless of whether Rete
+         is actually adopted.
+      Net: drag-to-splice should be treated as closer to "match it" than
+      "defer if expensive" going forward, whichever canvas library it
+      ends up built against. Still not scoped as a design or started —
+      this changes its priority tier, not its status.
 
 ## Explicitly still out of v1 (§10, unchanged by this session)
 
