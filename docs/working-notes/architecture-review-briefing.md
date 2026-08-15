@@ -126,8 +126,18 @@ up.
   headless core with framework-specific (React/Vue/Angular/Svelte/Lit)
   renderer plugins instead of a canvas draw loop, MIT licensed, actively
   maintained (v2.0.6, June 2026, commits into July). Found real,
-  specific hits rather than one: drag-to-splice has an official plugin
-  (`connection-mastery-plugin`); the palette-drag-and-drop ask has an
+  specific hits rather than one: drag-to-splice is covered by Rete's
+  official, current "Insert node" example (`retejs.org/examples/
+  insert-node`, MIT, `rete-kit`-scaffolded `insertableNodes` source, not
+  an installed npm package) — **correction, 2026-08-15**: originally
+  cited here as `connection-mastery-plugin`, which turned out on direct
+  inspection to be dead (peer-deps on `rete ^1.4.0`, i.e. Rete 1.x, not
+  the 2.x evaluated here; last published ~6 years ago) and, separately
+  from the version mismatch, not even the same feature (it creates a
+  *new* node from a dropped dangling connection via a Ctrl+context-menu
+  gesture, not splicing an *existing* node onto an *existing* wire). The
+  underlying claim — splice is cheap in Rete — still holds under the
+  corrected citation; the palette-drag-and-drop ask has an
   official plugin (`dock-plugin`); property-sheet-separate-from-canvas
   isn't a plugin at all, it falls out of component-based rendering for
   free (a sibling component reading the same selection state), versus

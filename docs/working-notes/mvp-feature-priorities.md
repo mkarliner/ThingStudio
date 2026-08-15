@@ -329,9 +329,16 @@ pipeline driven by hardcoded buttons.
          case-by-case — so it reads as axis-1 territory, not axis-2.
       2. Separately, an in-progress evaluation of Rete.js as a possible
          Litegraph replacement (not yet decided — raised this same
-         session, not scoped as a spike yet) found an official plugin
-         (`connection-mastery-plugin`) that gives drag-to-splice close to
-         free. That materially lowers the engineering cost the original
+         session, not scoped as a spike yet) found drag-to-splice close to
+         free via Rete's official "Insert node" example (`retejs.org/
+         examples/insert-node`, MIT, `rete-kit`-scaffolded source, current
+         against Rete 2.x) — **correction, 2026-08-15**: originally cited
+         here as an official `connection-mastery-plugin` plugin, which
+         turned out to be a dead Rete-1.x-only package (last published ~6
+         years ago) implementing a different feature entirely (new-node-
+         from-dangling-connection, not splice-onto-existing-wire); the
+         cost-lowering conclusion itself still holds under the corrected
+         citation. That materially lowers the engineering cost the original
          axis-2 placement was reasoned from, regardless of whether Rete
          is actually adopted.
       Net: drag-to-splice should be treated as closer to "match it" than

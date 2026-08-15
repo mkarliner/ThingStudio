@@ -53,10 +53,20 @@ result — verify it, don't assume it holds:
    what specifically lost Drawflow the original comparison, so this is
    the one checkpoint that could genuinely kill the idea if it doesn't
    hold.
-2. **Drag-to-splice** via `connection-mastery-plugin` — drop a node onto
-   an existing wire, confirm it splices in correctly (the connection
+2. **Drag-to-splice** via Rete's official "Insert node" example
+   (`retejs.org/examples/insert-node`, MIT, `rete-kit`-scaffolded
+   `insertableNodes` source — not an installed npm package) — drop a node
+   onto an existing wire, confirm it splices in correctly (the connection
    splits into two, rewired through the dropped node). This is the
-   feature that started the whole review.
+   feature that started the whole review. **Correction, 2026-08-15**:
+   earlier drafts of this briefing and `architecture-review-briefing.md`
+   named `connection-mastery-plugin` for this instead — checked directly
+   and it's dead (peer-deps on `rete ^1.4.0`, Rete 1.x only, last
+   published ~6 years ago) and, independent of the version mismatch,
+   implements a different feature (Ctrl+drop a dangling connection to
+   create and connect a *new* node via a context menu, not splicing an
+   existing node onto an existing wire). Use the Insert-node example
+   instead when building this checkpoint.
 3. **Palette drag-and-drop** via `dock-plugin` — a draggable node preview
    that instantiates the correct node type at the drop location.
 4. **Property sheet separate from the canvas** — build one node type's
@@ -68,10 +78,11 @@ Also worth recording, since these were flagged as open/unconfirmed during
 the review rather than assumed:
 
 - **Real bundle size** across the actual package set needed (core +
-  `area-plugin` + `connection-plugin` + a renderer + `dock-plugin` +
-  `connection-mastery-plugin`), for direct comparison against Litegraph's
-  known ~491KB — no single comparable number exists yet since Rete is
-  split across packages.
+  `area-plugin` + `connection-plugin` + a renderer + `dock-plugin`; the
+  Insert-node splice mechanism is copied-in source via `rete-kit`, not an
+  installed package, so it doesn't add to this number), for direct
+  comparison against Litegraph's known ~491KB — no single comparable
+  number exists yet since Rete is split across packages.
 - **Multi-select support** (native or hand-rolled) — POC-C's original
   bar for Litegraph vs. Drawflow; wasn't the trigger for this spike but
   worth checking for completeness given how badly Drawflow failed it.
