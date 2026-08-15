@@ -4,18 +4,14 @@
 <template>
   <div class="shell">
     <div class="toolbar">
-      <strong>poc-rete</strong>
-      <button @click="add('inject')">+ inject</button>
-      <button @click="add('function')">+ function</button>
-      <button @click="add('gpio_out')">+ gpio out</button>
-      <button @click="add('mqtt_publish')">+ mqtt out</button>
-      <button @click="add('debug')">+ debug</button>
+      <h1>poc-rete</h1>
+      <button class="primary" @click="loadExample">Load example flow</button>
+      <button class="danger" @click="clearAll">Clear canvas</button>
       <span class="spacer"></span>
-      <button @click="loadExample">Load example flow</button>
-      <button @click="clearAll">Clear canvas</button>
-      <span class="hint">drag a node from the dock (bottom-left) onto the canvas, or drop one onto an existing wire to splice it in</span>
+      <span class="hint">click a node in the palette (left) to add it — drag any node onto a wire to splice it in</span>
     </div>
     <div class="workspace">
+      <PaletteSidebar @add="add" />
       <div ref="canvasEl" class="canvas"></div>
       <div class="panel">
         <PropertyPanel />
@@ -32,6 +28,7 @@ import { createThingstudioEditor, type ThingstudioEditor } from "./editor-setup"
 import { InjectNode, FunctionNode, DebugNode, GpioOutNode, MqttPublishNode } from "./nodes";
 import PropertyPanel from "./PropertyPanel.vue";
 import DebugSidebar from "./DebugSidebar.vue";
+import PaletteSidebar from "./PaletteSidebar.vue";
 
 const canvasEl = ref<HTMLElement | null>(null);
 let handle: ThingstudioEditor | null = null;
@@ -110,12 +107,28 @@ html, body, #app { height: 100%; margin: 0; background: #16161a; }
   border-bottom: 1px solid #333;
   color: #eee;
 }
+.toolbar h1 {
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0 6px 0 0;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
 .toolbar button {
   padding: 5px 10px;
+  border-radius: 4px;
+  border: 1px solid #444;
+  background: #333;
+  color: #eee;
+  font-size: 12px;
   cursor: pointer;
 }
+.toolbar button:hover { filter: brightness(1.2); }
+.toolbar button.primary { background: #4a9eff; border-color: #4a9eff; color: #fff; }
+.toolbar button.danger { color: #ff8080; }
 .spacer { flex: 1; }
-.hint { color: #888; font-size: 11px; max-width: 320px; }
+.hint { color: #888; font-size: 11px; max-width: 420px; }
 .workspace {
   flex: 1;
   display: flex;

@@ -28,6 +28,7 @@ import type { AreaPlugin } from "rete-area-plugin";
 import type { AreaExtra, Editor, Schemes } from "./schemes";
 import { canCreateConnection, getConnectionSockets } from "./validation";
 import { ClassicPreset } from "rete";
+import { logDebug } from "./store";
 
 type Point = { x: number; y: number };
 
@@ -43,10 +44,12 @@ function distanceToSegment(p: Point, a: Point, b: Point): number {
 
 // Node center in area-space, approximated from the node view's translated
 // position plus the node's own declared width/height (same width/height
-// contract the "Arrange nodes" guide's node base class uses).
-function nodeCenter(area: AreaPlugin<Schemes, AreaExtra>, nodeId: string): Point | null {
+// contract the "Arrange nodes" guide's node base class uses, and the same
+// field `rete-vue-plugin`'s own Node.vue reads to size the real DOM box —
+// see nodes.ts's FunctionNode header for why that matters beyond this file).
+function nodeCenter(editor: Editor, area: AreaPlugin<Schemes, AreaExtra>, nodeId: string): Point | null {
   const view = area.nodeViews.get(nodeId);
-  const node = area.editor.getNode(nodeId) as unknown as { width?: number; height?: number };
+  const node = editor.getNode(nodeId) as unknown as { width?: number; height?: number } | undefined;
   if (!view) return null;
   return {
     x: view.position.x + (node?.width ?? 150) / 2,
@@ -56,58 +59,97 @@ function nodeCenter(area: AreaPlugin<Schemes, AreaExtra>, nodeId: string): Point
 
 const HIT_THRESHOLD_PX = 40;
 
+// 2026-08-15: Mike reported splice still not firing after the
+// `nodedragged` → `nodetranslated` fix (verified correct at the
+// AreaPlugin.translate → NodeView.translate → emits "nodetranslated"
+// level, by reading the installed bundle, not re-guessed). Since there's
+// no browser available in this environment to watch it happen, this pass
+// adds two things instead of a third guess: (1) a debug-sidebar log line
+// on every attempt — nearest wire found and its distance, or the
+// type-check verdict — so a real failure is diagnosable instead of just
+// "nothing happened"; (2) a guard against re-entrant splices on the same
+// connection, since `nodetranslated` can fire many times per drag and the
+// splice itself is async (`removeConnection` then two `addConnection`s) —
+// without this, two overlapping in-flight splices on the same wire could
+// race and silently no-op or throw.
+const splicingConnections = new Set<string>();
+
 export function installInsertableNodes(editor: Editor, area: AreaPlugin<Schemes, AreaExtra>): void {
   area.addPipe((context) => {
-    if (context.type === "nodedragged") {
-      const droppedId = context.data.id;
-      const dropped = editor.getNode(droppedId);
-      const center = nodeCenter(area, droppedId);
-      if (!dropped || !center) return context;
+    if (context.type !== "nodetranslated") return context;
 
-      // A node with no free input+output pair of the right shape can't be
-      // spliced through — skip (debug has no output, inject has no input).
-      const droppedInputKey = Object.keys(dropped.inputs)[0];
-      const droppedOutputKey = Object.keys(dropped.outputs)[0];
-      if (!droppedInputKey || !droppedOutputKey) return context;
+    // `NodeTranslateEventParams` (rete-area-plugin's own declared type)
+    // only lists `position`/`previous` — but the plugin's actual emit call
+    // does `_objectSpread({ id }, data)` (checked in the installed bundle,
+    // not assumed), so `id` really is there at runtime. The cast documents
+    // that gap between the shipped .d.ts and the shipped JS rather than
+    // reaching for `any`.
+    const droppedId = (context.data as { id: string }).id;
+    const dropped = editor.getNode(droppedId);
+    const center = nodeCenter(editor, area, droppedId);
+    if (!dropped || !center) return context;
 
-      for (const connection of editor.getConnections()) {
-        // Don't try to splice into a wire already touching the dropped node.
-        if (connection.source === droppedId || connection.target === droppedId) continue;
+    // A node with no free input+output pair of the right shape can't be
+    // spliced through — skip silently (debug has no output, inject has no
+    // input) rather than logging noise on every one of their moves too.
+    const droppedInputKey = Object.keys(dropped.inputs)[0];
+    const droppedOutputKey = Object.keys(dropped.outputs)[0];
+    if (!droppedInputKey || !droppedOutputKey) return context;
 
-        const a = nodeCenter(area, connection.source);
-        const b = nodeCenter(area, connection.target);
-        if (!a || !b) continue;
+    let nearest: { connection: Schemes["Connection"]; distance: number } | null = null;
 
-        if (distanceToSegment(center, a, b) <= HIT_THRESHOLD_PX) {
-          const sourceToDropped = new ClassicPreset.Connection(
-            editor.getNode(connection.source)!,
-            connection.sourceOutput,
-            dropped,
-            droppedInputKey,
-          ) as Schemes["Connection"];
-          const droppedToTarget = new ClassicPreset.Connection(
-            dropped,
-            droppedOutputKey,
-            editor.getNode(connection.target)!,
-            connection.targetInput,
-          ) as Schemes["Connection"];
+    for (const connection of editor.getConnections()) {
+      if (connection.source === droppedId || connection.target === droppedId) continue;
+      if (splicingConnections.has(connection.id)) continue;
 
-          if (!canCreateConnection(editor, sourceToDropped) || !canCreateConnection(editor, droppedToTarget)) {
-            // Types don't line up (e.g. dropping `debug` mid-wire, or the
-            // wire feeds gpio_out's bool-only input and the dropped node's
-            // output isn't bool) — leave the original connection alone
-            // rather than silently breaking the flow.
-            continue;
-          }
+      const a = nodeCenter(editor, area, connection.source);
+      const b = nodeCenter(editor, area, connection.target);
+      if (!a || !b) continue;
 
-          void editor.removeConnection(connection.id).then(async () => {
-            await editor.addConnection(sourceToDropped);
-            await editor.addConnection(droppedToTarget);
-          });
-          break; // one splice per drop
-        }
-      }
+      const distance = distanceToSegment(center, a, b);
+      if (!nearest || distance < nearest.distance) nearest = { connection, distance };
     }
+
+    if (!nearest || nearest.distance > HIT_THRESHOLD_PX) {
+      if (nearest) {
+        logDebug(
+          "[splice]",
+          `nearest wire ${Math.round(nearest.distance)}px away (need <=${HIT_THRESHOLD_PX}px) — move closer to the line between the two node centers`,
+        );
+      }
+      return context;
+    }
+
+    const { connection } = nearest;
+    const source = editor.getNode(connection.source)!;
+    const target = editor.getNode(connection.target)!;
+    const sourceToDropped = new ClassicPreset.Connection(source, connection.sourceOutput, dropped, droppedInputKey) as Schemes["Connection"];
+    const droppedToTarget = new ClassicPreset.Connection(dropped, droppedOutputKey, target, connection.targetInput) as Schemes["Connection"];
+
+    if (!canCreateConnection(editor, sourceToDropped) || !canCreateConnection(editor, droppedToTarget)) {
+      logDebug(
+        "[splice]",
+        `in range (${Math.round(nearest.distance)}px) but type-rejected: ${source.label}→${dropped.label} or ${dropped.label}→${target.label} isn't a valid socket pair`,
+      );
+      return context;
+    }
+
+    splicingConnections.add(connection.id);
+    logDebug("[splice]", `splicing ${dropped.label} into ${source.label}→${target.label}`);
+    void editor
+      .removeConnection(connection.id)
+      .then(async () => {
+        await editor.addConnection(sourceToDropped);
+        await editor.addConnection(droppedToTarget);
+        logDebug("[splice]", "done");
+      })
+      .catch((err) => {
+        logDebug("[splice] ERROR", String(err));
+      })
+      .finally(() => {
+        splicingConnections.delete(connection.id);
+      });
+
     return context;
   });
 }

@@ -4,7 +4,7 @@
      actually visible doing something when fired. -->
 <template>
   <div class="debug-sidebar">
-    <h3>debug</h3>
+    <h3>Debug <span class="count">({{ debugLog.length }})</span></h3>
     <div v-if="debugLog.length === 0" class="hint">Fire inject to see values here.</div>
     <div v-for="entry in debugLog" :key="entry.id" class="entry">
       <span class="label">{{ entry.label }}</span>
@@ -33,8 +33,15 @@ function format(v: unknown): string {
 .debug-sidebar h3 {
   font-family: system-ui, sans-serif;
   margin: 0 0 10px;
-  font-size: 13px;
-  color: #fff;
+  font-size: 11px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.count {
+  color: #666;
+  text-transform: none;
+  letter-spacing: normal;
 }
 .entry {
   border-bottom: 1px solid #2a2a2a;

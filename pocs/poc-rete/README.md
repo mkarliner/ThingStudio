@@ -29,6 +29,14 @@ right-hand column.
 
 `node verify-checkpoint1.mjs` re-runs checkpoint 1's headless proof against
 the real installed `rete` package with zero extra dependencies (see below).
+`npx tsc --noEmit` is clean as of 2026-08-15 — it wasn't on the first pass
+(`vite build` alone doesn't type-check; it uses esbuild, which strips types
+rather than checking them). Real errors it caught: the `Schemes` generic
+originally carried the union of concrete node subclasses instead of the
+plain `ClassicPreset.Node` base the plugin generics actually expect (fixed
+in `schemes.ts`), a missing `*.vue` module declaration, and a couple of
+smaller typing gaps in `insert-node.ts`/`validation.ts`. Worth a routine
+check on any future changes here, same as `editor/`'s own convention.
 
 ## Packages (flagged and approved per `CLAUDE.md` before install)
 
@@ -109,17 +117,34 @@ description ("replaces the connection with two new connections when the
 selected node is dropped onto the connection"), not a copy of the official
 source — flagged plainly in the file's own header, not glossed over.
 
-What it does: on the area's `nodedragged` signal (fires at drag end),
-computes the dropped node's center and tests it against every existing
-connection's source→target segment (point-to-segment distance, 40px
-threshold); on a hit, checks both new connections would be type-valid via
-the same `canCreateConnection` checkpoint 1 uses, then swaps one connection
-for two. The pure geometry function is unit-tested (point-to-segment
-distance: 0 at the wire, correct offset near it, correctly clamped past an
-endpoint) — real math, not assumed correct. What's **not** verified
-headlessly: the DOM-dependent half (`area.nodeViews.get(id).position`,
-whether `nodedragged` actually fires the way the API docs describe under a
-real pointer drag) — that needs a real browser, same caveat as checkpoint 1.
+What it does: on the area's `nodetranslated` signal, computes the dropped
+node's center and tests it against every existing connection's
+source→target segment (point-to-segment distance, 40px threshold); on a
+hit, checks both new connections would be type-valid via the same
+`canCreateConnection` checkpoint 1 uses, then swaps one connection for two.
+The pure geometry function is unit-tested (point-to-segment distance: 0 at
+the wire, correct offset near it, correctly clamped past an endpoint) —
+real math, not assumed correct. What's **not** verified headlessly: the
+DOM-dependent half (`area.nodeViews.get(id).position`, the real-drag
+interaction feel) — that needs a real browser, same caveat as checkpoint 1.
+
+**2026-08-15 hands-on fix, worth keeping on the record rather than quietly
+folding in:** the first version hooked `nodedragged` (fires once, at the
+end of a real pointer drag) instead of `nodetranslated`. Mike tried the
+exact gesture the toolbar hint suggests — drag a node out of the dock
+straight onto a wire — and splice did nothing. Root cause, found by
+inspecting `rete-dock-plugin`'s own bundle rather than guessing: it places
+a dropped node via `editor.addNode()` + `area.translate()` directly, never
+going through the `Drag` class pointer pipeline `nodedragged` comes from —
+so that signal simply never fires for a dock drop. `nodetranslated` fires
+for both a live pointer drag *and* a one-shot programmatic `.translate()`
+call like dock-plugin's (confirmed via the plugin's own emit call,
+`_objectSpread({ id }, data)`, in its installed bundle), so it covers both
+gestures. Trade-off worth being upfront about: during an ordinary reposition
+drag this now splice-checks on every intermediate position rather than only
+on release, so passing near a wire mid-drag will splice immediately instead
+of waiting for the drop. Not yet re-tested hands-on which reading feels
+better — flagging it rather than presenting the fix as obviously final.
 
 The underlying claim this checkpoint is actually testing — is splice-onto-
 wire reachable in Rete without building a large amount of custom canvas
@@ -156,6 +181,24 @@ effect worth naming: because properties don't need inline node-body widgets
 at all here, every node in this build is already closer to Node-RED's actual
 compact pill shape than poc-c's Litegraph nodes were — not a feature built
 for this spike, just a consequence of where property editing lives.
+
+## Also worth recording (Rete-specific gotcha, found hands-on)
+
+- **`node.width`/`node.height` aren't just layout hints — they set a real
+  inline CSS size on the rendered node, clipping content that doesn't fit.**
+  `FunctionNode` (the only node type with both an input row and an output
+  row) shipped at `height = 70`, copy-pasted from poc-c's Litegraph card
+  size without checking it against a different library's layout model. Mike
+  caught the input socket rendering squeezed/misplaced. Checked
+  `rete-vue-plugin`'s own bundle rather than guessing: its `Node.vue`
+  component's `nodeStyles()` sets `height: ${data.height}px` inline
+  whenever the field is a finite number — single-socket nodes (gpio out,
+  debug, mqtt out) fit fine at `height = 60`, which is what confirmed the
+  row-count theory before changing anything. Fixed by sizing `FunctionNode`
+  to `160×100`. Worth remembering for any future node type with more than
+  one socket row: **declared width/height are a real layout budget in Rete's
+  classic preset, not metadata** — unlike Litegraph, where `size` is more of
+  a starting hint the canvas draw loop can overflow gracefully.
 
 ## Also worth recording
 

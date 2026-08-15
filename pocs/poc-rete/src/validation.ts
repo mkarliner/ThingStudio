@@ -25,12 +25,13 @@
 // from the pipe architecture alone.
 
 import type { Schemes, Editor } from "./schemes";
+import type { ThingstudioSocket } from "./sockets";
 
 export function getConnectionSockets(editor: Editor, connection: Schemes["Connection"]) {
   const source = editor.getNode(connection.source);
   const target = editor.getNode(connection.target);
-  const output = source && (source.outputs as Record<string, { socket: import("rete").ClassicPreset.Socket } | undefined>)[connection.sourceOutput];
-  const input = target && (target.inputs as Record<string, { socket: import("rete").ClassicPreset.Socket } | undefined>)[connection.targetInput];
+  const output = source && (source.outputs as Record<string, { socket: ThingstudioSocket } | undefined>)[connection.sourceOutput];
+  const input = target && (target.inputs as Record<string, { socket: ThingstudioSocket } | undefined>)[connection.targetInput];
 
   return { source: output?.socket, target: input?.socket };
 }
@@ -39,7 +40,10 @@ export function canCreateConnection(editor: Editor, connection: Schemes["Connect
   const { source, target } = getConnectionSockets(editor, connection);
   // Input decides what it accepts, matching §6's real "editor refuses the
   // connection outright" contract (the input socket's isCompatibleWith is
-  // the one poc-c's port-type table actually enforces).
+  // the one poc-c's port-type table actually enforces). Every socket type
+  // this app ever constructs (sockets.ts) implements `isCompatibleWith` —
+  // `ThingstudioSocket` documents that as a real contract instead of
+  // casting to `any` at each call site.
   return !!source && !!target && target.isCompatibleWith(source);
 }
 

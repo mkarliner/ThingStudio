@@ -15,8 +15,12 @@
 -->
 <template>
   <div class="property-panel">
+    <div class="panel-eyebrow">Properties</div>
     <template v-if="node">
-      <h3>{{ node.label }} <span class="node-id">#{{ node.id.slice(0, 6) }}</span></h3>
+      <h3>
+        <span class="kind-dot" :style="{ background: kindStyle.color }" />
+        {{ node.label }} <span class="node-id">#{{ node.id.slice(0, 6) }}</span>
+      </h3>
 
       <template v-if="node.kind === 'inject'">
         <label>payload type
@@ -81,11 +85,14 @@
 import { computed } from "vue";
 import { selectedNode, bumpPropertyVersion, propertyVersion } from "./store";
 import type { InjectNode } from "./nodes";
+import { NODE_PALETTE, DEFAULT_KIND_STYLE, type NodeKind } from "./palette";
 
 const node = computed(() => {
   propertyVersion.value; // establish reactive dependency even though mutations happen off-Vue
   return selectedNode.value;
 });
+
+const kindStyle = computed(() => (node.value ? (NODE_PALETTE[node.value.kind as NodeKind] ?? DEFAULT_KIND_STYLE) : DEFAULT_KIND_STYLE));
 
 function touch(): void {
   bumpPropertyVersion();
@@ -112,10 +119,26 @@ function fire(): void {
   color: #ddd;
   font: 12px/1.4 system-ui, sans-serif;
 }
+.panel-eyebrow {
+  font-size: 11px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
 .property-panel h3 {
   margin: 0 0 10px;
   font-size: 13px;
   color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.kind-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 5px;
+  flex: 0 0 auto;
 }
 .node-id {
   color: #777;

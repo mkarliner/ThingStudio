@@ -11,6 +11,13 @@
 
 import { ClassicPreset } from "rete";
 
+// `ClassicPreset.Socket` itself declares no `isCompatibleWith` — every
+// concrete socket below adds it, and validation.ts needs a type that
+// says so without casting to `any` at every call site.
+export interface ThingstudioSocket extends ClassicPreset.Socket {
+  isCompatibleWith(socket: ClassicPreset.Socket): boolean;
+}
+
 export class BoolSocket extends ClassicPreset.Socket {
   constructor() {
     super("bool");
