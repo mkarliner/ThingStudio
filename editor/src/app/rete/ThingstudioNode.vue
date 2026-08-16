@@ -16,9 +16,16 @@
   canvas-side). Restoring a status line is a main.ts-wiring-time decision,
   not a canvas-layer one, and can be added back onto this component without
   disturbing the layout below.
+
+  Phase 3 item 12 addition: `data.highlighted` (nodes.ts) drives the
+  compile/runtime-error-attribution red state, replacing app/nodes.ts's
+  `node.color`/`node.bgcolor` mutation. Reads a plain field on the node
+  instance, same as `data.kind`/`data.properties` -- main.ts mutates it and
+  forces a re-render via `area.update("node", id)`, since Rete nodes aren't
+  Vue-reactive (see nodes.ts's own comment on the field).
 -->
 <template>
-  <div class="ts-node" :class="[`kind-${data.kind}`, { selected: data.selected }]" :style="nodeStyles">
+  <div class="ts-node" :class="[`kind-${data.kind}`, { selected: data.selected, highlighted: data.highlighted }]" :style="nodeStyles">
     <div class="ts-icon">{{ icon }}</div>
     <div class="ts-label" data-testid="title">{{ data.label }}</div>
 
@@ -55,12 +62,18 @@ import { NODE_PALETTE, DEFAULT_KIND_STYLE, type NodeKind } from "./palette";
 // past `AnyThingstudioNode` for `.selected`/`.inputs`/`.outputs`, which are
 // set by rete-area-plugin/rete itself, not this app's own node classes.
 const props = defineProps<{
-  data: AnyThingstudioNode & { selected?: boolean };
+  data: AnyThingstudioNode & { selected?: boolean; highlighted?: boolean };
   emit: (data: unknown) => unknown;
 }>();
 
 const palette = computed(() => NODE_PALETTE[props.data.kind as NodeKind] ?? DEFAULT_KIND_STYLE);
 const icon = computed(() => palette.value.icon);
+
+// app/nodes.ts's exact error-attribution colors (highlightNode()'s
+// node.color/node.bgcolor) -- preserved verbatim so a highlighted node
+// looks the same as it did on the Litegraph canvas.
+const HIGHLIGHT_COLOR = "#e05555";
+const HIGHLIGHT_BGCOLOR = "#5a1f1f";
 
 const nodeStyles = computed(() => ({
   // Real layout budget, not a hint -- rete-vue-plugin's Node.vue sets these
@@ -70,9 +83,12 @@ const nodeStyles = computed(() => ({
   height: Number.isFinite(props.data.height) ? `${props.data.height}px` : "",
   // Selected state computed here rather than left to the scoped `.selected`
   // class alone -- an inline style always wins over a stylesheet rule for
-  // the same CSS property regardless of class specificity.
-  outlineColor: props.data.selected ? "#ff8f0e" : palette.value.color,
-  background: palette.value.bgcolor,
+  // the same CSS property regardless of class specificity. Highlighted
+  // (error attribution) takes precedence over both selected and the
+  // per-kind palette color -- matches app/nodes.ts, which unconditionally
+  // overwrote node.color/bgcolor regardless of any other node state.
+  outlineColor: props.data.highlighted ? HIGHLIGHT_COLOR : props.data.selected ? "#ff8f0e" : palette.value.color,
+  background: props.data.highlighted ? HIGHLIGHT_BGCOLOR : palette.value.bgcolor,
 }));
 
 function sortByIndex(entries: [string, { index?: number }][]) {

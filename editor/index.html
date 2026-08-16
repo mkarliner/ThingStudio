@@ -3,7 +3,6 @@
 <head>
 <meta charset="utf-8" />
 <title>Thingstudio — bare-minimum editor</title>
-<link rel="stylesheet" type="text/css" href="/vendor/litegraph/litegraph.css" />
 <style>
   :root {
     --bg: #0f1115; --panel: #161a21; --border: #2a3140; --text: #d8dee9;
@@ -29,8 +28,20 @@
   .pill.disconnected { border-color: var(--bad); color: var(--bad); }
 
   #main { flex: 1 1 auto; display: flex; min-height: 0; }
-  #canvas-wrap { flex: 1 1 auto; position: relative; min-width: 0; }
-  #graph-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+  #canvas-wrap { flex: 1 1 auto; position: relative; min-width: 0; background: #16161a; }
+  #rete-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+
+  /* Palette (left) and property panel (right) mount points -- Phase 3 item
+     1/13. Both are standalone Vue apps (main.ts createApp(...).mount(...)),
+     not part of the same Vue tree as each other or as the canvas -- see
+     main.ts's canvas-construction section header for why this migration
+     didn't fold the whole app shell into one Vue root. Sizing/background
+     lives here rather than in each component's own scoped style so this
+     file stays the one place that lays out the three-region canvas area,
+     matching how #sidebar's three .panel children are laid out below. */
+  #palette-mount { flex: 0 0 auto; }
+  #property-panel-mount { flex: 0 0 260px; background: var(--panel);
+    border-left: 1px solid var(--border); min-height: 0; overflow-y: auto; }
 
   #sidebar { flex: 0 0 420px; display: flex; flex-direction: column; background: var(--panel);
     border-left: 1px solid var(--border); min-height: 0; overflow-y: auto; padding: 10px; gap: 10px; }
@@ -44,29 +55,12 @@
   #console .ok { color: var(--good); }
   #console .err { color: var(--bad); }
   .notice { font-size: 11px; color: var(--warn); line-height: 1.4; }
-
-  #code-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6);
-    align-items: center; justify-content: center; z-index: 1000; }
-  #code-modal.open { display: flex; }
-  #code-modal-box { background: var(--panel); border: 1px solid var(--border); border-radius: 6px;
-    width: 560px; max-width: 90vw; padding: 14px; }
-  #code-modal-box h3 { margin: 0 0 8px 0; font-size: 13px; color: var(--dim); }
-  #code-modal-textarea { width: 100%; height: 220px; background: #0a0c10; color: #d8ffd8;
-    font-family: inherit; font-size: 12px; border: 1px solid var(--border); border-radius: 4px;
-    padding: 8px; resize: vertical; }
-  #code-modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
 </style>
 </head>
 <body>
 <div id="app">
   <div id="toolbar">
     <h1>Thingstudio (bare minimum)</h1>
-    <button data-add-node="thingstudio/inject">+ inject</button>
-    <button data-add-node="thingstudio/function">+ function</button>
-    <button data-add-node="thingstudio/debug">+ debug</button>
-    <button data-add-node="thingstudio/gpio_out">+ gpio out</button>
-    <button data-add-node="thingstudio/timer">+ timer</button>
-    <div class="sep"></div>
     <button id="clear-canvas">Clear canvas</button>
     <button id="btnSaveFlow">Save flow</button>
     <button id="btnOpenFlow">Open flow</button>
@@ -77,12 +71,14 @@
     <span id="pill" class="pill disconnected">disconnected</span>
   </div>
   <div id="main">
-    <div id="canvas-wrap"><canvas id="graph-canvas"></canvas></div>
+    <div id="palette-mount"></div>
+    <div id="canvas-wrap"><div id="rete-canvas"></div></div>
+    <div id="property-panel-mount"></div>
     <div id="sidebar">
       <div class="panel notice">
         Bare-minimum editor: build a flow from inject / function / debug / gpio_out / timer,
         wire it up, then Connect + Deploy to real hardware (already flashed with
-        device-runtime/listener.py). No save/load, no version check, no polish.
+        device-runtime/listener.py). No version check, no polish.
       </div>
 
       <div class="panel">
@@ -98,18 +94,6 @@
   </div>
 </div>
 
-<div id="code-modal">
-  <div id="code-modal-box">
-    <h3>function node — edit MicroPython (runs on the device)</h3>
-    <textarea id="code-modal-textarea" spellcheck="false"></textarea>
-    <div id="code-modal-actions">
-      <button id="code-modal-cancel">Cancel</button>
-      <button id="code-modal-save" class="primary">Save</button>
-    </div>
-  </div>
-</div>
-
-<script src="/vendor/litegraph/litegraph.min.js"></script>
 <script type="module" src="/vendor/mpy-cross/load.mjs"></script>
 <script type="module" src="/src/app/main.ts"></script>
 </body>

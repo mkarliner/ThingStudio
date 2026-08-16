@@ -71,7 +71,11 @@ export interface GraphAdapterResult {
   nodeIdByReteId: Map<string, number>;
 }
 
-function socketIndex(keys: string[], key: string): number {
+// Exported (Phase 3): main.ts's extractCanvasSnapshot() needs the exact
+// same "socket key -> positional index" math when saving a flow file, and
+// re-deriving it there instead of importing it would risk the two drifting
+// apart -- both callers must agree on what "slot 0" means for a given node.
+export function socketIndex(keys: string[], key: string): number {
   const i = keys.indexOf(key);
   // A connection can't reference a socket key its own source/target node
   // doesn't have -- Rete's own addConnection would have had nothing to

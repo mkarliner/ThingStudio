@@ -1,149 +1,229 @@
 // SPDX-License-Identifier: Apache-2.0
 // editor/src/app/main.ts
 //
-// Bare-minimum editor app shell: canvas (Litegraph, four real node types
-// via nodes.ts) -> real compiler (compiler/compile.ts, the same one the
+// Bare-minimum editor app shell: canvas (Rete, five real node types via
+// rete/nodes.ts) -> real compiler (compiler/compile.ts, the same one the
 // off-device tests exercise) -> real mpy-cross WASM cross-compile
 // (vendored from mpy-cross-wasm/, see editor/public/vendor/mpy-cross) ->
-// real §13 DEPLOY over WebSerial (protocol/transport.ts). No save/load
-// gap remains (flow-file/ is wired in below); the HELLO/version gate
-// (version.ts) is now wired in too -- see the "WebSerial connect /
-// deploy" section below for the caveat that shapes how it's wired (a
-// device already running when Connect fires has no fresh HELLO to gate
-// on, since opening a WebSerial port doesn't reset the board).
+// real §13 DEPLOY over WebSerial (protocol/transport.ts). Save/load
+// (flow-file/), the HELLO/version gate (version.ts), and node highlighting
+// are all wired in below.
+//
+// Canvas layer rewritten Rete migration Phase 3
+// (docs/working-notes/rete-migration-decision.md's scoped task list, items
+// 1 and 10-13). app/nodes.ts (Litegraph) is deliberately no longer
+// imported from this file -- not deleted (Phase 4 step 17, after the
+// hardware round-trip). Per the decision doc's own framing, "the existing
+// Litegraph editor stays runnable" now means reversible via git, not
+// simultaneously live in this browser tab alongside Rete -- Litegraph and
+// Rete both want to own the same canvas element and pointer events, so
+// there is no dual-canvas mode. Confirmed with Mike before this rewrite
+// started, same as the decision doc asked.
+//
+// Vue-mounting judgment call (index.html's own open question, decision doc
+// item 2): this migration mounts two small standalone Vue apps
+// (PaletteSidebar.vue, PropertyPanel.vue) via createApp(...).mount(...)
+// into two designated containers, rather than folding the whole app shell
+// into one Vue tree. The canvas region's own rendering is already Vue
+// internally (rete-vue-plugin, via createThingstudioEditor()) without this
+// file mounting anything itself. Toolbar, source-preview, console, and the
+// WebSerial connect/deploy flow all stay exactly the vanilla-DOM
+// addEventListener style they always were. This is the smaller-blast-
+// radius reading of the two options: the canvas-agnostic two-thirds of
+// this file (mpy-cross loader, device console, HELLO/version gate,
+// Deploy handler) must survive verbatim per the decision doc's stop
+// conditions, and a single-Vue-tree rewrite would touch all of it for no
+// benefit this migration is scoped to deliver.
 
+import { createApp, watch } from "vue";
 import { compile } from "../compiler/compile.js";
 import type { NodeLineRange } from "../compiler/compile.js";
-import type { GraphData } from "../compiler/graph.js";
 import { buildRegistry } from "../node-library/registry.js";
 import { WebSerialTransport, type WebSerialPort } from "../protocol/transport.js";
 import type { Message, ProtocolVersion } from "../protocol/messages.js";
 import { decideDeploy } from "../protocol/version.js";
-import { registerCanvasNodeTypes } from "./nodes.js";
+import { createThingstudioEditor, type ThingstudioEditor } from "./rete/editor-setup.js";
+import { NODE_FACTORIES, type AnyThingstudioNode } from "./rete/nodes.js";
+import { DRAG_MIME, type NodeKind } from "./rete/palette.js";
+import { toGraphData, socketIndex } from "./rete/graph-adapter.js";
+import { propertyVersion } from "./rete/store.js";
+import PaletteSidebar from "./rete/PaletteSidebar.vue";
+import PropertyPanel from "./rete/PropertyPanel.vue";
 import { buildFlowFile, parseFlowFile, serializeFlowFileText, FlowFileError, type FlowFile, type FlowFileEdge, type CanvasNodeSnapshot } from "../flow-file/flow-file.js";
 import { saveFlowFileToDisk, openFlowFileFromDisk } from "../flow-file/file-io.js";
 
 const el = <T extends HTMLElement = HTMLElement>(id: string): T => document.getElementById(id) as T;
 
-registerCanvasNodeTypes();
-
 // ---------------------------------------------------------------------
 // Canvas
 // ---------------------------------------------------------------------
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const LG: any = (window as unknown as { LiteGraph: any }).LiteGraph;
-const graph = new LG.LGraph();
-const canvasEl = el<HTMLCanvasElement>("graph-canvas");
-const canvas = new LG.LGraphCanvas(canvasEl, graph);
-canvas.allow_searchbox = true;
-
-function resize(): void {
-  const wrap = el("canvas-wrap");
-  canvasEl.width = wrap.clientWidth;
-  canvasEl.height = wrap.clientHeight;
-  canvas.resize();
-}
-window.addEventListener("resize", resize);
-resize();
-graph.start();
+// Top-level await, not an async IIFE: createThingstudioEditor() does no
+// network/disk I/O (just plugin/DOM setup), so everything below this
+// block starts running a single microtask later in practice -- simpler
+// than threading an "editor not ready yet" guard through every function
+// below that touches reteEditor/reteArea.
+const canvasContainer = el("rete-canvas");
+const reteHandle: ThingstudioEditor = await createThingstudioEditor(canvasContainer);
+const reteEditor = reteHandle.editor;
+const reteArea = reteHandle.area;
 
 let placeCount = 0;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function addNode(type: string): any {
-  const node = LG.createNode(type);
+function nextGridPosition(): { x: number; y: number } {
   const col = placeCount % 3;
   const row = Math.floor(placeCount / 3);
-  node.pos = [80 + col * 220, 80 + row * 160];
-  graph.add(node);
   placeCount++;
-  canvas.setDirty(true, true);
+  return { x: 80 + col * 220, y: 80 + row * 160 };
+}
+
+async function addNodeOfKind(kind: NodeKind, position?: { x: number; y: number }): Promise<AnyThingstudioNode> {
+  const node = NODE_FACTORIES[kind]();
+  await reteHandle.addNode(node, position ?? nextGridPosition());
   return node;
 }
-document.querySelectorAll<HTMLButtonElement>("[data-add-node]").forEach((btn) => {
-  btn.addEventListener("click", () => addNode(btn.getAttribute("data-add-node")!));
-});
-el("clear-canvas").addEventListener("click", () => {
-  graph.clear();
+
+el("clear-canvas").addEventListener("click", async () => {
+  await reteHandle.clear();
   placeCount = 0;
+});
+
+// Palette (left) -- click-to-add via the `add` emit. Vue's programmatic
+// mount treats an `onAdd` prop as a listener for an emitted `add` event,
+// same as if this were a child component in a template
+// (PaletteSidebar.vue's own `defineEmits<{ add: [kind: NodeKind] }>()`).
+createApp(PaletteSidebar, {
+  onAdd: (kind: NodeKind) => {
+    void addNodeOfKind(kind);
+  },
+}).mount(el("palette-mount"));
+
+// Property panel (right) -- reads/writes the selected node via store.ts;
+// editor-setup.ts's nodepicked pipe (Phase 3 item 13) keeps `selectedNode`
+// in sync with canvas clicks.
+createApp(PropertyPanel).mount(el("property-panel-mount"));
+
+// Drag-and-drop from the palette onto the canvas -- ported from poc-rete's
+// App.vue onDrop(), same graph-space coordinate math: a screen point maps
+// back to graph space by subtracting the canvas's own on-screen offset and
+// current pan, then dividing by zoom (the inverse of how the canvas
+// positions/scales its content layer). PaletteSidebar.vue's own dragstart
+// sets DRAG_MIME; this is the drop-target half, a plain DOM listener
+// rather than part of either mounted Vue app since the gesture crosses a
+// real DOM boundary between them.
+canvasContainer.addEventListener("dragover", (e) => e.preventDefault());
+canvasContainer.addEventListener("drop", (e) => {
+  e.preventDefault();
+  const kind = e.dataTransfer?.getData(DRAG_MIME) as NodeKind | "";
+  if (!kind) return;
+  const rect = canvasContainer.getBoundingClientRect();
+  const { x: panX, y: panY, k: zoom } = reteArea.area.transform;
+  const graphX = (e.clientX - rect.left - panX) / zoom;
+  const graphY = (e.clientY - rect.top - panY) / zoom;
+  void addNodeOfKind(kind, { x: graphX, y: graphY });
 });
 
 // ---------------------------------------------------------------------
 // Flow save/load (flow-file/) -- the canvas-coupled half. flow-file.ts
 // owns the actual format (pure, off-device testable); this is just the
-// glue reading/writing a live Litegraph graph, same split transport.ts
+// glue reading/writing a live Rete graph, same split transport.ts
 // (protocol machinery) vs. main.ts's Connect handler (the raw
 // requestPort() call) already uses.
 // ---------------------------------------------------------------------
 function extractCanvasSnapshot(): { nodes: CanvasNodeSnapshot[]; edges: FlowFileEdge[] } {
-  // node.pos is a Float32Array-backed accessor (nodes.ts/Litegraph
-  // internals), not a plain array -- JSON.stringify would emit
-  // {"0":x,"1":y} instead of [x,y] without this explicit copy.
-  const nodes: CanvasNodeSnapshot[] = allCanvasNodes().map((n) => ({
-    id: n.id,
-    type: n.type,
-    properties: n.properties ?? {},
-    pos: [n.pos[0], n.pos[1]],
-    ...(n.size ? { size: [n.size[0], n.size[1]] as [number, number] } : {}),
-  }));
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const links: any[] = Object.values((graph as any).links ?? {});
-  const edges: FlowFileEdge[] = links.map((l) => [l.origin_id, l.origin_slot, l.target_id, l.target_slot]);
-  return { nodes, edges };
+  const nodes = reteEditor.getNodes() as AnyThingstudioNode[];
+  // Rete node IDs are string UUIDs (ClassicPreset.Node's own constructor,
+  // crypto.randomUUID()) -- flow-file.ts's format wants plain integers
+  // (Node-RED-cautionary-tale-driven determinism, that module's own
+  // header), so this assigns fresh sequential IDs for the save, same
+  // "recomputed fresh, no persistent numbering" approach graph-adapter.ts
+  // takes for the compiler-facing path (1-indexed, matching that file's
+  // own convention).
+  const fileIdByReteId = new Map<string, number>();
+  nodes.forEach((n, i) => fileIdByReteId.set(n.id, i + 1));
+
+  const snapshot: CanvasNodeSnapshot[] = nodes.map((n) => {
+    const view = reteArea.nodeViews.get(n.id);
+    // A missing NodeView would mean the node exists in the editor's data
+    // model but was never actually rendered -- shouldn't happen
+    // (reteHandle.addNode() always area.translate()s a node right after
+    // adding it), but falls back to (0, 0) rather than crashing the save,
+    // same "a partially-bad state should still save what it can" reasoning
+    // applyFlowFile's load side below uses.
+    const pos: [number, number] = view ? [view.position.x, view.position.y] : [0, 0];
+    return {
+      id: fileIdByReteId.get(n.id)!,
+      type: `thingstudio/${n.kind}`,
+      properties: n.properties,
+      pos,
+      size: [n.width, n.height],
+    };
+  });
+
+  const edges: FlowFileEdge[] = reteEditor.getConnections().map((c) => {
+    const sourceNode = reteEditor.getNode(c.source) as AnyThingstudioNode;
+    const targetNode = reteEditor.getNode(c.target) as AnyThingstudioNode;
+    const originSlot = socketIndex(Object.keys(sourceNode.outputs), c.sourceOutput);
+    const targetSlot = socketIndex(Object.keys(targetNode.inputs), c.targetInput);
+    return [fileIdByReteId.get(c.source)!, originSlot, fileIdByReteId.get(c.target)!, targetSlot];
+  });
+
+  return { nodes: snapshot, edges };
 }
 
 /**
- * Reconstructs the canvas from a parsed flow file. Verified against the
- * vendored Litegraph source before writing this (not guessed): per-node
- * `configure({properties, pos, size})` -- not the graph-level
- * `configure()`, which bundles link IDs/slot data our git-friendly format
- * deliberately doesn't save -- already syncs both `node.properties` AND
- * each widget's displayed value from `properties` in one call (Litegraph's
- * own widget/property-binding logic), and `connect()` accepts a raw
- * numeric target node ID directly, resolving it via getNodeById
- * internally. A referenced node type that isn't registered (a newer/
- * unknown type, or a typo from hand-editing the file) is reported and
- * skipped, along with any edge touching it, rather than aborting the
- * whole load -- CLAUDE.md's fault-handling priority applied to file I/O:
- * a partially-bad file should still load what it can.
+ * Reconstructs the canvas from a parsed flow file. Rete rewrite of the
+ * Litegraph version -- rete has no widget layer to sync (no
+ * per-node `configure()` call doing double duty the way Litegraph's did),
+ * which makes this simpler, not harder: construct each node via
+ * NODE_FACTORIES, assign its saved properties directly, and place it via
+ * reteHandle.addNode(). The fault-handling contract this replaces is not
+ * negotiable and is unchanged: a referenced node type that isn't
+ * registered (a newer/unknown type, or a typo from hand-editing the file)
+ * is reported and skipped, along with any edge touching it, rather than
+ * aborting the whole load -- CLAUDE.md's fault-handling priority applied
+ * to file I/O: a partially-bad file should still load what it can. An edge
+ * naming a valid slot index that doesn't resolve to a real socket key, or
+ * a connection Rete's own validation pipe rejects, is reported and skipped
+ * the same way rather than treated as fatal.
  */
-function applyFlowFile(file: FlowFile): void {
-  graph.clear();
+async function applyFlowFile(file: FlowFile): Promise<void> {
+  await reteHandle.clear();
   placeCount = 0;
-  const skippedNodeIds = new Set<number>();
+  const skippedFileIds = new Set<number>();
+  const nodeByFileId = new Map<number, AnyThingstudioNode>();
 
   for (const n of file.nodes) {
-    const node = LG.createNode(n.type);
-    if (!node) {
-      skippedNodeIds.add(n.id);
+    const kind = n.type.replace(/^thingstudio\//, "") as NodeKind;
+    const factory = NODE_FACTORIES[kind];
+    if (!factory) {
+      skippedFileIds.add(n.id);
       logLine(`[load: skipped node ${n.id}, unknown type "${n.type}"]`, "err");
       continue;
     }
-    node.id = n.id;
-    graph.add(node, true);
-    const layoutEntry = file.layout[String(n.id)];
+    const node = factory();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const configureData: Record<string, any> = { properties: n.properties };
-    if (layoutEntry) {
-      configureData.pos = layoutEntry.pos;
-      if (layoutEntry.size) configureData.size = layoutEntry.size;
-    }
-    node.configure(configureData);
+    Object.assign(node.properties as any, n.properties);
+    const layoutEntry = file.layout[String(n.id)];
+    const position = layoutEntry ? { x: layoutEntry.pos[0], y: layoutEntry.pos[1] } : { x: 0, y: 0 };
+    await reteHandle.addNode(node, position);
+    nodeByFileId.set(n.id, node);
   }
 
   for (const [originId, originSlot, targetId, targetSlot] of file.edges) {
-    if (skippedNodeIds.has(originId) || skippedNodeIds.has(targetId)) continue; // already reported above
-    const originNode = graph.getNodeById(originId);
-    if (!originNode) {
-      logLine(`[load: skipped edge from missing node ${originId}]`, "err");
+    if (skippedFileIds.has(originId) || skippedFileIds.has(targetId)) continue; // already reported above
+    const originNode = nodeByFileId.get(originId);
+    const targetNode = nodeByFileId.get(targetId);
+    if (!originNode || !targetNode) {
+      logLine(`[load: skipped edge from missing node ${!originNode ? originId : targetId}]`, "err");
       continue;
     }
-    if (!originNode.connect(originSlot, targetId, targetSlot)) {
+    const sourceKey = Object.keys(originNode.outputs)[originSlot];
+    const targetKey = Object.keys(targetNode.inputs)[targetSlot];
+    if (sourceKey === undefined || targetKey === undefined || !(await reteHandle.connectNodes(originNode, sourceKey, targetNode, targetKey))) {
       logLine(`[load: failed to connect node ${originId} slot ${originSlot} -> node ${targetId} slot ${targetSlot}]`, "err");
     }
   }
 
   placeCount = file.nodes.length;
-  canvas.setDirty(true, true);
 }
 
 el("btnSaveFlow").addEventListener("click", async () => {
@@ -162,35 +242,13 @@ el("btnOpenFlow").addEventListener("click", async () => {
     const text = await openFlowFileFromDisk();
     if (text === null) return; // user cancelled the picker
     const file = parseFlowFile(text);
-    applyFlowFile(file);
+    await applyFlowFile(file);
     logLine(`[flow loaded -- ${file.nodes.length} node(s)]`, "ok");
     refreshPreview();
   } catch (err) {
     const message = err instanceof FlowFileError ? `invalid flow file: ${err.message}` : err instanceof Error ? err.message : String(err);
     logLine(`[load failed] ${message}`, "err");
   }
-});
-
-// code editor modal for the function node
-const modal = el("code-modal");
-const textarea = el<HTMLTextAreaElement>("code-modal-textarea");
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let editingNode: any = null;
-(window as unknown as { thingstudioOpenCodeEditor: (node: unknown) => void }).thingstudioOpenCodeEditor = (node) => {
-  editingNode = node;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  textarea.value = (node as any).properties.code;
-  modal.classList.add("open");
-  textarea.focus();
-};
-el("code-modal-save").addEventListener("click", () => {
-  if (editingNode) editingNode.properties.code = textarea.value;
-  modal.classList.remove("open");
-  editingNode = null;
-});
-el("code-modal-cancel").addEventListener("click", () => {
-  modal.classList.remove("open");
-  editingNode = null;
 });
 
 // ---------------------------------------------------------------------
@@ -290,8 +348,17 @@ const registry = buildRegistry();
 // without re-plumbing it through another layer.
 let lastNodeLineRanges: NodeLineRange[] = [];
 
+// Numeric compiler-facing node ID -> the Rete node's own string ID, from
+// the most recent currentSource() call -- graph-adapter.ts's toGraphData()
+// recomputes this fresh every call (no persistent numbering across calls,
+// by that module's own design), so highlightNode() below needs the
+// mapping from whichever compile most recently produced the line ranges
+// or ran right before a §13 NODE_ERROR arrived.
+let lastReteIdByNodeId: Map<number, string> = new Map();
+
 function currentSource(): string {
-  const graphData = graph.serialize() as GraphData;
+  const { graphData, reteIdByNodeId } = toGraphData(reteEditor);
+  lastReteIdByNodeId = reteIdByNodeId;
   const { source, nodeLineRanges } = compile(graphData, registry);
   lastNodeLineRanges = nodeLineRanges;
   return source;
@@ -325,34 +392,30 @@ function refreshPreview(): { source: string } | { error: string } {
 //     msg22/NameError case that motivated adding this: syntactically
 //     valid Python, so mpy-cross never rejects it -- it only fails once
 //     actually executed on-device, which is exactly case 2, not case 1.
+//
+// Both cases' own logic is unchanged from the Litegraph version (Phase 3
+// item 12) -- only the mechanism that turns a node red changed, from
+// node.color/node.bgcolor mutation + canvas.setDirty(true, true) to
+// reactive component state (nodes.ts's `highlighted` field, mutated here
+// and pushed to the DOM via area.update("node", id) since Rete nodes
+// aren't Vue-reactive on their own).
 // ---------------------------------------------------------------------
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function allCanvasNodes(): any[] {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (graph as any)._nodes ?? [];
-}
-
 function clearNodeHighlights(): void {
-  for (const node of allCanvasNodes()) {
-    if (node._thingstudioDefaultColor !== undefined) {
-      node.color = node._thingstudioDefaultColor;
-      node.bgcolor = node._thingstudioDefaultBgcolor;
+  for (const node of reteEditor.getNodes() as AnyThingstudioNode[]) {
+    if (node.highlighted) {
+      node.highlighted = false;
+      void reteArea.update("node", node.id);
     }
   }
-  canvas.setDirty(true, true);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function highlightNode(nodeId: number): any {
-  const node = graph.getNodeById(nodeId);
-  if (!node) return null; // stale ID (since-removed node, or a redeploy landed on a different graph) -- not a reason to crash the console
-  if (node._thingstudioDefaultColor === undefined) {
-    node._thingstudioDefaultColor = node.color;
-    node._thingstudioDefaultBgcolor = node.bgcolor;
-  }
-  node.color = "#e05555";
-  node.bgcolor = "#5a1f1f";
-  canvas.setDirty(true, true);
+function highlightNode(nodeId: number): AnyThingstudioNode | null {
+  const reteId = lastReteIdByNodeId.get(nodeId);
+  if (!reteId) return null; // stale ID (since-removed node, or a redeploy landed on a different graph) -- not a reason to crash the console
+  const node = reteEditor.getNode(reteId) as AnyThingstudioNode | undefined;
+  if (!node) return null;
+  node.highlighted = true;
+  void reteArea.update("node", node.id);
   return node;
 }
 
@@ -364,29 +427,43 @@ function highlightNodeFromMpyError(stderrText: string): void {
   if (!range) return; // line falls outside any single node's function (compiler scaffolding) -- can't attribute more precisely than "somewhere in the flow"
   const node = highlightNode(range.nodeId);
   if (!node) return;
-  logLine(`[compile error attributed to node ${range.nodeId} (${node.type}), source line ${lineNo}]`, "err");
+  logLine(`[compile error attributed to node ${range.nodeId} (${node.kind}), source line ${lineNo}]`, "err");
 }
 
 function highlightNodeFromNodeError(nodeIdRaw: string): void {
   // §13's NODE_ERROR.nodeId is a string on the wire (messages.ts's own
-  // "verbose over terse" convention), but Litegraph's own node IDs are
-  // numeric -- the device is untrusted input either way (CLAUDE.md's
-  // fault-handling priority), so a non-numeric/garbled ID is dropped
-  // rather than trusted blindly.
+  // "verbose over terse" convention), but the compiler-facing node IDs
+  // toGraphData() hands out are numeric -- the device is untrusted input
+  // either way (CLAUDE.md's fault-handling priority), so a non-numeric/
+  // garbled ID is dropped rather than trusted blindly.
   const nodeId = Number(nodeIdRaw);
   if (!Number.isFinite(nodeId)) return;
   const node = highlightNode(nodeId);
   if (!node) return;
-  logLine(`[runtime error attributed to node ${nodeId} (${node.type})]`, "err");
+  logLine(`[runtime error attributed to node ${nodeId} (${node.kind})]`, "err");
 }
-// Litegraph 0.7.18 has no reliable "graph changed" callback worth
-// depending on sight-unseen, so the preview is kept fresh by a plain
-// poll rather than an assumed hook -- crude, but correct, and cheap
-// enough at 1s for a bare-minimum tool. Deploy also always re-compiles
-// from the live graph right before sending, so this poll is only ever
-// a display convenience, never the source of truth for what gets sent.
+
+// Rete's editor.addPipe sees every graph mutation (nodes/connections
+// added, removed, or cleared) -- replaces the 1s poll this section used to
+// need for Litegraph, whose own "no reliable 'graph changed' callback"
+// gap (this file's previous header comment) doesn't exist here. Property-
+// only edits (PropertyPanel.vue's v-model bindings) don't go through an
+// editor pipe at all -- they mutate `node.properties` directly, the same
+// off-Vue-reactivity mutation store.ts's `propertyVersion` bump exists to
+// signal -- so this also re-runs on every propertyVersion bump, which
+// PropertyPanel.vue's `touch()` already fires on every field edit. Between
+// the two, every user action that could change the compiled source
+// triggers a refresh; as before, Deploy always re-compiles from the live
+// graph right before sending regardless of when this last ran, so nothing
+// here is ever the source of truth for what gets deployed.
+reteEditor.addPipe((context) => {
+  if (context.type === "nodecreated" || context.type === "noderemoved" || context.type === "connectioncreated" || context.type === "connectionremoved" || context.type === "cleared") {
+    refreshPreview();
+  }
+  return context;
+});
+watch(propertyVersion, () => refreshPreview());
 refreshPreview();
-setInterval(refreshPreview, 1000);
 
 // ---------------------------------------------------------------------
 // WebSerial connect / deploy -- real §13 protocol via transport.ts, no

@@ -2,26 +2,28 @@
 // editor/src/app/rete/editor-setup.ts
 //
 // Rete editor bootstrap for the real canvas layer -- ported from
-// pocs/poc-rete/src/editor-setup.ts, pared down to Phase 1's scope
-// (rete-migration-decision.md's scoped task list, Phase 1 step 6): area
-// plugin, connection plugin, Vue render preset with the real per-kind
+// pocs/poc-rete/src/editor-setup.ts, originally pared down to Phase 1's
+// scope (rete-migration-decision.md's scoped task list, Phase 1 step 6):
+// area plugin, connection plugin, Vue render preset with the real per-kind
 // node/socket components, multi-select, and the checkpoint-1 validation
-// pipe. NOT included here, deliberately, because it belongs to a later
-// phase or is explicitly out of scope this session:
-//   - nodepicked selection tracking for a property panel -- Phase 3 step
-//     13, ported alongside PropertyPanel.vue itself.
-//   - insert-node.ts's drag-to-splice -- "not in scope for this chat"
-//     (decision doc), pending Mike's nodedragged-vs-nodetranslated call.
+// pipe. Two things deliberately left out of that first pass have now been
+// added, Phase 3 item 13:
+//   - nodepicked selection tracking for the property panel, below --
+//     ported from poc-rete's own editor-setup.ts checkpoint-4 block,
+//     wired against this app's store.ts instead of poc-rete's.
+// Still NOT included here, because it's explicitly out of scope for this
+// migration (decision doc, "Not in scope"), not merely deferred:
+//   - insert-node.ts's drag-to-splice -- pending Mike's
+//     nodedragged-vs-nodetranslated call.
 //   - propagate()'s hand-rolled live-value walk -- "rete-engine /
 //     canvas-side live value propagation" is explicitly out of scope; the
 //     real editor may need no execution engine at all (device-driven work
 //     instead, per the decision doc).
 //
-// Not wired into app/main.ts or index.html yet -- that wiring (replacing
-// the Litegraph canvas construction, addNode()/toolbar glue) is Phase 3.
-// This module is Phase 1's deliverable on its own: a working, tested
-// canvas-layer building block the Litegraph editor keeps running
-// alongside, untouched.
+// Wired into app/main.ts as of Phase 3 -- see that file's canvas-
+// construction section for how `container` is obtained and how the
+// returned handle is used (currentSource(), extractCanvasSnapshot(),
+// applyFlowFile(), highlighting).
 
 import { NodeEditor, ClassicPreset } from "rete";
 import { AreaPlugin, AreaExtensions } from "rete-area-plugin";
@@ -31,6 +33,7 @@ import { VuePlugin, Presets as VuePresets } from "rete-vue-plugin";
 import type { AreaExtra, Schemes } from "./schemes";
 import type { AnyThingstudioNode } from "./nodes";
 import { installConnectionValidation } from "./validation";
+import { selectedNode, bumpPropertyVersion } from "./store";
 import ThingstudioNode from "./ThingstudioNode.vue";
 import ThingstudioSocket from "./ThingstudioSocket.vue";
 
@@ -60,6 +63,25 @@ export async function createThingstudioEditor(container: HTMLElement) {
     console.warn("[thingstudio] rejected incompatible connection", rejected);
   });
 
+  // --- nodepicked selection tracking (Phase 3 item 13) --------------------
+  // Ported from poc-rete's own editor-setup.ts, same mechanism: `area`'s
+  // `nodepicked` signal fires on pointer-down over a node (rete-area-
+  // plugin's own selection gesture, distinct from AreaExtensions.
+  // selectableNodes' multi-select box below, which this doesn't replace).
+  // PropertyPanel.vue reads `selectedNode` reactively; clicking empty
+  // canvas (pointerdown directly on `container`, nothing above it) clears
+  // the selection the same way poc-rete's did.
+  area.addPipe((context) => {
+    if (context.type === "nodepicked") {
+      const node = editor.getNode(context.data.id) as AnyThingstudioNode | undefined;
+      selectedNode.value = node ?? null;
+    }
+    return context;
+  });
+  container.addEventListener("pointerdown", (e) => {
+    if (e.target === container) selectedNode.value = null;
+  });
+
   // --- multi-select (decision doc Phase 1 step 6) -------------------------
   AreaExtensions.selectableNodes(area, AreaExtensions.selector(), {
     accumulating: AreaExtensions.accumulateOnCtrl(),
@@ -74,13 +96,22 @@ export async function createThingstudioEditor(container: HTMLElement) {
       await area.translate(node.id, position);
       return node;
     },
-    connectNodes: async (source: AnyThingstudioNode, sourceKey: string, target: AnyThingstudioNode, targetKey: string) => {
-      await editor.addConnection(new ClassicPreset.Connection(source, sourceKey, target, targetKey) as Schemes["Connection"]);
+    // Returns addConnection's own boolean (Phase 3 addition) -- `false`
+    // means the connection was rejected (validation.ts's pipe, or Rete's
+    // own duplicate-connection guard) rather than silently added.
+    // applyFlowFile()'s skip-and-report contract (main.ts, item 11) needs
+    // this to tell "connected" from "rejected" without re-deriving it.
+    connectNodes: (source: AnyThingstudioNode, sourceKey: string, target: AnyThingstudioNode, targetKey: string): Promise<boolean> => {
+      return editor.addConnection(new ClassicPreset.Connection(source, sourceKey, target, targetKey) as Schemes["Connection"]);
     },
     fitView: () => AreaExtensions.zoomAt(area, editor.getNodes()),
     clear: async () => {
       for (const c of [...editor.getConnections()]) await editor.removeConnection(c.id);
       for (const n of [...editor.getNodes()]) await editor.removeNode(n.id);
+      // Selection can't survive a clear -- the selected node object itself
+      // is gone (poc-rete's editor-setup.ts clear() does the same).
+      selectedNode.value = null;
+      bumpPropertyVersion();
     },
   };
 }
