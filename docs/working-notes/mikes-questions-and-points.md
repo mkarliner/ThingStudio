@@ -24,5 +24,8 @@ the following points and questions are for discussion around the scope of the MV
 # CI
 - should we use a CI that's independent of Github (add to claud a note about vendor neutral where possible)
 
+# App Platform
+node-red has a backend serving up the editor web pages, not a cross platform, GUI app as Electron or Tauri give you. Which do we want? A back end could be written in Python which might ease the pain of cross platform issues.
+
 
 
