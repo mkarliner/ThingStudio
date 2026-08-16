@@ -320,6 +320,52 @@ every other feel question in this project.
 
 ---
 
+## Dependency risk: the release hiatus, checked rather than assumed
+
+Raised by Mike before approving Phase 0, and the right question to ask
+given design doc §2 already carries MicroFlo as a cautionary tale about
+exactly this failure mode ("the idea was right; it didn't survive
+sustained maintenance").
+
+Checked 2026-08-16 against the GitHub API, not recalled:
+
+| Signal | `retejs/rete` |
+|---|---|
+| Stars / forks / watchers | 12,068 / 747 / 165 |
+| **Open issues** | **10** |
+| Last push to repo | **2026-05-22** |
+| Last npm publish (`2.0.6`, still `latest`) | 2025-06-30 |
+| Archived | no |
+| License | MIT |
+
+**This is a release hiatus, not a maintenance hiatus.** The repo received
+commits eleven months *after* the last npm publish. The decisive number is
+10 open issues against 12k stars — abandonment manifests as accumulating
+issues, not as a quiet release cadence, and MicroFlo's contrasting profile
+(220 stars, dormant, issues left rotting) is what that failure actually
+looks like. Most benign consistent explanation: a feature-complete core
+with low defect inflow, where changes don't accumulate to release-worthy.
+The plugin packages doing the rendering work are current regardless
+(`rete-area-plugin` 2026-07-08, `rete-vue-plugin` 2026-07-10, per
+`pocs/poc-rete/README.md`'s registry `time` check).
+
+**Not verified, flagged rather than glossed:** GitHub's array-returning
+API endpoints (commits, issues, releases) came back empty through the
+tooling available in this environment, so *what* the May 2026 commits
+contain — real code versus docs/CI — and the issue tracker's actual
+content were not inspected. Worth Mike's own look, same pattern as every
+other hands-on confirmation in this project.
+
+**The risk that is real is bus factor, not cadence** — this appears to be
+a single-maintainer project. But it must be compared against the actual
+alternative, not an ideal one: Litegraph 0.7.18 is a *vendored single
+file* of a library this project already treats as unmaintained, with no
+upstream relationship at all. Rete is MIT with 747 forks; the worst case
+is pin-and-fork, which is precisely the posture `editor/` already holds
+for Litegraph today. **On dependency risk specifically, this migration is
+a net improvement, not a net cost** — which is not an argument for the
+migration on its own, but does dispose of an argument against it.
+
 ## Scoped task list
 
 Sequenced so a working deploy path exists at every point. **The existing
@@ -330,19 +376,59 @@ story here and shouldn't be optimized away for tidiness.
 
 **Phase 0 — set-up**
 
-1. Flag and approve the six Rete packages for `editor/package.json`
-   (`rete`, `rete-area-plugin`, `rete-connection-plugin`,
-   `rete-render-utils`, `rete-vue-plugin`, `vue`), individually, per
-   CLAUDE.md. Note these move from a spike's `package.json` to a real
-   shipped dependency — a higher bar than poc-rete's install was, and the
-   first non-`cborg` runtime dependency `editor/` has taken on.
-   `rete-dock-plugin` is deliberately not in this list.
-2. Install with `--ignore-scripts`, into a scratch directory outside the
+1. **Approved by Mike, 2026-08-16** — seven packages, not six; the
+   original count in this note omitted `@vitejs/plugin-vue`, without which
+   `.vue` files don't compile at all.
+
+   | Package | Pin | Role |
+   |---|---|---|
+   | `rete` | 2.0.6 | runtime — headless core |
+   | `rete-area-plugin` | 2.3.2 | runtime — canvas surface |
+   | `rete-connection-plugin` | 2.0.5 | runtime — wire drag |
+   | `rete-render-utils` | 2.0.3 | runtime — peer of the renderer |
+   | `rete-vue-plugin` | 2.1.3 | runtime — Vue node renderer |
+   | `vue` | 3.5.41 | runtime — peer of the above |
+   | `@vitejs/plugin-vue` | ^6.0.0 | **dev** — SFC compilation |
+
+   Carry poc-rete's exact pins (least drift from what was validated
+   hands-on). `rete-dock-plugin` deliberately does not come across
+   (sub-decision 2). These become the first non-`cborg` runtime
+   dependencies `editor/` has taken on, and Vue in particular is a
+   framework commitment, not just a library — accepted knowingly.
+
+2. **Vite 8 compatibility: resolved, no blocker.**
+   `@vitejs/plugin-vue@6.0.8` declares
+   `peerDependencies.vite: "^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0"`, so
+   `editor/`'s existing `vite ^8.2.1` is supported and poc-rete's `^6.0.0`
+   pin resolves correctly against it. No version reconciliation needed —
+   the concern raised when scoping this was unfounded, checked rather than
+   assumed.
+
+3. **Supply-chain check, worth recording since CLAUDE.md's npm rules ask
+   for one:** both `@vitejs/plugin-vue@6.0.8` and `rete-vue-plugin@2.1.3`
+   publish **npm provenance attestations** (SLSA provenance predicate,
+   trusted-publisher OIDC). That is the strongest available signal that
+   the published tarball matches the repo it claims to come from, and it
+   is a check this project can make as a *consumer* even though §12's
+   provenance discussion is framed around publishing. Verify the same for
+   the remaining five at install time rather than assuming.
+
+   Also confirmed from registry metadata: `rete-vue-plugin`'s sole
+   maintainer is `ni55an` (Vitaliy Stoliarov), corroborating the
+   single-maintainer bus-factor read above; and the package description
+   carries a Discord badge, so a community channel does exist — its
+   activity level was not measured.
+
+4. Install with `--ignore-scripts`, into a scratch directory outside the
    live-mounted repo, per `editor-look-and-feel-briefing.md`'s
-   `node_modules` corruption workaround. Copy source only.
-3. Add all six to `docs/third-party-licenses.md` in the same change,
+   `node_modules` corruption workaround. Copy source only. Re-check
+   `rete`'s `postinstall.js` is still the harmless console banner
+   poc-rete inspected, rather than trusting that finding is still current.
+5. Add all seven to `docs/third-party-licenses.md` in the same change,
    pulling versions/licenses from installed package metadata. Move them
-   from the poc-rete section to a real `editor/` dependency section.
+   from the poc-rete spike section into a real `editor/` runtime
+   dependency section — the ledger currently files them as spike-only,
+   which stops being true here.
 
 **Phase 1 — canvas layer**
 
