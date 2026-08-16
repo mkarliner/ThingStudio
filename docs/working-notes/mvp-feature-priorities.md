@@ -216,6 +216,18 @@ pipeline driven by hardcoded buttons.
     `nodes.ts` + a modest `main.ts` addition, no compiler/protocol
     changes. Deferred — cosmetic, not blocking the hardware-proof work
     above.
+  - **2026-08-16 (Rete migration, Phase 3): closed, as a side effect of
+    the canvas migration, not a dedicated pass.** `rete-migration-decision.md`
+    Phase 3 item 13 named this explicitly as "the one deferred item this
+    migration legitimately absorbs" — Rete's lack of a widget layer forced
+    the properties-outside-the-node-body pattern rather than inviting it.
+    `editor/src/app/rete/ThingstudioNode.vue` renders the compact
+    Node-RED-style pill (icon + label only, no inline config); config now
+    lives in `editor/src/app/rete/PropertyPanel.vue`, which also retired
+    the one-off `#code-modal`/`window.thingstudioOpenCodeEditor` special
+    case for the `function` node into the same general mechanism. Confirmed
+    working hands-on, real hardware, 2026-08-16 (property panel editing
+    listed alongside canvas parity in that session's own status).
   - 2026-08-14 (same session, real gap hit hands-on, not built): a
     `function` node with invalid MicroPython produces an `mpy-cross`
     `SyntaxError` with only a raw line number in the generated source
