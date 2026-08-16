@@ -73,6 +73,21 @@ end-user-visible on its own.
   equivalent standard scheme in the Pico SDK, so this hedge is ESP32-only;
   Pico-family OTA remains a separate, harder problem for whenever it's
   scoped.
+- **Added 2026-08-16 (`working-notes/transport-auth-design.md`): reserve
+  `HELLO`'s `authRequired`/`authScheme` fields, even in a v1 that ships
+  `authRequired: false`/`authScheme: "none"`.** Same one-way-door shape as
+  the OTA partition-table item above, and for the same reason: a `HELLO`
+  that says nothing about auth capability can't later be distinguished
+  from one an attacker stripped the requirement from, and every device
+  already in the field would need a manual reflash to become
+  distinguishable once that's noticed. Unlike the OTA hedge, this one
+  isn't chip-specific — it's two fields in the message codec
+  (`messages.ts`/`codec.ts`/`messages.py`), not a build-config/partition
+  choice, so it applies uniformly across every target in §3 and any added
+  later. Cheap: two lines per side plus a version-matrix-style test case.
+  The actual auth mechanism (HMAC-SHA256 + persisted counter) and its
+  `HELLO`-consuming logic are separate, larger Tier 0/1 work, not implied
+  by reserving these two fields.
 
 ## Tier 1 — the v1 node set (§6/§10), built on Tier 0
 

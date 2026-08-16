@@ -263,6 +263,38 @@ that off-device reasoning does not substitute for a board:
 
 ---
 
+## 7a. Addendum, 2026-08-16: portability across target chips, not an ESP32-C3 workaround
+
+Raised by Mike this session, applying design-doc-edit scrutiny before §8's
+changes land: **§3's target list already isn't ESP32-only** (ESP32-C3/
+classic/S3, RP2040, RP2350), and the likely list is wider still — STM32 and
+generic RISC-V parts were both raised this session as plausible future
+targets, neither yet in §3. §3's own "verified" section above grounds the
+counter-over-nonce call entirely in ESP32-C3-specific documentation
+(Espressif's ESP-IDF RNG caveats), which reads, out of context, like a
+workaround for one chip's known-bad RNG rather than what it actually is.
+
+**Correcting the framing, not the recommendation — the mechanism was
+already chip-agnostic, it just wasn't described that way.** The real
+argument for a monotonic counter over a random nonce was never "the
+ESP32-C3 specifically has a bad RNG." It's that **this project cannot
+assume any given target has a trustworthy on-chip RNG**, across a
+hardware family that will keep growing (RP2040/RP2350's RP2350 does carry
+a hardware RNG; RP2040 doesn't; STM32 entropy sources vary by family line;
+"RISC-V" names an instruction set, not a peripheral set, so it implies
+nothing about entropy quality either way) — auditing each target's RNG
+quality individually, and re-auditing it on every new target added to §3,
+is exactly the kind of per-chip special-casing worth designing away from
+rather than accepting. A mechanism that needs no RNG at all (HMAC-SHA256 +
+persisted counter, §4 above) sidesteps the question for every current and
+future target uniformly, which is the actual justification and a stronger
+one than "ESP32-C3's RNG happens to be bad." The ESP32-C3 findings above
+stay in this note as the concrete, verified evidence that triggered this
+design (and remain worth having — MicroPython's `hashlib.sha256`
+availability was checked against ESP32-C3 docs specifically, and that
+check would need repeating per target family regardless), not as the scope
+of what the recommendation covers.
+
 ## 8. Design doc changes this implies
 
 Not made in this session — flagged for whoever picks it up:
