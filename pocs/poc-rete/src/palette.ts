@@ -35,3 +35,9 @@ export const NODE_PALETTE: Record<NodeKind, KindStyle> = {
 };
 
 export const DEFAULT_KIND_STYLE: KindStyle = { color: "#555", bgcolor: "#2b2b2b", icon: "?", label: "?" };
+
+// Shared between PaletteSidebar.vue's `dragstart` (dataTransfer.setData)
+// and App.vue's `drop` (dataTransfer.getData) — a plain string constant in
+// one place so the two ends of the drag gesture can't drift out of sync
+// with each other, same reasoning as NODE_PALETTE itself.
+export const DRAG_MIME = "application/x-thingstudio-node-kind";

@@ -100,6 +100,16 @@ Sequenced by risk and dependency, not just copied from §6's list order:
 3. **I2C/SPI sensor nodes** — a handful of common sensors, each wrapping
    an existing MicroPython driver per §7. Gated on having the actual
    sensor hardware on hand for each one, not just a codegen exercise.
+   **Open fault-handling question, flagged by Mike (2026-08-16,
+   `docs/working-notes/mikes-questions-and-points.md`), not yet
+   resolved:** what happens with a stuck/unresponsive I2C device — does a
+   driver call hang the node's coroutine indefinitely, and if so does that
+   need the same bounded-timeout treatment §5's fault isolation already
+   requires for network I/O? This is a fault-handling requirement on an
+   already-scoped item, not a new node type, and per CLAUDE.md's
+   engineering-priority section it isn't optional polish to defer past
+   whichever sensor node lands first — resolve it while building the
+   first I2C sensor node, not after.
 4. **Network nodes** — WiFi status/HTTP request, then MQTT publish/
    subscribe. Last within this tier since they carry the most external
    moving parts (radio bring-up, broker availability) relative to the
@@ -117,6 +127,20 @@ Sequenced by risk and dependency, not just copied from §6's list order:
    broker/HTTP test server still pending** — this section's own validation
    bar treats that as non-negotiable for network nodes, not optional
    polish; nothing here has touched a real device or a real broker yet.
+5. **New candidates, folded in from Mike's 2026-08-16 review
+   (`docs/working-notes/mikes-questions-and-points.md`), deliberately not
+   sequenced within this tier yet — reprioritize as a whole once these are
+   weighed against items 1–4 above, not slotted in ad hoc:** interrupt/pin-
+   change (GPIO edge-triggered events, distinct from item 2's poll-driven
+   `gpio_in`), ADC (analog read — check whether this is genuinely separate
+   from `gpio_in` or the same node with a mode flag before treating it as
+   new surface), debounce, UDP/TCP (beyond the HTTP request node item 4
+   already has), mDNS (device/service discovery), file ops (flash
+   filesystem access from a flow), filter/event compression (rate-limiting
+   or change-only forwarding on a wire). Not yet checked against §6's node
+   category list or against whether each is a new node type versus a
+   property on an existing one — that review is part of the reprioritization
+   this item is waiting on, not done here.
 
 ## Tier 2 — the "feels like Node-RED" layer
 

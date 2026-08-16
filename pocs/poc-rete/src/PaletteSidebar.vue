@@ -7,16 +7,19 @@
   positioned as the first child of App.vue's `.workspace` row (left of the
   canvas), matching where Node-RED's own "PALETTE" panel sits.
 
-  Click-to-add, not drag-and-drop — real Node-RED's palette IS a drag
-  source, and this build originally had that mechanism too, via
-  rete-dock-plugin's bottom-left dock overlay on the canvas (checkpoint 3,
-  rete-spike-briefing.md #3). Removed 2026-08-15 per Mike's steer ("remove
-  the node palette from the bottom") once this sidebar existed alongside it
-  and the two read as redundant — see editor-setup.ts's header comment for
-  the real cost of that (checkpoint 3 no longer has a UI path in this
-  build). This sidebar's click-to-add is the only node-creation entry point
-  left besides "Load example flow"; dragging an already-placed node onto a
-  wire (checkpoint 2) is unaffected.
+  Click-to-add AND drag-and-drop. Originally click-only, with the real
+  Node-RED-style drag gesture handled by rete-dock-plugin's bottom-left
+  dock overlay (checkpoint 3, rete-spike-briefing.md #3) — that was removed
+  2026-08-15 once this sidebar existed alongside it and the two read as
+  redundant (see editor-setup.ts's header comment for what that cost:
+  checkpoint 3 no longer has a UI path in this build). Mike asked
+  afterward for drag-and-drop back specifically from this sidebar, so it's
+  native HTML5 drag-and-drop now (`draggable`, `dragstart` here;
+  `dragover`/`drop` on App.vue's `.canvas`), not a Rete plugin — plain
+  browser API, no new dependency, and it drops the node at the actual
+  cursor position (converted through the canvas's own pan/zoom transform
+  in App.vue) rather than dock-plugin's fixed-strip-then-drag-onto-canvas
+  two-step. Click-to-add still works unchanged alongside it.
 
   Colors/icons come from palette.ts, the same source ThingstudioNode.vue's
   canvas nodes render from, so this list can't visually drift from what
@@ -32,7 +35,9 @@
       :key="kind"
       class="palette-row"
       :style="{ borderColor: NODE_PALETTE[kind].color }"
+      draggable="true"
       @click="emit('add', kind)"
+      @dragstart="onDragStart($event, kind)"
     >
       <span class="palette-icon" :style="{ background: NODE_PALETTE[kind].bgcolor }">{{ NODE_PALETTE[kind].icon }}</span>
       <span class="palette-label">{{ NODE_PALETTE[kind].label }}</span>
@@ -43,7 +48,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { NODE_PALETTE, type NodeKind } from "./palette";
+import { NODE_PALETTE, DRAG_MIME, type NodeKind } from "./palette";
 
 const emit = defineEmits<{ add: [kind: NodeKind] }>();
 
@@ -56,6 +61,17 @@ const filter = ref("");
 const visibleKinds = computed(() =>
   KINDS.filter((kind) => NODE_PALETTE[kind].label.toLowerCase().includes(filter.value.trim().toLowerCase())),
 );
+
+// Native HTML5 drag-and-drop, not a Rete plugin — see this file's header
+// comment for why. `effectAllowed = "copy"` matches the gesture's actual
+// meaning (dragging a palette row creates a new node, doesn't move
+// anything out of the palette) and is what gives the cursor its "+"
+// affordance in Chrome. App.vue's `.canvas` drop handler reads this same
+// `DRAG_MIME` key back out.
+function onDragStart(event: DragEvent, kind: NodeKind): void {
+  event.dataTransfer?.setData(DRAG_MIME, kind);
+  if (event.dataTransfer) event.dataTransfer.effectAllowed = "copy";
+}
 </script>
 
 <style scoped>
