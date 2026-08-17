@@ -19,6 +19,35 @@ import type { GraphNode } from "./graph.js";
 
 export type NodeKind = "source" | "transform" | "sink";
 
+// §6's fixed payload type set (design doc §6, "payload itself is typed
+// from a small fixed set"). Single source of truth for both sides that
+// need it: rete/sockets.ts maps each of these to a real socket class for
+// the editor's wire-connect-time check, and this file's own `ports` field
+// (below) is what a node-library/*.ts declares its ports' types against.
+export type PayloadType = "int" | "number" | "bool" | "string" | "bytes" | "any";
+
+// A port's type is usually fixed, but not always -- inject's single
+// output is `bool`/`number`/`string` depending on its own `payloadType`
+// property (node-library/inject.ts), the one node in the current 5-node
+// canvas set whose port type isn't static. A function taking the node's
+// resolved `properties` covers that case without a second, parallel
+// mechanism for "ports that can retype" -- see resolvePortType below and
+// rete/nodes.ts's InjectNode.retypeOutput().
+export type PortType = PayloadType | ((properties: Record<string, unknown>) => PayloadType);
+
+export interface PortDefinition {
+  /** Must match the port's key in app/rete/nodes.ts's addInput/addOutput calls exactly. */
+  name: string;
+  type: PortType;
+}
+
+/** Resolves a possibly-dynamic PortDefinition against one node instance's
+ * current properties. The one place `typeof type === "function"` gets
+ * checked -- callers (rete/nodes.ts) never branch on that themselves. */
+export function resolvePortType(port: PortDefinition, properties: Record<string, unknown>): PayloadType {
+  return typeof port.type === "function" ? port.type(properties) : port.type;
+}
+
 /** Code generated at module scope, before any coroutine bodies -- pin/bus setup, imports, etc. */
 export interface SetupCode {
   /** Extra `import` lines this node needs; deduplicated across the whole compiled flow. */
@@ -56,6 +85,22 @@ export interface NodeDefinition {
   /** e.g. "thingstudio/gpio_out" */
   type: string;
   kind: NodeKind;
+  // Editor-side only (wire-type-system-scoping.md, "Governing call"): read
+  // by app/rete/nodes.ts to construct each port's real socket instead of a
+  // hardcoded AnySocket. compile.ts's own graph walk does not read this --
+  // confirmed when this field was added, matching the scoping note's
+  // framing that §6's type check is a wire-connect-time editor concern,
+  // not something codegen needs. Optional, and only populated for the 5
+  // node types currently on the canvas (inject, function, debug, gpio_out,
+  // timer) -- the other 11 registered types stay untouched, out of scope
+  // per the scoping note's question 5. A node type with no `ports` here
+  // simply isn't constructible on the canvas yet (rete/nodes.ts has no
+  // class for it either), so there's no "falls back to what" case to
+  // handle.
+  ports?: {
+    inputs?: PortDefinition[];
+    outputs?: PortDefinition[];
+  };
   codegenSource?(node: GraphNode, ctx: CodegenContext): SourceCodegenResult;
   codegenTransform?(node: GraphNode, ctx: CodegenContext): TransformCodegenResult;
   codegenSink?(node: GraphNode, ctx: CodegenContext): SinkCodegenResult;

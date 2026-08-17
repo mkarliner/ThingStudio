@@ -20,6 +20,14 @@ import type { CodegenContext, NodeDefinition, SourceCodegenResult } from "../com
 export const timerNode: NodeDefinition = {
   type: "thingstudio/timer",
   kind: "source",
+  // The tick counter below is a genuine Python int (`counterVar += 1`,
+  // starting at 0) -- `int`, not `number`, is the precise type; `int ->
+  // number` widening (bucket 2, sockets.ts) means this still feeds a
+  // `number`-typed input with no friction, it's just not lossily
+  // widened at the declaration itself.
+  ports: {
+    outputs: [{ name: "msg", type: "int" }],
+  },
   codegenSource(node: GraphNode, ctx: CodegenContext): SourceCodegenResult {
     const intervalMs = Math.round(Number(node.properties.intervalMs ?? 1000));
     if (!Number.isFinite(intervalMs) || intervalMs <= 0) {

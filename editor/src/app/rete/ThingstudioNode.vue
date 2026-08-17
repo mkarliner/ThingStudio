@@ -23,6 +23,7 @@
   instance, same as `data.kind`/`data.properties` -- main.ts mutates it and
   forces a re-render via `area.update("node", id)`, since Rete nodes aren't
   Vue-reactive (see nodes.ts's own comment on the field).
+
 -->
 <template>
   <div class="ts-node" :class="[`kind-${data.kind}`, { selected: data.selected, highlighted: data.highlighted }]" :style="nodeStyles">

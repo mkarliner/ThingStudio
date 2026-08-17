@@ -16,6 +16,12 @@ import type { CodegenContext, NodeDefinition, SinkCodegenResult } from "../compi
 export const debugNode: NodeDefinition = {
   type: "thingstudio/debug",
   kind: "sink",
+  // `any` in -- debug prints whatever payload it receives (`msg.get
+  // ('payload')` below, unconditionally), so it accepts every source type,
+  // same reasoning as function's own `any` input.
+  ports: {
+    inputs: [{ name: "msg", type: "any" }],
+  },
   codegenSink(node: GraphNode, ctx: CodegenContext): SinkCodegenResult {
     return {
       functionName: ctx.uniqueName("debug"),

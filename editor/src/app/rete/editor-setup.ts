@@ -55,9 +55,11 @@ export async function createThingstudioEditor(container: HTMLElement) {
   area.use(connection);
   area.use(render);
 
-  // --- checkpoint 1's mechanism, kept live as infrastructure -------------
-  // (see this file's header and validation.ts's own header for why this
-  // still gets wired even though sockets.ts's AnySocket always accepts).
+  // --- checkpoint 1's mechanism, now doing real work ----------------------
+  // (see this file's header and validation.ts's own header). sockets.ts
+  // carries real coercion-aware socket types as of the §6 wire-type
+  // system (wire-type-system-scoping.md) -- this pipe can now actually
+  // reject a connection, not just exist as a seam for later.
   installConnectionValidation(editor, (rejected) => {
     // eslint-disable-next-line no-console
     console.warn("[thingstudio] rejected incompatible connection", rejected);

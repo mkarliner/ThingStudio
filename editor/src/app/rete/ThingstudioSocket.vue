@@ -14,17 +14,23 @@
   hanging off a correctly-positioned but invisible anchor).
 -->
 <template>
-  <div class="ts-socket-dot" :title="data.name" />
+  <div class="ts-socket-dot" />
 </template>
 
 <script setup lang="ts">
-// `data` is the actual socket instance (AnySocket, sockets.ts) -- the
-// renderer hands the render context's `payload` straight through as this
-// prop, same pattern as ThingstudioNode.vue's `data`. `.name` is set by
-// `ClassicPreset.Socket`'s own constructor from the string passed to
-// `super(...)` ("any" for this app's one socket type) -- used here only as
-// a hover tooltip.
-defineProps<{ data: { name: string } }>();
+// `data` is the actual socket instance (rete-vue-plugin hands the render
+// context's `payload` straight through as this prop, same pattern as
+// ThingstudioNode.vue's `data`) -- required by the `socket: () =>
+// ThingstudioSocket` customization contract (editor-setup.ts) even though
+// nothing here reads it. A hover tooltip showing the socket's type name
+// (`.name`, from `ClassicPreset.Socket`'s constructor) was tried here
+// during the §6 wire-type system work and removed the same session --
+// didn't earn its keep (clicking the node already shows everything in the
+// property panel) and its live-update path turned out to need real
+// complexity elsewhere (see nodes.ts's `highlighted` field comment for the
+// general gotcha it ran into). Not worth carrying for a hover tooltip
+// nobody asked for.
+defineProps<{ data: unknown }>();
 </script>
 
 <style scoped>

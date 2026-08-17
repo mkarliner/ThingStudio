@@ -14,15 +14,21 @@
     - No `mqtt_publish` block -- that node type was never exposed on this
       canvas (nodes.ts's own header), even though node-library/
       mqtt-publish.ts exists for a later Tier.
-    - No "inject now" button, and inject's payload-type/repeat selects
-      don't call `retypeOutput()`/`setupTimer()` on change -- those were
-      poc-rete's hooks into its own hand-rolled live-propagation machinery
-      (InjectNode.fire()/setupTimer()), which doesn't exist on the real
-      InjectNode class (nodes.ts) and is explicitly out of scope for this
-      migration (rete-migration-decision.md, "rete-engine / canvas-side
-      live value propagation"). Editing these fields just updates
-      `properties` and touches propertyVersion, same as every other field
-      here.
+    - No "inject now" button, and inject's repeat select doesn't call
+      `setupTimer()` on change -- that was poc-rete's hook into its own
+      hand-rolled live-propagation machinery (InjectNode.fire()/
+      setupTimer()), which doesn't exist on the real InjectNode class
+      (nodes.ts) and is explicitly out of scope for this migration
+      (rete-migration-decision.md, "rete-engine / canvas-side live value
+      propagation"). Editing `repeat` just updates `properties` and
+      touches propertyVersion, same as every other field here.
+
+  Updated for the §6 wire-type system (wire-type-system-scoping.md):
+  unlike the note above, the payload-type select's `@change` NOW also
+  calls `retypeOutput()` (nodes.ts) -- that method exists on the real
+  InjectNode class as of this session, swapping the output socket to
+  match the new payloadType. Not live-propagation machinery; a real,
+  now-necessary part of the wire-type check.
   Added relative to poc-rete: a `timer` block (`intervalMs`) -- poc-rete
   had no timer node to port a panel section from; this is fresh work,
   unverified in a real browser until Mike's hands-on pass, same caveat
@@ -39,7 +45,7 @@
 
       <template v-if="node.kind === 'inject'">
         <label>payload type
-          <select v-model="node.properties.payloadType" @change="touch">
+          <select v-model="node.properties.payloadType" @change="retypeInjectOutput">
             <option value="bool">bool</option>
             <option value="number">number</option>
             <option value="string">string</option>
@@ -89,6 +95,7 @@
 import { computed } from "vue";
 import { selectedNode, bumpPropertyVersion, propertyVersion } from "./store";
 import { NODE_PALETTE, DEFAULT_KIND_STYLE, type NodeKind } from "./palette";
+import { InjectNode } from "./nodes";
 
 const node = computed(() => {
   propertyVersion.value; // establish reactive dependency even though mutations happen off-Vue
@@ -99,6 +106,23 @@ const kindStyle = computed(() => (node.value ? (NODE_PALETTE[node.value.kind as 
 
 function touch(): void {
   bumpPropertyVersion();
+}
+
+// payloadType's own @change handler (template above) -- v-model has
+// already written the new value into node.properties.payloadType by the
+// time this fires, so retypeOutput() (nodes.ts) picks it up correctly.
+// Real socket-instance swap, not just a `properties` edit, so it needs its
+// own handler rather than reusing plain `touch()` the way every other
+// field on this panel does. Deliberately does NOT try to force a visual
+// repaint of the socket dot (tried, then removed -- ThingstudioSocket.vue's
+// own header explains why, and what it would have taken to make that
+// visible): nothing on this canvas currently displays a socket's type
+// except the property panel itself, which `touch()` already refreshes.
+function retypeInjectOutput(): void {
+  if (node.value instanceof InjectNode) {
+    node.value.retypeOutput();
+  }
+  touch();
 }
 </script>
 

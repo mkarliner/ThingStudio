@@ -20,6 +20,17 @@ import type { CodegenContext, NodeDefinition, SinkCodegenResult } from "../compi
 export const gpioOutNode: NodeDefinition = {
   type: "thingstudio/gpio_out",
   kind: "sink",
+  // The one concretely-typed *input* that exists on today's 5-node canvas
+  // (wire-type-system-scoping.md's scope-of-protection analysis) --
+  // `signal` feeds `machine.Pin.value(1 if msg.get('payload') else 0)`
+  // below, which is exactly bucket 1's truthiness conversion, already
+  // unconditional and hardware-proven regardless of the feeding type. A
+  // `bool`-typed input is what makes that bucket-1 "anything -> bool: allow"
+  // rule load-bearing rather than decorative -- every real wire into this
+  // port stays allowed.
+  ports: {
+    inputs: [{ name: "signal", type: "bool" }],
+  },
   codegenSink(node: GraphNode, ctx: CodegenContext): SinkCodegenResult {
     const pin = Math.round(Number(node.properties.pin));
     if (!Number.isFinite(pin) || pin < 0 || pin > 39) {

@@ -2,20 +2,20 @@
 // editor/src/app/rete/validation.ts
 //
 // Checkpoint 1's mechanism (rete-migration-decision.md's evidence base,
-// pocs/poc-rete/README.md), wired in this session as live infrastructure
-// even though sockets.ts's single AnySocket always returns true from
-// isCompatibleWith (sub-decision 3 -- no type system this session). The
-// pipe exists so §6's real socket types can be dropped into sockets.ts
-// later without also having to build this interception point at the same
-// time: editor.addPipe intercepts every `connectioncreate` message before
-// editor.addConnection() adds it to the graph -- the same call a real
-// drag's drop gesture makes internally -- so a rejected connection is
-// never added and never rendered (architecturally the same class of
-// behavior as Litegraph's isValidConnection, "can't drop it", not
-// Drawflow's "flash then rip out"). Ported from
-// pocs/poc-rete/src/validation.ts; see that file's header for the fuller
-// mechanism writeup and what is/isn't confirmed about real-browser drag
-// feel.
+// pocs/poc-rete/README.md), wired in as live infrastructure back when
+// sockets.ts's single AnySocket always returned true from isCompatibleWith
+// (sub-decision 3 -- no type system in that session). This pipe is why
+// §6's real socket types (sockets.ts, wire-type-system-scoping.md) could
+// be dropped in later without also having to build this interception
+// point at the same time: editor.addPipe intercepts every
+// `connectioncreate` message before editor.addConnection() adds it to the
+// graph -- the same call a real drag's drop gesture makes internally --
+// so a rejected connection is never added and never rendered
+// (architecturally the same class of behavior as Litegraph's
+// isValidConnection, "can't drop it", not Drawflow's "flash then rip
+// out"). Ported from pocs/poc-rete/src/validation.ts; see that file's
+// header for the fuller mechanism writeup and what is/isn't confirmed
+// about real-browser drag feel.
 
 import type { Schemes, Editor } from "./schemes";
 import type { ThingstudioSocket } from "./sockets";

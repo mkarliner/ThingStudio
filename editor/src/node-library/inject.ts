@@ -10,7 +10,7 @@
 
 import { CompileError } from "../compiler/errors.js";
 import type { GraphNode } from "../compiler/graph.js";
-import type { CodegenContext, NodeDefinition, SourceCodegenResult } from "../compiler/node-definition.js";
+import type { CodegenContext, NodeDefinition, PayloadType, SourceCodegenResult } from "../compiler/node-definition.js";
 import { pyPayloadLiteral } from "./py-literals.js";
 
 const REPEAT_MS: Record<string, number> = { manual: 0, "1s": 1000, "5s": 5000, "30s": 30000 };
@@ -18,6 +18,15 @@ const REPEAT_MS: Record<string, number> = { manual: 0, "1s": 1000, "5s": 5000, "
 export const injectNode: NodeDefinition = {
   type: "thingstudio/inject",
   kind: "source",
+  // The one dynamic port in the current 5-node canvas set (node-
+  // definition.ts's PortType header comment) -- output type tracks the
+  // `payloadType` property exactly the way codegenSource's own
+  // `payloadType` read above does, so this can't drift from what actually
+  // gets emitted. Falls back to "bool" for an unset/unrecognized value,
+  // matching codegenSource's own `?? "bool"` default.
+  ports: {
+    outputs: [{ name: "msg", type: (properties) => (properties.payloadType as PayloadType | undefined) ?? "bool" }],
+  },
   codegenSource(node: GraphNode, _ctx: CodegenContext): SourceCodegenResult {
     const payloadType = (node.properties.payloadType as string | undefined) ?? "bool";
     const payloadLiteral = pyPayloadLiteral(payloadType, node.properties.payloadValue, "inject payload");

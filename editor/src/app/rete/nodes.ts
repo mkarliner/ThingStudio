@@ -18,27 +18,56 @@
 // no equivalent to port, so its property shape/sizing is fresh work here,
 // unverified in a real browser by anyone until Mike's hands-on pass.
 //
-// Sockets are `any`-equivalent this session (sub-decision 3, sockets.ts) --
-// no per-payload-type retyping the way poc-rete's InjectNode.retypeOutput()
-// did, since there's only one socket class to retype *to* here. Live
-// propagation (poc-rete's onFire/timer-interval instance behavior) is
-// out of scope entirely (rete-migration-decision.md, "Not in scope") --
-// these classes stay data-only: properties + ports, plus one small
-// addition below.
+// §6 wire-type system (docs/working-notes/wire-type-system-scoping.md):
+// every port constructed below reads its real socket type from the
+// matching node-library/*.ts's `ports` declaration (compiler/node-
+// definition.ts) via portSocket(), instead of the sub-decision-3-era
+// hardcoded `new AnySocket()` every port used to get. inject is the one
+// dynamic case -- see InjectNode.retypeOutput() below.
+//
+// Live propagation (poc-rete's onFire/timer-interval instance behavior)
+// is out of scope entirely (rete-migration-decision.md, "Not in scope") --
+// these classes stay data-only: properties + ports, plus the small
+// additions below (`highlighted`, `retypeOutput`).
 //
 // Phase 3 update: `highlighted` (a plain boolean, not a `properties` field)
 // and `NODE_FACTORIES` were added here -- see each class's own comment and
 // this file's bottom for why.
 
 import { ClassicPreset } from "rete";
-import { AnySocket } from "./sockets";
+import { socketForPayloadType } from "./sockets";
 import type { NodeKind } from "./palette";
+import { injectNode } from "../../node-library/inject.js";
+import { functionNode } from "../../node-library/function-node.js";
+import { debugNode } from "../../node-library/debug.js";
+import { gpioOutNode } from "../../node-library/gpio-out.js";
+import { timerNode } from "../../node-library/timer.js";
+import { resolvePortType, type PortDefinition } from "../../compiler/node-definition.js";
 
 // Uniform pill height, ported from poc-rete's NODE_HEIGHT -- see that
 // project's README "also worth recording" section for why this is a real
 // Rete classic-preset layout budget that clips content, not a hint the
 // way Litegraph's `size` is.
 const NODE_HEIGHT = 34;
+
+// Looks up one named port in a NodeDefinition's `ports.inputs`/`.outputs`
+// and resolves it to a real socket for the given node instance's current
+// `properties` -- the one place a node-library ports declaration becomes
+// an actual ClassicPreset socket, shared by every node class's constructor
+// below (and InjectNode's retypeOutput()) instead of five copies of the
+// same find-then-resolve-then-construct sequence. Throws on a missing
+// port rather than falling back to AnySocket -- a name here not matching
+// the node-library declaration is this file and that one drifting out of
+// sync with each other, a programmer error worth failing loudly on
+// (CLAUDE.md's fault-handling priority), same reasoning graph-adapter.ts's
+// own socketIndex() already applies to its analogous "key not found" case.
+function portSocket(defs: PortDefinition[] | undefined, name: string, properties: Record<string, unknown>) {
+  const def = defs?.find((d) => d.name === name);
+  if (!def) {
+    throw new Error(`nodes.ts: no port definition named "${name}" -- node-library ports declaration is out of sync with this file`);
+  }
+  return socketForPayloadType(resolvePortType(def, properties));
+}
 
 // `highlighted` (added to every node class below, Phase 3 item 12): the
 // reactive-state replacement for app/nodes.ts's `node.color`/`node.bgcolor`
@@ -51,6 +80,25 @@ const NODE_HEIGHT = 34;
 // used this exact mechanism for its live-value dots). Not part of
 // `properties` -- the compiler-facing adapter (graph-adapter.ts) never
 // reads it, so it can't leak into generated source or a saved flow file.
+//
+// General gotcha worth remembering, found hands-on chasing a socket-
+// tooltip bug during the §6 wire-type system work (tried, then removed --
+// ThingstudioSocket.vue's own header has the full story): `area.update
+// ("node", id)` only reaches state read directly by ThingstudioNode.vue's
+// own template, like `highlighted` above. It does NOT reach anything
+// rendered by a *nested* per-port Vue component (sockets, and by the same
+// architecture presumably controls) -- rete-vue-plugin mounts each of
+// those as its own independent Vue app, wired up once via `Ref.vue`'s
+// `mounted()` hook and never refreshed again on prop changes, and sockets
+// specifically have no `.id` at all (only nodes/connections do), so
+// `area.update()` isn't even a route that reaches them. The only way to
+// force one of those to refresh is a `:key` change on its `<Ref>` in the
+// owning node component, forcing Vue to unmount and remount it. Left
+// undone here since nothing currently needs a socket to visibly reflect a
+// runtime change -- worth knowing before assuming `area.update("node",
+// id)` alone covers "make the canvas reflect this mutation," if that ever
+// comes up again (a live-value dot per port, a drag-time compatibility
+// highlight, etc.).
 export class InjectNode extends ClassicPreset.Node {
   width = 96;
   height = NODE_HEIGHT;
@@ -65,7 +113,33 @@ export class InjectNode extends ClassicPreset.Node {
 
   constructor() {
     super("inject");
-    this.addOutput("msg", new ClassicPreset.Output(new AnySocket(), "msg"));
+    this.addOutput("msg", new ClassicPreset.Output(portSocket(injectNode.ports?.outputs, "msg", this.properties), "msg"));
+  }
+
+  // Swaps the output socket for the one matching the current
+  // `payloadType` property -- poc-rete's InjectNode.retypeOutput()
+  // (pocs/poc-rete/src/nodes.ts), ported onto the real coercion-aware
+  // socket classes instead of that spike's strict same-class ones.
+  // PropertyPanel.vue calls this from the payload-type select's `@change`
+  // (the constructor above only sets the *initial* socket, same gap
+  // poc-rete's own version existed to close).
+  //
+  // Deliberately does NOT drop or flag any now-invalid existing
+  // connection a retype might produce. wire-type-system-scoping.md's
+  // question 3 resolved what that behavior *should* eventually be (drop
+  // the wire, flag the drop via the `highlighted` mechanism above) but
+  // also that it's currently unreachable in practice: gpio_out's `signal`
+  // is the only concretely-typed input on today's 5-node canvas, and
+  // "anything -> bool" is unconditionally allowed (sockets.ts, bucket 1)
+  // -- no payloadType change can produce a wire this app would ever need
+  // to drop yet. Recording that as intent here, not building it blind:
+  // add the drop-and-flag behavior when a non-bool-typed input actually
+  // lands on the canvas (one of the other 11 node-library/registry.ts
+  // types), not before.
+  retypeOutput(): ClassicPreset.Socket {
+    const socket = portSocket(injectNode.ports?.outputs, "msg", this.properties);
+    this.outputs.msg!.socket = socket;
+    return socket;
   }
 }
 
@@ -81,8 +155,8 @@ export class FunctionNode extends ClassicPreset.Node {
 
   constructor() {
     super("function");
-    this.addInput("msg", new ClassicPreset.Input(new AnySocket(), "msg"));
-    this.addOutput("msg", new ClassicPreset.Output(new AnySocket(), "msg"));
+    this.addInput("msg", new ClassicPreset.Input(portSocket(functionNode.ports?.inputs, "msg", this.properties), "msg"));
+    this.addOutput("msg", new ClassicPreset.Output(portSocket(functionNode.ports?.outputs, "msg", this.properties), "msg"));
   }
 }
 
@@ -100,7 +174,7 @@ export class DebugNode extends ClassicPreset.Node {
 
   constructor() {
     super("debug");
-    this.addInput("msg", new ClassicPreset.Input(new AnySocket(), "msg"));
+    this.addInput("msg", new ClassicPreset.Input(portSocket(debugNode.ports?.inputs, "msg", this.properties), "msg"));
   }
 }
 
@@ -116,7 +190,7 @@ export class GpioOutNode extends ClassicPreset.Node {
 
   constructor() {
     super("gpio out");
-    this.addInput("signal", new ClassicPreset.Input(new AnySocket(), "signal"));
+    this.addInput("signal", new ClassicPreset.Input(portSocket(gpioOutNode.ports?.inputs, "signal", this.properties), "signal"));
   }
 }
 
@@ -130,7 +204,7 @@ export class TimerNode extends ClassicPreset.Node {
 
   constructor() {
     super("timer");
-    this.addOutput("msg", new ClassicPreset.Output(new AnySocket(), "msg"));
+    this.addOutput("msg", new ClassicPreset.Output(portSocket(timerNode.ports?.outputs, "msg", this.properties), "msg"));
   }
 }
 

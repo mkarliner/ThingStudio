@@ -60,6 +60,17 @@ const CONTEXT_STORE_CLASS = `class _Store:
 export const functionNode: NodeDefinition = {
   type: "thingstudio/function",
   kind: "transform",
+  // `any` in, `any` out -- the flow author's code can do anything to
+  // `msg.payload` (verbatim user code, per this file's own header), so
+  // there's no narrower static type to declare here. This is also what
+  // makes `function -> gpio_out` (an `any` output into a `bool` input)
+  // the wire-type-system-scoping.md-called-out common case that needs no
+  // conversion node: bucket 1's "anything -> bool" allow covers it
+  // (sockets.ts).
+  ports: {
+    inputs: [{ name: "msg", type: "any" }],
+    outputs: [{ name: "msg", type: "any" }],
+  },
   codegenTransform(node: GraphNode, ctx: CodegenContext): TransformCodegenResult {
     const userCode = String(node.properties.code ?? "").replace(/\r\n/g, "\n");
     if (!userCode.trim()) throw new CompileError("function node's code is empty");
