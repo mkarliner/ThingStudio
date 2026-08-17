@@ -405,6 +405,22 @@ Assistant auto-discovery, a self-hosted dashboard, multi-device flows, a
 companion server. All v2/v3 per §10's existing phasing — nothing here
 changes that.
 
+**Added 2026-08-17, raised during the §6 wire-type system work rather than
+built: a concrete motivating case for "config nodes with per-device
+override" above, worth weighing at the next MVP-scope decision rather
+than left as an abstract deferred line item.** Today, a value like
+`gpio_out`'s `pin` is a bare number sitting in that one node instance's
+`properties`, with no indirection at all — reusing the same flow (or even
+just one node) on a different board, where the LED happens to be on a
+different physical pin, means finding and hand-editing every occurrence
+of that pin number across the flow. Easy to miss one, and gets worse as a
+flow grows past a couple of GPIO nodes. This is the same gap the deferred
+line above already names in the abstract ("a shared template plus small
+per-device values — unique topic prefix, calibration constant") — not new
+scope, just a sharper example of why it matters, worth having on hand
+next time v1 boundaries get reweighed rather than re-deriving the
+motivation from scratch then.
+
 Added 2026-08-13, flagged during Tier 1 node-set planning rather than
 built: **stateful nodes and cross-message synchronization** — a
 Node-RED-style `join` node that buffers messages arriving on separate
