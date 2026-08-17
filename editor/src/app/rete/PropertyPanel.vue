@@ -83,6 +83,30 @@
         </label>
       </template>
 
+      <template v-else-if="node.kind === 'interrupt'">
+        <label>pin
+          <input type="number" min="0" max="39" v-model.number="node.properties.pin" @input="touch" />
+        </label>
+        <label>edge
+          <select v-model="node.properties.edge" @change="touch">
+            <option value="rising">rising</option>
+            <option value="falling">falling</option>
+            <option value="both">both</option>
+          </select>
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" v-model="node.properties.debounce" @change="touch" />
+          debounce
+        </label>
+        <label v-if="node.properties.debounce">debounce (ms)
+          <input type="number" min="1" v-model.number="node.properties.debounceMs" @input="touch" />
+        </label>
+        <p class="hint">
+          Event-driven (machine.Pin.irq()), not polled. No internal pull configured -- wire an external pull
+          resistor (or a button module with one built in), see test-flows/README.md.
+        </p>
+      </template>
+
       <template v-else-if="node.kind === 'debug'">
         <p class="hint">No properties -- this node just prints the inbound payload to the device console.</p>
       </template>
@@ -178,6 +202,16 @@ function retypeInjectOutput(): void {
 .code-label textarea {
   font-family: ui-monospace, monospace;
   font-size: 11px;
+}
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.checkbox-label input[type="checkbox"] {
+  display: inline-block;
+  width: auto;
+  margin-top: 0;
 }
 .hint {
   color: #888;

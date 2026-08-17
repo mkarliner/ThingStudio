@@ -9,6 +9,15 @@ class Pin:
     OUT = "OUT"
     IN = "IN"
 
+    # IRQ trigger flags, matching real machine.Pin's bit-flag values closely
+    # enough for interrupt.ts's codegen to construct/combine them the same
+    # way real MicroPython code would (`IRQ_RISING | IRQ_FALLING` for "both"
+    # trigger mode) -- exact numeric values don't matter here since nothing
+    # in this mock actually dispatches on them, only interrupt.ts's own
+    # codegen-text assertions check the generated expression string.
+    IRQ_RISING = 1
+    IRQ_FALLING = 2
+
     # Test-controlled input values for gpio_in-style reads, keyed by
     # physical pin number -- set by a test BEFORE running the generated
     # flow (e.g. `machine.Pin.INPUT_VALUES[12] = 1`) to simulate a real
@@ -16,7 +25,10 @@ class Pin:
     # DRIVE_GPIO/hardware equivalent. Defaults to 0 for any pin a test
     # hasn't set, preserving every pre-gpio_in test's behavior unchanged
     # (none of them ever called .value() with no args -- gpio_out only
-    # ever writes).
+    # ever writes). Kept under its original name even though gpio_in itself
+    # is gone (2026-08-17) -- interrupt.ts's buildMsg reads .value() the
+    # same way, and node-interrupt.test.ts drives it the same way node-gpio-
+    # in.test.ts did.
     INPUT_VALUES = {}
 
     def __init__(self, pin, mode):
@@ -28,6 +40,18 @@ class Pin:
         if v is None:
             return Pin.INPUT_VALUES.get(self._pin, 0)
         print("PIN_VALUE %s %s" % (self._pin, 1 if v else 0))
+
+    def irq(self, trigger=None, handler=None):
+        # No real hard-IRQ context exists in a CPython test process, and no
+        # off-device test can fire one -- see interrupt.ts's own header and
+        # this project's standing note that a real hardware pass is what
+        # actually proves the IRQ handler fires and doesn't leak/crash.
+        # This only needs to not blow up when interrupt.ts's setup code
+        # calls it and to record what was registered, for tests that want
+        # to assert on it.
+        self._irq_trigger = trigger
+        self._irq_handler = handler
+        print("PIN_IRQ %s trigger=%s" % (self._pin, trigger))
 
 
 class PWM:

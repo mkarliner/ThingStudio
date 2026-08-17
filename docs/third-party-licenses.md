@@ -1,7 +1,9 @@
 # Third-party software in use
 
-Status: living document, last updated 2026-08-16 (this update: six of the
-seven `pocs/poc-rete/` Rete.js packages promoted to real `editor/` runtime
+Status: living document, last updated 2026-08-17 (this update: `ThreadSafeEvent`
+vendored into `device-runtime/src/vendor/threadsafe_event/`, per Tier 1 item
+5's interrupt/pin-change node implementation. Prior update, 2026-08-16: six of
+the seven `pocs/poc-rete/` Rete.js packages promoted to real `editor/` runtime
 dependencies per `docs/working-notes/rete-migration-decision.md`'s Phase 0 —
 `rete-dock-plugin` deliberately not promoted, sub-decision 2 dropped it;
 `@vitejs/plugin-vue` added as `editor/` dev tooling. Litegraph.js and the
@@ -113,6 +115,7 @@ flagged to Mike and approved before adding, same spirit.
 | Package | Version installed | License | Notes |
 |---|---|---|---|
 | mqtt_as | 0.8.5 (upstream `VERSION` const; not pinned to an exact commit SHA — see its own README) | MIT | `device-runtime/src/vendor/mqtt_as/__init__.py`. Asynchronous, `uasyncio`-native MQTT client from [peterhinch/micropython-mqtt](https://github.com/peterhinch/micropython-mqtt), used by the `mqtt_publish`/`mqtt_subscribe` nodes. Chosen over `umqtt.simple` specifically for non-blocking I/O and built-in WiFi/broker reconnection — see `device-runtime/src/vendor/mqtt_as/README.md` for the full rationale, including why this one case departs from `cbor.py`'s hand-rolled-over-dependency precedent. |
+| ThreadSafeEvent | commit `0fb2f22d1b130d63be2ec4d66958c4f6eb8106b3` (2024-05-09, last commit to touch the file — a tighter pin than `mqtt_as`'s own version-only one) | MIT | `device-runtime/src/vendor/threadsafe_event/threadsafe_event.py`. From [peterhinch/micropython-async](https://github.com/peterhinch/micropython-async) (`v3/threadsafe/threadsafe_event.py`), used by the `interrupt` node (Tier 1 item 5) to bridge `machine.Pin.irq()`'s hard-IRQ context safely into `uasyncio` — the first hard-IRQ-adjacent code in this project. Only this one file vendored, not the rest of the upstream `threadsafe` package (`message.py`/`threadsafe_queue.py`/`context.py` aren't used); see `device-runtime/src/vendor/threadsafe_event/README.md` for why this one class specifically, and the hard-IRQ-safety trace (confirmed against upstream's own `THREADING.md`, not inferred from the class name). |
 
 ## `test/hil/` tooling (Python, not npm)
 

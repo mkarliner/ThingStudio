@@ -5,10 +5,10 @@ import { booleanNode } from "./boolean.js";
 import { comparatorNode } from "./comparator.js";
 import { debugNode } from "./debug.js";
 import { functionNode } from "./function-node.js";
-import { gpioInNode } from "./gpio-in.js";
 import { gpioOutNode } from "./gpio-out.js";
 import { httpRequestNode } from "./http-request.js";
 import { injectNode } from "./inject.js";
+import { interruptNode } from "./interrupt.js";
 import { mqttPublishNode } from "./mqtt-publish.js";
 import { mqttSubscribeNode } from "./mqtt-subscribe.js";
 import { pwmOutNode } from "./pwm-out.js";
@@ -22,9 +22,12 @@ import { wifiStatusNode } from "./wifi-status.js";
  * gpio_out) plus Tier 1's software-only batch
  * (docs/working-notes/mvp-feature-priorities.md): boolean/arithmetic
  * logic, comparators/thresholds, variable get/set, debug -- plus the
- * GPIO/timer batch: gpio_in, pwm_out, timer -- plus the network batch:
- * wifi_status, http_request, mqtt_publish, mqtt_subscribe. I2C/SPI
- * sensor nodes are the one Tier 1 batch not yet added.
+ * GPIO/timer batch: pwm_out, timer, plus interrupt (Tier 1 item 5,
+ * 2026-08-17 -- replaces the poll-driven gpio_in node, deprecated and
+ * removed the same session; see mvp-feature-priorities.md item 2's
+ * superseded note and item 5) -- plus the network batch: wifi_status,
+ * http_request, mqtt_publish, mqtt_subscribe. I2C/SPI sensor nodes are the
+ * one Tier 1 batch not yet added.
  */
 export function buildRegistry(): Map<string, NodeDefinition> {
   const registry = new Map<string, NodeDefinition>();
@@ -38,7 +41,7 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     variableGetNode,
     variableSetNode,
     debugNode,
-    gpioInNode,
+    interruptNode,
     pwmOutNode,
     timerNode,
     wifiStatusNode,

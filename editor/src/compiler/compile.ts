@@ -269,19 +269,32 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
 
   sources.forEach((source, chainIndex) => {
     const sourceDef = registry.get(source.type)!;
-    if (!sourceDef.codegenSource) {
-      throw new CompileError(`node type "${source.type}" declares kind "source" but has no codegenSource`);
-    }
-    const src = sourceDef.codegenSource(source, ctx);
-    mergeSetup(src, imports, setupStatements);
-
     const chainBody = emitChildren(childrenOf.get(source.id) ?? [], "msg");
 
-    const bodyLines = [src.buildMsg];
-    if (chainBody) bodyLines.push(chainBody);
-    if (src.repeatMs > 0) bodyLines.push(`await asyncio.sleep_ms(${src.repeatMs})`);
-
-    const loopBody = src.repeatMs > 0 ? `while True:\n${indent(bodyLines.join("\n"), 4)}` : bodyLines.join("\n");
+    let loopBody: string;
+    if (sourceDef.codegenEventSource) {
+      // Event-driven source (node-definition.ts's EventSourceCodegenResult):
+      // wait-on-event, not poll-or-sleep, so this always loops forever --
+      // there's no repeatMs-style "run once" case, the wait itself is the
+      // only suspension point. buildMsg may `continue` (e.g. interrupt's
+      // debounce cooldown) to skip chainBody for this wake and go straight
+      // back to waitStatement -- valid here because this whole block sits
+      // directly inside the coroutine's own while loop, not a nested function.
+      const src = sourceDef.codegenEventSource(source, ctx);
+      mergeSetup(src, imports, setupStatements);
+      const bodyLines = [src.waitStatement, src.buildMsg];
+      if (chainBody) bodyLines.push(chainBody);
+      loopBody = `while True:\n${indent(bodyLines.join("\n"), 4)}`;
+    } else if (sourceDef.codegenSource) {
+      const src = sourceDef.codegenSource(source, ctx);
+      mergeSetup(src, imports, setupStatements);
+      const bodyLines = [src.buildMsg];
+      if (chainBody) bodyLines.push(chainBody);
+      if (src.repeatMs > 0) bodyLines.push(`await asyncio.sleep_ms(${src.repeatMs})`);
+      loopBody = src.repeatMs > 0 ? `while True:\n${indent(bodyLines.join("\n"), 4)}` : bodyLines.join("\n");
+    } else {
+      throw new CompileError(`node type "${source.type}" declares kind "source" but has no codegenSource or codegenEventSource`);
+    }
 
     const coroName = ctx.uniqueName(`flow_${chainIndex}`);
     coroutines.push(`async def ${coroName}():\n${indent(loopBody, 4)}`);

@@ -15,6 +15,9 @@ the following points and questions are for discussion around the scope of the MV
    - file ops
    - i2c actual operation - what happens with stuck devices?
 
+# To review
+- 2026-08-17: Mike wants to review the `inject` node fairly soon — suspicion it's actually doing the job of two separate nodes (something to dig into, not yet diagnosed).
+
 # Port mapping
 I shouldn't have to remember what sensor is connector to a given gpio or other port. I want to be able to define names for pins which I can refer to in pin selection drop downs.
 

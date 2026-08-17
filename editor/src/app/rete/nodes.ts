@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: Apache-2.0
 // editor/src/app/rete/nodes.ts
 //
-// Rete node classes for the five real editor node types, ported from
+// Rete node classes for the editor node types, ported from
 // pocs/poc-rete/src/nodes.ts's five *fake* types onto the real property
 // contracts app/nodes.ts's own header documents -- node.properties here
 // has to match exactly what each node-library/*.ts's codegen reads:
-//   - inject:   payloadType, payloadValue, repeat        (node-library/inject.ts)
-//   - function: code                                     (node-library/function-node.ts)
-//   - debug:    (none -- debug.ts reads only node.id)     (node-library/debug.ts)
-//   - gpio_out: pin                                       (node-library/gpio-out.ts)
-//   - timer:    intervalMs                                (node-library/timer.ts)
+//   - inject:    payloadType, payloadValue, repeat        (node-library/inject.ts)
+//   - function:  code                                     (node-library/function-node.ts)
+//   - debug:     (none -- debug.ts reads only node.id)     (node-library/debug.ts)
+//   - gpio_out:  pin                                       (node-library/gpio-out.ts)
+//   - timer:     intervalMs                                (node-library/timer.ts)
+//   - interrupt: pin, edge, debounce, debounceMs           (node-library/interrupt.ts)
 //
 // poc-rete's fake type set doesn't match 1:1
 // (rete-migration-implementation-briefing.md's callout): "mqtt out" is
@@ -17,6 +18,12 @@
 // node-library/mqtt-publish.ts exists), and "timer" is new -- poc-rete had
 // no equivalent to port, so its property shape/sizing is fresh work here,
 // unverified in a real browser by anyone until Mike's hands-on pass.
+// "interrupt" is newer still -- added after the rest of this file, when
+// Mike's own hands-on test of the freshly-built interrupt node (Tier 1
+// item 5) hit the fact that it had never been wired into the canvas at
+// all (compiler/registry-only, matching gpio_in's old precedent). Same
+// "unverified in a real browser" caveat applies, doubly so here since
+// interrupt.ts's codegen itself hasn't had its own hardware pass yet.
 //
 // §6 wire-type system (docs/working-notes/wire-type-system-scoping.md):
 // every port constructed below reads its real socket type from the
@@ -42,6 +49,7 @@ import { functionNode } from "../../node-library/function-node.js";
 import { debugNode } from "../../node-library/debug.js";
 import { gpioOutNode } from "../../node-library/gpio-out.js";
 import { timerNode } from "../../node-library/timer.js";
+import { interruptNode } from "../../node-library/interrupt.js";
 import { resolvePortType, type PortDefinition } from "../../compiler/node-definition.js";
 
 // Uniform pill height, ported from poc-rete's NODE_HEIGHT -- see that
@@ -208,7 +216,30 @@ export class TimerNode extends ClassicPreset.Node {
   }
 }
 
-export type AnyThingstudioNode = InjectNode | FunctionNode | DebugNode | GpioOutNode | TimerNode;
+export class InterruptNode extends ClassicPreset.Node {
+  width = 104;
+  height = NODE_HEIGHT;
+  kind = "interrupt" as const;
+  highlighted = false;
+
+  // Defaults match interrupt.ts's own codegen defaults exactly (edge
+  // "rising", debounce true, debounceMs 50) -- a freshly-dropped node's
+  // properties and a freshly-omitted property on a hand-edited flow file
+  // should compile to the same thing.
+  properties: { pin: number; edge: "rising" | "falling" | "both"; debounce: boolean; debounceMs: number } = {
+    pin: 4,
+    edge: "rising",
+    debounce: true,
+    debounceMs: 50,
+  };
+
+  constructor() {
+    super("interrupt");
+    this.addOutput("msg", new ClassicPreset.Output(portSocket(interruptNode.ports?.outputs, "msg", this.properties), "msg"));
+  }
+}
+
+export type AnyThingstudioNode = InjectNode | FunctionNode | DebugNode | GpioOutNode | TimerNode | InterruptNode;
 
 // One constructor per palette kind, shared between the app-shell's
 // click-to-add/drag-drop handler (main.ts) and applyFlowFile()'s per-node
@@ -223,4 +254,5 @@ export const NODE_FACTORIES: Record<NodeKind, () => AnyThingstudioNode> = {
   debug: () => new DebugNode(),
   gpio_out: () => new GpioOutNode(),
   timer: () => new TimerNode(),
+  interrupt: () => new InterruptNode(),
 };

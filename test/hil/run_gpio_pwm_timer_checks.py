@@ -12,21 +12,34 @@
 #
 # Deploys hand-written flows that match what the real compiler
 # (editor/src/compiler/compile.ts) would generate for
-# gpio_in/pwm_out/timer node instances -- same approach
+# interrupt/pwm_out/timer node instances -- same approach
 # check_per_task_boundary already uses in run_fault_isolation_checks.py,
 # not a coincidence: this script drives real MicroPython source through
 # mpy-cross and the real §13 protocol, same as that one, just exercising
 # different node types.
+#
+# 2026-08-17: check_gpio_in replaced by check_interrupt, matching Tier 1
+# item 5's node-set change -- gpio_in (poll-based digital read) is removed
+# from the project entirely (mvp-feature-priorities.md item 2's superseded
+# note / item 5), replaced by the interrupt/pin-change node
+# (editor/src/node-library/interrupt.ts). Mike's explicit call, made when
+# this removal surfaced this script as a stop condition the original
+# removal briefing hadn't anticipated: repurpose this check for the new
+# node rather than just deleting gpio_in's coverage outright.
 #
 # IMPORTANT, stated plainly rather than glossed over: this script has NOT
 # been run against real hardware in the environment that wrote it (no
 # boards attached) -- same "code complete, structure verified, first
 # hardware run pending" status every prior hardware-touching piece of
 # this project has carried when hardware wasn't available in the writing
-# session. The node types' own codegen (gpio-in.ts/pwm-out.ts/timer.ts)
-# IS off-device tested (editor/test/node-{gpio-in,pwm-out,timer}.test.ts,
-# mvp-validation-plan.md's 2026-08-14 Tier 1 Results entry) -- this
-# script is what closes the gap to an actual hardware pass.
+# session. The node types' own codegen (interrupt.ts/pwm-out.ts/timer.ts)
+# IS off-device tested (editor/test/node-{interrupt,pwm-out,timer}.test.ts,
+# mvp-validation-plan.md's 2026-08-14 Tier 1 Results entry for pwm_out/
+# timer) -- this script is what closes the gap to an actual hardware pass.
+# For interrupt specifically, that hardware pass matters more than for
+# most prior node types: it's the first hard-IRQ code anywhere in this
+# project, and no off-device test can fire a real interrupt or prove the
+# handler doesn't crash/leak the IRQ on redeploy.
 #
 # Requires `pyserial` and a native `mpy-cross` build -- see
 # run_fault_isolation_checks.py's header for both.
@@ -97,89 +110,219 @@ def check_no_early_node_error(dut, context, results, timeout_s=1.5):
     return err
 
 
-def check_gpio_in(dut, witness, mpy_cross, tmpdir, results):
-    """mvp-validation-plan.md's gpio_in bar, via pin-map.md's DUT
-    GPIO4 <- witness GPIO5 pair: the witness drives a known signal, a
-    real gpio_in-shaped flow on the DUT reads it and mirrors it onto
-    DUT GPIO12 (gpio_out's own already-wired pin) so the witness can
-    confirm the read succeeded via WATCH_EDGES on its paired GPIO3,
-    without needing VALUE_STREAM (Tier 2, not built yet) to observe the
-    read directly.
+# interrupt's real dependency, device-runtime/src/vendor/threadsafe_event/
+# threadsafe_event.py, copied verbatim rather than imported -- the
+# compile/deploy pipeline doesn't yet push vendor/ files alongside a flow's
+# own bytecode (same gap that vendored file's own README and mqtt_as's
+# README both already flag), and this script's own established convention
+# (gpio_in/pwm_out/timer's checks before it) is a single, fully
+# self-contained hand-written source string per flow, no cross-file
+# dependencies. Keep this in sync with the real vendored file by hand if
+# that file ever changes -- there's no automated check tying the two
+# together.
+_THREADSAFE_EVENT_SRC = (
+    "class ThreadSafeEvent(asyncio.Event):\n"
+    "    def __init__(self):\n"
+    "        super().__init__()\n"
+    "        self._waiting_on_tsf = False\n"
+    "        self._tsf = asyncio.ThreadSafeFlag()\n"
+    "    def set(self):\n"
+    "        self._tsf.set()\n"
+    "    async def _waiter(self):\n"
+    "        await self._tsf.wait()\n"
+    "        super().set()\n"
+    "        self._waiting_on_tsf = False\n"
+    "    async def wait(self):\n"
+    "        if self._waiting_on_tsf == False:\n"
+    "            self._waiting_on_tsf = True\n"
+    "            await asyncio.sleep_ms(0)\n"
+    "            try:\n"
+    "                await self._tsf.wait()\n"
+    "                super().set()\n"
+    "                self._waiting_on_tsf = False\n"
+    "            except asyncio.CancelledError:\n"
+    "                asyncio.create_task(self._waiter())\n"
+    "                raise\n"
+    "        else:\n"
+    "            await super().wait()\n"
+)
 
-    Sequencing, worth being explicit about (this rig's actual protocol
-    constraint, not just a style choice): the witness board runs ONE
-    command at a time on a single serial link -- while WATCH_EDGES is
-    blocking (it owns the command loop until its duration_ms elapses),
-    the SAME witness board can't also process a DRIVE_GPIO call. So the
-    stimulus has to be set BEFORE WATCH_EDGES is armed, not during it:
-    drive the pin to a known level first (fast, synchronous), then arm
-    WATCH_EDGES, then DEPLOY the DUT flow -- the flow's first loop
-    iteration reads the already-driven pin and produces the mirrored
-    edge WATCH_EDGES observes, all after the arm. Run twice (LOW then
-    HIGH) to confirm both directions, not just "some edge happened."
+# Matches interrupt.ts's actual codegen for pin=DUT_GPIO_IN_PIN,
+# edge="both", debounce=True. 150ms gives real margin against IRQ/
+# scheduling jitter on both boards (same style of generous tolerance
+# check_pwm_out/check_timer already use, not lab-instrument precision) on
+# both sides of the two things this needs to stay clear of: the bounce
+# sub-test's full toggle sequence (see check_interrupt's sub-test 2) has
+# to land safely inside this window, and the settle delay between
+# sub-test 1's two clean edges has to land safely outside it.
+_INTERRUPT_DEBOUNCE_MS = 150
+_BOUNCE_COUNT = 6
+_BOUNCE_INTERVAL_MS = 10  # 6*10=60ms total bounce duration -- see check_interrupt's sub-test 2 for the margin arithmetic against _INTERRUPT_DEBOUNCE_MS this needs to satisfy
+
+
+def _interrupt_mirror_flow_source():
+    """The interrupt node's real codegen shape (node-definition.ts's
+    EventSourceCodegenResult / interrupt.ts), hand-written to match rather
+    than compiled through the real registry -- same approach every other
+    check in this script already uses. Mirrors an accepted (post-debounce)
+    transition onto DUT_GPIO_OUT_PIN, same "mirror onto gpio_out's already-
+    wired pin so the witness can observe it via WATCH_EDGES" pattern
+    check_gpio_in used before this node replaced it (Tier 1 item 5,
+    2026-08-17)."""
+    return (
+        "import runtime\n"
+        "import machine\n"
+        "import time\n"
+        "asyncio = runtime.asyncio\n"
+        + _THREADSAFE_EVENT_SRC
+        + "_irq_pin_%d = machine.Pin(%d, machine.Pin.IN)\n"
+        "_irq_evt_%d = ThreadSafeEvent()\n"
+        "def _irq_handler_%d(pin):\n"
+        "    _irq_evt_%d.set()\n"
+        "_irq_pin_%d.irq(trigger=machine.Pin.IRQ_RISING | machine.Pin.IRQ_FALLING, handler=_irq_handler_%d)\n"
+        "_irq_debounce_ts_%d = time.ticks_ms()\n"
+        "_irq_debounce_level_%d = -1\n"
+        "_pin_%d = machine.Pin(%d, machine.Pin.OUT)\n"
+        "async def _flow_0():\n"
+        "    while True:\n"
+        "        await _irq_evt_%d.wait()\n"
+        "        _irq_evt_%d.clear()\n"
+        "        global _irq_debounce_ts_%d, _irq_debounce_level_%d\n"
+        "        _level = _irq_pin_%d.value()\n"
+        "        _now = time.ticks_ms()\n"
+        "        if time.ticks_diff(_now, _irq_debounce_ts_%d) < %d:\n"
+        "            continue\n"
+        "        if _level == _irq_debounce_level_%d:\n"
+        "            continue\n"
+        "        _irq_debounce_ts_%d = _now\n"
+        "        _irq_debounce_level_%d = _level\n"
+        "        msg = {'payload': bool(_level), 'topic': ''}\n"
+        "        try:\n"
+        "            _pin_%d.value(1 if msg.get('payload') else 0)\n"
+        "        except Exception as _e:\n"
+        "            raise runtime.NodeError('2', _e)\n"
+        "runtime.spawn(_flow_0(), '1')\n"
+    ) % (
+        DUT_GPIO_IN_PIN,
+        DUT_GPIO_IN_PIN,  # _irq_pin_N init
+        DUT_GPIO_IN_PIN,  # _irq_evt_N
+        DUT_GPIO_IN_PIN,  # handler def
+        DUT_GPIO_IN_PIN,  # handler body (.set())
+        DUT_GPIO_IN_PIN,
+        DUT_GPIO_IN_PIN,  # .irq() registration (pin, handler)
+        DUT_GPIO_IN_PIN,  # debounce ts init
+        DUT_GPIO_IN_PIN,  # debounce level init
+        DUT_GPIO_OUT_PIN,
+        DUT_GPIO_OUT_PIN,  # mirror pin init
+        DUT_GPIO_IN_PIN,  # await .wait()
+        DUT_GPIO_IN_PIN,  # .clear()
+        DUT_GPIO_IN_PIN,
+        DUT_GPIO_IN_PIN,  # global ts, level
+        DUT_GPIO_IN_PIN,  # .value() read
+        DUT_GPIO_IN_PIN,
+        _INTERRUPT_DEBOUNCE_MS,  # cooldown check
+        DUT_GPIO_IN_PIN,  # same-level check
+        DUT_GPIO_IN_PIN,  # ts = now
+        DUT_GPIO_IN_PIN,  # level = _level
+        DUT_GPIO_OUT_PIN,  # mirror write
+    )
+
+
+def check_interrupt(dut, witness, mpy_cross, tmpdir, results):
+    """Tier 1 item 5's interrupt/pin-change node bar (replacing gpio_in's,
+    removed 2026-08-17 -- mvp-feature-priorities.md item 5). Two things
+    this node's own success criteria call out as needing a real hardware
+    pass, not just off-device tests (node-interrupt.test.ts already covers
+    the debounce cooldown *algorithm* in isolation, but can't fire a real
+    IRQ or prove the hard-IRQ handler doesn't crash/leak on real hardware):
+
+    1. A single clean edge in each direction (DRIVE_GPIO, both directions,
+       spaced past the DUT's own debounceMs so the cooldown from the first
+       doesn't eat the second) actually fires the interrupt and mirrors
+       onto DUT_GPIO_OUT_PIN -- proves the hard-IRQ-to-asyncio handoff
+       (machine.Pin.irq() -> ThreadSafeEvent.set() -> the coroutine's
+       await evt.wait()) works at all on real hardware, which no
+       off-device test can exercise.
+    2. A real bounce sequence (DRIVE_BOUNCE) produces exactly ONE mirrored
+       edge, not one per bounce -- proves debounce actually suppresses
+       bounce on real hardware, this node's own stated success bar, not
+       just that the cooldown algorithm is arithmetically correct in
+       isolation (node-interrupt.test.ts already covers that half).
     """
-    for expected_value, label in ((1, "HIGH"), (0, "LOW")):
-        drive_reply = witness.command("DRIVE_GPIO %d %d" % (WITNESS_DRIVE_PIN, expected_value), ["DRIVE_OK", "DRIVE_ERR"])
+    source = _interrupt_mirror_flow_source()
+    bytecode = compile_flow(mpy_cross, tmpdir, "flow_interrupt", source)
+
+    # One DEPLOY covers both sub-checks below -- the flow just keeps
+    # running, mirroring whatever accepted edges arrive, so there's no
+    # need to redeploy between the clean-edge and bounce sub-tests.
+    witness.ser.write(("WATCH_EDGES %d 6000\n" % WITNESS_EDGE_WATCH_PIN).encode("ascii"))
+    witness.ser.flush()
+    time.sleep(0.3)  # settle -- same race check_gpio_in's original docstring documented
+
+    dut.send_message({"type": "DEPLOY", "bytecode": bytecode, "staticData": b""})
+    dut.wait_for_message(lambda m: m["type"] == "DEPLOY_ACK", timeout_s=8, description="DEPLOY_ACK for the interrupt mirror flow")
+    check_no_early_node_error(dut, "interrupt", results)
+
+    # Sub-test 1: a single clean edge in each direction, spaced past
+    # debounceMs so the cooldown from the first doesn't eat the second.
+    for value, label in ((1, "HIGH"), (0, "LOW")):
+        drive_reply = witness.command("DRIVE_GPIO %d %d" % (WITNESS_DRIVE_PIN, value), ["DRIVE_OK", "DRIVE_ERR"])
         drive_ok = drive_reply and drive_reply[-1].startswith("DRIVE_OK")
-        results.append(("gpio_in: witness drove GPIO%d to %s" % (WITNESS_DRIVE_PIN, label), drive_ok, drive_reply))
-        if not drive_ok:
+        results.append(("interrupt: witness drove GPIO%d to %s" % (WITNESS_DRIVE_PIN, label), drive_ok, drive_reply))
+        time.sleep((_INTERRUPT_DEBOUNCE_MS + 50) / 1000.0)  # clear of the DUT's own cooldown before the next stimulus
+
+    # Sub-test 2: ONE real bounce sequence, fired soon enough after
+    # sub-test 1's LOW settle that its ENTIRE toggle sequence -- first
+    # wiggle through the final settle -- stays inside that edge's
+    # debounceMs cooldown window. Worth being precise about the arithmetic
+    # here rather than eyeballing it, since getting it wrong would silently
+    # turn this into a test of "does the cooldown eventually expire"
+    # (which it should, by design, once debounceMs genuinely elapses) --
+    # a materially different, less interesting question than "does
+    # debounce suppress bounce," which is this sub-test's actual job:
+    # pre-bounce gap (_BOUNCE_PRE_GAP_MS) + full bounce duration
+    # (_BOUNCE_COUNT * _BOUNCE_INTERVAL_MS) must stay below
+    # _INTERRUPT_DEBOUNCE_MS with real margin for scheduling jitter on
+    # both boards, not just barely under. Settles on 0 -- the same level
+    # sub-test 1's LOW already left the DUT in -- so a working debounce
+    # (both the time cooldown AND, if that alone weren't enough, the
+    # both-edges same-level check) suppresses every toggle in it; any
+    # mirrored edge observed here is a debounce failure, not a partial one.
+    _BOUNCE_PRE_GAP_MS = 20
+    assert _BOUNCE_PRE_GAP_MS + _BOUNCE_COUNT * _BOUNCE_INTERVAL_MS < _INTERRUPT_DEBOUNCE_MS - 20, (
+        "bounce sequence timing must stay comfortably inside the debounce cooldown window -- adjust the constants above, not this assertion"
+    )
+    time.sleep(_BOUNCE_PRE_GAP_MS / 1000.0)
+    witness.command("DRIVE_BOUNCE %d 0 %d %d" % (WITNESS_DRIVE_PIN, _BOUNCE_COUNT, _BOUNCE_INTERVAL_MS), ["BOUNCE_OK", "BOUNCE_ERR"])
+
+    edge_lines = []
+    deadline = time.time() + 6.5
+    while time.time() < deadline:
+        raw = witness.ser.readline()
+        if not raw:
             continue
+        text = raw.decode("utf-8", "replace").rstrip("\r\n")
+        edge_lines.append(text)
+        if text.startswith("EDGES_DONE") or text.startswith("EDGES_ERR"):
+            break
 
-        source = (
-            "import runtime\n"
-            "import machine\n"
-            "asyncio = runtime.asyncio\n"
-            "_pin_%d_in = machine.Pin(%d, machine.Pin.IN)\n"
-            "_pin_%d = machine.Pin(%d, machine.Pin.OUT)\n"
-            "async def _flow_0():\n"
-            "    while True:\n"
-            "        msg = {'payload': bool(_pin_%d_in.value()), 'topic': ''}\n"
-            "        _pin_%d.value(1 if msg.get('payload') else 0)\n"
-            "        await asyncio.sleep_ms(50)\n"
-            "runtime.spawn(_flow_0(), '1')\n"
-        ) % (DUT_GPIO_IN_PIN, DUT_GPIO_IN_PIN, DUT_GPIO_OUT_PIN, DUT_GPIO_OUT_PIN, DUT_GPIO_IN_PIN, DUT_GPIO_OUT_PIN)
-        bytecode = compile_flow(mpy_cross, tmpdir, "flow_gpio_in_%s" % label.lower(), source)
-
-        # Arm before DEPLOY -- see docstring above and
-        # check_per_task_boundary's identical note in
-        # run_fault_isolation_checks.py. A settle delay AFTER writing the
-        # arm command and BEFORE triggering the stimulus, added after a
-        # real run surfaced the race this closes: writing the command
-        # only means the witness has RECEIVED it, not that it's finished
-        # gc.collect() + pin.irq() setup yet (_arm_irq in
-        # witness_firmware.py) -- if the DUT's transition happens faster
-        # than that setup completes, the edge is simply missed with no
-        # error at all (a real run showed exactly this: WATCH_EDGES armed
-        # cleanly, zero edges captured). 300ms is a guess at "comfortably
-        # longer than one gc.collect() pass on this board," not a
-        # measured number -- revisit if this specific race recurs with
-        # it in place.
-        witness.ser.write(("WATCH_EDGES %d 2000\n" % WITNESS_EDGE_WATCH_PIN).encode("ascii"))
-        witness.ser.flush()
-        time.sleep(0.3)
-
-        dut.send_message({"type": "DEPLOY", "bytecode": bytecode, "staticData": b""})
-        dut.wait_for_message(lambda m: m["type"] == "DEPLOY_ACK", timeout_s=8, description="DEPLOY_ACK for the gpio_in mirror flow (%s)" % label)
-        check_no_early_node_error(dut, "gpio_in (%s)" % label, results)
-
-        edge_lines = []
-        deadline = time.time() + 3
-        while time.time() < deadline:
-            raw = witness.ser.readline()
-            if not raw:
-                continue
-            text = raw.decode("utf-8", "replace").rstrip("\r\n")
-            edge_lines.append(text)
-            if text.startswith("EDGES_DONE") or text.startswith("EDGES_ERR"):
-                break
-        saw_expected_value = any(line.startswith("EDGE ") and line.split()[-1] == str(expected_value) for line in edge_lines)
-        results.append(
-            (
-                "gpio_in: DUT mirrored witness-driven %s onto GPIO%d, observed by witness" % (label, DUT_GPIO_OUT_PIN),
-                saw_expected_value,
-                edge_lines,
-            )
+    mirrored_edges = [line for line in edge_lines if line.startswith("EDGE ")]
+    saw_high = any(line.split()[-1] == "1" for line in mirrored_edges)
+    saw_low = any(line.split()[-1] == "0" for line in mirrored_edges)
+    results.append(("interrupt: DUT mirrored a HIGH transition, observed by witness", saw_high, mirrored_edges))
+    results.append(("interrupt: DUT mirrored a LOW transition, observed by witness", saw_low, mirrored_edges))
+    # Exactly 2 mirrored edges expected total: one HIGH, one LOW, both from
+    # sub-test 1. Sub-test 2's whole bounce sequence should contribute
+    # zero more -- more than 2 means the cooldown (or, for a bounce that
+    # happened to land past it, the both-edges same-level check) failed to
+    # suppress something.
+    results.append(
+        (
+            "interrupt: exactly 2 mirrored edges total (1 clean HIGH + 1 clean LOW; the bounce sequence fully suppressed)",
+            len(mirrored_edges) == 2,
+            mirrored_edges,
         )
+    )
 
 
 def check_pwm_out(dut, mpy_cross, tmpdir, witness, results):
@@ -334,7 +477,7 @@ def main():
             results.append(("witness responds to PING", pong and pong[-1] == "PONG", pong))
             warm_up_witness_irq(witness)
 
-            check_gpio_in(dut, witness, args.mpy_cross, tmpdir, results)
+            check_interrupt(dut, witness, args.mpy_cross, tmpdir, results)
             check_pwm_out(dut, args.mpy_cross, tmpdir, witness, results)
             check_timer(dut, witness, args.mpy_cross, tmpdir, results)
         finally:

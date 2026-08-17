@@ -40,9 +40,9 @@ import { NODE_PALETTE, DRAG_MIME, type NodeKind } from "./palette";
 
 const emit = defineEmits<{ add: [kind: NodeKind] }>();
 
-// Display order -- sources first (inject, timer), then processing
-// (function), then sinks (gpio_out, debug).
-const KINDS: NodeKind[] = ["inject", "timer", "function", "gpio_out", "debug"];
+// Display order -- sources first (inject, timer, interrupt), then
+// processing (function), then sinks (gpio_out, debug).
+const KINDS: NodeKind[] = ["inject", "timer", "interrupt", "function", "gpio_out", "debug"];
 
 const filter = ref("");
 const visibleKinds = computed(() =>

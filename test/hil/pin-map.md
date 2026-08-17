@@ -25,7 +25,7 @@ verbatim.
 | Role (per validation plan) | DUT pin | Witness pin | Notes |
 |---|---|---|---|
 | `gpio_out` node validation: DUT drives, witness edge-captures | DUT **GPIO12** (out) | Witness **GPIO3** (in, IRQ + `ticks_us()`) | DUT side reuses POC-A/D's exact LED pin (GPIO12) on purpose — the onboard LED gives a free visual sanity check alongside the witness's timestamped capture |
-| `gpio_in` node validation: witness drives a known signal, DUT reads | DUT **GPIO4** (in) | Witness **GPIO5** (out) | |
+| `interrupt` node validation: witness drives a known signal (clean edges and, via `DRIVE_BOUNCE`, simulated bounce), DUT reads | DUT **GPIO4** (in) | Witness **GPIO5** (out) | Role/wiring unchanged since this table was first laid out — only the DUT-side node changed (2026-08-17: `gpio_in`, poll-based, removed; `interrupt`, edge-triggered, took over this same pair — mvp-feature-priorities.md item 5) |
 | PWM duty-cycle/frequency measurement | DUT **GPIO6** (PWM out) | Witness **GPIO7** (in, edge-capture across N cycles) | |
 | I2C sensor-node protocol testing (pending the slave-mode spike) | DUT **GPIO6=SCL, GPIO7=SDA** — ⚠ **conflicts with the PWM row above, see note** | Witness **GPIO18=SDA, GPIO19=SCL** (slave mode) | See "I2C pin conflict" below — do not wire both rows as written until resolved |
 | Fault-injection soak test liveness | DUT **GPIO10** (heartbeat, continuous toggle) | Witness **GPIO0** (in, `HEARTBEAT_WATCH`) | Independent of the DUT's own printed heartbeat, per the validation plan's own reasoning (POC-D's worst bug took the printed heartbeat down with the rest of the event loop) |
@@ -86,7 +86,7 @@ need them for its host link instead).
                      │                           │        │                          │
                      │  GPIO12 (out, +LED) ●─────┼────────┼─────● GPIO3 (in, IRQ)     │  gpio_out validation
                      │                           │        │                          │
-                     │  GPIO4  (in)        ●─────┼────────┼─────● GPIO5 (out)         │  gpio_in validation
+                     │  GPIO4  (in)        ●─────┼────────┼─────● GPIO5 (out)         │  interrupt validation
                      │                           │        │                          │
                      │  GPIO6  (PWM out)   ●─────┼────────┼─────● GPIO7 (in, capture) │  PWM measurement
                      │                           │        │                          │

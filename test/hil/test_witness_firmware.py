@@ -141,6 +141,31 @@ def test_drive_gpio_rejects_non_binary_value():
     assert len(out) == 1 and "0 or 1" in out[0]
 
 
+def test_drive_bounce_wrong_arg_count():
+    out = witness_firmware.handle_line("DRIVE_BOUNCE 5 1 3")
+    assert len(out) == 1 and out[0].startswith("BOUNCE_ERR")
+
+
+def test_drive_bounce_non_integer_args():
+    out = witness_firmware.handle_line("DRIVE_BOUNCE 5 one 3 5")
+    assert len(out) == 1 and out[0].startswith("BOUNCE_ERR")
+
+
+def test_drive_bounce_rejects_non_binary_final_value():
+    out = witness_firmware.handle_line("DRIVE_BOUNCE 5 2 3 5")
+    assert len(out) == 1 and "final_value" in out[0]
+
+
+def test_drive_bounce_rejects_non_positive_bounces():
+    out = witness_firmware.handle_line("DRIVE_BOUNCE 5 1 0 5")
+    assert len(out) == 1 and "bounces" in out[0]
+
+
+def test_drive_bounce_rejects_non_positive_interval():
+    out = witness_firmware.handle_line("DRIVE_BOUNCE 5 1 3 0")
+    assert len(out) == 1 and "interval_ms" in out[0]
+
+
 def test_watch_edges_wrong_arg_count():
     out = witness_firmware.handle_line("WATCH_EDGES 3")
     assert len(out) == 1 and out[0].startswith("EDGES_ERR")
@@ -178,6 +203,28 @@ def test_drive_gpio_sets_and_reads_back_via_fake_pin():
     out2 = witness_firmware.handle_line("DRIVE_GPIO 5 0")
     assert out2 == ["DRIVE_OK 5 0"]
     assert witness_firmware._output_pins[5].value() == 0  # same Pin object reused, not re-created
+
+
+def test_drive_bounce_ends_on_final_value_odd_bounce_count():
+    witness_firmware._output_pins.clear()
+    out = witness_firmware.handle_line("DRIVE_BOUNCE 5 1 3 1")
+    assert out == ["BOUNCE_OK 5 1 3"]
+    assert witness_firmware._output_pins[5].value() == 1
+
+
+def test_drive_bounce_ends_on_final_value_even_bounce_count():
+    witness_firmware._output_pins.clear()
+    out = witness_firmware.handle_line("DRIVE_BOUNCE 5 0 4 1")
+    assert out == ["BOUNCE_OK 5 0 4"]
+    assert witness_firmware._output_pins[5].value() == 0
+
+
+def test_drive_bounce_reuses_pin_object_across_calls():
+    witness_firmware._output_pins.clear()
+    witness_firmware.handle_line("DRIVE_BOUNCE 5 1 2 1")
+    pin_after_first = witness_firmware._output_pins[5]
+    witness_firmware.handle_line("DRIVE_BOUNCE 5 0 2 1")
+    assert witness_firmware._output_pins[5] is pin_after_first  # same Pin object reused, matching DRIVE_GPIO's own convention
 
 
 # --- PWM math, against synthetic edge lists (the actual bug-prone part) --
@@ -307,6 +354,14 @@ minitest.run(
         test_drive_gpio_wrong_arg_count,
         test_drive_gpio_non_integer_args,
         test_drive_gpio_rejects_non_binary_value,
+        test_drive_bounce_wrong_arg_count,
+        test_drive_bounce_non_integer_args,
+        test_drive_bounce_rejects_non_binary_final_value,
+        test_drive_bounce_rejects_non_positive_bounces,
+        test_drive_bounce_rejects_non_positive_interval,
+        test_drive_bounce_ends_on_final_value_odd_bounce_count,
+        test_drive_bounce_ends_on_final_value_even_bounce_count,
+        test_drive_bounce_reuses_pin_object_across_calls,
         test_watch_edges_wrong_arg_count,
         test_watch_edges_rejects_non_positive_duration,
         test_measure_pwm_rejects_zero_cycles,

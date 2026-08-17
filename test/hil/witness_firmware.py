@@ -22,10 +22,24 @@
 #
 #   DRIVE_GPIO <pin> <value>
 #     Configure <pin> as an output (idempotent -- safe to call repeatedly)
-#     and set it to 0 or 1. Used for gpio_in node validation: the witness
-#     drives a known signal, the DUT is expected to read it.
+#     and set it to 0 or 1. Used for interrupt node validation (formerly
+#     gpio_in, removed 2026-08-17 -- see mvp-feature-priorities.md item 5):
+#     the witness drives a known signal, the DUT is expected to read it.
 #     -> DRIVE_OK <pin> <value>
 #     -> DRIVE_ERR <reason>
+#
+#   DRIVE_BOUNCE <pin> <final_value> <bounces> <interval_ms>
+#     Configure <pin> as an output (same idempotent reuse as DRIVE_GPIO) and
+#     simulate a bouncy mechanical transition: toggle it <bounces> times,
+#     alternating away-from/back-to <final_value> at <interval_ms> spacing,
+#     then settle on <final_value>. Added 2026-08-17 for the interrupt
+#     node's debounce validation -- this rig has no real mechanical switch
+#     to wire in and deliberately wear out, so a fast, deliberate toggle
+#     sequence stands in for real contact bounce. Pick <interval_ms> well
+#     under the DUT flow's configured debounceMs so a passing debounce
+#     collapses the whole sequence into one accepted transition.
+#     -> BOUNCE_OK <pin> <final_value> <bounces>
+#     -> BOUNCE_ERR <reason>
 #
 #   WATCH_EDGES <pin> <duration_ms>
 #     Arms an IRQ on <pin> (both edges), waits <duration_ms>, reports every
@@ -160,6 +174,39 @@ def _cmd_drive_gpio(args):
     except Exception as e:  # noqa: BLE001 -- a bad pin number is adversarial-shaped input here too
         return ["DRIVE_ERR %r" % (e,)]
     return ["DRIVE_OK %d %d" % (pin_num, value)]
+
+
+def _cmd_drive_bounce(args):
+    if len(args) != 4:
+        return ["BOUNCE_ERR expected: DRIVE_BOUNCE <pin> <final_value> <bounces> <interval_ms>"]
+    try:
+        pin_num = int(args[0])
+        final_value = int(args[1])
+        bounces = int(args[2])
+        interval_ms = int(args[3])
+    except ValueError:
+        return ["BOUNCE_ERR pin, final_value, bounces, and interval_ms must be integers"]
+    if final_value not in (0, 1):
+        return ["BOUNCE_ERR final_value must be 0 or 1"]
+    if bounces < 1:
+        return ["BOUNCE_ERR bounces must be at least 1"]
+    if interval_ms <= 0:
+        return ["BOUNCE_ERR interval_ms must be positive"]
+    try:
+        if pin_num not in _output_pins:
+            _output_pins[pin_num] = _pin_out(pin_num)
+        pin = _output_pins[pin_num]
+        other = 1 - final_value
+        # Ends on final_value regardless of whether `bounces` is odd or
+        # even -- alternate other/final, then force final_value once more
+        # after the loop rather than relying on parity.
+        for i in range(bounces):
+            pin.value(other if i % 2 == 0 else final_value)
+            utime.sleep_ms(interval_ms)
+        pin.value(final_value)
+    except Exception as e:  # noqa: BLE001
+        return ["BOUNCE_ERR %r" % (e,)]
+    return ["BOUNCE_OK %d %d %d" % (pin_num, final_value, bounces)]
 
 
 def _cmd_watch_edges(args):
@@ -340,6 +387,7 @@ def _cmd_i2c_slave_emulate(args):
 _COMMANDS = {
     "PING": _cmd_ping,
     "DRIVE_GPIO": _cmd_drive_gpio,
+    "DRIVE_BOUNCE": _cmd_drive_bounce,
     "WATCH_EDGES": _cmd_watch_edges,
     "MEASURE_PWM": _cmd_measure_pwm,
     "HEARTBEAT_WATCH": _cmd_heartbeat_watch,

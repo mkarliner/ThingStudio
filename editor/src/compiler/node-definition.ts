@@ -63,6 +63,40 @@ export interface SourceCodegenResult extends SetupCode {
   repeatMs: number;
 }
 
+/**
+ * The fourth codegen pattern (docs/working-notes/node-definition-model.md's
+ * "Three codegen patterns" plus this one) -- wait-on-event, not
+ * poll-or-sleep. `SourceCodegenResult.repeatMs`'s contract (a millisecond
+ * count to sleep) has no way to express "block until an external event
+ * fires" -- there's no number of milliseconds that means that, so this is a
+ * genuinely different result shape rather than `repeatMs` overloaded or
+ * abused with a sentinel value. First real user: `interrupt` (Tier 1 item
+ * 5), which awaits a `ThreadSafeEvent` set from a `machine.Pin.irq()`
+ * handler running in hard-IRQ context
+ * (`device-runtime/src/vendor/threadsafe_event/`).
+ */
+export interface EventSourceCodegenResult extends SetupCode {
+  /**
+   * Statement(s) that suspend the coroutine until the external event has
+   * actually fired, and leave things ready for the next wait (e.g.
+   * `await _evt.wait()` followed by `_evt.clear()`). Not indented -- the
+   * compiler places this at the top of each loop iteration, before
+   * `buildMsg`. Must genuinely block here -- this is the coroutine's only
+   * suspension point, there is no sleep alongside it.
+   */
+  waitStatement: string;
+  /**
+   * Statement(s) that run once `waitStatement` returns, constructing the
+   * `msg` dict for this firing. Not indented. May contain a bare `continue`
+   * (this block is emitted directly inside the coroutine's `while True:`
+   * loop, not a separate function) to drop this particular wake without
+   * building or propagating a `msg` at all -- `interrupt`'s debounce
+   * cooldown check uses exactly this to swallow a bounced edge and go
+   * straight back to `waitStatement` for the next one.
+   */
+  buildMsg: string;
+}
+
 export interface TransformCodegenResult extends SetupCode {
   /** A Python function name, unique within the flow. */
   functionName: string;
@@ -102,6 +136,13 @@ export interface NodeDefinition {
     outputs?: PortDefinition[];
   };
   codegenSource?(node: GraphNode, ctx: CodegenContext): SourceCodegenResult;
+  /**
+   * Alternative to codegenSource for kind "source" nodes that wait on an
+   * external event rather than poll-or-sleep -- see EventSourceCodegenResult.
+   * A source node defines exactly one of codegenSource/codegenEventSource,
+   * never both; compile.ts's graph walk picks whichever is present.
+   */
+  codegenEventSource?(node: GraphNode, ctx: CodegenContext): EventSourceCodegenResult;
   codegenTransform?(node: GraphNode, ctx: CodegenContext): TransformCodegenResult;
   codegenSink?(node: GraphNode, ctx: CodegenContext): SinkCodegenResult;
 }
