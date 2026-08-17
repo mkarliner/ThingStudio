@@ -112,6 +112,16 @@ Sequenced by risk and dependency, not just copied from §6's list order:
    in from POC-D). **Hardware pass through the witness rig still
    pending** — this section's own validation bar treats that as
    non-negotiable for GPIO/PWM/timer nodes, not optional polish.
+   **Superseded 2026-08-17 (item 5's reprioritization session): `gpio_in`
+   (poll-based digital read) is deprecated, to be removed.** Interrupt/
+   pin-change is the real GPIO input node (a genuine external-event
+   source); `gpio_in` polling is architecturally redundant with `timer` +
+   `function` (same reasoning that keeps ADC from needing a dedicated node
+   at all — see item 5 below) and polling shouldn't be the encouraged
+   pattern for GPIO input going forward. This is a real removal of shipped
+   code, not just "don't build further," since `gpio_in` already landed —
+   flag explicitly for whoever implements item 5's interrupt/pin-change
+   node, don't let it get silently left in place alongside the new node.
 3. **I2C/SPI sensor nodes** — a handful of common sensors, each wrapping
    an existing MicroPython driver per §7. Gated on having the actual
    sensor hardware on hand for each one, not just a codegen exercise.
@@ -142,20 +152,138 @@ Sequenced by risk and dependency, not just copied from §6's list order:
    broker/HTTP test server still pending** — this section's own validation
    bar treats that as non-negotiable for network nodes, not optional
    polish; nothing here has touched a real device or a real broker yet.
-5. **New candidates, folded in from Mike's 2026-08-16 review
-   (`docs/working-notes/mikes-questions-and-points.md`), deliberately not
-   sequenced within this tier yet — reprioritize as a whole once these are
-   weighed against items 1–4 above, not slotted in ad hoc:** interrupt/pin-
-   change (GPIO edge-triggered events, distinct from item 2's poll-driven
-   `gpio_in`), ADC (analog read — check whether this is genuinely separate
-   from `gpio_in` or the same node with a mode flag before treating it as
-   new surface), debounce, UDP/TCP (beyond the HTTP request node item 4
-   already has), mDNS (device/service discovery), file ops (flash
-   filesystem access from a flow), filter/event compression (rate-limiting
-   or change-only forwarding on a wire). Not yet checked against §6's node
-   category list or against whether each is a new node type versus a
-   property on an existing one — that review is part of the reprioritization
-   this item is waiting on, not done here.
+5. **Resolved 2026-08-17 (`tier1-node-candidates-prioritization-briefing.md`'s
+   reprioritization session).** Originally: candidates folded in from
+   Mike's 2026-08-16 review (`mikes-questions-and-points.md`), deliberately
+   left unsequenced pending this pass. Per-candidate reasoning was worked
+   through live with Mike rather than derived solo; this entry is the
+   decision record, not a re-derivation. `thingstudio-design-doc.md` §6
+   gained a 2026-08-17 addendum for the parts that actually change the
+   committed v1 node-category list — see that doc for the design-level
+   text, this note for the full reasoning trail.
+
+   **Pulled into v1, in priority order (after items 1–4 above):**
+
+   1. **Interrupt/pin-change** — new node, replacing `gpio_in` (see item
+      2's superseded note above). Genuinely event-driven — `machine.Pin
+      .irq()` bridged safely into `uasyncio` via Peter Hinch's
+      `ThreadSafeEvent` (`micropython-async`, MIT; not yet vendored —
+      add to `docs/third-party-licenses.md` when this is built, per
+      `CLAUDE.md`'s tracking rule), not a poll loop. Fits the existing
+      "GPIO in/out" category with no new §6 category, but is a real
+      correction to what "GPIO in" means (see §6 addendum). Every
+      "source"-kind node already gets its own fault-boundary-wrapped
+      `runtime.spawn()` task automatically (checked against `compile.ts`/
+      `runtime.py` this session) — this node needs a new *shape* of
+      source-coroutine body (await an event, not sleep-and-loop), not new
+      spawn/task-registration machinery.
+      - **Debounce** ships as a property on this node, not a separate
+        node. Cooldown algorithm (ignore transitions within N ms of the
+        last *accepted* one) — deliberately the cheap version over
+        settle-and-confirm debounce (which needs its own delayed
+        re-check, a heavier mechanism), per `CLAUDE.md`'s new
+        premature-optimization principle (added this session, see below).
+   2. **Filter / event compression** — new node (change-only forward,
+      rate-limit), general-purpose rather than paired to one source type.
+      Buildable with zero new compiler capability: reuses `timer.ts`'s
+      per-instance module-level state pattern (`ctx.uniqueName` +
+      `global`) for "last value" / "last sent timestamp." This is also
+      the exact mechanism debounce's cooldown algorithm needs — worth
+      sharing one implementation between the two rather than duplicating
+      it. Named alongside inject/debug in §6's addendum as a first-class
+      v1 pattern rather than left generic.
+   3. **UDP send, UDP receive, TCP send, TCP listen-receive** — four new
+      nodes, promoted to v1 on the same explicit-reasoning footing MQTT
+      got in §6 originally (see §6 addendum). Deliberately not validating
+      or gatekeeping payload content on either protocol — the wire format
+      is undefined and it's the flow author's problem, this project isn't
+      building a firewall (Mike, explicit) — but an open listening port is
+      still a real attack-surface fact worth the one-line acknowledgment
+      other network-facing work gets.
+      - **UDP send** — sink, one-shot, no connection state (UDP has no
+        connect step).
+      - **UDP receive** — source, event-driven (waits on socket
+        readiness, not a poll loop), `bytes` payload, no parsing.
+      - **TCP send** — transform, one-shot request/response shaped like
+        `http_request` (connect → send → optional response → close), not
+        a persistent connection held across separate flow messages (that
+        class of problem is already tracked as out-of-v1 under "stateful
+        nodes and cross-message synchronization" below, not new scope
+        here). Gets a **lazy-expiry connection cache**: reuses
+        `mqtt-shared.ts`'s already-hardware-verified lazy-connect-and-lock
+        pattern (`mqttEnsureConnectedSnippet` — double-checked locking,
+        module-level cached client, verified under real concurrent
+        contention), adding one staleness check against an N-second
+        budget. **True proactive expiry (closes even with no further
+        traffic) is explicitly deferred to v2** — it needs a
+        `NodeDefinition` hook letting a transform register its own
+        persistent `runtime.spawn()`-backed task, extending a pattern
+        only source nodes get today; real, scoped compiler work, not
+        invented from nothing, but a materially bigger lift than the
+        lazy-expiry version and not needed to ship this node usefully.
+      - **TCP listen-receive** — source, event-driven (`uasyncio
+        .start_server`, which accepts concurrent connections for free —
+        no polling loop needed). Gets a `maxConnections` property
+        (default 10) as a resource-exhaustion bound (a fault-isolation
+        concern, not a content-filtering one — orthogonal to the
+        "not a firewall" stance above).
+
+   **Confirmed not v1 node types at all:**
+
+   - **ADC** — not a node. A periodic or free-running analog read is a
+     function-node one-liner (`machine.ADC(pin).read_u16()`, exact call
+     board/mode-dependent) — the same reasoning that makes a plain polled
+     digital read redundant with `timer` + `function` applies here too
+     (see item 2's superseded note). Needs a dev-docs example once dev
+     docs exist (tracked separately under `mikes-questions-and-points
+     .md`'s Documentation section, not this session's job), not an
+     engineering item.
+   - **File ops** — no remaining use case once its two motivating cases
+     were traced to where they actually belong (below); dropped from the
+     candidate list entirely, not deferred.
+
+   **Deferred to v2:**
+
+   - **mDNS** — a discovery convenience, not a functional gap the way
+     UDP/TCP are. MicroPython mDNS support isn't confirmed across every
+     in-scope target (§3) the way sockets/HTTP already are — a real
+     unknown, not just unbuilt. Added to §10's v2 candidate list.
+   - **TCP send's proactive connection expiry** — see above.
+
+   **Confirmed staying exactly where §6 already had it — not reversed,
+   not pulled forward:**
+
+   - **HTTP in/out.** HTTP out (`http_request`) is already v1/done.
+     HTTP in (an on-device HTTP server) stays deferred per §6's existing
+     dashboard reasoning ("a genuinely larger chunk of work than the rest
+     of this list"), now with two concrete motivating cases on record
+     rather than left abstract, both requiring an actual server (not just
+     the wire protocol's `STATE_READ`-style editor-session mechanism,
+     since both need to work independent of an active editor connection):
+     on-demand log retrieval (buffered while disconnected, pulled via
+     explicit request), and Tasmota-style AP/captive-portal WiFi
+     provisioning for a device with no configured credentials yet (also
+     touches §9's already-deferred WiFi-pairing design — one future
+     on-device-HTTP-server session motivates both, not two separate
+     asks). Recorded in §6's addendum.
+
+   **Resolved elsewhere, not new v1/v2 scope:**
+
+   - File ops' state-persistence use case is already Tier 2's flash-backed
+     key/value store above, which also picked up a refinement this
+     session (explicit per-entry persist/volatile property) — see that
+     bullet.
+   - File ops' offline-logging use case folds into the HTTP-in item above,
+     not a separate filesystem-access primitive.
+
+   **Non-node-candidate work this session also produced:**
+
+   - `CLAUDE.md` gained a new section, "No premature optimization, but
+     don't paint into an architectural dead end" — the debounce-algorithm
+     and TCP-connection-cache calls above are both direct applications of
+     it (ship the cheap version; the deferred heavier version isn't
+     foreclosed by the cheap one's generated code, so no hedge was needed
+     beyond the write-up above).
 
 ## Tier 2 — the "feels like Node-RED" layer
 
@@ -176,6 +304,15 @@ strictly after it.
   flash-backed key/value store for runtime state (variable values,
   calibration constants), keyed by node ID, surviving redeploy by default
   with a per-node opt-out.
+  **Refinement, 2026-08-17 (item 5's reprioritization session, raised
+  while examining file ops as a candidate):** the per-node opt-out above
+  should be a real, explicit property on each `context`/`flow` entry
+  (persist-to-store vs. volatile/in-RAM-only) rather than an inferred
+  default — surfaced because "a key-value store for context state that
+  survives reboot" turned out to be the actual motivating use case behind
+  the file-ops candidate (see item 5), not a separate filesystem-access
+  need. Design the property explicitly when this item is built, not
+  inferred after the fact.
 
 ## Tier 3 — product shell
 
