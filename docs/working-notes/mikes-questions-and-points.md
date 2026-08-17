@@ -15,6 +15,9 @@ the following points and questions are for discussion around the scope of the MV
    - file ops
    - i2c actual operation - what happens with stuck devices?
 
+# Port mapping
+I shouldn't have to remember what sensor is connector to a given gpio or other port. I want to be able to define names for pins which I can refer to in pin selection drop downs.
+
 # Documentation
 - Basic user docs
 - Developer guide (how to make new node types)
