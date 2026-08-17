@@ -94,6 +94,28 @@ canvas-related, gets a new field the compiler's own graph walk doesn't
 necessarily need to read. Worth confirming this framing is right before 16
 files get touched on the strength of it.
 
+**Follow-up, implementation session (2026-08-17): the framing held for
+*type* (compiler graph-walk confirmed not to need `ports` — compile.ts
+only ever reads `NodeDefinition.kind`), but "one declaration, not two that
+can drift" turned out to be true only for the type half, not the name
+half.** Each `PortDefinition.name` (`node-definition.ts`) still has to be
+hand-kept in sync with the literal string key each node-library file's
+matching node class passes to `addInput`/`addOutput` in `rete/nodes.ts` —
+nothing in the type system ties those two together, since one lives in a
+`node-library/*.ts` object literal and the other in a separate class
+constructor in a different file. `rete/nodes.ts`'s `portSocket()` helper
+guards this the same way `graph-adapter.ts`'s `socketIndex()` already
+guards its own analogous "key not found" case: it throws loudly on a
+missing match rather than silently falling back to `AnySocket`
+(CLAUDE.md's fault-handling priority) — but that's a runtime safety net
+for the *5 canvas types already wired up*, not a way to catch the drift at
+write time when the other 11 node types eventually get their own `nodes.ts`
+classes. Worth deciding then whether that's still an acceptable amount of
+by-hand coupling or whether it's worth a stricter mechanism (e.g. deriving
+the `addInput`/`addOutput` calls from the `ports` array directly instead of
+naming each port twice) — not resolved here, just flagged so it's a
+conscious choice next time, not a rediscovery.
+
 ## Coercion matrix — resolved 2026-08-16 (conversation, this session)
 
 The original draft below framed this as one binary allow/refuse call per
