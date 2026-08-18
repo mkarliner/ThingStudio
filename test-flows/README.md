@@ -20,6 +20,48 @@ position per node id). This is the git-friendly `nodes`/`edges`/`layout`
 split design doc §6 describes, not the compiler's own lower-level
 `GraphData` input shape.
 
+**Not every node type is on the canvas yet.** `wifi_status`, `http_request`,
+`mqtt_publish`, `mqtt_subscribe`, and (as of 2026-08-18) `udp_send`/
+`udp_receive` are all registry-only -- no `ports` field in their
+`NodeDefinition`, no Rete node class, no palette entry. A `FlowFile`
+referencing any of them can't be loaded through the browser's "Open Flow" at
+all. Files exercising those node types (`udp-echo-tester.flow.json` below)
+use the compiler's own lower-level `GraphData` shape instead, via the
+"Alternate path" section below -- not a limitation of this directory, a
+real gap tracked in `docs/working-notes/config-node-system-scoping.md`.
+
+## Bootstrapping a new board (`deploy_runtime.py`)
+
+Before any flow can be deployed to a board at all, the board's filesystem
+needs the actual runtime (`device-runtime/src/*.py`, `listener.py` as
+`main.py`, and the vendor libs some node types need) on it -- a one-time
+step per board (or after a full erase/reflash), separate from deploying any
+particular flow. `deploy_runtime.py` scripts what every prior hands-on
+session has done by hand via individual `mpremote cp` commands (see
+`docs/working-notes/rp2040-bringup-findings.md`'s "Runtime deployed via
+mpremote" note for the exact manual sequence this replays):
+
+```sh
+pip install mpremote  # not yet a tracked project dependency -- see docs/third-party-licenses.md's note on this
+python3 test-flows/deploy_runtime.py --port /dev/tty.usbmodemXXXX
+```
+
+Pushes `errors.py`, `cbor.py`, `framing.py`, `messages.py`, `protocol.py`,
+`runtime.py` as-is, `listener.py` as `main.py`, and (by default --
+`--no-vendor` to skip) `threadsafe_event.py` and `mqtt_as.py`. Reset the
+board afterward and watch its first boot with a **passive** serial
+connection (`mpremote connect <port>` with no further subcommand, or any
+monitor that doesn't send Ctrl-C on open) -- `mpremote repl`/Thonny's Shell
+both interrupt on connect, which looks identical to "never boots" even when
+everything's correct (the exact gotcha `rp2040-bringup-findings.md`
+recorded and this note exists so it doesn't cost time twice). You're
+watching for `LISTENER_BOOTING` -> `LISTENER_READY` -> a `HELLO` frame.
+Only after that works does `deploy_flow.py` (below) mean anything.
+
+`deploy_runtime.py` itself only touches the filesystem via `mpremote cp` --
+it never talks the §13 wire protocol, unlike everything else in this
+directory.
+
 ## `interrupt-basic.flow.json`
 
 Tier 1 item 5's interrupt/pin-change node, first hands-on test since it
@@ -61,14 +103,9 @@ wrapped. Not run on real hardware -- that's this experiment.
    `vendor/` files alongside a flow's bytecode yet, and this flow's
    generated code does `from threadsafe_event import ThreadSafeEvent`,
    which will fail with `ImportError` on-device if that file isn't there
-   already. One-time, before the first interrupt-node deploy to a given
-   board:
-   ```sh
-   mpremote connect <dut-port> cp device-runtime/src/vendor/threadsafe_event/threadsafe_event.py :threadsafe_event.py
-   ```
-   (or `ampy put`, whichever tool your setup already uses -- same as
-   `listener.py`'s own install step in `test/hil/README.md`.)
-
+   already. `deploy_runtime.py` (above) now handles this as part of the
+   one-time board bootstrap -- no longer a separate manual step, as long
+   as it was run without `--no-vendor`.
 2. **GPIO4 needs an external pull, or a button module with one built in.**
    `interrupt.ts`'s codegen is `machine.Pin(pin, machine.Pin.IN)` with no
    pull argument at all (matches `gpio_in`'s old scope, which also never
@@ -98,7 +135,10 @@ browser. `tsconfig.devtools.json` is a separate, narrower tsconfig
 (compiler + node-library + dev-tools + `flow-file.ts` only) -- the main
 `tsconfig.json` includes `src/app/rete/**`, which relies on Vite's
 bundler-mode module resolution and won't type-check under plain Node ESM
-resolution; this sidesteps that rather than fighting it.
+resolution; this sidesteps that rather than fighting it. Only useful for
+`FlowFile`-shaped files with every node type already canvas-wired -- see
+`udp-echo-tester.flow.json` below for the alternate path a registry-only
+node type needs instead.
 
 ## Alternate path: compiling and deploying without the browser
 
@@ -109,12 +149,15 @@ directory now use, and there's no automated converter between the two
 (the real conversion, `graph-adapter.ts`'s `toGraphData()`, runs against a
 live Rete graph in the browser, not a `FlowFile` on disk). Useful if you
 want a scriptable deploy with no browser involved at all, at the cost of
-hand-writing a second file in the older shape; not needed for
-`interrupt-basic.flow.json` now that the browser path works.
+hand-writing a second file in the older shape -- and currently the ONLY
+path for any node type that isn't canvas-wired yet (`udp_send`/
+`udp_receive` included, see below).
 
 ```sh
-node /tmp/ts-out/dev-tools/compile-flow.js path/to/a-graphdata-shaped-file.json > /tmp/flow.py
-python3 test-flows/deploy_flow.py --dut-port /dev/ttyUSB0 --mpy-cross /path/to/mpy-cross /tmp/flow.py
+cd editor
+./node_modules/.bin/tsc -p tsconfig.devtools.json --outDir /tmp/ts-out   # direct binary, not npx -- see CLAUDE.md's stray-.js note
+node /tmp/ts-out/dev-tools/compile-flow.js ../test-flows/a-graphdata-shaped-file.json > /tmp/flow.py
+python3 ../test-flows/deploy_flow.py --dut-port /dev/tty.usbmodemXXXX --mpy-cross /path/to/mpy-cross /tmp/flow.py
 ```
 
 `deploy_flow.py` itself is unaffected by any of this -- it only ever
@@ -125,31 +168,54 @@ pass/fail assertions. Sends `DEPLOY`, waits for `DEPLOY_ACK`, then prints
 console output and any `NODE_ERROR` until you Ctrl-C. `--mpy-cross` needs
 a native build -- `device-runtime/test/README.md` has the recipe.
 
-## What this experiment is actually checking
+## `udp-echo-tester.flow.json`
 
-Everything `tsc`/off-device tests already covered for this node
-(`editor/test/node-interrupt.test.ts`) is arithmetic and structure, not
-proof. This is the first time any of the following got checked against
-real hardware:
+The UDP/TCP batch's first hands-on hardware pass, and the reason
+`deploy_runtime.py` (above) exists -- both a Pico W and an ESP32-C3 needed
+bootstrapping to test this. Same flow file works for either board
+unmodified: `thingstudio/wifi_status` (fanned to `debug`, for a periodic
+"am I actually connected, and to what IP" console line) alongside two
+independent chains -- `thingstudio/timer` (3s) -> `thingstudio/udp_send`
+(a heartbeat, the timer's own tick count as payload), and
+`thingstudio/udp_receive` -> `debug` (prints anything that comes back).
 
-- Does `machine.Pin.irq()` -> `ThreadSafeEvent.set()` (hard-IRQ context) ->
-  the coroutine's `await evt.wait()` actually hand off correctly, at all.
-  **Confirmed** (2026-08-17) -- button press/release cleanly toggled the
-  LED via the fan-out to `gpio_out`.
-- Does debounce actually suppress real mechanical switch bounce, not just
-  a simulated `DRIVE_BOUNCE` sequence (`test/hil/run_gpio_pwm_timer_checks.py`
-  already covers that half). **Confirmed** (2026-08-17) -- rapid presses
-  produced no flicker/double-fire within the 50ms cooldown window.
-- Does a redeploy leave the IRQ handler in a sane state -- no leak, no
-  crash, no double-firing from a stale handler still registered on the
-  pin from a prior deploy. Not specifically exercised this round (only
-  one deploy-after-reset, not a redeploy-over-redeploy); still open.
-- Does the property panel / canvas wiring itself work in a real browser.
-  **Confirmed** (2026-08-17) -- flow loaded, edited, and deployed via the
-  browser end to end.
+**Real network peer required, not a mock or the witness rig** -- exactly
+what this batch's own implementation briefing called for. Run
+`udp_echo_server.py` (this directory) on this machine before deploying:
 
-Also confirmed this round, not part of the original list: the
-`RuntimeError: name too long` failure seen on the first deploy attempt
-was a stale-HELLO/version-check-skipped artifact, not a real bug -- a
-board reset (forcing a fresh HELLO) let the version check run and the
-same flow deployed clean.
+```sh
+python3 test-flows/udp_echo_server.py --listen-port 9999 --reply-port 9998
+```
+
+It listens on 9999 for a board's heartbeats (prints each one), and echoes
+`ECHO:<payload>` back to the sender's IP on port 9998 -- deliberately the
+fixed reply port, not the sender's ephemeral source port, since `udp_send`
+never reads anything back itself (it's a one-way sink, see
+`udp-send.ts`'s own header); only the flow's separate `udp_receive` node,
+bound to 9998, is set up to pick the echo up. Two independent UDP flows on
+two fixed ports, not one request/response pair on one port.
+
+**Three placeholder values need editing before this compiles into
+something that'll actually connect** -- `YOUR_WIFI_SSID`, `YOUR_WIFI_PASSWORD`
+(both appear on THREE node instances -- `wifi_status`, `udp_send`, AND
+`udp_receive` -- all three need the *exact same* value, byte for byte, or
+`compile.ts`'s dedup silently keeps whichever node's setup code was
+generated first and drops the others; see
+`docs/working-notes/config-node-system-scoping.md` for why this is a real,
+known gap, not a typo-checking suggestion), and `YOUR_MAC_LAN_IP` (this
+machine's LAN IP on the same network the boards will join -- `ipconfig
+getifaddr en0` on macOS, or check System Settings -> Network; not
+`127.0.0.1`, the boards are separate devices on the WiFi network, not this
+process).
+
+Compile and deploy exactly per the "Alternate path" section above (this
+node type isn't canvas-wired, see this file's top note) -- once per board,
+same compiled `flow.py`, pointed at each board's own serial port in turn.
+Watch each board's console via `deploy_flow.py`'s own output for the
+periodic `wifi_status` line (confirms real WiFi association + IP), the
+timer-driven heartbeat count going out, and -- the actual round-trip proof
+-- an `ECHO:N` payload coming back through `udp_receive` a moment later.
+Also watch `udp_echo_server.py`'s own terminal: a `RECEIVED`/`REPLIED` pair
+per heartbeat confirms the send direction independent of whether the board
+ever manages to receive its own echo back, which is worth checking
+separately if only one direction seems to be working.

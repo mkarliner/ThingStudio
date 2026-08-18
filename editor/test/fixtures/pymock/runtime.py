@@ -15,10 +15,35 @@
 # same way here as on-device: an exception is reported (printed, so the
 # regression tests can assert on it) rather than propagating and crashing
 # the whole mock run.
+#
+# `sleep_ms` added 2026-08-18 (udp-receive.ts): real CPython asyncio has no
+# such method (MicroPython-only, hence node-wifi-status.test.ts's/
+# node-mqtt-subscribe.test.ts's own header notes on why THEIR repeatMs
+# machinery can't run end-to-end here -- they were written before any node
+# needed to actually execute a sleep_ms-driven loop off-device, so they
+# just worked around the gap instead of closing it). udp-receive.ts's
+# buildMsg is the first node body to call asyncio.sleep_ms ITSELF (not just
+# compile.ts's outer per-iteration one) as a real, load-bearing part of its
+# own poll/retry logic -- text-matching udp-receive's generated source
+# wouldn't actually prove the retry loop works, only that it looks
+# plausible. Adding a trivial real implementation here (ms -> real
+# asyncio.sleep) closes that gap for good, purely additive (guarded by
+# hasattr, and no existing generated code path was reaching this line
+# before now, since every prior repeatMs-using test deliberately avoided
+# running through this fixture) -- doesn't change any existing test's
+# behavior, just makes a previously-impossible one (node-udp-receive.test.ts)
+# possible. Fair game for any future node that wants the same.
 
 import asyncio as _asyncio
 
 asyncio = _asyncio
+
+if not hasattr(asyncio, "sleep_ms"):
+
+    async def _sleep_ms(ms):
+        await asyncio.sleep(ms / 1000)
+
+    asyncio.sleep_ms = _sleep_ms
 
 
 class NodeError(Exception):

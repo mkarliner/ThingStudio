@@ -29,10 +29,49 @@ function runGenerated(source: string): string {
   const scriptPath = join(dir, "_flow.py");
   writeFileSync(scriptPath, source);
   const pymockDir = join(__dirname, "fixtures", "pymock");
-  return execFileSync("python3", [scriptPath], {
-    env: { ...process.env, PYTHONPATH: pymockDir },
-    encoding: "utf8",
-  });
+  try {
+    return execFileSync(
+      "python3",
+      [
+        // -u: unbuffered stdout. Load-bearing, not a style preference --
+        // see the timeout comment below. Without it, everything this
+        // script prints before being killed sits in Python's own stdio
+        // buffer (block-buffered whenever stdout isn't a TTY, which it
+        // never is under execFileSync) and is simply lost on SIGTERM, no
+        // atexit flush runs. Confirmed by reproducing both ways before
+        // landing this fix -- the un-flagged version genuinely returns
+        // empty output on a timeout-kill, not just a hang.
+        "-u",
+        scriptPath,
+      ],
+      {
+        env: { ...process.env, PYTHONPATH: pymockDir },
+        encoding: "utf8",
+        // The one test in this file compiles a graph with a genuinely
+        // repeating source (timer, intervalMs>0) alongside a one-shot
+        // inject chain -- runtime.spawn() runs each chain's coroutine to
+        // completion in turn (pymock's own runtime.py), and the timer
+        // chain's `while True: ...; await asyncio.sleep_ms(...)` never
+        // completes by design, matching real on-device behavior. That only
+        // became a real hang (rather than an immediate, silently-swallowed
+        // AttributeError) once runtime.py's own asyncio.sleep_ms shim
+        // started working for real (2026-08-18, udp-receive.ts's session --
+        // see that file's own comment) -- previously this test finished by
+        // accident, not by design. Bounding with a timeout and recovering
+        // whatever was already printed is the honest fix: both this test's
+        // expected PIN_VALUE lines are written before the timer's first
+        // sleep_ms call, so a short bound is plenty, and Node's
+        // execFileSync still populates the thrown error's own .stdout with
+        // everything captured before the kill (now that -u guarantees
+        // there's actually something there to capture).
+        timeout: 3000,
+      },
+    );
+  } catch (err) {
+    const asExecError = err as { stdout?: string };
+    if (typeof asExecError.stdout === "string") return asExecError.stdout;
+    throw err;
+  }
 }
 
 async function connect(editor: NodeEditor<Schemes>, source: ClassicPreset.Node, sourceKey: string, target: ClassicPreset.Node, targetKey: string) {

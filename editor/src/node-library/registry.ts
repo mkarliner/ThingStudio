@@ -13,6 +13,8 @@ import { mqttPublishNode } from "./mqtt-publish.js";
 import { mqttSubscribeNode } from "./mqtt-subscribe.js";
 import { pwmOutNode } from "./pwm-out.js";
 import { timerNode } from "./timer.js";
+import { udpReceiveNode } from "./udp-receive.js";
+import { udpSendNode } from "./udp-send.js";
 import { variableGetNode } from "./variable-get.js";
 import { variableSetNode } from "./variable-set.js";
 import { wifiStatusNode } from "./wifi-status.js";
@@ -26,8 +28,14 @@ import { wifiStatusNode } from "./wifi-status.js";
  * 2026-08-17 -- replaces the poll-driven gpio_in node, deprecated and
  * removed the same session; see mvp-feature-priorities.md item 2's
  * superseded note and item 5) -- plus the network batch: wifi_status,
- * http_request, mqtt_publish, mqtt_subscribe. I2C/SPI sensor nodes are the
- * one Tier 1 batch not yet added.
+ * http_request, mqtt_publish, mqtt_subscribe, plus the raw UDP/TCP batch
+ * (item 5 point 3, 2026-08-18): udp_send, udp_receive so far (tcp_send/
+ * tcp_listen_receive are this same batch's harder pair, tracked
+ * separately -- see mvp-feature-priorities.md item 5 point 3's own
+ * scope-split note). I2C/SPI sensor nodes are the one Tier 1 batch not
+ * yet added. Like http_request/mqtt_publish/mqtt_subscribe, udp_send/
+ * udp_receive are registry-only for now -- no `ports`/canvas wiring yet
+ * (see node-definition.ts's `ports` field comment for what that means).
  */
 export function buildRegistry(): Map<string, NodeDefinition> {
   const registry = new Map<string, NodeDefinition>();
@@ -48,6 +56,8 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     httpRequestNode,
     mqttPublishNode,
     mqttSubscribeNode,
+    udpSendNode,
+    udpReceiveNode,
   ]) {
     registry.set(def.type, def);
   }

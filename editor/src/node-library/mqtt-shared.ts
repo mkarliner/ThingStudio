@@ -151,19 +151,9 @@ export function mqttEnsureConnectedSnippet(cfg: MqttBrokerConfig): string {
   ].join("\n");
 }
 
-/** Turns an arbitrary msg.payload into the bytes mqtt_as's publish()/the
- * wire actually need -- same "encode whatever this is, sensibly" pattern
- * http-request.ts uses for a POST body, factored out since both
- * mqtt-publish.ts needs it for outgoing payloads. `varName` is the local
- * variable the caller wants the result bound to. */
-export function payloadToBytesSnippet(varName: string): string {
-  return [
-    "_payload = msg.get('payload')",
-    "if isinstance(_payload, (bytes, bytearray)):",
-    `    ${varName} = bytes(_payload)`,
-    "elif isinstance(_payload, str):",
-    `    ${varName} = _payload.encode()`,
-    "else:",
-    `    ${varName} = str(_payload).encode()`,
-  ].join("\n");
-}
+// payloadToBytesSnippet used to live here (mqtt_publish's outgoing-payload
+// encoding). Moved to py-literals.ts 2026-08-18 when udp-send.ts needed
+// the identical snippet -- see that file's doc comment for why. Re-exported
+// from here too, so mqtt-publish.ts's existing import path keeps working
+// without a churny cross-file rename.
+export { payloadToBytesSnippet } from "./py-literals.js";

@@ -1,0 +1,15 @@
+{
+  "nodes": [
+    { "id": 1, "type": "thingstudio/wifi_status", "properties": { "ssid": "YOUR_WIFI_SSID", "password": "YOUR_WIFI_PASSWORD", "pollMs": 5000 } },
+    { "id": 2, "type": "thingstudio/debug", "properties": {} },
+    { "id": 3, "type": "thingstudio/timer", "properties": { "intervalMs": 3000 } },
+    { "id": 4, "type": "thingstudio/udp_send", "properties": { "host": "YOUR_MAC_LAN_IP", "port": 9999, "ssid": "YOUR_WIFI_SSID", "password": "YOUR_WIFI_PASSWORD", "timeoutMs": 2000 } },
+    { "id": 5, "type": "thingstudio/udp_receive", "properties": { "port": 9998, "ssid": "YOUR_WIFI_SSID", "password": "YOUR_WIFI_PASSWORD", "pollMs": 20 } },
+    { "id": 6, "type": "thingstudio/debug", "properties": {} }
+  ],
+  "links": [
+    [1, 1, 0, 2, 0, "bool"],
+    [2, 3, 0, 4, 0, "number"],
+    [3, 5, 0, 6, 0, "bytes"]
+  ]
+}

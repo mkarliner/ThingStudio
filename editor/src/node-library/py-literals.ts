@@ -32,3 +32,26 @@ export function pyPayloadLiteral(payloadType: string, rawValue: unknown, context
       return pyStringLiteral(String(rawValue));
   }
 }
+
+/** Turns an arbitrary msg.payload into the bytes a socket/wire call
+ * actually needs -- "encode whatever this is, sensibly": bytes/bytearray
+ * pass through, str gets `.encode()`, anything else is stringified first.
+ * Originally lived in mqtt-shared.ts (mqtt_publish's outgoing-payload
+ * encoding); moved here 2026-08-18 when udp-send.ts needed the exact same
+ * snippet -- two independent copies would have been the third
+ * near-duplicate (http-request.ts's POST-body encoding already inlines
+ * the same three-way isinstance check separately, which is fine as a
+ * one-off but not worth a third copy-paste once a second real caller
+ * showed up). `varName` is the local variable the caller wants the
+ * result bound to. */
+export function payloadToBytesSnippet(varName: string): string {
+  return [
+    "_payload = msg.get('payload')",
+    "if isinstance(_payload, (bytes, bytearray)):",
+    `    ${varName} = bytes(_payload)`,
+    "elif isinstance(_payload, str):",
+    `    ${varName} = _payload.encode()`,
+    "else:",
+    `    ${varName} = str(_payload).encode()`,
+  ].join("\n");
+}

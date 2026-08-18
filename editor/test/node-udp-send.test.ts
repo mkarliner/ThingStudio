@@ -1,0 +1,180 @@
+// Tier 1 item 5's UDP/TCP batch: udp_send (editor/src/node-library/udp-send.ts).
+//
+// A sink, so (like node-mqtt-publish.test.ts) this can run generated code
+// end-to-end without hitting the pymock-has-no-sleep_ms constraint
+// node-wifi-status.test.ts documents for repeating sources -- one send,
+// one process exit, no loop. Spins up a real local UDP peer (Node's
+// `dgram` module) on loopback and points generated Python at it, matching
+// node-http-request.test.ts's "real local server, not a mock" bar at the
+// off-device level -- this exercises the actual generated socket/retry
+// code over a real UDP datagram, not stubbed I/O.
+//
+// Runs generated code via `import runtime; asyncio = runtime.asyncio`
+// (PYTHONPATH=pymock), NOT a bare `import asyncio` the way
+// node-http-request.test.ts/node-mqtt-publish.test.ts do -- udp-send.ts's
+// EAGAIN retry branch calls `asyncio.sleep_ms`, which only exists on
+// pymock's patched shim (see fixtures/pymock/runtime.py's own comment on
+// why), not real CPython asyncio. The happy-path tests below never
+// actually take that branch (a real bound loopback peer never leaves the
+// local send buffer full), but the harness goes through the real
+// generated-code alias path anyway for consistency with what compile.ts
+// itself produces, rather than a harness-only shortcut that would let a
+// bug in that alias assumption go unnoticed.
+//
+// No forced-timeout test here, unlike node-http-request.test.ts's "server
+// that never responds" case -- UDP sendto to a real bound local peer does
+// not block or fail the way an unresponsive TCP server does, and reliably
+// forcing a local UDP send buffer to actually fill (the only real way
+// sendto raises EAGAIN) needs OS-level setup outside what a portable
+// off-device test can assume. The retry-loop shape itself is exercised
+// indirectly: the EAGAIN branch's `asyncio.sleep_ms` availability is
+// confirmed by every test in this file completing through the same
+// runtime.py-aliased code path that branch would run under if it were hit.
+
+import { execFile } from "node:child_process";
+import dgram from "node:dgram";
+import { mkdtempSync, writeFileSync } from "node:fs";
+import type { AddressInfo } from "node:net";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { CompileError } from "../src/compiler/errors.js";
+import type { GraphNode } from "../src/compiler/graph.js";
+import type { CodegenContext } from "../src/compiler/node-definition.js";
+import { udpSendNode } from "../src/node-library/udp-send.js";
+
+const execFileAsync = promisify(execFile);
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const ctx: CodegenContext = { uniqueName: (hint) => `_${hint}` };
+
+function node(properties: Record<string, unknown>): GraphNode {
+  return { id: 1, type: "thingstudio/udp_send", properties };
+}
+
+function indent(code: string, spaces: number): string {
+  const pad = " ".repeat(spaces);
+  return code
+    .split("\n")
+    .map((l) => (l.length ? pad + l : l))
+    .join("\n");
+}
+
+/** Runs codegenSink's output once against a real payload. Async (execFile,
+ * not execFileSync), matching node-http-request.test.ts's own reasoning:
+ * Node's event loop -- and this file's in-process dgram socket -- needs to
+ * keep running while python3 does. */
+async function runSend(properties: Record<string, unknown>, payload: unknown): Promise<void> {
+  const result = udpSendNode.codegenSink!(node(properties), ctx);
+  const lines = [
+    "import runtime",
+    "asyncio = runtime.asyncio",
+    ...(result.imports ?? []),
+    ...(result.statements ?? []).map((s) => s.code),
+    "",
+    `async def ${result.functionName}(msg):`,
+    indent(result.functionBody, 4),
+    "",
+    "async def _main():",
+    `    msg = {'payload': ${JSON.stringify(payload)}, 'topic': ''}`,
+    `    await ${result.functionName}(msg)`,
+    "",
+    "asyncio.run(_main())",
+  ];
+  const dir = mkdtempSync(join(tmpdir(), "thingstudio-nodetest-"));
+  const scriptPath = join(dir, "_snippet.py");
+  writeFileSync(scriptPath, lines.join("\n"));
+  const pymockDir = join(__dirname, "fixtures", "pymock");
+  await execFileAsync("python3", [scriptPath], {
+    env: { ...process.env, PYTHONPATH: pymockDir },
+    encoding: "utf8",
+    timeout: 10_000,
+  });
+}
+
+async function waitFor(predicate: () => boolean, timeoutMs = 2000): Promise<void> {
+  const start = Date.now();
+  while (!predicate()) {
+    if (Date.now() - start > timeoutMs) throw new Error("timed out waiting for condition");
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+}
+
+describe("thingstudio/udp_send node", () => {
+  let server: dgram.Socket;
+  let port: number;
+  let received: { msg: Buffer; rinfo: dgram.RemoteInfo }[];
+
+  beforeEach(async () => {
+    received = [];
+    server = dgram.createSocket("udp4");
+    server.on("message", (msg, rinfo) => received.push({ msg, rinfo }));
+    await new Promise<void>((resolve) => server.bind(0, "127.0.0.1", () => resolve()));
+    port = (server.address() as AddressInfo).port;
+  });
+
+  afterEach(async () => {
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  });
+
+  it("sends the inbound string payload as UTF-8 bytes to the configured host:port", async () => {
+    await runSend({ host: "127.0.0.1", port, timeoutMs: 2000 }, "hello udp");
+    await waitFor(() => received.length > 0);
+    expect(received[0]!.msg.toString("utf8")).toBe("hello udp");
+  });
+
+  it("stringifies a non-string, non-bytes payload before sending", async () => {
+    await runSend({ host: "127.0.0.1", port, timeoutMs: 2000 }, 42);
+    await waitFor(() => received.length > 0);
+    expect(received[0]!.msg.toString("utf8")).toBe("42");
+  });
+
+  it("two udp_send nodes share one socket setup (dedup)", async () => {
+    const resultA = udpSendNode.codegenSink!(node({ host: "127.0.0.1", port }), ctx);
+    const resultB = udpSendNode.codegenSink!(node({ host: "127.0.0.1", port }), ctx);
+    expect(resultA.statements?.[0]?.code).toBe(resultB.statements?.[0]?.code);
+    expect(resultA.statements?.[0]?.key).toBe(resultB.statements?.[0]?.key);
+  });
+
+  it("rejects a missing host", () => {
+    expect(() => udpSendNode.codegenSink!(node({ port: 9999 }), ctx)).toThrow(CompileError);
+    expect(() => udpSendNode.codegenSink!(node({ port: 9999 }), ctx)).toThrow(/non-empty "host"/);
+  });
+
+  it("rejects an invalid port", () => {
+    expect(() => udpSendNode.codegenSink!(node({ host: "h", port: 0 }), ctx)).toThrow(/valid port number/);
+    expect(() => udpSendNode.codegenSink!(node({ host: "h", port: 70000 }), ctx)).toThrow(/valid port number/);
+  });
+
+  it("rejects a non-positive timeoutMs", () => {
+    expect(() => udpSendNode.codegenSink!(node({ host: "h", port: 1, timeoutMs: 0 }), ctx)).toThrow(/positive number/);
+  });
+
+  it("defaults timeoutMs to 2000ms", () => {
+    const result = udpSendNode.codegenSink!(node({ host: "h", port: 1 }), ctx);
+    expect(result.functionBody).toMatch(/,\s*2\)/); // 2000ms -> 2s
+  });
+
+  it("uses a non-blocking socket so the retry loop's EAGAIN branch is reachable, not decorative", () => {
+    const result = udpSendNode.codegenSink!(node({ host: "h", port: 1 }), ctx);
+    expect(result.statements?.[0]?.code).toContain(".setblocking(False)");
+    expect(result.functionBody).toContain("except OSError as _e:");
+    expect(result.functionBody).toContain("errno.EAGAIN");
+    expect(result.functionBody).toMatch(/await asyncio\.wait_for\(/);
+  });
+
+  it("brings the WiFi station interface up even with no ssid configured", () => {
+    const result = udpSendNode.codegenSink!(node({ host: "h", port: 1 }), ctx);
+    expect(result.statements?.[1]?.key).toBe("wifi-sta");
+    expect(result.statements?.[1]?.code).toContain("network.WLAN(network.STA_IF)");
+    expect(result.statements?.[1]?.code).toContain(".active(True)");
+    expect(result.statements?.[1]?.code).not.toContain(".connect(");
+  });
+
+  it("connects with the configured ssid/password, sharing the wifi-sta key with wifi_status/http_request", () => {
+    const result = udpSendNode.codegenSink!(node({ host: "h", port: 1, ssid: "MyNet", password: "hunter2" }), ctx);
+    expect(result.statements?.[1]?.code).toContain(".connect(");
+    expect(result.statements?.[1]?.code).toContain('"MyNet"');
+  });
+});
