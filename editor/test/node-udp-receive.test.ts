@@ -21,18 +21,36 @@
 // test with a clear TimeoutError instead of hanging the suite -- not part
 // of the node's own generated code, just this harness's own guard rail.
 //
+// **Fixed 2026-08-19, real failure caught on a real machine, not
+// hypothetical**: runReceive originally sent after a fixed 300ms delay,
+// gambling that python3's own interpreter-startup-plus-imports would
+// always finish first. It doesn't reliably -- under `npm test`, several
+// test files spawn python3 concurrently, and on a loaded machine that
+// startup can lose the race. A datagram sent before the socket is bound
+// is just dropped by the kernel (nothing is listening yet); no amount of
+// retrying on the Python side recovers it, since it's already gone by the
+// time the socket exists. Fix: the generated snippet now prints a `READY`
+// line immediately after its setup statements (before entering the
+// asyncio loop), and runReceive waits for that line on the child
+// process's actual stdout before sending anything, instead of guessing a
+// delay. This removes the race outright rather than picking a bigger
+// guess and hoping -- CLAUDE.md's fault-handling-over-happy-path
+// reasoning applied to test infrastructure, not just node codegen. This
+// is a test-harness-only fix: the real on-device flow is already running
+// (and its socket already bound) long before any real sender exists, so
+// this race has no production analog.
+//
 // Config nodes (config-node-and-palette-implementation-briefing.md):
 // updated 2026-08-18 for the wifiConfigId behavior change -- see
 // wifi-status.ts's own header. Same fake-resolveConfig-via-local-map
 // pattern node-wifi-status.test.ts/node-udp-send.test.ts use.
 
-import { execFile } from "node:child_process";
+import { spawn } from "node:child_process";
 import dgram from "node:dgram";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { promisify } from "node:util";
 import { beforeEach, describe, expect, it } from "vitest";
 import { compile } from "../src/compiler/compile.js";
 import { CompileError } from "../src/compiler/errors.js";
@@ -41,7 +59,6 @@ import type { CodegenContext } from "../src/compiler/node-definition.js";
 import { buildRegistry } from "../src/node-library/registry.js";
 import { udpReceiveNode } from "../src/node-library/udp-receive.js";
 
-const execFileAsync = promisify(execFile);
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const fakeConfigs = new Map<string, Record<string, unknown>>();
@@ -71,10 +88,11 @@ function delay(ms: number): Promise<void> {
 
 /** Runs buildMsg once per entry in `sends`, bound to the node's configured
  * `port`, against a real Node dgram client sending on loopback -- not a
- * mock. Starts the Python process, gives it a moment to bind before
- * sending (real, if small, warm-up race -- a datagram sent before the
- * socket is bound would just be dropped, same as it would on-device), then
- * sends each buffer in turn. */
+ * mock. Spawns python3 with `-u` (unbuffered stdout) and waits for an
+ * explicit `READY` line -- printed right after this snippet's setup
+ * statements run (bind included), before entering the asyncio loop --
+ * rather than a fixed delay before sending. See this file's header for why
+ * a guessed delay turned out to be a genuine race, not a hypothetical one. */
 async function runReceive(properties: Record<string, unknown>, sends: Buffer[]): Promise<string> {
   const result = udpReceiveNode.codegenSource!(node(properties), ctx);
   const loopLines: string[] = [];
@@ -87,6 +105,7 @@ async function runReceive(properties: Record<string, unknown>, sends: Buffer[]):
     "asyncio = runtime.asyncio",
     ...(result.imports ?? []),
     ...(result.statements ?? []).map((s) => s.code),
+    "print('READY', flush=True)",
     "",
     "async def _run():",
     ...loopLines.map((l) => `    ${l}`),
@@ -97,26 +116,76 @@ async function runReceive(properties: Record<string, unknown>, sends: Buffer[]):
   const scriptPath = join(dir, "_snippet.py");
   writeFileSync(scriptPath, lines.join("\n"));
   const pymockDir = join(__dirname, "fixtures", "pymock");
-  const runPromise = execFileAsync("python3", [scriptPath], {
-    env: { ...process.env, PYTHONPATH: pymockDir },
-    encoding: "utf8",
-    timeout: 10_000,
-  });
 
-  await delay(300); // let Python bind before anything is sent at it
-  const client = dgram.createSocket("udp4");
-  for (const buf of sends) {
-    await new Promise<void>((resolve, reject) => {
-      client.send(buf, Number(properties.port), "127.0.0.1", (err) => (err ? reject(err) : resolve()));
+  return new Promise<string>((resolve, reject) => {
+    const proc = spawn("python3", ["-u", scriptPath], {
+      env: { ...process.env, PYTHONPATH: pymockDir },
     });
-    await delay(50);
-  }
-  try {
-    const { stdout } = await runPromise;
-    return stdout;
-  } finally {
-    client.close();
-  }
+    const client = dgram.createSocket("udp4");
+    let stdout = "";
+    let stderr = "";
+    let ready = false;
+    let settled = false;
+
+    // Backstop well above the snippet's own 3s asyncio.wait_for bound --
+    // this should only ever fire on a genuine deadlock (e.g. python3
+    // itself hanging before it can even print READY), not normal
+    // slowness, which the READY handshake already absorbs.
+    const watchdog = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      client.close();
+      proc.kill();
+      reject(new Error(`runReceive: python3 never exited within 8s (ready=${ready})\nstdout so far:\n${stdout}\nstderr so far:\n${stderr}`));
+    }, 8000);
+
+    function sendAll(): void {
+      (async () => {
+        for (const buf of sends) {
+          await new Promise<void>((res, rej) => {
+            client.send(buf, Number(properties.port), "127.0.0.1", (err) => (err ? rej(err) : res()));
+          });
+          await delay(50);
+        }
+      })().catch((err: unknown) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(watchdog);
+        client.close();
+        proc.kill();
+        reject(err instanceof Error ? err : new Error(String(err)));
+      });
+    }
+
+    proc.stdout.on("data", (chunk: Buffer) => {
+      stdout += chunk.toString("utf8");
+      if (!ready && stdout.includes("READY")) {
+        ready = true;
+        sendAll();
+      }
+    });
+    proc.stderr.on("data", (chunk: Buffer) => {
+      stderr += chunk.toString("utf8");
+    });
+    proc.on("error", (err) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(watchdog);
+      client.close();
+      reject(err);
+    });
+    proc.on("close", (code) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(watchdog);
+      client.close();
+      if (code !== 0) {
+        reject(new Error(`python3 exited with code ${code}\nstdout:\n${stdout}\nstderr:\n${stderr}`));
+      } else {
+        resolve(stdout);
+      }
+    });
+  });
 }
 
 // High, randomized-per-run port range -- avoids colliding with a lingering
