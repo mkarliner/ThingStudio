@@ -15,20 +15,25 @@ straight into the editor.
 `nodes` (`{ id, type, properties }[]`), `edges`
 (`[originId, originSlot, targetId, targetSlot][]` -- 4 elements, not the
 6-element `GraphLink` tuple the compiler consumes internally; link IDs and
-socket types are regenerated on load, not saved), and `layout` (canvas
-position per node id). This is the git-friendly `nodes`/`edges`/`layout`
-split design doc §6 describes, not the compiler's own lower-level
-`GraphData` input shape.
+socket types are regenerated on load, not saved), `layout` (canvas
+position per node id), and (as of 2026-08-18) `configs`
+(`{ id, type, properties }[]`, string `id` -- config nodes,
+config-node-and-palette-implementation-briefing.md; always present,
+possibly empty). This is the git-friendly `nodes`/`edges`/`layout`/
+`configs` split design doc §6 describes, not the compiler's own
+lower-level `GraphData` input shape.
 
-**Not every node type is on the canvas yet.** `wifi_status`, `http_request`,
-`mqtt_publish`, `mqtt_subscribe`, and (as of 2026-08-18) `udp_send`/
-`udp_receive` are all registry-only -- no `ports` field in their
-`NodeDefinition`, no Rete node class, no palette entry. A `FlowFile`
-referencing any of them can't be loaded through the browser's "Open Flow" at
-all. Files exercising those node types (`udp-echo-tester.flow.json` below)
-use the compiler's own lower-level `GraphData` shape instead, via the
-"Alternate path" section below -- not a limitation of this directory, a
-real gap tracked in `docs/working-notes/config-node-system-scoping.md`.
+**Not every node type is on the canvas yet.** `http_request`,
+`mqtt_publish`, and `mqtt_subscribe` are still registry-only -- no `ports`
+field in their `NodeDefinition`, no Rete node class, no palette entry
+(config-node-and-palette-implementation-briefing.md's own explicit,
+flagged follow-up -- not silently dropped). A `FlowFile` referencing any
+of them can't be loaded through the browser's "Open Flow" at all; such
+files would still need the compiler's own lower-level `GraphData` shape
+via the "Alternate path" section below. **`wifi_status`, `udp_send`, and
+`udp_receive` are now canvas-wired** (as of the same session) -- see
+`udp-echo-tester.flow.json` below, which now loads through the real
+"Open Flow" for the first time instead of needing that alternate path.
 
 ## Bootstrapping a new board (`deploy_runtime.py`)
 
@@ -137,8 +142,8 @@ browser. `tsconfig.devtools.json` is a separate, narrower tsconfig
 bundler-mode module resolution and won't type-check under plain Node ESM
 resolution; this sidesteps that rather than fighting it. Only useful for
 `FlowFile`-shaped files with every node type already canvas-wired -- see
-`udp-echo-tester.flow.json` below for the alternate path a registry-only
-node type needs instead.
+the "Alternate path" section below for what a still-registry-only node
+type (`http_request`/`mqtt_publish`/`mqtt_subscribe`) needs instead.
 
 ## Alternate path: compiling and deploying without the browser
 
@@ -150,8 +155,14 @@ directory now use, and there's no automated converter between the two
 live Rete graph in the browser, not a `FlowFile` on disk). Useful if you
 want a scriptable deploy with no browser involved at all, at the cost of
 hand-writing a second file in the older shape -- and currently the ONLY
-path for any node type that isn't canvas-wired yet (`udp_send`/
-`udp_receive` included, see below).
+path for any node type that isn't canvas-wired yet (`http_request`/
+`mqtt_publish`/`mqtt_subscribe` as of 2026-08-18; `udp_send`/`udp_receive`
+graduated out of this list the same session -- see `udp-echo-tester.
+flow.json` below). A `GraphData`-shaped file has no `configs` array of its
+own the way a `FlowFile` does (compiler/graph.ts's `GraphConfigNode` is
+the equivalent field there, same `{id, type, properties}` shape, string
+id) -- a hand-written file exercising a config-referencing property
+(`wifiConfigId`) needs to include one directly.
 
 ```sh
 cd editor
@@ -172,12 +183,26 @@ a native build -- `device-runtime/test/README.md` has the recipe.
 
 The UDP/TCP batch's first hands-on hardware pass, and the reason
 `deploy_runtime.py` (above) exists -- both a Pico W and an ESP32-C3 needed
-bootstrapping to test this. Same flow file works for either board
-unmodified: `thingstudio/wifi_status` (fanned to `debug`, for a periodic
-"am I actually connected, and to what IP" console line) alongside two
-independent chains -- `thingstudio/timer` (3s) -> `thingstudio/udp_send`
-(a heartbeat, the timer's own tick count as payload), and
-`thingstudio/udp_receive` -> `debug` (prints anything that comes back).
+bootstrapping to test this. `thingstudio/wifi_status` (fanned to `debug`,
+for a periodic "am I actually connected, and to what IP" console line)
+alongside two independent chains -- `thingstudio/timer` (3s) ->
+`thingstudio/udp_send` (a heartbeat, the timer's own tick count as
+payload), and `thingstudio/udp_receive` -> `debug` (prints anything that
+comes back). Same flow file works for either board unmodified.
+
+**Rewritten 2026-08-18 (config-node-and-palette-implementation-briefing.md)
+to use the real `FlowFile` format with one shared config node**, now that
+`wifi_status`/`udp_send`/`udp_receive` are canvas-wired -- this is the
+concrete proof the session's own success bar names explicitly. Previously
+this file was `GraphData`-shaped (the "Alternate path" above) with the
+same `YOUR_WIFI_SSID`/`YOUR_WIFI_PASSWORD` placeholder pair duplicated
+across all three network nodes, byte-identical by hand or silently
+dropped by `compile.ts`'s dedup -- exactly the pain the config-node
+mechanism exists to close. Now there's one `thingstudio/config/wifi`
+config object (id `wifi-home`) in the file's own `configs` array,
+referenced by `wifiConfigId` from all three nodes -- edit the placeholder
+credentials in **one place**, not three, whether by hand in this JSON file
+or via the editor's own dropdown/pencil/+ widget once the file is loaded.
 
 **Real network peer required, not a mock or the witness rig** -- exactly
 what this batch's own implementation briefing called for. Run
@@ -195,23 +220,22 @@ never reads anything back itself (it's a one-way sink, see
 bound to 9998, is set up to pick the echo up. Two independent UDP flows on
 two fixed ports, not one request/response pair on one port.
 
-**Three placeholder values need editing before this compiles into
-something that'll actually connect** -- `YOUR_WIFI_SSID`, `YOUR_WIFI_PASSWORD`
-(both appear on THREE node instances -- `wifi_status`, `udp_send`, AND
-`udp_receive` -- all three need the *exact same* value, byte for byte, or
-`compile.ts`'s dedup silently keeps whichever node's setup code was
-generated first and drops the others; see
-`docs/working-notes/config-node-system-scoping.md` for why this is a real,
-known gap, not a typo-checking suggestion), and `YOUR_MAC_LAN_IP` (this
-machine's LAN IP on the same network the boards will join -- `ipconfig
-getifaddr en0` on macOS, or check System Settings -> Network; not
-`127.0.0.1`, the boards are separate devices on the WiFi network, not this
-process).
+**Two placeholder values need editing before this compiles into
+something that'll actually connect** -- the `wifi-home` config's own
+`ssid`/`password` (edit once, in the `configs` array, or via the editor's
+WiFi config widget once loaded -- no longer duplicated across three node
+instances, see above), and `YOUR_MAC_LAN_IP` on the `udp_send` node
+(this machine's LAN IP on the same network the boards will join --
+`ipconfig getifaddr en0` on macOS, or check System Settings -> Network;
+not `127.0.0.1`, the boards are separate devices on the WiFi network, not
+this process).
 
-Compile and deploy exactly per the "Alternate path" section above (this
-node type isn't canvas-wired, see this file's top note) -- once per board,
-same compiled `flow.py`, pointed at each board's own serial port in turn.
-Watch each board's console via `deploy_flow.py`'s own output for the
+**Load and deploy via the browser now** (`npm run dev` in `editor/`, "Open
+Flow", pick this file) -- the intended path, same as `interrupt-basic.
+flow.json` above. The "Alternate path" section's `compile-flow.ts`/
+`deploy_flow.py` route still works unchanged if a browser isn't available,
+but is no longer the only option for this file the way it was before this
+session. Watch each board's console via either path's own output for the
 periodic `wifi_status` line (confirms real WiFi association + IP), the
 timer-driven heartbeat count going out, and -- the actual round-trip proof
 -- an `ECHO:N` payload coming back through `udp_receive` a moment later.

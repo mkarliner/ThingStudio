@@ -30,6 +30,17 @@
 // written -- connect(originSlot, targetNodeOrId, targetSlot) takes no type
 // argument at all). Saving them would just be one more thing to keep
 // consistent for no benefit.
+//
+// Config nodes (config-node-and-palette-implementation-briefing.md): a
+// `configs` array, same `{id, type, properties}` shape as GraphConfigNode
+// (compiler/graph.ts) but with a string `id` like that type -- added
+// alongside `nodes`/`edges`/`layout`, sorted by id the same deterministic
+// way `nodes` is, so re-saving an untouched flow with configs stays a
+// zero-diff exactly as §6's git-friendliness requirement already demands
+// for everything else in this format. Configs aren't part of `layout` --
+// they don't have a canvas position at all (they're never graph nodes,
+// per graph.ts's own header comment), so there's no positional data to
+// split out for them.
 
 export const FLOW_FILE_FORMAT_VERSION = 1;
 
@@ -52,6 +63,16 @@ export interface FlowFileLayoutEntry {
   size?: [number, number];
 }
 
+/** A config node's saved shape -- see this file's header. String `id`,
+ * matching compiler/graph.ts's GraphConfigNode (both exist independently;
+ * see that file's own header for why configs use a separate string-ID
+ * space rather than the numeric one FlowFileNode/GraphNode use). */
+export interface FlowFileConfig {
+  id: string;
+  type: string;
+  properties: Record<string, unknown>;
+}
+
 export interface FlowFile {
   formatVersion: number;
   /** Sorted by id -- see buildFlowFile. */
@@ -64,6 +85,12 @@ export interface FlowFile {
    * regardless of insertion order, per the ECMAScript spec's own
    * "integer index" property-ordering rule, not merely by convention). */
   layout: Record<string, FlowFileLayoutEntry>;
+  /** Sorted by id (string comparison) -- see buildFlowFile. Always present
+   * (possibly empty) on anything this module builds; parseFlowFile treats
+   * a missing/absent key on an older, pre-config-nodes flow file as "no
+   * configs" rather than a validation error, so hand-written and
+   * previously-saved flow files without this key keep loading unchanged. */
+  configs: FlowFileConfig[];
 }
 
 /** What main.ts's canvas-reading code hands in -- plain data, no live
@@ -76,9 +103,10 @@ export interface CanvasNodeSnapshot {
   size?: [number, number];
 }
 
-export function buildFlowFile(nodes: CanvasNodeSnapshot[], edges: FlowFileEdge[]): FlowFile {
+export function buildFlowFile(nodes: CanvasNodeSnapshot[], edges: FlowFileEdge[], configs: FlowFileConfig[] = []): FlowFile {
   const sortedNodes = [...nodes].sort((a, b) => a.id - b.id);
   const sortedEdges = [...edges].sort((a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2] || a[3] - b[3]);
+  const sortedConfigs = [...configs].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 
   const layout: Record<string, FlowFileLayoutEntry> = {};
   for (const n of sortedNodes) {
@@ -90,6 +118,7 @@ export function buildFlowFile(nodes: CanvasNodeSnapshot[], edges: FlowFileEdge[]
     nodes: sortedNodes.map((n) => ({ id: n.id, type: n.type, properties: n.properties })),
     edges: sortedEdges,
     layout,
+    configs: sortedConfigs.map((c) => ({ id: c.id, type: c.type, properties: c.properties })),
   };
 }
 
@@ -109,6 +138,9 @@ export function serializeFlowFileText(file: FlowFile): string {
  * before there's a second version to migrate from, on the same reasoning
  * §13's HELLO version check exists: fail clearly at the boundary instead
  * of leaving a future format change to silently misparse as this one.
+ *
+ * `configs` is the one field treated as optional on input (see this file's
+ * header) -- every other top-level field stays mandatory, unchanged.
  */
 export function parseFlowFile(text: string): FlowFile {
   let raw: unknown;
@@ -128,6 +160,7 @@ export function parseFlowFile(text: string): FlowFile {
   if (!Array.isArray(obj.nodes)) throw new FlowFileError('"nodes" must be an array');
   if (!Array.isArray(obj.edges)) throw new FlowFileError('"edges" must be an array');
   if (typeof obj.layout !== "object" || obj.layout === null) throw new FlowFileError('"layout" must be an object');
+  if (obj.configs !== undefined && !Array.isArray(obj.configs)) throw new FlowFileError('"configs" must be an array');
 
   const nodes: FlowFileNode[] = obj.nodes.map((n, i) => {
     if (typeof n !== "object" || n === null) throw new FlowFileError(`nodes[${i}] must be an object`);
@@ -164,5 +197,15 @@ export function parseFlowFile(text: string): FlowFile {
     layout[key] = parsed;
   }
 
-  return { formatVersion: obj.formatVersion, nodes, edges, layout };
+  const configsArr = Array.isArray(obj.configs) ? obj.configs : [];
+  const configs: FlowFileConfig[] = configsArr.map((c, i) => {
+    if (typeof c !== "object" || c === null) throw new FlowFileError(`configs[${i}] must be an object`);
+    const rec = c as Record<string, unknown>;
+    if (typeof rec.id !== "string") throw new FlowFileError(`configs[${i}].id must be a string`);
+    if (typeof rec.type !== "string") throw new FlowFileError(`configs[${i}].type must be a string`);
+    if (typeof rec.properties !== "object" || rec.properties === null) throw new FlowFileError(`configs[${i}].properties must be an object`);
+    return { id: rec.id, type: rec.type, properties: rec.properties as Record<string, unknown> };
+  });
+
+  return { formatVersion: obj.formatVersion, nodes, edges, layout, configs };
 }

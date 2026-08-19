@@ -30,6 +30,11 @@
 // indirectly: the EAGAIN branch's `asyncio.sleep_ms` availability is
 // confirmed by every test in this file completing through the same
 // runtime.py-aliased code path that branch would run under if it were hit.
+//
+// Config nodes (config-node-and-palette-implementation-briefing.md):
+// updated 2026-08-18 for the wifiConfigId behavior change -- see
+// wifi-status.ts's own header. Same fake-resolveConfig-via-local-map
+// pattern node-wifi-status.test.ts uses.
 
 import { execFile } from "node:child_process";
 import dgram from "node:dgram";
@@ -47,7 +52,23 @@ import { udpSendNode } from "../src/node-library/udp-send.js";
 
 const execFileAsync = promisify(execFile);
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const ctx: CodegenContext = { uniqueName: (hint) => `_${hint}` };
+
+const fakeConfigs = new Map<string, Record<string, unknown>>();
+function setConfig(id: string, properties: Record<string, unknown>): void {
+  fakeConfigs.set(id, properties);
+}
+const ctx: CodegenContext = {
+  uniqueName: (hint) => `_${hint}`,
+  resolveConfig: (id) => {
+    const cfg = fakeConfigs.get(id);
+    if (!cfg) throw new CompileError(`referenced config "${id}" not found`);
+    return cfg;
+  },
+};
+
+beforeEach(() => {
+  fakeConfigs.clear();
+});
 
 function node(properties: Record<string, unknown>): GraphNode {
   return { id: 1, type: "thingstudio/udp_send", properties };
@@ -164,7 +185,7 @@ describe("thingstudio/udp_send node", () => {
     expect(result.functionBody).toMatch(/await asyncio\.wait_for\(/);
   });
 
-  it("brings the WiFi station interface up even with no ssid configured", () => {
+  it("brings the WiFi station interface up even with no wifiConfigId configured", () => {
     const result = udpSendNode.codegenSink!(node({ host: "h", port: 1 }), ctx);
     expect(result.statements?.[1]?.key).toBe("wifi-sta");
     expect(result.statements?.[1]?.code).toContain("network.WLAN(network.STA_IF)");
@@ -172,9 +193,14 @@ describe("thingstudio/udp_send node", () => {
     expect(result.statements?.[1]?.code).not.toContain(".connect(");
   });
 
-  it("connects with the configured ssid/password, sharing the wifi-sta key with wifi_status/http_request", () => {
-    const result = udpSendNode.codegenSink!(node({ host: "h", port: 1, ssid: "MyNet", password: "hunter2" }), ctx);
+  it("connects with the referenced config's ssid/password, sharing the wifi-sta key with wifi_status/http_request", () => {
+    setConfig("wifi1", { ssid: "MyNet", password: "hunter2" });
+    const result = udpSendNode.codegenSink!(node({ host: "h", port: 1, wifiConfigId: "wifi1" }), ctx);
     expect(result.statements?.[1]?.code).toContain(".connect(");
     expect(result.statements?.[1]?.code).toContain('"MyNet"');
+  });
+
+  it("raises a CompileError referencing the missing id when wifiConfigId doesn't resolve", () => {
+    expect(() => udpSendNode.codegenSink!(node({ host: "h", port: 1, wifiConfigId: "nope" }), ctx)).toThrow(/referenced config "nope" not found/);
   });
 });

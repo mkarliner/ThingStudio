@@ -68,14 +68,21 @@
 // the WiFi station interface up itself, so a flow whose only network node
 // is udp_receive would bind a socket on an interface that was never
 // `.active(True)`'d, let alone associated to an AP. Fixed the same way:
-// optional `ssid`/`password` properties, wifiSetupStatement() shared under
-// the same "wifi-sta" dedup key http-request.ts/wifi-status.ts/
-// udp-send.ts all use.
+// wifiSetupStatement() shared under the same "wifi-sta" dedup key
+// http-request.ts/wifi-status.ts/udp-send.ts all use.
+//
+// Config nodes (config-node-and-palette-implementation-briefing.md):
+// **behavior change, 2026-08-18** -- same treatment as udp-send.ts:
+// credentials now come from a referenced `thingstudio/config/wifi` config
+// node via `node.properties.wifiConfigId`, resolved through
+// wifi-status.ts's `resolveWifiCredentials()`, not raw `ssid`/`password`
+// properties on this node directly. See wifi-status.ts's own header for
+// the full reasoning.
 
 import { CompileError } from "../compiler/errors.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, NodeDefinition, SourceCodegenResult } from "../compiler/node-definition.js";
-import { wifiSetupStatement } from "./wifi-status.js";
+import { resolveWifiCredentials, wifiSetupStatement } from "./wifi-status.js";
 
 // Conservative fixed recv buffer -- comfortably under the ~1472-byte
 // practical UDP payload ceiling on a standard 1500-byte-MTU Ethernet/WiFi
@@ -91,7 +98,13 @@ const MANDATORY_YIELD_MS = 10;
 export const udpReceiveNode: NodeDefinition = {
   type: "thingstudio/udp_receive",
   kind: "source",
-  codegenSource(node: GraphNode, _ctx: CodegenContext): SourceCodegenResult {
+  // output `msg` type `bytes` -- payload is always the raw `_udp_data` from
+  // recvfrom(), never decoded (this file's own header, "not validating
+  // payload content").
+  ports: {
+    outputs: [{ name: "msg", type: "bytes" }],
+  },
+  codegenSource(node: GraphNode, ctx: CodegenContext): SourceCodegenResult {
     const port = Math.round(Number(node.properties.port));
     if (!Number.isFinite(port) || port <= 0 || port > 65535) {
       throw new CompileError(`udp_receive port "${String(node.properties.port)}" must be a valid port number (1-65535)`);
@@ -122,6 +135,8 @@ export const udpReceiveNode: NodeDefinition = {
       "msg = {'payload': _udp_data, 'topic': '', 'host': _udp_addr[0], 'port': _udp_addr[1]}",
     ].join("\n");
 
+    const { ssid, password } = resolveWifiCredentials(node.properties, ctx);
+
     return {
       imports: ["import socket", "import errno", "import network"],
       statements: [
@@ -131,7 +146,7 @@ export const udpReceiveNode: NodeDefinition = {
             "\n",
           ),
         },
-        wifiSetupStatement(node.properties.ssid, node.properties.password),
+        wifiSetupStatement(ssid, password),
       ],
       buildMsg,
       repeatMs: MANDATORY_YIELD_MS,

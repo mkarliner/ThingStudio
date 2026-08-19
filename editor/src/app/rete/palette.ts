@@ -13,7 +13,16 @@
 // glyphs, same convention poc-rete established (no icon asset library) --
 // "◷" for timer chosen to echo a clock/interval, matching
 // "▶"/"ƒ"/"≡"/"■"'s one-glyph-per-kind pattern.
-export type NodeKind = "inject" | "function" | "debug" | "gpio_out" | "timer" | "interrupt";
+//
+// wifi_status/udp_send/udp_receive added config-node-and-palette-
+// implementation-briefing.md (2026-08-18): the palette-wiring half of that
+// session, following interrupt's own wiring exactly. Colors picked from
+// the unused range below existing kinds (a teal/blue network-ish family,
+// distinct from debug's own blue and interrupt's amber). http_request/
+// mqtt_publish/mqtt_subscribe stay registry-only for now -- an explicit,
+// flagged follow-up (see that briefing's own "Success criteria" section),
+// not silently dropped -- so no palette entries for them yet.
+export type NodeKind = "inject" | "function" | "debug" | "gpio_out" | "timer" | "interrupt" | "wifi_status" | "udp_send" | "udp_receive";
 
 export interface KindStyle {
   color: string;
@@ -32,6 +41,12 @@ export const NODE_PALETTE: Record<NodeKind, KindStyle> = {
   // uses this range. "⚡" for the hard-IRQ-driven, event-fired nature (vs.
   // timer's "◷" clock glyph for its own poll/sleep-shaped source).
   interrupt: { color: "#8a5a1f", bgcolor: "#3f2e14", icon: "⚡", label: "interrupt" },
+  // Teal -- a status/radio glyph ("◉") for the polling connectivity check.
+  wifi_status: { color: "#1f6e6e", bgcolor: "#123f3f", icon: "◉", label: "wifi status" },
+  // Blue/green send-receive pair, up/down arrows echoing direction of
+  // travel the same way interrupt's "⚡" echoes its own trigger mechanism.
+  udp_send: { color: "#3b5c8a", bgcolor: "#1f2e4a", icon: "↑", label: "udp send" },
+  udp_receive: { color: "#3b8a6e", bgcolor: "#1f4a3a", icon: "↓", label: "udp receive" },
 };
 
 export const DEFAULT_KIND_STYLE: KindStyle = { color: "#555", bgcolor: "#2b2b2b", icon: "?", label: "?" };

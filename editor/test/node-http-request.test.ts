@@ -46,7 +46,17 @@ import { httpRequestNode } from "../src/node-library/http-request.js";
 
 const execFileAsync = promisify(execFile);
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const ctx: CodegenContext = { uniqueName: (hint) => `_${hint}` };
+// resolveConfig isn't exercised here -- http_request stays registry-only
+// this session (config-node-and-palette-implementation-briefing.md's
+// explicit, flagged follow-up), still reading raw ssid/password directly.
+// Stub throws if ever called, matching every other node test file's
+// updated ctx.
+const ctx: CodegenContext = {
+  uniqueName: (hint) => `_${hint}`,
+  resolveConfig: (id) => {
+    throw new Error(`unexpected resolveConfig("${id}") call -- this test file's ctx doesn't stub any configs`);
+  },
+};
 
 function node(properties: Record<string, unknown>): GraphNode {
   return { id: 1, type: "thingstudio/http_request", properties };

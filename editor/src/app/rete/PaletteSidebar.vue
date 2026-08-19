@@ -12,6 +12,10 @@
   Not wired into App/main.ts yet -- the `add` event and the drop target
   that reads DRAG_MIME back out are both Phase 3 (main.ts's rewrite). This
   component is usable standalone once that wiring exists.
+
+  wifi_status/udp_receive/udp_send added config-node-and-palette-
+  implementation-briefing.md (2026-08-18) -- same source-then-sink display
+  ordering convention as every prior addition to this list.
 -->
 <template>
   <div class="palette-sidebar">
@@ -40,9 +44,10 @@ import { NODE_PALETTE, DRAG_MIME, type NodeKind } from "./palette";
 
 const emit = defineEmits<{ add: [kind: NodeKind] }>();
 
-// Display order -- sources first (inject, timer, interrupt), then
-// processing (function), then sinks (gpio_out, debug).
-const KINDS: NodeKind[] = ["inject", "timer", "interrupt", "function", "gpio_out", "debug"];
+// Display order -- sources first (inject, timer, interrupt, wifi_status,
+// udp_receive), then processing (function), then sinks (gpio_out,
+// udp_send, debug).
+const KINDS: NodeKind[] = ["inject", "timer", "interrupt", "wifi_status", "udp_receive", "function", "gpio_out", "udp_send", "debug"];
 
 const filter = ref("");
 const visibleKinds = computed(() =>

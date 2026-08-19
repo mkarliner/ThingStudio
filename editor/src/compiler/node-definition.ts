@@ -113,6 +113,19 @@ export interface SinkCodegenResult extends SetupCode {
 /** Passed to every codegen hook so multiple instances of the same node type never collide on generated names. */
 export interface CodegenContext {
   uniqueName(hint: string): string;
+  /**
+   * Resolves a config node's `properties` by its string ID (config-node-
+   * and-palette-implementation-briefing.md). Throws `CompileError`
+   * ("referenced config \"<id>\" not found") on a missing ID -- this
+   * project's fault-handling priority applied the same way nodes.ts's own
+   * `portSocket()` throws loudly on a missing port rather than falling
+   * back to something silent. A node's own codegen hook calls this itself
+   * with whichever property holds a config reference (e.g.
+   * `node.properties.wifiConfigId`) and validates the shape it gets back --
+   * this method's job is just handing back the right bucket of properties,
+   * not validating what's inside it.
+   */
+  resolveConfig(id: string): Record<string, unknown>;
 }
 
 export interface NodeDefinition {

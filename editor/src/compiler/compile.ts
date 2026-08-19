@@ -41,9 +41,21 @@
 // `await` real non-blocking I/O without stalling every other node sharing
 // the flow's single event loop (design doc §5/§6's "single global event
 // loop" fact, not a per-flow one).
+//
+// Config nodes (config-node-and-palette-implementation-briefing.md):
+// GraphData.configs (graph.ts) is resolved into a configsById map below,
+// fed to codegen hooks via CodegenContext.resolveConfig(id) -- but a
+// config is NEVER registered into nodesById/childrenOf/sources/reachable.
+// This is deliberate, not an oversight: a config has no ports, is never
+// wired, and produces no codegen output of its own, so the DAG walk
+// (reachability, cycle detection, source/sink rules) below never needs to
+// know configs exist at all. Node codegen hooks that reference a config
+// (e.g. wifi-status.ts's wifiConfigId) call ctx.resolveConfig() themselves
+// and validate the shape they get back -- this file's only job is handing
+// back the right bucket of properties for a given ID.
 
 import { CompileError } from "./errors.js";
-import type { GraphData, GraphLink, GraphNode } from "./graph.js";
+import type { GraphConfigNode, GraphData, GraphLink, GraphNode } from "./graph.js";
 import type { CodegenContext, NodeDefinition, SinkCodegenResult, TransformCodegenResult } from "./node-definition.js";
 
 /** One node's generated function occupies this 1-indexed, inclusive line
@@ -73,6 +85,18 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
 
   for (const n of graphData.nodes) {
     if (!registry.has(n.type)) throw new CompileError(`unknown node type "${n.type}" (node ${n.id})`);
+  }
+
+  // Config nodes: kept in a separate map, deliberately never folded into
+  // nodesById above -- see this file's header comment. A duplicate config
+  // ID is still rejected up front, same reasoning as the duplicate node-id
+  // check just above (a silently-shadowed config would resolve to
+  // "whichever one was registered last," a quiet-wrong-answer case worth
+  // catching at compile time rather than left to surprise someone later).
+  const configsById = new Map<string, GraphConfigNode>();
+  for (const c of graphData.configs ?? []) {
+    if (configsById.has(c.id)) throw new CompileError(`duplicate config id "${c.id}"`);
+    configsById.set(c.id, c);
   }
 
   // childrenOf: originId -> its outgoing links, in link order. Any number
@@ -152,6 +176,11 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
       while (usedNames.has(candidate)) candidate = `_${hint}_${i++}`;
       usedNames.add(candidate);
       return candidate;
+    },
+    resolveConfig(id: string): Record<string, unknown> {
+      const cfg = configsById.get(id);
+      if (!cfg) throw new CompileError(`referenced config "${id}" not found`);
+      return cfg.properties;
     },
   };
 

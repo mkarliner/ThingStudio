@@ -37,7 +37,15 @@ import { interruptNode } from "../src/node-library/interrupt.js";
 import { buildRegistry } from "../src/node-library/registry.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const ctx: CodegenContext = { uniqueName: (hint) => `_${hint}` };
+// resolveConfig is unused by this node type -- stub throws if ever called,
+// same "fail loudly on the unexpected" instinct as the real compile.ts
+// implementation (config-node-and-palette-implementation-briefing.md).
+const ctx: CodegenContext = {
+  uniqueName: (hint) => `_${hint}`,
+  resolveConfig: (id) => {
+    throw new Error(`unexpected resolveConfig("${id}") call -- this test file's ctx doesn't stub any configs`);
+  },
+};
 
 function node(properties: Record<string, unknown>): GraphNode {
   return { id: 1, type: "thingstudio/interrupt", properties };

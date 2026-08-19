@@ -44,18 +44,24 @@
 // never `.active(True)`'d or `.connect()`'d -- silently going nowhere (or
 // raising ENETUNREACH-ish errors) unless the same flow happened to also
 // carry a wifi_status/http_request node bringing the interface up as a
-// side effect. Fixed by adopting the exact same `ssid`/`password`
-// properties and wifiSetupStatement() sharing http-request.ts/
-// wifi-status.ts already use -- optional, empty ssid just skips the
-// connect call and assumes something else (another network node in the
-// flow) handles it, same "wifi-sta" dedup key so whichever network node
-// compiles first brings the interface up for everyone sharing it.
+// side effect. Fixed by adopting the same wifiSetupStatement() sharing
+// http-request.ts/wifi-status.ts already use.
+//
+// Config nodes (config-node-and-palette-implementation-briefing.md):
+// **behavior change, 2026-08-18** -- credentials now come from a
+// referenced `thingstudio/config/wifi` config node via
+// `node.properties.wifiConfigId`, resolved through wifi-status.ts's
+// `resolveWifiCredentials()`, not raw `ssid`/`password` properties on this
+// node directly. See wifi-status.ts's own header for the full reasoning
+// (Mike's explicit mandate) and why this stays optional rather than
+// mandatory -- no `wifiConfigId` behaves exactly like an empty ssid always
+// has (interface brought up, no connect call).
 
 import { CompileError } from "../compiler/errors.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, NodeDefinition, SinkCodegenResult } from "../compiler/node-definition.js";
 import { payloadToBytesSnippet } from "./py-literals.js";
-import { wifiSetupStatement } from "./wifi-status.js";
+import { resolveWifiCredentials, wifiSetupStatement } from "./wifi-status.js";
 
 export const UDP_SEND_SOCK_VAR = "_udp_send_sock";
 export const UDP_SEND_SETUP_KEY = "udp-send-sock";
@@ -71,6 +77,12 @@ const SEND_RETRY_POLL_MS = 10;
 export const udpSendNode: NodeDefinition = {
   type: "thingstudio/udp_send",
   kind: "sink",
+  // input `msg` type `any` -- payloadToBytesSnippet handles bytes/str/other
+  // uniformly (same bucket-3-avoiding reasoning mqtt_publish's own `any`
+  // input gets, wire-type-system-scoping.md).
+  ports: {
+    inputs: [{ name: "msg", type: "any" }],
+  },
   codegenSink(node: GraphNode, ctx: CodegenContext): SinkCodegenResult {
     const host = typeof node.properties.host === "string" ? node.properties.host.trim() : "";
     if (!host) {
@@ -105,6 +117,8 @@ async def ${sendFnName}():
             await asyncio.sleep_ms(${SEND_RETRY_POLL_MS})
 await asyncio.wait_for(${sendFnName}(), ${timeoutS})`.trim();
 
+    const { ssid, password } = resolveWifiCredentials(node.properties, ctx);
+
     return {
       imports: ["import socket", "import errno", "import network"],
       statements: [
@@ -112,7 +126,7 @@ await asyncio.wait_for(${sendFnName}(), ${timeoutS})`.trim();
           key: UDP_SEND_SETUP_KEY,
           code: [`${UDP_SEND_SOCK_VAR} = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)`, `${UDP_SEND_SOCK_VAR}.setblocking(False)`].join("\n"),
         },
-        wifiSetupStatement(node.properties.ssid, node.properties.password),
+        wifiSetupStatement(ssid, password),
       ],
       functionName: ctx.uniqueName("udp_send"),
       functionBody,

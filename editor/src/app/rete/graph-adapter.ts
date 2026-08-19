@@ -52,6 +52,14 @@
 //      yet -- this only matters the moment a multi-output node type
 //      exists.
 //
+// Config nodes (config-node-and-palette-implementation-briefing.md):
+// `toGraphData()` takes an explicit `configs` parameter rather than
+// reading app/rete/store.ts's config store itself -- same reasoning this
+// file's own header already gives for staying framework/DOM-agnostic:
+// this module has no Vue import today and stays fully unit-testable
+// headlessly (graph-adapter.test.ts) without one. main.ts is the only real
+// caller and already has the store's contents in hand when it calls this.
+//
 // Not built here (Phase 3, main.ts wiring): calling this from
 // `currentSource()` in place of `graph.serialize()`, or using
 // `nodeIdByReteId` for highlighting. This module is a pure function over
@@ -59,7 +67,7 @@
 // headlessly (graph-adapter.test.ts), same "off-device testable" property
 // the implementation briefing called out for this phase.
 
-import type { GraphData, GraphLink, GraphNode } from "../../compiler/graph.js";
+import type { GraphConfigNode, GraphData, GraphLink, GraphNode } from "../../compiler/graph.js";
 import type { Editor, Schemes } from "./schemes";
 import type { AnyThingstudioNode } from "./nodes";
 
@@ -88,7 +96,12 @@ export function socketIndex(keys: string[], key: string): number {
   return i;
 }
 
-export function toGraphData(editor: Editor): GraphAdapterResult {
+/** `configs` is folded into the returned GraphData verbatim (already the
+ * right shape -- store.ts's ConfigEntry and GraphConfigNode agree on
+ * {id, type, properties}) -- optional and defaults to none, so every
+ * existing call site/test predating config nodes keeps compiling and
+ * behaving unchanged. */
+export function toGraphData(editor: Editor, configs: GraphConfigNode[] = []): GraphAdapterResult {
   const reteNodes = editor.getNodes();
   const reteIdByNodeId = new Map<number, string>();
   const nodeIdByReteId = new Map<string, number>();
@@ -131,5 +144,8 @@ export function toGraphData(editor: Editor): GraphAdapterResult {
     return link;
   });
 
-  return { graphData: { nodes, links }, reteIdByNodeId, nodeIdByReteId };
+  const graphData: GraphData = { nodes, links };
+  if (configs.length > 0) graphData.configs = configs;
+
+  return { graphData, reteIdByNodeId, nodeIdByReteId };
 }

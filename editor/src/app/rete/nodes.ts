@@ -5,12 +5,15 @@
 // pocs/poc-rete/src/nodes.ts's five *fake* types onto the real property
 // contracts app/nodes.ts's own header documents -- node.properties here
 // has to match exactly what each node-library/*.ts's codegen reads:
-//   - inject:    payloadType, payloadValue, repeat        (node-library/inject.ts)
-//   - function:  code                                     (node-library/function-node.ts)
-//   - debug:     (none -- debug.ts reads only node.id)     (node-library/debug.ts)
-//   - gpio_out:  pin                                       (node-library/gpio-out.ts)
-//   - timer:     intervalMs                                (node-library/timer.ts)
-//   - interrupt: pin, edge, debounce, debounceMs           (node-library/interrupt.ts)
+//   - inject:       payloadType, payloadValue, repeat        (node-library/inject.ts)
+//   - function:     code                                     (node-library/function-node.ts)
+//   - debug:        (none -- debug.ts reads only node.id)     (node-library/debug.ts)
+//   - gpio_out:     pin                                       (node-library/gpio-out.ts)
+//   - timer:        intervalMs                                (node-library/timer.ts)
+//   - interrupt:    pin, edge, debounce, debounceMs           (node-library/interrupt.ts)
+//   - wifi_status:  pollMs, wifiConfigId                       (node-library/wifi-status.ts)
+//   - udp_send:     host, port, timeoutMs, wifiConfigId        (node-library/udp-send.ts)
+//   - udp_receive:  port, pollMs, wifiConfigId                 (node-library/udp-receive.ts)
 //
 // poc-rete's fake type set doesn't match 1:1
 // (rete-migration-implementation-briefing.md's callout): "mqtt out" is
@@ -24,6 +27,19 @@
 // all (compiler/registry-only, matching gpio_in's old precedent). Same
 // "unverified in a real browser" caveat applies, doubly so here since
 // interrupt.ts's codegen itself hasn't had its own hardware pass yet.
+//
+// wifi_status/udp_send/udp_receive are newer still -- config-node-and-
+// palette-implementation-briefing.md (2026-08-18), following interrupt's
+// own wiring exactly as its own worked example. Each carries a
+// `wifiConfigId` property (empty string = "no config referenced yet",
+// resolveWifiCredentials()'s own contract, wifi-status.ts) bound to a
+// ConfigRefField in PropertyPanel.vue rather than raw ssid/password
+// fields -- the actual fix for the credential-duplication problem this
+// session exists to close. Same "unverified in a real browser until
+// Mike's hands-on pass" caveat as every prior canvas-wiring session.
+// http_request/mqtt_publish/mqtt_subscribe stay registry-only, an
+// explicit flagged follow-up -- see that briefing's own success-criteria
+// section.
 //
 // §6 wire-type system (docs/working-notes/wire-type-system-scoping.md):
 // every port constructed below reads its real socket type from the
@@ -50,6 +66,9 @@ import { debugNode } from "../../node-library/debug.js";
 import { gpioOutNode } from "../../node-library/gpio-out.js";
 import { timerNode } from "../../node-library/timer.js";
 import { interruptNode } from "../../node-library/interrupt.js";
+import { wifiStatusNode } from "../../node-library/wifi-status.js";
+import { udpSendNode } from "../../node-library/udp-send.js";
+import { udpReceiveNode } from "../../node-library/udp-receive.js";
 import { resolvePortType, type PortDefinition } from "../../compiler/node-definition.js";
 
 // Uniform pill height, ported from poc-rete's NODE_HEIGHT -- see that
@@ -239,7 +258,73 @@ export class InterruptNode extends ClassicPreset.Node {
   }
 }
 
-export type AnyThingstudioNode = InjectNode | FunctionNode | DebugNode | GpioOutNode | TimerNode | InterruptNode;
+export class WifiStatusNode extends ClassicPreset.Node {
+  width = 120;
+  height = NODE_HEIGHT;
+  kind = "wifi_status" as const;
+  highlighted = false;
+
+  // wifiConfigId: "" means "no config referenced" -- resolveWifiCredentials()'s
+  // own contract (wifi-status.ts), same "empty string sentinel, not
+  // undefined" convention as every other string property already on this
+  // canvas (e.g. gpio_out has no string property, but inject's
+  // payloadValue defaults to a real value, never undefined -- properties
+  // objects on this canvas are always fully populated, never partial).
+  properties: { pollMs: number; wifiConfigId: string } = { pollMs: 5000, wifiConfigId: "" };
+
+  constructor() {
+    super("wifi status");
+    this.addOutput("msg", new ClassicPreset.Output(portSocket(wifiStatusNode.ports?.outputs, "msg", this.properties), "msg"));
+  }
+}
+
+export class UdpSendNode extends ClassicPreset.Node {
+  width = 110;
+  height = NODE_HEIGHT;
+  kind = "udp_send" as const;
+  highlighted = false;
+
+  properties: { host: string; port: number; timeoutMs: number; wifiConfigId: string } = {
+    host: "",
+    port: 9999,
+    timeoutMs: 2000,
+    wifiConfigId: "",
+  };
+
+  constructor() {
+    super("udp send");
+    this.addInput("msg", new ClassicPreset.Input(portSocket(udpSendNode.ports?.inputs, "msg", this.properties), "msg"));
+  }
+}
+
+export class UdpReceiveNode extends ClassicPreset.Node {
+  width = 110;
+  height = NODE_HEIGHT;
+  kind = "udp_receive" as const;
+  highlighted = false;
+
+  properties: { port: number; pollMs: number; wifiConfigId: string } = {
+    port: 9998,
+    pollMs: 20,
+    wifiConfigId: "",
+  };
+
+  constructor() {
+    super("udp receive");
+    this.addOutput("msg", new ClassicPreset.Output(portSocket(udpReceiveNode.ports?.outputs, "msg", this.properties), "msg"));
+  }
+}
+
+export type AnyThingstudioNode =
+  | InjectNode
+  | FunctionNode
+  | DebugNode
+  | GpioOutNode
+  | TimerNode
+  | InterruptNode
+  | WifiStatusNode
+  | UdpSendNode
+  | UdpReceiveNode;
 
 // One constructor per palette kind, shared between the app-shell's
 // click-to-add/drag-drop handler (main.ts) and applyFlowFile()'s per-node
@@ -255,4 +340,7 @@ export const NODE_FACTORIES: Record<NodeKind, () => AnyThingstudioNode> = {
   gpio_out: () => new GpioOutNode(),
   timer: () => new TimerNode(),
   interrupt: () => new InterruptNode(),
+  wifi_status: () => new WifiStatusNode(),
+  udp_send: () => new UdpSendNode(),
+  udp_receive: () => new UdpReceiveNode(),
 };

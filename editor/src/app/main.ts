@@ -34,6 +34,15 @@
 // Deploy handler) must survive verbatim per the decision doc's stop
 // conditions, and a single-Vue-tree rewrite would touch all of it for no
 // benefit this migration is scoped to deliver.
+//
+// Config nodes (config-node-and-palette-implementation-briefing.md):
+// rete/store.ts's `configs` map is the single source of truth for a
+// flow's config nodes, same role it already plays for `selectedNode`/
+// `propertyVersion`. This file folds that store into save (buildFlowFile),
+// load (applyFlowFile -> replaceAllConfigs), compile (toGraphData), and
+// canvas-clear (clearConfigs) -- the "genuinely new plumbing" the briefing
+// calls out, not a couple of extra fields on something that already walks
+// the canvas.
 
 import { createApp, watch } from "vue";
 import { compile } from "../compiler/compile.js";
@@ -46,10 +55,19 @@ import { createThingstudioEditor, type ThingstudioEditor } from "./rete/editor-s
 import { NODE_FACTORIES, type AnyThingstudioNode } from "./rete/nodes.js";
 import { DRAG_MIME, type NodeKind } from "./rete/palette.js";
 import { toGraphData, socketIndex } from "./rete/graph-adapter.js";
-import { propertyVersion } from "./rete/store.js";
+import { propertyVersion, configs as configsStore, replaceAllConfigs, clearConfigs } from "./rete/store.js";
 import PaletteSidebar from "./rete/PaletteSidebar.vue";
 import PropertyPanel from "./rete/PropertyPanel.vue";
-import { buildFlowFile, parseFlowFile, serializeFlowFileText, FlowFileError, type FlowFile, type FlowFileEdge, type CanvasNodeSnapshot } from "../flow-file/flow-file.js";
+import {
+  buildFlowFile,
+  parseFlowFile,
+  serializeFlowFileText,
+  FlowFileError,
+  type FlowFile,
+  type FlowFileEdge,
+  type FlowFileConfig,
+  type CanvasNodeSnapshot,
+} from "../flow-file/flow-file.js";
 import { saveFlowFileToDisk, openFlowFileFromDisk } from "../flow-file/file-io.js";
 
 const el = <T extends HTMLElement = HTMLElement>(id: string): T => document.getElementById(id) as T;
@@ -84,6 +102,12 @@ async function addNodeOfKind(kind: NodeKind, position?: { x: number; y: number }
 el("clear-canvas").addEventListener("click", async () => {
   await reteHandle.clear();
   placeCount = 0;
+  // Configs are flow-scoped, not canvas-node-scoped (they never appear as
+  // boxes -- graph.ts's GraphConfigNode header), but "clear canvas" means
+  // "start a new empty flow" from the user's point of view, so they reset
+  // together rather than leaving orphaned configs no visible node
+  // references anymore.
+  clearConfigs();
 });
 
 // Palette (left) -- click-to-add via the `add` emit. Vue's programmatic
@@ -169,6 +193,14 @@ function extractCanvasSnapshot(): { nodes: CanvasNodeSnapshot[]; edges: FlowFile
   return { nodes: snapshot, edges };
 }
 
+/** rete/store.ts's `configs` map, snapshotted into flow-file.ts's own
+ * {id, type, properties} shape -- already agrees field-for-field
+ * (store.ts's ConfigEntry header), so this is a plain copy, not a
+ * translation. */
+function extractConfigsSnapshot(): FlowFileConfig[] {
+  return [...configsStore.value.values()].map((c) => ({ id: c.id, type: c.type, properties: c.properties }));
+}
+
 /**
  * Reconstructs the canvas from a parsed flow file. Rete rewrite of the
  * Litegraph version -- rete has no widget layer to sync (no
@@ -188,6 +220,11 @@ function extractCanvasSnapshot(): { nodes: CanvasNodeSnapshot[]; edges: FlowFile
 async function applyFlowFile(file: FlowFile): Promise<void> {
   await reteHandle.clear();
   placeCount = 0;
+  // Configs load before nodes: a node's own ConfigRefField (PropertyPanel.vue)
+  // looks its bound wifiConfigId up in this store to render the dropdown's
+  // current selection, so the store needs to already hold the file's
+  // configs by the time any node using one gets constructed/selected below.
+  replaceAllConfigs(file.configs.map((c) => ({ id: c.id, type: c.type, properties: c.properties })));
   const skippedFileIds = new Set<number>();
   const nodeByFileId = new Map<number, AnyThingstudioNode>();
 
@@ -229,7 +266,7 @@ async function applyFlowFile(file: FlowFile): Promise<void> {
 el("btnSaveFlow").addEventListener("click", async () => {
   try {
     const { nodes, edges } = extractCanvasSnapshot();
-    const text = serializeFlowFileText(buildFlowFile(nodes, edges));
+    const text = serializeFlowFileText(buildFlowFile(nodes, edges, extractConfigsSnapshot()));
     const saved = await saveFlowFileToDisk(text, "flow.flow.json");
     if (saved) logLine("[flow saved]", "ok");
   } catch (err) {
@@ -357,7 +394,7 @@ let lastNodeLineRanges: NodeLineRange[] = [];
 let lastReteIdByNodeId: Map<number, string> = new Map();
 
 function currentSource(): string {
-  const { graphData, reteIdByNodeId } = toGraphData(reteEditor);
+  const { graphData, reteIdByNodeId } = toGraphData(reteEditor, [...configsStore.value.values()]);
   lastReteIdByNodeId = reteIdByNodeId;
   const { source, nodeLineRanges } = compile(graphData, registry);
   lastNodeLineRanges = nodeLineRanges;

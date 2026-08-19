@@ -7,9 +7,25 @@
 // per design doc §6: nodes/edges vs. layout are genuinely separate
 // sections, and re-saving unchanged data is byte-identical (a real `git
 // diff` requirement, not just "looks right").
+//
+// Config nodes (config-node-and-palette-implementation-briefing.md):
+// `configs` coverage added 2026-08-18 -- same determinism/round-trip bar
+// as nodes/edges, plus validation-error cases for malformed entries and
+// the "absent `configs` key on an older/hand-written file parses as no
+// configs" backward-compatibility contract flow-file.ts's own header
+// documents.
 
 import { describe, expect, it } from "vitest";
-import { buildFlowFile, FLOW_FILE_FORMAT_VERSION, FlowFileError, parseFlowFile, serializeFlowFileText, type CanvasNodeSnapshot, type FlowFileEdge } from "../src/flow-file/flow-file.js";
+import {
+  buildFlowFile,
+  FLOW_FILE_FORMAT_VERSION,
+  FlowFileError,
+  parseFlowFile,
+  serializeFlowFileText,
+  type CanvasNodeSnapshot,
+  type FlowFileConfig,
+  type FlowFileEdge,
+} from "../src/flow-file/flow-file.js";
 
 const SAMPLE_NODES: CanvasNodeSnapshot[] = [
   { id: 3, type: "thingstudio/gpio_out", properties: { pin: 12 }, pos: [300, 100] },
@@ -19,6 +35,10 @@ const SAMPLE_NODES: CanvasNodeSnapshot[] = [
 const SAMPLE_EDGES: FlowFileEdge[] = [
   [2, 0, 3, 0],
   [1, 0, 2, 0],
+];
+const SAMPLE_CONFIGS: FlowFileConfig[] = [
+  { id: "wifi-b", type: "thingstudio/config/wifi", properties: { ssid: "SecondNet", password: "b" } },
+  { id: "wifi-a", type: "thingstudio/config/wifi", properties: { ssid: "FirstNet", password: "a" } },
 ];
 
 describe("buildFlowFile", () => {
@@ -43,6 +63,16 @@ describe("buildFlowFile", () => {
     const file = buildFlowFile(SAMPLE_NODES, SAMPLE_EDGES);
     expect(file.formatVersion).toBe(FLOW_FILE_FORMAT_VERSION);
   });
+
+  it("defaults configs to an empty array when omitted", () => {
+    const file = buildFlowFile(SAMPLE_NODES, SAMPLE_EDGES);
+    expect(file.configs).toEqual([]);
+  });
+
+  it("sorts configs by id (string comparison), regardless of input order", () => {
+    const file = buildFlowFile(SAMPLE_NODES, SAMPLE_EDGES, SAMPLE_CONFIGS);
+    expect(file.configs.map((c) => c.id)).toEqual(["wifi-a", "wifi-b"]);
+  });
 });
 
 describe("serializeFlowFileText: determinism", () => {
@@ -54,6 +84,13 @@ describe("serializeFlowFileText: determinism", () => {
     const shuffledNodes = [SAMPLE_NODES[2]!, SAMPLE_NODES[0]!, SAMPLE_NODES[1]!];
     const shuffledEdges: FlowFileEdge[] = [SAMPLE_EDGES[1]!, SAMPLE_EDGES[0]!];
     const textB = serializeFlowFileText(buildFlowFile(shuffledNodes, shuffledEdges));
+    expect(textA).toBe(textB);
+  });
+
+  it("re-serializing unchanged configs, in a different input order, also stays byte-identical", () => {
+    const textA = serializeFlowFileText(buildFlowFile(SAMPLE_NODES, SAMPLE_EDGES, SAMPLE_CONFIGS));
+    const shuffledConfigs: FlowFileConfig[] = [SAMPLE_CONFIGS[1]!, SAMPLE_CONFIGS[0]!];
+    const textB = serializeFlowFileText(buildFlowFile(SAMPLE_NODES, SAMPLE_EDGES, shuffledConfigs));
     expect(textA).toBe(textB);
   });
 
@@ -86,6 +123,19 @@ describe("parseFlowFile: round-trip and validation", () => {
     expect(parsed).toEqual(file);
   });
 
+  it("round-trips with configs included", () => {
+    const file = buildFlowFile(SAMPLE_NODES, SAMPLE_EDGES, SAMPLE_CONFIGS);
+    const parsed = parseFlowFile(serializeFlowFileText(file));
+    expect(parsed).toEqual(file);
+    expect(parsed.configs.map((c) => c.id)).toEqual(["wifi-a", "wifi-b"]);
+  });
+
+  it("treats a missing `configs` key (an older, pre-config-nodes flow file) as no configs, not a validation error", () => {
+    const base = { formatVersion: FLOW_FILE_FORMAT_VERSION, nodes: [], edges: [], layout: {} };
+    const parsed = parseFlowFile(JSON.stringify(base));
+    expect(parsed.configs).toEqual([]);
+  });
+
   it("rejects non-JSON text", () => {
     expect(() => parseFlowFile("not json {{{")).toThrow(FlowFileError);
     expect(() => parseFlowFile("not json {{{")).toThrow(/not valid JSON/);
@@ -101,5 +151,17 @@ describe("parseFlowFile: round-trip and validation", () => {
     expect(() => parseFlowFile(JSON.stringify({ ...base, nodes: [{ id: "not-a-number", type: "x", properties: {} }] }))).toThrow(/nodes\[0\]\.id/);
     expect(() => parseFlowFile(JSON.stringify({ ...base, edges: [[1, 0, 2]] }))).toThrow(/edges\[0\]/);
     expect(() => parseFlowFile(JSON.stringify({ ...base, layout: { "1": { pos: [0] } } }))).toThrow(/layout\["1"\]\.pos/);
+  });
+
+  it("rejects a non-array configs field", () => {
+    const base = { formatVersion: FLOW_FILE_FORMAT_VERSION, nodes: [], edges: [], layout: {} };
+    expect(() => parseFlowFile(JSON.stringify({ ...base, configs: { not: "an array" } }))).toThrow(/"configs" must be an array/);
+  });
+
+  it("rejects malformed config entries with a specific reason", () => {
+    const base = { formatVersion: FLOW_FILE_FORMAT_VERSION, nodes: [], edges: [], layout: {} };
+    expect(() => parseFlowFile(JSON.stringify({ ...base, configs: [{ id: 1, type: "x", properties: {} }] }))).toThrow(/configs\[0\]\.id/);
+    expect(() => parseFlowFile(JSON.stringify({ ...base, configs: [{ id: "x", type: 1, properties: {} }] }))).toThrow(/configs\[0\]\.type/);
+    expect(() => parseFlowFile(JSON.stringify({ ...base, configs: [{ id: "x", type: "x", properties: null }] }))).toThrow(/configs\[0\]\.properties/);
   });
 });

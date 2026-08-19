@@ -20,6 +20,11 @@
 // as a safety bound so a real bug (buildMsg never returning) fails the
 // test with a clear TimeoutError instead of hanging the suite -- not part
 // of the node's own generated code, just this harness's own guard rail.
+//
+// Config nodes (config-node-and-palette-implementation-briefing.md):
+// updated 2026-08-18 for the wifiConfigId behavior change -- see
+// wifi-status.ts's own header. Same fake-resolveConfig-via-local-map
+// pattern node-wifi-status.test.ts/node-udp-send.test.ts use.
 
 import { execFile } from "node:child_process";
 import dgram from "node:dgram";
@@ -28,7 +33,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { compile } from "../src/compiler/compile.js";
 import { CompileError } from "../src/compiler/errors.js";
 import type { GraphData, GraphNode } from "../src/compiler/graph.js";
@@ -38,7 +43,23 @@ import { udpReceiveNode } from "../src/node-library/udp-receive.js";
 
 const execFileAsync = promisify(execFile);
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const ctx: CodegenContext = { uniqueName: (hint) => `_${hint}` };
+
+const fakeConfigs = new Map<string, Record<string, unknown>>();
+function setConfig(id: string, properties: Record<string, unknown>): void {
+  fakeConfigs.set(id, properties);
+}
+const ctx: CodegenContext = {
+  uniqueName: (hint) => `_${hint}`,
+  resolveConfig: (id) => {
+    const cfg = fakeConfigs.get(id);
+    if (!cfg) throw new CompileError(`referenced config "${id}" not found`);
+    return cfg;
+  },
+};
+
+beforeEach(() => {
+  fakeConfigs.clear();
+});
 
 function node(properties: Record<string, unknown>): GraphNode {
   return { id: 1, type: "thingstudio/udp_receive", properties };
@@ -158,17 +179,22 @@ describe("thingstudio/udp_receive node", () => {
     expect(resultA.statements?.[0]?.code).toBe(resultB.statements?.[0]?.code);
   });
 
-  it("brings the WiFi station interface up even with no ssid configured", () => {
+  it("brings the WiFi station interface up even with no wifiConfigId configured", () => {
     const result = udpReceiveNode.codegenSource!(node({ port: 4242 }), ctx);
     expect(result.statements?.[1]?.key).toBe("wifi-sta");
     expect(result.statements?.[1]?.code).toContain("network.WLAN(network.STA_IF)");
     expect(result.statements?.[1]?.code).not.toContain(".connect(");
   });
 
-  it("connects with the configured ssid/password, sharing the wifi-sta key with wifi_status/http_request/udp_send", () => {
-    const result = udpReceiveNode.codegenSource!(node({ port: 4242, ssid: "MyNet", password: "hunter2" }), ctx);
+  it("connects with the referenced config's ssid/password, sharing the wifi-sta key with wifi_status/http_request/udp_send", () => {
+    setConfig("wifi1", { ssid: "MyNet", password: "hunter2" });
+    const result = udpReceiveNode.codegenSource!(node({ port: 4242, wifiConfigId: "wifi1" }), ctx);
     expect(result.statements?.[1]?.code).toContain(".connect(");
     expect(result.statements?.[1]?.code).toContain('"MyNet"');
+  });
+
+  it("raises a CompileError referencing the missing id when wifiConfigId doesn't resolve", () => {
+    expect(() => udpReceiveNode.codegenSource!(node({ port: 4242, wifiConfigId: "nope" }), ctx)).toThrow(/referenced config "nope" not found/);
   });
 
   it("compiles into a full flow with the expected structure (source text only)", () => {
@@ -187,5 +213,23 @@ describe("thingstudio/udp_receive node", () => {
     // Mandatory post-message yield (repeatMs=10), distinct from the
     // internal pollMs-driven sleep_ms inside buildMsg's own retry loop.
     expect(source).toMatch(/await asyncio\.sleep_ms\(10\)\s*$/m);
+  });
+
+  it("compiles a full flow sharing one wifi config with a wifi_status node (proof of the actual fix)", () => {
+    const graph: GraphData = {
+      nodes: [
+        { id: 1, type: "thingstudio/udp_receive", properties: { port: 4242, wifiConfigId: "wifi1" } },
+        { id: 2, type: "thingstudio/debug", properties: {} },
+        { id: 3, type: "thingstudio/wifi_status", properties: { pollMs: 5000, wifiConfigId: "wifi1" } },
+      ],
+      links: [[1, 1, 0, 2, 0, "bytes"]],
+      configs: [{ id: "wifi1", type: "thingstudio/config/wifi", properties: { ssid: "SharedNet", password: "sharedpw" } }],
+    };
+    const { source } = compile(graph, buildRegistry());
+    // Exactly one wifi-sta setup statement -- both nodes referencing the
+    // same config id dedup onto one shared connect, not two independently
+    // typed-in credentials that could drift.
+    expect(source.match(/_wifi_sta = network\.WLAN/g)?.length).toBe(1);
+    expect(source).toContain('"SharedNet"');
   });
 });

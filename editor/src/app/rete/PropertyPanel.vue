@@ -33,6 +33,16 @@
   had no timer node to port a panel section from; this is fresh work,
   unverified in a real browser until Mike's hands-on pass, same caveat
   nodes.ts's own TimerNode carries.
+
+  wifi_status/udp_send/udp_receive blocks added config-node-and-palette-
+  implementation-briefing.md (2026-08-18): each node's own remaining
+  fields (pollMs/host/port/timeoutMs) plus a ConfigRefField bound to
+  `wifiConfigId` -- the actual fix for "entering ssid credentials multiple
+  times," everything upstream of this component (data model, compiler
+  resolution, the store) exists to make this one property-panel change
+  possible and correct. No raw ssid/password inputs anywhere in this file
+  any more for these three kinds -- that's deliberate, not an oversight,
+  see wifi-status.ts's own header on why.
 -->
 <template>
   <div class="property-panel">
@@ -107,6 +117,49 @@
         </p>
       </template>
 
+      <template v-else-if="node.kind === 'wifi_status'">
+        <label>poll interval (ms)
+          <input type="number" min="1" v-model.number="node.properties.pollMs" @input="touch" />
+        </label>
+        <ConfigRefField
+          config-type="thingstudio/config/wifi"
+          :model-value="node.properties.wifiConfigId || undefined"
+          @update:model-value="(id) => setWifiConfigId(id)"
+        />
+        <p class="hint">No config selected -- the interface still comes up, but nothing connects (matches today's "no ssid" behavior).</p>
+      </template>
+
+      <template v-else-if="node.kind === 'udp_send'">
+        <label>host
+          <input v-model="node.properties.host" @input="touch" />
+        </label>
+        <label>port
+          <input type="number" min="1" max="65535" v-model.number="node.properties.port" @input="touch" />
+        </label>
+        <label>timeout (ms)
+          <input type="number" min="1" v-model.number="node.properties.timeoutMs" @input="touch" />
+        </label>
+        <ConfigRefField
+          config-type="thingstudio/config/wifi"
+          :model-value="node.properties.wifiConfigId || undefined"
+          @update:model-value="(id) => setWifiConfigId(id)"
+        />
+      </template>
+
+      <template v-else-if="node.kind === 'udp_receive'">
+        <label>port
+          <input type="number" min="1" max="65535" v-model.number="node.properties.port" @input="touch" />
+        </label>
+        <label>poll interval (ms)
+          <input type="number" min="1" v-model.number="node.properties.pollMs" @input="touch" />
+        </label>
+        <ConfigRefField
+          config-type="thingstudio/config/wifi"
+          :model-value="node.properties.wifiConfigId || undefined"
+          @update:model-value="(id) => setWifiConfigId(id)"
+        />
+      </template>
+
       <template v-else-if="node.kind === 'debug'">
         <p class="hint">No properties -- this node just prints the inbound payload to the device console.</p>
       </template>
@@ -120,6 +173,7 @@ import { computed } from "vue";
 import { selectedNode, bumpPropertyVersion, propertyVersion } from "./store";
 import { NODE_PALETTE, DEFAULT_KIND_STYLE, type NodeKind } from "./palette";
 import { InjectNode } from "./nodes";
+import ConfigRefField from "./ConfigRefField.vue";
 
 const node = computed(() => {
   propertyVersion.value; // establish reactive dependency even though mutations happen off-Vue
@@ -146,6 +200,17 @@ function retypeInjectOutput(): void {
   if (node.value instanceof InjectNode) {
     node.value.retypeOutput();
   }
+  touch();
+}
+
+// ConfigRefField's own `update:modelValue` hands back a fresh/selected
+// config id -- written onto whichever field the current node kind uses
+// (every wifi-referencing kind on this canvas uses the same
+// `wifiConfigId` property name, wifi-status.ts's own convention), same
+// `touch()` signal as every other field edit.
+function setWifiConfigId(id: string): void {
+  if (!node.value) return;
+  (node.value.properties as Record<string, unknown>).wifiConfigId = id;
   touch();
 }
 </script>

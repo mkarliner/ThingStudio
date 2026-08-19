@@ -26,7 +26,17 @@ import type { GraphNode } from "../src/compiler/graph.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const registry = buildRegistry();
-const ctx: CodegenContext = { uniqueName: (hint) => `_${hint}` };
+// resolveConfig isn't exercised here -- mqtt_publish stays registry-only
+// this session (config-node-and-palette-implementation-briefing.md's
+// explicit, flagged follow-up), still reading raw ssid/password directly
+// via parseMqttBrokerProps. Stub throws if ever called, matching every
+// other node test file's updated ctx.
+const ctx: CodegenContext = {
+  uniqueName: (hint) => `_${hint}`,
+  resolveConfig: (id) => {
+    throw new Error(`unexpected resolveConfig("${id}") call -- this test file's ctx doesn't stub any configs`);
+  },
+};
 
 function node(properties: Record<string, unknown>): GraphNode {
   return { id: 1, type: "thingstudio/mqtt_publish", properties };
@@ -155,6 +165,11 @@ describe("thingstudio/mqtt_publish node", () => {
         while (used.has(candidate)) candidate = `_${hint}_${i++}`;
         used.add(candidate);
         return candidate;
+      },
+      // resolveConfig isn't exercised here -- see the module-level `ctx`
+      // above for why (mqtt_publish stays registry-only this session).
+      resolveConfig(id: string): Record<string, unknown> {
+        throw new Error(`unexpected resolveConfig("${id}") call -- this test file's ctx doesn't stub any configs`);
       },
     };
     const cfg = { broker: "shared.broker", port: 1883, topic: "t1", ssid: "s" };

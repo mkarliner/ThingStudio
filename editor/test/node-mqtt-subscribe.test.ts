@@ -34,6 +34,13 @@ function freshCtx(): CodegenContext {
       used.add(candidate);
       return candidate;
     },
+    // resolveConfig isn't exercised here -- mqtt_subscribe stays
+    // registry-only this session (config-node-and-palette-implementation-
+    // briefing.md's explicit, flagged follow-up). Stub throws if ever
+    // called, matching every other node test file's updated ctx.
+    resolveConfig(id: string): Record<string, unknown> {
+      throw new Error(`unexpected resolveConfig("${id}") call -- this test file's ctx doesn't stub any configs`);
+    },
   };
 }
 

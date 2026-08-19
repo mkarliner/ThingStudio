@@ -12,11 +12,19 @@
 // imported, specifically to catch drift: if this list and the real
 // NODE_FACTORIES ever disagree, that's exactly the kind of mismatch this
 // check exists to catch before a hand-edited flow file goes to a browser.
+//
+// wifi_status/udp_send/udp_receive added config-node-and-palette-
+// implementation-briefing.md (2026-08-18) -- config references
+// (`configs[].id`, a node's `wifiConfigId` property) aren't cross-checked
+// here yet (this script predates config nodes existing at all); a
+// dangling `wifiConfigId` is caught by the real compiler's
+// `ctx.resolveConfig()` at compile time instead (CompileError, "referenced
+// config ... not found"), not by this file's own lighter-weight checks.
 
 import { readFileSync } from "node:fs";
 import { parseFlowFile } from "../flow-file/flow-file.js";
 
-const KNOWN_KINDS = new Set(["inject", "function", "debug", "gpio_out", "timer", "interrupt"]);
+const KNOWN_KINDS = new Set(["inject", "function", "debug", "gpio_out", "timer", "interrupt", "wifi_status", "udp_send", "udp_receive"]);
 
 const path = process.argv[2];
 if (!path) {
@@ -26,7 +34,7 @@ if (!path) {
 
 const text = readFileSync(path, "utf8");
 const file = parseFlowFile(text);
-console.log(`parsed OK: ${file.nodes.length} node(s), ${file.edges.length} edge(s)`);
+console.log(`parsed OK: ${file.nodes.length} node(s), ${file.edges.length} edge(s), ${file.configs.length} config(s)`);
 
 let ok = true;
 for (const n of file.nodes) {

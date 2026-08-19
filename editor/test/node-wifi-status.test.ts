@@ -6,13 +6,21 @@
 // runGenerated. Uses the same two-pattern split: codegenSource called
 // directly for "does it read status correctly" (against pymock's network
 // module), source-text assertions for "does it compile into a sane flow."
+//
+// Config nodes (config-node-and-palette-implementation-briefing.md):
+// updated 2026-08-18 for the wifiConfigId behavior change -- see
+// wifi-status.ts's own header. `ctx` here is a small fake CodegenContext
+// whose `resolveConfig` reads from a local, per-test-populated map (via
+// `setConfig`), standing in for compile.ts's real configsById the same
+// way every other node test file's `ctx.uniqueName` stub already stands
+// in for compile.ts's real name-uniquing.
 
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
 import { compile } from "../src/compiler/compile.js";
 import { CompileError } from "../src/compiler/errors.js";
 import type { GraphData, GraphNode } from "../src/compiler/graph.js";
@@ -21,7 +29,23 @@ import { buildRegistry } from "../src/node-library/registry.js";
 import { wifiStatusNode } from "../src/node-library/wifi-status.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const ctx: CodegenContext = { uniqueName: (hint) => `_${hint}` };
+
+const fakeConfigs = new Map<string, Record<string, unknown>>();
+function setConfig(id: string, properties: Record<string, unknown>): void {
+  fakeConfigs.set(id, properties);
+}
+const ctx: CodegenContext = {
+  uniqueName: (hint) => `_${hint}`,
+  resolveConfig: (id) => {
+    const cfg = fakeConfigs.get(id);
+    if (!cfg) throw new CompileError(`referenced config "${id}" not found`);
+    return cfg;
+  },
+};
+
+beforeEach(() => {
+  fakeConfigs.clear();
+});
 
 function node(properties: Record<string, unknown>): GraphNode {
   return { id: 1, type: "thingstudio/wifi_status", properties };
@@ -61,14 +85,25 @@ describe("thingstudio/wifi_status node", () => {
     expect(output).toContain("'payload': False");
   });
 
-  it("does not call connect() when no ssid is configured", () => {
+  it("does not call connect() when no wifiConfigId is set", () => {
     const output = runSnippet("", { pollMs: 1000 });
     expect(output).not.toContain("WLAN_CONNECT");
   });
 
-  it("calls connect() with the configured ssid/password when ssid is set", () => {
-    const output = runSnippet("", { pollMs: 1000, ssid: "MyNetwork", password: "hunter2" });
+  it("does not call connect() when wifiConfigId is an empty string", () => {
+    const output = runSnippet("", { pollMs: 1000, wifiConfigId: "" });
+    expect(output).not.toContain("WLAN_CONNECT");
+  });
+
+  it("calls connect() with the referenced config's ssid/password when wifiConfigId is set", () => {
+    setConfig("wifi1", { ssid: "MyNetwork", password: "hunter2" });
+    const output = runSnippet("", { pollMs: 1000, wifiConfigId: "wifi1" });
     expect(output).toContain("WLAN_CONNECT STA_IF MyNetwork");
+  });
+
+  it("raises a CompileError referencing the missing id when wifiConfigId doesn't resolve", () => {
+    expect(() => wifiStatusNode.codegenSource!(node({ pollMs: 1000, wifiConfigId: "does-not-exist" }), ctx)).toThrow(CompileError);
+    expect(() => wifiStatusNode.codegenSource!(node({ pollMs: 1000, wifiConfigId: "does-not-exist" }), ctx)).toThrow(/referenced config "does-not-exist" not found/);
   });
 
   it("sets repeatMs from the configured pollMs", () => {
@@ -89,10 +124,11 @@ describe("thingstudio/wifi_status node", () => {
   it("compiles into a full flow with the expected structure (source text only -- not executed, see header)", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/wifi_status", properties: { pollMs: 3000, ssid: "MyNetwork", password: "hunter2" } },
+        { id: 1, type: "thingstudio/wifi_status", properties: { pollMs: 3000, wifiConfigId: "wifi1" } },
         { id: 2, type: "thingstudio/debug", properties: {} },
       ],
       links: [[1, 1, 0, 2, 0, "bool"]],
+      configs: [{ id: "wifi1", type: "thingstudio/config/wifi", properties: { ssid: "MyNetwork", password: "hunter2" } }],
     };
     const { source } = compile(graph, buildRegistry());
     expect(source).toContain("_wifi_sta = network.WLAN(network.STA_IF)");
@@ -102,18 +138,26 @@ describe("thingstudio/wifi_status node", () => {
     expect(source).toMatch(/runtime\.spawn\(/);
   });
 
-  it("dedups the shared wifi-sta setup statement across two wifi_status nodes (first one wins)", () => {
+  it("dedups the shared wifi-sta setup statement across two wifi_status nodes sharing one config (first one wins)", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/wifi_status", properties: { pollMs: 1000, ssid: "First", password: "a" } },
-        { id: 2, type: "thingstudio/wifi_status", properties: { pollMs: 2000, ssid: "Second", password: "b" } },
+        { id: 1, type: "thingstudio/wifi_status", properties: { pollMs: 1000, wifiConfigId: "wifi1" } },
+        { id: 2, type: "thingstudio/wifi_status", properties: { pollMs: 2000, wifiConfigId: "wifi1" } },
       ],
       links: [],
+      configs: [{ id: "wifi1", type: "thingstudio/config/wifi", properties: { ssid: "First", password: "a" } }],
     };
     const { source } = compile(graph, buildRegistry());
     expect(source.match(/_wifi_sta = network\.WLAN/g)?.length).toBe(1);
     // pyStringLiteral uses JSON.stringify -- double-quoted output.
     expect(source).toContain('"First"');
-    expect(source).not.toContain('"Second"');
+  });
+
+  it("compiling a flow with a dangling wifiConfigId raises a CompileError naming the missing config", () => {
+    const graph: GraphData = {
+      nodes: [{ id: 1, type: "thingstudio/wifi_status", properties: { pollMs: 1000, wifiConfigId: "no-such-config" } }],
+      links: [],
+    };
+    expect(() => compile(graph, buildRegistry())).toThrow(/referenced config "no-such-config" not found/);
   });
 });
