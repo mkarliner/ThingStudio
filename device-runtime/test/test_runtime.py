@@ -23,6 +23,7 @@ import runtime
 def _reset_runtime():
     runtime._tasks = []
     runtime.on_node_error = None
+    runtime._cleanups = {}
 
 
 def test_node_error_reported_with_correct_node_id():
@@ -172,6 +173,71 @@ def test_spawn_tracks_tasks_for_cancel_running():
     asyncio.run(scenario())
 
 
+def test_register_cleanup_runs_on_cancel_running():
+    # docs/working-notes/redeploy-cleanup-and-network-fault-detection-briefing.md,
+    # Problem 1: register_cleanup/cancel_running is the explicit,
+    # deterministic replacement for relying on GC timing to release an
+    # OS-level resource (e.g. a socket) a redeployed flow's module-level
+    # setup code claimed.
+    _reset_runtime()
+    closed = []
+    runtime.register_cleanup("sock", lambda: closed.append("sock"))
+
+    async def scenario():
+        await runtime.cancel_running()
+
+    asyncio.run(scenario())
+    assert closed == ["sock"]
+
+
+def test_register_cleanup_dedups_by_key_first_wins():
+    # Matches compile.ts's mergeSetup dedup precedent -- two nodes sharing
+    # one resource must not double-register (and double-close) it.
+    _reset_runtime()
+    closed = []
+    runtime.register_cleanup("sock", lambda: closed.append("first"))
+    runtime.register_cleanup("sock", lambda: closed.append("second"))
+
+    async def scenario():
+        await runtime.cancel_running()
+
+    asyncio.run(scenario())
+    assert closed == ["first"]
+
+
+def test_cleanup_registry_cleared_after_cancel_running():
+    # A stale cleanup from a prior deploy must not re-fire (e.g. against
+    # an already-closed socket) on a later redeploy that doesn't
+    # re-register it.
+    _reset_runtime()
+    calls = []
+    runtime.register_cleanup("sock", lambda: calls.append(1))
+
+    async def scenario():
+        await runtime.cancel_running()
+        await runtime.cancel_running()
+
+    asyncio.run(scenario())
+    assert calls == [1]
+
+
+def test_one_cleanup_raising_does_not_prevent_others_from_running():
+    _reset_runtime()
+    ran = []
+
+    def bad():
+        raise RuntimeError("close failed")
+
+    runtime.register_cleanup("bad", bad)
+    runtime.register_cleanup("good", lambda: ran.append("good"))
+
+    async def scenario():
+        await runtime.cancel_running()
+
+    asyncio.run(scenario())  # must not raise out of cancel_running/the scenario
+    assert ran == ["good"]
+
+
 minitest.run(
     [
         test_node_error_reported_with_correct_node_id,
@@ -181,5 +247,9 @@ minitest.run(
         test_cancellation_is_not_reported_as_a_node_error,
         test_report_callback_failure_does_not_crash_the_task,
         test_spawn_tracks_tasks_for_cancel_running,
+        test_register_cleanup_runs_on_cancel_running,
+        test_register_cleanup_dedups_by_key_first_wins,
+        test_cleanup_registry_cleared_after_cancel_running,
+        test_one_cleanup_raising_does_not_prevent_others_from_running,
     ]
 )

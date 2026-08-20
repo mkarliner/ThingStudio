@@ -41,6 +41,22 @@
 // http_request node works even with no wifi_status node in the same flow
 // -- whichever network node compiles first brings the station interface
 // up under the shared dedup key.
+//
+// **Still NOT migrated to config nodes** (outstanding-items.md's "Network
+// / config nodes" section; explicitly out of scope for
+// redeploy-cleanup-and-network-fault-detection-briefing.md's Problem 2b)
+// -- this node keeps reading raw `ssid`/`password` off its own
+// `properties` directly, not `resolveWifiCredentials()`/`wifiConfigId`.
+// Passes `wifiSetupStatement()` a fixed `"open"` `security` below
+// specifically to preserve this node's pre-existing behavior unchanged
+// now that `wifiSetupStatement()` validates password-required for
+// `"password"`-security callers -- `"open"` skips that check regardless
+// of whether `password` is actually empty, matching what this node
+// always did before that check existed (connect with whatever password is
+// set, empty or not, no validation). Not a claim that this node's network
+// is actually open; a deliberate compatibility shim until this node gets
+// the same config-node treatment udp-send.ts/udp-receive.ts/wifi-status.ts
+// already have.
 
 import { CompileError } from "../compiler/errors.js";
 import type { GraphNode } from "../compiler/graph.js";
@@ -133,7 +149,7 @@ return msg`.trim();
 
     return {
       imports: ["import network"],
-      statements: [wifiSetupStatement(node.properties.ssid, node.properties.password)],
+      statements: [wifiSetupStatement(node.properties.ssid, node.properties.password, "open")],
       functionName: ctx.uniqueName("http_request"),
       functionBody,
     };

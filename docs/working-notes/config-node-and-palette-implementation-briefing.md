@@ -330,6 +330,22 @@ pencil/add-new widget actually works, not just compiles.
 - **Whether a `wifiConfigId` reference is mandatory or stays optional**
   for the four non-MQTT node types (recommended: optional, see above) is
   a real behavior decision, not a default to sleepwalk into.
+  **Reversed 2026-08-20** (`redeploy-cleanup-and-network-fault-detection-
+  briefing.md`, Problem 2b, Mike's own explicit call): the "optional"
+  choice made here turned out to be exactly what let `wifi_status` report
+  a connection this flow never declared (ESP-IDF's NVS-cached station
+  config reconnecting on `.active(True)` alone, indistinguishable from a
+  connection this flow actually set up) -- a real hardware pass surfaced
+  this as the silently-ambiguous behavior `CLAUDE.md`'s fault-handling
+  priority argues against. `wifiConfigId` is mandatory as of that session
+  for `wifi_status`/`udp_send`/`udp_receive` (not `http_request`, still
+  unmigrated -- see that node's own header); the "ride on an existing
+  connection" case this optionality existed for still has a path, now
+  explicit rather than implicit: reference a config whose `security` is
+  `"unmanaged"` (`config-types.ts`). Recorded here so this file's own
+  account of "current state" doesn't read as still-accurate when a later
+  session reverses it -- see `wifi-status.ts`'s header for the full
+  reasoning.
 - **The second config type (`mqtt_broker`) is optional for this session**
   — don't let it displace the SSID fix if time runs short.
 - **Config objects live in a genuinely new store**, not folded into the

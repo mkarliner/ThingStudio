@@ -41,11 +41,35 @@
 #    NOT wrapped in NodeError (e.g. a bug in buildMsg itself, before any
 #    node-specific call) still gets reported, blamed on the chain's source
 #    node as a documented fallback rather than silently lost.
+#
+# 3. register_cleanup()/the _cleanups registry (added
+#    docs/working-notes/redeploy-cleanup-and-network-fault-detection-briefing.md,
+#    Problem 1) -- cancel_running() cancelling a task never touched any
+#    OS-level resource (a socket) that task's *module-level* setup code
+#    claimed, since that resource isn't owned by the cancelled task's own
+#    stack frame. The only thing that used to release it was the old
+#    `_flow` module object itself getting garbage-collected, which is
+#    exactly why redeploying the same flow twice back-to-back used to fail
+#    the first time with an EADDRINUSE-style OSError and succeed on the
+#    second -- collection timing, not anything deterministic. This
+#    registry is the explicit, symmetric counterpart to
+#    compile.ts's mergeSetup dedup on the setup side: a node's generated
+#    setup statement self-registers its own cleanup (e.g.
+#    `runtime.register_cleanup("udp-send-sock", lambda: _udp_send_sock.close())`)
+#    right where it creates the resource, and cancel_running() below is
+#    what actually calls every registered cleanup, deterministically, on
+#    every redeploy -- no longer relying on GC timing at all.
 
 import uasyncio as asyncio
 
 _tasks = []  # tasks spawned by the deployed flow -- tracked so a redeploy
              # can cancel exactly these, same bookkeeping as pocs/poc-a and pocs/poc-d.
+
+_cleanups = {}  # key -> callable; see this file's header, point 3. Keyed the
+                # same way setup-statement dedup already works
+                # (compile.ts's mergeSetup, "first node's code wins") so two
+                # nodes sharing one resource don't register (and double-close)
+                # it twice.
 
 # Set by listener.py once it's importable (device-runtime/src/listener.py)
 # so this module stays independently importable/testable without ever
@@ -127,6 +151,18 @@ def spawn(coro, node_id=None):
     return t
 
 
+def register_cleanup(key, fn):
+    """Registers a callable to run the next time the currently-deployed
+    flow is torn down (redeploy today; any future stop path would get this
+    for free too) -- see this file's header, point 3. Only the first
+    registration for a given key sticks, matching mergeSetup's own "first
+    node's code wins" precedent, so e.g. two udp_receive nodes
+    (incorrectly) sharing one port don't each register their own close on
+    what's actually one shared socket."""
+    if key not in _cleanups:
+        _cleanups[key] = fn
+
+
 async def cancel_running():
     global _tasks
     for t in _tasks:
@@ -136,3 +172,18 @@ async def cancel_running():
             pass
     _tasks = []
     await asyncio.sleep_ms(10)
+    # Cleanups run AFTER the grace period above, not before -- closing a
+    # socket out from under a task that's still mid-recvfrom()/sendto() on
+    # it (before cancellation has actually propagated) risks a confusing
+    # exception inside the task being torn down, instead of a clean
+    # CancelledError. Each cleanup gets its own try/except so one
+    # resource's failure to close cleanly can't block the others from
+    # running or crash the redeploy itself -- same "never let one failure
+    # kill the whole path" convention _report_error/_send_message_safe
+    # already follow in listener.py.
+    for key, fn in _cleanups.items():
+        try:
+            fn()
+        except Exception as e:  # noqa: BLE001 -- one resource's cleanup failing must never block the others or the redeploy itself
+            print("CLEANUP_ERR key=%s %r" % (key, e))
+    _cleanups.clear()

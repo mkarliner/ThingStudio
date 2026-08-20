@@ -46,7 +46,10 @@
       <div class="config-edit-header">editing {{ descriptor.label }} <span class="config-edit-id">#{{ editingId.slice(0, 6) }}</span></div>
       <label v-for="f in descriptor.fields" :key="f.name">
         {{ f.label }}
-        <input :type="f.kind === 'password' ? 'password' : f.kind === 'number' ? 'number' : 'text'" v-model="draft[f.name] as any" />
+        <select v-if="f.kind === 'select'" v-model="draft[f.name] as any">
+          <option v-for="opt in f.options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+        </select>
+        <input v-else :type="f.kind === 'password' ? 'password' : f.kind === 'number' ? 'number' : 'text'" v-model="draft[f.name] as any" />
       </label>
       <div class="config-edit-actions">
         <button type="button" @click="saveEdit">Save</button>

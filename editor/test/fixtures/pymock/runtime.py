@@ -46,6 +46,23 @@ if not hasattr(asyncio, "sleep_ms"):
     asyncio.sleep_ms = _sleep_ms
 
 
+# register_cleanup added 2026-08-20 (redeploy-cleanup-and-network-fault-
+# detection-briefing.md, Problem 1): udp-send.ts/udp-receive.ts's
+# generated setup statements now self-register a socket-close cleanup via
+# `runtime.register_cleanup(key, fn)` right where they create the socket.
+# This fixture doesn't need to ever actually invoke a registered cleanup
+# (no test here calls a redeploy-equivalent path) -- it just needs to
+# exist so running that generated setup code through this mock doesn't
+# raise AttributeError, mirroring the real runtime.py's dedup-by-key
+# contract closely enough to be a faithful stand-in either way.
+_cleanups = {}
+
+
+def register_cleanup(key, fn):
+    if key not in _cleanups:
+        _cleanups[key] = fn
+
+
 class NodeError(Exception):
     def __init__(self, node_id, orig):
         super().__init__(node_id, orig)

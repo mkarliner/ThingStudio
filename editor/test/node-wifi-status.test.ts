@@ -14,6 +14,17 @@
 // `setConfig`), standing in for compile.ts's real configsById the same
 // way every other node test file's `ctx.uniqueName` stub already stands
 // in for compile.ts's real name-uniquing.
+//
+// Updated again 2026-08-20 (redeploy-cleanup-and-network-fault-detection-
+// briefing.md, Problem 2b Option B): `wifiConfigId` is now mandatory, so
+// every test below that only cares about the reported connection state
+// (not about credentials) now points at a pre-populated "unmanaged1"
+// config (`security: "unmanaged"`) instead of omitting `wifiConfigId`
+// entirely the way it used to -- that's the explicit, labeled replacement
+// for what an omitted `wifiConfigId` used to mean implicitly. The old
+// "does not call connect() when no wifiConfigId is set" tests are gone;
+// omitting it is a CompileError now, covered by the new tests near the
+// bottom of this describe block instead.
 
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, writeFileSync } from "node:fs";
@@ -45,6 +56,9 @@ const ctx: CodegenContext = {
 
 beforeEach(() => {
   fakeConfigs.clear();
+  // Stand-in for "no managed connection" now that wifiConfigId is
+  // mandatory -- see this file's header.
+  setConfig("unmanaged1", { security: "unmanaged" });
 });
 
 function node(properties: Record<string, unknown>): GraphNode {
@@ -66,7 +80,7 @@ function runSnippet(preamble: string, properties: Record<string, unknown>): stri
 
 describe("thingstudio/wifi_status node", () => {
   it("reports payload False and ip '' when not connected", () => {
-    const output = runSnippet("network.WLAN.CONNECTED = False", { pollMs: 1000 });
+    const output = runSnippet("network.WLAN.CONNECTED = False", { pollMs: 1000, wifiConfigId: "unmanaged1" });
     expect(output).toContain("'payload': False");
     expect(output).toContain("'ip': ''");
   });
@@ -74,25 +88,41 @@ describe("thingstudio/wifi_status node", () => {
   it("reports payload True and the real ifconfig IP when connected", () => {
     const output = runSnippet(
       "network.WLAN.CONNECTED = True\nnetwork.WLAN.IFCONFIG = ('192.168.1.42', '255.255.255.0', '192.168.1.1', '8.8.8.8')",
-      { pollMs: 1000 },
+      { pollMs: 1000, wifiConfigId: "unmanaged1" },
     );
     expect(output).toContain("'payload': True");
     expect(output).toContain("'ip': '192.168.1.42'");
   });
 
   it("defaults to False if nothing has driven the connection state", () => {
-    const output = runSnippet("", { pollMs: 1000 });
+    const output = runSnippet("", { pollMs: 1000, wifiConfigId: "unmanaged1" });
     expect(output).toContain("'payload': False");
   });
 
-  it("does not call connect() when no wifiConfigId is set", () => {
-    const output = runSnippet("", { pollMs: 1000 });
+  it("does not call connect() when the referenced config's security is 'unmanaged'", () => {
+    const output = runSnippet("", { pollMs: 1000, wifiConfigId: "unmanaged1" });
     expect(output).not.toContain("WLAN_CONNECT");
   });
 
-  it("does not call connect() when wifiConfigId is an empty string", () => {
-    const output = runSnippet("", { pollMs: 1000, wifiConfigId: "" });
-    expect(output).not.toContain("WLAN_CONNECT");
+  it("throws a CompileError when wifiConfigId is not set (Problem 2b Option B: mandatory as of 2026-08-20)", () => {
+    expect(() => wifiStatusNode.codegenSource!(node({ pollMs: 1000 }), ctx)).toThrow(CompileError);
+    expect(() => wifiStatusNode.codegenSource!(node({ pollMs: 1000 }), ctx)).toThrow(/wifi_status requires a WiFi config/);
+  });
+
+  it("throws a CompileError when wifiConfigId is an empty string", () => {
+    expect(() => wifiStatusNode.codegenSource!(node({ pollMs: 1000, wifiConfigId: "" }), ctx)).toThrow(/wifi_status requires a WiFi config/);
+  });
+
+  it("throws a CompileError when the referenced config has security 'password' (the default) and an empty password", () => {
+    setConfig("nopw", { ssid: "MyNetwork", password: "" });
+    expect(() => wifiStatusNode.codegenSource!(node({ pollMs: 1000, wifiConfigId: "nopw" }), ctx)).toThrow(CompileError);
+    expect(() => wifiStatusNode.codegenSource!(node({ pollMs: 1000, wifiConfigId: "nopw" }), ctx)).toThrow(/has no password but security is "password"/);
+  });
+
+  it("connects with an empty password when the referenced config's security is 'open'", () => {
+    setConfig("openNet", { ssid: "GuestNet", password: "", security: "open" });
+    const output = runSnippet("", { pollMs: 1000, wifiConfigId: "openNet" });
+    expect(output).toContain("WLAN_CONNECT STA_IF GuestNet");
   });
 
   it("calls connect() with the referenced config's ssid/password when wifiConfigId is set", () => {
@@ -107,12 +137,12 @@ describe("thingstudio/wifi_status node", () => {
   });
 
   it("sets repeatMs from the configured pollMs", () => {
-    const result = wifiStatusNode.codegenSource!(node({ pollMs: 2000 }), ctx);
+    const result = wifiStatusNode.codegenSource!(node({ pollMs: 2000, wifiConfigId: "unmanaged1" }), ctx);
     expect(result.repeatMs).toBe(2000);
   });
 
   it("defaults pollMs to 5000ms when not configured", () => {
-    const result = wifiStatusNode.codegenSource!(node({}), ctx);
+    const result = wifiStatusNode.codegenSource!(node({ wifiConfigId: "unmanaged1" }), ctx);
     expect(result.repeatMs).toBe(5000);
   });
 

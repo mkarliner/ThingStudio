@@ -77,7 +77,18 @@
 // node via `node.properties.wifiConfigId`, resolved through
 // wifi-status.ts's `resolveWifiCredentials()`, not raw `ssid`/`password`
 // properties on this node directly. See wifi-status.ts's own header for
-// the full reasoning.
+// the full reasoning. **`wifiConfigId` made mandatory 2026-08-20** --
+// same reversal as udp-send.ts, see wifi-status.ts's header.
+//
+// Redeploy resource cleanup + loud network errors (redeploy-cleanup-and-
+// network-fault-detection-briefing.md, Problems 1 and 2a) -- same
+// treatment as udp-send.ts, see that file's header for the full
+// reasoning: the per-port socket setup statement below now self-registers
+// a `runtime.register_cleanup()` call, and a non-EAGAIN OSError out of the
+// recvfrom() retry loop is re-raised with this node's own bound port
+// folded into the message (there's no remote host to report here --
+// nothing's been received yet -- so the port this node is bound to is the
+// diagnosable context instead).
 
 import { CompileError } from "../compiler/errors.js";
 import type { GraphNode } from "../compiler/graph.js";
@@ -130,23 +141,27 @@ export const udpReceiveNode: NodeDefinition = {
       "        break",
       "    except OSError as _e:",
       "        if _e.errno != errno.EAGAIN:",
-      "            raise",
+      `            raise OSError("udp_receive on port ${port} failed: %r" % (_e,))`,
       `        await asyncio.sleep_ms(${pollMs})`,
       "msg = {'payload': _udp_data, 'topic': '', 'host': _udp_addr[0], 'port': _udp_addr[1]}",
     ].join("\n");
 
-    const { ssid, password } = resolveWifiCredentials(node.properties, ctx);
+    const { ssid, password, security } = resolveWifiCredentials(node.properties, ctx, "udp_receive");
 
+    const setupKey = `udp-receive-${port}`;
     return {
       imports: ["import socket", "import errno", "import network"],
       statements: [
         {
-          key: `udp-receive-${port}`,
-          code: [`${sockVar} = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)`, `${sockVar}.setblocking(False)`, `${sockVar}.bind(('0.0.0.0', ${port}))`].join(
-            "\n",
-          ),
+          key: setupKey,
+          code: [
+            `${sockVar} = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)`,
+            `${sockVar}.setblocking(False)`,
+            `${sockVar}.bind(('0.0.0.0', ${port}))`,
+            `runtime.register_cleanup(${JSON.stringify(setupKey)}, lambda: ${sockVar}.close())`,
+          ].join("\n"),
         },
-        wifiSetupStatement(ssid, password),
+        wifiSetupStatement(ssid, password, security),
       ],
       buildMsg,
       repeatMs: MANDATORY_YIELD_MS,

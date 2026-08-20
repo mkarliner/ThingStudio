@@ -126,7 +126,7 @@
           :model-value="node.properties.wifiConfigId || undefined"
           @update:model-value="(id) => setWifiConfigId(id)"
         />
-        <p class="hint">No config selected -- the interface still comes up, but nothing connects (matches today's "no ssid" behavior).</p>
+        <p class="hint">Required -- won't compile without one. Pick "unmanaged" on the config if this flow intentionally rides on a connection managed outside it (e.g. a captive-portal-provisioned device).</p>
       </template>
 
       <template v-else-if="node.kind === 'udp_send'">
@@ -144,6 +144,7 @@
           :model-value="node.properties.wifiConfigId || undefined"
           @update:model-value="(id) => setWifiConfigId(id)"
         />
+        <p class="hint">Required -- won't compile without one. Pick "unmanaged" on the config if this flow intentionally rides on a connection managed outside it.</p>
       </template>
 
       <template v-else-if="node.kind === 'udp_receive'">
@@ -158,6 +159,7 @@
           :model-value="node.properties.wifiConfigId || undefined"
           @update:model-value="(id) => setWifiConfigId(id)"
         />
+        <p class="hint">Required -- won't compile without one. Pick "unmanaged" on the config if this flow intentionally rides on a connection managed outside it.</p>
       </template>
 
       <template v-else-if="node.kind === 'debug'">

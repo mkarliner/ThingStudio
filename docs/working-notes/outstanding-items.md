@@ -24,20 +24,29 @@ ones.
 
 ## Next up (already flagged before this audit, unstarted)
 
-- **`redeploy-cleanup-and-network-fault-detection-briefing.md`** — written
-  the session before this one, zero of it implemented. This project's own
-  sequencing rule (per this consolidation's own briefing) is that this is
-  the next real implementation session. Three sub-items, all reproduced
-  and root-caused, none fixed yet:
-  1. Redeploying the same flow twice back-to-back fails the first time
-     with an `EADDRINUSE`-style `OSError`, succeeds on retry — a socket
-     isn't released on redeploy.
-  2. `wifi_status` reports `payload=True` (connected) even when no WiFi
-     config was ever set up — should barf loudly on undefined network
-     details instead of silently reporting a false positive
-     (`CLAUDE.md`'s fault-handling priority, invoked by name).
-  3. The `thingstudio/config/wifi` config type has no way to declare an
-     intentionally open (no-password) network.
+- ~~**`redeploy-cleanup-and-network-fault-detection-briefing.md`**~~ —
+  **implemented 2026-08-20**, all three sub-items: (1) `runtime.py` gained
+  an explicit `register_cleanup`/`cancel_running` cleanup registry, closed
+  over by `udp-send.ts`/`udp-receive.ts`'s own setup statements, replacing
+  the GC-timing-dependent redeploy socket leak; (2) `wifiConfigId` is now
+  mandatory for `wifi_status`/`udp_send`/`udp_receive` (Mike's own Option
+  B call), with a new `"unmanaged"` config `security` state as the
+  explicit opt-out (see the new "WiFi provisioning / captive portal" item
+  below for why that state exists); (3) `thingstudio/config/wifi` gained a
+  `security: "password" | "open" | "unmanaged"` field, with an empty
+  password on `"password"`-security now a compile-time `CompileError`.
+  `device-runtime`'s off-device tests (11/11, including 4 new ones) pass
+  against a freshly-built real MicroPython unix-port binary; the editor
+  suite (262/262 across 29 files, up from 251) passes via `tsc --noEmit` +
+  `vitest run`. **Still owed, not done this session (needs Mike, real
+  hardware)**: the actual real-hardware pass this briefing's own success
+  criteria require — redeploying `udp-echo-tester.flow.json` twice
+  back-to-back with no `EADDRINUSE`, and confirming a real network
+  failure's `NODE_ERROR` message is actually diagnosable on-device, not
+  just in the generated source. `http_request`/`mqtt-shared.ts` did NOT
+  get the Problem 2a loud-error treatment (briefing flagged this as a
+  judgment call, not mandated) — still open, see "Network / config nodes"
+  below, unchanged.
 
 - **`rp2350-bringup-briefing.md`** — written as the follow-up to the
   RP2040 bring-up session; never executed (no matching commit in
@@ -106,6 +115,36 @@ ones.
   palette entry, unreachable from the actual editor UI. This is a large,
   currently-invisible gap between "the node library" and "what a user can
   actually drag onto the canvas."
+
+## WiFi provisioning / captive portal
+
+- **Tasmota-style soft-AP + captive-portal WiFi fallback — raised by Mike
+  2026-08-20, no design or scope exists anywhere yet.** When the device
+  can't connect to its configured network, it would fall back to hosting
+  its own AP with a captive portal, letting a user scan for and pick a
+  real network (and presumably persist the result, likely via ESP-IDF's
+  own NVS station-config caching — the same mechanism that turned out to
+  be the root cause of Problem 2b above). **Mike's own note: he believes
+  there's existing MicroPython code for this already** — worth checking
+  before building from scratch (a common pattern with several published
+  implementations, e.g. search "MicroPython captive portal WiFiManager");
+  not verified or evaluated yet, just recorded so whoever scopes this
+  doesn't start from zero.
+  Directly relevant to `redeploy-cleanup-and-network-fault-detection-
+  briefing.md`'s Problem 2b (`wifi-status.ts`'s header, `decisions.md`'s
+  new "Redeploy / network fault handling" section): making `wifiConfigId`
+  mandatory for `wifi_status`/`udp_send`/`udp_receive` would have
+  foreclosed this direction outright if there were no way for a flow to
+  say "something else manages this connection." The new `security:
+  "unmanaged"` state on `thingstudio/config/wifi` exists specifically to
+  keep this door open — a flow that wants to ride on a captive-portal-
+  provisioned connection references an `"unmanaged"` config rather than
+  omitting `wifiConfigId` (which is now a compile error). That state is
+  built; the actual captive-portal/soft-AP provisioning mechanism itself
+  (a device-runtime boot-time subsystem, most likely, not a flow/node
+  concept at all) is not — needs its own dedicated scoping session before
+  any implementation starts, same as "Node authoring / extensibility"
+  below.
 
 ## Node authoring / extensibility
 
@@ -328,6 +367,37 @@ zero code has been written against any of them yet.
 
 Whoever picks this up should treat it as one coherent, currently-unstarted
 body of work, not three independent small tasks.
+
+- **Explicit cross-platform requirement, added by Mike 2026-08-20
+  (`mikes-questions-and-points.md`, "# Platforms"): the editor/backend
+  must support macOS, Windows, and Linux.** Not a new architectural
+  direction — Python + `aiohttp` + `pyserial` (above) is already
+  cross-platform in principle, and this was implicitly part of why
+  Electron/Tauri were ruled out (`decisions.md`'s "Backend" section) —
+  but it was never stated as an explicit requirement anywhere, and
+  nothing about actual per-OS behavior has been verified (serial port
+  naming/permissions differ by OS, WebSerial/Web Bluetooth browser
+  support differs by OS+browser per `architecture-review-briefing.md`'s
+  own learnings). Worth confirming this holds once the backend actually
+  gets built, not assumed from the platform choice alone.
+
+## Board/processor reference data
+
+- **A local, maintained folder of board and processor definitions —
+  raised by Mike 2026-08-20 (`mikes-questions-and-points.md`, "# Working
+  docs"), not scoped anywhere yet.** The ask: stop re-deriving/re-fetching
+  board and processor specs from websites each time they're needed;
+  keep a curated local reference instead, including notes on which pins
+  are advisable/inadvisable to use per board, kept up to date as new
+  boards/processors are supported. Distinct from, but a likely data
+  dependency of, three already-open UI items above: "Named/labeled pin
+  mapping" (a flow author's own per-project pin names), "Machine/board-
+  specific node collections" (palette filtering by board), and "Editor
+  board-awareness" (warn on bad pins for the target board) — all three
+  would plausibly read from this reference data once it exists, rather
+  than each inventing their own board-fact source. Not scoped as its own
+  design; whoever picks up any of those three UI items should check
+  whether this reference folder needs to exist first.
 
 ## Docs / process
 

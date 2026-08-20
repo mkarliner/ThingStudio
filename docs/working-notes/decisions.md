@@ -195,6 +195,38 @@ Same convention already established for `docs/third-party-licenses.md`.
   change, keeps a config-less flow compiling exactly as before. Same
   note.
 
+## Redeploy / network fault handling
+
+- **2026-08-20 — Explicit cleanup registry (`runtime.register_cleanup`/
+  `cancel_running`), not GC-timing reordering, fixes the redeploy socket
+  leak.** A `gc.collect()` reorder would only make the `EADDRINUSE` flake
+  less frequent, still relying on incidental collection timing for
+  something that needs to be deterministic. `redeploy-cleanup-and-
+  network-fault-detection-briefing.md` Problem 1, `runtime.py`.
+- **2026-08-20 — `wifiConfigId` made mandatory for `wifi_status`/
+  `udp_send`/`udp_receive` (Option B), reversing the config-node
+  briefing's "optional" call.** The optional/implicit fallback was
+  exactly what let `wifi_status` report a connection the flow never
+  declared. `http_request` is untouched (still unmigrated to config
+  nodes at all). Mike's own explicit sign-off, not a default. Same
+  briefing, Problem 2b; see `config-node-and-palette-implementation-
+  briefing.md`'s own retroactive note.
+- **2026-08-20 — WiFi config `security` field: `"password"` (default) |
+  `"open"` | `"unmanaged"`, not just the two the briefing scoped.** The
+  third state (`"unmanaged"` -- no managed connection, ride on whatever
+  the device already has) is the explicit, labeled replacement for what
+  an omitted `wifiConfigId` used to mean implicitly, kept specifically so
+  Option B's mandatory-config rule doesn't foreclose a future captive-
+  portal/AP-fallback WiFi provisioning flow (raised by Mike 2026-08-20,
+  not built or scoped -- see `outstanding-items.md`). An empty password
+  on a `"password"`-security config is a compile-time `CompileError`.
+  `config-types.ts`, `wifi-status.ts`.
+- **2026-08-20 — Network OSError messages re-raised with host:port
+  context, `udp_send`/`udp_receive` only.** `http_request`/`mqtt-
+  shared.ts` left untouched -- the briefing flagged touching them as a
+  judgment call, not mandated; not done this session, still open for
+  whoever picks it up next.
+
 ## What this list doesn't include
 
 Small per-file implementation judgment calls (exact property names, which

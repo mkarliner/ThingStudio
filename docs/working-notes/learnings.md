@@ -165,6 +165,24 @@ when a sandboxed `npx tsc --noEmit` silently doesn't respect the flag
   a stated policy position from both Firefox and Safari, not a lagging
   gap that will close. `architecture-review-briefing.md`.
 
+## Cowork remote-device testing environment
+
+- **`device_bash`'s desktop workspace is a Linux VM, not literally Mike's
+  macOS host -- a `node_modules` with platform-specific native bindings
+  (installed on the real Mac) doesn't work there.** Confirmed 2026-08-20:
+  `npx vitest run` via `device_bash` failed with "Cannot find native
+  binding" (rolldown's `@rolldown/binding-darwin-x64` vs. the VM's own
+  `linux x86_64`). `./node_modules/.bin/tsc --noEmit` worked fine there
+  (pure JS, no native binding) -- only tools with a platform-specific
+  compiled dependency hit this. Workaround: tar the project (excluding
+  `node_modules`) into the connected folder, stage it, extract into the
+  cloud session's own workspace (which has network), `npm ci` fresh there
+  (pulls the right platform's bindings automatically), run the real test
+  suite there instead. Worth trying `device_bash` first for any future
+  session's test run (cheaper, no extra hop) but don't be surprised by
+  this failure mode or waste time debugging it as if it were a real bug --
+  it's an environment mismatch, not a code problem.
+
 ## Reusable patterns worth remembering
 
 - **A bounded, drop-oldest ring buffer for queued outbound messages** —

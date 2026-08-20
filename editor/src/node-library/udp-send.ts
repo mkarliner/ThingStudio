@@ -53,9 +53,30 @@
 // `node.properties.wifiConfigId`, resolved through wifi-status.ts's
 // `resolveWifiCredentials()`, not raw `ssid`/`password` properties on this
 // node directly. See wifi-status.ts's own header for the full reasoning
-// (Mike's explicit mandate) and why this stays optional rather than
-// mandatory -- no `wifiConfigId` behaves exactly like an empty ssid always
-// has (interface brought up, no connect call).
+// (Mike's explicit mandate). **`wifiConfigId` made mandatory 2026-08-20**
+// (redeploy-cleanup-and-network-fault-detection-briefing.md, Problem 2b
+// Option B) -- see wifi-status.ts's header for the reversal and why (the
+// silent "no config -> ride on whatever's connected" fallback is exactly
+// what let a stale/unrelated connection look like this flow's own).
+//
+// Redeploy resource cleanup (same briefing, Problem 1): the socket setup
+// statement below now self-registers a `runtime.register_cleanup()` call
+// closing the shared send socket -- device-runtime/src/runtime.py's
+// `cancel_running()` is what actually calls it on every redeploy, closing
+// the real root cause (an OS-level socket, owned by the old `_flow`
+// module, that cancelling its task never touched) instead of relying on
+// GC timing, which is what made "redeploy twice, first one fails with
+// EADDRINUSE, second one works" flaky rather than deterministic.
+//
+// Loud network errors (same briefing, Problem 2a): an OSError from either
+// `getaddrinfo()` or the bounded `sendto()` retry loop is now re-raised
+// with the operation's own host:port context folded into the message,
+// before it reaches runtime.py's NodeError/_guarded machinery -- that
+// machinery already reports node ID + exception type accurately; the fix
+// is making the message itself diagnosable (Mike's actual repro: a bare
+// `OSError: -202`, an undocumented errno, gives no way to tell whether
+// the target was unreachable, a DNS failure, or something else without
+// opening generated source).
 
 import { CompileError } from "../compiler/errors.js";
 import type { GraphNode } from "../compiler/graph.js";
@@ -106,27 +127,34 @@ export const udpSendNode: NodeDefinition = {
     const functionBody = `
 ${payloadToBytesSnippet("_udp_body")}
 async def ${sendFnName}():
-    _udp_target = socket.getaddrinfo(${hostLit}, ${port})[0][-1]
+    try:
+        _udp_target = socket.getaddrinfo(${hostLit}, ${port})[0][-1]
+    except OSError as _e:
+        raise OSError("udp_send: could not resolve %s:%s: %r" % (${hostLit}, ${port}, _e))
     while True:
         try:
             ${UDP_SEND_SOCK_VAR}.sendto(_udp_body, _udp_target)
             return
         except OSError as _e:
             if _e.errno != errno.EAGAIN:
-                raise
+                raise OSError("udp_send to %s:%s failed: %r" % (${hostLit}, ${port}, _e))
             await asyncio.sleep_ms(${SEND_RETRY_POLL_MS})
 await asyncio.wait_for(${sendFnName}(), ${timeoutS})`.trim();
 
-    const { ssid, password } = resolveWifiCredentials(node.properties, ctx);
+    const { ssid, password, security } = resolveWifiCredentials(node.properties, ctx, "udp_send");
 
     return {
       imports: ["import socket", "import errno", "import network"],
       statements: [
         {
           key: UDP_SEND_SETUP_KEY,
-          code: [`${UDP_SEND_SOCK_VAR} = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)`, `${UDP_SEND_SOCK_VAR}.setblocking(False)`].join("\n"),
+          code: [
+            `${UDP_SEND_SOCK_VAR} = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)`,
+            `${UDP_SEND_SOCK_VAR}.setblocking(False)`,
+            `runtime.register_cleanup(${JSON.stringify(UDP_SEND_SETUP_KEY)}, lambda: ${UDP_SEND_SOCK_VAR}.close())`,
+          ].join("\n"),
         },
-        wifiSetupStatement(ssid, password),
+        wifiSetupStatement(ssid, password, security),
       ],
       functionName: ctx.uniqueName("udp_send"),
       functionBody,

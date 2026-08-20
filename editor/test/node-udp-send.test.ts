@@ -35,6 +35,14 @@
 // updated 2026-08-18 for the wifiConfigId behavior change -- see
 // wifi-status.ts's own header. Same fake-resolveConfig-via-local-map
 // pattern node-wifi-status.test.ts uses.
+//
+// Updated again 2026-08-20 (redeploy-cleanup-and-network-fault-detection-
+// briefing.md, Problems 1/2a/2b): wifiConfigId is now mandatory, so every
+// test below that isn't specifically about credentials points at a
+// pre-populated "unmanaged1" config (same pattern node-wifi-status.test.ts
+// uses) instead of omitting wifiConfigId. New tests cover the
+// register_cleanup self-registration (Problem 1) and the host:port-
+// qualified OSError re-raise (Problem 2a).
 
 import { execFile } from "node:child_process";
 import dgram from "node:dgram";
@@ -68,6 +76,9 @@ const ctx: CodegenContext = {
 
 beforeEach(() => {
   fakeConfigs.clear();
+  // Stand-in for "no managed connection" now that wifiConfigId is
+  // mandatory -- see this file's header.
+  setConfig("unmanaged1", { security: "unmanaged" });
 });
 
 function node(properties: Record<string, unknown>): GraphNode {
@@ -140,20 +151,20 @@ describe("thingstudio/udp_send node", () => {
   });
 
   it("sends the inbound string payload as UTF-8 bytes to the configured host:port", async () => {
-    await runSend({ host: "127.0.0.1", port, timeoutMs: 2000 }, "hello udp");
+    await runSend({ host: "127.0.0.1", port, timeoutMs: 2000, wifiConfigId: "unmanaged1" }, "hello udp");
     await waitFor(() => received.length > 0);
     expect(received[0]!.msg.toString("utf8")).toBe("hello udp");
   });
 
   it("stringifies a non-string, non-bytes payload before sending", async () => {
-    await runSend({ host: "127.0.0.1", port, timeoutMs: 2000 }, 42);
+    await runSend({ host: "127.0.0.1", port, timeoutMs: 2000, wifiConfigId: "unmanaged1" }, 42);
     await waitFor(() => received.length > 0);
     expect(received[0]!.msg.toString("utf8")).toBe("42");
   });
 
   it("two udp_send nodes share one socket setup (dedup)", async () => {
-    const resultA = udpSendNode.codegenSink!(node({ host: "127.0.0.1", port }), ctx);
-    const resultB = udpSendNode.codegenSink!(node({ host: "127.0.0.1", port }), ctx);
+    const resultA = udpSendNode.codegenSink!(node({ host: "127.0.0.1", port, wifiConfigId: "unmanaged1" }), ctx);
+    const resultB = udpSendNode.codegenSink!(node({ host: "127.0.0.1", port, wifiConfigId: "unmanaged1" }), ctx);
     expect(resultA.statements?.[0]?.code).toBe(resultB.statements?.[0]?.code);
     expect(resultA.statements?.[0]?.key).toBe(resultB.statements?.[0]?.key);
   });
@@ -173,20 +184,38 @@ describe("thingstudio/udp_send node", () => {
   });
 
   it("defaults timeoutMs to 2000ms", () => {
-    const result = udpSendNode.codegenSink!(node({ host: "h", port: 1 }), ctx);
+    const result = udpSendNode.codegenSink!(node({ host: "h", port: 1, wifiConfigId: "unmanaged1" }), ctx);
     expect(result.functionBody).toMatch(/,\s*2\)/); // 2000ms -> 2s
   });
 
   it("uses a non-blocking socket so the retry loop's EAGAIN branch is reachable, not decorative", () => {
-    const result = udpSendNode.codegenSink!(node({ host: "h", port: 1 }), ctx);
+    const result = udpSendNode.codegenSink!(node({ host: "h", port: 1, wifiConfigId: "unmanaged1" }), ctx);
     expect(result.statements?.[0]?.code).toContain(".setblocking(False)");
     expect(result.functionBody).toContain("except OSError as _e:");
     expect(result.functionBody).toContain("errno.EAGAIN");
     expect(result.functionBody).toMatch(/await asyncio\.wait_for\(/);
   });
 
-  it("brings the WiFi station interface up even with no wifiConfigId configured", () => {
-    const result = udpSendNode.codegenSink!(node({ host: "h", port: 1 }), ctx);
+  it("registers a runtime cleanup that closes the shared send socket, keyed to the same 'udp-send-sock' dedup key (Problem 1)", () => {
+    const result = udpSendNode.codegenSink!(node({ host: "h", port: 1, wifiConfigId: "unmanaged1" }), ctx);
+    expect(result.statements?.[0]?.key).toBe("udp-send-sock");
+    expect(result.statements?.[0]?.code).toContain('runtime.register_cleanup("udp-send-sock"');
+    expect(result.statements?.[0]?.code).toContain("_udp_send_sock.close()");
+  });
+
+  it("re-raises a non-EAGAIN OSError with the target host:port folded into the message (Problem 2a)", () => {
+    const result = udpSendNode.codegenSink!(node({ host: "example.invalid", port: 4242, wifiConfigId: "unmanaged1" }), ctx);
+    expect(result.functionBody).toContain('raise OSError("udp_send to %s:%s failed: %r" % ("example.invalid", 4242, _e))');
+    expect(result.functionBody).toContain('raise OSError("udp_send: could not resolve %s:%s: %r" % ("example.invalid", 4242, _e))');
+  });
+
+  it("throws a CompileError when wifiConfigId is not set (Problem 2b Option B: mandatory as of 2026-08-20)", () => {
+    expect(() => udpSendNode.codegenSink!(node({ host: "h", port: 1 }), ctx)).toThrow(CompileError);
+    expect(() => udpSendNode.codegenSink!(node({ host: "h", port: 1 }), ctx)).toThrow(/udp_send requires a WiFi config/);
+  });
+
+  it("brings the WiFi station interface up with no connect call when the referenced config's security is 'unmanaged'", () => {
+    const result = udpSendNode.codegenSink!(node({ host: "h", port: 1, wifiConfigId: "unmanaged1" }), ctx);
     expect(result.statements?.[1]?.key).toBe("wifi-sta");
     expect(result.statements?.[1]?.code).toContain("network.WLAN(network.STA_IF)");
     expect(result.statements?.[1]?.code).toContain(".active(True)");
@@ -198,6 +227,11 @@ describe("thingstudio/udp_send node", () => {
     const result = udpSendNode.codegenSink!(node({ host: "h", port: 1, wifiConfigId: "wifi1" }), ctx);
     expect(result.statements?.[1]?.code).toContain(".connect(");
     expect(result.statements?.[1]?.code).toContain('"MyNet"');
+  });
+
+  it("throws a CompileError when the referenced config has security 'password' (the default) and an empty password", () => {
+    setConfig("nopw", { ssid: "MyNet", password: "" });
+    expect(() => udpSendNode.codegenSink!(node({ host: "h", port: 1, wifiConfigId: "nopw" }), ctx)).toThrow(/has no password but security is "password"/);
   });
 
   it("raises a CompileError referencing the missing id when wifiConfigId doesn't resolve", () => {

@@ -44,6 +44,12 @@
 // updated 2026-08-18 for the wifiConfigId behavior change -- see
 // wifi-status.ts's own header. Same fake-resolveConfig-via-local-map
 // pattern node-wifi-status.test.ts/node-udp-send.test.ts use.
+//
+// Updated again 2026-08-20 (redeploy-cleanup-and-network-fault-detection-
+// briefing.md, Problems 1/2a/2b): wifiConfigId is now mandatory -- see
+// node-udp-send.test.ts's own header for the same pattern applied here
+// ("unmanaged1" stand-in config). New tests cover register_cleanup
+// (Problem 1) and the port-qualified OSError re-raise (Problem 2a).
 
 import { spawn } from "node:child_process";
 import dgram from "node:dgram";
@@ -76,6 +82,7 @@ const ctx: CodegenContext = {
 
 beforeEach(() => {
   fakeConfigs.clear();
+  setConfig("unmanaged1", { security: "unmanaged" });
 });
 
 function node(properties: Record<string, unknown>): GraphNode {
@@ -200,7 +207,7 @@ function freshPort(): number {
 describe("thingstudio/udp_receive node", () => {
   it("receives a datagram as bytes payload with the sender's host/port", async () => {
     const port = freshPort();
-    const output = await runReceive({ port }, [Buffer.from("hello udp", "utf8")]);
+    const output = await runReceive({ port, wifiConfigId: "unmanaged1" }, [Buffer.from("hello udp", "utf8")]);
     expect(output).toContain("b'hello udp'");
     expect(output).toContain("'host': '127.0.0.1'");
     expect(output).toMatch(/'port': \d+/);
@@ -208,7 +215,7 @@ describe("thingstudio/udp_receive node", () => {
 
   it("receives multiple datagrams in order, one msg per datagram", async () => {
     const port = freshPort();
-    const output = await runReceive({ port, pollMs: 5 }, [Buffer.from("first"), Buffer.from("second")]);
+    const output = await runReceive({ port, pollMs: 5, wifiConfigId: "unmanaged1" }, [Buffer.from("first"), Buffer.from("second")]);
     const firstIdx = output.indexOf("b'first'");
     const secondIdx = output.indexOf("b'second'");
     expect(firstIdx).toBeGreaterThanOrEqual(0);
@@ -225,31 +232,48 @@ describe("thingstudio/udp_receive node", () => {
   });
 
   it("defaults pollMs to 20ms", () => {
-    const result = udpReceiveNode.codegenSource!(node({ port: 1000 }), ctx);
+    const result = udpReceiveNode.codegenSource!(node({ port: 1000, wifiConfigId: "unmanaged1" }), ctx);
     expect(result.buildMsg).toContain("asyncio.sleep_ms(20)");
   });
 
   it("repeatMs is a small fixed mandatory yield, not the poll interval (see header)", () => {
-    const result = udpReceiveNode.codegenSource!(node({ port: 1000, pollMs: 500 }), ctx);
+    const result = udpReceiveNode.codegenSource!(node({ port: 1000, pollMs: 500, wifiConfigId: "unmanaged1" }), ctx);
     expect(result.repeatMs).toBe(10);
     expect(result.buildMsg).toContain("asyncio.sleep_ms(500)");
   });
 
   it("binds a non-blocking socket on the configured port", () => {
-    const result = udpReceiveNode.codegenSource!(node({ port: 4242 }), ctx);
+    const result = udpReceiveNode.codegenSource!(node({ port: 4242, wifiConfigId: "unmanaged1" }), ctx);
     expect(result.statements?.[0]?.code).toContain("setblocking(False)");
     expect(result.statements?.[0]?.code).toContain("bind(('0.0.0.0', 4242))");
   });
 
+  it("registers a runtime cleanup that closes the port's socket, keyed the same as the socket setup statement (Problem 1)", () => {
+    const result = udpReceiveNode.codegenSource!(node({ port: 4242, wifiConfigId: "unmanaged1" }), ctx);
+    expect(result.statements?.[0]?.key).toBe("udp-receive-4242");
+    expect(result.statements?.[0]?.code).toContain('runtime.register_cleanup("udp-receive-4242"');
+    expect(result.statements?.[0]?.code).toContain("_udp_recv_sock_4242.close()");
+  });
+
+  it("re-raises a non-EAGAIN OSError with the bound port folded into the message (Problem 2a)", () => {
+    const result = udpReceiveNode.codegenSource!(node({ port: 4242, wifiConfigId: "unmanaged1" }), ctx);
+    expect(result.buildMsg).toContain('raise OSError("udp_receive on port 4242 failed: %r" % (_e,))');
+  });
+
+  it("throws a CompileError when wifiConfigId is not set (Problem 2b Option B: mandatory as of 2026-08-20)", () => {
+    expect(() => udpReceiveNode.codegenSource!(node({ port: 4242 }), ctx)).toThrow(CompileError);
+    expect(() => udpReceiveNode.codegenSource!(node({ port: 4242 }), ctx)).toThrow(/udp_receive requires a WiFi config/);
+  });
+
   it("two udp_receive nodes on the same port share one socket setup (dedup)", () => {
-    const resultA = udpReceiveNode.codegenSource!(node({ port: 5000 }), ctx);
-    const resultB = udpReceiveNode.codegenSource!(node({ port: 5000 }), ctx);
+    const resultA = udpReceiveNode.codegenSource!(node({ port: 5000, wifiConfigId: "unmanaged1" }), ctx);
+    const resultB = udpReceiveNode.codegenSource!(node({ port: 5000, wifiConfigId: "unmanaged1" }), ctx);
     expect(resultA.statements?.[0]?.key).toBe(resultB.statements?.[0]?.key);
     expect(resultA.statements?.[0]?.code).toBe(resultB.statements?.[0]?.code);
   });
 
-  it("brings the WiFi station interface up even with no wifiConfigId configured", () => {
-    const result = udpReceiveNode.codegenSource!(node({ port: 4242 }), ctx);
+  it("brings the WiFi station interface up with no connect call when the referenced config's security is 'unmanaged'", () => {
+    const result = udpReceiveNode.codegenSource!(node({ port: 4242, wifiConfigId: "unmanaged1" }), ctx);
     expect(result.statements?.[1]?.key).toBe("wifi-sta");
     expect(result.statements?.[1]?.code).toContain("network.WLAN(network.STA_IF)");
     expect(result.statements?.[1]?.code).not.toContain(".connect(");
@@ -262,6 +286,11 @@ describe("thingstudio/udp_receive node", () => {
     expect(result.statements?.[1]?.code).toContain('"MyNet"');
   });
 
+  it("throws a CompileError when the referenced config has security 'password' (the default) and an empty password", () => {
+    setConfig("nopw", { ssid: "MyNet", password: "" });
+    expect(() => udpReceiveNode.codegenSource!(node({ port: 4242, wifiConfigId: "nopw" }), ctx)).toThrow(/has no password but security is "password"/);
+  });
+
   it("raises a CompileError referencing the missing id when wifiConfigId doesn't resolve", () => {
     expect(() => udpReceiveNode.codegenSource!(node({ port: 4242, wifiConfigId: "nope" }), ctx)).toThrow(/referenced config "nope" not found/);
   });
@@ -269,10 +298,11 @@ describe("thingstudio/udp_receive node", () => {
   it("compiles into a full flow with the expected structure (source text only)", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/udp_receive", properties: { port: 4242 } },
+        { id: 1, type: "thingstudio/udp_receive", properties: { port: 4242, wifiConfigId: "unmanaged1" } },
         { id: 2, type: "thingstudio/debug", properties: {} },
       ],
       links: [[1, 1, 0, 2, 0, "bytes"]],
+      configs: [{ id: "unmanaged1", type: "thingstudio/config/wifi", properties: { security: "unmanaged" } }],
     };
     const { source } = compile(graph, buildRegistry());
     expect(source).toContain("socket.socket(socket.AF_INET, socket.SOCK_DGRAM)");
