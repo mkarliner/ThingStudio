@@ -48,6 +48,31 @@ ones.
   judgment call, not mandated) — still open, see "Network / config nodes"
   below, unchanged.
 
+- **Sequencing override, set by Mike 2026-08-20 — read this before
+  grabbing anything else in this file as "next."** Out of this list's
+  normal order, in this sequence:
+  1. **Custom node authoring** (below, "Node authoring / extensibility")
+     **+ documentation** (below, "Docs / process") — implementation, not
+     just scoping, even though the "Node authoring / extensibility" entry
+     below still says "no design or scope exists yet, needs its own
+     dedicated scoping session." Whoever picks up this session should
+     treat resolving that gap as the session's own first task, not a
+     blocker to raise back to Mike — his sequencing call already puts
+     this session ahead of the standalone scoping session that entry
+     originally called for.
+  2. **A deliberately narrow validation session, once (1) lands.** Mike
+     will run a session equipped with *only* the end-user documentation
+     (1) produces — not this file, not `CLAUDE.md`, not the rest of
+     `docs/working-notes/` — and ask it to build a new node type from a
+     brief, as a real test of whether the documentation alone is
+     sufficient for that task, not just whether it reads well. Not this
+     project's job to set up; recorded here so whoever builds (1)'s
+     documentation knows it's about to be tested exactly this way.
+  3. **Resume this file's normal order after (1) and (2) close out** —
+     back to whichever item is earliest below at that point (currently
+     `rp2350-bringup-briefing.md`, next bullet, unless something changes
+     before then).
+
 - **`rp2350-bringup-briefing.md`** — written as the follow-up to the
   RP2040 bring-up session; never executed (no matching commit in
   `git log`). RP2040 (plain Pico) is confirmed working, stable, with
@@ -55,6 +80,8 @@ ones.
   (Pico 2 / Pico 2 W) has not been touched on real hardware at all.
   §3's RP2040-vs-RP2350 floor question is explicitly waiting on Mike's
   own sign-off once this data exists, not decided anywhere yet.
+  **Not the immediate next session** — see the sequencing override
+  above; this is the resume point after it, not before.
 
 ---
 
