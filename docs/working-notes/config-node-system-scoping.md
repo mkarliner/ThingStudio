@@ -1,5 +1,13 @@
 # Working note: shared network config nodes — scoping, 2026-08-18
 
+> **Status: fully resolved/superseded as of 2026-08-19 — see
+> `docs/working-notes/outstanding-items.md`.** The "build or not" question
+> this note deliberately left open was answered by Mike
+> (`config-node-and-palette-implementation-briefing.md`: yes, mandatory).
+> This note's technical analysis (the 5-area breakdown, the canvas-wiring
+> prerequisite) is still accurate background, not wasted work — kept for
+> historical reference, not active reading.
+
 Status: scoping note, not a decision, not an implementation briefing. Written
 mid-session during the UDP/TCP batch's hardware bring-up, after Mike asked
 directly whether the WiFi-credentials sharing built for `udp_send`/

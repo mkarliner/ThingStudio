@@ -1,5 +1,11 @@
 # Briefing: Tier 1 — the v1 node set
 
+> **Status: fully resolved as of 2026-08-19 — see
+> `docs/working-notes/outstanding-items.md`.** Items 1–2 (software-only
+> nodes, GPIO/timers) are done, off-device and hardware confirmed;
+> `tier1-sensors-network-briefing.md` picked up items 3–4 next. Kept for
+> historical reference, not active reading.
+
 For the next chat. Read `CLAUDE.md` and `../thingstudio-design-doc.md` in
 full before starting — this is a pointer/summary, not a replacement for
 either. As of commit `8827a65`.

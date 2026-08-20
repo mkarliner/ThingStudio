@@ -1,5 +1,13 @@
 # Working note: §6 wire-type system — scoping, not a decision
 
+> **Status: fully resolved as of 2026-08-19 — see
+> `docs/working-notes/outstanding-items.md`.** Implemented per
+> `wire-type-system-implementation-briefing.md` (`git log`: "Implement §6
+> wire-type system"). This note's own flagged "5-vs-16 node type gap" is
+> still real and open — carried forward in `outstanding-items.md` — but
+> the wire-type system itself, this note's actual subject, is done. Kept
+> for historical reference, not active reading.
+
 Status: scoping pass, 2026-08-16, this session — started as scoping, ended
 as a real decision, worked out live in conversation rather than derived
 from evidence already in hand the way `rete-migration-decision.md` was.

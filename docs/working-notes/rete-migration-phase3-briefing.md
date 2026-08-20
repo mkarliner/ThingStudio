@@ -1,5 +1,11 @@
 # Briefing: Rete migration, Phase 3 (app shell)
 
+> **Status: fully resolved as of 2026-08-19 — see
+> `docs/working-notes/outstanding-items.md`.** Phase 3's app-shell cutover
+> landed and was hardware-confirmed the same day
+> (`rete-migration-phase4-briefing.md`'s own "Status as of this session
+> starts" section). Kept for historical reference, not active reading.
+
 For the next chat. Read `CLAUDE.md` in full, as always. Then read
 `docs/working-notes/rete-migration-decision.md` **in full — it is still
 the spec for this session**, same status it had for Phase 0-1: Phase 3's

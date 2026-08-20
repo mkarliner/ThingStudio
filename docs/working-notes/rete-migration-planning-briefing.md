@@ -1,5 +1,11 @@
 # Briefing: planning the Rete migration (and browser-vs-real-app)
 
+> **Status: fully resolved/superseded as of 2026-08-19 — see
+> `docs/working-notes/outstanding-items.md`.** Superseded by
+> `rete-migration-decision.md` (the actual decision + scoped plan this
+> planning session fed into), whose own task list is now fully
+> implemented. Kept for historical reference, not active reading.
+
 For the next chat. Read `CLAUDE.md` in full, and `../thingstudio-design-doc.md`
 in full — this reverses one of its resolved §11 decisions, which is exactly
 the "architecture change" case CLAUDE.md's own orientation note says to

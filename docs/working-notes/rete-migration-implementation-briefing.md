@@ -1,5 +1,10 @@
 # Briefing: Rete migration, Phase 0–1 (implementation)
 
+> **Status: fully resolved as of 2026-08-19 — see
+> `docs/working-notes/outstanding-items.md`.** Phases 0–1 landed
+> (`git log`: "Rete migration Phase 0-2: install packages, canvas layer,
+> graph adapter"). Kept for historical reference, not active reading.
+
 For the next chat. Read `CLAUDE.md` in full, as always. Then read
 `docs/working-notes/rete-migration-decision.md` **in full — it is the
 spec for this session**, not background. Also read

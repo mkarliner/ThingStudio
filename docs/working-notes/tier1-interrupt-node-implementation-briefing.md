@@ -1,5 +1,11 @@
 # Briefing: interrupt/pin-change node — implementation
 
+> **Status: fully resolved as of 2026-08-19 — see
+> `docs/working-notes/outstanding-items.md`.** The interrupt node, event-
+> driven source codegen, debounce, and `gpio_in` removal all landed and
+> were hardware-confirmed (`git log`: "Add interrupt node ... remove
+> gpio_in"). Kept for historical reference, not active reading.
+
 For the next chat. Read `CLAUDE.md` in full, as always — it gained a new
 section this session ("No premature optimization, but don't paint into an
 architectural dead end") that's directly relevant to how debounce and the

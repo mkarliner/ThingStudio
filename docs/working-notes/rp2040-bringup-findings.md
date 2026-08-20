@@ -1,5 +1,14 @@
 # RP2040 (Pico) bring-up: findings — 2026-08-18
 
+> **Status: fully resolved as of 2026-08-19 — see
+> `docs/working-notes/outstanding-items.md`.** This is itself a results
+> doc (RP2040 leg complete, all checks passed). The one thing it leaves
+> open — whether this data is enough to close §3's RP2040-vs-RP2350
+> provisional language outright, and the still-unrun RP2350 leg
+> (`rp2350-bringup-briefing.md`) — is carried forward in
+> `outstanding-items.md`. Kept for historical reference, not active
+> reading.
+
 Companion to `docs/working-notes/rp2-bringup-interrupt-briefing.md` (this
 session's briefing) and `test-flows/rp2-pin-notes.md` (pre-flight pin
 research done before hardware was in hand). This is the actual hands-on

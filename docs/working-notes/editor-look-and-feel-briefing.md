@@ -1,5 +1,12 @@
 # Briefing: poc-rete look-and-feel refinement
 
+> **Status: fully resolved as of 2026-08-19 — see
+> `docs/working-notes/outstanding-items.md`.** The `poc-rete` spike this
+> briefing polished was superseded by the real Rete migration
+> (`rete-migration-decision.md`), which replaced the real editor's canvas
+> outright rather than building further on the spike. Kept for historical
+> reference, not active reading.
+
 For the next chat. Read `CLAUDE.md` in full before starting, same as
 always. Also read `pocs/poc-rete/README.md` in full — this file is a
 pointer/summary on top of it, not a replacement. Skim

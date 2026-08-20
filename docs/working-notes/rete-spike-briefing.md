@@ -1,5 +1,11 @@
 # Briefing: Rete.js spike — editor/DAG canvas library evaluation
 
+> **Status: fully resolved as of 2026-08-19 — see
+> `docs/working-notes/outstanding-items.md`.** The spike ran
+> (`pocs/poc-rete/`), fed directly into `rete-migration-decision.md`, and
+> the real migration it justified is now complete. Kept for historical
+> reference, not active reading.
+
 For the next chat. Read `CLAUDE.md` and `../thingstudio-design-doc.md` in
 full before starting, same as always — this is a pointer, not a
 replacement for either. Read `../architecture-review-briefing.md` too,

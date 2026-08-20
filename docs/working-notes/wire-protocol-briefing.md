@@ -1,5 +1,12 @@
 # Briefing: wire protocol (§13) implementation
 
+> **Status: fully resolved as of 2026-08-19 — see
+> `docs/working-notes/outstanding-items.md`.** The browser/JS-side wire
+> protocol landed this session; the device-side listener (this briefing's
+> own "not in scope") was built and hardware-confirmed later
+> (`fault-isolation-briefing.md`). Kept for historical reference, not
+> active reading.
+
 For the next chat. Read `CLAUDE.md` and `../thingstudio-design-doc.md` in
 full before starting — this is a pointer/summary, not a replacement for
 either. As of commit `6f8c200`.

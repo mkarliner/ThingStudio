@@ -1,5 +1,11 @@
 # Briefing: MVP feature prioritization + code structure/conventions
 
+> **Status: fully resolved as of 2026-08-19 — see
+> `docs/working-notes/outstanding-items.md`.** Both tasks this briefing set
+> are done: Task 1 by `mvp-feature-priorities.md` (which remains the live
+> tracking doc), Task 2 by `repo-structure-and-conventions.md`. Kept for
+> historical reference, not active reading.
+
 For the next chat. Read `../thingstudio-design-doc.md` in full before proposing
 anything — this is a pointer/summary, not a replacement for it.
 

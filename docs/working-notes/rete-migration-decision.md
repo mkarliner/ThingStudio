@@ -1,5 +1,14 @@
 # Working note: Rete migration — decision and scoped plan
 
+> **Status: fully resolved as of 2026-08-19 — see
+> `docs/working-notes/outstanding-items.md`.** This decision's entire
+> scoped task list (Phases 0–5) is implemented and hardware-confirmed —
+> see `rete-migration-implementation-briefing.md`,
+> `rete-migration-phase3-briefing.md`, and `rete-migration-phase4-briefing.md`
+> for the phase-by-phase record, and `docs/thingstudio-design-doc.md` §11
+> for the corresponding resolved-decision text. Kept for historical
+> reference, not active reading.
+
 Status: decision + plan, 2026-08-16. Answers
 `rete-migration-planning-briefing.md`'s two open questions. Supersedes
 design doc §11's "resolved 2026-08-11 per POC-C: Litegraph.js" (the

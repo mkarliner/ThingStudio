@@ -1,5 +1,12 @@
 # Briefing: Tier 1 node candidates — prioritization
 
+> **Status: fully resolved as of 2026-08-19 — see
+> `docs/working-notes/outstanding-items.md`.** The reprioritization this
+> session called for was done (`git log`: "Resolve Tier 1 item 5: node
+> candidate prioritization"), recorded in `mvp-feature-priorities.md`
+> item 5 and `docs/thingstudio-design-doc.md` §6's 2026-08-17 addenda.
+> Kept for historical reference, not active reading.
+
 For the next chat. Read `CLAUDE.md` in full, as always. As of commit
 `2787fde`.
 

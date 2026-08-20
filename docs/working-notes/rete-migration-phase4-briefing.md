@@ -1,5 +1,12 @@
 # Briefing: Rete migration, Phase 4 step 17 + Phase 5 (cleanup and docs)
 
+> **Status: fully resolved as of 2026-08-19 — see
+> `docs/working-notes/outstanding-items.md`.** The Litegraph deletion and
+> doc updates landed (`git log`: "Rete migration Phase 5: update docs to
+> reflect Litegraph removal", "Phase 4 step 17: delete dead Litegraph
+> path"), closing out the whole Rete migration's scoped task list. Kept
+> for historical reference, not active reading.
+
 For the next chat. Read `CLAUDE.md` in full, as always. Then read
 `docs/working-notes/rete-migration-decision.md` **in full — still the spec
 for this session**, same status it's had every session so far: step 17

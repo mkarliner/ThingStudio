@@ -1,5 +1,11 @@
 # Briefing: fault isolation + witness/DUT rig (§5) implementation
 
+> **Status: fully resolved as of 2026-08-19 — see
+> `docs/working-notes/outstanding-items.md`.** Both halves of §5 fault
+> isolation and the witness+DUT rig itself are built and hardware-confirmed
+> (`git log`: "Fault isolation (§5) confirmed on real hardware -- Tier 0
+> complete"). Kept for historical reference, not active reading.
+
 For the next chat. Read `CLAUDE.md` and `../thingstudio-design-doc.md` in
 full before starting — this is a pointer/summary, not a replacement for
 either. As of commit `c083b25`.

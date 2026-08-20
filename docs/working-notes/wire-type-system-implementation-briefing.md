@@ -1,5 +1,10 @@
 # Briefing: §6 wire-type system — implementation
 
+> **Status: fully resolved as of 2026-08-19 — see
+> `docs/working-notes/outstanding-items.md`.** Landed (`git log`:
+> "Implement §6 wire-type system"). Kept for historical reference, not
+> active reading.
+
 For the next chat. Read `CLAUDE.md` in full, as always. Then read
 `docs/working-notes/wire-type-system-scoping.md` **in full — this is the
 spec for this session.** It reads as a scoping note by title but is

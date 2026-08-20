@@ -1,5 +1,11 @@
 # Working note: repo structure and conventions
 
+> **Status: fully resolved as of 2026-08-19 — see
+> `docs/working-notes/outstanding-items.md`.** This note's own "open
+> follow-ups" list (device-runtime headless test setup, physical-hardware-
+> gated items) was all completed in later sessions. Kept for historical
+> reference, not active reading.
+
 Status: working note, 2026-08-12. Closes out Task 2 from
 `mvp-planning-briefing.md` ("code structure and conventions") — §14's
 single-monorepo call, executed as an actual layout, plus the tooling and

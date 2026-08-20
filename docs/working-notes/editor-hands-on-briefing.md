@@ -1,5 +1,15 @@
 # Briefing: editor hands-on continues -- timer, error attribution, save/load landed
 
+> **Status: fully resolved as of 2026-08-19 — see
+> `docs/working-notes/outstanding-items.md`.** This file's own "what's NOT
+> yet done" list has since been absorbed elsewhere: the HELLO/version gate
+> landed later the same day; compact node appearance was closed as a side
+> effect of the Rete migration; `context`/`flow` state access for function
+> nodes landed 2026-08-14; live-value/inspector polish is tracked as Tier 2
+> in `mvp-feature-priorities.md`, not uniquely here; the three medium-term
+> infra needs moved to `deployment-and-distribution-notes.md`. Kept for
+> historical reference, not active reading.
+
 For the next chat. Read `CLAUDE.md` and `../thingstudio-design-doc.md` in
 full before starting — this is a pointer/summary, not a replacement for
 either. As of commit `2469c80`. This file replaces the previous version
