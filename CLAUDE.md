@@ -45,6 +45,33 @@ Before trusting any `npm test`/`vitest run`/`tsc` result — yours or an agent's
 
 `docs/third-party-licenses.md` is the running ledger of every third-party dependency in use — runtime/platform components, editor build tooling, and anything vendored — with its license. Keep it current in the same change, not batched up for later: any new npm package (already requires the flag-and-approve step above), any newly vendored library, or any platform/runtime component decision (a different ESP-IDF version, a different MicroPython fork, etc.) gets a line added or updated there immediately, pulling version/license straight from the installed package metadata rather than from memory.
 
+## Human-facing documentation: concise, not exhaustive
+
+This applies specifically to documentation written *for people to read* —
+end-user docs like `docs/user-guide/custom-nodes.md`, READMEs, anything handed to
+someone (or to a deliberately narrow validation session) as their whole
+picture of how to do something. It does not apply to working-notes files,
+`docs/thingstudio-design-doc.md`, or this file — those exist to carry a
+full reasoning trail and stay in their own established style.
+
+Default output tends toward exhaustive: every edge case named, every
+decision's rationale included inline, headers for things that don't need
+one. Human-facing docs should be shorter and plainer than that default —
+state what a thing is and how to use it, not the full case for why it's
+built that way. Short sentences, short paragraphs, definitions over
+elaboration, an example only where one actually clarifies.
+
+**Interim style reference, until we have our own:** Mike pointed at
+[Node-RED's "Concepts" page](https://nodered.org/docs/user-guide/concepts)
+as the shape to aim for — short (10–20 word) sentences, 3–4-sentence
+paragraphs, a neutral/direct tone with no flourish, one clarifying
+sentence per concept rather than a paragraph, and links out to
+"Working with..." pages instead of embedding that detail inline. Not a
+license to copy its wording — a reference for pacing and register while
+we work out our own house style. Once Mike's happy with a piece written
+this way, write the actual style guide from that example and replace this
+paragraph with a pointer to it.
+
 ## Decisions and learnings logs
 
 `docs/working-notes/decisions.md` and `docs/working-notes/learnings.md` are append-only, one-entry-per-item ledgers — an index into the ~30+ working-notes files' worth of real decisions and hard-won technical gotchas, not a copy of the reasoning behind them (each entry points back to its source note). Update in the same change, not batched for later: any session that writes or updates a `Status: decision`/`Status: resolved` note, or resolves a design-doc open question, adds one line to `decisions.md`; any session that hits a surprising platform behavior, library gotcha, test-methodology trap, or hardware quirk worth remembering adds one line to `learnings.md`. If a learning turns out to be a repeatable process rule (not just a fact worth knowing), promote it to its own section in this file instead, and leave a pointer in `learnings.md` rather than duplicating the text — see that file's own "Already promoted to `CLAUDE.md`" section for the precedent (the git-lock issue and the stray-`.js` issue both went this route). `docs/working-notes/outstanding-items.md` is the third leg of this set — current open work, not history — check there too when picking up a new task.

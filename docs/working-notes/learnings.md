@@ -208,7 +208,7 @@ when a sandboxed `npx tsc --noEmit` silently doesn't respect the flag
   time instead, since no module-level name exists inside the wrapper.
   Self-caught while writing `custom-node.test.ts`'s closure-isolation
   test, not by a real deploy failure — documented prominently in
-  `custom-node.ts`'s header comment and in `docs/custom-nodes.md` (its own
+  `custom-node.ts`'s header comment and in `docs/user-guide/custom-nodes.md` (its own
   dedicated section) given the project's fault-handling-first priority.
   `custom-node-authoring-scoping.md`.
 
