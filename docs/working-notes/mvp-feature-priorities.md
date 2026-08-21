@@ -324,6 +324,24 @@ pipeline driven by hardcoded buttons.
   untouched re-save). Not built in any POC yet.
 - **File save/load (§4).** File System Access API where available
   (Chrome/Edge), manual export/import fallback elsewhere (Safari/Firefox).
+  **Stale as written — §4's 2026-08-16 addendum superseded this under the
+  backend model: "this becomes the backend's own filesystem access rather
+  than the File System Access API specifically." Needs a pass once the
+  backend item below is picked up; not corrected here to avoid conflating
+  a wording fix with the new item's own scope.**
+- **Added 2026-08-21, marked MVP-needed by Mike — the thin local backend
+  (Python/`aiohttp`, `backend-platform-decision.md`) and a backend-owned
+  `~/.thingstudio` local-state directory.** Wasn't in this tier list at all
+  before now — `outstanding-items.md`'s "Backend / auth" section tracked it
+  as a whole unstarted, unprioritized body of work; this promotes it to
+  MVP. Immediate trigger: custom node packages (`custom-node-authoring-
+  scoping.md`) need to persist across app runs, and a browser can't
+  reliably own a fixed filesystem path cross-platform/cross-browser the
+  way a backend process can — full reasoning in
+  `local-persistence-scoping.md`. **Not resolved: whether this reprioritizes
+  ahead of `outstanding-items.md`'s current sequencing override** (the
+  custom-node-docs validation session, then RP2350 bring-up) — needs Mike's
+  own call, not assumed by adding this bullet.
 - **Real editor shell.** Connect + `HELLO` handshake, a Deploy flow that
   runs the pre-flight version/space check before sending `DEPLOY`, and the
   status/log/inspector panel from §8 — connection state, per-node errors

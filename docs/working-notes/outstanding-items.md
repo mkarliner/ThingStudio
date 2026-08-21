@@ -65,7 +65,7 @@ ones.
      codegen validation only (not the package format — doesn't compromise
      the multi-output-routing item below). 285/285 editor tests pass
      (30 files, up from 29), `tsc --noEmit` and `vite build` both clean.
-     End-user documentation: `docs/custom-nodes.md`. Full reasoning:
+     End-user documentation: `docs/user-guide/custom-nodes.md`. Full reasoning:
      `custom-node-authoring-scoping.md`; ledger entries:
      `decisions.md`'s new "Node authoring / extensibility" section,
      `learnings.md`'s new "Custom node authoring" section (the
@@ -73,7 +73,7 @@ ones.
      below — its own "real open questions" list is now resolved, not just
      this bullet.
   2. **A deliberately narrow validation session, next.** Mike will run a
-     session equipped with *only* `docs/custom-nodes.md` — not this file,
+     session equipped with *only* `docs/user-guide/custom-nodes.md` — not this file,
      not `CLAUDE.md`, not the rest of `docs/working-notes/` — and ask it
      to build a new node type from a brief, as a real test of whether the
      documentation alone is sufficient for that task, not just whether it
@@ -189,7 +189,7 @@ ones.
 sequencing override above. The item below is left as historical context
 (what was unknown going in); each of its "real open questions" now has a
 resolution, noted inline. `custom-node-authoring-scoping.md`,
-`docs/custom-nodes.md`, `decisions.md`'s "Node authoring / extensibility"
+`docs/user-guide/custom-nodes.md`, `decisions.md`'s "Node authoring / extensibility"
 section.
 
 - **Custom node authoring — letting users create and register their own
@@ -235,6 +235,10 @@ section.
     parallel to but deliberately separate from the config-node store —
     not cleared by "clear canvas," not saved/reloaded across sessions.
     `custom-node-authoring-scoping.md` Decision 4.
+    **Persistence-across-app-runs half scoped 2026-08-21, still not
+    built: backend-owned `~/.thingstudio` folder, waits for the backend
+    (now MVP-needed, see "Backend / auth" section below).**
+    `local-persistence-scoping.md`.
   - **Whether the compiler/editor contract extends cleanly to
     third-party-authored nodes.** `node-definition-model.md`'s
     `NodeDefinition` contract (type ID, ports, properties, codegen hook,
@@ -419,7 +423,21 @@ section.
   shipped) but no explicit revisit of the size trade-off has happened
   since. Low priority, worth closing out formally or dropping.
 
-## Backend / auth (the whole thin-backend architecture is still design-only)
+## Backend / auth (the whole thin-backend architecture is still design-only — now marked MVP-needed)
+
+**Newly marked MVP-needed by Mike, 2026-08-21 — was previously unprioritized
+against the tier list.** Trigger: custom node packages need to persist
+across app runs in a real `~/.thingstudio` local-state folder, and that's a
+backend-owned capability by the architecture's own logic (design doc §4 —
+under the backend model, filesystem access is the backend's, not the File
+System Access API's), not something a pure browser app can do reliably
+cross-platform. Full reasoning: `local-persistence-scoping.md`. **Not yet
+resolved: whether this reprioritizes the backend ahead of the sequencing
+override below** (the custom-node-docs validation session, then RP2350
+bring-up) — flagged in that note, needs Mike's own resequencing call, not
+assumed here. `mvp-feature-priorities.md` still doesn't list the backend in
+its tier structure at all; that gap is now itself part of what "MVP-needed"
+means and is worth closing when the backend is actually picked up.
 
 Worth flagging as a group, not just individually — there is currently no
 `backend/` (or equivalent) directory anywhere in this repo. Every piece of

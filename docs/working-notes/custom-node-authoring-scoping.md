@@ -17,7 +17,7 @@ built.
 
 Second half of Mike's own sequencing note applies too: he'll run a
 deliberately narrow follow-up session equipped with *only* the end-user
-documentation this work produces (`docs/custom-nodes.md`), not this note,
+documentation this work produces (`docs/user-guide/custom-nodes.md`), not this note,
 not `CLAUDE.md`, not the rest of `working-notes/`, and ask it to build a
 new node type from a brief — a real test of whether that doc alone is
 sufficient. That's the actual bar this design has to clear, not just "is
@@ -173,7 +173,7 @@ node author can make from their own setup code, no different from
 `udp-send.ts`'s own use of it. The gap isn't capability, it's
 discoverability — nothing prompts a custom node author to know this
 primitive exists unless they've read `runtime.py` itself. The end-user
-guide (`docs/custom-nodes.md`) makes this a prominent worked example (a
+guide (`docs/user-guide/custom-nodes.md`) makes this a prominent worked example (a
 node that opens a socket in setup and registers its own cleanup), not a
 footnote, specifically because of this comparison.
 
@@ -216,6 +216,13 @@ persistence (e.g. remembering File System Access handles, or a real
 project-directory scan once the backend in `backend-platform-decision.md`
 exists) later; it's additive UI/storage work on top of an unchanged
 package format, not a redesign.
+
+**[2026-08-21: this either/or is resolved, not implemented — backend-owned,
+via a `~/.thingstudio` local-state folder, deliberately not the File System
+Access handle-persistence route. Now marked MVP-needed by Mike, which also
+elevates the backend itself. See `local-persistence-scoping.md`,
+`decisions.md`'s "Backend" section, `outstanding-items.md`'s "Backend /
+auth" section.]**
 
 ## Decision 5: sandboxing — restate §9/§11's existing resolution, don't relitigate it
 
@@ -315,7 +322,7 @@ Named explicitly so it reads as a scope choice, not an oversight:
   class gains an explicit `nodeType` field instead; the two call sites read
   it directly. Verified against the existing test suite to produce
   identical output for all 9 existing node types.
-- New: `docs/custom-nodes.md` — the end-user guide, written to stand
+- New: `docs/user-guide/custom-nodes.md` — the end-user guide, written to stand
   completely alone per the validation-session bar described at the top of
   this note.
 

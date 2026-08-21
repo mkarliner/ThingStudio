@@ -124,6 +124,17 @@ Same convention already established for `docs/third-party-licenses.md`.
   because the browser's native `WebSocket` constructor cannot set custom
   headers — no way to send `Authorization: Bearer` on a WS handshake from
   page JS. Same note.
+- **2026-08-21 — `~/.thingstudio` local-state persistence is backend-owned,
+  not a browser-only stopgap, and this backend work is now marked
+  MVP-needed by Mike.** A browser can't silently target a fixed
+  home-relative path — only a user-driven picker, with reliably persisted
+  permission in Chrome/Edge only — so this waits for the backend rather
+  than building something thrown away once it exists. The MVP mark is a
+  real scope change: the backend wasn't in `mvp-feature-priorities.md`'s
+  tier list at all before this. Scoped as the app's general local-state
+  directory (custom node packages as the first consumer), not
+  custom-nodes-only, per Mike's own framing — not yet reconfirmed as a
+  separate answer. `local-persistence-scoping.md`.
 
 ## Board-transport auth (perimeter 2)
 
@@ -256,6 +267,11 @@ Same convention already established for `docs/third-party-licenses.md`.
   right framing directly with Mike ("multiple outputs is fairly high on
   the priority list... just don't do anything to compromise it"). Same
   note.
+- **2026-08-21 — Custom node package persistence across app runs: waits
+  for the backend, resolving Decision 4's "future work" either/or in favor
+  of its backend-owned half.** Not a browser-side File System Access
+  handle-persistence build — see the `Backend` section entry above for the
+  reasoning and the MVP-priority consequence. `local-persistence-scoping.md`.
 
 ## Session sequencing
 
