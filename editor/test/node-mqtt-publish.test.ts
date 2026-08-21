@@ -9,13 +9,21 @@
 // config wiring) needs exercising; mqtt_as itself is the vendored,
 // already-proven-elsewhere library here, so this test's job is "does the
 // generated code call it correctly," not "does MQTT actually work."
+//
+// Config nodes (config-node-and-palette-implementation-briefing.md):
+// updated 2026-08-21 for the wifiConfigId behavior change -- see
+// mqtt-shared.ts's own header. Same fake-resolveConfig-via-local-map
+// pattern node-udp-send.test.ts uses, EXCEPT there's no "unmanaged1"
+// stand-in default here: mqtt_publish rejects "unmanaged" outright (see
+// mqtt-shared.ts's header for why), so the default seeded config
+// ("wifi1") always carries a real ssid/password.
 
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { compile } from "../src/compiler/compile.js";
 import { CompileError } from "../src/compiler/errors.js";
 import type { GraphData } from "../src/compiler/graph.js";
@@ -26,17 +34,28 @@ import type { GraphNode } from "../src/compiler/graph.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const registry = buildRegistry();
-// resolveConfig isn't exercised here -- mqtt_publish stays registry-only
-// this session (config-node-and-palette-implementation-briefing.md's
-// explicit, flagged follow-up), still reading raw ssid/password directly
-// via parseMqttBrokerProps. Stub throws if ever called, matching every
-// other node test file's updated ctx.
+
+const fakeConfigs = new Map<string, Record<string, unknown>>();
+function setConfig(id: string, properties: Record<string, unknown>): void {
+  fakeConfigs.set(id, properties);
+}
 const ctx: CodegenContext = {
   uniqueName: (hint) => `_${hint}`,
   resolveConfig: (id) => {
-    throw new Error(`unexpected resolveConfig("${id}") call -- this test file's ctx doesn't stub any configs`);
+    const cfg = fakeConfigs.get(id);
+    if (!cfg) throw new CompileError(`referenced config "${id}" not found`);
+    return cfg;
   },
 };
+
+const DEFAULT_WIFI_CONFIGS: NonNullable<GraphData["configs"]> = [
+  { id: "wifi1", type: "thingstudio/config/wifi", properties: { ssid: "MyNet", password: "hunter2" } },
+];
+
+beforeEach(() => {
+  fakeConfigs.clear();
+  setConfig("wifi1", { ssid: "MyNet", password: "hunter2" });
+});
 
 function node(properties: Record<string, unknown>): GraphNode {
   return { id: 1, type: "thingstudio/mqtt_publish", properties };
@@ -53,20 +72,21 @@ function runGenerated(source: string): string {
   });
 }
 
-function graphWith(mqttProps: Record<string, unknown>): GraphData {
+function graphWith(mqttProps: Record<string, unknown>, configs: GraphData["configs"] = DEFAULT_WIFI_CONFIGS): GraphData {
   return {
     nodes: [
       { id: 1, type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "42.5", repeat: "manual" } },
       { id: 2, type: "thingstudio/mqtt_publish", properties: mqttProps },
     ],
     links: [[1, 1, 0, 2, 0, "string"]],
+    configs,
   };
 }
 
 describe("thingstudio/mqtt_publish node", () => {
   it("connects once and publishes the inbound payload to the configured topic", () => {
     const { source } = compile(
-      graphWith({ broker: "test.broker.local", port: 1883, topic: "sensors/temp", ssid: "MyNet", password: "hunter2" }),
+      graphWith({ broker: "test.broker.local", port: 1883, topic: "sensors/temp", wifiConfigId: "wifi1" }),
       registry,
     );
     const output = runGenerated(source);
@@ -76,7 +96,7 @@ describe("thingstudio/mqtt_publish node", () => {
 
   it("publishes with retain=True and qos=1 when configured", () => {
     const { source } = compile(
-      graphWith({ broker: "b", port: 1883, topic: "t", ssid: "s", retain: true, qos: 1 }),
+      graphWith({ broker: "b", port: 1883, topic: "t", wifiConfigId: "wifi1", retain: true, qos: 1 }),
       registry,
     );
     const output = runGenerated(source);
@@ -87,14 +107,15 @@ describe("thingstudio/mqtt_publish node", () => {
     const graph: GraphData = {
       nodes: [
         { id: 1, type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "a", repeat: "manual" } },
-        { id: 2, type: "thingstudio/mqtt_publish", properties: { broker: "b", port: 1883, topic: "t1", ssid: "s" } },
+        { id: 2, type: "thingstudio/mqtt_publish", properties: { broker: "b", port: 1883, topic: "t1", wifiConfigId: "wifi1" } },
         { id: 3, type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "b", repeat: "manual" } },
-        { id: 4, type: "thingstudio/mqtt_publish", properties: { broker: "b", port: 1883, topic: "t2", ssid: "s" } },
+        { id: 4, type: "thingstudio/mqtt_publish", properties: { broker: "b", port: 1883, topic: "t2", wifiConfigId: "wifi1" } },
       ],
       links: [
         [1, 1, 0, 2, 0, "string"],
         [2, 3, 0, 4, 0, "string"],
       ],
+      configs: DEFAULT_WIFI_CONFIGS,
     };
     const { source } = compile(graph, registry);
     expect(source.match(/mqtt_as\.MQTTClient\(/g)?.length).toBe(1);
@@ -104,31 +125,59 @@ describe("thingstudio/mqtt_publish node", () => {
   });
 
   it("rejects a missing broker", () => {
-    expect(() => mqttPublishNode.codegenSink!(node({ topic: "t", ssid: "s" }), ctx)).toThrow(CompileError);
-    expect(() => mqttPublishNode.codegenSink!(node({ topic: "t", ssid: "s" }), ctx)).toThrow(/requires a "broker"/);
+    expect(() => mqttPublishNode.codegenSink!(node({ topic: "t", wifiConfigId: "wifi1" }), ctx)).toThrow(CompileError);
+    expect(() => mqttPublishNode.codegenSink!(node({ topic: "t", wifiConfigId: "wifi1" }), ctx)).toThrow(/requires a "broker"/);
   });
 
-  it("rejects a missing ssid", () => {
-    expect(() => mqttPublishNode.codegenSink!(node({ broker: "b", topic: "t" }), ctx)).toThrow(/requires "ssid"/);
+  it("rejects a missing wifiConfigId", () => {
+    expect(() => mqttPublishNode.codegenSink!(node({ broker: "b", topic: "t" }), ctx)).toThrow(CompileError);
+    expect(() => mqttPublishNode.codegenSink!(node({ broker: "b", topic: "t" }), ctx)).toThrow(/requires a WiFi config/);
   });
 
   it("rejects a missing topic", () => {
-    expect(() => mqttPublishNode.codegenSink!(node({ broker: "b", ssid: "s" }), ctx)).toThrow(/non-empty "topic"/);
+    expect(() => mqttPublishNode.codegenSink!(node({ broker: "b", wifiConfigId: "wifi1" }), ctx)).toThrow(/non-empty "topic"/);
   });
 
   it("rejects an invalid port", () => {
-    expect(() => mqttPublishNode.codegenSink!(node({ broker: "b", ssid: "s", topic: "t", port: 0 }), ctx)).toThrow(/valid port number/);
-    expect(() => mqttPublishNode.codegenSink!(node({ broker: "b", ssid: "s", topic: "t", port: 70000 }), ctx)).toThrow(/valid port number/);
+    expect(() => mqttPublishNode.codegenSink!(node({ broker: "b", wifiConfigId: "wifi1", topic: "t", port: 0 }), ctx)).toThrow(/valid port number/);
+    expect(() => mqttPublishNode.codegenSink!(node({ broker: "b", wifiConfigId: "wifi1", topic: "t", port: 70000 }), ctx)).toThrow(/valid port number/);
   });
 
   it("rejects an unsupported qos", () => {
-    expect(() => mqttPublishNode.codegenSink!(node({ broker: "b", ssid: "s", topic: "t", qos: 2 }), ctx)).toThrow(/must be 0 or 1/);
+    expect(() => mqttPublishNode.codegenSink!(node({ broker: "b", wifiConfigId: "wifi1", topic: "t", qos: 2 }), ctx)).toThrow(/must be 0 or 1/);
   });
 
   it("defaults port to 1883 and qos to 0", () => {
-    const result = mqttPublishNode.codegenSink!(node({ broker: "b", ssid: "s", topic: "t" }), ctx);
+    const result = mqttPublishNode.codegenSink!(node({ broker: "b", wifiConfigId: "wifi1", topic: "t" }), ctx);
     expect(result.statements?.[0]?.code).toContain("_cfg['port'] = 1883");
     expect(result.functionBody).toContain("qos=0");
+  });
+
+  it("rejects a referenced config with security 'unmanaged' -- mqtt_as always needs real credentials", () => {
+    setConfig("unmanaged1", { security: "unmanaged" });
+    expect(() => mqttPublishNode.codegenSink!(node({ broker: "b", wifiConfigId: "unmanaged1", topic: "t" }), ctx)).toThrow(
+      /security "unmanaged", which isn't supported here/,
+    );
+  });
+
+  it("rejects a referenced config with security 'password' (the default) and an empty password", () => {
+    setConfig("nopw", { ssid: "MyNet", password: "" });
+    expect(() => mqttPublishNode.codegenSink!(node({ broker: "b", wifiConfigId: "nopw", topic: "t" }), ctx)).toThrow(
+      /has no password but security is "password"/,
+    );
+  });
+
+  it("resolves ssid/password from the referenced config into the client setup code", () => {
+    setConfig("wifi2", { ssid: "RealNet", password: "realpw" });
+    const result = mqttPublishNode.codegenSink!(node({ broker: "b", wifiConfigId: "wifi2", topic: "t" }), ctx);
+    expect(result.statements?.[0]?.code).toContain('"RealNet"');
+    expect(result.statements?.[0]?.code).toContain('"realpw"');
+  });
+
+  it("raises a CompileError referencing the missing id when wifiConfigId doesn't resolve", () => {
+    expect(() => mqttPublishNode.codegenSink!(node({ broker: "b", wifiConfigId: "nope", topic: "t" }), ctx)).toThrow(
+      /referenced config "nope" not found/,
+    );
   });
 
   // The "connect wifi, connect mqtt, then do mqtt things" ordering
@@ -166,13 +215,13 @@ describe("thingstudio/mqtt_publish node", () => {
         used.add(candidate);
         return candidate;
       },
-      // resolveConfig isn't exercised here -- see the module-level `ctx`
-      // above for why (mqtt_publish stays registry-only this session).
-      resolveConfig(id: string): Record<string, unknown> {
-        throw new Error(`unexpected resolveConfig("${id}") call -- this test file's ctx doesn't stub any configs`);
+      resolveConfig: (id) => {
+        const cfg = fakeConfigs.get(id);
+        if (!cfg) throw new CompileError(`referenced config "${id}" not found`);
+        return cfg;
       },
     };
-    const cfg = { broker: "shared.broker", port: 1883, topic: "t1", ssid: "s" };
+    const cfg = { broker: "shared.broker", port: 1883, topic: "t1", wifiConfigId: "wifi1" };
     const resultA = mqttPublishNode.codegenSink!(node(cfg), ctxShared);
     const resultB = mqttPublishNode.codegenSink!(node({ ...cfg, topic: "t2" }), ctxShared);
     // Both nodes target the same broker/port, so both proposed setup

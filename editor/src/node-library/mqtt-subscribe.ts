@@ -16,6 +16,19 @@
 //
 // See mqtt-shared.ts's header for the broker-client-sharing design this
 // depends on, and mqtt-publish.ts for the sink half.
+//
+// Config nodes (config-node-and-palette-implementation-briefing.md):
+// **behavior change, 2026-08-21** -- credentials now come from a
+// referenced `thingstudio/config/wifi` config node via
+// `node.properties.wifiConfigId`, resolved inside parseMqttBrokerProps
+// (mqtt-shared.ts) via wifi-status.ts's `resolveWifiCredentials()` -- not
+// raw `ssid`/`password` properties on this node directly. See
+// mqtt-shared.ts's own header for why "unmanaged" security is rejected
+// here even though wifi_status/udp_send/udp_receive accept it.
+//
+// Also given real canvas presence in this change (`ports` below) --
+// previously registry-only, per outstanding-items.md's "Network / config
+// nodes" section.
 
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, NodeDefinition, SourceCodegenResult } from "../compiler/node-definition.js";
@@ -26,8 +39,15 @@ import { pyStringLiteral } from "./py-literals.js";
 export const mqttSubscribeNode: NodeDefinition = {
   type: "thingstudio/mqtt_subscribe",
   kind: "source",
+  // output `msg` type `any` -- buildMsg's payload field falls back to the
+  // raw (possibly non-string) decoded value when the incoming bytes
+  // aren't valid text (`isinstance(..., (bytes, bytearray))` check
+  // above), so "string" would overclaim what's actually guaranteed here.
+  ports: {
+    outputs: [{ name: "msg", type: "any" }],
+  },
   codegenSource(node: GraphNode, ctx: CodegenContext): SourceCodegenResult {
-    const cfg = parseMqttBrokerProps(node.properties, "mqtt_subscribe");
+    const cfg = parseMqttBrokerProps(node.properties, ctx, "mqtt_subscribe");
 
     const topic = typeof node.properties.topic === "string" ? node.properties.topic.trim() : "";
     if (!topic) {

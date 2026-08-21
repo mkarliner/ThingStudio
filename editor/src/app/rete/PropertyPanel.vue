@@ -9,11 +9,10 @@
   state, no Rete API involved at all) generalizes to every node type for
   free, unlike a per-node-type modal hook.
 
-  Trimmed from the poc-rete version in two ways, both because this app's
-  real node set and scope differ from that spike's:
-    - No `mqtt_publish` block -- that node type was never exposed on this
-      canvas (nodes.ts's own header), even though node-library/
-      mqtt-publish.ts exists for a later Tier.
+  Trimmed from the poc-rete version in one way, because this app's real
+  node set and scope differ from that spike's (a former second trim --
+  "no mqtt_publish block" -- is gone; see the mqtt_publish/mqtt_subscribe
+  paragraph below):
     - No "inject now" button, and inject's repeat select doesn't call
       `setupTimer()` on change -- that was poc-rete's hook into its own
       hand-rolled live-propagation machinery (InjectNode.fire()/
@@ -43,6 +42,15 @@
   possible and correct. No raw ssid/password inputs anywhere in this file
   any more for these three kinds -- that's deliberate, not an oversight,
   see wifi-status.ts's own header on why.
+
+  mqtt_publish/mqtt_subscribe blocks added 2026-08-21: first-time canvas
+  wiring for these two (nodes.ts's own header) plus the same config-node
+  migration as above. Their hint text does NOT offer the "pick unmanaged"
+  escape hatch the wifi_status/udp_send/udp_receive hints give -- mqtt-
+  shared.ts's parseMqttBrokerProps rejects a referenced config with
+  security "unmanaged" outright, since mqtt_as always drives its own
+  connect/reconnect loop and needs real credentials to do so (see that
+  file's own header).
 
   Custom nodes (docs/working-notes/custom-node-authoring-scoping.md,
   2026-08-20): one generic block below, driven entirely by
@@ -170,6 +178,58 @@
           @update:model-value="(id) => setWifiConfigId(id)"
         />
         <p class="hint">Required -- won't compile without one. Pick "unmanaged" on the config if this flow intentionally rides on a connection managed outside it.</p>
+      </template>
+
+      <template v-else-if="node.kind === 'mqtt_publish'">
+        <label>broker
+          <input v-model="node.properties.broker" @input="touch" />
+        </label>
+        <label>port
+          <input type="number" min="1" max="65535" v-model.number="node.properties.port" @input="touch" />
+        </label>
+        <label>topic
+          <input v-model="node.properties.topic" @input="touch" />
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" v-model="node.properties.retain" @change="touch" />
+          retain
+        </label>
+        <label>qos
+          <select v-model.number="node.properties.qos" @change="touch">
+            <option :value="0">0</option>
+            <option :value="1">1</option>
+          </select>
+        </label>
+        <ConfigRefField
+          config-type="thingstudio/config/wifi"
+          :model-value="node.properties.wifiConfigId || undefined"
+          @update:model-value="(id) => setWifiConfigId(id)"
+        />
+        <p class="hint">Required -- won't compile without one. mqtt_as manages its own WiFi connection, so "unmanaged" configs aren't accepted here.</p>
+      </template>
+
+      <template v-else-if="node.kind === 'mqtt_subscribe'">
+        <label>broker
+          <input v-model="node.properties.broker" @input="touch" />
+        </label>
+        <label>port
+          <input type="number" min="1" max="65535" v-model.number="node.properties.port" @input="touch" />
+        </label>
+        <label>topic
+          <input v-model="node.properties.topic" @input="touch" />
+        </label>
+        <label>qos
+          <select v-model.number="node.properties.qos" @change="touch">
+            <option :value="0">0</option>
+            <option :value="1">1</option>
+          </select>
+        </label>
+        <ConfigRefField
+          config-type="thingstudio/config/wifi"
+          :model-value="node.properties.wifiConfigId || undefined"
+          @update:model-value="(id) => setWifiConfigId(id)"
+        />
+        <p class="hint">Required -- won't compile without one. mqtt_as manages its own WiFi connection, so "unmanaged" configs aren't accepted here.</p>
       </template>
 
       <template v-else-if="node.kind === 'debug'">

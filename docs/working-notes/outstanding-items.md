@@ -97,14 +97,21 @@ ones.
 
 ## Network / config nodes
 
-- **`http_request`/`mqtt_publish`/`mqtt_subscribe` never got the
-  config-node treatment.** `config-node-and-palette-implementation-briefing.md`
-  landed the config-node subsystem and wired `wifi_status`/`udp_send`/
-  `udp_receive` onto the canvas sharing one `thingstudio/config/wifi`
-  object; these three network node types are still registry-only,
-  duplicating raw credentials per instance. Explicitly flagged as a
-  follow-up in that briefing's own success-criteria section, not a silent
-  scope cut.
+- **`http_request` never got the config-node treatment.**
+  `config-node-and-palette-implementation-briefing.md` landed the
+  config-node subsystem and wired `wifi_status`/`udp_send`/`udp_receive`
+  onto the canvas sharing one `thingstudio/config/wifi` object;
+  `http_request` is still registry-only, duplicating raw credentials per
+  instance. Explicitly flagged as a follow-up in that briefing's own
+  success-criteria section, not a silent scope cut. **`mqtt_publish`/
+  `mqtt_subscribe` closed this same gap 2026-08-21** — both migrated to
+  `wifiConfigId` (via `mqtt-shared.ts`'s `parseMqttBrokerProps`, reusing
+  `wifi-status.ts`'s `resolveWifiCredentials()`) and given real canvas
+  presence for the first time (see the "canvas presence" bullet below).
+  One deliberate divergence from the other three migrated kinds: a
+  referenced config with `security: "unmanaged"` is a `CompileError` here,
+  not a supported state — `mqtt_as` always drives its own connect/
+  reconnect loop and needs real credentials to do so. `decisions.md`.
 
 - **TCP send / TCP listen-receive were never built.** `udp-tcp-nodes-implementation-briefing.md`
   scoped four new node types; only UDP send/receive landed (confirmed
@@ -146,16 +153,21 @@ ones.
   node types at the time, only `inject`/`function`/`debug`/`gpio_out`/
   `timer` were wired onto the Rete canvas originally. Since then
   `interrupt`, `wifi_status`, `udp_send`, `udp_receive` were added — but
-  `variable_get`, `variable_set`, `pwm_out`, `http_request`,
-  `mqtt_publish`, `mqtt_subscribe` are all still registry-only: real
-  compiler-side codegen, no Rete node class, no palette entry, unreachable
-  from the actual editor UI. This is a large, currently-invisible gap
-  between "the node library" and "what a user can actually drag onto the
-  canvas." **`boolean`/`arithmetic`/`comparator` removed from this list
-  2026-08-21 — not a canvas-wiring gap to close anymore, removed as
-  node types entirely (redundant with `function`, never wired, no
-  type-safety benefit as actually built). `decisions.md`, "Config nodes /
-  Tier 1 scope" section; `thingstudio-design-doc.md` §6 addendum.**
+  `variable_get`, `variable_set`, `pwm_out`, `http_request` are still
+  registry-only: real compiler-side codegen, no Rete node class, no
+  palette entry, unreachable from the actual editor UI. This is a large,
+  currently-invisible gap between "the node library" and "what a user can
+  actually drag onto the canvas." **`boolean`/`arithmetic`/`comparator`
+  removed from this list 2026-08-21 — not a canvas-wiring gap to close
+  anymore, removed as node types entirely (redundant with `function`,
+  never wired, no type-safety benefit as actually built). `decisions.md`,
+  "Config nodes / Tier 1 scope" section; `thingstudio-design-doc.md` §6
+  addendum. `mqtt_publish`/`mqtt_subscribe` also removed from this list
+  2026-08-21 — given real Rete node classes, palette entries, and
+  PropertyPanel.vue blocks in the same change that migrated them to
+  config nodes (see the "Network / config nodes" bullet above); no longer
+  a canvas-presence gap, still pending the real-hardware pass the next
+  bullet tracks.**
 
 ## WiFi provisioning / captive portal
 

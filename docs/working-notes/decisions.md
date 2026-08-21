@@ -217,6 +217,16 @@ Same convention already established for `docs/third-party-licenses.md`.
   mandatory**, for the four non-MQTT network node types — smaller behavior
   change, keeps a config-less flow compiling exactly as before. Same
   note.
+- **2026-08-21 — `mqtt_publish`/`mqtt_subscribe` migrated to `wifiConfigId`
+  (closing the last flagged config-node follow-up besides `http_request`)
+  and given real canvas presence for the first time in the same change.**
+  A referenced config with `security: "unmanaged"` is rejected as a
+  `CompileError` for these two specifically, diverging from
+  `wifi_status`/`udp_send`/`udp_receive` — `mqtt_as` always drives its own
+  connect/reconnect loop and needs real credentials to do so, so there's
+  no "ride on an externally-managed connection" mode to map `"unmanaged"`
+  onto. `mqtt-shared.ts`, `mqtt-publish.ts`, `mqtt-subscribe.ts`,
+  `thingstudio-design-doc.md` §6 addendum.
 
 ## Redeploy / network fault handling
 

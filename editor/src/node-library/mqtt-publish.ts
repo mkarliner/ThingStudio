@@ -8,6 +8,19 @@
 // across mqtt_publish/mqtt_subscribe nodes pointed at the same broker)
 // and why mqtt_as owns its own WiFi connection rather than sharing
 // wifi-status.ts's setup statement.
+//
+// Config nodes (config-node-and-palette-implementation-briefing.md):
+// **behavior change, 2026-08-21** -- credentials now come from a
+// referenced `thingstudio/config/wifi` config node via
+// `node.properties.wifiConfigId`, resolved inside parseMqttBrokerProps
+// (mqtt-shared.ts) via wifi-status.ts's `resolveWifiCredentials()` -- not
+// raw `ssid`/`password` properties on this node directly. See
+// mqtt-shared.ts's own header for why "unmanaged" security is rejected
+// here even though wifi_status/udp_send/udp_receive accept it.
+//
+// Also given real canvas presence in this change (`ports` below) --
+// previously registry-only, per outstanding-items.md's "Network / config
+// nodes" section.
 
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, NodeDefinition, SinkCodegenResult } from "../compiler/node-definition.js";
@@ -18,8 +31,14 @@ import { pyStringLiteral } from "./py-literals.js";
 export const mqttPublishNode: NodeDefinition = {
   type: "thingstudio/mqtt_publish",
   kind: "sink",
-  codegenSink(node: GraphNode, _ctx: CodegenContext): SinkCodegenResult {
-    const cfg = parseMqttBrokerProps(node.properties, "mqtt_publish");
+  // input `msg` type `any` -- payloadToBytesSnippet handles bytes/str/other
+  // uniformly (same reasoning udp_send's own `any` input gets,
+  // wire-type-system-scoping.md).
+  ports: {
+    inputs: [{ name: "msg", type: "any" }],
+  },
+  codegenSink(node: GraphNode, ctx: CodegenContext): SinkCodegenResult {
+    const cfg = parseMqttBrokerProps(node.properties, ctx, "mqtt_publish");
 
     const topic = typeof node.properties.topic === "string" ? node.properties.topic.trim() : "";
     if (!topic) {
@@ -43,7 +62,7 @@ export const mqttPublishNode: NodeDefinition = {
     return {
       imports: ["import mqtt_as"],
       statements: [mqttSetupStatement(cfg)],
-      functionName: _ctx.uniqueName("mqtt_publish"),
+      functionName: ctx.uniqueName("mqtt_publish"),
       functionBody,
     };
   },

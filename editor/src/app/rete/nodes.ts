@@ -14,11 +14,14 @@
 //   - wifi_status:  pollMs, wifiConfigId                       (node-library/wifi-status.ts)
 //   - udp_send:     host, port, timeoutMs, wifiConfigId        (node-library/udp-send.ts)
 //   - udp_receive:  port, pollMs, wifiConfigId                 (node-library/udp-receive.ts)
+//   - mqtt_publish:   broker, port, topic, retain, qos, wifiConfigId   (node-library/mqtt-publish.ts)
+//   - mqtt_subscribe: broker, port, topic, qos, wifiConfigId           (node-library/mqtt-subscribe.ts)
 //
 // poc-rete's fake type set doesn't match 1:1
-// (rete-migration-implementation-briefing.md's callout): "mqtt out" is
-// dropped (never exposed on this canvas, even though
-// node-library/mqtt-publish.ts exists), and "timer" is new -- poc-rete had
+// (rete-migration-implementation-briefing.md's callout): "mqtt out" was
+// originally dropped (never exposed on this canvas, even though
+// node-library/mqtt-publish.ts existed) -- since fixed, see the
+// mqtt_publish/mqtt_subscribe paragraph below. "timer" is new -- poc-rete had
 // no equivalent to port, so its property shape/sizing is fresh work here,
 // unverified in a real browser by anyone until Mike's hands-on pass.
 // "interrupt" is newer still -- added after the rest of this file, when
@@ -37,9 +40,19 @@
 // fields -- the actual fix for the credential-duplication problem this
 // session exists to close. Same "unverified in a real browser until
 // Mike's hands-on pass" caveat as every prior canvas-wiring session.
-// http_request/mqtt_publish/mqtt_subscribe stay registry-only, an
-// explicit flagged follow-up -- see that briefing's own success-criteria
-// section.
+// http_request stays registry-only, an explicit flagged follow-up -- see
+// that briefing's own success-criteria section.
+//
+// mqtt_publish/mqtt_subscribe are newer still (2026-08-21): given the same
+// config-node migration (wifiConfigId, not raw ssid/password) AND, unlike
+// wifi_status/udp_send/udp_receive, first-time canvas wiring at all --
+// they'd been registry-only since introduction, per this file's own
+// now-corrected header above. Same ConfigRefField pattern, EXCEPT
+// mqtt-shared.ts's parseMqttBrokerProps rejects a referenced config whose
+// security is "unmanaged" outright (mqtt_as always needs real credentials
+// to drive its own connect/reconnect loop) -- so PropertyPanel.vue's hint
+// text for these two kinds does NOT repeat the "pick unmanaged" advice the
+// other three kinds' hints give.
 //
 // §6 wire-type system (docs/working-notes/wire-type-system-scoping.md):
 // every port constructed below reads its real socket type from the
@@ -91,6 +104,8 @@ import { interruptNode } from "../../node-library/interrupt.js";
 import { wifiStatusNode } from "../../node-library/wifi-status.js";
 import { udpSendNode } from "../../node-library/udp-send.js";
 import { udpReceiveNode } from "../../node-library/udp-receive.js";
+import { mqttPublishNode } from "../../node-library/mqtt-publish.js";
+import { mqttSubscribeNode } from "../../node-library/mqtt-subscribe.js";
 import { resolvePortType, type PortDefinition } from "../../compiler/node-definition.js";
 import type { CustomNodeDescriptor } from "../../node-library/custom-node.js";
 
@@ -347,6 +362,54 @@ export class UdpReceiveNode extends ClassicPreset.Node {
   }
 }
 
+export class MqttPublishNode extends ClassicPreset.Node {
+  width = 128;
+  height = NODE_HEIGHT;
+  kind = "mqtt_publish" as const;
+  nodeType = "thingstudio/mqtt_publish";
+  highlighted = false;
+
+  // wifiConfigId: "" sentinel, same convention as every other config-node-
+  // referencing kind above -- see WifiStatusNode's own comment. retain
+  // defaults false / qos defaults 0, matching mqtt-publish.ts's own
+  // Number(...??...) defaults exactly (a freshly-dropped node and a
+  // freshly-omitted property on a hand-edited flow file compile the same).
+  properties: { broker: string; port: number; topic: string; retain: boolean; qos: 0 | 1; wifiConfigId: string } = {
+    broker: "",
+    port: 1883,
+    topic: "",
+    retain: false,
+    qos: 0,
+    wifiConfigId: "",
+  };
+
+  constructor() {
+    super("mqtt publish");
+    this.addInput("msg", new ClassicPreset.Input(portSocket(mqttPublishNode.ports?.inputs, "msg", this.properties), "msg"));
+  }
+}
+
+export class MqttSubscribeNode extends ClassicPreset.Node {
+  width = 132;
+  height = NODE_HEIGHT;
+  kind = "mqtt_subscribe" as const;
+  nodeType = "thingstudio/mqtt_subscribe";
+  highlighted = false;
+
+  properties: { broker: string; port: number; topic: string; qos: 0 | 1; wifiConfigId: string } = {
+    broker: "",
+    port: 1883,
+    topic: "",
+    qos: 0,
+    wifiConfigId: "",
+  };
+
+  constructor() {
+    super("mqtt subscribe");
+    this.addOutput("msg", new ClassicPreset.Output(portSocket(mqttSubscribeNode.ports?.outputs, "msg", this.properties), "msg"));
+  }
+}
+
 // --- Custom nodes (docs/working-notes/custom-node-authoring-scoping.md) ---
 //
 // One generic class for every loaded custom node type, instead of a
@@ -398,6 +461,8 @@ export type AnyThingstudioNode =
   | WifiStatusNode
   | UdpSendNode
   | UdpReceiveNode
+  | MqttPublishNode
+  | MqttSubscribeNode
   | CustomNode;
 
 // One constructor per palette kind, shared between the app-shell's
@@ -421,4 +486,6 @@ export const NODE_FACTORIES: Record<NodeKind, () => AnyThingstudioNode> = {
   wifi_status: () => new WifiStatusNode(),
   udp_send: () => new UdpSendNode(),
   udp_receive: () => new UdpReceiveNode(),
+  mqtt_publish: () => new MqttPublishNode(),
+  mqtt_subscribe: () => new MqttSubscribeNode(),
 };

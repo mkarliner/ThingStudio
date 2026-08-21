@@ -8,13 +8,21 @@
 // `_inject()` to place a message on the client's queue BEFORE running
 // buildMsg (which awaits queue.__anext__()) -- the software-only analog
 // of the witness rig physically driving a stimulus into a gpio_in flow.
+//
+// Config nodes (config-node-and-palette-implementation-briefing.md):
+// updated 2026-08-21 for the wifiConfigId behavior change -- see
+// mqtt-shared.ts's own header. Same fake-resolveConfig-via-local-map
+// pattern node-udp-send.test.ts uses, EXCEPT there's no "unmanaged1"
+// stand-in default here: mqtt_subscribe rejects "unmanaged" outright (see
+// mqtt-shared.ts's header for why), so the default seeded config
+// ("wifi1") always carries a real ssid/password.
 
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { compile } from "../src/compiler/compile.js";
 import { CompileError } from "../src/compiler/errors.js";
 import type { GraphData, GraphNode } from "../src/compiler/graph.js";
@@ -23,6 +31,20 @@ import { buildRegistry } from "../src/node-library/registry.js";
 import { mqttSubscribeNode } from "../src/node-library/mqtt-subscribe.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+
+const fakeConfigs = new Map<string, Record<string, unknown>>();
+function setConfig(id: string, properties: Record<string, unknown>): void {
+  fakeConfigs.set(id, properties);
+}
+
+const DEFAULT_WIFI_CONFIGS: NonNullable<GraphData["configs"]> = [
+  { id: "wifi1", type: "thingstudio/config/wifi", properties: { ssid: "s", password: "pw" } },
+];
+
+beforeEach(() => {
+  fakeConfigs.clear();
+  setConfig("wifi1", { ssid: "s", password: "pw" });
+});
 
 function freshCtx(): CodegenContext {
   const used = new Set<string>();
@@ -34,12 +56,10 @@ function freshCtx(): CodegenContext {
       used.add(candidate);
       return candidate;
     },
-    // resolveConfig isn't exercised here -- mqtt_subscribe stays
-    // registry-only this session (config-node-and-palette-implementation-
-    // briefing.md's explicit, flagged follow-up). Stub throws if ever
-    // called, matching every other node test file's updated ctx.
     resolveConfig(id: string): Record<string, unknown> {
-      throw new Error(`unexpected resolveConfig("${id}") call -- this test file's ctx doesn't stub any configs`);
+      const cfg = fakeConfigs.get(id);
+      if (!cfg) throw new CompileError(`referenced config "${id}" not found`);
+      return cfg;
     },
   };
 }
@@ -80,7 +100,7 @@ function runOneMessage(properties: Record<string, unknown>, injectedTopic: strin
 
 describe("thingstudio/mqtt_subscribe node", () => {
   it("connects, subscribes, and delivers an incoming message as payload/topic", () => {
-    const output = runOneMessage({ broker: "b", port: 1883, topic: "sensors/temp", ssid: "s" }, "sensors/temp", "23.5");
+    const output = runOneMessage({ broker: "b", port: 1883, topic: "sensors/temp", wifiConfigId: "wifi1" }, "sensors/temp", "23.5");
     expect(output).toContain("MQTT_CONNECT server=b port=1883");
     expect(output).toContain("MQTT_SUBSCRIBE topic='sensors/temp' qos=0");
     expect(output).toContain("'payload': '23.5'");
@@ -88,34 +108,66 @@ describe("thingstudio/mqtt_subscribe node", () => {
   });
 
   it("decodes the retained flag", () => {
-    const output = runOneMessage({ broker: "b", topic: "t", ssid: "s" }, "t", "x", true);
+    const output = runOneMessage({ broker: "b", topic: "t", wifiConfigId: "wifi1" }, "t", "x", true);
     expect(output).toContain("'retained': True");
   });
 
   it("subscribes with the configured qos", () => {
-    const output = runOneMessage({ broker: "b", topic: "t", ssid: "s", qos: 1 }, "t", "x");
+    const output = runOneMessage({ broker: "b", topic: "t", wifiConfigId: "wifi1", qos: 1 }, "t", "x");
     expect(output).toContain("MQTT_SUBSCRIBE topic='t' qos=1");
   });
 
-  it("rejects a missing broker/ssid/topic", () => {
+  it("rejects a missing broker/wifiConfigId/topic", () => {
     const ctx = freshCtx();
-    expect(() => mqttSubscribeNode.codegenSource!(node({ topic: "t", ssid: "s" }), ctx)).toThrow(CompileError);
-    expect(() => mqttSubscribeNode.codegenSource!(node({ broker: "b", topic: "t" }), ctx)).toThrow(/requires "ssid"/);
-    expect(() => mqttSubscribeNode.codegenSource!(node({ broker: "b", ssid: "s" }), ctx)).toThrow(/non-empty "topic"/);
+    expect(() => mqttSubscribeNode.codegenSource!(node({ topic: "t", wifiConfigId: "wifi1" }), ctx)).toThrow(CompileError);
+    expect(() => mqttSubscribeNode.codegenSource!(node({ broker: "b", topic: "t" }), ctx)).toThrow(/requires a WiFi config/);
+    expect(() => mqttSubscribeNode.codegenSource!(node({ broker: "b", wifiConfigId: "wifi1" }), ctx)).toThrow(/non-empty "topic"/);
   });
 
   it("rejects an unsupported qos", () => {
     const ctx = freshCtx();
-    expect(() => mqttSubscribeNode.codegenSource!(node({ broker: "b", ssid: "s", topic: "t", qos: 2 }), ctx)).toThrow(/must be 0 or 1/);
+    expect(() => mqttSubscribeNode.codegenSource!(node({ broker: "b", wifiConfigId: "wifi1", topic: "t", qos: 2 }), ctx)).toThrow(/must be 0 or 1/);
+  });
+
+  it("rejects a referenced config with security 'unmanaged' -- mqtt_as always needs real credentials", () => {
+    setConfig("unmanaged1", { security: "unmanaged" });
+    const ctx = freshCtx();
+    expect(() => mqttSubscribeNode.codegenSource!(node({ broker: "b", wifiConfigId: "unmanaged1", topic: "t" }), ctx)).toThrow(
+      /security "unmanaged", which isn't supported here/,
+    );
+  });
+
+  it("rejects a referenced config with security 'password' (the default) and an empty password", () => {
+    setConfig("nopw", { ssid: "MyNet", password: "" });
+    const ctx = freshCtx();
+    expect(() => mqttSubscribeNode.codegenSource!(node({ broker: "b", wifiConfigId: "nopw", topic: "t" }), ctx)).toThrow(
+      /has no password but security is "password"/,
+    );
+  });
+
+  it("resolves ssid/password from the referenced config into the client setup code", () => {
+    setConfig("wifi2", { ssid: "RealNet", password: "realpw" });
+    const ctx = freshCtx();
+    const result = mqttSubscribeNode.codegenSource!(node({ broker: "b", wifiConfigId: "wifi2", topic: "t" }), ctx);
+    expect(result.statements?.[0]?.code).toContain('"RealNet"');
+    expect(result.statements?.[0]?.code).toContain('"realpw"');
+  });
+
+  it("raises a CompileError referencing the missing id when wifiConfigId doesn't resolve", () => {
+    const ctx = freshCtx();
+    expect(() => mqttSubscribeNode.codegenSource!(node({ broker: "b", wifiConfigId: "nope", topic: "t" }), ctx)).toThrow(
+      /referenced config "nope" not found/,
+    );
   });
 
   it("compiles into a full flow with the expected structure (source text only -- not executed, see header)", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/mqtt_subscribe", properties: { broker: "b", topic: "sensors/temp", ssid: "s" } },
+        { id: 1, type: "thingstudio/mqtt_subscribe", properties: { broker: "b", topic: "sensors/temp", wifiConfigId: "wifi1" } },
         { id: 2, type: "thingstudio/debug", properties: {} },
       ],
       links: [[1, 1, 0, 2, 0, "any"]],
+      configs: DEFAULT_WIFI_CONFIGS,
     };
     const { source } = compile(graph, buildRegistry());
     expect(source).toContain("mqtt_as.MQTTClient(");
@@ -126,10 +178,11 @@ describe("thingstudio/mqtt_subscribe node", () => {
   it("two mqtt_subscribe nodes on the same broker share one client but subscribe independently", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/mqtt_subscribe", properties: { broker: "b", topic: "t1", ssid: "s" } },
-        { id: 2, type: "thingstudio/mqtt_subscribe", properties: { broker: "b", topic: "t2", ssid: "s" } },
+        { id: 1, type: "thingstudio/mqtt_subscribe", properties: { broker: "b", topic: "t1", wifiConfigId: "wifi1" } },
+        { id: 2, type: "thingstudio/mqtt_subscribe", properties: { broker: "b", topic: "t2", wifiConfigId: "wifi1" } },
       ],
       links: [],
+      configs: DEFAULT_WIFI_CONFIGS,
     };
     const { source } = compile(graph, buildRegistry());
     expect(source.match(/mqtt_as\.MQTTClient\(/g)?.length).toBe(1);
@@ -143,10 +196,11 @@ describe("thingstudio/mqtt_subscribe node", () => {
     const graph: GraphData = {
       nodes: [
         { id: 1, type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "x", repeat: "manual" } },
-        { id: 2, type: "thingstudio/mqtt_publish", properties: { broker: "shared.broker", port: 1883, topic: "out", ssid: "s" } },
-        { id: 3, type: "thingstudio/mqtt_subscribe", properties: { broker: "shared.broker", port: 1883, topic: "in", ssid: "s" } },
+        { id: 2, type: "thingstudio/mqtt_publish", properties: { broker: "shared.broker", port: 1883, topic: "out", wifiConfigId: "wifi1" } },
+        { id: 3, type: "thingstudio/mqtt_subscribe", properties: { broker: "shared.broker", port: 1883, topic: "in", wifiConfigId: "wifi1" } },
       ],
       links: [[1, 1, 0, 2, 0, "string"]],
+      configs: DEFAULT_WIFI_CONFIGS,
     };
     const { source } = compile(graph, buildRegistry());
     expect(source.match(/mqtt_as\.MQTTClient\(/g)?.length).toBe(1);

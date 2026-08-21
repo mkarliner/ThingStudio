@@ -47,9 +47,44 @@
 // upstream support for it), not just a config change here -- a real
 // enough lift that it's worth confirming there's an actual board/use case
 // before starting, not speculatively built now.
+//
+// Config nodes (config-node-and-palette-implementation-briefing.md):
+// **behavior change, 2026-08-21** -- `parseMqttBrokerProps` no longer reads
+// raw `ssid`/`password` node properties directly. Credentials now come from
+// a referenced `thingstudio/config/wifi` config node, via
+// `properties.wifiConfigId` + `ctx.resolveConfig()`, resolved through
+// wifi-status.ts's `resolveWifiCredentials()` -- the same shared lookup
+// udp-send.ts/udp-receive.ts already use, so mqtt_publish/mqtt_subscribe
+// close the exact gap `outstanding-items.md`'s "Network / config nodes"
+// section named ("http_request/mqtt_publish/mqtt_subscribe never got the
+// config-node treatment"). `http_request` is NOT migrated by this change --
+// still reading raw ssid/password, an explicitly flagged, separate
+// follow-up (see that file's own header).
+//
+// **One real divergence from udp-send.ts/udp-receive.ts's own treatment,
+// not a smaller version of the same migration:** a config whose `security`
+// is `"unmanaged"` is a CompileError here, not a supported state.
+// wifiSetupStatement() (wifi-status.ts) can skip its `.connect()` call
+// entirely for "unmanaged" because it's just bringing an interface up --
+// but mqtt_as has no equivalent "don't manage WiFi" mode; per this file's
+// own header above, it always drives its own connect/reconnect loop
+// through the ssid/wifi_pw baked into its config dict, and always has,
+// even before config nodes existed (`parseMqttBrokerProps` already
+// required a non-empty ssid). Accepting "unmanaged" here would mean
+// silently handing mqtt_as an empty ssid, and per Problem 2's "barf on
+// undefined network details" precedent (`redeploy-cleanup-and-network-
+// fault-detection-briefing.md`), a loud rejection is the right behavior,
+// not a quiet best-effort attempt. Same reasoning now also applied to an
+// empty password on a `"password"`-security config -- wifiSetupStatement()
+// already rejects that combination for wifi_status/udp_send/udp_receive;
+// parseMqttBrokerProps didn't check it before (there was no `security`
+// field to check against until config nodes existed), so this closes a
+// real, previously-unchecked gap, not just extending an existing one.
 
 import { CompileError } from "../compiler/errors.js";
+import type { CodegenContext } from "../compiler/node-definition.js";
 import { pyStringLiteral } from "./py-literals.js";
+import { resolveWifiCredentials } from "./wifi-status.js";
 
 export interface MqttBrokerConfig {
   broker: string;
@@ -83,8 +118,12 @@ export function mqttSetupKey(cfg: MqttBrokerConfig): string {
 }
 
 /** `context` is prefixed onto error messages (e.g. "mqtt_publish", so a
- * caller's CompileError says which node type actually rejected it). */
-export function parseMqttBrokerProps(properties: Record<string, unknown>, context: string): MqttBrokerConfig {
+ * caller's CompileError says which node type actually rejected it).
+ * `ctx` resolves `properties.wifiConfigId` via `resolveWifiCredentials()`
+ * (wifi-status.ts) -- see this file's header for why "unmanaged" is
+ * rejected here even though it's a supported state for wifi_status/
+ * udp_send/udp_receive. */
+export function parseMqttBrokerProps(properties: Record<string, unknown>, ctx: CodegenContext, context: string): MqttBrokerConfig {
   const broker = typeof properties.broker === "string" ? properties.broker.trim() : "";
   if (!broker) {
     throw new CompileError(`${context} requires a "broker" hostname/IP`);
@@ -93,7 +132,14 @@ export function parseMqttBrokerProps(properties: Record<string, unknown>, contex
   if (!Number.isFinite(port) || port <= 0 || port > 65535) {
     throw new CompileError(`${context} port "${String(properties.port)}" must be a valid port number (1-65535)`);
   }
-  const ssid = typeof properties.ssid === "string" ? properties.ssid.trim() : "";
+
+  const resolved = resolveWifiCredentials(properties, ctx, context);
+  if (resolved.security === "unmanaged") {
+    throw new CompileError(
+      `${context}'s WiFi config has security "unmanaged", which isn't supported here -- mqtt_as manages its own WiFi connection and needs real credentials to do so, unlike wifi_status/udp_send/udp_receive, which can ride on an externally-managed connection. Reference a config with a real ssid/password instead.`,
+    );
+  }
+  const ssid = typeof resolved.ssid === "string" ? resolved.ssid.trim() : "";
   if (!ssid) {
     // Deliberately required rather than optional-with-fallback (contrast
     // wifi-status.ts/http-request.ts, where an empty ssid just skips the
@@ -102,7 +148,12 @@ export function parseMqttBrokerProps(properties: Record<string, unknown>, contex
     // rather than assuming a connection already exists.
     throw new CompileError(`${context} requires "ssid" -- mqtt_as manages its own WiFi connection and needs credentials to do so`);
   }
-  const password = typeof properties.password === "string" ? properties.password : "";
+  const password = typeof resolved.password === "string" ? resolved.password : "";
+  if (resolved.security === "password" && !password) {
+    throw new CompileError(
+      `${context}'s WiFi config for ssid "${ssid}" has no password but security is "password" -- set a password, or choose "open" if this network intentionally has none`,
+    );
+  }
   return { broker, port, ssid, password };
 }
 
