@@ -195,6 +195,18 @@ Same convention already established for `docs/third-party-licenses.md`.
   deferred to v2 (MicroPython support unconfirmed across targets); HTTP-in
   (on-device server) stays deferred per §6's existing dashboard reasoning.
   `tier1-node-candidates-prioritization-briefing.md`.
+- **2026-08-21 — `boolean`/`arithmetic`/`comparator` node types removed
+  entirely, same reasoning as ADC/file ops above.** Mike's call, checked
+  rather than rubber-stamped: the one real counter-argument (a dedicated
+  node could carry narrower, statically-checked port types than
+  `function`'s necessarily-`any` ports) didn't hold for the code as
+  shipped — none of the three declared a `ports` field, so they had zero
+  type-safety benefit in practice, and all three were single-input
+  transforms against a configured constant, so `function` was already a
+  strict functional superset. Never wired onto the canvas. Not a one-way
+  door — nothing deployed references these types, cheap to re-add later
+  if canvas wiring + real typed ports is ever actually built for them.
+  `thingstudio-design-doc.md` §6 addendum, `registry.ts`.
 - **2026-08-18 — Config nodes: build Node-RED's per-flow, referenced-by-ID
   pattern, not the design doc's original per-device-override vision.**
   Direct override from Mike ("entering ssid credentials multiple times is

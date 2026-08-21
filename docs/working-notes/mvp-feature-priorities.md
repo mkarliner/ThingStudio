@@ -105,6 +105,12 @@ Sequenced by risk and dependency, not just copied from §6's list order:
    now, not yet the flash-backed store §5 describes — that's still Tier
    2's unbuilt "flow persistence" work, noted in each node file's own
    header rather than silently assumed done.
+   **2026-08-21: boolean/arithmetic/comparator removed from the node set
+   entirely** (Mike's call, `decisions.md` "Config nodes / Tier 1 scope" —
+   redundant with the function node as actually built, never wired onto
+   the canvas). This bullet's "done as of 2026-08-13" stays accurate as a
+   historical record of what landed that session; the removal is a later,
+   separate event, not a correction to what happened then.
 2. **GPIO/timers** — GPIO in/out + PWM, timers/intervals. Real I/O, but on
    exactly the mechanism POC-A/D already proved reliable on hardware.
    **Off-device done as of 2026-08-14** (`mvp-validation-plan.md`'s dated
