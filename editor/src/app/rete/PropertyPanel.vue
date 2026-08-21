@@ -43,6 +43,16 @@
   possible and correct. No raw ssid/password inputs anywhere in this file
   any more for these three kinds -- that's deliberate, not an oversight,
   see wifi-status.ts's own header on why.
+
+  Custom nodes (docs/working-notes/custom-node-authoring-scoping.md,
+  2026-08-20): one generic block below, driven entirely by
+  CustomNode.descriptor.properties (custom-node.ts) instead of a
+  hand-written block per type -- the whole point of a data-driven
+  descriptor. Deliberately renders from a static schema only (text/
+  number/boolean/select), never executes anything from the loaded
+  package -- see custom-node.ts's own header on why (no Node-RED-style
+  oneditprepare/oneditsave equivalent here, a deliberate divergence
+  confirmed with Mike).
 -->
 <template>
   <div class="property-panel">
@@ -165,6 +175,24 @@
       <template v-else-if="node.kind === 'debug'">
         <p class="hint">No properties -- this node just prints the inbound payload to the device console.</p>
       </template>
+
+      <template v-else-if="node.kind === 'custom' && customDescriptor">
+        <template v-for="f in customDescriptor.properties ?? []" :key="f.name">
+          <label v-if="f.kind === 'boolean'" class="checkbox-label">
+            <input type="checkbox" v-model="customProperties[f.name]" @change="touch" />
+            {{ f.label }}
+          </label>
+          <label v-else>
+            {{ f.label }}
+            <select v-if="f.kind === 'select'" v-model="customProperties[f.name]" @change="touch">
+              <option v-for="opt in f.options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+            </select>
+            <input v-else-if="f.kind === 'number'" type="number" v-model.number="customProperties[f.name]" @input="touch" />
+            <input v-else type="text" v-model="customProperties[f.name]" @input="touch" />
+          </label>
+        </template>
+        <p class="hint">Custom node ({{ customDescriptor.type }}) -- loaded this session only; reload its package after a page refresh.</p>
+      </template>
     </template>
     <p v-else class="hint">Select a node to edit its properties.</p>
   </div>
@@ -173,8 +201,8 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { selectedNode, bumpPropertyVersion, propertyVersion } from "./store";
-import { NODE_PALETTE, DEFAULT_KIND_STYLE, type NodeKind } from "./palette";
-import { InjectNode } from "./nodes";
+import { NODE_PALETTE, DEFAULT_KIND_STYLE, type NodeKind, type KindStyle } from "./palette";
+import { InjectNode, CustomNode } from "./nodes";
 import ConfigRefField from "./ConfigRefField.vue";
 
 const node = computed(() => {
@@ -182,7 +210,26 @@ const node = computed(() => {
   return selectedNode.value;
 });
 
-const kindStyle = computed(() => (node.value ? (NODE_PALETTE[node.value.kind as NodeKind] ?? DEFAULT_KIND_STYLE) : DEFAULT_KIND_STYLE));
+const customDescriptor = computed(() => (node.value instanceof CustomNode ? node.value.descriptor : null));
+
+// A plain untyped view onto the selected custom node's properties, purely
+// so the template above can use ordinary `customProperties[f.name]`
+// v-model bindings without a TS cast inside the template expression --
+// this project has no vue-tsc in its toolchain (package.json), so .vue
+// templates aren't type-checked today, and keeping template expressions
+// simple/uncast is one less thing to get wrong in the SFC compiler
+// regardless. Reads/writes the exact same object node.properties already
+// is, just via a loosely-typed local name.
+const customProperties = computed<Record<string, unknown>>(() => (node.value?.properties ?? {}) as Record<string, unknown>);
+
+const kindStyle = computed<KindStyle>(() => {
+  if (!node.value) return DEFAULT_KIND_STYLE;
+  if (node.value instanceof CustomNode) {
+    const d = node.value.descriptor;
+    return { color: d.color ?? DEFAULT_KIND_STYLE.color, bgcolor: d.bgcolor ?? DEFAULT_KIND_STYLE.bgcolor, icon: d.icon ?? "◆", label: d.label };
+  }
+  return NODE_PALETTE[node.value.kind as NodeKind] ?? DEFAULT_KIND_STYLE;
+});
 
 function touch(): void {
   bumpPropertyVersion();

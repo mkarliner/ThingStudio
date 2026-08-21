@@ -24,6 +24,14 @@
   forces a re-render via `area.update("node", id)`, since Rete nodes aren't
   Vue-reactive (see nodes.ts's own comment on the field).
 
+  Custom nodes (docs/working-notes/custom-node-authoring-scoping.md,
+  2026-08-20): `palette` below special-cases a CustomNode instance to read
+  its own descriptor's color/bgcolor/icon instead of looking `data.kind`
+  ("custom", for every loaded custom type) up in NODE_PALETTE, which would
+  otherwise fall through to DEFAULT_KIND_STYLE for all of them
+  indistinguishably. `data.label` needs no equivalent fix -- Rete's own
+  `ClassicPreset.Node` label is already set from the descriptor in
+  CustomNode's constructor (nodes.ts).
 -->
 <template>
   <div class="ts-node" :class="[`kind-${data.kind}`, { selected: data.selected, highlighted: data.highlighted }]" :style="nodeStyles">
@@ -54,8 +62,8 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { Ref } from "rete-vue-plugin";
-import type { AnyThingstudioNode } from "./nodes";
-import { NODE_PALETTE, DEFAULT_KIND_STYLE, type NodeKind } from "./palette";
+import { CustomNode, type AnyThingstudioNode } from "./nodes";
+import { NODE_PALETTE, DEFAULT_KIND_STYLE, type NodeKind, type KindStyle } from "./palette";
 
 // `data` is the actual node instance (rete-vue-plugin hands the render
 // context's `payload` straight through as this prop) so `.kind`/
@@ -67,7 +75,13 @@ const props = defineProps<{
   emit: (data: unknown) => unknown;
 }>();
 
-const palette = computed(() => NODE_PALETTE[props.data.kind as NodeKind] ?? DEFAULT_KIND_STYLE);
+const palette = computed<KindStyle>(() => {
+  if (props.data instanceof CustomNode) {
+    const d = props.data.descriptor;
+    return { color: d.color ?? DEFAULT_KIND_STYLE.color, bgcolor: d.bgcolor ?? DEFAULT_KIND_STYLE.bgcolor, icon: d.icon ?? "◆", label: d.label };
+  }
+  return NODE_PALETTE[props.data.kind as NodeKind] ?? DEFAULT_KIND_STYLE;
+});
 const icon = computed(() => palette.value.icon);
 
 // app/nodes.ts's exact error-attribution colors (highlightNode()'s

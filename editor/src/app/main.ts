@@ -43,19 +43,36 @@
 // canvas-clear (clearConfigs) -- the "genuinely new plumbing" the briefing
 // calls out, not a couple of extra fields on something that already walks
 // the canvas.
+//
+// Custom node authoring (docs/working-notes/custom-node-authoring-
+// scoping.md, 2026-08-20): a loaded custom node type (rete/custom-nodes-
+// store.ts) is session-scoped, not flow-scoped -- unlike configs, it is
+// NOT cleared by "clear canvas" and is not part of applyFlowFile()'s
+// clear-then-repopulate cycle. What IS new here: addCustomNodeOfType()
+// (this file's equivalent of addNodeOfKind() for a loaded custom type),
+// the drop handler's second MIME check, applyFlowFile()'s per-node branch
+// (a saved node whose type matches a *currently loaded* custom package
+// constructs via CustomNode instead of NODE_FACTORIES -- one not
+// currently loaded already falls through to the pre-existing "unknown
+// type, skip + log" path unchanged, no special-casing needed there), and
+// currentSource()'s registry merge (custom-node.ts's
+// mergeCustomNodeRegistry(), rebuilt fresh each compile since custom
+// nodes can be loaded mid-session).
 
 import { createApp, watch } from "vue";
 import { compile } from "../compiler/compile.js";
 import type { NodeLineRange } from "../compiler/compile.js";
 import { buildRegistry } from "../node-library/registry.js";
+import { mergeCustomNodeRegistry } from "../node-library/custom-node.js";
 import { WebSerialTransport, type WebSerialPort } from "../protocol/transport.js";
 import type { Message, ProtocolVersion } from "../protocol/messages.js";
 import { decideDeploy } from "../protocol/version.js";
 import { createThingstudioEditor, type ThingstudioEditor } from "./rete/editor-setup.js";
-import { NODE_FACTORIES, type AnyThingstudioNode } from "./rete/nodes.js";
-import { DRAG_MIME, type NodeKind } from "./rete/palette.js";
+import { NODE_FACTORIES, CustomNode, type AnyThingstudioNode } from "./rete/nodes.js";
+import { DRAG_MIME, CUSTOM_DRAG_MIME, type NodeKind } from "./rete/palette.js";
 import { toGraphData, socketIndex } from "./rete/graph-adapter.js";
 import { propertyVersion, configs as configsStore, replaceAllConfigs, clearConfigs } from "./rete/store.js";
+import { getCustomNodePackage, listCustomNodeDefinitions } from "./rete/custom-nodes-store.js";
 import PaletteSidebar from "./rete/PaletteSidebar.vue";
 import PropertyPanel from "./rete/PropertyPanel.vue";
 import {
@@ -99,6 +116,23 @@ async function addNodeOfKind(kind: NodeKind, position?: { x: number; y: number }
   return node;
 }
 
+/** Custom-node counterpart to addNodeOfKind() above -- `type` must name a
+ * package already loaded this session (rete/custom-nodes-store.ts); a
+ * stale drag/click referencing a type that's since... never happens today
+ * (nothing unloads a custom type once loaded), but a stale flow file
+ * reference is real (applyFlowFile() below), so this stays a fallible
+ * lookup rather than an assert. */
+async function addCustomNodeOfType(type: string, position?: { x: number; y: number }): Promise<AnyThingstudioNode | null> {
+  const pkg = getCustomNodePackage(type);
+  if (!pkg) {
+    logLine(`[custom node "${type}" is not loaded this session -- use "Load custom node..." first]`, "err");
+    return null;
+  }
+  const node = new CustomNode(pkg.descriptor);
+  await reteHandle.addNode(node, position ?? nextGridPosition());
+  return node;
+}
+
 el("clear-canvas").addEventListener("click", async () => {
   await reteHandle.clear();
   placeCount = 0;
@@ -106,17 +140,30 @@ el("clear-canvas").addEventListener("click", async () => {
   // boxes -- graph.ts's GraphConfigNode header), but "clear canvas" means
   // "start a new empty flow" from the user's point of view, so they reset
   // together rather than leaving orphaned configs no visible node
-  // references anymore.
+  // references anymore. Loaded custom node *types* are session-scoped, not
+  // flow-scoped (this file's header comment) -- deliberately NOT reset
+  // here.
   clearConfigs();
 });
 
-// Palette (left) -- click-to-add via the `add` emit. Vue's programmatic
-// mount treats an `onAdd` prop as a listener for an emitted `add` event,
-// same as if this were a child component in a template
-// (PaletteSidebar.vue's own `defineEmits<{ add: [kind: NodeKind] }>()`).
+// Palette (left) -- click-to-add via the `add`/`addCustom` emits, plus the
+// two custom-node-load outcome emits routed to the same device console
+// every other status line already uses. Vue's programmatic mount treats
+// an `onX` prop as a listener for an emitted `x` event, same as if this
+// were a child component in a template (PaletteSidebar.vue's own
+// `defineEmits<...>()`).
 createApp(PaletteSidebar, {
   onAdd: (kind: NodeKind) => {
     void addNodeOfKind(kind);
+  },
+  onAddCustom: (type: string) => {
+    void addCustomNodeOfType(type);
+  },
+  onCustomNodeLoaded: (type: string) => {
+    logLine(`[custom node loaded: ${type}]`, "ok");
+  },
+  onCustomNodeLoadError: (message: string) => {
+    logLine(`[custom node load failed] ${message}`, "err");
   },
 }).mount(el("palette-mount"));
 
@@ -130,18 +177,27 @@ createApp(PropertyPanel).mount(el("property-panel-mount"));
 // back to graph space by subtracting the canvas's own on-screen offset and
 // current pan, then dividing by zoom (the inverse of how the canvas
 // positions/scales its content layer). PaletteSidebar.vue's own dragstart
-// sets DRAG_MIME; this is the drop-target half, a plain DOM listener
+// sets DRAG_MIME (built-in kinds) or CUSTOM_DRAG_MIME (loaded custom
+// types, checked first below since a custom type is never also a NodeKind
+// literal -- the two MIME types are mutually exclusive per drag, not a
+// fallback chain); this is the drop-target half, a plain DOM listener
 // rather than part of either mounted Vue app since the gesture crosses a
 // real DOM boundary between them.
 canvasContainer.addEventListener("dragover", (e) => e.preventDefault());
 canvasContainer.addEventListener("drop", (e) => {
   e.preventDefault();
-  const kind = e.dataTransfer?.getData(DRAG_MIME) as NodeKind | "";
-  if (!kind) return;
   const rect = canvasContainer.getBoundingClientRect();
   const { x: panX, y: panY, k: zoom } = reteArea.area.transform;
   const graphX = (e.clientX - rect.left - panX) / zoom;
   const graphY = (e.clientY - rect.top - panY) / zoom;
+
+  const customType = e.dataTransfer?.getData(CUSTOM_DRAG_MIME);
+  if (customType) {
+    void addCustomNodeOfType(customType, { x: graphX, y: graphY });
+    return;
+  }
+  const kind = e.dataTransfer?.getData(DRAG_MIME) as NodeKind | "";
+  if (!kind) return;
   void addNodeOfKind(kind, { x: graphX, y: graphY });
 });
 
@@ -175,7 +231,13 @@ function extractCanvasSnapshot(): { nodes: CanvasNodeSnapshot[]; edges: FlowFile
     const pos: [number, number] = view ? [view.position.x, view.position.y] : [0, 0];
     return {
       id: fileIdByReteId.get(n.id)!,
-      type: `thingstudio/${n.kind}`,
+      // n.nodeType is each node's own real compiler type string (nodes.ts)
+      // -- "thingstudio/xxx" for a first-party kind, or a custom type's own
+      // namespaced id verbatim (e.g. "custom/dht22") -- read directly
+      // instead of computing `` `thingstudio/${n.kind}` ``, which assumed
+      // every node lives in the "thingstudio/" namespace (docs/working-
+      // notes/custom-node-authoring-scoping.md, 2026-08-20).
+      type: n.nodeType,
       properties: n.properties,
       pos,
       size: [n.width, n.height],
@@ -206,16 +268,18 @@ function extractConfigsSnapshot(): FlowFileConfig[] {
  * Litegraph version -- rete has no widget layer to sync (no
  * per-node `configure()` call doing double duty the way Litegraph's did),
  * which makes this simpler, not harder: construct each node via
- * NODE_FACTORIES, assign its saved properties directly, and place it via
+ * NODE_FACTORIES (or, for a custom type, `new CustomNode(descriptor)` --
+ * see below), assign its saved properties directly, and place it via
  * reteHandle.addNode(). The fault-handling contract this replaces is not
  * negotiable and is unchanged: a referenced node type that isn't
- * registered (a newer/unknown type, or a typo from hand-editing the file)
- * is reported and skipped, along with any edge touching it, rather than
- * aborting the whole load -- CLAUDE.md's fault-handling priority applied
- * to file I/O: a partially-bad file should still load what it can. An edge
- * naming a valid slot index that doesn't resolve to a real socket key, or
- * a connection Rete's own validation pipe rejects, is reported and skipped
- * the same way rather than treated as fatal.
+ * registered (a newer/unknown type, a typo from hand-editing the file, or
+ * -- new with custom nodes -- a custom type this session hasn't loaded
+ * yet) is reported and skipped, along with any edge touching it, rather
+ * than aborting the whole load -- CLAUDE.md's fault-handling priority
+ * applied to file I/O: a partially-bad file should still load what it
+ * can. An edge naming a valid slot index that doesn't resolve to a real
+ * socket key, or a connection Rete's own validation pipe rejects, is
+ * reported and skipped the same way rather than treated as fatal.
  */
 async function applyFlowFile(file: FlowFile): Promise<void> {
   await reteHandle.clear();
@@ -229,14 +293,27 @@ async function applyFlowFile(file: FlowFile): Promise<void> {
   const nodeByFileId = new Map<number, AnyThingstudioNode>();
 
   for (const n of file.nodes) {
-    const kind = n.type.replace(/^thingstudio\//, "") as NodeKind;
-    const factory = NODE_FACTORIES[kind];
-    if (!factory) {
-      skippedFileIds.add(n.id);
-      logLine(`[load: skipped node ${n.id}, unknown type "${n.type}"]`, "err");
-      continue;
+    // Custom node types are checked first -- a loaded custom package's
+    // `type` never starts with "thingstudio/" (validateCustomNodeDescriptor
+    // enforces the reserved namespace), so there's no ambiguity between
+    // the two lookups. A custom type this session simply hasn't loaded
+    // yet falls straight through to the existing built-in lookup below,
+    // which correctly reports it as unknown (custom-node-authoring-
+    // scoping.md's Decision 4: session-scoped loading, no auto-restore).
+    const customPkg = getCustomNodePackage(n.type);
+    let node: AnyThingstudioNode;
+    if (customPkg) {
+      node = new CustomNode(customPkg.descriptor);
+    } else {
+      const kind = n.type.replace(/^thingstudio\//, "") as NodeKind;
+      const factory = NODE_FACTORIES[kind];
+      if (!factory) {
+        skippedFileIds.add(n.id);
+        logLine(`[load: skipped node ${n.id}, unknown type "${n.type}"]`, "err");
+        continue;
+      }
+      node = factory();
     }
-    const node = factory();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     Object.assign(node.properties as any, n.properties);
     const layoutEntry = file.layout[String(n.id)];
@@ -376,7 +453,14 @@ function compileToMpy(source: string): Uint8Array {
 // ---------------------------------------------------------------------
 // Compile (source preview -- runs the real compiler, no device needed)
 // ---------------------------------------------------------------------
-const registry = buildRegistry();
+// Base registry, built once -- every compile merges the loaded custom
+// node definitions (rete/custom-nodes-store.ts) on top of this fresh
+// (custom-node.ts's mergeCustomNodeRegistry(), see currentSource() below),
+// since which custom types are loaded can change mid-session. Renamed
+// from the old bare `registry` (docs/working-notes/custom-node-
+// authoring-scoping.md, 2026-08-20) so it's unambiguous this is the
+// built-in-only base, not the registry actually passed to compile().
+const builtInRegistry = buildRegistry();
 
 // Node-ID line ranges from the most recent successful compile -- stashed
 // here rather than threaded through refreshPreview()'s return value so the
@@ -396,6 +480,13 @@ let lastReteIdByNodeId: Map<number, string> = new Map();
 function currentSource(): string {
   const { graphData, reteIdByNodeId } = toGraphData(reteEditor, [...configsStore.value.values()]);
   lastReteIdByNodeId = reteIdByNodeId;
+  // mergeCustomNodeRegistry throws (CustomNodeDescriptorError) if two
+  // loaded custom packages collide on the same type id -- allowed to
+  // propagate out to refreshPreview()'s existing catch below, which
+  // already turns any thrown Error from this function into a visible
+  // "COMPILE ERROR: ..." in the source preview panel; no special-casing
+  // needed here for that to be comprehensible.
+  const registry = mergeCustomNodeRegistry(builtInRegistry, listCustomNodeDefinitions());
   const { source, nodeLineRanges } = compile(graphData, registry);
   lastNodeLineRanges = nodeLineRanges;
   return source;
@@ -429,6 +520,9 @@ function refreshPreview(): { source: string } | { error: string } {
 //     msg22/NameError case that motivated adding this: syntactically
 //     valid Python, so mpy-cross never rejects it -- it only fails once
 //     actually executed on-device, which is exactly case 2, not case 1.
+//     A custom node's own NameError (e.g. its `.node.py` doesn't actually
+//     define `run`/`emit`, custom-node.ts's own header) is exactly this
+//     case too -- syntactically valid Python, fails only once imported.
 //
 // Both cases' own logic is unchanged from the Litegraph version (Phase 3
 // item 12) -- only the mechanism that turns a node red changed, from
@@ -464,7 +558,11 @@ function highlightNodeFromMpyError(stderrText: string): void {
   if (!range) return; // line falls outside any single node's function (compiler scaffolding) -- can't attribute more precisely than "somewhere in the flow"
   const node = highlightNode(range.nodeId);
   if (!node) return;
-  logLine(`[compile error attributed to node ${range.nodeId} (${node.kind}), source line ${lineNo}]`, "err");
+  // node.nodeType (nodes.ts) rather than node.kind here -- kind is just
+  // "custom" for every loaded custom node type, nodeType is the real,
+  // specific type id regardless of first-party or custom (docs/working-
+  // notes/custom-node-authoring-scoping.md, 2026-08-20).
+  logLine(`[compile error attributed to node ${range.nodeId} (${node.nodeType}), source line ${lineNo}]`, "err");
 }
 
 function highlightNodeFromNodeError(nodeIdRaw: string): void {
@@ -477,7 +575,7 @@ function highlightNodeFromNodeError(nodeIdRaw: string): void {
   if (!Number.isFinite(nodeId)) return;
   const node = highlightNode(nodeId);
   if (!node) return;
-  logLine(`[runtime error attributed to node ${nodeId} (${node.kind})]`, "err");
+  logLine(`[runtime error attributed to node ${nodeId} (${node.nodeType})]`, "err");
 }
 
 // Rete's editor.addPipe sees every graph mutation (nodes/connections

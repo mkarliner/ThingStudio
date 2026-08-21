@@ -51,25 +51,35 @@ ones.
 - **Sequencing override, set by Mike 2026-08-20 — read this before
   grabbing anything else in this file as "next."** Out of this list's
   normal order, in this sequence:
-  1. **Custom node authoring** (below, "Node authoring / extensibility")
-     **+ documentation** (below, "Docs / process") — implementation, not
-     just scoping, even though the "Node authoring / extensibility" entry
-     below still says "no design or scope exists yet, needs its own
-     dedicated scoping session." Whoever picks up this session should
-     treat resolving that gap as the session's own first task, not a
-     blocker to raise back to Mike — his sequencing call already puts
-     this session ahead of the standalone scoping session that entry
-     originally called for.
-  2. **A deliberately narrow validation session, once (1) lands.** Mike
-     will run a session equipped with *only* the end-user documentation
-     (1) produces — not this file, not `CLAUDE.md`, not the rest of
-     `docs/working-notes/` — and ask it to build a new node type from a
-     brief, as a real test of whether the documentation alone is
-     sufficient for that task, not just whether it reads well. Not this
-     project's job to set up; recorded here so whoever builds (1)'s
-     documentation knows it's about to be tested exactly this way.
-  3. **Resume this file's normal order after (1) and (2) close out** —
-     back to whichever item is earliest below at that point (currently
+  1. ~~**Custom node authoring** (below, "Node authoring / extensibility")
+     **+ documentation** (below, "Docs / process")~~ — **implemented
+     2026-08-20**, scoping and implementation both, in the same session
+     (the scoping gap this bullet originally flagged was resolved as that
+     session's own first task, per Mike's call, not raised back as a
+     blocker). Two-file package format (`<name>.node.json` +
+     `<name>.node.py`), a generic `NodeDefinition` builder
+     (`node-library/custom-node.ts`) requiring zero `compile.ts` changes,
+     session-scoped browser loading (multi-file picker,
+     `custom-nodes-store.ts`), no sandboxing (same trust boundary as the
+     `function` node, confirmed with Mike), output ports capped at 1 by
+     codegen validation only (not the package format — doesn't compromise
+     the multi-output-routing item below). 285/285 editor tests pass
+     (30 files, up from 29), `tsc --noEmit` and `vite build` both clean.
+     End-user documentation: `docs/custom-nodes.md`. Full reasoning:
+     `custom-node-authoring-scoping.md`; ledger entries:
+     `decisions.md`'s new "Node authoring / extensibility" section,
+     `learnings.md`'s new "Custom node authoring" section (the
+     `nonlocal`-not-`global` gotcha). See "Node authoring / extensibility"
+     below — its own "real open questions" list is now resolved, not just
+     this bullet.
+  2. **A deliberately narrow validation session, next.** Mike will run a
+     session equipped with *only* `docs/custom-nodes.md` — not this file,
+     not `CLAUDE.md`, not the rest of `docs/working-notes/` — and ask it
+     to build a new node type from a brief, as a real test of whether the
+     documentation alone is sufficient for that task, not just whether it
+     reads well. Not this project's job to set up.
+  3. **Resume this file's normal order after (2) closes out** — back to
+     whichever item is earliest below at that point (currently
      `rp2350-bringup-briefing.md`, next bullet, unless something changes
      before then).
 
@@ -175,6 +185,13 @@ ones.
 
 ## Node authoring / extensibility
 
+**Implemented 2026-08-20** — scoped and built in one session per Mike's
+sequencing override above. The item below is left as historical context
+(what was unknown going in); each of its "real open questions" now has a
+resolution, noted inline. `custom-node-authoring-scoping.md`,
+`docs/custom-nodes.md`, `decisions.md`'s "Node authoring / extensibility"
+section.
+
 - **Custom node authoring — letting users create and register their own
   node types without rebuilding the whole system. No design or scope
   exists anywhere yet; added to the backlog 2026-08-19, not from an audit
@@ -193,18 +210,31 @@ ones.
   worth adding there once this is actually scoped, not silently treated
   as covered by §7's prose alone.
 
-  Real open questions, none resolved anywhere:
+  Real open questions, as of 2026-08-19 — each now resolved, see the note
+  appended to it:
   - **Distribution mechanism** — how a user-authored node actually gets
     from wherever it's written onto a device. §11's own sketch (never
     built) is a module-push wire message plus a version/hash field on
     `HELLO`, extending the free-space accounting §6's multi-flow section
     already discusses — worth confirming that's still the right shape
     rather than assumed.
+    **Resolved 2026-08-20: no new wire protocol.** Custom node Python is
+    inlined into the existing DEPLOY-compiled flow module, same as any
+    first-party node's generated code — §11's module-push sketch stays
+    deferred until a real need (shared-across-flows, size) forces it, not
+    built now. `custom-node-authoring-scoping.md` Decision 1.
   - **Editor-side discovery/registration** — how the editor's palette
     picks up a node it didn't ship with: a manifest format, a local
     file-watch/import step, or something heavier. Nothing like this
     exists in `editor/src/node-library/registry.ts` today, which is a
     static, compiled-in list.
+    **Resolved 2026-08-20: session-scoped browser file picker, no
+    persistence.** A two-file package (`<name>.node.json` +
+    `<name>.node.py`) loaded via the File System Access API multi-file
+    picker into a new reactive store (`app/rete/custom-nodes-store.ts`),
+    parallel to but deliberately separate from the config-node store —
+    not cleared by "clear canvas," not saved/reloaded across sessions.
+    `custom-node-authoring-scoping.md` Decision 4.
   - **Whether the compiler/editor contract extends cleanly to
     third-party-authored nodes.** `node-definition-model.md`'s
     `NodeDefinition` contract (type ID, ports, properties, codegen hook,
@@ -213,6 +243,15 @@ ones.
     every node type is first-party. Whether a user-authored node can
     declare ports/types through the same contract, or needs a narrower
     one, is unexplored.
+    **Resolved 2026-08-20: yes, cleanly, via a generic builder.**
+    `buildCustomNodeDefinition()` (`node-library/custom-node.ts`) wraps
+    one instance's `.node.py` text in a per-instance closure and returns
+    an ordinary `NodeDefinition` — indistinguishable to `compile.ts` from
+    a first-party registry entry; zero compiler-core changes needed.
+    Output ports capped at 1 by this builder's own codegen validation
+    (not the wire-type system or the package format), specifically so it
+    doesn't foreclose the multi-output-routing item under "Redeploy /
+    runtime" below. `custom-node-authoring-scoping.md` Decisions 2 and 3.
   - **This is very likely the trigger condition for §11's already-flagged,
     currently-dormant function-node-sandboxing question.** §11 resolved
     "no hardening for v1" specifically because "v1 has no marketplace or
@@ -224,6 +263,14 @@ ones.
     code inside the existing `function` node's already-accepted trust
     perimeter. Whoever scopes this should treat the sandboxing question as
     back on the table, not still safely deferred.
+    **Resolved 2026-08-20, Mike's explicit call: no hardening, same as
+    the `function` node — "go with the trust-boundary call (until it
+    bites us)."** Custom nodes don't cross the existing deploy-access
+    trust perimeter (§9); loading stays session-scoped only, no registry
+    or URL-install mechanism exists or is planned, so the "someone other
+    than the deployer" trigger condition §11 named still hasn't actually
+    occurred. Revisit if real pain shows, not preemptively.
+    `custom-node-authoring-scoping.md` Decision 5.
 
 ## Redeploy / runtime
 

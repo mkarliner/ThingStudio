@@ -60,6 +60,17 @@
 // headlessly (graph-adapter.test.ts) without one. main.ts is the only real
 // caller and already has the store's contents in hand when it calls this.
 //
+// Custom node authoring (docs/working-notes/custom-node-authoring-
+// scoping.md, 2026-08-20): `type` below now reads each node's own
+// `nodeType` field (nodes.ts) instead of computing
+// `` `thingstudio/${n.kind}` `` -- that concatenation assumed every node
+// lives in the "thingstudio/" namespace and that its palette `kind` names
+// the rest of the type string, both true for the 9 first-party classes
+// but not for a loaded custom node (own namespace, e.g. "custom/dht22",
+// no fixed relationship between `kind` and a type suffix). Zero behavior
+// change for first-party nodes -- `nodeType` was set to exactly what this
+// used to compute, see nodes.ts's own header on that change.
+//
 // Not built here (Phase 3, main.ts wiring): calling this from
 // `currentSource()` in place of `graph.serialize()`, or using
 // `nodeIdByReteId` for highlighting. This module is a pure function over
@@ -115,11 +126,9 @@ export function toGraphData(editor: Editor, configs: GraphConfigNode[] = []): Gr
     const n = node as AnyThingstudioNode;
     return {
       id: nodeIdByReteId.get(n.id)!,
-      // Every node class in nodes.ts carries a `kind` field ("inject",
-      // "function", "debug", "gpio_out", "timer") that already equals the
-      // registry type string's suffix exactly, so this doesn't need a
-      // separate lookup table.
-      type: `thingstudio/${n.kind}`,
+      // See this file's header (Custom node authoring) -- n.nodeType is
+      // each node class's own real compiler type string, not derived here.
+      type: n.nodeType,
       properties: n.properties,
     };
   });

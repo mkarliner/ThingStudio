@@ -56,6 +56,28 @@
 // Phase 3 update: `highlighted` (a plain boolean, not a `properties` field)
 // and `NODE_FACTORIES` were added here -- see each class's own comment and
 // this file's bottom for why.
+//
+// Custom node authoring (docs/working-notes/custom-node-authoring-
+// scoping.md, 2026-08-20): every class below gained an explicit `nodeType`
+// field (e.g. "thingstudio/inject") holding exactly the string
+// graph-adapter.ts/main.ts used to compute on the fly via
+// `` `thingstudio/${n.kind}` ``. That string-concat assumed every node's
+// compiler type is the `thingstudio/` namespace plus its `kind` -- true
+// for all 9 classes here, but wrong for a loaded custom node type (own
+// namespace, e.g. "custom/dht22", no relationship to `kind`). Zero
+// behavior change for the 9 classes below: `nodeType` is set to exactly
+// what the old concatenation already produced, verified against the
+// existing test suite. `CustomNode` (bottom of this file) is the new,
+// generic, descriptor-driven class this work actually adds -- one class
+// for every loaded custom type instead of one hand-written subclass per
+// type, closing the "keep hand-writing a Litegraph/Rete subclass per node
+// type, or move to a data-driven descriptor consumed by one generic node
+// class" question node-definition-model.md flagged as open back at POC
+// time and never revisited since (the 9 first-party classes below simply
+// never grew past hand-writing being cheap enough not to bother).
+// First-party classes are deliberately left as hand-written subclasses,
+// not migrated onto the generic path -- no reason to touch 9 already
+// hardware-validated node classes for symmetry alone.
 
 import { ClassicPreset } from "rete";
 import { socketForPayloadType } from "./sockets";
@@ -70,6 +92,7 @@ import { wifiStatusNode } from "../../node-library/wifi-status.js";
 import { udpSendNode } from "../../node-library/udp-send.js";
 import { udpReceiveNode } from "../../node-library/udp-receive.js";
 import { resolvePortType, type PortDefinition } from "../../compiler/node-definition.js";
+import type { CustomNodeDescriptor } from "../../node-library/custom-node.js";
 
 // Uniform pill height, ported from poc-rete's NODE_HEIGHT -- see that
 // project's README "also worth recording" section for why this is a real
@@ -130,6 +153,7 @@ export class InjectNode extends ClassicPreset.Node {
   width = 96;
   height = NODE_HEIGHT;
   kind = "inject" as const;
+  nodeType = "thingstudio/inject";
   highlighted = false;
 
   properties: { payloadType: "bool" | "number" | "string"; payloadValue: string; repeat: "manual" | "1s" | "5s" | "30s" } = {
@@ -174,6 +198,7 @@ export class FunctionNode extends ClassicPreset.Node {
   width = 100;
   height = NODE_HEIGHT;
   kind = "function" as const;
+  nodeType = "thingstudio/function";
   highlighted = false;
 
   properties: { code: string } = {
@@ -191,6 +216,7 @@ export class DebugNode extends ClassicPreset.Node {
   width = 84;
   height = NODE_HEIGHT;
   kind = "debug" as const;
+  nodeType = "thingstudio/debug";
   highlighted = false;
 
   // No `properties` at all -- node-library/debug.ts's codegenSink reads
@@ -209,6 +235,7 @@ export class GpioOutNode extends ClassicPreset.Node {
   width = 104;
   height = NODE_HEIGHT;
   kind = "gpio_out" as const;
+  nodeType = "thingstudio/gpio_out";
   highlighted = false;
 
   // Default 12 -- matches app/nodes.ts's GpioOutNode (LuatOS ESP32-C3 test
@@ -225,6 +252,7 @@ export class TimerNode extends ClassicPreset.Node {
   width = 84;
   height = NODE_HEIGHT;
   kind = "timer" as const;
+  nodeType = "thingstudio/timer";
   highlighted = false;
 
   properties: { intervalMs: number } = { intervalMs: 1000 };
@@ -239,6 +267,7 @@ export class InterruptNode extends ClassicPreset.Node {
   width = 104;
   height = NODE_HEIGHT;
   kind = "interrupt" as const;
+  nodeType = "thingstudio/interrupt";
   highlighted = false;
 
   // Defaults match interrupt.ts's own codegen defaults exactly (edge
@@ -262,6 +291,7 @@ export class WifiStatusNode extends ClassicPreset.Node {
   width = 120;
   height = NODE_HEIGHT;
   kind = "wifi_status" as const;
+  nodeType = "thingstudio/wifi_status";
   highlighted = false;
 
   // wifiConfigId: "" means "no config referenced" -- resolveWifiCredentials()'s
@@ -282,6 +312,7 @@ export class UdpSendNode extends ClassicPreset.Node {
   width = 110;
   height = NODE_HEIGHT;
   kind = "udp_send" as const;
+  nodeType = "thingstudio/udp_send";
   highlighted = false;
 
   properties: { host: string; port: number; timeoutMs: number; wifiConfigId: string } = {
@@ -301,6 +332,7 @@ export class UdpReceiveNode extends ClassicPreset.Node {
   width = 110;
   height = NODE_HEIGHT;
   kind = "udp_receive" as const;
+  nodeType = "thingstudio/udp_receive";
   highlighted = false;
 
   properties: { port: number; pollMs: number; wifiConfigId: string } = {
@@ -315,6 +347,47 @@ export class UdpReceiveNode extends ClassicPreset.Node {
   }
 }
 
+// --- Custom nodes (docs/working-notes/custom-node-authoring-scoping.md) ---
+//
+// One generic class for every loaded custom node type, instead of a
+// hand-written subclass per type -- driven entirely by the type's
+// CustomNodeDescriptor (custom-node.ts), loaded at runtime from a
+// `.node.json`/`.node.py` package (custom-node-io.ts), never known about
+// at editor-build time. `kind` here is deliberately the *literal* string
+// "custom", not the descriptor's own `kind` ("source"/"transform"/"sink")
+// -- PropertyPanel.vue and palette.ts both switch on `.kind` to mean "which
+// UI shape," and "custom" is its own single UI shape (a generic
+// descriptor-driven form) regardless of which of the three compiler kinds
+// the underlying node actually is. `nodeType` is the thing that carries
+// the real, descriptor-declared, unprefixed type id (e.g. "custom/dht22")
+// -- exactly the field every other class above now carries too, which is
+// what makes graph-adapter.ts/main.ts's read of `n.nodeType` work
+// uniformly across first-party and custom nodes without a branch.
+export class CustomNode extends ClassicPreset.Node {
+  width = 128;
+  height = NODE_HEIGHT;
+  kind = "custom" as const;
+  nodeType: string;
+  descriptor: CustomNodeDescriptor;
+  highlighted = false;
+
+  properties: Record<string, unknown>;
+
+  constructor(descriptor: CustomNodeDescriptor) {
+    super(descriptor.label);
+    this.descriptor = descriptor;
+    this.nodeType = descriptor.type;
+    this.properties = Object.fromEntries((descriptor.properties ?? []).map((f) => [f.name, f.default]));
+
+    for (const input of descriptor.ports?.inputs ?? []) {
+      this.addInput(input.name, new ClassicPreset.Input(socketForPayloadType(input.type), input.name));
+    }
+    for (const output of descriptor.ports?.outputs ?? []) {
+      this.addOutput(output.name, new ClassicPreset.Output(socketForPayloadType(output.type), output.name));
+    }
+  }
+}
+
 export type AnyThingstudioNode =
   | InjectNode
   | FunctionNode
@@ -324,7 +397,8 @@ export type AnyThingstudioNode =
   | InterruptNode
   | WifiStatusNode
   | UdpSendNode
-  | UdpReceiveNode;
+  | UdpReceiveNode
+  | CustomNode;
 
 // One constructor per palette kind, shared between the app-shell's
 // click-to-add/drag-drop handler (main.ts) and applyFlowFile()'s per-node
@@ -332,7 +406,11 @@ export type AnyThingstudioNode =
 // kind X" and neither should hardcode its own copy of this switch. Keyed
 // by NodeKind (palette.ts), not the registry's `thingstudio/`-prefixed
 // type string, since that prefix-stripping is the caller's job (main.ts
-// does it once, from a flow file's saved `type` field).
+// does it once, from a flow file's saved `type` field). Custom nodes are
+// deliberately NOT in this table -- constructing one needs a
+// CustomNodeDescriptor, which NODE_FACTORIES' zero-argument factory shape
+// has no room for; main.ts branches on "is this a loaded custom type"
+// separately and calls `new CustomNode(descriptor)` directly.
 export const NODE_FACTORIES: Record<NodeKind, () => AnyThingstudioNode> = {
   inject: () => new InjectNode(),
   function: () => new FunctionNode(),

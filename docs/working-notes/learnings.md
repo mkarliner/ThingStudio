@@ -182,6 +182,35 @@ when a sandboxed `npx tsc --noEmit` silently doesn't respect the flag
   session's test run (cheaper, no extra hop) but don't be surprised by
   this failure mode or waste time debugging it as if it were a real bug --
   it's an environment mismatch, not a code problem.
+- **The cloud session's own staged read-only mirror of the repo (under
+  the uploads directory) can be a partial/curated snapshot, not a full
+  checkout -- don't trust it for `npm test`/`vitest run` without first
+  confirming the full `src`/`test` tree is actually present.** Discovered
+  2026-08-20: the mirror available during the custom-node session was
+  missing `src/compiler/errors.ts` and several other node-library/test
+  files, so a same-session verification attempt (tried because the device
+  bridge to Mike's machine was down) failed on unrelated
+  import-resolution errors, not real regressions in the new code. When
+  `device_bash` can't reach Mike's machine either, there is currently no
+  way to get a fully trustworthy test/typecheck signal from inside the
+  cloud session alone for this project -- say so plainly rather than
+  reporting a red result as if it were a real one, and defer the actual
+  verification to Mike's machine.
+
+## Custom node authoring
+
+- **A custom node's top-level `.node.py` code runs inside a generated
+  per-instance wrapper function, not at true module scope — `nonlocal`,
+  not `global`, is the correct idiom for persistent state.** First-party
+  node codegen (e.g. `timer.ts`) inlines its code directly at true
+  module/coroutine scope, where `global` is correct; a custom-node author
+  following that same familiar pattern would hit a `NameError` at deploy
+  time instead, since no module-level name exists inside the wrapper.
+  Self-caught while writing `custom-node.test.ts`'s closure-isolation
+  test, not by a real deploy failure — documented prominently in
+  `custom-node.ts`'s header comment and in `docs/custom-nodes.md` (its own
+  dedicated section) given the project's fault-handling-first priority.
+  `custom-node-authoring-scoping.md`.
 
 ## Reusable patterns worth remembering
 

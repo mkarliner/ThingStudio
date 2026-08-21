@@ -58,3 +58,11 @@ export const DEFAULT_KIND_STYLE: KindStyle = { color: "#555", bgcolor: "#2b2b2b"
 // can't drift out of sync with each other later, same reasoning
 // NODE_PALETTE itself gets.
 export const DRAG_MIME = "application/x-thingstudio-node-kind";
+
+// Custom node authoring (docs/working-notes/custom-node-authoring-
+// scoping.md, 2026-08-20): a separate MIME type from DRAG_MIME above --
+// a dropped custom node's payload is its own namespaced type id (e.g.
+// "custom/dht22"), not a NodeKind literal, so the canvas drop handler
+// (main.ts) needs a way to tell which table to resolve the dropped value
+// against without guessing from its shape.
+export const CUSTOM_DRAG_MIME = "application/x-thingstudio-custom-node-type";
