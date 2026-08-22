@@ -109,9 +109,38 @@ ones.
   `wifi-status.ts`'s `resolveWifiCredentials()`) and given real canvas
   presence for the first time (see the "canvas presence" bullet below).
   One deliberate divergence from the other three migrated kinds: a
-  referenced config with `security: "unmanaged"` is a `CompileError` here,
-  not a supported state — `mqtt_as` always drives its own connect/
-  reconnect loop and needs real credentials to do so. `decisions.md`.
+  referenced WiFi config with `security: "unmanaged"` is a `CompileError`
+  here, not a supported state — `mqtt_as` always drives its own
+  connect/reconnect loop and needs real credentials to do so.
+  **Same day, on Mike's own follow-up request: a second, independent
+  config type, `thingstudio/config/mqtt-broker`, holding `broker`/`port`
+  and (new) broker-level `username`/`password` auth** (`config-types.ts`)
+  — referenced via a new `brokerConfigId` property, mandatory from day
+  one (no "unmanaged"-equivalent opt-out; there's no sensible default
+  broker to fall back to). `broker`/`port` are no longer raw properties
+  on either node. `username`/`password` here are `mqtt_as`'s own
+  broker-level auth fields (`config['user']`/`config['password']`),
+  distinct from the WiFi config's own `ssid`/`password` — two independent
+  credential pairs authenticating to two different things, resolved via
+  two separate `ConfigRefField` instances in the property panel.
+  **MQTTS (TLS) explicitly deferred, not built** — `mqtt_as`'s own config
+  already has unused `ssl`/`ssl_params` keys; checked against
+  `CLAUDE.md`'s one-way-door principle before deferring (a config's
+  `properties` is a plain JSON blob, so adding a `tls` field later needs
+  no migration of already-saved flow files — not a one-way door, so
+  nothing was reserved). `decisions.md`.
+
+- **MQTTS (MQTT over TLS) — not built, deferred on Mike's own explicit
+  call (2026-08-21).** The vendored `mqtt_as`'s own `config` dict already
+  has `ssl`/`ssl_params` keys (`device-runtime/src/vendor/mqtt_as/__init__.py`)
+  neither `mqtt-shared.ts` nor `thingstudio/config/mqtt-broker`
+  (config-types.ts) touches. Nothing reserved for it either — checked
+  against `CLAUDE.md`'s "don't paint into an architectural dead end"
+  principle first, not skipped by default: a config's `properties` is a
+  plain JSON blob, so adding a `tls`/`ssl` field to the broker config
+  later needs no migration of already-saved flow files, unlike a real
+  one-way-door case (e.g. `HELLO`'s reserved `authRequired`/`authScheme`
+  fields). `decisions.md`.
 
 - **TCP send / TCP listen-receive were never built.** `udp-tcp-nodes-implementation-briefing.md`
   scoped four new node types; only UDP send/receive landed (confirmed
@@ -135,12 +164,38 @@ ones.
   the I2C/SPI slave-mode spike for witness-rig adversarial testing —
   `witness_firmware.py`'s `I2C_SLAVE_EMULATE` is still a stub.
 
-- **Network nodes' real hardware pass — still pending.** `wifi_status`,
-  `http_request`, `mqtt_publish`, `mqtt_subscribe` are off-device verified
-  only (`mvp-validation-plan.md`'s 2026-08-14 Results entry); no pass
-  against a real local MQTT broker or HTTP test server on real hardware
-  has been recorded. (UDP send/receive did get a real hardware pass later,
-  via the echo-tester flow — that part of this gap is closed.)
+- **Network nodes' real hardware pass — partially closed.** `wifi_status`/
+  `http_request` still off-device verified only (`mvp-validation-plan.md`'s
+  2026-08-14 Results entry); no pass against a real HTTP test server on
+  real hardware has been recorded. (UDP send/receive got a real hardware
+  pass earlier, via the echo-tester flow — that part was already closed.)
+  **`mqtt_publish`/`mqtt_subscribe` got their first real hardware pass
+  2026-08-21**, via Mike's own `mqtttest.flow.json` against a real local
+  broker — and it surfaced a real bug, not just confirmed the happy path:
+  a WiFi station-interface reconnect race (`E (...) wifi:sta is
+  connecting, cannot set config`) inside the vendored `mqtt_as`'s
+  `wifi_connect()`. Root-caused the same day; fixed on Thingstudio's own
+  side (`mqttWifiPrecheckStatement()`, `mqtt-shared.ts`), not by patching
+  the vendored file — see `decisions.md`'s 2026-08-21 entry for the full
+  story, including why an initial patch to `mqtt_as` was reverted. Worth a
+  second hardware pass once the fix is deployed, to confirm it actually
+  holds under the same conditions that surfaced the bug (a board with
+  stale NVS-cached WiFi credentials from a prior deploy) rather than just
+  trusting the code-reading diagnosis + off-device compile check.
+
+- **Whether to file an upstream issue for the `mqtt_as` WiFi-reconnect
+  race — undecided, Mike's call.** Real bug in
+  [peterhinch/micropython-mqtt](https://github.com/peterhinch/micropython-mqtt)'s
+  `wifi_connect()` (ESP32 branch), confirmed against the current `master`,
+  not just an old version — but Mike found this same class of fix already
+  raised more than once
+  ([#59](https://github.com/peterhinch/micropython-mqtt/issues/59),
+  [#61](https://github.com/peterhinch/micropython-mqtt/issues/61),
+  [#57](https://github.com/peterhinch/micropython-mqtt/pull/57)) without
+  landing, and that history is exactly why Thingstudio fixed this on its
+  own side instead of carrying a local patch (`decisions.md`). Whether a
+  fourth report (with a real hardware reproduction, no patch attached this
+  time) is worth his time to file is his call, not decided this session.
 
 - **Filter / event-compression node — not built.** Tier 1 item 5 point 2
   (`mvp-feature-priorities.md`), pulled into v1 alongside interrupt/

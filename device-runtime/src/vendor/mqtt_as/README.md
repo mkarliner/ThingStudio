@@ -65,9 +65,9 @@ Only `mqtt_as/__init__.py`. The upstream package also has an optional
 calls for basic MQTT publish/subscribe, not MQTTv5), so that file is
 never imported and isn't needed here.
 
-## Deploy note (real gap, not yet wired)
+## Deploy note
 
-Nothing in this repo's compile/deploy pipeline yet pushes `vendor/`
+~~Nothing in this repo's compile/deploy pipeline yet pushes `vendor/`
 alongside the flow module and the rest of `device-runtime/src/`'s
 first-party files to a real device — that's part of the still-open
 "how a node survives deploy" question `node-definition-model.md` already
@@ -75,4 +75,31 @@ flags for anything beyond inline-per-flow code. `mqtt_publish`/
 `mqtt_subscribe`'s generated code does `import mqtt_as`, which only
 resolves on-device once this vendored package is actually part of
 whatever gets pushed to the device's filesystem — real follow-up work,
-not something this node batch's off-device tests can exercise.
+not something this node batch's off-device tests can exercise.~~
+**resolved** — `test-flows/deploy_runtime.py`'s `VENDOR_FILES`/
+`VENDOR_DEST_NAMES` now push this file (renamed to `mqtt_as.py`, a
+single-file module, not `__init__.py` under a package dir — MicroPython's
+import resolution needs the flat name) by default; `--no-vendor` skips it.
+
+## Local patches
+
+None. This file is vendored unmodified.
+
+A real WiFi-reconnect race in this file's `wifi_connect()` (ESP32 branch --
+`s.active(True)` can trigger ESP-IDF's own NVS-cached auto-reconnect, and
+the unconditional `s.connect(self._ssid, self._wifi_pw)` right after can
+collide with it, raising `"sta is connecting, cannot set config"`) was
+found and reproduced on real hardware 2026-08-21. A local patch here was
+drafted and briefly applied, then deliberately reverted: this exact class
+of fix (an `isconnected()`/connecting-state guard before the ESP32
+branch's connect call) has already been raised against this library more
+than once ([peterhinch/micropython-mqtt#59](https://github.com/peterhinch/micropython-mqtt/issues/59),
+[#61](https://github.com/peterhinch/micropython-mqtt/issues/61), and
+discussed in [#57](https://github.com/peterhinch/micropython-mqtt/pull/57))
+without landing upstream -- Mike's own call, after reviewing that history,
+was to fix this on Thingstudio's own side instead of carrying a diverging
+local patch against the maintainer's evident preference. See
+`editor/src/node-library/mqtt-shared.ts`'s header for where the fix
+actually lives now, and `docs/working-notes/decisions.md` (2026-08-21) for
+the full reasoning, including why this is safe to do without touching
+this file.

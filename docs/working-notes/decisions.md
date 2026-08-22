@@ -227,6 +227,26 @@ Same convention already established for `docs/third-party-licenses.md`.
   no "ride on an externally-managed connection" mode to map `"unmanaged"`
   onto. `mqtt-shared.ts`, `mqtt-publish.ts`, `mqtt-subscribe.ts`,
   `thingstudio-design-doc.md` §6 addendum.
+- **2026-08-21 — Second config type, `thingstudio/config/mqtt-broker`
+  (`broker`, `port`, `username`, `password`), for `mqtt_publish`/
+  `mqtt_subscribe`'s broker connection — Mike's own same-day follow-up
+  request.** `brokerConfigId` is mandatory from day one, no
+  optional-then-later-reversed cycle the way `wifiConfigId`'s own
+  mandatory-ness was (the immediately preceding entry) — there's no
+  sensible default broker to fall back to the way an already-connected
+  WiFi interface is a sensible "ride on it" fallback. Kept as a SECOND,
+  independent config reference rather than folded into
+  `thingstudio/config/wifi` — the WiFi network and the MQTT broker are
+  authenticated to with two genuinely different credential pairs
+  (`mqtt_as`'s `ssid`/`wifi_pw` vs. its `user`/`password` config keys).
+  `username`/`password` are optional (no forced-non-empty check the way
+  the WiFi config's password gets) — an unauthenticated broker is a
+  normal, common setup, not a likely-forgotten-credential case. MQTTS
+  (TLS) explicitly deferred without reserving a field for it — checked
+  against `CLAUDE.md`'s one-way-door principle first: a config's
+  properties are a plain JSON blob, so this isn't a one-way door, unlike
+  `HELLO`'s reserved auth fields. `config-types.ts`, `mqtt-shared.ts`,
+  `outstanding-items.md`.
 
 ## Redeploy / network fault handling
 
@@ -259,6 +279,65 @@ Same convention already established for `docs/third-party-licenses.md`.
   shared.ts` left untouched -- the briefing flagged touching them as a
   judgment call, not mandated; not done this session, still open for
   whoever picks it up next.
+- **2026-08-21 — "sta is connecting, cannot set config" deploy failure
+  (real hardware, `mqtttest.flow.json`) fixed on Thingstudio's own side,
+  NOT by patching the vendored `mqtt_as` -- reversing this same day's
+  earlier call to patch it, on Mike's own explicit direction after he
+  reviewed the library's own issue history.** Root cause, confirmed by
+  reading the vendored source directly: mqtt_as's `wifi_connect()` (ESP32
+  branch) does `s.active(True)` then unconditionally
+  `s.connect(self._ssid, self._wifi_pw)`, with no check for a connect
+  already in progress; `s.active(True)` alone can trigger ESP-IDF's own
+  NVS-cached auto-reconnect from a previous deploy's saved station config,
+  and if that's still resolving when the very next line fires its own
+  connect, ESP-IDF refuses the second connect's config-set. Ruled out
+  first: not a cross-node-type race (wifi_status/http_request/udp_send/
+  udp_receive vs. mqtt_as's own connect) -- the reproducing flow has only
+  `mqtt_publish`/`mqtt_subscribe`, sharing one `wifiConfigId`/
+  `brokerConfigId`, and the existing lock/dedup mechanism
+  (`mqttEnsureConnectedSnippet`) was already working correctly, so the bug
+  is entirely inside `wifi_connect()` itself.
+  A local patch to the vendored file (adding the missing guard, mirroring
+  the ESP8266 branch's own existing `isconnected()` check a few lines
+  above) was drafted, applied, and delivered -- then reverted the same
+  day. Mike reviewed this library's own GitHub issue history and found
+  this exact class of fix (an `isconnected()`/connecting-state guard on
+  the ESP32 branch) already raised more than once
+  ([peterhinch/micropython-mqtt#59](https://github.com/peterhinch/micropython-mqtt/issues/59),
+  [#61](https://github.com/peterhinch/micropython-mqtt/issues/61), and a
+  `_is_connecting`-flag variant discussed in
+  [#57](https://github.com/peterhinch/micropython-mqtt/pull/57)) without
+  landing in the base implementation -- his call was not to carry a
+  diverging local patch against the maintainer's evident preference, and
+  to fix this entirely on Thingstudio's own side instead.
+  `mqttWifiPrecheckStatement()` (`mqtt-shared.ts`) is that fix: a
+  module-scope statement, emitted by every mqtt_publish/mqtt_subscribe
+  node (deduped to one occurrence per flow via the existing `mergeSetup`
+  mechanism), that WAITS OUT -- never cancels -- any WiFi connect already
+  in progress, bounded, before mqtt_as's own async `.connect()` ever gets
+  a chance to run. Waiting rather than cancelling is what keeps this safe
+  for a flow that also has wifi_status/http_request/udp_send/udp_receive:
+  those issue their own real `.connect()` call in their own module-scope
+  setup, and a cancel-based approach (the reverted vendored-file patch)
+  would have risked tearing down another node's legitimate, still-
+  resolving connect attempt; a wait can only let something already
+  destined to finish, finish, before mqtt_as's own connect call runs.
+  Deliberately gated to `sys.platform == "esp32"` -- the underlying race
+  is an ESP-IDF-specific behavior, and `network.STAT_CONNECTING` isn't
+  confirmed present on every MicroPython port this project targets (the
+  vendored file's own code only ever references that constant inside its
+  own `if ESP32:` branches). Verified against the real reproducing flow:
+  compiled `mqtttest.flow.json`'s equivalent graph and confirmed the
+  precheck statement appears exactly once, ahead of the client-setup
+  code, in the generated source (`ast.parse`-checked). 273/273 editor
+  tests still pass (existing tests updated to look up the client-setup
+  statement by content rather than a fixed array index, since the
+  precheck statement is now emitted first). The vendored file itself is
+  back to byte-identical-with-upstream; `device-runtime/src/vendor/
+  mqtt_as/README.md`'s "Local patches" section now says so explicitly and
+  points here. Filing an issue upstream (not a PR, given the history) may
+  still be worth doing independent of our own fix -- Mike's call, not
+  decided either way this session -- see `outstanding-items.md`.
 
 ## Node authoring / extensibility
 

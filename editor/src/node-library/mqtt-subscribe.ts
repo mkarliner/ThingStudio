@@ -24,16 +24,25 @@
 // (mqtt-shared.ts) via wifi-status.ts's `resolveWifiCredentials()` -- not
 // raw `ssid`/`password` properties on this node directly. See
 // mqtt-shared.ts's own header for why "unmanaged" security is rejected
-// here even though wifi_status/udp_send/udp_receive accept it.
+// here even though wifi_status/udp_send/udp_receive accept it. Same day,
+// on Mike's own follow-up request: `broker`/`port` also moved out of this
+// node's own properties into a second referenced config,
+// `thingstudio/config/mqtt-broker`, via `node.properties.brokerConfigId`
+// -- see mqtt-shared.ts's header for the broker-config design and why it's
+// a second, independent config reference rather than folded into the WiFi
+// config.
 //
 // Also given real canvas presence in this change (`ports` below) --
 // previously registry-only, per outstanding-items.md's "Network / config
 // nodes" section.
+//
+// 2026-08-21: also emits mqttWifiPrecheckStatement() (mqtt-shared.ts) --
+// a WiFi-reconnect race fix, see that file's header for the full story.
 
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, NodeDefinition, SourceCodegenResult } from "../compiler/node-definition.js";
 import { CompileError } from "../compiler/errors.js";
-import { mqttClientVar, mqttEnsureConnectedSnippet, mqttSetupStatement, parseMqttBrokerProps } from "./mqtt-shared.js";
+import { mqttClientVar, mqttEnsureConnectedSnippet, mqttSetupStatement, mqttWifiPrecheckStatement, parseMqttBrokerProps } from "./mqtt-shared.js";
 import { pyStringLiteral } from "./py-literals.js";
 
 export const mqttSubscribeNode: NodeDefinition = {
@@ -83,8 +92,11 @@ export const mqttSubscribeNode: NodeDefinition = {
     ].join("\n");
 
     return {
-      imports: ["import mqtt_as"],
-      statements: [mqttSetupStatement(cfg), { key: readyVar, code: `${readyVar} = False` }],
+      // network/sys/time: mqttWifiPrecheckStatement()'s own WiFi-reconnect
+      // race fix (mqtt-shared.ts header) -- not needed for mqtt_as/
+      // subscribe itself.
+      imports: ["import mqtt_as", "import network", "import sys", "import time"],
+      statements: [mqttWifiPrecheckStatement(), mqttSetupStatement(cfg), { key: readyVar, code: `${readyVar} = False` }],
       buildMsg,
       // NOT a poll interval -- `queue.__anext__()` above already blocks
       // (via the vendored mqtt_as's own asyncio.Event) until a real
