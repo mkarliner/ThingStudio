@@ -24,6 +24,16 @@ ones.
 
 ## Next up (already flagged before this audit, unstarted)
 
+- **`mqtt-hardware-validation-and-network-followups-briefing.md`,
+  2026-08-22 — Mike's own direct request, takes priority over the
+  sequencing below.** Real-hardware validation of the MQTT WiFi-precheck
+  fix and full MQTT functional pass (pub/sub, broker auth, qos 1,
+  retain, outage recovery — none run on real hardware yet), plus
+  `http_request`'s still-open config-node/canvas migration and hardware
+  pass, plus extending Problem 2a's loud-network-error fix to
+  `http_request`/`mqtt-shared.ts`. Doesn't remove or reorder the rp2350
+  item below — just goes first.
+
 - ~~**`redeploy-cleanup-and-network-fault-detection-briefing.md`**~~ —
   **implemented 2026-08-20**, all three sub-items: (1) `runtime.py` gained
   an explicit `register_cleanup`/`cancel_running` cleanup registry, closed
