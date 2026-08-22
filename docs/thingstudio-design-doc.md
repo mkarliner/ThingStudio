@@ -4,6 +4,27 @@
 
 Status: draft v0.1 · 2026-08-09
 
+## Contents
+
+- [1. Vision](#1-vision)
+- [2. Prior art and positioning](#2-prior-art-and-positioning)
+- [3. Target hardware](#3-target-hardware)
+- [4. System architecture](#4-system-architecture)
+- [5. Execution model: on-device VM](#5-execution-model-on-device-vm)
+- [6. Flow / graph representation](#6-flow--graph-representation)
+- [7. Extensibility](#7-extensibility)
+- [8. Deployment and live debugging](#8-deployment-and-live-debugging)
+- [9. Security considerations](#9-security-considerations)
+- [10. Phased roadmap](#10-phased-roadmap)
+- [11. Open questions](#11-open-questions)
+- [12. Licensing and open-source suitability](#12-licensing-and-open-source-suitability)
+- [13. Wire protocol (v1 sketch)](#13-wire-protocol-v1-sketch)
+- [14. Project license and governance](#14-project-license-and-governance)
+- [15. Proof-of-concept scope](#15-proof-of-concept-scope)
+- [Sources](#sources)
+
+Added 2026-08-22, added for navigation only — content below is unchanged.
+
 ## 1. Vision
 
 Thingstudio is a browser-based, node-and-wire visual programming environment, in the spirit of Node-RED, whose output runs directly on a microcontroller rather than on a server. A user drags nodes onto a canvas — sensors, GPIO, timers, logic, math, network — wires them together, and pushes the resulting flow to a physically connected or networked device. The device then runs the flow autonomously, with no host machine required afterward.
