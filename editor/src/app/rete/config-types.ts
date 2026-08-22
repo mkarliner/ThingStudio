@@ -11,11 +11,21 @@
 // fields -- a second config type (e.g. a later `mqtt_broker`) costs one
 // entry here, not a new component.
 //
-// Deliberately just one entry for this session's success bar --
-// `thingstudio/config/wifi`, `{ssid, password}` -- matching the one
-// config type the briefing scopes as required (a `mqtt_broker` config
-// type is explicitly optional/deferred, see mqtt-shared.ts's own header
-// on why it still takes `ssid`/`password` directly for now).
+// Was deliberately just one entry for the original session's success bar
+// -- `thingstudio/config/wifi`, `{ssid, password}` -- matching the one
+// config type that briefing scoped as required (a `mqtt_broker` config
+// type was explicitly optional/deferred at the time). Built 2026-08-21,
+// on Mike's own request once mqtt_publish/mqtt_subscribe got their first
+// canvas presence: `thingstudio/config/mqtt-broker`, `{broker, port,
+// username, password}` -- broker/port move out of each mqtt node's own
+// properties into a referenced config, same "stop duplicating the same
+// value across every node pointed at the same target" fix the wifi
+// config already gave ssid/password. `username`/`password` here are
+// mqtt_as's own broker-level auth fields (`config['user']`/
+// `config['password']`) -- a different credential pair from the
+// referenced WiFi config's own `ssid`/`password`, which authenticates to
+// the WiFi network, not the broker. See mqtt-shared.ts's own header for
+// how a node resolves both configs together.
 //
 // `security` field added (redeploy-cleanup-and-network-fault-detection-
 // briefing.md, Problem 2b/3): three states, not two --
@@ -91,5 +101,29 @@ export const CONFIG_TYPES: Record<string, ConfigTypeDescriptor> = {
     ],
     defaults: { ssid: "", security: "password", password: "" },
     summarize: (properties) => (typeof properties.ssid === "string" ? properties.ssid : ""),
+  },
+  "thingstudio/config/mqtt-broker": {
+    type: "thingstudio/config/mqtt-broker",
+    label: "MQTT Broker",
+    fields: [
+      { name: "broker", label: "broker host/IP", kind: "text" },
+      { name: "port", label: "port", kind: "number" },
+      // Both optional -- an empty username/password means "no broker
+      // auth," a normal, common broker setup (mqtt_as's own config
+      // defaults both to "" for exactly this reason). Unlike the WiFi
+      // config's password, there's no "security" select here forcing a
+      // non-empty password: a broker either wants credentials or it
+      // doesn't, and there's no equivalent to an open-vs-password WiFi
+      // network distinction worth a loud CompileError over.
+      { name: "username", label: "username (optional)", kind: "text" },
+      { name: "password", label: "password (optional)", kind: "password" },
+    ],
+    defaults: { broker: "", port: 1883, username: "", password: "" },
+    summarize: (properties) => {
+      const broker = typeof properties.broker === "string" ? properties.broker : "";
+      if (!broker) return "";
+      const port = properties.port;
+      return port !== undefined && port !== null && port !== "" ? `${broker}:${port}` : broker;
+    },
   },
 };

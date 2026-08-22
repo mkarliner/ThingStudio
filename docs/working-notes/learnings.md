@@ -64,6 +64,23 @@ when a sandboxed `npx tsc --noEmit` silently doesn't respect the flag
   internal timeout would have fired, a possibly-fine deploy reads as
   broken. Keep the client's wait comfortably longer than the device's
   worst case, never shorter. Same section.
+- **ESP-IDF's own NVS-cached station auto-reconnect can fire from
+  `network.WLAN(network.STA_IF).active(True)` alone, and races an
+  immediately-following explicit `.connect()` call.** If a *previous*
+  deploy left credentials in NVS, `active(True)` alone can kick off
+  ESP-IDF's own reconnect using those stale credentials; code that then
+  unconditionally calls `.connect(ssid, password)` right after (with no
+  `isconnected()`/`status()` check first) can collide with that in-flight
+  attempt, which ESP-IDF refuses with `E (...) wifi:sta is connecting,
+  cannot set config` — its own driver-level error, not a MicroPython
+  exception, so it surfaces as a raw serial log line rather than a Python
+  traceback. Confirmed on real hardware via `mqtttest.flow.json`; root
+  cause traced into the vendored `mqtt_as`'s `wifi_connect()` (ESP32
+  branch), which had exactly this gap — `docs/working-notes/decisions.md`,
+  2026-08-21 entry. Worth checking for the same shape (`active(True)`
+  immediately followed by an unconditional `.connect()`, no connecting-state
+  guard) in any other code that brings up `STA_IF` directly, not just this
+  one call site.
 
 ## Hardware bring-up / HIL rig
 

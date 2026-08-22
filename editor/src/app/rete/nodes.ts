@@ -14,8 +14,8 @@
 //   - wifi_status:  pollMs, wifiConfigId                       (node-library/wifi-status.ts)
 //   - udp_send:     host, port, timeoutMs, wifiConfigId        (node-library/udp-send.ts)
 //   - udp_receive:  port, pollMs, wifiConfigId                 (node-library/udp-receive.ts)
-//   - mqtt_publish:   broker, port, topic, retain, qos, wifiConfigId   (node-library/mqtt-publish.ts)
-//   - mqtt_subscribe: broker, port, topic, qos, wifiConfigId           (node-library/mqtt-subscribe.ts)
+//   - mqtt_publish:   topic, retain, qos, wifiConfigId, brokerConfigId   (node-library/mqtt-publish.ts)
+//   - mqtt_subscribe: topic, qos, wifiConfigId, brokerConfigId          (node-library/mqtt-subscribe.ts)
 //
 // poc-rete's fake type set doesn't match 1:1
 // (rete-migration-implementation-briefing.md's callout): "mqtt out" was
@@ -48,11 +48,18 @@
 // wifi_status/udp_send/udp_receive, first-time canvas wiring at all --
 // they'd been registry-only since introduction, per this file's own
 // now-corrected header above. Same ConfigRefField pattern, EXCEPT
-// mqtt-shared.ts's parseMqttBrokerProps rejects a referenced config whose
-// security is "unmanaged" outright (mqtt_as always needs real credentials
-// to drive its own connect/reconnect loop) -- so PropertyPanel.vue's hint
-// text for these two kinds does NOT repeat the "pick unmanaged" advice the
-// other three kinds' hints give.
+// mqtt-shared.ts's parseMqttBrokerProps rejects a referenced WiFi config
+// whose security is "unmanaged" outright (mqtt_as always needs real
+// credentials to drive its own connect/reconnect loop) -- so
+// PropertyPanel.vue's hint text for these two kinds does NOT repeat the
+// "pick unmanaged" advice the other three kinds' hints give. Same day, on
+// Mike's own follow-up request: a SECOND config reference,
+// `brokerConfigId` (`thingstudio/config/mqtt-broker`, config-types.ts),
+// replacing what used to be raw `broker`/`port` properties on these two
+// classes -- the WiFi config and the broker config are independent (see
+// mqtt-shared.ts's header), so each node carries both `wifiConfigId` and
+// `brokerConfigId`, bound to two separate ConfigRefField instances in
+// PropertyPanel.vue.
 //
 // §6 wire-type system (docs/working-notes/wire-type-system-scoping.md):
 // every port constructed below reads its real socket type from the
@@ -369,18 +376,20 @@ export class MqttPublishNode extends ClassicPreset.Node {
   nodeType = "thingstudio/mqtt_publish";
   highlighted = false;
 
-  // wifiConfigId: "" sentinel, same convention as every other config-node-
-  // referencing kind above -- see WifiStatusNode's own comment. retain
-  // defaults false / qos defaults 0, matching mqtt-publish.ts's own
+  // wifiConfigId/brokerConfigId: "" sentinel, same convention as every
+  // other config-node-referencing kind above -- see WifiStatusNode's own
+  // comment. Two independent config references, not one -- see
+  // mqtt-shared.ts's header for why the WiFi network and the MQTT broker
+  // are separate configs with separate credentials. retain defaults
+  // false / qos defaults 0, matching mqtt-publish.ts's own
   // Number(...??...) defaults exactly (a freshly-dropped node and a
   // freshly-omitted property on a hand-edited flow file compile the same).
-  properties: { broker: string; port: number; topic: string; retain: boolean; qos: 0 | 1; wifiConfigId: string } = {
-    broker: "",
-    port: 1883,
+  properties: { topic: string; retain: boolean; qos: 0 | 1; wifiConfigId: string; brokerConfigId: string } = {
     topic: "",
     retain: false,
     qos: 0,
     wifiConfigId: "",
+    brokerConfigId: "",
   };
 
   constructor() {
@@ -396,12 +405,11 @@ export class MqttSubscribeNode extends ClassicPreset.Node {
   nodeType = "thingstudio/mqtt_subscribe";
   highlighted = false;
 
-  properties: { broker: string; port: number; topic: string; qos: 0 | 1; wifiConfigId: string } = {
-    broker: "",
-    port: 1883,
+  properties: { topic: string; qos: 0 | 1; wifiConfigId: string; brokerConfigId: string } = {
     topic: "",
     qos: 0,
     wifiConfigId: "",
+    brokerConfigId: "",
   };
 
   constructor() {

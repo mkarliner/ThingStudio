@@ -20,11 +20,28 @@
 // dangling `wifiConfigId` is caught by the real compiler's
 // `ctx.resolveConfig()` at compile time instead (CompileError, "referenced
 // config ... not found"), not by this file's own lighter-weight checks.
+//
+// mqtt_publish/mqtt_subscribe added to the list below 2026-08-21, when
+// they got real canvas factories for the first time (nodes.ts's own
+// header) -- omitting them here would make this script wrongly flag a
+// valid, now-loadable flow file as having "no canvas factory."
 
 import { readFileSync } from "node:fs";
 import { parseFlowFile } from "../flow-file/flow-file.js";
 
-const KNOWN_KINDS = new Set(["inject", "function", "debug", "gpio_out", "timer", "interrupt", "wifi_status", "udp_send", "udp_receive"]);
+const KNOWN_KINDS = new Set([
+  "inject",
+  "function",
+  "debug",
+  "gpio_out",
+  "timer",
+  "interrupt",
+  "wifi_status",
+  "udp_send",
+  "udp_receive",
+  "mqtt_publish",
+  "mqtt_subscribe",
+]);
 
 const path = process.argv[2];
 if (!path) {

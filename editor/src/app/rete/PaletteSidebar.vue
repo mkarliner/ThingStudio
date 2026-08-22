@@ -17,6 +17,12 @@
   implementation-briefing.md (2026-08-18) -- same source-then-sink display
   ordering convention as every prior addition to this list.
 
+  mqtt_subscribe/mqtt_publish added 2026-08-21 -- same config-node
+  migration as wifi_status/udp_send/udp_receive got, plus first-time
+  canvas wiring at all (nodes.ts's own header). Same source-then-sink
+  ordering: mqtt_subscribe sits with the other sources, mqtt_publish with
+  the other sinks.
+
   Custom nodes (docs/working-notes/custom-node-authoring-scoping.md,
   2026-08-20): a second section below the built-in list, populated from
   custom-nodes-store.ts, plus a "Load custom node..." action that owns the
@@ -86,9 +92,21 @@ const emit = defineEmits<{
 }>();
 
 // Display order -- sources first (inject, timer, interrupt, wifi_status,
-// udp_receive), then processing (function), then sinks (gpio_out,
-// udp_send, debug).
-const KINDS: NodeKind[] = ["inject", "timer", "interrupt", "wifi_status", "udp_receive", "function", "gpio_out", "udp_send", "debug"];
+// udp_receive, mqtt_subscribe), then processing (function), then sinks
+// (gpio_out, udp_send, mqtt_publish, debug).
+const KINDS: NodeKind[] = [
+  "inject",
+  "timer",
+  "interrupt",
+  "wifi_status",
+  "udp_receive",
+  "mqtt_subscribe",
+  "function",
+  "gpio_out",
+  "udp_send",
+  "mqtt_publish",
+  "debug",
+];
 
 const filter = ref("");
 const visibleKinds = computed(() =>

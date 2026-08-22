@@ -45,12 +45,18 @@
 
   mqtt_publish/mqtt_subscribe blocks added 2026-08-21: first-time canvas
   wiring for these two (nodes.ts's own header) plus the same config-node
-  migration as above. Their hint text does NOT offer the "pick unmanaged"
-  escape hatch the wifi_status/udp_send/udp_receive hints give -- mqtt-
-  shared.ts's parseMqttBrokerProps rejects a referenced config with
-  security "unmanaged" outright, since mqtt_as always drives its own
-  connect/reconnect loop and needs real credentials to do so (see that
-  file's own header).
+  migration as above -- TWO ConfigRefField instances, not one, since a
+  WiFi config and an MQTT broker config are independent references on
+  these two kinds specifically (mqtt-shared.ts's own header explains why:
+  different credentials, different things being authenticated to). Their
+  hint text does NOT offer the "pick unmanaged" escape hatch the
+  wifi_status/udp_send/udp_receive hints give -- mqtt-shared.ts's
+  parseMqttBrokerProps rejects a referenced WiFi config with security
+  "unmanaged" outright, since mqtt_as always drives its own connect/
+  reconnect loop and needs real credentials to do so (see that file's own
+  header). The broker config's own username/password fields are edited
+  through ConfigRefField's existing generic edit panel (config-types.ts's
+  `fields` descriptor) -- no bespoke UI needed for them.
 
   Custom nodes (docs/working-notes/custom-node-authoring-scoping.md,
   2026-08-20): one generic block below, driven entirely by
@@ -181,12 +187,6 @@
       </template>
 
       <template v-else-if="node.kind === 'mqtt_publish'">
-        <label>broker
-          <input v-model="node.properties.broker" @input="touch" />
-        </label>
-        <label>port
-          <input type="number" min="1" max="65535" v-model.number="node.properties.port" @input="touch" />
-        </label>
         <label>topic
           <input v-model="node.properties.topic" @input="touch" />
         </label>
@@ -201,20 +201,19 @@
           </select>
         </label>
         <ConfigRefField
+          config-type="thingstudio/config/mqtt-broker"
+          :model-value="node.properties.brokerConfigId || undefined"
+          @update:model-value="(id) => setBrokerConfigId(id)"
+        />
+        <ConfigRefField
           config-type="thingstudio/config/wifi"
           :model-value="node.properties.wifiConfigId || undefined"
           @update:model-value="(id) => setWifiConfigId(id)"
         />
-        <p class="hint">Required -- won't compile without one. mqtt_as manages its own WiFi connection, so "unmanaged" configs aren't accepted here.</p>
+        <p class="hint">Both required -- won't compile without a broker and a WiFi config. mqtt_as manages its own WiFi connection, so "unmanaged" WiFi configs aren't accepted here.</p>
       </template>
 
       <template v-else-if="node.kind === 'mqtt_subscribe'">
-        <label>broker
-          <input v-model="node.properties.broker" @input="touch" />
-        </label>
-        <label>port
-          <input type="number" min="1" max="65535" v-model.number="node.properties.port" @input="touch" />
-        </label>
         <label>topic
           <input v-model="node.properties.topic" @input="touch" />
         </label>
@@ -225,11 +224,16 @@
           </select>
         </label>
         <ConfigRefField
+          config-type="thingstudio/config/mqtt-broker"
+          :model-value="node.properties.brokerConfigId || undefined"
+          @update:model-value="(id) => setBrokerConfigId(id)"
+        />
+        <ConfigRefField
           config-type="thingstudio/config/wifi"
           :model-value="node.properties.wifiConfigId || undefined"
           @update:model-value="(id) => setWifiConfigId(id)"
         />
-        <p class="hint">Required -- won't compile without one. mqtt_as manages its own WiFi connection, so "unmanaged" configs aren't accepted here.</p>
+        <p class="hint">Both required -- won't compile without a broker and a WiFi config. mqtt_as manages its own WiFi connection, so "unmanaged" WiFi configs aren't accepted here.</p>
       </template>
 
       <template v-else-if="node.kind === 'debug'">
@@ -320,6 +324,18 @@ function retypeInjectOutput(): void {
 function setWifiConfigId(id: string): void {
   if (!node.value) return;
   (node.value.properties as Record<string, unknown>).wifiConfigId = id;
+  touch();
+}
+
+// Same pattern as setWifiConfigId() above, for mqtt_publish/mqtt_subscribe's
+// second, independent config reference -- kept as its own small function
+// rather than generalizing both into one `setConfigId(key, id)` helper, so
+// this change doesn't touch the already-working wifi_status/udp_send/
+// udp_receive bindings for symmetry alone (CLAUDE.md's cheapest-correct-
+// change principle).
+function setBrokerConfigId(id: string): void {
+  if (!node.value) return;
+  (node.value.properties as Record<string, unknown>).brokerConfigId = id;
   touch();
 }
 </script>

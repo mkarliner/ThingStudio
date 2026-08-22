@@ -23,17 +23,25 @@ possibly empty). This is the git-friendly `nodes`/`edges`/`layout`/
 `configs` split design doc §6 describes, not the compiler's own
 lower-level `GraphData` input shape.
 
-**Not every node type is on the canvas yet.** `http_request`,
-`mqtt_publish`, and `mqtt_subscribe` are still registry-only -- no `ports`
-field in their `NodeDefinition`, no Rete node class, no palette entry
-(config-node-and-palette-implementation-briefing.md's own explicit,
-flagged follow-up -- not silently dropped). A `FlowFile` referencing any
-of them can't be loaded through the browser's "Open Flow" at all; such
-files would still need the compiler's own lower-level `GraphData` shape
-via the "Alternate path" section below. **`wifi_status`, `udp_send`, and
-`udp_receive` are now canvas-wired** (as of the same session) -- see
-`udp-echo-tester.flow.json` below, which now loads through the real
-"Open Flow" for the first time instead of needing that alternate path.
+**Not every node type is on the canvas yet.** `http_request` is still
+registry-only -- no `ports` field in its `NodeDefinition`, no Rete node
+class, no palette entry (config-node-and-palette-implementation-
+briefing.md's own explicit, flagged follow-up -- not silently dropped). A
+`FlowFile` referencing it can't be loaded through the browser's "Open
+Flow" at all; such a file would still need the compiler's own lower-level
+`GraphData` shape via the "Alternate path" section below. **`wifi_status`,
+`udp_send`, and `udp_receive` are canvas-wired** (config-node-and-palette-
+implementation-briefing.md, 2026-08-18) -- see `udp-echo-tester.flow.json`
+below, which loads through the real "Open Flow." **`mqtt_publish` and
+`mqtt_subscribe` are canvas-wired too, as of 2026-08-21** -- their first
+canvas presence at all, plus a `wifiConfigId` (WiFi network credentials)
+AND a `brokerConfigId` (`thingstudio/config/mqtt-broker` -- broker
+host/port and optional username/password) referenced independently,
+rather than either living as raw node properties. No sample flow file for
+them yet in this directory -- being canvas-wired now, the simplest way to
+try them is building one directly in the browser (drag `mqtt
+publish`/`mqtt subscribe` onto the canvas, wire them up, "Save Flow")
+rather than hand-writing JSON.
 
 ## Bootstrapping a new board (`deploy_runtime.py`)
 
@@ -142,8 +150,8 @@ browser. `tsconfig.devtools.json` is a separate, narrower tsconfig
 bundler-mode module resolution and won't type-check under plain Node ESM
 resolution; this sidesteps that rather than fighting it. Only useful for
 `FlowFile`-shaped files with every node type already canvas-wired -- see
-the "Alternate path" section below for what a still-registry-only node
-type (`http_request`/`mqtt_publish`/`mqtt_subscribe`) needs instead.
+the "Alternate path" section below for what the one still-registry-only
+node type (`http_request`) needs instead.
 
 ## Alternate path: compiling and deploying without the browser
 
@@ -155,10 +163,10 @@ directory now use, and there's no automated converter between the two
 live Rete graph in the browser, not a `FlowFile` on disk). Useful if you
 want a scriptable deploy with no browser involved at all, at the cost of
 hand-writing a second file in the older shape -- and currently the ONLY
-path for any node type that isn't canvas-wired yet (`http_request`/
-`mqtt_publish`/`mqtt_subscribe` as of 2026-08-18; `udp_send`/`udp_receive`
-graduated out of this list the same session -- see `udp-echo-tester.
-flow.json` below). A `GraphData`-shaped file has no `configs` array of its
+path for the one node type that isn't canvas-wired yet (`http_request`).
+`udp_send`/`udp_receive` graduated out of this list 2026-08-18 (see
+`udp-echo-tester.flow.json` below); `mqtt_publish`/`mqtt_subscribe`
+graduated out 2026-08-21. A `GraphData`-shaped file has no `configs` array of its
 own the way a `FlowFile` does (compiler/graph.ts's `GraphConfigNode` is
 the equivalent field there, same `{id, type, properties}` shape, string
 id) -- a hand-written file exercising a config-referencing property
