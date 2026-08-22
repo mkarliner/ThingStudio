@@ -1,0 +1,3 @@
+# Drag-to-splice — still not built, still needs Mike's own real-browser call
+
+Reclassified to "should eventually match Node-RED" priority (2026-08-15 addendum, `mvp-feature-priorities.md`), and multiple Rete migration sessions confirmed a working ~90-line poc-rete implementation exists to port — but the trigger mechanism (`nodedragged` vs. `nodetranslated`) is an explicitly unresolved hands-on judgment call only Mike can make in his own browser. `rete-migration-phase4-briefing.md` confirms this is untouched even after the full Rete migration closed out — `editor/src/app/rete/insert-node.ts` was never ported from poc-rete.
