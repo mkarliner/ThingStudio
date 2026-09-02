@@ -68,7 +68,7 @@ import { WebSerialTransport, type WebSerialPort } from "../protocol/transport.js
 import type { Message, ProtocolVersion } from "../protocol/messages.js";
 import { decideDeploy } from "../protocol/version.js";
 import { createThingstudioEditor, type ThingstudioEditor } from "./rete/editor-setup.js";
-import { NODE_FACTORIES, CustomNode, type AnyThingstudioNode } from "./rete/nodes.js";
+import { NODE_FACTORIES, CustomNode, InjectNode, type AnyThingstudioNode } from "./rete/nodes.js";
 import { DRAG_MIME, CUSTOM_DRAG_MIME, type NodeKind } from "./rete/palette.js";
 import { toGraphData, socketIndex } from "./rete/graph-adapter.js";
 import { propertyVersion, configs as configsStore, replaceAllConfigs, clearConfigs } from "./rete/store.js";
@@ -98,7 +98,19 @@ const el = <T extends HTMLElement = HTMLElement>(id: string): T => document.getE
 // than threading an "editor not ready yet" guard through every function
 // below that touches reteEditor/reteArea.
 const canvasContainer = el("rete-canvas");
-const reteHandle: ThingstudioEditor = await createThingstudioEditor(canvasContainer);
+// Reassigned once the WebSerial transport/deploy machinery exists further
+// down this file (inject click-only live-fire feature, 2026-09-02) --
+// createThingstudioEditor() itself has to be called this early (top-level
+// await, this file's own header comment on why), well before `transport`
+// exists, so the click hook is indirected through this mutable slot
+// instead of being passed as a value that doesn't exist yet.
+let onInjectNodeClicked: ((node: InjectNode) => void) | null = null;
+
+const reteHandle: ThingstudioEditor = await createThingstudioEditor(canvasContainer, {
+  onNodeClicked: (node) => {
+    if (node instanceof InjectNode) onInjectNodeClicked?.(node);
+  },
+});
 const reteEditor = reteHandle.editor;
 const reteArea = reteHandle.area;
 
@@ -686,6 +698,47 @@ const transport = new WebSerialTransport({
     setConnectedUi(false);
   },
 });
+
+// --- Inject click-only live-fire (2026-09-02) ---------------------------
+// Wired here, not in editor-setup.ts, since it's the first point in this
+// file where `transport` (is this connection even live?) and
+// `lastReteIdByNodeId` (what compiler-facing node ID does this Rete node
+// currently map to?) both already exist -- see the `onInjectNodeClicked`
+// slot's own declaration comment, above the createThingstudioEditor()
+// call, for why the assignment has to happen here rather than at that
+// call site directly.
+//
+// `lastReteIdByNodeId` is recomputed by every currentSource() call, not
+// just a Deploy -- the same "may point at a stale/since-edited graph"
+// caveat highlightNodeFromNodeError() already documents for the identical
+// reverse-direction lookup (main.ts's NODE_ERROR attribution). A click
+// naming an ID the device never actually deployed just gets silently
+// ignored on the device side (runtime.py's fire_trigger) -- the same
+// "untrusted/possibly-stale wire input degrades gracefully" contract
+// every other §13 message already follows, not a new failure mode this
+// feature introduces.
+function findNodeIdForReteId(reteId: string): number | null {
+  for (const [nodeId, id] of lastReteIdByNodeId) {
+    if (id === reteId) return nodeId;
+  }
+  return null;
+}
+
+onInjectNodeClicked = (node) => {
+  if (!transport.isConnected) {
+    logLine("[inject: connect to a device first -- clicking only fires while live]", "");
+    return;
+  }
+  const nodeId = findNodeIdForReteId(node.id);
+  if (nodeId === null) {
+    logLine("[inject: this node has no compiled ID yet -- deploy the current flow before clicking it]", "err");
+    return;
+  }
+  logLine(`[inject: firing node ${nodeId}]`, "");
+  transport.send({ type: "TRIGGER", nodeId: String(nodeId) }).catch((err) => {
+    logLine(`[inject: trigger send failed] ${err instanceof Error ? err.message : String(err)}`, "err");
+  });
+};
 
 function setConnectedUi(connected: boolean): void {
   el("pill").textContent = connected ? "connected" : "disconnected";

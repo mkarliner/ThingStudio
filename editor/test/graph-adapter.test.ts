@@ -90,7 +90,11 @@ describe("graph-adapter: Rete NodeEditor -> compiler GraphData", () => {
     const { graphData, nodeIdByReteId, reteIdByNodeId } = toGraphData(editor);
 
     expect(graphData.nodes).toEqual([
-      { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+      // `repeat` removed 2026-09-02 (inject click-only live-fire feature,
+      // nodes.ts's own header note) -- InjectNode's real properties object
+      // no longer has it at all, so toGraphData()'s pass-through here
+      // reflects that directly.
+      { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true" } },
       { id: 2, type: "thingstudio/gpio_out", properties: { pin: 12 } },
     ]);
     expect(nodeIdByReteId.get(inject.id)).toBe(1);

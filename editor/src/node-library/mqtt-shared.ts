@@ -292,7 +292,29 @@ export function mqttSetupStatement(cfg: MqttBrokerConfig): { key: string; code: 
     `${clientVar}_cfg['queue_len'] = 20`,
     `${clientVar} = mqtt_as.MQTTClient(${clientVar}_cfg)`,
     `${mqttConnectedVar(cfg)} = False`,
-    `${mqttLockVar(cfg)} = asyncio.Lock()`,
+    // NOT `asyncio.Lock()` here -- this statement runs at plain module
+    // scope, before any event loop is actually running (compile.ts emits
+    // every setup statement ahead of the coroutines/`runtime.spawn` calls
+    // that eventually run under one). Constructing a Lock with no loop
+    // running yet is a real, confirmed hazard on CPython 3.9 (what macOS's
+    // Xcode Command Line Tools ships): `asyncio.Lock.__init__` binds
+    // itself to "the current event loop" at construction time via the
+    // legacy `get_event_loop()` auto-create fallback, then `asyncio.run()`
+    // -- used by every off-device test in this repo, and this file's own
+    // header's "byte-identical setup code" invariant makes no promise
+    // about what actually drives the coroutines -- creates a SECOND,
+    // different loop to run everything, leaving the lock permanently
+    // bound to a stale one. Awaiting it later raises "Task ... got Future
+    // attached to a different loop." (Confirmed 2026-09-02, real hardware
+    // test session, `node-mqtt-publish.test.ts`'s own "two chains racing
+    // to connect" test.) `None` here plus the lazy construction in
+    // `mqttEnsureConnectedSnippet()` below defers actually calling
+    // `asyncio.Lock()` until it's first needed, inside a real running
+    // coroutine -- safe on every Python version, and a no-op change for
+    // the real target (MicroPython's `uasyncio.Lock` doesn't bind to a
+    // loop at construction at all, so it was never exposed to this on
+    // real hardware in the first place).
+    `${mqttLockVar(cfg)} = None`,
   ];
   return { key: mqttSetupKey(cfg), code: lines.join("\n") };
 }
@@ -318,12 +340,42 @@ export const MQTT_WIFI_PRECHECK_KEY = "mqtt-wifi-connect-precheck";
  * __init__.py), which reads as "not reliably available elsewhere," not
  * an oversight to copy past. `.active(True)` itself is harmless/idempotent
  * on every platform, so that line always runs; only the wait loop is
- * ESP32-only. */
+ * ESP32-only.
+ *
+ * Behavior change, 2026-09-02: extended with a settle wait after
+ * `.active(True)`, distinct from the "wait out an in-flight connect"
+ * check above it. First real-hardware run of this precheck (Mike's
+ * `basic-mqtt.flow.json`, mqtt_subscribe's own automatic boot-time
+ * connect -- no wifi_status node in that flow, no prior deploy, power-
+ * cycled first) hit `OSError: Wifi Internal State Error` from mqtt_as's
+ * `wifi_connect()` (`s.connect(self._ssid, self._wifi_pw)`) -- a
+ * DIFFERENT ESP-IDF error than the `wifi:sta is connecting, cannot set
+ * config` one this precheck originally targeted, and one the original
+ * STAT_CONNECTING wait can't catch: on a genuinely fresh boot, `.status()`
+ * right after `.active(True)` is idle, not connecting, so that loop
+ * breaks on its very first check and adds no real delay at all. The
+ * likely cause instead (a known, documented ESP32/MicroPython quirk, not
+ * confirmed by reading ESP-IDF source directly the way the original race
+ * was): `.active(True)` returning doesn't guarantee the WiFi driver has
+ * actually finished coming up internally -- issuing `.connect()`
+ * immediately afterward, before that finishes, can be rejected as a state
+ * error even though nothing else is touching the interface. Fixed the
+ * same way as the existing wait -- bounded, ESP32-gated, ride-don't-guess
+ * -- by polling `.active()` until it actually reports `True` (rather than
+ * trusting the call that requested it) plus a short fixed settle delay
+ * before falling through to the pre-existing in-flight-connect check.
+ * Unverified beyond this one manual repro; flag if it recurs or a
+ * different board/firmware combination needs a longer settle window. */
 export function mqttWifiPrecheckStatement(): { key: string; code: string } {
   const lines = [
     "_mqtt_wifi_precheck_sta = network.WLAN(network.STA_IF)",
     "_mqtt_wifi_precheck_sta.active(True)",
     'if sys.platform == "esp32":',
+    "    for _ in range(50):  # bounded ~5s wait for .active(True) to actually take effect",
+    "        if _mqtt_wifi_precheck_sta.active():",
+    "            break",
+    "        time.sleep_ms(100)",
+    "    time.sleep_ms(200)  # brief settle delay -- see this function's 2026-09-02 header note",
     "    for _ in range(50):  # bounded ~5s wait for any in-flight connect to resolve",
     "        if _mqtt_wifi_precheck_sta.status() != network.STAT_CONNECTING:",
     "            break",
@@ -338,18 +390,58 @@ export function mqttWifiPrecheckStatement(): { key: string; code: string } {
  * always legal). Double-checked-locking: the fast path (already
  * connected) never touches the lock; only the first caller across
  * however many chains share this client actually awaits `.connect()`,
- * everyone else just observes `_mqtt_connected_*` flip to True. */
+ * everyone else just observes `_mqtt_connected_*` flip to True.
+ *
+ * The `lockVar is None` check, 2026-09-02: the lock itself is now
+ * constructed HERE, lazily, on first real use inside a running coroutine,
+ * not eagerly in `mqttSetupStatement()`'s module-scope code (that
+ * function's own comment has the full "attached to a different loop"
+ * story this fixes). Safe with no extra locking of its own: this whole
+ * check-then-create is synchronous, no `await` in between, so asyncio's
+ * cooperative single-threaded scheduling can't interleave another
+ * coroutine's identical check in the middle of it -- the same guarantee
+ * the surrounding double-checked-locking on `${connectedVar}` already
+ * relies on.
+ *
+ * Bounded retry, 2026-09-02: real-hardware testing of
+ * `mqttWifiPrecheckStatement()`'s own settle-wait fix (this file, same
+ * day) showed it narrows but doesn't eliminate the cold-boot
+ * `OSError: Wifi Internal State Error` -- the FIRST deploy after a power
+ * cycle still hit it once, and a second deploy (no power cycle) then
+ * succeeded immediately. That's exactly the shape of a transient
+ * ESP-IDF driver-not-fully-settled condition, not a real/persistent
+ * connect failure (wrong password, broker unreachable) -- those fail the
+ * same way on every attempt, not just the first. Rather than chase an
+ * exact settle delay that apparently still isn't long enough on Mike's
+ * board, `.connect()` itself now gets up to 3 attempts with a fixed
+ * pause between them, inside the same lock (so racing chains still only
+ * ever see one connect attempt in flight at a time, unchanged from
+ * before). A genuinely persistent failure still surfaces as a NODE_ERROR
+ * -- the final attempt's exception is re-raised, not swallowed -- so this
+ * is strictly a "smooth over a known-transient cold-boot glitch," not a
+ * silent-failure risk. Unverified beyond one manual repro; revisit the
+ * attempt count/delay if this still isn't enough. */
 export function mqttEnsureConnectedSnippet(cfg: MqttBrokerConfig): string {
   const clientVar = mqttClientVar(cfg);
   const connectedVar = mqttConnectedVar(cfg);
   const lockVar = mqttLockVar(cfg);
+  const attemptVar = `_mqtt_connect_attempt_${idSuffix(cfg)}`;
   return [
-    `global ${connectedVar}`,
+    `global ${connectedVar}, ${lockVar}`,
     `if not ${connectedVar}:`,
+    `    if ${lockVar} is None:`,
+    `        ${lockVar} = asyncio.Lock()`,
     `    async with ${lockVar}:`,
     `        if not ${connectedVar}:`,
-    `            await ${clientVar}.connect()`,
-    `            ${connectedVar} = True`,
+    `            for ${attemptVar} in range(3):`,
+    `                try:`,
+    `                    await ${clientVar}.connect()`,
+    `                    ${connectedVar} = True`,
+    `                    break`,
+    `                except OSError:`,
+    `                    if ${attemptVar} == 2:`,
+    `                        raise`,
+    `                    await asyncio.sleep_ms(500)`,
   ].join("\n");
 }
 

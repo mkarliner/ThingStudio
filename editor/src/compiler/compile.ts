@@ -318,7 +318,17 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
       const src = sourceDef.codegenSource(source, ctx);
       mergeSetup(src, imports, setupStatements);
       const bodyLines = [src.buildMsg];
-      if (chainBody) bodyLines.push(chainBody);
+      // Guarded the same way a transform's None return already stops
+      // further downstream propagation (this function's own "if msgVar is
+      // not None" above) -- a poll-based source's own buildMsg can set
+      // `msg = None` to skip this cycle entirely (e.g. wifi_status's
+      // emit-only-on-change behavior) without skipping the sleep below:
+      // that sleep/yield must run every iteration regardless, same
+      // §5/POC-D non-yielding-event-loop hazard the transform-side comment
+      // already documents. Harmless no-op for every source whose buildMsg
+      // always assigns a real dict (the overwhelming majority) -- `msg` is
+      // never None there, so this `if` always passes through.
+      if (chainBody) bodyLines.push(`if msg is not None:\n${indent(chainBody, 4)}`);
       if (src.repeatMs > 0) bodyLines.push(`await asyncio.sleep_ms(${src.repeatMs})`);
       loopBody = src.repeatMs > 0 ? `while True:\n${indent(bodyLines.join("\n"), 4)}` : bodyLines.join("\n");
     } else {

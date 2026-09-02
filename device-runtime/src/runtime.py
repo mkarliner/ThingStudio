@@ -59,6 +59,25 @@
 #    right where it creates the resource, and cancel_running() below is
 #    what actually calls every registered cleanup, deterministically, on
 #    every redeploy -- no longer relying on GC timing at all.
+#
+# 4. register_trigger()/fire_trigger()/the _triggers registry (added
+#    2026-09-02, inject click-only live-fire feature,
+#    docs/working-notes/outstanding-items/inject-click-fire-missing.md) --
+#    the device-side half of a new §13 TRIGGER message (messages.py):
+#    inject.ts's codegenEventSource constructs a per-instance event object
+#    at module scope and self-registers it here under its own node ID
+#    (the same string listener.py's NODE_ERROR/runtime.spawn's fallback
+#    attribution already use), exactly the same self-registration shape
+#    register_cleanup() established for udp_send/udp_receive's sockets.
+#    listener.py's dispatch loop calls fire_trigger(node_id) when a
+#    TRIGGER arrives; inject's coroutine is blocked on that event's
+#    .wait(), so firing it is what makes a click actually run the chain.
+#    Cleared in cancel_running() below (a stale entry pointing at a
+#    since-replaced flow's event object must not silently keep working,
+#    or silently keep failing to look up a same-numbered but different
+#    node from a new flow) -- same "must not outlive a redeploy" reasoning
+#    _cleanups already follows, but with no cleanup *function* to call
+#    here, just references to drop.
 
 import uasyncio as asyncio
 
@@ -70,6 +89,10 @@ _cleanups = {}  # key -> callable; see this file's header, point 3. Keyed the
                 # (compile.ts's mergeSetup, "first node's code wins") so two
                 # nodes sharing one resource don't register (and double-close)
                 # it twice.
+
+_triggers = {}  # node_id (string) -> event object with a .set() method;
+                 # see this file's header, point 4 (added 2026-09-02, inject
+                 # click-only live-fire feature).
 
 # Set by listener.py once it's importable (device-runtime/src/listener.py)
 # so this module stays independently importable/testable without ever
@@ -163,6 +186,33 @@ def register_cleanup(key, fn):
         _cleanups[key] = fn
 
 
+def register_trigger(node_id, event):
+    """Registers the live-trigger event object for one source node --
+    see this file's header, point 4. Unlike register_cleanup(), this is
+    NOT deduped by "first registration wins": node_id is already unique
+    per node instance (the compiler's own per-node ID, not a shared
+    resource key like a pin or port number), so a second registration
+    under the same key can only mean a redeploy landed on a node that
+    reused a previous flow's ID -- overwriting is correct there, not a
+    conflict to guard against."""
+    _triggers[node_id] = event
+
+
+def fire_trigger(node_id):
+    """Fires the named node's live-trigger event, if one is currently
+    registered -- called from listener.py's dispatch loop on an incoming
+    TRIGGER message. A node_id with no registered event (unknown, stale
+    from a since-changed canvas, or simply not an inject node) is not an
+    error: logged and ignored, same "the device is untrusted input, degrade
+    gracefully" reasoning every other adversarial-input path in this
+    listener/runtime pair already follows."""
+    event = _triggers.get(node_id)
+    if event is None:
+        print("TRIGGER_IGNORED no live node registered for id=%s" % (node_id,))
+        return
+    event.set()
+
+
 async def cancel_running():
     global _tasks
     for t in _tasks:
@@ -171,6 +221,7 @@ async def cancel_running():
         except Exception:
             pass
     _tasks = []
+    _triggers.clear()
     await asyncio.sleep_ms(10)
     # Cleanups run AFTER the grace period above, not before -- closing a
     # socket out from under a task that's still mid-recvfrom()/sendto() on

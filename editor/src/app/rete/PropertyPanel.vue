@@ -13,14 +13,18 @@
   node set and scope differ from that spike's (a former second trim --
   "no mqtt_publish block" -- is gone; see the mqtt_publish/mqtt_subscribe
   paragraph below):
-    - No "inject now" button, and inject's repeat select doesn't call
-      `setupTimer()` on change -- that was poc-rete's hook into its own
-      hand-rolled live-propagation machinery (InjectNode.fire()/
-      setupTimer()), which doesn't exist on the real InjectNode class
-      (nodes.ts) and is explicitly out of scope for this migration
+    - No "inject now" button here, and no `repeat` field at all any more
+      (Behavior change, 2026-09-02, node-library/inject.ts's own header):
+      inject fires only on a real §13 TRIGGER sent by clicking the node
+      itself on the canvas while live-connected (main.ts's nodepicked
+      hook) -- there is no periodic option left to edit, and no separate
+      manual-fire button either, since the node body IS the fire button
+      now. poc-rete's own hand-rolled live-propagation machinery
+      (InjectNode.fire()/setupTimer()) still doesn't exist on the real
+      InjectNode class and is still out of scope for this migration
       (rete-migration-decision.md, "rete-engine / canvas-side live value
-      propagation"). Editing `repeat` just updates `properties` and
-      touches propertyVersion, same as every other field here.
+      propagation") -- a live click sends one real wire message, it
+      doesn't run any canvas-side simulation of the flow.
 
   Updated for the §6 wire-type system (wire-type-system-scoping.md):
   unlike the note above, the payload-type select's `@change` NOW also
@@ -88,14 +92,7 @@
         <label>value
           <input v-model="node.properties.payloadValue" @input="touch" />
         </label>
-        <label>repeat
-          <select v-model="node.properties.repeat" @change="touch">
-            <option value="manual">manual</option>
-            <option value="1s">1s</option>
-            <option value="5s">5s</option>
-            <option value="30s">30s</option>
-          </select>
-        </label>
+        <p class="hint">Click this node on the canvas while connected to fire it once.</p>
       </template>
 
       <template v-else-if="node.kind === 'function'">

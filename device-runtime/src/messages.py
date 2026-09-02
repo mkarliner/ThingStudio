@@ -13,7 +13,13 @@
 # values, and this is the real device-side listener that comment was
 # waiting on. Copied 1:1, not re-derived:
 #   HELLO=1 DEPLOY=2 DEPLOY_ACK=3 DEPLOY_ERROR=4 VALUE_STREAM=5
-#   NODE_ERROR=6 STATE_READ=7 STATE_WRITE=8
+#   NODE_ERROR=6 STATE_READ=7 STATE_WRITE=8 TRIGGER=9
+#
+# TRIGGER (2026-09-02, inject click-only live-fire feature) is newer than
+# the rest of this table -- editor -> device, "fire this source node's
+# live-trigger event right now" (see messages.ts's own TriggerMessage doc
+# comment for the full contract). Fire-and-forget, no ack, same as
+# STATE_WRITE."
 #
 # Field names/shapes below are likewise copied from messages.ts, including
 # its two documented spec-filling decisions: STATE_READ carries both
@@ -32,6 +38,7 @@ MessageType = {
     "NODE_ERROR": 6,
     "STATE_READ": 7,
     "STATE_WRITE": 8,
+    "TRIGGER": 9,
 }
 
 MESSAGE_NAME_BY_TYPE = {v: k for k, v in MessageType.items()}
@@ -192,6 +199,12 @@ def _validate_state_write(obj, name):
     }
 
 
+def _validate_trigger(obj, name):
+    return {
+        "nodeId": _expect_string(obj, "nodeId", name),
+    }
+
+
 _VALIDATORS = {
     "HELLO": _validate_hello,
     "DEPLOY": _validate_deploy,
@@ -201,4 +214,5 @@ _VALIDATORS = {
     "NODE_ERROR": _validate_node_error,
     "STATE_READ": _validate_state_read,
     "STATE_WRITE": _validate_state_write,
+    "TRIGGER": _validate_trigger,
 }

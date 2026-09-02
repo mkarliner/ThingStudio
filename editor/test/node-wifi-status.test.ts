@@ -65,9 +65,34 @@ function node(properties: Record<string, unknown>): GraphNode {
   return { id: 1, type: "thingstudio/wifi_status", properties };
 }
 
+function indent(code: string, spaces: number): string {
+  const pad = " ".repeat(spaces);
+  return code
+    .split("\n")
+    .map((line) => (line.length ? pad + line : line))
+    .join("\n");
+}
+
+// buildMsg now contains a `global` statement (2026-09-02 emit-on-change
+// change, wifi-status.ts) -- needs a real function scope to mean what it
+// means in the real compiled flow (compile.ts inlines buildMsg into the
+// coroutine body, a real function). Calling it directly at bare module
+// scope, with the state var's `= None` init also at module scope, is a
+// SyntaxError ("assigned to before global declaration"): module-level code
+// is its own block for that check, same as a function's, so the init
+// assignment and the `global` referencing the same name in that same block
+// collide. Wrapping in a real function avoids that -- same fix
+// node-timer.test.ts's own `runIterations`/`_iterate()` already applies to
+// the identical problem for `timer`'s own `global _timer_count`.
 function runSnippet(preamble: string, properties: Record<string, unknown>): string {
   const result = wifiStatusNode.codegenSource!(node(properties), ctx);
-  const lines = [...(result.imports ?? []), preamble, ...(result.statements ?? []).map((s) => s.code), result.buildMsg, "print(msg)"];
+  const lines = [
+    ...(result.imports ?? []),
+    preamble,
+    ...(result.statements ?? []).map((s) => s.code),
+    `def _poll():\n${indent(`${result.buildMsg}\nprint(msg)`, 4)}`,
+    "_poll()",
+  ];
   const dir = mkdtempSync(join(tmpdir(), "thingstudio-nodetest-"));
   const scriptPath = join(dir, "_snippet.py");
   writeFileSync(scriptPath, lines.join("\n"));
@@ -76,6 +101,58 @@ function runSnippet(preamble: string, properties: Record<string, unknown>): stri
     env: { ...process.env, PYTHONPATH: pymockDir },
     encoding: "utf8",
   });
+}
+
+// Runs buildMsg twice in the same process (same module-scope `_wifi_status_last*`
+// global carrying state across the two calls, exactly as it would across two
+// real polls in the generated flow's own while-loop) -- `runSnippet` above
+// only ever runs it once, which can't exercise the 2026-09-02 emit-on-change
+// behavior (outstanding-items/wifi-status-emit-on-change.md) at all.
+// `initialPreamble` runs once before the first call (sets the state the
+// first poll observes); `betweenPreamble` runs after the first call and
+// before the second (the state change, if any, the second poll should
+// react to). Each call's `msg` is printed via `repr()` on its own line so
+// `None` (skipped, unchanged) is distinguishable from an actual `{...}` dict.
+function runSnippetTwice(initialPreamble: string, betweenPreamble: string, properties: Record<string, unknown>): [string, string] {
+  const result = wifiStatusNode.codegenSource!(node(properties), ctx);
+  // `_poll()` defined ONCE (buildMsg's `global` needs real function scope,
+  // same reason `runSnippet` above wraps it -- see that function's own
+  // comment) then called twice, with `initialPreamble`/`betweenPreamble`
+  // run at module scope in between calls to mutate pymock's WLAN class
+  // state -- mirrors two real polls in the generated flow's own
+  // while-loop, where the same coroutine-local `global` var persists
+  // across iterations.
+  //
+  // Setup statements (WLAN construction/`.active(True)`/etc.) print their
+  // own "WLAN_INIT"/"WLAN_ACTIVE"/"WLAN_CONNECT" lines (pymock's network.py)
+  // -- a marker prefix on just the two lines this helper actually cares
+  // about, filtered below, keeps this robust against however much or little
+  // setup-statement output sits in between, rather than assuming (wrongly)
+  // that the two `msg` reprs are the only lines printed at all.
+  const lines = [
+    ...(result.imports ?? []),
+    ...(result.statements ?? []).map((s) => s.code),
+    `def _poll():\n${indent(`${result.buildMsg}\nprint("MSG:" + repr(msg))`, 4)}`,
+    initialPreamble,
+    "_poll()",
+    betweenPreamble,
+    "_poll()",
+  ];
+  const dir = mkdtempSync(join(tmpdir(), "thingstudio-nodetest-"));
+  const scriptPath = join(dir, "_snippet.py");
+  writeFileSync(scriptPath, lines.join("\n"));
+  const pymockDir = join(__dirname, "fixtures", "pymock");
+  const output = execFileSync("python3", [scriptPath], {
+    env: { ...process.env, PYTHONPATH: pymockDir },
+    encoding: "utf8",
+  });
+  const printed = output
+    .trim()
+    .split("\n")
+    .filter((line) => line.startsWith("MSG:"))
+    .map((line) => line.slice("MSG:".length));
+  if (printed.length !== 2) throw new Error(`expected exactly 2 "MSG:" lines, got: ${output}`);
+  return [printed[0]!, printed[1]!];
 }
 
 describe("thingstudio/wifi_status node", () => {
@@ -97,6 +174,44 @@ describe("thingstudio/wifi_status node", () => {
   it("defaults to False if nothing has driven the connection state", () => {
     const output = runSnippet("", { pollMs: 1000, wifiConfigId: "unmanaged1" });
     expect(output).toContain("'payload': False");
+  });
+
+  it("emits on the first poll but not a second poll with no change (2026-09-02 emit-on-change)", () => {
+    const [first, second] = runSnippetTwice("", "", { pollMs: 1000, wifiConfigId: "unmanaged1" });
+    expect(first).toContain("'payload': False");
+    expect(second).toBe("None");
+  });
+
+  it("emits again on a second poll when connection state changes False -> True", () => {
+    const [first, second] = runSnippetTwice(
+      "",
+      "network.WLAN.CONNECTED = True\nnetwork.WLAN.IFCONFIG = ('192.168.1.42', '255.255.255.0', '192.168.1.1', '8.8.8.8')",
+      { pollMs: 1000, wifiConfigId: "unmanaged1" },
+    );
+    expect(first).toContain("'payload': False");
+    expect(second).toContain("'payload': True");
+    expect(second).toContain("'ip': '192.168.1.42'");
+  });
+
+  it("emits again when still connected but the IP changes (DHCP lease renewal)", () => {
+    const [first, second] = runSnippetTwice(
+      "network.WLAN.CONNECTED = True\nnetwork.WLAN.IFCONFIG = ('192.168.1.42', '255.255.255.0', '192.168.1.1', '8.8.8.8')",
+      "network.WLAN.IFCONFIG = ('192.168.1.99', '255.255.255.0', '192.168.1.1', '8.8.8.8')",
+      { pollMs: 1000, wifiConfigId: "unmanaged1" },
+    );
+    expect(first).toContain("'ip': '192.168.1.42'");
+    expect(second).toContain("'payload': True");
+    expect(second).toContain("'ip': '192.168.1.99'");
+  });
+
+  it("does not emit again on a second poll when still connected with the same IP", () => {
+    const [first, second] = runSnippetTwice(
+      "network.WLAN.CONNECTED = True\nnetwork.WLAN.IFCONFIG = ('192.168.1.42', '255.255.255.0', '192.168.1.1', '8.8.8.8')",
+      "",
+      { pollMs: 1000, wifiConfigId: "unmanaged1" },
+    );
+    expect(first).toContain("'ip': '192.168.1.42'");
+    expect(second).toBe("None");
   });
 
   it("does not call connect() when the referenced config's security is 'unmanaged'", () => {
@@ -166,6 +281,33 @@ describe("thingstudio/wifi_status node", () => {
     expect(source).toContain("while True:");
     expect(source).toContain("asyncio.sleep_ms(3000)");
     expect(source).toMatch(/runtime\.spawn\(/);
+  });
+
+  it("guards the downstream chain with \"if msg is not None\" so an unchanged poll doesn't call debug (2026-09-02)", () => {
+    const graph: GraphData = {
+      nodes: [
+        { id: 1, type: "thingstudio/wifi_status", properties: { pollMs: 3000, wifiConfigId: "wifi1" } },
+        { id: 2, type: "thingstudio/debug", properties: {} },
+      ],
+      links: [[1, 1, 0, 2, 0, "bool"]],
+      configs: [{ id: "wifi1", type: "thingstudio/config/wifi", properties: { ssid: "MyNetwork", password: "hunter2" } }],
+    };
+    const { source } = compile(graph, buildRegistry());
+    expect(source).toContain("if msg is not None:");
+    // The sleep/yield must sit outside that guard -- a skipped poll must
+    // still yield the event loop every iteration, not busy-loop (this
+    // file's own header, compile.ts's matching comment on the transform
+    // side of the same mechanism).
+    const guardIndex = source.indexOf("if msg is not None:");
+    // "await " prefixes the sleep call on its own line -- searching for
+    // the call including that keyword, not just the bare function name,
+    // keeps the indentation slice below anchored to the actual start of
+    // the line rather than partway through it.
+    const sleepIndex = source.indexOf("await asyncio.sleep_ms(3000)");
+    expect(sleepIndex).toBeGreaterThan(guardIndex);
+    const guardLineIndent = source.slice(0, guardIndex).match(/\n( *)$/)?.[1] ?? "";
+    const sleepLineIndent = source.slice(0, sleepIndex).match(/\n( *)$/)?.[1] ?? "";
+    expect(sleepLineIndent.length).toBe(guardLineIndent.length);
   });
 
   it("dedups the shared wifi-sta setup statement across two wifi_status nodes sharing one config (first one wins)", () => {

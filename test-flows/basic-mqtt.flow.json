@@ -1,0 +1,156 @@
+{
+  "formatVersion": 1,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "thingstudio/inject",
+      "properties": {
+        "payloadType": "string",
+        "payloadValue": "hello mike!",
+        "repeat": "manual"
+      }
+    },
+    {
+      "id": 2,
+      "type": "thingstudio/mqtt_publish",
+      "properties": {
+        "topic": "foobar",
+        "retain": false,
+        "qos": 0,
+        "wifiConfigId": "1b1ff863-cb83-4567-af04-4d720eee028b",
+        "brokerConfigId": "ef01cb90-dda3-4708-86a0-c7d52db02539"
+      }
+    },
+    {
+      "id": 3,
+      "type": "thingstudio/mqtt_subscribe",
+      "properties": {
+        "topic": "foobar",
+        "qos": 0,
+        "wifiConfigId": "1b1ff863-cb83-4567-af04-4d720eee028b",
+        "brokerConfigId": "ef01cb90-dda3-4708-86a0-c7d52db02539"
+      }
+    },
+    {
+      "id": 4,
+      "type": "thingstudio/debug",
+      "properties": {}
+    },
+    {
+      "id": 5,
+      "type": "thingstudio/wifi_status",
+      "properties": {
+        "pollMs": 5000,
+        "wifiConfigId": "1b1ff863-cb83-4567-af04-4d720eee028b"
+      }
+    },
+    {
+      "id": 6,
+      "type": "thingstudio/debug",
+      "properties": {}
+    }
+  ],
+  "edges": [
+    [
+      1,
+      0,
+      2,
+      0
+    ],
+    [
+      3,
+      0,
+      4,
+      0
+    ],
+    [
+      5,
+      0,
+      6,
+      0
+    ]
+  ],
+  "layout": {
+    "1": {
+      "pos": [
+        77.62948608398438,
+        140.9742431640625
+      ],
+      "size": [
+        96,
+        34
+      ]
+    },
+    "2": {
+      "pos": [
+        343.74566650390625,
+        283
+      ],
+      "size": [
+        128,
+        34
+      ]
+    },
+    "3": {
+      "pos": [
+        63.1480712890625,
+        356.4884033203125
+      ],
+      "size": [
+        132,
+        34
+      ]
+    },
+    "4": {
+      "pos": [
+        347,
+        482
+      ],
+      "size": [
+        84,
+        34
+      ]
+    },
+    "5": {
+      "pos": [
+        125,
+        73
+      ],
+      "size": [
+        120,
+        34
+      ]
+    },
+    "6": {
+      "pos": [
+        371,
+        94
+      ],
+      "size": [
+        84,
+        34
+      ]
+    }
+  },
+  "configs": [
+    {
+      "id": "1b1ff863-cb83-4567-af04-4d720eee028b",
+      "type": "thingstudio/config/wifi",
+      "properties": {
+        "ssid": "mihome",
+        "security": "password",
+        "password": "electr1c"
+      }
+    },
+    {
+      "id": "ef01cb90-dda3-4708-86a0-c7d52db02539",
+      "type": "thingstudio/config/mqtt-broker",
+      "properties": {
+        "broker": "192.168.10.22",
+        "port": 1883,
+        "username": "guest",
+        "password": "guest"
+      }
+    }
+  ]
+}

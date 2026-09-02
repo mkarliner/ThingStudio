@@ -72,14 +72,22 @@ describe("general compiler: shapes POC-D's hardcoded compiler could never accept
   });
 
   it("a function node returning None stops propagation without skipping the sleep/yield", () => {
+    // Uses `timer`, not `inject`, as the repeating source -- this test's
+    // whole point is a codegenSource poll loop's sleep/yield surviving a
+    // short-circuited chain (repeatMs > 0), and inject no longer has a
+    // repeat option at all as of 2026-09-02 (inject.ts's own header:
+    // click-only live-fire, event-source codegen, no sleep_ms in its loop
+    // whatsoever). `timer` is the direct replacement: same "always
+    // repeats, no config beyond an interval" shape inject's old "1s"
+    // preset had.
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "1s" } },
+        { id: 1, type: "thingstudio/timer", properties: { intervalMs: 1000 } },
         { id: 2, type: "thingstudio/function", properties: { code: "return None\n" } },
         { id: 3, type: "thingstudio/gpio_out", properties: { pin: 12 } },
       ],
       links: [
-        [1, 1, 0, 2, 0, "bool"],
+        [1, 1, 0, 2, 0, "int"],
         [2, 2, 0, 3, 0, "bool"],
       ],
     };

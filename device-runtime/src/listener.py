@@ -244,6 +244,13 @@ async def _dispatch(result):
     msg_type = msg["type"]
     if msg_type == "DEPLOY":
         await _handle_deploy(msg)
+    elif msg_type == "TRIGGER":
+        # inject click-only live-fire feature (2026-09-02) -- fire-and-
+        # forget, no ack (messages.py's own TRIGGER doc note): runtime.py's
+        # fire_trigger already degrades an unknown/stale nodeId to a
+        # logged no-op, so there's nothing more for this dispatch branch
+        # to check or report.
+        runtime.fire_trigger(msg["nodeId"])
     elif msg_type in ("STATE_READ", "STATE_WRITE"):
         # Tier 2 (design doc: flash-backed state store), not this task's
         # scope (fault-isolation-briefing.md's "Not in scope"). Logged, not

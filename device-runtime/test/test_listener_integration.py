@@ -257,11 +257,64 @@ def test_malformed_frame_soak_does_not_kill_listener():
             listener.close()
 
 
+def test_trigger_fires_the_registered_node_and_ignores_unknown_ids():
+    # inject click-only live-fire feature (2026-09-02) -- the real §13
+    # TRIGGER message dispatched through the real listener/runtime.py
+    # pair. Uses a plain uasyncio.Event rather than the vendored
+    # ThreadSafeEvent real inject.ts codegen constructs: this test is
+    # about the TRIGGER message reaching runtime.fire_trigger() and
+    # waking the right coroutine, not about ThreadSafeEvent's own
+    # hard-IRQ-safety (interrupt.ts/its vendored README already cover
+    # that separately) -- an ordinary Event is a faithful enough stand-in
+    # for "some object with .wait()/.set()" here.
+    with tempfile.TemporaryDirectory() as tmpdir:
+        bytecode = _compile_flow(
+            tmpdir,
+            "flow_trigger",
+            "import runtime\n"
+            "import uasyncio as asyncio\n"
+            "_evt = asyncio.Event()\n"
+            "runtime.register_trigger('5', _evt)\n"
+            "async def _flow_0():\n"
+            "    while True:\n"
+            "        await _evt.wait()\n"
+            "        _evt.clear()\n"
+            "        print('INTEGRATION_TRIGGER_FIRED')\n"
+            "runtime.spawn(_flow_0(), '5')\n",
+        )
+        listener = ListenerProcess(tmpdir)
+        try:
+            listener.wait_for(lambda l: l == "LISTENER_READY", description="LISTENER_READY")
+            listener.send_message({"type": "DEPLOY", "bytecode": bytecode, "staticData": b""})
+            listener.wait_for(
+                lambda l: l.startswith(F64_PREFIX) and _decode_f64_line(l)["type"] == "DEPLOY_ACK",
+                description="DEPLOY_ACK",
+            )
+
+            listener.send_message({"type": "TRIGGER", "nodeId": "5"})
+            listener.wait_for(lambda l: l == "INTEGRATION_TRIGGER_FIRED", description="the flow's coroutine woke on TRIGGER")
+
+            # A TRIGGER naming an unknown/stale node ID must be a silent
+            # no-op, not a crash -- confirmed by the listener staying
+            # alive and answering a subsequent DEPLOY normally.
+            listener.send_message({"type": "TRIGGER", "nodeId": "does-not-exist"})
+            bytecode2 = _compile_flow(
+                tmpdir,
+                "flow_ok2",
+                "import runtime\nasync def _flow_0():\n    print('STILL_ALIVE_AFTER_TRIGGER')\nruntime.spawn(_flow_0(), '1')\n",
+            )
+            listener.send_message({"type": "DEPLOY", "bytecode": bytecode2, "staticData": b""})
+            listener.wait_for(lambda l: l == "STILL_ALIVE_AFTER_TRIGGER", description="listener still alive after TRIGGER traffic")
+        finally:
+            listener.close()
+
+
 TESTS = [
     test_hello_sent_on_boot,
     test_deploy_success_and_flow_runs,
     test_node_error_reported_end_to_end,
     test_malformed_frame_soak_does_not_kill_listener,
+    test_trigger_fires_the_registered_node_and_ignores_unknown_ids,
 ]
 
 

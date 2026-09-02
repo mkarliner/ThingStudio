@@ -37,7 +37,25 @@ import { selectedNode, bumpPropertyVersion } from "./store";
 import ThingstudioNode from "./ThingstudioNode.vue";
 import ThingstudioSocket from "./ThingstudioSocket.vue";
 
-export async function createThingstudioEditor(container: HTMLElement) {
+export interface ThingstudioEditorOptions {
+  /**
+   * Fires on every "nodepicked" pointer-down over a node -- the same
+   * gesture that already drives selection below, just also handed to the
+   * caller before/after that assignment. Added 2026-09-02 for inject's
+   * click-only live-fire feature: main.ts uses this to send a real §13
+   * TRIGGER when the clicked node is an inject node and the transport is
+   * currently connected, without editor-setup.ts itself needing to know
+   * anything about node kinds, live connections, or the wire protocol --
+   * this file stays exactly as protocol-agnostic as every other Rete
+   * plumbing concern here. Selection still happens unconditionally (the
+   * property panel keeps working for a clicked inject node exactly as it
+   * always has); firing is an independent side effect layered on the same
+   * click, not a replacement for selecting.
+   */
+  onNodeClicked?(node: AnyThingstudioNode): void;
+}
+
+export async function createThingstudioEditor(container: HTMLElement, options: ThingstudioEditorOptions = {}) {
   const editor = new NodeEditor<Schemes>();
   const area = new AreaPlugin<Schemes, AreaExtra>(container);
   const connection = new ConnectionPlugin<Schemes, AreaExtra>();
@@ -77,6 +95,7 @@ export async function createThingstudioEditor(container: HTMLElement) {
     if (context.type === "nodepicked") {
       const node = editor.getNode(context.data.id) as AnyThingstudioNode | undefined;
       selectedNode.value = node ?? null;
+      if (node) options.onNodeClicked?.(node);
     }
     return context;
   });

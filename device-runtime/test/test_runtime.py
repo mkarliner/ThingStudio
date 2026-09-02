@@ -24,6 +24,7 @@ def _reset_runtime():
     runtime._tasks = []
     runtime.on_node_error = None
     runtime._cleanups = {}
+    runtime._triggers = {}
 
 
 def test_node_error_reported_with_correct_node_id():
@@ -238,8 +239,74 @@ def test_one_cleanup_raising_does_not_prevent_others_from_running():
     assert ran == ["good"]
 
 
+# --- register_trigger/fire_trigger/_triggers (2026-09-02, inject
+# click-only live-fire feature) -----------------------------------------
+
+
+def test_fire_trigger_sets_the_registered_event():
+    _reset_runtime()
+
+    class FakeEvent:
+        def __init__(self):
+            self.was_set = False
+
+        def set(self):
+            self.was_set = True
+
+    evt = FakeEvent()
+    runtime.register_trigger("1", evt)
+    runtime.fire_trigger("1")
+    assert evt.was_set is True
+
+
+def test_fire_trigger_on_unknown_node_id_is_a_no_op():
+    _reset_runtime()
+
+    # Must not raise -- an untrusted/stale wire nodeId degrades gracefully,
+    # same contract every other §13 message already follows.
+    runtime.fire_trigger("does-not-exist")
+
+
+def test_register_trigger_overwrites_a_previous_registration_for_the_same_id():
+    # Unlike register_cleanup's dedup-by-key, a second registration under
+    # the same node_id is expected (a redeploy reusing that numeric ID for
+    # a different node) and must win -- see register_trigger's own
+    # docstring.
+    _reset_runtime()
+    calls = []
+    runtime.register_trigger("1", type("E", (), {"set": lambda self: calls.append("first")})())
+    runtime.register_trigger("1", type("E", (), {"set": lambda self: calls.append("second")})())
+    runtime.fire_trigger("1")
+    assert calls == ["second"]
+
+
+def test_triggers_cleared_on_cancel_running():
+    _reset_runtime()
+
+    class FakeEvent:
+        def set(self):
+            pass
+
+    runtime.register_trigger("1", FakeEvent())
+
+    async def scenario():
+        await runtime.cancel_running()
+
+    asyncio.run(scenario())
+    assert runtime._triggers == {}
+    # A stale nodeId from before the redeploy must now be a no-op, not a
+    # crash and not a silent wake of some *new* flow's unrelated node that
+    # happens to reuse the same ID with a fresh registration this test
+    # never made.
+    runtime.fire_trigger("1")
+
+
 minitest.run(
     [
+        test_fire_trigger_sets_the_registered_event,
+        test_fire_trigger_on_unknown_node_id_is_a_no_op,
+        test_register_trigger_overwrites_a_previous_registration_for_the_same_id,
+        test_triggers_cleared_on_cancel_running,
         test_node_error_reported_with_correct_node_id,
         test_unwrapped_exception_falls_back_to_source_node_id,
         test_missing_node_id_falls_back_to_unknown,

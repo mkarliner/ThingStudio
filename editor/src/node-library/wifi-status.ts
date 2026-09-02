@@ -86,6 +86,16 @@
 // The config-node mechanism fixes the common case (every node sharing ONE
 // config, so there's nothing to disagree about) but doesn't add real
 // multi-config conflict detection on top.
+//
+// **Behavior change, 2026-09-02** (Mike's ask -- outstanding-items/
+// wifi-status-emit-on-change.md): this node used to emit a message every
+// single poll, connected or not, changed or not -- a flow with a 1s
+// pollMs feeding `debug` produced a line a second forever. Now emits only
+// when `(connected, ip)` actually changes since the last poll (codegen
+// below tracks this per-instance, `compile.ts`'s source-loop assembly
+// skips the downstream chain -- not the mandatory sleep/yield -- when
+// `buildMsg` sets `msg = None`). The very first poll always reports,
+// matching the old behavior for that one case.
 
 import { CompileError } from "../compiler/errors.js";
 import type { GraphNode } from "../compiler/graph.js";
@@ -198,15 +208,42 @@ export const wifiStatusNode: NodeDefinition = {
 
     const { ssid, password, security } = resolveWifiCredentials(node.properties, ctx, "wifi_status");
 
+    // Mike's ask, 2026-09-02 (outstanding-items/wifi-status-emit-on-change.md):
+    // emit only when connection state actually changes, not on every poll.
+    // Per-INSTANCE, not per-broker/shared -- two wifi_status nodes (rare,
+    // but not rejected) each need their own "last reported state," matching
+    // mqtt-subscribe.ts's `readyVar` precedent (ctx.uniqueName's result is
+    // already flow-wide-unique, so it doubles safely as the setup-statement
+    // dedup key too). Tracks (connected, ip) as a pair, not just the bool --
+    // an IP change while still connected (DHCP lease renewal to a different
+    // address) is a real status change worth re-emitting, not just the
+    // connected/disconnected transition.
+    const lastVar = ctx.uniqueName("wifi_status_last");
+
     return {
       imports: ["import network"],
-      statements: [wifiSetupStatement(ssid, password, security)],
+      statements: [wifiSetupStatement(ssid, password, security), { key: lastVar, code: `${lastVar} = None` }],
       // 'ip' is '' when not connected -- ifconfig() itself would raise/
       // return a stale address on some ports while disconnected, so this
       // avoids calling it at all unless isconnected() already said yes.
+      //
+      // `${lastVar}` starts as `None` (statement above), which never equals
+      // a real `(bool, str)` state tuple -- so the very first poll always
+      // reports, same as before this change, then only reports again on an
+      // actual change. `compile.ts`'s source-loop assembly wraps the
+      // downstream chain in `if msg is not None:` and keeps the
+      // `asyncio.sleep_ms` yield unconditional either way, so a skipped
+      // cycle here never turns into a busy-loop.
       buildMsg:
+        `global ${lastVar}\n` +
         "_wifi_connected = bool(_wifi_sta.isconnected())\n" +
-        "msg = {'payload': _wifi_connected, 'topic': '', 'ip': (_wifi_sta.ifconfig()[0] if _wifi_connected else '')}",
+        "_wifi_ip = (_wifi_sta.ifconfig()[0] if _wifi_connected else '')\n" +
+        "_wifi_state = (_wifi_connected, _wifi_ip)\n" +
+        `if _wifi_state == ${lastVar}:\n` +
+        "    msg = None\n" +
+        "else:\n" +
+        `    ${lastVar} = _wifi_state\n` +
+        "    msg = {'payload': _wifi_connected, 'topic': '', 'ip': _wifi_ip}",
       repeatMs: pollMs,
     };
   },

@@ -35,6 +35,8 @@ SAMPLE_MESSAGES = [
     {"type": "STATE_READ", "nodeId": "n8", "key": "counter"},  # request form: no value
     {"type": "STATE_READ", "nodeId": "n8", "key": "counter", "value": 42},  # response form: value present
     {"type": "STATE_WRITE", "nodeId": "n8", "key": "counter", "value": 0},
+    # TRIGGER added 2026-09-02 (inject click-only live-fire feature).
+    {"type": "TRIGGER", "nodeId": "n9"},
 ]
 
 
@@ -167,6 +169,15 @@ def test_rejects_state_write_missing_value():
         pass
 
 
+def test_rejects_trigger_missing_node_id():
+    body = cbor.encode({})
+    try:
+        messages.decode_message_body(messages.MessageType["TRIGGER"], body)
+        assert False, "expected MessageDecodeError"
+    except MessageDecodeError:
+        pass
+
+
 def test_rejects_truncated_garbage_cbor():
     garbage = bytes([0xFF, 0x00, 0x9F, 0x9F, 0x9F])
     try:
@@ -227,6 +238,7 @@ minitest.run(
         test_rejects_malformed_runtime_version,
         test_rejects_deploy_non_bytes_field,
         test_rejects_state_write_missing_value,
+        test_rejects_trigger_missing_node_id,
         test_rejects_truncated_garbage_cbor,
         test_rejects_empty_body_for_every_type,
         test_decoder_deliberately_permissive_on_non_minimal_ints,

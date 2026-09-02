@@ -80,5 +80,80 @@ async def _guarded(coro, fallback_node_id):
         print("NODE_ERROR node=%s type=%s msg=%s" % (node_label, type(e).__name__, str(e)))
 
 
+# register_trigger/fire_trigger/_triggers added 2026-09-02 (inject
+# click-only live-fire feature) -- the real device-runtime/src/runtime.py
+# mirror of the same registry, so generated setup code that calls
+# `runtime.register_trigger(node_id, evt)` (inject.ts) doesn't blow up
+# under this mock. Unlike the real one, this fixture has no redeploy path
+# to clear it on -- each test process runs exactly one compiled flow once,
+# so there's nothing analogous to cancel_running() here to hook.
+_triggers = {}
+
+
+def register_trigger(node_id, event):
+    _triggers[node_id] = event
+
+
+def fire_trigger(node_id):
+    event = _triggers.get(node_id)
+    if event is not None:
+        event.set()
+
+
+# _AUTO_FIRE_DELAY_S / _MAX_RUN_S added the same day, for the same
+# feature: this fixture's whole reason for existing is running a compiled
+# flow's coroutine to completion so a test can assert on its printed
+# output (this file's own header) -- correct only for a source that
+# actually terminates on its own, which every inject-sourced test flow
+# used to do (repeatMs=0 meant "build msg once, no loop"). Inject is now
+# an always-looping event-source node (node-library/inject.ts's own
+# 2026-09-02 header) exactly like interrupt/timer/wifi_status/
+# mqtt_subscribe already were -- so left alone, `spawn()`'s old bare
+# `asyncio.run(coro)` would simply hang forever on `await evt.wait()`,
+# since nothing in a synthetic test process ever sends a real §13 TRIGGER.
+#
+# Rather than pushing a "manually fire this specific inject node" call
+# into every one of the ~15 existing test files that use inject purely as
+# "the thing that drives one message through the flow under test" (none
+# of them are testing inject's own firing behavior -- node-inject.test.ts
+# is where that actually lives now), this fixture simulates "a user
+# clicked every inject node on the canvas shortly after connecting" once,
+# generically, for any flow run through it: after a short delay (letting
+# the flow's own coroutine actually reach its first `await evt.wait()`),
+# every currently-registered trigger fires once. A coroutine that never
+# terminates on its own (this now includes inject, plus every pre-existing
+# always-looping source) is given a bounded run instead of an unbounded
+# one -- hitting that bound and raising asyncio.TimeoutError is the
+# EXPECTED outcome for such a source, not a test failure, mirroring
+# exactly what node-wifi-status.test.ts's/node-mqtt-subscribe.test.ts's
+# own headers already say about why THEIR repeating flows "can't run end
+# to end through this" harness: they can now, briefly, which is enough to
+# observe one message's worth of side effects.
+_AUTO_FIRE_DELAY_S = 0.02
+_MAX_RUN_S = 0.3
+
+
+async def _auto_fire_registered_triggers():
+    await _asyncio.sleep(_AUTO_FIRE_DELAY_S)
+    for event in list(_triggers.values()):
+        event.set()
+
+
 def spawn(coro, node_id=None):
-    return _asyncio.run(_guarded(coro, node_id))
+    async def _run():
+        firer = _asyncio.ensure_future(_auto_fire_registered_triggers())
+        try:
+            await _guarded(coro, node_id)
+        finally:
+            firer.cancel()
+
+    try:
+        _asyncio.run(_asyncio.wait_for(_run(), _MAX_RUN_S))
+    except _asyncio.TimeoutError:
+        # Expected for any source that loops forever (see this section's
+        # header) -- the bounded run already let it process whatever
+        # trigger(s)/wakes fired within the budget above; asyncio.wait_for
+        # cancels the still-running task for us, same clean-cancellation
+        # path _guarded()'s own `except NodeError`/`except Exception`
+        # never sees (CancelledError isn't an Exception subclass).
+        pass

@@ -32,6 +32,7 @@ import {
   type ProtocolVersion,
   type StateReadMessage,
   type StateWriteMessage,
+  type TriggerMessage,
   type ValueStreamMessage,
 } from "./messages.js";
 
@@ -109,6 +110,8 @@ export function decodeMessageBody(typeId: number, body: Uint8Array): Message {
       return { type: "STATE_READ", ...validateStateRead(obj) };
     case "STATE_WRITE":
       return { type: "STATE_WRITE", ...validateStateWrite(obj) };
+    case "TRIGGER":
+      return { type: "TRIGGER", ...validateTrigger(obj) };
   }
 }
 
@@ -223,5 +226,11 @@ function validateStateWrite(obj: Record<string, unknown>): Omit<StateWriteMessag
     nodeId: expectString(obj, "nodeId", "STATE_WRITE"),
     key: expectString(obj, "key", "STATE_WRITE"),
     value: requirePresent(obj, "value", "STATE_WRITE"),
+  };
+}
+
+function validateTrigger(obj: Record<string, unknown>): Omit<TriggerMessage, "type"> {
+  return {
+    nodeId: expectString(obj, "nodeId", "TRIGGER"),
   };
 }

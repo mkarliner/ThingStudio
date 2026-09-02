@@ -34,6 +34,8 @@ const SAMPLE_MESSAGES: Message[] = [
   { type: "STATE_READ", nodeId: "n8", key: "counter" }, // request form: no value
   { type: "STATE_READ", nodeId: "n8", key: "counter", value: 42 }, // response form: value present
   { type: "STATE_WRITE", nodeId: "n8", key: "counter", value: 0 },
+  // TRIGGER added 2026-09-02 (inject click-only live-fire feature).
+  { type: "TRIGGER", nodeId: "n9" },
 ];
 
 describe("message CBOR round-trip (codec.ts, per message type)", () => {
@@ -117,6 +119,16 @@ describe("codec.ts rejects valid CBOR with the wrong shape (per message type)", 
   it("rejects STATE_WRITE missing its required value", () => {
     const body = cborEncode({ nodeId: "n1", key: "x" });
     expect(() => decodeMessageBody(MessageType.STATE_WRITE, body)).toThrow(MessageDecodeError);
+  });
+
+  it("rejects TRIGGER missing its required nodeId", () => {
+    const body = cborEncode({});
+    expect(() => decodeMessageBody(MessageType.TRIGGER, body)).toThrow(MessageDecodeError);
+  });
+
+  it("rejects TRIGGER with a wrong-typed nodeId", () => {
+    const body = cborEncode({ nodeId: 42 });
+    expect(() => decodeMessageBody(MessageType.TRIGGER, body)).toThrow(MessageDecodeError);
   });
 
   it("rejects truncated/garbage CBOR bytes outright", () => {

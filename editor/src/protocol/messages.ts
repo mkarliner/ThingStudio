@@ -49,6 +49,14 @@ export const MessageType = {
   NODE_ERROR: 6,
   STATE_READ: 7,
   STATE_WRITE: 8,
+  // Added 2026-09-02 (inject click-only live-fire feature): editor -> device,
+  // "fire this source node's coroutine once, right now" -- inject.ts's
+  // codegenEventSource waits on this per-node-ID event instead of polling on
+  // a repeat interval. Numbered after the original 8, not inserted into the
+  // existing sequence, so a device already running the pre-2026-09-02
+  // listener.py simply logs "unexpected message type" (LISTENER_IGNORED)
+  // instead of misinterpreting some other message.
+  TRIGGER: 9,
 } as const;
 
 export type MessageTypeId = (typeof MessageType)[keyof typeof MessageType];
@@ -148,6 +156,27 @@ export interface StateWriteMessage {
   readonly value: unknown;
 }
 
+/**
+ * Editor -> device: fire one source node's live-trigger event right now,
+ * bypassing whatever's currently running in its coroutine's wait --
+ * inject's click-only live-fire feature (2026-09-02,
+ * docs/working-notes/outstanding-items/inject-click-fire-missing.md).
+ * Fire-and-forget, matching STATE_WRITE's precedent (no distinct ack
+ * message) -- the click itself is already the only user-visible feedback
+ * this needs; a NODE_ERROR still arrives independently if firing the
+ * chain then raises. `nodeId` matches whatever the most recent DEPLOY's
+ * compiled source assigned that node (compile.ts's `runtime.spawn(coro(),
+ * "<node.id>")` / `runtime.register_trigger("<node.id>", evt)`) -- a
+ * TRIGGER naming an unknown/stale node ID (e.g. the canvas changed since
+ * the last deploy) is not an error, just a silent no-op on the device
+ * side (runtime.py's fire_trigger), same "stale ID after edits" tolerance
+ * main.ts's own NODE_ERROR node-highlighting already accepts.
+ */
+export interface TriggerMessage {
+  readonly type: "TRIGGER";
+  readonly nodeId: string;
+}
+
 export type Message =
   | HelloMessage
   | DeployMessage
@@ -156,7 +185,8 @@ export type Message =
   | ValueStreamMessage
   | NodeErrorMessage
   | StateReadMessage
-  | StateWriteMessage;
+  | StateWriteMessage
+  | TriggerMessage;
 
 export const MESSAGE_TYPE_BY_NAME: Record<Message["type"], MessageTypeId> = {
   HELLO: MessageType.HELLO,
@@ -167,6 +197,7 @@ export const MESSAGE_TYPE_BY_NAME: Record<Message["type"], MessageTypeId> = {
   NODE_ERROR: MessageType.NODE_ERROR,
   STATE_READ: MessageType.STATE_READ,
   STATE_WRITE: MessageType.STATE_WRITE,
+  TRIGGER: MessageType.TRIGGER,
 };
 
 export const MESSAGE_NAME_BY_TYPE: Record<MessageTypeId, Message["type"]> = {
@@ -178,4 +209,5 @@ export const MESSAGE_NAME_BY_TYPE: Record<MessageTypeId, Message["type"]> = {
   [MessageType.NODE_ERROR]: "NODE_ERROR",
   [MessageType.STATE_READ]: "STATE_READ",
   [MessageType.STATE_WRITE]: "STATE_WRITE",
+  [MessageType.TRIGGER]: "TRIGGER",
 };

@@ -5,7 +5,7 @@
 // pocs/poc-rete/src/nodes.ts's five *fake* types onto the real property
 // contracts app/nodes.ts's own header documents -- node.properties here
 // has to match exactly what each node-library/*.ts's codegen reads:
-//   - inject:       payloadType, payloadValue, repeat        (node-library/inject.ts)
+//   - inject:       payloadType, payloadValue                (node-library/inject.ts -- no `repeat`, see that file's 2026-09-02 header note)
 //   - function:     code                                     (node-library/function-node.ts)
 //   - debug:        (none -- debug.ts reads only node.id)     (node-library/debug.ts)
 //   - gpio_out:     pin                                       (node-library/gpio-out.ts)
@@ -178,10 +178,13 @@ export class InjectNode extends ClassicPreset.Node {
   nodeType = "thingstudio/inject";
   highlighted = false;
 
-  properties: { payloadType: "bool" | "number" | "string"; payloadValue: string; repeat: "manual" | "1s" | "5s" | "30s" } = {
+  // Behavior change, 2026-09-02 (inject click-only live-fire feature,
+  // node-library/inject.ts's own header): `repeat` is gone -- inject fires
+  // only on a real §13 TRIGGER (a canvas click while live-connected,
+  // main.ts), never on a timer.
+  properties: { payloadType: "bool" | "number" | "string"; payloadValue: string } = {
     payloadType: "bool",
     payloadValue: "true",
-    repeat: "manual",
   };
 
   constructor() {

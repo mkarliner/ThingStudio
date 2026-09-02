@@ -37,11 +37,8 @@ below, which loads through the real "Open Flow." **`mqtt_publish` and
 canvas presence at all, plus a `wifiConfigId` (WiFi network credentials)
 AND a `brokerConfigId` (`thingstudio/config/mqtt-broker` -- broker
 host/port and optional username/password) referenced independently,
-rather than either living as raw node properties. No sample flow file for
-them yet in this directory -- being canvas-wired now, the simplest way to
-try them is building one directly in the browser (drag `mqtt
-publish`/`mqtt subscribe` onto the canvas, wire them up, "Save Flow")
-rather than hand-writing JSON.
+rather than either living as raw node properties. See `basic-mqtt.flow.json`
+below for the first sample flow exercising them.
 
 ## Bootstrapping a new board (`deploy_runtime.py`)
 
@@ -126,6 +123,36 @@ wrapped. Not run on real hardware -- that's this experiment.
    button-press signal. Wire a pull-down with the button to 3.3V (idle
    LOW, press HIGH -- LED lights when pressed, the intuitive direction for
    this flow's direct mirror), not a bare switch to a floating pin.
+
+## `basic-mqtt.flow.json`
+
+Mike's own minimal MQTT roundtrip test, 2026-09-02: `thingstudio/inject`
+("manual", payload "hello mike!") -> `thingstudio/mqtt_publish` (topic
+"foobar", qos 0, retain false); `thingstudio/mqtt_subscribe` (same topic,
+qos 0) -> `thingstudio/debug`. One shared `thingstudio/config/wifi` and
+`thingstudio/config/mqtt-broker` config, referenced by both mqtt nodes.
+
+**First real-hardware run of this file produced a silent failure** -- no
+debug output, no error. Dated Results entry:
+`docs/working-notes/validation/mvp-validation-plan.md`'s Tier 1 network
+section, 2026-09-02. Of the two candidate causes identified,
+`inject-click-fire-missing.md`'s (inject never actually fired -- "manual"
+only ever ran once at boot, not on click) is now implemented for real
+(2026-09-02): this flow's saved `repeat: "manual"` property is simply
+ignored by the new codegen, and re-deploying it now requires clicking the
+inject node on the canvas while connected to actually send anything. The
+other candidate, `mqtt-pubsub-boot-race.md`'s suspected publish-vs-
+subscribe wire-ordering race, is still unconfirmed and unfixed -- this
+file is the natural first real-hardware re-test for both once Mike
+rebuilds, since a real click now isolates "did the publish even get sent"
+from "was there a boot race" in a way a boot-time one-shot fire never
+could.
+
+Needs a real local broker reachable from the board (Mosquitto, matching
+`mqtt-hardware-validation-and-network-followups-briefing.md`'s
+recommended setup) -- broker host/port/credentials are in the file's own
+`configs` array, edit before deploying. Load via the browser ("Open
+Flow") same as the other files in this directory.
 
 ## Loading and deploying via the browser (the intended path now)
 

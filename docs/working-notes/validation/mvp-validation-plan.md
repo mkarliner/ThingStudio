@@ -949,6 +949,32 @@ the README-per-component convention.
   `compile.ts`'s own `uniqueName` logic. 187/187 editor tests passing (up
   from 186), `tsc --noEmit` clean.
 
+- **Results (2026-09-02, real hardware attempt — SILENT FAILURE, not yet
+  passing):** Mike deployed `basicmqtt.flow.json` (inject "manual" -->
+  mqtt_publish; mqtt_subscribe --> debug, one shared wifi/broker config,
+  topic "foobar", qos 0, retain false) to real ESP32 hardware against a
+  real broker. No output reached the debug node, and no error was
+  reported anywhere. Root cause not yet isolated to one factor -- two
+  distinct, real gaps identified during investigation, either one
+  sufficient on its own to explain zero output:
+  1. `inject`'s click-only live-fire feature, believed shipped per a
+     prior session's handoff brief, is verifiably absent from the repo
+     (no commit/stash/reflog trace) -- "manual" today fires once,
+     automatically, at flow boot, not on click. Full detail:
+     `outstanding-items/inject-click-fire-missing.md`.
+  2. Suspected: no ordering guarantee between mqtt_subscribe's SUBSCRIBE
+     packet and mqtt_publish's PUBLISH packet reaching the broker when
+     both share one client at boot -- this addendum's own "two chains
+     racing to connect" test above only covers the shared *connect* step,
+     never publish-vs-subscribe wire ordering against a real broker (the
+     pymock fixture doesn't model that at all). With qos 0 + retain
+     false, a publish landing first means the message is gone for good.
+     Full detail: `outstanding-items/mqtt-pubsub-boot-race.md`.
+
+  Neither factor fixed yet. This section's "real hardware validation of
+  the MQTT WiFi-precheck fix and full functional pass" bar (qos 1,
+  retain, outage recovery included) remains open pending both.
+
 ## Tier 2 — live values + persistence
 
 - Live value streaming: inject a known value sequence, confirm the
