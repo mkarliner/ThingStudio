@@ -23,8 +23,11 @@ Git writes from the agent sandbox leave stale `.git/*.lock` files behind
 on the live-mounted repo (`git add`/`git commit` never run from the
 sandbox, ever). Stray compiled `.js` files can shadow real `.ts` sources
 when a sandboxed `npx tsc --noEmit` silently doesn't respect the flag
-(check and delete before trusting any test/build result). See
-`CLAUDE.md` directly for both — this file doesn't restate them.
+(check and delete before trusting any test/build result). `npm install`/
+`build`/`test` against the live-mounted `editor/` corrupts `node_modules`
+for Mike's Mac the same way (Linux native bindings written over darwin
+ones) — never run from the sandbox, hand Mike the command instead. See
+`CLAUDE.md` directly for all three — this file doesn't restate them.
 
 ## MicroPython / device-runtime
 
@@ -184,21 +187,6 @@ when a sandboxed `npx tsc --noEmit` silently doesn't respect the flag
 
 ## Cowork remote-device testing environment
 
-- **`device_bash`'s desktop workspace is a Linux VM, not literally Mike's
-  macOS host -- a `node_modules` with platform-specific native bindings
-  (installed on the real Mac) doesn't work there.** Confirmed 2026-08-20:
-  `npx vitest run` via `device_bash` failed with "Cannot find native
-  binding" (rolldown's `@rolldown/binding-darwin-x64` vs. the VM's own
-  `linux x86_64`). `./node_modules/.bin/tsc --noEmit` worked fine there
-  (pure JS, no native binding) -- only tools with a platform-specific
-  compiled dependency hit this. Workaround: tar the project (excluding
-  `node_modules`) into the connected folder, stage it, extract into the
-  cloud session's own workspace (which has network), `npm ci` fresh there
-  (pulls the right platform's bindings automatically), run the real test
-  suite there instead. Worth trying `device_bash` first for any future
-  session's test run (cheaper, no extra hop) but don't be surprised by
-  this failure mode or waste time debugging it as if it were a real bug --
-  it's an environment mismatch, not a code problem.
 - **The cloud session's own staged read-only mirror of the repo (under
   the uploads directory) can be a partial/curated snapshot, not a full
   checkout -- don't trust it for `npm test`/`vitest run` without first
