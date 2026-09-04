@@ -38,8 +38,10 @@ background across a redeploy, orphaned from whichever flow is deployed afterward
 report) at minimum, and potentially interfering with a *later* flow's own network use at worst (an unrelated wifi
 node deployed after this one could end up racing, or riding on, a connection attempt it never initiated).
 
-**Not yet confirmed with Mike** whether this specific instance really was preceded by a wifi/mqtt flow deploy in the
-same power cycle -- likely given the timestamp and recent MQTT hardware validation work, but not verified.
+**Confirmed by Mike, 2026-09-04: a power cycle fixed it.** That rules out anything persisted to flash by the flow
+itself (a redeploy alone doesn't clear it, a hard power-cycle does) and confirms the leftover-native-driver-state
+diagnosis above -- this is in-RAM/radio state carried across redeploys within one power-on session, not anything
+`_flow.mpy`/NVS-persisted that a fresh deploy of a clean flow should have to account for on its own.
 
 ## Why this isn't a mechanical fix
 
@@ -55,5 +57,6 @@ building, not a silent default.
 
 - Whether this is purely cosmetic (stray log line, no functional impact on the currently-deployed flow) or can
   actually disrupt a *subsequent* wifi-using flow's own connection attempt -- no hardware experiment run either way.
-- Whether `_wifi_sta.disconnect()` alone (vs. `.active(False)`) is sufficient, or leaves the same NVS-cached-credential
-  auto-reconnect behavior Problem 2b already documented.
+- Whether `_wifi_sta.disconnect()` alone (vs. `.active(False)`) is sufficient to fix it without a full power-cycle, or
+  leaves the same NVS-cached-credential auto-reconnect behavior Problem 2b already documented -- unverified, since
+  the confirmation above only tested the power-cycle workaround, not any in-software teardown.
