@@ -82,7 +82,7 @@ beforeEach(() => {
 });
 
 function node(properties: Record<string, unknown>): GraphNode {
-  return { id: 1, type: "thingstudio/udp_send", properties };
+  return { id: "1", type: "thingstudio/udp_send", properties };
 }
 
 function indent(code: string, spaces: number): string {

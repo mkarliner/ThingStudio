@@ -66,7 +66,7 @@ import type { CodegenContext, NodeDefinition, SinkCodegenResult, TransformCodege
  * generated function body); source nodes' `buildMsg` is inlined directly
  * into their coroutine, not emitted as a separate function. */
 export interface NodeLineRange {
-  nodeId: number;
+  nodeId: string;
   startLine: number;
   endLine: number;
 }
@@ -77,7 +77,7 @@ export interface CompileResult {
 }
 
 export function compile(graphData: GraphData, registry: Map<string, NodeDefinition>): CompileResult {
-  const nodesById = new Map<number, GraphNode>();
+  const nodesById = new Map<string, GraphNode>();
   for (const n of graphData.nodes) {
     if (nodesById.has(n.id)) throw new CompileError(`duplicate node id ${n.id}`);
     nodesById.set(n.id, n);
@@ -103,8 +103,8 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
   // of links per origin (fan-out) and any number of links per target
   // (fan-in, tracked implicitly -- nothing needs an explicit "incoming"
   // list beyond the counts/checks below).
-  const childrenOf = new Map<number, GraphLink[]>();
-  const incomingCount = new Map<number, number>();
+  const childrenOf = new Map<string, GraphLink[]>();
+  const incomingCount = new Map<string, number>();
   for (const link of graphData.links) {
     const [, originId, , targetId] = link;
     if (!nodesById.has(originId)) throw new CompileError(`link references unknown origin node ${originId}`);
@@ -143,9 +143,9 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
   // one source's own tree, or a node shared between two different
   // sources -- not a cycle; stop descending (its subtree's already been
   // validated) but it's still reachable.
-  const color = new Map<number, "gray" | "black">();
-  const reachable = new Set<number>();
-  function walkForCycles(sourceId: number, nodeId: number): void {
+  const color = new Map<string, "gray" | "black">();
+  const reachable = new Set<string>();
+  function walkForCycles(sourceId: string, nodeId: string): void {
     const existing = color.get(nodeId);
     if (existing === "black") return;
     if (existing === "gray") {
@@ -191,7 +191,7 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
   // panel, NOT what nodeLineRanges below is computed from (that's derived
   // directly from the actual assembled line count, immune to whatever a
   // function node's own verbatim user code happens to contain).
-  const functionDefs: { nodeId: number; text: string }[] = [];
+  const functionDefs: { nodeId: string; text: string }[] = [];
   const coroutines: string[] = [];
   const spawnCalls: string[] = [];
 
@@ -202,8 +202,8 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
   // called from every place that reaches it -- matching Node-RED's own
   // fan-in semantics (no synchronization/merge, the node just fires once
   // per incoming message, however many times that ends up being per run).
-  const transformCodegen = new Map<number, TransformCodegenResult>();
-  const sinkCodegen = new Map<number, SinkCodegenResult>();
+  const transformCodegen = new Map<string, TransformCodegenResult>();
+  const sinkCodegen = new Map<string, SinkCodegenResult>();
 
   function getTransform(node: GraphNode): TransformCodegenResult {
     let t = transformCodegen.get(node.id);
@@ -238,7 +238,7 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
    * drops the message, matching Node-RED -- not an error). NOT indented;
    * callers indent the whole result as one block.
    */
-  function emit(nodeId: number, msgVar: string): string {
+  function emit(nodeId: string, msgVar: string): string {
     const node = nodesById.get(nodeId)!;
     const kind = registry.get(node.type)!.kind;
 
@@ -403,7 +403,7 @@ function mergeSetup(
  * handles indentation for the whole multi-line result the same way it
  * already does for a single-line call.
  */
-function nodeCallWithFaultBoundary(nodeId: number, call: string): string {
+function nodeCallWithFaultBoundary(nodeId: string, call: string): string {
   return `try:\n${indent(call, 4)}\nexcept Exception as _e:\n    raise runtime.NodeError("${nodeId}", _e)`;
 }
 

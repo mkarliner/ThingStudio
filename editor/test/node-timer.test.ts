@@ -19,7 +19,7 @@ import { timerNode } from "../src/node-library/timer.js";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 function node(properties: Record<string, unknown>): GraphNode {
-  return { id: 1, type: "thingstudio/timer", properties };
+  return { id: "1", type: "thingstudio/timer", properties };
 }
 
 function freshCtx(): CodegenContext {
@@ -107,10 +107,10 @@ describe("thingstudio/timer node", () => {
   it("compiles into a full flow with the expected structure (source text only -- not executed, see header)", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/timer", properties: { intervalMs: 750 } },
-        { id: 2, type: "thingstudio/debug", properties: {} },
+        { id: "1", type: "thingstudio/timer", properties: { intervalMs: 750 } },
+        { id: "2", type: "thingstudio/debug", properties: {} },
       ],
-      links: [[1, 1, 0, 2, 0, "number"]],
+      links: [[1, "1", 0, "2", 0, "number"]],
     };
     const { source } = compile(graph, buildRegistry());
     expect(source).toContain("while True:");

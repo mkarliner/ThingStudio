@@ -73,7 +73,7 @@ function freshCtx(): CodegenContext {
 }
 
 function node(properties: Record<string, unknown>): GraphNode {
-  return { id: 1, type: "thingstudio/mqtt_subscribe", properties };
+  return { id: "1", type: "thingstudio/mqtt_subscribe", properties };
 }
 
 /** Finds the actual MQTTClient-construction statement among a codegen
@@ -215,10 +215,10 @@ describe("thingstudio/mqtt_subscribe node", () => {
   it("compiles into a full flow with the expected structure (source text only -- not executed, see header)", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/mqtt_subscribe", properties: { ...BASE, topic: "sensors/temp" } },
-        { id: 2, type: "thingstudio/debug", properties: {} },
+        { id: "1", type: "thingstudio/mqtt_subscribe", properties: { ...BASE, topic: "sensors/temp" } },
+        { id: "2", type: "thingstudio/debug", properties: {} },
       ],
-      links: [[1, 1, 0, 2, 0, "any"]],
+      links: [[1, "1", 0, "2", 0, "any"]],
       configs: configsWith({ broker: "b", port: 1883 }),
     };
     const { source } = compile(graph, buildRegistry());
@@ -230,8 +230,8 @@ describe("thingstudio/mqtt_subscribe node", () => {
   it("two mqtt_subscribe nodes on the same broker share one client but subscribe independently", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/mqtt_subscribe", properties: { ...BASE, topic: "t1" } },
-        { id: 2, type: "thingstudio/mqtt_subscribe", properties: { ...BASE, topic: "t2" } },
+        { id: "1", type: "thingstudio/mqtt_subscribe", properties: { ...BASE, topic: "t1" } },
+        { id: "2", type: "thingstudio/mqtt_subscribe", properties: { ...BASE, topic: "t2" } },
       ],
       links: [],
       configs: configsWith({ broker: "b", port: 1883 }),
@@ -247,11 +247,11 @@ describe("thingstudio/mqtt_subscribe node", () => {
   it("mqtt_publish and mqtt_subscribe on the same broker share one client", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "x", repeat: "manual" } },
-        { id: 2, type: "thingstudio/mqtt_publish", properties: { ...BASE, topic: "out" } },
-        { id: 3, type: "thingstudio/mqtt_subscribe", properties: { ...BASE, topic: "in" } },
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "x", repeat: "manual" } },
+        { id: "2", type: "thingstudio/mqtt_publish", properties: { ...BASE, topic: "out" } },
+        { id: "3", type: "thingstudio/mqtt_subscribe", properties: { ...BASE, topic: "in" } },
       ],
-      links: [[1, 1, 0, 2, 0, "string"]],
+      links: [[1, "1", 0, "2", 0, "string"]],
       configs: configsWith({ broker: "shared.broker", port: 1883 }),
     };
     const { source } = compile(graph, buildRegistry());

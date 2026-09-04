@@ -223,14 +223,11 @@ canvasContainer.addEventListener("drop", (e) => {
 function extractCanvasSnapshot(): { nodes: CanvasNodeSnapshot[]; edges: FlowFileEdge[] } {
   const nodes = reteEditor.getNodes() as AnyThingstudioNode[];
   // Rete node IDs are string UUIDs (ClassicPreset.Node's own constructor,
-  // crypto.randomUUID()) -- flow-file.ts's format wants plain integers
-  // (Node-RED-cautionary-tale-driven determinism, that module's own
-  // header), so this assigns fresh sequential IDs for the save, same
-  // "recomputed fresh, no persistent numbering" approach graph-adapter.ts
-  // takes for the compiler-facing path (1-indexed, matching that file's
-  // own convention).
-  const fileIdByReteId = new Map<string, number>();
-  nodes.forEach((n, i) => fileIdByReteId.set(n.id, i + 1));
+  // crypto.randomUUID()) -- flow-file.ts's node ids are the same string
+  // now (decisions.md's "Stable node IDs" entry, 2026-09-04), so this is
+  // a direct pass-through below, not a remap: a node is saved under the
+  // exact id it already has on the canvas, stable across save/load and
+  // redeploys rather than recomputed fresh on every save.
 
   const snapshot: CanvasNodeSnapshot[] = nodes.map((n) => {
     const view = reteArea.nodeViews.get(n.id);
@@ -242,7 +239,7 @@ function extractCanvasSnapshot(): { nodes: CanvasNodeSnapshot[]; edges: FlowFile
     // applyFlowFile's load side below uses.
     const pos: [number, number] = view ? [view.position.x, view.position.y] : [0, 0];
     return {
-      id: fileIdByReteId.get(n.id)!,
+      id: n.id,
       // n.nodeType is each node's own real compiler type string (nodes.ts)
       // -- "thingstudio/xxx" for a first-party kind, or a custom type's own
       // namespaced id verbatim (e.g. "custom/dht22") -- read directly
@@ -261,7 +258,7 @@ function extractCanvasSnapshot(): { nodes: CanvasNodeSnapshot[]; edges: FlowFile
     const targetNode = reteEditor.getNode(c.target) as AnyThingstudioNode;
     const originSlot = socketIndex(Object.keys(sourceNode.outputs), c.sourceOutput);
     const targetSlot = socketIndex(Object.keys(targetNode.inputs), c.targetInput);
-    return [fileIdByReteId.get(c.source)!, originSlot, fileIdByReteId.get(c.target)!, targetSlot];
+    return [c.source, originSlot, c.target, targetSlot];
   });
 
   return { nodes: snapshot, edges };
@@ -301,8 +298,8 @@ async function applyFlowFile(file: FlowFile): Promise<void> {
   // current selection, so the store needs to already hold the file's
   // configs by the time any node using one gets constructed/selected below.
   replaceAllConfigs(file.configs.map((c) => ({ id: c.id, type: c.type, properties: c.properties })));
-  const skippedFileIds = new Set<number>();
-  const nodeByFileId = new Map<number, AnyThingstudioNode>();
+  const skippedFileIds = new Set<string>();
+  const nodeByFileId = new Map<string, AnyThingstudioNode>();
 
   for (const n of file.nodes) {
     // Custom node types are checked first -- a loaded custom package's
@@ -326,9 +323,17 @@ async function applyFlowFile(file: FlowFile): Promise<void> {
       }
       node = factory();
     }
+    // Adopt the saved id instead of the fresh crypto.randomUUID() the
+    // constructor just assigned -- stable node IDs (decisions.md's
+    // "Stable node IDs" entry, 2026-09-04) means a loaded node keeps the
+    // exact identity it was saved under, not a new one every time the
+    // flow file is opened. Must happen before reteHandle.addNode() below,
+    // which registers the node into the editor (and calls area.translate())
+    // keyed by whatever node.id already holds at that point.
+    node.id = n.id;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     Object.assign(node.properties as any, n.properties);
-    const layoutEntry = file.layout[String(n.id)];
+    const layoutEntry = file.layout[n.id];
     const position = layoutEntry ? { x: layoutEntry.pos[0], y: layoutEntry.pos[1] } : { x: 0, y: 0 };
     await reteHandle.addNode(node, position);
     nodeByFileId.set(n.id, node);
@@ -481,17 +486,8 @@ const builtInRegistry = buildRegistry();
 // without re-plumbing it through another layer.
 let lastNodeLineRanges: NodeLineRange[] = [];
 
-// Numeric compiler-facing node ID -> the Rete node's own string ID, from
-// the most recent currentSource() call -- graph-adapter.ts's toGraphData()
-// recomputes this fresh every call (no persistent numbering across calls,
-// by that module's own design), so highlightNode() below needs the
-// mapping from whichever compile most recently produced the line ranges
-// or ran right before a §13 NODE_ERROR arrived.
-let lastReteIdByNodeId: Map<number, string> = new Map();
-
 function currentSource(): string {
-  const { graphData, reteIdByNodeId } = toGraphData(reteEditor, [...configsStore.value.values()]);
-  lastReteIdByNodeId = reteIdByNodeId;
+  const graphData = toGraphData(reteEditor, [...configsStore.value.values()]);
   // mergeCustomNodeRegistry throws (CustomNodeDescriptorError) if two
   // loaded custom packages collide on the same type id -- allowed to
   // propagate out to refreshPreview()'s existing catch below, which
@@ -552,10 +548,17 @@ function clearNodeHighlights(): void {
   }
 }
 
-function highlightNode(nodeId: number): AnyThingstudioNode | null {
-  const reteId = lastReteIdByNodeId.get(nodeId);
-  if (!reteId) return null; // stale ID (since-removed node, or a redeploy landed on a different graph) -- not a reason to crash the console
-  const node = reteEditor.getNode(reteId) as AnyThingstudioNode | undefined;
+function highlightNode(nodeId: string): AnyThingstudioNode | null {
+  // nodeId IS the Rete node's own id now (decisions.md's "Stable node
+  // IDs" entry, 2026-09-04) -- no lookup table needed, and no more "which
+  // compile's mapping is this from" staleness risk the old per-compile
+  // remap carried (an edit made after a deploy but before a device
+  // response arrived could previously point this at the wrong live
+  // node). Still returns null rather than throwing for an unknown id (a
+  // since-removed node, or the device reporting an id from a flow that's
+  // since been edited) -- untrusted input either way, not a reason to
+  // crash the console (CLAUDE.md's fault-handling priority).
+  const node = reteEditor.getNode(nodeId) as AnyThingstudioNode | undefined;
   if (!node) return null;
   node.highlighted = true;
   void reteArea.update("node", node.id);
@@ -577,14 +580,15 @@ function highlightNodeFromMpyError(stderrText: string): void {
   logLine(`[compile error attributed to node ${range.nodeId} (${node.nodeType}), source line ${lineNo}]`, "err");
 }
 
-function highlightNodeFromNodeError(nodeIdRaw: string): void {
+function highlightNodeFromNodeError(nodeId: string): void {
   // §13's NODE_ERROR.nodeId is a string on the wire (messages.ts's own
-  // "verbose over terse" convention), but the compiler-facing node IDs
-  // toGraphData() hands out are numeric -- the device is untrusted input
-  // either way (CLAUDE.md's fault-handling priority), so a non-numeric/
-  // garbled ID is dropped rather than trusted blindly.
-  const nodeId = Number(nodeIdRaw);
-  if (!Number.isFinite(nodeId)) return;
+  // "verbose over terse" convention) and now IS the compiler-facing node
+  // id directly (decisions.md's "Stable node IDs" entry, 2026-09-04) --
+  // no numeric coercion needed any more. Still untrusted input either way
+  // (CLAUDE.md's fault-handling priority): highlightNode() itself returns
+  // null rather than throwing for an id that doesn't resolve to a real
+  // node, so a garbled/unknown id from the device is silently dropped
+  // here, not trusted blindly.
   const node = highlightNode(nodeId);
   if (!node) return;
   logLine(`[runtime error attributed to node ${nodeId} (${node.nodeType})]`, "err");
@@ -700,42 +704,26 @@ const transport = new WebSerialTransport({
 });
 
 // --- Inject click-only live-fire (2026-09-02) ---------------------------
-// Wired here, not in editor-setup.ts, since it's the first point in this
-// file where `transport` (is this connection even live?) and
-// `lastReteIdByNodeId` (what compiler-facing node ID does this Rete node
-// currently map to?) both already exist -- see the `onInjectNodeClicked`
-// slot's own declaration comment, above the createThingstudioEditor()
-// call, for why the assignment has to happen here rather than at that
-// call site directly.
-//
-// `lastReteIdByNodeId` is recomputed by every currentSource() call, not
-// just a Deploy -- the same "may point at a stale/since-edited graph"
-// caveat highlightNodeFromNodeError() already documents for the identical
-// reverse-direction lookup (main.ts's NODE_ERROR attribution). A click
-// naming an ID the device never actually deployed just gets silently
-// ignored on the device side (runtime.py's fire_trigger) -- the same
-// "untrusted/possibly-stale wire input degrades gracefully" contract
-// every other §13 message already follows, not a new failure mode this
-// feature introduces.
-function findNodeIdForReteId(reteId: string): number | null {
-  for (const [nodeId, id] of lastReteIdByNodeId) {
-    if (id === reteId) return nodeId;
-  }
-  return null;
-}
-
+// A click sends a real §13 TRIGGER naming the clicked node's own id
+// directly (decisions.md's "Stable node IDs" entry, 2026-09-04) -- no
+// reverse lookup needed any more (there used to be a
+// findNodeIdForReteId()/lastReteIdByNodeId indirection here, the same
+// per-compile remap highlightNodeFromNodeError() used to need in the
+// opposite direction; both went away together in the same change). A
+// click naming an id the device never actually deployed (the flow was
+// edited after the last Deploy, or the device was reset/power-cycled and
+// has no flow running at all -- see outstanding-items/inject-click-fire-
+// missing.md's hardware notes) just gets silently ignored on the device
+// side (runtime.py's fire_trigger) -- the same "untrusted/possibly-stale
+// wire input degrades gracefully" contract every other §13 message
+// already follows, not a new failure mode this feature introduces.
 onInjectNodeClicked = (node) => {
   if (!transport.isConnected) {
     logLine("[inject: connect to a device first -- clicking only fires while live]", "");
     return;
   }
-  const nodeId = findNodeIdForReteId(node.id);
-  if (nodeId === null) {
-    logLine("[inject: this node has no compiled ID yet -- deploy the current flow before clicking it]", "err");
-    return;
-  }
-  logLine(`[inject: firing node ${nodeId}]`, "");
-  transport.send({ type: "TRIGGER", nodeId: String(nodeId) }).catch((err) => {
+  logLine(`[inject: firing node ${node.id}]`, "");
+  transport.send({ type: "TRIGGER", nodeId: node.id }).catch((err) => {
     logLine(`[inject: trigger send failed] ${err instanceof Error ? err.message : String(err)}`, "err");
   });
 };

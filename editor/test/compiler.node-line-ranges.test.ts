@@ -20,13 +20,13 @@ describe("compile(): nodeLineRanges", () => {
   it("maps each transform/sink node's own line range, each starting with its marker comment", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
-        { id: 2, type: "thingstudio/function", properties: { code: "msg['payload'] = not msg['payload']\nreturn msg\n" } },
-        { id: 3, type: "thingstudio/gpio_out", properties: { pin: 12 } },
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: "2", type: "thingstudio/function", properties: { code: "msg['payload'] = not msg['payload']\nreturn msg\n" } },
+        { id: "3", type: "thingstudio/gpio_out", properties: { pin: 12 } },
       ],
       links: [
-        [1, 1, 0, 2, 0, "bool"],
-        [2, 2, 0, 3, 0, "bool"],
+        [1, "1", 0, "2", 0, "bool"],
+        [2, "2", 0, "3", 0, "bool"],
       ],
     };
     const { source, nodeLineRanges } = compile(graph, buildRegistry());
@@ -36,7 +36,7 @@ describe("compile(): nodeLineRanges", () => {
     // inject source's buildMsg is inlined directly into its coroutine,
     // never emitted as its own function (see compile.ts's NodeLineRange
     // doc comment).
-    expect(nodeLineRanges.map((r) => r.nodeId).sort()).toEqual([2, 3]);
+    expect(nodeLineRanges.map((r) => r.nodeId).sort()).toEqual(["2", "3"]);
 
     for (const range of nodeLineRanges) {
       expect(range.startLine).toBeLessThanOrEqual(range.endLine);
@@ -59,18 +59,18 @@ describe("compile(): nodeLineRanges", () => {
     // inside a function node's own code actually looks like.
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
-        { id: 2, type: "thingstudio/function", properties: { code: "a = 1\nb = 2\nmsg['payload'] = a + b\nreturn msg\n" } },
-        { id: 3, type: "thingstudio/gpio_out", properties: { pin: 12 } },
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: "2", type: "thingstudio/function", properties: { code: "a = 1\nb = 2\nmsg['payload'] = a + b\nreturn msg\n" } },
+        { id: "3", type: "thingstudio/gpio_out", properties: { pin: 12 } },
       ],
       links: [
-        [1, 1, 0, 2, 0, "bool"],
-        [2, 2, 0, 3, 0, "bool"],
+        [1, "1", 0, "2", 0, "bool"],
+        [2, "2", 0, "3", 0, "bool"],
       ],
     };
     const { source, nodeLineRanges } = compile(graph, buildRegistry());
     const lines = source.split("\n");
-    const functionRange = nodeLineRanges.find((r) => r.nodeId === 2)!;
+    const functionRange = nodeLineRanges.find((r) => r.nodeId === "2")!;
 
     const bodyLineNo = lines.findIndex((l) => l.includes("b = 2")) + 1; // 1-indexed
     expect(bodyLineNo).toBeGreaterThan(0);

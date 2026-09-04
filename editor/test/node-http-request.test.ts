@@ -59,7 +59,7 @@ const ctx: CodegenContext = {
 };
 
 function node(properties: Record<string, unknown>): GraphNode {
-  return { id: 1, type: "thingstudio/http_request", properties };
+  return { id: "1", type: "thingstudio/http_request", properties };
 }
 
 function indent(code: string, spaces: number): string {

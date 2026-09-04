@@ -51,7 +51,7 @@ function freshCtx(): CodegenContext {
 }
 
 function node(id: number, properties: Record<string, unknown>): GraphNode {
-  return { id, type: "custom/test", properties };
+  return { id: String(id), type: "custom/test", properties };
 }
 
 function indent(code: string, spaces: number): string {
@@ -360,13 +360,13 @@ describe("custom node inside a full compile()", () => {
 
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/timer", properties: { intervalMs: 1000 } },
-        { id: 2, type: "custom/doubler", properties: { factor: 5 } },
-        { id: 3, type: "thingstudio/debug", properties: {} },
+        { id: "1", type: "thingstudio/timer", properties: { intervalMs: 1000 } },
+        { id: "2", type: "custom/doubler", properties: { factor: 5 } },
+        { id: "3", type: "thingstudio/debug", properties: {} },
       ],
       links: [
-        [1, 1, 0, 2, 0, "number"],
-        [2, 2, 0, 3, 0, "any"],
+        [1, "1", 0, "2", 0, "number"],
+        [2, "2", 0, "3", 0, "any"],
       ],
     };
     const { source } = compile(graph, registry);

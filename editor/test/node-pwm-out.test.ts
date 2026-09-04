@@ -32,10 +32,10 @@ function runGenerated(source: string): string {
 function graphWith(injectValue: string, pwmProps: Record<string, unknown>): GraphData {
   return {
     nodes: [
-      { id: 1, type: "thingstudio/inject", properties: { payloadType: "number", payloadValue: injectValue, repeat: "manual" } },
-      { id: 2, type: "thingstudio/pwm_out", properties: pwmProps },
+      { id: "1", type: "thingstudio/inject", properties: { payloadType: "number", payloadValue: injectValue, repeat: "manual" } },
+      { id: "2", type: "thingstudio/pwm_out", properties: pwmProps },
     ],
-    links: [[1, 1, 0, 2, 0, "number"]],
+    links: [[1, "1", 0, "2", 0, "number"]],
   };
 }
 

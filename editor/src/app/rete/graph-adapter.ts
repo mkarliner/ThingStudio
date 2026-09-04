@@ -10,26 +10,33 @@
 // node-library/compiler test suites) stays untouched and has to keep
 // trusting whatever this function hands it.
 //
-// Two real conversions happen here, not one:
+// IDs (simplified 2026-09-04, decisions.md's "Stable node IDs" entry):
+// this used to be the one place doing real work here -- GraphNode.id was
+// `number` (Litegraph's own auto-incrementing convention) while Rete's
+// ClassicPreset.Node.id is a string UUID (crypto.randomUUID(), set by the
+// class's own constructor), so this function assigned fresh sequential
+// integers on every call and returned a string<->number mapping
+// (`reteIdByNodeId`/`nodeIdByReteId`) so a later caller could translate
+// between the two -- recomputed fresh every time, no persistent numbering
+// across calls, by design, since nothing downstream needed identity to
+// survive an edit or redeploy back when this was written.
 //
-//   1. IDs. GraphNode.id/GraphLink's node-id fields are `number`
-//      (graph.ts's header: modeled on Litegraph's own auto-incrementing
-//      numeric node IDs). Rete's ClassicPreset.Node.id is a string UUID
-//      (crypto.randomUUID(), set by the class's own constructor) -- there
-//      is no numeric ID anywhere in a Rete graph to reuse. This adapter
-//      assigns sequential integers (1-indexed, matching Litegraph's own
-//      convention of never using 0) in `editor.getNodes()` order, and
-//      returns the string<->number mapping alongside the compiled
-//      GraphData so a later caller (main.ts's error-attribution path,
-//      §5/§13's NODE_ERROR handling -- Phase 3, not built here) can map a
-//      numeric node ID from a compile error or a device NODE_ERROR back to
-//      the actual canvas node to highlight. Recomputed fresh on every
-//      call -- there is no persistent numbering across calls, by design,
-//      since the alternative (a stable ID surviving node
-//      deletion/re-creation) is more machinery than anything downstream
-//      currently needs.
+// That's no longer the design: GraphNode.id is now `string` (graph.ts's
+// own header), and this function passes each Rete node's own `.id`
+// straight through as the compiler-facing id -- no remapping, no second
+// ID space, and therefore no mapping to compute or return. A node's id is
+// simply the same string everywhere: on the canvas, in a saved flow file,
+// in generated Python, and on the wire (§13 messages already carried
+// `nodeId` as a string -- see messages.ts's header -- so this change
+// needed zero protocol changes, only this adapter and the few
+// editor-side consumers of the old numeric id). This is what makes
+// main.ts's highlightNode() (Phase 3, NODE_ERROR/DEBUG-line attribution)
+// a plain `editor.getNode(nodeId)` lookup now instead of needing this
+// module's old id-mapping output at all.
 //
-//   2. Slot indices. compiler/graph.ts's own `GraphLink` header documents
+// One real conversion still happens here:
+//
+//   Slot indices. compiler/graph.ts's own `GraphLink` header documents
 //      `origin_slot`/`target_slot` as real positional indices, and
 //      rete-migration-decision.md's sub-decision 1 is explicit that this
 //      adapter must compute them for real rather than hardcoding 0 "since
@@ -70,28 +77,13 @@
 // no fixed relationship between `kind` and a type suffix). Zero behavior
 // change for first-party nodes -- `nodeType` was set to exactly what this
 // used to compute, see nodes.ts's own header on that change.
-//
-// Not built here (Phase 3, main.ts wiring): calling this from
-// `currentSource()` in place of `graph.serialize()`, or using
-// `nodeIdByReteId` for highlighting. This module is a pure function over
-// a `NodeEditor` -- no DOM, no AreaPlugin -- so it's fully unit-testable
-// headlessly (graph-adapter.test.ts), same "off-device testable" property
-// the implementation briefing called out for this phase.
 
-import type { GraphConfigNode, GraphData, GraphLink, GraphNode } from "../../compiler/graph.js";
+import type { GraphConfigNode, GraphData, GraphLink } from "../../compiler/graph.js";
 import type { Editor, Schemes } from "./schemes";
 import type { AnyThingstudioNode } from "./nodes";
 
-export interface GraphAdapterResult {
-  graphData: GraphData;
-  /** Numeric compiler-facing ID -> the Rete node's own string ID. */
-  reteIdByNodeId: Map<number, string>;
-  /** The reverse of the above. */
-  nodeIdByReteId: Map<string, number>;
-}
-
-// Exported (Phase 3): main.ts's extractCanvasSnapshot() needs the exact
-// same "socket key -> positional index" math when saving a flow file, and
+// Exported: main.ts's extractCanvasSnapshot() needs the exact same
+// "socket key -> positional index" math when saving a flow file, and
 // re-deriving it there instead of importing it would risk the two drifting
 // apart -- both callers must agree on what "slot 0" means for a given node.
 export function socketIndex(keys: string[], key: string): number {
@@ -112,20 +104,16 @@ export function socketIndex(keys: string[], key: string): number {
  * {id, type, properties}) -- optional and defaults to none, so every
  * existing call site/test predating config nodes keeps compiling and
  * behaving unchanged. */
-export function toGraphData(editor: Editor, configs: GraphConfigNode[] = []): GraphAdapterResult {
+export function toGraphData(editor: Editor, configs: GraphConfigNode[] = []): GraphData {
   const reteNodes = editor.getNodes();
-  const reteIdByNodeId = new Map<number, string>();
-  const nodeIdByReteId = new Map<string, number>();
-  reteNodes.forEach((node, i) => {
-    const numericId = i + 1; // 1-indexed, matches Litegraph's own convention (never uses 0)
-    reteIdByNodeId.set(numericId, node.id);
-    nodeIdByReteId.set(node.id, numericId);
-  });
 
-  const nodes: GraphNode[] = reteNodes.map((node) => {
+  const nodes = reteNodes.map((node) => {
     const n = node as AnyThingstudioNode;
     return {
-      id: nodeIdByReteId.get(n.id)!,
+      // Passed straight through -- see this file's header. n.id is
+      // already the string every other consumer (flow-file, wire
+      // protocol, device-runtime) treats as this node's real identity.
+      id: n.id,
       // See this file's header (Custom node authoring) -- n.nodeType is
       // each node class's own real compiler type string, not derived here.
       type: n.nodeType,
@@ -143,18 +131,16 @@ export function toGraphData(editor: Editor, configs: GraphConfigNode[] = []): Gr
       // as socketIndex's guard above.
       throw new Error(`graph-adapter: connection ${conn.id} references a missing node`);
     }
-    const originId = nodeIdByReteId.get(conn.source)!;
-    const targetId = nodeIdByReteId.get(conn.target)!;
     const originSlot = socketIndex(Object.keys(sourceNode.outputs), conn.sourceOutput);
     const targetSlot = socketIndex(Object.keys(targetNode.inputs), conn.targetInput);
     const socketType = sourceNode.outputs[conn.sourceOutput]?.socket.name ?? "any";
 
-    const link: GraphLink = [i + 1, originId, originSlot, targetId, targetSlot, socketType];
+    const link: GraphLink = [i + 1, conn.source, originSlot, conn.target, targetSlot, socketType];
     return link;
   });
 
   const graphData: GraphData = { nodes, links };
   if (configs.length > 0) graphData.configs = configs;
 
-  return { graphData, reteIdByNodeId, nodeIdByReteId };
+  return graphData;
 }

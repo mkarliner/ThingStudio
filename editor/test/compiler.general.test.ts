@@ -31,14 +31,14 @@ describe("general compiler: shapes POC-D's hardcoded compiler could never accept
   it("compiles two independent inject -> gpio_out chains (multiple sources) into one flow", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
-        { id: 2, type: "thingstudio/gpio_out", properties: { pin: 12 } },
-        { id: 3, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "false", repeat: "manual" } },
-        { id: 4, type: "thingstudio/gpio_out", properties: { pin: 13 } },
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: "2", type: "thingstudio/gpio_out", properties: { pin: 12 } },
+        { id: "3", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "false", repeat: "manual" } },
+        { id: "4", type: "thingstudio/gpio_out", properties: { pin: 13 } },
       ],
       links: [
-        [1, 1, 0, 2, 0, "bool"],
-        [2, 3, 0, 4, 0, "bool"],
+        [1, "1", 0, "2", 0, "bool"],
+        [2, "3", 0, "4", 0, "bool"],
       ],
     };
     const { source } = compile(graph, buildRegistry());
@@ -54,15 +54,15 @@ describe("general compiler: shapes POC-D's hardcoded compiler could never accept
   it("compiles a chain of two function nodes before the sink (depth POC-D's compiler never handled)", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
-        { id: 2, type: "thingstudio/function", properties: { code: "msg['payload'] = not msg['payload']\nreturn msg\n" } },
-        { id: 3, type: "thingstudio/function", properties: { code: "msg['payload'] = not msg['payload']\nreturn msg\n" } },
-        { id: 4, type: "thingstudio/gpio_out", properties: { pin: 12 } },
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: "2", type: "thingstudio/function", properties: { code: "msg['payload'] = not msg['payload']\nreturn msg\n" } },
+        { id: "3", type: "thingstudio/function", properties: { code: "msg['payload'] = not msg['payload']\nreturn msg\n" } },
+        { id: "4", type: "thingstudio/gpio_out", properties: { pin: 12 } },
       ],
       links: [
-        [1, 1, 0, 2, 0, "bool"],
-        [2, 2, 0, 3, 0, "bool"],
-        [3, 3, 0, 4, 0, "bool"],
+        [1, "1", 0, "2", 0, "bool"],
+        [2, "2", 0, "3", 0, "bool"],
+        [3, "3", 0, "4", 0, "bool"],
       ],
     };
     const { source } = compile(graph, buildRegistry());
@@ -82,13 +82,13 @@ describe("general compiler: shapes POC-D's hardcoded compiler could never accept
     // preset had.
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/timer", properties: { intervalMs: 1000 } },
-        { id: 2, type: "thingstudio/function", properties: { code: "return None\n" } },
-        { id: 3, type: "thingstudio/gpio_out", properties: { pin: 12 } },
+        { id: "1", type: "thingstudio/timer", properties: { intervalMs: 1000 } },
+        { id: "2", type: "thingstudio/function", properties: { code: "return None\n" } },
+        { id: "3", type: "thingstudio/gpio_out", properties: { pin: 12 } },
       ],
       links: [
-        [1, 1, 0, 2, 0, "int"],
-        [2, 2, 0, 3, 0, "bool"],
+        [1, "1", 0, "2", 0, "int"],
+        [2, "2", 0, "3", 0, "bool"],
       ],
     };
     const { source } = compile(graph, buildRegistry());
@@ -118,13 +118,13 @@ describe("general compiler: shapes POC-D's hardcoded compiler could never accept
   it("fans one inject's output out to two independent gpio_out sinks", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
-        { id: 2, type: "thingstudio/gpio_out", properties: { pin: 12 } },
-        { id: 3, type: "thingstudio/gpio_out", properties: { pin: 13 } },
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: "2", type: "thingstudio/gpio_out", properties: { pin: 12 } },
+        { id: "3", type: "thingstudio/gpio_out", properties: { pin: 13 } },
       ],
       links: [
-        [1, 1, 0, 2, 0, "bool"], // node 1's output wired to both...
-        [2, 1, 0, 3, 0, "bool"], // ...node 2 and node 3
+        [1, "1", 0, "2", 0, "bool"], // node 1's output wired to both...
+        [2, "1", 0, "3", 0, "bool"], // ...node 2 and node 3
       ],
     };
     const { source } = compile(graph, buildRegistry());
@@ -136,17 +136,17 @@ describe("general compiler: shapes POC-D's hardcoded compiler could never accept
   it("fan-out clones msg per branch: one branch's mutation doesn't leak into a sibling", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
         // branch A: flips payload to false before its sink
-        { id: 2, type: "thingstudio/function", properties: { code: "msg['payload'] = False\nreturn msg\n" } },
-        { id: 3, type: "thingstudio/gpio_out", properties: { pin: 12 } },
+        { id: "2", type: "thingstudio/function", properties: { code: "msg['payload'] = False\nreturn msg\n" } },
+        { id: "3", type: "thingstudio/gpio_out", properties: { pin: 12 } },
         // branch B: untouched, straight to its own sink
-        { id: 4, type: "thingstudio/gpio_out", properties: { pin: 13 } },
+        { id: "4", type: "thingstudio/gpio_out", properties: { pin: 13 } },
       ],
       links: [
-        [1, 1, 0, 2, 0, "bool"], // node 1 -> branch A's function
-        [2, 1, 0, 4, 0, "bool"], // node 1 -> branch B's sink directly
-        [3, 2, 0, 3, 0, "bool"], // branch A's function -> its sink
+        [1, "1", 0, "2", 0, "bool"], // node 1 -> branch A's function
+        [2, "1", 0, "4", 0, "bool"], // node 1 -> branch B's sink directly
+        [3, "2", 0, "3", 0, "bool"], // branch A's function -> its sink
       ],
     };
     const { source } = compile(graph, buildRegistry());
@@ -159,13 +159,13 @@ describe("general compiler: shapes POC-D's hardcoded compiler could never accept
   it("fan-in: two independent sources sharing one gpio_out sink each call it once, function generated once", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
-        { id: 2, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "false", repeat: "manual" } },
-        { id: 3, type: "thingstudio/gpio_out", properties: { pin: 12 } },
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: "2", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "false", repeat: "manual" } },
+        { id: "3", type: "thingstudio/gpio_out", properties: { pin: 12 } },
       ],
       links: [
-        [1, 1, 0, 3, 0, "bool"], // source 1 -> shared sink
-        [2, 2, 0, 3, 0, "bool"], // source 2 -> the same shared sink
+        [1, "1", 0, "3", 0, "bool"], // source 1 -> shared sink
+        [2, "2", 0, "3", 0, "bool"], // source 2 -> the same shared sink
       ],
     };
     const { source } = compile(graph, buildRegistry());

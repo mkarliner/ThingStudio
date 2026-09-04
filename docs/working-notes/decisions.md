@@ -185,6 +185,53 @@ Same convention already established for `docs/third-party-licenses.md`.
   Non-blocking I/O and built-in WiFi/broker reconnection, worth the
   vendoring cost over the more commonly-cited blocking library.
   `mvp-validation-plan.md`, 2026-08-14 network-batch Results entry.
+- **2026-09-04 — Stable node IDs: a node's own Rete canvas identity
+  (`crypto.randomUUID()`) is now its compiler-facing/wire-protocol/
+  flow-file id too, passed through everywhere unchanged instead of
+  recomputed fresh every compile/save.** Raised by Mike asking why a
+  console `NODE_ERROR`/`DEBUG` message couldn't be clicked to jump to its
+  canvas node; investigating that surfaced that a prior session's claimed
+  "node-ID refactor from numeric to UUID" (`continue-on-bigmac-brief.md`)
+  had never actually landed (same audit that found inject's click-fire
+  missing, `inject-click-fire-missing.md`) — so the reasoning for wanting
+  it in the first place had been lost too. Reconstructed here: the old
+  scheme (Litegraph-style auto-incrementing integers, recomputed fresh by
+  `graph-adapter.ts`/`main.ts` on every compile/save, "no persistent
+  numbering across calls" by original design) meant a node's id could
+  silently point at the wrong live node once you edited the flow between
+  a deploy and a device response, and gave Tier 2's planned flash-
+  persisted per-node state nothing stable to key on. Mike's explicit
+  choice (over "keep wire ids compact, renumber never" and "defer,
+  console-mapping doesn't strictly need it"): full UUID identity
+  end-to-end, since wire bandwidth isn't a real constraint here and it
+  removes one prerequisite blocker for a persisted flow running
+  standalone/disconnected from the editor (inject firing without a fresh
+  redeploy after a reset) -- though that scenario also needs Tier 2's
+  flash persistence itself, separately, still unbuilt.
+  Turned out to need **zero wire-protocol changes** -- `messages.ts`/
+  `codec.ts`/device-runtime's `_expect_string` already treated `nodeId` as
+  an opaque string everywhere; the change is confined to
+  `compiler/graph.ts`, `flow-file/flow-file.ts`, `app/rete/graph-
+  adapter.ts` (which drops its old sequential-id-assignment entirely --
+  now a pure pass-through, no more `reteIdByNodeId`/`nodeIdByReteId`
+  mapping to compute or return), `app/main.ts`'s save/load/highlight code,
+  `node-library/inject.ts` (had to stop deriving a Python *variable name*
+  from the raw id -- a UUID's hyphens aren't valid in a Python identifier;
+  fixed by sanitizing a separate `pyId` for that one use, keeping the raw
+  id for the actual `runtime.register_trigger` wire value), and existing
+  `test-flows/*.flow.json` sample files (migrated in place -- old integer
+  ids fail the new "id must be a string" validation otherwise). Direct,
+  load-bearing side effect: `main.ts`'s `highlightNode()` (console-message-
+  to-canvas-node attribution, NODE_ERROR/DEBUG/compile-error) no longer
+  needs any lookup table at all -- `editor.getNode(nodeId)` directly --
+  which is also what makes a click-to-navigate console UI (the original
+  ask) a small addition rather than a new mechanism. See
+  `outstanding-items/console-node-id-mapping.md` for the corrected
+  current-state audit (some of Phase 3's attribution work was already
+  built, contrary to that file's prior claim) and what's still open
+  (DEBUG-line attribution, the actual click UI) -- done as phase 2,
+  deliberately separated from this id-stability change so `tsc`/`vitest`
+  can gate each independently.
 
 ## Config nodes / Tier 1 scope
 

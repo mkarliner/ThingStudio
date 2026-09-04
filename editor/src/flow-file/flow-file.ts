@@ -33,14 +33,33 @@
 //
 // Config nodes (config-node-and-palette-implementation-briefing.md): a
 // `configs` array, same `{id, type, properties}` shape as GraphConfigNode
-// (compiler/graph.ts) but with a string `id` like that type -- added
-// alongside `nodes`/`edges`/`layout`, sorted by id the same deterministic
-// way `nodes` is, so re-saving an untouched flow with configs stays a
-// zero-diff exactly as §6's git-friendliness requirement already demands
-// for everything else in this format. Configs aren't part of `layout` --
-// they don't have a canvas position at all (they're never graph nodes,
-// per graph.ts's own header comment), so there's no positional data to
-// split out for them.
+// (compiler/graph.ts) -- added alongside `nodes`/`edges`/`layout`, sorted
+// by id the same deterministic way `nodes` is, so re-saving an untouched
+// flow with configs stays a zero-diff exactly as §6's git-friendliness
+// requirement already demands for everything else in this format. Configs
+// aren't part of `layout` -- they don't have a canvas position at all
+// (they're never graph nodes, per graph.ts's own header comment), so
+// there's no positional data to split out for them.
+//
+// Node IDs, string not numeric (changed 2026-09-04, decisions.md's
+// "Stable node IDs" entry): node ids used to be sequential integers,
+// recomputed fresh on every save/compile (Litegraph's own auto-
+// incrementing convention) -- same numbering scheme graph-adapter.ts used
+// to assign compiler-side, and for the identical reason: nothing
+// downstream needed identity to survive an edit or a redeploy, so
+// recomputing was the cheaper option. That's no longer true -- Tier 2's
+// planned flash-persisted per-node state and reliable console-message-to-
+// canvas-node attribution (a NODE_ERROR/DEBUG line surviving edits made
+// after the deploy that produced it) both need a node's id to mean the
+// same thing across saves/redeploys, not just within one compile. Rather
+// than invent a second ID scheme, this format now saves each node's own
+// Rete canvas identity directly (`crypto.randomUUID()`, ClassicPreset.
+// Node's own constructor) -- the same string every other consumer
+// (compiler, wire protocol, device-runtime) already treats as an opaque
+// token via string interpolation, never arithmetic. Configs already used
+// a string id for unrelated reasons (a separate identity space from nodes,
+// this file's original header) -- nodes now share that same shape, not a
+// new one.
 
 export const FLOW_FILE_FORMAT_VERSION = 1;
 
@@ -48,25 +67,24 @@ export class FlowFileError extends Error {}
 
 /** One node's logic -- everything that changes only when behavior changes. */
 export interface FlowFileNode {
-  id: number;
+  id: string;
   type: string;
   properties: Record<string, unknown>;
 }
 
 /** [originNodeId, originSlot, targetNodeId, targetSlot] -- deliberately not
  * the 6-element GraphLink tuple compile.ts consumes; see header comment on
- * why link id/type aren't saved. */
-export type FlowFileEdge = [number, number, number, number];
+ * why link id/type aren't saved. Node ids are strings (see header);
+ * slot indices stay plain numbers -- they're positions, not identities. */
+export type FlowFileEdge = [string, number, string, number];
 
 export interface FlowFileLayoutEntry {
   pos: [number, number];
   size?: [number, number];
 }
 
-/** A config node's saved shape -- see this file's header. String `id`,
- * matching compiler/graph.ts's GraphConfigNode (both exist independently;
- * see that file's own header for why configs use a separate string-ID
- * space rather than the numeric one FlowFileNode/GraphNode use). */
+/** A config node's saved shape -- see this file's header. Same `{id, type,
+ * properties}` shape as FlowFileNode now that both use string ids. */
 export interface FlowFileConfig {
   id: string;
   type: string;
@@ -83,7 +101,11 @@ export interface FlowFile {
    * see flow-file.test.ts for why this doesn't actually cost determinism:
    * JS/JSON engines order small-integer-like string keys ascending
    * regardless of insertion order, per the ECMAScript spec's own
-   * "integer index" property-ordering rule, not merely by convention). */
+   * "integer index" property-ordering rule, not merely by convention).
+   * Node ids are UUIDs now (see header), not small-integer-like strings,
+   * so that ordering guarantee no longer applies here in practice -- keys
+   * are written in `sortedNodes`' own deterministic (string-sorted) order
+   * instead, which is what actually keeps re-saves zero-diff now. */
   layout: Record<string, FlowFileLayoutEntry>;
   /** Sorted by id (string comparison) -- see buildFlowFile. Always present
    * (possibly empty) on anything this module builds; parseFlowFile treats
@@ -96,21 +118,30 @@ export interface FlowFile {
 /** What main.ts's canvas-reading code hands in -- plain data, no live
  * Litegraph node reference, so this module never needs one. */
 export interface CanvasNodeSnapshot {
-  id: number;
+  id: string;
   type: string;
   properties: Record<string, unknown>;
   pos: [number, number];
   size?: [number, number];
 }
 
+/** String comparator shared by every sort below (nodes, configs, and now
+ * edges' node-id columns) -- ids stopped being numeric (see header), so
+ * `a.id - b.id`-style arithmetic subtraction no longer type-checks or
+ * means anything; this is the same three-way comparison configs already
+ * used before this file's ids were all strings. */
+function cmpId(a: string, b: string): number {
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+
 export function buildFlowFile(nodes: CanvasNodeSnapshot[], edges: FlowFileEdge[], configs: FlowFileConfig[] = []): FlowFile {
-  const sortedNodes = [...nodes].sort((a, b) => a.id - b.id);
-  const sortedEdges = [...edges].sort((a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2] || a[3] - b[3]);
-  const sortedConfigs = [...configs].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  const sortedNodes = [...nodes].sort((a, b) => cmpId(a.id, b.id));
+  const sortedEdges = [...edges].sort((a, b) => cmpId(a[0], b[0]) || a[1] - b[1] || cmpId(a[2], b[2]) || a[3] - b[3]);
+  const sortedConfigs = [...configs].sort((a, b) => cmpId(a.id, b.id));
 
   const layout: Record<string, FlowFileLayoutEntry> = {};
   for (const n of sortedNodes) {
-    layout[String(n.id)] = n.size ? { pos: n.pos, size: n.size } : { pos: n.pos };
+    layout[n.id] = n.size ? { pos: n.pos, size: n.size } : { pos: n.pos };
   }
 
   return {
@@ -165,15 +196,15 @@ export function parseFlowFile(text: string): FlowFile {
   const nodes: FlowFileNode[] = obj.nodes.map((n, i) => {
     if (typeof n !== "object" || n === null) throw new FlowFileError(`nodes[${i}] must be an object`);
     const rec = n as Record<string, unknown>;
-    if (typeof rec.id !== "number") throw new FlowFileError(`nodes[${i}].id must be a number`);
+    if (typeof rec.id !== "string") throw new FlowFileError(`nodes[${i}].id must be a string`);
     if (typeof rec.type !== "string") throw new FlowFileError(`nodes[${i}].type must be a string`);
     if (typeof rec.properties !== "object" || rec.properties === null) throw new FlowFileError(`nodes[${i}].properties must be an object`);
     return { id: rec.id, type: rec.type, properties: rec.properties as Record<string, unknown> };
   });
 
   const edges: FlowFileEdge[] = obj.edges.map((e, i) => {
-    if (!Array.isArray(e) || e.length !== 4 || e.some((v) => typeof v !== "number")) {
-      throw new FlowFileError(`edges[${i}] must be a 4-element numeric array [originId, originSlot, targetId, targetSlot]`);
+    if (!Array.isArray(e) || e.length !== 4 || typeof e[0] !== "string" || typeof e[1] !== "number" || typeof e[2] !== "string" || typeof e[3] !== "number") {
+      throw new FlowFileError(`edges[${i}] must be a 4-element array [originId: string, originSlot: number, targetId: string, targetSlot: number]`);
     }
     return e as FlowFileEdge;
   });

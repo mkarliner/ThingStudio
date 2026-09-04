@@ -85,7 +85,23 @@ export const injectNode: NodeDefinition = {
     // on, so deriving the Python variable name from it too keeps both
     // uses obviously in sync instead of tracking them as two separate
     // values that happen to agree today.
-    const evtVar = `_inject_evt_${node.id}`;
+    //
+    // Sanitized separately from the raw id (changed 2026-09-04, alongside
+    // decisions.md's "Stable node IDs" entry): node.id is now a
+    // crypto.randomUUID() string like "3fa85f64-5717-4562-b3fc-...", not
+    // the small integer this pattern was originally written against --
+    // hyphens aren't valid in a Python identifier, so embedding the id
+    // verbatim would emit something like `_inject_evt_3fa85f64-5717-...`,
+    // which either fails to parse or silently parses as a chain of
+    // subtractions (`_inject_evt_3fa85f64 - 5717 - ...`) depending on
+    // context -- exactly the class of silent-wrong-Python bug this
+    // project's fault-handling priority exists to catch before it ships,
+    // not after a confusing hardware failure. `pyId` is for identifier use
+    // ONLY; `nodeIdStr` (unsanitized) is what actually goes over the wire
+    // via runtime.register_trigger, and must keep matching TRIGGER's
+    // nodeId exactly.
+    const pyId = String(node.id).replace(/[^a-zA-Z0-9_]/g, "_");
+    const evtVar = `_inject_evt_${pyId}`;
     const nodeIdStr = String(node.id);
 
     return {

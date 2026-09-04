@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "nodes": [
     {
-      "id": 1,
+      "id": "1",
       "type": "thingstudio/wifi_status",
       "properties": {
         "pollMs": 5000,
@@ -10,19 +10,19 @@
       }
     },
     {
-      "id": 2,
+      "id": "2",
       "type": "thingstudio/debug",
       "properties": {}
     },
     {
-      "id": 3,
+      "id": "3",
       "type": "thingstudio/timer",
       "properties": {
         "intervalMs": 3000
       }
     },
     {
-      "id": 4,
+      "id": "4",
       "type": "thingstudio/udp_send",
       "properties": {
         "host": "YOUR_MAC_LAN_IP",
@@ -32,7 +32,7 @@
       }
     },
     {
-      "id": 5,
+      "id": "5",
       "type": "thingstudio/udp_receive",
       "properties": {
         "port": 9998,
@@ -41,23 +41,68 @@
       }
     },
     {
-      "id": 6,
+      "id": "6",
       "type": "thingstudio/debug",
       "properties": {}
     }
   ],
   "edges": [
-    [1, 0, 2, 0],
-    [3, 0, 4, 0],
-    [5, 0, 6, 0]
+    [
+      "1",
+      0,
+      "2",
+      0
+    ],
+    [
+      "3",
+      0,
+      "4",
+      0
+    ],
+    [
+      "5",
+      0,
+      "6",
+      0
+    ]
   ],
   "layout": {
-    "1": { "pos": [80, 80] },
-    "2": { "pos": [300, 80] },
-    "3": { "pos": [520, 80] },
-    "4": { "pos": [80, 240] },
-    "5": { "pos": [300, 240] },
-    "6": { "pos": [520, 240] }
+    "1": {
+      "pos": [
+        80,
+        80
+      ]
+    },
+    "2": {
+      "pos": [
+        300,
+        80
+      ]
+    },
+    "3": {
+      "pos": [
+        520,
+        80
+      ]
+    },
+    "4": {
+      "pos": [
+        80,
+        240
+      ]
+    },
+    "5": {
+      "pos": [
+        300,
+        240
+      ]
+    },
+    "6": {
+      "pos": [
+        520,
+        240
+      ]
+    }
   },
   "configs": [
     {

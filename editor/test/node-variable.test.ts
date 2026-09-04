@@ -41,19 +41,19 @@ function crossChainGraph(setValue: string): GraphData {
   return {
     nodes: [
       // chain A: inject -> variable_set("counter") -> debug (node 3)
-      { id: 1, type: "thingstudio/inject", properties: { payloadType: "number", payloadValue: setValue, repeat: "manual" } },
-      { id: 2, type: "thingstudio/variable_set", properties: { name: "counter" } },
-      { id: 3, type: "thingstudio/debug", properties: {} },
+      { id: "1", type: "thingstudio/inject", properties: { payloadType: "number", payloadValue: setValue, repeat: "manual" } },
+      { id: "2", type: "thingstudio/variable_set", properties: { name: "counter" } },
+      { id: "3", type: "thingstudio/debug", properties: {} },
       // chain B: inject -> variable_get("counter") -> debug (node 6)
-      { id: 4, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
-      { id: 5, type: "thingstudio/variable_get", properties: { name: "counter", payloadType: "number", default: "0" } },
-      { id: 6, type: "thingstudio/debug", properties: {} },
+      { id: "4", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+      { id: "5", type: "thingstudio/variable_get", properties: { name: "counter", payloadType: "number", default: "0" } },
+      { id: "6", type: "thingstudio/debug", properties: {} },
     ],
     links: [
-      [1, 1, 0, 2, 0, "number"],
-      [2, 2, 0, 3, 0, "number"],
-      [3, 4, 0, 5, 0, "bool"],
-      [4, 5, 0, 6, 0, "number"],
+      [1, "1", 0, "2", 0, "number"],
+      [2, "2", 0, "3", 0, "number"],
+      [3, "4", 0, "5", 0, "bool"],
+      [4, "5", 0, "6", 0, "number"],
     ],
   };
 }
@@ -69,13 +69,13 @@ describe("thingstudio/variable_get and thingstudio/variable_set", () => {
   it("variable_get falls back to its configured default when nothing has been set yet", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
-        { id: 2, type: "thingstudio/variable_get", properties: { name: "never_set", payloadType: "number", default: "99" } },
-        { id: 3, type: "thingstudio/debug", properties: {} },
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: "2", type: "thingstudio/variable_get", properties: { name: "never_set", payloadType: "number", default: "99" } },
+        { id: "3", type: "thingstudio/debug", properties: {} },
       ],
       links: [
-        [1, 1, 0, 2, 0, "bool"],
-        [2, 2, 0, 3, 0, "number"],
+        [1, "1", 0, "2", 0, "bool"],
+        [2, "2", 0, "3", 0, "number"],
       ],
     };
     const { source } = compile(graph, registry);
@@ -90,19 +90,19 @@ describe("thingstudio/variable_get and thingstudio/variable_set", () => {
   it("two different variable names don't collide in the shared store", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/inject", properties: { payloadType: "number", payloadValue: "1", repeat: "manual" } },
-        { id: 2, type: "thingstudio/variable_set", properties: { name: "a" } },
-        { id: 3, type: "thingstudio/inject", properties: { payloadType: "number", payloadValue: "2", repeat: "manual" } },
-        { id: 4, type: "thingstudio/variable_set", properties: { name: "b" } },
-        { id: 5, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
-        { id: 6, type: "thingstudio/variable_get", properties: { name: "a", payloadType: "number", default: "-1" } },
-        { id: 7, type: "thingstudio/debug", properties: {} },
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "number", payloadValue: "1", repeat: "manual" } },
+        { id: "2", type: "thingstudio/variable_set", properties: { name: "a" } },
+        { id: "3", type: "thingstudio/inject", properties: { payloadType: "number", payloadValue: "2", repeat: "manual" } },
+        { id: "4", type: "thingstudio/variable_set", properties: { name: "b" } },
+        { id: "5", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: "6", type: "thingstudio/variable_get", properties: { name: "a", payloadType: "number", default: "-1" } },
+        { id: "7", type: "thingstudio/debug", properties: {} },
       ],
       links: [
-        [1, 1, 0, 2, 0, "number"],
-        [2, 3, 0, 4, 0, "number"],
-        [3, 5, 0, 6, 0, "bool"],
-        [4, 6, 0, 7, 0, "number"],
+        [1, "1", 0, "2", 0, "number"],
+        [2, "3", 0, "4", 0, "number"],
+        [3, "5", 0, "6", 0, "bool"],
+        [4, "6", 0, "7", 0, "number"],
       ],
     };
     const { source } = compile(graph, registry);
@@ -114,10 +114,10 @@ describe("thingstudio/variable_get and thingstudio/variable_set", () => {
   it("rejects an empty variable_set name", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/inject", properties: { payloadType: "number", payloadValue: "1", repeat: "manual" } },
-        { id: 2, type: "thingstudio/variable_set", properties: { name: "  " } },
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "number", payloadValue: "1", repeat: "manual" } },
+        { id: "2", type: "thingstudio/variable_set", properties: { name: "  " } },
       ],
-      links: [[1, 1, 0, 2, 0, "number"]],
+      links: [[1, "1", 0, "2", 0, "number"]],
     };
     expect(() => compile(graph, registry)).toThrow(CompileError);
     expect(() => compile(graph, registry)).toThrow(/empty/);
@@ -126,10 +126,10 @@ describe("thingstudio/variable_get and thingstudio/variable_set", () => {
   it("rejects an empty variable_get name", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
-        { id: 2, type: "thingstudio/variable_get", properties: { name: "", payloadType: "bool", default: "false" } },
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: "2", type: "thingstudio/variable_get", properties: { name: "", payloadType: "bool", default: "false" } },
       ],
-      links: [[1, 1, 0, 2, 0, "bool"]],
+      links: [[1, "1", 0, "2", 0, "bool"]],
     };
     expect(() => compile(graph, registry)).toThrow(/empty/);
   });

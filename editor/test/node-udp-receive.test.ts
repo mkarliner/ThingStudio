@@ -86,7 +86,7 @@ beforeEach(() => {
 });
 
 function node(properties: Record<string, unknown>): GraphNode {
-  return { id: 1, type: "thingstudio/udp_receive", properties };
+  return { id: "1", type: "thingstudio/udp_receive", properties };
 }
 
 function delay(ms: number): Promise<void> {
@@ -298,10 +298,10 @@ describe("thingstudio/udp_receive node", () => {
   it("compiles into a full flow with the expected structure (source text only)", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/udp_receive", properties: { port: 4242, wifiConfigId: "unmanaged1" } },
-        { id: 2, type: "thingstudio/debug", properties: {} },
+        { id: "1", type: "thingstudio/udp_receive", properties: { port: 4242, wifiConfigId: "unmanaged1" } },
+        { id: "2", type: "thingstudio/debug", properties: {} },
       ],
-      links: [[1, 1, 0, 2, 0, "bytes"]],
+      links: [[1, "1", 0, "2", 0, "bytes"]],
       configs: [{ id: "unmanaged1", type: "thingstudio/config/wifi", properties: { security: "unmanaged" } }],
     };
     const { source } = compile(graph, buildRegistry());
@@ -317,11 +317,11 @@ describe("thingstudio/udp_receive node", () => {
   it("compiles a full flow sharing one wifi config with a wifi_status node (proof of the actual fix)", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/udp_receive", properties: { port: 4242, wifiConfigId: "wifi1" } },
-        { id: 2, type: "thingstudio/debug", properties: {} },
-        { id: 3, type: "thingstudio/wifi_status", properties: { pollMs: 5000, wifiConfigId: "wifi1" } },
+        { id: "1", type: "thingstudio/udp_receive", properties: { port: 4242, wifiConfigId: "wifi1" } },
+        { id: "2", type: "thingstudio/debug", properties: {} },
+        { id: "3", type: "thingstudio/wifi_status", properties: { pollMs: 5000, wifiConfigId: "wifi1" } },
       ],
-      links: [[1, 1, 0, 2, 0, "bytes"]],
+      links: [[1, "1", 0, "2", 0, "bytes"]],
       configs: [{ id: "wifi1", type: "thingstudio/config/wifi", properties: { ssid: "SharedNet", password: "sharedpw" } }],
     };
     const { source } = compile(graph, buildRegistry());

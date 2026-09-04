@@ -39,13 +39,13 @@ describe("fault isolation: NODE_ERROR attribution in generated code", () => {
   it("blames the failing function node, not the chain's inject source", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
-        { id: 2, type: "thingstudio/function", properties: { code: "raise ValueError('deliberately broken')\n" } },
-        { id: 3, type: "thingstudio/gpio_out", properties: { pin: 12 } },
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: "2", type: "thingstudio/function", properties: { code: "raise ValueError('deliberately broken')\n" } },
+        { id: "3", type: "thingstudio/gpio_out", properties: { pin: 12 } },
       ],
       links: [
-        [1, 1, 0, 2, 0, "bool"],
-        [2, 2, 0, 3, 0, "bool"],
+        [1, "1", 0, "2", 0, "bool"],
+        [2, "2", 0, "3", 0, "bool"],
       ],
     };
     const { source } = compile(graph, buildRegistry());
@@ -63,13 +63,13 @@ describe("fault isolation: NODE_ERROR attribution in generated code", () => {
   it("a passthrough transform ahead of a working sink triggers no NodeError wrapper at all", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
-        { id: 2, type: "thingstudio/function", properties: { code: "return msg\n" } }, // passthrough, doesn't fail
-        { id: 3, type: "thingstudio/gpio_out", properties: { pin: 13 } },
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: "2", type: "thingstudio/function", properties: { code: "return msg\n" } }, // passthrough, doesn't fail
+        { id: "3", type: "thingstudio/gpio_out", properties: { pin: 13 } },
       ],
       links: [
-        [1, 1, 0, 2, 0, "bool"],
-        [2, 2, 0, 3, 0, "bool"],
+        [1, "1", 0, "2", 0, "bool"],
+        [2, "2", 0, "3", 0, "bool"],
       ],
     };
     const { source } = compile(graph, buildRegistry());
@@ -84,16 +84,16 @@ describe("fault isolation: NODE_ERROR attribution in generated code", () => {
   it("one failing chain doesn't stop an independent second chain (per-chain task isolation)", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
-        { id: 2, type: "thingstudio/function", properties: { code: "raise RuntimeError('chain A is broken')\n" } },
-        { id: 3, type: "thingstudio/gpio_out", properties: { pin: 12 } },
-        { id: 4, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
-        { id: 5, type: "thingstudio/gpio_out", properties: { pin: 13 } },
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: "2", type: "thingstudio/function", properties: { code: "raise RuntimeError('chain A is broken')\n" } },
+        { id: "3", type: "thingstudio/gpio_out", properties: { pin: 12 } },
+        { id: "4", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: "5", type: "thingstudio/gpio_out", properties: { pin: 13 } },
       ],
       links: [
-        [1, 1, 0, 2, 0, "bool"],
-        [2, 2, 0, 3, 0, "bool"],
-        [3, 4, 0, 5, 0, "bool"],
+        [1, "1", 0, "2", 0, "bool"],
+        [2, "2", 0, "3", 0, "bool"],
+        [3, "4", 0, "5", 0, "bool"],
       ],
     };
     const { source } = compile(graph, buildRegistry());

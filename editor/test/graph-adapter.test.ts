@@ -8,6 +8,13 @@
 // real, untouched compile() (compiler/compile.ts) and actually runs the
 // generated Python via pymock -- proof this is genuinely compiler-
 // compatible output, not just a shape that happens to type-check.
+//
+// Node ids (updated 2026-09-04, decisions.md's "Stable node IDs" entry):
+// toGraphData() used to assign fresh sequential 1-indexed numeric ids and
+// return a string<->number mapping alongside GraphData -- both gone now.
+// A node's compiler-facing id is its own real Rete id (`inject.id`,
+// `gpio.id`, ...) passed straight through, so these tests assert against
+// the actual node instances' `.id` rather than hardcoded small integers.
 
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, writeFileSync } from "node:fs";
@@ -79,7 +86,7 @@ async function connect(editor: NodeEditor<Schemes>, source: ClassicPreset.Node, 
 }
 
 describe("graph-adapter: Rete NodeEditor -> compiler GraphData", () => {
-  it("maps node type/properties and assigns sequential 1-indexed numeric IDs", async () => {
+  it("maps node type/properties and passes each node's own Rete id through unchanged", async () => {
     const editor = new NodeEditor<Schemes>();
     const inject = new InjectNode();
     const gpio = new GpioOutNode();
@@ -87,20 +94,16 @@ describe("graph-adapter: Rete NodeEditor -> compiler GraphData", () => {
     await editor.addNode(gpio);
     await connect(editor, inject, "msg", gpio, "signal");
 
-    const { graphData, nodeIdByReteId, reteIdByNodeId } = toGraphData(editor);
+    const graphData = toGraphData(editor);
 
     expect(graphData.nodes).toEqual([
       // `repeat` removed 2026-09-02 (inject click-only live-fire feature,
       // nodes.ts's own header note) -- InjectNode's real properties object
       // no longer has it at all, so toGraphData()'s pass-through here
       // reflects that directly.
-      { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true" } },
-      { id: 2, type: "thingstudio/gpio_out", properties: { pin: 12 } },
+      { id: inject.id, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true" } },
+      { id: gpio.id, type: "thingstudio/gpio_out", properties: { pin: 12 } },
     ]);
-    expect(nodeIdByReteId.get(inject.id)).toBe(1);
-    expect(nodeIdByReteId.get(gpio.id)).toBe(2);
-    expect(reteIdByNodeId.get(1)).toBe(inject.id);
-    expect(reteIdByNodeId.get(2)).toBe(gpio.id);
   });
 
   it("computes real slot indices from socket key position, not hardcoded 0 -- sub-decision 1", async () => {
@@ -130,7 +133,7 @@ describe("graph-adapter: Rete NodeEditor -> compiler GraphData", () => {
     await connect(editor, router, "true", debugTrue, "msg");
     await connect(editor, router, "false", debugFalse, "msg");
 
-    const { graphData } = toGraphData(editor);
+    const graphData = toGraphData(editor);
     const trueLink = graphData.links.find((l) => l[3] === graphData.nodes[1]!.id)!;
     const falseLink = graphData.links.find((l) => l[3] === graphData.nodes[2]!.id)!;
     expect(trueLink[2]).toBe(0); // "true" is addOutput'd first
@@ -148,11 +151,11 @@ describe("graph-adapter: Rete NodeEditor -> compiler GraphData", () => {
     await connect(editor, inject, "msg", gpio, "signal");
     await connect(editor, inject, "msg", debug, "msg");
 
-    const { graphData } = toGraphData(editor);
+    const graphData = toGraphData(editor);
     expect(graphData.links).toHaveLength(2);
     expect(new Set(graphData.links.map((l) => l[0])).size).toBe(2); // distinct link ids
     for (const link of graphData.links) {
-      expect(link[1]).toBe(1); // both originate at the inject node (id 1)
+      expect(link[1]).toBe(inject.id); // both originate at the inject node
       expect(link[2]).toBe(0); // inject's only output, "msg", is index 0
     }
   });
@@ -179,16 +182,18 @@ describe("graph-adapter: Rete NodeEditor -> compiler GraphData", () => {
     await connect(editor, fn, "msg", gpio, "signal");
     await connect(editor, timer, "msg", gpio2, "signal");
 
-    const { graphData, reteIdByNodeId } = toGraphData(editor);
+    const graphData = toGraphData(editor);
     const { source, nodeLineRanges } = compile(graphData, buildRegistry());
 
     // Two independent sources (inject chain + timer chain) -> two coroutines.
     expect(source.match(/^async def _flow_\d+\(\):/gm)?.length).toBe(2);
-    // nodeLineRanges' IDs must be real, resolvable numeric IDs the adapter
-    // handed out -- not just "some number" -- proving the two halves
-    // (adapter's numbering, compiler's own node-ID bookkeeping) agree.
+    // nodeLineRanges' IDs must be real, resolvable ids the adapter handed
+    // out -- not just "some string" -- proving the two halves (adapter's
+    // pass-through id, compiler's own node-ID bookkeeping) agree, and that
+    // both actually mean the same thing as the live Rete editor's own node
+    // identity (no separate id space to reconcile any more).
     for (const range of nodeLineRanges) {
-      expect(reteIdByNodeId.has(range.nodeId)).toBe(true);
+      expect(editor.getNode(range.nodeId)).toBeDefined();
     }
 
     const output = runGenerated(source);

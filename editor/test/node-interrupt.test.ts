@@ -48,7 +48,7 @@ const ctx: CodegenContext = {
 };
 
 function node(properties: Record<string, unknown>): GraphNode {
-  return { id: 1, type: "thingstudio/interrupt", properties };
+  return { id: "1", type: "thingstudio/interrupt", properties };
 }
 
 /**
@@ -132,10 +132,10 @@ describe("thingstudio/interrupt node", () => {
   it("compiles into a full flow with the expected structure -- event-driven, not repeatMs/sleep_ms", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/interrupt", properties: { pin: 14, edge: "both", debounce: true, debounceMs: 30 } },
-        { id: 2, type: "thingstudio/debug", properties: {} },
+        { id: "1", type: "thingstudio/interrupt", properties: { pin: 14, edge: "both", debounce: true, debounceMs: 30 } },
+        { id: "2", type: "thingstudio/debug", properties: {} },
       ],
-      links: [[1, 1, 0, 2, 0, "bool"]],
+      links: [[1, "1", 0, "2", 0, "bool"]],
     };
     const { source } = compile(graph, buildRegistry());
     expect(source).toContain("from threadsafe_event import ThreadSafeEvent");
@@ -151,11 +151,11 @@ describe("thingstudio/interrupt node", () => {
   it("an interrupt and gpio_out on the same pin number get two independently-configured Pin objects", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/interrupt", properties: { pin: 12, edge: "rising" } },
-        { id: 2, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
-        { id: 3, type: "thingstudio/gpio_out", properties: { pin: 12 } },
+        { id: "1", type: "thingstudio/interrupt", properties: { pin: 12, edge: "rising" } },
+        { id: "2", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: "3", type: "thingstudio/gpio_out", properties: { pin: 12 } },
       ],
-      links: [[1, 2, 0, 3, 0, "bool"]],
+      links: [[1, "2", 0, "3", 0, "bool"]],
     };
     const { source } = compile(graph, buildRegistry());
     expect(source).toContain("machine.Pin(12, machine.Pin.IN)");

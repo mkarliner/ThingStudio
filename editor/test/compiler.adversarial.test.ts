@@ -26,7 +26,7 @@ const passthroughFn = { code: "return msg\n" };
 describe("general compiler: adversarial graph shapes", () => {
   it("rejects an unknown node type", () => {
     const graph: GraphData = {
-      nodes: [{ id: 1, type: "thingstudio/does_not_exist", properties: {} }],
+      nodes: [{ id: "1", type: "thingstudio/does_not_exist", properties: {} }],
       links: [],
     };
     expect(() => compile(graph, registry)).toThrow(CompileError);
@@ -35,7 +35,7 @@ describe("general compiler: adversarial graph shapes", () => {
 
   it("rejects a graph with no source node", () => {
     const graph: GraphData = {
-      nodes: [{ id: 1, type: "thingstudio/gpio_out", properties: { pin: 12 } }],
+      nodes: [{ id: "1", type: "thingstudio/gpio_out", properties: { pin: 12 } }],
       links: [],
     };
     expect(() => compile(graph, registry)).toThrow(/no source node/);
@@ -44,12 +44,12 @@ describe("general compiler: adversarial graph shapes", () => {
   it("rejects a disconnected node", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
-        { id: 2, type: "thingstudio/gpio_out", properties: { pin: 12 } },
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: "2", type: "thingstudio/gpio_out", properties: { pin: 12 } },
         // node 3: never wired to anything
-        { id: 3, type: "thingstudio/function", properties: passthroughFn },
+        { id: "3", type: "thingstudio/function", properties: passthroughFn },
       ],
-      links: [[1, 1, 0, 2, 0, "bool"]],
+      links: [[1, "1", 0, "2", 0, "bool"]],
     };
     expect(() => compile(graph, registry)).toThrow(/disconnected/);
   });
@@ -63,14 +63,14 @@ describe("general compiler: adversarial graph shapes", () => {
     // not just defensively. 2 -> 3 -> 2, both reachable from source 1.
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
-        { id: 2, type: "thingstudio/function", properties: passthroughFn },
-        { id: 3, type: "thingstudio/function", properties: passthroughFn },
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: "2", type: "thingstudio/function", properties: passthroughFn },
+        { id: "3", type: "thingstudio/function", properties: passthroughFn },
       ],
       links: [
-        [1, 1, 0, 2, 0, "bool"],
-        [2, 2, 0, 3, 0, "bool"],
-        [3, 3, 0, 2, 0, "bool"], // closes the loop back onto node 2
+        [1, "1", 0, "2", 0, "bool"],
+        [2, "2", 0, "3", 0, "bool"],
+        [3, "3", 0, "2", 0, "bool"], // closes the loop back onto node 2
       ],
     };
     expect(() => compile(graph, registry)).toThrow(CompileError);
@@ -87,14 +87,14 @@ describe("general compiler: adversarial graph shapes", () => {
     // isn't reachable from anything at all.
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/function", properties: passthroughFn },
-        { id: 2, type: "thingstudio/function", properties: passthroughFn },
-        { id: 3, type: "thingstudio/function", properties: passthroughFn },
+        { id: "1", type: "thingstudio/function", properties: passthroughFn },
+        { id: "2", type: "thingstudio/function", properties: passthroughFn },
+        { id: "3", type: "thingstudio/function", properties: passthroughFn },
       ],
       links: [
-        [1, 1, 0, 2, 0, "bool"],
-        [2, 2, 0, 3, 0, "bool"],
-        [3, 3, 0, 1, 0, "bool"],
+        [1, "1", 0, "2", 0, "bool"],
+        [2, "2", 0, "3", 0, "bool"],
+        [3, "3", 0, "1", 0, "bool"],
       ],
     };
     expect(() => compile(graph, registry)).toThrow(/no source node/);
@@ -108,17 +108,17 @@ describe("general compiler: adversarial graph shapes", () => {
     // source.
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
-        { id: 2, type: "thingstudio/gpio_out", properties: { pin: 12 } },
-        { id: 10, type: "thingstudio/function", properties: passthroughFn },
-        { id: 11, type: "thingstudio/function", properties: passthroughFn },
-        { id: 12, type: "thingstudio/function", properties: passthroughFn },
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: "2", type: "thingstudio/gpio_out", properties: { pin: 12 } },
+        { id: "10", type: "thingstudio/function", properties: passthroughFn },
+        { id: "11", type: "thingstudio/function", properties: passthroughFn },
+        { id: "12", type: "thingstudio/function", properties: passthroughFn },
       ],
       links: [
-        [1, 1, 0, 2, 0, "bool"],
-        [2, 10, 0, 11, 0, "bool"],
-        [3, 11, 0, 12, 0, "bool"],
-        [4, 12, 0, 10, 0, "bool"],
+        [1, "1", 0, "2", 0, "bool"],
+        [2, "10", 0, "11", 0, "bool"],
+        [3, "11", 0, "12", 0, "bool"],
+        [4, "12", 0, "10", 0, "bool"],
       ],
     };
     expect(() => compile(graph, registry)).toThrow(/disconnected/);
@@ -127,10 +127,10 @@ describe("general compiler: adversarial graph shapes", () => {
   it("rejects a source node with an incoming connection", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
-        { id: 2, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "false", repeat: "manual" } },
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: "2", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "false", repeat: "manual" } },
       ],
-      links: [[1, 1, 0, 2, 0, "bool"]],
+      links: [[1, "1", 0, "2", 0, "bool"]],
     };
     expect(() => compile(graph, registry)).toThrow(/takes? no input|incoming connection/);
   });
@@ -138,13 +138,13 @@ describe("general compiler: adversarial graph shapes", () => {
   it("rejects a node after a sink in the same chain", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
-        { id: 2, type: "thingstudio/gpio_out", properties: { pin: 12 } },
-        { id: 3, type: "thingstudio/function", properties: passthroughFn },
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: "2", type: "thingstudio/gpio_out", properties: { pin: 12 } },
+        { id: "3", type: "thingstudio/function", properties: passthroughFn },
       ],
       links: [
-        [1, 1, 0, 2, 0, "bool"],
-        [2, 2, 0, 3, 0, "bool"], // gpio_out has no real output port; wiring past it is invalid
+        [1, "1", 0, "2", 0, "bool"],
+        [2, "2", 0, "3", 0, "bool"], // gpio_out has no real output port; wiring past it is invalid
       ],
     };
     expect(() => compile(graph, registry)).toThrow(/sink/);
@@ -153,10 +153,10 @@ describe("general compiler: adversarial graph shapes", () => {
   it("rejects an out-of-range gpio_out pin", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
-        { id: 2, type: "thingstudio/gpio_out", properties: { pin: 99 } },
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: "2", type: "thingstudio/gpio_out", properties: { pin: 99 } },
       ],
-      links: [[1, 1, 0, 2, 0, "bool"]],
+      links: [[1, "1", 0, "2", 0, "bool"]],
     };
     expect(() => compile(graph, registry)).toThrow(/out of range/);
   });
@@ -164,10 +164,10 @@ describe("general compiler: adversarial graph shapes", () => {
   it("rejects an empty function node body", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
-        { id: 2, type: "thingstudio/function", properties: { code: "   " } },
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: "2", type: "thingstudio/function", properties: { code: "   " } },
       ],
-      links: [[1, 1, 0, 2, 0, "bool"]],
+      links: [[1, "1", 0, "2", 0, "bool"]],
     };
     expect(() => compile(graph, registry)).toThrow(/empty/);
   });

@@ -14,6 +14,13 @@
 // the "absent `configs` key on an older/hand-written file parses as no
 // configs" backward-compatibility contract flow-file.ts's own header
 // documents.
+//
+// Node ids, string not numeric (updated 2026-09-04, decisions.md's
+// "Stable node IDs" entry): SAMPLE_NODES/SAMPLE_EDGES below use small
+// string ids ("1"/"2"/"3") purely for readability in this file -- real
+// ids are crypto.randomUUID() strings (flow-file.ts's own header), but
+// nothing here depends on the id's actual shape, only that it's a
+// string and that string comparison sorts it deterministically.
 
 import { describe, expect, it } from "vitest";
 import {
@@ -28,13 +35,13 @@ import {
 } from "../src/flow-file/flow-file.js";
 
 const SAMPLE_NODES: CanvasNodeSnapshot[] = [
-  { id: 3, type: "thingstudio/gpio_out", properties: { pin: 12 }, pos: [300, 100] },
-  { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" }, pos: [80, 80], size: [190, 130] },
-  { id: 2, type: "thingstudio/function", properties: { code: "return msg\n" }, pos: [200, 90] },
+  { id: "3", type: "thingstudio/gpio_out", properties: { pin: 12 }, pos: [300, 100] },
+  { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" }, pos: [80, 80], size: [190, 130] },
+  { id: "2", type: "thingstudio/function", properties: { code: "return msg\n" }, pos: [200, 90] },
 ];
 const SAMPLE_EDGES: FlowFileEdge[] = [
-  [2, 0, 3, 0],
-  [1, 0, 2, 0],
+  ["2", 0, "3", 0],
+  ["1", 0, "2", 0],
 ];
 const SAMPLE_CONFIGS: FlowFileConfig[] = [
   { id: "wifi-b", type: "thingstudio/config/wifi", properties: { ssid: "SecondNet", password: "b" } },
@@ -52,10 +59,10 @@ describe("buildFlowFile", () => {
 
   it("sorts nodes by id and edges by [originId, originSlot, targetId, targetSlot], regardless of input order", () => {
     const file = buildFlowFile(SAMPLE_NODES, SAMPLE_EDGES);
-    expect(file.nodes.map((n) => n.id)).toEqual([1, 2, 3]);
+    expect(file.nodes.map((n) => n.id)).toEqual(["1", "2", "3"]);
     expect(file.edges).toEqual([
-      [1, 0, 2, 0],
-      [2, 0, 3, 0],
+      ["1", 0, "2", 0],
+      ["2", 0, "3", 0],
     ]);
   });
 
@@ -94,20 +101,29 @@ describe("serializeFlowFileText: determinism", () => {
     expect(textA).toBe(textB);
   });
 
-  it("layout's numeric-string keys come out ascending regardless of insertion order -- a real JS/JSON engine guarantee (ECMAScript's integer-index property ordering), not a convention this code has to enforce itself", () => {
-    // Node 10 built before node 2 -- if key order followed insertion,
-    // "10" would sort before "2" as a string. It doesn't: JS engines
-    // order integer-like keys ascending numerically.
+  it("layout keys come out in the same deterministic (string-sorted) order as `nodes`, regardless of insertion order", () => {
+    // Updated 2026-09-04 (decisions.md's "Stable node IDs" entry): this
+    // used to test the ECMAScript "integer-index property ordering"
+    // guarantee (small-integer-like string keys sort ascending
+    // numerically regardless of insertion order, even though they're
+    // still strings) -- that guarantee doesn't apply any more now that
+    // real node ids are crypto.randomUUID() strings, not small integers.
+    // What buildFlowFile() actually guarantees now (flow-file.ts's own
+    // header): layout keys are written in `sortedNodes`' own
+    // deterministic string-sorted order, which is what this checks --
+    // "b" (from a node built first) still lands after "a" (built second)
+    // in the serialized output, because the sort key is the id string,
+    // never insertion order.
     const nodes: CanvasNodeSnapshot[] = [
-      { id: 10, type: "thingstudio/debug", properties: {}, pos: [0, 0] },
-      { id: 2, type: "thingstudio/debug", properties: {}, pos: [0, 0] },
+      { id: "b-node", type: "thingstudio/debug", properties: {}, pos: [0, 0] },
+      { id: "a-node", type: "thingstudio/debug", properties: {}, pos: [0, 0] },
     ];
     const text = serializeFlowFileText(buildFlowFile(nodes, []));
-    const idx2 = text.indexOf('"2":');
-    const idx10 = text.indexOf('"10":');
-    expect(idx2).toBeGreaterThan(-1);
-    expect(idx10).toBeGreaterThan(-1);
-    expect(idx2).toBeLessThan(idx10);
+    const idxA = text.indexOf('"a-node":');
+    const idxB = text.indexOf('"b-node":');
+    expect(idxA).toBeGreaterThan(-1);
+    expect(idxB).toBeGreaterThan(-1);
+    expect(idxA).toBeLessThan(idxB);
   });
 
   it("ends with a trailing newline", () => {
@@ -148,9 +164,23 @@ describe("parseFlowFile: round-trip and validation", () => {
 
   it("rejects malformed nodes/edges/layout with a specific reason, not a generic crash", () => {
     const base = { formatVersion: FLOW_FILE_FORMAT_VERSION, nodes: [], edges: [], layout: {} };
-    expect(() => parseFlowFile(JSON.stringify({ ...base, nodes: [{ id: "not-a-number", type: "x", properties: {} }] }))).toThrow(/nodes\[0\]\.id/);
+    // Updated 2026-09-04: node ids are string now (decisions.md's
+    // "Stable node IDs" entry) -- a string id is valid, so the malformed
+    // case is a NUMBER where a string is required, the mirror image of
+    // what this test checked before the id type flipped.
+    expect(() => parseFlowFile(JSON.stringify({ ...base, nodes: [{ id: 123, type: "x", properties: {} }] }))).toThrow(/nodes\[0\]\.id/);
     expect(() => parseFlowFile(JSON.stringify({ ...base, edges: [[1, 0, 2]] }))).toThrow(/edges\[0\]/);
     expect(() => parseFlowFile(JSON.stringify({ ...base, layout: { "1": { pos: [0] } } }))).toThrow(/layout\["1"\]\.pos/);
+  });
+
+  it("rejects an edge whose node-id columns aren't strings, or whose slot columns aren't numbers", () => {
+    // New case, 2026-09-04: edges are now [string, number, string, number]
+    // (flow-file.ts's header) rather than 4 plain numbers -- a
+    // number where a node id belongs, or a string where a slot index
+    // belongs, must both fail the same way a wrong-length array does.
+    const base = { formatVersion: FLOW_FILE_FORMAT_VERSION, nodes: [], edges: [], layout: {} };
+    expect(() => parseFlowFile(JSON.stringify({ ...base, edges: [[1, 0, 2, 0]] }))).toThrow(/edges\[0\]/);
+    expect(() => parseFlowFile(JSON.stringify({ ...base, edges: [["a", "0", "b", 0]] }))).toThrow(/edges\[0\]/);
   });
 
   it("rejects a non-array configs field", () => {

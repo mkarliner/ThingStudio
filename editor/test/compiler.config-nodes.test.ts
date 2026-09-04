@@ -45,7 +45,7 @@ function registry(): Map<string, NodeDefinition> {
 describe("compiler: config node resolution", () => {
   it("resolves a referenced config's properties by id", () => {
     const graph: GraphData = {
-      nodes: [{ id: 1, type: "test/config-reader-source", properties: { configId: "cfg1" } }],
+      nodes: [{ id: "1", type: "test/config-reader-source", properties: { configId: "cfg1" } }],
       links: [],
       configs: [{ id: "cfg1", type: "test/anything", properties: { foo: "bar" } }],
     };
@@ -55,7 +55,7 @@ describe("compiler: config node resolution", () => {
 
   it("throws CompileError naming the missing id when a config reference doesn't resolve", () => {
     const graph: GraphData = {
-      nodes: [{ id: 1, type: "test/config-reader-source", properties: { configId: "missing" } }],
+      nodes: [{ id: "1", type: "test/config-reader-source", properties: { configId: "missing" } }],
       links: [],
     };
     expect(() => compile(graph, registry())).toThrow(CompileError);
@@ -64,7 +64,7 @@ describe("compiler: config node resolution", () => {
 
   it("rejects duplicate config ids up front, same as duplicate node ids", () => {
     const graph: GraphData = {
-      nodes: [{ id: 1, type: "test/config-reader-source", properties: { configId: "cfg1" } }],
+      nodes: [{ id: "1", type: "test/config-reader-source", properties: { configId: "cfg1" } }],
       links: [],
       configs: [
         { id: "cfg1", type: "test/anything", properties: { foo: "a" } },
@@ -76,7 +76,7 @@ describe("compiler: config node resolution", () => {
 
   it("an orphan config (referenced by nothing) doesn't affect reachability or disconnected-node checks", () => {
     const graph: GraphData = {
-      nodes: [{ id: 1, type: "test/config-reader-source", properties: { configId: "cfg1" } }],
+      nodes: [{ id: "1", type: "test/config-reader-source", properties: { configId: "cfg1" } }],
       links: [],
       configs: [
         { id: "cfg1", type: "test/anything", properties: { foo: "bar" } },
@@ -95,7 +95,7 @@ describe("compiler: config node resolution", () => {
     // (compile.ts's own header comment, "never register configs in
     // nodesById/childrenOf/sources/reachable").
     const graph: GraphData = {
-      nodes: [{ id: 1, type: "test/config-reader-source", properties: { configId: "cfg1" } }],
+      nodes: [{ id: "1", type: "test/config-reader-source", properties: { configId: "cfg1" } }],
       links: [],
       configs: [{ id: "cfg1", type: "totally/unregistered/type", properties: { foo: "bar" } }],
     };
@@ -108,7 +108,7 @@ describe("compiler: config node resolution", () => {
     // accidental collision check needed between the two. A config id that
     // happens to look like a node id ("1") should resolve independently.
     const graph: GraphData = {
-      nodes: [{ id: 1, type: "test/config-reader-source", properties: { configId: "1" } }],
+      nodes: [{ id: "1", type: "test/config-reader-source", properties: { configId: "1" } }],
       links: [],
       configs: [{ id: "1", type: "test/anything", properties: { note: "not node id 1" } }],
     };
@@ -118,7 +118,7 @@ describe("compiler: config node resolution", () => {
 
   it("compiling with no configs array at all still works right up until an actual reference is resolved", () => {
     const graph: GraphData = {
-      nodes: [{ id: 1, type: "test/config-reader-source", properties: { configId: "unused" } }],
+      nodes: [{ id: "1", type: "test/config-reader-source", properties: { configId: "unused" } }],
       links: [],
     };
     // No configs at all -> resolveConfig("unused") still throws (nothing

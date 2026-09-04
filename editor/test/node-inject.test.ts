@@ -42,7 +42,7 @@ const ctx: CodegenContext = {
 };
 
 function node(id: number, properties: Record<string, unknown>): GraphNode {
-  return { id, type: "thingstudio/inject", properties };
+  return { id: String(id), type: "thingstudio/inject", properties };
 }
 
 function runGenerated(source: string): string {
@@ -88,10 +88,10 @@ describe("thingstudio/inject node", () => {
   it("compiles into a full flow with the expected structure -- event-driven, not repeatMs/sleep_ms", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true" } },
-        { id: 2, type: "thingstudio/debug", properties: {} },
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true" } },
+        { id: "2", type: "thingstudio/debug", properties: {} },
       ],
-      links: [[1, 1, 0, 2, 0, "bool"]],
+      links: [[1, "1", 0, "2", 0, "bool"]],
     };
     const { source } = compile(graph, buildRegistry());
     expect(source).toContain("from threadsafe_event import ThreadSafeEvent");
@@ -107,14 +107,14 @@ describe("thingstudio/inject node", () => {
   it("two inject nodes in one flow each get their own event, keyed by their own node ID", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true" } },
-        { id: 3, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "false" } },
-        { id: 2, type: "thingstudio/debug", properties: {} },
-        { id: 4, type: "thingstudio/debug", properties: {} },
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true" } },
+        { id: "3", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "false" } },
+        { id: "2", type: "thingstudio/debug", properties: {} },
+        { id: "4", type: "thingstudio/debug", properties: {} },
       ],
       links: [
-        [1, 1, 0, 2, 0, "bool"],
-        [2, 3, 0, 4, 0, "bool"],
+        [1, "1", 0, "2", 0, "bool"],
+        [2, "3", 0, "4", 0, "bool"],
       ],
     };
     const { source } = compile(graph, buildRegistry());
@@ -127,10 +127,10 @@ describe("thingstudio/inject node", () => {
   it("end to end: a fired trigger (pymock's auto-fire, simulating a real click) runs the chain exactly once", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "hello mike!" } },
-        { id: 2, type: "thingstudio/debug", properties: {} },
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "hello mike!" } },
+        { id: "2", type: "thingstudio/debug", properties: {} },
       ],
-      links: [[1, 1, 0, 2, 0, "bool"]],
+      links: [[1, "1", 0, "2", 0, "bool"]],
     };
     const { source } = compile(graph, buildRegistry());
     const output = runGenerated(source);

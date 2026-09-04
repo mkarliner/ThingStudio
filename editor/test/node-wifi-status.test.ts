@@ -62,7 +62,7 @@ beforeEach(() => {
 });
 
 function node(properties: Record<string, unknown>): GraphNode {
-  return { id: 1, type: "thingstudio/wifi_status", properties };
+  return { id: "1", type: "thingstudio/wifi_status", properties };
 }
 
 function indent(code: string, spaces: number): string {
@@ -269,10 +269,10 @@ describe("thingstudio/wifi_status node", () => {
   it("compiles into a full flow with the expected structure (source text only -- not executed, see header)", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/wifi_status", properties: { pollMs: 3000, wifiConfigId: "wifi1" } },
-        { id: 2, type: "thingstudio/debug", properties: {} },
+        { id: "1", type: "thingstudio/wifi_status", properties: { pollMs: 3000, wifiConfigId: "wifi1" } },
+        { id: "2", type: "thingstudio/debug", properties: {} },
       ],
-      links: [[1, 1, 0, 2, 0, "bool"]],
+      links: [[1, "1", 0, "2", 0, "bool"]],
       configs: [{ id: "wifi1", type: "thingstudio/config/wifi", properties: { ssid: "MyNetwork", password: "hunter2" } }],
     };
     const { source } = compile(graph, buildRegistry());
@@ -286,10 +286,10 @@ describe("thingstudio/wifi_status node", () => {
   it("guards the downstream chain with \"if msg is not None\" so an unchanged poll doesn't call debug (2026-09-02)", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/wifi_status", properties: { pollMs: 3000, wifiConfigId: "wifi1" } },
-        { id: 2, type: "thingstudio/debug", properties: {} },
+        { id: "1", type: "thingstudio/wifi_status", properties: { pollMs: 3000, wifiConfigId: "wifi1" } },
+        { id: "2", type: "thingstudio/debug", properties: {} },
       ],
-      links: [[1, 1, 0, 2, 0, "bool"]],
+      links: [[1, "1", 0, "2", 0, "bool"]],
       configs: [{ id: "wifi1", type: "thingstudio/config/wifi", properties: { ssid: "MyNetwork", password: "hunter2" } }],
     };
     const { source } = compile(graph, buildRegistry());
@@ -313,8 +313,8 @@ describe("thingstudio/wifi_status node", () => {
   it("dedups the shared wifi-sta setup statement across two wifi_status nodes sharing one config (first one wins)", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/wifi_status", properties: { pollMs: 1000, wifiConfigId: "wifi1" } },
-        { id: 2, type: "thingstudio/wifi_status", properties: { pollMs: 2000, wifiConfigId: "wifi1" } },
+        { id: "1", type: "thingstudio/wifi_status", properties: { pollMs: 1000, wifiConfigId: "wifi1" } },
+        { id: "2", type: "thingstudio/wifi_status", properties: { pollMs: 2000, wifiConfigId: "wifi1" } },
       ],
       links: [],
       configs: [{ id: "wifi1", type: "thingstudio/config/wifi", properties: { ssid: "First", password: "a" } }],
@@ -327,7 +327,7 @@ describe("thingstudio/wifi_status node", () => {
 
   it("compiling a flow with a dangling wifiConfigId raises a CompileError naming the missing config", () => {
     const graph: GraphData = {
-      nodes: [{ id: 1, type: "thingstudio/wifi_status", properties: { pollMs: 1000, wifiConfigId: "no-such-config" } }],
+      nodes: [{ id: "1", type: "thingstudio/wifi_status", properties: { pollMs: 1000, wifiConfigId: "no-such-config" } }],
       links: [],
     };
     expect(() => compile(graph, buildRegistry())).toThrow(/referenced config "no-such-config" not found/);

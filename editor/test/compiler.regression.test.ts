@@ -36,13 +36,13 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 function pocDGraph(): GraphData {
   return {
     nodes: [
-      { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
-      { id: 2, type: "thingstudio/function", properties: { code: "msg['payload'] = msg['payload']\nreturn msg\n" } },
-      { id: 3, type: "thingstudio/gpio_out", properties: { pin: 12 } },
+      { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+      { id: "2", type: "thingstudio/function", properties: { code: "msg['payload'] = msg['payload']\nreturn msg\n" } },
+      { id: "3", type: "thingstudio/gpio_out", properties: { pin: 12 } },
     ],
     links: [
-      [1, 1, 0, 2, 0, "bool"],
-      [2, 2, 0, 3, 0, "bool"],
+      [1, "1", 0, "2", 0, "bool"],
+      [2, "2", 0, "3", 0, "bool"],
     ],
   };
 }

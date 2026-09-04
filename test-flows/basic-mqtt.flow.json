@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "nodes": [
     {
-      "id": 1,
+      "id": "1",
       "type": "thingstudio/inject",
       "properties": {
         "payloadType": "string",
@@ -11,7 +11,7 @@
       }
     },
     {
-      "id": 2,
+      "id": "2",
       "type": "thingstudio/mqtt_publish",
       "properties": {
         "topic": "foobar",
@@ -22,7 +22,7 @@
       }
     },
     {
-      "id": 3,
+      "id": "3",
       "type": "thingstudio/mqtt_subscribe",
       "properties": {
         "topic": "foobar",
@@ -32,12 +32,12 @@
       }
     },
     {
-      "id": 4,
+      "id": "4",
       "type": "thingstudio/debug",
       "properties": {}
     },
     {
-      "id": 5,
+      "id": "5",
       "type": "thingstudio/wifi_status",
       "properties": {
         "pollMs": 5000,
@@ -45,28 +45,28 @@
       }
     },
     {
-      "id": 6,
+      "id": "6",
       "type": "thingstudio/debug",
       "properties": {}
     }
   ],
   "edges": [
     [
-      1,
+      "1",
       0,
-      2,
+      "2",
       0
     ],
     [
-      3,
+      "3",
       0,
-      4,
+      "4",
       0
     ],
     [
-      5,
+      "5",
       0,
-      6,
+      "6",
       0
     ]
   ],

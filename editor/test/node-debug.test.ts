@@ -29,10 +29,10 @@ describe("thingstudio/debug node", () => {
   it("prints the node id and payload for a string payload", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "hello world", repeat: "manual" } },
-        { id: 7, type: "thingstudio/debug", properties: {} },
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "hello world", repeat: "manual" } },
+        { id: "7", type: "thingstudio/debug", properties: {} },
       ],
-      links: [[1, 1, 0, 7, 0, "string"]],
+      links: [[1, "1", 0, "7", 0, "string"]],
     };
     const { source } = compile(graph, registry);
     expect(runGenerated(source)).toContain("DEBUG node=7 payload='hello world'");
@@ -41,10 +41,10 @@ describe("thingstudio/debug node", () => {
   it("prints a bool payload", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
-        { id: 2, type: "thingstudio/debug", properties: {} },
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: "2", type: "thingstudio/debug", properties: {} },
       ],
-      links: [[1, 1, 0, 2, 0, "bool"]],
+      links: [[1, "1", 0, "2", 0, "bool"]],
     };
     const { source } = compile(graph, registry);
     expect(runGenerated(source)).toContain("DEBUG node=2 payload=True");
@@ -53,13 +53,13 @@ describe("thingstudio/debug node", () => {
   it("is a terminal sink -- rejects an outgoing wire from a debug node", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
-        { id: 2, type: "thingstudio/debug", properties: {} },
-        { id: 3, type: "thingstudio/gpio_out", properties: { pin: 12 } },
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: "2", type: "thingstudio/debug", properties: {} },
+        { id: "3", type: "thingstudio/gpio_out", properties: { pin: 12 } },
       ],
       links: [
-        [1, 1, 0, 2, 0, "bool"],
-        [2, 2, 0, 3, 0, "bool"],
+        [1, "1", 0, "2", 0, "bool"],
+        [2, "2", 0, "3", 0, "bool"],
       ],
     };
     expect(() => compile(graph, registry)).toThrow(/sink/);
@@ -68,13 +68,13 @@ describe("thingstudio/debug node", () => {
   it("multiple debug nodes fanned out from one source each get their own function", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
-        { id: 2, type: "thingstudio/debug", properties: {} },
-        { id: 3, type: "thingstudio/debug", properties: {} },
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: "2", type: "thingstudio/debug", properties: {} },
+        { id: "3", type: "thingstudio/debug", properties: {} },
       ],
       links: [
-        [1, 1, 0, 2, 0, "bool"],
-        [2, 1, 0, 3, 0, "bool"],
+        [1, "1", 0, "2", 0, "bool"],
+        [2, "1", 0, "3", 0, "bool"],
       ],
     };
     const { source } = compile(graph, registry);

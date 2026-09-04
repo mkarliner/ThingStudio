@@ -84,7 +84,7 @@ beforeEach(() => {
 });
 
 function node(properties: Record<string, unknown>): GraphNode {
-  return { id: 1, type: "thingstudio/mqtt_publish", properties };
+  return { id: "1", type: "thingstudio/mqtt_publish", properties };
 }
 
 function runGenerated(source: string): string {
@@ -101,10 +101,10 @@ function runGenerated(source: string): string {
 function graphWith(mqttProps: Record<string, unknown>, brokerProps: Record<string, unknown>): GraphData {
   return {
     nodes: [
-      { id: 1, type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "42.5", repeat: "manual" } },
-      { id: 2, type: "thingstudio/mqtt_publish", properties: { ...mqttProps, wifiConfigId: "wifi1", brokerConfigId: "broker1" } },
+      { id: "1", type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "42.5", repeat: "manual" } },
+      { id: "2", type: "thingstudio/mqtt_publish", properties: { ...mqttProps, wifiConfigId: "wifi1", brokerConfigId: "broker1" } },
     ],
-    links: [[1, 1, 0, 2, 0, "string"]],
+    links: [[1, "1", 0, "2", 0, "string"]],
     configs: configsWith(brokerProps),
   };
 }
@@ -126,14 +126,14 @@ describe("thingstudio/mqtt_publish node", () => {
   it("two mqtt_publish nodes on the same broker share one client (setup dedup)", () => {
     const graph: GraphData = {
       nodes: [
-        { id: 1, type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "a", repeat: "manual" } },
-        { id: 2, type: "thingstudio/mqtt_publish", properties: { topic: "t1", wifiConfigId: "wifi1", brokerConfigId: "broker1" } },
-        { id: 3, type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "b", repeat: "manual" } },
-        { id: 4, type: "thingstudio/mqtt_publish", properties: { topic: "t2", wifiConfigId: "wifi1", brokerConfigId: "broker1" } },
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "a", repeat: "manual" } },
+        { id: "2", type: "thingstudio/mqtt_publish", properties: { topic: "t1", wifiConfigId: "wifi1", brokerConfigId: "broker1" } },
+        { id: "3", type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "b", repeat: "manual" } },
+        { id: "4", type: "thingstudio/mqtt_publish", properties: { topic: "t2", wifiConfigId: "wifi1", brokerConfigId: "broker1" } },
       ],
       links: [
-        [1, 1, 0, 2, 0, "string"],
-        [2, 3, 0, 4, 0, "string"],
+        [1, "1", 0, "2", 0, "string"],
+        [2, "3", 0, "4", 0, "string"],
       ],
       configs: configsWith({ broker: "b", port: 1883 }),
     };
