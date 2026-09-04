@@ -9,6 +9,13 @@ mechanism that turned out to be the root cause of the redeploy-cleanup WiFi reco
 from scratch (a common pattern with several published implementations, e.g. search "MicroPython captive portal
 WiFiManager"); not verified or evaluated yet, just recorded so whoever scopes this doesn't start from zero.
 
+**Refined, 2026-09-04** (same session as the single-wifi-owner fix, `wifi-single-owner-fix.md`): Mike confirmed
+the intent behind an "unnamed"/blank-ssid WiFi config is specifically this — asking the microcontroller to scan
+at runtime and present real networks in a dropdown to pick from, rather than compiling a specific ssid/password
+into the flow at all. This is the same feature as the soft-AP/captive-portal fallback above, not a separate one —
+just confirms the concrete UX (scan → dropdown) that was previously just "let a user scan for and pick a real
+network." Still no design/scope beyond this.
+
 Directly relevant to `redeploy-cleanup-and-network-fault-detection-briefing.md`'s Problem 2b (`wifi-status.ts`'s
 header, `decisions.md`'s "Redeploy / network fault handling" section): making `wifiConfigId` mandatory for
 `wifi_status`/`udp_send`/`udp_receive` would have foreclosed this direction outright if there were no way for a

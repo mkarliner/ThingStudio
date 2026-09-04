@@ -233,6 +233,12 @@ Same convention already established for `docs/third-party-licenses.md`.
   deliberately separated from this id-stability change so `tsc`/`vitest`
   can gate each independently.
 
+- **2026-09-04 — UI cleanup pass: panels collapse to a thin rail rather than fully disappearing, collapse state is session-only (not persisted), and the node palette gained a `group` dimension.** Three sub-decisions, all Mike's explicit call during this session:
+  1. Property panel (auto, driven by node selection) and node palette (manual toggle) both collapse to a ~28px icon rail when out of the way, not zero width — keeps the panel's presence and re-open affordance visible rather than requiring the user to remember it exists. `PropertyPanel.vue`/`PaletteSidebar.vue`.
+  2. Collapse/expand state resets to sensible defaults every page load rather than persisting via localStorage — simpler, no storage plumbing, revisit if Mike finds the reset annoying in practice.
+  3. `palette.ts`'s `KindStyle` and `custom-node.ts`'s `CustomNodeDescriptor` both gained a `group` field (a plain string, not restricted to the three defaults) so the palette can render grouped sections (general/network/hardware for built-ins) with a custom node free to name its own new group instead of being forced into one of the three. Per-kind group assignment itself is a small judgment call documented in `palette.ts`'s own header, not indexed here (see this file's "What this list doesn't include").
+  "Compiled source (preview)"/"Device console" became native `<details>`/`<summary>` disclosures instead — no JS collapse state needed for those two, source closed by default (rarely interesting), console open. `docs/ui-cleanup-and-collapsing-panels-brief.md`.
+
 ## Config nodes / Tier 1 scope
 
 - **2026-08-17 — Tier 1 item 5 resolved: interrupt/pin-change (replacing
@@ -385,6 +391,24 @@ Same convention already established for `docs/third-party-licenses.md`.
   points here. Filing an issue upstream (not a PR, given the history) may
   still be worth doing independent of our own fix -- Mike's call, not
   decided either way this session -- see `outstanding-items.md`.
+- **2026-09-04 — `wifi_status` made the flow's sole owner of WiFi
+  credentials; `udp_send`/`udp_receive`/`mqtt_publish`/`mqtt_subscribe`/
+  `http_request` lose their own independent `wifiConfigId`.** Mike's own
+  real-hardware finding: nothing stopped a flow's `wifi_status` node
+  being set to `"unmanaged"` while an `mqtt_publish` node in the same
+  flow independently referenced a different WiFi config with real
+  credentials -- two disagreeing claims about the one physical radio.
+  Fixed via a new `ctx.findNodesOfType()` (`node-definition.ts`/
+  `compile.ts`) and `wifi-status.ts`'s `resolveFlowWifiCredentials()`,
+  which every other network node type now calls instead of resolving its
+  own config reference; requires exactly one `wifi_status` node per flow
+  (Mike's explicit "assume one interface for now"), a `CompileError` for
+  zero or more than one. Deliberately not a one-way door against a later
+  multi-interface extension (CLAUDE.md's dead-end principle) -- see full
+  reasoning in `outstanding-items/wifi-single-owner-fix.md`. `wifi_status`
+  itself keeps its name and its own `wifiConfigId` unchanged -- Mike's
+  explicit call not to rename it this session. No real-hardware pass of
+  this specific change yet -- flagged, not assumed safe.
 
 ## Node authoring / extensibility
 

@@ -21,3 +21,26 @@ Root cause (reasoned, not confirmed by hardware tracing): `mqttWifiPrecheckState
 Fixed in `mqtt-shared.ts`'s `mqttWifiPrecheckStatement()`: poll `.active()` until it actually reports `True` (rather than trusting the call that requested it), plus a short fixed settle delay, before the pre-existing in-flight-connect wait. Editor-side codegen change only -- no device-runtime files touched, so this needs a flow re-deploy (not a runtime re-deploy) to test.
 
 **Tested, partially effective**: first deploy after a power cycle still hit the same `Wifi Internal State Error` once; a second deploy (no power cycle) then succeeded immediately -- exactly the shape of a transient, not-yet-fully-settled driver condition rather than a persistent failure. Rather than chase a longer settle delay, added a bounded retry around the `.connect()` call itself (`mqttEnsureConnectedSnippet()`, up to 3 attempts with a 500ms pause, still inside the same lock): a transient first-attempt failure now self-heals within the same deploy instead of needing a manual redeploy; a genuinely persistent failure (bad password, unreachable broker) still surfaces as a NODE_ERROR since the final attempt's exception is re-raised. **Not yet verified against real hardware.**
+
+## Update, 2026-09-04: basic-mqtt roundtrip confirmed working on real hardware
+
+Mike confirmed `basic-mqtt.flow.json` works end-to-end on real hardware -- inject click ->
+publish -> subscribe -> debug all functioning. Some edge cases flagged as deferred, not yet
+itemized in detail (follow up to get specifics recorded here once known). This resolves the
+2026-09-02 silent-failure update above; both candidate causes named there (inject click-fire
+missing, the suspected pubsub boot race) are apparently no longer blocking, though neither
+was confirmed root-caused in isolation -- worth noting if either resurfaces.
+
+**Caveat, same day:** immediately after this confirmation, Mike found a real WiFi-config-
+selection bug (two network nodes in one flow could reference disagreeing WiFi configs -- see
+`outstanding-items/wifi-single-owner-fix.md`) and a fix for it landed the same session,
+changing the WiFi-resolution codepath every network node type goes through, including
+`mqtt_publish`/`mqtt_subscribe`. **`basic-mqtt.flow.json` has NOT been re-tested against real
+hardware since that fix landed.** The flow file itself needed only a trivial edit (its two
+mqtt nodes' now-inert `wifiConfigId` properties removed; it already had its own `wifi_status`
+node providing WiFi credentials, so no structural change was needed) and passes off-device
+tests, but a real redeploy + retest is still owed before trusting this combination on a board.
+
+Still not reached: the WiFi-precheck-under-stale-NVS-credentials repro, qos 1, retain, and
+outage-recovery from this item's original scope -- none of today's testing exercised those
+specifically.

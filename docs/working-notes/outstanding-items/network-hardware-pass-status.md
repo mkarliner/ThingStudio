@@ -15,3 +15,9 @@ Worth a second hardware pass once the fix is deployed, to confirm it actually ho
 surfaced the bug (a board with stale NVS-cached WiFi credentials from a prior deploy) rather than just trusting the
 code-reading diagnosis + off-device compile check. This is exactly what the mqtt-hardware-validation item (Next up)
 is now doing.
+
+**Update, 2026-09-04: that second pass happened and did NOT hold.** Testing `basic-mqtt.flow.json` with invalid
+credentials hit a real, confirmed variant of this same class of race -- not the mqtt-vs-mqtt case the 2026-08-21 fix
+targeted, but a wifi_status-vs-mqtt_as cross-node version the fix was never validated against. See
+`wifi-status-mqtt-connect-ordering-race.md` for the full root cause (a compile-time statement-ordering bug, not
+just a timing/timeout tuning issue) and status. Not fixed yet.

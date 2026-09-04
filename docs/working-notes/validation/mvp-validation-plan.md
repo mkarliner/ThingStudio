@@ -975,6 +975,28 @@ the README-per-component convention.
   the MQTT WiFi-precheck fix and full functional pass" bar (qos 1,
   retain, outage recovery included) remains open pending both.
 
+- **Results (2026-09-04, real hardware — basic roundtrip confirmed working):**
+  Mike confirmed `basic-mqtt.flow.json` (inject click -> mqtt_publish;
+  mqtt_subscribe -> debug) works end-to-end on real hardware. Some edge
+  cases flagged as deferred, not yet itemized here in detail. Neither
+  2026-09-02 candidate cause (inject click-fire, the suspected pubsub
+  boot race) was confirmed root-caused in isolation, so this is "the
+  roundtrip works," not "we know why the earlier silent failure
+  happened" -- worth noting if either resurfaces. qos 1, retain, outage
+  recovery, and the stale-NVS-credential WiFi-precheck repro are still
+  unexercised -- this section's full bar remains open.
+
+  **Same-day caveat:** immediately after this confirmation, a real
+  WiFi-config-selection bug surfaced (two network nodes in one flow could
+  reference disagreeing WiFi configs) and a fix landed the same session,
+  changing the WiFi-resolution codepath every network node type goes
+  through -- see `outstanding-items/wifi-single-owner-fix.md`.
+  `basic-mqtt.flow.json` has NOT been re-tested against real hardware
+  since that fix landed; it needed only a trivial edit (its two mqtt
+  nodes' now-unused `wifiConfigId` properties removed) and passes
+  off-device tests, but the result above predates the fix and doesn't
+  cover it.
+
 ## Tier 2 — live values + persistence
 
 - Live value streaming: inject a known value sequence, confirm the
