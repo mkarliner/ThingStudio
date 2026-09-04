@@ -42,35 +42,42 @@ export type NodeKind =
   | "mqtt_publish"
   | "mqtt_subscribe";
 
+export const DEFAULT_NODE_GROUPS = ["general", "network", "hardware"] as const;
+
 export interface KindStyle {
   color: string;
   bgcolor: string;
   icon: string;
   label: string;
+  /** Palette section this kind sorts into (PaletteSidebar.vue). One of
+   * DEFAULT_NODE_GROUPS for every built-in kind today, but not typed as
+   * that closed union -- a custom node's own descriptor.group (custom-
+   * node.ts) shares this same field name/meaning and is free-form. */
+  group: string;
 }
 
 export const NODE_PALETTE: Record<NodeKind, KindStyle> = {
-  inject: { color: "#2e5c2e", bgcolor: "#1f3f1f", icon: "▶", label: "inject" },
-  function: { color: "#6e5b2e", bgcolor: "#3f341f", icon: "ƒ", label: "function" },
-  debug: { color: "#2e4a6e", bgcolor: "#1f2c3f", icon: "≡", label: "debug" },
-  gpio_out: { color: "#6e3b3b", bgcolor: "#3f1f1f", icon: "■", label: "gpio out" },
-  timer: { color: "#5b3b6e", bgcolor: "#331f3f", icon: "◷", label: "timer" },
+  inject: { color: "#2e5c2e", bgcolor: "#1f3f1f", icon: "▶", label: "inject", group: "general" },
+  function: { color: "#6e5b2e", bgcolor: "#3f341f", icon: "ƒ", label: "function", group: "general" },
+  debug: { color: "#2e4a6e", bgcolor: "#1f2c3f", icon: "≡", label: "debug", group: "general" },
+  gpio_out: { color: "#6e3b3b", bgcolor: "#3f1f1f", icon: "■", label: "gpio out", group: "hardware" },
+  timer: { color: "#5b3b6e", bgcolor: "#331f3f", icon: "◷", label: "timer", group: "general" },
   // Distinct from every existing color -- amber/orange, no prior node type
   // uses this range. "⚡" for the hard-IRQ-driven, event-fired nature (vs.
   // timer's "◷" clock glyph for its own poll/sleep-shaped source).
-  interrupt: { color: "#8a5a1f", bgcolor: "#3f2e14", icon: "⚡", label: "interrupt" },
+  interrupt: { color: "#8a5a1f", bgcolor: "#3f2e14", icon: "⚡", label: "interrupt", group: "hardware" },
   // Teal -- a status/radio glyph ("◉") for the polling connectivity check.
-  wifi_status: { color: "#1f6e6e", bgcolor: "#123f3f", icon: "◉", label: "wifi status" },
+  wifi_status: { color: "#1f6e6e", bgcolor: "#123f3f", icon: "◉", label: "wifi status", group: "network" },
   // Blue/green send-receive pair, up/down arrows echoing direction of
   // travel the same way interrupt's "⚡" echoes its own trigger mechanism.
-  udp_send: { color: "#3b5c8a", bgcolor: "#1f2e4a", icon: "↑", label: "udp send" },
-  udp_receive: { color: "#3b8a6e", bgcolor: "#1f4a3a", icon: "↓", label: "udp receive" },
+  udp_send: { color: "#3b5c8a", bgcolor: "#1f2e4a", icon: "↑", label: "udp send", group: "network" },
+  udp_receive: { color: "#3b8a6e", bgcolor: "#1f4a3a", icon: "↓", label: "udp receive", group: "network" },
   // Magenta/purple pair -- see this file's header for the icon reasoning.
-  mqtt_publish: { color: "#8a3b6e", bgcolor: "#4a1f3a", icon: "⇧", label: "mqtt publish" },
-  mqtt_subscribe: { color: "#6e3b8a", bgcolor: "#3a1f4a", icon: "⇩", label: "mqtt subscribe" },
+  mqtt_publish: { color: "#8a3b6e", bgcolor: "#4a1f3a", icon: "⇧", label: "mqtt publish", group: "network" },
+  mqtt_subscribe: { color: "#6e3b8a", bgcolor: "#3a1f4a", icon: "⇩", label: "mqtt subscribe", group: "network" },
 };
 
-export const DEFAULT_KIND_STYLE: KindStyle = { color: "#555", bgcolor: "#2b2b2b", icon: "?", label: "?" };
+export const DEFAULT_KIND_STYLE: KindStyle = { color: "#555", bgcolor: "#2b2b2b", icon: "?", label: "?", group: "general" };
 
 // Shared between PaletteSidebar.vue's `dragstart` (dataTransfer.setData)
 // and the eventual app-shell `drop` handler (dataTransfer.getData) -- not

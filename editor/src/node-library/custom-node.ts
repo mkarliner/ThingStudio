@@ -116,6 +116,11 @@ export interface CustomNodeDescriptor {
   bgcolor?: string;
   /** Single-glyph icon, matching palette.ts's own convention for built-in kinds. */
   icon?: string;
+  /** Palette section (PaletteSidebar.vue) this node sorts into -- any
+   * non-empty string, not restricted to palette.ts's DEFAULT_NODE_GROUPS.
+   * Omitted -> "general" (defaulted where the palette renders custom
+   * rows, not here -- see this field's own validation below). */
+  group?: string;
   ports?: {
     inputs?: CustomNodePort[];
     outputs?: CustomNodePort[];
@@ -250,6 +255,10 @@ export function validateCustomNodeDescriptor(raw: unknown): CustomNodeDescriptor
   if (typeof obj.color === "string") descriptor.color = obj.color;
   if (typeof obj.bgcolor === "string") descriptor.bgcolor = obj.bgcolor;
   if (typeof obj.icon === "string") descriptor.icon = obj.icon;
+  if (obj.group !== undefined) {
+    if (typeof obj.group !== "string" || obj.group.length === 0) fail('"group" must be a non-empty string when present');
+    descriptor.group = obj.group;
+  }
   return descriptor;
 }
 

@@ -36,50 +36,46 @@
   "only talk to the parent via emits" shape.
 -->
 <template>
-  <div class="palette-sidebar">
-    <div class="palette-header">Palette</div>
-    <input v-model="filter" class="palette-filter" type="text" placeholder="filter nodes" />
-    <div class="palette-category">nodes</div>
-    <button
-      v-for="kind in visibleKinds"
-      :key="kind"
-      class="palette-row"
-      :style="{ borderColor: NODE_PALETTE[kind].color }"
-      draggable="true"
-      @click="emit('add', kind)"
-      @dragstart="onDragStart($event, kind)"
-    >
-      <span class="palette-icon" :style="{ background: NODE_PALETTE[kind].bgcolor }">{{ NODE_PALETTE[kind].icon }}</span>
-      <span class="palette-label">{{ NODE_PALETTE[kind].label }}</span>
-    </button>
-    <p v-if="visibleKinds.length === 0 && customRows.length === 0" class="hint">No nodes match "{{ filter }}".</p>
-
-    <template v-if="customRows.length > 0">
-      <div class="palette-category">custom nodes</div>
+  <div class="palette-sidebar" :class="{ 'is-collapsed': collapsed }">
+    <div class="palette-header">
+      <span v-if="!collapsed" class="palette-header-label">Palette</span>
       <button
-        v-for="row in customRows"
-        :key="row.type"
-        class="palette-row"
-        :style="{ borderColor: row.color }"
-        draggable="true"
-        @click="emit('addCustom', row.type)"
-        @dragstart="onCustomDragStart($event, row.type)"
-      >
-        <span class="palette-icon" :style="{ background: row.bgcolor }">{{ row.icon }}</span>
-        <span class="palette-label">{{ row.label }}</span>
+        class="palette-collapse-toggle"
+        :title="collapsed ? 'Expand palette' : 'Collapse palette'"
+        @click="collapsed = !collapsed"
+      >{{ collapsed ? "»" : "«" }}</button>
+    </div>
+    <template v-if="!collapsed">
+      <input v-model="filter" class="palette-filter" type="text" placeholder="filter nodes" />
+
+      <template v-for="group in groupedRows" :key="group.name">
+        <div class="palette-category">{{ group.name }}</div>
+        <button
+          v-for="row in group.rows"
+          :key="row.key"
+          class="palette-row"
+          :style="{ borderColor: row.color }"
+          draggable="true"
+          @click="onRowClick(row)"
+          @dragstart="onRowDragStart($event, row)"
+        >
+          <span class="palette-icon" :style="{ background: row.bgcolor }">{{ row.icon }}</span>
+          <span class="palette-label">{{ row.label }}</span>
+        </button>
+      </template>
+      <p v-if="groupedRows.length === 0" class="hint">No nodes match "{{ filter }}".</p>
+
+      <button class="palette-row load-custom-row" @click="onLoadCustomNode">
+        <span class="palette-icon">+</span>
+        <span class="palette-label">Load custom node…</span>
       </button>
     </template>
-
-    <button class="palette-row load-custom-row" @click="onLoadCustomNode">
-      <span class="palette-icon">+</span>
-      <span class="palette-label">Load custom node…</span>
-    </button>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { NODE_PALETTE, DEFAULT_KIND_STYLE, DRAG_MIME, CUSTOM_DRAG_MIME, type NodeKind } from "./palette";
+import { NODE_PALETTE, DEFAULT_KIND_STYLE, DEFAULT_NODE_GROUPS, DRAG_MIME, CUSTOM_DRAG_MIME, type NodeKind } from "./palette";
 import { customNodePackages, customNodesVersion, loadOrReplaceCustomNodePackage } from "./custom-nodes-store";
 import { loadCustomNodePackageFromDisk, CustomNodeFileIoError } from "../../flow-file/custom-node-io";
 import { validateCustomNodeDescriptor, CustomNodeDescriptorError } from "../../node-library/custom-node";
@@ -91,9 +87,11 @@ const emit = defineEmits<{
   customNodeLoadError: [message: string];
 }>();
 
-// Display order -- sources first (inject, timer, interrupt, wifi_status,
-// udp_receive, mqtt_subscribe), then processing (function), then sinks
-// (gpio_out, udp_send, mqtt_publish, debug).
+// Display order within each group -- sources first (inject, timer,
+// interrupt, wifi_status, udp_receive, mqtt_subscribe), then processing
+// (function), then sinks (gpio_out, udp_send, mqtt_publish, debug). Group
+// assignment itself lives in palette.ts (KindStyle.group), not here, so
+// this file doesn't duplicate that mapping.
 const KINDS: NodeKind[] = [
   "inject",
   "timer",
@@ -108,41 +106,90 @@ const KINDS: NodeKind[] = [
   "debug",
 ];
 
-const filter = ref("");
-const visibleKinds = computed(() =>
-  KINDS.filter((kind) => NODE_PALETTE[kind].label.toLowerCase().includes(filter.value.trim().toLowerCase())),
-);
+// Manual collapse (UI-cleanup brief, 2026-09-04) -- unlike
+// PropertyPanel.vue's selection-driven collapse, nothing tells this panel
+// when to reopen itself, so it's a plain user toggle. Not persisted across
+// reloads (Mike's call, same discussion): starts open every session.
+const collapsed = ref(false);
 
-const customRows = computed(() => {
+const filter = ref("");
+
+// One row shape for both built-in and custom nodes, so groupedRows below
+// can merge them into the same section headers instead of rendering two
+// separate lists (the pre-grouping template had a hardcoded "nodes" /
+// "custom nodes" split -- gone now that the whole point is grouping by
+// palette.ts's/the descriptor's own `group`, not by origin).
+interface PaletteRow {
+  key: string;
+  origin: "builtin" | "custom";
+  /** NodeKind for a builtin row, the custom type id (e.g. "custom/dht22") for a custom row. */
+  value: string;
+  label: string;
+  color: string;
+  bgcolor: string;
+  icon: string;
+  group: string;
+}
+
+const allRows = computed<PaletteRow[]>(() => {
   customNodesVersion.value; // reactive dependency -- see custom-nodes-store.ts's own header
   const needle = filter.value.trim().toLowerCase();
-  return [...customNodePackages.value.values()]
+
+  const builtinRows: PaletteRow[] = KINDS.filter((kind) => NODE_PALETTE[kind].label.toLowerCase().includes(needle)).map((kind) => {
+    const style = NODE_PALETTE[kind];
+    return { key: kind, origin: "builtin", value: kind, label: style.label, color: style.color, bgcolor: style.bgcolor, icon: style.icon, group: style.group };
+  });
+
+  const customRows: PaletteRow[] = [...customNodePackages.value.values()]
     .map((pkg) => ({
-      type: pkg.descriptor.type,
+      key: pkg.descriptor.type,
+      origin: "custom" as const,
+      value: pkg.descriptor.type,
       label: pkg.descriptor.label,
       color: pkg.descriptor.color ?? DEFAULT_KIND_STYLE.color,
       bgcolor: pkg.descriptor.bgcolor ?? DEFAULT_KIND_STYLE.bgcolor,
       icon: pkg.descriptor.icon ?? "◆",
+      // A custom node with no declared group falls into "general" --
+      // same fallback-at-the-consuming-end pattern color/bgcolor/icon
+      // already use above, not baked into validateCustomNodeDescriptor
+      // itself (custom-node.ts's own comment on this field).
+      group: pkg.descriptor.group ?? DEFAULT_KIND_STYLE.group,
     }))
     .filter((row) => row.label.toLowerCase().includes(needle));
+
+  return [...builtinRows, ...customRows];
 });
+
+// Section order: the three defaults first (general/network/hardware,
+// palette.ts's DEFAULT_NODE_GROUPS), even if a given session's rows don't
+// happen to populate all three, then any other group name (a custom
+// node's own, per the brief) appended in first-seen order. A group with
+// zero matching rows (e.g. filtered out, or simply unused this session)
+// is dropped rather than rendered as an empty header.
+const groupedRows = computed(() => {
+  const rows = allRows.value;
+  const order: string[] = [...DEFAULT_NODE_GROUPS];
+  for (const row of rows) {
+    if (!order.includes(row.group)) order.push(row.group);
+  }
+  return order.map((name) => ({ name, rows: rows.filter((row) => row.group === name) })).filter((section) => section.rows.length > 0);
+});
+
+function onRowClick(row: PaletteRow): void {
+  if (row.origin === "builtin") emit("add", row.value as NodeKind);
+  else emit("addCustom", row.value);
+}
 
 // Native HTML5 drag-and-drop, not a Rete plugin -- see this file's header
 // comment for why. `effectAllowed = "copy"` matches the gesture's actual
 // meaning (dragging a palette row creates a new node, doesn't move
-// anything out of the palette).
-function onDragStart(event: DragEvent, kind: NodeKind): void {
-  event.dataTransfer?.setData(DRAG_MIME, kind);
-  if (event.dataTransfer) event.dataTransfer.effectAllowed = "copy";
-}
-
-// Separate MIME type from the built-in kind's own DRAG_MIME -- a custom
-// node's payload is its own type id (an arbitrary namespaced string, e.g.
-// "custom/dht22"), not one of NodeKind's fixed literal union, so the drop
-// handler (main.ts) needs a way to tell which table to look the dropped
-// value up in without guessing from its shape.
-function onCustomDragStart(event: DragEvent, type: string): void {
-  event.dataTransfer?.setData(CUSTOM_DRAG_MIME, type);
+// anything out of the palette). Which MIME type carries the payload
+// depends on origin -- a custom node's value is its own namespaced type
+// id, not one of NodeKind's fixed literal union, so the drop handler
+// (main.ts) needs a way to tell which table to resolve it against without
+// guessing from its shape.
+function onRowDragStart(event: DragEvent, row: PaletteRow): void {
+  event.dataTransfer?.setData(row.origin === "builtin" ? DRAG_MIME : CUSTOM_DRAG_MIME, row.value);
   if (event.dataTransfer) event.dataTransfer.effectAllowed = "copy";
 }
 
@@ -179,15 +226,43 @@ async function onLoadCustomNode(): Promise<void> {
   padding: 10px 8px;
   box-sizing: border-box;
   overflow-y: auto;
+  overflow-x: hidden;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  transition: width 0.15s ease, padding 0.15s ease;
+}
+/* Manual collapse (UI-cleanup brief, 2026-09-04) -- shrinks to a thin
+   rail holding just the re-expand toggle, same "narrow strip stays
+   visible" shape as PropertyPanel.vue's selection-driven collapse. */
+.palette-sidebar.is-collapsed {
+  width: 28px;
+  padding: 10px 0;
 }
 .palette-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   font-size: 11px;
   color: #888;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 8px;
   padding: 0 2px;
+}
+.palette-sidebar.is-collapsed .palette-header {
+  justify-content: center;
+}
+.palette-collapse-toggle {
+  flex: 0 0 auto;
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  padding: 2px 4px;
+}
+.palette-collapse-toggle:hover {
+  color: #ddd;
 }
 .palette-filter {
   display: block;
