@@ -46,17 +46,37 @@ import { httpRequestNode } from "../src/node-library/http-request.js";
 
 const execFileAsync = promisify(execFile);
 const __dirname = dirname(fileURLToPath(import.meta.url));
-// resolveConfig isn't exercised here -- http_request stays registry-only
-// this session (config-node-and-palette-implementation-briefing.md's
-// explicit, flagged follow-up), still reading raw ssid/password directly.
-// Stub throws if ever called, matching every other node test file's
-// updated ctx.
+// 2026-09-04: http_request now derives its WiFi credentials from the
+// flow's own wifi_status node (wifi-status.ts's resolveFlowWifiCredentials,
+// via the new ctx.findNodesOfType() -- see that file's header for the bug
+// this fixes). resolveConfig itself still isn't exercised directly by
+// this node's OWN codegen (it has no config reference of its own -- the
+// lookup happens through the synthesized wifi_status node's properties,
+// resolved by resolveFlowWifiCredentials internally against ITS
+// wifiConfigId), so it stays a throwing stub, matching every other node
+// test file's convention for "this path shouldn't be hit."
+const fakeWifiConfigs = new Map<string, Record<string, unknown>>();
+let wifiStatusNodes: GraphNode[] = [];
 const ctx: CodegenContext = {
   uniqueName: (hint) => `_${hint}`,
   resolveConfig: (id) => {
-    throw new Error(`unexpected resolveConfig("${id}") call -- this test file's ctx doesn't stub any configs`);
+    const cfg = fakeWifiConfigs.get(id);
+    if (!cfg) throw new Error(`unexpected resolveConfig("${id}") call -- this test file's ctx only stubs wifi configs (see wifiStatusNodes)`);
+    return cfg;
   },
+  findNodesOfType: (type) => (type === "thingstudio/wifi_status" ? wifiStatusNodes : []),
 };
+
+beforeEach(() => {
+  fakeWifiConfigs.clear();
+  fakeWifiConfigs.set("unmanaged1", { security: "unmanaged" });
+  // Default: one wifi_status node, riding on an externally-managed
+  // connection -- matches this node's own old "open"/no-validation
+  // default closely enough that every pre-existing test below (which
+  // only cares about http behavior, not WiFi credentials) keeps passing
+  // unmodified.
+  wifiStatusNodes = [{ id: "wifi_status_1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "unmanaged1" } }];
+});
 
 function node(properties: Record<string, unknown>): GraphNode {
   return { id: "1", type: "thingstudio/http_request", properties };
@@ -216,5 +236,27 @@ describe("thingstudio/http_request node", () => {
   it("defaults path to / when the url has none", () => {
     const result = httpRequestNode.codegenTransform!(node({ url: "http://example.local" }), ctx);
     expect(result.functionBody).toContain('"/"');
+  });
+
+  it("throws a CompileError when the flow has no wifi_status node (2026-09-04: no ssid/password properties of its own any more)", () => {
+    wifiStatusNodes = [];
+    expect(() => httpRequestNode.codegenTransform!(node({ url: "http://example.local" }), ctx)).toThrow(CompileError);
+    expect(() => httpRequestNode.codegenTransform!(node({ url: "http://example.local" }), ctx)).toThrow(/http_request needs a "wifi_status" node/);
+  });
+
+  it("throws a CompileError when the flow has more than one wifi_status node (single-interface assumption, for now)", () => {
+    wifiStatusNodes = [
+      { id: "w1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "unmanaged1" } },
+      { id: "w2", type: "thingstudio/wifi_status", properties: { wifiConfigId: "unmanaged1" } },
+    ];
+    expect(() => httpRequestNode.codegenTransform!(node({ url: "http://example.local" }), ctx)).toThrow(/only one WiFi interface is supported today/);
+  });
+
+  it("derives ssid/password/security from the flow's wifi_status node instead of properties of its own", () => {
+    fakeWifiConfigs.set("wifi1", { ssid: "MyNet", password: "hunter2" });
+    wifiStatusNodes = [{ id: "wifi_status_1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "wifi1" } }];
+    const result = httpRequestNode.codegenTransform!(node({ url: "http://example.local" }), ctx);
+    expect(result.statements?.[0]?.code).toContain('"MyNet"');
+    expect(result.statements?.[0]?.code).toContain(".connect(");
   });
 });

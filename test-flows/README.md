@@ -34,11 +34,21 @@ Flow" at all; such a file would still need the compiler's own lower-level
 implementation-briefing.md, 2026-08-18) -- see `udp-echo-tester.flow.json`
 below, which loads through the real "Open Flow." **`mqtt_publish` and
 `mqtt_subscribe` are canvas-wired too, as of 2026-08-21** -- their first
-canvas presence at all, plus a `wifiConfigId` (WiFi network credentials)
-AND a `brokerConfigId` (`thingstudio/config/mqtt-broker` -- broker
-host/port and optional username/password) referenced independently,
-rather than either living as raw node properties. See `basic-mqtt.flow.json`
-below for the first sample flow exercising them.
+canvas presence at all, plus (at the time) a `wifiConfigId` (WiFi network
+credentials) AND a `brokerConfigId` (`thingstudio/config/mqtt-broker` --
+broker host/port and optional username/password) referenced
+independently, rather than either living as raw node properties.
+
+**2026-09-04: `wifiConfigId` removed from `mqtt_publish`/`mqtt_subscribe`
+(and `udp_send`/`udp_receive`/`http_request`) entirely** -- a flow's
+`wifi_status` node is now the sole source of WiFi credentials every other
+network node type derives from, fixing a real bug where two network
+nodes in one flow could otherwise reference disagreeing WiFi configs
+(`docs/working-notes/outstanding-items/wifi-single-owner-fix.md`). A
+flow needs exactly one `wifi_status` node if it uses any other network
+node type. `mqtt_publish`/`mqtt_subscribe` still each reference their own
+`brokerConfigId` -- unaffected, that was never part of the bug. See
+`basic-mqtt.flow.json` below for the sample flow exercising all of this.
 
 ## Bootstrapping a new board (`deploy_runtime.py`)
 
@@ -129,8 +139,11 @@ wrapped. Not run on real hardware -- that's this experiment.
 Mike's own minimal MQTT roundtrip test, 2026-09-02: `thingstudio/inject`
 ("manual", payload "hello mike!") -> `thingstudio/mqtt_publish` (topic
 "foobar", qos 0, retain false); `thingstudio/mqtt_subscribe` (same topic,
-qos 0) -> `thingstudio/debug`. One shared `thingstudio/config/wifi` and
-`thingstudio/config/mqtt-broker` config, referenced by both mqtt nodes.
+qos 0) -> `thingstudio/debug`; one `thingstudio/wifi_status` node
+providing the flow's WiFi credentials (2026-09-04: the only node in this
+flow with a WiFi config reference of its own -- see this doc's header
+note above), plus one shared `thingstudio/config/mqtt-broker` config
+referenced by both mqtt nodes' own `brokerConfigId`.
 
 **First real-hardware run of this file produced a silent failure** -- no
 debug output, no error. Dated Results entry:
@@ -153,6 +166,15 @@ Needs a real local broker reachable from the board (Mosquitto, matching
 recommended setup) -- broker host/port/credentials are in the file's own
 `configs` array, edit before deploying. Load via the browser ("Open
 Flow") same as the other files in this directory.
+
+**Update, 2026-09-04: confirmed working end-to-end on real hardware**
+(inject click -> publish -> subscribe -> debug), some edge cases flagged
+as deferred but not yet itemized -- see `docs/working-notes/outstanding-
+items/mqtt-hardware-validation.md`'s 2026-09-04 update. That confirmation
+predates the same-day single-wifi-owner fix (this doc's header note
+above) -- this file's own `wifiConfigId` properties were removed as part
+of that fix (a trivial edit; it already had its own `wifi_status` node),
+but it hasn't been redeployed and re-confirmed on real hardware since.
 
 ## Loading and deploying via the browser (the intended path now)
 

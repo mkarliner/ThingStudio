@@ -42,26 +42,32 @@
 // -- whichever network node compiles first brings the station interface
 // up under the shared dedup key.
 //
-// **Still NOT migrated to config nodes** (outstanding-items.md's "Network
-// / config nodes" section; explicitly out of scope for
-// redeploy-cleanup-and-network-fault-detection-briefing.md's Problem 2b)
-// -- this node keeps reading raw `ssid`/`password` off its own
-// `properties` directly, not `resolveWifiCredentials()`/`wifiConfigId`.
-// Passes `wifiSetupStatement()` a fixed `"open"` `security` below
-// specifically to preserve this node's pre-existing behavior unchanged
-// now that `wifiSetupStatement()` validates password-required for
-// `"password"`-security callers -- `"open"` skips that check regardless
-// of whether `password` is actually empty, matching what this node
-// always did before that check existed (connect with whatever password is
-// set, empty or not, no validation). Not a claim that this node's network
-// is actually open; a deliberate compatibility shim until this node gets
-// the same config-node treatment udp-send.ts/udp-receive.ts/wifi-status.ts
-// already have.
+// **Was NOT migrated to config nodes for a long time** (outstanding-
+// items.md's "Network / config nodes" section; explicitly out of scope
+// for redeploy-cleanup-and-network-fault-detection-briefing.md's Problem
+// 2b) -- this node used to keep reading raw `ssid`/`password` off its own
+// `properties` directly, passing `wifiSetupStatement()` a fixed `"open"`
+// security as a compatibility shim.
+//
+// **Migrated, 2026-09-04**, as part of Mike's own real-hardware finding
+// (wifi-status.ts's header has the full story): rather than gain its own
+// independent `wifiConfigId` property the way udp-send.ts/udp-receive.ts
+// once did, this node goes straight to the flow-wide derivation those two
+// (and mqtt-shared.ts) were updated to use the same day --
+// `resolveFlowWifiCredentials()` (wifi-status.ts), which requires exactly
+// one `wifi_status` node in the flow and uses ITS resolved WiFi config.
+// No `wifiConfigId`/raw ssid/password property of its own at all, ever --
+// this node had no canvas presence to migrate away from (still registry-
+// only, outstanding-items.md's "canvas-presence-gaps" -- unaffected by
+// this change). The old `"open"` compatibility shim is gone along with
+// it: security now comes through as whatever the flow's wifi_status node
+// actually has configured (`"password"`/`"open"`/`"unmanaged"`), same as
+// every other migrated network node type.
 
 import { CompileError } from "../compiler/errors.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, NodeDefinition, TransformCodegenResult } from "../compiler/node-definition.js";
-import { wifiSetupStatement } from "./wifi-status.js";
+import { resolveFlowWifiCredentials, wifiSetupStatement } from "./wifi-status.js";
 
 interface ParsedUrl {
   host: string;
@@ -147,9 +153,11 @@ finally:
     _writer.close()
 return msg`.trim();
 
+    const { ssid, password, security } = resolveFlowWifiCredentials(ctx, "http_request");
+
     return {
       imports: ["import network"],
-      statements: [wifiSetupStatement(node.properties.ssid, node.properties.password, "open")],
+      statements: [wifiSetupStatement(ssid, password, security)],
       functionName: ctx.uniqueName("http_request"),
       functionBody,
     };

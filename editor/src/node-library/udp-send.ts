@@ -59,6 +59,12 @@
 // silent "no config -> ride on whatever's connected" fallback is exactly
 // what let a stale/unrelated connection look like this flow's own).
 //
+// **Superseded, 2026-09-04**: this node no longer has a `wifiConfigId`
+// property at all -- see wifi-status.ts's header for the bug this fixes
+// (this node's own independently-selectable WiFi config could silently
+// disagree with wifi_status's) and `resolveFlowWifiCredentials()`, which
+// this node now calls instead of `resolveWifiCredentials()` directly.
+//
 // Redeploy resource cleanup (same briefing, Problem 1): the socket setup
 // statement below now self-registers a `runtime.register_cleanup()` call
 // closing the shared send socket -- device-runtime/src/runtime.py's
@@ -82,7 +88,7 @@ import { CompileError } from "../compiler/errors.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, NodeDefinition, SinkCodegenResult } from "../compiler/node-definition.js";
 import { payloadToBytesSnippet } from "./py-literals.js";
-import { resolveWifiCredentials, wifiSetupStatement } from "./wifi-status.js";
+import { resolveFlowWifiCredentials, wifiSetupStatement } from "./wifi-status.js";
 
 export const UDP_SEND_SOCK_VAR = "_udp_send_sock";
 export const UDP_SEND_SETUP_KEY = "udp-send-sock";
@@ -141,7 +147,7 @@ async def ${sendFnName}():
             await asyncio.sleep_ms(${SEND_RETRY_POLL_MS})
 await asyncio.wait_for(${sendFnName}(), ${timeoutS})`.trim();
 
-    const { ssid, password, security } = resolveWifiCredentials(node.properties, ctx, "udp_send");
+    const { ssid, password, security } = resolveFlowWifiCredentials(ctx, "udp_send");
 
     return {
       imports: ["import socket", "import errno", "import network"],

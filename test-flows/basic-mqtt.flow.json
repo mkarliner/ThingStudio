@@ -17,7 +17,6 @@
         "topic": "foobar",
         "retain": false,
         "qos": 0,
-        "wifiConfigId": "1b1ff863-cb83-4567-af04-4d720eee028b",
         "brokerConfigId": "ef01cb90-dda3-4708-86a0-c7d52db02539"
       }
     },
@@ -27,7 +26,6 @@
       "properties": {
         "topic": "foobar",
         "qos": 0,
-        "wifiConfigId": "1b1ff863-cb83-4567-af04-4d720eee028b",
         "brokerConfigId": "ef01cb90-dda3-4708-86a0-c7d52db02539"
       }
     },

@@ -80,6 +80,11 @@
 // the full reasoning. **`wifiConfigId` made mandatory 2026-08-20** --
 // same reversal as udp-send.ts, see wifi-status.ts's header.
 //
+// **Superseded, 2026-09-04**: same treatment as udp-send.ts -- this node
+// no longer has a `wifiConfigId` property at all, and now calls
+// `resolveFlowWifiCredentials()` instead of `resolveWifiCredentials()`
+// directly. See wifi-status.ts's header for the bug this fixes.
+//
 // Redeploy resource cleanup + loud network errors (redeploy-cleanup-and-
 // network-fault-detection-briefing.md, Problems 1 and 2a) -- same
 // treatment as udp-send.ts, see that file's header for the full
@@ -93,7 +98,7 @@
 import { CompileError } from "../compiler/errors.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, NodeDefinition, SourceCodegenResult } from "../compiler/node-definition.js";
-import { resolveWifiCredentials, wifiSetupStatement } from "./wifi-status.js";
+import { resolveFlowWifiCredentials, wifiSetupStatement } from "./wifi-status.js";
 
 // Conservative fixed recv buffer -- comfortably under the ~1472-byte
 // practical UDP payload ceiling on a standard 1500-byte-MTU Ethernet/WiFi
@@ -146,7 +151,7 @@ export const udpReceiveNode: NodeDefinition = {
       "msg = {'payload': _udp_data, 'topic': '', 'host': _udp_addr[0], 'port': _udp_addr[1]}",
     ].join("\n");
 
-    const { ssid, password, security } = resolveWifiCredentials(node.properties, ctx, "udp_receive");
+    const { ssid, password, security } = resolveFlowWifiCredentials(ctx, "udp_receive");
 
     const setupKey = `udp-receive-${port}`;
     return {

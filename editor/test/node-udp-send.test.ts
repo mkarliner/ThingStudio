@@ -65,6 +65,20 @@ const fakeConfigs = new Map<string, Record<string, unknown>>();
 function setConfig(id: string, properties: Record<string, unknown>): void {
   fakeConfigs.set(id, properties);
 }
+// Synthetic wifi_status node(s), 2026-09-04: udp_send no longer carries
+// its own wifiConfigId (wifi-status.ts's header has the full story --
+// this node now derives WiFi credentials from the flow's own wifi_status
+// node via ctx.findNodesOfType()). `node()` below still accepts
+// `wifiConfigId` as a convenience so this file's many existing call sites
+// (written when udp_send DID carry its own) need no per-line changes: it
+// stashes whatever id is passed into this shared array instead of onto
+// the real udp_send properties, synthesizing exactly the flow shape
+// compile.ts's real findNodesOfType would see for a flow with one
+// wifi_status node pointed at that config. Reset to empty (= "no
+// wifi_status node in this flow") in beforeEach, same "explicit stand-in,
+// not an implicit fallback" spirit as fakeConfigs/setConfig above.
+let wifiStatusNodes: GraphNode[] = [];
+
 const ctx: CodegenContext = {
   uniqueName: (hint) => `_${hint}`,
   resolveConfig: (id) => {
@@ -72,6 +86,7 @@ const ctx: CodegenContext = {
     if (!cfg) throw new CompileError(`referenced config "${id}" not found`);
     return cfg;
   },
+  findNodesOfType: (type) => (type === "thingstudio/wifi_status" ? wifiStatusNodes : []),
 };
 
 beforeEach(() => {
@@ -79,10 +94,15 @@ beforeEach(() => {
   // Stand-in for "no managed connection" now that wifiConfigId is
   // mandatory -- see this file's header.
   setConfig("unmanaged1", { security: "unmanaged" });
+  wifiStatusNodes = [];
 });
 
 function node(properties: Record<string, unknown>): GraphNode {
-  return { id: "1", type: "thingstudio/udp_send", properties };
+  const { wifiConfigId, ...rest } = properties;
+  if (typeof wifiConfigId === "string") {
+    wifiStatusNodes = [{ id: "wifi_status_1", type: "thingstudio/wifi_status", properties: { wifiConfigId } }];
+  }
+  return { id: "1", type: "thingstudio/udp_send", properties: rest };
 }
 
 function indent(code: string, spaces: number): string {
@@ -209,9 +229,17 @@ describe("thingstudio/udp_send node", () => {
     expect(result.functionBody).toContain('raise OSError("udp_send: could not resolve %s:%s: %r" % ("example.invalid", 4242, _e))');
   });
 
-  it("throws a CompileError when wifiConfigId is not set (Problem 2b Option B: mandatory as of 2026-08-20)", () => {
+  it("throws a CompileError when the flow has no wifi_status node (2026-09-04: no wifiConfigId of its own any more, derives from wifi_status instead)", () => {
     expect(() => udpSendNode.codegenSink!(node({ host: "h", port: 1 }), ctx)).toThrow(CompileError);
-    expect(() => udpSendNode.codegenSink!(node({ host: "h", port: 1 }), ctx)).toThrow(/udp_send requires a WiFi config/);
+    expect(() => udpSendNode.codegenSink!(node({ host: "h", port: 1 }), ctx)).toThrow(/udp_send needs a "wifi_status" node/);
+  });
+
+  it("throws a CompileError when the flow has more than one wifi_status node (single-interface assumption, for now)", () => {
+    wifiStatusNodes = [
+      { id: "w1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "unmanaged1" } },
+      { id: "w2", type: "thingstudio/wifi_status", properties: { wifiConfigId: "unmanaged1" } },
+    ];
+    expect(() => udpSendNode.codegenSink!(node({ host: "h", port: 1 }), ctx)).toThrow(/only one WiFi interface is supported today/);
   });
 
   it("brings the WiFi station interface up with no connect call when the referenced config's security is 'unmanaged'", () => {

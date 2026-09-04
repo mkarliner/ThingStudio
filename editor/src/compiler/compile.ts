@@ -182,6 +182,15 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
       if (!cfg) throw new CompileError(`referenced config "${id}" not found`);
       return cfg.properties;
     },
+    // node-definition.ts's own doc comment covers why this exists (single-
+    // wifi-node-owns-WiFi-credentials fix, 2026-09-04). A plain filter
+    // over the same graphData.nodes array already walked above -- graph
+    // order, no special-casing, since this file's job is just "hand back
+    // the right nodes," same framing resolveConfig's own doc comment
+    // gives for config lookups.
+    findNodesOfType(type: string): GraphNode[] {
+      return graphData.nodes.filter((n) => n.type === type);
+    },
   };
 
   const imports = new Set<string>(["import runtime"]);

@@ -126,6 +126,28 @@ export interface CodegenContext {
    * not validating what's inside it.
    */
   resolveConfig(id: string): Record<string, unknown>;
+  /**
+   * Returns every node in the flow whose `type` matches exactly (e.g.
+   * "thingstudio/wifi_status"), in graph order -- lets a node type derive
+   * shared state from another node's own instance-level properties,
+   * rather than only from a config node's static data (`resolveConfig`
+   * above). First real use, 2026-09-04: `mqtt_publish`/`mqtt_subscribe`/
+   * `http_request`/`udp_send`/`udp_receive` no longer carry their own
+   * independent `wifiConfigId` property -- each derives WiFi credentials
+   * from the flow's own `thingstudio/wifi_status` node instead (see
+   * wifi-status.ts's `resolveFlowWifiCredentials()`), fixing a real bug
+   * Mike found hands-on: nothing stopped two network nodes in one flow
+   * from independently referencing two DIFFERENT wifi configs (one
+   * "unmanaged", one with real credentials) for the one physical radio
+   * they both actually share. Optional, not required, so every existing
+   * hand-rolled `CodegenContext` mock in this repo's test suite that
+   * doesn't touch WiFi resolution keeps compiling unchanged (cheap-by-
+   * default, CLAUDE.md) -- compile.ts's own real implementation always
+   * provides it. Not validated for count here -- zero, one, or many is
+   * a call for whichever caller asks (today: exactly one is correct,
+   * zero/many are both CompileErrors -- see resolveFlowWifiCredentials()).
+   */
+  findNodesOfType?(type: string): GraphNode[];
 }
 
 export interface NodeDefinition {

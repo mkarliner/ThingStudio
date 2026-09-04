@@ -97,6 +97,40 @@
 // `buildMsg` sets `msg = None`). The very first poll always reports,
 // matching the old behavior for that one case.
 
+//
+// **This node is now the flow's sole owner of WiFi identity, 2026-09-04
+// (Mike's own real-hardware finding, same day):** every other network
+// node type that needs the station interface up -- udp_send, udp_receive,
+// mqtt_publish, mqtt_subscribe, http_request -- used to carry its OWN
+// independent `wifiConfigId` property, letting a flow author point each
+// one at a different `thingstudio/config/wifi` config with nothing to
+// stop them disagreeing. Mike hit this directly: setting THIS node's own
+// config to "unmanaged" (this file's header above, "ride on an existing
+// connection") did nothing to stop an mqtt_publish node elsewhere in the
+// same flow from still pointing at a config with a real ssid -- two
+// contradictory claims about one physical radio, neither compiler-checked
+// against the other. Fixed by removing `wifiConfigId` from every node
+// type except this one: udp_send/udp_receive/mqtt_publish/mqtt_subscribe/
+// http_request now derive their WiFi credentials from THIS node's own
+// resolved config instead of a config reference of their own --
+// `resolveFlowWifiCredentials()` below is the shared lookup, via the new
+// `ctx.findNodesOfType()` (node-definition.ts). Assumes exactly one
+// `wifi_status` node per flow for now (Mike's own explicit call, same
+// day) -- zero or more than one is a CompileError, not a silent pick of
+// "whichever one" the way mergeSetup's key-dedup silently picks a winner
+// elsewhere in this codebase. Deliberately not a one-way door against the
+// multi-interface future this project already wants to keep open (this
+// file's own "possible future enhancement" note above, and Mike's own
+// explicit ask): the day a board legitimately needs a second interface,
+// each interface gets its own `wifi_status` node, and the network node
+// types gain one new property picking which one to derive from -- old
+// flows with exactly one `wifi_status` node need no migration at all,
+// since "the sole one" is still an unambiguous, correct default. This
+// node's own `wifiConfigId` property, and its use of
+// `resolveWifiCredentials()` below, are unaffected by this change -- it
+// was never part of the bug (it's the one place a wifi config selection
+// was always supposed to live).
+
 import { CompileError } from "../compiler/errors.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, SourceCodegenResult } from "../compiler/node-definition.js";
@@ -150,6 +184,48 @@ export function resolveWifiCredentials(
   const resolved = ctx.resolveConfig(String(configId));
   const security: WifiSecurity = resolved.security === "open" || resolved.security === "unmanaged" ? resolved.security : "password";
   return { ssid: resolved.ssid, password: resolved.password, security };
+}
+
+/** The flow-wide counterpart to resolveWifiCredentials() above -- see this
+ * file's 2026-09-04 header note for the bug this fixes and the design.
+ * Looks up the flow's own `thingstudio/wifi_status` node (via
+ * `ctx.findNodesOfType()`, node-definition.ts) and resolves WiFi
+ * credentials from THAT NODE'S OWN `wifiConfigId`, not from the calling
+ * node's own properties -- callers (udp-send.ts, udp-receive.ts,
+ * mqtt-shared.ts, http-request.ts) no longer have a `wifiConfigId`
+ * property of their own at all. `nodeTypeLabel` (e.g. "mqtt_publish") is
+ * folded into every error message so it's attributable without opening
+ * generated source, same convention resolveWifiCredentials() itself uses.
+ *
+ * Assumes exactly one `wifi_status` node per flow (this file's header) --
+ * zero or more than one is a loud CompileError, not a silent pick. The
+ * `ctx.findNodesOfType` call itself is guarded (it's an optional method,
+ * node-definition.ts) purely for the test-suite mocks that predate this
+ * function and never touch WiFi resolution -- compile.ts's real
+ * CodegenContext always provides it, so a real compile can never actually
+ * hit that branch. */
+export function resolveFlowWifiCredentials(
+  ctx: CodegenContext,
+  nodeTypeLabel: string,
+): { ssid: unknown; password: unknown; security: WifiSecurity } {
+  const finder = ctx.findNodesOfType;
+  if (!finder) {
+    throw new CompileError(
+      `${nodeTypeLabel}: this compiler context can't look up the flow's wifi_status node (findNodesOfType missing) -- internal error, not a flow-authoring mistake`,
+    );
+  }
+  const wifiNodes = finder("thingstudio/wifi_status");
+  if (wifiNodes.length === 0) {
+    throw new CompileError(
+      `${nodeTypeLabel} needs a "wifi_status" node in this flow to supply WiFi credentials -- add one and set its WiFi config (${nodeTypeLabel} no longer has a WiFi config of its own, see wifi-status.ts)`,
+    );
+  }
+  if (wifiNodes.length > 1) {
+    throw new CompileError(
+      `${nodeTypeLabel}: found ${wifiNodes.length} "wifi_status" nodes in this flow -- only one WiFi interface is supported today (multiple wifi_status nodes, one per interface, is a planned future extension, not yet built)`,
+    );
+  }
+  return resolveWifiCredentials(wifiNodes[0]!.properties, ctx, "wifi_status");
 }
 
 /** Builds the shared "bring the station interface up, optionally with

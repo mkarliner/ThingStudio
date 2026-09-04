@@ -11,11 +11,11 @@
 //   - gpio_out:     pin                                       (node-library/gpio-out.ts)
 //   - timer:        intervalMs                                (node-library/timer.ts)
 //   - interrupt:    pin, edge, debounce, debounceMs           (node-library/interrupt.ts)
-//   - wifi_status:  pollMs, wifiConfigId                       (node-library/wifi-status.ts)
-//   - udp_send:     host, port, timeoutMs, wifiConfigId        (node-library/udp-send.ts)
-//   - udp_receive:  port, pollMs, wifiConfigId                 (node-library/udp-receive.ts)
-//   - mqtt_publish:   topic, retain, qos, wifiConfigId, brokerConfigId   (node-library/mqtt-publish.ts)
-//   - mqtt_subscribe: topic, qos, wifiConfigId, brokerConfigId          (node-library/mqtt-subscribe.ts)
+//   - wifi_status:  pollMs, wifiConfigId                       (node-library/wifi-status.ts -- the flow's ONLY node with its own wifiConfigId, 2026-09-04, see that file's header)
+//   - udp_send:     host, port, timeoutMs                      (node-library/udp-send.ts -- wifiConfigId removed 2026-09-04, derives from the flow's wifi_status node instead)
+//   - udp_receive:  port, pollMs                                (node-library/udp-receive.ts -- same removal)
+//   - mqtt_publish:   topic, retain, qos, brokerConfigId          (node-library/mqtt-publish.ts -- wifiConfigId removed 2026-09-04, same reason)
+//   - mqtt_subscribe: topic, qos, brokerConfigId                 (node-library/mqtt-subscribe.ts -- same removal)
 //
 // poc-rete's fake type set doesn't match 1:1
 // (rete-migration-implementation-briefing.md's callout): "mqtt out" was
@@ -33,33 +33,42 @@
 //
 // wifi_status/udp_send/udp_receive are newer still -- config-node-and-
 // palette-implementation-briefing.md (2026-08-18), following interrupt's
-// own wiring exactly as its own worked example. Each carries a
-// `wifiConfigId` property (empty string = "no config referenced yet",
-// resolveWifiCredentials()'s own contract, wifi-status.ts) bound to a
-// ConfigRefField in PropertyPanel.vue rather than raw ssid/password
-// fields -- the actual fix for the credential-duplication problem this
-// session exists to close. Same "unverified in a real browser until
-// Mike's hands-on pass" caveat as every prior canvas-wiring session.
-// http_request stays registry-only, an explicit flagged follow-up -- see
-// that briefing's own success-criteria section.
+// own wiring exactly as its own worked example. Each originally carried
+// its own `wifiConfigId` property (empty string = "no config referenced
+// yet", resolveWifiCredentials()'s own contract, wifi-status.ts) bound to
+// a ConfigRefField in PropertyPanel.vue rather than raw ssid/password
+// fields -- the fix for the credential-duplication problem that session
+// existed to close. http_request stays registry-only, an explicit
+// flagged follow-up at the time (see that briefing's own success-criteria
+// section).
+//
+// **`wifiConfigId` removed from udp_send/udp_receive/mqtt_publish/
+// mqtt_subscribe, 2026-09-04** (Mike's own real-hardware finding,
+// wifi-status.ts's header has the full story): the credential-duplication
+// fix above stopped ssid/password being TYPED IN more than once, but
+// nothing stopped each node's own independent config REFERENCE from
+// silently disagreeing with another network node's -- wifi_status is now
+// the flow's one and only source of WiFi credentials, and every other
+// network node type derives from it instead of picking its own. Only
+// wifi_status keeps a `wifiConfigId` property; the ConfigRefField this
+// paragraph used to describe on udp_send/udp_receive's own panel sections
+// is gone (PropertyPanel.vue).
 //
 // mqtt_publish/mqtt_subscribe are newer still (2026-08-21): given the same
-// config-node migration (wifiConfigId, not raw ssid/password) AND, unlike
-// wifi_status/udp_send/udp_receive, first-time canvas wiring at all --
-// they'd been registry-only since introduction, per this file's own
-// now-corrected header above. Same ConfigRefField pattern, EXCEPT
-// mqtt-shared.ts's parseMqttBrokerProps rejects a referenced WiFi config
-// whose security is "unmanaged" outright (mqtt_as always needs real
-// credentials to drive its own connect/reconnect loop) -- so
-// PropertyPanel.vue's hint text for these two kinds does NOT repeat the
-// "pick unmanaged" advice the other three kinds' hints give. Same day, on
-// Mike's own follow-up request: a SECOND config reference,
-// `brokerConfigId` (`thingstudio/config/mqtt-broker`, config-types.ts),
-// replacing what used to be raw `broker`/`port` properties on these two
-// classes -- the WiFi config and the broker config are independent (see
-// mqtt-shared.ts's header), so each node carries both `wifiConfigId` and
-// `brokerConfigId`, bound to two separate ConfigRefField instances in
-// PropertyPanel.vue.
+// config-node migration (wifiConfigId, not raw ssid/password, at the
+// time) AND, unlike wifi_status/udp_send/udp_receive, first-time canvas
+// wiring at all -- they'd been registry-only since introduction, per this
+// file's own now-corrected header above. Same day, on Mike's own follow-
+// up request: a second config reference, `brokerConfigId`
+// (`thingstudio/config/mqtt-broker`, config-types.ts), replacing what
+// used to be raw `broker`/`port` properties on these two classes -- see
+// mqtt-shared.ts's header for the broker-config design.
+//
+// **`wifiConfigId` removed 2026-09-04** along with udp_send/udp_receive's
+// (see this file's header paragraph above and wifi-status.ts's own
+// header) -- these two kinds now carry only `brokerConfigId`, one
+// ConfigRefField, not two; the WiFi side derives from the flow's own
+// wifi_status node instead of a config reference of their own.
 //
 // §6 wire-type system (docs/working-notes/wire-type-system-scoping.md):
 // every port constructed below reads its real socket type from the
@@ -340,11 +349,10 @@ export class UdpSendNode extends ClassicPreset.Node {
   nodeType = "thingstudio/udp_send";
   highlighted = false;
 
-  properties: { host: string; port: number; timeoutMs: number; wifiConfigId: string } = {
+  properties: { host: string; port: number; timeoutMs: number } = {
     host: "",
     port: 9999,
     timeoutMs: 2000,
-    wifiConfigId: "",
   };
 
   constructor() {
@@ -360,10 +368,9 @@ export class UdpReceiveNode extends ClassicPreset.Node {
   nodeType = "thingstudio/udp_receive";
   highlighted = false;
 
-  properties: { port: number; pollMs: number; wifiConfigId: string } = {
+  properties: { port: number; pollMs: number } = {
     port: 9998,
     pollMs: 20,
-    wifiConfigId: "",
   };
 
   constructor() {
@@ -379,19 +386,18 @@ export class MqttPublishNode extends ClassicPreset.Node {
   nodeType = "thingstudio/mqtt_publish";
   highlighted = false;
 
-  // wifiConfigId/brokerConfigId: "" sentinel, same convention as every
-  // other config-node-referencing kind above -- see WifiStatusNode's own
-  // comment. Two independent config references, not one -- see
-  // mqtt-shared.ts's header for why the WiFi network and the MQTT broker
-  // are separate configs with separate credentials. retain defaults
+  // brokerConfigId: "" sentinel, same convention as WifiStatusNode's own
+  // wifiConfigId. Just one config reference now, not two -- this class's
+  // own wifiConfigId was removed 2026-09-04 (this file's header
+  // paragraph); the WiFi network now comes from the flow's own
+  // wifi_status node instead (mqtt-shared.ts's header). retain defaults
   // false / qos defaults 0, matching mqtt-publish.ts's own
   // Number(...??...) defaults exactly (a freshly-dropped node and a
   // freshly-omitted property on a hand-edited flow file compile the same).
-  properties: { topic: string; retain: boolean; qos: 0 | 1; wifiConfigId: string; brokerConfigId: string } = {
+  properties: { topic: string; retain: boolean; qos: 0 | 1; brokerConfigId: string } = {
     topic: "",
     retain: false,
     qos: 0,
-    wifiConfigId: "",
     brokerConfigId: "",
   };
 
@@ -408,10 +414,11 @@ export class MqttSubscribeNode extends ClassicPreset.Node {
   nodeType = "thingstudio/mqtt_subscribe";
   highlighted = false;
 
-  properties: { topic: string; qos: 0 | 1; wifiConfigId: string; brokerConfigId: string } = {
+  // brokerConfigId: "" sentinel -- wifiConfigId removed 2026-09-04, see
+  // MqttPublishNode's own comment above (identical reasoning).
+  properties: { topic: string; qos: 0 | 1; brokerConfigId: string } = {
     topic: "",
     qos: 0,
-    wifiConfigId: "",
     brokerConfigId: "",
   };
 

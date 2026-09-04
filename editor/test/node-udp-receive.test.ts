@@ -71,6 +71,11 @@ const fakeConfigs = new Map<string, Record<string, unknown>>();
 function setConfig(id: string, properties: Record<string, unknown>): void {
   fakeConfigs.set(id, properties);
 }
+// Synthetic wifi_status node(s), 2026-09-04 -- see node-udp-send.test.ts's
+// own comment on this exact mechanism (identical reasoning, this node got
+// the identical treatment the same day).
+let wifiStatusNodes: GraphNode[] = [];
+
 const ctx: CodegenContext = {
   uniqueName: (hint) => `_${hint}`,
   resolveConfig: (id) => {
@@ -78,15 +83,21 @@ const ctx: CodegenContext = {
     if (!cfg) throw new CompileError(`referenced config "${id}" not found`);
     return cfg;
   },
+  findNodesOfType: (type) => (type === "thingstudio/wifi_status" ? wifiStatusNodes : []),
 };
 
 beforeEach(() => {
   fakeConfigs.clear();
   setConfig("unmanaged1", { security: "unmanaged" });
+  wifiStatusNodes = [];
 });
 
 function node(properties: Record<string, unknown>): GraphNode {
-  return { id: "1", type: "thingstudio/udp_receive", properties };
+  const { wifiConfigId, ...rest } = properties;
+  if (typeof wifiConfigId === "string") {
+    wifiStatusNodes = [{ id: "wifi_status_1", type: "thingstudio/wifi_status", properties: { wifiConfigId } }];
+  }
+  return { id: "1", type: "thingstudio/udp_receive", properties: rest };
 }
 
 function delay(ms: number): Promise<void> {
@@ -260,9 +271,17 @@ describe("thingstudio/udp_receive node", () => {
     expect(result.buildMsg).toContain('raise OSError("udp_receive on port 4242 failed: %r" % (_e,))');
   });
 
-  it("throws a CompileError when wifiConfigId is not set (Problem 2b Option B: mandatory as of 2026-08-20)", () => {
+  it("throws a CompileError when the flow has no wifi_status node (2026-09-04: no wifiConfigId of its own any more, derives from wifi_status instead)", () => {
     expect(() => udpReceiveNode.codegenSource!(node({ port: 4242 }), ctx)).toThrow(CompileError);
-    expect(() => udpReceiveNode.codegenSource!(node({ port: 4242 }), ctx)).toThrow(/udp_receive requires a WiFi config/);
+    expect(() => udpReceiveNode.codegenSource!(node({ port: 4242 }), ctx)).toThrow(/udp_receive needs a "wifi_status" node/);
+  });
+
+  it("throws a CompileError when the flow has more than one wifi_status node (single-interface assumption, for now)", () => {
+    wifiStatusNodes = [
+      { id: "w1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "unmanaged1" } },
+      { id: "w2", type: "thingstudio/wifi_status", properties: { wifiConfigId: "unmanaged1" } },
+    ];
+    expect(() => udpReceiveNode.codegenSource!(node({ port: 4242 }), ctx)).toThrow(/only one WiFi interface is supported today/);
   });
 
   it("two udp_receive nodes on the same port share one socket setup (dedup)", () => {
@@ -298,8 +317,12 @@ describe("thingstudio/udp_receive node", () => {
   it("compiles into a full flow with the expected structure (source text only)", () => {
     const graph: GraphData = {
       nodes: [
-        { id: "1", type: "thingstudio/udp_receive", properties: { port: 4242, wifiConfigId: "unmanaged1" } },
+        { id: "1", type: "thingstudio/udp_receive", properties: { port: 4242 } },
         { id: "2", type: "thingstudio/debug", properties: {} },
+        // 2026-09-04: udp_receive no longer has its own wifiConfigId --
+        // this wifi_status node is the flow's sole source of WiFi
+        // credentials now (wifi-status.ts's header).
+        { id: "3", type: "thingstudio/wifi_status", properties: { pollMs: 5000, wifiConfigId: "unmanaged1" } },
       ],
       links: [[1, "1", 0, "2", 0, "bytes"]],
       configs: [{ id: "unmanaged1", type: "thingstudio/config/wifi", properties: { security: "unmanaged" } }],
@@ -314,10 +337,10 @@ describe("thingstudio/udp_receive node", () => {
     expect(source).toMatch(/await asyncio\.sleep_ms\(10\)\s*$/m);
   });
 
-  it("compiles a full flow sharing one wifi config with a wifi_status node (proof of the actual fix)", () => {
+  it("derives its WiFi credentials from the flow's one wifi_status node -- no wifiConfigId of its own any more (2026-09-04 fix)", () => {
     const graph: GraphData = {
       nodes: [
-        { id: "1", type: "thingstudio/udp_receive", properties: { port: 4242, wifiConfigId: "wifi1" } },
+        { id: "1", type: "thingstudio/udp_receive", properties: { port: 4242 } },
         { id: "2", type: "thingstudio/debug", properties: {} },
         { id: "3", type: "thingstudio/wifi_status", properties: { pollMs: 5000, wifiConfigId: "wifi1" } },
       ],
@@ -325,10 +348,39 @@ describe("thingstudio/udp_receive node", () => {
       configs: [{ id: "wifi1", type: "thingstudio/config/wifi", properties: { ssid: "SharedNet", password: "sharedpw" } }],
     };
     const { source } = compile(graph, buildRegistry());
-    // Exactly one wifi-sta setup statement -- both nodes referencing the
-    // same config id dedup onto one shared connect, not two independently
-    // typed-in credentials that could drift.
+    // Exactly one wifi-sta setup statement -- udp_receive has no config
+    // reference of its own to disagree with wifi_status's any more, so
+    // there's only ever one credential source to dedup onto in the first
+    // place (this file's own header, the bug this replaced).
     expect(source.match(/_wifi_sta = network\.WLAN/g)?.length).toBe(1);
     expect(source).toContain('"SharedNet"');
+  });
+
+  it("rejects a flow with no wifi_status node at all", () => {
+    const graph: GraphData = {
+      nodes: [
+        { id: "1", type: "thingstudio/udp_receive", properties: { port: 4242 } },
+        { id: "2", type: "thingstudio/debug", properties: {} },
+      ],
+      links: [[1, "1", 0, "2", 0, "bytes"]],
+      configs: [],
+    };
+    expect(() => compile(graph, buildRegistry())).toThrow(/udp_receive needs a "wifi_status" node/);
+  });
+
+  it("rejects a flow with two wifi_status nodes (single-interface assumption, for now)", () => {
+    const graph: GraphData = {
+      nodes: [
+        { id: "1", type: "thingstudio/udp_receive", properties: { port: 4242 } },
+        { id: "2", type: "thingstudio/debug", properties: {} },
+        { id: "3", type: "thingstudio/wifi_status", properties: { pollMs: 5000, wifiConfigId: "wifi1" } },
+        { id: "4", type: "thingstudio/wifi_status", properties: { pollMs: 5000, wifiConfigId: "wifi1" } },
+      ],
+      links: [
+        [1, "1", 0, "2", 0, "bytes"],
+      ],
+      configs: [{ id: "wifi1", type: "thingstudio/config/wifi", properties: { ssid: "SharedNet", password: "sharedpw" } }],
+    };
+    expect(() => compile(graph, buildRegistry())).toThrow(/only one WiFi interface is supported today/);
   });
 });
