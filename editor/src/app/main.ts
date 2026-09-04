@@ -386,14 +386,56 @@ el("btnOpenFlow").addEventListener("click", async () => {
 // Console
 // ---------------------------------------------------------------------
 const consoleEl = el("console");
-function logLine(text: string, cls?: "ok" | "err" | ""): void {
+// `nodeId` (added 2026-09-04, phase 2 of decisions.md's "Stable node IDs"
+// entry -- the actual console click-to-navigate ask this whole change
+// started from): when a log line names a real node, the message span
+// becomes clickable, wired to locateNode() below. Every call site below
+// that knows a node id passes it through; every other call (most of
+// them) simply omits it and gets the old plain, unclickable line.
+function logLine(text: string, cls?: "ok" | "err" | "", nodeId?: string): void {
   const row = document.createElement("div");
   const now = new Date();
   const ts = now.toLocaleTimeString(undefined, { hour12: false }) + "." + String(now.getMilliseconds()).padStart(3, "0");
   row.innerHTML = `<span class="t">[${ts}] </span><span class="${cls ?? ""}"></span>`;
-  row.querySelector("span:last-child")!.textContent = text;
+  const msgSpan = row.querySelector("span:last-child")!;
+  msgSpan.textContent = text;
+  if (nodeId !== undefined) {
+    msgSpan.classList.add("node-link");
+    msgSpan.setAttribute("title", "click to locate this node on the canvas");
+    msgSpan.addEventListener("click", () => locateNode(nodeId));
+  }
   consoleEl.appendChild(row);
   consoleEl.scrollTop = consoleEl.scrollHeight;
+}
+
+/**
+ * Console click-to-navigate (phase 2, 2026-09-04 -- Mike's original ask:
+ * "make messages clickable and highlight/focus on the transmitting
+ * node"). Selects the node (drives PropertyPanel.vue the same way
+ * clicking it directly on the canvas does, editor-setup.ts's own
+ * `nodepicked` pipe) and pans/zooms it into view (editor-setup.ts's new
+ * `focusNode()`, scoped AreaExtensions.zoomAt()) -- deliberately does NOT
+ * also force the red `highlighted` flag on: that's reserved for a real
+ * NODE_ERROR/compile error (highlightNode() above), and reusing it here
+ * would make an ordinary DEBUG-line click look like an error report.
+ * Same untrusted-input handling as highlightNode(): an id that doesn't
+ * resolve to a live node (removed since, or from a different flow) is
+ * reported, not thrown.
+ */
+function locateNode(nodeId: string): void {
+  const node = reteEditor.getNode(nodeId) as AnyThingstudioNode | undefined;
+  if (!node) {
+    logLine(`[locate: node ${nodeId} not found on the canvas -- removed since, or from a different flow]`, "err");
+    return;
+  }
+  // selectNode() drives both the property panel (selectedNode) and
+  // Rete's own visual "selected" highlight (editor-setup.ts's new
+  // selectNode(), 2026-09-04 fix -- a plain `selectedNode.value = node`
+  // here opened the property panel but never touched the canvas's own
+  // node.selected flag, so the node itself never visually highlighted;
+  // Mike caught this on the first real click-through).
+  void reteHandle.selectNode(node);
+  void reteHandle.focusNode(node);
 }
 el("btnClear").addEventListener("click", () => (consoleEl.innerHTML = ""));
 
@@ -577,7 +619,7 @@ function highlightNodeFromMpyError(stderrText: string): void {
   // "custom" for every loaded custom node type, nodeType is the real,
   // specific type id regardless of first-party or custom (docs/working-
   // notes/custom-node-authoring-scoping.md, 2026-08-20).
-  logLine(`[compile error attributed to node ${range.nodeId} (${node.nodeType}), source line ${lineNo}]`, "err");
+  logLine(`[compile error attributed to node ${range.nodeId} (${node.nodeType}), source line ${lineNo}]`, "err", range.nodeId);
 }
 
 function highlightNodeFromNodeError(nodeId: string): void {
@@ -591,7 +633,7 @@ function highlightNodeFromNodeError(nodeId: string): void {
   // here, not trusted blindly.
   const node = highlightNode(nodeId);
   if (!node) return;
-  logLine(`[runtime error attributed to node ${nodeId} (${node.nodeType})]`, "err");
+  logLine(`[runtime error attributed to node ${nodeId} (${node.nodeType})]`, "err", nodeId);
 }
 
 // Rete's editor.addPipe sees every graph mutation (nodes/connections
@@ -674,7 +716,10 @@ let lastHelloVersion: ProtocolVersion | null = null;
 
 const transport = new WebSerialTransport({
   onMessage(message) {
-    logLine(`[${message.type}] ${JSON.stringify(message, (_k, v) => (v instanceof Uint8Array ? `<${v.length} bytes>` : v))}`, "ok");
+    // Not every message type carries a nodeId (HELLO doesn't) -- `in`
+    // narrows this safely per the real discriminated union either way.
+    const nodeId = "nodeId" in message ? message.nodeId : undefined;
+    logLine(`[${message.type}] ${JSON.stringify(message, (_k, v) => (v instanceof Uint8Array ? `<${v.length} bytes>` : v))}`, "ok", nodeId);
     if (message.type === "NODE_ERROR") highlightNodeFromNodeError(message.nodeId);
     if (message.type === "HELLO") {
       lastHelloVersion = message.runtimeVersion;
@@ -694,7 +739,14 @@ const transport = new WebSerialTransport({
     logLine(`[protocol error] ${String(error)}`, "err");
   },
   onDebugLine(line) {
-    logLine(line, "");
+    // debug.ts's codegen emits `DEBUG node=<id> payload=...` -- DEBUG
+    // output is raw print() text over the wire, not its own structured
+    // §13 message type (Tier 2's still-unbuilt VALUE_STREAM is the
+    // eventual structured replacement, debug.ts's own header), so this is
+    // a text parse, same pattern highlightNodeFromMpyError() already uses
+    // for a raw mpy-cross line number.
+    const match = line.match(/^DEBUG node=(\S+) /);
+    logLine(line, "", match ? match[1] : undefined);
   },
   onDisconnect(reason) {
     logLine(`[disconnected] ${reason ? String(reason) : "(clean)"}`, "");

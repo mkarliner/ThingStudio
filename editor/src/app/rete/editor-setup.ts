@@ -104,7 +104,18 @@ export async function createThingstudioEditor(container: HTMLElement, options: T
   });
 
   // --- multi-select (decision doc Phase 1 step 6) -------------------------
-  AreaExtensions.selectableNodes(area, AreaExtensions.selector(), {
+  // Captured (rather than discarded, as the original Phase 1 step 6 pass
+  // left it) so its `select()` can be driven programmatically below --
+  // needed for the console click-to-navigate feature (2026-09-04):
+  // setting `selectedNode.value` alone (what the nodepicked pipe above
+  // does) only drives PropertyPanel.vue: it's an app-level store write,
+  // not Rete's own visual "selected" state (the `node.selected` flag this
+  // extension flips, read by ThingstudioNode.vue to draw the highlight
+  // border). A real canvas click gets both because the nodepicked pipe
+  // and this extension both listen to the same underlying pointer
+  // gesture; a console click has no gesture to listen to, so it has to
+  // trigger both explicitly.
+  const nodeSelection = AreaExtensions.selectableNodes(area, AreaExtensions.selector(), {
     accumulating: AreaExtensions.accumulateOnCtrl(),
   });
   AreaExtensions.simpleNodesOrder(area);
@@ -126,6 +137,25 @@ export async function createThingstudioEditor(container: HTMLElement, options: T
       return editor.addConnection(new ClassicPreset.Connection(source, sourceKey, target, targetKey) as Schemes["Connection"]);
     },
     fitView: () => AreaExtensions.zoomAt(area, editor.getNodes()),
+    // Pan/zoom to bring one specific node into view -- same
+    // AreaExtensions.zoomAt() fitView already uses above, just scoped to
+    // a single-node array. Added for the console click-to-navigate
+    // feature (main.ts's locateNode(), 2026-09-04): a clicked console
+    // line (a NODE_ERROR, a DEBUG line, anything carrying a resolvable
+    // node id) needs to bring its node into view even when it's
+    // off-screen, not just select/highlight it in place.
+    focusNode: (node: AnyThingstudioNode) => AreaExtensions.zoomAt(area, [node]),
+    // Drives both halves of "select this node" for a caller outside the
+    // canvas's own pointer handling (the console click-to-navigate
+    // feature, main.ts's locateNode(), 2026-09-04): the app-level store
+    // write PropertyPanel.vue reads, and Rete's own visual selection
+    // state (nodeSelection.select() above, `accumulate: false` so this
+    // replaces any existing canvas selection rather than adding to it,
+    // matching what a plain unmodified click on the canvas itself does).
+    selectNode: async (node: AnyThingstudioNode) => {
+      selectedNode.value = node;
+      await nodeSelection.select(node.id, false);
+    },
     clear: async () => {
       for (const c of [...editor.getConnections()]) await editor.removeConnection(c.id);
       for (const n of [...editor.getNodes()]) await editor.removeNode(n.id);

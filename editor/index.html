@@ -54,6 +54,13 @@
   #console .t { color: var(--dim); }
   #console .ok { color: var(--good); }
   #console .err { color: var(--bad); }
+  /* Console click-to-navigate (2026-09-04): any log line naming a real
+     node -- NODE_ERROR, a compile-error attribution, a DEBUG line -- gets
+     this class from main.ts's logLine(). Underline is the affordance;
+     kept subtle (dotted, not solid) so it doesn't read as a broken link
+     or as an error on lines that aren't .err. */
+  #console .node-link { cursor: pointer; text-decoration: underline dotted; text-underline-offset: 2px; }
+  #console .node-link:hover { background: #1a1f2b; }
   .notice { font-size: 11px; color: var(--warn); line-height: 1.4; }
 </style>
 </head>
