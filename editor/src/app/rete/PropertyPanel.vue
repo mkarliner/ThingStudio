@@ -39,28 +39,32 @@
 
   wifi_status/udp_send/udp_receive blocks added config-node-and-palette-
   implementation-briefing.md (2026-08-18): each node's own remaining
-  fields (pollMs/host/port/timeoutMs) plus a ConfigRefField bound to
-  `wifiConfigId` -- the actual fix for "entering ssid credentials multiple
-  times," everything upstream of this component (data model, compiler
-  resolution, the store) exists to make this one property-panel change
-  possible and correct. No raw ssid/password inputs anywhere in this file
-  any more for these three kinds -- that's deliberate, not an oversight,
-  see wifi-status.ts's own header on why.
+  fields (pollMs/host/port/timeoutMs) plus, at the time, a ConfigRefField
+  each bound to its own `wifiConfigId` -- the actual fix for "entering
+  ssid credentials multiple times." No raw ssid/password inputs anywhere
+  in this file for these three kinds, then or now -- deliberate, see
+  wifi-status.ts's own header on why.
 
   mqtt_publish/mqtt_subscribe blocks added 2026-08-21: first-time canvas
   wiring for these two (nodes.ts's own header) plus the same config-node
-  migration as above -- TWO ConfigRefField instances, not one, since a
-  WiFi config and an MQTT broker config are independent references on
-  these two kinds specifically (mqtt-shared.ts's own header explains why:
-  different credentials, different things being authenticated to). Their
-  hint text does NOT offer the "pick unmanaged" escape hatch the
-  wifi_status/udp_send/udp_receive hints give -- mqtt-shared.ts's
-  parseMqttBrokerProps rejects a referenced WiFi config with security
-  "unmanaged" outright, since mqtt_as always drives its own connect/
-  reconnect loop and needs real credentials to do so (see that file's own
-  header). The broker config's own username/password fields are edited
-  through ConfigRefField's existing generic edit panel (config-types.ts's
-  `fields` descriptor) -- no bespoke UI needed for them.
+  migration as above, at the time with two ConfigRefField instances each
+  (a WiFi config and an MQTT broker config, independent references --
+  mqtt-shared.ts's own header explains why: different credentials,
+  different things being authenticated to). The broker config's own
+  username/password fields are edited through ConfigRefField's existing
+  generic edit panel (config-types.ts's `fields` descriptor) -- no bespoke
+  UI needed for them.
+
+  **WiFi ConfigRefField removed from udp_send/udp_receive/mqtt_publish/
+  mqtt_subscribe, 2026-09-04** (Mike's own real-hardware finding --
+  wifi-status.ts's header has the full story): only wifi_status keeps its
+  own WiFi ConfigRefField now. The other four network node kinds derive
+  WiFi credentials from the flow's own wifi_status node instead of a
+  config reference of their own, fixing a real bug where each node's
+  independently-selectable WiFi config could silently disagree with
+  wifi_status's. mqtt_publish/mqtt_subscribe keep their own
+  `brokerConfigId` ConfigRefField unchanged -- the broker config was never
+  part of the bug.
 
   Custom nodes (docs/working-notes/custom-node-authoring-scoping.md,
   2026-08-20): one generic block below, driven entirely by
@@ -73,7 +77,7 @@
   confirmed with Mike).
 -->
 <template>
-  <div class="property-panel">
+  <div class="property-panel" :class="{ 'is-collapsed': !node }">
     <div class="panel-eyebrow">Properties</div>
     <template v-if="node">
       <h3>
@@ -160,12 +164,7 @@
         <label>timeout (ms)
           <input type="number" min="1" v-model.number="node.properties.timeoutMs" @input="touch" />
         </label>
-        <ConfigRefField
-          config-type="thingstudio/config/wifi"
-          :model-value="node.properties.wifiConfigId || undefined"
-          @update:model-value="(id) => setWifiConfigId(id)"
-        />
-        <p class="hint">Required -- won't compile without one. Pick "unmanaged" on the config if this flow intentionally rides on a connection managed outside it.</p>
+        <p class="hint">Uses the flow's own wifi_status node for WiFi credentials -- add one if the flow doesn't have one yet.</p>
       </template>
 
       <template v-else-if="node.kind === 'udp_receive'">
@@ -175,12 +174,7 @@
         <label>poll interval (ms)
           <input type="number" min="1" v-model.number="node.properties.pollMs" @input="touch" />
         </label>
-        <ConfigRefField
-          config-type="thingstudio/config/wifi"
-          :model-value="node.properties.wifiConfigId || undefined"
-          @update:model-value="(id) => setWifiConfigId(id)"
-        />
-        <p class="hint">Required -- won't compile without one. Pick "unmanaged" on the config if this flow intentionally rides on a connection managed outside it.</p>
+        <p class="hint">Uses the flow's own wifi_status node for WiFi credentials -- add one if the flow doesn't have one yet.</p>
       </template>
 
       <template v-else-if="node.kind === 'mqtt_publish'">
@@ -202,12 +196,7 @@
           :model-value="node.properties.brokerConfigId || undefined"
           @update:model-value="(id) => setBrokerConfigId(id)"
         />
-        <ConfigRefField
-          config-type="thingstudio/config/wifi"
-          :model-value="node.properties.wifiConfigId || undefined"
-          @update:model-value="(id) => setWifiConfigId(id)"
-        />
-        <p class="hint">Both required -- won't compile without a broker and a WiFi config. mqtt_as manages its own WiFi connection, so "unmanaged" WiFi configs aren't accepted here.</p>
+        <p class="hint">Broker config required -- won't compile without one. Uses the flow's own wifi_status node for WiFi credentials (add one if the flow doesn't have one yet); mqtt_as manages its own WiFi connection, so an "unmanaged" wifi_status config isn't accepted here.</p>
       </template>
 
       <template v-else-if="node.kind === 'mqtt_subscribe'">
@@ -225,12 +214,7 @@
           :model-value="node.properties.brokerConfigId || undefined"
           @update:model-value="(id) => setBrokerConfigId(id)"
         />
-        <ConfigRefField
-          config-type="thingstudio/config/wifi"
-          :model-value="node.properties.wifiConfigId || undefined"
-          @update:model-value="(id) => setWifiConfigId(id)"
-        />
-        <p class="hint">Both required -- won't compile without a broker and a WiFi config. mqtt_as manages its own WiFi connection, so "unmanaged" WiFi configs aren't accepted here.</p>
+        <p class="hint">Broker config required -- won't compile without one. Uses the flow's own wifi_status node for WiFi credentials (add one if the flow doesn't have one yet); mqtt_as manages its own WiFi connection, so an "unmanaged" wifi_status config isn't accepted here.</p>
       </template>
 
       <template v-else-if="node.kind === 'debug'">
@@ -255,7 +239,6 @@
         <p class="hint">Custom node ({{ customDescriptor.type }}) -- loaded this session only; reload its package after a page refresh.</p>
       </template>
     </template>
-    <p v-else class="hint">Select a node to edit its properties.</p>
   </div>
 </template>
 
@@ -339,10 +322,28 @@ function setBrokerConfigId(id: string): void {
 
 <style scoped>
 .property-panel {
+  flex: 0 0 auto;
+  width: 260px;
   padding: 12px;
   color: #ddd;
   font: 12px/1.4 system-ui, sans-serif;
   overflow-y: auto;
+  overflow-x: hidden;
+  transition: width 0.15s ease, padding 0.15s ease;
+}
+/* Collapsed to a thin rail rather than fully disappearing (Mike's call,
+   2026-09-04 UI-cleanup discussion) -- the eyebrow label rotates to fill
+   it, so the panel's presence (and that clicking a node reopens it) stays
+   visible even with nothing selected. */
+.property-panel.is-collapsed {
+  width: 28px;
+  padding: 12px 0;
+}
+.property-panel.is-collapsed .panel-eyebrow {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  white-space: nowrap;
+  margin: 0 auto;
 }
 .panel-eyebrow {
   font-size: 11px;
