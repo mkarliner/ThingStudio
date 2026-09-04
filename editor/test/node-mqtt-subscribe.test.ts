@@ -48,10 +48,19 @@ function configsWith(brokerProps: Record<string, unknown>): NonNullable<GraphDat
   return [DEFAULT_WIFI_CONFIG, { id: "broker1", type: "thingstudio/config/mqtt-broker", properties: brokerProps }];
 }
 
+// Synthetic wifi_status node(s), 2026-09-04 -- see node-udp-send.test.ts's
+// own comment on this exact mechanism (identical reasoning): mqtt_subscribe
+// no longer carries its own wifiConfigId (mqtt-shared.ts's header),
+// deriving instead from the flow's own wifi_status node. `node()` below
+// still accepts `wifiConfigId` as a convenience for this file's existing
+// call sites (including via BASE, below).
+let wifiStatusNodes: GraphNode[] = [];
+
 beforeEach(() => {
   fakeConfigs.clear();
   setConfig("wifi1", { ssid: "s", password: "pw" });
   setConfig("broker1", { broker: "b", port: 1883, username: "", password: "" });
+  wifiStatusNodes = [{ id: "wifi_status_1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "wifi1" } }];
 });
 
 function freshCtx(): CodegenContext {
@@ -69,20 +78,27 @@ function freshCtx(): CodegenContext {
       if (!cfg) throw new CompileError(`referenced config "${id}" not found`);
       return cfg;
     },
+    findNodesOfType(type: string): GraphNode[] {
+      return type === "thingstudio/wifi_status" ? wifiStatusNodes : [];
+    },
   };
 }
 
 function node(properties: Record<string, unknown>): GraphNode {
-  return { id: "1", type: "thingstudio/mqtt_subscribe", properties };
+  const { wifiConfigId, ...rest } = properties;
+  if (typeof wifiConfigId === "string") {
+    wifiStatusNodes = [{ id: "wifi_status_1", type: "thingstudio/wifi_status", properties: { wifiConfigId } }];
+  }
+  return { id: "1", type: "thingstudio/mqtt_subscribe", properties: rest };
 }
 
 /** Finds the actual MQTTClient-construction statement among a codegen
- * result's `statements` -- NOT index [0] (that's
- * `mqttWifiPrecheckStatement()`'s WiFi-reconnect race fix, mqtt-shared.ts,
- * emitted first but with no broker/credential content of its own to
- * assert against here). Looked up by content rather than a fixed index so
- * this stays correct regardless of how many statements get added ahead of
- * it in the future. */
+ * result's `statements`. Looked up by content rather than a fixed index --
+ * even though it's the only statement this node type contributes today
+ * (the WiFi-reconnect race fix moved inline into
+ * mqttEnsureConnectedSnippet()'s own function body 2026-09-04, mqtt-shared.ts,
+ * so it's no longer a separate statement ahead of this one) -- so this
+ * stays correct regardless of what gets added ahead of it in the future. */
 function mqttClientSetupCode(result: { statements?: { key: string; code: string }[] }): string {
   const stmt = result.statements?.find((s) => s.code.includes("mqtt_as.MQTTClient("));
   if (!stmt) throw new Error("no MQTTClient setup statement found in codegen result");
@@ -177,10 +193,20 @@ describe("thingstudio/mqtt_subscribe node", () => {
     );
   });
 
-  it("rejects a missing wifiConfigId/topic", () => {
+  it("rejects a flow with no wifi_status node, and separately a missing topic", () => {
     const ctx = freshCtx();
-    expect(() => mqttSubscribeNode.codegenSource!(node({ topic: "t", brokerConfigId: "broker1" }), ctx)).toThrow(/requires a WiFi config/);
+    wifiStatusNodes = [];
+    expect(() => mqttSubscribeNode.codegenSource!(node({ topic: "t", brokerConfigId: "broker1" }), ctx)).toThrow(/needs a "wifi_status" node/);
     expect(() => mqttSubscribeNode.codegenSource!(node({ ...BASE }), ctx)).toThrow(/non-empty "topic"/);
+  });
+
+  it("rejects a flow with more than one wifi_status node (single-interface assumption, for now)", () => {
+    const ctx = freshCtx();
+    wifiStatusNodes = [
+      { id: "w1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "wifi1" } },
+      { id: "w2", type: "thingstudio/wifi_status", properties: { wifiConfigId: "wifi1" } },
+    ];
+    expect(() => mqttSubscribeNode.codegenSource!(node({ topic: "t", brokerConfigId: "broker1" }), ctx)).toThrow(/only one WiFi interface is supported today/);
   });
 
   it("rejects an unsupported qos", () => {
@@ -217,6 +243,11 @@ describe("thingstudio/mqtt_subscribe node", () => {
       nodes: [
         { id: "1", type: "thingstudio/mqtt_subscribe", properties: { ...BASE, topic: "sensors/temp" } },
         { id: "2", type: "thingstudio/debug", properties: {} },
+        // 2026-09-04: mqtt_subscribe no longer has its own wifiConfigId --
+        // this wifi_status node is the flow's sole source of WiFi
+        // credentials now (mqtt-shared.ts's header). BASE's own
+        // wifiConfigId is now inert data on the mqtt_subscribe node itself.
+        { id: "3", type: "thingstudio/wifi_status", properties: { pollMs: 5000, wifiConfigId: "wifi1" } },
       ],
       links: [[1, "1", 0, "2", 0, "any"]],
       configs: configsWith({ broker: "b", port: 1883 }),
@@ -232,6 +263,7 @@ describe("thingstudio/mqtt_subscribe node", () => {
       nodes: [
         { id: "1", type: "thingstudio/mqtt_subscribe", properties: { ...BASE, topic: "t1" } },
         { id: "2", type: "thingstudio/mqtt_subscribe", properties: { ...BASE, topic: "t2" } },
+        { id: "3", type: "thingstudio/wifi_status", properties: { pollMs: 5000, wifiConfigId: "wifi1" } },
       ],
       links: [],
       configs: configsWith({ broker: "b", port: 1883 }),
@@ -250,6 +282,7 @@ describe("thingstudio/mqtt_subscribe node", () => {
         { id: "1", type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "x", repeat: "manual" } },
         { id: "2", type: "thingstudio/mqtt_publish", properties: { ...BASE, topic: "out" } },
         { id: "3", type: "thingstudio/mqtt_subscribe", properties: { ...BASE, topic: "in" } },
+        { id: "4", type: "thingstudio/wifi_status", properties: { pollMs: 5000, wifiConfigId: "wifi1" } },
       ],
       links: [[1, "1", 0, "2", 0, "string"]],
       configs: configsWith({ broker: "shared.broker", port: 1883 }),

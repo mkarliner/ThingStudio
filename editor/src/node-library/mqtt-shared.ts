@@ -50,16 +50,27 @@
 //
 // Config nodes (config-node-and-palette-implementation-briefing.md):
 // **behavior change, 2026-08-21** -- `parseMqttBrokerProps` no longer reads
-// raw `ssid`/`password` node properties directly. Credentials now come from
-// a referenced `thingstudio/config/wifi` config node, via
-// `properties.wifiConfigId` + `ctx.resolveConfig()`, resolved through
+// raw `ssid`/`password` node properties directly. Credentials came from a
+// referenced `thingstudio/config/wifi` config node, via
+// `properties.wifiConfigId` + `ctx.resolveConfig()`, through
 // wifi-status.ts's `resolveWifiCredentials()` -- the same shared lookup
-// udp-send.ts/udp-receive.ts already use, so mqtt_publish/mqtt_subscribe
-// close the exact gap `outstanding-items.md`'s "Network / config nodes"
-// section named ("http_request/mqtt_publish/mqtt_subscribe never got the
-// config-node treatment"). `http_request` is NOT migrated by this change --
-// still reading raw ssid/password, an explicitly flagged, separate
-// follow-up (see that file's own header).
+// udp-send.ts/udp-receive.ts used, so mqtt_publish/mqtt_subscribe closed
+// the exact gap `outstanding-items.md`'s "Network / config nodes" section
+// named ("http_request/mqtt_publish/mqtt_subscribe never got the
+// config-node treatment"). `http_request` was NOT migrated by this
+// change -- an explicitly flagged, separate follow-up at the time (see
+// that file's own header).
+//
+// **Superseded, 2026-09-04** -- see wifi-status.ts's header for the full
+// story: this node no longer has a `wifiConfigId` property of its own at
+// all. `parseMqttBrokerProps` now calls `resolveFlowWifiCredentials()`
+// (wifi-status.ts) instead of `resolveWifiCredentials()` directly, which
+// derives credentials from the flow's own `wifi_status` node rather than
+// from this node's own (now-removed) config reference -- fixing a real
+// bug where two network nodes in one flow could independently reference
+// two different, disagreeing WiFi configs. `http_request` got the same
+// treatment the same day, closing that follow-up too (see that file's
+// header).
 //
 // **One real divergence from udp-send.ts/udp-receive.ts's own treatment,
 // not a smaller version of the same migration:** a config whose `security`
@@ -143,6 +154,30 @@
 // own connect call runs. See `decisions.md` (2026-08-21) for the full
 // reasoning and the ruled-out alternatives.
 //
+// **CONFIRMED BROKEN, 2026-09-04 -- superseded by the fix below.** The
+// module-scope-statement design above assumed wifi_status's own connect
+// (also module-scope, wifi-status.ts) would always have already run by
+// the time this precheck's statement executed -- but `compile.ts` collects
+// module-scope statements in plain node-array order, not any real phase
+// system, so which one lands first in the compiled output is an accident
+// of how a flow happens to list its nodes. `basic-mqtt.flow.json` lists
+// its mqtt nodes before its wifi_status node, so this precheck ran BEFORE
+// wifi_status's connect ever fired -- checking for an in-flight connect
+// that hadn't started yet, then passing straight through, then colliding
+// moments later exactly the way this was supposed to prevent. Confirmed
+// on real hardware with both invalid and valid credentials (see
+// outstanding-items/wifi-status-mqtt-connect-ordering-race.md) --
+// `basic-mqtt.flow.json` did not deploy successfully at all. Fixed by
+// moving this wait out of module scope entirely and into
+// `mqttEnsureConnectedSnippet()` below, immediately before the actual
+// `client.connect()` call it exists to protect -- see that function's own
+// header for why that placement is correct regardless of node order (ALL
+// module-scope code, from every node type, has already run by the time
+// any coroutine executes, so there's no "which statement comes first"
+// question left to get wrong). `mqttWifiPrecheckStatement()` and its
+// setup-statement key are removed; nothing in `mqtt-publish.ts`/
+// `mqtt-subscribe.ts` contributes this to `statements` any more.
+//
 // MQTTS/TLS explicitly deferred, not built, not even a reserved field:
 // the vendored mqtt_as's own `config` dict already has `ssl`/`ssl_params`
 // keys (device-runtime/src/vendor/mqtt_as/__init__.py) this file doesn't
@@ -161,7 +196,7 @@
 import { CompileError } from "../compiler/errors.js";
 import type { CodegenContext } from "../compiler/node-definition.js";
 import { pyStringLiteral } from "./py-literals.js";
-import { resolveWifiCredentials } from "./wifi-status.js";
+import { resolveFlowWifiCredentials } from "./wifi-status.js";
 
 export interface MqttBrokerConfig {
   broker: string;
@@ -240,7 +275,12 @@ function resolveMqttBrokerConfig(
 export function parseMqttBrokerProps(properties: Record<string, unknown>, ctx: CodegenContext, context: string): MqttBrokerConfig {
   const { broker, port, username, password } = resolveMqttBrokerConfig(properties, ctx, context);
 
-  const resolved = resolveWifiCredentials(properties, ctx, context);
+  // 2026-09-04: derives from the flow's own wifi_status node
+  // (resolveFlowWifiCredentials, wifi-status.ts) rather than this node's
+  // own wifiConfigId property -- see that file's header for the bug this
+  // fixes (two network nodes silently able to disagree about which WiFi
+  // config is active for the one physical radio they share).
+  const resolved = resolveFlowWifiCredentials(ctx, context);
   if (resolved.security === "unmanaged") {
     throw new CompileError(
       `${context}'s WiFi config has security "unmanaged", which isn't supported here -- mqtt_as manages its own WiFi connection and needs real credentials to do so, unlike wifi_status/udp_send/udp_receive, which can ride on an externally-managed connection. Reference a config with a real ssid/password instead.`,
@@ -319,69 +359,40 @@ export function mqttSetupStatement(cfg: MqttBrokerConfig): { key: string; code: 
   return { key: mqttSetupKey(cfg), code: lines.join("\n") };
 }
 
-/** Shared setup key for `mqttWifiPrecheckStatement()` below -- fixed
- * (not per-broker, unlike `mqttSetupKey()`) so every mqtt_publish/
- * mqtt_subscribe node in a flow contributes the identical statement and
- * `mergeSetup`'s dedup collapses them to exactly one occurrence,
- * regardless of how many distinct broker configs the flow has. */
-export const MQTT_WIFI_PRECHECK_KEY = "mqtt-wifi-connect-precheck";
-
-/** Module-scope statement (this file's header, "WiFi-reconnect race fix"):
- * waits out, bounded, any WiFi connect already in progress on the station
- * interface -- before mqtt_as's own `wifi_connect()` gets a chance to
- * issue its own connect call and collide with it. Deliberately gated to
- * ESP32 (`sys.platform == "esp32"`): the underlying race (ESP-IDF's own
- * NVS-cached auto-reconnect, triggered by `.active(True)` alone) is an
- * ESP-IDF behavior specifically, and `network.STAT_CONNECTING` isn't
- * confirmed present on every MicroPython port this project targets --
- * the vendored mqtt_as's own code only ever references that constant
- * inside its own `if ESP32:` branches, using plain numeric status
- * comparisons for RP2/PYBOARD instead (device-runtime/src/vendor/mqtt_as/
- * __init__.py), which reads as "not reliably available elsewhere," not
- * an oversight to copy past. `.active(True)` itself is harmless/idempotent
- * on every platform, so that line always runs; only the wait loop is
- * ESP32-only.
- *
- * Behavior change, 2026-09-02: extended with a settle wait after
- * `.active(True)`, distinct from the "wait out an in-flight connect"
- * check above it. First real-hardware run of this precheck (Mike's
- * `basic-mqtt.flow.json`, mqtt_subscribe's own automatic boot-time
- * connect -- no wifi_status node in that flow, no prior deploy, power-
- * cycled first) hit `OSError: Wifi Internal State Error` from mqtt_as's
- * `wifi_connect()` (`s.connect(self._ssid, self._wifi_pw)`) -- a
- * DIFFERENT ESP-IDF error than the `wifi:sta is connecting, cannot set
- * config` one this precheck originally targeted, and one the original
- * STAT_CONNECTING wait can't catch: on a genuinely fresh boot, `.status()`
- * right after `.active(True)` is idle, not connecting, so that loop
- * breaks on its very first check and adds no real delay at all. The
- * likely cause instead (a known, documented ESP32/MicroPython quirk, not
- * confirmed by reading ESP-IDF source directly the way the original race
- * was): `.active(True)` returning doesn't guarantee the WiFi driver has
- * actually finished coming up internally -- issuing `.connect()`
- * immediately afterward, before that finishes, can be rejected as a state
- * error even though nothing else is touching the interface. Fixed the
- * same way as the existing wait -- bounded, ESP32-gated, ride-don't-guess
- * -- by polling `.active()` until it actually reports `True` (rather than
- * trusting the call that requested it) plus a short fixed settle delay
- * before falling through to the pre-existing in-flight-connect check.
- * Unverified beyond this one manual repro; flag if it recurs or a
- * different board/firmware combination needs a longer settle window. */
-export function mqttWifiPrecheckStatement(): { key: string; code: string } {
-  const lines = [
+/** The WiFi-reconnect-race wait, inlined into `mqttEnsureConnectedSnippet()`
+ * below rather than emitted as its own module-scope statement -- see this
+ * file's "CONFIRMED BROKEN, 2026-09-04" header note above for why the old
+ * module-scope-statement design didn't actually work (its position in the
+ * compiled output depended on arbitrary node-array order, so it could run
+ * before wifi_status's own connect ever fired, protecting nothing). NOT
+ * indented; caller embeds this inside `mqttEnsureConnectedSnippet()`'s own
+ * async function body, so `await` is always legal here. Deliberately
+ * gated to ESP32 (`sys.platform == "esp32"`) -- see this function's
+ * pre-2026-09-04 history in git blame / decisions.md (2026-08-21,
+ * 2026-09-02) for why: the underlying race is an ESP-IDF behavior
+ * specifically, and `network.STAT_CONNECTING` isn't confirmed present on
+ * every MicroPython port this project targets. `.active(True)` itself is
+ * harmless/idempotent on every platform, so that line always runs; only
+ * the wait loop is ESP32-only. Uses `await asyncio.sleep_ms()`, not
+ * `time.sleep_ms()` -- this runs inside a coroutine now (it didn't when
+ * this was module-scope code with no event loop running yet), so a
+ * blocking sleep here would stall every other coroutine in the flow for
+ * up to ~10s while this waits. */
+function mqttWifiPrecheckSnippet(): string {
+  return [
     "_mqtt_wifi_precheck_sta = network.WLAN(network.STA_IF)",
     "_mqtt_wifi_precheck_sta.active(True)",
     'if sys.platform == "esp32":',
     "    for _ in range(50):  # bounded ~5s wait for .active(True) to actually take effect",
     "        if _mqtt_wifi_precheck_sta.active():",
     "            break",
-    "        time.sleep_ms(100)",
-    "    time.sleep_ms(200)  # brief settle delay -- see this function's 2026-09-02 header note",
+    "        await asyncio.sleep_ms(100)",
+    "    await asyncio.sleep_ms(200)  # brief settle delay -- see this function's history",
     "    for _ in range(50):  # bounded ~5s wait for any in-flight connect to resolve",
     "        if _mqtt_wifi_precheck_sta.status() != network.STAT_CONNECTING:",
     "            break",
-    "        time.sleep_ms(100)",
-  ];
-  return { key: MQTT_WIFI_PRECHECK_KEY, code: lines.join("\n") };
+    "        await asyncio.sleep_ms(100)",
+  ].join("\n");
 }
 
 /** NOT indented; caller embeds this at the top of an async function body
@@ -403,9 +414,10 @@ export function mqttWifiPrecheckStatement(): { key: string; code: string } {
  * the surrounding double-checked-locking on `${connectedVar}` already
  * relies on.
  *
- * Bounded retry, 2026-09-02: real-hardware testing of
- * `mqttWifiPrecheckStatement()`'s own settle-wait fix (this file, same
- * day) showed it narrows but doesn't eliminate the cold-boot
+ * Bounded retry, 2026-09-02: real-hardware testing of the WiFi-reconnect
+ * precheck's own settle-wait fix (this file, same day; the precheck was
+ * module-scope at the time, later moved inline here 2026-09-04 -- see this
+ * file's header) showed it narrows but doesn't eliminate the cold-boot
  * `OSError: Wifi Internal State Error` -- the FIRST deploy after a power
  * cycle still hit it once, and a second deploy (no power cycle) then
  * succeeded immediately. That's exactly the shape of a transient
@@ -426,6 +438,14 @@ export function mqttEnsureConnectedSnippet(cfg: MqttBrokerConfig): string {
   const connectedVar = mqttConnectedVar(cfg);
   const lockVar = mqttLockVar(cfg);
   const attemptVar = `_mqtt_connect_attempt_${idSuffix(cfg)}`;
+  // mqttWifiPrecheckSnippet() indented to this block's own 12-space level
+  // (matching the `for ${attemptVar}...` line right after it) -- see this
+  // file's header ("CONFIRMED BROKEN, 2026-09-04") for why this runs here,
+  // inside the double-checked lock right before the actual connect
+  // attempt, rather than as a module-scope statement.
+  const precheckLines = mqttWifiPrecheckSnippet()
+    .split("\n")
+    .map((l) => `            ${l}`);
   return [
     `global ${connectedVar}, ${lockVar}`,
     `if not ${connectedVar}:`,
@@ -433,6 +453,7 @@ export function mqttEnsureConnectedSnippet(cfg: MqttBrokerConfig): string {
     `        ${lockVar} = asyncio.Lock()`,
     `    async with ${lockVar}:`,
     `        if not ${connectedVar}:`,
+    ...precheckLines,
     `            for ${attemptVar} in range(3):`,
     `                try:`,
     `                    await ${clientVar}.connect()`,

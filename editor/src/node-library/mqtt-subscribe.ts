@@ -18,13 +18,23 @@
 // depends on, and mqtt-publish.ts for the sink half.
 //
 // Config nodes (config-node-and-palette-implementation-briefing.md):
-// **behavior change, 2026-08-21** -- credentials now come from a
-// referenced `thingstudio/config/wifi` config node via
-// `node.properties.wifiConfigId`, resolved inside parseMqttBrokerProps
-// (mqtt-shared.ts) via wifi-status.ts's `resolveWifiCredentials()` -- not
-// raw `ssid`/`password` properties on this node directly. See
-// mqtt-shared.ts's own header for why "unmanaged" security is rejected
-// here even though wifi_status/udp_send/udp_receive accept it. Same day,
+// **behavior change, 2026-08-21** -- credentials came from a referenced
+// `thingstudio/config/wifi` config node via `node.properties.wifiConfigId`,
+// resolved inside parseMqttBrokerProps (mqtt-shared.ts) via
+// wifi-status.ts's `resolveWifiCredentials()` -- not raw `ssid`/`password`
+// properties on this node directly. See mqtt-shared.ts's own header for
+// why "unmanaged" security is rejected here even though wifi_status/
+// udp_send/udp_receive accept it.
+//
+// **Superseded, 2026-09-04**: this node no longer has a `wifiConfigId`
+// property at all -- parseMqttBrokerProps now derives WiFi credentials
+// from the flow's own `wifi_status` node instead (wifi-status.ts's
+// `resolveFlowWifiCredentials()`, mqtt-shared.ts's own updated header).
+// Fixes a real bug: this node's own, independently-selectable
+// `wifiConfigId` used to let it silently disagree with wifi_status about
+// which WiFi config was actually active for the flow's one physical
+// radio. `brokerConfigId` below is unaffected -- the broker config was
+// never part of the bug. Same day,
 // on Mike's own follow-up request: `broker`/`port` also moved out of this
 // node's own properties into a second referenced config,
 // `thingstudio/config/mqtt-broker`, via `node.properties.brokerConfigId`
@@ -36,13 +46,14 @@
 // previously registry-only, per outstanding-items.md's "Network / config
 // nodes" section.
 //
-// 2026-08-21: also emits mqttWifiPrecheckStatement() (mqtt-shared.ts) --
-// a WiFi-reconnect race fix, see that file's header for the full story.
+// 2026-08-21: also emits the WiFi-reconnect race fix (mqtt-shared.ts's
+// mqttEnsureConnectedSnippet()) -- see that file's header for the full
+// story, including the 2026-09-04 fix to how/when it actually runs.
 
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, NodeDefinition, SourceCodegenResult } from "../compiler/node-definition.js";
 import { CompileError } from "../compiler/errors.js";
-import { mqttClientVar, mqttEnsureConnectedSnippet, mqttSetupStatement, mqttWifiPrecheckStatement, parseMqttBrokerProps } from "./mqtt-shared.js";
+import { mqttClientVar, mqttEnsureConnectedSnippet, mqttSetupStatement, parseMqttBrokerProps } from "./mqtt-shared.js";
 import { pyStringLiteral } from "./py-literals.js";
 
 export const mqttSubscribeNode: NodeDefinition = {
@@ -92,11 +103,14 @@ export const mqttSubscribeNode: NodeDefinition = {
     ].join("\n");
 
     return {
-      // network/sys/time: mqttWifiPrecheckStatement()'s own WiFi-reconnect
-      // race fix (mqtt-shared.ts header) -- not needed for mqtt_as/
-      // subscribe itself.
-      imports: ["import mqtt_as", "import network", "import sys", "import time"],
-      statements: [mqttWifiPrecheckStatement(), mqttSetupStatement(cfg), { key: readyVar, code: `${readyVar} = False` }],
+      // network/sys: the WiFi-reconnect race fix inlined into
+      // mqttEnsureConnectedSnippet() (mqtt-shared.ts) needs both -- no
+      // longer a separate module-scope statement, so no `time` import
+      // (it used blocking time.sleep_ms() when it was module-scope code
+      // with no event loop yet; inlined into a coroutine now, it uses
+      // asyncio.sleep_ms() instead, see that file's header).
+      imports: ["import mqtt_as", "import network", "import sys"],
+      statements: [mqttSetupStatement(cfg), { key: readyVar, code: `${readyVar} = False` }],
       buildMsg,
       // NOT a poll interval -- `queue.__anext__()` above already blocks
       // (via the vendored mqtt_as's own asyncio.Event) until a real
