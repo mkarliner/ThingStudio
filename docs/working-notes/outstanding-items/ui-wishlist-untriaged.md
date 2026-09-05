@@ -7,4 +7,6 @@
 - "Compiled source (preview)" and "Device console" (the `#sidebar` panels) became native `<details>`/`<summary>` disclosures -- compiled source closed by default (it's rarely what anyone's looking at), console open by default. No new JS state needed for these two.
 - Collapse state is session-only, not persisted across reloads (Mike's explicit call) -- every panel starts from the same default on a fresh load.
 
-**Still unbuilt:** resizable panes (collapse/hide only, no drag-to-resize), delete node/wire, a notes/README sheet for documenting a flow.
+**Still unbuilt:** resizable panes (collapse/hide only, no drag-to-resize), a notes/README sheet for documenting
+a flow. Delete node/wire split out into its own tracked item, 2026-09-04 -- see
+`outstanding-items/delete-node-wire.md`, not repeated here.

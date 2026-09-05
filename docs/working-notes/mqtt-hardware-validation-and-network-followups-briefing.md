@@ -1,5 +1,15 @@
 # Briefing: MQTT real-hardware validation + network/config-node follow-ups
 
+**Superseded, 2026-09-04 -- read `wifi-race-fix-verification-and-network-followups-briefing.md` instead.** A lot
+happened against this briefing's scope in the 2026-09-04 session: the MQTT config-node migration this briefing
+called for was already done before that session (see Problem 1's own "Where this came from"); real hardware
+testing finally happened and found the original WiFi-precheck fix didn't hold (a real ordering bug, now fixed,
+still unverified); `http_request` got its WiFi-config migration but NOT its canvas wiring (Problem 2 only half
+closed); Problem 3 (loud network errors) still untouched. The successor briefing carries forward everything from
+this one that's still open (Problem 2's canvas-wiring half, Problem 3 in full, qos 1/retain/outage-recovery/
+stale-NVS repro) plus the new verification work the 2026-09-04 session's own findings require. This file is kept
+for its historical reasoning (the original WiFi-precheck design, since superseded) rather than deleted.
+
 For the next chat. Read `CLAUDE.md` in full, as always.
 
 **Check `git log` before assuming anything below is committed.** The

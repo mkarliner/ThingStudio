@@ -44,3 +44,26 @@ tests, but a real redeploy + retest is still owed before trusting this combinati
 Still not reached: the WiFi-precheck-under-stale-NVS-credentials repro, qos 1, retain, and
 outage-recovery from this item's original scope -- none of today's testing exercised those
 specifically.
+
+## Update, 2026-09-04 (later the same day): the redeploy+retest above happened, found a confirmed bug, now fixed but unverified
+
+Mike did retest `basic-mqtt.flow.json` after the single-wifi-owner fix, first with invalid ssid/password (compile
+succeeded, real-hardware deploy failed: `OSError: Wifi Internal State Error`), then with valid credentials (same
+failure). Root-caused to a real ordering bug, not a credentials or timeout problem: `compile.ts` emits every node's
+module-scope setup statements in the flow file's own arbitrary node array order, and in `basic-mqtt.flow.json` that
+happens to put both mqtt nodes' setup (including the WiFi-reconnect-race precheck from the 2026-09-02 updates above)
+*before* `wifi_status`'s own connect call -- so the precheck ran, found nothing in flight yet, passed through as a
+no-op, and only then did the real connect race happen moments later. Full root cause and fix:
+`outstanding-items/wifi-status-mqtt-connect-ordering-race.md`.
+
+Fixed the same day by moving the precheck's wait logic out of module scope entirely, into
+`mqttEnsureConnectedSnippet()` (`mqtt-shared.ts`) immediately before the actual `client.connect()` call -- this runs
+strictly after every module-scope statement from every node type has already executed, regardless of node order, so
+there's no ordering question left to get wrong. **Not yet run through `tsc`/`vitest`, and not yet redeployed to real
+hardware** -- both still owed, on ESP32 (where this was found) and RP2040 (never tested at all, and the precheck's
+wait loop is ESP32-gated, so it currently provides zero protection on RP2040 even after this fix).
+
+This is now the single most important unresolved thing this item is tracking: **`basic-mqtt.flow.json` has not
+successfully completed a real-hardware deploy since the single-wifi-owner fix landed.** Everything else in this
+item's original scope (qos 1, retain, outage recovery, the stale-NVS-credentials repro) is still blocked behind
+getting a clean deploy confirmed again.
