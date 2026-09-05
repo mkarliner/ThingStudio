@@ -68,3 +68,46 @@ them -- if `machine.reset()`-before-deploy is built later, HELLO_REQUEST doesn't
 make it easier, it just means the editor already has an independent way to check in on a
 device's state that doesn't depend on that work landing first. See `decisions.md`'s
 2026-09-05 entry.
+
+
+## Update, 2026-09-05: point 2's prerequisite is now built (unrelated trigger)
+
+A separate real-hardware finding the same day -- RP2040 WiFi state getting stuck (oscillating
+`wifi_status` True/False under invalid-then-corrected credentials) and only clearing on a power
+cycle, never a redeploy -- led Mike to independently propose a flow-triggerable reset node for
+recovery. Looking into that surfaced the same gap this file's point 2 already named: nothing ran
+at boot to auto-resume a previously-DEPLOYed flow, so *any* reset (a redeploy-time
+`machine.reset()` per this file's idea, or a flow-triggered reset node, or a plain power cycle)
+lost the running flow entirely until a human noticed and manually redeployed. Mike's own words:
+"not persisting flows to survive reset or power cycle is pretty fundamental. fix it."
+
+Built: `listener.py`'s `main()` now calls a new `_resume_flow()` before `run_forever()` starts --
+checks `_FLOW_PATH` for a persisted flow and `import`s it exactly the way `_handle_deploy` already
+does, degrading to a logged, non-fatal no-op if the file is absent (never deployed) or corrupt
+(never allowed to block boot). Verified against a real MicroPython unix-port build + real
+mpy-cross-compiled flows, not just `py_compile`: `device-runtime/test/test_listener_integration.py`'s
+`test_boot_time_flow_auto_resume` deploys a flow to one listener process, kills it, starts a brand
+new one against the same on-disk flow file with **no second DEPLOY sent**, and confirms the flow
+runs again; `test_boot_time_resume_survives_corrupt_persisted_flow` confirms a garbage flow file
+doesn't stop the listener reaching `LISTENER_READY` or sending its boot HELLO.
+
+This closes point 2 above (something now runs at boot to auto-resume from flash, unconditionally,
+not just after a DEPLOY) but does **not** by itself close this file's own idea -- points 1, 3, and
+4 (DEPLOY_ACK's meaning/timing across a reset, and host-side tooling tolerating the device
+dropping off the serial port for a reset+reboot window) are still real, still unscoped, still
+Mike's call. What's changed is that the "auto-resume" half of the prerequisite work is done and
+tested, not hypothetical -- a future `machine.reset()`-before-deploy implementation can build on
+`_resume_flow()` directly rather than needing to invent it from scratch. It also means a flow-
+triggered reset node (Mike's 2026-09-05 proposal, prompted by the RP2040 stuck-WiFi finding) is
+now viable in a way it wasn't a day earlier: a reset no longer loses the running flow.
+
+Side effect worth flagging, found while verifying this: `_send_hello()`'s `runtimeBuild` field
+(2026-09-05's earlier belt-and-braces marker, `decisions.md`) was being sent as an explicit CBOR
+`None` on any board without a `_runtime_build.txt` marker file -- `cbor.py` has no null/undefined
+support at all, so this raised inside `cbor.encode` and, swallowed by `_send_message_safe`, would
+have silently broken HELLO entirely on exactly those boards. Fixed at the source
+(`messages.encode_message_body` now drops any `None`-valued key before encoding, matching the
+read side's existing "missing key or explicit None both mean not provided" contract) rather than
+patched around at the one call site -- caught only because this session built the actual
+MicroPython unix-port + mpy-cross toolchain and ran `device-runtime/test/test_protocol.py` for
+real, rather than relying on `py_compile` alone. See `learnings.md`'s 2026-09-05 entry.

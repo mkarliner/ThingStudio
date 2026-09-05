@@ -23,6 +23,14 @@
   button:hover:not(:disabled) { border-color: var(--accent); }
   button:disabled { opacity: 0.4; cursor: not-allowed; }
   button.primary { border-color: var(--accent); color: var(--accent); }
+  /* Flow name (2026-09-05, "flow identity" -- decisions.md): a plain,
+     user-edited label saved in the flow file (flow-file.ts's flowName)
+     and sent with every DEPLOY, so a HELLO's currentFlowName can answer
+     "is the flow on this device the one I have open" without needing to
+     match an opaque deployId against files on disk. */
+  #flowNameInput { background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px;
+    padding: 6px 10px; font-size: 12px; font-family: inherit; width: 200px; }
+  #flowNameInput:focus { outline: none; border-color: var(--accent); }
   .pill { padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border); font-size: 11px; }
   .pill.connected { border-color: var(--good); color: var(--good); }
   .pill.disconnected { border-color: var(--bad); color: var(--bad); }
@@ -70,6 +78,7 @@
 <div id="app">
   <div id="toolbar">
     <h1>Thingstudio</h1>
+    <input id="flowNameInput" type="text" placeholder="untitled flow" title="This flow's name -- saved in the flow file, sent with every deploy so you can tell which flow a connected board is running" />
     <button id="clear-canvas">Clear canvas</button>
     <button id="btnSaveFlow">Save flow</button>
     <button id="btnOpenFlow">Open flow</button>

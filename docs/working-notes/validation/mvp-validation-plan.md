@@ -997,6 +997,62 @@ the README-per-component convention.
   off-device tests, but the result above predates the fix and doesn't
   cover it.
 
+- **Results (2026-09-05, real RP2040/Pico W hardware -- ordering-race fix
+  verification, redirected here first per Mike's own call):** wifi-race-
+  fix-verification-and-network-followups-briefing.md's Problem 1 asked
+  for both ESP32 and RP2040 passes of the wifi_status-vs-mqtt_as
+  ordering-race fix; Mike redirected to RP2040 first, so **the ESP32 leg
+  of this verification is still outstanding** (not attempted this
+  session at all -- carried forward, see the fresh next-session briefing
+  this entry points to).
+
+  First hurdle wasn't the fix under test: the connected Pico W was
+  running a stale on-device `runtime.py` (predating 2026-09-02's
+  `register_trigger` addition), so any deploy failed with
+  `AttributeError: 'module' object has no attribute 'register_trigger'`
+  -- traced to the version-bump mechanism existing but never being
+  exercised (nobody bumped `_RUNTIME_VERSION` when `runtime.py` changed).
+  Fixed by re-running `test-flows/deploy_runtime.py`, plus built lasting
+  infrastructure to catch this class of drift going forward: CLAUDE.md's
+  "Device-runtime version bump discipline" rule, and a belt-and-braces
+  git-SHA `runtimeBuild` marker (HELLO field, `checkRuntimeBuild`,
+  non-blocking) -- see `decisions.md`'s 2026-09-05 entries.
+
+  With a fresh runtime: `basic-mqtt.flow.json` smoke-tested successfully
+  on the Pico W (inject click -> mqtt_publish; mqtt_subscribe -> debug).
+  The Pico W's lack of a physical reset button, and a power-cycle
+  dropping the WebSerial connection, motivated a new `HELLO_REQUEST`
+  message (editor -> device, "resend HELLO now, no side effects") --
+  built and validated end-to-end the same session ("check status
+  works").
+
+  **The ordering-race fix's own charter, specifically:** invalid WiFi
+  credentials on RP2040 did NOT reproduce ESP32's `OSError: Wifi Internal
+  State Error` crash -- a genuine pass for this fix on this platform, per
+  wifi-status-mqtt-connect-ordering-race.md's own RP2040 note (cyw43, not
+  ESP-IDF, so no assumption either fix or failure mode carried over).
+
+  **New, separate finding surfaced by the same test (not a defect in the
+  fix under test):** with invalid credentials, `wifi_status` didn't
+  crash, but its published value oscillated True/False repeatedly rather
+  than settling on False. Correcting the credentials and redeploying did
+  NOT clear the oscillation -- only a full power cycle did. Same shape as
+  the already-documented ESP32
+  `outstanding-items/wlan-state-not-torn-down-on-redeploy.md` finding
+  (leftover native WiFi driver state surviving a redeploy), via a new
+  trigger path and a different chip's WiFi stack -- **that file still
+  needs a dated addendum recording this, not yet written; carried to the
+  next-session briefing.**
+
+  This same investigation is what led to boot-time flow auto-resume and
+  flow identity being built this session (see Tier 2's own Results entry
+  above, and `decisions.md`) -- reasoning chain: a reset/power-cycle is
+  the only thing that clears this stuck state, but before this session, a
+  reset also lost the running flow entirely until a human manually
+  redeployed, which would have made a flow-triggered reset node (Mike's
+  own proposal for automated recovery from exactly this kind of stuck
+  state) far less useful than it is now.
+
 ## Tier 2 — live values + persistence
 
 - Live value streaming: inject a known value sequence, confirm the
@@ -1006,6 +1062,36 @@ the README-per-component convention.
 - Flow persistence: power-cycle a device with a deployed flow N times
   (target: on the order of POC-A's 50-cycle convention) with no editor
   attached; confirm the flow resumes correctly every time.
+  **Results (2026-09-05, mechanism built and verified off-device --
+  real N-power-cycle hardware pass still open):** the mechanism this
+  bullet needs didn't exist before this session -- confirmed by reading
+  `listener.py`'s `main()`, `import _flow` only ever ran inside
+  `_handle_deploy()`, triggered by a live DEPLOY message, never at boot.
+  Surfaced by a real RP2040 finding (stuck WiFi state after invalid-then-
+  corrected credentials, self-healing only via power cycle, never a
+  redeploy) plus Mike's own direct call: "not persisting flows to
+  survive reset or power cycle is pretty fundamental. fix it." Built:
+  `listener.py`'s new `_resume_flow()`, called once from `main()` before
+  `run_forever()`, checks for a persisted flow and imports it exactly
+  the way a live DEPLOY does, degrading to a logged no-op (never a boot
+  failure) if the file is absent or corrupt. Verified against a real
+  MicroPython unix-port + mpy-cross build (not just `py_compile`):
+  `test_listener_integration.py`'s `test_boot_time_flow_auto_resume`
+  deploys once, kills that listener process entirely, starts a brand
+  new one against the same on-disk flow file with no second DEPLOY sent,
+  and confirms the flow runs again; a second test confirms a corrupt
+  persisted flow degrades safely. Same session also added flow identity
+  (`flowName`/`deployId`, echoed in HELLO as `currentFlowName`/
+  `currentFlowDeployId`) so a human can confirm *which* flow resumed, not
+  just that something did -- verified the identity survives the same
+  kill-and-restart cycle. What this does NOT cover yet: the real N-cycle
+  physical power-cycle hardware pass this bullet actually calls for (a
+  CPython-driven subprocess restart is a faithful stand-in for "the
+  process starts fresh with nothing in memory," but isn't real silicon
+  power-cycling, real flash timing, or a real witness-rig pass) -- still
+  open. See `decisions.md`'s 2026-09-05 "flow identity" entry and
+  `outstanding-items/reset-before-deploy.md`'s same-dated update for full
+  detail.
 - State store: deploy a flow with a stateful node (counter or running
   average), redeploy repeatedly, confirm the value survives by default;
   confirm a node's opt-out flag actually clears its state on redeploy

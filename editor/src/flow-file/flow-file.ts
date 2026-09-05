@@ -63,6 +63,10 @@
 
 export const FLOW_FILE_FORMAT_VERSION = 1;
 
+/** Default flow name until the user sets one (main.ts's flow-name input) --
+ * see FlowFile.flowName's own doc comment. */
+export const DEFAULT_FLOW_NAME = "untitled flow";
+
 export class FlowFileError extends Error {}
 
 /** One node's logic -- everything that changes only when behavior changes. */
@@ -93,6 +97,21 @@ export interface FlowFileConfig {
 
 export interface FlowFile {
   formatVersion: number;
+  /** Human-readable identity for this flow -- added 2026-09-05
+   * (decisions.md's "flow identity" entry), the direct follow-on to
+   * device-runtime's boot-time flow auto-resume: once a flow can
+   * survive a reset, "is the flow running on this device the one I have
+   * open" becomes a real question. This is the stable half of that
+   * answer (main.ts's DEPLOY handler also sends a fresh per-deploy uuid,
+   * messages.ts's `deployId` -- see that field's own doc comment for why
+   * identity is split this way). Deliberately a plain user-edited string,
+   * not a generated id: Mike's own call, matching a uuid against flow
+   * files on disk "would be painful" with no index to search. Always a
+   * string in a file this module builds (defaults to DEFAULT_FLOW_NAME);
+   * parseFlowFile treats a missing key on an older, pre-flow-name file
+   * the same way, so hand-written and previously-saved files without
+   * this key keep loading unchanged (same precedent as `configs`). */
+  flowName: string;
   /** Sorted by id -- see buildFlowFile. */
   nodes: FlowFileNode[];
   /** Sorted by [originId, originSlot, targetId, targetSlot] -- see buildFlowFile. */
@@ -134,7 +153,12 @@ function cmpId(a: string, b: string): number {
   return a < b ? -1 : a > b ? 1 : 0;
 }
 
-export function buildFlowFile(nodes: CanvasNodeSnapshot[], edges: FlowFileEdge[], configs: FlowFileConfig[] = []): FlowFile {
+export function buildFlowFile(
+  nodes: CanvasNodeSnapshot[],
+  edges: FlowFileEdge[],
+  configs: FlowFileConfig[] = [],
+  flowName: string = DEFAULT_FLOW_NAME,
+): FlowFile {
   const sortedNodes = [...nodes].sort((a, b) => cmpId(a.id, b.id));
   const sortedEdges = [...edges].sort((a, b) => cmpId(a[0], b[0]) || a[1] - b[1] || cmpId(a[2], b[2]) || a[3] - b[3]);
   const sortedConfigs = [...configs].sort((a, b) => cmpId(a.id, b.id));
@@ -146,6 +170,7 @@ export function buildFlowFile(nodes: CanvasNodeSnapshot[], edges: FlowFileEdge[]
 
   return {
     formatVersion: FLOW_FILE_FORMAT_VERSION,
+    flowName,
     nodes: sortedNodes.map((n) => ({ id: n.id, type: n.type, properties: n.properties })),
     edges: sortedEdges,
     layout,
@@ -170,8 +195,9 @@ export function serializeFlowFileText(file: FlowFile): string {
  * §13's HELLO version check exists: fail clearly at the boundary instead
  * of leaving a future format change to silently misparse as this one.
  *
- * `configs` is the one field treated as optional on input (see this file's
- * header) -- every other top-level field stays mandatory, unchanged.
+ * `configs` and `flowName` are the two fields treated as optional on
+ * input (see this file's header) -- every other top-level field stays
+ * mandatory, unchanged.
  */
 export function parseFlowFile(text: string): FlowFile {
   let raw: unknown;
@@ -188,6 +214,15 @@ export function parseFlowFile(text: string): FlowFile {
   if (obj.formatVersion !== FLOW_FILE_FORMAT_VERSION) {
     throw new FlowFileError(`unsupported flow file formatVersion ${JSON.stringify(obj.formatVersion)} (expected ${FLOW_FILE_FORMAT_VERSION})`);
   }
+  // flowName is the one field treated as optional on input, same
+  // backward-compatibility precedent as `configs` (this file's header):
+  // an older/hand-written file simply doesn't have it, and gets the same
+  // default a freshly-built one would. A *present* but wrong-typed value
+  // still fails loudly, matching every other field's strictness.
+  if (obj.flowName !== undefined && typeof obj.flowName !== "string") {
+    throw new FlowFileError('"flowName" must be a string');
+  }
+  const flowName = typeof obj.flowName === "string" ? obj.flowName : DEFAULT_FLOW_NAME;
   if (!Array.isArray(obj.nodes)) throw new FlowFileError('"nodes" must be an array');
   if (!Array.isArray(obj.edges)) throw new FlowFileError('"edges" must be an array');
   if (typeof obj.layout !== "object" || obj.layout === null) throw new FlowFileError('"layout" must be an object');
@@ -238,5 +273,5 @@ export function parseFlowFile(text: string): FlowFile {
     return { id: rec.id, type: rec.type, properties: rec.properties as Record<string, unknown> };
   });
 
-  return { formatVersion: obj.formatVersion, nodes, edges, layout, configs };
+  return { formatVersion: obj.formatVersion, flowName, nodes, edges, layout, configs };
 }

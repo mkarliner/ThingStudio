@@ -54,6 +54,7 @@
 
 import sys
 import gc
+import json
 import binascii
 
 import uasyncio as asyncio
@@ -159,6 +160,70 @@ _RUNTIME_BUILD = _read_runtime_build()
 
 _deploy_generation = 0  # bumped on every DEPLOY, purely diagnostic (not part of the wire protocol)
 
+# Flow identity, added 2026-09-05 (decisions.md's "flow identity" entry,
+# the direct follow-on to boot-time flow auto-resume): once a flow can
+# survive a reset, "is the flow currently running on this board the one
+# I have open" is a real question. _FLOW_META_PATH is a small sidecar
+# JSON file written next to _FLOW_PATH/_STATIC_DATA_PATH, carrying the
+# two identifiers HELLO/DEPLOY now also carry (messages.py's own note):
+# flowName (the flow file's stable, human-edited name) and deployId (a
+# fresh UUID the editor generates per Deploy click). _current_flow_name/
+# _current_flow_deploy_id are the in-memory mirror _send_hello() actually
+# reads -- updated by both _handle_deploy (a live DEPLOY) and
+# _resume_flow (boot-time auto-resume), deliberately NOT re-read from
+# disk on every HELLO: this must reflect whichever flow is *actually*
+# running right now, and a live redeploy changes that without a reboot.
+_FLOW_META_PATH = "/_flow_meta.json"
+try:
+    # Same THINGSTUDIO_*_PATH override reasoning as _FLOW_PATH/
+    # _STATIC_DATA_PATH just above -- the unix-port build these
+    # off-device tests run against has no device flash, "/" is the real
+    # host filesystem root. Missed on this field's first pass (caught by
+    # test_flow_identity_reported_in_hello_and_survives_resume failing --
+    # without this override, every test process was silently reading/
+    # writing the *same* real "/_flow_meta.json" on the test host,
+    # instead of an isolated per-test tmpdir path).
+    _FLOW_META_PATH = os.getenv("THINGSTUDIO_FLOW_META_PATH", _FLOW_META_PATH)
+except AttributeError:
+    pass
+_current_flow_name = None
+_current_flow_deploy_id = None
+
+
+def _set_current_flow(flow_name, deploy_id):
+    global _current_flow_name, _current_flow_deploy_id
+    _current_flow_name = flow_name
+    _current_flow_deploy_id = deploy_id
+
+
+def _persist_flow_meta(flow_name, deploy_id):
+    """Writes flow identity to flash so _resume_flow can recover it after
+    a reset/power-cycle -- same persistence shape _FLOW_PATH/
+    _STATIC_DATA_PATH already establish for the bytecode itself.
+    Best-effort: by the time this is called the flow has already
+    successfully started (see _handle_deploy), so a write failure here
+    must not be able to fail a deploy that's already succeeded -- logged,
+    not raised."""
+    try:
+        with open(_FLOW_META_PATH, "w") as f:
+            json.dump({"flowName": flow_name, "deployId": deploy_id}, f)
+    except Exception as e:  # noqa: BLE001 -- see docstring
+        print("LISTENER_ERR could not persist flow metadata: %r" % (e,))
+
+
+def _read_flow_meta():
+    try:
+        with open(_FLOW_META_PATH) as f:
+            meta = json.load(f)
+        return meta.get("flowName"), meta.get("deployId")
+    except (OSError, ValueError):
+        # OSError: no meta file (a board bootstrapped before this existed,
+        # or a previous _persist_flow_meta write failed). ValueError:
+        # malformed JSON (cbor.py's own "adversarial input must never be
+        # able to escape" precedent applies here too) -- either way, "no
+        # identity recorded" degrades to (None, None), never a crash.
+        return None, None
+
 
 def _chip_type():
     try:
@@ -228,6 +293,8 @@ async def _send_hello():
             "chipType": _chip_type(),
             "runtimeVersion": _RUNTIME_VERSION,
             "runtimeBuild": _RUNTIME_BUILD,
+            "currentFlowName": _current_flow_name,
+            "currentFlowDeployId": _current_flow_deploy_id,
             "freeFlashBytes": _free_flash_bytes(),
             "freeRamBytes": _free_ram_bytes(),
         }
@@ -248,6 +315,13 @@ async def _handle_deploy(msg):
     future node type to read rather than interpreted here."""
     global _deploy_generation
     await runtime.cancel_running()
+    # Nothing is genuinely running from this point until the code below
+    # re-confirms otherwise -- added 2026-09-05 alongside flow identity:
+    # previously a failed redeploy (import _flow raising, below) still
+    # left the OLD flow's name/deployId looking "current" even though
+    # cancel_running() had already killed it, which would have made
+    # HELLO lie about what's actually running.
+    _set_current_flow(None, None)
     gc.collect()
     before_ram = gc.mem_free()
     try:
@@ -259,12 +333,62 @@ async def _handle_deploy(msg):
         if "_flow" in sys.modules:
             del sys.modules["_flow"]
         import _flow  # noqa: F401 -- executes _flow's top-level code, which calls runtime.spawn(...)
+        _persist_flow_meta(msg["flowName"], msg["deployId"])
+        _set_current_flow(msg["flowName"], msg["deployId"])
         _deploy_generation += 1
         gc.collect()
         _send_message_safe({"type": "DEPLOY_ACK", "freeFlashBytes": _free_flash_bytes(), "freeRamBytes": gc.mem_free()})
     except Exception as e:  # noqa: BLE001 -- a bad DEPLOY is adversarial-shaped input (design doc §13: DEPLOY_ERROR), never allowed to kill the listener
         print("DEPLOY_ERR %r (before_ram=%d)" % (e, before_ram))
         _send_message_safe({"type": "DEPLOY_ERROR", "code": type(e).__name__, "message": str(e)})
+
+
+def _resume_flow():
+    """Boot-time flow auto-resume, added 2026-09-05
+    (docs/working-notes/outstanding-items/reset-before-deploy.md's point 2
+    -- Mike's own words, real hardware finding: "not persisting flows to
+    survive reset or power cycle is pretty fundamental. fix it."). Before
+    this, a previously-DEPLOYed flow only ever (re)started via
+    _handle_deploy() -- i.e. only on a live DEPLOY message arriving over
+    an already-open connection -- even though the compiled bytecode this
+    function reads (_FLOW_PATH) survives on the device's own flash the
+    whole time. Every reset/power-cycle silently lost the running flow
+    until a human noticed and manually redeployed. Called once from
+    main(), synchronously, before run_forever() starts -- same timing
+    _listener()/_heartbeat()/_send_hello() below already rely on: uasyncio
+    lets a task be scheduled (asyncio.create_task) before the loop is
+    actually running, which is exactly what `import _flow`'s top-level
+    runtime.spawn(...) calls do.
+
+    Deliberately NOT routed through _handle_deploy() itself: there's no
+    incoming DEPLOY message here (no bytecode/staticData to write --
+    _FLOW_PATH/_STATIC_DATA_PATH already hold whatever the last real
+    DEPLOY wrote), nothing running yet for cancel_running() to cancel, and
+    no DEPLOY_ACK to send (nothing sent a request for this to acknowledge,
+    and boot is almost certainly too early for an editor to be connected
+    to receive it anyway). The one thing both paths share -- `import
+    _flow` -- is the only thing this function does.
+
+    A missing flow file (never deployed, or a board bootstrapped before
+    this existed) is the ordinary, expected case, not a fault. A present
+    but corrupt/incompatible flow file (this port's bytecode format
+    changed, hand-edited, truncated write) must degrade to "didn't
+    resume" and let boot continue -- a bad persisted flow must never be
+    able to brick the listener itself, same "adversarial input, never
+    allowed to kill the process" reasoning _handle_deploy's own
+    DEPLOY_ERROR path already follows."""
+    try:
+        with open(_FLOW_PATH, "rb"):
+            pass
+    except OSError:
+        print("LISTENER_BOOT no persisted flow at %s -- nothing to resume" % _FLOW_PATH)
+        return
+    try:
+        import _flow  # noqa: F401 -- see _handle_deploy's own note: executes _flow's top-level code, which calls runtime.spawn(...)
+        _set_current_flow(*_read_flow_meta())
+        print("LISTENER_BOOT resumed persisted flow from %s" % _FLOW_PATH)
+    except Exception as e:  # noqa: BLE001 -- a corrupt/incompatible persisted flow must degrade to "didn't resume", never crash boot
+        print("LISTENER_BOOT_ERR could not resume persisted flow: %r" % (e,))
 
 
 async def _dispatch(result):
@@ -435,6 +559,8 @@ def main():
     flow_dir = "" if flow_dir in ("", "/") else flow_dir
     if flow_dir not in sys.path:
         sys.path.insert(0, flow_dir)
+
+    _resume_flow()
 
     print("LISTENER_READY")
     asyncio.create_task(_listener())

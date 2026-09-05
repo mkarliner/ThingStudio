@@ -36,6 +36,14 @@ automatic (non-blocking) git-SHA marker check -- see CLAUDE.md's
 "Device-runtime version bump discipline" (2026-09-05, surfaced by a
 real RP2040 hardware failure).
 
+A fifth: `py_compile` is a syntax check, not a test -- verify any
+`device-runtime/src` change that could actually run against the real
+MicroPython suite (build the toolchain once, ~2 minutes, per
+`device-runtime/test/README.md`), not `py_compile` alone. See
+CLAUDE.md's "`device-runtime/src` changes: run the real MicroPython
+suite, not just `py_compile`" (2026-09-05, caught a real `cbor.py`
+`None`-encoding bug `py_compile` had twice reported clean).
+
 ## MicroPython / device-runtime
 
 - **`sys.stdin.read(n)`/`readexactly(n)` can hang a port's event loop
@@ -91,6 +99,35 @@ real RP2040 hardware failure).
   immediately followed by an unconditional `.connect()`, no connecting-state
   guard) in any other code that brings up `STA_IF` directly, not just this
   one call site.
+- **`py_compile` only proves a file parses -- it caught neither of two
+  real bugs a real MicroPython run found in the same session.** Built the
+  actual toolchain (`device-runtime/test/README.md`'s recipe: clone
+  `micropython`, `make -C mpy-cross`, `make submodules && make` in
+  `ports/unix`) for the first time from inside a Cowork device-bridge
+  session, entirely in the bridge's own scratch space (`~/tmp/`, never the
+  shared mount) so it carried none of the cross-platform-native-binary
+  risk the npm/`node_modules` restriction exists for. Running the real
+  suite immediately surfaced `cbor.py`'s encoder raising `TypeError` on a
+  `None` value (2026-09-05's `runtimeBuild` field, sent unconditionally
+  including when unknown) -- invisible to `py_compile`, which only checks
+  syntax, not runtime behavior, and would have shipped a HELLO that
+  silently never sent on any board without a `_runtime_build.txt` marker.
+  Worth the ~2 minutes of one-time build cost whenever a session touches
+  `device-runtime/src` in a way that could actually run — `py_compile`
+  alone is a syntax check, not a test.
+- **CBOR `None`/null has to be handled explicitly on both the write and
+  read side of an optional field -- it doesn't fail loudly by default.**
+  `cbor.py` (this project's hand-rolled encoder) has no null/undefined
+  support at all, by design (optional fields are meant to be omitted from
+  the map entirely, never encoded as CBOR null) -- but nothing enforced
+  that at the call site, so `_send_hello()` passing an explicit `None`
+  straight through to `cbor.encode` raised, and that raise was swallowed
+  by `_send_message_safe`'s own catch-all, so the failure mode was total
+  silence (no HELLO at all), not a visible error. Fixed generally at
+  `messages.encode_message_body` (drops `None`-valued keys before
+  encoding) rather than at the one call site that happened to trigger it
+  -- any future optional-and-sometimes-unknown field gets this for free.
+  `decisions.md`'s 2026-09-05 entry.
 
 ## Hardware bring-up / HIL rig
 

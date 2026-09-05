@@ -25,6 +25,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildFlowFile,
+  DEFAULT_FLOW_NAME,
   FLOW_FILE_FORMAT_VERSION,
   FlowFileError,
   parseFlowFile,
@@ -79,6 +80,16 @@ describe("buildFlowFile", () => {
   it("sorts configs by id (string comparison), regardless of input order", () => {
     const file = buildFlowFile(SAMPLE_NODES, SAMPLE_EDGES, SAMPLE_CONFIGS);
     expect(file.configs.map((c) => c.id)).toEqual(["wifi-a", "wifi-b"]);
+  });
+
+  it("defaults flowName to DEFAULT_FLOW_NAME when omitted", () => {
+    const file = buildFlowFile(SAMPLE_NODES, SAMPLE_EDGES);
+    expect(file.flowName).toBe(DEFAULT_FLOW_NAME);
+  });
+
+  it("uses the given flowName when provided", () => {
+    const file = buildFlowFile(SAMPLE_NODES, SAMPLE_EDGES, [], "my named flow");
+    expect(file.flowName).toBe("my named flow");
   });
 });
 
@@ -150,6 +161,23 @@ describe("parseFlowFile: round-trip and validation", () => {
     const base = { formatVersion: FLOW_FILE_FORMAT_VERSION, nodes: [], edges: [], layout: {} };
     const parsed = parseFlowFile(JSON.stringify(base));
     expect(parsed.configs).toEqual([]);
+  });
+
+  it("round-trips flowName", () => {
+    const file = buildFlowFile(SAMPLE_NODES, SAMPLE_EDGES, [], "my named flow");
+    const parsed = parseFlowFile(serializeFlowFileText(file));
+    expect(parsed.flowName).toBe("my named flow");
+  });
+
+  it("treats a missing `flowName` key (an older, pre-flow-name flow file) as DEFAULT_FLOW_NAME, not a validation error", () => {
+    const base = { formatVersion: FLOW_FILE_FORMAT_VERSION, nodes: [], edges: [], layout: {} };
+    const parsed = parseFlowFile(JSON.stringify(base));
+    expect(parsed.flowName).toBe(DEFAULT_FLOW_NAME);
+  });
+
+  it("rejects a non-string flowName", () => {
+    const base = { formatVersion: FLOW_FILE_FORMAT_VERSION, nodes: [], edges: [], layout: {} };
+    expect(() => parseFlowFile(JSON.stringify({ ...base, flowName: 123 }))).toThrow(/"flowName" must be a string/);
   });
 
   it("rejects non-JSON text", () => {

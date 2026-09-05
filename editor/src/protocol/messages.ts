@@ -98,6 +98,27 @@ export interface HelloMessage {
    * determine git info when it last ran -- not "confirmed stale."
    */
   readonly runtimeBuild: string | null;
+  /**
+   * Flow identity, added 2026-09-05 (decisions.md's "flow identity"
+   * entry) as the direct follow-on to boot-time flow auto-resume: once a
+   * flow can survive a reset, "is the flow currently running on this
+   * board the one I have open" becomes a real question, not a
+   * hypothetical. `currentFlowName` is the flow-file's own
+   * user-editable, stable name (flow-file.ts's `flowName`) -- meant to
+   * be read by a human, not matched programmatically (Mike's own call:
+   * a UUID isn't useful here because "matching uuid against flow files
+   * would be painful" -- there's no index of flow files by UUID to
+   * search). `currentFlowDeployId` is the opposite kind of identifier:
+   * a fresh UUID the editor generates on every single Deploy click
+   * (main.ts), so it identifies *which deploy* is running, not which
+   * flow -- redeploying the identical, unchanged flow twice still gets
+   * two different deployIds. Both null together mean no flow has
+   * successfully started this boot (never deployed, or every deploy/
+   * resume attempt so far failed) -- see listener.py's `_current_flow_name`/
+   * `_current_flow_deploy_id`.
+   */
+  readonly currentFlowName: string | null;
+  readonly currentFlowDeployId: string | null;
   readonly freeFlashBytes: number;
   readonly freeRamBytes: number;
 }
@@ -115,6 +136,21 @@ export interface DeployMessage {
   readonly type: "DEPLOY";
   readonly bytecode: Uint8Array;
   readonly staticData: Uint8Array;
+  /**
+   * Flow identity, added 2026-09-05 alongside HELLO's `currentFlowName`/
+   * `currentFlowDeployId` (see that field's doc comment for the full
+   * reasoning) -- `flowName` is the flow file's own stable, user-edited
+   * name (flow-file.ts); `deployId` is a fresh `crypto.randomUUID()`
+   * main.ts generates fresh on every Deploy click, identifying this one
+   * deploy action, not the flow itself. Both nullable on the wire
+   * (`expectOptionalString`/`_expect_optional_string`) purely for an
+   * old-editor/new-device-runtime compatibility degrade -- this editor
+   * always sends real values for both; a device that doesn't recognize
+   * these fields simply ignores them (same additive-field precedent as
+   * `runtimeBuild` on HELLO).
+   */
+  readonly flowName: string | null;
+  readonly deployId: string | null;
 }
 
 /**

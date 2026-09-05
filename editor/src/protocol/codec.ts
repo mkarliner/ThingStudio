@@ -186,6 +186,8 @@ function validateHello(obj: Record<string, unknown>): Omit<HelloMessage, "type">
     chipType: expectString(obj, "chipType", "HELLO"),
     runtimeVersion: expectVersion(obj, "runtimeVersion", "HELLO"),
     runtimeBuild: expectOptionalString(obj, "runtimeBuild", "HELLO"),
+    currentFlowName: expectOptionalString(obj, "currentFlowName", "HELLO"),
+    currentFlowDeployId: expectOptionalString(obj, "currentFlowDeployId", "HELLO"),
     freeFlashBytes: expectNonNegativeInt(obj, "freeFlashBytes", "HELLO"),
     freeRamBytes: expectNonNegativeInt(obj, "freeRamBytes", "HELLO"),
   };
@@ -195,6 +197,8 @@ function validateDeploy(obj: Record<string, unknown>): Omit<DeployMessage, "type
   return {
     bytecode: expectBytes(obj, "bytecode", "DEPLOY"),
     staticData: expectBytes(obj, "staticData", "DEPLOY"),
+    flowName: expectOptionalString(obj, "flowName", "DEPLOY"),
+    deployId: expectOptionalString(obj, "deployId", "DEPLOY"),
   };
 }
 

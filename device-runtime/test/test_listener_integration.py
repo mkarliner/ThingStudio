@@ -79,6 +79,7 @@ class ListenerProcess:
         env["THINGSTUDIO_BOOT_DELAY_S"] = "0.1"
         env["THINGSTUDIO_FLOW_PATH"] = os.path.join(tmpdir, "_flow.mpy")
         env["THINGSTUDIO_STATIC_DATA_PATH"] = os.path.join(tmpdir, "_flow_static.bin")
+        env["THINGSTUDIO_FLOW_META_PATH"] = os.path.join(tmpdir, "_flow_meta.json")
         listener_path = os.path.join(SRC_DIR, "listener.py")
         self.proc = subprocess.Popen(
             [MICROPYTHON_BIN, listener_path],
@@ -345,8 +346,199 @@ def test_hello_request_resends_hello_no_side_effects():
             listener.close()
 
 
+def test_boot_time_flow_auto_resume():
+    # 2026-09-05, Mike's own real-hardware finding: "not persisting flows
+    # to survive reset or power cycle is pretty fundamental. fix it." --
+    # before listener.py's _resume_flow(), a second listener process
+    # pointed at the same on-disk flow file would boot with nothing
+    # running at all; only a fresh DEPLOY (a live message, not just the
+    # bytecode already sitting on disk) ever started a flow. This test is
+    # the whole point: deploy once, throw away that listener process
+    # entirely (the real-world equivalent of a reset/power-cycle), start a
+    # brand new one against the same tmpdir, and confirm the flow runs
+    # again with NO second DEPLOY sent.
+    with tempfile.TemporaryDirectory() as tmpdir:
+        bytecode = _compile_flow(
+            tmpdir,
+            "flow_resumable",
+            "import runtime\n"
+            "async def _flow_0():\n"
+            "    print('INTEGRATION_FLOW_RESUMED')\n"
+            "runtime.spawn(_flow_0(), '1')\n",
+        )
+        first = ListenerProcess(tmpdir)
+        try:
+            first.wait_for(lambda l: l == "LISTENER_READY", description="LISTENER_READY (first boot)")
+            first.send_message({"type": "DEPLOY", "bytecode": bytecode, "staticData": b""})
+            first.wait_for(
+                lambda l: l.startswith(F64_PREFIX) and _decode_f64_line(l)["type"] == "DEPLOY_ACK",
+                description="DEPLOY_ACK",
+            )
+        finally:
+            first.close()
+
+        # Simulates a reset/power-cycle: a brand new process, same on-disk
+        # _flow.mpy (THINGSTUDIO_FLOW_PATH points at the same tmpdir/file),
+        # no DEPLOY sent this time at all.
+        second = ListenerProcess(tmpdir)
+        try:
+            second.wait_for(
+                lambda l: l == "LISTENER_BOOT resumed persisted flow from %s" % os.path.join(tmpdir, "_flow.mpy"),
+                description="boot-time resume log line",
+            )
+            second.wait_for(lambda l: l == "INTEGRATION_FLOW_RESUMED", description="the persisted flow's own print output, with no DEPLOY sent this boot")
+        finally:
+            second.close()
+
+
+def test_flow_identity_reported_in_hello_and_survives_resume():
+    # 2026-09-05, Mike's direct follow-on to auto-resume: "so if we
+    # connect to a micro we know if we have the right flow loaded."
+    # flowName/deployId travel in DEPLOY, get persisted alongside the
+    # bytecode, and come back out in HELLO as currentFlowName/
+    # currentFlowDeployId -- confirm both survive a full process
+    # restart (the real-world equivalent of a reset/power-cycle), not
+    # just a live connection.
+    with tempfile.TemporaryDirectory() as tmpdir:
+        bytecode = _compile_flow(
+            tmpdir,
+            "flow_named",
+            "import runtime\nasync def _flow_0():\n    print('INTEGRATION_FLOW_NAMED_RAN')\nruntime.spawn(_flow_0(), '1')\n",
+        )
+        first = ListenerProcess(tmpdir)
+        try:
+            first.wait_for(lambda l: l == "LISTENER_READY", description="LISTENER_READY (first boot)")
+            first.send_message(
+                {
+                    "type": "DEPLOY",
+                    "bytecode": bytecode,
+                    "staticData": b"",
+                    "flowName": "my named flow",
+                    "deployId": "11111111-2222-3333-4444-555555555555",
+                }
+            )
+            first.wait_for(
+                lambda l: l.startswith(F64_PREFIX) and _decode_f64_line(l)["type"] == "DEPLOY_ACK",
+                description="DEPLOY_ACK",
+            )
+            first.send_message({"type": "HELLO_REQUEST"})
+
+            def _is_hello_for_named_flow(l):
+                if not l.startswith(F64_PREFIX):
+                    return False
+                try:
+                    msg = _decode_f64_line(l)
+                except Exception:
+                    return False
+                return msg["type"] == "HELLO" and msg.get("currentFlowName") == "my named flow"
+
+            reply_line = first.wait_for(_is_hello_for_named_flow, description="a HELLO reporting the just-deployed flow's identity (not the earlier boot-time one)")
+            msg = _decode_f64_line(reply_line)
+            assert msg["currentFlowName"] == "my named flow"
+            assert msg["currentFlowDeployId"] == "11111111-2222-3333-4444-555555555555"
+        finally:
+            first.close()
+
+        # Simulates a reset/power-cycle: brand new process, same on-disk
+        # flow + flow-meta files, no DEPLOY sent -- the identity should
+        # come back exactly as it was, recovered by _resume_flow(), not
+        # just the bytecode.
+        second = ListenerProcess(tmpdir)
+        try:
+            second.wait_for(lambda l: l == "INTEGRATION_FLOW_NAMED_RAN", description="the persisted flow resumed with no DEPLOY sent")
+            line = second.wait_for(lambda l: l.startswith(F64_PREFIX), description="boot HELLO reporting the resumed flow's identity")
+            msg = _decode_f64_line(line)
+            assert msg["type"] == "HELLO"
+            assert msg["currentFlowName"] == "my named flow"
+            assert msg["currentFlowDeployId"] == "11111111-2222-3333-4444-555555555555"
+        finally:
+            second.close()
+
+
+def test_failed_redeploy_clears_flow_identity():
+    # A DEPLOY that fails (bad bytecode) must not leave the OLD flow's
+    # identity looking "current" -- cancel_running() already killed it,
+    # so HELLO reporting the stale name/deployId afterward would be a
+    # lie about what's actually running (see listener.py's
+    # _handle_deploy, the _set_current_flow(None, None) added alongside
+    # this same 2026-09-05 change).
+    with tempfile.TemporaryDirectory() as tmpdir:
+        bytecode = _compile_flow(
+            tmpdir,
+            "flow_good",
+            "import runtime\nasync def _flow_0():\n    print('INTEGRATION_GOOD_FLOW_RAN')\nruntime.spawn(_flow_0(), '1')\n",
+        )
+        listener = ListenerProcess(tmpdir)
+        try:
+            listener.wait_for(lambda l: l == "LISTENER_READY", description="LISTENER_READY")
+            listener.send_message(
+                {"type": "DEPLOY", "bytecode": bytecode, "staticData": b"", "flowName": "good flow", "deployId": "aaaa"}
+            )
+            listener.wait_for(
+                lambda l: l.startswith(F64_PREFIX) and _decode_f64_line(l)["type"] == "DEPLOY_ACK",
+                description="DEPLOY_ACK for the good flow",
+            )
+
+            # Deliberately corrupt bytecode -- import _flow will raise.
+            listener.send_message(
+                {"type": "DEPLOY", "bytecode": b"not real bytecode", "staticData": b"", "flowName": "bad flow", "deployId": "bbbb"}
+            )
+            listener.wait_for(
+                lambda l: l.startswith(F64_PREFIX) and _decode_f64_line(l)["type"] == "DEPLOY_ERROR",
+                description="DEPLOY_ERROR for the corrupt bytecode",
+            )
+
+            listener.send_message({"type": "HELLO_REQUEST"})
+            reply_line = listener.wait_for(
+                lambda l: l.startswith(F64_PREFIX) and _decode_f64_line(l)["type"] == "HELLO",
+                description="HELLO_REQUEST reply after the failed redeploy",
+            )
+            msg = _decode_f64_line(reply_line)
+            assert msg["currentFlowName"] is None, "stale identity from the cancelled good flow must not survive a failed redeploy"
+            assert msg["currentFlowDeployId"] is None
+        finally:
+            listener.close()
+
+
+def test_boot_time_resume_survives_corrupt_persisted_flow():
+    # A persisted flow file that can't actually be imported (this port's
+    # bytecode format changed, a truncated write, hand-edited garbage)
+    # must degrade to "didn't resume" and let the rest of boot continue --
+    # never brick the listener itself. Confirmed here by writing garbage
+    # bytes straight to the flow path (bypassing DEPLOY entirely) and
+    # checking the listener still reaches LISTENER_READY, still sends its
+    # boot HELLO, and still accepts a normal DEPLOY afterward.
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with open(os.path.join(tmpdir, "_flow.mpy"), "wb") as f:
+            f.write(b"not a real .mpy file")
+
+        listener = ListenerProcess(tmpdir)
+        try:
+            listener.wait_for(lambda l: l == "LISTENER_READY", description="LISTENER_READY despite a corrupt persisted flow")
+            listener.wait_for(
+                lambda l: l.startswith("LISTENER_BOOT_ERR could not resume persisted flow"),
+                description="a logged, non-fatal boot-resume error",
+            )
+            line = listener.wait_for(lambda l: l.startswith(F64_PREFIX), description="boot HELLO still sent")
+            assert _decode_f64_line(line)["type"] == "HELLO"
+
+            bytecode = _compile_flow(
+                tmpdir,
+                "flow_after_corrupt_resume",
+                "import runtime\nasync def _flow_0():\n    print('STILL_ALIVE_AFTER_CORRUPT_RESUME')\nruntime.spawn(_flow_0(), '1')\n",
+            )
+            listener.send_message({"type": "DEPLOY", "bytecode": bytecode, "staticData": b""})
+            listener.wait_for(lambda l: l == "STILL_ALIVE_AFTER_CORRUPT_RESUME", description="a normal DEPLOY still works after a corrupt persisted flow")
+        finally:
+            listener.close()
+
+
 TESTS = [
     test_hello_sent_on_boot,
+    test_boot_time_flow_auto_resume,
+    test_boot_time_resume_survives_corrupt_persisted_flow,
+    test_flow_identity_reported_in_hello_and_survives_resume,
+    test_failed_redeploy_clears_flow_identity,
     test_hello_request_resends_hello_no_side_effects,
     test_deploy_success_and_flow_runs,
     test_node_error_reported_end_to_end,

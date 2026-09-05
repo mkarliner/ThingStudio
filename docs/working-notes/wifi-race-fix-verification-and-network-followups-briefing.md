@@ -1,5 +1,12 @@
 # Briefing: verify the WiFi/mqtt ordering-race fix on real hardware (ESP32 + RP2040), then close out remaining network follow-ups
 
+**Superseded, 2026-09-05 -- read `http-request-canvas-and-network-followups-briefing.md` instead.** RP2040
+verification (Problem 1) is done; ESP32 verification is not (still open, carried forward). Problems 2 and 3
+below were never reached this session -- carried forward unchanged. Two real, unplanned things this session
+also built, unrelated to this briefing's own scope but worth knowing about before touching `listener.py`/
+`messages.py`/the wire protocol again: boot-time flow auto-resume, and flow identity (`flowName`/`deployId`).
+Full detail in the new briefing and in `decisions.md`'s 2026-09-05 entries.
+
 For the next chat. Read `CLAUDE.md` in full, as always, plus `docs/working-notes/mikes-questions-and-points.md`.
 
 **Check `git log` before assuming anything below is committed.** Five commits landed 2026-09-04 covering this

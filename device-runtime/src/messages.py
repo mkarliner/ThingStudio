@@ -60,8 +60,25 @@ def message_type_id(message):
 def encode_message_body(message):
     """Encode a message dict (must have a "type" key naming one of
     MessageType) to its CBOR body only -- no frame header, see
-    framing.encode_frame."""
-    body = {k: v for k, v in message.items() if k != "type"}
+    framing.encode_frame.
+
+    Any key whose value is None is dropped before encoding -- not just
+    "type". This is the write-side half of _expect_optional_string's own
+    "a missing key or an explicit None both mean 'not provided'" contract
+    (this file, and codec.ts's expectOptionalString on the editor side):
+    an optional field a caller doesn't have a value for (e.g. HELLO's
+    runtimeBuild on a board with no _runtime_build.txt marker) should
+    round-trip as "field absent," the same as an older sender that never
+    knew the field existed at all. Required, not just tidy: cbor.py has no
+    null/undefined support at all (its own header note -- "this
+    protocol's optional fields are omitted from the map entirely, never
+    encoded as CBOR null/undefined"), so passing an explicit None straight
+    through to cbor.encode() would raise TypeError instead of encoding
+    anything -- confirmed the hard way (2026-09-05): this file's own
+    SAMPLE_MESSAGES round-trip fixture for HELLO's "board doesn't know its
+    build" case used exactly this shape and failed exactly this way before
+    this filter existed."""
+    body = {k: v for k, v in message.items() if k != "type" and v is not None}
     return cbor.encode(body)
 
 
@@ -160,6 +177,14 @@ def _validate_hello(obj, name):
         "chipType": _expect_string(obj, "chipType", name),
         "runtimeVersion": _expect_version(obj, "runtimeVersion", name),
         "runtimeBuild": _expect_optional_string(obj, "runtimeBuild", name),
+        # Flow identity, added 2026-09-05 -- see messages.ts's HelloMessage
+        # doc comment for the full reasoning (Mike's own call: the stable,
+        # human-editable flowName is what answers "is this the flow I have
+        # open," not the per-deploy deployId; matching an opaque uuid
+        # against flow files on disk "would be painful"). Both null means
+        # no flow has successfully started this boot.
+        "currentFlowName": _expect_optional_string(obj, "currentFlowName", name),
+        "currentFlowDeployId": _expect_optional_string(obj, "currentFlowDeployId", name),
         "freeFlashBytes": _expect_non_negative_int(obj, "freeFlashBytes", name),
         "freeRamBytes": _expect_non_negative_int(obj, "freeRamBytes", name),
     }
@@ -169,6 +194,14 @@ def _validate_deploy(obj, name):
     return {
         "bytecode": _expect_bytes(obj, "bytecode", name),
         "staticData": _expect_bytes(obj, "staticData", name),
+        # Flow identity (see _validate_hello's own note just above) --
+        # optional/nullable here specifically so an old editor that
+        # predates this feature can still DEPLOY successfully against a
+        # new device-runtime (missing key degrades to None, not a
+        # MessageDecodeError), matching this file's own established
+        # additive-field convention.
+        "flowName": _expect_optional_string(obj, "flowName", name),
+        "deployId": _expect_optional_string(obj, "deployId", name),
     }
 
 

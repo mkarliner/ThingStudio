@@ -464,6 +464,102 @@ Same convention already established for `docs/third-party-licenses.md`.
   doesn't apply to protocol additions an old device degrades safely on).
   `messages.ts`/`messages.py`, `codec.ts`, `listener.py`, `main.ts`,
   `index.html`.
+- **2026-09-05 -- boot-time flow auto-resume built: a persisted flow
+  (`/_flow.mpy`) now restarts on any cold boot, not only on a live
+  DEPLOY.** Mike's own explicit, unambiguous call, surfaced while
+  scoping how far to take a flow-triggered reset-node idea (itself
+  prompted by a real RP2040 finding -- stuck `wifi_status` oscillation
+  under invalid-then-corrected credentials, clearing only on a power
+  cycle, never a redeploy): "not persisting flows to survive reset or
+  power cycle is pretty fundamental. fix it." Before this, every
+  reset/power-cycle silently lost the running flow until a human
+  noticed and manually redeployed, even though the compiled bytecode
+  itself survived on flash the whole time -- `_handle_deploy` only ever
+  ran `import _flow` in response to a live DEPLOY message arriving over
+  an already-open connection, never at boot. Fixed with a new
+  `listener.py` function, `_resume_flow()`, called once from `main()`
+  before `run_forever()` starts (same synchronous-task-scheduling timing
+  `_listener()`/`_heartbeat()`/`_send_hello()` already use): checks
+  `_FLOW_PATH` for a persisted flow and imports it exactly the way
+  `_handle_deploy` does, degrading to a logged no-op (never a boot
+  failure) when the file is absent or corrupt/incompatible. Deliberately
+  not routed through `_handle_deploy()` itself -- no incoming DEPLOY
+  message to acknowledge, nothing running yet to cancel, no live
+  connection this early in boot to send a DEPLOY_ACK to anyway.
+  Confirmed against a real MicroPython unix-port build + real
+  mpy-cross-compiled flows (not just `py_compile`):
+  `test_listener_integration.py`'s `test_boot_time_flow_auto_resume`
+  deploys once, kills that listener process, starts a brand new one
+  against the same on-disk flow file with no second DEPLOY sent, and
+  confirms the flow runs again; a second test confirms a corrupt
+  persisted flow file doesn't block boot. Explicitly does NOT resolve
+  `reset-before-deploy.md`'s own bigger, still-unscoped idea (DEPLOY_ACK
+  semantics across a reset, host tooling tolerating a connection drop) --
+  it closes exactly the one prerequisite that idea's own "not a
+  one-liner" list already named, and separately makes the reset-node
+  idea viable (a reset no longer loses the running flow). See
+  `reset-before-deploy.md`'s 2026-09-05 update. `listener.py`,
+  `test_listener_integration.py`.
+- **2026-09-05 -- `messages.encode_message_body` now drops any
+  `None`-valued key before CBOR-encoding, instead of passing it through
+  to `cbor.encode` verbatim.** Found while building the real MicroPython
+  toolchain to verify the auto-resume work above: `cbor.py` has no
+  null/undefined support at all (by design -- its own header says this
+  protocol's optional fields are meant to be omitted from the map
+  entirely, never encoded as CBOR null), but `_send_hello()` was
+  unconditionally sending `"runtimeBuild": _RUNTIME_BUILD`, which is
+  `None` on any board with no `_runtime_build.txt` marker file. That
+  raises `TypeError` inside `cbor.encode`, silently swallowed by
+  `_send_message_safe` -- HELLO would never have actually reached the
+  wire on exactly the boards this field was least tested against
+  (anything bootstrapped before 2026-09-05, or pushed without git
+  available). Fixed at the general encode path rather than patched
+  around at the one call site, symmetric with the read side's own
+  `_expect_optional_string`/`expectOptionalString`, which already treat
+  "missing key" and "explicit None" as the same "not provided" case.
+  Caught only because this session ran the actual off-device test suite
+  against a real build rather than relying on `py_compile` alone -- see
+  `learnings.md`. `messages.py`.
+
+- **2026-09-05 -- flow identity: a stable, user-edited `flowName` (flow
+  file + wire protocol) plus a per-deploy `deployId` (uuid, wire protocol
+  only) -- deliberately two different kinds of identifier, not one.**
+  Direct follow-on to boot-time flow auto-resume: once a flow can survive
+  a reset, "is the flow running on this board the one I have open"
+  becomes a real, recurring question, not hypothetical. Mike's own
+  explicit call, correcting my initial framing (which had the uuid as the
+  stable identity and the name as derived): "stable name, per deploy
+  uuid. otherwise how do I know which flow to load in the editor?
+  matching uuid against flow files would be painful" -- there's no index
+  of flow files by uuid to search, so the field meant to be read by a
+  human (which flow is this) has to be the human-chosen name, not an
+  opaque generated id. `flowName` lives in the flow file itself
+  (flow-file.ts, new `DEFAULT_FLOW_NAME`-backed field, a new toolbar text
+  input in `index.html`/`main.ts`) and travels with every DEPLOY;
+  `deployId` is a fresh `crypto.randomUUID()` main.ts generates on every
+  single Deploy click, identifying *that one deploy action* -- redeploying
+  the identical, unchanged flow twice still gets two different deployIds.
+  Both come back out in HELLO as `currentFlowName`/`currentFlowDeployId`
+  (null together = no flow has successfully started this boot), purely
+  informational like `runtimeBuild`'s own check -- never gates a DEPLOY.
+  Device-side: `listener.py` persists both to a new sidecar file
+  (`_flow_meta.json`, alongside `_flow.mpy`/`_flow_static.bin`) on a
+  successful deploy, recovers it in `_resume_flow()` on boot, and
+  explicitly clears it (`_set_current_flow(None, None)`) right after
+  `cancel_running()` in `_handle_deploy` -- a fixed pre-existing gap found
+  while building this: a failed redeploy used to leave the OLD flow's
+  identity looking "current" even though it had already been cancelled.
+  Both new DEPLOY fields are optional/nullable on decode (an old editor
+  that predates this feature still deploys fine against a new
+  device-runtime), same additive-field convention as `runtimeBuild` --
+  no version bump needed. Verified against the real MicroPython
+  toolchain, not just `py_compile`: a new integration test deploys a
+  named flow, kills that listener process, starts a brand new one, and
+  confirms the SAME name/deployId come back in the boot HELLO with no
+  second DEPLOY sent; a second new test confirms a failed redeploy
+  reports no flow running, not the stale old one.
+  `flow-file.ts`, `messages.ts`/`messages.py`, `codec.ts`, `listener.py`,
+  `main.ts`, `index.html`.
 
 ## Node authoring / extensibility
 

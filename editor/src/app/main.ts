@@ -80,6 +80,7 @@ import {
   parseFlowFile,
   serializeFlowFileText,
   FlowFileError,
+  DEFAULT_FLOW_NAME,
   type FlowFile,
   type FlowFileEdge,
   type FlowFileConfig,
@@ -88,6 +89,16 @@ import {
 import { saveFlowFileToDisk, openFlowFileFromDisk } from "../flow-file/file-io.js";
 
 const el = <T extends HTMLElement = HTMLElement>(id: string): T => document.getElementById(id) as T;
+
+// Flow identity (2026-09-05, "flow identity" -- decisions.md): the name
+// input is the single source of truth for this flow's flowName, read at
+// save/deploy time and written at load/clear time -- deliberately not
+// mirrored into any other in-memory variable, so there's exactly one
+// place this can drift from what's on screen.
+function currentFlowNameInput(): string {
+  const raw = el<HTMLInputElement>("flowNameInput").value.trim();
+  return raw === "" ? DEFAULT_FLOW_NAME : raw;
+}
 
 // ---------------------------------------------------------------------
 // Canvas
@@ -154,8 +165,10 @@ el("clear-canvas").addEventListener("click", async () => {
   // together rather than leaving orphaned configs no visible node
   // references anymore. Loaded custom node *types* are session-scoped, not
   // flow-scoped (this file's header comment) -- deliberately NOT reset
-  // here.
+  // here. The flow name (2026-09-05) is flow-scoped the same way configs
+  // are, so it resets to the same default a brand new flow file would get.
   clearConfigs();
+  el<HTMLInputElement>("flowNameInput").value = "";
 });
 
 // Palette (left) -- click-to-add via the `add`/`addCustom` emits, plus the
@@ -360,7 +373,7 @@ async function applyFlowFile(file: FlowFile): Promise<void> {
 el("btnSaveFlow").addEventListener("click", async () => {
   try {
     const { nodes, edges } = extractCanvasSnapshot();
-    const text = serializeFlowFileText(buildFlowFile(nodes, edges, extractConfigsSnapshot()));
+    const text = serializeFlowFileText(buildFlowFile(nodes, edges, extractConfigsSnapshot(), currentFlowNameInput()));
     const saved = await saveFlowFileToDisk(text, "flow.flow.json");
     if (saved) logLine("[flow saved]", "ok");
   } catch (err) {
@@ -374,6 +387,11 @@ el("btnOpenFlow").addEventListener("click", async () => {
     if (text === null) return; // user cancelled the picker
     const file = parseFlowFile(text);
     await applyFlowFile(file);
+    // Mirrors the file's own saved name into the input -- shows "" (the
+    // placeholder) rather than literally re-typing DEFAULT_FLOW_NAME for
+    // an older file that never had one, same reasoning clear-canvas's own
+    // reset uses.
+    el<HTMLInputElement>("flowNameInput").value = file.flowName === DEFAULT_FLOW_NAME ? "" : file.flowName;
     logLine(`[flow loaded -- ${file.nodes.length} node(s)]`, "ok");
     refreshPreview();
   } catch (err) {
@@ -738,6 +756,17 @@ const transport = new WebSerialTransport({
       // decideDeploy rather than replacing it.
       const buildCheck = checkRuntimeBuild(message.runtimeBuild, EDITOR_RUNTIME_BUILD);
       logLine(`[runtime build check] ${buildCheck.reason}`, buildCheck.status === "mismatch" ? "err" : "ok");
+      // Flow identity (2026-09-05, "flow identity" -- decisions.md):
+      // purely informational, same non-blocking spirit as the build
+      // check just above -- lets a human confirm "is the flow on this
+      // board the one I have open" without matching a deployId against
+      // flow files on disk (Mike's own reasoning for why flowName, not
+      // deployId, is the field meant to be eyeballed here).
+      if (message.currentFlowName !== null) {
+        logLine(`[flow status] running: "${message.currentFlowName}" (deploy ${message.currentFlowDeployId ?? "unknown"})`, "");
+      } else {
+        logLine("[flow status] no flow currently running on this board", "");
+      }
     }
     waiters = waiters.filter((w) => {
       if (w.match(message)) {
@@ -905,8 +934,17 @@ el("btnDeploy").addEventListener("click", async () => {
     }
     logLine(`[compiled -- ${mpyBytes.length} bytes of bytecode]`, "");
 
+    // Flow identity (2026-09-05, "flow identity" -- decisions.md): a
+    // fresh id every single Deploy click, deliberately not reused even
+    // for a redeploy of the identical unchanged flow -- this identifies
+    // *this deploy action*, not the flow itself (flowName, read from the
+    // input, is the stable half). See messages.ts's DeployMessage doc
+    // comment for the full reasoning.
+    const deployId = crypto.randomUUID();
+    const flowName = currentFlowNameInput();
+    logLine(`[deploying "${flowName}" as ${deployId}]`, "");
     const ackP = waitForMessage((m) => m.type === "DEPLOY_ACK" || m.type === "DEPLOY_ERROR", DEPLOY_TIMEOUT_MS);
-    await transport.send({ type: "DEPLOY", bytecode: mpyBytes, staticData: new Uint8Array(0) });
+    await transport.send({ type: "DEPLOY", bytecode: mpyBytes, staticData: new Uint8Array(0), flowName, deployId });
     try {
       const result = await ackP;
       if (result.type === "DEPLOY_ERROR") {

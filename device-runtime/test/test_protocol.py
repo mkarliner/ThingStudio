@@ -22,20 +22,47 @@ SAMPLE_MESSAGES = [
         "chipType": "ESP32-C3",
         "runtimeVersion": {"major": 1, "minor": 2, "patch": 3},
         "runtimeBuild": None,  # board predates the runtime-build marker, or deploy_runtime.py couldn't determine git info
+        # Flow identity (added 2026-09-05, alongside runtimeBuild's own
+        # "board doesn't know" shape): both null means no flow has
+        # successfully started this boot.
+        "currentFlowName": None,
+        "currentFlowDeployId": None,
         "freeFlashBytes": 3500000,
         "freeRamBytes": 168000,
     },
     {
         # Same message type, second variant: a board that DOES have a
-        # runtime-build SHA -- mirrors editor/test/protocol.roundtrip.test.ts.
+        # runtime-build SHA and a currently-running, named flow -- mirrors
+        # editor/test/protocol.roundtrip.test.ts.
         "type": "HELLO",
         "chipType": "Raspberry Pi Pico W with RP2040",
         "runtimeVersion": {"major": 0, "minor": 1, "patch": 0},
         "runtimeBuild": "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678",
+        "currentFlowName": "basic mqtt smoke test",
+        "currentFlowDeployId": "6f1c9b2a-8e3d-4a5b-9c1e-2d3f4a5b6c7d",
         "freeFlashBytes": 757760,
         "freeRamBytes": 179200,
     },
-    {"type": "DEPLOY", "bytecode": bytes([0x4D, 0x06, 0x00, 0x01, 0x02, 0x03]), "staticData": b""},
+    {
+        "type": "DEPLOY",
+        "bytecode": bytes([0x4D, 0x06, 0x00, 0x01, 0x02, 0x03]),
+        "staticData": b"",
+        # Flow identity (added 2026-09-05): an old editor that predates
+        # this feature simply doesn't send these -- None here exercises
+        # exactly that degrade, not just the happy path.
+        "flowName": None,
+        "deployId": None,
+    },
+    {
+        # Second DEPLOY variant: a current editor, which always has a
+        # name (flow-file.ts's DEFAULT_FLOW_NAME at worst) and always
+        # generates a fresh deployId per Deploy click.
+        "type": "DEPLOY",
+        "bytecode": bytes([0x4D, 0x06, 0x00, 0x04, 0x05, 0x06]),
+        "staticData": bytes([1, 2, 3]),
+        "flowName": "untitled flow",
+        "deployId": "9d8c7b6a-5e4f-3d2c-1b0a-f9e8d7c6b5a4",
+    },
     {"type": "DEPLOY_ACK", "freeFlashBytes": 3400000, "freeRamBytes": 160000},
     {"type": "DEPLOY_ERROR", "code": "insufficient_space", "message": "flow needs 12000 bytes flash, 8000 available"},
     {"type": "VALUE_STREAM", "nodeId": "n3", "portId": "out0", "payload": True, "timestampMs": 1723000000123},
@@ -195,6 +222,56 @@ def test_accepts_hello_with_runtime_build_entirely_absent():
     assert decoded["runtimeBuild"] is None
 
 
+def test_rejects_hello_non_string_current_flow_fields():
+    # Same shape as test_rejects_hello_non_string_non_null_runtime_build,
+    # for the two flow-identity fields added 2026-09-05.
+    base = {"chipType": "x", "runtimeVersion": {"major": 1, "minor": 0, "patch": 0}, "freeFlashBytes": 1, "freeRamBytes": 1}
+    for bad_field in ("currentFlowName", "currentFlowDeployId"):
+        body = cbor.encode(dict(base, **{bad_field: 123}))
+        try:
+            messages.decode_message_body(messages.MessageType["HELLO"], body)
+            assert False, "expected MessageDecodeError for bad %s" % (bad_field,)
+        except MessageDecodeError:
+            pass
+
+
+def test_accepts_hello_with_current_flow_fields_entirely_absent():
+    # No flow has ever been deployed to this board -- both fields must
+    # degrade to None, not a validation error.
+    body = cbor.encode(
+        {
+            "chipType": "x",
+            "runtimeVersion": {"major": 1, "minor": 0, "patch": 0},
+            "freeFlashBytes": 1,
+            "freeRamBytes": 1,
+        }
+    )
+    decoded = messages.decode_message_body(messages.MessageType["HELLO"], body)
+    assert decoded["currentFlowName"] is None
+    assert decoded["currentFlowDeployId"] is None
+
+
+def test_rejects_deploy_non_string_flow_identity_fields():
+    base = {"bytecode": b"\x00", "staticData": b""}
+    for bad_field in ("flowName", "deployId"):
+        body = cbor.encode(dict(base, **{bad_field: 123}))
+        try:
+            messages.decode_message_body(messages.MessageType["DEPLOY"], body)
+            assert False, "expected MessageDecodeError for bad %s" % (bad_field,)
+        except MessageDecodeError:
+            pass
+
+
+def test_accepts_deploy_with_flow_identity_fields_entirely_absent():
+    # An old editor that predates this feature (or a hand-crafted DEPLOY)
+    # simply doesn't send flowName/deployId -- must degrade to None, not
+    # a rejected deploy (messages.py's own "additive field" convention).
+    body = cbor.encode({"bytecode": b"\x01\x02", "staticData": b""})
+    decoded = messages.decode_message_body(messages.MessageType["DEPLOY"], body)
+    assert decoded["flowName"] is None
+    assert decoded["deployId"] is None
+
+
 def test_rejects_deploy_non_bytes_field():
     body = cbor.encode({"bytecode": "not bytes", "staticData": b""})
     try:
@@ -282,6 +359,10 @@ minitest.run(
         test_rejects_malformed_runtime_version,
         test_rejects_hello_non_string_non_null_runtime_build,
         test_accepts_hello_with_runtime_build_entirely_absent,
+        test_rejects_hello_non_string_current_flow_fields,
+        test_accepts_hello_with_current_flow_fields_entirely_absent,
+        test_rejects_deploy_non_string_flow_identity_fields,
+        test_accepts_deploy_with_flow_identity_fields_entirely_absent,
         test_rejects_deploy_non_bytes_field,
         test_rejects_state_write_missing_value,
         test_rejects_trigger_missing_node_id,

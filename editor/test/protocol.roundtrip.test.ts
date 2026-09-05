@@ -17,17 +17,25 @@ const SAMPLE_MESSAGES: Message[] = [
     chipType: "ESP32-C3",
     runtimeVersion: { major: 1, minor: 2, patch: 3 },
     runtimeBuild: null, // board predates the runtime-build marker, or deploy_runtime.py couldn't determine git info
+    // Flow identity (added 2026-09-05, same "board doesn't know" shape as
+    // runtimeBuild's own null case): no flow has successfully started
+    // this boot.
+    currentFlowName: null,
+    currentFlowDeployId: null,
     freeFlashBytes: 3_500_000,
     freeRamBytes: 168_000,
   },
   {
     // Same message type, second variant: a board that DOES have a runtime-build
     // SHA, covering checkRuntimeBuild's non-null path through the actual wire
-    // codec, not just its own unit tests below.
+    // codec, not just its own unit tests below. Also has a currently-running,
+    // named flow.
     type: "HELLO",
     chipType: "Raspberry Pi Pico W with RP2040",
     runtimeVersion: { major: 0, minor: 1, patch: 0 },
     runtimeBuild: "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678",
+    currentFlowName: "basic mqtt smoke test",
+    currentFlowDeployId: "6f1c9b2a-8e3d-4a5b-9c1e-2d3f4a5b6c7d",
     freeFlashBytes: 757_760,
     freeRamBytes: 179_200,
   },
@@ -35,6 +43,21 @@ const SAMPLE_MESSAGES: Message[] = [
     type: "DEPLOY",
     bytecode: new Uint8Array([0x4d, 0x06, 0x00, 0x01, 0x02, 0x03]),
     staticData: new Uint8Array([]),
+    // Flow identity (added 2026-09-05): an old editor that predates this
+    // feature simply doesn't send these -- null here exercises exactly
+    // that degrade, not just the happy path.
+    flowName: null,
+    deployId: null,
+  },
+  {
+    // Second DEPLOY variant: a current editor, which always has a name
+    // (flow-file.ts's DEFAULT_FLOW_NAME at worst) and always generates a
+    // fresh deployId per Deploy click.
+    type: "DEPLOY",
+    bytecode: new Uint8Array([0x4d, 0x06, 0x00, 0x04, 0x05, 0x06]),
+    staticData: new Uint8Array([1, 2, 3]),
+    flowName: "untitled flow",
+    deployId: "9d8c7b6a-5e4f-3d2c-1b0a-f9e8d7c6b5a4",
   },
   { type: "DEPLOY_ACK", freeFlashBytes: 3_400_000, freeRamBytes: 160_000 },
   { type: "DEPLOY_ERROR", code: "insufficient_space", message: "flow needs 12000 bytes flash, 8000 available" },
@@ -76,7 +99,7 @@ describe("message CBOR round-trip (codec.ts, per message type)", () => {
   });
 
   it("bytes fields round-trip as native CBOR byte strings, not base64 text", () => {
-    const msg: Message = { type: "DEPLOY", bytecode: new Uint8Array([9, 9, 9]), staticData: new Uint8Array([1]) };
+    const msg: Message = { type: "DEPLOY", bytecode: new Uint8Array([9, 9, 9]), staticData: new Uint8Array([1]), flowName: null, deployId: null };
     const body = encodeMessageBody(msg);
     const raw = cborDecode(body) as { bytecode: unknown };
     expect(raw.bytecode).toBeInstanceOf(Uint8Array);
@@ -146,6 +169,41 @@ describe("codec.ts rejects valid CBOR with the wrong shape (per message type)", 
     });
     const decoded = decodeMessageBody(MessageType.HELLO, body);
     expect((decoded as { runtimeBuild: unknown }).runtimeBuild).toBeNull();
+  });
+
+  it("rejects HELLO with a non-string currentFlowName or currentFlowDeployId", () => {
+    const base = { chipType: "x", runtimeVersion: { major: 1, minor: 0, patch: 0 }, freeFlashBytes: 1, freeRamBytes: 1 };
+    for (const badField of ["currentFlowName", "currentFlowDeployId"] as const) {
+      const body = cborEncode({ ...base, [badField]: 123 });
+      expect(() => decodeMessageBody(MessageType.HELLO, body)).toThrow(MessageDecodeError);
+    }
+  });
+
+  it("accepts HELLO with currentFlowName/currentFlowDeployId entirely absent (no flow running)", () => {
+    const body = cborEncode({
+      chipType: "x",
+      runtimeVersion: { major: 1, minor: 0, patch: 0 },
+      freeFlashBytes: 1,
+      freeRamBytes: 1,
+    });
+    const decoded = decodeMessageBody(MessageType.HELLO, body);
+    expect((decoded as { currentFlowName: unknown }).currentFlowName).toBeNull();
+    expect((decoded as { currentFlowDeployId: unknown }).currentFlowDeployId).toBeNull();
+  });
+
+  it("rejects DEPLOY with a non-string flowName or deployId", () => {
+    const base = { bytecode: new Uint8Array([0]), staticData: new Uint8Array([]) };
+    for (const badField of ["flowName", "deployId"] as const) {
+      const body = cborEncode({ ...base, [badField]: 123 });
+      expect(() => decodeMessageBody(MessageType.DEPLOY, body)).toThrow(MessageDecodeError);
+    }
+  });
+
+  it("accepts DEPLOY with flowName/deployId entirely absent (older-editor case)", () => {
+    const body = cborEncode({ bytecode: new Uint8Array([1, 2]), staticData: new Uint8Array([]) });
+    const decoded = decodeMessageBody(MessageType.DEPLOY, body);
+    expect((decoded as { flowName: unknown }).flowName).toBeNull();
+    expect((decoded as { deployId: unknown }).deployId).toBeNull();
   });
 
   it("rejects DEPLOY with a non-bytes field", () => {

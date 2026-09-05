@@ -18,6 +18,15 @@ const HELLO: Message = {
   chipType: "ESP32-C3",
   runtimeVersion: { major: 0, minor: 1, patch: 0 },
   runtimeBuild: null, // board predates the runtime-build marker, or deploy_runtime.py couldn't determine git info
+  // Flow identity (added 2026-09-05) -- same "board doesn't know" null
+  // shape as runtimeBuild just above. NOTE: this fixture bit us once
+  // already (runtimeBuild's own addition missed this file, "three
+  // fails" -- learnings.md) because it's a single object used in
+  // multiple toEqual([HELLO]) assertions below, not part of
+  // protocol.roundtrip.test.ts's SAMPLE_MESSAGES list -- grepped this
+  // whole file for "HELLO" before considering this fixture done.
+  currentFlowName: null,
+  currentFlowDeployId: null,
   freeFlashBytes: 1000,
   freeRamBytes: 2000,
 };
