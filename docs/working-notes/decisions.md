@@ -436,6 +436,34 @@ Same convention already established for `docs/third-party-licenses.md`.
   (`vite.config.ts`'s `define`) and logs a warning, never blocks a
   DEPLOY. `messages.py`/`messages.ts`, `codec.ts`, `listener.py`,
   `deploy_runtime.py`, `vite.config.ts`, `main.ts`.
+- **2026-09-05 -- new `HELLO_REQUEST` message (editor -> device, number
+  10) added specifically to solve "get the editor to a known state after
+  connecting/reconnecting, with no reset," kept deliberately separate
+  from `reset-before-deploy.md`'s bigger, still-unscoped idea.** Surfaced
+  by the RP2040 hardware pass: the Pico W has no reset button, and
+  `_send_hello()` only ever runs once, at boot -- a reconnecting editor
+  (or a board that's simply been running a while) had no way to learn
+  the device's current version/build/free-memory state without a
+  physical reset. Mike's own framing, correcting an earlier version of
+  this idea from me that conflated two different problems: this is
+  explicitly NOT about getting newly-pushed `runtime.py` code running
+  (that genuinely needs a reboot, and native-USB boards drop their
+  connection on any real reset regardless of what triggers it -- a
+  separate, harder problem `reset-before-deploy.md` already flags with
+  its own open protocol-shape questions); it's only about reaching a
+  known state with an already-running device, no side effects at all (no
+  redeploy, no runtime reload). Device-side: `listener.py`'s dispatch
+  just calls the same `_send_hello()` boot already uses -- deliberately
+  no separate code path to keep in sync. Editor-side: the Connect handler
+  now actively requests a HELLO instead of passively hoping one arrives
+  (a passive wait could only ever catch a boot-time HELLO by lucky
+  timing), plus a standalone "Check status" button for use any time.
+  Numbered after `TRIGGER`, same append-only convention -- an old
+  listener.py just logs `LISTENER_IGNORED`, no version bump needed
+  (matches `TRIGGER`'s own precedent, CLAUDE.md's bump-discipline rule
+  doesn't apply to protocol additions an old device degrades safely on).
+  `messages.ts`/`messages.py`, `codec.ts`, `listener.py`, `main.ts`,
+  `index.html`.
 
 ## Node authoring / extensibility
 

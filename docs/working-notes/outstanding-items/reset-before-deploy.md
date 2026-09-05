@@ -53,3 +53,18 @@ starting, same as `wlan-state-not-torn-down-on-redeploy.md` was left for Mike's 
 `wlan-state-not-torn-down-on-redeploy.md`'s conditional-teardown approach -- worth deciding between them rather
 than building both. Needs a scoping pass on the DEPLOY protocol/boot-sequence questions above before implementation
 starts.
+
+
+## Related but distinct, added 2026-09-05: HELLO_REQUEST
+
+A different, narrower need surfaced during the RP2040 hardware pass (no reset button on the
+Pico W): getting the *editor* back to a known state against an *already-running* device, with
+no reset at all -- not the "get a clean device state before running a newly-deployed flow"
+problem this file is about. Solved separately and much more simply: a new `HELLO_REQUEST`
+message (editor -> device) that just re-sends the device's current HELLO, no side effects,
+no reboot. Does NOT touch any of the open questions above (DEPLOY_ACK semantics, boot-time
+auto-resume, host tooling tolerating a connection drop) and doesn't reduce the need to solve
+them -- if `machine.reset()`-before-deploy is built later, HELLO_REQUEST doesn't replace it or
+make it easier, it just means the editor already has an independent way to check in on a
+device's state that doesn't depend on that work landing first. See `decisions.md`'s
+2026-09-05 entry.

@@ -57,6 +57,19 @@ export const MessageType = {
   // listener.py simply logs "unexpected message type" (LISTENER_IGNORED)
   // instead of misinterpreting some other message.
   TRIGGER: 9,
+  // Added 2026-09-05 (real RP2040 hardware pass, no reset button on the
+  // Pico W): editor -> device, "resend your current HELLO right now."
+  // Explicitly NOT a reset/redeploy/reboot request -- listener.py's
+  // _send_hello() only ever ran once, at boot, so a board that's been
+  // running a while (or reconnected after a browser tab reload) has no
+  // way to get the editor back to a known state (current runtimeVersion/
+  // runtimeBuild/free memory) without physically resetting it. This
+  // sidesteps that entirely: whatever's already running just reports
+  // itself again, no side effects beyond that. Numbered after TRIGGER,
+  // same "append, don't renumber" convention -- a device already running
+  // the pre-2026-09-05 listener.py logs LISTENER_IGNORED for it instead
+  // of misinterpreting some other message.
+  HELLO_REQUEST: 10,
 } as const;
 
 export type MessageTypeId = (typeof MessageType)[keyof typeof MessageType];
@@ -191,6 +204,17 @@ export interface TriggerMessage {
   readonly nodeId: string;
 }
 
+/**
+ * Editor -> device: "send a fresh HELLO right now." See MessageType's own
+ * HELLO_REQUEST comment for why this exists -- gets the editor to a known
+ * state on connect/reconnect without needing a reset. No fields: it's a
+ * pure request, the device's only response is the normal HELLO message
+ * type, not a distinct ack.
+ */
+export interface HelloRequestMessage {
+  readonly type: "HELLO_REQUEST";
+}
+
 export type Message =
   | HelloMessage
   | DeployMessage
@@ -200,7 +224,8 @@ export type Message =
   | NodeErrorMessage
   | StateReadMessage
   | StateWriteMessage
-  | TriggerMessage;
+  | TriggerMessage
+  | HelloRequestMessage;
 
 export const MESSAGE_TYPE_BY_NAME: Record<Message["type"], MessageTypeId> = {
   HELLO: MessageType.HELLO,
@@ -212,6 +237,7 @@ export const MESSAGE_TYPE_BY_NAME: Record<Message["type"], MessageTypeId> = {
   STATE_READ: MessageType.STATE_READ,
   STATE_WRITE: MessageType.STATE_WRITE,
   TRIGGER: MessageType.TRIGGER,
+  HELLO_REQUEST: MessageType.HELLO_REQUEST,
 };
 
 export const MESSAGE_NAME_BY_TYPE: Record<MessageTypeId, Message["type"]> = {
@@ -224,4 +250,5 @@ export const MESSAGE_NAME_BY_TYPE: Record<MessageTypeId, Message["type"]> = {
   [MessageType.STATE_READ]: "STATE_READ",
   [MessageType.STATE_WRITE]: "STATE_WRITE",
   [MessageType.TRIGGER]: "TRIGGER",
+  [MessageType.HELLO_REQUEST]: "HELLO_REQUEST",
 };

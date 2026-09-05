@@ -798,6 +798,7 @@ function setConnectedUi(connected: boolean): void {
   el("pill").className = connected ? "pill connected" : "pill disconnected";
   el<HTMLButtonElement>("btnConnect").disabled = connected;
   el<HTMLButtonElement>("btnDisconnect").disabled = !connected;
+  el<HTMLButtonElement>("btnCheckStatus").disabled = !connected;
   el<HTMLButtonElement>("btnDeploy").disabled = !connected;
 }
 
@@ -817,19 +818,44 @@ el("btnConnect").addEventListener("click", async () => {
   }
   setConnectedUi(true);
   logLine("[connected @ 115200 baud -- opening the port does not reset the board]", "");
-  logLine("[if nothing appears below, the board's listener may not be running -- press its physical reset button]", "");
 
-  // Only gates the warning below -- transport.onMessage already handles
-  // (and logs) a HELLO whenever it actually arrives, on its own schedule,
-  // independent of this wait. See this section's header comment for why
-  // a timeout here is expected and not itself an error.
+  // Actively ask for a fresh HELLO rather than passively hoping one
+  // arrives (2026-09-05, real RP2040 hardware -- no reset button on the
+  // Pico W): listener.py's _send_hello() only ever runs once, at boot,
+  // so a board that's been running a while already sent its one HELLO
+  // long before this connection existed -- a purely passive wait here
+  // would only ever catch one from a board that happens to be mid-boot
+  // at the exact moment Connect was clicked. HELLO_REQUEST
+  // (messages.ts) gets to a known state without a reset -- explicitly no
+  // side effects beyond that (no redeploy, no runtime reload). Start
+  // waiting before sending, not after, so a fast reply can't race past
+  // this listener being registered.
+  const helloP = waitForMessage((m) => m.type === "HELLO", HELLO_WAIT_MS);
   try {
-    await waitForMessage((m) => m.type === "HELLO", HELLO_WAIT_MS);
+    await transport.send({ type: "HELLO_REQUEST" });
+  } catch {
+    // send() failing here just means the wait below times out the normal
+    // way below -- not worth a separate error path for this.
+  }
+  try {
+    await helloP;
   } catch {
     logLine(
-      "[no HELLO received yet -- version compatibility is unverified; Deploy will proceed without the check until one arrives (reset the board to get one now)]",
+      '[no HELLO received yet -- version compatibility is unverified; Deploy will proceed without the check. Try "Check status", or the board\'s listener may not be running at all (reset it if this persists)]',
       "",
     );
+  }
+});
+
+el("btnCheckStatus").addEventListener("click", async () => {
+  // Same HELLO_REQUEST as the Connect handler above, available any time
+  // while connected -- no reset, no redeploy, just "tell me what you are
+  // right now." transport.onMessage already logs the resulting HELLO (and
+  // re-runs both version checks) the same way any other HELLO does.
+  try {
+    await transport.send({ type: "HELLO_REQUEST" });
+  } catch (err) {
+    logLine(`[check status failed] ${err instanceof Error ? err.message : String(err)}`, "err");
   }
 });
 

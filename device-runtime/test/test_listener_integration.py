@@ -309,8 +309,45 @@ def test_trigger_fires_the_registered_node_and_ignores_unknown_ids():
             listener.close()
 
 
+def test_hello_request_resends_hello_no_side_effects():
+    # No reset button on the Pico W (2026-09-05, real hardware pass)
+    # surfaced this: _send_hello() only fires once, at boot, so a
+    # reconnecting editor (or a board that's been running a while) has no
+    # way to learn the device's current state without a physical reset.
+    # HELLO_REQUEST is the fix -- confirm it actually resends a real HELLO,
+    # and that it has no other effect (no flow re-run, listener stays
+    # alive for a subsequent normal DEPLOY).
+    with tempfile.TemporaryDirectory() as tmpdir:
+        listener = ListenerProcess(tmpdir)
+        try:
+            listener.wait_for(lambda l: l == "LISTENER_READY", description="LISTENER_READY")
+            # Consume the boot-time HELLO first so the next F64: line this
+            # test waits for is unambiguously the HELLO_REQUEST's own reply,
+            # not a race against the one from boot.
+            boot_line = listener.wait_for(lambda l: l.startswith(F64_PREFIX), description="boot-time HELLO frame")
+            assert _decode_f64_line(boot_line)["type"] == "HELLO"
+
+            listener.send_message({"type": "HELLO_REQUEST"})
+            reply_line = listener.wait_for(lambda l: l.startswith(F64_PREFIX), description="HELLO_REQUEST's HELLO reply")
+            msg = _decode_f64_line(reply_line)
+            assert msg["type"] == "HELLO"
+            assert msg["runtimeVersion"] == {"major": 0, "minor": 1, "patch": 0}
+
+            # No side effects: a normal DEPLOY still works fine afterward.
+            bytecode = _compile_flow(
+                tmpdir,
+                "flow_after_hello_request",
+                "import runtime\nasync def _flow_0():\n    print('STILL_ALIVE_AFTER_HELLO_REQUEST')\nruntime.spawn(_flow_0(), '1')\n",
+            )
+            listener.send_message({"type": "DEPLOY", "bytecode": bytecode, "staticData": b""})
+            listener.wait_for(lambda l: l == "STILL_ALIVE_AFTER_HELLO_REQUEST", description="listener still alive after HELLO_REQUEST")
+        finally:
+            listener.close()
+
+
 TESTS = [
     test_hello_sent_on_boot,
+    test_hello_request_resends_hello_no_side_effects,
     test_deploy_success_and_flow_runs,
     test_node_error_reported_end_to_end,
     test_malformed_frame_soak_does_not_kill_listener,

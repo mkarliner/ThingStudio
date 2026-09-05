@@ -48,6 +48,9 @@ const SAMPLE_MESSAGES: Message[] = [
   { type: "STATE_WRITE", nodeId: "n8", key: "counter", value: 0 },
   // TRIGGER added 2026-09-02 (inject click-only live-fire feature).
   { type: "TRIGGER", nodeId: "n9" },
+  // HELLO_REQUEST added 2026-09-05 (no reset button on the Pico W) -- no
+  // fields at all, the minimal possible message shape.
+  { type: "HELLO_REQUEST" },
 ];
 
 describe("message CBOR round-trip (codec.ts, per message type)", () => {

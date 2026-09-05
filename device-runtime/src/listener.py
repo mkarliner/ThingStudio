@@ -287,6 +287,15 @@ async def _dispatch(result):
         # logged no-op, so there's nothing more for this dispatch branch
         # to check or report.
         runtime.fire_trigger(msg["nodeId"])
+    elif msg_type == "HELLO_REQUEST":
+        # No reset button on the Pico W (2026-09-05 real hardware pass)
+        # surfaced this: _send_hello() only ever runs once, at boot, so a
+        # board that's been running a while has no way to get the editor
+        # back to a known state without a physical reset. Reusing the
+        # exact same function boot uses -- deliberately no separate code
+        # path to keep in sync, and no side effects beyond sending a
+        # fresh HELLO (no redeploy, no runtime reload, nothing else).
+        await _send_hello()
     elif msg_type in ("STATE_READ", "STATE_WRITE"):
         # Tier 2 (design doc: flash-backed state store), not this task's
         # scope (fault-isolation-briefing.md's "Not in scope"). Logged, not

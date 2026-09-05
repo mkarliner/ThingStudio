@@ -26,6 +26,7 @@ import {
   type DeployErrorMessage,
   type DeployMessage,
   type HelloMessage,
+  type HelloRequestMessage,
   type Message,
   type MessageTypeId,
   type NodeErrorMessage,
@@ -112,6 +113,8 @@ export function decodeMessageBody(typeId: number, body: Uint8Array): Message {
       return { type: "STATE_WRITE", ...validateStateWrite(obj) };
     case "TRIGGER":
       return { type: "TRIGGER", ...validateTrigger(obj) };
+    case "HELLO_REQUEST":
+      return { type: "HELLO_REQUEST", ...validateHelloRequest(obj) };
   }
 }
 
@@ -244,4 +247,11 @@ function validateTrigger(obj: Record<string, unknown>): Omit<TriggerMessage, "ty
   return {
     nodeId: expectString(obj, "nodeId", "TRIGGER"),
   };
+}
+
+/** No fields to validate -- HELLO_REQUEST is a pure signal (messages.ts's
+ * own doc comment). `obj` is accepted but ignored: an editor sending
+ * extra/unexpected keys here isn't this layer's problem to reject. */
+function validateHelloRequest(_obj: Record<string, unknown>): Omit<HelloRequestMessage, "type"> {
+  return {};
 }
