@@ -34,6 +34,7 @@ import argparse
 import os
 import subprocess
 import sys
+import tempfile
 
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 _REPO_ROOT = os.path.join(_THIS_DIR, "..")
@@ -79,6 +80,30 @@ def mpremote(port, *args):
     subprocess.run(cmd, check=True)
 
 
+def _runtime_build_sha():
+    """git SHA of the last commit that touched device-runtime/src, scoped
+    (not the whole repo's HEAD) so an unrelated editor/docs-only commit
+    doesn't make every already-bootstrapped board look stale for no
+    reason. Belt-and-braces companion to _RUNTIME_VERSION -- see
+    CLAUDE.md's "Device-runtime version bump discipline" and listener.py's
+    own header on _RUNTIME_BUILD. None if git isn't available or this
+    isn't a git checkout -- fails open (skips the marker, doesn't fail the
+    bootstrap), matching this project's fault-handling-over-happy-path
+    priority applied to tooling, not just device code."""
+    try:
+        out = subprocess.run(
+            ["git", "log", "-1", "--format=%H", "--", _RUNTIME_SRC],
+            cwd=_REPO_ROOT,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        sha = out.stdout.strip()
+        return sha or None
+    except (OSError, subprocess.CalledProcessError):
+        return None
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--port", required=True, help="serial device path, e.g. /dev/tty.usbmodemXXXX")
@@ -109,6 +134,24 @@ def main():
 
     listener_local = os.path.join(_RUNTIME_SRC, LISTENER_FILE)
     mpremote(args.port, "cp", listener_local, ":main.py")
+
+    build_sha = _runtime_build_sha()
+    if build_sha:
+        with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False) as f:
+            f.write(build_sha)
+            marker_path = f.name
+        try:
+            mpremote(args.port, "cp", marker_path, ":_runtime_build.txt")
+        finally:
+            os.unlink(marker_path)
+        print("Runtime build marker: %s (device-runtime/src @ this commit)" % build_sha)
+    else:
+        print(
+            "WARN: couldn't determine device-runtime/src's git SHA (not a git checkout, or git isn't "
+            "installed) -- skipping the runtime-build marker. The board will report runtimeBuild=None; "
+            "the editor's belt-and-braces staleness check (CLAUDE.md) can't confirm freshness for it, "
+            "same as any board bootstrapped before this feature existed."
+        )
 
     if not args.no_vendor:
         for local in VENDOR_FILES:

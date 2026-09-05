@@ -29,6 +29,13 @@ for Mike's Mac the same way (Linux native bindings written over darwin
 ones) — never run from the sandbox, hand Mike the command instead. See
 `CLAUDE.md` directly for all three — this file doesn't restate them.
 
+A fourth: `device-runtime/src/*.py` changes need a breaking-change
+judgment call and a matching `_RUNTIME_VERSION`/
+`EDITOR_TARGET_VERSION` bump in the same change, backed by an
+automatic (non-blocking) git-SHA marker check -- see CLAUDE.md's
+"Device-runtime version bump discipline" (2026-09-05, surfaced by a
+real RP2040 hardware failure).
+
 ## MicroPython / device-runtime
 
 - **`sys.stdin.read(n)`/`readexactly(n)` can hang a port's event loop

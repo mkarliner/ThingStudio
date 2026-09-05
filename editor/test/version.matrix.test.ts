@@ -10,7 +10,7 @@
 // examples.
 
 import { describe, expect, it } from "vitest";
-import { decideDeploy, formatVersion } from "../src/protocol/version.js";
+import { checkRuntimeBuild, decideDeploy, formatVersion } from "../src/protocol/version.js";
 import type { ProtocolVersion } from "../src/protocol/messages.js";
 
 const COMPONENT_VALUES = [0, 1, 2, 5, 10];
@@ -110,5 +110,55 @@ describe("formatVersion", () => {
   it("formats as major.minor.patch", () => {
     expect(formatVersion({ major: 1, minor: 2, patch: 3 })).toBe("1.2.3");
     expect(formatVersion({ major: 0, minor: 0, patch: 0 })).toBe("0.0.0");
+  });
+});
+
+// checkRuntimeBuild's own coverage, per CLAUDE.md's "Device-runtime
+// version bump discipline": belt-and-braces companion to decideDeploy
+// above, added after the register_trigger incident showed the manually-
+// bumped semver alone can silently miss a real device-runtime/src change.
+// Purely informational (status, never allowed/blocked) -- these tests
+// check the three status buckets and that mismatch actually requires
+// BOTH sides to be non-null and unequal, not just "different somehow."
+describe("checkRuntimeBuild", () => {
+  it("matches when device and editor report the same SHA", () => {
+    const result = checkRuntimeBuild("abc123", "abc123");
+    expect(result.status).toBe("match");
+  });
+
+  it("mismatches when both are non-null and different", () => {
+    const result = checkRuntimeBuild("abc123", "def456");
+    expect(result.status).toBe("mismatch");
+    expect(result.reason).toContain("abc123");
+    expect(result.reason).toContain("def456");
+  });
+
+  it("is 'unknown', not 'mismatch', when the device reported no runtimeBuild", () => {
+    const result = checkRuntimeBuild(null, "def456");
+    expect(result.status).toBe("unknown");
+  });
+
+  it("is 'unknown', not 'mismatch', when this editor build has no SHA of its own", () => {
+    const result = checkRuntimeBuild("abc123", null);
+    expect(result.status).toBe("unknown");
+  });
+
+  it("is 'unknown' when both sides are null", () => {
+    const result = checkRuntimeBuild(null, null);
+    expect(result.status).toBe("unknown");
+  });
+
+  it("every status includes a non-empty human-readable reason", () => {
+    const pairs: [string | null, string | null][] = [
+      ["a", "a"],
+      ["a", "b"],
+      [null, "a"],
+      ["a", null],
+      [null, null],
+    ];
+    for (const [device, editorBuild] of pairs) {
+      const result = checkRuntimeBuild(device, editorBuild);
+      expect(result.reason.length).toBeGreaterThan(0);
+    }
   });
 });

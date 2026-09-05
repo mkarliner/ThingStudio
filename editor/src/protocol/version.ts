@@ -65,3 +65,55 @@ export function decideDeploy(device: ProtocolVersion, editorTarget: ProtocolVers
     reason: `device runtime ${formatVersion(device)} is compatible with this editor (targets ${formatVersion(editorTarget)}).`,
   };
 }
+
+export interface BuildCheck {
+  readonly status: "match" | "mismatch" | "unknown";
+  readonly reason: string;
+}
+
+/**
+ * The belt-and-braces companion to decideDeploy, added 2026-09-05 (see
+ * CLAUDE.md's "Device-runtime version bump discipline" and this file's
+ * own header for why decideDeploy's manually-bumped semver alone isn't
+ * enough -- confirmed by the register_trigger incident, where a real
+ * device-runtime/src change shipped without either version const being
+ * touched). Purely informational -- unlike decideDeploy, nothing here
+ * gates a DEPLOY; this only ever produces a log line for a human to act
+ * on. Deliberately a plain equality check on a git SHA, not a content
+ * hash: a hash would flag a same-behavior comment/rename edit as
+ * "mismatch" with no way to tell how much actually changed or why, where
+ * a SHA lets a real mismatch be followed up with `git diff`/`git log`
+ * against device-runtime/src.
+ *
+ * device: the connected board's HELLO.runtimeBuild.
+ * editorBuild: this editor's own build-time SHA (main.ts's
+ * EDITOR_RUNTIME_BUILD, sourced from vite.config.ts's `define`).
+ */
+export function checkRuntimeBuild(device: string | null, editorBuild: string | null): BuildCheck {
+  if (editorBuild === null) {
+    return {
+      status: "unknown",
+      reason: "this editor build has no runtime-build SHA of its own (git wasn't available when it was built/started) -- can't compare.",
+    };
+  }
+  if (device === null) {
+    return {
+      status: "unknown",
+      reason:
+        "device reported no runtimeBuild -- either it predates this check (bootstrapped before deploy_runtime.py " +
+        "wrote the marker file) or deploy_runtime.py couldn't determine git info when it last ran. Not confirmed " +
+        "stale, just unconfirmed.",
+    };
+  }
+  if (device === editorBuild) {
+    return { status: "match", reason: `device runtime build ${device} matches this editor's (${editorBuild}).` };
+  }
+  return {
+    status: "mismatch",
+    reason:
+      `device runtime build ${device} differs from this editor's (${editorBuild}) -- device-runtime/src has ` +
+      `changed since this board was last bootstrapped. The semver check above may still say "compatible" if ` +
+      `nobody bumped it for the change (see CLAUDE.md) -- if anything behaves unexpectedly, re-run ` +
+      `test-flows/deploy_runtime.py against this board before assuming it's a real bug.`,
+  };
+}

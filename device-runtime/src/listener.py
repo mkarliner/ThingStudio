@@ -122,6 +122,41 @@ _HEARTBEAT_PERIOD_MS = 200
 
 _RUNTIME_VERSION = {"major": 0, "minor": 1, "patch": 0}  # pre-v1; bump deliberately, not implicitly, once real semver policy exists
 
+# Belt-and-braces companion to _RUNTIME_VERSION, added 2026-09-05 (CLAUDE.md's
+# "Device-runtime version bump discipline"): _RUNTIME_VERSION is a human-
+# maintained semver the editor treats as a compatibility *decision*
+# (version.ts's decideDeploy only gates on a `major` mismatch) -- it can't
+# catch a change that landed in device-runtime/src without anyone
+# remembering to bump it, exactly what happened with register_trigger
+# (2026-09-02). This is NOT a replacement for that check, and deliberately
+# isn't a content hash either (a hash would flag a same-behavior comment
+# edit as "different" with no way to tell how much actually changed) --
+# it's a plain git-SHA fingerprint of device-runtime/src at the moment
+# test-flows/deploy_runtime.py last pushed it, purely informational: the
+# editor logs a warning on mismatch (version.ts's checkRuntimeBuild),
+# never blocks a DEPLOY over it the way a major-version mismatch does.
+#
+# Read once at boot from a plain marker file deploy_runtime.py writes
+# alongside the runtime files themselves -- not a .py module, so there's
+# nothing to re-import and no risk of it going stale mid-process. A board
+# bootstrapped before this existed, or one deploy_runtime.py pushed
+# without git available, simply has no file here and reports None -- an
+# absent/None value means "can't confirm freshness this way," not
+# "confirmed stale," and is handled as its own case (see checkRuntimeBuild).
+_RUNTIME_BUILD_FILE = "_runtime_build.txt"
+
+
+def _read_runtime_build():
+    try:
+        with open(_RUNTIME_BUILD_FILE) as f:
+            build = f.read().strip()
+        return build if build else None
+    except OSError:
+        return None
+
+
+_RUNTIME_BUILD = _read_runtime_build()
+
 _deploy_generation = 0  # bumped on every DEPLOY, purely diagnostic (not part of the wire protocol)
 
 
@@ -192,6 +227,7 @@ async def _send_hello():
             "type": "HELLO",
             "chipType": _chip_type(),
             "runtimeVersion": _RUNTIME_VERSION,
+            "runtimeBuild": _RUNTIME_BUILD,
             "freeFlashBytes": _free_flash_bytes(),
             "freeRamBytes": _free_ram_bytes(),
         }

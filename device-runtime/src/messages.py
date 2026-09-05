@@ -95,6 +95,18 @@ def _expect_string(obj, key, name):
     return v
 
 
+def _expect_optional_string(obj, key, name):
+    """Same as _expect_string, but a missing key or an explicit None both
+    mean "not provided" -- used for fields a board running an older
+    runtime/listener simply never sends (runtimeBuild, HELLO)."""
+    v = obj.get(key)
+    if v is None:
+        return None
+    if not isinstance(v, str):
+        _fail(name, 'field "%s" must be a string or absent/None, got %r' % (key, type(v)))
+    return v
+
+
 def _expect_finite_number(obj, key, name):
     v = obj.get(key)
     if isinstance(v, bool) or not isinstance(v, (int, float)):
@@ -138,6 +150,7 @@ def _validate_hello(obj, name):
     return {
         "chipType": _expect_string(obj, "chipType", name),
         "runtimeVersion": _expect_version(obj, "runtimeVersion", name),
+        "runtimeBuild": _expect_optional_string(obj, "runtimeBuild", name),
         "freeFlashBytes": _expect_non_negative_int(obj, "freeFlashBytes", name),
         "freeRamBytes": _expect_non_negative_int(obj, "freeRamBytes", name),
     }

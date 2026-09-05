@@ -21,8 +21,19 @@ SAMPLE_MESSAGES = [
         "type": "HELLO",
         "chipType": "ESP32-C3",
         "runtimeVersion": {"major": 1, "minor": 2, "patch": 3},
+        "runtimeBuild": None,  # board predates the runtime-build marker, or deploy_runtime.py couldn't determine git info
         "freeFlashBytes": 3500000,
         "freeRamBytes": 168000,
+    },
+    {
+        # Same message type, second variant: a board that DOES have a
+        # runtime-build SHA -- mirrors editor/test/protocol.roundtrip.test.ts.
+        "type": "HELLO",
+        "chipType": "Raspberry Pi Pico W with RP2040",
+        "runtimeVersion": {"major": 0, "minor": 1, "patch": 0},
+        "runtimeBuild": "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678",
+        "freeFlashBytes": 757760,
+        "freeRamBytes": 179200,
     },
     {"type": "DEPLOY", "bytecode": bytes([0x4D, 0x06, 0x00, 0x01, 0x02, 0x03]), "staticData": b""},
     {"type": "DEPLOY_ACK", "freeFlashBytes": 3400000, "freeRamBytes": 160000},
@@ -151,6 +162,36 @@ def test_rejects_malformed_runtime_version():
         pass
 
 
+def test_rejects_hello_non_string_non_null_runtime_build():
+    body = cbor.encode(
+        {
+            "chipType": "x",
+            "runtimeVersion": {"major": 1, "minor": 0, "patch": 0},
+            "runtimeBuild": 123,
+            "freeFlashBytes": 1,
+            "freeRamBytes": 1,
+        }
+    )
+    try:
+        messages.decode_message_body(messages.MessageType["HELLO"], body)
+        assert False, "expected MessageDecodeError"
+    except MessageDecodeError:
+        pass
+
+
+def test_accepts_hello_with_runtime_build_entirely_absent():
+    body = cbor.encode(
+        {
+            "chipType": "x",
+            "runtimeVersion": {"major": 1, "minor": 0, "patch": 0},
+            "freeFlashBytes": 1,
+            "freeRamBytes": 1,
+        }
+    )
+    decoded = messages.decode_message_body(messages.MessageType["HELLO"], body)
+    assert decoded["runtimeBuild"] is None
+
+
 def test_rejects_deploy_non_bytes_field():
     body = cbor.encode({"bytecode": "not bytes", "staticData": b""})
     try:
@@ -236,6 +277,8 @@ minitest.run(
         test_rejects_hello_wrong_typed_field,
         test_rejects_hello_negative_byte_count,
         test_rejects_malformed_runtime_version,
+        test_rejects_hello_non_string_non_null_runtime_build,
+        test_accepts_hello_with_runtime_build_entirely_absent,
         test_rejects_deploy_non_bytes_field,
         test_rejects_state_write_missing_value,
         test_rejects_trigger_missing_node_id,

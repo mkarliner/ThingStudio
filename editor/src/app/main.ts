@@ -66,7 +66,7 @@ import { buildRegistry } from "../node-library/registry.js";
 import { mergeCustomNodeRegistry } from "../node-library/custom-node.js";
 import { WebSerialTransport, type WebSerialPort } from "../protocol/transport.js";
 import type { Message, ProtocolVersion } from "../protocol/messages.js";
-import { decideDeploy } from "../protocol/version.js";
+import { checkRuntimeBuild, decideDeploy } from "../protocol/version.js";
 import { createThingstudioEditor, type ThingstudioEditor } from "./rete/editor-setup.js";
 import { NODE_FACTORIES, CustomNode, InjectNode, type AnyThingstudioNode } from "./rete/nodes.js";
 import { DRAG_MIME, CUSTOM_DRAG_MIME, type NodeKind } from "./rete/palette.js";
@@ -705,6 +705,14 @@ function waitForMessage(match: (m: Message) => boolean, timeoutMs: number): Prom
 // messages.ts's own header already applies to the MessageType table.
 const EDITOR_TARGET_VERSION: ProtocolVersion = { major: 0, minor: 1, patch: 0 };
 
+// This editor's own device-runtime/src git SHA, injected at build/dev-
+// server-start time by vite.config.ts's `define` (see that file,
+// vite-env.d.ts's ambient declaration, and version.ts's
+// checkRuntimeBuild). null if git wasn't available when this editor was
+// built/started -- checkRuntimeBuild treats that as "can't compare",
+// not as a mismatch.
+const EDITOR_RUNTIME_BUILD: string | null = __RUNTIME_BUILD_SHA__;
+
 const HELLO_WAIT_MS = 3000; // generous over a real boot's timing; only gates the "unverified" warning below, never blocks Connect itself
 
 // Set from the most recent HELLO this connection has seen; null means
@@ -725,6 +733,11 @@ const transport = new WebSerialTransport({
       lastHelloVersion = message.runtimeVersion;
       const decision = decideDeploy(message.runtimeVersion, EDITOR_TARGET_VERSION);
       logLine(`[version check] ${decision.reason}`, decision.allowed ? "ok" : "err");
+      // Belt-and-braces companion check, non-blocking -- see
+      // checkRuntimeBuild's own header for why this exists alongside
+      // decideDeploy rather than replacing it.
+      const buildCheck = checkRuntimeBuild(message.runtimeBuild, EDITOR_RUNTIME_BUILD);
+      logLine(`[runtime build check] ${buildCheck.reason}`, buildCheck.status === "mismatch" ? "err" : "ok");
     }
     waiters = waiters.filter((w) => {
       if (w.match(message)) {

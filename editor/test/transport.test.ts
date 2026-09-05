@@ -17,6 +17,7 @@ const HELLO: Message = {
   type: "HELLO",
   chipType: "ESP32-C3",
   runtimeVersion: { major: 0, minor: 1, patch: 0 },
+  runtimeBuild: null, // board predates the runtime-build marker, or deploy_runtime.py couldn't determine git info
   freeFlashBytes: 1000,
   freeRamBytes: 2000,
 };

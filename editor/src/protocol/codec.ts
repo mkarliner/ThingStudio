@@ -127,6 +127,16 @@ function expectString(obj: Record<string, unknown>, key: string, name: string): 
   return v;
 }
 
+/** Same as expectString, but a missing key or an explicit null/undefined
+ * both mean "not provided" -- used for fields a device running an older
+ * listener simply never sends (runtimeBuild, HELLO). */
+function expectOptionalString(obj: Record<string, unknown>, key: string, name: string): string | null {
+  const v = obj[key];
+  if (v === undefined || v === null) return null;
+  if (typeof v !== "string") fail(name, `field "${key}" must be a string or absent/null, got ${typeof v}`);
+  return v;
+}
+
 function expectFiniteNumber(obj: Record<string, unknown>, key: string, name: string): number {
   const v = obj[key];
   if (typeof v !== "number" || !Number.isFinite(v)) {
@@ -172,6 +182,7 @@ function validateHello(obj: Record<string, unknown>): Omit<HelloMessage, "type">
   return {
     chipType: expectString(obj, "chipType", "HELLO"),
     runtimeVersion: expectVersion(obj, "runtimeVersion", "HELLO"),
+    runtimeBuild: expectOptionalString(obj, "runtimeBuild", "HELLO"),
     freeFlashBytes: expectNonNegativeInt(obj, "freeFlashBytes", "HELLO"),
     freeRamBytes: expectNonNegativeInt(obj, "freeRamBytes", "HELLO"),
   };

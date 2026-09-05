@@ -409,6 +409,33 @@ Same convention already established for `docs/third-party-licenses.md`.
   itself keeps its name and its own `wifiConfigId` unchanged -- Mike's
   explicit call not to rename it this session. No real-hardware pass of
   this specific change yet -- flagged, not assumed safe.
+- **2026-09-05 -- runtime/editor version-check gap closed with two
+  layers, both kept, neither replacing the other: the existing manually-
+  bumped semver stays (with a new CLAUDE.md rule for when to bump it),
+  plus an automatic git-SHA marker as a non-blocking backstop -- a raw
+  content hash rejected outright.** Surfaced by a real hardware failure:
+  `register_trigger` landed in `runtime.py` (2026-09-02) without
+  `_RUNTIME_VERSION`/`EDITOR_TARGET_VERSION` being bumped, so a stale
+  RP2040 board's HELLO still read `0.1.0`, `decideDeploy` said
+  "compatible," and the flow crashed with `AttributeError: 'module'
+  object has no attribute 'register_trigger'`. Mike's own explicit call,
+  having been offered a hash-only option: a content hash can't
+  distinguish a real behavioral change from a harmless comment/rename
+  edit (both would just read "different"), so it was rejected in favor
+  of keeping semver as the actual compatibility decision, backed by a
+  documented rule for deciding when a `device-runtime/src` change is
+  breaking (CLAUDE.md's "Device-runtime version bump discipline" --
+  given `decideDeploy` only gates on `major`, the rule is blunter than
+  textbook semver: any codegen-visible change gets a `major` bump, not a
+  `minor` one, since `minor`/`patch` bumps give zero actual protection
+  today). Mike also asked for the git-SHA marker "for belt and braces" on
+  top of the rule, not instead of it -- `test-flows/deploy_runtime.py`
+  now stamps a board with `device-runtime/src`'s git SHA at push time;
+  HELLO gains an optional `runtimeBuild` field echoing it; `version.ts`'s
+  `checkRuntimeBuild` compares it to the editor's own build-time SHA
+  (`vite.config.ts`'s `define`) and logs a warning, never blocks a
+  DEPLOY. `messages.py`/`messages.ts`, `codec.ts`, `listener.py`,
+  `deploy_runtime.py`, `vite.config.ts`, `main.ts`.
 
 ## Node authoring / extensibility
 

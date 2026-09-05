@@ -16,8 +16,20 @@ const SAMPLE_MESSAGES: Message[] = [
     type: "HELLO",
     chipType: "ESP32-C3",
     runtimeVersion: { major: 1, minor: 2, patch: 3 },
+    runtimeBuild: null, // board predates the runtime-build marker, or deploy_runtime.py couldn't determine git info
     freeFlashBytes: 3_500_000,
     freeRamBytes: 168_000,
+  },
+  {
+    // Same message type, second variant: a board that DOES have a runtime-build
+    // SHA, covering checkRuntimeBuild's non-null path through the actual wire
+    // codec, not just its own unit tests below.
+    type: "HELLO",
+    chipType: "Raspberry Pi Pico W with RP2040",
+    runtimeVersion: { major: 0, minor: 1, patch: 0 },
+    runtimeBuild: "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678",
+    freeFlashBytes: 757_760,
+    freeRamBytes: 179_200,
   },
   {
     type: "DEPLOY",
@@ -109,6 +121,28 @@ describe("codec.ts rejects valid CBOR with the wrong shape (per message type)", 
   it("rejects a malformed runtimeVersion (not a major/minor/patch map)", () => {
     const body = cborEncode({ chipType: "x", runtimeVersion: "1.2.3", freeFlashBytes: 1, freeRamBytes: 1 });
     expect(() => decodeMessageBody(MessageType.HELLO, body)).toThrow(MessageDecodeError);
+  });
+
+  it("rejects HELLO with a non-string, non-null runtimeBuild", () => {
+    const body = cborEncode({
+      chipType: "x",
+      runtimeVersion: { major: 1, minor: 0, patch: 0 },
+      runtimeBuild: 123,
+      freeFlashBytes: 1,
+      freeRamBytes: 1,
+    });
+    expect(() => decodeMessageBody(MessageType.HELLO, body)).toThrow(MessageDecodeError);
+  });
+
+  it("accepts HELLO with runtimeBuild entirely absent (older-listener case)", () => {
+    const body = cborEncode({
+      chipType: "x",
+      runtimeVersion: { major: 1, minor: 0, patch: 0 },
+      freeFlashBytes: 1,
+      freeRamBytes: 1,
+    });
+    const decoded = decodeMessageBody(MessageType.HELLO, body);
+    expect((decoded as { runtimeBuild: unknown }).runtimeBuild).toBeNull();
   });
 
   it("rejects DEPLOY with a non-bytes field", () => {

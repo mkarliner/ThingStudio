@@ -71,6 +71,20 @@ export interface HelloMessage {
   readonly type: "HELLO";
   readonly chipType: string;
   readonly runtimeVersion: ProtocolVersion;
+  /**
+   * Belt-and-braces companion to `runtimeVersion`, added 2026-09-05
+   * (CLAUDE.md's "Device-runtime version bump discipline"): a git SHA of
+   * `device-runtime/src` at the moment `test-flows/deploy_runtime.py`
+   * last pushed it onto this board -- NOT a content hash (deliberately;
+   * see that CLAUDE.md section for why a hash was rejected) and NOT part
+   * of the deploy-safety decision `version.ts`'s `decideDeploy` makes.
+   * Purely informational: `checkRuntimeBuild` (version.ts) compares this
+   * to the editor's own build-time SHA and logs a warning on mismatch,
+   * never blocks a DEPLOY. `null` means "can't confirm" -- either this
+   * board predates the marker file, or `deploy_runtime.py` couldn't
+   * determine git info when it last ran -- not "confirmed stale."
+   */
+  readonly runtimeBuild: string | null;
   readonly freeFlashBytes: number;
   readonly freeRamBytes: number;
 }
