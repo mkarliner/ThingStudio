@@ -34,8 +34,10 @@ We need to support the following platforms for the editor/backend:
 [whole list triaged — decisions.md, "Config nodes / Tier 1 scope" section, 2026-08-17 entry, plus tier1-node-candidates-prioritization-briefing.md; per-item disposition below]
    - Interrupt / pin change
      [done — interrupt.ts, replaces gpio_in]
-   - ADC
-     [decided: rejected as a node type, reduces to a function-node one-liner — decisions.md]
+   - delay, gets a messages and relays it after an interval
+   - average/smooth low pass filter for eg: adc readings.
+   - ADC - review, read on message, it may include a polling option...
+   - gpio in -  read on message, again, may have polling option.
    - debounce
      [done — built into the interrupt node's cooldown algorithm, decisions.md]
    - http in/out
@@ -52,6 +54,7 @@ We need to support the following platforms for the editor/backend:
      [tracked, unresolved fault-handling question — outstanding-items.md "Network / config nodes"]
    - init node triggered by start of flow?
      [tracked, never discussed — outstanding-items.md "UI / editor" section]
+# Store flows on micro as well as file system.
 
 # machine specific node collections and defs
    - we should have node 'collections' for nodes that naturally are a set , specifially board/processor specific ones like pi pio
