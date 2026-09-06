@@ -35,9 +35,13 @@ We need to support the following platforms for the editor/backend:
    - Interrupt / pin change
      [done — interrupt.ts, replaces gpio_in]
    - delay, gets a messages and relays it after an interval
+     [tracked, never scoped — outstanding-items.md "Network / config nodes" section]
    - average/smooth low pass filter for eg: adc readings.
+     [same node as "filter / event compression" below — outstanding-items.md "Network / config nodes" section]
    - ADC - review, read on message, it may include a polling option...
+     [decided: rejected as a node type, reduces to a function-node one-liner — decisions.md, "Config nodes / Tier 1 scope" section, 2026-08-17 entry]
    - gpio in -  read on message, again, may have polling option.
+     [done — interrupt.ts replaces gpio_in, same as "Interrupt / pin change" above]
    - debounce
      [done — built into the interrupt node's cooldown algorithm, decisions.md]
    - http in/out
@@ -55,6 +59,12 @@ We need to support the following platforms for the editor/backend:
    - init node triggered by start of flow?
      [tracked, never discussed — outstanding-items.md "UI / editor" section]
 # Store flows on micro as well as file system.
+[tracked, not scoped — outstanding-items.md "Redeploy / runtime" section]
+
+# UDP send has a timeout property - why?
+
+# UDP receive has a poll internval property - why?
+[tracked, unanswered — outstanding-items.md "Network / config nodes" section]
 
 # machine specific node collections and defs
    - we should have node 'collections' for nodes that naturally are a set , specifially board/processor specific ones like pi pio

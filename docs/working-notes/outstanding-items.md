@@ -14,6 +14,8 @@ confirmed with confidence, it was flagged as open rather than guessed closed —
 bottom. That audit is not redone here; item status reflects the 2026-08-19/2026-08-21 audit plus whatever's noted
 inline, not a fresh check.
 
+**2026-09-06 pass:** re-checked every active item's own status (not a full re-audit against `git log`) and moved six items that were already marked implemented-and-verified, or already resolved as a decision, out of the active sections into the new "Resolved" section near the bottom — nothing deleted, just compressed to a pointer so this file stays quick to read. Everything else here is untouched.
+
 ## Next up (already flagged before this audit, unstarted)
 
 - **MQTT real-hardware validation + network follow-ups (in progress).** **Mike's direct request, top priority (2026-08-22).** Real-hardware validation of the MQTT WiFi-precheck fix, full MQTT functional pass, `http_request`'s config-node/canvas migration, and Problem 2a's loud-error fix extended to `http_request`/`mqtt-shared.ts`. **2026-09-04: a second, confirmed real-hardware bug (wifi_status-vs-mqtt_as connect ordering) was found and fixed but not yet verified, on ESP32 or RP2040 -- this is now the front of the queue.** Briefing for the next session: `wifi-race-fix-verification-and-network-followups-briefing.md` (supersedes `mqtt-hardware-validation-and-network-followups-briefing.md`). ([detail](outstanding-items/mqtt-hardware-validation.md))
@@ -25,7 +27,6 @@ inline, not a fresh check.
 
 - **Suspected: `mqtt_publish`/`mqtt_subscribe` sharing one broker client have no publish-after-subscribe-confirmed ordering guarantee at flow boot -- likely (co-)cause of a real silent-failure hardware test, 2026-09-02, unconfirmed pending a targeted fix+retest.** ([detail](outstanding-items/mqtt-pubsub-boot-race.md))
 - **`wifi_status` emits every poll, not just on change -- implemented 2026-09-02, not yet verified.** `buildMsg` had no change-detection; fixed via a per-instance last-known-state comparison plus a new `compile.ts` guard (a source's `buildMsg` can now set `msg = None` to skip a cycle without skipping the mandatory sleep/yield). Not run through `npm test`/build from the sandbox (CLAUDE.md's npm rule) or retested on real hardware yet. Mike's ask. ([detail](outstanding-items/wifi-status-emit-on-change.md))
-- **`http_request`'s WiFi-config migration closed 2026-09-04; canvas presence still open.** Still registry-only (no Rete class/ports/palette entry), but no longer reads raw `ssid`/`password` — it now derives WiFi credentials from the flow's own `wifi_status` node, the same fix every other network node type got the same day (see the single-wifi-owner bullet below). ([detail](outstanding-items/http-request-config-node-gap.md))
 - **Single-wifi-owner fix, 2026-09-04 — no real-hardware pass yet.** `wifi_status` is now the flow's sole source of WiFi credentials; `udp_send`/`udp_receive`/`mqtt_publish`/`mqtt_subscribe`/`http_request` lost their own independent `wifiConfigId` (Mike's own real-hardware finding: two network nodes in one flow could silently disagree about which WiFi config was active). Off-device tests updated and passing; the actual redeploy + retest on real hardware — including re-confirming `basic-mqtt.flow.json`, which Mike had just gotten working the same session before this fix landed — hasn't happened yet. Also flagged, same day, deferred pending real-world evidence: wifi_status's plain one-shot WiFi connect has no retry/backoff the way mqtt_as's own connection management does -- Mike's call was to leave this until it's shown to actually cause problems, not fix it speculatively. ([detail](outstanding-items/wifi-single-owner-fix.md))
 - **CONFIRMED BUG, 2026-09-04 — wifi_status's own WiFi connect can fire after mqtt's precheck, defeating it. Fix implemented same day, not yet hardware-verified, needs testing on RP2040 too.** `basic-mqtt.flow.json` tested with invalid ssid/password hit real hardware failure `OSError('Wifi Internal State Error')` / `"sta is connecting, cannot set config"`. Root cause confirmed by reading the compiler: module-scope setup-statement order follows the flow file's own arbitrary node array order, not a real phase/priority system — in this file, both mqtt nodes' setup (including the WiFi-race precheck) happens to land before `wifi_status`'s own connect call, so the precheck waits for an in-flight connect that hasn't started yet, then `wifi_status` connects, then mqtt_as's own connect collides with it moments later. This is the wifi_status-vs-mqtt_as cross-node race `mqtt-shared.ts` always flagged as unverified — now confirmed on hardware. Not fixed yet; needs a real ordering guarantee in `compile.ts`, not a longer timeout. Blocks trusting any mqtt+wifi_status flow. ([detail](outstanding-items/wifi-status-mqtt-connect-ordering-race.md))
 - **MQTTS (MQTT over TLS) — not built, deferred on Mike's explicit call (2026-08-21).** Vendored `mqtt_as`'s `config` dict already has unused `ssl`/`ssl_params` keys; checked against the one-way-door principle before deferring — a config's `properties` is a plain JSON blob, so this isn't a one-way door. Nothing reserved. ([detail](outstanding-items/mqtts-tls-deferred.md))
@@ -34,16 +35,14 @@ inline, not a fresh check.
 - **Network nodes' real hardware pass — partially closed.** UDP send/receive: real hardware pass done (echo-tester flow). `wifi_status`/`http_request`: off-device verified only. `mqtt_publish`/`mqtt_subscribe`: first real hardware pass 2026-08-21 surfaced the WiFi reconnect-race bug; fix needs a second pass to confirm it holds. ([detail](outstanding-items/network-hardware-pass-status.md))
 - **Whether to file an upstream issue for the `mqtt_as` WiFi-reconnect race — undecided, Mike's call.** Real bug confirmed against current `master` of peterhinch/micropython-mqtt, but the same class of fix has been raised before (#59, #61, #57) without landing — which is exactly why Thingstudio fixed it locally instead. ([detail](outstanding-items/mqtt-upstream-issue-decision.md))
 - **Filter / event-compression node — not built.** Tier 1 item 5 point 2, pulled into v1 alongside interrupt/pin-change but never implemented. Buildable with zero new compiler capability (reuses `timer.ts`'s per-instance state pattern) — just not done yet. ([detail](outstanding-items/filter-event-compression-node.md))
+- **`delay` node — never built, never even scoped.** From `mikes-questions-and-points.md`'s original node-prioritisation list ("gets a message and relays it after an interval"); the 2026-08-17 Tier 1 triage resolved every other item on that list but this one was never explicitly addressed.
+- **`udp_send`'s `timeout` property and `udp_receive`'s `poll interval` property — Mike questioning why these exist, 2026-09-06, not yet answered.** Raised in `mikes-questions-and-points.md`; unscoped, no investigation yet.
 - **Most of the node library still has no canvas presence.** `variable_get`, `variable_set`, `pwm_out`, `http_request` are registry-only: real codegen, no Rete class, no palette entry, unreachable from the editor UI. `boolean`/`arithmetic`/`comparator` removed as node types entirely 2026-08-21; `mqtt_publish`/`mqtt_subscribe` closed 2026-08-21. ([detail](outstanding-items/canvas-presence-gaps.md))
 
 ## WiFi provisioning / captive portal
 
 - **Tasmota-style soft-AP + captive-portal WiFi fallback — raised by Mike 2026-08-20, no design/scope yet.** Mike believes MicroPython code for this already exists — worth checking before building from scratch. The new `security: "unmanaged"` config state exists specifically to keep this door open. Refined 2026-09-04: the concrete intent is scan-at-runtime, pick-from-a-dropdown, not just "something else manages it." Needs its own scoping session. ([detail](outstanding-items/wifi-provisioning-captive-portal.md))
 - **Credential-free git-committable flows — deferred, 2026-09-04.** Mike wants a valid, mqtt-including flow committed to git with no real WiFi credentials embedded in it. Blocked today by mqtt_publish/mqtt_subscribe's hard requirement for real credentials (mqtt_as manages its own WiFi connection, no "unmanaged" mode) — needs either placeholder/dummy creds (flow doesn't actually run as committed) or a real secrets-injected-outside-the-flow-file mechanism (unscoped). Deferred, not started. ([detail](outstanding-items/credential-free-committable-flows.md))
-
-## Node authoring / extensibility
-
-- **Custom node authoring — implemented 2026-08-20 (historical record).** Letting users create/register their own node types. Scoped and built in one session per Mike's sequencing override; all of its "real open questions" now resolved (distribution mechanism, editor-side discovery, compiler/editor contract, sandboxing). ([detail](outstanding-items/custom-node-authoring.md))
 
 ## Redeploy / runtime
 
@@ -57,12 +56,12 @@ inline, not a fresh check.
 - **Connection-state gate/router nodes — neither shape built.** A pass-or-drop WiFi/MQTT-status gate (cheap) and a real two-output status router (needs a genuine multi-output-port contract) are both flagged, neither started. The router shape connects to a bigger "route by a condition" need. ([detail](outstanding-items/connection-state-gate-router-nodes.md))
 - **Tier 1 "kitchen sink" gate — not run.** One combined flow wiring every v1 node type together, soak-run for an extended period, per `mvp-validation-plan.md`'s own Tier-level bar. Needs the rest of Tier 1 (I2C sensors, network hardware pass, remaining canvas wiring) to mean anything. ([detail](outstanding-items/tier1-kitchen-sink-gate.md))
 
+- **Store the flow definition on the device itself, not just the host file system — raised by Mike, never scoped.** Today a flow's source of truth lives only in the editor's saved `.flow.json`; whether/how a device should also carry its own copy (for backup, inspection, or recovery without the original file) is untouched. Distinct from Tier 2's live-value/state persistence above, which is about runtime data, not the flow definition itself.
+
 ## UI / editor
 
 - **`inject`'s click-only live-fire feature -- implemented 2026-09-02, not yet verified by Mike on real hardware.** Verified absent from the repo first (a prior session's handoff brief had wrongly claimed it was built and commit-ready), then built for real: new §13 `TRIGGER` message, `inject.ts` rewritten onto the event-source codegen pattern (`repeat` property removed entirely, no periodic options), device-side trigger registry, and canvas click wiring. The `startup` node (fire-once-at-boot) was explicitly excluded from this work, per Mike's own scope decision -- still tracked separately. Surfaced originally when Mike's own `basicmqtt.flow.json` hardware test produced no output. ([detail](outstanding-items/inject-click-fire-missing.md))
 - **`wifi_status`/mqtt nodes have no connection-status indicator on the canvas.** Status is only visible via generated console output today. Mike's ask, 2026-09-02, not scoped. ([detail](outstanding-items/node-status-indicators.md))
-- **Console-message-to-node attribution -- implemented and verified 2026-09-04 (phase 2).** `main.ts`'s `highlightNode()` family already turned a node red automatically on a real NODE_ERROR or compile error before this session; phase 2 added the two things that were still missing: `DEBUG node=X` console lines now get attributed too (regex-parsed out of the raw print text), and every attributable console line (NODE_ERROR, compile error, DEBUG) is now clickable -- clicking selects the node (property panel opens, canvas shows the same orange selected outline a real click gives), and pans/zooms the canvas to it. `tsc --noEmit`/`vitest run` both passed; Mike confirmed the manual click-through on real hardware. One bug found and fixed along the way: the first pass only set the app-level `selectedNode` store (opened the property panel) without also driving Rete's own `AreaExtensions.selectableNodes` selection state, so the node never got its visual highlight border -- `editor-setup.ts` now exposes a `selectNode()` that does both, matching what an ordinary canvas click triggers via two separate listeners on the same pointer gesture. ([detail](outstanding-items/console-node-id-mapping.md))
-- **Stable node IDs -- implemented and `tsc`/`vitest`-verified 2026-09-04.** A node's own Rete canvas id (crypto.randomUUID()) is now its compiler-facing/wire-protocol/flow-file id too, passed through unchanged instead of recomputed fresh every compile/save -- fixes a real (if narrow) misattribution risk in the console-highlighting above, removes the old sequential-id-remap machinery from `graph-adapter.ts`/`main.ts` entirely, and required zero wire-protocol changes (nodeId was already a string everywhere on the wire). `test-flows/*.flow.json` migrated in place to the new string-id schema; old saved flow files with integer ids would otherwise fail to load. `npx tsc --noEmit`/`npx vitest run` both passed, and a real hardware flow-run (`test-flows/basic-mqtt.flow.json`) confirmed correct behavior -- migrated flows keep their original id shape (small-integer-looking strings), only genuinely new nodes get fresh UUIDs, which is expected (the property that matters is stability, not the id's visual shape). Full reasoning: `decisions.md`'s "Stable node IDs" entry. Phase 2 (the console click-to-navigate item above) builds on this.
 - **Drag-to-splice — still not built, still needs Mike's own real-browser call.** Reclassified to "should eventually match Node-RED" priority (2026-08-15 addendum, `mvp-feature-priorities.md`), and multiple Rete migration sessions confirmed a working ~90-line poc-rete implementation exists to port — but the trigger mechanism (`nodedragged` vs. `nodetranslated`) is an explicitly unresolved hands-on judgment call only Mike can make in his own browser. `rete-migration-phase4-briefing.md` confirms this is untouched even after the full Rete migration closed out — `editor/src/app/rete/insert-node.ts` was never ported from poc-rete. ([detail](outstanding-items/drag-to-splice.md))
 - **Mike's own suspicion, not yet diagnosed: `inject` might be doing the job of two separate nodes.** Flagged 2026-08-17 in `mikes-questions-and-points.md`'s "To review" section, wants a review "fairly soon." No investigation yet. ([detail](outstanding-items/inject-node-review.md))
 - **"Init node triggered by start of flow?" — raw open question, never discussed.** From `mikes-questions-and-points.md`'s "Nodes - to be prioritised" list, never discussed even in the Tier 1 prioritization session that triaged every other item on that list. Whether `inject`'s manual/repeat semantics already cover this is unconfirmed — resolve alongside the inject-node review, not separately. ([detail](outstanding-items/init-node-on-flow-start.md))
@@ -108,14 +107,18 @@ server — also the "HTTP in" item Mike raised, deliberately not folded into v1'
 flows, a companion server for team libraries/fleet deployment. `mvp-feature-priorities.md`'s own "Explicitly still
 out of v1" section covers the same ground in more detail and is the fuller source if needed.
 
-## Coverage note — closing the loop on `mikes-questions-and-points.md`
+## Resolved — closed out of the active backlog
 
-Two items from that file are fully resolved elsewhere but weren't otherwise cross-referenced back to the raw note:
+Items below are done and verified (or resolved as a decision); kept here as one-line pointers rather than full
+paragraphs in the active sections above, per the same "index, not a copy" principle as this whole file. Full
+reasoning stays at each pointer's target, nothing here was deleted.
 
-- **"App Platform"** (backend-served web UI vs. a cross-platform GUI app) — resolved 2026-08-16: thin local Python
-  backend + browser-based web editor, explicitly not Electron/Tauri. `decisions.md`, "Backend" section, first entry.
-- **"file ops"** (from "Nodes - to be prioritised") — resolved 2026-08-17: rejected as a node type entirely,
-  reduces to a `function`-node one-liner. `decisions.md`, "Config nodes / Tier 1 scope" section, first entry.
+- **Custom node authoring** — implemented 2026-08-20, all open questions resolved. ([detail](outstanding-items/custom-node-authoring.md))
+- **`http_request`'s WiFi-config migration** — closed 2026-09-04 (derives credentials from the flow's `wifi_status` node like every other network node type). Its one remaining piece, canvas presence, is not duplicated here — it's already covered by "Most of the node library still has no canvas presence" above. ([detail](outstanding-items/http-request-config-node-gap.md))
+- **Console-message-to-node attribution** — implemented and verified 2026-09-04 (phase 2: DEBUG-line attribution, click-to-navigate, Mike confirmed on real hardware). ([detail](outstanding-items/console-node-id-mapping.md))
+- **Stable node IDs** — implemented and verified 2026-09-04 (a node's own Rete UUID is now its compiler/wire-protocol/flow-file id end to end). Full reasoning: `decisions.md`, "Stable node IDs" entry.
+- **"App Platform" question** (backend-served web UI vs. a cross-platform GUI app) — resolved 2026-08-16: thin local Python backend + browser-based web editor. `decisions.md`, "Backend" section.
+- **"file ops" node idea** — resolved 2026-08-17: rejected as a node type entirely, reduces to a `function`-node one-liner. `decisions.md`, "Config nodes / Tier 1 scope" section.
 
 ## Flagged as ambiguous — needs a human decision, not guessed here
 
@@ -134,20 +137,8 @@ Two items from that file are fully resolved elsewhere but weren't otherwise cros
 
 ## Files marked fully resolved by the original 2026-08-19 audit (archived 2026-08-22)
 
-Moved into `docs/working-notes/archive/` 2026-08-22 (unchanged otherwise, just relocated — none of these were
-edited) so the main directory only shows files an active session might actually need:
-
-`archive/config-node-system-scoping.md`, `archive/editor-hands-on-briefing.md`,
-`archive/editor-look-and-feel-briefing.md`, `archive/fault-isolation-briefing.md`,
-`archive/mvp-planning-briefing.md`, `archive/repo-structure-and-conventions.md`,
-`archive/rete-migration-decision.md`, `archive/rete-migration-implementation-briefing.md`,
-`archive/rete-migration-phase3-briefing.md`, `archive/rete-migration-phase4-briefing.md`,
-`archive/rete-migration-planning-briefing.md`, `archive/rete-spike-briefing.md`,
-`archive/rp2040-bringup-findings.md`, `archive/tier1-interrupt-node-implementation-briefing.md`,
-`archive/tier1-node-candidates-prioritization-briefing.md`, `archive/tier1-node-set-briefing.md`,
-`archive/wire-protocol-briefing.md`, `archive/wire-type-system-scoping.md`,
-`archive/wire-type-system-implementation-briefing.md`.
-
-Every other file in the inventory was read and classified but left completely untouched — either because it's
-partially resolved (open items pulled forward above, rest of the file stands as historical context), still fully
-active, or is one of the three living tracking documents noted under "Flagged as ambiguous."
+19 working-notes briefings whose own success criteria were entirely met got moved into
+`docs/working-notes/archive/` 2026-08-22, unchanged otherwise — see that directory for the list. Everything else in
+the original inventory was read and classified but left in place — either partially resolved (open items pulled
+forward above), still fully active, or one of the three living tracking documents noted under "Flagged as
+ambiguous."
