@@ -1,8 +1,11 @@
 # Network nodes' real hardware pass — partially closed
 
-`wifi_status`/`http_request` still off-device verified only (`mvp-validation-plan.md`'s 2026-08-14 Results entry);
-no pass against a real HTTP test server on real hardware has been recorded. (UDP send/receive got a real hardware
-pass earlier, via the echo-tester flow — that part was already closed.)
+`wifi_status` still off-device verified only (`mvp-validation-plan.md`'s 2026-08-14 Results entry). (UDP
+send/receive got a real hardware pass earlier, via the echo-tester flow — that part was already closed.)
+
+**`http_request` got its first real hardware pass 2026-09-06**, on ESP32, against a new local test peer
+(`test-flows/http_test_server.py`) — both GET and POST confirmed, response body/status landing in `msg` correctly.
+Full detail: `mvp-validation-plan.md`'s 2026-09-06 Results entry. RP2040 not yet tested for this node specifically.
 
 **`mqtt_publish`/`mqtt_subscribe` got their first real hardware pass 2026-08-21**, via Mike's own
 `mqtttest.flow.json` against a real local broker — and it surfaced a real bug, not just confirmed the happy path: a

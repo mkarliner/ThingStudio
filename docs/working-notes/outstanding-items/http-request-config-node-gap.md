@@ -40,9 +40,11 @@ OSErrors now fold in this request's own host:port) and extended the same fix to 
 
 Verified 2026-09-06 from an isolated extraction of `editor/` (`.verify-tmp/editor-src.tar.gz` → the cloud session's
 own workspace, per CLAUDE.md's npm/build-from-sandbox rule — never run against the live-mounted repo): stray-`.js`
-check clean, `tsc --noEmit` clean, full `vitest` suite green (28 files, 319 tests). **Still owed: Mike's own
-real-terminal verify pass, the actual git commit, and a real-hardware pass** — a local HTTP test server reachable
-from real ESP32 (and RP2040) hardware, GET and POST, confirming response body/status land in `msg` correctly and
-that WiFi credentials are actually derived from the flow's `wifi_status` node on real hardware, not just
-off-device. Dated Results entry owed in `mvp-validation-plan.md` once that hardware pass happens.
-(`network-hardware-pass-status.md`)
+check clean, `tsc --noEmit` clean, full `vitest` suite green (28 files, 319 tests).
+
+**Real hardware pass also closed 2026-09-06**, on ESP32: `basic-http-request.flow.json` against a new local test
+peer (`test-flows/http_test_server.py`) — GET and POST both confirmed, response body/status landing in `msg`
+correctly, WiFi credentials correctly derived from the flow's `wifi_status` node. Full detail:
+`mvp-validation-plan.md`'s 2026-09-06 Results entry, `network-hardware-pass-status.md`. **Still owed: Mike's own
+real-terminal verify pass and the actual git commit** — nothing else left open on this item. RP2040 not yet
+tested for this node specifically.

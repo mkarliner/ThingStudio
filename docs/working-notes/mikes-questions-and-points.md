@@ -95,6 +95,7 @@ node-red has a backend serving up the editor web pages, not a cross platform, GU
 
 # UI
 - collapsible, resizable panes
+- nodes in general should able to show status (like node red mqtt), specifically wifi, mqtt http 
 - delete node and wire
 - notes / README sheet for documenting flow
 [tracked, untriaged — outstanding-items.md "UI / editor" section ("General UI wishlist")]

@@ -1077,6 +1077,33 @@ the README-per-component convention.
   ordering-guarantee design in `compile.ts` is Mike's call, not decided
   here.
 
+- **Results (2026-09-06, real ESP32 hardware -- `http_request` GET and
+  POST, first real-hardware pass):** `basic-http-request.flow.json`
+  (inject -> http_request -> debug, `wifi_status` providing WiFi
+  credentials) against a new stdlib test peer,
+  `test-flows/http_test_server.py` (matches `udp_echo_server.py`'s role
+  for the UDP nodes; deliberately not `python3 -m http.server`, which
+  501s on POST and doesn't guarantee a `Content-Length` header the
+  same way -- this client has no chunked-transfer-encoding support).
+
+  **GET passed** first, against `http://<mac-lan-ip>:8000/...` --
+  confirmed the node's first real request off the board actually needed
+  the Mac's real LAN IP, not `localhost` (which resolves to the board
+  itself, not the test machine -- an `OSError(104,)` on first attempt
+  confirmed this before the URL was corrected). **POST passed** next,
+  round-tripping an `inject`-sourced string payload through the test
+  server's echo handler and back into `msg.payload`/`msg.status`
+  correctly. Confirms both `http_request`'s canvas-presence work and
+  Problem 2a's loud-error fix (`outstanding-items/http-request-config-
+  node-gap.md`, `outstanding-items/mqtt-hardware-validation.md`'s
+  2026-09-05/06 updates) on real hardware for the first time -- prior
+  verification of that work was off-device only (`tsc`/`vitest`).
+
+  **Not covered here, still open:** the same pass on RP2040 (untested
+  for `http_request` specifically); HTTPS/TLS (v1 doesn't support it);
+  chunked-transfer-encoding responses (also unsupported by design, not
+  exercised against a real chunked server here).
+
 ## Tier 2 — live values + persistence
 
 - Live value streaming: inject a known value sequence, confirm the

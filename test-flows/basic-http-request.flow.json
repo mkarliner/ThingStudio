@@ -1,0 +1,103 @@
+{
+  "formatVersion": 1,
+  "flowName": "basic http request",
+  "nodes": [
+    {
+      "id": "000ad180ba5e33e4",
+      "type": "thingstudio/inject",
+      "properties": {
+        "payloadType": "string",
+        "payloadValue": "adsfasdfa"
+      }
+    },
+    {
+      "id": "b0fb9832e4c7dca9",
+      "type": "thingstudio/debug",
+      "properties": {}
+    },
+    {
+      "id": "c0f0cb2f0af1f642",
+      "type": "thingstudio/http_request",
+      "properties": {
+        "url": "http://localhost:8000/index.html",
+        "method": "GET",
+        "timeoutMs": 5000
+      }
+    },
+    {
+      "id": "e92ea53568991478",
+      "type": "thingstudio/wifi_status",
+      "properties": {
+        "pollMs": 5000,
+        "wifiConfigId": "00f8da1d-7e14-4629-b0fe-8722c4723406"
+      }
+    }
+  ],
+  "edges": [
+    [
+      "000ad180ba5e33e4",
+      0,
+      "c0f0cb2f0af1f642",
+      0
+    ],
+    [
+      "c0f0cb2f0af1f642",
+      0,
+      "b0fb9832e4c7dca9",
+      0
+    ]
+  ],
+  "layout": {
+    "000ad180ba5e33e4": {
+      "pos": [
+        133.74566650390625,
+        341.74566650390625
+      ],
+      "size": [
+        96,
+        34
+      ]
+    },
+    "b0fb9832e4c7dca9": {
+      "pos": [
+        441,
+        496
+      ],
+      "size": [
+        84,
+        34
+      ]
+    },
+    "c0f0cb2f0af1f642": {
+      "pos": [
+        245.74566650390625,
+        389.74566650390625
+      ],
+      "size": [
+        130,
+        34
+      ]
+    },
+    "e92ea53568991478": {
+      "pos": [
+        137,
+        224.25433349609375
+      ],
+      "size": [
+        120,
+        34
+      ]
+    }
+  },
+  "configs": [
+    {
+      "id": "00f8da1d-7e14-4629-b0fe-8722c4723406",
+      "type": "thingstudio/config/wifi",
+      "properties": {
+        "ssid": "mihome",
+        "security": "password",
+        "password": "electr1c"
+      }
+    }
+  ]
+}
