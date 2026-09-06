@@ -14,6 +14,7 @@
 //   - wifi_status:  pollMs, wifiConfigId                       (node-library/wifi-status.ts -- the flow's ONLY node with its own wifiConfigId, 2026-09-04, see that file's header)
 //   - udp_send:     host, port, timeoutMs                      (node-library/udp-send.ts -- wifiConfigId removed 2026-09-04, derives from the flow's wifi_status node instead)
 //   - udp_receive:  port, pollMs                                (node-library/udp-receive.ts -- same removal)
+//   - http_request: url, method, timeoutMs                       (node-library/http-request.ts -- given canvas presence 2026-09-05, see below; never had a wifiConfigId of its own, unaffected by the 2026-09-04 removal)
 //   - mqtt_publish:   topic, retain, qos, brokerConfigId          (node-library/mqtt-publish.ts -- wifiConfigId removed 2026-09-04, same reason)
 //   - mqtt_subscribe: topic, qos, brokerConfigId                 (node-library/mqtt-subscribe.ts -- same removal)
 //
@@ -41,6 +42,14 @@
 // existed to close. http_request stays registry-only, an explicit
 // flagged follow-up at the time (see that briefing's own success-criteria
 // section).
+//
+// **`http_request` given real canvas presence, 2026-09-05**
+// (HttpRequestNode below) -- previously registry-only since introduction
+// (this file's header above; outstanding-items/http-request-config-node-
+// gap.md, canvas-presence-gaps.md), following mqtt-publish.ts's own
+// worked example. A transform kind (both input and output ports), like
+// FunctionNode -- the only other transform-kind class in this file, since
+// every other network node type here is a pure source or sink.
 //
 // **`wifiConfigId` removed from udp_send/udp_receive/mqtt_publish/
 // mqtt_subscribe, 2026-09-04** (Mike's own real-hardware finding,
@@ -120,6 +129,7 @@ import { interruptNode } from "../../node-library/interrupt.js";
 import { wifiStatusNode } from "../../node-library/wifi-status.js";
 import { udpSendNode } from "../../node-library/udp-send.js";
 import { udpReceiveNode } from "../../node-library/udp-receive.js";
+import { httpRequestNode } from "../../node-library/http-request.js";
 import { mqttPublishNode } from "../../node-library/mqtt-publish.js";
 import { mqttSubscribeNode } from "../../node-library/mqtt-subscribe.js";
 import { resolvePortType, type PortDefinition } from "../../compiler/node-definition.js";
@@ -379,6 +389,35 @@ export class UdpReceiveNode extends ClassicPreset.Node {
   }
 }
 
+export class HttpRequestNode extends ClassicPreset.Node {
+  width = 130;
+  height = NODE_HEIGHT;
+  kind = "http_request" as const;
+  nodeType = "thingstudio/http_request";
+  highlighted = false;
+
+  // Defaults match http-request.ts's own codegen defaults exactly (GET,
+  // 5000ms timeout) -- a freshly-dropped node and a freshly-omitted
+  // property on a hand-edited flow file compile the same, same
+  // convention every other class here follows. url has no sensible
+  // non-empty default (unlike udp_send's own empty-string host, which at
+  // least compiles to a CompileError with the same message either way) --
+  // parseHttpUrl (http-request.ts) already rejects an empty url with a
+  // clear CompileError, so "" here just reaches that same error path
+  // immediately rather than needing its own placeholder check.
+  properties: { url: string; method: "GET" | "POST"; timeoutMs: number } = {
+    url: "",
+    method: "GET",
+    timeoutMs: 5000,
+  };
+
+  constructor() {
+    super("http request");
+    this.addInput("msg", new ClassicPreset.Input(portSocket(httpRequestNode.ports?.inputs, "msg", this.properties), "msg"));
+    this.addOutput("msg", new ClassicPreset.Output(portSocket(httpRequestNode.ports?.outputs, "msg", this.properties), "msg"));
+  }
+}
+
 export class MqttPublishNode extends ClassicPreset.Node {
   width = 128;
   height = NODE_HEIGHT;
@@ -479,6 +518,7 @@ export type AnyThingstudioNode =
   | WifiStatusNode
   | UdpSendNode
   | UdpReceiveNode
+  | HttpRequestNode
   | MqttPublishNode
   | MqttSubscribeNode
   | CustomNode;
@@ -504,6 +544,7 @@ export const NODE_FACTORIES: Record<NodeKind, () => AnyThingstudioNode> = {
   wifi_status: () => new WifiStatusNode(),
   udp_send: () => new UdpSendNode(),
   udp_receive: () => new UdpReceiveNode(),
+  http_request: () => new HttpRequestNode(),
   mqtt_publish: () => new MqttPublishNode(),
   mqtt_subscribe: () => new MqttSubscribeNode(),
 };

@@ -49,6 +49,15 @@
 // 2026-08-21: also emits the WiFi-reconnect race fix (mqtt-shared.ts's
 // mqttEnsureConnectedSnippet()) -- see that file's header for the full
 // story, including the 2026-09-04 fix to how/when it actually runs.
+//
+// Loud network errors added, 2026-09-05 (mqtt-shared.ts's own header;
+// redeploy-cleanup-and-network-fault-detection-briefing.md's Problem 2a):
+// an OSError from the one-time `.subscribe()` call is now re-raised with
+// this node's own broker host:port folded into the message, same as
+// mqtt-publish.ts's `.publish()` call and the connect-retry loop's own
+// final raise (mqtt-shared.ts). Deliberately NOT wrapped around
+// `queue.__anext__()` below -- that's an in-memory queue read, not
+// network I/O, and can't itself raise OSError.
 
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, NodeDefinition, SourceCodegenResult } from "../compiler/node-definition.js";
@@ -92,7 +101,10 @@ export const mqttSubscribeNode: NodeDefinition = {
       `global ${readyVar}`,
       mqttEnsureConnectedSnippet(cfg),
       `if not ${readyVar}:`,
-      `    await ${clientVar}.subscribe(${pyStringLiteral(topic)}, ${qos})`,
+      "    try:",
+      `        await ${clientVar}.subscribe(${pyStringLiteral(topic)}, ${qos})`,
+      "    except OSError as _e:",
+      `        raise OSError("mqtt subscribe to %s:%s failed: %r" % (${pyStringLiteral(cfg.broker)}, ${cfg.port}, _e))`,
       `    ${readyVar} = True`,
       `_mqtt_topic, _mqtt_payload, _mqtt_retained = await ${clientVar}.queue.__anext__()`,
       "msg = {",

@@ -19,9 +19,8 @@
 // session, following interrupt's own wiring exactly. Colors picked from
 // the unused range below existing kinds (a teal/blue network-ish family,
 // distinct from debug's own blue and interrupt's amber). http_request
-// stays registry-only for now -- an explicit, flagged follow-up (see that
-// briefing's own "Success criteria" section), not silently dropped -- so
-// no palette entry for it yet.
+// stayed registry-only at the time -- an explicit, flagged follow-up (see
+// that briefing's own "Success criteria" section), not silently dropped.
 //
 // mqtt_publish/mqtt_subscribe added 2026-08-21 (same config-node migration
 // as wifi_status/udp_send/udp_receive got, plus first-time canvas wiring --
@@ -29,6 +28,17 @@
 // existing network-node color -- "⇧"/"⇩" (hollow, double-stroke arrows)
 // echo udp_send/udp_receive's own "↑"/"↓" direction-of-travel convention
 // while staying visually distinct from them.
+//
+// http_request given a palette entry, 2026-09-05 -- its long-flagged
+// canvas-presence follow-up finally closed (nodes.ts's own header). Lands
+// in the "network" group alongside every other network node type (group
+// field added by the 2026-09-04 UI-cleanup pass). Amber/gold, distinct
+// from every other network-node color used so far -- "⇄" (bidirectional
+// arrows) for the one network node type here that's a transform (both
+// sends a request and returns a response) rather than a pure source or
+// sink, echoing udp_send/udp_receive/mqtt_publish/mqtt_subscribe's own
+// direction-of-travel icon convention without reusing any of their
+// single-direction glyphs.
 export type NodeKind =
   | "inject"
   | "function"
@@ -39,6 +49,7 @@ export type NodeKind =
   | "wifi_status"
   | "udp_send"
   | "udp_receive"
+  | "http_request"
   | "mqtt_publish"
   | "mqtt_subscribe";
 
@@ -72,6 +83,8 @@ export const NODE_PALETTE: Record<NodeKind, KindStyle> = {
   // travel the same way interrupt's "⚡" echoes its own trigger mechanism.
   udp_send: { color: "#3b5c8a", bgcolor: "#1f2e4a", icon: "↑", label: "udp send", group: "network" },
   udp_receive: { color: "#3b8a6e", bgcolor: "#1f4a3a", icon: "↓", label: "udp receive", group: "network" },
+  // Amber/gold -- see this file's header for the icon reasoning.
+  http_request: { color: "#8a6e1f", bgcolor: "#4a3a1f", icon: "⇄", label: "http request", group: "network" },
   // Magenta/purple pair -- see this file's header for the icon reasoning.
   mqtt_publish: { color: "#8a3b6e", bgcolor: "#4a1f3a", icon: "⇧", label: "mqtt publish", group: "network" },
   mqtt_subscribe: { color: "#6e3b8a", bgcolor: "#3a1f4a", icon: "⇩", label: "mqtt subscribe", group: "network" },

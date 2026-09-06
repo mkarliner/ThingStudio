@@ -117,3 +117,23 @@ node vs. wifi_status, both able to call `.connect()` on the same interface) exis
 WiFi driver (cyw43, not ESP-IDF) has the same "reject a second connect while one is in flight" failure mode, or
 degrades some other way, or not at all, is simply unknown until it's actually tested there. Not scoped or
 started.
+
+**2026-09-05 -- ESP32 retested (real hardware, via Mike directly -- this
+session's browser/computer-use tooling couldn't complete WebSerial's
+device picker). Still fails.** Power cycle, then invalid credentials via
+boot-time auto-resume (confirmed equivalent to a live DEPLOY --
+`_resume_flow()` just does `import _flow`, no different code path).
+`E (...) wifi:sta is connecting, cannot set config` still fires, then
+`NODE_ERROR node=2 ... msg=mqtt connect to 192.168.10.22:1883 failed:
+OSError('Wifi Internal State Error',)`. The `sys.platform == "esp32"`
+precheck's ~5s bound doesn't hold under this timing -- the race is
+narrowed, not eliminated.
+
+Mike's note, worth keeping attached to this finding: per CLAUDE.md's
+fault-handling-first principle ("the measure of a good system is not how
+well it works but how well it fails"), this failure is no longer
+badly-behaved -- thanks to this session's loud-error work, it's now a
+clean, attributed `NODE_ERROR` with host:port context, not a raw crash.
+Whether that makes this an acceptable resting state (document the
+limitation) or still worth pursuing one of the ordering-guarantee designs
+above is Mike's call, not decided here.

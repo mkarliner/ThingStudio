@@ -1053,6 +1053,30 @@ the README-per-component convention.
   own proposal for automated recovery from exactly this kind of stuck
   state) far less useful than it is now.
 
+- **Results (2026-09-05, real ESP32 hardware -- ordering-race fix ESP32 leg,
+  fix confirmed NOT fully holding):** the ESP32 leg of
+  `wifi-race-fix-verification-and-network-followups-briefing.md`'s Problem 1,
+  carried forward as outstanding after the RP2040 entry above redirected
+  there first. Power cycle, then invalid credentials via boot-time
+  auto-resume (confirmed equivalent to a live DEPLOY -- `_resume_flow()`
+  just does `import _flow`, no different code path). `E (...) wifi:sta is
+  connecting, cannot set config` still fires, then a clean, attributed
+  `NODE_ERROR node=2 ... msg=mqtt connect to 192.168.10.22:1883 failed:
+  OSError('Wifi Internal State Error',)`. The `sys.platform == "esp32"`
+  precheck's ~5s bound doesn't hold under this timing -- **the race is
+  narrowed, not eliminated.** Full root cause and status:
+  `outstanding-items/wifi-status-mqtt-connect-ordering-race.md`.
+
+  Per CLAUDE.md's fault-handling-first principle, this failure is no
+  longer badly-behaved -- this session's Problem 2a loud-error work
+  (extended to `http_request`/`mqtt-shared.ts`, see
+  `outstanding-items/mqtt-hardware-validation.md`'s 2026-09-05 update)
+  means it now surfaces as a clean, attributed `NODE_ERROR` with
+  host:port context, not a raw crash. Whether that makes this an
+  acceptable resting state or still worth pursuing a real
+  ordering-guarantee design in `compile.ts` is Mike's call, not decided
+  here.
+
 ## Tier 2 — live values + persistence
 
 - Live value streaming: inject a known value sequence, confirm the

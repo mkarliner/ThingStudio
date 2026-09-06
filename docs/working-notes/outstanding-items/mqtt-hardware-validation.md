@@ -67,3 +67,65 @@ This is now the single most important unresolved thing this item is tracking: **
 successfully completed a real-hardware deploy since the single-wifi-owner fix landed.** Everything else in this
 item's original scope (qos 1, retain, outage recovery, the stale-NVS-credentials repro) is still blocked behind
 getting a clean deploy confirmed again.
+
+## Update, 2026-09-05: RP2040 leg passes, ESP32 leg still fails; http_request given canvas presence + loud errors
+
+Both outstanding legs of Problem 1 (`wifi-race-fix-verification-and-network-followups-briefing.md`) were run this
+day. **RP2040: pass** — invalid credentials did not reproduce ESP32's `OSError: Wifi Internal State Error`; full
+detail, plus a separate unrelated finding (stuck `wifi_status` oscillation, only clears on a power cycle), in
+`validation/mvp-validation-plan.md`'s 2026-09-05 RP2040 Results entry. **ESP32: retested, still fails** — same
+`OSError: Wifi Internal State Error` crash, now surfacing as a clean, attributed `NODE_ERROR` rather than a raw
+crash (see the loud-error work below). Confirms the 2026-09-04 fix narrows the race rather than eliminating it.
+Full root cause and status: `wifi-status-mqtt-connect-ordering-race.md`. This is the item's own stop condition
+(`wifi-race-fix-verification-and-network-followups-briefing.md`, Problem 1 item 4) — re-open the design rather
+than tune bounds/timeouts; candidate shapes are listed in the detail file, none evaluated yet. **Mike's call, not
+decided here.**
+
+Same session: `http_request` given real canvas presence (`ports`/Rete class/palette entry/panel section, following
+`mqtt-publish.ts`'s worked example — `http-request-config-node-gap.md`, `canvas-presence-gaps.md`) and Problem 2a's
+loud-network-error fix extended to it plus `mqtt-shared.ts`/`mqtt-publish.ts`/`mqtt-subscribe.ts` (an OSError from a
+connect/publish/subscribe/request call now folds in the operation's own host:port before it reaches `NODE_ERROR` —
+exactly what turned the ESP32 finding above from a raw crash into an attributed error). Both left uncommitted at
+end of session.
+
+## Update, 2026-09-06: uncommitted 2026-09-05 work verified clean off-device
+
+Verified the 2026-09-05 http_request-canvas + loud-error changes above, from an isolated extraction of `editor/`
+(`.verify-tmp/editor-src.tar.gz` → the cloud session's own workspace, per CLAUDE.md's npm/build-from-sandbox rule —
+never run against the live-mounted repo): stray-`.js` check clean, `tsc --noEmit` clean, full `vitest` suite green
+(28 files, 319 tests, including `node-http-request.test.ts`'s new canvas-presence and Problem 2a tests). **Still
+owed: Mike's own real-terminal verify pass (belt-and-braces, matching every prior session's convention), the
+actual commit, and `http_request`'s real-hardware GET/POST pass** (`network-hardware-pass-status.md`) — nothing
+here has touched real hardware. The ESP32 ordering-race stop condition above is unaddressed and still needs Mike's
+design call before any further code changes to it.
+
+## Update, 2026-09-05: RP2040 leg passes, ESP32 leg still fails; http_request given canvas presence + loud errors
+
+Both outstanding legs of Problem 1 (`wifi-race-fix-verification-and-network-followups-briefing.md`) were run this
+day. **RP2040: pass** — invalid credentials did not reproduce ESP32's `OSError: Wifi Internal State Error`; full
+detail, plus a separate unrelated finding (stuck `wifi_status` oscillation, only clears on a power cycle), in
+`validation/mvp-validation-plan.md`'s 2026-09-05 RP2040 Results entry. **ESP32: retested, still fails** — same
+`OSError: Wifi Internal State Error` crash, now surfacing as a clean, attributed `NODE_ERROR` rather than a raw
+crash (see the loud-error work below). Confirms the 2026-09-04 fix narrows the race rather than eliminating it.
+Full root cause and status: `wifi-status-mqtt-connect-ordering-race.md`. This is the item's own stop condition
+(`wifi-race-fix-verification-and-network-followups-briefing.md`, Problem 1 item 4) — re-open the design rather
+than tune bounds/timeouts; candidate shapes are listed in the detail file, none evaluated yet. **Mike's call, not
+decided here.**
+
+Same session: `http_request` given real canvas presence (`ports`/Rete class/palette entry/panel section, following
+`mqtt-publish.ts`'s worked example — `http-request-config-node-gap.md`, `canvas-presence-gaps.md`) and Problem 2a's
+loud-network-error fix extended to it plus `mqtt-shared.ts`/`mqtt-publish.ts`/`mqtt-subscribe.ts` (an OSError from a
+connect/publish/subscribe/request call now folds in the operation's own host:port before it reaches `NODE_ERROR` —
+exactly what turned the ESP32 finding above from a raw crash into an attributed error). Both left uncommitted at
+end of session.
+
+## Update, 2026-09-06: uncommitted 2026-09-05 work verified clean off-device
+
+Verified the 2026-09-05 http_request-canvas + loud-error changes above, from an isolated extraction of `editor/`
+(`.verify-tmp/editor-src.tar.gz` → the cloud session's own workspace, per CLAUDE.md's npm/build-from-sandbox rule —
+never run against the live-mounted repo): stray-`.js` check clean, `tsc --noEmit` clean, full `vitest` suite green
+(28 files, 319 tests, including `node-http-request.test.ts`'s new canvas-presence and Problem 2a tests). **Still
+owed: Mike's own real-terminal verify pass (belt-and-braces, matching every prior session's convention), the
+actual commit, and `http_request`'s real-hardware GET/POST pass** (`network-hardware-pass-status.md`) — nothing
+here has touched real hardware. The ESP32 ordering-race stop condition above is unaddressed and still needs Mike's
+design call before any further code changes to it.

@@ -259,4 +259,36 @@ describe("thingstudio/http_request node", () => {
     expect(result.statements?.[0]?.code).toContain('"MyNet"');
     expect(result.statements?.[0]?.code).toContain(".connect(");
   });
+
+  // Canvas presence (2026-09-05, outstanding-items/http-request-config-
+  // node-gap.md, canvas-presence-gaps.md): registered ports, matching the
+  // pattern every other now-canvas-wired network node type's own test file
+  // asserts (e.g. node-udp-send.test.ts doesn't need this because a sink's
+  // single input is implicit in its own test names, but a transform's pair
+  // is worth asserting explicitly, matching function-node.ts's own shape).
+  it("declares an input and output msg port (transform kind, canvas presence 2026-09-05)", () => {
+    expect(httpRequestNode.ports?.inputs).toEqual([{ name: "msg", type: "any" }]);
+    expect(httpRequestNode.ports?.outputs).toEqual([{ name: "msg", type: "any" }]);
+  });
+
+  // Loud network errors (2026-09-05, redeploy-cleanup-and-network-fault-
+  // detection-briefing.md's Problem 2a): a real ECONNREFUSED against a
+  // closed local port -- not the "server never responds" timeout case
+  // above, a different OSError subclass entirely -- should surface with
+  // this request's own host:port folded into the message, same pattern
+  // node-udp-send.test.ts's own Problem 2a test asserts.
+  it("re-raises a connection failure with the target host:port folded into the message (Problem 2a)", async () => {
+    // 0 lets the OS pick a port, so binding-then-immediately-closing it
+    // reliably yields a real "nothing is listening here" port rather than
+    // a hardcoded number that might collide with something else running
+    // on the test machine.
+    const closedServer = http.createServer();
+    await new Promise<void>((resolve) => closedServer.listen(0, "127.0.0.1", resolve));
+    const closedPort = (closedServer.address() as AddressInfo).port;
+    await new Promise<void>((resolve) => closedServer.close(() => resolve()));
+
+    await expect(runRequest({ url: `http://127.0.0.1:${closedPort}/`, method: "GET", timeoutMs: 2000 })).rejects.toThrow(
+      new RegExp(`http_request to 127\\.0\\.0\\.1:${closedPort}: connect failed`),
+    );
+  });
 });

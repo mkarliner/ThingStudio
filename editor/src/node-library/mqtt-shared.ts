@@ -178,6 +178,17 @@
 // setup-statement key are removed; nothing in `mqtt-publish.ts`/
 // `mqtt-subscribe.ts` contributes this to `statements` any more.
 //
+// Loud network errors added, 2026-09-05 (redeploy-cleanup-and-network-
+// fault-detection-briefing.md's Problem 2a, same pattern udp-send.ts/
+// udp-receive.ts already had -- flagged as a judgment call for
+// http_request/mqtt at the time, never done until now). The final,
+// re-raised OSError out of mqttEnsureConnectedSnippet()'s bounded
+// connect-retry loop below now folds this broker's own host:port into
+// the message; mqtt-publish.ts's `.publish()` call and mqtt-subscribe.ts's
+// `.subscribe()` call get the same treatment at their own call sites
+// (not here -- unlike connect, those two calls happen inside each node's
+// own file, not this shared one).
+//
 // MQTTS/TLS explicitly deferred, not built, not even a reserved field:
 // the vendored mqtt_as's own `config` dict already has `ssl`/`ssl_params`
 // keys (device-runtime/src/vendor/mqtt_as/__init__.py) this file doesn't
@@ -459,9 +470,9 @@ export function mqttEnsureConnectedSnippet(cfg: MqttBrokerConfig): string {
     `                    await ${clientVar}.connect()`,
     `                    ${connectedVar} = True`,
     `                    break`,
-    `                except OSError:`,
+    `                except OSError as _e:`,
     `                    if ${attemptVar} == 2:`,
-    `                        raise`,
+    `                        raise OSError("mqtt connect to %s:%s failed: %r" % (${pyStringLiteral(cfg.broker)}, ${cfg.port}, _e))`,
     `                    await asyncio.sleep_ms(500)`,
   ].join("\n");
 }

@@ -1,4 +1,4 @@
-# `http_request`'s WiFi-config migration (closed 2026-09-04); canvas presence still open
+# `http_request`'s WiFi-config migration (closed 2026-09-04) and canvas presence (closed 2026-09-05)
 
 `config-node-and-palette-implementation-briefing.md` landed the config-node subsystem and wired
 `wifi_status`/`udp_send`/`udp_receive` onto the canvas sharing one `thingstudio/config/wifi` object; `http_request`
@@ -31,9 +31,18 @@ properties, and the `"open"`-security compatibility shim is gone. It didn't get 
 (`resolveFlowWifiCredentials()`, `wifi-status.ts`) rather than gaining a per-node config reference just to lose it
 again immediately.
 
-**Still open: canvas presence.** No `ports`, no Rete node class, no palette entry, no `PropertyPanel.vue` section —
-wire it onto the canvas following `mqtt-publish.ts`'s own worked example (`ports`/Rete class/palette entry/panel
-section), matching every other now-canvas-wired network node type. Validation once that's done: a local HTTP test
-server reachable from real ESP32 hardware — GET and POST, confirming response body/status land in `msg` correctly,
-and that it actually derives WiFi credentials from the flow's `wifi_status` node on real hardware, not just
-off-device. Dated Results entry in `mvp-validation-plan.md`.
+**Canvas presence closed 2026-09-05.** Wired onto the canvas following `mqtt-publish.ts`'s own worked example:
+`ports` (`http-request.ts`), a Rete node class (`HttpRequestNode`, `nodes.ts`), a palette entry (`palette.ts`,
+"network" group, amber/gold, "⇄"), and a `PropertyPanel.vue` section (url/method/timeoutMs). The same change also
+closed Problem 2a's loud-network-error fix for this node (`http-request.ts`'s `open_connection`/request-exchange
+OSErrors now fold in this request's own host:port) and extended the same fix to `mqtt-shared.ts`/`mqtt-publish.ts`/
+`mqtt-subscribe.ts`.
+
+Verified 2026-09-06 from an isolated extraction of `editor/` (`.verify-tmp/editor-src.tar.gz` → the cloud session's
+own workspace, per CLAUDE.md's npm/build-from-sandbox rule — never run against the live-mounted repo): stray-`.js`
+check clean, `tsc --noEmit` clean, full `vitest` suite green (28 files, 319 tests). **Still owed: Mike's own
+real-terminal verify pass, the actual git commit, and a real-hardware pass** — a local HTTP test server reachable
+from real ESP32 (and RP2040) hardware, GET and POST, confirming response body/status land in `msg` correctly and
+that WiFi credentials are actually derived from the flow's `wifi_status` node on real hardware, not just
+off-device. Dated Results entry owed in `mvp-validation-plan.md` once that hardware pass happens.
+(`network-hardware-pass-status.md`)

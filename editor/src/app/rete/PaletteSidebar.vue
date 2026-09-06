@@ -23,6 +23,12 @@
   ordering: mqtt_subscribe sits with the other sources, mqtt_publish with
   the other sinks.
 
+  http_request added 2026-09-05 -- its long-flagged canvas-presence
+  follow-up finally closed (nodes.ts's own header, palette.ts's own
+  header). Placed with `function`, the other transform-kind entry in this
+  list (both input and output ports) -- it doesn't fit the source-then-
+  sink convention above since it's neither.
+
   Custom nodes (docs/working-notes/custom-node-authoring-scoping.md,
   2026-08-20): a second section below the built-in list, populated from
   custom-nodes-store.ts, plus a "Load custom node..." action that owns the
@@ -100,6 +106,7 @@ const KINDS: NodeKind[] = [
   "udp_receive",
   "mqtt_subscribe",
   "function",
+  "http_request",
   "gpio_out",
   "udp_send",
   "mqtt_publish",

@@ -41,6 +41,13 @@
 // 2026-08-21: also emits the WiFi-reconnect race fix (mqtt-shared.ts's
 // mqttEnsureConnectedSnippet()) -- see that file's header for the full
 // story, including the 2026-09-04 fix to how/when it actually runs.
+//
+// Loud network errors added, 2026-09-05 (mqtt-shared.ts's own header;
+// redeploy-cleanup-and-network-fault-detection-briefing.md's Problem 2a):
+// an OSError from `.publish()` itself (broker connection dropped
+// mid-publish, say) is now re-raised with this node's own broker
+// host:port folded into the message, same as the connect-retry loop's
+// own final raise (mqtt-shared.ts).
 
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, NodeDefinition, SinkCodegenResult } from "../compiler/node-definition.js";
@@ -76,7 +83,10 @@ export const mqttPublishNode: NodeDefinition = {
     const functionBody = [
       mqttEnsureConnectedSnippet(cfg),
       payloadToBytesSnippet("_mqtt_body"),
-      `await ${clientVar}.publish(${pyStringLiteral(topic)}, _mqtt_body, retain=${retain ? "True" : "False"}, qos=${qos})`,
+      "try:",
+      `    await ${clientVar}.publish(${pyStringLiteral(topic)}, _mqtt_body, retain=${retain ? "True" : "False"}, qos=${qos})`,
+      "except OSError as _e:",
+      `    raise OSError("mqtt publish to %s:%s failed: %r" % (${pyStringLiteral(cfg.broker)}, ${cfg.port}, _e))`,
     ].join("\n");
 
     return {

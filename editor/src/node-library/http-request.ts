@@ -63,6 +63,24 @@
 // it: security now comes through as whatever the flow's wifi_status node
 // actually has configured (`"password"`/`"open"`/`"unmanaged"`), same as
 // every other migrated network node type.
+//
+// **Given real canvas presence, 2026-09-05** (`ports` below) --
+// previously registry-only per outstanding-items/http-request-config-
+// node-gap.md and canvas-presence-gaps.md; wired onto the canvas
+// following mqtt-publish.ts's own worked example (Rete node class in
+// nodes.ts, palette entry in palette.ts, PropertyPanel.vue section). A
+// transform kind (both an input and an output port), same shape as
+// function.ts, not a source/sink like every other network node type here.
+//
+// **Loud network errors added, 2026-09-05** (redeploy-cleanup-and-
+// network-fault-detection-briefing.md's Problem 2a, same pattern udp-
+// send.ts/udp-receive.ts already had): an OSError from either the initial
+// `open_connection()` or anywhere in the request/response exchange is now
+// re-raised with this operation's own host:port folded into the message,
+// before it reaches runtime.py's NodeError/_guarded machinery -- same
+// motivation as udp-send.ts's own header on this: a bare `OSError: -202`
+// gives no way to tell which node/target actually failed without opening
+// generated source.
 
 import { CompileError } from "../compiler/errors.js";
 import type { GraphNode } from "../compiler/graph.js";
@@ -92,6 +110,16 @@ function parseHttpUrl(rawUrl: unknown): ParsedUrl {
 export const httpRequestNode: NodeDefinition = {
   type: "thingstudio/http_request",
   kind: "transform",
+  // input/output `msg` type `any` -- the inbound payload can be
+  // anything (str/bytes/other, POST-body-encoded per the switch in
+  // codegenTransform below), and the response body is decoded to a
+  // plain string but riding on the same generic `msg` shape every other
+  // transform/sink node's `any` port already assumes (function-node.ts,
+  // udp-send.ts) -- no narrower static type to declare here either.
+  ports: {
+    inputs: [{ name: "msg", type: "any" }],
+    outputs: [{ name: "msg", type: "any" }],
+  },
   codegenTransform(node: GraphNode, ctx: CodegenContext): TransformCodegenResult {
     const { host, port, path } = parseHttpUrl(node.properties.url);
 
@@ -111,7 +139,10 @@ export const httpRequestNode: NodeDefinition = {
     const methodLit = JSON.stringify(method);
 
     const functionBody = `
-_reader, _writer = await asyncio.wait_for(asyncio.open_connection(${hostLit}, ${port}), ${timeoutS})
+try:
+    _reader, _writer = await asyncio.wait_for(asyncio.open_connection(${hostLit}, ${port}), ${timeoutS})
+except OSError as _e:
+    raise OSError("http_request to %s:%s: connect failed: %r" % (${hostLit}, ${port}, _e))
 try:
     _payload = msg.get('payload')
     if ${methodLit} == 'POST':
@@ -149,6 +180,8 @@ try:
             _resp_body += _chunk
     msg['payload'] = _resp_body.decode()
     msg['status'] = _status
+except OSError as _e:
+    raise OSError("http_request to %s:%s: request failed: %r" % (${hostLit}, ${port}, _e))
 finally:
     _writer.close()
 return msg`.trim();

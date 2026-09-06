@@ -55,6 +55,15 @@
   generic edit panel (config-types.ts's `fields` descriptor) -- no bespoke
   UI needed for them.
 
+  http_request block added 2026-09-05: first-time canvas wiring
+  (nodes.ts's own header) -- url/method/timeoutMs, no ConfigRefField at
+  all. Unlike every other network node type on this canvas, http_request
+  never had its own wifiConfigId to remove (nodes.ts's header table) --
+  it's always derived WiFi credentials from the flow's own wifi_status
+  node via resolveFlowWifiCredentials(), so there's nothing here to
+  migrate away from, just the same "add one if missing" hint every other
+  network block already gives.
+
   **WiFi ConfigRefField removed from udp_send/udp_receive/mqtt_publish/
   mqtt_subscribe, 2026-09-04** (Mike's own real-hardware finding --
   wifi-status.ts's header has the full story): only wifi_status keeps its
@@ -175,6 +184,22 @@
           <input type="number" min="1" v-model.number="node.properties.pollMs" @input="touch" />
         </label>
         <p class="hint">Uses the flow's own wifi_status node for WiFi credentials -- add one if the flow doesn't have one yet.</p>
+      </template>
+
+      <template v-else-if="node.kind === 'http_request'">
+        <label>url
+          <input v-model="node.properties.url" @input="touch" placeholder="http://host:port/path" />
+        </label>
+        <label>method
+          <select v-model="node.properties.method" @change="touch">
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+          </select>
+        </label>
+        <label>timeout (ms)
+          <input type="number" min="1" v-model.number="node.properties.timeoutMs" @input="touch" />
+        </label>
+        <p class="hint">http:// only -- no TLS/HTTPS in v1. Uses the flow's own wifi_status node for WiFi credentials -- add one if the flow doesn't have one yet.</p>
       </template>
 
       <template v-else-if="node.kind === 'mqtt_publish'">
