@@ -259,3 +259,18 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
   reports no flow running, not the stale old one.
   `flow-file.ts`, `messages.ts`/`messages.py`, `codec.ts`, `listener.py`,
   `main.ts`, `index.html`.
+
+- **2026-09-06 -- fail well rather than chase every board's idiosyncrasies: the ESP32 wifi-ordering race stays a
+  documented limitation, not a design to keep iterating on.** Direct response to the ESP32 leg of the
+  wifi_status-vs-mqtt_as ordering-race fix failing retest (2026-09-05,
+  `outstanding-items/wifi-status-mqtt-connect-ordering-race.md`) after already holding on RP2040 -- the fix
+  narrows the race but doesn't eliminate it against ESP32's ESP-IDF WiFi stack. Mike's own words: "the general
+  rule, 'fail well rather than work badly' stands. there are a lot of boards, all with different idiosyncrasies.
+  Rather than play whack-a-mole and try to make all cases work, it's better to have really clear error messages."
+  Generalized into a standing project rule, not just this one bug: `CLAUDE.md`'s "Engineering priority: fault
+  handling over happy-path behavior" section now has a corollary saying so explicitly. Concretely for this bug:
+  the current state -- a clean, attributed `NODE_ERROR` with host:port context, thanks to the same week's Problem
+  2a loud-error work, rather than the original raw `OSError: Wifi Internal State Error` crash -- is accepted as
+  the resting state on ESP32; none of the candidate ordering-guarantee redesigns in the detail file's own "What a
+  real fix looks like" section are being pursued. Not a blanket rule against ever fixing a board-specific bug (a
+  real, cheaply-fixable one still gets fixed) -- a call on where further effort on THIS one actually pays off.

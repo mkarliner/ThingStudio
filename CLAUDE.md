@@ -6,6 +6,18 @@ Orientation for anyone (human or Claude) picking this project up: `docs/thingstu
 
 The measure of a good system is not how well it works but how well it fails. When a design or implementation choice trades off clarity/robustness of fault handling against the happy path, fault handling generally takes priority — timeouts, error attribution, degradation behavior, and recovery paths are not secondary polish added once the happy path works, they're load-bearing. This is already the working convention this project applies to hardware/protocol work (§5's fault isolation, the wire protocol's adversarial framing tests, bounded timeouts on network I/O) — worth stating explicitly so it's applied consistently to new work too, not just re-derived per feature.
 
+**Corollary, 2026-09-06: don't chase every board's idiosyncrasies — make the failure legible instead.** The
+board/platform landscape (ESP32/ESP-IDF, RP2040/RP2350's cyw43, and whatever comes after) is wide, and each one's
+WiFi/network stack has its own timing and failure modes — a general-purpose fix aimed at holding across all of
+them can be a moving target rather than a one-time close-out (the wifi_status-vs-mqtt_as ordering-race fix held on
+RP2040 but still failed on ESP32 after a real fix attempt — `outstanding-items/wifi-status-mqtt-connect-ordering-
+race.md`). Mike's own words, prompted by that finding: "there are a lot of boards, all with different
+idiosyncrasies. Rather than play whack-a-mole and try to make all cases work, it's better to have really clear
+error messages." Default to a clear, attributed failure — a `NODE_ERROR` naming the operation and its host:port,
+the pattern already built into `udp-send.ts`/`udp-receive.ts`/`http-request.ts`/`mqtt-shared.ts` — over an
+open-ended chase for a fix that works on every platform. Not a license to skip a real, cheaply-fixable bug — a
+call on where further effort actually pays off once a platform-specific quirk resists a clean general fix.
+
 ## No premature optimization, but don't paint into an architectural dead end
 
 Default to the cheapest implementation that's actually correct — don't build the general/heavy version of something on spec before a real need forces it. But before taking the cheap path, check whether it forecloses a future direction that would otherwise be nearly free to keep open: if a shortcut is a one-way door (a field that can't be added later without stranding already-deployed devices, a data shape that can't grow without a breaking migration), the cost of avoiding that lock-in now is usually much lower than the cost of undoing it later, and that comparison is worth making explicitly rather than skipped in the name of avoiding premature optimization. This project already applies the pattern — reserving `HELLO`'s `authRequired`/`authScheme` fields and laying out OTA-capable partitions on the ESP32 build before either feature is built (`mvp-feature-priorities.md`, Tier 0) are both "ship the cheap version, but don't foreclose the expensive one" calls, not exceptions to the cheap-by-default rule. Worth naming explicitly so it's applied consistently to new work — including plain engineering-effort trade-offs, not just protocol/hardware one-way doors — rather than re-derived per feature.

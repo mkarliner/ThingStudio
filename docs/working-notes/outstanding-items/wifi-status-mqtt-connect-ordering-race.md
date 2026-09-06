@@ -134,6 +134,14 @@ fault-handling-first principle ("the measure of a good system is not how
 well it works but how well it fails"), this failure is no longer
 badly-behaved -- thanks to this session's loud-error work, it's now a
 clean, attributed `NODE_ERROR` with host:port context, not a raw crash.
-Whether that makes this an acceptable resting state (document the
-limitation) or still worth pursuing one of the ordering-guarantee designs
-above is Mike's call, not decided here.
+
+## Resolved, 2026-09-06: accepted as a documented limitation, not pursued further
+
+Mike's own call: rather than keep chasing a general ordering-guarantee fix across every board's own WiFi-stack
+idiosyncrasies (ESP-IDF here, cyw43 on RP2040, whatever comes next), the clean, attributed `NODE_ERROR` failure
+mode above is accepted as the resting state on ESP32. None of the candidate ordering-guarantee redesigns in "What
+a real fix looks like" above are being pursued. Generalized into a standing project rule, not just this bug --
+see `CLAUDE.md`'s "Engineering priority: fault handling over happy-path behavior" section's 2026-09-06 corollary,
+and `decisions/redeploy-network.md`'s own 2026-09-06 entry for the full reasoning. Any mqtt+wifi_status flow on
+ESP32 still carries this risk under the right timing -- that's the accepted, documented trade-off, not a claim
+the underlying race is gone.

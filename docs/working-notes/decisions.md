@@ -52,7 +52,7 @@ The Tier 1 node-type triage (interrupt/pin-change, filter/event-compression, fou
 
 ## Redeploy / network fault handling
 
-The redeploy-cleanup and WiFi/MQTT hardening work: the socket-leak cleanup registry, mandatory `wifiConfigId`, the WiFi `security` field's three states, the `wifi_status`-vs-`mqtt_as` connect-race fix (kept local rather than patching upstream), `wifi_status` becoming the flow's sole WiFi-credential owner, the runtime/editor version-check gap (semver rule plus a git-SHA backstop), `HELLO_REQUEST`, boot-time flow auto-resume, the CBOR `None`-encoding fix, and `flowName`/`deployId` flow identity. The single largest, most active section in this log. 11 entries: `docs/working-notes/decisions/redeploy-network.md`.
+The redeploy-cleanup and WiFi/MQTT hardening work: the socket-leak cleanup registry, mandatory `wifiConfigId`, the WiFi `security` field's three states, the `wifi_status`-vs-`mqtt_as` connect-race fix (kept local rather than patching upstream), `wifi_status` becoming the flow's sole WiFi-credential owner, the runtime/editor version-check gap (semver rule plus a git-SHA backstop), `HELLO_REQUEST`, boot-time flow auto-resume, the CBOR `None`-encoding fix, `flowName`/`deployId` flow identity, and the call to accept the ESP32 ordering-race's current failure mode as a documented limitation rather than keep chasing a universal fix. The single largest, most active section in this log. 12 entries: `docs/working-notes/decisions/redeploy-network.md`.
 
 ## Node authoring / extensibility
 
