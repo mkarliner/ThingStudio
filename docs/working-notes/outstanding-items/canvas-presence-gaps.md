@@ -22,3 +22,14 @@ under `network-hardware-pass-status.md`.
 2026-09-06 (`tsc --noEmit`, full `vitest` suite) but **not yet committed and not yet given a real-hardware
 pass** — tracked as its own active item under "Network / config nodes" in the top-level index, not folded into
 this file's own resolved history.
+
+**Fully closed 2026-09-06** — the last three registry-only types (`variable_get`, `variable_set`, `pwm_out`)
+given real canvas presence, following `http_request`'s own worked example (Rete node class, palette entry,
+`PropertyPanel.vue` section). `variable_get`'s output port is dynamic (`payloadType`-dependent, same
+`resolvePortType` mechanism `inject`'s own output already used) with its own `retypeOutput()` method and
+`PropertyPanel.vue` `@change` handler, mirroring `InjectNode`'s. `variable_set`: plain `any`-in/`any`-out
+pass-through, same shape as `function`. `pwm_out`: single `duty` (`number`) input, sink kind, same shape as
+`gpio_out`'s own `signal` input. Existing off-device tests (`node-variable.test.ts`, `node-pwm-out.test.ts`)
+gained port-declaration assertions; nothing about each node's own codegen changed. Off-device verified clean
+(`tsc --noEmit`, full `vitest` suite: 29 files / 329 tests passing, up from 326). This file's own gap is now
+fully closed — nothing left registry-only in the node library. Only the git commit is still owed.

@@ -133,6 +133,9 @@ import { httpRequestNode } from "../../node-library/http-request.js";
 import { delayNode } from "../../node-library/delay.js";
 import { mqttPublishNode } from "../../node-library/mqtt-publish.js";
 import { mqttSubscribeNode } from "../../node-library/mqtt-subscribe.js";
+import { variableGetNode } from "../../node-library/variable-get.js";
+import { variableSetNode } from "../../node-library/variable-set.js";
+import { pwmOutNode } from "../../node-library/pwm-out.js";
 import { resolvePortType, type PortDefinition } from "../../compiler/node-definition.js";
 import type { CustomNodeDescriptor } from "../../node-library/custom-node.js";
 
@@ -257,6 +260,56 @@ export class FunctionNode extends ClassicPreset.Node {
   }
 }
 
+// Given canvas presence 2026-09-06 (outstanding-items/canvas-presence-
+// gaps.md) -- previously registry-only since introduction, same batch as
+// VariableSetNode and PwmOutNode below. Output port retypes with
+// `payloadType`, same mechanism as InjectNode.retypeOutput() above --
+// variable-get.ts's own header explains why the output type is dynamic
+// rather than `any`.
+export class VariableGetNode extends ClassicPreset.Node {
+  width = 110;
+  height = NODE_HEIGHT;
+  kind = "variable_get" as const;
+  nodeType = "thingstudio/variable_get";
+  highlighted = false;
+
+  properties: { name: string; payloadType: "bool" | "number" | "string"; default: string } = {
+    name: "",
+    payloadType: "bool",
+    default: "false",
+  };
+
+  constructor() {
+    super("variable get");
+    this.addInput("msg", new ClassicPreset.Input(portSocket(variableGetNode.ports?.inputs, "msg", this.properties), "msg"));
+    this.addOutput("msg", new ClassicPreset.Output(portSocket(variableGetNode.ports?.outputs, "msg", this.properties), "msg"));
+  }
+
+  // Same reasoning/shape as InjectNode.retypeOutput() above -- swaps the
+  // output socket for the one matching the current `payloadType`.
+  retypeOutput(): ClassicPreset.Socket {
+    const socket = portSocket(variableGetNode.ports?.outputs, "msg", this.properties);
+    this.outputs.msg!.socket = socket;
+    return socket;
+  }
+}
+
+export class VariableSetNode extends ClassicPreset.Node {
+  width = 110;
+  height = NODE_HEIGHT;
+  kind = "variable_set" as const;
+  nodeType = "thingstudio/variable_set";
+  highlighted = false;
+
+  properties: { name: string } = { name: "" };
+
+  constructor() {
+    super("variable set");
+    this.addInput("msg", new ClassicPreset.Input(portSocket(variableSetNode.ports?.inputs, "msg", this.properties), "msg"));
+    this.addOutput("msg", new ClassicPreset.Output(portSocket(variableSetNode.ports?.outputs, "msg", this.properties), "msg"));
+  }
+}
+
 export class DelayNode extends ClassicPreset.Node {
   width = 100;
   height = NODE_HEIGHT;
@@ -308,6 +361,26 @@ export class GpioOutNode extends ClassicPreset.Node {
   constructor() {
     super("gpio out");
     this.addInput("signal", new ClassicPreset.Input(portSocket(gpioOutNode.ports?.inputs, "signal", this.properties), "signal"));
+  }
+}
+
+// Given canvas presence 2026-09-06 (outstanding-items/canvas-presence-
+// gaps.md) -- previously registry-only since introduction, same batch as
+// VariableGetNode/VariableSetNode above. Sink kind, one input -- same
+// single-port shape as GpioOutNode just above, `duty` named for what it
+// actually carries (pwm-out.ts's own header explains the naming choice).
+export class PwmOutNode extends ClassicPreset.Node {
+  width = 104;
+  height = NODE_HEIGHT;
+  kind = "pwm_out" as const;
+  nodeType = "thingstudio/pwm_out";
+  highlighted = false;
+
+  properties: { pin: number; freq: number } = { pin: 12, freq: 1000 };
+
+  constructor() {
+    super("pwm out");
+    this.addInput("duty", new ClassicPreset.Input(portSocket(pwmOutNode.ports?.inputs, "duty", this.properties), "duty"));
   }
 }
 
@@ -530,8 +603,11 @@ export class CustomNode extends ClassicPreset.Node {
 export type AnyThingstudioNode =
   | InjectNode
   | FunctionNode
+  | VariableGetNode
+  | VariableSetNode
   | DebugNode
   | GpioOutNode
+  | PwmOutNode
   | TimerNode
   | InterruptNode
   | WifiStatusNode
@@ -557,8 +633,11 @@ export type AnyThingstudioNode =
 export const NODE_FACTORIES: Record<NodeKind, () => AnyThingstudioNode> = {
   inject: () => new InjectNode(),
   function: () => new FunctionNode(),
+  variable_get: () => new VariableGetNode(),
+  variable_set: () => new VariableSetNode(),
   debug: () => new DebugNode(),
   gpio_out: () => new GpioOutNode(),
+  pwm_out: () => new PwmOutNode(),
   timer: () => new TimerNode(),
   interrupt: () => new InterruptNode(),
   wifi_status: () => new WifiStatusNode(),

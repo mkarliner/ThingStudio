@@ -38,9 +38,18 @@ import { pyStringLiteral } from "./py-literals.js";
  * how many instances of either) compiles first. */
 export const FLOW_VARS_DICT = "_flow_vars";
 
+// **Given canvas presence, 2026-09-06** (outstanding-items/canvas-
+// presence-gaps.md) -- was registry-only since introduction. `any` in,
+// `any` out -- msg passes through completely unchanged other than the
+// side-effecting store write, same shape as function.ts's own
+// pass-through ports.
 export const variableSetNode: NodeDefinition = {
   type: "thingstudio/variable_set",
   kind: "transform",
+  ports: {
+    inputs: [{ name: "msg", type: "any" }],
+    outputs: [{ name: "msg", type: "any" }],
+  },
   codegenTransform(node: GraphNode, ctx: CodegenContext): TransformCodegenResult {
     const name = String(node.properties.name ?? "").trim();
     if (!name) throw new CompileError("variable_set node's name is empty");

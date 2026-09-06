@@ -115,9 +115,41 @@
         </label>
       </template>
 
+      <template v-else-if="node.kind === 'variable_get'">
+        <label>name
+          <input v-model="node.properties.name" @input="touch" />
+        </label>
+        <label>payload type
+          <select v-model="node.properties.payloadType" @change="retypeVariableGetOutput">
+            <option value="bool">bool</option>
+            <option value="number">number</option>
+            <option value="string">string</option>
+          </select>
+        </label>
+        <label>default
+          <input v-model="node.properties.default" @input="touch" />
+        </label>
+        <p class="hint">Used when nothing has been stored under this name yet.</p>
+      </template>
+
+      <template v-else-if="node.kind === 'variable_set'">
+        <label>name
+          <input v-model="node.properties.name" @input="touch" />
+        </label>
+      </template>
+
       <template v-else-if="node.kind === 'gpio_out'">
         <label>pin
           <input type="number" min="0" max="39" v-model.number="node.properties.pin" @input="touch" />
+        </label>
+      </template>
+
+      <template v-else-if="node.kind === 'pwm_out'">
+        <label>pin
+          <input type="number" min="0" max="39" v-model.number="node.properties.pin" @input="touch" />
+        </label>
+        <label>frequency (Hz)
+          <input type="number" min="1" v-model.number="node.properties.freq" @input="touch" />
         </label>
       </template>
 
@@ -277,7 +309,7 @@
 import { computed } from "vue";
 import { selectedNode, bumpPropertyVersion, propertyVersion } from "./store";
 import { NODE_PALETTE, DEFAULT_KIND_STYLE, type NodeKind, type KindStyle } from "./palette";
-import { InjectNode, CustomNode } from "./nodes";
+import { InjectNode, VariableGetNode, CustomNode } from "./nodes";
 import ConfigRefField from "./ConfigRefField.vue";
 
 const node = computed(() => {
@@ -322,6 +354,17 @@ function touch(): void {
 // except the property panel itself, which `touch()` already refreshes.
 function retypeInjectOutput(): void {
   if (node.value instanceof InjectNode) {
+    node.value.retypeOutput();
+  }
+  touch();
+}
+
+// Same reasoning as retypeInjectOutput() above -- variable_get's output
+// socket is likewise dynamic (variable-get.ts's own header), so its
+// payload-type select needs the same real-socket-swap handler rather
+// than plain touch().
+function retypeVariableGetOutput(): void {
+  if (node.value instanceof VariableGetNode) {
     node.value.retypeOutput();
   }
   touch();

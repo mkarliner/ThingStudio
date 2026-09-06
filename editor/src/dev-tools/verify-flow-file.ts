@@ -36,11 +36,16 @@
 import { readFileSync } from "node:fs";
 import { parseFlowFile } from "../flow-file/flow-file.js";
 
+// variable_get/variable_set/pwm_out added 2026-09-06, closing out
+// canvas-presence-gaps.md's last three registry-only node types.
 const KNOWN_KINDS = new Set([
   "inject",
   "function",
+  "variable_get",
+  "variable_set",
   "debug",
   "gpio_out",
+  "pwm_out",
   "timer",
   "interrupt",
   "wifi_status",

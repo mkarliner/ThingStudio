@@ -20,9 +20,19 @@ import { CompileError } from "../compiler/errors.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, NodeDefinition, SinkCodegenResult } from "../compiler/node-definition.js";
 
+// **Given canvas presence, 2026-09-06** (outstanding-items/canvas-
+// presence-gaps.md) -- was registry-only since introduction. Input named
+// `duty`, not `msg`/`signal` -- gpio_out's own `signal` names the port
+// after what it carries semantically (a boolean level), and this node's
+// payload is likewise not a generic message but specifically the duty
+// fraction consumed below; `number` matches what's actually clamped and
+// converted, not `any`.
 export const pwmOutNode: NodeDefinition = {
   type: "thingstudio/pwm_out",
   kind: "sink",
+  ports: {
+    inputs: [{ name: "duty", type: "number" }],
+  },
   codegenSink(node: GraphNode, ctx: CodegenContext): SinkCodegenResult {
     const pin = Math.round(Number(node.properties.pin));
     if (!Number.isFinite(pin) || pin < 0 || pin > 39) {

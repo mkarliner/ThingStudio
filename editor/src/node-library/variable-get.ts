@@ -10,16 +10,30 @@
 // covers the not-yet-set case so downstream nodes always see a
 // well-typed payload rather than a bare `None` the payload type system
 // (§6) doesn't know about.
+//
+// **Given canvas presence, 2026-09-06** (outstanding-items/canvas-
+// presence-gaps.md) -- was registry-only since introduction. Output port
+// type is dynamic (a function of `payloadType`, resolvePortType's
+// contract), same pattern inject.ts's own output already uses -- the
+// value this node actually emits is exactly whatever `payloadType` says,
+// known at compile/canvas time from the node's own config, so "any"
+// would be strictly less honest than the real answer. Input port is
+// `any`: msg.payload is never read (only overwritten), same shape as
+// function.ts's own pass-through input.
 
 import { CompileError } from "../compiler/errors.js";
 import type { GraphNode } from "../compiler/graph.js";
-import type { CodegenContext, NodeDefinition, TransformCodegenResult } from "../compiler/node-definition.js";
+import type { CodegenContext, NodeDefinition, PayloadType, TransformCodegenResult } from "../compiler/node-definition.js";
 import { pyPayloadLiteral, pyStringLiteral } from "./py-literals.js";
 import { FLOW_VARS_DICT } from "./variable-set.js";
 
 export const variableGetNode: NodeDefinition = {
   type: "thingstudio/variable_get",
   kind: "transform",
+  ports: {
+    inputs: [{ name: "msg", type: "any" }],
+    outputs: [{ name: "msg", type: (properties) => (properties.payloadType as PayloadType | undefined) ?? "bool" }],
+  },
   codegenTransform(node: GraphNode, ctx: CodegenContext): TransformCodegenResult {
     const name = String(node.properties.name ?? "").trim();
     if (!name) throw new CompileError("variable_get node's name is empty");

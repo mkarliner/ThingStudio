@@ -6,6 +6,13 @@ dist/
 __pycache__/
 *.pyc
 
+# Scratch tarballs the cloud-sandbox verification workflow builds under
+# .verify-tmp/ to stage editor/ into an isolated copy for tsc/vitest
+# (CLAUDE.md's sandbox rule -- never npm/build directly against this
+# live-mounted repo). Two of these got committed by accident 2026-09-06
+# before this line existed; deleted from git the same day this was added.
+.verify-tmp/
+
 # editor/src and editor/test are TypeScript-only; tsconfig.json has no
 # outDir, so a tsc invocation that doesn't actually respect --noEmit
 # (some npx invocations in sandboxed shells swallow the flag -- use

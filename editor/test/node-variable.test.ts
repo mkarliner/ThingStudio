@@ -22,6 +22,8 @@ import { compile } from "../src/compiler/compile.js";
 import { CompileError } from "../src/compiler/errors.js";
 import type { GraphData } from "../src/compiler/graph.js";
 import { buildRegistry } from "../src/node-library/registry.js";
+import { variableGetNode } from "../src/node-library/variable-get.js";
+import { variableSetNode } from "../src/node-library/variable-set.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const registry = buildRegistry();
@@ -132,5 +134,27 @@ describe("thingstudio/variable_get and thingstudio/variable_set", () => {
       links: [[1, "1", 0, "2", 0, "bool"]],
     };
     expect(() => compile(graph, registry)).toThrow(/empty/);
+  });
+
+  // Canvas presence given 2026-09-06 (outstanding-items/canvas-presence-
+  // gaps.md) -- confirms the ports declarations exist and, for
+  // variable_get, retype correctly with payloadType (nodes.ts's
+  // VariableGetNode.retypeOutput() reads these same declarations).
+  it("variable_get declares an any input and a payloadType-dependent output", () => {
+    expect(variableGetNode.ports?.inputs).toEqual([{ name: "msg", type: "any" }]);
+    const outputs = variableGetNode.ports?.outputs;
+    expect(outputs).toHaveLength(1);
+    expect(outputs?.[0]?.name).toBe("msg");
+    const resolve = outputs?.[0]?.type;
+    expect(typeof resolve).toBe("function");
+    if (typeof resolve === "function") {
+      expect(resolve({})).toBe("bool"); // default when unconfigured
+      expect(resolve({ payloadType: "number" })).toBe("number");
+    }
+  });
+
+  it("variable_set declares matching any input and output ports", () => {
+    expect(variableSetNode.ports?.inputs).toEqual([{ name: "msg", type: "any" }]);
+    expect(variableSetNode.ports?.outputs).toEqual([{ name: "msg", type: "any" }]);
   });
 });

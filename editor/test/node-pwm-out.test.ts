@@ -14,6 +14,7 @@ import { compile } from "../src/compiler/compile.js";
 import { CompileError } from "../src/compiler/errors.js";
 import type { GraphData } from "../src/compiler/graph.js";
 import { buildRegistry } from "../src/node-library/registry.js";
+import { pwmOutNode } from "../src/node-library/pwm-out.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const registry = buildRegistry();
@@ -79,5 +80,12 @@ describe("thingstudio/pwm_out node", () => {
 
   it("rejects a non-positive freq", () => {
     expect(() => compile(graphWith("1.0", { pin: 12, freq: 0 }), registry)).toThrow(/positive number/);
+  });
+
+  // Canvas presence given 2026-09-06 (outstanding-items/canvas-presence-
+  // gaps.md).
+  it("declares a single numeric 'duty' input port (sink kind, no outputs)", () => {
+    expect(pwmOutNode.ports?.inputs).toEqual([{ name: "duty", type: "number" }]);
+    expect(pwmOutNode.ports?.outputs).toBeUndefined();
   });
 });
