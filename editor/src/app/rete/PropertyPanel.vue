@@ -127,6 +127,12 @@
         </label>
       </template>
 
+      <template v-else-if="node.kind === 'delay'">
+        <label>delay (ms)
+          <input type="number" min="1" v-model.number="node.properties.delayMs" @input="touch" />
+        </label>
+      </template>
+
       <template v-else-if="node.kind === 'interrupt'">
         <label>pin
           <input type="number" min="0" max="39" v-model.number="node.properties.pin" @input="touch" />

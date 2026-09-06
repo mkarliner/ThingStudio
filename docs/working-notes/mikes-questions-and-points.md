@@ -35,7 +35,7 @@ We need to support the following platforms for the editor/backend:
    - Interrupt / pin change
      [done — interrupt.ts, replaces gpio_in]
    - delay, gets a messages and relays it after an interval
-     [tracked, never scoped — outstanding-items.md "Network / config nodes" section]
+     [built 2026-09-06 — editor/src/node-library/delay.ts, transform node, full canvas presence, 7 tests, off-device verified; outstanding-items.md "Resolved" section]
    - average/smooth low pass filter for eg: adc readings.
      [same node as "filter / event compression" below — outstanding-items.md "Network / config nodes" section]
    - ADC - review, read on message, it may include a polling option...
@@ -64,7 +64,11 @@ We need to support the following platforms for the editor/backend:
 # UDP send has a timeout property - why?
 
 # UDP receive has a poll internval property - why?
-[tracked, unanswered — outstanding-items.md "Network / config nodes" section]
+[answered 2026-09-06 — outstanding-items.md "Network / config nodes" section: udp_send's timeout bounds the
+sendto() EAGAIN-retry loop (a rare but real full-send-buffer case), per CLAUDE.md's bound-every-network-call rule;
+udp_receive's pollMs is the actual polling cadence of a non-blocking-socket workaround for a real MicroPython
+asyncio gap (no datagram-await primitive on any port, micropython/micropython#13382) — a genuine trade-off knob,
+not cosmetic, though its 20ms default is still unvalidated against real back-to-back hardware traffic.]
 
 # machine specific node collections and defs
    - we should have node 'collections' for nodes that naturally are a set , specifially board/processor specific ones like pi pio

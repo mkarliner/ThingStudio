@@ -130,6 +130,7 @@ import { wifiStatusNode } from "../../node-library/wifi-status.js";
 import { udpSendNode } from "../../node-library/udp-send.js";
 import { udpReceiveNode } from "../../node-library/udp-receive.js";
 import { httpRequestNode } from "../../node-library/http-request.js";
+import { delayNode } from "../../node-library/delay.js";
 import { mqttPublishNode } from "../../node-library/mqtt-publish.js";
 import { mqttSubscribeNode } from "../../node-library/mqtt-subscribe.js";
 import { resolvePortType, type PortDefinition } from "../../compiler/node-definition.js";
@@ -253,6 +254,24 @@ export class FunctionNode extends ClassicPreset.Node {
     super("function");
     this.addInput("msg", new ClassicPreset.Input(portSocket(functionNode.ports?.inputs, "msg", this.properties), "msg"));
     this.addOutput("msg", new ClassicPreset.Output(portSocket(functionNode.ports?.outputs, "msg", this.properties), "msg"));
+  }
+}
+
+export class DelayNode extends ClassicPreset.Node {
+  width = 100;
+  height = NODE_HEIGHT;
+  kind = "delay" as const;
+  nodeType = "thingstudio/delay";
+  highlighted = false;
+
+  properties: { delayMs: number } = {
+    delayMs: 1000,
+  };
+
+  constructor() {
+    super("delay");
+    this.addInput("msg", new ClassicPreset.Input(portSocket(delayNode.ports?.inputs, "msg", this.properties), "msg"));
+    this.addOutput("msg", new ClassicPreset.Output(portSocket(delayNode.ports?.outputs, "msg", this.properties), "msg"));
   }
 }
 
@@ -521,6 +540,7 @@ export type AnyThingstudioNode =
   | HttpRequestNode
   | MqttPublishNode
   | MqttSubscribeNode
+  | DelayNode
   | CustomNode;
 
 // One constructor per palette kind, shared between the app-shell's
@@ -547,4 +567,5 @@ export const NODE_FACTORIES: Record<NodeKind, () => AnyThingstudioNode> = {
   http_request: () => new HttpRequestNode(),
   mqtt_publish: () => new MqttPublishNode(),
   mqtt_subscribe: () => new MqttSubscribeNode(),
+  delay: () => new DelayNode(),
 };

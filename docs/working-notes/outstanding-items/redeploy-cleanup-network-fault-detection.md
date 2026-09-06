@@ -13,8 +13,12 @@
 `device-runtime`'s off-device tests (11/11, including 4 new ones) pass against a freshly-built real MicroPython
 unix-port binary; the editor suite (262/262 across 29 files, up from 251) passes via `tsc --noEmit` + `vitest run`.
 
-**Still owed, needs Mike + real hardware:** the actual real-hardware pass this briefing's own success criteria
-require — redeploying `udp-echo-tester.flow.json` twice back-to-back with no `EADDRINUSE`, and confirming a real
-network failure's `NODE_ERROR` message is actually diagnosable on-device, not just in the generated source.
-`http_request`/`mqtt-shared.ts` did NOT get the Problem 2a loud-error treatment (briefing flagged this as a judgment
-call, not mandated) — still open, see the network-hardware and loud-error items.
+**Update, 2026-09-05/06: `http_request`/`mqtt-shared.ts` DID get the Problem 2a loud-error treatment** (closed
+2026-09-05, hardware-confirmed 2026-09-06 on ESP32 -- both the `http_request` hardware pass and the wifi-ordering-
+race retest surfaced a real network failure as a clean, attributed `NODE_ERROR`, not just off-device). The claim
+below that this was still open is stale; only the redeploy-specific test remains.
+
+**Closed 2026-09-06: real-hardware pass done.** `udp-echo-tester.flow.json` redeployed twice back-to-back with
+no power cycle -- clean `DEPLOY_ACK` both times, heartbeat/echo loop resumed normally, no `EADDRINUSE` or any
+other bind error. Full detail: `mvp-validation-plan.md`'s 2026-09-06 Results entry. Nothing left open on this
+item.

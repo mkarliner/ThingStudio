@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import type { NodeDefinition } from "../compiler/node-definition.js";
 import { debugNode } from "./debug.js";
+import { delayNode } from "./delay.js";
 import { functionNode } from "./function-node.js";
 import { gpioOutNode } from "./gpio-out.js";
 import { httpRequestNode } from "./http-request.js";
@@ -58,6 +59,7 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     mqttSubscribeNode,
     udpSendNode,
     udpReceiveNode,
+    delayNode,
   ]) {
     registry.set(def.type, def);
   }

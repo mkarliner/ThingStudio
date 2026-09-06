@@ -1104,6 +1104,59 @@ the README-per-component convention.
   chunked-transfer-encoding responses (also unsupported by design, not
   exercised against a real chunked server here).
 
+- **Results (2026-09-06, real hardware -- back-to-back redeploy, no
+  `EADDRINUSE`):** `udp-echo-tester.flow.json` deployed, confirmed
+  working (periodic `wifi_status` line, timer heartbeat out, `ECHO:N`
+  round-tripping back through `udp_receive`), then **redeployed a second
+  time immediately, no power cycle** -- the actual test
+  `redeploy-cleanup-network-fault-detection.md`'s own success criteria
+  called for. Clean `DEPLOY_ACK`, "deploy OK", and the heartbeat/echo
+  loop resumed normally (counter reset to 1, as expected for a fresh
+  flow instance) with no bind error or `NODE_ERROR` of any kind on
+  either UDP socket. Confirms the cleanup registry
+  (`register_cleanup`/`cancel_running`, replacing the old GC-timing-
+  dependent socket teardown) actually holds on real hardware, not just
+  off-device. Closes out the last open piece of
+  `outstanding-items/redeploy-cleanup-network-fault-detection.md`.
+
+- **Results (2026-09-06, software-only -- `delay` node scoped and
+  built):** the last unaddressed item from `mikes-questions-and-points.md`'s
+  original node-prioritisation list ("gets a message and relays it after
+  an interval") -- every other item on that list was triaged 2026-08-17,
+  this one wasn't. `thingstudio/delay` (`editor/src/node-library/delay.ts`):
+  a `transform`, same shape as `function` (`any` in, `any` out), one
+  `delayMs` property (default 1000), codegen is `await
+  asyncio.sleep_ms(delayMs); return msg`. Rejects non-positive and
+  non-numeric `delayMs` with a `CompileError` rather than emitting broken
+  Python. Full canvas presence from day one (not registry-only): Rete node
+  class, palette entry ("general" group, "⌛" icon), property-panel input,
+  `PaletteSidebar`/`verify-flow-file.ts` registration -- the six-file
+  wiring pattern established for prior nodes. `editor/test/node-delay.test.ts`,
+  7 tests, same real-`asyncio.run`-plus-pymock harness as
+  `node-udp-send.test.ts`'s `runSend`: relays msg unchanged; genuinely
+  waits (elapsed-time assertion on a 150ms delay, not just that the
+  generated text mentions `sleep_ms`); defaults to 1000ms; rejects
+  non-positive and non-numeric `delayMs`; independent function names
+  across instances; correct port declarations. No physical I/O, so no
+  hardware pass applies (same bar the software-only batch above used).
+  Verified off-device only, per CLAUDE.md's sandbox rule -- fresh
+  `npm ci` + `tsc --noEmit` (clean) + `vitest run` in an isolated
+  extracted copy of `editor/`, not the live-mounted shared repo: 29 files,
+  326 tests passing (up from 28/319 before this node existed). **Honest
+  limitation, documented in the node's own header comment, not glossed
+  over:** `compile.ts` runs one source's downstream chain synchronously
+  within that source's own coroutine, so `delay`'s sleep blocks its
+  SOURCE's own next iteration for at least `delayMs` -- a `timer`
+  (200ms) feeding a `delay` (5000ms) will NOT keep ticking every 200ms,
+  it ticks roughly every `delayMs + intervalMs` instead. Not a new
+  failure mode (any slow transform already has this effect, `http_request`'s
+  `timeoutMs` is the same shape of cost), but `delay` makes it the whole
+  point of the node rather than a side effect. A future non-blocking,
+  per-message-concurrent mode is a real option later (its own spawned
+  task per message) but isn't a one-way door this version forecloses --
+  `properties.delayMs` and the node's `type` string are stable either
+  way. Git commit still owed (CLAUDE.md's sandbox-can't-write-git rule).
+
 ## Tier 2 — live values + persistence
 
 - Live value streaming: inject a known value sequence, confirm the

@@ -39,6 +39,14 @@
 // sink, echoing udp_send/udp_receive/mqtt_publish/mqtt_subscribe's own
 // direction-of-travel icon convention without reusing any of their
 // single-direction glyphs.
+//
+// delay added 2026-09-06 (mikes-questions-and-points.md's original node-
+// prioritisation list, never built until now -- outstanding-items.md).
+// "general" group, alongside inject/function/timer -- it's a plain
+// message-flow building block, not network- or hardware-specific.
+// Slate-blue, distinct from every existing color; "⌛" (hourglass) for
+// the waiting semantics, distinct from timer's own "◷" clock glyph
+// (timer repeats on an interval, delay waits out a single one).
 export type NodeKind =
   | "inject"
   | "function"
@@ -51,7 +59,8 @@ export type NodeKind =
   | "udp_receive"
   | "http_request"
   | "mqtt_publish"
-  | "mqtt_subscribe";
+  | "mqtt_subscribe"
+  | "delay";
 
 export const DEFAULT_NODE_GROUPS = ["general", "network", "hardware"] as const;
 
@@ -88,6 +97,8 @@ export const NODE_PALETTE: Record<NodeKind, KindStyle> = {
   // Magenta/purple pair -- see this file's header for the icon reasoning.
   mqtt_publish: { color: "#8a3b6e", bgcolor: "#4a1f3a", icon: "⇧", label: "mqtt publish", group: "network" },
   mqtt_subscribe: { color: "#6e3b8a", bgcolor: "#3a1f4a", icon: "⇩", label: "mqtt subscribe", group: "network" },
+  // Slate-blue -- see this file's header for the icon reasoning.
+  delay: { color: "#4a4a6e", bgcolor: "#2a2a3f", icon: "⌛", label: "delay", group: "general" },
 };
 
 export const DEFAULT_KIND_STYLE: KindStyle = { color: "#555", bgcolor: "#2b2b2b", icon: "?", label: "?", group: "general" };

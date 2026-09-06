@@ -29,6 +29,9 @@
 // http_request added to the list below 2026-09-05, same reasoning: it
 // got a real canvas factory for the first time that day (nodes.ts's own
 // header) after being registry-only since introduction.
+//
+// delay added 2026-09-06 -- a brand new node type, given canvas presence
+// from the day it was built rather than landing registry-only first.
 
 import { readFileSync } from "node:fs";
 import { parseFlowFile } from "../flow-file/flow-file.js";
@@ -46,6 +49,7 @@ const KNOWN_KINDS = new Set([
   "http_request",
   "mqtt_publish",
   "mqtt_subscribe",
+  "delay",
 ]);
 
 const path = process.argv[2];

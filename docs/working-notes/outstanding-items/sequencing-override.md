@@ -12,9 +12,11 @@ Out of this list's normal order, in this sequence:
    `decisions.md`'s "Node authoring / extensibility" section, `learnings.md`'s "Custom node authoring" section
    (the `nonlocal`-not-`global` gotcha). See the custom-node-authoring item — its own "real open questions" list is
    now resolved, not just this bullet.
-2. **A deliberately narrow validation session, next.** Mike will run a session equipped with *only*
-   `docs/user-guide/custom-nodes.md` — not the outstanding-items index, not `CLAUDE.md`, not the rest of
-   `docs/working-notes/` — and ask it to build a new node type from a brief, as a real test of whether the
-   documentation alone is sufficient for that task, not just whether it reads well. Not this project's job to set up.
-3. **Resume normal order after (2) closes out** — back to whichever item is earliest in the backlog at that point
-   (currently rp2350 bring-up, unless something changes before then).
+2. ~~**A deliberately narrow validation session.**~~ — **run by Mike, closed 2026-09-06: docs were sufficient.**
+   A session equipped with *only* `docs/user-guide/custom-nodes.md` — not the outstanding-items index, not
+   `CLAUDE.md`, not the rest of `docs/working-notes/` — built a new node type from a brief successfully, no gaps
+   reported. Clean pass, no follow-up work needed.
+3. **Resume normal order, 2026-09-06.** MQTT real-hardware validation (Mike's own direct-request interrupt, took
+   priority over this whole sequence per `mqtt-hardware-validation.md`'s own header) closed out in the meantime,
+   including `http_request`'s canvas presence and real hardware pass, and the ESP32 ordering-race decision. Back
+   to whichever item is earliest in normal backlog order now — see `outstanding-items.md`'s "Next up" section.
