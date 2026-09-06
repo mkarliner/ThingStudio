@@ -1,0 +1,114 @@
+# Learnings — MicroPython / device-runtime
+
+Status: detail file, split out of `learnings.md` on 2026-09-06 to keep that index quick to read — content below is unchanged from what previously lived inline there under this same heading (plus, for this file, incident detail moved down from `CLAUDE.md`'s trimmed rule sections — see `learnings.md`'s "Already promoted" section). See `learnings.md` for the index and this log's own maintenance rule.
+
+
+- **`sys.stdin.read(n)`/`readexactly(n)` can hang a port's event loop
+  outright — not just slow, a genuine non-yielding block `asyncio.wait_for`
+  can't preempt.** Confirmed on the ESP32-C3 LuatOS CORE board during
+  POC-D. Fixed by riding binary payloads over `readline()` (base64-encoded
+  text line) instead. Verify per-port before trusting a specific-byte-count
+  read anywhere in this protocol again — never assume it's safe just
+  because it works in browser-side simulation. `thingstudio-design-doc.md`
+  §15.5, `fault-isolation-briefing.md`.
+- **`mpy-cross` needs RAM headroom beyond what the compiled code itself
+  needs.** On-device compilation of large-enough source (MQTT client
+  libraries were a real historical trigger, pre-`mpy-cross`-era) can OOM a
+  constrained board even though the identical code runs fine once it's
+  bytecode. Directly why v1 ships precompiled `.mpy`, not raw-source
+  `exec()`. `thingstudio-design-doc.md` §15.1 resolution.
+- **The ESP32-C3's hardware RNG is not a true RNG unless WiFi or
+  Bluetooth is enabled** (Espressif's own ESP-IDF docs, verified directly).
+  A USB-only v1 with no radio bring-up generating a nonce via
+  `os.urandom()` would be pseudo-random. Chip-agnostic lesson, not an
+  ESP32-C3 workaround: don't assume any given MicroPython target has a
+  trustworthy on-chip RNG. `transport-auth-design.md`.
+- **MicroPython's `asyncio` has no first-class UDP primitive on any port**
+  (confirmed against upstream issue #13382, open). Unlike
+  `open_connection`/`start_server` for TCP, UDP needs a non-blocking
+  socket polled on a short interval, try/except around `recvfrom()`
+  catching `EAGAIN`. `udp-tcp-nodes-implementation-briefing.md`.
+- **A board with no auto-reset circuit needs a software fallback.** Some
+  boards don't reset when a browser opens the WebSerial port the way
+  `esptool`-flashable boards typically do — a best-effort
+  `port.setSignals()` RTS trick helps but isn't universal; document the
+  physical-reset fallback rather than assuming the software path always
+  works. `thingstudio-design-doc.md` §15.5 (POC-D).
+- **Client/device timeout mismatches make a working deploy look like a
+  hard failure.** If the browser gives up waiting before the device's own
+  internal timeout would have fired, a possibly-fine deploy reads as
+  broken. Keep the client's wait comfortably longer than the device's
+  worst case, never shorter. Same section.
+- **ESP-IDF's own NVS-cached station auto-reconnect can fire from
+  `network.WLAN(network.STA_IF).active(True)` alone, and races an
+  immediately-following explicit `.connect()` call.** If a *previous*
+  deploy left credentials in NVS, `active(True)` alone can kick off
+  ESP-IDF's own reconnect using those stale credentials; code that then
+  unconditionally calls `.connect(ssid, password)` right after (with no
+  `isconnected()`/`status()` check first) can collide with that in-flight
+  attempt, which ESP-IDF refuses with `E (...) wifi:sta is connecting,
+  cannot set config` — its own driver-level error, not a MicroPython
+  exception, so it surfaces as a raw serial log line rather than a Python
+  traceback. Confirmed on real hardware via `mqtttest.flow.json`; root
+  cause traced into the vendored `mqtt_as`'s `wifi_connect()` (ESP32
+  branch), which had exactly this gap — `docs/working-notes/decisions.md`,
+  2026-08-21 entry. Worth checking for the same shape (`active(True)`
+  immediately followed by an unconditional `.connect()`, no connecting-state
+  guard) in any other code that brings up `STA_IF` directly, not just this
+  one call site.
+- **`py_compile` only proves a file parses -- it caught neither of two
+  real bugs a real MicroPython run found in the same session.** Built the
+  actual toolchain (`device-runtime/test/README.md`'s recipe: clone
+  `micropython`, `make -C mpy-cross`, `make submodules && make` in
+  `ports/unix`) for the first time from inside a Cowork device-bridge
+  session, entirely in the bridge's own scratch space (`~/tmp/`, never the
+  shared mount) so it carried none of the cross-platform-native-binary
+  risk the npm/`node_modules` restriction exists for. Running the real
+  suite immediately surfaced `cbor.py`'s encoder raising `TypeError` on a
+  `None` value (2026-09-05's `runtimeBuild` field, sent unconditionally
+  including when unknown) -- invisible to `py_compile`, which only checks
+  syntax, not runtime behavior, and would have shipped a HELLO that
+  silently never sent on any board without a `_runtime_build.txt` marker.
+  Worth the ~2 minutes of one-time build cost whenever a session touches
+  `device-runtime/src` in a way that could actually run — `py_compile`
+  alone is a syntax check, not a test.
+- **CBOR `None`/null has to be handled explicitly on both the write and
+  read side of an optional field -- it doesn't fail loudly by default.**
+  `cbor.py` (this project's hand-rolled encoder) has no null/undefined
+  support at all, by design (optional fields are meant to be omitted from
+  the map entirely, never encoded as CBOR null) -- but nothing enforced
+  that at the call site, so `_send_hello()` passing an explicit `None`
+  straight through to `cbor.encode` raised, and that raise was swallowed
+  by `_send_message_safe`'s own catch-all, so the failure mode was total
+  silence (no HELLO at all), not a visible error. Fixed generally at
+  `messages.encode_message_body` (drops `None`-valued keys before
+  encoding) rather than at the one call site that happened to trigger it
+  -- any future optional-and-sometimes-unknown field gets this for free.
+  `decisions.md`'s 2026-09-05 entry.
+- **A `device-runtime/src` change with no codegen-visible effect is safe to
+  skip a version bump for; almost anything else isn't, and nothing enforced
+  that judgment call automatically until 2026-09-05.** `register_trigger`
+  was added to `runtime.py` (2026-09-02, inject click-fire) without bumping
+  `_RUNTIME_VERSION`/`EDITOR_TARGET_VERSION`; a board bootstrapped before
+  that change still reported the same `0.1.0` HELLO, `version.ts`'s
+  `decideDeploy()` correctly said "compatible" (it only ever gates on a
+  `major` mismatch), and the flow crashed on real RP2040 hardware with
+  `AttributeError: 'module' object has no attribute 'register_trigger'`.
+  Promoted to a CLAUDE.md standing rule the same day ("Device-runtime
+  version bump discipline"): evaluate every device-runtime-pushable change
+  for whether it could make an editor's codegen produce a flow the OLD
+  runtime can't run correctly, and if so bump both consts together, in the
+  same commit. Blunter than textbook semver — most `runtime.py` additions
+  end up `major`, not `minor` — because `minor`/`patch` bumps give
+  `decideDeploy` zero actual gating power today; an over-cautious block on
+  a safe deploy beats a false "compatible" that lets a crash through again.
+  Backed the same day by a non-blocking backstop Mike asked for "for belt
+  and braces," not instead of the rule: `test-flows/deploy_runtime.py`
+  stamps a board with a git SHA of `device-runtime/src` at push time, the
+  board echoes it back in HELLO as `runtimeBuild`, and `version.ts`'s
+  `checkRuntimeBuild` logs a warning on mismatch — diagnostic only,
+  deliberately a plain marker rather than a content hash (a hash would flag
+  a same-behavior comment edit as "different" with no way to tell how much
+  actually changed). `runtimeBuild: null` means "can't confirm," not
+  "confirmed stale." `decisions.md`'s "Redeploy / network fault handling"
+  section, 2026-09-05 entry.
