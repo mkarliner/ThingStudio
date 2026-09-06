@@ -103,3 +103,5 @@ node-red has a backend serving up the editor web pages, not a cross platform, GU
 - delete node and wire
 - notes / README sheet for documenting flow
 [tracked, untriaged — outstanding-items.md "UI / editor" section ("General UI wishlist")]
+- custom nodes should be persistent across session, needs a manage pallette system, plus a convention on where to store them.
+
