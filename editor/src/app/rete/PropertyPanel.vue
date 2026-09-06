@@ -115,29 +115,6 @@
         </label>
       </template>
 
-      <template v-else-if="node.kind === 'variable_get'">
-        <label>name
-          <input v-model="node.properties.name" @input="touch" />
-        </label>
-        <label>payload type
-          <select v-model="node.properties.payloadType" @change="retypeVariableGetOutput">
-            <option value="bool">bool</option>
-            <option value="number">number</option>
-            <option value="string">string</option>
-          </select>
-        </label>
-        <label>default
-          <input v-model="node.properties.default" @input="touch" />
-        </label>
-        <p class="hint">Used when nothing has been stored under this name yet.</p>
-      </template>
-
-      <template v-else-if="node.kind === 'variable_set'">
-        <label>name
-          <input v-model="node.properties.name" @input="touch" />
-        </label>
-      </template>
-
       <template v-else-if="node.kind === 'gpio_out'">
         <label>pin
           <input type="number" min="0" max="39" v-model.number="node.properties.pin" @input="touch" />
@@ -309,7 +286,7 @@
 import { computed } from "vue";
 import { selectedNode, bumpPropertyVersion, propertyVersion } from "./store";
 import { NODE_PALETTE, DEFAULT_KIND_STYLE, type NodeKind, type KindStyle } from "./palette";
-import { InjectNode, VariableGetNode, CustomNode } from "./nodes";
+import { InjectNode, CustomNode } from "./nodes";
 import ConfigRefField from "./ConfigRefField.vue";
 
 const node = computed(() => {
@@ -359,16 +336,6 @@ function retypeInjectOutput(): void {
   touch();
 }
 
-// Same reasoning as retypeInjectOutput() above -- variable_get's output
-// socket is likewise dynamic (variable-get.ts's own header), so its
-// payload-type select needs the same real-socket-swap handler rather
-// than plain touch().
-function retypeVariableGetOutput(): void {
-  if (node.value instanceof VariableGetNode) {
-    node.value.retypeOutput();
-  }
-  touch();
-}
 
 // ConfigRefField's own `update:modelValue` hands back a fresh/selected
 // config id -- written onto whichever field the current node kind uses

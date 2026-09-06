@@ -98,16 +98,15 @@ const emit = defineEmits<{
 
 // Display order within each group -- sources first (inject, timer,
 // interrupt, wifi_status, udp_receive, mqtt_subscribe), then processing
-// (function, variable_get, variable_set), then sinks (gpio_out, pwm_out,
-// udp_send, mqtt_publish, debug). Group assignment itself lives in
-// palette.ts (KindStyle.group), not here, so this file doesn't duplicate
-// that mapping.
+// (function), then sinks (gpio_out, pwm_out, udp_send, mqtt_publish,
+// debug). Group assignment itself lives in palette.ts (KindStyle.group),
+// not here, so this file doesn't duplicate that mapping.
 //
-// variable_get/variable_set/pwm_out added 2026-09-06, closing out
-// canvas-presence-gaps.md's last three registry-only node types --
-// variable_get/variable_set placed with function (all three are
-// "general"-group transforms), pwm_out placed with gpio_out (both
-// "hardware"-group sinks).
+// pwm_out added 2026-09-06, closing out canvas-presence-gaps.md's last
+// three registry-only node types -- placed with gpio_out (both
+// "hardware"-group sinks). variable_get/variable_set got the same
+// treatment the same day, then were hidden again -- see palette.ts's own
+// header for why.
 const KINDS: NodeKind[] = [
   "inject",
   "timer",
@@ -116,8 +115,6 @@ const KINDS: NodeKind[] = [
   "udp_receive",
   "mqtt_subscribe",
   "function",
-  "variable_get",
-  "variable_set",
   "http_request",
   "delay",
   "gpio_out",

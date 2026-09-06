@@ -48,24 +48,31 @@
 // the waiting semantics, distinct from timer's own "◷" clock glyph
 // (timer repeats on an interval, delay waits out a single one).
 //
-// variable_get/variable_set/pwm_out added 2026-09-06 -- the last three
-// node types canvas-presence-gaps.md flagged as registry-only, closing
-// that item out entirely. variable_get/variable_set: "general" group,
-// alongside function -- generic message-flow building blocks, no
-// hardware or network dependency. Olive-green/brown pair (distinct from
-// function's own olive-brown and every other used hue), "↧"/"↥" (arrow
-// off/onto a bar) echoing "lift a value off the shared store"/"place a
-// value onto it," a fresh directional pair distinct from udp_send/
-// udp_receive's "↑"/"↓" and mqtt_publish/mqtt_subscribe's "⇧"/"⇩". pwm_out:
-// "hardware" group, alongside gpio_out/interrupt -- real GPIO peripheral
-// output. Blue, distinct from gpio_out's maroon and interrupt's amber;
-// "∿" (sine wave) for the duty-cycle/analog-ish nature of PWM, distinct
-// from gpio_out's binary "■" and interrupt's "⚡".
+// pwm_out added 2026-09-06 -- one of the last three node types
+// canvas-presence-gaps.md flagged as registry-only. "hardware" group,
+// alongside gpio_out/interrupt -- real GPIO peripheral output. Blue,
+// distinct from gpio_out's maroon and interrupt's amber; "∿" (sine wave)
+// for the duty-cycle/analog-ish nature of PWM, distinct from gpio_out's
+// binary "■" and interrupt's "⚡".
+//
+// variable_get/variable_set: given canvas presence alongside pwm_out
+// 2026-09-06, then hidden again the same day -- Mike's call, after
+// walking through the actual use case (decoupling a producer and a
+// consumer on independent triggers, e.g. a timer-fed variable_set and an
+// mqtt_subscribe-fed variable_get sharing a name) and deciding the right
+// answer is to do this properly, Node-RED-style
+// (https://nodered.org/docs/user-guide/context -- node/flow/global
+// scope, pluggable storage backends, a generic node for setting context
+// rather than a single-purpose one) rather than ship the current narrow
+// pair. Codegen/registry (variable-get.ts/variable-set.ts) and the
+// function node's flow.get/flow.set (which read/write the exact same
+// store) are UNCHANGED and still fully working -- only the two
+// dedicated canvas nodes are hidden. See
+// docs/working-notes/decisions/editor-canvas.md and
+// outstanding-items/context-model-node-red-style.md.
 export type NodeKind =
   | "inject"
   | "function"
-  | "variable_get"
-  | "variable_set"
   | "debug"
   | "gpio_out"
   | "pwm_out"
@@ -116,9 +123,6 @@ export const NODE_PALETTE: Record<NodeKind, KindStyle> = {
   mqtt_subscribe: { color: "#6e3b8a", bgcolor: "#3a1f4a", icon: "⇩", label: "mqtt subscribe", group: "network" },
   // Slate-blue -- see this file's header for the icon reasoning.
   delay: { color: "#4a4a6e", bgcolor: "#2a2a3f", icon: "⌛", label: "delay", group: "general" },
-  // Olive-green/brown pair -- see this file's header for the icon reasoning.
-  variable_get: { color: "#5c6e1f", bgcolor: "#333f12", icon: "↧", label: "variable get", group: "general" },
-  variable_set: { color: "#6e4a1f", bgcolor: "#3f2812", icon: "↥", label: "variable set", group: "general" },
   // Blue -- see this file's header for the icon reasoning.
   pwm_out: { color: "#1f5c8a", bgcolor: "#12334a", icon: "∿", label: "pwm out", group: "hardware" },
 };

@@ -36,13 +36,13 @@
 import { readFileSync } from "node:fs";
 import { parseFlowFile } from "../flow-file/flow-file.js";
 
-// variable_get/variable_set/pwm_out added 2026-09-06, closing out
-// canvas-presence-gaps.md's last three registry-only node types.
+// pwm_out added 2026-09-06, closing out canvas-presence-gaps.md's last
+// three registry-only node types. variable_get/variable_set got the same
+// treatment the same day, then were hidden again (nodes.ts's own header)
+// -- deliberately NOT in this list, same as before 2026-09-06.
 const KNOWN_KINDS = new Set([
   "inject",
   "function",
-  "variable_get",
-  "variable_set",
   "debug",
   "gpio_out",
   "pwm_out",

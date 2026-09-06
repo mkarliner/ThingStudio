@@ -18,6 +18,8 @@ the pattern already built into `udp-send.ts`/`udp-receive.ts`/`http-request.ts`/
 open-ended chase for a fix that works on every platform. Not a license to skip a real, cheaply-fixable bug — a
 call on where further effort actually pays off once a platform-specific quirk resists a clean general fix.
 
+## Any work that impacts the user experience should update the user documentation to reflect that.
+
 ## No premature optimization, but don't paint into an architectural dead end
 
 Default to the cheapest implementation that's actually correct — don't build the general/heavy version of something on spec before a real need forces it. But before taking the cheap path, check whether it forecloses a future direction that would otherwise be nearly free to keep open: if a shortcut is a one-way door (a field that can't be added later without stranding already-deployed devices, a data shape that can't grow without a breaking migration), the cost of avoiding that lock-in now is usually much lower than the cost of undoing it later, and that comparison is worth making explicitly rather than skipped in the name of avoiding premature optimization. This project already applies the pattern — reserving `HELLO`'s `authRequired`/`authScheme` fields and laying out OTA-capable partitions on the ESP32 build before either feature is built (`mvp-feature-priorities.md`, Tier 0) are both "ship the cheap version, but don't foreclose the expensive one" calls, not exceptions to the cheap-by-default rule. Worth naming explicitly so it's applied consistently to new work — including plain engineering-effort trade-offs, not just protocol/hardware one-way doors — rather than re-derived per feature.

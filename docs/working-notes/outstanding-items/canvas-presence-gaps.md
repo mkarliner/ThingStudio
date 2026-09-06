@@ -33,3 +33,17 @@ pass-through, same shape as `function`. `pwm_out`: single `duty` (`number`) inpu
 gained port-declaration assertions; nothing about each node's own codegen changed. Off-device verified clean
 (`tsc --noEmit`, full `vitest` suite: 29 files / 329 tests passing, up from 326). This file's own gap is now
 fully closed — nothing left registry-only in the node library. Only the git commit is still owed.
+
+
+**Update, same day — `variable_get`/`variable_set` hidden from the canvas again.** After walking through the
+actual use case for these two nodes with Mike, the call was that the current narrow pair (store-now/fetch-later,
+no transform) isn't worth keeping visible as a dedicated node type without a real design behind it. Reverted:
+`nodes.ts`'s `VariableGetNode`/`VariableSetNode` classes, their `palette.ts`/`PaletteSidebar.vue`/
+`PropertyPanel.vue`/`verify-flow-file.ts` wiring. **Not reverted, still fully working:**
+`node-library/variable-get.ts`/`variable-set.ts` (codegen + `ports` declarations), `registry.ts`'s registration
+of both, and the function node's `flow.get`/`flow.set` (reads/writes the exact same `_flow_vars` store) --
+a hand-authored or previously-saved flow file referencing either type still compiles. `pwm_out`'s canvas-presence
+closure is unaffected. Target design going forward: Node-RED's context model
+(https://nodered.org/docs/user-guide/context) -- node/flow/global scope, pluggable storage backends, a generic
+node for setting context rather than a single-purpose pair -- not scoped yet.
+See `docs/working-notes/decisions/editor-canvas.md` and `outstanding-items/context-model-node-red-style.md`.

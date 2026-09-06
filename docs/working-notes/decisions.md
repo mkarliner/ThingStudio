@@ -44,7 +44,7 @@ HMAC-SHA256 + a persisted counter over a nonce challenge-response (no trustworth
 
 ## Editor / canvas
 
-The Rete migration's shape (adapter over `compiler/graph.ts`, hand-rolled palette drag-and-drop, wire-type system kept as its own separate task); the wire-type coercion matrix; uniform `async`/`await` codegen; debounce via the cooldown algorithm; vendoring `mqtt_as`; the stable-node-ID migration (UUID identity end-to-end, replacing recomputed integer ids — the console-attribution work builds on this); the UI cleanup pass (collapsible panels, palette groups). 9 entries: `docs/working-notes/decisions/editor-canvas.md`.
+The Rete migration's shape (adapter over `compiler/graph.ts`, hand-rolled palette drag-and-drop, wire-type system kept as its own separate task); the wire-type coercion matrix; uniform `async`/`await` codegen; debounce via the cooldown algorithm; vendoring `mqtt_as`; the stable-node-ID migration (UUID identity end-to-end, replacing recomputed integer ids — the console-attribution work builds on this); the UI cleanup pass (collapsible panels, palette groups); hiding `variable_get`/`variable_set` from the canvas pending a Node-RED-style context model. 10 entries: `docs/working-notes/decisions/editor-canvas.md`.
 
 ## Config nodes / Tier 1 scope
 
