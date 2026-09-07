@@ -1,4 +1,4 @@
-# Editor↔backend wiring — WS transport client + connection-mode picker built, 2026-09-07
+# Editor↔backend wiring — built and verified end-to-end on real hardware, 2026-09-07
 
 **Picked up next session as expected** — `backend-persisted-data-protocol.md`'s own "suggested next-session
 candidates" #1, confirmed via a clarifying question at the start of this chat. Before this session, two backend
@@ -116,19 +116,21 @@ things came out of it:
   running `npm ci`/`tsc`/`vitest` fresh there, per `CLAUDE.md`'s "never run these directly against the
   live-mounted `editor/`" rule; `.verify-tmp/` (gitignored) is the established staging point for this, not a new
   pattern this session invented.
-- **Partially verified against real hardware, same session** (see "Live-testing follow-up" above): Mike ran a
-  real backend process and a real board, which is what surfaced and let us fix the `_send_status` race. What's
-  still not confirmed: a clean, uninterrupted "Via backend" connect → deploy → disconnect round trip against a
-  real board, with no stale second connection in the picture. That's the natural next real-world checkpoint,
-  now that the crash the first attempt hit is fixed.
+- **Verified end-to-end against real hardware, same session.** Mike's first pass (real backend + real board)
+  is what surfaced and let us fix the `_send_status` race above. After that fix, Mike confirmed a real "Via
+  backend" connect to a real ESP32 plus a basic MQTT flow deployed and running on it — the first actual
+  round trip through the backend, not just a fake-serial/fake-WS unit test. This is the checkpoint the earlier
+  "not yet confirmed" note below was waiting on.
 
 ## What's still open, named explicitly rather than silently skipped
 
 - **Admin-API `fetch` client** — flow/custom-node save-load through `/api/flows`/`/api/custom-nodes`, regardless
   of connection mode. Not touched this session (see "Scoping call" above).
-- **Real end-to-end verification**: editor (either mode) → real running backend → real board, never attempted
-  this session. The backend's own real-hardware pass (DTR/RTS per board, actual disconnect timing) was already
-  open before this session and is unaffected by it.
+- ~~**Real end-to-end verification**: editor (either mode) → real running backend → real board.~~ **Done,
+  2026-09-07**: Mike confirmed "via backend" connect to a real ESP32 plus a basic MQTT flow both work. Still
+  open, narrower than before: the backend's own dedicated real-hardware pass for DTR/RTS-per-board specifics and
+  actual disconnect timing (`backend-platform-decision.md` §5) — this confirms basic connect/deploy/run works,
+  not that every board-specific reset/disconnect edge case has been exercised.
 - **Posture-2 auth** (`[P4]`) — unaffected, unrelated to this session's scope.
 - **`admin_api.py`/`persisted_store.py` being run by Mike for real** — unrelated pre-existing open item, still
   open.

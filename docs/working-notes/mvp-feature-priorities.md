@@ -367,10 +367,13 @@ pipeline driven by hardcoded buttons.
     `connModeSelect`), scoped explicitly to that half, not the admin-API
     client (still open). "Via backend" is now the default connection mode;
     "direct" WebSerial stays as a deliberate, working fallback. Found and
-    fixed a real bug in the same session -- the backend's serial relay
+    fixed two real bugs the same session -- the backend's serial relay
     assumed the wrong wire format (raw binary instead of the base64/F64-line
-    encoding the real device listener actually speaks). Not yet run against
-    a real backend process or real hardware.
+    encoding the real device listener actually speaks), and a WS teardown
+    race in `_send_status()` that could crash the backend, both fixed with
+    regression tests. **Then verified end-to-end**: Mike confirmed a real
+    "via backend" connect to an ESP32 plus a basic MQTT flow both work --
+    the first real round trip through the backend, not just unit tests.
     `outstanding-items/editor-backend-wiring.md`.
 - **Real editor shell.** Connect + `HELLO` handshake, a Deploy flow that
   runs the pre-flight version/space check before sending `DEPLOY`, and the
