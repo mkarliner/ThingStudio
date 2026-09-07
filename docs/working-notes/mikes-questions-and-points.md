@@ -30,6 +30,9 @@ We need to support the following platforms for the editor/backend:
 - do we need a password for access to the board transport? I'm aware of how insecure iot devices are. I think we should at least basic security for the board from day 1
   [partially decided, not implemented — decisions.md, "Board-transport auth (perimeter 2)" section: HMAC-SHA256 + persisted counter chosen for v1.1+; the one v1 hedge (HELLO's authRequired/authScheme fields) is still unbuilt, see outstanding-items.md "Redeploy / runtime" section]
 
+# Wifi management
+Investigate using Functor/Singletons for the Wifi config and any other global config objects : see https://github.com/peterhinch/micropython-samples/blob/master/functor_singleton/README.md
+
 # Nodes - to be prioritised
 [whole list triaged — decisions.md, "Config nodes / Tier 1 scope" section, 2026-08-17 entry, plus tier1-node-candidates-prioritization-briefing.md; per-item disposition below]
    - Interrupt / pin change
@@ -38,8 +41,7 @@ We need to support the following platforms for the editor/backend:
      [built 2026-09-06 — editor/src/node-library/delay.ts, transform node, full canvas presence, 7 tests, off-device verified; outstanding-items.md "Resolved" section]
    - average/smooth low pass filter for eg: adc readings.
      [same node as "filter / event compression" below — outstanding-items.md "Network / config nodes" section]
-   - ADC - review, read on message, it may include a polling option...
-     [decided: rejected as a node type, reduces to a function-node one-liner — decisions.md, "Config nodes / Tier 1 scope" section, 2026-08-17 entry]
+   - ADC - review, , from peter hinche's collection 
    - gpio in -  read on message, again, may have polling option.
      [done — interrupt.ts replaces gpio_in, same as "Interrupt / pin change" above]
    - debounce
@@ -58,6 +60,7 @@ We need to support the following platforms for the editor/backend:
      [tracked, unresolved fault-handling question — outstanding-items.md "Network / config nodes"]
    - init node triggered by start of flow?
      [tracked, never discussed — outstanding-items.md "UI / editor" section]
+   - Button and Switch from peter hinche's collection
 # Store flows on micro as well as file system.
 [tracked, not scoped — outstanding-items.md "Redeploy / runtime" section]
 

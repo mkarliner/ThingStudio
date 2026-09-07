@@ -1,6 +1,6 @@
-# Context model — do it Node-RED-style, not built yet
+# Context model — do it Node-RED-style, volatile (in-RAM) scope only
 
-Status: raw idea / not scoped, 2026-09-06. Follow-up to `canvas-presence-gaps.md`'s same-day reversal of
+Status: **[P2]**, scope narrowed 2026-09-06 during Mike's priority pass -- deliberately volatile-only for now. Follow-up to `canvas-presence-gaps.md`'s same-day reversal of
 `variable_get`/`variable_set` canvas presence.
 
 ## Where this came from
@@ -53,3 +53,15 @@ context system (https://nodered.org/docs/user-guide/context) as the reference.
 
 Everything above is reference material and open questions, not a plan. Needs its own scoping pass before any of it
 gets built -- same bar as any other new-node-type work in this project.
+
+
+## Scope split, 2026-09-06 (Mike's call)
+
+This item is **[P2]**, buildable pre-MVP, but deliberately limited to volatile (in-RAM) storage -- same durability
+as today's `_flow_vars` dict, just with the real node/flow/global scope model and a generic setting mechanism
+instead of the narrow `variable_get`/`variable_set` pair. A flash-backed/persistent storage backend for this same
+context model is a separate, later item -- see `tier2-live-streaming-persistence.md` (tagged **[POST-MVP]**),
+which should build on top of whatever scope/API shape this item lands on rather than duplicate it. Do not conflate
+the two when scoping this: get the scope/API right first (this item), let persistence plug in as a storage backend
+choice later (Node-RED's own `contextStorage` pattern already models this split -- `memory` vs `localfilesystem` as
+interchangeable backends behind the same `context.get`/`.set` API).
