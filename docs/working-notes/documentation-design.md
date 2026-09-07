@@ -78,26 +78,35 @@ nav:
   - Debugging & troubleshooting: debugging.md
   - Node reference:
       - Overview: nodes/index.md
-      - inject: nodes/inject.md
-      - function: nodes/function.md
-      - debug: nodes/debug.md
-      - gpio out: nodes/gpio-out.md
-      - pwm out: nodes/pwm-out.md
-      - timer: nodes/timer.md
-      - interrupt: nodes/interrupt.md
-      - delay: nodes/delay.md
-      - wifi status: nodes/wifi-status.md
-      - udp send: nodes/udp-send.md
-      - udp receive: nodes/udp-receive.md
-      - http request: nodes/http-request.md
-      - mqtt publish: nodes/mqtt-publish.md
-      - mqtt subscribe: nodes/mqtt-subscribe.md
+      - General:
+          - inject: nodes/inject.md
+          - timer: nodes/timer.md
+          - function: nodes/function.md
+          - delay: nodes/delay.md
+          - debug: nodes/debug.md
+      - Network:
+          - wifi status: nodes/wifi-status.md
+          - udp receive: nodes/udp-receive.md
+          - mqtt subscribe: nodes/mqtt-subscribe.md
+          - http request: nodes/http-request.md
+          - udp send: nodes/udp-send.md
+          - mqtt publish: nodes/mqtt-publish.md
+      - Hardware:
+          - interrupt: nodes/interrupt.md
+          - gpio out: nodes/gpio-out.md
+          - pwm out: nodes/pwm-out.md
   - Writing custom nodes: custom-nodes.md
 ```
 
-Node order follows `registry.ts`'s own registration order (general/software nodes first, then GPIO/timer, then
-network), not alphabetical — matches the palette sidebar's own grouping logic (`palette.ts`'s `group` field) so a
-reader who's used the editor finds things where they'd expect.
+**Corrected 2026-09-07 (later same day, content-writing session):** the original scaffold's node-reference nav
+was a flat list loosely following `registry.ts`'s registration order, and this section's own prose claimed it
+"matches the palette sidebar's own grouping logic" — that claim wasn't actually true of the flat list, just
+aspirational. Nav now literally mirrors what `PaletteSidebar.vue` renders: three named subsections in
+`palette.ts`'s `DEFAULT_NODE_GROUPS` order (General, Network, Hardware — `palette.ts`'s `group` field per node
+type), and within each subsection, the same order `PaletteSidebar.vue`'s own `KINDS` array produces once
+filtered to that group (sources first, then processing, then sinks — see that file's own header comment). A
+reader who's used the editor's palette sees node types in the docs in the exact order they'd find them there,
+not just a roughly-similar one.
 
 ## What this session scaffolded
 

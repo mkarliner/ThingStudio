@@ -34,3 +34,10 @@ standalone document, linked rather than duplicated. `mkdocs.yml`'s `docs_dir` po
 `docs/user-guide/` rather than restructuring `docs/` itself, since `docs/`'s other contents (the design doc,
 working-notes) are explicitly out of scope for this site. Scaffolded, not just designed: `mkdocs.yml`, a GitHub
 Actions `gh-deploy` workflow, and every page as a placeholder -- actual content-writing is a separate, later task.
+
+**2026-09-07 — node-reference nav corrected to actually group by palette, not just resemble it.** Full
+reasoning: `documentation-design.md`'s "Nav layout" section (see its "Corrected" note). The scaffolded nav was a
+flat list this file's own prose incorrectly described as matching the palette sidebar's grouping — it didn't.
+Nav now has three real subsections (General/Network/Hardware, `palette.ts`'s `DEFAULT_NODE_GROUPS` order) with
+nodes in each ordered the same way `PaletteSidebar.vue` actually renders them. `mkdocs.yml` and
+`docs/user-guide/nodes/index.md` both updated in the same change.
