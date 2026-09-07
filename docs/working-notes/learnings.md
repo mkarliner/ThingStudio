@@ -68,6 +68,10 @@ WebSocket same-origin/DNS-rebinding gaps, the WebSocket custom-header limitation
 
 A previously-"all tests passing" backend module (`ws_relay.py`/`framing.py`) assumed raw §13 binary frames ride the physical serial wire directly; the real device listener only ever speaks base64/"F64:"-line-encoded frames there (a real hardware workaround, already implemented on the browser-direct path in `transport.ts`), and nothing in either side's own tests could have caught the mismatch. Fixed 2026-09-07 (editor-backend-wiring session). 2 entries: `docs/working-notes/learnings/backend-serial-wire-format.md`.
 
+## Backend / WS status-send race on teardown
+
+`ws_relay.py`'s `_send_status()` didn't guard against the WebSocket already being closed/closing when called from `_disconnect()`/`cleanup()` -- surfaced only by a real teardown race during live-hardware testing (a second, stale editor connection racing this one's serial read into a "Bad file descriptor," then cleanup landing on an already-closing WS), not by any of the 80 passing unit tests, each of which drove one clean sequence. Fixed 2026-09-07 (editor-backend-wiring session, live-hardware follow-up) with a try/except and a direct regression test. 3 entries: `docs/working-notes/learnings/backend-ws-status-send-race.md`.
+
 ## Cowork remote-device testing environment
 
 The cloud session's own staged mirror of the repo can be a partial snapshot — don't trust it for a real test/typecheck signal without confirming the full tree is present; a plain file on the shared live mount can also silently lose content mid-edit if something else writes to it at the same time, with no lock file to flag it. 2 entries: `docs/working-notes/learnings/cowork-remote-device-testing.md`.

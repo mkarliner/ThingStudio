@@ -27,7 +27,7 @@ from aiohttp.test_utils import TestClient, TestServer
 from thingstudio_backend.framing import encode_frame
 from thingstudio_backend.line_framing import encode_f64_line
 from thingstudio_backend.serial_relay import SerialRelayError
-from thingstudio_backend.ws_relay import make_websocket_handler
+from thingstudio_backend.ws_relay import ConnectionSession, make_websocket_handler
 
 
 class FakeSerialConnection:
@@ -255,3 +255,39 @@ async def test_malformed_json_control_message_reports_error_not_a_crash() -> Non
         assert status["type"] == "status"
         assert "NODE_ERROR" in status["error"]
         await ws.close()
+
+
+class FakeWebSocketAlreadyClosing:
+    """Stands in for aiohttp.web.WebSocketResponse when the socket is already
+    gone by the time a send is attempted -- e.g. cleanup()/_disconnect()
+    reaching _send_status() after the browser tab has closed, or after a
+    race with another connection to the same board. Real aiohttp raises
+    ConnectionResetError from send_str() in that situation; this fake
+    reproduces that deterministically without needing a live socket."""
+
+    async def send_str(self, data: str) -> None:
+        raise ConnectionResetError("Cannot write to closing transport")
+
+
+@pytest.mark.asyncio
+async def test_send_status_on_already_closing_ws_does_not_raise() -> None:
+    # Real bug, found 2026-09-07 exercising this against an actual backend
+    # process for the first time: a client-editor tab closing (or racing a
+    # second connection to the same board) meant cleanup()/_disconnect()'s
+    # own call to _send_status() landed on a WebSocket that was already
+    # gone. That raised ClientConnectionResetError straight out of
+    # cleanup() -- an uncaught exception in the request handler's `finally`
+    # block, exactly what this module's header comment says never happens.
+    # See ws_relay.py's _send_status() for the fix this guards.
+    factory = FakeSerialConnectionFactory()
+    session = ConnectionSession(FakeWebSocketAlreadyClosing(), factory)  # type: ignore[arg-type]
+
+    # _connect() itself calls _send_status(connected=True, ...) right after
+    # opening -- exercise that path too, not just the cleanup() one.
+    await session._connect("/dev/fake0", 115200)
+    assert factory.instances[-1].closed is False
+
+    # cleanup() -> _disconnect() -> _send_status(connected=False, ...) --
+    # this used to be the exact call that raised. Should not raise now.
+    await session.cleanup()
+    assert factory.instances[-1].closed is True

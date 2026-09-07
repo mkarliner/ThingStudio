@@ -70,22 +70,55 @@ shared `DeviceTransport` contract needed building either way.
   `docs/working-notes/learnings/backend-serial-wire-format.md` — worth reading before touching this boundary
   again, since it's exactly the kind of "two independently-tested components silently disagree" gap that won't
   show up as a test failure on either side alone.
+- **A second real bug found the same session, via an actual live-hardware attempt with Mike** (see
+  "Live-testing follow-up" below): `ws_relay.py`'s `_send_status()` didn't guard against the WebSocket already
+  being closed/closing when called from `_disconnect()`/`cleanup()`. A real teardown race (a stale second
+  editor connection to the same board, from a session Mike had accidentally left open, racing this one's
+  serial read into a "Bad file descriptor") meant cleanup landed on an already-closing WS and raised
+  `ClientConnectionResetError`, uncaught, straight out of the request handler. Fixed with a
+  `try/except (ConnectionResetError, RuntimeError)` around the `send_str()` call, same best-effort posture
+  `_pump_serial_to_ws()` already applies to its own unexpected errors. New direct regression test,
+  `test_send_status_on_already_closing_ws_does_not_raise`, instantiates `ConnectionSession` against a
+  deliberately-failing fake WS (bypassing the full aiohttp test-server stack, since the real race isn't
+  practical to reproduce deterministically through one). Confirmed the test catches the regression by
+  reverting the fix in a scratch copy and re-running it. Full incident:
+  `docs/working-notes/learnings/backend-ws-status-send-race.md`.
+
+## Live-testing follow-up, 2026-09-07 (same session)
+
+After the above shipped, Mike ran the backend and editor himself and tried a real "via backend" connection
+against a real board — the first time any of this was exercised outside a fake-serial/fake-WS unit test. Two
+things came out of it:
+
+- **The `_send_status` crash bug above** — found and fixed because Mike pasted the backend's own real log
+  output (including the unhandled traceback) into the session, which is exactly the kind of signal a live pass
+  is for. His own accidental duplicate editor tab was the trigger, not a bug in the duplicate-detection sense —
+  the bug is that the backend's fault handling didn't tolerate that race, which it now does.
+- **An open, unresolved question, not yet chased down**: attempts to drive a real end-to-end WS connection
+  through Claude's own built-in browser pane (as a stand-in for a real browser, to get a second independent
+  signal) consistently failed with WebSocket close code 1006 and — per Mike's own pasted backend access log —
+  zero corresponding entries on the backend side at all, as if the connection attempt never reached the server.
+  Ruled out CORS (WebSocket isn't subject to it, per this project's own `backend-editor-auth-and-protocol.md`).
+  Whether this is a sandboxing restriction specific to the browser-pane tool, or something else, is still open —
+  worth a real (non-sandboxed) browser for the next definitive end-to-end pass, rather than assuming the
+  browser-pane result generalizes.
 
 ## Verification
 
-- **Backend**: 80 tests passing (66 previous + 14 new), verified in a scratch venv built outside the
-  live-mounted repo (`~/scratch-backend-test/`, deleted after this session — same shared-mount/cross-platform-
-  binary reasoning `CLAUDE.md` already gives for npm, applied to Python here per prior sessions' own precedent).
+- **Backend**: 81 tests passing (66 previous + 14 wire-format + 1 status-send-race), verified in a scratch venv
+  built outside the live-mounted repo (`~/scratch-backend-test/`, deleted after this session and again after the
+  live-testing follow-up — same shared-mount/cross-platform-binary reasoning `CLAUDE.md` already gives for npm,
+  applied to Python here per prior sessions' own precedent).
 - **Editor**: `tsc --noEmit` clean, `vitest run` — 341 tests passing (329 previous + 12 new) — verified by
   extracting `editor/` (excluding `node_modules`/`dist`/`.git`) into the cloud session's own workspace and
   running `npm ci`/`tsc`/`vitest` fresh there, per `CLAUDE.md`'s "never run these directly against the
   live-mounted `editor/`" rule; `.verify-tmp/` (gitignored) is the established staging point for this, not a new
   pattern this session invented.
-- **Not verified, named explicitly:** none of this has been run against a real backend process or real
-  hardware. The backend fix above was verified by unit test (a fake serial connection fed real F64-encoded
-  lines, matching what `listener.py` actually produces) — not by an actual round-trip through a running
-  `thingstudio-backend` process talking to a real board. That's the natural next real-world checkpoint once Mike
-  has both the backend and a board available at the same time.
+- **Partially verified against real hardware, same session** (see "Live-testing follow-up" above): Mike ran a
+  real backend process and a real board, which is what surfaced and let us fix the `_send_status` race. What's
+  still not confirmed: a clean, uninterrupted "Via backend" connect → deploy → disconnect round trip against a
+  real board, with no stale second connection in the picture. That's the natural next real-world checkpoint,
+  now that the crash the first attempt hit is fixed.
 
 ## What's still open, named explicitly rather than silently skipped
 

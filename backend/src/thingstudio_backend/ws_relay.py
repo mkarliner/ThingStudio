@@ -168,7 +168,25 @@ class ConnectionSession:
         if error is not None:
             payload["error"] = error
             logger.warning(error)
-        await self._ws.send_str(json.dumps(payload))
+        # Real bug, found 2026-09-07 while exercising this against an actual
+        # backend process for the first time: this send is reached from
+        # cleanup()/_disconnect() on the way OUT of a connection that's
+        # already gone (the browser tab closed, a second connection to the
+        # same board raced this one's serial read into a "Bad file
+        # descriptor" and this cleanup ran right as the WS itself was also
+        # closing) -- there's nobody left to receive the status this call is
+        # trying to send. Before this fix, that write raised
+        # ClientConnectionResetError straight out of _disconnect()/cleanup(),
+        # surfacing as an unhandled server-side traceback -- exactly the
+        # "uncaught exception that crashes the request handler" this file's
+        # own header comment says never happens. Best-effort now, same
+        # last-resort-backstop posture _pump_serial_to_ws already has for
+        # its own unexpected errors: log and move on, don't let a write to
+        # an already-dead socket take the teardown path down with it.
+        try:
+            await self._ws.send_str(json.dumps(payload))
+        except (ConnectionResetError, RuntimeError) as exc:
+            logger.warning("could not send status to a WebSocket that's already closing: %s", exc)
 
     async def cleanup(self) -> None:
         await self._disconnect()
