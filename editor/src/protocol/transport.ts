@@ -46,6 +46,29 @@ export interface WebSerialPort {
   readonly writable: WritableStream<Uint8Array> | null;
 }
 
+/**
+ * Minimal shape main.ts needs to drive a live connection generically, once
+ * one exists -- editor-backend-wiring (2026-09-07), the design doc §4
+ * requirement that connection mode ("direct" WebSerial vs. "via backend")
+ * be an explicit user choice, not auto-detected. Both WebSerialTransport
+ * (this file) and BackendTransport (protocol/backend-transport.ts)
+ * implement this so everything downstream of a successful Connect --
+ * Deploy, Check status, Disconnect, inject click-to-fire -- is written
+ * once against this contract rather than duplicated per mode. Deliberately
+ * does NOT cover how a connection is *opened*: WebSerialTransport.connect()
+ * takes an already-user-picked WebSerialPort (from navigator.serial's own
+ * native picker), while BackendTransport needs a backend URL plus a
+ * server-side port name chosen from a list the backend itself reports --
+ * different enough shapes that main.ts's Connect handler branches on mode
+ * explicitly rather than this interface trying to paper over the
+ * difference.
+ */
+export interface DeviceTransport {
+  readonly isConnected: boolean;
+  disconnect(): Promise<void>;
+  send(message: Message): Promise<void>;
+}
+
 export interface TransportEvents {
   /** A successfully decoded §13 message from the device. */
   onMessage?(message: Message): void;
@@ -74,7 +97,7 @@ const DEFAULT_BAUD_RATE = 115200; // matches every prior POC's harness.py / this
  * not in the port itself, so a caller can inspect `pendingByteCount` for
  * diagnostics the same way protocol.ts's own tests do.
  */
-export class WebSerialTransport {
+export class WebSerialTransport implements DeviceTransport {
   #port: WebSerialPort | null = null;
   #reader: ReadableStreamDefaultReader<Uint8Array> | null = null;
   #writer: WritableStreamDefaultWriter<Uint8Array> | null = null;

@@ -6,6 +6,16 @@
 # logic (framing/multiplexing/fault handling). Real pyserial behavior
 # (DTR/RTS quirks, actual disconnect timing) still needs a real-hardware pass
 # per docs/working-notes/backend-platform-decision.md §5 -- not claimed here.
+#
+# Updated 2026-09-07 (editor-backend-wiring session) alongside ws_relay.py's
+# own fix: the fake serial connection's `feed()` now needs to be fed real
+# base64/"F64:" lines (line_framing.encode_f64_line), not raw framing.py
+# frame bytes, since that's what the relay now actually expects on the
+# "serial" side -- matching the real device listener's wire format instead
+# of the incorrect raw-binary assumption these tests previously encoded.
+# framing.encode_frame is still used below, but only to build the *inner*
+# §13 frame bytes that then get F64-line-wrapped -- that inner format is
+# unchanged by this fix.
 
 import asyncio
 import json
@@ -15,6 +25,7 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
 from thingstudio_backend.framing import encode_frame
+from thingstudio_backend.line_framing import encode_f64_line
 from thingstudio_backend.serial_relay import SerialRelayError
 from thingstudio_backend.ws_relay import make_websocket_handler
 
@@ -99,22 +110,73 @@ async def test_connect_then_serial_to_ws_relay() -> None:
         assert status == {"type": "status", "connected": True, "port": "/dev/fake0"}
         assert factory.instances[-1].port == "/dev/fake0"
 
-        # Feed one complete protocol frame on the "serial" side, byte-at-a-time
-        # to exercise the reassembler, not just a single push().
+        # Feed one complete protocol frame, F64/base64-line-wrapped the way
+        # the real device listener actually sends it, byte-at-a-time to
+        # exercise the line reassembler, not just a single push().
         frame = encode_frame(3, bytes([9, 9, 9]))
+        line = encode_f64_line(frame)
         conn = factory.instances[-1]
-        for b in frame:
+        for b in line:
             conn.feed(bytes([b]))
 
         msg = await ws.receive()
         assert msg.type.name == "BINARY"
-        assert msg.data == frame  # forwarded verbatim, not re-encoded
+        assert msg.data == frame  # decoded back to the inner frame, not the wire line
 
         await ws.close()
 
 
 @pytest.mark.asyncio
-async def test_ws_binary_from_browser_is_written_to_serial_verbatim() -> None:
+async def test_serial_debug_line_relayed_as_debug_control_message() -> None:
+    """A non-F64 line on the serial side is the device's own plain
+    print()/debug output (listener.py's own header: LISTENER_READY,
+    NODE_ERROR console echoes, etc.) -- it must still reach the browser,
+    not be silently dropped, matching the direct WebSerial mode's
+    onDebugLine behavior (transport.ts)."""
+    factory = FakeSerialConnectionFactory()
+    async with TestClient(TestServer(_make_app(factory))) as client:
+        ws = await client.ws_connect("/ws")
+        await ws.send_json({"type": "connect", "port": "/dev/fake0"})
+        await ws.receive_json()  # status: connected
+
+        conn = factory.instances[-1]
+        conn.feed(b"LISTENER_READY\r\n")
+
+        msg = await ws.receive_json()
+        assert msg == {"type": "debug", "line": "LISTENER_READY"}
+
+        await ws.close()
+
+
+@pytest.mark.asyncio
+async def test_malformed_f64_line_reports_error_not_a_crash() -> None:
+    factory = FakeSerialConnectionFactory()
+    async with TestClient(TestServer(_make_app(factory))) as client:
+        ws = await client.ws_connect("/ws")
+        await ws.send_json({"type": "connect", "port": "/dev/fake0"})
+        await ws.receive_json()  # status: connected
+
+        conn = factory.instances[-1]
+        conn.feed(b"F64:not-valid-base64!!!\n")
+
+        status = await ws.receive_json()
+        assert status["type"] == "status"
+        assert "NODE_ERROR" in status["error"]
+
+        # The session survives a garbled line -- a subsequent good frame
+        # still relays correctly, same "one bad unit doesn't wedge the
+        # whole socket" contract every other fault path here already has.
+        frame = encode_frame(1, b"ok")
+        conn.feed(encode_f64_line(frame))
+        msg = await ws.receive()
+        assert msg.type.name == "BINARY"
+        assert msg.data == frame
+
+        await ws.close()
+
+
+@pytest.mark.asyncio
+async def test_ws_binary_from_browser_is_written_to_serial_as_f64_line() -> None:
     factory = FakeSerialConnectionFactory()
     async with TestClient(TestServer(_make_app(factory))) as client:
         ws = await client.ws_connect("/ws")
@@ -125,7 +187,10 @@ async def test_ws_binary_from_browser_is_written_to_serial_verbatim() -> None:
         await ws.send_bytes(already_framed)
         await asyncio.sleep(0.05)  # let the handler task process it
 
-        assert factory.instances[-1].written == [already_framed]
+        # Written to the wire as one F64/base64 line, not the raw frame
+        # bytes -- see line_framing.py's header for why the real device
+        # listener needs this encoding rather than raw binary.
+        assert factory.instances[-1].written == [encode_f64_line(already_framed)]
         await ws.close()
 
 

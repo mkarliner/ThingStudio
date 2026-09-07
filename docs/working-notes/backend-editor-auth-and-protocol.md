@@ -161,6 +161,25 @@ doesn't change an existing one.
 
 ---
 
+**Correction, 2026-09-07 (editor-backend-wiring session): "passed through
+verbatim" above describes the WS<->browser contract correctly, but the
+2026-08-16-session backend build (`ws_relay.py`) wrongly extended that
+same "verbatim, don't touch the bytes" idea to the *serial* side too --
+assuming §13's raw binary frame layout also rides the physical serial
+wire directly. It doesn't: the real device listener
+(`device-runtime/src/listener.py`) only ever speaks base64-encoded,
+`"F64:"`-prefixed text lines on that wire specifically, a real hardware
+workaround (POC-D's `read(n)`/`readexactly(n)` hang) `editor/src/protocol/
+transport.ts`'s `WebSerialTransport` already implements identically for
+the browser-direct path -- the information needed to catch this was
+already in the repo. Fixed 2026-09-07: `backend/src/thingstudio_backend/
+line_framing.py` sits between the raw serial byte stream and this WS
+endpoint, invisible from the browser's side of the socket -- the
+WS<->browser binary contract this section describes is unchanged. Full
+incident: `docs/working-notes/learnings/backend-serial-wire-format.md`.**
+
+---
+
 ## 3. What this deliberately does not decide
 
 - **TLS mechanics for posture 2** — self-signed vs. real certificate,

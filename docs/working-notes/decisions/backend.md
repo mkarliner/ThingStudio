@@ -56,3 +56,18 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
   data (saved flows, custom node packages) that needs to be reachable with no serial connection open at all.
   New `/api/flows`/`/api/custom-nodes` routes, covered automatically by the existing Host-allowlist middleware
   (installed at the `Application` level). `outstanding-items/backend-persisted-data-protocol.md`.
+
+- **2026-09-07 — Editor↔backend wiring: "via backend" is the default connection mode; "direct" WebSerial stays
+  available, not retired.** Mike's own call, confirmed at the start of this session and checked rather than
+  taken as given: dropping "direct" isn't free even though the backend path is where all new investment goes
+  (design doc §4's 2026-08-16 addendum) — it needs no backend process installed/running at all (lowest friction
+  for a quick one-off session) and stays a working fallback if the backend itself is what's broken, and keeping
+  it cost nothing new here since `WebSerialTransport` already existed and already worked. Both modes now share
+  one `DeviceTransport` contract (`transport.ts`) so Deploy/Check status/Disconnect/inject-click-to-fire are
+  written once, not duplicated per mode. `outstanding-items/editor-backend-wiring.md`.
+- **2026-09-07 — Backend serial relay's real wire format: base64/"F64:"-prefixed lines, not raw binary,
+  matching `transport.ts`'s existing browser-direct encoding.** Fixes a real bug in the 2026-08-16-session
+  backend build (`ws_relay.py` assumed raw §13 frames ride the serial wire directly; the device listener never
+  puts them there unencoded — POC-D's `read(n)` hang workaround). New `line_framing.py`; `framing.py` itself
+  unchanged and still correct as a frame codec, just not what belongs directly on the serial byte stream. See
+  `docs/working-notes/learnings/backend-serial-wire-format.md` for the full incident.

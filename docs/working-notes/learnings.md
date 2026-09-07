@@ -64,6 +64,10 @@ Witness-rig wiring gotchas (floating pins, long patch wires, first-`.irq()` `Mem
 
 WebSocket same-origin/DNS-rebinding gaps, the WebSocket custom-header limitation, checking a dependency's real release activity (Python this time), verifying a citation by direct inspection, current browser transport support (WebSerial/Web Bluetooth). 5 entries: `docs/working-notes/learnings/backend-security-research.md`.
 
+## Backend / serial wire format
+
+A previously-"all tests passing" backend module (`ws_relay.py`/`framing.py`) assumed raw §13 binary frames ride the physical serial wire directly; the real device listener only ever speaks base64/"F64:"-line-encoded frames there (a real hardware workaround, already implemented on the browser-direct path in `transport.ts`), and nothing in either side's own tests could have caught the mismatch. Fixed 2026-09-07 (editor-backend-wiring session). 2 entries: `docs/working-notes/learnings/backend-serial-wire-format.md`.
+
 ## Cowork remote-device testing environment
 
 The cloud session's own staged mirror of the repo can be a partial snapshot — don't trust it for a real test/typecheck signal without confirming the full tree is present; a plain file on the shared live mount can also silently lose content mid-edit if something else writes to it at the same time, with no lock file to flag it. 2 entries: `docs/working-notes/learnings/cowork-remote-device-testing.md`.

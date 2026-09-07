@@ -362,6 +362,16 @@ pipeline driven by hardcoded buttons.
     minimal build alone didn't. Not yet run by Mike; no editor-side consumer
     exists yet (the editor has no WebSocket client and no admin-API client
     code either). `outstanding-items/backend-persisted-data-protocol.md`.
+  - **Same day, next session: editor<->backend wiring (`[P1]`) -- the WS
+    transport client + connection-mode picker half built** (`BackendTransport`,
+    `connModeSelect`), scoped explicitly to that half, not the admin-API
+    client (still open). "Via backend" is now the default connection mode;
+    "direct" WebSerial stays as a deliberate, working fallback. Found and
+    fixed a real bug in the same session -- the backend's serial relay
+    assumed the wrong wire format (raw binary instead of the base64/F64-line
+    encoding the real device listener actually speaks). Not yet run against
+    a real backend process or real hardware.
+    `outstanding-items/editor-backend-wiring.md`.
 - **Real editor shell.** Connect + `HELLO` handshake, a Deploy flow that
   runs the pre-flight version/space check before sending `DEPLOY`, and the
   status/log/inspector panel from §8 — connection state, per-node errors

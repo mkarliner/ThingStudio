@@ -59,12 +59,38 @@
 // mergeCustomNodeRegistry(), rebuilt fresh each compile since custom
 // nodes can be loaded mid-session).
 
+// Editor-backend-wiring, 2026-09-07 (docs/working-notes/outstanding-items/
+// backend-persisted-data-protocol.md's own "suggested next-session
+// candidates" #1): design doc §4 already requires the connection be an
+// "explicit user choice between 'direct' (WebSerial, local-only) and 'via
+// backend' connection modes -- not auto-detection." Before this session
+// nothing in the browser could reach either backend surface at all
+// (backend-auth-overview.md's own finding). This adds that choice
+// (connModeSelect in index.html) and a second transport implementation,
+// BackendTransport (protocol/backend-transport.ts), alongside the
+// existing WebSerialTransport -- both now typed against the shared
+// DeviceTransport contract (transport.ts) so the Connect/Deploy/Check
+// status/Disconnect/inject-click-to-fire logic below is written once and
+// used by either mode, branching only at the point a connection is
+// actually opened. Default mode is "via backend" (Mike's own call,
+// 2026-09-07); "direct" stays available deliberately, not just left in
+// out of inertia -- it needs no backend process running at all (lowest
+// friction for a quick one-off session) and remains a working fallback if
+// the backend itself is what's broken, and keeping it costs nothing new
+// here since WebSerialTransport already existed and already worked.
+// Out of scope for this session, named explicitly: a fetch-based client
+// for the new /api/flows and /api/custom-nodes admin API (backend-
+// persisted-data-protocol.md) -- flow/custom-node save-load still goes
+// through the File System Access picker (flow-file/file-io.ts) regardless
+// of connection mode; that's its own follow-up, not assumed done here.
+
 import { createApp, watch } from "vue";
 import { compile } from "../compiler/compile.js";
 import type { NodeLineRange } from "../compiler/compile.js";
 import { buildRegistry } from "../node-library/registry.js";
 import { mergeCustomNodeRegistry } from "../node-library/custom-node.js";
-import { WebSerialTransport, type WebSerialPort } from "../protocol/transport.js";
+import { WebSerialTransport, type WebSerialPort, type DeviceTransport, type TransportEvents } from "../protocol/transport.js";
+import { BackendTransport, type SerialPortInfo } from "../protocol/backend-transport.js";
 import type { Message, ProtocolVersion } from "../protocol/messages.js";
 import { checkRuntimeBuild, decideDeploy } from "../protocol/version.js";
 import { createThingstudioEditor, type ThingstudioEditor } from "./rete/editor-setup.js";
@@ -740,7 +766,15 @@ const HELLO_WAIT_MS = 3000; // generous over a real boot's timing; only gates th
 // a previous device never silently carries over to a new one.
 let lastHelloVersion: ProtocolVersion | null = null;
 
-const transport = new WebSerialTransport({
+// Transport-agnostic event handling (design doc §4, editor-backend-wiring
+// 2026-09-07: "explicit user choice between 'direct' (WebSerial,
+// local-only) and 'via backend' connection modes"). Everything below
+// reacts to §13 Message events the same way regardless of whether they
+// arrived over a real WebSerial port or relayed through the backend's
+// WebSocket -- only *how a connection is opened* differs (see the Connect
+// handler further down), which is why this object is shared between both
+// WebSerialTransport and BackendTransport rather than duplicated per mode.
+const transportEvents: TransportEvents = {
   onMessage(message) {
     // Not every message type carries a nodeId (HELLO doesn't) -- `in`
     // narrows this safely per the real discriminated union either way.
@@ -786,7 +820,11 @@ const transport = new WebSerialTransport({
     // §13 message type (Tier 2's still-unbuilt VALUE_STREAM is the
     // eventual structured replacement, debug.ts's own header), so this is
     // a text parse, same pattern highlightNodeFromMpyError() already uses
-    // for a raw mpy-cross line number.
+    // for a raw mpy-cross line number. Backend-relayed debug lines
+    // (BackendTransport's onDebugLine -- the device's own print() output
+    // forwarded via the backend's "debug" control message, or a
+    // "[backend] ..."-prefixed line reporting a relay-side problem) land
+    // here too, same handling either way.
     const match = line.match(/^DEBUG node=(\S+) /);
     logLine(line, "", match ? match[1] : undefined);
   },
@@ -795,7 +833,18 @@ const transport = new WebSerialTransport({
     lastHelloVersion = null;
     setConnectedUi(false);
   },
-});
+};
+
+// The live connection, if any -- a WebSerialTransport (direct) or a
+// BackendTransport (relayed through the backend's WebSocket), chosen by
+// connModeSelect at Connect time (see below). Typed against the minimal
+// DeviceTransport contract both implement (transport.ts), so everything
+// past this point -- Deploy, Check status, Disconnect, inject
+// click-to-fire -- is written once against that contract rather than
+// duplicated per mode. Reassigned to a freshly-constructed instance of the
+// right kind each time Connect succeeds; never mutated in place.
+let transport: DeviceTransport = new WebSerialTransport(transportEvents);
+
 
 // --- Inject click-only live-fire (2026-09-02) ---------------------------
 // A click sends a real §13 TRIGGER naming the clicked node's own id
@@ -831,22 +880,118 @@ function setConnectedUi(connected: boolean): void {
   el<HTMLButtonElement>("btnDeploy").disabled = !connected;
 }
 
-el("btnConnect").addEventListener("click", async () => {
-  const nav = navigator as unknown as { serial?: { requestPort(): Promise<WebSerialPort> } };
-  if (!nav.serial) {
-    logLine("[Web Serial API not available -- use Chrome or Edge, served over http(s)://]", "err");
-    return;
-  }
-  lastHelloVersion = null;
+const DEFAULT_BACKEND_WS_URL = "ws://127.0.0.1:8765/ws"; // matches __main__.py's --host 127.0.0.1 --port 8765 default and app.py's /ws route
+
+function currentConnMode(): "direct" | "backend" {
+  return el<HTMLSelectElement>("connModeSelect").value === "direct" ? "direct" : "backend";
+}
+
+/** Shows/hides the "via backend" controls (URL, port picker, refresh) --
+ * a UI convenience only. The actual explicit choice design doc §4 asks for
+ * is connModeSelect's own value; nothing here infers or defaults the mode
+ * from the environment (e.g. whether a backend happens to be reachable). */
+function updateConnModeUi(): void {
+  const backend = currentConnMode() === "backend";
+  el("backendUrlInput").hidden = !backend;
+  el("backendPortSelect").hidden = !backend;
+  el("btnRefreshPorts").hidden = !backend;
+}
+el("connModeSelect").addEventListener("change", updateConnModeUi);
+updateConnModeUi();
+
+/** Populates backendPortSelect from the backend's own list_ports control
+ * message. Uses a short-lived BackendTransport just for this one
+ * request/response, torn down immediately after -- deliberately not the
+ * same instance the Connect handler below opens for the real session, so
+ * listing ports never requires already being (or staying) connected to a
+ * device. Not called automatically on load or on switching to "via
+ * backend": design doc §4's "explicit choice, not auto-detection"
+ * reasoning applies here too -- probing a URL nobody asked to probe yet
+ * would silently fail on every page load before a backend is even
+ * started, which is exactly the ambiguous-failure shape that reasoning
+ * warns against. */
+async function refreshBackendPorts(): Promise<void> {
+  const select = el<HTMLSelectElement>("backendPortSelect");
+  const wsUrl = el<HTMLInputElement>("backendUrlInput").value.trim() || DEFAULT_BACKEND_WS_URL;
+  select.innerHTML = '<option value="">(loading…)</option>';
+  const probe = new BackendTransport({ onDebugLine: (line) => logLine(`[backend] ${line}`, "") });
   try {
-    const port = await nav.serial.requestPort();
-    await transport.connect(port);
+    await probe.open(wsUrl);
+    const ports: SerialPortInfo[] = await probe.listPorts();
+    select.innerHTML = "";
+    if (ports.length === 0) {
+      select.innerHTML = '<option value="">(no ports found)</option>';
+    } else {
+      for (const p of ports) {
+        const opt = document.createElement("option");
+        opt.value = p.device;
+        opt.textContent = p.description ? `${p.device} -- ${p.description}` : p.device;
+        select.appendChild(opt);
+      }
+    }
   } catch (err) {
-    logLine(`[connect failed] ${err instanceof Error ? err.message : String(err)}`, "err");
-    return;
+    select.innerHTML = '<option value="">(backend unreachable)</option>';
+    logLine(`[list ports failed] ${err instanceof Error ? err.message : String(err)}`, "err");
+  } finally {
+    await probe.disconnect();
   }
-  setConnectedUi(true);
-  logLine("[connected @ 115200 baud -- opening the port does not reset the board]", "");
+}
+el("btnRefreshPorts").addEventListener("click", () => void refreshBackendPorts());
+
+el("btnConnect").addEventListener("click", async () => {
+  lastHelloVersion = null;
+  const mode = currentConnMode();
+
+  if (mode === "direct") {
+    // Frozen fallback per design doc §4's 2026-08-16 addendum: local-only,
+    // no remote access, no auth story -- kept alongside the backend path
+    // rather than retired. Genuinely still useful, not just legacy: it
+    // needs no backend process installed or running at all (lowest-
+    // friction path for a quick one-off session), and it stays usable as
+    // an independent fallback if the backend itself is ever the thing
+    // that's broken. All new investment still goes into the backend path
+    // per that same addendum -- this mode is deliberately not being
+    // extended further here.
+    const nav = navigator as unknown as { serial?: { requestPort(): Promise<WebSerialPort> } };
+    if (!nav.serial) {
+      logLine('[Web Serial API not available -- use Chrome or Edge, served over http(s)://, or switch to "Via backend"]', "err");
+      return;
+    }
+    const t = new WebSerialTransport(transportEvents);
+    try {
+      const port = await nav.serial.requestPort();
+      await t.connect(port);
+    } catch (err) {
+      logLine(`[connect failed] ${err instanceof Error ? err.message : String(err)}`, "err");
+      return;
+    }
+    transport = t;
+    setConnectedUi(true);
+    logLine("[connected @ 115200 baud, direct WebSerial -- opening the port does not reset the board]", "");
+  } else {
+    const wsUrl = el<HTMLInputElement>("backendUrlInput").value.trim() || DEFAULT_BACKEND_WS_URL;
+    const portName = el<HTMLSelectElement>("backendPortSelect").value;
+    if (!portName) {
+      logLine('[connect failed] choose a serial port from the list first ("⟳ ports")', "err");
+      return;
+    }
+    const t = new BackendTransport(transportEvents);
+    try {
+      await t.open(wsUrl);
+      await t.connectPort(portName);
+    } catch (err) {
+      logLine(`[connect failed] ${err instanceof Error ? err.message : String(err)}`, "err");
+      try {
+        await t.disconnect();
+      } catch {
+        // best-effort cleanup of a half-open socket -- not worth its own error path
+      }
+      return;
+    }
+    transport = t;
+    setConnectedUi(true);
+    logLine(`[connected @ 115200 baud via backend -- ${wsUrl}, port ${portName}]`, "");
+  }
 
   // Actively ask for a fresh HELLO rather than passively hoping one
   // arrives (2026-09-05, real RP2040 hardware -- no reset button on the
@@ -858,7 +1003,8 @@ el("btnConnect").addEventListener("click", async () => {
   // (messages.ts) gets to a known state without a reset -- explicitly no
   // side effects beyond that (no redeploy, no runtime reload). Start
   // waiting before sending, not after, so a fast reply can't race past
-  // this listener being registered.
+  // this listener being registered. Identical for both connection modes
+  // -- transport.send() doesn't care which one is live.
   const helloP = waitForMessage((m) => m.type === "HELLO", HELLO_WAIT_MS);
   try {
     await transport.send({ type: "HELLO_REQUEST" });
@@ -875,6 +1021,7 @@ el("btnConnect").addEventListener("click", async () => {
     );
   }
 });
+
 
 el("btnCheckStatus").addEventListener("click", async () => {
   // Same HELLO_REQUEST as the Connect handler above, available any time
@@ -961,6 +1108,17 @@ el("btnDeploy").addEventListener("click", async () => {
 });
 
 if (!("serial" in navigator)) {
-  logLine("[Web Serial API not available -- use Chrome or Edge, served over http(s)://]", "err");
-  el<HTMLButtonElement>("btnConnect").disabled = true;
+  // Only "Direct" mode needs navigator.serial -- "Via backend" (the
+  // default per Mike's 2026-09-07 call) works in any browser that can
+  // open a WebSocket, so Connect itself stays enabled; only the Direct
+  // option is disabled, and the mode select is forced off it if it
+  // somehow started there (e.g. a saved/bookmarked page state).
+  const directOption = el<HTMLOptionElement>("connModeOptionDirect");
+  directOption.disabled = true;
+  directOption.textContent += " (unavailable in this browser)";
+  if (currentConnMode() === "direct") {
+    el<HTMLSelectElement>("connModeSelect").value = "backend";
+    updateConnModeUi();
+  }
+  logLine('[Web Serial API not available in this browser -- "Direct" mode is disabled; use "Via backend" instead]', "");
 }
