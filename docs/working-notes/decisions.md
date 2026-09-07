@@ -62,6 +62,10 @@ Custom nodes as a two-file package inlined via a generic `NodeDefinition` builde
 
 Custom node authoring + docs sequenced ahead of the normal backlog, then a documentation-only validation session, before resuming normal backlog order. 1 entry: `docs/working-notes/decisions/session-sequencing.md`.
 
+## Docs / process
+
+Documentation split into three activities (scoping, design, tech selection); scoping and tech selection both resolved 2026-09-07 -- the real content gap is an end-user flow-builder guide (developer guide already done by `custom-nodes.md`), tooling is MkDocs + Material on GitHub Pages for now. Design (activity 2) still open. A new, related in-editor node-reference idea (Mike's, same session) is tracked separately, not yet designed. 3 entries: `docs/working-notes/decisions/documentation-process.md`.
+
 ## What this list doesn't include
 
 Small per-file implementation judgment calls (exact property names, which
