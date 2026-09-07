@@ -73,5 +73,9 @@ Mike hasn't yet run `pip install`/started the server himself.
 - Cross-platform behavior (macOS/Windows/Linux port naming, WebSerial/Web Bluetooth differences) and the
   package-install/distribution story (`backend-platform-decision.md` §7) — both folded into this item per
   Mike's 2026-09-06 call, neither touched by the minimal build above.
-- The two split-out items: posture-2 auth (`[P4]`) and the persisted-data protocol (`[P1]`, expected next
-  session — see that file for why it's the one that actually closes this item's original MVP-needed trigger).
+- The remaining split-out item: posture-2 auth (`[P4]`).
+- **The persisted-data protocol split-out item is now decided and built** (2026-09-07, next session as expected)
+  — `outstanding-items/backend-persisted-data-protocol.md`: HTTP admin API, `persisted_store.py`/`admin_api.py`,
+  41 new tests passing (66 total). This closes this item's original MVP-needed trigger (`~/.thingstudio` persistence) at the
+  code level; still open: Mike hasn't run any of this for real yet, and the editor has no client code for either
+  the WS relay or the new admin API, so nothing in the browser can actually reach the backend end to end.

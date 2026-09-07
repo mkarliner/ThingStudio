@@ -104,3 +104,14 @@ below; not silently reordering the queue on this note's own authority.
   content, not decided by naming it as a candidate here.
 - Whether the backend's arrival should reorder the current sequencing
   override — see above.
+
+
+## Addendum, 2026-09-07: internal layout now decided
+
+`backend-persisted-data-protocol.md` answers the question this note's own "what this note deliberately does not
+decide" list left open, once the persisted-data protocol's shape (HTTP admin API) was itself confirmed with
+Mike the same session. `persisted_store.py`: flat `~/.thingstudio/flows/<name>.flow.json` and
+`~/.thingstudio/custom-nodes/<name>.node.json`+`<name>.node.py` (verbatim copies, matching
+`custom-node-authoring-scoping.md`'s existing two-file package format exactly, not repackaged). Still not
+decided: on-disk format versioning for custom node packages specifically (flow files already have
+`formatVersion`) -- see that file's own "not decided or built here" list.

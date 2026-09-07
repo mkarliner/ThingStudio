@@ -34,9 +34,9 @@ Top-level platform calls: MicroPython over CircuitPython; Rete.js over Litegraph
 
 Monorepo structure; TypeScript editor / Python device-runtime split; Vite + Vitest; `ruff` config; Apache-2.0 license; the "harness" → `runtime`/`listener` rename; today's CLAUDE.md/decisions.md/learnings.md context-size restructuring. 7 entries: `docs/working-notes/decisions/repo-tooling.md`.
 
-## Backend (design-complete, zero code as of 2026-08-19 — see `outstanding-items.md`)
+## Backend (minimal build + persisted-data protocol landed 2026-09-07 — see `outstanding-items.md`)
 
-Thin local Python + `aiohttp` backend feeding a browser-based web editor (not Electron/Tauri, not browser-only WebSerial); plain `pyserial` over the dead `pyserial-asyncio`; the one-endpoint multiplexed WebSocket wire shape; both auth postures (Host-header allowlist default, hand-rolled bcrypt + session cookie for opt-in remote access); `~/.thingstudio` local-state persistence, now MVP-needed. 8 entries: `docs/working-notes/decisions/backend.md`.
+Thin local Python + `aiohttp` backend feeding a browser-based web editor (not Electron/Tauri, not browser-only WebSerial); plain `pyserial` over the dead `pyserial-asyncio`; the one-endpoint multiplexed WebSocket wire shape; both auth postures (Host-header allowlist default, hand-rolled bcrypt + session cookie for opt-in remote access); `~/.thingstudio` local-state persistence, now MVP-needed; the backend↔browser persisted-data protocol is an HTTP admin API, not a WS control-plane extension. 9 entries: `docs/working-notes/decisions/backend.md`.
 
 ## Board-transport auth (perimeter 2)
 

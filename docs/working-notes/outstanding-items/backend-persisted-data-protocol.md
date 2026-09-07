@@ -1,9 +1,15 @@
-# Backend↔browser persisted-data protocol — undecided, not just unbuilt, 2026-09-07
+# Backend↔browser persisted-data protocol — decided and built, 2026-09-07
 
-**Not part of this session's minimal-backend build; expected next session.** Raised by Mike while scoping the
-minimal build: how does the browser actually get saved custom nodes, WiFi credentials, etc. back from the
-backend? Checked against every doc that touches persistence and none of them answer it — this is a genuine
-design gap, not a documented-but-unbuilt item like the rest of `backend-auth-overview.md`.
+**Picked up next session as expected, 2026-09-07.** Raised by Mike while scoping the minimal
+backend build: how does the browser actually get saved custom nodes, WiFi credentials, etc. back from the
+backend? Checked against every doc that touches persistence and none of them answered it at the time — a
+genuine design gap, not a documented-but-unbuilt item like the rest of `backend-auth-overview.md`. That gap is
+now closed: shape confirmed with Mike (HTTP admin API, not a WS control-plane extension — see "Two shapes,
+neither decided" below, now decided), and real code landed in the same session — `persisted_store.py`
+(`~/.thingstudio` ownership: layout, atomic writes, name validation) and `admin_api.py` (the HTTP routes),
+41 new tests (`backend/test/test_persisted_store.py`, `backend/test/test_admin_api.py`), all passing. **Not yet
+run by Mike on his own machine** — same "sandbox verifies in a scratch venv, Mike verifies for real" pattern the
+minimal build itself is still waiting on (`backend-auth-overview.md`).
 
 ## What's decided, and what isn't
 
@@ -25,17 +31,22 @@ design gap, not a documented-but-unbuilt item like the rest of `backend-auth-ove
   `backend-editor-auth-and-protocol.md` §2's WebSocket control-plane channel only names port-list/connect/status
   messages — nothing about flow load/save or custom-node listing exists in that message set today.
 
-## Two shapes, neither decided
+## Two shapes — decided 2026-09-07: HTTP admin API
 
 - A small REST-ish HTTP API on the backend for flow and custom-node CRUD — Node-RED's own `/flows`/`/nodes`
   admin API is the direct precedent, and this project already leans on Node-RED's model elsewhere (`adminAuth`,
-  "thin backend").
+  "thin backend"). **Chosen.**
 - Extending the existing WS control-plane JSON channel with more message types instead of adding a second
-  protocol surface.
+  protocol surface. Rejected: `ws_relay.py`'s `ConnectionSession` is scoped to "at most one open serial port per
+  socket" — persisted data (saved flows, custom node packages) needs to be reachable with no serial connection
+  open at all, which that object doesn't model.
 
-**This choice has auth consequences the current design doesn't cover**, since it doesn't know this surface
-exists yet: an HTTP admin API needs the same Host-allowlist (and, once built, posture-2 session-cookie)
-treatment as the WS upgrade — `backend-editor-auth-and-protocol.md` only designed that for the one WS endpoint.
+**Auth consequence flagged here, resolved by how it's wired, not by new code:** an HTTP admin API needs the same
+Host-allowlist treatment as the WS upgrade — `backend-editor-auth-and-protocol.md` only designed that for the one
+WS endpoint. `app.py`'s `host_allowlist_middleware` is installed at the `Application` level (not per-route), so
+every route including the new `/api/flows`/`/api/custom-nodes` ones is covered automatically —
+`test_admin_api.py`'s last test confirms this directly against the real `create_app()`, not just against the
+routes in isolation. Posture-2 session-cookie auth, once built, will cover these routes the same automatic way.
 
 ## Why this doesn't block the minimal-backend build, but does block calling it "done"
 
@@ -45,3 +56,50 @@ the note that made the backend MVP-needed in the first place (custom node packag
 protocol is the missing link between "the backend can own `~/.thingstudio`" and "a user's saved custom nodes
 actually come back." Worth being explicit that the minimal build doesn't satisfy that original trigger by
 itself — this item is what would.
+
+
+## What shipped, 2026-09-07
+
+`~/.thingstudio` layout (this note's own "not decided" list, and `local-persistence-scoping.md`'s "internal
+layout" gap, both now answered by `persisted_store.py`):
+
+```
+~/.thingstudio/
+  flows/<name>.flow.json          -- one file per saved flow, opaque JSON text
+  custom-nodes/<name>.node.json   -- descriptor half of a package
+  custom-nodes/<name>.node.py     -- implementation half, same base name
+```
+
+Deliberately flat (no subdirectories/nesting yet — design doc §6's "fleet of devices as a directory of flow
+files" isn't built here), and deliberately opaque: the backend validates a flow file is *valid JSON* before
+writing it (catches obviously-corrupt writes) but never parses its schema — `formatVersion`/`nodes`/`edges`/
+`configs` validation stays editor-side (`flow-file.ts`'s `parseFlowFile`), matching the "thin backend, never
+decodes CBOR either" posture `ws_relay.py` already established. A custom node's `.node.py` is stored and
+returned as plain text and **never executed anywhere in the backend** — `custom-node-authoring-scoping.md`
+Decision 5's constraint, extended to this, the one other place besides the editor that now touches these files
+(`test_persisted_store.py::test_custom_node_implementation_is_never_executed` is a regression guard for this
+specifically).
+
+Routes (`admin_api.py`), all under the existing Host-allowlist:
+
+- `GET/PUT/DELETE /api/flows/{name}`, `GET /api/flows`
+- `GET/PUT/DELETE /api/custom-nodes/{name}`, `GET /api/custom-nodes`
+
+Fault handling: every write is temp-file-then-`os.replace` (atomic — a crash or disk-full mid-write can't leave
+a truncated file), name validation rejects path traversal before any filesystem call (`^[A-Za-z0-9_-]{1,100}$`,
+checked against both the raw route segment and after aiohttp's own URL-decoding), and every store failure
+becomes a structured `{"error": "NODE_ERROR: ..."}` JSON response (404 for "doesn't exist", 400 for a bad name/
+invalid JSON/malformed request body) rather than a bare 500 — same posture as `ws_relay.py`'s status messages.
+
+**Not decided or built here, named explicitly rather than silently skipped:**
+
+- On-disk format versioning for custom node packages (flow files already carry `formatVersion`; custom node
+  descriptors don't have an equivalent yet — `local-persistence-scoping.md` already flagged this as unresolved,
+  still unresolved).
+- Any editor-side consumer of these routes at all — this is backend-only. The editor still has zero WebSocket
+  client code (`backend-auth-overview.md`'s finding #4) and equally zero `fetch`-based admin-API client code;
+  nothing in the browser calls any of this yet.
+- Concurrent-write safety across multiple backend processes/tabs — out of scope, matching this project's existing
+  single-operator-local-tool assumption everywhere else (transport-auth-design.md's shared-secret model, etc.).
+- Nested/project-directory flow storage (design doc §6's fleet-of-devices framing) — flat names only for v1;
+  not a one-way door, flat names are a subset of nested names.

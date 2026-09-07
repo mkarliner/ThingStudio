@@ -50,3 +50,9 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
   directory (custom node packages as the first consumer), not
   custom-nodes-only, per Mike's own framing — not yet reconfirmed as a
   separate answer. `local-persistence-scoping.md`.
+
+- **2026-09-07 — Backend↔browser persisted-data protocol: HTTP admin API, not a WS control-plane extension.**
+  `ws_relay.py`'s `ConnectionSession` is scoped to "at most one open serial port per socket," a poor fit for
+  data (saved flows, custom node packages) that needs to be reachable with no serial connection open at all.
+  New `/api/flows`/`/api/custom-nodes` routes, covered automatically by the existing Host-allowlist middleware
+  (installed at the `Application` level). `outstanding-items/backend-persisted-data-protocol.md`.
