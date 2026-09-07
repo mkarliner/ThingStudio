@@ -348,6 +348,16 @@ pipeline driven by hardcoded buttons.
   ahead of `outstanding-items.md`'s current sequencing override** (the
   custom-node-docs validation session, then RP2350 bring-up) — needs Mike's
   own call, not assumed by adding this bullet.
+  - **2026-09-07: minimal build picked up.** Platform + the serial<->WebSocket
+    relay + posture-1's Host-header allowlist now exist (`backend/`, real code,
+    unit-tested against a real `aiohttp` app and a fake serial connection --
+    real hardware still needs its own pass, per `backend-platform-decision.md`
+    §5's DTR/RTS and disconnect caveats). Split off and explicitly deferred,
+    tracked separately: posture-2 auth (app-secured, `[P4]`,
+    `outstanding-items/posture-2-auth.md`) and the backend<->browser
+    persisted-data protocol (`[P1]`, undecided not just unbuilt,
+    `outstanding-items/backend-persisted-data-protocol.md`) -- the actual
+    `~/.thingstudio` trigger above isn't satisfied by the minimal build alone.
 - **Real editor shell.** Connect + `HELLO` handshake, a Deploy flow that
   runs the pre-flight version/space check before sending `DEPLOY`, and the
   status/log/inspector panel from §8 — connection state, per-node errors

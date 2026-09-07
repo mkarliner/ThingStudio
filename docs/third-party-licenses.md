@@ -1,8 +1,12 @@
 # Third-party software in use
 
-Status: living document, last updated 2026-08-17 (this update: `ThreadSafeEvent`
+Status: living document, last updated 2026-09-07 (this update: `backend/`'s
+minimal-build dependencies -- `aiohttp`, `pyserial` as real pinned
+`pyproject.toml` dependencies, `pytest`/`pytest-asyncio` as test-only ones --
+added under the new "Backend" section below. Prior update, 2026-08-17:
+`ThreadSafeEvent`
 vendored into `device-runtime/src/vendor/threadsafe_event/`, per Tier 1 item
-5's interrupt/pin-change node implementation. Prior update, 2026-08-16: six of
+5's interrupt/pin-change node implementation. Earlier, 2026-08-16: six of
 the seven `pocs/poc-rete/` Rete.js packages promoted to real `editor/` runtime
 dependencies per `docs/working-notes/rete-migration-decision.md`'s Phase 0 —
 `rete-dock-plugin` deliberately not promoted, sub-decision 2 dropped it;
@@ -174,6 +178,28 @@ not because any current build depends on them.
 |---|---|---|---|
 | Litegraph.js | 0.7.18 | MIT | `pocs/poc-c/litegraph.min.js`, `pocs/poc-d/litegraph.min.js` — chosen per design doc §11/§15.3 as the real v1 canvas library. **Now also a live dependency**, copied into `editor/public/vendor/litegraph/` — see the "Vendored in `editor/`" table above; this POC copy is kept as the historical/frozen reference the live copy was taken from, not a second independent instance. |
 | Drawflow | 0.0.60 | MIT | `pocs/poc-c/drawflow/` — **evaluated and dropped** (§11/§15.3: needed hand-rolled type-checking, execution engine, and can't reach multi-select at all); kept only as the comparison record, not a candidate going forward |
+
+## Backend (pip, `backend/pyproject.toml`)
+
+**New 2026-09-07**, minimal backend build (`docs/working-notes/outstanding-items/backend-auth-overview.md`,
+[P1]): platform/framework/serial-library choice was already made and its license checked in
+`docs/working-notes/backend-platform-decision.md` §6 before any code existed; this entry records what's
+actually installed and verified now that it is. Flagged to Mike before installing per `CLAUDE.md`'s
+dependency convention, applied to pip the same as npm. Versions/licenses below are from the installed
+packages' own metadata (`pip show <package>`), not recalled from memory -- re-verify the same way after any
+update, same practice as the npm tables above.
+
+| Package | Version installed | License | Notes |
+|---|---|---|---|
+| aiohttp | 3.14.3 | Apache-2.0 AND MIT (dual, per its own metadata) | HTTP/WebSocket server (`backend/src/thingstudio_backend/app.py`). Chosen over FastAPI specifically for not carrying Starlette/Pydantic/Uvicorn's weight for capabilities this backend doesn't need -- see `backend-platform-decision.md` §3. Installs from a prebuilt wheel; no arbitrary install script runs at `pip install` time. |
+| pyserial | 3.5 | BSD (3-clause) | Serial I/O (`backend/src/thingstudio_backend/serial_relay.py`), wrapped in `asyncio.to_thread` rather than taking on the (dead-upstream) `pyserial-asyncio` -- see `backend-platform-decision.md` §4. Same package already tracked, unpinned, under "`test/hil/` tooling" below for a different, older use (`test/hil/run_fault_isolation_checks.py`) -- this is the first place it's a real pinned `pyproject.toml` dependency. |
+| pytest | 9.1.1 | MIT | Test runner, `backend/test/`. Dev/test-only (`[project.optional-dependencies].test`), not a runtime dependency of the shipped backend. |
+| pytest-asyncio | 1.4.0 | Apache-2.0 | `asyncio`-aware test support for `backend/test/test_ws_relay.py`/`test_middleware.py`'s `async def test_*` cases. Dev/test-only, same as pytest above. |
+
+Verified this session in a scratch venv outside the live-mounted repo (`/tmp`, not under `backend/`), same
+discipline as the editor's npm-install workaround (`CLAUDE.md`) -- the actual `pip install` populating a real
+venv under `backend/` is Mike's own step, run from a real Terminal, for the same shared-mount/cross-platform-
+binary reason (`aiohttp` ships platform-specific compiled wheels, same hazard class as npm's native bindings).
 
 ## Documentation build tooling (pip, not yet installed)
 
