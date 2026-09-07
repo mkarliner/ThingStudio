@@ -27,3 +27,21 @@ as not yet installed.
   list.
 - Mike running the actual `pip install mkdocs mkdocs-material` and a local `mkdocs build`/`mkdocs serve` to verify
   the scaffold actually works, per the same shared-mount reasoning that keeps npm installs out of the sandbox.
+
+
+**2026-09-07: content-writing done, same day as the design/scaffold session.** The 4 guide pages
+(`getting-started.md`, `canvas-basics.md`, `flow-lifecycle.md`, `debugging.md`) and all 14 node-reference pages
+now have real content, not placeholders -- pulled from each node's own header comment/`NodeDefinition`,
+`PropertyPanel.vue`'s actual field labels (not guessed), `README.md`, `test-flows/README.md`, and `CLAUDE.md`'s
+own conventions (fault-handling corollary, "concise, not exhaustive" style rule). `nodes/index.md` and
+`mkdocs.yml`'s nav were also corrected the same day to group node pages by `palette.ts`'s actual General/
+Network/Hardware groups (see `decisions/documentation-process.md`'s nav-correction entry), so the reference
+content and its nav agree.
+
+**Everything from the original ask is now done except Mike's own verification step**: installing
+`mkdocs`/`mkdocs-material` and running a real `mkdocs build`/`mkdocs serve` to confirm the site actually
+renders -- same shared-mount reasoning that keeps this out of the sandbox (`CLAUDE.md`'s npm/build rule applies
+the same way to a Python venv's compiled deps). See the handoff briefing for the exact commands. The in-editor
+node-reference idea (`outstanding-items/in-editor-node-reference.md`) is unaffected and still separately
+tracked -- these per-node markdown files are one real candidate source for it now that they exist and are
+written, not chosen or built.

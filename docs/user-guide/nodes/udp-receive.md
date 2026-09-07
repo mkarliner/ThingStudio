@@ -1,5 +1,12 @@
 # udp receive
 
-*Content not yet written — placeholder scaffolded 2026-09-07. Source: `editor/src/node-library/udp-receive.ts`.*
+Listens on a UDP port and emits one message per datagram received.
 
-Source: binds a UDP socket on a configured local port and produces one message per datagram received.
+## Properties
+
+- **port** — local port to listen on (1–65535).
+- **poll interval (ms)** — internal receive polling cadence. Default 20ms; rarely needs changing.
+
+## Behavior
+
+Uses the flow's `wifi_status` node for its WiFi connection, same as every other network node. The payload is the raw bytes received, unparsed — decode it yourself in a `function` node if you're expecting text or a structured format. `host` and `port` fields on the message carry the sender's address, alongside the payload.

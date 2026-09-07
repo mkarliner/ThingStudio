@@ -1,5 +1,12 @@
 # pwm out
 
-*Content not yet written — placeholder scaffolded 2026-09-07. Source: `editor/src/node-library/pwm-out.ts`.*
+Drives a PWM signal on a GPIO pin — for dimming an LED, driving a motor, or anything else that wants a variable duty cycle rather than a plain on/off.
 
-Drives a configured pin's PWM duty cycle from an inbound message (a 0.0-1.0 duty fraction). Terminal sink, no output.
+## Properties
+
+- **pin** — GPIO pin number (0–39).
+- **frequency (Hz)** — the PWM frequency. Default 1000Hz.
+
+## Behavior
+
+The input is a duty fraction from `0.0` (always off) to `1.0` (always on). A value outside that range is clamped rather than rejected — a slightly-out-of-bounds computed value won't crash the flow.

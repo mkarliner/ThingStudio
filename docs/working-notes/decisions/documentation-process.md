@@ -41,3 +41,12 @@ flat list this file's own prose incorrectly described as matching the palette si
 Nav now has three real subsections (General/Network/Hardware, `palette.ts`'s `DEFAULT_NODE_GROUPS` order) with
 nodes in each ordered the same way `PaletteSidebar.vue` actually renders them. `mkdocs.yml` and
 `docs/user-guide/nodes/index.md` both updated in the same change.
+
+**2026-09-07 — documentation content-writing done; all three original activities plus content now complete.**
+Full detail: `outstanding-items/docs-nothing-written.md`. The 4 guide pages and 14 node-reference pages
+scaffolded as placeholders earlier the same day now have real content -- sourced from each node's own
+`editor/src/node-library/*.ts` header comment and `NodeDefinition`, `PropertyPanel.vue`'s actual field labels
+(read directly, not inferred from the compiler-side property names), `README.md`, `test-flows/README.md`, and
+`CLAUDE.md`'s own conventions (the fault-handling corollary for the WiFi/MQTT ordering-race note, the
+"concise, not exhaustive" style rule for pacing). Only remaining piece of the whole documentation item: Mike
+installing `mkdocs`/`mkdocs-material` and running a real build to confirm the site renders correctly.

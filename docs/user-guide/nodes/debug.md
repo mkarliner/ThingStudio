@@ -1,5 +1,11 @@
 # debug
 
-*Content not yet written — placeholder scaffolded 2026-09-07. Source: `editor/src/node-library/debug.ts`.*
+Prints a message's payload to the device's console — the simplest way to see what's actually flowing through a wire.
 
-Prints a value to the editor's inspector. Real live-value-streaming wiring is a later, unbuilt Tier 2 feature — today's version works off the compiled/console output.
+## Properties
+
+None.
+
+## Behavior
+
+Output currently goes to the device's serial console (visible in the editor's console panel once connected), not a dedicated live-value inspector — that's planned but not built yet. For now, `debug` is the way to see a value without guessing.

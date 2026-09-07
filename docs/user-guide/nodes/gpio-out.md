@@ -1,5 +1,11 @@
 # gpio out
 
-*Content not yet written — placeholder scaffolded 2026-09-07. Source: `editor/src/node-library/gpio-out.ts`.*
+Drives a GPIO pin high or low based on an incoming message.
 
-Sets a configured GPIO pin high or low from an inbound message.
+## Properties
+
+- **pin** — GPIO pin number (0–39).
+
+## Behavior
+
+Any truthy payload sets the pin high; anything falsy sets it low. Since the incoming wire can be any type, "truthy" follows Python's own rule (`0`, `""`, `None`, and `False` are falsy; nearly everything else is truthy) — a `bool` input works exactly as you'd expect, and other types convert sensibly too.

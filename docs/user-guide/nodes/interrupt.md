@@ -1,5 +1,18 @@
 # interrupt
 
-*Content not yet written — placeholder scaffolded 2026-09-07. Source: `editor/src/node-library/interrupt.ts`.*
+Fires immediately when a GPIO pin changes state — genuinely event-driven, not polled.
 
-Genuinely event-driven GPIO input — fires from a hardware interrupt (`machine.Pin.irq()`) rather than polling. Replaces the old poll-driven gpio-in node.
+## Properties
+
+- **pin** — GPIO pin number (0–39).
+- **edge** — `rising`, `falling`, or `both`.
+- **debounce** — on by default. Ignores further transitions within the debounce window after an accepted one.
+- **debounce (ms)** — the debounce window, shown when debounce is on. Default 50ms.
+
+## Behavior
+
+The payload is the pin's level (`true`/`false`) at the moment the node wakes, not a record of every intermediate change — a burst of bounces inside the debounce window collapses into one report of the settled state, by design.
+
+No internal pull resistor is configured. Wire an external pull resistor, or use a button module with one built in.
+
+Two `interrupt` nodes configured for the same pin silently share the first one's edge/debounce settings rather than erroring — a real limitation, not a crash, but worth knowing if a second interrupt node on the same pin doesn't seem to behave the way its own property panel says.

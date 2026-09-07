@@ -1,5 +1,11 @@
 # timer
 
-*Content not yet written — placeholder scaffolded 2026-09-07. Source: `editor/src/node-library/timer.ts`.*
+Emits an increasing count on a fixed interval — a heartbeat with a sequence number, not a repeated value.
 
-Fires on a repeating interval. Distinct from inject: timer's interval is a configurable period, not one of inject's four fixed presets.
+## Properties
+
+- **interval (ms)** — how often to emit. Must be a positive number.
+
+## Behavior
+
+The payload is a whole number that starts at 1 and increases by one on every tick — not a fixed constant. Each `timer` node keeps its own independent counter, even if two of them share the same interval.
