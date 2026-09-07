@@ -41,6 +41,7 @@ Investigate using Functor/Singletons for the Wifi config and any other global co
      [tracked, never discussed — outstanding-items.md "UI / editor" section]
    - Button and Switch from peter hinche's collection
    - Threading / multicore support, maybe surfaced as Exec node?
+   - SSD1306 node, and possibly templating UI nodes...
 # Store flows on micro as well as file system.
 [tracked, not scoped — outstanding-items.md "Redeploy / runtime" section]
 
@@ -56,7 +57,7 @@ I shouldn't have to remember what sensor is connector to a given gpio or other p
 - Basic user docs
 - Developer guide (how to make new node types)
 - Anything else ?
-[developer guide done — docs/user-guide/custom-nodes.md. End-user "basic user docs" guide: scoped and tooling decided (MkDocs + Material theme, GitHub Pages) — writing it (design + content) still open. outstanding-items.md "Docs / process" section; docs/working-notes/documentation-scoping.md; docs/working-notes/documentation-tech-selection.md]
+[developer guide done — docs/user-guide/custom-nodes.md. End-user "basic user docs" guide: scoped, tooling decided (MkDocs + Material theme, GitHub Pages), and structure designed + project scaffolded (mkdocs.yml, GH Actions workflow, placeholder pages) — only the actual guide/node-reference content remains unwritten. outstanding-items.md "Docs / process" section; docs/working-notes/documentation-scoping.md; docs/working-notes/documentation-tech-selection.md; docs/working-notes/documentation-design.md]
 
 
 # CI

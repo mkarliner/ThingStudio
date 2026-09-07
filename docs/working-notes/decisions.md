@@ -64,7 +64,7 @@ Custom node authoring + docs sequenced ahead of the normal backlog, then a docum
 
 ## Docs / process
 
-Documentation split into three activities (scoping, design, tech selection); scoping and tech selection both resolved 2026-09-07 -- the real content gap is an end-user flow-builder guide (developer guide already done by `custom-nodes.md`), tooling is MkDocs + Material on GitHub Pages for now. Design (activity 2) still open. A new, related in-editor node-reference idea (Mike's, same session) is tracked separately, not yet designed. 3 entries: `docs/working-notes/decisions/documentation-process.md`.
+Documentation split into three activities (scoping, design, tech selection); all three now done or scaffolded as of 2026-09-07 -- the real content gap is an end-user flow-builder guide (developer guide already done by `custom-nodes.md`), tooling is MkDocs + Material on GitHub Pages for now, and structure/nav is a 4-page guide plus a one-file-per-node reference, with the actual MkDocs project (config, workflow, placeholder pages) scaffolded. Only the real content-writing (and Mike's own install/build verification) remains. A new, related in-editor node-reference idea (Mike's, same week) is tracked separately, not yet designed. 4 entries: `docs/working-notes/decisions/documentation-process.md`.
 
 ## What this list doesn't include
 

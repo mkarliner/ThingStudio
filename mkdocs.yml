@@ -1,0 +1,63 @@
+# Thingstudio end-user documentation site.
+# docs/working-notes/documentation-tech-selection.md: MkDocs + Material chosen 2026-09-07.
+# docs/working-notes/documentation-design.md: structure/nav decided the same week.
+#
+# docs_dir points at docs/user-guide/, not docs/ itself -- docs/ also holds
+# thingstudio-design-doc.md and working-notes/, both explicitly out of scope
+# for this site (contributor-facing material, already served elsewhere).
+
+site_name: Thingstudio
+site_description: Node-and-wire visual programming for microcontrollers.
+repo_url: https://github.com/mkarliner/ThingStudio
+repo_name: mkarliner/ThingStudio
+
+docs_dir: docs/user-guide
+site_dir: site
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - pymdownx.superfences
+  - pymdownx.highlight
+
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md
+  - Canvas basics: canvas-basics.md
+  - Flow lifecycle: flow-lifecycle.md
+  - Debugging & troubleshooting: debugging.md
+  - Node reference:
+      - Overview: nodes/index.md
+      - inject: nodes/inject.md
+      - function: nodes/function.md
+      - debug: nodes/debug.md
+      - gpio out: nodes/gpio-out.md
+      - pwm out: nodes/pwm-out.md
+      - timer: nodes/timer.md
+      - interrupt: nodes/interrupt.md
+      - delay: nodes/delay.md
+      - wifi status: nodes/wifi-status.md
+      - udp send: nodes/udp-send.md
+      - udp receive: nodes/udp-receive.md
+      - http request: nodes/http-request.md
+      - mqtt publish: nodes/mqtt-publish.md
+      - mqtt subscribe: nodes/mqtt-subscribe.md
+  - Writing custom nodes: custom-nodes.md

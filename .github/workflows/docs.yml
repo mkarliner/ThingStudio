@@ -1,0 +1,38 @@
+name: Docs
+
+# Builds and publishes the end-user documentation site (mkdocs.yml) to
+# GitHub Pages via `mkdocs gh-deploy`. Hosting is GitHub Pages "for now"
+# per docs/working-notes/documentation-tech-selection.md -- ties CI to
+# GitHub specifically, made knowingly against the still-open
+# docs/working-notes/outstanding-items/ci-vendor-neutrality.md question,
+# not a silent decision.
+#
+# Separate from ci.yml (editor typecheck/test) -- different toolchain
+# (Python/pip, not Node/npm), different trigger scope (docs + mkdocs.yml
+# changes only, not every push).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "mkdocs.yml"
+      - "docs/user-guide/**"
+      - ".github/workflows/docs.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    name: build + gh-deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # Pinned versions here should match docs/third-party-licenses.md's
+      # "Documentation build tooling" entry -- update both together.
+      - run: pip install mkdocs==1.6.1 mkdocs-material==9.7.7
+      - run: mkdocs gh-deploy --force

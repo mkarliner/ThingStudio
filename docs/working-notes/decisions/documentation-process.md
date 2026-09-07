@@ -24,3 +24,13 @@ should be available directly in the editor (property panel or a separate tab), n
 Real implication for the decisions above: node-reference content needs one authored source shared between the
 editor and the docs site, not two independently hand-maintained copies. Tracked as its own UI item,
 `outstanding-items/in-editor-node-reference.md` — not designed or built yet.
+
+**2026-09-07 — documentation design resolved: two-part structure, MkDocs project scaffolded.** Full reasoning:
+`docs/working-notes/documentation-design.md`. Structure: a 4-page narrative flow-builder guide (getting started,
+canvas basics, flow lifecycle, debugging) plus a separate node reference, one file per node rather than one long
+page -- chosen specifically because the in-editor-node-reference idea above needs a single content source a
+future editor panel could read directly, not text embedded in a longer page. `custom-nodes.md` stays its own
+standalone document, linked rather than duplicated. `mkdocs.yml`'s `docs_dir` points at the existing
+`docs/user-guide/` rather than restructuring `docs/` itself, since `docs/`'s other contents (the design doc,
+working-notes) are explicitly out of scope for this site. Scaffolded, not just designed: `mkdocs.yml`, a GitHub
+Actions `gh-deploy` workflow, and every page as a placeholder -- actual content-writing is a separate, later task.

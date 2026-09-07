@@ -175,6 +175,25 @@ not because any current build depends on them.
 | Litegraph.js | 0.7.18 | MIT | `pocs/poc-c/litegraph.min.js`, `pocs/poc-d/litegraph.min.js` — chosen per design doc §11/§15.3 as the real v1 canvas library. **Now also a live dependency**, copied into `editor/public/vendor/litegraph/` — see the "Vendored in `editor/`" table above; this POC copy is kept as the historical/frozen reference the live copy was taken from, not a second independent instance. |
 | Drawflow | 0.0.60 | MIT | `pocs/poc-c/drawflow/` — **evaluated and dropped** (§11/§15.3: needed hand-rolled type-checking, execution engine, and can't reach multi-select at all); kept only as the comparison record, not a candidate going forward |
 
+## Documentation build tooling (pip, not yet installed)
+
+Not yet a real dependency of anything in this repo -- `mkdocs.yml` and the placeholder pages under
+`docs/user-guide/` exist (`docs/working-notes/documentation-design.md`, 2026-09-07) but nobody has run
+`pip install` yet. Tracked from day one anyway, same reasoning as the "Runtime / platform components" table
+above: flagged and approved (Mike's own tech-selection call, `docs/working-notes/documentation-tech-selection.md`)
+before the pip packages exist as an actual installed dependency.
+
+| Package | Version to install | License | Notes |
+|---|---|---|---|
+| mkdocs | 1.6.1 | BSD-2-Clause | Static site generator. Version/license confirmed against PyPI 2026-09-07 -- re-verify against the installed package's own metadata (`pip show mkdocs`) once Mike actually installs it, per this file's own stated practice for npm packages. |
+| mkdocs-material | 9.7.7 | MIT | Theme (`mkdocs.yml`'s `theme.name: material`). Version/license confirmed against PyPI 2026-09-07 -- same re-verify note as mkdocs above. |
+
+Both pinned in `.github/workflows/docs.yml`'s `pip install` step -- update the pin there in the same change if
+either version changes here. Not gated by `CLAUDE.md`'s npm-specific install-flag rule (these are pip, not npm
+packages), but flagged and tracked here per that rule's own spirit, same as `test/hil/`'s `pyserial` entry above.
+Installing them is Mike's own step, run from a real Terminal -- same shared-mount reasoning as this project's
+npm-install-from-the-sandbox restriction (`CLAUDE.md`).
+
 ## How this stays current
 
 Per `CLAUDE.md`: any time a new npm package is installed (already
