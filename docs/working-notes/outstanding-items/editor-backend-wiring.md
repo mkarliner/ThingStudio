@@ -94,14 +94,16 @@ things came out of it:
   output (including the unhandled traceback) into the session, which is exactly the kind of signal a live pass
   is for. His own accidental duplicate editor tab was the trigger, not a bug in the duplicate-detection sense —
   the bug is that the backend's fault handling didn't tolerate that race, which it now does.
-- **An open, unresolved question, not yet chased down**: attempts to drive a real end-to-end WS connection
-  through Claude's own built-in browser pane (as a stand-in for a real browser, to get a second independent
-  signal) consistently failed with WebSocket close code 1006 and — per Mike's own pasted backend access log —
-  zero corresponding entries on the backend side at all, as if the connection attempt never reached the server.
-  Ruled out CORS (WebSocket isn't subject to it, per this project's own `backend-editor-auth-and-protocol.md`).
-  Whether this is a sandboxing restriction specific to the browser-pane tool, or something else, is still open —
-  worth a real (non-sandboxed) browser for the next definitive end-to-end pass, rather than assuming the
-  browser-pane result generalizes.
+- **Resolved, same session, once the backend was actually running**: the browser-pane WS mystery above was not
+  a ThingStudio bug. With the real backend up, a plain HTTP `navigate` to `http://127.0.0.1:8765/api/flows` from
+  the pane returned real data (`{"flows": []}`) with no trouble, but every attempt to open
+  `new WebSocket("ws://127.0.0.1:8765/ws")` from a page in that same pane still failed (one explicitly as
+  `net::ERR_BLOCKED_BY_CLIENT`) — so the backend and the editor's WS client are both fine; the pane itself
+  appears to block outgoing WebSocket connections to local/private addresses while allowing plain HTTP to the
+  same host. Full detail: `docs/working-notes/learnings/cowork-remote-device-testing.md`. Practical consequence:
+  this pane cannot give a real end-to-end signal for "via backend" mode — that verification needs a real,
+  non-sandboxed browser (Mike's own, or Claude in Chrome once its extension is connected — it wasn't, this
+  attempt).
 
 ## Verification
 

@@ -36,3 +36,21 @@ Status: detail file, split out of `learnings.md` on 2026-09-06 to keep that inde
   mid-session on a file the human might also have open -- and especially
   before basing further edits on that content, the way this session
   nearly did.
+
+- **Claude's built-in browser pane (the Cowork/Claude-desktop preview surface) appears to block outgoing
+  WebSocket connections to local/private addresses, while plain HTTP requests to the same host go through
+  fine.** Discovered 2026-09-07, resolving a mystery left open earlier the same day: repeated attempts to drive
+  a real "editor -> backend" WS connection through this pane all failed with close code 1006 and zero matching
+  entries in the backend's own access log, as if the request never reached the server. Confirmed later the same
+  day, backend running for real: a plain `navigate` to `http://127.0.0.1:8765/api/flows` in the same pane
+  returned the real JSON body (`{"flows": []}`) without issue, but `new WebSocket("ws://127.0.0.1:8765/ws")`
+  from a page in that same pane failed every time, one attempt surfacing explicitly as
+  `net::ERR_BLOCKED_BY_CLIENT` in the console. Not a ThingStudio bug -- the backend was reachable and serving
+  correctly the whole time; this looks like a guardrail specific to the browser-pane tool itself (plausibly an
+  anti-SSRF measure against local/private-network destinations) rather than a CORS or same-origin issue (WS
+  isn't subject to those anyway, per `backend-editor-auth-and-protocol.md`). Claude in Chrome (the real browser
+  extension, a separate tool from this pane) was not connected to test as a comparison in this instance.
+  **Practical upshot: this pane cannot be used to verify anything that opens a WebSocket to a local dev backend
+  -- get that signal from a real, non-sandboxed browser (Mike's own Chrome, or Claude in Chrome once connected)
+  instead**, and don't read a WS failure from this pane specifically as evidence of a backend/editor defect
+  without confirming plain HTTP against the same host also fails.

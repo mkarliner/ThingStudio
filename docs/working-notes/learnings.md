@@ -74,7 +74,7 @@ A previously-"all tests passing" backend module (`ws_relay.py`/`framing.py`) ass
 
 ## Cowork remote-device testing environment
 
-The cloud session's own staged mirror of the repo can be a partial snapshot — don't trust it for a real test/typecheck signal without confirming the full tree is present; a plain file on the shared live mount can also silently lose content mid-edit if something else writes to it at the same time, with no lock file to flag it. 2 entries: `docs/working-notes/learnings/cowork-remote-device-testing.md`.
+The cloud session's own staged mirror of the repo can be a partial snapshot — don't trust it for a real test/typecheck signal without confirming the full tree is present; a plain file on the shared live mount can also silently lose content mid-edit if something else writes to it at the same time, with no lock file to flag it; the built-in browser pane appears to block outgoing WebSocket connections to local/private addresses even though plain HTTP to the same host works, so it can't be used to verify anything that opens a WS to a local dev backend. 3 entries: `docs/working-notes/learnings/cowork-remote-device-testing.md`.
 
 ## Custom node authoring
 
