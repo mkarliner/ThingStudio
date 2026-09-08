@@ -92,7 +92,12 @@ automated tests added: this codebase doesn't unit-test the Rete/Vue canvas layer
 interactive behavior (click a wire, multi-select nodes, Delete removing the right thing, not firing while typing)
 still needs Mike's own real-browser pass** -- nothing here substitutes for that.
 
+**2026-09-08, Mike's real-browser smoke test: delete node and delete wire both confirmed working.** Multi-select
+uses Cmd-click on his machine, not Ctrl-click -- confirmed as existing `rete-area-plugin` behavior
+(`accumulateOnCtrl()` already treats `Meta` the same as `Control`, unmodified by this session's work), not a bug.
+No button/context-menu wanted alongside the keyboard shortcut -- Delete/Backspace alone confirmed sufficient.
+
 ## Status
 
 **Raised 2026-08-something (`mikes-questions-and-points.md`), split into its own tracked item 2026-09-04, picked
-as the next priority 2026-09-08, implemented the same day. Awaiting Mike's real-browser verification.**
+as the next priority 2026-09-08, implemented and verified the same day. Done.**
