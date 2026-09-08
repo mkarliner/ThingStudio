@@ -26,25 +26,16 @@ We need to support the following platforms for the editor/backend:
 - do we need a password for access to the board transport? I'm aware of how insecure iot devices are. I think we should at least basic security for the board from day 1
   [partially decided, not implemented — decisions.md, "Board-transport auth (perimeter 2)" section: HMAC-SHA256 + persisted counter chosen for v1.1+; the one v1 hedge (HELLO's authRequired/authScheme fields) is still unbuilt, see outstanding-items.md "Redeploy / runtime" section]
 
-# Wifi management
-Investigate using Functor/Singletons for the Wifi config and any other global config objects : see https://github.com/peterhinch/micropython-samples/blob/master/functor_singleton/README.md
-
 # Nodes - to be prioritised
 [whole list triaged — decisions.md, "Config nodes / Tier 1 scope" section, 2026-08-17 entry, plus tier1-node-candidates-prioritization-briefing.md; per-item disposition below]
    - filter / event compression
      [tracked, not built — outstanding-items.md "Network / config nodes"; also covers the average/smooth low-pass-filter ask that used to be listed separately here, same node] see peter hinche's collection
-   - http server / in
-   - tcp node
    - udp / tcp
      [udp_send/udp_receive built and on canvas. tcp_send/tcp_listen_receive not built — outstanding-items.md "Network / config nodes"] see async udp implementation
    - i2c actual operation - what happens with stuck devices?
      [tracked, unresolved fault-handling question — outstanding-items.md "Network / config nodes"]
    - init node triggered by start of flow?
      [tracked, never discussed — outstanding-items.md "UI / editor" section]
-   - Button and Switch from peter hinche's collection
-   - Threading / multicore support, maybe surfaced as Exec node?
-   - SSD1306 node, and possibly templating UI nodes...
-   - GPIO, ADC and other hardware config nodes. These should be singleton nodes with no pallete presence. This will also handle the issue of nodes conflicting in their use of pins.
 # Store flows on micro as well as file system.
 [tracked, not scoped — outstanding-items.md "Redeploy / runtime" section]
 
@@ -62,12 +53,6 @@ I shouldn't have to remember what sensor is connector to a given gpio or other p
 - Anything else ?
 [developer guide done — docs/user-guide/custom-nodes.md. End-user "basic user docs" guide: scoped, tooling decided (MkDocs + Material theme, GitHub Pages), and structure designed + project scaffolded (mkdocs.yml, GH Actions workflow, placeholder pages) — only the actual guide/node-reference content remains unwritten. outstanding-items.md "Docs / process" section; docs/working-notes/documentation-scoping.md; docs/working-notes/documentation-tech-selection.md; docs/working-notes/documentation-design.md]
 
-# Backend front end
-- Installer
-- One start command for backend and frontend
-- scope / design / implement network transpost as well as serial.
-
-
 # CI
 - should we use a CI that's independent of Github (add to claud a note about vendor neutral where possible)
 [tracked, not revisited — outstanding-items.md "Docs / process" section ("CI vendor-neutrality")]
@@ -75,7 +60,6 @@ I shouldn't have to remember what sensor is connector to a given gpio or other p
 # UI
 - resizable panes
 - Allow multiple panes (still one flow)
-- nodes in general should able to show status (like node red mqtt), specifically wifi, mqtt http 
 - delete node and wire
 - notes / README sheet for documenting flow
 [collapsible panes done 2026-09-04; resizable panes, delete node/wire, and the notes/README sheet remain tracked, untriaged — outstanding-items.md "UI / editor" section ("General UI wishlist")]
