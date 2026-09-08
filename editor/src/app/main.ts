@@ -85,16 +85,28 @@
 // of connection mode; that's its own follow-up, not assumed done here.
 //
 // Admin-API client wired in, 2026-09-08 (flow-file/admin-api-client.ts):
-// storage is backend-exclusive now, on Mike's own explicit call -- every
-// save/load in this file goes through the backend's /api/flows and
-// /api/custom-nodes routes, never file-io.ts's File System Access picker.
-// "Direct" WebSerial mode's own connModeSelect option is hidden in
-// index.html (not removed -- same "keep it, git-reversible" posture this
-// file's header already takes with app/nodes.ts) since it can no longer
-// save or load anything on its own; all new investment still goes into
-// the backend path. backendUrlInput is now the single backend location
-// for both the device transport and storage -- see admin-api-client.ts's
-// own header for why this doesn't need a second URL field.
+// custom node loading (PaletteSidebar.vue) goes through the backend's
+// /api/custom-nodes routes; backendUrlInput is the single backend
+// location for both the device transport and custom-node storage.
+//
+// Flow save/open briefly went backend-exclusive the same day (every
+// save/load through /api/flows, no File System Access picker) before
+// Mike's own explicit call, later the same day, reversed it: a flow is
+// project material that belongs in whatever git repo it's part of,
+// chosen per-save/per-open via the OS's own native file dialog like any
+// other editing program -- not tied to a directory fixed at backend
+// startup, and not backend-managed at all. flow-file/file-io.ts (File
+// System Access API, with manual download/upload as the Safari/Firefox
+// fallback) is what btnSaveFlow/btnOpenFlow use below, same as before
+// this file ever went backend-exclusive. admin-api-client.ts's flow
+// functions (listFlows/readFlow/writeFlow/deleteFlow) and the backend's
+// own /api/flows routes stay in the tree, unused -- same "keep it,
+// git-reversible" posture this file's header already takes with
+// connModeSelect's hidden "direct" option -- custom nodes are the
+// genuinely cross-flow case backend storage stays right for.
+// "Direct" WebSerial mode's connModeSelect option stays hidden regardless
+// -- that's about the device transport, unrelated to where a flow's own
+// file lives.
 
 import { createApp, watch } from "vue";
 import { compile } from "../compiler/compile.js";
@@ -124,15 +136,14 @@ import {
   type FlowFileConfig,
   type CanvasNodeSnapshot,
 } from "../flow-file/flow-file.js";
-import {
-  AdminApiError,
-  DEFAULT_BACKEND_WS_URL,
-  deleteFlow as deleteBackendFlow,
-  listFlows as listBackendFlows,
-  readFlow as readBackendFlow,
-  slugifyFlowName,
-  writeFlow as writeBackendFlow,
-} from "../flow-file/admin-api-client.js";
+import { DEFAULT_BACKEND_WS_URL, slugifyFlowName } from "../flow-file/admin-api-client.js";
+// slugifyFlowName is reused here purely for a nicer suggested filename in
+// the save dialog below -- its own header's reasoning for why a display
+// name isn't a valid storage key applies just as well to a suggested
+// filename, even though nothing here treats it as an actual storage key
+// anymore. AdminApiError and the flow CRUD functions aren't imported --
+// nothing in this file calls them; see the header comment above.
+import { saveFlowFileToDisk, openFlowFileFromDisk } from "../flow-file/file-io.js";
 
 const el = <T extends HTMLElement = HTMLElement>(id: string): T => document.getElementById(id) as T;
 
@@ -416,93 +427,44 @@ async function applyFlowFile(file: FlowFile): Promise<void> {
   placeCount = file.nodes.length;
 }
 
-// Save/open/delete are backend-exclusive as of 2026-09-08 (this file's own
-// header addendum) -- flowSelect/btnRefreshFlows follow the exact pattern
-// backendPortSelect/btnRefreshPorts already established below: an explicit
-// refresh action populates the list (never auto-probed on load or on
-// every keystroke -- design doc §4's "explicit choice, not auto-detection"
-// reasoning, already applied to port listing, applies here identically),
-// the user picks from it, and Open/Delete act on whatever's currently
-// selected.
-
-async function refreshFlowList(): Promise<void> {
-  const select = el<HTMLSelectElement>("flowSelect");
-  select.innerHTML = '<option value="">(loading…)</option>';
-  try {
-    const flows = await listBackendFlows(currentBackendWsUrl());
-    if (flows.length === 0) {
-      select.innerHTML = '<option value="">(no flows saved)</option>';
-    } else {
-      select.innerHTML = "";
-      for (const name of flows) {
-        const opt = document.createElement("option");
-        opt.value = name;
-        opt.textContent = name;
-        select.appendChild(opt);
-      }
-    }
-  } catch (err) {
-    select.innerHTML = '<option value="">(backend unreachable)</option>';
-    logLine(`[list flows failed] ${err instanceof Error ? err.message : String(err)}`, "err");
-  }
-}
-el("btnRefreshFlows").addEventListener("click", () => void refreshFlowList());
+// Save/open use the OS's own native file dialog (flow-file/file-io.ts),
+// same as any other desktop editing program -- see this file's header for
+// the 2026-09-08 back-and-forth on why. No refresh/list/delete concept
+// here at all: the OS's own Open dialog IS the browsing UI, and deleting a
+// file you picked yourself is Finder's/git's job, not this editor's.
 
 el("btnSaveFlow").addEventListener("click", async () => {
   try {
     const { nodes, edges } = extractCanvasSnapshot();
     const flowDisplayName = currentFlowNameInput();
     const text = serializeFlowFileText(buildFlowFile(nodes, edges, extractConfigsSnapshot(), flowDisplayName));
-    // The backend storage key is a slug of the display name, not the
-    // display name itself (admin-api-client.ts's slugifyFlowName header
-    // comment) -- "My Cool Flow" saves as "my-cool-flow" but the file's
-    // own flowName field (and flowNameInput on the next open) stays
-    // exactly what was typed.
-    const storageName = slugifyFlowName(flowDisplayName);
-    await writeBackendFlow(currentBackendWsUrl(), storageName, text);
-    logLine(`[flow saved to backend as "${storageName}"]`, "ok");
+    // Suggested filename only -- the picker lets the user type over it
+    // freely, same as any "Save As" dialog; nothing here treats this as a
+    // storage key the way the brief backend-exclusive period did.
+    const suggestedName = `${slugifyFlowName(flowDisplayName)}.flow.json`;
+    const saved = await saveFlowFileToDisk(text, suggestedName);
+    if (saved) logLine("[flow saved]", "ok");
   } catch (err) {
-    logLine(`[save failed] ${err instanceof AdminApiError ? err.message : err instanceof Error ? err.message : String(err)}`, "err");
+    logLine(`[save failed] ${err instanceof Error ? err.message : String(err)}`, "err");
   }
 });
 
 el("btnOpenFlow").addEventListener("click", async () => {
-  const name = el<HTMLSelectElement>("flowSelect").value;
-  if (!name) {
-    logLine('[open failed] choose a saved flow from the list first ("⟳ flows")', "err");
-    return;
-  }
   try {
-    const text = await readBackendFlow(currentBackendWsUrl(), name);
+    const text = await openFlowFileFromDisk();
+    if (text === null) return; // user cancelled the picker
     const file = parseFlowFile(text);
     await applyFlowFile(file);
     // Mirrors the file's own saved name into the input -- shows "" (the
     // placeholder) rather than literally re-typing DEFAULT_FLOW_NAME for
     // an older file that never had one, same reasoning clear-canvas's own
-    // reset uses. Deliberately NOT the backend storage name (`name`
-    // above) -- see slugifyFlowName's own header comment on why those two
-    // strings are allowed to differ.
+    // reset uses.
     el<HTMLInputElement>("flowNameInput").value = file.flowName === DEFAULT_FLOW_NAME ? "" : file.flowName;
-    logLine(`[flow loaded from backend as "${name}" -- ${file.nodes.length} node(s)]`, "ok");
+    logLine(`[flow loaded -- ${file.nodes.length} node(s)]`, "ok");
     refreshPreview();
   } catch (err) {
     const message = err instanceof FlowFileError ? `invalid flow file: ${err.message}` : err instanceof Error ? err.message : String(err);
     logLine(`[load failed] ${message}`, "err");
-  }
-});
-
-el("btnDeleteFlow").addEventListener("click", async () => {
-  const name = el<HTMLSelectElement>("flowSelect").value;
-  if (!name) {
-    logLine('[delete failed] choose a saved flow from the list first ("⟳ flows")', "err");
-    return;
-  }
-  try {
-    await deleteBackendFlow(currentBackendWsUrl(), name);
-    logLine(`[flow "${name}" deleted from backend]`, "ok");
-    await refreshFlowList();
-  } catch (err) {
-    logLine(`[delete failed] ${err instanceof Error ? err.message : String(err)}`, "err");
   }
 });
 

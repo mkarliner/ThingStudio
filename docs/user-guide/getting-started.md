@@ -4,7 +4,7 @@ Thingstudio runs entirely in the browser — no separate install for the editor 
 
 ## Requirements
 
-A backend running somewhere reachable — see "Connecting" below. It's needed for saving and opening flows and custom nodes, and for reaching a board. Any modern browser works with the editor itself.
+A backend running somewhere reachable — see "Connecting" below. It's needed for loading custom nodes and for reaching a board; saving and opening flows uses your browser's own file dialog and needs no backend at all. Any modern browser works with the editor itself, though the native file dialog for flows is Chrome/Edge only — Safari/Firefox fall back to a plain download/upload.
 
 ## Running the editor
 

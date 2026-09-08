@@ -91,11 +91,16 @@
     <h1>Thingstudio</h1>
     <input id="flowNameInput" type="text" placeholder="untitled flow" title="This flow's name -- saved in the flow file, sent with every deploy so you can tell which flow a connected board is running" />
     <button id="clear-canvas">Clear canvas</button>
-    <button id="btnSaveFlow">Save flow</button>
-    <select id="flowSelect" title="Flows saved on the backend"><option value="">(no flows loaded)</option></select>
-    <button id="btnRefreshFlows" title="Ask the backend for its current list of saved flows">⟳ flows</button>
-    <button id="btnOpenFlow">Open flow</button>
-    <button id="btnDeleteFlow" title="Delete the flow selected above from the backend">Delete flow</button>
+    <button id="btnSaveFlow" title="Save this flow to a file you choose, via the OS's own save dialog">Save flow…</button>
+    <!-- flowSelect/btnRefreshFlows/btnDeleteFlow: backend-managed flow storage, 2026-09-08 for less
+         than a day (main.ts's header has the story) -- hidden, not removed, same git-reversible
+         posture as connModeOptionDirect below, in case a backend-managed path is wanted again later.
+         Flow save/open now go through the OS's native file dialog (file-io.ts); there's nothing for
+         these three to list, refresh, or delete against any more. -->
+    <select id="flowSelect" title="Flows saved on the backend" hidden><option value="">(no flows loaded)</option></select>
+    <button id="btnRefreshFlows" title="Ask the backend for its current list of saved flows" hidden>⟳ flows</button>
+    <button id="btnOpenFlow" title="Open a flow file, via the OS's own open dialog">Open flow…</button>
+    <button id="btnDeleteFlow" title="Delete the flow selected above from the backend" hidden>Delete flow</button>
     <div class="sep"></div>
     <select id="connModeSelect" title="How the editor reaches your device -- an explicit choice per design doc §4, never auto-detected">
       <!-- "Direct" hidden, not removed, 2026-09-08 (main.ts's own header addendum): storage is
