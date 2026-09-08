@@ -47,3 +47,8 @@ interface IP) so no separate tunnel step is needed at all -- is what this item a
 and Mike still wants it, just not urgently. Whoever picks this up next should read this
 addendum for the concrete real-world driver rather than working from the abstract "not needed
 until bound to a LAN or public interface" framing above alone.
+
+
+## Addendum, 2026-09-08 -- re-tagged P4 -> P3
+
+Mike's call while triaging next-session work: this item moves from **[P4]** to **[P3]** in `outstanding-items.md`. Still deferred -- not picked up this session, not needed until the backend binds to something other than loopback -- just re-ranked relative to other open items.

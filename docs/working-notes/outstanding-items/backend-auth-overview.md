@@ -65,7 +65,7 @@ Mike hasn't yet run `pip install`/started the server himself.
 
 ## What's still open
 
-- A real-hardware pass (DTR/RTS per board, actual unplug/disconnect behavior).
+- A real-hardware pass (DTR/RTS per board, actual unplug/disconnect behavior). **2026-09-08:** first real run done, via `backend/test/hardware/dtr_rts_disconnect_pass.py` (see its sibling `README.md`), against an ESP32-C3-class board with a CH9102 USB-serial chip (vid=6790/pid=21971). Result: today's default (`dtr=None, rts=None`) does NOT reset this board -- only explicitly forcing both DTR and RTS low does. Disconnect handling confirmed clean: a physical unplug produced a structured `NODE_ERROR` (`[Errno 6] Device not configured`), no hang, no crash. Full write-up: `decisions/backend.md`'s 2026-09-08 entry. **Still open, per this project's own per-board philosophy (CLAUDE.md):** this is one board/chip combination, not a general answer -- worth a pass on the other board families in use (RP2040/RP2350's native USB, any CP2102/CH340 board) whenever one is on hand, but not blocking on it.
 - Mike installing and running it for real (`pip install -e backend[.test]`, per `docs/third-party-licenses.md`'s
   new entry — the sandbox only ever verified this in a throwaway venv, never the shared mount).
 - Static asset serving is wired (`app.py`'s `static_dir` param) but nothing points it at a real built `editor/`
