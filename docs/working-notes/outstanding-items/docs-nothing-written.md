@@ -38,10 +38,8 @@ own conventions (fault-handling corollary, "concise, not exhaustive" style rule)
 Network/Hardware groups (see `decisions/documentation-process.md`'s nav-correction entry), so the reference
 content and its nav agree.
 
-**Everything from the original ask is now done except Mike's own verification step**: installing
-`mkdocs`/`mkdocs-material` and running a real `mkdocs build`/`mkdocs serve` to confirm the site actually
-renders -- same shared-mount reasoning that keeps this out of the sandbox (`CLAUDE.md`'s npm/build rule applies
-the same way to a Python venv's compiled deps). See the handoff briefing for the exact commands. The in-editor
-node-reference idea (`outstanding-items/in-editor-node-reference.md`) is unaffected and still separately
-tracked -- these per-node markdown files are one real candidate source for it now that they exist and are
-written, not chosen or built.
+**Everything from the original ask is now done, including Mike's own verification step.** **2026-09-08:**
+Mike installed `mkdocs`/`mkdocs-material` and ran a real `mkdocs build` -- confirmed working, site renders.
+Nothing left open on this item. The in-editor node-reference idea (`outstanding-items/in-editor-node-
+reference.md`) is unaffected and still separately tracked -- these per-node markdown files are one real
+candidate source for it now that they exist and are written, not chosen or built.

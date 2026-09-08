@@ -111,6 +111,20 @@ we work out our own house style. Once Mike's happy with a piece written
 this way, write the actual style guide from that example and replace this
 paragraph with a pointer to it.
 
+## Handoff/briefing note filenames: lead with the topic, not "next-session-picks"
+
+Several earlier sessions named the end-of-session handoff note `next-session-picks-briefing-<date>[-suffix].md`.
+That prefix is pure noise once there are more than a couple of them -- a directory listing of a dozen
+`next-session-picks-briefing-2026-09-07*.md` files tells you nothing about what any of them actually cover.
+Mike's call, 2026-09-08: name these the same way every other topic-scoped briefing in this directory already is
+(`rp2350-bringup-briefing.md`, `tier1-sensors-network-briefing.md`, `udp-tcp-nodes-implementation-briefing.md`)
+-- a short, meaningful topic phrase first, `-briefing` suffix, a date only if needed to disambiguate more than
+one briefing on the same topic. `failure-handling-briefing-2026-09-08.md`, not
+`next-session-picks-briefing-2026-09-08-failure-handling.md`.
+
+Existing `next-session-picks-briefing-*.md` files are left as-is -- this only governs naming going forward, not
+a retroactive rename pass.
+
 ## Decisions and learnings logs
 
 `docs/working-notes/decisions.md` and `docs/working-notes/learnings.md` are each a short index — one line per topic, pointing at that topic's own detail file under `docs/working-notes/decisions/` or `docs/working-notes/learnings/` (split out 2026-09-06 specifically so a session doesn't have to read either log end to end regardless of task). Read the index to see what topics exist and orient fast; open only the detail file(s) matching your task's topic, not the whole set — read everything only for genuinely cross-cutting work (a new architecture decision, or a dedicated audit/consolidation session).
