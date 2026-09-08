@@ -41,6 +41,16 @@ import serial.tools.list_ports
 _READ_POLL_TIMEOUT_SECONDS = 0.5
 _READ_CHUNK_SIZE = 4096
 
+# Write timeout for the blocking pyserial write wrapped in asyncio.to_thread --
+# unlike _READ_POLL_TIMEOUT_SECONDS (a responsiveness polling interval), this
+# is a genuine "this write is stuck" bound: pyserial's own default is
+# write_timeout=None (block forever), so with no bound here a wedged device
+# (stuck firmware, hardware flow control asserted and never released, a
+# board-specific USB-serial-chip quirk) can hang the executor thread
+# indefinitely on write(). Per CLAUDE.md's fault-handling priority -- bound
+# every I/O call -- matching the same treatment already given to reads.
+_WRITE_TIMEOUT_SECONDS = 5.0
+
 
 class SerialRelayError(Exception):
     """A serial operation failed. Always names the port and the underlying cause --
@@ -108,7 +118,12 @@ class SerialConnection:
             # dsrdtr left at pyserial's default; dtr/rts only touched if the
             # caller explicitly asked -- see module docstring on why the
             # correct per-board default isn't decided here.
-            ser = serial.Serial(self.port, baudrate=self._baudrate, timeout=_READ_POLL_TIMEOUT_SECONDS)
+            ser = serial.Serial(
+                self.port,
+                baudrate=self._baudrate,
+                timeout=_READ_POLL_TIMEOUT_SECONDS,
+                write_timeout=_WRITE_TIMEOUT_SECONDS,
+            )
             if self._dtr is not None:
                 ser.dtr = self._dtr
             if self._rts is not None:
