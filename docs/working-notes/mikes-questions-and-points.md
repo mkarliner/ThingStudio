@@ -53,10 +53,6 @@ I shouldn't have to remember what sensor is connector to a given gpio or other p
 - Anything else ?
 [developer guide done — docs/user-guide/custom-nodes.md. End-user "basic user docs" guide: scoped, tooling decided (MkDocs + Material theme, GitHub Pages), and structure designed + project scaffolded (mkdocs.yml, GH Actions workflow, placeholder pages) — only the actual guide/node-reference content remains unwritten. outstanding-items.md "Docs / process" section; docs/working-notes/documentation-scoping.md; docs/working-notes/documentation-tech-selection.md; docs/working-notes/documentation-design.md]
 
-# CI
-- should we use a CI that's independent of Github (add to claud a note about vendor neutral where possible)
-[tracked, not revisited — outstanding-items.md "Docs / process" section ("CI vendor-neutrality")]
-
 # UI
 - resizable panes
 - Allow multiple panes (still one flow)
@@ -65,3 +61,4 @@ I shouldn't have to remember what sensor is connector to a given gpio or other p
 [collapsible panes done 2026-09-04; resizable panes, delete node/wire, and the notes/README sheet remain tracked, untriaged — outstanding-items.md "UI / editor" section ("General UI wishlist")]
 - custom nodes should be persistent across session, needs a manage pallette system, plus a convention on where to store them.
   [tracked, not scoped — outstanding-items.md "Backend / auth" section; local-persistence-scoping.md already scopes this as backend-owned, via a ~/.thingstudio local-state folder, zero code yet]
+- favicon
