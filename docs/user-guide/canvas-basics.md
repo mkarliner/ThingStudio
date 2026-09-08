@@ -22,7 +22,10 @@ Some properties are shared across multiple nodes rather than typed into each one
 
 **A flow needs exactly one `wifi_status` node if it uses any other network node type.** `wifi_status` is the flow's sole source of WiFi credentials — `udp_send`, `udp_receive`, `http_request`, `mqtt_publish`, and `mqtt_subscribe` all derive their connection from it rather than carrying a WiFi config of their own. Zero, or more than one, is a compile error. This trips people up before they know it's a rule, so it's worth knowing up front.
 
+## Deleting
+
+Click a node or a wire to select it, then press Delete or Backspace to remove it. Ctrl-click to select several nodes at once and delete them together. Deleting a node also removes any wires attached to it.
+
 ## Current limitations
 
-- **No per-node delete yet.** "Clear canvas" removes everything; there's no way to delete a single node or wire without starting over.
 - **No resizable panes**, beyond collapsing the palette and property panel to a thin rail.

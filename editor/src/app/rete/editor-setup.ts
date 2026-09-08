@@ -24,6 +24,14 @@
 // construction section for how `container` is obtained and how the
 // returned handle is used (currentSource(), extractCanvasSnapshot(),
 // applyFlowFile(), highlighting).
+//
+// Delete-node/delete-wire (2026-09-08, outstanding-items.md "UI / editor"
+// section): customize.connection() (ThingstudioConnection.vue) makes wires
+// clickable/selectable, mirroring the node selection this file already
+// tracked; deleteSelected() below removes whatever's currently selected --
+// every Rete-multi-selected node (and each connection touching one of
+// them) if any, else the one selected wire. Wired to Delete/Backspace by
+// main.ts, guarded there against deleting while a text field has focus.
 
 import { NodeEditor, ClassicPreset } from "rete";
 import { AreaPlugin, AreaExtensions } from "rete-area-plugin";
@@ -33,9 +41,10 @@ import { VuePlugin, Presets as VuePresets } from "rete-vue-plugin";
 import type { AreaExtra, Schemes } from "./schemes";
 import type { AnyThingstudioNode } from "./nodes";
 import { installConnectionValidation } from "./validation";
-import { selectedNode, bumpPropertyVersion } from "./store";
+import { selectedNode, selectedConnection, clearNodeSelection, bumpPropertyVersion } from "./store";
 import ThingstudioNode from "./ThingstudioNode.vue";
 import ThingstudioSocket from "./ThingstudioSocket.vue";
+import ThingstudioConnection from "./ThingstudioConnection.vue";
 
 export interface ThingstudioEditorOptions {
   /**
@@ -66,7 +75,9 @@ export async function createThingstudioEditor(container: HTMLElement, options: T
   // (retejs.org/docs/guides/renderers/vue, "Customization"). `socket` is
   // overridden too, not just `node` -- see ThingstudioSocket.vue's own
   // header for the real bug this fixes.
-  render.addPreset(VuePresets.classic.setup({ customize: { node: () => ThingstudioNode, socket: () => ThingstudioSocket } }));
+  render.addPreset(
+    VuePresets.classic.setup({ customize: { node: () => ThingstudioNode, socket: () => ThingstudioSocket, connection: () => ThingstudioConnection } }),
+  );
   connection.addPreset(ConnectionPresets.classic.setup());
 
   editor.use(area);
@@ -95,12 +106,19 @@ export async function createThingstudioEditor(container: HTMLElement, options: T
     if (context.type === "nodepicked") {
       const node = editor.getNode(context.data.id) as AnyThingstudioNode | undefined;
       selectedNode.value = node ?? null;
+      // A node click always wins over any previously selected wire --
+      // mutual exclusivity, ThingstudioConnection.vue's own click handler
+      // does the same in the other direction.
+      selectedConnection.value = null;
       if (node) options.onNodeClicked?.(node);
     }
     return context;
   });
   container.addEventListener("pointerdown", (e) => {
-    if (e.target === container) selectedNode.value = null;
+    if (e.target === container) {
+      selectedNode.value = null;
+      selectedConnection.value = null;
+    }
   });
 
   // --- multi-select (decision doc Phase 1 step 6) -------------------------
@@ -115,9 +133,19 @@ export async function createThingstudioEditor(container: HTMLElement, options: T
   // and this extension both listen to the same underlying pointer
   // gesture; a console click has no gesture to listen to, so it has to
   // trigger both explicitly.
-  const nodeSelection = AreaExtensions.selectableNodes(area, AreaExtensions.selector(), {
+  // Captured separately from selectableNodes()'s own return value (not
+  // just inlined as before) so deleteSelected() below can read which
+  // nodes are currently multi-selected, and so clearNodeSelection (store.ts)
+  // can hand ThingstudioConnection.vue a way to clear that multi-select
+  // when a wire gets clicked instead -- see store.ts's own comment on why
+  // that has to be threaded through a ref rather than an emit.
+  const nodeSelector = AreaExtensions.selector();
+  const nodeSelection = AreaExtensions.selectableNodes(area, nodeSelector, {
     accumulating: AreaExtensions.accumulateOnCtrl(),
   });
+  clearNodeSelection.value = () => {
+    void nodeSelector.unselectAll();
+  };
   AreaExtensions.simpleNodesOrder(area);
 
   return {
@@ -154,15 +182,52 @@ export async function createThingstudioEditor(container: HTMLElement, options: T
     // matching what a plain unmodified click on the canvas itself does).
     selectNode: async (node: AnyThingstudioNode) => {
       selectedNode.value = node;
+      selectedConnection.value = null;
       await nodeSelection.select(node.id, false);
     },
     clear: async () => {
       for (const c of [...editor.getConnections()]) await editor.removeConnection(c.id);
       for (const n of [...editor.getNodes()]) await editor.removeNode(n.id);
-      // Selection can't survive a clear -- the selected node object itself
-      // is gone (poc-rete's editor-setup.ts clear() does the same).
+      // Selection can't survive a clear -- the selected node/connection
+      // objects themselves are gone (poc-rete's editor-setup.ts clear()
+      // does the same for the node half).
       selectedNode.value = null;
+      selectedConnection.value = null;
       bumpPropertyVersion();
+    },
+    // Delete-node/delete-wire (2026-09-08). Removes every Rete-multi-
+    // selected node (checked via the runtime-only `.selected` flag
+    // AreaExtensions.selectableNodes maintains -- not declared on
+    // AnyThingstudioNode itself, same widening ThingstudioNode.vue's own
+    // props type already does) plus every connection touching one of
+    // them, mirroring clear()'s connections-before-nodes order: Rete core
+    // doesn't cascade removeNode() into its connections at all (confirmed
+    // reading rete's own source -- it just throws "cannot find node" if
+    // the id's unknown, no connection awareness whatsoever). Falls back to
+    // the single selected wire (store.ts's `selectedConnection`) only when
+    // no node is multi-selected, so a lone wire-click-then-Delete still
+    // works without requiring a node to also be selected.
+    deleteSelected: async () => {
+      const selectedIds = new Set(
+        (editor.getNodes() as (AnyThingstudioNode & { selected?: boolean })[]).filter((n) => n.selected).map((n) => n.id),
+      );
+      if (selectedIds.size > 0) {
+        for (const c of [...editor.getConnections()]) {
+          if (selectedIds.has(c.source) || selectedIds.has(c.target)) await editor.removeConnection(c.id);
+        }
+        for (const id of selectedIds) await editor.removeNode(id);
+        if (selectedNode.value && selectedIds.has(selectedNode.value.id)) selectedNode.value = null;
+        bumpPropertyVersion();
+        return;
+      }
+      if (selectedConnection.value) {
+        const id = selectedConnection.value.id;
+        // Guard against a stale reference (e.g. the connection's own node
+        // was already removed through some other path) rather than
+        // hitting removeConnection()'s "cannot find connection" throw.
+        if (editor.getConnections().some((c) => c.id === id)) await editor.removeConnection(id);
+        selectedConnection.value = null;
+      }
     },
   };
 }

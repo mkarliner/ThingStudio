@@ -228,6 +228,26 @@ el("clear-canvas").addEventListener("click", async () => {
   el<HTMLInputElement>("flowNameInput").value = "";
 });
 
+// Delete-node/delete-wire (2026-09-08, outstanding-items.md "UI / editor"
+// section). Listens on `document`, not `canvasContainer` -- a click on a
+// node/wire doesn't necessarily leave DOM focus anywhere in particular, so
+// scoping this to the canvas element could miss the very keypress it's
+// meant to catch. The real risk of a document-level listener is a
+// Backspace/Delete meant for a text field (flowNameInput, a property
+// panel field, ConfigRefField.vue's own inputs) instead deleting whatever
+// happens to be selected on the canvas -- guarded by checking
+// document.activeElement the same way any editor with both a canvas and
+// text inputs has to. reteHandle.deleteSelected() itself is a no-op with
+// nothing selected, so this doesn't need its own guard for that case.
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Delete" && e.key !== "Backspace") return;
+  const active = document.activeElement as HTMLElement | null;
+  const tag = active?.tagName;
+  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || active?.isContentEditable) return;
+  e.preventDefault();
+  void reteHandle.deleteSelected();
+});
+
 // Palette (left) -- click-to-add via the `add`/`addCustom` emits, plus the
 // two custom-node-load outcome emits routed to the same device console
 // every other status line already uses. Vue's programmatic mount treats

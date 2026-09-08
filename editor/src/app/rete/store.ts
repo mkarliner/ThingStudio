@@ -24,10 +24,32 @@
 // modules unit-testable without a live Vue app -- see their own headers).
 
 import { ref } from "vue";
+import type { ClassicPreset } from "rete";
 import type { AnyThingstudioNode } from "./nodes";
 import { DEFAULT_BACKEND_WS_URL } from "../../flow-file/admin-api-client";
 
 export const selectedNode = ref<AnyThingstudioNode | null>(null);
+
+// Delete-node/delete-wire (2026-09-08, outstanding-items.md "UI / editor"
+// section): a wire (Rete connection) needs to be selectable before it can
+// be deleted -- node selection already existed (selectedNode above), wire
+// selection did not. Set by ThingstudioConnection.vue on click; read by
+// editor-setup.ts's deleteSelected() and by ThingstudioConnection.vue
+// itself to draw the selected-wire highlight.
+export const selectedConnection = ref<ClassicPreset.Connection<ClassicPreset.Node, ClassicPreset.Node> | null>(null);
+
+// Rete's own visual multi-select (the `node.selected` flags AreaExtensions.
+// selectableNodes' Selector instance manages, driving ThingstudioNode.vue's
+// orange border) lives inside editor-setup.ts's closure -- out of reach for
+// ThingstudioConnection.vue, which (unlike ThingstudioNode.vue) gets no
+// `emit` prop to pipe a request back through (rete-vue-plugin's classic
+// preset only threads `emit` to node/socket/control render props, not
+// connection -- confirmed reading its render(), 'connection' branch).
+// createThingstudioEditor() fills this in once it builds the Selector;
+// ThingstudioConnection.vue calls it on wire-click so "select a wire" and
+// "multi-select nodes" stay mutually exclusive, matching how a plain node
+// click already replaces any earlier node selection.
+export const clearNodeSelection = ref<(() => void) | null>(null);
 
 // Backend URL (2026-09-08, admin-API wiring): main.ts owns the actual
 // `backendUrlInput` DOM element (this file's own established convention --

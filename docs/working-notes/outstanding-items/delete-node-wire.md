@@ -47,7 +47,52 @@ Delete/Backspace-or-button mechanism calling `editor.removeConnection(id)`.
   ships without it.
 - Multi-select delete (several nodes/wires at once) -- in scope for a first pass, or single-item-only to start?
 
+## Implemented, 2026-09-08
+
+Built per the shape above, judgment calls resolved as follows -- flagged here rather than assumed silently
+settled, since this file itself said these needed Mike's real-browser feel, same category as the still-open
+drag-to-splice trigger question:
+
+- **Keyboard shortcut, not a button/context-menu.** Delete/Backspace, matching Node-RED's own convention (this
+  project already leans on Node-RED as its UX reference elsewhere -- multi-output-port support, the property
+  panel). No toolbar button or right-click menu added. **Worth Mike's own hands-on check** that this is
+  discoverable enough without one -- easy to add a button alongside it later if not.
+- **No confirmation step, no undo.** Matches "Clear canvas"'s own existing precedent (also no confirmation, also
+  no undo) rather than introducing an inconsistency between the two deletion mechanisms. Undo still doesn't exist
+  anywhere in the editor.
+- **Multi-select delete included in the first pass**, not deferred. Deleting a wire and deleting node(s) share one
+  `deleteSelected()` entry point: any Rete-multi-selected nodes (Ctrl-click) win if present, otherwise the one
+  selected wire.
+
+### What actually changed
+
+- `editor/src/app/rete/store.ts`: new `selectedConnection` ref (wire selection, mirroring the existing
+  `selectedNode`) and `clearNodeSelection` ref (a callback slot `editor-setup.ts` fills in, since a connection's
+  render props carry no `emit` the way a node's do -- confirmed reading rete-vue-plugin's compiled classic
+  preset -- so `ThingstudioConnection.vue` has no other way to reach back into the Selector instance that owns
+  Rete's own multi-select highlight).
+- `editor/src/app/rete/ThingstudioConnection.vue`: new file, `customize.connection()` in `editor-setup.ts`. A wire
+  is now click-to-select (orange highlight, same `#ff8f0e` as a selected node) rather than purely decorative.
+- `editor/src/app/rete/editor-setup.ts`: `deleteSelected()` added to the returned handle (mirrors `clear()`'s own
+  connections-before-nodes ordering -- confirmed reading Rete core's source that `removeNode()` does not cascade
+  into connections on its own, so a caller has to). Node/wire selection kept mutually exclusive throughout
+  (picking a node clears any selected wire and vice versa) so Delete never has an ambiguous target.
+- `editor/src/app/main.ts`: `document`-level `keydown` listener for Delete/Backspace, guarded against firing while
+  a text field (property panel, flow name, a custom-node picker) has focus.
+- `docs/user-guide/canvas-basics.md`: "No per-node delete yet" limitation removed, replaced with a short
+  "Deleting" section (CLAUDE.md's human-facing-docs style -- plain, no rationale).
+
+### Verified
+
+`tsc --noEmit` clean, full existing vitest suite (365 tests) still green -- both run against a fresh scratch
+`npm ci` in an isolated copy, never the live-mounted `node_modules` (CLAUDE.md's shared-mount rule). No new
+automated tests added: this codebase doesn't unit-test the Rete/Vue canvas layer anywhere (`editor-setup.ts`,
+`ThingstudioNode.vue`, `PropertyPanel.vue`, etc. all have zero test coverage today, confirmed by listing
+`editor/test/`) -- consistent with that existing pattern rather than introducing a first one here. **The actual
+interactive behavior (click a wire, multi-select nodes, Delete removing the right thing, not firing while typing)
+still needs Mike's own real-browser pass** -- nothing here substitutes for that.
+
 ## Status
 
-**Raised 2026-08-something (`mikes-questions-and-points.md`), split into its own tracked item 2026-09-04. Not
-scoped in detail, not started.**
+**Raised 2026-08-something (`mikes-questions-and-points.md`), split into its own tracked item 2026-09-04, picked
+as the next priority 2026-09-08, implemented the same day. Awaiting Mike's real-browser verification.**
