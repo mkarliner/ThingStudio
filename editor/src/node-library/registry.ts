@@ -4,7 +4,9 @@ import { debugNode } from "./debug.js";
 import { delayNode } from "./delay.js";
 import { functionNode } from "./function-node.js";
 import { gpioOutNode } from "./gpio-out.js";
+import { httpInNode } from "./http-in.js";
 import { httpRequestNode } from "./http-request.js";
+import { httpResponseNode } from "./http-response.js";
 import { injectNode } from "./inject.js";
 import { interruptNode } from "./interrupt.js";
 import { mqttPublishNode } from "./mqtt-publish.js";
@@ -32,7 +34,9 @@ import { wifiStatusNode } from "./wifi-status.js";
  * 2026-08-17 -- replaces the poll-driven gpio_in node, deprecated and
  * removed the same session; see mvp-feature-priorities.md item 2's
  * superseded note and item 5) -- plus the network batch: wifi_status,
- * http_request, mqtt_publish, mqtt_subscribe, plus the raw UDP/TCP batch
+ * http_request, mqtt_publish, mqtt_subscribe, plus http_in/http_response
+ * (2026-09-08, exact-path-match v1 -- see http-server-shared.ts's own
+ * header for scope), plus the raw UDP/TCP batch
  * (item 5 point 3, 2026-08-18): udp_send, udp_receive so far (tcp_send/
  * tcp_listen_receive are this same batch's harder pair, tracked
  * separately -- see mvp-feature-priorities.md item 5 point 3's own
@@ -55,6 +59,8 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     timerNode,
     wifiStatusNode,
     httpRequestNode,
+    httpInNode,
+    httpResponseNode,
     mqttPublishNode,
     mqttSubscribeNode,
     udpSendNode,

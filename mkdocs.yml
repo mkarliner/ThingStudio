@@ -57,6 +57,8 @@ nav:
           - udp receive: nodes/udp-receive.md
           - mqtt subscribe: nodes/mqtt-subscribe.md
           - http request: nodes/http-request.md
+          - http in: nodes/http-in.md
+          - http response: nodes/http-response.md
           - udp send: nodes/udp-send.md
           - mqtt publish: nodes/mqtt-publish.md
       - Hardware:

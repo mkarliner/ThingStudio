@@ -55,6 +55,17 @@
   generic edit panel (config-types.ts's `fields` descriptor) -- no bespoke
   UI needed for them.
 
+  http_in/http_response blocks added 2026-09-08 (outstanding-items.md's
+  "HTTP in / HTTP response nodes" P3 MVP item) -- given real canvas
+  presence from the start, no registry-only interim period. http_in's own
+  properties (port/path/method/responseTimeoutMs) plus the same
+  "uses the flow's wifi_status node" hint http_request's own block gives;
+  http_response has no properties at all, matching debug's own empty-block
+  precedent -- everything it needs (statusCode/payload) comes off msg at
+  runtime. Full v1 scope cuts (exact path match only, no :name params, no
+  request body parsing) are http-server-shared.ts's own header, not
+  repeated here.
+
   http_request block added 2026-09-05: first-time canvas wiring
   (nodes.ts's own header) -- url/method/timeoutMs, no ConfigRefField at
   all. Unlike every other network node type on this canvas, http_request
@@ -215,6 +226,29 @@
           <input type="number" min="1" v-model.number="node.properties.timeoutMs" @input="touch" />
         </label>
         <p class="hint">http:// only -- no TLS/HTTPS in v1. Uses the flow's own wifi_status node for WiFi credentials -- add one if the flow doesn't have one yet.</p>
+      </template>
+
+      <template v-else-if="node.kind === 'http_in'">
+        <label>port
+          <input type="number" min="1" max="65535" v-model.number="node.properties.port" @input="touch" />
+        </label>
+        <label>path
+          <input v-model="node.properties.path" @input="touch" placeholder="/status" />
+        </label>
+        <label>method
+          <select v-model="node.properties.method" @change="touch">
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+          </select>
+        </label>
+        <label>response timeout (ms)
+          <input type="number" min="1" v-model.number="node.properties.responseTimeoutMs" @input="touch" />
+        </label>
+        <p class="hint">Exact path match only -- no ":name" path parameters yet. Fires once per matching inbound request; pair with an http_response node to actually reply (a request that never reaches one times out with a 500). Uses the flow's own wifi_status node for WiFi credentials -- add one if the flow doesn't have one yet.</p>
+      </template>
+
+      <template v-else-if="node.kind === 'http_response'">
+        <p class="hint">No properties -- reads msg.statusCode (default 200) and msg.payload (the response body) at runtime, Node-RED's own field names. Must fire on a msg that originally came from an http_in node.</p>
       </template>
 
       <template v-else-if="node.kind === 'mqtt_publish'">

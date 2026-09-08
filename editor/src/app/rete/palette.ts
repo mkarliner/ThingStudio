@@ -82,6 +82,8 @@ export type NodeKind =
   | "udp_send"
   | "udp_receive"
   | "http_request"
+  | "http_in"
+  | "http_response"
   | "mqtt_publish"
   | "mqtt_subscribe"
   | "delay";
@@ -118,6 +120,14 @@ export const NODE_PALETTE: Record<NodeKind, KindStyle> = {
   udp_receive: { color: "#3b8a6e", bgcolor: "#1f4a3a", icon: "↓", label: "udp receive", group: "network" },
   // Amber/gold -- see this file's header for the icon reasoning.
   http_request: { color: "#8a6e1f", bgcolor: "#4a3a1f", icon: "⇄", label: "http request", group: "network" },
+  // http_in/http_response, 2026-09-08 -- same amber/gold family as
+  // http_request (all three are the one "http" node family) but a
+  // distinct shade each, and direction-of-travel arrows echoing
+  // udp_send/udp_receive/mqtt_publish/mqtt_subscribe's own convention:
+  // "↙" (inbound) for http_in (a source, like udp_receive/mqtt_subscribe),
+  // "↗" (outbound) for http_response (a sink, like udp_send/mqtt_publish).
+  http_in: { color: "#a67c1f", bgcolor: "#4a3a1f", icon: "↙", label: "http in", group: "network" },
+  http_response: { color: "#6e5216", bgcolor: "#3a2c14", icon: "↗", label: "http response", group: "network" },
   // Magenta/purple pair -- see this file's header for the icon reasoning.
   mqtt_publish: { color: "#8a3b6e", bgcolor: "#4a1f3a", icon: "⇧", label: "mqtt publish", group: "network" },
   mqtt_subscribe: { color: "#6e3b8a", bgcolor: "#3a1f4a", icon: "⇩", label: "mqtt subscribe", group: "network" },

@@ -130,6 +130,8 @@ import { wifiStatusNode } from "../../node-library/wifi-status.js";
 import { udpSendNode } from "../../node-library/udp-send.js";
 import { udpReceiveNode } from "../../node-library/udp-receive.js";
 import { httpRequestNode } from "../../node-library/http-request.js";
+import { httpInNode } from "../../node-library/http-in.js";
+import { httpResponseNode } from "../../node-library/http-response.js";
 import { delayNode } from "../../node-library/delay.js";
 import { mqttPublishNode } from "../../node-library/mqtt-publish.js";
 import { mqttSubscribeNode } from "../../node-library/mqtt-subscribe.js";
@@ -471,6 +473,61 @@ export class HttpRequestNode extends ClassicPreset.Node {
   }
 }
 
+// http_in/http_response added 2026-09-08 (outstanding-items.md's "HTTP
+// in / HTTP response nodes" P3 MVP item; http-server-shared.ts's own
+// header has the full architecture and v1 scope cuts -- exact
+// (method, path) match only, no :name params, no body-to-payload
+// parsing). http_in is a source (one output, fires on a real matching
+// inbound HTTP request); http_response is a sink (one input, completes
+// whichever request the msg came from). Given real canvas presence from
+// the start -- no registry-only interim period, unlike http_request's
+// own history (this file's header table).
+export class HttpInNode extends ClassicPreset.Node {
+  width = 120;
+  height = NODE_HEIGHT;
+  kind = "http_in" as const;
+  nodeType = "thingstudio/http_in";
+  highlighted = false;
+
+  // Defaults match http-server-shared.ts's own codegen defaults exactly
+  // (GET, 10000ms response timeout) -- a freshly-dropped node and a
+  // freshly-omitted property on a hand-edited flow file compile the same,
+  // same convention every other class here follows. path "/" is a valid,
+  // real route (unlike http_request's url, which has no sensible non-empty
+  // default) -- kept as the default anyway since a flow author still needs
+  // to pick their own path deliberately.
+  properties: { port: number; path: string; method: "GET" | "POST"; responseTimeoutMs: number } = {
+    port: 8080,
+    path: "/",
+    method: "GET",
+    responseTimeoutMs: 10000,
+  };
+
+  constructor() {
+    super("http in");
+    this.addOutput("msg", new ClassicPreset.Output(portSocket(httpInNode.ports?.outputs, "msg", this.properties), "msg"));
+  }
+}
+
+export class HttpResponseNode extends ClassicPreset.Node {
+  width = 130;
+  height = NODE_HEIGHT;
+  kind = "http_response" as const;
+  nodeType = "thingstudio/http_response";
+  highlighted = false;
+
+  // No properties -- status/body come from msg.statusCode/msg.payload at
+  // runtime (Node-RED's own field names), matching this node's own
+  // codegen (http-response.ts). Same "no configurable properties" shape
+  // as DebugNode above.
+  properties: Record<string, never> = {};
+
+  constructor() {
+    super("http response");
+    this.addInput("msg", new ClassicPreset.Input(portSocket(httpResponseNode.ports?.inputs, "msg", this.properties), "msg"));
+  }
+}
+
 export class MqttPublishNode extends ClassicPreset.Node {
   width = 128;
   height = NODE_HEIGHT;
@@ -573,6 +630,8 @@ export type AnyThingstudioNode =
   | UdpSendNode
   | UdpReceiveNode
   | HttpRequestNode
+  | HttpInNode
+  | HttpResponseNode
   | MqttPublishNode
   | MqttSubscribeNode
   | DelayNode
@@ -601,6 +660,8 @@ export const NODE_FACTORIES: Record<NodeKind, () => AnyThingstudioNode> = {
   udp_send: () => new UdpSendNode(),
   udp_receive: () => new UdpReceiveNode(),
   http_request: () => new HttpRequestNode(),
+  http_in: () => new HttpInNode(),
+  http_response: () => new HttpResponseNode(),
   mqtt_publish: () => new MqttPublishNode(),
   mqtt_subscribe: () => new MqttSubscribeNode(),
   delay: () => new DelayNode(),
