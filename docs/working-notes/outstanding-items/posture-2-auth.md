@@ -25,3 +25,25 @@ app-secured" — zero code written against it:
   pass to update its stale pure-browser-era premise.
 - Rate limiting (including from loopback) — named in the design note's own DNS-rebinding research as a real
   hardening measure, not scoped there.
+
+
+## Addendum, 2026-09-08 -- real motivating use case for a non-loopback bind
+
+Raised by Mike while scoping the admin-API fetch client: he wants to run the backend on a
+machine in a firewalled environment near the actual IoT devices, and edit/debug from a
+separate dev machine. Checked with him directly which of the two postures this needs --
+confirmed **for now** it's the cheap one, not this item: an SSH/VPN tunnel from the dev
+machine into the firewalled box's loopback interface (`ssh -L 8765:localhost:8765 ...` or
+equivalent), so the backend keeps binding to loopback exactly as `__main__.py` already
+requires, and the Host header the backend sees still reads as loopback -- no code change
+needed anywhere for that shape, and it's exactly the "network-secured / localhost-behind-a-
+VPN" default posture design doc §9 already names. `cors.py`'s reflect-any-Origin default
+(2026-09-08, backend-persisted-data-protocol.md) was chosen with this in mind: it doesn't care
+what origin the editor is served from or how it's tunneled to the backend.
+
+**Explicitly flagged as wanted eventually, not forgotten:** the *other* shape -- the backend
+binding directly to a non-loopback interface on the firewalled machine (e.g. a Tailscale/VPN
+interface IP) so no separate tunnel step is needed at all -- is what this item actually covers,
+and Mike still wants it, just not urgently. Whoever picks this up next should read this
+addendum for the concrete real-world driver rather than working from the abstract "not needed
+until bound to a LAN or public interface" framing above alone.

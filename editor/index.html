@@ -38,10 +38,10 @@
      native [hidden] attribute when connModeSelect is set to "direct"
      rather than removed from the DOM, so main.ts can toggle them with a
      plain boolean. */
-  #connModeSelect, #backendUrlInput, #backendPortSelect { background: var(--bg); color: var(--text);
+  #connModeSelect, #backendUrlInput, #backendPortSelect, #flowSelect { background: var(--bg); color: var(--text);
     border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; font-size: 12px; font-family: inherit; }
   #backendUrlInput { width: 170px; }
-  #backendPortSelect { max-width: 220px; }
+  #backendPortSelect, #flowSelect { max-width: 220px; }
   .pill { padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border); font-size: 11px; }
   .pill.connected { border-color: var(--good); color: var(--good); }
   .pill.disconnected { border-color: var(--bad); color: var(--bad); }
@@ -92,10 +92,17 @@
     <input id="flowNameInput" type="text" placeholder="untitled flow" title="This flow's name -- saved in the flow file, sent with every deploy so you can tell which flow a connected board is running" />
     <button id="clear-canvas">Clear canvas</button>
     <button id="btnSaveFlow">Save flow</button>
+    <select id="flowSelect" title="Flows saved on the backend"><option value="">(no flows loaded)</option></select>
+    <button id="btnRefreshFlows" title="Ask the backend for its current list of saved flows">⟳ flows</button>
     <button id="btnOpenFlow">Open flow</button>
+    <button id="btnDeleteFlow" title="Delete the flow selected above from the backend">Delete flow</button>
     <div class="sep"></div>
     <select id="connModeSelect" title="How the editor reaches your device -- an explicit choice per design doc §4, never auto-detected">
-      <option id="connModeOptionDirect" value="direct">Direct (WebSerial)</option>
+      <!-- "Direct" hidden, not removed, 2026-09-08 (main.ts's own header addendum): storage is
+           backend-exclusive now, so this mode can no longer save or load a flow on its own -- kept
+           in the DOM/git history for when a real use case brings it back, per this codebase's usual
+           "hide, don't delete" posture (e.g. app/nodes.ts, palette.ts's variable_get/variable_set). -->
+      <option id="connModeOptionDirect" value="direct" hidden>Direct (WebSerial)</option>
       <option value="backend" selected>Via backend</option>
     </select>
     <input id="backendUrlInput" type="text" value="ws://127.0.0.1:8765/ws" title="Backend WebSocket URL" />

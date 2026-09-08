@@ -1,16 +1,18 @@
 # Writing a custom node for Thingstudio
 
 A custom node is two files sharing a base name: `<name>.node.json` (the
-descriptor) and `<name>.node.py` (the behavior). Load them through the
-palette sidebar, then drag the node onto the canvas like any built-in
-node. This document is complete on its own — no other Thingstudio docs
-needed.
+descriptor) and `<name>.node.py` (the behavior), placed in the backend's
+`~/.thingstudio/custom-nodes/` directory. Load it through the palette
+sidebar, then drag the node onto the canvas like any built-in node. This
+document is complete on its own — no other Thingstudio docs needed.
 
 ## Loading a custom node
 
-Click "Load custom node…" in the palette sidebar. Select both files at
-once (shift-click or ctrl/cmd-click). The node appears under "custom
-nodes" in the palette.
+Copy both files into `~/.thingstudio/custom-nodes/` on the machine
+running the backend (there's no upload button in the editor yet — see
+below). In the editor, click "Load custom node…" in the palette sidebar,
+then pick it from the list. The node appears under "custom nodes" in the
+palette.
 
 Loading is scoped to the current editor session. Reload the page and
 you'll need to load the package again before reopening or recompiling a

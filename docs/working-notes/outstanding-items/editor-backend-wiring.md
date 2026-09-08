@@ -124,8 +124,14 @@ things came out of it:
 
 ## What's still open, named explicitly rather than silently skipped
 
-- **Admin-API `fetch` client** — flow/custom-node save-load through `/api/flows`/`/api/custom-nodes`, regardless
-  of connection mode. Not touched this session (see "Scoping call" above).
+- ~~**Admin-API `fetch` client** — flow/custom-node save-load through `/api/flows`/`/api/custom-nodes`, regardless
+  of connection mode. Not touched this session (see "Scoping call" above).~~ **Done, 2026-09-08** --
+  `editor/src/flow-file/admin-api-client.ts`. Turned out narrower than "regardless of connection mode" implied:
+  Mike's own call was that storage is backend-*exclusive* now, so it needed no connection-mode branching at all
+  (unlike the transport half above) -- see `backend-persisted-data-protocol.md`'s own addendum and
+  `decisions/backend.md` for the full reasoning, including the CORS support this required
+  (`backend/src/thingstudio_backend/cors.py`) and "direct" WebSerial mode's connModeSelect option being hidden
+  as a consequence (it can no longer save/load a flow on its own).
 - ~~**Real end-to-end verification**: editor (either mode) → real running backend → real board.~~ **Done,
   2026-09-07**: Mike confirmed "via backend" connect to a real ESP32 plus a basic MQTT flow both work. Still
   open, narrower than before: the backend's own dedicated real-hardware pass for DTR/RTS-per-board specifics and

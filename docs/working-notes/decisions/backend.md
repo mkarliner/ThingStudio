@@ -71,3 +71,27 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
   puts them there unencoded — POC-D's `read(n)` hang workaround). New `line_framing.py`; `framing.py` itself
   unchanged and still correct as a frame codec, just not what belongs directly on the serial byte stream. See
   `docs/working-notes/learnings/backend-serial-wire-format.md` for the full incident.
+- **2026-09-08 — Admin-API fetch client: storage is backend-*exclusive*, not connection-mode-gated.** Mike's own
+  call, checked before building rather than assumed: every save/load in the editor (flow save/open/delete,
+  custom-node load) goes through the backend's `/api/flows`/`/api/custom-nodes` routes now
+  (`editor/src/flow-file/admin-api-client.ts`), replacing file-io.ts/custom-node-io.ts's File System Access
+  pickers rather than running alongside them, and independent of whether the device transport itself is
+  "direct" or "via backend" -- exactly what made an HTTP admin API rather than a WS control-plane extension the
+  right shape in the first place (`backend-persisted-data-protocol.md`'s "Two shapes" section). Consequence: WebSerial
+  "direct" mode's `connModeSelect` option is hidden (not removed) in `index.html`, since it can no longer
+  save/load a flow on its own and Mike doesn't see a use case for it right now. `outstanding-items/editor-backend-wiring.md`.
+- **2026-09-08 — Admin-API CORS: reflect the request's Origin, not an explicit allowlist.** Weighed against a
+  `--allowed-origin` flag mirroring `--allowed-host`; chosen because it doesn't lower this backend's actual
+  security bar -- the WS relay already does zero Origin checking (`middleware.py`'s own header comment), and
+  `__main__.py` already refuses to bind anywhere but loopback until posture-2 auth exists, so the worst case
+  this opens (another page in the same loopback-reachable browser can also hit the admin API) is a risk category
+  already fully accepted for the WS relay today. Works for the `npm run dev` workflow and for a remote/
+  firewalled backend reached through a tunnel, with zero backend-side config either way.
+  `backend/src/thingstudio_backend/cors.py`.
+- **2026-09-08 — Remote/firewalled backend access: tunnel to loopback, not a non-loopback bind, for now.** Mike
+  wants to run the backend near firewalled IoT devices and edit from a separate dev machine; confirmed with him
+  directly that the near-term answer is an SSH/VPN tunnel into the backend's own loopback interface (no code
+  change needed -- design doc §9's "network-secured / localhost-behind-a-VPN" default posture already covers
+  this), not loosening `__main__.py`'s loopback-only bind refusal. The other shape (binding directly to a
+  non-loopback interface, e.g. a Tailscale IP) is still wanted, just deferred -- flagged explicitly in
+  `outstanding-items/posture-2-auth.md`'s 2026-09-08 addendum rather than silently dropped.

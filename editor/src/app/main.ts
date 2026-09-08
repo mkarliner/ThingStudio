@@ -83,6 +83,18 @@
 // persisted-data-protocol.md) -- flow/custom-node save-load still goes
 // through the File System Access picker (flow-file/file-io.ts) regardless
 // of connection mode; that's its own follow-up, not assumed done here.
+//
+// Admin-API client wired in, 2026-09-08 (flow-file/admin-api-client.ts):
+// storage is backend-exclusive now, on Mike's own explicit call -- every
+// save/load in this file goes through the backend's /api/flows and
+// /api/custom-nodes routes, never file-io.ts's File System Access picker.
+// "Direct" WebSerial mode's own connModeSelect option is hidden in
+// index.html (not removed -- same "keep it, git-reversible" posture this
+// file's header already takes with app/nodes.ts) since it can no longer
+// save or load anything on its own; all new investment still goes into
+// the backend path. backendUrlInput is now the single backend location
+// for both the device transport and storage -- see admin-api-client.ts's
+// own header for why this doesn't need a second URL field.
 
 import { createApp, watch } from "vue";
 import { compile } from "../compiler/compile.js";
@@ -97,7 +109,7 @@ import { createThingstudioEditor, type ThingstudioEditor } from "./rete/editor-s
 import { NODE_FACTORIES, CustomNode, InjectNode, type AnyThingstudioNode } from "./rete/nodes.js";
 import { DRAG_MIME, CUSTOM_DRAG_MIME, type NodeKind } from "./rete/palette.js";
 import { toGraphData, socketIndex } from "./rete/graph-adapter.js";
-import { propertyVersion, configs as configsStore, replaceAllConfigs, clearConfigs } from "./rete/store.js";
+import { propertyVersion, configs as configsStore, replaceAllConfigs, clearConfigs, backendWsUrl } from "./rete/store.js";
 import { getCustomNodePackage, listCustomNodeDefinitions } from "./rete/custom-nodes-store.js";
 import PaletteSidebar from "./rete/PaletteSidebar.vue";
 import PropertyPanel from "./rete/PropertyPanel.vue";
@@ -112,7 +124,15 @@ import {
   type FlowFileConfig,
   type CanvasNodeSnapshot,
 } from "../flow-file/flow-file.js";
-import { saveFlowFileToDisk, openFlowFileFromDisk } from "../flow-file/file-io.js";
+import {
+  AdminApiError,
+  DEFAULT_BACKEND_WS_URL,
+  deleteFlow as deleteBackendFlow,
+  listFlows as listBackendFlows,
+  readFlow as readBackendFlow,
+  slugifyFlowName,
+  writeFlow as writeBackendFlow,
+} from "../flow-file/admin-api-client.js";
 
 const el = <T extends HTMLElement = HTMLElement>(id: string): T => document.getElementById(id) as T;
 
@@ -396,33 +416,93 @@ async function applyFlowFile(file: FlowFile): Promise<void> {
   placeCount = file.nodes.length;
 }
 
+// Save/open/delete are backend-exclusive as of 2026-09-08 (this file's own
+// header addendum) -- flowSelect/btnRefreshFlows follow the exact pattern
+// backendPortSelect/btnRefreshPorts already established below: an explicit
+// refresh action populates the list (never auto-probed on load or on
+// every keystroke -- design doc §4's "explicit choice, not auto-detection"
+// reasoning, already applied to port listing, applies here identically),
+// the user picks from it, and Open/Delete act on whatever's currently
+// selected.
+
+async function refreshFlowList(): Promise<void> {
+  const select = el<HTMLSelectElement>("flowSelect");
+  select.innerHTML = '<option value="">(loading…)</option>';
+  try {
+    const flows = await listBackendFlows(currentBackendWsUrl());
+    if (flows.length === 0) {
+      select.innerHTML = '<option value="">(no flows saved)</option>';
+    } else {
+      select.innerHTML = "";
+      for (const name of flows) {
+        const opt = document.createElement("option");
+        opt.value = name;
+        opt.textContent = name;
+        select.appendChild(opt);
+      }
+    }
+  } catch (err) {
+    select.innerHTML = '<option value="">(backend unreachable)</option>';
+    logLine(`[list flows failed] ${err instanceof Error ? err.message : String(err)}`, "err");
+  }
+}
+el("btnRefreshFlows").addEventListener("click", () => void refreshFlowList());
+
 el("btnSaveFlow").addEventListener("click", async () => {
   try {
     const { nodes, edges } = extractCanvasSnapshot();
-    const text = serializeFlowFileText(buildFlowFile(nodes, edges, extractConfigsSnapshot(), currentFlowNameInput()));
-    const saved = await saveFlowFileToDisk(text, "flow.flow.json");
-    if (saved) logLine("[flow saved]", "ok");
+    const flowDisplayName = currentFlowNameInput();
+    const text = serializeFlowFileText(buildFlowFile(nodes, edges, extractConfigsSnapshot(), flowDisplayName));
+    // The backend storage key is a slug of the display name, not the
+    // display name itself (admin-api-client.ts's slugifyFlowName header
+    // comment) -- "My Cool Flow" saves as "my-cool-flow" but the file's
+    // own flowName field (and flowNameInput on the next open) stays
+    // exactly what was typed.
+    const storageName = slugifyFlowName(flowDisplayName);
+    await writeBackendFlow(currentBackendWsUrl(), storageName, text);
+    logLine(`[flow saved to backend as "${storageName}"]`, "ok");
   } catch (err) {
-    logLine(`[save failed] ${err instanceof Error ? err.message : String(err)}`, "err");
+    logLine(`[save failed] ${err instanceof AdminApiError ? err.message : err instanceof Error ? err.message : String(err)}`, "err");
   }
 });
 
 el("btnOpenFlow").addEventListener("click", async () => {
+  const name = el<HTMLSelectElement>("flowSelect").value;
+  if (!name) {
+    logLine('[open failed] choose a saved flow from the list first ("⟳ flows")', "err");
+    return;
+  }
   try {
-    const text = await openFlowFileFromDisk();
-    if (text === null) return; // user cancelled the picker
+    const text = await readBackendFlow(currentBackendWsUrl(), name);
     const file = parseFlowFile(text);
     await applyFlowFile(file);
     // Mirrors the file's own saved name into the input -- shows "" (the
     // placeholder) rather than literally re-typing DEFAULT_FLOW_NAME for
     // an older file that never had one, same reasoning clear-canvas's own
-    // reset uses.
+    // reset uses. Deliberately NOT the backend storage name (`name`
+    // above) -- see slugifyFlowName's own header comment on why those two
+    // strings are allowed to differ.
     el<HTMLInputElement>("flowNameInput").value = file.flowName === DEFAULT_FLOW_NAME ? "" : file.flowName;
-    logLine(`[flow loaded -- ${file.nodes.length} node(s)]`, "ok");
+    logLine(`[flow loaded from backend as "${name}" -- ${file.nodes.length} node(s)]`, "ok");
     refreshPreview();
   } catch (err) {
     const message = err instanceof FlowFileError ? `invalid flow file: ${err.message}` : err instanceof Error ? err.message : String(err);
     logLine(`[load failed] ${message}`, "err");
+  }
+});
+
+el("btnDeleteFlow").addEventListener("click", async () => {
+  const name = el<HTMLSelectElement>("flowSelect").value;
+  if (!name) {
+    logLine('[delete failed] choose a saved flow from the list first ("⟳ flows")', "err");
+    return;
+  }
+  try {
+    await deleteBackendFlow(currentBackendWsUrl(), name);
+    logLine(`[flow "${name}" deleted from backend]`, "ok");
+    await refreshFlowList();
+  } catch (err) {
+    logLine(`[delete failed] ${err instanceof Error ? err.message : String(err)}`, "err");
   }
 });
 
@@ -880,10 +960,22 @@ function setConnectedUi(connected: boolean): void {
   el<HTMLButtonElement>("btnDeploy").disabled = !connected;
 }
 
-const DEFAULT_BACKEND_WS_URL = "ws://127.0.0.1:8765/ws"; // matches __main__.py's --host 127.0.0.1 --port 8765 default and app.py's /ws route
+// DEFAULT_BACKEND_WS_URL now lives in admin-api-client.ts (imported above)
+// -- the WS transport and the admin-API client share one backend location,
+// so the fallback default only needs to exist in one place.
 
 function currentConnMode(): "direct" | "backend" {
   return el<HTMLSelectElement>("connModeSelect").value === "direct" ? "direct" : "backend";
+}
+
+/** The one backend URL this editor talks to, for both the device
+ * transport (when connModeSelect is "backend") and all storage (always,
+ * per this file's 2026-09-08 header addendum) -- a small helper so every
+ * call site (Connect, refreshBackendPorts, Save/Open/Delete flow, and the
+ * store.ts mirror PaletteSidebar.vue reads) reads backendUrlInput the same
+ * way rather than repeating the trim-or-default inline. */
+function currentBackendWsUrl(): string {
+  return el<HTMLInputElement>("backendUrlInput").value.trim() || DEFAULT_BACKEND_WS_URL;
 }
 
 /** Shows/hides the "via backend" controls (URL, port picker, refresh) --
@@ -899,6 +991,18 @@ function updateConnModeUi(): void {
 el("connModeSelect").addEventListener("change", updateConnModeUi);
 updateConnModeUi();
 
+// Mirrors backendUrlInput into store.ts's backendWsUrl (2026-09-08) --
+// PaletteSidebar.vue's "Load custom node..." picker talks to the admin
+// API directly and has no DOM reference to this input (main.ts owns all
+// direct element access, per this file's own established convention), so
+// it reads this reactive ref instead. Initialized once here, then kept in
+// sync on every edit; not read reactively anywhere else in this file
+// (every other call site here already calls currentBackendWsUrl() fresh).
+backendWsUrl.value = currentBackendWsUrl();
+el("backendUrlInput").addEventListener("input", () => {
+  backendWsUrl.value = currentBackendWsUrl();
+});
+
 /** Populates backendPortSelect from the backend's own list_ports control
  * message. Uses a short-lived BackendTransport just for this one
  * request/response, torn down immediately after -- deliberately not the
@@ -912,7 +1016,7 @@ updateConnModeUi();
  * warns against. */
 async function refreshBackendPorts(): Promise<void> {
   const select = el<HTMLSelectElement>("backendPortSelect");
-  const wsUrl = el<HTMLInputElement>("backendUrlInput").value.trim() || DEFAULT_BACKEND_WS_URL;
+  const wsUrl = currentBackendWsUrl();
   select.innerHTML = '<option value="">(loading…)</option>';
   const probe = new BackendTransport({ onDebugLine: (line) => logLine(`[backend] ${line}`, "") });
   try {
@@ -969,7 +1073,7 @@ el("btnConnect").addEventListener("click", async () => {
     setConnectedUi(true);
     logLine("[connected @ 115200 baud, direct WebSerial -- opening the port does not reset the board]", "");
   } else {
-    const wsUrl = el<HTMLInputElement>("backendUrlInput").value.trim() || DEFAULT_BACKEND_WS_URL;
+    const wsUrl = currentBackendWsUrl();
     const portName = el<HTMLSelectElement>("backendPortSelect").value;
     if (!portName) {
       logLine('[connect failed] choose a serial port from the list first ("⟳ ports")', "err");

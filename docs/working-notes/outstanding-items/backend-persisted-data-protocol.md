@@ -96,10 +96,27 @@ invalid JSON/malformed request body) rather than a bare 500 — same posture as 
 - On-disk format versioning for custom node packages (flow files already carry `formatVersion`; custom node
   descriptors don't have an equivalent yet — `local-persistence-scoping.md` already flagged this as unresolved,
   still unresolved).
-- Any editor-side consumer of these routes at all — this is backend-only. The editor still has zero WebSocket
+- ~~Any editor-side consumer of these routes at all — this is backend-only. The editor still has zero WebSocket
   client code (`backend-auth-overview.md`'s finding #4) and equally zero `fetch`-based admin-API client code;
-  nothing in the browser calls any of this yet.
+  nothing in the browser calls any of this yet.~~ **Resolved 2026-09-08.** The WS client landed 2026-09-07
+  (`editor-backend-wiring.md`); the fetch-based admin-API client landed this session
+  (`editor/src/flow-file/admin-api-client.ts`) and, per Mike's own explicit call, storage is now
+  backend-*exclusive* -- main.ts's Save/Open/Delete flow and PaletteSidebar.vue's "Load custom node..." picker
+  go through here, not file-io.ts/custom-node-io.ts's File System Access pickers (those two modules are
+  unchanged and unused, kept for the same "hidden, not deleted" reason WebSerial "direct" mode is). This also
+  needed CORS support that didn't exist before -- see `cors.py` (reflect-any-Origin, confirmed with Mike) and
+  its own header for the security reasoning; `decisions/backend.md` has the short version.
 - Concurrent-write safety across multiple backend processes/tabs — out of scope, matching this project's existing
   single-operator-local-tool assumption everywhere else (transport-auth-design.md's shared-secret model, etc.).
 - Nested/project-directory flow storage (design doc §6's fleet-of-devices framing) — flat names only for v1;
   not a one-way door, flat names are a subset of nested names.
+
+**New, named 2026-09-08 (found while wiring the editor-side client):** there's no editor UI to *author or upload*
+a custom node package to the backend, only to load one that's already there (`PaletteSidebar.vue`'s picker is
+read-only against `GET /api/custom-nodes`). A user has to place `<name>.node.json`/`<name>.node.py` directly into
+the backend's `~/.thingstudio/custom-nodes/` themselves -- fine when the backend is on the same machine
+(copy the files in), materially more friction once it isn't (Mike's own stated firewalled-backend-plus-remote-
+editor use case, `posture-2-auth.md`'s 2026-09-08 addendum): no drag-and-drop from the editor, `scp`/manual file
+placement on whatever machine the backend runs on instead. The client-side plumbing already exists and is tested
+(`admin-api-client.ts`'s `writeCustomNode`/`deleteCustomNode`, unused by any UI yet) -- what's missing is
+entirely an editor authoring/upload flow, not backend work.

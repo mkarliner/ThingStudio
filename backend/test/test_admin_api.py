@@ -180,3 +180,19 @@ async def test_admin_routes_covered_by_host_allowlist_when_wired_into_real_app(t
         assert resp.status == 403
         resp_ok = await client.get("/api/flows", headers={"Host": "localhost"})
         assert resp_ok.status == 200
+
+
+@pytest.mark.asyncio
+async def test_admin_routes_carry_cors_headers_when_wired_into_real_app(tmp_path) -> None:
+    # Same shape as the Host-allowlist coverage test above, for the other
+    # cross-cutting middleware admin_api.py's routes inherit for free
+    # (cors.py -- not re-testing the middleware itself, test_cors.py already
+    # does that): confirms a real editor fetch() from a different origin
+    # would actually get a readable response from these routes.
+    from thingstudio_backend.app import create_app
+
+    app = create_app(data_dir=tmp_path / ".thingstudio")
+    async with TestClient(TestServer(app)) as client:
+        resp = await client.get("/api/flows", headers={"Origin": "http://localhost:5173"})
+        assert resp.status == 200
+        assert resp.headers["Access-Control-Allow-Origin"] == "http://localhost:5173"

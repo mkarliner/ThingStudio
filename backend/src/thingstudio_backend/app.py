@@ -13,6 +13,12 @@
 # backend-persisted-data-protocol.md, [P1]) is no longer undecided or
 # unbuilt as of 2026-09-07 -- shape confirmed with Mike (HTTP admin API,
 # not a WS control-plane extension); see persisted_store.py, admin_api.py.
+# cors_middleware (2026-09-08) is the outermost middleware -- it wraps the
+# Host allowlist so a CORS preflight OPTIONS (no route registered for it)
+# gets answered before host_allowlist_middleware ever sees it, and so every
+# response, including a host-allowlist 403 or an admin-API error body,
+# still carries the CORS headers the editor's fetch() calls need to read
+# it at all. See cors.py's own header for the policy and its reasoning.
 
 from __future__ import annotations
 
@@ -21,6 +27,7 @@ from pathlib import Path
 from aiohttp import web
 
 from .admin_api import make_admin_routes
+from .cors import cors_middleware
 from .middleware import DEFAULT_ALLOWED_HOSTS, host_allowlist_middleware
 from .persisted_store import PersistedStore
 from .ws_relay import websocket_handler
@@ -31,7 +38,7 @@ def create_app(
     static_dir: Path | None = None,
     data_dir: Path | None = None,
 ) -> web.Application:
-    app = web.Application(middlewares=[host_allowlist_middleware(allowed_hosts)])
+    app = web.Application(middlewares=[cors_middleware, host_allowlist_middleware(allowed_hosts)])
     app.router.add_get("/ws", websocket_handler)
     # Registered before the static catch-all below -- aiohttp's router
     # matches resources in registration order, so these have to come first

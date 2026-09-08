@@ -359,21 +359,29 @@ pipeline driven by hardcoded buttons.
     (`[P1]`) decided and built** -- HTTP admin API (`persisted_store.py`,
     `admin_api.py`), `~/.thingstudio` layout resolved, 41 new tests passing.
     This is what actually satisfies the `~/.thingstudio` trigger above -- the
-    minimal build alone didn't. Not yet run by Mike; no editor-side consumer
-    exists yet (the editor has no WebSocket client and no admin-API client
-    code either). `outstanding-items/backend-persisted-data-protocol.md`.
+    minimal build alone didn't. `outstanding-items/backend-persisted-data-protocol.md`.
   - **Same day, next session: editor<->backend wiring (`[P1]`) -- the WS
     transport client + connection-mode picker half built** (`BackendTransport`,
     `connModeSelect`), scoped explicitly to that half, not the admin-API
-    client (still open). "Via backend" is now the default connection mode;
-    "direct" WebSerial stays as a deliberate, working fallback. Found and
-    fixed two real bugs the same session -- the backend's serial relay
+    client. "Via backend" is now the default connection mode; "direct"
+    WebSerial stays as a deliberate, working fallback (at the time). Found
+    and fixed two real bugs the same session -- the backend's serial relay
     assumed the wrong wire format (raw binary instead of the base64/F64-line
     encoding the real device listener actually speaks), and a WS teardown
     race in `_send_status()` that could crash the backend, both fixed with
     regression tests. **Then verified end-to-end**: Mike confirmed a real
     "via backend" connect to an ESP32 plus a basic MQTT flow both work --
     the first real round trip through the backend, not just unit tests.
+    `outstanding-items/editor-backend-wiring.md`.
+  - **2026-09-08: admin-API fetch client (`[P1]`) landed, closing out both
+    items above** -- `editor/src/flow-file/admin-api-client.ts`, plus CORS
+    support the backend didn't have before (`cors.py`, reflect-any-Origin).
+    Turned into a bigger call than "just the client": Mike's own decision was
+    that storage is backend-*exclusive* now, so `file-io.ts`/`custom-node-io.ts`'s
+    File System Access pickers are no longer called from anywhere, and
+    "direct" WebSerial's `connModeSelect` option is hidden (not removed) since
+    it can no longer save/load a flow on its own. 89 backend tests, 365
+    editor tests, all passing. `outstanding-items/backend-persisted-data-protocol.md`,
     `outstanding-items/editor-backend-wiring.md`.
 - **Real editor shell.** Connect + `HELLO` handshake, a Deploy flow that
   runs the pre-flight version/space check before sending `DEPLOY`, and the

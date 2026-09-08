@@ -4,7 +4,7 @@ Thingstudio runs entirely in the browser — no separate install for the editor 
 
 ## Requirements
 
-Any modern browser works with the **Via backend** connection mode (see below). **Direct (WebSerial)** mode needs Chrome or Edge — WebSerial isn't available in Safari, and only in recent Firefox.
+A backend running somewhere reachable — see "Connecting" below. It's needed for saving and opening flows and custom nodes, and for reaching a board. Any modern browser works with the editor itself.
 
 ## Running the editor
 
@@ -31,9 +31,7 @@ Reset the board afterward and watch its first boot to confirm the runtime is run
 
 ## Connecting
 
-The toolbar has a mode picker: **Via backend** or **Direct (WebSerial)**. This chooses how the editor reaches your board, and it's a real choice you make each time, not something the editor guesses for you.
-
-**Via backend** (the default) talks to a small local backend process instead of the browser talking to the board directly. Start it once per session:
+Start the backend once per session, on whatever machine can reach your board:
 
 ```sh
 cd backend
@@ -41,10 +39,8 @@ pip install -e .
 thingstudio-backend
 ```
 
-Then in the editor, click **⟳ ports** to see the serial ports the backend can reach, pick one, and click **Connect**.
+Point the editor at it with the **backend URL** field — it defaults to `ws://127.0.0.1:8765/ws`, matching the backend's own default, for when both are running on the same machine. If the backend is elsewhere (a firewalled machine near your devices, say), tunnel to it — `ssh -L 8765:localhost:8765 <host>` — and leave the field on its default; the backend still only ever binds to loopback on its own machine.
 
-**Direct (WebSerial)** needs no backend at all — the browser talks straight to the board. Click **Connect** and pick the board's port from the browser's own picker. Useful for a quick session, or if the backend isn't running.
-
-Either way, the editor then asks the board to identify itself — chip type, runtime version, free flash/RAM. If nothing comes back within a few seconds, you'll see a warning that version compatibility is unverified and Deploy will proceed without the check.
+In the editor, click **⟳ ports** to see the serial ports the backend can reach, pick one, and click **Connect**. The editor then asks the board to identify itself — chip type, runtime version, free flash/RAM. If nothing comes back within a few seconds, you'll see a warning that version compatibility is unverified and Deploy will proceed without the check.
 
 This is normal the first time you connect to a board that hasn't been reset since power-up — the listener is running, it just hasn't been asked to say hello yet. Click **Check status** to ask again without resetting or redeploying. If it's still silent after that, the board's listener may not actually be running; reset the board and try again.

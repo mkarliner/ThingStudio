@@ -2,11 +2,13 @@
 
 ## Save and open
 
-**Save flow** writes the current canvas to a `.flow.json` file: node types and properties, wiring, canvas layout, and config nodes, each kept in its own section of the file. Position changes and behavior changes land in different parts of the file, so a `git diff` on a saved flow tells you something real — moving a node doesn't look like rewriting one.
+Flows are saved on the backend, not to a file on your disk. **Save flow** writes the current canvas — node types and properties, wiring, canvas layout, and config nodes, each kept in its own section — under the flow name shown at the top of the editor.
 
-**Open flow** loads one back, canvas layout included.
+Click **⟳ flows** to list what's saved, pick one, then **Open flow** to load it back, canvas layout included. **Delete flow** removes the selected one.
 
-**The flow name** field at the top of the editor is saved in the file and sent with every deploy, so a connected board's identity is visible in the console rather than just an opaque deploy id.
+**The flow name** field is what Save uses as the storage name (spaces and punctuation become dashes), is saved inside the file itself, and is sent with every deploy — so a connected board's identity is visible in the console rather than just an opaque deploy id.
+
+A flow saved this way is still an ordinary JSON file underneath — it lives in the backend's `~/.thingstudio/flows/` directory, one file per flow, git-friendly the same way a locally-saved file always was.
 
 ## Deploy
 

@@ -35,7 +35,7 @@
   Custom nodes (docs/working-notes/custom-node-authoring-scoping.md,
   2026-08-20): a second section below the built-in list, populated from
   custom-nodes-store.ts, plus a "Load custom node..." action that owns the
-  actual file-pick/validate/register sequence (custom-node-io.ts +
+  actual list/fetch/validate/register sequence (admin-api-client.ts +
   custom-node.ts's validateCustomNodeDescriptor + the store) end to end --
   kept here rather than in main.ts since it's entirely about this
   sidebar's own list, and this component already owns its own drag
@@ -43,6 +43,16 @@
   two new emits (`customNodeLoaded`/`customNodeLoadError`) rather than
   reaching into main.ts's console directly, matching this file's existing
   "only talk to the parent via emits" shape.
+
+  Backend-exclusive as of 2026-09-08 (main.ts's own header addendum): this
+  used to open a native two-file picker (custom-node-io.ts) against local
+  disk; it now lists what's saved on the backend's /api/custom-nodes and
+  lets the user pick one from an inline expanding list (no native
+  file-picker equivalent for "choose one of these backend-known names", so
+  this renders its own small list of palette-row-styled buttons rather
+  than inventing a new widget kind). custom-node-io.ts itself is
+  unchanged and unused from here now, kept for the same "hidden, not
+  deleted" reason main.ts's header gives WebSerial "direct" mode.
 -->
 <template>
   <div class="palette-sidebar" :class="{ 'is-collapsed': collapsed }">
@@ -76,7 +86,16 @@
 
       <button class="palette-row load-custom-row" @click="onLoadCustomNode">
         <span class="palette-icon">+</span>
-        <span class="palette-label">Load custom node…</span>
+        <span class="palette-label">{{ backendCustomNodeChoices === null ? "Load custom node…" : "Cancel" }}</span>
+      </button>
+      <button
+        v-for="name in backendCustomNodeChoices ?? []"
+        :key="name"
+        class="palette-row load-custom-row"
+        @click="onPickBackendCustomNode(name)"
+      >
+        <span class="palette-icon">◆</span>
+        <span class="palette-label">{{ name }}</span>
       </button>
     </template>
   </div>
@@ -86,7 +105,8 @@
 import { computed, ref } from "vue";
 import { NODE_PALETTE, DEFAULT_KIND_STYLE, DEFAULT_NODE_GROUPS, DRAG_MIME, CUSTOM_DRAG_MIME, type NodeKind } from "./palette";
 import { customNodePackages, customNodesVersion, loadOrReplaceCustomNodePackage } from "./custom-nodes-store";
-import { loadCustomNodePackageFromDisk, CustomNodeFileIoError } from "../../flow-file/custom-node-io";
+import { backendWsUrl } from "./store";
+import { AdminApiError, listCustomNodes, readCustomNode } from "../../flow-file/admin-api-client";
 import { validateCustomNodeDescriptor, CustomNodeDescriptorError } from "../../node-library/custom-node";
 
 const emit = defineEmits<{
@@ -211,22 +231,46 @@ function onRowDragStart(event: DragEvent, row: PaletteRow): void {
   if (event.dataTransfer) event.dataTransfer.effectAllowed = "copy";
 }
 
+// null = picker closed; a (possibly empty) array = the backend's current
+// /api/custom-nodes listing, shown as an expanding set of rows below the
+// "Load custom node..." button rather than a native picker -- there's no
+// OS-level equivalent for "choose one of these backend-known names" the
+// way file-io.ts/custom-node-io.ts could lean on showOpenFilePicker.
+const backendCustomNodeChoices = ref<string[] | null>(null);
+
 async function onLoadCustomNode(): Promise<void> {
-  let jsonName = "*.node.json"; // overwritten once the picker resolves; fallback keeps a pre-pick JSON.parse failure's message generic-but-sensible
+  if (backendCustomNodeChoices.value !== null) {
+    // Second click while the list is already open -- treat it as
+    // "cancel" rather than silently re-fetching underneath an open list.
+    backendCustomNodeChoices.value = null;
+    return;
+  }
   try {
-    const files = await loadCustomNodePackageFromDisk();
-    if (!files) return; // user cancelled the picker
-    jsonName = files.jsonName;
-    const rawDescriptor: unknown = JSON.parse(files.jsonText);
+    const names = await listCustomNodes(backendWsUrl.value);
+    if (names.length === 0) {
+      emit("customNodeLoadError", "no custom nodes saved on the backend yet");
+      return;
+    }
+    backendCustomNodeChoices.value = names;
+  } catch (err) {
+    emit("customNodeLoadError", err instanceof AdminApiError || err instanceof Error ? err.message : String(err));
+  }
+}
+
+async function onPickBackendCustomNode(name: string): Promise<void> {
+  backendCustomNodeChoices.value = null;
+  try {
+    const pkg = await readCustomNode(backendWsUrl.value, name);
+    const rawDescriptor: unknown = JSON.parse(pkg.descriptor);
     const descriptor = validateCustomNodeDescriptor(rawDescriptor);
-    loadOrReplaceCustomNodePackage(descriptor, files.pythonText);
+    loadOrReplaceCustomNodePackage(descriptor, pkg.implementation);
     emit("customNodeLoaded", descriptor.type);
   } catch (err) {
     const message =
-      err instanceof CustomNodeFileIoError || err instanceof CustomNodeDescriptorError
+      err instanceof AdminApiError || err instanceof CustomNodeDescriptorError
         ? err.message
         : err instanceof SyntaxError
-          ? `"${jsonName}" is not valid JSON: ${err.message}`
+          ? `custom node "${name}"'s descriptor is not valid JSON: ${err.message}`
           : err instanceof Error
             ? err.message
             : String(err);

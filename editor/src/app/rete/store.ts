@@ -25,8 +25,18 @@
 
 import { ref } from "vue";
 import type { AnyThingstudioNode } from "./nodes";
+import { DEFAULT_BACKEND_WS_URL } from "../../flow-file/admin-api-client";
 
 export const selectedNode = ref<AnyThingstudioNode | null>(null);
+
+// Backend URL (2026-09-08, admin-API wiring): main.ts owns the actual
+// `backendUrlInput` DOM element (this file's own established convention --
+// see this module's header, "framework-agnostic... bridging" -- never
+// reads the DOM itself) and mirrors its value in here on every edit.
+// PaletteSidebar.vue's "Load custom node..." picker talks to the backend's
+// admin API directly and needs this editor's current backend location to
+// do it, without reaching into main.ts's DOM to get it.
+export const backendWsUrl = ref<string>(DEFAULT_BACKEND_WS_URL);
 
 // Bumped whenever a node's `properties` object is mutated from outside
 // Vue's reactivity (Rete nodes are plain classes, not reactive) so
