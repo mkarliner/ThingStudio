@@ -16,7 +16,7 @@ Custom node packages are the one thing that still lives on the backend, in `~/.t
 
 **Compile → Deploy** compiles the current canvas to MicroPython bytecode and sends it to the connected board, replacing whatever flow is currently running there.
 
-A successful deploy shows a confirmation in the console and the new flow starts running immediately. A failed one shows a specific error — either a compile error (something in the flow itself, like a missing required property) or a space error (the compiled flow doesn't fit in the board's available flash/RAM).
+A successful deploy shows a confirmation in the console and the new flow starts running immediately. A failed one shows a specific error — either a compile error (something in the flow itself, like a missing required property) or a space error (the compiled flow doesn't fit in the board's available flash/RAM). The button grays out right after a successful deploy — it means the board is already running exactly what's on the canvas — and re-enables the moment you change anything (a property, a node, a wire). A failed deploy leaves it enabled so you can fix the problem and retry immediately.
 
 **Check status** re-requests the board's identity — chip type, runtime version, and whichever flow is currently running — without resetting the board or redeploying anything. Useful for confirming what's actually on the board after reconnecting to a session already in progress.
 

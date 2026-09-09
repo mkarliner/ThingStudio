@@ -755,13 +755,40 @@ function highlightNodeFromNodeError(nodeId: string): void {
 // triggers a refresh; as before, Deploy always re-compiles from the live
 // graph right before sending regardless of when this last ran, so nothing
 // here is ever the source of truth for what gets deployed.
+// Deploy-button "clean" state (Mike's ask, 2026-09-09): the Compile ->
+// Deploy button should stay disabled right after a successful deploy --
+// signals "what's running on the device already matches what's open" --
+// and re-enable the moment the flow actually changes again, rather than
+// (the old behavior) re-enabling unconditionally the instant the deploy
+// attempt finishes, success or not. Piggybacks on the exact same two
+// change-signals refreshPreview() already listens to below (this file's
+// own comment there: "every user action that could change the compiled
+// source" triggers one of these) -- anything that marks the preview
+// stale marks the deploy button re-deployable too, so there's no second,
+// independently-maintained notion of "did the flow change" to drift out
+// of sync with the first. Starts false (nothing deployed yet this
+// session, and setConnectedUi resets it on every fresh connect too --
+// see that function) so Deploy is always available the moment you can
+// reach a device.
+let deployedClean = false;
+
+function updateDeployButtonEnabled(): void {
+  el<HTMLButtonElement>("btnDeploy").disabled = !transport.isConnected || deployedClean;
+}
+
 reteEditor.addPipe((context) => {
   if (context.type === "nodecreated" || context.type === "noderemoved" || context.type === "connectioncreated" || context.type === "connectionremoved" || context.type === "cleared") {
+    deployedClean = false;
+    updateDeployButtonEnabled();
     refreshPreview();
   }
   return context;
 });
-watch(propertyVersion, () => refreshPreview());
+watch(propertyVersion, () => {
+  deployedClean = false;
+  updateDeployButtonEnabled();
+  refreshPreview();
+});
 refreshPreview();
 
 // ---------------------------------------------------------------------
@@ -939,7 +966,14 @@ function setConnectedUi(connected: boolean): void {
   el<HTMLButtonElement>("btnConnect").disabled = connected;
   el<HTMLButtonElement>("btnDisconnect").disabled = !connected;
   el<HTMLButtonElement>("btnCheckStatus").disabled = !connected;
-  el<HTMLButtonElement>("btnDeploy").disabled = !connected;
+  // A fresh connection always starts deployable, regardless of whatever
+  // deployedClean was left at from a previous connection (a different
+  // board very likely doesn't already have this exact flow running, and
+  // even the same board could have been redeployed to, reset, or power-
+  // cycled since -- HELLO's own currentFlowName/currentFlowDeployId is
+  // the real source of truth for that, not this button's own state).
+  if (connected) deployedClean = false;
+  updateDeployButtonEnabled();
 }
 
 // DEFAULT_BACKEND_WS_URL now lives in admin-api-client.ts (imported above)
@@ -1184,12 +1218,17 @@ el("btnDeploy").addEventListener("click", async () => {
         logLine(`[deploy failed] ${result.code}: ${result.message}`, "err");
       } else {
         logLine("[deploy OK -- flow is running on the device]", "ok");
+        // Only the real success path marks the button clean (Mike's ask,
+        // 2026-09-09) -- a DEPLOY_ERROR or a timeout below both mean the
+        // device does NOT have this flow running, so the button must stay
+        // available to retry, not go stale-disabled on a failed attempt.
+        deployedClean = true;
       }
     } catch {
       logLine(`[deploy timeout] no DEPLOY_ACK/DEPLOY_ERROR within ${DEPLOY_TIMEOUT_MS}ms`, "err");
     }
   } finally {
-    btn.disabled = !transport.isConnected;
+    updateDeployButtonEnabled();
   }
 });
 
