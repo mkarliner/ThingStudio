@@ -8,7 +8,8 @@ the following points and questions are for discussion around the scope of the MV
 # Bugs -- priority
 - 2026-09-02: wifi status, mqtt nodes should have an indicator of status (on the canvas itself, not just console output).
   [tracked, not scoped — outstanding-items.md, "UI / editor" section]
-
+- Can't connect two wires to a node input
+- wifi status node should emit complete wifi status include ip address
 # Platforms
 We need to support the following platforms for the editor/backend:
 - MacOS
