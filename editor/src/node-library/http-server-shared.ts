@@ -305,6 +305,22 @@ ${routeLines.join("\n")}
         # lifetime to this object's own.
         global _http_server_${port}
         _http_server_${port} = await asyncio.start_server(_http_handler_${port}, '0.0.0.0', ${port})
+        # Real bug, hit on the second deploy of any flow with an http_in
+        # node (not hypothetical -- Mike's own redeploy): without this,
+        # nothing ever closed the previous deploy's listening socket, so
+        # the next deploy's own start_server() call on the same port
+        # failed with EADDRINUSE. Same fix shape udp-receive.ts/
+        # udp-send.ts already established for their own sockets
+        # (redeploy-cleanup-and-network-fault-detection-briefing.md,
+        # Problem 1) -- runtime.cancel_running() (device-runtime/src/
+        # runtime.py) calls every registered cleanup, deterministically,
+        # on every redeploy, rather than relying on GC timing. Registered
+        # here (inside _http_ensure_<port>, at the point the socket is
+        # actually created) rather than at module setup time, for the
+        # same reason the route table itself moved here -- this function
+        # only runs once per port (the _http_started_<port> guard above),
+        # so this registration is naturally exactly-once too.
+        runtime.register_cleanup(${JSON.stringify(`http-server-${port}`)}, lambda: _http_server_${port}.close())
 `.trim();
 
   return { key: `http-server-${port}`, code };

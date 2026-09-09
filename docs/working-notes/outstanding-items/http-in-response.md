@@ -52,6 +52,41 @@ has already executed), instead of at raw module scope. `node-http-in.test.ts`'s 
 path" test is what surfaced this; worth remembering as a real hazard for any future shared-setup-statement
 node whose setup code needs to reference another sibling's own per-instance name.
 
+## A second gap, found by Mike's own real-browser check (not the automated tests)
+
+`app/rete/PaletteSidebar.vue` keeps its own separate, hand-ordered `KINDS: NodeKind[]` display list --
+**not** derived from `palette.ts`'s `NODE_PALETTE`/the `NodeKind` union. Both new types were already in the
+union and in `NODE_PALETTE` (compiled clean, every test above passed), but a kind only actually renders as a
+palette row if it's *also* listed in `PaletteSidebar.vue`'s own `KINDS` array -- forgotten in the first pass,
+so neither node showed up in the editor despite everything off-device checking out clean. Fixed by adding
+both to `KINDS` (`http_in` with the other sources, `http_response` at the end with `debug`, matching this
+list's own existing source-then-sink convention) and documenting the gap in that file's own header comment,
+same "leave the trap documented so the next addition doesn't repeat it" pattern this codebase uses elsewhere.
+Re-verified clean (`tsc`/`vitest`/`vite build`) after the fix.
+
+## A third bug, found from Mike's own real-hardware redeploy
+
+```
+[17:11:44.686] NODE_ERROR node=16762bf11e80d716 type=OSError msg=[Errno 112] EADDRINUSE
+```
+
+The second deploy of any flow with an `http_in` node failed -- the shared listening socket
+`_http_ensure_<port>()` creates was never registered for cleanup, so nothing closed it on redeploy (the
+previous deploy's socket just sat there bound, since garbage-collection timing is exactly what
+`redeploy-cleanup-and-network-fault-detection-briefing.md`'s Problem 1 already fixed for `udp_send`/
+`udp_receive` -- this node simply hadn't been given the same treatment). Fixed the same way those two
+already are: `runtime.register_cleanup("http-server-<port>", lambda: _http_server_<port>.close())`, registered
+at the exact point the socket is created (inside `_http_ensure_<port>`, right after `asyncio.start_server`
+succeeds) so it's naturally exactly-once, matching that function's own `_http_started_<port>` guard.
+`runtime.cancel_running()` (device-runtime's own scheduler) calls every registered cleanup on every redeploy.
+
+Covered by two new tests: a structural one confirming the generated code actually calls
+`runtime.register_cleanup` with the right key/close target, and a functional one that starts a real server,
+simulates a redeploy in-process (runs the registered cleanup, then re-triggers `_http_ensure_<port>`), and
+confirms a fresh request against the same port succeeds -- rather than trusting the structural check alone,
+given this same node already produced one surprising bug (the module-scope ordering issue above) that a
+text-match test wouldn't have caught either.
+
 ## Verified
 
 Off-device: `tsc --noEmit` clean, `vitest run` clean (384/384, including 19 new tests in

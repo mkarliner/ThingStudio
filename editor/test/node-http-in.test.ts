@@ -153,7 +153,14 @@ async function startServer(routes: Route[]): Promise<void> {
     consumeFns.push(`async def _consume_${route.id}():\n${indent(`while True:\n${indent(loopBody, 4)}`, 4)}`);
   }
 
-  const lines: string[] = ["import asyncio", "import sys", ...seenImports, "", ...setupBlocks, ""];
+  // "import runtime" + "asyncio = runtime.asyncio", NOT a bare "import
+  // asyncio" -- matching compile.ts's own real boilerplate exactly (and
+  // node-udp-receive.test.ts's identical precedent), so pymock's own
+  // runtime.py fixture -- which provides a real, dedup-by-key
+  // register_cleanup() -- is what generated code's
+  // `runtime.register_cleanup(...)` calls (http-server-shared.ts) resolve
+  // against, instead of a bare NameError.
+  const lines: string[] = ["import runtime", "asyncio = runtime.asyncio", "import sys", ...seenImports, "", ...setupBlocks, ""];
   lines.push(`async def ${responseResult.functionName}(msg):`);
   lines.push(indent(responseResult.functionBody, 4));
   lines.push("");
@@ -281,6 +288,114 @@ describe("thingstudio/http_in + thingstudio/http_response nodes", () => {
   it("http_response completing a request that was never asked for raises a clear, attributable error", () => {
     const responseResult = httpResponseNode.codegenSink!({ id: "resp", type: "thingstudio/http_response", properties: {} }, ctx);
     expect(responseResult.functionBody).toContain("did not come from an http_in node");
+  });
+
+  // Real bug, hit on Mike's own second real-browser deploy of a flow with
+  // an http_in node (not hypothetical): without a registered cleanup, the
+  // previous deploy's listening socket was never closed, so the next
+  // deploy's own asyncio.start_server() call on the same port failed with
+  // EADDRINUSE. Same fix shape udp-receive.ts/udp-send.ts already
+  // established (redeploy-cleanup-and-network-fault-detection-
+  // briefing.md's Problem 1) -- see http-server-shared.ts's own comment
+  // at the register_cleanup() call site.
+  it("registers a redeploy cleanup that closes the listening server, keyed by port", () => {
+    httpInNodes = [httpInGraphNode("a", { port: 8080, path: "/", method: "GET" })];
+    const result = httpInNode.codegenEventSource!(httpInNodes[0]!, ctx);
+    const serverSetup = result.statements?.find((s) => s.key === "http-server-8080");
+    expect(serverSetup?.code).toContain('runtime.register_cleanup("http-server-8080"');
+    expect(serverSetup?.code).toContain("_http_server_8080.close()");
+  });
+
+  it("surviving a redeploy: closing the registered cleanup actually frees the port for an immediate rebind", async () => {
+    const port = 18090;
+    httpInNodes = [httpInGraphNode("a", { port, path: "/", method: "GET" })];
+    const src = httpInNode.codegenEventSource!(httpInNodes[0]!, ctx);
+    const responseResult = httpResponseNode.codegenSink!({ id: "resp", type: "thingstudio/http_response", properties: {} }, ctx);
+
+    const setupCode = (src.statements ?? []).map((s) => s.code).join("\n\n");
+    const script = [
+      "import runtime",
+      "asyncio = runtime.asyncio",
+      ...(src.imports ?? []),
+      "",
+      setupCode,
+      "",
+      `async def ${responseResult.functionName}(msg):`,
+      indent(responseResult.functionBody, 4),
+      "",
+      "async def _consume():",
+      "    while True:",
+      indent(src.waitStatement, 8),
+      indent(src.buildMsg, 8),
+      "        msg['payload'] = 'ok'",
+      `        msg = await ${responseResult.functionName}(msg)`,
+      "",
+      "async def _main():",
+      "    asyncio.create_task(_consume())",
+      `    await _http_ensure_${port}()`,
+      '    print("READY", flush=True)',
+      "    await asyncio.sleep(0.2)",
+      // Simulates what runtime.cancel_running() does on a real redeploy:
+      // run every registered cleanup, then let the (in this test,
+      // simulated-fresh) module set the server up again from scratch.
+      `    runtime._cleanups["http-server-${port}"]()`,
+      `    global _http_started_${port}`,
+      `    _http_started_${port} = False`,
+      `    await _http_ensure_${port}()`,
+      '    print("READY2", flush=True)',
+      "    await asyncio.sleep(3600)",
+      "",
+      "asyncio.run(_main())",
+    ].join("\n");
+
+    const dir = mkdtempSync(join(tmpdir(), "thingstudio-httpin-redeploy-"));
+    const scriptPath = join(dir, "_server.py");
+    writeFileSync(scriptPath, script);
+    const pymockDir = join(__dirname, "fixtures", "pymock");
+
+    stderrChunks = [];
+    proc = spawn("python3", [scriptPath], { env: { ...process.env, PYTHONPATH: pymockDir } });
+    proc.stderr.on("data", (c) => stderrChunks.push(c.toString()));
+
+    const seen = { ready: false, ready2: false };
+    const waitFor = (label: "READY" | "READY2") =>
+      new Promise<void>((resolve, reject) => {
+        if ((label === "READY" && seen.ready) || (label === "READY2" && seen.ready2)) {
+          resolve();
+          return;
+        }
+        let out = "";
+        const timer = setTimeout(() => reject(new Error(`never saw ${label} within 3s. stderr:\n${stderrChunks.join("")}`)), 3000);
+        const onData = (c: Buffer) => {
+          out += c.toString();
+          if (out.includes("READY2")) seen.ready2 = true;
+          if (out.includes("READY")) seen.ready = true;
+          if ((label === "READY" && seen.ready) || (label === "READY2" && seen.ready2)) {
+            clearTimeout(timer);
+            proc?.stdout.off("data", onData);
+            resolve();
+          }
+        };
+        proc?.stdout.on("data", onData);
+        proc?.on("exit", (code) => {
+          clearTimeout(timer);
+          reject(new Error(`server process exited early (code ${code}) waiting for ${label}. This is exactly the EADDRINUSE regression if it happens after READY. stderr:\n${stderrChunks.join("")}`));
+        });
+      });
+
+    await waitFor("READY");
+    const firstRes = await fetch(`http://127.0.0.1:${port}/`);
+    expect(await firstRes.text()).toBe("ok");
+
+    // If register_cleanup's close() didn't actually work, this second
+    // _http_ensure_<port>() call raises OSError EADDRINUSE, which -- being
+    // uncaught inside _main()'s own top-level task -- crashes the whole
+    // process before READY2 ever prints. waitFor's own "exited early"
+    // rejection is what surfaces that as a clear, attributable test
+    // failure rather than a hang.
+    await waitFor("READY2");
+    const secondRes = await fetch(`http://127.0.0.1:${port}/`);
+    expect(await secondRes.text()).toBe("ok");
   });
 
   it("declares the expected ports (source-only output for http_in, sink-only input for http_response)", () => {

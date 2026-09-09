@@ -127,6 +127,16 @@ const emit = defineEmits<{
 // "hardware"-group sinks). variable_get/variable_set got the same
 // treatment the same day, then were hidden again -- see palette.ts's own
 // header for why.
+//
+// http_in/http_response added 2026-09-08 -- KINDS is this file's own
+// separate display-order list, NOT derived from NodeKind/NODE_PALETTE
+// (whose entries alone don't make a row actually render -- a real gap
+// this addition tripped over: both types were already in the NodeKind
+// union and NODE_PALETTE, compiled and passed tests clean, but were
+// invisible in the editor until added here too). http_in goes with the
+// other sources (it's a source, like wifi_status/udp_receive/
+// mqtt_subscribe); http_response goes with debug at the very end (both
+// terminal sinks with no properties-panel-driving canvas complexity).
 const KINDS: NodeKind[] = [
   "inject",
   "timer",
@@ -134,6 +144,7 @@ const KINDS: NodeKind[] = [
   "wifi_status",
   "udp_receive",
   "mqtt_subscribe",
+  "http_in",
   "function",
   "http_request",
   "delay",
@@ -141,6 +152,7 @@ const KINDS: NodeKind[] = [
   "pwm_out",
   "udp_send",
   "mqtt_publish",
+  "http_response",
   "debug",
 ];
 
