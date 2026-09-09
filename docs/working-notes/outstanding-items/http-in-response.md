@@ -2,7 +2,9 @@
 
 ## Status
 
-Implemented and off-device verified, 2026-09-08. Not yet real-hardware verified by Mike.
+Implemented 2026-09-08, real-hardware verified by Mike 2026-09-09 -- including a real redeploy pass (the
+EADDRINUSE bug below was found and fixed as part of that verification) and the palette-visibility fix.
+Nothing left open.
 
 ## Background
 
@@ -122,7 +124,8 @@ built now, per Mike's own steer.
 
 ## Not yet decided / not asked
 
-Nothing outstanding on the design side — Mike's Node-RED-parity steer plus the exact-path-only /
-status-and-body-only scope answers resolved every open question this item's design phase raised. Remaining
-work is the git commit and Mike's own real-hardware verification pass, same as every other freshly-built
-node type here.
+Nothing outstanding. Mike's Node-RED-parity steer plus the exact-path-only / status-and-body-only scope
+answers resolved every open question this item's design phase raised, and the real-hardware pass (2026-09-09)
+found and closed the two real bugs above. Only the "What's deferred" section's own tracked follow-ups
+(path parameters, body parsing, per-node Content-Type, a connection cap) remain, and those are deliberate,
+not owed.

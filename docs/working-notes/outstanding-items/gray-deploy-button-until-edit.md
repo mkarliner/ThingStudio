@@ -31,4 +31,21 @@ Mike's explicit confirmation rather than assumed.
 
 ## Status
 
-**Raised, 2026-09-04. Not scoped in detail, not started.**
+**Implemented and real-browser verified by Mike, 2026-09-09.**
+
+`main.ts`: a `deployedClean` flag, false by default, set true only on a real `DEPLOY_ACK`. Reset to false by
+the exact same two signals `refreshPreview()` already listens to (`reteEditor.addPipe`'s
+nodecreated/noderemoved/connectioncreated/connectionremoved/cleared, and the `propertyVersion` watch covering
+every property-panel edit) -- no second, independently-maintained "did the flow change" mechanism. Also reset
+to false on every fresh `Connect` (a different board, or the same board reset/redeployed-to since, may not
+actually have this exact flow running -- `setConnectedUi`'s own comment has the reasoning). The button's
+`disabled` state is now `!transport.isConnected || deployedClean`, set from one function
+(`updateDeployButtonEnabled()`) instead of being written directly from three different call sites.
+
+Answers this file's own open question exactly as already resolved 2026-09-06: a `DEPLOY_ERROR` or a timeout
+does NOT set `deployedClean` -- only the real success path does -- so a failed deploy leaves the button
+enabled for an immediate retry.
+
+`docs/user-guide/flow-lifecycle.md` updated. Off-device verified (`tsc`/`vitest`/`vite build` clean, 386/386)
+-- `main.ts` has no existing test harness to extend (same "whole canvas layer" gap `delete-node-wire.md`
+already notes).
