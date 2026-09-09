@@ -1,0 +1,124 @@
+{
+  "formatVersion": 1,
+  "flowName": "untitled flow",
+  "nodes": [
+    {
+      "id": "16762bf11e80d716",
+      "type": "thingstudio/http_in",
+      "properties": {
+        "port": 9999,
+        "path": "/foo",
+        "method": "GET",
+        "responseTimeoutMs": 10000
+      }
+    },
+    {
+      "id": "21d9a93474fdd372",
+      "type": "thingstudio/wifi_status",
+      "properties": {
+        "pollMs": 5000,
+        "wifiConfigId": "249c3e19-50d0-47a9-9f31-c7593dd85ad8"
+      }
+    },
+    {
+      "id": "63176706228ebb86",
+      "type": "thingstudio/debug",
+      "properties": {}
+    },
+    {
+      "id": "895ef7295fdec5ac",
+      "type": "thingstudio/http_response",
+      "properties": {}
+    },
+    {
+      "id": "b3df4b432ebadf95",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "msg['payload'] = msg['payload']\nmsg['payload'] = \"asdfasdf\"\nreturn msg\n"
+      }
+    }
+  ],
+  "edges": [
+    [
+      "16762bf11e80d716",
+      0,
+      "b3df4b432ebadf95",
+      0
+    ],
+    [
+      "21d9a93474fdd372",
+      0,
+      "63176706228ebb86",
+      0
+    ],
+    [
+      "b3df4b432ebadf95",
+      0,
+      "895ef7295fdec5ac",
+      0
+    ]
+  ],
+  "layout": {
+    "16762bf11e80d716": {
+      "pos": [
+        246.74566650390625,
+        387.74566650390625
+      ],
+      "size": [
+        120,
+        34
+      ]
+    },
+    "21d9a93474fdd372": {
+      "pos": [
+        144.74566650390625,
+        185.25433349609375
+      ],
+      "size": [
+        120,
+        34
+      ]
+    },
+    "63176706228ebb86": {
+      "pos": [
+        360.4913330078125,
+        213.5086669921875
+      ],
+      "size": [
+        84,
+        34
+      ]
+    },
+    "895ef7295fdec5ac": {
+      "pos": [
+        593,
+        417
+      ],
+      "size": [
+        130,
+        34
+      ]
+    },
+    "b3df4b432ebadf95": {
+      "pos": [
+        404.356201171875,
+        371.3352355957031
+      ],
+      "size": [
+        100,
+        34
+      ]
+    }
+  },
+  "configs": [
+    {
+      "id": "249c3e19-50d0-47a9-9f31-c7593dd85ad8",
+      "type": "thingstudio/config/wifi",
+      "properties": {
+        "ssid": "mihome",
+        "security": "password",
+        "password": "electr1c"
+      }
+    }
+  ]
+}
