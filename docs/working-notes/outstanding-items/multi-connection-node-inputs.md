@@ -37,7 +37,6 @@ New test file `editor/test/multi-connection-inputs.test.ts` (headless, no DOM --
 `graph-adapter.test.ts`): one test per input-bearing node class confirming `multipleConnections === true`, plus an
 end-to-end test wiring two independent `inject` sources into one `debug` node's single input and running the
 compiled Python, confirming both messages fire and the sink's function is generated exactly once.
-`docs/user-guide/canvas-basics.md` updated. **Not yet real-browser verified** -- the interactive drag/drop
-behavior itself (a second wire actually landing instead of evicting the first, on a real drag gesture) is Mike's-
-own-hands-on-pass territory, same as every other canvas-drag behavior in this codebase; this headless suite
-can't reach that layer at all.
+`docs/user-guide/canvas-basics.md` updated. **Real-browser verified, 2026-09-10 (Mike).** `tsc`/`vitest` clean, and a real drag confirmed a second wire
+lands on an already-wired input instead of evicting the first. Committed `1e5353e`. Nothing left open on this
+item.

@@ -8,8 +8,6 @@ the following points and questions are for discussion around the scope of the MV
 # Bugs -- priority
 - 2026-09-02: wifi status, mqtt nodes should have an indicator of status (on the canvas itself, not just console output).
   [tracked, not scoped — outstanding-items.md, "UI / editor" section]
-- Can't connect two wires to a node input
-  [implemented 2026-09-10, real-browser drag/drop pass owed — outstanding-items.md, "UI / editor" section]
 - wifi status node should emit complete wifi status include ip address
   [implemented, off-device verified 2026-09-10, real-hardware pass owed — outstanding-items.md, "Network / config nodes" section]
 - Favicon for editor
@@ -61,6 +59,7 @@ I shouldn't have to remember what sensor is connector to a given gpio or other p
 
 # UI
 - resizable panes
+- arrange to menu to better reflect workflow connect/open/sav...
 - Allow multiple panes (still one flow)
 - delete node and wire
 - notes / README sheet for documenting flow
