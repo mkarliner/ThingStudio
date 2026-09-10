@@ -9,10 +9,12 @@ the following points and questions are for discussion around the scope of the MV
 - 2026-09-02: wifi status, mqtt nodes should have an indicator of status (on the canvas itself, not just console output).
   [tracked, not scoped — outstanding-items.md, "UI / editor" section]
 - Can't connect two wires to a node input
-  [tracked, priority set (P1) — outstanding-items.md, "UI / editor" section]
+  [implemented 2026-09-10, real-browser drag/drop pass owed — outstanding-items.md, "UI / editor" section]
 - wifi status node should emit complete wifi status include ip address
-  [tracked, priority set (P1) — outstanding-items.md, "Network / config nodes" section]
+  [implemented, off-device verified 2026-09-10, real-hardware pass owed — outstanding-items.md, "Network / config nodes" section]
 - Favicon for editor
+- Node input and output - define a consistent policy for msg/payload ext and include in claude.md
+- write explaination of node flow operation to include in user docs
 # Platforms
 We need to support the following platforms for the editor/backend:
 - MacOS

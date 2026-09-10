@@ -116,6 +116,32 @@
 // First-party classes are deliberately left as hand-written subclasses,
 // not migrated onto the generic path -- no reason to touch 9 already
 // hardware-validated node classes for symmetry alone.
+//
+// **Multi-connection inputs, 2026-09-10** (Mike's ask -- outstanding-
+// items/multi-connection-node-inputs.md): every `new ClassicPreset.Input
+// (...)` call below now passes `true` as the third (`multipleConnections`)
+// constructor argument, so any number of wires can land on one input --
+// Node-RED's own semantics, Mike's explicit design call. Previously every
+// input was implicitly single-connection (Rete's own `Input` default is
+// `false`, asymmetric with `Output`'s `true` default) -- not a
+// Thingstudio bug, just never overridden. Mechanically this is the whole
+// fix: `compile.ts`'s codegen already fully supports fan-in with no
+// change needed (its own header comment documents this as deliberate
+// from the DAG-compiler rewrite onward, and `compiler.general.test.ts`'s
+// "fan-in: two independent sources sharing one gpio_out sink" test
+// already covered the identical mechanism -- multiple upstream links
+// converging on one node, generated once, called once per incoming
+// path); `graph-adapter.ts`'s `toGraphData()`/main.ts's flow-file `edges`
+// builder already map over ALL of `editor.getConnections()` with no
+// per-input uniqueness assumption. The one real behavior change is
+// canvas-side: `rete-connection-plugin`'s `syncConnections()` used to
+// silently REPLACE an input's existing wire with a new one dropped on the
+// same socket (not a rejection -- Mike's "can't connect two wires" was
+// actually "second wire silently evicts the first"); with
+// `multipleConnections: true` that auto-eviction is skipped for that
+// port (rete-connection-plugin's own built-in behavior, confirmed by
+// reading its source -- nothing bespoke needed here), so a second wire
+// now adds alongside the first instead of replacing it.
 
 import { ClassicPreset } from "rete";
 import { socketForPayloadType } from "./sockets";
@@ -255,7 +281,7 @@ export class FunctionNode extends ClassicPreset.Node {
 
   constructor() {
     super("function");
-    this.addInput("msg", new ClassicPreset.Input(portSocket(functionNode.ports?.inputs, "msg", this.properties), "msg"));
+    this.addInput("msg", new ClassicPreset.Input(portSocket(functionNode.ports?.inputs, "msg", this.properties), "msg", true));
     this.addOutput("msg", new ClassicPreset.Output(portSocket(functionNode.ports?.outputs, "msg", this.properties), "msg"));
   }
 }
@@ -284,7 +310,7 @@ export class DelayNode extends ClassicPreset.Node {
 
   constructor() {
     super("delay");
-    this.addInput("msg", new ClassicPreset.Input(portSocket(delayNode.ports?.inputs, "msg", this.properties), "msg"));
+    this.addInput("msg", new ClassicPreset.Input(portSocket(delayNode.ports?.inputs, "msg", this.properties), "msg", true));
     this.addOutput("msg", new ClassicPreset.Output(portSocket(delayNode.ports?.outputs, "msg", this.properties), "msg"));
   }
 }
@@ -302,7 +328,7 @@ export class DebugNode extends ClassicPreset.Node {
 
   constructor() {
     super("debug");
-    this.addInput("msg", new ClassicPreset.Input(portSocket(debugNode.ports?.inputs, "msg", this.properties), "msg"));
+    this.addInput("msg", new ClassicPreset.Input(portSocket(debugNode.ports?.inputs, "msg", this.properties), "msg", true));
   }
 }
 
@@ -319,7 +345,7 @@ export class GpioOutNode extends ClassicPreset.Node {
 
   constructor() {
     super("gpio out");
-    this.addInput("signal", new ClassicPreset.Input(portSocket(gpioOutNode.ports?.inputs, "signal", this.properties), "signal"));
+    this.addInput("signal", new ClassicPreset.Input(portSocket(gpioOutNode.ports?.inputs, "signal", this.properties), "signal", true));
   }
 }
 
@@ -341,7 +367,7 @@ export class PwmOutNode extends ClassicPreset.Node {
 
   constructor() {
     super("pwm out");
-    this.addInput("duty", new ClassicPreset.Input(portSocket(pwmOutNode.ports?.inputs, "duty", this.properties), "duty"));
+    this.addInput("duty", new ClassicPreset.Input(portSocket(pwmOutNode.ports?.inputs, "duty", this.properties), "duty", true));
   }
 }
 
@@ -420,7 +446,7 @@ export class UdpSendNode extends ClassicPreset.Node {
 
   constructor() {
     super("udp send");
-    this.addInput("msg", new ClassicPreset.Input(portSocket(udpSendNode.ports?.inputs, "msg", this.properties), "msg"));
+    this.addInput("msg", new ClassicPreset.Input(portSocket(udpSendNode.ports?.inputs, "msg", this.properties), "msg", true));
   }
 }
 
@@ -466,7 +492,7 @@ export class HttpRequestNode extends ClassicPreset.Node {
 
   constructor() {
     super("http request");
-    this.addInput("msg", new ClassicPreset.Input(portSocket(httpRequestNode.ports?.inputs, "msg", this.properties), "msg"));
+    this.addInput("msg", new ClassicPreset.Input(portSocket(httpRequestNode.ports?.inputs, "msg", this.properties), "msg", true));
     this.addOutput("msg", new ClassicPreset.Output(portSocket(httpRequestNode.ports?.outputs, "msg", this.properties), "msg"));
   }
 }
@@ -522,7 +548,7 @@ export class HttpResponseNode extends ClassicPreset.Node {
 
   constructor() {
     super("http response");
-    this.addInput("msg", new ClassicPreset.Input(portSocket(httpResponseNode.ports?.inputs, "msg", this.properties), "msg"));
+    this.addInput("msg", new ClassicPreset.Input(portSocket(httpResponseNode.ports?.inputs, "msg", this.properties), "msg", true));
   }
 }
 
@@ -550,7 +576,7 @@ export class MqttPublishNode extends ClassicPreset.Node {
 
   constructor() {
     super("mqtt publish");
-    this.addInput("msg", new ClassicPreset.Input(portSocket(mqttPublishNode.ports?.inputs, "msg", this.properties), "msg"));
+    this.addInput("msg", new ClassicPreset.Input(portSocket(mqttPublishNode.ports?.inputs, "msg", this.properties), "msg", true));
   }
 }
 
@@ -608,7 +634,7 @@ export class CustomNode extends ClassicPreset.Node {
     this.properties = Object.fromEntries((descriptor.properties ?? []).map((f) => [f.name, f.default]));
 
     for (const input of descriptor.ports?.inputs ?? []) {
-      this.addInput(input.name, new ClassicPreset.Input(socketForPayloadType(input.type), input.name));
+      this.addInput(input.name, new ClassicPreset.Input(socketForPayloadType(input.type), input.name, true));
     }
     for (const output of descriptor.ports?.outputs ?? []) {
       this.addOutput(output.name, new ClassicPreset.Output(socketForPayloadType(output.type), output.name));

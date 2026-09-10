@@ -18,3 +18,16 @@ already emitted, or the existing `ip` field just isn't visible anywhere in the U
    the node's own header comment, not just docs) where it isn't, rather than chasing portability across boards.
 
 Tagged **P1**, build before the connection-status-indicator work.
+
+**Implemented and off-device verified, 2026-09-09/10 (commit `90b1622`).** All three points landed:
+`wifi-status.ts`'s emitted envelope now carries `subnet`/`gateway`/`dns` (rest of `ifconfig()`'s tuple) and `rssi`
+(ESP32-only, degrades to `None` via `except (OSError, AttributeError)` on boards that don't support it -- board-
+idiosyncrasy limitation documented in the node's own header, not chased). Change-detection extended to the full
+network-identity tuple (`connected`, `ip`, `subnet`, `gateway`, `dns`) -- `rssi` deliberately excluded from that
+comparison (it drifts constantly even on an idle link; including it would have undone the 2026-09-02 emit-on-
+change fix). Root cause of point 1 confirmed directly against real device output (`DEBUG node=... payload=True`,
+nothing else): `debug.ts` only ever printed `payload`. Fixed with a new opt-in `fullMessage` property on `debug`
+(default off, matches Node-RED's own debug-node default -- no existing flow's output changes unless a flow author
+turns it on). `docs/user-guide/nodes/wifi-status.md`/`debug.md` updated. 7 new tests in
+`node-wifi-status.test.ts`, 2 in `node-debug.test.ts` -- Mike ran `tsc --noEmit`/`vitest` himself and confirmed
+clean, then committed. **Real-hardware pass not yet done** -- off-device only so far.

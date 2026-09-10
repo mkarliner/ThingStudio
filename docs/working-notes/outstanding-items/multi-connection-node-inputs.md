@@ -17,3 +17,27 @@ input might fire from two unrelated upstream sources" in mind. Check for single-
 before shipping, not just flip the port flag and assume it works. Multi-input wiring may also matter for testing
 the connection-status-indicator work (a status fan-in wanting multiple upstream sources feeding one display) --
 see `node-status-indicators.md`.
+
+**Implemented, 2026-09-10.** Every `new ClassicPreset.Input(...)` call in `nodes.ts` now passes `true` as the
+`multipleConnections` argument (10 call sites: `function`/`delay`/`debug`/`gpio_out`/`pwm_out`/`udp_send`/
+`http_request`/`http_response`/`mqtt_publish`, plus `CustomNode`'s dynamic descriptor-driven inputs). The
+codegen-risk check this item's own scope called for turned out to be a non-issue on inspection: `compile.ts`'s
+header comment already documents fan-in as a deliberate, tested DAG-compiler feature from day one (no
+single-provenance assumption anywhere), and `compiler.general.test.ts`'s pre-existing "fan-in: two independent
+sources sharing one gpio_out sink" test already proved it -- a shared node's function is generated exactly once
+and called once per incoming path, matching Node-RED's own semantics. `graph-adapter.ts`'s `toGraphData()` and
+`main.ts`'s flow-file `edges` builder both already map over every `editor.getConnections()` entry with no
+per-input uniqueness assumption either. The only real behavior change is in the interactive canvas: Rete's
+`rete-connection-plugin`'s `syncConnections()` used to silently REPLACE an input's existing wire with a newly
+dropped one on the same socket when `multipleConnections` was `false` (not a hard rejection -- "can't connect two
+wires" was actually "the second wire silently evicts the first," confirmed by reading that plugin's own source).
+With `true`, that auto-eviction is skipped for the port -- built-in library behavior, nothing bespoke needed.
+
+New test file `editor/test/multi-connection-inputs.test.ts` (headless, no DOM -- same discipline as
+`graph-adapter.test.ts`): one test per input-bearing node class confirming `multipleConnections === true`, plus an
+end-to-end test wiring two independent `inject` sources into one `debug` node's single input and running the
+compiled Python, confirming both messages fire and the sink's function is generated exactly once.
+`docs/user-guide/canvas-basics.md` updated. **Not yet real-browser verified** -- the interactive drag/drop
+behavior itself (a second wire actually landing instead of evicting the first, on a real drag gesture) is Mike's-
+own-hands-on-pass territory, same as every other canvas-drag behavior in this codebase; this headless suite
+can't reach that layer at all.
