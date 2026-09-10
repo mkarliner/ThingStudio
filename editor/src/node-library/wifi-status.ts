@@ -98,6 +98,38 @@
 // matching the old behavior for that one case.
 
 //
+// **Behavior change, 2026-09-09** (Mike's ask -- outstanding-items/
+// wifi-status-completeness.md): the emitted envelope now carries the
+// rest of `ifconfig()`'s 4-tuple (`subnet`/`gateway`/`dns`, alongside the
+// existing `ip`) plus `rssi`. `subnet`/`gateway`/`dns` are treated as
+// network-identity fields, same category as `ip` -- folded into the
+// change-detection tuple below, so a change to any of them (not just
+// `ip`) re-triggers emission, same reasoning the 2026-09-02 IP-change
+// case above already established.
+//
+// `rssi` is deliberately NOT part of that tuple. It's continuous
+// telemetry, not connection-identity state -- signal strength drifts by
+// a dBm or two constantly even on an otherwise-idle, still-connected
+// link, and folding it into the equality check would silently undo the
+// whole point of 2026-09-02's emit-on-change change (a flow polling
+// every second would go back to emitting every second). So `rssi` is
+// computed fresh on every poll and included whenever a message DOES fire
+// for another reason, but its own fluctuation never causes one. That
+// means the RSSI value in an emitted message is a snapshot as of the
+// last actual connection-state change, not a live reading -- genuinely
+// live RSSI streaming is Tier 2 live-value-streaming territory
+// (tier2-live-streaming-persistence.md), not this node's job.
+//
+// `rssi`'s read itself (`_wifi_sta.status('rssi')`) is wrapped in
+// `except (OSError, AttributeError)` -- it's an ESP-IDF-specific status
+// key, not a portable MicroPython API across every port/board (RP2040's
+// cyw43 driver, for one, doesn't support it). Per CLAUDE.md's whack-
+// a-mole/board-idiosyncrasy corollary: this degrades to `rssi: None` on
+// boards that don't support it, rather than chasing per-board RSSI
+// support -- a documented limitation, not a silent gap (see this node's
+// user-guide entry).
+
+//
 // **This node is now the flow's sole owner of WiFi identity, 2026-09-04
 // (Mike's own real-hardware finding, same day):** every other network
 // node type that needs the station interface up -- udp_send, udp_receive,
@@ -290,36 +322,56 @@ export const wifiStatusNode: NodeDefinition = {
     // but not rejected) each need their own "last reported state," matching
     // mqtt-subscribe.ts's `readyVar` precedent (ctx.uniqueName's result is
     // already flow-wide-unique, so it doubles safely as the setup-statement
-    // dedup key too). Tracks (connected, ip) as a pair, not just the bool --
-    // an IP change while still connected (DHCP lease renewal to a different
-    // address) is a real status change worth re-emitting, not just the
-    // connected/disconnected transition.
+    // dedup key too). Tracks (connected, ip, subnet, gateway, dns) as a
+    // tuple, not just the bool -- any network-identity field changing while
+    // still connected (DHCP lease renewal, most commonly a new `ip`, but a
+    // new `gateway`/`dns` is equally a real change) is worth re-emitting,
+    // not just the connected/disconnected transition. `rssi` is
+    // deliberately excluded from this tuple -- see this file's 2026-09-09
+    // header note for why.
     const lastVar = ctx.uniqueName("wifi_status_last");
 
     return {
       imports: ["import network"],
       statements: [wifiSetupStatement(ssid, password, security), { key: lastVar, code: `${lastVar} = None` }],
-      // 'ip' is '' when not connected -- ifconfig() itself would raise/
-      // return a stale address on some ports while disconnected, so this
-      // avoids calling it at all unless isconnected() already said yes.
+      // ifconfig()/status('rssi') are only read when isconnected() already
+      // said yes -- ifconfig() itself would raise/return a stale address
+      // on some ports while disconnected, same reasoning that already
+      // applied to 'ip' alone before this node reported the rest of the
+      // tuple too.
       //
       // `${lastVar}` starts as `None` (statement above), which never equals
-      // a real `(bool, str)` state tuple -- so the very first poll always
-      // reports, same as before this change, then only reports again on an
-      // actual change. `compile.ts`'s source-loop assembly wraps the
-      // downstream chain in `if msg is not None:` and keeps the
-      // `asyncio.sleep_ms` yield unconditional either way, so a skipped
-      // cycle here never turns into a busy-loop.
+      // a real state tuple -- so the very first poll always reports, same
+      // as before this change, then only reports again on an actual
+      // change. `compile.ts`'s source-loop assembly wraps the downstream
+      // chain in `if msg is not None:` and keeps the `asyncio.sleep_ms`
+      // yield unconditional either way, so a skipped cycle here never
+      // turns into a busy-loop.
       buildMsg:
         `global ${lastVar}\n` +
         "_wifi_connected = bool(_wifi_sta.isconnected())\n" +
-        "_wifi_ip = (_wifi_sta.ifconfig()[0] if _wifi_connected else '')\n" +
-        "_wifi_state = (_wifi_connected, _wifi_ip)\n" +
+        "if _wifi_connected:\n" +
+        "    _wifi_ifcfg = _wifi_sta.ifconfig()\n" +
+        "    _wifi_ip = _wifi_ifcfg[0]\n" +
+        "    _wifi_subnet = _wifi_ifcfg[1]\n" +
+        "    _wifi_gateway = _wifi_ifcfg[2]\n" +
+        "    _wifi_dns = _wifi_ifcfg[3]\n" +
+        "    try:\n" +
+        "        _wifi_rssi = _wifi_sta.status('rssi')\n" +
+        "    except (OSError, AttributeError):\n" +
+        "        _wifi_rssi = None\n" +
+        "else:\n" +
+        "    _wifi_ip = ''\n" +
+        "    _wifi_subnet = ''\n" +
+        "    _wifi_gateway = ''\n" +
+        "    _wifi_dns = ''\n" +
+        "    _wifi_rssi = None\n" +
+        "_wifi_state = (_wifi_connected, _wifi_ip, _wifi_subnet, _wifi_gateway, _wifi_dns)\n" +
         `if _wifi_state == ${lastVar}:\n` +
         "    msg = None\n" +
         "else:\n" +
         `    ${lastVar} = _wifi_state\n` +
-        "    msg = {'payload': _wifi_connected, 'topic': '', 'ip': _wifi_ip}",
+        "    msg = {'payload': _wifi_connected, 'topic': '', 'ip': _wifi_ip, 'subnet': _wifi_subnet, 'gateway': _wifi_gateway, 'dns': _wifi_dns, 'rssi': _wifi_rssi}",
       repeatMs: pollMs,
     };
   },

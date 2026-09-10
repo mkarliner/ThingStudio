@@ -9,6 +9,15 @@
 # .status(), .disconnect(). No real radio/socket behavior -- state is
 # entirely test-controlled via the module-level CONNECTED/IFCONFIG values,
 # same pattern as machine.py's Pin.INPUT_VALUES.
+#
+# RSSI (added 2026-09-09, wifi-status-completeness.md): real MicroPython's
+# `status('rssi')` is ESP-IDF-specific, not implemented on every port
+# (RP2040's cyw43 driver, for one). Two test-controlled knobs simulate
+# both real outcomes: RSSI (an int, when the board supports the call) and
+# RSSI_UNSUPPORTED (True to make status('rssi') raise OSError instead,
+# simulating a board where it's not available -- wifi-status.ts's own
+# buildMsg is required to degrade to `rssi: None` in that case, not
+# crash).
 
 STA_IF = "STA_IF"
 AP_IF = "AP_IF"
@@ -25,6 +34,8 @@ class WLAN:
     # as a fresh, unconfigured board.
     CONNECTED = False
     IFCONFIG = ("0.0.0.0", "255.255.255.0", "0.0.0.0", "0.0.0.0")
+    RSSI = -50
+    RSSI_UNSUPPORTED = False
 
     def __init__(self, if_id):
         self._if_id = if_id
@@ -49,7 +60,11 @@ class WLAN:
     def ifconfig(self):
         return WLAN.IFCONFIG
 
-    def status(self, *_args):
+    def status(self, *args):
+        if args and args[0] == "rssi":
+            if WLAN.RSSI_UNSUPPORTED:
+                raise OSError("rssi status not supported")
+            return WLAN.RSSI
         return STAT_GOT_IP if WLAN.CONNECTED else STAT_IDLE
 
     def config(self, **_kwargs):

@@ -214,6 +214,55 @@ describe("thingstudio/wifi_status node", () => {
     expect(second).toBe("None");
   });
 
+  it("includes subnet/gateway/dns/rssi in the envelope when connected (2026-09-09 completeness change)", () => {
+    const output = runSnippet(
+      "network.WLAN.CONNECTED = True\nnetwork.WLAN.IFCONFIG = ('192.168.1.42', '255.255.255.0', '192.168.1.1', '8.8.8.8')\nnetwork.WLAN.RSSI = -47",
+      { pollMs: 1000, wifiConfigId: "unmanaged1" },
+    );
+    expect(output).toContain("'ip': '192.168.1.42'");
+    expect(output).toContain("'subnet': '255.255.255.0'");
+    expect(output).toContain("'gateway': '192.168.1.1'");
+    expect(output).toContain("'dns': '8.8.8.8'");
+    expect(output).toContain("'rssi': -47");
+  });
+
+  it("reports empty-string subnet/gateway/dns and rssi None when not connected", () => {
+    const output = runSnippet("network.WLAN.CONNECTED = False", { pollMs: 1000, wifiConfigId: "unmanaged1" });
+    expect(output).toContain("'subnet': ''");
+    expect(output).toContain("'gateway': ''");
+    expect(output).toContain("'dns': ''");
+    expect(output).toContain("'rssi': None");
+  });
+
+  it("degrades rssi to None (not a crash) on a board where status('rssi') raises OSError -- board-idiosyncrasy limitation, wifi-status-completeness.md", () => {
+    const output = runSnippet(
+      "network.WLAN.CONNECTED = True\nnetwork.WLAN.IFCONFIG = ('192.168.1.42', '255.255.255.0', '192.168.1.1', '8.8.8.8')\nnetwork.WLAN.RSSI_UNSUPPORTED = True",
+      { pollMs: 1000, wifiConfigId: "unmanaged1" },
+    );
+    expect(output).toContain("'rssi': None");
+    expect(output).toContain("'payload': True");
+  });
+
+  it("re-emits when gateway changes even though ip stays the same (network-identity field, same treatment as ip)", () => {
+    const [first, second] = runSnippetTwice(
+      "network.WLAN.CONNECTED = True\nnetwork.WLAN.IFCONFIG = ('192.168.1.42', '255.255.255.0', '192.168.1.1', '8.8.8.8')",
+      "network.WLAN.IFCONFIG = ('192.168.1.42', '255.255.255.0', '192.168.1.254', '8.8.8.8')",
+      { pollMs: 1000, wifiConfigId: "unmanaged1" },
+    );
+    expect(first).toContain("'gateway': '192.168.1.1'");
+    expect(second).toContain("'gateway': '192.168.1.254'");
+  });
+
+  it("does NOT re-emit merely because rssi changes between polls -- rssi is deliberately excluded from change-detection (2026-09-09 header note)", () => {
+    const [first, second] = runSnippetTwice(
+      "network.WLAN.CONNECTED = True\nnetwork.WLAN.IFCONFIG = ('192.168.1.42', '255.255.255.0', '192.168.1.1', '8.8.8.8')\nnetwork.WLAN.RSSI = -40",
+      "network.WLAN.RSSI = -80",
+      { pollMs: 1000, wifiConfigId: "unmanaged1" },
+    );
+    expect(first).toContain("'rssi': -40");
+    expect(second).toBe("None");
+  });
+
   it("does not call connect() when the referenced config's security is 'unmanaged'", () => {
     const output = runSnippet("", { pollMs: 1000, wifiConfigId: "unmanaged1" });
     expect(output).not.toContain("WLAN_CONNECT");

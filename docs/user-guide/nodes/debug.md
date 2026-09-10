@@ -4,7 +4,7 @@ Prints a message's payload to the device's console — the simplest way to see w
 
 ## Properties
 
-None.
+- **full message** — off by default. Prints the whole message (topic, and any other fields a source node adds — for example `wifi_status`'s `ip`/`subnet`/`gateway`/`dns`/`rssi`) instead of just `payload`.
 
 ## Behavior
 

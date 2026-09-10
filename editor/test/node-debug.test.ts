@@ -50,6 +50,35 @@ describe("thingstudio/debug node", () => {
     expect(runGenerated(source)).toContain("DEBUG node=2 payload=True");
   });
 
+  it("prints only payload by default when fullMessage is unset (2026-09-09, no behavior change for existing flows)", () => {
+    const graph: GraphData = {
+      nodes: [
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "hello", repeat: "manual" } },
+        { id: "2", type: "thingstudio/debug", properties: {} },
+      ],
+      links: [[1, "1", 0, "2", 0, "string"]],
+    };
+    const { source } = compile(graph, registry);
+    const output = runGenerated(source);
+    expect(output).toContain("DEBUG node=2 payload='hello'");
+    expect(output).not.toContain("msg=");
+  });
+
+  it("prints the full message dict when fullMessage is true (2026-09-09, wifi-status-completeness.md)", () => {
+    const graph: GraphData = {
+      nodes: [
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "hello", repeat: "manual" } },
+        { id: "2", type: "thingstudio/debug", properties: { fullMessage: true } },
+      ],
+      links: [[1, "1", 0, "2", 0, "string"]],
+    };
+    const { source } = compile(graph, registry);
+    const output = runGenerated(source);
+    expect(output).toContain("DEBUG node=2 msg=");
+    expect(output).toContain("'payload': 'hello'");
+    expect(output).toContain("'topic'");
+  });
+
   it("is a terminal sink -- rejects an outgoing wire from a debug node", () => {
     const graph: GraphData = {
       nodes: [

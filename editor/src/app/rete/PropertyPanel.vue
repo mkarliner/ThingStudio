@@ -292,7 +292,11 @@
       </template>
 
       <template v-else-if="node.kind === 'debug'">
-        <p class="hint">No properties -- this node just prints the inbound payload to the device console.</p>
+        <label class="checkbox-label">
+          <input type="checkbox" v-model="node.properties.fullMessage" @change="touch" />
+          full message
+        </label>
+        <p class="hint">Prints the inbound payload to the device console. Check "full message" to print the whole message (topic, and any other fields a source node adds -- e.g. wifi_status's ip/subnet/gateway/dns/rssi) instead of just payload.</p>
       </template>
 
       <template v-else-if="node.kind === 'custom' && customDescriptor">

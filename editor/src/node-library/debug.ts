@@ -9,7 +9,18 @@
 // emit over VALUE_STREAM once that protocol path exists is additive to
 // this node, not a redesign -- the node doesn't change shape, just what
 // its generated call does.
-
+//
+// **`fullMessage` property, 2026-09-09** (outstanding-items/wifi-status-
+// completeness.md): found while completing that item -- `wifi_status`'s
+// envelope now carries `ip`/`subnet`/`gateway`/`dns`/`rssi` alongside
+// `payload`, but this node printed only `payload`, so none of that was
+// ever visible via debug (confirmed directly against real device output:
+// `wifi_status` -> `debug` printed only `DEBUG node=... payload=True`).
+// Node-RED's own debug node has the same default (payload-only) with an
+// "output complete message" option -- `fullMessage` (default `false`,
+// unset in every existing flow) is that same opt-in here, not a new
+// default: existing flows' debug output is byte-for-byte unchanged unless
+// a flow author explicitly turns it on.
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, NodeDefinition, SinkCodegenResult } from "../compiler/node-definition.js";
 
@@ -23,9 +34,13 @@ export const debugNode: NodeDefinition = {
     inputs: [{ name: "msg", type: "any" }],
   },
   codegenSink(node: GraphNode, ctx: CodegenContext): SinkCodegenResult {
+    const fullMessage = node.properties.fullMessage === true;
+    const functionBody = fullMessage
+      ? `print("DEBUG node=${node.id} msg=%r" % (msg,))`
+      : `print("DEBUG node=${node.id} payload=%r" % (msg.get('payload'),))`;
     return {
       functionName: ctx.uniqueName("debug"),
-      functionBody: `print("DEBUG node=${node.id} payload=%r" % (msg.get('payload'),))`,
+      functionBody,
     };
   },
 };

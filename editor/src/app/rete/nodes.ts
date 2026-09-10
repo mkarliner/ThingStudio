@@ -7,7 +7,7 @@
 // has to match exactly what each node-library/*.ts's codegen reads:
 //   - inject:       payloadType, payloadValue                (node-library/inject.ts -- no `repeat`, see that file's 2026-09-02 header note)
 //   - function:     code                                     (node-library/function-node.ts)
-//   - debug:        (none -- debug.ts reads only node.id)     (node-library/debug.ts)
+//   - debug:        fullMessage                              (node-library/debug.ts -- opt-in, default false, added 2026-09-09)
 //   - gpio_out:     pin                                       (node-library/gpio-out.ts)
 //   - timer:        intervalMs                                (node-library/timer.ts)
 //   - interrupt:    pin, edge, debounce, debounceMs           (node-library/interrupt.ts)
@@ -296,11 +296,9 @@ export class DebugNode extends ClassicPreset.Node {
   nodeType = "thingstudio/debug";
   highlighted = false;
 
-  // No `properties` at all -- node-library/debug.ts's codegenSink reads
-  // only node.id, nothing configured on the node itself. Matches
-  // app/nodes.ts's DebugNode exactly (it declares no `this.properties`
-  // either).
-  properties: Record<string, never> = {};
+  // `fullMessage` added 2026-09-09 (wifi-status-completeness.md): opt-in,
+  // default `false` -- see node-library/debug.ts's own header for why.
+  properties: { fullMessage: boolean } = { fullMessage: false };
 
   constructor() {
     super("debug");
