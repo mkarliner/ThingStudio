@@ -7,15 +7,33 @@
   circles straddling the left/right edges, distributed vertically by port
   count), wired in via editor-setup.ts's `customize.node()`.
 
-  Deliberately narrower than the poc-rete version: no `status`/`seed`
-  live-value indicator line. That machinery existed there to surface
-  poc-rete's hand-rolled propagate() (gpio_out's LED, mqtt_publish's last
-  topic/value) -- this session doesn't wire propagation at all
-  (editor-setup.ts's header: canvas-side live value propagation is out of
-  scope, the real editor's live values are device-driven work per §6, not
-  canvas-side). Restoring a status line is a main.ts-wiring-time decision,
-  not a canvas-layer one, and can be added back onto this component without
-  disturbing the layout below.
+  `status`/`statusText` line restored 2026-09-10 (connection-status-
+  indicator feature, outstanding-items/node-status-indicators.md), ported
+  from poc-rete's own status-line concept (that file's header has the
+  original design writeup: dot + text, positioned as a sibling below the
+  pill so it doesn't grow nodes.ts's fixed NODE_HEIGHT). Different data
+  source than poc-rete's version, though: that spike's status line read
+  `lastValue`/`lastLabel`, mutated by its own hand-rolled canvas-side
+  propagate() (out of scope here, editor-setup.ts's header); this one
+  reads `data.status`/`data.statusText` (nodes.ts), mutated by main.ts
+  only in response to a real device-pushed §13 NODE_STATUS message --
+  device-driven, not canvas-side, per §6.
+
+  CORRECTION (2026-09-10, found hands-on via Mike's own devtools): this
+  DOES need the `seed` prop after all -- the claim just above (that
+  `highlighted`'s existing mechanism made it unnecessary) was wrong.
+  `data` is `markRaw`'d by rete-vue-plugin (see poc-rete's own header),
+  so mutating `data.status` in place gives Vue's `statusLine` computed no
+  tracked dependency to invalidate on -- `area.update("node", id)` does
+  make rete-vue-plugin pass a fresh `seed` prop on every call (confirmed:
+  Vue warned about it arriving as an unconsumed extraneous attribute), but
+  that only forces this component to re-render if `seed` is a real,
+  declared, read prop. Fixed by declaring `seed?: number` below and
+  reading it inside `statusLine`'s computed, exactly matching poc-rete's
+  own proven pattern -- see that file's header for the fuller writeup of
+  why. Left as an open question whether `nodeStyles`/`highlighted` above
+  has this same latent bug; it wasn't touched here since there's no
+  evidence yet that it's broken, but it's worth a hardware check.
 
   Phase 3 item 12 addition: `data.highlighted` (nodes.ts) drives the
   compile/runtime-error-attribution red state, replacing app/nodes.ts's
@@ -57,6 +75,11 @@
       data-testid="output-socket"
     />
   </div>
+
+  <div v-if="statusLine" class="ts-status" :style="statusPosition">
+    <span class="ts-status-dot" :class="statusLine.dotClass" />
+    <span class="ts-status-text">{{ statusLine.text }}</span>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -64,6 +87,7 @@ import { computed } from "vue";
 import { Ref } from "rete-vue-plugin";
 import { CustomNode, type AnyThingstudioNode } from "./nodes";
 import { NODE_PALETTE, DEFAULT_KIND_STYLE, type NodeKind, type KindStyle } from "./palette";
+import type { NodeStatusState } from "../../protocol/messages";
 
 // `data` is the actual node instance (rete-vue-plugin hands the render
 // context's `payload` straight through as this prop) so `.kind`/
@@ -73,6 +97,12 @@ import { NODE_PALETTE, DEFAULT_KIND_STYLE, type NodeKind, type KindStyle } from 
 const props = defineProps<{
   data: AnyThingstudioNode & { selected?: boolean; highlighted?: boolean };
   emit: (data: unknown) => unknown;
+  // Fresh random number rete-vue-plugin injects on every
+  // `area.update("node", id)`-driven re-render (see header comment's
+  // 2026-09-10 correction, and poc-rete's own original version) --
+  // declared so it's a real, tracked prop `statusLine` can depend on,
+  // not so its value itself means anything.
+  seed?: number;
 }>();
 
 const palette = computed<KindStyle>(() => {
@@ -104,6 +134,42 @@ const nodeStyles = computed(() => ({
   // overwrote node.color/bgcolor regardless of any other node state.
   outlineColor: props.data.highlighted ? HIGHLIGHT_COLOR : props.data.selected ? "#ff8f0e" : palette.value.color,
   background: props.data.highlighted ? HIGHLIGHT_BGCOLOR : palette.value.bgcolor,
+}));
+
+// Node-RED's own dot-color convention (green/connecting-amber/grey/red
+// for connected/connecting/disconnected/error) -- matches the reference
+// screenshot poc-rete's own header cites, not invented fresh here.
+const STATUS_DOT_CLASS: Record<NodeStatusState, string> = {
+  connected: "connected",
+  connecting: "connecting",
+  disconnected: "disconnected",
+  error: "error",
+};
+
+type StatusLine = { text: string; dotClass: string } | null;
+
+const statusLine = computed<StatusLine>(() => {
+  // Real reactive dependency, not a no-op read -- `data` is `markRaw`'d,
+  // so `props.data.status` below has nothing for Vue to track; `seed` is
+  // the only genuinely-reactive prop this component gets on every
+  // `area.update()`-driven re-render, so reading it here is what makes
+  // this computed re-evaluate at all. See header comment's 2026-09-10
+  // correction.
+  void props.seed;
+  const state = props.data.status;
+  if (state === null || state === undefined) return null; // "never heard from" -- see nodes.ts's own comment on the field's null default
+  return { text: props.data.statusText ?? state, dotClass: STATUS_DOT_CLASS[state] };
+});
+
+// Same positioning approach as poc-rete's own version (that file's
+// header has the full offsetTop/transform writeup for why this is a
+// sibling of `.ts-node`, not a child, and why `top`/`left` are computed
+// as plain px numbers rather than a scoped-CSS v-bind()): renders below
+// the pill without growing its declared NODE_HEIGHT.
+const statusPosition = computed(() => ({
+  top: `${(Number.isFinite(props.data.height) ? props.data.height : 34) + 3}px`,
+  left: "0",
+  width: Number.isFinite(props.data.width) ? `${props.data.width}px` : "",
 }));
 
 function sortByIndex(entries: [string, { index?: number }][]) {
@@ -205,5 +271,42 @@ function portStyle(index: number, count: number): { top: string } {
 }
 :deep(.ts-port.out) {
   right: -5px;
+}
+.ts-status {
+  /* top/left/width set inline via `statusPosition` (script setup) --
+     same reasoning as poc-rete's own version's comment on this: a plain
+     inline style rather than a scoped-CSS v-bind(). */
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font: 10px ui-monospace, monospace;
+  color: #bbb;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.ts-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 5px;
+  background: #666;
+  flex: 0 0 auto;
+}
+.ts-status-dot.connected {
+  background: #57ff57;
+}
+.ts-status-dot.connecting {
+  background: #e0c040;
+}
+.ts-status-dot.disconnected {
+  background: #666;
+}
+.ts-status-dot.error {
+  background: #e05555;
+}
+.ts-status-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
 }
 </style>

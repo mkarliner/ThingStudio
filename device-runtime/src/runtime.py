@@ -78,8 +78,21 @@
 #    node from a new flow) -- same "must not outlive a redeploy" reasoning
 #    _cleanups already follows, but with no cleanup *function* to call
 #    here, just references to drop.
+#
+# 5. report_status()/on_node_status (added 2026-09-10, outstanding-items/
+#    node-status-indicators.md) -- a §13 NODE_STATUS push, same
+#    device-initiated "call a hook listener.py wires to the transport"
+#    shape as on_node_error/_report_error above, but NOT an error path:
+#    called directly by a node's own generated code (wifi-status.ts,
+#    mqtt-shared.ts) whenever its already-tracked internal connection
+#    state changes, independent of whether anything is wired downstream
+#    to see the `msg` those same state changes also produce. Kept
+#    separate from NodeError/_guarded() on purpose -- a status push isn't
+#    a fault, it shouldn't unwind a coroutine or go through the per-task
+#    exception boundary, it's just informational.
 
 import uasyncio as asyncio
+from messages import NODE_STATUS_STATES
 
 _tasks = []  # tasks spawned by the deployed flow -- tracked so a redeploy
              # can cancel exactly these, same bookkeeping as pocs/poc-a and pocs/poc-d.
@@ -103,6 +116,12 @@ _triggers = {}  # node_id (string) -> event object with a .set() method;
 # exception_message: str) -> None. Must never raise -- see _report_error's
 # own try/except around calling it.
 on_node_error = None
+
+# Set by listener.py the same way on_node_error is -- see that field's own
+# comment just above for the shared reasoning. Signature: on_node_status
+# (node_id: str, state: str, text: str or None) -> None. Must never raise
+# -- see report_status()'s own try/except around calling it.
+on_node_status = None
 
 
 class NodeError(Exception):
@@ -211,6 +230,28 @@ def fire_trigger(node_id):
         print("TRIGGER_IGNORED no live node registered for id=%s" % (node_id,))
         return
     event.set()
+
+
+def report_status(node_id, state, text=None):
+    """Pushes a §13 NODE_STATUS message toward the editor, if one's
+    attached -- see this file's header, point 5. `state` must be one of
+    messages.NODE_STATUS_STATES; a bad value raises ValueError rather than
+    silently sending garbage the editor's own decode-side validator would
+    just reject anyway -- every real caller is this project's own codegen
+    (wifi-status.ts/mqtt-shared.ts), never user-authored function-node
+    code, so this is catching an internal bug close to its source, not
+    validating untrusted input. Always printed to the console first,
+    independent of on_node_status, same "readable trail even with no
+    listener attached" precedent _report_error already follows."""
+    if state not in NODE_STATUS_STATES:
+        raise ValueError("invalid NODE_STATUS state %r (must be one of %r)" % (state, NODE_STATUS_STATES))
+    node_label = node_id if node_id is not None else "unknown"
+    print("NODE_STATUS node=%s state=%s text=%s" % (node_label, state, text))
+    if on_node_status is not None:
+        try:
+            on_node_status(str(node_label), state, text)
+        except Exception as e:  # noqa: BLE001 -- reporting itself must never be able to kill the caller's task
+            print("NODE_STATUS report callback failed: %r" % (e,))
 
 
 async def cancel_running():

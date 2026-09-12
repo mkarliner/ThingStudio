@@ -14,6 +14,24 @@
 # waiting on. Copied 1:1, not re-derived:
 #   HELLO=1 DEPLOY=2 DEPLOY_ACK=3 DEPLOY_ERROR=4 VALUE_STREAM=5
 #   NODE_ERROR=6 STATE_READ=7 STATE_WRITE=8 TRIGGER=9 HELLO_REQUEST=10
+#   NODE_STATUS=11
+#
+# NODE_STATUS (2026-09-10, outstanding-items/node-status-indicators.md):
+# device -> editor, a lightweight per-node connection-status push,
+# deliberately separate from VALUE_STREAM. VALUE_STREAM's shape (nodeId,
+# portId, payload, timestampMs) is reserved for real wire/port values --
+# the still-unbuilt full live-value-streaming feature (design doc §5) --
+# and a connection status isn't a port's value, so it gets its own type
+# rather than a synthetic portId hack. Deliberately NOT part of the
+# emit-on-change `msg` a node sends downstream on its own wires (wifi-
+# status.ts/mqtt-shared.ts) -- those two mechanisms happen to source from
+# the same internal state, but a NODE_STATUS push doesn't depend on
+# anything being wired downstream to see it, the same way NODE_ERROR
+# doesn't. Small, fixed shape for v1 (nodeId, state, optional text) --
+# not Node-RED's full free-form fill/shape/text -- Mike's own design call,
+# 2026-09-09: the canvas owns a shared state->color mapping rather than
+# pushing that choice onto every node type's own codegen. Additive later
+# if a node type ever needs more nuance.
 #
 # TRIGGER (2026-09-02, inject click-only live-fire feature) is newer than
 # the rest of this table -- editor -> device, "fire this source node's
@@ -48,9 +66,17 @@ MessageType = {
     "STATE_WRITE": 8,
     "TRIGGER": 9,
     "HELLO_REQUEST": 10,
+    "NODE_STATUS": 11,
 }
 
 MESSAGE_NAME_BY_TYPE = {v: k for k, v in MessageType.items()}
+
+# NODE_STATUS's fixed state vocabulary -- the one enum this protocol
+# validates by value, not just by field type. Shared with runtime.py's
+# report_status() (the one legitimate caller) so the valid set is defined
+# in exactly one place, not duplicated between "what's accepted on
+# decode" and "what a caller is allowed to send".
+NODE_STATUS_STATES = ("connected", "disconnected", "connecting", "error")
 
 
 def message_type_id(message):
@@ -172,6 +198,13 @@ def _require_present(obj, key, name):
     return obj[key]
 
 
+def _expect_one_of(obj, key, name, allowed):
+    v = _expect_string(obj, key, name)
+    if v not in allowed:
+        _fail(name, 'field "%s" must be one of %r, got %r' % (key, allowed, v))
+    return v
+
+
 def _validate_hello(obj, name):
     return {
         "chipType": _expect_string(obj, "chipType", name),
@@ -267,6 +300,17 @@ def _validate_hello_request(obj, name):
     return {}
 
 
+def _validate_node_status(obj, name):
+    fields = {
+        "nodeId": _expect_string(obj, "nodeId", name),
+        "state": _expect_one_of(obj, "state", name, NODE_STATUS_STATES),
+    }
+    text = _expect_optional_string(obj, "text", name)
+    if text is not None:
+        fields["text"] = text
+    return fields
+
+
 _VALIDATORS = {
     "HELLO": _validate_hello,
     "DEPLOY": _validate_deploy,
@@ -278,4 +322,5 @@ _VALIDATORS = {
     "STATE_WRITE": _validate_state_write,
     "TRIGGER": _validate_trigger,
     "HELLO_REQUEST": _validate_hello_request,
+    "NODE_STATUS": _validate_node_status,
 }

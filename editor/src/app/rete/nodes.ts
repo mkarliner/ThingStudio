@@ -164,6 +164,7 @@ import { mqttSubscribeNode } from "../../node-library/mqtt-subscribe.js";
 import { pwmOutNode } from "../../node-library/pwm-out.js";
 import { resolvePortType, type PortDefinition } from "../../compiler/node-definition.js";
 import type { CustomNodeDescriptor } from "../../node-library/custom-node.js";
+import type { NodeStatusState } from "../../protocol/messages.js";
 
 // Uniform pill height, ported from poc-rete's NODE_HEIGHT -- see that
 // project's README "also worth recording" section for why this is a real
@@ -220,12 +221,36 @@ function portSocket(defs: PortDefinition[] | undefined, name: string, properties
 // id)` alone covers "make the canvas reflect this mutation," if that ever
 // comes up again (a live-value dot per port, a drag-time compatibility
 // highlight, etc.).
+//
+// `status`/`statusText` (added 2026-09-10, connection-status-indicator
+// feature, outstanding-items/node-status-indicators.md -- Mike's design
+// call 2026-09-09/10): same off-`properties`, main.ts-mutated,
+// `area.update()`-driven mechanism as `highlighted` just above, restoring
+// poc-rete's own status-line concept (ThingstudioNode.vue's header) on a
+// device-driven basis instead of that spike's hand-rolled propagate().
+// Added to every node class here, not just the three kinds that can
+// currently produce one, for the same reason `highlighted` is universal
+// despite not every node type being able to NODE_ERROR in practice --
+// ThingstudioNode.vue renders generically off `AnyThingstudioNode` and
+// shouldn't need per-kind branching to know whether a status line is
+// possible. What actually gates this to wifi_status/mqtt_publish/
+// mqtt_subscribe (Mike's scope decision) is which node-library/*.ts
+// codegens ever call `runtime.report_status()` -- no other kind's
+// generated code can produce a NODE_STATUS push, so no other kind's
+// fields are ever mutated from null. `status` is `null` (not e.g.
+// "disconnected") until at least one push has arrived this
+// connection/since the last redeploy -- main.ts's clearNodeStatuses()
+// resets every node back to this same "never heard from" null state on
+// every redeploy attempt (Mike's "clear on every redeploy" call), same
+// point clearNodeHighlights() already resets `highlighted` from.
 export class InjectNode extends ClassicPreset.Node {
   width = 96;
   height = NODE_HEIGHT;
   kind = "inject" as const;
   nodeType = "thingstudio/inject";
   highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
 
   // Behavior change, 2026-09-02 (inject click-only live-fire feature,
   // node-library/inject.ts's own header): `repeat` is gone -- inject fires
@@ -274,6 +299,8 @@ export class FunctionNode extends ClassicPreset.Node {
   kind = "function" as const;
   nodeType = "thingstudio/function";
   highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
 
   properties: { code: string } = {
     code: "msg['payload'] = msg['payload']\nreturn msg\n",
@@ -303,6 +330,8 @@ export class DelayNode extends ClassicPreset.Node {
   kind = "delay" as const;
   nodeType = "thingstudio/delay";
   highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
 
   properties: { delayMs: number } = {
     delayMs: 1000,
@@ -321,6 +350,8 @@ export class DebugNode extends ClassicPreset.Node {
   kind = "debug" as const;
   nodeType = "thingstudio/debug";
   highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
 
   // `fullMessage` added 2026-09-09 (wifi-status-completeness.md): opt-in,
   // default `false` -- see node-library/debug.ts's own header for why.
@@ -338,6 +369,8 @@ export class GpioOutNode extends ClassicPreset.Node {
   kind = "gpio_out" as const;
   nodeType = "thingstudio/gpio_out";
   highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
 
   // Default 12 -- matches app/nodes.ts's GpioOutNode (LuatOS ESP32-C3 test
   // board's visible onboard LED).
@@ -362,6 +395,8 @@ export class PwmOutNode extends ClassicPreset.Node {
   kind = "pwm_out" as const;
   nodeType = "thingstudio/pwm_out";
   highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
 
   properties: { pin: number; freq: number } = { pin: 12, freq: 1000 };
 
@@ -377,6 +412,8 @@ export class TimerNode extends ClassicPreset.Node {
   kind = "timer" as const;
   nodeType = "thingstudio/timer";
   highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
 
   properties: { intervalMs: number } = { intervalMs: 1000 };
 
@@ -392,6 +429,8 @@ export class InterruptNode extends ClassicPreset.Node {
   kind = "interrupt" as const;
   nodeType = "thingstudio/interrupt";
   highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
 
   // Defaults match interrupt.ts's own codegen defaults exactly (edge
   // "rising", debounce true, debounceMs 50) -- a freshly-dropped node's
@@ -416,6 +455,8 @@ export class WifiStatusNode extends ClassicPreset.Node {
   kind = "wifi_status" as const;
   nodeType = "thingstudio/wifi_status";
   highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
 
   // wifiConfigId: "" means "no config referenced" -- resolveWifiCredentials()'s
   // own contract (wifi-status.ts), same "empty string sentinel, not
@@ -437,6 +478,8 @@ export class UdpSendNode extends ClassicPreset.Node {
   kind = "udp_send" as const;
   nodeType = "thingstudio/udp_send";
   highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
 
   properties: { host: string; port: number; timeoutMs: number } = {
     host: "",
@@ -456,6 +499,8 @@ export class UdpReceiveNode extends ClassicPreset.Node {
   kind = "udp_receive" as const;
   nodeType = "thingstudio/udp_receive";
   highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
 
   properties: { port: number; pollMs: number } = {
     port: 9998,
@@ -474,6 +519,8 @@ export class HttpRequestNode extends ClassicPreset.Node {
   kind = "http_request" as const;
   nodeType = "thingstudio/http_request";
   highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
 
   // Defaults match http-request.ts's own codegen defaults exactly (GET,
   // 5000ms timeout) -- a freshly-dropped node and a freshly-omitted
@@ -512,6 +559,8 @@ export class HttpInNode extends ClassicPreset.Node {
   kind = "http_in" as const;
   nodeType = "thingstudio/http_in";
   highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
 
   // Defaults match http-server-shared.ts's own codegen defaults exactly
   // (GET, 10000ms response timeout) -- a freshly-dropped node and a
@@ -539,6 +588,8 @@ export class HttpResponseNode extends ClassicPreset.Node {
   kind = "http_response" as const;
   nodeType = "thingstudio/http_response";
   highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
 
   // No properties -- status/body come from msg.statusCode/msg.payload at
   // runtime (Node-RED's own field names), matching this node's own
@@ -558,6 +609,8 @@ export class MqttPublishNode extends ClassicPreset.Node {
   kind = "mqtt_publish" as const;
   nodeType = "thingstudio/mqtt_publish";
   highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
 
   // brokerConfigId: "" sentinel, same convention as WifiStatusNode's own
   // wifiConfigId. Just one config reference now, not two -- this class's
@@ -586,6 +639,8 @@ export class MqttSubscribeNode extends ClassicPreset.Node {
   kind = "mqtt_subscribe" as const;
   nodeType = "thingstudio/mqtt_subscribe";
   highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
 
   // brokerConfigId: "" sentinel -- wifiConfigId removed 2026-09-04, see
   // MqttPublishNode's own comment above (identical reasoning).
@@ -624,6 +679,8 @@ export class CustomNode extends ClassicPreset.Node {
   nodeType: string;
   descriptor: CustomNodeDescriptor;
   highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
 
   properties: Record<string, unknown>;
 

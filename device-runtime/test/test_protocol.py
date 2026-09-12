@@ -70,6 +70,11 @@ SAMPLE_MESSAGES = [
     {"type": "VALUE_STREAM", "nodeId": "n5", "portId": "out0", "payload": "hello", "timestampMs": 1},
     {"type": "VALUE_STREAM", "nodeId": "n6", "portId": "out0", "payload": bytes([1, 2, 3]), "timestampMs": 1},
     {"type": "NODE_ERROR", "nodeId": "n7", "exceptionType": "ZeroDivisionError", "exceptionMessage": "division by zero"},
+    # NODE_STATUS added 2026-09-10 (connection-status-indicator feature).
+    # Two variants: text present and text absent -- mirrors
+    # editor/test/protocol.roundtrip.test.ts exactly.
+    {"type": "NODE_STATUS", "nodeId": "n10", "state": "connected", "text": "192.168.1.42"},
+    {"type": "NODE_STATUS", "nodeId": "n11", "state": "disconnected"},
     {"type": "STATE_READ", "nodeId": "n8", "key": "counter"},  # request form: no value
     {"type": "STATE_READ", "nodeId": "n8", "key": "counter", "value": 42},  # response form: value present
     {"type": "STATE_WRITE", "nodeId": "n8", "key": "counter", "value": 0},

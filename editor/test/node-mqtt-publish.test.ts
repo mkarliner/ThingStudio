@@ -139,6 +139,54 @@ describe("thingstudio/mqtt_publish node", () => {
     expect(output).toContain("MQTT_PUBLISH topic='sensors/temp' payload=b'42.5' retain=False qos=0");
   });
 
+  it("reports NODE_STATUS state=connected under its own node id after connecting (2026-09-10)", () => {
+    const { source } = compile(graphWith({ topic: "sensors/temp" }, { broker: "test.broker.local", port: 1883 }), registry);
+    const output = runGenerated(source);
+    // graphWith()'s mqtt_publish node is id "2" (this file's own comment on graphWith).
+    expect(output).toContain("NODE_STATUS node=2 state=connected text=None");
+  });
+
+  it("two mqtt_publish nodes on the same broker each report status under their OWN node id, not the shared broker's", () => {
+    const graph: GraphData = {
+      nodes: [
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "a", repeat: "manual" } },
+        { id: "2", type: "thingstudio/mqtt_publish", properties: { topic: "t1", brokerConfigId: "broker1" } },
+        { id: "3", type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "b", repeat: "manual" } },
+        { id: "4", type: "thingstudio/mqtt_publish", properties: { topic: "t2", brokerConfigId: "broker1" } },
+        { id: "5", type: "thingstudio/wifi_status", properties: { pollMs: 5000, wifiConfigId: "wifi1" } },
+      ],
+      links: [
+        [1, "1", 0, "2", 0, "string"],
+        [2, "3", 0, "4", 0, "string"],
+      ],
+      configs: configsWith({ broker: "b", port: 1883 }),
+    };
+    const { source } = compile(graph, registry);
+    const output = runGenerated(source);
+    // Only the FIRST caller through the shared client's double-checked
+    // lock actually runs .connect() -- but mqttEnsureConnectedSnippet's
+    // ground-truth isconnected() diff (mqtt-shared.ts, corrected
+    // 2026-09-10) runs unconditionally after that block, for every
+    // caller, so the SECOND node still gets its own 'connected' report
+    // under its own id even though it never itself touched .connect().
+    // A first cut of this feature only reported from inside the
+    // connect-only branch, so node 4 never reported at all here -- a real
+    // bug, caught by Mike on real hardware
+    // (outstanding-items/node-status-indicators.md, 2026-09-10) -- this
+    // test's own expectation below reflects the corrected behavior, not
+    // the original (wrong) one.
+    //
+    // Filtered to node 2/4 specifically, not every "NODE_STATUS" line in
+    // the output -- this graph also carries the mandatory `wifi_status`
+    // node (id "5", every mqtt_publish flow needs one), which reports its
+    // OWN connection status independently (wifi-status.ts's own
+    // report_status() call, unrelated to this test's actual concern).
+    const statusLines = output.split("\n").filter((line) => /^NODE_STATUS node=[24] /.test(line));
+    expect(statusLines).toHaveLength(2);
+    expect(statusLines).toContain("NODE_STATUS node=2 state=connected text=None");
+    expect(statusLines).toContain("NODE_STATUS node=4 state=connected text=None");
+  });
+
   it("publishes with retain=True and qos=1 when configured", () => {
     const { source } = compile(graphWith({ topic: "t", retain: true, qos: 1 }, { broker: "b", port: 1883 }), registry);
     const output = runGenerated(source);
@@ -309,6 +357,7 @@ describe("thingstudio/mqtt_publish node", () => {
 
     const lines = [
       "import asyncio",
+      "import runtime", // this test bypasses compile() (see its own comment above), which normally adds this -- mqttEnsureConnectedSnippet()'s runtime.report_status() call needs it here too (2026-09-10)
       ...(resultA.imports ?? []),
       ...(resultA.statements ?? []).map((s) => s.code),
       "",

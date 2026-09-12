@@ -31,3 +31,9 @@ nothing else): `debug.ts` only ever printed `payload`. Fixed with a new opt-in `
 turns it on). `docs/user-guide/nodes/wifi-status.md`/`debug.md` updated. 7 new tests in
 `node-wifi-status.test.ts`, 2 in `node-debug.test.ts` -- Mike ran `tsc --noEmit`/`vitest` himself and confirmed
 clean, then committed. **Real-hardware pass not yet done** -- off-device only so far.
+
+**Real-hardware verified, 2026-09-10 (Mike).** Confirmed against a real board/network: connect reports real
+`ip`/`subnet`/`gateway`/`dns` matching the actual network; disconnect re-emits `payload: False` with all four back
+to empty strings; RSSI changing on its own (walking away from the AP) does NOT trigger a re-emit by itself -- only
+a real identity change does, matching the 2026-09-09 change-detection design. Debug node's "full message" checkbox
+confirmed as the actual fix for the original "just prints `payload=True`" report. Nothing left open on this item.

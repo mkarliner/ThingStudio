@@ -115,6 +115,7 @@ function runOneMessage(properties: Record<string, unknown>, injectedTopic: strin
   const result = mqttSubscribeNode.codegenSource!(node(properties), ctx);
   const lines = [
     "import asyncio",
+    "import runtime", // compile.ts always adds this to a real flow -- mqttEnsureConnectedSnippet()'s runtime.report_status() call needs it here too (same fix node-wifi-status.test.ts's runSnippet/runSnippetTwice needed, 2026-09-10)
     ...(result.imports ?? []),
     ...(result.statements ?? []).map((s) => s.code),
     `mqtt_as.CLIENTS[-1].queue._inject(${JSON.stringify(injectedTopic)}.encode(), ${JSON.stringify(injectedPayload)}.encode(), ${retained ? "True" : "False"})`,

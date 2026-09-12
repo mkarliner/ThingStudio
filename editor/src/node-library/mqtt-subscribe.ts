@@ -62,7 +62,7 @@
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, NodeDefinition, SourceCodegenResult } from "../compiler/node-definition.js";
 import { CompileError } from "../compiler/errors.js";
-import { mqttClientVar, mqttEnsureConnectedSnippet, mqttSetupStatement, parseMqttBrokerProps } from "./mqtt-shared.js";
+import { mqttClientVar, mqttEnsureConnectedSnippet, mqttNodeStatusSetupStatement, mqttSetupStatement, parseMqttBrokerProps } from "./mqtt-shared.js";
 import { pyStringLiteral } from "./py-literals.js";
 
 export const mqttSubscribeNode: NodeDefinition = {
@@ -99,7 +99,7 @@ export const mqttSubscribeNode: NodeDefinition = {
 
     const buildMsg = [
       `global ${readyVar}`,
-      mqttEnsureConnectedSnippet(cfg),
+      mqttEnsureConnectedSnippet(cfg, node.id),
       `if not ${readyVar}:`,
       "    try:",
       `        await ${clientVar}.subscribe(${pyStringLiteral(topic)}, ${qos})`,
@@ -122,7 +122,7 @@ export const mqttSubscribeNode: NodeDefinition = {
       // with no event loop yet; inlined into a coroutine now, it uses
       // asyncio.sleep_ms() instead, see that file's header).
       imports: ["import mqtt_as", "import network", "import sys"],
-      statements: [mqttSetupStatement(cfg), { key: readyVar, code: `${readyVar} = False` }],
+      statements: [mqttSetupStatement(cfg), mqttNodeStatusSetupStatement(node.id), { key: readyVar, code: `${readyVar} = False` }],
       buildMsg,
       // NOT a poll interval -- `queue.__anext__()` above already blocks
       // (via the vendored mqtt_as's own asyncio.Event) until a real

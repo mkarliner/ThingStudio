@@ -22,6 +22,7 @@ import { MessageDecodeError } from "./errors.js";
 import {
   MESSAGE_NAME_BY_TYPE,
   MESSAGE_TYPE_BY_NAME,
+  NODE_STATUS_STATES,
   type DeployAckMessage,
   type DeployErrorMessage,
   type DeployMessage,
@@ -30,6 +31,7 @@ import {
   type Message,
   type MessageTypeId,
   type NodeErrorMessage,
+  type NodeStatusMessage,
   type ProtocolVersion,
   type StateReadMessage,
   type StateWriteMessage,
@@ -107,6 +109,8 @@ export function decodeMessageBody(typeId: number, body: Uint8Array): Message {
       return { type: "VALUE_STREAM", ...validateValueStream(obj) };
     case "NODE_ERROR":
       return { type: "NODE_ERROR", ...validateNodeError(obj) };
+    case "NODE_STATUS":
+      return { type: "NODE_STATUS", ...validateNodeStatus(obj) };
     case "STATE_READ":
       return { type: "STATE_READ", ...validateStateRead(obj) };
     case "STATE_WRITE":
@@ -138,6 +142,23 @@ function expectOptionalString(obj: Record<string, unknown>, key: string, name: s
   if (v === undefined || v === null) return null;
   if (typeof v !== "string") fail(name, `field "${key}" must be a string or absent/null, got ${typeof v}`);
   return v;
+}
+
+/** Same as expectString, but the value must also be one of `allowed` --
+ * used for NODE_STATUS's fixed state enum (mirrors messages.py's
+ * _expect_one_of). A device sending a state string outside this list is
+ * malformed input, not a new state the editor should silently accept. */
+function expectOneOf<T extends string>(
+  obj: Record<string, unknown>,
+  key: string,
+  name: string,
+  allowed: readonly T[],
+): T {
+  const v = obj[key];
+  if (typeof v !== "string" || !(allowed as readonly string[]).includes(v)) {
+    fail(name, `field "${key}" must be one of ${JSON.stringify(allowed)}, got ${JSON.stringify(v)}`);
+  }
+  return v as T;
 }
 
 function expectFiniteNumber(obj: Record<string, unknown>, key: string, name: string): number {
@@ -231,6 +252,17 @@ function validateNodeError(obj: Record<string, unknown>): Omit<NodeErrorMessage,
     exceptionType: expectString(obj, "exceptionType", "NODE_ERROR"),
     exceptionMessage: expectString(obj, "exceptionMessage", "NODE_ERROR"),
   };
+}
+
+/** `text` is present-only-when-provided, not present-but-null -- same
+ * convention validateStateRead uses for its own optional `value` key,
+ * and matches messages.py's _validate_node_status exactly (it only sets
+ * the "text" dict key when the field was given). */
+function validateNodeStatus(obj: Record<string, unknown>): Omit<NodeStatusMessage, "type"> {
+  const nodeId = expectString(obj, "nodeId", "NODE_STATUS");
+  const state = expectOneOf(obj, "state", "NODE_STATUS", NODE_STATUS_STATES);
+  const text = expectOptionalString(obj, "text", "NODE_STATUS");
+  return text === null ? { nodeId, state } : { nodeId, state, text };
 }
 
 function validateStateRead(obj: Record<string, unknown>): Omit<StateReadMessage, "type"> {

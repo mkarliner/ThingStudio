@@ -8,11 +8,10 @@ the following points and questions are for discussion around the scope of the MV
 # Bugs -- priority
 - 2026-09-02: wifi status, mqtt nodes should have an indicator of status (on the canvas itself, not just console output).
   [tracked, not scoped — outstanding-items.md, "UI / editor" section]
-- wifi status node should emit complete wifi status include ip address
-  [implemented, off-device verified 2026-09-10, real-hardware pass owed — outstanding-items.md, "Network / config nodes" section]
 - Favicon for editor
 - Node input and output - define a consistent policy for msg/payload ext and include in claude.md
 - write explaination of node flow operation to include in user docs
+- Clicking on the inject node action opens the property sheet. It should only open on a real select.
 # Platforms
 We need to support the following platforms for the editor/backend:
 - MacOS
@@ -67,3 +66,4 @@ I shouldn't have to remember what sensor is connector to a given gpio or other p
 - custom nodes should be persistent across session, needs a manage pallette system, plus a convention on where to store them.
   [tracked, not scoped — outstanding-items.md "Backend / auth" section; local-persistence-scoping.md already scopes this as backend-owned, via a ~/.thingstudio local-state folder, zero code yet]
 - favicon
+- deploy runtome from editor

@@ -24,6 +24,12 @@ Some properties are shared across multiple nodes rather than typed into each one
 
 **A flow needs exactly one `wifi_status` node if it uses any other network node type.** `wifi_status` is the flow's sole source of WiFi credentials — `udp_send`, `udp_receive`, `http_request`, `http_in`, `mqtt_publish`, and `mqtt_subscribe` all derive their connection from it rather than carrying a WiFi config of their own. Zero, or more than one, is a compile error. This trips people up before they know it's a rule, so it's worth knowing up front.
 
+## Node status
+
+`wifi_status`, `mqtt_publish`, and `mqtt_subscribe` show a small colored dot and a line of text below the node while connected to a device — green for connected, amber for connecting, red for error, grey for disconnected. This reflects what the device is actually doing right now (a real push from the running flow), not the editor's own guess — it only appears once you're connected and the device has reported at least once, and it resets to nothing on every redeploy until the new flow reports its own state.
+
+Other node types don't show this yet — it's currently limited to connection-oriented nodes; `http_request` doesn't get one since it isn't a persistent connection.
+
 ## Deleting
 
 Click a node or a wire to select it, then press Delete or Backspace to remove it. Ctrl-click to select several nodes at once and delete them together. Deleting a node also removes any wires attached to it.

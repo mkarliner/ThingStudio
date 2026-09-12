@@ -52,7 +52,7 @@
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, NodeDefinition, SinkCodegenResult } from "../compiler/node-definition.js";
 import { CompileError } from "../compiler/errors.js";
-import { mqttClientVar, mqttEnsureConnectedSnippet, mqttSetupStatement, parseMqttBrokerProps, payloadToBytesSnippet } from "./mqtt-shared.js";
+import { mqttClientVar, mqttEnsureConnectedSnippet, mqttNodeStatusSetupStatement, mqttSetupStatement, parseMqttBrokerProps, payloadToBytesSnippet } from "./mqtt-shared.js";
 import { pyStringLiteral } from "./py-literals.js";
 
 export const mqttPublishNode: NodeDefinition = {
@@ -81,7 +81,7 @@ export const mqttPublishNode: NodeDefinition = {
     const clientVar = mqttClientVar(cfg);
 
     const functionBody = [
-      mqttEnsureConnectedSnippet(cfg),
+      mqttEnsureConnectedSnippet(cfg, node.id),
       payloadToBytesSnippet("_mqtt_body"),
       "try:",
       `    await ${clientVar}.publish(${pyStringLiteral(topic)}, _mqtt_body, retain=${retain ? "True" : "False"}, qos=${qos})`,
@@ -97,7 +97,7 @@ export const mqttPublishNode: NodeDefinition = {
       // with no event loop yet; inlined into a coroutine now, it uses
       // asyncio.sleep_ms() instead, see that file's header).
       imports: ["import mqtt_as", "import network", "import sys"],
-      statements: [mqttSetupStatement(cfg)],
+      statements: [mqttSetupStatement(cfg), mqttNodeStatusSetupStatement(node.id)],
       functionName: ctx.uniqueName("mqtt_publish"),
       functionBody,
     };

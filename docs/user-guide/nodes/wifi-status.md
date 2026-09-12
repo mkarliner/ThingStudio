@@ -16,3 +16,5 @@ The payload is `true`/`false` for connected/disconnected. The message also carri
 It emits when connection identity changes (connect/disconnect, or a change to `ip`/`subnet`/`gateway`/`dns`), not on every poll — except the very first poll, which always reports. `rssi` doesn't trigger a re-emit on its own — it drifts constantly even on an idle connection, so it's included whenever a message fires for another reason, but its own changes don't cause one. It's a snapshot, not a live reading.
 
 If a device provisions its own WiFi outside of any deployed flow (a captive-portal setup, for example), pick "unmanaged" on the WiFi config rather than leaving it unset — that tells this node to bring the interface up without issuing its own connect, riding on whatever the device is already connected to.
+
+Shows a connection-status dot on the canvas (see [Canvas basics](../canvas-basics.md#node-status)) once connected to a device.

@@ -70,6 +70,19 @@ class NodeError(Exception):
         self.orig = orig
 
 
+# report_status added 2026-09-10 (connection-status-indicator feature) --
+# mirrors device-runtime/src/runtime.py's real report_status() closely
+# enough for generated code that calls it (wifi-status.ts's buildMsg,
+# mqtt-shared.ts's setup code) to run under this mock instead of raising
+# AttributeError. Prints rather than pushing onto any wire (this fixture
+# has no real §13 listener behind it at all), same "printed so a
+# regression test can assert on it" convention _guarded()'s own
+# NODE_ERROR line above already uses -- node-wifi-status.test.ts's own
+# tests grep this exact line shape.
+def report_status(node_id, state, text=None):
+    print("NODE_STATUS node=%s state=%s text=%s" % (node_id, state, text))
+
+
 async def _guarded(coro, fallback_node_id):
     try:
         await coro

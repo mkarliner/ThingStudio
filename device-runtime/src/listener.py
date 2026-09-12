@@ -121,7 +121,11 @@ F64_PREFIX = "F64:"
 _HEARTBEAT_PIN = 10
 _HEARTBEAT_PERIOD_MS = 200
 
-_RUNTIME_VERSION = {"major": 0, "minor": 1, "patch": 0}  # pre-v1; bump deliberately, not implicitly, once real semver policy exists
+_RUNTIME_VERSION = {"major": 1, "minor": 0, "patch": 0}  # bumped 2026-09-10: NODE_STATUS support
+# (runtime.report_status) is a hard dependency of wifi-status.ts's/mqtt-shared.ts's codegen now -- an editor
+# with this change targeting a pre-2026-09-10 runtime would crash on deploy (AttributeError: report_status),
+# not degrade gracefully. See CLAUDE.md's "Device-runtime version bump discipline" -- decideDeploy() only
+# blocks on a major mismatch, so this is the level that actually matters.
 
 # Belt-and-braces companion to _RUNTIME_VERSION, added 2026-09-05 (CLAUDE.md's
 # "Device-runtime version bump discipline"): _RUNTIME_VERSION is a human-
@@ -286,6 +290,27 @@ def _handle_node_error(node_id, exception_type, exception_message):
 runtime.on_node_error = _handle_node_error
 
 
+def _handle_node_status(node_id, state, text):
+    """Wired up as runtime.on_node_status below -- device-side sender for
+    a §13 NODE_STATUS push (outstanding-items/node-status-indicators.md),
+    same shape as _handle_node_error just above. `text` is optional on
+    the wire (messages.py's own encode_message_body already drops any
+    None-valued key before CBOR-encoding, matching every other optional
+    field's convention in this protocol), so it's passed straight through
+    here rather than special-cased."""
+    _send_message_safe(
+        {
+            "type": "NODE_STATUS",
+            "nodeId": node_id,
+            "state": state,
+            "text": text,
+        }
+    )
+
+
+runtime.on_node_status = _handle_node_status
+
+
 async def _send_hello():
     _send_message_safe(
         {
@@ -428,10 +453,10 @@ async def _dispatch(result):
         # timeout on the editor side.
         print("LISTENER_IGNORED %s not yet implemented (Tier 2)" % (msg_type,))
     else:
-        # HELLO/DEPLOY_ACK/DEPLOY_ERROR/VALUE_STREAM/NODE_ERROR are all
-        # device -> editor per §13; receiving one FROM the editor is
-        # unexpected input, not a crash -- logged the same way any other
-        # LISTENER_IGNORED case is.
+        # HELLO/DEPLOY_ACK/DEPLOY_ERROR/VALUE_STREAM/NODE_ERROR/NODE_STATUS
+        # are all device -> editor per §13; receiving one FROM the editor
+        # is unexpected input, not a crash -- logged the same way any
+        # other LISTENER_IGNORED case is.
         print("LISTENER_IGNORED unexpected message type from editor: %s" % (msg_type,))
 
 

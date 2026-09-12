@@ -238,8 +238,32 @@ function mqttLockVar(cfg: MqttBrokerConfig): string {
   return `_mqtt_lock_${idSuffix(cfg)}`;
 }
 
+// Per-CALLING-NODE, not per-broker -- unlike connectedVar/lockVar above,
+// this tracks what THIS node has last told the editor, since two nodes
+// sharing one broker client (mqtt_publish + mqtt_subscribe, or two of
+// either) still each want their own accurate canvas dot (nodes.ts's
+// `status` field is per-node-instance). `nodeId` is already flow-wide
+// unique, so no broker suffix is needed the way the shared vars above
+// need one.
+function mqttLastStateVar(nodeId: string): string {
+  return `_mqtt_last_state_${sanitizeIdent(nodeId)}`;
+}
+
 export function mqttSetupKey(cfg: MqttBrokerConfig): string {
   return `mqtt-client-${cfg.broker}-${cfg.port}`;
+}
+
+/** Per-node module-scope statement (connection-status-indicator feature,
+ * 2026-09-10) -- keyed by the calling node's own id, so it's never
+ * deduped away by mergeSetup even when several nodes share one broker's
+ * `mqttSetupStatement()` (broker-keyed, deduped on purpose, this file's
+ * own header). Initialized to `None`, not `False`: `mqttEnsureConnectedSnippet()`
+ * below diffs against this on every call, and `None` deliberately never
+ * equals real `True`/`False`, so the very first call always reports
+ * whatever the real current state is, positive or negative -- matching
+ * wifi-status.ts's own "always report on the first poll" convention. */
+export function mqttNodeStatusSetupStatement(nodeId: string): { key: string; code: string } {
+  return { key: `mqtt-status-${nodeId}`, code: `${mqttLastStateVar(nodeId)} = None` };
 }
 
 /** Resolves `properties.brokerConfigId` via `ctx.resolveConfig()` -- a
@@ -444,11 +468,51 @@ function mqttWifiPrecheckSnippet(): string {
  * is strictly a "smooth over a known-transient cold-boot glitch," not a
  * silent-failure risk. Unverified beyond one manual repro; revisit the
  * attempt count/delay if this still isn't enough. */
-export function mqttEnsureConnectedSnippet(cfg: MqttBrokerConfig): string {
+export function mqttEnsureConnectedSnippet(cfg: MqttBrokerConfig, nodeId: string): string {
   const clientVar = mqttClientVar(cfg);
   const connectedVar = mqttConnectedVar(cfg);
   const lockVar = mqttLockVar(cfg);
   const attemptVar = `_mqtt_connect_attempt_${idSuffix(cfg)}`;
+  const lastStateVar = mqttLastStateVar(nodeId);
+  const nowVar = `_mqtt_now_connected_${sanitizeIdent(nodeId)}`;
+  // NODE_STATUS push, both directions (connection-status-indicator
+  // feature, added 2026-09-10, corrected same day) -- keyed to the
+  // CALLING node's own id (mqtt-publish.ts's/mqtt-subscribe.ts's own
+  // `node.id`), not the shared broker config, even though this whole
+  // snippet is broker-scoped and byte-identical text gets generated once
+  // per calling node (this file's own header: "byte-identical...
+  // regardless of which one compiles first"). A publish node and a
+  // subscribe node sharing one broker are still two separate canvas
+  // nodes that each want their own status badge (nodes.ts's `status`
+  // field is per-node-instance) -- baking the caller's id into each
+  // copy, JSON.stringify-quoted the same safe way inject.ts's own
+  // `nodeIdStr` embedding already is, keeps that per-node attribution
+  // correct regardless of how many other nodes share the same broker.
+  //
+  // First cut of this feature only reported 'connected' from inside the
+  // connect-retry block below, which only ever runs for whichever node's
+  // call happens to be the FIRST to observe `${connectedVar}` still False
+  // (broker-keyed, shared by every node on that broker) -- every OTHER
+  // node sharing that broker, the ones that always find it already
+  // connected, never reported anything at all. Real bug, caught by Mike
+  // on real hardware (outstanding-items/node-status-indicators.md,
+  // 2026-09-10), not hypothetical. Fixed below, and Mike's separate ask
+  // the same session ("all nodes with status should show the negative as
+  // well as positive status") covered in the same fix rather than a
+  // second pass: EVERY call to this snippet, whether it ran the connect
+  // block or skipped it, now checks the client's own real `isconnected()`
+  // and diffs it against `${lastStateVar}` (per-CALLING-node, not
+  // per-broker -- `mqttLastStateVar()` above), reporting
+  // 'connected'/'disconnected' only on an actual change -- same "don't
+  // spam every routine call" reasoning wifi-status.ts's own
+  // report_status placement documents, but keyed off ground truth rather
+  // than "did I personally just run .connect()." `${connectedVar}` itself
+  // is deliberately left untouched by this -- mqtt_as's own
+  // `_keep_connected()` background task already owns real reconnection
+  // (this file's header: "the entire reason it was vendored over
+  // `umqtt.simple`"), so this stays purely an observer, never a driver of
+  // reconnect behavior.
+  const nodeIdLiteral = JSON.stringify(String(nodeId));
   // mqttWifiPrecheckSnippet() indented to this block's own 12-space level
   // (matching the `for ${attemptVar}...` line right after it) -- see this
   // file's header ("CONFIRMED BROKEN, 2026-09-04") for why this runs here,
@@ -458,7 +522,7 @@ export function mqttEnsureConnectedSnippet(cfg: MqttBrokerConfig): string {
     .split("\n")
     .map((l) => `            ${l}`);
   return [
-    `global ${connectedVar}, ${lockVar}`,
+    `global ${connectedVar}, ${lockVar}, ${lastStateVar}`,
     `if not ${connectedVar}:`,
     `    if ${lockVar} is None:`,
     `        ${lockVar} = asyncio.Lock()`,
@@ -472,8 +536,23 @@ export function mqttEnsureConnectedSnippet(cfg: MqttBrokerConfig): string {
     `                    break`,
     `                except OSError as _e:`,
     `                    if ${attemptVar} == 2:`,
+    // Final attempt exhausted -- report 'error' before re-raising (the
+    // raise still happens unconditionally right after; this is
+    // ADDITIONAL user-facing signal, not a replacement for the real
+    // NODE_ERROR the re-raise below produces via _guarded). Also sets
+    // lastStateVar directly (rather than relying on the diff check below,
+    // which this path never reaches -- raise leaves the function first),
+    // so a later real reconnect still reports 'connected' when it happens.
+    `                        ${lastStateVar} = False`,
+    `                        runtime.report_status(${nodeIdLiteral}, 'error', "connect to %s:%s failed" % (${pyStringLiteral(cfg.broker)}, ${cfg.port}))`,
     `                        raise OSError("mqtt connect to %s:%s failed: %r" % (${pyStringLiteral(cfg.broker)}, ${cfg.port}, _e))`,
     `                    await asyncio.sleep_ms(500)`,
+    // Ground-truth diff, every call, whichever path above ran -- see this
+    // function's own docblock above for the full story.
+    `${nowVar} = bool(${clientVar}.isconnected())`,
+    `if ${nowVar} != ${lastStateVar}:`,
+    `    ${lastStateVar} = ${nowVar}`,
+    `    runtime.report_status(${nodeIdLiteral}, 'connected' if ${nowVar} else 'disconnected')`,
   ].join("\n");
 }
 

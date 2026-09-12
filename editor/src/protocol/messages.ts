@@ -70,6 +70,12 @@ export const MessageType = {
   // the pre-2026-09-05 listener.py logs LISTENER_IGNORED for it instead
   // of misinterpreting some other message.
   HELLO_REQUEST: 10,
+  // Added 2026-09-10 (outstanding-items/node-status-indicators.md):
+  // device -> editor, a lightweight per-node connection-status push. See
+  // NodeStatusMessage's own doc comment for the full reasoning (why this
+  // is a new type rather than reusing VALUE_STREAM). Same "append, don't
+  // renumber" convention as TRIGGER/HELLO_REQUEST above.
+  NODE_STATUS: 11,
 } as const;
 
 export type MessageTypeId = (typeof MessageType)[keyof typeof MessageType];
@@ -195,6 +201,47 @@ export interface NodeErrorMessage {
   readonly exceptionMessage: string;
 }
 
+/** NODE_STATUS's fixed state vocabulary (matches messages.py's
+ * NODE_STATUS_STATES exactly -- has to be mirrored by hand, same
+ * "no shared config file between the two languages" reasoning this
+ * file's own header already gives for the MessageType table). A real
+ * runtime array, not just a type union, so codec.ts's decoder can
+ * validate an incoming `state` string against it at runtime -- a bare
+ * `type` alias erases at compile time and gives decodeMessageBody
+ * nothing to check an untrusted wire value against. */
+export const NODE_STATUS_STATES = ["connected", "disconnected", "connecting", "error"] as const;
+export type NodeStatusState = (typeof NODE_STATUS_STATES)[number];
+
+/**
+ * Device -> editor: a lightweight per-node connection-status push
+ * (outstanding-items/node-status-indicators.md, Mike's design call
+ * 2026-09-09/10). NOT §13's VALUE_STREAM -- that shape (nodeId, portId,
+ * payload, timestampMs) is reserved for real wire/port values, the
+ * still-unbuilt full live-value-streaming feature (§5); a connection
+ * status isn't a port's value, and forcing it into VALUE_STREAM's shape
+ * via a synthetic portId would misuse an already-defined contract and
+ * muddy it for whenever real live-streaming is eventually built.
+ * Deliberately NOT tied to whatever a node's own `msg` carries downstream
+ * on its wires either -- wifi-status.ts's/mqtt-shared.ts's codegen calls
+ * `runtime.report_status()` alongside (not instead of) their existing
+ * emit-on-change `msg` logic, so a status push reaches the editor whether
+ * or not anything is actually wired downstream to see the `msg`, the same
+ * way NODE_ERROR doesn't depend on wiring either. `state` is a small
+ * fixed enum, not Node-RED's free-form fill/shape/text -- the canvas owns
+ * one shared state -> color mapping rather than pushing that choice onto
+ * every node type's own codegen; additive later if a node type ever needs
+ * more nuance. `text` is optional supplementary detail (e.g. an IP
+ * address) -- absent, not null, when a node type doesn't have any (same
+ * "missing key means not provided" convention every other optional field
+ * in this protocol already uses).
+ */
+export interface NodeStatusMessage {
+  readonly type: "NODE_STATUS";
+  readonly nodeId: string;
+  readonly state: NodeStatusState;
+  readonly text?: string;
+}
+
 /**
  * §13 lists STATE_READ but not a separate response type -- this file's
  * interpretation (flagged, not spec'd): the same message type carries
@@ -261,7 +308,8 @@ export type Message =
   | StateReadMessage
   | StateWriteMessage
   | TriggerMessage
-  | HelloRequestMessage;
+  | HelloRequestMessage
+  | NodeStatusMessage;
 
 export const MESSAGE_TYPE_BY_NAME: Record<Message["type"], MessageTypeId> = {
   HELLO: MessageType.HELLO,
@@ -274,6 +322,7 @@ export const MESSAGE_TYPE_BY_NAME: Record<Message["type"], MessageTypeId> = {
   STATE_WRITE: MessageType.STATE_WRITE,
   TRIGGER: MessageType.TRIGGER,
   HELLO_REQUEST: MessageType.HELLO_REQUEST,
+  NODE_STATUS: MessageType.NODE_STATUS,
 };
 
 export const MESSAGE_NAME_BY_TYPE: Record<MessageTypeId, Message["type"]> = {
@@ -287,4 +336,5 @@ export const MESSAGE_NAME_BY_TYPE: Record<MessageTypeId, Message["type"]> = {
   [MessageType.STATE_WRITE]: "STATE_WRITE",
   [MessageType.TRIGGER]: "TRIGGER",
   [MessageType.HELLO_REQUEST]: "HELLO_REQUEST",
+  [MessageType.NODE_STATUS]: "NODE_STATUS",
 };

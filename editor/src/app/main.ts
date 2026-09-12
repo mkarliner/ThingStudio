@@ -115,7 +115,7 @@ import { buildRegistry } from "../node-library/registry.js";
 import { mergeCustomNodeRegistry } from "../node-library/custom-node.js";
 import { WebSerialTransport, type WebSerialPort, type DeviceTransport, type TransportEvents } from "../protocol/transport.js";
 import { BackendTransport, type SerialPortInfo } from "../protocol/backend-transport.js";
-import type { Message, ProtocolVersion } from "../protocol/messages.js";
+import type { Message, NodeStatusMessage, ProtocolVersion } from "../protocol/messages.js";
 import { checkRuntimeBuild, decideDeploy } from "../protocol/version.js";
 import { createThingstudioEditor, type ThingstudioEditor } from "./rete/editor-setup.js";
 import { NODE_FACTORIES, CustomNode, InjectNode, type AnyThingstudioNode } from "./rete/nodes.js";
@@ -696,6 +696,24 @@ function clearNodeHighlights(): void {
   }
 }
 
+// Clears every node's status back to "never heard from" (nodes.ts's own
+// comment on `status`'s null default) -- Mike's "clear all statuses on
+// every redeploy" design call. A stale "connected" left over from the
+// previous flow would otherwise keep showing on a node that the new flow
+// doesn't even wire up to WiFi/MQTT the same way, or that isn't even the
+// same node any more (edited between deploys but reusing an id) -- same
+// staleness risk clearNodeHighlights() above already exists to avoid, one
+// state field over.
+function clearNodeStatuses(): void {
+  for (const node of reteEditor.getNodes() as AnyThingstudioNode[]) {
+    if (node.status !== null || node.statusText !== null) {
+      node.status = null;
+      node.statusText = null;
+      void reteArea.update("node", node.id);
+    }
+  }
+}
+
 function highlightNode(nodeId: string): AnyThingstudioNode | null {
   // nodeId IS the Rete node's own id now (decisions.md's "Stable node
   // IDs" entry, 2026-09-04) -- no lookup table needed, and no more "which
@@ -740,6 +758,25 @@ function highlightNodeFromNodeError(nodeId: string): void {
   const node = highlightNode(nodeId);
   if (!node) return;
   logLine(`[runtime error attributed to node ${nodeId} (${node.nodeType})]`, "err", nodeId);
+}
+
+// NODE_STATUS handler (connection-status-indicator feature,
+// outstanding-items/node-status-indicators.md) -- deliberately NOT
+// built on highlightNode(): that function's whole contract is "flag this
+// node red," which a routine status push (most commonly "still
+// connected," wifi_status's own emit-on-change design already limits
+// these to real state transitions, not a poll-rate flood) has no
+// business doing. Same untrusted-input handling as every other §13
+// nodeId-bearing message, though: reteEditor.getNode() returns undefined
+// for an id that doesn't resolve (a since-removed node, or a stale id
+// from a flow the editor has since redeployed over), silently dropped
+// here rather than crashing the console.
+function handleNodeStatus(nodeId: string, state: NodeStatusMessage["state"], text: string | undefined): void {
+  const node = reteEditor.getNode(nodeId) as AnyThingstudioNode | undefined;
+  if (!node) return;
+  node.status = state;
+  node.statusText = text ?? null;
+  void reteArea.update("node", node.id);
 }
 
 // Rete's editor.addPipe sees every graph mutation (nodes/connections
@@ -836,7 +873,14 @@ function waitForMessage(match: (m: Message) => boolean, timeoutMs: number): Prom
 // config file between the two projects/languages, same "has to be
 // mirrored, flagged rather than silently duplicated" reasoning
 // messages.ts's own header already applies to the MessageType table.
-const EDITOR_TARGET_VERSION: ProtocolVersion = { major: 0, minor: 1, patch: 0 };
+// Bumped 2026-09-10 (major: 0 -> 1): wifi-status.ts's/mqtt-shared.ts's
+// codegen now calls runtime.report_status (NODE_STATUS,
+// outstanding-items/node-status-indicators.md) -- a function that
+// doesn't exist on any pre-2026-09-10 device-runtime/src/listener.py.
+// decideDeploy() only blocks on a major mismatch (CLAUDE.md's version-
+// bump-discipline rule), so this is the level that actually stops an
+// unsafe DEPLOY rather than letting it crash on the device.
+const EDITOR_TARGET_VERSION: ProtocolVersion = { major: 1, minor: 0, patch: 0 };
 
 // This editor's own device-runtime/src git SHA, injected at build/dev-
 // server-start time by vite.config.ts's `define` (see that file,
@@ -870,6 +914,7 @@ const transportEvents: TransportEvents = {
     const nodeId = "nodeId" in message ? message.nodeId : undefined;
     logLine(`[${message.type}] ${JSON.stringify(message, (_k, v) => (v instanceof Uint8Array ? `<${v.length} bytes>` : v))}`, "ok", nodeId);
     if (message.type === "NODE_ERROR") highlightNodeFromNodeError(message.nodeId);
+    if (message.type === "NODE_STATUS") handleNodeStatus(message.nodeId, message.state, message.text);
     if (message.type === "HELLO") {
       lastHelloVersion = message.runtimeVersion;
       const decision = decideDeploy(message.runtimeVersion, EDITOR_TARGET_VERSION);
@@ -1166,6 +1211,7 @@ el("btnDeploy").addEventListener("click", async () => {
   const btn = el<HTMLButtonElement>("btnDeploy");
   btn.disabled = true;
   clearNodeHighlights(); // stale red from a previous failed attempt shouldn't linger past a new one
+  clearNodeStatuses(); // Mike's "clear all statuses on every redeploy" call -- same staleness reasoning, one state field over
   try {
     // Gate the attempt itself, before any compile work -- §5's own
     // framing for why this check exists. Soft on absence (no HELLO seen
