@@ -1,0 +1,58 @@
+{
+  "formatVersion": 1,
+  "flowName": "function-output-switch",
+  "nodes": [
+    {
+      "id": "09033f73b7ea4cb9",
+      "type": "thingstudio/inject",
+      "properties": {
+        "payloadType": "number",
+        "payloadValue": "1",
+        "repeat": "manual"
+      }
+    },
+    {
+      "id": "055607c79b2b481f",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "idx = msg['payload']\noutputs = [None, None, None]\nif isinstance(idx, int) and 0 <= idx < len(outputs):\n    outputs[idx] = msg\nreturn outputs",
+        "outputCount": 3
+      }
+    },
+    {
+      "id": "fe241847723f4862",
+      "type": "thingstudio/debug",
+      "properties": {
+        "fullMessage": true
+      }
+    },
+    {
+      "id": "06ff75478d9c4d9c",
+      "type": "thingstudio/debug",
+      "properties": {
+        "fullMessage": true
+      }
+    },
+    {
+      "id": "7d9c0c2596b04013",
+      "type": "thingstudio/debug",
+      "properties": {
+        "fullMessage": true
+      }
+    }
+  ],
+  "edges": [
+    ["09033f73b7ea4cb9", 0, "055607c79b2b481f", 0],
+    ["055607c79b2b481f", 0, "fe241847723f4862", 0],
+    ["055607c79b2b481f", 1, "06ff75478d9c4d9c", 0],
+    ["055607c79b2b481f", 2, "7d9c0c2596b04013", 0]
+  ],
+  "layout": {
+    "09033f73b7ea4cb9": { "pos": [80, 300] },
+    "055607c79b2b481f": { "pos": [320, 280] },
+    "fe241847723f4862": { "pos": [620, 180] },
+    "06ff75478d9c4d9c": { "pos": [620, 300] },
+    "7d9c0c2596b04013": { "pos": [620, 420] }
+  },
+  "configs": []
+}
