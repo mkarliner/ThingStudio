@@ -29,8 +29,14 @@ that motivated it, so CLAUDE.md doesn't have to.
 - **Git writes from the agent sandbox leave stale `.git/*.lock` files
   behind** on the live-mounted repo (confirmed for `.git/index.lock`,
   `.git/HEAD.lock`, `.git/objects/*/tmp_obj_*`) — `git add`/`git commit`
-  never run from the sandbox, ever. `CLAUDE.md`, "Git writes from the agent
-  sandbox."
+  never run from the sandbox, ever. **Widened 2026-09-12: read-only
+  commands aren't exempt either** — a plain `git status -sb` from the
+  sandbox left a `.git/index.lock` behind (git's own opportunistic index
+  refresh during a status check), which silently blocked a real
+  `git commit` run minutes later from Mike's own Terminal — `git status`
+  just kept showing everything as still modified, no error surfaced until
+  Mike ran `rm -f .git/index.lock` himself. `CLAUDE.md`, "Git writes from
+  the agent sandbox."
 - **Stray compiled `.js` files can shadow real `.ts` sources** when a
   sandboxed `npx tsc --noEmit` silently doesn't respect the flag — check
   and delete before trusting any test/build result. `CLAUDE.md`, "Check for
