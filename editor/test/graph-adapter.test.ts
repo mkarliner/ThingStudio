@@ -24,7 +24,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { NodeEditor, ClassicPreset } from "rete";
 import type { Schemes } from "../src/app/rete/schemes.js";
-import { InjectNode, FunctionNode, DebugNode, GpioOutNode, TimerNode } from "../src/app/rete/nodes.js";
+import { InjectNode, FunctionNode, DebugNode, GpioOutNode, TimerNode, functionOutputKey } from "../src/app/rete/nodes.js";
 import { toGraphData } from "../src/app/rete/graph-adapter.js";
 import { compile } from "../src/compiler/compile.js";
 import { buildRegistry } from "../src/node-library/registry.js";
@@ -179,7 +179,7 @@ describe("graph-adapter: Rete NodeEditor -> compiler GraphData", () => {
     await editor.addNode(timer);
     await editor.addNode(gpio2);
     await connect(editor, inject, "msg", fn, "msg");
-    await connect(editor, fn, "msg", gpio, "signal");
+    await connect(editor, fn, functionOutputKey(0), gpio, "signal"); // function node's single default output is keyed "out0", not "msg" (multi-output-port support, 2026-09-12)
     await connect(editor, timer, "msg", gpio2, "signal");
 
     const graphData = toGraphData(editor);
