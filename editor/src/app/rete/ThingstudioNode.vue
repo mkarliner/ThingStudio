@@ -175,8 +175,26 @@ const statusPosition = computed(() => ({
 function sortByIndex(entries: [string, { index?: number }][]) {
   return [...entries].sort(([, a], [, b]) => (a?.index ?? 0) - (b?.index ?? 0));
 }
-const inputs = computed(() => sortByIndex(Object.entries(props.data.inputs)));
-const outputs = computed(() => sortByIndex(Object.entries(props.data.outputs)));
+// `void props.seed` in both: found 2026-09-12 building multi-output-port
+// support (a function node's own output count can now change after
+// construction, editor-setup.ts's setFunctionNodeOutputCount) -- the
+// EXACT SAME latent bug this file's header already documents fixing for
+// `statusLine` (`data` is markRaw'd, so a computed that reads `props.data`
+// alone has no reactive dependency and, once evaluated, never
+// re-evaluates again for the component's lifetime, regardless of how many
+// `area.update("node", id)` calls follow). Adding/removing a port would
+// otherwise mutate the real `ClassicPreset.Node.outputs`/`.inputs` record
+// correctly while the canvas kept showing the old port count forever.
+// Reading `seed` here gives both computeds the same real, tracked
+// dependency `statusLine` already relies on.
+const inputs = computed(() => {
+  void props.seed;
+  return sortByIndex(Object.entries(props.data.inputs));
+});
+const outputs = computed(() => {
+  void props.seed;
+  return sortByIndex(Object.entries(props.data.outputs));
+});
 
 // Must match ThingstudioSocket.vue's own `.ts-socket-dot` width/height --
 // there's no shared import for it since it's read by rete-render-utils

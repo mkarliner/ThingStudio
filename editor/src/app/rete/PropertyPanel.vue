@@ -124,6 +124,16 @@
           code
           <textarea v-model="node.properties.code" @input="touch" rows="10" spellcheck="false"></textarea>
         </label>
+        <label>outputs
+          <input
+            type="number"
+            :min="1"
+            :max="maxFunctionOutputs"
+            :value="node.properties.outputCount"
+            @change="setFunctionOutputCount(($event.target as HTMLInputElement).valueAsNumber)"
+          />
+        </label>
+        <p class="hint">Return an array to route to multiple outputs, Node-RED style: e.g. <code>return [msg, null]</code> sends to output 1 only. A plain <code>return msg</code> still works and always targets output 1.</p>
       </template>
 
       <template v-else-if="node.kind === 'gpio_out'">
@@ -322,9 +332,10 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { selectedNode, bumpPropertyVersion, propertyVersion } from "./store";
+import { selectedNode, bumpPropertyVersion, propertyVersion, setFunctionNodeOutputCount } from "./store";
 import { NODE_PALETTE, DEFAULT_KIND_STYLE, type NodeKind, type KindStyle } from "./palette";
-import { InjectNode, CustomNode } from "./nodes";
+import { InjectNode, CustomNode, FunctionNode } from "./nodes";
+import { MAX_FUNCTION_OUTPUTS } from "../../node-library/function-node";
 import ConfigRefField from "./ConfigRefField.vue";
 
 const node = computed(() => {
@@ -371,6 +382,23 @@ function retypeInjectOutput(): void {
   if (node.value instanceof InjectNode) {
     node.value.retypeOutput();
   }
+  touch();
+}
+
+const maxFunctionOutputs = MAX_FUNCTION_OUTPUTS;
+
+// Real port add/remove (not just a `properties` edit) -- routed through
+// store.ts's setFunctionNodeOutputCount ref, filled in by
+// editor-setup.ts's createThingstudioEditor(), which is where the live
+// Rete editor/area instances actually live (this panel never imports
+// them directly, same reasoning ConfigRefField.vue's own header gives for
+// staying editor-instance-agnostic). A bare-NaN input (field cleared
+// mid-edit) is ignored rather than resized to 1 -- less surprising than
+// snapping the port count to 1 on every keystroke while someone's typing
+// a two-digit number.
+function setFunctionOutputCount(count: number): void {
+  if (!(node.value instanceof FunctionNode) || !Number.isFinite(count)) return;
+  void setFunctionNodeOutputCount.value?.(node.value, count);
   touch();
 }
 

@@ -69,6 +69,21 @@ export function bumpPropertyVersion(): void {
   propertyVersion.value++;
 }
 
+// Function-node output-count resize (multi-output-port support,
+// outstanding-items/connection-state-gate-router-nodes.md, 2026-09-12) --
+// same threading-through-a-ref pattern as clearNodeSelection above, and
+// for the same reason: PropertyPanel.vue has no import of the live Rete
+// editor/area instances (deliberately -- it only ever touches
+// node.properties plus this store), but resizing a node's real output
+// ports needs both (removing connections on a port that disappears,
+// re-rendering the new port count) -- createThingstudioEditor()
+// (editor-setup.ts) is where `editor`/`area` already live in scope, so it
+// fills this in the same way it fills in clearNodeSelection. `null` until
+// the editor's actually been constructed -- PropertyPanel.vue guards the
+// same way it would have to for any store function that might not be
+// wired up yet.
+export const setFunctionNodeOutputCount = ref<((node: AnyThingstudioNode, count: number) => void) | null>(null);
+
 // --- Config nodes ---------------------------------------------------------
 
 export interface ConfigEntry {

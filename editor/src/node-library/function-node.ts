@@ -57,6 +57,14 @@ const CONTEXT_STORE_CLASS = `class _Store:
     def set(self, key, value):
         self._d[key] = value`;
 
+// Node-RED's own function-edit dialog has no hard cap on output count in
+// the UI; an unbounded stepper here just invites fat-fingering an absurd
+// port fan-out for no real use case. 10 is a generous, arbitrary-but-
+// reasonable ceiling -- not a wire-format or protocol limit (GraphLink's
+// slot fields are plain numbers, node-definition-model.md), so raising it
+// later costs nothing beyond changing this one constant.
+export const MAX_FUNCTION_OUTPUTS = 10;
+
 export const functionNode: NodeDefinition = {
   type: "thingstudio/function",
   kind: "transform",
@@ -67,9 +75,29 @@ export const functionNode: NodeDefinition = {
   // the wire-type-system-scoping.md-called-out common case that needs no
   // conversion node: bucket 1's "anything -> bool" allow covers it
   // (sockets.ts).
+  //
+  // Single "any" entry regardless of the node's actual output count --
+  // `outputCount` below is what tells compile.ts how many outputs THIS
+  // INSTANCE really has (per-instance, unlike every other node type's
+  // fixed port list); every output on a function node is equally untyped
+  // `any` regardless of index, so one entry fully describes the TYPE every
+  // output shares. Count is a separate question, answered below.
   ports: {
     inputs: [{ name: "msg", type: "any" }],
     outputs: [{ name: "msg", type: "any" }],
+  },
+  // Node-RED-style configurable output count (multi-output-port support,
+  // docs/working-notes/outstanding-items/connection-state-gate-router-nodes.md,
+  // 2026-09-12): a per-instance property (nodes.ts's FunctionNode class),
+  // not a fixed part of the type's `ports` declaration above. Absent or
+  // non-numeric `properties.outputCount` -- every flow saved before this
+  // feature existed -- defaults to 1, preserving the original
+  // single-output contract exactly; compile.ts's emit() only takes the
+  // multi-output path at all once this returns more than 1.
+  outputCount(properties: Record<string, unknown>): number {
+    const n = Math.round(Number(properties.outputCount));
+    if (!Number.isFinite(n) || n < 1) return 1;
+    return Math.min(n, MAX_FUNCTION_OUTPUTS);
   },
   codegenTransform(node: GraphNode, ctx: CodegenContext): TransformCodegenResult {
     const userCode = String(node.properties.code ?? "").replace(/\r\n/g, "\n");

@@ -43,3 +43,24 @@ Status: detail file, split out of `learnings.md` on 2026-09-06 to keep that inde
   the shared mount — hand Mike the command, or extract the project
   (excluding `node_modules`) into the cloud session's own workspace for a
   self-contained signal instead.
+
+- **The cloud agent sandbox's own isolated `npm ci` (in its own workspace,
+  not the shared mount -- the fallback the rule above recommends) can
+  itself be blocked by the session's egress policy, even for
+  `registry.npmjs.org`.** Confirmed 2026-09-12 building multi-output-port
+  support: extracting `editor/` (excluding `node_modules`) into a scratch
+  workspace and running `npm ci` there failed with `403 Forbidden` on
+  every package tried (`why-is-node-running`, then `vue`, then a plain
+  `lodash` fetched with a bare `curl`) -- looked at first like npmjs.org-
+  side rate-limiting (the agent proxy's own `noProxy` list includes
+  `registry.npmjs.org`, meaning traffic goes there directly, bypassing the
+  policy-enforcing proxy), but `curl -i` against the registry showed the
+  real cause: `x-deny-reason: host_not_allowed` -- this session's own
+  network egress allowlist, not npmjs.org. Not fixable from inside the
+  sandbox; a genuine egress-policy 403 isn't something to retry or route
+  around. Fallback used instead: `node_modules` already existed on Mike's
+  Mac (he runs `npm run dev` there), so `tsc --noEmit`/`vitest run` were
+  verified by handing Mike the exact commands to run himself in his own
+  Terminal -- same pattern as git writes -- rather than either the
+  blocked sandbox install or (per the standing rule above) running
+  against the shared mount.

@@ -114,6 +114,26 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
     incomingCount.set(targetId, (incomingCount.get(targetId) ?? 0) + 1);
   }
 
+  // Per-(node, output-slot) view of childrenOf, for multi-output routing
+  // (docs/working-notes/outstanding-items/connection-state-gate-router-nodes.md,
+  // 2026-09-12) -- childrenOf itself stays slot-blind (every outgoing link
+  // regardless of which output it's attached to), since reachability and
+  // cycle detection below don't care which output a link came from, only
+  // that it exists.
+  function childrenOfSlot(nodeId: string, slot: number): GraphLink[] {
+    return (childrenOf.get(nodeId) ?? []).filter((link) => link[2] === slot);
+  }
+
+  // How many outputs THIS node instance actually has -- ports.outputs's
+  // length for every ordinary (fixed-output-count) node type, or the
+  // type's own outputCount() hook when output count varies per instance
+  // (today: only `function`, node-definition.ts's own doc comment on
+  // NodeDefinition.outputCount has the full reasoning).
+  function outputCountOf(node: GraphNode): number {
+    const def = registry.get(node.type)!;
+    return def.outputCount?.(node.properties) ?? def.ports?.outputs?.length ?? 1;
+  }
+
   const sources = graphData.nodes.filter((n) => registry.get(n.type)!.kind === "source");
   if (sources.length === 0) {
     throw new CompileError("graph has no source node (e.g. inject) to drive any flow");
@@ -265,18 +285,66 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
     }
 
     const t = getTransform(node);
-    const callLine = nodeCallWithFaultBoundary(node.id, `${msgVar} = await ${t.functionName}(${msgVar})`);
+    const outputCount = outputCountOf(node);
 
-    const children = childrenOf.get(nodeId) ?? [];
-    const branchesBody = emitChildren(children, msgVar);
-    if (!branchesBody) return callLine;
+    if (outputCount <= 1) {
+      // Original, single-output contract -- byte-for-byte unchanged from
+      // before multi-output existed, so every node type that never
+      // declares more than one output (the overwhelming majority) compiles
+      // to exactly the same Python it always has.
+      const callLine = nodeCallWithFaultBoundary(node.id, `${msgVar} = await ${t.functionName}(${msgVar})`);
 
-    // The sleep/yield the caller appends after the whole per-source body
-    // must sit outside this `if`, at the same nesting level as buildMsg --
-    // assembled by the caller, same hazard §5/POC-D's hardware bugs warn
-    // about (a short-circuited/None chain must still yield every
-    // iteration, not busy-loop the event loop).
-    return `${callLine}\nif ${msgVar} is not None:\n${indent(branchesBody, 4)}`;
+      const children = childrenOf.get(nodeId) ?? [];
+      const branchesBody = emitChildren(children, msgVar);
+      if (!branchesBody) return callLine;
+
+      // The sleep/yield the caller appends after the whole per-source body
+      // must sit outside this `if`, at the same nesting level as buildMsg --
+      // assembled by the caller, same hazard §5/POC-D's hardware bugs warn
+      // about (a short-circuited/None chain must still yield every
+      // iteration, not busy-loop the event loop).
+      return `${callLine}\nif ${msgVar} is not None:\n${indent(branchesBody, 4)}`;
+    }
+
+    // Multi-output (docs/working-notes/outstanding-items/connection-state-
+    // gate-router-nodes.md, 2026-09-12): node-definition.ts's
+    // TransformCodegenResult.functionBody doc comment has the full
+    // contract (Node-RED's own array-return convention, loose tolerance on
+    // a malformed shape). Only outputs that actually have a wire attached
+    // generate any code at all -- an unwired output produces nothing,
+    // regardless of what the function returns for it, same "no downstream,
+    // nothing to emit" reasoning the single-output path already applies
+    // via emitChildren's own empty-array check.
+    const outputsVar = ctx.uniqueName("outputs");
+    const lines = [
+      nodeCallWithFaultBoundary(node.id, `${outputsVar} = await ${t.functionName}(${msgVar})`),
+      `if not isinstance(${outputsVar}, list):`,
+      `    ${outputsVar} = [${outputsVar}]`,
+    ];
+    for (let i = 0; i < outputCount; i++) {
+      const slotChildren = childrenOfSlot(nodeId, i);
+      if (slotChildren.length === 0) continue;
+      const slotVar = ctx.uniqueName(`out${i}`);
+      const perMsgVar = ctx.uniqueName("msg_out");
+      const outMsgsVar = ctx.uniqueName("out_msgs");
+      const branchesBody = emitChildren(slotChildren, perMsgVar) || "pass";
+      lines.push(`${slotVar} = ${outputsVar}[${i}] if len(${outputsVar}) > ${i} else None`);
+      lines.push(`if ${slotVar} is not None:`);
+      lines.push(
+        indent(
+          [
+            `if isinstance(${slotVar}, list):`,
+            `    ${outMsgsVar} = ${slotVar}`,
+            `else:`,
+            `    ${outMsgsVar} = [${slotVar}]`,
+            `for ${perMsgVar} in ${outMsgsVar}:`,
+            indent(branchesBody, 4),
+          ].join("\n"),
+          4,
+        ),
+      );
+    }
+    return lines.join("\n");
   }
 
   /**

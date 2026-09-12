@@ -100,7 +100,34 @@ export interface EventSourceCodegenResult extends SetupCode {
 export interface TransformCodegenResult extends SetupCode {
   /** A Python function name, unique within the flow. */
   functionName: string;
-  /** The function body, NOT indented -- the compiler indents it under `def <functionName>(msg):`. Must return the (possibly modified) msg, or None to stop propagation. */
+  /**
+   * The function body, NOT indented -- the compiler indents it under
+   * `def <functionName>(msg):`.
+   *
+   * Single-output node (the default -- no `ports.outputs` beyond one
+   * entry, and no `outputCount` hook returning >1): must return the
+   * (possibly modified) msg, or None to stop propagation -- unchanged,
+   * original contract, exactly as before multi-output existed.
+   *
+   * Multi-output node (`ports.outputs.length > 1`, or
+   * `outputCount(properties) > 1` -- see NodeDefinition.outputCount
+   * above): must return a value routed across every output, Node-RED's
+   * own convention
+   * (https://nodered.org/docs/user-guide/writing-functions#multiple-outputs).
+   * compile.ts's emit() applies LOOSE tolerance when unpacking it (Mike's
+   * call, 2026-09-12 -- a malformed return here is a mistake in the flow
+   * author's own flow-local code, not a platform-level fault worth a
+   * NodeError over, so this matches Node-RED's own forgiving behavior
+   * rather than failing loudly): a non-list return targets output 0 only
+   * (nothing sent on any other output) -- exactly what a function written
+   * before multi-output existed already does, so every existing
+   * single-output function stays fully compatible unchanged; a list
+   * shorter than the output count treats every missing trailing slot as
+   * None; a list longer than the output count silently ignores the extra
+   * entries. Within one slot: `None` sends nothing, a single msg dict
+   * sends one message, and a list of msg dicts sends every one of them,
+   * in order, out that same output.
+   */
   functionBody: string;
 }
 
@@ -170,6 +197,23 @@ export interface NodeDefinition {
     inputs?: PortDefinition[];
     outputs?: PortDefinition[];
   };
+  /**
+   * Overrides `ports.outputs?.length` for how many outputs THIS
+   * PARTICULAR node instance has -- only needed when output count varies
+   * per instance rather than being fixed by the node type (today: only
+   * `function`, via its own `properties.outputCount`; see
+   * function-node.ts). Absent for every other node type, where
+   * `ports.outputs?.length ?? 1` is already the right, fixed answer.
+   * compile.ts's emit() calls this (falling back to `ports.outputs?.length
+   * ?? 1` when absent) to decide whether a transform's return value is a
+   * plain msg-or-None (1 output, the original/default contract, unchanged)
+   * or a Node-RED-style array routed across N outputs -- see
+   * TransformCodegenResult.functionBody's own doc comment below for that
+   * contract. Added for multi-output-port support,
+   * docs/working-notes/outstanding-items/connection-state-gate-router-nodes.md,
+   * 2026-09-12.
+   */
+  outputCount?(properties: Record<string, unknown>): number;
   codegenSource?(node: GraphNode, ctx: CodegenContext): SourceCodegenResult;
   /**
    * Alternative to codegenSource for kind "source" nodes that wait on an

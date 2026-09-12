@@ -217,3 +217,187 @@ describe("thingstudio/function node -- flow scope (shared with variable_get/vari
     expect(source.match(/^class _Store:$/gm)?.length).toBe(1);
   });
 });
+
+describe("thingstudio/function node -- multi-output routing (Node-RED-style array return, outstanding-items/connection-state-gate-router-nodes.md, 2026-09-12)", () => {
+  it("an array return with a null slot routes only to the output that got a real value", () => {
+    const graph: GraphData = {
+      nodes: [
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: "2", type: "thingstudio/function", properties: { code: "msg['payload'] = 'a'\nreturn [msg, None]", outputCount: 2 } },
+        { id: "3", type: "thingstudio/debug", properties: {} },
+        { id: "4", type: "thingstudio/debug", properties: {} },
+      ],
+      links: [
+        [1, "1", 0, "2", 0, "bool"],
+        [2, "2", 0, "3", 0, "any"],
+        [3, "2", 1, "4", 0, "any"],
+      ],
+    };
+    const { source } = compile(graph, registry);
+    const lines = runGenerated(source).trim().split("\n");
+    const line3 = lines.find((l) => l.includes("node=3"));
+    expect(line3).toContain("payload='a'");
+    expect(lines.some((l) => l.includes("node=4"))).toBe(false);
+  });
+
+  it("routes to whichever slot the array actually put a value in, not always slot 0", () => {
+    const graph: GraphData = {
+      nodes: [
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: "2", type: "thingstudio/function", properties: { code: "msg['payload'] = 'b'\nreturn [None, msg]", outputCount: 2 } },
+        { id: "3", type: "thingstudio/debug", properties: {} },
+        { id: "4", type: "thingstudio/debug", properties: {} },
+      ],
+      links: [
+        [1, "1", 0, "2", 0, "bool"],
+        [2, "2", 0, "3", 0, "any"],
+        [3, "2", 1, "4", 0, "any"],
+      ],
+    };
+    const { source } = compile(graph, registry);
+    const lines = runGenerated(source).trim().split("\n");
+    expect(lines.some((l) => l.includes("node=3"))).toBe(false);
+    const line4 = lines.find((l) => l.includes("node=4"));
+    expect(line4).toContain("payload='b'");
+  });
+
+  it("loose tolerance: a non-list return targets output 0 only, even with more outputs wired", () => {
+    const graph: GraphData = {
+      nodes: [
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: "2", type: "thingstudio/function", properties: { code: "msg['payload'] = 'x'\nreturn msg", outputCount: 2 } },
+        { id: "3", type: "thingstudio/debug", properties: {} },
+        { id: "4", type: "thingstudio/debug", properties: {} },
+      ],
+      links: [
+        [1, "1", 0, "2", 0, "bool"],
+        [2, "2", 0, "3", 0, "any"],
+        [3, "2", 1, "4", 0, "any"],
+      ],
+    };
+    const { source } = compile(graph, registry);
+    const lines = runGenerated(source).trim().split("\n");
+    const line3 = lines.find((l) => l.includes("node=3"));
+    expect(line3).toContain("payload='x'");
+    expect(lines.some((l) => l.includes("node=4"))).toBe(false);
+  });
+
+  it("loose tolerance: a short array leaves missing trailing outputs as None (no message sent)", () => {
+    const graph: GraphData = {
+      nodes: [
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: "2", type: "thingstudio/function", properties: { code: "msg['payload'] = 'only0'\nreturn [msg]", outputCount: 3 } },
+        { id: "3", type: "thingstudio/debug", properties: {} },
+        { id: "4", type: "thingstudio/debug", properties: {} },
+        { id: "5", type: "thingstudio/debug", properties: {} },
+      ],
+      links: [
+        [1, "1", 0, "2", 0, "bool"],
+        [2, "2", 0, "3", 0, "any"],
+        [3, "2", 1, "4", 0, "any"],
+        [4, "2", 2, "5", 0, "any"],
+      ],
+    };
+    const { source } = compile(graph, registry);
+    const lines = runGenerated(source).trim().split("\n");
+    const line3 = lines.find((l) => l.includes("node=3"));
+    expect(line3).toContain("payload='only0'");
+    expect(lines.some((l) => l.includes("node=4"))).toBe(false);
+    expect(lines.some((l) => l.includes("node=5"))).toBe(false);
+  });
+
+  it("loose tolerance: a long array's extra elements beyond the node's real output count are ignored", () => {
+    const graph: GraphData = {
+      nodes: [
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        {
+          id: "2",
+          type: "thingstudio/function",
+          properties: { code: "msg['payload'] = 'two'\nreturn [None, msg, 'ignored', 'also ignored']", outputCount: 2 },
+        },
+        { id: "3", type: "thingstudio/debug", properties: {} },
+        { id: "4", type: "thingstudio/debug", properties: {} },
+      ],
+      links: [
+        [1, "1", 0, "2", 0, "bool"],
+        [2, "2", 0, "3", 0, "any"],
+        [3, "2", 1, "4", 0, "any"],
+      ],
+    };
+    const { source } = compile(graph, registry);
+    const lines = runGenerated(source).trim().split("\n");
+    expect(lines.some((l) => l.includes("node=3"))).toBe(false);
+    const line4 = lines.find((l) => l.includes("node=4"));
+    expect(line4).toContain("payload='two'");
+  });
+
+  it("a nested list in one slot sends multiple messages out that one output, in order", () => {
+    const graph: GraphData = {
+      nodes: [
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        {
+          id: "2",
+          type: "thingstudio/function",
+          properties: { code: "return [[dict(msg, payload=1), dict(msg, payload=2)], None]", outputCount: 2 },
+        },
+        { id: "3", type: "thingstudio/debug", properties: {} },
+      ],
+      links: [
+        [1, "1", 0, "2", 0, "bool"],
+        [2, "2", 0, "3", 0, "any"],
+      ],
+    };
+    const { source } = compile(graph, registry);
+    const lines = runGenerated(source)
+      .trim()
+      .split("\n")
+      .filter((l) => l.includes("node=3"));
+    expect(lines).toHaveLength(2);
+    expect(lines[0]).toContain("payload=1");
+    expect(lines[1]).toContain("payload=2");
+  });
+
+  it("an unwired output produces no code and doesn't affect the wired ones", () => {
+    const graph: GraphData = {
+      nodes: [
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        {
+          id: "2",
+          type: "thingstudio/function",
+          properties: { code: "msg['payload'] = 'only-wired'\nreturn [msg, msg]", outputCount: 2 },
+        },
+        { id: "3", type: "thingstudio/debug", properties: {} },
+      ],
+      links: [
+        [1, "1", 0, "2", 0, "bool"],
+        [2, "2", 0, "3", 0, "any"],
+      ],
+    };
+    const { source } = compile(graph, registry);
+    const lines = runGenerated(source).trim().split("\n");
+    const line3 = lines.find((l) => l.includes("node=3"));
+    expect(line3).toContain("payload='only-wired'");
+  });
+
+  it("a single-output function node (outputCount 1, or unset) still compiles through the original single-output path unchanged", () => {
+    const graph: GraphData = {
+      nodes: [
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: "2", type: "thingstudio/function", properties: { code: "msg['payload'] = 'plain'\nreturn msg" } },
+        { id: "3", type: "thingstudio/debug", properties: {} },
+      ],
+      links: [
+        [1, "1", 0, "2", 0, "bool"],
+        [2, "2", 0, "3", 0, "any"],
+      ],
+    };
+    const { source } = compile(graph, registry);
+    // No multi-output routing code (isinstance checks etc.) should appear
+    // at all -- this graph has no other node type that emits `isinstance`
+    // either (http_request/http_response/mqtt_subscribe do; none are here).
+    expect(source).not.toContain("isinstance");
+    const lines = runGenerated(source).trim().split("\n");
+    const line3 = lines.find((l) => l.includes("node=3"));
+    expect(line3).toContain("payload='plain'");
+  });
+});

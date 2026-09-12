@@ -19,3 +19,19 @@ context.set('count', count)
 msg['payload'] = count
 return msg
 ```
+
+## Multiple outputs
+
+A function node can have more than one output — set **outputs** in its properties (up to 10). Return an array to route to specific outputs, Node-RED style:
+
+```python
+if msg['payload'] > 100:
+    return [msg, None]   # output 1 only
+else:
+    return [None, msg]   # output 2 only
+```
+
+- `None` in a slot sends nothing out that output.
+- A plain `return msg` (no array) still works, and always targets output 1.
+- A slot holding a list of messages sends all of them out that one output, in order: `return [[msg1, msg2], None]`.
+- Returning fewer elements than the node has outputs leaves the missing ones as `None`; returning more just ignores the extras.

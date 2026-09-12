@@ -183,7 +183,7 @@ const NODE_HEIGHT = 34;
 // sync with each other, a programmer error worth failing loudly on
 // (CLAUDE.md's fault-handling priority), same reasoning graph-adapter.ts's
 // own socketIndex() already applies to its analogous "key not found" case.
-function portSocket(defs: PortDefinition[] | undefined, name: string, properties: Record<string, unknown>) {
+export function portSocket(defs: PortDefinition[] | undefined, name: string, properties: Record<string, unknown>) {
   const def = defs?.find((d) => d.name === name);
   if (!def) {
     throw new Error(`nodes.ts: no port definition named "${name}" -- node-library ports declaration is out of sync with this file`);
@@ -293,6 +293,39 @@ export class InjectNode extends ClassicPreset.Node {
   }
 }
 
+// Output key convention for FunctionNode's dynamic ports (multi-output-
+// port support, outstanding-items/connection-state-gate-router-nodes.md,
+// 2026-09-12), shared with editor-setup.ts's resize logic
+// (setFunctionNodeOutputCount) so both sides agree on what the output at
+// position `i` is called. Deliberately NOT a numeric-looking string ("0",
+// "1", ...): JS object property enumeration always lists integer-index-
+// like keys first, in ascending numeric order, regardless of insertion
+// order -- which would silently break graph-adapter.ts's socketIndex()
+// (position in Object.keys(node.outputs) at serialize time, the thing
+// compile.ts's per-output routing actually keys off) the moment a
+// function node's first output isn't also its first-inserted one, e.g.
+// after a shrink then a regrow. "out0"/"out1"/... aren't numeric-index-
+// like strings, so they keep ordinary insertion-order semantics, and a
+// resize that only ever adds/removes from the tail (which
+// setFunctionNodeOutputCount does) always regrows in the same order it
+// shrank from.
+export function functionOutputKey(index: number): string {
+  return `out${index}`;
+}
+
+// Grows the pill with output count rather than packing ports tighter into
+// a fixed height (Mike's call, 2026-09-12, over CustomNode's existing
+// "pack into NODE_HEIGHT regardless of count" precedent for inputs --
+// legible at a function node's realistic 2-4 output range matters more
+// here than staying pixel-uniform with every other node type). 18px/row
+// is comfortably wider than ThingstudioNode.vue's own 10px SOCKET_SIZE,
+// leaving real spacing between adjacent output dots instead of just
+// clearing overlap.
+const FUNCTION_OUTPUT_ROW_HEIGHT = 18;
+export function functionNodeHeight(outputCount: number): number {
+  return NODE_HEIGHT + Math.max(0, outputCount - 1) * FUNCTION_OUTPUT_ROW_HEIGHT;
+}
+
 export class FunctionNode extends ClassicPreset.Node {
   width = 100;
   height = NODE_HEIGHT;
@@ -302,14 +335,25 @@ export class FunctionNode extends ClassicPreset.Node {
   status: NodeStatusState | null = null;
   statusText: string | null = null;
 
-  properties: { code: string } = {
+  // `outputCount` (multi-output-port support, outstanding-items/
+  // connection-state-gate-router-nodes.md, 2026-09-12): defaults to 1,
+  // matching every function node saved before this property existed.
+  // Kept in `properties`, not a separate field, so it round-trips through
+  // the flow file the same way every other node property already does --
+  // no flow-file-format change needed, same "reuse the existing
+  // properties bag" precedent config nodes already established
+  // (config-node-and-palette-implementation-briefing.md).
+  properties: { code: string; outputCount: number } = {
     code: "msg['payload'] = msg['payload']\nreturn msg\n",
+    outputCount: 1,
   };
 
   constructor() {
     super("function");
     this.addInput("msg", new ClassicPreset.Input(portSocket(functionNode.ports?.inputs, "msg", this.properties), "msg", true));
-    this.addOutput("msg", new ClassicPreset.Output(portSocket(functionNode.ports?.outputs, "msg", this.properties), "msg"));
+    for (let i = 0; i < this.properties.outputCount; i++) {
+      this.addOutput(functionOutputKey(i), new ClassicPreset.Output(portSocket(functionNode.ports?.outputs, "msg", this.properties), String(i + 1)));
+    }
   }
 }
 

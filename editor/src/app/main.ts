@@ -117,8 +117,10 @@ import { WebSerialTransport, type WebSerialPort, type DeviceTransport, type Tran
 import { BackendTransport, type SerialPortInfo } from "../protocol/backend-transport.js";
 import type { Message, NodeStatusMessage, ProtocolVersion } from "../protocol/messages.js";
 import { checkRuntimeBuild, decideDeploy } from "../protocol/version.js";
+import { ClassicPreset } from "rete";
 import { createThingstudioEditor, type ThingstudioEditor } from "./rete/editor-setup.js";
-import { NODE_FACTORIES, CustomNode, InjectNode, type AnyThingstudioNode } from "./rete/nodes.js";
+import { NODE_FACTORIES, CustomNode, InjectNode, FunctionNode, portSocket, functionOutputKey, functionNodeHeight, type AnyThingstudioNode } from "./rete/nodes.js";
+import { functionNode as functionNodeDefinition } from "../node-library/function-node.js";
 import { DRAG_MIME, CUSTOM_DRAG_MIME, type NodeKind } from "./rete/palette.js";
 import { toGraphData, socketIndex } from "./rete/graph-adapter.js";
 import { propertyVersion, configs as configsStore, replaceAllConfigs, clearConfigs, backendWsUrl } from "./rete/store.js";
@@ -423,6 +425,36 @@ async function applyFlowFile(file: FlowFile): Promise<void> {
     node.id = n.id;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     Object.assign(node.properties as any, n.properties);
+    // Rebuild a loaded function node's real output ports to match its
+    // saved `outputCount` (multi-output-port support, outstanding-items/
+    // connection-state-gate-router-nodes.md, 2026-09-12) -- the factory()
+    // call above just built a fresh FunctionNode with the DEFAULT
+    // outputCount (1), before the Object.assign above overwrote
+    // `properties.outputCount` with whatever the file actually says;
+    // `node.outputs` itself (the real Rete port record) isn't touched by
+    // that assignment at all, so without this a flow saved with 3 outputs
+    // would load back with `properties.outputCount === 3` but only ONE
+    // real output port -- any edge targeting slot 1 or 2 would then
+    // silently fail to resolve in the edge-restoring loop below
+    // (`Object.keys(originNode.outputs)[originSlot]` undefined). Runs
+    // before reteHandle.addNode() so there's no already-rendered canvas
+    // state to force a re-render of -- the node is constructed correctly
+    // from the start instead. Reuses functionNodeDefinition's own
+    // outputCount() hook (function-node.ts) for the same clamping a
+    // garbage/out-of-range saved value gets anywhere else, rather than a
+    // second copy of that clamp logic here.
+    if (node instanceof FunctionNode) {
+      const wanted = functionNodeDefinition.outputCount!(node.properties);
+      const current = Object.keys(node.outputs).length;
+      for (let i = current; i < wanted; i++) {
+        node.addOutput(functionOutputKey(i), new ClassicPreset.Output(portSocket(functionNodeDefinition.ports?.outputs, "msg", node.properties), String(i + 1)));
+      }
+      for (let i = wanted; i < current; i++) {
+        node.removeOutput(functionOutputKey(i));
+      }
+      node.properties.outputCount = wanted;
+      node.height = functionNodeHeight(wanted);
+    }
     const layoutEntry = file.layout[n.id];
     const position = layoutEntry ? { x: layoutEntry.pos[0], y: layoutEntry.pos[1] } : { x: 0, y: 0 };
     await reteHandle.addNode(node, position);

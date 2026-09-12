@@ -39,9 +39,10 @@ import { ConnectionPlugin, Presets as ConnectionPresets } from "rete-connection-
 import { VuePlugin, Presets as VuePresets } from "rete-vue-plugin";
 
 import type { AreaExtra, Schemes } from "./schemes";
-import type { AnyThingstudioNode } from "./nodes";
+import { type AnyThingstudioNode, FunctionNode, portSocket, functionOutputKey, functionNodeHeight } from "./nodes";
+import { functionNode as functionNodeDefinition, MAX_FUNCTION_OUTPUTS } from "../../node-library/function-node";
 import { installConnectionValidation } from "./validation";
-import { selectedNode, selectedConnection, clearNodeSelection, bumpPropertyVersion } from "./store";
+import { selectedNode, selectedConnection, clearNodeSelection, setFunctionNodeOutputCount, bumpPropertyVersion } from "./store";
 import ThingstudioNode from "./ThingstudioNode.vue";
 import ThingstudioSocket from "./ThingstudioSocket.vue";
 import ThingstudioConnection from "./ThingstudioConnection.vue";
@@ -147,6 +148,46 @@ export async function createThingstudioEditor(container: HTMLElement, options: T
     void nodeSelector.unselectAll();
   };
   AreaExtensions.simpleNodesOrder(area);
+
+  // Function-node output-count resize (multi-output-port support,
+  // outstanding-items/connection-state-gate-router-nodes.md, 2026-09-12).
+  // store.ts's own comment on setFunctionNodeOutputCount explains why this
+  // lives here rather than in PropertyPanel.vue directly: `editor`/`area`
+  // are only in scope inside this function. Only ever resizes from the
+  // TAIL (adds/removes the highest-indexed output(s)) -- nodes.ts's
+  // functionOutputKey() doc comment explains why that matters (JS object
+  // key enumeration order for non-numeric-looking string keys is
+  // insertion order, and graph-adapter.ts's socketIndex() depends on that
+  // order matching output position).
+  setFunctionNodeOutputCount.value = async (node: AnyThingstudioNode, count: number) => {
+    if (!(node instanceof FunctionNode)) return;
+    const clamped = Math.max(1, Math.min(MAX_FUNCTION_OUTPUTS, Math.round(count) || 1));
+    const current = Object.keys(node.outputs).length;
+    if (clamped === current) return;
+    if (clamped > current) {
+      for (let i = current; i < clamped; i++) {
+        node.addOutput(functionOutputKey(i), new ClassicPreset.Output(portSocket(functionNodeDefinition.ports?.outputs, "msg", node.properties), String(i + 1)));
+      }
+    } else {
+      // Shrinking: remove any wire attached to a port before removing the
+      // port itself -- Rete core has no cascading removal of its own
+      // (deleteSelected()'s own header comment above already found this
+      // the hard way for node deletion), and an orphaned connection
+      // referencing a since-removed output key would corrupt the very
+      // next compile (graph-adapter.ts's socketIndex() throws on a socket
+      // key it can't find).
+      for (let i = clamped; i < current; i++) {
+        const key = functionOutputKey(i);
+        for (const c of [...editor.getConnections()]) {
+          if (c.source === node.id && c.sourceOutput === key) await editor.removeConnection(c.id);
+        }
+        node.removeOutput(key);
+      }
+    }
+    node.properties.outputCount = clamped;
+    node.height = functionNodeHeight(clamped);
+    await area.update("node", node.id);
+  };
 
   return {
     editor,
