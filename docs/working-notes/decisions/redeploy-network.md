@@ -274,3 +274,61 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
   the resting state on ESP32; none of the candidate ordering-guarantee redesigns in the detail file's own "What a
   real fix looks like" section are being pursued. Not a blanket rule against ever fixing a board-specific bug (a
   real, cheaply-fixable one still gets fixed) -- a call on where further effort on THIS one actually pays off.
+
+- **2026-09-11 -- `wifi_status` defers connection ownership to `mqtt_as` entirely (not just credentials) when the
+  flow has any mqtt node -- the credentials fix (2026-09-04, above) turned out to be only half the job.** Found by
+  Mike on real hardware via the new connection-status dots (`outstanding-items/node-status-indicators.md`): WiFi
+  visibly cycling up/down with no real signal problem, once mqtt nodes were in the flow. Root cause: unifying
+  *credentials* onto `wifi_status`'s own resolved config (2026-09-04) never touched *connection ownership* --
+  `wifi_status`'s own setup statement still independently called `.connect()` once at flow start, while `mqtt_as`
+  (vendored, `mqtt_publish`/`mqtt_subscribe`) separately drives its own connect plus a background
+  `_keep_connected()` watchdog that runs forever, polling `isconnected()` roughly every second and proactively
+  forcing a `.disconnect()`+reconnect on its own initiative if it ever perceives the link as down -- two
+  independent owners of the one physical `STA_IF`, unaware of each other. Mike's own proposed direction: have
+  `wifi_status` back off when mqtt nodes are present. Implemented at compile time, not a runtime flag: `wifi-
+  status.ts`'s `codegenSource` now checks `ctx.findNodesOfType("thingstudio/mqtt_publish"/"thingstudio/
+  mqtt_subscribe")` and, if either is non-empty, passes `security: "unmanaged"` into `wifiSetupStatement()`
+  regardless of the referenced WiFi config's own declared security -- reusing the exact code path `"unmanaged"`
+  already means for a config someone picks by hand (skip `.connect()`, still bring the interface up, still poll
+  and report real status every cycle). No new runtime state, no new code path -- purely a different choice
+  between two already-existing, already-proven branches. Credential validation is unaffected: `mqtt-shared.ts`'s
+  own `parseMqttBrokerProps` independently resolves and validates the same underlying config's real
+  ssid/password, and separately still rejects an actually-`"unmanaged"`-configured WiFi config outright when mqtt
+  nodes are present -- this override only ever decides whether `wifi_status` ALSO tries to connect, never what
+  credentials `mqtt_as` connects with. Verified off-device: the generated code for a flow with `wifi_status` +
+  `mqtt_publish` no longer emits a `.connect()` call from `wifi_status`'s own setup statement at all, confirmed
+  against both the direct codegen output and a full `compile()` run through the `pymock` fixtures; three new
+  `node-wifi-status.test.ts` tests lock in the behavior (defers for both mqtt node types, unaffected when neither
+  is present). Real-hardware re-verification of whether this actually stops the observed flapping (versus just
+  removing part of the startup race) is still Mike's to confirm -- the more likely primary driver of the *ongoing*
+  cycling is `mqtt_as`'s own `_keep_connected()` watchdog reacting to real-but-transient link state, which this
+  change doesn't touch; flagged as an open question, not assumed solved. `wifi-status.ts`.
+
+- **2026-09-11, same day, revision to the entry just above: `deferToMqtt` is now a separate `wifiSetupStatement()`
+  parameter, not an overload of `security: "unmanaged"`.** Mike's own call, right after seeing the first cut: reusing
+  `"unmanaged"` for two different meanings -- "the flow author chose this" versus "the compiler decided this because
+  an mqtt node exists" -- reads fine in the moment but is exactly the kind of thing that confuses a future
+  maintainer (him) staring at a property panel showing "unmanaged" with no way to tell which reason applies, or at
+  generated code with no connect() call and no way to tell why. Fixed by giving `wifiSetupStatement()` a genuinely
+  separate `deferToMqtt: boolean` parameter (default `false`), with its own doc comment explaining the distinction,
+  and a new `flowHasMqttNodes(ctx)` helper (wifi-status.ts) computing it -- `security` keeps meaning only what the
+  flow author declared. The generated code now also carries its own explanatory comment when deferring
+  (`# WiFi connection managed by mqtt_as -- ...`), so reading the compiled output alone answers "why no connect()
+  call here" without needing the property panel. Also closed a latent correctness gap found while making this
+  change, not just a naming one: `http-request.ts`/`udp-send.ts`/`udp-receive.ts`/`http-in.ts` all independently
+  call `wifiSetupStatement()` under the same shared `"wifi-sta"` dedup key (compile.ts's `mergeSetup`, first-writer-
+  wins, order depends on graph node array order) -- if any of THEM happened to compile before `wifi_status`'s own
+  turn, their un-updated call would have won the dedup race and silently reintroduced the redundant `.connect()`
+  call regardless of `wifi_status`'s own deferral. All four now also compute and pass `flowHasMqttNodes(ctx)`, so
+  whichever caller wins the race makes the same decision. Four new `node-wifi-status.test.ts` tests (the
+  mqtt-deferral comment appears/doesn't appear correctly, and a dedicated test proving a user-chosen `"unmanaged"`
+  config never gets the mqtt-deferral comment -- the two stay visibly distinct). `tsc --noEmit` clean; off-device
+  verified only, same real-hardware caveat as the entry above. `wifi-status.ts`, `http-request.ts`, `udp-send.ts`,
+  `udp-receive.ts`, `http-in.ts`.
+
+- **2026-09-11, real-hardware confirmation: the `deferToMqtt` fix (two entries above) stops the WiFi flapping.**
+  Mike's own words: "seems to have fixed it." Resolves the open question both prior entries left flagged (whether
+  this actually addressed the ongoing cycling, versus only the startup race) -- it does. The "`mqtt_publish` doesn't
+  connect until selected" report from earlier the same day, tentatively flagged as a possible downstream artifact of
+  this same flapping (outstanding-items/node-status-indicators.md), has not been independently re-checked since this
+  fix landed -- worth revisiting if it recurs, not assumed resolved just because this is.

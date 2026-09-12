@@ -260,6 +260,21 @@ export function resolveFlowWifiCredentials(
   return resolveWifiCredentials(wifiNodes[0]!.properties, ctx, "wifi_status");
 }
 
+/** Whether this flow has any node that manages its own independent WiFi
+ * connection (today: mqtt_as, backing mqtt_publish/mqtt_subscribe) --
+ * shared by every `wifiSetupStatement()` caller (this file's own
+ * codegenSource below, plus http-request.ts/udp-send.ts/udp-receive.ts/
+ * http-in.ts) so whichever one happens to win compile.ts's `mergeSetup`
+ * dedup for the shared "wifi-sta" key (first writer wins, graph-node-array-
+ * order-dependent -- see compile.ts's own header) still makes the SAME
+ * connect-or-defer decision. Missing `findNodesOfType` degrades to `false`
+ * (never defer) rather than throwing -- same reasoning resolveFlowWifiCredentials()
+ * above documents: real compiles always provide it, this is purely a
+ * fallback for hand-rolled test-suite mocks that predate this function. */
+export function flowHasMqttNodes(ctx: CodegenContext): boolean {
+  return (ctx.findNodesOfType?.("thingstudio/mqtt_publish").length ?? 0) > 0 || (ctx.findNodesOfType?.("thingstudio/mqtt_subscribe").length ?? 0) > 0;
+}
+
 /** Builds the shared "bring the station interface up, optionally with
  * configured credentials" setup statement. `ssid`/`password` are the raw
  * (possibly empty/undefined) values resolved from a referenced wifi
@@ -279,9 +294,32 @@ export function resolveFlowWifiCredentials(
  *     version selector and open networks already worked mechanically
  *     before this field existed). An empty ssid (no network declared at
  *     all) still just brings the interface up with no connect call,
- *     unchanged from before this field existed -- not itself an error. */
-export function wifiSetupStatement(ssid: unknown, password: unknown, security: WifiSecurity = "password"): { key: string; code: string } {
+ *     unchanged from before this field existed -- not itself an error.
+ *
+ * `deferToMqtt` (default `false`) is a DELIBERATELY SEPARATE parameter
+ * from `security`, 2026-09-11 (Mike's own explicit call, after the first
+ * cut of this fix piggybacked on `security: "unmanaged"` -- see this
+ * file's own header note right above the `flowHasMqttNodes()` call site
+ * below for the full mechanism this exists to fix): `security` is the
+ * flow AUTHOR's own declared intent about a WiFi config ("this network
+ * needs a password" / "this is open" / "something outside this flow
+ * already manages the connection"); `deferToMqtt` is the COMPILER's own
+ * derived fact about this specific flow ("an mqtt node is present, so
+ * mqtt_as already owns reconnection here"). Collapsing those into one
+ * enum value would mean a flow author staring at `security: "unmanaged"`
+ * in the property panel can no longer tell whether they chose that, or
+ * the compiler silently picked it for them -- confusing for exactly the
+ * kind of future-maintainer reason Mike flagged. When `deferToMqtt` is
+ * true, the generated code notes why with its own comment, regardless of
+ * what `security` says -- so reading the compiled output alone (no
+ * property panel needed) already answers "why is there no connect() call
+ * here." */
+export function wifiSetupStatement(ssid: unknown, password: unknown, security: WifiSecurity = "password", deferToMqtt = false): { key: string; code: string } {
   const lines = ["_wifi_sta = network.WLAN(network.STA_IF)", "_wifi_sta.active(True)"];
+  if (deferToMqtt) {
+    lines.push("# WiFi connection managed by mqtt_as -- this flow has an mqtt_publish/mqtt_subscribe node, which owns its own connect/reconnect (wifi-status.ts's flowHasMqttNodes())");
+    return { key: WIFI_SETUP_KEY, code: lines.join("\n") };
+  }
   if (security === "unmanaged") {
     return { key: WIFI_SETUP_KEY, code: lines.join("\n") };
   }
@@ -331,9 +369,55 @@ export const wifiStatusNode: NodeDefinition = {
     // header note for why.
     const lastVar = ctx.uniqueName("wifi_status_last");
 
+    // Defer connection ownership to mqtt_as when the flow has any mqtt
+    // node, 2026-09-11 (Mike's real-hardware finding -- outstanding-items/
+    // node-status-indicators.md): mqtt_publish/mqtt_subscribe already
+    // derive their WiFi credentials from THIS node's own resolved config
+    // (resolveFlowWifiCredentials above), but that was only ever a
+    // credentials fix (2026-09-04, this file's header) -- it left TWO
+    // independent code paths still each free to bring the shared physical
+    // STA_IF up: this node's own one-shot `.connect()` in
+    // wifiSetupStatement() below, and mqtt_as's own internal
+    // wifi_connect()/`_keep_connected()` (mqtt-shared.ts's header, and the
+    // vendored mqtt_as/__init__.py). mqtt_as's own background watchdog
+    // polls isconnected() roughly every second once connected and will
+    // proactively call `.disconnect()`+reconnect on its own if it ever
+    // perceives the link as down -- on real hardware this showed up as
+    // WiFi visibly cycling up/down with no actual signal problem, first
+    // reported by Mike once the status-indicator feature made it possible
+    // to actually SEE it happening on the canvas (it isn't new; there was
+    // just no way to observe it before).
+    //
+    // Fix: `wifiSetupStatement()`'s own `deferToMqtt` parameter (see that
+    // function's header for why this is a SEPARATE parameter from
+    // `security`, not an overload of `"unmanaged"` -- Mike's own explicit
+    // call, after a first cut of this fix piggybacked on `security:
+    // "unmanaged"` and he flagged that as confusing for a future
+    // maintainer reading generated code or this property panel: no way to
+    // tell "I set this" from "the compiler decided this"). Doesn't weaken
+    // credential validation: mqtt-shared.ts's own parseMqttBrokerProps
+    // independently resolves and validates the SAME underlying config's
+    // real ssid/password (and separately rejects an actually-`"unmanaged"`
+    // -configured WiFi config outright when mqtt nodes are present) --
+    // `deferToMqtt` only ever affects whether THIS node's own setup
+    // statement issues a redundant `.connect()` call, never what
+    // credentials mqtt_as itself connects with. Everything else about
+    // this node is unaffected: still polls and reports real
+    // connected/disconnected state every cycle, same as always -- it just
+    // never tries to be the one bringing the link up when mqtt_as is
+    // already doing that job. Compile-time, not a runtime flag -- no new
+    // state to carry onto the device.
+    //
+    // Whether this fully explains the observed flapping (versus just
+    // removing the startup race a second independent `.connect()` call
+    // could cause) is still being confirmed on real hardware -- worth
+    // real-device re-verification before this is called done, same as
+    // everything else pending Mike's hardware pass in this file's own
+    // outstanding-items entry.
+
     return {
       imports: ["import network"],
-      statements: [wifiSetupStatement(ssid, password, security), { key: lastVar, code: `${lastVar} = None` }],
+      statements: [wifiSetupStatement(ssid, password, security, flowHasMqttNodes(ctx)), { key: lastVar, code: `${lastVar} = None` }],
       // ifconfig()/status('rssi') are only read when isconnected() already
       // said yes -- ifconfig() itself would raise/return a stale address
       // on some ports while disconnected, same reasoning that already
@@ -371,7 +455,24 @@ export const wifiStatusNode: NodeDefinition = {
         "    msg = None\n" +
         "else:\n" +
         `    ${lastVar} = _wifi_state\n` +
-        "    msg = {'payload': _wifi_connected, 'topic': '', 'ip': _wifi_ip, 'subnet': _wifi_subnet, 'gateway': _wifi_gateway, 'dns': _wifi_dns, 'rssi': _wifi_rssi}",
+        "    msg = {'payload': _wifi_connected, 'topic': '', 'ip': _wifi_ip, 'subnet': _wifi_subnet, 'gateway': _wifi_gateway, 'dns': _wifi_dns, 'rssi': _wifi_rssi}\n" +
+        // NODE_STATUS push (connection-status-indicator feature,
+        // outstanding-items/node-status-indicators.md, added 2026-09-10)
+        // -- alongside `msg`, not instead of it (NodeStatusMessage's own
+        // doc comment in messages.ts). Piggybacks on the SAME "state
+        // changed" branch `msg` already uses rather than tracking its own
+        // separate last-reported-status var: the only cost is a
+        // functionally-redundant identical report_status call on a
+        // gateway/subnet/dns-only change while staying connected (rare --
+        // a DHCP lease renewal, not a routine poll) since that still
+        // takes this branch -- harmless (the editor's own `status` field
+        // just gets set to the same value again, nodes.ts) and far
+        // simpler than a second per-instance tracking var for a case
+        // this rare. `text` carries the IP address when connected (only
+        // supplementary detail worth surfacing here -- `state` alone
+        // already says connected/disconnected), absent when not
+        // (messages.ts's "absent, not null" convention for this field).
+        `    runtime.report_status(${JSON.stringify(String(node.id))}, 'connected' if _wifi_connected else 'disconnected', _wifi_ip if _wifi_connected else None)`,
       repeatMs: pollMs,
     };
   },

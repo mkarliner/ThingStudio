@@ -87,6 +87,7 @@ function indent(code: string, spaces: number): string {
 function runSnippet(preamble: string, properties: Record<string, unknown>): string {
   const result = wifiStatusNode.codegenSource!(node(properties), ctx);
   const lines = [
+    "import runtime", // compile.ts always adds this to a real flow (line ~196) -- buildMsg's runtime.report_status() call needs it here too
     ...(result.imports ?? []),
     preamble,
     ...(result.statements ?? []).map((s) => s.code),
@@ -113,7 +114,7 @@ function runSnippet(preamble: string, properties: Record<string, unknown>): stri
 // before the second (the state change, if any, the second poll should
 // react to). Each call's `msg` is printed via `repr()` on its own line so
 // `None` (skipped, unchanged) is distinguishable from an actual `{...}` dict.
-function runSnippetTwice(initialPreamble: string, betweenPreamble: string, properties: Record<string, unknown>): [string, string] {
+function runSnippetTwice(initialPreamble: string, betweenPreamble: string, properties: Record<string, unknown>): [string, string, string] {
   const result = wifiStatusNode.codegenSource!(node(properties), ctx);
   // `_poll()` defined ONCE (buildMsg's `global` needs real function scope,
   // same reason `runSnippet` above wraps it -- see that function's own
@@ -130,6 +131,7 @@ function runSnippetTwice(initialPreamble: string, betweenPreamble: string, prope
   // setup-statement output sits in between, rather than assuming (wrongly)
   // that the two `msg` reprs are the only lines printed at all.
   const lines = [
+    "import runtime", // same reason as runSnippet() above
     ...(result.imports ?? []),
     ...(result.statements ?? []).map((s) => s.code),
     `def _poll():\n${indent(`${result.buildMsg}\nprint("MSG:" + repr(msg))`, 4)}`,
@@ -152,7 +154,11 @@ function runSnippetTwice(initialPreamble: string, betweenPreamble: string, prope
     .filter((line) => line.startsWith("MSG:"))
     .map((line) => line.slice("MSG:".length));
   if (printed.length !== 2) throw new Error(`expected exactly 2 "MSG:" lines, got: ${output}`);
-  return [printed[0]!, printed[1]!];
+  // Third element: the full raw output, unfiltered -- lets a caller also
+  // check for/count NODE_STATUS lines (report_status(), 2026-09-10),
+  // which the MSG:-only filtering above would otherwise throw away.
+  // Existing callers destructuring just `[first, second]` are unaffected.
+  return [printed[0]!, printed[1]!, output];
 }
 
 describe("thingstudio/wifi_status node", () => {
@@ -263,6 +269,37 @@ describe("thingstudio/wifi_status node", () => {
     expect(second).toBe("None");
   });
 
+  it("calls runtime.report_status with state 'connected' and the IP as text when connected (NODE_STATUS, 2026-09-10)", () => {
+    const output = runSnippet(
+      "network.WLAN.CONNECTED = True\nnetwork.WLAN.IFCONFIG = ('192.168.1.42', '255.255.255.0', '192.168.1.1', '8.8.8.8')",
+      { pollMs: 1000, wifiConfigId: "unmanaged1" },
+    );
+    expect(output).toContain("NODE_STATUS node=1 state=connected text=192.168.1.42");
+  });
+
+  it("calls runtime.report_status with state 'disconnected' and no text when not connected (NODE_STATUS, 2026-09-10)", () => {
+    const output = runSnippet("network.WLAN.CONNECTED = False", { pollMs: 1000, wifiConfigId: "unmanaged1" });
+    expect(output).toContain("NODE_STATUS node=1 state=disconnected text=None");
+  });
+
+  it("does not call report_status again on a second poll with no connection-state change (same emit-on-change gate as msg)", () => {
+    const [, , raw] = runSnippetTwice("network.WLAN.CONNECTED = False", "", { pollMs: 1000, wifiConfigId: "unmanaged1" });
+    const statusLines = raw.split("\n").filter((line) => line.startsWith("NODE_STATUS"));
+    expect(statusLines).toHaveLength(1); // only the first poll's -- see wifi-status.ts's own comment on report_status piggybacking on the msg change-detection branch
+  });
+
+  it("reports again when the gateway changes while staying connected, even though 'connected' itself didn't change (documented redundancy, wifi-status.ts header)", () => {
+    const [, , raw] = runSnippetTwice(
+      "network.WLAN.CONNECTED = True\nnetwork.WLAN.IFCONFIG = ('192.168.1.42', '255.255.255.0', '192.168.1.1', '8.8.8.8')",
+      "network.WLAN.IFCONFIG = ('192.168.1.42', '255.255.255.0', '192.168.1.254', '8.8.8.8')",
+      { pollMs: 1000, wifiConfigId: "unmanaged1" },
+    );
+    const statusLines = raw.split("\n").filter((line) => line.startsWith("NODE_STATUS"));
+    expect(statusLines).toHaveLength(2);
+    expect(statusLines[0]).toBe("NODE_STATUS node=1 state=connected text=192.168.1.42");
+    expect(statusLines[1]).toBe("NODE_STATUS node=1 state=connected text=192.168.1.42"); // same state+text -- the documented harmless redundancy
+  });
+
   it("does not call connect() when the referenced config's security is 'unmanaged'", () => {
     const output = runSnippet("", { pollMs: 1000, wifiConfigId: "unmanaged1" });
     expect(output).not.toContain("WLAN_CONNECT");
@@ -293,6 +330,62 @@ describe("thingstudio/wifi_status node", () => {
     setConfig("wifi1", { ssid: "MyNetwork", password: "hunter2" });
     const output = runSnippet("", { pollMs: 1000, wifiConfigId: "wifi1" });
     expect(output).toContain("WLAN_CONNECT STA_IF MyNetwork");
+  });
+
+  // WiFi-vs-mqtt_as dual-connection-ownership fix, 2026-09-11 (Mike's
+  // real-hardware finding of WiFi visibly cycling up/down with mqtt nodes
+  // in the flow -- outstanding-items/node-status-indicators.md,
+  // wifi-status.ts's own header comment right above its `flowHasMqttNodes()`
+  // call site for the full mechanism). A real, config'd (not "unmanaged")
+  // WiFi credential is used here specifically so this test can tell
+  // "connect() was skipped because mqtt nodes are present" apart from
+  // "connect() was skipped because the config itself said unmanaged"
+  // (covered separately below) -- `deferToMqtt` is a deliberately
+  // SEPARATE parameter from `security` (wifiSetupStatement()'s own
+  // header, 2026-09-11 revision: Mike's call, a first cut of this fix
+  // overloaded `security: "unmanaged"` for both meanings and he flagged
+  // that as confusing for a future maintainer -- no way to tell "I set
+  // this" from "the compiler decided this").
+  it("does not call connect() itself when the flow has an mqtt_publish node -- defers to mqtt_as (2026-09-11)", () => {
+    setConfig("wifi1", { ssid: "MyNetwork", password: "hunter2" });
+    const mqttNode: GraphNode = { id: "m1", type: "thingstudio/mqtt_publish", properties: {} };
+    const ctxWithMqtt: CodegenContext = { ...ctx, findNodesOfType: (type) => (type === "thingstudio/mqtt_publish" ? [mqttNode] : []) };
+    const result = wifiStatusNode.codegenSource!(node({ pollMs: 1000, wifiConfigId: "wifi1" }), ctxWithMqtt);
+    const wifiStaCode = result.statements?.find((s) => s.code.includes("network.WLAN"))?.code ?? "";
+    expect(wifiStaCode).not.toContain(".connect(");
+    expect(wifiStaCode).toContain("_wifi_sta.active(True)"); // interface still brought up, just not connected by this node
+    expect(wifiStaCode).toContain("# WiFi connection managed by mqtt_as"); // generated code says why, without needing the property panel
+  });
+
+  it("does not call connect() when the flow has an mqtt_subscribe node either (same deferral, other mqtt node type)", () => {
+    setConfig("wifi1", { ssid: "MyNetwork", password: "hunter2" });
+    const mqttNode: GraphNode = { id: "m1", type: "thingstudio/mqtt_subscribe", properties: {} };
+    const ctxWithMqtt: CodegenContext = { ...ctx, findNodesOfType: (type) => (type === "thingstudio/mqtt_subscribe" ? [mqttNode] : []) };
+    const result = wifiStatusNode.codegenSource!(node({ pollMs: 1000, wifiConfigId: "wifi1" }), ctxWithMqtt);
+    const wifiStaCode = result.statements?.find((s) => s.code.includes("network.WLAN"))?.code ?? "";
+    expect(wifiStaCode).not.toContain(".connect(");
+  });
+
+  it("still calls connect() itself when findNodesOfType reports no mqtt nodes at all (unaffected by the deferral)", () => {
+    setConfig("wifi1", { ssid: "MyNetwork", password: "hunter2" });
+    const ctxNoMqtt: CodegenContext = { ...ctx, findNodesOfType: () => [] };
+    const result = wifiStatusNode.codegenSource!(node({ pollMs: 1000, wifiConfigId: "wifi1" }), ctxNoMqtt);
+    const wifiStaCode = result.statements?.find((s) => s.code.includes("network.WLAN"))?.code ?? "";
+    expect(wifiStaCode).toContain('.connect("MyNetwork", "hunter2")');
+    expect(wifiStaCode).not.toContain("# WiFi connection managed by mqtt_as");
+  });
+
+  it("keeps the mqtt-deferral comment separate from a user-chosen 'unmanaged' config -- the two never get conflated", () => {
+    // No mqtt nodes at all here -- "unmanaged1" is the flow author's OWN
+    // choice (this file's beforeEach), not the compiler's. The generated
+    // code should look exactly like the pre-2026-09-11 "unmanaged" case
+    // always has: no connect(), and critically no mqtt-deferral comment,
+    // since nothing here has anything to do with mqtt.
+    const ctxNoMqtt: CodegenContext = { ...ctx, findNodesOfType: () => [] };
+    const result = wifiStatusNode.codegenSource!(node({ pollMs: 1000, wifiConfigId: "unmanaged1" }), ctxNoMqtt);
+    const wifiStaCode = result.statements?.find((s) => s.code.includes("network.WLAN"))?.code ?? "";
+    expect(wifiStaCode).not.toContain(".connect(");
+    expect(wifiStaCode).not.toContain("# WiFi connection managed by mqtt_as");
   });
 
   it("raises a CompileError referencing the missing id when wifiConfigId doesn't resolve", () => {

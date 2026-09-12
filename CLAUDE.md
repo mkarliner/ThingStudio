@@ -111,7 +111,7 @@ we work out our own house style. Once Mike's happy with a piece written
 this way, write the actual style guide from that example and replace this
 paragraph with a pointer to it.
 
-## Handoff/briefing note filenames: lead with the topic, not "next-session-picks"
+## Handoff/briefing note filenames: lead with the topic, not "next-session-picks" -- this keeps getting ignored, read it before you name the file
 
 Several earlier sessions named the end-of-session handoff note `next-session-picks-briefing-<date>[-suffix].md`.
 That prefix is pure noise once there are more than a couple of them -- a directory listing of a dozen
@@ -121,6 +121,30 @@ Mike's call, 2026-09-08: name these the same way every other topic-scoped briefi
 -- a short, meaningful topic phrase first, `-briefing` suffix, a date only if needed to disambiguate more than
 one briefing on the same topic. `failure-handling-briefing-2026-09-08.md`, not
 `next-session-picks-briefing-2026-09-08-failure-handling.md`.
+
+**This rule has already been violated at least once after being written down** -- on 2026-09-11, in the very
+session that fixed the WiFi-flapping/mqtt-status bugs, the handoff doc was written and saved as
+`next-session-picks-briefing-2026-09-11.md`, the exact deprecated pattern this section prohibits, by an agent
+that had presumably already read this file earlier in the same session. It took Mike explicitly flagging it
+("it keeps being ignored") for it to be caught and renamed (to `node-status-hardware-pass-briefing.md`). The
+likely failure mode: with a dozen pre-2026-09-08 `next-session-picks-briefing-*.md` files still sitting in
+`docs/working-notes/` (they're grandfathered -- see below -- so they're not going away), it's easy to pattern-match
+off what's already in the directory listing instead of off this rule. Don't do that. If you're about to run
+`ls docs/working-notes/ | grep briefing` or otherwise eyeball existing filenames to decide the new one, that's
+the moment this has previously gone wrong.
+
+**Before naming or writing the handoff file, actually do this, in order:**
+
+1. Write down the one-sentence topic of the session in your own head first -- not "what's next" (that's the
+   content of the doc, not its topic), but what this session actually *did* or *is handing off*. That sentence
+   is where the filename comes from.
+2. Turn that sentence into a short kebab-case phrase (3-6 words). That phrase, plus `-briefing.md`, is the
+   filename. A date suffix only gets added if another briefing already uses that exact topic phrase.
+3. The string `next-session-picks` must not appear in the filename you're about to write. If it does, you've
+   defaulted to the deprecated pattern -- stop and go back to step 1. This check takes one second and catches
+   the exact mistake made on 2026-09-11.
+4. Before saving, check the new name against `ls docs/working-notes/*briefing*.md` for a collision or near-miss
+   (a differently-worded file already covering the same topic) and disambiguate if needed.
 
 Existing `next-session-picks-briefing-*.md` files are left as-is -- this only governs naming going forward, not
 a retroactive rename pass.

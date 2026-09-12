@@ -1,0 +1,158 @@
+{
+  "formatVersion": 1,
+  "flowName": "wifistatus",
+  "nodes": [
+    {
+      "id": "1092043ee3adab9e",
+      "type": "thingstudio/debug",
+      "properties": {
+        "fullMessage": true
+      }
+    },
+    {
+      "id": "26e0feaeeb5eae01",
+      "type": "thingstudio/wifi_status",
+      "properties": {
+        "pollMs": 5000,
+        "wifiConfigId": "73df14a9-b690-4371-aa37-ed21573f2d0d"
+      }
+    },
+    {
+      "id": "3d3b53ab358eaf33",
+      "type": "thingstudio/mqtt_publish",
+      "properties": {
+        "topic": "foobara",
+        "retain": false,
+        "qos": 0,
+        "brokerConfigId": "fcb5908c-52a8-4f2f-9c2a-66d2d251e9ef"
+      }
+    },
+    {
+      "id": "4ab956bb7f237255",
+      "type": "thingstudio/debug",
+      "properties": {
+        "fullMessage": true
+      }
+    },
+    {
+      "id": "657a5699fc3e3954",
+      "type": "thingstudio/mqtt_subscribe",
+      "properties": {
+        "topic": "foobara",
+        "qos": 0,
+        "brokerConfigId": "fcb5908c-52a8-4f2f-9c2a-66d2d251e9ef"
+      }
+    },
+    {
+      "id": "98fcf8ed462dd5ff",
+      "type": "thingstudio/inject",
+      "properties": {
+        "payloadType": "string",
+        "payloadValue": "364536"
+      }
+    }
+  ],
+  "edges": [
+    [
+      "26e0feaeeb5eae01",
+      0,
+      "4ab956bb7f237255",
+      0
+    ],
+    [
+      "657a5699fc3e3954",
+      0,
+      "1092043ee3adab9e",
+      0
+    ],
+    [
+      "98fcf8ed462dd5ff",
+      0,
+      "3d3b53ab358eaf33",
+      0
+    ]
+  ],
+  "layout": {
+    "1092043ee3adab9e": {
+      "pos": [
+        462,
+        742.2543334960938
+      ],
+      "size": [
+        84,
+        34
+      ]
+    },
+    "26e0feaeeb5eae01": {
+      "pos": [
+        199,
+        281
+      ],
+      "size": [
+        120,
+        34
+      ]
+    },
+    "3d3b53ab358eaf33": {
+      "pos": [
+        235.4913330078125,
+        416.4913330078125
+      ],
+      "size": [
+        128,
+        34
+      ]
+    },
+    "4ab956bb7f237255": {
+      "pos": [
+        488,
+        294
+      ],
+      "size": [
+        84,
+        34
+      ]
+    },
+    "657a5699fc3e3954": {
+      "pos": [
+        306,
+        502.74560546875
+      ],
+      "size": [
+        132,
+        34
+      ]
+    },
+    "98fcf8ed462dd5ff": {
+      "pos": [
+        74.49041748046875,
+        390.0882568359375
+      ],
+      "size": [
+        96,
+        34
+      ]
+    }
+  },
+  "configs": [
+    {
+      "id": "73df14a9-b690-4371-aa37-ed21573f2d0d",
+      "type": "thingstudio/config/wifi",
+      "properties": {
+        "ssid": "mihome",
+        "security": "password",
+        "password": "electr1c"
+      }
+    },
+    {
+      "id": "fcb5908c-52a8-4f2f-9c2a-66d2d251e9ef",
+      "type": "thingstudio/config/mqtt-broker",
+      "properties": {
+        "broker": "verdi.karliner.org",
+        "port": 1883,
+        "username": "guest",
+        "password": "guest"
+      }
+    }
+  ]
+}

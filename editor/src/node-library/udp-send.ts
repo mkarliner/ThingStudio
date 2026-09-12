@@ -88,7 +88,7 @@ import { CompileError } from "../compiler/errors.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, NodeDefinition, SinkCodegenResult } from "../compiler/node-definition.js";
 import { payloadToBytesSnippet } from "./py-literals.js";
-import { resolveFlowWifiCredentials, wifiSetupStatement } from "./wifi-status.js";
+import { flowHasMqttNodes, resolveFlowWifiCredentials, wifiSetupStatement } from "./wifi-status.js";
 
 export const UDP_SEND_SOCK_VAR = "_udp_send_sock";
 export const UDP_SEND_SETUP_KEY = "udp-send-sock";
@@ -160,7 +160,12 @@ await asyncio.wait_for(${sendFnName}(), ${timeoutS})`.trim();
             `runtime.register_cleanup(${JSON.stringify(UDP_SEND_SETUP_KEY)}, lambda: ${UDP_SEND_SOCK_VAR}.close())`,
           ].join("\n"),
         },
-        wifiSetupStatement(ssid, password, security),
+        // deferToMqtt (2026-09-11, decisions/redeploy-network.md): keeps this in sync
+        // with wifi-status.ts's OWN wifiSetupStatement() call for the same reason --
+        // compile.ts's mergeSetup dedups the shared "wifi-sta" key by first-writer-wins,
+        // so whichever node happens to compile first must make the SAME defer-to-mqtt
+        // decision, or an ordering accident could silently undo wifi_status's own deferral.
+        wifiSetupStatement(ssid, password, security, flowHasMqttNodes(ctx)),
       ],
       functionName: ctx.uniqueName("udp_send"),
       functionBody,

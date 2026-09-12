@@ -98,7 +98,7 @@
 import { CompileError } from "../compiler/errors.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, NodeDefinition, SourceCodegenResult } from "../compiler/node-definition.js";
-import { resolveFlowWifiCredentials, wifiSetupStatement } from "./wifi-status.js";
+import { flowHasMqttNodes, resolveFlowWifiCredentials, wifiSetupStatement } from "./wifi-status.js";
 
 // Conservative fixed recv buffer -- comfortably under the ~1472-byte
 // practical UDP payload ceiling on a standard 1500-byte-MTU Ethernet/WiFi
@@ -166,7 +166,12 @@ export const udpReceiveNode: NodeDefinition = {
             `runtime.register_cleanup(${JSON.stringify(setupKey)}, lambda: ${sockVar}.close())`,
           ].join("\n"),
         },
-        wifiSetupStatement(ssid, password, security),
+        // deferToMqtt (2026-09-11, decisions/redeploy-network.md): keeps this in sync
+        // with wifi-status.ts's OWN wifiSetupStatement() call for the same reason --
+        // compile.ts's mergeSetup dedups the shared "wifi-sta" key by first-writer-wins,
+        // so whichever node happens to compile first must make the SAME defer-to-mqtt
+        // decision, or an ordering accident could silently undo wifi_status's own deferral.
+        wifiSetupStatement(ssid, password, security, flowHasMqttNodes(ctx)),
       ],
       buildMsg,
       repeatMs: MANDATORY_YIELD_MS,

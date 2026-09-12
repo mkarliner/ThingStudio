@@ -44,7 +44,7 @@ HMAC-SHA256 + a persisted counter over a nonce challenge-response (no trustworth
 
 ## Editor / canvas
 
-The Rete migration's shape (adapter over `compiler/graph.ts`, hand-rolled palette drag-and-drop, wire-type system kept as its own separate task); the wire-type coercion matrix; uniform `async`/`await` codegen; debounce via the cooldown algorithm; vendoring `mqtt_as`; the stable-node-ID migration (UUID identity end-to-end, replacing recomputed integer ids — the console-attribution work builds on this); the UI cleanup pass (collapsible panels, palette groups); hiding `variable_get`/`variable_set` from the canvas pending a Node-RED-style context model. 10 entries: `docs/working-notes/decisions/editor-canvas.md`.
+The Rete migration's shape (adapter over `compiler/graph.ts`, hand-rolled palette drag-and-drop, wire-type system kept as its own separate task); the wire-type coercion matrix; uniform `async`/`await` codegen; debounce via the cooldown algorithm; vendoring `mqtt_as`; the stable-node-ID migration (UUID identity end-to-end, replacing recomputed integer ids — the console-attribution work builds on this); the UI cleanup pass (collapsible panels, palette groups); hiding `variable_get`/`variable_set` from the canvas pending a Node-RED-style context model; the connection-status-indicator design (new `NODE_STATUS` message type, small fixed state enum, clear-on-redeploy, scoped to `wifi_status`/mqtt only). 11 entries: `docs/working-notes/decisions/editor-canvas.md`.
 
 ## Config nodes / Tier 1 scope
 
@@ -52,7 +52,7 @@ The Tier 1 node-type triage (interrupt/pin-change, filter/event-compression, fou
 
 ## Redeploy / network fault handling
 
-The redeploy-cleanup and WiFi/MQTT hardening work: the socket-leak cleanup registry, mandatory `wifiConfigId`, the WiFi `security` field's three states, the `wifi_status`-vs-`mqtt_as` connect-race fix (kept local rather than patching upstream), `wifi_status` becoming the flow's sole WiFi-credential owner, the runtime/editor version-check gap (semver rule plus a git-SHA backstop), `HELLO_REQUEST`, boot-time flow auto-resume, the CBOR `None`-encoding fix, `flowName`/`deployId` flow identity, and the call to accept the ESP32 ordering-race's current failure mode as a documented limitation rather than keep chasing a universal fix. The single largest, most active section in this log. 12 entries: `docs/working-notes/decisions/redeploy-network.md`.
+The redeploy-cleanup and WiFi/MQTT hardening work: the socket-leak cleanup registry, mandatory `wifiConfigId`, the WiFi `security` field's three states, the `wifi_status`-vs-`mqtt_as` connect-race fix (kept local rather than patching upstream), `wifi_status` becoming the flow's sole WiFi-credential owner, the runtime/editor version-check gap (semver rule plus a git-SHA backstop), `HELLO_REQUEST`, boot-time flow auto-resume, the CBOR `None`-encoding fix, `flowName`/`deployId` flow identity, the call to accept the ESP32 ordering-race's current failure mode as a documented limitation rather than keep chasing a universal fix, and `wifi_status` deferring connection ownership (not just credentials) to `mqtt_as` entirely when the flow has any mqtt node, fixing WiFi visibly cycling up/down that the new status dots made observable. The single largest, most active section in this log. 13 entries: `docs/working-notes/decisions/redeploy-network.md`.
 
 ## Node authoring / extensibility
 
