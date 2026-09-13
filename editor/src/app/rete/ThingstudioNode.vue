@@ -52,7 +52,11 @@
   CustomNode's constructor (nodes.ts).
 -->
 <template>
-  <div class="ts-node" :class="[`kind-${data.kind}`, { selected: data.selected, highlighted: data.highlighted }]" :style="nodeStyles">
+  <div
+    class="ts-node"
+    :class="[`kind-${data.kind}`, { selected: data.selected, highlighted: data.highlighted, 'ts-pane-hidden': paneHidden }]"
+    :style="nodeStyles"
+  >
     <div class="ts-icon">{{ icon }}</div>
     <div class="ts-label" data-testid="title">{{ data.label }}</div>
 
@@ -76,7 +80,7 @@
     />
   </div>
 
-  <div v-if="statusLine" class="ts-status" :style="statusPosition">
+  <div v-if="statusLine && !paneHidden" class="ts-status" :style="statusPosition">
     <span class="ts-status-dot" :class="statusLine.dotClass" />
     <span class="ts-status-text">{{ statusLine.text }}</span>
   </div>
@@ -88,6 +92,7 @@ import { Ref } from "rete-vue-plugin";
 import { CustomNode, type AnyThingstudioNode } from "./nodes";
 import { NODE_PALETTE, DEFAULT_KIND_STYLE, type NodeKind, type KindStyle } from "./palette";
 import type { NodeStatusState } from "../../protocol/messages";
+import { isNodeInActivePane, nodePaneVersion } from "./panes-store";
 
 // `data` is the actual node instance (rete-vue-plugin hands the render
 // context's `payload` straight through as this prop) so `.kind`/
@@ -104,6 +109,21 @@ const props = defineProps<{
   // not so its value itself means anything.
   seed?: number;
 }>();
+
+// Multiple panes (2026-09-13, outstanding-items/multi-pane-canvas.md):
+// only the currently-open pane's nodes are shown -- the node itself
+// always stays in the real Rete editor regardless (panes-store.ts's own
+// header explains why: compile/save must always see the whole flow).
+// `nodePaneVersion` read explicitly, same reason `seed` is read inside
+// `statusLine`/`inputs`/`outputs` above -- panes-store.ts's `nodePane`
+// Map isn't deeply Vue-reactive (that file's own header), so this is the
+// real tracked dependency; `activePaneId` (read inside
+// isNodeInActivePane()) is an ordinary reactive ref and needs no such
+// workaround.
+const paneHidden = computed(() => {
+  void nodePaneVersion.value;
+  return !isNodeInActivePane(props.data.id);
+});
 
 const palette = computed<KindStyle>(() => {
   if (props.data instanceof CustomNode) {
@@ -246,6 +266,32 @@ function portStyle(index: number, count: number): { top: string } {
 }
 .ts-node:hover {
   filter: brightness(1.15);
+}
+/* Multiple panes (2026-09-13): `visibility:hidden`, deliberately NOT
+   `display:none` -- confirmed hands-on reading rete-render-utils' own
+   source (getElementCenter(), rete-render-utils.esm.js): it reads
+   `child.offsetParent` and, if that's null, awaits a `setTimeout(0)` and
+   retries FOREVER rather than failing -- and `offsetParent` is exactly
+   what goes null for a `display:none` element (DOM spec), unlike
+   `visibility:hidden`, which keeps a normal (if unpainted) layout box and
+   a valid `offsetParent`/`offsetWidth`/`offsetHeight`. rete-vue-plugin
+   calls this to compute a wire's endpoint position for EVERY connection
+   touching this node, independently of ThingstudioConnection.vue's own
+   rendering (that component only receives an already-computed `path`
+   string) -- so `display:none` here would leave one of these polling
+   loops running forever, per hidden connection, for as long as its pane
+   stays closed. `visibility:hidden` sidesteps this entirely: the node
+   keeps normal, correctly-computed geometry (it just isn't painted), so
+   `path` computation for a hidden connection works exactly as it would
+   for a visible one -- ThingstudioConnection.vue's own `v-if` gate is
+   what actually keeps it off screen. `visibility:hidden` also already
+   excludes the node from hit-testing on its own (CSS spec -- a hidden
+   element receives no pointer/click events), which is everything this
+   app's own click-only selection (no drag-box multi-select exists here,
+   grep-confirmed) actually needs. */
+.ts-node.ts-pane-hidden {
+  visibility: hidden;
+  pointer-events: none; /* belt-and-braces alongside visibility's own hit-testing exclusion */
 }
 .ts-node.selected {
   /* outline-color handled inline (nodeStyles) -- see that computed's

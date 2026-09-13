@@ -52,6 +52,14 @@
   #main { flex: 1 1 auto; display: flex; min-height: 0; }
   #canvas-wrap { flex: 1 1 auto; position: relative; min-width: 0; background: #16161a; }
   #rete-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+  /* Pane tabs (2026-09-13, multi-pane-canvas.md) -- mount point only,
+     no sizing/positioning of its own here: PaneTabs.vue's own scoped
+     `#pane-tabs` rule does the actual `position:absolute` pinning to the
+     top of #canvas-wrap (this file's own comment on #palette-mount/
+     #property-panel-mount explains the general split -- sizing/layout
+     that spans regions lives here, a component's own look lives in its
+     own scoped style). */
+  #pane-tabs-mount { position: relative; }
 
   /* Palette (left) and property panel (right) mount points -- Phase 3 item
      1/13. Both are standalone Vue apps (main.ts createApp(...).mount(...)),
@@ -124,7 +132,7 @@
   </div>
   <div id="main">
     <div id="palette-mount"></div>
-    <div id="canvas-wrap"><div id="rete-canvas"></div></div>
+    <div id="canvas-wrap"><div id="pane-tabs-mount"></div><div id="rete-canvas"></div></div>
     <div id="property-panel-mount"></div>
     <div id="sidebar">
       <details class="panel">

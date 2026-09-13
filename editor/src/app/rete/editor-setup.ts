@@ -43,6 +43,7 @@ import { type AnyThingstudioNode, FunctionNode, portSocket, functionOutputKey, f
 import { functionNode as functionNodeDefinition, MAX_FUNCTION_OUTPUTS } from "../../node-library/function-node";
 import { installConnectionValidation } from "./validation";
 import { selectedNode, selectedConnection, clearNodeSelection, setFunctionNodeOutputCount, bumpPropertyVersion } from "./store";
+import { forgetNode, nodeIdsInPane, removePane } from "./panes-store";
 import ThingstudioNode from "./ThingstudioNode.vue";
 import ThingstudioSocket from "./ThingstudioSocket.vue";
 import ThingstudioConnection from "./ThingstudioConnection.vue";
@@ -239,7 +240,10 @@ export async function createThingstudioEditor(container: HTMLElement, options: T
     },
     clear: async () => {
       for (const c of [...editor.getConnections()]) await editor.removeConnection(c.id);
-      for (const n of [...editor.getNodes()]) await editor.removeNode(n.id);
+      for (const n of [...editor.getNodes()]) {
+        await editor.removeNode(n.id);
+        forgetNode(n.id); // multi-pane-canvas.md's node-delete upkeep -- panes-store.ts's own header
+      }
       // Selection can't survive a clear -- the selected node/connection
       // objects themselves are gone (poc-rete's editor-setup.ts clear()
       // does the same for the node half).
@@ -267,7 +271,10 @@ export async function createThingstudioEditor(container: HTMLElement, options: T
         for (const c of [...editor.getConnections()]) {
           if (selectedIds.has(c.source) || selectedIds.has(c.target)) await editor.removeConnection(c.id);
         }
-        for (const id of selectedIds) await editor.removeNode(id);
+        for (const id of selectedIds) {
+          await editor.removeNode(id);
+          forgetNode(id); // multi-pane-canvas.md's node-delete upkeep -- panes-store.ts's own header
+        }
         if (selectedNode.value && selectedIds.has(selectedNode.value.id)) selectedNode.value = null;
         bumpPropertyVersion();
         return;
@@ -280,6 +287,29 @@ export async function createThingstudioEditor(container: HTMLElement, options: T
         if (editor.getConnections().some((c) => c.id === id)) await editor.removeConnection(id);
         selectedConnection.value = null;
       }
+    },
+    // Multiple panes (2026-09-13, multi-pane-canvas.md's resolved design:
+    // "removing a pane deletes its nodes"). Mirrors deleteSelected()'s own
+    // connections-before-nodes order and node-delete upkeep. Returns
+    // false (nothing removed) for the last remaining pane -- panes-
+    // store.ts's removePane() own doc comment on why that's a reachable
+    // UI state, not a programmer error; PaneTabs.vue is expected not to
+    // offer "X" on the only remaining tab, but this guards the same
+    // invariant regardless of what the UI does.
+    deletePane: async (paneId: string): Promise<boolean> => {
+      const nodeIds = new Set(nodeIdsInPane(paneId));
+      if (nodeIds.size > 0) {
+        for (const c of [...editor.getConnections()]) {
+          if (nodeIds.has(c.source) || nodeIds.has(c.target)) await editor.removeConnection(c.id);
+        }
+        for (const id of nodeIds) {
+          await editor.removeNode(id);
+          forgetNode(id);
+        }
+        if (selectedNode.value && nodeIds.has(selectedNode.value.id)) selectedNode.value = null;
+        bumpPropertyVersion();
+      }
+      return removePane(paneId);
     },
   };
 }

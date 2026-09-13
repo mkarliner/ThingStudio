@@ -108,7 +108,7 @@
 // -- that's about the device transport, unrelated to where a flow's own
 // file lives.
 
-import { createApp, watch } from "vue";
+import { createApp, nextTick, watch } from "vue";
 import { compile } from "../compiler/compile.js";
 import type { NodeLineRange } from "../compiler/compile.js";
 import { buildRegistry } from "../node-library/registry.js";
@@ -125,8 +125,10 @@ import { DRAG_MIME, CUSTOM_DRAG_MIME, type NodeKind } from "./rete/palette.js";
 import { toGraphData, socketIndex } from "./rete/graph-adapter.js";
 import { propertyVersion, configs as configsStore, replaceAllConfigs, clearConfigs, backendWsUrl } from "./rete/store.js";
 import { getCustomNodePackage, listCustomNodeDefinitions } from "./rete/custom-nodes-store.js";
+import { assignNodeToActivePane, paneOfNode, replacePanesFromFlowFile, resetPanes, setActivePane, panes as panesStore } from "./rete/panes-store.js";
 import PaletteSidebar from "./rete/PaletteSidebar.vue";
 import PropertyPanel from "./rete/PropertyPanel.vue";
+import PaneTabs from "./rete/PaneTabs.vue";
 import {
   buildFlowFile,
   parseFlowFile,
@@ -203,6 +205,9 @@ function nextGridPosition(): { x: number; y: number } {
 async function addNodeOfKind(kind: NodeKind, position?: { x: number; y: number }): Promise<AnyThingstudioNode> {
   const node = NODE_FACTORIES[kind]();
   await reteHandle.addNode(node, position ?? nextGridPosition());
+  // Multiple panes (2026-09-13): a new node defaults into whichever pane
+  // is currently open -- multi-pane-canvas.md's own resolved design.
+  assignNodeToActivePane(node.id);
   return node;
 }
 
@@ -220,6 +225,7 @@ async function addCustomNodeOfType(type: string, position?: { x: number; y: numb
   }
   const node = new CustomNode(pkg.descriptor);
   await reteHandle.addNode(node, position ?? nextGridPosition());
+  assignNodeToActivePane(node.id); // see addNodeOfKind()'s own comment just above
   return node;
 }
 
@@ -235,6 +241,9 @@ el("clear-canvas").addEventListener("click", async () => {
   // here. The flow name (2026-09-05) is flow-scoped the same way configs
   // are, so it resets to the same default a brand new flow file would get.
   clearConfigs();
+  // Panes (2026-09-13) are flow-scoped the same way -- back to the single
+  // starting pane, same as a brand new flow file.
+  resetPanes();
   el<HTMLInputElement>("flowNameInput").value = "";
 });
 
@@ -283,6 +292,21 @@ createApp(PaletteSidebar, {
 // editor-setup.ts's nodepicked pipe (Phase 3 item 13) keeps `selectedNode`
 // in sync with canvas clicks.
 createApp(PropertyPanel).mount(el("property-panel-mount"));
+
+// Pane tabs (2026-09-13, multi-pane-canvas.md) -- overlaid on top of the
+// canvas itself (index.html's #pane-tabs-mount sits inside #canvas-wrap,
+// before #rete-canvas; PaneTabs.vue's own `#pane-tabs` rule does the
+// actual `position:absolute` pinning, so #rete-canvas's existing
+// absolute-fill sizing is untouched). Only pane *removal* needs
+// reteHandle (it deletes the pane's live Rete nodes too, editor-setup.
+// ts's deletePane()) -- add/rename are pure panes-store.ts mutations
+// PaneTabs.vue makes directly (that component's own header explains the
+// split).
+createApp(PaneTabs, {
+  onDeletePane: (id: string) => {
+    void reteHandle.deletePane(id);
+  }, // matches PaneTabs.vue's `defineEmits<{ deletePane: ... }>()`
+}).mount(el("pane-tabs-mount"));
 
 // Drag-and-drop from the palette onto the canvas -- ported from poc-rete's
 // App.vue onDrop(), same graph-space coordinate math: a screen point maps
@@ -350,6 +374,13 @@ function extractCanvasSnapshot(): { nodes: CanvasNodeSnapshot[]; edges: FlowFile
       properties: n.properties,
       pos,
       size: [n.width, n.height],
+      // Multiple panes (2026-09-13) -- paneOfNode() falls back to the
+      // first pane for a node panes-store.ts somehow never tracked
+      // (shouldn't happen -- every node gets assigned at creation/load --
+      // but a save should still succeed with a sensible default rather
+      // than crash, same "a partially-bad state should still save what it
+      // can" reasoning this function's own header already documents).
+      paneId: paneOfNode(n.id),
     };
   });
 
@@ -484,6 +515,14 @@ async function applyFlowFile(file: FlowFile): Promise<void> {
     }
   }
 
+  // Multiple panes (2026-09-13) -- after nodes exist (a node's saved pane
+  // assignment doesn't affect construction/placement above, so ordering
+  // relative to that loop doesn't matter, but this reads nodeByFileId's
+  // final key set, so it has to come after that loop finishes). Only real
+  // constructed nodes get a pane entry -- a skipped (unknown-type) node
+  // was never added to the canvas at all, so it has nothing to track.
+  replacePanesFromFlowFile(file.panes, file.paneOf, [...nodeByFileId.keys()]);
+
   placeCount = file.nodes.length;
 }
 
@@ -497,7 +536,7 @@ el("btnSaveFlow").addEventListener("click", async () => {
   try {
     const { nodes, edges } = extractCanvasSnapshot();
     const flowDisplayName = currentFlowNameInput();
-    const text = serializeFlowFileText(buildFlowFile(nodes, edges, extractConfigsSnapshot(), flowDisplayName));
+    const text = serializeFlowFileText(buildFlowFile(nodes, edges, extractConfigsSnapshot(), flowDisplayName, panesStore.value));
     // Suggested filename only -- the picker lets the user type over it
     // freely, same as any "Save As" dialog; nothing here treats this as a
     // storage key the way the brief backend-exclusive period did.
@@ -574,14 +613,34 @@ function locateNode(nodeId: string): void {
     logLine(`[locate: node ${nodeId} not found on the canvas -- removed since, or from a different flow]`, "err");
     return;
   }
-  // selectNode() drives both the property panel (selectedNode) and
-  // Rete's own visual "selected" highlight (editor-setup.ts's new
-  // selectNode(), 2026-09-04 fix -- a plain `selectedNode.value = node`
-  // here opened the property panel but never touched the canvas's own
-  // node.selected flag, so the node itself never visually highlighted;
-  // Mike caught this on the first real click-through).
-  void reteHandle.selectNode(node);
-  void reteHandle.focusNode(node);
+  // Multiple panes (2026-09-13): the console can report a node from ANY
+  // pane -- the device runs the whole compiled flow, not just whichever
+  // pane happens to be open (panes-store.ts's own header) -- so a click
+  // has to switch panes first when the node isn't in the one currently
+  // showing, or it'd try to focus a node the user can't see yet
+  // (ThingstudioNode.vue's `visibility:hidden`) without ever revealing it.
+  // setActivePane() itself no-ops if this is already the active pane, so
+  // no separate "did it change" check is needed here.
+  setActivePane(paneOfNode(nodeId));
+  // nextTick before select/focus, not strictly required by the geometry
+  // itself -- ThingstudioNode.vue hides a node with `visibility:hidden`,
+  // which (unlike `display:none`) keeps normal, correct measurements at
+  // all times regardless of paint state, so focusNode()'s
+  // AreaExtensions.zoomAt() would read valid numbers either way. Kept
+  // anyway as a small safety margin between the pane-switch's reactive
+  // update and reading anything DOM-derived, at effectively zero cost
+  // (one microtask; a no-op setActivePane() call still resolves on the
+  // very next microtask same as a real one).
+  void nextTick().then(() => {
+    // selectNode() drives both the property panel (selectedNode) and
+    // Rete's own visual "selected" highlight (editor-setup.ts's new
+    // selectNode(), 2026-09-04 fix -- a plain `selectedNode.value = node`
+    // here opened the property panel but never touched the canvas's own
+    // node.selected flag, so the node itself never visually highlighted;
+    // Mike caught this on the first real click-through).
+    void reteHandle.selectNode(node);
+    void reteHandle.focusNode(node);
+  });
 }
 el("btnClear").addEventListener("click", () => (consoleEl.innerHTML = ""));
 

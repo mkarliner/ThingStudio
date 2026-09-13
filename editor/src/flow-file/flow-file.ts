@@ -41,6 +41,16 @@
 // (they're never graph nodes, per graph.ts's own header comment), so
 // there's no positional data to split out for them.
 //
+// Panes (2026-09-13, outstanding-items/multi-pane-canvas.md): `panes`
+// (an ordered list of {id, name} tabs) and `paneOf` (nodeId -> pane id)
+// follow `layout`'s own precedent exactly, for the identical reason --
+// which pane a node sits in, or which pane is currently open, is a
+// visual/organizational fact, not a behavior change, so it's split out
+// of `nodes` the same way position is. `paneOf` is built from
+// `sortedNodes` the same deterministic way `layout` is. Both are treated
+// as optional on parse (see parseFlowFile) so a pre-panes flow file keeps
+// loading unchanged, same backward-compatibility precedent as `configs`.
+//
 // Node IDs, string not numeric (changed 2026-09-04, decisions.md's
 // "Stable node IDs" entry): node ids used to be sequential integers,
 // recomputed fresh on every save/compile (Litegraph's own auto-
@@ -66,6 +76,16 @@ export const FLOW_FILE_FORMAT_VERSION = 1;
 /** Default flow name until the user sets one (main.ts's flow-name input) --
  * see FlowFile.flowName's own doc comment. */
 export const DEFAULT_FLOW_NAME = "untitled flow";
+
+/** The single pane a freshly-built flow (or a pre-panes flow file loading
+ * for the first time, parseFlowFile below) starts with. Fixed, not
+ * generated (crypto.randomUUID()) -- an old flow file re-saved unedited
+ * must produce byte-identical JSON (this file's own determinism
+ * requirement, header comment), so the synthesized default pane's id has
+ * to be stable across repeated parses of the same input, not fresh every
+ * time. */
+export const DEFAULT_PANE_ID = "pane-1";
+export const DEFAULT_PANE_NAME = "Flow 01";
 
 export class FlowFileError extends Error {}
 
@@ -93,6 +113,13 @@ export interface FlowFileConfig {
   id: string;
   type: string;
   properties: Record<string, unknown>;
+}
+
+/** One pane (tab) -- see this file's header. Ordered by creation, no
+ * reordering yet (multi-pane-canvas.md's MVP scope). */
+export interface FlowFilePane {
+  id: string;
+  name: string;
 }
 
 export interface FlowFile {
@@ -132,6 +159,20 @@ export interface FlowFile {
    * configs" rather than a validation error, so hand-written and
    * previously-saved flow files without this key keep loading unchanged. */
   configs: FlowFileConfig[];
+  /** Ordered by creation (no reordering yet -- see this file's header).
+   * Always at least one entry on anything this module builds; parseFlowFile
+   * treats a missing/absent key on a pre-panes flow file as a single
+   * default pane (DEFAULT_PANE_ID/DEFAULT_PANE_NAME) holding every node,
+   * same backward-compatibility precedent as `configs`. */
+  panes: FlowFilePane[];
+  /** nodeId -> pane id, same "split from the node's own data, regenerated
+   * from the live node set on every save" shape `layout` already has (see
+   * this file's header) -- no separate store to drift out of sync. A node
+   * id absent from this map (a pre-panes flow file, or a node saved before
+   * panes existed) falls back to `panes[0].id` at load time, same
+   * missing-entry handling `layout` already gets in main.ts's
+   * applyFlowFile(). */
+  paneOf: Record<string, string>;
 }
 
 /** What main.ts's canvas-reading code hands in -- plain data, no live
@@ -142,6 +183,10 @@ export interface CanvasNodeSnapshot {
   properties: Record<string, unknown>;
   pos: [number, number];
   size?: [number, number];
+  /** Which pane this node belongs to -- split out into `paneOf` by
+   * buildFlowFile below, same treatment `pos`/`size` already get for
+   * `layout`. */
+  paneId: string;
 }
 
 /** String comparator shared by every sort below (nodes, configs, and now
@@ -158,14 +203,21 @@ export function buildFlowFile(
   edges: FlowFileEdge[],
   configs: FlowFileConfig[] = [],
   flowName: string = DEFAULT_FLOW_NAME,
+  // Defaults to the single starting pane -- a caller that hasn't been
+  // taught about panes yet (any existing test fixture, for instance)
+  // still gets a well-formed file rather than an empty `panes: []`,
+  // which parseFlowFile would otherwise have no node to fall back onto.
+  panes: FlowFilePane[] = [{ id: DEFAULT_PANE_ID, name: DEFAULT_PANE_NAME }],
 ): FlowFile {
   const sortedNodes = [...nodes].sort((a, b) => cmpId(a.id, b.id));
   const sortedEdges = [...edges].sort((a, b) => cmpId(a[0], b[0]) || a[1] - b[1] || cmpId(a[2], b[2]) || a[3] - b[3]);
   const sortedConfigs = [...configs].sort((a, b) => cmpId(a.id, b.id));
 
   const layout: Record<string, FlowFileLayoutEntry> = {};
+  const paneOf: Record<string, string> = {};
   for (const n of sortedNodes) {
     layout[n.id] = n.size ? { pos: n.pos, size: n.size } : { pos: n.pos };
+    paneOf[n.id] = n.paneId;
   }
 
   return {
@@ -175,6 +227,8 @@ export function buildFlowFile(
     edges: sortedEdges,
     layout,
     configs: sortedConfigs.map((c) => ({ id: c.id, type: c.type, properties: c.properties })),
+    panes,
+    paneOf,
   };
 }
 
@@ -195,9 +249,9 @@ export function serializeFlowFileText(file: FlowFile): string {
  * §13's HELLO version check exists: fail clearly at the boundary instead
  * of leaving a future format change to silently misparse as this one.
  *
- * `configs` and `flowName` are the two fields treated as optional on
- * input (see this file's header) -- every other top-level field stays
- * mandatory, unchanged.
+ * `configs`, `flowName`, `panes`, and `paneOf` are the fields treated as
+ * optional on input (see this file's header) -- every other top-level
+ * field stays mandatory, unchanged.
  */
 export function parseFlowFile(text: string): FlowFile {
   let raw: unknown;
@@ -227,6 +281,13 @@ export function parseFlowFile(text: string): FlowFile {
   if (!Array.isArray(obj.edges)) throw new FlowFileError('"edges" must be an array');
   if (typeof obj.layout !== "object" || obj.layout === null) throw new FlowFileError('"layout" must be an object');
   if (obj.configs !== undefined && !Array.isArray(obj.configs)) throw new FlowFileError('"configs" must be an array');
+  // panes/paneOf: same optional-on-input treatment as configs/flowName
+  // above (this file's header) -- a pre-panes flow file simply doesn't
+  // have them.
+  if (obj.panes !== undefined && !Array.isArray(obj.panes)) throw new FlowFileError('"panes" must be an array');
+  if (obj.paneOf !== undefined && (typeof obj.paneOf !== "object" || obj.paneOf === null)) {
+    throw new FlowFileError('"paneOf" must be an object');
+  }
 
   const nodes: FlowFileNode[] = obj.nodes.map((n, i) => {
     if (typeof n !== "object" || n === null) throw new FlowFileError(`nodes[${i}] must be an object`);
@@ -273,5 +334,38 @@ export function parseFlowFile(text: string): FlowFile {
     return { id: rec.id, type: rec.type, properties: rec.properties as Record<string, unknown> };
   });
 
-  return { formatVersion: obj.formatVersion, flowName, nodes, edges, layout, configs };
+  // A pre-panes flow file (obj.panes absent) gets the same single default
+  // pane a freshly-built one starts with (DEFAULT_PANE_ID/NAME) -- see
+  // this file's header and DEFAULT_PANE_ID's own doc comment on why that
+  // id is fixed rather than generated.
+  // Explicit `unknown[]` annotation -- keeps both ternary branches
+  // (obj.panes narrowed to unknown[], vs. the {id,name}[] fallback) from
+  // inferring as a wider union than intended; matches configsArr's own
+  // simpler version of this same pattern just above.
+  const panesArr: unknown[] = Array.isArray(obj.panes) ? obj.panes : [{ id: DEFAULT_PANE_ID, name: DEFAULT_PANE_NAME }];
+  const panes: FlowFilePane[] = panesArr.map((pn, i) => {
+    if (typeof pn !== "object" || pn === null) throw new FlowFileError(`panes[${i}] must be an object`);
+    const rec = pn as Record<string, unknown>;
+    if (typeof rec.id !== "string") throw new FlowFileError(`panes[${i}].id must be a string`);
+    if (typeof rec.name !== "string") throw new FlowFileError(`panes[${i}].name must be a string`);
+    return { id: rec.id, name: rec.name };
+  });
+  if (panes.length === 0) throw new FlowFileError('"panes" must have at least one entry');
+
+  // paneOf's values are only checked for shape (a string), not that they
+  // name a real pane in `panes` -- same leniency `layout` already gets
+  // (no cross-check against `nodes` either). A node id missing from this
+  // map, or naming an unknown pane, both fall back to `panes[0].id` at
+  // load time (main.ts's applyFlowFile) rather than failing the parse --
+  // same "a partially-bad state should still load what it can" reasoning
+  // applyFlowFile's own header already applies to layout/edges.
+  const paneOfObj = (obj.paneOf ?? {}) as Record<string, unknown>;
+  const paneOf: Record<string, string> = {};
+  for (const key of Object.keys(paneOfObj)) {
+    const value = paneOfObj[key];
+    if (typeof value !== "string") throw new FlowFileError(`paneOf["${key}"] must be a string`);
+    paneOf[key] = value;
+  }
+
+  return { formatVersion: obj.formatVersion, flowName, nodes, edges, layout, configs, panes, paneOf };
 }

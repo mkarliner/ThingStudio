@@ -26,6 +26,8 @@ import { describe, expect, it } from "vitest";
 import {
   buildFlowFile,
   DEFAULT_FLOW_NAME,
+  DEFAULT_PANE_ID,
+  DEFAULT_PANE_NAME,
   FLOW_FILE_FORMAT_VERSION,
   FlowFileError,
   parseFlowFile,
@@ -33,12 +35,18 @@ import {
   type CanvasNodeSnapshot,
   type FlowFileConfig,
   type FlowFileEdge,
+  type FlowFilePane,
 } from "../src/flow-file/flow-file.js";
 
+// paneId: DEFAULT_PANE_ID on every sample node below -- these tests
+// mostly aren't about panes at all, so they all share the one implicit
+// default pane buildFlowFile() itself defaults to when no `panes` arg is
+// given (see that default's own comment). Pane-specific behavior gets its
+// own dedicated tests further down.
 const SAMPLE_NODES: CanvasNodeSnapshot[] = [
-  { id: "3", type: "thingstudio/gpio_out", properties: { pin: 12 }, pos: [300, 100] },
-  { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" }, pos: [80, 80], size: [190, 130] },
-  { id: "2", type: "thingstudio/function", properties: { code: "return msg\n" }, pos: [200, 90] },
+  { id: "3", type: "thingstudio/gpio_out", properties: { pin: 12 }, pos: [300, 100], paneId: DEFAULT_PANE_ID },
+  { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" }, pos: [80, 80], size: [190, 130], paneId: DEFAULT_PANE_ID },
+  { id: "2", type: "thingstudio/function", properties: { code: "return msg\n" }, pos: [200, 90], paneId: DEFAULT_PANE_ID },
 ];
 const SAMPLE_EDGES: FlowFileEdge[] = [
   ["2", 0, "3", 0],
@@ -91,6 +99,30 @@ describe("buildFlowFile", () => {
     const file = buildFlowFile(SAMPLE_NODES, SAMPLE_EDGES, [], "my named flow");
     expect(file.flowName).toBe("my named flow");
   });
+
+  it("defaults panes to a single default pane when omitted", () => {
+    const file = buildFlowFile(SAMPLE_NODES, SAMPLE_EDGES);
+    expect(file.panes).toEqual([{ id: DEFAULT_PANE_ID, name: DEFAULT_PANE_NAME }]);
+  });
+
+  it("uses the given panes list, in the given order (no sorting -- creation order, per multi-pane-canvas.md)", () => {
+    const panes: FlowFilePane[] = [
+      { id: "pane-2", name: "Flow 02" },
+      { id: "pane-1", name: "Flow 01" },
+    ];
+    const file = buildFlowFile(SAMPLE_NODES, SAMPLE_EDGES, [], DEFAULT_FLOW_NAME, panes);
+    expect(file.panes).toEqual(panes);
+  });
+
+  it("builds paneOf from each node's paneId, keyed in the same deterministic (id-sorted) order as layout", () => {
+    const nodes: CanvasNodeSnapshot[] = [
+      { id: "3", type: "thingstudio/gpio_out", properties: {}, pos: [0, 0], paneId: "pane-2" },
+      { id: "1", type: "thingstudio/inject", properties: {}, pos: [0, 0], paneId: "pane-1" },
+      { id: "2", type: "thingstudio/function", properties: {}, pos: [0, 0], paneId: "pane-1" },
+    ];
+    const file = buildFlowFile(nodes, []);
+    expect(file.paneOf).toEqual({ "1": "pane-1", "2": "pane-1", "3": "pane-2" });
+  });
 });
 
 describe("serializeFlowFileText: determinism", () => {
@@ -126,8 +158,8 @@ describe("serializeFlowFileText: determinism", () => {
     // in the serialized output, because the sort key is the id string,
     // never insertion order.
     const nodes: CanvasNodeSnapshot[] = [
-      { id: "b-node", type: "thingstudio/debug", properties: {}, pos: [0, 0] },
-      { id: "a-node", type: "thingstudio/debug", properties: {}, pos: [0, 0] },
+      { id: "b-node", type: "thingstudio/debug", properties: {}, pos: [0, 0], paneId: DEFAULT_PANE_ID },
+      { id: "a-node", type: "thingstudio/debug", properties: {}, pos: [0, 0], paneId: DEFAULT_PANE_ID },
     ];
     const text = serializeFlowFileText(buildFlowFile(nodes, []));
     const idxA = text.indexOf('"a-node":');
@@ -221,5 +253,56 @@ describe("parseFlowFile: round-trip and validation", () => {
     expect(() => parseFlowFile(JSON.stringify({ ...base, configs: [{ id: 1, type: "x", properties: {} }] }))).toThrow(/configs\[0\]\.id/);
     expect(() => parseFlowFile(JSON.stringify({ ...base, configs: [{ id: "x", type: 1, properties: {} }] }))).toThrow(/configs\[0\]\.type/);
     expect(() => parseFlowFile(JSON.stringify({ ...base, configs: [{ id: "x", type: "x", properties: null }] }))).toThrow(/configs\[0\]\.properties/);
+  });
+
+  it("round-trips panes/paneOf", () => {
+    const panes: FlowFilePane[] = [
+      { id: "pane-1", name: "Flow 01" },
+      { id: "pane-2", name: "Flow 02" },
+    ];
+    const nodes: CanvasNodeSnapshot[] = [{ id: "1", type: "thingstudio/debug", properties: {}, pos: [0, 0], paneId: "pane-2" }];
+    const file = buildFlowFile(nodes, [], [], DEFAULT_FLOW_NAME, panes);
+    const parsed = parseFlowFile(serializeFlowFileText(file));
+    expect(parsed).toEqual(file);
+    expect(parsed.panes).toEqual(panes);
+    expect(parsed.paneOf).toEqual({ "1": "pane-2" });
+  });
+
+  it("treats a missing `panes` key (a pre-panes flow file) as a single default pane, not a validation error", () => {
+    const base = { formatVersion: FLOW_FILE_FORMAT_VERSION, nodes: [], edges: [], layout: {} };
+    const parsed = parseFlowFile(JSON.stringify(base));
+    expect(parsed.panes).toEqual([{ id: DEFAULT_PANE_ID, name: DEFAULT_PANE_NAME }]);
+  });
+
+  it("treats a missing `paneOf` key (a pre-panes flow file) as an empty map, not a validation error", () => {
+    const base = { formatVersion: FLOW_FILE_FORMAT_VERSION, nodes: [], edges: [], layout: {} };
+    const parsed = parseFlowFile(JSON.stringify(base));
+    expect(parsed.paneOf).toEqual({});
+  });
+
+  it("rejects a non-array panes field", () => {
+    const base = { formatVersion: FLOW_FILE_FORMAT_VERSION, nodes: [], edges: [], layout: {} };
+    expect(() => parseFlowFile(JSON.stringify({ ...base, panes: { not: "an array" } }))).toThrow(/"panes" must be an array/);
+  });
+
+  it("rejects an empty panes array -- there must always be at least one pane", () => {
+    const base = { formatVersion: FLOW_FILE_FORMAT_VERSION, nodes: [], edges: [], layout: {} };
+    expect(() => parseFlowFile(JSON.stringify({ ...base, panes: [] }))).toThrow(/"panes" must have at least one entry/);
+  });
+
+  it("rejects malformed pane entries with a specific reason", () => {
+    const base = { formatVersion: FLOW_FILE_FORMAT_VERSION, nodes: [], edges: [], layout: {} };
+    expect(() => parseFlowFile(JSON.stringify({ ...base, panes: [{ id: 1, name: "x" }] }))).toThrow(/panes\[0\]\.id/);
+    expect(() => parseFlowFile(JSON.stringify({ ...base, panes: [{ id: "x", name: 1 }] }))).toThrow(/panes\[0\]\.name/);
+  });
+
+  it("rejects a non-object paneOf field", () => {
+    const base = { formatVersion: FLOW_FILE_FORMAT_VERSION, nodes: [], edges: [], layout: {} };
+    expect(() => parseFlowFile(JSON.stringify({ ...base, paneOf: "not an object" }))).toThrow(/"paneOf" must be an object/);
+  });
+
+  it("rejects a non-string paneOf value", () => {
+    const base = { formatVersion: FLOW_FILE_FORMAT_VERSION, nodes: [], edges: [], layout: {} };
+    expect(() => parseFlowFile(JSON.stringify({ ...base, paneOf: { "1": 42 } }))).toThrow(/paneOf\["1"\] must be a string/);
   });
 });

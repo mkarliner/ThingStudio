@@ -30,9 +30,27 @@
   events:none with pointer-events:auto opted back in on the path) so an
   unselected wire looks exactly as it always has; only the selected-state
   styling and the click handling are new.
+
+  Multiple panes (2026-09-13, outstanding-items/multi-pane-canvas.md):
+  `v-if="!paneHidden"` below skips rendering entirely for a wire whose
+  endpoints aren't in the active pane -- purely presentational, not a
+  defensive measure: ThingstudioNode.vue hides a node with
+  `visibility:hidden`, not `display:none` (that file's own comment on why
+  -- a `display:none` node's `offsetParent` going null breaks rete-
+  render-utils' own socket-position code), so a hidden node keeps a
+  completely normal, correctly-measured layout box. `props.path` (this
+  component only receives `props.data.source`/`.target`, node ids, plus
+  that already-computed `path` string -- this file's own header, above)
+  is therefore a perfectly valid path even for a wire between two hidden
+  nodes; this `v-if` just keeps it from actually being painted, the same
+  reason ThingstudioNode.vue's own node stays out of the *visual* canvas
+  while remaining fully present and measurable underneath. Cross-pane
+  wires can't exist (panes-store.ts's header), so a connection's two
+  endpoints are always both hidden or both visible -- checking `source`
+  alone is sufficient, never a case where `source`/`target` disagree.
 -->
 <template>
-  <svg data-testid="connection">
+  <svg v-if="!paneHidden" data-testid="connection">
     <path :d="path" :class="{ 'ts-wire-selected': isSelected }" @pointerdown.stop="select" />
   </svg>
 </template>
@@ -41,6 +59,7 @@
 import { computed } from "vue";
 import type { ClassicPreset } from "rete";
 import { selectedConnection, selectedNode, clearNodeSelection } from "./store";
+import { isNodeInActivePane, nodePaneVersion } from "./panes-store";
 
 const props = defineProps<{
   data: ClassicPreset.Connection<ClassicPreset.Node, ClassicPreset.Node>;
@@ -48,6 +67,13 @@ const props = defineProps<{
 }>();
 
 const isSelected = computed(() => selectedConnection.value?.id === props.data.id);
+
+// See this file's header -- checking `source` alone is enough, cross-pane
+// wires can't exist.
+const paneHidden = computed(() => {
+  void nodePaneVersion.value;
+  return !isNodeInActivePane(props.data.source);
+});
 
 function select(): void {
   selectedConnection.value = props.data;
