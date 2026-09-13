@@ -2,6 +2,10 @@
 
 Orientation for anyone (human or Claude) picking this project up: `docs/thingstudio-design-doc.md` is the design doc, `docs/working-notes/` is active planning. Read the design doc in full before proposing architecture changes.
 
+## Message shape: the `msg`/`payload` convention
+
+Every message flowing through a compiled flow is a dict: `msg = {'payload': ..., 'topic': ..., <anything else>}`. `payload` is the one key every generic downstream node reads and the one a port's declared type checks against (`debug` prints only `msg['payload']`). `topic` is a routing/identification string, required on every message even when a node has no natural topic of its own -- set it to `''` rather than omitting it. Anything beyond those two keys rides along unchecked, read only by a node written to look for it specifically. Full explanation and examples: `docs/user-guide/custom-nodes.md`.
+
 ## Do not use the following phrases/words
 - load bearing
 

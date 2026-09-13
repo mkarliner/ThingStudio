@@ -8,19 +8,10 @@ the following points and questions are for discussion around the scope of the MV
 # Bugs -- priority
 - 2026-09-02: wifi status, mqtt nodes should have an indicator of status (on the canvas itself, not just console output).
   [tracked, not scoped — outstanding-items.md, "UI / editor" section]
-- Node input and output - define a consistent policy for msg/payload ext and include in claude.md
-  [partially covered — docs/user-guide/custom-nodes.md already documents the msg/payload convention for
-  node authors; CLAUDE.md itself still doesn't restate it as a standing rule (the specific ask). Trivial
-  fix — see multi-output-landed-mikes-questions-triage-briefing.md, 2026-09-12]
 - write explaination of node flow operation to include in user docs
   [partially covered — canvas-basics.md's Wiring section covers connection mechanics, not the underlying
   execution model (independent per-source async loops, no shared tick, multi-output fan-out order) — worth
   a short new subsection. multi-output-landed-mikes-questions-triage-briefing.md, 2026-09-12]
-- Clicking on the inject node action opens the property sheet. It should only open on a real select.
-  [confirmed still open 2026-09-12 — editor-setup.ts's nodepicked pipe unconditionally selects on any
-  pointer-down over a node, including an inject click-to-fire; no outstanding-items file yet. Small,
-  well-scoped fix. multi-output-landed-mikes-questions-triage-briefing.md]
-
 - when selecting a node id in the console, the canvas makes that node the center. This turns out to be annoying. Remove that.
 # Platforms
 We need to support the following platforms for the editor/backend:
