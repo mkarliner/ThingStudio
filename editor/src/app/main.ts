@@ -173,12 +173,20 @@ const canvasContainer = el("rete-canvas");
 // createThingstudioEditor() itself has to be called this early (top-level
 // await, this file's own header comment on why), well before `transport`
 // exists, so the click hook is indirected through this mutable slot
-// instead of being passed as a value that doesn't exist yet.
-let onInjectNodeClicked: ((node: InjectNode) => void) | null = null;
+// instead of being passed as a value that doesn't exist yet. Returns
+// whether it actually fired (added 2026-09-12, alongside editor-setup.ts's
+// onNodeClicked veto -- outstanding-items, "Clicking on the inject node
+// action opens the property sheet"): a click only counts as a fire-action
+// (and should suppress the property panel) when it really sent a TRIGGER,
+// not just because the clicked node happens to be an inject node.
+let onInjectNodeClicked: ((node: InjectNode) => boolean) | null = null;
 
 const reteHandle: ThingstudioEditor = await createThingstudioEditor(canvasContainer, {
   onNodeClicked: (node) => {
-    if (node instanceof InjectNode) onInjectNodeClicked?.(node);
+    if (node instanceof InjectNode) {
+      const fired = onInjectNodeClicked?.(node) ?? false;
+      if (fired) return false; // action, not a real select -- don't open the property panel
+    }
   },
 });
 const reteEditor = reteHandle.editor;
@@ -1026,15 +1034,21 @@ let transport: DeviceTransport = new WebSerialTransport(transportEvents);
 // side (runtime.py's fire_trigger) -- the same "untrusted/possibly-stale
 // wire input degrades gracefully" contract every other §13 message
 // already follows, not a new failure mode this feature introduces.
+// 2026-09-12: now returns whether it fired, so the onNodeClicked hook
+// above (main.ts) can suppress the same click's property-panel selection
+// when it did -- fixes "clicking the inject action opens the property
+// sheet" (outstanding-items). Not connected = real select, property
+// panel opens as normal.
 onInjectNodeClicked = (node) => {
   if (!transport.isConnected) {
     logLine("[inject: connect to a device first -- clicking only fires while live]", "");
-    return;
+    return false;
   }
   logLine(`[inject: firing node ${node.id}]`, "");
   transport.send({ type: "TRIGGER", nodeId: node.id }).catch((err) => {
     logLine(`[inject: trigger send failed] ${err instanceof Error ? err.message : String(err)}`, "err");
   });
+  return true;
 };
 
 function setConnectedUi(connected: boolean): void {

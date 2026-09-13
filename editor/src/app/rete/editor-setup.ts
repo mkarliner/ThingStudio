@@ -49,20 +49,26 @@ import ThingstudioConnection from "./ThingstudioConnection.vue";
 
 export interface ThingstudioEditorOptions {
   /**
-   * Fires on every "nodepicked" pointer-down over a node -- the same
-   * gesture that already drives selection below, just also handed to the
-   * caller before/after that assignment. Added 2026-09-02 for inject's
-   * click-only live-fire feature: main.ts uses this to send a real §13
-   * TRIGGER when the clicked node is an inject node and the transport is
-   * currently connected, without editor-setup.ts itself needing to know
-   * anything about node kinds, live connections, or the wire protocol --
-   * this file stays exactly as protocol-agnostic as every other Rete
-   * plumbing concern here. Selection still happens unconditionally (the
-   * property panel keeps working for a clicked inject node exactly as it
-   * always has); firing is an independent side effect layered on the same
-   * click, not a replacement for selecting.
+   * Fires on every "nodepicked" pointer-down over a node, called before
+   * this file's own selection logic below runs. Added 2026-09-02 for
+   * inject's click-only live-fire feature: main.ts uses this to send a
+   * real §13 TRIGGER when the clicked node is an inject node and the
+   * transport is currently connected, without editor-setup.ts itself
+   * needing to know anything about node kinds, live connections, or the
+   * wire protocol -- this file stays exactly as protocol-agnostic as
+   * every other Rete plumbing concern here.
+   *
+   * Return `false` to suppress this click's selection (the property panel
+   * will not open/refresh for it) -- anything else (including no return)
+   * selects normally. Added 2026-09-12 (outstanding-items, "Clicking on
+   * the inject node action opens the property sheet"): a click on a live
+   * inject node fires it via TRIGGER, which is an action, not a real
+   * select, so it shouldn't also steal focus into the property panel. A
+   * click on a non-live (or non-inject) node is still a real select --
+   * main.ts returns non-false for those, and the property panel keeps
+   * working exactly as it always has.
    */
-  onNodeClicked?(node: AnyThingstudioNode): void;
+  onNodeClicked?(node: AnyThingstudioNode): boolean | void;
 }
 
 export async function createThingstudioEditor(container: HTMLElement, options: ThingstudioEditorOptions = {}) {
@@ -106,12 +112,17 @@ export async function createThingstudioEditor(container: HTMLElement, options: T
   area.addPipe((context) => {
     if (context.type === "nodepicked") {
       const node = editor.getNode(context.data.id) as AnyThingstudioNode | undefined;
-      selectedNode.value = node ?? null;
-      // A node click always wins over any previously selected wire --
-      // mutual exclusivity, ThingstudioConnection.vue's own click handler
-      // does the same in the other direction.
-      selectedConnection.value = null;
-      if (node) options.onNodeClicked?.(node);
+      // options.onNodeClicked can veto selection for this click (return
+      // false) -- e.g. inject's click-to-fire, where the click is an
+      // action rather than a real select. See its doc comment above.
+      const shouldSelect = node ? options.onNodeClicked?.(node) !== false : true;
+      if (shouldSelect) {
+        selectedNode.value = node ?? null;
+        // A node click always wins over any previously selected wire --
+        // mutual exclusivity, ThingstudioConnection.vue's own click handler
+        // does the same in the other direction.
+        selectedConnection.value = null;
+      }
     }
     return context;
   });
