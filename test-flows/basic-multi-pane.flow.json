@@ -1,0 +1,127 @@
+{
+  "formatVersion": 1,
+  "flowName": "untitled flow",
+  "nodes": [
+    {
+      "id": "5b47180f573a5f8e",
+      "type": "thingstudio/delay",
+      "properties": {
+        "delayMs": 1000
+      }
+    },
+    {
+      "id": "8bba24aac2704675",
+      "type": "thingstudio/inject",
+      "properties": {
+        "payloadType": "string",
+        "payloadValue": "panel 0"
+      }
+    },
+    {
+      "id": "ae4dee4163581165",
+      "type": "thingstudio/debug",
+      "properties": {
+        "fullMessage": false
+      }
+    },
+    {
+      "id": "e2d8e205e229e229",
+      "type": "thingstudio/inject",
+      "properties": {
+        "payloadType": "string",
+        "payloadValue": "panel 1"
+      }
+    },
+    {
+      "id": "fcf828f3821ffcb4",
+      "type": "thingstudio/debug",
+      "properties": {
+        "fullMessage": false
+      }
+    }
+  ],
+  "edges": [
+    [
+      "8bba24aac2704675",
+      0,
+      "ae4dee4163581165",
+      0
+    ],
+    [
+      "e2d8e205e229e229",
+      0,
+      "fcf828f3821ffcb4",
+      0
+    ]
+  ],
+  "layout": {
+    "5b47180f573a5f8e": {
+      "pos": [
+        261.2388916015625,
+        -161.87380981445312
+      ],
+      "size": [
+        100,
+        34
+      ]
+    },
+    "8bba24aac2704675": {
+      "pos": [
+        200.74566650390625,
+        159.00289916992188
+      ],
+      "size": [
+        96,
+        34
+      ]
+    },
+    "ae4dee4163581165": {
+      "pos": [
+        391.7388916015625,
+        185.62619018554688
+      ],
+      "size": [
+        84,
+        34
+      ]
+    },
+    "e2d8e205e229e229": {
+      "pos": [
+        45.594329833984375,
+        -61.3675537109375
+      ],
+      "size": [
+        96,
+        34
+      ]
+    },
+    "fcf828f3821ffcb4": {
+      "pos": [
+        164.57952880859375,
+        147.95343017578125
+      ],
+      "size": [
+        84,
+        34
+      ]
+    }
+  },
+  "configs": [],
+  "panes": [
+    {
+      "id": "pane-1",
+      "name": "asdfsadf"
+    },
+    {
+      "id": "e20e70bc-f481-4804-bfc4-754e499f987f",
+      "name": "asdfadfs"
+    }
+  ],
+  "paneOf": {
+    "5b47180f573a5f8e": "pane-1",
+    "8bba24aac2704675": "pane-1",
+    "ae4dee4163581165": "pane-1",
+    "e2d8e205e229e229": "e20e70bc-f481-4804-bfc4-754e499f987f",
+    "fcf828f3821ffcb4": "e20e70bc-f481-4804-bfc4-754e499f987f"
+  }
+}
