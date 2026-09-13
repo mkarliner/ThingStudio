@@ -119,11 +119,11 @@ import type { Message, NodeStatusMessage, ProtocolVersion } from "../protocol/me
 import { checkRuntimeBuild, decideDeploy } from "../protocol/version.js";
 import { ClassicPreset } from "rete";
 import { createThingstudioEditor, type ThingstudioEditor } from "./rete/editor-setup.js";
-import { NODE_FACTORIES, CustomNode, InjectNode, FunctionNode, portSocket, functionOutputKey, functionNodeHeight, type AnyThingstudioNode } from "./rete/nodes.js";
+import { NODE_FACTORIES, CustomNode, FunctionNode, portSocket, functionOutputKey, functionNodeHeight, type AnyThingstudioNode } from "./rete/nodes.js";
 import { functionNode as functionNodeDefinition } from "../node-library/function-node.js";
 import { DRAG_MIME, CUSTOM_DRAG_MIME, type NodeKind } from "./rete/palette.js";
 import { toGraphData, socketIndex } from "./rete/graph-adapter.js";
-import { propertyVersion, configs as configsStore, replaceAllConfigs, clearConfigs, backendWsUrl } from "./rete/store.js";
+import { propertyVersion, configs as configsStore, replaceAllConfigs, clearConfigs, backendWsUrl, fireInjectNode } from "./rete/store.js";
 import { getCustomNodePackage, listCustomNodeDefinitions } from "./rete/custom-nodes-store.js";
 import { assignNodeToActivePane, paneOfNode, replacePanesFromFlowFile, resetPanes, setActivePane, panes as panesStore } from "./rete/panes-store.js";
 import PaletteSidebar from "./rete/PaletteSidebar.vue";
@@ -170,27 +170,7 @@ function currentFlowNameInput(): string {
 // than threading an "editor not ready yet" guard through every function
 // below that touches reteEditor/reteArea.
 const canvasContainer = el("rete-canvas");
-// Reassigned once the WebSerial transport/deploy machinery exists further
-// down this file (inject click-only live-fire feature, 2026-09-02) --
-// createThingstudioEditor() itself has to be called this early (top-level
-// await, this file's own header comment on why), well before `transport`
-// exists, so the click hook is indirected through this mutable slot
-// instead of being passed as a value that doesn't exist yet. Returns
-// whether it actually fired (added 2026-09-12, alongside editor-setup.ts's
-// onNodeClicked veto -- outstanding-items, "Clicking on the inject node
-// action opens the property sheet"): a click only counts as a fire-action
-// (and should suppress the property panel) when it really sent a TRIGGER,
-// not just because the clicked node happens to be an inject node.
-let onInjectNodeClicked: ((node: InjectNode) => boolean) | null = null;
-
-const reteHandle: ThingstudioEditor = await createThingstudioEditor(canvasContainer, {
-  onNodeClicked: (node) => {
-    if (node instanceof InjectNode) {
-      const fired = onInjectNodeClicked?.(node) ?? false;
-      if (fired) return false; // action, not a real select -- don't open the property panel
-    }
-  },
-});
+const reteHandle: ThingstudioEditor = await createThingstudioEditor(canvasContainer);
 const reteEditor = reteHandle.editor;
 const reteArea = reteHandle.area;
 
@@ -1093,21 +1073,23 @@ let transport: DeviceTransport = new WebSerialTransport(transportEvents);
 // side (runtime.py's fire_trigger) -- the same "untrusted/possibly-stale
 // wire input degrades gracefully" contract every other §13 message
 // already follows, not a new failure mode this feature introduces.
-// 2026-09-12: now returns whether it fired, so the onNodeClicked hook
-// above (main.ts) can suppress the same click's property-panel selection
-// when it did -- fixes "clicking the inject action opens the property
-// sheet" (outstanding-items). Not connected = real select, property
-// panel opens as normal.
-onInjectNodeClicked = (node) => {
+// 2026-09-13: reworked from an onNodeClicked veto (which made the whole
+// inject node body either fire or select, with no way to open a live
+// inject node's property panel) to a dedicated fire action wired through
+// store.ts's fireInjectNode -- ThingstudioNode.vue calls this only from
+// the node's own "▶" icon, stopping that click from ever reaching the
+// canvas's normal node-select handling. No return value needed any more:
+// firing and selecting are now two entirely separate click targets, not
+// one click racing to decide which it was.
+fireInjectNode.value = (node) => {
   if (!transport.isConnected) {
     logLine("[inject: connect to a device first -- clicking only fires while live]", "");
-    return false;
+    return;
   }
   logLine(`[inject: firing node ${node.id}]`, "");
   transport.send({ type: "TRIGGER", nodeId: node.id }).catch((err) => {
     logLine(`[inject: trigger send failed] ${err instanceof Error ? err.message : String(err)}`, "err");
   });
-  return true;
 };
 
 function setConnectedUi(connected: boolean): void {

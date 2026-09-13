@@ -48,31 +48,21 @@ import ThingstudioNode from "./ThingstudioNode.vue";
 import ThingstudioSocket from "./ThingstudioSocket.vue";
 import ThingstudioConnection from "./ThingstudioConnection.vue";
 
-export interface ThingstudioEditorOptions {
-  /**
-   * Fires on every "nodepicked" pointer-down over a node, called before
-   * this file's own selection logic below runs. Added 2026-09-02 for
-   * inject's click-only live-fire feature: main.ts uses this to send a
-   * real §13 TRIGGER when the clicked node is an inject node and the
-   * transport is currently connected, without editor-setup.ts itself
-   * needing to know anything about node kinds, live connections, or the
-   * wire protocol -- this file stays exactly as protocol-agnostic as
-   * every other Rete plumbing concern here.
-   *
-   * Return `false` to suppress this click's selection (the property panel
-   * will not open/refresh for it) -- anything else (including no return)
-   * selects normally. Added 2026-09-12 (outstanding-items, "Clicking on
-   * the inject node action opens the property sheet"): a click on a live
-   * inject node fires it via TRIGGER, which is an action, not a real
-   * select, so it shouldn't also steal focus into the property panel. A
-   * click on a non-live (or non-inject) node is still a real select --
-   * main.ts returns non-false for those, and the property panel keeps
-   * working exactly as it always has.
-   */
-  onNodeClicked?(node: AnyThingstudioNode): boolean | void;
-}
-
-export async function createThingstudioEditor(container: HTMLElement, options: ThingstudioEditorOptions = {}) {
+// Inject's click-only live-fire feature (2026-09-02) used to route through
+// an `onNodeClicked` hook here that could veto a whole-node click's
+// selection (added 2026-09-12, outstanding-items/"Clicking on the inject
+// node action opens the property sheet") -- but that made the *entire*
+// node body a single click target that either fired (connected) or
+// selected (not connected), with no way to open a live inject node's
+// property panel at all short of disconnecting first (Mike, 2026-09-13).
+// Replaced: the fire action now lives on the node's own "▶" icon
+// specifically (ThingstudioNode.vue, via store.ts's `fireInjectNode`),
+// which stops its pointerdown from ever reaching this file's nodepicked
+// pipe below -- so a click anywhere else on an inject node (the label,
+// the rest of the body) is always a real select, live or not, same as
+// every other node kind. This file no longer needs to know anything
+// about node kinds or live connections to make that work.
+export async function createThingstudioEditor(container: HTMLElement) {
   const editor = new NodeEditor<Schemes>();
   const area = new AreaPlugin<Schemes, AreaExtra>(container);
   const connection = new ConnectionPlugin<Schemes, AreaExtra>();
@@ -113,17 +103,11 @@ export async function createThingstudioEditor(container: HTMLElement, options: T
   area.addPipe((context) => {
     if (context.type === "nodepicked") {
       const node = editor.getNode(context.data.id) as AnyThingstudioNode | undefined;
-      // options.onNodeClicked can veto selection for this click (return
-      // false) -- e.g. inject's click-to-fire, where the click is an
-      // action rather than a real select. See its doc comment above.
-      const shouldSelect = node ? options.onNodeClicked?.(node) !== false : true;
-      if (shouldSelect) {
-        selectedNode.value = node ?? null;
-        // A node click always wins over any previously selected wire --
-        // mutual exclusivity, ThingstudioConnection.vue's own click handler
-        // does the same in the other direction.
-        selectedConnection.value = null;
-      }
+      selectedNode.value = node ?? null;
+      // A node click always wins over any previously selected wire --
+      // mutual exclusivity, ThingstudioConnection.vue's own click handler
+      // does the same in the other direction.
+      selectedConnection.value = null;
     }
     return context;
   });
@@ -201,6 +185,45 @@ export async function createThingstudioEditor(container: HTMLElement, options: T
     await area.update("node", node.id);
   };
 
+  // Console click-to-navigate viewport jump (outstanding-items/
+  // console-click-viewport-jump.md, raised 2026-09-13): focusNode() below
+  // used to pan/zoom unconditionally on every click, discarding whatever
+  // part of a large flow was already in view even when the target node
+  // was already fully on-screen. This checks that first.
+  //
+  // "Comfortably visible" = the node's full bounding box, in model space
+  // (AreaExtensions.getBoundingBox(), the same helper zoomAt() itself
+  // uses internally), maps entirely inside the container's viewport once
+  // converted to screen space -- model -> screen is `* k + {x, y}` from
+  // the area's own transform, the identical mapping content.holder's CSS
+  // transform uses to actually paint nodes -- inset by a margin so a node
+  // sitting right at the edge still counts as "not visible enough" (the
+  // outstanding-items note's own suggestion). Falls back to needing a
+  // pan/zoom (returns false) if the container hasn't been laid out yet
+  // (clientWidth/clientHeight still 0) -- same as the pre-fix behavior.
+  //
+  // Deliberately does NOT account for the property panel/palette
+  // occluding part of the canvas -- the outstanding-items note leaves
+  // that unscoped; revisit if it proves annoying in practice.
+  const FOCUS_VISIBILITY_MARGIN_PX = 40;
+  function isNodeComfortablyVisible(node: AnyThingstudioNode): boolean {
+    const viewportWidth = area.container.clientWidth;
+    const viewportHeight = area.container.clientHeight;
+    if (viewportWidth === 0 || viewportHeight === 0) return false;
+    const box = AreaExtensions.getBoundingBox(area, [node]);
+    const { x: tx, y: ty, k } = area.area.transform;
+    const screenLeft = box.left * k + tx;
+    const screenTop = box.top * k + ty;
+    const screenRight = box.right * k + tx;
+    const screenBottom = box.bottom * k + ty;
+    return (
+      screenLeft >= FOCUS_VISIBILITY_MARGIN_PX &&
+      screenTop >= FOCUS_VISIBILITY_MARGIN_PX &&
+      screenRight <= viewportWidth - FOCUS_VISIBILITY_MARGIN_PX &&
+      screenBottom <= viewportHeight - FOCUS_VISIBILITY_MARGIN_PX
+    );
+  }
+
   return {
     editor,
     area,
@@ -224,8 +247,15 @@ export async function createThingstudioEditor(container: HTMLElement, options: T
     // feature (main.ts's locateNode(), 2026-09-04): a clicked console
     // line (a NODE_ERROR, a DEBUG line, anything carrying a resolvable
     // node id) needs to bring its node into view even when it's
-    // off-screen, not just select/highlight it in place.
-    focusNode: (node: AnyThingstudioNode) => AreaExtensions.zoomAt(area, [node]),
+    // off-screen, not just select/highlight it in place. Only actually
+    // pans/zooms when the node isn't already comfortably visible --
+    // isNodeComfortablyVisible() above -- otherwise a no-op: the node
+    // still gets selected (selectNode(), called separately by
+    // locateNode()), it just doesn't move the view.
+    focusNode: (node: AnyThingstudioNode) => {
+      if (isNodeComfortablyVisible(node)) return Promise.resolve();
+      return AreaExtensions.zoomAt(area, [node]);
+    },
     // Drives both halves of "select this node" for a caller outside the
     // canvas's own pointer handling (the console click-to-navigate
     // feature, main.ts's locateNode(), 2026-09-04): the app-level store

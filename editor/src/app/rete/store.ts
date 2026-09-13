@@ -25,7 +25,7 @@
 
 import { ref } from "vue";
 import type { ClassicPreset } from "rete";
-import type { AnyThingstudioNode } from "./nodes";
+import type { AnyThingstudioNode, InjectNode } from "./nodes";
 import { DEFAULT_BACKEND_WS_URL } from "../../flow-file/admin-api-client";
 
 export const selectedNode = ref<AnyThingstudioNode | null>(null);
@@ -83,6 +83,23 @@ export function bumpPropertyVersion(): void {
 // same way it would have to for any store function that might not be
 // wired up yet.
 export const setFunctionNodeOutputCount = ref<((node: AnyThingstudioNode, count: number) => void) | null>(null);
+
+// Inject click-only live-fire (2026-09-02), reworked 2026-09-13 (Mike:
+// "Inject should have two clickables, the arrow which triggers an inject
+// message and the body which opens the property sheet" -- the previous
+// design made the whole node body either fire or select depending on
+// connection state, with no way to open a live inject node's property
+// panel short of disconnecting first). The fire action now lives on the
+// node's own "▶" icon specifically (ThingstudioNode.vue), which is a
+// plain DOM click main.ts can't reach without going through this store --
+// same threading-through-a-ref pattern as setFunctionNodeOutputCount
+// above, and for the same reason (main.ts owns `transport`, ThingstudioNode.vue
+// deliberately doesn't reach into it directly). `null` until main.ts's own
+// transport exists (this app's top-level-await ordering, main.ts's own
+// header comment on why the old onInjectNodeClicked slot needed the same
+// treatment) -- ThingstudioNode.vue guards the same way PropertyPanel.vue
+// already does for setFunctionNodeOutputCount.
+export const fireInjectNode = ref<((node: InjectNode) => void) | null>(null);
 
 // --- Config nodes ---------------------------------------------------------
 

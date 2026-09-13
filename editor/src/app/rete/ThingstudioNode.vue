@@ -57,7 +57,12 @@
     :class="[`kind-${data.kind}`, { selected: data.selected, highlighted: data.highlighted, 'ts-pane-hidden': paneHidden }]"
     :style="nodeStyles"
   >
-    <div class="ts-icon">{{ icon }}</div>
+    <div
+      class="ts-icon"
+      :class="{ 'ts-icon-fire': isInject }"
+      :title="isInject ? 'fire this inject node' : undefined"
+      @pointerdown="onIconPointerDown"
+    >{{ icon }}</div>
     <div class="ts-label" data-testid="title">{{ data.label }}</div>
 
     <Ref
@@ -89,10 +94,11 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { Ref } from "rete-vue-plugin";
-import { CustomNode, type AnyThingstudioNode } from "./nodes";
+import { CustomNode, InjectNode, type AnyThingstudioNode } from "./nodes";
 import { NODE_PALETTE, DEFAULT_KIND_STYLE, type NodeKind, type KindStyle } from "./palette";
 import type { NodeStatusState } from "../../protocol/messages";
 import { isNodeInActivePane, nodePaneVersion } from "./panes-store";
+import { fireInjectNode } from "./store";
 
 // `data` is the actual node instance (rete-vue-plugin hands the render
 // context's `payload` straight through as this prop) so `.kind`/
@@ -133,6 +139,33 @@ const palette = computed<KindStyle>(() => {
   return NODE_PALETTE[props.data.kind as NodeKind] ?? DEFAULT_KIND_STYLE;
 });
 const icon = computed(() => palette.value.icon);
+
+// Inject's two-clickable-targets fix (2026-09-13, Mike: "Inject should
+// have two clickables, the arrow which triggers an inject message and
+// the body which opens the property sheet"). `isInject` gates both the
+// `.ts-icon-fire` cursor/hover styling below and onIconPointerDown's
+// actual behavior -- every other node kind's icon stays inert, exactly
+// as before.
+const isInject = computed(() => props.data instanceof InjectNode);
+
+// Fires on pointerdown, not click, to match rete-area-plugin's own
+// NodeView (its Drag handler starts on the same event -- see that file's
+// header note on why the wrapper element's pointerdown listener is what
+// this has to out-race). stopPropagation() here is what keeps this click
+// from ever reaching that wrapper: rete-area-plugin's own pointerdown
+// listener sits on an ancestor of this element and only sees bubbling
+// events, so stopping it here (a descendant) means editor-setup.ts's
+// nodepicked pipe never fires for this click at all -- no veto needed on
+// that side any more, this is a real two-target split, not a race two
+// handlers both see. Store-ref-routed (fireInjectNode, store.ts) because
+// this component doesn't own a transport to send a TRIGGER with, same
+// reasoning as setFunctionNodeOutputCount's own indirection through
+// editor-setup.ts.
+function onIconPointerDown(event: PointerEvent): void {
+  if (!isInject.value) return;
+  event.stopPropagation();
+  fireInjectNode.value?.(props.data as InjectNode);
+}
 
 // app/nodes.ts's exact error-attribution colors (highlightNode()'s
 // node.color/node.bgcolor) -- preserved verbatim so a highlighted node
@@ -310,6 +343,16 @@ function portStyle(index: number, count: number): { top: string } {
   color: #fff;
   font-size: 12px;
   line-height: 1;
+}
+/* Inject's fire-icon click target (2026-09-13) -- a visibly separate
+   cursor from the rest of the pill (`.ts-node` sets `cursor: pointer`
+   for the whole-node select/drag target) so the "▶" reads as its own
+   clickable, not just decoration. */
+.ts-icon-fire {
+  cursor: pointer;
+}
+.ts-icon-fire:hover {
+  filter: brightness(1.4);
 }
 .ts-label {
   flex: 1 1 auto;
