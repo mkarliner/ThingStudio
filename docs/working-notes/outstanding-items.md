@@ -76,11 +76,6 @@ inline, not a fresh check.
 
 ## UI / editor
 
-- **Console-click-to-navigate always recenters the viewport, even when the node's already visible.** Raised again
-  2026-09-13 (Mike) -- not a new bug in a broken feature (the pan/zoom-to-node behavior itself was built and confirmed
-  working 2026-09-04), the complaint is that it fires unconditionally, discarding whatever part of a large flow Mike
-  was actually looking at. Likely fix: only pan/zoom when the target node isn't already comfortably visible in the
-  current viewport. ([detail](outstanding-items/console-click-viewport-jump.md))
 - **[P3]** **Deploy the runtime itself from the browser editor, not just compiled flows.** Confirmed untracked
   anywhere until 2026-09-12. Today, `test-flows/deploy_runtime.py` is a standalone `mpremote`-based script pushing
   `device-runtime/src/*.py` onto a board's filesystem -- a precondition for any flow deploy ever working, and
@@ -150,6 +145,23 @@ Items below are done and verified (or resolved as a decision); kept here as one-
 paragraphs in the active sections above, per the same "index, not a copy" principle as this whole file. Full
 reasoning stays at each pointer's target, nothing here was deleted.
 
+- **Console-click-to-navigate viewport jump** -- fixed and committed 2026-09-13 (`7bf6b53`). `focusNode()`
+  (editor-setup.ts) now checks the target node's screen-space bounding box against the container's viewport
+  (40px margin) before calling `AreaExtensions.zoomAt()` -- a click on an already-visible node just selects it
+  in place; only an off-screen (or edge-hugging) node still triggers a pan/zoom. Deliberately doesn't account
+  for the property panel/palette occluding part of the canvas -- left unscoped, revisit if it proves annoying.
+  Mike confirmed working after a real dev-server reload (an initial "still always centres" report turned out to
+  be a stale/not-actually-running page, not a code bug). ([detail](outstanding-items/console-click-viewport-jump.md))
+- **Inject node had one click target doing two incompatible jobs** -- found and fixed 2026-09-13 (`7bf6b53`),
+  same session as the viewport-jump fix above. The whole node body either fired a TRIGGER (connected) or opened
+  the property panel (not connected), so there was no way to edit a live inject node's properties short of
+  disconnecting first (Mike: "Inject should have two clickables, the arrow which triggers an inject message and
+  the body which opens the property sheet"). Fixed: the "▶" icon is now its own click target (stops
+  propagation before Rete's own node-pick handler, fires directly via the new `fireInjectNode` store ref);
+  the rest of the node body always selects/opens the property panel, live or not. Removed the now-unused
+  `onNodeClicked` veto hook (editor-setup.ts) this replaces -- it existed only to serve the old, broken
+  single-click design. `docs/user-guide/nodes/inject.md` updated to match. Not previously a tracked item --
+  Mike caught it hands-on while smoke-testing the viewport-jump fix above.
 - **Palette node-family ordering** -- implemented and committed 2026-09-13 (`cba9d80`). Explicit numeric
   `priority` field on `KindStyle` (built-in) and `CustomNodeDescriptor` (custom nodes) replaces
   `PaletteSidebar.vue`'s hardcoded source-then-sink `KINDS` array; `group` unchanged. `tsc`/`vitest` clean,
