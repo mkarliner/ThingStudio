@@ -1,5 +1,10 @@
 # Project rules for Thingstudio
 
+@AGENTS.md
+
+Behavior Preferences
+Keep responses concise and focused on code.Do not repeat large blocks of unchanged code in explanations.Provide complete, copy-pasteable files when rewriting components.
+
 Orientation for anyone (human or Claude) picking this project up: `docs/thingstudio-design-doc.md` is the design doc,
 `docs/working-notes/` is active planning. Read the design doc in full before proposing architecture changes.
 
