@@ -20,7 +20,20 @@ inline, not a fresh check.
 
 ## Next up (already flagged before this audit, unstarted)
 
-- **Current handoff doc: `multi-output-landed-mikes-questions-triage-briefing.md`.** Written 2026-09-12 after multi-output-port support landed and was committed (`52fab78`), plus a favicon (`c4c5a53`) and a hand-verified test flow (`3dad1af`) -- opens with a full triage of `mikes-questions-and-points.md` (two items resolved and pruned, five found genuinely still open or never actually triaged despite looking like they were), then the usual open-threads/next-candidates sections. Top open item: confirm `tsc`/`vitest` actually came back clean on Mike's machine, since the sandbox's own isolated `npm ci` hit a genuine egress-policy block this session (`learnings/editor-build-tooling.md`). Supersedes `node-status-hardware-pass-briefing.md` as the live "what's next" pointer -- that one is fully overtaken by events (its own top recommendation, multi-output-port support, was picked and landed, per `git log`).
+- **Current handoff doc: `palette-ordering-and-multi-panes-landed-briefing.md`.** Written 2026-09-13 after
+  palette node-family ordering and multiple-panes support both landed and were committed (`cba9d80`,
+  `e2359f3`, plus the docs commit `8b78dca`) -- opens with what landed, including a genuine bug found and
+  fixed before Mike ever saw it (an infinite-polling risk in `rete-render-utils` from hiding pane-inactive
+  nodes with `display:none`), then the usual open-threads/next-candidates sections. Mike already confirmed
+  `tsc`/`vitest` plus his own browser smoke test passed for both features before authorizing the commits --
+  nothing left open from this session to verify. Supersedes
+  `multi-output-landed-mikes-questions-triage-briefing.md` as the live "what's next" pointer -- of that
+  briefing's open items, the two orphaned UI-wishlist bullets it flagged as needing Mike's decision (triage
+  #2 -- palette ordering and multiple panes) got that decision and were both scoped and built this session;
+  its other carried-forward items (inject-click-opens-property-sheet bug, `CLAUDE.md` msg/payload
+  convention, router/switch node, TCP send/listen-receive, node-flow-execution docs,
+  deploy-runtime-from-editor) are untouched -- still open, tracked in this file's own backlog rather than
+  re-listed here.
 - **MQTT real-hardware validation + network follow-ups (in progress, mostly closed).** **Mike's direct request, top priority (2026-08-22).** `http_request`'s config-node migration, canvas migration, Problem 2a's loud-error extension, and its real-hardware GET/POST pass (ESP32, 2026-09-06) are all done and committed (`43f4eec`, `5956a1b`). The wifi_status-vs-mqtt_as ordering-race fix passed real-hardware verification on RP2040 but failed retest on ESP32 (2026-09-05) -- narrowed, not eliminated; **resolved 2026-09-06 as an accepted, documented limitation (Mike's call, not a further fix) -- see the "Resolved" section below.** Current briefing: `http-request-canvas-and-network-followups-briefing.md` (supersedes `wifi-race-fix-verification-and-network-followups-briefing.md`, itself superseding `mqtt-hardware-validation-and-network-followups-briefing.md`) -- fully overtaken by events above; nothing left in this item's own scope needs a next session. ([detail](outstanding-items/mqtt-hardware-validation.md))
 - **Sequencing override set by Mike, 2026-08-20 — fully closed 2026-09-06.** Custom node authoring + docs done 2026-08-20; the narrow docs-only validation session run by Mike 2026-09-06, clean pass (docs sufficient, no gaps); normal backlog order now resumes. ([detail](outstanding-items/sequencing-override.md))
 - **[P5]** **RP2350 (Pico 2 / Pico 2 W) bring-up — in progress, wiring deferred.** Follow-up to the RP2040 bring-up session. **2026-09-06 (plain Pico 2, non-W): MicroPython flash + runtime deploy + boot-to-HELLO confirmed working.** Functional interrupt-flow pass and the memcheck RAM comparison against RP2040's ~209KB-free baseline deferred by Mike until he has time to wire the button. ([detail](outstanding-items/rp2350-bringup.md))
@@ -63,19 +76,6 @@ inline, not a fresh check.
 
 ## UI / editor
 
-- **[P1]** **Palette ordering: an explicit `priority` field per node, replacing the hardcoded source-then-sink `KINDS`
-  list.** Mike's clarification and design call, 2026-09-13, of the old, ambiguous "arrange to menu..." bullet -- it's
-  about the node palette, not a menu. Resolved: `group` stays exactly as is (no finer-grained groups); a new numeric
-  `priority` field on both `KindStyle` (built-in) and `CustomNodeDescriptor` (custom nodes) controls order within a
-  group, replacing `PaletteSidebar.vue`'s hardcoded `KINDS` array entirely. Fully scoped, no open design questions --
-  buildable as-is. ([detail](outstanding-items/palette-node-family-ordering.md))
-- **[P1]** **Multiple panes for one large flow, still one flow.** Mike's clarification 2026-09-13: split a large flow
-  visually across multiple panes/areas for organization (not Node-RED's separate-tabs-are-separate-flows model -- one
-  canvas graph, one compile/deploy unit throughout). Fully scoped, no open design questions -- tabbed, not tiled;
-  cross-pane wires and pane reordering deferred to post-MVP; pane membership is a separate layer (a `panes` map
-  alongside flow-file.ts's existing `layout` map), not a node property; panes default-named "Flow nn", renamed via
-  double-click on the tab label; "+" on the tab bar adds a pane, a tab's "X" removes the pane and deletes its
-  nodes. Buildable as-is. ([detail](outstanding-items/multi-pane-canvas.md))
 - **Console-click-to-navigate always recenters the viewport, even when the node's already visible.** Raised again
   2026-09-13 (Mike) -- not a new bug in a broken feature (the pan/zoom-to-node behavior itself was built and confirmed
   working 2026-09-04), the complaint is that it fires unconditionally, discarding whatever part of a large flow Mike
@@ -150,6 +150,16 @@ Items below are done and verified (or resolved as a decision); kept here as one-
 paragraphs in the active sections above, per the same "index, not a copy" principle as this whole file. Full
 reasoning stays at each pointer's target, nothing here was deleted.
 
+- **Palette node-family ordering** -- implemented and committed 2026-09-13 (`cba9d80`). Explicit numeric
+  `priority` field on `KindStyle` (built-in) and `CustomNodeDescriptor` (custom nodes) replaces
+  `PaletteSidebar.vue`'s hardcoded source-then-sink `KINDS` array; `group` unchanged. `tsc`/`vitest` clean,
+  Mike's own browser smoke test confirmed. ([detail](outstanding-items/palette-node-family-ordering.md))
+- **Multiple panes for one large flow, still one flow** -- implemented and committed 2026-09-13 (`e2359f3`).
+  Tabbed, not tiled; cross-pane wires and pane reordering deferred to post-MVP; pane membership kept as a
+  separate `panes`/`paneOf` layer in `flow-file.ts`, mirroring that file's own `layout` precedent rather than
+  a node property. Panes default-named "Flow 01"/"Flow 02"/etc., renamed via double-click; "+" on the tab
+  bar adds a pane, a tab's "X" removes it and deletes its nodes. `tsc`/`vitest` clean, Mike's own browser
+  smoke test confirmed. ([detail](outstanding-items/multi-pane-canvas.md))
 - **Custom node authoring** — implemented 2026-08-20, all open questions resolved. ([detail](outstanding-items/custom-node-authoring.md))
 - **Multiple wires into one node input** — implemented and real-browser verified 2026-09-10 (commit `1e5353e`). Every `nodes.ts` input now passes `multipleConnections: true` (Node-RED-style, Mike's design call) -- the suspected codegen risk was a non-issue (`compile.ts` already fully supported and tested fan-in; `graph-adapter.ts`/`main.ts` had no single-input assumption either). Only real change was canvas-side (`rete-connection-plugin` used to silently evict an input's existing wire on a second connection). ([detail](outstanding-items/multi-connection-node-inputs.md))
 - **`wifi_status` node emits complete WiFi status (IP, network info, RSSI)** — implemented and off-device verified 2026-09-09/10 (commit `90b1622`); **real-hardware verified 2026-09-10 (Mike)**. Envelope carries `subnet`/`gateway`/`dns` plus `rssi` (ESP32-only, degrades to `None` elsewhere). Confirmed on real hardware: connect/disconnect report real network values and re-emit correctly, RSSI-only drift does not trigger a spurious re-emit. Root cause of the original ask's UI-visibility half (`debug.ts` only ever printed `payload`) fixed with the new opt-in `fullMessage` property. Nothing left open. ([detail](outstanding-items/wifi-status-completeness.md))
