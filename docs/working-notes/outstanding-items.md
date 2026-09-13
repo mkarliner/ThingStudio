@@ -63,16 +63,19 @@ inline, not a fresh check.
 
 ## UI / editor
 
-- **[P1]** **Palette ordering: group related nodes together (e.g. the `mqtt_publish`/`mqtt_subscribe` pair), not just
-  by kind.** Mike's clarification 2026-09-13 of the old, ambiguous "arrange to menu..." bullet -- it's about the node
-  palette, not a menu. The current source-then-sink display convention within a `group` (`PaletteSidebar.vue`) splits
-  `mqtt_subscribe` (source) from `mqtt_publish` (sink) even though they're both `group: "network"`. Needs a design
-  decision (family sub-grouping, explicit pinning, or dropping source-then-sink in favor of family-first), not just a
-  reorder. ([detail](outstanding-items/palette-node-family-ordering.md))
+- **[P1]** **Palette ordering: an explicit `priority` field per node, replacing the hardcoded source-then-sink `KINDS`
+  list.** Mike's clarification and design call, 2026-09-13, of the old, ambiguous "arrange to menu..." bullet -- it's
+  about the node palette, not a menu. Resolved: `group` stays exactly as is (no finer-grained groups); a new numeric
+  `priority` field on both `KindStyle` (built-in) and `CustomNodeDescriptor` (custom nodes) controls order within a
+  group, replacing `PaletteSidebar.vue`'s hardcoded `KINDS` array entirely. Fully scoped, no open design questions --
+  buildable as-is. ([detail](outstanding-items/palette-node-family-ordering.md))
 - **[P1]** **Multiple panes for one large flow, still one flow.** Mike's clarification 2026-09-13: split a large flow
   visually across multiple panes/areas for organization (not Node-RED's separate-tabs-are-separate-flows model -- one
-  canvas graph, one compile/deploy unit throughout). Not scoped yet: pane-membership representation, tiled-vs-tabbed
-  display, and how a wire crossing pane boundaries is shown. ([detail](outstanding-items/multi-pane-canvas.md))
+  canvas graph, one compile/deploy unit throughout). Fully scoped, no open design questions -- tabbed, not tiled;
+  cross-pane wires and pane reordering deferred to post-MVP; pane membership is a separate layer (a `panes` map
+  alongside flow-file.ts's existing `layout` map), not a node property; panes default-named "Flow nn", renamed via
+  double-click on the tab label; "+" on the tab bar adds a pane, a tab's "X" removes the pane and deletes its
+  nodes. Buildable as-is. ([detail](outstanding-items/multi-pane-canvas.md))
 - **Console-click-to-navigate always recenters the viewport, even when the node's already visible.** Raised again
   2026-09-13 (Mike) -- not a new bug in a broken feature (the pan/zoom-to-node behavior itself was built and confirmed
   working 2026-09-04), the complaint is that it fires unconditionally, discarding whatever part of a large flow Mike
