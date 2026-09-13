@@ -59,6 +59,14 @@ outline and fill. Default is gray.
 
 **`icon`** (optional) — one or two characters shown in the icon chip.
 
+**`group`** (optional) — which palette section the node sorts into.
+Defaults to "general". Any name works; a new one gets its own section,
+added after the built-in ones.
+
+**`priority`** (optional) — a number controlling order within `group`,
+lower first. Omit it and the node sorts after every built-in node in
+that group.
+
 **`ports.inputs`** / **`ports.outputs`** — arrays of `{ name, type }`.
 `type` is one of `int`, `number`, `bool`, `string`, `bytes`, `any` — the
 same types built-in nodes use, with the same wire-compatibility checks.

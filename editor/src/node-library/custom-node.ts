@@ -121,6 +121,13 @@ export interface CustomNodeDescriptor {
    * Omitted -> "general" (defaulted where the palette renders custom
    * rows, not here -- see this field's own validation below). */
   group?: string;
+  /** Display order within `group`, lower first -- palette.ts's
+   * KindStyle.priority (built-in nodes) shares this same field name/
+   * meaning. Added 2026-09-13 (outstanding-items/palette-node-family-
+   * ordering.md). Omitted -> sorts after every built-in entry (defaulted
+   * where the palette renders custom rows, not here -- same pattern as
+   * `group` above). */
+  priority?: number;
   ports?: {
     inputs?: CustomNodePort[];
     outputs?: CustomNodePort[];
@@ -258,6 +265,10 @@ export function validateCustomNodeDescriptor(raw: unknown): CustomNodeDescriptor
   if (obj.group !== undefined) {
     if (typeof obj.group !== "string" || obj.group.length === 0) fail('"group" must be a non-empty string when present');
     descriptor.group = obj.group;
+  }
+  if (obj.priority !== undefined) {
+    if (typeof obj.priority !== "number" || !Number.isFinite(obj.priority)) fail('"priority" must be a finite number when present');
+    descriptor.priority = obj.priority;
   }
   return descriptor;
 }

@@ -100,44 +100,60 @@ export interface KindStyle {
    * that closed union -- a custom node's own descriptor.group (custom-
    * node.ts) shares this same field name/meaning and is free-form. */
   group: string;
+  /** Display order within `group` (PaletteSidebar.vue), lower first.
+   * Added 2026-09-13 (outstanding-items/palette-node-family-ordering.md,
+   * Mike's design call) replacing PaletteSidebar.vue's old hardcoded
+   * `KINDS` array and its source-then-sink convention, which split every
+   * multi-node protocol family (mqtt/udp/http) apart within "network".
+   * Plain numbers, grouped in tens per family (10, 20, 30, ...) with a
+   * sub-number for siblings within a family (20/21/22) -- leaves room to
+   * insert a new kind between two existing ones later without a full
+   * renumbering pass. A custom node's own descriptor.priority (custom-
+   * node.ts) shares this same field name/meaning and is optional there;
+   * DEFAULT_KIND_STYLE.priority is what an unset one falls back to. */
+  priority: number;
 }
 
 export const NODE_PALETTE: Record<NodeKind, KindStyle> = {
-  inject: { color: "#2e5c2e", bgcolor: "#1f3f1f", icon: "▶", label: "inject", group: "general" },
-  function: { color: "#6e5b2e", bgcolor: "#3f341f", icon: "ƒ", label: "function", group: "general" },
-  debug: { color: "#2e4a6e", bgcolor: "#1f2c3f", icon: "≡", label: "debug", group: "general" },
-  gpio_out: { color: "#6e3b3b", bgcolor: "#3f1f1f", icon: "■", label: "gpio out", group: "hardware" },
-  timer: { color: "#5b3b6e", bgcolor: "#331f3f", icon: "◷", label: "timer", group: "general" },
+  inject: { color: "#2e5c2e", bgcolor: "#1f3f1f", icon: "▶", label: "inject", group: "general", priority: 10 },
+  function: { color: "#6e5b2e", bgcolor: "#3f341f", icon: "ƒ", label: "function", group: "general", priority: 30 },
+  debug: { color: "#2e4a6e", bgcolor: "#1f2c3f", icon: "≡", label: "debug", group: "general", priority: 50 },
+  gpio_out: { color: "#6e3b3b", bgcolor: "#3f1f1f", icon: "■", label: "gpio out", group: "hardware", priority: 20 },
+  timer: { color: "#5b3b6e", bgcolor: "#331f3f", icon: "◷", label: "timer", group: "general", priority: 20 },
   // Distinct from every existing color -- amber/orange, no prior node type
   // uses this range. "⚡" for the hard-IRQ-driven, event-fired nature (vs.
   // timer's "◷" clock glyph for its own poll/sleep-shaped source).
-  interrupt: { color: "#8a5a1f", bgcolor: "#3f2e14", icon: "⚡", label: "interrupt", group: "hardware" },
+  interrupt: { color: "#8a5a1f", bgcolor: "#3f2e14", icon: "⚡", label: "interrupt", group: "hardware", priority: 10 },
   // Teal -- a status/radio glyph ("◉") for the polling connectivity check.
-  wifi_status: { color: "#1f6e6e", bgcolor: "#123f3f", icon: "◉", label: "wifi status", group: "network" },
+  wifi_status: { color: "#1f6e6e", bgcolor: "#123f3f", icon: "◉", label: "wifi status", group: "network", priority: 10 },
   // Blue/green send-receive pair, up/down arrows echoing direction of
   // travel the same way interrupt's "⚡" echoes its own trigger mechanism.
-  udp_send: { color: "#3b5c8a", bgcolor: "#1f2e4a", icon: "↑", label: "udp send", group: "network" },
-  udp_receive: { color: "#3b8a6e", bgcolor: "#1f4a3a", icon: "↓", label: "udp receive", group: "network" },
+  udp_send: { color: "#3b5c8a", bgcolor: "#1f2e4a", icon: "↑", label: "udp send", group: "network", priority: 21 },
+  udp_receive: { color: "#3b8a6e", bgcolor: "#1f4a3a", icon: "↓", label: "udp receive", group: "network", priority: 20 },
   // Amber/gold -- see this file's header for the icon reasoning.
-  http_request: { color: "#8a6e1f", bgcolor: "#4a3a1f", icon: "⇄", label: "http request", group: "network" },
+  http_request: { color: "#8a6e1f", bgcolor: "#4a3a1f", icon: "⇄", label: "http request", group: "network", priority: 41 },
   // http_in/http_response, 2026-09-08 -- same amber/gold family as
   // http_request (all three are the one "http" node family) but a
   // distinct shade each, and direction-of-travel arrows echoing
   // udp_send/udp_receive/mqtt_publish/mqtt_subscribe's own convention:
   // "↙" (inbound) for http_in (a source, like udp_receive/mqtt_subscribe),
   // "↗" (outbound) for http_response (a sink, like udp_send/mqtt_publish).
-  http_in: { color: "#a67c1f", bgcolor: "#4a3a1f", icon: "↙", label: "http in", group: "network" },
-  http_response: { color: "#6e5216", bgcolor: "#3a2c14", icon: "↗", label: "http response", group: "network" },
+  http_in: { color: "#a67c1f", bgcolor: "#4a3a1f", icon: "↙", label: "http in", group: "network", priority: 40 },
+  http_response: { color: "#6e5216", bgcolor: "#3a2c14", icon: "↗", label: "http response", group: "network", priority: 42 },
   // Magenta/purple pair -- see this file's header for the icon reasoning.
-  mqtt_publish: { color: "#8a3b6e", bgcolor: "#4a1f3a", icon: "⇧", label: "mqtt publish", group: "network" },
-  mqtt_subscribe: { color: "#6e3b8a", bgcolor: "#3a1f4a", icon: "⇩", label: "mqtt subscribe", group: "network" },
+  mqtt_publish: { color: "#8a3b6e", bgcolor: "#4a1f3a", icon: "⇧", label: "mqtt publish", group: "network", priority: 31 },
+  mqtt_subscribe: { color: "#6e3b8a", bgcolor: "#3a1f4a", icon: "⇩", label: "mqtt subscribe", group: "network", priority: 30 },
   // Slate-blue -- see this file's header for the icon reasoning.
-  delay: { color: "#4a4a6e", bgcolor: "#2a2a3f", icon: "⌛", label: "delay", group: "general" },
+  delay: { color: "#4a4a6e", bgcolor: "#2a2a3f", icon: "⌛", label: "delay", group: "general", priority: 40 },
   // Blue -- see this file's header for the icon reasoning.
-  pwm_out: { color: "#1f5c8a", bgcolor: "#12334a", icon: "∿", label: "pwm out", group: "hardware" },
+  pwm_out: { color: "#1f5c8a", bgcolor: "#12334a", icon: "∿", label: "pwm out", group: "hardware", priority: 30 },
 };
 
-export const DEFAULT_KIND_STYLE: KindStyle = { color: "#555", bgcolor: "#2b2b2b", icon: "?", label: "?", group: "general" };
+// priority: 1000 -- a custom node that doesn't declare its own priority
+// sorts after every built-in entry above (all in the 10-50 range) within
+// its group, same "unset falls to the end" precedent as group's own
+// "no declared group -> general" fallback.
+export const DEFAULT_KIND_STYLE: KindStyle = { color: "#555", bgcolor: "#2b2b2b", icon: "?", label: "?", group: "general", priority: 1000 };
 
 // Shared between PaletteSidebar.vue's `dragstart` (dataTransfer.setData)
 // and the eventual app-shell `drop` handler (dataTransfer.getData) -- not

@@ -116,45 +116,14 @@ const emit = defineEmits<{
   customNodeLoadError: [message: string];
 }>();
 
-// Display order within each group -- sources first (inject, timer,
-// interrupt, wifi_status, udp_receive, mqtt_subscribe), then processing
-// (function), then sinks (gpio_out, pwm_out, udp_send, mqtt_publish,
-// debug). Group assignment itself lives in palette.ts (KindStyle.group),
-// not here, so this file doesn't duplicate that mapping.
-//
-// pwm_out added 2026-09-06, closing out canvas-presence-gaps.md's last
-// three registry-only node types -- placed with gpio_out (both
-// "hardware"-group sinks). variable_get/variable_set got the same
-// treatment the same day, then were hidden again -- see palette.ts's own
-// header for why.
-//
-// http_in/http_response added 2026-09-08 -- KINDS is this file's own
-// separate display-order list, NOT derived from NodeKind/NODE_PALETTE
-// (whose entries alone don't make a row actually render -- a real gap
-// this addition tripped over: both types were already in the NodeKind
-// union and NODE_PALETTE, compiled and passed tests clean, but were
-// invisible in the editor until added here too). http_in goes with the
-// other sources (it's a source, like wifi_status/udp_receive/
-// mqtt_subscribe); http_response goes with debug at the very end (both
-// terminal sinks with no properties-panel-driving canvas complexity).
-const KINDS: NodeKind[] = [
-  "inject",
-  "timer",
-  "interrupt",
-  "wifi_status",
-  "udp_receive",
-  "mqtt_subscribe",
-  "http_in",
-  "function",
-  "http_request",
-  "delay",
-  "gpio_out",
-  "pwm_out",
-  "udp_send",
-  "mqtt_publish",
-  "http_response",
-  "debug",
-];
+// Display order within each group is data, not a list here -- see
+// palette.ts's KindStyle.priority (built-in kinds) / custom-node.ts's
+// CustomNodeDescriptor.priority (custom nodes). Replaced the old
+// hardcoded KINDS array + source-then-sink convention 2026-09-13
+// (outstanding-items/palette-node-family-ordering.md) -- that convention
+// split every multi-node protocol family (mqtt/udp/http) apart within
+// "network"; groupedRows below now sorts each group's rows by priority
+// directly, so a family's members just need adjacent priority numbers.
 
 // Manual collapse (UI-cleanup brief, 2026-09-04) -- unlike
 // PropertyPanel.vue's selection-driven collapse, nothing tells this panel
@@ -179,16 +148,29 @@ interface PaletteRow {
   bgcolor: string;
   icon: string;
   group: string;
+  priority: number;
 }
 
 const allRows = computed<PaletteRow[]>(() => {
   customNodesVersion.value; // reactive dependency -- see custom-nodes-store.ts's own header
   const needle = filter.value.trim().toLowerCase();
 
-  const builtinRows: PaletteRow[] = KINDS.filter((kind) => NODE_PALETTE[kind].label.toLowerCase().includes(needle)).map((kind) => {
-    const style = NODE_PALETTE[kind];
-    return { key: kind, origin: "builtin", value: kind, label: style.label, color: style.color, bgcolor: style.bgcolor, icon: style.icon, group: style.group };
-  });
+  const builtinRows: PaletteRow[] = (Object.keys(NODE_PALETTE) as NodeKind[])
+    .filter((kind) => NODE_PALETTE[kind].label.toLowerCase().includes(needle))
+    .map((kind) => {
+      const style = NODE_PALETTE[kind];
+      return {
+        key: kind,
+        origin: "builtin",
+        value: kind,
+        label: style.label,
+        color: style.color,
+        bgcolor: style.bgcolor,
+        icon: style.icon,
+        group: style.group,
+        priority: style.priority,
+      };
+    });
 
   const customRows: PaletteRow[] = [...customNodePackages.value.values()]
     .map((pkg) => ({
@@ -204,6 +186,10 @@ const allRows = computed<PaletteRow[]>(() => {
       // already use above, not baked into validateCustomNodeDescriptor
       // itself (custom-node.ts's own comment on this field).
       group: pkg.descriptor.group ?? DEFAULT_KIND_STYLE.group,
+      // Same fallback pattern for order within that group -- an unset
+      // priority sorts after every built-in entry (DEFAULT_KIND_STYLE's
+      // own doc comment on this field).
+      priority: pkg.descriptor.priority ?? DEFAULT_KIND_STYLE.priority,
     }))
     .filter((row) => row.label.toLowerCase().includes(needle));
 
@@ -222,7 +208,15 @@ const groupedRows = computed(() => {
   for (const row of rows) {
     if (!order.includes(row.group)) order.push(row.group);
   }
-  return order.map((name) => ({ name, rows: rows.filter((row) => row.group === name) })).filter((section) => section.rows.length > 0);
+  return order
+    .map((name) => ({
+      name,
+      // Stable sort (Array.prototype.sort, ES2019+) -- rows sharing a
+      // priority keep whatever order they were encountered in, rather
+      // than an arbitrary sort-implementation-dependent shuffle.
+      rows: rows.filter((row) => row.group === name).sort((a, b) => a.priority - b.priority),
+    }))
+    .filter((section) => section.rows.length > 0);
 });
 
 function onRowClick(row: PaletteRow): void {

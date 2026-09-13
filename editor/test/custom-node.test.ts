@@ -194,6 +194,27 @@ describe("validateCustomNodeDescriptor", () => {
     const bad = { ...TRANSFORM_DESCRIPTOR_RAW, ports: { inputs: [{ name: "msg", type: "object" }], outputs: [{ name: "msg", type: "any" }] } };
     expect(() => validateCustomNodeDescriptor(bad)).toThrow(/must be one of/);
   });
+
+  // Palette ordering (outstanding-items/palette-node-family-ordering.md, 2026-09-13):
+  // priority controls display order within a node's group, same field name/meaning
+  // as palette.ts's KindStyle.priority for built-in kinds.
+  it("accepts a numeric priority and carries it through to the descriptor", () => {
+    const d = validateCustomNodeDescriptor({ ...TRANSFORM_DESCRIPTOR_RAW, priority: 25 });
+    expect(d.priority).toBe(25);
+  });
+
+  it("leaves priority undefined when not declared", () => {
+    const d = validateCustomNodeDescriptor(TRANSFORM_DESCRIPTOR_RAW);
+    expect(d.priority).toBeUndefined();
+  });
+
+  it("rejects a non-numeric priority", () => {
+    expect(() => validateCustomNodeDescriptor({ ...TRANSFORM_DESCRIPTOR_RAW, priority: "first" })).toThrow(/"priority" must be a finite number/);
+  });
+
+  it("rejects a non-finite priority", () => {
+    expect(() => validateCustomNodeDescriptor({ ...TRANSFORM_DESCRIPTOR_RAW, priority: Number.POSITIVE_INFINITY })).toThrow(/"priority" must be a finite number/);
+  });
 });
 
 describe("buildCustomNodeDefinition -- transform", () => {
