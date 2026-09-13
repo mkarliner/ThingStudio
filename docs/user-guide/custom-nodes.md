@@ -64,9 +64,9 @@ outline and fill. Default is gray.
 same types built-in nodes use, with the same wire-compatibility checks.
 Use `any` when unsure.
 
-Only one output port is supported. Thingstudio doesn't yet support
-routing to multiple named outputs, for any node type. That's planned,
-not built — the limit is in the compiler, not this file format.
+Custom nodes support only one output port. The built-in `function` node
+supports multiple, configurable outputs -- that hasn't been extended to
+the custom-node format yet.
 
 **`properties`** (optional) — fields shown in the property panel when
 the node is selected:
