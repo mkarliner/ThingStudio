@@ -87,6 +87,26 @@ def test_render_portal_page_escapes_network_names():
     assert "&lt;script&gt;" in html
 
 
+def test_render_portal_page_includes_a_manual_entry_field():
+    # 2026-09-14: scan can't be trusted to list every nearby network on every board (real-hardware
+    # finding, wifi-provisioning-captive-portal.md) -- the form must offer a way in regardless.
+    html = wifi_provision._render_portal_page(["mihome"])
+    assert "name='ssid_manual'" in html
+
+
+def test_chosen_ssid_prefers_manual_entry_over_dropdown():
+    assert wifi_provision._chosen_ssid({"ssid": "mihome", "ssid_manual": "BT-1234"}) == "BT-1234"
+
+
+def test_chosen_ssid_falls_back_to_dropdown_when_manual_empty():
+    assert wifi_provision._chosen_ssid({"ssid": "mihome", "ssid_manual": ""}) == "mihome"
+    assert wifi_provision._chosen_ssid({"ssid": "mihome"}) == "mihome"
+
+
+def test_chosen_ssid_strips_whitespace_from_manual_entry():
+    assert wifi_provision._chosen_ssid({"ssid": "mihome", "ssid_manual": "  BT-1234  "}) == "BT-1234"
+
+
 # --- credential persistence ---------------------------------------------------------------------
 
 
@@ -278,6 +298,10 @@ minitest.run(
         test_parse_form_decodes_percent_and_plus_encoding,
         test_parse_form_skips_malformed_pairs,
         test_render_portal_page_escapes_network_names,
+        test_render_portal_page_includes_a_manual_entry_field,
+        test_chosen_ssid_prefers_manual_entry_over_dropdown,
+        test_chosen_ssid_falls_back_to_dropdown_when_manual_empty,
+        test_chosen_ssid_strips_whitespace_from_manual_entry,
         test_get_sta_credential_none_when_never_provisioned,
         test_save_and_get_sta_credential_round_trips,
         test_get_ap_password_defaults_when_not_overridden,

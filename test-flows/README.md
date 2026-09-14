@@ -304,3 +304,53 @@ Also watch `udp_echo_server.py`'s own terminal: a `RECEIVED`/`REPLIED` pair
 per heartbeat confirms the send direction independent of whether the board
 ever manages to receive its own echo back, which is worth checking
 separately if only one direction seems to be working.
+
+## `wifi-provision-test.flow.json`
+
+Minimal hands-on test for the boot-time WiFi self-provisioning feature
+(`device-runtime/src/wifi_provision.py`,
+`outstanding-items/wifi-provisioning-captive-portal.md`) -- just
+`thingstudio/wifi_status` (config security `"unmanaged"`,
+`allowReprovisioning` off) fanned to `debug`, nothing else. The point is
+watching the board's own boot sequence, not the flow's runtime behavior.
+
+**The board needs `wifi_provision.py` on it first** -- re-run
+`deploy_runtime.py` (above) against any board bootstrapped before
+2026-09-14; it wasn't in the pushed file list before this feature landed.
+
+**To see first-run provisioning:** delete `/_wifi_provision.json` off the
+board first if it's ever been provisioned before (`mpremote fs rm
+:/_wifi_provision.json`, or start from a freshly-bootstrapped board --
+`deploy_runtime.py` doesn't touch this file either way, it's not part of
+the runtime push). Load this file in the browser ("Open Flow"), Deploy,
+then reset the board and watch a **passive** serial connection (same
+`mpremote connect <port>` caveat the "Bootstrapping a new board" section
+above already flags). Expect `WIFI_PROVISION_FIRST_RUN`, then
+`WIFI_PROVISION_AP_UP ssid='Thingstudio-Setup-XXXX'`.
+
+Connect a phone or laptop to that network (password `thingstudio`) --
+most phones prompt to sign in automatically; if not, browse to
+`http://192.168.4.1/`. Pick the target network from the dropdown, enter
+its password, submit. Expect a "Connected" page in the browser and
+`WIFI_PROVISION_CONNECTED (freshly provisioned)` on the serial console,
+followed by the flow's own normal boot (`LISTENER_READY`, then
+`wifi_status`'s periodic line once `debug` starts printing).
+
+**To confirm persistence:** reset the board again without touching
+anything. Expect `WIFI_PROVISION_TRY_STORED` followed directly by
+`WIFI_PROVISION_CONNECTED (stored credential)` -- no AP, no portal.
+
+**To test the reprovisioning fallback:** flip `allowReprovisioning` to
+`true` on the config (editor property panel), redeploy, then make the
+stored credential fail -- easiest is temporarily changing that network's
+own password, or moving the board out of range, then resetting it. Expect
+`WIFI_PROVISION_REOPENING_PORTAL` and the AP coming back up. Change the
+network's password back (or move the board back in range) afterward --
+this flag intentionally leaves the AP re-openable on every future
+connect failure, matching its own on-canvas warning about trusted-network
+use only.
+
+Nothing here is exercised by the automated MicroPython/vitest suites --
+both stop at the protocol/unit level (`outstanding-items/
+wifi-provisioning-captive-portal.md`'s own "Verification" note). This
+file is the actual hardware check for the feature.

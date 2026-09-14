@@ -202,3 +202,45 @@ Docs updated in the same change (CLAUDE.md's UX-documentation rule): `docs/user-
 "unmanaged" paragraph now describes the real captive-portal flow and the reprovisioning-fallback
 warning; `docs/thingstudio-design-doc.md` §9 got the one-line pointer this file's own scoping section
 above said it would need once built.
+
+## Real-hardware follow-up, 2026-09-14 (same day): scan-dropdown-only was a real gap, now fixed
+
+Mike's first hands-on test on an ESP32-C3 board raised a concern that read at first like a serious
+bug: submitting the portal form appeared to "create a new AP with the SSID typed in," not join it.
+Traced with him step by step, in order:
+
+1. **Ruled out a code-level swap bug.** `_try_connect()` calls `sta.connect(ssid, password)` on the
+   STA interface; the only `ap.config(essid=...)` call in the file uses the portal's own fixed name/
+   password, never form data. No path from typed input to AP config exists in the source.
+2. **A clean console trace showed the join actually working**: `WIFI_PROVISION_CONNECTED (freshly
+   provisioned)` followed by `NODE_STATUS ... state=connected text=192.168.10.247` -- a real IP on
+   Mike's actual home network. The original "new AP" read was most likely the phone's own WiFi list
+   still showing the (still-tearing-down) setup AP for a moment, not a device-side bug.
+3. **A separate, real issue while investigating: the portal's network dropdown only ever listed one
+   SSID (`mihome`)**, despite Mike confirming several other 2.4GHz networks are in range (a "BT" and
+   a "Community Broadband" network, at least). Isolated systematically:
+   - Ruled out AP+STA channel-locking (a real ESP32 concurrent-mode constraint) by having Mike run a
+     scan from a `function` node in an already-running flow, AP not even active: still one result.
+   - Ruled out an already-connected-scan quirk by having him scan with `sta.disconnect()` called
+     first: still one result.
+   - Ruled out anything in Thingstudio's own code at all by having him run the same scan directly in
+     Thonny against a fresh `sta.active(True)`, no Thingstudio code in the path whatsoever: still one
+     result (`mihome`, channel 1, -49dBm -- the network the board is normally closest to/strongest on).
+   - **Root cause, per Mike's own research:** ESP-IDF's WiFi driver defaults to `WIFI_FAST_SCAN`,
+     which returns as soon as it finds a match rather than sweeping every channel -- exactly explains
+     "always exactly the one, closest/already-associated network." MicroPython's `network.WLAN`
+     doesn't expose a way to flip that to `WIFI_ALL_CHANNEL_SCAN` from Python (it's set via
+     ESP-IDF's `wifi_sta_config_t.scan_method`, a C-level struct field with no MicroPython binding),
+     so this isn't fixable from this project's own code -- a genuine board/firmware limitation, per
+     CLAUDE.md's board-idiosyncrasy corollary: not chased further, made legible/worked-around instead.
+
+**Fix shipped, same day:** the portal form is no longer scan-dropdown-only. A new manual "type a
+network name" text field sits alongside the dropdown (`_render_portal_page()`); a new `_chosen_ssid()`
+helper prefers the manual entry when non-empty, falling back to the dropdown pick otherwise
+(`_handle_http()`'s POST handler). This makes the portal usable regardless of what a given board's
+scan actually finds -- it doesn't depend on understanding or working around the underlying ESP-IDF
+scan-mode behavior at all. 4 new tests (`test_render_portal_page_includes_a_manual_entry_field`,
+`test_chosen_ssid_prefers_manual_entry_over_dropdown`, `test_chosen_ssid_falls_back_to_dropdown_when_manual_empty`,
+`test_chosen_ssid_strips_whitespace_from_manual_entry`), real MicroPython suite 23/23. Docs
+(`docs/user-guide/nodes/wifi-status.md`) updated to mention the manual field. Board needs
+`deploy_runtime.py` re-run to pick this up before the next hands-on test.

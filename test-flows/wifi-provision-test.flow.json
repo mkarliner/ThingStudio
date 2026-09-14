@@ -1,0 +1,60 @@
+{
+  "formatVersion": 1,
+  "flowName": "wifi-provision-test",
+  "nodes": [
+    {
+      "id": "d1d7e62d594c2e26",
+      "type": "thingstudio/wifi_status",
+      "properties": {
+        "pollMs": 5000,
+        "wifiConfigId": "84d0003a-cfb5-4efb-a889-bbd22203ed68"
+      }
+    },
+    {
+      "id": "5d991fbda29294bf",
+      "type": "thingstudio/debug",
+      "properties": {
+        "fullMessage": true
+      }
+    }
+  ],
+  "edges": [
+    [
+      "d1d7e62d594c2e26",
+      0,
+      "5d991fbda29294bf",
+      0
+    ]
+  ],
+  "layout": {
+    "d1d7e62d594c2e26": {
+      "pos": [200, 200],
+      "size": [120, 34]
+    },
+    "5d991fbda29294bf": {
+      "pos": [420, 200],
+      "size": [84, 34]
+    }
+  },
+  "configs": [
+    {
+      "id": "84d0003a-cfb5-4efb-a889-bbd22203ed68",
+      "type": "thingstudio/config/wifi",
+      "properties": {
+        "credentialName": "",
+        "security": "unmanaged",
+        "allowReprovisioning": false
+      }
+    }
+  ],
+  "panes": [
+    {
+      "id": "pane-1",
+      "name": "Flow 01"
+    }
+  ],
+  "paneOf": {
+    "d1d7e62d594c2e26": "pane-1",
+    "5d991fbda29294bf": "pane-1"
+  }
+}

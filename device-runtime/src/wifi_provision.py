@@ -36,6 +36,11 @@
 #     built this pass (folds into the same pre-listener boot-sequence work, per the outstanding-items
 #     file) -- load_ap_password()/set_ap_password() below just make the persisted file ready for it,
 #     not a dead end, without a protocol message wired up to call set_ap_password() yet.
+#   - The portal form's network field is scan-dropdown-plus-manual-entry, not scan-only (added
+#     2026-09-14, same day, after real-hardware testing on an ESP32-C3 board found
+#     network.WLAN(STA_IF).scan() only ever returning the single network the interface was already
+#     closest to/associated with -- reproduced in plain MicroPython outside any Thingstudio code at
+#     all, so it's a board/firmware limitation, not a bug here. _chosen_ssid() below is the fallback.
 #
 # Web server: hand-rolled, not tinyweb (this file's own earlier scoping-session research flagged
 # tinyweb as the recommended vendor pick) -- reversed on reflection while actually implementing this:
@@ -307,6 +312,8 @@ def _render_portal_page(networks, error=None):
         "<h1>Connect this device to WiFi</h1>%s"
         "<form method='POST' action='/save'>"
         "<p><label>Network<br><select name='ssid' style='width:100%%'>%s</select></label></p>"
+        "<p><label>Or type a network name (if it's not in the list above)<br>"
+        "<input type='text' name='ssid_manual' style='width:100%%'></label></p>"
         "<p><label>Password<br><input type='password' name='password' style='width:100%%'></label></p>"
         "<button type='submit'>Connect</button>"
         "</form></body></html>"
@@ -341,6 +348,20 @@ def _parse_form(body):
         key, _, value = pair.partition("=")
         result[_url_unquote(key)] = _url_unquote(value)
     return result
+
+
+def _chosen_ssid(form):
+    """Prefer a manually-typed network name over the scan dropdown. Confirmed 2026-09-14 (Mike,
+    real hardware): on at least one ESP32-C3 board, network.WLAN(STA_IF).scan() only ever returned
+    the single network the interface was already closest to/associated with -- reproduced in plain
+    MicroPython via Thonny, no Thingstudio code involved at all, so this is a board/firmware scan
+    limitation, not a bug in _scan_networks() or anything else here (CLAUDE.md's board-idiosyncrasy
+    corollary: not chased further, made legible/worked-around instead -- see
+    outstanding-items/wifi-provisioning-captive-portal.md for the full diagnostic trail). A scan-only
+    dropdown can silently make some networks impossible to select on a board like that; the manual
+    field is the fallback that keeps the portal usable regardless of what the scan actually found."""
+    manual = form.get("ssid_manual", "").strip()
+    return manual if manual else form.get("ssid", "")
 
 
 def _scan_networks(sta):
@@ -385,7 +406,7 @@ def _handle_http(http_sock, sta):
         method, path, body = req
         if method == "POST" and path == "/save":
             form = _parse_form(body)
-            ssid = form.get("ssid", "")
+            ssid = _chosen_ssid(form)
             password = form.get("password", "")
             if not ssid:
                 conn.sendall(_http_response("200 OK", _render_portal_page(_scan_networks(sta), error="Pick a network.")))
