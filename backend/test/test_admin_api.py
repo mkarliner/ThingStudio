@@ -162,6 +162,102 @@ async def test_delete_custom_node(tmp_path) -> None:
         assert get_resp.status == 404
 
 
+# -- WiFi/MQTT-broker credentials --------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_list_credentials_starts_empty(tmp_path) -> None:
+    async with _client(tmp_path) as client:
+        resp = await client.get("/api/credentials/wifi")
+        assert resp.status == 200
+        assert await resp.json() == {"credentials": []}
+
+
+@pytest.mark.asyncio
+async def test_put_then_get_credential_round_trips(tmp_path) -> None:
+    body = json.dumps({"ssid": "home-network", "password": "hunter2"})
+    async with _client(tmp_path) as client:
+        put_resp = await client.put("/api/credentials/wifi/home-wifi", data=body)
+        assert put_resp.status == 200
+        assert (await put_resp.json())["ok"] is True
+
+        get_resp = await client.get("/api/credentials/wifi/home-wifi")
+        assert get_resp.status == 200
+        assert get_resp.content_type == "application/json"
+        assert await get_resp.text() == body
+
+        list_resp = await client.get("/api/credentials/wifi")
+        assert (await list_resp.json())["credentials"] == ["home-wifi"]
+
+
+@pytest.mark.asyncio
+async def test_get_missing_credential_is_404(tmp_path) -> None:
+    async with _client(tmp_path) as client:
+        resp = await client.get("/api/credentials/wifi/nope")
+        assert resp.status == 404
+        assert "NODE_ERROR" in (await resp.json())["error"]
+
+
+@pytest.mark.asyncio
+async def test_put_invalid_json_credential_is_400(tmp_path) -> None:
+    async with _client(tmp_path) as client:
+        resp = await client.put("/api/credentials/wifi/bad", data="{not json")
+        assert resp.status == 400
+        assert "NODE_ERROR" in (await resp.json())["error"]
+
+
+@pytest.mark.asyncio
+async def test_invalid_credential_type_is_400_not_500(tmp_path) -> None:
+    async with _client(tmp_path) as client:
+        resp = await client.get("/api/credentials/not-a-real-type")
+        assert resp.status == 400
+        resp2 = await client.put("/api/credentials/not-a-real-type/n", data="{}")
+        assert resp2.status == 400
+
+
+@pytest.mark.asyncio
+async def test_credential_types_are_independent_namespaces(tmp_path) -> None:
+    async with _client(tmp_path) as client:
+        await client.put("/api/credentials/wifi/shared-name", data='{"ssid": "x", "password": "y"}')
+        await client.put(
+            "/api/credentials/mqtt-broker/shared-name",
+            data='{"broker": "b", "port": 1883, "username": "", "password": ""}',
+        )
+        wifi_list = await client.get("/api/credentials/wifi")
+        broker_list = await client.get("/api/credentials/mqtt-broker")
+        assert (await wifi_list.json())["credentials"] == ["shared-name"]
+        assert (await broker_list.json())["credentials"] == ["shared-name"]
+
+
+@pytest.mark.asyncio
+async def test_delete_credential(tmp_path) -> None:
+    async with _client(tmp_path) as client:
+        await client.put("/api/credentials/mqtt-broker/b", data='{"broker": "x", "port": 1883}')
+        del_resp = await client.delete("/api/credentials/mqtt-broker/b")
+        assert del_resp.status == 200
+        get_resp = await client.get("/api/credentials/mqtt-broker/b")
+        assert get_resp.status == 404
+
+
+@pytest.mark.asyncio
+async def test_delete_missing_credential_is_404(tmp_path) -> None:
+    async with _client(tmp_path) as client:
+        resp = await client.delete("/api/credentials/wifi/nope")
+        assert resp.status == 404
+
+
+@pytest.mark.asyncio
+async def test_credential_routes_covered_by_host_allowlist_when_wired_into_real_app(tmp_path) -> None:
+    from thingstudio_backend.app import create_app
+
+    app = create_app(data_dir=tmp_path / ".thingstudio")
+    async with TestClient(TestServer(app)) as client:
+        resp = await client.get("/api/credentials/wifi", headers={"Host": "evil.example"})
+        assert resp.status == 403
+        resp_ok = await client.get("/api/credentials/wifi", headers={"Host": "localhost"})
+        assert resp_ok.status == 200
+
+
 # -- posture-1 coverage -------------------------------------------------------
 # (Confirms these routes inherit the Host allowlist the same way /ws does --
 # not re-testing the middleware itself, test_middleware.py already does

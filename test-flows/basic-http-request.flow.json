@@ -94,9 +94,8 @@
       "id": "00f8da1d-7e14-4629-b0fe-8722c4723406",
       "type": "thingstudio/config/wifi",
       "properties": {
-        "ssid": "mihome",
-        "security": "password",
-        "password": "electr1c"
+        "credentialName": "mihome",
+        "security": "password"
       }
     }
   ]

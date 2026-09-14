@@ -8,5 +8,4 @@ the following points and questions are for discussion around the scope of the MV
 [2026-09-13, big pass: everything implemented, or already tracked with its own home in outstanding-items.md/decisions.md, removed outright per the same go-ahead above — not just the freshly-resolved items, but the whole backlog of already-triaged bullets that were only being kept here as a duplicate, plus the two items that got scoped and given real outstanding-items.md entries during this same pass (console-click-viewport-jump.md, deploy-runtime-from-editor.md). Nothing remains below as of this pass — every item that was here now has a home elsewhere. Leaving this file in place, empty of bullets, as the standing place new points/questions get added going forward.]
 
 
-- Save credentials to persistence store in .thingstudio, not in flow
 - save / close dialog box should when save is clicked, close is just to escape without saving.

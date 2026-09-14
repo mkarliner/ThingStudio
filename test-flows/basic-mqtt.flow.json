@@ -136,19 +136,15 @@
       "id": "1b1ff863-cb83-4567-af04-4d720eee028b",
       "type": "thingstudio/config/wifi",
       "properties": {
-        "ssid": "mihome",
-        "security": "password",
-        "password": "electr1c"
+        "credentialName": "mihome",
+        "security": "password"
       }
     },
     {
       "id": "ef01cb90-dda3-4708-86a0-c7d52db02539",
       "type": "thingstudio/config/mqtt-broker",
       "properties": {
-        "broker": "192.168.10.22",
-        "port": 1883,
-        "username": "guest",
-        "password": "guest"
+        "credentialName": "lan-mqtt-broker"
       }
     }
   ]

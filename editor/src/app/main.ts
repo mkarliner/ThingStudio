@@ -123,7 +123,8 @@ import { NODE_FACTORIES, CustomNode, FunctionNode, portSocket, functionOutputKey
 import { functionNode as functionNodeDefinition } from "../node-library/function-node.js";
 import { DRAG_MIME, CUSTOM_DRAG_MIME, type NodeKind } from "./rete/palette.js";
 import { toGraphData, socketIndex } from "./rete/graph-adapter.js";
-import { propertyVersion, configs as configsStore, replaceAllConfigs, clearConfigs, backendWsUrl, fireInjectNode } from "./rete/store.js";
+import { CONFIG_TYPES } from "./rete/config-types.js";
+import { propertyVersion, configs as configsStore, replaceAllConfigs, clearConfigs, backendWsUrl, fireInjectNode, updateConfig } from "./rete/store.js";
 import { getCustomNodePackage, listCustomNodeDefinitions } from "./rete/custom-nodes-store.js";
 import { assignNodeToActivePane, paneOfNode, replacePanesFromFlowFile, resetPanes, setActivePane, panes as panesStore } from "./rete/panes-store.js";
 import PaletteSidebar from "./rete/PaletteSidebar.vue";
@@ -140,7 +141,7 @@ import {
   type FlowFileConfig,
   type CanvasNodeSnapshot,
 } from "../flow-file/flow-file.js";
-import { DEFAULT_BACKEND_WS_URL, slugifyFlowName } from "../flow-file/admin-api-client.js";
+import { DEFAULT_BACKEND_WS_URL, slugifyFlowName, getCredential, type CredentialType } from "../flow-file/admin-api-client.js";
 // slugifyFlowName is reused here purely for a nicer suggested filename in
 // the save dialog below -- its own header's reasoning for why a display
 // name isn't a valid storage key applies just as well to a suggested
@@ -377,10 +378,84 @@ function extractCanvasSnapshot(): { nodes: CanvasNodeSnapshot[]; edges: FlowFile
 
 /** rete/store.ts's `configs` map, snapshotted into flow-file.ts's own
  * {id, type, properties} shape -- already agrees field-for-field
- * (store.ts's ConfigEntry header), so this is a plain copy, not a
- * translation. */
+ * (store.ts's ConfigEntry header), so this is mostly a plain copy, not a
+ * translation.
+ *
+ * Credential storage (2026-09-13, credential-storage-design.md): a WiFi/
+ * MQTT-broker config's real secret values (ssid/password, or broker/
+ * port/username/password) get resolved INTO this same in-memory config
+ * entry at load time (resolveConfigCredentials() below), so that
+ * resolveConfig() (compile.ts) keeps working unchanged -- but that means
+ * `c.properties` in memory holds MORE than what's allowed to reach disk.
+ * This function is the one save-time choke point that filters back down
+ * to exactly config-types.ts's own declared field names for the config's
+ * type (`credentialName`/`security`, never the resolved secrets) before
+ * anything gets handed to buildFlowFile() -- the actual mechanism behind
+ * this design's whole point: a saved flow file never has a real ssid or
+ * password in it, only a name. A config type CONFIG_TYPES doesn't
+ * recognize (shouldn't happen -- every config on this canvas is one of
+ * the two known types) falls back to saving properties unfiltered rather
+ * than silently dropping data for a type this function doesn't
+ * understand -- CLAUDE.md's fault-handling priority: fail open into "saved
+ * something reasonable," not into "silently lost a field." */
 function extractConfigsSnapshot(): FlowFileConfig[] {
-  return [...configsStore.value.values()].map((c) => ({ id: c.id, type: c.type, properties: c.properties }));
+  return [...configsStore.value.values()].map((c) => {
+    const descriptor = CONFIG_TYPES[c.type];
+    if (!descriptor) return { id: c.id, type: c.type, properties: c.properties };
+    const allowedNames = new Set(descriptor.fields.map((f) => f.name));
+    const filtered: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(c.properties)) {
+      if (allowedNames.has(key)) filtered[key] = value;
+    }
+    return { id: c.id, type: c.type, properties: filtered };
+  });
+}
+
+/** The reverse direction: after a flow loads, every WiFi/MQTT-broker
+ * config on the canvas holds only `{credentialName, ...}` (whatever
+ * survived extractConfigsSnapshot()'s filter above) -- no real ssid/
+ * password. This walks them and resolves each named credential from the
+ * backend (admin-api-client.ts's getCredential()), merging the real
+ * values into that config's own in-memory properties via updateConfig()
+ * -- the same store mutation ConfigRefField.vue's own saveEdit() uses, so
+ * resolveConfig() (compile.ts) sees a fully-populated config exactly as
+ * if the values had been typed in directly, with zero changes to that
+ * function's own contract.
+ *
+ * Fetches once, right after load, not per-compile (credential-storage-
+ * design.md's "decided" #4) -- keeps compile.ts's resolveConfig() fully
+ * synchronous. An empty `credentialName` (a freshly-created, not-yet-
+ * filled-in config, or -- for WiFi specifically -- an intentionally blank
+ * "unmanaged" config, wifi-status.ts's own header) is skipped, not an
+ * error: resolveWifiCredentials()/resolveMqttBrokerConfig() already
+ * handle an unresolved config with their own attributed CompileErrors at
+ * compile time, so there's nothing this function needs to guess at ahead
+ * of time. A resolution failure (backend unreachable, or the named
+ * credential no longer exists) is a clear, attributed console line naming
+ * the config id and credential name that failed -- not a silent empty
+ * value reaching the compiler (this project's standing fault-handling
+ * priority; matches wifi-status.ts's/mqtt-shared.ts's own loud-CompileError
+ * posture for a missing config reference, one level up). */
+async function resolveConfigCredentials(): Promise<void> {
+  const credentialTypeByConfigType: Record<string, CredentialType> = {
+    "thingstudio/config/wifi": "wifi",
+    "thingstudio/config/mqtt-broker": "mqtt-broker",
+  };
+  for (const cfg of [...configsStore.value.values()]) {
+    const credentialType = credentialTypeByConfigType[cfg.type];
+    if (!credentialType) continue;
+    const name = typeof cfg.properties.credentialName === "string" ? cfg.properties.credentialName : "";
+    if (!name) continue;
+    try {
+      const data = await getCredential(backendWsUrl.value, credentialType, name);
+      updateConfig(cfg.id, data);
+    } catch (err) {
+      logLine(
+        `[load: could not resolve ${credentialType} credential "${name}" for config ${cfg.id}] ${err instanceof Error ? err.message : String(err)}`,
+        "err",
+      );
+    }
+  }
 }
 
 /**
@@ -409,6 +484,13 @@ async function applyFlowFile(file: FlowFile): Promise<void> {
   // current selection, so the store needs to already hold the file's
   // configs by the time any node using one gets constructed/selected below.
   replaceAllConfigs(file.configs.map((c) => ({ id: c.id, type: c.type, properties: c.properties })));
+  // Credential storage (2026-09-13): resolve every WiFi/MQTT-broker
+  // config's credentialName into real values before any node gets
+  // constructed below -- a node's own PropertyPanel.vue block may read a
+  // referenced config's properties as soon as it's selected, so the
+  // resolved values need to already be in the store by then, same
+  // ordering reason the configs-before-nodes comment above already gives.
+  await resolveConfigCredentials();
   const skippedFileIds = new Set<string>();
   const nodeByFileId = new Map<string, AnyThingstudioNode>();
 

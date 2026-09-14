@@ -61,3 +61,25 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
   properties are a plain JSON blob, so this isn't a one-way door, unlike
   `HELLO`'s reserved auth fields. `config-types.ts`, `mqtt-shared.ts`,
   `outstanding-items.md`.
+- **2026-09-13 — WiFi/MQTT-broker config nodes stop holding real secret
+  values at all; the actual ssid/password/broker/username/password bundle
+  moves into a new, backend-owned, name-keyed credential store
+  (`~/.thingstudio/credentials/<type>/<name>.json`), referenced from the
+  config node by a `credentialName` string ("Option B," the whole bundle
+  externalized, over "Option A," a partial secrets-only externalization).**
+  Picked back up from Mike's own fresh ask ("Save credentials to
+  persistence store in .thingstudio, not in flow"), resolving the
+  deferred `credential-free-committable-flows.md` item the same way.
+  Three further decisions confirmed the same day: renaming/deleting a
+  saved credential is out of scope for v1 (no flow-file migration story);
+  a credential's value is shared by every config referencing it by name,
+  by design; resolution happens once, at flow-load time, keeping
+  `resolveConfig()`/`compile.ts` fully synchronous. A resolved credential
+  is merged into the same in-memory `properties` object `resolveConfig()`
+  reads, but `extractConfigsSnapshot()` filters that object back down to
+  only the field names `config-types.ts` still declares (now just
+  `credentialName`/`security`) before a flow saves, so a real secret never
+  round-trips into the committed `.flow.json`. `persisted_store.py`,
+  `admin_api.py`, `credential-types.ts`, `CredentialRefField.vue`,
+  `config-types.ts`, `main.ts`, `docs/working-notes/outstanding-items/
+  credential-storage-design.md`.

@@ -430,7 +430,14 @@ function setBrokerConfigId(id: string): void {
 <style scoped>
 .property-panel {
   flex: 0 0 auto;
-  width: 260px;
+  /* Widened 2026-09-14 (Mike's own ask) from 260px -- the panel already
+     collapses to a thin rail when nothing's selected (see .is-collapsed
+     below) rather than staying open at a fixed width all the time, so the
+     usual "wider sidebar eats canvas space" tradeoff barely applies here;
+     the credential-storage config/credential edit forms nested inside
+     (ConfigRefField.vue/CredentialRefField.vue's own field-row layout)
+     need the extra room more than the canvas needs those 80px back. */
+  width: 340px;
   padding: 12px;
   color: #ddd;
   font: 12px/1.4 system-ui, sans-serif;

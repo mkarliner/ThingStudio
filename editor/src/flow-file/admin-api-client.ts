@@ -194,3 +194,38 @@ export async function deleteCustomNode(wsUrl: string, name: string): Promise<voi
   const res = await request(wsUrl, `/api/custom-nodes/${encodeURIComponent(name)}`, { method: "DELETE" });
   if (!res.ok) throw new AdminApiError(`delete custom node "${name}" failed: ${await parseErrorBody(res)}`);
 }
+
+// -- WiFi/MQTT-broker credentials ------------------------------------------
+// docs/working-notes/outstanding-items/credential-storage-design.md.
+// Same shape as the flow functions above -- a credential bundle is an
+// opaque JSON blob to this module too, same as flow text; credential-
+// types.ts is what knows a "wifi" bundle looks like {ssid, password}.
+
+export type CredentialType = "wifi" | "mqtt-broker";
+
+export async function listCredentials(wsUrl: string, type: CredentialType): Promise<string[]> {
+  const res = await request(wsUrl, `/api/credentials/${type}`);
+  if (!res.ok) throw new AdminApiError(`list ${type} credentials failed: ${await parseErrorBody(res)}`);
+  const body = (await res.json()) as { credentials: string[] };
+  return body.credentials;
+}
+
+export async function getCredential(wsUrl: string, type: CredentialType, name: string): Promise<Record<string, unknown>> {
+  const res = await request(wsUrl, `/api/credentials/${type}/${encodeURIComponent(name)}`);
+  if (!res.ok) throw new AdminApiError(`load ${type} credential "${name}" failed: ${await parseErrorBody(res)}`);
+  return (await res.json()) as Record<string, unknown>;
+}
+
+export async function putCredential(wsUrl: string, type: CredentialType, name: string, data: Record<string, unknown>): Promise<void> {
+  const res = await request(wsUrl, `/api/credentials/${type}/${encodeURIComponent(name)}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new AdminApiError(`save ${type} credential "${name}" failed: ${await parseErrorBody(res)}`);
+}
+
+export async function deleteCredential(wsUrl: string, type: CredentialType, name: string): Promise<void> {
+  const res = await request(wsUrl, `/api/credentials/${type}/${encodeURIComponent(name)}`, { method: "DELETE" });
+  if (!res.ok) throw new AdminApiError(`delete ${type} credential "${name}" failed: ${await parseErrorBody(res)}`);
+}

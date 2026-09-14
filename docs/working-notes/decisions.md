@@ -48,7 +48,7 @@ The Rete migration's shape (adapter over `compiler/graph.ts`, hand-rolled palett
 
 ## Config nodes / Tier 1 scope
 
-The Tier 1 node-type triage (interrupt/pin-change, filter/event-compression, four UDP/TCP nodes in; ADC/file-ops/boolean-arithmetic-comparator rejected as node types); config nodes built as Node-RED's per-flow referenced-by-ID pattern, not per-device override; `wifiConfigId`'s optional-then-mandatory history; `mqtt_publish`/`mqtt_subscribe`'s migration to config nodes plus first real canvas presence; the separate `mqtt-broker` config type for broker-level auth. 6 entries: `docs/working-notes/decisions/config-nodes-tier1-scope.md`.
+The Tier 1 node-type triage (interrupt/pin-change, filter/event-compression, four UDP/TCP nodes in; ADC/file-ops/boolean-arithmetic-comparator rejected as node types); config nodes built as Node-RED's per-flow referenced-by-ID pattern, not per-device override; `wifiConfigId`'s optional-then-mandatory history; `mqtt_publish`/`mqtt_subscribe`'s migration to config nodes plus first real canvas presence; the separate `mqtt-broker` config type for broker-level auth; WiFi/MQTT-broker config nodes moving to a name-keyed backend credential store instead of holding secrets themselves. 7 entries: `docs/working-notes/decisions/config-nodes-tier1-scope.md`.
 
 ## Redeploy / network fault handling
 

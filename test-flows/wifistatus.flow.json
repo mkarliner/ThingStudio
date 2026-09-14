@@ -14,7 +14,7 @@
       "type": "thingstudio/wifi_status",
       "properties": {
         "pollMs": 5000,
-        "wifiConfigId": "73df14a9-b690-4371-aa37-ed21573f2d0d"
+        "wifiConfigId": "8d0579bb-b931-4950-879d-d1fb52bd96ed"
       }
     },
     {
@@ -86,7 +86,7 @@
     "26e0feaeeb5eae01": {
       "pos": [
         199,
-        281
+        280.74566650390625
       ],
       "size": [
         120,
@@ -139,20 +139,38 @@
       "id": "73df14a9-b690-4371-aa37-ed21573f2d0d",
       "type": "thingstudio/config/wifi",
       "properties": {
-        "ssid": "mihome",
-        "security": "password",
-        "password": "electr1c"
+        "credentialName": "mihome",
+        "security": "password"
+      }
+    },
+    {
+      "id": "8d0579bb-b931-4950-879d-d1fb52bd96ed",
+      "type": "thingstudio/config/wifi",
+      "properties": {
+        "credentialName": "home",
+        "security": "password"
       }
     },
     {
       "id": "fcb5908c-52a8-4f2f-9c2a-66d2d251e9ef",
       "type": "thingstudio/config/mqtt-broker",
       "properties": {
-        "broker": "verdi.karliner.org",
-        "port": 1883,
-        "username": "guest",
-        "password": "guest"
+        "credentialName": "verdi-mqtt-broker"
       }
     }
-  ]
+  ],
+  "panes": [
+    {
+      "id": "pane-1",
+      "name": "Flow 01"
+    }
+  ],
+  "paneOf": {
+    "1092043ee3adab9e": "pane-1",
+    "26e0feaeeb5eae01": "pane-1",
+    "3d3b53ab358eaf33": "pane-1",
+    "4ab956bb7f237255": "pane-1",
+    "657a5699fc3e3954": "pane-1",
+    "98fcf8ed462dd5ff": "pane-1"
+  }
 }

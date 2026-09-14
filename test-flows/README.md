@@ -163,8 +163,10 @@ could.
 
 Needs a real local broker reachable from the board (Mosquitto, matching
 `mqtt-hardware-validation-and-network-followups-briefing.md`'s
-recommended setup) -- broker host/port/credentials are in the file's own
-`configs` array, edit before deploying. Load via the browser ("Open
+recommended setup) -- broker host/port/credentials are a saved credential
+(`lan-mqtt-broker`), edit or replace it via the editor's own MQTT broker
+config widget (see [Canvas basics](../docs/user-guide/canvas-basics.md#config-nodes))
+before deploying, not in this file itself. Load via the browser ("Open
 Flow") same as the other files in this directory.
 
 **Update, 2026-09-04: confirmed working end-to-end on real hardware**
@@ -258,8 +260,10 @@ dropped by `compile.ts`'s dedup -- exactly the pain the config-node
 mechanism exists to close. Now there's one `thingstudio/config/wifi`
 config object (id `wifi-home`) in the file's own `configs` array,
 referenced by `wifiConfigId` from all three nodes -- edit the placeholder
-credentials in **one place**, not three, whether by hand in this JSON file
-or via the editor's own dropdown/pencil/+ widget once the file is loaded.
+credential in **one place**, not three, via the editor's own
+dropdown/pencil/+ widget once the file is loaded (the config node itself
+only holds a `credentialName`; the placeholder ssid/password live in the
+saved `your-wifi` credential, not in this JSON file).
 
 **Real network peer required, not a mock or the witness rig** -- exactly
 what this batch's own implementation briefing called for. Run
@@ -278,14 +282,14 @@ bound to 9998, is set up to pick the echo up. Two independent UDP flows on
 two fixed ports, not one request/response pair on one port.
 
 **Two placeholder values need editing before this compiles into
-something that'll actually connect** -- the `wifi-home` config's own
-`ssid`/`password` (edit once, in the `configs` array, or via the editor's
-WiFi config widget once loaded -- no longer duplicated across three node
-instances, see above), and `YOUR_MAC_LAN_IP` on the `udp_send` node
-(this machine's LAN IP on the same network the boards will join --
-`ipconfig getifaddr en0` on macOS, or check System Settings -> Network;
-not `127.0.0.1`, the boards are separate devices on the WiFi network, not
-this process).
+something that'll actually connect** -- the saved `your-wifi` credential's
+own `ssid`/`password` (edit once via the editor's WiFi config widget once
+the file is loaded -- no longer duplicated across three node instances,
+see above, and no longer edited in this JSON file directly), and
+`YOUR_MAC_LAN_IP` on the `udp_send` node (this machine's LAN IP on the
+same network the boards will join -- `ipconfig getifaddr en0` on macOS,
+or check System Settings -> Network; not `127.0.0.1`, the boards are
+separate devices on the WiFi network, not this process).
 
 **Load and deploy via the browser now** (`npm run dev` in `editor/`, "Open
 Flow", pick this file) -- the intended path, same as `interrupt-basic.

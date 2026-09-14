@@ -34,3 +34,12 @@ read — which today means inside the flow file's own config-node properties, in
 
 **Decision (Mike, 2026-09-04): defer.** Likely wants the mqtt-including version (option discussed was "probably 2"
 in the exchange that raised this), but no design/implementation work started. Revisit once picked back up.
+
+## Resolved, 2026-09-13
+
+Picked back up from Mike's own fresh ask (`mikes-questions-and-points.md`: "Save credentials to persistence
+store in .thingstudio, not in flow") and built the same day as option 2 above -- see
+[credential-storage-design.md](credential-storage-design.md) for the full design and decisions, and
+`outstanding-items.md`'s Resolved section for the one-line pointer. A committed `.flow.json` now has zero
+WiFi/broker info in it at all (not just no plaintext password) -- the config node holds only a `credentialName`,
+and the real values live in the backend's own credential store.

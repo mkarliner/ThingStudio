@@ -31,13 +31,26 @@
 # their content as opaque text, so that versioning story is unaffected by
 # anything here.
 #
-# WiFi credentials get no special handling -- per
-# backend-persisted-data-protocol.md, they're just properties inside a
-# flow file's `configs` array (thingstudio/config/wifi), not a separate
-# secrets store. This module doesn't know the difference between a flow
-# with WiFi creds in it and one without; there's no encryption-at-rest
-# here, matching the project's existing (unrevisited) plaintext-flow-file
-# stance (design doc §6).
+# WiFi/MQTT-broker credentials: superseded 2026-09-13
+# (docs/working-notes/outstanding-items/credential-storage-design.md) --
+# they now DO get special handling, in their own store below, keyed by
+# name rather than by flow/config-node id. A flow's `thingstudio/config/
+# wifi` and `thingstudio/config/mqtt-broker` configs hold only a
+# `credentialName` reference now; the real secret values live here:
+#
+#   ~/.thingstudio/
+#     credentials/wifi/<name>.json          -- { "ssid": ..., "password": ... }
+#     credentials/mqtt-broker/<name>.json   -- { "broker": ..., "port": ...,
+#                                                 "username": ..., "password": ... }
+#
+# Same opaque-JSON-blob treatment as flows (below): this module never
+# knows or validates which keys a credential bundle actually holds, same
+# "backend stays thin" reasoning as the rest of this file. There's still
+# no encryption-at-rest -- reading a credential back returns the real
+# secret in plaintext, same risk profile every other file in
+# `~/.thingstudio` already has (posture-1 auth is a Host-allowlist only;
+# see credential-storage-design.md's own "named security trade-off" for
+# why this isn't a new regression).
 #
 # This module never parses a flow file's *schema* -- only enough to catch
 # obviously-corrupt writes (valid JSON) before they land on disk. Full
@@ -75,6 +88,13 @@ from pathlib import Path
 
 _NAME_RE = re.compile(r"^[A-Za-z0-9_-]{1,100}$")
 
+# Fixed set, not free-form -- matches config-types.ts's own CONFIG_TYPES
+# keys (minus the "thingstudio/config/" prefix, which is editor-internal
+# and not part of this module's own naming). Kept as a tuple rather than
+# derived from anything editor-side; this module doesn't import editor
+# code and isn't going to start now for two literal strings.
+_CREDENTIAL_TYPES = ("wifi", "mqtt-broker")
+
 
 class PersistedStoreError(Exception):
     """Raised for any invalid name, missing file, or filesystem failure.
@@ -91,6 +111,14 @@ class PersistedStoreNotFoundError(PersistedStoreError):
 class CustomNodePackage:
     descriptor: str
     implementation: str
+
+
+def _validate_credential_type(credential_type: str) -> str:
+    if credential_type not in _CREDENTIAL_TYPES:
+        raise PersistedStoreError(
+            f"NODE_ERROR: invalid credential type {credential_type!r} -- must be one of {_CREDENTIAL_TYPES}"
+        )
+    return credential_type
 
 
 def _validate_name(name: str, *, kind: str) -> str:
@@ -137,6 +165,7 @@ class PersistedStore:
         self.base_dir = base_dir if base_dir is not None else Path.home() / ".thingstudio"
         self.flows_dir = self.base_dir / "flows"
         self.custom_nodes_dir = self.base_dir / "custom-nodes"
+        self.credentials_dir = self.base_dir / "credentials"
 
     # -- flows --------------------------------------------------------
 
@@ -226,3 +255,49 @@ class PersistedStore:
                 raise PersistedStoreError(f"NODE_ERROR: failed deleting custom node {name!r}: {exc}") from exc
         if not found:
             raise PersistedStoreNotFoundError(f"NODE_ERROR: no saved custom node named {name!r}")
+
+    # -- WiFi/MQTT-broker credentials -----------------------------------
+    # Opaque JSON blob per name, same treatment as flows above -- this
+    # module never parses or validates a credential bundle's own keys
+    # (ssid/password, or broker/port/username/password); that's
+    # admin_api.py's/the editor's business, same "backend doesn't know
+    # flow schema" split flows already use.
+
+    def list_credentials(self, credential_type: str) -> list[str]:
+        _validate_credential_type(credential_type)
+        d = self.credentials_dir / credential_type
+        if not d.is_dir():
+            return []
+        return sorted(p.stem for p in d.glob("*.json"))
+
+    def read_credential(self, credential_type: str, name: str) -> str:
+        _validate_credential_type(credential_type)
+        _validate_name(name, kind="credential")
+        path = self.credentials_dir / credential_type / f"{name}.json"
+        try:
+            return path.read_text(encoding="utf-8")
+        except FileNotFoundError as exc:
+            raise PersistedStoreNotFoundError(
+                f"NODE_ERROR: no saved {credential_type} credential named {name!r}"
+            ) from exc
+        except OSError as exc:
+            raise PersistedStoreError(f"NODE_ERROR: failed reading {credential_type} credential {name!r}: {exc}") from exc
+
+    def write_credential(self, credential_type: str, name: str, text: str) -> None:
+        _validate_credential_type(credential_type)
+        _validate_name(name, kind="credential")
+        _validate_json_text(text, what=f"{credential_type} credential {name!r}")
+        _atomic_write(self.credentials_dir / credential_type / f"{name}.json", text)
+
+    def delete_credential(self, credential_type: str, name: str) -> None:
+        _validate_credential_type(credential_type)
+        _validate_name(name, kind="credential")
+        path = self.credentials_dir / credential_type / f"{name}.json"
+        try:
+            path.unlink()
+        except FileNotFoundError as exc:
+            raise PersistedStoreNotFoundError(
+                f"NODE_ERROR: no saved {credential_type} credential named {name!r}"
+            ) from exc
+        except OSError as exc:
+            raise PersistedStoreError(f"NODE_ERROR: failed deleting {credential_type} credential {name!r}: {exc}") from exc

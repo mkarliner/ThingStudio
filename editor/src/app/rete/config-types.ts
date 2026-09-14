@@ -57,13 +57,34 @@
 //     way to say "someone else manages this connection" without that way
 //     being an easy-to-miss blank field.
 
+// Credential storage (docs/working-notes/outstanding-items/
+// credential-storage-design.md, confirmed with Mike 2026-09-13): a WiFi
+// or MQTT-broker config's own secret-shaped fields (ssid/password, or
+// broker/port/username/password) moved OUT of this file's `defaults`/
+// `fields` entirely -- the whole named bundle now lives in the backend's
+// own credential store (persisted_store.py), referenced by
+// `credentialName`, not split field-by-field the way a partial-secrecy
+// design would. `security` stays here for the WiFi type -- it's a
+// per-flow compile-behavior flag (wifi-status.ts), not part of "which
+// network," so it isn't a secret and doesn't move.
+//
+// `kind: "credential"` is the new field kind this adds:
+// `ConfigRefField.vue`'s edit panel renders it as `CredentialRefField.vue`
+// instead of a plain input -- same per-kind dispatch pattern `select` vs.
+// plain `input` already uses, one level down. `credentialType` says which
+// credential-store namespace ("wifi" or "mqtt-broker") the field resolves
+// against; see credential-types.ts for that store's own field shapes.
+
 export interface ConfigFieldDescriptor {
   /** Must match the key this field is stored under in a config's own `properties`. */
   name: string;
   label: string;
-  kind: "text" | "password" | "number" | "select";
+  kind: "text" | "password" | "number" | "select" | "credential";
   /** Only meaningful when `kind` is "select" -- the fixed set of allowed values. */
   options?: { value: string; label: string }[];
+  /** Only meaningful when `kind` is "credential" -- which credential-store
+   * namespace this field resolves against (credential-types.ts). */
+  credentialType?: "wifi" | "mqtt-broker";
 }
 
 export interface ConfigTypeDescriptor {
@@ -86,7 +107,7 @@ export const CONFIG_TYPES: Record<string, ConfigTypeDescriptor> = {
     type: "thingstudio/config/wifi",
     label: "WiFi",
     fields: [
-      { name: "ssid", label: "SSID", kind: "text" },
+      { name: "credentialName", label: "credential", kind: "credential", credentialType: "wifi" },
       {
         name: "security",
         label: "security",
@@ -97,33 +118,18 @@ export const CONFIG_TYPES: Record<string, ConfigTypeDescriptor> = {
           { value: "unmanaged", label: "Unmanaged (device connects itself, e.g. captive portal)" },
         ],
       },
-      { name: "password", label: "password", kind: "password" },
     ],
-    defaults: { ssid: "", security: "password", password: "" },
-    summarize: (properties) => (typeof properties.ssid === "string" ? properties.ssid : ""),
+    defaults: { credentialName: "", security: "password" },
+    // The credential's own name doubles as the summary -- Fork #1 (the
+    // design doc) already makes it a human-chosen nickname for a real
+    // network ("home-wifi"), so there's no separate SSID to show anymore.
+    summarize: (properties) => (typeof properties.credentialName === "string" ? properties.credentialName : ""),
   },
   "thingstudio/config/mqtt-broker": {
     type: "thingstudio/config/mqtt-broker",
     label: "MQTT Broker",
-    fields: [
-      { name: "broker", label: "broker host/IP", kind: "text" },
-      { name: "port", label: "port", kind: "number" },
-      // Both optional -- an empty username/password means "no broker
-      // auth," a normal, common broker setup (mqtt_as's own config
-      // defaults both to "" for exactly this reason). Unlike the WiFi
-      // config's password, there's no "security" select here forcing a
-      // non-empty password: a broker either wants credentials or it
-      // doesn't, and there's no equivalent to an open-vs-password WiFi
-      // network distinction worth a loud CompileError over.
-      { name: "username", label: "username (optional)", kind: "text" },
-      { name: "password", label: "password (optional)", kind: "password" },
-    ],
-    defaults: { broker: "", port: 1883, username: "", password: "" },
-    summarize: (properties) => {
-      const broker = typeof properties.broker === "string" ? properties.broker : "";
-      if (!broker) return "";
-      const port = properties.port;
-      return port !== undefined && port !== null && port !== "" ? `${broker}:${port}` : broker;
-    },
+    fields: [{ name: "credentialName", label: "credential", kind: "credential", credentialType: "mqtt-broker" }],
+    defaults: { credentialName: "" },
+    summarize: (properties) => (typeof properties.credentialName === "string" ? properties.credentialName : ""),
   },
 };

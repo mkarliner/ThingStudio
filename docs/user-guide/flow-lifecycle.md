@@ -10,7 +10,7 @@ Flows save to a file you choose, via your browser's own save dialog — no backe
 
 In Chrome or Edge this is the real OS file dialog each time — Save and Open don't remember the last file you picked, so you choose a target on every save (the browser's own dialog handles confirming an overwrite if you pick a file that already exists). Safari and Firefox don't support this file-picker API at all, so there **Save flow…** falls back to a plain browser download and **Open flow…** to a plain file-upload picker.
 
-Custom node packages are the one thing that still lives on the backend, in `~/.thingstudio/custom-nodes/` — see [Custom nodes](custom-nodes.md). They're shared across flows rather than tied to one project, unlike a flow itself.
+Custom node packages and saved credentials (see [Canvas basics](canvas-basics.md#config-nodes)) are the two things that still live on the backend, in `~/.thingstudio/custom-nodes/` and `~/.thingstudio/credentials/`. They're shared across flows rather than tied to one project, unlike a flow itself — a saved credential referenced by name from a config node never gets written into the `.flow.json` file.
 
 ## Deploy
 

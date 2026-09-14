@@ -109,8 +109,8 @@
       "id": "wifi-home",
       "type": "thingstudio/config/wifi",
       "properties": {
-        "ssid": "YOUR_WIFI_SSID",
-        "password": "YOUR_WIFI_PASSWORD"
+        "credentialName": "your-wifi",
+        "security": "password"
       }
     }
   ]

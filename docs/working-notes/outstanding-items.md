@@ -58,8 +58,6 @@ inline, not a fresh check.
 ## WiFi provisioning / captive portal
 
 - **[P3]** **Tasmota-style soft-AP + captive-portal WiFi fallback — raised by Mike 2026-08-20, no design/scope yet.** Mike believes MicroPython code for this already exists — worth checking before building from scratch. The new `security: "unmanaged"` config state exists specifically to keep this door open. Refined 2026-09-04: the concrete intent is scan-at-runtime, pick-from-a-dropdown, not just "something else manages it." Needs its own scoping session. ([detail](outstanding-items/wifi-provisioning-captive-portal.md))
-- **[P2]** **Credential-free git-committable flows — deferred, 2026-09-04.** Mike wants a valid, mqtt-including flow committed to git with no real WiFi credentials embedded in it. Blocked today by mqtt_publish/mqtt_subscribe's hard requirement for real credentials (mqtt_as manages its own WiFi connection, no "unmanaged" mode) — needs either placeholder/dummy creds (flow doesn't actually run as committed) or a real secrets-injected-outside-the-flow-file mechanism (unscoped). Deferred, not started. **2026-09-06, Mike's own note when prioritizing:** the secrets-injection mechanism this needs likely has other uses too, e.g. persisting custom-node config outside the repo (`~/.config/thingstudio/xxx.conf`?) — worth scoping as a general host-side secrets/config mechanism, not just a flow-credentials special case. ([detail](outstanding-items/credential-free-committable-flows.md))
-
 ## Redeploy / runtime
 
 - **[P3]** **machine.reset() before each deploy, for a known-clean device state -- raised by Mike, 2026-09-04, not scoped.** +3s deploy time, likely worth it (Mike's own call). Real candidate to supersede the conditional-teardown approach below rather than complement it -- a full reset gets the same clean-slate effect the "a power cycle fixed it" finding already confirmed, without needing to reason about which redeploys are safe to skip teardown for. Not a one-liner: DEPLOY already persists bytecode to flash, but inserting a reset mid-handshake breaks the current single-connection DEPLOY/DEPLOY_ACK exchange -- needs boot-time auto-resume plus host-tooling changes to tolerate the device dropping off during reset. ([detail](outstanding-items/reset-before-deploy.md))
@@ -145,6 +143,18 @@ Items below are done and verified (or resolved as a decision); kept here as one-
 paragraphs in the active sections above, per the same "index, not a copy" principle as this whole file. Full
 reasoning stays at each pointer's target, nothing here was deleted.
 
+- **Named credential store for WiFi/MQTT-broker secrets** -- built 2026-09-13, same day as the design
+  decisions. WiFi/MQTT-broker config nodes now hold only `credentialName` (+ `security` for WiFi); the real
+  secret values live in a new backend-owned `~/.thingstudio/credentials/<type>/<name>.json` store, resolved
+  into the in-memory config at flow-load time and filtered back out before a flow saves -- a saved `.flow.json`
+  never has a real ssid/password/broker-auth value in it. Supersedes and resolves
+  [credential-free-committable-flows.md](outstanding-items/credential-free-committable-flows.md) (moved below,
+  same day) -- Option B gives exactly the "valid, mqtt-including flow with zero WiFi/broker info in it" that
+  item asked for. The 6 real test-flow files that had plaintext credentials committed were migrated the same
+  day. Real backend/editor test suites and a manual browser smoke test still need Mike to run them himself.
+  ([detail](outstanding-items/credential-storage-design.md))
+- **Credential-free git-committable flows** -- deferred 2026-09-04, resolved 2026-09-13 by the credential-store
+  item just above. ([detail](outstanding-items/credential-free-committable-flows.md))
 - **Console-click-to-navigate viewport jump** -- fixed and committed 2026-09-13 (`7bf6b53`). `focusNode()`
   (editor-setup.ts) now checks the target node's screen-space bounding box against the container's viewport
   (40px margin) before calling `AreaExtensions.zoomAt()` -- a click on an already-visible node just selects it

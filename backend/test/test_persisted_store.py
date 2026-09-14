@@ -172,3 +172,75 @@ def test_invalid_custom_node_names_rejected(tmp_path, bad_name) -> None:
     store = _store(tmp_path)
     with pytest.raises(PersistedStoreError):
         store.write_custom_node(bad_name, "{}", "pass")
+
+
+# -- WiFi/MQTT-broker credentials --------------------------------------------
+
+
+def test_list_credentials_starts_empty(tmp_path) -> None:
+    store = _store(tmp_path)
+    assert store.list_credentials("wifi") == []
+    assert store.list_credentials("mqtt-broker") == []
+
+
+def test_write_then_read_credential_round_trips(tmp_path) -> None:
+    store = _store(tmp_path)
+    text = json.dumps({"ssid": "home-network", "password": "hunter2"})
+    store.write_credential("wifi", "home-wifi", text)
+    assert store.read_credential("wifi", "home-wifi") == text
+    assert store.list_credentials("wifi") == ["home-wifi"]
+    # A "mqtt-broker" credential of the same name lives in a separate
+    # namespace -- the two types never collide on disk.
+    assert store.list_credentials("mqtt-broker") == []
+
+
+def test_read_missing_credential_raises_not_found(tmp_path) -> None:
+    store = _store(tmp_path)
+    with pytest.raises(PersistedStoreNotFoundError):
+        store.read_credential("wifi", "nope")
+
+
+def test_write_credential_rejects_invalid_json(tmp_path) -> None:
+    store = _store(tmp_path)
+    with pytest.raises(PersistedStoreError):
+        store.write_credential("wifi", "bad", "{not json")
+    assert store.list_credentials("wifi") == []
+
+
+def test_delete_credential_removes_it(tmp_path) -> None:
+    store = _store(tmp_path)
+    store.write_credential("mqtt-broker", "b", '{"broker": "x", "port": 1883}')
+    store.delete_credential("mqtt-broker", "b")
+    assert store.list_credentials("mqtt-broker") == []
+    with pytest.raises(PersistedStoreNotFoundError):
+        store.read_credential("mqtt-broker", "b")
+
+
+def test_delete_missing_credential_raises_not_found(tmp_path) -> None:
+    store = _store(tmp_path)
+    with pytest.raises(PersistedStoreNotFoundError):
+        store.delete_credential("wifi", "nope")
+
+
+@pytest.mark.parametrize("bad_type", ["", "WIFI", "wifi ", "ssh", "wifi/../escape"])
+def test_invalid_credential_types_rejected(tmp_path, bad_type) -> None:
+    store = _store(tmp_path)
+    with pytest.raises(PersistedStoreError):
+        store.list_credentials(bad_type)
+    with pytest.raises(PersistedStoreError):
+        store.write_credential(bad_type, "n", "{}")
+
+
+@pytest.mark.parametrize("bad_name", ["../escape", "a/b", ""])
+def test_invalid_credential_names_rejected(tmp_path, bad_name) -> None:
+    store = _store(tmp_path)
+    with pytest.raises(PersistedStoreError):
+        store.write_credential("wifi", bad_name, "{}")
+
+
+def test_credential_name_cannot_escape_type_dir_via_traversal(tmp_path) -> None:
+    store = _store(tmp_path)
+    outside = tmp_path / "outside.json"
+    with pytest.raises(PersistedStoreError):
+        store.write_credential("wifi", "../outside", '{"ssid": "x"}')
+    assert not outside.exists()

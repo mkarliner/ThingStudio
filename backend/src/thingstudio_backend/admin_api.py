@@ -113,6 +113,48 @@ def make_admin_routes(store: PersistedStore) -> list[web.RouteDef]:
             return _error_response(exc)
         return web.json_response({"ok": True})
 
+    # -- WiFi/MQTT-broker credentials ------------------------------------
+    # docs/working-notes/outstanding-items/credential-storage-design.md.
+    # {type} is "wifi" or "mqtt-broker" -- persisted_store.py rejects
+    # anything else with a PersistedStoreError, mapped to 400 below same
+    # as any other bad-name case, not a routing-level 404.
+
+    async def list_credentials(request: web.Request) -> web.Response:
+        credential_type = request.match_info["type"]
+        try:
+            names = store.list_credentials(credential_type)
+        except PersistedStoreError as exc:
+            return _error_response(exc)
+        return web.json_response({"credentials": names})
+
+    async def get_credential(request: web.Request) -> web.Response:
+        credential_type = request.match_info["type"]
+        name = request.match_info["name"]
+        try:
+            text = store.read_credential(credential_type, name)
+        except PersistedStoreError as exc:
+            return _error_response(exc)
+        return web.Response(text=text, content_type="application/json")
+
+    async def put_credential(request: web.Request) -> web.Response:
+        credential_type = request.match_info["type"]
+        name = request.match_info["name"]
+        text = await request.text()
+        try:
+            store.write_credential(credential_type, name, text)
+        except PersistedStoreError as exc:
+            return _error_response(exc)
+        return web.json_response({"ok": True})
+
+    async def delete_credential(request: web.Request) -> web.Response:
+        credential_type = request.match_info["type"]
+        name = request.match_info["name"]
+        try:
+            store.delete_credential(credential_type, name)
+        except PersistedStoreError as exc:
+            return _error_response(exc)
+        return web.json_response({"ok": True})
+
     return [
         web.get("/api/flows", list_flows),
         web.get("/api/flows/{name}", get_flow),
@@ -122,4 +164,8 @@ def make_admin_routes(store: PersistedStore) -> list[web.RouteDef]:
         web.get("/api/custom-nodes/{name}", get_custom_node),
         web.put("/api/custom-nodes/{name}", put_custom_node),
         web.delete("/api/custom-nodes/{name}", delete_custom_node),
+        web.get("/api/credentials/{type}", list_credentials),
+        web.get("/api/credentials/{type}/{name}", get_credential),
+        web.put("/api/credentials/{type}/{name}", put_credential),
+        web.delete("/api/credentials/{type}/{name}", delete_credential),
     ]
