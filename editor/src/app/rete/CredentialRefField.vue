@@ -59,7 +59,7 @@
       <p v-if="editError" class="credential-error">{{ editError }}</p>
       <div class="credential-edit-actions">
         <button type="button" :disabled="saving" @click="saveEdit">{{ saving ? "saving..." : "Save" }}</button>
-        <button type="button" @click="closeEdit">Close</button>
+        <button type="button" @click="closeEdit">Cancel</button>
       </div>
     </div>
   </div>

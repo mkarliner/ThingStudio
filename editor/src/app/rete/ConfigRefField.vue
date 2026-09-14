@@ -12,7 +12,7 @@
   Bound via v-model to a node property holding a config id (e.g.
   `node.properties.wifiConfigId`) -- `modelValue`/`update:modelValue`,
   ordinary Vue v-model convention. The "edit one config's properties"
-  surface is a simple inline expand (text inputs, Save/Close), not a modal
+  surface is a simple inline expand (text inputs, Save/Cancel), not a modal
   -- CLAUDE.md's "cheapest implementation that's actually correct"
   applies directly here per the briefing; don't over-build the editing
   chrome for a first version of this widget.
@@ -32,16 +32,24 @@
 
   Auto-save, no outer Save button (2026-09-13, same day, Mike's own
   hands-on report): with a credential field in the mix, the original
-  Save/Close pair here stacked on top of CredentialRefField's own
-  Save/Close for the nested credential-create form -- two Saves doing two
+  Save/Cancel pair here stacked on top of CredentialRefField's own
+  Save/Cancel for the nested credential-create form -- two Saves doing two
   different things (this panel's own persisting `credentialName`/
   `security` onto the config; the nested one persisting the credential's
   actual values to the backend) right next to each other reads as one
   confusing double-save, not two distinct steps. Fixed by auto-committing
   `draft` to the config on every change (a `watch(draft, ..., {deep:
-  true})`) and dropping this panel down to a single "Close" -- the only
+  true})`) and dropping this panel down to a single button -- the only
   explicit Save left anywhere in the whole widget is CredentialRefField's
   own, which is unavoidably a real, separate, backend-persisted action.
+  Labeled "Cancel", not "Close" (2026-09-14, Mike's own call, resolving
+  the open tension against his "close is just to escape without saving"
+  note -- the auto-save behavior itself stands, only the label changed).
+  Same day, broadened to a standing rule: every button anywhere in the
+  editor that dismisses a dialog/panel without taking action is labeled
+  "Cancel", not "Close" -- covers this panel's own button above, the
+  `creatingNew` form's button below (which does discard an unsaved
+  draft), and CredentialRefField.vue's own edit-panel button.
 
   "+" creates one named thing, not an anonymous config plus a second,
   nested "+" (2026-09-13, same day, Mike's own direct ask: "I'd expect to
@@ -125,7 +133,7 @@
         </label>
       </template>
       <div class="config-edit-actions">
-        <button type="button" @click="closeEdit">Close</button>
+        <button type="button" @click="closeEdit">Cancel</button>
       </div>
     </div>
 
@@ -156,7 +164,7 @@
       <p v-if="createError" class="field-error">{{ createError }}</p>
       <div class="config-edit-actions">
         <button type="button" :disabled="creating" @click="saveNew">{{ creating ? "saving..." : "Save" }}</button>
-        <button type="button" @click="cancelNew">Close</button>
+        <button type="button" @click="cancelNew">Cancel</button>
       </div>
     </div>
   </div>

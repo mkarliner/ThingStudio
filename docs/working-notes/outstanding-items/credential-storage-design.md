@@ -153,8 +153,21 @@ to hold only `credentialName`/`security`. `credential-free-committable-flows.md`
 with its own Save button stacked on top of `CredentialRefField.vue`'s nested Save button -- two Saves doing two
 different things (persisting `credentialName`/`security` onto the config vs. persisting the credential's actual
 values to the backend) read as one confusing double-save. Fixed by auto-committing the outer panel's `draft` to
-the config on every change and dropping it to a single "Close" -- the only explicit Save left anywhere in the
+the config on every change and dropping it to a single button -- the only explicit Save left anywhere in the
 widget is the credential's own, which is unavoidably a real backend call.
+
+**Resolved, 2026-09-14:** this auto-save fix had cut against Mike's own standing note in
+`mikes-questions-and-points.md` ("close is just to escape without saving"), flagged as an open tension in
+`credential-store-implementation-briefing.md`. Mike's call: the auto-save behavior stands as shipped, but the
+button is labeled "Cancel" rather than "Close".
+
+**Broadened same day to a standing rule:** every button anywhere in the editor that dismisses a dialog/panel
+without taking action is labeled "Cancel", not "Close" -- not just the one panel above. Covers three buttons
+total, all in this feature's own widgets: `ConfigRefField.vue`'s outer edit-panel button (the one this tension
+was originally about), `ConfigRefField.vue`'s `creatingNew` form button (discards an unsaved new-credential
+draft), and `CredentialRefField.vue`'s own edit-panel button (discards an unsaved edit to an existing
+credential's values). Swept the whole `editor/src` tree for any other `>Close<`/`title="close"`-style button --
+none found outside these three.
 
 **Second UX fix, same day, from Mike's own continued hands-on testing:** the double-Save fix above still left
 "+" creating an anonymous config (`credentialName: ""`) and opening its own edit panel just to reach a SECOND,
