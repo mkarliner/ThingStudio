@@ -10,5 +10,6 @@ the ones that already exist, see [Writing custom nodes](custom-nodes.md).
 - **[Getting started](getting-started.md)** — running the editor, connecting to a board.
 - **[Canvas basics](canvas-basics.md)** — the palette, wiring, config nodes.
 - **[Flow lifecycle](flow-lifecycle.md)** — saving, deploying, checking status.
+- **[WiFi provisioning](wifi-provisioning.md)** — a device learning its WiFi credentials on its own.
 - **[Debugging & troubleshooting](debugging.md)** — reading errors, known limitations.
 - **[Node reference](nodes/index.md)** — what each built-in node does.

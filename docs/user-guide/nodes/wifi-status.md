@@ -15,18 +15,8 @@ The payload is `true`/`false` for connected/disconnected. The message also carri
 
 It emits when connection identity changes (connect/disconnect, or a change to `ip`/`subnet`/`gateway`/`dns`), not on every poll — except the very first poll, which always reports. `rssi` doesn't trigger a re-emit on its own — it drifts constantly even on an idle connection, so it's included whenever a message fires for another reason, but its own changes don't cause one. It's a snapshot, not a live reading.
 
-Pick "unmanaged" on the WiFi config when you don't want this node issuing its own connect. On first boot with no stored credential, the device opens its own setup network — **Thingstudio-Setup-XXXX**, WPA2-secured with the password `thingstudio` — and serves a page at 192.168.4.1 for picking a network and entering its password. Connect a phone or laptop to that network; most phones prompt to sign in to it automatically. Pick your network from the list, or type its name directly if it isn't listed -- some boards' WiFi scans don't reliably find every nearby network, so the form always accepts a typed name too. The device saves what you enter and connects with it on every later boot, without reopening the setup network.
+Pick "unmanaged" on the WiFi config when you don't want this node issuing its own connect — either because something else already manages the connection, or because you want the device to learn its credentials on its own over the air. See [WiFi provisioning](../wifi-provisioning.md) for how that self-provisioning flow works, including the setup network's password and the reprovisioning-fallback option.
 
-**The setup network's password is `thingstudio` by default.** There's no editor setting for this yet -- to change it, connect to the board and run:
-
-```
-mpremote connect /dev/tty.usbmodemXXXX exec "import wifi_provision; wifi_provision.set_ap_password('yournewpassword')"
-```
-
-Reset the board afterward. To go back to the default, run the same command with `'thingstudio'`, or delete the board's saved state entirely (`mpremote connect /dev/tty.usbmodemXXXX fs rm :/_wifi_provision.json`) -- that also clears any saved WiFi credential, so the next boot runs first-run setup again.
-
-The WiFi config's "Allow reprovisioning on connect failure" field reopens the setup network any time the saved credential stops working, not just on first boot. It's off by default: reopening an unauthenticated setup network whenever WiFi drops is itself a risk — anyone in radio range during the drop could connect to it and redirect the device to a different network. Only turn it on for a device on a trusted, physically-controlled network.
-
-If no connection is ever made, this node just reports disconnected, the same as any other failed connect — this feature changes how the interface gets its credentials, not how wifi_status reports on them.
+If no connection is ever made, this node just reports disconnected, the same as any other failed connect — provisioning changes how the interface gets its credentials, not how wifi_status reports on them.
 
 Shows a connection-status dot on the canvas (see [Canvas basics](../canvas-basics.md#node-status)) once connected to a device.
