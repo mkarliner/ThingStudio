@@ -167,9 +167,11 @@ reasoning stays at each pointer's target, nothing here was deleted.
   WiFi credentials from the flow's own sole `wifi_status` node, same pattern every other network node
   type uses. Full canvas wiring (registry, Rete class, palette entry, property panel, flow-file
   verifier), a vitest suite run against real generated Python (pymock's `network.WLAN.CONNECTED`
-  toggle), and a user-guide page. The item's other original ask -- a dedicated router/switch node --
-  stays open, deferred to POST-MVP (see the active-backlog entry above).
-  ([detail](outstanding-items/connection-state-gate-router-nodes.md))
+  toggle), and a user-guide page. Real-hardware smoke test confirmed 2026-09-14 (deploys and runs
+  cleanly, via `test-flows/wifi-gate-test.flow.json`) -- the specific pass-vs-drop behavior on an
+  actual link drop/reconnect hasn't been separately confirmed yet. The item's other original ask --
+  a dedicated router/switch node -- stays open, deferred to POST-MVP (see the active-backlog entry
+  above). ([detail](outstanding-items/connection-state-gate-router-nodes.md))
 - **Tasmota-style soft-AP + captive-portal WiFi provisioning** -- built and verified 2026-09-14, same
   day as the scoping session. A flow whose WiFi config is `"unmanaged"` now makes the device open a
   soft AP (`Thingstudio-Setup-XXXX`, WPA2, default password `thingstudio`) plus a catch-all DNS

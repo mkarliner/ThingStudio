@@ -77,6 +77,13 @@ generated Python run against pymock's `network.WLAN.CONNECTED` toggle, plus the 
 wifi-sta-sharing coverage `node-udp-send.test.ts` has for its own wifi_status dependency), and a user-guide
 page (`docs/user-guide/nodes/wifi-gate.md`).
 
+**Real-hardware smoke test confirmed by Mike, 2026-09-14** (`test-flows/wifi-gate-test.flow.json`,
+`test-flows/README.md`'s own section on it): deploys and runs cleanly on a real board. That flow's first
+deploy attempt also caught an unrelated pre-existing bug -- DEPLOY's CBOR encoding never stripped
+`null`-valued fields, which the device's decoder can't parse -- fixed the same day, see
+`learnings/backend-serial-wire-format.md`. The gate's specific pass-vs-drop behavior (gated stream
+stopping on an actual link drop, resuming on reconnect) hasn't been separately confirmed yet.
+
 ## 2026-09-14, Mike's call: dedicated router/switch node deferred to POST-MVP
 
 A dedicated router/switch node (the item's original narrower ask -- e.g. a real two-output status/condition
