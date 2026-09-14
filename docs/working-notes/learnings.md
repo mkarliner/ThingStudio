@@ -72,7 +72,15 @@ WebSocket same-origin/DNS-rebinding gaps, the WebSocket custom-header limitation
 
 ## Backend / serial wire format
 
-A previously-"all tests passing" backend module (`ws_relay.py`/`framing.py`) assumed raw §13 binary frames ride the physical serial wire directly; the real device listener only ever speaks base64/"F64:"-line-encoded frames there (a real hardware workaround, already implemented on the browser-direct path in `transport.ts`), and nothing in either side's own tests could have caught the mismatch. Fixed 2026-09-07 (editor-backend-wiring session). 2 entries: `docs/working-notes/learnings/backend-serial-wire-format.md`.
+A previously-"all tests passing" backend module (`ws_relay.py`/`framing.py`) assumed raw §13 binary
+frames ride the physical serial wire directly; the real device listener only ever speaks
+base64/"F64:"-line-encoded frames there (a real hardware workaround, already implemented on the
+browser-direct path in `transport.ts`), and nothing in either side's own tests could have caught the
+mismatch. Fixed 2026-09-07 (editor-backend-wiring session). Same root cause struck a third time,
+2026-09-14 -- the editor's CBOR encoder never filtered `null`-valued optional fields, and the
+device's decoder has never supported decoding one; an in-repo round-trip test passed regardless
+since it only round-trips through the editor's own encoder/decoder, never the device's. 3 entries:
+`docs/working-notes/learnings/backend-serial-wire-format.md`.
 
 ## Backend / WS status-send race on teardown
 

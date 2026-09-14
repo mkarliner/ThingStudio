@@ -61,9 +61,31 @@ const DECODE_OPTIONS = {
   rejectDuplicateMapKeys: true,
 } as const;
 
-/** Encode a typed message to its CBOR body only (no frame header -- see framing.encodeFrame). */
+/** Encode a typed message to its CBOR body only (no frame header -- see framing.encodeFrame).
+ *
+ * Any key whose value is null is dropped before encoding -- not just "type". This is the
+ * write-side half of expectOptionalString's own "a missing key or an explicit null both mean
+ * 'not provided'" contract (this file, and messages.py's encode_message_body on the device
+ * side, which this mirrors) -- required, not just tidy: device-runtime/src/cbor.py's decoder
+ * has no null/undefined support at all (its own header note -- "this protocol's optional
+ * fields are omitted from the map entirely, never encoded as CBOR null/undefined"), so an
+ * explicit null field sent to a real device raises `CBORDecodeError("unsupported CBOR
+ * simple/float value (major 7, additional info 22)")` there instead of decoding anything.
+ *
+ * Confirmed the hard way, 2026-09-14: DEPLOY's `wifiProvision` field (added the same day,
+ * messages.ts) is null for the ordinary "no unmanaged WiFi config in this flow" case, and
+ * this function had no filtering at all until this fix -- every DEPLOY for a flow without
+ * self-provisioning crashed the device's decoder on arrival. This file's own
+ * protocol.roundtrip.test.ts already had `wifiProvision: null`/`flowName: null`/`deployId:
+ * null` sample messages and passed anyway, because that test round-trips through cborg on
+ * both ends -- cborg decodes its own CBOR null just fine, so a JS-only round trip can never
+ * catch a gap that only exists on the real device's hand-rolled decoder. messages.py's own
+ * encode_message_body already carried this exact filter (its own docstring cites an
+ * identical 2026-09-05 HELLO/runtimeBuild failure) -- it was never mirrored to this,
+ * the editor's own device-bound encode path, until now. */
 export function encodeMessageBody(message: Message): Uint8Array {
-  const { type: _discriminant, ...body } = message;
+  const { type: _discriminant, ...rest } = message;
+  const body = Object.fromEntries(Object.entries(rest).filter(([, v]) => v !== null));
   return encode(body);
 }
 

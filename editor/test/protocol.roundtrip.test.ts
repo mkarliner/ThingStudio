@@ -125,6 +125,37 @@ describe("message CBOR round-trip (codec.ts, per message type)", () => {
     const raw = cborDecode(body) as { bytecode: unknown };
     expect(raw.bytecode).toBeInstanceOf(Uint8Array);
   });
+
+  // Confirmed the hard way on real hardware, 2026-09-14 (codec.ts's own
+  // encodeMessageBody header has the full story): a null-valued field
+  // reaching the device crashes its hand-rolled cbor.py decoder
+  // (CBORDecodeError, "unsupported CBOR simple/float value") -- cborg
+  // itself decodes its own CBOR null just fine, so the plain round-trip
+  // tests above (encode with cborg, decode with cborg) can never catch
+  // this; only inspecting the raw decoded structure for an actual CBOR
+  // null value proves the on-wire body has none, which is the real
+  // constraint the device's decoder requires. Recurses (not just a
+  // top-level check) since wifiProvision is itself a nested map -- a
+  // structural check, not a raw-byte scan for 0xf6, since bytecode/
+  // staticData are arbitrary binary and could coincidentally contain
+  // that byte as data, not as a CBOR null marker. Every null-valued
+  // sample message above is exercised here, not just DEPLOY's own
+  // fields.
+  function containsCborNull(value: unknown): boolean {
+    if (value === null) return true;
+    if (Array.isArray(value)) return value.some(containsCborNull);
+    if (value instanceof Uint8Array) return false;
+    if (typeof value === "object") return Object.values(value as Record<string, unknown>).some(containsCborNull);
+    return false;
+  }
+
+  it("never encodes a CBOR null for a null-valued optional field (device's cbor.py can't decode one)", () => {
+    for (const original of SAMPLE_MESSAGES) {
+      const body = encodeMessageBody(original);
+      const raw = cborDecode(body);
+      expect(containsCborNull(raw)).toBe(false);
+    }
+  });
 });
 
 describe("codec.ts rejects valid CBOR with the wrong shape (per message type)", () => {
