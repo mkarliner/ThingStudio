@@ -354,3 +354,42 @@ Nothing here is exercised by the automated MicroPython/vitest suites --
 both stop at the protocol/unit level (`outstanding-items/
 wifi-provisioning-captive-portal.md`'s own "Verification" note). This
 file is the actual hardware check for the feature.
+
+## `wifi-gate-test.flow.json`
+
+Hands-on hardware test for the pass-or-drop WiFi-link gate
+(`thingstudio/wifi_gate`, `outstanding-items/connection-state-gate-router-
+nodes.md`'s 2026-09-14 entry). Two independent chains sharing one
+`thingstudio/wifi_status` node (config security `"unmanaged"`, same as
+`wifi-provision-test.flow.json` above -- reuses whatever credential the
+board already learned via self-provisioning, no placeholder to edit):
+
+- `wifi_status` -> `debug` (full message) -- the link-state reference:
+  confirms whether the board is actually connected right now, same as
+  `udp-echo-tester.flow.json`'s own periodic status line.
+- `thingstudio/timer` (2000ms) -> `thingstudio/wifi_gate` ->
+  `thingstudio/debug` (payload only) -- a steady tick count that only
+  reaches the second debug node while the WiFi link is up. `wifi_gate`
+  checks live link state per message, not `wifi_status`'s own (slower,
+  emit-on-change-only) output, so it reacts immediately.
+
+**What to watch for:** with the board connected, the gated debug stream
+prints an incrementing count every ~2s, matching the timer interval.
+Disconnect the board's WiFi (power off the AP it joined, or move the
+board out of range) and the gated stream should stop cleanly -- no
+errors, just silence -- while the status debug stream (still polling
+every 5s) reports the disconnect. Reconnect and the gated stream should
+resume, picking up the timer's counter where it left off (the counter
+itself never stops incrementing -- `wifi_gate` drops the messages fired
+while disconnected, it doesn't pause the timer upstream of it).
+
+Load via the browser ("Open Flow", same as every other file in this
+directory) and Deploy. Verified via `verify-flow-file.ts` (parses clean,
+every node type has a real canvas factory), a `compile()` dry run through
+the registry, and confirmed 2026-09-14 as a real-hardware smoke test --
+deploys and runs cleanly (this flow's first deploy attempt also surfaced
+and confirmed the fix for `learnings/backend-serial-wire-format.md`'s
+DEPLOY-null-field CBOR bug, unrelated to `wifi_gate` itself). The specific
+pass-vs-drop behavior (gated stream stopping on disconnect, resuming on
+reconnect) hasn't been separately confirmed yet -- see this file's own
+"What to watch for" above.

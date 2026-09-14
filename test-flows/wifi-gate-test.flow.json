@@ -1,0 +1,76 @@
+{
+  "formatVersion": 1,
+  "flowName": "wifi-gate-test",
+  "nodes": [
+    {
+      "id": "9be5735daf06ae19",
+      "type": "thingstudio/wifi_status",
+      "properties": {
+        "pollMs": 5000,
+        "wifiConfigId": "3212b162-cb17-457b-82e3-7bf03e7f3635"
+      }
+    },
+    {
+      "id": "5c7b640ab7b8602f",
+      "type": "thingstudio/debug",
+      "properties": {
+        "fullMessage": true
+      }
+    },
+    {
+      "id": "1d77ec91185d33c3",
+      "type": "thingstudio/timer",
+      "properties": {
+        "intervalMs": 2000
+      }
+    },
+    {
+      "id": "b7825fe4becc8b28",
+      "type": "thingstudio/wifi_gate",
+      "properties": {}
+    },
+    {
+      "id": "d05fc8b3de1c5b4a",
+      "type": "thingstudio/debug",
+      "properties": {
+        "fullMessage": false
+      }
+    }
+  ],
+  "edges": [
+    ["9be5735daf06ae19", 0, "5c7b640ab7b8602f", 0],
+    ["1d77ec91185d33c3", 0, "b7825fe4becc8b28", 0],
+    ["b7825fe4becc8b28", 0, "d05fc8b3de1c5b4a", 0]
+  ],
+  "layout": {
+    "9be5735daf06ae19": { "pos": [200, 120], "size": [120, 34] },
+    "5c7b640ab7b8602f": { "pos": [420, 120], "size": [84, 34] },
+    "1d77ec91185d33c3": { "pos": [200, 300], "size": [84, 34] },
+    "b7825fe4becc8b28": { "pos": [400, 300], "size": [110, 34] },
+    "d05fc8b3de1c5b4a": { "pos": [610, 300], "size": [84, 34] }
+  },
+  "configs": [
+    {
+      "id": "3212b162-cb17-457b-82e3-7bf03e7f3635",
+      "type": "thingstudio/config/wifi",
+      "properties": {
+        "credentialName": "",
+        "security": "unmanaged",
+        "allowReprovisioning": false
+      }
+    }
+  ],
+  "panes": [
+    {
+      "id": "pane-1",
+      "name": "Flow 01"
+    }
+  ],
+  "paneOf": {
+    "9be5735daf06ae19": "pane-1",
+    "5c7b640ab7b8602f": "pane-1",
+    "1d77ec91185d33c3": "pane-1",
+    "b7825fe4becc8b28": "pane-1",
+    "d05fc8b3de1c5b4a": "pane-1"
+  }
+}
