@@ -20,20 +20,21 @@ inline, not a fresh check.
 
 ## Next up (already flagged before this audit, unstarted)
 
-- **Current handoff doc: `palette-ordering-and-multi-panes-landed-briefing.md`.** Written 2026-09-13 after
-  palette node-family ordering and multiple-panes support both landed and were committed (`cba9d80`,
-  `e2359f3`, plus the docs commit `8b78dca`) -- opens with what landed, including a genuine bug found and
-  fixed before Mike ever saw it (an infinite-polling risk in `rete-render-utils` from hiding pane-inactive
-  nodes with `display:none`), then the usual open-threads/next-candidates sections. Mike already confirmed
-  `tsc`/`vitest` plus his own browser smoke test passed for both features before authorizing the commits --
-  nothing left open from this session to verify. Supersedes
-  `multi-output-landed-mikes-questions-triage-briefing.md` as the live "what's next" pointer -- of that
-  briefing's open items, the two orphaned UI-wishlist bullets it flagged as needing Mike's decision (triage
-  #2 -- palette ordering and multiple panes) got that decision and were both scoped and built this session;
-  its other carried-forward items (inject-click-opens-property-sheet bug, `CLAUDE.md` msg/payload
-  convention, router/switch node, TCP send/listen-receive, node-flow-execution docs,
-  deploy-runtime-from-editor) are untouched -- still open, tracked in this file's own backlog rather than
-  re-listed here.
+- **Current handoff doc: `credential-store-implementation-briefing.md`.** Written 2026-09-14 after the
+  WiFi/MQTT-broker credential-store feature (Mike's own fresh ask, not drawn from this backlog) landed and
+  was committed (`712cded`), plus four rounds of UX fixes from Mike's own hands-on browser testing the same
+  day -- opens with what landed, flags one tension worth a quick check-in (an auto-save fix cut against Mike's
+  own standing "close is just to escape without saving" note; he removed that note from
+  `mikes-questions-and-points.md` mid-session, read as tacit acceptance but not explicitly confirmed), then the
+  usual open-threads/next-candidates sections. Real `pytest`/`vitest` runs not yet confirmed -- still open.
+  Also flags a new scratchpad note (Button/Switch/ADC nodes) that duplicates the already-tracked
+  eswitch/ebutton item below. Supersedes
+  `palette-ordering-and-multi-panes-landed-briefing.md` as the live "what's next" pointer -- that briefing's own
+  work (palette ordering, multiple panes) was already fully closed with nothing left open; this session's work
+  was unrelated to it. Everything that briefing carried forward as still-open (inject-click-opens-property-sheet
+  bug -- since resolved 2026-09-13, see "Resolved" below; `CLAUDE.md` msg/payload convention; router/switch
+  node; TCP send/listen-receive; node-flow-execution docs; deploy-runtime-from-editor) is untouched by today's
+  session -- still open, tracked in this file's own backlog rather than re-listed here.
 - **MQTT real-hardware validation + network follow-ups (in progress, mostly closed).** **Mike's direct request, top priority (2026-08-22).** `http_request`'s config-node migration, canvas migration, Problem 2a's loud-error extension, and its real-hardware GET/POST pass (ESP32, 2026-09-06) are all done and committed (`43f4eec`, `5956a1b`). The wifi_status-vs-mqtt_as ordering-race fix passed real-hardware verification on RP2040 but failed retest on ESP32 (2026-09-05) -- narrowed, not eliminated; **resolved 2026-09-06 as an accepted, documented limitation (Mike's call, not a further fix) -- see the "Resolved" section below.** Current briefing: `http-request-canvas-and-network-followups-briefing.md` (supersedes `wifi-race-fix-verification-and-network-followups-briefing.md`, itself superseding `mqtt-hardware-validation-and-network-followups-briefing.md`) -- fully overtaken by events above; nothing left in this item's own scope needs a next session. ([detail](outstanding-items/mqtt-hardware-validation.md))
 - **Sequencing override set by Mike, 2026-08-20 — fully closed 2026-09-06.** Custom node authoring + docs done 2026-08-20; the narrow docs-only validation session run by Mike 2026-09-06, clean pass (docs sufficient, no gaps); normal backlog order now resumes. ([detail](outstanding-items/sequencing-override.md))
 - **[P5]** **RP2350 (Pico 2 / Pico 2 W) bring-up — in progress, wiring deferred.** Follow-up to the RP2040 bring-up session. **2026-09-06 (plain Pico 2, non-W): MicroPython flash + runtime deploy + boot-to-HELLO confirmed working.** Functional interrupt-flow pass and the memcheck RAM comparison against RP2040's ~209KB-free baseline deferred by Mike until he has time to wire the button. ([detail](outstanding-items/rp2350-bringup.md))
