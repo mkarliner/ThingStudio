@@ -58,7 +58,14 @@ inline, not a fresh check.
 
 ## WiFi provisioning / captive portal
 
-- **[P3]** **Tasmota-style soft-AP + captive-portal WiFi fallback — raised by Mike 2026-08-20, no design/scope yet.** Mike believes MicroPython code for this already exists — worth checking before building from scratch. The new `security: "unmanaged"` config state exists specifically to keep this door open. Refined 2026-09-04: the concrete intent is scan-at-runtime, pick-from-a-dropdown, not just "something else manages it." Needs its own scoping session. ([detail](outstanding-items/wifi-provisioning-captive-portal.md))
+- **[P3]** **Tasmota-style soft-AP + captive-portal WiFi fallback — scoping session held 2026-09-14,
+  no code yet.** Trigger (first-run baseline + opt-in, trusted-networks-only reprovisioning flag),
+  config semantics (`"unmanaged"` unchanged, new separate boolean for the fallback), and credential
+  persistence (own flash file, not NVS) confirmed with Mike. `tinyweb` recommended for the on-device
+  HTTP server (Mike's ask: research existing MicroPython web servers rather than hand-roll one) — not
+  yet confirmed/vendored. Still blocking real implementation: where pre-listener boot-time code
+  actually lives, since no `boot.py`/`main.py` entry point exists in `device-runtime/src` today.
+  ([detail](outstanding-items/wifi-provisioning-captive-portal.md))
 ## Redeploy / runtime
 
 - **[P3]** **machine.reset() before each deploy, for a known-clean device state -- raised by Mike, 2026-09-04, not scoped.** +3s deploy time, likely worth it (Mike's own call). Real candidate to supersede the conditional-teardown approach below rather than complement it -- a full reset gets the same clean-slate effect the "a power cycle fixed it" finding already confirmed, without needing to reason about which redeploys are safe to skip teardown for. Not a one-liner: DEPLOY already persists bytecode to flash, but inserting a reset mid-handshake breaks the current single-connection DEPLOY/DEPLOY_ACK exchange -- needs boot-time auto-resume plus host-tooling changes to tolerate the device dropping off during reset. ([detail](outstanding-items/reset-before-deploy.md))
