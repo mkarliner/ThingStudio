@@ -14,4 +14,5 @@ Nodes based on Peter Hinch's drivers (https://github.com/peterhinch/micropython-
 - Button
 - Switch
 - AADC
+- i2c https://github.com/peterhinch/micropython-async/blob/master/v3/docs/I2C.md
 - maybe more...
