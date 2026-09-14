@@ -20,7 +20,14 @@ inline, not a fresh check.
 
 ## Next up (already flagged before this audit, unstarted)
 
-- **Current handoff doc: `credential-store-implementation-briefing.md`.** Written 2026-09-14 after the
+- **Current handoff doc: `wifi-gate-and-protocol-fix-briefing.md`.** Written 2026-09-14, supersedes
+  `credential-store-implementation-briefing.md` below as the live "what's next" pointer -- covers
+  WiFi-provisioning real-hardware hardening, the new `thingstudio/wifi_gate` node built end-to-end
+  and real-hardware smoke-tested, and a real DEPLOY-encoding protocol bug found and fixed along the
+  way (unrelated to `wifi_gate` itself). One open thread it carries forward from the prior handoff,
+  untouched by this round: the eswitch/ebutton scratch note still sitting in
+  `mikes-questions-and-points.md`'s "## Nodes" section, not yet folded into that tracked item.
+- **Prior handoff doc: `credential-store-implementation-briefing.md`.** Written 2026-09-14 after the
   WiFi/MQTT-broker credential-store feature (Mike's own fresh ask, not drawn from this backlog) landed and
   was committed (`712cded`), plus four rounds of UX fixes from Mike's own hands-on browser testing the same
   day -- opens with what landed, flags one tension worth a quick check-in (an auto-save fix cut against Mike's
