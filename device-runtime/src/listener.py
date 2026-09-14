@@ -73,6 +73,15 @@ try:
 except ImportError:
     os = None
 
+try:
+    import wifi_provision
+except ImportError:
+    # Missing on a board bootstrapped by an older deploy_runtime.py, before this feature's module
+    # was added to CORE_FILES -- degrades to "provisioning feature unavailable," never a boot
+    # failure, same "a board that predates a feature just doesn't have it" contract every other
+    # additive DEPLOY field in this file already follows (flowName/deployId, wifiProvision itself).
+    wifi_provision = None
+
 # Boot-time recovery window (design doc §5, second mitigation layer,
 # "physical-access-independent fallback... not a replacement for" the
 # hardening above): for this short window, kbd_intr is still at its
@@ -190,6 +199,16 @@ try:
     _FLOW_META_PATH = os.getenv("THINGSTUDIO_FLOW_META_PATH", _FLOW_META_PATH)
 except AttributeError:
     pass
+
+# wifi_provision.py's own boot-time marker (wifi-provisioning-captive-portal.md, 2026-09-14):
+# {"selfProvision": bool, "allowReprovision": bool}, or absent -- whether the CURRENTLY deployed
+# flow's wifi_status config says "unmanaged" (wifi-status.ts's computeWifiProvisionMarker(),
+# editor-side). Same env-var-override reasoning as every other THINGSTUDIO_*_PATH above.
+_WIFI_PROVISION_MARKER_PATH = "/_flow_wifi_provision.json"
+try:
+    _WIFI_PROVISION_MARKER_PATH = os.getenv("THINGSTUDIO_WIFI_PROVISION_MARKER_PATH", _WIFI_PROVISION_MARKER_PATH)
+except AttributeError:
+    pass
 _current_flow_name = None
 _current_flow_deploy_id = None
 
@@ -227,6 +246,60 @@ def _read_flow_meta():
         # able to escape" precedent applies here too) -- either way, "no
         # identity recorded" degrades to (None, None), never a crash.
         return None, None
+
+
+def _persist_wifi_provision_marker(marker):
+    """Writes (or clears) wifi_provision.py's own boot-time marker -- called from _handle_deploy
+    right after a flow has successfully started, same timing/best-effort contract
+    _persist_flow_meta() just above uses (a write failure here must not be able to fail a deploy
+    that's already succeeded). `marker` is None for every flow that doesn't reference an "unmanaged"
+    WiFi config -- the file is REMOVED in that case, not left stale from a previous flow that did
+    use this feature (a flow-B redeploy over a flow-A that self-provisioned must not silently keep
+    triggering flow-A's provisioning intent on flow-B's behalf)."""
+    if marker is None:
+        try:
+            os.remove(_WIFI_PROVISION_MARKER_PATH)
+        except OSError:
+            pass  # nothing to remove -- the ordinary case for every flow that never used this feature
+        return
+    try:
+        with open(_WIFI_PROVISION_MARKER_PATH, "w") as f:
+            json.dump(marker, f)
+    except Exception as e:  # noqa: BLE001 -- see _persist_flow_meta's own docstring for why this degrades, not raises
+        print("LISTENER_ERR could not persist wifi provision marker: %r" % (e,))
+
+
+def _read_wifi_provision_marker():
+    try:
+        with open(_WIFI_PROVISION_MARKER_PATH) as f:
+            marker = json.load(f)
+        if not isinstance(marker, dict):
+            return None
+        return marker
+    except (OSError, ValueError):
+        # OSError: no marker (the ordinary case -- this flow doesn't use the feature, or never
+        # deployed one that does). ValueError: malformed JSON -- degrades to "no marker", same
+        # adversarial-input contract _read_flow_meta() applies to its own file.
+        return None
+
+
+def _provision_wifi_if_needed():
+    """Called once from main(), before _resume_flow() -- see that call site's own comment for why
+    the order matters. A missing wifi_provision module (board bootstrapped before this feature
+    existed) or a missing/absent marker (this flow doesn't reference an "unmanaged" WiFi config) both
+    degrade to a no-op, not an error -- this is the ordinary case for every flow/board that isn't
+    using this feature, unchanged from its absence."""
+    if wifi_provision is None:
+        return
+    marker = _read_wifi_provision_marker()
+    if marker is None:
+        return
+    try:
+        wifi_provision.provision_if_needed(marker.get("selfProvision", False), marker.get("allowReprovision", False))
+    except Exception as e:  # noqa: BLE001 -- wifi_provision.py's own header says it should never raise, but boot must
+        # survive even a bug in this brand-new module -- same "adversarial/unexpected input never
+        # allowed to kill boot" reasoning as every other phase in this file.
+        print("LISTENER_ERR wifi provisioning raised unexpectedly: %r -- continuing boot anyway" % (e,))
 
 
 def _chip_type():
@@ -359,6 +432,7 @@ async def _handle_deploy(msg):
             del sys.modules["_flow"]
         import _flow  # noqa: F401 -- executes _flow's top-level code, which calls runtime.spawn(...)
         _persist_flow_meta(msg["flowName"], msg["deployId"])
+        _persist_wifi_provision_marker(msg.get("wifiProvision"))
         _set_current_flow(msg["flowName"], msg["deployId"])
         _deploy_generation += 1
         gc.collect()
@@ -584,6 +658,15 @@ def main():
     flow_dir = "" if flow_dir in ("", "/") else flow_dir
     if flow_dir not in sys.path:
         sys.path.insert(0, flow_dir)
+
+    # WiFi self-provisioning (wifi-provisioning-captive-portal.md, 2026-09-14) -- BEFORE
+    # _resume_flow(), deliberately: _resume_flow()'s own `import _flow` executes the persisted
+    # flow's generated wifiSetupStatement() code, which for an "unmanaged" WiFi config brings the
+    # station interface up but issues no .connect() call of its own (wifi-status.ts's own header) --
+    # this call is what actually gets it connected first, using a previously-learned credential or,
+    # on first run, the captive portal. A no-op for every flow/board not using this feature (see
+    # _provision_wifi_if_needed's own docstring).
+    _provision_wifi_if_needed()
 
     _resume_flow()
 

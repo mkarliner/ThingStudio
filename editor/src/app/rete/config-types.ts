@@ -49,13 +49,17 @@
 //     connection" now has to be a flow author's own labeled choice
 //     (create/pick an "unmanaged" config) rather than a silent omission.
 //     Deliberately kept open, not removed by Option B: a device that
-//     provisions its own WiFi outside of any deployed flow (e.g. a
-//     Tasmota-style captive-portal/soft-AP fallback that saves credentials
-//     to NVS on first boot -- raised by Mike 2026-08-20, not built or
-//     scoped anywhere yet, see outstanding-items.md) is exactly the real
-//     case this state exists for -- a flow's network nodes still need a
-//     way to say "someone else manages this connection" without that way
-//     being an easy-to-miss blank field.
+//     provisions its own WiFi outside of any deployed flow (a soft-AP/
+//     captive-portal fallback, raised by Mike 2026-08-20 -- BUILT
+//     2026-09-14, device-runtime/src/wifi_provision.py, see
+//     outstanding-items/wifi-provisioning-captive-portal.md) is exactly
+//     the real case this state exists for -- a flow's network nodes still
+//     need a way to say "someone else manages this connection" without
+//     that way being an easy-to-miss blank field. The new
+//     `allowReprovisioning` field below is what actually opts a config
+//     into this feature's fallback-reprovisioning behavior; "unmanaged"
+//     alone (this field) is what tells the compiler this feature is in
+//     play for the flow at all (computeWifiProvisionMarker(), wifi-status.ts).
 
 // Credential storage (docs/working-notes/outstanding-items/
 // credential-storage-design.md, confirmed with Mike 2026-09-13): a WiFi
@@ -79,12 +83,22 @@ export interface ConfigFieldDescriptor {
   /** Must match the key this field is stored under in a config's own `properties`. */
   name: string;
   label: string;
-  kind: "text" | "password" | "number" | "select" | "credential";
+  kind: "text" | "password" | "number" | "select" | "credential" | "boolean";
   /** Only meaningful when `kind` is "select" -- the fixed set of allowed values. */
   options?: { value: string; label: string }[];
   /** Only meaningful when `kind` is "credential" -- which credential-store
    * namespace this field resolves against (credential-types.ts). */
   credentialType?: "wifi" | "mqtt-broker";
+  /** Short plain-text note rendered under the field, any kind -- added for
+   * "boolean" (`allowReprovisioning` below) specifically because a checkbox's
+   * label alone can't carry the security caveat Mike asked for (a loud
+   * warning, not a quiet default-off setting easy to flip without reading) --
+   * see docs/working-notes/outstanding-items/wifi-provisioning-captive-
+   * portal.md's "Trigger condition" decision. Generic on the descriptor
+   * (not hardcoded to this one field) so any future field can use it the
+   * same way, matching this file's own established "derive from field/
+   * option data, don't hardcode to WiFi" convention. */
+  help?: string;
 }
 
 export interface ConfigTypeDescriptor {
@@ -118,8 +132,25 @@ export const CONFIG_TYPES: Record<string, ConfigTypeDescriptor> = {
           { value: "unmanaged", label: "Unmanaged (device connects itself, e.g. captive portal)" },
         ],
       },
+      {
+        // wifi-provisioning-captive-portal.md (2026-09-14, confirmed with Mike): kept as its own
+        // field rather than folded into `security` above -- same reasoning wifi-status.ts's own
+        // `deferToMqtt` is kept separate from `security` (a flow author's declared intent vs. a
+        // second, independently-toggled choice). Only meaningful when security is "unmanaged" --
+        // computeWifiProvisionMarker() (wifi-status.ts) only ever reads it in that branch -- but
+        // always shown, same as `security` itself; no conditional-field-visibility mechanism exists
+        // in this generic per-kind loop yet, not worth building for one field.
+        name: "allowReprovisioning",
+        label: "Allow reprovisioning on connect failure",
+        kind: "boolean",
+        help:
+          "Off by default: the device only opens its setup AP on first run. Turning this on lets " +
+          "it reopen that AP any time WiFi drops, not just once -- only do this on a trusted, " +
+          "physically-controlled network. Anyone in radio range while WiFi is down could otherwise " +
+          "connect to the AP and redirect this device to a different network.",
+      },
     ],
-    defaults: { credentialName: "", security: "password" },
+    defaults: { credentialName: "", security: "password", allowReprovisioning: false },
     // The credential's own name doubles as the summary -- Fork #1 (the
     // design doc) already makes it a human-chosen nickname for a real
     // network ("home-wifi"), so there's no separate SSID to show anymore.

@@ -43,7 +43,11 @@ _RUNTIME_SRC = os.path.join(_REPO_ROOT, "device-runtime", "src")
 # device-runtime/src/{...}.py, copied as-is -- everything listener.py
 # imports at module scope. Same file list and order test/hil/README.md's
 # step 4 documents.
-CORE_FILES = ["errors.py", "cbor.py", "framing.py", "messages.py", "protocol.py", "runtime.py"]
+# wifi_provision.py added 2026-09-14 -- listener.py's own guarded `import wifi_provision` degrades
+# to a no-op on a board bootstrapped before this line existed (its own header comment), so an
+# already-deployed board isn't broken by this list changing; it just needs a re-run of this script
+# to pick up the new feature, same as any other core-file addition.
+CORE_FILES = ["errors.py", "cbor.py", "framing.py", "messages.py", "protocol.py", "runtime.py", "wifi_provision.py"]
 
 # Copied separately, installed AS main.py -- see main() below.
 LISTENER_FILE = "listener.py"

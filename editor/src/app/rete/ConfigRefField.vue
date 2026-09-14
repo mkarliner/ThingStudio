@@ -129,8 +129,15 @@
           <select v-if="f.kind === 'select'" v-model="draft[f.name] as any">
             <option v-for="opt in f.options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
           </select>
+          <input v-else-if="f.kind === 'boolean'" type="checkbox" v-model="draft[f.name] as any" />
           <input v-else :type="f.kind === 'password' ? 'password' : f.kind === 'number' ? 'number' : 'text'" v-model="draft[f.name] as any" />
         </label>
+        <!-- Rendered as a sibling of the field-row above, not inside it -- .field-row is a flex row
+             (one field per line, this file's own 2026-09-14 fix), and a multi-sentence warning
+             doesn't belong crammed into that row. Generic on f.help, not specific to
+             allowReprovisioning -- see config-types.ts's own doc comment on why help exists on the
+             descriptor at all (Mike's "loud warning, not a quiet checkbox" ask for that one field). -->
+        <p v-if="f.help" class="field-help">{{ f.help }}</p>
       </template>
       <div class="config-edit-actions">
         <button type="button" @click="closeEdit">Cancel</button>
@@ -150,17 +157,21 @@
           v-model="newCredentialDraft[cf.name] as any"
         />
       </label>
-      <label v-for="f in otherFields" :key="f.name" class="field-row">
-        <span class="field-label">{{ f.label }}</span>
-        <select v-if="f.kind === 'select'" v-model="newConfigDraft[f.name] as any">
-          <option v-for="opt in f.options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-        </select>
-        <input
-          v-else
-          :type="f.kind === 'password' ? 'password' : f.kind === 'number' ? 'number' : 'text'"
-          v-model="newConfigDraft[f.name] as any"
-        />
-      </label>
+      <template v-for="f in otherFields" :key="f.name">
+        <label class="field-row">
+          <span class="field-label">{{ f.label }}</span>
+          <select v-if="f.kind === 'select'" v-model="newConfigDraft[f.name] as any">
+            <option v-for="opt in f.options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+          </select>
+          <input v-else-if="f.kind === 'boolean'" type="checkbox" v-model="newConfigDraft[f.name] as any" />
+          <input
+            v-else
+            :type="f.kind === 'password' ? 'password' : f.kind === 'number' ? 'number' : 'text'"
+            v-model="newConfigDraft[f.name] as any"
+          />
+        </label>
+        <p v-if="f.help" class="field-help">{{ f.help }}</p>
+      </template>
       <p v-if="createError" class="field-error">{{ createError }}</p>
       <div class="config-edit-actions">
         <button type="button" :disabled="creating" @click="saveNew">{{ creating ? "saving..." : "Save" }}</button>
@@ -503,6 +514,19 @@ watch(
 .config-edit-actions button:disabled {
   opacity: 0.6;
   cursor: default;
+}
+.field-help {
+  /* Warning-box styling, not plain muted help text -- Mike's explicit ask for allowReprovisioning's
+     own field (config-types.ts): "a loud warning next to the checkbox, not a quiet default-off
+     setting that's easy to flip without reading." Generic on any field.help, not hardcoded to this
+     one field (config-types.ts's own doc comment). */
+  background: #3a2f1a;
+  border: 1px solid #7a5a1a;
+  color: #e0c080;
+  font-size: 11px;
+  padding: 6px 8px;
+  border-radius: 3px;
+  margin: 0 0 6px 0;
 }
 .field-error {
   color: #e08080;

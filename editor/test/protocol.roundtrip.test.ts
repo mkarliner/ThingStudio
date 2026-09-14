@@ -48,6 +48,9 @@ const SAMPLE_MESSAGES: Message[] = [
     // that degrade, not just the happy path.
     flowName: null,
     deployId: null,
+    // wifiProvision (added 2026-09-14, wifi-provisioning-captive-portal.md): same "an old editor
+    // simply doesn't send this" degrade as flowName/deployId just above.
+    wifiProvision: null,
   },
   {
     // Second DEPLOY variant: a current editor, which always has a name
@@ -58,6 +61,10 @@ const SAMPLE_MESSAGES: Message[] = [
     staticData: new Uint8Array([1, 2, 3]),
     flowName: "untitled flow",
     deployId: "9d8c7b6a-5e4f-3d2c-1b0a-f9e8d7c6b5a4",
+    // wifiProvision's happy path (see above for the null/"absent" case): a flow whose WiFi config is
+    // "unmanaged" with the reprovisioning fallback left off, the default this feature ships with
+    // (wifi-provisioning-captive-portal.md's confirmed trigger semantics).
+    wifiProvision: { selfProvision: true, allowReprovision: false },
   },
   { type: "DEPLOY_ACK", freeFlashBytes: 3_400_000, freeRamBytes: 160_000 },
   { type: "DEPLOY_ERROR", code: "insufficient_space", message: "flow needs 12000 bytes flash, 8000 available" },
@@ -106,7 +113,14 @@ describe("message CBOR round-trip (codec.ts, per message type)", () => {
   });
 
   it("bytes fields round-trip as native CBOR byte strings, not base64 text", () => {
-    const msg: Message = { type: "DEPLOY", bytecode: new Uint8Array([9, 9, 9]), staticData: new Uint8Array([1]), flowName: null, deployId: null };
+    const msg: Message = {
+      type: "DEPLOY",
+      bytecode: new Uint8Array([9, 9, 9]),
+      staticData: new Uint8Array([1]),
+      flowName: null,
+      deployId: null,
+      wifiProvision: null,
+    };
     const body = encodeMessageBody(msg);
     const raw = cborDecode(body) as { bytecode: unknown };
     expect(raw.bytecode).toBeInstanceOf(Uint8Array);
@@ -211,6 +225,23 @@ describe("codec.ts rejects valid CBOR with the wrong shape (per message type)", 
     const decoded = decodeMessageBody(MessageType.DEPLOY, body);
     expect((decoded as { flowName: unknown }).flowName).toBeNull();
     expect((decoded as { deployId: unknown }).deployId).toBeNull();
+  });
+
+  it("accepts DEPLOY with wifiProvision entirely absent (older-editor case)", () => {
+    const body = cborEncode({ bytecode: new Uint8Array([1, 2]), staticData: new Uint8Array([]) });
+    const decoded = decodeMessageBody(MessageType.DEPLOY, body);
+    expect((decoded as { wifiProvision: unknown }).wifiProvision).toBeNull();
+  });
+
+  it("defaults wifiProvision's own two fields to false when absent inside a present map", () => {
+    const body = cborEncode({ bytecode: new Uint8Array([1, 2]), staticData: new Uint8Array([]), wifiProvision: {} });
+    const decoded = decodeMessageBody(MessageType.DEPLOY, body) as { wifiProvision: { selfProvision: boolean; allowReprovision: boolean } };
+    expect(decoded.wifiProvision).toEqual({ selfProvision: false, allowReprovision: false });
+  });
+
+  it("rejects DEPLOY with a non-map wifiProvision", () => {
+    const body = cborEncode({ bytecode: new Uint8Array([1, 2]), staticData: new Uint8Array([]), wifiProvision: "unmanaged" });
+    expect(() => decodeMessageBody(MessageType.DEPLOY, body)).toThrow(MessageDecodeError);
   });
 
   it("rejects DEPLOY with a non-bytes field", () => {

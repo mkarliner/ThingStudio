@@ -157,6 +157,16 @@ export interface DeployMessage {
    */
   readonly flowName: string | null;
   readonly deployId: string | null;
+  /**
+   * wifi_provision.py's own boot-time marker (device-runtime/src/wifi_provision.py,
+   * wifi-provisioning-captive-portal.md, 2026-09-14) -- computed by
+   * wifi-status.ts's computeWifiProvisionMarker() from the flow's own wifi_status node config, not
+   * authored directly. null for every flow that doesn't reference an "unmanaged" WiFi config (the
+   * ordinary case, unaffected by this feature's existence) -- same additive-field/nullable
+   * convention as flowName/deployId above, so an old device-runtime that predates this feature
+   * simply ignores the key.
+   */
+  readonly wifiProvision: { selfProvision: boolean; allowReprovision: boolean } | null;
 }
 
 /**

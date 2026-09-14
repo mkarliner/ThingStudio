@@ -260,6 +260,42 @@ export function resolveFlowWifiCredentials(
   return resolveWifiCredentials(wifiNodes[0]!.properties, ctx, "wifi_status");
 }
 
+/** wifi-provisioning-captive-portal.md (2026-09-14, confirmed with Mike): computes the
+ * device-runtime marker DEPLOY carries so wifi_provision.py knows, before it ever imports the
+ * deployed flow's own code, whether this flow wants boot-time self-provisioning at all. Returns
+ * null when there's no (or more than one) wifi_status node, its wifiConfigId doesn't resolve, or
+ * its config's `security` isn't "unmanaged" (every other security value means the flow itself
+ * supplies real credentials, so this feature is simply not in play) -- a null marker is what tells
+ * DEPLOY to omit the field entirely (messages.ts's own additive-field convention), which in turn
+ * tells wifi_provision.py's own listener.py caller to clear any previously-persisted marker rather
+ * than carry forward a PREVIOUS flow's provisioning intent (listener.py's own
+ * _persist_wifi_provision_marker() doc comment).
+ *
+ * Deliberately takes a plain GraphData, not a CodegenContext -- called from main.ts alongside (not
+ * from inside) compile.ts's own codegen pass, so compile.ts itself never needs to import a specific
+ * node type by name (this file's own header already flags that as the reason CredentialRefField
+ * lives one layer away from ConfigRefField; the same "generic compiler, node-type-specific logic
+ * stays in node-library" layering applies here in reverse -- see main.ts's own call site). The
+ * "exactly one wifi_status node" ambiguity (0 or >1) is deliberately NOT an error here -- a flow
+ * with a genuinely ambiguous WiFi setup already gets a real CompileError from
+ * resolveFlowWifiCredentials() during the normal compile a Deploy click always runs first; this
+ * function only ever runs after that compile has already succeeded (main.ts's own call order), so
+ * reaching an ambiguous case here would mean compile.ts's own check has a bug, not that this
+ * function needs to duplicate it. */
+export function computeWifiProvisionMarker(graphData: { nodes: GraphNode[]; configs?: { id: string; properties: Record<string, unknown> }[] }): {
+  selfProvision: boolean;
+  allowReprovision: boolean;
+} | null {
+  const wifiNodes = graphData.nodes.filter((n) => n.type === "thingstudio/wifi_status");
+  if (wifiNodes.length !== 1) return null;
+  const configId = wifiNodes[0]!.properties.wifiConfigId;
+  if (typeof configId !== "string" || !configId) return null;
+  const config = (graphData.configs ?? []).find((c) => c.id === configId);
+  if (!config) return null;
+  if (config.properties.security !== "unmanaged") return null;
+  return { selfProvision: true, allowReprovision: config.properties.allowReprovisioning === true };
+}
+
 /** Whether this flow has any node that manages its own independent WiFi
  * connection (today: mqtt_as, backing mqtt_publish/mqtt_subscribe) --
  * shared by every `wifiSetupStatement()` caller (this file's own

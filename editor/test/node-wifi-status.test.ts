@@ -37,7 +37,7 @@ import { CompileError } from "../src/compiler/errors.js";
 import type { GraphData, GraphNode } from "../src/compiler/graph.js";
 import type { CodegenContext } from "../src/compiler/node-definition.js";
 import { buildRegistry } from "../src/node-library/registry.js";
-import { wifiStatusNode } from "../src/node-library/wifi-status.js";
+import { computeWifiProvisionMarker, wifiStatusNode } from "../src/node-library/wifi-status.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -473,5 +473,57 @@ describe("thingstudio/wifi_status node", () => {
       links: [],
     };
     expect(() => compile(graph, buildRegistry())).toThrow(/referenced config "no-such-config" not found/);
+  });
+});
+
+// computeWifiProvisionMarker (wifi-provisioning-captive-portal.md, 2026-09-14) -- computed by
+// main.ts alongside compile(), not from inside it (this function's own doc comment explains why),
+// so tested against plain GraphData-shaped objects directly rather than through a full compile().
+describe("computeWifiProvisionMarker", () => {
+  it("returns null when there is no wifi_status node at all", () => {
+    expect(computeWifiProvisionMarker({ nodes: [] })).toBeNull();
+  });
+
+  it("returns null when more than one wifi_status node is present (ambiguous, left to compile()'s own CompileError)", () => {
+    const graph = {
+      nodes: [
+        { id: "1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "w1" } },
+        { id: "2", type: "thingstudio/wifi_status", properties: { wifiConfigId: "w1" } },
+      ],
+      configs: [{ id: "w1", properties: { security: "unmanaged" } }],
+    };
+    expect(computeWifiProvisionMarker(graph)).toBeNull();
+  });
+
+  it("returns null when the resolved config's security is not \"unmanaged\"", () => {
+    const graph = {
+      nodes: [{ id: "1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "w1" } }],
+      configs: [{ id: "w1", properties: { security: "password", ssid: "home", password: "x" } }],
+    };
+    expect(computeWifiProvisionMarker(graph)).toBeNull();
+  });
+
+  it("returns selfProvision:true, allowReprovision:false for an unmanaged config with the fallback off (the default)", () => {
+    const graph = {
+      nodes: [{ id: "1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "w1" } }],
+      configs: [{ id: "w1", properties: { security: "unmanaged", allowReprovisioning: false } }],
+    };
+    expect(computeWifiProvisionMarker(graph)).toEqual({ selfProvision: true, allowReprovision: false });
+  });
+
+  it("carries allowReprovision:true through when the config's own field is set", () => {
+    const graph = {
+      nodes: [{ id: "1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "w1" } }],
+      configs: [{ id: "w1", properties: { security: "unmanaged", allowReprovisioning: true } }],
+    };
+    expect(computeWifiProvisionMarker(graph)).toEqual({ selfProvision: true, allowReprovision: true });
+  });
+
+  it("returns null when wifiConfigId doesn't resolve to any config (dangling reference)", () => {
+    const graph = {
+      nodes: [{ id: "1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "no-such-config" } }],
+      configs: [],
+    };
+    expect(computeWifiProvisionMarker(graph)).toBeNull();
   });
 });

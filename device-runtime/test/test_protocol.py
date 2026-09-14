@@ -52,6 +52,9 @@ SAMPLE_MESSAGES = [
         # exactly that degrade, not just the happy path.
         "flowName": None,
         "deployId": None,
+        # wifiProvision (added 2026-09-14, wifi-provisioning-captive-portal.md): same "an old editor
+        # simply doesn't send this" degrade as flowName/deployId just above.
+        "wifiProvision": None,
     },
     {
         # Second DEPLOY variant: a current editor, which always has a
@@ -62,6 +65,10 @@ SAMPLE_MESSAGES = [
         "staticData": bytes([1, 2, 3]),
         "flowName": "untitled flow",
         "deployId": "9d8c7b6a-5e4f-3d2c-1b0a-f9e8d7c6b5a4",
+        # wifiProvision's happy path (see above for the None/"absent" case): a flow whose WiFi config
+        # is "unmanaged" with the reprovisioning fallback left off, the default this feature ships
+        # with (wifi-provisioning-captive-portal.md's confirmed trigger semantics).
+        "wifiProvision": {"selfProvision": True, "allowReprovision": False},
     },
     {"type": "DEPLOY_ACK", "freeFlashBytes": 3400000, "freeRamBytes": 160000},
     {"type": "DEPLOY_ERROR", "code": "insufficient_space", "message": "flow needs 12000 bytes flash, 8000 available"},

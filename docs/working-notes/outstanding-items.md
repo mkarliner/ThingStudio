@@ -56,16 +56,6 @@ inline, not a fresh check.
 - **[POST-MVP]** **Templating UI nodes for displays — new item, 2026-09-08, split from the SSD1306 ask.** Generic way to template/lay out what gets drawn to a display node. Not scoped, expected to be hard (Mike's characterization).
 - **[POST-MVP]** **Threading / multicore support, possibly an Exec node — new item, 2026-09-08.** Not scoped.
 
-## WiFi provisioning / captive portal
-
-- **[P3]** **Tasmota-style soft-AP + captive-portal WiFi fallback — scoping session held 2026-09-14,
-  no code yet.** Trigger (first-run baseline + opt-in, trusted-networks-only reprovisioning flag),
-  config semantics (`"unmanaged"` unchanged, new separate boolean for the fallback), and credential
-  persistence (own flash file, not NVS) confirmed with Mike. `tinyweb` recommended for the on-device
-  HTTP server (Mike's ask: research existing MicroPython web servers rather than hand-roll one) — not
-  yet confirmed/vendored. Still blocking real implementation: where pre-listener boot-time code
-  actually lives, since no `boot.py`/`main.py` entry point exists in `device-runtime/src` today.
-  ([detail](outstanding-items/wifi-provisioning-captive-portal.md))
 ## Redeploy / runtime
 
 - **[P3]** **machine.reset() before each deploy, for a known-clean device state -- raised by Mike, 2026-09-04, not scoped.** +3s deploy time, likely worth it (Mike's own call). Real candidate to supersede the conditional-teardown approach below rather than complement it -- a full reset gets the same clean-slate effect the "a power cycle fixed it" finding already confirmed, without needing to reason about which redeploys are safe to skip teardown for. Not a one-liner: DEPLOY already persists bytecode to flash, but inserting a reset mid-handshake breaks the current single-connection DEPLOY/DEPLOY_ACK exchange -- needs boot-time auto-resume plus host-tooling changes to tolerate the device dropping off during reset. ([detail](outstanding-items/reset-before-deploy.md))
@@ -151,6 +141,31 @@ Items below are done and verified (or resolved as a decision); kept here as one-
 paragraphs in the active sections above, per the same "index, not a copy" principle as this whole file. Full
 reasoning stays at each pointer's target, nothing here was deleted.
 
+- **Tasmota-style soft-AP + captive-portal WiFi provisioning** -- built and verified 2026-09-14, same
+  day as the scoping session. A flow whose WiFi config is `"unmanaged"` now makes the device open a
+  soft AP (`Thingstudio-Setup-XXXX`, WPA2, default password `thingstudio`) plus a catch-all DNS
+  responder and a hand-rolled HTTP form on first boot with no stored credential; a saved credential is
+  reused on every later boot without reopening the portal. A new per-config `allowReprovisioning`
+  field (off by default, warned in its own help text) opts into reopening the portal on a later
+  connect failure too -- trusted-networks-only, per Mike's own caveat. Resolved the scoping session's
+  own open architectural question (no pre-listener boot-time code existed anywhere in this codebase)
+  by adding a new editor-computed, DEPLOY-envelope-level `wifiProvision` marker
+  (`computeWifiProvisionMarker()`, `wifi-status.ts`) -- distinct from the flow's own bytecode --
+  persisted device-side and read by `listener.py`'s `main()` before `_resume_flow()`. Web server:
+  hand-rolled, not the scoping session's own `tinyweb` recommendation -- reversed during
+  implementation, matching `cbor.py`'s small-native-implementation precedent for a ~2-route surface;
+  flagged explicitly as a reversal, not a silent change. AP password is settable in the persisted-
+  state schema (`get_ap_password`/`set_ap_password`) but has no editor-side push mechanism yet --
+  schema kept ready for it rather than a dead end, per this file's own no-premature-optimization/
+  no-dead-end convention. No `_RUNTIME_VERSION`/`EDITOR_TARGET_VERSION` bump: the new `wifiProvision`
+  DEPLOY field and `wifi_provision.py` module are both purely additive -- an old editor omitting the
+  field degrades to `self_provision: false` (today's behavior, unchanged), and an old runtime without
+  `wifi_provision.py` simply ignores the field, so neither direction can produce a flow the other
+  side runs incorrectly. Verified: real MicroPython unix-port suite (19/19 new
+  `test_wifi_provision.py` tests, full suite otherwise green), editor `tsc --noEmit` clean, and a
+  fresh `npm ci` + vitest run (448/448) in an isolated copy of `editor/`. Not yet done: Mike's own
+  hands-on hardware test of the actual captive-portal flow on a real board.
+  ([detail](outstanding-items/wifi-provisioning-captive-portal.md))
 - **Named credential store for WiFi/MQTT-broker secrets** -- built 2026-09-13, same day as the design
   decisions. WiFi/MQTT-broker config nodes now hold only `credentialName` (+ `security` for WiFi); the real
   secret values live in a new backend-owned `~/.thingstudio/credentials/<type>/<name>.json` store, resolved

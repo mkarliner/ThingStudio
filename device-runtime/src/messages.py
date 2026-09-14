@@ -205,6 +205,37 @@ def _expect_one_of(obj, key, name, allowed):
     return v
 
 
+def _expect_optional_bool(obj, key, name):
+    """Same "missing/None both mean not provided" convention as _expect_optional_string -- used for
+    wifiProvision's own two fields below, and for wifiProvision itself being absent (an editor
+    predating this feature never sends it, same additive-field convention every DEPLOY field since
+    flowName/deployId already follows)."""
+    v = obj.get(key)
+    if v is None:
+        return None
+    if not isinstance(v, bool):
+        _fail(name, 'field "%s" must be a bool or absent/None, got %r' % (key, type(v)))
+    return v
+
+
+def _expect_optional_wifi_provision(obj, key, name):
+    """DEPLOY's own optional `wifiProvision` field (added 2026-09-14, wifi-provisioning-captive-
+    portal.md) -- {selfProvision, allowReprovision} or None/absent. Computed editor-side by
+    wifi-status.ts's computeWifiProvisionMarker() from the flow's own wifi_status node config, not
+    authored directly -- an old editor that predates this feature simply never sends the key, which
+    must degrade to "this feature is not in play for this flow," not a MessageDecodeError, same
+    additive-field convention flowName/deployId already established here."""
+    v = obj.get(key)
+    if v is None:
+        return None
+    if not isinstance(v, dict):
+        _fail(name, 'field "%s" must be a map or absent/None, got %r' % (key, type(v)))
+    return {
+        "selfProvision": _expect_optional_bool(v, "selfProvision", name) or False,
+        "allowReprovision": _expect_optional_bool(v, "allowReprovision", name) or False,
+    }
+
+
 def _validate_hello(obj, name):
     return {
         "chipType": _expect_string(obj, "chipType", name),
@@ -235,6 +266,10 @@ def _validate_deploy(obj, name):
         # additive-field convention.
         "flowName": _expect_optional_string(obj, "flowName", name),
         "deployId": _expect_optional_string(obj, "deployId", name),
+        # wifi_provision.py's own boot-time marker, same optional/additive
+        # convention as flowName/deployId above -- see
+        # _expect_optional_wifi_provision's own doc comment.
+        "wifiProvision": _expect_optional_wifi_provision(obj, "wifiProvision", name),
     }
 
 

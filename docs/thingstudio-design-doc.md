@@ -130,6 +130,8 @@ The transport authenticates before accepting a flow write. The direct/WebSerial-
 
 **v1 mechanism**: HMAC-SHA256 over a shared secret, with a persisted monotonic counter in place of a random challenge nonce. `HELLO` reserves `authRequired`/`authScheme` fields even though v1 ships `authRequired: false`. Full mechanism and what's deferred (WiFi pairing/provisioning, the backend's own editor-facing auth, confidentiality/TLS): `working-notes/transport-auth-design.md`.
 
+WiFi self-provisioning (built 2026-09-14): a flow whose WiFi config is set to "unmanaged" makes the device open its own soft-AP captive portal on first boot to collect real network credentials, instead of the flow needing them baked in. That portal doesn't reopen on its own if the saved credential later stops working — an opt-in per-config flag is needed for that — because reopening an unauthenticated AP any time WiFi drops is itself an attack surface: anyone in radio range during the drop could connect and redirect the device to a different network. Detail: `working-notes/outstanding-items/wifi-provisioning-captive-portal.md`.
+
 The function node (§6) is unsandboxed; it sits inside the same deploy-access trust perimeter as any native node.
 
 ## 10. Phased roadmap

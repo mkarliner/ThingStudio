@@ -144,6 +144,33 @@ function expectOptionalString(obj: Record<string, unknown>, key: string, name: s
   return v;
 }
 
+/** Same "missing/null both mean not provided" convention as expectOptionalString -- used for
+ * wifiProvision's own two fields below, and for wifiProvision itself being absent (mirrors
+ * messages.py's _expect_optional_bool). */
+function expectOptionalBool(obj: Record<string, unknown>, key: string, name: string): boolean | null {
+  const v = obj[key];
+  if (v === undefined || v === null) return null;
+  if (typeof v !== "boolean") fail(name, `field "${key}" must be a bool or absent/null, got ${typeof v}`);
+  return v;
+}
+
+/** DEPLOY's own optional `wifiProvision` field (messages.ts's DeployMessage doc comment; mirrors
+ * messages.py's _expect_optional_wifi_provision) -- {selfProvision, allowReprovision} or null/absent. */
+function expectOptionalWifiProvision(
+  obj: Record<string, unknown>,
+  key: string,
+  name: string,
+): { selfProvision: boolean; allowReprovision: boolean } | null {
+  const v = obj[key];
+  if (v === undefined || v === null) return null;
+  if (typeof v !== "object" || Array.isArray(v)) fail(name, `field "${key}" must be a map or absent/null, got ${typeof v}`);
+  const inner = v as Record<string, unknown>;
+  return {
+    selfProvision: expectOptionalBool(inner, "selfProvision", name) ?? false,
+    allowReprovision: expectOptionalBool(inner, "allowReprovision", name) ?? false,
+  };
+}
+
 /** Same as expectString, but the value must also be one of `allowed` --
  * used for NODE_STATUS's fixed state enum (mirrors messages.py's
  * _expect_one_of). A device sending a state string outside this list is
@@ -220,6 +247,7 @@ function validateDeploy(obj: Record<string, unknown>): Omit<DeployMessage, "type
     staticData: expectBytes(obj, "staticData", "DEPLOY"),
     flowName: expectOptionalString(obj, "flowName", "DEPLOY"),
     deployId: expectOptionalString(obj, "deployId", "DEPLOY"),
+    wifiProvision: expectOptionalWifiProvision(obj, "wifiProvision", "DEPLOY"),
   };
 }
 

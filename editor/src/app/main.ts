@@ -111,6 +111,7 @@
 import { createApp, nextTick, watch } from "vue";
 import { compile } from "../compiler/compile.js";
 import type { NodeLineRange } from "../compiler/compile.js";
+import { computeWifiProvisionMarker } from "../node-library/wifi-status.js";
 import { buildRegistry } from "../node-library/registry.js";
 import { mergeCustomNodeRegistry } from "../node-library/custom-node.js";
 import { WebSerialTransport, type WebSerialPort, type DeviceTransport, type TransportEvents } from "../protocol/transport.js";
@@ -795,6 +796,15 @@ const builtInRegistry = buildRegistry();
 // without re-plumbing it through another layer.
 let lastNodeLineRanges: NodeLineRange[] = [];
 
+// wifi_provision.py's own boot-time marker (wifi-provisioning-captive-portal.md, 2026-09-14) --
+// stashed here the same way lastNodeLineRanges is just above (not threaded through
+// refreshPreview()'s own return value), computed once per compile and read back by the Deploy
+// handler's transport.send({type: "DEPLOY", ...}) call further down this file. null for every flow
+// that doesn't reference an "unmanaged" WiFi config -- see computeWifiProvisionMarker's own doc
+// comment (wifi-status.ts) for why this is computed here, alongside compile(), rather than inside
+// compile.ts itself.
+let lastWifiProvision: { selfProvision: boolean; allowReprovision: boolean } | null = null;
+
 function currentSource(): string {
   const graphData = toGraphData(reteEditor, [...configsStore.value.values()]);
   // mergeCustomNodeRegistry throws (CustomNodeDescriptorError) if two
@@ -806,6 +816,7 @@ function currentSource(): string {
   const registry = mergeCustomNodeRegistry(builtInRegistry, listCustomNodeDefinitions());
   const { source, nodeLineRanges } = compile(graphData, registry);
   lastNodeLineRanges = nodeLineRanges;
+  lastWifiProvision = computeWifiProvisionMarker(graphData);
   return source;
 }
 
@@ -1426,7 +1437,16 @@ el("btnDeploy").addEventListener("click", async () => {
     const flowName = currentFlowNameInput();
     logLine(`[deploying "${flowName}" as ${deployId}]`, "");
     const ackP = waitForMessage((m) => m.type === "DEPLOY_ACK" || m.type === "DEPLOY_ERROR", DEPLOY_TIMEOUT_MS);
-    await transport.send({ type: "DEPLOY", bytecode: mpyBytes, staticData: new Uint8Array(0), flowName, deployId });
+    // lastWifiProvision was computed alongside this same compile, by the currentSource() call
+    // refreshPreview() (above) just made -- see that field's own doc comment.
+    await transport.send({
+      type: "DEPLOY",
+      bytecode: mpyBytes,
+      staticData: new Uint8Array(0),
+      flowName,
+      deployId,
+      wifiProvision: lastWifiProvision,
+    });
     try {
       const result = await ackP;
       if (result.type === "DEPLOY_ERROR") {
