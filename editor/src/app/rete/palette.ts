@@ -79,6 +79,7 @@ export type NodeKind =
   | "timer"
   | "interrupt"
   | "wifi_status"
+  | "wifi_gate"
   | "udp_send"
   | "udp_receive"
   | "http_request"
@@ -126,6 +127,11 @@ export const NODE_PALETTE: Record<NodeKind, KindStyle> = {
   interrupt: { color: "#8a5a1f", bgcolor: "#3f2e14", icon: "⚡", label: "interrupt", group: "hardware", priority: 10 },
   // Teal -- a status/radio glyph ("◉") for the polling connectivity check.
   wifi_status: { color: "#1f6e6e", bgcolor: "#123f3f", icon: "◉", label: "wifi status", group: "network", priority: 10 },
+  // Teal-green, distinct from wifi_status's own teal -- same family (both
+  // WiFi-link-state related) but visually distinguishable. "⊘" (circled
+  // slash) for the pass-or-drop gating behavior, added 2026-09-14 (wifi-
+  // gate.ts's own header has the full scope story).
+  wifi_gate: { color: "#1f8a5a", bgcolor: "#123f2a", icon: "⊘", label: "wifi gate", group: "network", priority: 11 },
   // Blue/green send-receive pair, up/down arrows echoing direction of
   // travel the same way interrupt's "⚡" echoes its own trigger mechanism.
   udp_send: { color: "#3b5c8a", bgcolor: "#1f2e4a", icon: "↑", label: "udp send", group: "network", priority: 21 },

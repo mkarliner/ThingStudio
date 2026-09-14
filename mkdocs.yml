@@ -54,6 +54,7 @@ nav:
           - debug: nodes/debug.md
       - Network:
           - wifi status: nodes/wifi-status.md
+          - wifi gate: nodes/wifi-gate.md
           - udp receive: nodes/udp-receive.md
           - mqtt subscribe: nodes/mqtt-subscribe.md
           - http request: nodes/http-request.md

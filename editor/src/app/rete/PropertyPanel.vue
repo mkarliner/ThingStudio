@@ -199,6 +199,10 @@
         <p class="hint">Required -- won't compile without one. Pick "unmanaged" on the config if this flow intentionally rides on a connection managed outside it (e.g. a captive-portal-provisioned device).</p>
       </template>
 
+      <template v-else-if="node.kind === 'wifi_gate'">
+        <p class="hint">No properties. Passes the message through unchanged if the WiFi station link is currently up, or drops it (same as a function node's own "return null") if it isn't. Checks the live link state at message-arrival-time, not wifi_status's own emitted messages -- wifi_status only emits on a connection-identity change, so a fast-firing source gated off its output wire could be checking stale state. Uses the flow's own wifi_status node for WiFi credentials -- add one if the flow doesn't have one yet.</p>
+      </template>
+
       <template v-else-if="node.kind === 'udp_send'">
         <label>host
           <input v-model="node.properties.host" @input="touch" />

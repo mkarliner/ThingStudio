@@ -17,6 +17,7 @@ import { udpReceiveNode } from "./udp-receive.js";
 import { udpSendNode } from "./udp-send.js";
 import { variableGetNode } from "./variable-get.js";
 import { variableSetNode } from "./variable-set.js";
+import { wifiGateNode } from "./wifi-gate.js";
 import { wifiStatusNode } from "./wifi-status.js";
 
 /**
@@ -58,6 +59,7 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     pwmOutNode,
     timerNode,
     wifiStatusNode,
+    wifiGateNode,
     httpRequestNode,
     httpInNode,
     httpResponseNode,

@@ -65,7 +65,24 @@ inline, not a fresh check.
 - **[POST-MVP]** **OTA-capable partition table on the ESP32 build — still not done.** Tier 0 item, flagged repeatedly across multiple later briefings as "still not done." Build-config only, one-way door (every field device would need a manual reflash later otherwise), no code dependency on anything else outstanding. **2026-09-06, Mike's call when prioritizing:** deferred past MVP anyway -- no field devices exist yet and only a handful are expected even post-MVP, so the one-way-door cost (manual reflash of a small number of early devices) is cheap enough to accept rather than build this speculatively now. Worth noting: `CLAUDE.md`'s own premature-optimization corollary cites this exact item as the "don't foreclose a near-free future direction" example -- this is a deliberate, informed override of that framing, not an oversight. ([detail](outstanding-items/ota-partition-table.md))
 - **[POST-MVP]** **Flash-backed runtime-state persistence (a `variable_get`/`variable_set` value, a calibration constant surviving redeploy) — not built.** Split out 2026-09-06 from the old "Tier 2" item, which bundled three separate things: the flow's own bytecode surviving power loss (**already built**, boot-time flow auto-resume, 2026-09-05 -- that part of the old item's "not started at all" framing was stale), a full live-value-streaming-on-wires UI (Mike's call: not actually asked for -- the real near-term bar is the connection-status-indicator item below, not generic wire streaming), and this -- the flash-backed, node-ID-keyed state store §5 describes. Deferred past MVP: real design thinking needed (scope, storage format, opt-out-on-deploy semantics), connects to `context-model-node-red-style.md`'s still-unscoped context work. ([detail](outstanding-items/tier2-live-streaming-persistence.md))
 - **[POST-MVP]** **Stateful nodes / cross-message synchronization (Node-RED-style `join`) — not started, not even scoped.** Flagged 2026-08-13, still open. Distinct from the (now-resolved) flashing-LED `context`/`flow` gap, which did get built. **2026-09-06, Mike's condition when deferring:** only OK as long as context get/set is interrupt-safe. Checked against `interrupt.ts`'s own header while triaging: by design, the hard-IRQ handler only ever signals a `ThreadSafeEvent` (the one non-allocating, hard-IRQ-safe call its vendored README traces) -- every real decision, including any downstream `variable_get`/`variable_set`/`flow.get`/`flow.set` call, runs in the coroutine (soft context) afterward, on the normal cooperatively-scheduled event loop, same as everything else. So today's architecture already satisfies the condition by construction, not by luck -- worth a confirming real-hardware test once this is picked up, but not an open unknown blocking the defer. ([detail](outstanding-items/stateful-nodes-join.md))
-- **[P2]** **Multi-output-port support (was "connection-state gate/router nodes") — general mechanism + function-node UI built 2026-09-12; a dedicated router node and the pass-or-drop status gate remain unbuilt.** Reframed 2026-09-06, Mike's call: generalize past the specific two-output status router into real multi-output-port support, Node-RED-style -- function-node UI to set output count, codegen for the return-value/`node.send()` array convention (`return [msg1, null]` routes to output 1 only; `null` in a slot sends nothing; a nested array in a slot sends multiple messages out that one output in sequence; https://nodered.org/docs/user-guide/writing-functions#multiple-outputs), and canvas wiring for N output ports on a node -- landed 2026-09-12 with three of Mike's own calls (loose tolerance on a malformed return shape, live-value streaming deferred, function node grows taller rather than packing ports tighter), `decisions/editor-canvas.md`. Already anticipated: `decisions/node-authoring.md`'s 2026-08-20 entry deliberately caps custom-node output ports at 1 via *codegen validation*, not the `.node.json` schema itself, specifically so this "higher-priority multi-output-routing roadmap item" wouldn't be compromised -- confirmed directly with Mike at the time. Still open: a dedicated router/switch node, and the original pass-or-drop WiFi/MQTT-status gate (doesn't strictly need multi-output at all -- buildable independently). ([detail](outstanding-items/connection-state-gate-router-nodes.md))
+- **[POST-MVP]** **Multi-output-port support (was "connection-state gate/router nodes") — general
+  mechanism + function-node UI built 2026-09-12; the pass-or-drop status gate built 2026-09-14; a
+  dedicated router node deferred to POST-MVP, 2026-09-14 (Mike's call).** Reframed 2026-09-06, Mike's
+  call: generalize past the specific two-output status router into real multi-output-port support,
+  Node-RED-style -- function-node UI to set output count, codegen for the return-value/`node.send()`
+  array convention (`return [msg1, null]` routes to output 1 only; `null` in a slot sends nothing; a
+  nested array in a slot sends multiple messages out that one output in sequence;
+  https://nodered.org/docs/user-guide/writing-functions#multiple-outputs), and canvas wiring for N
+  output ports on a node -- landed 2026-09-12 with three of Mike's own calls (loose tolerance on a
+  malformed return shape, live-value streaming deferred, function node grows taller rather than packing
+  ports tighter), `decisions/editor-canvas.md`. Already anticipated: `decisions/node-authoring.md`'s
+  2026-08-20 entry deliberately caps custom-node output ports at 1 via *codegen validation*, not the
+  `.node.json` schema itself, specifically so this "higher-priority multi-output-routing roadmap item"
+  wouldn't be compromised -- confirmed directly with Mike at the time. **2026-09-14, Mike's call: a
+  dedicated router/switch node deferred to POST-MVP** -- a `function` node's own multiple outputs plus
+  an in-code switch already cover the routing need; only this piece remains open. The pass-or-drop
+  WiFi-link status gate (the item's other original narrower ask) is built -- see Resolved below.
+  ([detail](outstanding-items/connection-state-gate-router-nodes.md))
 - **[P5]** **Tier 1 "kitchen sink" gate — not run.** One combined flow wiring every v1 node type together, soak-run for an extended period, per `mvp-validation-plan.md`'s own Tier-level bar. Needs the rest of Tier 1 (I2C sensors, network hardware pass, remaining canvas wiring) to mean anything. ([detail](outstanding-items/tier1-kitchen-sink-gate.md))
 
 - **[POST-MVP]** **Store the flow definition on the device itself, not just the host file system — raised by Mike, never scoped.** Today a flow's source of truth lives only in the editor's saved `.flow.json`; whether/how a device should also carry its own copy (for backup, inspection, or recovery without the original file) is untouched. Distinct from Tier 2's live-value/state persistence above, which is about runtime data, not the flow definition itself.
@@ -141,6 +158,18 @@ Items below are done and verified (or resolved as a decision); kept here as one-
 paragraphs in the active sections above, per the same "index, not a copy" principle as this whole file. Full
 reasoning stays at each pointer's target, nothing here was deleted.
 
+- **Pass-or-drop WiFi-link status gate (`thingstudio/wifi_gate`)** -- built 2026-09-14, WiFi-link-only
+  scope (Mike's call, asked via AskUserQuestion before implementing). One input, one output: passes
+  `msg` through unchanged when the WiFi station link is up, drops it (same mechanism a `function`
+  node's own `return None` uses) when it isn't. Checks live link state at message-arrival-time, not a
+  value read off `wifi_status`'s own emitted messages -- those only fire on a connection-identity
+  change, so a fast-firing source gated off that wire could see stale state. No properties; derives
+  WiFi credentials from the flow's own sole `wifi_status` node, same pattern every other network node
+  type uses. Full canvas wiring (registry, Rete class, palette entry, property panel, flow-file
+  verifier), a vitest suite run against real generated Python (pymock's `network.WLAN.CONNECTED`
+  toggle), and a user-guide page. The item's other original ask -- a dedicated router/switch node --
+  stays open, deferred to POST-MVP (see the active-backlog entry above).
+  ([detail](outstanding-items/connection-state-gate-router-nodes.md))
 - **Tasmota-style soft-AP + captive-portal WiFi provisioning** -- built and verified 2026-09-14, same
   day as the scoping session. A flow whose WiFi config is `"unmanaged"` now makes the device open a
   soft AP (`Thingstudio-Setup-XXXX`, WPA2, default password `thingstudio`) plus a catch-all DNS

@@ -153,6 +153,7 @@ import { gpioOutNode } from "../../node-library/gpio-out.js";
 import { timerNode } from "../../node-library/timer.js";
 import { interruptNode } from "../../node-library/interrupt.js";
 import { wifiStatusNode } from "../../node-library/wifi-status.js";
+import { wifiGateNode } from "../../node-library/wifi-gate.js";
 import { udpSendNode } from "../../node-library/udp-send.js";
 import { udpReceiveNode } from "../../node-library/udp-receive.js";
 import { httpRequestNode } from "../../node-library/http-request.js";
@@ -516,6 +517,31 @@ export class WifiStatusNode extends ClassicPreset.Node {
   }
 }
 
+// Pass-or-drop WiFi link gate, built 2026-09-14 (wifi-gate.ts's own header
+// has the full scope story): a transform, not a source/sink, so it needs
+// both an input and an output port like DelayNode/FunctionNode above --
+// unlike WifiStatusNode (a pure source) it sits mid-flow. No configurable
+// properties (same "no properties" shape as HttpResponseNode above) --
+// it derives its WiFi config from the flow's own sole wifi_status node,
+// same as UdpSendNode/UdpReceiveNode below.
+export class WifiGateNode extends ClassicPreset.Node {
+  width = 110;
+  height = NODE_HEIGHT;
+  kind = "wifi_gate" as const;
+  nodeType = "thingstudio/wifi_gate";
+  highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
+
+  properties: Record<string, never> = {};
+
+  constructor() {
+    super("wifi gate");
+    this.addInput("msg", new ClassicPreset.Input(portSocket(wifiGateNode.ports?.inputs, "msg", this.properties), "msg", true));
+    this.addOutput("msg", new ClassicPreset.Output(portSocket(wifiGateNode.ports?.outputs, "msg", this.properties), "msg"));
+  }
+}
+
 export class UdpSendNode extends ClassicPreset.Node {
   width = 110;
   height = NODE_HEIGHT;
@@ -752,6 +778,7 @@ export type AnyThingstudioNode =
   | TimerNode
   | InterruptNode
   | WifiStatusNode
+  | WifiGateNode
   | UdpSendNode
   | UdpReceiveNode
   | HttpRequestNode
@@ -782,6 +809,7 @@ export const NODE_FACTORIES: Record<NodeKind, () => AnyThingstudioNode> = {
   timer: () => new TimerNode(),
   interrupt: () => new InterruptNode(),
   wifi_status: () => new WifiStatusNode(),
+  wifi_gate: () => new WifiGateNode(),
   udp_send: () => new UdpSendNode(),
   udp_receive: () => new UdpReceiveNode(),
   http_request: () => new HttpRequestNode(),

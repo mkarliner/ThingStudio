@@ -32,6 +32,10 @@
 //
 // delay added 2026-09-06 -- a brand new node type, given canvas presence
 // from the day it was built rather than landing registry-only first.
+//
+// wifi_gate added 2026-09-14, same as delay -- a brand new node type,
+// given canvas presence from the day it was built (nodes.ts's own header
+// has the full scope story).
 
 import { readFileSync } from "node:fs";
 import { parseFlowFile } from "../flow-file/flow-file.js";
@@ -49,6 +53,7 @@ const KNOWN_KINDS = new Set([
   "timer",
   "interrupt",
   "wifi_status",
+  "wifi_gate",
   "udp_send",
   "udp_receive",
   "http_request",
