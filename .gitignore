@@ -20,3 +20,4 @@ __pycache__/
 # .ts file instead of erroring. Never intentional, never committed.
 editor/src/**/*.js
 editor/test/**/*.js
+*.egg-info/
