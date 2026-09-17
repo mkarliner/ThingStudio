@@ -1,2 +1,0 @@
-[console_scripts]
-thingstudio-backend = thingstudio_backend.__main__:main

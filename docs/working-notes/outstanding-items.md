@@ -20,7 +20,17 @@ inline, not a fresh check.
 
 ## Next up (already flagged before this audit, unstarted)
 
-- **Current handoff doc: `wifi-gate-and-protocol-fix-briefing.md`.** Written 2026-09-14, supersedes
+- **Current handoff doc: `framebuffer-st7789-display-briefing.md`.** Written 2026-09-17, supersedes
+  `wifi-gate-and-protocol-fix-briefing.md` below as the live "what's next" pointer -- a scoping-only
+  briefing (nothing built yet) for a new `thingstudio/display_st7789`-shaped node, prompted directly by
+  the eswitch/ebutton real-hardware session on the EMF 2022 TiDAL badge: same badge, driving its own
+  135x240 ST7789 screen next. Covers confirmed hardware facts (chip, pins found so far), a recommended
+  two-layer architecture (built-in `framebuf.FrameBuffer` plus a vendored pure-Python ST7789 push
+  driver -- `devbis/st7789py_mpy`, not `russhughes/st7789_mpy`, which needs a custom-compiled firmware
+  build this project's deployment model can't accommodate), and several explicitly open questions
+  (exact SPI pins, CS-pin mismatch risk, pymock SPI fixture gap) left for next session, not guessed at
+  here.
+- **Prior handoff doc: `wifi-gate-and-protocol-fix-briefing.md`.** Written 2026-09-14, supersedes
   `credential-store-implementation-briefing.md` below as the live "what's next" pointer -- covers
   WiFi-provisioning real-hardware hardening, the new `thingstudio/wifi_gate` node built end-to-end
   and real-hardware smoke-tested, and a real DEPLOY-encoding protocol bug found and fixed along the
