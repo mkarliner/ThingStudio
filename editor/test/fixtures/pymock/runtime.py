@@ -46,6 +46,49 @@ if not hasattr(asyncio, "sleep_ms"):
     asyncio.sleep_ms = _sleep_ms
 
 
+# ThreadSafeFlag added 2026-09-17 (node-eswitch.test.ts/node-ebutton.test.ts):
+# real CPython asyncio has no such attribute at all (MicroPython-specific,
+# for cross-core/hard-ISR signaling) -- the vendored Delay_ms
+# (device-runtime/src/vendor/primitives_events/delay_ms.py, used by
+# EButton's long-press/double-click timers) constructs one unconditionally
+# in __init__, so running EButton through this fixture needs the name to
+# resolve, same reasoning as sleep_ms above. A real hard-IRQ/cross-core
+# signal has no CPython equivalent to simulate at all (same limitation
+# threadsafe_event.py's own header already states) -- but Delay_ms never
+# actually needs cross-core semantics, only "set from anywhere, wait from
+# one coroutine, auto-clear on wait return" (MicroPython's own
+# ThreadSafeFlag.wait() docs: "flag is automatically reset upon return from
+# wait"), which a plain asyncio.Event provides. Deferred-construction of
+# the real asyncio.Event, same fix and same reason as threadsafe_event.py's
+# own stand-in (module-scope construction, before spawn()'s asyncio.run()
+# has started a loop) -- see that file's header for the full trace.
+if not hasattr(asyncio, "ThreadSafeFlag"):
+
+    class _ThreadSafeFlag:
+        def __init__(self):
+            self._flag = False
+            self._event = None  # real asyncio.Event, constructed lazily
+
+        def _ensure(self):
+            if self._event is None:
+                self._event = asyncio.Event()
+                if self._flag:
+                    self._event.set()
+
+        def set(self):
+            self._flag = True
+            if self._event is not None:
+                self._event.set()
+
+        async def wait(self):
+            self._ensure()
+            await self._event.wait()
+            self._flag = False
+            self._event.clear()  # auto-reset on return, per real ThreadSafeFlag semantics
+
+    asyncio.ThreadSafeFlag = _ThreadSafeFlag
+
+
 # register_cleanup added 2026-08-20 (redeploy-cleanup-and-network-fault-
 # detection-briefing.md, Problem 1): udp-send.ts/udp-receive.ts's
 # generated setup statements now self-register a socket-close cleanup via
@@ -143,7 +186,17 @@ def fire_trigger(node_id):
 # to end through this" harness: they can now, briefly, which is enough to
 # observe one message's worth of side effects.
 _AUTO_FIRE_DELAY_S = 0.02
-_MAX_RUN_S = 0.3
+# Overridable via PYMOCK_MAX_RUN_S, added 2026-09-17: node-eswitch.test.ts/
+# node-ebutton.test.ts drive several real state transitions through the
+# vendored drivers' own real-time debounce/long-press/double-click polling
+# (not pymock's virtual clock -- see machine.py's Pin.SCHEDULE header), so
+# they need more real wall-clock budget than the 0.3s default comfortably
+# allows once test-process scheduling jitter is accounted for. Reading the
+# env var only when unset preserves every existing test's behavior exactly
+# (none of them set it, so they keep getting 0.3s).
+import os as _os
+
+_MAX_RUN_S = float(_os.environ.get("PYMOCK_MAX_RUN_S", "0.3"))
 
 
 async def _auto_fire_registered_triggers():

@@ -34,3 +34,41 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
   of its backend-owned half.** Not a browser-side File System Access
   handle-persistence build — see the `Backend` section entry above for the
   reasoning and the MVP-priority consequence. `local-persistence-scoping.md`.
+- **2026-09-17 — `thingstudio/eswitch`/`thingstudio/ebutton`: partial
+  adoption of Peter Hinch's `micropython-async`, resolving design doc
+  §11's open question for switches/buttons.** Vendored his `ESwitch`/
+  `EButton`/`WaitAny`/`Delay_ms` classes verbatim
+  (`device-runtime/src/vendor/primitives_events/`, pinned commit SHA +
+  SHA-256 hashes, same convention as `ThreadSafeEvent`/`mqtt_as`) rather
+  than re-deriving debounce/long-press/double-click logic by hand. Single
+  output port per node, `topic` distinguishes which event fired
+  (`close`/`open` for eswitch; `press`/`release`/`long`/`double` for
+  ebutton) — confirmed with Mike rather than extending the compiler's
+  multi-output support (transform-only today) to sources. His §5 `AADC`
+  driver deliberately deferred to a follow-up item, same call, not bundled
+  into this pass. Found and fixed a real correctness bug while building
+  this: `WaitAny.clear()` clears every event it watches, but `EButton` can
+  set both `press` and `double` in the same synchronous call (a rapid
+  second click) — clearing the whole group after each wake would silently
+  drop whichever lost `WaitAny`'s internal race, so `buildMsg` clears only
+  the one event that actually fired (`_trig.clear()`), not the group.
+  Off-device tests run the real vendored driver through a real CPython
+  asyncio loop (not just this project's own generated text), since neither
+  class has a hard-IRQ dependency pymock can't stand in for. Side effect,
+  not yet acted on: the existing `interrupt` node's debounce option is now
+  redundant with eswitch/ebutton's own, and could be removed — flagged in
+  `outstanding-items.md`, not resolved here.
+  `device-runtime/src/vendor/primitives_events/README.md`.
+- **2026-09-17, same session, real-hardware pass — added a `pull` property
+  (none/up/down, default "none") to `eswitch`/`ebutton`.** Found while
+  wiring up a real EMF 2022 TiDAL badge (stock MicroPython, RP2040): its
+  own buttons.md documents every button but one relying on the RP2040's
+  *internal* pull-up (`machine.Pin(..., machine.Pin.PULL_UP)`), not an
+  external resistor or a pull built into the button hardware itself — a
+  case this node's original "no internal pull, wire an external one"
+  design (inherited from `interrupt`'s own convention) had no way to
+  handle at all. Backward-compatible: default "none" means every
+  already-generated flow's Python is byte-for-byte unchanged.
+  `interrupt` has the identical gap, not addressed in this pass — scoped to
+  eswitch/ebutton only, matching the button test at hand; worth the same
+  treatment later if it comes up again.

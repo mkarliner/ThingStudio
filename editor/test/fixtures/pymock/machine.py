@@ -4,10 +4,39 @@
 # Not a substitute for the real headless-unix-port check; closest thing
 # achievable without real MicroPython or hardware.
 
+import time as _real_time
+
 
 class Pin:
     OUT = "OUT"
     IN = "IN"
+
+    # Added 2026-09-17 for eswitch.ts/ebutton.ts's new `pull` property (real-
+    # hardware finding: an EMF 2022 TiDAL badge's buttons need the RP2040's
+    # own internal pull-up, which this project's nodes had no way to
+    # configure before now). Values are irrelevant here -- like IRQ_RISING/
+    # IRQ_FALLING above, nothing in this mock dispatches on them, only
+    # codegen-text assertions check the generated Pin(...) call's arguments.
+    PULL_UP = "PULL_UP"
+    PULL_DOWN = "PULL_DOWN"
+
+    # Real-wall-clock schedule, added for node-eswitch.test.ts/
+    # node-ebutton.test.ts: unlike interrupt.ts's own tests (which bypass
+    # the coroutine entirely and drive buildMsg directly against
+    # time_mock.py's virtual clock, since interrupt's real debounce logic
+    # is entirely interrupt.ts's own synchronous code), ESwitch/EButton's
+    # actual debounce/long-press/double-click logic lives inside the
+    # vendored asyncio driver classes themselves (device-runtime/src/
+    # vendor/primitives_events/) -- proving that logic actually works
+    # needs a real running asyncio loop and real elapsed time, since
+    # that's what `_poll()`'s own `await asyncio.sleep_ms(dt)` actually
+    # waits on. SCHEDULE[pin] = [(offset_seconds, value), ...], sorted
+    # ascending by offset; T0 is set once (by test setup code, to
+    # time.monotonic()) right before the flow starts running. A pin not
+    # present in SCHEDULE falls back to INPUT_VALUES's own static value --
+    # every pre-existing test's behavior, completely unchanged.
+    SCHEDULE = {}
+    T0 = None
 
     # IRQ trigger flags, matching real machine.Pin's bit-flag values closely
     # enough for interrupt.ts's codegen to construct/combine them the same
@@ -31,15 +60,32 @@ class Pin:
     # in.test.ts did.
     INPUT_VALUES = {}
 
-    def __init__(self, pin, mode):
+    def __init__(self, pin, mode, pull=None):
         self._pin = pin
         self._mode = mode
-        print("PIN_INIT %s %s" % (pin, mode))
+        self._pull = pull
+        print("PIN_INIT %s %s pull=%s" % (pin, mode, pull))
 
     def value(self, v=None):
         if v is None:
+            if self._pin in Pin.SCHEDULE and Pin.T0 is not None:
+                elapsed = _real_time.monotonic() - Pin.T0
+                result = Pin.INPUT_VALUES.get(self._pin, 0)
+                for offset, val in Pin.SCHEDULE[self._pin]:
+                    if elapsed < offset:
+                        break
+                    result = val
+                return result
             return Pin.INPUT_VALUES.get(self._pin, 0)
         print("PIN_VALUE %s %s" % (self._pin, 1 if v else 0))
+
+    # ESwitch/EButton read pin state via call syntax (`self._pin()`), the
+    # real machine.Pin's own documented shorthand for `.value()` with no
+    # args -- not used by any pre-existing node in this project (they all
+    # call `.value()` explicitly), so added here rather than assumed
+    # already covered.
+    def __call__(self):
+        return self.value()
 
     def irq(self, trigger=None, handler=None):
         # No real hard-IRQ context exists in a CPython test process, and no

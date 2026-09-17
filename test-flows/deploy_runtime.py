@@ -66,6 +66,8 @@ LISTENER_FILE = "listener.py"
 VENDOR_FILES = [
     os.path.join(_REPO_ROOT, "device-runtime", "src", "vendor", "threadsafe_event", "threadsafe_event.py"),
     os.path.join(_REPO_ROOT, "device-runtime", "src", "vendor", "mqtt_as", "__init__.py"),
+    os.path.join(_REPO_ROOT, "device-runtime", "src", "vendor", "primitives_events", "events.py"),
+    os.path.join(_REPO_ROOT, "device-runtime", "src", "vendor", "primitives_events", "delay_ms.py"),
 ]
 # mqtt_as's __init__.py needs to land as mqtt_as.py (a single-file module),
 # not as __init__.py under an mqtt_as/ package dir -- MicroPython's import
@@ -111,7 +113,7 @@ def _runtime_build_sha():
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--port", required=True, help="serial device path, e.g. /dev/tty.usbmodemXXXX")
-    parser.add_argument("--no-vendor", action="store_true", help="skip vendor/ libs (threadsafe_event, mqtt_as) -- see VENDOR_FILES comment")
+    parser.add_argument("--no-vendor", action="store_true", help="skip vendor/ libs (threadsafe_event, mqtt_as, primitives_events) -- see VENDOR_FILES comment")
     parser.add_argument(
         "--wipe",
         action="store_true",

@@ -64,6 +64,8 @@ nav:
           - mqtt publish: nodes/mqtt-publish.md
       - Hardware:
           - interrupt: nodes/interrupt.md
+          - eswitch: nodes/eswitch.md
+          - ebutton: nodes/ebutton.md
           - gpio out: nodes/gpio-out.md
           - pwm out: nodes/pwm-out.md
   - Writing custom nodes: custom-nodes.md

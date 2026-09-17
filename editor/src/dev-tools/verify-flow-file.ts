@@ -36,6 +36,10 @@
 // wifi_gate added 2026-09-14, same as delay -- a brand new node type,
 // given canvas presence from the day it was built (nodes.ts's own header
 // has the full scope story).
+//
+// eswitch/ebutton added 2026-09-17, same treatment -- brand new node
+// types, given canvas presence from the day they were built (eswitch.ts/
+// ebutton.ts's own headers have the full design story).
 
 import { readFileSync } from "node:fs";
 import { parseFlowFile } from "../flow-file/flow-file.js";
@@ -52,6 +56,8 @@ const KNOWN_KINDS = new Set([
   "pwm_out",
   "timer",
   "interrupt",
+  "eswitch",
+  "ebutton",
   "wifi_status",
   "wifi_gate",
   "udp_send",

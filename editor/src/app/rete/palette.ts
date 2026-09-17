@@ -78,6 +78,8 @@ export type NodeKind =
   | "pwm_out"
   | "timer"
   | "interrupt"
+  | "eswitch"
+  | "ebutton"
   | "wifi_status"
   | "wifi_gate"
   | "udp_send"
@@ -125,6 +127,15 @@ export const NODE_PALETTE: Record<NodeKind, KindStyle> = {
   // uses this range. "⚡" for the hard-IRQ-driven, event-fired nature (vs.
   // timer's "◷" clock glyph for its own poll/sleep-shaped source).
   interrupt: { color: "#8a5a1f", bgcolor: "#3f2e14", icon: "⚡", label: "interrupt", group: "hardware", priority: 10 },
+  // eswitch/ebutton, 2026-09-17 -- same amber family as interrupt (all
+  // three are debounced-digital-input siblings), distinct shades each,
+  // priorities 11/12 (interrupt's own family-of-tens convention, this
+  // file's header) so they sort right after it, before gpio_out/pwm_out.
+  // "○"/"●" (open/filled circle) for eswitch's own open/close states;
+  // "⏺" (filled record-dot) for ebutton's press/release/long/double,
+  // distinct from both.
+  eswitch: { color: "#a67c3f", bgcolor: "#4a3a1f", icon: "○", label: "eswitch", group: "hardware", priority: 11 },
+  ebutton: { color: "#a6633f", bgcolor: "#4a2e1f", icon: "⏺", label: "ebutton", group: "hardware", priority: 12 },
   // Teal -- a status/radio glyph ("◉") for the polling connectivity check.
   wifi_status: { color: "#1f6e6e", bgcolor: "#123f3f", icon: "◉", label: "wifi status", group: "network", priority: 10 },
   // Teal-green, distinct from wifi_status's own teal -- same family (both

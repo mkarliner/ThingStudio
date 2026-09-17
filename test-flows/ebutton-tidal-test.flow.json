@@ -1,0 +1,81 @@
+{
+  "formatVersion": 1,
+  "flowName": "ebutton-tidal-test",
+  "nodes": [
+    {
+      "id": "1",
+      "type": "thingstudio/ebutton",
+      "properties": { "pin": 15, "pull": "up", "senseMode": "1", "debounceMs": 50, "longPressMs": 1000, "doubleClickMs": 400 }
+    },
+    { "id": "2", "type": "thingstudio/debug", "properties": { "fullMessage": true } },
+
+    {
+      "id": "3",
+      "type": "thingstudio/ebutton",
+      "properties": { "pin": 16, "pull": "up", "senseMode": "1", "debounceMs": 50, "longPressMs": 1000, "doubleClickMs": 400 }
+    },
+    { "id": "4", "type": "thingstudio/debug", "properties": { "fullMessage": true } },
+
+    {
+      "id": "5",
+      "type": "thingstudio/ebutton",
+      "properties": { "pin": 8, "pull": "up", "senseMode": "1", "debounceMs": 50, "longPressMs": 1000, "doubleClickMs": 400 }
+    },
+    { "id": "6", "type": "thingstudio/debug", "properties": { "fullMessage": true } },
+
+    {
+      "id": "7",
+      "type": "thingstudio/ebutton",
+      "properties": { "pin": 7, "pull": "up", "senseMode": "1", "debounceMs": 50, "longPressMs": 1000, "doubleClickMs": 400 }
+    },
+    { "id": "8", "type": "thingstudio/debug", "properties": { "fullMessage": true } },
+
+    {
+      "id": "9",
+      "type": "thingstudio/ebutton",
+      "properties": { "pin": 9, "pull": "up", "senseMode": "1", "debounceMs": 50, "longPressMs": 1000, "doubleClickMs": 400 }
+    },
+    { "id": "10", "type": "thingstudio/debug", "properties": { "fullMessage": true } },
+
+    {
+      "id": "11",
+      "type": "thingstudio/ebutton",
+      "properties": { "pin": 6, "pull": "up", "senseMode": "1", "debounceMs": 50, "longPressMs": 1000, "doubleClickMs": 400 }
+    },
+    { "id": "12", "type": "thingstudio/debug", "properties": { "fullMessage": true } },
+
+    {
+      "id": "13",
+      "type": "thingstudio/ebutton",
+      "properties": { "pin": 2, "pull": "none", "senseMode": "1", "debounceMs": 50, "longPressMs": 1000, "doubleClickMs": 400 }
+    },
+    { "id": "14", "type": "thingstudio/debug", "properties": { "fullMessage": true } },
+
+    {
+      "id": "15",
+      "type": "thingstudio/ebutton",
+      "properties": { "pin": 1, "pull": "up", "senseMode": "1", "debounceMs": 50, "longPressMs": 1000, "doubleClickMs": 400 }
+    },
+    { "id": "16", "type": "thingstudio/debug", "properties": { "fullMessage": true } }
+  ],
+  "edges": [
+    ["1", 0, "2", 0],
+    ["3", 0, "4", 0],
+    ["5", 0, "6", 0],
+    ["7", 0, "8", 0],
+    ["9", 0, "10", 0],
+    ["11", 0, "12", 0],
+    ["13", 0, "14", 0],
+    ["15", 0, "16", 0]
+  ],
+  "layout": {
+    "1": { "pos": [80, 40] }, "2": { "pos": [380, 40] },
+    "3": { "pos": [80, 140] }, "4": { "pos": [380, 140] },
+    "5": { "pos": [80, 240] }, "6": { "pos": [380, 240] },
+    "7": { "pos": [80, 340] }, "8": { "pos": [380, 340] },
+    "9": { "pos": [80, 440] }, "10": { "pos": [380, 440] },
+    "11": { "pos": [80, 540] }, "12": { "pos": [380, 540] },
+    "13": { "pos": [80, 640] }, "14": { "pos": [380, 640] },
+    "15": { "pos": [80, 740] }, "16": { "pos": [380, 740] }
+  }
+}

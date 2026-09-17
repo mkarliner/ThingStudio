@@ -393,3 +393,53 @@ DEPLOY-null-field CBOR bug, unrelated to `wifi_gate` itself). The specific
 pass-vs-drop behavior (gated stream stopping on disconnect, resuming on
 reconnect) hasn't been separately confirmed yet -- see this file's own
 "What to watch for" above.
+
+## `ebutton-tidal-test.flow.json`
+
+First real-hardware test for the new `thingstudio/ebutton` node
+(`decisions/node-authoring.md`'s 2026-09-17 entry), against an EMF Camp
+2022 TiDAL badge (ESP32-S3, stock community MicroPython -- not the
+badge's own custom `TiDAL-Firmware` fork) rather than one of this
+project's usual ESP32-C3/RP2040 dev boards. Eight `thingstudio/ebutton`
+nodes, one per physical button, each fanned to its own `thingstudio/debug`
+(full message), pins and `pull` taken directly from
+[emfcamp/TiDAL-Firmware's buttons.md](https://github.com/emfcamp/TiDAL-Firmware/blob/main/buttons.md):
+
+| Button  | pin | pull   |
+|---------|-----|--------|
+| Up      | 15  | up     |
+| Down    | 16  | up     |
+| Left    | 8   | up     |
+| Right   | 7   | up     |
+| Centre  | 9   | up     |
+| Button3 | 6   | up     |
+| Button2 | 2   | none   |
+| Button1 | 1   | up     |
+
+All buttons are active-low on this board (`senseMode: "1"`, i.e. "unpressed
+reads as 3V3") -- set explicitly rather than left on `senseMode: "auto"`,
+so the test doesn't depend on no button happening to be held at boot.
+Button2 already has its own onboard pull-up (per buttons.md, deliberately
+not routed through the RP2040/ESP32's own internal one, "to avoid
+interference with the power supply circuit") -- `pull: "none"` for that
+one node only, matching the hardware exactly rather than doubling up an
+external and an internal pull on the same pin.
+
+**This flow is what prompted `eswitch`/`ebutton`'s new `pull` property**
+(none/up/down, `decisions/node-authoring.md`) -- every button but Button2
+needs the chip's own internal pull-up per buttons.md's own MicroPython
+example, which these nodes had no way to configure before this session.
+
+Verified via `verify-flow-file.ts` (parses clean, all 16 nodes have a
+real canvas factory) and a `compile()` dry run through the registry (8
+independent fault-isolated tasks, `machine.Pin.PULL_UP` present on every
+node but Button2's, `sense=1` on all eight) -- not yet run on real
+hardware, that's this experiment. Load via the browser ("Open Flow") and
+Deploy, same as every other file in this directory; `deploy_runtime.py`
+(above) needs to have pushed `primitives_events/events.py` and
+`primitives_events/delay_ms.py` first (default behavior, unless
+`--no-vendor` was passed) -- this flow's generated code does
+`from events import EButton, WaitAny`, which fails with `ImportError`
+on-device otherwise. Press each button in turn and watch for
+`press`/`release` (and `long`/`double` on a long or rapid-double press)
+on that button's own debug line.

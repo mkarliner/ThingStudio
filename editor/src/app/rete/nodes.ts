@@ -11,6 +11,8 @@
 //   - gpio_out:     pin                                       (node-library/gpio-out.ts)
 //   - timer:        intervalMs                                (node-library/timer.ts)
 //   - interrupt:    pin, edge, debounce, debounceMs           (node-library/interrupt.ts)
+//   - eswitch:      pin, lopen, debounceMs                     (node-library/eswitch.ts, 2026-09-17)
+//   - ebutton:      pin, suppress, senseMode, debounceMs, longPressMs, doubleClickMs (node-library/ebutton.ts, 2026-09-17)
 //   - wifi_status:  pollMs, wifiConfigId                       (node-library/wifi-status.ts -- the flow's ONLY node with its own wifiConfigId, 2026-09-04, see that file's header)
 //   - udp_send:     host, port, timeoutMs                      (node-library/udp-send.ts -- wifiConfigId removed 2026-09-04, derives from the flow's wifi_status node instead)
 //   - udp_receive:  port, pollMs                                (node-library/udp-receive.ts -- same removal)
@@ -152,6 +154,8 @@ import { debugNode } from "../../node-library/debug.js";
 import { gpioOutNode } from "../../node-library/gpio-out.js";
 import { timerNode } from "../../node-library/timer.js";
 import { interruptNode } from "../../node-library/interrupt.js";
+import { eswitchNode } from "../../node-library/eswitch.js";
+import { ebuttonNode } from "../../node-library/ebutton.js";
 import { wifiStatusNode } from "../../node-library/wifi-status.js";
 import { wifiGateNode } from "../../node-library/wifi-gate.js";
 import { udpSendNode } from "../../node-library/udp-send.js";
@@ -494,6 +498,66 @@ export class InterruptNode extends ClassicPreset.Node {
   }
 }
 
+// eswitch/ebutton added 2026-09-17 -- eswitch.ts/ebutton.ts's own headers
+// have the full design story (wrapping Peter Hinch's ESwitch/EButton,
+// topic-carries-event-identity single output). Defaults here match each
+// file's own codegen defaults exactly, same invariant InterruptNode's own
+// comment states just above.
+export class EswitchNode extends ClassicPreset.Node {
+  width = 104;
+  height = NODE_HEIGHT;
+  kind = "eswitch" as const;
+  nodeType = "thingstudio/eswitch";
+  highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
+
+  properties: { pin: number; lopen: 0 | 1; debounceMs: number; pull: "none" | "up" | "down" } = {
+    pin: 4,
+    lopen: 1,
+    debounceMs: 50,
+    pull: "none",
+  };
+
+  constructor() {
+    super("eswitch");
+    this.addOutput("msg", new ClassicPreset.Output(portSocket(eswitchNode.ports?.outputs, "msg", this.properties), "msg"));
+  }
+}
+
+export class EbuttonNode extends ClassicPreset.Node {
+  width = 104;
+  height = NODE_HEIGHT;
+  kind = "ebutton" as const;
+  nodeType = "thingstudio/ebutton";
+  highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
+
+  properties: {
+    pin: number;
+    suppress: boolean;
+    senseMode: "auto" | "0" | "1";
+    debounceMs: number;
+    longPressMs: number;
+    doubleClickMs: number;
+    pull: "none" | "up" | "down";
+  } = {
+    pin: 5,
+    suppress: false,
+    senseMode: "auto",
+    debounceMs: 50,
+    longPressMs: 1000,
+    doubleClickMs: 400,
+    pull: "none",
+  };
+
+  constructor() {
+    super("ebutton");
+    this.addOutput("msg", new ClassicPreset.Output(portSocket(ebuttonNode.ports?.outputs, "msg", this.properties), "msg"));
+  }
+}
+
 export class WifiStatusNode extends ClassicPreset.Node {
   width = 120;
   height = NODE_HEIGHT;
@@ -777,6 +841,8 @@ export type AnyThingstudioNode =
   | PwmOutNode
   | TimerNode
   | InterruptNode
+  | EswitchNode
+  | EbuttonNode
   | WifiStatusNode
   | WifiGateNode
   | UdpSendNode
@@ -808,6 +874,8 @@ export const NODE_FACTORIES: Record<NodeKind, () => AnyThingstudioNode> = {
   pwm_out: () => new PwmOutNode(),
   timer: () => new TimerNode(),
   interrupt: () => new InterruptNode(),
+  eswitch: () => new EswitchNode(),
+  ebutton: () => new EbuttonNode(),
   wifi_status: () => new WifiStatusNode(),
   wifi_gate: () => new WifiGateNode(),
   udp_send: () => new UdpSendNode(),

@@ -8,11 +8,7 @@ the following points and questions are for discussion around the scope of the MV
 [2026-09-13, big pass: everything implemented, or already tracked with its own home in outstanding-items.md/decisions.md, removed outright per the same go-ahead above — not just the freshly-resolved items, but the whole backlog of already-triaged bullets that were only being kept here as a duplicate, plus the two items that got scoped and given real outstanding-items.md entries during this same pass (console-click-viewport-jump.md, deploy-runtime-from-editor.md). Nothing remains below as of this pass — every item that was here now has a home elsewhere. Leaving this file in place, empty of bullets, as the standing place new points/questions get added going forward.]
 
 
-## Nodes
-Nodes based on Peter Hinch's drivers (https://github.com/peterhinch/micropython-async/blob/master/v3/docs/DRIVERS.md)
-
-- Button
-- Switch
-- AADC
-- i2c https://github.com/peterhinch/micropython-async/blob/master/v3/docs/I2C.md
-- maybe more...
+[2026-09-17: "## Nodes" section removed -- Button/Switch built as `thingstudio/eswitch`/`thingstudio/ebutton`
+(outstanding-items.md's "Resolved" section, `decisions/node-authoring.md`); AADC split into its own
+outstanding-items.md follow-up item; i2c folded into the existing `i2c-spi-sensor-nodes.md` item. Nothing lost --
+same removal convention as this file's own 2026-09-07/2026-09-13 passes above.]

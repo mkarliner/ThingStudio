@@ -2,6 +2,8 @@
 import type { NodeDefinition } from "../compiler/node-definition.js";
 import { debugNode } from "./debug.js";
 import { delayNode } from "./delay.js";
+import { ebuttonNode } from "./ebutton.js";
+import { eswitchNode } from "./eswitch.js";
 import { functionNode } from "./function-node.js";
 import { gpioOutNode } from "./gpio-out.js";
 import { httpInNode } from "./http-in.js";
@@ -45,6 +47,10 @@ import { wifiStatusNode } from "./wifi-status.js";
  * yet added. Like http_request/mqtt_publish/mqtt_subscribe, udp_send/
  * udp_receive are registry-only for now -- no `ports`/canvas wiring yet
  * (see node-definition.ts's `ports` field comment for what that means).
+ * eswitch/ebutton (2026-09-17, outstanding-items.md's "[P4] eswitch/ebutton
+ * nodes") wrap Peter Hinch's ESwitch/EButton asyncio drivers -- given
+ * canvas presence from the day they were built, see eswitch.ts/ebutton.ts's
+ * own headers for the full design story.
  */
 export function buildRegistry(): Map<string, NodeDefinition> {
   const registry = new Map<string, NodeDefinition>();
@@ -56,6 +62,8 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     variableSetNode,
     debugNode,
     interruptNode,
+    eswitchNode,
+    ebuttonNode,
     pwmOutNode,
     timerNode,
     wifiStatusNode,

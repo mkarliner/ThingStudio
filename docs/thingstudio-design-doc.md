@@ -146,7 +146,7 @@ v3+: a self-hosted mini dashboard (§6), multi-device flows (one flow spanning d
 
 ## 11. Open questions
 
-Open: whether to adopt Peter Hinch's `micropython-async` — hardware driver primitives (switches/buttons/ADC/encoders), `ThreadSafeQueue`/`ThreadSafeEvent`, a cron-like scheduler, `aiorepl`, and `asyncio_alt` (a low-latency/lightsleep event loop variant). Not evaluated yet.
+~~Open: whether to adopt Peter Hinch's `micropython-async` — hardware driver primitives (switches/buttons/ADC/encoders), `ThreadSafeQueue`/`ThreadSafeEvent`, a cron-like scheduler, `aiorepl`, and `asyncio_alt` (a low-latency/lightsleep event loop variant). Not evaluated yet.~~ **Partially resolved, 2026-09-17:** adopted for switches/buttons. `thingstudio/eswitch`/`thingstudio/ebutton` vendor his `ESwitch`/`EButton`/`WaitAny`/`Delay_ms` classes (`device-runtime/src/vendor/primitives_events/`) verbatim, same vendoring convention as `ThreadSafeEvent`/`mqtt_as`. Still open for ADC (his §5 `AADC` driver, deferred as a follow-up item) and for encoders, `ThreadSafeQueue`, the cron-like scheduler, `aiorepl`, and `asyncio_alt` — none of those evaluated yet. `docs/working-notes/decisions/node-authoring.md` has the full reasoning.
 
 ## 12. Licensing and open-source suitability
 

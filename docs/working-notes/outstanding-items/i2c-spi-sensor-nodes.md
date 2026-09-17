@@ -10,3 +10,9 @@ priority, this should be resolved while building the first I2C sensor node, not 
 
 Also gates on the I2C/SPI slave-mode spike for witness-rig adversarial testing — `witness_firmware.py`'s
 `I2C_SLAVE_EMULATE` is still a stub.
+
+Candidate source, from `mikes-questions-and-points.md` (folded in here 2026-09-17, same pass that built
+eswitch/ebutton off the same upstream): Peter Hinch's
+[I2C.md](https://github.com/peterhinch/micropython-async/blob/master/v3/docs/I2C.md) primitives, same
+`micropython-async` library eswitch/ebutton vendor from — worth checking against once this item is picked up,
+not evaluated yet.

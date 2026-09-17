@@ -187,6 +187,73 @@
         </p>
       </template>
 
+      <template v-else-if="node.kind === 'eswitch'">
+        <label>pin
+          <input type="number" min="0" max="39" v-model.number="node.properties.pin" @input="touch" />
+        </label>
+        <label>pull
+          <select v-model="node.properties.pull" @change="touch">
+            <option value="none">none -- external pull or self-pulling switch (default)</option>
+            <option value="up">up -- enable the pin's internal pull-up</option>
+            <option value="down">down -- enable the pin's internal pull-down</option>
+          </select>
+        </label>
+        <label>open level (lopen)
+          <select v-model.number="node.properties.lopen" @change="touch">
+            <option :value="1">1 -- switch to gnd, pulled up (default)</option>
+            <option :value="0">0 -- switch to 3V3, pulled down</option>
+          </select>
+        </label>
+        <label>debounce (ms)
+          <input type="number" min="1" v-model.number="node.properties.debounceMs" @input="touch" />
+        </label>
+        <p class="hint">
+          Debounced (polling, not IRQ-driven -- see device-runtime/src/vendor/primitives_events/README.md). One
+          output: msg.topic is "close" or "open", msg.payload is the same state as a bool. No internal pull
+          enabled by default -- wire an external pull resistor, use a switch module with one built in, or set
+          pull above if the pin needs the RP2040/ESP32's own internal one.
+        </p>
+      </template>
+
+      <template v-else-if="node.kind === 'ebutton'">
+        <label>pin
+          <input type="number" min="0" max="39" v-model.number="node.properties.pin" @input="touch" />
+        </label>
+        <label>pull
+          <select v-model="node.properties.pull" @change="touch">
+            <option value="none">none -- external pull or self-pulling button (default)</option>
+            <option value="up">up -- enable the pin's internal pull-up</option>
+            <option value="down">down -- enable the pin's internal pull-down</option>
+          </select>
+        </label>
+        <label>sense
+          <select v-model="node.properties.senseMode" @change="touch">
+            <option value="auto">auto -- assume not pressed at boot (default)</option>
+            <option value="0">0 -- unpressed reads as gnd</option>
+            <option value="1">1 -- unpressed reads as 3V3</option>
+          </select>
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" v-model="node.properties.suppress" @change="touch" />
+          suppress (delay/suppress release in favor of double/long)
+        </label>
+        <label>debounce (ms)
+          <input type="number" min="1" v-model.number="node.properties.debounceMs" @input="touch" />
+        </label>
+        <label>long press (ms)
+          <input type="number" min="1" v-model.number="node.properties.longPressMs" @input="touch" />
+        </label>
+        <label>double click (ms)
+          <input type="number" min="1" v-model.number="node.properties.doubleClickMs" @input="touch" />
+        </label>
+        <p class="hint">
+          Debounced (polling, not IRQ-driven). One output: msg.topic is "press"/"release"/"long"/"double",
+          msg.payload is the button's current pressed state as a bool. No internal pull enabled by default --
+          wire an external pull resistor, use a button module with one built in, or set pull above if the pin
+          needs the RP2040/ESP32's own internal one. double-click time must be less than long-press time.
+        </p>
+      </template>
+
       <template v-else-if="node.kind === 'wifi_status'">
         <label>poll interval (ms)
           <input type="number" min="1" v-model.number="node.properties.pollMs" @input="touch" />

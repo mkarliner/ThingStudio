@@ -64,6 +64,24 @@ def ticks_diff(a, b):
     return a - b
 
 
+def ticks_add(t, delta):
+    # Added 2026-09-17 for node-eswitch.test.ts/node-ebutton.test.ts: the
+    # vendored Delay_ms (device-runtime/src/vendor/primitives_events/
+    # delay_ms.py, used by EButton's long-press/double-click timers) calls
+    # this to compute an absolute deadline (`ticks_add(ticks_ms(), duration)`
+    # in `trigger()`), then `ticks_diff(that deadline, ticks_ms())`
+    # immediately after in `_run()` to recover `duration` as the argument
+    # to a REAL `asyncio.sleep_ms()` -- these two calls happen back-to-back
+    # with no `await` between them, so it's fine that CLOCK.now here is a
+    # frozen, test-controlled value rather than a real advancing clock:
+    # both calls read the identical frozen snapshot, so `ticks_diff`
+    # recovers `duration` exactly regardless of what CLOCK.now actually is.
+    # The real passage of time for these tests' long-press/double-click
+    # timing comes entirely from that real `asyncio.sleep_ms()` call, not
+    # from this clock advancing at all.
+    return t + delta
+
+
 def __getattr__(name):
     # PEP 562 module-level __getattr__ -- only reached for names this
     # mock doesn't define itself (ticks_ms/ticks_diff/CLOCK above all
