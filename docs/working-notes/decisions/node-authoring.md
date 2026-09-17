@@ -61,8 +61,8 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
   `device-runtime/src/vendor/primitives_events/README.md`.
 - **2026-09-17, same session, real-hardware pass — added a `pull` property
   (none/up/down, default "none") to `eswitch`/`ebutton`.** Found while
-  wiring up a real EMF 2022 TiDAL badge (stock MicroPython, RP2040): its
-  own buttons.md documents every button but one relying on the RP2040's
+  wiring up a real EMF 2022 TiDAL badge (stock MicroPython, ESP32-S3): its
+  own buttons.md documents every button but one relying on the chip's
   *internal* pull-up (`machine.Pin(..., machine.Pin.PULL_UP)`), not an
   external resistor or a pull built into the button hardware itself — a
   case this node's original "no internal pull, wire an external one"
@@ -72,3 +72,12 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
   `interrupt` has the identical gap, not addressed in this pass — scoped to
   eswitch/ebutton only, matching the button test at hand; worth the same
   treatment later if it comes up again.
+  **Confirmed working on the real board, same day:** `ebutton` on the
+  TiDAL's Centre/joystick-press button (pin 9, `pull: "up"`) reported
+  `press`/`release`/`long` correctly, and `double` reported the exact
+  dual-event behavior the `WaitAny` full-clear fix above was built to
+  produce — a rapid second click gave both `press` and `double` back to
+  back (2ms apart in the real console timestamps), not `double` alone.
+  First real confirmation this fix holds on actual hardware, not just in
+  the off-device CPython tests. `eswitch`, and every other `ebutton`
+  button/pin on this board, are still unconfirmed.

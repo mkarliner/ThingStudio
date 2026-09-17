@@ -61,7 +61,7 @@ inline, not a fresh check.
 - **[P3]** **Config-node Functor/Singleton pattern — new item, 2026-09-08 (Mike's ask).** Investigate using the Functor/Singleton pattern (peterhinch/micropython-samples' `functor_singleton`) for WiFi config and other global config-node objects: the first node instantiated for a given config is the real one; further nodes referencing the same config get the existing instance instead of creating a new one. Resolves multiple nodes accessing/mutating the same config item with low/no code. **GPIO/ADC and other hardware config nodes being singletons (no palette presence) is the concrete motivating example, folded into this same item** — also handles pin-conflict-by-construction for config nodes specifically (distinct from the broader [P5] pin/resource-conflict-detection item above, which covers cross-node-type conflicts more generally).
 - **[P4]** **AADC (Peter Hinch's §5 ADC-monitoring driver) node — deferred follow-up, 2026-09-17.** Split off from the eswitch/ebutton item below (now resolved) when eswitch/ebutton were built -- scoped out of that pass on Mike's call rather than bundled in, per [DRIVERS.md §5](https://github.com/peterhinch/micropython-async/blob/master/v3/docs/DRIVERS.md). Not started. His DRIVERS.md collection more broadly stays a candidate source for further nodes later, not scoped now.
 - **[P4]** **Remove the `interrupt` node's debounce option — new item, 2026-09-17, side effect of eswitch/ebutton landing.** `eswitch`/`ebutton` now own debounce for the switch/button use case (`ESwitch.debounce_ms`/`EButton.debounce_ms`), so `interrupt`'s own separate debounce-cooldown option (`interrupt.ts`) is redundant for that use case -- but `interrupt` is still the only source node for a raw, non-debounced pin-change event, so this isn't a clean "always remove," and removing a property is a breaking change to any already-saved flow using it. Flagged for Mike's call, not removed here.
-- **[P4]** **`interrupt` node still has no way to enable an internal pull resistor -- new item, 2026-09-17.** `eswitch`/`ebutton` just picked up a `pull` (none/up/down) property, prompted by a real EMF 2022 TiDAL badge test needing the RP2040's own internal pull-up on most of its buttons; `interrupt` has the identical "no internal pull, wire an external one" limitation and wasn't touched in that pass (scoped to the button test at hand). Same shape of fix if picked up: a `pull` property, default "none", threaded into `machine.Pin(pin, machine.Pin.IN, ...)`. ([detail](decisions/node-authoring.md))
+- **[P4]** **`interrupt` node still has no way to enable an internal pull resistor -- new item, 2026-09-17.** `eswitch`/`ebutton` just picked up a `pull` (none/up/down) property, prompted by a real EMF 2022 TiDAL badge test needing the chip's own internal pull-up on most of its buttons; `interrupt` has the identical "no internal pull, wire an external one" limitation and wasn't touched in that pass (scoped to the button test at hand). Same shape of fix if picked up: a `pull` property, default "none", threaded into `machine.Pin(pin, machine.Pin.IN, ...)`. ([detail](decisions/node-authoring.md))
 - **[P4]** **SSD1306 display node — new item, 2026-09-08.** Not scoped, expected to be easy (Mike's characterization).
 - **[POST-MVP]** **Templating UI nodes for displays — new item, 2026-09-08, split from the SSD1306 ask.** Generic way to template/lay out what gets drawn to a display node. Not scoped, expected to be hard (Mike's characterization).
 - **[POST-MVP]** **Threading / multicore support, possibly an Exec node — new item, 2026-09-08.** Not scoped.
@@ -176,10 +176,19 @@ reasoning stays at each pointer's target, nothing here was deleted.
   (registry, Rete classes, palette entries, property panel, flow-file verifier), a vitest suite
   running the real vendored driver through a real CPython asyncio loop (19 tests, all passing), and
   `docs/third-party-licenses.md`/design-doc §11 updated. **Real-hardware pass started same day** on an
-  EMF 2022 TiDAL badge (stock MicroPython, RP2040) -- surfaced a real gap before it could bite: most
-  of that badge's buttons need the RP2040's own internal pull-up, which these nodes had no way to
+  EMF 2022 TiDAL badge (stock MicroPython, ESP32-S3) -- surfaced a real gap before it could bite: most
+  of that badge's buttons need the chip's own internal pull-up, which these nodes had no way to
   configure, so a `pull` (none/up/down, default "none", backward-compatible) property was added to
-  both nodes same-day. `interrupt` has the identical gap, tracked separately below. His §5 AADC
+  both nodes same-day. `interrupt` has the identical gap, tracked separately below.
+  **`ebutton` real-hardware pass confirmed working, 2026-09-17** (TiDAL badge, Centre/joystick-press
+  button, pin 9, `pull: "up"`): `press`, `release`, and `long` all confirmed via the actual console
+  output. `double` confirmed too, including the exact behavior this node's own regression test
+  (`node-ebutton.test.ts`) exists to prove: a rapid second click reported BOTH `press` and `double`
+  back-to-back (2ms apart in the real console timestamps), not `double` alone -- the real-hardware
+  proof that the `WaitAny` full-clear fix (`decisions/node-authoring.md`'s original 2026-09-17 entry)
+  holds on actual silicon, not just off-device. `eswitch` itself, and every `ebutton` button besides
+  Centre, remain real-hardware-unconfirmed -- same driver/`pull` property, likely low-risk, but not
+  assumed covered by this one pass. His §5 AADC
   driver deliberately split out as its own follow-up item (above), not bundled into this pass; the
   interrupt-node debounce-removal side effect is also split out as its own item (above), flagged for
   Mike rather than resolved here. ([detail](decisions/node-authoring.md))
