@@ -443,3 +443,133 @@ Deploy, same as every other file in this directory; `deploy_runtime.py`
 on-device otherwise. Press each button in turn and watch for
 `press`/`release` (and `long`/`double` on a long or rapid-double press)
 on that button's own debug line.
+
+## `display-spi-tidal-test.flow.json`
+
+First hands-on test for the new `thingstudio/display_spi` node
+(`decisions/node-authoring.md`'s 2026-09-17 entry), against the same EMF
+2022 TiDAL badge as `ebutton-tidal-test.flow.json` above -- its 135x240
+ST7789 SPI panel. Five nodes, all fanned from one `thingstudio/inject`
+("bool" payload, click-fire): `thingstudio/function` (builds a 135x240
+RGB565 frame via `framebuf.FrameBuffer`: fills it black, draws
+"Hello TiDAL" in white at (8, 8) via `.text()`, a filled green circle via
+`.ellipse(67, 140, 40, 40, ..., True)`, then byte-swaps the buffer -- see
+below) -> `thingstudio/display_spi` (pushes the frame); and two
+`thingstudio/gpio_out` nodes, pins 0 and 39 (see the LCD_PWR/LCD_BLEN
+section below).
+
+Pins taken from `claude/framebuffer-display-node-scoping.md`'s confirmed
+TiDAL hardware facts: `spiBus: 2`, `sck: 12`, `mosi: 11`, `dc: 13`,
+`cs: 10`, `reset: 14`, `width: 135`, `height: 240`. `display_spi`'s own
+`backlight` property is left at `-1` (see below for why pin 0 is driven
+by its own `gpio_out` node instead). `xstart: 52, ystart: 40` are set
+explicitly -- see the GRAM-offset section below; `display_spi`'s new
+default (`-1`, "auto") would now resolve to the same values via
+st7789py_mpy's own table, but this flow pins them explicitly anyway
+(same "properties, not defaults baked in" precedent this node's other
+board-specific values already follow).
+
+**No flush/show call needed to actually push pixels -- confirmed by
+reading the vendored driver directly, not assumed.** `display_spi`'s
+generated sink code calls `ST7789.blit_buffer()`
+(`device-runtime/src/vendor/st7789py_mpy/st7789py.py`), which calls
+`set_window()` (CASET/RASET/RAMWR) followed immediately by
+`self.write(None, buffer)` -- a synchronous `self.spi.write(data)` SPI
+transaction, right there in the same call. Unlike `display_i2c`'s
+SSD1306 driver (its own internal framebuffer needs an explicit `.show()`
+-- already handled inside `display_i2c`'s own codegen, nothing the flow
+author has to do), there's no separate in-driver buffer for
+`display_spi` to flush at all.
+
+**`LCD_PWR` (GPIO 39) and `LCD_BLEN` (GPIO 0) are both *active-low* on
+real TiDAL hardware -- confirmed from `emfcamp/TiDAL-Firmware`'s own
+`gpio.md`** ("The LCD power enable and backlight enable signals are both
+active low gpios" -- their own example enables the backlight with
+`lcd_blen.off()`, i.e. driving it LOW). `display_spi`'s own
+backlight-on write is hardcoded `.value(1)` (HIGH, the ordinary
+active-HIGH convention) -- backwards for TiDAL, so this flow leaves
+`display_spi`'s `backlight` property unwired (`-1`) and drives pin 0
+from a dedicated `gpio_out` node instead, fed `false` from the same
+inject click (`gpio_out`'s codegen is
+`pin.value(1 if msg.get('payload') else 0)`, so `false` -> `.value(0)`
+-> LOW -> correct "on" for an active-low signal). `LCD_PWR` (pin 39)
+gets the same treatment as a best-effort second `gpio_out`, with a real
+ordering caveat: `display_spi`'s hardware init runs automatically at
+flow boot, before any inject click could reach a `gpio_out` node --
+there's still no "run once at boot" node in this codebase
+(`outstanding-items/init-node-on-flow-start.md`). Real-hardware result,
+2026-09-18: **this fix alone was sufficient** -- content is now visible,
+so whatever powers this board's ST7789 controller either isn't gated by
+`LCD_PWR` at all, or the boot-time `init()` sequence tolerates it either
+way; not root-caused further since the practical symptom is resolved.
+
+**GRAM offset bug found and fixed, 2026-09-18 -- the reason the circle
+was clipped at the top with stray pixels along the left/bottom edges.**
+`display_spi`'s codegen used to hardcode `xstart=0, ystart=0`
+unconditionally when constructing `ST7789(...)`, deliberately bypassing
+st7789py_mpy's own built-in offset table (`display-spi.ts`'s own header
+comment has the full self-correction story, including why that original
+choice seemed reasonable at the time). That table wants
+`xstart=52, ystart=40` for a 135x240 panel -- TiDAL's own panel, and the
+vendor README's own reason for picking this driver in the first place
+("explicitly supports... 135x240 panels (the TiDAL badge's own panel)
+without extra configuration"). Forcing `0, 0` instead silently blitted
+into the wrong window of the controller's actual (larger) GRAM: content
+landed offset/clipped, and the visible glass showed whatever stale
+pixels already sat in the uncovered portion -- indistinguishable from
+random static, because that's essentially what it was. Fixed by adding
+real `xstart`/`ystart` properties to `display_spi` (default `-1`, "let
+st7789py_mpy's own table decide" -- same sentinel convention `cs`/
+`reset`/`backlight` already use for "not wired"), and setting them
+explicitly here. `editor/test/node-display-spi.test.ts` gained four new
+cases against the real vendored driver: the `-1` default resolving
+TiDAL's 135x240 to `(52, 40)` and a 240x240 panel to `(0, 0)`, an
+explicit override taking precedence, and an unsupported resolution with
+no override now raising the vendored driver's own clear `ValueError`
+instead of silently defaulting to `(0, 0)`.
+
+**RGB565 byte-order bug found and fixed, 2026-09-18 -- the reason the
+green circle rendered red.** Confirmed via MicroPython's own upstream
+PR discussion
+([`micropython/micropython#3536`](https://github.com/micropython/micropython/pull/3536),
+closed unmerged): `framebuf.RGB565` stores each pixel in CPU-native
+(little-endian on ESP32) byte order in the buffer, but SPI TFT
+controllers including the ST7789 expect big-endian pixel bytes on the
+wire -- `display_spi`'s `blit_buffer()` just forwards the buffer's raw
+bytes as-is (see the no-flush-needed note above), so the mismatch reaches
+the panel unfixed. Worked out the exact effect by hand: `0x07E0` (pure
+green, R=0 G=63 B=0) stored little-endian is bytes `e0 07`; a receiver
+expecting big-endian reads that as pixel `0xE007`, which decodes to
+R=28 G=0 B=7 -- a strong red with a faint blue tint, matching what
+showed up on the badge exactly. There's no MicroPython-level flag to
+pick big-endian storage instead (that's exactly what the linked,
+unmerged PR would have added). Fixed in this flow's `function` node: a
+final loop swaps every pair of bytes in the buffer right before
+`msg['payload'] = bytes(buf)`. White text is unaffected either way
+(`0xFFFF`'s two bytes are identical, so a swap is a no-op) which is why
+only the circle's color was visibly wrong. This is a real gotcha for
+*any* flow feeding `display_spi` a `framebuf.FrameBuffer(...,
+framebuf.RGB565)`-built buffer, not just this one -- flagged in
+`docs/user-guide/nodes/display-spi.md` and the property panel's own
+hint text too, not left as a one-off fix buried in this file.
+
+Verified via `verify-flow-file.ts` (parses clean, all 5 nodes have a
+real canvas factory) and a `compile()` dry run through the registry
+(confirms `xstart=52, ystart=40` on the generated `ST7789(...)` call,
+the byte-swap loop present in `_function`'s body, `_display_spi_bl =
+None`, and both `gpio_out` writes resolving to `.value(0)`). Load via
+the browser ("Open Flow") and Deploy, click the inject node once
+connected live. Watch for white "Hello TiDAL" text near the top-left
+and a filled green circle roughly centered in the lower half of the
+panel, both fully on-screen with no stray pixels at the edges.
+
+**Real-hardware timeline, 2026-09-17/18:** first deploy hit
+`ImportError: no module named 'st7789py'` (board bootstrapped before
+`st7789py.py`/`ssd1306.py` were added to `VENDOR_FILES` this session --
+fixed by re-running `deploy_runtime.py`). Second deploy succeeded and
+ran with no `NODE_ERROR`, but nothing appeared -- root-caused to the
+`LCD_PWR`/`LCD_BLEN` active-low issue above and fixed. Third deploy
+showed a red circle clipped at the top with static along the left/
+bottom edges -- root-caused to the two bugs immediately above (GRAM
+offset, RGB565 byte order) and fixed. Not yet confirmed clean on real
+hardware with all fixes applied together -- that's the next pass.

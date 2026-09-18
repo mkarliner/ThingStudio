@@ -20,16 +20,14 @@ inline, not a fresh check.
 
 ## Next up (already flagged before this audit, unstarted)
 
-- **Current handoff doc: `framebuffer-st7789-display-briefing.md`.** Written 2026-09-17, supersedes
-  `wifi-gate-and-protocol-fix-briefing.md` below as the live "what's next" pointer -- a scoping-only
-  briefing (nothing built yet) for a new `thingstudio/display_st7789`-shaped node, prompted directly by
-  the eswitch/ebutton real-hardware session on the EMF 2022 TiDAL badge: same badge, driving its own
-  135x240 ST7789 screen next. Covers confirmed hardware facts (chip, pins found so far), a recommended
-  two-layer architecture (built-in `framebuf.FrameBuffer` plus a vendored pure-Python ST7789 push
-  driver -- `devbis/st7789py_mpy`, not `russhughes/st7789_mpy`, which needs a custom-compiled firmware
-  build this project's deployment model can't accommodate), and several explicitly open questions
-  (exact SPI pins, CS-pin mismatch risk, pymock SPI fixture gap) left for next session, not guessed at
-  here.
+- **Prior handoff doc: `framebuffer-st7789-display-briefing.md`.** Written 2026-09-17 as a scoping-only
+  briefing for a new display node, prompted by the eswitch/ebutton real-hardware session on the EMF 2022
+  TiDAL badge. Superseded the same day, after Mike corrected the badge's actual firmware (stock
+  MicroPython, not TiDAL-Firmware) and widened scope beyond just the TiDAL/ST7789 case ("there are many
+  other boards") -- the briefing's own two-layer architecture recommendation (built-in
+  `framebuf.FrameBuffer` plus a vendored pure-Python push driver) held up, but the node shape converged
+  on two bus-family node types (`display_spi`/`display_i2c`), not one `display_st7789`-shaped node. See
+  "Resolved" below for what actually got built.
 - **Prior handoff doc: `wifi-gate-and-protocol-fix-briefing.md`.** Written 2026-09-14, supersedes
   `credential-store-implementation-briefing.md` below as the live "what's next" pointer -- covers
   WiFi-provisioning real-hardware hardening, the new `thingstudio/wifi_gate` node built end-to-end
@@ -72,8 +70,8 @@ inline, not a fresh check.
 - **[P4]** **AADC (Peter Hinch's §5 ADC-monitoring driver) node — deferred follow-up, 2026-09-17.** Split off from the eswitch/ebutton item below (now resolved) when eswitch/ebutton were built -- scoped out of that pass on Mike's call rather than bundled in, per [DRIVERS.md §5](https://github.com/peterhinch/micropython-async/blob/master/v3/docs/DRIVERS.md). Not started. His DRIVERS.md collection more broadly stays a candidate source for further nodes later, not scoped now.
 - **[P4]** **Remove the `interrupt` node's debounce option — new item, 2026-09-17, side effect of eswitch/ebutton landing.** `eswitch`/`ebutton` now own debounce for the switch/button use case (`ESwitch.debounce_ms`/`EButton.debounce_ms`), so `interrupt`'s own separate debounce-cooldown option (`interrupt.ts`) is redundant for that use case -- but `interrupt` is still the only source node for a raw, non-debounced pin-change event, so this isn't a clean "always remove," and removing a property is a breaking change to any already-saved flow using it. Flagged for Mike's call, not removed here.
 - **[P4]** **`interrupt` node still has no way to enable an internal pull resistor -- new item, 2026-09-17.** `eswitch`/`ebutton` just picked up a `pull` (none/up/down) property, prompted by a real EMF 2022 TiDAL badge test needing the chip's own internal pull-up on most of its buttons; `interrupt` has the identical "no internal pull, wire an external one" limitation and wasn't touched in that pass (scoped to the button test at hand). Same shape of fix if picked up: a `pull` property, default "none", threaded into `machine.Pin(pin, machine.Pin.IN, ...)`. ([detail](decisions/node-authoring.md))
-- **[P4]** **SSD1306 display node — new item, 2026-09-08.** Not scoped, expected to be easy (Mike's characterization).
-- **[POST-MVP]** **Templating UI nodes for displays — new item, 2026-09-08, split from the SSD1306 ask.** Generic way to template/lay out what gets drawn to a display node. Not scoped, expected to be hard (Mike's characterization).
+- **[POST-MVP]** **Templating UI nodes for displays — new item, 2026-09-08, split from the SSD1306 ask.** Generic way to template/lay out what gets drawn to a display node -- LVGL (or similar) was floated 2026-09-17 as the likely shape ("the more generic the actual graphics interface is the better"), sitting in front of the now-built `display_spi`/`display_i2c` nodes rather than replacing them; those nodes' full-frame-only `bytes` input was deliberately kept graphics-framework-agnostic with this in mind, but nothing LVGL-specific is built. Not scoped, expected to be hard (Mike's characterization).
+- **[P4]** **`test-flows/deploy_runtime.py`'s `VENDOR_FILES` list doesn't scale past a handful of display controllers -- new item, 2026-09-17.** That list is pushed unconditionally to every board on every bootstrap, not scoped per-flow (confirmed by reading `deploy_runtime.py` directly, not assumed) -- fine for two display drivers (~8.4KB/~4.9KB source, next to `mqtt_as`'s own ~36KB already there unconditionally), but a real cost on every board's flash regardless of whether that board has a display at all once more controllers are added (`display_spi`/`display_i2c`'s own `controller` property is deliberately open for exactly that growth -- ILI9341/GC9A01/SH1106/etc.). Flagged to Mike mid-session; his call was "proceed with the simpler one and track the scaling" -- build `st7789py`/`ssd1306` the normal unconditional-push way now (done, see "Resolved" below), track this as the point where a selective/opt-in vendor push (only pushing a display driver to a board whose flow actually uses a display node) needs building, before a third or fourth controller lands the same way. Not scoped.
 - **[POST-MVP]** **Threading / multicore support, possibly an Exec node — new item, 2026-09-08.** Not scoped.
 
 ## Redeploy / runtime
@@ -178,6 +176,64 @@ Items below are done and verified (or resolved as a decision); kept here as one-
 paragraphs in the active sections above, per the same "index, not a copy" principle as this whole file. Full
 reasoning stays at each pointer's target, nothing here was deleted.
 
+- **`display_spi`/`display_i2c` nodes (framebuffer-driven display push)** -- built 2026-09-17, closing
+  the "SSD1306 display node" ask above. Converged design (Mike's steer, mid-session): "generic" means
+  the framebuffer wire contract, not one universal node -- hardware specifics differ enough per display
+  that separate node types are right, held to the two bus families (SPI/I2C) rather than one node per
+  exact chip. `thingstudio/display_spi` (SPI color TFTs, vendoring `devbis/st7789py_mpy`'s `ST7789`
+  driver, `device-runtime/src/vendor/st7789py_mpy/`) and `thingstudio/display_i2c` (I2C mono OLEDs,
+  vendoring micropython-lib's `SSD1306_I2C` driver, `device-runtime/src/vendor/ssd1306/`), both
+  unmodified vendored code, both MIT, both hash-verified against two independent fetch methods. Each
+  node takes one `bytes` input -- an already-rendered `framebuf.FrameBuffer` buffer (RGB565 for
+  `display_spi`, MONO_VLSB for `display_i2c`) built upstream -- and pushes it to hardware on every
+  message; no drawing primitives (that's the separate POST-MVP templating item above). A `controller`
+  property on each leaves room for more chips per bus family later (ILI9341/GC9A01/etc. for SPI,
+  SH1106/etc. for I2C) without a breaking property-shape change. Pins/bus/resolution are node
+  properties, not defaults -- they genuinely differ board to board. Full canvas wiring (registry, Rete
+  classes, palette entries, property panel, flow-file verifier), a vitest suite running each real
+  vendored driver through a real CPython asyncio loop (18 tests, all passing -- pymock's `machine.py`
+  gained `SPI`/`I2C` mocks and `Pin.off()`/`.on()`, and three new fixture modules,
+  `micropython.py`/`ustruct.py`/`framebuf.py`, were added), `docs/third-party-licenses.md` updated, and
+  a user-guide page for each. **Untested on real hardware this session** (no board available) --
+  `display_spi`'s rotation support in particular (`_set_mem_access_mode()` called a second time,
+  overriding the vendored driver's own hardcoded call) is flagged as needing a real-hardware pass before
+  relying on non-zero rotation values. The `VENDOR_FILES`-scaling concern this work surfaced is tracked
+  separately, not solved here (see the active-backlog entry above). ([detail](decisions/node-authoring.md))
+  **Follow-on UI bug found and fixed same session:** growing the hardware palette group to 7 rows (this
+  work's two new entries pushed it over) exposed a real layout bug Mike caught live -- the palette sidebar
+  ran off the bottom of the page with no scrollbar. Root cause confirmed with a real headless-browser
+  before/after check (not just theorized): `#palette-mount` (`editor/index.html`) had no `overflow` rule of
+  its own, so once its content grew taller than its flex-stretched box, the excess simply painted past the
+  box's edges, unclipped and genuinely unscrollable (`element.scrollTop = <n>` was a no-op, not just a
+  hidden-scrollbar cosmetic issue) -- rather than the `min-height: auto` flex gotcha first suspected (ruled
+  out empirically: the box's own height was already correctly stretched). Fixed with `overflow-y: auto`
+  (plus `min-height: 0` for parity with `#property-panel-mount`/`#sidebar`'s own already-working pattern a
+  few lines away in the same file, which is what made the right fix obvious once the missing property was
+  spotted). One-line CSS change, verified scrollable both by the headless-browser check and by confirming
+  every palette row (including `display spi`/`display i2c`) is reachable by scrolling to the bottom.
+  **Second follow-on bug found and fixed same session, 2026-09-17:** writing `test-flows/display-spi-tidal-
+  test.flow.json` (Mike's own "draw text and a circle" ask) surfaced a second real bug -- a hand-authored
+  `function -> display_spi` edge silently failed to connect on flow-file load, reading as "the function node
+  is not connected to the display node." Root cause: `display_spi`/`display_i2c`'s `frame` input is the first
+  (and only) `bytes`-typed input this node library has ever had, and the wire-type system's `BytesSocket` was
+  identity-only -- `any -> bytes` fell into bucket 3's "refuse, needs a conversion node" rule, exactly the gap
+  `wire-type-system-scoping.md`'s own "Former open questions" #4 had anticipated and deliberately deferred
+  until a real bytes-typed input existed. Fixed by allowing `any -> bytes` (mirroring the already-accepted
+  `any -> bool` self-correction, not a blanket bucket-3 loosening -- `bytes <-> string` stays refused, still a
+  real encoding choice), with a new `editor/test/sockets.test.ts` covering the full coercion matrix (no test
+  had covered `sockets.ts` before). ([detail](decisions/node-authoring.md))
+  **Third and fourth follow-on bugs found and fixed same real-hardware pass, 2026-09-18:** with the wire-type
+  and LCD_PWR/LCD_BLEN fixes above in place, the flow deployed and ran but the circle rendered clipped at the
+  top with static along the left/bottom edges, in the wrong color (green intended, red shown). Two separate
+  real bugs, both in `display_spi`: (1) codegen hardcoded `xstart=0, ystart=0`, bypassing st7789py_mpy's own
+  offset table, which needs `52, 40` for TiDAL's 135x240 panel specifically -- fixed by adding real
+  `xstart`/`ystart` node properties (default `-1`, auto-resolved via the vendored table, matching
+  `cs`/`reset`/`backlight`'s existing "not wired" sentinel convention), with 4 new off-device tests against
+  the real driver. (2) `framebuf.RGB565` stores pixels little-endian (MicroPython's own CPU-native behavior,
+  confirmed via `micropython/micropython#3536`, an unmerged upstream PR), but the ST7789 wants big-endian
+  pixel bytes -- fixed with a byte-swap loop in the flow's `function` node, and flagged as a general gotcha in
+  `docs/user-guide/nodes/display-spi.md` for every future user of this node. ([detail](decisions/node-
+  authoring.md))
 - **eswitch/ebutton nodes (Peter Hinch's asyncio drivers)** -- built 2026-09-17. `thingstudio/eswitch`/
   `thingstudio/ebutton`, vendoring his `ESwitch`/`EButton`/`WaitAny`/`Delay_ms` classes verbatim
   (`device-runtime/src/vendor/primitives_events/`) rather than re-deriving debounce/long-press/

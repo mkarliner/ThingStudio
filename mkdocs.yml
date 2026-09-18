@@ -68,4 +68,6 @@ nav:
           - ebutton: nodes/ebutton.md
           - gpio out: nodes/gpio-out.md
           - pwm out: nodes/pwm-out.md
+          - display spi: nodes/display-spi.md
+          - display i2c: nodes/display-i2c.md
   - Writing custom nodes: custom-nodes.md

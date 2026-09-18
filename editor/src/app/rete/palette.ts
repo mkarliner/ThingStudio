@@ -70,6 +70,16 @@
 // dedicated canvas nodes are hidden. See
 // docs/working-notes/decisions/editor-canvas.md and
 // outstanding-items/context-model-node-red-style.md.
+// display_spi/display_i2c added 2026-09-17 (framebuffer-display-node-
+// scoping.md, outstanding-items.md's "[P4] SSD1306 display node") --
+// "hardware" group, alongside gpio_out/pwm_out/interrupt/eswitch/ebutton --
+// real peripheral output, same as those. Indigo/violet pair, distinct from
+// every existing hardware-group color (gpio_out's maroon, interrupt/
+// eswitch/ebutton's ambers, pwm_out's blue). "▤" (rectangle with
+// horizontal fill, screen-like) for display_spi's color TFTs; "▦"
+// (rectangle with a pixel-grid fill) for display_i2c's mono OLEDs --
+// distinct glyphs for the two bus families, echoing the visual difference
+// between a filled color panel and a dot-matrix mono one.
 export type NodeKind =
   | "inject"
   | "function"
@@ -80,6 +90,8 @@ export type NodeKind =
   | "interrupt"
   | "eswitch"
   | "ebutton"
+  | "display_spi"
+  | "display_i2c"
   | "wifi_status"
   | "wifi_gate"
   | "udp_send"
@@ -136,6 +148,11 @@ export const NODE_PALETTE: Record<NodeKind, KindStyle> = {
   // distinct from both.
   eswitch: { color: "#a67c3f", bgcolor: "#4a3a1f", icon: "○", label: "eswitch", group: "hardware", priority: 11 },
   ebutton: { color: "#a6633f", bgcolor: "#4a2e1f", icon: "⏺", label: "ebutton", group: "hardware", priority: 12 },
+  // display_spi/display_i2c, 2026-09-17 -- see this file's header for the
+  // color/icon reasoning. Priorities 40/41 (pwm_out's own 30 is the last
+  // used hardware-group slot so far), sorting after gpio_out/pwm_out.
+  display_spi: { color: "#4a3f8a", bgcolor: "#2a1f4a", icon: "▤", label: "display spi", group: "hardware", priority: 40 },
+  display_i2c: { color: "#3f2e8a", bgcolor: "#1f144a", icon: "▦", label: "display i2c", group: "hardware", priority: 41 },
   // Teal -- a status/radio glyph ("◉") for the polling connectivity check.
   wifi_status: { color: "#1f6e6e", bgcolor: "#123f3f", icon: "◉", label: "wifi status", group: "network", priority: 10 },
   // Teal-green, distinct from wifi_status's own teal -- same family (both

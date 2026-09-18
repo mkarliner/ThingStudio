@@ -68,6 +68,17 @@ VENDOR_FILES = [
     os.path.join(_REPO_ROOT, "device-runtime", "src", "vendor", "mqtt_as", "__init__.py"),
     os.path.join(_REPO_ROOT, "device-runtime", "src", "vendor", "primitives_events", "events.py"),
     os.path.join(_REPO_ROOT, "device-runtime", "src", "vendor", "primitives_events", "delay_ms.py"),
+    # st7789py.py/ssd1306.py added 2026-09-17 (display_spi/display_i2c node
+    # types) -- same unconditional-push treatment as every other entry here,
+    # a deliberate scope call for this session (see outstanding-items.md's
+    # "VENDOR_FILES doesn't scale past a few controllers" item): at ~8.4KB/
+    # ~4.9KB source respectively these are still small next to mqtt_as's own
+    # ~36KB already living here unconditionally, but each additional display
+    # controller driver added the same way going forward pushes flash to
+    # every board regardless of whether that board has a display -- tracked,
+    # not solved by this addition.
+    os.path.join(_REPO_ROOT, "device-runtime", "src", "vendor", "st7789py_mpy", "st7789py.py"),
+    os.path.join(_REPO_ROOT, "device-runtime", "src", "vendor", "ssd1306", "ssd1306.py"),
 ]
 # mqtt_as's __init__.py needs to land as mqtt_as.py (a single-file module),
 # not as __init__.py under an mqtt_as/ package dir -- MicroPython's import
@@ -113,7 +124,7 @@ def _runtime_build_sha():
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--port", required=True, help="serial device path, e.g. /dev/tty.usbmodemXXXX")
-    parser.add_argument("--no-vendor", action="store_true", help="skip vendor/ libs (threadsafe_event, mqtt_as, primitives_events) -- see VENDOR_FILES comment")
+    parser.add_argument("--no-vendor", action="store_true", help="skip vendor/ libs (threadsafe_event, mqtt_as, primitives_events, st7789py, ssd1306) -- see VENDOR_FILES comment")
     parser.add_argument(
         "--wipe",
         action="store_true",

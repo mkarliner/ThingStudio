@@ -1,0 +1,113 @@
+{
+  "formatVersion": 1,
+  "flowName": "display-spi-tidal-test",
+  "nodes": [
+    {
+      "id": "1",
+      "type": "thingstudio/inject",
+      "properties": {
+        "payloadType": "bool",
+        "payloadValue": "false"
+      }
+    },
+    {
+      "id": "2",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "import framebuf\nw, h = 135, 240\nbuf = bytearray(w * h * 2)\nfb = framebuf.FrameBuffer(buf, w, h, framebuf.RGB565)\nfb.fill(0x0000)\nfb.text('Hello TiDAL', 8, 8, 0xFFFF)\nfb.ellipse(67, 140, 40, 40, 0x07E0, True)\n# framebuf.RGB565 stores each pixel in CPU-native (little-endian on\n# ESP32) byte order, but the ST7789 wants big-endian pixel bytes over\n# SPI -- byte-swap every pair before sending, or colors come out\n# wrong (confirmed on real hardware: intended green rendered as red).\nfor i in range(0, len(buf), 2):\n    buf[i], buf[i + 1] = buf[i + 1], buf[i]\nmsg['payload'] = bytes(buf)\nreturn msg"
+      }
+    },
+    {
+      "id": "3",
+      "type": "thingstudio/display_spi",
+      "properties": {
+        "controller": "st7789",
+        "spiBus": 2,
+        "baudrate": 40000000,
+        "sck": 12,
+        "mosi": 11,
+        "dc": 13,
+        "cs": 10,
+        "reset": 14,
+        "backlight": -1,
+        "width": 135,
+        "height": 240,
+        "rotation": 0,
+        "xstart": 52,
+        "ystart": 40
+      }
+    },
+    {
+      "id": "4",
+      "type": "thingstudio/gpio_out",
+      "properties": {
+        "pin": 0
+      }
+    },
+    {
+      "id": "5",
+      "type": "thingstudio/gpio_out",
+      "properties": {
+        "pin": 39
+      }
+    }
+  ],
+  "edges": [
+    [
+      "1",
+      0,
+      "2",
+      0
+    ],
+    [
+      "2",
+      0,
+      "3",
+      0
+    ],
+    [
+      "1",
+      0,
+      "4",
+      0
+    ],
+    [
+      "1",
+      0,
+      "5",
+      0
+    ]
+  ],
+  "layout": {
+    "1": {
+      "pos": [
+        40,
+        240
+      ]
+    },
+    "2": {
+      "pos": [
+        340,
+        40
+      ]
+    },
+    "3": {
+      "pos": [
+        640,
+        40
+      ]
+    },
+    "4": {
+      "pos": [
+        340,
+        300
+      ]
+    },
+    "5": {
+      "pos": [
+        340,
+        420
+      ]
+    }
+  }
+}

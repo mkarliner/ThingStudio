@@ -108,10 +108,34 @@ export class BytesSocket extends ClassicPreset.Socket implements ThingstudioSock
     super("bytes");
   }
   isCompatibleWith(socket: ClassicPreset.Socket): boolean {
-    // Identity only -- bucket 3, no coercion into bytes from anything
-    // else, including string (the ambiguous-encoding case the matrix
-    // names explicitly).
-    return socket instanceof BytesSocket;
+    // Identity, plus `any -> bytes` (added 2026-09-17 -- self-correction
+    // matching the `any -> bool` fix this same file's header already
+    // documents): bucket 3's blanket "any into any concrete non-bool
+    // type: refuse" was written when no bytes-typed *input* existed
+    // anywhere on the canvas (archive/wire-type-system-scoping.md's
+    // "Former open questions" #4 explicitly deferred this "until a real
+    // node with a bytes/string-typed port that actually needs one gets
+    // added"). That node exists now -- display_spi/display_i2c's "frame"
+    // input, the only two bytes-typed inputs in the entire node library
+    // (grep-confirmed) -- and the refusal's own stated reason ("genuinely
+    // ambiguous or can fail for an arbitrary unknown-typed value")
+    // doesn't actually hold for bytes the way it does for
+    // number/int/string: there's no encoding decision buried in "is this
+    // already bytes-shaped," unlike `bytes <-> string` (still refused
+    // below, unchanged -- that IS a real encoding choice: utf-8, hex,
+    // base64 all differ). A wrong-shaped value reaching
+    // display_spi/display_i2c at runtime already gets a clear
+    // ValueError (their own length check, NODE_ERROR-attributed via
+    // §5's fault boundary) -- the same "fails later, not never" contract
+    // already accepted for `string -> number`, not a new failure mode.
+    // Caught for real, not just reasoned about: a hand-authored
+    // `function -> display_spi` edge in a flow file silently failed to
+    // connect on load (main.ts's connectNodes() returning false, logged
+    // to the console but easy to miss) -- the exact "function -> a
+    // bytes-typed sink" pattern the `any -> bool` fix's own comment
+    // called "probably the single most common real pattern," just for
+    // bytes instead of bool.
+    return socket instanceof BytesSocket || socket instanceof AnySocket;
   }
 }
 

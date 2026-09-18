@@ -254,6 +254,102 @@
         </p>
       </template>
 
+      <template v-else-if="node.kind === 'display_spi'">
+        <label>controller
+          <select v-model="node.properties.controller" @change="touch">
+            <option value="st7789">ST7789</option>
+          </select>
+        </label>
+        <label>SPI bus
+          <input type="number" min="0" v-model.number="node.properties.spiBus" @input="touch" />
+        </label>
+        <label>baudrate
+          <input type="number" min="1" v-model.number="node.properties.baudrate" @input="touch" />
+        </label>
+        <label>sck pin
+          <input type="number" min="0" max="39" v-model.number="node.properties.sck" @input="touch" />
+        </label>
+        <label>mosi pin
+          <input type="number" min="0" max="39" v-model.number="node.properties.mosi" @input="touch" />
+        </label>
+        <label>dc pin
+          <input type="number" min="0" max="39" v-model.number="node.properties.dc" @input="touch" />
+        </label>
+        <label>cs pin (-1 = not wired)
+          <input type="number" min="-1" max="39" v-model.number="node.properties.cs" @input="touch" />
+        </label>
+        <label>reset pin (-1 = not wired)
+          <input type="number" min="-1" max="39" v-model.number="node.properties.reset" @input="touch" />
+        </label>
+        <label>backlight pin (-1 = not wired)
+          <input type="number" min="-1" max="39" v-model.number="node.properties.backlight" @input="touch" />
+        </label>
+        <label>width (px)
+          <input type="number" min="1" v-model.number="node.properties.width" @input="touch" />
+        </label>
+        <label>height (px)
+          <input type="number" min="1" v-model.number="node.properties.height" @input="touch" />
+        </label>
+        <label>rotation (0-7)
+          <input type="number" min="0" max="7" v-model.number="node.properties.rotation" @input="touch" />
+        </label>
+        <label>xstart (-1 = auto)
+          <input type="number" min="-1" v-model.number="node.properties.xstart" @input="touch" />
+        </label>
+        <label>ystart (-1 = auto)
+          <input type="number" min="-1" v-model.number="node.properties.ystart" @input="touch" />
+        </label>
+        <p class="hint">
+          One input: msg.payload must already be an RGB565-encoded framebuf.FrameBuffer buffer, width * height *
+          2 bytes -- build it upstream (a function node using framebuf.FrameBuffer, or a future graphics-
+          framework node). Note: MicroPython's framebuf.RGB565 stores each pixel in CPU-native (little-endian)
+          byte order, but SPI TFT controllers including this one expect big-endian pixel bytes on the wire --
+          byte-swap the buffer (swap each pair of bytes) before sending, or colors come out wrong (e.g. green
+          renders as red). Wrong-length input raises a NODE_ERROR rather than corrupting the panel silently.
+          Pins vary board to board -- there's no sensible default for more than one board, so set them from
+          your board's pinout. -1 on cs/reset/backlight means that pin isn't wired (some boards tie reset/cs
+          high or omit backlight control entirely). -1 on xstart/ystart (the default) lets the vendored
+          st7789py_mpy driver's own built-in offset table handle 240x240 and 135x240 panels (TiDAL's own panel
+          needs xstart=52, ystart=40 -- the driver applies this automatically at -1); any other resolution
+          needs xstart/ystart set explicitly or the driver raises a clear error at flow-boot time.
+        </p>
+      </template>
+
+      <template v-else-if="node.kind === 'display_i2c'">
+        <label>controller
+          <select v-model="node.properties.controller" @change="touch">
+            <option value="ssd1306">SSD1306</option>
+          </select>
+        </label>
+        <label>I2C bus
+          <input type="number" min="0" v-model.number="node.properties.i2cBus" @input="touch" />
+        </label>
+        <label>frequency (Hz)
+          <input type="number" min="1" v-model.number="node.properties.freq" @input="touch" />
+        </label>
+        <label>scl pin
+          <input type="number" min="0" max="39" v-model.number="node.properties.scl" @input="touch" />
+        </label>
+        <label>sda pin
+          <input type="number" min="0" max="39" v-model.number="node.properties.sda" @input="touch" />
+        </label>
+        <label>address
+          <input type="number" min="0" max="127" v-model.number="node.properties.addr" @input="touch" />
+        </label>
+        <label>width (px)
+          <input type="number" min="1" v-model.number="node.properties.width" @input="touch" />
+        </label>
+        <label>height (px, multiple of 8)
+          <input type="number" min="8" step="8" v-model.number="node.properties.height" @input="touch" />
+        </label>
+        <p class="hint">
+          One input: msg.payload must already be a MONO_VLSB-encoded framebuf.FrameBuffer buffer, width *
+          (height / 8) bytes -- build it upstream. Wrong-length input raises a NODE_ERROR rather than silently
+          corrupting the display's internal buffer indexing. Pins/address vary board to board -- set them from
+          your board's pinout.
+        </p>
+      </template>
+
       <template v-else-if="node.kind === 'wifi_status'">
         <label>poll interval (ms)
           <input type="number" min="1" v-model.number="node.properties.pollMs" @input="touch" />

@@ -60,7 +60,14 @@ class Pin:
     # in.test.ts did.
     INPUT_VALUES = {}
 
-    def __init__(self, pin, mode, pull=None):
+    # mode defaults to None (real machine.Pin's own default is -1, "leave
+    # as-is") -- added 2026-09-17 for display-spi.ts/display-i2c.ts's SPI/
+    # I2C clock/data pins, which construct `machine.Pin(N)` with no mode at
+    # all (real SPI()/I2C() constructors reconfigure the pin's function
+    # internally, same as every other MicroPython peripheral -- the pin's
+    # own `mode` is irrelevant once a bus owns it). Every pre-existing
+    # caller here passes mode explicitly, so this is purely additive.
+    def __init__(self, pin, mode=None, pull=None):
         self._pin = pin
         self._mode = mode
         self._pull = pull
@@ -78,6 +85,16 @@ class Pin:
                 return result
             return Pin.INPUT_VALUES.get(self._pin, 0)
         print("PIN_VALUE %s %s" % (self._pin, 1 if v else 0))
+
+    # Real machine.Pin's own on()/off() shorthand for value(1)/value(0) --
+    # added 2026-09-17 for st7789py.py's dc_low()/dc_high()/reset_low()/
+    # reset_high()/cs_low()/cs_high(), the first vendored driver in this
+    # project to call these instead of .value(...) directly.
+    def off(self):
+        self.value(0)
+
+    def on(self):
+        self.value(1)
 
     # ESwitch/EButton read pin state via call syntax (`self._pin()`), the
     # real machine.Pin's own documented shorthand for `.value()` with no
@@ -98,6 +115,52 @@ class Pin:
         self._irq_trigger = trigger
         self._irq_handler = handler
         print("PIN_IRQ %s trigger=%s" % (self._pin, trigger))
+
+
+class SPI:
+    """Stand-in for machine.SPI, enough to observe st7789py.py's own
+    hardware-write calls (self.spi.write(...)) for display_spi node
+    tests -- added 2026-09-17 alongside I2C below, for `outstanding-
+    items.md`'s "[P4] SSD1306 display node". Records every constructor
+    call and every write() call's bytes so a test can assert on them
+    (e.g. the init sequence, or a specific blit_buffer's bytes) without
+    needing a real SPI bus."""
+
+    def __init__(self, bus, baudrate=None, polarity=None, phase=None, sck=None, mosi=None, miso=None):
+        self._bus = bus
+        self._baudrate = baudrate
+        sck_num = sck._pin if isinstance(sck, Pin) else sck
+        mosi_num = mosi._pin if isinstance(mosi, Pin) else mosi
+        print("SPI_INIT bus=%s baudrate=%s sck=%s mosi=%s" % (bus, baudrate, sck_num, mosi_num))
+        self.writes = []
+
+    def write(self, buf):
+        self.writes.append(bytes(buf))
+        print("SPI_WRITE %d bytes" % len(buf))
+
+
+class I2C:
+    """Stand-in for machine.I2C, enough to observe ssd1306.py's own
+    SSD1306_I2C.write_cmd/write_data calls (self.i2c.writeto/.writevto)
+    for display_i2c node tests -- same "record calls, assert on them"
+    shape as SPI above."""
+
+    def __init__(self, bus, scl=None, sda=None, freq=None):
+        self._bus = bus
+        self._freq = freq
+        scl_num = scl._pin if isinstance(scl, Pin) else scl
+        sda_num = sda._pin if isinstance(sda, Pin) else sda
+        print("I2C_INIT bus=%s scl=%s sda=%s freq=%s" % (bus, scl_num, sda_num, freq))
+        self.writes = []
+
+    def writeto(self, addr, buf):
+        self.writes.append(("writeto", addr, bytes(buf)))
+        print("I2C_WRITETO addr=%s %d bytes" % (addr, len(buf)))
+
+    def writevto(self, addr, buflist):
+        combined = b"".join(bytes(b) for b in buflist)
+        self.writes.append(("writevto", addr, combined))
+        print("I2C_WRITEVTO addr=%s %d bytes" % (addr, len(combined)))
 
 
 class PWM:

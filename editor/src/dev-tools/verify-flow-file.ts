@@ -40,6 +40,10 @@
 // eswitch/ebutton added 2026-09-17, same treatment -- brand new node
 // types, given canvas presence from the day they were built (eswitch.ts/
 // ebutton.ts's own headers have the full design story).
+//
+// display_spi/display_i2c added 2026-09-17, same treatment -- brand new
+// node types, given canvas presence from the day they were built (nodes.ts/
+// display-spi.ts/display-i2c.ts's own headers have the full design story).
 
 import { readFileSync } from "node:fs";
 import { parseFlowFile } from "../flow-file/flow-file.js";
@@ -58,6 +62,8 @@ const KNOWN_KINDS = new Set([
   "interrupt",
   "eswitch",
   "ebutton",
+  "display_spi",
+  "display_i2c",
   "wifi_status",
   "wifi_gate",
   "udp_send",

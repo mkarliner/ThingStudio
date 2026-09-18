@@ -167,6 +167,8 @@ import { delayNode } from "../../node-library/delay.js";
 import { mqttPublishNode } from "../../node-library/mqtt-publish.js";
 import { mqttSubscribeNode } from "../../node-library/mqtt-subscribe.js";
 import { pwmOutNode } from "../../node-library/pwm-out.js";
+import { displaySpiNode } from "../../node-library/display-spi.js";
+import { displayI2cNode } from "../../node-library/display-i2c.js";
 import { resolvePortType, type PortDefinition } from "../../compiler/node-definition.js";
 import type { CustomNodeDescriptor } from "../../node-library/custom-node.js";
 import type { NodeStatusState } from "../../protocol/messages.js";
@@ -558,6 +560,101 @@ export class EbuttonNode extends ClassicPreset.Node {
   }
 }
 
+// display_spi/display_i2c added 2026-09-17 -- framebuffer-display-node-
+// scoping.md's converged design (Mike's steer): two node families split
+// by bus (SPI/I2C), each taking a single pre-rendered framebuf-format
+// `frame` (bytes) input and pushing it to a vendored driver
+// (display-spi.ts/display-i2c.ts's own headers have the full design
+// story, including the VENDOR_FILES scaling concern this design tracks
+// but doesn't solve). Defaults here match each file's own codegen
+// defaults exactly, same invariant every other hardware node class in
+// this file follows -- a freshly-dropped node's properties and a
+// freshly-omitted property on a hand-edited flow file should compile to
+// the same thing. `cs`/`reset`/`backlight` default to -1 (display-spi.ts's
+// "not wired" sentinel, not a Thingstudio-specific convention -- see that
+// file's header).
+export class DisplaySpiNode extends ClassicPreset.Node {
+  width = 128;
+  height = NODE_HEIGHT;
+  kind = "display_spi" as const;
+  nodeType = "thingstudio/display_spi";
+  highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
+
+  properties: {
+    controller: "st7789";
+    spiBus: number;
+    baudrate: number;
+    sck: number;
+    mosi: number;
+    dc: number;
+    cs: number;
+    reset: number;
+    backlight: number;
+    width: number;
+    height: number;
+    rotation: number;
+    xstart: number;
+    ystart: number;
+  } = {
+    controller: "st7789",
+    spiBus: 2,
+    baudrate: 40000000,
+    sck: 12,
+    mosi: 11,
+    dc: 13,
+    cs: -1,
+    reset: -1,
+    backlight: -1,
+    width: 135,
+    height: 240,
+    rotation: 0,
+    xstart: -1,
+    ystart: -1,
+  };
+
+  constructor() {
+    super("display spi");
+    this.addInput("frame", new ClassicPreset.Input(portSocket(displaySpiNode.ports?.inputs, "frame", this.properties), "frame", true));
+  }
+}
+
+export class DisplayI2cNode extends ClassicPreset.Node {
+  width = 128;
+  height = NODE_HEIGHT;
+  kind = "display_i2c" as const;
+  nodeType = "thingstudio/display_i2c";
+  highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
+
+  properties: {
+    controller: "ssd1306";
+    i2cBus: number;
+    freq: number;
+    scl: number;
+    sda: number;
+    addr: number;
+    width: number;
+    height: number;
+  } = {
+    controller: "ssd1306",
+    i2cBus: 0,
+    freq: 400000,
+    scl: 22,
+    sda: 21,
+    addr: 0x3c,
+    width: 128,
+    height: 64,
+  };
+
+  constructor() {
+    super("display i2c");
+    this.addInput("frame", new ClassicPreset.Input(portSocket(displayI2cNode.ports?.inputs, "frame", this.properties), "frame", true));
+  }
+}
+
 export class WifiStatusNode extends ClassicPreset.Node {
   width = 120;
   height = NODE_HEIGHT;
@@ -843,6 +940,8 @@ export type AnyThingstudioNode =
   | InterruptNode
   | EswitchNode
   | EbuttonNode
+  | DisplaySpiNode
+  | DisplayI2cNode
   | WifiStatusNode
   | WifiGateNode
   | UdpSendNode
@@ -876,6 +975,8 @@ export const NODE_FACTORIES: Record<NodeKind, () => AnyThingstudioNode> = {
   interrupt: () => new InterruptNode(),
   eswitch: () => new EswitchNode(),
   ebutton: () => new EbuttonNode(),
+  display_spi: () => new DisplaySpiNode(),
+  display_i2c: () => new DisplayI2cNode(),
   wifi_status: () => new WifiStatusNode(),
   wifi_gate: () => new WifiGateNode(),
   udp_send: () => new UdpSendNode(),

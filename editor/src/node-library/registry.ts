@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import type { NodeDefinition } from "../compiler/node-definition.js";
 import { debugNode } from "./debug.js";
+import { displayI2cNode } from "./display-i2c.js";
+import { displaySpiNode } from "./display-spi.js";
 import { delayNode } from "./delay.js";
 import { ebuttonNode } from "./ebutton.js";
 import { eswitchNode } from "./eswitch.js";
@@ -51,6 +53,12 @@ import { wifiStatusNode } from "./wifi-status.js";
  * nodes") wrap Peter Hinch's ESwitch/EButton asyncio drivers -- given
  * canvas presence from the day they were built, see eswitch.ts/ebutton.ts's
  * own headers for the full design story.
+ * display_spi/display_i2c (2026-09-17, outstanding-items.md's "[P4] SSD1306
+ * display node") round out the display side: two node families split by
+ * bus (SPI color TFTs / I2C mono OLEDs), each pushing an already-rendered
+ * framebuf-format frame to a vendored driver -- see display-spi.ts/
+ * display-i2c.ts's own headers for the full design story, including the
+ * tracked (not yet solved) VENDOR_FILES scaling concern.
  */
 export function buildRegistry(): Map<string, NodeDefinition> {
   const registry = new Map<string, NodeDefinition>();
@@ -64,6 +72,8 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     interruptNode,
     eswitchNode,
     ebuttonNode,
+    displaySpiNode,
+    displayI2cNode,
     pwmOutNode,
     timerNode,
     wifiStatusNode,

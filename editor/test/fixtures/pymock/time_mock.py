@@ -82,6 +82,19 @@ def ticks_add(t, delta):
     return t + delta
 
 
+def sleep_ms(ms):
+    # Added 2026-09-17 for node-display-spi.test.ts: st7789py.py's own
+    # hard_reset()/soft_reset()/init() call `time.sleep_ms(...)` for real
+    # panel boot/settle delays (up to ~970ms total across a full init
+    # sequence) -- these tests only need the write SEQUENCE to happen
+    # correctly, not real elapsed wall-clock time, so this advances the
+    # same test-controlled CLOCK ticks_ms()/ticks_add() already use rather
+    # than actually blocking -- consistent with this file's own
+    # "test-controllable rather than wall-clock-based" design note above,
+    # and keeps the test suite fast.
+    CLOCK.now += ms
+
+
 def __getattr__(name):
     # PEP 562 module-level __getattr__ -- only reached for names this
     # mock doesn't define itself (ticks_ms/ticks_diff/CLOCK above all
