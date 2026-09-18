@@ -232,8 +232,7 @@ reasoning stays at each pointer's target, nothing here was deleted.
   the real driver. (2) `framebuf.RGB565` stores pixels little-endian (MicroPython's own CPU-native behavior,
   confirmed via `micropython/micropython#3536`, an unmerged upstream PR), but the ST7789 wants big-endian
   pixel bytes -- fixed with a byte-swap loop in the flow's `function` node, and flagged as a general gotcha in
-  `docs/user-guide/nodes/display-spi.md` for every future user of this node. ([detail](decisions/node-
-  authoring.md))
+  `docs/user-guide/nodes/display-spi.md` for every future user of this node. **Confirmed working on the real TiDAL badge, 2026-09-18** ("redeploy looks fine," Mike) -- all four real-hardware bugs found this session (wire-type gap, LCD_PWR/LCD_BLEN polarity, GRAM offset, RGB565 byte order) fixed and verified together. ([detail](decisions/node-authoring.md))
 - **eswitch/ebutton nodes (Peter Hinch's asyncio drivers)** -- built 2026-09-17. `thingstudio/eswitch`/
   `thingstudio/ebutton`, vendoring his `ESwitch`/`EButton`/`WaitAny`/`Delay_ms` classes verbatim
   (`device-runtime/src/vendor/primitives_events/`) rather than re-deriving debounce/long-press/

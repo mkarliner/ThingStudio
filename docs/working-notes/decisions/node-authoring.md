@@ -230,7 +230,8 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
   (confirms `xstart=52, ystart=40` and the byte-swap loop in the generated
   Python) and, combined with the earlier LCD_PWR/LCD_BLEN fix, resolved the
   flow's real-hardware symptoms in order: import error -> blank screen ->
-  clipped red circle with static -> not yet reconfirmed clean with all three
-  fixes together (next real-hardware pass). Full test suite re-run clean
-  throughout (515 passing, only the pre-existing unrelated `node-
-  startup.test.ts` failures unchanged).
+  clipped red circle with static -> confirmed working on the real TiDAL
+  badge, 2026-09-18, all four real-hardware bugs this session fixed
+  together (wire-type gap, LCD_PWR/LCD_BLEN polarity, GRAM offset, RGB565
+  byte order). Full test suite re-run clean throughout (515 passing, only
+  the pre-existing unrelated `node-startup.test.ts` failures unchanged).

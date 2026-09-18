@@ -571,5 +571,9 @@ ran with no `NODE_ERROR`, but nothing appeared -- root-caused to the
 `LCD_PWR`/`LCD_BLEN` active-low issue above and fixed. Third deploy
 showed a red circle clipped at the top with static along the left/
 bottom edges -- root-caused to the two bugs immediately above (GRAM
-offset, RGB565 byte order) and fixed. Not yet confirmed clean on real
-hardware with all fixes applied together -- that's the next pass.
+offset, RGB565 byte order) and fixed. **Fourth deploy, 2026-09-18,
+confirmed working** ("redeploy looks fine," Mike) -- white "Hello TiDAL"
+text and a correctly-colored, fully-on-screen green circle, all four
+real-hardware bugs found this session (wire-type gap, LCD_PWR/LCD_BLEN
+polarity, GRAM offset, RGB565 byte order) fixed and verified together on
+the actual TiDAL badge, not just off-device.
