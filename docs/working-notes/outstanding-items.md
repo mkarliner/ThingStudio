@@ -129,9 +129,10 @@ inline, not a fresh check.
   `vitest run` (37/37 `node-display-spi.test.ts`, 531/540 full suite, remaining failures confirmed
   pre-existing/environmental). Two new real-hardware test flows written
   (`test-flows/display-spi-gs2-cyd-test.flow.json`, `display-spi-mono-cyd-test.flow.json`, same CYD
-  config as gs4's), **neither deployed to real hardware yet** -- gs4 remains the only depth confirmed
-  working on real silicon. A TiDAL companion flow (this project's only real odd-width panel) would
-  separately cover the stride-fix correctness case on real hardware, not written yet, for any depth.
+  config as gs4's), and **both confirmed working on real CYD hardware, 2026-09-18** -- all three
+  indexed depths (`gs4`, `gs2`, `mono`) are now confirmed working on real silicon, not just off-device.
+  A TiDAL companion flow (this project's only real odd-width panel) would separately cover the
+  stride-fix correctness case on real hardware, not written yet, for any depth.
 - **[POST-MVP]** **Preset dropdown for known-working `display_spi` panel configs — new item,
   2026-09-18, Mike's ask.** A picklist of named, known-good presets (e.g. "TiDAL badge", "CYD
   2-USB") that fill in the raw property values, while still allowing a fully manual/roll-your-own

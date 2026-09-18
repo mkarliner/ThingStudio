@@ -73,8 +73,8 @@ real `@micropython.viper` re-enabled, this project's first-ever real-hardware vi
 Xtensa, closing gs4 out end to end; then `gs2`/`mono` (the two remaining decided-but-not-built depths)
 built the same day, including a real MicroPython-source-confirmed finding that gs4's bit order doesn't
 generalize to gs2/mono (they're the opposite of gs4, and of each other's similarly-named `MONO_HLSB`
-sibling) -- neither deployed to real hardware yet. 14 entries: `docs/working-notes/decisions/
-node-authoring.md`.
+sibling) -- and, later the same day, both confirmed working on real CYD hardware too, closing out all
+three indexed depths end to end. 14 entries: `docs/working-notes/decisions/node-authoring.md`.
 
 ## Session sequencing
 

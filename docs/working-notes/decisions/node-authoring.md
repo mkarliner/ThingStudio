@@ -564,7 +564,12 @@ never given an `ssd1306` vendor file or a couple of button-driver ones, unrelate
 here) rather than real regressions.
 
 **Two new real-hardware test flows** (`test-flows/display-spi-gs2-cyd-test.flow.json`,
-`display-spi-mono-cyd-test.flow.json`), same CYD config as the gs4 test flow, **neither deployed to
-real hardware yet** -- `test-flows/README.md`'s own entry has the full description and expected byte
-counts (19,200/9,600). gs4 is still the only depth actually confirmed working end to end on real
-silicon.
+`display-spi-mono-cyd-test.flow.json`), same CYD config as the gs4 test flow -- `test-flows/README.md`'s
+own entry has the full description and expected byte counts (19,200/9,600).
+
+**Deployed and confirmed working on real CYD hardware, 2026-09-18 -- same day.** Mike ran both flows
+on the same CYD unit gs4 was confirmed on; both rendered correctly (text, colored/shaded bands, filled
+circle/rectangle) with no `MemoryError` and no visible bit-order corruption, closing out the open
+question of whether the ascending-bit-order expansion loops (the opposite of gs4's) were actually
+right on real silicon, not just independently hand-verified off-device. All three indexed depths
+(`gs4`, `gs2`, `mono`) are now confirmed working end to end on real hardware.

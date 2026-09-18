@@ -1,4 +1,4 @@
-# `display_spi` framebuffer construction can exceed available heap — gs4 confirmed on real CYD hardware; gs2/mono also built (not yet on hardware)
+# `display_spi` framebuffer construction can exceed available heap — all three indexed depths (gs4/gs2/mono) confirmed on real CYD hardware
 
 Status: scoped 2026-09-18 (Mike's request after the CYD real-hardware bring-up session hit a real
 `MemoryError`), decided the same day, and `frameFormat: "gs4"` implemented the same day (`display-
@@ -14,7 +14,8 @@ device file -- the file kept the old, buggy flat-byte expansion until a second p
 on-device by grep immediately after, actually took. Worth remembering: `device_commit_files` returning
 success is not sufficient confirmation the content landed -- re-read the on-device file after a push
 before trusting it, especially before a verification pass that will be graded against that push. `gs2`/
-`mono` remain decided but not built.
+`mono` were built later the same day and are now also confirmed on real hardware (see the dedicated
+section below).
 
 **A real-hardware test flow for `gs4` now exists, not yet run:**
 `test-flows/display-spi-gs4-cyd-test.flow.json`, targeting the same CYD unit whose classic-ESP32
@@ -239,7 +240,7 @@ bottleneck per the corroborating GS4 account above -- isn't exercised by this sp
 2-row expansion granularity and the ~11-color Material palette are also still to be tried on real
 hardware. Full method + numbers: `docs/working-notes/learnings/micropython-device-runtime.md`.
 
-## `gs2`/`mono` built, 2026-09-18 -- same day as gs4's real-hardware confirmation, not yet deployed
+## `gs2`/`mono` built and confirmed on real CYD hardware, 2026-09-18 -- same day as gs4's own confirmation
 
 The two remaining depths this doc originally scoped alongside gs4 (`gs2`: `framebuf.GS2_HMSB`, 2bpp,
 an eighth of RGB565's memory; `mono`: `framebuf.MONO_HMSB`, 1bpp, a sixteenth) are now built --
@@ -266,6 +267,8 @@ Verified via `tsc --noEmit` (clean, same pre-existing unrelated gap) and `vitest
 formulas above and independently script-verified before being written into the suite, not backed out
 of the codegen's own output; 531/540 full suite, remaining 9 failures confirmed pre-existing/
 environmental, unrelated). Two new real-hardware test flows written (`test-flows/display-spi-gs2-cyd-
-test.flow.json`, `display-spi-mono-cyd-test.flow.json`), **neither deployed yet** -- gs4 remains the
-only depth actually confirmed working on real silicon. Full incident: `decisions/node-authoring.md`'s
+test.flow.json`, `display-spi-mono-cyd-test.flow.json`), and **both confirmed working on real CYD
+hardware, 2026-09-18** -- Mike deployed and ran both, correct rendering, no `MemoryError`, no
+bit-order corruption. All three indexed depths (`gs4`, `gs2`, `mono`) are now confirmed working on
+real silicon, closing this item out end to end. Full incident: `decisions/node-authoring.md`'s
 2026-09-18 "gs2/mono frame formats built" entry.

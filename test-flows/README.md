@@ -711,11 +711,15 @@ continuous redraw holds up with no further `MemoryError` or crash.
 node-authoring.md`) -- these two are the equivalent first real-hardware test flows for the two
 lower depths, same shape as `display-spi-gs4-cyd-test.flow.json` above (same CYD hardware config,
 `baudrate: 27000000` included, `thingstudio/inject` -> `thingstudio/function` -> `thingstudio/
-display_spi`, palette property left unset to exercise the default-palette path). **Neither has been
-deployed to real hardware yet** -- gs4's own real-hardware pass is what these two are modeled on, not
-a substitute for it; frameFormat/bit-unpacking correctness is covered off-device (see below), but
-first real deploys of `gs2`/`mono` specifically, and the SPI/viper behavior on a real board for these
-two frame formats, are still open.
+display_spi`, palette property left unset to exercise the default-palette path). Modeled directly on gs4's
+own real-hardware-confirmed test flow above, not a substitute for it -- frameFormat/bit-unpacking
+correctness is covered off-device (see below), and this pair is what took that same coverage onto
+real silicon for the two lower depths.
+
+**Confirmed working on real CYD hardware, 2026-09-18** -- Mike deployed and ran both flows; both
+render correctly at full native resolution (label text, colored/shaded bands, filled circle/rectangle,
+no `MemoryError`, no visible bit-order corruption or sideways smearing within a row). All three
+`display_spi` indexed frame formats (`gs4`, `gs2`, `mono`) are now confirmed working on real hardware.
 
 `display-spi-gs2-cyd-test.flow.json`: `frameFormat: "gs2"` (`framebuf.GS2_HMSB`, 2 bits/pixel, 4-color
 palette -- default palette's own first 4 entries: black/white/red/green). Function node draws the same
