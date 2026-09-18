@@ -56,7 +56,9 @@ The redeploy-cleanup and WiFi/MQTT hardening work: the socket-leak cleanup regis
 
 ## Node authoring / extensibility
 
-Custom nodes as a two-file package inlined via a generic `NodeDefinition` builder, no new wire protocol; same trust boundary as the `function` node, no sandboxing; output ports capped at 1 by codegen validation, not the package format; package persistence deferred to the backend; `eswitch`/`ebutton` nodes vendoring Peter Hinch's `micropython-async` primitives, partially resolving design doc §11. 5 entries: `docs/working-notes/decisions/node-authoring.md`.
+Custom nodes as a two-file package inlined via a generic `NodeDefinition` builder, no new wire protocol; same trust boundary as the `function` node, no sandboxing; output ports capped at 1 by codegen validation, not the package format; package persistence deferred to the backend; `eswitch`/`ebutton` nodes vendoring Peter Hinch's
+`micropython-async` primitives, partially resolving design doc §11; CYD confirmed ST7789(V)-compatible
+with a working MADCTL/inversion config. 6 entries: `docs/working-notes/decisions/node-authoring.md`.
 
 ## Session sequencing
 

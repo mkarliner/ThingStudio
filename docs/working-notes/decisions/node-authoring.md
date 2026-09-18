@@ -235,3 +235,32 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
   together (wire-type gap, LCD_PWR/LCD_BLEN polarity, GRAM offset, RGB565
   byte order). Full test suite re-run clean throughout (515 passing, only
   the pre-existing unrelated `node-startup.test.ts` failures unchanged).
+
+
+- **2026-09-18 -- CYD (ESP32-2432S028, 2 USB ports) confirmed ST7789(V)-compatible, working
+  display config found on real hardware.** `framebuffer-display-node-scoping.md`'s open "CYD
+  controller-variant story" resolved: `docs/working-notes/cyd-touch-gui-flash-budget-briefing.md`
+  item 1's own fallback plan (chip-ID read first, then try candidate drivers on real hardware) run
+  in full. Chip-ID reads (`RDDID`/`RDID1-3`/`RDID4`) all came back `0x00` -- inconclusive alone,
+  consistent with these registers being known-unreliable on real CYD units (an independent CYD
+  diagnostic tool project doesn't attempt automatic ID detection either). Community naming
+  heuristics conflicted (one GitHub issue says 2-USB CYD variants are ST7789, Bruce firmware's own
+  default profile for this exact board string is ILI9341) -- not trusted alone, per the original
+  briefing's own warning that silkscreen/model number doesn't reliably distinguish these boards.
+  Settled by running the project's own vendored `st7789py_mpy` driver directly against real
+  hardware (`test-flows/cyd-display-test-pattern.py`, `cyd-display-orientation-test.py`,
+  `cyd-display-mh-test.py`) and iterating on a real photographed test pattern until all 6
+  independently-colored test bars rendered correctly. Working config for this unit: `st7789py_mpy`'s
+  `ST7789` class, `reset=None` (RST tied high, no GPIO), `xstart=0, ystart=0` (no GRAM offset needed
+  at native 240x320), `inversion_mode(False)` (the class's own `init()` hardcodes `True`, tuned for
+  TiDAL's different panel), and `MADCTL = 0x4C` (`BGR | MH | MX` -- written directly via
+  `display.write(ST7789_MADCTL, ...)`, bypassing `_set_mem_access_mode()`'s rotation-table wrapper,
+  which never exercises the `MH` bit at all -- see the learnings-log entry below). Pins: SPI bus 2,
+  `sck=14, mosi=13, miso=12, cs=15, dc=2, backlight=21` (mischianti.org's documented values, now
+  hardware-confirmed rather than sourced from one unverified page). Backlight assumed active-high
+  and was correct (no repeat of TiDAL's active-low surprise). Does NOT resolve whether this holds
+  across other CYD units/batches -- the original briefing's own "no visible way to tell apart"
+  caveat still stands for a different physical unit; this is one confirmed real board, not a
+  universal CYD answer. Real bugs found along the way (full-frame `MemoryError`, the MADCTL `MH`
+  bit, unreliable ID reads, conflicting board-naming heuristics) logged separately:
+  `docs/working-notes/learnings/hardware-bringup-hil-rig.md`.

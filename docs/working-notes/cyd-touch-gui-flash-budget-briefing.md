@@ -25,6 +25,44 @@ command (CYD's SPI wiring includes MISO, unlike TiDAL, so read-back is actually 
 first; failing that, try each candidate driver on real hardware and see which produces a correct image.
 Record whichever variant it turns out to be — the next person shouldn't have to redo this.
 
+**Interim findings, 2026-09-18 (this session) — converging, but not yet driver-confirmed.** Mike's
+actual unit: board ID string `esp32-2432s028` (no `R` suffix), 2 USB ports.
+`test-flows/cyd-controller-id-probe.py` (written and run this session) against real hardware: `0xD3`
+RDID4 (ILI9341/ILI9342's "spells 9341" register) came back `00 00 00` — absence of the expected
+`00 93 41` signature, though not conclusive alone (RDDID/RDID1-3 also came back zero, and a CYD-focused
+diagnostic tool project doesn't even attempt automatic ID detection on this hardware family — these
+registers are known-unreliable here). `0x09` RDDST *did* return real, structured data (`30 80 00 00`
+once framing-aligned), confirming the SPI/MISO wiring and pin numbers below are correct — the bus talks
+fine, the chip just doesn't answer the ID-specific commands usefully.
+
+Two independent community threads on this exact board family (a CYD GitHub issue and a TFT_eSPI
+discussion) report that the 2-USB-port CYD variant uses **ST7789**, while the single-USB "R" variant
+uses ILI9341 — consistent with Mike's board having no `R` suffix and 2 USB ports. Mike then flashed
+Bruce firmware (`BruceDevices/firmware`) — its own default profile for board string `2432S028` selects
+ILI9341 — and reported the display works but colors look off (green text on a white background,
+uncertain if intended). That "renders, but colors look wrong" symptom is the textbook signature of an
+ILI9341 driver running an ST7789 panel (or vice versa) — a *known, currently-unresolved* Bruce issue
+(`BruceDevices/firmware#1546`, "CYD-2432S028 Inverted Screen Colors") reports the identical symptom on
+this identical board.
+
+**RESOLVED, 2026-09-18: confirmed ST7789(V), working config found on real hardware.** The three
+converging signals above turned out right. `test-flows/cyd-display-test-pattern.py` +
+`cyd-display-orientation-test.py` + `cyd-display-mh-test.py` (all written and run this session) pushed
+real photographed test patterns through the project's already-vendored `st7789py_mpy` driver until all
+6 independently-colored bars rendered correctly — no new controller driver needed, as hoped. Working
+config for this unit: `reset=None` (RST tied high), `xstart=0, ystart=0` (no GRAM offset at native
+240x320), `inversion_mode(False)` (the driver's own `init()` hardcodes `True`, tuned for TiDAL's
+different panel), and `MADCTL = 0x4C` (`BGR | MH | MX`, written directly — `_set_mem_access_mode()`'s
+rotation table never exercises the `MH` bit, which this panel needed for correct horizontal
+orientation). Backlight active-high was correct (no repeat of TiDAL's active-low surprise). Full
+reasoning, the chip-ID-read dead end, and real bugs hit along the way (a full-frame `MemoryError` on
+classic ESP32, the MADCTL `MH` gap, unreliable ID registers):
+`docs/working-notes/decisions/node-authoring.md` (2026-09-18 entry) and
+`docs/working-notes/learnings/hardware-bringup-hil-rig.md`. **Still only one confirmed unit** — the
+"no visible way to tell variants apart" caveat above still applies to a different physical board;
+this doesn't prove every CYD is ST7789(V).
+
+
 **Pins (mischianti.org's documented values, for the ILI9341 case — unverified):** MISO=12, MOSI=13,
 SCK=14, CS=15, DC=2, RST tied high in hardware (no GPIO), backlight=21, 55MHz SPI clock. Different bus,
 different numbers entirely from TiDAL's SPI 2 / CS=10 / CLK=12 / DIN=11 / RESET=14 / DC=13 — confirms

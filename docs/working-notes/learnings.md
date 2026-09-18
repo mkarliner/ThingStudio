@@ -60,7 +60,11 @@ Device-side runtime gotchas: `readline()` over `read(n)`/`readexactly(n)` for bi
 
 ## Hardware bring-up / HIL rig
 
-Witness-rig wiring gotchas (floating pins, long patch wires, first-`.irq()` `MemoryError`), Thonny's keyboard-interrupt-on-connect trap, Rete's `width`/`height` as a real rendering clipping budget. 5 entries: `docs/working-notes/learnings/hardware-bringup-hil-rig.md`.
+Witness-rig wiring gotchas (floating pins, long patch wires, first-`.irq()` `MemoryError`),
+Thonny's keyboard-interrupt-on-connect trap, Rete's `width`/`height` as a real rendering clipping
+budget, and CYD display bring-up (full-frame `MemoryError` on classic ESP32, the MADCTL `MH` bit,
+unreliable chip-ID reads, conflicting board-naming heuristics). 9 entries:
+`docs/working-notes/learnings/hardware-bringup-hil-rig.md`.
 
 ## Editor / build tooling
 
