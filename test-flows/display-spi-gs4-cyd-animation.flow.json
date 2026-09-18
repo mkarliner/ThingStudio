@@ -1,0 +1,78 @@
+{
+  "formatVersion": 1,
+  "flowName": "display-spi-gs4-cyd-animation",
+  "nodes": [
+    {
+      "id": "1",
+      "type": "thingstudio/timer",
+      "properties": {
+        "intervalMs": 1
+      }
+    },
+    {
+      "id": "2",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "import framebuf\nw, h = 240, 320\n# Same GS4_HMSB stride math as display-spi-gs4-cyd-test.flow.json --\n# ((w+1)//2) per row, not a flat w*h/2 (see that flow / display-spi.ts's\n# header for why the flat formula breaks on an odd width like TiDAL's).\nstride = (w + 1) // 2\n\n# Allocated ONCE, on the first tick, and mutated in place on every\n# subsequent tick -- not re-allocated per frame. The first version of\n# this flow rebuilt a fresh bytearray() every tick and also converted it\n# to bytes() before sending (an extra full-size copy) -- fine for a\n# single manual inject, but at this timer's ~1ms interval it repeatedly\n# asks the allocator for two back-to-back 38,400-byte blocks forever,\n# which fragmented this classic ESP32's heap fast enough to MemoryError\n# within the first second, even right after a fresh power cycle. Storing\n# the buffer (and the FrameBuffer wrapping it) in this node's own\n# `context` and reusing them is also just the correct pattern for a real\n# embedded animation loop, not only a workaround.\nbuf = context.get('buf')\nif buf is None:\n    buf = bytearray(stride * h)\n    context.set('buf', buf)\nfb = context.get('fb')\nif fb is None:\n    fb = framebuf.FrameBuffer(buf, w, h, framebuf.GS4_HMSB)\n    context.set('fb', fb)\n\ntick = msg['payload']\n\n# Everything below is a closed-form function of tick, not an\n# accumulator -- no separate position/velocity state needed, and a\n# dropped/late tick can't desync the animation the way a running\n# accumulator could.\n\n# Ball bounces up/down the full 320px height on a triangle wave.\nv_period = 120\nvp = tick % (2 * v_period)\nvt = vp if vp <= v_period else 2 * v_period - vp\nradius = 24\ny = radius + (vt * (h - 2 * radius)) // v_period\n\n# Bar sweeps left/right across the 240px width on its own, shorter\n# triangle wave, so both axes' motion are visible at once.\nh_period = 80\nhp = tick % (2 * h_period)\nht = hp if hp <= h_period else 2 * h_period - hp\nbar_w = 20\nbx = (ht * (w - bar_w)) // h_period\n\nfb.fill(0)\nfb.ellipse(w // 2, y, radius, radius, 2, True)\nfb.fill_rect(bx, h - 40, bar_w, 20, 6)\nfb.text('tick {}'.format(tick), 4, 4, 1)\n\n# No bytes(buf) copy here -- display_spi's sink only ever reads the\n# payload via len() and a viper ptr8 pointer, both of which work\n# identically against a bytearray; the earlier bytes() conversion was an\n# unnecessary second 38,400-byte allocation every tick, not something\n# the sink actually required.\nmsg['payload'] = buf\nreturn msg"
+      }
+    },
+    {
+      "id": "3",
+      "type": "thingstudio/display_spi",
+      "properties": {
+        "controller": "st7789",
+        "frameFormat": "gs4",
+        "spiBus": 2,
+        "baudrate": 27000000,
+        "sck": 14,
+        "mosi": 13,
+        "dc": 2,
+        "cs": 15,
+        "reset": -1,
+        "backlight": 21,
+        "width": 240,
+        "height": 320,
+        "rotation": 1,
+        "xstart": 0,
+        "ystart": 0,
+        "colorOrder": "bgr",
+        "invertColors": false,
+        "dataLatchOrder": true
+      }
+    }
+  ],
+  "edges": [
+    [
+      "1",
+      0,
+      "2",
+      0
+    ],
+    [
+      "2",
+      0,
+      "3",
+      0
+    ]
+  ],
+  "layout": {
+    "1": {
+      "pos": [
+        40,
+        240
+      ]
+    },
+    "2": {
+      "pos": [
+        340,
+        40
+      ]
+    },
+    "3": {
+      "pos": [
+        640,
+        40
+      ]
+    }
+  }
+}

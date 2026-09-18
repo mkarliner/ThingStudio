@@ -63,8 +63,14 @@ with a working MADCTL/inversion config, now exposed as real `display_spi` node p
 decided (real `frameFormat`/`palette` properties, four depths, palette-driven throughout) with an
 off-device `@micropython.viper` spike backing it, then `frameFormat: "gs4"` actually built (a real
 odd-width stride bug found and fixed before landing) and verified by a real `tsc`/`vitest` pass, which
-also caught a `device_commit_files` push that had silently not landed. 11 entries:
-`docs/working-notes/decisions/node-authoring.md`.
+also caught a `device_commit_files` push that had silently not landed; then, on the first real
+hardware-deploy attempt, a previously-invisible gap in the editor's own `mpy-cross` WASM Deploy
+pipeline (never passed `-march`, breaking on the first-ever real `@micropython.viper` compile) found
+and fixed; then a real hard crash (`Guru Meditation Error`, boot loop) root-caused to CYD's specific
+SPI pins not supporting the node's 40MHz default baudrate, unrelated to gs4/viper at all; both fixes
+then confirmed on a real redeploy -- correct render with viper disabled, then correct render again with
+real `@micropython.viper` re-enabled, this project's first-ever real-hardware viper execution on
+Xtensa, closing gs4 out end to end. 13 entries: `docs/working-notes/decisions/node-authoring.md`.
 
 ## Session sequencing
 

@@ -91,8 +91,36 @@ inline, not a fresh check.
   before landing. **Verified the same day** by a real `tsc --noEmit` (clean) and `vitest run`
   (`node-display-spi.test.ts` 27/27) against an isolated extraction, per `CLAUDE.md`'s fallback --
   caught 4 real strict-null errors and a `device_commit_files` push that had silently not landed on
-  the device (fixed, re-verified on-device). Still no real-hardware (CYD/TiDAL) pass. `gs2`/`mono`
-  still not built.
+  the device (fixed, re-verified on-device). **A real-hardware test flow now exists**
+  (`test-flows/display-spi-gs4-cyd-test.flow.json`, CYD's full native 240x320 resolution, the actual
+  `MemoryError` case), verified via `verify-flow-file.ts` and a `compile()` dry run (confirms the
+  38,400-byte gs4 frame, correct MADCTL/inversion, the corrected expansion function). **Three real,
+  unrelated bugs found and fixed on the road to a first real deploy, none of them gs4/viper bugs**:
+  (1) board needed a first-time `deploy_runtime.py` bootstrap; (2) the editor's own `mpy-cross` WASM
+  Deploy pipeline never passed `-march`, breaking on the first-ever real `@micropython.viper` compile
+  (fixed: `-march=xtensawin`); (3) this CYD's specific SPI pins can't sustain the node's 40MHz default
+  baudrate -- silently invalid SPI device handle, then a real hard crash (`Guru Meditation Error`,
+  boot loop) on the first transaction, root-caused via a standalone step-by-step probe script
+  (`test-flows/cyd-display-spi-init-probe.py`) and fixed by pinning the flow's own `baudrate: 27000000`
+  (matching every prior CYD script). All three logged: `learnings/hardware-bringup-hil-rig.md`,
+  `learnings/editor-build-tooling.md`, `decisions/node-authoring.md`. **Confirmed rendering correctly
+  on real CYD hardware, 2026-09-18** -- first with `@micropython.viper` temporarily disabled
+  (`GS4_DIAGNOSTIC_PLAIN_PYTHON`, a diagnostic-only flag added mid-incident to rule viper in/out of the
+  boot-loop crash above; it wasn't the cause -- see `decisions/node-authoring.md`), confirmed correct,
+  then the flag reverted and the same flow redeployed with real viper back on: **also confirmed
+  rendering correctly** ("seems to work fine" -- Mike). This is this project's first-ever real-hardware
+  execution of `@micropython.viper`-compiled code on Xtensa, and closes out the whole gs4 memory-
+  reduction feature end to end: built, statically verified, and now confirmed live on the actual
+  hardware it was built for. `test-flows/display-spi-gs4-cyd-animation.flow.json` (added same day)
+  drives the same gs4 pipeline continuously via `thingstudio/timer` (1ms interval, i.e. display-bound)
+  instead of one manual inject click, as a rough visual/refresh-rate demo -- not a timing measurement
+  (no on-device instrumentation), just confirms the loop holds up under continuous redraw. Its first
+  version had a real bug of its own (reallocating the gs4 framebuffer every tick fragmented the heap
+  into a `MemoryError` within about a second, even after a power cycle) -- fixed by reusing a
+  `context`-persisted buffer instead of reallocating per frame, and **confirmed rendering correctly,
+  continuously, on real hardware** after the fix (`learnings/hardware-bringup-hil-rig.md`). A TiDAL
+  companion flow (this project's only real odd-width panel) would separately cover the stride-fix
+  correctness case on real hardware, not written yet. `gs2`/`mono` still not built.
 - **[POST-MVP]** **Preset dropdown for known-working `display_spi` panel configs — new item,
   2026-09-18, Mike's ask.** A picklist of named, known-good presets (e.g. "TiDAL badge", "CYD
   2-USB") that fill in the raw property values, while still allowing a fully manual/roll-your-own

@@ -577,3 +577,130 @@ text and a correctly-colored, fully-on-screen green circle, all four
 real-hardware bugs found this session (wire-type gap, LCD_PWR/LCD_BLEN
 polarity, GRAM offset, RGB565 byte order) fixed and verified together on
 the actual TiDAL badge, not just off-device.
+
+## `display-spi-gs4-cyd-test.flow.json`
+
+First real-hardware test for `frameFormat: "gs4"` (`decisions/node-authoring.md`'s 2026-09-18 entries,
+`outstanding-items/display-spi-framebuffer-memory.md`) -- against the same CYD (ESP32-2432S028) unit
+`cyd-display-test-pattern.py`/`decisions/node-authoring.md`'s CYD entries confirmed, using its native
+240x320 panel at full resolution. This is the actual motivating case: a full RGB565 frame at this
+resolution (153,600 bytes) is what produced the real `MemoryError` on this same board
+(`learnings/hardware-bringup-hil-rig.md`) that `gs4` exists to avoid -- this flow is the direct test of
+whether it actually does, not just a memory-math argument on paper.
+
+Three nodes, all fanned from one `thingstudio/inject` ("bool" payload, click-fire): `thingstudio/function`
+(builds a 240x320 `framebuf.GS4_HMSB` frame -- black background, white "GS4 240x320" text, four colored
+horizontal bars in red/green/blue/cyan, a yellow filled circle -- using the default palette indices
+directly, `palette` deliberately left unset on the `display_spi` node so this run also exercises the
+no-`palette`-property default path, not just an explicit override) -> `thingstudio/display_spi`
+(`frameFormat: "gs4"`, CYD's confirmed hardware config: `spiBus: 2, sck: 14, mosi: 13, dc: 2, cs: 15,
+reset: -1, backlight: 21, width: 240, height: 320, rotation: 1, xstart: 0, ystart: 0, colorOrder: "bgr",
+invertColors: false, dataLatchOrder: true` -- all but one of `display_spi`'s own current defaults,
+pinned explicitly per this directory's own "a real flow targeting real hardware pins its own real
+values" convention rather than relying on defaults matching by coincidence). No `gpio_out` workaround
+nodes needed here (unlike TiDAL) -- CYD's backlight is already confirmed active-high, so `display_spi`'s
+own `backlight` property handles it directly.
+
+**`baudrate: 27000000`, NOT the node's 40MHz default** -- found the hard way, 2026-09-18's first real
+deploy attempt: this CYD's specific pin assignment can't reach 40MHz (silently invalid SPI device
+handle, then a real hard crash on the first transaction -- full story in
+`learnings/hardware-bringup-hil-rig.md`). 27MHz matches every prior CYD script
+(`cyd-display-test-pattern.py` and friends) -- already proven safe, not a fresh guess.
+
+**Expected memory math, the actual point of this test:** `expectedBytes` for this flow's frame is
+`Math.ceil(240 / 2) * 320 = 38,400` bytes -- a quarter of the 153,600-byte RGB565 buffer that
+`MemoryError`'d on this board, allocated as one contiguous `bytearray` with no strip-juggling.
+Confirmed by a `compile()` dry run through the real registry (below), not just hand math.
+
+**Verified via `verify-flow-file.ts`** (parses clean, all 3 nodes have a real canvas factory) **and a
+`compile()` dry run through the real registry** (not just this file's own JSON) -- confirms
+`_display_spi_disp.write(ST7789_MADCTL, bytes([76]))` (`0x4C` = `BGR | MH | MX`, byte-identical to the
+CYD config `decisions/node-authoring.md` already confirmed on real hardware for RGB565 mode -- MADCTL
+computation doesn't change based on `frameFormat`, exactly as intended), `inversion_mode(False)`, the
+`_display_spi_expand` viper function present with the corrected `stride`/`width`/`rows`-aware signature
+(not the flat-nibble one an earlier push briefly regressed to -- see this session's own verification
+entry in `decisions/node-authoring.md`), a 38,400-byte length check, and a 960-byte reusable scratch
+buffer (`240 * 2 * GS4_ROWS_PER_BATCH`). `array`/`micropython` are MicroPython core modules, not
+vendored files, so no new `deploy_runtime.py` `VENDOR_FILES` entry or board re-bootstrap is needed
+beyond whatever a board running `display_spi` already requires (`st7789py.py`).
+
+**Run for real, 2026-09-18 -- confirmed working, twice.** First deploy attempt hit an unrelated boot
+loop (this CYD's pins can't sustain the node's 40MHz default baudrate -- fixed by pinning `baudrate:
+27000000` above; full story in `decisions/node-authoring.md` and `learnings/hardware-bringup-hil-
+rig.md`). With that fixed, redeployed and got the expected render described below -- first with
+`@micropython.viper` temporarily disabled to isolate it from the SPI crash while that was still an
+open question, then again with real viper back on: same correct render. That second run is this
+project's first-ever real-hardware execution of viper-compiled code on Xtensa.
+
+**Load via the browser ("Open Flow", same as every other file in this directory) and Deploy**, click
+the inject node once connected live. **What to watch for:** white "GS4 240x320" text near the top-left,
+then four full-width colored bars top to bottom (red, green, blue, cyan -- same palette-index-to-color
+mapping `DEFAULT_PALETTE_GS4` documents in `display-spi.ts`), then a yellow filled circle, filling the
+whole 240x320 panel with no black margin/crop and no visible banding/tearing between the 2-row batches
+`display_spi`'s own codegen streams out. A wrong-looking color on one specific bar (not all of them)
+points at a palette-index mixup in the `function` node's own drawing calls, not a `display_spi`/codegen
+bug -- worth distinguishing before assuming the fix itself is wrong. **The actual pass/fail that
+matters most:** does this deploy and run AT ALL without a `MemoryError`, at this board's full native
+resolution, in a single contiguous frame buffer -- that's the one thing the old RGB565 path could never
+do on this hardware.
+
+**Not covered by this flow:** the odd-width stride fix (`decisions/node-authoring.md`'s
+"GRAM offset bug"-adjacent gs4 entry -- the `Math.ceil(width / 2)` vs. flat `w*h/2` correctness bug
+found and fixed before landing) is already covered by hand-verification + `vitest` against a synthetic
+odd-width case, but has never been exercised on a REAL odd-width panel -- TiDAL's 135x240 is this
+project's only one. A `display-spi-gs4-tidal-test.flow.json` companion flow, same shape as this one
+but against TiDAL's panel and pins (see `display-spi-tidal-test.flow.json` above for its confirmed
+config), would be the natural next real-hardware check for that specific fix -- not written yet, flag
+to Mike if wanted.
+
+## `display-spi-gs4-cyd-animation.flow.json`
+
+A demo, not a new correctness test -- built 2026-09-18 right after
+`display-spi-gs4-cyd-test.flow.json` above was confirmed working end to end (real viper included), to
+show off continuous redraw rather than a single static frame. Same CYD hardware config, same
+`frameFormat: "gs4"` sink -- the only thing different is what drives it.
+
+`thingstudio/timer` (`intervalMs: 1`, i.e. as fast as the flow can go -- `compile.ts` sleeps this long
+*after* each iteration finishes, so the real driving factor is however long the `function` node's
+frame update plus `display_spi`'s own viper-expand-and-write actually take, not this number) ->
+`thingstudio/function` (mutates a persistent 38,400-byte gs4 frame in place every tick: a filled circle
+bouncing top-to-bottom and a bar sweeping left-to-right, both driven off the timer's own tick count via
+a closed-form triangle wave, not a stored position -- so a skipped or delayed tick can't desync the
+animation) -> `thingstudio/display_spi` (identical properties to `display-spi-gs4-cyd-test.flow.json`,
+`baudrate: 27000000` included).
+
+**A real `MemoryError` found and fixed before this ever rendered, 2026-09-18.** The first version of
+this flow's `function` node rebuilt a fresh `bytearray(38400)` every single tick and then converted it
+to `bytes()` before sending -- two full-size allocations, back-to-back, forever, at a ~1ms cadence.
+That's exactly the same pattern `display-spi-gs4-cyd-test.flow.json`'s own `function` node uses and it
+works fine there, but that flow only ever runs it once per manual inject click; run continuously it
+fragments this classic ESP32's heap badly enough to `MemoryError: memory allocation failed, allocating
+38401 bytes` within about a second of deploying -- reproduced even immediately after a fresh power
+cycle, so this is a real allocation-pattern bug, not the earlier session's one-off fragmentation-from-
+churn diagnosis. **Fixed**: the `bytearray` and its `framebuf.FrameBuffer` wrapper are now allocated
+once, on the first tick, and stashed in the function node's own `context` store
+(`thingstudio/function`'s `context.get`/`context.set`, per-node-instance persistent state --
+`function-node.ts`'s header); every later tick reuses and mutates the same buffer in place instead of
+allocating a new one. The `bytes()` copy is gone too -- `display_spi`'s sink only ever reads the
+payload via `len()` and a viper `ptr8` pointer, both of which work identically against a `bytearray`,
+so the copy was never actually required, just carried over unexamined from the single-shot test flow.
+This is also simply the correct pattern for a real embedded animation loop (one persistent framebuffer,
+mutated per frame), not only a workaround for this bug.
+
+Verified via `verify-flow-file.ts` and a `compile()` dry run through the real registry, generated
+Python inspected by hand -- the `_display_spi_expand` viper block is byte-identical to the already-
+confirmed one, only the timer/function nodes driving it changed. **Not a timing measurement**: nothing
+here instruments actual frame rate on-device (no timestamp printing, no frame counter in the console) --
+it's a rough by-eye look at how smooth continuous redraw is, not a number to cite. If real per-frame
+timing is ever wanted, the natural next step is a `utime.ticks_ms()` diff around the `display_spi` sink
+call, printed every N frames rather than every frame (so the print itself doesn't skew the measurement).
+
+**Load via the browser and Deploy, no inject click needed** -- the timer starts firing on its own as
+soon as the flow is running. **What to watch for:** a circle bouncing vertically and a bar sweeping
+horizontally, independently (different periods, so they drift in and out of phase with each other
+rather than moving in lockstep), redrawing the full panel every frame with no visible corruption,
+missing rows, or one-frame-behind tearing between the 2-row SPI batches. Stop by deploying a different
+flow or power-cycling -- there's no inject node to click "off".
+
+**Confirmed working on real CYD hardware, 2026-09-18**, after the `context`-store fix above --
+continuous redraw holds up with no further `MemoryError` or crash.

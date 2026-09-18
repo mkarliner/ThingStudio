@@ -68,3 +68,80 @@ Status: detail file, split out of `learnings.md` on 2026-09-06 to keep that inde
   claim for one specific unit, but the two sources disagreeing at all is itself the useful data
   point -- board string/USB-port-count is a hint worth checking, never a substitute for testing the
   actual unit.
+
+- **A `SyntaxError: invalid syntax` / `File "<stdin>", line 1` on connect or "Check status" usually
+  means the board has no runtime at all, not a boot-timing race -- check the boot log before chasing
+  DTR/RTS.** Discovered 2026-09-18, second CYD unit for the `gs4` real-hardware pass: connecting (and
+  retrying) both produced this exact error, with the connecting side's own framed message (e.g.
+  `F64:AAIKoA==`) visible right after a `>>> ` prompt -- proof real protocol bytes were reaching the
+  board fine, just landing on its raw REPL instead of `listener.py`'s framed protocol loop. First
+  hypothesis (plausible, not wrong in general): `listener.py`'s own 3-second boot-delay window
+  (`_BOOT_DELAY_S`, real Ctrl-C still live) racing against the backend's `HELLO_REQUEST`, sent ~0.5s
+  after connect, if opening the serial port also auto-resets the board (`serial_relay.py`'s
+  deliberately-unresolved DTR/RTS default, `backend-platform-decision.md` §5,
+  `backend/test/hardware/dtr_rts_disconnect_pass.py` exists to pin this down). **Actual cause here,
+  confirmed once a full power-on boot log was seen:** this specific board had simply never had
+  `deploy_runtime.py` run against it -- boot showed the plain MicroPython banner
+  (`MicroPython v1.28.0 on 2026-04-06...`) with no `LISTENER_BOOTING` line at all, meaning there was no
+  `main.py` to race against in the first place; every message sent, at any time, would hit the REPL.
+  **The tell:** a real boot-delay race would still show `LISTENER_BOOTING -- Ctrl-C within 3s...`
+  before the REPL takes over; a never-bootstrapped (or wiped) board's boot log shows the stock
+  MicroPython banner and nothing else. Check for that line before assuming the DTR/RTS race and
+  reaching for the diagnostic script -- `deploy_runtime.py --port <port>` (`test-flows/README.md`'s
+  "Bootstrapping a new board" section) is the fix when it's absent, no `--wipe` needed. The DTR/RTS
+  question itself is still genuinely open for a board that DOES show `LISTENER_BOOTING` and still hits
+  this.
+
+- **CYD's `display_spi` pins need `baudrate` capped around 27MHz -- 40MHz silently creates an invalid
+  SPI device handle, then crashes hard on the first real transaction.** Discovered 2026-09-18,
+  `display_spi`'s first-ever real CYD deploy (`test-flows/display-spi-gs4-cyd-test.flow.json`, the gs4
+  real-hardware pass): `machine.SPI(2, baudrate=40000000, ...)` (`display_spi`'s own node default)
+  printed no Python-level error, but the console showed `E spi_hal: The clock_speed_hz should less
+  than 26666666` / `E spi_master: spi_bus_add_device(500): assigned clock speed not supported` --
+  ESP-IDF silently failed to create a real device handle underneath a Python object that still looked
+  valid. The first actual SPI transaction (`ST7789.init()`) then hit repeated
+  `check_trans_valid: invalid dev handle` errors and crashed hard: `Guru Meditation Error: Core 1
+  panic'ed (LoadProhibited)`, `EXCVADDR: 0x00000074` (a near-null pointer dereference) -- a real
+  boot-loop (`SW_CPU_RESET`), not a catchable Python exception (confirmed `_resume_flow()`'s own
+  `try/except Exception` around `import _flow` doesn't catch it -- this is a C-level fault). Initially
+  looked exactly like a gs4/`@micropython.viper` bug (first-ever real deploy of that code too, same
+  session) -- ruled out by realizing the crash happens on every boot with no inject click, meaning it's
+  in the flow's unconditional SETUP code (SPI/ST7789 init), never the click-gated sink/expand code
+  viper only touches. Root-caused by isolating the exact init sequence into a standalone script
+  (`test-flows/cyd-display-spi-init-probe.py`) run step-by-step via `mpremote run`, which pinpointed the
+  crash to the SPI bus construction itself. This CYD's specific pin assignment (`sck=14, mosi=13,
+  cs=15, dc=2` on SPI bus 2) apparently can't reach 40MHz -- likely GPIO-matrix routing rather than the
+  native IO_MUX fast path, capping the real achievable clock well below the node's 40MHz default. Every
+  prior CYD display script (`cyd-display-test-pattern.py`, `cyd-display-mh-test.py`,
+  `cyd-display-orientation-test.py`) already used `baudrate=27_000_000` -- nobody had hit this because
+  none of them went through `display_spi`'s own codegen default before; this gs4 flow was the first
+  real CYD `display_spi` deploy through the actual pipeline, node default and all. TiDAL's flow uses
+  `baudrate: 40000000` and works fine, so this is pin-assignment-specific, not a general 40MHz problem.
+  **Fix: pin `baudrate` explicitly per board, same convention `xstart`/`ystart`/`colorOrder`-family
+  properties already established** -- a real flow targeting real hardware sets its own real values, the
+  node's default is a starting point, not a promise any given board matches it. No codegen change
+  needed; `baudrate` was already a real property. `decisions/node-authoring.md`'s 2026-09-18 entries,
+  `outstanding-items/display-spi-framebuffer-memory.md`.
+
+- **A repeated large `bytearray`/`bytes` allocate-and-discard cycle at a fast timer cadence
+  fragments a classic-ESP32 heap badly enough to `MemoryError` within about a second, even right
+  after a power cycle.** Found 2026-09-18 building `test-flows/display-spi-gs4-cyd-animation.flow.
+  json` (a `thingstudio/timer`-driven, `intervalMs: 1` version of the already-confirmed gs4 CYD test
+  flow). Its `function` node reused the single-inject test flow's own code unmodified -- `buf =
+  bytearray(stride * h)` then `msg['payload'] = bytes(buf)`, two full 38,400-byte allocations every
+  tick -- which is fine run once per manual click, but run continuously it hit
+  `MemoryError: memory allocation failed, allocating 38401 bytes` almost immediately on deploy, and
+  the same on a fresh power cycle -- a real allocation-*pattern* problem, not the earlier session's
+  one-off fragmentation-from-repeated-deploy-churn (that one needed a power cycle to clear; this one
+  doesn't, because the fragmentation is happening live, every tick, inside a single boot). **Fix**:
+  allocate the `bytearray` (and its `framebuf.FrameBuffer` wrapper) once, stash it in the function
+  node's own `context` store (`context.get`/`context.set`, per-node-instance persistent state --
+  `function-node.ts`'s header), and mutate it in place on every later tick instead of reallocating.
+  Also dropped the `bytes(buf)` copy entirely: `display_spi`'s sink only ever reads the payload via
+  `len()` and a viper `ptr8` pointer, both of which work identically against a `bytearray`, so the
+  copy was never required in the first place, just carried over unexamined from the single-shot flow.
+  Worth remembering generally: MicroPython's heap allocator has no compaction, so any flow that
+  repeatedly allocates-and-drops a large buffer on a tight loop is a fragmentation risk regardless of
+  total free RAM looking sufficient at any single snapshot -- a persistent, in-place-mutated buffer
+  (this project's `context`/`flow` store mechanism) is the fix, not a bigger heap or a GC-timing
+  workaround. `test-flows/README.md`'s own entry for the animation flow has the full before/after.

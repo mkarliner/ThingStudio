@@ -64,3 +64,28 @@ Status: detail file, split out of `learnings.md` on 2026-09-06 to keep that inde
   Terminal -- same pattern as git writes -- rather than either the
   blocked sandbox install or (per the standing rule above) running
   against the shared mount.
+
+- **The editor's vendored `mpy-cross` WASM never passed `-march=<arch>`, invisible until the first real
+  `@micropython.viper` flow tried to Deploy.** Discovered 2026-09-18, `display_spi`'s `frameFormat:
+  "gs4"` first real-hardware deploy attempt: `compileToMpy()` (`editor/src/app/main.ts`) calls
+  `MpyModule.callMain(["-o", "/out.mpy", "/in.py"])` with no `-march` -- fine for ordinary bytecode
+  (architecture-independent), but mpy-cross's native-code emitter (what a `@micropython.viper`/
+  `@micropython.native`-decorated function actually needs) requires an explicit target, and its
+  absence produced `SyntaxError: invalid arch` on a real Deploy click, not a viper/codegen bug. Gap
+  existed since this pipeline was built -- just never exercised, since nothing before `gs4` ever
+  emitted viper code through the real browser Deploy path (the earlier off-device spike used a
+  from-scratch native `mpy-cross` build with its own explicit `-march`; the vitest suite's pymock
+  `viper` stub never calls mpy-cross at all). Confirmed the real supported arch list by `strings`-ing
+  `editor/public/vendor/mpy-cross/mpy-cross.wasm` directly (`x86, x64, armv6, armv6m, armv7m, armv7em,
+  armv7emsp, armv7emdp, xtensa, xtensawin, rv32imc, rv64imc, host, debug`) rather than guessing.
+  `xtensawin` is correct for every board this project currently targets (ESP32/ESP32-C3/ESP32-S3, all
+  Xtensa, all using the same native-emitter ABI). Verified the fix against the real WASM module run
+  directly under Node (not the browser) before shipping it: the exact gs4-generated source now
+  compiles cleanly, and a plain non-viper snippet produces byte-identical `.mpy` output with or without
+  the flag (SHA-256 match) -- zero regression risk for every other flow type. Fixed with a single named
+  `MPY_CROSS_MARCH` constant, not scattered inline, specifically so it's one place to extend, not a
+  rearchitecture, whenever an ARM-family board (RP2040/RP2350 -- already real boards elsewhere in this
+  project) ever needs viper/native code too; no board/architecture concept exists anywhere in the
+  compile pipeline yet to pick a different value automatically, flagged as a real open gap, not solved
+  here. `docs/working-notes/outstanding-items/display-spi-framebuffer-memory.md`,
+  `decisions/node-authoring.md`'s 2026-09-18 entries.

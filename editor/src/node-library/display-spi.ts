@@ -228,6 +228,26 @@ type FrameFormat = (typeof FRAME_FORMATS)[number];
 // corroboration" section), not an arbitrary choice.
 const GS4_ROWS_PER_BATCH = 2;
 
+// **Diagnostic flag, 2026-09-18 -- reverted to false, real viper.** Added
+// when a first real gs4 deploy boot-looped (SW_CPU_RESET) on a CYD, to
+// isolate whether @micropython.viper's native codegen was the cause --
+// neither the off-device spike (x86 native code, not Xtensa) nor the
+// vitest/pymock suite (viper stubbed to a no-op decorator, never real
+// native codegen) had ever exercised real compiled Xtensa machine code
+// before this. Setting this true for a redeploy proved the crash was
+// NOT viper -- the flow only fires on a manual inject click, so the
+// crash (happening on every boot with nothing clicked) had to be in the
+// unconditional SETUP code, and was root-caused separately to a 40MHz
+// SPI baudrate this CYD's specific pins can't sustain (`decisions/
+// node-authoring.md`'s 2026-09-18 entries have the full incident). Once
+// that was fixed and a plain-Python gs4 render was confirmed correct on
+// real hardware, this flipped back to false to get the actual first-ever
+// real validation of @micropython.viper on Xtensa. Kept as a named
+// constant (not deleted) in case a future board/driver-interaction
+// regression ever needs this same isolation technique again -- flip to
+// true, redeploy, compare; it costs nothing to leave in place.
+const GS4_DIAGNOSTIC_PLAIN_PYTHON = false;
+
 // A placeholder starting palette -- NOT the exact ~11-color Material-
 // Design-inspired set the corroborating GS4 driver account describes
 // (outstanding-items/display-spi-framebuffer-memory.md); that source's
@@ -418,7 +438,8 @@ export const displaySpiNode: NodeDefinition = {
 
     const imports = ["import machine", "from st7789py import ST7789, ST7789_MADCTL"];
     if (frameFormat === "gs4") {
-      imports.push("import array", "import micropython");
+      imports.push("import array");
+      if (!GS4_DIAGNOSTIC_PLAIN_PYTHON) imports.push("import micropython");
     }
 
     const statements: SinkCodegenResult["statements"] = [
@@ -475,8 +496,20 @@ export const displaySpiNode: NodeDefinition = {
           // device first (this file's header, learnings/micropython-
           // device-runtime.md's 2026-09-18 entry): compiles and runs
           // correctly, ~42x over plain Python for this exact loop shape.
-          `@micropython.viper`,
-          `def ${expandVar}(src: ptr8, off: int, stride: int, dst: ptr8, width: int, rows: int, pal: ptr16):`,
+          //
+          // GS4_DIAGNOSTIC_PLAIN_PYTHON (see that const's own comment,
+          // TEMPORARY): when true, the decorator and ptr8/ptr16/int type
+          // annotations are omitted -- real MicroPython evaluates
+          // annotations as plain expressions at def time when there's no
+          // @micropython.viper/@micropython.native decorator to special-
+          // case them, and ptr8/ptr16 aren't real names outside that
+          // context, so they have to be stripped entirely, not just the
+          // decorator line -- everything else below is byte-for-byte
+          // identical either way.
+          ...(GS4_DIAGNOSTIC_PLAIN_PYTHON ? [] : [`@micropython.viper`]),
+          GS4_DIAGNOSTIC_PLAIN_PYTHON
+            ? `def ${expandVar}(src, off, stride, dst, width, rows, pal):`
+            : `def ${expandVar}(src: ptr8, off: int, stride: int, dst: ptr8, width: int, rows: int, pal: ptr16):`,
           `    full = width >> 1`,
           `    odd = width & 1`,
           `    row_dst_bytes = width * 2`,

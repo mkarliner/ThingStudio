@@ -62,13 +62,19 @@ Device-side runtime gotchas: `readline()` over `read(n)`/`readexactly(n)` for bi
 
 Witness-rig wiring gotchas (floating pins, long patch wires, first-`.irq()` `MemoryError`),
 Thonny's keyboard-interrupt-on-connect trap, Rete's `width`/`height` as a real rendering clipping
-budget, and CYD display bring-up (full-frame `MemoryError` on classic ESP32, the MADCTL `MH` bit,
-unreliable chip-ID reads, conflicting board-naming heuristics). 9 entries:
+budget, CYD display bring-up (full-frame `MemoryError` on classic ESP32, the MADCTL `MH` bit,
+unreliable chip-ID reads, conflicting board-naming heuristics), a `SyntaxError`/`<stdin>` on connect
+that looks like a boot-timing race but usually just means the board never had the runtime deployed at
+all, CYD's `display_spi` pins silently failing at 40MHz SPI (a real hard crash, not a catchable
+error -- needs `baudrate` capped around 27MHz on this pin assignment), and a fast-timer-driven flow
+that repeatedly allocates and discards a large buffer fragmenting a classic ESP32's heap into a
+`MemoryError` within about a second regardless of total free RAM (fix: a persistent, in-place-mutated
+buffer via a function node's `context` store, not a bigger heap). 12 entries:
 `docs/working-notes/learnings/hardware-bringup-hil-rig.md`.
 
 ## Editor / build tooling
 
-`vite build` not type-checking, Litegraph's file-picker extension-matching gap, `execFileSync` deadlocking against an in-process test server, Node's chunked-transfer default, and the sandbox/`node_modules` native-binding corruption incidents. 5 entries: `docs/working-notes/learnings/editor-build-tooling.md`.
+`vite build` not type-checking, Litegraph's file-picker extension-matching gap, `execFileSync` deadlocking against an in-process test server, Node's chunked-transfer default, the sandbox/`node_modules` native-binding corruption incidents, and the vendored `mpy-cross` WASM never passing `-march=<arch>` (invisible until the first real `@micropython.viper` flow tried to Deploy, fixed with `-march=xtensawin`). 6 entries: `docs/working-notes/learnings/editor-build-tooling.md`.
 
 ## Backend / security research
 

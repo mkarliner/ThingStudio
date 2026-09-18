@@ -1,4 +1,4 @@
-# `display_spi` framebuffer construction can exceed available heap — gs4 built and verified (tsc/vitest)
+# `display_spi` framebuffer construction can exceed available heap — gs4 built, verified, and confirmed on real CYD hardware (incl. viper)
 
 Status: scoped 2026-09-18 (Mike's request after the CYD real-hardware bring-up session hit a real
 `MemoryError`), decided the same day, and `frameFormat: "gs4"` implemented the same day (`display-
@@ -15,6 +15,61 @@ on-device by grep immediately after, actually took. Worth remembering: `device_c
 success is not sufficient confirmation the content landed -- re-read the on-device file after a push
 before trusting it, especially before a verification pass that will be graded against that push. `gs2`/
 `mono` remain decided but not built.
+
+**A real-hardware test flow for `gs4` now exists, not yet run:**
+`test-flows/display-spi-gs4-cyd-test.flow.json`, targeting the same CYD unit whose classic-ESP32
+`MemoryError` motivated this whole fix, at its full native 240x320 resolution -- the direct test of
+whether the fix actually works, not just memory math on paper. Verified via `verify-flow-file.ts` and a
+`compile()` dry run (confirms the 38,400-byte frame -- a quarter of the 153,600 bytes that failed --
+correct MADCTL/inversion matching CYD's already-confirmed RGB565 config, and the corrected
+stride-aware expansion function). See `test-flows/README.md`'s own entry for the full flow description
+and what to watch for. Deploying it needs a real Terminal on Mike's machine with the board attached --
+not something this session can do itself.
+
+**Deployed for real, 2026-09-18 -- confirmed working end to end, including real viper.** The first
+real deploy attempt boot-looped (`SW_CPU_RESET`) -- not a gs4/viper bug, root-caused via a standalone
+step-by-step probe script (`test-flows/cyd-display-spi-init-probe.py`) to `display_spi`'s own 40MHz
+default SPI baudrate exceeding what this CYD's specific (GPIO-matrix-routed) pins can sustain: ESP-IDF
+silently created an invalid SPI device handle, which then hard-crashed (`Guru Meditation Error:
+LoadProhibited`) on the first real transaction. Fixed by pinning the test flow's own `baudrate:
+27000000` (matching every prior CYD script) -- no codegen change. Full incident:
+`decisions/node-authoring.md`'s "CYD `display_spi` real hard-crash root-caused" entry,
+`learnings/hardware-bringup-hil-rig.md`. Redeployed with the fix and **rendered correctly** -- first
+with `@micropython.viper` temporarily disabled (a diagnostic-only flag, to isolate the crash from
+viper while both were still unknowns), then again with real viper re-enabled: **also rendered
+correctly**. That second run is this project's first-ever real-hardware execution of
+`@micropython.viper`-compiled code on Xtensa/ESP32 -- the one piece of the whole gs4 feature that
+hadn't been proven on real silicon before now (the off-device spike below used a unix-port interpreter,
+different CPU entirely). This closes out `gs4` end to end: built, statically verified, and now
+confirmed live on the actual hardware and code path (real viper, real mpy-cross `-march`, real SPI
+timing) it was designed for.
+
+A same-day `test-flows/display-spi-gs4-cyd-animation.flow.json` drives the same confirmed pipeline
+continuously (timer-driven, not single-inject) as a rough visual/refresh-rate demo -- not a timing
+measurement, no on-device instrumentation added; per-frame timing on real hardware (viper expansion +
+SPI transfer together) is still unmeasured, see the off-device-spike caveat below.
+
+**A second, more fundamental bug found and fixed during that first real deploy attempt, 2026-09-18:**
+the editor's own browser Deploy pipeline (`editor/src/app/main.ts`'s `compileToMpy()`) calls the
+vendored `mpy-cross` WASM build with no `-march=<arch>` flag at all -- harmless for ordinary bytecode
+(architecture-independent), but `@micropython.viper` needs the native-code emitter, which requires an
+explicit target architecture. First real attempt to Deploy the gs4 CYD flow failed with
+`SyntaxError: invalid arch` from mpy-cross itself -- not a viper/gs4 code bug, a gap in the deploy
+pipeline that was simply never exercised before (the earlier off-device viper spike used a from-scratch
+native `mpy-cross` build with an explicit `-march`, never this WASM path; the vitest suite's own
+pymock `viper` stub never invokes mpy-cross at all). Confirmed by reading the actual arch list embedded
+in `editor/public/vendor/mpy-cross/mpy-cross.wasm` directly (`strings` on the binary), and reproduced +
+fixed + verified against the real WASM module run directly under Node (not guessed): passing
+`-march=xtensawin` compiles the exact gs4-generated source cleanly (2615-byte `.mpy` output), and
+produces byte-identical bytecode output for a plain non-viper snippet with or without the flag (SHA-256
+match) -- confirms zero regression risk for every other flow type. Fixed in `main.ts` (a single named
+`MPY_CROSS_MARCH = "xtensawin"` constant, correct for every board this project currently targets --
+ESP32/ESP32-C3/ESP32-S3 are all Xtensa). **Real gap not closed by this fix, flagged not solved**: no
+board/architecture concept exists anywhere in the compile pipeline to pick a different arch from --
+fine today (no ARM-family board, e.g. the RP2040/RP2350 boards this project's `interrupt-basic.pico-
+*.flow.json` flows already target, uses viper/native code anywhere yet), a real landmine whenever one
+does. Logged in `learnings/editor-build-tooling.md`; verified clean `tsc --noEmit` after the fix
+(same pre-existing unrelated `node-startup.test.ts` gap, nothing new).
 
 ## The problem, with real numbers
 

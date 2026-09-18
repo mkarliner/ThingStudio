@@ -747,6 +747,40 @@ async function waitForMpyCrossFactory(timeoutMs: number): Promise<CreateMpyCross
 // attempt in compileToMpy, read back in the Deploy handler's catch block.
 let mpyStderrLines: string[] = [];
 
+// mpy-cross's native-code emitter (what actually compiles a
+// `@micropython.viper`/`@micropython.native`-decorated function to real
+// machine code, as opposed to portable bytecode) needs an explicit
+// `-march=<arch>` target -- omitted entirely until 2026-09-18, because
+// nothing this project ever deployed through this real browser pipeline
+// used either decorator before `display_spi`'s `frameFormat: "gs4"`
+// (decisions/node-authoring.md's 2026-09-18 entries): plain bytecode
+// compilation is architecture-independent, so the gap was invisible until
+// a real viper-using flow tried to Deploy and mpy-cross failed with
+// "SyntaxError: invalid arch" (confirmed by reading the actual arch list
+// embedded in editor/public/vendor/mpy-cross/mpy-cross.wasm directly:
+// "x86, x64, armv6, armv6m, armv7m, armv7em, armv7emsp, armv7emdp,
+// xtensa, xtensawin, rv32imc, rv64imc, host, debug").
+//
+// "xtensawin" is correct for every board this project currently targets
+// with a real flow -- ESP32/ESP32-C3/ESP32-S3 are all Xtensa, and
+// MicroPython's own ESP32 port firmware builds its native emitter for
+// "xtensawin" uniformly across that whole family (not "xtensa" plain --
+// that's a different register-windowing ABI variant this port doesn't
+// use). **Real gap, not closed by this fix**: this is a single hardcoded
+// global, with no board/architecture concept anywhere in the compile
+// pipeline to pick a different value from -- fine today because nothing
+// ARM-family (RP2040/RP2350 -- real boards elsewhere in this project,
+// `test-flows/interrupt-basic.pico-*.flow.json`) uses viper/native code
+// yet, but a landmine for whenever one does (wrong arch either fails
+// mpy-cross outright with this same error, or -- MicroPython's own .mpy
+// loader checks a file's required native arch against the running
+// device's at import time -- fails loudly on-device instead, not
+// silently wrong; still a real gap worth real board-awareness before
+// that day, not a decision to make unilaterally here). Flagged in
+// `outstanding-items.md`, not solved further than "unblock every board
+// this project actually ships to today."
+const MPY_CROSS_MARCH = "xtensawin";
+
 const mpyReadyPromise: Promise<void> = (async () => {
   const createMpyCross = await waitForMpyCrossFactory(10000);
   MpyModule = await createMpyCross({
@@ -770,7 +804,7 @@ function compileToMpy(source: string): Uint8Array {
   } catch {
     // no previous output to remove -- fine
   }
-  const exitCode = MpyModule.callMain(["-o", "/out.mpy", "/in.py"]);
+  const exitCode = MpyModule.callMain(["-march=" + MPY_CROSS_MARCH, "-o", "/out.mpy", "/in.py"]);
   if (exitCode !== 0) {
     throw new Error(`mpy-cross exited ${exitCode} (see console log above for stderr)`);
   }

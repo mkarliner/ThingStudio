@@ -404,3 +404,104 @@ rebuilt the verification tarball from that confirmed-correct device state and re
 Process takeaway logged in `learnings/micropython-device-runtime.md`: a `device_commit_files` call
 returning success is not sufficient confirmation the content actually landed on the device -- re-read
 the on-device file directly after a push, before trusting a verification pass built from it.
+
+## `mpy-cross` WASM deploy pipeline missing `-march`, found and fixed on first real `gs4` deploy attempt, 2026-09-18
+
+Mike's first real Deploy of `test-flows/display-spi-gs4-cyd-test.flow.json` (after resolving an
+unrelated stuck-REPL board issue, `learnings/hardware-bringup-hil-rig.md`) failed with
+`SyntaxError: invalid arch` from `mpy-cross`, not a code bug in the gs4 codegen: the editor's browser
+Deploy pipeline (`editor/src/app/main.ts`'s `compileToMpy()`) has always called the vendored
+`mpy-cross` WASM build with no `-march=<arch>` flag, which is fine for ordinary architecture-
+independent bytecode but breaks the moment any `@micropython.viper`/`@micropython.native`-decorated
+function needs to be compiled -- exactly what `frameFormat: "gs4"` introduced, the first time this
+project's real Deploy path has ever needed to compile native code (the earlier off-device viper spike
+used its own from-scratch native `mpy-cross` build, entirely separate from this pipeline).
+
+Root-caused by reading the actual supported-arch list embedded in `editor/public/vendor/mpy-cross/
+mpy-cross.wasm` directly (`strings` on the binary: `x86, x64, armv6, armv6m, armv7m, armv7em,
+armv7emsp, armv7emdp, xtensa, xtensawin, rv32imc, rv64imc, host, debug`), not guessed. Fixed with a
+single named `MPY_CROSS_MARCH = "xtensawin"` constant feeding `callMain(["-march=" + MPY_CROSS_MARCH,
+...])` -- correct for every board this project currently targets with a real flow (ESP32/ESP32-C3/
+ESP32-S3, all Xtensa, MicroPython's own ESP32 port firmware uses `xtensawin` uniformly across that
+family). Verified against the real WASM module run directly under Node before shipping: the exact
+gs4-generated source (captured via a `compile()` dry run through the registry) now compiles cleanly to
+a 2615-byte `.mpy`, and a plain non-viper snippet produces byte-identical output with or without the
+flag (SHA-256 match) -- confirms zero regression for every other flow type in this project. `tsc
+--noEmit` re-run clean afterward (same one pre-existing, unrelated `node-startup.test.ts` gap).
+
+**Real gap, flagged not solved**: no board/architecture concept exists anywhere in the compile
+pipeline to pick a different `-march` value automatically -- a single global constant, deliberately
+kept as one easy-to-find point rather than scattered, specifically so it's a small change (not a
+rearchitecture) whenever an ARM-family board needs viper/native code too. Nothing today does (the
+RP2040/RP2350 boards this project already has real flows for, `test-flows/interrupt-basic.pico-
+*.flow.json`, don't use viper anywhere), so this isn't a fork requiring Mike's call yet -- but worth
+remembering before the next board that both (a) needs `@micropython.viper` and (b) isn't Xtensa-family,
+since the wrong `-march` either fails loudly at compile time (safe) or, if it somehow passed compile,
+would fail loudly on-device at import time instead (MicroPython's own `.mpy` loader checks a file's
+required native arch against the running device's) -- not a silent-wrong-code risk either way, but
+still a real gap worth closing with real board-awareness before it's actually hit.
+
+## CYD `display_spi` real hard-crash root-caused: 40MHz SPI baudrate, not gs4/viper, 2026-09-18
+
+Direct follow-on to the mpy-cross `-march` fix above, same deploy session. After that fix, the gs4 CYD
+flow compiled and deployed for real, then boot-looped (`SW_CPU_RESET`) on every subsequent boot. Looked
+exactly like a viper/native-codegen bug at first (also this project's first-ever real Xtensa execution
+of `@micropython.viper` code) -- ruled out by recognizing the flow only fires on a manual inject click,
+so the crash (happening automatically on every boot, nothing clicked) had to be in the flow's
+unconditional SETUP code, not the click-gated sink/expand code viper only affects. A temporary
+diagnostic (`GS4_DIAGNOSTIC_PLAIN_PYTHON` in `display-spi.ts`, since reverted) confirmed this by
+running the same setup with viper removed entirely -- still crashed, confirming viper was never the
+variable in play.
+
+Root-caused by isolating the setup sequence into a standalone script
+(`test-flows/cyd-display-spi-init-probe.py`, six labeled steps) run via `mpremote run`: the crash is in
+`machine.SPI(2, baudrate=40000000, ...)` -- `display_spi`'s own node default. ESP-IDF logged (but
+MicroPython didn't surface as a Python exception) `spi_hal: The clock_speed_hz should less than
+26666666` / `spi_master: spi_bus_add_device(500): assigned clock speed not supported` -- this CYD's
+specific pin assignment (`sck=14, mosi=13, cs=15, dc=2` on SPI bus 2) can't reach 40MHz, likely GPIO-
+matrix routing rather than the native IO_MUX fast path. The Python-visible `SPI` object still looked
+valid, so the flow proceeded to `ST7789.init()`'s first real transaction, which hit repeated
+`check_trans_valid: invalid dev handle` errors and crashed hard: `Guru Meditation Error: Core 1
+panic'ed (LoadProhibited)`, a near-null-pointer dereference -- confirmed as a genuine C-level fault,
+not a catchable Python bug, by checking `_resume_flow()`'s own `try/except Exception` around
+`import _flow` (device-runtime/src/listener.py) doesn't catch it.
+
+Every prior CYD display script (`cyd-display-test-pattern.py`, `cyd-display-mh-test.py`,
+`cyd-display-orientation-test.py`) already used `baudrate=27_000_000` -- nobody had hit this before
+because none of them ever went through `display_spi`'s own codegen default; this gs4 flow is the first
+real CYD `display_spi` deploy through the actual DEPLOY pipeline, node default included. TiDAL's flow
+uses `baudrate: 40000000` and works fine, confirming this is pin-assignment-specific, not a general
+40MHz-is-too-fast problem.
+
+**Fix: `test-flows/display-spi-gs4-cyd-test.flow.json`'s own `baudrate` property set to `27000000`
+explicitly** -- same "a real flow pins its own real values, the node default is a starting point"
+convention `xstart`/`ystart`/`colorOrder`-family properties already established, not a codegen change
+(`baudrate` was already a real property). `GS4_DIAGNOSTIC_PLAIN_PYTHON` reverted to `false` (real
+viper) once this is confirmed rendering cleanly -- staged deliberately: confirm the SPI fix with the
+simpler plain-Python path first, then re-enable viper and confirm it renders identically, so the actual
+first-ever-real-Xtensa-viper validation this project has been waiting on isn't muddled by two unknowns
+resolving at once. `learnings/hardware-bringup-hil-rig.md` has the full incident.
+
+**Both stages confirmed, 2026-09-18, same session.** Redeploy with the baudrate fix and
+`GS4_DIAGNOSTIC_PLAIN_PYTHON` still `true` (plain Python) rendered correctly on the real CYD panel --
+confirms the SPI fix alone was sufficient and the crash really was fully explained by the baudrate, not
+some second latent issue plain Python happened to dodge. `GS4_DIAGNOSTIC_PLAIN_PYTHON` was then flipped
+back to `false` on-device (diagnostic-only flag, not a real property -- no flow-file change needed) and
+the identical flow redeployed once more with real `@micropython.viper` code in the sink: **also
+rendered correctly** ("seems to work fine" -- Mike). That second redeploy is this project's first-ever
+real-hardware execution of viper-compiled code on Xtensa/ESP32 -- until now the only viper evidence was
+the off-device unix-port spike (`learnings/micropython-device-runtime.md`) and the mpy-cross-level
+compile check (`learnings/editor-build-tooling.md`), neither of which exercises real Xtensa silicon.
+Nothing about the viper codegen itself needed changing to get here; the entire incident chain (runtime
+bootstrap, `-march`, baudrate) was three unrelated pre-existing gaps the gs4 feature was simply the
+first thing to actually exercise, not gs4/viper bugs. `GS4_DIAGNOSTIC_PLAIN_PYTHON` stays in
+`display-spi.ts` as a named, easy-to-revert constant (currently `false`) rather than being deleted --
+cheap to keep for the next display-codegen change that wants the same plain-Python-vs-viper isolation
+trick again.
+
+A same-day `test-flows/display-spi-gs4-cyd-animation.flow.json` (timer-driven continuous redraw, not
+single-inject) exercises the identical viper sink under sustained load rather than one frame -- built
+after this confirmation, as a demo, not a new finding; verified via `verify-flow-file.ts` and a
+`compile()` dry run the same way every flow in this session was, generated Python inspected by hand
+(the viper `_display_spi_expand` block is byte-identical to the already-confirmed one, only the driving
+timer/function nodes are new).
