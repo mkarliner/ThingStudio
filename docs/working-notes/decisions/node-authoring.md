@@ -505,3 +505,66 @@ after this confirmation, as a demo, not a new finding; verified via `verify-flow
 `compile()` dry run the same way every flow in this session was, generated Python inspected by hand
 (the viper `_display_spi_expand` block is byte-identical to the already-confirmed one, only the driving
 timer/function nodes are new).
+
+## `gs2`/`mono` frame formats built, 2026-09-18 -- same day as gs4's real-hardware confirmation
+
+Following on from gs4's full real-hardware confirmation above, extended `display_spi`'s `frameFormat`
+to the two remaining depths the original decision (`display-spi-framebuffer-format-decision.md`)
+already scoped but didn't build: `gs2` (`framebuf.GS2_HMSB`, 2 bits/pixel, an eighth of RGB565's
+memory, 4-color palette) and `mono` (1 bit/pixel, a sixteenth, 2-color palette). Same `palette`
+property shape as gs4 -- always exactly 16 RGB565 entries, `gs2` reads the first 4, `mono` the first
+2 -- one property, one codegen path, across all three depths, per the original decision.
+
+**A real design fork resolved, not just an extension: which MicroPython `framebuf` mono format.**
+MicroPython has three 1-bit formats -- `MONO_VLSB` (vertical byte columns, the OLED/SSD1306
+convention this project's own `display_i2c` node already uses -- wrong orientation for this node's
+row-by-row SPI streaming), `MONO_HLSB`, and `MONO_HMSB` (both horizontal/row-oriented like
+`GS4_HMSB`/`GS2_HMSB`, but pack their 8 pixels/byte in OPPOSITE bit orders from each other).
+`MONO_HMSB` was picked for `"mono"`, for naming consistency with `GS4_HMSB`/`GS2_HMSB` -- a real
+judgment call, flagged to Mike rather than treated as the only reasonable choice, since (per the next
+finding) its bit order does NOT actually match either of those two consistently anyway.
+
+**A second real correctness fact, found reading MicroPython's real `extmod/modframebuf.c` source
+directly (`gs4_hmsb_setpixel`, `gs2_hmsb_setpixel`, `mono_horiz_setpixel`) rather than assumed to
+generalize from gs4's already-working loop:** the three formats pack pixels into a byte in OPPOSITE
+bit orders from each other. `GS4_HMSB`'s first (leftmost) pixel of a pair occupies the HIGH nibble --
+descending, high-to-low. `GS2_HMSB` and `MONO_HMSB` are the other way: each format's first pixel of
+its group occupies the LOWEST bits, its last pixel the HIGHEST -- ascending, low-to-high. (Also
+confirmed in passing: `MONO_HLSB`'s bit order -- despite its "LSB" name -- is actually the descending
+one, matching `GS4_HMSB` rather than its own `HMSB`-suffixed sibling `MONO_HMSB`. Names alone don't
+predict this; only the real source does.) Each of the two new expansion loops (`gs2`/`mono`, in
+`display-spi.ts`'s `expandFunctionBody()`) was written and independently hand-verified against its
+own format's real setpixel/getpixel source -- deliberately NOT derived from gs4's already-working loop
+by analogy, since that analogy would have gotten the bit order silently backwards for both.
+
+**Real stride-padding rule generalized correctly from the start, not re-discovered per format**: gs4's
+own odd-width stride bug (padding a row's byte count UP to a whole byte, not a flat `w*h/N` formula --
+this doc's earlier 2026-09-18 entry) is a property of every indexed `framebuf` format, confirmed the
+same way (reading the real C source's stride computation for each): `Math.ceil(width / pixelsPerByte)`
+per row, `pixelsPerByte` = 2/4/8 for gs4/gs2/mono. Built into `gs2`/`mono` from the start.
+
+**Style choice, not a correctness one**: gs4's already-real-hardware-confirmed expansion loop was left
+completely untouched (still hand-unrolled, 2 pixels at a time) rather than rewritten to match gs2/
+mono's newer style, so nothing proven working on real Xtensa hardware was disturbed for uniformity's
+sake. gs2/mono's own loops use a small `for k in range(N)` inner loop instead of a hand unroll --
+simpler to write correctly for 4/8 pixels than gs4's 2-pixel unroll was, at a marginal (and per this
+project's own prior viper-timing findings, likely immaterial relative to SPI transfer time) native-
+code cost; real per-frame timing on hardware remains unmeasured for every format including gs4.
+
+**Verified the same way as gs4's own original build**: a real `./node_modules/.bin/tsc --noEmit`
+(clean, same one pre-existing unrelated `node-startup.test.ts` gap) run directly against the live-
+mounted `editor/` (permitted -- CLAUDE.md's npm-sandbox section only restricts `npm ci`/`vite build`/
+`vite dev`/`vitest`, not `tsc`), and a real `vitest run` against a freshly re-synced isolated
+extraction (per CLAUDE.md's mandated fallback for vitest specifically) -- 37/37 in
+`node-display-spi.test.ts` (6 new gs2 cases, 5 new mono cases, plus a message-text update to one
+existing gs4 assertion -- the length-check error now also names the real `framebuf.<CONSTANT>`, not
+just the format string, a real UX improvement made in passing), 531/540 across the full suite, the 9
+unrelated failures confirmed environmental (this ad-hoc verify copy's `device-runtime/vendor/` was
+never given an `ssd1306` vendor file or a couple of button-driver ones, unrelated to anything touched
+here) rather than real regressions.
+
+**Two new real-hardware test flows** (`test-flows/display-spi-gs2-cyd-test.flow.json`,
+`display-spi-mono-cyd-test.flow.json`), same CYD config as the gs4 test flow, **neither deployed to
+real hardware yet** -- `test-flows/README.md`'s own entry has the full description and expected byte
+counts (19,200/9,600). gs4 is still the only depth actually confirmed working end to end on real
+silicon.

@@ -164,8 +164,27 @@ Status: detail file, split out of `learnings.md` on 2026-09-06 to keep that inde
   first-draft `display_spi` `"gs4"` expansion loop's flat-nibble-count bug easy to miss -- it only
   breaks on an ODD width (TiDAL's real 135: 68 bytes/row, not 67.5), where a naive expansion silently
   shifts every pixel after the first odd-width row out of alignment for the rest of the frame. Design
-  around this from the start on any future reduced-depth framebuf work (`gs2`/`mono`, not yet built) --
-  the correct per-row byte count is `Math.ceil(width / 2)` (or `/4`, `/8` for gs2/mono), and the
-  expansion loop needs to discard trailing pad nibbles/bits per row, not just expand every byte in the
-  buffer flatly. `decisions/node-authoring.md`'s 2026-09-18 `frameFormat: "gs4"` entry,
-  `outstanding-items/display-spi-framebuffer-memory.md`.
+  around this from the start on any future reduced-depth framebuf work; applied to `gs2`/`mono` from
+  the start when they were built the same day gs4 was confirmed on real hardware (below) -- the correct
+  per-row byte count is `Math.ceil(width / 2)` (or `/4`, `/8` for gs2/mono), and the expansion loop
+  needs to discard trailing pad nibbles/bits per row, not just expand every byte in the buffer flatly.
+  `decisions/node-authoring.md`'s 2026-09-18 `frameFormat: "gs4"` entry, `outstanding-items/
+  display-spi-framebuffer-memory.md`.
+
+- **`GS4_HMSB`'s pixel bit order inside a byte does NOT generalize to `GS2_HMSB`/`MONO_HMSB` --
+  they're the opposite of gs4, and (for mono) opposite of the similarly-named `MONO_HLSB` too.** Found
+  building `gs2`/`mono` support for `display_spi`, 2026-09-18, by reading MicroPython's real
+  `gs4_hmsb_setpixel`/`gs2_hmsb_setpixel`/`mono_horiz_setpixel` C source directly rather than assuming
+  gs4's already-working, real-hardware-confirmed expansion loop would generalize by analogy. `GS4_HMSB`
+  packs the first (leftmost) pixel of each pair into the HIGH nibble, the second into the LOW nibble --
+  descending, high-to-low. `GS2_HMSB` (`shift = (x & 3) << 1`) and `MONO_HMSB` (`offset = x & 7`) are
+  the other way: each format's first pixel occupies the LOWEST bits, its last pixel the HIGHEST --
+  ascending, low-to-high. A further trap: MicroPython's OTHER row-oriented 1-bit format, `MONO_HLSB`
+  (`offset = 7 - (x & 7)`), is actually the DESCENDING one despite its "LSB" name -- it's `MONO_HMSB`,
+  not `MONO_HLSB`, whose bit order doesn't match gs4's, even though the naming would suggest the
+  opposite at a glance. Getting this backwards silently scrambles pixel order within every row (not a
+  crash, not a wrong color -- a spatial smear), exactly the "looks like corruption, isn't flagged as an
+  error" failure class this project keeps hitting with framebuf formats. Each depth's expansion loop
+  needs writing and verifying against its OWN format's real source, never derived from another depth's
+  by analogy, no matter how similar the two look. `decisions/node-authoring.md`'s 2026-09-18 "gs2/mono
+  frame formats built" entry has the full derivation.

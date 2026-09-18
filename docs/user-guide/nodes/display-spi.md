@@ -7,10 +7,14 @@ or eventually a graphics-framework node) and wire it into this node's input.
 ## Properties
 
 - **controller** — the display chip. Only `ST7789` today.
-- **frame format** — `rgb565` (default, full color, `width * height * 2` bytes) or `gs4` (4-bit
-  indexed, a quarter the memory). Switch to `gs4` if a full RGB565 buffer won't fit in memory.
-- **palette** — 16 RGB565 colors, used only in `gs4` mode. Not yet editable from this panel — set it
-  as a flow-file property (an array of 16 numbers) if you don't want the built-in default.
+- **frame format** — `rgb565` (default, full color, `width * height * 2` bytes), or an indexed
+  format: `gs4` (4-bit, a quarter the memory), `gs2` (2-bit, an eighth), or `mono` (1-bit, a
+  sixteenth). Switch away from `rgb565` if a full RGB565 buffer won't fit in memory — the lower the
+  depth, the smaller the buffer, at the cost of fewer colors (see "Indexed modes" below).
+- **palette** — always 16 RGB565 colors, used by every indexed format (`gs4` reads all 16, `gs2` only
+  the first 4, `mono` only the first 2 — one property, one shape, across every depth). Not yet
+  editable from this panel — set it as a flow-file property (an array of 16 numbers) if you don't
+  want the built-in default.
 - **SPI bus** — which hardware SPI peripheral to use. Default 2.
 - **baudrate** — SPI clock speed. Default 40MHz.
 - **sck / mosi / dc pins** — required GPIO pins (0–39).
@@ -66,20 +70,45 @@ for i in range(0, len(buf), 2):
 (pure white `0xFFFF`, pure black `0x0000`) is unaffected either way, which is why a swap bug can hide
 behind text/background colors and only show up on saturated colors like a pure green or blue fill.
 
-## GS4 mode: lower memory, a fixed palette
+## Indexed modes: lower memory, a fixed palette
 
-Switch frame format to `gs4` if a full RGB565 buffer won't fit in memory — a real problem on some
-boards at larger resolutions. Build the frame upstream with `framebuf.FrameBuffer(...,
-framebuf.GS4_HMSB)` instead of `RGB565`. Pixel values become palette indices (0–15), not colors. This
-node expands each pixel to real color using the palette property when it sends the frame.
+Switch frame format away from `rgb565` if a full RGB565 buffer won't fit in memory — a real problem
+on some boards at larger resolutions. Build the frame upstream with `framebuf.FrameBuffer(...,
+framebuf.<FORMAT>)` instead of `RGB565`, where `<FORMAT>` matches the frame format property:
 
-The input buffer isn't simply "half the size of RGB565" — each row is padded to a whole number of
-bytes, so an odd-width panel needs slightly more than `width * height / 2` bytes. This node works out
-and checks the real size for you.
+| frame format | `framebuf` constant | bits/pixel | palette indices used | 240×320 frame size |
+|---|---|---|---|---|
+| `rgb565` (default) | `RGB565` | 16 | — (real color) | 153,600 bytes |
+| `gs4` | `GS4_HMSB` | 4 | 0–15 (all 16) | 38,400 bytes |
+| `gs2` | `GS2_HMSB` | 2 | 0–3 (first 4) | 19,200 bytes |
+| `mono` | `MONO_HMSB` | 1 | 0–1 (first 2) | 9,600 bytes |
 
-GS4 mode has no byte-order gotcha — the palette already stores colors in the order this node expects.
+Pixel values become palette indices, not colors — this node expands each pixel to real color using
+the palette property when it sends the frame.
 
-Sixteen colors total, so it suits a UI with a small fixed palette (buttons, status text, simple icons),
-not photos or arbitrary images.
+**`mono` needs `framebuf.MONO_HMSB` specifically, not `MONO_VLSB` or `MONO_HLSB`.** MicroPython has
+three different 1-bit `framebuf` formats and they are NOT interchangeable — building your source
+buffer with the wrong one silently produces a garbled image, not an error, because this node has no
+way to tell which one you actually used. `MONO_VLSB` (the common OLED/SSD1306 convention, and what
+this project's own `display_i2c` node uses) packs pixels into *vertical* byte columns; this node
+streams frames out row-by-row like every other format here, so `MONO_VLSB` will not work. Of the two
+row-oriented options, `MONO_HLSB` and `MONO_HMSB` pack their 8 pixels-per-byte in opposite bit orders
+from each other — this node was built against `MONO_HMSB` specifically (chosen for consistency with
+`GS4_HMSB`/`GS2_HMSB`'s own naming, confirmed directly against MicroPython's real C source, not
+assumed from the name), so `MONO_HLSB` will come out with every row's pixels in the wrong order.
+
+The input buffer isn't simply "1/N the size of RGB565" for any of these — each row is padded to a
+whole number of bytes, so a width that isn't an exact multiple of the format's pixels-per-byte (2 for
+`gs4`, 4 for `gs2`, 8 for `mono`) needs slightly more than a flat `width * height / bitsPerByte`
+formula would give. This node works out and checks the real size for you, and raises a clear error
+naming the exact expected byte count (including the format and bits/pixel) on a mismatch.
+
+Indexed modes have no byte-order gotcha — the palette already stores colors in the order this node
+expects.
+
+Fewer colors as the depth drops (16 for `gs4`, 4 for `gs2`, 2 for `mono` — effectively black/white
+unless you override the palette), so these suit a UI with a small fixed palette (buttons, status
+text, simple icons), not photos or arbitrary images; `mono` in particular is closer to an e-ink-style
+UI than a color one.
 
 No drawing primitives here — this node only pushes a complete, already-rendered frame on every message.

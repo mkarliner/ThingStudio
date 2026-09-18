@@ -110,16 +110,17 @@ function runSink(properties: Record<string, unknown>, byteLength: number): strin
   });
 }
 
-/** Same real-driver/real-pymock harness as runSink, but for `frameFormat: "gs4"`:
- * runs the sink once against a specific hex-encoded gs4 payload and returns every
- * SPI write issued DURING that one sink call (not init-time writes, unlike
- * runSink's OFFSETS/LAST_WRITES which capture only init). `ptr8 = ptr16 = ptr32
- * = int` is TEST-HARNESS-ONLY scaffolding (matching time_mock's own pattern) --
- * codegen itself never imports or defines those names; see fixtures/pymock/
- * micropython.py's own `viper` stub header for why real MicroPython doesn't need
- * this but plain CPython does. */
-function runGs4(properties: Record<string, unknown>, payloadHex: string): string {
-  const result = displaySpiNode.codegenSink!(node({ ...properties, frameFormat: "gs4" }), ctx);
+/** Same real-driver/real-pymock harness as runSink, but for any indexed
+ * frameFormat ("gs4"/"gs2"/"mono"): runs the sink once against a specific
+ * hex-encoded payload and returns every SPI write issued DURING that one
+ * sink call (not init-time writes, unlike runSink's OFFSETS/LAST_WRITES
+ * which capture only init). `ptr8 = ptr16 = ptr32 = int` is TEST-HARNESS-
+ * ONLY scaffolding (matching time_mock's own pattern) -- codegen itself
+ * never imports or defines those names; see fixtures/pymock/
+ * micropython.py's own `viper` stub header for why real MicroPython
+ * doesn't need this but plain CPython does. */
+function runIndexed(frameFormat: "gs4" | "gs2" | "mono", properties: Record<string, unknown>, payloadHex: string): string {
+  const result = displaySpiNode.codegenSink!(node({ ...properties, frameFormat }), ctx);
   const setupCode = (result.statements ?? []).map((s) => s.code).join("\n");
   const dispVarMatch = setupCode.match(/(\w+_disp) = ST7789\(/);
   if (!dispVarMatch) throw new Error("couldn't find the generated ST7789(...) assignment");
@@ -144,7 +145,7 @@ function runGs4(properties: Record<string, unknown>, payloadHex: string): string
     `asyncio.run(${result.functionName}(msg))`,
     `print("PAYLOAD_WRITES", " ".join(w.hex() for w in ${dispVar}.spi.writes[_before:]))`,
   ];
-  const dir = mkdtempSync(join(tmpdir(), "thingstudio-nodetest-gs4-"));
+  const dir = mkdtempSync(join(tmpdir(), "thingstudio-nodetest-indexed-"));
   const scriptPath = join(dir, "_snippet.py");
   writeFileSync(scriptPath, lines.join("\n"));
   return execFileSync("python3", [scriptPath], {
@@ -152,6 +153,13 @@ function runGs4(properties: Record<string, unknown>, payloadHex: string): string
     encoding: "utf8",
     timeout: 10_000,
   });
+}
+
+/** `runIndexed` pinned to "gs4" -- every existing gs4 test below calls this
+ * unchanged (added when gs2/mono were built, 2026-09-18, so those tests'
+ * own call sites didn't need touching). */
+function runGs4(properties: Record<string, unknown>, payloadHex: string): string {
+  return runIndexed("gs4", properties, payloadHex);
 }
 
 describe("thingstudio/display_spi node", () => {
@@ -330,7 +338,7 @@ describe("thingstudio/display_spi node", () => {
         // width=3 (odd) -> stride ceil(3/2)=2 bytes/row * height 2 = 4 bytes,
         // NOT a flat ceil(3*2/2)=3 -- this is the exact number that would be
         // wrong if expectedBytes used the naive flat formula.
-        expect(stderr).toContain("display_spi: expected 4 bytes (3x2 gs4/4bpp, 2 bytes/row), got 3");
+        expect(stderr).toContain("display_spi: expected 4 bytes (3x2 gs4/framebuf.GS4_HMSB, 4bpp, 2 bytes/row), got 3");
       }
     });
 
@@ -387,6 +395,140 @@ describe("thingstudio/display_spi node", () => {
       const output = runGs4({ sck: 12, mosi: 11, dc: 13, width: 2, height: 1, xstart: 0, ystart: 0, palette: customPalette }, "01");
       const writes = output.match(/PAYLOAD_WRITES (.+)/)?.[1]?.trim().split(" ") ?? [];
       expect(writes[writes.length - 1]).toBe("12345678");
+    });
+  });
+
+  // 2026-09-18, gs2/mono built (gs4's own describe block above has the
+  // "why these tests exist" story -- same reasoning applies here: real
+  // odd-width/stride coverage, not just the even/multiple-of-ppb case).
+  // Unlike gs4, gs2 and mono's bit-unpacking order was independently
+  // re-derived from MicroPython's real gs2_hmsb_setpixel/mono_horiz_
+  // setpixel C source rather than assumed to match gs4's (display-spi.
+  // ts's header explains why gs4 is descending, high-to-low, while gs2/
+  // mono are ascending, low-to-high -- opposite of each other), so these
+  // fixtures are computed straight from that same bit formula
+  // independently of this file's own codegen, not backed out of
+  // whatever the generated code happens to emit (which would risk a
+  // test that just re-asserts a bug the way CLAUDE.md warns against).
+  describe("frameFormat gs2", () => {
+    it("accepts the correct byte count for a width divisible by 4 pixels/byte", () => {
+      // width=4 -> stride 1 byte/row * height 4 = 4 bytes.
+      const output = runIndexed("gs2", { sck: 12, mosi: 11, dc: 13, width: 4, height: 4, xstart: 0, ystart: 0 }, "00".repeat(4));
+      const writes = output.match(/PAYLOAD_WRITES (.+)/)?.[1]?.trim().split(" ") ?? [];
+      // 5 set_window writes + 2 data writes (4 rows / 2 rows-per-batch = 2 batches).
+      expect(writes.length).toBe(7);
+    });
+
+    it("rejects a wrong-length gs2 payload with a clear error naming the real (row-padded) byte count", () => {
+      expect.assertions(1);
+      try {
+        runIndexed("gs2", { sck: 12, mosi: 11, dc: 13, width: 5, height: 1, xstart: 0, ystart: 0 }, "00");
+      } catch (err) {
+        const stderr = String((err as { stderr?: string }).stderr ?? "");
+        // width=5 (not a multiple of 4) -> stride ceil(5/4)=2 bytes/row * height 1 = 2 bytes.
+        expect(stderr).toContain("display_spi: expected 2 bytes (5x1 gs2/framebuf.GS2_HMSB, 2bpp, 2 bytes/row), got 1");
+      }
+    });
+
+    it("expands an odd-width (5x1) gs2 frame to the correct per-pixel RGB565 bytes, discarding the per-row pad bits", () => {
+      // Hand-derived from the real gs2_hmsb bit formula (shift = (x&3)<<1,
+      // ASCENDING -- pixel 0 of each group of 4 in the LOW bits, pixel 3
+      // in the HIGH bits, the opposite of gs4's nibble order), independently
+      // verified with a small script against display-spi.ts's header
+      // before writing this test, not derived from the codegen output
+      // itself. byte0=0xE4 (0b11100100) -> pixels 0,1,2,3 (black, white,
+      // red, green); byte1=0xFD (rem=1, only bit0 read -> pixel 1 =
+      // white; bits 2-7 are garbage padding, must be discarded).
+      const output = runIndexed("gs2", { sck: 12, mosi: 11, dc: 13, width: 5, height: 1, xstart: 0, ystart: 0 }, "e4fd");
+      const writes = output.match(/PAYLOAD_WRITES (.+)/)?.[1]?.trim().split(" ") ?? [];
+      // 5 set_window writes (CASET cmd+data, RASET cmd+data, RAMWR cmd) + 1 data write.
+      expect(writes.length).toBe(6);
+      expect(writes[writes.length - 1]).toBe("0000fffff80007e0ffff");
+    });
+
+    it("splits a taller gs2 frame into multiple row-batches (2 rows/transaction)", () => {
+      // height=3, INDEXED_ROWS_PER_BATCH=2 -> batches of 2 rows then 1
+      // row. width=4 -> stride 1 byte/row, 4 pixels/row, no remainder.
+      // row0=0x1b -> pixels 3,2,1,0 (green,red,white,black);
+      // row1=0x4e -> pixels 2,3,0,1 (red,green,black,white);
+      // row2=0x27 -> pixels 3,1,2,0 (green,white,red,black).
+      // Hand-derived the same way as the odd-width case above.
+      const output = runIndexed("gs2", { sck: 12, mosi: 11, dc: 13, width: 4, height: 3, xstart: 0, ystart: 0 }, "1b4e27");
+      const writes = output.match(/PAYLOAD_WRITES (.+)/)?.[1]?.trim().split(" ") ?? [];
+      // 5 set_window writes + 2 data writes (batch of 2 rows, then 1 row).
+      expect(writes.length).toBe(7);
+      expect(writes[5]).toBe("07e0f800ffff0000f80007e00000ffff");
+      expect(writes[6]).toBe("07e0fffff8000000");
+    });
+
+    it("honors a custom palette instead of the default (reading only the first 4 entries it actually bakes in)", () => {
+      const customPalette = new Array(16).fill(0);
+      customPalette[3] = 0xabcd;
+      // width=1, height=1 -> one byte, pixel 0 = index 3 -> palette[3].
+      const output = runIndexed("gs2", { sck: 12, mosi: 11, dc: 13, width: 1, height: 1, xstart: 0, ystart: 0, palette: customPalette }, "03");
+      const writes = output.match(/PAYLOAD_WRITES (.+)/)?.[1]?.trim().split(" ") ?? [];
+      expect(writes[writes.length - 1]).toBe("abcd");
+    });
+  });
+
+  describe("frameFormat mono", () => {
+    it("accepts the correct byte count for a width divisible by 8 pixels/byte", () => {
+      // width=8 -> stride 1 byte/row * height 4 = 4 bytes.
+      const output = runIndexed("mono", { sck: 12, mosi: 11, dc: 13, width: 8, height: 4, xstart: 0, ystart: 0 }, "00".repeat(4));
+      const writes = output.match(/PAYLOAD_WRITES (.+)/)?.[1]?.trim().split(" ") ?? [];
+      // 5 set_window writes + 2 data writes (4 rows / 2 rows-per-batch = 2 batches).
+      expect(writes.length).toBe(7);
+    });
+
+    it("rejects a wrong-length mono payload with a clear error naming the real (row-padded) byte count", () => {
+      expect.assertions(1);
+      try {
+        runIndexed("mono", { sck: 12, mosi: 11, dc: 13, width: 10, height: 1, xstart: 0, ystart: 0 }, "00");
+      } catch (err) {
+        const stderr = String((err as { stderr?: string }).stderr ?? "");
+        // width=10 (not a multiple of 8) -> stride ceil(10/8)=2 bytes/row * height 1 = 2 bytes.
+        expect(stderr).toContain("display_spi: expected 2 bytes (10x1 mono/framebuf.MONO_HMSB, 1bpp, 2 bytes/row), got 1");
+      }
+    });
+
+    it("expands an odd-width (10x1) mono frame to the correct per-pixel RGB565 bytes, discarding the per-row pad bits", () => {
+      // Hand-derived from MONO_HMSB's real bit formula (offset = x & 0x07,
+      // ASCENDING -- pixel 0 of each group of 8 at bit 0, pixel 7 at bit
+      // 7 -- picked over MONO_HLSB specifically for HMSB-suffix naming
+      // consistency with gs4/gs2, this file's header), independently
+      // verified with a small script before writing this test. byte0=
+      // 0x55 (0b01010101) -> alternating white/black x8; byte1=0xFD
+      // (rem=2, only bits 0-1 read -> white, black; bits 2-7 garbage
+      // padding, must be discarded).
+      const output = runIndexed("mono", { sck: 12, mosi: 11, dc: 13, width: 10, height: 1, xstart: 0, ystart: 0 }, "55fd");
+      const writes = output.match(/PAYLOAD_WRITES (.+)/)?.[1]?.trim().split(" ") ?? [];
+      // 5 set_window writes + 1 data write.
+      expect(writes.length).toBe(6);
+      expect(writes[writes.length - 1]).toBe("ffff0000ffff0000ffff0000ffff0000ffff0000");
+    });
+
+    it("splits a taller mono frame into multiple row-batches (2 rows/transaction)", () => {
+      // height=3, INDEXED_ROWS_PER_BATCH=2 -> batches of 2 rows then 1
+      // row. width=8 -> stride 1 byte/row, 8 pixels/row, no remainder.
+      // row0=0x01 -> only bit0 set (white, rest black);
+      // row1=0x80 -> only bit7 set (black x7, then white);
+      // row2=0xff -> all white. Hand-derived the same way as the
+      // odd-width case above.
+      const output = runIndexed("mono", { sck: 12, mosi: 11, dc: 13, width: 8, height: 3, xstart: 0, ystart: 0 }, "0180ff");
+      const writes = output.match(/PAYLOAD_WRITES (.+)/)?.[1]?.trim().split(" ") ?? [];
+      // 5 set_window writes + 2 data writes (batch of 2 rows, then 1 row).
+      expect(writes.length).toBe(7);
+      expect(writes[5]).toBe("ffff00000000000000000000000000000000000000000000000000000000ffff");
+      expect(writes[6]).toBe("ffffffffffffffffffffffffffffffff");
+    });
+
+    it("honors a custom palette instead of the default (reading only the first 2 entries it actually bakes in)", () => {
+      const customPalette = new Array(16).fill(0);
+      customPalette[1] = 0x1234;
+      // width=1, height=1 -> one byte, pixel 0 = bit0 = 1 -> palette[1].
+      const output = runIndexed("mono", { sck: 12, mosi: 11, dc: 13, width: 1, height: 1, xstart: 0, ystart: 0, palette: customPalette }, "01");
+      const writes = output.match(/PAYLOAD_WRITES (.+)/)?.[1]?.trim().split(" ") ?? [];
+      expect(writes[writes.length - 1]).toBe("1234");
     });
   });
 });

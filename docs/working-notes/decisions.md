@@ -70,7 +70,11 @@ and fixed; then a real hard crash (`Guru Meditation Error`, boot loop) root-caus
 SPI pins not supporting the node's 40MHz default baudrate, unrelated to gs4/viper at all; both fixes
 then confirmed on a real redeploy -- correct render with viper disabled, then correct render again with
 real `@micropython.viper` re-enabled, this project's first-ever real-hardware viper execution on
-Xtensa, closing gs4 out end to end. 13 entries: `docs/working-notes/decisions/node-authoring.md`.
+Xtensa, closing gs4 out end to end; then `gs2`/`mono` (the two remaining decided-but-not-built depths)
+built the same day, including a real MicroPython-source-confirmed finding that gs4's bit order doesn't
+generalize to gs2/mono (they're the opposite of gs4, and of each other's similarly-named `MONO_HLSB`
+sibling) -- neither deployed to real hardware yet. 14 entries: `docs/working-notes/decisions/
+node-authoring.md`.
 
 ## Session sequencing
 

@@ -161,22 +161,27 @@
 // contiguous allocation on real hardware, even though TiDAL's smaller
 // 135x240 = 64800 bytes never hit this -- `learnings/hardware-bringup-
 // hil-rig.md`'s 2026-09-18 entry). Now avoidable via a new `frameFormat`
-// property: `"rgb565"` (default, today's existing behavior, unchanged) or
-// `"gs4"` (MicroPython's own `framebuf.GS4_HMSB`, 4 bits/pixel, palette-
-// indexed, a quarter the memory footprint for the same panel). In
-// `"gs4"` mode, `msg.payload` is a GS4_HMSB-packed buffer (built upstream
-// via `framebuf.FrameBuffer(..., framebuf.GS4_HMSB)`, pixel values 0-15
-// as palette indices, not literal color) instead of a full RGB565 buffer.
-// A new `palette` property (always exactly 16 RGB565 entries --
-// `DEFAULT_PALETTE_GS4` below is a placeholder pending Mike's own values,
-// see that const's own comment) maps each 4-bit index to a real color.
+// property: `"rgb565"` (default, today's existing behavior, unchanged),
+// `"gs4"` (MicroPython's own `framebuf.GS4_HMSB`, 4 bits/pixel, a
+// quarter the RGB565 memory footprint), `"gs2"` (`framebuf.GS2_HMSB`,
+// 2 bits/pixel, an eighth), or `"mono"` (`framebuf.MONO_HMSB`, 1 bit/
+// pixel, a sixteenth). In any non-`"rgb565"` mode, `msg.payload` is a
+// palette-indexed buffer (built upstream via `framebuf.FrameBuffer(...,
+// framebuf.<FORMAT>)`, pixel values as palette indices, not literal
+// color) instead of a full RGB565 buffer. A `palette` property (always
+// exactly 16 RGB565 entries -- `DEFAULT_PALETTE_GS4` below is a
+// placeholder pending Mike's own values, see that const's own comment)
+// maps each index to a real color: `gs4` reads all 16 entries (4-bit
+// indices), `gs2` reads only the first 4 (2-bit indices), `mono` reads
+// only the first 2 (1-bit indices) -- one property, one consistent
+// codegen path, across all three depths.
 //
 // Expansion happens inside this node's own generated code, not the
 // vendored driver: a `@micropython.viper`-decorated per-instance helper
-// (typed `ptr8`/`ptr16` params) unpacks GS4 nibbles to real RGB565 bytes
-// two rows at a time -- pixel-count-aware, not a flat byte count, so an
-// odd-width row's trailing pad nibble (see the correctness subtlety
-// below) is discarded rather than expanded into a phantom extra pixel
+// (typed `ptr8`/`ptr16` params) unpacks packed indices to real RGB565
+// bytes two rows at a time -- pixel-count-aware, not a flat byte count,
+// so an odd-width row's trailing pad bits (see the correctness subtlety
+// below) are discarded rather than expanded into phantom extra pixels
 // that would shift every subsequent pixel out of alignment -- streamed
 // out via the vendored driver's own `set_window()` + `write(None, ...)`
 // primitives -- the same two calls
@@ -185,32 +190,53 @@
 // `st7789py.py` directly: `write()` toggles `cs_low()`/`cs_high()` around
 // every call, so each row-batch is its own complete, correctly-framed SPI
 // transaction, not a half-open window between calls). This granularity
-// (2 rows/transaction) matches the corroborating real-world GS4 driver
-// account's own proven shape (`outstanding-items/display-spi-framebuffer-
-// memory.md`'s "External corroboration" section), which hit <100ms/frame
-// at 240x320 this way. The `@micropython.viper` mechanism itself was
-// spiked off-device against a real MicroPython unix-port build before
-// this landed -- works, ~42x over plain Python for the same loop shape,
-// but that was on an x86 dev machine, not this project's own ESP32
-// hardware, so the timing target is still unconfirmed on real boards
-// (`learnings/micropython-device-runtime.md`'s 2026-09-18 entry has the
-// full method and numbers). `gs2` (2bpp) and `mono` (1bpp) formats are
-// decided alongside `gs4` (`decisions/node-authoring.md`) but not yet
-// built -- `gs4` ships first, the cheaper, already-corroborated case.
+// (2 rows/transaction, `INDEXED_ROWS_PER_BATCH` below, shared by all
+// three indexed formats -- it only bounds the OUTPUT scratch buffer size,
+// which is always RGB565 regardless of source depth) matches the
+// corroborating real-world GS4 driver account's own proven shape
+// (`outstanding-items/display-spi-framebuffer-memory.md`'s "External
+// corroboration" section), which hit <100ms/frame at 240x320 this way.
+// The `@micropython.viper` mechanism itself was spiked off-device against
+// a real MicroPython unix-port build before `gs4` landed -- works, ~42x
+// over plain Python for the same loop shape on an x86 dev machine
+// (`learnings/micropython-device-runtime.md`'s 2026-09-18 entry) -- and
+// has since been confirmed on real Xtensa/ESP32 hardware too, for `gs4`
+// specifically (`decisions/node-authoring.md`'s 2026-09-18 entries); real
+// per-frame timing on real hardware is still unmeasured for any format,
+// gs4 included.
 //
 // **Real correctness subtlety, found reading MicroPython's own
-// `extmod/modframebuf.c` directly rather than assuming flat `w*h/2`
-// packing:** `GS4_HMSB`'s row stride is rounded UP to the nearest even
-// pixel count (`(width + 1) & ~1` in the real C source) before dividing
-// by 2 for bytes/row. For an EVEN width (CYD's 240) this is exactly
-// `width/2` and a flat `w*h/2` calculation happens to still be correct,
-// but for an ODD width (TiDAL's 135) each row is padded to 68 bytes
-// (`ceil(135/2)`), not 67.5 -- a flat `ceil(w*h/2)` undercounts the real
-// buffer size by `height` bytes for any odd-width panel, which is exactly
-// why it's easy to miss testing only against CYD's (even-width) panel.
-// This node's own `expectedBytes` calculation for `"gs4"` mode is
-// `Math.ceil(width / 2) * height`, not a flat `Math.ceil((width *
-// height) / 2)` -- see `gs4StrideBytes` below.
+// `extmod/modframebuf.c` directly rather than assuming flat packing:**
+// every one of these formats rounds its per-row byte stride UP to a
+// whole byte before dividing by the format's pixels-per-byte -- `(width
+// + (ppb - 1)) & ~(ppb - 1)` in the real C source, `ppb` pixels per byte
+// (2 for gs4, 4 for gs2, 8 for mono) -- so `Math.ceil(width / ppb)` is
+// the right per-row byte count, not a flat `Math.ceil((width * height) /
+// ppb)`. For an EVEN-enough width (CYD's 240, divisible by all three
+// `ppb` values) this happens to agree with the flat formula, but for an
+// odd or non-multiple width (TiDAL's 135: not a multiple of 4 or 8
+// either) it doesn't -- this is exactly the bug `gs4`'s own first draft
+// hit and fixed (see `decisions/node-authoring.md`), generalized here to
+// `gs2`/`mono` from the start rather than re-discovered per format.
+//
+// **A second, more subtle correctness fact, found the same way (reading
+// `gs4_hmsb_setpixel`/`gs2_hmsb_setpixel`/`mono_horiz_setpixel` in
+// `extmod/modframebuf.c` directly) and NOT assumed to generalize from
+// `gs4`:** the three formats pack pixels into a byte in OPPOSITE bit
+// orders from each other. `GS4_HMSB`'s first (leftmost) pixel of a pair
+// occupies the HIGH nibble, its second pixel the LOW nibble --
+// descending, high-to-low. `GS2_HMSB` and `MONO_HMSB` are the other way
+// around: each format's first (leftmost) pixel of its group occupies the
+// LOWEST bits, its last pixel the HIGHEST -- ascending, low-to-high.
+// (MicroPython also has `MONO_HLSB`, confusingly the one whose bit order
+// -- high-to-low -- matches `GS4_HMSB`'s rather than its own `HMSB`-
+// suffixed sibling's; picked `MONO_HMSB` for `"mono"` specifically for
+// naming consistency with `GS4_HMSB`/`GS2_HMSB` above, a real judgment
+// call flagged to Mike, not because its bit order matches theirs -- it
+// doesn't.) Each expansion loop below was written and hand-verified
+// against its own format's real setpixel/getpixel source, not derived by
+// analogy from `gs4`'s already-working loop -- the bit-order difference
+// is exactly the kind of thing an analogy would get wrong silently.
 
 import { CompileError } from "../compiler/errors.js";
 import type { GraphNode } from "../compiler/graph.js";
@@ -219,14 +245,38 @@ import type { CodegenContext, NodeDefinition, SinkCodegenResult } from "../compi
 const CONTROLLERS = ["st7789"] as const;
 type Controller = (typeof CONTROLLERS)[number];
 
-const FRAME_FORMATS = ["rgb565", "gs4"] as const;
+const FRAME_FORMATS = ["rgb565", "gs4", "gs2", "mono"] as const;
 type FrameFormat = (typeof FRAME_FORMATS)[number];
+type IndexedFrameFormat = Exclude<FrameFormat, "rgb565">;
 
-// How many expanded rows go out per SPI transaction in "gs4" mode --
-// matches the corroborating GS4 driver account's own proven granularity
-// (outstanding-items/display-spi-framebuffer-memory.md's "External
-// corroboration" section), not an arbitrary choice.
-const GS4_ROWS_PER_BATCH = 2;
+// framebuf format name + pixels-per-byte for each indexed format --
+// `PIXELS_PER_BYTE` alone drives `strideBytes`/`expectedBytes` below
+// (`Math.ceil(width / ppb) * height`, this file's header has the real-
+// source citation for why it's ceil-per-row, not a flat formula).
+// `FRAMEBUF_ATTR` is purely documentation here (the actual upstream
+// `framebuf.GS4_HMSB`/etc. constant a flow author's own `function` node
+// needs to build the source buffer with -- this node never imports
+// `framebuf` itself, it only consumes already-packed bytes).
+const PIXELS_PER_BYTE: Record<IndexedFrameFormat, number> = { gs4: 2, gs2: 4, mono: 8 };
+const FRAMEBUF_ATTR: Record<IndexedFrameFormat, string> = { gs4: "GS4_HMSB", gs2: "GS2_HMSB", mono: "MONO_HMSB" };
+const BITS_PER_PIXEL: Record<IndexedFrameFormat, number> = { gs4: 4, gs2: 2, mono: 1 };
+// How many palette entries each depth actually reads out of the shared
+// 16-entry `palette` property (`requirePalette` below always requires
+// all 16 regardless of format -- one property, one shape, across every
+// depth, per this file's header) -- also how many entries actually get
+// baked into the generated `array.array('H', ...)` literal: no point
+// carrying 14 unread halfwords in RAM for a `mono` node that only ever
+// indexes `pal[0]`/`pal[1]`.
+const PALETTE_ENTRIES_USED: Record<IndexedFrameFormat, number> = { gs4: 16, gs2: 4, mono: 2 };
+
+// How many expanded rows go out per SPI transaction in any indexed
+// ("gs4"/"gs2"/"mono") mode -- matches the corroborating GS4 driver
+// account's own proven granularity (outstanding-items/display-spi-
+// framebuffer-memory.md's "External corroboration" section), not an
+// arbitrary choice. Named generically (not `GS4_...`) since it only
+// bounds the OUTPUT scratch buffer, which is always RGB565 regardless of
+// source depth -- shared unchanged across all three formats.
+const INDEXED_ROWS_PER_BATCH = 2;
 
 // **Diagnostic flag, 2026-09-18 -- reverted to false, real viper.** Added
 // when a first real gs4 deploy boot-looped (SW_CPU_RESET) on a CYD, to
@@ -242,11 +292,15 @@ const GS4_ROWS_PER_BATCH = 2;
 // node-authoring.md`'s 2026-09-18 entries have the full incident). Once
 // that was fixed and a plain-Python gs4 render was confirmed correct on
 // real hardware, this flipped back to false to get the actual first-ever
-// real validation of @micropython.viper on Xtensa. Kept as a named
-// constant (not deleted) in case a future board/driver-interaction
-// regression ever needs this same isolation technique again -- flip to
-// true, redeploy, compare; it costs nothing to leave in place.
-const GS4_DIAGNOSTIC_PLAIN_PYTHON = false;
+// real validation of @micropython.viper on Xtensa -- since confirmed
+// working, including under sustained continuous redraw (same 2026-09-18
+// entries). Kept as a named constant (not deleted) in case a future
+// board/driver-interaction regression ever needs this same isolation
+// technique again -- flip to true, redeploy, compare; it costs nothing
+// to leave in place. Applies uniformly to whichever indexed format's
+// expand function this node generates (gs4/gs2/mono alike), not just gs4
+// -- the isolation trick is format-agnostic.
+const DIAGNOSTIC_PLAIN_PYTHON = false;
 
 // A placeholder starting palette -- NOT the exact ~11-color Material-
 // Design-inspired set the corroborating GS4 driver account describes
@@ -257,7 +311,10 @@ const GS4_DIAGNOSTIC_PLAIN_PYTHON = false;
 // ramp, plus a few darker accents) -- flagged for Mike to swap for the
 // real reference values, or his own, rather than silently treated as
 // authoritative. Any flow can override this via its own `palette`
-// property regardless.
+// property regardless. Shared across gs4/gs2/mono -- gs2 reads indices
+// 0-3 (black/white/red/green here), mono reads indices 0-1 (black/
+// white) -- a flow wanting different low-depth colors overrides
+// `palette` directly, same as gs4 already can.
 const DEFAULT_PALETTE_GS4: readonly number[] = [
   0x0000, // 0  black        (0, 0, 0)
   0xffff, // 1  white        (255, 255, 255)
@@ -331,7 +388,7 @@ function optionalOffset(value: unknown, label: string): number {
   return raw;
 }
 
-/** Exactly 16 raw RGB565 values (0-65535), same "compile-time property, not a runtime object" convention as everything else in this file -- no color-picker UI yet (PropertyPanel.vue), same gap `colorOrder`/`invertColors`/`dataLatchOrder` already have; set via raw flow-file properties for now. */
+/** Exactly 16 raw RGB565 values (0-65535), same "compile-time property, not a runtime object" convention as everything else in this file -- no color-picker UI yet (PropertyPanel.vue), same gap `colorOrder`/`invertColors`/`dataLatchOrder` already have; set via raw flow-file properties for now. Always 16 regardless of format (gs4/gs2/mono all read from the same shape, just a different prefix of it -- this file's header). */
 function requirePalette(value: unknown): number[] {
   if (value === undefined) return [...DEFAULT_PALETTE_GS4];
   if (!Array.isArray(value) || value.length !== 16) {
@@ -344,6 +401,129 @@ function requirePalette(value: unknown): number[] {
     }
     return n;
   });
+}
+
+/**
+ * Builds the body (as an array of source lines, decorator line excluded --
+ * the caller prepends `@micropython.viper` unless `DIAGNOSTIC_PLAIN_PYTHON`)
+ * of the per-format expansion function: `def NAME(src, off, stride, dst,
+ * width, rows, pal)`, unpacking `rows` rows of packed indices starting at
+ * source byte offset `off` (row stride `stride` bytes) into `dst` as
+ * RGB565 bytes, `width` real pixels per row (pixel-count-aware, not a
+ * flat byte count -- discards any trailing pad bits in the source rather
+ * than expanding them, see this file's header). Each format's bit-
+ * unpacking logic is hand-written and independently verified against its
+ * own real MicroPython C source (this file's header's second
+ * correctness-subtlety note) -- deliberately NOT derived from `gs4`'s by
+ * analogy or by a shared "generic N-bit unpack" abstraction, since the
+ * three formats' bit orders actually differ from each other (gs4
+ * descending, gs2/mono ascending) and a clever unified formula is exactly
+ * the kind of thing that would get that silently wrong.
+ */
+function expandFunctionBody(format: IndexedFrameFormat): string[] {
+  if (format === "gs4") {
+    // 2 px/byte, DESCENDING bit order (confirmed against the real
+    // `gs4_hmsb_setpixel`/`getpixel` in `extmod/modframebuf.c`): the
+    // first (even-x) pixel of a pair is the HIGH nibble, the second
+    // (odd-x) pixel the LOW nibble. Unrolled by hand (not a `for k in
+    // range(2)` loop) -- this is the original, already real-hardware-
+    // confirmed gs4 loop (`decisions/node-authoring.md`'s 2026-09-18
+    // entries), left exactly as shipped rather than rewritten to match
+    // gs2/mono's newer loop-based style below, so nothing proven working
+    // on real Xtensa hardware is disturbed for the sake of uniformity.
+    return [
+      `    full = width >> 1`,
+      `    odd = width & 1`,
+      `    row_dst_bytes = width * 2`,
+      `    for r in range(rows):`,
+      `        s = off + r * stride`,
+      `        d = r * row_dst_bytes`,
+      `        for i in range(full):`,
+      `            b = int(src[s + i])`,
+      `            hi = b >> 4`,
+      `            lo = b & 0x0F`,
+      `            c0 = int(pal[hi])`,
+      `            c1 = int(pal[lo])`,
+      `            j = d + i * 4`,
+      `            dst[j] = c0 >> 8`,
+      `            dst[j + 1] = c0 & 0xFF`,
+      `            dst[j + 2] = c1 >> 8`,
+      `            dst[j + 3] = c1 & 0xFF`,
+      `        if odd:`,
+      `            b = int(src[s + full])`,
+      `            hi = b >> 4`,
+      `            c0 = int(pal[hi])`,
+      `            j = d + full * 4`,
+      `            dst[j] = c0 >> 8`,
+      `            dst[j + 1] = c0 & 0xFF`,
+    ];
+  }
+  if (format === "gs2") {
+    // 4 px/byte, ASCENDING bit order (confirmed against the real
+    // `gs2_hmsb_setpixel`/`getpixel`: `shift = (x & 0x3) << 1`) -- pixel
+    // 0 of each group of 4 occupies bits 0-1 (lowest), pixel 3 occupies
+    // bits 6-7 (highest). A small `for k in range(4)` inner loop, not
+    // hand-unrolled like gs4 -- new code, favoring clarity/correctness
+    // over the marginal native-code saving a manual unroll might buy;
+    // viper compiles fixed-bound loops to native code, so this is not
+    // expected to be the bottleneck (same reasoning gs4's own header
+    // already makes about the loop vs. SPI transfer time), but real
+    // per-frame timing on hardware is still unmeasured either way.
+    return [
+      `    full = width >> 2`,
+      `    rem = width & 3`,
+      `    row_dst_bytes = width * 2`,
+      `    for r in range(rows):`,
+      `        s = off + r * stride`,
+      `        d = r * row_dst_bytes`,
+      `        for i in range(full):`,
+      `            b = int(src[s + i])`,
+      `            j = d + i * 8`,
+      `            for k in range(4):`,
+      `                c = int(pal[(b >> (k * 2)) & 0x3])`,
+      `                dst[j + k * 2] = c >> 8`,
+      `                dst[j + k * 2 + 1] = c & 0xFF`,
+      `        if rem:`,
+      `            b = int(src[s + full])`,
+      `            j = d + full * 8`,
+      `            for k in range(rem):`,
+      `                c = int(pal[(b >> (k * 2)) & 0x3])`,
+      `                dst[j + k * 2] = c >> 8`,
+      `                dst[j + k * 2 + 1] = c & 0xFF`,
+    ];
+  }
+  // format === "mono": 8 px/byte, ASCENDING bit order -- MicroPython's
+  // MONO_HMSB (`mono_horiz_setpixel`/`getpixel` with `fb->format ==
+  // FRAMEBUF_MHMSB`: `offset = x & 0x07`), NOT the other mono format
+  // MicroPython also has, MONO_HLSB (`offset = 7 - (x & 0x07)`, actually
+  // the DESCENDING one despite its "LSB" name -- confirmed directly from
+  // source, not assumed from either name; the two names don't describe
+  // what "MSB"/"LSB" might suggest at a glance). `MONO_HMSB` picked for
+  // `"mono"` specifically for naming consistency with `GS4_HMSB`/
+  // `GS2_HMSB` above (this file's header) -- pixel 0 of each group of 8
+  // occupies bit 0 (lowest), pixel 7 occupies bit 7 (highest).
+  return [
+    `    full = width >> 3`,
+    `    rem = width & 7`,
+    `    row_dst_bytes = width * 2`,
+    `    for r in range(rows):`,
+    `        s = off + r * stride`,
+    `        d = r * row_dst_bytes`,
+    `        for i in range(full):`,
+    `            b = int(src[s + i])`,
+    `            j = d + i * 16`,
+    `            for k in range(8):`,
+    `                c = int(pal[(b >> k) & 0x1])`,
+    `                dst[j + k * 2] = c >> 8`,
+    `                dst[j + k * 2 + 1] = c & 0xFF`,
+    `        if rem:`,
+    `            b = int(src[s + full])`,
+    `            j = d + full * 16`,
+    `            for k in range(rem):`,
+    `                c = int(pal[(b >> k) & 0x1])`,
+    `                dst[j + k * 2] = c >> 8`,
+    `                dst[j + k * 2 + 1] = c & 0xFF`,
+  ];
 }
 
 export const displaySpiNode: NodeDefinition = {
@@ -362,7 +542,8 @@ export const displaySpiNode: NodeDefinition = {
     if (!FRAME_FORMATS.includes(frameFormat)) {
       throw new CompileError(`display_spi frameFormat "${String(node.properties.frameFormat)}" must be one of: ${FRAME_FORMATS.join(", ")}`);
     }
-    const palette = frameFormat === "gs4" ? requirePalette(node.properties.palette) : null;
+    const isIndexed = frameFormat !== "rgb565";
+    const palette = isIndexed ? requirePalette(node.properties.palette) : null;
 
     const spiBus = Math.round(Number(node.properties.spiBus ?? 2));
     if (!Number.isFinite(spiBus) || spiBus < 0) {
@@ -429,17 +610,19 @@ export const displaySpiNode: NodeDefinition = {
     const resetExpr = reset === null ? "None" : `machine.Pin(${reset}, machine.Pin.OUT)`;
     const blExpr = backlight === null ? "None" : `machine.Pin(${backlight}, machine.Pin.OUT)`;
 
-    // GS4_HMSB pads each row to a whole number of bytes (2px/byte) --
-    // Math.ceil(width / 2) is that padded per-row byte count, NOT
-    // Math.ceil((width * height) / 2) -- see this file's header for why
-    // the difference matters on an odd-width panel (TiDAL's 135).
-    const gs4StrideBytes = Math.ceil(width / 2);
-    const expectedBytes = frameFormat === "gs4" ? gs4StrideBytes * height : width * height * 2; // RGB565
+    // Every indexed format pads its per-row byte stride UP to a whole
+    // byte -- Math.ceil(width / pixelsPerByte) is that padded per-row
+    // byte count, NOT Math.ceil((width * height) / pixelsPerByte) -- see
+    // this file's header for why the difference matters on a width
+    // that's not a multiple of the format's pixels-per-byte (TiDAL's 135
+    // isn't a multiple of 2, 4, or 8).
+    const strideBytes = isIndexed ? Math.ceil(width / PIXELS_PER_BYTE[frameFormat as IndexedFrameFormat]) : null;
+    const expectedBytes = isIndexed ? strideBytes! * height : width * height * 2; // RGB565
 
     const imports = ["import machine", "from st7789py import ST7789, ST7789_MADCTL"];
-    if (frameFormat === "gs4") {
+    if (isIndexed) {
       imports.push("import array");
-      if (!GS4_DIAGNOSTIC_PLAIN_PYTHON) imports.push("import micropython");
+      if (!DIAGNOSTIC_PLAIN_PYTHON) imports.push("import micropython");
     }
 
     const statements: SinkCodegenResult["statements"] = [
@@ -465,39 +648,40 @@ export const displaySpiNode: NodeDefinition = {
       },
     ];
 
-    if (frameFormat === "gs4") {
-      const paletteLiteral = palette!.map((v) => `0x${v.toString(16).padStart(4, "0")}`).join(", ");
-      const scratchBytes = width * 2 * GS4_ROWS_PER_BATCH; // real pixels only, no row-padding in the OUTPUT
+    if (isIndexed) {
+      const format = frameFormat as IndexedFrameFormat;
+      const paletteLiteral = palette!
+        .slice(0, PALETTE_ENTRIES_USED[format])
+        .map((v) => `0x${v.toString(16).padStart(4, "0")}`)
+        .join(", ");
+      const scratchBytes = width * 2 * INDEXED_ROWS_PER_BATCH; // real pixels only, no row-padding in the OUTPUT
       statements.push({
-        key: `${base}_gs4`,
+        key: `${base}_${format}`,
         // The palette + expansion helper are per-instance, matching every
         // other setup block in this file (no shared/deduped codegen
-        // infrastructure exists to reuse one across multiple gs4 nodes in
-        // the same flow) -- cheap in flash for the realistic case of one
-        // or a few display_spi nodes per flow, per CLAUDE.md's "cheapest
-        // correct implementation" default.
+        // infrastructure exists to reuse one across multiple display_spi
+        // nodes in the same flow) -- cheap in flash for the realistic
+        // case of one or a few display_spi nodes per flow, per
+        // CLAUDE.md's "cheapest correct implementation" default.
         //
-        // Pixel-count-aware, not a flat byte count: GS4_HMSB's per-row
-        // byte stride (`stride` param below) can be LARGER than the real
-        // pixel count implies on an odd width (this file's header) --
-        // a naive "expand every nibble in the buffer" loop would expand
-        // the odd-row trailing pad nibble into a real output pixel too,
-        // pushing one extra pixel per odd-width row into set_window()'s
-        // RAMWR stream and silently shifting every pixel after it out of
-        // alignment for the rest of the frame. This loop expands exactly
-        // `width` pixels per row (discarding a trailing half-byte pad
-        // when width is odd, e.g. TiDAL's 135) and advances the SOURCE
-        // side by the real row `stride` -- the two can differ, the DEST
-        // side never includes padding.
+        // Pixel-count-aware, not a flat byte count -- see this file's
+        // header and `expandFunctionBody()`'s own per-format comments for
+        // exactly how each format's bit-unpacking works and why it's
+        // independently hand-verified per format, not shared/derived by
+        // analogy.
         code: [
           `${palVar} = array.array('H', [${paletteLiteral}])`,
           ``,
           // @micropython.viper, typed ptr8/ptr16 params -- spiked off-
           // device first (this file's header, learnings/micropython-
-          // device-runtime.md's 2026-09-18 entry): compiles and runs
-          // correctly, ~42x over plain Python for this exact loop shape.
+          // device-runtime.md's 2026-09-18 entry), since confirmed on
+          // real Xtensa/ESP32 hardware for gs4 (decisions/node-
+          // authoring.md's 2026-09-18 entries) -- gs2/mono share the same
+          // mechanism and the same real-hardware confidence, though
+          // neither has its own real-hardware deploy yet (this file's
+          // header).
           //
-          // GS4_DIAGNOSTIC_PLAIN_PYTHON (see that const's own comment,
+          // DIAGNOSTIC_PLAIN_PYTHON (see that const's own comment,
           // TEMPORARY): when true, the decorator and ptr8/ptr16/int type
           // annotations are omitted -- real MicroPython evaluates
           // annotations as plain expressions at def time when there's no
@@ -506,34 +690,11 @@ export const displaySpiNode: NodeDefinition = {
           // context, so they have to be stripped entirely, not just the
           // decorator line -- everything else below is byte-for-byte
           // identical either way.
-          ...(GS4_DIAGNOSTIC_PLAIN_PYTHON ? [] : [`@micropython.viper`]),
-          GS4_DIAGNOSTIC_PLAIN_PYTHON
+          ...(DIAGNOSTIC_PLAIN_PYTHON ? [] : [`@micropython.viper`]),
+          DIAGNOSTIC_PLAIN_PYTHON
             ? `def ${expandVar}(src, off, stride, dst, width, rows, pal):`
             : `def ${expandVar}(src: ptr8, off: int, stride: int, dst: ptr8, width: int, rows: int, pal: ptr16):`,
-          `    full = width >> 1`,
-          `    odd = width & 1`,
-          `    row_dst_bytes = width * 2`,
-          `    for r in range(rows):`,
-          `        s = off + r * stride`,
-          `        d = r * row_dst_bytes`,
-          `        for i in range(full):`,
-          `            b = int(src[s + i])`,
-          `            hi = b >> 4`,
-          `            lo = b & 0x0F`,
-          `            c0 = int(pal[hi])`,
-          `            c1 = int(pal[lo])`,
-          `            j = d + i * 4`,
-          `            dst[j] = c0 >> 8`,
-          `            dst[j + 1] = c0 & 0xFF`,
-          `            dst[j + 2] = c1 >> 8`,
-          `            dst[j + 3] = c1 & 0xFF`,
-          `        if odd:`,
-          `            b = int(src[s + full])`,
-          `            hi = b >> 4`,
-          `            c0 = int(pal[hi])`,
-          `            j = d + full * 4`,
-          `            dst[j] = c0 >> 8`,
-          `            dst[j + 1] = c0 & 0xFF`,
+          ...expandFunctionBody(format),
           ``,
           // Reused across batches (not reallocated per message/per batch)
           // -- same "small scratch buffer, not a full expanded frame"
@@ -543,33 +704,31 @@ export const displaySpiNode: NodeDefinition = {
       });
     }
 
-    const lengthCheck =
-      frameFormat === "gs4"
-        ? `    raise ValueError('display_spi: expected ${expectedBytes} bytes (${width}x${height} gs4/4bpp, ${gs4StrideBytes} bytes/row), got %d' % len(_buf))`
-        : `    raise ValueError('display_spi: expected ${expectedBytes} bytes (${width}x${height} RGB565), got %d' % len(_buf))`;
+    const lengthCheck = isIndexed
+      ? `    raise ValueError('display_spi: expected ${expectedBytes} bytes (${width}x${height} ${frameFormat}/framebuf.${FRAMEBUF_ATTR[frameFormat as IndexedFrameFormat]}, ${BITS_PER_PIXEL[frameFormat as IndexedFrameFormat]}bpp, ${strideBytes} bytes/row), got %d' % len(_buf))`
+      : `    raise ValueError('display_spi: expected ${expectedBytes} bytes (${width}x${height} RGB565), got %d' % len(_buf))`;
 
-    const functionBody =
-      frameFormat === "gs4"
-        ? [
-            `_buf = msg.get('payload', b'')`,
-            `if len(_buf) != ${expectedBytes}:`,
-            lengthCheck,
-            // set_window once, then several write(None, ...) calls --
-            // the same two primitives blit_buffer() itself calls, just
-            // split apart. st7789py.py's own write() toggles cs_low()/
-            // cs_high() around every call (confirmed by reading it
-            // directly, this file's header), so each batch below is its
-            // own complete, correctly-framed SPI transaction.
-            `${dispVar}.set_window(0, 0, ${width - 1}, ${height - 1})`,
-            `_row = 0`,
-            `while _row < ${height}:`,
-            `    _n = ${GS4_ROWS_PER_BATCH} if (${height} - _row) >= ${GS4_ROWS_PER_BATCH} else (${height} - _row)`,
-            `    ${expandVar}(_buf, _row * ${gs4StrideBytes}, ${gs4StrideBytes}, ${scratchVar}, ${width}, _n, ${palVar})`,
-            `    _cnt = ${width} * 2 * _n`,
-            `    ${dispVar}.write(None, memoryview(${scratchVar})[:_cnt])`,
-            `    _row += _n`,
-          ].join("\n")
-        : [`_buf = msg.get('payload', b'')`, `if len(_buf) != ${expectedBytes}:`, lengthCheck, `${dispVar}.blit_buffer(_buf, 0, 0, ${width}, ${height})`].join("\n");
+    const functionBody = isIndexed
+      ? [
+          `_buf = msg.get('payload', b'')`,
+          `if len(_buf) != ${expectedBytes}:`,
+          lengthCheck,
+          // set_window once, then several write(None, ...) calls --
+          // the same two primitives blit_buffer() itself calls, just
+          // split apart. st7789py.py's own write() toggles cs_low()/
+          // cs_high() around every call (confirmed by reading it
+          // directly, this file's header), so each batch below is its
+          // own complete, correctly-framed SPI transaction.
+          `${dispVar}.set_window(0, 0, ${width - 1}, ${height - 1})`,
+          `_row = 0`,
+          `while _row < ${height}:`,
+          `    _n = ${INDEXED_ROWS_PER_BATCH} if (${height} - _row) >= ${INDEXED_ROWS_PER_BATCH} else (${height} - _row)`,
+          `    ${expandVar}(_buf, _row * ${strideBytes}, ${strideBytes}, ${scratchVar}, ${width}, _n, ${palVar})`,
+          `    _cnt = ${width} * 2 * _n`,
+          `    ${dispVar}.write(None, memoryview(${scratchVar})[:_cnt])`,
+          `    _row += _n`,
+        ].join("\n")
+      : [`_buf = msg.get('payload', b'')`, `if len(_buf) != ${expectedBytes}:`, lengthCheck, `${dispVar}.blit_buffer(_buf, 0, 0, ${width}, ${height})`].join("\n");
 
     return {
       imports,

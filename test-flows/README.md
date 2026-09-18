@@ -704,3 +704,51 @@ flow or power-cycling -- there's no inject node to click "off".
 
 **Confirmed working on real CYD hardware, 2026-09-18**, after the `context`-store fix above --
 continuous redraw holds up with no further `MemoryError` or crash.
+
+## `display-spi-gs2-cyd-test.flow.json` / `display-spi-mono-cyd-test.flow.json`
+
+`gs2`/`mono` built 2026-09-18, same day as gs4's real-hardware confirmation (`decisions/
+node-authoring.md`) -- these two are the equivalent first real-hardware test flows for the two
+lower depths, same shape as `display-spi-gs4-cyd-test.flow.json` above (same CYD hardware config,
+`baudrate: 27000000` included, `thingstudio/inject` -> `thingstudio/function` -> `thingstudio/
+display_spi`, palette property left unset to exercise the default-palette path). **Neither has been
+deployed to real hardware yet** -- gs4's own real-hardware pass is what these two are modeled on, not
+a substitute for it; frameFormat/bit-unpacking correctness is covered off-device (see below), but
+first real deploys of `gs2`/`mono` specifically, and the SPI/viper behavior on a real board for these
+two frame formats, are still open.
+
+`display-spi-gs2-cyd-test.flow.json`: `frameFormat: "gs2"` (`framebuf.GS2_HMSB`, 2 bits/pixel, 4-color
+palette -- default palette's own first 4 entries: black/white/red/green). Function node draws the same
+kind of test pattern as the gs4 flow (label text, two colored bands, a filled circle) using palette
+indices 0-3. Expected frame size: `Math.ceil(240 / 4) * 320 = 19,200` bytes -- an eighth of RGB565's
+153,600, confirmed via a `compile()` dry run (below), not just hand math.
+
+`display-spi-mono-cyd-test.flow.json`: `frameFormat: "mono"` (`framebuf.MONO_HMSB` specifically --
+**not** `MONO_VLSB` (display_i2c's own vertical-byte-column OLED convention, wrong orientation for
+this node's row-by-row streaming) or `MONO_HLSB` (same row orientation as `MONO_HMSB` but the
+OPPOSITE bit order -- `display-spi.ts`'s header has the real-source citation for why), 1 bit/pixel,
+2-color/black-white palette). Function node draws a label, an outlined rectangle, and a filled circle
+using palette indices 0-1. Expected frame size: `Math.ceil(240 / 8) * 320 = 9,600` bytes -- a
+sixteenth of RGB565's 153,600.
+
+**Verified via `verify-flow-file.ts` and a `compile()` dry run through the real registry** for both
+files (not just their own JSON) -- confirms the correct expected-byte-count length check for each
+format (19,200/9,600 respectively, matching the table above), the `_display_spi_expand` viper function
+present with each format's own independently-derived bit-unpacking logic (`display-spi.ts`'s
+`expandFunctionBody()`), and a shared 960-byte reusable scratch buffer (`240 * 2 *
+INDEXED_ROWS_PER_BATCH`, same as gs4 -- the scratch buffer size is output-format-independent, always
+RGB565, regardless of source depth). The bit-unpacking logic itself (not just these flows' own
+generated code) has its own dedicated off-device correctness coverage: `node-display-spi.test.ts`'s
+`"frameFormat gs2"`/`"frameFormat mono"` describe blocks, hand-derived from MicroPython's real
+`gs2_hmsb_setpixel`/`mono_horiz_setpixel` C source independently of this project's own codegen (same
+"not a test that just re-asserts a bug" reasoning gs4's own odd-width test already used) -- odd-width/
+non-multiple-of-pixels-per-byte cases, multi-row-batch splitting, and custom-palette overrides, for
+both formats.
+
+**Load via the browser and Deploy, click the inject node once connected live**, same as
+`display-spi-gs4-cyd-test.flow.json`. What to watch for is the same shape of check: does it deploy and
+run at this board's full native resolution without a `MemoryError`, and does the rendered pattern
+(text, colored/shaded bands, a filled circle) look correct and undistorted -- particularly watch for
+anything that looks like pixels shifted or smeared sideways within a row, which is exactly what a bit-
+order mistake in a format's expansion loop would produce (this file's header on why gs2/mono's bit
+order is the OPPOSITE of gs4's, independently verified for each rather than assumed to match).

@@ -1,0 +1,79 @@
+{
+  "formatVersion": 1,
+  "flowName": "display-spi-gs2-cyd-test",
+  "nodes": [
+    {
+      "id": "1",
+      "type": "thingstudio/inject",
+      "properties": {
+        "payloadType": "bool",
+        "payloadValue": "false"
+      }
+    },
+    {
+      "id": "2",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "import framebuf\nw, h = 240, 320\n# GS2_HMSB packs 4px/byte, each row padded UP to a whole byte -- ceil(w/4)\n# is the real per-row byte count display_spi's own codegen expects, same\n# \"pad to a byte boundary\" rule gs4 established (display-spi.ts's header).\nstride = (w + 3) // 4\nbuf = bytearray(stride * h)\nfb = framebuf.FrameBuffer(buf, w, h, framebuf.GS2_HMSB)\n# Default palette indices (display_spi's own DEFAULT_PALETTE_GS4, only\n# the first 4 entries are read in gs2 mode): 0 black, 1 white, 2 red,\n# 3 green -- palette property left unset on purpose, same as the gs4 test\n# flow, to also exercise the no-palette-property default path.\nfb.fill(0)\nfb.text('GS2 240x320', 8, 8, 1)\nfb.fill_rect(0, 40, w, 90, 2)\nfb.fill_rect(0, 130, w, 90, 3)\nfb.ellipse(120, 260, 50, 50, 1, True)\nmsg['payload'] = bytes(buf)\nreturn msg"
+      }
+    },
+    {
+      "id": "3",
+      "type": "thingstudio/display_spi",
+      "properties": {
+        "controller": "st7789",
+        "frameFormat": "gs2",
+        "spiBus": 2,
+        "baudrate": 27000000,
+        "sck": 14,
+        "mosi": 13,
+        "dc": 2,
+        "cs": 15,
+        "reset": -1,
+        "backlight": 21,
+        "width": 240,
+        "height": 320,
+        "rotation": 1,
+        "xstart": 0,
+        "ystart": 0,
+        "colorOrder": "bgr",
+        "invertColors": false,
+        "dataLatchOrder": true
+      }
+    }
+  ],
+  "edges": [
+    [
+      "1",
+      0,
+      "2",
+      0
+    ],
+    [
+      "2",
+      0,
+      "3",
+      0
+    ]
+  ],
+  "layout": {
+    "1": {
+      "pos": [
+        40,
+        240
+      ]
+    },
+    "2": {
+      "pos": [
+        340,
+        40
+      ]
+    },
+    "3": {
+      "pos": [
+        640,
+        40
+      ]
+    }
+  }
+}

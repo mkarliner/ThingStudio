@@ -12,3 +12,7 @@ the following points and questions are for discussion around the scope of the MV
 (outstanding-items.md's "Resolved" section, `decisions/node-authoring.md`); AADC split into its own
 outstanding-items.md follow-up item; i2c folded into the existing `i2c-spi-sensor-nodes.md` item. Nothing lost --
 same removal convention as this file's own 2026-09-07/2026-09-13 passes above.]
+
+- need a way of deleting flows that cause a boot loop or similar lock out. mpremote rm is not enough
+- generic policy for presets for nodes that are complex to set up, like display drivers, but also board configs / pin mappings
+- processor detection/selection mechanism for viper 

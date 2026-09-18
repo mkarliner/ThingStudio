@@ -118,9 +118,20 @@ inline, not a fresh check.
   version had a real bug of its own (reallocating the gs4 framebuffer every tick fragmented the heap
   into a `MemoryError` within about a second, even after a power cycle) -- fixed by reusing a
   `context`-persisted buffer instead of reallocating per frame, and **confirmed rendering correctly,
-  continuously, on real hardware** after the fix (`learnings/hardware-bringup-hil-rig.md`). A TiDAL
-  companion flow (this project's only real odd-width panel) would separately cover the stride-fix
-  correctness case on real hardware, not written yet. `gs2`/`mono` still not built.
+  continuously, on real hardware** after the fix (`learnings/hardware-bringup-hil-rig.md`).
+  **`gs2`/`mono` (the two remaining decided depths) built the same day** (`display-spi.ts`/`nodes.ts`/
+  `PropertyPanel.vue`/user-guide doc/tests) -- a real design/correctness finding surfaced doing this:
+  gs4's own bit-packing order (high-to-low within a byte) does NOT generalize to gs2/mono (both
+  low-to-high, the opposite of gs4 and, for mono specifically, the opposite of its similarly-named
+  `MONO_HLSB` sibling too), confirmed by reading MicroPython's real `extmod/modframebuf.c` per-format
+  setpixel/getpixel source directly rather than assumed by analogy -- each format's expansion loop was
+  written and independently verified against its own source. Verified by `tsc --noEmit` (clean) and
+  `vitest run` (37/37 `node-display-spi.test.ts`, 531/540 full suite, remaining failures confirmed
+  pre-existing/environmental). Two new real-hardware test flows written
+  (`test-flows/display-spi-gs2-cyd-test.flow.json`, `display-spi-mono-cyd-test.flow.json`, same CYD
+  config as gs4's), **neither deployed to real hardware yet** -- gs4 remains the only depth confirmed
+  working on real silicon. A TiDAL companion flow (this project's only real odd-width panel) would
+  separately cover the stride-fix correctness case on real hardware, not written yet, for any depth.
 - **[POST-MVP]** **Preset dropdown for known-working `display_spi` panel configs — new item,
   2026-09-18, Mike's ask.** A picklist of named, known-good presets (e.g. "TiDAL badge", "CYD
   2-USB") that fill in the raw property values, while still allowing a fully manual/roll-your-own
