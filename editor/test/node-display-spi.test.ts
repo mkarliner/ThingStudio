@@ -88,6 +88,11 @@ function runSink(properties: Record<string, unknown>, byteLength: number): strin
     ...(result.imports ?? []),
     ...(result.statements ?? []).map((s) => s.code),
     `print("OFFSETS", ${dispVar}.xstart, ${dispVar}.ystart)`,
+    // The three writes right after .init() are, in order: inversion_mode()'s
+    // own single command byte, then ST7789_MADCTL's command byte, then its data
+    // byte -- see display-spi.ts's header for why these are written directly
+    // rather than through _set_mem_access_mode().
+    `print("LAST_WRITES", " ".join(w.hex() for w in ${dispVar}.spi.writes[-3:]))`,
     "",
     `async def ${result.functionName}(msg):`,
     indent(result.functionBody, 4),
@@ -198,5 +203,45 @@ describe("thingstudio/display_spi node", () => {
   it("declares a single bytes 'frame' input port (sink kind, no outputs)", () => {
     expect(displaySpiNode.ports?.inputs).toEqual([{ name: "frame", type: "bytes" }]);
     expect(displaySpiNode.ports?.outputs).toBeUndefined();
+  });
+
+  // 2026-09-18, real CYD (ESP32-2432S028) hardware bring-up --
+  // display-spi.ts's own header and docs/working-notes/decisions/
+  // node-authoring.md's 2026-09-18 entry have the full story. These
+  // four cases exist for the same reason the xstart/ystart cases above
+  // do: off-device coverage for exactly the real-hardware finding that
+  // prompted the property, not a re-derivation of the finding itself.
+  describe("colorOrder / invertColors / dataLatchOrder / rotation (MADCTL)", () => {
+    it("defaults to CYD's confirmed real-hardware config: colorOrder=bgr, invertColors=false, dataLatchOrder=true, rotation=1", () => {
+      const output = runSink({ sck: 12, mosi: 11, dc: 13, width: 4, height: 4, xstart: 0, ystart: 0 }, 32);
+      // inversion_mode(False) -> INVOFF (0x20); MADCTL command (0x36);
+      // data byte 0x4C = BGR (0x08) | MH (0x04) | MX (0x40, rotation=1).
+      expect(output).toContain("LAST_WRITES 20 36 4c");
+    });
+
+    it("honors an explicit colorOrder=rgb/invertColors=true/dataLatchOrder=false/rotation=0 override, reproducing TiDAL's own pre-2026-09-18 confirmed-working MADCTL/inversion bytes", () => {
+      const output = runSink(
+        { sck: 12, mosi: 11, dc: 13, width: 4, height: 4, xstart: 0, ystart: 0, colorOrder: "rgb", invertColors: true, dataLatchOrder: false, rotation: 0 },
+        32,
+      );
+      // inversion_mode(True) -> INVON (0x21); MADCTL command (0x36);
+      // data byte 0x00 (no BGR, no MH, rotation=0 -> no MY/MX/MV either)
+      // -- the exact byte the old _set_mem_access_mode(0, False, False,
+      // False)-based codegen produced for TiDAL before this property
+      // change, confirmed by re-deriving it here rather than assumed.
+      expect(output).toContain("LAST_WRITES 21 36 00");
+    });
+
+    it("computes MX|MH|BGR (0x4c) explicitly the same way the default does, so the default isn't the only path that reaches CYD's byte", () => {
+      const output = runSink(
+        { sck: 12, mosi: 11, dc: 13, width: 4, height: 4, xstart: 0, ystart: 0, colorOrder: "bgr", invertColors: false, dataLatchOrder: true, rotation: 1 },
+        32,
+      );
+      expect(output).toContain("LAST_WRITES 20 36 4c");
+    });
+
+    it("rejects an unknown colorOrder", () => {
+      expect(() => displaySpiNode.codegenSink!(node({ sck: 12, mosi: 11, dc: 13, colorOrder: "cmyk" }), ctx)).toThrow(/must be "rgb" or "bgr"/);
+    });
   });
 });

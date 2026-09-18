@@ -264,3 +264,38 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
   universal CYD answer. Real bugs found along the way (full-frame `MemoryError`, the MADCTL `MH`
   bit, unreliable ID reads, conflicting board-naming heuristics) logged separately:
   `docs/working-notes/learnings/hardware-bringup-hil-rig.md`.
+
+- **2026-09-18 -- `display_spi` panel-variant config landed as real node properties (colorOrder,
+  invertColors, dataLatchOrder), defaulting to the CYD config confirmed above.** Direct follow-on to
+  the CYD bring-up entry immediately above: Mike's framing was explicit ("we need to node to
+  accommodate variants, so this stuff should be in node properties... lets get node properties in,
+  other wise the cyd work is useless") -- a confirmed working config sitting only in one-off scratch
+  scripts (`test-flows/cyd-display-*.py`) doesn't help a real flow. Three new properties: `colorOrder`
+  (`"rgb"`/`"bgr"`, default `"bgr"`, validated with a `CompileError` on anything else), `invertColors`
+  (bool, default `false`), `dataLatchOrder` (bool, default `true` -- the MADCTL `MH` bit, named for
+  what it actually does rather than "mirror" since it isn't a coordinate mirror on this panel family).
+  `rotation`'s own default changed from `0` to `1` to match the CYD unit's confirmed orientation.
+  MADCTL is now computed the same way the CYD bring-up scripts worked it out by hand
+  (`ROTATION_BITS[rotation] | (dataLatchOrder ? MH : 0) | (colorOrder=="bgr" ? BGR : 0)`) and written
+  directly via `display.write(ST7789_MADCTL, ...)`, replacing the old
+  `_set_mem_access_mode(rotation, False, False, False)` call -- that wrapper never exercises the `MH`
+  bit at all (the learnings-log entry from the CYD session), so it could never have produced the CYD's
+  working config regardless of what properties fed it. `invertColors` now drives an explicit
+  `inversion_mode(...)` call after `init()`, overriding `st7789py_mpy`'s own hardcoded `True` (tuned
+  for TiDAL) rather than living with whatever the vendored driver's `init()` picked.
+  **TiDAL's already-confirmed-working config preserved explicitly**, not silently broken by the new
+  CYD-shaped defaults: `test-flows/display-spi-tidal-test.flow.json` now sets `colorOrder: "rgb"`,
+  `invertColors: true`, `dataLatchOrder: false` (rotation `0` was already explicit). Four new tests in
+  `editor/test/node-display-spi.test.ts` assert the generated MADCTL/inversion bytes directly off the
+  mock SPI transcript for both configs (`LAST_WRITES 20 36 4c` for the CYD default, `LAST_WRITES 21 36
+  00` for TiDAL's override) plus the `colorOrder` validation. Verified with a full fresh build in an
+  isolated copy of `editor/` + `device-runtime/`: clean `npm ci`, `tsc --noEmit` (one strict-null fix,
+  `ROTATION_BITS[rotation]!` -- safe, `rotation` is already range-checked to 0-7 above the lookup),
+  full `vitest run` at 519/521 passing (the 2 failures are the pre-existing, already-documented
+  `node-startup.test.ts` WIP-node gap, unchanged), and `verify-flow-file.ts` against the updated TiDAL
+  flow file. **Still a one-unit caveat** (same as the entry above): these are CYD-confirmed defaults,
+  not a universal CYD or ST7789 answer -- a different panel/batch may need different property values,
+  which is exactly what the properties are now for. Unblocks the POST-MVP preset-dropdown idea Mike
+  raised in the same conversation (`outstanding-items.md`). The separate framebuffer-memory problem
+  the CYD session's `MemoryError` surfaced (full RGB565 frame too big for classic ESP32 heap) is
+  scoped, not solved, as its own item (`outstanding-items/display-spi-framebuffer-memory.md`).

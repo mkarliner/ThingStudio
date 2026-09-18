@@ -90,20 +90,59 @@
 // resolution panel that isn't in that table gets a clear `ValueError`
 // from the vendored driver's own `__init__` at flow-boot time instead of
 // a silent wrong offset -- a real error to debug, not a coincidentally-
-// working one. `rotation` (0-7, st7789py_mpy's own MADCTL encoding) is applied
-// by calling the vendored driver's `_set_mem_access_mode()` a second time
-// right after `.init()`, deliberately overriding `ST7789.init()`'s own
-// hardcoded `_set_mem_access_mode(4, True, True, False)` call -- upstream
-// gives no other way to configure rotation (`init()` isn't parameterized
-// for it), and reaching into a vendored driver's internals this way
-// already has precedent in this project (eswitch.ts's `ESwitch.
-// debounce_ms` class-attribute manipulation). UNTESTED on real hardware
-// this session (no board available -- see CLAUDE.md's mac-mini-down
-// caveat for this session) -- off-device tested only, same "off-device
-// first, hardware pass separately, non-negotiable" convention every other
-// new hardware node type here follows; flag this specifically as needing
-// a real-hardware confirmation pass before relying on non-zero rotation
-// values in a real flow.
+// working one.
+//
+// **Second self-correction, 2026-09-18, found bringing up a real CYD
+// (ESP32-2432S028) board -- see `docs/working-notes/decisions/
+// node-authoring.md`'s 2026-09-18 entry for the full real-hardware story.**
+// `rotation` alone (calling the vendored driver's `_set_mem_access_mode()`
+// a second time after `.init()`, overriding its own hardcoded
+// `_set_mem_access_mode(4, True, True, False)` call) was never enough: two
+// more real per-panel differences surfaced getting CYD's screen to render
+// correctly, and CYD needed a MADCTL bit (`MH`, Display Data Latch Order)
+// that `_set_mem_access_mode()`'s own rotation table never exercises at
+// all (it only ever combines `MY`/`MX`/`MV` -- confirmed by reading the
+// vendored driver directly). Colors were also wrong (BGR channel order,
+// and `ST7789.init()`'s own hardcoded `inversion_mode(True)`, both tuned
+// for TiDAL's specific panel). Fixed by adding three more real properties
+// -- `colorOrder` ("rgb"/"bgr"), `invertColors` (bool), `dataLatchOrder`
+// (bool, the MH bit) -- and, since no combination of `_set_mem_access_
+// mode()`'s own vert_mirror/horz_mirror/rotation arguments can express
+// "rotation bits AND the MH bit at once" (its own if/elif logic is
+// mutually exclusive between them), codegen now computes the full MADCTL
+// byte itself (in TypeScript, from `rotation`/`dataLatchOrder`/
+// `colorOrder` together) and writes it directly via
+// `display.write(ST7789_MADCTL, ...)`, bypassing `_set_mem_access_mode()`
+// entirely rather than trying to coax three interacting properties through
+// a helper that can't actually express their combination. Same "reaching
+// into a vendored driver's internals has precedent" reasoning the old
+// `_set_mem_access_mode()`-after-`init()` call already established
+// (eswitch.ts's `ESwitch.debounce_ms` class-attribute manipulation is the
+// original precedent) -- this just reaches one level deeper (the MADCTL
+// register directly) because the driver's own convenience wrapper turned
+// out not to cover a real, confirmed-needed case.
+//
+// **Defaults changed to CYD's confirmed real-hardware values, 2026-09-18,
+// Mike's explicit call** (`colorOrder: "bgr"`, `invertColors: false`,
+// `dataLatchOrder: true`, `rotation: 1` -- previously `rotation` defaulted
+// to `0`) -- CYD, not TiDAL, is now the node type's own default target.
+// TiDAL's own already-confirmed-working flow (`test-flows/display-spi-
+// tidal-test.flow.json`) is pinned with its own explicit `colorOrder:
+// "rgb"`, `invertColors: true`, `dataLatchOrder: false`, `rotation: 0` so
+// this default change doesn't silently break what's already verified on
+// real hardware -- same "properties, not defaults baked into the node
+// type" convention `xstart`/`ystart` already established above: a real
+// flow targeting real hardware pins its own real values explicitly,
+// defaults are a starting point for a new flow being authored, not a
+// promise that any given board matches them.
+//
+// **Still scoped to one confirmed CYD unit, not a general "pick your
+// panel" UI.** A POST-MVP outstanding item (`outstanding-items.md`)
+// tracks a future preset dropdown (named, known-good combinations of
+// these properties -- "TiDAL badge," "CYD 2-USB," etc. -- alongside the
+// still-available roll-your-own raw properties) once more real panels
+// have been confirmed this way; not built now, four raw properties is
+// the whole of today's UI for this.
 //
 // A length check against the expected RGB565 buffer size (width * height
 // * 2 bytes) runs before every blit -- CLAUDE.md's fault-handling-over-
@@ -112,6 +151,20 @@
 // panel's own address window on a wrong-sized buffer rather than failing
 // loudly. A clear NODE_ERROR here (design doc §5) is much easier to debug
 // than a garbled screen with no error at all.
+//
+// **Known scaling limit, not solved here (`outstanding-items.md` /
+// `docs/working-notes/learnings/hardware-bringup-hil-rig.md`'s 2026-09-18
+// entry):** a full-frame RGB565 buffer this node's own upstream `function`
+// node builds can `MemoryError` on a classic ESP32 for a large panel (CYD's
+// 240x320 = 153600 bytes failed as one contiguous allocation on real
+// hardware, even though TiDAL's smaller 135x240 = 64800 bytes never hit
+// this) -- worked around in test scripts by building/pushing the frame in
+// smaller strips instead of one full-screen buffer. Not yet built into
+// this node or its upstream contract. A lower-bit-depth software
+// framebuffer (e.g. 4-bit/16-color indexed, expanded to the panel's real
+// RGB565 color depth on the fly while streaming out, rather than held
+// expanded in RAM) is one candidate shape for a real fix, worth scoping
+// separately rather than folding into this property change.
 
 import { CompileError } from "../compiler/errors.js";
 import type { GraphNode } from "../compiler/graph.js";
@@ -119,6 +172,33 @@ import type { CodegenContext, NodeDefinition, SinkCodegenResult } from "../compi
 
 const CONTROLLERS = ["st7789"] as const;
 type Controller = (typeof CONTROLLERS)[number];
+
+// MADCTL bits (st7789py_mpy's own constants, mirrored here in TypeScript
+// -- rotation/colorOrder/dataLatchOrder are all compile-time properties,
+// not runtime data, so the whole MADCTL byte is computed once here rather
+// than at runtime, same "branch in TypeScript, not generated code" style
+// eswitch.ts's pullArg already uses).
+const MADCTL_MY = 0x80;
+const MADCTL_MX = 0x40;
+const MADCTL_MV = 0x20;
+const MADCTL_BGR = 0x08;
+const MADCTL_MH = 0x04;
+
+// st7789py_mpy's own `_set_mem_access_mode()` rotation table (MY/MX/MV
+// combinations only -- it never exercises MH, see this file's header for
+// why that matters). Reproduced here rather than called at codegen time
+// because this node now writes MADCTL directly instead of going through
+// that helper (see header).
+const ROTATION_BITS: Record<number, number> = {
+  0: 0,
+  1: MADCTL_MX,
+  2: MADCTL_MY,
+  3: MADCTL_MX | MADCTL_MY,
+  4: MADCTL_MV,
+  5: MADCTL_MV | MADCTL_MX,
+  6: MADCTL_MV | MADCTL_MY,
+  7: MADCTL_MV | MADCTL_MX | MADCTL_MY,
+};
 
 function requirePin(value: unknown, label: string): number {
   const pin = Math.round(Number(value));
@@ -180,10 +260,31 @@ export const displaySpiNode: NodeDefinition = {
     if (!Number.isFinite(width) || width <= 0 || !Number.isFinite(height) || height <= 0) {
       throw new CompileError(`display_spi width/height "${String(node.properties.width)}x${String(node.properties.height)}" must be positive integers`);
     }
-    const rotation = Math.round(Number(node.properties.rotation ?? 0));
+
+    // Default 1 (CYD's confirmed real-hardware config -- see this file's
+    // header) -- was 0 before 2026-09-18. TiDAL's own flow pins 0
+    // explicitly, unaffected by this default change.
+    const rotation = Math.round(Number(node.properties.rotation ?? 1));
     if (!Number.isFinite(rotation) || rotation < 0 || rotation > 7) {
       throw new CompileError(`display_spi rotation "${String(node.properties.rotation)}" must be an integer 0-7`);
     }
+
+    const colorOrder = String(node.properties.colorOrder ?? "bgr");
+    if (colorOrder !== "rgb" && colorOrder !== "bgr") {
+      throw new CompileError(`display_spi colorOrder "${colorOrder}" must be "rgb" or "bgr"`);
+    }
+    const bgr = colorOrder === "bgr";
+
+    // Real booleans, not sentinel-encoded -- unlike the pin/offset
+    // properties above, "not set" and "explicitly false" aren't
+    // distinguishable needs here, so a plain default is enough.
+    const invertColors = node.properties.invertColors === undefined ? false : Boolean(node.properties.invertColors);
+    const dataLatchOrder = node.properties.dataLatchOrder === undefined ? true : Boolean(node.properties.dataLatchOrder);
+
+    // rotation is already range-checked to 0-7 above, so this lookup always
+    // hits -- the non-null assertion is for TypeScript's indexed-access typing,
+    // not a runtime possibility.
+    const madctl = ROTATION_BITS[rotation]! | (dataLatchOrder ? MADCTL_MH : 0) | (bgr ? MADCTL_BGR : 0);
 
     const xstart = optionalOffset(node.properties.xstart, "xstart");
     const ystart = optionalOffset(node.properties.ystart, "ystart");
@@ -203,7 +304,7 @@ export const displaySpiNode: NodeDefinition = {
     const expectedBytes = width * height * 2; // RGB565
 
     return {
-      imports: ["import machine", "from st7789py import ST7789"],
+      imports: ["import machine", "from st7789py import ST7789, ST7789_MADCTL"],
       statements: [
         {
           key: base,
@@ -215,7 +316,12 @@ export const displaySpiNode: NodeDefinition = {
             `${blVar} = ${blExpr}`,
             `${dispVar} = ST7789(${spiVar}, ${width}, ${height}, ${resetVar}, ${dcVar}, cs=${csVar}, backlight=${blVar}, xstart=${xstart}, ystart=${ystart})`,
             `${dispVar}.init()`,
-            `${dispVar}._set_mem_access_mode(${rotation}, False, False, False)`,
+            // Overrides ST7789.init()'s own hardcoded inversion_mode(True)
+            // and _set_mem_access_mode(4, True, True, False) calls -- see
+            // this file's header for why MADCTL is written directly rather
+            // than through _set_mem_access_mode() a second time.
+            `${dispVar}.inversion_mode(${invertColors ? "True" : "False"})`,
+            `${dispVar}.write(ST7789_MADCTL, bytes([${madctl}]))`,
             `if ${blVar} is not None:`,
             `    ${blVar}.value(1)`,
           ].join("\n"),

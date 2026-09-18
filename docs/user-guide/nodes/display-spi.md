@@ -13,7 +13,13 @@ or eventually a graphics-framework node) and wire it into this node's input.
 - **cs / reset / backlight pins** — optional GPIO pins (0–39, or −1 for "not wired"). Some boards tie
   reset or CS high in hardware and don't expose them as GPIOs, or have no backlight control at all.
 - **width / height** — panel resolution in pixels.
-- **rotation** — 0–7, the panel's MADCTL orientation code.
+- **rotation** — 0–7, the panel's MADCTL orientation code (which of MY/MX/MV to set). Default `1`.
+- **color order** — `rgb` or `bgr`, whichever matches your panel's own wiring. Default `bgr`.
+- **invert colors** — on or off. Some panels need this flipped to show true colors instead of their
+  negative. Default off.
+- **data latch order** — on or off, a separate MADCTL bit (`MH`) some panels need alongside rotation for
+  correct left-right orientation — not the same bit as rotation's own mirror options, and not always
+  needed. Default on.
 - **xstart / ystart** — the panel's offset into the ST7789 controller's own (larger) GRAM. Default `-1`,
   which lets the vendored driver's own built-in table resolve this automatically for the two panel sizes
   it knows about (240×240 → `0, 0`; 135×240, including the EMF 2022 TiDAL badge's own panel → `52, 40`).
@@ -24,8 +30,12 @@ or eventually a graphics-framework node) and wire it into this node's input.
   (confirmed on real TiDAL hardware, 2026-09-18 — see `test-flows/README.md`'s
   `display-spi-tidal-test.flow.json` section for the full story).
 
-Pins, bus, and resolution vary board to board — there's no sensible default that works for more than one
-board, so set these from your board's own pinout.
+Pins, bus, resolution, rotation, color order, inversion, and data latch order all vary board to board —
+there's no sensible default that works for more than one board, so confirm these against your own panel.
+The defaults above match a real Cheap Yellow Display (ESP32-2432S028) unit confirmed working 2026-09-18;
+a different board, or even a different unit of the same board, may need different values — see
+`docs/working-notes/decisions/node-authoring.md`'s 2026-09-18 entry for how that unit's values were found,
+if you need to work out your own panel's.
 
 ## Behavior
 

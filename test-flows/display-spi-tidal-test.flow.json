@@ -34,7 +34,10 @@
         "height": 240,
         "rotation": 0,
         "xstart": 52,
-        "ystart": 40
+        "ystart": 40,
+        "colorOrder": "rgb",
+        "invertColors": true,
+        "dataLatchOrder": false
       }
     },
     {

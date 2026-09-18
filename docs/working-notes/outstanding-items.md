@@ -71,6 +71,23 @@ inline, not a fresh check.
 - **[P4]** **Remove the `interrupt` node's debounce option — new item, 2026-09-17, side effect of eswitch/ebutton landing.** `eswitch`/`ebutton` now own debounce for the switch/button use case (`ESwitch.debounce_ms`/`EButton.debounce_ms`), so `interrupt`'s own separate debounce-cooldown option (`interrupt.ts`) is redundant for that use case -- but `interrupt` is still the only source node for a raw, non-debounced pin-change event, so this isn't a clean "always remove," and removing a property is a breaking change to any already-saved flow using it. Flagged for Mike's call, not removed here.
 - **[P4]** **`interrupt` node still has no way to enable an internal pull resistor -- new item, 2026-09-17.** `eswitch`/`ebutton` just picked up a `pull` (none/up/down) property, prompted by a real EMF 2022 TiDAL badge test needing the chip's own internal pull-up on most of its buttons; `interrupt` has the identical "no internal pull, wire an external one" limitation and wasn't touched in that pass (scoped to the button test at hand). Same shape of fix if picked up: a `pull` property, default "none", threaded into `machine.Pin(pin, machine.Pin.IN, ...)`. ([detail](decisions/node-authoring.md))
 - **[POST-MVP]** **Templating UI nodes for displays — new item, 2026-09-08, split from the SSD1306 ask.** Generic way to template/lay out what gets drawn to a display node -- LVGL (or similar) was floated 2026-09-17 as the likely shape ("the more generic the actual graphics interface is the better"), sitting in front of the now-built `display_spi`/`display_i2c` nodes rather than replacing them; those nodes' full-frame-only `bytes` input was deliberately kept graphics-framework-agnostic with this in mind, but nothing LVGL-specific is built. Not scoped, expected to be hard (Mike's characterization).
+- **`display_spi`/framebuffer construction can blow the classic-ESP32 heap for a full-resolution
+  RGB565 frame — new item, 2026-09-18, scoped (not built) per Mike's ask.** A full 240x320 RGB565
+  frame is 153,600 bytes, which the CYD bring-up session hit as a hard `MemoryError` on a classic
+  ESP32 (`learnings/hardware-bringup-hil-rig.md`) -- worked around there only by building/pushing the
+  frame one strip at a time, not by any node-level fix. Mike's own suggested shape: build the frame in
+  a lower bit depth (a 4-bit/16-color indexed buffer, a quarter the memory), expanding each pixel to
+  real RGB565 only at blit time. Scoped in `outstanding-items/display-spi-framebuffer-memory.md`,
+  including the real memory math and the open architectural fork (expand-on-blit inside `display_spi`
+  itself vs. a documented per-strip construction pattern for flow authors) -- not implemented. Priority
+  not yet triaged by Mike.
+- **[POST-MVP]** **Preset dropdown for known-working `display_spi` panel configs — new item,
+  2026-09-18, Mike's ask.** A picklist of named, known-good presets (e.g. "TiDAL badge", "CYD
+  2-USB") that fill in the raw property values, while still allowing a fully manual/roll-your-own
+  entry for an unlisted panel. Unblocked as of 2026-09-18 -- the underlying `colorOrder`/
+  `invertColors`/`dataLatchOrder`/`rotation` properties now exist (`decisions/node-authoring.md`'s
+  same-day entry) -- but the dropdown itself is still not built, and still explicitly deferred past
+  MVP.
 - **[P4]** **`test-flows/deploy_runtime.py`'s `VENDOR_FILES` list doesn't scale past a handful of display controllers -- new item, 2026-09-17.** That list is pushed unconditionally to every board on every bootstrap, not scoped per-flow (confirmed by reading `deploy_runtime.py` directly, not assumed) -- fine for two display drivers (~8.4KB/~4.9KB source, next to `mqtt_as`'s own ~36KB already there unconditionally), but a real cost on every board's flash regardless of whether that board has a display at all once more controllers are added (`display_spi`/`display_i2c`'s own `controller` property is deliberately open for exactly that growth -- ILI9341/GC9A01/SH1106/etc.). Flagged to Mike mid-session; his call was "proceed with the simpler one and track the scaling" -- build `st7789py`/`ssd1306` the normal unconditional-push way now (done, see "Resolved" below), track this as the point where a selective/opt-in vendor push (only pushing a display driver to a board whose flow actually uses a display node) needs building, before a third or fourth controller lands the same way. Not scoped.
 - **[POST-MVP]** **Threading / multicore support, possibly an Exec node — new item, 2026-09-08.** Not scoped.
 
@@ -233,6 +250,16 @@ reasoning stays at each pointer's target, nothing here was deleted.
   confirmed via `micropython/micropython#3536`, an unmerged upstream PR), but the ST7789 wants big-endian
   pixel bytes -- fixed with a byte-swap loop in the flow's `function` node, and flagged as a general gotcha in
   `docs/user-guide/nodes/display-spi.md` for every future user of this node. **Confirmed working on the real TiDAL badge, 2026-09-18** ("redeploy looks fine," Mike) -- all four real-hardware bugs found this session (wire-type gap, LCD_PWR/LCD_BLEN polarity, GRAM offset, RGB565 byte order) fixed and verified together. ([detail](decisions/node-authoring.md))
+  **Fifth follow-on, 2026-09-18: real node properties for panel-variant config.** The MADCTL/inversion
+  override values the real-hardware CYD bring-up needed (same-day, separate real-hardware session,
+  `decisions/node-authoring.md`) were only reachable from one-off scratch scripts, not from a real
+  flow -- fixed by adding `colorOrder`/`invertColors`/`dataLatchOrder` node properties (CYD-defaulted,
+  `rotation`'s own default also changed to match), computing MADCTL the same way the scratch scripts
+  worked it out by hand, and preserving TiDAL's own already-confirmed config with explicit property
+  overrides in its flow file so the new defaults don't silently break it. Four new tests, full isolated
+  `npm ci`/`tsc --noEmit`/`vitest run` pass (519/521, same 2 pre-existing unrelated failures). The
+  separate framebuffer-memory problem this same CYD session surfaced (`MemoryError` on a full RGB565
+  frame) is scoped, not solved, as its own item below. ([detail](decisions/node-authoring.md))
 - **eswitch/ebutton nodes (Peter Hinch's asyncio drivers)** -- built 2026-09-17. `thingstudio/eswitch`/
   `thingstudio/ebutton`, vendoring his `ESwitch`/`EButton`/`WaitAny`/`Delay_ms` classes verbatim
   (`device-runtime/src/vendor/primitives_events/`) rather than re-deriving debounce/long-press/
