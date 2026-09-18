@@ -92,7 +92,7 @@ since it only round-trips through the editor's own encoder/decoder, never the de
 
 ## Cowork remote-device testing environment
 
-The cloud session's own staged mirror of the repo can be a partial snapshot — don't trust it for a real test/typecheck signal without confirming the full tree is present; a plain file on the shared live mount can also silently lose content mid-edit if something else writes to it at the same time, with no lock file to flag it; the built-in browser pane appears to block outgoing WebSocket connections to local/private addresses even though plain HTTP to the same host works, so it can't be used to verify anything that opens a WS to a local dev backend. 3 entries: `docs/working-notes/learnings/cowork-remote-device-testing.md`.
+The cloud session's own staged mirror of the repo can be a partial snapshot — don't trust it for a real test/typecheck signal without confirming the full tree is present; a plain file on the shared live mount can also silently lose content mid-edit if something else writes to it at the same time, with no lock file to flag it; the built-in browser pane appears to block outgoing WebSocket connections to local/private addresses even though plain HTTP to the same host works, so it can't be used to verify anything that opens a WS to a local dev backend; and a `device_commit_files` push reporting success doesn't confirm the content actually landed on the device — re-read the on-device file directly before trusting a verification pass built from it. 4 entries: `docs/working-notes/learnings/cowork-remote-device-testing.md`.
 
 ## Custom node authoring
 

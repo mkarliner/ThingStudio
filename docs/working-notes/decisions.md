@@ -62,7 +62,8 @@ with a working MADCTL/inversion config, now exposed as real `display_spi` node p
 (colorOrder/invertColors/dataLatchOrder), CYD-defaulted; `display_spi` framebuffer-memory fix
 decided (real `frameFormat`/`palette` properties, four depths, palette-driven throughout) with an
 off-device `@micropython.viper` spike backing it, then `frameFormat: "gs4"` actually built (a real
-odd-width stride bug found and fixed before landing, not yet verified by `tsc`/`vitest`). 10 entries:
+odd-width stride bug found and fixed before landing) and verified by a real `tsc`/`vitest` pass, which
+also caught a `device_commit_files` push that had silently not landed. 11 entries:
 `docs/working-notes/decisions/node-authoring.md`.
 
 ## Session sequencing

@@ -316,7 +316,7 @@ describe("thingstudio/display_spi node", () => {
       // even-width case where the two formulas happen to agree (unlike
       // the odd-width case below, where they don't).
       const output = runGs4({ sck: 12, mosi: 11, dc: 13, width: 4, height: 4, xstart: 0, ystart: 0 }, "00".repeat(8));
-      const writes = output.match(/PAYLOAD_WRITES (.+)/)?.[1].trim().split(" ") ?? [];
+      const writes = output.match(/PAYLOAD_WRITES (.+)/)?.[1]?.trim().split(" ") ?? [];
       // 5 set_window writes + 2 data writes (4 rows / 2 rows-per-batch = 2 batches).
       expect(writes.length).toBe(7);
     });
@@ -346,7 +346,7 @@ describe("thingstudio/display_spi node", () => {
       // GS4_ROWS_PER_BATCH=2), so this is a single 12-byte SPI write.
       const output = runGs4({ sck: 12, mosi: 11, dc: 13, width: 3, height: 2, xstart: 0, ystart: 0 }, "012f345f");
       expect(output).toContain("PAYLOAD_WRITES");
-      const writes = output.match(/PAYLOAD_WRITES (.+)/)?.[1].trim().split(" ") ?? [];
+      const writes = output.match(/PAYLOAD_WRITES (.+)/)?.[1]?.trim().split(" ") ?? [];
       // 5 set_window writes (CASET cmd+data, RASET cmd+data, RAMWR cmd) + 1 data write.
       expect(writes.length).toBe(6);
       expect(writes[writes.length - 1]).toBe("0000fffff80007e0001fffe0");
@@ -358,7 +358,7 @@ describe("thingstudio/display_spi node", () => {
       // width=2 (even) -> stride 1 byte/row, 1 pixel-pair/row.
       // row0 0x01->(black,white), row1 0x23->(red,green), row2 0x45->(blue,yellow).
       const output = runGs4({ sck: 12, mosi: 11, dc: 13, width: 2, height: 3, xstart: 0, ystart: 0 }, "012345");
-      const writes = output.match(/PAYLOAD_WRITES (.+)/)?.[1].trim().split(" ") ?? [];
+      const writes = output.match(/PAYLOAD_WRITES (.+)/)?.[1]?.trim().split(" ") ?? [];
       // 5 set_window writes + 2 data writes (batch of 2 rows, then 1 row) --
       // verified independently against the real driver before this test was
       // written (rows 0-1 packed into one write, row 2 into a second).
@@ -385,7 +385,7 @@ describe("thingstudio/display_spi node", () => {
       customPalette[1] = 0x5678;
       // width=2, height=1 -> one byte, hi=0 -> palette[0], lo=1 -> palette[1].
       const output = runGs4({ sck: 12, mosi: 11, dc: 13, width: 2, height: 1, xstart: 0, ystart: 0, palette: customPalette }, "01");
-      const writes = output.match(/PAYLOAD_WRITES (.+)/)?.[1].trim().split(" ") ?? [];
+      const writes = output.match(/PAYLOAD_WRITES (.+)/)?.[1]?.trim().split(" ") ?? [];
       expect(writes[writes.length - 1]).toBe("12345678");
     });
   });

@@ -54,3 +54,19 @@ Status: detail file, split out of `learnings.md` on 2026-09-06 to keep that inde
   -- get that signal from a real, non-sandboxed browser (Mike's own Chrome, or Claude in Chrome once connected)
   instead**, and don't read a WS failure from this pane specifically as evidence of a backend/editor defect
   without confirming plain HTTP against the same host also fails.
+
+- **A `device_commit_files` push reporting success is not sufficient confirmation the content actually
+  landed on the device -- re-read the on-device file directly afterward before trusting it.** Discovered
+  2026-09-18, `display_spi`'s `frameFormat: "gs4"` work: pushed a corrected version of the GS4 expansion
+  function via `device_commit_files` (with `force: true`), then later built a verification tarball
+  straight from the device and ran a real `tsc`/`vitest` pass against it -- one test failed with output
+  that decoded to exactly the OLD, buggy pre-fix behavior. A direct `grep` on the actual device file
+  confirmed it: the corrected content had never landed, despite the earlier `device_commit_files` call
+  returning a normal-looking success result with no rejection. Root cause not conclusively identified
+  (candidates: a stale `fileUuid` from an earlier `SendUserFile` call, some staleness/ordering issue
+  between the two pushes) -- not chased further once a second push, immediately re-verified with a
+  direct on-device `grep`/`wc -l` byte-count check, landed correctly. Practical upshot: treat
+  `device_commit_files`'s return value as necessary but not sufficient -- always re-read the pushed
+  file's actual on-device content (a grep for a distinguishing string, a byte/line count) before
+  building a verification tarball, running tests against it, or reporting a test result as trustworthy.
+  `decisions/node-authoring.md`'s 2026-09-18 verification entry has the full incident in context.

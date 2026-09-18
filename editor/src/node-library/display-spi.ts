@@ -174,8 +174,12 @@
 // Expansion happens inside this node's own generated code, not the
 // vendored driver: a `@micropython.viper`-decorated per-instance helper
 // (typed `ptr8`/`ptr16` params) unpacks GS4 nibbles to real RGB565 bytes
-// two rows at a time, streamed out via the vendored driver's own
-// `set_window()` + `write(None, ...)` primitives -- the same two calls
+// two rows at a time -- pixel-count-aware, not a flat byte count, so an
+// odd-width row's trailing pad nibble (see the correctness subtlety
+// below) is discarded rather than expanded into a phantom extra pixel
+// that would shift every subsequent pixel out of alignment -- streamed
+// out via the vendored driver's own `set_window()` + `write(None, ...)`
+// primitives -- the same two calls
 // `blit_buffer()` itself makes internally, just split apart so several
 // smaller writes can share one open address window (confirmed by reading
 // `st7789py.py` directly: `write()` toggles `cs_low()`/`cs_high()` around
@@ -442,7 +446,7 @@ export const displaySpiNode: NodeDefinition = {
 
     if (frameFormat === "gs4") {
       const paletteLiteral = palette!.map((v) => `0x${v.toString(16).padStart(4, "0")}`).join(", ");
-      const scratchBytes = gs4StrideBytes * GS4_ROWS_PER_BATCH * 4; // 2px/byte -> 4 output bytes/src byte
+      const scratchBytes = width * 2 * GS4_ROWS_PER_BATCH; // real pixels only, no row-padding in the OUTPUT
       statements.push({
         key: `${base}_gs4`,
         // The palette + expansion helper are per-instance, matching every
@@ -451,6 +455,19 @@ export const displaySpiNode: NodeDefinition = {
         // the same flow) -- cheap in flash for the realistic case of one
         // or a few display_spi nodes per flow, per CLAUDE.md's "cheapest
         // correct implementation" default.
+        //
+        // Pixel-count-aware, not a flat byte count: GS4_HMSB's per-row
+        // byte stride (`stride` param below) can be LARGER than the real
+        // pixel count implies on an odd width (this file's header) --
+        // a naive "expand every nibble in the buffer" loop would expand
+        // the odd-row trailing pad nibble into a real output pixel too,
+        // pushing one extra pixel per odd-width row into set_window()'s
+        // RAMWR stream and silently shifting every pixel after it out of
+        // alignment for the rest of the frame. This loop expands exactly
+        // `width` pixels per row (discarding a trailing half-byte pad
+        // when width is odd, e.g. TiDAL's 135) and advances the SOURCE
+        // side by the real row `stride` -- the two can differ, the DEST
+        // side never includes padding.
         code: [
           `${palVar} = array.array('H', [${paletteLiteral}])`,
           ``,
@@ -458,21 +475,32 @@ export const displaySpiNode: NodeDefinition = {
           // device first (this file's header, learnings/micropython-
           // device-runtime.md's 2026-09-18 entry): compiles and runs
           // correctly, ~42x over plain Python for this exact loop shape.
-          // `off` avoids slicing/copying msg.payload per batch -- indexes
-          // directly into the full buffer via a running offset instead.
           `@micropython.viper`,
-          `def ${expandVar}(src: ptr8, off: int, dst: ptr8, n: int, pal: ptr16):`,
-          `    for i in range(n):`,
-          `        b = int(src[off + i])`,
-          `        hi = b >> 4`,
-          `        lo = b & 0x0F`,
-          `        c0 = int(pal[hi])`,
-          `        c1 = int(pal[lo])`,
-          `        j = i * 4`,
-          `        dst[j] = c0 >> 8`,
-          `        dst[j + 1] = c0 & 0xFF`,
-          `        dst[j + 2] = c1 >> 8`,
-          `        dst[j + 3] = c1 & 0xFF`,
+          `def ${expandVar}(src: ptr8, off: int, stride: int, dst: ptr8, width: int, rows: int, pal: ptr16):`,
+          `    full = width >> 1`,
+          `    odd = width & 1`,
+          `    row_dst_bytes = width * 2`,
+          `    for r in range(rows):`,
+          `        s = off + r * stride`,
+          `        d = r * row_dst_bytes`,
+          `        for i in range(full):`,
+          `            b = int(src[s + i])`,
+          `            hi = b >> 4`,
+          `            lo = b & 0x0F`,
+          `            c0 = int(pal[hi])`,
+          `            c1 = int(pal[lo])`,
+          `            j = d + i * 4`,
+          `            dst[j] = c0 >> 8`,
+          `            dst[j + 1] = c0 & 0xFF`,
+          `            dst[j + 2] = c1 >> 8`,
+          `            dst[j + 3] = c1 & 0xFF`,
+          `        if odd:`,
+          `            b = int(src[s + full])`,
+          `            hi = b >> 4`,
+          `            c0 = int(pal[hi])`,
+          `            j = d + full * 4`,
+          `            dst[j] = c0 >> 8`,
+          `            dst[j + 1] = c0 & 0xFF`,
           ``,
           // Reused across batches (not reallocated per message/per batch)
           // -- same "small scratch buffer, not a full expanded frame"
@@ -503,9 +531,9 @@ export const displaySpiNode: NodeDefinition = {
             `_row = 0`,
             `while _row < ${height}:`,
             `    _n = ${GS4_ROWS_PER_BATCH} if (${height} - _row) >= ${GS4_ROWS_PER_BATCH} else (${height} - _row)`,
-            `    _cnt = ${gs4StrideBytes} * _n`,
-            `    ${expandVar}(_buf, _row * ${gs4StrideBytes}, ${scratchVar}, _cnt, ${palVar})`,
-            `    ${dispVar}.write(None, memoryview(${scratchVar})[:_cnt * 4])`,
+            `    ${expandVar}(_buf, _row * ${gs4StrideBytes}, ${gs4StrideBytes}, ${scratchVar}, ${width}, _n, ${palVar})`,
+            `    _cnt = ${width} * 2 * _n`,
+            `    ${dispVar}.write(None, memoryview(${scratchVar})[:_cnt])`,
             `    _row += _n`,
           ].join("\n")
         : [`_buf = msg.get('payload', b'')`, `if len(_buf) != ${expectedBytes}:`, lengthCheck, `${dispVar}.blit_buffer(_buf, 0, 0, ${width}, ${height})`].join("\n");

@@ -375,3 +375,32 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
   `outstanding-items/display-spi-framebuffer-memory.md` updated to match; the stride-padding finding
   also logged in `learnings/micropython-device-runtime.md`.
 
+
+## `frameFormat: "gs4"` verified: real `tsc`/`vitest` pass, 2026-09-18
+
+Follow-up to the `gs4` build above, same day. Extracted the project (excluding `node_modules`) into an
+isolated cloud-session workspace and ran `npm ci --ignore-scripts` fresh there, per `CLAUDE.md`'s
+mandated fallback for not running `npm`/`tsc`/`vitest` against the live-mounted `editor/` directly.
+Result: `./node_modules/.bin/tsc --noEmit` clean apart from one pre-existing, unrelated
+`node-startup.test.ts` gap (an already-known WIP node type not yet registered); `vitest run
+test/node-display-spi.test.ts` 27/27 passing; a full `vitest run` shows the same pre-existing
+`node-startup` gap plus three other pre-existing failures (`node-display-i2c`, `node-ebutton`,
+`node-eswitch`) that are an artifact of this verification tarball only including the `st7789py_mpy`
+vendor directory, not `events`/`ssd1306` -- unrelated to this change, not a regression.
+
+This pass caught two real problems. First, 4 real TypeScript strict-null errors in the new
+`node-display-spi.test.ts` helper (`output.match(...)?.[1].trim()` needed to be `?.[1]?.trim()` --
+`.trim()` chained directly after an optional-chained index without its own `?.`), fixed in both the
+test file and the isolated copy. Second, and more significant: an earlier `device_commit_files` push
+(with `force: true`) of the corrected pixel-aware expansion function had silently not landed on the
+actual device file -- `tsc`/`vitest` reported success against a verification tarball, but that tarball
+had been built from the OLD file, before the corrected push. The stale content wasn't caught by hand
+verification alone (which was checking the local pre-push file, not re-reading the device file after
+each push) -- only the real vitest run's failing assertion, decoded back to confirm it matched the old
+buggy behavior exactly, surfaced it. Re-pushed, re-verified via a direct `grep` on the device file
+immediately after the push (byte size and line count both matching the intended local file), then
+rebuilt the verification tarball from that confirmed-correct device state and re-ran clean.
+
+Process takeaway logged in `learnings/micropython-device-runtime.md`: a `device_commit_files` call
+returning success is not sufficient confirmation the content actually landed on the device -- re-read
+the on-device file directly after a push, before trusting a verification pass built from it.

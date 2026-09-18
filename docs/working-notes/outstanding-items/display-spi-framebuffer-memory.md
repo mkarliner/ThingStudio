@@ -1,14 +1,20 @@
-# `display_spi` framebuffer construction can exceed available heap — gs4 built, not verified by tsc/vitest
+# `display_spi` framebuffer construction can exceed available heap — gs4 built and verified (tsc/vitest)
 
 Status: scoped 2026-09-18 (Mike's request after the CYD real-hardware bring-up session hit a real
 `MemoryError`), decided the same day, and `frameFormat: "gs4"` implemented the same day (`display-
 spi.ts`, `nodes.ts`, `PropertyPanel.vue`, `node-display-spi.test.ts`, `docs/user-guide/nodes/
 display-spi.md` -- see `decisions/node-authoring.md`'s later 2026-09-18 entry for the implementation
-itself). **Not yet verified by a real `tsc --noEmit`/`vitest run`** -- built and hand-verified against
-the real vendored driver via a standalone python3 script (not the vitest suite itself, which this
-session's sandbox can't run against the live-mounted `editor/`, per `CLAUDE.md`), so Mike's own build/
-test pass is still the actual gate before trusting this compiles and the new tests pass. `gs2`/`mono`
-remain decided but not built.
+itself). **Verified the same day** by a real `tsc --noEmit` (clean, apart from a pre-existing unrelated
+`node-startup.test.ts` gap) and a real `vitest run` against an isolated extracted copy, per
+`CLAUDE.md`'s mandated fallback for not running these against the live-mounted `editor/` directly --
+`node-display-spi.test.ts` is 27/27 passing. That pass caught and fixed 4 real TypeScript strict-null
+errors (`?.[1].trim()` needed `?.[1]?.trim()`), and separately surfaced that an earlier
+`device_commit_files` push of the corrected expansion function had silently not landed on the actual
+device file -- the file kept the old, buggy flat-byte expansion until a second push, re-verified
+on-device by grep immediately after, actually took. Worth remembering: `device_commit_files` returning
+success is not sufficient confirmation the content landed -- re-read the on-device file after a push
+before trusting it, especially before a verification pass that will be graded against that push. `gs2`/
+`mono` remain decided but not built.
 
 ## The problem, with real numbers
 
