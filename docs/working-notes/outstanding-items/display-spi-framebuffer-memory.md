@@ -45,6 +45,48 @@ this, so the expansion loop is a plain per-pixel Python loop -- a real CPU/time 
 measuring on real hardware before assuming it's fast enough for any given flow's update rate; not
 measured here.
 
+## External corroboration: a real-world GS4 UI-display driver (source Mike found)
+
+A practitioner's own account of building exactly this design point, independently, confirms the
+approach is real and describes it in more concrete detail than either the CYD `MemoryError` this
+session hit or the general math above:
+
+- **Palette size confirmed practical, not just theoretical**: ~11 colors, chosen from Google's
+  Material Design color picker, covering the actual needs of a real UI -- leaving a handful of the
+  remaining GS4 slots (16 total) free for "arbitrary use / not decided yet." A concrete starting
+  point for this project's own default palette, if/when one gets built, rather than inventing one
+  from scratch.
+- **No SPIRAM required** -- relevant here specifically because the CYD's classic ESP32 (and other
+  classic-ESP32 boards without PSRAM) is exactly the case this session's `MemoryError` hit; GS4's
+  smaller footprint means it doesn't need to fall back to slower/optional PSRAM the way a full
+  RGB565 buffer might on a PSRAM-equipped board.
+- **Real timing numbers, not a guess**: full 240x320 frame sent in **under 100ms**, in "pure"
+  MicroPython using the `@micropython.viper` code emitter for the row-expansion inner loop -- this
+  is the detail this scoping note was originally missing (it only flagged "a plain per-pixel Python
+  loop... a real CPU/time cost... not measured here"). `viper` is MicroPython's near-native-speed
+  typed-subset emitter, exactly the tool for a tight per-pixel expand loop like this -- worth
+  reaching for directly rather than re-discovering the need for it through a slow first attempt.
+- **Expansion granularity**: 2 rows at a time, each expanded to RGB565 then sent as one SPI
+  transaction -- finer-grained than the ~25KB-strip approach this session's CYD scratch script
+  used, and the granularity that got to <100ms.
+- **Scales to a larger panel too**: the same driver adapted to a 320x480 ili9486 4" display takes
+  ~150-170ms per frame -- a useful reference point if a future board needs a bigger display than
+  CYD's 240x320.
+- **Known limitation, stated plainly by the source**: not useful for photos/arbitrary images -- a
+  fixed ~11-16 color palette is a UI/graphics tool, not a general-purpose framebuffer replacement.
+  Consistent with this node's own current audience (control-panel/status-display UIs, not photo
+  viewers).
+- A further speed-up path the source identifies but didn't need: writing the expansion in C, or
+  going further and queueing SPI transactions directly via esp-idf calls (bypassing MicroPython's
+  own SPI driver, which the source characterizes as slow) -- not needed to hit "fast enough," and
+  not something to chase here without a concrete reason to.
+
+This substantially de-risks Mike's suggested shape above: it's a proven, shipped technique
+elsewhere, with real numbers, not just plausible math. It doesn't resolve the architectural fork
+below on its own -- that's still whether `display_spi` should own this internally or stay dumb and
+document the pattern -- but it does mean either path now has a validated implementation to follow
+rather than a from-scratch design.
+
 ## The open architectural fork -- Mike's call, not decided here
 
 Two real shapes this could take, and they commit the project to different things:
@@ -76,4 +118,7 @@ large-panel flow exposed to the same failure by default. Needs Mike's call befor
 No code changes. No `frameFormat`/`palette` property exists. No expansion helper exists.
 `test-flows/cyd-display-test-pattern.py`'s per-strip RGB565 approach remains the only real, working
 mitigation in the repo today, and it lives in a one-off scratch script, not in `display_spi` or in
-documentation a new flow author would find.
+documentation a new flow author would find. The external GS4 account above is corroboration and a
+concrete reference implementation to follow, not code in this repo -- `@micropython.viper`, the
+2-row expansion granularity, and the ~11-color Material palette are all still to be tried on real
+hardware here.

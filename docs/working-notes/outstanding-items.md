@@ -77,10 +77,13 @@ inline, not a fresh check.
   ESP32 (`learnings/hardware-bringup-hil-rig.md`) -- worked around there only by building/pushing the
   frame one strip at a time, not by any node-level fix. Mike's own suggested shape: build the frame in
   a lower bit depth (a 4-bit/16-color indexed buffer, a quarter the memory), expanding each pixel to
-  real RGB565 only at blit time. Scoped in `outstanding-items/display-spi-framebuffer-memory.md`,
-  including the real memory math and the open architectural fork (expand-on-blit inside `display_spi`
-  itself vs. a documented per-strip construction pattern for flow authors) -- not implemented. Priority
-  not yet triaged by Mike.
+  real RGB565 only at blit time -- since corroborated by a real-world GS4-framebuffer UI driver Mike
+  found, with concrete numbers (<100ms/frame at 240x320 using `@micropython.viper`, no SPIRAM needed,
+  ~11-color Material-inspired palette). Scoped in
+  `outstanding-items/display-spi-framebuffer-memory.md`, including the real memory math, the
+  corroborating reference, and the open architectural fork (expand-on-blit inside `display_spi` itself
+  vs. a documented per-strip construction pattern for flow authors) -- not implemented. Priority not
+  yet triaged by Mike.
 - **[POST-MVP]** **Preset dropdown for known-working `display_spi` panel configs — new item,
   2026-09-18, Mike's ask.** A picklist of named, known-good presets (e.g. "TiDAL badge", "CYD
   2-USB") that fill in the raw property values, while still allowing a fully manual/roll-your-own
