@@ -160,6 +160,19 @@ decided.
 
 ## 3. GUI framework selection (nanogui / microgui / LVGL)
 
+**Superseded, 2026-09-18 -- see `gui-layout-widget-system-scoping.md` for the real, researched version.**
+Two things were decided that session and are not reflected below: Hinch's `micropython-micro-gui` /
+`micropython-touch` was **rejected** as the runtime GUI layer (Mike's call -- too monolithic for a code
+generator to emit against), and layout was required to be **container-based rather than absolute
+coordinates** (flex / X-Intrinsics style). The resulting recommendation is to build our own, with the
+layout engine running in the editor at compile time and shipping nothing to the device. The evaluation
+framing below (which library, pure-Python vs. C-module, how much widget surface to own) is kept for the
+historical record only. The one part of it that survives intact is the **partial-rect vs. full-frame
+flush contract** against `display_spi`/`display_i2c` -- still a real, unresolved question, reached from a
+different direction (dirty-rect updates), and carried forward in that doc. Start there, not here.
+
+Original evaluation framing, superseded above, kept for context only:
+
 An evaluation and decision task, not implementation yet. The original scoping doc already flagged this as
 a forward-looking fork point: **LVGL's own flush callback pushes partial dirty rectangles, not full
 frames** — `display_spi`/`display_i2c`'s current contract is "one `bytes` port, full frame, overwrite

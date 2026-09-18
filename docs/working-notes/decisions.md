@@ -76,6 +76,14 @@ generalize to gs2/mono (they're the opposite of gs4, and of each other's similar
 sibling) -- and, later the same day, both confirmed working on real CYD hardware too, closing out all
 three indexed depths end to end. 14 entries: `docs/working-notes/decisions/node-authoring.md`.
 
+## GUI layout / widget system
+
+Hinch's `micropython-micro-gui`/`micropython-touch` rejected as the runtime GUI layer (too monolithic for a
+code generator to emit against, though individual widget draw routines and `Writer`/`font_to_py` remain
+candidates to vendor); GUI layout required to be container-based rather than absolute coordinates, which puts
+the layout engine in the editor at compile time and ships nothing to the device. Supersedes
+`cyd-touch-gui-flash-budget-briefing.md`'s item 3. 2 entries: `docs/working-notes/decisions/gui-layout.md`.
+
 ## Session sequencing
 
 Custom node authoring + docs sequenced ahead of the normal backlog, then a documentation-only validation session, before resuming normal backlog order. 1 entry: `docs/working-notes/decisions/session-sequencing.md`.
