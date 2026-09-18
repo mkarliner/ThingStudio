@@ -7,6 +7,10 @@ or eventually a graphics-framework node) and wire it into this node's input.
 ## Properties
 
 - **controller** — the display chip. Only `ST7789` today.
+- **frame format** — `rgb565` (default, full color, `width * height * 2` bytes) or `gs4` (4-bit
+  indexed, a quarter the memory). Switch to `gs4` if a full RGB565 buffer won't fit in memory.
+- **palette** — 16 RGB565 colors, used only in `gs4` mode. Not yet editable from this panel — set it
+  as a flow-file property (an array of 16 numbers) if you don't want the built-in default.
 - **SPI bus** — which hardware SPI peripheral to use. Default 2.
 - **baudrate** — SPI clock speed. Default 40MHz.
 - **sck / mosi / dc pins** — required GPIO pins (0–39).
@@ -61,5 +65,21 @@ for i in range(0, len(buf), 2):
 — right after drawing, before `msg['payload'] = bytes(buf)`. A color where both bytes happen to match
 (pure white `0xFFFF`, pure black `0x0000`) is unaffected either way, which is why a swap bug can hide
 behind text/background colors and only show up on saturated colors like a pure green or blue fill.
+
+## GS4 mode: lower memory, a fixed palette
+
+Switch frame format to `gs4` if a full RGB565 buffer won't fit in memory — a real problem on some
+boards at larger resolutions. Build the frame upstream with `framebuf.FrameBuffer(...,
+framebuf.GS4_HMSB)` instead of `RGB565`. Pixel values become palette indices (0–15), not colors. This
+node expands each pixel to real color using the palette property when it sends the frame.
+
+The input buffer isn't simply "half the size of RGB565" — each row is padded to a whole number of
+bytes, so an odd-width panel needs slightly more than `width * height / 2` bytes. This node works out
+and checks the real size for you.
+
+GS4 mode has no byte-order gotcha — the palette already stores colors in the order this node expects.
+
+Sixteen colors total, so it suits a UI with a small fixed palette (buttons, status text, simple icons),
+not photos or arbitrary images.
 
 No drawing primitives here — this node only pushes a complete, already-rendered frame on every message.

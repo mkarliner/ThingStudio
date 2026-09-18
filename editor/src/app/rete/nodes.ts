@@ -584,6 +584,8 @@ export class DisplaySpiNode extends ClassicPreset.Node {
 
   properties: {
     controller: "st7789";
+    frameFormat: "rgb565" | "gs4";
+    palette: number[];
     spiBus: number;
     baudrate: number;
     sck: number;
@@ -599,6 +601,17 @@ export class DisplaySpiNode extends ClassicPreset.Node {
     ystart: number;
   } = {
     controller: "st7789",
+    // frameFormat/palette added 2026-09-18 (display-spi.ts's own header
+    // has the full story) -- "rgb565" is the default so a freshly-dropped
+    // node still compiles identically to before this property existed,
+    // same invariant this class's own header comment states. DEFAULT_
+    // PALETTE_GS4 (display-spi.ts) is mirrored here rather than imported
+    // -- this file already duplicates other codegen defaults (e.g.
+    // rotation/xstart/ystart) rather than importing them, same pattern.
+    frameFormat: "rgb565",
+    palette: [
+      0x0000, 0xffff, 0xf800, 0x07e0, 0x001f, 0xffe0, 0x07ff, 0xf81f, 0x8410, 0x4208, 0xc618, 0xfd20, 0x8000, 0x0400, 0x0010, 0x0410,
+    ],
     spiBus: 2,
     baudrate: 40000000,
     sck: 12,

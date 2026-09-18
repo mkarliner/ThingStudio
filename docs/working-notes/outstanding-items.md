@@ -80,10 +80,16 @@ inline, not a fresh check.
   real RGB565 only at blit time -- since corroborated by a real-world GS4-framebuffer UI driver Mike
   found, with concrete numbers (<100ms/frame at 240x320 using `@micropython.viper`, no SPIRAM needed,
   ~11-color Material-inspired palette). Scoped in
-  `outstanding-items/display-spi-framebuffer-memory.md`, including the real memory math, the
-  corroborating reference, and the open architectural fork (expand-on-blit inside `display_spi` itself
-  vs. a documented per-strip construction pattern for flow authors) -- not implemented. Priority not
-  yet triaged by Mike.
+  `outstanding-items/display-spi-framebuffer-memory.md`, including the real memory math and the
+  corroborating reference. **Architectural fork resolved 2026-09-18** (`decisions/node-authoring.md`):
+  option 1 (real `frameFormat`/`palette` properties, `display_spi` does the expansion internally),
+  extended to four depths (rgb565/gs4/gs2/mono) at Mike's own ask, palette-driven throughout. A
+  standalone off-device spike the same day confirmed `@micropython.viper` works for the expansion loop
+  and is far faster than plain Python (`learnings/micropython-device-runtime.md`), though real-hardware
+  timing is still unmeasured. **`gs4` built the same day** (`display-spi.ts`/`nodes.ts`/
+  `PropertyPanel.vue`/tests/user-guide doc), including a real odd-width stride bug found and fixed
+  before landing -- not yet verified by a real `tsc`/`vitest` run (sandbox can't run those against the
+  live mount), and no on-device pass yet. `gs2`/`mono` still not built.
 - **[POST-MVP]** **Preset dropdown for known-working `display_spi` panel configs — new item,
   2026-09-18, Mike's ask.** A picklist of named, known-good presets (e.g. "TiDAL badge", "CYD
   2-USB") that fill in the raw property values, while still allowing a fully manual/roll-your-own

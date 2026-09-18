@@ -112,3 +112,60 @@ Status: detail file, split out of `learnings.md` on 2026-09-06 to keep that inde
   actually changed). `runtimeBuild: null` means "can't confirm," not
   "confirmed stale." `decisions.md`'s "Redeploy / network fault handling"
   section, 2026-09-05 entry.
+
+- **`@micropython.viper` works cleanly for a GS4/GS2/mono-to-RGB565 pixel-expansion loop and is
+  dramatically faster than plain Python -- confirmed off-device on a real MicroPython unix-port
+  build, not yet on this project's actual ESP32 hardware.** Written for `display_spi`'s
+  framebuffer-memory scoping (`outstanding-items/display-spi-framebuffer-memory.md`) -- before
+  committing engineering time to building `frameFormat`/`palette` properties into `display_spi`'s
+  codegen, ran a standalone spike: cloned upstream MicroPython, built `mpy-cross` + the unix port
+  fresh in an isolated cloud-session workspace (never the shared mount -- same discipline as
+  `editor-build-tooling.md`'s npm/vitest restriction, for the same cross-platform-native-binary
+  reason, even though this was a from-scratch build rather than an install into a shared tree), then
+  wrote three `@micropython.viper`-typed (`ptr8`/`ptr16` params) expansion loops, one per reduced
+  depth (gs4/4bpp, gs2/2bpp, mono/1bpp), each unpacking a source byte into 2/4/8 palette-indexed
+  pixels and writing real RGB565 bytes to a destination buffer. All three correctness-checked
+  against hand-derived expected output first, then timed against a plain-Python equivalent (gs4
+  only, for the ratio). Results, x86 dev machine, 240x320 frame: gs4 0.25ms, gs2 0.23ms, mono 0.38ms
+  (all far under the source driver's ~100ms/frame target this scoping cites), a ~42x speedup over
+  plain Python for gs4. Core gs4 loop, for reference:
+  ```python
+  @micropython.viper
+  def expand_gs4_viper(src: ptr8, dst: ptr8, n: int, pal: ptr16):
+      for i in range(n):
+          b = int(src[i])
+          hi = b >> 4
+          lo = b & 0x0F
+          c0 = int(pal[hi])
+          c1 = int(pal[lo])
+          j = i * 4
+          dst[j] = c0 >> 8
+          dst[j + 1] = c0 & 0xFF
+          dst[j + 2] = c1 >> 8
+          dst[j + 3] = c1 & 0xFF
+  ```
+  gs2/mono use the same shape (4 and 8 pixels per source byte respectively, same palette-lookup +
+  byte-split pattern). Confirms the mechanism has no syntax/semantic surprises and that the
+  expansion loop itself is very unlikely to be the CPU bottleneck relative to SPI transfer time.
+  **Caveat, don't over-read this:** not a real-hardware timing result -- an x86 dev CPU is not an
+  ESP32 Xtensa core, and this spike never touches MicroPython's own SPI driver (the actual
+  bottleneck in the corroborating GS4 driver account the design doc cites) at all. A real CYD/TiDAL
+  pass is still needed before the "under 100ms" target is confirmed for this project's own boards.
+  Spike script itself was not checked into this repo (throwaway, cloud-session-only) -- the loop
+  shape above plus this entry's numbers are what's preserved; reconstructing it is a few minutes'
+  work if a future session wants to re-run or extend it. `outstanding-items/display-spi-framebuffer-
+  memory.md`, `decisions/node-authoring.md`'s 2026-09-18 entries.
+
+- **`framebuf.GS4_HMSB` (and `GS2_HMSB`/`MONO_*`) row stride is rounded UP to a whole byte -- a flat
+  `width * height / 2` buffer-size formula is wrong for an odd width.** Confirmed by reading
+  MicroPython's own `extmod/modframebuf.c` directly (`stride = (stride + 1) & ~1;` for GS4_HMSB before
+  the byte count is derived), not assumed from the format name. For an EVEN width (CYD's 240) this
+  rounding is a no-op and a flat formula happens to still be correct, which is exactly what made a
+  first-draft `display_spi` `"gs4"` expansion loop's flat-nibble-count bug easy to miss -- it only
+  breaks on an ODD width (TiDAL's real 135: 68 bytes/row, not 67.5), where a naive expansion silently
+  shifts every pixel after the first odd-width row out of alignment for the rest of the frame. Design
+  around this from the start on any future reduced-depth framebuf work (`gs2`/`mono`, not yet built) --
+  the correct per-row byte count is `Math.ceil(width / 2)` (or `/4`, `/8` for gs2/mono), and the
+  expansion loop needs to discard trailing pad nibbles/bits per row, not just expand every byte in the
+  buffer flatly. `decisions/node-authoring.md`'s 2026-09-18 `frameFormat: "gs4"` entry,
+  `outstanding-items/display-spi-framebuffer-memory.md`.

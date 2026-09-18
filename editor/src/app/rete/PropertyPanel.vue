@@ -260,6 +260,12 @@
             <option value="st7789">ST7789</option>
           </select>
         </label>
+        <label>frame format
+          <select v-model="node.properties.frameFormat" @change="touch">
+            <option value="rgb565">RGB565 (full color, default)</option>
+            <option value="gs4">GS4 4-bit indexed (1/4 the memory, 16-color palette)</option>
+          </select>
+        </label>
         <label>SPI bus
           <input type="number" min="0" v-model.number="node.properties.spiBus" @input="touch" />
         </label>
@@ -300,18 +306,23 @@
           <input type="number" min="-1" v-model.number="node.properties.ystart" @input="touch" />
         </label>
         <p class="hint">
-          One input: msg.payload must already be an RGB565-encoded framebuf.FrameBuffer buffer, width * height *
-          2 bytes -- build it upstream (a function node using framebuf.FrameBuffer, or a future graphics-
-          framework node). Note: MicroPython's framebuf.RGB565 stores each pixel in CPU-native (little-endian)
-          byte order, but SPI TFT controllers including this one expect big-endian pixel bytes on the wire --
-          byte-swap the buffer (swap each pair of bytes) before sending, or colors come out wrong (e.g. green
-          renders as red). Wrong-length input raises a NODE_ERROR rather than corrupting the panel silently.
-          Pins vary board to board -- there's no sensible default for more than one board, so set them from
-          your board's pinout. -1 on cs/reset/backlight means that pin isn't wired (some boards tie reset/cs
-          high or omit backlight control entirely). -1 on xstart/ystart (the default) lets the vendored
-          st7789py_mpy driver's own built-in offset table handle 240x240 and 135x240 panels (TiDAL's own panel
-          needs xstart=52, ystart=40 -- the driver applies this automatically at -1); any other resolution
-          needs xstart/ystart set explicitly or the driver raises a clear error at flow-boot time.
+          One input: msg.payload must already be a framebuf.FrameBuffer buffer matching frame format above --
+          RGB565 (width * height * 2 bytes) by default, or GS4 4-bit indexed (a quarter the memory -- build it
+          upstream with framebuf.GS4_HMSB, pixel values 0-15 as palette indices, not literal color) -- build it
+          with a function node using framebuf.FrameBuffer, or a future graphics-framework node. Note: MicroPython's
+          framebuf.RGB565 stores each pixel in CPU-native (little-endian) byte order, but SPI TFT controllers
+          including this one expect big-endian pixel bytes on the wire -- byte-swap an RGB565 buffer (swap each
+          pair of bytes) before sending, or colors come out wrong (e.g. green renders as red); GS4 mode doesn't
+          need this, the palette is defined in real RGB565 order already. Wrong-length input raises a NODE_ERROR
+          rather than corrupting the panel silently. Pins vary board to board -- there's no sensible default for
+          more than one board, so set them from your board's pinout. -1 on cs/reset/backlight means that pin
+          isn't wired (some boards tie reset/cs high or omit backlight control entirely). -1 on xstart/ystart
+          (the default) lets the vendored st7789py_mpy driver's own built-in offset table handle 240x240 and
+          135x240 panels (TiDAL's own panel needs xstart=52, ystart=40 -- the driver applies this automatically
+          at -1); any other resolution needs xstart/ystart set explicitly or the driver raises a clear error at
+          flow-boot time. GS4 mode's palette (16 RGB565 colors) isn't editable from this panel yet -- set it via
+          the flow file's own "palette" property (an array of 16 numbers) if you need something other than the
+          built-in default.
         </p>
       </template>
 

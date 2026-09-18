@@ -17,7 +17,7 @@
 // minimal-sink precedent. No drawing primitives here on purpose -- that's
 // exactly the deferred POST-MVP "templating UI nodes for displays" item
 // (outstanding-items.md); msg.payload is expected to already be a
-// framebuf-rendered RGB565 buffer, built upstream (e.g. a `function` node
+// framebuf-rendered buffer, built upstream (e.g. a `function` node
 // using `framebuf.FrameBuffer` directly, or eventually an LVGL-style
 // graphics-framework node -- framebuffer-display-node-scoping.md's own
 // forward-looking note on why a future partial-rect input contract might
@@ -144,27 +144,69 @@
 // have been confirmed this way; not built now, four raw properties is
 // the whole of today's UI for this.
 //
-// A length check against the expected RGB565 buffer size (width * height
-// * 2 bytes) runs before every blit -- CLAUDE.md's fault-handling-over-
-// happy-path priority: `blit_buffer` itself would just SPI-write whatever
-// length it's given (no internal validation), silently desyncing the
-// panel's own address window on a wrong-sized buffer rather than failing
-// loudly. A clear NODE_ERROR here (design doc §5) is much easier to debug
-// than a garbled screen with no error at all.
+// A length check against the expected buffer size (format-dependent, see
+// `frameFormat` below) runs before every blit -- CLAUDE.md's fault-
+// handling-over-happy-path priority: `blit_buffer`/`write` themselves
+// would just SPI-write whatever length they're given (no internal
+// validation), silently desyncing the panel's own address window on a
+// wrong-sized buffer rather than failing loudly. A clear NODE_ERROR here
+// (design doc §5) is much easier to debug than a garbled screen with no
+// error at all.
 //
-// **Known scaling limit, not solved here (`outstanding-items.md` /
-// `docs/working-notes/learnings/hardware-bringup-hil-rig.md`'s 2026-09-18
-// entry):** a full-frame RGB565 buffer this node's own upstream `function`
-// node builds can `MemoryError` on a classic ESP32 for a large panel (CYD's
-// 240x320 = 153600 bytes failed as one contiguous allocation on real
-// hardware, even though TiDAL's smaller 135x240 = 64800 bytes never hit
-// this) -- worked around in test scripts by building/pushing the frame in
-// smaller strips instead of one full-screen buffer. Not yet built into
-// this node or its upstream contract. A lower-bit-depth software
-// framebuffer (e.g. 4-bit/16-color indexed, expanded to the panel's real
-// RGB565 color depth on the fly while streaming out, rather than held
-// expanded in RAM) is one candidate shape for a real fix, worth scoping
-// separately rather than folding into this property change.
+// **Framebuffer-memory fix landed, 2026-09-18 (`outstanding-items/display-
+// spi-framebuffer-memory.md`, `decisions/node-authoring.md`'s 2026-09-18
+// entries).** A full-frame RGB565 buffer this node's own upstream
+// `function` node builds could previously `MemoryError` on a classic
+// ESP32 for a large panel (CYD's 240x320 = 153600 bytes failed as one
+// contiguous allocation on real hardware, even though TiDAL's smaller
+// 135x240 = 64800 bytes never hit this -- `learnings/hardware-bringup-
+// hil-rig.md`'s 2026-09-18 entry). Now avoidable via a new `frameFormat`
+// property: `"rgb565"` (default, today's existing behavior, unchanged) or
+// `"gs4"` (MicroPython's own `framebuf.GS4_HMSB`, 4 bits/pixel, palette-
+// indexed, a quarter the memory footprint for the same panel). In
+// `"gs4"` mode, `msg.payload` is a GS4_HMSB-packed buffer (built upstream
+// via `framebuf.FrameBuffer(..., framebuf.GS4_HMSB)`, pixel values 0-15
+// as palette indices, not literal color) instead of a full RGB565 buffer.
+// A new `palette` property (always exactly 16 RGB565 entries --
+// `DEFAULT_PALETTE_GS4` below is a placeholder pending Mike's own values,
+// see that const's own comment) maps each 4-bit index to a real color.
+//
+// Expansion happens inside this node's own generated code, not the
+// vendored driver: a `@micropython.viper`-decorated per-instance helper
+// (typed `ptr8`/`ptr16` params) unpacks GS4 nibbles to real RGB565 bytes
+// two rows at a time, streamed out via the vendored driver's own
+// `set_window()` + `write(None, ...)` primitives -- the same two calls
+// `blit_buffer()` itself makes internally, just split apart so several
+// smaller writes can share one open address window (confirmed by reading
+// `st7789py.py` directly: `write()` toggles `cs_low()`/`cs_high()` around
+// every call, so each row-batch is its own complete, correctly-framed SPI
+// transaction, not a half-open window between calls). This granularity
+// (2 rows/transaction) matches the corroborating real-world GS4 driver
+// account's own proven shape (`outstanding-items/display-spi-framebuffer-
+// memory.md`'s "External corroboration" section), which hit <100ms/frame
+// at 240x320 this way. The `@micropython.viper` mechanism itself was
+// spiked off-device against a real MicroPython unix-port build before
+// this landed -- works, ~42x over plain Python for the same loop shape,
+// but that was on an x86 dev machine, not this project's own ESP32
+// hardware, so the timing target is still unconfirmed on real boards
+// (`learnings/micropython-device-runtime.md`'s 2026-09-18 entry has the
+// full method and numbers). `gs2` (2bpp) and `mono` (1bpp) formats are
+// decided alongside `gs4` (`decisions/node-authoring.md`) but not yet
+// built -- `gs4` ships first, the cheaper, already-corroborated case.
+//
+// **Real correctness subtlety, found reading MicroPython's own
+// `extmod/modframebuf.c` directly rather than assuming flat `w*h/2`
+// packing:** `GS4_HMSB`'s row stride is rounded UP to the nearest even
+// pixel count (`(width + 1) & ~1` in the real C source) before dividing
+// by 2 for bytes/row. For an EVEN width (CYD's 240) this is exactly
+// `width/2` and a flat `w*h/2` calculation happens to still be correct,
+// but for an ODD width (TiDAL's 135) each row is padded to 68 bytes
+// (`ceil(135/2)`), not 67.5 -- a flat `ceil(w*h/2)` undercounts the real
+// buffer size by `height` bytes for any odd-width panel, which is exactly
+// why it's easy to miss testing only against CYD's (even-width) panel.
+// This node's own `expectedBytes` calculation for `"gs4"` mode is
+// `Math.ceil(width / 2) * height`, not a flat `Math.ceil((width *
+// height) / 2)` -- see `gs4StrideBytes` below.
 
 import { CompileError } from "../compiler/errors.js";
 import type { GraphNode } from "../compiler/graph.js";
@@ -172,6 +214,44 @@ import type { CodegenContext, NodeDefinition, SinkCodegenResult } from "../compi
 
 const CONTROLLERS = ["st7789"] as const;
 type Controller = (typeof CONTROLLERS)[number];
+
+const FRAME_FORMATS = ["rgb565", "gs4"] as const;
+type FrameFormat = (typeof FRAME_FORMATS)[number];
+
+// How many expanded rows go out per SPI transaction in "gs4" mode --
+// matches the corroborating GS4 driver account's own proven granularity
+// (outstanding-items/display-spi-framebuffer-memory.md's "External
+// corroboration" section), not an arbitrary choice.
+const GS4_ROWS_PER_BATCH = 2;
+
+// A placeholder starting palette -- NOT the exact ~11-color Material-
+// Design-inspired set the corroborating GS4 driver account describes
+// (outstanding-items/display-spi-framebuffer-memory.md); that source's
+// exact swatch hex values were never captured in this repo, only its
+// existence and color count. This is a hand-verified, clean-bit-math
+// 16-entry RGB565 palette instead (pure/mixed primaries, a 4-step gray
+// ramp, plus a few darker accents) -- flagged for Mike to swap for the
+// real reference values, or his own, rather than silently treated as
+// authoritative. Any flow can override this via its own `palette`
+// property regardless.
+const DEFAULT_PALETTE_GS4: readonly number[] = [
+  0x0000, // 0  black        (0, 0, 0)
+  0xffff, // 1  white        (255, 255, 255)
+  0xf800, // 2  red          (248, 0, 0)
+  0x07e0, // 3  green        (0, 252, 0)
+  0x001f, // 4  blue         (0, 0, 248)
+  0xffe0, // 5  yellow       red | green
+  0x07ff, // 6  cyan         green | blue
+  0xf81f, // 7  magenta      red | blue
+  0x8410, // 8  gray 50%     (128, 128, 128)
+  0x4208, // 9  gray 25%     (64, 64, 64)
+  0xc618, // 10 gray 75%     (192, 192, 192)
+  0xfd20, // 11 orange       (255, 165, 0)
+  0x8000, // 12 dark red     (128, 0, 0)
+  0x0400, // 13 dark green   (0, 128, 0)
+  0x0010, // 14 dark blue    (0, 0, 128)
+  0x0410, // 15 dark cyan    (0, 128, 128)
+];
 
 // MADCTL bits (st7789py_mpy's own constants, mirrored here in TypeScript
 // -- rotation/colorOrder/dataLatchOrder are all compile-time properties,
@@ -227,6 +307,21 @@ function optionalOffset(value: unknown, label: string): number {
   return raw;
 }
 
+/** Exactly 16 raw RGB565 values (0-65535), same "compile-time property, not a runtime object" convention as everything else in this file -- no color-picker UI yet (PropertyPanel.vue), same gap `colorOrder`/`invertColors`/`dataLatchOrder` already have; set via raw flow-file properties for now. */
+function requirePalette(value: unknown): number[] {
+  if (value === undefined) return [...DEFAULT_PALETTE_GS4];
+  if (!Array.isArray(value) || value.length !== 16) {
+    throw new CompileError(`display_spi palette must be an array of exactly 16 RGB565 values (0-65535)`);
+  }
+  return value.map((entry, i) => {
+    const n = Math.round(Number(entry));
+    if (!Number.isFinite(n) || n < 0 || n > 0xffff) {
+      throw new CompileError(`display_spi palette[${i}] "${String(entry)}" must be an integer 0-65535 (a raw RGB565 value)`);
+    }
+    return n;
+  });
+}
+
 export const displaySpiNode: NodeDefinition = {
   type: "thingstudio/display_spi",
   kind: "sink",
@@ -238,6 +333,12 @@ export const displaySpiNode: NodeDefinition = {
     if (!CONTROLLERS.includes(controller)) {
       throw new CompileError(`display_spi controller "${String(node.properties.controller)}" must be one of: ${CONTROLLERS.join(", ")}`);
     }
+
+    const frameFormat = String(node.properties.frameFormat ?? "rgb565") as FrameFormat;
+    if (!FRAME_FORMATS.includes(frameFormat)) {
+      throw new CompileError(`display_spi frameFormat "${String(node.properties.frameFormat)}" must be one of: ${FRAME_FORMATS.join(", ")}`);
+    }
+    const palette = frameFormat === "gs4" ? requirePalette(node.properties.palette) : null;
 
     const spiBus = Math.round(Number(node.properties.spiBus ?? 2));
     if (!Number.isFinite(spiBus) || spiBus < 0) {
@@ -296,44 +397,124 @@ export const displaySpiNode: NodeDefinition = {
     const resetVar = `${base}_reset`;
     const blVar = `${base}_bl`;
     const dispVar = `${base}_disp`;
+    const palVar = `${base}_pal`;
+    const expandVar = `${base}_expand`;
+    const scratchVar = `${base}_scratch`;
 
     const csExpr = cs === null ? "None" : `machine.Pin(${cs}, machine.Pin.OUT)`;
     const resetExpr = reset === null ? "None" : `machine.Pin(${reset}, machine.Pin.OUT)`;
     const blExpr = backlight === null ? "None" : `machine.Pin(${backlight}, machine.Pin.OUT)`;
 
-    const expectedBytes = width * height * 2; // RGB565
+    // GS4_HMSB pads each row to a whole number of bytes (2px/byte) --
+    // Math.ceil(width / 2) is that padded per-row byte count, NOT
+    // Math.ceil((width * height) / 2) -- see this file's header for why
+    // the difference matters on an odd-width panel (TiDAL's 135).
+    const gs4StrideBytes = Math.ceil(width / 2);
+    const expectedBytes = frameFormat === "gs4" ? gs4StrideBytes * height : width * height * 2; // RGB565
+
+    const imports = ["import machine", "from st7789py import ST7789, ST7789_MADCTL"];
+    if (frameFormat === "gs4") {
+      imports.push("import array", "import micropython");
+    }
+
+    const statements: SinkCodegenResult["statements"] = [
+      {
+        key: base,
+        code: [
+          `${spiVar} = machine.SPI(${spiBus}, baudrate=${baudrate}, polarity=0, phase=0, sck=machine.Pin(${sck}), mosi=machine.Pin(${mosi}))`,
+          `${csVar} = ${csExpr}`,
+          `${dcVar} = machine.Pin(${dc}, machine.Pin.OUT)`,
+          `${resetVar} = ${resetExpr}`,
+          `${blVar} = ${blExpr}`,
+          `${dispVar} = ST7789(${spiVar}, ${width}, ${height}, ${resetVar}, ${dcVar}, cs=${csVar}, backlight=${blVar}, xstart=${xstart}, ystart=${ystart})`,
+          `${dispVar}.init()`,
+          // Overrides ST7789.init()'s own hardcoded inversion_mode(True)
+          // and _set_mem_access_mode(4, True, True, False) calls -- see
+          // this file's header for why MADCTL is written directly rather
+          // than through _set_mem_access_mode() a second time.
+          `${dispVar}.inversion_mode(${invertColors ? "True" : "False"})`,
+          `${dispVar}.write(ST7789_MADCTL, bytes([${madctl}]))`,
+          `if ${blVar} is not None:`,
+          `    ${blVar}.value(1)`,
+        ].join("\n"),
+      },
+    ];
+
+    if (frameFormat === "gs4") {
+      const paletteLiteral = palette!.map((v) => `0x${v.toString(16).padStart(4, "0")}`).join(", ");
+      const scratchBytes = gs4StrideBytes * GS4_ROWS_PER_BATCH * 4; // 2px/byte -> 4 output bytes/src byte
+      statements.push({
+        key: `${base}_gs4`,
+        // The palette + expansion helper are per-instance, matching every
+        // other setup block in this file (no shared/deduped codegen
+        // infrastructure exists to reuse one across multiple gs4 nodes in
+        // the same flow) -- cheap in flash for the realistic case of one
+        // or a few display_spi nodes per flow, per CLAUDE.md's "cheapest
+        // correct implementation" default.
+        code: [
+          `${palVar} = array.array('H', [${paletteLiteral}])`,
+          ``,
+          // @micropython.viper, typed ptr8/ptr16 params -- spiked off-
+          // device first (this file's header, learnings/micropython-
+          // device-runtime.md's 2026-09-18 entry): compiles and runs
+          // correctly, ~42x over plain Python for this exact loop shape.
+          // `off` avoids slicing/copying msg.payload per batch -- indexes
+          // directly into the full buffer via a running offset instead.
+          `@micropython.viper`,
+          `def ${expandVar}(src: ptr8, off: int, dst: ptr8, n: int, pal: ptr16):`,
+          `    for i in range(n):`,
+          `        b = int(src[off + i])`,
+          `        hi = b >> 4`,
+          `        lo = b & 0x0F`,
+          `        c0 = int(pal[hi])`,
+          `        c1 = int(pal[lo])`,
+          `        j = i * 4`,
+          `        dst[j] = c0 >> 8`,
+          `        dst[j + 1] = c0 & 0xFF`,
+          `        dst[j + 2] = c1 >> 8`,
+          `        dst[j + 3] = c1 & 0xFF`,
+          ``,
+          // Reused across batches (not reallocated per message/per batch)
+          // -- same "small scratch buffer, not a full expanded frame"
+          // shape the corroborating GS4 driver account used.
+          `${scratchVar} = bytearray(${scratchBytes})`,
+        ].join("\n"),
+      });
+    }
+
+    const lengthCheck =
+      frameFormat === "gs4"
+        ? `    raise ValueError('display_spi: expected ${expectedBytes} bytes (${width}x${height} gs4/4bpp, ${gs4StrideBytes} bytes/row), got %d' % len(_buf))`
+        : `    raise ValueError('display_spi: expected ${expectedBytes} bytes (${width}x${height} RGB565), got %d' % len(_buf))`;
+
+    const functionBody =
+      frameFormat === "gs4"
+        ? [
+            `_buf = msg.get('payload', b'')`,
+            `if len(_buf) != ${expectedBytes}:`,
+            lengthCheck,
+            // set_window once, then several write(None, ...) calls --
+            // the same two primitives blit_buffer() itself calls, just
+            // split apart. st7789py.py's own write() toggles cs_low()/
+            // cs_high() around every call (confirmed by reading it
+            // directly, this file's header), so each batch below is its
+            // own complete, correctly-framed SPI transaction.
+            `${dispVar}.set_window(0, 0, ${width - 1}, ${height - 1})`,
+            `_row = 0`,
+            `while _row < ${height}:`,
+            `    _n = ${GS4_ROWS_PER_BATCH} if (${height} - _row) >= ${GS4_ROWS_PER_BATCH} else (${height} - _row)`,
+            `    _cnt = ${gs4StrideBytes} * _n`,
+            `    ${expandVar}(_buf, _row * ${gs4StrideBytes}, ${scratchVar}, _cnt, ${palVar})`,
+            `    ${dispVar}.write(None, memoryview(${scratchVar})[:_cnt * 4])`,
+            `    _row += _n`,
+          ].join("\n")
+        : [`_buf = msg.get('payload', b'')`, `if len(_buf) != ${expectedBytes}:`, lengthCheck, `${dispVar}.blit_buffer(_buf, 0, 0, ${width}, ${height})`].join("\n");
 
     return {
-      imports: ["import machine", "from st7789py import ST7789, ST7789_MADCTL"],
-      statements: [
-        {
-          key: base,
-          code: [
-            `${spiVar} = machine.SPI(${spiBus}, baudrate=${baudrate}, polarity=0, phase=0, sck=machine.Pin(${sck}), mosi=machine.Pin(${mosi}))`,
-            `${csVar} = ${csExpr}`,
-            `${dcVar} = machine.Pin(${dc}, machine.Pin.OUT)`,
-            `${resetVar} = ${resetExpr}`,
-            `${blVar} = ${blExpr}`,
-            `${dispVar} = ST7789(${spiVar}, ${width}, ${height}, ${resetVar}, ${dcVar}, cs=${csVar}, backlight=${blVar}, xstart=${xstart}, ystart=${ystart})`,
-            `${dispVar}.init()`,
-            // Overrides ST7789.init()'s own hardcoded inversion_mode(True)
-            // and _set_mem_access_mode(4, True, True, False) calls -- see
-            // this file's header for why MADCTL is written directly rather
-            // than through _set_mem_access_mode() a second time.
-            `${dispVar}.inversion_mode(${invertColors ? "True" : "False"})`,
-            `${dispVar}.write(ST7789_MADCTL, bytes([${madctl}]))`,
-            `if ${blVar} is not None:`,
-            `    ${blVar}.value(1)`,
-          ].join("\n"),
-        },
-      ],
+      imports,
+      statements,
       functionName: ctx.uniqueName("display_spi_sink"),
-      functionBody: [
-        `_buf = msg.get('payload', b'')`,
-        `if len(_buf) != ${expectedBytes}:`,
-        `    raise ValueError('display_spi: expected ${expectedBytes} bytes (${width}x${height} RGB565), got %d' % len(_buf))`,
-        `${dispVar}.blit_buffer(_buf, 0, 0, ${width}, ${height})`,
-      ].join("\n"),
+      functionBody,
     };
   },
 };

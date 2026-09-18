@@ -59,7 +59,11 @@ The redeploy-cleanup and WiFi/MQTT hardening work: the socket-leak cleanup regis
 Custom nodes as a two-file package inlined via a generic `NodeDefinition` builder, no new wire protocol; same trust boundary as the `function` node, no sandboxing; output ports capped at 1 by codegen validation, not the package format; package persistence deferred to the backend; `eswitch`/`ebutton` nodes vendoring Peter Hinch's
 `micropython-async` primitives, partially resolving design doc §11; CYD confirmed ST7789(V)-compatible
 with a working MADCTL/inversion config, now exposed as real `display_spi` node properties
-(colorOrder/invertColors/dataLatchOrder), CYD-defaulted. 7 entries: `docs/working-notes/decisions/node-authoring.md`.
+(colorOrder/invertColors/dataLatchOrder), CYD-defaulted; `display_spi` framebuffer-memory fix
+decided (real `frameFormat`/`palette` properties, four depths, palette-driven throughout) with an
+off-device `@micropython.viper` spike backing it, then `frameFormat: "gs4"` actually built (a real
+odd-width stride bug found and fixed before landing, not yet verified by `tsc`/`vitest`). 10 entries:
+`docs/working-notes/decisions/node-authoring.md`.
 
 ## Session sequencing
 

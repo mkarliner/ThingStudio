@@ -1,7 +1,14 @@
-# `display_spi` framebuffer construction can exceed available heap — scoped, not built
+# `display_spi` framebuffer construction can exceed available heap — gs4 built, not verified by tsc/vitest
 
-Status: scoping note only, 2026-09-18, written at Mike's request after the CYD real-hardware bring-up
-session hit this as a real `MemoryError`. Nothing below is implemented.
+Status: scoped 2026-09-18 (Mike's request after the CYD real-hardware bring-up session hit a real
+`MemoryError`), decided the same day, and `frameFormat: "gs4"` implemented the same day (`display-
+spi.ts`, `nodes.ts`, `PropertyPanel.vue`, `node-display-spi.test.ts`, `docs/user-guide/nodes/
+display-spi.md` -- see `decisions/node-authoring.md`'s later 2026-09-18 entry for the implementation
+itself). **Not yet verified by a real `tsc --noEmit`/`vitest run`** -- built and hand-verified against
+the real vendored driver via a standalone python3 script (not the vitest suite itself, which this
+session's sandbox can't run against the live-mounted `editor/`, per `CLAUDE.md`), so Mike's own build/
+test pass is still the actual gate before trusting this compiles and the new tests pass. `gs2`/`mono`
+remain decided but not built.
 
 ## The problem, with real numbers
 
@@ -87,7 +94,22 @@ below on its own -- that's still whether `display_spi` should own this internall
 document the pattern -- but it does mean either path now has a validated implementation to follow
 rather than a from-scratch design.
 
-## The open architectural fork -- Mike's call, not decided here
+## The architectural fork -- RESOLVED, 2026-09-18 (Mike's call, via `AskUserQuestion`)
+
+**Option 1, extended.** `display_spi` grows real properties and does the expansion internally.
+Extended beyond the two shapes below (Mike's own ask, same session): support four frame depths, not
+two -- `frameFormat`: `"rgb565"` (default, unchanged), `"gs4"` (4bpp), `"gs2"` (2bpp), `"mono"` (1bpp)
+-- mapping directly onto MicroPython's own `framebuf` formats (`RGB565`/`GS4_HMSB`/`GS2_HMSB`/a
+`MONO_*` variant). All three reduced depths are palette-driven (one 16-entry RGB565 `palette`
+property used regardless of `frameFormat`, not hardcoded gray/black-white ramps for the low depths).
+Full decision write-up, including what's still open (default `gs2`/`mono` palette seeding, exact
+`MONO_*` variant, phasing/sequencing, row-batching size per depth): Claude-project doc
+`display-spi-framebuffer-format-decision.md` (ThingStudio project -- transcribe into this repo's own
+`decisions/node-authoring.md` in full once implementation starts; a short pointer entry already
+exists there as of 2026-09-18). Not built yet. The two shapes below are kept as-is for the historical
+record of what was being decided between -- option 1 (extended) is what's actually happening now.
+
+### The two shapes that were on the table
 
 Two real shapes this could take, and they commit the project to different things:
 
@@ -113,12 +135,45 @@ colorOrder-family properties just landed (real properties, not documentation), b
 increase for `display_spi` than anything it's taken on so far; (2) is cheap now but leaves every future
 large-panel flow exposed to the same failure by default. Needs Mike's call before any of this is built.
 
-## Not done here
+## Built, 2026-09-18 -- `gs4` only
 
-No code changes. No `frameFormat`/`palette` property exists. No expansion helper exists.
-`test-flows/cyd-display-test-pattern.py`'s per-strip RGB565 approach remains the only real, working
-mitigation in the repo today, and it lives in a one-off scratch script, not in `display_spi` or in
-documentation a new flow author would find. The external GS4 account above is corroboration and a
-concrete reference implementation to follow, not code in this repo -- `@micropython.viper`, the
-2-row expansion granularity, and the ~11-color Material palette are all still to be tried on real
-hardware here.
+`frameFormat: "rgb565" | "gs4"` and a `palette` property (16 RGB565 entries) landed in `display-
+spi.ts`, mirrored into `nodes.ts`'s typed defaults and `PropertyPanel.vue`'s form (frame-format
+dropdown; palette is flow-file-only for now, no color-picker UI, same gap `colorOrder`/`invertColors`/
+`dataLatchOrder` already have). In `"gs4"` mode, expansion happens inside this node's own generated
+code via a per-instance `@micropython.viper`-decorated helper, streamed out 2 rows/transaction through
+the vendored driver's own `set_window()` + `write(None, ...)` primitives (not `blit_buffer()`, which
+assumes RGB565).
+
+**A real correctness bug found and fixed before landing, not just theoretical:** the first draft of
+the expansion loop treated the source buffer as a flat sequence of nibbles (n whole bytes in, n*4 bytes
+out). That's wrong for an odd-width panel -- GS4_HMSB pads each row to a whole byte (confirmed by
+reading MicroPython's own `extmod/modframebuf.c` directly, not assumed), so a flat expansion would
+expand the trailing pad nibble on an odd-width row into a phantom extra pixel, shifting every
+subsequent pixel out of alignment for the rest of the frame -- exactly the kind of "silently wrong
+beats loudly right" failure this project's own fault-handling priority exists to catch. Fixed: the
+expansion loop is pixel-count-aware per row (expands exactly `width` real pixels, discards any
+trailing pad nibble), not byte-count-aware. Verified end-to-end twice, by hand, against the real
+vendored driver + pymock harness before writing the vitest test cases from the same numbers (not
+from the codegen's own output, to avoid a test that just re-asserts a bug) -- an odd-width case
+(3x2) and a multi-row-batch case (2x3, split across 2 SPI transactions) both match hand-derived
+expected bytes exactly. `expectedBytes` for `"gs4"` mode is `Math.ceil(width / 2) * height`, not a
+flat `Math.ceil((width * height) / 2)` -- the two agree for CYD's even 240 width and disagree for
+TiDAL's odd 135 (68 bytes/row, not 67.5), which is exactly why this was easy to miss testing only
+against CYD's panel.
+
+`test-flows/cyd-display-test-pattern.py`'s per-strip RGB565 approach is superseded by `gs4` mode for
+any new flow that wants the memory saving, though it isn't removed. No worked example/test flow using
+`gs4` exists yet in `test-flows/` -- a real on-device pass (CYD or TiDAL) is still the actual gate,
+not this off-device work.
+
+**`@micropython.viper` mechanism spiked off-device, 2026-09-18 -- not yet on this project's own
+hardware.** Before committing to the codegen above, a standalone spike (not checked into this repo)
+ran `@micropython.viper`-typed gs4/gs2/mono expansion loops against a freshly-built MicroPython
+unix-port interpreter: correctness-checked, then timed at 0.25ms/0.23ms/0.38ms per 240x320 frame on
+that (x86) dev machine -- confirms the mechanism itself works with no syntax/semantic surprises and
+that the loop is very unlikely to be the CPU bottleneck relative to SPI transfer time. This is NOT a
+real-hardware result (different CPU entirely, and MicroPython's own SPI driver -- the actual
+bottleneck per the corroborating GS4 account above -- isn't exercised by this spike at all). The
+2-row expansion granularity and the ~11-color Material palette are also still to be tried on real
+hardware. Full method + numbers: `docs/working-notes/learnings/micropython-device-runtime.md`.

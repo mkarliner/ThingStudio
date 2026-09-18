@@ -299,3 +299,79 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
   raised in the same conversation (`outstanding-items.md`). The separate framebuffer-memory problem
   the CYD session's `MemoryError` surfaced (full RGB565 frame too big for classic ESP32 heap) is
   scoped, not solved, as its own item (`outstanding-items/display-spi-framebuffer-memory.md`).
+
+- **2026-09-18 -- `display_spi` framebuffer-memory fix: option 1 chosen, extended to four frame
+  depths, palette-driven throughout.** Mike's call on the architectural fork
+  `outstanding-items/display-spi-framebuffer-memory.md` flagged (asked for explicitly via
+  `AskUserQuestion`, per that note's own instruction not to default to either shape): `display_spi`
+  grows real properties and does the expansion internally, rather than staying dumb with a documented
+  function-node pattern. Extended beyond that note's binary rgb565/gs4 framing on Mike's own ask --
+  also support 2-bit and 1-bit depths for more constrained devices. Maps directly onto MicroPython's
+  own `framebuf` module formats: `frameFormat` will be `"rgb565"` (default, unchanged, `RGB565`,
+  16bpp), `"gs4"` (`GS4_HMSB`, 4bpp), `"gs2"` (`GS2_HMSB`, 2bpp), or `"mono"` (a `MONO_*` variant, 1bpp,
+  exact variant TBD). Memory for a 240x320 frame: 153,600 / 38,400 / 19,200 / 9,600 bytes respectively.
+  Second decision, same session: all three reduced depths are palette-driven, not hardcoded
+  gray/black-white ramps -- one `palette` property, always 16 RGB565 entries regardless of
+  `frameFormat`, with `gs4`/`gs2`/`mono` reading the first 16/4/2 entries. Keeps one consistent
+  expansion-codegen shape across all three depths and leaves room for a tinted low-color panel (e.g.
+  amber-on-black) rather than forcing literal grayscale/black-white. Full write-up, including what's
+  still not decided (default `gs2`/`mono` palette seeding, which `MONO_*` bit-packing variant, whether
+  `gs2`/`mono` ship in the same change as `gs4` or as a fast-follow, row-batching size per depth):
+  Claude-project doc `display-spi-framebuffer-format-decision.md` (ThingStudio project, not yet
+  transcribed into this repo in full -- do that once implementation actually starts). Not built.
+  `outstanding-items/display-spi-framebuffer-memory.md`'s architectural-fork section updated to point
+  here.
+
+- **2026-09-18 -- `@micropython.viper` GS4/GS2/mono expansion-loop spike: mechanism confirmed
+  off-device, real-hardware timing still open.** Before committing engineering time to the codegen
+  above, ran a standalone spike (not checked into this repo) against a freshly-built MicroPython
+  unix-port interpreter: `@micropython.viper`-typed (`ptr8`/`ptr16` params) nibble/bit-unpack +
+  16-entry-palette-lookup loops for all three reduced depths, correctness-checked against hand-derived
+  expected bytes, then timed. Results on that x86 dev machine, 240x320 frame: gs4 0.25ms, gs2 0.23ms,
+  mono 0.38ms (all far under the source driver's ~100ms/frame target), a ~42x speedup over plain Python
+  for gs4. Confirms the `@micropython.viper` mechanism itself has no syntax/semantic surprises and that
+  the expansion loop is very unlikely to be the CPU bottleneck relative to SPI transfer time -- but
+  this is explicitly NOT a real-hardware result (x86 dev CPU, not ESP32 Xtensa; MicroPython's own SPI
+  driver, the actual bottleneck in the corroborating account, isn't exercised at all). A real CYD/
+  TiDAL pass is still needed before the "under 100ms" target is confirmed for this project's own
+  boards. Full method + numbers: `docs/working-notes/learnings/micropython-device-runtime.md`.
+- **2026-09-18 -- `frameFormat: "gs4"` built (the decision two entries above, `gs4` slice only --
+  `gs2`/`mono` still not built).** `display-spi.ts`: `frameFormat` (`"rgb565"` default | `"gs4"`) and
+  `palette` (16 RGB565 entries, `DEFAULT_PALETTE_GS4` a hand-verified placeholder pending Mike's real
+  values) properties, validated the same way every other property in this file is. In `"gs4"` mode,
+  `expectedBytes` is `Math.ceil(width / 2) * height` (GS4_HMSB's real row-padded stride, confirmed by
+  reading MicroPython's own `extmod/modframebuf.c` directly rather than assumed -- differs from a flat
+  `ceil(w*h/2)` on an odd width like TiDAL's 135). Expansion is a per-instance `@micropython.viper`-
+  decorated helper (typed `ptr8`/`ptr16` params, the mechanism the entry above spiked off-device),
+  streamed 2 rows/transaction via the vendored driver's own `set_window()` + `write(None, ...)`
+  primitives rather than `blit_buffer()` (which assumes RGB565). Mirrored into `nodes.ts`'s typed
+  property defaults (frameFormat/palette added, `"rgb565"`-default so a freshly-dropped node still
+  compiles the same as before) and `PropertyPanel.vue` (a frame-format dropdown; palette has no
+  color-picker UI yet, flow-file-only, same gap `colorOrder`/`invertColors`/`dataLatchOrder` already
+  have -- found while making this change, not fixed here, flagged for Mike separately).
+  `docs/user-guide/nodes/display-spi.md` updated in the same change (CLAUDE.md's own rule).
+
+  **A real bug found and fixed before landing, not caught by review after the fact:** the first draft
+  of the expansion loop expanded the source buffer as a flat sequence of nibbles. GS4_HMSB pads each
+  row to a whole byte, so on an odd width (TiDAL's 135) that flat approach would expand a row's
+  trailing pad nibble into a phantom extra pixel, shifting every subsequent pixel out of alignment for
+  the rest of the frame -- exactly the "silently wrong beats loudly right" failure CLAUDE.md's fault-
+  handling priority exists to catch, and exactly the kind of bug that only shows up on an odd-width
+  panel, easy to miss testing only against CYD's even-width one. Fixed: the expansion loop is now
+  pixel-count-aware per row (expands exactly `width` pixels, discards any trailing pad nibble) rather
+  than byte-count-aware. Verified twice by hand against the real vendored driver + the existing
+  pymock harness (an odd-width 3x2 case, and a taller 2x3 case split across two row-batches) before
+  writing the equivalent vitest cases from the same hand-derived numbers, specifically to avoid writing
+  a test that would just re-assert the bug. Four new `describe("frameFormat gs4", ...)` cases added to
+  `node-display-spi.test.ts` (odd-width expansion, multi-batch splitting, wrong-length error message,
+  custom-palette override), plus format/palette validation-error cases.
+
+  **Not yet verified by this project's own `tsc --noEmit`/`vitest run`.** Built and reviewed from a
+  session without access to run those (CLAUDE.md's npm/vitest-from-sandbox restriction), so correctness
+  here rests on the manual driver-level verification above plus code review, not an actual green test
+  run -- Mike's own build/test pass is the real gate before trusting this compiles and the new tests
+  pass, same as any other change handed off this way. No `device-runtime/src` file was touched (only
+  read, for the stride finding), so no `_RUNTIME_VERSION`/`EDITOR_TARGET_VERSION` bump applies.
+  `outstanding-items/display-spi-framebuffer-memory.md` updated to match; the stride-padding finding
+  also logged in `learnings/micropython-device-runtime.md`.
+

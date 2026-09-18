@@ -110,6 +110,50 @@ function runSink(properties: Record<string, unknown>, byteLength: number): strin
   });
 }
 
+/** Same real-driver/real-pymock harness as runSink, but for `frameFormat: "gs4"`:
+ * runs the sink once against a specific hex-encoded gs4 payload and returns every
+ * SPI write issued DURING that one sink call (not init-time writes, unlike
+ * runSink's OFFSETS/LAST_WRITES which capture only init). `ptr8 = ptr16 = ptr32
+ * = int` is TEST-HARNESS-ONLY scaffolding (matching time_mock's own pattern) --
+ * codegen itself never imports or defines those names; see fixtures/pymock/
+ * micropython.py's own `viper` stub header for why real MicroPython doesn't need
+ * this but plain CPython does. */
+function runGs4(properties: Record<string, unknown>, payloadHex: string): string {
+  const result = displaySpiNode.codegenSink!(node({ ...properties, frameFormat: "gs4" }), ctx);
+  const setupCode = (result.statements ?? []).map((s) => s.code).join("\n");
+  const dispVarMatch = setupCode.match(/(\w+_disp) = ST7789\(/);
+  if (!dispVarMatch) throw new Error("couldn't find the generated ST7789(...) assignment");
+  const dispVar = dispVarMatch[1];
+  const lines = [
+    "import time",
+    "import sys",
+    "import machine",
+    "import time_mock",
+    'sys.modules["time"] = time_mock',
+    "import runtime",
+    "asyncio = runtime.asyncio",
+    "ptr8 = ptr16 = ptr32 = int",
+    ...(result.imports ?? []),
+    ...(result.statements ?? []).map((s) => s.code),
+    "",
+    `async def ${result.functionName}(msg):`,
+    indent(result.functionBody, 4),
+    "",
+    `_before = len(${dispVar}.spi.writes)`,
+    `msg = {'payload': bytes.fromhex('${payloadHex}'), 'topic': ''}`,
+    `asyncio.run(${result.functionName}(msg))`,
+    `print("PAYLOAD_WRITES", " ".join(w.hex() for w in ${dispVar}.spi.writes[_before:]))`,
+  ];
+  const dir = mkdtempSync(join(tmpdir(), "thingstudio-nodetest-gs4-"));
+  const scriptPath = join(dir, "_snippet.py");
+  writeFileSync(scriptPath, lines.join("\n"));
+  return execFileSync("python3", [scriptPath], {
+    env: { ...process.env, PYTHONPATH: `${pymockDir}${delimiter}${vendorDir}` },
+    encoding: "utf8",
+    timeout: 10_000,
+  });
+}
+
 describe("thingstudio/display_spi node", () => {
   it("constructs the SPI bus/pins and ST7789, and blits a correctly-sized RGB565 buffer", () => {
     // width=4, height=4 -> expected bytes = 4 * 4 * 2 = 32
@@ -242,6 +286,107 @@ describe("thingstudio/display_spi node", () => {
 
     it("rejects an unknown colorOrder", () => {
       expect(() => displaySpiNode.codegenSink!(node({ sck: 12, mosi: 11, dc: 13, colorOrder: "cmyk" }), ctx)).toThrow(/must be "rgb" or "bgr"/);
+    });
+  });
+
+  // 2026-09-18, display-spi-framebuffer-format-decision.md / decisions/
+  // node-authoring.md's 2026-09-18 entries: frameFormat "gs4" landed as
+  // the first reduced-depth format (gs2/mono decided, not yet built).
+  // These tests exist for the same reason the xstart/ystart/MADCTL cases
+  // above do -- off-device coverage for a real correctness subtlety this
+  // file's own header documents, not a re-derivation of it: GS4_HMSB's
+  // per-row byte stride is rounded up to a whole number of bytes, which
+  // differs from a flat width*height/2 buffer size on an ODD width (like
+  // TiDAL's real 135) even though it happens to match on an EVEN width
+  // (like CYD's real 240) -- exactly the kind of thing that passes if you
+  // only ever test the even-width case.
+  describe("frameFormat gs4", () => {
+    it("defaults frameFormat to rgb565 (unchanged behavior) when not set", () => {
+      const output = runSink({ sck: 12, mosi: 11, dc: 13, width: 4, height: 4, xstart: 0, ystart: 0 }, 32);
+      expect(output).toContain("SPI_WRITE 32 bytes");
+    });
+
+    it("rejects an unknown frameFormat", () => {
+      expect(() => displaySpiNode.codegenSink!(node({ sck: 12, mosi: 11, dc: 13, frameFormat: "gs8" }), ctx)).toThrow(/must be one of/);
+    });
+
+    it("accepts the correct byte count for an EVEN width, where a flat w*h/2 formula happens to also be right", () => {
+      // width=4 (even) -> stride 2 bytes/row * height 4 = 8 bytes, the
+      // same number a naive flat ceil(w*h/2) would also give here -- the
+      // even-width case where the two formulas happen to agree (unlike
+      // the odd-width case below, where they don't).
+      const output = runGs4({ sck: 12, mosi: 11, dc: 13, width: 4, height: 4, xstart: 0, ystart: 0 }, "00".repeat(8));
+      const writes = output.match(/PAYLOAD_WRITES (.+)/)?.[1].trim().split(" ") ?? [];
+      // 5 set_window writes + 2 data writes (4 rows / 2 rows-per-batch = 2 batches).
+      expect(writes.length).toBe(7);
+    });
+
+    it("rejects a wrong-length gs4 payload with a clear error naming the real (row-padded) byte count", () => {
+      expect.assertions(1);
+      try {
+        runGs4({ sck: 12, mosi: 11, dc: 13, width: 3, height: 2, xstart: 0, ystart: 0 }, "00".repeat(3));
+      } catch (err) {
+        const stderr = String((err as { stderr?: string }).stderr ?? "");
+        // width=3 (odd) -> stride ceil(3/2)=2 bytes/row * height 2 = 4 bytes,
+        // NOT a flat ceil(3*2/2)=3 -- this is the exact number that would be
+        // wrong if expectedBytes used the naive flat formula.
+        expect(stderr).toContain("display_spi: expected 4 bytes (3x2 gs4/4bpp, 2 bytes/row), got 3");
+      }
+    });
+
+    it("expands an odd-width (3x2) gs4 frame to the correct per-pixel RGB565 bytes, discarding the per-row pad nibble", () => {
+      // Real end-to-end check (hand-derived and independently verified
+      // against the real vendored driver + pymock harness before this
+      // test was written, not just asserted on faith):
+      // row0 byte 0x01 -> pixels (black=0x0000, white=0xffff); row0 byte
+      // 0x2F -> pixel 2 = palette[2] red=0xf800 (low nibble 0xF is the
+      // pad, must be ignored); row1 byte 0x34 -> pixels (green=0x07e0,
+      // blue=0x001f); row1 byte 0x5F -> pixel 2 = palette[5] yellow=0xffe0
+      // (low nibble again padding). Both rows land in ONE batch (height=2,
+      // GS4_ROWS_PER_BATCH=2), so this is a single 12-byte SPI write.
+      const output = runGs4({ sck: 12, mosi: 11, dc: 13, width: 3, height: 2, xstart: 0, ystart: 0 }, "012f345f");
+      expect(output).toContain("PAYLOAD_WRITES");
+      const writes = output.match(/PAYLOAD_WRITES (.+)/)?.[1].trim().split(" ") ?? [];
+      // 5 set_window writes (CASET cmd+data, RASET cmd+data, RAMWR cmd) + 1 data write.
+      expect(writes.length).toBe(6);
+      expect(writes[writes.length - 1]).toBe("0000fffff80007e0001fffe0");
+    });
+
+    it("splits a taller gs4 frame into multiple row-batches (2 rows/transaction)", () => {
+      // height=3, GS4_ROWS_PER_BATCH=2 -> batches of 2 rows then 1 row,
+      // i.e. two separate write(None, ...) data calls, not one.
+      // width=2 (even) -> stride 1 byte/row, 1 pixel-pair/row.
+      // row0 0x01->(black,white), row1 0x23->(red,green), row2 0x45->(blue,yellow).
+      const output = runGs4({ sck: 12, mosi: 11, dc: 13, width: 2, height: 3, xstart: 0, ystart: 0 }, "012345");
+      const writes = output.match(/PAYLOAD_WRITES (.+)/)?.[1].trim().split(" ") ?? [];
+      // 5 set_window writes + 2 data writes (batch of 2 rows, then 1 row) --
+      // verified independently against the real driver before this test was
+      // written (rows 0-1 packed into one write, row 2 into a second).
+      expect(writes.length).toBe(7);
+      expect(writes[5]).toBe("0000fffff80007e0");
+      expect(writes[6]).toBe("001fffe0");
+    });
+
+    it("rejects a palette that isn't exactly 16 entries", () => {
+      expect(() => displaySpiNode.codegenSink!(node({ sck: 12, mosi: 11, dc: 13, frameFormat: "gs4", palette: [0, 1, 2] }), ctx)).toThrow(
+        /exactly 16 RGB565 values/,
+      );
+    });
+
+    it("rejects a palette entry out of RGB565 range", () => {
+      expect(() =>
+        displaySpiNode.codegenSink!(node({ sck: 12, mosi: 11, dc: 13, frameFormat: "gs4", palette: new Array(16).fill(0x10000) }), ctx),
+      ).toThrow(/palette\[0\]/);
+    });
+
+    it("honors a custom palette instead of the default", () => {
+      const customPalette = new Array(16).fill(0);
+      customPalette[0] = 0x1234;
+      customPalette[1] = 0x5678;
+      // width=2, height=1 -> one byte, hi=0 -> palette[0], lo=1 -> palette[1].
+      const output = runGs4({ sck: 12, mosi: 11, dc: 13, width: 2, height: 1, xstart: 0, ystart: 0, palette: customPalette }, "01");
+      const writes = output.match(/PAYLOAD_WRITES (.+)/)?.[1].trim().split(" ") ?? [];
+      expect(writes[writes.length - 1]).toBe("12345678");
     });
   });
 });
