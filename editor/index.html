@@ -69,7 +69,26 @@
      lives here rather than in each component's own scoped style so this
      file stays the one place that lays out the three-region canvas area,
      matching how #sidebar's two .panel children are laid out below. */
-  #palette-mount { flex: 0 0 auto; }
+  /* overflow-y: auto, 2026-09-17 -- #palette-mount's own box was
+     already correctly stretched to #main's height by flex's default
+     align-items: stretch (confirmed with a real headless-browser check,
+     not assumed), but with no `overflow` rule of its own it stayed at
+     the initial `visible` -- so once the palette's node list grew
+     tall enough to exceed that box (the display_spi/display_i2c
+     addition pushed it over), the excess content just painted past the
+     box's own edges, unclipped and NOT scrollable (confirmed:
+     `mount.scrollTop = <big number>` was a no-op before this fix, a
+     real difference from a merely-hidden scrollbar), rather than
+     wrapping into a scroll container -- Mike's "run off the bottom...
+     Chrome not showing a scroll bar" report, reproduced and fixed with
+     a real before/after check. min-height: 0 added alongside for
+     parity with #property-panel-mount/#sidebar's own established
+     pattern just below/above, though it wasn't the operative fix here
+     (this box's stretched height didn't need it). This rule just never
+     got `overflow-y: auto` when the palette mount point was first added
+     (Phase 3 item 1/13), because the list was short enough then not to
+     visibly overflow. */
+  #palette-mount { flex: 0 0 auto; min-height: 0; overflow-y: auto; }
   #property-panel-mount { flex: 0 0 auto; background: var(--panel);
     border-left: 1px solid var(--border); min-height: 0; overflow-y: auto; display: flex; }
 
