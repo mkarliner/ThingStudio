@@ -130,9 +130,14 @@ time for every one of them.
 
 ## 2. Touch-screen driver, architected for multiple touch controllers
 
-Not researched yet — this needs its own scoping pass, the same kind `framebuffer-display-node-scoping.md`
-did for displays before `display_spi`/`display_i2c` got built. Starting hypotheses, to validate rather
-than assume:
+**Superseded, 2026-09-18 -- see `touch-input-briefing.md` for the real, researched version.** The
+hypotheses below (kept for the historical record only) turned out directionally right -- SPI/I2C split,
+event-source codegen pattern -- but that doc has actual hardware facts (CYD's XPT2046 pin mapping,
+confirmed a separate bus from the display, not shared), license-checked driver candidates, and the real
+open design questions (calibration UX, event/payload shape, multi-touch scope) this placeholder didn't
+have yet. Start there, not here.
+
+Original starting hypotheses, superseded above, kept for context only:
 
 - **Likely mirrors the display bus-family split** (`display_spi`/`display_i2c`'s own converged design,
   "the framebuffer contract, not one universal node" — Mike's steer that session): touch controllers
