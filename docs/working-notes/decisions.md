@@ -82,7 +82,10 @@ Hinch's `micropython-micro-gui`/`micropython-touch` rejected as the runtime GUI 
 code generator to emit against, though individual widget draw routines and `Writer`/`font_to_py` remain
 candidates to vendor); GUI layout required to be container-based rather than absolute coordinates, which puts
 the layout engine in the editor at compile time and ships nothing to the device. Supersedes
-`cyd-touch-gui-flash-budget-briefing.md`'s item 3. 2 entries: `docs/working-notes/decisions/gui-layout.md`.
+`cyd-touch-gui-flash-budget-briefing.md`'s item 3. Then (2026-09-22): the GUI gets its own editor view
+parallel to the flow view, GUI nodes are two-faced (one record, both views), MVC guides the design,
+superseding the named-slot design; unknown is a first-class value state in the GUI's visual language.
+4 entries: `docs/working-notes/decisions/gui-layout.md`.
 
 ## Session sequencing
 

@@ -28,3 +28,21 @@ measure/arrange without its runtime geometry-negotiation protocol; layout overfl
 with full attribution rather than a visual bug found on hardware. Recommended -- **not decided** -- shape
 is a hybrid: screen structure as a compiled tree owned by a `ui_screen` config node, widgets as canvas
 nodes bound into named slots in that tree. ([detail](../gui-layout-widget-system-scoping.md))
+
+**2026-09-22 -- the GUI gets its own editor view; GUI nodes are two-faced; MVC is the guiding pattern.**
+Mike's direction: GUI layout and event management are orthogonal to the flow paradigm, so they get a
+parallel GUI view with drag-and-drop layout into container widgets. A GUI node is one record shown in both
+views -- its data face (value in, events out) in the flow view, its presentation face (position in a
+container tree) in the GUI view. Container trees live in a new `screens` section of the flow file,
+referencing widget nodes by id (not `layout`, which already means canvas positions). **Supersedes the
+2026-09-18 named-slot design**, which was a workaround for not having a layout view. The recommended MVC
+split (flow owns values, GUI subsystem owns view and controller, interaction state never enters the flow)
+and the two-call device boundary (`set_value` in, `event` out) are recommendations, not decisions.
+([detail](../gui-layout-widget-system-scoping.md))
+
+**2026-09-22 -- unknown is a first-class value state in the GUI's visual language.** Mike's requirement:
+in real IoT use a value may be unknown until an external device or system reports it, so the GUI must show
+that rather than rely on default initial values. Flow-fed widgets start unknown on every boot and redeploy.
+The recommended wider state set (unknown / known / stale / pending / error), its mono-safe visual
+treatments, and `payload: None` as the unknown signal are recommendations, not decisions.
+([detail](../gui-layout-widget-system-scoping.md))
