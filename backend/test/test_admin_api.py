@@ -258,6 +258,118 @@ async def test_credential_routes_covered_by_host_allowlist_when_wired_into_real_
         assert resp_ok.status == 200
 
 
+# -- per-node presets ---------------------------------------------------
+# docs/working-notes/outstanding-items/presets-design.md. {type} is open
+# (any node-kind string), not a fixed tuple -- so there's no "unknown type"
+# 400 case to test the way credentials has one; persisted_store.py's own
+# name-pattern rejection is exercised in test_persisted_store.py instead.
+
+
+@pytest.mark.asyncio
+async def test_list_presets_starts_empty(tmp_path) -> None:
+    async with _client(tmp_path) as client:
+        resp = await client.get("/api/presets/display_spi")
+        assert resp.status == 200
+        assert await resp.json() == {"presets": []}
+
+
+@pytest.mark.asyncio
+async def test_put_then_get_preset_round_trips(tmp_path) -> None:
+    body = json.dumps({"controller": "st7789", "sck": 12, "mosi": 11, "dc": 13})
+    async with _client(tmp_path) as client:
+        put_resp = await client.put("/api/presets/display_spi/cyd", data=body)
+        assert put_resp.status == 200
+        assert (await put_resp.json())["ok"] is True
+
+        get_resp = await client.get("/api/presets/display_spi/cyd")
+        assert get_resp.status == 200
+        assert get_resp.content_type == "application/json"
+        assert await get_resp.text() == body
+
+        list_resp = await client.get("/api/presets/display_spi")
+        assert (await list_resp.json())["presets"] == [{"name": "cyd", "valid": True, "error": None}]
+
+
+@pytest.mark.asyncio
+async def test_get_missing_preset_is_404(tmp_path) -> None:
+    async with _client(tmp_path) as client:
+        resp = await client.get("/api/presets/display_spi/nope")
+        assert resp.status == 404
+        assert "NODE_ERROR" in (await resp.json())["error"]
+
+
+@pytest.mark.asyncio
+async def test_put_invalid_json_preset_is_400(tmp_path) -> None:
+    async with _client(tmp_path) as client:
+        resp = await client.put("/api/presets/display_spi/bad", data="{not json")
+        assert resp.status == 400
+        assert "NODE_ERROR" in (await resp.json())["error"]
+
+
+@pytest.mark.asyncio
+async def test_preset_types_are_independent_namespaces(tmp_path) -> None:
+    async with _client(tmp_path) as client:
+        await client.put("/api/presets/display_spi/shared-name", data='{"sck": 12}')
+        await client.put("/api/presets/display_i2c/shared-name", data='{"scl": 22}')
+        spi_list = await client.get("/api/presets/display_spi")
+        i2c_list = await client.get("/api/presets/display_i2c")
+        assert (await spi_list.json())["presets"] == [{"name": "shared-name", "valid": True, "error": None}]
+        assert (await i2c_list.json())["presets"] == [{"name": "shared-name", "valid": True, "error": None}]
+
+
+@pytest.mark.asyncio
+async def test_delete_preset(tmp_path) -> None:
+    async with _client(tmp_path) as client:
+        await client.put("/api/presets/display_spi/cyd", data='{"sck": 12}')
+        del_resp = await client.delete("/api/presets/display_spi/cyd")
+        assert del_resp.status == 200
+        get_resp = await client.get("/api/presets/display_spi/cyd")
+        assert get_resp.status == 404
+
+
+@pytest.mark.asyncio
+async def test_delete_missing_preset_is_404(tmp_path) -> None:
+    async with _client(tmp_path) as client:
+        resp = await client.delete("/api/presets/display_spi/nope")
+        assert resp.status == 404
+
+
+@pytest.mark.asyncio
+async def test_list_presets_flags_a_hand_edited_broken_file(tmp_path) -> None:
+    # Simulates a preset file broken by a hand edit outside the app (Mike's
+    # explicit ask: this has to be "a very obvious syntax error flagged"),
+    # written directly rather than through PUT, which would itself reject
+    # the bad JSON.
+    async with _client(tmp_path) as client:
+        await client.put("/api/presets/display_spi/good", data='{"sck": 12}')
+        d = tmp_path / ".thingstudio" / "presets" / "display_spi"
+        (d / "broken.json").write_text("{not valid json", encoding="utf-8")
+
+        list_resp = await client.get("/api/presets/display_spi")
+        assert list_resp.status == 200
+        presets = {p["name"]: p for p in (await list_resp.json())["presets"]}
+        assert presets["good"]["valid"] is True
+        assert presets["good"]["error"] is None
+        assert presets["broken"]["valid"] is False
+        assert presets["broken"]["error"] is not None and "not valid JSON" in presets["broken"]["error"]
+
+        get_resp = await client.get("/api/presets/display_spi/broken")
+        assert get_resp.status == 400
+        assert "NODE_ERROR" in (await get_resp.json())["error"]
+
+
+@pytest.mark.asyncio
+async def test_preset_routes_covered_by_host_allowlist_when_wired_into_real_app(tmp_path) -> None:
+    from thingstudio_backend.app import create_app
+
+    app = create_app(data_dir=tmp_path / ".thingstudio")
+    async with TestClient(TestServer(app)) as client:
+        resp = await client.get("/api/presets/display_spi", headers={"Host": "evil.example"})
+        assert resp.status == 403
+        resp_ok = await client.get("/api/presets/display_spi", headers={"Host": "localhost"})
+        assert resp_ok.status == 200
+
+
 # -- posture-1 coverage -------------------------------------------------------
 # (Confirms these routes inherit the Host allowlist the same way /ws does --
 # not re-testing the middleware itself, test_middleware.py already does

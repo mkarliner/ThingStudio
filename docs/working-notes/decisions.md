@@ -137,6 +137,31 @@ maps to `armv6m` (confirmed, Cortex-M0+); RP2350 maps to `armv7emsp`, sourced fr
 maintainer discussion thread, not this project's own hardware -- flagged unconfirmed, the main reason
 the manual override exists at all for v1. 1 entry: `docs/working-notes/decisions/board-aware-compile.md`.
 
+## Presets (named, saveable, human-editable per-node property bundles)
+
+**2026-09-22 -- MVP item 4 built (per-node scope only, NOT board/chip-family auto-seeding), NOT yet
+verified against real hardware.** New `~/.thingstudio/presets/<type>/<name>.json` store
+(`PersistedStore.list_presets`/`read_preset`/`write_preset`/`delete_preset` + mirrored
+`/api/presets/{type}[/{name}]` routes), an open `type` namespace rather than credentials' fixed
+wifi/mqtt-broker tuple. Copy-on-apply, confirmed with Mike over a live-reference design (presets hold
+no secret, so credentials' "keep the real value out of the flow file" reasoning doesn't apply) --
+selecting a preset copies its values onto `node.properties` once, no persisted reference stays behind.
+Per Mike's explicit follow-up when confirming this ("if a user adds a preset file manually that is
+invalid there should a very obvious syntax error flagged"), `list_presets()` eagerly validates every
+file's JSON and reports `valid`/`error` per entry — the one real behavioral departure from the
+credentials pattern it otherwise mirrors, which only validates at write time. New `PresetRefField.vue`
+widget (dropdown + save-as-name, invalid entries shown disabled with a location-naming warning), wired
+into `PropertyPanel.vue`'s `display_spi`/`display_i2c` blocks — the two kinds Mike named explicitly as
+"complex to set up." Picked up in the same change: `display_spi`'s `colorOrder`/`invertColors`/
+`dataLatchOrder` (MVP item 5's own named gap) had no property-panel fields at all before this, which
+would have undercut a "save this display's SPI setup as a preset" feature; `nodes.ts`'s `DisplaySpiNode`
+defaults now match `display-spi.ts`'s own codegen fallback values, closing that gap for those three
+properties (`palette` remains the one display_spi property with no form field — out of scope, a separate
+color-picker UI). `board-processor-reference-data.md` (board-family auto-seeded defaults across several
+nodes at once) stays unbuilt, its own separately-scoped item — this only supplies the storage/UI
+mechanism a future board-preset type could sit on top of. 1 entry:
+`docs/working-notes/decisions/presets.md`.
+
 ## What this list doesn't include
 
 Small per-file implementation judgment calls (exact property names, which

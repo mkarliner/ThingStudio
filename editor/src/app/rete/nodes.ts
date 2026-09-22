@@ -597,6 +597,9 @@ export class DisplaySpiNode extends ClassicPreset.Node {
     width: number;
     height: number;
     rotation: number;
+    colorOrder: "rgb" | "bgr";
+    invertColors: boolean;
+    dataLatchOrder: boolean;
     xstart: number;
     ystart: number;
   } = {
@@ -625,6 +628,24 @@ export class DisplaySpiNode extends ClassicPreset.Node {
     width: 135,
     height: 240,
     rotation: 0,
+    // colorOrder/invertColors/dataLatchOrder added 2026-09-22, closing the
+    // PropertyPanel.vue gap MVP item 5 named explicitly ("colorOrder,
+    // invertColors, dataLatchOrder are missing today") -- picked up
+    // alongside the presets work (docs/working-notes/outstanding-items/
+    // presets-design.md) since a "save this display's SPI setup as a
+    // preset" feature is a lot less useful if three of its real properties
+    // can't be seen or set from the panel that's doing the saving. Values
+    // match display-spi.ts's own codegen fallback defaults exactly (its
+    // `?? "bgr"` / `=== undefined ? false` / `=== undefined ? true`), same
+    // "a freshly-dropped node and a freshly-omitted flow-file property
+    // compile to the same thing" invariant this class's own header states
+    // -- NOT the CYD-tuned `rotation: 1` default that same header
+    // paragraph in display-spi.ts also mentions; this class's `rotation: 0`
+    // above predates that CYD default change and is left alone here, out
+    // of scope for this change.
+    colorOrder: "bgr",
+    invertColors: false,
+    dataLatchOrder: true,
     xstart: -1,
     ystart: -1,
   };

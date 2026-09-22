@@ -4,6 +4,11 @@ Pushes an already-rendered frame to an SPI color TFT panel (ST7789 today — the
 leaves room for others later). Build the frame upstream (a `function` node using `framebuf.FrameBuffer`,
 or eventually a graphics-framework node) and wire it into this node's input.
 
+This node's property panel has a **preset** picker (see [Canvas basics](../canvas-basics.md#presets)) —
+save a real panel's whole setup (pins, bus, resolution, rotation, color order, and so on) under a name
+once, then load it again on this or another `display_spi` node instead of retyping every field. The CYD
+defaults below are exactly what saving a "cyd" preset from a correctly-configured node would capture.
+
 ## Properties
 
 - **controller** — the display chip. Only `ST7789` today.

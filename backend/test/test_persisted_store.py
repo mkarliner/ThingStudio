@@ -15,6 +15,7 @@ from thingstudio_backend.persisted_store import (
     PersistedStore,
     PersistedStoreError,
     PersistedStoreNotFoundError,
+    PresetInfo,
 )
 
 
@@ -244,3 +245,131 @@ def test_credential_name_cannot_escape_type_dir_via_traversal(tmp_path) -> None:
     with pytest.raises(PersistedStoreError):
         store.write_credential("wifi", "../outside", '{"ssid": "x"}')
     assert not outside.exists()
+
+
+# -- per-node presets ---------------------------------------------------
+# Unlike credentials, `type` here is an open namespace (any string passing
+# the same name pattern), not a fixed tuple -- so "invalid type" tests below
+# reuse credentials' bad-name cases, not a hardcoded-unknown-type case.
+
+
+def test_list_presets_starts_empty(tmp_path) -> None:
+    store = _store(tmp_path)
+    assert store.list_presets("display_spi") == []
+
+
+def test_write_then_read_preset_round_trips(tmp_path) -> None:
+    store = _store(tmp_path)
+    text = json.dumps({"controller": "st7789", "spiBus": 2, "sck": 12, "mosi": 11, "dc": 13})
+    store.write_preset("display_spi", "cyd", text)
+    assert store.read_preset("display_spi", "cyd") == text
+
+
+def test_list_presets_reports_valid_entries(tmp_path) -> None:
+    store = _store(tmp_path)
+    store.write_preset("display_spi", "cyd", '{"sck": 12}')
+    store.write_preset("display_spi", "tidal", '{"sck": 5}')
+    assert store.list_presets("display_spi") == [
+        PresetInfo(name="cyd", valid=True),
+        PresetInfo(name="tidal", valid=True),
+    ]
+
+
+def test_read_missing_preset_raises_not_found(tmp_path) -> None:
+    store = _store(tmp_path)
+    with pytest.raises(PersistedStoreNotFoundError):
+        store.read_preset("display_spi", "nope")
+
+
+def test_write_preset_rejects_invalid_json(tmp_path) -> None:
+    store = _store(tmp_path)
+    with pytest.raises(PersistedStoreError):
+        store.write_preset("display_spi", "bad", "{not json")
+    assert store.list_presets("display_spi") == []
+
+
+def test_delete_preset_removes_it(tmp_path) -> None:
+    store = _store(tmp_path)
+    store.write_preset("display_spi", "cyd", '{"sck": 12}')
+    store.delete_preset("display_spi", "cyd")
+    assert store.list_presets("display_spi") == []
+    with pytest.raises(PersistedStoreNotFoundError):
+        store.read_preset("display_spi", "cyd")
+
+
+def test_delete_missing_preset_raises_not_found(tmp_path) -> None:
+    store = _store(tmp_path)
+    with pytest.raises(PersistedStoreNotFoundError):
+        store.delete_preset("display_spi", "nope")
+
+
+@pytest.mark.parametrize("bad_type", ["", "a/b", "../escape"])
+def test_invalid_preset_type_names_rejected(tmp_path, bad_type) -> None:
+    store = _store(tmp_path)
+    with pytest.raises(PersistedStoreError):
+        store.list_presets(bad_type)
+    with pytest.raises(PersistedStoreError):
+        store.write_preset(bad_type, "n", "{}")
+
+
+@pytest.mark.parametrize("bad_name", ["../escape", "a/b", ""])
+def test_invalid_preset_names_rejected(tmp_path, bad_name) -> None:
+    store = _store(tmp_path)
+    with pytest.raises(PersistedStoreError):
+        store.write_preset("display_spi", bad_name, "{}")
+
+
+def test_preset_name_cannot_escape_type_dir_via_traversal(tmp_path) -> None:
+    store = _store(tmp_path)
+    outside = tmp_path / "outside.json"
+    with pytest.raises(PersistedStoreError):
+        store.write_preset("display_spi", "../outside", "{}")
+    assert not outside.exists()
+
+
+def test_preset_types_are_independent_namespaces(tmp_path) -> None:
+    store = _store(tmp_path)
+    store.write_preset("display_spi", "shared-name", '{"sck": 12}')
+    store.write_preset("display_i2c", "shared-name", '{"scl": 22}')
+    assert store.list_presets("display_spi") == [PresetInfo(name="shared-name", valid=True)]
+    assert store.list_presets("display_i2c") == [PresetInfo(name="shared-name", valid=True)]
+
+
+# -- hand-edited-file validity flagging (the one real departure from
+# credentials' write-time-only validation, per Mike's explicit ask: "if a
+# user adds a preset file manually that is invalid there should a very
+# obvious syntax error flagged"). Written directly via pathlib rather than
+# through write_preset(), which would itself reject the bad JSON -- these
+# simulate a file edited by hand outside the app, after Thingstudio wrote
+# it (or created fresh by the user).
+
+
+def test_list_presets_flags_a_hand_edited_broken_file(tmp_path) -> None:
+    store = _store(tmp_path)
+    d = store.presets_dir / "display_spi"
+    d.mkdir(parents=True)
+    (d / "broken.json").write_text("{not valid json", encoding="utf-8")
+    infos = store.list_presets("display_spi")
+    assert len(infos) == 1
+    assert infos[0].name == "broken"
+    assert infos[0].valid is False
+    assert infos[0].error is not None and "not valid JSON" in infos[0].error
+
+
+def test_list_presets_reports_valid_and_invalid_entries_together(tmp_path) -> None:
+    store = _store(tmp_path)
+    store.write_preset("display_spi", "good", '{"sck": 12}')
+    d = store.presets_dir / "display_spi"
+    (d / "broken.json").write_text("{not valid json", encoding="utf-8")
+    infos = {info.name: info for info in store.list_presets("display_spi")}
+    assert infos["good"].valid is True
+    assert infos["broken"].valid is False
+
+
+def test_read_preset_raises_for_a_hand_edited_broken_file(tmp_path) -> None:
+    store = _store(tmp_path)
+    d = store.presets_dir / "display_spi"
+    d.mkdir(parents=True)
+    (d / "broken.json").write_text("{not valid json", encoding="utf-8")
+    with pytest.raises(PersistedStoreError):
+        store.read_preset("display_spi", "broken")

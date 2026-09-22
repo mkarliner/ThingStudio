@@ -11,7 +11,10 @@
 #
 # Covered by the same posture-1 Host-allowlist middleware as every other
 # route -- app.py installs it at the Application level, not per-route, so
-# nothing here needs its own auth wiring. The auth consequence the
+# nothing here needs its own auth wiring. Presets (added 2026-09-22,
+# persisted_store.py's own header has the full design story) get the same
+# treatment as credentials below, one further route group down. The auth
+# consequence the
 # outstanding-item doc flagged ("an HTTP admin API needs the same
 # Host-allowlist... treatment as the WS upgrade") is satisfied by that
 # existing app-level middleware, not by anything new.
@@ -31,12 +34,24 @@ import json
 
 from aiohttp import web
 
-from .persisted_store import PersistedStore, PersistedStoreError, PersistedStoreNotFoundError
+from .persisted_store import (
+    PersistedStore,
+    PersistedStoreError,
+    PersistedStoreNotFoundError,
+    PresetInfo,
+)
 
 
 def _error_response(exc: PersistedStoreError) -> web.Response:
     status = 404 if isinstance(exc, PersistedStoreNotFoundError) else 400
     return web.json_response({"error": str(exc)}, status=status)
+
+
+def _preset_info_json(info: PresetInfo) -> dict:
+    # error is always None when valid is True (PresetInfo's own invariant) --
+    # included either way so the editor doesn't need a second round trip to
+    # find out *why* an entry it can already see is invalid.
+    return {"name": info.name, "valid": info.valid, "error": info.error}
 
 
 def make_admin_routes(store: PersistedStore) -> list[web.RouteDef]:
@@ -155,6 +170,50 @@ def make_admin_routes(store: PersistedStore) -> list[web.RouteDef]:
             return _error_response(exc)
         return web.json_response({"ok": True})
 
+    # -- per-node presets --------------------------------------------------
+    # docs/working-notes/outstanding-items/presets-design.md. {type} is an
+    # open namespace (any node kind string), unlike {type} on the
+    # credentials routes above which persisted_store.py restricts to
+    # wifi/mqtt-broker -- an invalid preset type still maps to 400 via
+    # _error_response below, same as any other bad-name case, not a
+    # routing-level 404.
+
+    async def list_presets(request: web.Request) -> web.Response:
+        preset_type = request.match_info["type"]
+        try:
+            infos = store.list_presets(preset_type)
+        except PersistedStoreError as exc:
+            return _error_response(exc)
+        return web.json_response({"presets": [_preset_info_json(info) for info in infos]})
+
+    async def get_preset(request: web.Request) -> web.Response:
+        preset_type = request.match_info["type"]
+        name = request.match_info["name"]
+        try:
+            text = store.read_preset(preset_type, name)
+        except PersistedStoreError as exc:
+            return _error_response(exc)
+        return web.Response(text=text, content_type="application/json")
+
+    async def put_preset(request: web.Request) -> web.Response:
+        preset_type = request.match_info["type"]
+        name = request.match_info["name"]
+        text = await request.text()
+        try:
+            store.write_preset(preset_type, name, text)
+        except PersistedStoreError as exc:
+            return _error_response(exc)
+        return web.json_response({"ok": True})
+
+    async def delete_preset(request: web.Request) -> web.Response:
+        preset_type = request.match_info["type"]
+        name = request.match_info["name"]
+        try:
+            store.delete_preset(preset_type, name)
+        except PersistedStoreError as exc:
+            return _error_response(exc)
+        return web.json_response({"ok": True})
+
     return [
         web.get("/api/flows", list_flows),
         web.get("/api/flows/{name}", get_flow),
@@ -168,4 +227,8 @@ def make_admin_routes(store: PersistedStore) -> list[web.RouteDef]:
         web.get("/api/credentials/{type}/{name}", get_credential),
         web.put("/api/credentials/{type}/{name}", put_credential),
         web.delete("/api/credentials/{type}/{name}", delete_credential),
+        web.get("/api/presets/{type}", list_presets),
+        web.get("/api/presets/{type}/{name}", get_preset),
+        web.put("/api/presets/{type}/{name}", put_preset),
+        web.delete("/api/presets/{type}/{name}", delete_preset),
     ]

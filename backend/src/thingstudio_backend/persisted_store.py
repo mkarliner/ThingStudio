@@ -17,6 +17,9 @@
 #                                         (custom-node-authoring-scoping.md
 #                                         Decision 3/4's two-file package
 #                                         format, mirrored here unchanged)
+#     presets/<type>/<name>.json      -- named per-node-kind property
+#                                         bundles (added 2026-09-22, see the
+#                                         "Presets" section further down)
 #
 # Deliberately flat, no subdirectories/nesting -- design doc §6 imagines a
 # project directory of many flow files (a fleet of devices), but nothing
@@ -51,6 +54,43 @@
 # `~/.thingstudio` already has (posture-1 auth is a Host-allowlist only;
 # see credential-storage-design.md's own "named security trade-off" for
 # why this isn't a new regression).
+#
+# Presets: added 2026-09-22 (docs/working-notes/outstanding-items/
+# presets-design.md, confirmed with Mike 2026-09-22) -- MVP item 4 ("sensible
+# defaults per chip family") and road-to-mvp.md's own "things like board and
+# processor definitions should be human editable files in the thingstudio
+# config folder... spi setup should be saveable with a name" ask. Named,
+# per-node-kind bundles of property values:
+#
+#   ~/.thingstudio/
+#     presets/<type>/<name>.json    -- <type> is a node kind string (e.g.
+#                                        "display_spi"), an OPEN namespace
+#                                        unlike credentials' fixed
+#                                        wifi/mqtt-broker tuple: presets
+#                                        cover whichever node kinds are
+#                                        complex enough to deserve one, no
+#                                        backend code change needed to add
+#                                        a new type later.
+#
+# Same opaque-JSON-blob treatment as flows/credentials -- this module never
+# knows or validates which keys a given preset type's bundle holds (that's
+# editor-side, same "backend stays thin" split as everywhere else in this
+# file).
+#
+# One deliberate departure from the credentials pattern above:
+# credentials are validated for JSON syntax only at write time
+# (write_credential), because nothing expects a human to hand-edit a
+# credential file directly. Presets are explicitly meant to be hand-edited
+# outside the app (Mike's own "human editable files" framing) -- so a
+# broken hand-edit has to be caught and flagged loudly at *list* time too,
+# not just fail later when someone tries to load it. list_presets()
+# therefore eagerly parses every file on disk and returns a `valid`/`error`
+# flag per entry (see `PresetInfo` below); read_preset() re-validates for
+# the same reason (a file can be edited-broken between a list and a read
+# call). v1 scope is per-node presets only, no board/processor auto-seeding
+# (board-processor-reference-data.md remains its own, separately-scoped,
+# not-yet-built item -- this module only supplies the storage mechanism a
+# future board-preset type could sit on top of).
 #
 # This module never parses a flow file's *schema* -- only enough to catch
 # obviously-corrupt writes (valid JSON) before they land on disk. Full
@@ -113,6 +153,18 @@ class CustomNodePackage:
     implementation: str
 
 
+@dataclass(frozen=True)
+class PresetInfo:
+    """One entry in list_presets()'s result. `error` is None exactly when
+    `valid` is True -- split into two fields rather than `error: str | None`
+    doing double duty, so a caller checking `.valid` doesn't also need to
+    remember that null-vs-non-null is the same signal."""
+
+    name: str
+    valid: bool
+    error: str | None = None
+
+
 def _validate_credential_type(credential_type: str) -> str:
     if credential_type not in _CREDENTIAL_TYPES:
         raise PersistedStoreError(
@@ -166,6 +218,7 @@ class PersistedStore:
         self.flows_dir = self.base_dir / "flows"
         self.custom_nodes_dir = self.base_dir / "custom-nodes"
         self.credentials_dir = self.base_dir / "credentials"
+        self.presets_dir = self.base_dir / "presets"
 
     # -- flows --------------------------------------------------------
 
@@ -301,3 +354,65 @@ class PersistedStore:
             ) from exc
         except OSError as exc:
             raise PersistedStoreError(f"NODE_ERROR: failed deleting {credential_type} credential {name!r}: {exc}") from exc
+
+    # -- per-node presets --------------------------------------------------
+    # docs/working-notes/outstanding-items/presets-design.md. Preset `type`
+    # is an open namespace (any string passing _validate_name, same charset
+    # as a name) rather than credentials' fixed _CREDENTIAL_TYPES tuple --
+    # see this file's header for why. Eager JSON validity checking at list
+    # (and read) time is the one real behavioral departure from the
+    # credentials methods just above; everything else mirrors them.
+
+    def list_presets(self, preset_type: str) -> list[PresetInfo]:
+        _validate_name(preset_type, kind="preset type")
+        d = self.presets_dir / preset_type
+        if not d.is_dir():
+            return []
+        infos: list[PresetInfo] = []
+        for path in sorted(d.glob("*.json"), key=lambda p: p.stem):
+            try:
+                text = path.read_text(encoding="utf-8")
+            except OSError as exc:
+                infos.append(PresetInfo(name=path.stem, valid=False, error=f"failed reading file: {exc}"))
+                continue
+            try:
+                json.loads(text)
+            except json.JSONDecodeError as exc:
+                infos.append(PresetInfo(name=path.stem, valid=False, error=f"not valid JSON: {exc}"))
+                continue
+            infos.append(PresetInfo(name=path.stem, valid=True))
+        return infos
+
+    def read_preset(self, preset_type: str, name: str) -> str:
+        _validate_name(preset_type, kind="preset type")
+        _validate_name(name, kind="preset")
+        path = self.presets_dir / preset_type / f"{name}.json"
+        try:
+            text = path.read_text(encoding="utf-8")
+        except FileNotFoundError as exc:
+            raise PersistedStoreNotFoundError(f"NODE_ERROR: no saved {preset_type} preset named {name!r}") from exc
+        except OSError as exc:
+            raise PersistedStoreError(f"NODE_ERROR: failed reading {preset_type} preset {name!r}: {exc}") from exc
+        # Re-validated here, not just at write time (unlike credentials) --
+        # presets are meant to be hand-edited outside the app, and a file
+        # broken since the last list_presets() call must fail loudly and
+        # specifically here rather than handing back unparseable text.
+        _validate_json_text(text, what=f"{preset_type} preset {name!r} (hand-edited file may have a syntax error)")
+        return text
+
+    def write_preset(self, preset_type: str, name: str, text: str) -> None:
+        _validate_name(preset_type, kind="preset type")
+        _validate_name(name, kind="preset")
+        _validate_json_text(text, what=f"{preset_type} preset {name!r}")
+        _atomic_write(self.presets_dir / preset_type / f"{name}.json", text)
+
+    def delete_preset(self, preset_type: str, name: str) -> None:
+        _validate_name(preset_type, kind="preset type")
+        _validate_name(name, kind="preset")
+        path = self.presets_dir / preset_type / f"{name}.json"
+        try:
+            path.unlink()
+        except FileNotFoundError as exc:
+            raise PersistedStoreNotFoundError(f"NODE_ERROR: no saved {preset_type} preset named {name!r}") from exc
+        except OSError as exc:
+            raise PersistedStoreError(f"NODE_ERROR: failed deleting {preset_type} preset {name!r}: {exc}") from exc

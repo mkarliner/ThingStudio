@@ -4,6 +4,10 @@ Pushes an already-rendered frame to an I2C mono OLED panel (SSD1306 today — th
 leaves room for others later, like SH1106). Build the frame upstream (a `function` node using
 `framebuf.FrameBuffer`, or eventually a graphics-framework node) and wire it into this node's input.
 
+This node's property panel has a **preset** picker (see [Canvas basics](../canvas-basics.md#presets)) —
+save a real panel's pin/address setup under a name once, then load it again on this or another
+`display_i2c` node instead of retyping it.
+
 ## Properties
 
 - **controller** — the display chip. Only `SSD1306` today.

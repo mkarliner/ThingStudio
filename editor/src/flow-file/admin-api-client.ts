@@ -229,3 +229,63 @@ export async function deleteCredential(wsUrl: string, type: CredentialType, name
   const res = await request(wsUrl, `/api/credentials/${type}/${encodeURIComponent(name)}`, { method: "DELETE" });
   if (!res.ok) throw new AdminApiError(`delete ${type} credential "${name}" failed: ${await parseErrorBody(res)}`);
 }
+
+// -- per-node presets ------------------------------------------------------
+// docs/working-notes/outstanding-items/presets-design.md (design confirmed
+// with Mike 2026-09-22) -- MVP item 4 / road-to-mvp.md's "spi setup should
+// be saveable with a name to be selected later." Structurally the closest
+// cousin of the credential functions just above, with one real difference:
+// `presetType` is an open string (any node kind, e.g. "display_spi"), not a
+// fixed CredentialType union -- persisted_store.py's own header explains
+// why (presets cover whichever node kinds are complex enough to deserve
+// one, no code change needed to add a new type). The other real difference
+// is `PresetInfo` itself: unlike listCredentials()'s plain `string[]`,
+// listPresets() returns a `valid`/`error` flag per entry, because presets
+// are meant to be hand-edited directly in ~/.thingstudio/presets/<type>/
+// (Mike's own "human editable files" framing) -- a broken hand-edit has to
+// surface here loudly, not just fail later when something tries to apply
+// it. PresetRefField.vue is this module's one caller.
+//
+// Deliberately NOT credential-shaped in one other way: there is no
+// `defaults`/`fields` descriptor table the way credential-types.ts gives
+// CredentialRefField.vue one. A preset's content is simply an entire node's
+// `properties` object, snapshotted as-is -- the node's own already-existing
+// PropertyPanel.vue fields ARE the editing UI; a preset never needs a
+// second, bespoke edit form the way a credential (whose fields live nowhere
+// else) does.
+
+export interface PresetInfo {
+  name: string;
+  /** false when the on-disk file failed to parse as JSON -- see this
+   * section's header on why that has to be caught and shown, not just
+   * silently skipped. */
+  valid: boolean;
+  error: string | null;
+}
+
+export async function listPresets(wsUrl: string, presetType: string): Promise<PresetInfo[]> {
+  const res = await request(wsUrl, `/api/presets/${encodeURIComponent(presetType)}`);
+  if (!res.ok) throw new AdminApiError(`list ${presetType} presets failed: ${await parseErrorBody(res)}`);
+  const body = (await res.json()) as { presets: PresetInfo[] };
+  return body.presets;
+}
+
+export async function getPreset(wsUrl: string, presetType: string, name: string): Promise<Record<string, unknown>> {
+  const res = await request(wsUrl, `/api/presets/${encodeURIComponent(presetType)}/${encodeURIComponent(name)}`);
+  if (!res.ok) throw new AdminApiError(`load ${presetType} preset "${name}" failed: ${await parseErrorBody(res)}`);
+  return (await res.json()) as Record<string, unknown>;
+}
+
+export async function putPreset(wsUrl: string, presetType: string, name: string, data: Record<string, unknown>): Promise<void> {
+  const res = await request(wsUrl, `/api/presets/${encodeURIComponent(presetType)}/${encodeURIComponent(name)}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new AdminApiError(`save ${presetType} preset "${name}" failed: ${await parseErrorBody(res)}`);
+}
+
+export async function deletePreset(wsUrl: string, presetType: string, name: string): Promise<void> {
+  const res = await request(wsUrl, `/api/presets/${encodeURIComponent(presetType)}/${encodeURIComponent(name)}`, { method: "DELETE" });
+  if (!res.ok) throw new AdminApiError(`delete ${presetType} preset "${name}" failed: ${await parseErrorBody(res)}`);
+}

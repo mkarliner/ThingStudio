@@ -12,3 +12,12 @@ collections" (`board-specific-node-collections.md`, palette filtering by board),
 reference data once it exists, rather than each inventing their own board-fact source. Not scoped as its own
 design; whoever picks up any of those three UI items should check whether this reference folder needs to exist
 first.
+
+**Update, 2026-09-22 (`docs/working-notes/outstanding-items/presets-design.md`):** the storage mechanism a
+"board preset" type would need now exists — `PersistedStore.list_presets`/`read_preset`/`write_preset` in
+`persisted_store.py` takes an open `type` string, so a `board` (or `processor`) preset type could sit on top
+of it with no backend change, the same way `display_spi`/`display_i2c` presets do today. **This item itself
+is still not built or scoped as a UI**: v1 of presets is explicitly per-node only (one preset, one node's own
+`properties`, applied from that node's own property panel) — there's no "pick a board, seed several nodes'
+pins/settings at once" flow, and no curated reference *data* (this item's actual ask) exists yet either. Read
+`presets-design.md` before scoping this, since the storage layer it would use is no longer a blank slate.

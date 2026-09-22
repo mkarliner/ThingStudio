@@ -86,6 +86,31 @@
   `brokerConfigId` ConfigRefField unchanged -- the broker config was never
   part of the bug.
 
+  Presets (docs/working-notes/outstanding-items/presets-design.md,
+  confirmed with Mike 2026-09-22) -- MVP item 4 / road-to-mvp.md's "spi
+  setup should be saveable with a name to be selected later." One
+  `PresetRefField` instance each on display_spi/display_i2c, the two node
+  kinds Mike's own framing named explicitly ("nodes that are complex to set
+  up, like display drivers"). Unlike ConfigRefField/CredentialRefField,
+  this widget takes the whole `node.properties` object directly rather than
+  a lookup-table key -- see PresetRefField.vue's own header for why a
+  preset needs no separate field descriptor. `:key="node.id"` on each usage
+  below is deliberate, not decoration: it remounts the widget when the
+  selected node changes (even between two nodes of the same kind), so its
+  own local "which preset is loaded" display doesn't carry over from a
+  previously-selected node.
+
+  display_spi's `colorOrder`/`invertColors`/`dataLatchOrder` fields added
+  the same day, alongside the presets work above -- MVP item 5 named this
+  gap explicitly ("colorOrder, invertColors, dataLatchOrder are missing
+  today"), and a saved SPI preset is a lot less useful if three of the
+  real properties it captures can't be seen or edited here. `palette`
+  remains the one display_spi property with no form field (a 16-entry
+  RGB565 color picker is a separate, larger UI piece, out of scope here) --
+  a saved preset still captures whatever palette a node has via the raw
+  properties snapshot (PresetRefField.vue's own header), it just can't be
+  edited from this panel afterward.
+
   Custom nodes (docs/working-notes/custom-node-authoring-scoping.md,
   2026-08-20): one generic block below, driven entirely by
   CustomNode.descriptor.properties (custom-node.ts) instead of a
@@ -255,6 +280,7 @@
       </template>
 
       <template v-else-if="node.kind === 'display_spi'">
+        <PresetRefField :key="node.id" preset-type="display_spi" :properties="node.properties" @applied="touch" />
         <label>controller
           <select v-model="node.properties.controller" @change="touch">
             <option value="st7789">ST7789</option>
@@ -301,6 +327,20 @@
         <label>rotation (0-7)
           <input type="number" min="0" max="7" v-model.number="node.properties.rotation" @input="touch" />
         </label>
+        <label>color order
+          <select v-model="node.properties.colorOrder" @change="touch">
+            <option value="bgr">BGR (default)</option>
+            <option value="rgb">RGB</option>
+          </select>
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" v-model="node.properties.invertColors" @change="touch" />
+          invert colors
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" v-model="node.properties.dataLatchOrder" @change="touch" />
+          data latch order (MH bit)
+        </label>
         <label>xstart (-1 = auto)
           <input type="number" min="-1" v-model.number="node.properties.xstart" @input="touch" />
         </label>
@@ -331,6 +371,7 @@
       </template>
 
       <template v-else-if="node.kind === 'display_i2c'">
+        <PresetRefField :key="node.id" preset-type="display_i2c" :properties="node.properties" @applied="touch" />
         <label>controller
           <select v-model="node.properties.controller" @change="touch">
             <option value="ssd1306">SSD1306</option>
@@ -519,6 +560,7 @@ import { NODE_PALETTE, DEFAULT_KIND_STYLE, type NodeKind, type KindStyle } from 
 import { InjectNode, CustomNode, FunctionNode } from "./nodes";
 import { MAX_FUNCTION_OUTPUTS } from "../../node-library/function-node";
 import ConfigRefField from "./ConfigRefField.vue";
+import PresetRefField from "./PresetRefField.vue";
 
 const node = computed(() => {
   propertyVersion.value; // establish reactive dependency even though mutations happen off-Vue

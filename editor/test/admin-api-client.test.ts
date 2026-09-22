@@ -12,8 +12,12 @@ import {
   backendHttpBaseUrl,
   deleteCustomNode,
   deleteFlow,
+  deletePreset,
+  getPreset,
   listCustomNodes,
   listFlows,
+  listPresets,
+  putPreset,
   readCustomNode,
   readFlow,
   slugifyFlowName,
@@ -183,5 +187,72 @@ describe("listCustomNodes / readCustomNode / writeCustomNode / deleteCustomNode"
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ error: "NODE_ERROR: no saved custom node named 'dht22'" }, { status: 404 }));
     vi.stubGlobal("fetch", fetchMock);
     await expect(readCustomNode("ws://127.0.0.1:8765/ws", "dht22")).rejects.toThrow(/NODE_ERROR: no saved custom node named 'dht22'/);
+  });
+});
+
+describe("listPresets / getPreset / putPreset / deletePreset", () => {
+  it("listPresets hits GET /api/presets/{type} and returns the presets array, valid/error flags included", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse({
+        presets: [
+          { name: "cyd", valid: true, error: null },
+          { name: "broken", valid: false, error: "not valid JSON: ..." },
+        ],
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const result = await listPresets("ws://127.0.0.1:8765/ws", "display_spi");
+    expect(result).toEqual([
+      { name: "cyd", valid: true, error: null },
+      { name: "broken", valid: false, error: "not valid JSON: ..." },
+    ]);
+    expect(fetchMock).toHaveBeenCalledWith("http://127.0.0.1:8765/api/presets/display_spi", undefined);
+  });
+
+  it("listPresets URL-encodes the preset type", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ presets: [] }));
+    vi.stubGlobal("fetch", fetchMock);
+    await listPresets("ws://127.0.0.1:8765/ws", "weird type/x");
+    expect(fetchMock).toHaveBeenCalledWith("http://127.0.0.1:8765/api/presets/weird%20type%2Fx", undefined);
+  });
+
+  it("getPreset returns the parsed JSON object", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ controller: "st7789", sck: 12 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const data = await getPreset("ws://127.0.0.1:8765/ws", "display_spi", "cyd");
+    expect(data).toEqual({ controller: "st7789", sck: 12 });
+    expect(fetchMock).toHaveBeenCalledWith("http://127.0.0.1:8765/api/presets/display_spi/cyd", undefined);
+  });
+
+  it("getPreset surfaces a 400 for a hand-edited broken preset as a NODE_ERROR-prefixed message", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(jsonResponse({ error: "NODE_ERROR: display_spi preset 'broken' (hand-edited file may have a syntax error) is not valid JSON: ..." }, { status: 400 }));
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(getPreset("ws://127.0.0.1:8765/ws", "display_spi", "broken")).rejects.toThrow(/hand-edited file may have a syntax error/);
+  });
+
+  it("putPreset PUTs a JSON-serialized body with an application/json Content-Type", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ ok: true }));
+    vi.stubGlobal("fetch", fetchMock);
+    await putPreset("ws://127.0.0.1:8765/ws", "display_spi", "cyd", { controller: "st7789", sck: 12 });
+    expect(fetchMock).toHaveBeenCalledWith("http://127.0.0.1:8765/api/presets/display_spi/cyd", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ controller: "st7789", sck: 12 }),
+    });
+  });
+
+  it("putPreset throws AdminApiError on a non-ok response", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ error: "NODE_ERROR: bad" }, { status: 400 }));
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(putPreset("ws://127.0.0.1:8765/ws", "display_spi", "cyd", {})).rejects.toThrow(AdminApiError);
+  });
+
+  it("deletePreset issues a DELETE", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ ok: true }));
+    vi.stubGlobal("fetch", fetchMock);
+    await deletePreset("ws://127.0.0.1:8765/ws", "display_spi", "cyd");
+    expect(fetchMock).toHaveBeenCalledWith("http://127.0.0.1:8765/api/presets/display_spi/cyd", { method: "DELETE" });
   });
 });

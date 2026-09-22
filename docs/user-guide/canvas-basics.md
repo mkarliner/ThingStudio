@@ -18,6 +18,28 @@ An input can take any number of wires — connect several outputs to the same in
 
 Select a node to see its property panel on the right — every configurable field for that node type. Properties are read when you Compile → Deploy; nothing needs a redeploy just to preview a change.
 
+## Presets
+
+Some node types (currently `display_spi` and `display_i2c` — the ones complex enough to be worth naming a
+setup) have a **preset** picker at the top of their property panel: a dropdown of saved presets, a save
+button, and a refresh button.
+
+Presets are a snapshot, not a live link. Saving one copies that node's current property values under a name
+you choose; loading one copies those saved values back onto the node's properties, once, right then. Nothing
+stays linked to the preset afterward — editing a field, or editing the saved preset file later, doesn't
+change anything already applied. This is deliberate: unlike a WiFi/MQTT credential (see "Config nodes"
+below), a preset holds no secret, so there's no reason to keep it out of a flow file you save or commit —
+applying one just fills in real values, the same as typing them in yourself.
+
+Presets are saved on the backend as plain JSON files, one per name, under
+`~/.thingstudio/presets/<node type>/`, meant to be hand-edited if you'd rather write one directly than build
+it by hand in the panel — a good way to keep, say, one file per real display panel you own. A preset file
+that doesn't parse as valid JSON shows up in the dropdown disabled, with a warning naming which file is
+broken and where to find it, rather than failing silently or applying garbage.
+
+Presets need a backend connection, same as saved credentials — the direct/WebSerial-only connection mode
+doesn't support them.
+
 ## Config nodes
 
 Some properties are shared across multiple nodes rather than typed into each one separately — WiFi credentials and MQTT broker details. These live in **config nodes**: a WiFi config (a saved credential, plus a security mode — password, open, or [unmanaged](wifi-provisioning.md)) and an MQTT broker config (a saved credential holding host, port, and optional username/password). Reference one from a node's property panel instead of retyping the same SSID into five different nodes.
