@@ -143,6 +143,7 @@
     <input id="backendUrlInput" type="text" value="ws://127.0.0.1:8765/ws" title="Backend WebSocket URL" />
     <select id="backendPortSelect" title="Serial port, as seen by the backend"><option value="">(select port)</option></select>
     <button id="btnRefreshPorts" title="Ask the backend for its current list of serial ports">⟳ ports</button>
+    <button id="btnInstallRuntime" title="Push a fresh device-runtime onto the selected port via raw REPL -- for a board with no listener installed yet. Resets the board; reconnect afterward.">Install runtime…</button>
     <button id="btnConnect" class="primary">Connect</button>
     <button id="btnDisconnect" disabled>Disconnect</button>
     <button id="btnCheckStatus" disabled title="Ask the board to resend HELLO -- no reset, no redeploy">Check status</button>

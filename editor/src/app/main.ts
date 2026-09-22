@@ -1263,6 +1263,7 @@ function updateConnModeUi(): void {
   el("backendUrlInput").hidden = !backend;
   el("backendPortSelect").hidden = !backend;
   el("btnRefreshPorts").hidden = !backend;
+  el("btnInstallRuntime").hidden = !backend;
 }
 el("connModeSelect").addEventListener("change", updateConnModeUi);
 updateConnModeUi();
@@ -1317,6 +1318,63 @@ async function refreshBackendPorts(): Promise<void> {
   }
 }
 el("btnRefreshPorts").addEventListener("click", () => void refreshBackendPorts());
+
+/** Pushes a fresh device-runtime onto the selected port via the backend's
+ * raw-REPL bootstrap (backend/src/thingstudio_backend/raw_repl.py +
+ * runtime_installer.py, 2026-09-22) -- MVP item 1 (outstanding-items/
+ * deploy-runtime-from-editor.md), for a bare board with no listener.py
+ * running at all yet, so there's nothing on the other end to answer a
+ * framed §13 message and no existing "connect" session to reuse. Backend-
+ * relay only, same as the rest of this file's backend-mode controls --
+ * updateConnModeUi() hides this button entirely in "direct" mode.
+ *
+ * NOT yet verified against real hardware -- see raw_repl.py's own header;
+ * this session had no board available to confirm the reset/re-enumeration
+ * behavior described below actually happens as expected.
+ *
+ * Uses its own short-lived BackendTransport (same shape as
+ * refreshBackendPorts()'s probe), not the shared `transport` -- installing
+ * doesn't require an existing connectPort() session (the backend closes
+ * whatever it already has open on this WS connection before installing;
+ * see BackendTransport.installRuntime()'s own header). If the *editor's*
+ * live session happens to already hold this same port open, that's a
+ * separate WS connection from the backend's point of view and its serial
+ * port claim would conflict with this one -- disconnected first below, and
+ * not silently: told to the user, since Deploy/Check status/Disconnect all
+ * go stale for that dropped session either way. */
+el("btnInstallRuntime").addEventListener("click", async () => {
+  const wsUrl = currentBackendWsUrl();
+  const portName = el<HTMLSelectElement>("backendPortSelect").value;
+  if (!portName) {
+    logLine('[install runtime failed] choose a serial port from the list first ("⟳ ports")', "err");
+    return;
+  }
+  if (transport.isConnected) {
+    logLine("[install runtime] disconnecting the current session first -- installing needs exclusive use of the port]", "");
+    await transport.disconnect();
+    setConnectedUi(false);
+  }
+  logLine(`[install runtime] pushing device-runtime to ${portName} via ${wsUrl} -- this resets the board]`, "");
+  const installer = new BackendTransport({ onDebugLine: (line) => logLine(`[backend] ${line}`, "") });
+  try {
+    await installer.open(wsUrl);
+    await installer.installRuntime(portName);
+  } catch (err) {
+    logLine(`[install runtime failed] ${err instanceof Error ? err.message : String(err)}`, "err");
+    return;
+  } finally {
+    await installer.disconnect();
+  }
+  // installRuntime() resolving means the backend pushed every file and
+  // hard-reset the board (raw_repl.py's install_runtime()) -- the backend
+  // deliberately does not auto-reconnect afterward (USB re-enumeration
+  // timing after a reset isn't something to chase per board, per CLAUDE.md's
+  // "make the failure legible instead" corollary), so this editor doesn't
+  // either. The board is rebooting into the newly-installed listener as
+  // this line prints; "⟳ ports" may need a moment before the port
+  // reappears if the OS re-enumerates the device.
+  logLine('[install runtime OK -- board reset into the new runtime. Click "⟳ ports" if needed, then "Connect".]', "ok");
+});
 
 el("btnConnect").addEventListener("click", async () => {
   lastHelloVersion = null;

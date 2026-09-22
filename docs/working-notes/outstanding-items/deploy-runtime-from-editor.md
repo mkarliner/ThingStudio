@@ -78,12 +78,52 @@ taken literally):
   (`learnings/hardware-bringup-hil-rig.md`'s 2026-09-18 `LISTENER_BOOTING`-line finding) to gate it. Detection
   can be layered on top later without changing the install mechanism itself.
 
-**Still not built** -- this session did item 2's first slice instead (`decisions/editor-connect-errors.md`) and
-used the reading this doc asked for to get the above confirmed. Next concrete step: a small raw-REPL client in
-the backend (new module, `serial_relay.py`-adjacent -- enter raw REPL, push `device-runtime/src/*.py` + vendor
-files, matching `test-flows/deploy_runtime.py`'s own file list, then reset), a new backend control-plane
-message pair for the editor to trigger it and get progress/completion back, and a button in `main.ts`. Needs a
-real board to verify against, same rigor as every other device-runtime-adjacent change this project has made
-(`CLAUDE.md`'s device-runtime test-suite rule doesn't directly apply -- no `device-runtime/src` changes here,
-only a new backend-side client speaking to it -- but the raw-REPL push itself still needs a real-hardware pass
-before it's trusted, not just reasoned through).
+**Built, 2026-09-22 -- backend + editor, NOT yet verified against real hardware.** Mike had no board available
+this session ("part the validation, for the moment, I don't have a real board on me"), so this landed with full
+unit-test rigor but zero hardware confirmation -- treat every claim below as "implemented and tested against
+fakes," not "confirmed working."
+
+Layers, bottom to top:
+
+- `backend/src/thingstudio_backend/raw_repl.py` (new) -- the raw-REPL client itself: `enter_raw_repl()`,
+  `exec_raw()`, `write_file_chunked()` (base64-chunked, 256-byte chunks -- a whole-file paste risks the same
+  `MemoryError` pressure `learnings/hardware-bringup-hil-rig.md` already documents on real hardware for a large
+  file like `mqtt_as.py`), `hard_reset()`, and `install_runtime()` tying them together. Structured
+  `RawReplError` (this backend's existing `NODE_ERROR`-prefixed attribution convention, not a bare exception),
+  every read time-bounded via `RawReplTimeouts`. Unit-tested against a fake port
+  (`backend/test/test_raw_repl.py`, 10 tests) -- a real protocol bug (a `_read_until()` that silently dropped
+  bytes read past a marker within the same physical chunk) was caught this way, not by inspection; see the
+  file's own header and `learnings/` for the incident if one gets written up separately.
+- `device-runtime/runtime_manifest.py` (new) -- `CORE_FILES`/`LISTENER_FILE`/`VENDOR_FILES` moved here from
+  `test-flows/deploy_runtime.py` so that script and the new backend path share one file list instead of two
+  hand-maintained copies that can silently drift.
+- `backend/src/thingstudio_backend/runtime_installer.py` (new) -- reads the real files off disk via the shared
+  manifest and drives `raw_repl.install_runtime()`. Tested against a fake tree and, separately, a smoke test
+  against the real `device-runtime/src` manifest (confirms every real file resolves and reads non-empty, with
+  nothing pushed).
+- `backend/src/thingstudio_backend/ws_relay.py` (edited) -- new `install_runtime` / `install_runtime_result`
+  control-plane message pair. Closes any existing relay connection on that WS session first, then runs the
+  install as one blocking `asyncio.to_thread()`. Deliberately does **not** auto-reconnect after the install's
+  hard reset -- USB re-enumeration timing after a reset varies per board/OS, and per `CLAUDE.md`'s "don't chase
+  every board's idiosyncrasy" corollary the answer is a legible manual reconnect, not a guessed wait.
+- `editor/src/protocol/backend-transport.ts` (edited) -- `BackendTransport.installRuntime(port, baudRate?)`,
+  mirroring `connectPort()`'s pending-promise pattern; a new `"install_runtime_result"` case in
+  `#handleControlMessage`. Tested in `editor/test/backend-transport.test.ts` (4 new cases: success, backend
+  error, default baudrate, rejection on `disconnect()` mid-flight).
+- `editor/index.html` / `editor/src/app/main.ts` (edited) -- a new "Install runtime…" button, visible only in
+  "via backend" mode (same as the port picker/refresh controls -- there's no WebSerial-direct equivalent). The
+  click handler disconnects the editor's own live session first if one is holding the port open, runs the
+  install via its own short-lived `BackendTransport` (same shape `refreshBackendPorts()`'s probe already uses),
+  and on success tells the user to reconnect manually -- it does not attempt to reconnect itself, matching the
+  backend's own no-auto-reconnect choice above.
+
+Verification done this session: `tsc --noEmit` clean (one pre-existing, unrelated error in
+`test/node-startup.test.ts` -- a `codegenFireableSource` property check, nothing to do with this work); the
+full backend test suite (143 tests) and the editor's `backend-transport.test.ts` (16 tests, including the 4 new
+ones) passing in isolated verify environments, never against the live-mounted tree (`CLAUDE.md`'s npm/build
+rule). **Not done:** any real-hardware pass. Before trusting this against a real board, confirm at minimum:
+raw-REPL timing/chunk-size behavior on at least one real ESP32 and one real RP2040 (the two platform families
+this project targets), and what actually happens to the OS-visible serial port across the hard reset (does it
+stay enumerated, re-enumerate under the same path, or disappear and require a manual re-plug/re-select in
+`backendPortSelect`) -- that answer is what future work (e.g. attempting an auto-reconnect) would depend on, and
+right now it's unknown, not just unbuilt.

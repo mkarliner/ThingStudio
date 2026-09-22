@@ -40,55 +40,26 @@ _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 _REPO_ROOT = os.path.join(_THIS_DIR, "..")
 _RUNTIME_SRC = os.path.join(_REPO_ROOT, "device-runtime", "src")
 
-# device-runtime/src/{...}.py, copied as-is -- everything listener.py
-# imports at module scope. Same file list and order test/hil/README.md's
-# step 4 documents.
-# wifi_provision.py added 2026-09-14 -- listener.py's own guarded `import wifi_provision` degrades
-# to a no-op on a board bootstrapped before this line existed (its own header comment), so an
-# already-deployed board isn't broken by this list changing; it just needs a re-run of this script
-# to pick up the new feature, same as any other core-file addition.
-CORE_FILES = ["errors.py", "cbor.py", "framing.py", "messages.py", "protocol.py", "runtime.py", "wifi_provision.py"]
+# CORE_FILES/LISTENER_FILE/VENDOR_FILES used to be hardcoded here -- moved 2026-09-22 into
+# device-runtime/runtime_manifest.py, shared with the new browser-triggered install path
+# (backend/src/thingstudio_backend/runtime_installer.py) so the two can't silently drift the
+# way two hand-maintained copies of the same list eventually do (this file's own git history
+# already shows that risk: wifi_provision.py and st7789py.py/ssd1306.py were each added here by
+# hand, at different times, with no automatic check the other consumer picked them up too).
+sys.path.insert(0, os.path.join(_REPO_ROOT, "device-runtime"))
+from runtime_manifest import CORE_FILES, LISTENER_FILE, VENDOR_FILES  # noqa: E402 -- needs sys.path set first
 
-# Copied separately, installed AS main.py -- see main() below.
-LISTENER_FILE = "listener.py"
-
-# Vendor libs some (not all) node types need at runtime -- pushed by
-# default since the cost is trivial (a few KB of flash) against the
-# alternative (rediscovering an ImportError mid-flow-deploy later and
-# having to come back to this script) -- the same "don't paint into a
-# dead end" reasoning CLAUDE.md already names elsewhere. --no-vendor skips
-# both for a leaner image if flash/RAM headroom is ever actually tight;
-# rp2040-bringup-findings.md's own memory-headroom data (>75% RAM free
-# with the runtime + threadsafe_event + a real flow loaded) suggests it
-# isn't, for flows of similar size to what's been tested so far -- but
-# that's one data point on one board, not a guarantee for every board/flow
-# combination, hence the escape hatch rather than assuming it's always fine.
-VENDOR_FILES = [
-    os.path.join(_REPO_ROOT, "device-runtime", "src", "vendor", "threadsafe_event", "threadsafe_event.py"),
-    os.path.join(_REPO_ROOT, "device-runtime", "src", "vendor", "mqtt_as", "__init__.py"),
-    os.path.join(_REPO_ROOT, "device-runtime", "src", "vendor", "primitives_events", "events.py"),
-    os.path.join(_REPO_ROOT, "device-runtime", "src", "vendor", "primitives_events", "delay_ms.py"),
-    # st7789py.py/ssd1306.py added 2026-09-17 (display_spi/display_i2c node
-    # types) -- same unconditional-push treatment as every other entry here,
-    # a deliberate scope call for this session (see outstanding-items.md's
-    # "VENDOR_FILES doesn't scale past a few controllers" item): at ~8.4KB/
-    # ~4.9KB source respectively these are still small next to mqtt_as's own
-    # ~36KB already living here unconditionally, but each additional display
-    # controller driver added the same way going forward pushes flash to
-    # every board regardless of whether that board has a display -- tracked,
-    # not solved by this addition.
-    os.path.join(_REPO_ROOT, "device-runtime", "src", "vendor", "st7789py_mpy", "st7789py.py"),
-    os.path.join(_REPO_ROOT, "device-runtime", "src", "vendor", "ssd1306", "ssd1306.py"),
-]
-# mqtt_as's __init__.py needs to land as mqtt_as.py (a single-file module),
-# not as __init__.py under an mqtt_as/ package dir -- MicroPython's import
-# system finds either shape, but a single flat file is simpler to push
-# with this script's one-file-at-a-time cp calls and matches how the
-# generated code imports it (`import mqtt_as`, not `from mqtt_as import ...`
-# expecting a package).
-VENDOR_DEST_NAMES = {
-    os.path.join(_REPO_ROOT, "device-runtime", "src", "vendor", "mqtt_as", "__init__.py"): "mqtt_as.py",
-}
+# Vendor libs some (not all) node types need at runtime -- pushed by default since the cost is
+# trivial (a few KB of flash) against the alternative (rediscovering an ImportError mid-flow-
+# deploy later and having to come back to this script) -- the same "don't paint into a dead
+# end" reasoning CLAUDE.md already names elsewhere. --no-vendor skips them for a leaner image if
+# flash/RAM headroom is ever actually tight; rp2040-bringup-findings.md's own memory-headroom
+# data (>75% RAM free with the runtime + threadsafe_event + a real flow loaded) suggests it
+# isn't, for flows of similar size to what's been tested so far -- but that's one data point on
+# one board, not a guarantee for every board/flow combination, hence the escape hatch rather
+# than assuming it's always fine. VENDOR_FILES entries are (path relative to
+# device-runtime/src/vendor/, destination filename on-device) -- see runtime_manifest.py for the
+# actual list and why mqtt_as's own __init__.py lands flat as mqtt_as.py.
 
 
 def mpremote(port, *args):
@@ -171,8 +142,8 @@ def main():
         )
 
     if not args.no_vendor:
-        for local in VENDOR_FILES:
-            dest_name = VENDOR_DEST_NAMES.get(local, os.path.basename(local))
+        for src_rel, dest_name in VENDOR_FILES:
+            local = os.path.join(_RUNTIME_SRC, "vendor", src_rel)
             mpremote(args.port, "cp", local, ":%s" % dest_name)
 
     print("\nDone. Files now on the device:")

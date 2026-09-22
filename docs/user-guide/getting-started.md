@@ -18,14 +18,18 @@ Opens the editor locally. Build a flow from scratch, or open one of the examples
 
 ## Bootstrapping a board
 
-Before any flow can be deployed, a board needs the Thingstudio runtime on it — a one-time step per board, or after a full erase/reflash:
+Before any flow can be deployed, a board needs the Thingstudio runtime on it — a one-time step per board, or after a full erase/reflash.
+
+**From the editor:** with the backend running and the board's port selected (see "Connecting" below), click **Install runtime…**. It pushes the runtime and resets the board — reconnect afterward, the button doesn't do that for you.
+
+**From the command line**, no backend needed:
 
 ```sh
 pip install mpremote
 python3 test-flows/deploy_runtime.py --port /dev/tty.usbmodemXXXX
 ```
 
-Reset the board afterward and watch its first boot to confirm the runtime is running: `LISTENER_BOOTING` → `LISTENER_READY` → a `HELLO` frame.
+Either way, watch the board's first boot afterward to confirm the runtime is running: `LISTENER_BOOTING` → `LISTENER_READY` → a `HELLO` frame.
 
 **Watch with a passive connection.** Use `mpremote connect <port>` with no further subcommand, or any serial monitor that doesn't send Ctrl-C on open. `mpremote repl` and Thonny's Shell both interrupt the board the moment they connect — that looks identical to "the board never boots," even when everything is fine.
 

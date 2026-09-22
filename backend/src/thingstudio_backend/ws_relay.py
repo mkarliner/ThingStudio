@@ -41,19 +41,46 @@
 # exception that drops the WebSocket or crashes the backend process --
 # same fault-isolation posture as the relay's serial layer and the
 # device-side listener it's modeled after.
+#
+# "install_runtime" control message (2026-09-22, MVP item 1's first backend slice --
+# outstanding-items/deploy-runtime-from-editor.md): pushes the runtime onto a board with raw
+# REPL (raw_repl.py/runtime_installer.py) instead of the normal listener-relay path -- a bare
+# board has no listener running at all, so there's nothing for the usual connect/binary-relay
+# flow above to talk to. Deliberately NOT layered on SerialConnection: raw REPL needs
+# synchronous, marker-driven reads (raw_repl.py's own _ByteReader), a different discipline
+# from SerialConnection's async read_loop generator built for continuous line-by-line
+# relaying. Opens its own dedicated port instead, closing any existing relay connection
+# first (raw REPL needs exclusive access) -- the whole install runs as one blocking
+# asyncio.to_thread() call, so v1 has no live progress messages, only a final
+# {"type": "install_runtime_result", "ok": ..., "error"?: ...}. Deliberately does not try to
+# auto-reconnect afterward: hard_reset() can make a board re-enumerate its USB port
+# (RP2040's native USB, unlike an ESP32's separate UART bridge chip) on a timeline this
+# backend has no way to predict -- per CLAUDE.md's "make the failure legible, don't chase
+# every board's idiosyncrasy" -- so the browser is told to prompt the user to reconnect
+# manually instead.
 
 from __future__ import annotations
 
 import asyncio
 import json
 import logging
+from typing import Callable
 
+import serial
 from aiohttp import WSMsgType, web
 
 from .line_framing import LineDecoder, encode_f64_line
+from .raw_repl import RawReplError
+from .runtime_installer import RuntimeInstaller
 from .serial_relay import SerialConnection, SerialRelayError, list_ports
 
 logger = logging.getLogger(__name__)
+
+# Poll timeout for the raw port opened specifically for install_runtime -- same
+# responsiveness-bound reasoning serial_relay.py's own _READ_POLL_TIMEOUT_SECONDS gives (bounds
+# how long one blocking read() can hold the executor thread), not a protocol-level timeout on
+# its own; raw_repl.py's own RawReplTimeouts own the actual per-step deadlines.
+_INSTALL_READ_POLL_TIMEOUT_SECONDS = 0.5
 
 
 class ConnectionSession:
@@ -64,11 +91,17 @@ class ConnectionSession:
         self,
         ws: web.WebSocketResponse,
         serial_connection_factory: type[SerialConnection] | object = SerialConnection,
+        raw_port_factory: Callable[..., object] = serial.Serial,
+        runtime_installer: RuntimeInstaller | None = None,
     ) -> None:
         self._ws = ws
         # Injectable for tests -- production code always uses the real
         # SerialConnection; tests substitute a fake with no hardware dependency.
         self._serial_connection_factory = serial_connection_factory
+        # Same injection shape, for install_runtime's own dedicated port (see this module's
+        # header) -- production code always uses real serial.Serial/RuntimeInstaller.
+        self._raw_port_factory = raw_port_factory
+        self._runtime_installer = runtime_installer or RuntimeInstaller()
         self._serial: SerialConnection | None = None
         self._decoder = LineDecoder()
         self._read_task: asyncio.Task[None] | None = None
@@ -88,6 +121,8 @@ class ConnectionSession:
             await self._connect(message.get("port"), message.get("baudrate", 115200))
         elif msg_type == "disconnect":
             await self._disconnect()
+        elif msg_type == "install_runtime":
+            await self._install_runtime(message.get("port"), message.get("baudrate", 115200))
         else:
             await self._send_status(error=f"NODE_ERROR: unknown control message type: {msg_type!r}")
 
@@ -124,6 +159,56 @@ class ConnectionSession:
         self._decoder.reset()
         await self._send_status(connected=True, port=port)
         self._read_task = asyncio.create_task(self._pump_serial_to_ws(conn))
+
+    async def _install_runtime(self, port: str | None, baudrate: int) -> None:
+        """Pushes the runtime onto `port`'s board via raw REPL -- see this module's header for
+        why this doesn't reuse the normal connect/relay path. Closes any existing relay
+        connection first (raw REPL needs exclusive access to the port); does not reopen one
+        afterward even on success -- see this module's header on why an automatic reconnect
+        isn't attempted."""
+        if not port:
+            await self._send_install_result(ok=False, error="NODE_ERROR: install_runtime requested with no port given")
+            return
+        if self._serial is not None:
+            await self._disconnect()
+
+        def _run_install() -> None:
+            # Runs entirely inside asyncio.to_thread() below -- raw_repl.py is deliberately
+            # synchronous (see its own header), so the whole install is one blocking call from
+            # this event loop's point of view, not interleaved with anything else on this
+            # session. A real serial.Serial opened here is unrelated to (and, since
+            # self._disconnect() already ran above, never concurrent with) self._serial.
+            raw_port = self._raw_port_factory(port, baudrate=baudrate, timeout=_INSTALL_READ_POLL_TIMEOUT_SECONDS)
+            try:
+                self._runtime_installer.install(raw_port)
+            finally:
+                raw_port.close()
+
+        try:
+            await asyncio.to_thread(_run_install)
+        except serial.SerialException as exc:
+            # Same NODE_ERROR text shape serial_relay.py's SerialRelayError already produces
+            # for a connect failure (deliberate -- see connect-error-help.ts on the editor
+            # side, which pattern-matches this exact shape into a workaround suggestion; that
+            # logic applies here for free rather than needing its own copy).
+            await self._send_install_result(ok=False, error=f"NODE_ERROR: serial open failed on {port}: {exc}")
+            return
+        except RawReplError as exc:
+            await self._send_install_result(ok=False, error=str(exc))
+            return
+        await self._send_install_result(ok=True)
+
+    async def _send_install_result(self, *, ok: bool, error: str | None = None) -> None:
+        payload: dict[str, object] = {"type": "install_runtime_result", "ok": ok}
+        if error is not None:
+            payload["error"] = error
+            logger.warning(error)
+        # Same already-closing-socket tolerance _send_status gives below -- best-effort, never
+        # lets a write to a dead WebSocket take the install's own error path down with it.
+        try:
+            await self._ws.send_str(json.dumps(payload))
+        except (ConnectionResetError, RuntimeError) as exc:
+            logger.warning("could not send install_runtime_result to a WebSocket that's already closing: %s", exc)
 
     async def _pump_serial_to_ws(self, conn: SerialConnection) -> None:
         try:
@@ -194,14 +279,17 @@ class ConnectionSession:
 
 def make_websocket_handler(
     serial_connection_factory: type[SerialConnection] | object = SerialConnection,
+    raw_port_factory: Callable[..., object] = serial.Serial,
+    runtime_installer: RuntimeInstaller | None = None,
 ):
-    """Build the aiohttp WS route handler. Production code uses the default
-    (real SerialConnection); tests pass a fake with no hardware dependency."""
+    """Build the aiohttp WS route handler. Production code uses the defaults (real
+    SerialConnection/serial.Serial/RuntimeInstaller); tests pass fakes with no hardware
+    dependency."""
 
     async def websocket_handler(request: web.Request) -> web.WebSocketResponse:
         ws = web.WebSocketResponse()
         await ws.prepare(request)
-        session = ConnectionSession(ws, serial_connection_factory)
+        session = ConnectionSession(ws, serial_connection_factory, raw_port_factory, runtime_installer)
 
         try:
             async for msg in ws:

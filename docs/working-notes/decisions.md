@@ -107,6 +107,23 @@ only, matching the existing WebSerial-direct-is-frozen/hidden decision above -- 
 there. A real "Install runtime" button is item 1, not this. 1 entry:
 `docs/working-notes/decisions/editor-connect-errors.md`.
 
+## Runtime install from the editor
+
+**2026-09-22 -- MVP item 1 built end-to-end (backend raw-REPL client through an editor button),
+backend-relay only, NOT yet verified against real hardware.** A bare board with no listener has
+nothing to answer a framed §13 message, so only a raw-REPL bootstrap (the same host-side primitive
+`mpremote` uses) can do an *initial* install -- corrects this item's own earlier scoping doc, which
+had framed that as one of two interchangeable mechanism choices. New `raw_repl.py` +
+`runtime_installer.py` in the backend, a shared `device-runtime/runtime_manifest.py` so
+`test-flows/deploy_runtime.py` and the new path can't drift apart, a new `install_runtime`/
+`install_runtime_result` control-plane message pair in `ws_relay.py`, and
+`BackendTransport.installRuntime()` plus an "Install runtime…" button in the editor (backend mode
+only -- no WebSerial-direct equivalent). No auto-reconnect after the install's hard reset, by
+design (`CLAUDE.md`'s "make the failure legible instead" corollary -- USB re-enumeration timing
+isn't something to chase per board). Fully unit-tested against fakes (a real protocol bug was
+caught this way, not by inspection); zero hardware confirmation this session (no board available).
+1 entry: `docs/working-notes/decisions/runtime-install-from-editor.md`.
+
 ## What this list doesn't include
 
 Small per-file implementation judgment calls (exact property names, which

@@ -21,11 +21,13 @@ import asyncio
 import json
 
 import pytest
+import serial
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
 from thingstudio_backend.framing import encode_frame
 from thingstudio_backend.line_framing import encode_f64_line
+from thingstudio_backend.raw_repl import RawReplError
 from thingstudio_backend.serial_relay import SerialRelayError
 from thingstudio_backend.ws_relay import ConnectionSession, make_websocket_handler
 
@@ -81,9 +83,65 @@ class FakeSerialConnectionFactory:
         return conn
 
 
-def _make_app(factory: FakeSerialConnectionFactory) -> web.Application:
+class FakeRawPort:
+    """Stands in for a real serial.Serial opened for install_runtime -- RuntimeInstaller itself
+    is faked out in these tests (FakeRuntimeInstaller below), so this only needs to be
+    constructible and closeable, never actually read/written."""
+
+    def __init__(self, port: str, baudrate: int = 115200, timeout: float | None = None) -> None:
+        self.port = port
+        self.baudrate = baudrate
+        self.timeout = timeout
+        self.closed = False
+
+    def close(self) -> None:
+        self.closed = True
+
+
+class FakeRawPortFactory:
+    """`open_effect`, if set, is raised instead of returning a port -- simulates the OS-level
+    open failure serial.Serial itself would raise (permission denied, port busy, etc.)."""
+
+    def __init__(self, open_effect: Exception | None = None) -> None:
+        self.instances: list[FakeRawPort] = []
+        self._open_effect = open_effect
+
+    def __call__(self, port: str, baudrate: int = 115200, timeout: float | None = None) -> FakeRawPort:
+        if self._open_effect is not None:
+            raise self._open_effect
+        conn = FakeRawPort(port, baudrate, timeout)
+        self.instances.append(conn)
+        return conn
+
+
+class FakeRuntimeInstaller:
+    """Stands in for runtime_installer.RuntimeInstaller -- `install_effect`, if set, is raised
+    instead of "succeeding," simulating a raw-REPL failure partway through a real install
+    without needing raw_repl.py's own protocol logic (that's raw_repl.py's own test file's job,
+    not this one's)."""
+
+    def __init__(self, install_effect: Exception | None = None) -> None:
+        self.install_calls: list[object] = []
+        self._install_effect = install_effect
+
+    def install(self, port: object, include_vendor: bool = True, timeouts: object = None) -> None:
+        self.install_calls.append(port)
+        if self._install_effect is not None:
+            raise self._install_effect
+
+
+def _make_app(
+    factory: FakeSerialConnectionFactory,
+    raw_port_factory: FakeRawPortFactory | None = None,
+    runtime_installer: FakeRuntimeInstaller | None = None,
+) -> web.Application:
     app = web.Application()
-    app.router.add_get("/ws", make_websocket_handler(factory))
+    kwargs: dict[str, object] = {}
+    if raw_port_factory is not None:
+        kwargs["raw_port_factory"] = raw_port_factory
+    if runtime_installer is not None:
+        kwargs["runtime_installer"] = runtime_installer
+    app.router.add_get("/ws", make_websocket_handler(factory, **kwargs))
     return app
 
 
@@ -291,3 +349,93 @@ async def test_send_status_on_already_closing_ws_does_not_raise() -> None:
     # this used to be the exact call that raised. Should not raise now.
     await session.cleanup()
     assert factory.instances[-1].closed is True
+
+
+@pytest.mark.asyncio
+async def test_install_runtime_success() -> None:
+    factory = FakeSerialConnectionFactory()
+    raw_ports = FakeRawPortFactory()
+    installer = FakeRuntimeInstaller()
+    async with TestClient(TestServer(_make_app(factory, raw_ports, installer))) as client:
+        ws = await client.ws_connect("/ws")
+
+        await ws.send_json({"type": "install_runtime", "port": "/dev/fake0"})
+        reply = await ws.receive_json()
+
+        assert reply == {"type": "install_runtime_result", "ok": True}
+        assert raw_ports.instances[-1].port == "/dev/fake0"
+        assert raw_ports.instances[-1].closed is True  # closed after install, success or not
+        assert installer.install_calls == [raw_ports.instances[-1]]
+        await ws.close()
+
+
+@pytest.mark.asyncio
+async def test_install_runtime_requires_a_port() -> None:
+    factory = FakeSerialConnectionFactory()
+    async with TestClient(TestServer(_make_app(factory))) as client:
+        ws = await client.ws_connect("/ws")
+        await ws.send_json({"type": "install_runtime"})
+        reply = await ws.receive_json()
+        assert reply["type"] == "install_runtime_result"
+        assert reply["ok"] is False
+        assert "no port given" in reply["error"]
+        await ws.close()
+
+
+@pytest.mark.asyncio
+async def test_install_runtime_closes_an_existing_relay_connection_first() -> None:
+    """Raw REPL needs exclusive access to the port -- an install_runtime request while already
+    connected via the normal relay path must close that connection before opening its own."""
+    factory = FakeSerialConnectionFactory()
+    raw_ports = FakeRawPortFactory()
+    installer = FakeRuntimeInstaller()
+    async with TestClient(TestServer(_make_app(factory, raw_ports, installer))) as client:
+        ws = await client.ws_connect("/ws")
+
+        await ws.send_json({"type": "connect", "port": "/dev/fake0"})
+        connect_status = await ws.receive_json()
+        assert connect_status["connected"] is True
+        relay_conn = factory.instances[-1]
+        assert relay_conn.closed is False
+
+        await ws.send_json({"type": "install_runtime", "port": "/dev/fake0"})
+        disconnect_status = await ws.receive_json()
+        assert disconnect_status == {"type": "status", "connected": False, "port": "/dev/fake0"}
+        assert relay_conn.closed is True
+
+        install_result = await ws.receive_json()
+        assert install_result == {"type": "install_runtime_result", "ok": True}
+        await ws.close()
+
+
+@pytest.mark.asyncio
+async def test_install_runtime_reports_a_structured_error_on_open_failure() -> None:
+    factory = FakeSerialConnectionFactory()
+    raw_ports = FakeRawPortFactory(open_effect=serial.SerialException("[Errno 13] Permission denied"))
+    installer = FakeRuntimeInstaller()
+    async with TestClient(TestServer(_make_app(factory, raw_ports, installer))) as client:
+        ws = await client.ws_connect("/ws")
+        await ws.send_json({"type": "install_runtime", "port": "/dev/fake0"})
+        reply = await ws.receive_json()
+
+        assert reply["ok"] is False
+        # Same NODE_ERROR text shape serial_relay.py's own connect-failure errors use --
+        # ws_relay.py's own header explains why that's deliberate.
+        assert reply["error"].startswith("NODE_ERROR: serial open failed on /dev/fake0:")
+        assert "Permission denied" in reply["error"]
+        assert installer.install_calls == []  # never reached -- the port never opened
+
+
+@pytest.mark.asyncio
+async def test_install_runtime_reports_a_raw_repl_failure_verbatim() -> None:
+    factory = FakeSerialConnectionFactory()
+    raw_ports = FakeRawPortFactory()
+    installer = FakeRuntimeInstaller(install_effect=RawReplError("pushing runtime.py (open)", "device raised: b'MemoryError'"))
+    async with TestClient(TestServer(_make_app(factory, raw_ports, installer))) as client:
+        ws = await client.ws_connect("/ws")
+        await ws.send_json({"type": "install_runtime", "port": "/dev/fake0"})
+        reply = await ws.receive_json()
+
+        assert reply["ok"] is False
+        assert reply["error"] == str(installer._install_effect)
+        assert raw_ports.instances[-1].closed is True  # still closed even though install raised

@@ -174,6 +174,56 @@ describe("BackendTransport", () => {
     expect(debugLines.some((l) => l.includes("NODE_ERROR"))).toBe(true);
   });
 
+  it("installRuntime() sends install_runtime and resolves on ok:true", async () => {
+    const { factory, sockets } = makeFakeFactory();
+    const t = new BackendTransport({}, factory);
+    const openP = t.open("ws://x/ws");
+    sockets[0]!.simulateOpen();
+    await openP;
+
+    const installP = t.installRuntime("/dev/ttyUSB0", 115200);
+    expect(sockets[0]!.sent).toEqual([JSON.stringify({ type: "install_runtime", port: "/dev/ttyUSB0", baudrate: 115200 })]);
+    sockets[0]!.simulateMessage(JSON.stringify({ type: "install_runtime_result", ok: true }));
+    await installP; // must resolve, not reject
+  });
+
+  it("installRuntime() rejects with the backend's error on ok:false", async () => {
+    const { factory, sockets } = makeFakeFactory();
+    const t = new BackendTransport({}, factory);
+    const openP = t.open("ws://x/ws");
+    sockets[0]!.simulateOpen();
+    await openP;
+
+    const installP = t.installRuntime("/dev/ttyUSB0");
+    sockets[0]!.simulateMessage(
+      JSON.stringify({ type: "install_runtime_result", ok: false, error: "NODE_ERROR: runtime install failed at pushing runtime.py: timed out" }),
+    );
+    await expect(installP).rejects.toThrow(/NODE_ERROR/);
+  });
+
+  it("installRuntime() defaults baudrate to 115200 when not given", async () => {
+    const { factory, sockets } = makeFakeFactory();
+    const t = new BackendTransport({}, factory);
+    const openP = t.open("ws://x/ws");
+    sockets[0]!.simulateOpen();
+    await openP;
+
+    void t.installRuntime("/dev/ttyUSB0");
+    expect(sockets[0]!.sent).toEqual([JSON.stringify({ type: "install_runtime", port: "/dev/ttyUSB0", baudrate: 115200 })]);
+  });
+
+  it("disconnect() rejects an in-flight installRuntime() rather than leaving it hanging", async () => {
+    const { factory, sockets } = makeFakeFactory();
+    const t = new BackendTransport({}, factory);
+    const openP = t.open("ws://x/ws");
+    sockets[0]!.simulateOpen();
+    await openP;
+
+    const installP = t.installRuntime("/dev/ttyUSB0");
+    await t.disconnect();
+    await expect(installP).rejects.toThrow(/disconnected before the backend responded/);
+  });
+
   it("send() throws when not connected, and encodes a message as one binary WS frame once connected", async () => {
     const { factory, sockets } = makeFakeFactory();
     const t = new BackendTransport({}, factory);

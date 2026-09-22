@@ -76,6 +76,7 @@ export class BackendTransport implements DeviceTransport {
   #connectedPort: string | null = null;
   #pendingListPorts: { resolve(ports: SerialPortInfo[]): void; reject(err: unknown): void }[] = [];
   #pendingConnect: { resolve(): void; reject(err: Error): void } | null = null;
+  #pendingInstallRuntime: { resolve(): void; reject(err: Error): void } | null = null;
   #wsFactory: (url: string) => WebSocket;
 
   /** `wsFactory` defaults to the real `WebSocket` constructor -- overridable
@@ -170,6 +171,40 @@ export class BackendTransport implements DeviceTransport {
     return p;
   }
 
+  /** Asks the backend to push a fresh device-runtime onto `port` via raw
+   * REPL (backend/src/thingstudio_backend/raw_repl.py + runtime_installer.py,
+   * 2026-09-22) -- the browser-triggered equivalent of test-flows/
+   * deploy_runtime.py's manual mpremote sequence, for a board with no
+   * listener.py running at all (outstanding-items/deploy-runtime-from-
+   * editor.md's scoping: raw-REPL bootstrap is the only mechanism that
+   * solves an *initial* install, since a bare board has nothing to answer a
+   * framed §13 message). Backend-relay only -- there is no WebSerial-direct
+   * equivalent (decisions.md's "web serial is deprecated" note), so this
+   * only makes sense to call while connModeSelect is "backend".
+   *
+   * The backend closes any existing relay connection on this port before
+   * installing (ws_relay.py's _install_runtime), so this does NOT require
+   * connectPort() to have succeeded first -- same "only valid after open()"
+   * shape as listPorts(), not connectPort(). Resolves once the backend
+   * confirms every file was pushed and the board was hard-reset; rejects
+   * with the backend's own NODE_ERROR-prefixed message on failure (serial
+   * open failure, any raw-REPL protocol error). The board reboots into the
+   * newly-installed listener as part of a successful install -- the caller
+   * is expected to reconnect afterward, same as after any other reset;
+   * this method doesn't attempt that itself (this file's header: USB
+   * re-enumeration timing after a hard reset isn't something to chase per
+   * board, per CLAUDE.md's "make the failure legible instead" corollary --
+   * a manual reconnect is the legible, doesn't-need-to-be-clever answer). */
+  async installRuntime(port: string, baudRate = 115200): Promise<void> {
+    if (!this.#ws) throw new Error("BackendTransport is not open -- call open() first");
+    if (this.#pendingInstallRuntime) throw new Error("BackendTransport already has an installRuntime() in flight");
+    const p = new Promise<void>((resolve, reject) => {
+      this.#pendingInstallRuntime = { resolve, reject };
+    });
+    this.#ws.send(JSON.stringify({ type: "install_runtime", port, baudrate: baudRate }));
+    return p;
+  }
+
   /** Tears down the whole session -- both the backend's serial port (if
    * connectPort() succeeded) and the WebSocket itself. Safe to call on a
    * session that never got past open() (e.g. main.ts's port-listing probe
@@ -197,6 +232,10 @@ export class BackendTransport implements DeviceTransport {
     if (this.#pendingConnect) {
       this.#pendingConnect.reject(new Error("disconnected before the backend responded"));
       this.#pendingConnect = null;
+    }
+    if (this.#pendingInstallRuntime) {
+      this.#pendingInstallRuntime.reject(new Error("disconnected before the backend responded"));
+      this.#pendingInstallRuntime = null;
     }
     for (const waiter of this.#pendingListPorts.splice(0)) {
       waiter.reject(new Error("disconnected before the backend responded"));
@@ -274,6 +313,23 @@ export class BackendTransport implements DeviceTransport {
           }
         } else if (m.connected === false) {
           this.#connectedPort = null;
+        }
+        break;
+      }
+      case "install_runtime_result": {
+        // ws_relay.py's _send_install_result(): {ok: bool, error?: string}
+        // -- one reply per installRuntime() call, no partial-progress
+        // messages in between (raw_repl.py's install_runtime() has no
+        // partial-success state worth reporting either, per its own
+        // header: "a partially-written runtime is not a state worth
+        // distinguishing from a total failure").
+        const waiter = this.#pendingInstallRuntime;
+        this.#pendingInstallRuntime = null;
+        if (m.ok === true) {
+          waiter?.resolve();
+        } else {
+          const message = typeof m.error === "string" ? m.error : "runtime install failed (no error detail from backend)";
+          waiter?.reject(new Error(message));
         }
         break;
       }
