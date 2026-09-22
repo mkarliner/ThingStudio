@@ -124,6 +124,19 @@ isn't something to chase per board). Fully unit-tested against fakes (a real pro
 caught this way, not by inspection); zero hardware confirmation this session (no board available).
 1 entry: `docs/working-notes/decisions/runtime-install-from-editor.md`.
 
+## Board-aware compile (-march)
+
+**2026-09-22 -- MVP item 3 built, NOT yet verified against real hardware.** Replaces the single
+`MPY_CROSS_MARCH = "xtensawin"` constant with `editor/src/app/native-arch.ts`'s `inferNativeArch()`
+(auto-detects from HELLO's `chipType`) plus a manual-override dropdown (`nativeArchSelect`) for when
+Auto guesses wrong or no board is connected yet -- both parts of the same brief item, built together
+rather than staged. Found and fixed a second, previously-unnoticed bug in the same area while doing
+this: the old constant's own justification ("ESP32/ESP32-C3/ESP32-S3 are all Xtensa") was wrong --
+ESP32-C3/C6 are RISC-V cores (`rv32imc`), confirmed against MicroPython's own docs, not Xtensa. RP2040
+maps to `armv6m` (confirmed, Cortex-M0+); RP2350 maps to `armv7emsp`, sourced from a MicroPython
+maintainer discussion thread, not this project's own hardware -- flagged unconfirmed, the main reason
+the manual override exists at all for v1. 1 entry: `docs/working-notes/decisions/board-aware-compile.md`.
+
 ## What this list doesn't include
 
 Small per-file implementation judgment calls (exact property names, which

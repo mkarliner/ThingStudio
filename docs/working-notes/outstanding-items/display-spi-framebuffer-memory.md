@@ -72,6 +72,38 @@ fine today (no ARM-family board, e.g. the RP2040/RP2350 boards this project's `i
 does. Logged in `learnings/editor-build-tooling.md`; verified clean `tsc --noEmit` after the fix
 (same pre-existing unrelated `node-startup.test.ts` gap, nothing new).
 
+**Gap closed, 2026-09-22 -- MVP item 3 (`mvp-kickoff-brief.md`), board-aware compile.** New
+`editor/src/app/native-arch.ts` (`inferNativeArch()`) replaces the single `MPY_CROSS_MARCH` constant
+with a per-board mapping, inferred from HELLO's `chipType` string with a manual-override dropdown
+(`nativeArchSelect`, `index.html`) for when Auto guesses wrong or no board is connected yet.
+
+**A second wrong assumption found while building this, distinct from the RP2040/RP2350 gap already
+flagged above:** the single-constant fix's own reasoning -- "ESP32/ESP32-C3/ESP32-S3 are all Xtensa" --
+was itself incorrect. ESP32-C3 (and C6) is a RISC-V core, not Xtensa, confirmed against MicroPython's
+own docs (`docs.micropython.org/en/latest/develop/natmod.html`'s arch table: `rv32imc -- eg ESP32C3,
+ESP32C6`) and independently by Espressif's own chip documentation -- `xtensawin` was silently wrong for
+every C3 board this project has (the LuatOS CORE-ESP32-C3 hardware used for ebutton/eswitch/interrupt
+work), just never caught because no viper-using flow had ever been deployed to one -- `gs4`'s own
+real-hardware proof above used a CYD (ESP32-WROOM, genuinely Xtensa), not a C3 board.
+
+Full mapping, with confidence noted (`native-arch.ts`'s own header has the sourcing detail for each):
+ESP32/ESP32-S3 -> `xtensawin` (confirmed, unchanged); ESP32-C3/C6 -> `rv32imc` (confirmed, the
+correction above); RP2040 -> `armv6m` (confirmed -- Cortex-M0+, MicroPython's own docs table: "eg
+Cortex-M0"); RP2350 -> `armv7emsp` (**not confirmed** -- community-sourced from a MicroPython
+maintainer discussion, `github.com/orgs/micropython/discussions/16538`, no real-hardware verification
+by this project; `armv7m` offered as a no-FPU fallback in the same thread, also selectable via the
+manual override). An unrecognized board falls back to `xtensawin`, also unconfirmed, same "harmless
+unless the flow uses viper" reasoning as the original single-constant default.
+
+Verified: 11 new cases in `editor/test/native-arch.test.ts` (against real observed `chipType` strings,
+e.g. `"Raspberry Pi Pico W with RP2040"` from `protocol.roundtrip.test.ts`'s own test data, not
+invented ones), isolated `tsc --noEmit` (clean, same pre-existing unrelated `node-startup.test.ts`
+gap) and `vitest run` (full suite, 558/561 passing -- the 3 failures are the same pre-existing/
+environmental ones already tracked elsewhere, none touching this change). **Not done: any
+real-hardware pass** -- no board was available this session (same constraint as the runtime-install
+work landed the same day, `decisions/runtime-install-from-editor.md`). RP2350's guessed arch in
+particular needs a real board to confirm or correct.
+
 ## The problem, with real numbers
 
 `display_spi` takes one already-rendered `bytes` frame as its single input -- by design, it doesn't

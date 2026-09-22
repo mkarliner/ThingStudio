@@ -117,6 +117,7 @@ import { mergeCustomNodeRegistry } from "../node-library/custom-node.js";
 import { WebSerialTransport, type WebSerialPort, type DeviceTransport, type TransportEvents } from "../protocol/transport.js";
 import { BackendTransport, type SerialPortInfo } from "../protocol/backend-transport.js";
 import { explainBackendConnectError } from "./connect-error-help.js";
+import { NATIVE_ARCH_OPTIONS, inferNativeArch } from "./native-arch.js";
 import type { Message, NodeStatusMessage, ProtocolVersion } from "../protocol/messages.js";
 import { checkRuntimeBuild, decideDeploy } from "../protocol/version.js";
 import { ClassicPreset } from "rete";
@@ -751,36 +752,16 @@ let mpyStderrLines: string[] = [];
 // mpy-cross's native-code emitter (what actually compiles a
 // `@micropython.viper`/`@micropython.native`-decorated function to real
 // machine code, as opposed to portable bytecode) needs an explicit
-// `-march=<arch>` target -- omitted entirely until 2026-09-18, because
-// nothing this project ever deployed through this real browser pipeline
-// used either decorator before `display_spi`'s `frameFormat: "gs4"`
-// (decisions/node-authoring.md's 2026-09-18 entries): plain bytecode
-// compilation is architecture-independent, so the gap was invisible until
-// a real viper-using flow tried to Deploy and mpy-cross failed with
-// "SyntaxError: invalid arch" (confirmed by reading the actual arch list
-// embedded in editor/public/vendor/mpy-cross/mpy-cross.wasm directly:
-// "x86, x64, armv6, armv6m, armv7m, armv7em, armv7emsp, armv7emdp,
-// xtensa, xtensawin, rv32imc, rv64imc, host, debug").
-//
-// "xtensawin" is correct for every board this project currently targets
-// with a real flow -- ESP32/ESP32-C3/ESP32-S3 are all Xtensa, and
-// MicroPython's own ESP32 port firmware builds its native emitter for
-// "xtensawin" uniformly across that whole family (not "xtensa" plain --
-// that's a different register-windowing ABI variant this port doesn't
-// use). **Real gap, not closed by this fix**: this is a single hardcoded
-// global, with no board/architecture concept anywhere in the compile
-// pipeline to pick a different value from -- fine today because nothing
-// ARM-family (RP2040/RP2350 -- real boards elsewhere in this project,
-// `test-flows/interrupt-basic.pico-*.flow.json`) uses viper/native code
-// yet, but a landmine for whenever one does (wrong arch either fails
-// mpy-cross outright with this same error, or -- MicroPython's own .mpy
-// loader checks a file's required native arch against the running
-// device's at import time -- fails loudly on-device instead, not
-// silently wrong; still a real gap worth real board-awareness before
-// that day, not a decision to make unilaterally here). Flagged in
-// `outstanding-items.md`, not solved further than "unblock every board
-// this project actually ships to today."
-const MPY_CROSS_MARCH = "xtensawin";
+// `-march=<arch>` target -- omitted entirely until 2026-09-18, then
+// hardcoded to one global "xtensawin" constant, then made board-aware
+// 2026-09-22 (MVP item 3, mvp-kickoff-brief.md): the single-constant
+// version was itself wrong for ESP32-C3 (a RISC-V core, not Xtensa,
+// despite the family name) and had no way to target RP2040/RP2350 at
+// all. See native-arch.ts's own header for the full reasoning, the real
+// arch list read out of the vendored mpy-cross.wasm, and which mappings
+// are confirmed vs. a best-effort guess pending real-hardware
+// verification. inferNativeArch() there is this function's replacement;
+// currentNativeArch() below adds the manual-override layer on top of it.
 
 const mpyReadyPromise: Promise<void> = (async () => {
   const createMpyCross = await waitForMpyCrossFactory(10000);
@@ -796,7 +777,7 @@ const mpyReadyPromise: Promise<void> = (async () => {
   logLine(`[mpy-cross load error] ${err instanceof Error ? err.message : String(err)}`, "err");
 });
 
-function compileToMpy(source: string): Uint8Array {
+function compileToMpy(source: string, march: string): Uint8Array {
   if (!MpyModule) throw new Error("mpy-cross not ready yet");
   mpyStderrLines = [];
   MpyModule.FS.writeFile("/in.py", source);
@@ -805,7 +786,7 @@ function compileToMpy(source: string): Uint8Array {
   } catch {
     // no previous output to remove -- fine
   }
-  const exitCode = MpyModule.callMain(["-march=" + MPY_CROSS_MARCH, "-o", "/out.mpy", "/in.py"]);
+  const exitCode = MpyModule.callMain(["-march=" + march, "-o", "/out.mpy", "/in.py"]);
   if (exitCode !== 0) {
     throw new Error(`mpy-cross exited ${exitCode} (see console log above for stderr)`);
   }
@@ -1106,6 +1087,13 @@ const HELLO_WAIT_MS = 3000; // generous over a real boot's timing; only gates th
 // a previous device never silently carries over to a new one.
 let lastHelloVersion: ProtocolVersion | null = null;
 
+// Same lifecycle as lastHelloVersion (set/reset at the same three call
+// sites, deliberately not merged into one object -- they're read by
+// unrelated code paths and this keeps each independently greppable).
+// Feeds native-arch.ts's inferNativeArch() for the Deploy handler's
+// board-aware mpy-cross -march choice (currentNativeArch(), below).
+let lastHelloChipType: string | null = null;
+
 // Transport-agnostic event handling (design doc §4, editor-backend-wiring
 // 2026-09-07: "explicit user choice between 'direct' (WebSerial,
 // local-only) and 'via backend' connection modes"). Everything below
@@ -1124,6 +1112,7 @@ const transportEvents: TransportEvents = {
     if (message.type === "NODE_STATUS") handleNodeStatus(message.nodeId, message.state, message.text);
     if (message.type === "HELLO") {
       lastHelloVersion = message.runtimeVersion;
+      lastHelloChipType = message.chipType;
       const decision = decideDeploy(message.runtimeVersion, EDITOR_TARGET_VERSION);
       logLine(`[version check] ${decision.reason}`, decision.allowed ? "ok" : "err");
       // Belt-and-braces companion check, non-blocking -- see
@@ -1172,6 +1161,7 @@ const transportEvents: TransportEvents = {
   onDisconnect(reason) {
     logLine(`[disconnected] ${reason ? String(reason) : "(clean)"}`, "");
     lastHelloVersion = null;
+    lastHelloChipType = null;
     setConnectedUi(false);
   },
 };
@@ -1252,6 +1242,37 @@ function currentConnMode(): "direct" | "backend" {
  * way rather than repeating the trim-or-default inline. */
 function currentBackendWsUrl(): string {
   return el<HTMLInputElement>("backendUrlInput").value.trim() || DEFAULT_BACKEND_WS_URL;
+}
+
+/** Resolves the mpy-cross `-march` to compile with -- MVP item 3
+ * (mvp-kickoff-brief.md), reads nativeArchSelect (index.html): "auto"
+ * (the default) infers from the connected board's HELLO via
+ * native-arch.ts's inferNativeArch(), any other value is the user's own
+ * explicit override and always reported `confirmed: true` -- a person who
+ * picked a specific arch by hand isn't being "guessed at" the way Auto's
+ * fallback is. Auto with no HELLO seen yet this connection (lastHelloChipType
+ * still null -- Deploy is allowed to proceed without one, see the version-
+ * check comment above) infers from "", which native-arch.ts's fallback
+ * resolves the same unconfirmed way as any other unrecognized board. */
+function currentNativeArch(): { arch: string; confirmed: boolean; manual: boolean } {
+  const selected = el<HTMLSelectElement>("nativeArchSelect").value;
+  if (selected === "auto") {
+    const guess = inferNativeArch(lastHelloChipType ?? "");
+    return { ...guess, manual: false };
+  }
+  return { arch: selected, confirmed: true, manual: true };
+}
+
+// Populates nativeArchSelect's real options from NATIVE_ARCH_OPTIONS
+// (native-arch.ts) once, at startup -- index.html only hardcodes the
+// static "Auto" option itself, so this list has exactly one source of
+// truth rather than drifting between the .ts file and the markup the way
+// CORE_FILES/VENDOR_FILES used to (runtime_manifest.py's own header).
+for (const opt of NATIVE_ARCH_OPTIONS) {
+  const optionEl = document.createElement("option");
+  optionEl.value = opt.value;
+  optionEl.textContent = opt.label;
+  el("nativeArchSelect").appendChild(optionEl);
 }
 
 /** Shows/hides the "via backend" controls (URL, port picker, refresh) --
@@ -1378,6 +1399,7 @@ el("btnInstallRuntime").addEventListener("click", async () => {
 
 el("btnConnect").addEventListener("click", async () => {
   lastHelloVersion = null;
+  lastHelloChipType = null;
   const mode = currentConnMode();
 
   if (mode === "direct") {
@@ -1529,9 +1551,36 @@ el("btnDeploy").addEventListener("click", async () => {
 
     await mpyReadyPromise;
 
+    // Board-aware -march (MVP item 3) -- see currentNativeArch()'s own
+    // header for the auto/manual split. Logged unconditionally, not just
+    // on a problem, so which arch a given Deploy actually used is always
+    // visible in the console, not just inferable after the fact.
+    const nativeArch = currentNativeArch();
+    const usesNativeCode = /@micropython\.(viper|native)\b/.test(preview.source);
+    logLine(
+      `[compile] targeting mpy-cross -march=${nativeArch.arch}` +
+        (nativeArch.manual ? " (manual override)" : lastHelloChipType ? ` (auto-detected from "${lastHelloChipType}")` : " (auto, no board chipType known yet)"),
+      "",
+    );
+    if (!nativeArch.confirmed && usesNativeCode) {
+      // Only a real risk when the compiled flow actually emits native
+      // code -- see native-arch.ts's header: a wrong -march is byte-
+      // identical-harmless for plain bytecode, but MicroPython's .mpy
+      // loader checks a native module's required arch against the
+      // running device's own at import time, so a wrong guess here fails
+      // on-device at Deploy/import time, not silently. Surfaced loud
+      // (err-styled) specifically because this is the one case that can
+      // actually bite, not just a generic "unconfirmed" footnote.
+      logLine(
+        `[compile] this flow uses @micropython.viper/native, and -march=${nativeArch.arch} is an unverified guess for this board -- ` +
+          "if Deploy fails on-device with an arch/native-module error, pick the right value from the native arch dropdown and redeploy",
+        "err",
+      );
+    }
+
     let mpyBytes: Uint8Array;
     try {
-      mpyBytes = compileToMpy(preview.source);
+      mpyBytes = compileToMpy(preview.source, nativeArch.arch);
     } catch (err) {
       logLine(`[mpy-cross error] ${err instanceof Error ? err.message : String(err)}`, "err");
       highlightNodeFromMpyError(mpyStderrLines.join("\n"));

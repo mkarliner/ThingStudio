@@ -147,6 +147,9 @@
     <button id="btnConnect" class="primary">Connect</button>
     <button id="btnDisconnect" disabled>Disconnect</button>
     <button id="btnCheckStatus" disabled title="Ask the board to resend HELLO -- no reset, no redeploy">Check status</button>
+    <select id="nativeArchSelect" title="mpy-cross -march target for @micropython.viper/@micropython.native code (e.g. display_spi's gs4/gs2/mono formats) -- only matters if a node in this flow actually uses one. Auto detects from the connected board's HELLO; override if Auto guesses wrong or no board is connected yet.">
+      <option value="auto" selected>Native arch: Auto</option>
+    </select>
     <button id="btnDeploy" disabled class="primary">Compile → Deploy</button>
     <span id="pill" class="pill disconnected">disconnected</span>
   </div>
