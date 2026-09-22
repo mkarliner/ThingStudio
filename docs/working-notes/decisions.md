@@ -95,6 +95,18 @@ Custom node authoring + docs sequenced ahead of the normal backlog, then a docum
 
 Documentation split into three activities (scoping, design, tech selection); all three now done or scaffolded as of 2026-09-07 -- the real content gap is an end-user flow-builder guide (developer guide already done by `custom-nodes.md`), tooling is MkDocs + Material on GitHub Pages for now, and structure/nav is a 4-page guide plus a one-file-per-node reference, with the actual MkDocs project (config, workflow, placeholder pages) scaffolded. Only the real content-writing (and Mike's own install/build verification) remains. A new, related in-editor node-reference idea (Mike's, same week) is tracked separately, not yet designed. 4 entries: `docs/working-notes/decisions/documentation-process.md`.
 
+## Editor connect-error UX
+
+**2026-09-22 -- backend-relay connect failures get a plain-language workaround, not raw exception
+text.** MVP item 2 (`mvp-kickoff-brief.md`), first slice: `serial_relay.py`'s already-structured
+`SerialRelayError` text (permission denied, port busy, device vanished) is now pattern-matched into
+a workaround suggestion in the editor (`connect-error-help.ts`), and the HELLO-timeout message now
+names the real, documented "no runtime installed" cause (`learnings/hardware-bringup-hil-rig.md`'s
+2026-09-18 entry) alongside the boot-race one it already mentioned. Scoped to the backend-relay path
+only, matching the existing WebSerial-direct-is-frozen/hidden decision above -- no new investment
+there. A real "Install runtime" button is item 1, not this. 1 entry:
+`docs/working-notes/decisions/editor-connect-errors.md`.
+
 ## What this list doesn't include
 
 Small per-file implementation judgment calls (exact property names, which

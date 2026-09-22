@@ -50,3 +50,40 @@ awareness on afterward.
 
 Not scoped further than this -- needs a real design session (which transport(s) to support first, whether v1
 can be direct-WebSerial-only and defer the via-backend case, wire message shape) before it's buildable.
+
+## Scoped, 2026-09-22 -- this is MVP item 1, and the two questions above are answered
+
+Confirmed with Mike before writing any wire-protocol code (this doc's own "needs a real design session" line,
+taken literally):
+
+- **Transport: backend-relay only, not WebSerial-direct.** Matches `decisions/backend.md`'s 2026-09-08 entry
+  (`direct` mode already hidden in `index.html`, no new investment per the 2026-08-16 addendum) -- Mike's own
+  call, confirmed explicitly this session ("web serial is deprecated").
+- **This doc's own framing of the two mechanisms as a choice is wrong -- they solve different problems, and
+  only one of them solves *this* item.** A board with no runtime at all has nothing listening on the framed
+  §13 protocol -- there's no running listener for a new "write-file" message family to reach. So:
+  - **Raw-REPL bootstrap (this item's actual mechanism):** the backend drives MicroPython's raw REPL directly
+    over the already-open `pyserial` connection `serial_relay.py` already has -- same primitive `mpremote`
+    uses, no new dependency (the MVP's own fixed decision already rules out asking users to `pip install
+    mpremote`, `serial_relay.py` already depends on plain `pyserial`). This is the only mechanism that works
+    for an initial install on a bare-MicroPython board.
+  - **A listener-side self-rewrite message family (this doc's other option):** only useful for a board that
+    already has *some* working listener -- an in-place runtime *upgrade*, not an initial install. Real, and
+    ties into `CLAUDE.md`'s version-bump-discipline section (an auto-correcting `_RUNTIME_VERSION`/
+    `EDITOR_TARGET_VERSION` mismatch), but it's a different, separate future item -- not scoped further here,
+    not blocking this one.
+- **v1 ships a manual "Install runtime" action, not automatic detection.** No preference from Mike on this
+  point, so defaulting to the cheaper, faster-to-ship slice: always offer the action when not connected/no
+  HELLO, rather than first building the boot-log-based "no runtime" detection
+  (`learnings/hardware-bringup-hil-rig.md`'s 2026-09-18 `LISTENER_BOOTING`-line finding) to gate it. Detection
+  can be layered on top later without changing the install mechanism itself.
+
+**Still not built** -- this session did item 2's first slice instead (`decisions/editor-connect-errors.md`) and
+used the reading this doc asked for to get the above confirmed. Next concrete step: a small raw-REPL client in
+the backend (new module, `serial_relay.py`-adjacent -- enter raw REPL, push `device-runtime/src/*.py` + vendor
+files, matching `test-flows/deploy_runtime.py`'s own file list, then reset), a new backend control-plane
+message pair for the editor to trigger it and get progress/completion back, and a button in `main.ts`. Needs a
+real board to verify against, same rigor as every other device-runtime-adjacent change this project has made
+(`CLAUDE.md`'s device-runtime test-suite rule doesn't directly apply -- no `device-runtime/src` changes here,
+only a new backend-side client speaking to it -- but the raw-REPL push itself still needs a real-hardware pass
+before it's trusted, not just reasoned through).

@@ -116,6 +116,7 @@ import { buildRegistry } from "../node-library/registry.js";
 import { mergeCustomNodeRegistry } from "../node-library/custom-node.js";
 import { WebSerialTransport, type WebSerialPort, type DeviceTransport, type TransportEvents } from "../protocol/transport.js";
 import { BackendTransport, type SerialPortInfo } from "../protocol/backend-transport.js";
+import { explainBackendConnectError } from "./connect-error-help.js";
 import type { Message, NodeStatusMessage, ProtocolVersion } from "../protocol/messages.js";
 import { checkRuntimeBuild, decideDeploy } from "../protocol/version.js";
 import { ClassicPreset } from "rete";
@@ -1359,7 +1360,13 @@ el("btnConnect").addEventListener("click", async () => {
       await t.open(wsUrl);
       await t.connectPort(portName);
     } catch (err) {
-      logLine(`[connect failed] ${err instanceof Error ? err.message : String(err)}`, "err");
+      // connectPort() rejections carry the backend's own NODE_ERROR text
+      // (serial_relay.py's SerialRelayError) verbatim; open() rejections
+      // (backend unreachable) don't and shouldn't be pattern-matched
+      // against connect-failure causes they were never meant to describe.
+      const message = err instanceof Error ? err.message : String(err);
+      const explained = message.startsWith("NODE_ERROR:") ? explainBackendConnectError(message) : message;
+      logLine(`[connect failed] ${explained}`, "err");
       try {
         await t.disconnect();
       } catch {
@@ -1394,8 +1401,21 @@ el("btnConnect").addEventListener("click", async () => {
   try {
     await helloP;
   } catch {
+    // "the listener may not be running at all" covers two real, distinct
+    // causes this project has actually hit on hardware (learnings/
+    // hardware-bringup-hil-rig.md, 2026-09-18): a boot-timing race (rare,
+    // still open -- backend-platform-decision.md §5), and a board that
+    // simply has no runtime installed at all -- confirmed by a
+    // "SyntaxError: invalid syntax" / 'File "<stdin>", line 1' line
+    // appearing on connect or "Check status", the console's own next
+    // message after this one when that's the cause. No in-editor install
+    // yet (outstanding-items/deploy-runtime-from-editor.md) -- until then
+    // this points at the same manual step the MVP brief itself names.
     logLine(
-      '[no HELLO received yet -- version compatibility is unverified; Deploy will proceed without the check. Try "Check status", or the board\'s listener may not be running at all (reset it if this persists)]',
+      '[no HELLO received yet -- version compatibility is unverified; Deploy will proceed without the check. ' +
+        'Try "Check status". If a "SyntaxError" line shows up on connect or Check status, the board has no ' +
+        "runtime installed -- run `python3 test-flows/deploy_runtime.py --port <port>` from a terminal, then " +
+        "reconnect. Otherwise, the board's listener may just not be running (reset it if this persists).]",
       "",
     );
   }
