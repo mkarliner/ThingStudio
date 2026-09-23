@@ -16,3 +16,6 @@ same removal convention as this file's own 2026-09-07/2026-09-13 passes above.]
 - need a way of deleting flows that cause a boot loop or similar lock out. mpremote rm is not enough
 - generic policy for presets for nodes that are complex to set up, like display drivers, but also board configs / pin mappings
 - processor detection/selection mechanism for viper 
+- mechanism for pausing run time so user can go to python prompt without rebooting, also resme.
+- rearrange items on top bar to be more logical in user flow, eg: open, save ports, connect etc etc
+- remove 'via backend' from top bar, it's always via backend.

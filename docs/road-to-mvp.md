@@ -10,7 +10,6 @@ MVP users are makers and MicroPython users, and probably Node-RED users. Assume 
 
 Test for it with a real newcomer:
 
-- **No terminal.** Install, board setup and deploy all happen through the product.
 - **No hand-holding.** Every question they hit is answered in the docs, or it becomes an MVP item.
 - **No silent failure.** When something goes wrong, they are told what happened and what to do next.
 - **A first success in minutes.** Time to first blink of 15 minutes or better, from download to a blinking LED.
@@ -26,6 +25,7 @@ Installation should be one obvious path with no command line, from download to a
    - **Every route bundles the back end's language runtime**, so there are no prerequisites to install first
 2. **Runtime install from the editor.** Users bring a board with MicroPython already on it. The editor detects a board with no runtime and offers to install it. Today this is a manual `deploy_runtime.py` step, and missing it shows only a confusing `SyntaxError` on connect.
 3. **Sensible defaults per supported chip.** ESP32, ESP32-C3, ESP32-S3, RP2040 and RP2350 each get working defaults for pins, SPI speed and the like, so users don't discover limits by crashing.
+   - **Presets - things like board and processor definitions should be human editable files in the thingstudio config folder. Similarly, spi setup should be saveable with a name to be selected later.
 4. **Clear connect failures, not guaranteed connects.** Users will plug in boards with unknown reset behaviour, so reliable connection everywhere isn't achievable. When a connect fails, say what happened and suggest workarounds, such as pressing reset or changing the DTR/RTS setting.
 5. **Acceptance test.** A fresh machine and a fresh board reach a blinking LED in 15 minutes or less, by a first-time test user following only the docs. Mike identifies the initial test users.
 
@@ -34,7 +34,7 @@ Installation should be one obvious path with no command line, from download to a
 The docs should be written around what a person is trying to do, and should never disagree with the product.
 
 **Human-centred**
-
+- ** Style like node red, concise, brief, not verbose, should read like a human wrote it.
 - **Getting started tutorial.** Install, blink an LED, read a sensor, draw on a display. Each step shows what success looks like.
 - **Task guides before reference.** "Show a temperature on an SSD1306 display" before the `display_spi` property list.
 - **User docs kept apart from project docs.** `learnings/` and `decisions/` are for contributors; users should never need them.
