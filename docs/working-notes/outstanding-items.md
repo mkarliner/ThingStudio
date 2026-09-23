@@ -463,3 +463,4 @@ ambiguous."
 
 - **GPIO pin range hardcoded to 0–39** — too narrow for ESP32-S2/S3, too wide for RP2040. MVP item 4.
   `outstanding-items/gpio-pin-range-by-chip.md`.
+  Next: `chip-board-definitions-briefing.md` (MVP item 4).
