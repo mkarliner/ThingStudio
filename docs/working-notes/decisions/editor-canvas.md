@@ -99,3 +99,18 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
   3. **"Grow the pill" over packing ports tighter into a fixed height** -- `nodes.ts`'s `functionNodeHeight()` adds a fixed row height per output beyond the first, rather than keeping every function node the same height and cramming N output dots into it. Legible at the realistic 2-4 output range matters more here than staying pixel-uniform with every other (fixed-single-output) node type.
 
   Mechanism: `NodeDefinition.outputCount(properties)` (`node-definition.ts`) lets a node type's real output count vary per instance -- every other node type still gets its fixed count from `ports.outputs.length`, so this is a no-op for the rest of the library. `compile.ts`'s `emit()` takes a new per-output-slot code path only when `outputCount > 1`; the original single-output codegen is untouched byte-for-byte below that threshold, so no existing flow's compiled output changes. Canvas side: `nodes.ts`'s `functionOutputKey()` deliberately uses non-numeric-looking port keys (`"out0"`, `"out1"`, ...) to avoid JS's own integer-index-key reordering hazard corrupting `graph-adapter.ts`'s `socketIndex()`; `editor-setup.ts`'s `setFunctionNodeOutputCount()` only ever resizes from the tail and removes any connection on a port before removing the port itself. Two latent bugs found and fixed while building this, unrelated to multi-output specifically but only exposed by a port count that can change after construction: `ThingstudioNode.vue`'s `inputs`/`outputs` computeds weren't reading the `seed` prop (same markRaw non-reactivity class the `statusLine` fix already covered, 2026-09-10 entry above), and `main.ts`'s `applyFlowFile()` wasn't reconstructing a loaded function node's real output ports to match its saved `outputCount` -- both would have silently dropped a loaded/resized flow's higher-index-output wiring. No `device-runtime/src` change and no version bump -- generated Python uses only the pre-existing `runtime.NodeError`. A dedicated router/switch node (the item's original narrower ask) is still unbuilt -- see `outstanding-items/connection-state-gate-router-nodes.md`.
+
+- **2026-09-23 — Top bar reordered to follow what a user does; "via backend" and the backend URL field
+  gone.** Mike's two points from `mikes-questions-and-points.md`. Groups, left to right: title + **Docs**
+  (help, not a step); flow (**Open…**, **Save…**, name, **Clear**); board (port, **⟳ ports**,
+  **Connect**/**Disconnect**, status pill, **Check status**, **Install runtime…**); deploy (**Native arch**,
+  **Compile → Deploy**). Details:
+  - `connModeSelect` hidden (kept in the DOM, value "backend": main.ts reads it, and the frozen direct
+    WebSerial path is still in git). `backendUrlInput` shown only under the Vite dev server — when the
+    backend serves the editor, the URL is the page's origin.
+  - Connect/Disconnect: only the applicable one is shown; Check status only while connected.
+  - Each group is a `.tb-group` (nowrap), so a narrow window wraps between groups, never through one.
+  - Checked by screenshot of a real build at 1440/1280/1100px: one row at 1440 (disconnected), clean
+    group-boundary wraps below that. The Native arch select was unstyled and sized to its longest option
+    label, forcing two to three rows on its own; now styled and capped at 120px.
+  - `flow-lifecycle.md` updated for the shorter **Open…**/**Save…** labels.

@@ -1250,9 +1250,14 @@ fireInjectNode.value = (node) => {
 function setConnectedUi(connected: boolean): void {
   el("pill").textContent = connected ? "connected" : "disconnected";
   el("pill").className = connected ? "pill connected" : "pill disconnected";
+  // Only the applicable one is shown (2026-09-23 top-bar tidy-up) -- two buttons with one always
+  // greyed out was just clutter. `disabled` kept in step too, belt and braces.
   el<HTMLButtonElement>("btnConnect").disabled = connected;
+  el<HTMLButtonElement>("btnConnect").hidden = connected;
   el<HTMLButtonElement>("btnDisconnect").disabled = !connected;
+  el<HTMLButtonElement>("btnDisconnect").hidden = !connected;
   el<HTMLButtonElement>("btnCheckStatus").disabled = !connected;
+  el<HTMLButtonElement>("btnCheckStatus").hidden = !connected;
   // A fresh connection always starts deployable, regardless of whatever
   // deployedClean was left at from a previous connection (a different
   // board very likely doesn't already have this exact flow running, and
@@ -1318,7 +1323,9 @@ for (const opt of NATIVE_ARCH_OPTIONS) {
  * from the environment (e.g. whether a backend happens to be reachable). */
 function updateConnModeUi(): void {
   const backend = currentConnMode() === "backend";
-  el("backendUrlInput").hidden = !backend;
+  // Only the Vite dev server needs a settable backend URL; when the backend serves the page, the
+  // URL is the page's own origin (initialBackendWsUrl, below). 2026-09-23 top-bar tidy-up.
+  el("backendUrlInput").hidden = !backend || !import.meta.env.DEV;
   el("backendPortSelect").hidden = !backend;
   el("btnRefreshPorts").hidden = !backend;
   el("btnInstallRuntime").hidden = !backend;
