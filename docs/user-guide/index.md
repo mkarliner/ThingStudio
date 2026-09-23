@@ -9,6 +9,7 @@ the ones that already exist, see [Writing custom nodes](custom-nodes.md).
 
 - **[Installing MicroPython](installing-micropython.md)** — getting MicroPython onto a new board.
 - **[Getting started](getting-started.md)** — installing, starting, connecting a board.
+- **[Blink an LED](first-flow.md)** — your first flow, step by step.
 - **[Canvas basics](canvas-basics.md)** — the palette, wiring, config nodes.
 - **[Flow lifecycle](flow-lifecycle.md)** — saving, deploying, checking status.
 - **[WiFi provisioning](wifi-provisioning.md)** — a device learning its WiFi credentials on its own.

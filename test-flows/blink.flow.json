@@ -1,0 +1,34 @@
+{
+  "formatVersion": 1,
+  "flowName": "blink",
+  "nodes": [
+    {
+      "id": "b1ink0timer00001",
+      "type": "thingstudio/timer",
+      "properties": { "intervalMs": 500 }
+    },
+    {
+      "id": "b1ink0onoff00002",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "msg['payload'] = msg['payload'] % 2\nreturn msg",
+        "outputCount": 1
+      }
+    },
+    {
+      "id": "b1ink0gpio000003",
+      "type": "thingstudio/gpio_out",
+      "properties": { "pin": 15 }
+    }
+  ],
+  "edges": [
+    ["b1ink0timer00001", 0, "b1ink0onoff00002", 0],
+    ["b1ink0onoff00002", 0, "b1ink0gpio000003", 0]
+  ],
+  "layout": {
+    "b1ink0timer00001": { "pos": [80, 200] },
+    "b1ink0onoff00002": { "pos": [320, 200] },
+    "b1ink0gpio000003": { "pos": [560, 200] }
+  },
+  "configs": []
+}

@@ -40,13 +40,28 @@ A board that's new to Thingstudio doesn't have its runtime yet. The console says
 
 ## Install the runtime
 
-The runtime is the part of Thingstudio that runs on the board. It's a one-time step for each board.
+The runtime is the part of Thingstudio that runs on the board. Each board needs it once.
+
+There are two ways to install it. Use the editor unless you have a reason not to.
+
+**From the editor**
 
 1. With the board's port selected, click **Install runtime…**. It takes about half a minute and shows each file as it goes.
 2. The board restarts when it's done. Click **Connect** again.
 
 If something goes wrong, the console says what the board sent back and what to do. See [Board won't connect](debugging.md#board-wont-connect).
 
+**From the command line**
+
+Useful for scripting, or setting up several boards at once. Click **Disconnect** in the editor first, so the port is free.
+
+```sh
+pip install mpremote
+python3 test-flows/deploy_runtime.py --port PORT
+```
+
+`PORT` is the board's port, as shown in the editor's port list. When it finishes, click **Connect** in the editor.
+
 ## Next
 
-Build your first flow: [Canvas basics](canvas-basics.md).
+Build your first flow: [Blink an LED](first-flow.md). [Canvas basics](canvas-basics.md) covers the editor in more detail.

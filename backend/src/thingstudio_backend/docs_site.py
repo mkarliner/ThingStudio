@@ -24,6 +24,8 @@ from pathlib import Path
 
 from aiohttp import web
 
+from .editor_site import changed_since_build, page_with_banner, stale_banner
+
 logger = logging.getLogger(__name__)
 
 ONLINE_DOCS_URL = "https://mkarliner.github.io/ThingStudio/"
@@ -49,6 +51,15 @@ def _not_built_page(docs_dir: Path, path: str) -> web.Response:
     return web.Response(status=503, text=body, content_type="text/html")
 
 
+def _doc_sources(docs_dir: Path) -> list[Path]:
+    """In a dev checkout (site/ at the repo root next to mkdocs.yml), what a docs build is made from.
+    Empty for a packaged install, which ships no sources."""
+    repo = docs_dir.parent
+    if not (repo / "mkdocs.yml").is_file():
+        return []
+    return [repo / "mkdocs.yml", repo / "docs" / "user-guide"]
+
+
 def make_docs_routes(docs_dir: Path) -> list[web.RouteDef]:
     root = docs_dir.resolve()
     if not (root / "index.html").is_file():
@@ -72,6 +83,13 @@ def make_docs_routes(docs_dir: Path) -> list[web.RouteDef]:
             target = target / "index.html"
         if not target.is_file():
             raise web.HTTPNotFound()
+        if target.suffix == ".html":
+            # Same stale-build banner as the editor (editor_site.py). Found necessary 2026-09-23: after
+            # the docs were rewritten, the served copy still showed the old pages because nobody had
+            # rerun `mkdocs build`, and nothing said so.
+            newer = changed_since_build(root / "index.html", _doc_sources(root))
+            if newer is not None:
+                return page_with_banner(target, stale_banner("docs", newer, "mkdocs build"))
         # mkdocs page names don't change between builds, so the browser must revalidate (same
         # stale-page trap editor_site.py hit with index.html).
         return web.FileResponse(target, headers={"Cache-Control": "no-cache"})

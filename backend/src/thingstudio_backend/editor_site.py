@@ -41,42 +41,48 @@ def default_editor_dir() -> Path:
     return Path(__file__).resolve().parents[3] / "editor" / "dist"
 
 
-def stale_source(editor_dir: Path) -> Path | None:
-    """In a dev checkout (editor/src next to editor/dist), the newest source file changed after the
-    last build, else None. Only checks editor/src and editor/index.html -- enough to catch "forgot to
-    rebuild", not a full dependency graph."""
-    built = editor_dir / "index.html"
-    src = editor_dir.parent / "src"
-    if not built.is_file() or not src.is_dir():
+def changed_since_build(built: Path, sources: list[Path]) -> Path | None:
+    """The newest file under `sources` (files or directories) modified after `built`, else None.
+    None too if `built` or every source is missing -- a packaged install ships no sources, and that
+    isn't staleness. Shared with docs_site.py."""
+    if not built.is_file():
         return None
-    built_at = built.stat().st_mtime
-    candidates = [editor_dir.parent / "index.html", *src.rglob("*")]
-    newest = max(
-        (p for p in candidates if p.is_file() and p.name != ".DS_Store"),
-        key=lambda p: p.stat().st_mtime,
-        default=None,
-    )
-    if newest is not None and newest.stat().st_mtime > built_at:
+    files: list[Path] = []
+    for src in sources:
+        if src.is_file():
+            files.append(src)
+        elif src.is_dir():
+            files.extend(p for p in src.rglob("*") if p.is_file())
+    newest = max((p for p in files if p.name != ".DS_Store"), key=lambda p: p.stat().st_mtime, default=None)
+    if newest is not None and newest.stat().st_mtime > built.stat().st_mtime:
         return newest
     return None
 
 
-def _stale_banner(newer: Path) -> str:
+def stale_source(editor_dir: Path) -> Path | None:
+    """In a dev checkout (editor/src next to editor/dist), the newest source file changed after the
+    last build, else None. Only checks editor/src and editor/index.html -- enough to catch "forgot to
+    rebuild", not a full dependency graph."""
+    if not (editor_dir.parent / "src").is_dir():
+        return None
+    return changed_since_build(editor_dir / "index.html", [editor_dir.parent / "index.html", editor_dir.parent / "src"])
+
+
+def stale_banner(what: str, newer: Path, rebuild_cmd: str) -> str:
     return (
         "<div id='ts-stale-build' style='position:fixed;top:0;left:0;right:0;z-index:99999;"
         "background:#b3261e;color:#fff;font:14px/1.4 system-ui;padding:8px 12px'>"
-        "This editor build is out of date: "
+        f"This {html.escape(what)} build is out of date: "
         f"<code>{html.escape(newer.name)}</code> changed since it was built. "
-        "Rebuild with <code>cd editor &amp;&amp; npm run build</code>, then reload this page."
+        f"Rebuild with <code>{html.escape(rebuild_cmd)}</code>, then reload this page."
         "</div>"
     )
 
 
-def _index_with_banner(index: Path, newer: Path) -> web.Response:
-    """index.html with the stale-build banner inserted just after <body>. Served uncached so the
-    banner goes away on the first reload after a rebuild."""
-    page = index.read_text(encoding="utf-8")
-    banner = _stale_banner(newer)
+def page_with_banner(page_path: Path, banner: str) -> web.Response:
+    """An HTML file with `banner` inserted just after <body>. Served uncached so the banner goes
+    away on the first reload after a rebuild. Shared with docs_site.py."""
+    page = page_path.read_text(encoding="utf-8")
     i = page.find("<body")
     j = page.find(">", i) if i != -1 else -1
     page = page[: j + 1] + banner + page[j + 1 :] if j != -1 else banner + page
@@ -126,7 +132,7 @@ def make_editor_routes(editor_dir: Path) -> list[web.RouteDef]:
             # and an edit made while the backend runs should show up too.
             newer = stale_source(root)
             if newer is not None:
-                return _index_with_banner(target, newer)
+                return page_with_banner(target, stale_banner("editor", newer, "cd editor && npm run build"))
         response = web.FileResponse(target)
         if not target.is_relative_to(root / "assets"):
             # Only Vite's assets/ files have content hashes in their names. Everything else --

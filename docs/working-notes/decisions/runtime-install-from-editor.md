@@ -120,3 +120,9 @@ Status: detail file for `decisions.md`'s "Runtime install from the editor" index
   answer. The one gap: `runtimeBuild: null`, because only `deploy_runtime.py` wrote `_runtime_build.txt`.
   `runtime_installer.runtime_build_sha()` now stamps the same marker (fails open with no git); `version.ts`'s
   null-build message no longer refers to `deploy_runtime.py`.
+- **2026-09-23 — First blink from a blank board, following only the product and its docs.** Mike, LOLIN S2
+  Mini: MicroPython from `installing-micropython.md`, Install runtime from the editor, then the new "Blink an
+  LED" page (`first-flow.md`: timer → function `% 2` → gpio out). Not yet the formal acceptance test
+  (road-to-mvp.md §1.5 wants a first-time user who isn't Mike), but every step of that path now exists and
+  has run on real hardware. The docs build now gets the same stale-build banner as the editor, after the
+  served Getting started page turned out to be the pre-rewrite version (`mkdocs build` not rerun).

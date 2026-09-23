@@ -77,3 +77,28 @@ async def test_unbuilt_docs_explain_and_link_online_copy(tmp_path) -> None:
         assert "aren't built" in body
         assert ONLINE_DOCS_URL + "installing-micropython/" in body
         assert "mkdocs build" in body
+
+
+@pytest.mark.asyncio
+async def test_a_stale_docs_build_shows_a_banner(tmp_path) -> None:
+    """Real case, 2026-09-23: the Getting started page was rewritten but the served copy still showed
+    the old one -- `mkdocs build` hadn't been rerun, and nothing said so."""
+    import os
+
+    site = _built_site(tmp_path)
+    (site / "installing-micropython" / "index.html").write_text("<html><body><h1>install mp</h1></body></html>")
+    (tmp_path / "mkdocs.yml").write_text("site_name: x")
+    guide = tmp_path / "docs" / "user-guide"
+    guide.mkdir(parents=True)
+    (guide / "getting-started.md").write_text("# new")
+    old = (guide / "getting-started.md").stat().st_mtime - 100
+    os.utime(site / "index.html", (old, old))
+    os.utime(tmp_path / "mkdocs.yml", (old - 1, old - 1))  # only the page changed since the build
+    async with _client(tmp_path, site) as client:
+        body = await (await client.get("/docs/installing-micropython/")).text()
+        assert "docs build is out of date" in body and "getting-started.md" in body and "mkdocs build" in body
+        # CSS and other assets are served untouched.
+        assert (await (await client.get("/docs/assets/app.css")).text()) == "body{}"
+        new = (guide / "getting-started.md").stat().st_mtime + 100
+        os.utime(site / "index.html", (new, new))
+        assert "out of date" not in await (await client.get("/docs/installing-micropython/")).text()

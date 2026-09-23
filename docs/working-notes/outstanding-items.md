@@ -460,3 +460,6 @@ reasoning stays at each pointer's target, nothing here was deleted.
 the original inventory was read and classified but left in place — either partially resolved (open items pulled
 forward above), still fully active, or one of the three living tracking documents noted under "Flagged as
 ambiguous."
+
+- **GPIO pin range hardcoded to 0–39** — too narrow for ESP32-S2/S3, too wide for RP2040. MVP item 4.
+  `outstanding-items/gpio-pin-range-by-chip.md`.
