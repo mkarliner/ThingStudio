@@ -9,6 +9,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   AdminApiError,
+  DEFAULT_BACKEND_WS_URL,
+  initialBackendWsUrl,
   backendHttpBaseUrl,
   deleteCustomNode,
   deleteFlow,
@@ -254,5 +256,17 @@ describe("listPresets / getPreset / putPreset / deletePreset", () => {
     vi.stubGlobal("fetch", fetchMock);
     await deletePreset("ws://127.0.0.1:8765/ws", "display_spi", "cyd");
     expect(fetchMock).toHaveBeenCalledWith("http://127.0.0.1:8765/api/presets/display_spi/cyd", { method: "DELETE" });
+  });
+});
+
+describe("initialBackendWsUrl", () => {
+  it("uses the page's own origin when the backend served the editor", () => {
+    expect(initialBackendWsUrl(false, { protocol: "http:", host: "127.0.0.1:9000" })).toBe("ws://127.0.0.1:9000/ws");
+    expect(initialBackendWsUrl(false, { protocol: "https:", host: "localhost:8765" })).toBe("wss://localhost:8765/ws");
+  });
+
+  it("falls back to the default under the Vite dev server or a file:// page", () => {
+    expect(initialBackendWsUrl(true, { protocol: "http:", host: "localhost:5173" })).toBe(DEFAULT_BACKEND_WS_URL);
+    expect(initialBackendWsUrl(false, { protocol: "file:", host: "" })).toBe(DEFAULT_BACKEND_WS_URL);
   });
 });

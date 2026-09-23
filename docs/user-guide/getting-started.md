@@ -1,61 +1,52 @@
 # Getting started
 
-Thingstudio runs entirely in the browser — no separate install for the editor itself.
+Thingstudio is a program you run on your computer. It opens its editor in your web browser. You build a flow there and deploy it to a board over USB.
 
-## Requirements
+You need a supported board with [MicroPython installed](installing-micropython.md), and a USB cable that carries data, not just power.
 
-A backend running somewhere reachable — see "Connecting" below. It's needed for loading custom nodes and for reaching a board; saving and opening flows uses your browser's own file dialog and needs no backend at all. Any modern browser works with the editor itself, though the native file dialog for flows is Chrome/Edge only — Safari/Firefox fall back to a plain download/upload.
+## Install
 
-## Running the editor
+Packaged installers aren't available yet. For now, install from a copy of the repository. You need Python 3.10 or later, and Node.js to build the editor.
 
 ```sh
-cd editor
-npm install
-npm run dev
+pip install -e backend
+cd editor && npm ci && npm run build && cd ..
+pip install mkdocs==1.6.1 mkdocs-material==9.7.7 && mkdocs build
 ```
 
-Opens the editor locally. Build a flow from scratch, or open one of the examples in `test-flows/`.
+Run the last two lines again after updating the repository.
 
-## Bootstrapping a board
-
-Your board needs MicroPython first. If it doesn't have it yet, follow [Installing MicroPython](installing-micropython.md).
-
-Before any flow can be deployed, a board also needs the Thingstudio runtime on it — a one-time step per board, or after a full erase/reflash.
-
-**From the editor:** with the backend running and the board's port selected (see "Connecting" below), click **Install runtime…**. It pushes the runtime and resets the board — reconnect afterward, the button doesn't do that for you.
-
-If the install fails, the console says what the board sent back and what to do next — for example, that MicroPython isn't installed. See [Board won't connect](debugging.md#board-wont-connect).
-
-**From the command line**, no backend needed:
+## Start
 
 ```sh
-pip install mpremote
-python3 test-flows/deploy_runtime.py --port /dev/tty.usbmodemXXXX
-```
-
-Either way, watch the board's first boot afterward to confirm the runtime is running: `LISTENER_BOOTING` → `LISTENER_READY` → a `HELLO` frame.
-
-**Watch with a passive connection.** Use `mpremote connect <port>` with no further subcommand, or any serial monitor that doesn't send Ctrl-C on open. `mpremote repl` and Thonny's Shell both interrupt the board the moment they connect — that looks identical to "the board never boots," even when everything is fine.
-
-## Connecting
-
-Start the backend once per session, on whatever machine can reach your board:
-
-```sh
-cd backend
-pip install -e .
 thingstudio-backend
 ```
 
-The backend also serves these docs at `http://127.0.0.1:8765/docs/`, so they work without an internet connection. The editor's **Docs** button and the help links in the console open that copy. In a development checkout, build the docs once first:
+The editor opens in your browser at `http://127.0.0.1:8765/`. Leave the terminal open while you work; press Ctrl-C there to stop Thingstudio. Add `--no-browser` if you'd rather open the page yourself.
 
-```sh
-pip install mkdocs==1.6.1 mkdocs-material==9.7.7
-mkdocs build
-```
+These docs are served locally too, so they work without an internet connection. The **Docs** button opens them.
 
-Point the editor at it with the **backend URL** field — it defaults to `ws://127.0.0.1:8765/ws`, matching the backend's own default, for when both are running on the same machine. If the backend is elsewhere (a firewalled machine near your devices, say), tunnel to it — `ssh -L 8765:localhost:8765 <host>` — and leave the field on its default; the backend still only ever binds to loopback on its own machine.
+## Connect a board
 
-In the editor, click **⟳ ports** to see the serial ports the backend can reach, pick one, and click **Connect**. The editor then asks the board to identify itself — chip type, runtime version, free flash/RAM. If nothing comes back within a few seconds, you'll see a warning that version compatibility is unverified and Deploy will proceed without the check.
+1. Plug the board in.
+2. Click **⟳ ports** and pick the board's port.
+3. Click **Connect**.
 
-This is normal the first time you connect to a board that hasn't been reset since power-up — the listener is running, it just hasn't been asked to say hello yet. Click **Check status** to ask again without resetting or redeploying. If there's still no reply, the console says what the board printed instead and what to do next. See [Board won't connect](debugging.md#board-wont-connect).
+Port names depend on your operating system and the board's USB chip, so there's no fixed name to look for. If you're not sure which is the board, unplug it, click **⟳ ports**, plug it back in and click again. The one that appears is your board.
+
+The board replies with its chip type, runtime version and free memory. The console shows this.
+
+A board that's new to Thingstudio doesn't have its runtime yet. The console says so and suggests the next step.
+
+## Install the runtime
+
+The runtime is the part of Thingstudio that runs on the board. It's a one-time step for each board.
+
+1. With the board's port selected, click **Install runtime…**. It takes about half a minute and shows each file as it goes.
+2. The board restarts when it's done. Click **Connect** again.
+
+If something goes wrong, the console says what the board sent back and what to do. See [Board won't connect](debugging.md#board-wont-connect).
+
+## Next
+
+Build your first flow: [Canvas basics](canvas-basics.md).

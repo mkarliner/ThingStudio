@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import pytest
 from aiohttp.test_utils import TestClient, TestServer
+from yarl import URL
 
 from thingstudio_backend.app import create_app
 from thingstudio_backend.docs_site import ONLINE_DOCS_URL
@@ -57,10 +58,13 @@ async def test_missing_page_is_404(tmp_path) -> None:
 @pytest.mark.asyncio
 async def test_cannot_escape_the_docs_dir(tmp_path) -> None:
     async with _client(tmp_path, _built_site(tmp_path)) as client:
-        r = await client.get("/docs/../secret.txt")
-        assert r.status == 404
-        r = await client.get("/docs/%2e%2e/secret.txt")
-        assert r.status == 404
+        r = await client.get("/docs/../secret.txt")  # the client normalises this to /secret.txt
+        assert r.status != 200
+        assert "outside" not in await r.text()
+        # Sent un-normalised (encoded=True), so the server itself sees the dot segments.
+        raw = URL(f"http://{client.host}:{client.port}/docs/%2e%2e/secret.txt", encoded=True)
+        r = await client.session.get(raw)
+        assert r.status != 200
         assert "outside" not in await r.text()
 
 

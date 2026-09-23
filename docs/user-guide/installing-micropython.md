@@ -55,7 +55,7 @@ esptool.py --port PORT --baud 460800 write_flash ADDRESS firmware.bin
 | ESP32, ESP32-S2 | `0x1000` |
 | ESP32-S3, ESP32-C3 | `0` |
 
-`PORT` is the board's serial port, such as `/dev/cu.usbmodem01` on macOS, `/dev/ttyACM0` on Linux or `COM4` on Windows. If writing fails partway, leave out `--baud 460800`.
+`PORT` is the board's serial port. Names vary by operating system and board: on macOS and Linux they start with `/dev/`, on Windows they're `COM` followed by a number. To find yours, run `esptool.py flash_id` with no `--port`; esptool searches for the board and prints the port it found. If writing fails partway, leave out `--baud 460800`.
 
 Press **RESET** when it finishes. Boards that use the chip's own USB (most ESP32-S2 and S3 boards) may show up on a different port afterwards. Click **⟳ ports** in Thingstudio to refresh the list.
 

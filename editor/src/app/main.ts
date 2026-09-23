@@ -145,7 +145,7 @@ import {
   type FlowFileConfig,
   type CanvasNodeSnapshot,
 } from "../flow-file/flow-file.js";
-import { DEFAULT_BACKEND_WS_URL, backendHttpBaseUrl, slugifyFlowName, getCredential, type CredentialType } from "../flow-file/admin-api-client.js";
+import { DEFAULT_BACKEND_WS_URL, backendHttpBaseUrl, initialBackendWsUrl, slugifyFlowName, getCredential, type CredentialType } from "../flow-file/admin-api-client.js";
 // slugifyFlowName is reused here purely for a nicer suggested filename in
 // the save dialog below -- its own header's reasoning for why a display
 // name isn't a valid storage key applies just as well to a suggested
@@ -1324,6 +1324,9 @@ function updateConnModeUi(): void {
 }
 el("connModeSelect").addEventListener("change", updateConnModeUi);
 updateConnModeUi();
+
+// Start from wherever this page was served (the backend, normally) -- see initialBackendWsUrl().
+el<HTMLInputElement>("backendUrlInput").value = initialBackendWsUrl(import.meta.env.DEV, window.location);
 
 // Mirrors backendUrlInput into store.ts's backendWsUrl (2026-09-08) --
 // PaletteSidebar.vue's "Load custom node..." picker talks to the admin

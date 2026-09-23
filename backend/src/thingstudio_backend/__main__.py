@@ -14,8 +14,10 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 import logging
 import sys
+import webbrowser
 from pathlib import Path
 
 from aiohttp import web
@@ -38,7 +40,17 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         help="additional Host header value to allow (posture 1); repeatable. "
         f"Defaults to {sorted(DEFAULT_ALLOWED_HOSTS)}.",
     )
-    parser.add_argument("--static-dir", type=Path, default=None, help="directory of built editor assets to serve")
+    parser.add_argument(
+        "--static-dir",
+        type=Path,
+        default=None,
+        help="directory of the built editor to serve at / (default: the repo's editor/dist)",
+    )
+    parser.add_argument(
+        "--no-browser",
+        action="store_true",
+        help="don't open the editor in a browser on start",
+    )
     parser.add_argument(
         "--data-dir",
         type=Path,
@@ -53,6 +65,27 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     )
     parser.add_argument("--log-level", default="INFO")
     return parser.parse_args(argv)
+
+
+def _open_browser_soon(url: str):
+    """on_startup hook: opens the editor once the server is listening. Delayed slightly because
+    on_startup runs just before aiohttp binds the socket; run in a thread because webbrowser.open()
+    can block. Failure to open a browser (headless machine, no default browser) is logged, never
+    fatal -- the URL is printed either way."""
+
+    async def hook(_app: web.Application) -> None:
+        loop = asyncio.get_running_loop()
+
+        def _open() -> None:
+            try:
+                if not webbrowser.open(url):
+                    logging.getLogger(__name__).info("no browser available -- open %s yourself", url)
+            except Exception as exc:  # noqa: BLE001 -- see docstring
+                logging.getLogger(__name__).info("couldn't open a browser (%s) -- open %s yourself", exc, url)
+
+        loop.call_later(0.5, lambda: loop.run_in_executor(None, _open))
+
+    return hook
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -71,7 +104,10 @@ def main(argv: list[str] | None = None) -> int:
 
     allowed_hosts = DEFAULT_ALLOWED_HOSTS | frozenset(args.allowed_hosts or ())
     app = create_app(allowed_hosts=allowed_hosts, static_dir=args.static_dir, data_dir=args.data_dir, docs_dir=args.docs_dir)
-    web.run_app(app, host=args.host, port=args.port)
+    url = f"http://{'[::1]' if args.host == '::1' else args.host}:{args.port}/"
+    if not args.no_browser:
+        app.on_startup.append(_open_browser_soon(url))
+    web.run_app(app, host=args.host, port=args.port, print=lambda _msg: print(f"Thingstudio is running at {url}"))
     return 0
 
 

@@ -56,6 +56,16 @@ export const DEFAULT_BACKEND_WS_URL = "ws://127.0.0.1:8765/ws"; // matches __mai
 
 export class AdminApiError extends Error {}
 
+/** The backend URL the editor starts with. When the backend itself served this page (the normal
+ * case since 2026-09-23 -- editor_site.py), the backend is wherever the page came from, whatever
+ * port it was started on. Under the Vite dev server (`dev`), the page's origin is Vite's, so fall
+ * back to the backend's default address. For the MVP the editor and backend are always on the same
+ * machine (Mike, 2026-09-23), so no other case needs handling. */
+export function initialBackendWsUrl(dev: boolean, page: { protocol: string; host: string }): string {
+  if (dev || (page.protocol !== "http:" && page.protocol !== "https:")) return DEFAULT_BACKEND_WS_URL;
+  return `${page.protocol === "https:" ? "wss" : "ws"}://${page.host}/ws`;
+}
+
 /** ws://host:port/ws -> http://host:port ; wss:// -> https://. The admin
  * API and the WS relay share one host:port (app.py wires both into the
  * same aiohttp Application), so this is a scheme swap plus stripping the

@@ -72,6 +72,8 @@ def make_docs_routes(docs_dir: Path) -> list[web.RouteDef]:
             target = target / "index.html"
         if not target.is_file():
             raise web.HTTPNotFound()
-        return web.FileResponse(target)
+        # mkdocs page names don't change between builds, so the browser must revalidate (same
+        # stale-page trap editor_site.py hit with index.html).
+        return web.FileResponse(target, headers={"Cache-Control": "no-cache"})
 
     return [web.get("/docs", redirect_to_slash), web.get("/docs/{path:.*}", serve)]

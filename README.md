@@ -7,60 +7,51 @@ server.
 
 ## Status
 
-Pre-v1, but real and running. The editor (Rete.js canvas, compiler,
-WebSerial device link) and the device runtime (a MicroPython listener)
-both exist and have been tested against real ESP32-C3 and RP2040
-hardware. Still missing: the optional remote-access backend
-(design-complete, zero code — direct USB works today without it), several
-node types' canvas presence, and other items tracked in
-`docs/working-notes/outstanding-items.md`.
+Pre-v1, working towards an MVP (`docs/road-to-mvp.md`). The editor, the
+compiler, the local backend and the device runtime all exist and run on
+real hardware.
 
 See `docs/thingstudio-design-doc.md` for the full design.
 
 ## How it works
 
-Three pieces:
-
-1. **Editor** (browser, no install) — drag nodes onto a canvas, wire them
-   together, hit Deploy. Runs entirely client-side.
-2. **Compiler** (also client-side) — turns the node graph into MicroPython
-   source, then cross-compiles it to `.mpy` bytecode with a WASM build of
+1. **Backend** — a small local Python program. It serves the editor and
+   the user docs, talks to boards over USB serial, and stores custom nodes
+   and saved credentials in `~/.thingstudio`. Start it and the editor opens
+   in your browser, as with Node-RED.
+2. **Editor** (in the browser) — drag nodes onto a canvas, wire them
+   together, hit Deploy. The compiler runs in the browser too: it turns the
+   graph into MicroPython, then into `.mpy` bytecode with a WASM build of
    `mpy-cross`.
 3. **Device runtime** (on the microcontroller) — a MicroPython listener
-   receives the compiled bytecode over USB serial, swaps the running flow,
-   and keeps executing it standalone once the cable's disconnected.
-
-Editor and device talk directly over WebSerial — no backend needed for
-local use. A thin remote-access backend is designed but not built yet
-(see "Not built yet" below).
+   that receives the compiled flow, swaps it in, and keeps running it on
+   its own once the cable's unplugged. The editor installs it onto a board
+   that already has MicroPython (**Install runtime…**).
 
 Full reasoning, and how this compares to Node-RED MCU Edition,
 MicroBlocks, XOD, MicroFlo, and ESPHome/Tasmota: design doc §1–§2.
 
 ## Try it
 
-Requires Chrome or Edge — WebSerial isn't supported in Safari, and only
-in recent Firefox.
+From a copy of this repository (Python 3.10+, Node.js):
 
 ```sh
-cd editor
-npm install
-npm run dev
+pip install -e backend
+cd editor && npm ci && npm run build && cd ..
+pip install mkdocs==1.6.1 mkdocs-material==9.7.7 && mkdocs build
+thingstudio-backend
 ```
 
-Opens the editor. Build a flow, or open one of the examples in
-`test-flows/`.
+The editor opens at `http://127.0.0.1:8765/`; the **Docs** button opens the
+user guide, served locally. Start with its Getting started page
+(`docs/user-guide/getting-started.md`), and Installing MicroPython if your
+board doesn't have it yet.
 
-Before deploying to a board for the first time, push the runtime onto it:
-
-```sh
-pip install mpremote
-python3 test-flows/deploy_runtime.py --port /dev/tty.usbmodemXXXX
-```
-
-Then connect from the editor and hit Deploy. `test-flows/README.md` has
-the full walkthrough, including how to watch a board's first boot without
-triggering a false "it never started."
+**Working on the editor itself:** `cd editor && npm run dev` serves it with
+hot reload on Vite's own port, talking to a separately started backend on
+its default port (8765). Rebuild (`npm run build`) before relying on the
+backend-served copy — the backend warns at startup if `editor/dist` is
+older than `editor/src`.
 
 ## Node library
 
@@ -78,14 +69,16 @@ see [`docs/user-guide/custom-nodes.md`](docs/user-guide/custom-nodes.md).
 
 ## Target hardware
 
-ESP32-C3 confirmed on real hardware (v1 baseline). RP2040 (Pico)
-confirmed too — stable, comfortable RAM headroom. Classic ESP32/ESP32-S3
-are in scope; RP2350 (Pico 2) hasn't been touched yet. Full comparison:
-design doc §3.
+MVP chips: ESP32, ESP32-C3, ESP32-S3, RP2040, RP2350 — users bring a board
+with MicroPython already on it. Confirmed on real hardware so far:
+ESP32-C3, RP2040, classic ESP32 (CYD), and an ESP32-S2 (LOLIN S2 Mini,
+outside the MVP list) for the full blank-board-to-runtime path. Full
+comparison: design doc §3.
 
 ## Project layout
 
 ```
+backend/         local Python backend: serial relay, runtime install, serves editor + docs
 editor/          browser app: canvas, compiler, protocol client, node library
 device-runtime/  MicroPython device code: listener, protocol, runtime
 docs/            design doc, user guide, working notes
@@ -97,21 +90,19 @@ tools/           license-scan and build scripts
 
 ## Not built yet
 
-- **Remote access backend** — a thin local Python service so the editor
-  doesn't have to run on the same machine as the USB cable.
-  Design-complete, zero code. Direct local USB works without it.
+- **Packaged installers** (`curl | sh`, Homebrew, winget/scoop, zips) —
+  MVP item 7.
+- **WiFi transport between editor and board** — MVP item 6.
 - **Board-transport auth** — the `HELLO` handshake fields are designed,
   not yet wired in.
-- **Several node types' canvas presence** — see "Node library" above.
-- **TCP nodes, I2C/SPI sensor nodes, live value streaming, flow
-  persistence** — all scoped, none built.
 
 Full, current list: `docs/working-notes/outstanding-items.md`.
 
 ## Documentation
 
-- [`docs/user-guide/`](docs/user-guide/) — guides for using Thingstudio
-  (currently: writing a custom node type).
+- [`docs/user-guide/`](docs/user-guide/) — the user guide, built with
+  MkDocs and served by the backend at `/docs/` (and online at
+  https://mkarliner.github.io/ThingStudio/ once GitHub Pages is live).
 - `docs/thingstudio-design-doc.md` — the design doc. Read in full before
   proposing anything architectural.
 - `docs/working-notes/` — active planning, decisions, and open items.

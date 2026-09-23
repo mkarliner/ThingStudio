@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 // SPDX-License-Identifier: Apache-2.0
 // editor/src/vite-env.d.ts
 //

@@ -104,3 +104,24 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
 - **2026-09-08 (same day, superseding the entry above within hours) -- Reversed: flows go through the OS's native file dialog, not a backend `--flows-dir` at all.** Mike's own correction after seeing the `--flows-dir` proposal: he never wanted a directory fixed at backend-startup time -- he wanted "just like saving a file from any other editing program," a per-save/per-open native dialog. The `--flows-dir` CLI flag and `PersistedStore`'s split were fully reverted (`persisted_store.py`/`app.py`/`__main__.py` back to their pre-split state, confirmed identical to HEAD); flow save/open in `main.ts` now calls `flow-file/file-io.ts`'s `saveFlowFileToDisk`/`openFlowFileFromDisk` again -- the same File System Access API path this file used before the whole backend-exclusive period started, restored rather than reinvented. Net effect for flows: no backend involvement at all, no directory to configure anywhere, an OS-native "Save As"/"Open" dialog every time, exactly matching how any other desktop editor handles documents. Custom node packages are unaffected by any of this back-and-forth -- they stay backend-owned in `~/.thingstudio`, per Mike's own stated principle that they're genuinely cross-flow, unlike a flow itself. `outstanding-items/backend-persisted-data-protocol.md`.
 
 - **2026-09-08 (later still) -- No further per-board hardware passes; redirect effort to general failure handling instead.** Mike's call after the single ESP32-C3/CH9102 DTR/RTS pass: with dozens of boards and USB-serial-chip combinations expected in the field, verifying each one individually is exactly the whack-a-mole CLAUDE.md's own fault-handling corollary already warns against ("don't chase every board's idiosyncrasies -- make the failure legible instead"). Backend/auth is treated as complete for the moment -- Mike has installed and run it for real, confirmed working end to end (Save/Open live-verified against a running backend, then again after flows moved to the native file dialog). Going forward, backend hardening work concentrates on strengthening `serial_relay.py`'s general, board-independent failure handling (clearer/more specific error attribution, edge cases beyond the two already covered -- open failure and mid-session disconnect) rather than expanding board coverage. `outstanding-items/backend-auth-overview.md`.
+- **2026-09-23 — The backend starts the editor; editor and backend are on the same machine for the MVP.**
+  Both Mike's calls, same day. `thingstudio-backend` now serves the built editor at `/` (`editor_site.py`,
+  `--static-dir`, dev default `editor/dist`) and opens it in the browser on start (`--no-browser` to skip);
+  it prints `Thingstudio is running at <url>`. Details:
+  - Not a bare `add_static("/")` (it never served `index.html` for `/`); same small handler as
+    `docs_site.py`. Registered last so `/ws`, `/api/*`, `/docs/*` win.
+  - `.wasm`/`.mjs` MIME types registered explicitly — browsers reject a module script or streaming WASM
+    compile with the wrong type, and Python's table varies by platform.
+  - Legible failures: editor not built → `/` returns a page with the build command; built but older than
+    `editor/src` → startup warning naming the newest changed file. Needed on day one: Mike's `editor/dist`
+    was from 2026-08-22.
+  - Editor side: `initialBackendWsUrl()` — when the backend served the page, the backend URL is the page's
+    own origin (any port); under the Vite dev server it falls back to `ws://127.0.0.1:8765/ws`. The
+    same-machine assumption means no other case is handled; the backend URL field is now a candidate for
+    removal in the top-bar tidy-up.
+  - Verified: backend pytest 205 passed (7 new for the editor route); a real `vite build` served by the
+    backend over HTTP (index, JS, `.mjs`, `.wasm` all 200 with correct types).
+  - Follow-up, same day: after a real rebuild the browser still showed the August editor. Cause: Chrome
+    heuristically cached `index.html` (served with only `Last-Modified`, no `Cache-Control`). Every
+    non-hashed file (everything outside `assets/`) and every docs page is now served `Cache-Control:
+    no-cache`; a stale build also gets a red banner in the page itself, not just the startup warning.

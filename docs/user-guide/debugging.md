@@ -20,6 +20,12 @@ When **Connect**, **Check status** or **Install runtime…** gets no proper repl
 
 The raw error from the backend stays in the message in brackets. Include it if you report a problem.
 
+### Watching a board start up
+
+To see a board's own startup messages, connect with `mpremote connect <port>` and no further command, or a serial monitor that doesn't send Ctrl-C when it opens. A working runtime prints `LISTENER_BOOTING`, then `LISTENER_READY`.
+
+`mpremote repl` and Thonny's Shell interrupt the board as they connect. That looks just like a board that never starts, even when it's fine. Close them before connecting from Thingstudio; only one program can use the port at a time.
+
 ## Reading a node error
 
 When a node raises an exception on the device, the board reports which node and what went wrong. Every network node (`udp_send`, `udp_receive`, `http_request`, `mqtt_publish`, `mqtt_subscribe`) follows the same convention for its own errors: the operation and the host/port it was talking to are named directly in the message, not left for you to guess from a bare exception. If you see a raw, unattributed error with no context from a network node, that's worth reporting — every network node in this project is meant to wrap its own errors before they reach you.
