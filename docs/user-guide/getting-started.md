@@ -29,10 +29,10 @@ These docs are served locally too, so they work without an internet connection. 
 ## Connect a board
 
 1. Plug the board in.
-2. Click **⟳ ports** and pick the board's port.
+2. Check the port list. When the editor opens it looks for boards, and picks yours if it's the only one plugged in. If you plugged it in afterwards, click **⟳ ports**.
 3. Click **Connect**.
 
-Port names depend on your operating system and the board's USB chip, so there's no fixed name to look for. If you're not sure which is the board, unplug it, click **⟳ ports**, plug it back in and click again. The one that appears is your board.
+With more than one board plugged in, pick yours from the list. Port names depend on your operating system and the board's USB chip, so there's no fixed name to look for. If you're not sure which is yours, unplug it, click **⟳ ports**, plug it back in and click again. The one that appears is your board.
 
 The board replies with its chip type, runtime version and free memory. The console shows this.
 

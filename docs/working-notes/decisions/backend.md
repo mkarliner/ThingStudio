@@ -125,3 +125,9 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
     heuristically cached `index.html` (served with only `Last-Modified`, no `Cache-Control`). Every
     non-hashed file (everything outside `assets/`) and every docs page is now served `Cache-Control:
     no-cache`; a stale build also gets a red banner in the page itself, not just the startup warning.
+- **2026-09-23 — The editor scans for ports on load and pre-selects a lone board.** Mike's call. The old
+  "explicit click only" rule existed because the page could load before any backend was running; with the
+  backend serving the page that no longer holds. `port-choice.ts`: ports with a USB vendor ID first (every
+  supported board is USB; macOS's Bluetooth/debug-console ports have none), a previous selection kept if
+  still present, exactly one USB device pre-selected, never a guess between several. Under the Vite dev
+  server with no backend running, the list says "(backend not running)" and the console says how to start it.

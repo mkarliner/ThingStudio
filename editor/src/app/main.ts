@@ -116,6 +116,7 @@ import { buildRegistry } from "../node-library/registry.js";
 import { mergeCustomNodeRegistry } from "../node-library/custom-node.js";
 import { WebSerialTransport, type WebSerialPort, type DeviceTransport, type TransportEvents } from "../protocol/transport.js";
 import { BackendTransport, InstallRuntimeError, type SerialPortInfo } from "../protocol/backend-transport.js";
+import { choosePort, isUsbPort } from "./port-choice.js";
 import { classifyDebugLines, explainInstallFailure, explainNoHello, localDocUrl, type Advice, type DocLink } from "./board-diagnosis.js";
 import { explainBackendConnectError } from "./connect-error-help.js";
 import { NATIVE_ARCH_OPTIONS, inferNativeArch } from "./native-arch.js";
@@ -1345,39 +1346,61 @@ el("backendUrlInput").addEventListener("input", () => {
  * request/response, torn down immediately after -- deliberately not the
  * same instance the Connect handler below opens for the real session, so
  * listing ports never requires already being (or staying) connected to a
- * device. Not called automatically on load or on switching to "via
- * backend": design doc §4's "explicit choice, not auto-detection"
- * reasoning applies here too -- probing a URL nobody asked to probe yet
- * would silently fail on every page load before a backend is even
- * started, which is exactly the ambiguous-failure shape that reasoning
- * warns against. */
-async function refreshBackendPorts(): Promise<void> {
+ * device.
+ *
+ * Also runs once on page load (2026-09-23, Mike's call). It used to be
+ * click-only because the page could load before any backend was running;
+ * now the backend serves the page, so it's there. Under the Vite dev server
+ * it may not be -- then the list says so and one console line says what to
+ * do, rather than an error. USB devices are listed first, and a lone USB
+ * device is pre-selected (port-choice.ts). */
+async function refreshBackendPorts(onLoad = false): Promise<void> {
   const select = el<HTMLSelectElement>("backendPortSelect");
+  const previous = select.value;
   const wsUrl = currentBackendWsUrl();
   select.innerHTML = '<option value="">(loading…)</option>';
   const probe = new BackendTransport({ onDebugLine: (line) => logLine(`[backend] ${line}`, "") });
   try {
     await probe.open(wsUrl);
     const ports: SerialPortInfo[] = await probe.listPorts();
+    const choice = choosePort(ports, previous);
     select.innerHTML = "";
-    if (ports.length === 0) {
+    if (choice.ordered.length === 0) {
       select.innerHTML = '<option value="">(no ports found)</option>';
     } else {
-      for (const p of ports) {
+      if (!choice.selected) {
+        const prompt = document.createElement("option");
+        prompt.value = "";
+        prompt.textContent = choice.ordered.some(isUsbPort) ? "(choose your board)" : "(no board found -- plug one in)";
+        select.appendChild(prompt);
+      }
+      for (const p of choice.ordered) {
         const opt = document.createElement("option");
         opt.value = p.device;
         opt.textContent = p.description ? `${p.device} -- ${p.description}` : p.device;
         select.appendChild(opt);
       }
+      select.value = choice.selected;
+    }
+    if (choice.selected && choice.selected !== previous) {
+      logLine(`[ports] found a board on ${choice.selected} -- click "Connect"`, "");
+    } else if (!choice.ordered.some(isUsbPort)) {
+      logLine('[ports] no board found. Plug one in, then click "⟳ ports".', "");
     }
   } catch (err) {
-    select.innerHTML = '<option value="">(backend unreachable)</option>';
-    logLine(`[list ports failed] ${err instanceof Error ? err.message : String(err)}`, "err");
+    select.innerHTML = '<option value="">(backend not running)</option>';
+    const detail = err instanceof Error ? err.message : String(err);
+    if (onLoad) {
+      logLine(`[ports] no backend at ${wsUrl} -- start it with "thingstudio-backend", then click "⟳ ports".`, "err");
+    } else {
+      logLine(`[list ports failed] ${detail}`, "err");
+    }
   } finally {
     await probe.disconnect();
   }
 }
 el("btnRefreshPorts").addEventListener("click", () => void refreshBackendPorts());
+void refreshBackendPorts(true);
 el("btnDocs").addEventListener("click", () => {
   window.open(docUrl({ label: "Docs", path: "" }), "_blank", "noopener");
 });
