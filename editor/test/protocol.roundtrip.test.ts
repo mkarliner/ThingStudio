@@ -24,6 +24,7 @@ const SAMPLE_MESSAGES: Message[] = [
     currentFlowDeployId: null,
     freeFlashBytes: 3_500_000,
     freeRamBytes: 168_000,
+    safeMode: false,
   },
   {
     // Same message type, second variant: a board that DOES have a runtime-build
@@ -38,6 +39,7 @@ const SAMPLE_MESSAGES: Message[] = [
     currentFlowDeployId: "6f1c9b2a-8e3d-4a5b-9c1e-2d3f4a5b6c7d",
     freeFlashBytes: 757_760,
     freeRamBytes: 179_200,
+    safeMode: true, // board in boot-loop safe mode (2026-09-23)
   },
   {
     type: "DEPLOY",
@@ -88,6 +90,9 @@ const SAMPLE_MESSAGES: Message[] = [
   // HELLO_REQUEST added 2026-09-05 (no reset button on the Pico W) -- no
   // fields at all, the minimal possible message shape.
   { type: "HELLO_REQUEST" },
+  // EXEC / STOP_TO_PROMPT added 2026-09-23 (console command box, stop to prompt).
+  { type: "EXEC", code: "import machine; machine.Pin(15).value()" },
+  { type: "STOP_TO_PROMPT" },
 ];
 
 describe("message CBOR round-trip (codec.ts, per message type)", () => {

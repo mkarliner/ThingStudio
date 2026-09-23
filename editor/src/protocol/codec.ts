@@ -141,6 +141,10 @@ export function decodeMessageBody(typeId: number, body: Uint8Array): Message {
       return { type: "TRIGGER", ...validateTrigger(obj) };
     case "HELLO_REQUEST":
       return { type: "HELLO_REQUEST", ...validateHelloRequest(obj) };
+    case "EXEC":
+      return { type: "EXEC", code: expectString(obj, "code", "EXEC") };
+    case "STOP_TO_PROMPT":
+      return { type: "STOP_TO_PROMPT" };
   }
 }
 
@@ -260,6 +264,7 @@ function validateHello(obj: Record<string, unknown>): Omit<HelloMessage, "type">
     currentFlowDeployId: expectOptionalString(obj, "currentFlowDeployId", "HELLO"),
     freeFlashBytes: expectNonNegativeInt(obj, "freeFlashBytes", "HELLO"),
     freeRamBytes: expectNonNegativeInt(obj, "freeRamBytes", "HELLO"),
+    safeMode: expectOptionalBool(obj, "safeMode", "HELLO") ?? false,
   };
 }
 

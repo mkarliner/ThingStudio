@@ -24,6 +24,7 @@ const HELLO: Message = {
   currentFlowDeployId: null,
   freeFlashBytes: 1000,
   freeRamBytes: 2000,
+  safeMode: false,
 };
 
 type Listener = (ev: { data?: unknown }) => void;
@@ -383,5 +384,49 @@ describe("BackendTransport", () => {
 
     sockets[0]!.simulateMessage("not json{{{");
     expect(debugLines.some((l) => l.includes("malformed control message"))).toBe(true);
+  });
+});
+
+describe("BackendTransport raw write and remove flow (2026-09-23)", () => {
+  it("rawWrite() needs a connected port, then sends raw_write", async () => {
+    const { factory, sockets } = makeFakeFactory();
+    const t = new BackendTransport({}, factory);
+    const openP = t.open("ws://x/ws");
+    sockets[0]!.simulateOpen();
+    await openP;
+    expect(() => t.rawWrite("1+1\r")).toThrow(/not connected/);
+    const connectP = t.connectPort("/dev/ttyUSB0");
+    sockets[0]!.simulateMessage(JSON.stringify({ type: "status", connected: true, port: "/dev/ttyUSB0" }));
+    await connectP;
+    t.rawWrite("\x04");
+    expect(sockets[0]!.sent.at(-1)).toEqual(JSON.stringify({ type: "raw_write", text: "\x04" }));
+  });
+
+  it("removeFlow() relays status lines and resolves on ok", async () => {
+    const { factory, sockets } = makeFakeFactory();
+    const t = new BackendTransport({}, factory);
+    const openP = t.open("ws://x/ws");
+    sockets[0]!.simulateOpen();
+    await openP;
+    const status: string[] = [];
+    const p = t.removeFlow("/dev/ttyUSB0", (s) => status.push(s));
+    expect(sockets[0]!.sent.at(-1)).toEqual(JSON.stringify({ type: "remove_flow", port: "/dev/ttyUSB0" }));
+    sockets[0]!.simulateMessage(JSON.stringify({ type: "remove_flow_status", text: "press reset" }));
+    sockets[0]!.simulateMessage(JSON.stringify({ type: "remove_flow_result", ok: true }));
+    await p;
+    expect(status).toEqual(["press reset"]);
+  });
+
+  it("removeFlow() rejects with the backend's error", async () => {
+    const { factory, sockets } = makeFakeFactory();
+    const t = new BackendTransport({}, factory);
+    const openP = t.open("ws://x/ws");
+    sockets[0]!.simulateOpen();
+    await openP;
+    const p = t.removeFlow("/dev/ttyUSB0");
+    sockets[0]!.simulateMessage(
+      JSON.stringify({ type: "remove_flow_result", ok: false, error: "NODE_ERROR: runtime install failed at waiting for the board to stop at a prompt: never" }),
+    );
+    await expect(p).rejects.toThrow(/never/);
   });
 });

@@ -26,6 +26,34 @@ To see a board's own startup messages, connect with `mpremote connect <port>` an
 
 `mpremote repl` and Thonny's Shell interrupt the board as they connect. That looks just like a board that never starts, even when it's fine. Close them before connecting from Thingstudio; only one program can use the port at a time.
 
+## Commands and the Python prompt
+
+The box under the console runs Python on the board. Type a line and press Enter; the result appears in the console. Up and down arrows bring back earlier commands.
+
+```python
+gc.mem_free()
+import machine; machine.Pin(15).value()
+os.listdir()
+```
+
+Commands run alongside your flow, and variables you set stay for the next command. A slow command (a long `sleep`, a loop) pauses the flow until it finishes, so keep them short.
+
+For a full Python prompt, click **Stop flow & open prompt**. The flow and Thingstudio stop, and the board waits at MicroPython's own `>>>` prompt. Nothing is deleted. Anything you type in the box now goes straight to that prompt. Deploy is off while you're there. Click **Restart Thingstudio** when you're done; the board restarts Thingstudio and your saved flow.
+
+You can also use the prompt from another program, such as Thonny or `mpremote`: click **Disconnect** first.
+
+## Board stuck restarting
+
+A flow that crashes the board as it starts would crash it again on every restart. Thingstudio stops this itself: if the saved flow doesn't stay up for 10 seconds on three restarts in a row, the board starts without it. The console shows **[safe mode]**. Fix the flow and deploy it again, or remove it.
+
+**Remove flow…** (under the console) deletes the saved flow from the board. The board then starts with Thingstudio only, as after a fresh runtime install. Use it for any flow that stops the board answering:
+
+1. Select the board's port and click **Remove flow…**.
+2. If the console says so, press the board's reset button. Thingstudio keeps trying for a minute, so the timing doesn't matter.
+3. When it's done, click **Connect**.
+
+The flow on your canvas isn't affected.
+
 ## Reading a node error
 
 When a node raises an exception on the device, the board reports which node and what went wrong. Every network node (`udp_send`, `udp_receive`, `http_request`, `mqtt_publish`, `mqtt_subscribe`) follows the same convention for its own errors: the operation and the host/port it was talking to are named directly in the message, not left for you to guess from a bare exception. If you see a raw, unattributed error with no context from a network node, that's worth reporting — every network node in this project is meant to wrap its own errors before they reach you.

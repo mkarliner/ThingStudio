@@ -69,6 +69,7 @@ from typing import Callable
 import serial
 from aiohttp import WSMsgType, web
 
+from . import board_recovery
 from .line_framing import LineDecoder, encode_f64_line
 from .raw_repl import ENTER_STEP, RawReplError, classify_reply
 from .runtime_installer import RuntimeInstaller
@@ -86,6 +87,10 @@ _INSTALL_READ_POLL_TIMEOUT_SECONDS = 0.5
 # reading -- the real 2026-09-23 ESP32-S2 install hang. raw_repl._write() turns the timeout into a
 # RawReplError naming the step. Same value and reasoning as serial_relay.py's _WRITE_TIMEOUT_SECONDS.
 _INSTALL_WRITE_TIMEOUT_SECONDS = 5.0
+
+# How long "Remove flow" keeps trying to catch a boot window before giving up -- long enough for a
+# user to read "press reset" and do it, and for a boot-looping board to cycle a few times.
+_REMOVE_FLOW_TIMEOUT_SECONDS = 60.0
 
 
 class ConnectionSession:
@@ -128,6 +133,10 @@ class ConnectionSession:
             await self._disconnect()
         elif msg_type == "install_runtime":
             await self._install_runtime(message.get("port"), message.get("baudrate", 115200))
+        elif msg_type == "remove_flow":
+            await self._remove_flow(message.get("port"), message.get("baudrate", 115200))
+        elif msg_type == "raw_write":
+            await self._raw_write(message.get("text"))
         else:
             await self._send_status(error=f"NODE_ERROR: unknown control message type: {msg_type!r}")
 
@@ -224,6 +233,66 @@ class ConnectionSession:
             await self._send_install_result(ok=False, error=str(exc), diagnosis=diagnosis)
             return
         await self._send_install_result(ok=True)
+
+    async def _raw_write(self, text: object) -> None:
+        """Writes `text` to the connected board as-is, no F64 framing -- the editor's command box
+        when the board is at MicroPython's own ">>>" prompt (after STOP_TO_PROMPT), and Ctrl-D to
+        restart the listener from there. Output comes back through the normal relay as "debug"
+        lines. Added 2026-09-23."""
+        if not isinstance(text, str):
+            await self._send_status(error="NODE_ERROR: raw_write needs a text field")
+            return
+        if self._serial is None:
+            await self._send_status(error="NODE_ERROR: raw_write with no serial port connected")
+            return
+        try:
+            await self._serial.write(text.encode("utf-8"))
+        except SerialRelayError as exc:
+            await self._send_status(error=str(exc))
+            await self._disconnect()
+
+    async def _remove_flow(self, port: str | None, baudrate: int) -> None:
+        """board_recovery.remove_flow() on a dedicated port, same shape as _install_runtime: close any
+        relay connection first, run in a thread, one final result message. Status lines ("press
+        reset") go out as they happen."""
+        if not port:
+            await self._send_result("remove_flow_result", ok=False, error="NODE_ERROR: remove_flow requested with no port given")
+            return
+        if self._serial is not None:
+            await self._disconnect()
+        loop = asyncio.get_running_loop()
+
+        def _on_status(text: str) -> None:
+            payload = json.dumps({"type": "remove_flow_status", "text": text})
+            asyncio.run_coroutine_threadsafe(self._send_quietly(payload), loop)
+
+        def _open():
+            return self._raw_port_factory(
+                port,
+                baudrate=baudrate,
+                timeout=_INSTALL_READ_POLL_TIMEOUT_SECONDS,
+                write_timeout=_INSTALL_WRITE_TIMEOUT_SECONDS,
+            )
+
+        try:
+            await asyncio.to_thread(board_recovery.remove_flow, _open, _REMOVE_FLOW_TIMEOUT_SECONDS, _on_status)
+        except RawReplError as exc:
+            await self._send_result("remove_flow_result", ok=False, error=str(exc))
+            return
+        await self._send_result("remove_flow_result", ok=True)
+
+    async def _send_result(self, msg_type: str, *, ok: bool, error: str | None = None) -> None:
+        payload: dict[str, object] = {"type": msg_type, "ok": ok}
+        if error is not None:
+            payload["error"] = error
+            logger.warning(error)
+        await self._send_quietly(json.dumps(payload))
+
+    async def _send_quietly(self, text: str) -> None:
+        try:
+            await self._ws.send_str(text)
+        except (ConnectionResetError, RuntimeError) as exc:
+            logger.warning("could not send to a closing WebSocket: %s", exc)
 
     async def _send_install_progress(self, index: int, total: int, name: str) -> None:
         """One message per file as it starts, so the editor can show progress and notice a stall

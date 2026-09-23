@@ -130,7 +130,7 @@ F64_PREFIX = "F64:"
 _HEARTBEAT_PIN = 10
 _HEARTBEAT_PERIOD_MS = 200
 
-_RUNTIME_VERSION = {"major": 1, "minor": 0, "patch": 0}  # bumped 2026-09-10: NODE_STATUS support
+_RUNTIME_VERSION = {"major": 2, "minor": 0, "patch": 0}  # bumped 2026-09-23: EXEC, STOP_TO_PROMPT, safe mode (1.0.0 was 2026-09-10: NODE_STATUS)
 # (runtime.report_status) is a hard dependency of wifi-status.ts's/mqtt-shared.ts's codegen now -- an editor
 # with this change targeting a pre-2026-09-10 runtime would crash on deploy (AttributeError: report_status),
 # not degrade gracefully. See CLAUDE.md's "Device-runtime version bump discipline" -- decideDeploy() only
@@ -205,6 +205,26 @@ except AttributeError:
 # flow's wifi_status config says "unmanaged" (wifi-status.ts's computeWifiProvisionMarker(),
 # editor-side). Same env-var-override reasoning as every other THINGSTUDIO_*_PATH above.
 _WIFI_PROVISION_MARKER_PATH = "/_flow_wifi_provision.json"
+
+# Boot-loop safe mode (2026-09-23, Mike: "need a way of deleting flows that cause a boot loop or
+# similar lock out"). A flow that hard-crashes the board (MemoryError while loading, watchdog, a
+# driver wedging the chip) used to crash it again on every boot, since every boot resumes the saved
+# flow; the only way out was a Ctrl-C landing inside the 3s boot window. Now each boot with a saved
+# flow bumps a counter on flash, and a flow that stays up for _STABLE_AFTER_MS clears it. After
+# _SAFE_MODE_AFTER boots in a row that never got that far, the listener starts WITHOUT the flow and
+# says so (a LISTENER_SAFE_MODE line, and HELLO.safeMode). A successful DEPLOY clears it.
+# Catches crashes, not a flow that merely hogs the CPU -- the editor's "Remove flow" covers that.
+_BOOT_COUNT_PATH = "/_boot_count"
+_SAFE_MODE_AFTER = 3
+_STABLE_AFTER_MS = 10000
+_safe_mode = False
+try:
+    # Same off-device test override as every THINGSTUDIO_*_PATH above: the unix port has no device
+    # flash, and a test must never write the real host's "/_boot_count".
+    _BOOT_COUNT_PATH = os.getenv("THINGSTUDIO_BOOT_COUNT_PATH", _BOOT_COUNT_PATH)
+    _STABLE_AFTER_MS = int(os.getenv("THINGSTUDIO_STABLE_AFTER_MS", str(_STABLE_AFTER_MS)))
+except (AttributeError, ValueError):
+    pass
 try:
     _WIFI_PROVISION_MARKER_PATH = os.getenv("THINGSTUDIO_WIFI_PROVISION_MARKER_PATH", _WIFI_PROVISION_MARKER_PATH)
 except AttributeError:
@@ -395,6 +415,7 @@ async def _send_hello():
             "currentFlowDeployId": _current_flow_deploy_id,
             "freeFlashBytes": _free_flash_bytes(),
             "freeRamBytes": _free_ram_bytes(),
+            "safeMode": _safe_mode,
         }
     )
 
@@ -432,6 +453,7 @@ async def _handle_deploy(msg):
             del sys.modules["_flow"]
         import _flow  # noqa: F401 -- executes _flow's top-level code, which calls runtime.spawn(...)
         _persist_flow_meta(msg["flowName"], msg["deployId"])
+        _leave_safe_mode()
         _persist_wifi_provision_marker(msg.get("wifiProvision"))
         _set_current_flow(msg["flowName"], msg["deployId"])
         _deploy_generation += 1
@@ -490,6 +512,116 @@ def _resume_flow():
         print("LISTENER_BOOT_ERR could not resume persisted flow: %r" % (e,))
 
 
+# Globals for EXEC commands. One dict for the life of the listener, so a variable set by one
+# command is there for the next (`p = machine.Pin(15)`, then `p.value()`), like a REPL session.
+_exec_globals = {"__name__": "__command__"}
+# Preloaded so quick checks work without an import line first (`gc.mem_free()`, `os.listdir()`,
+# `machine.Pin(15).value()`). Each is optional: the unix port used for tests has no `machine`.
+for _mod_name in ("gc", "os", "sys", "time", "machine"):
+    try:
+        _exec_globals[_mod_name] = __import__(_mod_name)
+    except ImportError:
+        pass
+
+
+def _handle_exec(code):
+    """Runs one command from the editor's command box and prints what a REPL would: an expression's
+    repr (unless None), or a traceback. Output goes to stdout, which the backend relays to the
+    editor console as plain lines -- no reply message needed. Tried as an expression first, then as
+    a statement: eval() rejects statements at compile time, before anything runs, so nothing
+    executes twice.
+
+    Runs synchronously inside the listener task: a slow command (a long sleep, a loop) holds up the
+    flow and the listener until it finishes. Fine for quick checks, which is what it's for; the
+    docs say so. Exceptions never escape -- a bad command is user input, not a listener fault."""
+    try:
+        try:
+            result = eval(code, _exec_globals)
+        except SyntaxError:
+            exec(code, _exec_globals)
+        else:
+            if result is not None:
+                print(repr(result))
+    except Exception as e:  # noqa: BLE001 -- see docstring
+        try:
+            sys.print_exception(e)
+        except AttributeError:  # CPython (off-device tests) has no print_exception
+            print("%s: %s" % (type(e).__name__, e))
+
+
+async def _handle_stop_to_prompt():
+    """Stops the flow and the listener and hands the serial line back to MicroPython's own REPL:
+    Ctrl-C re-enabled, event loop stopped, so main() returns and main.py ends at ">>>". Nothing is
+    rebooted or deleted -- a soft reset (Ctrl-D) or the reset button starts the listener and the
+    saved flow again. Mike, 2026-09-23: a way to reach the Python prompt without rebooting."""
+    await runtime.cancel_running()
+    _set_current_flow(None, None)
+    print("LISTENER_STOPPED -- at the Python prompt. Ctrl-D or the reset button restarts Thingstudio.")
+    try:
+        import micropython
+
+        micropython.kbd_intr(3)
+    except (ImportError, AttributeError):
+        pass
+    asyncio.get_event_loop().stop()
+
+
+def _read_boot_count():
+    try:
+        with open(_BOOT_COUNT_PATH) as f:
+            return int(f.read().strip() or "0")
+    except (OSError, ValueError):
+        return 0
+
+
+def _write_boot_count(n):
+    try:
+        with open(_BOOT_COUNT_PATH, "w") as f:
+            f.write(str(n))
+    except OSError as e:
+        # Degrades to "no boot-loop protection this boot", never a boot failure.
+        print("LISTENER_BOOT_ERR could not write boot counter: %r" % (e,))
+
+
+def _leave_safe_mode():
+    global _safe_mode
+    _safe_mode = False
+    _write_boot_count(0)
+
+
+def _flow_is_saved():
+    try:
+        with open(_FLOW_PATH, "rb"):
+            return True
+    except OSError:
+        return False
+
+
+def _check_boot_loop():
+    """Called once at boot, before the saved flow is touched. Returns True if the flow should be
+    skipped (safe mode). See _BOOT_COUNT_PATH's comment for the design."""
+    global _safe_mode
+    if not _flow_is_saved():
+        return False
+    count = _read_boot_count()
+    if count >= _SAFE_MODE_AFTER:
+        _safe_mode = True
+        print(
+            "LISTENER_SAFE_MODE -- the saved flow didn't stay up for %ds on the last %d boots, so it has NOT "
+            "been started. Fix it and deploy again, or remove it from the board." % (_STABLE_AFTER_MS // 1000, count)
+        )
+        return True
+    _write_boot_count(count + 1)
+    return False
+
+
+async def _mark_stable():
+    """Clears the boot counter once the flow has stayed up for _STABLE_AFTER_MS."""
+    await asyncio.sleep_ms(_STABLE_AFTER_MS)
+    if not _safe_mode:
+        _write_boot_count(0)
+
+
 async def _dispatch(result):
     if "error" in result:
         # Adversarial input (framing.FramingError or
@@ -519,6 +651,10 @@ async def _dispatch(result):
         # path to keep in sync, and no side effects beyond sending a
         # fresh HELLO (no redeploy, no runtime reload, nothing else).
         await _send_hello()
+    elif msg_type == "EXEC":
+        _handle_exec(msg["code"])
+    elif msg_type == "STOP_TO_PROMPT":
+        await _handle_stop_to_prompt()
     elif msg_type in ("STATE_READ", "STATE_WRITE"):
         # Tier 2 (design doc: flash-backed state store), not this task's
         # scope (fault-isolation-briefing.md's "Not in scope"). Logged, not
@@ -666,9 +802,12 @@ def main():
     # this call is what actually gets it connected first, using a previously-learned credential or,
     # on first run, the captive portal. A no-op for every flow/board not using this feature (see
     # _provision_wifi_if_needed's own docstring).
-    _provision_wifi_if_needed()
-
-    _resume_flow()
+    if _check_boot_loop():
+        pass  # safe mode: skip WiFi provisioning and the saved flow; the listener still starts
+    else:
+        _provision_wifi_if_needed()
+        _resume_flow()
+        asyncio.create_task(_mark_stable())
 
     print("LISTENER_READY")
     asyncio.create_task(_listener())

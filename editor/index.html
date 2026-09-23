@@ -108,6 +108,10 @@
   .panel:not([open]) summary { margin: 0; }
   .panel-action { position: absolute; top: 8px; right: 8px; padding: 2px 8px; font-size: 11px; }
   .panel .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+  .console-tools { margin: 8px 0 0; }
+  #cmdInput { flex: 1 1 auto; min-width: 0; background: var(--bg); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: 6px 8px; font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
+  #cmdInput:focus { outline: none; border-color: var(--accent); }
   #source-preview, #console { background: #0a0c10; border: 1px solid var(--border); border-radius: 6px;
     padding: 8px; white-space: pre-wrap; word-break: break-word; line-height: 1.4; max-height: 260px;
     overflow-y: auto; font-size: 11px; }
@@ -188,6 +192,18 @@
         <summary>Device console</summary>
         <button id="btnClear" class="panel-action">Clear</button>
         <div id="console"></div>
+        <!-- Command box and board tools (2026-09-23). Commands run in the listener while a flow is
+             running (EXEC), or go straight to MicroPython's prompt after "Stop flow". -->
+        <div class="row console-tools">
+          <input id="cmdInput" type="text" disabled spellcheck="false" autocomplete="off"
+                 placeholder="Python command, e.g. gc.mem_free()" title="Runs on the board; output appears above. Up/down arrows recall earlier commands." />
+          <button id="btnSendCmd" disabled>Send</button>
+        </div>
+        <div class="row console-tools">
+          <button id="btnStopToPrompt" disabled title="Stop the flow and Thingstudio on the board, leaving MicroPython's own >>> prompt. Nothing is deleted.">Stop flow &amp; open prompt</button>
+          <button id="btnResume" hidden title="Soft-reset the board (Ctrl-D): Thingstudio and the saved flow start again">Restart Thingstudio</button>
+          <button id="btnRemoveFlow" title="Delete the saved flow from the board, even one that crashes it or won't let go. Keeps retrying while you press reset.">Remove flow…</button>
+        </div>
       </details>
     </div>
   </div>

@@ -67,6 +67,13 @@ MessageType = {
     "TRIGGER": 9,
     "HELLO_REQUEST": 10,
     "NODE_STATUS": 11,
+    # Added 2026-09-23 (Mike: a text box to send basic commands to the board, output to the
+    # console). Editor -> device: run `code` in the listener, print the result. Append-only
+    # numbering, same as every type above.
+    "EXEC": 12,
+    # Added 2026-09-23. Editor -> device: stop the flow and the listener, leaving the board at the
+    # normal ">>>" prompt with Ctrl-C re-enabled. Soft reset (Ctrl-D) or a real reset restarts it.
+    "STOP_TO_PROMPT": 13,
 }
 
 MESSAGE_NAME_BY_TYPE = {v: k for k, v in MessageType.items()}
@@ -251,7 +258,18 @@ def _validate_hello(obj, name):
         "currentFlowDeployId": _expect_optional_string(obj, "currentFlowDeployId", name),
         "freeFlashBytes": _expect_non_negative_int(obj, "freeFlashBytes", name),
         "freeRamBytes": _expect_non_negative_int(obj, "freeRamBytes", name),
+        # Added 2026-09-23: True when the listener skipped the saved flow after repeated failed
+        # boots (listener.py's safe mode). Absent from older runtimes, meaning False.
+        "safeMode": _expect_optional_bool(obj, "safeMode", name) or False,
     }
+
+
+def _validate_exec(obj, name):
+    return {"code": _expect_string(obj, "code", name)}
+
+
+def _validate_stop_to_prompt(obj, name):
+    return {}
 
 
 def _validate_deploy(obj, name):
@@ -358,4 +376,6 @@ _VALIDATORS = {
     "TRIGGER": _validate_trigger,
     "HELLO_REQUEST": _validate_hello_request,
     "NODE_STATUS": _validate_node_status,
+    "EXEC": _validate_exec,
+    "STOP_TO_PROMPT": _validate_stop_to_prompt,
 }

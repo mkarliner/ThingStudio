@@ -491,3 +491,27 @@ async def test_install_runtime_relays_progress_before_the_result() -> None:
         assert msgs[0] == {"type": "install_runtime_progress", "index": 1, "total": 2, "file": "errors.py"}
         assert msgs[1] == {"type": "install_runtime_progress", "index": 2, "total": 2, "file": "main.py"}
         assert msgs[2] == {"type": "install_runtime_result", "ok": True}
+
+
+@pytest.mark.asyncio
+async def test_raw_write_goes_to_the_serial_port_unframed() -> None:
+    factory = FakeSerialConnectionFactory()
+    async with TestClient(TestServer(_make_app(factory, FakeRawPortFactory(), FakeRuntimeInstaller()))) as client:
+        ws = await client.ws_connect("/ws")
+        await ws.send_json({"type": "connect", "port": "/dev/fake0"})
+        await ws.receive_json()  # status connected
+        await ws.send_json({"type": "raw_write", "text": "1+1\r"})
+        for _ in range(20):
+            if factory.instances[-1].written:
+                break
+            await asyncio.sleep(0.01)
+        assert factory.instances[-1].written[-1] == b"1+1\r"
+
+
+@pytest.mark.asyncio
+async def test_remove_flow_without_a_port_is_a_clear_error() -> None:
+    async with TestClient(TestServer(_make_app(FakeSerialConnectionFactory(), FakeRawPortFactory(), FakeRuntimeInstaller()))) as client:
+        ws = await client.ws_connect("/ws")
+        await ws.send_json({"type": "remove_flow"})
+        reply = await ws.receive_json()
+        assert reply == {"type": "remove_flow_result", "ok": False, "error": "NODE_ERROR: remove_flow requested with no port given"}

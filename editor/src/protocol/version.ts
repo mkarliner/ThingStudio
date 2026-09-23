@@ -54,8 +54,8 @@ export function decideDeploy(device: ProtocolVersion, editorTarget: ProtocolVers
       reason:
         `device runtime ${formatVersion(device)} is a different major version than this editor targets ` +
         `(${formatVersion(editorTarget)}). Deploying could wipe the device's flow and persisted state ` +
-        `(design doc §5/§11), and the device may not even be able to parse this DEPLOY. Reconnect with a ` +
-        `matching editor version, or reflash the device's runtime, before deploying.`,
+        `(design doc §5/§11), and the device may not even be able to parse this DEPLOY. Click ` +
+        `"Install runtime…" to update the board's runtime, then Connect again.`,
     };
   }
 

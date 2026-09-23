@@ -80,6 +80,8 @@ class ListenerProcess:
         env["THINGSTUDIO_FLOW_PATH"] = os.path.join(tmpdir, "_flow.mpy")
         env["THINGSTUDIO_STATIC_DATA_PATH"] = os.path.join(tmpdir, "_flow_static.bin")
         env["THINGSTUDIO_FLOW_META_PATH"] = os.path.join(tmpdir, "_flow_meta.json")
+        env["THINGSTUDIO_BOOT_COUNT_PATH"] = os.path.join(tmpdir, "_boot_count")
+        env["THINGSTUDIO_STABLE_AFTER_MS"] = "400"
         listener_path = os.path.join(SRC_DIR, "listener.py")
         self.proc = subprocess.Popen(
             [MICROPYTHON_BIN, listener_path],
@@ -154,7 +156,7 @@ def test_hello_sent_on_boot():
             line = listener.wait_for(lambda l: l.startswith(F64_PREFIX), description="a HELLO frame")
             msg = _decode_f64_line(line)
             assert msg["type"] == "HELLO"
-            assert msg["runtimeVersion"] == {"major": 0, "minor": 1, "patch": 0}
+            assert msg["runtimeVersion"] == {"major": 2, "minor": 0, "patch": 0}
             assert isinstance(msg["freeRamBytes"], int) and msg["freeRamBytes"] > 0
         finally:
             listener.close()
@@ -332,7 +334,7 @@ def test_hello_request_resends_hello_no_side_effects():
             reply_line = listener.wait_for(lambda l: l.startswith(F64_PREFIX), description="HELLO_REQUEST's HELLO reply")
             msg = _decode_f64_line(reply_line)
             assert msg["type"] == "HELLO"
-            assert msg["runtimeVersion"] == {"major": 0, "minor": 1, "patch": 0}
+            assert msg["runtimeVersion"] == {"major": 2, "minor": 0, "patch": 0}
 
             # No side effects: a normal DEPLOY still works fine afterward.
             bytecode = _compile_flow(
@@ -533,6 +535,119 @@ def test_boot_time_resume_survives_corrupt_persisted_flow():
             listener.close()
 
 
+def _hello_reply(listener, description):
+    listener.send_message({"type": "HELLO_REQUEST"})
+    time.sleep(0.3)
+    with listener._lock:
+        lines = [l for l in listener._history if l.startswith(F64_PREFIX)]
+    hellos = [m for m in (_decode_f64_line(l) for l in lines) if m["type"] == "HELLO"]
+    assert hellos, "no HELLO for %s" % description
+    return hellos[-1]
+
+
+def test_exec_prints_results_keeps_variables_and_survives_errors():
+    """EXEC (2026-09-23): the editor's command box."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        listener = ListenerProcess(tmpdir)
+        try:
+            listener.wait_for(lambda l: l == "LISTENER_READY", description="LISTENER_READY")
+            listener.send_message({"type": "EXEC", "code": "6 * 7"})
+            listener.wait_for(lambda l: l == "42", description="expression result")
+            listener.send_message({"type": "EXEC", "code": "type(gc.mem_free()).__name__"})
+            listener.wait_for(lambda l: l == "'int'", description="gc preloaded, no import needed")
+            listener.send_message({"type": "EXEC", "code": "greeting = 'hi from exec'"})
+            listener.send_message({"type": "EXEC", "code": "greeting"})
+            listener.wait_for(lambda l: l == "'hi from exec'", description="variable kept between commands")
+            listener.send_message({"type": "EXEC", "code": "print('printed ' + greeting)"})
+            listener.wait_for(lambda l: l == "printed hi from exec", description="print output")
+            listener.send_message({"type": "EXEC", "code": "1/0"})
+            listener.wait_for(lambda l: "ZeroDivisionError" in l, description="traceback for a failing command")
+            listener.send_message({"type": "EXEC", "code": "if if"})
+            listener.wait_for(lambda l: "SyntaxError" in l, description="SyntaxError for bad input")
+            assert _hello_reply(listener, "after bad commands")["type"] == "HELLO"  # listener still alive
+        finally:
+            listener.close()
+
+
+def test_stop_to_prompt_stops_the_flow_and_ends_the_listener():
+    """STOP_TO_PROMPT (2026-09-23): on a real board main.py returning leaves the REPL; here the
+    unix-port process simply exits once main() returns."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        bytecode = _compile_flow(
+            tmpdir,
+            "flow_ticker",
+            "import runtime\nimport uasyncio as asyncio\n"
+            "async def _flow_0():\n    while True:\n        print('TICK')\n        await asyncio.sleep_ms(50)\n"
+            "runtime.spawn(_flow_0(), '1')\n",
+        )
+        listener = ListenerProcess(tmpdir)
+        try:
+            listener.wait_for(lambda l: l == "LISTENER_READY", description="LISTENER_READY")
+            listener.send_message({"type": "DEPLOY", "bytecode": bytecode, "staticData": b""})
+            listener.wait_for(lambda l: l == "TICK", description="flow running")
+            listener.send_message({"type": "STOP_TO_PROMPT"})
+            listener.wait_for(lambda l: l.startswith("LISTENER_STOPPED"), description="stop line")
+            listener.proc.wait(timeout=5)  # main() returned
+            with listener._lock:
+                after = listener._history[[i for i, l in enumerate(listener._history) if l.startswith("LISTENER_STOPPED")][0]:]
+            assert "TICK" not in after, "flow kept running after STOP_TO_PROMPT: %r" % (after,)
+        finally:
+            listener.close()
+
+
+def test_boot_loop_safe_mode():
+    """Safe mode (2026-09-23): after 3 boots in a row that never stayed up, the saved flow is
+    skipped; a DEPLOY clears it; a flow that stays up clears the counter."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        bytecode = _compile_flow(
+            tmpdir,
+            "flow_ok",
+            "import runtime\nasync def _flow_0():\n    print('FLOW_STARTED')\nruntime.spawn(_flow_0(), '1')\n",
+        )
+        count_path = os.path.join(tmpdir, "_boot_count")
+        first = ListenerProcess(tmpdir)
+        try:
+            first.wait_for(lambda l: l == "LISTENER_READY", description="LISTENER_READY")
+            first.send_message({"type": "DEPLOY", "bytecode": bytecode, "staticData": b""})
+            first.wait_for(lambda l: l == "FLOW_STARTED", description="deployed flow runs")
+        finally:
+            first.close()
+
+        # Simulate three boots that crashed before the flow counted as stable.
+        with open(count_path, "w") as f:
+            f.write("3")
+        safe = ListenerProcess(tmpdir)
+        try:
+            safe.wait_for(lambda l: l.startswith("LISTENER_SAFE_MODE"), description="safe mode line")
+            safe.wait_for(lambda l: l == "LISTENER_READY", description="listener still starts")
+            hello = _hello_reply(safe, "in safe mode")
+            assert hello["safeMode"] is True, hello
+            with safe._lock:
+                assert "FLOW_STARTED" not in safe._history, "flow ran in safe mode"
+            # A successful deploy leaves safe mode and clears the counter.
+            safe.send_message({"type": "DEPLOY", "bytecode": bytecode, "staticData": b""})
+            safe.wait_for(lambda l: l == "FLOW_STARTED", description="redeployed flow runs")
+            assert _hello_reply(safe, "after redeploy")["safeMode"] is False
+            with open(count_path) as f:
+                assert f.read().strip() == "0"
+        finally:
+            safe.close()
+
+        # A normal boot counts up, then clears once the flow has stayed up.
+        with open(count_path, "w") as f:
+            f.write("1")
+        normal = ListenerProcess(tmpdir)
+        try:
+            normal.wait_for(lambda l: l == "FLOW_STARTED", description="flow resumes on a normal boot")
+            with open(count_path) as f:
+                assert f.read().strip() == "2", "boot not counted"
+            time.sleep(0.8)  # THINGSTUDIO_STABLE_AFTER_MS is 400 in these tests
+            with open(count_path) as f:
+                assert f.read().strip() == "0", "stable flow didn't clear the counter"
+        finally:
+            normal.close()
+
+
 TESTS = [
     test_hello_sent_on_boot,
     test_boot_time_flow_auto_resume,
@@ -544,6 +659,9 @@ TESTS = [
     test_node_error_reported_end_to_end,
     test_malformed_frame_soak_does_not_kill_listener,
     test_trigger_fires_the_registered_node_and_ignores_unknown_ids,
+    test_exec_prints_results_keeps_variables_and_survives_errors,
+    test_stop_to_prompt_stops_the_flow_and_ends_the_listener,
+    test_boot_loop_safe_mode,
 ]
 
 

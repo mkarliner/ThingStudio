@@ -37,6 +37,8 @@ export interface Advice {
 
 export const DOC_INSTALL_MICROPYTHON: DocLink = { label: "Installing MicroPython", path: "installing-micropython/" };
 export const DOC_BOARD_WONT_CONNECT: DocLink = { label: "Board won't connect", path: "debugging/#board-wont-connect" };
+export const DOC_BOARD_STUCK: DocLink = { label: "Board stuck restarting", path: "debugging/#board-stuck-restarting" };
+export const DOC_COMMANDS: DocLink = { label: "Commands and the Python prompt", path: "debugging/#commands-and-the-python-prompt" };
 
 const INSTALL_FAILURE_ADVICE: Record<string, Advice> = {
   silent: {

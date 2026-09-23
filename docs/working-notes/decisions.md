@@ -169,3 +169,8 @@ bucket a specific type pair lands in, pin numbers) — those live in the
 node's or file's own header comment, per this project's existing
 convention, and aren't worth indexing here.
 
+## Board recovery, command box, stop to prompt
+
+Console command box (EXEC), stop to the MicroPython prompt and restart (STOP_TO_PROMPT), boot-loop safe mode,
+and "Remove flow…" that retries through resets; runtime 2.0.0. 1 entry:
+`docs/working-notes/decisions/board-recovery-and-commands.md`.

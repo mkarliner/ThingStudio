@@ -103,6 +103,7 @@ export class BackendTransport implements DeviceTransport {
   #connectedPort: string | null = null;
   #pendingListPorts: { resolve(ports: SerialPortInfo[]): void; reject(err: unknown): void }[] = [];
   #pendingConnect: { resolve(): void; reject(err: Error): void } | null = null;
+  #pendingRemoveFlow: { resolve(): void; reject(err: Error): void; onStatus?: (text: string) => void } | null = null;
   #pendingInstallRuntime: {
     resolve(): void;
     reject(err: Error): void;
@@ -269,6 +270,42 @@ export class BackendTransport implements DeviceTransport {
     return p;
   }
 
+  /** Writes `text` to the board as-is, no framing (ws_relay.py's raw_write) -- for MicroPython's own
+   * ">>>" prompt after STOP_TO_PROMPT, and Ctrl-D ("\x04") to restart the listener from there.
+   * Needs connectPort() first. Fire-and-forget: output arrives as ordinary debug lines. */
+  rawWrite(text: string): void {
+    if (!this.#ws || !this.#connectedPort) throw new Error("not connected to a board");
+    this.#ws.send(JSON.stringify({ type: "raw_write", text }));
+  }
+
+  /** Removes the saved flow from the board on `port` (board_recovery.py): the backend keeps sending
+   * Ctrl-C until the board stops at a prompt (asking the user, via `onStatus`, to press reset if it
+   * doesn't), deletes the flow files and resets the board. Like installRuntime(), needs only open().
+   * The backend gives up after 60s on its own; `timeoutMs` is a backstop in case it goes quiet. */
+  async removeFlow(port: string, onStatus?: (text: string) => void, timeoutMs = 75_000): Promise<void> {
+    if (!this.#ws) throw new Error("BackendTransport is not open -- call open() first");
+    if (this.#pendingRemoveFlow) throw new Error("BackendTransport already has a removeFlow() in flight");
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const p = new Promise<void>((resolve, reject) => {
+      const settle = (fn: () => void) => {
+        clearTimeout(timer);
+        this.#pendingRemoveFlow = null;
+        fn();
+      };
+      this.#pendingRemoveFlow = {
+        resolve: () => settle(resolve),
+        reject: (err) => settle(() => reject(err)),
+        onStatus,
+      };
+      timer = setTimeout(
+        () => settle(() => reject(new Error(`NODE_ERROR: remove flow got no answer from the backend in ${timeoutMs / 1000}s`))),
+        timeoutMs,
+      );
+    });
+    this.#ws.send(JSON.stringify({ type: "remove_flow", port }));
+    return p;
+  }
+
   /** Tears down the whole session -- both the backend's serial port (if
    * connectPort() succeeded) and the WebSocket itself. Safe to call on a
    * session that never got past open() (e.g. main.ts's port-listing probe
@@ -296,6 +333,9 @@ export class BackendTransport implements DeviceTransport {
     if (this.#pendingConnect) {
       this.#pendingConnect.reject(new Error("disconnected before the backend responded"));
       this.#pendingConnect = null;
+    }
+    if (this.#pendingRemoveFlow) {
+      this.#pendingRemoveFlow.reject(new Error("disconnected before the backend responded"));
     }
     if (this.#pendingInstallRuntime) {
       this.#pendingInstallRuntime.reject(new Error("disconnected before the backend responded"));
@@ -395,6 +435,16 @@ export class BackendTransport implements DeviceTransport {
           const diagnosis = typeof m.diagnosis === "string" ? m.diagnosis : null;
           waiter?.reject(new InstallRuntimeError(message, diagnosis));
         }
+        break;
+      }
+      case "remove_flow_status": {
+        if (typeof m.text === "string") this.#pendingRemoveFlow?.onStatus?.(m.text);
+        break;
+      }
+      case "remove_flow_result": {
+        const waiter = this.#pendingRemoveFlow;
+        if (m.ok === true) waiter?.resolve();
+        else waiter?.reject(new Error(typeof m.error === "string" ? m.error : "remove flow failed (no detail from backend)"));
         break;
       }
       case "install_runtime_progress": {

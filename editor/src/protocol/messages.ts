@@ -76,6 +76,12 @@ export const MessageType = {
   // is a new type rather than reusing VALUE_STREAM). Same "append, don't
   // renumber" convention as TRIGGER/HELLO_REQUEST above.
   NODE_STATUS: 11,
+  // Added 2026-09-23 (the console's command box): editor -> device, run a line of Python in the
+  // listener; its output comes back as plain console lines. Must match messages.py.
+  EXEC: 12,
+  // Added 2026-09-23: editor -> device, stop the flow and the listener and leave the board at the
+  // ">>>" prompt. Must match messages.py.
+  STOP_TO_PROMPT: 13,
 } as const;
 
 export type MessageTypeId = (typeof MessageType)[keyof typeof MessageType];
@@ -127,6 +133,9 @@ export interface HelloMessage {
   readonly currentFlowDeployId: string | null;
   readonly freeFlashBytes: number;
   readonly freeRamBytes: number;
+  /** Added 2026-09-23: the board skipped its saved flow after repeated failed boots (listener.py's
+   * safe mode). False when absent -- a runtime older than 2.0.0 never sends it. */
+  readonly safeMode: boolean;
 }
 
 /**
@@ -308,6 +317,19 @@ export interface HelloRequestMessage {
   readonly type: "HELLO_REQUEST";
 }
 
+/** Editor -> device: run `code` (an expression or a statement) in the listener. The device prints
+ * the result or a traceback; there's no reply message. */
+export interface ExecMessage {
+  readonly type: "EXEC";
+  readonly code: string;
+}
+
+/** Editor -> device: stop the flow and the listener, leaving the board at MicroPython's own prompt.
+ * Soft reset (Ctrl-D) or a real reset starts Thingstudio again. */
+export interface StopToPromptMessage {
+  readonly type: "STOP_TO_PROMPT";
+}
+
 export type Message =
   | HelloMessage
   | DeployMessage
@@ -319,7 +341,9 @@ export type Message =
   | StateWriteMessage
   | TriggerMessage
   | HelloRequestMessage
-  | NodeStatusMessage;
+  | NodeStatusMessage
+  | ExecMessage
+  | StopToPromptMessage;
 
 export const MESSAGE_TYPE_BY_NAME: Record<Message["type"], MessageTypeId> = {
   HELLO: MessageType.HELLO,
@@ -333,6 +357,8 @@ export const MESSAGE_TYPE_BY_NAME: Record<Message["type"], MessageTypeId> = {
   TRIGGER: MessageType.TRIGGER,
   HELLO_REQUEST: MessageType.HELLO_REQUEST,
   NODE_STATUS: MessageType.NODE_STATUS,
+  EXEC: MessageType.EXEC,
+  STOP_TO_PROMPT: MessageType.STOP_TO_PROMPT,
 };
 
 export const MESSAGE_NAME_BY_TYPE: Record<MessageTypeId, Message["type"]> = {
@@ -347,4 +373,6 @@ export const MESSAGE_NAME_BY_TYPE: Record<MessageTypeId, Message["type"]> = {
   [MessageType.TRIGGER]: "TRIGGER",
   [MessageType.HELLO_REQUEST]: "HELLO_REQUEST",
   [MessageType.NODE_STATUS]: "NODE_STATUS",
+  [MessageType.EXEC]: "EXEC",
+  [MessageType.STOP_TO_PROMPT]: "STOP_TO_PROMPT",
 };

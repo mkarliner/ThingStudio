@@ -29,6 +29,7 @@ SAMPLE_MESSAGES = [
         "currentFlowDeployId": None,
         "freeFlashBytes": 3500000,
         "freeRamBytes": 168000,
+        "safeMode": False,
     },
     {
         # Same message type, second variant: a board that DOES have a
@@ -42,6 +43,7 @@ SAMPLE_MESSAGES = [
         "currentFlowDeployId": "6f1c9b2a-8e3d-4a5b-9c1e-2d3f4a5b6c7d",
         "freeFlashBytes": 757760,
         "freeRamBytes": 179200,
+        "safeMode": False,
     },
     {
         "type": "DEPLOY",
@@ -90,6 +92,9 @@ SAMPLE_MESSAGES = [
     # HELLO_REQUEST added 2026-09-05 (no reset button on the Pico W) -- no
     # fields at all, the minimal possible message shape.
     {"type": "HELLO_REQUEST"},
+    # EXEC / STOP_TO_PROMPT added 2026-09-23 (console command box, stop to prompt).
+    {"type": "EXEC", "code": "import machine; machine.Pin(15).value()"},
+    {"type": "STOP_TO_PROMPT"},
 ]
 
 

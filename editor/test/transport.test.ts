@@ -29,6 +29,7 @@ const HELLO: Message = {
   currentFlowDeployId: null,
   freeFlashBytes: 1000,
   freeRamBytes: 2000,
+  safeMode: false,
 };
 
 function bytesToBase64(bytes: Uint8Array): string {

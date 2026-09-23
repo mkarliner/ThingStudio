@@ -117,7 +117,16 @@ import { mergeCustomNodeRegistry } from "../node-library/custom-node.js";
 import { WebSerialTransport, type WebSerialPort, type DeviceTransport, type TransportEvents } from "../protocol/transport.js";
 import { BackendTransport, InstallRuntimeError, type SerialPortInfo } from "../protocol/backend-transport.js";
 import { choosePort, isUsbPort } from "./port-choice.js";
-import { classifyDebugLines, explainInstallFailure, explainNoHello, localDocUrl, type Advice, type DocLink } from "./board-diagnosis.js";
+import {
+  DOC_BOARD_STUCK,
+  DOC_COMMANDS,
+  classifyDebugLines,
+  explainInstallFailure,
+  explainNoHello,
+  localDocUrl,
+  type Advice,
+  type DocLink,
+} from "./board-diagnosis.js";
 import { explainBackendConnectError } from "./connect-error-help.js";
 import { NATIVE_ARCH_OPTIONS, inferNativeArch } from "./native-arch.js";
 import type { Message, NodeStatusMessage, ProtocolVersion } from "../protocol/messages.js";
@@ -1025,9 +1034,13 @@ function handleNodeStatus(nodeId: string, state: NodeStatusMessage["state"], tex
 // see that function) so Deploy is always available the moment you can
 // reach a device.
 let deployedClean = false;
+/** True between "Stop flow & open prompt" and "Restart Thingstudio" (or a disconnect) -- see the
+ * command-box section at the end of this file. Declared up here because updateDeployButtonEnabled()
+ * reads it and can run during startup. */
+let boardAtPrompt = false;
 
 function updateDeployButtonEnabled(): void {
-  el<HTMLButtonElement>("btnDeploy").disabled = !transport.isConnected || deployedClean;
+  el<HTMLButtonElement>("btnDeploy").disabled = !transport.isConnected || deployedClean || boardAtPrompt;
 }
 
 reteEditor.addPipe((context) => {
@@ -1097,7 +1110,8 @@ function waitForMessage(match: (m: Message) => boolean, timeoutMs: number): Prom
 // decideDeploy() only blocks on a major mismatch (CLAUDE.md's version-
 // bump-discipline rule), so this is the level that actually stops an
 // unsafe DEPLOY rather than letting it crash on the device.
-const EDITOR_TARGET_VERSION: ProtocolVersion = { major: 1, minor: 0, patch: 0 };
+// 2.0.0 (2026-09-23): EXEC, STOP_TO_PROMPT, safe mode. Must match listener.py's _RUNTIME_VERSION.
+const EDITOR_TARGET_VERSION: ProtocolVersion = { major: 2, minor: 0, patch: 0 };
 
 // This editor's own device-runtime/src git SHA, injected at build/dev-
 // server-start time by vite.config.ts's `define` (see that file,
@@ -1145,6 +1159,18 @@ const transportEvents: TransportEvents = {
     if (message.type === "NODE_ERROR") highlightNodeFromNodeError(message.nodeId);
     if (message.type === "NODE_STATUS") handleNodeStatus(message.nodeId, message.state, message.text);
     if (message.type === "HELLO") {
+      if (message.safeMode) {
+        logAdvice(
+          "[safe mode]",
+          {
+            text:
+              "The board's saved flow kept crashing it on start, so it hasn't been run this time. Fix the flow " +
+              "and deploy again, or click \"Remove flow…\".",
+            doc: DOC_BOARD_STUCK,
+          },
+          "err",
+        );
+      }
       lastHelloVersion = message.runtimeVersion;
       lastHelloChipType = message.chipType;
       const decision = decideDeploy(message.runtimeVersion, EDITOR_TARGET_VERSION);
@@ -1258,6 +1284,8 @@ function setConnectedUi(connected: boolean): void {
   el<HTMLButtonElement>("btnDisconnect").hidden = !connected;
   el<HTMLButtonElement>("btnCheckStatus").disabled = !connected;
   el<HTMLButtonElement>("btnCheckStatus").hidden = !connected;
+  if (!connected) boardAtPrompt = false;
+  updateBoardToolsUi();
   // A fresh connection always starts deployable, regardless of whatever
   // deployedClean was left at from a previous connection (a different
   // board very likely doesn't already have this exact flow running, and
@@ -1709,3 +1737,150 @@ if (!("serial" in navigator)) {
   }
   logLine('[Web Serial API not available in this browser -- "Direct" mode is disabled; use "Via backend" instead]', "");
 }
+
+
+// --- Command box, stop to prompt, remove flow (2026-09-23) -----------------------------------------
+//
+// Mike: "a text box to send basic commands to the board, and outputs sent to the console", plus a way
+// to reach the Python prompt without rebooting, and a way out of a flow that boot-loops the board.
+// While a flow runs, commands go to the listener as EXEC (listener.py's _handle_exec prints the
+// result). After "Stop flow & open prompt" (STOP_TO_PROMPT) the listener has exited, so commands go
+// to MicroPython's own ">>>" prompt as raw text (ws_relay.py's raw_write), and "Restart Thingstudio"
+// sends Ctrl-D. Deploy is disabled while at the prompt: nothing is listening for a DEPLOY frame.
+
+const commandHistory: string[] = [];
+let historyIndex = 0;
+const RESTART_WAIT_MS = 3500; // listener.py's 3s boot window, plus a little
+
+function updateBoardToolsUi(): void {
+  const connected = transport.isConnected;
+  el<HTMLInputElement>("cmdInput").disabled = !connected;
+  el<HTMLButtonElement>("btnSendCmd").disabled = !connected;
+  el<HTMLButtonElement>("btnStopToPrompt").disabled = !connected;
+  el<HTMLButtonElement>("btnStopToPrompt").hidden = boardAtPrompt;
+  el<HTMLButtonElement>("btnResume").hidden = !boardAtPrompt;
+  el<HTMLInputElement>("cmdInput").placeholder = boardAtPrompt
+    ? "MicroPython prompt: type a line and press Enter"
+    : "Python command, e.g. gc.mem_free()";
+  updateDeployButtonEnabled();
+}
+updateBoardToolsUi();
+
+function backendTransportOrNull(): BackendTransport | null {
+  return transport instanceof BackendTransport ? transport : null;
+}
+
+async function sendCommand(): Promise<void> {
+  const input = el<HTMLInputElement>("cmdInput");
+  const code = input.value;
+  if (!code.trim()) return;
+  input.value = "";
+  commandHistory.push(code);
+  historyIndex = commandHistory.length;
+  logLine(`» ${code}`, "");
+  try {
+    if (boardAtPrompt) {
+      const bt = backendTransportOrNull();
+      if (!bt) throw new Error("the prompt needs the backend connection");
+      bt.rawWrite(code + "\r");
+    } else {
+      await transport.send({ type: "EXEC", code });
+    }
+  } catch (err) {
+    logLine(`[command failed] ${err instanceof Error ? err.message : String(err)}`, "err");
+  }
+}
+
+el("btnSendCmd").addEventListener("click", () => void sendCommand());
+el<HTMLInputElement>("cmdInput").addEventListener("keydown", (ev) => {
+  const input = ev.target as HTMLInputElement;
+  if (ev.key === "Enter") {
+    ev.preventDefault();
+    void sendCommand();
+  } else if (ev.key === "ArrowUp" && historyIndex > 0) {
+    ev.preventDefault();
+    historyIndex -= 1;
+    input.value = commandHistory[historyIndex] ?? "";
+  } else if (ev.key === "ArrowDown" && historyIndex < commandHistory.length) {
+    ev.preventDefault();
+    historyIndex += 1;
+    input.value = commandHistory[historyIndex] ?? "";
+  }
+});
+
+el("btnStopToPrompt").addEventListener("click", async () => {
+  try {
+    await transport.send({ type: "STOP_TO_PROMPT" });
+  } catch (err) {
+    logLine(`[stop failed] ${err instanceof Error ? err.message : String(err)}`, "err");
+    return;
+  }
+  boardAtPrompt = true;
+  lastHelloVersion = null;
+  updateBoardToolsUi();
+  logAdvice(
+    "[prompt]",
+    {
+      text:
+        "Flow stopped. Commands now go straight to MicroPython's prompt. Click \"Restart Thingstudio\" " +
+        "when you're done -- Deploy is off until then. A board running a runtime older than 2.0.0 ignores " +
+        "this; update it with \"Install runtime…\".",
+      doc: DOC_COMMANDS,
+    },
+    "",
+  );
+});
+
+el("btnResume").addEventListener("click", async () => {
+  const bt = backendTransportOrNull();
+  if (!bt) return;
+  try {
+    bt.rawWrite("\x04"); // Ctrl-D: MicroPython soft reset -> main.py -> listener + saved flow
+  } catch (err) {
+    logLine(`[restart failed] ${err instanceof Error ? err.message : String(err)}`, "err");
+    return;
+  }
+  boardAtPrompt = false;
+  updateBoardToolsUi();
+  logLine("[restart] restarting Thingstudio on the board (about 3 seconds)…", "");
+  await new Promise((r) => setTimeout(r, RESTART_WAIT_MS));
+  if (transport.isConnected) await requestHelloOrExplain();
+});
+
+el("btnRemoveFlow").addEventListener("click", async () => {
+  const portName = el<HTMLSelectElement>("backendPortSelect").value;
+  if (!portName) {
+    logLine('[remove flow failed] choose the board\'s port first ("⟳ ports")', "err");
+    return;
+  }
+  if (!window.confirm("Remove the saved flow from the board? The flow on your canvas isn't affected.")) return;
+  if (transport.isConnected) {
+    // A board that's still answering can stop at the prompt by itself, so no reset is needed.
+    if (!boardAtPrompt && lastHelloVersion !== null) {
+      try {
+        await transport.send({ type: "STOP_TO_PROMPT" });
+        await new Promise((r) => setTimeout(r, 300));
+      } catch {
+        // Falls through to the reset path below -- the backend keeps trying either way.
+      }
+    }
+    await transport.disconnect();
+    setConnectedUi(false);
+  }
+  logLine(`[remove flow] stopping the board on ${portName}…`, "");
+  const remover = new BackendTransport({ onDebugLine: (line) => logLine(`[backend] ${line}`, "") });
+  try {
+    await remover.open(currentBackendWsUrl());
+    await remover.removeFlow(portName, (text) => logLine(`[remove flow] ${text}`, ""));
+  } catch (err) {
+    logAdvice(
+      "[remove flow failed]",
+      { text: err instanceof Error ? err.message : String(err), doc: DOC_BOARD_STUCK },
+      "err",
+    );
+    return;
+  } finally {
+    await remover.disconnect();
+  }
+  logLine('[remove flow OK] The saved flow is gone and the board has restarted without it. Click "Connect".', "ok");
+});
