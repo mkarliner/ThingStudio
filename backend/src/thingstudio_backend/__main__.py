@@ -45,6 +45,12 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         default=None,
         help="directory for persisted flows/custom-node packages (default: ~/.thingstudio)",
     )
+    parser.add_argument(
+        "--docs-dir",
+        type=Path,
+        default=None,
+        help="directory of built user docs (mkdocs build output) to serve at /docs/ (default: the repo's site/)",
+    )
     parser.add_argument("--log-level", default="INFO")
     return parser.parse_args(argv)
 
@@ -64,7 +70,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     allowed_hosts = DEFAULT_ALLOWED_HOSTS | frozenset(args.allowed_hosts or ())
-    app = create_app(allowed_hosts=allowed_hosts, static_dir=args.static_dir, data_dir=args.data_dir)
+    app = create_app(allowed_hosts=allowed_hosts, static_dir=args.static_dir, data_dir=args.data_dir, docs_dir=args.docs_dir)
     web.run_app(app, host=args.host, port=args.port)
     return 0
 

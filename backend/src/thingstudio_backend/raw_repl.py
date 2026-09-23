@@ -40,9 +40,12 @@
 from __future__ import annotations
 
 import base64
+import logging
 import time
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Callable, Protocol
+
+logger = logging.getLogger(__name__)
 
 _CTRL_A = b"\x01"
 _CTRL_B = b"\x02"
@@ -50,7 +53,12 @@ _CTRL_C = b"\x03"
 _CTRL_D = b"\x04"
 
 _RAW_REPL_BANNER = b"raw REPL; CTRL-B to exit\r\n>"
+
+# enter_raw_repl()'s step name -- exported so ws_relay.py can tell "never reached raw REPL" (says
+# something about the board's firmware) from a failure later in the install.
+ENTER_STEP = "entering raw REPL"
 _OK = b"OK"
+_PROMPT = b">"
 
 # Per-read poll size -- mirrors serial_relay.py's own _READ_CHUNK_SIZE, not a protocol-level
 # limit on its own.
@@ -67,16 +75,63 @@ _POLL_CHUNK_SIZE = 256
 # ampy/rshell use, for the same reason.
 _DEFAULT_CHUNK_SIZE = 256
 
+# Pasted code goes to the device in pieces of at most this many bytes, with a short pause between
+# them. Classic raw REPL has no flow control, so a paste bigger than the device's stdin buffer can
+# overrun it -- upstream tools/pyboard.py does exactly this (256 bytes, 10ms) for the same reason.
+# Added 2026-09-23 after the first real-hardware install (ESP32-S2) hung partway with no output.
+_WRITE_PIECE_SIZE = 256
+_WRITE_PIECE_PAUSE_SECONDS = 0.01
+
+# Progress callback: (index of the file now starting, 1-based; total files; its destination name).
+ProgressCallback = Callable[[int, int, str], None]
+
 
 class RawReplError(Exception):
     """A raw-REPL operation failed -- always names the step and what was actually seen (or the
     absence of what was expected). This backend's existing NODE_ERROR-style attribution
     convention (serial_relay.py's SerialRelayError), not a bare/unattributed exception."""
 
-    def __init__(self, step: str, detail: str) -> None:
+    def __init__(self, step: str, detail: str, seen: bytes = b"") -> None:
         super().__init__(f"NODE_ERROR: runtime install failed at {step}: {detail}")
         self.step = step
         self.detail = detail
+        # Everything the board sent back before the failure, untruncated -- classify_reply()'s
+        # input. `detail` carries a truncated copy for humans; this one is for code.
+        self.seen = seen
+
+
+# classify_reply() result values -- the backend's install_runtime_result "diagnosis" field.
+# The editor (board-diagnosis.ts) owns the user-facing wording for each; this side only names
+# what was seen, so the two can't drift into giving different advice.
+REPLY_SILENT = "silent"
+REPLY_MICROPYTHON = "micropython"
+REPLY_CIRCUITPYTHON = "circuitpython"
+REPLY_ESP_ROM = "esp_rom"
+REPLY_OTHER = "other"
+
+_ESP_ROM_MARKERS = (b"waiting for download", b"ESP-ROM:", b"rst:0x", b"ets Jun", b"ets Jul")
+_MICROPYTHON_MARKERS = (b">>>", b"MicroPython", b"raw REPL", b"Traceback", b"KeyboardInterrupt", b"SyntaxError")
+
+
+def classify_reply(seen: bytes) -> str:
+    """Best-effort guess at what is on the other end of the port, from whatever it sent back after
+    enter_raw_repl()'s Ctrl-C/Ctrl-A. Found necessary on real hardware (2026-09-23, a blank
+    ESP32-S2 with no MicroPython): the install failed with `last seen: b''`, accurate but with no
+    next step for a user who skipped the "install MicroPython first" instruction. Total silence,
+    ROM-bootloader text, a Python prompt and unrelated firmware each need different advice.
+
+    Substring matching, not a protocol parse -- same deliberately loose posture as the editor's
+    connect-error-help.ts. CircuitPython is checked before MicroPython since its REPL also shows
+    '>>>'."""
+    if not seen.strip():
+        return REPLY_SILENT
+    if b"CircuitPython" in seen:
+        return REPLY_CIRCUITPYTHON
+    if any(m in seen for m in _ESP_ROM_MARKERS):
+        return REPLY_ESP_ROM
+    if any(m in seen for m in _MICROPYTHON_MARKERS):
+        return REPLY_MICROPYTHON
+    return REPLY_OTHER
 
 
 class _SerialPort(Protocol):
@@ -96,6 +151,21 @@ class RawReplTimeouts:
 
     enter: float = 5.0
     exec_default: float = 5.0
+
+
+def read_available(port: _SerialPort, max_size: int) -> bytes:
+    """Returns as soon as there's anything to return: whatever is already buffered (up to
+    `max_size`), else waits for one byte, up to the port's own read timeout.
+
+    Not a plain port.read(max_size): pyserial's read(n) waits until it has n bytes *or* the timeout
+    passes. A raw-REPL reply is often 4 bytes ("OK" + two Ctrl-D), so every read sat out the full
+    0.5s timeout -- about 6 minutes for a ~690-exec install, with no output. That was the "hang" on
+    the first real ESP32-S2 install, 2026-09-23. Same idea as upstream pyboard.py's read(1) +
+    in_waiting loop. serial_relay.py's read_loop() uses this too, for the same latency reason.
+
+    `in_waiting` is read via getattr so test fakes without it still work (they get read(1))."""
+    waiting = getattr(port, "in_waiting", 0) or 0
+    return port.read(min(max(waiting, 1), max_size))
 
 
 class _ByteReader:
@@ -129,21 +199,42 @@ class _ByteReader:
                 return result
             if time.monotonic() > deadline:
                 seen = self._buf[-200:] if len(self._buf) > 200 else self._buf
-                raise RawReplError(step, f"timed out waiting for {marker!r}, last seen: {seen!r}")
-            chunk = self._port.read(_POLL_CHUNK_SIZE)
+                raise RawReplError(step, f"timed out waiting for {marker!r}, last seen: {seen!r}", seen=self._buf)
+            try:
+                chunk = read_available(self._port, _POLL_CHUNK_SIZE)
+            except Exception as exc:  # noqa: BLE001 -- same reasoning as _write(): attribute it, don't mislabel it
+                raise RawReplError(step, f"lost the connection to the board ({type(exc).__name__}: {exc})") from exc
             if chunk:
                 self._buf += chunk
+
+
+def _write(port: _SerialPort, data: bytes, step: str) -> None:
+    """Every write in this module goes through here. Sends `data` in _WRITE_PIECE_SIZE pieces (see
+    that constant) and turns any write failure into a RawReplError naming the step.
+
+    The caller must open the port with a write timeout (ws_relay.py does): pyserial's default is to
+    block forever, and a board that stops reading would otherwise hang the whole install silently --
+    exactly what the first real-hardware run did. Caught broadly because this module deliberately
+    doesn't import pyserial (see header); anything write() raises -- a write timeout, the port
+    vanishing mid-install -- is a failure of this step, and says so."""
+    for i in range(0, len(data), _WRITE_PIECE_SIZE):
+        if i:
+            time.sleep(_WRITE_PIECE_PAUSE_SECONDS)
+        try:
+            port.write(data[i : i + _WRITE_PIECE_SIZE])
+        except Exception as exc:  # noqa: BLE001 -- see docstring
+            raise RawReplError(step, f"the board stopped accepting data ({type(exc).__name__}: {exc})") from exc
 
 
 def enter_raw_repl(port: _SerialPort, timeouts: RawReplTimeouts = RawReplTimeouts()) -> None:
     """Interrupts whatever's running and switches the board into raw REPL. Safe to call on a
     board already in raw REPL (Ctrl-A is a no-op there) or already sitting at a bare '>>> '
     prompt."""
-    port.write(_CTRL_C)
-    port.write(_CTRL_C)  # pyboard.py's own belt-and-braces second interrupt, for a board that
-    # swallowed the first one mid a multi-byte read -- cheap, harmless if the first landed.
-    port.write(_CTRL_A)
-    _ByteReader(port).read_until(_RAW_REPL_BANNER, time.monotonic() + timeouts.enter, "entering raw REPL")
+    _write(port, _CTRL_C, ENTER_STEP)
+    _write(port, _CTRL_C, ENTER_STEP)  # pyboard.py's own belt-and-braces second interrupt, for a
+    # board that swallowed the first one mid a multi-byte read -- cheap, harmless if the first landed.
+    _write(port, _CTRL_A, ENTER_STEP)
+    _ByteReader(port).read_until(_RAW_REPL_BANNER, time.monotonic() + timeouts.enter, ENTER_STEP)
 
 
 def exit_raw_repl(port: _SerialPort) -> None:
@@ -162,8 +253,9 @@ def exec_raw(port: _SerialPort, code: bytes, step: str, timeout: float = 5.0) ->
     push past. One _ByteReader per call, deliberately not shared across exec_raw() calls: the
     device can't reply to a command that hasn't been sent yet, so there's never legitimate
     leftover data to carry from one exec into the next."""
-    port.write(code)
-    port.write(_CTRL_D)
+    logger.debug("raw REPL exec: %s", step)
+    _write(port, code, step)
+    _write(port, _CTRL_D, step)
     deadline = time.monotonic() + timeout
     reader = _ByteReader(port)
     echoed = reader.read_until(_OK, deadline, f"{step} (waiting for OK echo)")
@@ -175,6 +267,13 @@ def exec_raw(port: _SerialPort, code: bytes, step: str, timeout: float = 5.0) ->
     stderr = reader.read_until(_CTRL_D, deadline, f"{step} (reading stderr)")[: -len(_CTRL_D)]
     if stderr:
         raise RawReplError(step, f"device raised: {stderr!r}")
+    # After every exec the device prints a fresh raw-REPL prompt, ">". It must be consumed here:
+    # left in the port buffer it lands in front of the next exec's "OK" and fails the echo check
+    # above. Found on real hardware, 2026-09-23 (ESP32-S2: "unexpected bytes before OK echo:
+    # b'>OK'") once read_available() stopped over-reading -- the old read(256) had been swallowing
+    # the prompt into this call's buffer and discarding it by luck of timing. pyboard.py reads the
+    # same prompt too (at the start of its next exec).
+    reader.read_until(_PROMPT, deadline, f"{step} (waiting for the next prompt)")
     return stdout
 
 
@@ -199,11 +298,16 @@ def hard_reset(port: _SerialPort) -> None:
     Deliberately doesn't wait for a reply: the reset tears down the serial connection's other
     end immediately, so there's nothing to read back. The caller is expected to close this port
     right after calling this, not keep reading from it -- see runtime_installer.py."""
-    port.write(b"import machine\nmachine.reset()")
-    port.write(_CTRL_D)
+    _write(port, b"import machine\nmachine.reset()", "resetting the board")
+    _write(port, _CTRL_D, "resetting the board")
 
 
-def install_runtime(port: _SerialPort, files: list[tuple[str, bytes]], timeouts: RawReplTimeouts = RawReplTimeouts()) -> None:
+def install_runtime(
+    port: _SerialPort,
+    files: list[tuple[str, bytes]],
+    timeouts: RawReplTimeouts = RawReplTimeouts(),
+    on_progress: ProgressCallback | None = None,
+) -> None:
     """Pushes `files` (a caller-supplied, already-ordered [(dest_filename, contents), ...] list
     -- this module has no opinion on where those bytes come from or what belongs in the list,
     see runtime_installer.py for that) onto `port`'s board via raw REPL, then hard-resets it.
@@ -212,6 +316,9 @@ def install_runtime(port: _SerialPort, files: list[tuple[str, bytes]], timeouts:
     success return value, since a partially-written runtime is not a state worth distinguishing
     from a total failure; the caller's own retry is "run this again from the top"."""
     enter_raw_repl(port, timeouts)
-    for dest_name, data in files:
+    for index, (dest_name, data) in enumerate(files, start=1):
+        logger.info("installing runtime: %d/%d %s (%d bytes)", index, len(files), dest_name, len(data))
+        if on_progress is not None:
+            on_progress(index, len(files), dest_name)
         write_file_chunked(port, dest_name, data, f"pushing {dest_name}")
     hard_reset(port)

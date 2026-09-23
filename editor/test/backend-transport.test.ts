@@ -10,8 +10,8 @@
 // decode/control-message logic on top of it" approach test/transport.test.ts
 // already uses for WebSerialTransport.
 
-import { describe, expect, it } from "vitest";
-import { BackendTransport, type SerialPortInfo } from "../src/protocol/backend-transport.js";
+import { describe, expect, it, vi } from "vitest";
+import { BackendTransport, InstallRuntimeError, type InstallProgress, type SerialPortInfo } from "../src/protocol/backend-transport.js";
 import { encodeMessage } from "../src/protocol/protocol.js";
 import type { Message } from "../src/protocol/messages.js";
 
@@ -199,6 +199,71 @@ describe("BackendTransport", () => {
       JSON.stringify({ type: "install_runtime_result", ok: false, error: "NODE_ERROR: runtime install failed at pushing runtime.py: timed out" }),
     );
     await expect(installP).rejects.toThrow(/NODE_ERROR/);
+  });
+
+  it("installRuntime() passes the backend's diagnosis through on the rejection", async () => {
+    const { factory, sockets } = makeFakeFactory();
+    const t = new BackendTransport({}, factory);
+    const openP = t.open("ws://x/ws");
+    sockets[0]!.simulateOpen();
+    await openP;
+
+    const installP = t.installRuntime("/dev/cu.usbmodem02");
+    sockets[0]!.simulateMessage(
+      JSON.stringify({
+        type: "install_runtime_result",
+        ok: false,
+        error: "NODE_ERROR: runtime install failed at entering raw REPL: timed out ..., last seen: b''",
+        diagnosis: "silent",
+      }),
+    );
+    const err = await installP.catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(InstallRuntimeError);
+    expect((err as InstallRuntimeError).diagnosis).toBe("silent");
+  });
+
+  it("installRuntime() reports progress and keeps waiting while progress arrives", async () => {
+    vi.useFakeTimers();
+    try {
+      const { factory, sockets } = makeFakeFactory();
+      const t = new BackendTransport({}, factory);
+      const openP = t.open("ws://x/ws");
+      sockets[0]!.simulateOpen();
+      await openP;
+
+      const seen: InstallProgress[] = [];
+      const installP = t.installRuntime("/dev/ttyUSB0", 115200, (p) => seen.push(p), 1000);
+      vi.advanceTimersByTime(800);
+      sockets[0]!.simulateMessage(JSON.stringify({ type: "install_runtime_progress", index: 1, total: 2, file: "a.py" }));
+      vi.advanceTimersByTime(800); // 1600ms total, but only 800ms since the last progress
+      sockets[0]!.simulateMessage(JSON.stringify({ type: "install_runtime_result", ok: true }));
+      await installP;
+      expect(seen).toEqual([{ index: 1, total: 2, file: "a.py" }]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("installRuntime() rejects as stalled when the backend goes quiet", async () => {
+    vi.useFakeTimers();
+    try {
+      const { factory, sockets } = makeFakeFactory();
+      const t = new BackendTransport({}, factory);
+      const openP = t.open("ws://x/ws");
+      sockets[0]!.simulateOpen();
+      await openP;
+
+      const installP = t.installRuntime("/dev/ttyUSB0", 115200, undefined, 1000);
+      const caught = installP.catch((e: unknown) => e);
+      vi.advanceTimersByTime(1001);
+      const err = await caught;
+      expect(err).toBeInstanceOf(InstallRuntimeError);
+      expect((err as InstallRuntimeError).diagnosis).toBe("stalled");
+      // A second install is allowed afterwards -- the stalled one no longer counts as in flight.
+      void t.installRuntime("/dev/ttyUSB0").catch(() => {});
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("installRuntime() defaults baudrate to 115200 when not given", async () => {

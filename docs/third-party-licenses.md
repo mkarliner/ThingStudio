@@ -207,18 +207,18 @@ discipline as the editor's npm-install workaround (`CLAUDE.md`) -- the actual `p
 venv under `backend/` is Mike's own step, run from a real Terminal, for the same shared-mount/cross-platform-
 binary reason (`aiohttp` ships platform-specific compiled wheels, same hazard class as npm's native bindings).
 
-## Documentation build tooling (pip, not yet installed)
+## Documentation build tooling (pip)
 
-Not yet a real dependency of anything in this repo -- `mkdocs.yml` and the placeholder pages under
-`docs/user-guide/` exist (`docs/working-notes/documentation-design.md`, 2026-09-07) but nobody has run
-`pip install` yet. Tracked from day one anyway, same reasoning as the "Runtime / platform components" table
-above: flagged and approved (Mike's own tech-selection call, `docs/working-notes/documentation-tech-selection.md`)
-before the pip packages exist as an actual installed dependency.
+Builds the user docs (`mkdocs.yml`, `docs/user-guide/`) into `site/`. Since 2026-09-23 the built site also ships
+to users: the backend serves it at `/docs/` (`backend/src/thingstudio_backend/docs_site.py`), so
+mkdocs-material's own CSS/JS (MIT) is redistributed inside every built copy, not just used at build time.
+Versions and licenses confirmed 2026-09-23 from the installed packages' own metadata in a scratch venv
+(`License-Expression`: mkdocs `BSD-2-Clause`, mkdocs-material `MIT`).
 
-| Package | Version to install | License | Notes |
+| Package | Version | License | Notes |
 |---|---|---|---|
-| mkdocs | 1.6.1 | BSD-2-Clause | Static site generator. Version/license confirmed against PyPI 2026-09-07 -- re-verify against the installed package's own metadata (`pip show mkdocs`) once Mike actually installs it, per this file's own stated practice for npm packages. |
-| mkdocs-material | 9.7.7 | MIT | Theme (`mkdocs.yml`'s `theme.name: material`). Version/license confirmed against PyPI 2026-09-07 -- same re-verify note as mkdocs above. |
+| mkdocs | 1.6.1 | BSD-2-Clause | Static site generator. Build-time only. |
+| mkdocs-material | 9.7.7 | MIT | Theme (`mkdocs.yml`'s `theme.name: material`). Its CSS/JS is in every built site the backend serves. `theme.font: false`, so no Google Fonts are fetched or bundled. |
 
 Both pinned in `.github/workflows/docs.yml`'s `pip install` step -- update the pin there in the same change if
 either version changes here. Not gated by `CLAUDE.md`'s npm-specific install-flag rule (these are pip, not npm

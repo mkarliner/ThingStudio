@@ -21,3 +21,7 @@ __pycache__/
 editor/src/**/*.js
 editor/test/**/*.js
 *.egg-info/
+
+# mkdocs build output (mkdocs.yml's site_dir) -- served locally by the backend at /docs/
+# (docs_site.py), published online by .github/workflows/docs.yml. Never committed.
+site/

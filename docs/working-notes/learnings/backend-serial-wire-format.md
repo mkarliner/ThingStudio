@@ -33,3 +33,10 @@ Status: detail file, started 2026-09-07 (editor-backend-wiring session). See `le
   recursively, not a raw-byte scan, since arbitrary binary fields like `bytecode` could
   coincidentally contain the CBOR-null byte as data) asserts no encoded message body ever contains
   an actual CBOR null.
+
+- **pyserial's `read(n)` waits for n bytes or the timeout — it doesn't return early with what's there.**
+  2026-09-23. Asking for a large buffer "to be efficient" turns every short reply into a full timeout wait:
+  0.5s per raw-REPL exec (a ~6-minute silent runtime install) and up to 0.5s extra latency on every relayed
+  frame. Read `in_waiting` bytes, or 1 if none (`raw_repl.read_available()`). Test fakes that return whatever
+  is queued regardless of `n` hide this completely — it only showed on real hardware, and was then confirmed
+  with real pyserial on a pty (`decisions/runtime-install-from-editor.md`).

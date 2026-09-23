@@ -113,6 +113,7 @@
      or as an error on lines that aren't .err. */
   #console .node-link { cursor: pointer; text-decoration: underline dotted; text-underline-offset: 2px; }
   #console .node-link:hover { background: #1a1f2b; }
+  #console a { color: var(--accent); }
 </style>
 </head>
 <body>
@@ -151,6 +152,7 @@
       <option value="auto" selected>Native arch: Auto</option>
     </select>
     <button id="btnDeploy" disabled class="primary">Compile → Deploy</button>
+    <button id="btnDocs" title="Open the user docs, served by the backend (works offline)">Docs</button>
     <span id="pill" class="pill disconnected">disconnected</span>
   </div>
   <div id="main">

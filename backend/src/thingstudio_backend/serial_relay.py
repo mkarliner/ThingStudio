@@ -34,6 +34,8 @@ from dataclasses import dataclass
 import serial
 import serial.tools.list_ports
 
+from .raw_repl import read_available
+
 # Read timeout for the blocking pyserial read wrapped in asyncio.to_thread --
 # bounds how long one to_thread() call can block, so the read loop always gets
 # a chance to check its stop flag. Not a protocol timeout; purely a
@@ -154,8 +156,16 @@ class SerialConnection:
 
         while not self._stop_requested:
             try:
-                chunk = await asyncio.to_thread(self._serial.read, _READ_CHUNK_SIZE)
+                # read_available(), not read(_READ_CHUNK_SIZE): the latter waits for a full 4096
+                # bytes or the poll timeout, delaying every relayed frame by up to 0.5s. See
+                # raw_repl.read_available()'s docstring (2026-09-23).
+                chunk = await asyncio.to_thread(read_available, self._serial, _READ_CHUNK_SIZE)
             except (serial.SerialException, OSError) as exc:
+                if self._stop_requested:
+                    # close() ran while this read was in flight -- the port going away is the
+                    # expected result of that, not a failure. Seen on real hardware as a spurious
+                    # "Bad file descriptor" warning every time Install runtime disconnected first.
+                    return
                 raise SerialRelayError(self.port, "read", exc) from exc
             if chunk:
                 yield chunk

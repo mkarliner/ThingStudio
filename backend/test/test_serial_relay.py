@@ -197,3 +197,33 @@ async def test_close_wraps_serial_exception(monkeypatch) -> None:
         await conn.close()
 
     assert exc_info.value.operation == "close"
+
+
+@pytest.mark.asyncio
+async def test_read_loop_ends_quietly_when_the_port_is_closed_under_it(monkeypatch) -> None:
+    """Real case, 2026-09-23: Install runtime disconnects the relay first; the in-flight read then
+    fails with EBADF. That's the expected result of close(), not an error to report."""
+    conn, fake = await _open_fake(monkeypatch)
+    conn.request_stop()
+    fake._read_effect = OSError(9, "Bad file descriptor")
+    chunks = [c async for c in conn.read_loop()]
+    assert chunks == []
+
+
+@pytest.mark.asyncio
+async def test_read_loop_asks_only_for_what_is_waiting(monkeypatch) -> None:
+    """pyserial's read(n) waits for n bytes or the timeout -- asking for 4096 delayed every frame."""
+    conn, fake = await _open_fake(monkeypatch)
+    sizes: list[int] = []
+    real_read = fake.read
+
+    def recording_read(size: int) -> bytes:
+        sizes.append(size)
+        conn.request_stop()
+        return real_read(size)
+
+    fake.read = recording_read  # type: ignore[method-assign]
+    fake.in_waiting = 0
+    fake._read_queue = [b"x"]
+    [c async for c in conn.read_loop()]
+    assert sizes == [1]

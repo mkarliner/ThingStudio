@@ -68,6 +68,33 @@ export interface SerialPortInfo {
  * that UI itself (main.ts's backendPortSelect, populated from listPorts()).
  * connectPort() is the second phase, opening the actual serial port on the
  * backend side and starting the relay. */
+/** installRuntime()'s rejection when the backend reports a failure. `diagnosis` is
+ * raw_repl.py's classify_reply() value ("silent", "micropython", "circuitpython", "esp_rom",
+ * "other") when the install never reached raw REPL, else null -- board-diagnosis.ts turns it into
+ * a next step for the user. */
+/** One install_runtime_progress message: file `index` of `total` is starting. */
+export interface InstallProgress {
+  readonly index: number;
+  readonly total: number;
+  readonly file: string;
+}
+
+/** installRuntime() gives up if the backend sends nothing -- no progress, no result -- for this
+ * long. The backend bounds every read and write to seconds (raw_repl.py, ws_relay.py), so this
+ * much silence means the backend itself is stuck, not a slow board. Added after the first real
+ * ESP32-S2 install (2026-09-23) sat with no output and no end. */
+export const INSTALL_IDLE_TIMEOUT_MS = 30_000;
+
+export class InstallRuntimeError extends Error {
+  constructor(
+    message: string,
+    readonly diagnosis: string | null,
+  ) {
+    super(message);
+    this.name = "InstallRuntimeError";
+  }
+}
+
 export class BackendTransport implements DeviceTransport {
   #ws: WebSocket | null = null;
   #decoder = new ProtocolStreamDecoder();
@@ -76,7 +103,12 @@ export class BackendTransport implements DeviceTransport {
   #connectedPort: string | null = null;
   #pendingListPorts: { resolve(ports: SerialPortInfo[]): void; reject(err: unknown): void }[] = [];
   #pendingConnect: { resolve(): void; reject(err: Error): void } | null = null;
-  #pendingInstallRuntime: { resolve(): void; reject(err: Error): void } | null = null;
+  #pendingInstallRuntime: {
+    resolve(): void;
+    reject(err: Error): void;
+    onProgress?: (p: InstallProgress) => void;
+    armIdleTimer(): void;
+  } | null = null;
   #wsFactory: (url: string) => WebSocket;
 
   /** `wsFactory` defaults to the real `WebSocket` constructor -- overridable
@@ -195,11 +227,43 @@ export class BackendTransport implements DeviceTransport {
    * re-enumeration timing after a hard reset isn't something to chase per
    * board, per CLAUDE.md's "make the failure legible instead" corollary --
    * a manual reconnect is the legible, doesn't-need-to-be-clever answer). */
-  async installRuntime(port: string, baudRate = 115200): Promise<void> {
+  async installRuntime(
+    port: string,
+    baudRate = 115200,
+    onProgress?: (p: InstallProgress) => void,
+    idleTimeoutMs = INSTALL_IDLE_TIMEOUT_MS,
+  ): Promise<void> {
     if (!this.#ws) throw new Error("BackendTransport is not open -- call open() first");
     if (this.#pendingInstallRuntime) throw new Error("BackendTransport already has an installRuntime() in flight");
+    let timer: ReturnType<typeof setTimeout> | undefined;
     const p = new Promise<void>((resolve, reject) => {
-      this.#pendingInstallRuntime = { resolve, reject };
+      const settle = (fn: () => void) => {
+        clearTimeout(timer);
+        this.#pendingInstallRuntime = null;
+        fn();
+      };
+      const armIdleTimer = () => {
+        clearTimeout(timer);
+        timer = setTimeout(
+          () =>
+            settle(() =>
+              reject(
+                new InstallRuntimeError(
+                  `NODE_ERROR: runtime install stalled -- no word from the backend for ${Math.round(idleTimeoutMs / 1000)}s`,
+                  "stalled",
+                ),
+              ),
+            ),
+          idleTimeoutMs,
+        );
+      };
+      this.#pendingInstallRuntime = {
+        resolve: () => settle(resolve),
+        reject: (err) => settle(() => reject(err)),
+        onProgress,
+        armIdleTimer,
+      };
+      armIdleTimer();
     });
     this.#ws.send(JSON.stringify({ type: "install_runtime", port, baudrate: baudRate }));
     return p;
@@ -324,12 +388,22 @@ export class BackendTransport implements DeviceTransport {
         // header: "a partially-written runtime is not a state worth
         // distinguishing from a total failure").
         const waiter = this.#pendingInstallRuntime;
-        this.#pendingInstallRuntime = null;
         if (m.ok === true) {
           waiter?.resolve();
         } else {
           const message = typeof m.error === "string" ? m.error : "runtime install failed (no error detail from backend)";
-          waiter?.reject(new Error(message));
+          const diagnosis = typeof m.diagnosis === "string" ? m.diagnosis : null;
+          waiter?.reject(new InstallRuntimeError(message, diagnosis));
+        }
+        break;
+      }
+      case "install_runtime_progress": {
+        // ws_relay.py's _send_install_progress(): one per file as it starts. Also proof of life
+        // for installRuntime()'s idle timer.
+        const waiter = this.#pendingInstallRuntime;
+        if (waiter && typeof m.index === "number" && typeof m.total === "number" && typeof m.file === "string") {
+          waiter.armIdleTimer();
+          waiter.onProgress?.({ index: m.index, total: m.total, file: m.file });
         }
         break;
       }

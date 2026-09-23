@@ -100,9 +100,9 @@ export function checkRuntimeBuild(device: string | null, editorBuild: string | n
     return {
       status: "unknown",
       reason:
-        "device reported no runtimeBuild -- either it predates this check (bootstrapped before deploy_runtime.py " +
-        "wrote the marker file) or deploy_runtime.py couldn't determine git info when it last ran. Not confirmed " +
-        "stale, just unconfirmed.",
+        "device reported no runtimeBuild -- its runtime was installed by a version that didn't record one, or " +
+        'git info wasn\'t available at install time. Not confirmed stale, just unconfirmed. Clicking "Install ' +
+        'runtime…" again records it.',
     };
   }
   if (device === editorBuild) {

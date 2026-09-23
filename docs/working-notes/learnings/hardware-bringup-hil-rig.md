@@ -145,3 +145,10 @@ Status: detail file, split out of `learnings.md` on 2026-09-06 to keep that inde
   total free RAM looking sufficient at any single snapshot -- a persistent, in-place-mutated buffer
   (this project's `context`/`flow` store mechanism) is the fix, not a bigger heap or a GC-timing
   workaround. `test-flows/README.md`'s own entry for the animation flow has the full before/after.
+
+- **A blank ESP32-S2 (no MicroPython) enumerates on macOS as a USB serial port
+  (`/dev/cu.usbmodem02`) and accepts an open, but sends nothing back at all — not even to Ctrl-C.**
+  2026-09-23. So "port appears and opens" says nothing about whether MicroPython is there; total
+  silence after Ctrl-C/Ctrl-A is the signal. Contrast a board with MicroPython but no runtime, which
+  echoes a framed request back as a `SyntaxError`. `board-diagnosis.ts` / `raw_repl.classify_reply()`
+  rely on that difference.

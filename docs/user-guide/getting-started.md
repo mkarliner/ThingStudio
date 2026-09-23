@@ -18,9 +18,13 @@ Opens the editor locally. Build a flow from scratch, or open one of the examples
 
 ## Bootstrapping a board
 
-Before any flow can be deployed, a board needs the Thingstudio runtime on it — a one-time step per board, or after a full erase/reflash.
+Your board needs MicroPython first. If it doesn't have it yet, follow [Installing MicroPython](installing-micropython.md).
+
+Before any flow can be deployed, a board also needs the Thingstudio runtime on it — a one-time step per board, or after a full erase/reflash.
 
 **From the editor:** with the backend running and the board's port selected (see "Connecting" below), click **Install runtime…**. It pushes the runtime and resets the board — reconnect afterward, the button doesn't do that for you.
+
+If the install fails, the console says what the board sent back and what to do next — for example, that MicroPython isn't installed. See [Board won't connect](debugging.md#board-wont-connect).
 
 **From the command line**, no backend needed:
 
@@ -43,8 +47,15 @@ pip install -e .
 thingstudio-backend
 ```
 
+The backend also serves these docs at `http://127.0.0.1:8765/docs/`, so they work without an internet connection. The editor's **Docs** button and the help links in the console open that copy. In a development checkout, build the docs once first:
+
+```sh
+pip install mkdocs==1.6.1 mkdocs-material==9.7.7
+mkdocs build
+```
+
 Point the editor at it with the **backend URL** field — it defaults to `ws://127.0.0.1:8765/ws`, matching the backend's own default, for when both are running on the same machine. If the backend is elsewhere (a firewalled machine near your devices, say), tunnel to it — `ssh -L 8765:localhost:8765 <host>` — and leave the field on its default; the backend still only ever binds to loopback on its own machine.
 
 In the editor, click **⟳ ports** to see the serial ports the backend can reach, pick one, and click **Connect**. The editor then asks the board to identify itself — chip type, runtime version, free flash/RAM. If nothing comes back within a few seconds, you'll see a warning that version compatibility is unverified and Deploy will proceed without the check.
 
-This is normal the first time you connect to a board that hasn't been reset since power-up — the listener is running, it just hasn't been asked to say hello yet. Click **Check status** to ask again without resetting or redeploying. If it's still silent after that, the board's listener may not actually be running; reset the board and try again.
+This is normal the first time you connect to a board that hasn't been reset since power-up — the listener is running, it just hasn't been asked to say hello yet. Click **Check status** to ask again without resetting or redeploying. If there's still no reply, the console says what the board printed instead and what to do next. See [Board won't connect](debugging.md#board-wont-connect).

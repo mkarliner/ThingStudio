@@ -106,10 +106,13 @@ class FakeRawPortFactory:
         self.instances: list[FakeRawPort] = []
         self._open_effect = open_effect
 
-    def __call__(self, port: str, baudrate: int = 115200, timeout: float | None = None) -> FakeRawPort:
+    def __call__(
+        self, port: str, baudrate: int = 115200, timeout: float | None = None, write_timeout: float | None = None
+    ) -> FakeRawPort:
         if self._open_effect is not None:
             raise self._open_effect
         conn = FakeRawPort(port, baudrate, timeout)
+        conn.write_timeout = write_timeout
         self.instances.append(conn)
         return conn
 
@@ -120,12 +123,16 @@ class FakeRuntimeInstaller:
     without needing raw_repl.py's own protocol logic (that's raw_repl.py's own test file's job,
     not this one's)."""
 
-    def __init__(self, install_effect: Exception | None = None) -> None:
+    def __init__(self, install_effect: Exception | None = None, progress: list[tuple[int, int, str]] | None = None) -> None:
         self.install_calls: list[object] = []
         self._install_effect = install_effect
+        self._progress = progress or []
 
-    def install(self, port: object, include_vendor: bool = True, timeouts: object = None) -> None:
+    def install(self, port: object, include_vendor: bool = True, timeouts: object = None, on_progress=None) -> None:
         self.install_calls.append(port)
+        for step in self._progress:
+            if on_progress is not None:
+                on_progress(*step)
         if self._install_effect is not None:
             raise self._install_effect
 
@@ -438,4 +445,49 @@ async def test_install_runtime_reports_a_raw_repl_failure_verbatim() -> None:
 
         assert reply["ok"] is False
         assert reply["error"] == str(installer._install_effect)
+        assert "diagnosis" not in reply  # failed mid-push: says nothing about the board's firmware
         assert raw_ports.instances[-1].closed is True  # still closed even though install raised
+
+
+@pytest.mark.asyncio
+async def test_install_runtime_diagnoses_a_silent_board() -> None:
+    """Real case, 2026-09-23: a blank ESP32-S2 with no MicroPython sent nothing back at all."""
+    factory = FakeSerialConnectionFactory()
+    raw_ports = FakeRawPortFactory()
+    installer = FakeRuntimeInstaller(
+        install_effect=RawReplError("entering raw REPL", "timed out waiting for ..., last seen: b''", seen=b"")
+    )
+    async with TestClient(TestServer(_make_app(factory, raw_ports, installer))) as client:
+        ws = await client.ws_connect("/ws")
+        await ws.send_json({"type": "install_runtime", "port": "/dev/fake0"})
+        reply = await ws.receive_json()
+
+        assert reply["ok"] is False
+        assert reply["diagnosis"] == "silent"
+
+
+@pytest.mark.asyncio
+async def test_install_runtime_opens_the_port_with_a_write_timeout() -> None:
+    """pyserial blocks forever on write by default -- the real 2026-09-23 ESP32-S2 install hang."""
+    factory = FakeSerialConnectionFactory()
+    raw_ports = FakeRawPortFactory()
+    async with TestClient(TestServer(_make_app(factory, raw_ports, FakeRuntimeInstaller()))) as client:
+        ws = await client.ws_connect("/ws")
+        await ws.send_json({"type": "install_runtime", "port": "/dev/fake0"})
+        await ws.receive_json()
+        assert raw_ports.instances[-1].write_timeout is not None
+        assert raw_ports.instances[-1].write_timeout > 0
+
+
+@pytest.mark.asyncio
+async def test_install_runtime_relays_progress_before_the_result() -> None:
+    factory = FakeSerialConnectionFactory()
+    raw_ports = FakeRawPortFactory()
+    installer = FakeRuntimeInstaller(progress=[(1, 2, "errors.py"), (2, 2, "main.py")])
+    async with TestClient(TestServer(_make_app(factory, raw_ports, installer))) as client:
+        ws = await client.ws_connect("/ws")
+        await ws.send_json({"type": "install_runtime", "port": "/dev/fake0"})
+        msgs = [await ws.receive_json() for _ in range(3)]
+        assert msgs[0] == {"type": "install_runtime_progress", "index": 1, "total": 2, "file": "errors.py"}
+        assert msgs[1] == {"type": "install_runtime_progress", "index": 2, "total": 2, "file": "main.py"}
+        assert msgs[2] == {"type": "install_runtime_result", "ok": True}

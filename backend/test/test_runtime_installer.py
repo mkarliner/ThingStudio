@@ -79,7 +79,7 @@ def test_install_drives_raw_repl_install_runtime_with_the_built_file_list(tmp_pa
 
     captured: dict[str, object] = {}
 
-    def fake_install_runtime(port: object, files: list[tuple[str, bytes]], timeouts: object) -> None:
+    def fake_install_runtime(port: object, files: list[tuple[str, bytes]], timeouts: object, on_progress: object = None) -> None:
         captured["port"] = port
         captured["files"] = files
 
@@ -103,3 +103,37 @@ def test_runtime_installer_reads_the_real_manifest_without_pushing_anything() ->
     assert "main.py" in names  # the listener, always present under this dest name
     assert len(files) == len(set(names)), f"duplicate destination filenames: {names}"
     assert all(len(data) > 0 for _, data in files), "a manifest file read back empty"
+
+
+def test_build_file_list_stamps_the_runtime_build_marker_when_git_knows_it(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """HELLO.runtimeBuild came back null after the first real in-editor install (2026-09-23) -- only
+    deploy_runtime.py wrote this file. Now both paths do."""
+    from thingstudio_backend import runtime_installer
+
+    src_dir = _write_fake_device_runtime(tmp_path)
+    monkeypatch.setattr(runtime_installer, "runtime_build_sha", lambda _dir: "abc123")
+    files = RuntimeInstaller(runtime_src_dir=src_dir).build_file_list()
+    assert files[-1] == ("_runtime_build.txt", b"abc123")
+
+
+def test_build_file_list_skips_the_marker_without_git(tmp_path: Path) -> None:
+    src_dir = _write_fake_device_runtime(tmp_path)  # tmp_path is not a git checkout
+    names = [name for name, _ in RuntimeInstaller(runtime_src_dir=src_dir).build_file_list()]
+    assert "_runtime_build.txt" not in names
+
+
+def test_runtime_build_sha_reads_the_last_commit_touching_the_src_dir(tmp_path: Path) -> None:
+    import shutil
+    import subprocess
+
+    from thingstudio_backend.runtime_installer import runtime_build_sha
+
+    if shutil.which("git") is None:
+        pytest.skip("git not installed")
+    src_dir = _write_fake_device_runtime(tmp_path)
+    env = {"GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t", "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@t", "PATH": __import__("os").environ["PATH"]}
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True, env=env)
+    subprocess.run(["git", "add", "."], cwd=tmp_path, check=True, env=env)
+    subprocess.run(["git", "commit", "-qm", "x"], cwd=tmp_path, check=True, env=env)
+    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=tmp_path, check=True, capture_output=True, text=True, env=env)
+    assert runtime_build_sha(src_dir) == head.stdout.strip()

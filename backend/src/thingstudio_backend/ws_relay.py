@@ -70,7 +70,7 @@ import serial
 from aiohttp import WSMsgType, web
 
 from .line_framing import LineDecoder, encode_f64_line
-from .raw_repl import RawReplError
+from .raw_repl import ENTER_STEP, RawReplError, classify_reply
 from .runtime_installer import RuntimeInstaller
 from .serial_relay import SerialConnection, SerialRelayError, list_ports
 
@@ -81,6 +81,11 @@ logger = logging.getLogger(__name__)
 # how long one blocking read() can hold the executor thread), not a protocol-level timeout on
 # its own; raw_repl.py's own RawReplTimeouts own the actual per-step deadlines.
 _INSTALL_READ_POLL_TIMEOUT_SECONDS = 0.5
+
+# Write bound for that same port. pyserial's default is to block forever on a board that stops
+# reading -- the real 2026-09-23 ESP32-S2 install hang. raw_repl._write() turns the timeout into a
+# RawReplError naming the step. Same value and reasoning as serial_relay.py's _WRITE_TIMEOUT_SECONDS.
+_INSTALL_WRITE_TIMEOUT_SECONDS = 5.0
 
 
 class ConnectionSession:
@@ -172,21 +177,40 @@ class ConnectionSession:
         if self._serial is not None:
             await self._disconnect()
 
+        loop = asyncio.get_running_loop()
+
+        def _on_progress(index: int, total: int, name: str) -> None:
+            # Called from the install's worker thread -- hand the send to the event loop, and
+            # don't wait on it: a slow or closing WebSocket mustn't stall the install itself.
+            asyncio.run_coroutine_threadsafe(self._send_install_progress(index, total, name), loop)
+
         def _run_install() -> None:
             # Runs entirely inside asyncio.to_thread() below -- raw_repl.py is deliberately
             # synchronous (see its own header), so the whole install is one blocking call from
             # this event loop's point of view, not interleaved with anything else on this
             # session. A real serial.Serial opened here is unrelated to (and, since
             # self._disconnect() already ran above, never concurrent with) self._serial.
-            raw_port = self._raw_port_factory(port, baudrate=baudrate, timeout=_INSTALL_READ_POLL_TIMEOUT_SECONDS)
+            raw_port = self._raw_port_factory(
+                port,
+                baudrate=baudrate,
+                timeout=_INSTALL_READ_POLL_TIMEOUT_SECONDS,
+                write_timeout=_INSTALL_WRITE_TIMEOUT_SECONDS,
+            )
             try:
-                self._runtime_installer.install(raw_port)
+                self._runtime_installer.install(raw_port, on_progress=_on_progress)
             finally:
-                raw_port.close()
+                try:
+                    raw_port.close()
+                except Exception as exc:  # noqa: BLE001 -- a board that reset or was unplugged
+                    # can make close() fail; that mustn't replace the install's real outcome.
+                    logger.info("closing %s after install: %s", port, exc)
 
         try:
             await asyncio.to_thread(_run_install)
         except serial.SerialException as exc:
+            # Only the open can land here -- every read/write during the install is wrapped into a
+            # RawReplError naming its step (raw_repl._write()/_ByteReader). Before 2026-09-23 a
+            # mid-install read failure also landed here and was mislabelled "open failed".
             # Same NODE_ERROR text shape serial_relay.py's SerialRelayError already produces
             # for a connect failure (deliberate -- see connect-error-help.ts on the editor
             # side, which pattern-matches this exact shape into a workaround suggestion; that
@@ -194,15 +218,30 @@ class ConnectionSession:
             await self._send_install_result(ok=False, error=f"NODE_ERROR: serial open failed on {port}: {exc}")
             return
         except RawReplError as exc:
-            await self._send_install_result(ok=False, error=str(exc))
+            # Only a failure to reach raw REPL at all says anything about what the board is
+            # running; a failure mid-push means MicroPython was there and something else broke.
+            diagnosis = classify_reply(exc.seen) if exc.step == ENTER_STEP else None
+            await self._send_install_result(ok=False, error=str(exc), diagnosis=diagnosis)
             return
         await self._send_install_result(ok=True)
 
-    async def _send_install_result(self, *, ok: bool, error: str | None = None) -> None:
+    async def _send_install_progress(self, index: int, total: int, name: str) -> None:
+        """One message per file as it starts, so the editor can show progress and notice a stall
+        (BackendTransport.installRuntime()'s idle timeout)."""
+        payload = {"type": "install_runtime_progress", "index": index, "total": total, "file": name}
+        try:
+            await self._ws.send_str(json.dumps(payload))
+        except (ConnectionResetError, RuntimeError) as exc:
+            logger.warning("could not send install_runtime_progress to a closing WebSocket: %s", exc)
+
+    async def _send_install_result(self, *, ok: bool, error: str | None = None, diagnosis: str | None = None) -> None:
         payload: dict[str, object] = {"type": "install_runtime_result", "ok": ok}
         if error is not None:
             payload["error"] = error
             logger.warning(error)
+        if diagnosis is not None:
+            # raw_repl.classify_reply()'s value -- the editor turns it into a next step.
+            payload["diagnosis"] = diagnosis
         # Same already-closing-socket tolerance _send_status gives below -- best-effort, never
         # lets a write to a dead WebSocket take the install's own error path down with it.
         try:

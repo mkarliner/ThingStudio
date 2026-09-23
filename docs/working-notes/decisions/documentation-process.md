@@ -50,3 +50,18 @@ scaffolded as placeholders earlier the same day now have real content -- sourced
 `CLAUDE.md`'s own conventions (the fault-handling corollary for the WiFi/MQTT ordering-race note, the
 "concise, not exhaustive" style rule for pacing). Only remaining piece of the whole documentation item: Mike
 installing `mkdocs`/`mkdocs-material` and running a real build to confirm the site renders correctly.
+
+- **2026-09-23 — Docs hosting: local for an installed copy, GitHub Pages for pre-install reading.** Mike's
+  call. The backend serves the built site at `/docs/` (`docs_site.py`, `--docs-dir`, dev default the repo's
+  `site/`), so help works with no internet — the case that matters most is a user whose board won't connect,
+  who may be offline or on a machine set up only for this. GitHub Pages (`site_url` in `mkdocs.yml`) stays for
+  people deciding whether to install. Details:
+  - The editor's help links (`board-diagnosis.ts` advice, the toolbar **Docs** button) always point at the
+    backend's copy, derived from the backend URL field (`backendHttpBaseUrl()`), never at GitHub Pages.
+  - Docs not built on this machine → `/docs/…` answers 503 with a short page saying so, the online URL of the
+    same page, and the build command. Legible failure, not a 404 for a link the editor itself produced.
+  - `theme.font: false` so the built site makes no Google Fonts request offline. Checked on a real build: the
+    only external URLs left are ordinary links.
+  - Packaging (MVP item 7) must bundle the built `site/` and pass `--docs-dir`; `site/` is now gitignored.
+  - GitHub Pages returned 404 on 2026-09-23 — the workflow exists but the site isn't live. See
+    `outstanding-items/documentation-site.md`.

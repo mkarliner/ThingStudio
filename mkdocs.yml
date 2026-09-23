@@ -7,6 +7,7 @@
 # for this site (contributor-facing material, already served elsewhere).
 
 site_name: Thingstudio
+site_url: https://mkarliner.github.io/ThingStudio/
 site_description: Node-and-wire visual programming for microcontrollers.
 repo_url: https://github.com/mkarliner/ThingStudio
 repo_name: mkarliner/ThingStudio
@@ -16,6 +17,8 @@ site_dir: site
 
 theme:
   name: material
+  # No Google Fonts: the backend serves these docs locally (/docs/) and they must work offline.
+  font: false
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
@@ -40,6 +43,7 @@ markdown_extensions:
 
 nav:
   - Home: index.md
+  - Installing MicroPython: installing-micropython.md
   - Getting started: getting-started.md
   - Canvas basics: canvas-basics.md
   - Flow lifecycle: flow-lifecycle.md

@@ -28,6 +28,7 @@ from aiohttp import web
 
 from .admin_api import make_admin_routes
 from .cors import cors_middleware
+from .docs_site import default_docs_dir, make_docs_routes
 from .middleware import DEFAULT_ALLOWED_HOSTS, host_allowlist_middleware
 from .persisted_store import PersistedStore
 from .ws_relay import websocket_handler
@@ -37,6 +38,7 @@ def create_app(
     allowed_hosts: frozenset[str] = DEFAULT_ALLOWED_HOSTS,
     static_dir: Path | None = None,
     data_dir: Path | None = None,
+    docs_dir: Path | None = None,
 ) -> web.Application:
     app = web.Application(middlewares=[cors_middleware, host_allowlist_middleware(allowed_hosts)])
     app.router.add_get("/ws", websocket_handler)
@@ -44,6 +46,8 @@ def create_app(
     # matches resources in registration order, so these have to come first
     # or a static_dir containing files at these same paths could shadow them.
     app.router.add_routes(make_admin_routes(PersistedStore(data_dir)))
+    # Built user docs at /docs/ (docs_site.py) -- offline help for an installed copy.
+    app.router.add_routes(make_docs_routes(docs_dir or default_docs_dir()))
 
     if static_dir is not None:
         app.router.add_static("/", static_dir, show_index=False)

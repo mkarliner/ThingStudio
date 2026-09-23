@@ -115,7 +115,8 @@ import { computeWifiProvisionMarker } from "../node-library/wifi-status.js";
 import { buildRegistry } from "../node-library/registry.js";
 import { mergeCustomNodeRegistry } from "../node-library/custom-node.js";
 import { WebSerialTransport, type WebSerialPort, type DeviceTransport, type TransportEvents } from "../protocol/transport.js";
-import { BackendTransport, type SerialPortInfo } from "../protocol/backend-transport.js";
+import { BackendTransport, InstallRuntimeError, type SerialPortInfo } from "../protocol/backend-transport.js";
+import { classifyDebugLines, explainInstallFailure, explainNoHello, localDocUrl, type Advice, type DocLink } from "./board-diagnosis.js";
 import { explainBackendConnectError } from "./connect-error-help.js";
 import { NATIVE_ARCH_OPTIONS, inferNativeArch } from "./native-arch.js";
 import type { Message, NodeStatusMessage, ProtocolVersion } from "../protocol/messages.js";
@@ -144,7 +145,7 @@ import {
   type FlowFileConfig,
   type CanvasNodeSnapshot,
 } from "../flow-file/flow-file.js";
-import { DEFAULT_BACKEND_WS_URL, slugifyFlowName, getCredential, type CredentialType } from "../flow-file/admin-api-client.js";
+import { DEFAULT_BACKEND_WS_URL, backendHttpBaseUrl, slugifyFlowName, getCredential, type CredentialType } from "../flow-file/admin-api-client.js";
 // slugifyFlowName is reused here purely for a nicer suggested filename in
 // the save dialog below -- its own header's reasoning for why a display
 // name isn't a valid storage key applies just as well to a suggested
@@ -658,6 +659,33 @@ function logLine(text: string, cls?: "ok" | "err" | "", nodeId?: string): void {
   consoleEl.scrollTop = consoleEl.scrollHeight;
 }
 
+/** URL of a docs page on the backend's locally served copy (docs_site.py) -- works offline. Falls
+ * back to the site root on a malformed backend URL rather than throwing out of an error path. */
+function docUrl(doc: DocLink): string {
+  let base: string;
+  try {
+    base = backendHttpBaseUrl(currentBackendWsUrl());
+  } catch {
+    base = backendHttpBaseUrl(DEFAULT_BACKEND_WS_URL);
+  }
+  return localDocUrl(base, doc);
+}
+
+/** logLine() for board-diagnosis.ts advice: the text, then a clickable link to the docs page it
+ * refers to, opened in a new tab. */
+function logAdvice(prefix: string, advice: Advice, cls: "ok" | "err" | ""): void {
+  logLine(`${prefix} ${advice.text}`, cls);
+  if (!advice.doc) return;
+  const msgSpan = consoleEl.lastElementChild?.querySelector("span:last-child");
+  if (!msgSpan) return;
+  const a = document.createElement("a");
+  a.href = docUrl(advice.doc);
+  a.target = "_blank";
+  a.rel = "noopener";
+  a.textContent = advice.doc.label;
+  msgSpan.append(" Help: ", a);
+}
+
 /**
  * Console click-to-navigate (phase 2, 2026-09-04 -- Mike's original ask:
  * "make messages clickable and highlight/focus on the transmitting
@@ -1093,6 +1121,11 @@ let lastHelloVersion: ProtocolVersion | null = null;
 // Feeds native-arch.ts's inferNativeArch() for the Deploy handler's
 // board-aware mpy-cross -march choice (currentNativeArch(), below).
 let lastHelloChipType: string | null = null;
+// Plain text lines the board has printed since the last HELLO_REQUEST (Connect or Check status) --
+// board-diagnosis.ts's classifyDebugLines() input when no HELLO comes back. Capped: only the first
+// few lines after a request say anything about what's on the board.
+let debugLinesSinceRequest: string[] = [];
+const DEBUG_LINES_KEPT = 50;
 
 // Transport-agnostic event handling (design doc §4, editor-backend-wiring
 // 2026-09-07: "explicit user choice between 'direct' (WebSerial,
@@ -1157,6 +1190,9 @@ const transportEvents: TransportEvents = {
     // here too, same handling either way.
     const match = line.match(/^DEBUG node=(\S+) /);
     logLine(line, "", match ? match[1] : undefined);
+    if (!line.startsWith("[backend]") && debugLinesSinceRequest.length < DEBUG_LINES_KEPT) {
+      debugLinesSinceRequest.push(line);
+    }
   },
   onDisconnect(reason) {
     logLine(`[disconnected] ${reason ? String(reason) : "(clean)"}`, "");
@@ -1339,6 +1375,9 @@ async function refreshBackendPorts(): Promise<void> {
   }
 }
 el("btnRefreshPorts").addEventListener("click", () => void refreshBackendPorts());
+el("btnDocs").addEventListener("click", () => {
+  window.open(docUrl({ label: "Docs", path: "" }), "_blank", "noopener");
+});
 
 /** Pushes a fresh device-runtime onto the selected port via the backend's
  * raw-REPL bootstrap (backend/src/thingstudio_backend/raw_repl.py +
@@ -1371,17 +1410,21 @@ el("btnInstallRuntime").addEventListener("click", async () => {
     return;
   }
   if (transport.isConnected) {
-    logLine("[install runtime] disconnecting the current session first -- installing needs exclusive use of the port]", "");
+    logLine("[install runtime] disconnecting the current session first -- installing needs exclusive use of the port", "");
     await transport.disconnect();
     setConnectedUi(false);
   }
-  logLine(`[install runtime] pushing device-runtime to ${portName} via ${wsUrl} -- this resets the board]`, "");
+  logLine(`[install runtime] checking the board on ${portName}, then installing the runtime -- this resets the board`, "");
   const installer = new BackendTransport({ onDebugLine: (line) => logLine(`[backend] ${line}`, "") });
   try {
     await installer.open(wsUrl);
-    await installer.installRuntime(portName);
+    await installer.installRuntime(portName, undefined, (p) =>
+      logLine(`[install runtime] ${p.index}/${p.total} ${p.file}`, ""),
+    );
   } catch (err) {
-    logLine(`[install runtime failed] ${err instanceof Error ? err.message : String(err)}`, "err");
+    const message = err instanceof Error ? err.message : String(err);
+    const diagnosis = err instanceof InstallRuntimeError ? err.diagnosis : null;
+    logAdvice("[install runtime failed]", explainInstallFailure(message, diagnosis), "err");
     return;
   } finally {
     await installer.disconnect();
@@ -1459,59 +1502,49 @@ el("btnConnect").addEventListener("click", async () => {
     logLine(`[connected @ 115200 baud via backend -- ${wsUrl}, port ${portName}]`, "");
   }
 
-  // Actively ask for a fresh HELLO rather than passively hoping one
-  // arrives (2026-09-05, real RP2040 hardware -- no reset button on the
-  // Pico W): listener.py's _send_hello() only ever runs once, at boot,
-  // so a board that's been running a while already sent its one HELLO
-  // long before this connection existed -- a purely passive wait here
-  // would only ever catch one from a board that happens to be mid-boot
-  // at the exact moment Connect was clicked. HELLO_REQUEST
-  // (messages.ts) gets to a known state without a reset -- explicitly no
-  // side effects beyond that (no redeploy, no runtime reload). Start
-  // waiting before sending, not after, so a fast reply can't race past
-  // this listener being registered. Identical for both connection modes
-  // -- transport.send() doesn't care which one is live.
+  // Same for both connection modes -- transport.send() doesn't care which one is live.
+  await requestHelloOrExplain();
+});
+
+/** Sends HELLO_REQUEST and waits up to HELLO_WAIT_MS for a HELLO. On timeout, says what the board
+ * did print instead and what to do next (board-diagnosis.ts) -- road-to-mvp.md's "no silent
+ * failure". Used by both Connect and Check status.
+ *
+ * Why actively ask rather than wait (2026-09-05, real RP2040 hardware -- no reset button on the
+ * Pico W): listener.py's _send_hello() only runs once, at boot, so a board that's been running a
+ * while already sent its one HELLO long before this connection existed. HELLO_REQUEST
+ * (messages.ts) gets a fresh one with no side effects. The wait starts before sending, so a fast
+ * reply can't race past it.
+ *
+ * Why the timeout message classifies instead of guessing (2026-09-23, real ESP32-S2 with no
+ * MicroPython): the old fixed text sent the user to a terminal script that no longer applies and
+ * never considered that MicroPython itself might be missing. A board with MicroPython but no
+ * runtime echoes the framed request back as a SyntaxError (learnings/hardware-bringup-hil-rig.md,
+ * 2026-09-18); a board with no MicroPython prints nothing. */
+async function requestHelloOrExplain(): Promise<void> {
+  debugLinesSinceRequest = [];
   const helloP = waitForMessage((m) => m.type === "HELLO", HELLO_WAIT_MS);
   try {
     await transport.send({ type: "HELLO_REQUEST" });
-  } catch {
-    // send() failing here just means the wait below times out the normal
-    // way below -- not worth a separate error path for this.
+  } catch (err) {
+    // send() failing means the wait below times out the normal way -- the send error itself is
+    // still worth showing.
+    logLine(`[check status failed] ${err instanceof Error ? err.message : String(err)}`, "err");
   }
   try {
     await helloP;
   } catch {
-    // "the listener may not be running at all" covers two real, distinct
-    // causes this project has actually hit on hardware (learnings/
-    // hardware-bringup-hil-rig.md, 2026-09-18): a boot-timing race (rare,
-    // still open -- backend-platform-decision.md §5), and a board that
-    // simply has no runtime installed at all -- confirmed by a
-    // "SyntaxError: invalid syntax" / 'File "<stdin>", line 1' line
-    // appearing on connect or "Check status", the console's own next
-    // message after this one when that's the cause. No in-editor install
-    // yet (outstanding-items/deploy-runtime-from-editor.md) -- until then
-    // this points at the same manual step the MVP brief itself names.
-    logLine(
-      '[no HELLO received yet -- version compatibility is unverified; Deploy will proceed without the check. ' +
-        'Try "Check status". If a "SyntaxError" line shows up on connect or Check status, the board has no ' +
-        "runtime installed -- run `python3 test-flows/deploy_runtime.py --port <port>` from a terminal, then " +
-        "reconnect. Otherwise, the board's listener may just not be running (reset it if this persists).]",
-      "",
-    );
+    const reply = classifyDebugLines(debugLinesSinceRequest);
+    logAdvice("[no HELLO]", explainNoHello(reply), "err");
   }
-});
-
+}
 
 el("btnCheckStatus").addEventListener("click", async () => {
   // Same HELLO_REQUEST as the Connect handler above, available any time
   // while connected -- no reset, no redeploy, just "tell me what you are
   // right now." transport.onMessage already logs the resulting HELLO (and
   // re-runs both version checks) the same way any other HELLO does.
-  try {
-    await transport.send({ type: "HELLO_REQUEST" });
-  } catch (err) {
-    logLine(`[check status failed] ${err instanceof Error ? err.message : String(err)}`, "err");
-  }
+  await requestHelloOrExplain();
 });
 
 el("btnDisconnect").addEventListener("click", async () => {

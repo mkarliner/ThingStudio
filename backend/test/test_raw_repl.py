@@ -15,8 +15,11 @@ import base64
 import pytest
 
 from thingstudio_backend.raw_repl import (
+    ENTER_STEP,
     RawReplError,
     RawReplTimeouts,
+    classify_reply,
+    read_available,
     enter_raw_repl,
     exec_raw,
     hard_reset,
@@ -48,8 +51,9 @@ class _FakePort:
 
 
 def _ok_response(stdout: bytes = b"", stderr: bytes = b"") -> bytes:
-    """One exec_raw()'s worth of device reply: OK echo, stdout, a marker, stderr, a marker."""
-    return b"OK" + stdout + b"\x04" + stderr + b"\x04"
+    """One exec_raw()'s worth of device reply: OK echo, stdout, a marker, stderr, a marker, then
+    the fresh raw-REPL prompt a real device always sends next."""
+    return b"OK" + stdout + b"\x04" + stderr + b"\x04>"
 
 
 def test_enter_raw_repl_success() -> None:
@@ -98,13 +102,15 @@ def test_write_file_chunked_round_trips_data_through_base64_execs() -> None:
     port = _FakePort([_ok_response(), _ok_response(), _ok_response(), _ok_response()])  # open, chunk1, chunk2, close
     write_file_chunked(port, "runtime.py", data, "pushing runtime.py")
 
-    open_call = port.written[0].decode()
-    assert open_call == "f=open('runtime.py','wb')"
+    # Writes are split into pieces (raw_repl._write), so reassemble whole execs: each one's code
+    # ends at its Ctrl-D.
+    execs = b"".join(port.written).split(b"\x04")[:-1]
+    assert execs[0].decode() == "f=open('runtime.py','wb')"
 
     # Each chunk write is "import ubinascii\nf.write(ubinascii.a2b_base64(b'<...>'))" -- decode
     # the base64 literal back out and confirm it round-trips to the real bytes, not just that
     # *some* base64 call was made.
-    chunk_writes = [w for w in port.written if b"a2b_base64" in w]
+    chunk_writes = [e for e in execs if b"a2b_base64" in e]
     assert len(chunk_writes) == 2
     decoded = b""
     for call in chunk_writes:
@@ -113,9 +119,7 @@ def test_write_file_chunked_round_trips_data_through_base64_execs() -> None:
         decoded += base64.b64decode(call[literal_start:literal_end])
     assert decoded == data
 
-    # exec_raw() sends code and its trailing Ctrl-D as two separate write() calls, so the code
-    # itself is second-to-last, not last.
-    assert port.written[-2] == b"f.close()"
+    assert execs[-1] == b"f.close()"
     assert port.written[-1] == b"\x04"
 
 
@@ -150,3 +154,108 @@ def test_install_runtime_raises_and_stops_on_a_mid_push_failure() -> None:
         install_runtime(port, files, _FAST)
 
     assert not any(b"machine.reset" in w for w in port.written)
+
+
+def test_enter_raw_repl_timeout_keeps_everything_seen_for_diagnosis() -> None:
+    port = _FakePort([b"ESP-ROM:esp32s2-rc4-20191025\r\nwaiting for download\r\n"])
+    with pytest.raises(RawReplError) as info:
+        enter_raw_repl(port, _FAST)
+    assert info.value.step == ENTER_STEP
+    assert b"waiting for download" in info.value.seen
+
+
+@pytest.mark.parametrize(
+    ("seen", "expected"),
+    [
+        (b"", "silent"),
+        (b"\r\n  \r\n", "silent"),
+        (b"\r\nMicroPython v1.24.1 on 2024-11-29; ESP32S2 module with ESP32S2\r\n>>> ", "micropython"),
+        (b'Traceback (most recent call last):\r\n  File "<stdin>", line 1\r\nSyntaxError: invalid syntax\r\n', "micropython"),
+        (b"\r\nAdafruit CircuitPython 9.1.4 on 2024-09-17; ...\r\n>>> ", "circuitpython"),
+        (b"ESP-ROM:esp32s2-rc4-20191025\r\nwaiting for download\r\n", "esp_rom"),
+        (b"ets Jun  8 2016 00:22:57\r\n\r\nrst:0x1 (POWERON_RESET)", "esp_rom"),
+        (b"Hello from Arduino loop 42\r\n", "other"),
+    ],
+)
+def test_classify_reply(seen: bytes, expected: str) -> None:
+    assert classify_reply(seen) == expected
+
+
+class _StuckPort(_FakePort):
+    """write() raises the way pyserial does when write_timeout expires on a board that stopped reading."""
+
+    def __init__(self, fail_after: int) -> None:
+        super().__init__()
+        self._fail_after = fail_after
+
+    def write(self, data: bytes) -> int | None:
+        if len(self.written) >= self._fail_after:
+            raise TimeoutError("Write timeout")
+        return super().write(data)
+
+
+def test_a_stuck_write_becomes_an_attributed_error_not_a_hang() -> None:
+    port = _StuckPort(fail_after=3)  # enter_raw_repl's three writes succeed, the first exec's doesn't
+    port._script = [_BANNER]
+    with pytest.raises(RawReplError) as info:
+        install_runtime(port, [("runtime.py", b"x = 1\n")], _FAST)
+    assert "pushing runtime.py" in str(info.value)
+    assert "stopped accepting data" in str(info.value)
+
+
+def test_long_pastes_are_split_into_pieces() -> None:
+    code = b"a" * 600
+    port = _FakePort([_ok_response()])
+    exec_raw(port, code, "big", timeout=0.2)
+    assert [len(w) for w in port.written] == [256, 256, 88, 1]  # three pieces, then Ctrl-D
+    assert b"".join(port.written[:3]) == code
+
+
+def test_install_reports_progress_per_file() -> None:
+    files = [("a.py", b"1"), ("b.py", b"2")]
+    # enter, then per file: open, one chunk, close
+    port = _FakePort([_BANNER] + [_ok_response()] * 6)
+    seen: list[tuple[int, int, str]] = []
+    install_runtime(port, files, _FAST, on_progress=lambda i, n, name: seen.append((i, n, name)))
+    assert seen == [(1, 2, "a.py"), (2, 2, "b.py")]
+
+
+def test_read_available_does_not_ask_for_more_than_is_waiting() -> None:
+    class _Port(_FakePort):
+        def __init__(self, waiting: int) -> None:
+            super().__init__([b"OK\x04\x04"])
+            self.in_waiting = waiting
+            self.sizes: list[int] = []
+
+        def read(self, size: int = 1) -> bytes:
+            self.sizes.append(size)
+            return super().read(size)
+
+    idle = _Port(0)
+    read_available(idle, 256)
+    assert idle.sizes == [1]  # nothing buffered: wait for one byte, not 256
+    busy = _Port(4)
+    read_available(busy, 256)
+    assert busy.sizes == [4]
+    flood = _Port(10_000)
+    read_available(flood, 256)
+    assert flood.sizes == [256]
+
+
+def test_a_lost_connection_mid_read_is_attributed_to_the_step() -> None:
+    class _Gone(_FakePort):
+        def read(self, size: int = 1) -> bytes:
+            raise OSError(6, "Device not configured")
+
+    with pytest.raises(RawReplError) as info:
+        exec_raw(_Gone(), b"x=1", "pushing runtime.py (chunk 3 of 9)", timeout=0.2)
+    assert "pushing runtime.py (chunk 3 of 9)" in str(info.value)
+    assert "lost the connection" in str(info.value)
+
+
+def test_the_prompt_after_each_exec_is_consumed_even_when_it_arrives_separately() -> None:
+    """Real ESP32-S2 case, 2026-09-23: the trailing '>' arrived in its own read and was left behind
+    for the next exec, failing it with "unexpected bytes before OK echo: b'>OK'"."""
+    port = _FakePort([b"OK", b"\x04", b"\x04", b">", b"OK", b"\x04", b"\x04", b">"])
+    exec_raw(port, b"a=1", "first", timeout=0.5)
+    exec_raw(port, b"b=2", "second", timeout=0.5)  # must not see a stray '>' first
