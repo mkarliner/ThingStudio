@@ -30,4 +30,6 @@ Status: detail file for `decisions.md`'s "Board recovery, command box, stop to p
     deploy, clear when stable). Two HELLO integration tests had been failing since 2026-09-10 (expected
     runtime 0.1.0); fixed to 2.0.0. Backend 214 passed (4 new fake-port tests for remove flow, 2 for
     raw_write/remove_flow wiring). Editor vitest 595/598 (same 3 known failures), protocol round-trips for
-    both new types. **Not yet run on real hardware.**
+    both new types.
+- **2026-09-23 — Confirmed on real hardware** (Mike, LOLIN S2 Mini, runtime 2.0.0 installed from the editor):
+  command box, stop to prompt and restart, and Remove flow all worked as described ("all good").
