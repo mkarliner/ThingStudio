@@ -44,7 +44,8 @@ const INSTALL_FAILURE_ADVICE: Record<string, Advice> = {
   silent: {
     text:
       "The board didn't reply at all. It probably doesn't have MicroPython yet -- install that first. " +
-      "If it does have MicroPython, press its reset button and try again.",
+      "If it does, press its reset button (or unplug it and plug it back in) while \"Install runtime…\" is " +
+      "waiting.",
     doc: DOC_INSTALL_MICROPYTHON,
   },
   micropython: {

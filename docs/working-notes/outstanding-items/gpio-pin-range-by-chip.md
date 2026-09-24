@@ -29,4 +29,13 @@ Connect/Deploy not yet tried.
 deploy and draw. The gs4 flow first hit a `MemoryError` on its `bytes(buf)` copy under runtime 2.0.0, not
 related to this work; fixed by sending the `bytearray` itself (`learnings/hardware-bringup-hil-rig.md`,
 2026-09-24). 40 MHz on bus 2 fails to compile, as intended; 40 MHz on bus 1 compiles and renders.
-CYD done. Remaining: Pico / Pico W / Pico 2, and editing a `~/.thingstudio` definition file.
+CYD done.
+
+**Hardware check, 2026-09-24 -- Pico / Pico W / Pico 2: pass (Mike).** Auto detected each; GPIO 25 rejected as
+reserved on the Pico W. Moving from the CYD to a Pico exposed a stuck manual Board menu pick, fixed the same day
+(`decisions/chip-board-definitions.md`). Side finding: after the editor's Install runtime, the Picos needed a
+power cycle (no reset button). Cause: the install's single Ctrl-C is ignored by a running listener
+(`kbd_intr(-1)`), and a Pico doesn't reset when the port opens. Fixed 2026-09-24: Install runtime now sends
+STOP_TO_PROMPT first and waits for a prompt like Remove flow (`board_recovery.catch_prompt`); not yet re-run
+on the Pico. Remaining: editing a `~/.thingstudio` definition file and
+seeing it after Connect/Deploy.

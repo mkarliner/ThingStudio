@@ -1618,6 +1618,17 @@ el("btnInstallRuntime").addEventListener("click", async () => {
     return;
   }
   if (transport.isConnected) {
+    // The running listener ignores Ctrl-C, and a Pico doesn't reset when the port opens, so ask a
+    // board that's still answering to stop at the prompt first -- same as "Remove flow" (2026-09-24).
+    // Otherwise the backend keeps trying and asks for a reset or replug.
+    if (!boardAtPrompt && lastHelloVersion !== null) {
+      try {
+        await transport.send({ type: "STOP_TO_PROMPT" });
+        await new Promise((r) => setTimeout(r, 300));
+      } catch {
+        // The backend's own wait-for-a-prompt covers this.
+      }
+    }
     logLine("[install runtime] disconnecting the current session first -- installing needs exclusive use of the port", "");
     await transport.disconnect();
     setConnectedUi(false);
@@ -1626,8 +1637,12 @@ el("btnInstallRuntime").addEventListener("click", async () => {
   const installer = new BackendTransport({ onDebugLine: (line) => logLine(`[backend] ${line}`, "") });
   try {
     await installer.open(wsUrl);
-    await installer.installRuntime(portName, undefined, (p) =>
-      logLine(`[install runtime] ${p.index}/${p.total} ${p.file}`, ""),
+    await installer.installRuntime(
+      portName,
+      undefined,
+      (p) => logLine(`[install runtime] ${p.index}/${p.total} ${p.file}`, ""),
+      undefined,
+      (text) => logLine(`[install runtime] ${text}`, ""),
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

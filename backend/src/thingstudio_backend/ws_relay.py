@@ -64,6 +64,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import time
 from typing import Callable
 
 import serial
@@ -72,6 +73,7 @@ from aiohttp import WSMsgType, web
 from . import board_recovery
 from .line_framing import LineDecoder, encode_f64_line
 from .raw_repl import ENTER_STEP, RawReplError, classify_reply
+from .board_recovery import CATCH_STEP
 from .runtime_installer import RuntimeInstaller
 from .serial_relay import SerialConnection, SerialRelayError, list_ports
 
@@ -91,6 +93,8 @@ _INSTALL_WRITE_TIMEOUT_SECONDS = 5.0
 # How long "Remove flow" keeps trying to catch a boot window before giving up -- long enough for a
 # user to read "press reset" and do it, and for a boot-looping board to cycle a few times.
 _REMOVE_FLOW_TIMEOUT_SECONDS = 60.0
+# How long Install runtime waits for a running board to stop at a prompt (board_recovery.catch_prompt).
+_INSTALL_CATCH_TIMEOUT_SECONDS = 60.0
 
 
 class ConnectionSession:
@@ -193,17 +197,36 @@ class ConnectionSession:
             # don't wait on it: a slow or closing WebSocket mustn't stall the install itself.
             asyncio.run_coroutine_threadsafe(self._send_install_progress(index, total, name), loop)
 
+        def _on_status(text: str) -> None:
+            payload = json.dumps({"type": "install_runtime_status", "text": text})
+            asyncio.run_coroutine_threadsafe(self._send_quietly(payload), loop)
+
+        def _open_raw():
+            return self._raw_port_factory(
+                port,
+                baudrate=baudrate,
+                timeout=_INSTALL_READ_POLL_TIMEOUT_SECONDS,
+                write_timeout=_INSTALL_WRITE_TIMEOUT_SECONDS,
+            )
+
         def _run_install() -> None:
             # Runs entirely inside asyncio.to_thread() below -- raw_repl.py is deliberately
             # synchronous (see its own header), so the whole install is one blocking call from
             # this event loop's point of view, not interleaved with anything else on this
             # session. A real serial.Serial opened here is unrelated to (and, since
             # self._disconnect() already ran above, never concurrent with) self._serial.
-            raw_port = self._raw_port_factory(
-                port,
-                baudrate=baudrate,
-                timeout=_INSTALL_READ_POLL_TIMEOUT_SECONDS,
-                write_timeout=_INSTALL_WRITE_TIMEOUT_SECONDS,
+            # Opened once up front so a port that can't be opened at all (busy, no permission) fails
+            # straight away as "serial open failed", not after the whole catch timeout.
+            first = [_open_raw()]
+
+            def _open_for_catch():
+                return first.pop() if first else _open_raw()
+
+            # A running listener ignores Ctrl-C, and a native-USB board (Pico) doesn't reset when the
+            # port opens, so wait for a prompt the same way Remove flow does (2026-09-24, Mike: Pico
+            # installs failed with "last seen: b''" until power-cycled).
+            raw_port = board_recovery.catch_prompt(
+                _open_for_catch, time.monotonic() + _INSTALL_CATCH_TIMEOUT_SECONDS, _on_status
             )
             try:
                 self._runtime_installer.install(raw_port, on_progress=_on_progress)
@@ -229,7 +252,7 @@ class ConnectionSession:
         except RawReplError as exc:
             # Only a failure to reach raw REPL at all says anything about what the board is
             # running; a failure mid-push means MicroPython was there and something else broke.
-            diagnosis = classify_reply(exc.seen) if exc.step == ENTER_STEP else None
+            diagnosis = classify_reply(exc.seen) if exc.step in (ENTER_STEP, CATCH_STEP) else None
             await self._send_install_result(ok=False, error=str(exc), diagnosis=diagnosis)
             return
         await self._send_install_result(ok=True)

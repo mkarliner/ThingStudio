@@ -51,6 +51,7 @@ There are two ways to install it. Use the editor unless you have a reason not to
 **From the editor**
 
 1. With the board's port selected, click **Install runtime…**. It takes about half a minute and shows each file as it goes.
+   If the board is busy and doesn't stop, the console asks you to press its reset button. A board without one, such as a Pico, can be unplugged and plugged back in instead.
 2. The board restarts when it's done. Click **Connect** again.
 
 If something goes wrong, the console says what the board sent back and what to do. See [Board won't connect](debugging.md#board-wont-connect).

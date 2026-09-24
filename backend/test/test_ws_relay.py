@@ -85,14 +85,25 @@ class FakeSerialConnectionFactory:
 
 class FakeRawPort:
     """Stands in for a real serial.Serial opened for install_runtime -- RuntimeInstaller itself
-    is faked out in these tests (FakeRuntimeInstaller below), so this only needs to be
-    constructible and closeable, never actually read/written."""
+    is faked out in these tests (FakeRuntimeInstaller below). Only board_recovery.catch_prompt
+    reads and writes it: by default it answers like a board already at the ">>>" prompt;
+    `reply=b""` makes it a board that never answers."""
+
+    reply = b"\r\n>>> "
 
     def __init__(self, port: str, baudrate: int = 115200, timeout: float | None = None) -> None:
         self.port = port
         self.baudrate = baudrate
         self.timeout = timeout
         self.closed = False
+        self.written: list[bytes] = []
+
+    def write(self, data: bytes) -> int:
+        self.written.append(data)
+        return len(data)
+
+    def read(self, size: int = 1) -> bytes:
+        return type(self).reply
 
     def close(self) -> None:
         self.closed = True
@@ -515,3 +526,42 @@ async def test_remove_flow_without_a_port_is_a_clear_error() -> None:
         await ws.send_json({"type": "remove_flow"})
         reply = await ws.receive_json()
         assert reply == {"type": "remove_flow_result", "ok": False, "error": "NODE_ERROR: remove_flow requested with no port given"}
+
+
+@pytest.mark.asyncio
+async def test_install_runtime_stops_the_board_at_a_prompt_first() -> None:
+    """2026-09-24, real Pico: a running listener ignores Ctrl-C and a native-USB board doesn't reset
+    when the port opens, so install now waits for a prompt (board_recovery.catch_prompt) first."""
+    factory = FakeSerialConnectionFactory()
+    raw_ports = FakeRawPortFactory()
+    installer = FakeRuntimeInstaller()
+    async with TestClient(TestServer(_make_app(factory, raw_ports, installer))) as client:
+        ws = await client.ws_connect("/ws")
+        await ws.send_json({"type": "install_runtime", "port": "/dev/fake0"})
+        reply = await ws.receive_json()
+        assert reply == {"type": "install_runtime_result", "ok": True}
+        assert raw_ports.instances[0].written[0] == b"\x03"
+        assert installer.install_calls == [raw_ports.instances[0]]
+
+
+@pytest.mark.asyncio
+async def test_install_runtime_says_what_to_do_when_the_board_never_stops(monkeypatch) -> None:
+    from thingstudio_backend import ws_relay
+
+    monkeypatch.setattr(ws_relay, "_INSTALL_CATCH_TIMEOUT_SECONDS", 0.3)
+    monkeypatch.setattr(FakeRawPort, "reply", b"")
+    factory = FakeSerialConnectionFactory()
+    raw_ports = FakeRawPortFactory()
+    installer = FakeRuntimeInstaller()
+    async with TestClient(TestServer(_make_app(factory, raw_ports, installer))) as client:
+        ws = await client.ws_connect("/ws")
+        await ws.send_json({"type": "install_runtime", "port": "/dev/fake0"})
+        status = await ws.receive_json()
+        assert status["type"] == "install_runtime_status"
+        assert "unplug it and plug it back in" in status["text"]
+        reply = await ws.receive_json()
+        assert reply["ok"] is False
+        assert "never stopped at a prompt" in reply["error"]
+        assert reply["diagnosis"] == "silent"
+        assert installer.install_calls == []
+        assert all(p.closed for p in raw_ports.instances)

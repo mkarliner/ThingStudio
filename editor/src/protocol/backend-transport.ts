@@ -85,6 +85,11 @@ export interface InstallProgress {
  * ESP32-S2 install (2026-09-23) sat with no output and no end. */
 export const INSTALL_IDLE_TIMEOUT_MS = 30_000;
 
+/** After an install_runtime_status message the backend may wait this long for the board to stop at a
+ * prompt (ws_relay.py's _INSTALL_CATCH_TIMEOUT_SECONDS, 60s) without sending anything else, so the
+ * idle timer allows that much plus a margin. */
+export const INSTALL_CATCH_WAIT_MS = 75_000;
+
 export class InstallRuntimeError extends Error {
   constructor(
     message: string,
@@ -108,7 +113,8 @@ export class BackendTransport implements DeviceTransport {
     resolve(): void;
     reject(err: Error): void;
     onProgress?: (p: InstallProgress) => void;
-    armIdleTimer(): void;
+    onStatus?: (text: string) => void;
+    armIdleTimer(ms?: number): void;
   } | null = null;
   #wsFactory: (url: string) => WebSocket;
 
@@ -233,6 +239,7 @@ export class BackendTransport implements DeviceTransport {
     baudRate = 115200,
     onProgress?: (p: InstallProgress) => void,
     idleTimeoutMs = INSTALL_IDLE_TIMEOUT_MS,
+    onStatus?: (text: string) => void,
   ): Promise<void> {
     if (!this.#ws) throw new Error("BackendTransport is not open -- call open() first");
     if (this.#pendingInstallRuntime) throw new Error("BackendTransport already has an installRuntime() in flight");
@@ -243,25 +250,26 @@ export class BackendTransport implements DeviceTransport {
         this.#pendingInstallRuntime = null;
         fn();
       };
-      const armIdleTimer = () => {
+      const armIdleTimer = (ms = idleTimeoutMs) => {
         clearTimeout(timer);
         timer = setTimeout(
           () =>
             settle(() =>
               reject(
                 new InstallRuntimeError(
-                  `NODE_ERROR: runtime install stalled -- no word from the backend for ${Math.round(idleTimeoutMs / 1000)}s`,
+                  `NODE_ERROR: runtime install stalled -- no word from the backend for ${Math.round(ms / 1000)}s`,
                   "stalled",
                 ),
               ),
             ),
-          idleTimeoutMs,
+          ms,
         );
       };
       this.#pendingInstallRuntime = {
         resolve: () => settle(resolve),
         reject: (err) => settle(() => reject(err)),
         onProgress,
+        onStatus,
         armIdleTimer,
       };
       armIdleTimer();
@@ -445,6 +453,15 @@ export class BackendTransport implements DeviceTransport {
         const waiter = this.#pendingRemoveFlow;
         if (m.ok === true) waiter?.resolve();
         else waiter?.reject(new Error(typeof m.error === "string" ? m.error : "remove flow failed (no detail from backend)"));
+        break;
+      }
+      case "install_runtime_status": {
+        // ws_relay.py: "waiting for the board to stop..." while board_recovery.catch_prompt runs.
+        const waiter = this.#pendingInstallRuntime;
+        if (waiter && typeof m.text === "string") {
+          waiter.armIdleTimer(INSTALL_CATCH_WAIT_MS);
+          waiter.onStatus?.(m.text);
+        }
         break;
       }
       case "install_runtime_progress": {

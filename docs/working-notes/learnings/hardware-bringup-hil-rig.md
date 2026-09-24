@@ -179,3 +179,11 @@ Status: detail file, split out of `learnings.md` on 2026-09-06 to keep that inde
   backs up the 2026-09-23 IO_MUX finding above (14/13 are id 1's own pins), and `pin-check.ts`'s rule now
   matches real hardware in both directions: id 2 at 40 MHz is refused at compile time, id 1 is allowed.
   The test flows still use id 2 at 27 MHz; switching them is optional.
+
+- **Install runtime couldn't stop a Pico already running the listener.** 2026-09-24: `entering raw REPL: timed
+  out ... last seen: b''`. The listener turns Ctrl-C off (`kbd_intr(-1)`), and the installer's Ctrl-C only ever
+  worked because opening the port resets an ESP32 through its USB-serial chip's DTR/RTS, landing the Ctrl-C in
+  the 3 s boot window. A native-USB board (RP2040, and ESP32-S2/S3 on native USB) doesn't reset on open, so
+  only a power cycle got through. Install now does what Remove flow already did: STOP_TO_PROMPT from the editor
+  when the board is answering, then `board_recovery.catch_prompt` (repeated Ctrl-C, reopen on re-enumeration,
+  "press reset or unplug and replug" status) before raw REPL.

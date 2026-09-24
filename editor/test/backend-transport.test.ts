@@ -11,7 +11,7 @@
 // already uses for WebSerialTransport.
 
 import { describe, expect, it, vi } from "vitest";
-import { BackendTransport, InstallRuntimeError, type InstallProgress, type SerialPortInfo } from "../src/protocol/backend-transport.js";
+import { BackendTransport, INSTALL_CATCH_WAIT_MS, InstallRuntimeError, type InstallProgress, type SerialPortInfo } from "../src/protocol/backend-transport.js";
 import { encodeMessage } from "../src/protocol/protocol.js";
 import type { Message } from "../src/protocol/messages.js";
 
@@ -262,6 +262,27 @@ describe("BackendTransport", () => {
       expect((err as InstallRuntimeError).diagnosis).toBe("stalled");
       // A second install is allowed afterwards -- the stalled one no longer counts as in flight.
       void t.installRuntime("/dev/ttyUSB0").catch(() => {});
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("installRuntime() passes status lines on and waits longer while the backend catches the board", async () => {
+    vi.useFakeTimers();
+    try {
+      const { factory, sockets } = makeFakeFactory();
+      const t = new BackendTransport({}, factory);
+      const openP = t.open("ws://x/ws");
+      sockets[0]!.simulateOpen();
+      await openP;
+
+      const status: string[] = [];
+      const installP = t.installRuntime("/dev/cu.usbmodem1", 115200, undefined, 1000, (s) => status.push(s));
+      sockets[0]!.simulateMessage(JSON.stringify({ type: "install_runtime_status", text: "Waiting for the board." }));
+      vi.advanceTimersByTime(INSTALL_CATCH_WAIT_MS - 1); // well past the 1000ms idle timeout
+      sockets[0]!.simulateMessage(JSON.stringify({ type: "install_runtime_result", ok: true }));
+      await installP;
+      expect(status).toEqual(["Waiting for the board."]);
     } finally {
       vi.useRealTimers();
     }

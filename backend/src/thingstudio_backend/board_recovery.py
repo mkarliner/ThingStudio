@@ -49,9 +49,11 @@ _REMOVE_CODE = (
 StatusCallback = Callable[[str], None]
 
 
-def _catch_prompt(open_port: Callable[[], object], deadline: float, on_status: StatusCallback):
+def catch_prompt(open_port: Callable[[], object], deadline: float, on_status: StatusCallback):
     """Sends Ctrl-C until the board answers from a prompt; returns the open port. Reopens the port
-    whenever it goes away (a native-USB board re-enumerating across a reset)."""
+    whenever it goes away (a native-USB board re-enumerating across a reset). Also Install runtime's
+    first step (ws_relay.py), since 2026-09-24: a Pico has no reset-on-open, so a single Ctrl-C at a
+    running listener got nothing back."""
     port = None
     seen = b""
     told_to_reset = False
@@ -76,11 +78,11 @@ def _catch_prompt(open_port: Callable[[], object], deadline: float, on_status: S
                 p, port = port, None
                 return p
             if not told_to_reset:
-                on_status("Waiting for the board. If nothing happens, press its reset button.")
+                on_status("Waiting for the board. If nothing happens, press its reset button, or unplug it and plug it back in.")
                 told_to_reset = True
         raise RawReplError(
             CATCH_STEP,
-            "the board never stopped at a prompt -- press its reset button while this is waiting",
+            "the board never stopped at a prompt -- press its reset button (or unplug and replug it) while this is waiting",
             seen=seen,
         )
     finally:
@@ -98,7 +100,7 @@ def _close_quietly(port) -> None:
 def remove_flow(open_port: Callable[[], object], timeout_s: float, on_status: StatusCallback) -> None:
     """Deletes the saved flow (FLOW_FILES) and hard-resets the board. Raises RawReplError naming the
     step on any failure. `open_port` opens the serial port fresh each time it's called."""
-    port = _catch_prompt(open_port, time.monotonic() + timeout_s, on_status)
+    port = catch_prompt(open_port, time.monotonic() + timeout_s, on_status)
     try:
         on_status("Board stopped. Removing the saved flow…")
         raw_repl.enter_raw_repl(port)
