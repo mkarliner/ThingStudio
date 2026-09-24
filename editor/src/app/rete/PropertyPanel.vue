@@ -105,11 +105,7 @@
   gap explicitly ("colorOrder, invertColors, dataLatchOrder are missing
   today"), and a saved SPI preset is a lot less useful if three of the
   real properties it captures can't be seen or edited here. `palette`
-  remains the one display_spi property with no form field (a 16-entry
-  RGB565 color picker is a separate, larger UI piece, out of scope here) --
-  a saved preset still captures whatever palette a node has via the raw
-  properties snapshot (PresetRefField.vue's own header), it just can't be
-  edited from this panel afterward.
+  followed 2026-09-24 via PaletteField.vue (swatches per used entry).
 
   Custom nodes (docs/working-notes/custom-node-authoring-scoping.md,
   2026-08-20): one generic block below, driven entirely by
@@ -142,6 +138,20 @@
           <input v-model="node.properties.payloadValue" @input="touch" />
         </label>
         <p class="hint">Click this node on the canvas while connected to fire it once.</p>
+      </template>
+
+      <template v-else-if="node.kind === 'startup'">
+        <label>payload type
+          <select v-model="node.properties.payloadType" @change="retypeInjectOutput">
+            <option value="bool">bool</option>
+            <option value="number">number</option>
+            <option value="string">string</option>
+          </select>
+        </label>
+        <label>value
+          <input v-model="node.properties.payloadValue" @input="touch" />
+        </label>
+        <p class="hint">Sends this once each time the flow starts: after Deploy, and after the board resets or powers up.</p>
       </template>
 
       <template v-else-if="node.kind === 'function'">
@@ -299,6 +309,7 @@
             <option value="mono">Mono 1-bit indexed (1/16 the memory, 2-color palette)</option>
           </select>
         </label>
+        <PaletteField :properties="node.properties" @changed="touch" />
         <label>SPI bus
           <input type="number" min="0" v-model.number="node.properties.spiBus" @input="touch" />
         </label>
@@ -375,9 +386,8 @@
           lets the vendored st7789py_mpy driver's own built-in offset table handle 240x240 and 135x240 panels
           (TiDAL's own panel needs xstart=52, ystart=40 -- the driver applies this automatically at -1); any
           other resolution needs xstart/ystart set explicitly or the driver raises a clear error at flow-boot
-          time. Every indexed mode's palette (always 16 RGB565 colors, even for GS2/Mono -- GS2 reads only the
-          first 4, Mono only the first 2) isn't editable from this panel yet -- set it via the flow file's own
-          "palette" property (an array of 16 numbers) if you need something other than the built-in default.
+          time. Indexed modes use the palette swatches under frame format: GS2 reads the first 4 colors, Mono the
+          first 2.
         </p>
       </template>
 
@@ -571,10 +581,11 @@ import { computed } from "vue";
 import { selectedNode, bumpPropertyVersion, propertyVersion, setFunctionNodeOutputCount, activeTarget } from "./store";
 import { FALLBACK_MAX_PIN } from "../../definitions/pin-check";
 import { NODE_PALETTE, DEFAULT_KIND_STYLE, type NodeKind, type KindStyle } from "./palette";
-import { InjectNode, CustomNode, FunctionNode } from "./nodes";
+import { InjectNode, StartupNode, CustomNode, FunctionNode } from "./nodes";
 import { MAX_FUNCTION_OUTPUTS } from "../../node-library/function-node";
 import ConfigRefField from "./ConfigRefField.vue";
 import PresetRefField from "./PresetRefField.vue";
+import PaletteField from "./PaletteField.vue";
 
 const node = computed(() => {
   propertyVersion.value; // establish reactive dependency even though mutations happen off-Vue
@@ -616,8 +627,9 @@ function touch(): void {
 // own header explains why, and what it would have taken to make that
 // visible): nothing on this canvas currently displays a socket's type
 // except the property panel itself, which `touch()` already refreshes.
+// Shared by inject and startup, which have the same dynamic output socket.
 function retypeInjectOutput(): void {
-  if (node.value instanceof InjectNode) {
+  if (node.value instanceof InjectNode || node.value instanceof StartupNode) {
     node.value.retypeOutput();
   }
   touch();

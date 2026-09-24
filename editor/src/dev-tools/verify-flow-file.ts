@@ -54,6 +54,7 @@ import { parseFlowFile } from "../flow-file/flow-file.js";
 // -- deliberately NOT in this list, same as before 2026-09-06.
 const KNOWN_KINDS = new Set([
   "inject",
+  "startup",
   "function",
   "debug",
   "gpio_out",
@@ -69,6 +70,8 @@ const KNOWN_KINDS = new Set([
   "udp_send",
   "udp_receive",
   "http_request",
+  "http_in",
+  "http_response",
   "mqtt_publish",
   "mqtt_subscribe",
   "delay",

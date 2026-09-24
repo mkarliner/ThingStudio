@@ -54,6 +54,7 @@ nav:
       - Overview: nodes/index.md
       - General:
           - inject: nodes/inject.md
+          - startup: nodes/startup.md
           - timer: nodes/timer.md
           - function: nodes/function.md
           - delay: nodes/delay.md

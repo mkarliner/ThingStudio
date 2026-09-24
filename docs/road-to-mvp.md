@@ -49,7 +49,7 @@ The docs should be written around what a person is trying to do, and should neve
 **Accurate**
 
 - **Docs change in the same change as code**, as the project already does for node pages.
-- **Editor and docs agree.** `colorOrder`, `invertColors` and `dataLatchOrder` exist in flow files but not in the property panel; the docs must not describe one while the UI shows the other.
+- **Editor and docs agree.** The docs must not describe one thing while the UI shows another. Every node property is now in the property panel (2026-09-24), so no setting needs a flow-file edit.
 - **Examples are tested.** Every example flow in the docs deploys and runs on real hardware before release.
 
 ## Other candidates
@@ -57,7 +57,7 @@ The docs should be written around what a person is trying to do, and should neve
 | Item | Why it matters | Placement |
 | --- | --- | --- |
 | Clear device errors in the editor | Crashes like the SPI boot loop only showed in a serial log | MVP |
-| Property panel shows every node property | Some settings can only be changed by editing flow files | MVP |
+| Property panel shows every node property | Some settings could only be changed by editing flow files | MVP — done 2026-09-24 |
 | Board-aware compile (`-march`) | Hardcoded to Xtensa; viper code such as `display_spi` gs4 will break on RP2040/RP2350 | MVP |
 | Displays: framebuffer only | ST7789-family SPI (incl. M5Stack) and SSD1306 via `display_spi`/`display_i2c`, full-frame push | MVP |
 | WiFi transport between editor and board | Deploy and monitor without a USB cable, alongside serial; sidesteps unknown USB reset behaviour once a board is set up | MVP |

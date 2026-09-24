@@ -17,9 +17,9 @@ defaults below are exactly what saving a "cyd" preset from a correctly-configure
   sixteenth). Switch away from `rgb565` if a full RGB565 buffer won't fit in memory — the lower the
   depth, the smaller the buffer, at the cost of fewer colors (see "Indexed modes" below).
 - **palette** — always 16 RGB565 colors, used by every indexed format (`gs4` reads all 16, `gs2` only
-  the first 4, `mono` only the first 2 — one property, one shape, across every depth). Not yet
-  editable from this panel — set it as a flow-file property (an array of 16 numbers) if you don't
-  want the built-in default.
+  the first 4, `mono` only the first 2). Shown as color swatches under frame format when an indexed
+  format is picked; click one to change it, or **reset** to go back to the built-in colors. Colors
+  are stored as RGB565, so a picked color is rounded to the nearest one the panel can show.
 - **SPI bus** — which hardware SPI peripheral to use. Default 2.
 - **baudrate** — SPI clock speed. Default 40MHz. On an ESP32, use 27MHz or less unless sck and mosi are the bus's fast pins; the compile tells you if the speed is too high for your [board](../boards.md).
 - **sck / mosi / dc pins** — required GPIO pins. Checked against your [board](../boards.md), along with the SPI bus and speed.

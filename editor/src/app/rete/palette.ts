@@ -82,6 +82,7 @@
 // between a filled color panel and a dot-matrix mono one.
 export type NodeKind =
   | "inject"
+  | "startup"
   | "function"
   | "debug"
   | "gpio_out"
@@ -131,6 +132,11 @@ export interface KindStyle {
 
 export const NODE_PALETTE: Record<NodeKind, KindStyle> = {
   inject: { color: "#2e5c2e", bgcolor: "#1f3f1f", icon: "▶", label: "inject", group: "general", priority: 10 },
+  // startup, 2026-09-24 -- olive green, close to inject's green since both
+  // are fixed-payload sources, but distinct. "⏻" (power) for "runs at
+  // boot/reset", vs. inject's "▶" (click to fire). Priority 11: right
+  // after inject.
+  startup: { color: "#5c5c2e", bgcolor: "#3a3a1f", icon: "⏻", label: "startup", group: "general", priority: 11 },
   function: { color: "#6e5b2e", bgcolor: "#3f341f", icon: "ƒ", label: "function", group: "general", priority: 30 },
   debug: { color: "#2e4a6e", bgcolor: "#1f2c3f", icon: "≡", label: "debug", group: "general", priority: 50 },
   gpio_out: { color: "#6e3b3b", bgcolor: "#3f1f1f", icon: "■", label: "gpio out", group: "hardware", priority: 20 },

@@ -6,6 +6,7 @@
 // contracts app/nodes.ts's own header documents -- node.properties here
 // has to match exactly what each node-library/*.ts's codegen reads:
 //   - inject:       payloadType, payloadValue                (node-library/inject.ts -- no `repeat`, see that file's 2026-09-02 header note)
+//   - startup:      payloadType, payloadValue                (node-library/startup.ts -- canvas presence 2026-09-24)
 //   - function:     code                                     (node-library/function-node.ts)
 //   - debug:        fullMessage                              (node-library/debug.ts -- opt-in, default false, added 2026-09-09)
 //   - gpio_out:     pin                                       (node-library/gpio-out.ts)
@@ -149,6 +150,7 @@ import { ClassicPreset } from "rete";
 import { socketForPayloadType } from "./sockets";
 import type { NodeKind } from "./palette";
 import { injectNode } from "../../node-library/inject.js";
+import { startupNode } from "../../node-library/startup.js";
 import { functionNode } from "../../node-library/function-node.js";
 import { debugNode } from "../../node-library/debug.js";
 import { gpioOutNode } from "../../node-library/gpio-out.js";
@@ -295,6 +297,37 @@ export class InjectNode extends ClassicPreset.Node {
   // types), not before.
   retypeOutput(): ClassicPreset.Socket {
     const socket = portSocket(injectNode.ports?.outputs, "msg", this.properties);
+    this.outputs.msg!.socket = socket;
+    return socket;
+  }
+}
+
+// Fires once at flow start: right after a DEPLOY, and after a reset that
+// resumes the saved flow (listener.py's _resume_flow). Same properties and
+// dynamic output socket as InjectNode, but no click-to-fire.
+// node-library/startup.ts has the design story.
+export class StartupNode extends ClassicPreset.Node {
+  width = 104;
+  height = NODE_HEIGHT;
+  kind = "startup" as const;
+  nodeType = "thingstudio/startup";
+  highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
+
+  properties: { payloadType: "bool" | "number" | "string"; payloadValue: string } = {
+    payloadType: "bool",
+    payloadValue: "true",
+  };
+
+  constructor() {
+    super("startup");
+    this.addOutput("msg", new ClassicPreset.Output(portSocket(startupNode.ports?.outputs, "msg", this.properties), "msg"));
+  }
+
+  /** Same as InjectNode.retypeOutput(). */
+  retypeOutput(): ClassicPreset.Socket {
+    const socket = portSocket(startupNode.ports?.outputs, "msg", this.properties);
     this.outputs.msg!.socket = socket;
     return socket;
   }
@@ -968,6 +1001,7 @@ export class CustomNode extends ClassicPreset.Node {
 
 export type AnyThingstudioNode =
   | InjectNode
+  | StartupNode
   | FunctionNode
   | DebugNode
   | GpioOutNode
@@ -1003,6 +1037,7 @@ export type AnyThingstudioNode =
 // separately and calls `new CustomNode(descriptor)` directly.
 export const NODE_FACTORIES: Record<NodeKind, () => AnyThingstudioNode> = {
   inject: () => new InjectNode(),
+  startup: () => new StartupNode(),
   function: () => new FunctionNode(),
   debug: () => new DebugNode(),
   gpio_out: () => new GpioOutNode(),

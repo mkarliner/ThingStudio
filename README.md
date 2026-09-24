@@ -56,11 +56,9 @@ older than `editor/src`.
 
 ## Node library
 
-15 built-in node types (`editor/src/node-library/`): `inject`,
-`function`, `debug`, `timer`, `interrupt`, `gpio_out`, `pwm_out`,
-`wifi_status`, `udp_send`, `udp_receive`, `http_request`, `mqtt_publish`,
-`mqtt_subscribe`, `variable_get`, `variable_set`. 9 are wired onto the
-canvas today; the rest compile correctly but have no palette entry yet
+24 built-in node types (`editor/src/node-library/`, listed in
+`registry.ts`). All are on the canvas except `variable_get` and
+`variable_set`, which compile but have no palette entry
 (`docs/working-notes/outstanding-items.md`). No dedicated boolean/
 arithmetic/comparator nodes — a `function` node covers that ground in
 one line, and dedicated ones were never wired onto the canvas anyway.

@@ -114,3 +114,11 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
     group-boundary wraps below that. The Native arch select was unstyled and sized to its longest option
     label, forcing two to three rows on its own; now styled and capped at 120px.
   - `flow-lifecycle.md` updated for the shorter **Open…**/**Save…** labels.
+
+- **2026-09-24 — MVP item 5 closed: every node property is editable in the panel.** Audit of every node-library
+  codegen's `properties.*` reads against `PropertyPanel.vue` and `config-types.ts` found one gap, `display_spi`'s
+  `palette`. New `PaletteField.vue`: one `<input type="color">` swatch per entry the frame format reads (2/4/16),
+  hidden for rgb565, plus a reset button. Entries past the used count are kept, so switching format loses nothing.
+  RGB565↔hex lives in `rgb565.ts` (565→888 replicates high bits so 0xffff shows as white; round-trip exact for all
+  65536 values, tested). `startup` got canvas presence in the same change (`outstanding-items/init-node-on-flow-
+  start.md`). Checked in headless Chromium against a real build: palette entry, property panel, swatch counts.

@@ -268,3 +268,9 @@ project has been explicit about.
   round-trip/rejection), `test_listener_integration.py` (real end-to-end
   fire + boot-resume tests, including two brand new tests specific to the
   boot-resume claim).
+
+## Addendum, 2026-09-24
+
+Only `startup.ts` and `node-startup.test.ts` from this session ever reached git (inside `67d87c7`); the
+`registry.ts`/`nodes.ts`/`palette.ts`/`PropertyPanel.vue` wiring described above did not. Wired in 2026-09-24 —
+see `outstanding-items/init-node-on-flow-start.md`.

@@ -268,7 +268,7 @@ const BITS_PER_PIXEL: Record<IndexedFrameFormat, number> = { gs4: 4, gs2: 2, mon
 // baked into the generated `array.array('H', ...)` literal: no point
 // carrying 14 unread halfwords in RAM for a `mono` node that only ever
 // indexes `pal[0]`/`pal[1]`.
-const PALETTE_ENTRIES_USED: Record<IndexedFrameFormat, number> = { gs4: 16, gs2: 4, mono: 2 };
+export const PALETTE_ENTRIES_USED: Record<IndexedFrameFormat, number> = { gs4: 16, gs2: 4, mono: 2 };
 
 // How many expanded rows go out per SPI transaction in any indexed
 // ("gs4"/"gs2"/"mono") mode -- matches the corroborating GS4 driver
@@ -316,7 +316,7 @@ const DIAGNOSTIC_PLAIN_PYTHON = false;
 // 0-3 (black/white/red/green here), mono reads indices 0-1 (black/
 // white) -- a flow wanting different low-depth colors overrides
 // `palette` directly, same as gs4 already can.
-const DEFAULT_PALETTE_GS4: readonly number[] = [
+export const DEFAULT_PALETTE_GS4: readonly number[] = [
   0x0000, // 0  black        (0, 0, 0)
   0xffff, // 1  white        (255, 255, 255)
   0xf800, // 2  red          (248, 0, 0)
@@ -371,7 +371,7 @@ function optionalOffset(value: unknown, label: string): number {
   return raw;
 }
 
-/** Exactly 16 raw RGB565 values (0-65535), same "compile-time property, not a runtime object" convention as everything else in this file -- no color-picker UI yet (PropertyPanel.vue); set via raw flow-file properties for now. `colorOrder`/`invertColors`/`dataLatchOrder` had this same gap until 2026-09-22 (nodes.ts/PropertyPanel.vue both updated then, alongside the presets feature) -- `palette` is now the only display_spi property left without a form field, since a 16-entry RGB565 color picker is a larger, separate UI piece. Always 16 regardless of format (gs4/gs2/mono all read from the same shape, just a different prefix of it -- this file's header). */
+/** Exactly 16 raw RGB565 values (0-65535), same "compile-time property, not a runtime object" convention as everything else in this file -- edited in the property panel via PaletteField.vue (2026-09-24, the last display_spi property to get a form field). Always 16 regardless of format (gs4/gs2/mono all read from the same shape, just a different prefix of it -- this file's header). */
 function requirePalette(value: unknown): number[] {
   if (value === undefined) return [...DEFAULT_PALETTE_GS4];
   if (!Array.isArray(value) || value.length !== 16) {

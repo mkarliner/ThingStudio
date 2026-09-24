@@ -16,6 +16,7 @@ import { interruptNode } from "./interrupt.js";
 import { mqttPublishNode } from "./mqtt-publish.js";
 import { mqttSubscribeNode } from "./mqtt-subscribe.js";
 import { pwmOutNode } from "./pwm-out.js";
+import { startupNode } from "./startup.js";
 import { timerNode } from "./timer.js";
 import { udpReceiveNode } from "./udp-receive.js";
 import { udpSendNode } from "./udp-send.js";
@@ -59,11 +60,15 @@ import { wifiStatusNode } from "./wifi-status.js";
  * framebuf-format frame to a vendored driver -- see display-spi.ts/
  * display-i2c.ts's own headers for the full design story, including the
  * tracked (not yet solved) VENDOR_FILES scaling concern.
+ * startup (2026-09-24): fires once at flow start, after a DEPLOY and after
+ * a reset that resumes the saved flow -- see startup.ts's header. Its
+ * source file landed 2026-09-17 but was never registered until now.
  */
 export function buildRegistry(): Map<string, NodeDefinition> {
   const registry = new Map<string, NodeDefinition>();
   for (const def of [
     injectNode,
+    startupNode,
     functionNode,
     gpioOutNode,
     variableGetNode,

@@ -77,9 +77,8 @@ describe("thingstudio/startup node", () => {
     expect(result.repeatMs).toBe(0);
   });
 
-  it("has no codegenFireableSource -- auto-runs at flow start, not click-fired", () => {
+  it("is a plain source, not an event source -- auto-runs at flow start, not click-fired", () => {
     expect(typeof startupNode.codegenSource).toBe("function");
-    expect(startupNode.codegenFireableSource).toBeUndefined();
     expect(startupNode.codegenEventSource).toBeUndefined();
   });
 
@@ -95,7 +94,7 @@ describe("thingstudio/startup node", () => {
     expect(source).toMatch(/runtime\.spawn\(.*"startup-1"\)/);
     expect(source).not.toContain("while True:");
     expect(source).not.toContain("asyncio.sleep_ms");
-    expect(source).not.toMatch(/runtime\.register_fireable\(/);
+    expect(source).not.toMatch(/runtime\.register_trigger\(/);
   });
 
   it("runs once at flow start, actually firing the sink, when the whole compiled flow is executed", () => {
