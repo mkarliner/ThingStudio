@@ -16,3 +16,17 @@ chip's actual range. Check `pwm_out`, `interrupt`, `eswitch`/`ebutton` for the s
 has been deployed through the new checks on real hardware yet. Worth doing on the S2 Mini (a pin above
 39, e.g. GPIO 40) and the CYD (Board menu → CYD, the gs4 test flow at 27 MHz should compile clean;
 40 MHz should fail to compile, not crash the board).
+
+**Hardware check, 2026-09-24 -- LOLIN S2 Mini: pass (Mike).** Board menu auto-detected "Auto: LOLIN S2 Mini",
+Arch menu "Arch: xtensawin". Blink on GPIO 15 deployed and ran. `gpio_out` on GPIO 40 deployed (rejected before
+this work). `gpio_out` on GPIO 23 failed to compile, naming the valid pins. Still to do: CYD (27 MHz clean,
+40 MHz compile error, optional `spiBus: 1` at 40 MHz), Pico / Pico W / Pico 2 auto-detect, Pico W GPIO 25
+rejected as reserved. `~/.thingstudio/boards/` and `processors/` confirmed filled on first start (all 11 files
+identical to the built-ins; existing flows and credentials untouched); editing one and seeing it after
+Connect/Deploy not yet tried.
+
+**Hardware check, 2026-09-24 -- CYD (picked by hand), 27 MHz: pass (Mike).** The gs4 and mono test flows
+deploy and draw. The gs4 flow first hit a `MemoryError` on its `bytes(buf)` copy under runtime 2.0.0, not
+related to this work; fixed by sending the `bytearray` itself (`learnings/hardware-bringup-hil-rig.md`,
+2026-09-24). 40 MHz on bus 2 fails to compile, as intended; 40 MHz on bus 1 compiles and renders.
+CYD done. Remaining: Pico / Pico W / Pico 2, and editing a `~/.thingstudio` definition file.

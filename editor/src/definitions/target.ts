@@ -150,6 +150,29 @@ export function resolveTarget(defs: DefinitionSet, choice: TargetChoice, chipTyp
   return { target: null, how: "none", note: "No board connected and none picked in the Board menu.", mismatch: null };
 }
 
+/**
+ * The Board menu value to use once a board connects. A manual pick for a different processor than the
+ * connected board goes back to Auto (Mike, 2026-09-24): a different processor means a different board,
+ * and keeping the pick would check pins and compile native code for the wrong chip. A pick for the same
+ * processor stays, since that's how a board that reports only its processor (the CYD) gets picked.
+ * `note` says what changed, or is null when nothing did.
+ */
+export function choiceForConnectedBoard(
+  defs: DefinitionSet,
+  choice: TargetChoice,
+  chipType: string,
+): { choice: TargetChoice; note: string | null } {
+  const r = resolveTarget(defs, choice, chipType);
+  if (r.how !== "manual" || !r.mismatch || !r.target) return { choice, note: null };
+  const found = resolveTarget(defs, "auto", chipType).target;
+  return {
+    choice: "auto",
+    note:
+      `The Board menu was set to ${r.target.label}, but the connected board reports "${chipType}". ` +
+      `Switched it back to Auto${found ? ` (${found.label})` : ""}.`,
+  };
+}
+
 /** Every pin any known processor has -- the fallback range when there's no target. */
 export function widestGpio(defs: DefinitionSet): ReadonlySet<number> {
   const all = new Set<number>();

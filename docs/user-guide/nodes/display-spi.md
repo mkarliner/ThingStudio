@@ -71,7 +71,7 @@ for i in range(0, len(buf), 2):
     buf[i], buf[i + 1] = buf[i + 1], buf[i]
 ```
 
-— right after drawing, before `msg['payload'] = bytes(buf)`. A color where both bytes happen to match
+— right after drawing, before `msg['payload'] = buf`. A color where both bytes happen to match
 (pure white `0xFFFF`, pure black `0x0000`) is unaffected either way, which is why a swap bug can hide
 behind text/background colors and only show up on saturated colors like a pure green or blue fill.
 
@@ -87,6 +87,10 @@ framebuf.<FORMAT>)` instead of `RGB565`, where `<FORMAT>` matches the frame form
 | `gs4` | `GS4_HMSB` | 4 | 0–15 (all 16) | 38,400 bytes |
 | `gs2` | `GS2_HMSB` | 2 | 0–3 (first 4) | 19,200 bytes |
 | `mono` | `MONO_HMSB` | 1 | 0–1 (first 2) | 9,600 bytes |
+
+Send the `bytearray` itself as the payload (`msg['payload'] = buf`). `bytes(buf)` makes a second full-size
+copy, and a board can run out of memory for it even when plenty looks free. For a flow that redraws often,
+keep the buffer in `context` and reuse it rather than allocating a new one each time.
 
 Pixel values become palette indices, not colors — this node expands each pixel to real color using
 the palette property when it sends the frame.

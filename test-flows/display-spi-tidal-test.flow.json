@@ -14,7 +14,7 @@
       "id": "2",
       "type": "thingstudio/function",
       "properties": {
-        "code": "import framebuf\nw, h = 135, 240\nbuf = bytearray(w * h * 2)\nfb = framebuf.FrameBuffer(buf, w, h, framebuf.RGB565)\nfb.fill(0x0000)\nfb.text('Hello TiDAL', 8, 8, 0xFFFF)\nfb.ellipse(67, 140, 40, 40, 0x07E0, True)\n# framebuf.RGB565 stores each pixel in CPU-native (little-endian on\n# ESP32) byte order, but the ST7789 wants big-endian pixel bytes over\n# SPI -- byte-swap every pair before sending, or colors come out\n# wrong (confirmed on real hardware: intended green rendered as red).\nfor i in range(0, len(buf), 2):\n    buf[i], buf[i + 1] = buf[i + 1], buf[i]\nmsg['payload'] = bytes(buf)\nreturn msg"
+        "code": "import framebuf\nw, h = 135, 240\nbuf = bytearray(w * h * 2)\nfb = framebuf.FrameBuffer(buf, w, h, framebuf.RGB565)\nfb.fill(0x0000)\nfb.text('Hello TiDAL', 8, 8, 0xFFFF)\nfb.ellipse(67, 140, 40, 40, 0x07E0, True)\n# framebuf.RGB565 stores each pixel in CPU-native (little-endian on\n# ESP32) byte order, but the ST7789 wants big-endian pixel bytes over\n# SPI -- byte-swap every pair before sending, or colors come out\n# wrong (confirmed on real hardware: intended green rendered as red).\nfor i in range(0, len(buf), 2):\n    buf[i], buf[i + 1] = buf[i + 1], buf[i]\n# Send the bytearray itself: bytes(buf) would need a second full-size copy,\n# which a fragmented ESP32 heap may not have in one piece.\nmsg['payload'] = buf\nreturn msg"
       }
     },
     {

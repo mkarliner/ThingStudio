@@ -131,7 +131,7 @@ import { explainBackendConnectError } from "./connect-error-help.js";
 import { NATIVE_ARCH_OPTIONS, inferNativeArch } from "./native-arch.js";
 import { BUILTIN_DEFINITION_FILES } from "../definitions/builtin.js";
 import { buildDefinitionSet, userDefinitionFiles, type DefinitionSet } from "../definitions/definitions.js";
-import { resolveTarget, type TargetResolution } from "../definitions/target.js";
+import { choiceForConnectedBoard, resolveTarget, type TargetResolution } from "../definitions/target.js";
 import type { Message, NodeStatusMessage, ProtocolVersion } from "../protocol/messages.js";
 import { checkRuntimeBuild, decideDeploy } from "../protocol/version.js";
 import { ClassicPreset } from "rete";
@@ -1184,6 +1184,12 @@ const transportEvents: TransportEvents = {
       }
       lastHelloVersion = message.runtimeVersion;
       lastHelloChipType = message.chipType;
+      const boardSelect = el<HTMLSelectElement>("boardSelect");
+      const after = choiceForConnectedBoard(definitions, boardSelect.value || "auto", message.chipType);
+      if (after.note) {
+        boardSelect.value = after.choice;
+        logLine(`[board] ${after.note}`, "");
+      }
       logTargetResolution(updateActiveTarget());
       const decision = decideDeploy(message.runtimeVersion, EDITOR_TARGET_VERSION);
       logLine(`[version check] ${decision.reason}`, decision.allowed ? "ok" : "err");

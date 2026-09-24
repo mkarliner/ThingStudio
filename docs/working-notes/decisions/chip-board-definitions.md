@@ -77,3 +77,7 @@ Status: detail file for `decisions.md`'s "Processor and board definitions" index
 - **2026-09-24 — Auto shows its choice in the Board menu** by relabelling the Auto option ("Auto:
   LOLIN S2 Mini", "Auto: ESP32 (any board)", "Auto: unknown board"), not by selecting that board.
   Selecting it would turn Auto into a manual pick that stops following the next board connected.
+- **2026-09-24 -- A manual Board menu pick goes back to Auto when a board with a different processor connects**
+  (Mike's call, over keeping the pick and blocking Deploy, or only warning louder). Found moving from the CYD
+  to a Pico: the CYD pick stuck, so pins and native arch were still the ESP32's. A pick for the same processor
+  stays (that's how the CYD gets picked). `target.ts`'s `choiceForConnectedBoard`, called on HELLO.

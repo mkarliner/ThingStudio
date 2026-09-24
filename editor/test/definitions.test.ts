@@ -12,7 +12,7 @@ import type { CodegenContext } from "../src/compiler/node-definition.js";
 import { BUILTIN_DEFINITION_FILES } from "../src/definitions/builtin.js";
 import { buildDefinitionSet, formatPinSet, parsePinSpec, type RawDefinitionFile } from "../src/definitions/definitions.js";
 import { FALLBACK_MAX_PIN, NO_TARGET_WARNING } from "../src/definitions/pin-check.js";
-import { buildTarget, resolveTarget, widestGpio, type Target } from "../src/definitions/target.js";
+import { buildTarget, choiceForConnectedBoard, resolveTarget, widestGpio, type Target } from "../src/definitions/target.js";
 import { inferNativeArch } from "../src/app/native-arch.js";
 import { gpioOutNode } from "../src/node-library/gpio-out.js";
 import { ebuttonNode } from "../src/node-library/ebutton.js";
@@ -198,6 +198,19 @@ describe("target resolution from HELLO chipType", () => {
     expect(r.how).toBe("manual");
     expect(r.mismatch).toMatch(/connected board reports "Raspberry Pi Pico with RP2040"/);
     expect(resolveTarget(defs, "board:cyd", "Generic ESP32 module with ESP32").mismatch).toBeNull();
+  });
+
+  it("drops a manual pick back to Auto when a board with a different processor connects", () => {
+    const r = choiceForConnectedBoard(defs, "board:cyd", "Raspberry Pi Pico with RP2040");
+    expect(r.choice).toBe("auto");
+    expect(r.note).toMatch(/was set to CYD .* Switched it back to Auto \(Raspberry Pi Pico \(RP2040\)\)/);
+    expect(choiceForConnectedBoard(defs, "processor:esp32-s3", "LOLIN_S2_MINI with ESP32-S2FN4R2").choice).toBe("auto");
+  });
+
+  it("keeps a manual pick for the same processor, Auto, and picks it can't judge", () => {
+    expect(choiceForConnectedBoard(defs, "board:cyd", "Generic ESP32 module with ESP32")).toEqual({ choice: "board:cyd", note: null });
+    expect(choiceForConnectedBoard(defs, "auto", "Raspberry Pi Pico with RP2040")).toEqual({ choice: "auto", note: null });
+    expect(choiceForConnectedBoard(defs, "board:cyd", "Mystery board with XYZ123")).toEqual({ choice: "board:cyd", note: null });
   });
 
   it("carries on as Auto, and says so, when a manual pick no longer exists", () => {

@@ -163,3 +163,19 @@ Status: detail file, split out of `learnings.md` on 2026-09-06 to keep that inde
   (`outstanding-items/processor-board-definitions-followups.md`). S2/S3 differ: their id 2 (SPI3) has no
   IO_MUX pins at all, and ESP-IDF's matrix frequency check is ESP32-only; TiDAL (S3) runs 40 MHz on id 2.
 
+
+- **The single-shot CYD `display_spi` test flows' `bytes(buf)` copy stopped fitting under runtime 2.0.0.**
+  Found 2026-09-24, CYD hardware check for the board definitions work. After a power cycle, the gs4 test flow
+  deployed fine but its first inject hit `MemoryError ... allocating 38401 bytes` at 98 KB free: the
+  `bytearray(38400)` fit, the `bytes()` copy needed a second contiguous 38 KB block that wasn't there. The same
+  code worked on 2026-09-18 (runtime 1.x, smaller). Fix is the one the animation-flow entry above already found:
+  send the `bytearray` itself. Applied to the gs4/gs2/mono CYD and TiDAL test flows and `display-spi.md`.
+  Before the power cycle the same deploy timed out (no `DEPLOY_ACK`) and the board rebooted about 3 s after
+  Deploy, then reported the flow as running; the power cycle cleared it. Not reproduced since, cause not pinned
+  down -- if it recurs, capture the board's boot output.
+
+- **Confirmed: the CYD's display runs at 40 MHz on SPI id 1.** 2026-09-24, same CYD unit as above: the gs4 test
+  flow with `spiBus: 1`, `baudrate: 40000000` and the stock pins (SCK 14, MOSI 13) deploys and renders. This
+  backs up the 2026-09-23 IO_MUX finding above (14/13 are id 1's own pins), and `pin-check.ts`'s rule now
+  matches real hardware in both directions: id 2 at 40 MHz is refused at compile time, id 1 is allowed.
+  The test flows still use id 2 at 27 MHz; switching them is optional.
