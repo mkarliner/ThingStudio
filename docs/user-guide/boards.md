@@ -65,6 +65,7 @@ The definition files list every pin to avoid, with the reason.
 Definition files live in `~/.thingstudio/boards/` and `~/.thingstudio/processors/`. When Thingstudio starts, it copies in any built-in file that's missing, so you can read and edit them there.
 
 To change a built-in board, edit its file. To get the original back, delete the file and restart Thingstudio. A newer version of Thingstudio doesn't update a file you already have. Delete it to get the new one.
+For example, the built-in Pico files now say `"wifi": false`; an older copy without that line still offers WiFi.
 
 Thingstudio reads these files when the editor starts, when you connect, and when you deploy. If a file has a mistake, it isn't loaded and the built-in is used instead. The console says what's wrong, and the Board menu lists the file under **Invalid files**.
 
@@ -93,6 +94,7 @@ Save a JSON file in `~/.thingstudio/boards/`. The file name, without `.json`, is
 | `reserved` | Pins that must not be used, each with a reason. |
 | `avoid` | Pins that give a warning, each with a reason. |
 | `notes` | Anything else worth knowing. |
+| `wifi` | `false` if the board has no WiFi. Hides [connecting over WiFi](wifi-connection.md) for it. Leave it out if unsure. |
 
 Pin lists take numbers and ranges: `[0, 2, "4-7"]`. In `reserved` and `avoid`, the key is a pin or a range: `{ "6-11": "Wired to the flash chip." }`.
 

@@ -31,6 +31,7 @@ $MICROPYTHON test_cbor.py
 $MICROPYTHON test_framing.py
 $MICROPYTHON test_protocol.py
 $MICROPYTHON test_runtime.py
+$MICROPYTHON test_board_settings.py   # WiFi transport: hostname, password key, HMAC, challenge/verify
 ```
 
 Each prints a `PASS`/`FAIL` line per test (via `minitest.py`, a hand-rolled runner — see its own header comment for why: this MicroPython build has no `unittest` module) and exits non-zero if anything failed.

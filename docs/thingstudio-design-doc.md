@@ -132,6 +132,10 @@ The transport authenticates before accepting a flow write. The direct/WebSerial-
 
 WiFi self-provisioning (built 2026-09-14): a flow whose WiFi config is set to "unmanaged" makes the device open its own soft-AP captive portal on first boot to collect real network credentials, instead of the flow needing them baked in. That portal doesn't reopen on its own if the saved credential later stops working — an opt-in per-config flag is needed for that — because reopening an unauthenticated AP any time WiFi drops is itself an attack surface: anyone in radio range during the drop could connect and redirect the device to a different network. Detail: `working-notes/outstanding-items/wifi-provisioning-captive-portal.md`.
 
+WiFi transport (built 2026-09-24, MVP item 6): a board password set over USB is the pairing step. WiFi sessions
+open with a random-nonce HMAC-SHA256 challenge (the radio is up, so the RNG is real); serial needs no password in
+v1, and a board with no password accepts no network connection. Detail: `working-notes/wifi-transport-scoping.md`.
+
 The function node (§6) is unsandboxed; it sits inside the same deploy-access trust perimeter as any native node.
 
 ## 10. Phased roadmap

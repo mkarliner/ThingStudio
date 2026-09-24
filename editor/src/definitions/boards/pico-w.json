@@ -1,6 +1,7 @@
 {
   "name": "Raspberry Pi Pico W",
   "processor": "rp2040",
+  "wifi": true,
   "match": ["Raspberry Pi Pico W"],
   "pins": {},
   "reserved": {

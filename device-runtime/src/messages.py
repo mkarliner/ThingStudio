@@ -74,6 +74,11 @@ MessageType = {
     # Added 2026-09-23. Editor -> device: stop the flow and the listener, leaving the board at the
     # normal ">>>" prompt with Ctrl-C re-enabled. Soft reset (Ctrl-D) or a real reset restarts it.
     "STOP_TO_PROMPT": 13,
+    # Added 2026-09-24 (WiFi transport, MVP item 6 -- wifi-transport-scoping.md). Editor -> device:
+    # save this board's hostname and/or WiFi-session password (board_settings.py). Accepted over
+    # USB serial only; the device answers BOARD_SETTINGS_RESULT, then a fresh HELLO on success.
+    "SET_BOARD_SETTINGS": 14,
+    "BOARD_SETTINGS_RESULT": 15,
 }
 
 MESSAGE_NAME_BY_TYPE = {v: k for k, v in MessageType.items()}
@@ -261,7 +266,32 @@ def _validate_hello(obj, name):
         # Added 2026-09-23: True when the listener skipped the saved flow after repeated failed
         # boots (listener.py's safe mode). Absent from older runtimes, meaning False.
         "safeMode": _expect_optional_bool(obj, "safeMode", name) or False,
+        # Added 2026-09-24 (WiFi transport). All optional: a runtime older than 3.0.0 sends none of
+        # them. hostname: the board's network name (board_settings.py). authRequired/authScheme:
+        # the reserved one-way-door pair (transport-auth-design.md) -- true once a password is set,
+        # which is also what turns the WiFi transport on. hasWifi: the firmware has network.WLAN.
+        # networkAddress: the station IP while the WiFi transport is listening, else absent.
+        "hostname": _expect_optional_string(obj, "hostname", name),
+        "authRequired": _expect_optional_bool(obj, "authRequired", name) or False,
+        "authScheme": _expect_optional_string(obj, "authScheme", name),
+        "hasWifi": _expect_optional_bool(obj, "hasWifi", name) or False,
+        "networkAddress": _expect_optional_string(obj, "networkAddress", name),
     }
+
+
+def _validate_set_board_settings(obj, name):
+    return {
+        "hostname": _expect_optional_string(obj, "hostname", name),
+        "password": _expect_optional_string(obj, "password", name),
+        "clearPassword": _expect_optional_bool(obj, "clearPassword", name) or False,
+    }
+
+
+def _validate_board_settings_result(obj, name):
+    ok = _require_present(obj, "ok", name)
+    if not isinstance(ok, bool):
+        _fail(name, 'field "ok" must be a bool, got %r' % (type(ok),))
+    return {"ok": ok, "error": _expect_optional_string(obj, "error", name)}
 
 
 def _validate_exec(obj, name):
@@ -378,4 +408,6 @@ _VALIDATORS = {
     "NODE_STATUS": _validate_node_status,
     "EXEC": _validate_exec,
     "STOP_TO_PROMPT": _validate_stop_to_prompt,
+    "SET_BOARD_SETTINGS": _validate_set_board_settings,
+    "BOARD_SETTINGS_RESULT": _validate_board_settings_result,
 }

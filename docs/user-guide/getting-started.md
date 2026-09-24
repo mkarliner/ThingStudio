@@ -40,6 +40,8 @@ With more than one board plugged in, pick yours from the list. Port names depend
 
 The board replies with its chip type, runtime version and free memory. The console shows this.
 
+Once a board with WiFi is set up, you can also connect to it over WiFi. See [Connecting over WiFi](wifi-connection.md).
+
 A board that's new to Thingstudio doesn't have its runtime yet. The console says so and suggests the next step.
 
 ## Install the runtime

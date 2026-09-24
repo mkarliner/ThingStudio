@@ -20,7 +20,7 @@ from __future__ import annotations
 # added 2026-09-14 (see listener.py's own guarded `import wifi_provision`, which degrades to a
 # no-op on a board bootstrapped before this line existed, so a re-run of an install onto an
 # already-bootstrapped board is never destructive just because this list grows).
-CORE_FILES: list[str] = ["errors.py", "cbor.py", "framing.py", "messages.py", "protocol.py", "runtime.py", "wifi_provision.py"]
+CORE_FILES: list[str] = ["errors.py", "cbor.py", "framing.py", "messages.py", "protocol.py", "runtime.py", "wifi_provision.py", "board_settings.py", "net_transport.py"]
 
 # Installed as main.py so the board boots straight into it.
 LISTENER_FILE: str = "listener.py"

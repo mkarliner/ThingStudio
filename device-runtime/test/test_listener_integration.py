@@ -73,9 +73,11 @@ class ListenerProcess:
     itself is a long-running event loop -- this is the CPython-side
     equivalent of a WebSerial transport client's read loop)."""
 
-    def __init__(self, tmpdir):
+    def __init__(self, tmpdir, extra_env=None):
         self.tmpdir = tmpdir
         env = dict(os.environ)
+        env["THINGSTUDIO_BOARD_SETTINGS_PATH"] = os.path.join(tmpdir, "_board.json")
+        env.update(extra_env or {})
         env["THINGSTUDIO_BOOT_DELAY_S"] = "0.1"
         env["THINGSTUDIO_FLOW_PATH"] = os.path.join(tmpdir, "_flow.mpy")
         env["THINGSTUDIO_STATIC_DATA_PATH"] = os.path.join(tmpdir, "_flow_static.bin")
@@ -156,8 +158,12 @@ def test_hello_sent_on_boot():
             line = listener.wait_for(lambda l: l.startswith(F64_PREFIX), description="a HELLO frame")
             msg = _decode_f64_line(line)
             assert msg["type"] == "HELLO"
-            assert msg["runtimeVersion"] == {"major": 2, "minor": 0, "patch": 0}
+            assert msg["runtimeVersion"] == {"major": 3, "minor": 0, "patch": 0}
             assert isinstance(msg["freeRamBytes"], int) and msg["freeRamBytes"] > 0
+            # WiFi transport fields (2026-09-24): fresh board -> generated hostname, no password.
+            assert msg["hostname"].startswith("ts-"), msg["hostname"]
+            assert msg["authRequired"] is False and msg["authScheme"] == "none"
+            assert msg["networkAddress"] is None
         finally:
             listener.close()
 
@@ -334,7 +340,7 @@ def test_hello_request_resends_hello_no_side_effects():
             reply_line = listener.wait_for(lambda l: l.startswith(F64_PREFIX), description="HELLO_REQUEST's HELLO reply")
             msg = _decode_f64_line(reply_line)
             assert msg["type"] == "HELLO"
-            assert msg["runtimeVersion"] == {"major": 2, "minor": 0, "patch": 0}
+            assert msg["runtimeVersion"] == {"major": 3, "minor": 0, "patch": 0}
 
             # No side effects: a normal DEPLOY still works fine afterward.
             bytecode = _compile_flow(
@@ -648,6 +654,255 @@ def test_boot_loop_safe_mode():
             normal.close()
 
 
+
+# --- WiFi transport (2026-09-24, wifi-transport-scoping.md) -----------------------------------
+
+import hashlib  # noqa: E402
+import hmac  # noqa: E402
+import json  # noqa: E402
+import socket  # noqa: E402
+
+
+def _free_port(kind=socket.SOCK_STREAM):
+    s = socket.socket(socket.AF_INET, kind)
+    s.bind(("127.0.0.1", 0))
+    port = s.getsockname()[1]
+    s.close()
+    return port
+
+
+def _messages_after(listener, start_index, msg_type, timeout=5):
+    """The first decoded F64 message of `msg_type` printed after history index `start_index`."""
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        with listener._lock:
+            snapshot = list(listener._history[start_index:])
+        for line in snapshot:
+            if line.startswith(F64_PREFIX):
+                msg = _decode_f64_line(line)
+                if msg["type"] == msg_type:
+                    return msg
+        time.sleep(0.05)
+    raise AssertionError("no %s after index %d" % (msg_type, start_index))
+
+
+def _mark(listener):
+    with listener._lock:
+        return len(listener._history)
+
+
+def _client_answer(password, challenge):
+    # Independent CPython implementation of what tcp_relay.py does: iterated SHA-256 key, stdlib hmac.
+    parts = challenge.split(" ")
+    assert parts[0] == "TSAUTH1" and len(parts) == 5, challenge
+    nonce, salt, iters = bytes.fromhex(parts[2]), bytes.fromhex(parts[3]), int(parts[4])
+    key = salt + password.encode()
+    for _ in range(iters):
+        key = hashlib.sha256(key).digest()
+    return "TSAUTH1 " + hmac.new(key, nonce, hashlib.sha256).hexdigest()
+
+
+class NetClient:
+    def __init__(self, port):
+        self.sock = socket.create_connection(("127.0.0.1", port), timeout=5)
+        self.buf = b""
+
+    def readline(self, timeout=5):
+        self.sock.settimeout(timeout)
+        while b"\n" not in self.buf:
+            chunk = self.sock.recv(4096)
+            if not chunk:
+                raise EOFError("connection closed; buffered %r" % (self.buf,))
+            self.buf += chunk
+        line, self.buf = self.buf.split(b"\n", 1)
+        return line.decode()
+
+    def read_message(self, msg_type, timeout=5):
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            line = self.readline(timeout=max(0.1, deadline - time.time()))
+            if line.startswith(F64_PREFIX):
+                msg = _decode_f64_line(line)
+                if msg["type"] == msg_type:
+                    return msg
+        raise AssertionError("no %s over the network session" % (msg_type,))
+
+    def send_message(self, message):
+        frame = protocol.encode_message(message)
+        self.sock.sendall((F64_PREFIX + base64.b64encode(frame).decode("ascii") + "\n").encode())
+
+    def close(self):
+        self.sock.close()
+
+
+def _net_listener(tmpdir):
+    tcp, udp = _free_port(), _free_port(socket.SOCK_DGRAM)
+    listener = ListenerProcess(
+        tmpdir,
+        {"THINGSTUDIO_NET_TEST_IP": "127.0.0.1", "THINGSTUDIO_NET_PORT": str(tcp), "THINGSTUDIO_NET_PROBE_PORT": str(udp)},
+    )
+    listener.wait_for(lambda l: l == "LISTENER_READY", description="LISTENER_READY")
+    return listener, tcp, udp
+
+
+def _set_password(listener, password, hostname="kitchen"):
+    mark = _mark(listener)
+    listener.send_message({"type": "SET_BOARD_SETTINGS", "hostname": hostname, "password": password})
+    result = _messages_after(listener, mark, "BOARD_SETTINGS_RESULT")
+    assert result["ok"] is True, result
+    hello = _messages_after(listener, mark, "HELLO")
+    return hello
+
+
+def test_board_settings_over_serial():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        listener = ListenerProcess(tmpdir)
+        try:
+            listener.wait_for(lambda l: l == "LISTENER_READY", description="LISTENER_READY")
+            mark = _mark(listener)
+            listener.send_message({"type": "SET_BOARD_SETTINGS", "password": "short"})
+            bad = _messages_after(listener, mark, "BOARD_SETTINGS_RESULT")
+            assert bad["ok"] is False and "8-64" in bad["error"], bad
+            mark = _mark(listener)
+            listener.send_message({"type": "SET_BOARD_SETTINGS", "hostname": "Bad Name"})
+            assert _messages_after(listener, mark, "BOARD_SETTINGS_RESULT")["ok"] is False
+
+            hello = _set_password(listener, "correct horse")
+            assert hello["hostname"] == "kitchen" and hello["authRequired"] is True
+            assert hello["authScheme"] == "hmac-sha256-nonce"
+            with open(os.path.join(tmpdir, "_board.json")) as f:
+                assert "correct horse" not in f.read()
+        finally:
+            listener.close()
+
+        # Survives a restart (a real board: reset/power cycle).
+        listener = ListenerProcess(tmpdir)
+        try:
+            line = listener.wait_for(lambda l: l.startswith(F64_PREFIX), description="HELLO after restart")
+            hello = _decode_f64_line(line)
+            assert hello["hostname"] == "kitchen" and hello["authRequired"] is True
+        finally:
+            listener.close()
+
+
+def test_no_network_listener_without_password():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        listener, tcp, udp = _net_listener(tmpdir)
+        try:
+            time.sleep(2.5)  # past one network check
+            with listener._lock:
+                assert not any(l.startswith("NET_LISTENING") for l in listener._history)
+            try:
+                socket.create_connection(("127.0.0.1", tcp), timeout=1).close()
+                assert False, "TCP port open with no password set"
+            except OSError:
+                pass
+            # The probe still answers, saying WiFi transport is off.
+            u = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            u.settimeout(3)
+            u.sendto(b"TSPROBE1", ("127.0.0.1", udp))
+            reply = json.loads(u.recvfrom(1024)[0])
+            u.close()
+            assert reply["wifiTransport"] is False and reply["hostname"].startswith("ts-"), reply
+        finally:
+            listener.close()
+
+
+def test_network_session_end_to_end():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        listener, tcp, udp = _net_listener(tmpdir)
+        try:
+            _set_password(listener, "correct horse")
+            listener.wait_for(lambda l: l.startswith("NET_LISTENING 127.0.0.1:%d" % tcp), timeout=6, description="NET_LISTENING")
+
+            u = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            u.settimeout(3)
+            u.sendto(b"TSPROBE1", ("127.0.0.1", udp))
+            reply = json.loads(u.recvfrom(1024)[0])
+            u.close()
+            assert reply["hostname"] == "kitchen" and reply["port"] == tcp and reply["wifiTransport"] is True, reply
+
+            # Wrong password: FAIL, then closed.
+            c = NetClient(tcp)
+            challenge = c.readline()
+            assert challenge.split(" ")[1] == "kitchen"
+            c.sock.sendall((_client_answer("wrong horse!", challenge) + "\n").encode())
+            assert c.readline(timeout=5) == "TSAUTH FAIL"
+            c.close()
+
+            # Right password: OK, HELLO over the session, DEPLOY round trip, flow output mirrored.
+            c = NetClient(tcp)
+            challenge = c.readline()
+            c.sock.sendall((_client_answer("correct horse", challenge) + "\n").encode())
+            assert c.readline() == "TSAUTH OK"
+            hello = c.read_message("HELLO")
+            assert hello["networkAddress"] == "127.0.0.1" and hello["authRequired"] is True, hello
+
+            # A second client while this session is open is refused.
+            c2 = NetClient(tcp)
+            assert c2.readline() == "TSAUTH BUSY"
+            c2.close()
+
+            bytecode = _compile_flow(tmpdir, "net_flow", "import runtime\nasync def _flow_0():\n    pass\nruntime.spawn(_flow_0(), '1')\n")
+            c.send_message({"type": "DEPLOY", "bytecode": bytecode, "staticData": b"", "flowName": "net flow", "deployId": "d1"})
+            ack = c.read_message("DEPLOY_ACK")
+            assert ack["freeRamBytes"] > 0
+
+            # Board settings can't be changed over the network.
+            c.send_message({"type": "SET_BOARD_SETTINGS", "password": "another password"})
+            res = c.read_message("BOARD_SETTINGS_RESULT")
+            assert res["ok"] is False and "USB" in res["error"], res
+
+            # A blank keepalive line is accepted silently and the session stays up.
+            c.sock.sendall(b"\n")
+            c.send_message({"type": "HELLO_REQUEST"})
+            assert c.read_message("HELLO")["currentFlowName"] == "net flow"
+
+            # Clearing the password over USB ends the session.
+            mark = _mark(listener)
+            listener.send_message({"type": "SET_BOARD_SETTINGS", "clearPassword": True})
+            assert _messages_after(listener, mark, "BOARD_SETTINGS_RESULT")["ok"] is True
+            listener.wait_for(lambda l: l.startswith("NET_SESSION_CLOSED"), timeout=5, description="session closed")
+            try:
+                while True:
+                    c.readline(timeout=3)
+            except (EOFError, OSError):
+                pass
+            c.close()
+            listener.wait_for(lambda l: l.startswith("NET_STOPPED"), timeout=6, description="NET_STOPPED")
+        finally:
+            listener.close()
+
+
+def test_network_session_auth_timeout_and_garbage():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        listener, tcp, udp = _net_listener(tmpdir)
+        try:
+            _set_password(listener, "correct horse")
+            listener.wait_for(lambda l: l.startswith("NET_LISTENING"), timeout=6, description="NET_LISTENING")
+            c = NetClient(tcp)
+            c.readline()
+            c.sock.sendall(b"TSAUTH1 not-hex\n")
+            assert c.readline(timeout=5) == "TSAUTH FAIL"
+            c.close()
+            # A client that connects and says nothing doesn't block the next one for long:
+            # a half-open handshake isn't a session, so the next client gets its own challenge.
+            idle = NetClient(tcp)
+            idle.readline()
+            c = NetClient(tcp)
+            challenge = c.readline()
+            assert challenge.startswith("TSAUTH1 kitchen "), challenge
+            c.sock.sendall((_client_answer("correct horse", challenge) + "\n").encode())
+            assert c.readline() == "TSAUTH OK"
+            c.close()
+            idle.close()
+            # Listener survives all of it and still serves serial.
+            mark = _mark(listener)
+            listener.send_message({"type": "HELLO_REQUEST"})
+            _messages_after(listener, mark, "HELLO")
+        finally:
+            listener.close()
+
 TESTS = [
     test_hello_sent_on_boot,
     test_boot_time_flow_auto_resume,
@@ -662,6 +917,10 @@ TESTS = [
     test_exec_prints_results_keeps_variables_and_survives_errors,
     test_stop_to_prompt_stops_the_flow_and_ends_the_listener,
     test_boot_loop_safe_mode,
+    test_board_settings_over_serial,
+    test_no_network_listener_without_password,
+    test_network_session_end_to_end,
+    test_network_session_auth_timeout_and_garbage,
 ]
 
 

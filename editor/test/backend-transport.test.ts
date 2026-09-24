@@ -25,6 +25,11 @@ const HELLO: Message = {
   freeFlashBytes: 1000,
   freeRamBytes: 2000,
   safeMode: false,
+  hostname: null,
+  authRequired: false,
+  authScheme: null,
+  hasWifi: false,
+  networkAddress: null,
 };
 
 type Listener = (ev: { data?: unknown }) => void;

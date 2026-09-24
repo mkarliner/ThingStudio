@@ -76,6 +76,12 @@ from .raw_repl import ENTER_STEP, RawReplError, classify_reply
 from .board_recovery import CATCH_STEP
 from .runtime_installer import RuntimeInstaller
 from .serial_relay import SerialConnection, SerialRelayError, list_ports
+from .tcp_relay import DEFAULT_PORT as DEFAULT_TCP_PORT
+from .tcp_relay import PasswordLookup, TcpConnection, TcpRelayError, discover
+
+# Either kind of board connection: serial_relay.SerialConnection or tcp_relay.TcpConnection share one
+# interface (open/write/read_loop/request_stop/close, `port`), and both raise their own *RelayError.
+_RELAY_ERRORS = (SerialRelayError, TcpRelayError)
 
 logger = logging.getLogger(__name__)
 
@@ -107,8 +113,14 @@ class ConnectionSession:
         serial_connection_factory: type[SerialConnection] | object = SerialConnection,
         raw_port_factory: Callable[..., object] = serial.Serial,
         runtime_installer: RuntimeInstaller | None = None,
+        tcp_connection_factory: Callable[..., TcpConnection] = TcpConnection,
+        password_lookup: PasswordLookup | None = None,
+        discover_fn: Callable[[], list] = discover,
     ) -> None:
         self._ws = ws
+        self._tcp_connection_factory = tcp_connection_factory
+        self._password_lookup = password_lookup
+        self._discover_fn = discover_fn
         # Injectable for tests -- production code always uses the real
         # SerialConnection; tests substitute a fake with no hardware dependency.
         self._serial_connection_factory = serial_connection_factory
@@ -116,7 +128,7 @@ class ConnectionSession:
         # header) -- production code always uses real serial.Serial/RuntimeInstaller.
         self._raw_port_factory = raw_port_factory
         self._runtime_installer = runtime_installer or RuntimeInstaller()
-        self._serial: SerialConnection | None = None
+        self._serial: SerialConnection | TcpConnection | None = None
         self._decoder = LineDecoder()
         self._read_task: asyncio.Task[None] | None = None
 
@@ -131,8 +143,14 @@ class ConnectionSession:
         if msg_type == "list_ports":
             ports = [p.__dict__ for p in list_ports()]
             await self._ws.send_str(json.dumps({"type": "ports", "ports": ports}))
+        elif msg_type == "connect" and message.get("host"):
+            # WiFi transport (2026-09-24, tcp_relay.py). `password` is only sent when the editor has
+            # just asked the user for one; otherwise it's looked up by the board's hostname.
+            await self._connect_tcp(str(message["host"]), message.get("tcpPort", DEFAULT_TCP_PORT), message.get("password"))
         elif msg_type == "connect":
             await self._connect(message.get("port"), message.get("baudrate", 115200))
+        elif msg_type == "discover":
+            await self._discover()
         elif msg_type == "disconnect":
             await self._disconnect()
         elif msg_type == "install_runtime":
@@ -155,7 +173,7 @@ class ConnectionSession:
             return
         try:
             await self._serial.write(encode_f64_line(data))
-        except SerialRelayError as exc:
+        except _RELAY_ERRORS as exc:
             await self._send_status(error=str(exc))
             await self._disconnect()
 
@@ -177,6 +195,52 @@ class ConnectionSession:
         self._decoder.reset()
         await self._send_status(connected=True, port=port)
         self._read_task = asyncio.create_task(self._pump_serial_to_ws(conn))
+
+    async def _connect_tcp(self, host: str, tcp_port: object, password: object) -> None:
+        if not isinstance(tcp_port, int) or not 1 <= tcp_port <= 65535:
+            await self._send_status(error=f"NODE_ERROR: connect requested with an invalid network port {tcp_port!r}")
+            return
+        if self._serial is not None:
+            await self._disconnect()
+        conn = self._tcp_connection_factory(
+            host,
+            tcp_port,
+            password=password if isinstance(password, str) else None,
+            password_lookup=self._password_lookup,
+        )
+        try:
+            await conn.open()
+        except TcpRelayError as exc:
+            await self._send_status(error=str(exc), error_code=exc.code, hostname=exc.hostname)
+            return
+        self._serial = conn
+        self._decoder.reset()
+        await self._send_status(connected=True, port=conn.port, network=True, hostname=conn.hostname)
+        self._read_task = asyncio.create_task(self._pump_serial_to_ws(conn))
+
+    async def _discover(self) -> None:
+        """Lists boards answering the WiFi transport's UDP probe (tcp_relay.discover)."""
+        try:
+            boards = await asyncio.to_thread(self._discover_fn)
+        except Exception:  # noqa: BLE001 -- discovery must never take the session down
+            logger.exception("board discovery failed")
+            boards = []
+        payload = {
+            "type": "boards",
+            "boards": [
+                {
+                    "hostname": b.hostname,
+                    "address": b.address,
+                    "port": b.port,
+                    "chip": b.chip,
+                    "flow": b.flow,
+                    "wifiTransport": b.wifi_transport,
+                    "busy": b.busy,
+                }
+                for b in boards
+            ],
+        }
+        await self._send_quietly(json.dumps(payload))
 
     async def _install_runtime(self, port: str | None, baudrate: int) -> None:
         """Pushes the runtime onto `port`'s board via raw REPL -- see this module's header for
@@ -270,7 +334,7 @@ class ConnectionSession:
             return
         try:
             await self._serial.write(text.encode("utf-8"))
-        except SerialRelayError as exc:
+        except _RELAY_ERRORS as exc:
             await self._send_status(error=str(exc))
             await self._disconnect()
 
@@ -341,7 +405,7 @@ class ConnectionSession:
         except (ConnectionResetError, RuntimeError) as exc:
             logger.warning("could not send install_runtime_result to a WebSocket that's already closing: %s", exc)
 
-    async def _pump_serial_to_ws(self, conn: SerialConnection) -> None:
+    async def _pump_serial_to_ws(self, conn: SerialConnection | TcpConnection) -> None:
         try:
             async for chunk in conn.read_loop():
                 for event in self._decoder.push(chunk):
@@ -351,8 +415,10 @@ class ConnectionSession:
                         await self._ws.send_bytes(event.frame)
                     elif event.debug_text is not None:
                         await self._ws.send_str(json.dumps({"type": "debug", "line": event.debug_text}))
-        except SerialRelayError as exc:
+        except _RELAY_ERRORS as exc:
             await self._send_status(error=str(exc))
+            if self._serial is conn:
+                await self._send_status(connected=False, port=conn.port)
             self._serial = None
         except Exception:  # noqa: BLE001 -- last-resort backstop, never let this task die silently
             logger.exception("unexpected error relaying serial->WS for %s", conn.port)
@@ -364,7 +430,7 @@ class ConnectionSession:
             port = self._serial.port
             try:
                 await self._serial.close()
-            except SerialRelayError as exc:
+            except _RELAY_ERRORS as exc:
                 await self._send_status(error=str(exc))
             else:
                 await self._send_status(connected=False, port=port)
@@ -374,9 +440,22 @@ class ConnectionSession:
             self._read_task = None
 
     async def _send_status(
-        self, *, connected: bool | None = None, port: str | None = None, error: str | None = None
+        self,
+        *,
+        connected: bool | None = None,
+        port: str | None = None,
+        error: str | None = None,
+        network: bool | None = None,
+        error_code: str | None = None,
+        hostname: str | None = None,
     ) -> None:
         payload: dict[str, object] = {"type": "status"}
+        if network is not None:
+            payload["network"] = network
+        if error_code is not None:
+            payload["errorCode"] = error_code
+        if hostname is not None:
+            payload["hostname"] = hostname
         if connected is not None:
             payload["connected"] = connected
         if port is not None:
@@ -412,6 +491,9 @@ def make_websocket_handler(
     serial_connection_factory: type[SerialConnection] | object = SerialConnection,
     raw_port_factory: Callable[..., object] = serial.Serial,
     runtime_installer: RuntimeInstaller | None = None,
+    password_lookup: PasswordLookup | None = None,
+    tcp_connection_factory: Callable[..., TcpConnection] = TcpConnection,
+    discover_fn: Callable[[], list] = discover,
 ):
     """Build the aiohttp WS route handler. Production code uses the defaults (real
     SerialConnection/serial.Serial/RuntimeInstaller); tests pass fakes with no hardware
@@ -420,7 +502,15 @@ def make_websocket_handler(
     async def websocket_handler(request: web.Request) -> web.WebSocketResponse:
         ws = web.WebSocketResponse()
         await ws.prepare(request)
-        session = ConnectionSession(ws, serial_connection_factory, raw_port_factory, runtime_installer)
+        session = ConnectionSession(
+            ws,
+            serial_connection_factory,
+            raw_port_factory,
+            runtime_installer,
+            tcp_connection_factory=tcp_connection_factory,
+            password_lookup=password_lookup,
+            discover_fn=discover_fn,
+        )
 
         try:
             async for msg in ws:

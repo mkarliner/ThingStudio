@@ -188,3 +188,12 @@ Status: detail file, split out of `learnings.md` on 2026-09-06 to keep that inde
   needs writing and verifying against its OWN format's real source, never derived from another depth's
   by analogy, no matter how similar the two look. `decisions/node-authoring.md`'s 2026-09-18 "gs2/mono
   frame formats built" entry has the full derivation.
+- **2026-09-24 — Unix-port sockets want a resolved address; unix port has no `os.dupterm`.** WiFi transport
+  work (`net_transport.py`). `sock.bind(("0.0.0.0", port))` raises "object with buffer protocol required" on the
+  unix port, which only takes a raw sockaddr; `socket.getaddrinfo(host, port)[0][-1]` works on every port, so use
+  that. And `os.dupterm` exists on ESP32 and rp2 (`MICROPY_PY_OS_DUPTERM`) but not in the unix build, so the
+  "mirror all print() output to the WiFi session" path can't be covered off-device -- only the F64-only fallback
+  is. The dupterm path needs the hardware pass.
+- **2026-09-24 — Ending an asyncio session from another task: cancel it, don't just close its socket.** Closing
+  the writer from outside left the session's `readline()` waiting until its 8 s read timeout noticed; cancelling
+  the handler task (`asyncio.current_task()` captured at session start) runs its `finally` at once.

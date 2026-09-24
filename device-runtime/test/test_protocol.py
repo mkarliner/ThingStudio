@@ -30,6 +30,11 @@ SAMPLE_MESSAGES = [
         "freeFlashBytes": 3500000,
         "freeRamBytes": 168000,
         "safeMode": False,
+        "hostname": None,
+        "authRequired": False,
+        "authScheme": None,
+        "hasWifi": False,
+        "networkAddress": None,
     },
     {
         # Same message type, second variant: a board that DOES have a
@@ -44,6 +49,12 @@ SAMPLE_MESSAGES = [
         "freeFlashBytes": 757760,
         "freeRamBytes": 179200,
         "safeMode": False,
+        # WiFi transport fields (2026-09-24): a board with a password set, listening.
+        "hostname": "ts-kitchen",
+        "authRequired": True,
+        "authScheme": "hmac-sha256-nonce",
+        "hasWifi": True,
+        "networkAddress": "192.168.1.42",
     },
     {
         "type": "DEPLOY",
@@ -95,6 +106,11 @@ SAMPLE_MESSAGES = [
     # EXEC / STOP_TO_PROMPT added 2026-09-23 (console command box, stop to prompt).
     {"type": "EXEC", "code": "import machine; machine.Pin(15).value()"},
     {"type": "STOP_TO_PROMPT"},
+    # SET_BOARD_SETTINGS / BOARD_SETTINGS_RESULT added 2026-09-24 (WiFi transport).
+    {"type": "SET_BOARD_SETTINGS", "hostname": "ts-kitchen", "password": "correct horse", "clearPassword": False},
+    {"type": "SET_BOARD_SETTINGS", "hostname": None, "password": None, "clearPassword": True},
+    {"type": "BOARD_SETTINGS_RESULT", "ok": True, "error": None},
+    {"type": "BOARD_SETTINGS_RESULT", "ok": False, "error": "password must be 8-64 characters"},
 ]
 
 
@@ -363,8 +379,35 @@ def test_50_malformed_message_bodies_soak():
             pass  # expected outcome for essentially all garbage inputs
 
 
+def test_hello_wifi_fields_default_when_absent():
+    # A runtime older than 3.0.0 sends none of the 2026-09-24 WiFi transport fields.
+    body = cbor.encode({"chipType": "x", "runtimeVersion": {"major": 2, "minor": 0, "patch": 0}, "freeFlashBytes": 1, "freeRamBytes": 1})
+    decoded = messages.decode_message_body(messages.MessageType["HELLO"], body)
+    assert decoded["hostname"] is None
+    assert decoded["authRequired"] is False
+    assert decoded["hasWifi"] is False
+    assert decoded["networkAddress"] is None
+
+
+def test_rejects_bad_board_settings_shapes():
+    for name, bad in (
+        ("SET_BOARD_SETTINGS", {"hostname": 5}),
+        ("SET_BOARD_SETTINGS", {"password": b"x"}),
+        ("SET_BOARD_SETTINGS", {"clearPassword": "yes"}),
+        ("BOARD_SETTINGS_RESULT", {}),
+        ("BOARD_SETTINGS_RESULT", {"ok": 1}),
+    ):
+        try:
+            messages.decode_message_body(messages.MessageType[name], cbor.encode(bad))
+            assert False, "expected MessageDecodeError for %s %r" % (name, bad)
+        except MessageDecodeError:
+            pass
+
+
 minitest.run(
     [
+        test_hello_wifi_fields_default_when_absent,
+        test_rejects_bad_board_settings_shapes,
         test_roundtrip_every_message_type,
         test_roundtrip_through_full_frame,
         test_bytes_fields_are_native_cbor_byte_strings,

@@ -64,6 +64,10 @@ export interface BoardDef {
   readonly gpio: ReadonlySet<number> | null;
   readonly reserved: ReadonlyMap<number, string>;
   readonly avoid: ReadonlyMap<number, string>;
+  /** Whether the board has a WiFi radio (WiFi transport, 2026-09-24). false hides the network
+   * connection and board password; null (not stated) offers them -- Mike's call: only a definition
+   * that says "no radio" takes the option away. */
+  readonly wifi: boolean | null;
   readonly notes: string;
 }
 
@@ -193,7 +197,7 @@ function subset(pins: Iterable<number>, gpio: ReadonlySet<number>, where: string
 // ---------------------------------------------------------------------
 
 const PROCESSOR_KEYS = ["name", "match", "nativeArch", "nativeArchConfirmed", "gpio", "inputOnly", "noPull", "reserved", "avoid", "spi", "i2c", "notes"];
-const BOARD_KEYS = ["name", "processor", "match", "pins", "gpio", "reserved", "avoid", "notes"];
+const BOARD_KEYS = ["name", "processor", "match", "pins", "gpio", "reserved", "avoid", "notes", "wifi"];
 
 function parseSpi(v: unknown, gpio: ReadonlySet<number>): ProcessorDef["spi"] {
   if (!isObject(v)) throw new DefinitionError(`"spi": must be an object`);
@@ -340,7 +344,13 @@ export function parseBoard(id: string, data: unknown, processors: ReadonlyMap<st
     reserved,
     avoid,
     notes: data.notes === undefined ? "" : str(data.notes, `"notes"`),
+    wifi: data.wifi === undefined ? null : bool(data.wifi, `"wifi"`),
   };
+}
+
+function bool(v: unknown, where: string): boolean {
+  if (typeof v !== "boolean") throw new DefinitionError(`${where}: must be true or false`);
+  return v;
 }
 
 // ---------------------------------------------------------------------

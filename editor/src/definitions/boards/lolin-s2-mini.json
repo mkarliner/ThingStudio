@@ -1,6 +1,7 @@
 {
   "name": "LOLIN S2 Mini",
   "processor": "esp32-s2",
+  "wifi": true,
   "match": ["LOLIN_S2_MINI"],
   "pins": { "LED": 15, "BUTTON": 0 },
   "reserved": {

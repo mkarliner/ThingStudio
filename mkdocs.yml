@@ -49,6 +49,7 @@ nav:
   - Canvas basics: canvas-basics.md
   - Flow lifecycle: flow-lifecycle.md
   - Boards and processors: boards.md
+  - Connecting over WiFi: wifi-connection.md
   - Debugging & troubleshooting: debugging.md
   - Node reference:
       - Overview: nodes/index.md

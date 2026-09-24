@@ -211,7 +211,9 @@ export async function deleteCustomNode(wsUrl: string, name: string): Promise<voi
 // opaque JSON blob to this module too, same as flow text; credential-
 // types.ts is what knows a "wifi" bundle looks like {ssid, password}.
 
-export type CredentialType = "wifi" | "mqtt-broker";
+/** "board" (2026-09-24, WiFi transport): {password}, named by the board's hostname -- what the
+ * backend answers a board's WiFi challenge with. */
+export type CredentialType = "wifi" | "mqtt-broker" | "board";
 
 export async function listCredentials(wsUrl: string, type: CredentialType): Promise<string[]> {
   const res = await request(wsUrl, `/api/credentials/${type}`);

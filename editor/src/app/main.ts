@@ -115,7 +115,17 @@ import { computeWifiProvisionMarker } from "../node-library/wifi-status.js";
 import { buildRegistry } from "../node-library/registry.js";
 import { mergeCustomNodeRegistry } from "../node-library/custom-node.js";
 import { WebSerialTransport, type WebSerialPort, type DeviceTransport, type TransportEvents } from "../protocol/transport.js";
-import { BackendTransport, InstallRuntimeError, type SerialPortInfo } from "../protocol/backend-transport.js";
+import { BackendTransport, InstallRuntimeError, NetworkConnectError, type NetworkBoardInfo, type SerialPortInfo } from "../protocol/backend-transport.js";
+import {
+  MANUAL_NETWORK_VALUE,
+  hostnameProblem,
+  networkOptionLabel,
+  networkOptionValue,
+  parseNetworkAddress,
+  parsePortSelection,
+  passwordProblem,
+  wifiReadiness,
+} from "./network-choice.js";
 import { choosePort, isUsbPort } from "./port-choice.js";
 import {
   DOC_BOARD_STUCK,
@@ -132,7 +142,7 @@ import { NATIVE_ARCH_OPTIONS, inferNativeArch } from "./native-arch.js";
 import { BUILTIN_DEFINITION_FILES } from "../definitions/builtin.js";
 import { buildDefinitionSet, userDefinitionFiles, type DefinitionSet } from "../definitions/definitions.js";
 import { choiceForConnectedBoard, resolveTarget, type TargetResolution } from "../definitions/target.js";
-import type { Message, NodeStatusMessage, ProtocolVersion } from "../protocol/messages.js";
+import type { BoardSettingsResultMessage, HelloMessage, Message, NodeStatusMessage, ProtocolVersion } from "../protocol/messages.js";
 import { checkRuntimeBuild, decideDeploy } from "../protocol/version.js";
 import { ClassicPreset } from "rete";
 import { createThingstudioEditor, type ThingstudioEditor } from "./rete/editor-setup.js";
@@ -158,7 +168,7 @@ import {
   type FlowFileConfig,
   type CanvasNodeSnapshot,
 } from "../flow-file/flow-file.js";
-import { DEFAULT_BACKEND_WS_URL, backendHttpBaseUrl, initialBackendWsUrl, slugifyFlowName, getCredential, listDefinitions, type CredentialType } from "../flow-file/admin-api-client.js";
+import { DEFAULT_BACKEND_WS_URL, backendHttpBaseUrl, initialBackendWsUrl, slugifyFlowName, getCredential, putCredential, listDefinitions, type CredentialType } from "../flow-file/admin-api-client.js";
 // slugifyFlowName is reused here purely for a nicer suggested filename in
 // the save dialog below -- its own header's reasoning for why a display
 // name isn't a valid storage key applies just as well to a suggested
@@ -1122,7 +1132,7 @@ function waitForMessage(match: (m: Message) => boolean, timeoutMs: number): Prom
 // bump-discipline rule), so this is the level that actually stops an
 // unsafe DEPLOY rather than letting it crash on the device.
 // 2.0.0 (2026-09-23): EXEC, STOP_TO_PROMPT, safe mode. Must match listener.py's _RUNTIME_VERSION.
-const EDITOR_TARGET_VERSION: ProtocolVersion = { major: 2, minor: 0, patch: 0 };
+const EDITOR_TARGET_VERSION: ProtocolVersion = { major: 3, minor: 0, patch: 0 }; // 3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS
 
 // This editor's own device-runtime/src git SHA, injected at build/dev-
 // server-start time by vite.config.ts's `define` (see that file,
@@ -1147,6 +1157,11 @@ let lastHelloVersion: ProtocolVersion | null = null;
 // Feeds native-arch.ts's inferNativeArch() for the Deploy handler's
 // board-aware mpy-cross -march choice (currentNativeArch(), below).
 let lastHelloChipType: string | null = null;
+// The whole last HELLO (WiFi transport, 2026-09-24): Board settings… reads the hostname and whether a
+// password is set from it. Cleared on disconnect.
+let lastHello: HelloMessage | null = null;
+// Addresses typed into "WiFi address…", kept in the port menu across "⟳ ports" refreshes.
+const manualNetworkTargets = new Map<string, string>(); // option value -> label
 // Plain text lines the board has printed since the last HELLO_REQUEST (Connect or Check status) --
 // board-diagnosis.ts's classifyDebugLines() input when no HELLO comes back. Capped: only the first
 // few lines after a request say anything about what's on the board.
@@ -1209,6 +1224,8 @@ const transportEvents: TransportEvents = {
       } else {
         logLine("[flow status] no flow currently running on this board", "");
       }
+      lastHello = message;
+      logWifiStatus(message);
     }
     waiters = waiters.filter((w) => {
       if (w.match(message)) {
@@ -1241,6 +1258,7 @@ const transportEvents: TransportEvents = {
   },
   onDisconnect(reason) {
     logLine(`[disconnected] ${reason ? String(reason) : "(clean)"}`, "");
+    lastHello = null;
     lastHelloVersion = null;
     lastHelloChipType = null;
     updateActiveTarget();
@@ -1303,7 +1321,11 @@ function setConnectedUi(connected: boolean): void {
   el<HTMLButtonElement>("btnDisconnect").hidden = !connected;
   el<HTMLButtonElement>("btnCheckStatus").disabled = !connected;
   el<HTMLButtonElement>("btnCheckStatus").hidden = !connected;
-  if (!connected) boardAtPrompt = false;
+  if (!connected) {
+    boardAtPrompt = false;
+    lastHello = null;
+  }
+  updateBoardSettingsButton();
   updateBoardToolsUi();
   // A fresh connection always starts deployable, regardless of whatever
   // deployedClean was left at from a previous connection (a different
@@ -1564,10 +1586,42 @@ async function refreshBackendPorts(onLoad = false): Promise<void> {
       }
       select.value = choice.selected;
     }
+    // WiFi transport (2026-09-24): boards on the network go in their own group, filled in when the
+    // probe answers (about 1.5 s) so the serial ports show straight away.
+    const wifiGroup = document.createElement("optgroup");
+    wifiGroup.label = "WiFi";
+    for (const [value, label] of manualNetworkTargets) addOption(wifiGroup, value, label);
+    addOption(wifiGroup, MANUAL_NETWORK_VALUE, "WiFi address…");
+    select.appendChild(wifiGroup);
+    if (manualNetworkTargets.has(previous)) select.value = previous;
     if (choice.selected && choice.selected !== previous) {
       logLine(`[ports] found a board on ${choice.selected} -- click "Connect"`, "");
     } else if (!choice.ordered.some(isUsbPort)) {
-      logLine('[ports] no board found. Plug one in, then click "⟳ ports".', "");
+      logLine('[ports] no USB board found. Plug one in, then click "⟳ ports".', "");
+    }
+    let boards: NetworkBoardInfo[] = [];
+    try {
+      boards = await probe.discoverBoards();
+    } catch {
+      boards = []; // an older backend without discovery, or it went away: just no WiFi list
+    }
+    const manualOption = wifiGroup.lastElementChild;
+    for (const b of boards) {
+      const value = networkOptionValue(b);
+      if (manualNetworkTargets.has(value)) continue;
+      const opt = document.createElement("option");
+      opt.value = value;
+      opt.textContent = networkOptionLabel(b);
+      wifiGroup.insertBefore(opt, manualOption);
+    }
+    if (boards.some((b) => networkOptionValue(b) === previous)) select.value = previous;
+    const ready = boards.filter((b) => b.wifiTransport && !b.busy);
+    if (boards.length > 0) {
+      logLine(`[ports] ${boards.length} board${boards.length === 1 ? "" : "s"} found on WiFi: ${boards.map((b) => b.hostname).join(", ")}`, "");
+    }
+    if (!select.value && ready.length === 1) {
+      select.value = networkOptionValue(ready[0]!);
+      logLine(`[ports] no USB board, so ${ready[0]!.hostname} on WiFi is selected -- click "Connect"`, "");
     }
   } catch (err) {
     select.innerHTML = '<option value="">(backend not running)</option>';
@@ -1582,6 +1636,253 @@ async function refreshBackendPorts(onLoad = false): Promise<void> {
   }
 }
 el("btnRefreshPorts").addEventListener("click", () => void refreshBackendPorts());
+
+function addOption(parent: HTMLElement, value: string, label: string): void {
+  const opt = document.createElement("option");
+  opt.value = value;
+  opt.textContent = label;
+  parent.appendChild(opt);
+}
+
+// --- WiFi transport (MVP item 6, 2026-09-24) -------------------------------------------------
+// docs/working-notes/wifi-transport-scoping.md. The backend does the network work (tcp_relay.py);
+// this is the UI: WiFi boards in the port menu, a typed address, the board password when the backend
+// has none saved, and Board settings… (hostname and password, over USB only).
+
+let portSelectPrevious = "";
+el("backendPortSelect").addEventListener("focus", () => {
+  portSelectPrevious = el<HTMLSelectElement>("backendPortSelect").value;
+});
+el("backendPortSelect").addEventListener("change", async () => {
+  const select = el<HTMLSelectElement>("backendPortSelect");
+  if (select.value !== MANUAL_NETWORK_VALUE) {
+    portSelectPrevious = select.value;
+    return;
+  }
+  const target = await askNetworkAddress();
+  if (!target) {
+    select.value = portSelectPrevious;
+    return;
+  }
+  const value = `net:${target.host}:${target.tcpPort}`;
+  const label = `${target.host}${target.tcpPort === 7462 ? "" : `:${target.tcpPort}`} -- WiFi`;
+  if (!manualNetworkTargets.has(value)) {
+    manualNetworkTargets.set(value, label);
+    const manual = select.querySelector(`option[value="${MANUAL_NETWORK_VALUE}"]`);
+    const opt = document.createElement("option");
+    opt.value = value;
+    opt.textContent = label;
+    manual?.parentElement?.insertBefore(opt, manual);
+  }
+  select.value = value;
+  portSelectPrevious = value;
+});
+
+/** Resolves with the dialog's return value once it closes ("" when dismissed with Escape). */
+function dialogResult(dialog: HTMLDialogElement): Promise<string> {
+  return new Promise((resolve) => {
+    dialog.addEventListener("close", () => resolve(dialog.returnValue), { once: true });
+  });
+}
+
+async function askNetworkAddress(): Promise<{ host: string; tcpPort: number } | null> {
+  const dialog = el<HTMLDialogElement>("netAddressDialog");
+  const input = el<HTMLInputElement>("netAddressInput");
+  const error = el("netAddressError");
+  input.value = "";
+  error.textContent = "";
+  const check = (e: Event) => {
+    if (!parseNetworkAddress(input.value)) {
+      e.preventDefault();
+      error.textContent = "That isn't a network name or IP address.";
+    }
+  };
+  el("netAddressOk").addEventListener("click", check);
+  dialog.returnValue = "";
+  dialog.showModal();
+  const result = await dialogResult(dialog);
+  el("netAddressOk").removeEventListener("click", check);
+  return result === "ok" ? parseNetworkAddress(input.value) : null;
+}
+
+async function askBoardPassword(hostname: string, retry: boolean): Promise<{ password: string; remember: boolean } | null> {
+  const dialog = el<HTMLDialogElement>("netPasswordDialog");
+  el("netPasswordTitle").textContent = `Password for ${hostname}`;
+  el("netPasswordText").textContent = retry
+    ? `That password was wrong. Enter the password set for ${hostname} in Board settings.`
+    : `This computer has no saved password for ${hostname}. Enter the one set in Board settings.`;
+  const input = el<HTMLInputElement>("netPasswordInput");
+  input.value = "";
+  dialog.returnValue = "";
+  dialog.showModal();
+  const result = await dialogResult(dialog);
+  if (result !== "ok" || !input.value) return null;
+  return { password: input.value, remember: el<HTMLInputElement>("netPasswordRemember").checked };
+}
+
+/** Explains a failed network connect in terms of what to do next (road-to-mvp.md: no silent failure). */
+function explainNetworkConnectError(err: NetworkConnectError): string {
+  switch (err.code) {
+    case "busy":
+      return `${err.message}. Only one editor can connect over WiFi at a time.`;
+    case "board_no_password":
+      return `${err.message}.`;
+    case "timeout":
+      return (
+        `${err.message}. Check the board is powered, its flow has a "wifi status" node that has joined a network, ` +
+        "and this computer is on the same network. If a .local name doesn't work, try the board's IP address."
+      );
+    default:
+      return (
+        `${err.message}. If the board was reset or its flow was redeployed without a "wifi status" node, it may be ` +
+        "off the network -- connect over USB to check."
+      );
+  }
+}
+
+/** Connects `t` to a board over WiFi, asking for its password when the backend has none saved (or a
+ * saved one is wrong), and saving a typed one if the user asked. Returns false after logging why. */
+async function connectOverNetwork(t: BackendTransport, host: string, tcpPort: number): Promise<boolean> {
+  let password: string | undefined;
+  let remember = false;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    try {
+      await t.connectNetwork(host, tcpPort, password);
+    } catch (err) {
+      if (err instanceof NetworkConnectError && (err.code === "no_password" || err.code === "auth_failed") && err.hostname) {
+        const answer = await askBoardPassword(err.hostname, err.code === "auth_failed");
+        if (!answer) {
+          logLine("[connect cancelled] no password entered", "");
+          return false;
+        }
+        password = answer.password;
+        remember = answer.remember;
+        continue;
+      }
+      logLine(`[connect failed] ${err instanceof NetworkConnectError ? explainNetworkConnectError(err) : err instanceof Error ? err.message : String(err)}`, "err");
+      return false;
+    }
+    if (password !== undefined && remember) {
+      const hostname = t.connectedHostname;
+      if (hostname) await rememberBoardPassword(hostname, password);
+    }
+    return true;
+  }
+  logLine("[connect failed] too many wrong passwords", "err");
+  return false;
+}
+
+async function rememberBoardPassword(hostname: string, password: string): Promise<void> {
+  try {
+    await putCredential(currentBackendWsUrl(), "board", hostname, { password });
+  } catch (err) {
+    logLine(`[board password] not saved on this computer: ${err instanceof Error ? err.message : String(err)}`, "err");
+  }
+}
+
+function logWifiStatus(hello: HelloMessage): void {
+  const readiness = wifiReadiness(hello, activeTarget.value?.board?.wifi ?? null);
+  if (readiness === "ready") {
+    logLine(
+      hello.networkAddress
+        ? `[wifi] ${hello.hostname} accepts WiFi connections at ${hello.networkAddress} (${hello.hostname}.local)`
+        : `[wifi] ${hello.hostname} has a password set; it accepts WiFi connections while its flow's "wifi status" node is on a network`,
+      "",
+    );
+  } else if (readiness === "no_password" && !backendTransportOrNull()?.connectedOverNetwork) {
+    logLine(`[wifi] ${hello.hostname} only accepts USB until it has a password. Set one in "Board settings…".`, "");
+  }
+  updateBoardSettingsButton();
+}
+
+function updateBoardSettingsButton(): void {
+  const btn = el<HTMLButtonElement>("btnBoardSettings");
+  const hello = lastHello;
+  const readiness = hello ? wifiReadiness(hello, activeTarget.value?.board?.wifi ?? null) : null;
+  const show = transport.isConnected && (readiness === "ready" || readiness === "no_password");
+  const overNetwork = backendTransportOrNull()?.connectedOverNetwork ?? false;
+  btn.hidden = !show;
+  btn.disabled = !show || overNetwork || boardAtPrompt;
+  btn.title = overNetwork
+    ? "Board settings can only be changed over USB."
+    : "The board's network name and WiFi password. Changes are made over USB.";
+}
+
+el("btnBoardSettings").addEventListener("click", () => {
+  const hello = lastHello;
+  if (!hello || !hello.hostname) return;
+  el<HTMLInputElement>("bsHostname").value = hello.hostname;
+  el<HTMLInputElement>("bsPassword").value = "";
+  el<HTMLInputElement>("bsConfirm").value = "";
+  el<HTMLInputElement>("bsClearPassword").checked = false;
+  el<HTMLInputElement>("bsClearPassword").disabled = !hello.authRequired;
+  el("bsError").textContent = "";
+  const dialog = el<HTMLDialogElement>("boardSettingsDialog");
+  dialog.returnValue = "";
+  dialog.showModal();
+});
+
+el("bsSave").addEventListener("click", (e) => {
+  // Validate and save before the dialog closes, so a problem is shown in it rather than lost.
+  e.preventDefault();
+  void saveBoardSettings();
+});
+
+async function saveBoardSettings(): Promise<void> {
+  const hello = lastHello;
+  const error = el("bsError");
+  if (!hello || !hello.hostname) {
+    error.textContent = "The board isn't connected any more.";
+    return;
+  }
+  const hostname = el<HTMLInputElement>("bsHostname").value.trim().toLowerCase();
+  const password = el<HTMLInputElement>("bsPassword").value;
+  const confirm = el<HTMLInputElement>("bsConfirm").value;
+  const clear = el<HTMLInputElement>("bsClearPassword").checked;
+  const problem = hostnameProblem(hostname) ?? (!clear && (password || confirm) ? passwordProblem(password, confirm) : null);
+  if (problem) {
+    error.textContent = problem;
+    return;
+  }
+  const newHostname = hostname !== hello.hostname ? hostname : null;
+  const newPassword = !clear && password ? password : null;
+  if (newHostname === null && newPassword === null && !clear) {
+    el<HTMLDialogElement>("boardSettingsDialog").close("cancel");
+    return;
+  }
+  error.textContent = "Saving…";
+  const resultP = waitForMessage((m) => m.type === "BOARD_SETTINGS_RESULT", 10_000);
+  try {
+    await transport.send({ type: "SET_BOARD_SETTINGS", hostname: newHostname, password: newPassword, clearPassword: clear });
+    const result = (await resultP) as BoardSettingsResultMessage;
+    if (!result.ok) {
+      error.textContent = result.error ?? "The board refused the change.";
+      return;
+    }
+  } catch (err) {
+    resultP.catch(() => undefined);
+    error.textContent = `No answer from the board (${err instanceof Error ? err.message : String(err)}). Is it still connected?`;
+    return;
+  }
+  // Keep this computer's copy of the password under the board's (possibly new) name.
+  if (newPassword !== null) {
+    await rememberBoardPassword(hostname, newPassword);
+  } else if (newHostname !== null && hello.authRequired && !clear) {
+    try {
+      const saved = await getCredential(currentBackendWsUrl(), "board", hello.hostname);
+      if (typeof saved.password === "string") await rememberBoardPassword(hostname, saved.password);
+    } catch {
+      // No saved password under the old name -- nothing to carry over.
+    }
+  }
+  logLine(
+    `[board settings] saved: name ${hostname}` +
+      (clear ? ", password removed (USB only now)" : newPassword ? ", new password set" : "") +
+      (newHostname ? ". The new name is used from the next time the board joins WiFi (reset it to apply now)." : ""),
+    "ok",
+  );
+  el<HTMLDialogElement>("boardSettingsDialog").close("save");
+}
 void refreshBackendPorts(true);
 el("btnDocs").addEventListener("click", () => {
   window.open(docUrl({ label: "Docs", path: "" }), "_blank", "noopener");
@@ -1615,6 +1916,10 @@ el("btnInstallRuntime").addEventListener("click", async () => {
   const portName = el<HTMLSelectElement>("backendPortSelect").value;
   if (!portName) {
     logLine('[install runtime failed] choose a serial port from the list first ("⟳ ports")', "err");
+    return;
+  }
+  if (parsePortSelection(portName).kind !== "serial") {
+    logLine("[install runtime failed] installing the runtime needs the board on USB -- choose its serial port", "err");
     return;
   }
   if (transport.isConnected) {
@@ -1698,8 +2003,27 @@ el("btnConnect").addEventListener("click", async () => {
   } else {
     const wsUrl = currentBackendWsUrl();
     const portName = el<HTMLSelectElement>("backendPortSelect").value;
-    if (!portName) {
-      logLine('[connect failed] choose a serial port from the list first ("⟳ ports")', "err");
+    const selection = parsePortSelection(portName);
+    if (selection.kind === "none" || selection.kind === "manual") {
+      logLine('[connect failed] choose a serial port or a WiFi board from the list first ("⟳ ports")', "err");
+      return;
+    }
+    if (selection.kind === "network") {
+      const t = new BackendTransport(transportEvents);
+      try {
+        await t.open(wsUrl);
+      } catch (err) {
+        logLine(`[connect failed] ${err instanceof Error ? err.message : String(err)}`, "err");
+        return;
+      }
+      if (!(await connectOverNetwork(t, selection.host, selection.tcpPort))) {
+        await t.disconnect().catch(() => undefined);
+        return;
+      }
+      transport = t;
+      setConnectedUi(true);
+      logLine(`[connected over WiFi via backend -- ${selection.host}]`, "");
+      await requestHelloOrExplain();
       return;
     }
     const t = new BackendTransport(transportEvents);
@@ -1935,6 +2259,7 @@ function updateBoardToolsUi(): void {
     ? "MicroPython prompt: type a line and press Enter"
     : "Python command, e.g. gc.mem_free()";
   updateDeployButtonEnabled();
+  updateBoardSettingsButton();
 }
 updateBoardToolsUi();
 
@@ -2023,6 +2348,10 @@ el("btnRemoveFlow").addEventListener("click", async () => {
   const portName = el<HTMLSelectElement>("backendPortSelect").value;
   if (!portName) {
     logLine('[remove flow failed] choose the board\'s port first ("⟳ ports")', "err");
+    return;
+  }
+  if (parsePortSelection(portName).kind !== "serial") {
+    logLine("[remove flow failed] removing a flow needs the board on USB -- choose its serial port", "err");
     return;
   }
   if (!window.confirm("Remove the saved flow from the board? The flow on your canvas isn't affected.")) return;

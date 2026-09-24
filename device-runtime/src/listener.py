@@ -82,6 +82,16 @@ except ImportError:
     # additive DEPLOY field in this file already follows (flowName/deployId, wifiProvision itself).
     wifi_provision = None
 
+# WiFi transport (2026-09-24, wifi-transport-scoping.md). Both ship in CORE_FILES with this file, so
+# a missing module means a partial install -- degrade to serial-only rather than fail to boot.
+try:
+    import board_settings
+    import net_transport
+except ImportError as _e:
+    print("LISTENER_WARN WiFi transport unavailable (%r) -- serial only" % (_e,))
+    board_settings = None
+    net_transport = None
+
 # Boot-time recovery window (design doc §5, second mitigation layer,
 # "physical-access-independent fallback... not a replacement for" the
 # hardening above): for this short window, kbd_intr is still at its
@@ -130,7 +140,7 @@ F64_PREFIX = "F64:"
 _HEARTBEAT_PIN = 10
 _HEARTBEAT_PERIOD_MS = 200
 
-_RUNTIME_VERSION = {"major": 2, "minor": 0, "patch": 0}  # bumped 2026-09-23: EXEC, STOP_TO_PROMPT, safe mode (1.0.0 was 2026-09-10: NODE_STATUS)
+_RUNTIME_VERSION = {"major": 3, "minor": 0, "patch": 0}  # bumped 2026-09-24: WiFi transport, SET_BOARD_SETTINGS (2.0.0 was 2026-09-23: EXEC, STOP_TO_PROMPT, safe mode; 1.0.0 was 2026-09-10: NODE_STATUS)
 # (runtime.report_status) is a hard dependency of wifi-status.ts's/mqtt-shared.ts's codegen now -- an editor
 # with this change targeting a pre-2026-09-10 runtime would crash on deploy (AttributeError: report_status),
 # not degrade gracefully. See CLAUDE.md's "Device-runtime version bump discipline" -- decideDeploy() only
@@ -355,7 +365,10 @@ def _send_message(message):
     b64 = binascii.b2a_base64(frame).strip()  # b2a_base64 appends a trailing \n; strip it, we add our own
     if isinstance(b64, bytes):
         b64 = b64.decode("ascii")
-    sys.stdout.write(F64_PREFIX + b64 + "\n")
+    line = F64_PREFIX + b64 + "\n"
+    sys.stdout.write(line)
+    if net_transport is not None:
+        net_transport.mirror_line(line)  # a no-op where os.dupterm already copies stdout to the session
 
 
 def _send_message_safe(message):
@@ -416,8 +429,30 @@ async def _send_hello():
             "freeFlashBytes": _free_flash_bytes(),
             "freeRamBytes": _free_ram_bytes(),
             "safeMode": _safe_mode,
+            "hostname": board_settings.hostname() if board_settings else None,
+            "authRequired": board_settings.password_set() if board_settings else False,
+            "authScheme": (board_settings.SCHEME if board_settings.password_set() else "none") if board_settings else None,
+            "hasWifi": net_transport.has_wifi() if net_transport else False,
+            "networkAddress": net_transport.listening_address() if net_transport else None,
         }
     )
+
+
+def _handle_set_board_settings(msg, source):
+    """SET_BOARD_SETTINGS (2026-09-24): USB serial only -- the password is how WiFi sessions are
+    trusted, so it can't be changed over WiFi. Answers BOARD_SETTINGS_RESULT, then HELLO on success
+    so the editor sees the new hostname/authRequired straight away."""
+    if board_settings is None:
+        return "this runtime was installed without board_settings.py -- reinstall the runtime"
+    if source != "serial":
+        return "board settings can only be changed over USB"
+    err = board_settings.apply(
+        new_hostname=msg.get("hostname"), new_password=msg.get("password"), clear_password=msg.get("clearPassword")
+    )
+    if err is None:
+        net_transport.settings_changed()
+        print("BOARD_SETTINGS saved: hostname=%s password=%s" % (board_settings.hostname(), "set" if board_settings.password_set() else "none"))
+    return err
 
 
 async def _handle_deploy(msg):
@@ -622,7 +657,17 @@ async def _mark_stable():
         _write_boot_count(0)
 
 
-async def _dispatch(result):
+_dispatch_lock = asyncio.Lock()
+
+
+async def _dispatch(result, source="serial"):
+    # Serial and a WiFi session can both deliver messages; one at a time (two overlapping DEPLOYs
+    # would interleave cancel/write/import).
+    async with _dispatch_lock:
+        await _dispatch_locked(result, source)
+
+
+async def _dispatch_locked(result, source):
     if "error" in result:
         # Adversarial input (framing.FramingError or
         # messages.MessageDecodeError) -- exactly the case the
@@ -655,6 +700,11 @@ async def _dispatch(result):
         _handle_exec(msg["code"])
     elif msg_type == "STOP_TO_PROMPT":
         await _handle_stop_to_prompt()
+    elif msg_type == "SET_BOARD_SETTINGS":
+        err = _handle_set_board_settings(msg, source)
+        _send_message_safe({"type": "BOARD_SETTINGS_RESULT", "ok": err is None, "error": err})
+        if err is None:
+            await _send_hello()
     elif msg_type in ("STATE_READ", "STATE_WRITE"):
         # Tier 2 (design doc: flash-backed state store), not this task's
         # scope (fault-isolation-briefing.md's "Not in scope"). Logged, not
@@ -674,26 +724,46 @@ _MAX_STALL_PUSHES = 5  # see _listener()'s "stalled decoder" handling below
 
 
 async def _listener():
-    sreader = asyncio.StreamReader(sys.stdin)
+    await _serve_lines(asyncio.StreamReader(sys.stdin), "serial", None)
+
+
+async def _serve_lines(sreader, source, idle_timeout_s):
+    """Reads F64 lines from `sreader` and dispatches them until the stream ends. Serial (source
+    "serial", idle_timeout_s None) never ends. A WiFi session (net_transport.py) ends on EOF or after
+    idle_timeout_s with no bytes at all -- the backend sends a blank keepalive line every 30 s, which
+    is silently skipped below."""
     decoder = protocol.ProtocolStreamDecoder()
     stall_pushes = 0
+    idle_s = 0
     while True:
         try:
             raw = await asyncio.wait_for(sreader.readline(), READ_TIMEOUT_S)
         except asyncio.TimeoutError:
+            idle_s += READ_TIMEOUT_S
+            if idle_timeout_s is not None and idle_s >= idle_timeout_s:
+                print("LISTENER_NET_IDLE no data for %ds -- closing the network session" % (idle_s,))
+                return
             continue  # no data in a while -- normal, go around again
         except Exception as e:  # noqa: BLE001 -- hardening property 1: nothing here may kill this task
+            if source != "serial":
+                print("LISTENER_NET_CLOSED read failed: %r" % (e,))
+                return  # a dead socket doesn't come back; the client reconnects
             print("LISTENER_ERR readline %r -- recovering, not crashing" % (e,))
             decoder.reset()
             await asyncio.sleep_ms(50)
             continue
 
+        idle_s = 0
         try:
             if not raw:
+                if source != "serial":
+                    return  # the network client closed the connection
                 await asyncio.sleep_ms(20)
                 continue
 
             text = raw.decode() if isinstance(raw, bytes) else raw
+            if not text.strip():
+                continue  # keepalive (network) or a stray newline
             if not text.startswith(F64_PREFIX):
                 print("LISTENER_IGNORED %r" % (text[:60],))
                 continue
@@ -709,7 +779,7 @@ async def _listener():
             if results:
                 stall_pushes = 0
                 for result in results:
-                    await _dispatch(result)
+                    await _dispatch(result, source)
             elif decoder.pending_byte_count > 0:
                 # framing.py's FrameDecoder can legitimately end up
                 # "waiting for more bytes" on a length header that's
@@ -802,6 +872,11 @@ def main():
     # this call is what actually gets it connected first, using a previously-learned credential or,
     # on first run, the captive portal. A no-op for every flow/board not using this feature (see
     # _provision_wifi_if_needed's own docstring).
+    # Board hostname (WiFi transport, 2026-09-24): network.hostname() only takes effect for a
+    # connection made after it's set, so before the portal or the saved flow can bring WiFi up.
+    if net_transport is not None:
+        net_transport.apply_hostname()
+
     if _check_boot_loop():
         pass  # safe mode: skip WiFi provisioning and the saved flow; the listener still starts
     else:
@@ -813,6 +888,17 @@ def main():
     asyncio.create_task(_listener())
     asyncio.create_task(_heartbeat())
     asyncio.create_task(_send_hello())
+    if net_transport is not None:
+        asyncio.create_task(
+            net_transport.watch(
+                {
+                    "on_session_start": _send_hello,
+                    "serve": lambda reader, idle_s: _serve_lines(reader, "network", idle_s),
+                    "chip_type": _chip_type,
+                    "flow_name": lambda: _current_flow_name,
+                }
+            )
+        )
     asyncio.get_event_loop().run_forever()
 
 

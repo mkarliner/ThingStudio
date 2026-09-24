@@ -138,7 +138,9 @@ _NAME_RE = re.compile(r"^[A-Za-z0-9_-]{1,100}$")
 # and not part of this module's own naming). Kept as a tuple rather than
 # derived from anything editor-side; this module doesn't import editor
 # code and isn't going to start now for two literal strings.
-_CREDENTIAL_TYPES = ("wifi", "mqtt-broker")
+# "board" (2026-09-24, WiFi transport): credentials/board/<hostname>.json -- { "password": ... }, the
+# password tcp_relay.py answers a board's challenge with. Named by the board's hostname.
+_CREDENTIAL_TYPES = ("wifi", "mqtt-broker", "board")
 
 
 class PersistedStoreError(Exception):

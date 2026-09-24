@@ -82,6 +82,11 @@ export const MessageType = {
   // Added 2026-09-23: editor -> device, stop the flow and the listener and leave the board at the
   // ">>>" prompt. Must match messages.py.
   STOP_TO_PROMPT: 13,
+  // Added 2026-09-24 (WiFi transport, MVP item 6 -- wifi-transport-scoping.md): editor -> device,
+  // save the board's hostname and/or WiFi-session password; the device answers
+  // BOARD_SETTINGS_RESULT, then a fresh HELLO on success. USB serial only. Must match messages.py.
+  SET_BOARD_SETTINGS: 14,
+  BOARD_SETTINGS_RESULT: 15,
 } as const;
 
 export type MessageTypeId = (typeof MessageType)[keyof typeof MessageType];
@@ -136,6 +141,16 @@ export interface HelloMessage {
   /** Added 2026-09-23: the board skipped its saved flow after repeated failed boots (listener.py's
    * safe mode). False when absent -- a runtime older than 2.0.0 never sends it. */
   readonly safeMode: boolean;
+  /** Added 2026-09-24 (WiFi transport). All absent from runtimes older than 3.0.0, which decode
+   * to null/false. `hostname` is the board's network name; `authRequired` is true once a WiFi
+   * password is set (which also switches the WiFi transport on), `authScheme` names how it's
+   * checked; `hasWifi` means the firmware has network.WLAN; `networkAddress` is the IP the board is
+   * listening on while its WiFi transport is up. */
+  readonly hostname: string | null;
+  readonly authRequired: boolean;
+  readonly authScheme: string | null;
+  readonly hasWifi: boolean;
+  readonly networkAddress: string | null;
 }
 
 /**
@@ -330,6 +345,22 @@ export interface StopToPromptMessage {
   readonly type: "STOP_TO_PROMPT";
 }
 
+/** Editor -> device, over USB serial only. Any field left out is unchanged. `password` sets a new
+ * one (8-64 characters); `clearPassword` removes it, which switches the WiFi transport off. */
+export interface SetBoardSettingsMessage {
+  readonly type: "SET_BOARD_SETTINGS";
+  readonly hostname: string | null;
+  readonly password: string | null;
+  readonly clearPassword: boolean;
+}
+
+/** Device -> editor, the answer to SET_BOARD_SETTINGS. `error` says what was wrong when !ok. */
+export interface BoardSettingsResultMessage {
+  readonly type: "BOARD_SETTINGS_RESULT";
+  readonly ok: boolean;
+  readonly error: string | null;
+}
+
 export type Message =
   | HelloMessage
   | DeployMessage
@@ -343,7 +374,9 @@ export type Message =
   | HelloRequestMessage
   | NodeStatusMessage
   | ExecMessage
-  | StopToPromptMessage;
+  | StopToPromptMessage
+  | SetBoardSettingsMessage
+  | BoardSettingsResultMessage;
 
 export const MESSAGE_TYPE_BY_NAME: Record<Message["type"], MessageTypeId> = {
   HELLO: MessageType.HELLO,
@@ -359,6 +392,8 @@ export const MESSAGE_TYPE_BY_NAME: Record<Message["type"], MessageTypeId> = {
   NODE_STATUS: MessageType.NODE_STATUS,
   EXEC: MessageType.EXEC,
   STOP_TO_PROMPT: MessageType.STOP_TO_PROMPT,
+  SET_BOARD_SETTINGS: MessageType.SET_BOARD_SETTINGS,
+  BOARD_SETTINGS_RESULT: MessageType.BOARD_SETTINGS_RESULT,
 };
 
 export const MESSAGE_NAME_BY_TYPE: Record<MessageTypeId, Message["type"]> = {
@@ -375,4 +410,6 @@ export const MESSAGE_NAME_BY_TYPE: Record<MessageTypeId, Message["type"]> = {
   [MessageType.NODE_STATUS]: "NODE_STATUS",
   [MessageType.EXEC]: "EXEC",
   [MessageType.STOP_TO_PROMPT]: "STOP_TO_PROMPT",
+  [MessageType.SET_BOARD_SETTINGS]: "SET_BOARD_SETTINGS",
+  [MessageType.BOARD_SETTINGS_RESULT]: "BOARD_SETTINGS_RESULT",
 };

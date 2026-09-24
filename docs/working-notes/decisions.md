@@ -183,3 +183,8 @@ convention, and aren't worth indexing here.
 Console command box (EXEC), stop to the MicroPython prompt and restart (STOP_TO_PROMPT), boot-loop safe mode,
 and "Remove flow…" that retries through resets; runtime 2.0.0. 1 entry:
 `docs/working-notes/decisions/board-recovery-and-commands.md`.
+
+## WiFi transport (MVP item 6)
+
+Backend-relayed TCP link, flow owns WiFi, password auth set over USB (serial exempt, WiFi off until set),
+board-level hostname, UDP probe for the board list; built 2026-09-24, runtime 3.0.0. 6 entries: `docs/working-notes/decisions/wifi-transport.md`.

@@ -20,3 +20,5 @@ Pick "unmanaged" on the WiFi config when you don't want this node issuing its ow
 If no connection is ever made, this node just reports disconnected, the same as any other failed connect — provisioning changes how the interface gets its credentials, not how wifi_status reports on them.
 
 Shows a connection-status dot on the canvas (see [Canvas basics](../canvas-basics.md#node-status)) once connected to a device.
+
+While this node has the board on a network, the editor can connect to the board over WiFi. See [Connecting over WiFi](../wifi-connection.md).

@@ -90,6 +90,33 @@ export const INSTALL_IDLE_TIMEOUT_MS = 30_000;
  * idle timer allows that much plus a margin. */
 export const INSTALL_CATCH_WAIT_MS = 75_000;
 
+/** One board that answered the WiFi transport's UDP probe (backend tcp_relay.discover). */
+export interface NetworkBoardInfo {
+  readonly hostname: string;
+  readonly address: string;
+  readonly port: number;
+  readonly chip: string;
+  readonly flow: string | null;
+  /** False when the board has no password set, so it won't accept a network connection yet. */
+  readonly wifiTransport: boolean;
+  /** Another editor already has a network session open with it. */
+  readonly busy: boolean;
+}
+
+/** connectNetwork()'s rejection. `code` is tcp_relay.py's TcpRelayError.code: "no_password" (none
+ * saved for this board -- ask the user), "auth_failed", "busy", "board_no_password", "timeout",
+ * "network". `hostname` is the board's own name when the handshake got far enough to learn it. */
+export class NetworkConnectError extends Error {
+  constructor(
+    message: string,
+    readonly code: string,
+    readonly hostname: string | null,
+  ) {
+    super(message);
+    this.name = "NetworkConnectError";
+  }
+}
+
 export class InstallRuntimeError extends Error {
   constructor(
     message: string,
@@ -108,6 +135,9 @@ export class BackendTransport implements DeviceTransport {
   #connectedPort: string | null = null;
   #pendingListPorts: { resolve(ports: SerialPortInfo[]): void; reject(err: unknown): void }[] = [];
   #pendingConnect: { resolve(): void; reject(err: Error): void } | null = null;
+  #pendingDiscover: { resolve(boards: NetworkBoardInfo[]): void; reject(err: unknown): void }[] = [];
+  #connectedIsNetwork = false;
+  #connectedHostname: string | null = null;
   #pendingRemoveFlow: { resolve(): void; reject(err: Error): void; onStatus?: (text: string) => void } | null = null;
   #pendingInstallRuntime: {
     resolve(): void;
@@ -208,6 +238,42 @@ export class BackendTransport implements DeviceTransport {
     });
     this.#ws.send(JSON.stringify({ type: "connect", port, baudrate: baudRate }));
     return p;
+  }
+
+  /** WiFi transport (2026-09-24): asks the backend to open an authenticated network session with
+   * the board at `host` (a `name.local` hostname or an IP) and relay it exactly like a serial port.
+   * `password` is only needed when the backend has none saved for that board -- a rejection with
+   * code "no_password" says so. Rejects with NetworkConnectError. */
+  async connectNetwork(host: string, tcpPort = 7462, password?: string): Promise<void> {
+    if (!this.#ws) throw new Error("BackendTransport is not open -- call open() first");
+    if (this.#pendingConnect) throw new Error("BackendTransport already has a connect in flight");
+    const p = new Promise<void>((resolve, reject) => {
+      this.#pendingConnect = { resolve, reject };
+    });
+    const msg: Record<string, unknown> = { type: "connect", host, tcpPort };
+    if (password !== undefined) msg.password = password;
+    this.#ws.send(JSON.stringify(msg));
+    return p;
+  }
+
+  /** Lists boards on the local network that answer the WiFi transport's probe. Takes about 1.5 s. */
+  async discoverBoards(): Promise<NetworkBoardInfo[]> {
+    if (!this.#ws) throw new Error("BackendTransport is not open -- call open() first");
+    const p = new Promise<NetworkBoardInfo[]>((resolve, reject) => {
+      this.#pendingDiscover.push({ resolve, reject });
+    });
+    this.#ws.send(JSON.stringify({ type: "discover" }));
+    return p;
+  }
+
+  /** The board's own hostname while connected over the network (from its WiFi challenge), else null. */
+  get connectedHostname(): string | null {
+    return this.connectedOverNetwork ? this.#connectedHostname : null;
+  }
+
+  /** True while connected to a board over the network rather than serial. */
+  get connectedOverNetwork(): boolean {
+    return this.#connectedPort !== null && this.#connectedIsNetwork;
   }
 
   /** Asks the backend to push a fresh device-runtime onto `port` via raw
@@ -335,6 +401,8 @@ export class BackendTransport implements DeviceTransport {
     }
     this.#ws = null;
     this.#connectedPort = null;
+    this.#connectedIsNetwork = false;
+    for (const waiter of this.#pendingDiscover.splice(0)) waiter.reject(new Error("disconnected before the backend responded"));
     // Reject a still-outstanding connectPort()/listPorts() rather than
     // leaving it hanging forever -- the socket that would have answered it
     // is gone now.
@@ -413,19 +481,35 @@ export class BackendTransport implements DeviceTransport {
           if (this.#pendingConnect) {
             const waiter = this.#pendingConnect;
             this.#pendingConnect = null;
-            waiter.reject(new Error(m.error));
+            waiter.reject(
+              typeof m.errorCode === "string"
+                ? new NetworkConnectError(m.error, m.errorCode, typeof m.hostname === "string" ? m.hostname : null)
+                : new Error(m.error),
+            );
           }
         }
         if (m.connected === true && typeof m.port === "string") {
           this.#connectedPort = m.port;
+          this.#connectedIsNetwork = m.network === true;
+          this.#connectedHostname = typeof m.hostname === "string" ? m.hostname : null;
           if (this.#pendingConnect) {
             const waiter = this.#pendingConnect;
             this.#pendingConnect = null;
             waiter.resolve();
           }
         } else if (m.connected === false) {
+          // Unasked-for (a user disconnect() clears #connectedPort first): the board or the link
+          // went away mid-session -- a network board reset or dropped off WiFi, a serial read error.
+          const wasConnected = this.#connectedPort !== null;
           this.#connectedPort = null;
+          this.#connectedIsNetwork = false;
+          if (wasConnected && !this.#closing) this.#events.onDisconnect?.(undefined);
         }
+        break;
+      }
+      case "boards": {
+        const waiter = this.#pendingDiscover.shift();
+        waiter?.resolve(Array.isArray(m.boards) ? (m.boards as NetworkBoardInfo[]) : []);
         break;
       }
       case "install_runtime_result": {

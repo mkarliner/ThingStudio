@@ -145,6 +145,18 @@ export function decodeMessageBody(typeId: number, body: Uint8Array): Message {
       return { type: "EXEC", code: expectString(obj, "code", "EXEC") };
     case "STOP_TO_PROMPT":
       return { type: "STOP_TO_PROMPT" };
+    case "SET_BOARD_SETTINGS":
+      return {
+        type: "SET_BOARD_SETTINGS",
+        hostname: expectOptionalString(obj, "hostname", name),
+        password: expectOptionalString(obj, "password", name),
+        clearPassword: expectOptionalBool(obj, "clearPassword", name) ?? false,
+      };
+    case "BOARD_SETTINGS_RESULT": {
+      const ok = requirePresent(obj, "ok", name);
+      if (typeof ok !== "boolean") fail(name, `field "ok" must be a bool, got ${typeof ok}`);
+      return { type: "BOARD_SETTINGS_RESULT", ok, error: expectOptionalString(obj, "error", name) };
+    }
   }
 }
 
@@ -265,6 +277,11 @@ function validateHello(obj: Record<string, unknown>): Omit<HelloMessage, "type">
     freeFlashBytes: expectNonNegativeInt(obj, "freeFlashBytes", "HELLO"),
     freeRamBytes: expectNonNegativeInt(obj, "freeRamBytes", "HELLO"),
     safeMode: expectOptionalBool(obj, "safeMode", "HELLO") ?? false,
+    hostname: expectOptionalString(obj, "hostname", "HELLO"),
+    authRequired: expectOptionalBool(obj, "authRequired", "HELLO") ?? false,
+    authScheme: expectOptionalString(obj, "authScheme", "HELLO"),
+    hasWifi: expectOptionalBool(obj, "hasWifi", "HELLO") ?? false,
+    networkAddress: expectOptionalString(obj, "networkAddress", "HELLO"),
   };
 }
 

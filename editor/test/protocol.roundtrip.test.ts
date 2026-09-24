@@ -25,6 +25,11 @@ const SAMPLE_MESSAGES: Message[] = [
     freeFlashBytes: 3_500_000,
     freeRamBytes: 168_000,
     safeMode: false,
+    hostname: null,
+    authRequired: false,
+    authScheme: null,
+    hasWifi: false,
+    networkAddress: null,
   },
   {
     // Same message type, second variant: a board that DOES have a runtime-build
@@ -40,7 +45,18 @@ const SAMPLE_MESSAGES: Message[] = [
     freeFlashBytes: 757_760,
     freeRamBytes: 179_200,
     safeMode: true, // board in boot-loop safe mode (2026-09-23)
+    // WiFi transport fields (2026-09-24): a board with a password set, listening.
+    hostname: "ts-kitchen",
+    authRequired: true,
+    authScheme: "hmac-sha256-nonce",
+    hasWifi: true,
+    networkAddress: "192.168.1.42",
   },
+  // SET_BOARD_SETTINGS/BOARD_SETTINGS_RESULT (2026-09-24, WiFi transport).
+  { type: "SET_BOARD_SETTINGS", hostname: "ts-kitchen", password: "correct horse", clearPassword: false },
+  { type: "SET_BOARD_SETTINGS", hostname: null, password: null, clearPassword: true },
+  { type: "BOARD_SETTINGS_RESULT", ok: true, error: null },
+  { type: "BOARD_SETTINGS_RESULT", ok: false, error: "password must be 8-64 characters" },
   {
     type: "DEPLOY",
     bytecode: new Uint8Array([0x4d, 0x06, 0x00, 0x01, 0x02, 0x03]),

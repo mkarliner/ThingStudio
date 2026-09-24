@@ -300,6 +300,10 @@ async def test_serial_disconnect_mid_session_reports_structured_error_not_a_cras
         assert status["type"] == "status"
         assert "NODE_ERROR" in status["error"]
         assert "/dev/fake0" in status["error"]
+        # Then a plain "no longer connected" (2026-09-24), so the editor shows the board as gone
+        # rather than still connected to a dead link.
+        gone = await ws.receive_json()
+        assert gone == {"type": "status", "connected": False, "port": "/dev/fake0"}
 
         # The session should still be alive and respond to further control
         # messages -- one failed connection doesn't wedge the whole socket.

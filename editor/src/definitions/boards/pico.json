@@ -1,6 +1,7 @@
 {
   "name": "Raspberry Pi Pico",
   "processor": "rp2040",
+  "wifi": false,
   "match": ["Raspberry Pi Pico"],
   "pins": { "LED": 25 },
   "avoid": {
