@@ -1407,11 +1407,43 @@ function populateBoardSelect(): void {
 /** Recomputes the target from the Board menu and the last HELLO, publishes it for PropertyPanel,
  * and recompiles the preview against it. */
 function updateActiveTarget(): TargetResolution {
-  const resolution = resolveTarget(definitions, el<HTMLSelectElement>("boardSelect").value || "auto", lastHelloChipType);
+  const select = el<HTMLSelectElement>("boardSelect");
+  const choice = select.value || "auto";
+  const resolution = resolveTarget(definitions, choice, lastHelloChipType);
   activeTarget.value = resolution.target;
+  // Show what Auto found in the menu itself (Mike, 2026-09-24) by relabelling the Auto option, not by
+  // selecting the board: a real selection would become a manual pick and stop following the next board.
+  const autoOption = select.querySelector<HTMLOptionElement>('option[value="auto"]');
+  if (autoOption) {
+    autoOption.textContent =
+      choice !== "auto"
+        ? "Board: Auto"
+        : resolution.target
+          ? `Auto: ${resolution.target.board?.name ?? `${resolution.target.processor.name} (any board)`}`
+          : lastHelloChipType
+            ? "Auto: unknown board"
+            : "Board: Auto";
+  }
+  select.title = resolution.note;
+  updateNativeArchLabel();
   refreshPreview();
   return resolution;
 }
+
+/** Same idea for the Native arch menu: its Auto option shows the arch Auto would use ("Arch: xtensawin"). */
+function updateNativeArchLabel(): void {
+  const select = el<HTMLSelectElement>("nativeArchSelect");
+  const autoOption = select.querySelector<HTMLOptionElement>('option[value="auto"]');
+  if (!autoOption) return;
+  if (select.value !== "auto") {
+    autoOption.textContent = "Arch: Auto";
+    return;
+  }
+  const arch = currentNativeArch();
+  const known = activeTarget.value !== null || lastHelloChipType !== null;
+  autoOption.textContent = known ? `Arch: ${arch.arch}${arch.confirmed ? "" : " (unverified)"}` : "Arch: Auto";
+}
+el("nativeArchSelect").addEventListener("change", updateNativeArchLabel);
 
 function logTargetResolution(resolution: TargetResolution): void {
   logLine(`[board] ${resolution.note}`, resolution.target ? "ok" : "");

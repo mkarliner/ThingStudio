@@ -63,3 +63,17 @@ Status: detail file for `decisions.md`'s "Processor and board definitions" index
   (ESP32-C6). A test keeps the two in step for every built-in processor.
 - **Property panel.** Pin inputs' `max` follows the target (was a fixed 39 on 13 inputs), and a hint
   under each shows the board's label (`TFT_DC`) or "reserved" / "avoid" / "not on this board".
+- **2026-09-24 — Built-ins are copied into `~/.thingstudio/processors/` and `boards/` on backend start,
+  missing files only (Mike's call).** Mike wanted users to copy and modify the built-ins without the
+  repo. First draft rewrote a separate `~/.thingstudio/built-in/` reference folder on every start; Mike
+  preferred copying only missing files into the live folders, so a user edits a built-in in place and
+  recovers the original by deleting the file and restarting the backend. `builtin_reference.py`, called
+  from `__main__.main()` (not `create_app()`, so tests never write to a real home). Accepted cost: a
+  later version's fix to a built-in doesn't reach an existing copy, edited or not, until it's deleted.
+  To keep untouched copies quiet, the editor only logs "replaces the built-in" when a user file's
+  content differs from the built-in. Runs at backend start because there is no install step yet;
+  packaging (MVP item 7) must ship `editor/src/definitions/` alongside the backend. No built-in presets
+  exist yet; if some are added they should follow the same copy-missing rule.
+- **2026-09-24 — Auto shows its choice in the Board menu** by relabelling the Auto option ("Auto:
+  LOLIN S2 Mini", "Auto: ESP32 (any board)", "Auto: unknown board"), not by selecting that board.
+  Selecting it would turn Auto into a manual pick that stops following the next board connected.

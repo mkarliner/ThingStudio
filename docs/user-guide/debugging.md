@@ -58,11 +58,11 @@ The flow on your canvas isn't affected.
 
 When a node raises an exception on the device, the board reports which node and what went wrong. Every network node (`udp_send`, `udp_receive`, `http_request`, `mqtt_publish`, `mqtt_subscribe`) follows the same convention for its own errors: the operation and the host/port it was talking to are named directly in the message, not left for you to guess from a bare exception. If you see a raw, unattributed error with no context from a network node, that's worth reporting — every network node in this project is meant to wrap its own errors before they reach you.
 
-## Native arch (the "Native arch" dropdown)
+## Native arch (the "Arch" menu)
 
 A few nodes (currently `display_spi`'s `gs4`/`gs2`/`mono` frame formats) compile part of their code to native machine code, not portable bytecode. That needs the right target architecture for your board's chip.
 
-The **Native arch** dropdown in the toolbar defaults to **Auto**, which uses the processor of the board in the [Board menu](boards.md). If Auto picks the wrong one, choose your board's chip directly from the list instead.
+The **Arch** menu in the toolbar defaults to Auto, which uses the processor of the board in the [Board menu](boards.md) and shows the result, for example **Arch: xtensawin**. If Auto picks the wrong one, choose your board's chip directly from the list instead.
 
 If Deploy fails with an architecture or native-module error, that's the sign to check this dropdown — pick your board's chip explicitly and redeploy.
 

@@ -1,0 +1,69 @@
+# SPDX-License-Identifier: Apache-2.0
+# backend/src/thingstudio_backend/builtin_reference.py
+#
+# Copies the built-in processor and board definitions into
+# ~/.thingstudio/processors/ and ~/.thingstudio/boards/ on backend start, so
+# a user can see and change them without a copy of the repo (Mike,
+# 2026-09-24).
+#
+# Only MISSING files are copied; an existing file is never touched (Mike's
+# call, 2026-09-24). So a user edits a built-in in place, and gets the
+# original back by deleting the file and restarting the backend. The known
+# cost: when a later version changes a built-in, a user's existing copy
+# (edited or not) still wins in the editor until they delete it. The editor
+# only reports a user file as replacing a built-in when its content actually
+# differs (definitions.ts), so untouched copies stay quiet.
+#
+# Runs at backend start rather than "install time" because Thingstudio has
+# no install step of its own yet (pip install -e + a build). A failure here
+# is logged and ignored: it must never stop the editor from starting, and
+# the editor has its own bundled copy of the built-ins anyway.
+#
+# Source: editor/src/definitions/ in the repo, located the same way
+# editor_site.py finds editor/dist and runtime_installer.py finds
+# device-runtime/src. Packaging (MVP item 7) has to carry these files too.
+
+from __future__ import annotations
+
+import logging
+from pathlib import Path
+
+log = logging.getLogger(__name__)
+
+KINDS = ("processors", "boards")
+
+
+def default_definitions_dir() -> Path:
+    """backend/src/thingstudio_backend/builtin_reference.py -> repo root -> editor/src/definitions."""
+    return Path(__file__).resolve().parents[3] / "editor" / "src" / "definitions"
+
+
+def copy_missing_builtins(data_dir: Path, source_dir: Path | None = None) -> list[str]:
+    """Copies each built-in definition into <data_dir>/<kind>/ unless a file
+    with that name is already there. Returns the "<kind>/<file>" paths copied.
+    Raises OSError on failure; the caller decides whether that's fatal."""
+    source_dir = source_dir or default_definitions_dir()
+    if not all((source_dir / kind).is_dir() for kind in KINDS):
+        raise OSError(f"built-in definitions not found at {source_dir}")
+    copied: list[str] = []
+    for kind in KINDS:
+        out = data_dir / kind
+        out.mkdir(parents=True, exist_ok=True)
+        for src in sorted((source_dir / kind).glob("*.json")):
+            dest = out / src.name
+            if dest.exists():
+                continue
+            dest.write_bytes(src.read_bytes())
+            copied.append(f"{kind}/{src.name}")
+    return copied
+
+
+def seed_builtin_definitions(data_dir: Path, source_dir: Path | None = None) -> None:
+    """copy_missing_builtins, logging instead of raising."""
+    try:
+        copied = copy_missing_builtins(data_dir, source_dir)
+    except OSError as exc:
+        log.warning("could not copy built-in board/processor definitions into %s: %s", data_dir, exc)
+        return
+    if copied:
+        log.info("copied built-in definitions into %s: %s", data_dir, ", ".join(copied))

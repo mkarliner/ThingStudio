@@ -23,7 +23,9 @@ from pathlib import Path
 from aiohttp import web
 
 from .app import create_app
+from .builtin_reference import seed_builtin_definitions
 from .middleware import DEFAULT_ALLOWED_HOSTS
+from .persisted_store import PersistedStore
 
 _LOOPBACK_HOSTS = frozenset({"127.0.0.1", "localhost", "::1"})
 
@@ -103,6 +105,9 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     allowed_hosts = DEFAULT_ALLOWED_HOSTS | frozenset(args.allowed_hosts or ())
+    # Copies any missing built-in board/processor files into ~/.thingstudio (builtin_reference.py).
+    # Here rather than in create_app() so tests building an app never write to a real home folder.
+    seed_builtin_definitions(PersistedStore(args.data_dir).base_dir)
     app = create_app(allowed_hosts=allowed_hosts, static_dir=args.static_dir, data_dir=args.data_dir, docs_dir=args.docs_dir)
     url = f"http://{'[::1]' if args.host == '::1' else args.host}:{args.port}/"
     if not args.no_browser:

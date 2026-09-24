@@ -2,11 +2,11 @@
 
 Thingstudio checks every pin in a flow against the board the flow is for. If a pin doesn't exist on that board, or using it would crash the board, the compile stops and says why.
 
-Each board has a definition file, and so does each processor. Thingstudio comes with definitions for the boards and processors below. You can [add your own](#adding-a-board).
+Each board has a definition file, and so does each processor. Thingstudio comes with definitions for the boards and processors below. You can [change them or add your own](#your-definition-files).
 
 ## Picking the board
 
-Pick the board a flow is for from the **Board** menu in the toolbar. The default, **Auto**, uses the connected board. Auto recognises a board by the name MicroPython reports for it.
+Pick the board a flow is for from the **Board** menu in the toolbar. The default, **Auto**, uses the connected board. Auto recognises a board by the name MicroPython reports for it, and the menu shows what it found, for example **Auto: LOLIN S2 Mini**.
 
 Some boards report only their processor. The CYD, for example, reports itself as a generic ESP32. Pick those boards from the menu by hand. You can also pick a processor without a board, for example **ESP32 (any board)**.
 
@@ -56,7 +56,15 @@ The ESP32 runs SPI at up to 27 MHz on most pins. Faster speeds need the bus's ow
 
 On the RP2040 and RP2350, each SPI and I2C bus can only use certain pins. The compile error lists the pins that work.
 
-The definition files list every pin to avoid, with the reason. They're in `editor/src/definitions/` in the Thingstudio source.
+The definition files list every pin to avoid, with the reason.
+
+## Your definition files
+
+Definition files live in `~/.thingstudio/boards/` and `~/.thingstudio/processors/`. When Thingstudio starts, it copies in any built-in file that's missing, so you can read and edit them there.
+
+To change a built-in board, edit its file. To get the original back, delete the file and restart Thingstudio. A newer version of Thingstudio doesn't update a file you already have. Delete it to get the new one.
+
+Thingstudio reads these files when the editor starts, when you connect, and when you deploy. If a file has a mistake, it isn't loaded and the built-in is used instead. The console says what's wrong, and the Board menu lists the file under **Invalid files**.
 
 ## Adding a board
 
@@ -88,11 +96,9 @@ Pin lists take numbers and ranges: `[0, 2, "4-7"]`. In `reserved` and `avoid`, t
 
 To find the name MicroPython reports, connect the board and look for `chipType` in the console's `[HELLO]` line. The board name is the part before " with ".
 
-Thingstudio reads your files when the editor starts, when you connect, and when you deploy. A file with the same name as a built-in replaces it. If a file has a mistake, it isn't loaded. The console says what's wrong, and the Board menu lists it under **Invalid files**.
-
 ## Adding a processor
 
-Save a JSON file in `~/.thingstudio/processors/`, named the same way as a board file. The built-in files in `editor/src/definitions/processors/` are good examples.
+Save a JSON file in `~/.thingstudio/processors/`, named the same way as a board file. The built-in files in that folder are good examples.
 
 | Field | Meaning |
 | --- | --- |

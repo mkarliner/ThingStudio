@@ -354,8 +354,9 @@ function errorText(err: unknown): string {
 /**
  * Validates and merges definition files. `builtin` first, then `user`: a
  * valid user file replaces the built-in with the same id (reported in
- * `overrides`). An invalid user file does NOT fall back silently to the
- * built-in it would have replaced -- it's reported in `problems`, and the
+ * `overrides` only when its content differs). An invalid user file does
+ * NOT fall back silently to the built-in it would have replaced -- it's
+ * reported in `problems`, and the
  * built-in stays in use, so the problem list is the one place to look.
  * Processors are resolved before boards, since a board names its processor.
  */
@@ -364,7 +365,9 @@ export function buildDefinitionSet(builtin: readonly RawDefinitionFile[], user: 
   const overrides: { kind: DefinitionKind; id: string; source: string }[] = [];
   const processors = new Map<string, ProcessorDef>();
   const boards = new Map<string, BoardDef>();
-  const builtinIds = new Set(builtin.map((f) => `${f.kind}:${f.id}`));
+  // The backend copies every missing built-in into the user folders (builtin_reference.py), so most
+  // user files are untouched copies. Only one that differs from its built-in counts as an override.
+  const builtinData = new Map(builtin.map((f) => [`${f.kind}:${f.id}`, JSON.stringify(f.data)]));
 
   const ordered = [...builtin, ...user];
   const tryAdd = (file: RawDefinitionFile): void => {
@@ -375,7 +378,8 @@ export function buildDefinitionSet(builtin: readonly RawDefinitionFile[], user: 
     try {
       if (file.kind === "processor") processors.set(file.id, parseProcessor(file.id, file.data));
       else boards.set(file.id, parseBoard(file.id, file.data, processors));
-      if (!builtin.includes(file) && builtinIds.has(`${file.kind}:${file.id}`)) {
+      const original = builtinData.get(`${file.kind}:${file.id}`);
+      if (!builtin.includes(file) && original !== undefined && original !== JSON.stringify(file.data)) {
         overrides.push({ kind: file.kind, id: file.id, source: file.source });
       }
     } catch (err) {

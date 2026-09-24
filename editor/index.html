@@ -52,8 +52,8 @@
   #backendPortSelect, #flowSelect { max-width: 180px; }
   /* Its options carry long explanatory labels; without a cap the closed select sizes to the longest
      one and pushes the toolbar onto extra rows. */
-  #nativeArchSelect { max-width: 120px; }
-  #boardSelect { max-width: 160px; }
+  #nativeArchSelect { max-width: 180px; }
+  #boardSelect { max-width: 260px; }
   .pill { padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border); font-size: 11px; }
   .pill.connected { border-color: var(--good); color: var(--good); }
   .pill.disconnected { border-color: var(--bad); color: var(--bad); }
@@ -179,7 +179,7 @@
       <option value="auto" selected>Board: Auto</option>
     </select>
     <select id="nativeArchSelect" title="mpy-cross -march target for @micropython.viper/@micropython.native code (e.g. display_spi's gs4/gs2/mono formats) -- only matters if a node in this flow actually uses one. Auto detects from the connected board's HELLO; override if Auto guesses wrong or no board is connected yet.">
-      <option value="auto" selected>Native arch: Auto</option>
+      <option value="auto" selected>Arch: Auto</option>
     </select>
     <button id="btnDeploy" disabled class="primary">Compile → Deploy</button>
     </div>

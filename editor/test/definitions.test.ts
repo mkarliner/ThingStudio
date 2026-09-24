@@ -139,6 +139,13 @@ describe("definition file validation", () => {
     expect(set.overrides).toEqual([{ kind: "board", id: "pico", source: "~/.thingstudio/boards/pico.json" }]);
   });
 
+  it("doesn't report an untouched copy of a built-in as an override", () => {
+    const pico = BUILTIN_DEFINITION_FILES.find((f) => f.kind === "board" && f.id === "pico")!;
+    const set = buildDefinitionSet(BUILTIN_DEFINITION_FILES, [user("board", "pico", JSON.parse(JSON.stringify(pico.data)))]);
+    expect(set.overrides).toEqual([]);
+    expect(set.problems).toEqual([]);
+  });
+
   it("keeps the built-in and reports the problem when a replacing user file is invalid", () => {
     const set = buildDefinitionSet(BUILTIN_DEFINITION_FILES, [user("board", "pico", { name: "My Pico" })]);
     expect(set.boards.get("pico")!.name).toBe("Raspberry Pi Pico");
