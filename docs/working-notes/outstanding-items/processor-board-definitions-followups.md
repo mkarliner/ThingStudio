@@ -12,12 +12,17 @@ None of these block MVP item 4; each is a small, separate change.
 - **CYD pins beyond the display are from community pinouts, not tested here:** touch (25/32/39/33/36),
   SD (18/23/19/5), RGB LED (4/16/17, active low), LDR 34, speaker 26. Check on a real unit and correct
   `editor/src/definitions/boards/cyd.json`.
-- **CYD display on SPI bus 1 above 27 MHz is untested.** GPIO 14/13 are ESP32 SPI id 1's fast pins, so
-  `spiBus: 1` should allow up to 80 MHz where `spiBus: 2` crashed at 40 MHz. The pin check allows it; a
-  real unit hasn't run it.
+- ~~CYD display on SPI bus 1 above 27 MHz is untested.~~ **Confirmed 2026-09-24:** 40 MHz on `spiBus: 1`
+  renders on a real CYD (`learnings/hardware-bringup-hil-rig.md`). Higher speeds still untried.
 - **RP2350 native arch** (`armv7emsp`) is still community-sourced (`decisions/board-aware-compile.md`);
   the processor file carries `nativeArchConfirmed: false`.
 - **No board-level defaults yet.** A board file could seed a new `display_spi` node's pins and speed
   (the "pick a board, seed several nodes" idea in `board-processor-reference-data.md`). Not built.
 - **ESP32-C6 and other chips have no processor file.** `inferNativeArch()` still covers C6's arch, but
   pin checks fall back to 0-48 for it.
+- **The Arch menu keeps a manual pick across board changes** (raised 2026-09-24). The Board menu now drops a
+  pick for a different processor back to Auto on connect (`target.ts`'s `choiceForConnectedBoard`); the Arch
+  menu's manual override doesn't, so it can still compile native code for the previous board's arch.
+- **The backend's stale-build banner and log say `npm run build` / `mkdocs build`** (raised 2026-09-24). Since
+  the Makefile, `mkdocs` lives only in `.venv`, so `make` is the command to show. `editor_site.py`,
+  `docs_site.py` and their tests assert the old strings.
