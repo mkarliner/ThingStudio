@@ -32,7 +32,7 @@ Top-level platform calls: MicroPython over CircuitPython; Rete.js over Litegraph
 
 ## Repo / tooling
 
-Monorepo structure; TypeScript editor / Python device-runtime split; Vite + Vitest; `ruff` config; Apache-2.0 license; the "harness" → `runtime`/`listener` rename; today's CLAUDE.md/decisions.md/learnings.md context-size restructuring. 7 entries: `docs/working-notes/decisions/repo-tooling.md`.
+Monorepo structure; TypeScript editor / Python device-runtime split; Vite + Vitest; `ruff` config; Apache-2.0 license; the "harness" → `runtime`/`listener` rename; today's CLAUDE.md/decisions.md/learnings.md context-size restructuring; the top-level Makefile (2026-09-24). 8 entries: `docs/working-notes/decisions/repo-tooling.md`.
 
 ## Backend (minimal build + persisted-data protocol + editor-backend wiring landed 2026-09-07; admin-API fetch client + CORS landed 2026-09-08; first real-hardware DTR/RTS pass landed 2026-09-08; flow storage reverted same day to the File System Access picker, not backend-managed at all; complete for the moment as of 2026-09-08, no further per-board passes planned — see `outstanding-items.md`)
 

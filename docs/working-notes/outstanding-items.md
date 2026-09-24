@@ -217,6 +217,10 @@ inline, not a fresh check.
 
 ## Docs / process
 
+- **MkDocs future -- stay on 1.x, Zensical likely later (2026-09-24).** MkDocs 1.x is unmaintained, 2.0 is an
+  incompatible rewrite Material can't use, Material reportedly enters maintenance mode 2026-11-05. No action until
+  a build breaks or packaging fixes the toolchain. ([detail](outstanding-items/mkdocs-future.md))
+
 - **User docs are missing an execution-model explanation.** `mikes-questions-and-points.md`'s "write explaination of
   node flow operation" ask -- `canvas-basics.md`'s Wiring section covers connection mechanics (port types,
   fan-in/fan-out, refused connections) but not the underlying execution model: each source node (`inject`, `timer`,

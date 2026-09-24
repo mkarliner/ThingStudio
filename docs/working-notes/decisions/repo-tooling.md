@@ -19,3 +19,10 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
 - **"Harness" retired as a name** for the on-device listener — too easily
   misread as agent-harness. Real code uses `runtime`/`listener`. Doesn't
   touch the POCs' own frozen `harness.py`. `repo-structure-and-conventions.md`.
+- **2026-09-24 -- Top-level `Makefile` is the build entry point** (`make`, `make run`, `make test`),
+  replacing the three hand-run install/build lines in README and Getting started. Rebuilds only what's
+  out of date (editor sources, docs sources, lockfile, `pyproject.toml`, and the device-runtime SHA the
+  editor bakes in); backend and mkdocs live in a repo-local `.venv`; mkdocs pins moved to
+  `docs/requirements.txt`, shared with `docs.yml`. Kept to GNU make 3.81 (macOS's). `make` also symlinks
+  `thingstudio-backend` into the first writable `~/.local/bin`/`/opt/homebrew/bin`/`/usr/local/bin` on PATH
+  (never replacing a non-link), so it can be started straight after a build.

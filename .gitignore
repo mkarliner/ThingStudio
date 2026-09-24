@@ -25,3 +25,7 @@ editor/test/**/*.js
 # mkdocs build output (mkdocs.yml's site_dir) -- served locally by the backend at /docs/
 # (docs_site.py), published online by .github/workflows/docs.yml. Never committed.
 site/
+
+# Makefile: the backend/docs-tooling venv and its build stamps. Never committed.
+.venv/
+.build/

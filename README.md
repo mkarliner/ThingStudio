@@ -33,14 +33,15 @@ MicroBlocks, XOD, MicroFlo, and ESPHome/Tasmota: design doc §1–§2.
 
 ## Try it
 
-From a copy of this repository (Python 3.10+, Node.js):
+From a copy of this repository (Python 3.10+, Node.js 22.12+, make):
 
 ```sh
-pip install -e backend
-cd editor && npm ci && npm run build && cd ..
-pip install mkdocs==1.6.1 mkdocs-material==9.7.7 && mkdocs build
-thingstudio-backend
+make                  # build the editor and docs, install into .venv, link the command onto PATH
+thingstudio-backend   # start it (or: make run)
 ```
+
+`make` only rebuilds what changed; `make test` runs the editor and backend tests. The
+Makefile's header lists the other targets.
 
 The editor opens at `http://127.0.0.1:8765/`; the **Docs** button opens the
 user guide, served locally. Start with its Getting started page
@@ -49,7 +50,7 @@ board doesn't have it yet.
 
 **Working on the editor itself:** `cd editor && npm run dev` serves it with
 hot reload on Vite's own port, talking to a separately started backend on
-its default port (8765). Rebuild (`npm run build`) before relying on the
+its default port (8765). Rebuild (`make`) before relying on the
 backend-served copy — the backend warns at startup if `editor/dist` is
 older than `editor/src`.
 

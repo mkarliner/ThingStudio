@@ -115,6 +115,7 @@ himself in a real Terminal, rather than running `git commit` from the sandbox. F
 
 Same shared-mount hazard as the git-lock issue above, different symptom: never run `npm ci`/`npm install`,
 `vite build`, `vite dev`, or `vitest`/`npm test` from the agent sandbox directly against the live-mounted `editor/`.
+`make` counts too: every target except `clean`/`distclean` runs npm, and it builds a `.venv` of Linux binaries.
 The sandbox (`device_bash`) is a Linux VM; Mike's Mac is darwin — packages with platform-specific native bindings
 (rollup, esbuild/rolldown, etc.) get installed as their Linux build into the shared `node_modules` tree, breaking the
 identical files on Mike's Mac afterward. Confirmed twice — full incident detail:

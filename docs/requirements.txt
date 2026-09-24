@@ -1,0 +1,5 @@
+# Docs build tooling, used by the Makefile and .github/workflows/docs.yml.
+# Versions must match docs/third-party-licenses.md's "Documentation build tooling" entry.
+# Stay on mkdocs 1.x: 2.0 is an incompatible rewrite (docs/working-notes/outstanding-items/mkdocs-future.md).
+mkdocs==1.6.1
+mkdocs-material==9.7.7

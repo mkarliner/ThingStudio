@@ -6,21 +6,25 @@ You need a supported board with [MicroPython installed](installing-micropython.m
 
 ## Install
 
-Packaged installers aren't available yet. For now, install from a copy of the repository. You need Python 3.10 or later, and Node.js to build the editor.
+Packaged installers aren't available yet. For now, install from a copy of the repository. You need Python 3.10 or later, Node.js 22.12 or later, and `make`. On a Mac, `make` comes with the Xcode command line tools (`xcode-select --install`).
+
+In the repository folder, run:
 
 ```sh
-pip install -e backend
-cd editor && npm ci && npm run build && cd ..
-pip install mkdocs==1.6.1 mkdocs-material==9.7.7 && mkdocs build
+make
 ```
 
-Run the last two lines again after updating the repository.
+This builds the editor and these docs, and installs Thingstudio into a `.venv` folder. It also puts the `thingstudio-backend` command on your PATH. Run `make` again after updating the repository. It only rebuilds what changed.
+
+If your `python3` is older than 3.10, name a newer one: `make PYTHON=python3.12`.
 
 ## Start
 
 ```sh
 thingstudio-backend
 ```
+
+If your terminal says the command isn't found just after the first `make`, run `hash -r` or open a new terminal. If `make` said it couldn't put the command on your PATH, use `make run` instead.
 
 The editor opens in your browser at `http://127.0.0.1:8765/`. Leave the terminal open while you work; press Ctrl-C there to stop Thingstudio. Add `--no-browser` if you'd rather open the page yourself.
 
