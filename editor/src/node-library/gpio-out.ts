@@ -13,7 +13,7 @@
 // input and an output would silently dedup onto ONE wrongly-configured
 // Pin object instead of two independently-correct ones.
 
-import { CompileError } from "../compiler/errors.js";
+import { checkPin } from "../definitions/pin-check.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, NodeDefinition, SinkCodegenResult } from "../compiler/node-definition.js";
 
@@ -32,10 +32,7 @@ export const gpioOutNode: NodeDefinition = {
     inputs: [{ name: "signal", type: "bool" }],
   },
   codegenSink(node: GraphNode, ctx: CodegenContext): SinkCodegenResult {
-    const pin = Math.round(Number(node.properties.pin));
-    if (!Number.isFinite(pin) || pin < 0 || pin > 39) {
-      throw new CompileError(`gpio_out pin ${String(node.properties.pin)} is out of range (0-39)`);
-    }
+    const pin = checkPin(ctx, "gpio_out pin", node.properties.pin, "output");
     const pinVar = `_pin_${pin}`;
     return {
       imports: ["import machine"],

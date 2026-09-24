@@ -129,6 +129,9 @@ import {
 } from "./board-diagnosis.js";
 import { explainBackendConnectError } from "./connect-error-help.js";
 import { NATIVE_ARCH_OPTIONS, inferNativeArch } from "./native-arch.js";
+import { BUILTIN_DEFINITION_FILES } from "../definitions/builtin.js";
+import { buildDefinitionSet, userDefinitionFiles, type DefinitionSet } from "../definitions/definitions.js";
+import { resolveTarget, type TargetResolution } from "../definitions/target.js";
 import type { Message, NodeStatusMessage, ProtocolVersion } from "../protocol/messages.js";
 import { checkRuntimeBuild, decideDeploy } from "../protocol/version.js";
 import { ClassicPreset } from "rete";
@@ -138,7 +141,7 @@ import { functionNode as functionNodeDefinition } from "../node-library/function
 import { DRAG_MIME, CUSTOM_DRAG_MIME, type NodeKind } from "./rete/palette.js";
 import { toGraphData, socketIndex } from "./rete/graph-adapter.js";
 import { CONFIG_TYPES } from "./rete/config-types.js";
-import { propertyVersion, configs as configsStore, replaceAllConfigs, clearConfigs, backendWsUrl, fireInjectNode, updateConfig } from "./rete/store.js";
+import { propertyVersion, configs as configsStore, replaceAllConfigs, clearConfigs, backendWsUrl, fireInjectNode, updateConfig, activeTarget } from "./rete/store.js";
 import { getCustomNodePackage, listCustomNodeDefinitions } from "./rete/custom-nodes-store.js";
 import { assignNodeToActivePane, paneOfNode, replacePanesFromFlowFile, resetPanes, setActivePane, panes as panesStore } from "./rete/panes-store.js";
 import PaletteSidebar from "./rete/PaletteSidebar.vue";
@@ -155,7 +158,7 @@ import {
   type FlowFileConfig,
   type CanvasNodeSnapshot,
 } from "../flow-file/flow-file.js";
-import { DEFAULT_BACKEND_WS_URL, backendHttpBaseUrl, initialBackendWsUrl, slugifyFlowName, getCredential, type CredentialType } from "../flow-file/admin-api-client.js";
+import { DEFAULT_BACKEND_WS_URL, backendHttpBaseUrl, initialBackendWsUrl, slugifyFlowName, getCredential, listDefinitions, type CredentialType } from "../flow-file/admin-api-client.js";
 // slugifyFlowName is reused here purely for a nicer suggested filename in
 // the save dialog below -- its own header's reasoning for why a display
 // name isn't a valid storage key applies just as well to a suggested
@@ -859,6 +862,10 @@ let lastNodeLineRanges: NodeLineRange[] = [];
 // compile.ts itself.
 let lastWifiProvision: { selfProvision: boolean; allowReprovision: boolean } | null = null;
 
+// Non-fatal pin warnings from the most recent successful compile (definitions/pin-check.ts) --
+// stashed the same way as lastNodeLineRanges, shown in the preview and logged on Deploy.
+let lastCompileWarnings: string[] = [];
+
 function currentSource(): string {
   const graphData = toGraphData(reteEditor, [...configsStore.value.values()]);
   // mergeCustomNodeRegistry throws (CustomNodeDescriptorError) if two
@@ -868,8 +875,9 @@ function currentSource(): string {
   // "COMPILE ERROR: ..." in the source preview panel; no special-casing
   // needed here for that to be comprehensible.
   const registry = mergeCustomNodeRegistry(builtInRegistry, listCustomNodeDefinitions());
-  const { source, nodeLineRanges } = compile(graphData, registry);
+  const { source, nodeLineRanges, warnings } = compile(graphData, registry, { target: activeTarget.value });
   lastNodeLineRanges = nodeLineRanges;
+  lastCompileWarnings = warnings;
   lastWifiProvision = computeWifiProvisionMarker(graphData);
   return source;
 }
@@ -877,7 +885,10 @@ function currentSource(): string {
 function refreshPreview(): { source: string } | { error: string } {
   try {
     const source = currentSource();
-    el("source-preview").textContent = source;
+    // Warnings go after the source, as comments, so line numbers in the preview still match
+    // the compiled source's own.
+    el("source-preview").textContent =
+      lastCompileWarnings.length === 0 ? source : `${source}\n\n${lastCompileWarnings.map((w) => `# WARNING: ${w}`).join("\n")}\n`;
     return { source };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -1173,6 +1184,7 @@ const transportEvents: TransportEvents = {
       }
       lastHelloVersion = message.runtimeVersion;
       lastHelloChipType = message.chipType;
+      logTargetResolution(updateActiveTarget());
       const decision = decideDeploy(message.runtimeVersion, EDITOR_TARGET_VERSION);
       logLine(`[version check] ${decision.reason}`, decision.allowed ? "ok" : "err");
       // Belt-and-braces companion check, non-blocking -- see
@@ -1225,6 +1237,7 @@ const transportEvents: TransportEvents = {
     logLine(`[disconnected] ${reason ? String(reason) : "(clean)"}`, "");
     lastHelloVersion = null;
     lastHelloChipType = null;
+    updateActiveTarget();
     setConnectedUi(false);
   },
 };
@@ -1327,6 +1340,10 @@ function currentBackendWsUrl(): string {
 function currentNativeArch(): { arch: string; confirmed: boolean; manual: boolean } {
   const selected = el<HTMLSelectElement>("nativeArchSelect").value;
   if (selected === "auto") {
+    // The target's processor definition (MVP item 4) when there is one; otherwise native-arch.ts's
+    // own chipType heuristic, which also knows chips no definition covers yet (ESP32-C6).
+    const processor = activeTarget.value?.processor;
+    if (processor) return { arch: processor.nativeArch, confirmed: processor.nativeArchConfirmed, manual: false };
     const guess = inferNativeArch(lastHelloChipType ?? "");
     return { ...guess, manual: false };
   }
@@ -1344,6 +1361,94 @@ for (const opt of NATIVE_ARCH_OPTIONS) {
   optionEl.textContent = opt.label;
   el("nativeArchSelect").appendChild(optionEl);
 }
+
+// ---------------------------------------------------------------------
+// Processor and board definitions (MVP item 4, docs/working-notes/decisions/chip-board-definitions.md)
+// ---------------------------------------------------------------------
+// Built-ins ship with the editor; the user's own ~/.thingstudio/processors/ and boards/ files come
+// from the backend and are merged on top by id. Every invalid file is logged, never skipped quietly.
+// The Board menu picks the target by hand; "Auto" follows the connected board's HELLO.
+
+let definitions: DefinitionSet = buildDefinitionSet(BUILTIN_DEFINITION_FILES, []);
+
+function populateBoardSelect(): void {
+  const select = el<HTMLSelectElement>("boardSelect");
+  const previous = select.value || "auto";
+  select.replaceChildren();
+  const add = (parent: HTMLElement, value: string, text: string, disabled = false): void => {
+    const o = document.createElement("option");
+    o.value = value;
+    o.textContent = text;
+    o.disabled = disabled;
+    parent.appendChild(o);
+  };
+  add(select, "auto", "Board: Auto");
+  const byName = <T extends { name: string }>(a: T, b: T): number => a.name.localeCompare(b.name);
+  const boards = document.createElement("optgroup");
+  boards.label = "Boards";
+  for (const b of [...definitions.boards.values()].sort(byName)) add(boards, `board:${b.id}`, b.name);
+  const processors = document.createElement("optgroup");
+  processors.label = "Processor only";
+  for (const p of [...definitions.processors.values()].sort(byName)) add(processors, `processor:${p.id}`, `${p.name} (any board)`);
+  select.append(boards, processors);
+  if (definitions.problems.length > 0) {
+    const bad = document.createElement("optgroup");
+    bad.label = "Invalid files (see console)";
+    for (const p of definitions.problems) add(bad, "", `${p.source}`, true);
+    select.appendChild(bad);
+  }
+  // Keep the user's pick across a reload; a pick that vanished is kept as a value resolveTarget()
+  // reports on, rather than silently snapping back to Auto.
+  select.value = previous;
+  if (select.value !== previous) add(select, previous, `${previous} (no longer defined)`);
+  select.value = previous;
+}
+
+/** Recomputes the target from the Board menu and the last HELLO, publishes it for PropertyPanel,
+ * and recompiles the preview against it. */
+function updateActiveTarget(): TargetResolution {
+  const resolution = resolveTarget(definitions, el<HTMLSelectElement>("boardSelect").value || "auto", lastHelloChipType);
+  activeTarget.value = resolution.target;
+  refreshPreview();
+  return resolution;
+}
+
+function logTargetResolution(resolution: TargetResolution): void {
+  logLine(`[board] ${resolution.note}`, resolution.target ? "ok" : "");
+  if (resolution.mismatch) logLine(`[board] ${resolution.mismatch}`, "err");
+}
+
+// What the last load reported, so reloading on every Connect/Deploy only logs what changed.
+let lastDefinitionsReport = "";
+
+async function loadUserDefinitions(): Promise<void> {
+  let listing;
+  try {
+    listing = await listDefinitions(currentBackendWsUrl());
+  } catch (err) {
+    const line = `[definitions] using built-in boards only -- ${err instanceof Error ? err.message : String(err)}`;
+    if (line !== lastDefinitionsReport) logLine(line, "");
+    lastDefinitionsReport = line;
+    return;
+  }
+  definitions = buildDefinitionSet(BUILTIN_DEFINITION_FILES, userDefinitionFiles(listing));
+  const lines = [
+    ...definitions.overrides.map((o) => ({ text: `[definitions] ${o.source} replaces the built-in ${o.kind} "${o.id}"`, cls: "" as const })),
+    ...definitions.problems.map((p) => ({ text: `[definitions] ${p.source} is not loaded: ${p.message}`, cls: "err" as const })),
+  ];
+  const report = JSON.stringify(lines);
+  if (report !== lastDefinitionsReport) for (const l of lines) logLine(l.text, l.cls);
+  lastDefinitionsReport = report;
+  populateBoardSelect();
+  updateActiveTarget();
+}
+
+populateBoardSelect();
+el("boardSelect").addEventListener("change", () => {
+  logTargetResolution(updateActiveTarget());
+  deployedClean = false;
+  updateDeployButtonEnabled();
+});
 
 /** Shows/hides the "via backend" controls (URL, port picker, refresh) --
  * a UI convenience only. The actual explicit choice design doc §4 asks for
@@ -1375,6 +1480,10 @@ backendWsUrl.value = currentBackendWsUrl();
 el("backendUrlInput").addEventListener("input", () => {
   backendWsUrl.value = currentBackendWsUrl();
 });
+
+// The user's own board/processor files. Read again on Connect and on Deploy, so an edit made in a
+// text editor takes effect without reloading the page.
+void loadUserDefinitions();
 
 /** Populates backendPortSelect from the backend's own list_ports control
  * message. Uses a short-lived BackendTransport just for this one
@@ -1504,6 +1613,7 @@ el("btnInstallRuntime").addEventListener("click", async () => {
 el("btnConnect").addEventListener("click", async () => {
   lastHelloVersion = null;
   lastHelloChipType = null;
+  void loadUserDefinitions();
   const mode = currentConnMode();
 
   if (mode === "direct") {
@@ -1637,11 +1747,14 @@ el("btnDeploy").addEventListener("click", async () => {
       logLine("[deploying without a version check -- no HELLO received this connection]", "");
     }
 
+    await loadUserDefinitions();
+    logTargetResolution(updateActiveTarget());
     const preview = refreshPreview();
     if ("error" in preview) {
       logLine(`[compile error] ${preview.error}`, "err");
       return;
     }
+    for (const w of lastCompileWarnings) logLine(`[compile warning] ${w}`, "");
 
     await mpyReadyPromise;
 
@@ -1653,7 +1766,13 @@ el("btnDeploy").addEventListener("click", async () => {
     const usesNativeCode = /@micropython\.(viper|native)\b/.test(preview.source);
     logLine(
       `[compile] targeting mpy-cross -march=${nativeArch.arch}` +
-        (nativeArch.manual ? " (manual override)" : lastHelloChipType ? ` (auto-detected from "${lastHelloChipType}")` : " (auto, no board chipType known yet)"),
+        (nativeArch.manual
+          ? " (manual override)"
+          : activeTarget.value
+            ? ` (auto, from the ${activeTarget.value.processor.name} definition)`
+            : lastHelloChipType
+              ? ` (auto-detected from "${lastHelloChipType}")`
+              : " (auto, no board chipType known yet)"),
       "",
     );
     if (!nativeArch.confirmed && usesNativeCode) {

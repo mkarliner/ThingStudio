@@ -1,0 +1,24 @@
+{
+  "name": "ESP32-C3",
+  "match": ["ESP32C3"],
+  "nativeArch": "rv32imc",
+  "gpio": ["0-21"],
+  "reserved": {
+    "12-17": "Wired to the flash chip. Using them crashes the board."
+  },
+  "avoid": {
+    "2": "Strapping pin. Must be high at reset for a normal boot.",
+    "8": "Strapping pin. Must be high at reset to flash the board.",
+    "9": "Strapping pin, usually the BOOT button. Held low at reset, the board starts in download mode.",
+    "18-19": "Native USB D- and D+. On boards that use native USB for serial, using them cuts the link to Thingstudio.",
+    "20-21": "UART0 RX and TX. On boards with a USB-serial chip, these carry the link to Thingstudio."
+  },
+  "spi": {
+    "maxHz": 80000000,
+    "buses": {
+      "1": { "fastPins": { "sck": 6, "mosi": 7, "miso": 2 } }
+    }
+  },
+  "i2c": { "buses": { "0": {} } },
+  "notes": "ESP32-C3 (single-core RISC-V). Has one SPI bus (1) and one I2C bus (0) for user code."
+}

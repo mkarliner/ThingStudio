@@ -152,3 +152,14 @@ Status: detail file, split out of `learnings.md` on 2026-09-06 to keep that inde
   silence after Ctrl-C/Ctrl-A is the signal. Contrast a board with MicroPython but no runtime, which
   echoes a framed request back as a `SyntaxError`. `board-diagnosis.ts` / `raw_repl.classify_reply()`
   rely on that difference.
+
+- **The CYD's 27 MHz SPI ceiling comes from using SPI id 2 with SPI id 1's pins.** Found 2026-09-23
+  while writing the ESP32 processor definition. MicroPython's `machine.SPI(1)` on a classic ESP32 is
+  HSPI, whose IO_MUX ("fast") pins are SCK 14 / MOSI 13 / MISO 12; `machine.SPI(2)` is VSPI, fast pins
+  18 / 23 / 19 (`ports/esp32/machine_hw_spi.c`'s id table, ESP-IDF `spi_pins.h`). The CYD flows use
+  `spiBus: 2` with 14/13, so the signals go through the GPIO matrix, where ESP-IDF caps full-duplex SPI
+  at 80/3 MHz and refuses 40 MHz outright (the 2026-09-18 crash above). `spiBus: 1` on the same pins
+  should reach 40 MHz or more. Not tested on hardware yet
+  (`outstanding-items/processor-board-definitions-followups.md`). S2/S3 differ: their id 2 (SPI3) has no
+  IO_MUX pins at all, and ESP-IDF's matrix frequency check is ESP32-only; TiDAL (S3) runs 40 MHz on id 2.
+

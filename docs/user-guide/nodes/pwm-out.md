@@ -4,7 +4,7 @@ Drives a PWM signal on a GPIO pin — for dimming an LED, driving a motor, or an
 
 ## Properties
 
-- **pin** — GPIO pin number (0–39).
+- **pin** — GPIO pin number. Checked against your [board](../boards.md).
 - **frequency (Hz)** — the PWM frequency. Default 1000Hz.
 
 ## Behavior

@@ -13,7 +13,7 @@ save a real panel's pin/address setup under a name once, then load it again on t
 - **controller** — the display chip. Only `SSD1306` today.
 - **I2C bus** — which hardware I2C peripheral to use. Default 0.
 - **frequency (Hz)** — I2C clock speed. Default 400kHz.
-- **scl / sda pins** — required GPIO pins (0–39).
+- **scl / sda pins** — required GPIO pins. Checked against your [board](../boards.md), along with the I2C bus.
 - **address** — the I2C address. Default `0x3C`.
 - **width / height** — panel resolution in pixels. Height must be a multiple of 8.
 

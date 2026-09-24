@@ -404,3 +404,45 @@ async def test_admin_routes_carry_cors_headers_when_wired_into_real_app(tmp_path
         resp = await client.get("/api/flows", headers={"Origin": "http://localhost:5173"})
         assert resp.status == 200
         assert resp.headers["Access-Control-Allow-Origin"] == "http://localhost:5173"
+
+
+# -- processor and board definitions -------------------------------------
+# docs/working-notes/decisions/chip-board-definitions.md. Read-only route;
+# field validation is the editor's job, so only JSON syntax and file names
+# are checked here.
+
+
+@pytest.mark.asyncio
+async def test_list_definitions_starts_empty(tmp_path) -> None:
+    async with _client(tmp_path) as client:
+        resp = await client.get("/api/definitions")
+        assert resp.status == 200
+        assert await resp.json() == {"processors": [], "boards": []}
+
+
+@pytest.mark.asyncio
+async def test_list_definitions_returns_parsed_files_and_flags_bad_ones(tmp_path) -> None:
+    base = tmp_path / ".thingstudio"
+    (base / "boards").mkdir(parents=True)
+    (base / "processors").mkdir(parents=True)
+    (base / "boards" / "my-board.json").write_text(json.dumps({"name": "Mine", "processor": "esp32", "match": [], "pins": {"LED": 2}}))
+    (base / "boards" / "broken.json").write_text('{"name": "Broken",\n  "pins": {}\n  "match": []}')
+    (base / "boards" / "bad name.json").write_text("{}")
+    (base / "boards" / "notes.txt").write_text("ignored: not .json")
+    (base / "processors" / "esp32.json").write_text(json.dumps({"name": "My ESP32"}))
+    async with _client(tmp_path) as client:
+        body = await (await client.get("/api/definitions")).json()
+    assert body["processors"] == [{"name": "esp32", "valid": True, "error": None, "data": {"name": "My ESP32"}}]
+    boards = {b["name"]: b for b in body["boards"]}
+    assert set(boards) == {"bad name", "broken", "my-board"}
+    assert boards["my-board"] == {
+        "name": "my-board",
+        "valid": True,
+        "error": None,
+        "data": {"name": "Mine", "processor": "esp32", "match": [], "pins": {"LED": 2}},
+    }
+    assert boards["broken"]["valid"] is False
+    assert "line 3" in boards["broken"]["error"]
+    assert boards["broken"]["data"] is None
+    assert boards["bad name"]["valid"] is False
+    assert "file name" in boards["bad name"]["error"]

@@ -17,6 +17,7 @@
 // this node's problem to work around in software.
 
 import { CompileError } from "../compiler/errors.js";
+import { checkPin } from "../definitions/pin-check.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, NodeDefinition, SinkCodegenResult } from "../compiler/node-definition.js";
 
@@ -34,10 +35,7 @@ export const pwmOutNode: NodeDefinition = {
     inputs: [{ name: "duty", type: "number" }],
   },
   codegenSink(node: GraphNode, ctx: CodegenContext): SinkCodegenResult {
-    const pin = Math.round(Number(node.properties.pin));
-    if (!Number.isFinite(pin) || pin < 0 || pin > 39) {
-      throw new CompileError(`pwm_out pin ${String(node.properties.pin)} is out of range (0-39)`);
-    }
+    const pin = checkPin(ctx, "pwm_out pin", node.properties.pin, "output");
     const freq = Math.round(Number(node.properties.freq ?? 1000));
     if (!Number.isFinite(freq) || freq <= 0) {
       throw new CompileError(`pwm_out freq "${String(node.properties.freq)}" must be a positive number`);

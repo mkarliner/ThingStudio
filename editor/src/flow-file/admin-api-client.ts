@@ -299,3 +299,27 @@ export async function deletePreset(wsUrl: string, presetType: string, name: stri
   const res = await request(wsUrl, `/api/presets/${encodeURIComponent(presetType)}/${encodeURIComponent(name)}`, { method: "DELETE" });
   if (!res.ok) throw new AdminApiError(`delete ${presetType} preset "${name}" failed: ${await parseErrorBody(res)}`);
 }
+
+// -- processor and board definitions ---------------------------------------
+// docs/working-notes/decisions/chip-board-definitions.md. Read-only: the
+// user's own ~/.thingstudio/processors/ and boards/ files, each already
+// JSON-parsed by the backend (or flagged invalid with the reason). Field
+// validation happens in definitions/definitions.ts, not here.
+
+export interface DefinitionFileInfo {
+  name: string;
+  valid: boolean;
+  error: string | null;
+  data: unknown;
+}
+
+export interface UserDefinitionFiles {
+  processors: DefinitionFileInfo[];
+  boards: DefinitionFileInfo[];
+}
+
+export async function listDefinitions(wsUrl: string): Promise<UserDefinitionFiles> {
+  const res = await request(wsUrl, "/api/definitions");
+  if (!res.ok) throw new AdminApiError(`load processor/board definitions failed: ${await parseErrorBody(res)}`);
+  return (await res.json()) as UserDefinitionFiles;
+}

@@ -1,0 +1,29 @@
+{
+  "name": "CYD (ESP32-2432S028, ST7789)",
+  "processor": "esp32",
+  "match": [],
+  "pins": {
+    "TFT_SCK": 14,
+    "TFT_MOSI": 13,
+    "TFT_MISO": 12,
+    "TFT_CS": 15,
+    "TFT_DC": 2,
+    "BACKLIGHT": 21,
+    "LED_RED": 4,
+    "LED_GREEN": 16,
+    "LED_BLUE": 17,
+    "TOUCH_CLK": 25,
+    "TOUCH_MOSI": 32,
+    "TOUCH_MISO": 39,
+    "TOUCH_CS": 33,
+    "TOUCH_IRQ": 36,
+    "SD_SCK": 18,
+    "SD_MOSI": 23,
+    "SD_MISO": 19,
+    "SD_CS": 5,
+    "LDR": 34,
+    "SPEAKER": 26,
+    "BOOT": 0
+  },
+  "notes": "Reports itself as a generic ESP32, so pick it by hand in the Board menu. Display pins are tested on real units; touch, SD, LED, LDR and speaker pins are from community pinouts. The RGB LED is active low. Units vary: check your own board."
+}

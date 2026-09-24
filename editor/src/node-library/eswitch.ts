@@ -68,6 +68,7 @@
 // purely additive, not a breaking change to the node's own contract.
 
 import { CompileError } from "../compiler/errors.js";
+import { checkPin } from "../definitions/pin-check.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, EventSourceCodegenResult, NodeDefinition } from "../compiler/node-definition.js";
 
@@ -78,10 +79,7 @@ export const eswitchNode: NodeDefinition = {
     outputs: [{ name: "msg", type: "bool" }],
   },
   codegenEventSource(node: GraphNode, ctx: CodegenContext): EventSourceCodegenResult {
-    const pin = Math.round(Number(node.properties.pin));
-    if (!Number.isFinite(pin) || pin < 0 || pin > 39) {
-      throw new CompileError(`eswitch pin ${String(node.properties.pin)} is out of range (0-39)`);
-    }
+    const pin = checkPin(ctx, "eswitch pin", node.properties.pin, "input", { pull: String(node.properties.pull ?? "none") !== "none" });
     const lopen = Math.round(Number(node.properties.lopen ?? 1));
     if (lopen !== 0 && lopen !== 1) {
       throw new CompileError(`eswitch lopen "${String(node.properties.lopen)}" must be 0 or 1`);

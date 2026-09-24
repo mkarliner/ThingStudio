@@ -20,6 +20,11 @@
 #     presets/<type>/<name>.json      -- named per-node-kind property
 #                                         bundles (added 2026-09-22, see the
 #                                         "Presets" section further down)
+#     processors/<id>.json            -- hand-written processor and board
+#     boards/<id>.json                   definitions (added 2026-09-23, MVP
+#                                         item 4, see "Definitions" below).
+#                                         Read-only here: people write them
+#                                         with a text editor.
 #
 # Deliberately flat, no subdirectories/nesting -- design doc §6 imagines a
 # project directory of many flow files (a fleet of devices), but nothing
@@ -165,6 +170,22 @@ class PresetInfo:
     error: str | None = None
 
 
+@dataclass(frozen=True)
+class DefinitionFile:
+    """One file in list_definitions()'s result. `data` is the parsed JSON when
+    `valid`, else None and `error` says why. Only JSON syntax (and the file
+    name) is checked here; the editor's definitions.ts validates the fields,
+    so the rules live in one place."""
+
+    name: str
+    valid: bool
+    error: str | None = None
+    data: object = None
+
+
+_DEFINITION_KINDS = ("processors", "boards")
+
+
 def _validate_credential_type(credential_type: str) -> str:
     if credential_type not in _CREDENTIAL_TYPES:
         raise PersistedStoreError(
@@ -219,6 +240,8 @@ class PersistedStore:
         self.custom_nodes_dir = self.base_dir / "custom-nodes"
         self.credentials_dir = self.base_dir / "credentials"
         self.presets_dir = self.base_dir / "presets"
+        self.processors_dir = self.base_dir / "processors"
+        self.boards_dir = self.base_dir / "boards"
 
     # -- flows --------------------------------------------------------
 
@@ -416,3 +439,40 @@ class PersistedStore:
             raise PersistedStoreNotFoundError(f"NODE_ERROR: no saved {preset_type} preset named {name!r}") from exc
         except OSError as exc:
             raise PersistedStoreError(f"NODE_ERROR: failed deleting {preset_type} preset {name!r}: {exc}") from exc
+
+    # -- processor and board definitions -----------------------------------
+    # docs/working-notes/decisions/chip-board-definitions.md. Read-only: the
+    # files are written by hand. Every *.json file is listed, including ones
+    # with a bad name or bad JSON -- flagged invalid with the reason, never
+    # skipped, so a mistake in a hand-edited file shows up in the editor
+    # instead of silently doing nothing (same rule as list_presets above).
+
+    def list_definitions(self, kind: str) -> list[DefinitionFile]:
+        if kind not in _DEFINITION_KINDS:
+            raise PersistedStoreError(f"NODE_ERROR: invalid definition kind {kind!r} -- must be one of {_DEFINITION_KINDS}")
+        d = self.base_dir / kind
+        if not d.is_dir():
+            return []
+        out: list[DefinitionFile] = []
+        for path in sorted(d.glob("*.json"), key=lambda p: p.stem):
+            if not _NAME_RE.match(path.stem):
+                out.append(
+                    DefinitionFile(
+                        name=path.stem,
+                        valid=False,
+                        error=f"file name {path.name!r} must be letters, digits, '_' or '-' only, ending in .json",
+                    )
+                )
+                continue
+            try:
+                text = path.read_text(encoding="utf-8")
+            except (OSError, UnicodeDecodeError) as exc:
+                out.append(DefinitionFile(name=path.stem, valid=False, error=f"failed reading file: {exc}"))
+                continue
+            try:
+                data = json.loads(text)
+            except json.JSONDecodeError as exc:
+                out.append(DefinitionFile(name=path.stem, valid=False, error=f"not valid JSON: {exc}"))
+                continue
+            out.append(DefinitionFile(name=path.stem, valid=True, data=data))
+        return out

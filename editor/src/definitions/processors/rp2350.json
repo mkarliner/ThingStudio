@@ -1,0 +1,21 @@
+{
+  "name": "RP2350",
+  "match": ["RP2350"],
+  "nativeArch": "armv7emsp",
+  "nativeArchConfirmed": false,
+  "gpio": ["0-47"],
+  "spi": {
+    "maxHz": 75000000,
+    "buses": {
+      "0": { "pins": { "sck": [2, 6, 18, 22, 34, 38], "mosi": [3, 7, 19, 23, 35, 39], "miso": [0, 4, 16, 20, 32, 36] } },
+      "1": { "pins": { "sck": [10, 14, 26, 30, 42, 46], "mosi": [11, 15, 27, 31, 43, 47], "miso": [8, 12, 24, 28, 40, 44] } }
+    }
+  },
+  "i2c": {
+    "buses": {
+      "0": { "pins": { "sda": [0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44], "scl": [1, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45] } },
+      "1": { "pins": { "sda": [2, 6, 10, 14, 18, 22, 26, 30, 34, 38, 42, 46], "scl": [3, 7, 11, 15, 19, 23, 27, 31, 35, 39, 43, 47] } }
+    }
+  },
+  "notes": "RP2350 in Arm mode (dual Cortex-M33). GPIO 30-47 exist only on the larger RP2350B; boards with the RP2350A narrow this to 0-29. Native arch armv7emsp is community-sourced, not yet checked on hardware."
+}

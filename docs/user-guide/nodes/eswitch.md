@@ -5,7 +5,7 @@ simple debounced switch is all you need.
 
 ## Properties
 
-- **pin** — GPIO pin number (0–39). Default 4.
+- **pin** — GPIO pin number. Default 4. Checked against your [board](../boards.md).
 - **pull** — `none` (default), `up`, or `down`. Enables the board's own internal pull resistor on this pin.
 - **open level (lopen)** — which electrical level means "open": `1` (default, switch to ground, pulled up) or
   `0` (switch to 3V3, pulled down).

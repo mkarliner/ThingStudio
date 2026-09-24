@@ -46,13 +46,14 @@
      native [hidden] attribute when connModeSelect is set to "direct"
      rather than removed from the DOM, so main.ts can toggle them with a
      plain boolean. */
-  #connModeSelect, #backendUrlInput, #backendPortSelect, #flowSelect, #nativeArchSelect { background: var(--bg); color: var(--text);
+  #connModeSelect, #backendUrlInput, #backendPortSelect, #flowSelect, #nativeArchSelect, #boardSelect { background: var(--bg); color: var(--text);
     border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; font-size: 12px; font-family: inherit; }
   #backendUrlInput { width: 170px; }
   #backendPortSelect, #flowSelect { max-width: 180px; }
   /* Its options carry long explanatory labels; without a cap the closed select sizes to the longest
      one and pushes the toolbar onto extra rows. */
   #nativeArchSelect { max-width: 120px; }
+  #boardSelect { max-width: 160px; }
   .pill { padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border); font-size: 11px; }
   .pill.connected { border-color: var(--good); color: var(--good); }
   .pill.disconnected { border-color: var(--bad); color: var(--bad); }
@@ -172,6 +173,11 @@
     </div>
     <div class="tb-group">
     <!-- Deploy -->
+    <!-- boardSelect: the board or processor to check pins against (MVP item 4). Filled in by main.ts from
+         the built-in and ~/.thingstudio definitions. -->
+    <select id="boardSelect" title="The board or processor this flow is for. Pins are checked against it when you compile. Auto uses the connected board.">
+      <option value="auto" selected>Board: Auto</option>
+    </select>
     <select id="nativeArchSelect" title="mpy-cross -march target for @micropython.viper/@micropython.native code (e.g. display_spi's gs4/gs2/mono formats) -- only matters if a node in this flow actually uses one. Auto detects from the connected board's HELLO; override if Auto guesses wrong or no board is connected yet.">
       <option value="auto" selected>Native arch: Auto</option>
     </select>

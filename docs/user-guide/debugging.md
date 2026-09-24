@@ -62,7 +62,7 @@ When a node raises an exception on the device, the board reports which node and 
 
 A few nodes (currently `display_spi`'s `gs4`/`gs2`/`mono` frame formats) compile part of their code to native machine code, not portable bytecode. That needs the right target architecture for your board's chip.
 
-The **Native arch** dropdown in the toolbar defaults to **Auto**, which reads your board's chip type from its HELLO response. If you haven't connected yet, or Auto picks the wrong one, choose your board's chip directly from the list instead.
+The **Native arch** dropdown in the toolbar defaults to **Auto**, which uses the processor of the board in the [Board menu](boards.md). If Auto picks the wrong one, choose your board's chip directly from the list instead.
 
 If Deploy fails with an architecture or native-module error, that's the sign to check this dropdown — pick your board's chip explicitly and redeploy.
 

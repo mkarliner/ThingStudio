@@ -35,6 +35,7 @@ import json
 from aiohttp import web
 
 from .persisted_store import (
+    DefinitionFile,
     PersistedStore,
     PersistedStoreError,
     PersistedStoreNotFoundError,
@@ -52,6 +53,10 @@ def _preset_info_json(info: PresetInfo) -> dict:
     # included either way so the editor doesn't need a second round trip to
     # find out *why* an entry it can already see is invalid.
     return {"name": info.name, "valid": info.valid, "error": info.error}
+
+
+def _definition_json(info: DefinitionFile) -> dict:
+    return {"name": info.name, "valid": info.valid, "error": info.error, "data": info.data}
 
 
 def make_admin_routes(store: PersistedStore) -> list[web.RouteDef]:
@@ -214,6 +219,25 @@ def make_admin_routes(store: PersistedStore) -> list[web.RouteDef]:
             return _error_response(exc)
         return web.json_response({"ok": True})
 
+    # -- processor and board definitions -------------------------------------
+    # docs/working-notes/decisions/chip-board-definitions.md. One read-only
+    # route returning both kinds, since the editor always needs both (a
+    # board names its processor). Built-ins aren't served from here -- they
+    # ship inside the editor so direct-WebSerial mode has them too.
+
+    async def list_definitions(request: web.Request) -> web.Response:
+        try:
+            processors = store.list_definitions("processors")
+            boards = store.list_definitions("boards")
+        except PersistedStoreError as exc:
+            return _error_response(exc)
+        return web.json_response(
+            {
+                "processors": [_definition_json(i) for i in processors],
+                "boards": [_definition_json(i) for i in boards],
+            }
+        )
+
     return [
         web.get("/api/flows", list_flows),
         web.get("/api/flows/{name}", get_flow),
@@ -231,4 +255,5 @@ def make_admin_routes(store: PersistedStore) -> list[web.RouteDef]:
         web.get("/api/presets/{type}/{name}", get_preset),
         web.put("/api/presets/{type}/{name}", put_preset),
         web.delete("/api/presets/{type}/{name}", delete_preset),
+        web.get("/api/definitions", list_definitions),
     ]

@@ -1,0 +1,12 @@
+{
+  "name": "Raspberry Pi Pico",
+  "processor": "rp2040",
+  "match": ["Raspberry Pi Pico"],
+  "pins": { "LED": 25 },
+  "avoid": {
+    "23": "Controls the power supply mode (SMPS).",
+    "24": "Senses USB power (VBUS).",
+    "29": "Measures the supply voltage (VSYS)."
+  },
+  "notes": "The onboard LED is GPIO 25."
+}

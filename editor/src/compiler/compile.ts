@@ -57,6 +57,7 @@
 import { CompileError } from "./errors.js";
 import type { GraphConfigNode, GraphData, GraphLink, GraphNode } from "./graph.js";
 import type { CodegenContext, NodeDefinition, SinkCodegenResult, TransformCodegenResult } from "./node-definition.js";
+import type { Target } from "../definitions/target.js";
 
 /** One node's generated function occupies this 1-indexed, inclusive line
  * range in `CompileResult.source` -- lets the caller map a line number
@@ -74,9 +75,16 @@ export interface NodeLineRange {
 export interface CompileResult {
   source: string;
   nodeLineRanges: NodeLineRange[];
+  /** Non-fatal problems nodes reported via ctx.warn (deduplicated). */
+  warnings: string[];
 }
 
-export function compile(graphData: GraphData, registry: Map<string, NodeDefinition>): CompileResult {
+export interface CompileOptions {
+  /** Processor/board to check pins against (definitions/target.ts). Absent = none known. */
+  target?: Target | null;
+}
+
+export function compile(graphData: GraphData, registry: Map<string, NodeDefinition>, options: CompileOptions = {}): CompileResult {
   const nodesById = new Map<string, GraphNode>();
   for (const n of graphData.nodes) {
     if (nodesById.has(n.id)) throw new CompileError(`duplicate node id ${n.id}`);
@@ -189,7 +197,12 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
   // --- codegen ---
 
   const usedNames = new Set<string>();
+  const warnings = new Set<string>();
   const ctx: CodegenContext = {
+    target: options.target ?? null,
+    warn(message: string): void {
+      warnings.add(message);
+    },
     uniqueName(hint: string): string {
       let candidate = `_${hint}`;
       let i = 1;
@@ -451,7 +464,7 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
   for (const s of spawnCalls) push(s);
   push("");
 
-  return { source: outputLines.join("\n"), nodeLineRanges };
+  return { source: outputLines.join("\n"), nodeLineRanges, warnings: [...warnings] };
 }
 
 function mergeSetup(

@@ -1,5 +1,9 @@
 # Briefing: chip and board definitions (MVP item 4)
 
+**Status 2026-09-23 (later the same day): built, not yet hardware-verified.** See
+`decisions/chip-board-definitions.md` for what was decided and `outstanding-items/
+processor-board-definitions-followups.md` for what's left. The text below is the original brief.
+
 2026-09-23. Written at the end of the session that took a blank ESP32-S2 to a blinking LED using only the
 product and its docs. Read `docs/road-to-mvp.md` first; this says where item 4 stands and what Mike wants.
 

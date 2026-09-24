@@ -21,9 +21,9 @@ defaults below are exactly what saving a "cyd" preset from a correctly-configure
   editable from this panel — set it as a flow-file property (an array of 16 numbers) if you don't
   want the built-in default.
 - **SPI bus** — which hardware SPI peripheral to use. Default 2.
-- **baudrate** — SPI clock speed. Default 40MHz.
-- **sck / mosi / dc pins** — required GPIO pins (0–39).
-- **cs / reset / backlight pins** — optional GPIO pins (0–39, or −1 for "not wired"). Some boards tie
+- **baudrate** — SPI clock speed. Default 40MHz. On an ESP32, use 27MHz or less unless sck and mosi are the bus's fast pins; the compile tells you if the speed is too high for your [board](../boards.md).
+- **sck / mosi / dc pins** — required GPIO pins. Checked against your [board](../boards.md), along with the SPI bus and speed.
+- **cs / reset / backlight pins** — optional GPIO pins (−1 for "not wired"). Some boards tie
   reset or CS high in hardware and don't expose them as GPIOs, or have no backlight control at all.
 - **width / height** — panel resolution in pixels.
 - **rotation** — 0–7, the panel's MADCTL orientation code (which of MY/MX/MV to set). Default `1`.

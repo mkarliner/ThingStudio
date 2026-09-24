@@ -49,6 +49,7 @@
 // more than one ebutton node.
 
 import { CompileError } from "../compiler/errors.js";
+import { checkPin } from "../definitions/pin-check.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, EventSourceCodegenResult, NodeDefinition } from "../compiler/node-definition.js";
 
@@ -59,10 +60,7 @@ export const ebuttonNode: NodeDefinition = {
     outputs: [{ name: "msg", type: "bool" }],
   },
   codegenEventSource(node: GraphNode, ctx: CodegenContext): EventSourceCodegenResult {
-    const pin = Math.round(Number(node.properties.pin));
-    if (!Number.isFinite(pin) || pin < 0 || pin > 39) {
-      throw new CompileError(`ebutton pin ${String(node.properties.pin)} is out of range (0-39)`);
-    }
+    const pin = checkPin(ctx, "ebutton pin", node.properties.pin, "input", { pull: String(node.properties.pull ?? "none") !== "none" });
     const suppress = Boolean(node.properties.suppress ?? false);
     const senseMode = String(node.properties.senseMode ?? "auto");
     if (senseMode !== "auto" && senseMode !== "0" && senseMode !== "1") {

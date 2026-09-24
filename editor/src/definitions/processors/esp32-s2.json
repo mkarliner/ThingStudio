@@ -1,0 +1,26 @@
+{
+  "name": "ESP32-S2",
+  "match": ["ESP32S2"],
+  "nativeArch": "xtensawin",
+  "gpio": ["0-21", "26-46"],
+  "inputOnly": [46],
+  "reserved": {
+    "27-32": "Wired to the flash chip. Using them crashes the board."
+  },
+  "avoid": {
+    "0": "Strapping pin. Held low at reset, the board starts in download mode.",
+    "19-20": "Native USB D- and D+. On boards that use native USB for serial, using them cuts the link to Thingstudio.",
+    "26": "PSRAM chip select on chips and modules with PSRAM.",
+    "45": "Strapping pin. Sets flash voltage at reset.",
+    "46": "Strapping pin. Sets boot mode at reset."
+  },
+  "spi": {
+    "maxHz": 80000000,
+    "buses": {
+      "1": { "fastPins": { "sck": 12, "mosi": 11, "miso": 13 } },
+      "2": {}
+    }
+  },
+  "i2c": { "buses": { "0": {}, "1": {} } },
+  "notes": "ESP32-S2 (single-core Xtensa LX7)."
+}

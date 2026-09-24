@@ -239,6 +239,7 @@
 // is exactly the kind of thing an analogy would get wrong silently.
 
 import { CompileError } from "../compiler/errors.js";
+import { checkOptionalPin, checkPin, checkSpi } from "../definitions/pin-check.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, NodeDefinition, SinkCodegenResult } from "../compiler/node-definition.js";
 
@@ -361,25 +362,7 @@ const ROTATION_BITS: Record<number, number> = {
   7: MADCTL_MV | MADCTL_MX | MADCTL_MY,
 };
 
-function requirePin(value: unknown, label: string): number {
-  const pin = Math.round(Number(value));
-  if (!Number.isFinite(pin) || pin < 0 || pin > 39) {
-    throw new CompileError(`display_spi ${label} pin ${String(value)} is out of range (0-39)`);
-  }
-  return pin;
-}
-
-/** -1 (st7789py_mpy's own "not overridden" sentinel convention) means "not wired" -- resolved to a literal `None` at codegen time, never a runtime check. */
-function optionalPin(value: unknown, label: string): number | null {
-  const raw = Math.round(Number(value ?? -1));
-  if (raw === -1) return null;
-  if (!Number.isFinite(raw) || raw < 0 || raw > 39) {
-    throw new CompileError(`display_spi ${label} pin ${String(value)} is out of range (0-39, or -1 for "not wired")`);
-  }
-  return raw;
-}
-
-/** -1 (st7789py_mpy's own "not overridden" sentinel, same convention as `optionalPin` above but for a GRAM offset, not a pin -- no 0-39 range, just >= -1) means "let st7789py_mpy's own 240x240/135x240 offset table decide," passed through as a literal `-1` at codegen time rather than resolved away, so the vendored driver's own `__init__` logic (not a TypeScript re-implementation of its lookup table) is what actually runs at flow-boot time. */
+/** -1 (st7789py_mpy's own "not overridden" sentinel, same convention as the optional pins but for a GRAM offset, not a pin -- no pin range, just >= -1) means "let st7789py_mpy's own 240x240/135x240 offset table decide," passed through as a literal `-1` at codegen time rather than resolved away, so the vendored driver's own `__init__` logic (not a TypeScript re-implementation of its lookup table) is what actually runs at flow-boot time. */
 function optionalOffset(value: unknown, label: string): number {
   const raw = Math.round(Number(value ?? -1));
   if (!Number.isFinite(raw) || raw < -1) {
@@ -554,12 +537,13 @@ export const displaySpiNode: NodeDefinition = {
       throw new CompileError(`display_spi baudrate "${String(node.properties.baudrate)}" must be a positive number`);
     }
 
-    const sck = requirePin(node.properties.sck, "sck");
-    const mosi = requirePin(node.properties.mosi, "mosi");
-    const dc = requirePin(node.properties.dc, "dc");
-    const cs = optionalPin(node.properties.cs, "cs");
-    const reset = optionalPin(node.properties.reset, "reset");
-    const backlight = optionalPin(node.properties.backlight, "backlight");
+    const sck = checkPin(ctx, "display_spi sck pin", node.properties.sck, "output");
+    const mosi = checkPin(ctx, "display_spi mosi pin", node.properties.mosi, "output");
+    const dc = checkPin(ctx, "display_spi dc pin", node.properties.dc, "output");
+    const cs = checkOptionalPin(ctx, "display_spi cs pin", node.properties.cs, "output");
+    const reset = checkOptionalPin(ctx, "display_spi reset pin", node.properties.reset, "output");
+    const backlight = checkOptionalPin(ctx, "display_spi backlight pin", node.properties.backlight, "output");
+    checkSpi(ctx, "display_spi", spiBus, { sck, mosi }, baudrate);
 
     const width = Math.round(Number(node.properties.width ?? 135));
     const height = Math.round(Number(node.properties.height ?? 240));

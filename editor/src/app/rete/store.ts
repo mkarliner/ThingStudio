@@ -23,10 +23,11 @@
 // array param, not by importing it themselves, keeping both of those
 // modules unit-testable without a live Vue app -- see their own headers).
 
-import { ref } from "vue";
+import { ref, shallowRef } from "vue";
 import type { ClassicPreset } from "rete";
 import type { AnyThingstudioNode, InjectNode } from "./nodes";
 import { DEFAULT_BACKEND_WS_URL } from "../../flow-file/admin-api-client";
+import type { Target } from "../../definitions/target";
 
 export const selectedNode = ref<AnyThingstudioNode | null>(null);
 
@@ -169,3 +170,10 @@ export function replaceAllConfigs(entries: ConfigEntry[]): void {
 export function clearConfigs(): void {
   replaceAllConfigs([]);
 }
+
+// The processor/board the next compile targets (definitions/target.ts),
+// or null when none is known -- main.ts owns resolving it (Board menu +
+// the connected board's HELLO) and writes it here; PropertyPanel.vue reads
+// it for pin-field limits and hints. shallowRef: a Target is replaced
+// whole, never mutated, and its Sets/Maps don't need deep reactivity.
+export const activeTarget = shallowRef<Target | null>(null);

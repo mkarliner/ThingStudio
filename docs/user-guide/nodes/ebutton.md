@@ -4,7 +4,7 @@ Reports press, release, long-press, and double-click events from a single deboun
 
 ## Properties
 
-- **pin** — GPIO pin number (0–39). Default 5.
+- **pin** — GPIO pin number. Default 5. Checked against your [board](../boards.md).
 - **pull** — `none` (default), `up`, or `down`. Enables the board's own internal pull resistor on this pin.
 - **sense** — which electrical level means "pressed": `auto` (default, reads the pin's own boot state as
   "not pressed"), `0`, or `1`.

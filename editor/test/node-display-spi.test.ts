@@ -211,7 +211,7 @@ describe("thingstudio/display_spi node", () => {
   });
 
   it("rejects an out-of-range optional pin (cs/reset/backlight) that isn't the -1 sentinel", () => {
-    expect(() => displaySpiNode.codegenSink!(node({ sck: 12, mosi: 11, dc: 13, cs: 99 }), ctx)).toThrow(/not wired/);
+    expect(() => displaySpiNode.codegenSink!(node({ sck: 12, mosi: 11, dc: 13, cs: 99 }), ctx)).toThrow(/cs pin 99 is out of range/);
   });
 
   it("rejects an unknown controller", () => {

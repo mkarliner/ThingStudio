@@ -1,0 +1,13 @@
+{
+  "name": "Raspberry Pi Pico W",
+  "processor": "rp2040",
+  "match": ["Raspberry Pi Pico W"],
+  "pins": {},
+  "reserved": {
+    "23": "Wired to the WiFi chip.",
+    "24": "Wired to the WiFi chip.",
+    "25": "Wired to the WiFi chip.",
+    "29": "Wired to the WiFi chip."
+  },
+  "notes": "The onboard LED is on the WiFi chip, not a GPIO, so gpio_out can't drive it. Use an external LED on a free pin."
+}

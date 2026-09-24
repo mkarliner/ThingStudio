@@ -163,13 +163,15 @@
 
       <template v-else-if="node.kind === 'gpio_out'">
         <label>pin
-          <input type="number" min="0" max="39" v-model.number="node.properties.pin" @input="touch" />
+          <input type="number" min="0" :max="pinMax" v-model.number="node.properties.pin" @input="touch" />
+          <span v-if="pinInfo(node.properties.pin)" class="pin-hint" :class="{ bad: pinInfo(node.properties.pin)!.bad }" :title="pinInfo(node.properties.pin)!.title">{{ pinInfo(node.properties.pin)!.text }}</span>
         </label>
       </template>
 
       <template v-else-if="node.kind === 'pwm_out'">
         <label>pin
-          <input type="number" min="0" max="39" v-model.number="node.properties.pin" @input="touch" />
+          <input type="number" min="0" :max="pinMax" v-model.number="node.properties.pin" @input="touch" />
+          <span v-if="pinInfo(node.properties.pin)" class="pin-hint" :class="{ bad: pinInfo(node.properties.pin)!.bad }" :title="pinInfo(node.properties.pin)!.title">{{ pinInfo(node.properties.pin)!.text }}</span>
         </label>
         <label>frequency (Hz)
           <input type="number" min="1" v-model.number="node.properties.freq" @input="touch" />
@@ -190,7 +192,8 @@
 
       <template v-else-if="node.kind === 'interrupt'">
         <label>pin
-          <input type="number" min="0" max="39" v-model.number="node.properties.pin" @input="touch" />
+          <input type="number" min="0" :max="pinMax" v-model.number="node.properties.pin" @input="touch" />
+          <span v-if="pinInfo(node.properties.pin)" class="pin-hint" :class="{ bad: pinInfo(node.properties.pin)!.bad }" :title="pinInfo(node.properties.pin)!.title">{{ pinInfo(node.properties.pin)!.text }}</span>
         </label>
         <label>edge
           <select v-model="node.properties.edge" @change="touch">
@@ -214,7 +217,8 @@
 
       <template v-else-if="node.kind === 'eswitch'">
         <label>pin
-          <input type="number" min="0" max="39" v-model.number="node.properties.pin" @input="touch" />
+          <input type="number" min="0" :max="pinMax" v-model.number="node.properties.pin" @input="touch" />
+          <span v-if="pinInfo(node.properties.pin)" class="pin-hint" :class="{ bad: pinInfo(node.properties.pin)!.bad }" :title="pinInfo(node.properties.pin)!.title">{{ pinInfo(node.properties.pin)!.text }}</span>
         </label>
         <label>pull
           <select v-model="node.properties.pull" @change="touch">
@@ -242,7 +246,8 @@
 
       <template v-else-if="node.kind === 'ebutton'">
         <label>pin
-          <input type="number" min="0" max="39" v-model.number="node.properties.pin" @input="touch" />
+          <input type="number" min="0" :max="pinMax" v-model.number="node.properties.pin" @input="touch" />
+          <span v-if="pinInfo(node.properties.pin)" class="pin-hint" :class="{ bad: pinInfo(node.properties.pin)!.bad }" :title="pinInfo(node.properties.pin)!.title">{{ pinInfo(node.properties.pin)!.text }}</span>
         </label>
         <label>pull
           <select v-model="node.properties.pull" @change="touch">
@@ -301,22 +306,28 @@
           <input type="number" min="1" v-model.number="node.properties.baudrate" @input="touch" />
         </label>
         <label>sck pin
-          <input type="number" min="0" max="39" v-model.number="node.properties.sck" @input="touch" />
+          <input type="number" min="0" :max="pinMax" v-model.number="node.properties.sck" @input="touch" />
+          <span v-if="pinInfo(node.properties.sck)" class="pin-hint" :class="{ bad: pinInfo(node.properties.sck)!.bad }" :title="pinInfo(node.properties.sck)!.title">{{ pinInfo(node.properties.sck)!.text }}</span>
         </label>
         <label>mosi pin
-          <input type="number" min="0" max="39" v-model.number="node.properties.mosi" @input="touch" />
+          <input type="number" min="0" :max="pinMax" v-model.number="node.properties.mosi" @input="touch" />
+          <span v-if="pinInfo(node.properties.mosi)" class="pin-hint" :class="{ bad: pinInfo(node.properties.mosi)!.bad }" :title="pinInfo(node.properties.mosi)!.title">{{ pinInfo(node.properties.mosi)!.text }}</span>
         </label>
         <label>dc pin
-          <input type="number" min="0" max="39" v-model.number="node.properties.dc" @input="touch" />
+          <input type="number" min="0" :max="pinMax" v-model.number="node.properties.dc" @input="touch" />
+          <span v-if="pinInfo(node.properties.dc)" class="pin-hint" :class="{ bad: pinInfo(node.properties.dc)!.bad }" :title="pinInfo(node.properties.dc)!.title">{{ pinInfo(node.properties.dc)!.text }}</span>
         </label>
         <label>cs pin (-1 = not wired)
-          <input type="number" min="-1" max="39" v-model.number="node.properties.cs" @input="touch" />
+          <input type="number" min="-1" :max="pinMax" v-model.number="node.properties.cs" @input="touch" />
+          <span v-if="pinInfo(node.properties.cs)" class="pin-hint" :class="{ bad: pinInfo(node.properties.cs)!.bad }" :title="pinInfo(node.properties.cs)!.title">{{ pinInfo(node.properties.cs)!.text }}</span>
         </label>
         <label>reset pin (-1 = not wired)
-          <input type="number" min="-1" max="39" v-model.number="node.properties.reset" @input="touch" />
+          <input type="number" min="-1" :max="pinMax" v-model.number="node.properties.reset" @input="touch" />
+          <span v-if="pinInfo(node.properties.reset)" class="pin-hint" :class="{ bad: pinInfo(node.properties.reset)!.bad }" :title="pinInfo(node.properties.reset)!.title">{{ pinInfo(node.properties.reset)!.text }}</span>
         </label>
         <label>backlight pin (-1 = not wired)
-          <input type="number" min="-1" max="39" v-model.number="node.properties.backlight" @input="touch" />
+          <input type="number" min="-1" :max="pinMax" v-model.number="node.properties.backlight" @input="touch" />
+          <span v-if="pinInfo(node.properties.backlight)" class="pin-hint" :class="{ bad: pinInfo(node.properties.backlight)!.bad }" :title="pinInfo(node.properties.backlight)!.title">{{ pinInfo(node.properties.backlight)!.text }}</span>
         </label>
         <label>width (px)
           <input type="number" min="1" v-model.number="node.properties.width" @input="touch" />
@@ -384,10 +395,12 @@
           <input type="number" min="1" v-model.number="node.properties.freq" @input="touch" />
         </label>
         <label>scl pin
-          <input type="number" min="0" max="39" v-model.number="node.properties.scl" @input="touch" />
+          <input type="number" min="0" :max="pinMax" v-model.number="node.properties.scl" @input="touch" />
+          <span v-if="pinInfo(node.properties.scl)" class="pin-hint" :class="{ bad: pinInfo(node.properties.scl)!.bad }" :title="pinInfo(node.properties.scl)!.title">{{ pinInfo(node.properties.scl)!.text }}</span>
         </label>
         <label>sda pin
-          <input type="number" min="0" max="39" v-model.number="node.properties.sda" @input="touch" />
+          <input type="number" min="0" :max="pinMax" v-model.number="node.properties.sda" @input="touch" />
+          <span v-if="pinInfo(node.properties.sda)" class="pin-hint" :class="{ bad: pinInfo(node.properties.sda)!.bad }" :title="pinInfo(node.properties.sda)!.title">{{ pinInfo(node.properties.sda)!.text }}</span>
         </label>
         <label>address
           <input type="number" min="0" max="127" v-model.number="node.properties.addr" @input="touch" />
@@ -555,7 +568,8 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { selectedNode, bumpPropertyVersion, propertyVersion, setFunctionNodeOutputCount } from "./store";
+import { selectedNode, bumpPropertyVersion, propertyVersion, setFunctionNodeOutputCount, activeTarget } from "./store";
+import { FALLBACK_MAX_PIN } from "../../definitions/pin-check";
 import { NODE_PALETTE, DEFAULT_KIND_STYLE, type NodeKind, type KindStyle } from "./palette";
 import { InjectNode, CustomNode, FunctionNode } from "./nodes";
 import { MAX_FUNCTION_OUTPUTS } from "../../node-library/function-node";
@@ -610,6 +624,27 @@ function retypeInjectOutput(): void {
 }
 
 const maxFunctionOutputs = MAX_FUNCTION_OUTPUTS;
+
+// Pin fields (MVP item 4, definitions/): the input's max follows the
+// current target (Board menu, or the connected board), and a short hint
+// beside it shows the board's label for that pin ("LED") or why it's a
+// problem. The compile-time checks in definitions/pin-check.ts are what
+// actually enforce anything; this is only a guide while editing.
+const pinMax = computed(() => (activeTarget.value ? Math.max(...activeTarget.value.gpio) : FALLBACK_MAX_PIN));
+
+function pinInfo(value: unknown): { text: string; title: string; bad: boolean } | null {
+  const t = activeTarget.value;
+  const pin = Number(value);
+  if (!t || !Number.isInteger(pin) || pin < 0) return null;
+  if (!t.gpio.has(pin)) return { text: "not on this board", title: `${t.label} has no GPIO ${pin}`, bad: true };
+  const reserved = t.reserved.get(pin);
+  if (reserved !== undefined) return { text: "reserved", title: reserved, bad: true };
+  const labels = t.pinLabels.get(pin)?.join(", ");
+  const avoid = t.avoid.get(pin);
+  if (avoid !== undefined) return { text: labels ? `${labels} · avoid` : "avoid", title: avoid, bad: false };
+  if (t.inputOnly.has(pin)) return { text: labels ? `${labels} · input only` : "input only", title: `GPIO ${pin} is input-only on ${t.label}`, bad: false };
+  return labels ? { text: labels, title: `${t.board?.name ?? t.label}: ${labels}`, bad: false } : null;
+}
 
 // Real port add/remove (not just a `properties` edit) -- routed through
 // store.ts's setFunctionNodeOutputCount ref, filled in by
@@ -741,5 +776,14 @@ function setBrokerConfigId(id: string): void {
 }
 .hint {
   color: #888;
+}
+.pin-hint {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: #888;
+}
+.pin-hint.bad {
+  color: #e06c6c;
 }
 </style>

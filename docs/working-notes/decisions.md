@@ -162,6 +162,15 @@ nodes at once) stays unbuilt, its own separately-scoped item — this only suppl
 mechanism a future board-preset type could sit on top of. 1 entry:
 `docs/working-notes/decisions/presets.md`.
 
+## Processor and board definitions (MVP item 4)
+
+**2026-09-23 -- built, NOT yet verified on real hardware.** Hand-writable JSON definitions: built-ins in
+`editor/src/definitions/{processors,boards}/`, user files in `~/.thingstudio/processors/` and `boards/`
+(read-only `GET /api/definitions`), id = file name, user file replaces a built-in whole, invalid files
+logged loudly. New toolbar Board menu (Auto from HELLO `chipType`, or a manual pick). All 7 pin-taking
+nodes check pins, SPI/I2C buses and SPI speed against the target; errors vs warnings split as the brief
+suggested. 1 entry: `docs/working-notes/decisions/chip-board-definitions.md`.
+
 ## What this list doesn't include
 
 Small per-file implementation judgment calls (exact property names, which

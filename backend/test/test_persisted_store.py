@@ -373,3 +373,21 @@ def test_read_preset_raises_for_a_hand_edited_broken_file(tmp_path) -> None:
     (d / "broken.json").write_text("{not valid json", encoding="utf-8")
     with pytest.raises(PersistedStoreError):
         store.read_preset("display_spi", "broken")
+
+
+# -- processor and board definitions -------------------------------------
+
+
+def test_list_definitions_rejects_an_unknown_kind(tmp_path) -> None:
+    store = PersistedStore(base_dir=tmp_path)
+    with pytest.raises(PersistedStoreError, match="invalid definition kind"):
+        store.list_definitions("chips")
+
+
+def test_list_definitions_flags_an_unreadable_encoding(tmp_path) -> None:
+    (tmp_path / "boards").mkdir()
+    (tmp_path / "boards" / "latin.json").write_bytes(b'{"name": "caf\xe9"}')
+    store = PersistedStore(base_dir=tmp_path)
+    [info] = store.list_definitions("boards")
+    assert info.valid is False
+    assert "failed reading file" in info.error

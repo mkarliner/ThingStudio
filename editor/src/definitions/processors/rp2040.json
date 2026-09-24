@@ -1,0 +1,20 @@
+{
+  "name": "RP2040",
+  "match": ["RP2040"],
+  "nativeArch": "armv6m",
+  "gpio": ["0-29"],
+  "spi": {
+    "maxHz": 62500000,
+    "buses": {
+      "0": { "pins": { "sck": [2, 6, 18, 22], "mosi": [3, 7, 19, 23], "miso": [0, 4, 16, 20] } },
+      "1": { "pins": { "sck": [10, 14, 26], "mosi": [11, 15, 27], "miso": [8, 12, 24, 28] } }
+    }
+  },
+  "i2c": {
+    "buses": {
+      "0": { "pins": { "sda": [0, 4, 8, 12, 16, 20, 24, 28], "scl": [1, 5, 9, 13, 17, 21, 25, 29] } },
+      "1": { "pins": { "sda": [2, 6, 10, 14, 18, 22, 26], "scl": [3, 7, 11, 15, 19, 23, 27] } }
+    }
+  },
+  "notes": "RP2040 (dual Cortex-M0+). Each SPI and I2C bus can only use certain pins."
+}

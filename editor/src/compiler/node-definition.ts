@@ -16,6 +16,7 @@
 //                  (pattern 1, native primitive call).
 
 import type { GraphNode } from "./graph.js";
+import type { Target } from "../definitions/target.js";
 
 export type NodeKind = "source" | "transform" | "sink";
 
@@ -175,6 +176,19 @@ export interface CodegenContext {
    * zero/many are both CompileErrors -- see resolveFlowWifiCredentials()).
    */
   findNodesOfType?(type: string): GraphNode[];
+  /**
+   * The processor/board this compile targets (definitions/target.ts), or
+   * null/absent when none is known. Pin-taking nodes don't read it directly
+   * -- they call definitions/pin-check.ts, which does. Optional for the same
+   * reason as findNodesOfType: hand-rolled mocks keep compiling.
+   */
+  target?: Target | null;
+  /**
+   * Records a non-fatal problem (an "avoid" pin, no target known). Returned
+   * in CompileResult.warnings, deduplicated, in first-seen order. Optional:
+   * a mock without it just drops warnings.
+   */
+  warn?(message: string): void;
 }
 
 export interface NodeDefinition {

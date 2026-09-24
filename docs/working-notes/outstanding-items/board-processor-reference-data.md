@@ -21,3 +21,10 @@ is still not built or scoped as a UI**: v1 of presets is explicitly per-node onl
 `properties`, applied from that node's own property panel) — there's no "pick a board, seed several nodes'
 pins/settings at once" flow, and no curated reference *data* (this item's actual ask) exists yet either. Read
 `presets-design.md` before scoping this, since the storage layer it would use is no longer a blank slate.
+
+**Update, 2026-09-23: built (MVP item 4).** Not on top of presets after all: separate
+`~/.thingstudio/processors/` and `boards/` folders (Mike's naming), plus built-ins in
+`editor/src/definitions/`. Each pin to avoid carries its reason. Full design:
+`decisions/chip-board-definitions.md`. User docs: `docs/user-guide/boards.md`. "Kept up to date as new
+boards are supported" is now a matter of adding a JSON file; the "pick a board, seed several nodes'
+settings" flow is still not built.

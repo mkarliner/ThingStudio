@@ -40,6 +40,7 @@
 // scoping note flagged rather than left to be rediscovered mid-build.
 
 import { CompileError } from "../compiler/errors.js";
+import { checkPin } from "../definitions/pin-check.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, EventSourceCodegenResult, NodeDefinition } from "../compiler/node-definition.js";
 
@@ -56,11 +57,8 @@ export const interruptNode: NodeDefinition = {
   ports: {
     outputs: [{ name: "msg", type: "bool" }],
   },
-  codegenEventSource(node: GraphNode, _ctx: CodegenContext): EventSourceCodegenResult {
-    const pin = Math.round(Number(node.properties.pin));
-    if (!Number.isFinite(pin) || pin < 0 || pin > 39) {
-      throw new CompileError(`interrupt pin ${String(node.properties.pin)} is out of range (0-39)`);
-    }
+  codegenEventSource(node: GraphNode, ctx: CodegenContext): EventSourceCodegenResult {
+    const pin = checkPin(ctx, "interrupt pin", node.properties.pin, "input");
     const edge = String(node.properties.edge ?? "rising");
     if (!VALID_EDGES.has(edge)) {
       throw new CompileError(`interrupt edge "${edge}" must be one of "rising", "falling", or "both"`);

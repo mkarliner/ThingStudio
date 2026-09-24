@@ -4,7 +4,7 @@ Drives a GPIO pin high or low based on an incoming message.
 
 ## Properties
 
-- **pin** — GPIO pin number (0–39).
+- **pin** — GPIO pin number. Checked against your [board](../boards.md).
 
 ## Behavior
 

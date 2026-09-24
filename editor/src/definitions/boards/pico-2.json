@@ -1,0 +1,13 @@
+{
+  "name": "Raspberry Pi Pico 2",
+  "processor": "rp2350",
+  "match": ["Raspberry Pi Pico2"],
+  "gpio": ["0-29"],
+  "pins": { "LED": 25 },
+  "avoid": {
+    "23": "Controls the power supply mode (SMPS).",
+    "24": "Senses USB power (VBUS).",
+    "29": "Measures the supply voltage (VSYS)."
+  },
+  "notes": "RP2350A, so GPIO 0-29 only. The onboard LED is GPIO 25."
+}

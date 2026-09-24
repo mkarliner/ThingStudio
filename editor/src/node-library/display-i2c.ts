@@ -50,19 +50,12 @@
 // to catch before it does, not after.
 
 import { CompileError } from "../compiler/errors.js";
+import { checkI2c, checkPin } from "../definitions/pin-check.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, NodeDefinition, SinkCodegenResult } from "../compiler/node-definition.js";
 
 const CONTROLLERS = ["ssd1306"] as const;
 type Controller = (typeof CONTROLLERS)[number];
-
-function requirePin(value: unknown, label: string): number {
-  const pin = Math.round(Number(value));
-  if (!Number.isFinite(pin) || pin < 0 || pin > 39) {
-    throw new CompileError(`display_i2c ${label} pin ${String(value)} is out of range (0-39)`);
-  }
-  return pin;
-}
 
 export const displayI2cNode: NodeDefinition = {
   type: "thingstudio/display_i2c",
@@ -84,8 +77,9 @@ export const displayI2cNode: NodeDefinition = {
     if (!Number.isFinite(freq) || freq <= 0) {
       throw new CompileError(`display_i2c freq "${String(node.properties.freq)}" must be a positive number`);
     }
-    const scl = requirePin(node.properties.scl, "scl");
-    const sda = requirePin(node.properties.sda, "sda");
+    const scl = checkPin(ctx, "display_i2c scl pin", node.properties.scl, "bidirectional");
+    const sda = checkPin(ctx, "display_i2c sda pin", node.properties.sda, "bidirectional");
+    checkI2c(ctx, "display_i2c", i2cBus, { scl, sda });
 
     const addr = Math.round(Number(node.properties.addr ?? 0x3c));
     if (!Number.isFinite(addr) || addr < 0 || addr > 0x7f) {

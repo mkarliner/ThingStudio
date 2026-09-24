@@ -4,7 +4,7 @@ Fires immediately when a GPIO pin changes state — genuinely event-driven, not 
 
 ## Properties
 
-- **pin** — GPIO pin number (0–39).
+- **pin** — GPIO pin number. Checked against your [board](../boards.md).
 - **edge** — `rising`, `falling`, or `both`.
 - **debounce** — on by default. Ignores further transitions within the debounce window after an accepted one.
 - **debounce (ms)** — the debounce window, shown when debounce is on. Default 50ms.

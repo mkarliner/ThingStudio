@@ -1,0 +1,31 @@
+{
+  "name": "ESP32",
+  "match": ["ESP32"],
+  "nativeArch": "xtensawin",
+  "gpio": ["0-19", "21-23", "25-27", "32-39"],
+  "inputOnly": ["34-39"],
+  "noPull": ["34-39"],
+  "reserved": {
+    "1": "UART0 TX. Carries the USB serial link to Thingstudio.",
+    "3": "UART0 RX. Carries the USB serial link to Thingstudio.",
+    "6-11": "Wired to the flash chip. Using them crashes the board."
+  },
+  "avoid": {
+    "0": "Strapping pin. Held low at reset, the board starts in download mode.",
+    "2": "Strapping pin. Must be low or floating at reset to flash the board.",
+    "5": "Strapping pin. Sets flash timing at reset.",
+    "12": "Strapping pin. High at reset selects 1.8 V flash, and most boards then fail to boot.",
+    "15": "Strapping pin. Low at reset silences the boot log.",
+    "16-17": "Wired to PSRAM on WROVER modules."
+  },
+  "spi": {
+    "maxHz": 80000000,
+    "otherPinsMaxHz": 27000000,
+    "buses": {
+      "1": { "fastPins": { "sck": 14, "mosi": 13, "miso": 12 } },
+      "2": { "fastPins": { "sck": 18, "mosi": 23, "miso": 19 } }
+    }
+  },
+  "i2c": { "buses": { "0": {}, "1": {} } },
+  "notes": "Classic ESP32 (Xtensa LX6). On pins other than the bus's fast pins, SPI tops out near 27 MHz (ESP-IDF rounds 27 MHz down to 26.7 MHz). Asking for more makes ESP-IDF refuse the setting, and the board crashes."
+}
