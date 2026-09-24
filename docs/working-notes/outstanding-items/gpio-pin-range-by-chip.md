@@ -36,6 +36,8 @@ reserved on the Pico W. Moving from the CYD to a Pico exposed a stuck manual Boa
 (`decisions/chip-board-definitions.md`). Side finding: after the editor's Install runtime, the Picos needed a
 power cycle (no reset button). Cause: the install's single Ctrl-C is ignored by a running listener
 (`kbd_intr(-1)`), and a Pico doesn't reset when the port opens. Fixed 2026-09-24: Install runtime now sends
-STOP_TO_PROMPT first and waits for a prompt like Remove flow (`board_recovery.catch_prompt`); not yet re-run
-on the Pico. Remaining: editing a `~/.thingstudio` definition file and
-seeing it after Connect/Deploy.
+STOP_TO_PROMPT first and waits for a prompt like Remove flow (`board_recovery.catch_prompt`); confirmed on
+the Pico the same day (Mike), both the connected path and unplug-and-replug. Editing `~/.thingstudio/boards/pico.json` (new name, extra pin label) showed up on the next Connect
+with no restart: the override console line, the renamed Auto label, and the label in the property panel.
+Deleting the file and restarting the backend restored the built-in, identical. **All hardware checks from
+`board-definitions-landed-briefing.md` pass (2026-09-24).**
