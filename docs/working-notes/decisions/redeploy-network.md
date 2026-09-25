@@ -357,3 +357,9 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
   mqtt_as constructor, then the wait step); a flow without MQTT never does. So `active(True)` is now only called
   on an inactive interface -- in the wait step and, as a second local patch, in mqtt_as's constructor and
   `wifi_connect()`. Runtime 5.0.0. Hardware result pending.
+- 2026-09-25: MQTT clients are stopped on redeploy. mqtt_as runs its own tasks, which `cancel_running()` never
+  reached, so the old flow's client kept running beside the new one with the same client ID; the broker kicked each
+  off in turn and every reconnect dropped WiFi ("bouncing" after editing a subscribe topic). The generated setup now
+  registers a `runtime.register_cleanup()` that stops `_keep_connected`, cancels the client's tasks, sends DISCONNECT and
+  closes the socket, leaving WiFi up. Hardware-confirmed on the ESP32-C3. Known gap: a client mid-`connect()` at
+  redeploy (broker down) may complete it once. `mqtt-shared.ts` (`mqttSetupStatement`).

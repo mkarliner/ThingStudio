@@ -70,3 +70,4 @@ Reinstall the runtime first (3.0.0 adds `board_settings.py` and `net_transport.p
   mqtt:` lines are experiment diagnostics -- keep or quieten. Lazy runtime imports are now [P2] in outstanding-items.
 - Still not checked: steps 7-9 (fault cases, Pico W WiFi transport, plain Pico), and the Pico W / RP2 regression
   check after today's `mqtt_as` and codegen changes.
+- Redeploying an MQTT flow no longer leaves the old client running (it bounced the connection); fixed and confirmed.

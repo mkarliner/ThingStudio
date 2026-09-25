@@ -367,6 +367,27 @@ export function mqttSetupStatement(cfg: MqttBrokerConfig): { key: string; code: 
     `${clientVar}_cfg['queue_len'] = 20`,
     `${clientVar} = mqtt_as.MQTTClient(${clientVar}_cfg)`,
     `${mqttConnectedVar(cfg)} = False`,
+    // Stop this client when the flow is replaced (2026-09-25, ESP32-C3 bench: editing the subscribe topic and
+    // redeploying set the connection bouncing). mqtt_as runs its own tasks, which a redeploy's task cancel
+    // doesn't reach, so the old client kept running beside the new one with the same client ID -- the
+    // broker allows one connection per ID, so each kicked the other off, and every reconnect also dropped
+    // WiFi. Sync, as runtime cleanups are: stop _keep_connected's loop, cancel the rest, tell the broker
+    // (DISCONNECT), close the socket. WiFi stays up for the next flow. Uses mqtt_as internals
+    // (_has_connected, _tasks, _sock) -- its own disconnect() is async and close() also drops WiFi.
+    `def ${clientVar}_stop(c=${clientVar}):`,
+    `    c._has_connected = False`,
+    `    c._isconnected = False`,
+    `    for t in c._tasks:`,
+    `        t.cancel()`,
+    `    c._tasks.clear()`,
+    `    if c._sock is not None:`,
+    `        try:`,
+    `            c._sock.write(b"\\xe0\\0")`,
+    `        except OSError:`,
+    `            pass`,
+    `        c._close()`,
+    `        c._sock = None`,
+    `runtime.register_cleanup(${pyStringLiteral("mqtt-" + clientVar)}, ${clientVar}_stop)`,
     // NOT `asyncio.Lock()` here -- this statement runs at plain module
     // scope, before any event loop is actually running (compile.ts emits
     // every setup statement ahead of the coroutines/`runtime.spawn` calls

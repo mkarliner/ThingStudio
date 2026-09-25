@@ -73,7 +73,16 @@ class MQTTClient:
         self.connect_calls = 0
         self.queue = _MsgQueue()
         self.subscriptions = []
+        # The mqtt_as internals Thingstudio's redeploy cleanup touches (mqtt-shared.ts's <client>_stop).
+        self._has_connected = False
+        self._isconnected = False
+        self._tasks = []
+        self._sock = None
+        self.closed = False
         CLIENTS.append(self)
+
+    def _close(self):
+        self.closed = True
 
     async def connect(self, quick=False):
         self.connect_calls += 1

@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 import { compile } from "../src/compiler/compile.js";
 import type { GraphData } from "../src/compiler/graph.js";
 import { buildRegistry } from "../src/node-library/registry.js";
-import { mqttEnsureConnectedSnippet } from "../src/node-library/mqtt-shared.js";
+import { mqttEnsureConnectedSnippet, mqttSetupStatement } from "../src/node-library/mqtt-shared.js";
 import { wifiSetupStatement } from "../src/node-library/wifi-status.js";
 
 const cfg = { broker: "broker.local", port: 1883, ssid: "net", wifiPassword: "pw", username: "", password: "" };
@@ -36,6 +36,14 @@ describe("ESP32 + MQTT WiFi join", () => {
   it("explains the broker's refusal codes", () => {
     expect(at('("0x5", "not authorised')).toBeGreaterThan(-1);
     expect(at('("0x4", "bad username or password')).toBeGreaterThan(-1);
+  });
+
+  it("registers a redeploy cleanup that stops the client (no second client with the same ID)", () => {
+    const setup = mqttSetupStatement(cfg).code;
+    expect(setup).toContain("def _mqtt_client_");
+    expect(setup).toContain("c._has_connected = False");
+    expect(setup).toContain('c._sock.write(b"\\xe0\\0")');
+    expect(setup).toMatch(/runtime\.register_cleanup\("mqtt-_mqtt_client_[^"]+", _mqtt_client_\w+_stop\)/);
   });
 
   it("a flow with MQTT but no wifi_status still gets the join", () => {
