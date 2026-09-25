@@ -139,8 +139,9 @@ class FakeRuntimeInstaller:
         self._install_effect = install_effect
         self._progress = progress or []
 
-    def install(self, port: object, include_vendor: bool = True, timeouts: object = None, on_progress=None) -> None:
+    def install(self, port: object, include_vendor: bool = True, timeouts: object = None, on_progress=None, compiled=None) -> None:
         self.install_calls.append(port)
+        self.last_compiled = compiled
         for step in self._progress:
             if on_progress is not None:
                 on_progress(*step)
@@ -581,8 +582,9 @@ class SlowRuntimeInstaller(FakeRuntimeInstaller):
         self.started = threading.Event()
         self.release = threading.Event()
 
-    def install(self, port: object, include_vendor: bool = True, timeouts: object = None, on_progress=None) -> None:
+    def install(self, port: object, include_vendor: bool = True, timeouts: object = None, on_progress=None, compiled=None) -> None:
         self.install_calls.append(port)
+        self.last_compiled = compiled
         self.started.set()
         self.release.wait(5)
 

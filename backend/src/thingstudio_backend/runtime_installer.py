@@ -120,15 +120,60 @@ class RuntimeInstaller:
             logger.warning("couldn't determine device-runtime/src's git SHA -- the board will report runtimeBuild=null")
         return files
 
+    def source_files(self, include_vendor: bool = True) -> list[tuple[str, str]]:
+        """The .py files an editor can precompile, as (board file name, source text) -- every runtime
+        and vendored module, with listener.py under its own name (main.py becomes a stub when it's
+        compiled; see with_compiled()). Served at /api/runtime-sources."""
+        out: list[tuple[str, str]] = []
+        for dest, data in self.build_file_list(include_vendor):
+            if dest == "main.py":
+                dest = "listener.py"
+            if dest.endswith(".py"):
+                out.append((dest, data.decode("utf-8")))
+        return out
+
+    @staticmethod
+    def with_compiled(files: list[tuple[str, bytes]], compiled: dict[str, bytes]) -> tuple[list[tuple[str, bytes]], list[str]]:
+        """Swaps each .py for its precompiled .mpy where `compiled` has one (2026-09-25: loading .mpy
+        skips on-board compilation, whose heap growth left an ESP32-C3's WiFi too little memory to
+        authenticate). Returns the files to push and the stale names to delete first -- MicroPython
+        imports x.py before x.mpy, so the other format's copy must go. main.py stays a .py (it's what
+        boots): with listener compiled, it becomes a two-line stub. A .py with no compiled twin is
+        pushed as source, and its stale .mpy removed."""
+        out: list[tuple[str, bytes]] = []
+        remove: list[str] = []
+        for dest, data in files:
+            if dest == "main.py":
+                if "listener.mpy" in compiled:
+                    out.append(("listener.mpy", compiled["listener.mpy"]))
+                    out.append(("main.py", b"import listener\nlistener.main()\n"))
+                else:
+                    out.append((dest, data))
+                    remove.append("listener.mpy")
+                remove.append("listener.py")
+                continue
+            if dest.endswith(".py"):
+                mpy = dest[:-3] + ".mpy"
+                if mpy in compiled:
+                    out.append((mpy, compiled[mpy]))
+                    remove.append(dest)
+                else:
+                    out.append((dest, data))
+                    remove.append(mpy)
+                continue
+            out.append((dest, data))
+        return out, remove
+
     def install(
         self,
         port: "_SerialPort",
         include_vendor: bool = True,
         timeouts: RawReplTimeouts = RawReplTimeouts(),
         on_progress: "raw_repl.ProgressCallback | None" = None,
+        compiled: dict[str, bytes] | None = None,
     ) -> None:
         """Pushes the full manifest onto `port`'s board and hard-resets it. Raises
         raw_repl.RawReplError (from whichever step failed) on any problem -- see
         raw_repl.install_runtime()'s own docstring on why there's no partial-success case."""
-        files = self.build_file_list(include_vendor)
-        raw_repl.install_runtime(port, files, timeouts, on_progress)
+        files, remove = self.with_compiled(self.build_file_list(include_vendor), compiled or {})
+        raw_repl.install_runtime(port, files, timeouts, on_progress, remove=remove)

@@ -63,3 +63,10 @@ Reinstall the runtime first (3.0.0 adds `board_settings.py` and `net_transport.p
   was the ESP32-C3 (Board settings applies to whichever board is on USB). The Pico W (`ts-3c0c31`, running the
   `wifistatus` test flow with mqtt nodes, RSSI -58) pings at 2-25 ms with no loss. The ESP32's pattern looks like
   its default WiFi modem sleep; not yet confirmed with `pm=PM_NONE`.
+- ESP32-C3 + MQTT (afternoon): a first WiFi join from an MQTT flow failed (1001 for 15 s, then 202) until the
+  runtime was installed precompiled -- memory, see `learnings/micropython-device-runtime.md`. Along the way: WiFi
+  config became a singleton, `mqtt_as` gained two local patches (runtime 5.0.0), the ESP32 first join moved to flow
+  start, and MQTT connect errors name every attempt's WiFi status and the broker's refusal reason. The `NET_INFO
+  mqtt:` lines are experiment diagnostics -- keep or quieten. Lazy runtime imports are now [P2] in outstanding-items.
+- Still not checked: steps 7-9 (fault cases, Pico W WiFi transport, plain Pico), and the Pico W / RP2 regression
+  check after today's `mqtt_as` and codegen changes.

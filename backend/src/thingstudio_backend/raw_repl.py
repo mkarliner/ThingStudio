@@ -307,6 +307,7 @@ def install_runtime(
     files: list[tuple[str, bytes]],
     timeouts: RawReplTimeouts = RawReplTimeouts(),
     on_progress: ProgressCallback | None = None,
+    remove: list[str] | None = None,
 ) -> None:
     """Pushes `files` (a caller-supplied, already-ordered [(dest_filename, contents), ...] list
     -- this module has no opinion on where those bytes come from or what belongs in the list,
@@ -316,6 +317,11 @@ def install_runtime(
     success return value, since a partially-written runtime is not a state worth distinguishing
     from a total failure; the caller's own retry is "run this again from the top"."""
     enter_raw_repl(port, timeouts)
+    if remove:
+        # Stale copies from an earlier install in the other format (2026-09-25): MicroPython imports
+        # x.py in preference to x.mpy, so an old .py would silently shadow a new .mpy.
+        code = "import os\nfor _f in %r:\n try:\n  os.remove(_f)\n except OSError:\n  pass" % (list(remove),)
+        exec_raw(port, code.encode(), "removing stale runtime files")
     for index, (dest_name, data) in enumerate(files, start=1):
         logger.info("installing runtime: %d/%d %s (%d bytes)", index, len(files), dest_name, len(data))
         if on_progress is not None:

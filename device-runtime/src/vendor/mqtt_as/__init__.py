@@ -189,7 +189,8 @@ class MQTT_base:
             raise ValueError("no server specified.")
         self._sock = None
         self._sta_if = network.WLAN(network.STA_IF)
-        self._sta_if.active(True)
+        if not self._sta_if.active():  # THINGSTUDIO PATCH (2026-09-25): see wifi_connect() and README.md
+            self._sta_if.active(True)
         if config["gateway"]:  # Called from gateway (hence ESP32).
             import aioespnow  # Set up ESPNOW
 
@@ -733,7 +734,10 @@ class MQTTClient(MQTT_base):
                 while s.status() == network.STAT_CONNECTING:
                     await asyncio.sleep(1)
         else:
-            s.active(True)
+            # THINGSTUDIO PATCH (2026-09-25): activate only when inactive -- on the ESP32-C3, active(True) on an
+            # interface mid-connect made the join fail (15 s "connecting", then 202). See README.md.
+            if not s.active():
+                s.active(True)
             if RP2 and not NINA:  # Disable auto-sleep.
                 # https://datasheets.raspberrypi.com/picow/connecting-to-the-internet-with-pico-w.pdf
                 # para 3.6.3

@@ -378,6 +378,20 @@ export function wifiSetupStatement(ssid: unknown, password: unknown, security: W
   const lines = ["_wifi_sta = network.WLAN(network.STA_IF)", "_wifi_sta.active(True)"];
   if (deferToMqtt) {
     lines.push("# WiFi connection managed by mqtt_as -- this flow has an mqtt_publish/mqtt_subscribe node, which owns its own connect/reconnect (wifi-status.ts's flowHasMqttNodes())");
+    // EXPERIMENT 2026-09-25: except the first join on ESP32, which happens here at flow start, exactly as a
+    // flow without MQTT does. On the ESP32-C3 bench the same connect() run later, inside the flow's MQTT
+    // coroutine, sat at "connecting" for 15 s and failed with 202; at import it joins. mqtt_as's vendored
+    // wifi_connect() skips its own connect() once this has joined, and still owns reconnecting.
+    // mqtt-publish.ts/mqtt-subscribe.ts contribute this statement too, so it exists without a wifi_status node.
+    const ssidStr = typeof ssid === "string" ? ssid.trim() : "";
+    if (ssidStr && security !== "unmanaged") {
+      const pwStr = typeof password === "string" ? password : "";
+      lines.push(
+        "import sys",
+        `if sys.platform == "esp32" and not _wifi_sta.isconnected():`,
+        `    _wifi_sta.connect(${pyStringLiteral(ssidStr)}, ${pyStringLiteral(pwStr)})`,
+      );
+    }
     return { key: WIFI_SETUP_KEY, code: lines.join("\n") };
   }
   if (security === "unmanaged") {

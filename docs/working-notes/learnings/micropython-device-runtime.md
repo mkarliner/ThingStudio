@@ -197,3 +197,16 @@ Status: detail file, split out of `learnings.md` on 2026-09-06 to keep that inde
 - **2026-09-24 — Ending an asyncio session from another task: cancel it, don't just close its socket.** Closing
   the writer from outside left the session's `readline()` waiting until its 8 s read timeout noticed; cancelling
   the handler task (`asyncio.current_task()` captured at session start) runs its `finally` at once.
+- 2026-09-25, ESP32-C3: **compiling source on the board can starve WiFi.** A flow with MQTT nodes could not make a
+  first WiFi join -- 15 s at `STAT_CONNECTING` (1001), then 202 (authentication failed) -- while a `wifi_status`-only
+  flow joined the same network from the same state, and an MQTT flow deployed onto an already-joined board worked.
+  Four fixes aimed at the connect sequence changed nothing. Explanation, confirmed by the fix working (the heap
+  itself was never measured -- `esp32.idf_heap_info(esp32.HEAP_DATA)` before and after `import mqtt_as` would): MicroPython's ESP32 heap grows into the
+  ESP-IDF heap and doesn't give it back, so compiling ~900 lines of `mqtt_as.py` at import left the WiFi driver
+  too little memory for the WPA handshake. Earlier the same day the driver also failed with "Expected to init 10
+  rx buffer, actual is 0" -- the same shortage. Response: precompiled installs
+  (`decisions/runtime-install-from-editor.md`). The runtime's boot footprint grew in 3.0.0 (WiFi transport), and
+  the display/eswitch work landed without a network test on the C3; a memory check belongs on the hardware list.
+  Result: with the runtime installed as precompiled `.mpy`, the same MQTT flow joined WiFi 1.7 s after a clean
+  power-cycle, and MQTT connected once the broker credential was corrected (CONNACK 0x5 was a wrong broker
+  password, unrelated).

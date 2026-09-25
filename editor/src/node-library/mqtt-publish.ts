@@ -54,6 +54,7 @@ import type { CodegenContext, NodeDefinition, SinkCodegenResult } from "../compi
 import { CompileError } from "../compiler/errors.js";
 import { mqttClientVar, mqttEnsureConnectedSnippet, mqttNodeStatusSetupStatement, mqttSetupStatement, parseMqttBrokerProps, payloadToBytesSnippet } from "./mqtt-shared.js";
 import { pyStringLiteral } from "./py-literals.js";
+import { wifiSetupStatement } from "./wifi-status.js";
 
 export const mqttPublishNode: NodeDefinition = {
   type: "thingstudio/mqtt_publish",
@@ -96,8 +97,8 @@ export const mqttPublishNode: NodeDefinition = {
       // (it used blocking time.sleep_ms() when it was module-scope code
       // with no event loop yet; inlined into a coroutine now, it uses
       // asyncio.sleep_ms() instead, see that file's header).
-      imports: ["import mqtt_as", "import network", "import sys"],
-      statements: [mqttSetupStatement(cfg), mqttNodeStatusSetupStatement(node.id)],
+      imports: ["import mqtt_as", "import network", "import sys", "import time"],
+      statements: [wifiSetupStatement(cfg.ssid, cfg.wifiPassword, "open", true), mqttSetupStatement(cfg), mqttNodeStatusSetupStatement(node.id)],
       functionName: ctx.uniqueName("mqtt_publish"),
       functionBody,
     };

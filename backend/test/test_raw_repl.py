@@ -143,6 +143,18 @@ def test_install_runtime_pushes_every_file_in_order_then_resets() -> None:
     assert port.written[-2:] == [b"import machine\nmachine.reset()", b"\x04"]
 
 
+def test_install_runtime_removes_stale_files_before_pushing() -> None:
+    # 2026-09-25: an old x.py would shadow a new x.mpy (MicroPython imports .py first).
+    files = [("errors.mpy", b"M")]
+    port = _FakePort([b"\r\n" + _BANNER] + [_ok_response() for _ in range(1 + 3 * len(files))])
+    install_runtime(port, files, _FAST, remove=["errors.py"])
+    texts = [w.decode(errors="replace") for w in port.written]
+    removal = next(i for i, t in enumerate(texts) if "os.remove" in t)
+    first_open = next(i for i, t in enumerate(texts) if t.startswith("f=open("))
+    assert removal < first_open
+    assert "'errors.py'" in texts[removal]
+
+
 def test_install_runtime_raises_and_stops_on_a_mid_push_failure() -> None:
     files = [("errors.py", b"errors source"), ("runtime.py", b"runtime source")]
     # Banner, then the first file's open+chunk+close (3 responses), then a response that isn't

@@ -69,3 +69,31 @@ async def test_with_no_tab_checking_in_the_editor_opens(tmp_path, monkeypatch) -
     async with TestClient(TestServer(app)):
         await asyncio.sleep(0.4)
     assert opened == ["http://127.0.0.1:1/"]
+
+
+@pytest.mark.asyncio
+async def test_runtime_sources_serves_the_real_runtime_as_text(tmp_path) -> None:
+    from aiohttp.test_utils import TestClient, TestServer
+
+    from thingstudio_backend.app import create_app
+
+    app = create_app(data_dir=tmp_path, static_dir=tmp_path, docs_dir=tmp_path)
+    async with TestClient(TestServer(app)) as client:
+        resp = await client.get("/api/runtime-sources", headers={"Host": "127.0.0.1"})
+        assert resp.status == 200
+        names = [f["name"] for f in (await resp.json())["files"]]
+    assert "listener.py" in names and "net_transport.py" in names and "mqtt_as.py" in names
+    assert "main.py" not in names
+
+
+def test_compiled_field_is_checked() -> None:
+    import base64
+
+    from thingstudio_backend.ws_relay import _decode_compiled
+
+    ok, problem = _decode_compiled({"runtime.mpy": base64.b64encode(b"M\x06x").decode()})
+    assert problem is None and ok == {"runtime.mpy": b"M\x06x"}
+    assert _decode_compiled(None) == (None, None)
+    assert _decode_compiled({"../main.py": "TQ=="})[1]  # not a plain module name
+    assert _decode_compiled({"x.mpy": "not base64!"})[1]
+    assert _decode_compiled({"x.mpy": base64.b64encode(b"print(1)").decode()})[1]  # not a .mpy header

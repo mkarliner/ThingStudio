@@ -851,7 +851,9 @@ const mpyReadyPromise: Promise<void> = (async () => {
   logLine(`[mpy-cross load error] ${err instanceof Error ? err.message : String(err)}`, "err");
 });
 
-function compileToMpy(source: string, march: string): Uint8Array {
+/** `march` null: plain bytecode with no -march, loadable on any chip (used for the runtime's own files,
+ * which have no native code -- precompileRuntime()). */
+function compileToMpy(source: string, march: string | null): Uint8Array {
   if (!MpyModule) throw new Error("mpy-cross not ready yet");
   mpyStderrLines = [];
   MpyModule.FS.writeFile("/in.py", source);
@@ -860,7 +862,7 @@ function compileToMpy(source: string, march: string): Uint8Array {
   } catch {
     // no previous output to remove -- fine
   }
-  const exitCode = MpyModule.callMain(["-march=" + march, "-o", "/out.mpy", "/in.py"]);
+  const exitCode = MpyModule.callMain([...(march ? ["-march=" + march] : []), "-o", "/out.mpy", "/in.py"]);
   if (exitCode !== 0) {
     throw new Error(`mpy-cross exited ${exitCode} (see console log above for stderr)`);
   }
@@ -1164,7 +1166,7 @@ function waitForMessage(match: (m: Message) => boolean, timeoutMs: number): Prom
 // bump-discipline rule), so this is the level that actually stops an
 // unsafe DEPLOY rather than letting it crash on the device.
 // 2.0.0 (2026-09-23): EXEC, STOP_TO_PROMPT, safe mode. Must match listener.py's _RUNTIME_VERSION.
-const EDITOR_TARGET_VERSION: ProtocolVersion = { major: 4, minor: 0, patch: 0 }; // 4.0.0 2026-09-25: mqtt_as guard, ESP32 MQTT joins WiFi first; 3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS
+const EDITOR_TARGET_VERSION: ProtocolVersion = { major: 5, minor: 0, patch: 0 }; // 5.0.0 2026-09-25: mqtt_as active(True) guard; 4.0.0 2026-09-25: mqtt_as guard, ESP32 MQTT joins WiFi first; 3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS
 
 // This editor's own device-runtime/src git SHA, injected at build/dev-
 // server-start time by vite.config.ts's `define` (see that file,
@@ -2036,6 +2038,38 @@ function exclusiveBoardJob(job: () => Promise<void>): () => Promise<void> {
  * port claim would conflict with this one -- disconnected first below, and
  * not silently: told to the user, since Deploy/Check status/Disconnect all
  * go stale for that dropped session either way. */
+/** Compiles the runtime's .py files to .mpy with the same mpy-cross as flows, so the board loads bytecode
+ * instead of compiling source (2026-09-25: on an ESP32-C3, compiling mqtt_as at import grew the heap into
+ * memory the WiFi driver needed, and joins failed with "authentication failed"). Plain bytecode, no
+ * -march: the runtime has no native code, so one set of files suits every chip. Any failure -- no backend
+ * endpoint, mpy-cross not loaded, a file that won't compile -- returns undefined and the install goes
+ * ahead from source, as before, with a console line saying so. */
+async function precompileRuntime(): Promise<Record<string, string> | undefined> {
+  try {
+    await mpyReadyPromise;
+    const res = await fetch(`${backendHttpBaseUrl(currentBackendWsUrl())}/api/runtime-sources`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`backend answered ${res.status}`);
+    const body = (await res.json()) as { files?: { name: string; source: string }[] };
+    const out: Record<string, string> = {};
+    let bytes = 0;
+    for (const f of body.files ?? []) {
+      const mpy = compileToMpy(f.source, null);
+      bytes += mpy.length;
+      let bin = "";
+      for (let i = 0; i < mpy.length; i++) bin += String.fromCharCode(mpy[i]!);
+      out[f.name.replace(/\.py$/, ".mpy")] = btoa(bin);
+    }
+    logLine(`[install runtime] precompiled ${Object.keys(out).length} runtime files (${Math.round(bytes / 1024)} KB of bytecode)`, "");
+    return out;
+  } catch (err) {
+    logLine(
+      `[install runtime] couldn't precompile the runtime (${err instanceof Error ? err.message : String(err)}) -- installing from source instead`,
+      "err",
+    );
+    return undefined;
+  }
+}
+
 el("btnInstallRuntime").addEventListener("click", exclusiveBoardJob(async () => {
   const wsUrl = currentBackendWsUrl();
   const portName = el<HTMLSelectElement>("backendPortSelect").value;
@@ -2063,6 +2097,7 @@ el("btnInstallRuntime").addEventListener("click", exclusiveBoardJob(async () => 
     await transport.disconnect();
     setConnectedUi(false);
   }
+  const compiled = await precompileRuntime();
   logLine(`[install runtime] checking the board on ${portName}, then installing the runtime -- this resets the board`, "");
   const installer = new BackendTransport({ onDebugLine: (line) => logLine(`[backend] ${line}`, "") });
   try {
@@ -2073,6 +2108,7 @@ el("btnInstallRuntime").addEventListener("click", exclusiveBoardJob(async () => 
       (p) => logLine(`[install runtime] ${p.index}/${p.total} ${p.file}`, ""),
       undefined,
       (text) => logLine(`[install runtime] ${text}`, ""),
+      compiled,
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

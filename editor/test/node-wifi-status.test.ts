@@ -354,24 +354,27 @@ describe("thingstudio/wifi_status node", () => {
   // overloaded `security: "unmanaged"` for both meanings and he flagged
   // that as confusing for a future maintainer -- no way to tell "I set
   // this" from "the compiler decided this").
-  it("does not call connect() itself when the flow has an mqtt_publish node -- defers to mqtt_as (2026-09-11)", () => {
+  it("defers to mqtt_as when the flow has an mqtt_publish node -- only the ESP32 first join stays (2026-09-11, 2026-09-25)", () => {
     setConfig("wifi1", { ssid: "MyNetwork", password: "hunter2" });
     const mqttNode: GraphNode = { id: "m1", type: "thingstudio/mqtt_publish", properties: {} };
     const ctxWithMqtt: CodegenContext = { ...ctx, findNodesOfType: (type) => (type === "thingstudio/mqtt_publish" ? [mqttNode] : []) };
     const result = wifiStatusNode.codegenSource!(node({ pollMs: 1000, wifiConfigId: "wifi1" }), ctxWithMqtt);
     const wifiStaCode = result.statements?.find((s) => s.code.includes("network.WLAN"))?.code ?? "";
-    expect(wifiStaCode).not.toContain(".connect(");
-    expect(wifiStaCode).toContain("_wifi_sta.active(True)"); // interface still brought up, just not connected by this node
+    // Only the ESP32 first join (2026-09-25 experiment, mqtt-connect-retry.test.ts); everywhere else mqtt_as connects.
+    expect(wifiStaCode.split("\n").filter((l) => l.includes(".connect("))).toHaveLength(1);
+    expect(wifiStaCode).toContain('if sys.platform == "esp32" and not _wifi_sta.isconnected():');
+    expect(wifiStaCode).toContain("_wifi_sta.active(True)");
     expect(wifiStaCode).toContain("# WiFi connection managed by mqtt_as"); // generated code says why, without needing the property panel
   });
 
-  it("does not call connect() when the flow has an mqtt_subscribe node either (same deferral, other mqtt node type)", () => {
+  it("defers the same way with an mqtt_subscribe node", () => {
     setConfig("wifi1", { ssid: "MyNetwork", password: "hunter2" });
     const mqttNode: GraphNode = { id: "m1", type: "thingstudio/mqtt_subscribe", properties: {} };
     const ctxWithMqtt: CodegenContext = { ...ctx, findNodesOfType: (type) => (type === "thingstudio/mqtt_subscribe" ? [mqttNode] : []) };
     const result = wifiStatusNode.codegenSource!(node({ pollMs: 1000, wifiConfigId: "wifi1" }), ctxWithMqtt);
     const wifiStaCode = result.statements?.find((s) => s.code.includes("network.WLAN"))?.code ?? "";
-    expect(wifiStaCode).not.toContain(".connect(");
+    expect(wifiStaCode.split("\n").filter((l) => l.includes(".connect("))).toHaveLength(1);
+    expect(wifiStaCode).toContain('if sys.platform == "esp32" and not _wifi_sta.isconnected():');
   });
 
   it("still calls connect() itself when findNodesOfType reports no mqtt nodes at all (unaffected by the deferral)", () => {

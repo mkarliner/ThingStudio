@@ -62,8 +62,11 @@
 from __future__ import annotations
 
 import asyncio
+import base64
+import binascii
 import json
 import logging
+import re
 import time
 from typing import Callable
 
@@ -109,6 +112,37 @@ _INSTALL_CATCH_TIMEOUT_SECONDS = 60.0
 # waited for a reset gave "multiple access on port" and one install reading another's raw-REPL
 # banner). A second job on a busy port is refused straight away instead.
 _BUSY_PORTS: set[str] = set()
+
+
+_MPY_NAME_RE = re.compile(r"^[a-z_][a-z0-9_]{0,40}\.mpy$")
+_MAX_COMPILED_FILES = 64
+_MAX_COMPILED_BYTES = 512 * 1024
+
+
+def _decode_compiled(value: object) -> tuple[dict[str, bytes] | None, str | None]:
+    """install_runtime's optional "compiled" field (2026-09-25): {"<module>.mpy": base64} from the
+    editor's mpy-cross. Absent means install from source, as before. Names are plain module names only
+    (they become board file names); sizes are capped. Returns (files, None) or (None, problem)."""
+    if value is None:
+        return None, None
+    if not isinstance(value, dict) or len(value) > _MAX_COMPILED_FILES:
+        return None, '"compiled" must be an object of at most %d files' % _MAX_COMPILED_FILES
+    out: dict[str, bytes] = {}
+    total = 0
+    for name, b64 in value.items():
+        if not isinstance(name, str) or not _MPY_NAME_RE.match(name) or not isinstance(b64, str):
+            return None, f"bad compiled file entry {str(name)[:50]!r}"
+        try:
+            data = base64.b64decode(b64, validate=True)
+        except (binascii.Error, ValueError):
+            return None, f"compiled file {name} isn't valid base64"
+        if not data.startswith(b"M"):
+            return None, f"compiled file {name} isn't a .mpy (bad header)"
+        total += len(data)
+        if total > _MAX_COMPILED_BYTES:
+            return None, "compiled files are too large in total"
+        out[name] = data
+    return out, None
 
 
 class ConnectionSession:
@@ -162,7 +196,7 @@ class ConnectionSession:
         elif msg_type == "disconnect":
             await self._disconnect()
         elif msg_type == "install_runtime":
-            await self._install_runtime(message.get("port"), message.get("baudrate", 115200))
+            await self._install_runtime(message.get("port"), message.get("baudrate", 115200), message.get("compiled"))
         elif msg_type == "remove_flow":
             await self._remove_flow(message.get("port"), message.get("baudrate", 115200))
         elif msg_type == "raw_write":
@@ -253,7 +287,11 @@ class ConnectionSession:
         }
         await self._send_quietly(json.dumps(payload))
 
-    async def _install_runtime(self, port: str | None, baudrate: int) -> None:
+    async def _install_runtime(self, port: str | None, baudrate: int, compiled_b64: object = None) -> None:
+        compiled, problem = _decode_compiled(compiled_b64)
+        if problem:
+            await self._send_install_result(ok=False, error=f"NODE_ERROR: install_runtime: {problem}")
+            return
         if port and port in _BUSY_PORTS:
             await self._send_install_result(
                 ok=False, error=f"NODE_ERROR: an install or Remove flow is already running on {port} -- wait for it to finish"
@@ -262,12 +300,12 @@ class ConnectionSession:
         if port:
             _BUSY_PORTS.add(port)
         try:
-            await self._install_runtime_exclusive(port, baudrate)
+            await self._install_runtime_exclusive(port, baudrate, compiled)
         finally:
             if port:
                 _BUSY_PORTS.discard(port)
 
-    async def _install_runtime_exclusive(self, port: str | None, baudrate: int) -> None:
+    async def _install_runtime_exclusive(self, port: str | None, baudrate: int, compiled: dict[str, bytes] | None = None) -> None:
         """Pushes the runtime onto `port`'s board via raw REPL -- see this module's header for
         why this doesn't reuse the normal connect/relay path. Closes any existing relay
         connection first (raw REPL needs exclusive access to the port); does not reopen one
@@ -318,7 +356,7 @@ class ConnectionSession:
                 _open_for_catch, time.monotonic() + _INSTALL_CATCH_TIMEOUT_SECONDS, _on_status
             )
             try:
-                self._runtime_installer.install(raw_port, on_progress=_on_progress)
+                self._runtime_installer.install(raw_port, on_progress=_on_progress, compiled=compiled)
             finally:
                 try:
                     raw_port.close()

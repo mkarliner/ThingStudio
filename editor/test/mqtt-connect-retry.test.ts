@@ -1,32 +1,55 @@
-// mqtt-shared.ts's connect path on ESP32 (2026-09-25, experiment): the generated code joins WiFi itself
-// before mqtt_as's connect() (whose vendored wifi_connect() now returns early when already connected), and
-// no longer disconnect()s between attempts -- that wedged the ESP32-C3's WiFi driver. Checked at the text
-// level: the pymock network/mqtt_as fixtures don't model ESP-IDF's refusals, and the rest of the generated
-// code is run for real by node-mqtt-publish.test.ts/node-mqtt-subscribe.test.ts.
+// ESP32 + MQTT WiFi join (2026-09-25, experiment): the flow joins WiFi at start -- the same connect() a flow
+// without MQTT runs, which works on the ESP32-C3 bench where the same call inside the MQTT coroutine didn't --
+// and the MQTT connect path only waits for the link, then hands over to mqtt_as (whose vendored
+// wifi_connect() skips its own connect() once joined). Checked at the text level: the pymock network/mqtt_as
+// fixtures don't model ESP-IDF, and the rest of the generated code is run by the node-mqtt-* tests.
 
 import { describe, expect, it } from "vitest";
+import { compile } from "../src/compiler/compile.js";
+import type { GraphData } from "../src/compiler/graph.js";
+import { buildRegistry } from "../src/node-library/registry.js";
 import { mqttEnsureConnectedSnippet } from "../src/node-library/mqtt-shared.js";
+import { wifiSetupStatement } from "../src/node-library/wifi-status.js";
 
 const cfg = { broker: "broker.local", port: 1883, ssid: "net", wifiPassword: "pw", username: "", password: "" };
 const lines = mqttEnsureConnectedSnippet(cfg, "n1").split("\n");
 const at = (text: string) => lines.findIndex((l) => l.includes(text));
 
-describe("mqtt connect on ESP32", () => {
-  it("joins WiFi with the flow's credentials before mqtt_as connects", () => {
-    const gate = at('if sys.platform == "esp32" and not _mqtt_wifi_precheck_sta.isconnected():');
-    const join = at('_mqtt_wifi_precheck_sta.connect("net", "pw")');
-    const mqttConnect = at(".connect()");
-    expect(gate).toBeGreaterThan(-1);
-    expect(join).toBeGreaterThan(gate);
-    expect(mqttConnect).toBeGreaterThan(join);
+describe("ESP32 + MQTT WiFi join", () => {
+  it("joins at flow start on ESP32 when MQTT owns the connection", () => {
+    const code = wifiSetupStatement("net", "pw", "password", true).code;
+    expect(code).toContain('if sys.platform == "esp32" and not _wifi_sta.isconnected():');
+    expect(code).toContain('_wifi_sta.connect("net", "pw")');
   });
 
-  it("doesn't disconnect the station between attempts", () => {
+  it("the MQTT connect path only waits: no connect() or disconnect() of its own", () => {
+    expect(at("_mqtt_wifi_precheck_sta.connect(")).toBe(-1);
     expect(at("disconnect()")).toBe(-1);
+    expect(at("NET_INFO mqtt: waiting for WiFi")).toBeLessThan(at("for _mqtt_connect_attempt_"));
   });
 
   it("reports every attempt's error with the station status", () => {
     expect(at("wifi status %s")).toBeGreaterThan(-1);
     expect(at('"mqtt connect to %s:%s failed after 3 attempts (%s)"')).toBeGreaterThan(-1);
+  });
+
+  it("explains the broker's refusal codes", () => {
+    expect(at('("0x5", "not authorised')).toBeGreaterThan(-1);
+    expect(at('("0x4", "bad username or password')).toBeGreaterThan(-1);
+  });
+
+  it("a flow with MQTT but no wifi_status still gets the join", () => {
+    const graph: GraphData = {
+      nodes: [
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "x" } },
+        { id: "2", type: "thingstudio/mqtt_publish", properties: { topic: "t", retain: false, qos: 0, brokerConfigId: "b1" } },
+      ],
+      links: [[1, "1", 0, "2", 0, "any"]],
+      configs: [
+        { id: "w1", type: "thingstudio/config/wifi", properties: { ssid: "HomeNet", password: "secret12", security: "password" } },
+        { id: "b1", type: "thingstudio/config/mqtt-broker", properties: { broker: "broker.local", port: 1883 } },
+      ],
+    };
+    expect(compile(graph, buildRegistry()).source).toContain('_wifi_sta.connect("HomeNet", "secret12")');
   });
 });

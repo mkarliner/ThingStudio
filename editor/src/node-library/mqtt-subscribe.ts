@@ -64,6 +64,7 @@ import type { CodegenContext, NodeDefinition, SourceCodegenResult } from "../com
 import { CompileError } from "../compiler/errors.js";
 import { mqttClientVar, mqttEnsureConnectedSnippet, mqttNodeStatusSetupStatement, mqttSetupStatement, parseMqttBrokerProps } from "./mqtt-shared.js";
 import { pyStringLiteral } from "./py-literals.js";
+import { wifiSetupStatement } from "./wifi-status.js";
 
 export const mqttSubscribeNode: NodeDefinition = {
   type: "thingstudio/mqtt_subscribe",
@@ -121,8 +122,13 @@ export const mqttSubscribeNode: NodeDefinition = {
       // (it used blocking time.sleep_ms() when it was module-scope code
       // with no event loop yet; inlined into a coroutine now, it uses
       // asyncio.sleep_ms() instead, see that file's header).
-      imports: ["import mqtt_as", "import network", "import sys"],
-      statements: [mqttSetupStatement(cfg), mqttNodeStatusSetupStatement(node.id), { key: readyVar, code: `${readyVar} = False` }],
+      imports: ["import mqtt_as", "import network", "import sys", "import time"],
+      statements: [
+        wifiSetupStatement(cfg.ssid, cfg.wifiPassword, "open", true),
+        mqttSetupStatement(cfg),
+        mqttNodeStatusSetupStatement(node.id),
+        { key: readyVar, code: `${readyVar} = False` },
+      ],
       buildMsg,
       // NOT a poll interval -- `queue.__anext__()` above already blocks
       // (via the vendored mqtt_as's own asyncio.Event) until a real

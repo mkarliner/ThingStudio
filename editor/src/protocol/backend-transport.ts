@@ -306,6 +306,9 @@ export class BackendTransport implements DeviceTransport {
     onProgress?: (p: InstallProgress) => void,
     idleTimeoutMs = INSTALL_IDLE_TIMEOUT_MS,
     onStatus?: (text: string) => void,
+    /** Precompiled runtime files, "<module>.mpy" -> base64 (2026-09-25; main.ts's precompileRuntime()).
+     * Omitted: the backend installs from source, as before. */
+    compiled?: Record<string, string>,
   ): Promise<void> {
     if (!this.#ws) throw new Error("BackendTransport is not open -- call open() first");
     if (this.#pendingInstallRuntime) throw new Error("BackendTransport already has an installRuntime() in flight");
@@ -340,7 +343,7 @@ export class BackendTransport implements DeviceTransport {
       };
       armIdleTimer();
     });
-    this.#ws.send(JSON.stringify({ type: "install_runtime", port, baudrate: baudRate }));
+    this.#ws.send(JSON.stringify({ type: "install_runtime", port, baudrate: baudRate, ...(compiled ? { compiled } : {}) }));
     return p;
   }
 

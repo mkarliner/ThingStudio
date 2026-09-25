@@ -35,6 +35,7 @@ from .persisted_store import PersistedStore
 import json
 
 from .persisted_store import PersistedStoreError
+from .runtime_installer import RuntimeInstaller
 from .ws_relay import make_websocket_handler
 
 
@@ -69,6 +70,17 @@ def create_app(
         return web.json_response({"ok": True})
 
     app.router.add_get("/api/alive", alive)
+
+    # The runtime's source files, for the editor to precompile to .mpy before an install (2026-09-25:
+    # runtime_installer.py's with_compiled()). Read-only; the same files an install pushes.
+    async def runtime_sources(_request: web.Request) -> web.Response:
+        try:
+            files = RuntimeInstaller().source_files()
+        except Exception as exc:  # noqa: BLE001 -- reported to the editor, which then installs from source
+            return web.json_response({"error": f"NODE_ERROR: couldn't read the runtime sources: {exc}"}, status=500)
+        return web.json_response({"files": [{"name": n, "source": src} for n, src in files]})
+
+    app.router.add_get("/api/runtime-sources", runtime_sources)
     # Registered before the static catch-all below -- aiohttp's router
     # matches resources in registration order, so these have to come first
     # or a static_dir containing files at these same paths could shadow them.

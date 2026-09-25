@@ -79,9 +79,10 @@ def test_install_drives_raw_repl_install_runtime_with_the_built_file_list(tmp_pa
 
     captured: dict[str, object] = {}
 
-    def fake_install_runtime(port: object, files: list[tuple[str, bytes]], timeouts: object, on_progress: object = None) -> None:
+    def fake_install_runtime(port: object, files: list[tuple[str, bytes]], timeouts: object, on_progress: object = None, remove: object = None) -> None:
         captured["port"] = port
         captured["files"] = files
+        captured["remove"] = remove
 
     monkeypatch.setattr(raw_repl, "install_runtime", fake_install_runtime)
 
@@ -137,3 +138,52 @@ def test_runtime_build_sha_reads_the_last_commit_touching_the_src_dir(tmp_path: 
     subprocess.run(["git", "commit", "-qm", "x"], cwd=tmp_path, check=True, env=env)
     head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=tmp_path, check=True, capture_output=True, text=True, env=env)
     assert runtime_build_sha(src_dir) == head.stdout.strip()
+
+
+# --- precompiled installs (2026-09-25) ------------------------------------------------------------
+
+
+def test_source_files_lists_every_py_with_listener_under_its_own_name(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("thingstudio_backend.runtime_installer.runtime_build_sha", lambda _d: "abc")
+    installer = RuntimeInstaller(runtime_src_dir=_write_fake_device_runtime(tmp_path))
+    assert installer.source_files() == [
+        ("errors.py", "# errors"),
+        ("runtime.py", "# runtime"),
+        ("listener.py", "# listener"),
+        ("somelib.py", "# vendored"),
+    ]
+
+
+def test_with_compiled_swaps_in_mpy_stubs_main_and_removes_stale_py() -> None:
+    files = [("errors.py", b"e"), ("main.py", b"l"), ("somelib.py", b"s"), ("_runtime_build.txt", b"abc")]
+    compiled = {"errors.mpy": b"M1", "listener.mpy": b"M2"}
+    out, remove = RuntimeInstaller.with_compiled(files, compiled)
+    assert out == [
+        ("errors.mpy", b"M1"),
+        ("listener.mpy", b"M2"),
+        ("main.py", b"import listener\nlistener.main()\n"),
+        ("somelib.py", b"s"),  # nothing compiled for it: pushed as source
+        ("_runtime_build.txt", b"abc"),
+    ]
+    assert remove == ["errors.py", "listener.py", "somelib.mpy"]
+
+
+def test_with_nothing_compiled_it_is_a_source_install_that_clears_old_mpy() -> None:
+    files = [("errors.py", b"e"), ("main.py", b"l")]
+    out, remove = RuntimeInstaller.with_compiled(files, {})
+    assert out == files
+    assert remove == ["errors.mpy", "listener.mpy", "listener.py"]
+
+
+def test_install_passes_compiled_files_and_removals_through(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    installer = RuntimeInstaller(runtime_src_dir=_write_fake_device_runtime(tmp_path))
+    captured: dict[str, object] = {}
+
+    def fake_install_runtime(port: object, files: list[tuple[str, bytes]], timeouts: object, on_progress: object = None, remove: object = None) -> None:
+        captured["files"] = [n for n, _ in files]
+        captured["remove"] = remove
+
+    monkeypatch.setattr(raw_repl, "install_runtime", fake_install_runtime)
+    installer.install(object(), compiled={"runtime.mpy": b"M"})  # type: ignore[arg-type]
+    assert "runtime.mpy" in captured["files"] and "runtime.py" not in captured["files"]
+    assert "runtime.py" in captured["remove"]  # type: ignore[operator]

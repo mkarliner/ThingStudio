@@ -413,8 +413,8 @@ export function mqttSetupStatement(cfg: MqttBrokerConfig): { key: string; code: 
  * this was module-scope code with no event loop running yet), so a
  * blocking sleep here would stall every other coroutine in the flow for
  * up to ~10s while this waits. */
-function mqttWifiPrecheckSnippet(cfg: MqttBrokerConfig): string {
-  // 2026-09-25 (experiment, Mike's call): on ESP32 this now JOINS WiFi itself, then hands over to mqtt_as,
+function mqttWifiPrecheckSnippet(): string {
+  // 2026-09-25 (experiment, Mike's call): on ESP32 the flow joins WiFi at start (wifi-status.ts), then hands over to mqtt_as,
   // whose vendored wifi_connect() carries a local patch returning early when already connected
   // (device-runtime/src/vendor/mqtt_as/README.md). Before, mqtt_as always issued its own connect(), which
   // ESP-IDF refuses while its auto-reconnect is in flight; waiting and retrying round that from outside
@@ -422,21 +422,21 @@ function mqttWifiPrecheckSnippet(cfg: MqttBrokerConfig): string {
   // before, so nothing is worse than without it. mqtt_as still owns reconnecting after an outage.
   return [
     "_mqtt_wifi_precheck_sta = network.WLAN(network.STA_IF)",
-    "_mqtt_wifi_precheck_sta.active(True)",
+    // Only when inactive (2026-09-25): active(True) again while the flow-start join is mid-handshake made
+    // that join fail on the ESP32-C3 (15 s "connecting", then 202).
+    "if not _mqtt_wifi_precheck_sta.active():",
+    "    _mqtt_wifi_precheck_sta.active(True)",
     'if sys.platform == "esp32" and not _mqtt_wifi_precheck_sta.isconnected():',
-    "    for _ in range(50):  # bounded ~5s: let an in-flight connect (ESP-IDF's own auto-reconnect) finish",
-    "        if _mqtt_wifi_precheck_sta.isconnected() or _mqtt_wifi_precheck_sta.status() != network.STAT_CONNECTING:",
+    // EXPERIMENT diagnostics (2026-09-25): the join itself now runs at flow start (wifi-status.ts's
+    // wifiSetupStatement, deferToMqtt branch); this only waits for it, and says how it went. Remove or
+    // quieten once ESP32 + MQTT is settled.
+    '    _mqtt_t0 = time.ticks_ms()',
+    '    print("NET_INFO mqtt: waiting for WiFi, station status %s" % (_mqtt_wifi_precheck_sta.status(),))',
+    "    for _ in range(150):  # bounded ~15s",
+    "        if _mqtt_wifi_precheck_sta.isconnected():",
     "            break",
     "        await asyncio.sleep_ms(100)",
-    "    if not _mqtt_wifi_precheck_sta.isconnected():",
-    "        try:",
-    `            _mqtt_wifi_precheck_sta.connect(${pyStringLiteral(cfg.ssid)}, ${pyStringLiteral(cfg.wifiPassword)})`,
-    "        except OSError:",
-    "            pass  # already connecting -- the wait below covers it",
-    "        for _ in range(150):  # bounded ~15s for the join",
-    "            if _mqtt_wifi_precheck_sta.isconnected():",
-    "                break",
-    "            await asyncio.sleep_ms(100)",
+    '    print("NET_INFO mqtt: WiFi %s after %d ms, station status %s" % ("up" if _mqtt_wifi_precheck_sta.isconnected() else "NOT up", time.ticks_diff(time.ticks_ms(), _mqtt_t0), _mqtt_wifi_precheck_sta.status()))',
   ].join("\n");
 }
 
@@ -529,7 +529,7 @@ export function mqttEnsureConnectedSnippet(cfg: MqttBrokerConfig, nodeId: string
   // file's header ("CONFIRMED BROKEN, 2026-09-04") for why this runs here,
   // inside the double-checked lock right before the actual connect
   // attempt, rather than as a module-scope statement.
-  const precheckLines = mqttWifiPrecheckSnippet(cfg)
+  const precheckLines = mqttWifiPrecheckSnippet()
     .split("\n")
     .map((l) => `            ${l}`);
   return [
@@ -554,7 +554,13 @@ export function mqttEnsureConnectedSnippet(cfg: MqttBrokerConfig, nodeId: string
     `                        _mqtt_st = _mqtt_wifi_precheck_sta.status()`,
     `                    except Exception:`,
     `                        _mqtt_st = "?"`,
-    `                    ${errsVar}.append("%d: %r, wifi status %s" % (${attemptVar} + 1, _e, _mqtt_st))`,
+    // The broker's refusal codes in words (2026-09-25: "CONNACK reason code 0x5" on the bench was a wrong
+    // broker password, but nothing said so).
+    `                    _mqtt_why = repr(_e)`,
+    `                    for _k, _v in (("0x1", "broker doesn't support this MQTT version"), ("0x2", "client ID rejected"), ("0x3", "broker unavailable"), ("0x4", "bad username or password -- check the broker config"), ("0x5", "not authorised -- check the broker config's username/password, or the broker's access rules")):`,
+    `                        if "reason code " + _k in _mqtt_why:`,
+    `                            _mqtt_why += " (" + _v + ")"`,
+    `                    ${errsVar}.append("%d: %s, wifi status %s" % (${attemptVar} + 1, _mqtt_why, _mqtt_st))`,
     `                    if ${attemptVar} == 2:`,
     // Final attempt exhausted -- report 'error' before re-raising (the
     // raise still happens unconditionally right after; this is

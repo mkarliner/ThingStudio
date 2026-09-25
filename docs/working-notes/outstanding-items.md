@@ -497,3 +497,14 @@ ambiguous."
   rounds; pushes changes to the editor, which rebuilds the WiFi group without losing the selection (a vanished
   selected board shows "(not seen)"). Follows IP changes; enables "last seen" in not-listed help. No board-side
   change, no runtime bump. Today discovery runs only on ⟳ ports / page load (`tcp_relay.discover()`).
+- **[P2, raised 2026-09-25]** **Lazy loading, for RAM on small boards** (Mike). Context: an ESP32-C3 couldn't join
+  WiFi from an MQTT flow, most likely memory (`learnings/micropython-device-runtime.md`, 2026-09-25); installs are
+  now precompiled. Two parts, in order:
+  1. **Runtime modules imported only when needed.** `listener.py` imports all nine at every boot (~3,200 lines):
+     `wifi_provision` (536 lines) is only for captive-portal flows; `board_settings`/`net_transport` (640) only on
+     WiFi boards. Import them on first use instead. This is the RAM win.
+  2. **Node libraries pushed with the flow, not at runtime install.** Flows already import `mqtt_as`, `st7789py` etc.
+     only when used, so this saves flash and install time rather than RAM, and lets a flow carry exactly what it
+     needs. Deploy would push a missing or outdated library (precompiled) before the flow.
+  Also: report free ESP-IDF heap in HELLO next to `freeRamBytes`, and add a C3 memory check (MQTT + display flow)
+  to the hardware checklist.

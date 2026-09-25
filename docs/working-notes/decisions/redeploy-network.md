@@ -348,3 +348,12 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
   now lists every attempt with the station status code. Runtime 4.0.0 (the patched file is pushed to the board,
   and new codegen with the unpatched one would double-connect again). `vendor/mqtt_as/README.md`,
   `mqtt-shared.ts`. Hardware result pending.
+  Bench result, same afternoon: joining from inside the MQTT coroutine failed on the ESP32-C3 (station idle,
+  our connect accepted, 15.9 s at 1001, then 202) where the identical connect() at flow start works. So the
+  first ESP32 join now runs at flow start (`wifiSetupStatement`'s deferToMqtt branch, contributed by the MQTT
+  nodes too), and the MQTT path only waits for the link. Why the in-coroutine join fails is not known.
+  Then: the flow-start join also failed (fresh board, station idle), but succeeded when a wifi_status-only flow
+  joined first. The generated MQTT flow calls `active(True)` again right after the flow-start `connect()` (the
+  mqtt_as constructor, then the wait step); a flow without MQTT never does. So `active(True)` is now only called
+  on an inactive interface -- in the wait step and, as a second local patch, in mqtt_as's constructor and
+  `wifi_connect()`. Runtime 5.0.0. Hardware result pending.

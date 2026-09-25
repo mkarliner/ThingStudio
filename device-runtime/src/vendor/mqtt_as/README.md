@@ -13,7 +13,7 @@ made. Worth tightening to an exact commit SHA next time this file is
 touched, rather than left permanently vague.
 
 SHA-256 of the file as originally vendored: `0fe913cfb76f9e0fdcad1fcdbcece249a89dc31cb185c408ecdb3a738a161d56`.
-After the local patch below: `c2cbffc7121255d40159101a4ad3cb51ff11f4075946238ce19c68ad529bfbd2`.
+After the local patches below: `31552031fbba53c65d606ee83e9bd533b5e65c004487f3f376bb8b6a1a6aa672`.
 
 ## Local patch (2026-09-25) -- an experiment, Mike's call
 
@@ -25,7 +25,10 @@ driver (2026-09-25, ESP32-C3). Thingstudio's generated MQTT code now joins WiFi 
 calling `mqtt_as`'s `connect()`; `mqtt_as` still owns reconnecting after an outage (its `_keep_connected()`
 disconnects first, so the guard doesn't skip that). This reverses the 2026-08-21 call not to carry a local
 patch (upstream issues #57, #59, #61 ask for the same guard); `decisions/redeploy-network.md` has the reasoning.
-Re-apply it if this file is ever re-fetched.
+Second change, same day: the constructor and `wifi_connect()` call `active(True)` only when the interface is
+inactive. On the ESP32-C3, `active(True)` on an interface that was mid-connect (Thingstudio's flow-start join)
+made the join fail -- 15 s at "connecting", then 202 -- while the same join with nothing calling `active(True)`
+afterwards succeeded. Re-apply both if this file is ever re-fetched.
 Honest caveat on verification, matching this project's convention of
 saying plainly what wasn't checked: this was fetched via a web-fetch tool
 in an environment with no direct outbound network access from the shell,

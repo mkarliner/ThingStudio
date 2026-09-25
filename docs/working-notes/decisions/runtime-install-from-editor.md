@@ -132,3 +132,12 @@ Status: detail file for `decisions.md`'s "Runtime install from the editor" index
   `raw REPL; CTRL-B to exit` banner) and all failed. The editor now disables both buttons while either runs
   (`exclusiveBoardJob`, main.ts), and the backend refuses a second job, or a connect, on a busy port
   (`_BUSY_PORTS`, ws_relay.py; `test_second_install_on_a_busy_port_is_refused_not_run`).
+- 2026-09-25: installs are **precompiled**. The editor fetches the runtime sources (`GET /api/runtime-sources`),
+  compiles each with the same mpy-cross WASM it uses for flows -- plain bytecode, no `-march`, since the
+  runtime has no native code -- and sends them in `install_runtime`'s new optional `compiled` field. The backend
+  (`runtime_installer.py`'s `with_compiled()`) pushes the `.mpy` files, makes `main.py` a two-line stub
+  (`import listener; listener.main()`), and first deletes the other format's stale copies (MicroPython imports
+  `x.py` before `x.mpy`). Any failure falls back to a source install, with a console line. Chosen over a PyPI
+  `mpy-cross` in the backend: no new dependency, and one compiler version for flows and runtime alike. Why: see
+  `learnings/micropython-device-runtime.md`'s 2026-09-25 entry. No runtime version bump (no board-side change).
+  `test-flows/deploy_runtime.py` still pushes source; a stale `.mpy` is harmless because `.py` wins.

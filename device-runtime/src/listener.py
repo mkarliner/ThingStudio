@@ -140,7 +140,7 @@ F64_PREFIX = "F64:"
 _HEARTBEAT_PIN = 10
 _HEARTBEAT_PERIOD_MS = 200
 
-_RUNTIME_VERSION = {"major": 4, "minor": 0, "patch": 0}  # bumped 2026-09-25: vendored mqtt_as wifi_connect() guard -- MQTT codegen now joins WiFi first on ESP32 (3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS; 2.0.0 was 2026-09-23: EXEC, STOP_TO_PROMPT, safe mode; 1.0.0 was 2026-09-10: NODE_STATUS)
+_RUNTIME_VERSION = {"major": 5, "minor": 0, "patch": 0}  # bumped 2026-09-25 (later): mqtt_as active(True) only when inactive (4.0.0 same day: vendored mqtt_as wifi_connect() guard -- MQTT codegen now joins WiFi first on ESP32 (3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS; 2.0.0 was 2026-09-23: EXEC, STOP_TO_PROMPT, safe mode; 1.0.0 was 2026-09-10: NODE_STATUS)
 # (runtime.report_status) is a hard dependency of wifi-status.ts's/mqtt-shared.ts's codegen now -- an editor
 # with this change targeting a pre-2026-09-10 runtime would crash on deploy (AttributeError: report_status),
 # not degrade gracefully. See CLAUDE.md's "Device-runtime version bump discipline" -- decideDeploy() only
