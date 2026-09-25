@@ -39,3 +39,15 @@ Reinstall the runtime first (3.0.0 adds `board_settings.py` and `net_transport.p
 - Mid-session WiFi output that exceeds 16 KB before the client reads it is dropped with a `NET_WARN` line.
 - One vitest failure appeared once in a full run and didn't reproduce in three reruns; which test is unknown.
 - The two `node-startup.test.ts` failures are fixed (they were stale expectations, not a startup-node change).
+
+## Hardware results, 2026-09-25 (ESP32-C3, Mike's Mac)
+
+- Steps 1-5 pass: Board settings over USB, `NET_LISTENING`, WiFi connect with the saved password, deploy over WiFi,
+  and the `debug` node's print() output arriving over the session (the `os.dupterm` mirror, untestable off-device).
+- Found and fixed on the way: repeated Install clicks racing on one port (one job per port now); credentials not
+  fetched when picked from a dropdown, so no `connect()` was generated (fetched on pick and at Deploy; no SSID is now a
+  compile error).
+- macOS 15 Local Network privacy blocked the backend's Homebrew Python when started from iTerm ("No route to host")
+  even with iTerm allowed; Apple's Terminal works (TN3179 exempts it). Docs and the error message say so; packaging
+  (item 7) must ship a signed app with `NSLocalNetworkUsageDescription`.
+- Not yet checked: steps 6-9 (`.local` entry, fault cases, Pico W, plain Pico).

@@ -211,7 +211,16 @@ inline, not a fresh check.
 - **[MVP]** **Network transport (WiFi, initially) editor/backend↔board, supplementing USB serial — new item, 2026-09-08, supersedes the §10 v2 "full BLE/WiFi transport with pairing/auth" candidate mention.** Promoted to MVP item 6 by `road-to-mvp.md`; scoped 2026-09-24 in `wifi-transport-scoping.md`.
   **Built 2026-09-24, off-device verified, not yet on hardware.** Left: the hardware pass (ESP32 and Pico W,
   including the `os.dupterm` output mirror, which the unix port can't test), the network scan (nice to have), and
-  setting the captive portal's AP password from Board settings (`wifi_provision.set_ap_password` still has no caller). Cross-reference: raises the urgency question on the existing POST-MVP board-transport-auth item -- serial is a physically-local channel, WiFi isn't -- not yet re-prioritized, flagging the connection only.
+  setting the captive portal's AP password from Board settings (`wifi_provision.set_ap_password` still has no caller).
+  **2026-09-25, ESP32-C3 hardware pass (Mike): working over WiFi** -- password auth, deploy, NODE_STATUS and plain
+  print() output (debug node) all over the network session, so the `os.dupterm` mirror works on real hardware; Board
+  settings correctly disabled while on WiFi. Still to check: wrong password, power pull mid-session, Pico W, `.local`
+  entry, discovery from a Mac with the permission sorted.
+  **2026-09-25, first hardware test (ESP32-C3):** the board side works (`NET_LISTENING`); the Mac backend is blocked
+  by macOS Local Network privacy for its framework-build Python (`learnings/backend-security-research.md`). Workaround
+  confirmed: start the backend from Apple's Terminal (docs and the error message say so). Packaging (item 7) must ship
+  a signed app with `NSLocalNetworkUsageDescription` so macOS prompts normally; if that proves unreliable, the
+  fallback is reversing the connection (the board dials the backend -- accepting needs no permission, TN3179). Cross-reference: raises the urgency question on the existing POST-MVP board-transport-auth item -- serial is a physically-local channel, WiFi isn't -- not yet re-prioritized, flagging the connection only.
 
 ## Board/processor reference data
 
