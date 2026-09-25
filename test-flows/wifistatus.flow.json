@@ -86,7 +86,7 @@
     "26e0feaeeb5eae01": {
       "pos": [
         199,
-        280.74566650390625
+        280.4913330078125
       ],
       "size": [
         120,
@@ -136,19 +136,12 @@
   },
   "configs": [
     {
-      "id": "73df14a9-b690-4371-aa37-ed21573f2d0d",
-      "type": "thingstudio/config/wifi",
-      "properties": {
-        "credentialName": "mihome",
-        "security": "password"
-      }
-    },
-    {
       "id": "8d0579bb-b931-4950-879d-d1fb52bd96ed",
       "type": "thingstudio/config/wifi",
       "properties": {
-        "credentialName": "home",
-        "security": "password"
+        "credentialName": "mihome",
+        "security": "password",
+        "allowReprovisioning": false
       }
     },
     {
