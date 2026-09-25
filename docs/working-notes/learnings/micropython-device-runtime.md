@@ -212,3 +212,11 @@ Status: detail file, split out of `learnings.md` on 2026-09-06 to keep that inde
   password, unrelated).
   Ruled out: a different network. The flow switched from the `home` credential to `mihome` during the afternoon,
   but the two hold the same SSID and password (Mike), so failing and working runs joined the same network.
+
+## ESP32 reports the reset button as a power-on reset, 2026-09-25
+
+Found on real hardware (ESP32-C3, runtime 5.1.0), testing the `startup` node's start reason: pressing the reset
+button gave `power_on`, not `hard_reset`. On ESP32-family chips the button drives the EN (chip enable) pin, so
+ESP-IDF sees a power-on reset and MicroPython's `machine.reset_cause()` returns `PWRON_RESET`. Nothing to fix;
+the user guide's startup page says so. `hard_reset` is only reported by ports that have a separate reset pin.
+

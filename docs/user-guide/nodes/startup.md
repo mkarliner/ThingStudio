@@ -22,7 +22,8 @@ the payload is that same string.
 | `soft_reset` | software restarted the board, for example `machine.reset()` |
 | `unknown` | the board can't tell |
 
-Not every board reports every reason. A board running a runtime older than 5.1.0 always sends `unknown`.
+Not every board reports every reason. ESP32 boards report the reset button as `power_on`, because on those
+chips the button cuts power to the core. A board running a runtime older than 5.1.0 always sends `unknown`.
 
 ## Behavior
 

@@ -77,3 +77,14 @@ Reinstall the runtime first (3.0.0 adds `board_settings.py` and `net_transport.p
   keepalive plus a 20 s retransmit cap, `decisions/wifi-transport.md`). Committed as `fef8a04`.
 - Open: the `NET_INFO mqtt:` diagnostics (keep or quieten); lazy runtime imports ([P2]); plain Pico still shows
   WiFi entries (deferred); ESP32-C3 slow pings / modem sleep (unconfirmed).
+
+## C3 memory baseline, 2026-09-25 (runtime 5.1.0, checklist step 10)
+
+- `wifistatus` flow (wifi_status + MQTT, WiFi joined): MicroPython 62 KB free; ESP-IDF heap 42 KB free, largest
+  block 34 KB. At boot, before the join: MicroPython 91 KB, ESP-IDF 49 KB, largest block 42 KB. So the join plus
+  MQTT costs about 30 KB of MicroPython RAM and 7-8 KB of ESP-IDF heap. The boot HELLO is sent before WiFi is
+  up, so take the working figure from **Check status** once the flow is connected.
+- Reading: a plain MQTT flow fits. An mbedTLS handshake needs roughly 30-40 KB of ESP-IDF heap, so MQTT over TLS
+  on the C3 is likely at or past the limit. Check that first if a TLS node or broker option goes in.
+- Not yet measured: the same flow plus a display (step 10's full case).
+
