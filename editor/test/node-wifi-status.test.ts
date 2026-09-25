@@ -527,3 +527,22 @@ describe("computeWifiProvisionMarker", () => {
     expect(computeWifiProvisionMarker(graph)).toBeNull();
   });
 });
+
+// 2026-09-24, real ESP32-C3: a config whose credential values never reached the compiler (picked
+// from the dropdown, fetched only on flow load) compiled to no connect() call and no error.
+describe("wifiSetupStatement with no SSID", () => {
+  it("is a CompileError for password and open security", async () => {
+    const { wifiSetupStatement } = await import("../src/node-library/wifi-status.js");
+    const { CompileError } = await import("../src/compiler/errors.js");
+    expect(() => wifiSetupStatement(undefined, undefined, "password")).toThrow(CompileError);
+    expect(() => wifiSetupStatement("  ", "pw", "open")).toThrow(/SSID/);
+  });
+  it("is fine when unmanaged, which never connects by itself", async () => {
+    const { wifiSetupStatement } = await import("../src/node-library/wifi-status.js");
+    expect(wifiSetupStatement(undefined, undefined, "unmanaged").code).not.toContain("connect(");
+  });
+  it("still emits the connect call when the SSID is there", async () => {
+    const { wifiSetupStatement } = await import("../src/node-library/wifi-status.js");
+    expect(wifiSetupStatement("mihome", "secret12", "password").code).toContain('_wifi_sta.connect("mihome", "secret12")');
+  });
+});

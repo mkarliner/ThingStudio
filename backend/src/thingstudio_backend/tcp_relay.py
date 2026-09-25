@@ -78,6 +78,31 @@ def answer_challenge(challenge: str, password: str) -> str:
     return f"TSAUTH1 {mac}"
 
 
+def _explain_connect_oserror(exc: OSError) -> str:
+    """Adds the likely fix to the network errors a user can act on. EHOSTUNREACH on macOS is usually
+    the Local Network privacy setting, not the network: since macOS 15, a program started from
+    Terminal can't reach LAN devices until the app that launched it is allowed, and the refusal
+    surfaces as "No route to host" (2026-09-25, first real ESP32-C3 WiFi test). Apple's Terminal is
+    exempt (TN3179); iTerm, even when allowed, didn't cover Homebrew's framework Python.
+    Also sent for the discovery broadcast (discover()), which needs the same permission."""
+    import errno
+    import sys
+
+    text = str(exc)
+    if exc.errno == errno.EHOSTUNREACH and sys.platform == "darwin":
+        return (
+            f"{text} -- on a Mac this usually means macOS is blocking this computer's local network access for "
+            "Thingstudio. Start Thingstudio from Apple's Terminal app, which macOS always allows; other terminals "
+            "(iTerm, VS Code) often aren't enough for Homebrew's Python even when allowed in System Settings > "
+            "Privacy & Security > Local Network"
+        )
+    if exc.errno in (errno.EHOSTUNREACH, errno.ENETUNREACH):
+        return f"{text} -- check this computer and the board are on the same network (not a guest network)"
+    if exc.errno == errno.ECONNREFUSED:
+        return f"{text} -- the board is on the network but isn't accepting connections: is a WiFi password set in Board settings?"
+    return text
+
+
 PasswordLookup = Callable[[str], "str | None"]
 
 
@@ -111,7 +136,7 @@ class TcpConnection:
         except asyncio.TimeoutError as exc:
             raise TcpRelayError(self.port, "connect", f"no answer within {_CONNECT_TIMEOUT_S:.0f}s -- is the board on and on this network?", "timeout") from exc
         except OSError as exc:
-            raise TcpRelayError(self.port, "connect", exc) from exc
+            raise TcpRelayError(self.port, "connect", _explain_connect_oserror(exc)) from exc
         try:
             await self._handshake()
         except BaseException:

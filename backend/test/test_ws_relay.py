@@ -569,3 +569,58 @@ async def test_install_runtime_says_what_to_do_when_the_board_never_stops(monkey
         assert reply["diagnosis"] == "silent"
         assert installer.install_calls == []
         assert all(p.closed for p in raw_ports.instances)
+
+
+class SlowRuntimeInstaller(FakeRuntimeInstaller):
+    """Blocks in install() until released, like a real install waiting for a board to reset."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        import threading
+
+        self.started = threading.Event()
+        self.release = threading.Event()
+
+    def install(self, port: object, include_vendor: bool = True, timeouts: object = None, on_progress=None) -> None:
+        self.install_calls.append(port)
+        self.started.set()
+        self.release.wait(5)
+
+
+@pytest.mark.asyncio
+async def test_second_install_on_a_busy_port_is_refused_not_run() -> None:
+    """2026-09-24, real Pico: repeated clicks on "Install runtime…" while the first install waited
+    for a reset each started another install on the same port; they fought over it and all failed.
+    A second install (or Remove flow, or a connect) on a busy port is refused straight away, and
+    the port is free again once the first finishes."""
+    factory = FakeSerialConnectionFactory()
+    raw_ports = FakeRawPortFactory()
+    installer = SlowRuntimeInstaller()
+    async with TestClient(TestServer(_make_app(factory, raw_ports, installer))) as client:
+        first = await client.ws_connect("/ws")
+        second = await client.ws_connect("/ws")
+        await first.send_json({"type": "install_runtime", "port": "/dev/fake0"})
+        assert await asyncio.to_thread(installer.started.wait, 5)
+
+        await second.send_json({"type": "install_runtime", "port": "/dev/fake0"})
+        refused = await second.receive_json()
+        assert refused["ok"] is False and "already running on /dev/fake0" in refused["error"]
+        await second.send_json({"type": "remove_flow", "port": "/dev/fake0"})
+        refused = await second.receive_json()
+        assert refused["type"] == "remove_flow_result" and refused["ok"] is False
+        await second.send_json({"type": "connect", "port": "/dev/fake0"})
+        refused = await second.receive_json()
+        assert "busy" in refused["error"]
+        assert len(installer.install_calls) == 1
+
+        installer.release.set()
+        assert await first.receive_json() == {"type": "install_runtime_result", "ok": True}
+        # Free again: a new install runs.
+        installer.release.clear()
+        installer.started.clear()
+        await second.send_json({"type": "install_runtime", "port": "/dev/fake0"})
+        assert await asyncio.to_thread(installer.started.wait, 5)
+        installer.release.set()
+        assert await second.receive_json() == {"type": "install_runtime_result", "ok": True}
+        await first.close()
+        await second.close()

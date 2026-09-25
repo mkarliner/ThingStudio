@@ -372,3 +372,14 @@ async def test_ws_discover_returns_boards() -> None:
             ],
         }
         await ws.close()
+
+
+def test_connect_errors_carry_a_next_step(monkeypatch) -> None:
+    import errno
+
+    monkeypatch.setattr("sys.platform", "darwin")
+    text = tcp_relay._explain_connect_oserror(OSError(errno.EHOSTUNREACH, "No route to host"))
+    assert "Local Network" in text and "Apple's Terminal" in text
+    monkeypatch.setattr("sys.platform", "linux")
+    assert "same network" in tcp_relay._explain_connect_oserror(OSError(errno.EHOSTUNREACH, "No route to host"))
+    assert "Board settings" in tcp_relay._explain_connect_oserror(OSError(errno.ECONNREFUSED, "Connection refused"))

@@ -11,6 +11,7 @@ inject clicks all work the same way.
   only reachable while that flow is running. It starts again by itself after a reset.
 - A board password, set over USB.
 - This computer on the same network as the board.
+- On a Mac, Thingstudio started from Apple's Terminal app. See [If it doesn't connect](#if-it-doesnt-connect).
 
 ## Set the password and name
 
@@ -46,6 +47,9 @@ If this computer has no saved password for the board, the editor asks for it.
 
 The console says what went wrong:
 
+- **No route to host (Mac):** macOS is blocking local network access. Start Thingstudio from Apple's **Terminal**
+  app, which macOS always allows. Other terminals, such as iTerm, often aren't enough, even when they're allowed in
+  System Settings > Privacy & Security > Local Network.
 - **No answer:** check the board is on, its flow's **wifi status** node shows connected, and this computer is on the
   same network. If a `.local` name doesn't work, try the IP address, shown in the console when you connect over USB.
 - **Wrong password:** the editor asks again. To change it, connect over USB and use **Board settings…**.

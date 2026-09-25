@@ -122,3 +122,10 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
   RGB565↔hex lives in `rgb565.ts` (565→888 replicates high bits so 0xffff shows as white; round-trip exact for all
   65536 values, tested). `startup` got canvas presence in the same change (`outstanding-items/init-node-on-flow-
   start.md`). Checked in headless Chromium against a real build: palette entry, property panel, swatch counts.
+- **2026-09-24 — Credentials are fetched when picked, and before every Deploy; a missing SSID is a compile
+  error.** Real ESP32-C3: choosing a saved WiFi credential from the `wifi_status` dropdown set only
+  `credentialName`; values were fetched on flow load only, so the compiler saw no SSID and
+  `wifiSetupStatement` silently emitted no `connect()` -- the flow deployed fine and never joined WiFi.
+  `main.ts` now resolves a config's credential as soon as its name changes (`configsVersion` watch) and
+  re-resolves all of them at Deploy; `wifiSetupStatement` throws a CompileError for a non-unmanaged config with
+  no SSID.

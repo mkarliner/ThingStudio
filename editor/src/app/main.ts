@@ -151,7 +151,7 @@ import { functionNode as functionNodeDefinition } from "../node-library/function
 import { DRAG_MIME, CUSTOM_DRAG_MIME, type NodeKind } from "./rete/palette.js";
 import { toGraphData, socketIndex } from "./rete/graph-adapter.js";
 import { CONFIG_TYPES } from "./rete/config-types.js";
-import { propertyVersion, configs as configsStore, replaceAllConfigs, clearConfigs, backendWsUrl, fireInjectNode, updateConfig, activeTarget } from "./rete/store.js";
+import { propertyVersion, configsVersion, configs as configsStore, replaceAllConfigs, clearConfigs, backendWsUrl, fireInjectNode, updateConfig, activeTarget } from "./rete/store.js";
 import { getCustomNodePackage, listCustomNodeDefinitions } from "./rete/custom-nodes-store.js";
 import { assignNodeToActivePane, paneOfNode, replacePanesFromFlowFile, resetPanes, setActivePane, panes as panesStore } from "./rete/panes-store.js";
 import PaletteSidebar from "./rete/PaletteSidebar.vue";
@@ -463,7 +463,14 @@ function extractConfigsSnapshot(): FlowFileConfig[] {
  * value reaching the compiler (this project's standing fault-handling
  * priority; matches wifi-status.ts's/mqtt-shared.ts's own loud-CompileError
  * posture for a missing config reference, one level up). */
-async function resolveConfigCredentials(): Promise<void> {
+// Which credential name each config's values were last fetched for. 2026-09-24, real ESP32-C3: picking
+// a saved credential from a WiFi dropdown only set `credentialName` -- values were fetched on flow
+// load only -- so the compiler saw a config with no SSID and silently emitted no connect() call.
+// Now a changed name is fetched as soon as it's picked (the configsVersion watch below), and every
+// Deploy re-fetches all of them (a credential's values may have been edited since).
+const resolvedCredentialNames = new Map<string, string>();
+
+async function resolveConfigCredentials(onlyChanged = false): Promise<void> {
   const credentialTypeByConfigType: Record<string, CredentialType> = {
     "thingstudio/config/wifi": "wifi",
     "thingstudio/config/mqtt-broker": "mqtt-broker",
@@ -473,9 +480,11 @@ async function resolveConfigCredentials(): Promise<void> {
     if (!credentialType) continue;
     const name = typeof cfg.properties.credentialName === "string" ? cfg.properties.credentialName : "";
     if (!name) continue;
+    if (onlyChanged && resolvedCredentialNames.get(cfg.id) === name) continue;
     try {
       const data = await getCredential(backendWsUrl.value, credentialType, name);
       updateConfig(cfg.id, data);
+      resolvedCredentialNames.set(cfg.id, name);
     } catch (err) {
       logLine(
         `[load: could not resolve ${credentialType} credential "${name}" for config ${cfg.id}] ${err instanceof Error ? err.message : String(err)}`,
@@ -1073,6 +1082,15 @@ reteEditor.addPipe((context) => {
   return context;
 });
 watch(propertyVersion, () => {
+  deployedClean = false;
+  updateDeployButtonEnabled();
+  refreshPreview();
+});
+// A config changed (picked, created, or its credential swapped): fetch any newly chosen credential's
+// values, then recompile the preview. updateConfig() bumps configsVersion again, but the second pass
+// finds nothing changed, so this settles.
+watch(configsVersion, async () => {
+  await resolveConfigCredentials(true);
   deployedClean = false;
   updateDeployButtonEnabled();
   refreshPreview();
@@ -1733,6 +1751,7 @@ function explainNetworkConnectError(err: NetworkConnectError): string {
         "and this computer is on the same network. If a .local name doesn't work, try the board's IP address."
       );
     default:
+      if (err.message.includes(" -- ")) return err.message; // the backend already said what to do
       return (
         `${err.message}. If the board was reset or its flow was redeployed without a "wifi status" node, it may be ` +
         "off the network -- connect over USB to check."
@@ -1888,6 +1907,31 @@ el("btnDocs").addEventListener("click", () => {
   window.open(docUrl({ label: "Docs", path: "" }), "_blank", "noopener");
 });
 
+// Install runtime and Remove flow each open the serial port themselves on the backend, so two at once
+// fight over the board (2026-09-24, real Pico: four clicks while the first install waited for a reset
+// left four installs failing against each other). One at a time; both buttons are disabled while one
+// runs. The backend refuses a second job on a busy port too (ws_relay.py's _BUSY_PORTS).
+let boardJobRunning = false;
+
+function exclusiveBoardJob(job: () => Promise<void>): () => Promise<void> {
+  return async () => {
+    if (boardJobRunning) {
+      logLine("[busy] an install or Remove flow is still running -- wait for it to finish", "");
+      return;
+    }
+    boardJobRunning = true;
+    el<HTMLButtonElement>("btnInstallRuntime").disabled = true;
+    el<HTMLButtonElement>("btnRemoveFlow").disabled = true;
+    try {
+      await job();
+    } finally {
+      boardJobRunning = false;
+      el<HTMLButtonElement>("btnInstallRuntime").disabled = false;
+      el<HTMLButtonElement>("btnRemoveFlow").disabled = false;
+    }
+  };
+}
+
 /** Pushes a fresh device-runtime onto the selected port via the backend's
  * raw-REPL bootstrap (backend/src/thingstudio_backend/raw_repl.py +
  * runtime_installer.py, 2026-09-22) -- MVP item 1 (outstanding-items/
@@ -1911,7 +1955,7 @@ el("btnDocs").addEventListener("click", () => {
  * port claim would conflict with this one -- disconnected first below, and
  * not silently: told to the user, since Deploy/Check status/Disconnect all
  * go stale for that dropped session either way. */
-el("btnInstallRuntime").addEventListener("click", async () => {
+el("btnInstallRuntime").addEventListener("click", exclusiveBoardJob(async () => {
   const wsUrl = currentBackendWsUrl();
   const portName = el<HTMLSelectElement>("backendPortSelect").value;
   if (!portName) {
@@ -1966,7 +2010,7 @@ el("btnInstallRuntime").addEventListener("click", async () => {
   // this line prints; "⟳ ports" may need a moment before the port
   // reappears if the OS re-enumerates the device.
   logLine('[install runtime OK -- board reset into the new runtime. Click "⟳ ports" if needed, then "Connect".]', "ok");
-});
+}));
 
 el("btnConnect").addEventListener("click", async () => {
   lastHelloVersion = null;
@@ -2125,6 +2169,7 @@ el("btnDeploy").addEventListener("click", async () => {
     }
 
     await loadUserDefinitions();
+    await resolveConfigCredentials();
     logTargetResolution(updateActiveTarget());
     const preview = refreshPreview();
     if ("error" in preview) {
@@ -2344,7 +2389,7 @@ el("btnResume").addEventListener("click", async () => {
   if (transport.isConnected) await requestHelloOrExplain();
 });
 
-el("btnRemoveFlow").addEventListener("click", async () => {
+el("btnRemoveFlow").addEventListener("click", exclusiveBoardJob(async () => {
   const portName = el<HTMLSelectElement>("backendPortSelect").value;
   if (!portName) {
     logLine('[remove flow failed] choose the board\'s port first ("⟳ ports")', "err");
@@ -2384,4 +2429,4 @@ el("btnRemoveFlow").addEventListener("click", async () => {
     await remover.disconnect();
   }
   logLine('[remove flow OK] The saved flow is gone and the board has restarted without it. Click "Connect".', "ok");
-});
+}));

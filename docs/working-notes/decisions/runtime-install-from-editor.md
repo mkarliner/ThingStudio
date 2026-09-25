@@ -126,3 +126,9 @@ Status: detail file for `decisions.md`'s "Runtime install from the editor" index
   (road-to-mvp.md §1.5 wants a first-time user who isn't Mike), but every step of that path now exists and
   has run on real hardware. The docs build now gets the same stale-build banner as the editor, after the
   served Getting started page turned out to be the pre-rewrite version (`mkdocs build` not rerun).
+- **2026-09-24 — One install or Remove flow per port at a time.** Real Pico: clicking "Install runtime…" again
+  while the first install waited for a reset started one install per click, each opening the port in its own
+  thread; they interleaved raw-REPL traffic ("multiple access on port", one install reading another's
+  `raw REPL; CTRL-B to exit` banner) and all failed. The editor now disables both buttons while either runs
+  (`exclusiveBoardJob`, main.ts), and the backend refuses a second job, or a connect, on a busy port
+  (`_BUSY_PORTS`, ws_relay.py; `test_second_install_on_a_busy_port_is_refused_not_run`).

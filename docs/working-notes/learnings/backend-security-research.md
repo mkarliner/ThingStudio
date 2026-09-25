@@ -36,3 +36,16 @@ Status: detail file, split out of `learnings.md` on 2026-09-06 to keep that inde
   it in v151 (May 2026); Web Bluetooth is *permanently* Chromium-only —
   a stated policy position from both Firefox and Safari, not a lagging
   gap that will close. `architecture-review-briefing.md`.
+
+- **2026-09-25 — macOS 15 Local Network privacy blocks a framework-build Python even when the terminal is
+  allowed.** First real WiFi-transport test (ESP32-C3, Mike's Mac): the board listened (`NET_LISTENING`), `nc` from
+  iTerm connected, but the backend got `[Errno 65] No route to host` for both the TCP connect and the discovery
+  broadcast. iTerm was allowed; Python wasn't listed at all. Likely cause: python.org/Homebrew Pythons are framework
+  builds whose `python3` re-execs a hidden `Python.app`, which macOS judges on its own and often never prompts for.
+  Diagnosis: `.venv/bin/python -c "import sys; print(sys._base_executable)"` showing `Python.framework`. **Confirmed:** the same command works
+  from Apple's Terminal, which TN3179 says is always allowed ("Command-line tools run from Terminal or over SSH,
+  including any child processes"); from iTerm it fails even with iTerm allowed and the Python called by full path.
+  TN3179 also: only outgoing TCP/UDP and sending broadcasts need the permission -- listening and accepting don't --
+  and identity is by code signature, so ad-hoc-signed Homebrew Python is the "may behave weirdly" case. Matters for packaging (MVP item 7): the
+  bundled runtime must be allowed local network access. `tcp_relay._explain_connect_oserror` points Mac users at the
+  setting.

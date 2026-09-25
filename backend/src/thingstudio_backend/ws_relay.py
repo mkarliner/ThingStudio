@@ -103,6 +103,14 @@ _REMOVE_FLOW_TIMEOUT_SECONDS = 60.0
 _INSTALL_CATCH_TIMEOUT_SECONDS = 60.0
 
 
+# Serial ports with an install or Remove flow in progress, across every WebSocket session in this
+# process. Each such job opens the port itself in a thread, so two of them on one port interleave
+# raw-REPL traffic and both fail (seen 2026-09-24: four clicks on "Install runtime…" while a Pico
+# waited for a reset gave "multiple access on port" and one install reading another's raw-REPL
+# banner). A second job on a busy port is refused straight away instead.
+_BUSY_PORTS: set[str] = set()
+
+
 class ConnectionSession:
     """Per-WebSocket-connection state: at most one open serial port at a time,
     matching this backend's one-backend-one-device v1 scope."""
@@ -181,6 +189,9 @@ class ConnectionSession:
         if not port:
             await self._send_status(error="NODE_ERROR: connect requested with no port given")
             return
+        if port in _BUSY_PORTS:
+            await self._send_status(error=f"NODE_ERROR: {port} is busy with an install or Remove flow -- connect when it finishes")
+            return
         if self._serial is not None:
             await self._disconnect()
 
@@ -243,6 +254,20 @@ class ConnectionSession:
         await self._send_quietly(json.dumps(payload))
 
     async def _install_runtime(self, port: str | None, baudrate: int) -> None:
+        if port and port in _BUSY_PORTS:
+            await self._send_install_result(
+                ok=False, error=f"NODE_ERROR: an install or Remove flow is already running on {port} -- wait for it to finish"
+            )
+            return
+        if port:
+            _BUSY_PORTS.add(port)
+        try:
+            await self._install_runtime_exclusive(port, baudrate)
+        finally:
+            if port:
+                _BUSY_PORTS.discard(port)
+
+    async def _install_runtime_exclusive(self, port: str | None, baudrate: int) -> None:
         """Pushes the runtime onto `port`'s board via raw REPL -- see this module's header for
         why this doesn't reuse the normal connect/relay path. Closes any existing relay
         connection first (raw REPL needs exclusive access to the port); does not reopen one
@@ -339,6 +364,22 @@ class ConnectionSession:
             await self._disconnect()
 
     async def _remove_flow(self, port: str | None, baudrate: int) -> None:
+        if port and port in _BUSY_PORTS:
+            await self._send_result(
+                "remove_flow_result",
+                ok=False,
+                error=f"NODE_ERROR: an install or Remove flow is already running on {port} -- wait for it to finish",
+            )
+            return
+        if port:
+            _BUSY_PORTS.add(port)
+        try:
+            await self._remove_flow_exclusive(port, baudrate)
+        finally:
+            if port:
+                _BUSY_PORTS.discard(port)
+
+    async def _remove_flow_exclusive(self, port: str | None, baudrate: int) -> None:
         """board_recovery.remove_flow() on a dedicated port, same shape as _install_runtime: close any
         relay connection first, run in a thread, one final result message. Status lines ("press
         reset") go out as they happen."""

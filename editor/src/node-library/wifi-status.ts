@@ -360,7 +360,14 @@ export function wifiSetupStatement(ssid: unknown, password: unknown, security: W
     return { key: WIFI_SETUP_KEY, code: lines.join("\n") };
   }
   const ssidStr = typeof ssid === "string" ? ssid.trim() : "";
-  if (ssidStr) {
+  if (!ssidStr) {
+    // Used to skip the connect() call silently, which left a flow that compiles and deploys fine
+    // but never joins WiFi (2026-09-24, real ESP32-C3). An SSID is required unless "unmanaged".
+    throw new CompileError(
+      `the WiFi config has no network name (SSID) -- pick a saved WiFi credential on the wifi_status node, or set security to "unmanaged" if the board should get its WiFi details another way`,
+    );
+  }
+  {
     const pwStr = typeof password === "string" ? password : "";
     if (security === "password" && !pwStr) {
       throw new CompileError(
