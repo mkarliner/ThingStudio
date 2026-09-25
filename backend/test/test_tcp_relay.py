@@ -415,3 +415,33 @@ def test_connect_errors_carry_a_next_step(monkeypatch) -> None:
     monkeypatch.setattr("sys.platform", "linux")
     assert "same network" in tcp_relay._explain_connect_oserror(OSError(errno.EHOSTUNREACH, "No route to host"))
     assert "Board settings" in tcp_relay._explain_connect_oserror(OSError(errno.ECONNREFUSED, "Connection refused"))
+
+
+def test_dead_peer_detection_sets_keepalive_and_a_retransmit_limit() -> None:
+    """2026-09-25: a board that loses power never closes the connection; these make the OS notice."""
+    import sys
+
+    s = socket.socket()
+    try:
+        done = tcp_relay.enable_dead_peer_detection(s, timeout_s=20)
+        assert s.getsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE) != 0
+        if sys.platform.startswith("linux"):
+            assert s.getsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE) == 5
+            assert s.getsockopt(socket.IPPROTO_TCP, socket.TCP_USER_TIMEOUT) == 20000
+        assert "SO_KEEPALIVE" in done
+    finally:
+        s.close()
+
+
+@pytest.mark.asyncio
+async def test_connect_turns_on_dead_peer_detection() -> None:
+    board = FakeBoard()
+    await board.start()
+    conn = TcpConnection("127.0.0.1", board.port, password=PASSWORD)
+    try:
+        await conn.open()
+        raw = conn._writer.get_extra_info("socket")  # noqa: SLF001 -- checking the option really landed
+        assert raw.getsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE) != 0
+    finally:
+        await conn.close()
+        await board.stop()

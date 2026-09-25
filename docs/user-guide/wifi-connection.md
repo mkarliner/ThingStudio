@@ -41,6 +41,7 @@ A board with no password is listed as **no password set**. It won't accept a WiF
 - Only one editor can connect over WiFi at a time.
 - Board settings can only be changed over USB.
 - Installing the runtime and **Remove flow…** need USB.
+- If the board loses power or leaves WiFi range, the editor shows it disconnected within about 30 seconds.
 - Deploying a flow that doesn't use WiFi takes the board off the network at its next reset.
 - The password is never sent over the network, but the connection isn't encrypted. Use it on a network you
   trust.

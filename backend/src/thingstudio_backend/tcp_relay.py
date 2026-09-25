@@ -105,6 +105,47 @@ def _explain_connect_oserror(exc: OSError) -> str:
     return text
 
 
+DEAD_PEER_TIMEOUT_S = 20
+
+
+def enable_dead_peer_detection(sock: socket.socket, timeout_s: int = DEAD_PEER_TIMEOUT_S) -> list[str]:
+    """Makes this computer's TCP stack notice a board that vanished without closing the connection -- pulled
+    power, a reset mid-session (2026-09-25, ESP32-C3: the editor never showed "disconnected"). Nothing arrives
+    to say the board has gone, so without this the socket looks open until a write times out, many minutes
+    later on macOS. Two parts, because either alone misses a case:
+      - TCP keepalive probes when the line is idle (the board's network stack answers them by itself);
+      - a cap on how long sent data may stay unacknowledged, since keepalive pauses while there is some --
+        and the 30 s keepalive line (_keepalive, below) always leaves some.
+    Options this platform lacks are skipped; returns the names that were set, for the log. Best-effort: a
+    failure here must never stop a connection that would otherwise work."""
+    import sys
+
+    done: list[str] = []
+
+    def opt(level: int, name: str, value: int, fallback: int | None = None) -> None:
+        number = getattr(socket, name, fallback)
+        if number is None:
+            return
+        try:
+            sock.setsockopt(level, number, value)
+            done.append(name)
+        except OSError:
+            pass
+
+    opt(socket.SOL_SOCKET, "SO_KEEPALIVE", 1)
+    if sys.platform == "darwin":
+        opt(socket.IPPROTO_TCP, "TCP_KEEPALIVE", 5, 0x10)  # idle seconds before the first probe
+        opt(socket.IPPROTO_TCP, "TCP_KEEPINTVL", 3, 0x101)
+        opt(socket.IPPROTO_TCP, "TCP_KEEPCNT", 3, 0x102)
+        opt(socket.IPPROTO_TCP, "TCP_RXT_CONNDROPTIME", timeout_s, 0x80)  # seconds of unacked retransmits
+    else:
+        opt(socket.IPPROTO_TCP, "TCP_KEEPIDLE", 5)
+        opt(socket.IPPROTO_TCP, "TCP_KEEPINTVL", 3)
+        opt(socket.IPPROTO_TCP, "TCP_KEEPCNT", 3)
+        opt(socket.IPPROTO_TCP, "TCP_USER_TIMEOUT", timeout_s * 1000)  # milliseconds (Linux)
+    return done
+
+
 PasswordLookup = Callable[[str], "str | None"]
 
 
@@ -142,6 +183,9 @@ class TcpConnection:
 
             code = "refused" if exc.errno == errno.ECONNREFUSED else "network"
             raise TcpRelayError(self.port, "connect", _explain_connect_oserror(exc), code) from exc
+        raw_sock = self._writer.get_extra_info("socket") if self._writer is not None else None
+        if raw_sock is not None:
+            logger.info("%s: dead-peer detection %s", self.port, ", ".join(enable_dead_peer_detection(raw_sock)) or "unavailable")
         try:
             await self._handshake()
         except BaseException:
@@ -232,6 +276,8 @@ class TcpConnection:
             except OSError as exc:
                 if self._stop_requested:
                     return
+                if getattr(exc, "errno", None) in (60, 110):  # ETIMEDOUT (macOS, Linux): enable_dead_peer_detection() fired
+                    raise TcpRelayError(self.port, "read", "the board stopped answering (power lost, reset, or out of WiFi range)") from exc
                 raise TcpRelayError(self.port, "read", exc) from exc
             if not chunk:
                 if self._stop_requested:

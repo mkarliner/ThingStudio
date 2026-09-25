@@ -17,4 +17,7 @@
   the saved flow start. Same result as the agreed "wifi_status applies it", with no codegen change.
 - **2026-09-24 — Runtime 3.0.0.** No codegen changed, but the editor's WiFi and Board settings features need the
   3.0 listener; a major bump makes an old board say "install the runtime" rather than silently lack them.
-
+- 2026-09-25: the backend turns on TCP keepalive (5 s idle, 3 s x 3 probes) and a 20 s cap on unacknowledged
+  retransmits (`TCP_RXT_CONNDROPTIME` on macOS, `TCP_USER_TIMEOUT` on Linux) for every WiFi session
+  (`tcp_relay.enable_dead_peer_detection()`). A board that lost power never closed its end, so the editor never
+  showed it disconnected. Backend-only: the board's lwIP answers keepalive probes itself, no runtime change.
