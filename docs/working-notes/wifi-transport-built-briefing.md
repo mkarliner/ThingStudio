@@ -50,7 +50,6 @@ Reinstall the runtime first (3.0.0 adds `board_settings.py` and `net_transport.p
 - macOS 15 Local Network privacy blocked the backend's Homebrew Python when started from iTerm ("No route to host")
   even with iTerm allowed; Apple's Terminal works (TN3179 exempts it). Docs and the error message say so; packaging
   (item 7) must ship a signed app with `NSLocalNetworkUsageDescription`.
-- Not yet checked: steps 6-9 (`.local` entry, fault cases, Pico W, plain Pico).
 - Later the same day: discovery found one of two boards. `discover()` now resends the probe every 0.4 s within
   its 1.5 s window. The real cause turned out to be the port menu: its "(no board found)" placeholder was set before
   discovery and stayed selected when two WiFi boards were found (fixed; a 15 s test scan showed both boards
@@ -69,5 +68,9 @@ Reinstall the runtime first (3.0.0 adds `board_settings.py` and `net_transport.p
   start, and MQTT connect errors name every attempt's WiFi status and the broker's refusal reason. The `NET_INFO
   mqtt:` lines are experiment diagnostics -- keep or quieten. Lazy runtime imports are now [P2] in outstanding-items.
 - Pico W runs the `wifistatus` MQTT flow after today's `mqtt_as` and codegen changes (RP2 regression check passed).
-- Still not checked: steps 7-9 (fault cases, Pico W WiFi transport, plain Pico).
 - Redeploying an MQTT flow no longer leaves the old client running (it bounced the connection); fixed and confirmed.
+- End of day: the whole checklist re-run from step 1 on runtime 5.0.0 (precompiled install), ESP32-C3 and Pico W --
+  all pass. The one failure, pulling power during a WiFi session not being noticed, is fixed in the backend (TCP
+  keepalive plus a 20 s retransmit cap, `decisions/wifi-transport.md`). Committed as `fef8a04`.
+- Open: the `NET_INFO mqtt:` diagnostics (keep or quieten); lazy runtime imports ([P2]); plain Pico still shows
+  WiFi entries (deferred); ESP32-C3 slow pings / modem sleep (unconfirmed).

@@ -448,9 +448,9 @@ function mqttWifiPrecheckSnippet(): string {
     "if not _mqtt_wifi_precheck_sta.active():",
     "    _mqtt_wifi_precheck_sta.active(True)",
     'if sys.platform == "esp32" and not _mqtt_wifi_precheck_sta.isconnected():',
-    // EXPERIMENT diagnostics (2026-09-25): the join itself now runs at flow start (wifi-status.ts's
-    // wifiSetupStatement, deferToMqtt branch); this only waits for it, and says how it went. Remove or
-    // quieten once ESP32 + MQTT is settled.
+    // The join itself runs at flow start (wifi-status.ts's wifiSetupStatement, deferToMqtt branch); this only
+    // waits for it, and says how it went. NET_INFO lines only show in the console's Verbose mode
+    // (console-filter.ts), so they stay for diagnosing joins without drowning a flow's own output.
     '    _mqtt_t0 = time.ticks_ms()',
     '    print("NET_INFO mqtt: waiting for WiFi, station status %s" % (_mqtt_wifi_precheck_sta.status(),))',
     "    for _ in range(150):  # bounded ~15s",

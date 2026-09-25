@@ -508,3 +508,10 @@ ambiguous."
      needs. Deploy would push a missing or outdated library (precompiled) before the flow.
   Also: report free ESP-IDF heap in HELLO next to `freeRamBytes`, and add a C3 memory check (MQTT + display flow)
   to the hardware checklist.
+  **Mike's call, 2026-09-25:** keep an eye on memory while the remaining MVP nodes go in, and build lazy loading
+  then only if needed; otherwise post-MVP. (Why the C3 ran out first despite 400 KB vs the Pico W's 264 KB: the
+  C3 runs the whole WiFi stack -- MAC, WPA supplicant, mbedTLS, lwIP buffers -- on its own CPU and RAM, and the
+  handshake allocates at join time; the Pico W's CYW43439 radio has its own processor and RAM.)
+- **[DEFERRED]** **ESP32-C3 slow, lossy pings over WiFi** (2-324 ms, ~33% loss; Pico W 2-25 ms, none). Probably
+  the C3's default modem sleep; not confirmed (`w.config(pm=w.PM_NONE)` then ping). Mike, 2026-09-25: defer unless
+  it causes other problems. A fix would switch power saving off during a WiFi session only (`net_transport.py`).

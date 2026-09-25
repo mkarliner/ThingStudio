@@ -4,6 +4,8 @@
 
 The **console** panel shows everything the connected board reports: deploy results, node errors, and anything a `debug` node prints. Clear it with the button in its corner.
 
+Routine system reports are hidden unless you tick **Verbose**: network status, the listener starting up, and the raw protocol messages. Tick it when you're chasing a connection problem. Warnings, errors and your flow's own output always show. Hidden lines are kept, so ticking it later shows what was already logged.
+
 The **source preview** panel shows the actual MicroPython the current canvas compiles to — useful for seeing exactly what a flow does, or for confirming a fix landed where you expected.
 
 ## Board won't connect

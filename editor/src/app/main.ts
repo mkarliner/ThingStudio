@@ -138,6 +138,7 @@ import {
   type DocLink,
 } from "./board-diagnosis.js";
 import { explainBackendConnectError } from "./connect-error-help.js";
+import { isVerboseOnly } from "./console-filter.js";
 import { NATIVE_ARCH_OPTIONS, inferNativeArch } from "./native-arch.js";
 import { BUILTIN_DEFINITION_FILES } from "../definitions/builtin.js";
 import { buildDefinitionSet, userDefinitionFiles, type DefinitionSet } from "../definitions/definitions.js";
@@ -689,8 +690,20 @@ const consoleEl = el("console");
 // becomes clickable, wired to locateNode() below. Every call site below
 // that knows a node id passes it through; every other call (most of
 // them) simply omits it and gets the old plain, unclickable line.
+// Verbose switch (console-filter.ts): off by default, remembered per browser.
+let consoleVerbose = false;
+try {
+  consoleVerbose = localStorage.getItem("thingstudio.consoleVerbose") === "1";
+} catch {
+  // storage unavailable -- default off
+}
+
 function logLine(text: string, cls?: "ok" | "err" | "", nodeId?: string): void {
   const row = document.createElement("div");
+  if (isVerboseOnly(text, cls)) {
+    row.dataset.verbose = "1";
+    row.hidden = !consoleVerbose;
+  }
   const now = new Date();
   const ts = now.toLocaleTimeString(undefined, { hour12: false }) + "." + String(now.getMilliseconds()).padStart(3, "0");
   row.innerHTML = `<span class="t">[${ts}] </span><span class="${cls ?? ""}"></span>`;
@@ -1985,6 +1998,23 @@ async function watchBackend(): Promise<void> {
   setTimeout(() => void watchBackend(), ok ? 5000 : 1000);
 }
 setTimeout(() => void watchBackend(), 5000);
+
+{
+  const box = el<HTMLInputElement>("consoleVerbose");
+  box.checked = consoleVerbose;
+  box.addEventListener("change", () => {
+    consoleVerbose = box.checked;
+    try {
+      localStorage.setItem("thingstudio.consoleVerbose", consoleVerbose ? "1" : "0");
+    } catch {
+      // not remembered -- still applies to this page
+    }
+    consoleEl.querySelectorAll<HTMLElement>("[data-verbose]").forEach((row) => {
+      row.hidden = !consoleVerbose;
+    });
+    consoleEl.scrollTop = consoleEl.scrollHeight;
+  });
+}
 
 el("btnDocs").addEventListener("click", () => {
   window.open(docUrl({ label: "Docs", path: "" }), "_blank", "noopener");

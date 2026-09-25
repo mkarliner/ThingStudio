@@ -46,3 +46,8 @@ that rather than rely on default initial values. Flow-fed widgets start unknown 
 The recommended wider state set (unknown / known / stale / pending / error), its mono-safe visual
 treatments, and `payload: None` as the unknown signal are recommendations, not decisions.
 ([detail](../gui-layout-widget-system-scoping.md))
+- 2026-09-25 (Mike): the device console gets a **Verbose** switch. Routine system reports (NET_INFO/NET_LISTENING/
+  session lines, listener boot lines, the board's NODE_STATUS prints, and the [HELLO]/[NODE_STATUS]/[DEPLOY_ACK]/
+  [BOARD_SETTINGS_RESULT] JSON echoes) are hidden unless it's on; flow output, warnings, errors and the editor's own
+  notes always show. Editor-side filter (`console-filter.ts`), no runtime change; hidden rows are kept, the choice is
+  remembered per browser.
