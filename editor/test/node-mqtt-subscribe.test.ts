@@ -23,6 +23,7 @@
 // `thingstudio/config/mqtt-broker`, via `brokerConfigId` -- default seeded
 // as "broker1" (see beforeEach below).
 
+import { flowWifiConfigsFrom } from "./flow-wifi-helper.js";
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -78,6 +79,7 @@ function freshCtx(): CodegenContext {
       if (!cfg) throw new CompileError(`referenced config "${id}" not found`);
       return cfg;
     },
+    findConfigsOfType: (type: string) => (type === "thingstudio/config/wifi" ? flowWifiConfigsFrom(wifiStatusNodes, (id) => fakeConfigs.get(id)) : []),
     findNodesOfType(type: string): GraphNode[] {
       return type === "thingstudio/wifi_status" ? wifiStatusNodes : [];
     },
@@ -197,17 +199,17 @@ describe("thingstudio/mqtt_subscribe node", () => {
   it("rejects a flow with no wifi_status node, and separately a missing topic", () => {
     const ctx = freshCtx();
     wifiStatusNodes = [];
-    expect(() => mqttSubscribeNode.codegenSource!(node({ topic: "t", brokerConfigId: "broker1" }), ctx)).toThrow(/needs a "wifi_status" node/);
+    expect(() => mqttSubscribeNode.codegenSource!(node({ topic: "t", brokerConfigId: "broker1" }), ctx)).toThrow(/needs a WiFi network/);
     expect(() => mqttSubscribeNode.codegenSource!(node({ ...BASE }), ctx)).toThrow(/non-empty "topic"/);
   });
 
-  it("rejects a flow with more than one wifi_status node (single-interface assumption, for now)", () => {
+  it("rejects a flow with two WiFi configs (one radio, so one WiFi config per flow)", () => {
     const ctx = freshCtx();
     wifiStatusNodes = [
       { id: "w1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "wifi1" } },
-      { id: "w2", type: "thingstudio/wifi_status", properties: { wifiConfigId: "wifi1" } },
+      { id: "w2", type: "thingstudio/wifi_status", properties: { wifiConfigId: "wifi1_other" } },
     ];
-    expect(() => mqttSubscribeNode.codegenSource!(node({ topic: "t", brokerConfigId: "broker1" }), ctx)).toThrow(/only one WiFi interface is supported today/);
+    expect(() => mqttSubscribeNode.codegenSource!(node({ topic: "t", brokerConfigId: "broker1" }), ctx)).toThrow(/a flow can only have one/);
   });
 
   it("rejects an unsupported qos", () => {

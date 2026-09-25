@@ -218,80 +218,104 @@ export function resolveWifiCredentials(
   return { ssid: resolved.ssid, password: resolved.password, security };
 }
 
-/** The flow-wide counterpart to resolveWifiCredentials() above -- see this
- * file's 2026-09-04 header note for the bug this fixes and the design.
- * Looks up the flow's own `thingstudio/wifi_status` node (via
- * `ctx.findNodesOfType()`, node-definition.ts) and resolves WiFi
- * credentials from THAT NODE'S OWN `wifiConfigId`, not from the calling
- * node's own properties -- callers (udp-send.ts, udp-receive.ts,
- * mqtt-shared.ts, http-request.ts) no longer have a `wifiConfigId`
- * property of their own at all. `nodeTypeLabel` (e.g. "mqtt_publish") is
- * folded into every error message so it's attributable without opening
- * generated source, same convention resolveWifiCredentials() itself uses.
+/** The WiFi config type -- a singleton (config-types.ts's `singleton`, 2026-09-25): at most one per flow. */
+export const WIFI_CONFIG_TYPE = "thingstudio/config/wifi";
+
+/** Every node type that needs the station interface up, so uses the flow's WiFi config. */
+export const WIFI_NODE_TYPES: readonly string[] = [
+  "thingstudio/wifi_status",
+  "thingstudio/wifi_gate",
+  "thingstudio/udp_send",
+  "thingstudio/udp_receive",
+  "thingstudio/http_request",
+  "thingstudio/http_in",
+  "thingstudio/mqtt_publish",
+  "thingstudio/mqtt_subscribe",
+];
+
+/** The flow's WiFi credentials, for any node that needs WiFi. `nodeTypeLabel` (e.g. "mqtt_publish") is
+ * folded into every error so it's attributable without opening generated source.
  *
- * Assumes exactly one `wifi_status` node per flow (this file's header) --
- * zero or more than one is a loud CompileError, not a silent pick. The
- * `ctx.findNodesOfType` call itself is guarded (it's an optional method,
- * node-definition.ts) purely for the test-suite mocks that predate this
- * function and never touch WiFi resolution -- compile.ts's real
- * CodegenContext always provides it, so a real compile can never actually
- * hit that branch. */
+ * History: until 2026-09-04 each network node had its own `wifiConfigId`, and two nodes could point at
+ * different networks for the one radio. The fix then routed every node through the flow's single
+ * `wifi_status` node, which made wifi_status mandatory even in flows where mqtt_as owns the connection.
+ * 2026-09-25 (Mike's call): the WiFi config is a singleton instead -- every node's WiFi field shows and
+ * edits the one instance (store.ts's createConfig()), so this resolves "the flow's WiFi config" directly
+ * and no node needs another node to exist. More than one WiFi config (a hand-edited file, or one saved by
+ * an older editor and not yet reloaded) is an error rather than a silent pick; loading the flow in the
+ * editor merges them (normalizeWifiConfigs(), below). */
 export function resolveFlowWifiCredentials(
   ctx: CodegenContext,
   nodeTypeLabel: string,
 ): { ssid: unknown; password: unknown; security: WifiSecurity } {
-  const finder = ctx.findNodesOfType;
+  const finder = ctx.findConfigsOfType;
   if (!finder) {
     throw new CompileError(
-      `${nodeTypeLabel}: this compiler context can't look up the flow's wifi_status node (findNodesOfType missing) -- internal error, not a flow-authoring mistake`,
+      `${nodeTypeLabel}: this compiler context can't look up the flow's WiFi config (findConfigsOfType missing) -- internal error, not a flow-authoring mistake`,
     );
   }
-  const wifiNodes = finder("thingstudio/wifi_status");
-  if (wifiNodes.length === 0) {
+  const wifiConfigs = finder(WIFI_CONFIG_TYPE);
+  if (wifiConfigs.length === 0) {
     throw new CompileError(
-      `${nodeTypeLabel} needs a "wifi_status" node in this flow to supply WiFi credentials -- add one and set its WiFi config (${nodeTypeLabel} no longer has a WiFi config of its own, see wifi-status.ts)`,
+      `${nodeTypeLabel} needs a WiFi network -- set "WiFi" in its properties (every WiFi node in a flow shares one)`,
     );
   }
-  if (wifiNodes.length > 1) {
+  if (wifiConfigs.length > 1) {
     throw new CompileError(
-      `${nodeTypeLabel}: found ${wifiNodes.length} "wifi_status" nodes in this flow -- only one WiFi interface is supported today (multiple wifi_status nodes, one per interface, is a planned future extension, not yet built)`,
+      `this flow has ${wifiConfigs.length} WiFi configs, but a flow can only have one -- reopen the flow in the editor to merge them`,
     );
   }
-  return resolveWifiCredentials(wifiNodes[0]!.properties, ctx, "wifi_status");
+  return resolveWifiCredentials({ wifiConfigId: wifiConfigs[0]!.id }, ctx, nodeTypeLabel);
+}
+
+/** Collapses a flow's WiFi configs to the one instance (2026-09-25, the singleton change -- see
+ * resolveFlowWifiCredentials()). Keeps the config the flow's wifi_status node pointed at, else the first
+ * one any node pointed at, else the first; drops the rest; points every node's `wifiConfigId` at the
+ * kept one. Pure: main.ts calls it when a flow loads and logs `dropped`. */
+export function normalizeWifiConfigs<C extends { id: string; type: string; properties: Record<string, unknown> }, N extends { type: string; properties: Record<string, unknown> }>(
+  nodes: N[],
+  configs: C[],
+): { nodes: N[]; configs: C[]; dropped: C[] } {
+  const wifi = configs.filter((c) => c.type === WIFI_CONFIG_TYPE);
+  if (wifi.length === 0) return { nodes, configs, dropped: [] };
+  const referenced = (n: N) => (typeof n.properties.wifiConfigId === "string" ? n.properties.wifiConfigId : "");
+  const isWifi = (id: string) => wifi.some((c) => c.id === id);
+  const fromWifiStatus = nodes.filter((n) => n.type === "thingstudio/wifi_status").map(referenced).find(isWifi);
+  const fromAny = nodes.map(referenced).find(isWifi);
+  const keepId = fromWifiStatus ?? fromAny ?? wifi[0]!.id;
+  const dropped = wifi.filter((c) => c.id !== keepId);
+  const outNodes = nodes.map((n) =>
+    "wifiConfigId" in n.properties && n.properties.wifiConfigId !== keepId
+      ? { ...n, properties: { ...n.properties, wifiConfigId: keepId } }
+      : n,
+  );
+  return { nodes: outNodes, configs: configs.filter((c) => !dropped.includes(c)), dropped };
 }
 
 /** wifi-provisioning-captive-portal.md (2026-09-14, confirmed with Mike): computes the
  * device-runtime marker DEPLOY carries so wifi_provision.py knows, before it ever imports the
  * deployed flow's own code, whether this flow wants boot-time self-provisioning at all. Returns
- * null when there's no (or more than one) wifi_status node, its wifiConfigId doesn't resolve, or
- * its config's `security` isn't "unmanaged" (every other security value means the flow itself
- * supplies real credentials, so this feature is simply not in play) -- a null marker is what tells
- * DEPLOY to omit the field entirely (messages.ts's own additive-field convention), which in turn
- * tells wifi_provision.py's own listener.py caller to clear any previously-persisted marker rather
- * than carry forward a PREVIOUS flow's provisioning intent (listener.py's own
- * _persist_wifi_provision_marker() doc comment).
+ * null unless the flow has a node that uses WiFi and its one WiFi config's `security` is
+ * "unmanaged" (every other security value means the flow itself supplies real credentials) -- a
+ * null marker tells DEPLOY to omit the field entirely (messages.ts's additive-field convention),
+ * which tells listener.py to clear any previously-persisted marker rather than carry forward a
+ * PREVIOUS flow's provisioning intent.
  *
- * Deliberately takes a plain GraphData, not a CodegenContext -- called from main.ts alongside (not
- * from inside) compile.ts's own codegen pass, so compile.ts itself never needs to import a specific
- * node type by name (this file's own header already flags that as the reason CredentialRefField
- * lives one layer away from ConfigRefField; the same "generic compiler, node-type-specific logic
- * stays in node-library" layering applies here in reverse -- see main.ts's own call site). The
- * "exactly one wifi_status node" ambiguity (0 or >1) is deliberately NOT an error here -- a flow
- * with a genuinely ambiguous WiFi setup already gets a real CompileError from
- * resolveFlowWifiCredentials() during the normal compile a Deploy click always runs first; this
- * function only ever runs after that compile has already succeeded (main.ts's own call order), so
- * reaching an ambiguous case here would mean compile.ts's own check has a bug, not that this
- * function needs to duplicate it. */
-export function computeWifiProvisionMarker(graphData: { nodes: GraphNode[]; configs?: { id: string; properties: Record<string, unknown> }[] }): {
+ * Takes plain GraphData, not a CodegenContext -- called from main.ts alongside (not from inside)
+ * compile.ts's codegen pass, and only after that compile succeeded, so the "exactly one WiFi config"
+ * rule has already been enforced by resolveFlowWifiCredentials(); anything else here just means null.
+ * 2026-09-25: reads the flow's singleton WiFi config, no longer wifi_status's own reference. */
+export function computeWifiProvisionMarker(graphData: {
+  nodes: GraphNode[];
+  configs?: { id: string; type: string; properties: Record<string, unknown> }[];
+}): {
   selfProvision: boolean;
   allowReprovision: boolean;
 } | null {
-  const wifiNodes = graphData.nodes.filter((n) => n.type === "thingstudio/wifi_status");
-  if (wifiNodes.length !== 1) return null;
-  const configId = wifiNodes[0]!.properties.wifiConfigId;
-  if (typeof configId !== "string" || !configId) return null;
-  const config = (graphData.configs ?? []).find((c) => c.id === configId);
-  if (!config) return null;
+  if (!graphData.nodes.some((n) => WIFI_NODE_TYPES.includes(n.type))) return null;
+  const wifi = (graphData.configs ?? []).filter((c) => c.type === WIFI_CONFIG_TYPE);
+  if (wifi.length !== 1) return null;
+  const config = wifi[0]!;
   if (config.properties.security !== "unmanaged") return null;
   return { selfProvision: true, allowReprovision: config.properties.allowReprovisioning === true };
 }
@@ -395,7 +419,7 @@ export const wifiStatusNode: NodeDefinition = {
       throw new CompileError(`wifi_status pollMs "${String(node.properties.pollMs)}" must be a positive number`);
     }
 
-    const { ssid, password, security } = resolveWifiCredentials(node.properties, ctx, "wifi_status");
+    const { ssid, password, security } = resolveFlowWifiCredentials(ctx, "wifi_status");
 
     // Mike's ask, 2026-09-02 (outstanding-items/wifi-status-emit-on-change.md):
     // emit only when connection state actually changes, not on every poll.

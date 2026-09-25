@@ -22,7 +22,7 @@ from pathlib import Path
 
 from aiohttp import web
 
-from .app import create_app
+from .app import EDITOR_SEEN_KEY, create_app
 from .builtin_reference import seed_builtin_definitions
 from .middleware import DEFAULT_ALLOWED_HOSTS
 from .persisted_store import PersistedStore
@@ -69,23 +69,30 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def _open_browser_soon(url: str):
-    """on_startup hook: opens the editor once the server is listening. Delayed slightly because
-    on_startup runs just before aiohttp binds the socket; run in a thread because webbrowser.open()
-    can block. Failure to open a browser (headless machine, no default browser) is logged, never
-    fatal -- the URL is printed either way."""
+_REUSE_TAB_WAIT_S = 2.5
 
-    async def hook(_app: web.Application) -> None:
+
+def _open_browser_soon(url: str):
+    """on_startup hook: opens the editor once the server is listening -- unless an editor tab left open
+    from the last run checks in first (2026-09-25: an open tab polls /api/alive every second while the
+    backend is down, so restarting the backend used to leave a dead tab behind each time). Waits
+    _REUSE_TAB_WAIT_S for that. Run in a thread because webbrowser.open() can block. Failure to open a
+    browser (headless machine, no default browser) is logged, never fatal -- the URL is printed either way."""
+
+    async def hook(app: web.Application) -> None:
         loop = asyncio.get_running_loop()
 
         def _open() -> None:
+            if app[EDITOR_SEEN_KEY]["seen"]:
+                logging.getLogger(__name__).info("an editor tab is already open -- reconnected to it, not opening another")
+                return
             try:
                 if not webbrowser.open(url):
                     logging.getLogger(__name__).info("no browser available -- open %s yourself", url)
             except Exception as exc:  # noqa: BLE001 -- see docstring
                 logging.getLogger(__name__).info("couldn't open a browser (%s) -- open %s yourself", exc, url)
 
-        loop.call_later(0.5, lambda: loop.run_in_executor(None, _open))
+        loop.call_later(_REUSE_TAB_WAIT_S, lambda: loop.run_in_executor(None, _open))
 
     return hook
 
@@ -112,7 +119,20 @@ def main(argv: list[str] | None = None) -> int:
     url = f"http://{'[::1]' if args.host == '::1' else args.host}:{args.port}/"
     if not args.no_browser:
         app.on_startup.append(_open_browser_soon(url))
-    web.run_app(app, host=args.host, port=args.port, print=lambda _msg: print(f"Thingstudio is running at {url}"))
+    try:
+        web.run_app(app, host=args.host, port=args.port, print=lambda _msg: print(f"Thingstudio is running at {url}"))
+    except OSError as exc:
+        import errno
+
+        if exc.errno != errno.EADDRINUSE:
+            raise
+        print(
+            f"NODE_ERROR: port {args.port} is already in use -- Thingstudio is probably already running (check your "
+            f"other terminal windows). Stop it with Ctrl-C there, or run: lsof -ti tcp:{args.port} | xargs kill. "
+            "To run a second copy, use --port.",
+            file=sys.stderr,
+        )
+        return 1
     return 0
 
 

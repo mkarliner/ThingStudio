@@ -10,6 +10,6 @@ Sends a message's payload as a UDP datagram to a fixed host and port.
 
 ## Behavior
 
-Uses whichever WiFi connection the flow's `wifi_status` node has established — add one if the flow doesn't have one yet. The payload is sent as bytes (a string is UTF-8 encoded, other types are converted); nothing about its content is validated.
+Uses the flow's WiFi network (its **WiFi** field, shared by every WiFi node). The payload is sent as bytes (a string is UTF-8 encoded, other types are converted); nothing about its content is validated.
 
 A send that fails — an unreachable host, a DNS failure, a timeout — raises a clear error naming the host and port it was trying to reach, not a bare error code.

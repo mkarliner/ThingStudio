@@ -28,6 +28,7 @@ import type { ClassicPreset } from "rete";
 import type { AnyThingstudioNode, InjectNode } from "./nodes";
 import { DEFAULT_BACKEND_WS_URL } from "../../flow-file/admin-api-client";
 import type { Target } from "../../definitions/target";
+import { CONFIG_TYPES } from "./config-types";
 
 export const selectedNode = ref<AnyThingstudioNode | null>(null);
 
@@ -137,6 +138,19 @@ export function getConfig(id: string): ConfigEntry | undefined {
  * (graph.ts's GraphConfigNode header), this just reuses an already-proven
  * generator rather than inventing a second one. */
 export function createConfig(type: string, properties: Record<string, unknown>): string {
+  // Singleton config types (config-types.ts's `singleton`, e.g. WiFi): "create" means "make the one
+  // instance look like this" -- same id back, so every node referencing it sees the change.
+  if (CONFIG_TYPES[type]?.singleton) {
+    const existing = listConfigsOfType(type)[0];
+    if (existing) {
+      // Same credential: keep the values main.ts already fetched for it (it only refetches when the
+      // name changes). A different one: start clean, and main.ts fetches the new values.
+      const same = existing.properties.credentialName === properties.credentialName;
+      existing.properties = same ? { ...existing.properties, ...properties } : { ...properties };
+      bumpConfigsVersion();
+      return existing.id;
+    }
+  }
   const id = crypto.randomUUID();
   configs.value.set(id, { id, type, properties });
   bumpConfigsVersion();

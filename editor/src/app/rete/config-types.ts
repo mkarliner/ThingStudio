@@ -114,12 +114,18 @@ export interface ConfigTypeDescriptor {
    * config's own id (below) when this returns an empty/falsy value (a
    * freshly-added, not-yet-filled-in config). */
   summarize(properties: Record<string, unknown>): string;
+  /** At most one config of this type exists in a flow (2026-09-25, Mike's call, for WiFi: a board has one
+   * radio). Any node can still pick or create one from its own field; store.ts's createConfig() hands back
+   * the existing instance, updated, instead of adding a second -- so every node that asks gets the same one
+   * and nothing else needs to know. */
+  singleton?: boolean;
 }
 
 export const CONFIG_TYPES: Record<string, ConfigTypeDescriptor> = {
   "thingstudio/config/wifi": {
     type: "thingstudio/config/wifi",
     label: "WiFi",
+    singleton: true,
     fields: [
       { name: "credentialName", label: "credential", kind: "credential", credentialType: "wifi" },
       {

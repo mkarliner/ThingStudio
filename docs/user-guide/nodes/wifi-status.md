@@ -1,15 +1,15 @@
 # wifi status
 
-Brings up the board's WiFi connection and reports connection state — and every other network node in a flow depends on it for its own credentials.
+Reports the board's WiFi connection state. In a flow with no other WiFi node, it also brings the connection up.
 
 ## Properties
 
 - **poll interval (ms)** — how often to check the connection. Default 5000ms.
-- **WiFi config** — which config node to connect with (see [Canvas basics](../canvas-basics.md#config-nodes)). Required — won't compile without one.
+- **WiFi** — the flow's WiFi network. Every WiFi node in a flow shares this one setting (see [Canvas basics](../canvas-basics.md#config-nodes)).
 
 ## Behavior
 
-**This is the flow's sole source of WiFi credentials.** Every other network node type (`udp_send`, `udp_receive`, `http_request`, `mqtt_publish`, `mqtt_subscribe`) connects using whatever this node is configured with — none of them carry a WiFi config of their own. A flow that uses any of those needs exactly one `wifi_status` node; zero, or more than one, is a compile error.
+This node is optional: other network nodes don't need it. In a flow with MQTT nodes, MQTT manages the WiFi connection and this node only reports on it.
 
 The payload is `true`/`false` for connected/disconnected. The message also carries `ip`, `subnet`, `gateway`, `dns` (all empty strings when disconnected), and `rssi` (signal strength in dBm, or `null` when disconnected or when the board doesn't support reading it — RSSI is an ESP32-only reading, not available on every board). Use a `debug` node with "full message" checked to see all of these — by default `debug` only prints `payload`.
 

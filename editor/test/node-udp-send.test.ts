@@ -44,6 +44,7 @@
 // register_cleanup self-registration (Problem 1) and the host:port-
 // qualified OSError re-raise (Problem 2a).
 
+import { flowWifiConfigsFrom } from "./flow-wifi-helper.js";
 import { execFile } from "node:child_process";
 import dgram from "node:dgram";
 import { mkdtempSync, writeFileSync } from "node:fs";
@@ -87,6 +88,7 @@ const ctx: CodegenContext = {
     return cfg;
   },
   findNodesOfType: (type) => (type === "thingstudio/wifi_status" ? wifiStatusNodes : []),
+  findConfigsOfType: (type: string) => (type === "thingstudio/config/wifi" ? flowWifiConfigsFrom(wifiStatusNodes, (id) => fakeConfigs.get(id)) : []),
 };
 
 beforeEach(() => {
@@ -231,15 +233,15 @@ describe("thingstudio/udp_send node", () => {
 
   it("throws a CompileError when the flow has no wifi_status node (2026-09-04: no wifiConfigId of its own any more, derives from wifi_status instead)", () => {
     expect(() => udpSendNode.codegenSink!(node({ host: "h", port: 1 }), ctx)).toThrow(CompileError);
-    expect(() => udpSendNode.codegenSink!(node({ host: "h", port: 1 }), ctx)).toThrow(/udp_send needs a "wifi_status" node/);
+    expect(() => udpSendNode.codegenSink!(node({ host: "h", port: 1 }), ctx)).toThrow(/udp_send needs a WiFi network/);
   });
 
-  it("throws a CompileError when the flow has more than one wifi_status node (single-interface assumption, for now)", () => {
+  it("rejects a flow with two WiFi configs (one radio, so one WiFi config per flow)", () => {
     wifiStatusNodes = [
       { id: "w1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "unmanaged1" } },
-      { id: "w2", type: "thingstudio/wifi_status", properties: { wifiConfigId: "unmanaged1" } },
+      { id: "w2", type: "thingstudio/wifi_status", properties: { wifiConfigId: "unmanaged1_other" } },
     ];
-    expect(() => udpSendNode.codegenSink!(node({ host: "h", port: 1 }), ctx)).toThrow(/only one WiFi interface is supported today/);
+    expect(() => udpSendNode.codegenSink!(node({ host: "h", port: 1 }), ctx)).toThrow(/a flow can only have one/);
   });
 
   it("brings the WiFi station interface up with no connect call when the referenced config's security is 'unmanaged'", () => {

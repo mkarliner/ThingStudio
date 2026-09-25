@@ -12,7 +12,20 @@ rate-limited during this session before a commit-level lookup could be
 made. Worth tightening to an exact commit SHA next time this file is
 touched, rather than left permanently vague.
 
-SHA-256 of the vendored file as committed: `0fe913cfb76f9e0fdcad1fcdbcece249a89dc31cb185c408ecdb3a738a161d56`.
+SHA-256 of the file as originally vendored: `0fe913cfb76f9e0fdcad1fcdbcece249a89dc31cb185c408ecdb3a738a161d56`.
+After the local patch below: `c2cbffc7121255d40159101a4ad3cb51ff11f4075946238ce19c68ad529bfbd2`.
+
+## Local patch (2026-09-25) -- an experiment, Mike's call
+
+One change, marked `THINGSTUDIO PATCH` in `__init__.py`: `wifi_connect()`'s non-ESP8266 branch returns early
+when the station is already connected, instead of calling `connect()` again (the ESP8266 branch already has
+this check). On ESP32 the unconditional second `connect()` failed with "Wifi Internal State Error" whenever
+ESP-IDF's own auto-reconnect was in flight, and working round it from outside eventually wedged the WiFi
+driver (2026-09-25, ESP32-C3). Thingstudio's generated MQTT code now joins WiFi itself on ESP32 before
+calling `mqtt_as`'s `connect()`; `mqtt_as` still owns reconnecting after an outage (its `_keep_connected()`
+disconnects first, so the guard doesn't skip that). This reverses the 2026-08-21 call not to carry a local
+patch (upstream issues #57, #59, #61 ask for the same guard); `decisions/redeploy-network.md` has the reasoning.
+Re-apply it if this file is ever re-fetched.
 Honest caveat on verification, matching this project's convention of
 saying plainly what wasn't checked: this was fetched via a web-fetch tool
 in an environment with no direct outbound network access from the shell,

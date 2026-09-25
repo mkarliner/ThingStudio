@@ -105,7 +105,7 @@ export interface NetworkBoardInfo {
 
 /** connectNetwork()'s rejection. `code` is tcp_relay.py's TcpRelayError.code: "no_password" (none
  * saved for this board -- ask the user), "auth_failed", "busy", "board_no_password", "timeout",
- * "network". `hostname` is the board's own name when the handshake got far enough to learn it. */
+ * "refused" (nothing listening on the board's port -- usually no password set), "network". `hostname` is the board's own name when the handshake got far enough to learn it. */
 export class NetworkConnectError extends Error {
   constructor(
     message: string,

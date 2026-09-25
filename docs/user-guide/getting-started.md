@@ -26,7 +26,7 @@ thingstudio-backend
 
 If your terminal says the command isn't found just after the first `make`, run `hash -r` or open a new terminal. If `make` said it couldn't put the command on your PATH, use `make run` instead.
 
-The editor opens in your browser at `http://127.0.0.1:8765/`. Leave the terminal open while you work; press Ctrl-C there to stop Thingstudio. Add `--no-browser` if you'd rather open the page yourself.
+The editor opens in your browser at `http://127.0.0.1:8765/`. Leave the terminal open while you work; press Ctrl-C there to stop Thingstudio. Add `--no-browser` if you'd rather open the page yourself. If you restart Thingstudio with the editor still open, that tab reconnects and no new one opens.
 
 These docs are served locally too, so they work without an internet connection. The **Docs** button opens them.
 

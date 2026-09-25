@@ -68,4 +68,4 @@ If Deploy fails with an architecture or native-module error, that's the sign to 
 
 ## Known platform limitation: WiFi/MQTT connect ordering
 
-If a flow has both a `wifi_status` node and an MQTT node (`mqtt_publish`/`mqtt_subscribe`), you may occasionally see a WiFi connection error at deploy time on ESP32 boards — the WiFi driver refusing a second connect attempt while the first is still settling. This is fixed on RP2040; on ESP32 it's narrowed but not fully eliminated. If you hit it, redeploying usually succeeds on the retry. It's a known platform timing issue, not a mistake in your flow.
+On ESP32 boards, a flow with MQTT nodes can hit a WiFi connection error at deploy time ("Wifi Internal State Error"). The board is still reconnecting to a network an earlier flow used, and refuses a new connect until that finishes. The MQTT nodes stop that reconnect and try again, up to three times. If it still fails, deploy again. It's a platform timing issue, not a mistake in your flow.

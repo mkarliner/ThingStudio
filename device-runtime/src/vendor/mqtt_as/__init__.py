@@ -738,6 +738,12 @@ class MQTTClient(MQTT_base):
                 # https://datasheets.raspberrypi.com/picow/connecting-to-the-internet-with-pico-w.pdf
                 # para 3.6.3
                 s.config(pm=0xA11140)
+            # THINGSTUDIO PATCH (2026-09-25, not upstream -- see this directory's README.md): don't issue a
+            # second connect when the station is already up, same check the ESP8266 branch above has. On
+            # ESP32, connect() on a connected/connecting station fails ("Wifi Internal State Error") and
+            # repeated attempts wedge the WiFi driver. Thingstudio's generated code joins WiFi itself first.
+            if s.isconnected():
+                return
             s.connect(self._ssid, self._wifi_pw)
             for _ in range(60):  # Break out on fail or success. Check once per sec.
                 await asyncio.sleep(1)

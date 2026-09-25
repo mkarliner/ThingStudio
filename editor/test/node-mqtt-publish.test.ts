@@ -28,6 +28,7 @@
 // call rather than reusing one fixed default the way DEFAULT_WIFI_CONFIG
 // does.
 
+import { flowWifiConfigsFrom } from "./flow-wifi-helper.js";
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -66,6 +67,7 @@ const ctx: CodegenContext = {
     return cfg;
   },
   findNodesOfType: (type) => (type === "thingstudio/wifi_status" ? wifiStatusNodes : []),
+  findConfigsOfType: (type: string) => (type === "thingstudio/config/wifi" ? flowWifiConfigsFrom(wifiStatusNodes, (id) => fakeConfigs.get(id)) : []),
 };
 
 /** Finds the actual MQTTClient-construction statement among a codegen
@@ -256,15 +258,15 @@ describe("thingstudio/mqtt_publish node", () => {
   it("rejects a flow with no wifi_status node (2026-09-04: no wifiConfigId of its own any more)", () => {
     wifiStatusNodes = [];
     expect(() => mqttPublishNode.codegenSink!(node({ topic: "t", brokerConfigId: "broker1" }), ctx)).toThrow(CompileError);
-    expect(() => mqttPublishNode.codegenSink!(node({ topic: "t", brokerConfigId: "broker1" }), ctx)).toThrow(/needs a "wifi_status" node/);
+    expect(() => mqttPublishNode.codegenSink!(node({ topic: "t", brokerConfigId: "broker1" }), ctx)).toThrow(/needs a WiFi network/);
   });
 
-  it("rejects a flow with more than one wifi_status node (single-interface assumption, for now)", () => {
+  it("rejects a flow with two WiFi configs (one radio, so one WiFi config per flow)", () => {
     wifiStatusNodes = [
       { id: "w1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "wifi1" } },
-      { id: "w2", type: "thingstudio/wifi_status", properties: { wifiConfigId: "wifi1" } },
+      { id: "w2", type: "thingstudio/wifi_status", properties: { wifiConfigId: "wifi1_other" } },
     ];
-    expect(() => mqttPublishNode.codegenSink!(node({ topic: "t", brokerConfigId: "broker1" }), ctx)).toThrow(/only one WiFi interface is supported today/);
+    expect(() => mqttPublishNode.codegenSink!(node({ topic: "t", brokerConfigId: "broker1" }), ctx)).toThrow(/a flow can only have one/);
   });
 
   it("rejects a missing topic", () => {
@@ -345,6 +347,7 @@ describe("thingstudio/mqtt_publish node", () => {
         return cfg;
       },
       findNodesOfType: (type) => (type === "thingstudio/wifi_status" ? wifiStatusNodes : []),
+      findConfigsOfType: (type: string) => (type === "thingstudio/config/wifi" ? flowWifiConfigsFrom(wifiStatusNodes, (id) => fakeConfigs.get(id)) : []),
     };
     const cfg = { topic: "t1", wifiConfigId: "wifi1", brokerConfigId: "broker1" };
     const resultA = mqttPublishNode.codegenSink!(node(cfg), ctxShared);

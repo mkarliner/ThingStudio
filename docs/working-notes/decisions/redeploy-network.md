@@ -332,3 +332,19 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
   connect until selected" report from earlier the same day, tentatively flagged as a possible downstream artifact of
   this same flapping (outstanding-items/node-status-indicators.md), has not been independently re-checked since this
   fix landed -- worth revisiting if it recurs, not assumed resolved just because this is.
+- 2026-09-25: ESP32 mqtt connect retry now calls `sta.disconnect()` after a failed attempt (then 1 s, not 500 ms,
+  before the next). A redeploy of the `wifistatus` flow on an ESP32-C3 failed all 3 attempts with "sta is
+  connecting, cannot set config": ESP-IDF's NVS auto-reconnect outlasted the 5 s precheck wait. The 2026-08-21
+  "wait, never cancel" rule no longer applies inside mqtt flows -- since `deferToMqtt` (2026-09-11) mqtt_as is the
+  only thing that connects WiFi there, and mqtt_as's own `_keep_connected()` disconnects before every reconnect.
+  Editor codegen only; no runtime bump. `mqtt-shared.ts`, `test/mqtt-connect-retry.test.ts`.
+- 2026-09-25, later the same day (experiment, Mike's call): the `sta.disconnect()` retry above is **removed** --
+  on the ESP32-C3 it ended with the WiFi driver unable to restart ("Expected to init 10 rx buffer, actual is 0",
+  netif "duplicate key", "Failed to deinit Wi-Fi"), needing a power cycle. Instead: (1) the vendored `mqtt_as`
+  carries a one-line local patch -- `wifi_connect()` returns early when the station is already connected, the
+  check its ESP8266 branch already has -- reversing the 2026-08-21 "no local patch" call; (2) on ESP32 the
+  generated MQTT code joins WiFi itself (waits out an in-flight connect, then `connect()` and up to ~15 s)
+  before calling `mqtt_as`'s `connect()`; `mqtt_as` still owns reconnection after an outage. The final NODE_ERROR
+  now lists every attempt with the station status code. Runtime 4.0.0 (the patched file is pushed to the board,
+  and new codegen with the unpatched one would double-connect again). `vendor/mqtt_as/README.md`,
+  `mqtt-shared.ts`. Hardware result pending.

@@ -48,7 +48,9 @@ KEEPALIVE_INTERVAL_S = 30.0
 class TcpRelayError(Exception):
     """A network operation failed. `code` lets the editor react to the cases a user can fix:
     "no_password" (none saved for this board), "auth_failed", "busy", "board_no_password",
-    "timeout", or "network" for everything else."""
+    "timeout", "refused" (the board's address answered but nothing listens on the port -- almost always
+    no password set on the board, since it only opens the port once one is), or "network" for everything
+    else."""
 
     def __init__(self, host: str, operation: str, cause: object, code: str = "network", hostname: str | None = None) -> None:
         super().__init__(f"NODE_ERROR: network {operation} failed for {host}: {cause}")
@@ -136,7 +138,10 @@ class TcpConnection:
         except asyncio.TimeoutError as exc:
             raise TcpRelayError(self.port, "connect", f"no answer within {_CONNECT_TIMEOUT_S:.0f}s -- is the board on and on this network?", "timeout") from exc
         except OSError as exc:
-            raise TcpRelayError(self.port, "connect", _explain_connect_oserror(exc)) from exc
+            import errno
+
+            code = "refused" if exc.errno == errno.ECONNREFUSED else "network"
+            raise TcpRelayError(self.port, "connect", _explain_connect_oserror(exc), code) from exc
         try:
             await self._handshake()
         except BaseException:
@@ -284,10 +289,18 @@ def _parse_probe_reply(data: bytes, address: str) -> DiscoveredBoard | None:
         return None
 
 
+_PROBE_RESEND_S = 0.4
+
+
 def discover(timeout_s: float = 1.5, targets: list[str] | None = None, probe_port: int = PROBE_PORT) -> list[DiscoveredBoard]:
     """Broadcasts the probe and returns every distinct board that answers within `timeout_s`.
     Blocking -- ws_relay runs it in a thread. `targets` overrides the broadcast address (tests).
-    Never raises: a network with no broadcast route just finds nothing, logged."""
+    Never raises: a network with no broadcast route just finds nothing, logged.
+
+    The probe goes out every _PROBE_RESEND_S until the deadline, not once: WiFi broadcasts aren't
+    acknowledged or retried, and a board in modem sleep can miss one. (On the 2026-09-25 bench, both
+    boards answered within 0.3 s; a "missing" second board was the port menu's stale placeholder, not
+    discovery.) Replies are de-duplicated by (hostname, address)."""
     found: dict[tuple[str, str], DiscoveredBoard] = {}
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -296,26 +309,40 @@ def discover(timeout_s: float = 1.5, targets: list[str] | None = None, probe_por
         return []
     try:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        for target in targets or ["255.255.255.255"]:
-            try:
-                sock.sendto(PROBE_REQUEST, (target, probe_port))
-            except OSError as exc:
-                logger.warning("board discovery: probe to %s failed: %s", target, exc)
-        deadline = time.monotonic() + timeout_s
+        warned: set[str] = set()
+
+        def send_probes() -> None:
+            for target in targets or ["255.255.255.255"]:
+                try:
+                    sock.sendto(PROBE_REQUEST, (target, probe_port))
+                except OSError as exc:
+                    if target not in warned:  # once per scan, not once per resend
+                        warned.add(target)
+                        logger.warning("board discovery: probe to %s failed: %s", target, exc)
+
+        start = time.monotonic()
+        deadline = start + timeout_s
+        next_send = start
         while True:
-            remaining = deadline - time.monotonic()
+            now = time.monotonic()
+            remaining = deadline - now
             if remaining <= 0:
                 break
-            sock.settimeout(remaining)
+            if now >= next_send:
+                send_probes()
+                next_send = now + _PROBE_RESEND_S
+            sock.settimeout(max(0.01, min(remaining, next_send - now)))
             try:
                 data, (address, _port) = sock.recvfrom(2048)
             except (socket.timeout, TimeoutError):
-                break
+                continue  # time to resend, or the loop's deadline check ends the scan
             except OSError as exc:
                 logger.warning("board discovery: receive failed: %s", exc)
                 break
             board = _parse_probe_reply(data, address)
             if board is not None:
+                if (board.hostname, board.address) not in found:
+                    logger.debug("board discovery: %s (%s) answered after %.1fs", board.hostname, address, time.monotonic() - start)
                 found[(board.hostname, board.address)] = board
     finally:
         sock.close()

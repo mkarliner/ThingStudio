@@ -224,6 +224,9 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
     findNodesOfType(type: string): GraphNode[] {
       return graphData.nodes.filter((n) => n.type === type);
     },
+    findConfigsOfType(type: string): { id: string; properties: Record<string, unknown> }[] {
+      return [...configsById.values()].filter((c) => c.type === type);
+    },
   };
 
   const imports = new Set<string>(["import runtime"]);

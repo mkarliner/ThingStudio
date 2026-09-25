@@ -139,6 +139,7 @@
     margin-top: 3px; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px;
     padding: 6px 8px; font: inherit; }
   dialog .dialog-error { color: var(--bad); min-height: 1em; }
+  dialog .dialog-board { font-weight: 600; }
   dialog .dialog-buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
 </style>
 </head>
@@ -233,6 +234,7 @@
 <dialog id="boardSettingsDialog">
   <form method="dialog">
     <h2>Board settings</h2>
+    <p id="bsBoard" class="dialog-board"></p>
     <p>Saved on the board, not in the flow. The password lets this editor connect over WiFi; without one,
       the board only accepts USB. Changes are made over USB only.</p>
     <label>Network name

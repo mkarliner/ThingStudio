@@ -38,6 +38,9 @@ from .persisted_store import PersistedStoreError
 from .ws_relay import make_websocket_handler
 
 
+EDITOR_SEEN_KEY = web.AppKey("editor_seen", dict)  # {"seen": bool} -- mutable: app state is frozen once started
+
+
 def create_app(
     allowed_hosts: frozenset[str] = DEFAULT_ALLOWED_HOSTS,
     static_dir: Path | None = None,
@@ -56,6 +59,16 @@ def create_app(
         return password if isinstance(password, str) else None
 
     app.router.add_get("/ws", make_websocket_handler(password_lookup=board_password))
+
+    # Editor tabs check in here (2026-09-25): an open tab polls it, so it can reconnect when the backend
+    # restarts, and __main__.py's browser-open skips opening a new tab when an existing one checks in.
+    app[EDITOR_SEEN_KEY] = {"seen": False}
+
+    async def alive(request: web.Request) -> web.Response:
+        request.app[EDITOR_SEEN_KEY]["seen"] = True
+        return web.json_response({"ok": True})
+
+    app.router.add_get("/api/alive", alive)
     # Registered before the static catch-all below -- aiohttp's router
     # matches resources in registration order, so these have to come first
     # or a static_dir containing files at these same paths could shadow them.

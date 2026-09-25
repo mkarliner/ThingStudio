@@ -46,7 +46,7 @@ Some properties are shared across multiple nodes rather than typed into each one
 
 **The real secret values live in a saved credential, not in the config node or the flow file.** A config node's own credential field is a dropdown of your saved credentials, plus a pencil icon to edit one and a "+" to save a new one — pick an existing WiFi network or MQTT broker, or create one on the spot. Credentials are saved by name on the backend (not in the flow file), so a flow you commit to git never has a real SSID or password in it, and picking the same saved credential from two different flows reuses the one value — editing it in one place updates every flow that references it. This needs a backend connection; the direct/WebSerial-only connection mode doesn't support saved credentials.
 
-**A flow needs exactly one `wifi_status` node if it uses any other network node type.** `wifi_status` is the flow's sole source of WiFi credentials — `udp_send`, `udp_receive`, `http_request`, `http_in`, `mqtt_publish`, and `mqtt_subscribe` all derive their connection from it rather than carrying a WiFi config of their own. Zero, or more than one, is a compile error. This trips people up before they know it's a rule, so it's worth knowing up front.
+**A flow has one WiFi network.** Every node that uses WiFi has a **WiFi** field, and they all show the same setting. Set it on any of them and it changes for all. A board has one radio, so this is one shared setting, not one per node. A flow doesn't need a `wifi_status` node just to use the network.
 
 ## Node status
 

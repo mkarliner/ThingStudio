@@ -10,7 +10,7 @@ Emits one message per incoming message on a subscribed MQTT topic.
 
 ## Behavior
 
-Uses the flow's `wifi_status` node for its WiFi connection and its own referenced broker config for the MQTT connection, same as `mqtt_publish`. An "unmanaged" WiFi config isn't accepted here, for the same reason.
+Uses the flow's WiFi network and its own broker config, same as `mqtt_publish`. An "unmanaged" WiFi config isn't accepted here, for the same reason.
 
 The message carries the payload (decoded as text when possible, raw bytes otherwise), the actual topic it arrived on, and whether the broker sent it as a retained message.
 

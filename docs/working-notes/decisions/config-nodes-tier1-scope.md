@@ -83,3 +83,15 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
   `admin_api.py`, `credential-types.ts`, `CredentialRefField.vue`,
   `config-types.ts`, `main.ts`, `docs/working-notes/outstanding-items/
   credential-storage-design.md`.
+- 2026-09-25 (Mike's call): the WiFi config is a **singleton** -- peterhinch's `functor_singleton` pattern applied
+  to the editor's config store. `config-types.ts` gains a generic `singleton` flag; `store.ts`'s `createConfig()`
+  returns (and updates) the existing instance for such a type instead of adding a second. Every WiFi-using node
+  (wifi_status, wifi_gate, udp_send/receive, http_request/in, mqtt_publish/subscribe) has its own WiFi field bound
+  to that one instance; the compiler resolves "the flow's WiFi config" (`resolveFlowWifiCredentials()`, via the
+  new `ctx.findConfigsOfType`) instead of borrowing wifi_status's reference. Supersedes the 2026-09-04
+  "wifi_status is the flow's sole WiFi source" fix: wifi_status is now optional, and two of them are allowed.
+  Differs from Hinch's decorator in one way: picking a different network in any node's field updates the
+  instance (his ignores later constructor args), otherwise the second node's pick would silently do nothing.
+  Older flows with several WiFi configs are merged on load (`normalizeWifiConfigs()`: keep wifi_status's, log the
+  dropped ones). Considered and rejected the same day: a WiFi reference on the MQTT broker config (moves the
+  setting depending on what's in the flow) and a flow-level Network setting (a file-format change).

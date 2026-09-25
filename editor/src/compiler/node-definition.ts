@@ -177,6 +177,13 @@ export interface CodegenContext {
    */
   findNodesOfType?(type: string): GraphNode[];
   /**
+   * Every config of this type in the flow, in file order. Added 2026-09-25 for singleton config types
+   * (config-types.ts's `singleton`, e.g. WiFi): a node asks for "the flow's WiFi config" rather than
+   * holding its own reference -- see wifi-status.ts's resolveFlowWifiCredentials(). Optional for the same
+   * reason as findNodesOfType.
+   */
+  findConfigsOfType?(type: string): { id: string; properties: Record<string, unknown> }[];
+  /**
    * The processor/board this compile targets (definitions/target.ts), or
    * null/absent when none is known. Pin-taking nodes don't read it directly
    * -- they call definitions/pin-check.ts, which does. Optional for the same

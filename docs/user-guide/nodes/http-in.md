@@ -17,7 +17,7 @@ Fires once per matching request. The message carries `req.method` and `req.path`
 
 A second request to the *same* route while an earlier one is still being processed queues behind it (this node processes one request at a time). Requests to *different* routes — even on the same port — are handled concurrently.
 
-Uses the flow's `wifi_status` node for its WiFi connection, same as every other network node — the device needs a station interface up to have anything to listen on.
+Uses the flow's WiFi network (its **WiFi** field, shared by every WiFi node).
 
 ## Not yet supported
 

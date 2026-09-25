@@ -30,6 +30,7 @@
 // the extra `status` property can be inspected -- debug.ts only ever
 // prints `payload`.
 
+import { flowWifiConfigsFrom } from "./flow-wifi-helper.js";
 import { execFile } from "node:child_process";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import http from "node:http";
@@ -65,6 +66,7 @@ const ctx: CodegenContext = {
     return cfg;
   },
   findNodesOfType: (type) => (type === "thingstudio/wifi_status" ? wifiStatusNodes : []),
+  findConfigsOfType: (type: string) => (type === "thingstudio/config/wifi" ? flowWifiConfigsFrom(wifiStatusNodes, (id) => fakeWifiConfigs.get(id)) : []),
 };
 
 beforeEach(() => {
@@ -241,15 +243,15 @@ describe("thingstudio/http_request node", () => {
   it("throws a CompileError when the flow has no wifi_status node (2026-09-04: no ssid/password properties of its own any more)", () => {
     wifiStatusNodes = [];
     expect(() => httpRequestNode.codegenTransform!(node({ url: "http://example.local" }), ctx)).toThrow(CompileError);
-    expect(() => httpRequestNode.codegenTransform!(node({ url: "http://example.local" }), ctx)).toThrow(/http_request needs a "wifi_status" node/);
+    expect(() => httpRequestNode.codegenTransform!(node({ url: "http://example.local" }), ctx)).toThrow(/http_request needs a WiFi network/);
   });
 
-  it("throws a CompileError when the flow has more than one wifi_status node (single-interface assumption, for now)", () => {
+  it("rejects a flow with two WiFi configs (one radio, so one WiFi config per flow)", () => {
     wifiStatusNodes = [
       { id: "w1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "unmanaged1" } },
-      { id: "w2", type: "thingstudio/wifi_status", properties: { wifiConfigId: "unmanaged1" } },
+      { id: "w2", type: "thingstudio/wifi_status", properties: { wifiConfigId: "unmanaged1_other" } },
     ];
-    expect(() => httpRequestNode.codegenTransform!(node({ url: "http://example.local" }), ctx)).toThrow(/only one WiFi interface is supported today/);
+    expect(() => httpRequestNode.codegenTransform!(node({ url: "http://example.local" }), ctx)).toThrow(/a flow can only have one/);
   });
 
   it("derives ssid/password/security from the flow's wifi_status node instead of properties of its own", () => {

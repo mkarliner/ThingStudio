@@ -9,4 +9,4 @@ Listens on a UDP port and emits one message per datagram received.
 
 ## Behavior
 
-Uses the flow's `wifi_status` node for its WiFi connection, same as every other network node. The payload is the raw bytes received, unparsed — decode it yourself in a `function` node if you're expecting text or a structured format. `host` and `port` fields on the message carry the sender's address, alongside the payload.
+Uses the flow's WiFi network (its **WiFi** field, shared by every WiFi node). The payload is the raw bytes received, unparsed — decode it yourself in a `function` node if you're expecting text or a structured format. `host` and `port` fields on the message carry the sender's address, alongside the payload.

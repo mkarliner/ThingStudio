@@ -86,6 +86,12 @@
   `brokerConfigId` ConfigRefField unchanged -- the broker config was never
   part of the bug.
 
+  **WiFi field back on every WiFi-using node, 2026-09-25** (Mike's call): the WiFi config is now a
+  singleton (config-types.ts's `singleton`), so each node's own field shows and edits the flow's one
+  instance -- no node holds its own id and nothing can disagree, which was the 2026-09-04 bug above.
+  Only wifi_status still writes `wifiConfigId` (kept so older editors reading the file still work);
+  the compiler ignores it and uses the instance (wifi-status.ts's resolveFlowWifiCredentials()).
+
   Presets (docs/working-notes/outstanding-items/presets-design.md,
   confirmed with Mike 2026-09-22) -- MVP item 4 / road-to-mvp.md's "spi
   setup should be saveable with a name to be selected later." One
@@ -438,11 +444,16 @@
           :model-value="node.properties.wifiConfigId || undefined"
           @update:model-value="(id) => setWifiConfigId(id)"
         />
-        <p class="hint">Required -- won't compile without one. Pick "unmanaged" on the config if this flow intentionally rides on a connection managed outside it (e.g. a captive-portal-provisioned device).</p>
+        <p class="hint">One WiFi network per flow: every WiFi node shares this setting. Pick "unmanaged" if the board joins WiFi some other way (e.g. its setup AP).</p>
       </template>
 
       <template v-else-if="node.kind === 'wifi_gate'">
-        <p class="hint">No properties. Passes the message through unchanged if the WiFi station link is currently up, or drops it (same as a function node's own "return null") if it isn't. Checks the live link state at message-arrival-time, not wifi_status's own emitted messages -- wifi_status only emits on a connection-identity change, so a fast-firing source gated off its output wire could be checking stale state. Uses the flow's own wifi_status node for WiFi credentials -- add one if the flow doesn't have one yet.</p>
+        <p class="hint">Passes the message through unchanged if the WiFi station link is currently up, or drops it (same as a function node's own "return null") if it isn't. Checks the live link state at message-arrival-time, not wifi_status's own emitted messages -- wifi_status only emits on a connection-identity change, so a fast-firing source gated off its output wire could be checking stale state. One WiFi network per flow: every WiFi node shares this setting.</p>
+        <ConfigRefField
+          config-type="thingstudio/config/wifi"
+          :model-value="undefined"
+          @update:model-value="() => touch()"
+        />
       </template>
 
       <template v-else-if="node.kind === 'udp_send'">
@@ -455,7 +466,12 @@
         <label>timeout (ms)
           <input type="number" min="1" v-model.number="node.properties.timeoutMs" @input="touch" />
         </label>
-        <p class="hint">Uses the flow's own wifi_status node for WiFi credentials -- add one if the flow doesn't have one yet.</p>
+        <ConfigRefField
+          config-type="thingstudio/config/wifi"
+          :model-value="undefined"
+          @update:model-value="() => touch()"
+        />
+        <p class="hint">One WiFi network per flow: every WiFi node shares this setting.</p>
       </template>
 
       <template v-else-if="node.kind === 'udp_receive'">
@@ -465,7 +481,12 @@
         <label>poll interval (ms)
           <input type="number" min="1" v-model.number="node.properties.pollMs" @input="touch" />
         </label>
-        <p class="hint">Uses the flow's own wifi_status node for WiFi credentials -- add one if the flow doesn't have one yet.</p>
+        <ConfigRefField
+          config-type="thingstudio/config/wifi"
+          :model-value="undefined"
+          @update:model-value="() => touch()"
+        />
+        <p class="hint">One WiFi network per flow: every WiFi node shares this setting.</p>
       </template>
 
       <template v-else-if="node.kind === 'http_request'">
@@ -481,7 +502,12 @@
         <label>timeout (ms)
           <input type="number" min="1" v-model.number="node.properties.timeoutMs" @input="touch" />
         </label>
-        <p class="hint">http:// only -- no TLS/HTTPS in v1. Uses the flow's own wifi_status node for WiFi credentials -- add one if the flow doesn't have one yet.</p>
+        <ConfigRefField
+          config-type="thingstudio/config/wifi"
+          :model-value="undefined"
+          @update:model-value="() => touch()"
+        />
+        <p class="hint">http:// only -- no TLS/HTTPS in v1. One WiFi network per flow: every WiFi node shares this setting.</p>
       </template>
 
       <template v-else-if="node.kind === 'http_in'">
@@ -500,7 +526,12 @@
         <label>response timeout (ms)
           <input type="number" min="1" v-model.number="node.properties.responseTimeoutMs" @input="touch" />
         </label>
-        <p class="hint">Exact path match only -- no ":name" path parameters yet. Fires once per matching inbound request; pair with an http_response node to actually reply (a request that never reaches one times out with a 500). Uses the flow's own wifi_status node for WiFi credentials -- add one if the flow doesn't have one yet.</p>
+        <ConfigRefField
+          config-type="thingstudio/config/wifi"
+          :model-value="undefined"
+          @update:model-value="() => touch()"
+        />
+        <p class="hint">Exact path match only -- no ":name" path parameters yet. Fires once per matching inbound request; pair with an http_response node to actually reply (a request that never reaches one times out with a 500). One WiFi network per flow: every WiFi node shares this setting.</p>
       </template>
 
       <template v-else-if="node.kind === 'http_response'">
@@ -526,7 +557,12 @@
           :model-value="node.properties.brokerConfigId || undefined"
           @update:model-value="(id) => setBrokerConfigId(id)"
         />
-        <p class="hint">Broker config required -- won't compile without one. Uses the flow's own wifi_status node for WiFi credentials (add one if the flow doesn't have one yet); mqtt_as manages its own WiFi connection, so an "unmanaged" wifi_status config isn't accepted here.</p>
+        <ConfigRefField
+          config-type="thingstudio/config/wifi"
+          :model-value="undefined"
+          @update:model-value="() => touch()"
+        />
+        <p class="hint">Broker config required -- won't compile without one. One WiFi network per flow: every WiFi node shares this setting. In a flow with MQTT nodes, MQTT manages the WiFi connection, so "unmanaged" isn't accepted.</p>
       </template>
 
       <template v-else-if="node.kind === 'mqtt_subscribe'">
@@ -544,7 +580,12 @@
           :model-value="node.properties.brokerConfigId || undefined"
           @update:model-value="(id) => setBrokerConfigId(id)"
         />
-        <p class="hint">Broker config required -- won't compile without one. Uses the flow's own wifi_status node for WiFi credentials (add one if the flow doesn't have one yet); mqtt_as manages its own WiFi connection, so an "unmanaged" wifi_status config isn't accepted here.</p>
+        <ConfigRefField
+          config-type="thingstudio/config/wifi"
+          :model-value="undefined"
+          @update:model-value="() => touch()"
+        />
+        <p class="hint">Broker config required -- won't compile without one. One WiFi network per flow: every WiFi node shares this setting. In a flow with MQTT nodes, MQTT manages the WiFi connection, so "unmanaged" isn't accepted.</p>
       </template>
 
       <template v-else-if="node.kind === 'debug'">

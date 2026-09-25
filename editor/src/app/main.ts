@@ -111,7 +111,7 @@
 import { createApp, nextTick, watch } from "vue";
 import { compile } from "../compiler/compile.js";
 import type { NodeLineRange } from "../compiler/compile.js";
-import { computeWifiProvisionMarker } from "../node-library/wifi-status.js";
+import { WIFI_CONFIG_TYPE, computeWifiProvisionMarker, normalizeWifiConfigs } from "../node-library/wifi-status.js";
 import { buildRegistry } from "../node-library/registry.js";
 import { mergeCustomNodeRegistry } from "../node-library/custom-node.js";
 import { WebSerialTransport, type WebSerialPort, type DeviceTransport, type TransportEvents } from "../protocol/transport.js";
@@ -519,6 +519,20 @@ async function applyFlowFile(file: FlowFile): Promise<void> {
   // looks its bound wifiConfigId up in this store to render the dropdown's
   // current selection, so the store needs to already hold the file's
   // configs by the time any node using one gets constructed/selected below.
+  // One WiFi config per flow (2026-09-25, wifi-status.ts's normalizeWifiConfigs()): a flow saved before
+  // that may have several -- keep the one in use, drop the rest, and say which.
+  const wifi = normalizeWifiConfigs(file.nodes, file.configs);
+  if (wifi.dropped.length > 0) {
+    file = { ...file, nodes: wifi.nodes, configs: wifi.configs };
+    const name = (c: { id: string; properties: Record<string, unknown> }) =>
+      typeof c.properties.credentialName === "string" && c.properties.credentialName ? `"${c.properties.credentialName}"` : `#${c.id.slice(0, 6)}`;
+    const kept = wifi.configs.find((c) => c.type === WIFI_CONFIG_TYPE);
+    logLine(
+      `[load] a flow now has one WiFi network, shared by every WiFi node: kept ${kept ? name(kept) : "?"}, ` +
+        `removed ${wifi.dropped.map(name).join(", ")}. Save the flow to keep this.`,
+      "",
+    );
+  }
   replaceAllConfigs(file.configs.map((c) => ({ id: c.id, type: c.type, properties: c.properties })));
   // Credential storage (2026-09-13): resolve every WiFi/MQTT-broker
   // config's credentialName into real values before any node gets
@@ -1150,7 +1164,7 @@ function waitForMessage(match: (m: Message) => boolean, timeoutMs: number): Prom
 // bump-discipline rule), so this is the level that actually stops an
 // unsafe DEPLOY rather than letting it crash on the device.
 // 2.0.0 (2026-09-23): EXEC, STOP_TO_PROMPT, safe mode. Must match listener.py's _RUNTIME_VERSION.
-const EDITOR_TARGET_VERSION: ProtocolVersion = { major: 3, minor: 0, patch: 0 }; // 3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS
+const EDITOR_TARGET_VERSION: ProtocolVersion = { major: 4, minor: 0, patch: 0 }; // 4.0.0 2026-09-25: mqtt_as guard, ESP32 MQTT joins WiFi first; 3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS
 
 // This editor's own device-runtime/src git SHA, injected at build/dev-
 // server-start time by vite.config.ts's `define` (see that file,
@@ -1180,6 +1194,9 @@ let lastHelloChipType: string | null = null;
 let lastHello: HelloMessage | null = null;
 // Addresses typed into "WiFi address…", kept in the port menu across "⟳ ports" refreshes.
 const manualNetworkTargets = new Map<string, string>(); // option value -> label
+// What the last "⟳ ports" probe said about each WiFi board, by option value. Used to explain a failed
+// connect ("no password set") -- never to block one, since it may be stale by the time Connect is clicked.
+const discoveredBoards = new Map<string, NetworkBoardInfo>();
 // Plain text lines the board has printed since the last HELLO_REQUEST (Connect or Check status) --
 // board-diagnosis.ts's classifyDebugLines() input when no HELLO comes back. Capped: only the first
 // few lines after a request say anything about what's on the board.
@@ -1587,15 +1604,18 @@ async function refreshBackendPorts(onLoad = false): Promise<void> {
     const ports: SerialPortInfo[] = await probe.listPorts();
     const choice = choosePort(ports, previous);
     select.innerHTML = "";
-    if (choice.ordered.length === 0) {
-      select.innerHTML = '<option value="">(no ports found)</option>';
-    } else {
-      if (!choice.selected) {
-        const prompt = document.createElement("option");
-        prompt.value = "";
-        prompt.textContent = choice.ordered.some(isUsbPort) ? "(choose your board)" : "(no board found -- plug one in)";
-        select.appendChild(prompt);
-      }
+    // The placeholder's text depends on what WiFi discovery finds, which comes later: it says
+    // "looking" until then, and is rewritten once the WiFi boards are in (2026-09-25 -- it used to be
+    // fixed before discovery, so two boards found on WiFi still showed "no board found").
+    const hasUsb = choice.ordered.some(isUsbPort);
+    let prompt: HTMLOptionElement | null = null;
+    if (!choice.selected) {
+      prompt = document.createElement("option");
+      prompt.value = "";
+      prompt.textContent = hasUsb ? "(choose your board)" : "(looking for boards on WiFi…)";
+      select.appendChild(prompt);
+    }
+    if (choice.ordered.length > 0) {
       for (const p of choice.ordered) {
         const opt = document.createElement("option");
         opt.value = p.device;
@@ -1624,6 +1644,8 @@ async function refreshBackendPorts(onLoad = false): Promise<void> {
       boards = []; // an older backend without discovery, or it went away: just no WiFi list
     }
     const manualOption = wifiGroup.lastElementChild;
+    discoveredBoards.clear();
+    for (const b of boards) discoveredBoards.set(networkOptionValue(b), b);
     for (const b of boards) {
       const value = networkOptionValue(b);
       if (manualNetworkTargets.has(value)) continue;
@@ -1640,6 +1662,10 @@ async function refreshBackendPorts(onLoad = false): Promise<void> {
     if (!select.value && ready.length === 1) {
       select.value = networkOptionValue(ready[0]!);
       logLine(`[ports] no USB board, so ${ready[0]!.hostname} on WiFi is selected -- click "Connect"`, "");
+    }
+    if (prompt && !hasUsb) {
+      prompt.textContent =
+        boards.length > 0 ? "(choose your board)" : "(no board found -- plug one in, or check its WiFi)";
     }
   } catch (err) {
     select.innerHTML = '<option value="">(backend not running)</option>';
@@ -1675,6 +1701,8 @@ el("backendPortSelect").addEventListener("change", async () => {
   const select = el<HTMLSelectElement>("backendPortSelect");
   if (select.value !== MANUAL_NETWORK_VALUE) {
     portSelectPrevious = select.value;
+    const board = discoveredBoards.get(select.value);
+    if (board && !board.wifiTransport) logLine(noPasswordHelp(board.hostname), "err");
     return;
   }
   const target = await askNetworkAddress();
@@ -1738,22 +1766,38 @@ async function askBoardPassword(hostname: string, retry: boolean): Promise<{ pas
   return { password: input.value, remember: el<HTMLInputElement>("netPasswordRemember").checked };
 }
 
-/** Explains a failed network connect in terms of what to do next (road-to-mvp.md: no silent failure). */
-function explainNetworkConnectError(err: NetworkConnectError): string {
+function noPasswordHelp(hostname: string): string {
+  return (
+    `${hostname} has no WiFi password set, so it won't accept a WiFi connection. Connect it over USB, ` +
+    'click "Board settings…" to set a password, then click "⟳ ports".'
+  );
+}
+
+/** Explains a failed network connect in terms of what to do next (road-to-mvp.md: no silent failure).
+ * `board` is what the last probe said about the target, when it was picked from the list. */
+function explainNetworkConnectError(err: NetworkConnectError, host: string, board?: NetworkBoardInfo): string {
   switch (err.code) {
     case "busy":
       return `${err.message}. Only one editor can connect over WiFi at a time.`;
     case "board_no_password":
-      return `${err.message}.`;
+      return noPasswordHelp(err.hostname ?? board?.hostname ?? "The board");
+    case "refused":
+      // The board only opens its WiFi port once a password is set, so a refusal almost always means none is.
+      if (board && !board.wifiTransport) return noPasswordHelp(board.hostname);
+      return (
+        `Connection refused by ${board?.hostname ?? host}. ` +
+        'The board is on the network but not accepting WiFi connections. Has a WiFi password been set? ' +
+        'Connect it over USB and use "Board settings…".'
+      );
     case "timeout":
       return (
-        `${err.message}. Check the board is powered, its flow has a "wifi status" node that has joined a network, ` +
+        `${err.message}. Check the board is powered, its flow uses WiFi and has joined a network, ` +
         "and this computer is on the same network. If a .local name doesn't work, try the board's IP address."
       );
     default:
       if (err.message.includes(" -- ")) return err.message; // the backend already said what to do
       return (
-        `${err.message}. If the board was reset or its flow was redeployed without a "wifi status" node, it may be ` +
+        `${err.message}. If the board was reset or its flow was redeployed without WiFi, it may be ` +
         "off the network -- connect over USB to check."
       );
   }
@@ -1778,7 +1822,8 @@ async function connectOverNetwork(t: BackendTransport, host: string, tcpPort: nu
         remember = answer.remember;
         continue;
       }
-      logLine(`[connect failed] ${err instanceof NetworkConnectError ? explainNetworkConnectError(err) : err instanceof Error ? err.message : String(err)}`, "err");
+      const board = discoveredBoards.get(networkOptionValue({ address: host, port: tcpPort }));
+      logLine(`[connect failed] ${err instanceof NetworkConnectError ? explainNetworkConnectError(err, host, board) : err instanceof Error ? err.message : String(err)}`, "err");
       return false;
     }
     if (password !== undefined && remember) {
@@ -1805,7 +1850,7 @@ function logWifiStatus(hello: HelloMessage): void {
     logLine(
       hello.networkAddress
         ? `[wifi] ${hello.hostname} accepts WiFi connections at ${hello.networkAddress} (${hello.hostname}.local)`
-        : `[wifi] ${hello.hostname} has a password set; it accepts WiFi connections while its flow's "wifi status" node is on a network`,
+        : `[wifi] ${hello.hostname} has a password set; it accepts WiFi connections while its flow is on a network`,
       "",
     );
   } else if (readiness === "no_password" && !backendTransportOrNull()?.connectedOverNetwork) {
@@ -1830,6 +1875,9 @@ function updateBoardSettingsButton(): void {
 el("btnBoardSettings").addEventListener("click", () => {
   const hello = lastHello;
   if (!hello || !hello.hostname) return;
+  // Says which board is about to change: with two boards on the bench it's easy to rename the wrong one
+  // (2026-09-25 -- the ESP32-C3 was renamed "picow-1").
+  el("bsBoard").textContent = boardSettingsTarget(hello, el<HTMLSelectElement>("backendPortSelect").value);
   el<HTMLInputElement>("bsHostname").value = hello.hostname;
   el<HTMLInputElement>("bsPassword").value = "";
   el<HTMLInputElement>("bsConfirm").value = "";
@@ -1840,6 +1888,13 @@ el("btnBoardSettings").addEventListener("click", () => {
   dialog.returnValue = "";
   dialog.showModal();
 });
+
+function boardSettingsTarget(hello: HelloMessage, portValue: string): string {
+  const selection = parsePortSelection(portValue);
+  const port = selection.kind === "serial" ? ` on ${selection.port}` : "";
+  const flow = hello.currentFlowName ? `, running "${hello.currentFlowName}"` : "";
+  return `Changing the ${hello.chipType} board${port}, currently named ${hello.hostname}${flow}.`;
+}
 
 el("bsSave").addEventListener("click", (e) => {
   // Validate and save before the dialog closes, so a problem is shown in it rather than lost.
@@ -1895,7 +1950,7 @@ async function saveBoardSettings(): Promise<void> {
     }
   }
   logLine(
-    `[board settings] saved: name ${hostname}` +
+    `[board settings] saved on the ${hello.chipType} board: name ${hostname}` +
       (clear ? ", password removed (USB only now)" : newPassword ? ", new password set" : "") +
       (newHostname ? ". The new name is used from the next time the board joins WiFi (reset it to apply now)." : ""),
     "ok",
@@ -1903,6 +1958,32 @@ async function saveBoardSettings(): Promise<void> {
   el<HTMLDialogElement>("boardSettingsDialog").close("save");
 }
 void refreshBackendPorts(true);
+
+// Backend restarts (2026-09-25, Mike: "lots of dead tabs"). This tab checks the backend is there -- every
+// 5 s while it is, every second while it isn't -- and picks it back up when it returns, so restarting the
+// backend doesn't leave a dead tab. The backend opens a new tab only if none checks in within a couple of
+// seconds of starting (backend __main__.py). No automatic reload: the flow isn't saved anywhere else, so a
+// reload would lose unsaved work.
+let backendAlive = true;
+async function watchBackend(): Promise<void> {
+  let ok = false;
+  try {
+    const res = await fetch(`${backendHttpBaseUrl(currentBackendWsUrl())}/api/alive`, { cache: "no-store" });
+    ok = res.ok;
+  } catch {
+    ok = false;
+  }
+  if (!ok && backendAlive) {
+    logLine("[backend] stopped -- this tab reconnects by itself when it's back", "err");
+  } else if (ok && !backendAlive) {
+    logLine("[backend] back. If you rebuilt the editor, save your flow and reload this page to use the new build.", "ok");
+    if (!transport.isConnected) void refreshBackendPorts();
+  }
+  backendAlive = ok;
+  setTimeout(() => void watchBackend(), ok ? 5000 : 1000);
+}
+setTimeout(() => void watchBackend(), 5000);
+
 el("btnDocs").addEventListener("click", () => {
   window.open(docUrl({ label: "Docs", path: "" }), "_blank", "noopener");
 });

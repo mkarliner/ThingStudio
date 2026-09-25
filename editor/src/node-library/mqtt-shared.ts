@@ -413,20 +413,30 @@ export function mqttSetupStatement(cfg: MqttBrokerConfig): { key: string; code: 
  * this was module-scope code with no event loop running yet), so a
  * blocking sleep here would stall every other coroutine in the flow for
  * up to ~10s while this waits. */
-function mqttWifiPrecheckSnippet(): string {
+function mqttWifiPrecheckSnippet(cfg: MqttBrokerConfig): string {
+  // 2026-09-25 (experiment, Mike's call): on ESP32 this now JOINS WiFi itself, then hands over to mqtt_as,
+  // whose vendored wifi_connect() carries a local patch returning early when already connected
+  // (device-runtime/src/vendor/mqtt_as/README.md). Before, mqtt_as always issued its own connect(), which
+  // ESP-IDF refuses while its auto-reconnect is in flight; waiting and retrying round that from outside
+  // ended with the WiFi driver wedged. If this join doesn't finish in ~15 s, mqtt_as's own connect runs as
+  // before, so nothing is worse than without it. mqtt_as still owns reconnecting after an outage.
   return [
     "_mqtt_wifi_precheck_sta = network.WLAN(network.STA_IF)",
     "_mqtt_wifi_precheck_sta.active(True)",
-    'if sys.platform == "esp32":',
-    "    for _ in range(50):  # bounded ~5s wait for .active(True) to actually take effect",
-    "        if _mqtt_wifi_precheck_sta.active():",
+    'if sys.platform == "esp32" and not _mqtt_wifi_precheck_sta.isconnected():',
+    "    for _ in range(50):  # bounded ~5s: let an in-flight connect (ESP-IDF's own auto-reconnect) finish",
+    "        if _mqtt_wifi_precheck_sta.isconnected() or _mqtt_wifi_precheck_sta.status() != network.STAT_CONNECTING:",
     "            break",
     "        await asyncio.sleep_ms(100)",
-    "    await asyncio.sleep_ms(200)  # brief settle delay -- see this function's history",
-    "    for _ in range(50):  # bounded ~5s wait for any in-flight connect to resolve",
-    "        if _mqtt_wifi_precheck_sta.status() != network.STAT_CONNECTING:",
-    "            break",
-    "        await asyncio.sleep_ms(100)",
+    "    if not _mqtt_wifi_precheck_sta.isconnected():",
+    "        try:",
+    `            _mqtt_wifi_precheck_sta.connect(${pyStringLiteral(cfg.ssid)}, ${pyStringLiteral(cfg.wifiPassword)})`,
+    "        except OSError:",
+    "            pass  # already connecting -- the wait below covers it",
+    "        for _ in range(150):  # bounded ~15s for the join",
+    "            if _mqtt_wifi_precheck_sta.isconnected():",
+    "                break",
+    "            await asyncio.sleep_ms(100)",
   ].join("\n");
 }
 
@@ -473,6 +483,7 @@ export function mqttEnsureConnectedSnippet(cfg: MqttBrokerConfig, nodeId: string
   const connectedVar = mqttConnectedVar(cfg);
   const lockVar = mqttLockVar(cfg);
   const attemptVar = `_mqtt_connect_attempt_${idSuffix(cfg)}`;
+  const errsVar = `_mqtt_connect_errs_${idSuffix(cfg)}`;
   const lastStateVar = mqttLastStateVar(nodeId);
   const nowVar = `_mqtt_now_connected_${sanitizeIdent(nodeId)}`;
   // NODE_STATUS push, both directions (connection-status-indicator
@@ -518,7 +529,7 @@ export function mqttEnsureConnectedSnippet(cfg: MqttBrokerConfig, nodeId: string
   // file's header ("CONFIRMED BROKEN, 2026-09-04") for why this runs here,
   // inside the double-checked lock right before the actual connect
   // attempt, rather than as a module-scope statement.
-  const precheckLines = mqttWifiPrecheckSnippet()
+  const precheckLines = mqttWifiPrecheckSnippet(cfg)
     .split("\n")
     .map((l) => `            ${l}`);
   return [
@@ -529,12 +540,21 @@ export function mqttEnsureConnectedSnippet(cfg: MqttBrokerConfig, nodeId: string
     `    async with ${lockVar}:`,
     `        if not ${connectedVar}:`,
     ...precheckLines,
+    // Every attempt's error plus the station's status code (2026-09-25: mqtt_as's own "Wi-Fi connect timed
+    // out" covers any failed join, and only the last attempt was reported -- the status code says whether it
+    // was a wrong password, no access point, or ESP-IDF's own reconnect getting in the way).
+    `            ${errsVar} = []`,
     `            for ${attemptVar} in range(3):`,
     `                try:`,
     `                    await ${clientVar}.connect()`,
     `                    ${connectedVar} = True`,
     `                    break`,
     `                except OSError as _e:`,
+    `                    try:`,
+    `                        _mqtt_st = _mqtt_wifi_precheck_sta.status()`,
+    `                    except Exception:`,
+    `                        _mqtt_st = "?"`,
+    `                    ${errsVar}.append("%d: %r, wifi status %s" % (${attemptVar} + 1, _e, _mqtt_st))`,
     `                    if ${attemptVar} == 2:`,
     // Final attempt exhausted -- report 'error' before re-raising (the
     // raise still happens unconditionally right after; this is
@@ -545,8 +565,11 @@ export function mqttEnsureConnectedSnippet(cfg: MqttBrokerConfig, nodeId: string
     // so a later real reconnect still reports 'connected' when it happens.
     `                        ${lastStateVar} = False`,
     `                        runtime.report_status(${nodeIdLiteral}, 'error', "connect to %s:%s failed" % (${pyStringLiteral(cfg.broker)}, ${cfg.port}))`,
-    `                        raise OSError("mqtt connect to %s:%s failed: %r" % (${pyStringLiteral(cfg.broker)}, ${cfg.port}, _e))`,
-    `                    await asyncio.sleep_ms(500)`,
+    `                        raise OSError("mqtt connect to %s:%s failed after 3 attempts (%s)" % (${pyStringLiteral(cfg.broker)}, ${cfg.port}, "; ".join(${errsVar})))`,
+    // (A disconnect() here between attempts, tried earlier on 2026-09-25, was removed the same day: with
+    // repeated attempts it left the ESP32-C3's WiFi driver unable to restart. The join now happens once,
+    // in the precheck above.)
+    `                    await asyncio.sleep_ms(1000)`,
     // Ground-truth diff, every call, whichever path above ran -- see this
     // function's own docblock above for the full story.
     `${nowVar} = bool(${clientVar}.isconnected())`,

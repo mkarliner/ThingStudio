@@ -37,7 +37,8 @@ import { CompileError } from "../src/compiler/errors.js";
 import type { GraphData, GraphNode } from "../src/compiler/graph.js";
 import type { CodegenContext } from "../src/compiler/node-definition.js";
 import { buildRegistry } from "../src/node-library/registry.js";
-import { computeWifiProvisionMarker, wifiStatusNode } from "../src/node-library/wifi-status.js";
+import { computeWifiProvisionMarker, normalizeWifiConfigs, wifiStatusNode } from "../src/node-library/wifi-status.js";
+import { flowWifiConfigsFrom } from "./flow-wifi-helper.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -52,7 +53,12 @@ const ctx: CodegenContext = {
     if (!cfg) throw new CompileError(`referenced config "${id}" not found`);
     return cfg;
   },
+  // The flow's WiFi config (2026-09-25 singleton): whichever one the node under test (node(), below)
+  // points at -- the same thing a real compile of a one-node flow would find.
+  findConfigsOfType: (type: string) =>
+    type === "thingstudio/config/wifi" ? flowWifiConfigsFrom(lastNodes, (id) => fakeConfigs.get(id)) : [],
 };
+let lastNodes: GraphNode[] = [];
 
 beforeEach(() => {
   fakeConfigs.clear();
@@ -62,7 +68,9 @@ beforeEach(() => {
 });
 
 function node(properties: Record<string, unknown>): GraphNode {
-  return { id: "1", type: "thingstudio/wifi_status", properties };
+  const n = { id: "1", type: "thingstudio/wifi_status", properties };
+  lastNodes = [n];
+  return n;
 }
 
 function indent(code: string, spaces: number): string {
@@ -307,11 +315,11 @@ describe("thingstudio/wifi_status node", () => {
 
   it("throws a CompileError when wifiConfigId is not set (Problem 2b Option B: mandatory as of 2026-08-20)", () => {
     expect(() => wifiStatusNode.codegenSource!(node({ pollMs: 1000 }), ctx)).toThrow(CompileError);
-    expect(() => wifiStatusNode.codegenSource!(node({ pollMs: 1000 }), ctx)).toThrow(/wifi_status requires a WiFi config/);
+    expect(() => wifiStatusNode.codegenSource!(node({ pollMs: 1000 }), ctx)).toThrow(/wifi_status needs a WiFi network/);
   });
 
   it("throws a CompileError when wifiConfigId is an empty string", () => {
-    expect(() => wifiStatusNode.codegenSource!(node({ pollMs: 1000, wifiConfigId: "" }), ctx)).toThrow(/wifi_status requires a WiFi config/);
+    expect(() => wifiStatusNode.codegenSource!(node({ pollMs: 1000, wifiConfigId: "" }), ctx)).toThrow(/wifi_status needs a WiFi network/);
   });
 
   it("throws a CompileError when the referenced config has security 'password' (the default) and an empty password", () => {
@@ -467,12 +475,14 @@ describe("thingstudio/wifi_status node", () => {
     expect(source).toContain('"First"');
   });
 
-  it("compiling a flow with a dangling wifiConfigId raises a CompileError naming the missing config", () => {
+  it("compiling a flow whose wifi_status points at a missing config, with no WiFi config at all, says a network is needed", () => {
+    // Since 2026-09-25 the node's own wifiConfigId is ignored (the flow's one WiFi config is used), so a
+    // dangling id just means "no WiFi config in this flow".
     const graph: GraphData = {
       nodes: [{ id: "1", type: "thingstudio/wifi_status", properties: { pollMs: 1000, wifiConfigId: "no-such-config" } }],
       links: [],
     };
-    expect(() => compile(graph, buildRegistry())).toThrow(/referenced config "no-such-config" not found/);
+    expect(() => compile(graph, buildRegistry())).toThrow(/wifi_status needs a WiFi network/);
   });
 });
 
@@ -484,13 +494,29 @@ describe("computeWifiProvisionMarker", () => {
     expect(computeWifiProvisionMarker({ nodes: [] })).toBeNull();
   });
 
-  it("returns null when more than one wifi_status node is present (ambiguous, left to compile()'s own CompileError)", () => {
+  it("returns null when the flow has two WiFi configs (ambiguous, left to compile()'s own CompileError)", () => {
     const graph = {
-      nodes: [
-        { id: "1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "w1" } },
-        { id: "2", type: "thingstudio/wifi_status", properties: { wifiConfigId: "w1" } },
+      nodes: [{ id: "1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "w1" } }],
+      configs: [
+        { id: "w1", type: "thingstudio/config/wifi", properties: { security: "unmanaged" } },
+        { id: "w2", type: "thingstudio/config/wifi", properties: { security: "unmanaged" } },
       ],
-      configs: [{ id: "w1", properties: { security: "unmanaged" } }],
+    };
+    expect(computeWifiProvisionMarker(graph)).toBeNull();
+  });
+
+  it("uses the flow's WiFi config with no wifi_status node, when another node needs WiFi", () => {
+    const graph = {
+      nodes: [{ id: "1", type: "thingstudio/udp_send", properties: {} }],
+      configs: [{ id: "w1", type: "thingstudio/config/wifi", properties: { security: "unmanaged" } }],
+    };
+    expect(computeWifiProvisionMarker(graph)).toEqual({ selfProvision: true, allowReprovision: false });
+  });
+
+  it("returns null when no node in the flow uses WiFi, even with an unmanaged WiFi config left over", () => {
+    const graph = {
+      nodes: [{ id: "1", type: "thingstudio/debug", properties: {} }],
+      configs: [{ id: "w1", type: "thingstudio/config/wifi", properties: { security: "unmanaged" } }],
     };
     expect(computeWifiProvisionMarker(graph)).toBeNull();
   });
@@ -498,7 +524,7 @@ describe("computeWifiProvisionMarker", () => {
   it("returns null when the resolved config's security is not \"unmanaged\"", () => {
     const graph = {
       nodes: [{ id: "1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "w1" } }],
-      configs: [{ id: "w1", properties: { security: "password", ssid: "home", password: "x" } }],
+      configs: [{ id: "w1", type: "thingstudio/config/wifi", properties: { security: "password", ssid: "home", password: "x" } }],
     };
     expect(computeWifiProvisionMarker(graph)).toBeNull();
   });
@@ -506,7 +532,7 @@ describe("computeWifiProvisionMarker", () => {
   it("returns selfProvision:true, allowReprovision:false for an unmanaged config with the fallback off (the default)", () => {
     const graph = {
       nodes: [{ id: "1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "w1" } }],
-      configs: [{ id: "w1", properties: { security: "unmanaged", allowReprovisioning: false } }],
+      configs: [{ id: "w1", type: "thingstudio/config/wifi", properties: { security: "unmanaged", allowReprovisioning: false } }],
     };
     expect(computeWifiProvisionMarker(graph)).toEqual({ selfProvision: true, allowReprovision: false });
   });
@@ -514,7 +540,7 @@ describe("computeWifiProvisionMarker", () => {
   it("carries allowReprovision:true through when the config's own field is set", () => {
     const graph = {
       nodes: [{ id: "1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "w1" } }],
-      configs: [{ id: "w1", properties: { security: "unmanaged", allowReprovisioning: true } }],
+      configs: [{ id: "w1", type: "thingstudio/config/wifi", properties: { security: "unmanaged", allowReprovisioning: true } }],
     };
     expect(computeWifiProvisionMarker(graph)).toEqual({ selfProvision: true, allowReprovision: true });
   });
@@ -544,5 +570,41 @@ describe("wifiSetupStatement with no SSID", () => {
   it("still emits the connect call when the SSID is there", async () => {
     const { wifiSetupStatement } = await import("../src/node-library/wifi-status.js");
     expect(wifiSetupStatement("mihome", "secret12", "password").code).toContain('_wifi_sta.connect("mihome", "secret12")');
+  });
+});
+
+// 2026-09-25: one WiFi config per flow. Flows saved earlier can hold several; loading merges them.
+describe("normalizeWifiConfigs", () => {
+  const wifi = (id: string) => ({ id, type: "thingstudio/config/wifi", properties: { credentialName: id } });
+  const broker = { id: "b1", type: "thingstudio/config/mqtt-broker", properties: {} };
+
+  it("leaves a flow with one WiFi config alone", () => {
+    const nodes = [{ type: "thingstudio/wifi_status", properties: { wifiConfigId: "home" } }];
+    const out = normalizeWifiConfigs(nodes, [wifi("home"), broker]);
+    expect(out.dropped).toEqual([]);
+    expect(out.configs).toHaveLength(2);
+  });
+
+  it("keeps the config wifi_status used, drops the others, and repoints every node", () => {
+    const nodes = [
+      { type: "thingstudio/mqtt_publish", properties: { wifiConfigId: "mihome" } },
+      { type: "thingstudio/wifi_status", properties: { wifiConfigId: "home" } },
+    ];
+    const out = normalizeWifiConfigs(nodes, [wifi("mihome"), wifi("home"), broker]);
+    expect(out.dropped.map((c) => c.id)).toEqual(["mihome"]);
+    expect(out.configs.map((c) => c.id)).toEqual(["home", "b1"]);
+    expect(out.nodes.map((n) => n.properties.wifiConfigId)).toEqual(["home", "home"]);
+  });
+
+  it("with no wifi_status, keeps the first one any node used", () => {
+    const nodes = [{ type: "thingstudio/udp_send", properties: { wifiConfigId: "b" } }];
+    const out = normalizeWifiConfigs(nodes, [wifi("a"), wifi("b")]);
+    expect(out.configs.map((c) => c.id)).toEqual(["b"]);
+  });
+
+  it("with nothing referencing any of them, keeps the first", () => {
+    const out = normalizeWifiConfigs([], [wifi("a"), wifi("b")]);
+    expect(out.configs.map((c) => c.id)).toEqual(["a"]);
+    expect(out.dropped.map((c) => c.id)).toEqual(["b"]);
   });
 });

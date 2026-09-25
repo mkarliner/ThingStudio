@@ -22,6 +22,7 @@
 // etc.), and `handler: null` skips calling http_response entirely, to
 // exercise the auto-timeout/500 fallback.
 
+import { flowWifiConfigsFrom } from "./flow-wifi-helper.js";
 import { type ChildProcessWithoutNullStreams, spawn } from "node:child_process";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -62,6 +63,7 @@ function makeCtx(): CodegenContext {
       if (!cfg) throw new Error(`unexpected resolveConfig("${id}") call`);
       return cfg;
     },
+    findConfigsOfType: (type: string) => (type === "thingstudio/config/wifi" ? flowWifiConfigsFrom(wifiStatusNodes, (id) => fakeWifiConfigs.get(id)) : []),
     findNodesOfType: (type: string) => {
       if (type === "thingstudio/wifi_status") return wifiStatusNodes;
       if (type === "thingstudio/http_in") return httpInNodes;
@@ -465,6 +467,6 @@ describe("thingstudio/http_in property validation and route-table rules (no serv
   it("throws a CompileError when the flow has no wifi_status node", () => {
     wifiStatusNodes = [];
     httpInNodes = [httpInGraphNode("a", { port: 8080, path: "/" })];
-    expect(() => httpInNode.codegenEventSource!(httpInNodes[0]!, ctx)).toThrow(/http_in needs a "wifi_status" node/);
+    expect(() => httpInNode.codegenEventSource!(httpInNodes[0]!, ctx)).toThrow(/http_in needs a WiFi network/);
   });
 });

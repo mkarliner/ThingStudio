@@ -91,7 +91,7 @@
   <div class="config-ref-field">
     <label>{{ fieldLabel }}
       <div class="config-ref-row">
-        <select :value="modelValue ?? ''" @change="onSelect(($event.target as HTMLSelectElement).value)">
+        <select :value="effectiveValue ?? ''" @change="onSelect(($event.target as HTMLSelectElement).value)">
           <option value="" disabled>select {{ descriptor.label }}...</option>
           <option v-for="opt in options" :key="opt.id" :value="opt.id">{{ opt.summary }}</option>
         </select>
@@ -285,9 +285,18 @@ const options = computed(() => {
   return [...configOptions, ...credentialOnlyOptions, ...unmanagedOption];
 });
 
+// A singleton config type (config-types.ts, e.g. WiFi) shows the flow's one instance whatever this node's
+// own property says -- an older node may hold no id, or a stale one from before the type was a singleton.
+const effectiveValue = computed(() => {
+  configsVersion.value;
+  if (descriptor.value.singleton) return listConfigsOfType(props.configType)[0]?.id;
+  return props.modelValue;
+});
+
 const selected = computed(() => {
   configsVersion.value;
-  return props.modelValue ? (configs.value.get(props.modelValue) ?? null) : null;
+  const id = effectiveValue.value;
+  return id ? (configs.value.get(id) ?? null) : null;
 });
 
 function onSelect(id: string): void {
@@ -419,7 +428,7 @@ function closeEdit(): void {
 // modelValue changes out from under an open edit panel, close the stale
 // panel rather than silently keep editing the wrong thing.
 watch(
-  () => props.modelValue,
+  () => effectiveValue.value,
   (next) => {
     if (editingId.value && next !== editingId.value) editingId.value = null;
   },

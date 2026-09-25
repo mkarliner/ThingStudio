@@ -209,6 +209,7 @@ async def test_connection_refused_is_a_named_error() -> None:
     with pytest.raises(TcpRelayError) as info:
         await conn.open()
     assert f"127.0.0.1:{port}" in str(info.value)
+    assert info.value.code == "refused"  # the editor turns this into "set a password in Board settings"
 
 
 @pytest.mark.asyncio
@@ -280,6 +281,37 @@ def test_discover_parses_replies_and_ignores_junk() -> None:
     assert len(boards) == 1
     b = boards[0]
     assert (b.hostname, b.address, b.port, b.chip, b.flow, b.wifi_transport, b.busy) == ("kitchen", "127.0.0.1", 7462, "ESP32", "demo", True, False)
+
+
+def test_discover_resends_the_probe_so_one_lost_packet_does_not_hide_a_board() -> None:
+    """A responder that ignores the first probe, like a board in modem sleep missing a broadcast."""
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.bind(("127.0.0.1", 0))
+    s.settimeout(0.1)
+    port = s.getsockname()[1]
+    stop = threading.Event()
+    reply = json.dumps({"ts": 1, "hostname": "sleepy", "port": 7462, "wifiTransport": True}).encode()
+
+    def run() -> None:
+        seen = 0
+        while not stop.is_set():
+            try:
+                data, addr = s.recvfrom(64)
+            except TimeoutError:
+                continue
+            except OSError:
+                return
+            seen += 1
+            if data == b"TSPROBE1" and seen > 1:
+                s.sendto(reply, addr)
+        s.close()
+
+    threading.Thread(target=run, daemon=True).start()
+    try:
+        boards = discover(timeout_s=1.0, targets=["127.0.0.1"], probe_port=port)
+    finally:
+        stop.set()
+    assert [b.hostname for b in boards] == ["sleepy"]
 
 
 def test_discover_with_nothing_listening_returns_empty() -> None:

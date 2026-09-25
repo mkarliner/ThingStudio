@@ -51,3 +51,15 @@ Reinstall the runtime first (3.0.0 adds `board_settings.py` and `net_transport.p
   even with iTerm allowed; Apple's Terminal works (TN3179 exempts it). Docs and the error message say so; packaging
   (item 7) must ship a signed app with `NSLocalNetworkUsageDescription`.
 - Not yet checked: steps 6-9 (`.local` entry, fault cases, Pico W, plain Pico).
+- Later the same day: discovery found one of two boards. `discover()` now resends the probe every 0.4 s within
+  its 1.5 s window. The real cause turned out to be the port menu: its "(no board found)" placeholder was set before
+  discovery and stayed selected when two WiFi boards were found (fixed; a 15 s test scan showed both boards
+  answering within 0.3 s). Connecting to a
+  board with no password now says so and points at Board settings (`refused` code for ECONNREFUSED; the editor
+  also uses the probe's `wifiTransport` flag). Plain Pico showing WiFi entries: deferred, in outstanding-items.
+- Step 6 passes on both boards (ESP32-C3, Pico W): `<name>.local` resolves, and a rename takes effect after a
+  power cycle. The Mac's mDNS cache hid the rename at first (`sudo killall -HUP mDNSResponder` cleared it).
+- Slow pings (2-324 ms, ~33% loss) turned out to be the ESP32-C3, not the Pico W: the board renamed `picow-1`
+  was the ESP32-C3 (Board settings applies to whichever board is on USB). The Pico W (`ts-3c0c31`, running the
+  `wifistatus` test flow with mqtt nodes, RSSI -58) pings at 2-25 ms with no loss. The ESP32's pattern looks like
+  its default WiFi modem sleep; not yet confirmed with `pm=PM_NONE`.
