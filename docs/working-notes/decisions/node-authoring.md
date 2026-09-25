@@ -573,3 +573,17 @@ circle/rectangle) with no `MemoryError` and no visible bit-order corruption, clo
 question of whether the ascending-bit-order expansion loops (the opposite of gs4's) were actually
 right on real silicon, not just independently hand-verified off-device. All three indexed depths
 (`gs4`, `gs2`, `mono`) are now confirmed working end to end on real hardware.
+
+## `startup` node reports why the flow started, 2026-09-25
+
+Mike's point (`mikes-questions-and-points.md`): "the startup node should provide a reason in its payload, like
+wake from deep sleep." Every `startup` message now carries `msg['reason']`: `deploy`, or at boot `power_on`,
+`hard_reset`, `watchdog`, `deep_sleep`, `soft_reset`, `unknown`. A new payload type, `start reason`, also puts it
+in the payload (output port type `string`), since `payload` is what generic downstream nodes read.
+The listener sets `runtime.start_reason` just before importing the flow: `"deploy"` in `_handle_deploy`,
+`_boot_reason()` (from `machine.reset_cause()`, matched by constant name because each port defines a different
+subset) in `_resume_flow`. Codegen reads it with `getattr(runtime, 'start_reason', 'unknown')`, so a flow from
+this editor still runs on a 5.0.0 board -- hence runtime 5.1.0, a minor bump, not a major one (CLAUDE.md's
+bump rule: nothing this codegen emits fails on the old runtime). Done now rather than later because the node
+shipped 2026-09-24: adding a field changes no existing flow. Detail left for later: ESP32's
+`machine.wake_reason()` (which pin or timer woke it) is not reported.

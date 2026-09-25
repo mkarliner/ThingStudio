@@ -242,6 +242,15 @@ function expectNonNegativeInt(obj: Record<string, unknown>, key: string, name: s
   return v;
 }
 
+/** Same "missing/null both mean not provided" convention as expectOptionalString -- used for the
+ * ESP-IDF heap fields (HELLO, DEPLOY_ACK), which only ESP32-family boards send. Mirrors
+ * messages.py's _expect_optional_non_negative_int. */
+function expectOptionalNonNegativeInt(obj: Record<string, unknown>, key: string, name: string): number | null {
+  const v = obj[key];
+  if (v === undefined || v === null) return null;
+  return expectNonNegativeInt(obj, key, name);
+}
+
 function expectBytes(obj: Record<string, unknown>, key: string, name: string): Uint8Array {
   const v = obj[key];
   if (!(v instanceof Uint8Array)) fail(name, `field "${key}" must be a byte string, got ${typeof v}`);
@@ -276,6 +285,8 @@ function validateHello(obj: Record<string, unknown>): Omit<HelloMessage, "type">
     currentFlowDeployId: expectOptionalString(obj, "currentFlowDeployId", "HELLO"),
     freeFlashBytes: expectNonNegativeInt(obj, "freeFlashBytes", "HELLO"),
     freeRamBytes: expectNonNegativeInt(obj, "freeRamBytes", "HELLO"),
+    freeIdfHeapBytes: expectOptionalNonNegativeInt(obj, "freeIdfHeapBytes", "HELLO"),
+    largestIdfHeapBlockBytes: expectOptionalNonNegativeInt(obj, "largestIdfHeapBlockBytes", "HELLO"),
     safeMode: expectOptionalBool(obj, "safeMode", "HELLO") ?? false,
     hostname: expectOptionalString(obj, "hostname", "HELLO"),
     authRequired: expectOptionalBool(obj, "authRequired", "HELLO") ?? false,
@@ -299,6 +310,8 @@ function validateDeployAck(obj: Record<string, unknown>): Omit<DeployAckMessage,
   return {
     freeFlashBytes: expectNonNegativeInt(obj, "freeFlashBytes", "DEPLOY_ACK"),
     freeRamBytes: expectNonNegativeInt(obj, "freeRamBytes", "DEPLOY_ACK"),
+    freeIdfHeapBytes: expectOptionalNonNegativeInt(obj, "freeIdfHeapBytes", "DEPLOY_ACK"),
+    largestIdfHeapBlockBytes: expectOptionalNonNegativeInt(obj, "largestIdfHeapBlockBytes", "DEPLOY_ACK"),
   };
 }
 

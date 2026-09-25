@@ -41,9 +41,16 @@ function freshCtx(): CodegenContext {
   };
 }
 
-function runBuildMsg(properties: Record<string, unknown>): string {
+function runBuildMsg(properties: Record<string, unknown>, key = "payload", startReason?: string): string {
   const result = startupNode.codegenSource!(node(properties), freshCtx());
-  const lines = [...(result.imports ?? []), ...(result.statements ?? []).map((s) => s.code), result.buildMsg, "print(msg['payload'])"];
+  const lines = [
+    "import runtime",
+    ...(startReason === undefined ? [] : [`runtime.start_reason = ${JSON.stringify(startReason)}`]),
+    ...(result.imports ?? []),
+    ...(result.statements ?? []).map((s) => s.code),
+    result.buildMsg,
+    `print(msg[${JSON.stringify(key)}])`,
+  ];
   const dir = mkdtempSync(join(tmpdir(), "thingstudio-nodetest-"));
   const scriptPath = join(dir, "_snippet.py");
   writeFileSync(scriptPath, lines.join("\n"));
@@ -66,6 +73,30 @@ describe("thingstudio/startup node", () => {
 
   it("defaults payloadType to bool when unset", () => {
     expect(runBuildMsg({ payloadValue: "true" }).trim()).toBe("True");
+  });
+
+  it("adds msg['reason'] alongside a fixed payload", () => {
+    expect(runBuildMsg({ payloadType: "bool", payloadValue: "true" }, "reason", "deep_sleep").trim()).toBe("deep_sleep");
+  });
+
+  it("payload type 'reason' sends the start reason as the payload, with a string output port", () => {
+    expect(runBuildMsg({ payloadType: "reason" }, "payload", "deploy").trim()).toBe("deploy");
+    const type = startupNode.ports!.outputs![0]!.type;
+    expect(typeof type === "function" ? type({ payloadType: "reason" }) : type).toBe("string");
+  });
+
+  it("falls back to 'unknown' on a runtime older than 5.1.0, which has no start_reason", () => {
+    // pymock's runtime.py stands in for the old runtime here only if it lacks start_reason; delete it to be sure.
+    const result = startupNode.codegenSource!(node({ payloadType: "reason" }), freshCtx());
+    const dir = mkdtempSync(join(tmpdir(), "thingstudio-nodetest-"));
+    const scriptPath = join(dir, "_snippet.py");
+    writeFileSync(
+      scriptPath,
+      ["import runtime", "if hasattr(runtime, 'start_reason'): del runtime.start_reason", result.buildMsg, "print(msg['payload'], msg['reason'])"].join("\n"),
+    );
+    const pymockDir = join(__dirname, "fixtures", "pymock");
+    const out = execFileSync("python3", [scriptPath], { env: { ...process.env, PYTHONPATH: pymockDir }, encoding: "utf8" });
+    expect(out.trim()).toBe("unknown unknown");
   });
 
   it("rejects an invalid number payload", () => {

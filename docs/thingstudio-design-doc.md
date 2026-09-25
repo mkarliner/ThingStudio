@@ -179,7 +179,7 @@ Before any public release: run an automated license scan (e.g., SPDX-based) over
 
 Concrete enough to build against, not a frozen spec. Framing: length-prefixed frames over the raw transport — a 2-byte length header plus payload, identical across serial/BLE/WiFi — with a 1-byte message type and a CBOR-encoded body.
 
-Message types: `HELLO` (chip type, MicroPython/runtime version as major.minor.patch, free flash/RAM, `authRequired`/`authScheme`); `DEPLOY` (full flow bytecode plus static data, replacing whatever's currently deployed); `DEPLOY_ACK` / `DEPLOY_ERROR`; `VALUE_STREAM` (device → editor, throttled live port values); `NODE_ERROR` (device → editor, node ID plus exception type/message); `STATE_READ` / `STATE_WRITE` (the persisted variable store, §5).
+Message types: `HELLO` (chip type, MicroPython/runtime version as major.minor.patch, free flash/RAM, plus ESP-IDF heap free/largest block on ESP32-family boards, `authRequired`/`authScheme`); `DEPLOY` (full flow bytecode plus static data, replacing whatever's currently deployed); `DEPLOY_ACK` / `DEPLOY_ERROR`; `VALUE_STREAM` (device → editor, throttled live port values); `NODE_ERROR` (device → editor, node ID plus exception type/message); `STATE_READ` / `STATE_WRITE` (the persisted variable store, §5).
 
 Generated flow code is human-readable Python (named per-node functions/variables tied to node IDs), not a compact intermediate form.
 

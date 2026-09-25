@@ -30,6 +30,9 @@ Reinstall the runtime first (3.0.0 adds `board_settings.py` and `net_transport.p
    ~90 s at worst; the backend's keepalive notices sooner).
 8. **Pico W:** repeat 1-4; `network.hostname()` needs rp2 firmware v1.25+ for `.local` to work.
 9. **Plain Pico:** no Board settings button, no WiFi entries for it.
+10. **ESP32-C3 memory (added 2026-09-25, runtime 5.1.0):** deploy a flow with MQTT and a display. Note the
+    `[memory]` lines after connect and after deploy, then check WiFi joins and MQTT connects. Record the ESP-IDF
+    free and largest-block figures each time a node type is added, so a shrinking margin shows before it fails.
 
 ## Known gaps
 

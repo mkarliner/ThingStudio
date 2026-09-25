@@ -4,8 +4,25 @@ Sends one message with a fixed payload each time the flow starts.
 
 ## Properties
 
-- **payload type** — `bool`, `number`, or `string`.
-- **value** — the fixed value to send, matching the chosen type.
+- **payload type** — `bool`, `number`, `string`, or `start reason`.
+- **value** — the fixed value to send, matching the chosen type. Not used with `start reason`.
+
+## Output
+
+Every message has a `reason` field saying why the flow started. With payload type `start reason`,
+the payload is that same string.
+
+| reason | the flow started because |
+| --- | --- |
+| `deploy` | you clicked Deploy |
+| `power_on` | the board was powered up |
+| `hard_reset` | the reset button was pressed |
+| `watchdog` | a watchdog timer reset the board |
+| `deep_sleep` | the board woke from deep sleep |
+| `soft_reset` | software restarted the board, for example `machine.reset()` |
+| `unknown` | the board can't tell |
+
+Not every board reports every reason. A board running a runtime older than 5.1.0 always sends `unknown`.
 
 ## Behavior
 

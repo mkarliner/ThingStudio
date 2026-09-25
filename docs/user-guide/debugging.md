@@ -8,6 +8,13 @@ Routine system reports are hidden unless you tick **Verbose**: network status, t
 
 The **source preview** panel shows the actual MicroPython the current canvas compiles to — useful for seeing exactly what a flow does, or for confirming a fix landed where you expected.
 
+### Memory
+
+After each connect and deploy, a **[memory]** line shows how much RAM the board has free. On ESP32 boards
+it also shows the ESP-IDF heap and its largest free block. WiFi, MQTT and TLS use that heap, not
+MicroPython's. If WiFi won't join while MicroPython still has plenty free, a low ESP-IDF figure is the
+likely cause. The ESP32-C3 is the tightest.
+
 ## Board won't connect
 
 When **Connect**, **Check status** or **Install runtime…** gets no proper reply, the console says what the board sent instead. Each case has a next step.

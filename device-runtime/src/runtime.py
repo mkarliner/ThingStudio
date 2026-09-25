@@ -123,6 +123,12 @@ on_node_error = None
 # -- see report_status()'s own try/except around calling it.
 on_node_status = None
 
+# Why the current flow started, set by listener.py just before it imports the flow: "deploy", or at
+# boot one of "power_on", "hard_reset", "watchdog", "deep_sleep", "soft_reset", "unknown"
+# (listener.py's _boot_reason). The startup node puts it in its message (editor/src/node-library/
+# startup.ts), reading it with getattr so a flow still runs on a runtime older than 5.1.0.
+start_reason = "unknown"
+
 
 class NodeError(Exception):
     """Raised by compiler-generated per-node call wrappers (see this file's

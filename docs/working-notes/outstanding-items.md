@@ -507,7 +507,8 @@ ambiguous."
      only when used, so this saves flash and install time rather than RAM, and lets a flow carry exactly what it
      needs. Deploy would push a missing or outdated library (precompiled) before the flow.
   Also: report free ESP-IDF heap in HELLO next to `freeRamBytes`, and add a C3 memory check (MQTT + display flow)
-  to the hardware checklist.
+  to the hardware checklist. **Both done 2026-09-25** (runtime 5.1.0, `[memory]` console line; checklist step 10
+  in `wifi-transport-built-briefing.md`). Not yet seen on hardware.
   **Mike's call, 2026-09-25:** keep an eye on memory while the remaining MVP nodes go in, and build lazy loading
   then only if needed; otherwise post-MVP. (Why the C3 ran out first despite 400 KB vs the Pico W's 264 KB: the
   C3 runs the whole WiFi stack -- MAC, WPA supplicant, mbedTLS, lwIP buffers -- on its own CPU and RAM, and the

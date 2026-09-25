@@ -69,6 +69,11 @@ except ImportError:
     machine = None  # off-device (unix-port tests) -- heartbeat/DEPLOY pin work below degrades gracefully
 
 try:
+    import esp32  # ESP32 family only: ESP-IDF heap figures for HELLO/DEPLOY_ACK (_idf_heap below)
+except ImportError:
+    esp32 = None
+
+try:
     import os
 except ImportError:
     os = None
@@ -140,7 +145,7 @@ F64_PREFIX = "F64:"
 _HEARTBEAT_PIN = 10
 _HEARTBEAT_PERIOD_MS = 200
 
-_RUNTIME_VERSION = {"major": 5, "minor": 0, "patch": 0}  # bumped 2026-09-25 (later): mqtt_as active(True) only when inactive (4.0.0 same day: vendored mqtt_as wifi_connect() guard -- MQTT codegen now joins WiFi first on ESP32 (3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS; 2.0.0 was 2026-09-23: EXEC, STOP_TO_PROMPT, safe mode; 1.0.0 was 2026-09-10: NODE_STATUS)
+_RUNTIME_VERSION = {"major": 5, "minor": 1, "patch": 0}  # 5.1.0 2026-09-25: runtime.start_reason, ESP-IDF heap in HELLO/DEPLOY_ACK -- minor only: startup codegen reads start_reason with getattr, so its flows still run on 5.0.0; 5.0.0 same day: mqtt_as active(True) only when inactive (4.0.0 same day: vendored mqtt_as wifi_connect() guard -- MQTT codegen now joins WiFi first on ESP32 (3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS; 2.0.0 was 2026-09-23: EXEC, STOP_TO_PROMPT, safe mode; 1.0.0 was 2026-09-10: NODE_STATUS)
 # (runtime.report_status) is a hard dependency of wifi-status.ts's/mqtt-shared.ts's codegen now -- an editor
 # with this change targeting a pre-2026-09-10 runtime would crash on deploy (AttributeError: report_status),
 # not degrade gracefully. See CLAUDE.md's "Device-runtime version bump discipline" -- decideDeploy() only
@@ -354,6 +359,54 @@ def _free_ram_bytes():
     return gc.mem_free()
 
 
+def _idf_heap():
+    """(free bytes, largest free block) of ESP-IDF's own data heap, or (None, None) off ESP32.
+
+    Separate from gc.mem_free(): on ESP32-family boards the WiFi stack (and mbedTLS, lwIP) allocates
+    from this heap, not MicroPython's. An ESP32-C3 failed to join WiFi from an MQTT flow with plenty
+    of MicroPython RAM free (learnings/micropython-device-runtime.md, 2026-09-25). The largest block
+    matters as much as the total: a join needs contiguous buffers."""
+    if esp32 is None:
+        return None, None
+    try:
+        regions = esp32.idf_heap_info(esp32.HEAP_DATA)  # [(total, free, largest_free, min_free), ...]
+    except (AttributeError, OSError):
+        return None, None
+    free = 0
+    largest = 0
+    for region in regions:
+        free += region[1]
+        if region[2] > largest:
+            largest = region[2]
+    return free, largest
+
+
+# machine.reset_cause() constant -> startup node's reason string. Checked by name, since each port
+# defines a different subset (rp2 has no DEEPSLEEP_RESET, for example).
+_RESET_REASONS = (
+    ("PWRON_RESET", "power_on"),
+    ("HARD_RESET", "hard_reset"),
+    ("WDT_RESET", "watchdog"),
+    ("DEEPSLEEP_RESET", "deep_sleep"),
+    ("SOFT_RESET", "soft_reset"),
+)
+
+
+def _boot_reason():
+    """Why the board booted, for a flow resumed at boot (runtime.start_reason). "unknown" when the
+    port can't say -- never raises, boot must not depend on it."""
+    if machine is None:
+        return "unknown"
+    try:
+        cause = machine.reset_cause()
+    except Exception:  # noqa: BLE001 -- missing on some ports; a reason is never worth failing boot over
+        return "unknown"
+    for attr, reason in _RESET_REASONS:
+        if getattr(machine, attr, None) == cause:
+            return reason
+    return "unknown"
+
+
 def _send_message(message):
     """Encode + frame + base64-line-wrap one message and write it to
     stdout. Synchronous and best-effort: a write failure here must not be
@@ -418,6 +471,7 @@ runtime.on_node_status = _handle_node_status
 
 
 async def _send_hello():
+    idf_free, idf_largest = _idf_heap()
     _send_message_safe(
         {
             "type": "HELLO",
@@ -428,6 +482,8 @@ async def _send_hello():
             "currentFlowDeployId": _current_flow_deploy_id,
             "freeFlashBytes": _free_flash_bytes(),
             "freeRamBytes": _free_ram_bytes(),
+            "freeIdfHeapBytes": idf_free,
+            "largestIdfHeapBlockBytes": idf_largest,
             "safeMode": _safe_mode,
             "hostname": board_settings.hostname() if board_settings else None,
             "authRequired": board_settings.password_set() if board_settings else False,
@@ -486,6 +542,7 @@ async def _handle_deploy(msg):
                 f.write(msg["staticData"])
         if "_flow" in sys.modules:
             del sys.modules["_flow"]
+        runtime.start_reason = "deploy"  # read by the startup node (startup.ts)
         import _flow  # noqa: F401 -- executes _flow's top-level code, which calls runtime.spawn(...)
         _persist_flow_meta(msg["flowName"], msg["deployId"])
         _leave_safe_mode()
@@ -493,7 +550,16 @@ async def _handle_deploy(msg):
         _set_current_flow(msg["flowName"], msg["deployId"])
         _deploy_generation += 1
         gc.collect()
-        _send_message_safe({"type": "DEPLOY_ACK", "freeFlashBytes": _free_flash_bytes(), "freeRamBytes": gc.mem_free()})
+        idf_free, idf_largest = _idf_heap()
+        _send_message_safe(
+            {
+                "type": "DEPLOY_ACK",
+                "freeFlashBytes": _free_flash_bytes(),
+                "freeRamBytes": gc.mem_free(),
+                "freeIdfHeapBytes": idf_free,
+                "largestIdfHeapBlockBytes": idf_largest,
+            }
+        )
     except Exception as e:  # noqa: BLE001 -- a bad DEPLOY is adversarial-shaped input (design doc §13: DEPLOY_ERROR), never allowed to kill the listener
         print("DEPLOY_ERR %r (before_ram=%d)" % (e, before_ram))
         _send_message_safe({"type": "DEPLOY_ERROR", "code": type(e).__name__, "message": str(e)})
@@ -540,6 +606,7 @@ def _resume_flow():
         print("LISTENER_BOOT no persisted flow at %s -- nothing to resume" % _FLOW_PATH)
         return
     try:
+        runtime.start_reason = _boot_reason()  # read by the startup node (startup.ts)
         import _flow  # noqa: F401 -- see _handle_deploy's own note: executes _flow's top-level code, which calls runtime.spawn(...)
         _set_current_flow(*_read_flow_meta())
         print("LISTENER_BOOT resumed persisted flow from %s" % _FLOW_PATH)

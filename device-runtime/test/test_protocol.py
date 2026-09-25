@@ -29,6 +29,9 @@ SAMPLE_MESSAGES = [
         "currentFlowDeployId": None,
         "freeFlashBytes": 3500000,
         "freeRamBytes": 168000,
+        # ESP-IDF heap (2026-09-25, runtime 5.1.0): an ESP32-family board reports it.
+        "freeIdfHeapBytes": 65536,
+        "largestIdfHeapBlockBytes": 31744,
         "safeMode": False,
         "hostname": None,
         "authRequired": False,
@@ -48,6 +51,8 @@ SAMPLE_MESSAGES = [
         "currentFlowDeployId": "6f1c9b2a-8e3d-4a5b-9c1e-2d3f4a5b6c7d",
         "freeFlashBytes": 757760,
         "freeRamBytes": 179200,
+        "freeIdfHeapBytes": None,  # not an ESP32
+        "largestIdfHeapBlockBytes": None,
         "safeMode": False,
         # WiFi transport fields (2026-09-24): a board with a password set, listening.
         "hostname": "ts-kitchen",
@@ -83,7 +88,8 @@ SAMPLE_MESSAGES = [
         # with (wifi-provisioning-captive-portal.md's confirmed trigger semantics).
         "wifiProvision": {"selfProvision": True, "allowReprovision": False},
     },
-    {"type": "DEPLOY_ACK", "freeFlashBytes": 3400000, "freeRamBytes": 160000},
+    {"type": "DEPLOY_ACK", "freeFlashBytes": 3400000, "freeRamBytes": 160000, "freeIdfHeapBytes": None, "largestIdfHeapBlockBytes": None},
+    {"type": "DEPLOY_ACK", "freeFlashBytes": 3400000, "freeRamBytes": 160000, "freeIdfHeapBytes": 60000, "largestIdfHeapBlockBytes": 28000},
     {"type": "DEPLOY_ERROR", "code": "insufficient_space", "message": "flow needs 12000 bytes flash, 8000 available"},
     {"type": "VALUE_STREAM", "nodeId": "n3", "portId": "out0", "payload": True, "timestampMs": 1723000000123},
     {"type": "VALUE_STREAM", "nodeId": "n4", "portId": "out0", "payload": 3.14, "timestampMs": 1},
@@ -284,6 +290,28 @@ def test_accepts_hello_with_current_flow_fields_entirely_absent():
     assert decoded["currentFlowDeployId"] is None
 
 
+def test_accepts_hello_without_idf_heap_fields():
+    # Non-ESP32 board, or a runtime older than 5.1.0.
+    body = cbor.encode({"chipType": "x", "runtimeVersion": {"major": 5, "minor": 0, "patch": 0}, "freeFlashBytes": 1, "freeRamBytes": 1})
+    decoded = messages.decode_message_body(messages.MessageType["HELLO"], body)
+    assert decoded["freeIdfHeapBytes"] is None
+    assert decoded["largestIdfHeapBlockBytes"] is None
+
+
+def test_rejects_bad_idf_heap_fields():
+    hello = {"chipType": "x", "runtimeVersion": {"major": 5, "minor": 1, "patch": 0}, "freeFlashBytes": 1, "freeRamBytes": 1}
+    ack = {"freeFlashBytes": 1, "freeRamBytes": 1}
+    for field in ("freeIdfHeapBytes", "largestIdfHeapBlockBytes"):
+        for bad in (-1, 1.5, "big"):
+            for type_name, base in (("HELLO", hello), ("DEPLOY_ACK", ack)):
+                body = cbor.encode(dict(base, **{field: bad}))
+                try:
+                    messages.decode_message_body(messages.MessageType[type_name], body)
+                    assert False, "expected MessageDecodeError for %s %s=%r" % (type_name, field, bad)
+                except MessageDecodeError:
+                    pass
+
+
 def test_rejects_deploy_non_string_flow_identity_fields():
     base = {"bytecode": b"\x00", "staticData": b""}
     for bad_field in ("flowName", "deployId"):
@@ -421,6 +449,8 @@ minitest.run(
         test_accepts_hello_with_runtime_build_entirely_absent,
         test_rejects_hello_non_string_current_flow_fields,
         test_accepts_hello_with_current_flow_fields_entirely_absent,
+        test_accepts_hello_without_idf_heap_fields,
+        test_rejects_bad_idf_heap_fields,
         test_rejects_deploy_non_string_flow_identity_fields,
         test_accepts_deploy_with_flow_identity_fields_entirely_absent,
         test_rejects_deploy_non_bytes_field,

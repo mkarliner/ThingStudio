@@ -24,6 +24,9 @@ const SAMPLE_MESSAGES: Message[] = [
     currentFlowDeployId: null,
     freeFlashBytes: 3_500_000,
     freeRamBytes: 168_000,
+    // ESP-IDF heap (2026-09-25, runtime 5.1.0): an ESP32-family board reports it.
+    freeIdfHeapBytes: 65_536,
+    largestIdfHeapBlockBytes: 31_744,
     safeMode: false,
     hostname: null,
     authRequired: false,
@@ -44,6 +47,8 @@ const SAMPLE_MESSAGES: Message[] = [
     currentFlowDeployId: "6f1c9b2a-8e3d-4a5b-9c1e-2d3f4a5b6c7d",
     freeFlashBytes: 757_760,
     freeRamBytes: 179_200,
+    freeIdfHeapBytes: null, // not an ESP32
+    largestIdfHeapBlockBytes: null,
     safeMode: true, // board in boot-loop safe mode (2026-09-23)
     // WiFi transport fields (2026-09-24): a board with a password set, listening.
     hostname: "ts-kitchen",
@@ -84,7 +89,8 @@ const SAMPLE_MESSAGES: Message[] = [
     // (wifi-provisioning-captive-portal.md's confirmed trigger semantics).
     wifiProvision: { selfProvision: true, allowReprovision: false },
   },
-  { type: "DEPLOY_ACK", freeFlashBytes: 3_400_000, freeRamBytes: 160_000 },
+  { type: "DEPLOY_ACK", freeFlashBytes: 3_400_000, freeRamBytes: 160_000, freeIdfHeapBytes: null, largestIdfHeapBlockBytes: null },
+  { type: "DEPLOY_ACK", freeFlashBytes: 3_400_000, freeRamBytes: 160_000, freeIdfHeapBytes: 60_000, largestIdfHeapBlockBytes: 28_000 },
   { type: "DEPLOY_ERROR", code: "insufficient_space", message: "flow needs 12000 bytes flash, 8000 available" },
   { type: "VALUE_STREAM", nodeId: "n3", portId: "out0", payload: true, timestampMs: 1_723_000_000_123 },
   { type: "VALUE_STREAM", nodeId: "n4", portId: "out0", payload: 3.14, timestampMs: 1 },
@@ -262,6 +268,24 @@ describe("codec.ts rejects valid CBOR with the wrong shape (per message type)", 
     const decoded = decodeMessageBody(MessageType.HELLO, body);
     expect((decoded as { currentFlowName: unknown }).currentFlowName).toBeNull();
     expect((decoded as { currentFlowDeployId: unknown }).currentFlowDeployId).toBeNull();
+  });
+
+  it("accepts HELLO without the ESP-IDF heap fields (non-ESP32, or runtime older than 5.1.0)", () => {
+    const body = cborEncode({ chipType: "x", runtimeVersion: { major: 5, minor: 0, patch: 0 }, freeFlashBytes: 1, freeRamBytes: 1 });
+    const decoded = decodeMessageBody(MessageType.HELLO, body) as { freeIdfHeapBytes: unknown; largestIdfHeapBlockBytes: unknown };
+    expect(decoded.freeIdfHeapBytes).toBeNull();
+    expect(decoded.largestIdfHeapBlockBytes).toBeNull();
+  });
+
+  it("rejects a negative or non-integer ESP-IDF heap field in HELLO and DEPLOY_ACK", () => {
+    const hello = { chipType: "x", runtimeVersion: { major: 5, minor: 1, patch: 0 }, freeFlashBytes: 1, freeRamBytes: 1 };
+    const ack = { freeFlashBytes: 1, freeRamBytes: 1 };
+    for (const field of ["freeIdfHeapBytes", "largestIdfHeapBlockBytes"] as const) {
+      for (const bad of [-1, 1.5, "big"]) {
+        expect(() => decodeMessageBody(MessageType.HELLO, cborEncode({ ...hello, [field]: bad }))).toThrow(MessageDecodeError);
+        expect(() => decodeMessageBody(MessageType.DEPLOY_ACK, cborEncode({ ...ack, [field]: bad }))).toThrow(MessageDecodeError);
+      }
+    }
   });
 
   it("rejects DEPLOY with a non-string flowName or deployId", () => {

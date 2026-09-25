@@ -138,6 +138,12 @@ export interface HelloMessage {
   readonly currentFlowDeployId: string | null;
   readonly freeFlashBytes: number;
   readonly freeRamBytes: number;
+  /** Added 2026-09-25 (runtime 5.1.0): ESP-IDF's own data heap, separate from the MicroPython heap
+   * `freeRamBytes` counts. On ESP32-family boards the WiFi stack allocates from here, so a low value
+   * (or a small largest block -- a join needs contiguous buffers) explains a failed WiFi join. Null
+   * on other ports and on older runtimes. */
+  readonly freeIdfHeapBytes: number | null;
+  readonly largestIdfHeapBlockBytes: number | null;
   /** Added 2026-09-23: the board skipped its saved flow after repeated failed boots (listener.py's
    * safe mode). False when absent -- a runtime older than 2.0.0 never sends it. */
   readonly safeMode: boolean;
@@ -204,6 +210,9 @@ export interface DeployAckMessage {
   readonly type: "DEPLOY_ACK";
   readonly freeFlashBytes: number;
   readonly freeRamBytes: number;
+  /** Same optional ESP-IDF heap pair as HelloMessage, measured after the new flow started. */
+  readonly freeIdfHeapBytes: number | null;
+  readonly largestIdfHeapBlockBytes: number | null;
 }
 
 /** Device -> editor: deploy failed. "A structured compile/space error" (§13). */

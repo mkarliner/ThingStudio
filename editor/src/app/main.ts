@@ -140,6 +140,7 @@ import {
 import { explainBackendConnectError } from "./connect-error-help.js";
 import { isVerboseOnly } from "./console-filter.js";
 import { NATIVE_ARCH_OPTIONS, inferNativeArch } from "./native-arch.js";
+import { formatMemoryLine } from "./memory-report.js";
 import { BUILTIN_DEFINITION_FILES } from "../definitions/builtin.js";
 import { buildDefinitionSet, userDefinitionFiles, type DefinitionSet } from "../definitions/definitions.js";
 import { choiceForConnectedBoard, resolveTarget, type TargetResolution } from "../definitions/target.js";
@@ -1179,7 +1180,7 @@ function waitForMessage(match: (m: Message) => boolean, timeoutMs: number): Prom
 // bump-discipline rule), so this is the level that actually stops an
 // unsafe DEPLOY rather than letting it crash on the device.
 // 2.0.0 (2026-09-23): EXEC, STOP_TO_PROMPT, safe mode. Must match listener.py's _RUNTIME_VERSION.
-const EDITOR_TARGET_VERSION: ProtocolVersion = { major: 5, minor: 0, patch: 0 }; // 5.0.0 2026-09-25: mqtt_as active(True) guard; 4.0.0 2026-09-25: mqtt_as guard, ESP32 MQTT joins WiFi first; 3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS
+const EDITOR_TARGET_VERSION: ProtocolVersion = { major: 5, minor: 1, patch: 0 }; // 5.1.0 2026-09-25: startup reason (getattr, so 5.0.0 still runs it), ESP-IDF heap fields; 5.0.0 2026-09-25: mqtt_as active(True) guard; 4.0.0 2026-09-25: mqtt_as guard, ESP32 MQTT joins WiFi first; 3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS
 
 // This editor's own device-runtime/src git SHA, injected at build/dev-
 // server-start time by vite.config.ts's `define` (see that file,
@@ -1275,6 +1276,7 @@ const transportEvents: TransportEvents = {
         logLine("[flow status] no flow currently running on this board", "");
       }
       lastHello = message;
+      logLine(formatMemoryLine(message), "");
       logWifiStatus(message);
     }
     waiters = waiters.filter((w) => {
@@ -2396,6 +2398,7 @@ el("btnDeploy").addEventListener("click", async () => {
         logLine(`[deploy failed] ${result.code}: ${result.message}`, "err");
       } else {
         logLine("[deploy OK -- flow is running on the device]", "ok");
+        if (result.type === "DEPLOY_ACK") logLine(formatMemoryLine(result), "");
         // Only the real success path marks the button clean (Mike's ask,
         // 2026-09-09) -- a DEPLOY_ERROR or a timeout below both mean the
         // device does NOT have this flow running, so the button must stay

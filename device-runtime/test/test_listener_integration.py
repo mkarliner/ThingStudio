@@ -158,8 +158,9 @@ def test_hello_sent_on_boot():
             line = listener.wait_for(lambda l: l.startswith(F64_PREFIX), description="a HELLO frame")
             msg = _decode_f64_line(line)
             assert msg["type"] == "HELLO"
-            assert msg["runtimeVersion"] == {"major": 5, "minor": 0, "patch": 0}
+            assert msg["runtimeVersion"] == {"major": 5, "minor": 1, "patch": 0}
             assert isinstance(msg["freeRamBytes"], int) and msg["freeRamBytes"] > 0
+            assert msg["freeIdfHeapBytes"] is None and msg["largestIdfHeapBlockBytes"] is None  # not an ESP32
             # WiFi transport fields (2026-09-24): fresh board -> generated hostname, no password.
             assert msg["hostname"].startswith("ts-"), msg["hostname"]
             assert msg["authRequired"] is False and msg["authScheme"] == "none"
@@ -340,7 +341,7 @@ def test_hello_request_resends_hello_no_side_effects():
             reply_line = listener.wait_for(lambda l: l.startswith(F64_PREFIX), description="HELLO_REQUEST's HELLO reply")
             msg = _decode_f64_line(reply_line)
             assert msg["type"] == "HELLO"
-            assert msg["runtimeVersion"] == {"major": 5, "minor": 0, "patch": 0}
+            assert msg["runtimeVersion"] == {"major": 5, "minor": 1, "patch": 0}
 
             # No side effects: a normal DEPLOY still works fine afterward.
             bytecode = _compile_flow(
@@ -395,6 +396,39 @@ def test_boot_time_flow_auto_resume():
                 description="boot-time resume log line",
             )
             second.wait_for(lambda l: l == "INTEGRATION_FLOW_RESUMED", description="the persisted flow's own print output, with no DEPLOY sent this boot")
+        finally:
+            second.close()
+
+
+def test_start_reason_is_deploy_then_boot_reason():
+    # 2026-09-25, startup node's reason: runtime.start_reason is "deploy" for a flow started by DEPLOY, and
+    # listener.py's _boot_reason() when the saved flow resumes at boot -- "unknown" here, since the unix port
+    # has no machine.reset_cause(). Also checks DEPLOY_ACK's ESP-IDF heap fields are absent off ESP32.
+    with tempfile.TemporaryDirectory() as tmpdir:
+        bytecode = _compile_flow(
+            tmpdir,
+            "flow_start_reason",
+            "import runtime\n"
+            "async def _flow_0():\n"
+            "    print('START_REASON ' + runtime.start_reason)\n"
+            "runtime.spawn(_flow_0(), '1')\n",
+        )
+        first = ListenerProcess(tmpdir)
+        try:
+            first.wait_for(lambda l: l == "LISTENER_READY", description="LISTENER_READY (first boot)")
+            first.send_message({"type": "DEPLOY", "bytecode": bytecode, "staticData": b""})
+            line = first.wait_for(
+                lambda l: l.startswith(F64_PREFIX) and _decode_f64_line(l)["type"] == "DEPLOY_ACK",
+                description="DEPLOY_ACK",
+            )
+            ack = _decode_f64_line(line)
+            assert ack["freeIdfHeapBytes"] is None and ack["largestIdfHeapBlockBytes"] is None, ack
+            first.wait_for(lambda l: l == "START_REASON deploy", description="start reason after DEPLOY")
+        finally:
+            first.close()
+        second = ListenerProcess(tmpdir)
+        try:
+            second.wait_for(lambda l: l == "START_REASON unknown", description="start reason after a boot-time resume")
         finally:
             second.close()
 
@@ -907,6 +941,7 @@ TESTS = [
     test_hello_sent_on_boot,
     test_boot_time_flow_auto_resume,
     test_boot_time_resume_survives_corrupt_persisted_flow,
+    test_start_reason_is_deploy_then_boot_reason,
     test_flow_identity_reported_in_hello_and_survives_resume,
     test_failed_redeploy_clears_flow_identity,
     test_hello_request_resends_hello_no_side_effects,

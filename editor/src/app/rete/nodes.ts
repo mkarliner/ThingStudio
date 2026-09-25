@@ -315,7 +315,8 @@ export class StartupNode extends ClassicPreset.Node {
   status: NodeStatusState | null = null;
   statusText: string | null = null;
 
-  properties: { payloadType: "bool" | "number" | "string"; payloadValue: string } = {
+  // "reason": the payload is why the flow started (node-library/startup.ts); payloadValue is unused.
+  properties: { payloadType: "bool" | "number" | "string" | "reason"; payloadValue: string } = {
     payloadType: "bool",
     payloadValue: "true",
   };

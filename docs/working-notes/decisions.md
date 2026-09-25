@@ -74,7 +74,7 @@ Xtensa, closing gs4 out end to end; then `gs2`/`mono` (the two remaining decided
 built the same day, including a real MicroPython-source-confirmed finding that gs4's bit order doesn't
 generalize to gs2/mono (they're the opposite of gs4, and of each other's similarly-named `MONO_HLSB`
 sibling) -- and, later the same day, both confirmed working on real CYD hardware too, closing out all
-three indexed depths end to end. 14 entries: `docs/working-notes/decisions/node-authoring.md`.
+three indexed depths end to end. `startup` node start reason (2026-09-25). 15 entries: `docs/working-notes/decisions/node-authoring.md`.
 
 ## GUI layout / widget system
 
@@ -187,4 +187,4 @@ and "Remove flow…" that retries through resets; runtime 2.0.0. 1 entry:
 ## WiFi transport (MVP item 6)
 
 Backend-relayed TCP link, flow owns WiFi, password auth set over USB (serial exempt, WiFi off until set),
-board-level hostname, UDP probe for the board list; built 2026-09-24, runtime 3.0.0. 6 entries: `docs/working-notes/decisions/wifi-transport.md`.
+board-level hostname, UDP probe for the board list; built 2026-09-24, runtime 3.0.0; ESP-IDF heap in HELLO (2026-09-25). 7 entries: `docs/working-notes/decisions/wifi-transport.md`.

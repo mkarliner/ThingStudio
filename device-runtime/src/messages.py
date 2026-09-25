@@ -185,6 +185,14 @@ def _expect_non_negative_int(obj, key, name):
     return v
 
 
+def _expect_optional_non_negative_int(obj, key, name):
+    """Same "missing/None both mean not provided" convention as _expect_optional_string -- used for
+    the ESP-IDF heap fields (HELLO, DEPLOY_ACK), which only ESP32-family boards send."""
+    if obj.get(key) is None:
+        return None
+    return _expect_non_negative_int(obj, key, name)
+
+
 def _expect_bytes(obj, key, name):
     v = obj.get(key)
     if not isinstance(v, (bytes, bytearray)):
@@ -263,6 +271,11 @@ def _validate_hello(obj, name):
         "currentFlowDeployId": _expect_optional_string(obj, "currentFlowDeployId", name),
         "freeFlashBytes": _expect_non_negative_int(obj, "freeFlashBytes", name),
         "freeRamBytes": _expect_non_negative_int(obj, "freeRamBytes", name),
+        # Added 2026-09-25: ESP-IDF's own heap, outside the MicroPython heap freeRamBytes counts. On
+        # ESP32-family boards the WiFi stack allocates from here, so a low value explains a failed
+        # WiFi join. Absent on other ports and on runtimes older than 5.1.0.
+        "freeIdfHeapBytes": _expect_optional_non_negative_int(obj, "freeIdfHeapBytes", name),
+        "largestIdfHeapBlockBytes": _expect_optional_non_negative_int(obj, "largestIdfHeapBlockBytes", name),
         # Added 2026-09-23: True when the listener skipped the saved flow after repeated failed
         # boots (listener.py's safe mode). Absent from older runtimes, meaning False.
         "safeMode": _expect_optional_bool(obj, "safeMode", name) or False,
@@ -325,6 +338,9 @@ def _validate_deploy_ack(obj, name):
     return {
         "freeFlashBytes": _expect_non_negative_int(obj, "freeFlashBytes", name),
         "freeRamBytes": _expect_non_negative_int(obj, "freeRamBytes", name),
+        # Same optional ESP-IDF heap pair as HELLO (see _validate_hello).
+        "freeIdfHeapBytes": _expect_optional_non_negative_int(obj, "freeIdfHeapBytes", name),
+        "largestIdfHeapBlockBytes": _expect_optional_non_negative_int(obj, "largestIdfHeapBlockBytes", name),
     }
 
 

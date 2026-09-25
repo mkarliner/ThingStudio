@@ -20,11 +20,29 @@
 // this node's whole point is "runs once, unconditionally"), and no fire
 // button in the property panel either (PropertyPanel.vue only offers Fire
 // for `codegenFireableSource` node types).
+//
+// Start reason (2026-09-25, Mike: "the startup node should provide a reason
+// in its payload, like wake from deep sleep"): every message carries
+// msg['reason'] -- "deploy", or at boot "power_on", "hard_reset",
+// "watchdog", "deep_sleep", "soft_reset" or "unknown" (listener.py's
+// _boot_reason sets runtime.start_reason before importing the flow).
+// payloadType "reason" puts the same string in the payload, for flows that
+// branch on it with a plain downstream node. Read with getattr so a flow
+// compiled here still runs on a pre-5.1.0 runtime (reason "unknown") --
+// why this was a minor runtime bump, not a major one.
 
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, PayloadType, SourceCodegenResult } from "../compiler/node-definition.js";
 import type { NodeDefinition } from "../compiler/node-definition.js";
 import { pyPayloadLiteral } from "./py-literals.js";
+
+/** Python expression for why the flow started (see this file's header). */
+const START_REASON_EXPR = "getattr(runtime, 'start_reason', 'unknown')";
+
+function startupOutputType(payloadType: unknown): PayloadType {
+  if (payloadType === "reason") return "string";
+  return (payloadType as PayloadType | undefined) ?? "bool";
+}
 
 export const startupNode: NodeDefinition = {
   type: "thingstudio/startup",
@@ -32,14 +50,15 @@ export const startupNode: NodeDefinition = {
   // Same dynamic-output-type pattern as inject's own single port (see that
   // file's header comment) -- output type tracks `payloadType` exactly.
   ports: {
-    outputs: [{ name: "msg", type: (properties) => (properties.payloadType as PayloadType | undefined) ?? "bool" }],
+    outputs: [{ name: "msg", type: (properties) => startupOutputType(properties.payloadType) }],
   },
   codegenSource(node: GraphNode, _ctx: CodegenContext): SourceCodegenResult {
     const payloadType = (node.properties.payloadType as string | undefined) ?? "bool";
-    const payloadLiteral = pyPayloadLiteral(payloadType, node.properties.payloadValue, "startup payload");
+    const payload =
+      payloadType === "reason" ? START_REASON_EXPR : pyPayloadLiteral(payloadType, node.properties.payloadValue, "startup payload");
 
     return {
-      buildMsg: `msg = {'payload': ${payloadLiteral}, 'topic': ''}`,
+      buildMsg: `msg = {'payload': ${payload}, 'topic': '', 'reason': ${START_REASON_EXPR}}`,
       repeatMs: 0,
     };
   },

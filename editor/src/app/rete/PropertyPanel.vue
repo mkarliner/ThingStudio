@@ -152,12 +152,14 @@
             <option value="bool">bool</option>
             <option value="number">number</option>
             <option value="string">string</option>
+            <option value="reason">start reason</option>
           </select>
         </label>
-        <label>value
+        <label v-if="node.properties.payloadType !== 'reason'">value
           <input v-model="node.properties.payloadValue" @input="touch" />
         </label>
-        <p class="hint">Sends this once each time the flow starts: after Deploy, and after the board resets or powers up.</p>
+        <p class="hint">Sends this once each time the flow starts: after Deploy, and after the board resets or powers up.
+          <code>msg.reason</code> says which.</p>
       </template>
 
       <template v-else-if="node.kind === 'function'">

@@ -21,3 +21,8 @@
   retransmits (`TCP_RXT_CONNDROPTIME` on macOS, `TCP_USER_TIMEOUT` on Linux) for every WiFi session
   (`tcp_relay.enable_dead_peer_detection()`). A board that lost power never closed its end, so the editor never
   showed it disconnected. Backend-only: the board's lwIP answers keepalive probes itself, no runtime change.
+- 2026-09-25: HELLO and DEPLOY_ACK carry `freeIdfHeapBytes` and `largestIdfHeapBlockBytes` (optional, ESP32
+  family only, from `esp32.idf_heap_info(esp32.HEAP_DATA)`). The WiFi stack allocates from ESP-IDF's heap, not
+  MicroPython's, which is why the C3's failed join looked like plenty of RAM free. The editor prints a
+  `[memory]` line after each HELLO and deploy, since those echoes are verbose-only. Runtime 5.1.0 (minor: both
+  fields are optional on the wire, and absent means "not reported").

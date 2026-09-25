@@ -29,6 +29,8 @@ const HELLO: Message = {
   currentFlowDeployId: null,
   freeFlashBytes: 1000,
   freeRamBytes: 2000,
+  freeIdfHeapBytes: null,
+  largestIdfHeapBlockBytes: null,
   safeMode: false,
   hostname: null,
   authRequired: false,
