@@ -210,3 +210,5 @@ Status: detail file, split out of `learnings.md` on 2026-09-06 to keep that inde
   Result: with the runtime installed as precompiled `.mpy`, the same MQTT flow joined WiFi 1.7 s after a clean
   power-cycle, and MQTT connected once the broker credential was corrected (CONNACK 0x5 was a wrong broker
   password, unrelated).
+  Ruled out: a different network. The flow switched from the `home` credential to `mihome` during the afternoon,
+  but the two hold the same SSID and password (Mike), so failing and working runs joined the same network.

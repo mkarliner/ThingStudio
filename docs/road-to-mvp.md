@@ -60,7 +60,7 @@ The docs should be written around what a person is trying to do, and should neve
 | Property panel shows every node property | Some settings could only be changed by editing flow files | MVP — done 2026-09-24 |
 | Board-aware compile (`-march`) | Hardcoded to Xtensa; viper code such as `display_spi` gs4 will break on RP2040/RP2350 | MVP |
 | Displays: framebuffer only | ST7789-family SPI (incl. M5Stack) and SSD1306 via `display_spi`/`display_i2c`, full-frame push | MVP |
-| WiFi transport between editor and board | Deploy and monitor without a USB cable, alongside serial; sidesteps unknown USB reset behaviour once a board is set up | MVP — built 2026-09-24, hardware pass pending |
+| WiFi transport between editor and board | Deploy and monitor without a USB cable, alongside serial; sidesteps unknown USB reset behaviour once a board is set up | MVP — built 2026-09-24, hardware pass done 2026-09-25 (ESP32-C3, Pico W) |
 | Display partial-blit path | Needed for a responsive GUI, not for a first flow | Post-MVP |
 | GUI view and widgets | Large feature; not needed to prove the core idea | Post-MVP |
 
