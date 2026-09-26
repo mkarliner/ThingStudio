@@ -301,8 +301,65 @@ def test_triggers_cleared_on_cancel_running():
     runtime.fire_trigger("1")
 
 
+
+def test_shared_builds_once_per_key_and_fetches_by_key():
+    _reset_runtime()
+    runtime._singletons.clear()
+    built = []
+
+    def make(tag):
+        def factory():
+            built.append(tag)
+            return object()
+        return factory
+
+    a = runtime.shared("i2c", 0, (22, 21, 100000), make("a"))
+    b = runtime.shared("i2c", 0, (22, 21, 100000), make("b"))
+    c = runtime.shared("i2c", 1, (5, 4, 100000), make("c"))
+    assert a is b and a is not c
+    assert built == ["a", "c"]
+    assert runtime.shared("i2c", 0) is a  # fetch only, as a function node would
+
+
+def test_shared_rejects_a_different_setup_for_the_same_key():
+    _reset_runtime()
+    runtime._singletons.clear()
+    runtime.shared("i2c", 0, (22, 21, 100000), lambda: object())
+    try:
+        runtime.shared("i2c", 0, (5, 4, 100000), lambda: object())
+        assert False, "expected ValueError"
+    except ValueError as e:
+        assert "i2c 0 is already set up" in str(e), e
+
+
+def test_shared_fetch_of_missing_key_names_it():
+    _reset_runtime()
+    runtime._singletons.clear()
+    try:
+        runtime.shared("i2c", 3)
+        assert False, "expected KeyError"
+    except KeyError as e:
+        assert "no i2c 3 in this flow" in str(e), e
+
+
+def test_shared_cleared_on_cancel_running():
+    _reset_runtime()
+    runtime.shared("i2c", 0, (22, 21, 100000), lambda: object())
+
+    async def scenario():
+        await runtime.cancel_running()
+
+    asyncio.run(scenario())
+    # A redeploy with different pins builds a new bus instead of failing.
+    runtime.shared("i2c", 0, (5, 4, 100000), lambda: object())
+
+
 minitest.run(
     [
+        test_shared_builds_once_per_key_and_fetches_by_key,
+        test_shared_rejects_a_different_setup_for_the_same_key,
+        test_shared_fetch_of_missing_key_names_it,
+        test_shared_cleared_on_cancel_running,
         test_fire_trigger_sets_the_registered_event,
         test_fire_trigger_on_unknown_node_id_is_a_no_op,
         test_register_trigger_overwrites_a_previous_registration_for_the_same_id,

@@ -158,7 +158,7 @@ def test_hello_sent_on_boot():
             line = listener.wait_for(lambda l: l.startswith(F64_PREFIX), description="a HELLO frame")
             msg = _decode_f64_line(line)
             assert msg["type"] == "HELLO"
-            assert msg["runtimeVersion"] == {"major": 5, "minor": 1, "patch": 0}
+            assert msg["runtimeVersion"] == {"major": 6, "minor": 0, "patch": 0}
             assert isinstance(msg["freeRamBytes"], int) and msg["freeRamBytes"] > 0
             assert msg["freeIdfHeapBytes"] is None and msg["largestIdfHeapBlockBytes"] is None  # not an ESP32
             # WiFi transport fields (2026-09-24): fresh board -> generated hostname, no password.
@@ -341,7 +341,7 @@ def test_hello_request_resends_hello_no_side_effects():
             reply_line = listener.wait_for(lambda l: l.startswith(F64_PREFIX), description="HELLO_REQUEST's HELLO reply")
             msg = _decode_f64_line(reply_line)
             assert msg["type"] == "HELLO"
-            assert msg["runtimeVersion"] == {"major": 5, "minor": 1, "patch": 0}
+            assert msg["runtimeVersion"] == {"major": 6, "minor": 0, "patch": 0}
 
             # No side effects: a normal DEPLOY still works fine afterward.
             bytecode = _compile_flow(

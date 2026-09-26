@@ -260,6 +260,34 @@ def report_status(node_id, state, text=None):
             print("NODE_STATUS report callback failed: %r" % (e,))
 
 
+# Keyed singletons (2026-09-26, Mike: Peter Hinch's functor_singleton pattern,
+# https://github.com/peterhinch/micropython-samples/blob/master/functor_singleton/README.md, keyed).
+# The first caller for a (kind, key) builds the real object; every later caller gets that same object.
+# Generated code uses it for hardware shared between nodes (an I2C bus: editor/src/node-library/
+# i2c-shared.ts), and a function or custom node can fetch the same object by key:
+#     i2c = runtime.shared('i2c', 0)
+# Differences from Hinch's version, both for fault legibility rather than silent surprises:
+#   - `signature` describes how the object was built (pins, clock). A later call with a different
+#     signature raises ValueError naming both, instead of quietly returning an object set up differently.
+#   - Cleared on every redeploy (cancel_running), so a new flow with new pins builds a new object.
+_singletons = {}  # (kind, key) -> (signature, object)
+
+
+def shared(kind, key, signature=None, factory=None):
+    """Returns the one object for (kind, key), building it with factory() on first use. With no factory,
+    only fetches: raises KeyError naming what's missing if nothing has built it yet."""
+    entry = _singletons.get((kind, key))
+    if entry is not None:
+        if factory is not None and entry[0] != signature:
+            raise ValueError("%s %s is already set up as %r, not %r" % (kind, key, entry[0], signature))
+        return entry[1]
+    if factory is None:
+        raise KeyError("no %s %s in this flow" % (kind, key))
+    obj = factory()
+    _singletons[(kind, key)] = (signature, obj)
+    return obj
+
+
 async def cancel_running():
     global _tasks
     for t in _tasks:
@@ -269,6 +297,7 @@ async def cancel_running():
             pass
     _tasks = []
     _triggers.clear()
+    _singletons.clear()
     await asyncio.sleep_ms(10)
     # Cleanups run AFTER the grace period above, not before -- closing a
     # socket out from under a task that's still mid-recvfrom()/sendto() on

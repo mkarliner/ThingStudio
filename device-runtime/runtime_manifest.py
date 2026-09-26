@@ -39,4 +39,5 @@ VENDOR_FILES: list[tuple[str, str]] = [
     ("primitives_events/delay_ms.py", "delay_ms.py"),
     ("st7789py_mpy/st7789py.py", "st7789py.py"),
     ("ssd1306/ssd1306.py", "ssd1306.py"),
+    ("bme280/bme280_float.py", "bme280_float.py"),
 ]
