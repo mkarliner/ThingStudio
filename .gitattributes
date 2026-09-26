@@ -1,0 +1,4 @@
+# The bundle launchers must keep their line endings whatever the checkout platform: cmd.exe needs CRLF,
+# and a CRLF shebang line breaks the sh launcher on macOS/Linux.
+packaging/launcher/thingstudio.cmd text eol=crlf
+packaging/launcher/thingstudio text eol=lf

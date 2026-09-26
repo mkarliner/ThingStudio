@@ -18,3 +18,7 @@
   Changed from the brief's "`_assets/` first, then repo": that order would silently serve a stale `_assets/`
   copy over a rebuilt `editor/dist`. `tools/build_assets.py` refuses stale builds and stamps the runtime SHA.
   `packaging-install-routes-briefing.md`, "Step 1 as built".
+- **2026-09-26 — Bundles built per platform on native runners; releases are drafts; deps and Python pinned.**
+  Tag `v*` or manual run; a tag must match `backend/pyproject.toml`. `.tar.gz` on macOS/Linux, `.zip` on
+  Windows. Python archive hash-pinned, deps pinned in `packaging/constraints.txt`, wheels only, glibc floor 2.28.
+  `packaging-install-routes-briefing.md`, "Step 2 as built".

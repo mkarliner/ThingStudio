@@ -138,7 +138,8 @@ mDNS lands with or after posture-2; `outstanding-items/posture-2-auth.md` carrie
 ## Order of work
 
 1. ~~Assets inside the Python package (small, lands alone).~~ Done 2026-09-26 (below).
-2. A relocatable folder per platform in CI; a zip that works on Mike's Mac.
+2. ~~A relocatable folder per platform in CI~~ Built 2026-09-26, not yet run on GitHub (below). Next: a first
+   workflow run, then try the macOS arm64 archive on Mike's Mac.
 3. Fresh Linux VM, then `curl | sh`, then Windows and the PowerShell one-liner.
 4. `thingstudio` command name + alias, first-run checks.
 5. Service recipes and `thingstudio service` helper.
@@ -165,6 +166,34 @@ mDNS lands with or after posture-2; `outstanding-items/posture-2-auth.md` carrie
   repo (130 asset files) installed into a clean venv, run from outside the repo, served `/`, `/docs/`,
   `/api/runtime-sources` and `/api/definitions`, seeded definitions into a fresh data dir, and stamped the
   runtime SHA. With `_assets/` removed, the startup error and page read as intended.
+
+## Step 2 as built (2026-09-26)
+
+- `tools/make_bundle.py` (stdlib, Python 3.10+) builds `thingstudio-<version>-<platform>/`: python-build-standalone
+  CPython 3.12.14 (release `20260901`, `install_only_stripped`), the backend installed into it, a launcher,
+  `README.txt`, `LICENSE`, `BUILD.txt`. Archived as `.tar.gz` on macOS/Linux (keeps symlinks and the executable
+  bit), `.zip` on Windows. Must run on the target platform, so pip picks matching compiled wheels.
+- Fails, with the fix, on: a Python archive whose SHA-256 doesn't match `packaging/python-build-standalone.sha256`;
+  `_assets/` not filled; a dependency with no wheel (`--only-binary=:all:`, no compiling on the CI machine); a
+  Linux wheel needing glibc newer than 2.28. Dependency versions pinned in `packaging/constraints.txt`, so two
+  builds of one tag ship the same code.
+- Launchers (`packaging/launcher/`): `thingstudio` (sh; follows symlinks, so the installer can link it onto
+  PATH) and `thingstudio.cmd`. Both run `python -I -m thingstudio_backend`; `-I` keeps the user's
+  `PYTHONPATH`/`PYTHONHOME` and user site-packages out. pip's own `thingstudio-backend` script is deleted from the
+  bundle: it hard-codes the build machine's path. `.gitattributes` pins their line endings. Known wart:
+  Ctrl-C in `thingstudio.cmd` asks "Terminate batch job (Y/N)?"; a signed `.exe` launcher can replace it later.
+- `tools/smoke_test_bundle.py` unpacks the archive into a new folder whose path has a space, starts it, and checks
+  `/api/alive`, `/`, `/docs/`, `/api/runtime-sources`, `/api/definitions`, definitions seeded, "packaged layout"
+  and no `NODE_ERROR` in the log, and the runtime build stamp. On macOS/Linux it repeats all of it through a symlink.
+- `.github/workflows/release.yml`: on a `v*` tag (must equal `backend/pyproject.toml`'s version) or "Run workflow".
+  One job builds the editor, docs and `_assets/`; five jobs bundle and smoke-test on their own runner
+  (`macos-15`, `macos-15-intel`, `ubuntu-24.04`, `ubuntu-24.04-arm`, `windows-2025`); on a tag, a last job makes
+  a **draft** GitHub Release with the archives and `SHA256SUMS`. Publishing the draft is manual.
+- Verified here: linux-x86_64 built from the real repo (42 MB) and passed the full smoke test; tampered Python
+  archive refused; glibc check rejects a 2.34-only wheel. Linux bundle needs glibc 2.17+ (every compiled wheel is
+  multi-tagged). The other four platforms are untested until the workflow runs.
+- Runner caveats: `macos-15-intel` is GitHub's last Intel macOS image, so macOS x86_64 builds have a shelf life;
+  `ubuntu-24.04-arm` is free for public repos.
 
 ## Out of scope
 

@@ -208,6 +208,30 @@ discipline as the editor's npm-install workaround (`CLAUDE.md`) -- the actual `p
 venv under `backend/` is Mike's own step, run from a real Terminal, for the same shared-mount/cross-platform-
 binary reason (`aiohttp` ships platform-specific compiled wheels, same hazard class as npm's native bindings).
 
+## Bundled in the release archives (MVP item 7)
+
+Since 2026-09-26 every release archive (`tools/make_bundle.py`, `.github/workflows/release.yml`) carries its own
+Python and the backend's full dependency tree, so all of these are redistributed, not just used at build time.
+Versions are pinned in `packaging/constraints.txt` (dependencies) and `tools/make_bundle.py` +
+`packaging/python-build-standalone.sha256` (Python). Versions and licenses below are from the installed packages'
+own metadata in a bundle built 2026-09-26 (linux-x86_64), not from memory. Change a pin there and here together.
+
+| Component | Version | License | Notes |
+|---|---|---|---|
+| CPython (python-build-standalone, Astral) | 3.12.14, release `20260901`, `install_only_stripped` | PSF-2.0 (CPython); the build's bundled libraries (OpenSSL, SQLite, libffi, zlib, etc.) under their own licenses | Relocatable CPython per platform; each archive checked against a pinned SHA-256. License texts ship inside `python/` (e.g. `python/lib/python3.12/LICENSE.txt`). |
+| aiohttp | 3.14.3 | Apache-2.0 AND MIT | Already listed under Backend; now redistributed. |
+| pyserial | 3.5 | BSD-3-Clause | Already listed under Backend; now redistributed. |
+| aiohappyeyeballs | 2.7.1 | PSF-2.0 | aiohttp dependency. |
+| aiosignal | 1.4.0 | Apache-2.0 | aiohttp dependency. |
+| attrs | 26.1.0 | MIT | aiohttp dependency. |
+| frozenlist | 1.8.0 | Apache-2.0 | aiohttp dependency (compiled wheel). |
+| idna | 3.20 | BSD-3-Clause | yarl dependency. |
+| multidict | 6.9.1 | Apache-2.0 | aiohttp dependency (compiled wheel). |
+| propcache | 0.5.4 | Apache-2.0 | yarl dependency (compiled wheel). |
+| typing_extensions | 4.16.0 | PSF-2.0 | multidict/aiosignal dependency. |
+| yarl | 1.25.1 | Apache-2.0 | aiohttp dependency (compiled wheel). |
+| pip | 26.2.1 | MIT | Comes with python-build-standalone; not used at run time. |
+
 ## Documentation build tooling (pip)
 
 Builds the user docs (`mkdocs.yml`, `docs/user-guide/`) into `site/`. Since 2026-09-23 the built site also ships

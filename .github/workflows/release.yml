@@ -1,0 +1,120 @@
+name: Release
+
+# Builds the self-contained Thingstudio bundles (MVP item 7, step 2): one folder per platform with its own
+# Python, archived as .tar.gz (macOS/Linux) or .zip (Windows). Details: tools/make_bundle.py and
+# docs/working-notes/packaging-install-routes-briefing.md.
+#
+# Push a tag vX.Y.Z (matching backend/pyproject.toml's version) -> build, smoke-test every bundle on its
+# own platform, and create a DRAFT GitHub Release with the archives and SHA256SUMS. Publishing the draft
+# is a manual step, so nothing reaches users without a look first.
+# "Run workflow" (workflow_dispatch) -> the same build and smoke tests, archives left as run artifacts, no
+# release. Use it to test a change to the packaging without cutting a version.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  assets:
+    name: build editor, docs and assets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # build_assets.py and vite.config.ts stamp the last commit touching device-runtime/src
+      - name: Tag matches backend version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          version=$(sed -n 's/^version *= *"\(.*\)"/\1/p' backend/pyproject.toml | head -1)
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::tag $GITHUB_REF_NAME doesn't match backend/pyproject.toml version $version. Bump the version, commit, and tag v$version."
+            exit 1
+          fi
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: editor/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build editor
+        working-directory: editor
+        run: |
+          npm ci --ignore-scripts
+          npm run build
+      - name: Build docs
+        run: |
+          pip install -r docs/requirements.txt
+          NO_MKDOCS_2_WARNING=1 mkdocs build
+      - name: Copy assets into the backend package
+        run: python tools/build_assets.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: assets
+          path: backend/src/thingstudio_backend/_assets
+          if-no-files-found: error
+          retention-days: 7
+
+  bundle:
+    name: bundle ${{ matrix.platform }}
+    needs: assets
+    strategy:
+      fail-fast: false # one platform failing shouldn't hide the others' results
+      matrix:
+        include:
+          - { platform: macos-arm64, runner: macos-15 }
+          - { platform: macos-x86_64, runner: macos-15-intel }
+          - { platform: linux-x86_64, runner: ubuntu-24.04 }
+          - { platform: linux-aarch64, runner: ubuntu-24.04-arm }
+          - { platform: windows-x86_64, runner: windows-2025 }
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@v4
+        with:
+          name: assets
+          path: backend/src/thingstudio_backend/_assets
+      - name: Build bundle
+        run: python tools/make_bundle.py --platform ${{ matrix.platform }} --out dist
+      - name: Smoke test
+        shell: bash
+        run: python tools/smoke_test_bundle.py dist/thingstudio-*-${{ matrix.platform }}.*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bundle-${{ matrix.platform }}
+          path: |
+            dist/thingstudio-*.tar.gz
+            dist/thingstudio-*.zip
+          if-no-files-found: error
+          compression-level: 0 # already compressed
+
+  release:
+    name: draft GitHub release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: bundle
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: bundle-*
+          path: dist
+          merge-multiple: true
+      - name: Checksums
+        working-directory: dist
+        run: sha256sum thingstudio-* > SHA256SUMS && cat SHA256SUMS
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --repo "$GITHUB_REPOSITORY" --draft --title "Thingstudio $GITHUB_REF_NAME" --generate-notes

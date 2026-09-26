@@ -193,4 +193,5 @@ board-level hostname, UDP probe for the board list; built 2026-09-24, runtime 3.
 
 Public repo + GitHub Releases, relocatable python-build-standalone folder per platform, macOS signed, CLI
 `thingstudio`, launchd/systemd recipes; mDNS/remote backend deferred to posture-2 (2026-09-26); packaged
-assets built, dev checkout wins over `_assets/`. 8 entries: `docs/working-notes/decisions/packaging.md`.
+assets built, dev checkout wins over `_assets/`; bundles on native runners, draft releases. 9 entries:
+`docs/working-notes/decisions/packaging.md`.
