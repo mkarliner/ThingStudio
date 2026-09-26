@@ -208,6 +208,53 @@
         </label>
       </template>
 
+      <template v-else-if="node.kind === 'bme280'">
+        <ConfigRefField
+          config-type="thingstudio/config/i2c-bus"
+          :model-value="node.properties.i2cConfigId || undefined"
+          @update:model-value="(id) => setConfigId('i2cConfigId', id)"
+        />
+        <label>address
+          <select v-model.number="node.properties.address" @change="touch">
+            <option :value="0x76">0x76 (SDO to GND, most boards)</option>
+            <option :value="0x77">0x77 (SDO to VCC)</option>
+          </select>
+        </label>
+        <label>interval (ms)
+          <input type="number" min="100" v-model.number="node.properties.intervalMs" @input="touch" />
+        </label>
+        <p class="hint">Sends {temperature °C, humidity %, pressure hPa} in msg.payload. A BMP280 works too; its
+          humidity is null. The status dot shows whether the sensor is answering.</p>
+      </template>
+
+      <template v-else-if="node.kind === 'i2c'">
+        <ConfigRefField
+          config-type="thingstudio/config/i2c-bus"
+          :model-value="node.properties.i2cConfigId || undefined"
+          @update:model-value="(id) => setConfigId('i2cConfigId', id)"
+        />
+        <label>operation
+          <select v-model="node.properties.operation" @change="touch">
+            <option value="read">read bytes</option>
+            <option value="write">write msg.payload</option>
+            <option value="scan">scan the bus</option>
+          </select>
+        </label>
+        <template v-if="node.properties.operation !== 'scan'">
+          <label>address
+            <input v-model="node.properties.address" placeholder="e.g. 0x29" @input="touch" />
+          </label>
+          <label>register
+            <input v-model="node.properties.register" placeholder="none" @input="touch" />
+          </label>
+        </template>
+        <label v-if="node.properties.operation === 'read'">length (bytes)
+          <input type="number" min="1" max="256" v-model.number="node.properties.length" @input="touch" />
+        </label>
+        <p class="hint">One transfer per incoming message. Read puts the bytes in msg.payload; scan puts the list of
+          addresses that answer. Hex (0x29) or decimal both work.</p>
+      </template>
+
       <template v-else-if="node.kind === 'filter'">
         <label>mode
           <select v-model="node.properties.mode" @change="touch">
@@ -430,20 +477,11 @@
             <option value="ssd1306">SSD1306</option>
           </select>
         </label>
-        <label>I2C bus
-          <input type="number" min="0" v-model.number="node.properties.i2cBus" @input="touch" />
-        </label>
-        <label>frequency (Hz)
-          <input type="number" min="1" v-model.number="node.properties.freq" @input="touch" />
-        </label>
-        <label>scl pin
-          <input type="number" min="0" :max="pinMax" v-model.number="node.properties.scl" @input="touch" />
-          <span v-if="pinInfo(node.properties.scl)" class="pin-hint" :class="{ bad: pinInfo(node.properties.scl)!.bad }" :title="pinInfo(node.properties.scl)!.title">{{ pinInfo(node.properties.scl)!.text }}</span>
-        </label>
-        <label>sda pin
-          <input type="number" min="0" :max="pinMax" v-model.number="node.properties.sda" @input="touch" />
-          <span v-if="pinInfo(node.properties.sda)" class="pin-hint" :class="{ bad: pinInfo(node.properties.sda)!.bad }" :title="pinInfo(node.properties.sda)!.title">{{ pinInfo(node.properties.sda)!.text }}</span>
-        </label>
+        <ConfigRefField
+          config-type="thingstudio/config/i2c-bus"
+          :model-value="node.properties.i2cConfigId || undefined"
+          @update:model-value="(id) => setConfigId('i2cConfigId', id)"
+        />
         <label>address
           <input type="number" min="0" max="127" v-model.number="node.properties.addr" @input="touch" />
         </label>
@@ -456,8 +494,8 @@
         <p class="hint">
           One input: msg.payload must already be a MONO_VLSB-encoded framebuf.FrameBuffer buffer, width *
           (height / 8) bytes -- build it upstream. Wrong-length input raises a NODE_ERROR rather than silently
-          corrupting the display's internal buffer indexing. Pins/address vary board to board -- set them from
-          your board's pinout.
+          corrupting the display's internal buffer indexing. The I2C bus holds the pins and clock, shared with
+          every other I2C node on the same bus.
         </p>
       </template>
 
@@ -758,6 +796,13 @@ function setWifiConfigId(id: string): void {
 // this change doesn't touch the already-working wifi_status/udp_send/
 // udp_receive bindings for symmetry alone (CLAUDE.md's cheapest-correct-
 // change principle).
+/** Points the selected node at a config (e.g. its I2C bus). */
+function setConfigId(key: string, id: string): void {
+  if (!node.value) return;
+  (node.value.properties as Record<string, unknown>)[key] = id;
+  touch();
+}
+
 function setBrokerConfigId(id: string): void {
   if (!node.value) return;
   (node.value.properties as Record<string, unknown>).brokerConfigId = id;

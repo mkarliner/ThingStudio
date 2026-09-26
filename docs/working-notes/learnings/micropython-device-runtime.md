@@ -220,3 +220,10 @@ button gave `power_on`, not `hard_reset`. On ESP32-family chips the button drive
 ESP-IDF sees a power-on reset and MicroPython's `machine.reset_cause()` returns `PWRON_RESET`. Nothing to fix;
 the user guide's startup page says so. `hard_reset` is only reported by ports that have a separate reset pin.
 
+## Sensor drivers often block the event loop while they wait, 2026-09-26
+
+robert-hh's BME280 driver (a common MicroPython choice) waits for each conversion with `time.sleep_ms()` in a
+loop -- about 60 ms at its default 8x oversampling, during which every other asyncio task on the board (the
+listener, WiFi transport, other nodes) is stalled. Most community sensor drivers are written for a plain script,
+not an asyncio flow. Check any driver before vendoring it for a blocking wait, and add an async path (see
+`device-runtime/src/vendor/bme280/README.md`, local patch 2) rather than calling the blocking method from a node.

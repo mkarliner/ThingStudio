@@ -50,7 +50,7 @@
 // to catch before it does, not after.
 
 import { CompileError } from "../compiler/errors.js";
-import { checkI2c, checkPin } from "../definitions/pin-check.js";
+import { i2cBusFromPins, resolveI2cBus } from "./i2c-shared.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, NodeDefinition, SinkCodegenResult } from "../compiler/node-definition.js";
 
@@ -69,17 +69,20 @@ export const displayI2cNode: NodeDefinition = {
       throw new CompileError(`display_i2c controller "${String(node.properties.controller)}" must be one of: ${CONTROLLERS.join(", ")}`);
     }
 
-    const i2cBus = Math.round(Number(node.properties.i2cBus ?? 0));
-    if (!Number.isFinite(i2cBus) || i2cBus < 0) {
-      throw new CompileError(`display_i2c i2cBus "${String(node.properties.i2cBus)}" must be a non-negative integer`);
-    }
-    const freq = Math.round(Number(node.properties.freq ?? 400000));
-    if (!Number.isFinite(freq) || freq <= 0) {
-      throw new CompileError(`display_i2c freq "${String(node.properties.freq)}" must be a positive number`);
-    }
-    const scl = checkPin(ctx, "display_i2c scl pin", node.properties.scl, "bidirectional");
-    const sda = checkPin(ctx, "display_i2c sda pin", node.properties.sda, "bidirectional");
-    checkI2c(ctx, "display_i2c", i2cBus, { scl, sda });
+    // The bus comes from a shared I2C bus config (i2c-shared.ts, 2026-09-26). A flow saved before that has
+    // i2cBus/scl/sda/freq on the node itself; those still compile, onto the same shared bus object. The editor
+    // moves them into a config when it loads the flow (flow-file's migrateI2cBusConfigs).
+    const bus =
+      typeof node.properties.i2cConfigId === "string" && node.properties.i2cConfigId !== ""
+        ? resolveI2cBus(ctx, "display_i2c", node.properties.i2cConfigId)
+        : node.properties.scl !== undefined || node.properties.sda !== undefined
+          ? i2cBusFromPins(ctx, {
+              bus: node.properties.i2cBus ?? 0,
+              scl: node.properties.scl,
+              sda: node.properties.sda,
+              freq: node.properties.freq ?? 400000,
+            })
+          : resolveI2cBus(ctx, "display_i2c", node.properties.i2cConfigId);
 
     const addr = Math.round(Number(node.properties.addr ?? 0x3c));
     if (!Number.isFinite(addr) || addr < 0 || addr > 0x7f) {
@@ -93,22 +96,13 @@ export const displayI2cNode: NodeDefinition = {
     }
 
     const base = ctx.uniqueName("display_i2c");
-    const i2cVar = `${base}_i2c`;
     const dispVar = `${base}_disp`;
 
     const expectedBytes = width * (height / 8); // MONO_VLSB
 
     return {
       imports: ["import machine", "from ssd1306 import SSD1306_I2C"],
-      statements: [
-        {
-          key: base,
-          code: [
-            `${i2cVar} = machine.I2C(${i2cBus}, scl=machine.Pin(${scl}), sda=machine.Pin(${sda}), freq=${freq})`,
-            `${dispVar} = SSD1306_I2C(${width}, ${height}, ${i2cVar}, addr=${addr})`,
-          ].join("\n"),
-        },
-      ],
+      statements: [bus.statement, { key: base, code: `${dispVar} = SSD1306_I2C(${width}, ${height}, ${bus.varName}, addr=${addr})` }],
       functionName: ctx.uniqueName("display_i2c_sink"),
       functionBody: [
         `_buf = msg.get('payload', b'')`,

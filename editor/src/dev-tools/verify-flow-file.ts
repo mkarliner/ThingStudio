@@ -76,6 +76,8 @@ const KNOWN_KINDS = new Set([
   "mqtt_subscribe",
   "delay",
   "filter",
+  "bme280",
+  "i2c",
 ]);
 
 const path = process.argv[2];

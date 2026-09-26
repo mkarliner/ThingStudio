@@ -63,6 +63,28 @@ A flow that crashes the board as it starts would crash it again on every restart
 
 The flow on your canvas isn't affected.
 
+## I2C device not answering
+
+A sensor node's status dot shows **disconnected**, "no reply at 0x76", when nothing answers at its address.
+Scan the bus to see what is there. Type these two lines in the command box, one at a time, with your bus
+and pins:
+
+```python
+i2c = machine.I2C(0, scl=machine.Pin(5), sda=machine.Pin(4))
+[hex(a) for a in i2c.scan()]
+```
+
+An `i2c` node set to **scan** does the same from a flow.
+
+An empty list means nothing answered. Check, in this order:
+
+- The pin numbers. On a Pico, GP4 and GP5 are physical pins 6 and 7.
+- SDA and SCL swapped.
+- Power (3.3 V) and ground to the device.
+- Solder joints on the header pins.
+
+A different address from the one set on the node means the address is wrong, not the wiring.
+
 ## Reading a node error
 
 When a node raises an exception on the device, the board reports which node and what went wrong. Every network node (`udp_send`, `udp_receive`, `http_request`, `mqtt_publish`, `mqtt_subscribe`) follows the same convention for its own errors: the operation and the host/port it was talking to are named directly in the message, not left for you to guess from a bare exception. If you see a raw, unattributed error with no context from a network node, that's worth reporting — every network node in this project is meant to wrap its own errors before they reach you.

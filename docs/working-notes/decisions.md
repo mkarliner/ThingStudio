@@ -48,7 +48,7 @@ The Rete migration's shape (adapter over `compiler/graph.ts`, hand-rolled palett
 
 ## Config nodes / Tier 1 scope
 
-The Tier 1 node-type triage (interrupt/pin-change, filter/event-compression, four UDP/TCP nodes in; ADC/file-ops/boolean-arithmetic-comparator rejected as node types); config nodes built as Node-RED's per-flow referenced-by-ID pattern, not per-device override; `wifiConfigId`'s optional-then-mandatory history; `mqtt_publish`/`mqtt_subscribe`'s migration to config nodes plus first real canvas presence; the separate `mqtt-broker` config type for broker-level auth; WiFi/MQTT-broker config nodes moving to a name-keyed backend credential store instead of holding secrets themselves; the WiFi config becoming a singleton (every WiFi node's field edits the one instance, wifi_status optional); the `filter` node built (2026-09-26). 9 entries: `docs/working-notes/decisions/config-nodes-tier1-scope.md`.
+The Tier 1 node-type triage (interrupt/pin-change, filter/event-compression, four UDP/TCP nodes in; ADC/file-ops/boolean-arithmetic-comparator rejected as node types); config nodes built as Node-RED's per-flow referenced-by-ID pattern, not per-device override; `wifiConfigId`'s optional-then-mandatory history; `mqtt_publish`/`mqtt_subscribe`'s migration to config nodes plus first real canvas presence; the separate `mqtt-broker` config type for broker-level auth; WiFi/MQTT-broker config nodes moving to a name-keyed backend credential store instead of holding secrets themselves; the WiFi config becoming a singleton (every WiFi node's field edits the one instance, wifi_status optional); the `filter` node built (2026-09-26); I2C bus as a keyed singleton config, and `runtime.shared()` on the device (2026-09-26). 11 entries: `docs/working-notes/decisions/config-nodes-tier1-scope.md`.
 
 ## Redeploy / network fault handling
 
@@ -74,7 +74,7 @@ Xtensa, closing gs4 out end to end; then `gs2`/`mono` (the two remaining decided
 built the same day, including a real MicroPython-source-confirmed finding that gs4's bit order doesn't
 generalize to gs2/mono (they're the opposite of gs4, and of each other's similarly-named `MONO_HLSB`
 sibling) -- and, later the same day, both confirmed working on real CYD hardware too, closing out all
-three indexed depths end to end. `startup` node start reason (2026-09-25). 15 entries: `docs/working-notes/decisions/node-authoring.md`.
+three indexed depths end to end. `startup` node start reason (2026-09-25); `bme280` and generic `i2c` nodes (2026-09-26). 17 entries: `docs/working-notes/decisions/node-authoring.md`.
 
 ## GUI layout / widget system
 

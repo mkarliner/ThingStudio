@@ -151,6 +151,16 @@ export function createConfig(type: string, properties: Record<string, unknown>):
       return existing.id;
     }
   }
+  // Keyed singleton (config-types.ts's `keyField`, e.g. I2C bus): one config per key value.
+  const keyField = CONFIG_TYPES[type]?.keyField;
+  if (keyField !== undefined) {
+    const existing = listConfigsOfType(type).find((c) => Number(c.properties[keyField]) === Number(properties[keyField]));
+    if (existing) {
+      existing.properties = { ...existing.properties, ...properties };
+      bumpConfigsVersion();
+      return existing.id;
+    }
+  }
   const id = crypto.randomUUID();
   configs.value.set(id, { id, type, properties });
   bumpConfigsVersion();
@@ -164,6 +174,15 @@ export function createConfig(type: string, properties: Record<string, unknown>):
  * loudly on (CLAUDE.md's fault-handling priority), same reasoning
  * nodes.ts's portSocket() and graph-adapter.ts's socketIndex() already
  * apply to their own analogous "key not found" cases. */
+/** Lowest whole number not yet used as `keyField` by a config of this type -- the key a new keyed-singleton
+ * config starts on (ConfigRefField's "+"). */
+export function nextFreeKey(type: string, keyField: string): number {
+  const used = new Set(listConfigsOfType(type).map((c) => Number(c.properties[keyField])));
+  let k = 0;
+  while (used.has(k)) k++;
+  return k;
+}
+
 export function updateConfig(id: string, properties: Record<string, unknown>): void {
   const existing = configs.value.get(id);
   if (!existing) throw new Error(`store.ts: updateConfig() called with unknown config id "${id}"`);

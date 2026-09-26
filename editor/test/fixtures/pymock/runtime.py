@@ -132,6 +132,23 @@ def _report_error(node_id, exc):
     print("NODE_ERROR node=%s type=%s msg=%s" % (node_id, type(exc).__name__, str(exc)))
 
 
+# shared() added 2026-09-26 -- same keyed singleton as device-runtime/src/runtime.py's.
+_singletons = {}
+
+
+def shared(kind, key, signature=None, factory=None):
+    entry = _singletons.get((kind, key))
+    if entry is not None:
+        if factory is not None and entry[0] != signature:
+            raise ValueError("%s %s is already set up as %r, not %r" % (kind, key, entry[0], signature))
+        return entry[1]
+    if factory is None:
+        raise KeyError("no %s %s in this flow" % (kind, key))
+    obj = factory()
+    _singletons[(kind, key)] = (signature, obj)
+    return obj
+
+
 async def _guarded(coro, fallback_node_id):
     try:
         await coro

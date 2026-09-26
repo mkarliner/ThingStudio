@@ -119,6 +119,11 @@ export interface ConfigTypeDescriptor {
    * the existing instance, updated, instead of adding a second -- so every node that asks gets the same one
    * and nothing else needs to know. */
   singleton?: boolean;
+  /** Keyed singleton (2026-09-26, I2C bus): at most one config per value of this field. store.ts's
+   * createConfig() hands back the existing config with the same key, and ConfigRefField's "+" starts a new
+   * one on the lowest unused key. Two configs made to share a key by editing are a compile error in the
+   * nodes that use them (i2c-shared.ts). Values are compared as numbers. */
+  keyField?: string;
 }
 
 export const CONFIG_TYPES: Record<string, ConfigTypeDescriptor> = {
@@ -161,6 +166,24 @@ export const CONFIG_TYPES: Record<string, ConfigTypeDescriptor> = {
     // design doc) already makes it a human-chosen nickname for a real
     // network ("home-wifi"), so there's no separate SSID to show anymore.
     summarize: (properties) => (typeof properties.credentialName === "string" ? properties.credentialName : ""),
+  },
+  // I2C bus (2026-09-26): pins and clock, set once per bus and shared by every I2C node on it
+  // (node-library/i2c-shared.ts). Keyed by bus number.
+  "thingstudio/config/i2c-bus": {
+    type: "thingstudio/config/i2c-bus",
+    label: "I2C bus",
+    keyField: "bus",
+    fields: [
+      { name: "bus", label: "bus", kind: "number" },
+      { name: "scl", label: "scl pin", kind: "number" },
+      { name: "sda", label: "sda pin", kind: "number" },
+      { name: "freq", label: "frequency (Hz)", kind: "number", help: "100000 suits most sensors; 400000 for displays that can take it." },
+    ],
+    defaults: { bus: 0, scl: null, sda: null, freq: 100000 },
+    summarize: (p) => {
+      const pins = p.scl !== null && p.scl !== undefined && p.sda !== null && p.sda !== undefined ? `SCL ${String(p.scl)}, SDA ${String(p.sda)}` : "pins not set";
+      return `bus ${String(p.bus ?? 0)}: ${pins}`;
+    },
   },
   "thingstudio/config/mqtt-broker": {
     type: "thingstudio/config/mqtt-broker",

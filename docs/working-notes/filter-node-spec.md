@@ -35,3 +35,7 @@ Properties: `mode`, `threshold` (>= 0, default 1), `intervalMs` (positive intege
 
 Percentage deadband, direction, Node-RED's narrowband, filtering on a property other than `payload`, and a
 rate mode that sends the last dropped value when the window ends (needs a task per node).
+
+**2026-09-26, Mike: no field option.** Filtering on one field of a dict payload (e.g. a bme280's temperature) stays
+a small `function` node before the filter -- "there are other use cases where other msg processing needs to be
+done." Don't add a `field` property.

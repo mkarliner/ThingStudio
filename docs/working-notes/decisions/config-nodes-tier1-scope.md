@@ -99,4 +99,18 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
 - **2026-09-26 — `filter` node built** (`filter-node-spec.md`): modes `change`, `deadband` (vs last passed value,
   abs, numeric strings parsed), `rate` (drop, don't queue); per topic by default, 32-topic cap. Rate limiting
   kept in `filter` per this file's Tier 1 decision rather than moved to `delay` as in Node-RED.
-
+- **2026-09-26 — I2C bus as a keyed singleton config** (Mike: "I'd make an i2c bus a keyed singleton").
+  `thingstudio/config/i2c-bus` holds bus number, pins and clock; at most one per bus number
+  (`config-types.ts`'s new `keyField`; `store.ts`'s `createConfig()` returns the existing one, "+" starts on the
+  next free bus). Every I2C node references it by `i2cConfigId`, and the compiled flow makes one `machine.I2C` per
+  bus. Two in-use configs made to share a bus number by editing are a compile error. `display_i2c` moved onto
+  it; a flow with the old per-node pins migrates on load, and still compiles as-is. Presets no longer save or
+  apply `...ConfigId` properties, which only mean something inside one flow.
+- **2026-09-26 — device-side keyed singleton, `runtime.shared()`** (Mike pointed at Peter Hinch's
+  [functor_singleton](https://github.com/peterhinch/micropython-samples/blob/master/functor_singleton/README.md)
+  for what "singleton" means here). `runtime.shared(kind, key, signature, factory)`: the first caller for
+  `(kind, key)` builds the object, later callers get the same one; `runtime.shared(kind, key)` only fetches (for
+  function/custom nodes). Two changes from Hinch's version, both for legible failure: a later call with a
+  different `signature` (pins, clock) raises `ValueError` instead of silently returning an object built
+  differently, and the table is cleared in `cancel_running()`, so a redeploy with new pins builds afresh. The I2C
+  bus setup statement uses it. Part of runtime 6.0.0 (not yet on any board when added).

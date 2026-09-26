@@ -103,7 +103,9 @@ export type NodeKind =
   | "mqtt_publish"
   | "mqtt_subscribe"
   | "delay"
-  | "filter";
+  | "filter"
+  | "bme280"
+  | "i2c";
 
 export const DEFAULT_NODE_GROUPS = ["general", "network", "hardware"] as const;
 
@@ -187,6 +189,10 @@ export const NODE_PALETTE: Record<NodeKind, KindStyle> = {
   // Slate-blue -- see this file's header for the icon reasoning.
   delay: { color: "#4a4a6e", bgcolor: "#2a2a3f", icon: "⌛", label: "delay", group: "general", priority: 40 },
   // filter added 2026-09-26: teal, "▽" (a funnel) -- it lets fewer messages through than arrive.
+  // bme280 added 2026-09-26: first I2C sensor. "hardware" group, brick red, "°" for temperature.
+  // i2c (generic) added 2026-09-26: same indigo family as display_i2c, "⇄" for a two-way transfer.
+  i2c: { color: "#2e3f8a", bgcolor: "#1f2a4a", icon: "⇄", label: "i2c", group: "hardware", priority: 45 },
+  bme280: { color: "#8a4a2e", bgcolor: "#4a2a1f", icon: "°", label: "bme280", group: "hardware", priority: 15 },
   filter: { color: "#2e6e4a", bgcolor: "#1f3f2c", icon: "▽", label: "filter", group: "general", priority: 35 },
   // Blue -- see this file's header for the icon reasoning.
   pwm_out: { color: "#1f5c8a", bgcolor: "#12334a", icon: "∿", label: "pwm out", group: "hardware", priority: 30 },

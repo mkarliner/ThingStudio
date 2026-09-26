@@ -167,6 +167,8 @@ import { httpInNode } from "../../node-library/http-in.js";
 import { httpResponseNode } from "../../node-library/http-response.js";
 import { delayNode } from "../../node-library/delay.js";
 import { filterNode, type FilterMode } from "../../node-library/filter.js";
+import { bme280Node } from "../../node-library/bme280.js";
+import { i2cGenericNode } from "../../node-library/i2c-generic.js";
 import { mqttPublishNode } from "../../node-library/mqtt-publish.js";
 import { mqttSubscribeNode } from "../../node-library/mqtt-subscribe.js";
 import { pwmOutNode } from "../../node-library/pwm-out.js";
@@ -456,6 +458,54 @@ export class FilterNode extends ClassicPreset.Node {
   }
 }
 
+// BME280/BMP280 sensor on a shared I2C bus (node-library/bme280.ts).
+export class Bme280Node extends ClassicPreset.Node {
+  width = 110;
+  height = NODE_HEIGHT;
+  kind = "bme280" as const;
+  nodeType = "thingstudio/bme280";
+  highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
+
+  properties: { i2cConfigId: string; address: number; intervalMs: number } = {
+    i2cConfigId: "",
+    address: 0x76,
+    intervalMs: 5000,
+  };
+
+  constructor() {
+    super("bme280");
+    this.addOutput("msg", new ClassicPreset.Output(portSocket(bme280Node.ports?.outputs, "msg", this.properties), "msg"));
+  }
+}
+
+// Generic I2C read/write/scan on a shared bus (node-library/i2c-generic.ts). address/register are text so hex
+// ("0x29") can be typed; the compiler parses them.
+export class I2cNode extends ClassicPreset.Node {
+  width = 90;
+  height = NODE_HEIGHT;
+  kind = "i2c" as const;
+  nodeType = "thingstudio/i2c";
+  highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
+
+  properties: { i2cConfigId: string; operation: "read" | "write" | "scan"; address: string; register: string; length: number } = {
+    i2cConfigId: "",
+    operation: "read",
+    address: "",
+    register: "",
+    length: 1,
+  };
+
+  constructor() {
+    super("i2c");
+    this.addInput("msg", new ClassicPreset.Input(portSocket(i2cGenericNode.ports?.inputs, "msg", this.properties), "msg", true));
+    this.addOutput("msg", new ClassicPreset.Output(portSocket(i2cGenericNode.ports?.outputs, "msg", this.properties), "msg"));
+  }
+}
+
 export class DebugNode extends ClassicPreset.Node {
   width = 84;
   height = NODE_HEIGHT;
@@ -726,21 +776,16 @@ export class DisplayI2cNode extends ClassicPreset.Node {
   status: NodeStatusState | null = null;
   statusText: string | null = null;
 
+  // Bus, pins and clock live in a shared I2C bus config (node-library/i2c-shared.ts, 2026-09-26).
   properties: {
     controller: "ssd1306";
-    i2cBus: number;
-    freq: number;
-    scl: number;
-    sda: number;
+    i2cConfigId: string;
     addr: number;
     width: number;
     height: number;
   } = {
     controller: "ssd1306",
-    i2cBus: 0,
-    freq: 400000,
-    scl: 22,
-    sda: 21,
+    i2cConfigId: "",
     addr: 0x3c,
     width: 128,
     height: 64,
@@ -1051,6 +1096,8 @@ export type AnyThingstudioNode =
   | MqttSubscribeNode
   | DelayNode
   | FilterNode
+  | Bme280Node
+  | I2cNode
   | CustomNode;
 
 // One constructor per palette kind, shared between the app-shell's
@@ -1088,4 +1135,6 @@ export const NODE_FACTORIES: Record<NodeKind, () => AnyThingstudioNode> = {
   mqtt_subscribe: () => new MqttSubscribeNode(),
   delay: () => new DelayNode(),
   filter: () => new FilterNode(),
+  bme280: () => new Bme280Node(),
+  i2c: () => new I2cNode(),
 };

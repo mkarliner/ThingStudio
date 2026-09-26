@@ -183,7 +183,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from "vue";
-import { backendWsUrl, configs, configsVersion, createConfig, getConfig, listConfigsOfType, updateConfig } from "./store";
+import { backendWsUrl, configs, configsVersion, createConfig, getConfig, listConfigsOfType, nextFreeKey, updateConfig } from "./store";
 import { CONFIG_TYPES } from "./config-types";
 import { CREDENTIAL_TYPES } from "./credential-types";
 import { AdminApiError, listCredentials, putCredential } from "../../flow-file/admin-api-client";
@@ -363,8 +363,11 @@ function addNew(): void {
   const credField = credentialField.value;
   if (!credField) {
     // No credential field on this config type -- nothing to combine into
-    // one form; fall back to the original create-then-edit behavior.
-    const id = createConfig(props.configType, { ...descriptor.value.defaults });
+    // one form; fall back to the original create-then-edit behavior. A keyed singleton (I2C bus) starts
+    // on the lowest unused key, so "+" makes a new bus rather than reopening bus 0.
+    const keyField = descriptor.value.keyField;
+    const seed = keyField ? { [keyField]: nextFreeKey(props.configType, keyField) } : {};
+    const id = createConfig(props.configType, { ...descriptor.value.defaults, ...seed });
     emit("update:modelValue", id);
     openEdit(id);
     return;

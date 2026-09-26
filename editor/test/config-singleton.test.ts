@@ -2,7 +2,7 @@
 // already exists hands back the existing instance, so every node asking for "a WiFi config" gets the same one.
 
 import { beforeEach, describe, expect, it } from "vitest";
-import { clearConfigs, createConfig, listConfigsOfType } from "../src/app/rete/store.js";
+import { clearConfigs, createConfig, listConfigsOfType, nextFreeKey } from "../src/app/rete/store.js";
 
 const WIFI = "thingstudio/config/wifi";
 const BROKER = "thingstudio/config/mqtt-broker";
@@ -38,5 +38,25 @@ describe("singleton config types", () => {
     const b = createConfig(BROKER, { credentialName: "two" });
     expect(b).not.toBe(a);
     expect(listConfigsOfType(BROKER)).toHaveLength(2);
+  });
+});
+
+describe("keyed singleton config types (I2C bus)", () => {
+  const I2C = "thingstudio/config/i2c-bus";
+
+  it("one config per bus number: the same bus hands back the existing one", () => {
+    const a = createConfig(I2C, { bus: 0, scl: 22, sda: 21 });
+    const b = createConfig(I2C, { bus: "0", scl: 5, sda: 4 });
+    const c = createConfig(I2C, { bus: 1, scl: 9, sda: 8 });
+    expect(b).toBe(a);
+    expect(c).not.toBe(a);
+    expect(listConfigsOfType(I2C)).toHaveLength(2);
+  });
+
+  it("nextFreeKey picks the lowest unused bus", () => {
+    expect(nextFreeKey(I2C, "bus")).toBe(0);
+    createConfig(I2C, { bus: 0 });
+    createConfig(I2C, { bus: 2 });
+    expect(nextFreeKey(I2C, "bus")).toBe(1);
   });
 });

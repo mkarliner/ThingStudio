@@ -79,4 +79,7 @@ nav:
           - pwm out: nodes/pwm-out.md
           - display spi: nodes/display-spi.md
           - display i2c: nodes/display-i2c.md
+          - bme280: nodes/bme280.md
+          - i2c: nodes/i2c.md
+          - I2C buses: nodes/i2c-bus.md
   - Writing custom nodes: custom-nodes.md

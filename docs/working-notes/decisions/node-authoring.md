@@ -587,3 +587,23 @@ this editor still runs on a 5.0.0 board -- hence runtime 5.1.0, a minor bump, no
 bump rule: nothing this codegen emits fails on the old runtime). Done now rather than later because the node
 shipped 2026-09-24: adding a field changes no existing flow. Detail left for later: ESP32's
 `machine.wake_reason()` (which pin or timer woke it) is not reported.
+
+## `bme280` node, 2026-09-26
+
+First I2C sensor node. A source with a dict payload `{temperature, humidity, pressure}` (Mike's call over one
+number chosen by a property); BMP280 accepted with humidity `None` (Mike: "both supported if easy"). Driver:
+vendored robert-hh `bme280_float.py` plus marked local patches -- chosen over writing our own because its
+compensation maths is the datasheet's and already checked against the datasheet's worked example in
+`device-runtime/test/test_bme280.py`; the patches add what it lacked (chip-id check, BMP280, an asyncio read).
+Fault handling: status dot, never raise out of the loop (`outstanding-items/i2c-spi-sensor-nodes.md`).
+Runtime 6.0.0: a flow using the node needs the driver on the board (Mike: "ok for the moment", pending
+lazy-loading part 2, pushing libraries with the flow).
+
+## Generic `i2c` node, 2026-09-26
+
+Mike's ask, for devices without a node of their own. A transform on the shared I2C bus: `read` (N bytes, optional
+8-bit register), `write` (msg.payload as bytes / list of 0-255 / one int, message passed on unchanged) or `scan`.
+Same fault handling as `bme280`: never raises (a raising transform ends its source's loop), status dot on failure,
+only on change. Board-to-board messaging over I2C was split off as a separate POST-MVP item (outstanding-items.md,
+"comms bus"); this node is controller-side only.
+

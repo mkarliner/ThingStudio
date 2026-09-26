@@ -76,6 +76,12 @@ import { computed, ref, watch } from "vue";
 import { backendWsUrl } from "./store";
 import { AdminApiError, listPresets, getPreset, putPreset, type PresetInfo } from "../../flow-file/admin-api-client";
 
+// Config references (e.g. i2cConfigId, 2026-09-26) point at a config inside one flow, so a preset neither
+// saves nor applies them -- the preset stays usable in any flow.
+function withoutConfigRefs(p: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(p).filter(([k]) => !k.endsWith("ConfigId")));
+}
+
 const props = defineProps<{
   /** Node kind this widget saves/loads presets for, e.g. "display_spi" --
    * the `{type}` path segment in the admin API's `/api/presets/{type}`
@@ -143,7 +149,7 @@ async function onSelect(name: string): Promise<void> {
     // doesn't have yet are added; keys the preset doesn't mention are left
     // untouched (a preset saved from a narrower/older version of this node
     // kind doesn't blow away fields it never knew about).
-    Object.assign(props.properties, data);
+    Object.assign(props.properties, withoutConfigRefs(data));
     selectedName.value = name;
     emit("applied");
   } catch (err) {
@@ -174,7 +180,7 @@ async function confirmSave(): Promise<void> {
     // A full snapshot of node.properties, as it stands right now -- not a
     // curated subset. See this file's header on why there's no field
     // descriptor deciding what belongs in a preset of this type.
-    await putPreset(backendWsUrl.value, props.presetType, name, { ...props.properties });
+    await putPreset(backendWsUrl.value, props.presetType, name, withoutConfigRefs(props.properties));
     await refresh();
     selectedName.value = name;
     showSavePanel.value = false;

@@ -141,6 +141,7 @@ import { explainBackendConnectError } from "./connect-error-help.js";
 import { isVerboseOnly } from "./console-filter.js";
 import { NATIVE_ARCH_OPTIONS, inferNativeArch } from "./native-arch.js";
 import { formatMemoryLine } from "./memory-report.js";
+import { migrateI2cBusConfigs } from "../node-library/i2c-shared.js";
 import { BUILTIN_DEFINITION_FILES } from "../definitions/builtin.js";
 import { buildDefinitionSet, userDefinitionFiles, type DefinitionSet } from "../definitions/definitions.js";
 import { choiceForConnectedBoard, resolveTarget, type TargetResolution } from "../definitions/target.js";
@@ -534,6 +535,14 @@ async function applyFlowFile(file: FlowFile): Promise<void> {
         `removed ${wifi.dropped.map(name).join(", ")}. Save the flow to keep this.`,
       "",
     );
+  }
+  // Shared I2C bus config (2026-09-26, i2c-shared.ts): an older display_i2c carries its own pins; move them
+  // into the flow's I2C bus config for that bus.
+  const i2c = migrateI2cBusConfigs(file.nodes, file.configs, () => crypto.randomUUID());
+  if (i2c.moved > 0) {
+    file = { ...file, nodes: i2c.nodes, configs: i2c.configs };
+    logLine(`[load] I2C pins now live in a shared "I2C bus" setting; moved ${i2c.moved} node(s) onto it. Save the flow to keep this.`, "");
+    for (const note of i2c.notes) logLine(`[load] ${note}`, "err");
   }
   replaceAllConfigs(file.configs.map((c) => ({ id: c.id, type: c.type, properties: c.properties })));
   // Credential storage (2026-09-13): resolve every WiFi/MQTT-broker
@@ -1180,7 +1189,7 @@ function waitForMessage(match: (m: Message) => boolean, timeoutMs: number): Prom
 // bump-discipline rule), so this is the level that actually stops an
 // unsafe DEPLOY rather than letting it crash on the device.
 // 2.0.0 (2026-09-23): EXEC, STOP_TO_PROMPT, safe mode. Must match listener.py's _RUNTIME_VERSION.
-const EDITOR_TARGET_VERSION: ProtocolVersion = { major: 5, minor: 1, patch: 0 }; // 5.1.0 2026-09-25: startup reason (getattr, so 5.0.0 still runs it), ESP-IDF heap fields; 5.0.0 2026-09-25: mqtt_as active(True) guard; 4.0.0 2026-09-25: mqtt_as guard, ESP32 MQTT joins WiFi first; 3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS
+const EDITOR_TARGET_VERSION: ProtocolVersion = { major: 6, minor: 0, patch: 0 }; // 6.0.0 2026-09-26: bme280 driver on the board; 5.1.0 2026-09-25: startup reason (getattr, so 5.0.0 still runs it), ESP-IDF heap fields; 5.0.0 2026-09-25: mqtt_as active(True) guard; 4.0.0 2026-09-25: mqtt_as guard, ESP32 MQTT joins WiFi first; 3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS
 
 // This editor's own device-runtime/src git SHA, injected at build/dev-
 // server-start time by vite.config.ts's `define` (see that file,
