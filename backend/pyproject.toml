@@ -25,6 +25,11 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+# The built editor, docs, device runtime and definitions, copied in by tools/build_assets.py
+# (`make assets`). Empty in a dev checkout, which reads them from the repo instead (assets.py).
+[tool.setuptools.package-data]
+thingstudio_backend = ["_assets/**/*"]
+
 [tool.pytest.ini_options]
 testpaths = ["test"]
 asyncio_mode = "strict"

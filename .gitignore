@@ -29,3 +29,11 @@ site/
 # Makefile: the backend/docs-tooling venv and its build stamps. Never committed.
 .venv/
 .build/
+
+# tools/build_assets.py output (`make assets`): built copies of the editor, docs, device runtime and
+# definitions, packaged into the backend. Regenerated for every package build. Never committed.
+backend/src/thingstudio_backend/_assets/
+backend/src/thingstudio_backend/_assets.tmp/
+# setuptools' in-tree build folder from building a wheel. Can hold files since deleted from _assets/,
+# which would then ship in the next wheel; `make clean` removes it.
+backend/build/

@@ -12,9 +12,8 @@
 #
 # If the docs haven't been built on this machine (a dev checkout that never ran `mkdocs build`),
 # /docs/ answers with a short page saying so and linking the online copy -- a legible failure, never
-# a bare 404 for a link the editor itself produced. Packaging (MVP item 7) is expected to bundle the
-# built site and pass --docs-dir, the same injection pattern runtime_installer.py uses for
-# device-runtime/src.
+# a bare 404 for a link the editor itself produced. A packaged install (MVP item 7) bundles the built
+# site in _assets/docs (assets.py); --docs-dir still overrides either layout.
 
 from __future__ import annotations
 
@@ -24,6 +23,7 @@ from pathlib import Path
 
 from aiohttp import web
 
+from .assets import asset_dirs, is_dev_checkout
 from .editor_site import changed_since_build, page_with_banner, stale_banner
 
 logger = logging.getLogger(__name__)
@@ -32,9 +32,8 @@ ONLINE_DOCS_URL = "https://mkarliner.github.io/ThingStudio/"
 
 
 def default_docs_dir() -> Path:
-    """backend/src/thingstudio_backend/docs_site.py -> repo root -> site/ (mkdocs.yml's site_dir).
-    Dev-checkout default only; see this module's header."""
-    return Path(__file__).resolve().parents[3] / "site"
+    """site/ (mkdocs.yml's site_dir) in a dev checkout, _assets/docs in a packaged install (assets.py)."""
+    return asset_dirs().docs
 
 
 def _not_built_page(docs_dir: Path, path: str) -> web.Response:
@@ -45,8 +44,12 @@ def _not_built_page(docs_dir: Path, path: str) -> web.Response:
         "<h1>Docs aren't built on this machine</h1>"
         f"<p>The backend looked for them in <code>{html.escape(str(docs_dir))}</code>.</p>"
         f"<p>Read this page online instead: <a href='{html.escape(online)}'>{html.escape(online)}</a></p>"
-        "<p>To build them locally, run <code>pip install mkdocs==1.6.1 mkdocs-material==9.7.7</code> "
-        "then <code>mkdocs build</code> in the repo root, and reload.</p>"
+        + (
+            "<p>To build them locally, run <code>pip install mkdocs==1.6.1 mkdocs-material==9.7.7</code> "
+            "then <code>mkdocs build</code> in the repo root, and reload.</p>"
+            if is_dev_checkout()
+            else "<p>This install is missing its docs files. Reinstall Thingstudio.</p>"
+        )
     )
     return web.Response(status=503, text=body, content_type="text/html")
 

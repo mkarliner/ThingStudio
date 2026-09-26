@@ -4,7 +4,9 @@
 #                   thingstudio-backend into a directory on your PATH, so you can start it right away
 #   make run        build, then start the backend (make run ARGS=--no-browser)
 #   make test       editor typecheck + tests, backend tests (make -k test runs all three)
-#   make clean      remove build output (editor/dist, site)
+#   make assets     build, then copy the editor, docs, device runtime and definitions into the
+#                   backend package (backend/src/thingstudio_backend/_assets) for packaging
+#   make clean      remove build output (editor/dist, site, the backend's _assets)
 #   make distclean  also remove editor/node_modules, .venv and the PATH link
 #
 # The link goes in the first writable one of ~/.local/bin, /opt/homebrew/bin, /usr/local/bin that is on
@@ -32,7 +34,7 @@ RUNTIME_SHA := $(shell git log -1 --format=%H -- device-runtime/src 2>/dev/null)
 # Plain `make` means `make all`, whatever order the rules below are in.
 .DEFAULT_GOAL := all
 .DELETE_ON_ERROR:
-.PHONY: all editor docs backend link run test typecheck test-editor test-backend clean distclean unlink check-node check-python
+.PHONY: all editor docs backend assets link run test typecheck test-editor test-backend clean distclean unlink check-node check-python
 
 # --- prerequisite checks ------------------------------------------------------------
 # Order-only (| check-...) below, so they run first but never force a rebuild.
@@ -65,6 +67,10 @@ backend: $(VENV)/.installed
 
 run: all
 	$(VENV)/bin/thingstudio-backend $(ARGS)
+
+# A dev checkout ignores _assets/ (assets.py), so this only matters for building a package.
+assets: editor docs backend
+	$(VPY) tools/build_assets.py
 
 # --- editor -------------------------------------------------------------------
 
@@ -152,7 +158,7 @@ test-backend: $(VENV)/.installed
 # --- cleanup ------------------------------------------------------------------
 
 clean:
-	rm -rf editor/dist site $(STAMP)
+	rm -rf editor/dist site $(STAMP) backend/src/thingstudio_backend/_assets backend/src/thingstudio_backend/_assets.tmp backend/build
 
 distclean: clean unlink
 	rm -rf editor/node_modules $(VENV)

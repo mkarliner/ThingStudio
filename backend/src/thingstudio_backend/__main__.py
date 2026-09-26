@@ -23,6 +23,7 @@ from pathlib import Path
 from aiohttp import web
 
 from .app import EDITOR_SEEN_KEY, create_app
+from .assets import asset_dirs, missing_assets
 from .builtin_reference import seed_builtin_definitions
 from .middleware import DEFAULT_ALLOWED_HOSTS
 from .persisted_store import PersistedStore
@@ -46,7 +47,7 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         "--static-dir",
         type=Path,
         default=None,
-        help="directory of the built editor to serve at / (default: the repo's editor/dist)",
+        help="directory of the built editor to serve at / (default: the bundled editor, or editor/dist in a checkout)",
     )
     parser.add_argument(
         "--no-browser",
@@ -63,7 +64,8 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         "--docs-dir",
         type=Path,
         default=None,
-        help="directory of built user docs (mkdocs build output) to serve at /docs/ (default: the repo's site/)",
+        help="directory of built user docs (mkdocs build output) to serve at /docs/ "
+        "(default: the bundled docs, or site/ in a checkout)",
     )
     parser.add_argument("--log-level", default="INFO")
     return parser.parse_args(argv)
@@ -97,6 +99,22 @@ def _open_browser_soon(url: str):
     return hook
 
 
+def _report_assets() -> None:
+    """Says which layout the editor, docs, runtime and definitions come from (assets.py). A packaged
+    install missing any of them was built without tools/build_assets.py; that's logged as an error
+    naming each missing part, not fatal -- what's there (e.g. the docs) still works, and each missing
+    part also fails legibly where it's used."""
+    log = logging.getLogger(__name__)
+    dirs = asset_dirs()
+    log.info("serving the %s layout (editor: %s)", dirs.layout, dirs.editor)
+    if dirs.layout == "packaged":
+        missing = missing_assets(dirs)
+        if missing:
+            log.error(
+                "NODE_ERROR: this install is incomplete -- missing %s. Reinstall Thingstudio.", "; ".join(missing)
+            )
+
+
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv if argv is not None else sys.argv[1:])
     logging.basicConfig(level=args.log_level, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -111,6 +129,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1
 
+    _report_assets()
     allowed_hosts = DEFAULT_ALLOWED_HOSTS | frozenset(args.allowed_hosts or ())
     # Copies any missing built-in board/processor files into ~/.thingstudio (builtin_reference.py).
     # Here rather than in create_app() so tests building an app never write to a real home folder.

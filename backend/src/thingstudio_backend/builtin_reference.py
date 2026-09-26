@@ -19,14 +19,15 @@
 # is logged and ignored: it must never stop the editor from starting, and
 # the editor has its own bundled copy of the built-ins anyway.
 #
-# Source: editor/src/definitions/ in the repo, located the same way
-# editor_site.py finds editor/dist and runtime_installer.py finds
-# device-runtime/src. Packaging (MVP item 7) has to carry these files too.
+# Source: editor/src/definitions/ in a dev checkout, _assets/definitions/
+# in a packaged install (assets.py).
 
 from __future__ import annotations
 
 import logging
 from pathlib import Path
+
+from .assets import asset_dirs
 
 log = logging.getLogger(__name__)
 
@@ -34,8 +35,8 @@ KINDS = ("processors", "boards")
 
 
 def default_definitions_dir() -> Path:
-    """backend/src/thingstudio_backend/builtin_reference.py -> repo root -> editor/src/definitions."""
-    return Path(__file__).resolve().parents[3] / "editor" / "src" / "definitions"
+    """editor/src/definitions in a dev checkout, _assets/definitions in a packaged install (assets.py)."""
+    return asset_dirs().definitions
 
 
 def copy_missing_builtins(data_dir: Path, source_dir: Path | None = None) -> list[str]:

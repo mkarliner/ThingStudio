@@ -14,3 +14,7 @@
 - **2026-09-26 — mDNS advertising and remote connection deferred** to post-MVP or posture-2 auth. The backend
   stays loopback-only; SSH tunnel documented for a remote backend. Same note;
   `outstanding-items/posture-2-auth.md`.
+- **2026-09-26 — Packaged assets: one layout for all four kinds, and a dev checkout wins over `_assets/`.**
+  Changed from the brief's "`_assets/` first, then repo": that order would silently serve a stale `_assets/`
+  copy over a rebuilt `editor/dist`. `tools/build_assets.py` refuses stale builds and stamps the runtime SHA.
+  `packaging-install-routes-briefing.md`, "Step 1 as built".

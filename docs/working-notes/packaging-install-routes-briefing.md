@@ -53,8 +53,8 @@ User data stays in `~/.thingstudio`, outside the install, so upgrades and uninst
 ## Proposed approach
 
 1. **Assets inside the Python package.** A build step copies editor, docs, device runtime and definitions into
-   `thingstudio_backend/_assets/`, and each default looks there first, then at the repo paths. No flags needed in
-   a package; the dev checkout keeps working unchanged.
+   `thingstudio_backend/_assets/`; no flags needed in a package, and the dev checkout keeps working unchanged.
+   **Built 2026-09-26**, with one change from this sketch: the layout is chosen once, not per asset (below).
 2. **One relocatable folder per platform**, built in GitHub Actions: python-build-standalone's `install_only`
    CPython + `pip install` of the backend into it + `_assets`. Targets: macOS arm64 and x86_64, Windows x86_64,
    Linux x86_64 and aarch64 (Raspberry Pi 4/5 as the host is plausible for makers). The zip route is this folder.
@@ -137,13 +137,34 @@ mDNS lands with or after posture-2; `outstanding-items/posture-2-auth.md` carrie
 
 ## Order of work
 
-1. Assets inside the Python package (small, lands alone).
+1. ~~Assets inside the Python package (small, lands alone).~~ Done 2026-09-26 (below).
 2. A relocatable folder per platform in CI; a zip that works on Mike's Mac.
 3. Fresh Linux VM, then `curl | sh`, then Windows and the PowerShell one-liner.
 4. `thingstudio` command name + alias, first-run checks.
 5. Service recipes and `thingstudio service` helper.
 6. Homebrew tap, scoop bucket, winget manifest; Apple signing and notarization once the Developer ID is active.
 7. Install docs, then fresh-VM acceptance and the newcomer test.
+
+## Step 1 as built (2026-09-26)
+
+- `assets.py` picks one layout for all four asset kinds. **Dev checkout wins**: if the repo's
+  `backend/pyproject.toml` and `device-runtime/` are where they should be, repo paths are used even when
+  `_assets/` exists. Otherwise `_assets/`. Not "`_assets/` first, then repo" as sketched: after a local
+  `make assets`, that order would serve the stale `_assets/editor` over a rebuilt `editor/dist` with no warning.
+- `tools/build_assets.py` (stdlib only; `make assets` builds first, then runs it) fills `_assets/`. It refuses an
+  unbuilt or stale editor/docs build, a manifest naming a missing runtime file, or no git SHA, each with the fix.
+  `--allow-stale`/`--allow-no-sha` override. Builds into `_assets.tmp/` and swaps, so a failure leaves no half copy.
+- Runtime build SHA: the build writes `_assets/device-runtime/runtime_build_sha.txt`; `runtime_build_sha()` reads
+  it before trying git, so boards installed from a package still report `runtimeBuild`.
+- `pyproject.toml` ships `_assets/**/*` as package data. `.gitignore` covers `_assets/`, `_assets.tmp/` and
+  `backend/build/` (setuptools' in-tree build folder, which can carry files since deleted from `_assets/` into
+  the next wheel; `make clean` removes it, and CI builds from a fresh checkout).
+- A packaged install missing its assets logs one `NODE_ERROR` at startup naming each missing part, and the
+  editor/docs "not built" pages say "Reinstall Thingstudio" instead of giving build commands.
+- Verified in a cloud workspace: backend suite 268 passed (12 new in `test_assets.py`); a wheel built from the real
+  repo (130 asset files) installed into a clean venv, run from outside the repo, served `/`, `/docs/`,
+  `/api/runtime-sources` and `/api/definitions`, seeded definitions into a fresh data dir, and stamped the
+  runtime SHA. With `_assets/` removed, the startup error and page read as intended.
 
 ## Out of scope
 

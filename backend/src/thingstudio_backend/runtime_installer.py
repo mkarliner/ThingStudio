@@ -9,13 +9,10 @@
 # dependency, and separate from ws_relay.py's WS-message wiring so this piece stays testable
 # without a WebSocket at all.
 #
-# Where device-runtime/src actually lives on disk is a real open question this doesn't solve:
-# _default_runtime_src_dir() below assumes a dev/repo-checkout layout (this file's own path,
-# walked up to the repo root, then into device-runtime/src) -- correct today, not guaranteed
-# correct once MVP item 7 (packaging -- curl|sh/Homebrew/PowerShell/winget/scoop/zip, "every
-# route bundles the runtime") actually ships a built app. `runtime_src_dir` is a constructor
-# parameter specifically so packaging can override it later without touching this module's
-# actual logic -- CLAUDE.md's "don't paint into a dead end" principle applied to a real one-way
+# Where device-runtime/src lives on disk: assets.py decides (the repo's device-runtime/src in a
+# dev checkout, _assets/device-runtime/src in a packaged install, 2026-09-26). `runtime_src_dir` is
+# still a constructor parameter so tests and other layouts can inject one without touching this
+# module's actual logic -- CLAUDE.md's "don't paint into a dead end" principle applied to a real one-way
 # door: hardcoding the dev-layout assumption INTO install logic (rather than injecting it) would
 # strand this code the moment packaging picks a different layout.
 #
@@ -30,6 +27,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from . import raw_repl
+from .assets import RUNTIME_BUILD_STAMP, asset_dirs
 from .raw_repl import RawReplTimeouts
 
 if TYPE_CHECKING:
@@ -48,7 +46,15 @@ def runtime_build_sha(runtime_src_dir: Path) -> str | None:
     editor's runtime-build check works for boards installed from the editor too (found missing on
     the first real in-editor install, 2026-09-23: HELLO.runtimeBuild came back null). Fails open
     (None) with no git or no checkout -- a diagnostic value must never block an install. A packaged
-    build (MVP item 7) will need to stamp this some other way; see this module's header."""
+    install has no git: tools/build_assets.py writes the SHA to RUNTIME_BUILD_STAMP beside the
+    runtime's src/ folder, and that file wins when present."""
+    stamp = runtime_src_dir.parent / RUNTIME_BUILD_STAMP
+    try:
+        stamped = stamp.read_text().strip()
+    except OSError:
+        stamped = ""
+    if stamped:
+        return stamped
     try:
         out = subprocess.run(
             ["git", "log", "-1", "--format=%H", "--", str(runtime_src_dir)],
@@ -64,10 +70,10 @@ def runtime_build_sha(runtime_src_dir: Path) -> str | None:
 
 
 def _default_runtime_src_dir() -> Path:
-    """backend/src/thingstudio_backend/runtime_installer.py -> repo root -> device-runtime/src.
-    See this module's header on why this is a default, not an assumption baked into the actual
-    install logic below."""
-    return Path(__file__).resolve().parents[3] / "device-runtime" / "src"
+    """device-runtime/src in a dev checkout, _assets/device-runtime/src in a packaged install
+    (assets.py). See this module's header on why this is a default, not an assumption baked into
+    the actual install logic below."""
+    return asset_dirs().runtime_src
 
 
 class RuntimeInstaller:

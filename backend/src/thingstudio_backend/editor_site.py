@@ -15,8 +15,8 @@
 #     day one: Mike's editor/dist was a month older than editor/src, and the terminal warning alone
 #     went unnoticed -- the browser just showed a month-old editor.
 #
-# Packaging (MVP item 7) bundles a built editor and passes --static-dir; the dev default is the repo's
-# editor/dist, same injection pattern as docs_site.py and runtime_installer.py.
+# Default location from assets.py: the repo's editor/dist in a dev checkout, _assets/editor in a packaged
+# install (MVP item 7). --static-dir still overrides either.
 
 from __future__ import annotations
 
@@ -26,6 +26,8 @@ import mimetypes
 from pathlib import Path
 
 from aiohttp import web
+
+from .assets import asset_dirs, is_dev_checkout
 
 logger = logging.getLogger(__name__)
 
@@ -37,8 +39,8 @@ mimetypes.add_type("text/javascript", ".mjs")
 
 
 def default_editor_dir() -> Path:
-    """backend/src/thingstudio_backend/editor_site.py -> repo root -> editor/dist."""
-    return Path(__file__).resolve().parents[3] / "editor" / "dist"
+    """editor/dist in a dev checkout, _assets/editor in a packaged install (assets.py)."""
+    return asset_dirs().editor
 
 
 def changed_since_build(built: Path, sources: list[Path]) -> Path | None:
@@ -95,9 +97,13 @@ def _not_built_page(editor_dir: Path) -> web.Response:
         "<body style='font-family:system-ui;max-width:40em;margin:3em auto;line-height:1.5'>"
         "<h1>The editor isn't built on this machine</h1>"
         f"<p>The backend looked for it in <code>{editor_dir}</code>.</p>"
-        "<p>Build it with <code>cd editor &amp;&amp; npm ci &amp;&amp; npm run build</code>, then reload "
-        "this page. No restart needed.</p>"
-        "<p>The <a href='/docs/'>docs</a> are served separately and may still work.</p>"
+        + (
+            "<p>Build it with <code>cd editor &amp;&amp; npm ci &amp;&amp; npm run build</code>, then reload "
+            "this page. No restart needed.</p>"
+            if is_dev_checkout()
+            else "<p>This install is missing its editor files. Reinstall Thingstudio.</p>"
+        )
+        + "<p>The <a href='/docs/'>docs</a> are served separately and may still work.</p>"
     )
     return web.Response(status=503, text=body, content_type="text/html")
 
@@ -105,7 +111,8 @@ def _not_built_page(editor_dir: Path) -> web.Response:
 def make_editor_routes(editor_dir: Path) -> list[web.RouteDef]:
     root = editor_dir.resolve()
     if not (root / "index.html").is_file():
-        logger.warning("editor not built at %s -- / will say so. Build: cd editor && npm ci && npm run build", root)
+        fix = "Build: cd editor && npm ci && npm run build" if is_dev_checkout() else "Reinstall Thingstudio."
+        logger.warning("editor not built at %s -- / will say so. %s", root, fix)
     else:
         newer = stale_source(root)
         if newer is not None:
