@@ -30,7 +30,7 @@
   sink convention above since it's neither.
 
   delay added 2026-09-06 -- same transform shape as function/http_request,
-  placed alongside them for the same reason.
+  placed alongside them for the same reason. filter (2026-09-26) likewise.
 
   Custom nodes (docs/working-notes/custom-node-authoring-scoping.md,
   2026-08-20): a second section below the built-in list, populated from

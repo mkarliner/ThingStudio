@@ -59,6 +59,7 @@ nav:
           - timer: nodes/timer.md
           - function: nodes/function.md
           - delay: nodes/delay.md
+          - filter: nodes/filter.md
           - debug: nodes/debug.md
       - Network:
           - wifi status: nodes/wifi-status.md

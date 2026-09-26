@@ -102,7 +102,8 @@ export type NodeKind =
   | "http_response"
   | "mqtt_publish"
   | "mqtt_subscribe"
-  | "delay";
+  | "delay"
+  | "filter";
 
 export const DEFAULT_NODE_GROUPS = ["general", "network", "hardware"] as const;
 
@@ -185,6 +186,8 @@ export const NODE_PALETTE: Record<NodeKind, KindStyle> = {
   mqtt_subscribe: { color: "#6e3b8a", bgcolor: "#3a1f4a", icon: "⇩", label: "mqtt subscribe", group: "network", priority: 30 },
   // Slate-blue -- see this file's header for the icon reasoning.
   delay: { color: "#4a4a6e", bgcolor: "#2a2a3f", icon: "⌛", label: "delay", group: "general", priority: 40 },
+  // filter added 2026-09-26: teal, "▽" (a funnel) -- it lets fewer messages through than arrive.
+  filter: { color: "#2e6e4a", bgcolor: "#1f3f2c", icon: "▽", label: "filter", group: "general", priority: 35 },
   // Blue -- see this file's header for the icon reasoning.
   pwm_out: { color: "#1f5c8a", bgcolor: "#12334a", icon: "∿", label: "pwm out", group: "hardware", priority: 30 },
 };

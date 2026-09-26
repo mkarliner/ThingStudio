@@ -126,6 +126,12 @@ def report_status(node_id, state, text=None):
     print("NODE_STATUS node=%s state=%s text=%s" % (node_id, state, text))
 
 
+# _report_error added 2026-09-26 (filter.ts): generated code calls it directly to report a fault without
+# raising, so the flow keeps running. Same printed NODE_ERROR line as _guarded below.
+def _report_error(node_id, exc):
+    print("NODE_ERROR node=%s type=%s msg=%s" % (node_id, type(exc).__name__, str(exc)))
+
+
 async def _guarded(coro, fallback_node_id):
     try:
         await coro

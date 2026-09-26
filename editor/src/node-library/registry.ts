@@ -4,6 +4,7 @@ import { debugNode } from "./debug.js";
 import { displayI2cNode } from "./display-i2c.js";
 import { displaySpiNode } from "./display-spi.js";
 import { delayNode } from "./delay.js";
+import { filterNode } from "./filter.js";
 import { ebuttonNode } from "./ebutton.js";
 import { eswitchNode } from "./eswitch.js";
 import { functionNode } from "./function-node.js";
@@ -91,6 +92,7 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     udpSendNode,
     udpReceiveNode,
     delayNode,
+    filterNode,
   ]) {
     registry.set(def.type, def);
   }

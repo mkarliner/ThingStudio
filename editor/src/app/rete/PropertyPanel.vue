@@ -208,6 +208,30 @@
         </label>
       </template>
 
+      <template v-else-if="node.kind === 'filter'">
+        <label>mode
+          <select v-model="node.properties.mode" @change="touch">
+            <option value="change">change: only when the payload changes</option>
+            <option value="deadband">deadband: only when a number moves enough</option>
+            <option value="rate">rate: at most one per interval</option>
+          </select>
+        </label>
+        <label v-if="node.properties.mode === 'deadband'">threshold
+          <input type="number" min="0" step="any" v-model.number="node.properties.threshold" @input="touch" />
+        </label>
+        <label v-if="node.properties.mode === 'rate'">interval (ms)
+          <input type="number" min="1" v-model.number="node.properties.intervalMs" @input="touch" />
+        </label>
+        <label v-if="node.properties.mode !== 'rate'" class="checkbox-label">
+          <input type="checkbox" v-model="node.properties.ignoreFirst" @change="touch" />
+          ignore first message
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" v-model="node.properties.perTopic" @change="touch" />
+          separately for each topic
+        </label>
+      </template>
+
       <template v-else-if="node.kind === 'interrupt'">
         <label>pin
           <input type="number" min="0" :max="pinMax" v-model.number="node.properties.pin" @input="touch" />

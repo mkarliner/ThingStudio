@@ -166,6 +166,7 @@ import { httpRequestNode } from "../../node-library/http-request.js";
 import { httpInNode } from "../../node-library/http-in.js";
 import { httpResponseNode } from "../../node-library/http-response.js";
 import { delayNode } from "../../node-library/delay.js";
+import { filterNode, type FilterMode } from "../../node-library/filter.js";
 import { mqttPublishNode } from "../../node-library/mqtt-publish.js";
 import { mqttSubscribeNode } from "../../node-library/mqtt-subscribe.js";
 import { pwmOutNode } from "../../node-library/pwm-out.js";
@@ -426,6 +427,32 @@ export class DelayNode extends ClassicPreset.Node {
     super("delay");
     this.addInput("msg", new ClassicPreset.Input(portSocket(delayNode.ports?.inputs, "msg", this.properties), "msg", true));
     this.addOutput("msg", new ClassicPreset.Output(portSocket(delayNode.ports?.outputs, "msg", this.properties), "msg"));
+  }
+}
+
+// Drops messages that aren't worth sending: unchanged, inside a deadband, or too soon
+// (node-library/filter.ts).
+export class FilterNode extends ClassicPreset.Node {
+  width = 100;
+  height = NODE_HEIGHT;
+  kind = "filter" as const;
+  nodeType = "thingstudio/filter";
+  highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
+
+  properties: { mode: FilterMode; threshold: number; intervalMs: number; ignoreFirst: boolean; perTopic: boolean } = {
+    mode: "change",
+    threshold: 1,
+    intervalMs: 1000,
+    ignoreFirst: false,
+    perTopic: true,
+  };
+
+  constructor() {
+    super("filter");
+    this.addInput("msg", new ClassicPreset.Input(portSocket(filterNode.ports?.inputs, "msg", this.properties), "msg", true));
+    this.addOutput("msg", new ClassicPreset.Output(portSocket(filterNode.ports?.outputs, "msg", this.properties), "msg"));
   }
 }
 
@@ -1023,6 +1050,7 @@ export type AnyThingstudioNode =
   | MqttPublishNode
   | MqttSubscribeNode
   | DelayNode
+  | FilterNode
   | CustomNode;
 
 // One constructor per palette kind, shared between the app-shell's
@@ -1059,4 +1087,5 @@ export const NODE_FACTORIES: Record<NodeKind, () => AnyThingstudioNode> = {
   mqtt_publish: () => new MqttPublishNode(),
   mqtt_subscribe: () => new MqttSubscribeNode(),
   delay: () => new DelayNode(),
+  filter: () => new FilterNode(),
 };

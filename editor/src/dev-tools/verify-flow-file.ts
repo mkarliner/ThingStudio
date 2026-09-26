@@ -75,6 +75,7 @@ const KNOWN_KINDS = new Set([
   "mqtt_publish",
   "mqtt_subscribe",
   "delay",
+  "filter",
 ]);
 
 const path = process.argv[2];

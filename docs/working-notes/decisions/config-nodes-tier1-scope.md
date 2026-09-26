@@ -95,3 +95,8 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
   Older flows with several WiFi configs are merged on load (`normalizeWifiConfigs()`: keep wifi_status's, log the
   dropped ones). Considered and rejected the same day: a WiFi reference on the MQTT broker config (moves the
   setting depending on what's in the flow) and a flow-level Network setting (a file-format change).
+
+- **2026-09-26 — `filter` node built** (`filter-node-spec.md`): modes `change`, `deadband` (vs last passed value,
+  abs, numeric strings parsed), `rate` (drop, don't queue); per topic by default, 32-topic cap. Rate limiting
+  kept in `filter` per this file's Tier 1 decision rather than moved to `delay` as in Node-RED.
+
