@@ -36,4 +36,6 @@ not evaluated yet.
 - **Generic `i2c` node on hardware, 2026-09-26 (Mike, Pico):** `test-flows/bmp280-generic-i2c.flow.json` (chip id,
   calibration, forced read + compensation, all through the `i2c` node) works.
 - **Still owed:** BME280 on the C3 with a display on the same bus, with the `[memory]` figures; the unplug/replug
-  status-dot check on hardware; TCS34725 and MPU-9250 nodes. The witness-rig I2C slave-emulation gate above is unchanged.
+  status-dot check on hardware.
+- **TCS34725 / MPU-9250 dedicated nodes: deferred (Mike, 2026-09-26).** The generic `i2c` node plus a small
+  `function` node covers them, as the BMP280 test flow shows. Build a dedicated node only when a tutorial needs one. The witness-rig I2C slave-emulation gate above is unchanged.

@@ -21,6 +21,7 @@ same removal convention as this file's own 2026-09-07/2026-09-13 passes above.]
 - all .thingstudio contents should be under some kind of change control
 - AADC node
 - Clear (canvas) should only clear the currently visible flow
+- there should be a button by the board and processor drop downs that will show a human readable page of their definitions, so I don't have to guess where the led is for example
 
 [2026-09-23: top-bar reorder and "remove 'via backend'" items removed -- done, see
 `decisions/editor-canvas.md`'s 2026-09-23 entry.]
