@@ -140,7 +140,8 @@ mDNS lands with or after posture-2; `outstanding-items/posture-2-auth.md` carrie
 1. ~~Assets inside the Python package (small, lands alone).~~ Done 2026-09-26 (below).
 2. ~~A relocatable folder per platform in CI~~ Built 2026-09-26, not yet run on GitHub (below). Next: a first
    workflow run, then try the macOS arm64 archive on Mike's Mac.
-3. Fresh Linux VM, then `curl | sh`, then Windows and the PowerShell one-liner.
+3. ~~`curl | sh`~~ Built 2026-09-26 (below). Still to do: a fresh Linux VM check, then Windows and the
+   PowerShell one-liner. Until then Windows is the zip route, documented in `getting-started.md`.
 4. `thingstudio` command name + alias, first-run checks.
 5. Service recipes and `thingstudio service` helper.
 6. Homebrew tap, scoop bucket, winget manifest; Apple signing and notarization once the Developer ID is active.
@@ -194,6 +195,29 @@ mDNS lands with or after posture-2; `outstanding-items/posture-2-auth.md` carrie
   multi-tagged). The other four platforms are untested until the workflow runs.
 - Runner caveats: `macos-15-intel` is GitHub's last Intel macOS image, so macOS x86_64 builds have a shelf life;
   `ubuntu-24.04-arm` is free for public repos.
+
+## Step 3 as built (2026-09-26): `curl | sh`
+
+- `packaging/install.sh` (POSIX sh, shellcheck-clean). Install URL:
+  `https://github.com/mkarliner/ThingStudio/releases/latest/download/install.sh`. The release job attaches the
+  script to every release, so the URL is stable and the script always matches the archives beside it. Not
+  served from `main`, which would change installer behaviour with every commit.
+- Finds the latest tag from the `/releases/latest` redirect (no API call, no JSON). Picks the platform from
+  `uname`, with the Rosetta check on macOS. Downloads the archive and `SHA256SUMS`; refuses a mismatch.
+- Layout: `~/.local/share/thingstudio/versions/<name>/`, a `current` link switched in one rename (`mv -T` GNU,
+  `mv -h` BSD; a plain `mv` would move the new link inside the old folder), and `~/.local/bin/thingstudio`
+  linking to `current/thingstudio`. Keeps the version it replaced (a running copy isn't pulled out from under
+  itself), deletes older ones. Won't replace a `thingstudio` in the bin folder that isn't a link.
+- After installing: runs `thingstudio --help` to prove it starts; prints the PATH line for the user's shell if
+  needed; on Linux, the exact `usermod` command if the user isn't in `dialout`/`uucp`.
+- `--uninstall` removes the program and link, never `~/.thingstudio`.
+- Tested here (Linux, dash): fresh install, two upgrades (older version pruned), reinstall, running the installed
+  command from PATH, corrupted archive refused with the existing install untouched, unknown version, uninstall.
+  The workflow patch runs the same install/reinstall/uninstall on every macOS and Linux runner, which covers BSD
+  `mv -h`; not yet run.
+- Workflow patch also pins `ubuntu-latest` to `ubuntu-24.04` (GitHub moves `ubuntu-latest` to 26.04 on
+  2026-10-19) and shellchecks the scripts.
+- User docs: `getting-started.md` Install/Start rewritten: `curl | sh`, Windows zip, "from source" kept.
 
 ## Out of scope
 

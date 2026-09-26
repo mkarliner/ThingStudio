@@ -6,25 +6,49 @@ You need a supported board with [MicroPython installed](installing-micropython.m
 
 ## Install
 
-Packaged installers aren't available yet. For now, install from a copy of the repository. You need Python 3.10 or later, Node.js 22.12 or later, and `make`. On a Mac, `make` comes with the Xcode command line tools (`xcode-select --install`).
+Thingstudio comes with everything it needs, including its own Python. Nothing else needs installing.
 
-In the repository folder, run:
+**macOS and Linux**
+
+Run this in a terminal:
 
 ```sh
-make
+curl -fsSL https://github.com/mkarliner/ThingStudio/releases/latest/download/install.sh | sh
 ```
 
-This builds the editor and these docs, and installs Thingstudio into a `.venv` folder. It also puts the `thingstudio-backend` command on your PATH. Run `make` again after updating the repository. It only rebuilds what changed.
+It installs Thingstudio into `~/.local/share/thingstudio` and adds the `thingstudio` command to `~/.local/bin`. If it says `~/.local/bin` isn't on your PATH, run the line it prints, then open a new terminal.
 
-If your `python3` is older than 3.10, name a newer one: `make PYTHON=python3.12`.
+On Linux, your account must be in the `dialout` group (`uucp` on Arch) to use USB boards. The installer tells you if it isn't, and gives the command to fix it.
+
+To upgrade, run the same command again. To remove Thingstudio:
+
+```sh
+curl -fsSL https://github.com/mkarliner/ThingStudio/releases/latest/download/install.sh | sh -s -- --uninstall
+```
+
+Your flows and settings live in `~/.thingstudio`. Upgrading and removing never touch them.
+
+**Windows**
+
+1. Download `thingstudio-…-windows-x86_64.zip` from the [releases page](https://github.com/mkarliner/ThingStudio/releases/latest).
+2. Unzip it anywhere, for example into your Documents folder.
+3. In the unzipped folder, run `thingstudio.cmd`. If Windows asks whether to run it, choose **Run**.
+
+**From source**
+
+For working on Thingstudio itself. You need Python 3.10 or later, Node.js 22.12 or later, and `make`. On a Mac, `make` comes with the Xcode command line tools (`xcode-select --install`).
+
+In the repository folder, run `make`. This builds the editor and these docs, installs Thingstudio into a `.venv` folder, and puts the `thingstudio-backend` command on your PATH. Run `make` again after updating the repository. It only rebuilds what changed. If your `python3` is older than 3.10, name a newer one: `make PYTHON=python3.12`.
 
 ## Start
 
 ```sh
-thingstudio-backend
+thingstudio
 ```
 
-If your terminal says the command isn't found just after the first `make`, run `hash -r` or open a new terminal. If `make` said it couldn't put the command on your PATH, use `make run` instead.
+On Windows, run `thingstudio.cmd`. From source, the command is `thingstudio-backend`, or `make run`.
+
+If your terminal says the command isn't found just after installing, open a new terminal.
 
 The editor opens in your browser at `http://127.0.0.1:8765/`. Leave the terminal open while you work; press Ctrl-C there to stop Thingstudio. Add `--no-browser` if you'd rather open the page yourself. If you restart Thingstudio with the editor still open, that tab reconnects and no new one opens.
 

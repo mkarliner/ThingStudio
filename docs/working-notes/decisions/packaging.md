@@ -22,3 +22,7 @@
   Tag `v*` or manual run; a tag must match `backend/pyproject.toml`. `.tar.gz` on macOS/Linux, `.zip` on
   Windows. Python archive hash-pinned, deps pinned in `packaging/constraints.txt`, wheels only, glibc floor 2.28.
   `packaging-install-routes-briefing.md`, "Step 2 as built".
+- **2026-09-26 — `install.sh` ships as a release asset, not from `main`.** Stable URL
+  `.../releases/latest/download/install.sh`; script and archives always match. Per-user install under
+  `~/.local/share/thingstudio`, previous version kept, `~/.thingstudio` never touched.
+  `packaging-install-routes-briefing.md`, "Step 3 as built".
