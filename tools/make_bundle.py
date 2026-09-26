@@ -62,9 +62,26 @@ class BundleError(Exception):
     pass
 
 
+def _under_rosetta() -> bool:
+    """True when this process is an x86_64 program translated by Rosetta on Apple Silicon."""
+    try:
+        out = subprocess.run(["sysctl", "-n", "sysctl.proc_translated"], capture_output=True, text=True, timeout=5)
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return out.stdout.strip() == "1"
+
+
+def can_build_on(plat: str, host: str) -> bool:
+    """The bundled Python runs pip, so the build machine must be able to run the target. An Apple Silicon
+    Mac also runs x86_64 macOS code under Rosetta, so it can build (and smoke-test) both macOS bundles."""
+    return plat == host or (plat == "macos-x86_64" and host == "macos-arm64")
+
+
 def host_platform() -> str:
     system = {"Darwin": "macos", "Linux": "linux", "Windows": "windows"}.get(platform.system())
     machine = platform.machine().lower()
+    if system == "macos" and machine == "x86_64" and _under_rosetta():
+        machine = "arm64"  # an Intel Python on Apple Silicon reports x86_64; the chip is what matters
     if machine in ("arm64", "aarch64"):
         arch = "arm64" if system == "macos" else "aarch64"
     elif machine in ("x86_64", "amd64"):
@@ -185,8 +202,9 @@ def bundle(plat: str, out_dir: Path, python_archive: Path | None = None, cache: 
     """Builds the folder and its archive in out_dir. Returns the archive's path."""
     if plat not in TARGETS:
         raise BundleError(f"unknown platform {plat!r}; one of {', '.join(TARGETS)}")
-    if plat != host_platform():
-        raise BundleError(f"building {plat} needs a {plat} machine (this is {host_platform()}); see this file's header")
+    host = host_platform()
+    if not can_build_on(plat, host):
+        raise BundleError(f"building {plat} needs a {plat} machine (this is {host}); see this file's header")
     assets = REPO / "backend" / "src" / "thingstudio_backend" / "_assets"
     if not (assets / "editor" / "index.html").is_file():
         raise BundleError(f"{assets} isn't filled. Run `make assets` (or tools/build_assets.py) first.")
