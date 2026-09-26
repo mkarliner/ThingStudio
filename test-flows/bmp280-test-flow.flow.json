@@ -1,0 +1,151 @@
+{
+  "formatVersion": 1,
+  "flowName": "untitled flow",
+  "nodes": [
+    {
+      "id": "266664b82ffa7c36",
+      "type": "thingstudio/debug",
+      "properties": {
+        "fullMessage": false
+      }
+    },
+    {
+      "id": "35d574746cfd5df0",
+      "type": "thingstudio/filter",
+      "properties": {
+        "mode": "deadband",
+        "threshold": 0.1,
+        "intervalMs": 1000,
+        "ignoreFirst": false,
+        "perTopic": true
+      }
+    },
+    {
+      "id": "5838a98b1086c76c",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "msg['payload'] = msg['payload']['temperature']\nreturn msg\n",
+        "outputCount": 1
+      }
+    },
+    {
+      "id": "7207fdca8086393b",
+      "type": "thingstudio/debug",
+      "properties": {
+        "fullMessage": false
+      }
+    },
+    {
+      "id": "b004b1458d4b195a",
+      "type": "thingstudio/bme280",
+      "properties": {
+        "i2cConfigId": "b71bdf29-a178-4171-b691-7bf78a04d426",
+        "address": 118,
+        "intervalMs": 5000
+      }
+    }
+  ],
+  "edges": [
+    [
+      "35d574746cfd5df0",
+      0,
+      "7207fdca8086393b",
+      0
+    ],
+    [
+      "5838a98b1086c76c",
+      0,
+      "266664b82ffa7c36",
+      0
+    ],
+    [
+      "5838a98b1086c76c",
+      0,
+      "35d574746cfd5df0",
+      0
+    ],
+    [
+      "b004b1458d4b195a",
+      0,
+      "5838a98b1086c76c",
+      0
+    ]
+  ],
+  "layout": {
+    "266664b82ffa7c36": {
+      "pos": [
+        413.7767190148494,
+        535.6320050113237
+      ],
+      "size": [
+        84,
+        34
+      ]
+    },
+    "35d574746cfd5df0": {
+      "pos": [
+        462.01539936628444,
+        392.96363577956606
+      ],
+      "size": [
+        100,
+        34
+      ]
+    },
+    "5838a98b1086c76c": {
+      "pos": [
+        269.27886328314787,
+        384.3070560079667
+      ],
+      "size": [
+        100,
+        34
+      ]
+    },
+    "7207fdca8086393b": {
+      "pos": [
+        684.3039038395334,
+        410.36844472285134
+      ],
+      "size": [
+        84,
+        34
+      ]
+    },
+    "b004b1458d4b195a": {
+      "pos": [
+        82.52414508979439,
+        384.27428966093254
+      ],
+      "size": [
+        110,
+        34
+      ]
+    }
+  },
+  "configs": [
+    {
+      "id": "b71bdf29-a178-4171-b691-7bf78a04d426",
+      "type": "thingstudio/config/i2c-bus",
+      "properties": {
+        "bus": 0,
+        "scl": 5,
+        "sda": 4,
+        "freq": 100000
+      }
+    }
+  ],
+  "panes": [
+    {
+      "id": "pane-1",
+      "name": "Flow 01"
+    }
+  ],
+  "paneOf": {
+    "266664b82ffa7c36": "pane-1",
+    "35d574746cfd5df0": "pane-1",
+    "5838a98b1086c76c": "pane-1",
+    "7207fdca8086393b": "pane-1",
+    "b004b1458d4b195a": "pane-1"
+  }
+}

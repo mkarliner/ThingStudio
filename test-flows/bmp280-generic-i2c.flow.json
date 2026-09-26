@@ -1,0 +1,369 @@
+{
+  "formatVersion": 1,
+  "flowName": "bmp280 via generic i2c",
+  "nodes": [
+    {
+      "id": "chip-inject",
+      "type": "thingstudio/inject",
+      "properties": {
+        "payloadType": "bool",
+        "payloadValue": "true"
+      }
+    },
+    {
+      "id": "chip-read",
+      "type": "thingstudio/i2c",
+      "properties": {
+        "i2cConfigId": "i2c-bus-0",
+        "operation": "read",
+        "address": "0x76",
+        "register": "0xD0",
+        "length": 1
+      }
+    },
+    {
+      "id": "chip-debug",
+      "type": "thingstudio/debug",
+      "properties": {
+        "fullMessage": false
+      }
+    },
+    {
+      "id": "cal-startup",
+      "type": "thingstudio/startup",
+      "properties": {
+        "payloadType": "bool",
+        "payloadValue": "true"
+      }
+    },
+    {
+      "id": "cal-read",
+      "type": "thingstudio/i2c",
+      "properties": {
+        "i2cConfigId": "i2c-bus-0",
+        "operation": "read",
+        "address": "0x76",
+        "register": "0x88",
+        "length": 24
+      }
+    },
+    {
+      "id": "cal-store",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "# Keep the 24 calibration bytes for the compensate node below.\nflow.set('bmp_cal', bytes(msg['payload']))\nmsg['payload'] = 'calibration stored (%d bytes)' % len(msg['payload'])\nreturn msg",
+        "outputCount": 1
+      }
+    },
+    {
+      "id": "cal-debug",
+      "type": "thingstudio/debug",
+      "properties": {
+        "fullMessage": false
+      }
+    },
+    {
+      "id": "meas-timer",
+      "type": "thingstudio/timer",
+      "properties": {
+        "intervalMs": 2000
+      }
+    },
+    {
+      "id": "meas-cmd",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "# ctrl_meas (0xF4) = 0x25: temperature x1, pressure x1, forced mode (one measurement, then sleep).\nmsg['payload'] = [0x25]\nreturn msg",
+        "outputCount": 1
+      }
+    },
+    {
+      "id": "meas-start",
+      "type": "thingstudio/i2c",
+      "properties": {
+        "i2cConfigId": "i2c-bus-0",
+        "operation": "write",
+        "address": "0x76",
+        "register": "0xF4",
+        "length": 1
+      }
+    },
+    {
+      "id": "meas-wait",
+      "type": "thingstudio/delay",
+      "properties": {
+        "delayMs": 50
+      }
+    },
+    {
+      "id": "meas-read",
+      "type": "thingstudio/i2c",
+      "properties": {
+        "i2cConfigId": "i2c-bus-0",
+        "operation": "read",
+        "address": "0x76",
+        "register": "0xF7",
+        "length": 6
+      }
+    },
+    {
+      "id": "meas-comp",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "# Raw burst from 0xF7: pressure (3 bytes), temperature (3 bytes), each 20-bit.\n# Compensation is the Bosch BMP280 datasheet's floating-point version (section 8.1).\nimport struct\ncal = flow.get('bmp_cal')\nif cal is None:\n    return None  # calibration not read yet\nT1, T2, T3, P1, P2, P3, P4, P5, P6, P7, P8, P9 = struct.unpack('<HhhHhhhhhhhh', cal)\nd = msg['payload']\nadc_p = (d[0] << 16 | d[1] << 8 | d[2]) >> 4\nadc_t = (d[3] << 16 | d[4] << 8 | d[5]) >> 4\n\nv1 = (adc_t / 16384.0 - T1 / 1024.0) * T2\nv2 = (adc_t / 131072.0 - T1 / 8192.0) ** 2 * T3\nt_fine = v1 + v2\ntemperature = t_fine / 5120.0\n\nv1 = t_fine / 2.0 - 64000.0\nv2 = v1 * v1 * P6 / 32768.0 + v1 * P5 * 2.0\nv2 = v2 / 4.0 + P4 * 65536.0\nv1 = (P3 * v1 * v1 / 524288.0 + P2 * v1) / 524288.0\nv1 = (1.0 + v1 / 32768.0) * P1\nif v1 == 0:\n    return None  # avoids a divide by zero on bad calibration\np = (1048576.0 - adc_p - v2 / 4096.0) * 6250.0 / v1\np = p + (P9 * p * p / 2147483648.0 + p * P8 / 32768.0 + P7) / 16.0\n\nmsg['payload'] = {'temperature': round(temperature, 2), 'pressure': round(p / 100, 2)}\nreturn msg",
+        "outputCount": 1
+      }
+    },
+    {
+      "id": "meas-debug",
+      "type": "thingstudio/debug",
+      "properties": {
+        "fullMessage": false
+      }
+    }
+  ],
+  "edges": [
+    [
+      "chip-inject",
+      0,
+      "chip-read",
+      0
+    ],
+    [
+      "chip-read",
+      0,
+      "chip-debug",
+      0
+    ],
+    [
+      "cal-startup",
+      0,
+      "cal-read",
+      0
+    ],
+    [
+      "cal-read",
+      0,
+      "cal-store",
+      0
+    ],
+    [
+      "cal-store",
+      0,
+      "cal-debug",
+      0
+    ],
+    [
+      "meas-timer",
+      0,
+      "meas-cmd",
+      0
+    ],
+    [
+      "meas-cmd",
+      0,
+      "meas-start",
+      0
+    ],
+    [
+      "meas-start",
+      0,
+      "meas-wait",
+      0
+    ],
+    [
+      "meas-wait",
+      0,
+      "meas-read",
+      0
+    ],
+    [
+      "meas-read",
+      0,
+      "meas-comp",
+      0
+    ],
+    [
+      "meas-comp",
+      0,
+      "meas-debug",
+      0
+    ]
+  ],
+  "layout": {
+    "chip-inject": {
+      "pos": [
+        60,
+        60
+      ],
+      "size": [
+        100,
+        34
+      ]
+    },
+    "chip-read": {
+      "pos": [
+        220,
+        60
+      ],
+      "size": [
+        100,
+        34
+      ]
+    },
+    "chip-debug": {
+      "pos": [
+        380,
+        60
+      ],
+      "size": [
+        100,
+        34
+      ]
+    },
+    "cal-startup": {
+      "pos": [
+        60,
+        160
+      ],
+      "size": [
+        100,
+        34
+      ]
+    },
+    "cal-read": {
+      "pos": [
+        220,
+        160
+      ],
+      "size": [
+        100,
+        34
+      ]
+    },
+    "cal-store": {
+      "pos": [
+        380,
+        160
+      ],
+      "size": [
+        100,
+        34
+      ]
+    },
+    "cal-debug": {
+      "pos": [
+        540,
+        160
+      ],
+      "size": [
+        100,
+        34
+      ]
+    },
+    "meas-timer": {
+      "pos": [
+        60,
+        260
+      ],
+      "size": [
+        100,
+        34
+      ]
+    },
+    "meas-cmd": {
+      "pos": [
+        200,
+        260
+      ],
+      "size": [
+        100,
+        34
+      ]
+    },
+    "meas-start": {
+      "pos": [
+        340,
+        260
+      ],
+      "size": [
+        100,
+        34
+      ]
+    },
+    "meas-wait": {
+      "pos": [
+        480,
+        260
+      ],
+      "size": [
+        100,
+        34
+      ]
+    },
+    "meas-read": {
+      "pos": [
+        620,
+        260
+      ],
+      "size": [
+        100,
+        34
+      ]
+    },
+    "meas-comp": {
+      "pos": [
+        760,
+        260
+      ],
+      "size": [
+        100,
+        34
+      ]
+    },
+    "meas-debug": {
+      "pos": [
+        900,
+        260
+      ],
+      "size": [
+        100,
+        34
+      ]
+    }
+  },
+  "configs": [
+    {
+      "id": "i2c-bus-0",
+      "type": "thingstudio/config/i2c-bus",
+      "properties": {
+        "bus": 0,
+        "scl": 5,
+        "sda": 4,
+        "freq": 100000
+      }
+    }
+  ],
+  "panes": [
+    {
+      "id": "pane-1",
+      "name": "Flow 01"
+    }
+  ],
+  "paneOf": {
+    "chip-inject": "pane-1",
+    "chip-read": "pane-1",
+    "chip-debug": "pane-1",
+    "cal-startup": "pane-1",
+    "cal-read": "pane-1",
+    "cal-store": "pane-1",
+    "cal-debug": "pane-1",
+    "meas-timer": "pane-1",
+    "meas-cmd": "pane-1",
+    "meas-start": "pane-1",
+    "meas-wait": "pane-1",
+    "meas-read": "pane-1",
+    "meas-comp": "pane-1",
+    "meas-debug": "pane-1"
+  }
+}

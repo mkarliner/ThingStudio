@@ -1,0 +1,98 @@
+{
+  "formatVersion": 1,
+  "flowName": "untitled flow",
+  "nodes": [
+    {
+      "id": "0e16e4c3c968917f",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "import machine\nimport runtime\n\nBUS, SCL, SDA = 0, 5, 4,    # only used if no node in this flow already uses this bus\n\ntry:\n    i2c = runtime.shared('i2c', BUS)      # the flow's own bus, if a bme280/display_i2c set it up\nexcept (KeyError, AttributeError):        # no I2C node on this bus, or a runtime older than 6.0.0\n    i2c = machine.I2C(BUS, scl=machine.Pin(SCL), sda=machine.Pin(SDA), freq=100000)\n\nKNOWN = {0x29: 'TCS34725', 0x3c: 'SSD1306', 0x3d: 'SSD1306', 0x68: 'MPU-9250', 0x69: 'MPU-9250',\n         0x76: 'BME280/BMP280', 0x77: 'BME280/BMP280'}\nfound = i2c.scan()\nmsg['payload'] = ['0x%02x %s' % (a, KNOWN.get(a, '?')) for a in found] or 'nothing found'\nreturn msg",
+        "outputCount": 1
+      }
+    },
+    {
+      "id": "26cdc7e8041cfd77",
+      "type": "thingstudio/debug",
+      "properties": {
+        "fullMessage": false
+      }
+    },
+    {
+      "id": "d24be84eab4ee24d",
+      "type": "thingstudio/inject",
+      "properties": {
+        "payloadType": "bool",
+        "payloadValue": "true"
+      }
+    }
+  ],
+  "edges": [
+    [
+      "0e16e4c3c968917f",
+      0,
+      "26cdc7e8041cfd77",
+      0
+    ],
+    [
+      "d24be84eab4ee24d",
+      0,
+      "0e16e4c3c968917f",
+      0
+    ]
+  ],
+  "layout": {
+    "0e16e4c3c968917f": {
+      "pos": [
+        330.36370849609375,
+        494.7147216796875
+      ],
+      "size": [
+        100,
+        34
+      ]
+    },
+    "26cdc7e8041cfd77": {
+      "pos": [
+        595,
+        291.25433349609375
+      ],
+      "size": [
+        84,
+        34
+      ]
+    },
+    "d24be84eab4ee24d": {
+      "pos": [
+        187.2542724609375,
+        381
+      ],
+      "size": [
+        96,
+        34
+      ]
+    }
+  },
+  "configs": [
+    {
+      "id": "7ce2ddea-532b-4da5-a763-98bd253ae1d9",
+      "type": "thingstudio/config/i2c-bus",
+      "properties": {
+        "bus": 0,
+        "scl": 5,
+        "sda": 4,
+        "freq": 100000
+      }
+    }
+  ],
+  "panes": [
+    {
+      "id": "pane-1",
+      "name": "Flow 01"
+    }
+  ],
+  "paneOf": {
+    "0e16e4c3c968917f": "pane-1",
+    "26cdc7e8041cfd77": "pane-1",
+    "d24be84eab4ee24d": "pane-1"
+  }
+}

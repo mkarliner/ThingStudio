@@ -756,3 +756,19 @@ run at this board's full native resolution without a `MemoryError`, and does the
 anything that looks like pixels shifted or smeared sideways within a row, which is exactly what a bit-
 order mistake in a format's expansion loop would produce (this file's header on why gs2/mono's bit
 order is the OPPOSITE of gs4's, independently verified for each rather than assumed to match).
+
+## `bmp280-generic-i2c.flow.json`
+
+A BMP280 (or BME280) read with only the generic `i2c` node and `function` nodes -- no `bme280` node. Pico, I2C
+bus 0, SDA GP4, SCL GP5, sensor at 0x76; change the I2C bus setting and the `i2c` nodes' address to suit.
+
+- **inject -> i2c read 0xD0 (1 byte) -> debug**: the chip id. `b'X'` (0x58) is a BMP280, `` b'`' `` (0x60) a BME280.
+- **startup -> i2c read 0x88 (24 bytes) -> function -> debug**: reads the calibration once and keeps it with
+  `flow.set('bmp_cal', ...)`. Prints `calibration stored (24 bytes)`.
+- **timer 2 s -> function -> i2c write 0xF4 -> delay 50 ms -> i2c read 0xF7 (6 bytes) -> function -> debug**:
+  starts a forced measurement (ctrl_meas = 0x25: temperature x1, pressure x1), waits, reads the raw burst, and
+  compensates it with the datasheet's floating-point formulas. Prints `{'temperature': 21.4, 'pressure': 1012.3}`.
+
+The compensate code was checked against the Bosch datasheet's worked example (25.08 C, 1006.53 hPa); the flow
+compiles through mpy-cross for RP2040. Run on a Pico 2026-09-26 (Mike): works. Unplugging the sensor should turn the `i2c` nodes'
+status dots to disconnected, and they should recover when it's back.
