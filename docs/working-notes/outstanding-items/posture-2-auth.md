@@ -52,3 +52,11 @@ until bound to a LAN or public interface" framing above alone.
 ## Addendum, 2026-09-08 -- re-tagged P4 -> P3
 
 Mike's call while triaging next-session work: this item moves from **[P4]** to **[P3]** in `outstanding-items.md`. Still deferred -- not picked up this session, not needed until the backend binds to something other than loopback -- just re-ranked relative to other open items.
+
+
+## Addendum, 2026-09-26 -- mDNS advertising waits on this item
+
+Mike wants the backend to advertise itself over mDNS (`_thingstudio._tcp`) so a remote backend is easy to find.
+That only makes sense once the backend can bind non-loopback, so it is deferred to this item (or post-MVP). Scope
+to add when picked up: `python-zeroconf` (LGPL-2.1), the machine's `.local` name in the Host allowlist, and a
+consumer for discovery (`thingstudio find` or an editor list). Detail: `packaging-install-routes-briefing.md`.

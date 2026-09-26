@@ -188,3 +188,9 @@ and "Remove flow…" that retries through resets; runtime 2.0.0. 1 entry:
 
 Backend-relayed TCP link, flow owns WiFi, password auth set over USB (serial exempt, WiFi off until set),
 board-level hostname, UDP probe for the board list; built 2026-09-24, runtime 3.0.0; ESP-IDF heap in HELLO (2026-09-25). 7 entries: `docs/working-notes/decisions/wifi-transport.md`.
+
+## Packaging and install routes (MVP item 7)
+
+Public repo + GitHub Releases, relocatable python-build-standalone folder per platform, macOS signed, CLI
+`thingstudio`, launchd/systemd recipes; mDNS/remote backend deferred to posture-2 (2026-09-26). 7 entries:
+`docs/working-notes/decisions/packaging.md`.
