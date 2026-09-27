@@ -13,7 +13,8 @@
  * process: the approach terminal apps use for their shells and Qt Creator's `disclaim` helper uses for
  * programs it runs. responsibility_spawnattrs_setdisclaim is a private libSystem call, looked up with dlsym;
  * if it's missing or the re-exec fails, this falls back to running as before, with a note on stderr.
- * THINGSTUDIO_NO_DISCLAIM=1 skips it (for diagnosis).
+ * Skipped under Apple's Terminal and SSH, which are exempt only for processes they're responsible for.
+ * THINGSTUDIO_NO_DISCLAIM=1 skips it too (for diagnosis).
  */
 #include <Python.h>
 
@@ -37,6 +38,11 @@ static void become_responsible(char **argv) {
         return;
     }
     if (getenv("THINGSTUDIO_NO_DISCLAIM") != NULL) return;
+    /* Apple's Terminal and SSH sessions are always allowed local network access (TN3179), but only for
+     * processes they're responsible for: disclaiming there throws that away (found 2026-09-27: after the
+     * disclaim change, Terminal was refused too). */
+    const char *term = getenv("TERM_PROGRAM");
+    if ((term != NULL && strcmp(term, "Apple_Terminal") == 0) || getenv("SSH_CONNECTION") != NULL) return;
     disclaim_fn disclaim = (disclaim_fn)dlsym(RTLD_DEFAULT, "responsibility_spawnattrs_setdisclaim");
     if (disclaim == NULL) {
         fprintf(stderr, "thingstudio: this macOS has no responsibility_spawnattrs_setdisclaim; local network "
