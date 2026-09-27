@@ -226,16 +226,20 @@ def macho_files(root: Path) -> list[Path]:
 
 
 def sign_macos(root: Path, identity: str | None) -> str:
-    """Signs every Mach-O in the bundle with the hardened runtime. With a Developer ID identity this is the
-    release signing (notarized afterwards by the workflow); without one, an ad-hoc signature, which still
-    binds the embedded Info.plist to thingstudio-python for local builds. Returns a line for BUILD.txt."""
+    """Signs every Mach-O in the bundle. With a Developer ID identity: hardened runtime and a secure
+    timestamp, the release signing (notarized afterwards by the workflow). Without one: an ad-hoc signature,
+    no hardened runtime, which still binds the embedded Info.plist to thingstudio-python for local builds.
+    Returns a line for BUILD.txt."""
     sign_as = identity or "-"
     entitlements = PACKAGING / "macos" / "entitlements.plist"
     files = macho_files(root)
     for f in files:
-        cmd = ["codesign", "--force", "--sign", sign_as, "--options", "runtime"]
+        cmd = ["codesign", "--force", "--sign", sign_as]
         if identity:
-            cmd.append("--timestamp")
+            # Hardened runtime (needed for notarization) only with a real identity: it enforces library
+            # validation, which needs every file signed by one team, and ad-hoc signatures have no team, so
+            # an ad-hoc hardened thingstudio-python is refused its own libpython ("different Team IDs").
+            cmd += ["--options", "runtime", "--timestamp"]
         if f.parent.name == "bin":
             cmd += ["--entitlements", str(entitlements)]
         if f.name == "thingstudio-python":

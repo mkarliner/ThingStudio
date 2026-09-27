@@ -230,7 +230,8 @@ mDNS lands with or after posture-2; `outstanding-items/posture-2-auth.md` carrie
   against the bundle's `libpython3.12.dylib` (install name `@rpath/...`, rpath `@executable_path/../lib`) with
   `Info.plist` embedded, identifier `org.thingstudio.backend`. The launcher runs it when present. Prefix
   resolution checked on Linux with the same construction: relocatable, `sys.prefix` right, pip works.
-- Every Mach-O is signed with the hardened runtime, libraries first; executables get
+- Every Mach-O is signed, libraries first (hardened runtime only with a Developer ID: ad hoc + hardened fails
+  library validation, "different Team IDs", found on Mike's Mac 2026-09-27); executables get
   `packaging/macos/entitlements.plist`, deliberately empty until a smoke test proves an exception is needed.
   With `--sign`/`$MACOS_SIGN_IDENTITY` it's the Developer ID release signature (with a secure timestamp);
   without, ad hoc, which still binds the plist for local builds. Each signature verified after signing.
