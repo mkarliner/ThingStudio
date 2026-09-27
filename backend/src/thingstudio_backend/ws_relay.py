@@ -80,7 +80,7 @@ from .board_recovery import CATCH_STEP
 from .runtime_installer import RuntimeInstaller
 from .serial_relay import SerialConnection, SerialRelayError, list_ports
 from .tcp_relay import DEFAULT_PORT as DEFAULT_TCP_PORT
-from .tcp_relay import PasswordLookup, TcpConnection, TcpRelayError, discover
+from .tcp_relay import DiscoveryResult, PasswordLookup, TcpConnection, TcpRelayError, scan
 
 # Either kind of board connection: serial_relay.SerialConnection or tcp_relay.TcpConnection share one
 # interface (open/write/read_loop/request_stop/close, `port`), and both raise their own *RelayError.
@@ -157,7 +157,7 @@ class ConnectionSession:
         runtime_installer: RuntimeInstaller | None = None,
         tcp_connection_factory: Callable[..., TcpConnection] = TcpConnection,
         password_lookup: PasswordLookup | None = None,
-        discover_fn: Callable[[], list] = discover,
+        discover_fn: Callable[[], DiscoveryResult | list] = scan,
     ) -> None:
         self._ws = ws
         self._tcp_connection_factory = tcp_connection_factory
@@ -264,13 +264,20 @@ class ConnectionSession:
         self._read_task = asyncio.create_task(self._pump_serial_to_ws(conn))
 
     async def _discover(self) -> None:
-        """Lists boards answering the WiFi transport's UDP probe (tcp_relay.discover)."""
+        """Lists boards answering the WiFi transport's UDP probe (tcp_relay.scan). `problem` goes to the
+        editor only when the scan couldn't be sent at all, so an empty list there reads as "couldn't look",
+        with the reason, rather than "no boards"."""
+        problem: str | None = None
         try:
-            boards = await asyncio.to_thread(self._discover_fn)
-        except Exception:  # noqa: BLE001 -- discovery must never take the session down
+            result = await asyncio.to_thread(self._discover_fn)
+        except Exception as exc:  # noqa: BLE001 -- discovery must never take the session down
             logger.exception("board discovery failed")
-            boards = []
-        payload = {
+            result = DiscoveryResult([], f"the WiFi scan failed: {exc}")
+        if isinstance(result, DiscoveryResult):
+            boards, problem = result.boards, result.problem
+        else:
+            boards = result
+        payload: dict = {
             "type": "boards",
             "boards": [
                 {
@@ -285,6 +292,8 @@ class ConnectionSession:
                 for b in boards
             ],
         }
+        if problem:
+            payload["problem"] = problem
         await self._send_quietly(json.dumps(payload))
 
     async def _install_runtime(self, port: str | None, baudrate: int, compiled_b64: object = None) -> None:
@@ -572,7 +581,7 @@ def make_websocket_handler(
     runtime_installer: RuntimeInstaller | None = None,
     password_lookup: PasswordLookup | None = None,
     tcp_connection_factory: Callable[..., TcpConnection] = TcpConnection,
-    discover_fn: Callable[[], list] = discover,
+    discover_fn: Callable[[], DiscoveryResult | list] = scan,
 ):
     """Build the aiohttp WS route handler. Production code uses the defaults (real
     SerialConnection/serial.Serial/RuntimeInstaller); tests pass fakes with no hardware

@@ -26,3 +26,9 @@
   MicroPython's, which is why the C3's failed join looked like plenty of RAM free. The editor prints a
   `[memory]` line after each HELLO and deploy, since those echoes are verbose-only. Runtime 5.1.0 (minor: both
   fields are optional on the wire, and absent means "not reported").
+- **2026-09-27 — Discovery probes every interface's directed broadcast, 255.255.255.255 only as fallback.**
+  On macOS the limited broadcast failed ("No route to host") where the subnet broadcast worked, and it only
+  leaves by one interface. Addresses from `getifaddrs` via ctypes (`net_interfaces.py`, no new dependency;
+  Windows falls back). A scan that couldn't send anywhere now tells the editor why (`problem` in the `boards`
+  message, shown in the console). `learnings/backend-security-research.md`, 2026-09-27.
+

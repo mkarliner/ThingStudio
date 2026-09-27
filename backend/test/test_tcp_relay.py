@@ -22,7 +22,7 @@ from aiohttp.test_utils import TestClient, TestServer
 
 from thingstudio_backend import tcp_relay
 from thingstudio_backend.line_framing import encode_f64_line
-from thingstudio_backend.tcp_relay import TcpConnection, TcpRelayError, answer_challenge, discover
+from thingstudio_backend.tcp_relay import TcpConnection, TcpRelayError, answer_challenge, discover, scan
 from thingstudio_backend.ws_relay import make_websocket_handler
 
 PASSWORD = "correct horse"
@@ -322,6 +322,57 @@ def test_discover_with_nothing_listening_returns_empty() -> None:
     assert discover(timeout_s=0.2, targets=["127.0.0.1"], probe_port=port) == []
 
 
+def test_scan_reports_a_problem_only_when_the_probe_could_not_be_sent_anywhere() -> None:
+    # "256.0.0.1" isn't an address, so sendto raises (gaierror, an OSError) like macOS's refusal does.
+    result = scan(timeout_s=0.2, targets=["256.0.0.1"], probe_port=9)
+    assert result.boards == []
+    assert result.problem is not None and "256.0.0.1" in result.problem
+
+
+def test_scan_one_failing_target_does_not_hide_a_board_on_another() -> None:
+    stop = threading.Event()
+    reply = json.dumps({"ts": 1, "hostname": "desk", "port": 7462, "wifiTransport": True}).encode()
+    port = _udp_responder([reply], stop)
+    try:
+        result = scan(timeout_s=0.5, targets=["256.0.0.1", "127.0.0.1"], probe_port=port)
+    finally:
+        stop.set()
+    assert [b.hostname for b in result.boards] == ["desk"]
+    assert result.problem is None
+
+
+def test_scan_defaults_to_each_interface_broadcast_address(monkeypatch) -> None:
+    sent: list[str] = []
+
+    class FakeSocket:
+        def setsockopt(self, *a): pass
+        def sendto(self, data, addr): sent.append(addr[0])
+        def settimeout(self, t): pass
+        def recvfrom(self, n): raise TimeoutError
+        def close(self): pass
+
+    monkeypatch.setattr(tcp_relay.socket, "socket", lambda *a: FakeSocket())
+    monkeypatch.setattr(tcp_relay, "broadcast_addresses", lambda: ["192.168.10.255", "10.1.255.255"])
+    assert scan(timeout_s=0.05).problem is None
+    assert set(sent) == {"192.168.10.255", "10.1.255.255"}
+    sent.clear()
+    monkeypatch.setattr(tcp_relay, "broadcast_addresses", lambda: [])
+    scan(timeout_s=0.05)
+    assert set(sent) == {"255.255.255.255"}  # interfaces unreadable (e.g. Windows): the old limited broadcast
+
+
+def test_broadcast_addresses_are_real_non_loopback_ipv4() -> None:
+    import ipaddress
+
+    from thingstudio_backend.net_interfaces import broadcast_addresses
+
+    found = broadcast_addresses()
+    assert len(found) == len(set(found))
+    for a in found:
+        ip = ipaddress.IPv4Address(a)  # raises if not IPv4
+        assert not ip.is_loopback
+
+
 # --- through the WebSocket relay -------------------------------------------------------------
 
 
@@ -403,6 +454,17 @@ async def test_ws_discover_returns_boards() -> None:
                 {"hostname": "kitchen", "address": "10.0.0.5", "port": 7462, "chip": "ESP32", "flow": None, "wifiTransport": True, "busy": False}
             ],
         }
+        await ws.close()
+
+
+@pytest.mark.asyncio
+async def test_ws_discover_passes_on_why_a_scan_could_not_run() -> None:
+    result = tcp_relay.DiscoveryResult([], "couldn't send the WiFi scan to 192.168.10.255: No route to host")
+    async with TestClient(TestServer(_app(discover_fn=lambda: result))) as client:
+        ws = await client.ws_connect("/ws")
+        await ws.send_json({"type": "discover"})
+        reply = await ws.receive_json()
+        assert reply == {"type": "boards", "boards": [], "problem": result.problem}
         await ws.close()
 
 

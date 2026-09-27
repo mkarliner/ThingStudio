@@ -14,7 +14,8 @@
 # challenge, or uses one the editor just asked the user for. It never goes over the network: only
 # HMAC-SHA256(sha256^N(salt + password), nonce) does.
 #
-# discover() broadcasts the UDP probe and collects replies for the editor's board list.
+# scan()/discover() send the UDP probe to each interface's broadcast address and collect replies for the
+# editor's board list.
 #
 # Fault handling: every failure is a TcpRelayError naming the host and the step, the same
 # NODE_ERROR shape SerialRelayError uses; the handshake distinguishes the cases a user can act on
@@ -32,6 +33,8 @@ import socket
 import time
 from collections.abc import AsyncIterator, Callable
 from dataclasses import dataclass
+
+from .net_interfaces import broadcast_addresses
 
 logger = logging.getLogger(__name__)
 
@@ -93,10 +96,9 @@ def _explain_connect_oserror(exc: OSError) -> str:
     text = str(exc)
     if exc.errno == errno.EHOSTUNREACH and sys.platform == "darwin":
         return (
-            f"{text} -- on a Mac this usually means macOS is blocking this computer's local network access for "
-            "Thingstudio. Start Thingstudio from Apple's Terminal app, which macOS always allows; other terminals "
-            "(iTerm, VS Code) often aren't enough for Homebrew's Python even when allowed in System Settings > "
-            "Privacy & Security > Local Network"
+            f"{text} -- on a Mac this usually means macOS is blocking Thingstudio's local network access. Allow "
+            "Thingstudio in System Settings > Privacy & Security > Local Network, then restart it. Running from "
+            "source, start it from Apple's Terminal app instead, which macOS always allows"
         )
     if exc.errno in (errno.EHOSTUNREACH, errno.ENETUNREACH):
         return f"{text} -- check this computer and the board are on the same network (not a guest network)"
@@ -338,33 +340,50 @@ def _parse_probe_reply(data: bytes, address: str) -> DiscoveredBoard | None:
 _PROBE_RESEND_S = 0.4
 
 
-def discover(timeout_s: float = 1.5, targets: list[str] | None = None, probe_port: int = PROBE_PORT) -> list[DiscoveredBoard]:
-    """Broadcasts the probe and returns every distinct board that answers within `timeout_s`.
-    Blocking -- ws_relay runs it in a thread. `targets` overrides the broadcast address (tests).
-    Never raises: a network with no broadcast route just finds nothing, logged.
+@dataclass(frozen=True)
+class DiscoveryResult:
+    """What a scan found. `problem` is set only when the probe couldn't be sent anywhere, so an empty
+    list means "nothing answered" rather than "couldn't look" -- the editor shows it to the user."""
+    boards: list[DiscoveredBoard]
+    problem: str | None = None
+
+
+def scan(timeout_s: float = 1.5, targets: list[str] | None = None, probe_port: int = PROBE_PORT) -> DiscoveryResult:
+    """Sends the probe and returns every distinct board that answers within `timeout_s`.
+    Blocking -- ws_relay runs it in a thread. Never raises.
+
+    Targets: the broadcast address of every WiFi/Ethernet interface (net_interfaces.py), falling back to
+    255.255.255.255 where interfaces can't be listed; `targets` overrides both (tests). Not the limited
+    broadcast alone: on macOS it can fail with "No route to host" while the interface's own broadcast
+    address works (2026-09-27), and it only ever leaves by one interface.
 
     The probe goes out every _PROBE_RESEND_S until the deadline, not once: WiFi broadcasts aren't
     acknowledged or retried, and a board in modem sleep can miss one. (On the 2026-09-25 bench, both
     boards answered within 0.3 s; a "missing" second board was the port menu's stale placeholder, not
     discovery.) Replies are de-duplicated by (hostname, address)."""
+    if targets is None:
+        targets = broadcast_addresses() or ["255.255.255.255"]
     found: dict[tuple[str, str], DiscoveredBoard] = {}
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     except OSError as exc:
         logger.warning("board discovery: could not open a UDP socket: %s", exc)
-        return []
+        return DiscoveryResult([], f"couldn't open a network socket for the WiFi scan: {exc}")
+    failures: dict[str, OSError] = {}
+    sent_any = False
     try:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        warned: set[str] = set()
 
         def send_probes() -> None:
-            for target in targets or ["255.255.255.255"]:
+            nonlocal sent_any
+            for target in targets:
                 try:
                     sock.sendto(PROBE_REQUEST, (target, probe_port))
+                    sent_any = True
                 except OSError as exc:
-                    if target not in warned:  # once per scan, not once per resend
-                        warned.add(target)
-                        logger.warning("board discovery: probe to %s failed: %s", target, exc)
+                    if target not in failures:  # once per scan, not once per resend
+                        failures[target] = exc
+                        logger.debug("board discovery: probe to %s failed: %s", target, exc)
 
         start = time.monotonic()
         deadline = start + timeout_s
@@ -392,4 +411,17 @@ def discover(timeout_s: float = 1.5, targets: list[str] | None = None, probe_por
                 found[(board.hostname, board.address)] = board
     finally:
         sock.close()
-    return sorted(found.values(), key=lambda b: b.hostname)
+    boards = sorted(found.values(), key=lambda b: b.hostname)
+    problem = None
+    if not sent_any and failures:
+        exc = next(iter(failures.values()))
+        problem = f"couldn't send the WiFi scan to {', '.join(failures)}: {_explain_connect_oserror(exc)}"
+        logger.warning("board discovery: %s", problem)
+    elif failures:
+        logger.info("board discovery: probe failed for %s, sent to the others", ", ".join(failures))
+    return DiscoveryResult(boards, problem)
+
+
+def discover(timeout_s: float = 1.5, targets: list[str] | None = None, probe_port: int = PROBE_PORT) -> list[DiscoveredBoard]:
+    """scan(), boards only."""
+    return scan(timeout_s, targets, probe_port).boards

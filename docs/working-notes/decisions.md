@@ -187,7 +187,9 @@ and "Remove flow…" that retries through resets; runtime 2.0.0. 1 entry:
 ## WiFi transport (MVP item 6)
 
 Backend-relayed TCP link, flow owns WiFi, password auth set over USB (serial exempt, WiFi off until set),
-board-level hostname, UDP probe for the board list; built 2026-09-24, runtime 3.0.0; ESP-IDF heap in HELLO (2026-09-25). 7 entries: `docs/working-notes/decisions/wifi-transport.md`.
+board-level hostname, UDP probe for the board list; built 2026-09-24, runtime 3.0.0; ESP-IDF heap in HELLO
+(2026-09-25); probe sent to each interface's broadcast address (2026-09-27). 7 entries:
+`docs/working-notes/decisions/wifi-transport.md`.
 
 ## Packaging and install routes (MVP item 7)
 

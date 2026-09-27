@@ -62,4 +62,5 @@ The console says what went wrong:
 - **No password set** or **Connection refused:** the board has no password, so it only accepts USB. Set one over
   USB in **Board settings…**, then click **⟳ ports**.
 - **Board not listed:** click **⟳ ports** again. If it's still missing, check its flow has joined WiFi, or use
-  **WiFi address…**.
+  **WiFi address…**. If the console says the WiFi scan didn't run, the reason follows; on a Mac it's usually
+  the Local Network permission (see **No route to host** above).

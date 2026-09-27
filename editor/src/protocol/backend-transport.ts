@@ -90,7 +90,14 @@ export const INSTALL_IDLE_TIMEOUT_MS = 30_000;
  * idle timer allows that much plus a margin. */
 export const INSTALL_CATCH_WAIT_MS = 75_000;
 
-/** One board that answered the WiFi transport's UDP probe (backend tcp_relay.discover). */
+/** A WiFi scan's result (backend tcp_relay.scan). `problem` is set only when the scan couldn't be sent
+ * at all, so an empty `boards` then means "couldn't look" rather than "nothing there". */
+export interface NetworkScanResult {
+  readonly boards: NetworkBoardInfo[];
+  readonly problem: string | null;
+}
+
+/** One board that answered the WiFi transport's UDP probe (backend tcp_relay.scan). */
 export interface NetworkBoardInfo {
   readonly hostname: string;
   readonly address: string;
@@ -135,7 +142,7 @@ export class BackendTransport implements DeviceTransport {
   #connectedPort: string | null = null;
   #pendingListPorts: { resolve(ports: SerialPortInfo[]): void; reject(err: unknown): void }[] = [];
   #pendingConnect: { resolve(): void; reject(err: Error): void } | null = null;
-  #pendingDiscover: { resolve(boards: NetworkBoardInfo[]): void; reject(err: unknown): void }[] = [];
+  #pendingDiscover: { resolve(result: NetworkScanResult): void; reject(err: unknown): void }[] = [];
   #connectedIsNetwork = false;
   #connectedHostname: string | null = null;
   #pendingRemoveFlow: { resolve(): void; reject(err: Error): void; onStatus?: (text: string) => void } | null = null;
@@ -257,9 +264,9 @@ export class BackendTransport implements DeviceTransport {
   }
 
   /** Lists boards on the local network that answer the WiFi transport's probe. Takes about 1.5 s. */
-  async discoverBoards(): Promise<NetworkBoardInfo[]> {
+  async discoverBoards(): Promise<NetworkScanResult> {
     if (!this.#ws) throw new Error("BackendTransport is not open -- call open() first");
-    const p = new Promise<NetworkBoardInfo[]>((resolve, reject) => {
+    const p = new Promise<NetworkScanResult>((resolve, reject) => {
       this.#pendingDiscover.push({ resolve, reject });
     });
     this.#ws.send(JSON.stringify({ type: "discover" }));
@@ -512,7 +519,10 @@ export class BackendTransport implements DeviceTransport {
       }
       case "boards": {
         const waiter = this.#pendingDiscover.shift();
-        waiter?.resolve(Array.isArray(m.boards) ? (m.boards as NetworkBoardInfo[]) : []);
+        waiter?.resolve({
+          boards: Array.isArray(m.boards) ? (m.boards as NetworkBoardInfo[]) : [],
+          problem: typeof m.problem === "string" ? m.problem : null,
+        });
         break;
       }
       case "install_runtime_result": {

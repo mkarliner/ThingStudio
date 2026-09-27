@@ -49,3 +49,21 @@ Status: detail file, split out of `learnings.md` on 2026-09-06 to keep that inde
   and identity is by code signature, so ad-hoc-signed Homebrew Python is the "may behave weirdly" case. Matters for packaging (MVP item 7): the
   bundled runtime must be allowed local network access. `tcp_relay._explain_connect_oserror` points Mac users at the
   setting.
+
+## 2026-09-27 -- Local Network on the signed bundle; 255.255.255.255 refused while the subnet broadcast works
+
+- Signed + notarized bundle (Developer ID, `thingstudio-python` with embedded Info.plist), started from iTerm on
+  Mike's Intel Mac (macOS, Tailscale up): TCP connect to the board by IP **worked**, no Local Network prompt,
+  no Thingstudio entry in System Settings > Local Network. So TCP to a LAN address was allowed without any
+  prompt (probably attributed to iTerm, which is allowed), unlike the 2026-09-25 Homebrew-Python run.
+- Discovery's probe to 255.255.255.255 failed with `[Errno 65] No route to host` in the same process, although
+  `route get 255.255.255.255` and the default route were both `en0` (192.168.10.0/24). The same probe to
+  `192.168.10.255` found the Pico W at once. Cause not pinned down (Tailscale's network extension is the prime
+  suspect; not tested with Tailscale off). Fix doesn't depend on it: probe each interface's directed broadcast
+  (TN3179's own advice, "run your service discovery code on all broadcast-capable interfaces"), limited
+  broadcast only as fallback. `net_interfaces.py`, `tcp_relay.scan()`.
+- TN3179 (Apple): 255.255.255.255 and multicast count as local network addresses; ad-hoc signed code isn't
+  tracked reliably by Local Network privacy (use an Apple-issued identity); Terminal, SSH, launchd daemons and
+  root are exempt, launchd *agents* are not (need `AssociatedBundleIdentifiers` or their own Info.plist);
+  the first operation can be denied before the user answers the alert, so retry.
+

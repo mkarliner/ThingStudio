@@ -1665,7 +1665,9 @@ async function refreshBackendPorts(onLoad = false): Promise<void> {
     }
     let boards: NetworkBoardInfo[] = [];
     try {
-      boards = await probe.discoverBoards();
+      const scan = await probe.discoverBoards();
+      boards = scan.boards;
+      if (scan.problem) logLine(`[ports] WiFi scan didn't run: ${scan.problem}`, "err");
     } catch {
       boards = []; // an older backend without discovery, or it went away: just no WiFi list
     }
