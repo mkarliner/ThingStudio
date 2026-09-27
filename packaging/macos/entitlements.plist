@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Hardened-runtime exceptions for the bundle's executables. Deliberately empty: every library in the
+     bundle is re-signed with the same Developer ID, so library validation passes, and Python 3.12 has no
+     JIT. Add an exception here only when a CI smoke test proves one is needed, and say which. -->
+<plist version="1.0">
+<dict>
+</dict>
+</plist>

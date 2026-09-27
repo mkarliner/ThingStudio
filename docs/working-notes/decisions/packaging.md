@@ -26,3 +26,7 @@
   `.../releases/latest/download/install.sh`; script and archives always match. Per-user install under
   `~/.local/share/thingstudio`, previous version kept, `~/.thingstudio` never touched.
   `packaging-install-routes-briefing.md`, "Step 3 as built".
+- **2026-09-27 — macOS: own `thingstudio-python` with embedded Info.plist, all Mach-O signed + notarized.**
+  Signing alone doesn't get the Local Network prompt; the plist must be linked into the executable. Hardened
+  runtime, no entitlements until proven needed. Tag builds refuse to ship unsigned macOS bundles.
+  `packaging-install-routes-briefing.md`, "Step 6 as built".

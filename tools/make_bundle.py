@@ -17,6 +17,10 @@
 # something against the CI machine that may not run elsewhere. Versions are pinned by
 # packaging/constraints.txt, so two builds of the same tag ship the same dependencies.
 #
+# macOS bundles also get python/bin/thingstudio-python (packaging/macos/: a python3 with an embedded
+# Info.plist, so macOS can ask for Local Network permission) and every Mach-O signed with the hardened
+# runtime: with --sign / $MACOS_SIGN_IDENTITY (a Developer ID) for releases, ad hoc otherwise.
+#
 # Needs backend/src/thingstudio_backend/_assets/ filled first (tools/build_assets.py, `make assets`);
 # refuses to bundle without it. Python 3.10+, stdlib only.
 
@@ -24,14 +28,15 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import os
 import platform
+import re
 import shutil
 import stat
 import subprocess
 import sys
 import tarfile
 import tempfile
-import re
 import urllib.request
 import zipfile
 from pathlib import Path
@@ -56,6 +61,12 @@ TARGETS = {
 # 2.28 or later. Every compiled wheel installed must carry a manylinux tag at or below it (check_glibc_floor).
 GLIBC_FLOOR = (2, 28)
 _MANYLINUX_ALIASES = {"manylinux1": (2, 5), "manylinux2010": (2, 12), "manylinux2014": (2, 17)}
+
+
+MACHO_MAGICS = {b"\xfe\xed\xfa\xce", b"\xfe\xed\xfa\xcf", b"\xce\xfa\xed\xfe", b"\xcf\xfa\xed\xfe",
+                b"\xca\xfe\xba\xbe", b"\xbe\xba\xfe\xca"}
+MACOS_BUNDLE_ID = "org.thingstudio.backend"
+MACOS_MIN_VERSION = {"macos-arm64": "11.0", "macos-x86_64": "10.13"}  # python-build-standalone's own minimums
 
 
 class BundleError(Exception):
@@ -182,6 +193,65 @@ def run(cmd: list[str], **kw) -> None:
         raise BundleError(f"command failed ({result.returncode}): {' '.join(str(c) for c in cmd)}")
 
 
+def build_macos_executable(root: Path, plat: str, version: str) -> Path:
+    """Compiles packaging/macos/thingstudio-python.c against the bundle's libpython, with Info.plist
+    (NSLocalNetworkUsageDescription) embedded, into python/bin/thingstudio-python. See that file's header."""
+    py_root = root / "python"
+    include = next(py_root.glob("include/python3.*"), None)
+    lib = next((py_root / "lib").glob("libpython3.*.dylib"), None)
+    if include is None or lib is None:
+        raise BundleError(f"no Python headers or libpython3.*.dylib under {py_root}")
+    with tempfile.TemporaryDirectory() as tmp:
+        plist = Path(tmp) / "Info.plist"
+        plist.write_text((PACKAGING / "macos" / "Info.plist").read_text().replace("@VERSION@", version))
+        exe = py_root / "bin" / "thingstudio-python"
+        run(["clang", "-O2", f"-mmacosx-version-min={MACOS_MIN_VERSION[plat]}", f"-I{include}",
+             str(PACKAGING / "macos" / "thingstudio-python.c"), f"-L{lib.parent}",
+             f"-l{lib.name[3:-len('.dylib')]}", "-Wl,-rpath,@executable_path/../lib",
+             f"-Wl,-sectcreate,__TEXT,__info_plist,{plist}", "-o", str(exe)])
+    return exe
+
+
+def macho_files(root: Path) -> list[Path]:
+    """Every Mach-O file under root (not symlinks), libraries before executables, so each is signed after
+    anything it loads."""
+    found = []
+    for p in root.rglob("*"):
+        if p.is_symlink() or not p.is_file():
+            continue
+        with p.open("rb") as f:
+            if f.read(4) in MACHO_MAGICS:
+                found.append(p)
+    return sorted(found, key=lambda p: (p.parent.name == "bin", str(p)))
+
+
+def sign_macos(root: Path, identity: str | None) -> str:
+    """Signs every Mach-O in the bundle with the hardened runtime. With a Developer ID identity this is the
+    release signing (notarized afterwards by the workflow); without one, an ad-hoc signature, which still
+    binds the embedded Info.plist to thingstudio-python for local builds. Returns a line for BUILD.txt."""
+    sign_as = identity or "-"
+    entitlements = PACKAGING / "macos" / "entitlements.plist"
+    files = macho_files(root)
+    for f in files:
+        cmd = ["codesign", "--force", "--sign", sign_as, "--options", "runtime"]
+        if identity:
+            cmd.append("--timestamp")
+        if f.parent.name == "bin":
+            cmd += ["--entitlements", str(entitlements)]
+        if f.name == "thingstudio-python":
+            cmd += ["--identifier", MACOS_BUNDLE_ID]
+        run(cmd + [str(f)], stdout=subprocess.DEVNULL)
+    for f in files:
+        result = subprocess.run(["codesign", "--verify", "--strict", str(f)], capture_output=True, text=True)
+        if result.returncode != 0:
+            raise BundleError(f"signature check failed for {f.relative_to(root)}: {result.stderr.strip()}")
+    info = subprocess.run(["codesign", "-dv", str(root / "python" / "bin" / "thingstudio-python")],
+                          capture_output=True, text=True).stderr
+    if f"Identifier={MACOS_BUNDLE_ID}" not in info or "Info.plist entries=" not in info:
+        raise BundleError(f"thingstudio-python is signed without its identifier or Info.plist:\n{info}")
+    return f"signed {'by ' + identity if identity else 'ad hoc (not for release)'}, {len(files)} Mach-O files\n"
+
+
 def backend_version() -> str:
     """[project] version from backend/pyproject.toml (a regex, not tomllib, so Python 3.10 works)."""
     m = re.search(r'^version\s*=\s*"([^"]+)"', (REPO / "backend" / "pyproject.toml").read_text(), re.M)
@@ -198,7 +268,8 @@ def git_commit() -> str:
         return "unknown"
 
 
-def bundle(plat: str, out_dir: Path, python_archive: Path | None = None, cache: Path | None = None) -> Path:
+def bundle(plat: str, out_dir: Path, python_archive: Path | None = None, cache: Path | None = None,
+           sign_identity: str | None = None) -> Path:
     """Builds the folder and its archive in out_dir. Returns the archive's path."""
     if plat not in TARGETS:
         raise BundleError(f"unknown platform {plat!r}; one of {', '.join(TARGETS)}")
@@ -246,6 +317,13 @@ def bundle(plat: str, out_dir: Path, python_archive: Path | None = None, cache: 
     for script in ("bin/thingstudio-backend", "Scripts/thingstudio-backend.exe", "Scripts/thingstudio-backend"):
         (root / "python" / script).unlink(missing_ok=True)
 
+    signed = ""
+    if plat.startswith("macos"):
+        build_macos_executable(root, plat, version)
+        signed = sign_macos(root, sign_identity)
+    elif sign_identity:
+        raise BundleError("--sign is for macOS bundles only")
+
     launcher = "thingstudio.cmd" if windows else "thingstudio"
     shutil.copy2(PACKAGING / "launcher" / launcher, root / launcher)
     if not windows:
@@ -255,7 +333,7 @@ def bundle(plat: str, out_dir: Path, python_archive: Path | None = None, cache: 
     shutil.copy2(REPO / "LICENSE", root / "LICENSE")
     (root / "BUILD.txt").write_text(
         f"thingstudio {version}\nplatform {plat}\ncommit {git_commit()}\n"
-        f"python {PYTHON_VERSION} (python-build-standalone {PBS_RELEASE}, {TARGETS[plat]})\n" + glibc
+        f"python {PYTHON_VERSION} (python-build-standalone {PBS_RELEASE}, {TARGETS[plat]})\n" + glibc + signed
     )
 
     if windows:
@@ -276,9 +354,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", type=Path, default=REPO / "dist", help="output folder (default: dist/)")
     parser.add_argument("--python-archive", type=Path, default=None,
                         help="use this python-build-standalone archive instead of downloading it (hash still checked)")
+    parser.add_argument("--sign", default=os.environ.get("MACOS_SIGN_IDENTITY") or None, metavar="IDENTITY",
+                        help="macOS: Developer ID identity to sign with (default: $MACOS_SIGN_IDENTITY; "
+                        "none = ad-hoc signature, fine locally, not for release)")
     args = parser.parse_args(argv)
     try:
-        out = bundle(args.platform or host_platform(), args.out, args.python_archive)
+        out = bundle(args.platform or host_platform(), args.out, args.python_archive, sign_identity=args.sign)
     except (BundleError, OSError) as exc:
         print(f"make_bundle: {exc}", file=sys.stderr)
         return 1

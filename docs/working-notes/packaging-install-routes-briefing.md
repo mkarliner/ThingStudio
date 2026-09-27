@@ -144,7 +144,8 @@ mDNS lands with or after posture-2; `outstanding-items/posture-2-auth.md` carrie
    PowerShell one-liner. Until then Windows is the zip route, documented in `getting-started.md`.
 4. `thingstudio` command name + alias, first-run checks.
 5. Service recipes and `thingstudio service` helper.
-6. Homebrew tap, scoop bucket, winget manifest; Apple signing and notarization once the Developer ID is active.
+6. Homebrew tap, scoop bucket, winget manifest. ~~Apple signing and notarization~~ written 2026-09-27, first CI
+   run and the iTerm Local Network test on Mike's Mac pending (below).
 7. Install docs, then fresh-VM acceptance and the newcomer test.
 
 ## Step 1 as built (2026-09-26)
@@ -218,6 +219,32 @@ mDNS lands with or after posture-2; `outstanding-items/posture-2-auth.md` carrie
 - Workflow patch also pins `ubuntu-latest` to `ubuntu-24.04` (GitHub moves `ubuntu-latest` to 26.04 on
   2026-10-19) and shellchecks the scripts.
 - User docs: `getting-started.md` Install/Start rewritten: `curl | sh`, Windows zip, "from source" kept.
+
+## Step 6 as built (2026-09-27): macOS signing, notarization, Local Network
+
+- **Finding:** signing alone doesn't fix Local Network. macOS attributes the access to the executable and only
+  prompts for one declaring `NSLocalNetworkUsageDescription` in an embedded `__TEXT,__info_plist` section;
+  otherwise it denies silently. The section is added at link time, so it can't go on python-build-standalone's
+  `python3`. Same fix in tmux, and asked for in several CLI projects' issues (pi, claude-code, cmux).
+- `packaging/macos/thingstudio-python.c` is CPython's own main (`Py_BytesMain`), linked by `make_bundle.py`
+  against the bundle's `libpython3.12.dylib` (install name `@rpath/...`, rpath `@executable_path/../lib`) with
+  `Info.plist` embedded, identifier `org.thingstudio.backend`. The launcher runs it when present. Prefix
+  resolution checked on Linux with the same construction: relocatable, `sys.prefix` right, pip works.
+- Every Mach-O is signed with the hardened runtime, libraries first; executables get
+  `packaging/macos/entitlements.plist`, deliberately empty until a smoke test proves an exception is needed.
+  With `--sign`/`$MACOS_SIGN_IDENTITY` it's the Developer ID release signature (with a secure timestamp);
+  without, ad hoc, which still binds the plist for local builds. Each signature verified after signing.
+- Workflow: secrets `MACOS_CERT_P12`, `MACOS_CERT_PASSWORD`, `APPLE_API_KEY_P8`, `APPLE_API_KEY_ID`,
+  `APPLE_API_ISSUER_ID`, `APPLE_TEAM_ID`. Throwaway keychain; the certificate must be a Developer ID Application
+  for that team. Signed folder zipped and notarized with `notarytool --wait`; Apple's log printed; anything but
+  Accepted fails the job. No stapling possible for bare executables: Gatekeeper checks online. A tag build
+  refuses to continue without the secrets; forks/PRs build ad hoc.
+- Smoke test adds: serial port listing through the bundled Python (ctypes into IOKit on macOS, the likeliest
+  hardened-runtime casualty) on every platform, and on macOS the signature, identifier and plist.
+- User docs: `wifi-connection.md` "No route to host (Mac)" now says to choose Allow, or where to turn it on
+  later; the Terminal workaround kept for running from source. Rewrite it if Mike's test shows otherwise.
+- Untested until CI runs: all macOS code (Apple clang, codesign, notarytool). Then the real test: the signed
+  build started from iTerm on Mike's Mac, WiFi-connect to a board, expect a prompt, not a silent denial.
 
 ## Out of scope
 

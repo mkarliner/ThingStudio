@@ -135,7 +135,7 @@ def check_running(launcher: Path, data_dir: Path, log_path: Path) -> list[str]:
 
 
 def check_runtime_stamp(folder: Path) -> str:
-    py = folder / "python" / ("python.exe" if os.name == "nt" else "bin/python3")
+    py = bundle_python(folder)
     code = (
         "from thingstudio_backend.runtime_installer import RuntimeInstaller;"
         "f = dict(RuntimeInstaller().build_file_list());"
@@ -146,6 +146,36 @@ def check_runtime_stamp(folder: Path) -> str:
     if out.returncode != 0 or len(sha) != 40:
         raise SmokeError(f"runtime build stamp missing or wrong: {sha!r} {out.stderr[-500:]}")
     return f"runtime build stamp {sha[:12]}"
+
+
+def check_serial_listing(folder: Path) -> str:
+    """Lists serial ports with the bundled Python. On macOS pyserial does this through ctypes into IOKit,
+    the part most likely to trip over the hardened runtime of a signed build."""
+    py = bundle_python(folder)
+    code = "import serial.tools.list_ports as lp; print(len(lp.comports()))"
+    out = subprocess.run([str(py), "-I", "-c", code], capture_output=True, text=True, cwd=tempfile.gettempdir())
+    if out.returncode != 0:
+        raise SmokeError(f"listing serial ports failed: {out.stderr[-800:]}")
+    return f"serial port listing works ({out.stdout.strip()} ports on this machine)"
+
+
+def check_macos_signature(folder: Path) -> str:
+    exe = folder / "python" / "bin" / "thingstudio-python"
+    if not exe.is_file():
+        raise SmokeError(f"{exe} missing; macOS bundles must carry it (Local Network permission)")
+    verify = subprocess.run(["codesign", "--verify", "--strict", str(exe)], capture_output=True, text=True)
+    info = subprocess.run(["codesign", "-dv", str(exe)], capture_output=True, text=True).stderr
+    if verify.returncode != 0 or "Identifier=org.thingstudio.backend" not in info or "Info.plist entries=" not in info:
+        raise SmokeError(f"thingstudio-python isn't signed as expected: {verify.stderr.strip()} {info}")
+    team = next((line.split("=", 1)[1] for line in info.splitlines() if line.startswith("TeamIdentifier=")), "none")
+    return f"thingstudio-python signed with Info.plist (team {team})"
+
+
+def bundle_python(folder: Path) -> Path:
+    if os.name == "nt":
+        return folder / "python" / "python.exe"
+    exe = folder / "python" / "bin" / "thingstudio-python"
+    return exe if exe.is_file() else folder / "python" / "bin" / "python3"
 
 
 def smoke(archive: Path) -> list[str]:
@@ -171,6 +201,9 @@ def smoke(archive: Path) -> list[str]:
                 print("---- backend output ----\n" + log.read_text(errors="replace") + "\n------------------------")
             raise
         passed.append(check_runtime_stamp(folder))
+        passed.append(check_serial_listing(folder))
+        if sys.platform == "darwin":
+            passed.append(check_macos_signature(folder))
     return passed
 
 

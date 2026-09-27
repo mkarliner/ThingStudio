@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Embedded into thingstudio-python (see thingstudio-python.c). CFBundleShortVersionString is filled in
+     by tools/make_bundle.py. The usage string is what macOS shows in its Local Network permission prompt. -->
+<plist version="1.0">
+<dict>
+  <key>CFBundleIdentifier</key>
+  <string>org.thingstudio.backend</string>
+  <key>CFBundleName</key>
+  <string>Thingstudio</string>
+  <key>CFBundleDisplayName</key>
+  <string>Thingstudio</string>
+  <key>CFBundleShortVersionString</key>
+  <string>@VERSION@</string>
+  <key>CFBundleInfoDictionaryVersion</key>
+  <string>6.0</string>
+  <key>NSLocalNetworkUsageDescription</key>
+  <string>Thingstudio connects to your boards over your local network, to find them and to deploy and debug flows over WiFi.</string>
+</dict>
+</plist>
