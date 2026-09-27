@@ -8,9 +8,21 @@ You need a supported board with [MicroPython installed](installing-micropython.m
 
 Thingstudio comes with everything it needs, including its own Python. Nothing else needs installing.
 
+Each [release](https://github.com/mkarliner/ThingStudio/releases/latest) has a package for each platform:
+
+| Platform | Package |
+| --- | --- |
+| macOS, Apple Silicon (M1 and later) | `thingstudio-VERSION-macos-arm64.tar.gz` |
+| macOS, Intel | `thingstudio-VERSION-macos-x86_64.tar.gz` |
+| Linux, x86_64 | `thingstudio-VERSION-linux-x86_64.tar.gz` |
+| Linux, ARM 64-bit (Raspberry Pi 4 and 5 on a 64-bit OS) | `thingstudio-VERSION-linux-aarch64.tar.gz` |
+| Windows, x86_64 | `thingstudio-VERSION-windows-x86_64.zip` |
+
+`SHA256SUMS` lists each package's checksum. The macOS packages are signed and notarized by Apple.
+
 **macOS and Linux**
 
-Run this in a terminal:
+The installer picks the right package for your computer, checks it and sets it up. Run this in a terminal:
 
 ```sh
 curl -fsSL https://github.com/mkarliner/ThingStudio/releases/latest/download/install.sh | sh
@@ -28,9 +40,17 @@ curl -fsSL https://github.com/mkarliner/ThingStudio/releases/latest/download/ins
 
 Your flows and settings live in `~/.thingstudio`. Upgrading and removing never touch them.
 
+**macOS and Linux, without the installer**
+
+1. Download your platform's package from the [releases page](https://github.com/mkarliner/ThingStudio/releases/latest).
+2. Unpack it: `tar -xzf thingstudio-VERSION-PLATFORM.tar.gz`.
+3. Run `./thingstudio` in the unpacked folder.
+
+This doesn't add a `thingstudio` command. Start it from that folder, or by its full path. To upgrade, replace the folder with a newer one.
+
 **Windows**
 
-1. Download `thingstudio-…-windows-x86_64.zip` from the [releases page](https://github.com/mkarliner/ThingStudio/releases/latest).
+1. Download `thingstudio-VERSION-windows-x86_64.zip` from the [releases page](https://github.com/mkarliner/ThingStudio/releases/latest).
 2. Unzip it anywhere, for example into your Documents folder.
 3. In the unzipped folder, run `thingstudio.cmd`. If Windows asks whether to run it, choose **Run**.
 
