@@ -46,7 +46,7 @@ In the repository folder, run `make`. This builds the editor and these docs, ins
 thingstudio
 ```
 
-On Windows, run `thingstudio.cmd`. From source, the command is `thingstudio-backend`, or `make run`.
+On Windows, run `thingstudio.cmd`. From source, the command is `thingstudio-backend`, or `make run`. On a Mac, start it from Apple's **Terminal** app: macOS blocks WiFi connections from a copy run from source in other terminals, such as iTerm.
 
 If your terminal says the command isn't found just after installing, open a new terminal.
 

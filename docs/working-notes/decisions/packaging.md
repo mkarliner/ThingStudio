@@ -30,3 +30,6 @@
   Signing alone doesn't get the Local Network prompt; the plist must be linked into the executable. Hardened
   runtime, no entitlements until proven needed. Tag builds refuse to ship unsigned macOS bundles.
   `packaging-install-routes-briefing.md`, "Step 6 as built".
+- **2026-09-27 — `thingstudio-python` disclaims responsibility on start** (re-exec with the private
+  `responsibility_spawnattrs_setdisclaim`, falls back with a note), so macOS judges Local Network access for
+  Thingstudio rather than the terminal app. Smoke test fails if it can't. Briefing, "Step 6 as built".

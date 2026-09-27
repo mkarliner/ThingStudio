@@ -130,6 +130,10 @@ def check_running(launcher: Path, data_dir: Path, log_path: Path) -> list[str]:
         raise SmokeError("backend didn't report the packaged layout (is it reading a repo checkout instead?)")
     if "NODE_ERROR" in log_text:
         raise SmokeError("backend logged a NODE_ERROR")
+    if "take responsibility" in log_text or "no responsibility_spawnattrs_setdisclaim" in log_text:
+        # packaging/macos/thingstudio-python.c: without this, macOS judges Local Network access for the
+        # terminal app, not Thingstudio (2026-09-27)
+        raise SmokeError("thingstudio-python couldn't make itself its own responsible process (see log)")
     passed.append("packaged layout, no NODE_ERROR in the log")
     return passed
 

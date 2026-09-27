@@ -66,4 +66,12 @@ Status: detail file, split out of `learnings.md` on 2026-09-06 to keep that inde
   tracked reliably by Local Network privacy (use an Apple-issued identity); Terminal, SSH, launchd daemons and
   root are exempt, launchd *agents* are not (need `AssociatedBundleIdentifiers` or their own Info.plist);
   the first operation can be denied before the user answers the alert, so retry.
+- **Later the same day: the signed bundle's TCP connect failed too** (v0.1.1 draft from iTerm, "No route to
+  host"), still no Thingstudio entry, no prompt. Cause: a process started from a terminal app is attributed
+  to that app (its *responsible process*), so macOS judged iTerm, never our signed identity or embedded
+  Info.plist -- which is also why the earlier TCP success wasn't repeatable. The tmux fix works only because a
+  tmux server daemonises. Fix: `thingstudio-python` re-execs itself once (`POSIX_SPAWN_SETEXEC`, same pid) with
+  `responsibility_spawnattrs_setdisclaim` (private libSystem call, dlsym'd, falls back with a stderr note),
+  as terminal apps do for shells and Qt Creator's `disclaim` helper does. Mike's other apps with Local Network
+  entries are `.app` bundles started from Finder/Dock, so each is its own responsible process already.
 

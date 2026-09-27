@@ -238,6 +238,15 @@ inline, not a fresh check.
   incompatible rewrite Material can't use, Material reportedly enters maintenance mode 2026-11-05. No action until
   a build breaks or packaging fixes the toolchain. ([detail](outstanding-items/mkdocs-future.md))
 
+- **Developer section of the user manual: running from source on macOS -- new item, 2026-09-27 (Mike).** When the
+  manual gets a developer section, say: run `make run` / `thingstudio-backend` from Apple's **Terminal** on macOS.
+  From iTerm (or VS Code's terminal) the dev backend's unsigned venv Python can't reach boards over WiFi ("No
+  route to host"), and macOS never lists or prompts for it; Terminal is exempt (TN3179). Confirmed 2026-09-27:
+  `make run` connects from Terminal, not from iTerm. Mike's call: Terminal is fine for dev, so no `make` fix (the
+  option was building the release's `thingstudio-python` into `.venv`). Released builds are unaffected: they carry
+  their own signed executable. `getting-started.md`'s "From source" and `wifi-connection.md` already mention it
+  briefly. ([background](learnings/backend-security-research.md))
+
 - **User docs are missing an execution-model explanation.** `mikes-questions-and-points.md`'s "write explaination of
   node flow operation" ask -- `canvas-basics.md`'s Wiring section covers connection mechanics (port types,
   fan-in/fan-out, refused connections) but not the underlying execution model: each source node (`inject`, `timer`,

@@ -230,6 +230,10 @@ mDNS lands with or after posture-2; `outstanding-items/posture-2-auth.md` carrie
   against the bundle's `libpython3.12.dylib` (install name `@rpath/...`, rpath `@executable_path/../lib`) with
   `Info.plist` embedded, identifier `org.thingstudio.backend`. The launcher runs it when present. Prefix
   resolution checked on Linux with the same construction: relocatable, `sys.prefix` right, pip works.
+- **Second finding (2026-09-27, v0.1.1 draft):** the embedded plist is ignored while the terminal app is the
+  process's *responsible process* -- macOS judged iTerm. `thingstudio-python` now re-execs itself once with
+  responsibility disclaimed (`responsibility_spawnattrs_setdisclaim`, same pid) so its own signature and plist
+  count. `learnings/backend-security-research.md`, 2026-09-27.
 - Every Mach-O is signed, libraries first (hardened runtime only with a Developer ID: ad hoc + hardened fails
   library validation, "different Team IDs", found on Mike's Mac 2026-09-27); executables get
   `packaging/macos/entitlements.plist`, deliberately empty until a smoke test proves an exception is needed.
