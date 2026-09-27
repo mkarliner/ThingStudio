@@ -74,4 +74,21 @@ Status: detail file, split out of `learnings.md` on 2026-09-06 to keep that inde
   `responsibility_spawnattrs_setdisclaim` (private libSystem call, dlsym'd, falls back with a stderr note),
   as terminal apps do for shells and Qt Creator's `disclaim` helper does. Mike's other apps with Local Network
   entries are `.app` bundles started from Finder/Dock, so each is its own responsible process already.
+- **Verified 2026-09-27, 16:25, in a fresh macOS user account on the Mac mini (macOS 15+):** signed CI build from
+  iTerm -> Local Network prompt for Thingstudio -> Allow -> discovery and WiFi connect work. The approach
+  (embedded Info.plist + Developer ID + disclaiming responsibility, skipped under Terminal/SSH) is sound; the
+  failures in Mike's own account are stale entries. History of how we got there:
+- **Status earlier the same evening -- not yet verified on a clean macOS 15+.** The disclaim step made Apple's Terminal
+  fail too (its exemption only covers processes it's responsible for), so it's now skipped under
+  `TERM_PROGRAM=Apple_Terminal` and SSH. The signed CI build worked end to end on Mike's laptop, but that runs
+  **macOS 14 Sonoma, which has no Local Network privacy at all** (introduced in macOS 15, TN3179): it proves the
+  signed, disclaiming build runs and connects on 14, nothing about the permission. First read as a success
+  before the macOS version was noticed. On Mike's Mac mini (macOS 15+) the same build still fails: several test
+  identities (ad-hoc local build, Developer ID builds before/after the C change) left two `thingstudio-python` entries
+  that show
+  enabled but aren't honoured, and macOS stops prompting once an entry exists. There's no way to delete Local
+  Network entries on macOS (TN3179, FB14944392; `tccutil` doesn't cover it). **Test rule:** judge Local Network
+  behaviour only on **macOS 15 or later**, in a user account that has never run a build with this identity --
+  never on a machine used for earlier signing experiments, and never on macOS 14 or earlier, which don't have
+  the feature. Apple's own advice: a fresh user account, or a VM snapshot.
 

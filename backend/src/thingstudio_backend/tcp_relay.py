@@ -96,8 +96,9 @@ def _explain_connect_oserror(exc: OSError) -> str:
     text = str(exc)
     if exc.errno == errno.EHOSTUNREACH and sys.platform == "darwin":
         return (
-            f"{text} -- on a Mac this usually means macOS is blocking Thingstudio's local network access. Allow "
-            "Thingstudio in System Settings > Privacy & Security > Local Network, then restart it. Running from "
+            f"{text} -- on a Mac this usually means macOS is blocking Thingstudio's local network access. If macOS "
+            "just asked, choose Allow and connect again; otherwise turn on thingstudio-python in System Settings > "
+            "Privacy & Security > Local Network, then restart Thingstudio. Running from "
             "source, start it from Apple's Terminal app instead, which macOS always allows"
         )
     if exc.errno in (errno.EHOSTUNREACH, errno.ENETUNREACH):

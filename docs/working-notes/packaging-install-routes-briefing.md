@@ -233,7 +233,11 @@ mDNS lands with or after posture-2; `outstanding-items/posture-2-auth.md` carrie
 - **Second finding (2026-09-27, v0.1.1 draft):** the embedded plist is ignored while the terminal app is the
   process's *responsible process* -- macOS judged iTerm. `thingstudio-python` now re-execs itself once with
   responsibility disclaimed (`responsibility_spawnattrs_setdisclaim`, same pid) so its own signature and plist
-  count. `learnings/backend-security-research.md`, 2026-09-27.
+  count. Skipped under Apple's Terminal and SSH, which are exempt only for their own processes. **Verified
+  2026-09-27 in a fresh user account on macOS 15+:** iTerm -> prompt -> Allow -> discovery + connect. (A laptop
+  test on macOS 14 proved only that the build runs there: 14 has no Local Network privacy.) Mike's own account
+  keeps failing from iTerm with stale entries from test identities, which macOS can't delete; Terminal works.
+  `learnings/backend-security-research.md`, 2026-09-27.
 - Every Mach-O is signed, libraries first (hardened runtime only with a Developer ID: ad hoc + hardened fails
   library validation, "different Team IDs", found on Mike's Mac 2026-09-27); executables get
   `packaging/macos/entitlements.plist`, deliberately empty until a smoke test proves an exception is needed.
@@ -248,8 +252,8 @@ mDNS lands with or after posture-2; `outstanding-items/posture-2-auth.md` carrie
   hardened-runtime casualty) on every platform, and on macOS the signature, identifier and plist.
 - User docs: `wifi-connection.md` "No route to host (Mac)" now says to choose Allow, or where to turn it on
   later; the Terminal workaround kept for running from source. Rewrite it if Mike's test shows otherwise.
-- Untested until CI runs: all macOS code (Apple clang, codesign, notarytool). Then the real test: the signed
-  build started from iTerm on Mike's Mac, WiFi-connect to a board, expect a prompt, not a silent denial.
+- Verified: signing, notarization, Gatekeeper ("downloaded from the internet" prompt), serial listing under the
+  hardened runtime, the signed build on macOS 14, and Local Network on a clean macOS 15+ account (above).
 
 ## Out of scope
 

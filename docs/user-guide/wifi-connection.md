@@ -51,9 +51,10 @@ A board with no password is listed as **no password set**. It won't accept a WiF
 The console says what went wrong:
 
 - **No route to host (Mac):** macOS is blocking local network access. The first time Thingstudio reaches for the
-  network, macOS asks whether it may find devices on your local network: choose **Allow**. If you chose
-  **Don't Allow**, turn **Thingstudio** on in System Settings > Privacy & Security > Local Network, then restart
-  it. Running from source (`thingstudio-backend`), macOS may block it without asking: start it from Apple's
+  network, macOS asks whether it may find devices on your local network: choose **Allow**, then click
+  **Connect** again (the attempt that raised the question can fail). If you chose **Don't Allow**, turn
+  **thingstudio-python** on in System Settings > Privacy & Security > Local Network, then restart Thingstudio.
+  Running from source (`thingstudio-backend`), macOS may block it without asking: start it from Apple's
   **Terminal** app instead, which macOS always allows.
 - **No answer:** check the board is on, its flow has joined WiFi, and this computer is on the
   same network. If a `.local` name doesn't work, try the IP address, shown in the console when you connect over USB.
