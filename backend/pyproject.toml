@@ -1,6 +1,6 @@
 [project]
 name = "thingstudio-backend"
-version = "0.1.0"
+version = "0.1.1"
 description = "Thingstudio thin local backend: serial<->WebSocket relay, posture-1 Host allowlist, static asset serving."
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
