@@ -7,7 +7,7 @@
 # for this site (contributor-facing material, already served elsewhere).
 
 site_name: Thingstudio
-site_url: https://mkarliner.github.io/ThingStudio/
+site_url: https://docs.thingstudio.net/
 site_description: Node-and-wire visual programming for microcontrollers.
 repo_url: https://github.com/mkarliner/ThingStudio
 repo_name: mkarliner/ThingStudio

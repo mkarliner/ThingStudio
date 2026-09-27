@@ -4,6 +4,9 @@ Thingstudio is a node-and-wire visual programming environment, in the spirit of 
 directly on a microcontroller. It runs on your computer and opens its editor in your web browser. Drag nodes onto a canvas, wire them together, and deploy the flow to a
 connected board. The board then runs the flow on its own — no host machine needed afterward.
 
+These docs follow the latest code. The copy inside Thingstudio (the **Docs** button) matches the version you
+have installed.
+
 This guide covers using the editor to build and deploy flows. If you're writing a new node type instead of using
 the ones that already exist, see [Writing custom nodes](custom-nodes.md).
 

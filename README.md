@@ -5,6 +5,15 @@ output runs directly on a microcontroller — Node-RED's visual model, but
 the flow runs standalone on the device itself once deployed, not on a
 server.
 
+**Docs:** https://docs.thingstudio.net/
+
+**Install** (macOS and Linux; Windows and other options in
+[Getting started](https://docs.thingstudio.net/getting-started/)):
+
+```sh
+curl -fsSL https://github.com/mkarliner/ThingStudio/releases/latest/download/install.sh | sh
+```
+
 ## Status
 
 Pre-v1, working towards an MVP (`docs/road-to-mvp.md`). The editor, the
@@ -31,7 +40,7 @@ See `docs/thingstudio-design-doc.md` for the full design.
 Full reasoning, and how this compares to Node-RED MCU Edition,
 MicroBlocks, XOD, MicroFlo, and ESPHome/Tasmota: design doc §1–§2.
 
-## Try it
+## Build from source
 
 From a copy of this repository (Python 3.10+, Node.js 22.12+, make):
 
@@ -89,9 +98,9 @@ tools/           license-scan and build scripts
 
 ## Not built yet
 
-- **Packaged installers** (`curl | sh`, Homebrew, winget/scoop, zips) —
-  MVP item 7.
-- **WiFi transport between editor and board** — MVP item 6.
+- **More install routes** — a Windows installer, Homebrew, winget/scoop
+  (MVP item 7). Releases today: the `curl | sh` installer for macOS and
+  Linux, and a zip for Windows.
 - **Board-transport auth** — the `HELLO` handshake fields are designed,
   not yet wired in.
 
@@ -101,7 +110,7 @@ Full, current list: `docs/working-notes/outstanding-items.md`.
 
 - [`docs/user-guide/`](docs/user-guide/) — the user guide, built with
   MkDocs and served by the backend at `/docs/` (and online at
-  https://mkarliner.github.io/ThingStudio/ once GitHub Pages is live).
+  https://docs.thingstudio.net/).
 - `docs/thingstudio-design-doc.md` — the design doc. Read in full before
   proposing anything architectural.
 - `docs/working-notes/` — active planning, decisions, and open items.

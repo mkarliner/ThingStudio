@@ -28,7 +28,7 @@ from .editor_site import changed_since_build, page_with_banner, stale_banner
 
 logger = logging.getLogger(__name__)
 
-ONLINE_DOCS_URL = "https://mkarliner.github.io/ThingStudio/"
+ONLINE_DOCS_URL = "https://docs.thingstudio.net/"
 
 
 def default_docs_dir() -> Path:

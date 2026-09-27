@@ -225,6 +225,7 @@ main() {
   say ""
   say "Start it with: thingstudio"
   say "Stop it with Ctrl-C. Run this installer again to upgrade."
+  say "Docs: https://docs.thingstudio.net/"
 }
 
 main "$@"
