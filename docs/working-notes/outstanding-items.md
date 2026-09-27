@@ -57,6 +57,15 @@ inline, not a fresh check.
 
 ## Network / config nodes
 
+- **Board forgets its WiFi-transport password on a power cycle -- new bug, 2026-09-27 (Mike, Pico W).** Password
+  set over USB (Board settings…), WiFi connect worked; after unplugging and replugging, the board reported no
+  password set and needed setting again over USB. `board_settings._save()` is the only writer of `/_board.json`
+  (temp file + `os.rename`), and nothing deletes it (Remove flow / Install runtime / recovery don't touch it).
+  Next: over USB, read `/_board.json` before and after a power cycle (console box:
+  `import os; print(os.listdir('/')); print(open('/_board.json').read())`) to tell "not reaching flash" from
+  "read back wrong at boot"; check boot output for `BOARD_SETTINGS_ERR`. Seen while testing packaging, not
+  caused by it.
+
 - **[P4]** **Suspected: `mqtt_publish`/`mqtt_subscribe` sharing one broker client have no publish-after-subscribe-confirmed ordering guarantee at flow boot -- likely (co-)cause of a real silent-failure hardware test, 2026-09-02, unconfirmed pending a targeted fix+retest.** ([detail](outstanding-items/mqtt-pubsub-boot-race.md))
 - **[P4]** **MQTTS (MQTT over TLS) — not built, deferred on Mike's explicit call (2026-08-21).** Vendored `mqtt_as`'s `config` dict already has unused `ssl`/`ssl_params` keys; checked against the one-way-door principle before deferring — a config's `properties` is a plain JSON blob, so this isn't a one-way door. Nothing reserved. ([detail](outstanding-items/mqtts-tls-deferred.md))
 - **[POST-MVP]** **TCP send / TCP listen-receive — never built; deferred past MVP (Mike, 2026-09-26).** `udp-tcp-nodes-implementation-briefing.md` scoped four node types; only UDP send/receive landed. TCP send needs a lazy-expiry connection cache; TCP listen-receive needs a callback-to-coroutine bridge design. Tracked in `mvp-feature-priorities.md` Tier 1 item 5 point 3. ([detail](outstanding-items/tcp-send-listen-receive.md))

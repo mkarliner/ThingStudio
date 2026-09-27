@@ -253,7 +253,9 @@ mDNS lands with or after posture-2; `outstanding-items/posture-2-auth.md` carrie
 - User docs: `wifi-connection.md` "No route to host (Mac)" now says to choose Allow, or where to turn it on
   later; the Terminal workaround kept for running from source. Rewrite it if Mike's test shows otherwise.
 - Verified: signing, notarization, Gatekeeper ("downloaded from the internet" prompt), serial listing under the
-  hardened runtime, the signed build on macOS 14, and Local Network on a clean macOS 15+ account (above).
+  hardened runtime, the signed build on macOS 14, and Local Network on a clean macOS 15+ account (above). That
+  clean-account run used **Safari** (the new user's default browser): editor, discovery and WiFi connect all
+  worked, so the packaged editor doesn't depend on Chrome (the backend relays serial; no Web Serial needed).
 
 ## Out of scope
 
