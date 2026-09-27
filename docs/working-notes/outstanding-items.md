@@ -191,6 +191,10 @@ inline, not a fresh check.
 
 ## UI / editor
 
+- **Custom nodes load automatically from `~/.thingstudio/custom-nodes/` -- new item, 2026-09-27 (Mike).**
+  Reverses the session-scoped-only loading decision (`decisions/node-authoring.md`). A broken package is
+  skipped and named, never blocks the rest. ([detail](mvp-remaining-work-briefing.md), item B)
+
 - **[P3]** **Deploy the runtime itself from the browser editor, not just compiled flows.** Confirmed untracked
   anywhere until 2026-09-12. Today, `test-flows/deploy_runtime.py` is a standalone `mpremote`-based script pushing
   `device-runtime/src/*.py` onto a board's filesystem -- a precondition for any flow deploy ever working, and
@@ -242,6 +246,10 @@ inline, not a fresh check.
 - **[POST-MVP]** **A local, maintained folder of board and processor definitions — built 2026-09-23 (MVP item 4).** `editor/src/definitions/` plus `~/.thingstudio/processors/` and `boards/`, with per-pin reserved/avoid reasons. What's left is keeping it up to date as boards are added. ([detail](outstanding-items/board-processor-reference-data.md))
 
 ## Docs / process
+
+- **User docs on GitHub Pages -- new item, 2026-09-27 (Mike).** `docs.yml` already deploys to the `gh-pages`
+  branch successfully; Pages isn't switched on in the repo settings. Then check links and link it from the
+  README, release notes and `install.sh`. ([detail](mvp-remaining-work-briefing.md), item A)
 
 - **MkDocs future -- stay on 1.x, Zensical likely later (2026-09-24).** MkDocs 1.x is unmaintained, 2.0 is an
   incompatible rewrite Material can't use, Material reportedly enters maintenance mode 2026-11-05. No action until

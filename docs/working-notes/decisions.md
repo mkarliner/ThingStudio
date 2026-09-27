@@ -74,7 +74,8 @@ Xtensa, closing gs4 out end to end; then `gs2`/`mono` (the two remaining decided
 built the same day, including a real MicroPython-source-confirmed finding that gs4's bit order doesn't
 generalize to gs2/mono (they're the opposite of gs4, and of each other's similarly-named `MONO_HLSB`
 sibling) -- and, later the same day, both confirmed working on real CYD hardware too, closing out all
-three indexed depths end to end. `startup` node start reason (2026-09-25); `bme280` and generic `i2c` nodes (2026-09-26). 17 entries: `docs/working-notes/decisions/node-authoring.md`.
+three indexed depths end to end. `startup` node start reason (2026-09-25); `bme280` and generic `i2c` nodes (2026-09-26); custom nodes auto-load from
+`~/.thingstudio/custom-nodes/` (2026-09-27, not built yet). 18 entries: `docs/working-notes/decisions/node-authoring.md`.
 
 ## GUI layout / widget system
 

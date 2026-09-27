@@ -607,3 +607,7 @@ Same fault handling as `bme280`: never raises (a raising transform ends its sour
 only on change. Board-to-board messaging over I2C was split off as a separate POST-MVP item (outstanding-items.md,
 "comms bus"); this node is controller-side only.
 
+- **2026-09-27 — Custom nodes load automatically (Mike's call; reverses 2026-08-20/21 "session-scoped only").**
+  Every package in `~/.thingstudio/custom-nodes/` is loaded when the editor connects to the backend; a broken
+  one is skipped and named. Trust unchanged: loading only registers a palette entry, and the code runs on a
+  board only after the user places the node and deploys. Not built yet: `mvp-remaining-work-briefing.md`, B.
