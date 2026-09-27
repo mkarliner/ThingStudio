@@ -209,4 +209,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "$GITHUB_REF_NAME" dist/* \
-            --repo "$GITHUB_REPOSITORY" --draft --title "Thingstudio $GITHUB_REF_NAME" --generate-notes
+            --repo "$GITHUB_REPOSITORY" --draft --title "Thingstudio $GITHUB_REF_NAME" --generate-notes \
+            --notes "Install and getting started: https://docs.thingstudio.net/getting-started/"
