@@ -10,20 +10,20 @@ board then runs it on its own, with no computer attached.
     [coming from Node-RED](coming-from/node-red.md), [coming from MicroPython](coming-from/micropython.md) or
     [coming from Arduino and C](coming-from/arduino.md). Or go straight to [Getting started](getting-started.md).
 
-## Programs that react
+## Programs that respond to events
 
 Most microcontroller programs are one big loop. Read the sensors, check the buttons, update the outputs, go round
 again. It works, but every new job makes the loop longer and its timing harder to reason about.
 
-Thingstudio programs are a set of reactions instead. When the button is pressed, turn on the light. Every ten
-seconds, read the temperature. When a message arrives from the network, update the display. Nothing runs until
-something happens, and many reactions can be waiting at once. This is
+Thingstudio programs respond to events instead. When the button is pressed, turn on the light. Every ten seconds,
+read the temperature. When a message arrives from the network, update the display. Nothing runs until something
+happens, and the board can wait for many events at once. This is
 [event-driven programming](background/event-driven.md).
 
-## Reactions as nodes and wires
+## Events, nodes and wires
 
-Each reaction is drawn as a small chain of **nodes**. A node does one job: fire every second, read a pin, run some
-Python, switch an output. **Wires** join one node's output to the next node's input. Together they make a **flow**.
+Each response to an event is drawn as a small chain of **nodes**. A node does one job: fire every second, read a
+pin, run some Python, switch an output. **Wires** join one node's output to the next node's input. Together they make a **flow**.
 
 Nodes pass **messages** along the wires. A message is a small bundle of data, with the main value in its
 `payload`. A timer sends a message, a function node changes its payload, and a pin output node acts on it. More on
