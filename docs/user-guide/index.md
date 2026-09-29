@@ -1,8 +1,9 @@
 # Thingstudio
 
-Thingstudio lets you program a microcontroller by wiring nodes together in your web browser, in the style of
-Node-RED. The flow you build is turned into MicroPython and runs on the board itself. Once it's deployed, the board
-needs no computer.
+Thingstudio is a visual way to program microcontrollers. In your web browser, you drag boxes onto a canvas and join
+them with lines, in the style of [Node-RED](https://nodered.org/). Thingstudio turns the result into
+[MicroPython](https://micropython.org/), a version of Python for microcontrollers, and sends it to your board. The
+board then runs it on its own, with no computer attached.
 
 !!! tip "Already know the background?"
     If you know Node-RED, MicroPython and event-driven code, skip to what's different:
