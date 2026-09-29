@@ -43,6 +43,15 @@ markdown_extensions:
 
 nav:
   - Home: index.md
+  - Background:
+      - Event-driven programming: background/event-driven.md
+      - Flows, nodes and messages: background/flows-and-nodes.md
+      - Node-RED: background/node-red.md
+      - MicroPython: background/micropython.md
+  - Coming from:
+      - Node-RED: coming-from/node-red.md
+      - MicroPython: coming-from/micropython.md
+      - Arduino and C: coming-from/arduino.md
   - Installing MicroPython: installing-micropython.md
   - Getting started: getting-started.md
   - Blink an LED: first-flow.md
