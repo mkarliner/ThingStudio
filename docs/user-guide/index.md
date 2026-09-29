@@ -10,7 +10,7 @@ board then runs it on its own, with no computer attached.
     [coming from Node-RED](coming-from/node-red.md), [coming from MicroPython](coming-from/micropython.md) or
     [coming from Arduino and C](coming-from/arduino.md). Or go straight to [Getting started](getting-started.md).
 
-## Programs that respond to events
+## What's different about programming with Thingstudio?
 
 Most microcontroller programs are one big loop. Read the sensors, check the buttons, update the outputs, go round
 again. It works, but every new job makes the loop longer and its timing harder to reason about.
@@ -19,6 +19,10 @@ Thingstudio programs respond to events instead. When the button is pressed, turn
 read the temperature. When a message arrives from the network, update the display. Nothing runs until something
 happens, and the board can wait for many events at once. This is
 [event-driven programming](background/event-driven.md).
+
+Event-driven code can be tricky to write and to follow. The program no longer reads top to bottom, and you have to
+manage tasks, callbacks and the code that ties them together. Thingstudio makes this easier. You draw each event
+and what should happen next, and Thingstudio writes the code that runs them all side by side.
 
 ## Events, nodes and wires
 
