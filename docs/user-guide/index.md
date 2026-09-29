@@ -37,6 +37,11 @@ Node-RED, flows run on a server or a Raspberry Pi. In Thingstudio, they run on t
 The board runs [MicroPython](background/micropython.md), a version of Python 3 made for microcontrollers. You install
 it once, then Thingstudio adds a small runtime of its own on top.
 
+Thingstudio's events rest on MicroPython's
+[`asyncio`](https://docs.micropython.org/en/latest/library/asyncio.html) module, its built-in support for
+event-driven programming. `asyncio` lets one program wait for many things at once: timers, pins and the network.
+Every flow you build runs as `asyncio` tasks.
+
 When you click **Deploy**, the editor turns your flow into MicroPython code and compiles it. It sends the result to
 the board over USB or WiFi, and the board swaps it in and starts running it. There's no firmware to flash, so
 changing a flow and trying it again takes seconds. The board keeps the flow and runs it again after a restart.

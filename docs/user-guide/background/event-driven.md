@@ -31,9 +31,12 @@ with different timing don't get in each other's way.
 
 ## How Thingstudio does it
 
+Thingstudio is built on `asyncio`, MicroPython's built-in module for event-driven programming. It provides an
+event loop: one scheduler that runs many tasks, switching between them whenever one is waiting.
+
 In Thingstudio, each chain of nodes that starts at a source (a `timer`, an `interrupt`, an `mqtt subscribe`) is
-one handler. The flow is turned into MicroPython code that uses `asyncio`, MicroPython's built-in event loop. Each
-source becomes a task. While one task waits, for a timer or the network, the others run.
+one handler. When you deploy, the flow is turned into MicroPython code in which each source becomes an `asyncio`
+task. While one task waits, for a timer or the network, the others run.
 
 ## The one rule: don't block
 
