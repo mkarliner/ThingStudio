@@ -65,6 +65,14 @@ inline, not a fresh check.
   `import os; print(os.listdir('/')); print(open('/_board.json').read())`) to tell "not reaching flash" from
   "read back wrong at boot"; check boot output for `BOARD_SETTINGS_ERR`. Seen while testing packaging, not
   caused by it.
+  **2026-09-30: not reproduced.** Same Pico W: `/_board.json` held salt + key (hostname `ts-3c0c31`) before a
+  power cycle, and a WiFi connect with the password worked after it, so the key survived. Code review found no
+  path that loses it: `_save()` closes the temp file before `os.rename` (fine on littlefs), nothing on the board
+  or backend deletes or rewrites the file except "Board settings…" Save, and the editor's "no password" comes only
+  from HELLO's `authRequired`. One quirk noted, not the cause here: `listener.py` imports `board_settings` and
+  `net_transport` in one `try`, so a failed `net_transport` import also drops `board_settings` -- but that shows
+  as `hostname: null` ("old runtime"), not "no password". If it comes back: run the command above before and
+  after the power cycle, and keep the first console lines after reconnecting.
 
 - **[P4]** **Suspected: `mqtt_publish`/`mqtt_subscribe` sharing one broker client have no publish-after-subscribe-confirmed ordering guarantee at flow boot -- likely (co-)cause of a real silent-failure hardware test, 2026-09-02, unconfirmed pending a targeted fix+retest.** ([detail](outstanding-items/mqtt-pubsub-boot-race.md))
 - **[P4]** **MQTTS (MQTT over TLS) — not built, deferred on Mike's explicit call (2026-08-21).** Vendored `mqtt_as`'s `config` dict already has unused `ssl`/`ssl_params` keys; checked against the one-way-door principle before deferring — a config's `properties` is a plain JSON blob, so this isn't a one-way door. Nothing reserved. ([detail](outstanding-items/mqtts-tls-deferred.md))
