@@ -17,8 +17,9 @@ If no board is connected and none is picked, pins are only checked against the r
 ## Seeing a board's pins
 
 Click **Pins…** next to the **Board** menu. It opens a page, in its own tab, for the board or processor picked
-there. Pins the board names, such as its LED, come first. Then every pin, with whether it's free, reserved or best
-avoided, and why. Then which pins each SPI and I2C bus can use.
+there. Pins the board names, such as its LED, come first. For boards whose definition has a `header`, such as the
+Pico family, the board's physical pins come next, laid out like the board, with power and ground marked. Then every
+pin, with whether it's free, reserved or best avoided, and why. Then which pins each SPI and I2C bus can use.
 
 The page is read from the definition files each time you click. After changing a file, click **Pins…** again.
 
@@ -108,6 +109,10 @@ Save a JSON file in `~/.thingstudio/boards/`. The file name, without `.json`, is
 | `avoid` | Pins that give a warning, each with a reason. |
 | `notes` | Anything else worth knowing. |
 | `wifi` | `false` if the board has no WiFi. Hides [connecting over WiFi](wifi-connection.md) for it. Leave it out if unsure. |
+| `header` | What each physical pin carries: a GPIO number, or a label such as `"GND"` or `"3V3"`. Shown on the **Pins…** page. For example `{ "1": 0, "3": "GND", "40": "VBUS" }`. |
+
+Numbers in `header` are physical pin numbers, as printed on the board or its datasheet. A header numbered 1 to N
+is drawn in two columns, like the Pico's. For a board with several connectors, name the pins `"P3-1"` and so on.
 
 Pin lists take numbers and ranges: `[0, 2, "4-7"]`. In `reserved` and `avoid`, the key is a pin or a range: `{ "6-11": "Wired to the flash chip." }`.
 

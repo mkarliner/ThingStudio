@@ -13,7 +13,7 @@
 // Pure: returns an HTML string, touches no DOM, so it's unit-tested (test/definition-page.test.ts).
 // Everything taken from a definition file is escaped: those files are hand-written.
 
-import { formatPinSet, type ProcessorDef } from "./definitions.js";
+import { formatPinSet, type BoardDef, type ProcessorDef } from "./definitions.js";
 import { splitChipType, type Target } from "./target.js";
 
 function esc(s: string): string {
@@ -42,6 +42,68 @@ export function pinStatus(target: Target, pin: number): PinStatus {
     return { kind: "limited", status: text.charAt(0).toUpperCase() + text.slice(1), why: "" };
   }
   return { kind: "free", status: "Free", why: "" };
+}
+
+/** What a non-GPIO header label is, for colouring. Ground first: "AGND" is ground, not power. */
+export function headerLabelKind(label: string): "ground" | "power" | "other" {
+  if (/GND/i.test(label)) return "ground";
+  if (/^(VBUS|VSYS|VIN|VCC|VDD|5V|3V3|3\.3V)\b/i.test(label) || /^3V3\(OUT\)$/i.test(label)) return "power";
+  return "other";
+}
+
+/** GPIO -> the physical header pin(s) carrying it, from the board's `header`. */
+function headerPinsByGpio(board: BoardDef | null): Map<number, string[]> {
+  const out = new Map<number, string[]>();
+  for (const [pin, what] of board?.header ?? []) {
+    if (typeof what !== "number") continue;
+    if (!out.has(what)) out.set(what, []);
+    out.get(what)!.push(pin);
+  }
+  return out;
+}
+
+/** 1..N with N even: a dual-row header numbered down one side and back up the other (the Pico's). */
+function isDualRow(keys: string[]): number | null {
+  if (keys.length < 4 || keys.length % 2 !== 0) return null;
+  const nums = keys.map((k) => (/^\d+$/.test(k) ? Number(k) : NaN));
+  const set = new Set(nums);
+  for (let i = 1; i <= keys.length; i++) if (!set.has(i)) return null;
+  return keys.length;
+}
+
+function headerCell(target: Target, what: number | string | undefined, align: "left" | "right"): string {
+  if (what === undefined) return `<td class="${align}"></td>`;
+  if (typeof what === "string") return `<td class="${align} ${headerLabelKind(what)}">${esc(what)}</td>`;
+  const s = pinStatus(target, what);
+  const names = target.pinLabels.get(what) ?? [];
+  const text = `GPIO ${what}` + (names.length ? ` · ${names.join(", ")}` : "");
+  return `<td class="${align} ${s.kind}" title="${esc(s.status + (s.why ? `. ${s.why}` : ""))}">${esc(text)}</td>`;
+}
+
+function headerSection(target: Target): string {
+  const board = target.board;
+  if (!board || board.header.size === 0) return "";
+  const keys = [...board.header.keys()];
+  const warn =
+    `<p><strong>Red pins are power, grey pins are ground.</strong> Never wire a power pin to ground or to a GPIO: ` +
+    `it can destroy the board. Pink pins control the board itself, such as RUN, which resets it.</p>`;
+  const n = isDualRow(keys);
+  if (n !== null) {
+    const rows: string[] = [];
+    for (let i = 1; i <= n / 2; i++) {
+      const j = n + 1 - i;
+      rows.push(
+        `<tr>${headerCell(target, board.header.get(String(i)), "left")}<td class="num">${i}</td>` +
+          `<td class="num">${j}</td>${headerCell(target, board.header.get(String(j)), "right")}</tr>`,
+      );
+    }
+    return (
+      `<h2>Physical pins</h2>${warn}<p>As on the board: pin 1 top left, numbered down the left side and back up the right.</p>` +
+      `<div class="scroll"><table class="header"><tbody>${rows.join("")}</tbody></table></div>`
+    );
+  }
+  const rows = keys.map((k) => `<tr><td class="num">${esc(k)}</td>${headerCell(target, board.header.get(k), "left")}</tr>`);
+  return `<h2>Physical pins</h2>${warn}<table class="header"><thead><tr><th>Pin</th><th>Connected to</th></tr></thead><tbody>${rows.join("")}</tbody></table>`;
 }
 
 function spiSection(proc: ProcessorDef): string {
@@ -94,9 +156,11 @@ function formatHz(hz: number): string {
 
 const STYLE = `
 :root { --bg: #ffffff; --fg: #1d2328; --muted: #5d6870; --line: #d9dee2; --head: #f2f4f6;
-  --reserved: #fbe3e1; --avoid: #fff3d6; --limited: #e8f1fb; --accent: #2f6f9f; color-scheme: light; }
+  --reserved: #fbe3e1; --avoid: #fff3d6; --limited: #e8f1fb; --accent: #2f6f9f;
+  --power: #e04a3f; --power-fg: #ffffff; --ground: #3a4148; --ground-fg: #ffffff; --other: #f4c7c3; color-scheme: light; }
 @media (prefers-color-scheme: dark) { :root { --bg: #16191c; --fg: #e3e7ea; --muted: #9aa5ad; --line: #30363b;
-  --head: #1f2327; --reserved: #4a2320; --avoid: #45391a; --limited: #1c3146; --accent: #7fb3dc; color-scheme: dark; } }
+  --head: #1f2327; --reserved: #4a2320; --avoid: #45391a; --limited: #1c3146; --accent: #7fb3dc;
+  --power: #c9372d; --power-fg: #ffffff; --ground: #5a636b; --ground-fg: #ffffff; --other: #5c2e2a; color-scheme: dark; } }
 body { background: var(--bg); color: var(--fg); margin: 0; padding: 24px 16px 48px;
   font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
 main { max-width: 760px; margin: 0 auto; }
@@ -111,6 +175,17 @@ td.gpio { font-weight: 600; white-space: nowrap; }
 tr.reserved td { background: var(--reserved); }
 tr.avoid td { background: var(--avoid); }
 tr.limited td { background: var(--limited); }
+.scroll { overflow-x: auto; }
+table.header td { white-space: nowrap; }
+table.header td.num { width: 2.5em; text-align: center; font-weight: 600; background: var(--head); }
+table.header td.right { text-align: left; }
+table.header td.left { text-align: right; }
+td.power { background: var(--power); color: var(--power-fg); font-weight: 600; }
+td.ground { background: var(--ground); color: var(--ground-fg); font-weight: 600; }
+td.other { background: var(--other); }
+td.reserved { background: var(--reserved); }
+td.avoid { background: var(--avoid); }
+td.limited { background: var(--limited); }
 .key { color: var(--muted); font-size: 0.9rem; margin: 6px 0 0; }
 .notice { background: var(--avoid); padding: 12px 16px; border-radius: 6px; margin: 0 0 16px; }
 .notice p { margin: 0 0 8px; }
@@ -184,6 +259,13 @@ export function renderDefinitionPage(target: Target, opts: PageOptions): string 
   const notes = [board?.notes, processor.notes].filter((n): n is string => !!n && n.trim() !== "");
   const notesHtml = notes.length ? `<div class="notes">${notes.map((n) => `<p>${esc(n)}</p>`).join("")}</div>` : "";
 
+  const hasHeader = !!board && board.header.size > 0;
+  const onHeader = headerPinsByGpio(board);
+  const headerPinText = (pin: number): string => {
+    const at = onHeader.get(pin);
+    return at ? `pin ${at.join(", ")}` : "not on the header";
+  };
+
   let named = "";
   if (board && board.pins.size > 0) {
     const rows = [...board.pins]
@@ -191,11 +273,16 @@ export function renderDefinitionPage(target: Target, opts: PageOptions): string 
       .map(([label, pin]) => {
         const s = pinStatus(target, pin);
         const why = s.kind === "free" ? "" : `${s.status}. ${s.why}`.trim();
-        return `<tr><td>${esc(label)}</td><td class="gpio">GPIO ${pin}</td><td>${esc(why)}</td></tr>`;
+        return (
+          `<tr><td>${esc(label)}</td><td class="gpio">GPIO ${pin}</td>` +
+          (hasHeader ? `<td>${esc(headerPinText(pin))}</td>` : "") +
+          `<td>${esc(why)}</td></tr>`
+        );
       });
     named =
       `<h2>Named pins</h2><p>Pins wired to something on this board. Pin fields in the editor take the GPIO number.</p>` +
-      `<table><thead><tr><th>Name</th><th>GPIO</th><th>Notes</th></tr></thead><tbody>${rows.join("")}</tbody></table>`;
+      `<table><thead><tr><th>Name</th><th>GPIO</th>${hasHeader ? "<th>Header</th>" : ""}<th>Notes</th></tr></thead>` +
+      `<tbody>${rows.join("")}</tbody></table>`;
   }
 
   // Every usable GPIO, plus any reserved pin outside that set, so nothing the compile mentions is missing.
@@ -205,12 +292,14 @@ export function renderDefinitionPage(target: Target, opts: PageOptions): string 
     const labels = target.pinLabels.get(pin) ?? [];
     return (
       `<tr class="${s.kind}"><td class="gpio">${pin}</td><td>${esc(labels.join(", "))}</td>` +
+      (hasHeader ? `<td>${esc(onHeader.has(pin) ? onHeader.get(pin)!.join(", ") : "")}</td>` : "") +
       `<td>${esc(s.status)}</td><td>${esc(s.why)}</td></tr>`
     );
   });
   const pins =
     `<h2>All pins</h2>` +
-    `<table><thead><tr><th>GPIO</th><th>Name</th><th>Status</th><th>Why</th></tr></thead><tbody>${pinRows.join("")}</tbody></table>` +
+    `<div class="scroll"><table><thead><tr><th>GPIO</th><th>Name</th>${hasHeader ? "<th>Header pin</th>" : ""}` +
+    `<th>Status</th><th>Why</th></tr></thead><tbody>${pinRows.join("")}</tbody></table></div>` +
     `<p class="key">Reserved pins stop the compile. Pins to avoid work, but the compile warns. Blue rows have limits.</p>`;
 
   const files = [board ? `<code>~/.thingstudio/boards/${esc(board.id)}.json</code>` : null, `<code>~/.thingstudio/processors/${esc(processor.id)}.json</code>`]
@@ -224,6 +313,7 @@ export function renderDefinitionPage(target: Target, opts: PageOptions): string 
       notice +
       notesHtml +
       named +
+      headerSection(target) +
       pins +
       spiSection(processor) +
       i2cSection(processor) +

@@ -65,6 +65,18 @@ inline, not a fresh check.
   suffix follows (S2/S3/C3/C6/H2/P4), or match exact names per processor; either way an unknown ESP32 variant
   should resolve to no processor, which the Pins… page and the console already explain.
 
+- **[P3]** **Board header data for the LOLIN S2 Mini and the CYD -- new item, 2026-09-30.** The Pins… page shows
+  physical pins from a board's `header` (Pico family done, from Raspberry Pi's own pinouts). The S2 Mini's
+  maker prints labels but no pin numbers, so it needs a position scheme (e.g. by row and place) agreed first; the
+  CYD's P1/P3/CN1 connectors vary between units and are community-documented. Only add either from a source
+  checked against a real board: a wrong header is worse than none.
+- **[P3]** **Seeded copies of built-in definitions hide later updates -- noted 2026-09-30.** The backend copies
+  built-in board/processor files into `~/.thingstudio` once, and a user copy always wins
+  (`builtin_reference.py`'s documented cost). So the Pico `header` added 2026-09-30 doesn't reach anyone who
+  already ran Thingstudio until they delete `boards/pico*.json` and restart. The console does say the file
+  "replaces the built-in" once the content differs. A fix: remember what was copied (a hash), and refresh a copy
+  the user never edited.
+
 ## Network / config nodes
 
 - **Board forgets its WiFi-transport password on a power cycle -- new bug, 2026-09-27 (Mike, Pico W).** Password

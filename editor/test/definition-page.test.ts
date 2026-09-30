@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from "vitest";
 import { BUILTIN_DEFINITION_FILES } from "../src/definitions/builtin.js";
-import { pinStatus, renderDefinitionPage, renderUnknownBoardPage } from "../src/definitions/definition-page.js";
+import { headerLabelKind, pinStatus, renderDefinitionPage, renderUnknownBoardPage } from "../src/definitions/definition-page.js";
 import { buildDefinitionSet, type RawDefinitionFile } from "../src/definitions/definitions.js";
 import { buildTarget, resolveTarget, type Target } from "../src/definitions/target.js";
 
@@ -160,5 +160,75 @@ describe("boards Thingstudio doesn't fully know (2026-09-30)", () => {
     expect(html).toContain("no definition for its processor (<code>STM32F405</code>)");
     expect(html).toContain('href="http://127.0.0.1:8765/docs/boards/#adding-a-processor"');
     expect(html).not.toContain("<Board>");
+  });
+});
+
+describe("physical header pins (2026-09-30)", () => {
+  /** A board file on rp2040 with the given header, validated like a user file. */
+  function withHeader(header: unknown) {
+    return buildDefinitionSet(BUILTIN_DEFINITION_FILES, [
+      { kind: "board", id: "hdr", source: "~/.thingstudio/boards/hdr.json", data: { name: "H", processor: "rp2040", match: [], pins: {}, header } },
+    ]);
+  }
+
+  it("every Pico-family GPIO is on the header except 23, 24, 25 and 29 (used on the board, per the datasheet)", () => {
+    for (const id of ["pico", "pico-w", "pico-2"]) {
+      const board = defs.boards.get(id)!;
+      expect(board.header.size).toBe(40);
+      const onHeader = [...board.header.values()].filter((v): v is number => typeof v === "number").sort((a, b) => a - b);
+      const expected = [...boardTarget(id).gpio].filter((p) => ![23, 24, 25, 29].includes(p)).sort((a, b) => a - b);
+      expect(onHeader).toEqual(expected);
+      expect(board.header.get("3")).toBe("GND");
+      expect(board.header.get("36")).toBe("3V3(OUT)");
+      expect(board.header.get("40")).toBe("VBUS");
+    }
+  });
+
+  it("a header GPIO the board doesn't have, or the same GPIO twice, is refused and named", () => {
+    expect(withHeader({ "1": 40 }).problems[0]?.message).toContain('"header.1": GPIO 40 doesn\'t exist on this board');
+    expect(withHeader({ "1": 5, "7": 5 }).problems[0]?.message).toContain('"header.7": GPIO 5 is already on header pin 1');
+    expect(withHeader(["GND"]).problems[0]?.message).toContain('"header": must be an object');
+    expect(withHeader({ "1": "" }).problems[0]?.message).toContain("the label can't be empty");
+    expect(withHeader({ "1": 0, "2": "GND" }).problems).toEqual([]);
+  });
+
+  it("labels are coloured as ground before power, so AGND is ground", () => {
+    expect(headerLabelKind("GND")).toBe("ground");
+    expect(headerLabelKind("AGND")).toBe("ground");
+    expect(headerLabelKind("VBUS")).toBe("power");
+    expect(headerLabelKind("3V3(OUT)")).toBe("power");
+    expect(headerLabelKind("5V")).toBe("power");
+    expect(headerLabelKind("3V3_EN")).toBe("other");
+    expect(headerLabelKind("RUN")).toBe("other");
+  });
+
+  it("the Pico page lays the header out like the board: 1 opposite 40, 20 opposite 21", () => {
+    const html = renderDefinitionPage(boardTarget("pico"), OPTS);
+    expect(html).toContain("<h2>Physical pins</h2>");
+    expect(html).toContain("Never wire a power pin to ground or to a GPIO");
+    expect(html).toMatch(/<tr><td class="left free"[^>]*>GPIO 0<\/td><td class="num">1<\/td><td class="num">40<\/td><td class="right power">VBUS<\/td><\/tr>/);
+    expect(html).toMatch(/<td class="left ground">GND<\/td><td class="num">3<\/td><td class="num">38<\/td><td class="right ground">GND<\/td>/);
+    expect(html).toMatch(/<td class="num">20<\/td><td class="num">21<\/td><td class="right free"[^>]*>GPIO 16<\/td>/);
+    expect(html).toContain('<td class="right ground">AGND</td>');
+  });
+
+  it("says where each pin is: the LED isn't on the header, GPIO 0 is pin 1", () => {
+    const html = renderDefinitionPage(boardTarget("pico"), OPTS);
+    expect(html).toContain('<tr><td>LED</td><td class="gpio">GPIO 25</td><td>not on the header</td>');
+    expect(pinRow(html, 0)).toContain("|1|");
+    expect(html).toContain("<th>Header pin</th>");
+  });
+
+  it("boards without a header get no Physical pins section and no header columns", () => {
+    const html = renderDefinitionPage(boardTarget("cyd"), OPTS);
+    expect(html).not.toContain("Physical pins");
+    expect(html).not.toContain("Header pin");
+  });
+
+  it("a header numbered some other way is listed as it's written", () => {
+    const set = withHeader({ "P3-1": "GND", "P3-2": 5 });
+    const html = renderDefinitionPage(resolveTarget(set, "board:hdr", null).target!, OPTS);
+    expect(html).toContain("<th>Pin</th><th>Connected to</th>");
+    expect(html).toContain('<td class="num">P3-1</td><td class="left ground">GND</td>');
   });
 });
