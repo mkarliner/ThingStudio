@@ -55,7 +55,9 @@
   #nativeArchSelect { max-width: 180px; }
   #boardSelect { max-width: 190px; }
   /* Connected: one button shows the state and ends it (2026-09-30). */
-  button.connected-state { border-color: var(--good); color: var(--good); display: inline-flex; align-items: center; gap: 6px; }
+  /* :not([hidden]): an author `display` would otherwise override the hidden attribute and show it while disconnected. */
+  button.connected-state:not([hidden]) { display: inline-flex; align-items: center; gap: 6px; }
+  button.connected-state { border-color: var(--good); color: var(--good); }
   button.connected-state .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--good); }
   /* Toolbar menus (2026-09-30, menus.ts). Plain buttons in a positioned list; [hidden] items vanish. */
   .menu { position: relative; }
