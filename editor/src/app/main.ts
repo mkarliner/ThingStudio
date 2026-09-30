@@ -145,6 +145,7 @@ import { migrateI2cBusConfigs } from "../node-library/i2c-shared.js";
 import { BUILTIN_DEFINITION_FILES } from "../definitions/builtin.js";
 import { buildDefinitionSet, userDefinitionFiles, type DefinitionSet } from "../definitions/definitions.js";
 import { choiceForConnectedBoard, resolveTarget, type TargetResolution } from "../definitions/target.js";
+import { renderDefinitionPage } from "../definitions/definition-page.js";
 import type { BoardSettingsResultMessage, HelloMessage, Message, NodeStatusMessage, ProtocolVersion } from "../protocol/messages.js";
 import { checkRuntimeBuild, decideDeploy } from "../protocol/version.js";
 import { ClassicPreset } from "rete";
@@ -1517,6 +1518,11 @@ function updateActiveTarget(): TargetResolution {
             : "Board: Auto";
   }
   select.title = resolution.note;
+  const pinsButton = el<HTMLButtonElement>("btnBoardPins");
+  pinsButton.disabled = !resolution.target;
+  pinsButton.title = resolution.target
+    ? `Show ${resolution.target.label}'s pins: which are free, reserved or wired to something, and why. Opens in a new tab.`
+    : "Pick a board in the Board menu, or connect one, to see its pins.";
   updateNativeArchLabel();
   refreshPreview();
   return resolution;
@@ -1536,6 +1542,33 @@ function updateNativeArchLabel(): void {
   autoOption.textContent = known ? `Arch: ${arch.arch}${arch.confirmed ? "" : " (unverified)"}` : "Arch: Auto";
 }
 el("nativeArchSelect").addEventListener("change", updateNativeArchLabel);
+
+// "Pins…" (Mike, 2026-09-30): the current target's definitions as a readable page, in a tab of its own so
+// it can sit beside the editor. The definition files are read again first, so an edit made in a text
+// editor shows at once -- click again to refresh the same tab. Built from activeTarget, the same object the
+// pin checks use. The tab is opened before the (async) reload, while the click still counts as the user's:
+// Safari blocks window.open after an await. The blob URL isn't revoked, so reloading that tab keeps
+// working; each page is a few kilobytes.
+el("btnBoardPins").addEventListener("click", async () => {
+  const win = window.open("", "thingstudio-pins");
+  if (!win) {
+    logLine("[board] The browser blocked the pins page from opening. Allow pop-ups for this page, then try again.", "err");
+    return;
+  }
+  await loadUserDefinitions(); // re-reads ~/.thingstudio's files and re-resolves the target
+  const target = activeTarget.value;
+  if (!target) {
+    win.close();
+    logLine("[board] Pick a board in the Board menu, or connect one, to see its pins.", "");
+    return;
+  }
+  const html = renderDefinitionPage(target, {
+    generated: `Read from the files ${new Date().toLocaleString()}. Click Pins… again after changing them.`,
+    docsUrl: `${backendHttpBaseUrl(currentBackendWsUrl())}/docs/boards/`,
+  });
+  win.location.href = URL.createObjectURL(new Blob([html], { type: "text/html" }));
+  win.focus();
+});
 
 function logTargetResolution(resolution: TargetResolution): void {
   logLine(`[board] ${resolution.note}`, resolution.target ? "ok" : "");

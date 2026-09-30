@@ -14,6 +14,14 @@ A board picked by hand stays picked when you reconnect. If you then connect a bo
 
 If no board is connected and none is picked, pins are only checked against the range 0–48.
 
+## Seeing a board's pins
+
+Click **Pins…** next to the **Board** menu. It opens a page, in its own tab, for the board or processor picked
+there. Pins the board names, such as its LED, come first. Then every pin, with whether it's free, reserved or best
+avoided, and why. Then which pins each SPI and I2C bus can use.
+
+The page is read from the definition files each time you click. After changing a file, click **Pins…** again.
+
 ## What gets checked
 
 These stop the compile:

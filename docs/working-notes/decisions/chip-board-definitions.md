@@ -81,3 +81,10 @@ Status: detail file for `decisions.md`'s "Processor and board definitions" index
   (Mike's call, over keeping the pick and blocking Deploy, or only warning louder). Found moving from the CYD
   to a Pico: the CYD pick stuck, so pins and native arch were still the ESP32's. A pick for the same processor
   stays (that's how the CYD gets picked). `target.ts`'s `choiceForConnectedBoard`, called on HELLO.
+- **2026-09-30 — "Pins…" page (Mike, `mikes-questions-and-points.md`: "a button by the board and processor drop
+  downs that will show a human readable page of their definitions").** Built in the editor from the resolved
+  Target (`definitions/definition-page.ts`), the object the pin checks read, so page and compile agree. Opens in
+  one named tab; each click re-reads `~/.thingstudio`'s definition files first (Mike: edits must show at once),
+  so clicking again refreshes it. Named pins first, then every GPIO with status (free / limited / avoid: compile
+  warns / reserved: compile stops) and reason, then SPI/I2C bus pin rules, then which files to edit. The tab is
+  opened before the async re-read, since Safari blocks `window.open` after an `await`.
