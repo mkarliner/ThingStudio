@@ -178,6 +178,15 @@ export async function listCustomNodes(wsUrl: string): Promise<string[]> {
   return body.customNodes;
 }
 
+/** The full listing: names to load, plus every package file found (custom-node-loader.ts). */
+export async function listCustomNodePackages(wsUrl: string): Promise<{ names: string[]; packages: { name: string; file: string; shadowedBy?: string }[] }> {
+  const res = await request(wsUrl, "/api/custom-nodes");
+  if (!res.ok) throw new AdminApiError(`list custom nodes failed: ${await parseErrorBody(res)}`);
+  const body = (await res.json()) as { customNodes: string[]; packages?: { name: string; file: string; shadowedBy?: string }[] };
+  // A backend older than 2026-09-30 sends names only.
+  return { names: body.customNodes, packages: body.packages ?? body.customNodes.map((name) => ({ name, file: `${name}.node.json` })) };
+}
+
 export async function readCustomNode(wsUrl: string, name: string): Promise<CustomNodePackageText> {
   const res = await request(wsUrl, `/api/custom-nodes/${encodeURIComponent(name)}`);
   if (!res.ok) throw new AdminApiError(`load custom node "${name}" failed: ${await parseErrorBody(res)}`);
@@ -189,7 +198,7 @@ export async function readCustomNode(wsUrl: string, name: string): Promise<Custo
 // full route table (and because a future "save this custom node I'm
 // authoring" UI will need exactly this, not a different shape), but
 // nothing calls them yet -- the editor has no custom-node authoring UI
-// today, only PaletteSidebar.vue's read-only "Load custom node..." picker.
+// today; custom nodes are only read (custom-node-loader.ts).
 // Named explicitly rather than silently built as unreachable dead code.
 export async function writeCustomNode(wsUrl: string, name: string, descriptor: string, implementation: string): Promise<void> {
   const res = await request(wsUrl, `/api/custom-nodes/${encodeURIComponent(name)}`, {

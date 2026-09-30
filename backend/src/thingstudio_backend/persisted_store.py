@@ -161,6 +161,26 @@ class CustomNodePackage:
 
 
 @dataclass(frozen=True)
+class CustomNodeListing:
+    """One package in list_custom_node_packages()'s result. `path` is the
+    descriptor file, shown to the user in messages. `shadowed_by` is set when
+    an earlier folder in the search list has a package with the same name,
+    which then wins; None otherwise."""
+
+    name: str
+    path: Path
+    shadowed_by: Path | None = None
+
+
+def display_path(path: Path) -> str:
+    """`path` with the home folder shown as `~`, for messages people read."""
+    try:
+        return "~/" + path.relative_to(Path.home()).as_posix()
+    except ValueError:
+        return str(path)
+
+
+@dataclass(frozen=True)
 class PresetInfo:
     """One entry in list_presets()'s result. `error` is None exactly when
     `valid` is True -- split into two fields rather than `error: str | None`
@@ -240,6 +260,13 @@ class PersistedStore:
         self.base_dir = base_dir if base_dir is not None else Path.home() / ".thingstudio"
         self.flows_dir = self.base_dir / "flows"
         self.custom_nodes_dir = self.base_dir / "custom-nodes"
+        # Folders searched for custom node packages, in order; for the same
+        # package name, the first folder wins. Only the user's folder today.
+        # A folder of built-in node packages shipped with the install would
+        # go first (Mike, 2026-09-30: built-ins may move to the package
+        # format, but beside the install, not in ~/.thingstudio). Writes and
+        # deletes only ever touch custom_nodes_dir.
+        self.custom_node_dirs: list[Path] = [self.custom_nodes_dir]
         self.credentials_dir = self.base_dir / "credentials"
         self.presets_dir = self.base_dir / "presets"
         self.processors_dir = self.base_dir / "processors"
@@ -279,15 +306,38 @@ class PersistedStore:
 
     # -- custom node packages ------------------------------------------
 
+    def list_custom_node_packages(self) -> list[CustomNodeListing]:
+        """Every package in every search folder, in search order, sorted by
+        name within a folder. A name already found in an earlier folder is
+        still listed, marked `shadowed_by`, so the editor can say so."""
+        listings: list[CustomNodeListing] = []
+        first_seen: dict[str, Path] = {}
+        for folder in self.custom_node_dirs:
+            if not folder.is_dir():
+                continue
+            for path in sorted(folder.glob("*.node.json")):
+                name = path.name[: -len(".node.json")]
+                listings.append(CustomNodeListing(name=name, path=path, shadowed_by=first_seen.get(name)))
+                first_seen.setdefault(name, path)
+        return listings
+
     def list_custom_nodes(self) -> list[str]:
-        if not self.custom_nodes_dir.is_dir():
-            return []
-        return sorted(p.name[: -len(".node.json")] for p in self.custom_nodes_dir.glob("*.node.json"))
+        """Package names, each once, in the order the editor should load them."""
+        return [p.name for p in self.list_custom_node_packages() if p.shadowed_by is None]
+
+    def _find_custom_node(self, name: str) -> Path:
+        """The folder holding package `name`: the first search folder that has
+        its descriptor, else the user's folder (so "not found" names it)."""
+        for folder in self.custom_node_dirs:
+            if (folder / f"{name}.node.json").is_file():
+                return folder
+        return self.custom_nodes_dir
 
     def read_custom_node(self, name: str) -> CustomNodePackage:
         _validate_name(name, kind="custom node")
-        descriptor_path = self.custom_nodes_dir / f"{name}.node.json"
-        impl_path = self.custom_nodes_dir / f"{name}.node.py"
+        folder = self._find_custom_node(name)
+        descriptor_path = folder / f"{name}.node.json"
+        impl_path = folder / f"{name}.node.py"
         try:
             descriptor = descriptor_path.read_text(encoding="utf-8")
         except FileNotFoundError as exc:

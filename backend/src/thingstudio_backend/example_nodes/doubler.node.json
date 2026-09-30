@@ -1,0 +1,16 @@
+{
+  "type": "examples/doubler",
+  "kind": "transform",
+  "label": "doubler",
+  "color": "#6e3b8a",
+  "bgcolor": "#3f1f4a",
+  "icon": "×2",
+  "group": "examples",
+  "ports": {
+    "inputs": [{ "name": "msg", "type": "number" }],
+    "outputs": [{ "name": "msg", "type": "number" }]
+  },
+  "properties": [
+    { "name": "factor", "label": "factor", "kind": "number", "default": 2 }
+  ]
+}

@@ -28,7 +28,7 @@ where = ["src"]
 # The built editor, docs, device runtime and definitions, copied in by tools/build_assets.py
 # (`make assets`). Empty in a dev checkout, which reads them from the repo instead (assets.py).
 [tool.setuptools.package-data]
-thingstudio_backend = ["_assets/**/*"]
+thingstudio_backend = ["_assets/**/*", "example_nodes/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["test"]

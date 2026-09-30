@@ -2,21 +2,28 @@
 
 A custom node is two files sharing a base name: `<name>.node.json` (the
 descriptor) and `<name>.node.py` (the behavior), placed in the backend's
-`~/.thingstudio/custom-nodes/` directory. Load it through the palette
-sidebar, then drag the node onto the canvas like any built-in node. This
-document is complete on its own — no other Thingstudio docs needed.
+`~/.thingstudio/custom-nodes/` directory. Thingstudio loads it for you,
+and you drag it onto the canvas like any built-in node. This document is
+complete on its own — no other Thingstudio docs needed.
 
 ## Loading a custom node
 
-Copy both files into `~/.thingstudio/custom-nodes/` on the machine
-running the backend (there's no upload button in the editor yet — see
-below). In the editor, click "Load custom node…" in the palette sidebar,
-then pick it from the list. The node appears under "custom nodes" in the
-palette.
+Put both files in `~/.thingstudio/custom-nodes/` on the computer running
+Thingstudio. There's no upload button in the editor yet.
 
-Loading is scoped to the current editor session. Reload the page and
-you'll need to load the package again before reopening or recompiling a
-flow that uses it.
+The editor loads every package in that folder when it starts, and again
+when you switch back to its window. After changing a file, you can also
+click **Reload custom nodes** at the bottom of the palette. The console
+lists what loaded. Each node appears in the palette under its `group`.
+
+A package with a problem isn't loaded, and the console says which file
+and why. The others still load. If two packages use the same `type`, the
+first one by file name is loaded and the other is reported.
+
+The folder starts with two examples, `doubler` and `dht22`, under
+**examples** in the palette. Read them, change them or delete them.
+Thingstudio adds them only the first time it runs, so deleted examples
+stay deleted.
 
 ## The descriptor: `<name>.node.json`
 
@@ -237,7 +244,6 @@ Thingstudio doesn't check it. A typo surfaces as a runtime error (e.g.
 
 ## Limitations
 
-- **Session-scoped loading** — no persistence across a page reload.
 - **One output port** — a current compiler limit, not a format limit.
 - **No event-driven sources** — `intervalMs` polling only.
 - **No resource-sharing between instances.** Two built-in `gpio_out`
@@ -247,6 +253,7 @@ Thingstudio doesn't check it. A typo surfaces as a runtime error (e.g.
   resource (e.g. the same pin).
 - **No sandboxing.** Custom node Python runs with the same trust as any
   other node — the same trust Thingstudio's `function` node already
-  has. There's no install-from-elsewhere mechanism: no registry, no URL
-  install, only files you load yourself. Don't load a package you
-  haven't read.
+  has. Loading a package only adds it to the palette. Its Python runs
+  on a board only when you place the node and deploy. There's no
+  registry and no URL install, only files you put in the folder
+  yourself. Don't put a package there that you haven't read.

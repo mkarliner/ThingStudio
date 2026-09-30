@@ -5,9 +5,12 @@ import json
 import logging
 
 from thingstudio_backend.builtin_reference import (
+    EXAMPLE_NODES_DIR,
+    copy_example_custom_nodes,
     copy_missing_builtins,
     default_definitions_dir,
     seed_builtin_definitions,
+    seed_example_custom_nodes,
 )
 
 
@@ -47,3 +50,38 @@ def test_seed_logs_and_carries_on_when_the_source_is_missing(tmp_path, caplog) -
         seed_builtin_definitions(tmp_path / "data", tmp_path / "nowhere")
     assert "could not copy built-in board/processor definitions" in caplog.text
     assert not (tmp_path / "data").exists()
+
+
+# -- example custom nodes (2026-09-30) -------------------------------------------
+
+
+def test_first_run_copies_the_example_packages(tmp_path) -> None:
+    copied = copy_example_custom_nodes(tmp_path)
+    assert copied == ["dht22.node.json", "dht22.node.py", "doubler.node.json", "doubler.node.py"]
+    for name in copied:
+        assert (tmp_path / "custom-nodes" / name).read_bytes() == (EXAMPLE_NODES_DIR / name).read_bytes()
+    # Every descriptor has its implementation beside it, and parses.
+    for descriptor in EXAMPLE_NODES_DIR.glob("*.node.json"):
+        json.loads(descriptor.read_text())
+        assert descriptor.with_name(descriptor.name.replace(".node.json", ".node.py")).is_file()
+
+
+def test_an_existing_folder_is_never_touched_so_a_deleted_example_stays_deleted(tmp_path) -> None:
+    copy_example_custom_nodes(tmp_path)
+    (tmp_path / "custom-nodes" / "doubler.node.json").unlink()
+    (tmp_path / "custom-nodes" / "doubler.node.py").unlink()
+    assert copy_example_custom_nodes(tmp_path) == []
+    assert not (tmp_path / "custom-nodes" / "doubler.node.json").exists()
+
+
+def test_an_empty_existing_folder_gets_no_examples(tmp_path) -> None:
+    (tmp_path / "custom-nodes").mkdir()
+    assert copy_example_custom_nodes(tmp_path) == []
+    assert list((tmp_path / "custom-nodes").iterdir()) == []
+
+
+def test_seeding_logs_instead_of_raising(tmp_path, caplog) -> None:
+    with caplog.at_level(logging.WARNING):
+        seed_example_custom_nodes(tmp_path, source_dir=tmp_path / "missing")
+    assert "could not copy the example custom nodes" in caplog.text
+    assert not (tmp_path / "custom-nodes").exists()
