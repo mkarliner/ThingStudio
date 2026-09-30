@@ -27,6 +27,16 @@ jobs:
       - run: npx tsc --noEmit
       - run: npm test
 
+  # The installers: install.sh's lint, and install.ps1's tests (packaging/test/, runnable on Linux with the
+  # Windows-only steps stood in). The real installs run in release.yml against the built bundles.
+  packaging:
+    name: installers (shellcheck + install.ps1 tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: shellcheck -s sh packaging/install.sh packaging/launcher/thingstudio
+      - run: pwsh -NoProfile -File packaging/test/install-ps1.tests.ps1
+
   # device-runtime: headless MicroPython unix-port tests -- not added yet.
   # device-runtime/test/ is still a placeholder (no unix-port build wired
   # up in this environment). Add a job here once that exists; don't run
