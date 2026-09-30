@@ -194,6 +194,8 @@
     <select id="boardSelect" title="The board or processor this flow is for. Pins are checked against it when you compile. Auto uses the connected board.">
       <option value="auto" selected>Board: Auto</option>
     </select>
+    <!-- btnBoardPins (2026-09-30): the readable page for the board/processor above (definition-page.ts). -->
+    <button id="btnBoardPins" disabled title="Pick a board in the Board menu, or connect one, to see its pins.">Pins…</button>
     <select id="nativeArchSelect" title="mpy-cross -march target for @micropython.viper/@micropython.native code (e.g. display_spi's gs4/gs2/mono formats) -- only matters if a node in this flow actually uses one. Auto detects from the connected board's HELLO; override if Auto guesses wrong or no board is connected yet.">
       <option value="auto" selected>Arch: Auto</option>
     </select>

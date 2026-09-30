@@ -81,3 +81,19 @@ Status: detail file for `decisions.md`'s "Processor and board definitions" index
   (Mike's call, over keeping the pick and blocking Deploy, or only warning louder). Found moving from the CYD
   to a Pico: the CYD pick stuck, so pins and native arch were still the ESP32's. A pick for the same processor
   stays (that's how the CYD gets picked). `target.ts`'s `choiceForConnectedBoard`, called on HELLO.
+- **2026-09-30 — "Pins…" page (Mike, `mikes-questions-and-points.md`: "a button by the board and processor drop
+  downs that will show a human readable page of their definitions").** Built in the editor from the resolved
+  Target (`definitions/definition-page.ts`), the object the pin checks read, so page and compile agree. Opens in
+  one named tab; each click re-reads `~/.thingstudio`'s definition files first (Mike: edits must show at once),
+  so clicking again refreshes it. Named pins first, then every GPIO with status (free / limited / avoid: compile
+  warns / reserved: compile stops) and reason, then SPI/I2C bus pin rules, then which files to edit. The tab is
+  opened before the async re-read, since Safari blocks `window.open` after an `await`.
+- **2026-09-30 — Boards can say what each physical pin carries (Mike: "include the physical pin that a given
+  gpio is connected to and also gnd and power pins to avoid nasty accidents").** New optional board key
+  `header`: physical pin -> GPIO number or a label ("GND", "3V3(OUT)", "RUN"). Validated: a GPIO must exist on
+  the board and appear once. The Pins… page draws a 1..N header as two columns like the board, power red and
+  ground grey (a label containing "GND" is ground first, so AGND isn't mistaken for power), and adds the header
+  pin to the named/all pins tables ("not on the header" for the Pico's LED). Data only from the maker's own
+  pinout: Pico, Pico W and Pico 2 from Raspberry Pi's pinout SVGs (their documentation repo), all three
+  identical; a test checks every GPIO but 23/24/25/29 is on it. LOLIN S2 Mini and CYD left without a header:
+  Wemos doesn't number the S2 Mini's pins and the CYD's connectors are community-documented only.
