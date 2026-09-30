@@ -37,3 +37,5 @@
   `%LOCALAPPDATA%\Thingstudio`, a `.cmd` shim in `bin` instead of a `current` link (links need admin), `bin` on
   the user PATH via the raw registry value. Latest version read from the release's `SHA256SUMS`, not the GitHub
   API. Briefing, "PowerShell one-liner as built".
+- **2026-09-30 — winget and scoop manifests move to post-MVP (Mike).** The PowerShell one-liner already gives
+  Windows a one-step install and upgrade; the manifests would only point at the same zip. Homebrew stays in MVP.

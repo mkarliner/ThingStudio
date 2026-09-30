@@ -144,7 +144,8 @@ mDNS lands with or after posture-2; `outstanding-items/posture-2-auth.md` carrie
    fresh Linux VM check, a real person on real Windows.
 4. `thingstudio` command name + alias, first-run checks.
 5. Service recipes and `thingstudio service` helper.
-6. Homebrew tap, scoop bucket, winget manifest. ~~Apple signing and notarization~~ written 2026-09-27, first CI
+6. Homebrew tap. (Scoop bucket and winget manifest: post-MVP, Mike 2026-09-30 -- the PowerShell one-liner
+   covers Windows.) ~~Apple signing and notarization~~ written 2026-09-27, first CI
    run and the iTerm Local Network test on Mike's Mac pending (below).
 7. Install docs, then fresh-VM acceptance and the newcomer test.
 
@@ -292,7 +293,7 @@ mDNS lands with or after posture-2; `outstanding-items/posture-2-auth.md` carrie
   `ci.yml`'s new `packaging` job and `release.yml`'s assets job; a real Windows install in the bundle job under
   PowerShell 7, then 5.1, then through `Invoke-Expression`, with the registry PATH checked after install and
   after uninstall; `install.ps1` uploaded with each release and listed in `SHA256SUMS`.
-- Not done: winget and scoop manifests, a real person on real Windows.
+- Not done: a real person on real Windows. winget and scoop manifests moved to post-MVP (Mike, 2026-09-30).
 
 ## Out of scope
 

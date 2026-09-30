@@ -104,7 +104,7 @@ tools/           license-scan and build scripts
 
 ## Not built yet
 
-- **More install routes** — Homebrew, winget/scoop (MVP item 7).
+- **More install routes** — Homebrew (MVP item 7); winget/scoop after MVP.
   Releases today: one-line installers for macOS, Linux and Windows, and a
   zip or tarball per platform.
 - **Board-transport auth** — the `HELLO` handshake fields are designed,
