@@ -129,3 +129,14 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
   `main.ts` now resolves a config's credential as soon as its name changes (`configsVersion` watch) and
   re-resolves all of them at Deploy; `wifiSetupStatement` throws a CompileError for a non-unmanaged config with
   no SSID.
+- **2026-09-30 — Toolbar menus (Mike's "top menu streamline", `mikes-questions-and-points.md`).** File (New flow,
+  Open…, Save…), Tools (Check status, Board settings…, Install runtime…, Native code), Help (User guide, Getting
+  started, Report a problem, About). The "connected" pill and Disconnect were one fact twice: now one button,
+  **● Connected · Disconnect**, its tooltip naming USB port or WiFi host; ⟳ (was "⟳ ports") hides while
+  connected. Clear renamed New flow: it always reset everything, panes and configs included. Board menu, Pins…
+  and Compile → Deploy stay visible. One line at 1280 px wide (was two lines at 1440, three at 1280, connected).
+  Menus are plain buttons (`app/menus.ts`, no dependency) that keep their element ids, so main.ts's handlers and
+  hidden/disabled rules are untouched; click or Down opens, Up/Down move, Escape/outside click/choosing closes.
+  About shows Thingstudio's version (backend `/api/alive` now returns it), the runtime the editor expects, and the
+  connected board's runtime. Trade-off: Install runtime… is no longer a visible button; the console's "no
+  runtime" advice names "Tools → Install runtime…", and the newcomer test will show whether that's enough.

@@ -76,5 +76,5 @@ time.
 2. [Get started](getting-started.md): install Thingstudio and connect your board.
 3. [Blink an LED](first-flow.md): your first flow.
 
-These docs follow the latest code. The copy inside Thingstudio (the **Docs** button) matches the version you have
+These docs follow the latest code. The copy inside Thingstudio (**Help → User guide**) matches the version you have
 installed.
