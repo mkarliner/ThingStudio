@@ -68,3 +68,41 @@ def seed_builtin_definitions(data_dir: Path, source_dir: Path | None = None) -> 
         return
     if copied:
         log.info("copied built-in definitions into %s: %s", data_dir, ", ".join(copied))
+
+
+# -- example custom nodes ------------------------------------------------------
+#
+# Two small custom node packages (example_nodes/, shipped inside this Python
+# package) copied into ~/.thingstudio/custom-nodes/ the first time the backend
+# runs, so a new user has real, readable examples in the palette (Mike,
+# 2026-09-30). Only when that folder doesn't exist yet: once it does, it's the
+# user's, and a deleted example stays deleted.
+
+EXAMPLE_NODES_DIR = Path(__file__).resolve().parent / "example_nodes"
+
+
+def copy_example_custom_nodes(data_dir: Path, source_dir: Path = EXAMPLE_NODES_DIR) -> list[str]:
+    """Creates <data_dir>/custom-nodes/ holding the example packages, unless
+    that folder already exists. Returns the file names copied. Raises OSError
+    on failure; the caller decides whether that's fatal."""
+    out = data_dir / "custom-nodes"
+    if out.exists():
+        return []
+    files = sorted(p for p in source_dir.glob("*.node.*") if p.suffix in (".json", ".py"))
+    if not files:
+        raise OSError(f"example custom nodes not found at {source_dir}")
+    out.mkdir(parents=True)
+    for src in files:
+        (out / src.name).write_bytes(src.read_bytes())
+    return [p.name for p in files]
+
+
+def seed_example_custom_nodes(data_dir: Path, source_dir: Path = EXAMPLE_NODES_DIR) -> None:
+    """copy_example_custom_nodes, logging instead of raising."""
+    try:
+        copied = copy_example_custom_nodes(data_dir, source_dir)
+    except OSError as exc:
+        log.warning("could not copy the example custom nodes into %s: %s", data_dir / "custom-nodes", exc)
+        return
+    if copied:
+        log.info("copied example custom nodes into %s: %s", data_dir / "custom-nodes", ", ".join(copied))

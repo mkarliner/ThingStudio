@@ -103,7 +103,7 @@ async def test_list_custom_nodes_starts_empty(tmp_path) -> None:
     async with _client(tmp_path) as client:
         resp = await client.get("/api/custom-nodes")
         assert resp.status == 200
-        assert await resp.json() == {"customNodes": []}
+        assert await resp.json() == {"customNodes": [], "packages": []}
 
 
 @pytest.mark.asyncio
@@ -118,7 +118,10 @@ async def test_put_then_get_custom_node_round_trips(tmp_path) -> None:
         assert await get_resp.json() == payload
 
         list_resp = await client.get("/api/custom-nodes")
-        assert (await list_resp.json())["customNodes"] == ["blink"]
+        body = await list_resp.json()
+        assert body["customNodes"] == ["blink"]
+        # Each package's descriptor file, for messages that name it.
+        assert body["packages"] == [{"name": "blink", "file": str(tmp_path / ".thingstudio" / "custom-nodes" / "blink.node.json")}]
 
 
 @pytest.mark.asyncio

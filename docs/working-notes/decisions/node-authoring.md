@@ -610,4 +610,24 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
 - **2026-09-27 — Custom nodes load automatically (Mike's call; reverses 2026-08-20/21 "session-scoped only").**
   Every package in `~/.thingstudio/custom-nodes/` is loaded when the editor connects to the backend; a broken
   one is skipped and named. Trust unchanged: loading only registers a palette entry, and the code runs on a
-  board only after the user places the node and deploys. Not built yet: `mvp-remaining-work-briefing.md`, B.
+  board only after the user places the node and deploys. Built 2026-09-30, next entry.
+
+- **2026-09-30 — Auto-load built.** The editor loads every package the backend lists
+  (`app/custom-node-loader.ts`) on start, on backend reconnect, on window focus, and on the palette's
+  **Reload custom nodes** (replacing "Load custom node…" and its picker). One console line per broken
+  package, naming its file; an unchanged folder logs nothing on focus. Two packages with the same `type`: the
+  first (backend order: search folder, then file name) loads, the second is reported -- never replaced. A
+  flow using a type whose package failed says which file and why, on open (`missingNodeTypeMessage`) and in
+  the compile preview. The backend searches an ordered list of folders (`PersistedStore.custom_node_dirs`,
+  only `~/.thingstudio/custom-nodes/` today); a same-named package in a later folder is listed as shadowed.
+  Two example packages (`examples/doubler`, `examples/dht22`, `backend/.../example_nodes/`) are copied into
+  `~/.thingstudio/custom-nodes/` only when that folder doesn't exist yet, so deleting one sticks.
+- **2026-09-30 — Built-in nodes do not move into `~/.thingstudio` (Mike agreed).** Question raised: should
+  every node, built-ins included, live in the user's folder? No: an edited built-in in the user folder would
+  either block or be overwritten by upgrades; built-ins are tied to the board runtime and its vendored files
+  (`mqtt_as`, the event primitives, `decideDeploy`'s version gate); and a broken or deleted file would take
+  out basic nodes and every flow using them. The Node-RED model instead: same format, different place -- core
+  nodes ship with the install, `~/.node-red` holds only what the user adds. Built-ins may later become
+  packages in a folder shipped with the install, placed ahead of the user's folder in `custom_node_dirs`;
+  the reserved `thingstudio/` namespace keeps a user package from replacing one by accident. That needs the
+  package format to reach parity first (tracked in `outstanding-items.md`, "Custom node format parity").

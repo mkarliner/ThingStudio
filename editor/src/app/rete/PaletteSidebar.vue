@@ -44,6 +44,13 @@
   reaching into main.ts's console directly, matching this file's existing
   "only talk to the parent via emits" shape.
 
+  2026-09-30 (Mike: custom nodes load automatically): the picker below is
+  gone. main.ts loads every package the backend has (custom-node-loader.ts)
+  on start, on backend reconnect and on window focus; this sidebar only
+  offers "Reload custom nodes", emitted as `reloadCustomNodes` for main.ts
+  to handle, so the console lines come from one place. The two paragraphs
+  above and below describe the old picker.
+
   Backend-exclusive as of 2026-09-08 (main.ts's own header addendum): this
   used to open a native two-file picker (custom-node-io.ts) against local
   disk; it now lists what's saved on the backend's /api/custom-nodes and
@@ -84,18 +91,9 @@
       </template>
       <p v-if="groupedRows.length === 0" class="hint">No nodes match "{{ filter }}".</p>
 
-      <button class="palette-row load-custom-row" @click="onLoadCustomNode">
-        <span class="palette-icon">+</span>
-        <span class="palette-label">{{ backendCustomNodeChoices === null ? "Load custom node…" : "Cancel" }}</span>
-      </button>
-      <button
-        v-for="name in backendCustomNodeChoices ?? []"
-        :key="name"
-        class="palette-row load-custom-row"
-        @click="onPickBackendCustomNode(name)"
-      >
-        <span class="palette-icon">◆</span>
-        <span class="palette-label">{{ name }}</span>
+      <button class="palette-row load-custom-row" title="Read the custom node folder again, after you change a file there" @click="emit('reloadCustomNodes')">
+        <span class="palette-icon">⟳</span>
+        <span class="palette-label">Reload custom nodes</span>
       </button>
     </template>
   </div>
@@ -104,16 +102,12 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { NODE_PALETTE, DEFAULT_KIND_STYLE, DEFAULT_NODE_GROUPS, DRAG_MIME, CUSTOM_DRAG_MIME, type NodeKind } from "./palette";
-import { customNodePackages, customNodesVersion, loadOrReplaceCustomNodePackage } from "./custom-nodes-store";
-import { backendWsUrl } from "./store";
-import { AdminApiError, listCustomNodes, readCustomNode } from "../../flow-file/admin-api-client";
-import { validateCustomNodeDescriptor, CustomNodeDescriptorError } from "../../node-library/custom-node";
+import { customNodePackages, customNodesVersion } from "./custom-nodes-store";
 
 const emit = defineEmits<{
   add: [kind: NodeKind];
   addCustom: [type: string];
-  customNodeLoaded: [type: string];
-  customNodeLoadError: [message: string];
+  reloadCustomNodes: [];
 }>();
 
 // Display order within each group is data, not a list here -- see
@@ -237,52 +231,6 @@ function onRowDragStart(event: DragEvent, row: PaletteRow): void {
   if (event.dataTransfer) event.dataTransfer.effectAllowed = "copy";
 }
 
-// null = picker closed; a (possibly empty) array = the backend's current
-// /api/custom-nodes listing, shown as an expanding set of rows below the
-// "Load custom node..." button rather than a native picker -- there's no
-// OS-level equivalent for "choose one of these backend-known names" the
-// way file-io.ts/custom-node-io.ts could lean on showOpenFilePicker.
-const backendCustomNodeChoices = ref<string[] | null>(null);
-
-async function onLoadCustomNode(): Promise<void> {
-  if (backendCustomNodeChoices.value !== null) {
-    // Second click while the list is already open -- treat it as
-    // "cancel" rather than silently re-fetching underneath an open list.
-    backendCustomNodeChoices.value = null;
-    return;
-  }
-  try {
-    const names = await listCustomNodes(backendWsUrl.value);
-    if (names.length === 0) {
-      emit("customNodeLoadError", "no custom nodes saved on the backend yet");
-      return;
-    }
-    backendCustomNodeChoices.value = names;
-  } catch (err) {
-    emit("customNodeLoadError", err instanceof AdminApiError || err instanceof Error ? err.message : String(err));
-  }
-}
-
-async function onPickBackendCustomNode(name: string): Promise<void> {
-  backendCustomNodeChoices.value = null;
-  try {
-    const pkg = await readCustomNode(backendWsUrl.value, name);
-    const rawDescriptor: unknown = JSON.parse(pkg.descriptor);
-    const descriptor = validateCustomNodeDescriptor(rawDescriptor);
-    loadOrReplaceCustomNodePackage(descriptor, pkg.implementation);
-    emit("customNodeLoaded", descriptor.type);
-  } catch (err) {
-    const message =
-      err instanceof AdminApiError || err instanceof CustomNodeDescriptorError
-        ? err.message
-        : err instanceof SyntaxError
-          ? `custom node "${name}"'s descriptor is not valid JSON: ${err.message}`
-          : err instanceof Error
-            ? err.message
-            : String(err);
-    emit("customNodeLoadError", message);
-  }
-}
 </script>
 
 <style scoped>

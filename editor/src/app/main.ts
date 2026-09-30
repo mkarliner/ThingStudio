@@ -155,7 +155,8 @@ import { DRAG_MIME, CUSTOM_DRAG_MIME, type NodeKind } from "./rete/palette.js";
 import { toGraphData, socketIndex } from "./rete/graph-adapter.js";
 import { CONFIG_TYPES } from "./rete/config-types.js";
 import { propertyVersion, configsVersion, configs as configsStore, replaceAllConfigs, clearConfigs, backendWsUrl, fireInjectNode, updateConfig, activeTarget } from "./rete/store.js";
-import { getCustomNodePackage, listCustomNodeDefinitions } from "./rete/custom-nodes-store.js";
+import { getCustomNodePackage, listCustomNodeDefinitions, missingNodeTypeMessage, replaceAllCustomNodePackages } from "./rete/custom-nodes-store.js";
+import { loadAllCustomNodes } from "./custom-node-loader.js";
 import { assignNodeToActivePane, paneOfNode, replacePanesFromFlowFile, resetPanes, setActivePane, panes as panesStore } from "./rete/panes-store.js";
 import PaletteSidebar from "./rete/PaletteSidebar.vue";
 import PropertyPanel from "./rete/PropertyPanel.vue";
@@ -171,7 +172,7 @@ import {
   type FlowFileConfig,
   type CanvasNodeSnapshot,
 } from "../flow-file/flow-file.js";
-import { DEFAULT_BACKEND_WS_URL, backendHttpBaseUrl, initialBackendWsUrl, slugifyFlowName, getCredential, putCredential, listDefinitions, type CredentialType } from "../flow-file/admin-api-client.js";
+import { DEFAULT_BACKEND_WS_URL, backendHttpBaseUrl, initialBackendWsUrl, slugifyFlowName, getCredential, putCredential, listDefinitions, listCustomNodePackages, readCustomNode, type CredentialType } from "../flow-file/admin-api-client.js";
 // slugifyFlowName is reused here purely for a nicer suggested filename in
 // the save dialog below -- its own header's reasoning for why a display
 // name isn't a valid storage key applies just as well to a suggested
@@ -231,7 +232,7 @@ async function addNodeOfKind(kind: NodeKind, position?: { x: number; y: number }
 async function addCustomNodeOfType(type: string, position?: { x: number; y: number }): Promise<AnyThingstudioNode | null> {
   const pkg = getCustomNodePackage(type);
   if (!pkg) {
-    logLine(`[custom node "${type}" is not loaded this session -- use "Load custom node..." first]`, "err");
+    logLine(`[${missingNodeTypeMessage(type)}]`, "err");
     return null;
   }
   const node = new CustomNode(pkg.descriptor);
@@ -278,9 +279,9 @@ document.addEventListener("keydown", (e) => {
   void reteHandle.deleteSelected();
 });
 
-// Palette (left) -- click-to-add via the `add`/`addCustom` emits, plus the
-// two custom-node-load outcome emits routed to the same device console
-// every other status line already uses. Vue's programmatic mount treats
+// Palette (left) -- click-to-add via the `add`/`addCustom` emits, plus
+// "Reload custom nodes" (2026-09-30), which reports to the same device
+// console every other status line already uses. Vue's programmatic mount treats
 // an `onX` prop as a listener for an emitted `x` event, same as if this
 // were a child component in a template (PaletteSidebar.vue's own
 // `defineEmits<...>()`).
@@ -291,11 +292,8 @@ createApp(PaletteSidebar, {
   onAddCustom: (type: string) => {
     void addCustomNodeOfType(type);
   },
-  onCustomNodeLoaded: (type: string) => {
-    logLine(`[custom node loaded: ${type}]`, "ok");
-  },
-  onCustomNodeLoadError: (message: string) => {
-    logLine(`[custom node load failed] ${message}`, "err");
+  onReloadCustomNodes: () => {
+    void loadCustomNodes(true);
   },
 }).mount(el("palette-mount"));
 
@@ -572,7 +570,7 @@ async function applyFlowFile(file: FlowFile): Promise<void> {
       const factory = NODE_FACTORIES[kind];
       if (!factory) {
         skippedFileIds.add(n.id);
-        logLine(`[load: skipped node ${n.id}, unknown type "${n.type}"]`, "err");
+        logLine(`[load: skipped node ${n.id}: ${missingNodeTypeMessage(n.type)}]`, "err");
         continue;
       }
       node = factory();
@@ -933,6 +931,11 @@ function currentSource(): string {
   // "COMPILE ERROR: ..." in the source preview panel; no special-casing
   // needed here for that to be comprehensible.
   const registry = mergeCustomNodeRegistry(builtInRegistry, listCustomNodeDefinitions());
+  // A node whose type isn't loaded (its package failed, or went away on a reload): say why, naming the
+  // file, rather than compile.ts's bare "unknown node type".
+  for (const n of graphData.nodes) {
+    if (!registry.has(n.type)) throw new Error(`${missingNodeTypeMessage(n.type)} (node ${n.id})`);
+  }
   const { source, nodeLineRanges, warnings } = compile(graphData, registry, { target: activeTarget.value });
   lastNodeLineRanges = nodeLineRanges;
   lastCompileWarnings = warnings;
@@ -1564,6 +1567,60 @@ async function loadUserDefinitions(): Promise<void> {
   updateActiveTarget();
 }
 
+// Custom nodes (2026-09-30, Mike: load them automatically -- decisions/node-authoring.md). Every package
+// the backend has is loaded on start, when the backend comes back, when this window regains focus (so an
+// edit in a text editor shows up), and on "Reload custom nodes". A broken package is skipped with one
+// console line naming its file; the rest load. Like loadUserDefinitions(), only changes are logged,
+// except on an explicit reload, which always reports.
+let lastCustomNodesReport = "";
+let customNodesLoading = false;
+
+async function loadCustomNodes(explicit = false): Promise<void> {
+  if (customNodesLoading) return;
+  customNodesLoading = true;
+  try {
+    const wsUrl = currentBackendWsUrl();
+    let result;
+    try {
+      result = await loadAllCustomNodes({ list: () => listCustomNodePackages(wsUrl), read: (name) => readCustomNode(wsUrl, name) });
+    } catch (err) {
+      // No backend (the Vite dev server alone, say). Keep what's loaded.
+      const line = `[custom nodes] not loaded -- ${err instanceof Error ? err.message : String(err)}`;
+      if (explicit || line !== lastCustomNodesReport) logLine(line, "err");
+      lastCustomNodesReport = line;
+      return;
+    }
+    replaceAllCustomNodePackages(result.loaded, result.problems);
+    const lines = [
+      {
+        text:
+          result.loaded.length > 0
+            ? `[custom nodes] loaded ${result.loaded.map((p) => p.descriptor.type).join(", ")}`
+            : "[custom nodes] none found in ~/.thingstudio/custom-nodes/",
+        cls: result.loaded.length > 0 ? ("ok" as const) : ("" as const),
+      },
+      ...result.problems.map((p) => ({ text: `[custom nodes] ${p.file} is not loaded: ${p.message}`, cls: "err" as const })),
+    ];
+    // What was loaded is part of the report, so an edited .node.json or .node.py counts as a change too.
+    const report = JSON.stringify([lines, result.loaded.map((p) => [p.descriptor, p.pythonSource])]);
+    const quiet = !explicit && lastCustomNodesReport === "" && result.loaded.length === 0 && result.problems.length === 0;
+    if ((explicit || report !== lastCustomNodesReport) && !quiet) for (const l of lines) logLine(l.text, l.cls);
+    const previous = lastCustomNodesReport;
+    lastCustomNodesReport = report;
+    if (report !== previous) {
+      // A package changed, so the compiled flow may have too: recompile the preview, and let Deploy send
+      // it again. Not on the first load, when nothing has been deployed from this page yet.
+      if (previous !== "") {
+        deployedClean = false;
+        updateDeployButtonEnabled();
+      }
+      refreshPreview();
+    }
+  } finally {
+    customNodesLoading = false;
+  }
+}
+
 populateBoardSelect();
 el("boardSelect").addEventListener("change", () => {
   logTargetResolution(updateActiveTarget());
@@ -1591,7 +1648,7 @@ updateConnModeUi();
 el<HTMLInputElement>("backendUrlInput").value = initialBackendWsUrl(import.meta.env.DEV, window.location);
 
 // Mirrors backendUrlInput into store.ts's backendWsUrl (2026-09-08) --
-// PaletteSidebar.vue's "Load custom node..." picker talks to the admin
+// the credential and preset fields (ConfigRefField.vue and friends) talk to the admin
 // API directly and has no DOM reference to this input (main.ts owns all
 // direct element access, per this file's own established convention), so
 // it reads this reactive ref instead. Initialized once here, then kept in
@@ -1605,6 +1662,8 @@ el("backendUrlInput").addEventListener("input", () => {
 // The user's own board/processor files. Read again on Connect and on Deploy, so an edit made in a
 // text editor takes effect without reloading the page.
 void loadUserDefinitions();
+void loadCustomNodes();
+window.addEventListener("focus", () => void loadCustomNodes());
 
 /** Populates backendPortSelect from the backend's own list_ports control
  * message. Uses a short-lived BackendTransport just for this one
@@ -2005,6 +2064,7 @@ async function watchBackend(): Promise<void> {
     logLine("[backend] stopped -- this tab reconnects by itself when it's back", "err");
   } else if (ok && !backendAlive) {
     logLine("[backend] back. If you rebuilt the editor, save your flow and reload this page to use the new build.", "ok");
+    void loadCustomNodes();
     if (!transport.isConnected) void refreshBackendPorts();
   }
   backendAlive = ok;

@@ -57,8 +57,8 @@ export const clearNodeSelection = ref<(() => void) | null>(null);
 // `backendUrlInput` DOM element (this file's own established convention --
 // see this module's header, "framework-agnostic... bridging" -- never
 // reads the DOM itself) and mirrors its value in here on every edit.
-// PaletteSidebar.vue's "Load custom node..." picker talks to the backend's
-// admin API directly and needs this editor's current backend location to
+// The credential and preset fields (once also PaletteSidebar.vue's custom node picker) talk to the backend's
+// admin API directly and need this editor's current backend location to
 // do it, without reaching into main.ts's DOM to get it.
 export const backendWsUrl = ref<string>(DEFAULT_BACKEND_WS_URL);
 

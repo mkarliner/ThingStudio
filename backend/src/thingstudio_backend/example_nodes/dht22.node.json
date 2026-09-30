@@ -1,0 +1,14 @@
+{
+  "type": "examples/dht22",
+  "kind": "source",
+  "label": "dht22",
+  "icon": "°C",
+  "group": "examples",
+  "ports": {
+    "outputs": [{ "name": "msg", "type": "number" }]
+  },
+  "properties": [
+    { "name": "pin", "label": "data pin", "kind": "number", "default": 4 },
+    { "name": "intervalMs", "label": "read interval (ms)", "kind": "number", "default": 5000 }
+  ]
+}

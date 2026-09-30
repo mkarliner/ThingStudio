@@ -40,6 +40,7 @@ from .persisted_store import (
     PersistedStoreError,
     PersistedStoreNotFoundError,
     PresetInfo,
+    display_path,
 )
 
 
@@ -95,7 +96,18 @@ def make_admin_routes(store: PersistedStore) -> list[web.RouteDef]:
     # -- custom node packages --------------------------------------------
 
     async def list_custom_nodes(request: web.Request) -> web.Response:
-        return web.json_response({"customNodes": store.list_custom_nodes()})
+        # `customNodes`: the names to load, in order. `packages`: every
+        # package file found, for messages that name the file -- including
+        # ones shadowed by a same-named package in an earlier folder.
+        packages = [
+            {
+                "name": p.name,
+                "file": display_path(p.path),
+                **({"shadowedBy": display_path(p.shadowed_by)} if p.shadowed_by else {}),
+            }
+            for p in store.list_custom_node_packages()
+        ]
+        return web.json_response({"customNodes": store.list_custom_nodes(), "packages": packages})
 
     async def get_custom_node(request: web.Request) -> web.Response:
         name = request.match_info["name"]

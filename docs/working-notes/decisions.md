@@ -75,7 +75,8 @@ built the same day, including a real MicroPython-source-confirmed finding that g
 generalize to gs2/mono (they're the opposite of gs4, and of each other's similarly-named `MONO_HLSB`
 sibling) -- and, later the same day, both confirmed working on real CYD hardware too, closing out all
 three indexed depths end to end. `startup` node start reason (2026-09-25); `bme280` and generic `i2c` nodes (2026-09-26); custom nodes auto-load from
-`~/.thingstudio/custom-nodes/` (2026-09-27, not built yet). 18 entries: `docs/working-notes/decisions/node-authoring.md`.
+`~/.thingstudio/custom-nodes/` (2026-09-27, built 2026-09-30); built-ins stay out of `~/.thingstudio` (2026-09-30).
+20 entries: `docs/working-notes/decisions/node-authoring.md`.
 
 ## GUI layout / widget system
 

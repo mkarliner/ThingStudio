@@ -391,3 +391,61 @@ def test_list_definitions_flags_an_unreadable_encoding(tmp_path) -> None:
     [info] = store.list_definitions("boards")
     assert info.valid is False
     assert "failed reading file" in info.error
+
+
+# -- custom node search folders (2026-09-30) ------------------------------------
+
+
+def _package(folder, name, descriptor='{"kind": "sink"}', impl="async def run(msg, properties):\n    pass\n"):
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / f"{name}.node.json").write_text(descriptor)
+    (folder / f"{name}.node.py").write_text(impl)
+
+
+def test_first_search_folder_wins_and_the_shadowed_package_is_still_listed(tmp_path) -> None:
+    store = PersistedStore(tmp_path / "home")
+    shipped = tmp_path / "shipped"
+    store.custom_node_dirs = [shipped, store.custom_nodes_dir]
+    _package(shipped, "blink", impl="# shipped")
+    _package(shipped, "only_shipped")
+    _package(store.custom_nodes_dir, "blink", impl="# mine")
+    _package(store.custom_nodes_dir, "only_mine")
+
+    assert store.list_custom_nodes() == ["blink", "only_shipped", "only_mine"]
+    assert store.read_custom_node("blink").implementation == "# shipped"
+    assert store.read_custom_node("only_mine").implementation.startswith("async def")
+    listings = store.list_custom_node_packages()
+    shadowed = [l for l in listings if l.shadowed_by is not None]
+    assert [(l.name, l.path, l.shadowed_by) for l in shadowed] == [
+        ("blink", store.custom_nodes_dir / "blink.node.json", shipped / "blink.node.json")
+    ]
+
+
+def test_writes_and_deletes_only_touch_the_user_folder(tmp_path) -> None:
+    store = PersistedStore(tmp_path / "home")
+    shipped = tmp_path / "shipped"
+    store.custom_node_dirs = [shipped, store.custom_nodes_dir]
+    _package(shipped, "blink")
+    store.write_custom_node("new", "{}", "pass")
+    assert (store.custom_nodes_dir / "new.node.json").is_file()
+    assert not (shipped / "new.node.json").exists()
+    with pytest.raises(PersistedStoreNotFoundError):
+        store.delete_custom_node("blink")
+    assert (shipped / "blink.node.json").is_file()
+
+
+def test_missing_search_folders_are_skipped(tmp_path) -> None:
+    store = PersistedStore(tmp_path / "home")
+    store.custom_node_dirs = [tmp_path / "nowhere", store.custom_nodes_dir]
+    assert store.list_custom_nodes() == []
+    with pytest.raises(PersistedStoreNotFoundError):
+        store.read_custom_node("anything")
+
+
+def test_display_path_shows_the_home_folder_as_tilde(tmp_path) -> None:
+    from pathlib import Path
+
+    from thingstudio_backend.persisted_store import display_path
+
+    assert display_path(Path.home() / ".thingstudio" / "custom-nodes" / "a.node.json") == "~/.thingstudio/custom-nodes/a.node.json"
+    assert display_path(Path("/elsewhere/a.node.json")) == "/elsewhere/a.node.json"

@@ -2,7 +2,7 @@
 
 ## Palette
 
-The left sidebar lists every node type you can drag onto the canvas, grouped the same three ways as this guide's [node reference](nodes/index.md): **General**, **Network**, **Hardware**. Custom nodes you've loaded (see [Writing custom nodes](custom-nodes.md)) get their own group below the built-ins.
+The left sidebar lists every node type you can drag onto the canvas, grouped the same three ways as this guide's [node reference](nodes/index.md): **General**, **Network**, **Hardware**. Custom nodes from `~/.thingstudio/custom-nodes/` (see [Writing custom nodes](custom-nodes.md)) appear under the group their package names, and **Reload custom nodes** at the bottom reads that folder again.
 
 Drag a node onto the canvas, or click it to add it at a default position. Filter the list by typing in the search box above it.
 

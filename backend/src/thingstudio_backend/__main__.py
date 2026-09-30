@@ -24,7 +24,7 @@ from aiohttp import web
 
 from .app import EDITOR_SEEN_KEY, create_app
 from .assets import asset_dirs, missing_assets
-from .builtin_reference import seed_builtin_definitions
+from .builtin_reference import seed_builtin_definitions, seed_example_custom_nodes
 from .middleware import DEFAULT_ALLOWED_HOSTS
 from .persisted_store import PersistedStore
 
@@ -134,6 +134,8 @@ def main(argv: list[str] | None = None) -> int:
     # Copies any missing built-in board/processor files into ~/.thingstudio (builtin_reference.py).
     # Here rather than in create_app() so tests building an app never write to a real home folder.
     seed_builtin_definitions(PersistedStore(args.data_dir).base_dir)
+    # Example custom nodes, the first time only (builtin_reference.py). Same reason for being here.
+    seed_example_custom_nodes(PersistedStore(args.data_dir).base_dir)
     app = create_app(allowed_hosts=allowed_hosts, static_dir=args.static_dir, data_dir=args.data_dir, docs_dir=args.docs_dir)
     url = f"http://{'[::1]' if args.host == '::1' else args.host}:{args.port}/"
     if not args.no_browser:
