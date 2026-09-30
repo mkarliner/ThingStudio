@@ -199,5 +199,5 @@ Public repo + GitHub Releases, relocatable python-build-standalone folder per pl
 `thingstudio`, launchd/systemd recipes; mDNS/remote backend deferred to posture-2 (2026-09-26); packaged
 assets built, dev checkout wins over `_assets/`; bundles on native runners, draft releases;
 `install.sh` as a release asset; macOS signed + notarized with an Info.plist-carrying
-executable. 11 entries:
+executable; Windows `irm | iex` one-liner, per-user, no admin; winget/scoop post-MVP (2026-09-30). 14 entries:
 `docs/working-notes/decisions/packaging.md`.

@@ -54,6 +54,9 @@ detect_platform() {
         *) arch="" ;;
       esac
       ;;
+    MINGW* | MSYS* | CYGWIN*)
+      fail "this installer is for macOS and Linux. On Windows, run this in PowerShell instead: irm https://github.com/$REPO/releases/latest/download/install.ps1 | iex"
+      ;;
     *) arch="" ;;
   esac
   if [ -z "$arch" ]; then

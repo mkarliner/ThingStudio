@@ -54,7 +54,9 @@ jobs:
       - name: Copy assets into the backend package
         run: python tools/build_assets.py
       - name: Check the installer and launcher scripts
-        run: shellcheck -s sh packaging/install.sh packaging/launcher/thingstudio
+        run: |
+          shellcheck -s sh packaging/install.sh packaging/launcher/thingstudio
+          pwsh -NoProfile -File packaging/test/install-ps1.tests.ps1
       - uses: actions/upload-artifact@v7
         with:
           name: assets
@@ -172,6 +174,35 @@ jobs:
           sh packaging/install.sh --uninstall
           test ! -e "$HOME/.local/share/thingstudio" && test ! -e "$HOME/.local/bin/thingstudio"
           rm dist/SHA256SUMS
+      # The real install.ps1 against this bundle, the same way: under PowerShell 7 and under Windows
+      # PowerShell 5.1 (what a stock Windows has), then as the `irm | iex` one-liner runs it, then uninstall.
+      - name: Installer test (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $version = (Select-String -Path backend/pyproject.toml -Pattern '^version *= *"(.*)"').Matches[0].Groups[1].Value
+          Get-FileHash dist/thingstudio-*.zip -Algorithm SHA256 |
+            ForEach-Object { "$($_.Hash.ToLower())  $(Split-Path $_.Path -Leaf)" } | Set-Content dist/SHA256SUMS
+          $env:THINGSTUDIO_HOME = "$env:RUNNER_TEMP\installer-home"
+          $env:THINGSTUDIO_VERSION = "v$version"
+          $env:THINGSTUDIO_DOWNLOAD_BASE = "$PWD\dist"
+          pwsh -NoProfile -File packaging/install.ps1
+          if ($LASTEXITCODE) { throw 'install (PowerShell 7) failed' }
+          powershell -NoProfile -ExecutionPolicy Bypass -File packaging/install.ps1
+          if ($LASTEXITCODE) { throw 'reinstall (Windows PowerShell 5.1) failed' }
+          powershell -NoProfile -Command "Get-Content -Raw packaging/install.ps1 | Invoke-Expression; if (-not `$ThingstudioOk) { exit 1 }"
+          if ($LASTEXITCODE) { throw 'install via Invoke-Expression failed' }
+          & "$env:THINGSTUDIO_HOME\bin\thingstudio.cmd" --help | Out-Null
+          if ($LASTEXITCODE) { throw 'the installed thingstudio command does not run' }
+          $userPath = (Get-Item HKCU:\Environment).GetValue('Path', '', 'DoNotExpandEnvironmentNames')
+          if ($userPath -notlike "*$env:THINGSTUDIO_HOME\bin*") { throw 'bin was not added to the user PATH' }
+          pwsh -NoProfile -File packaging/install.ps1 -Uninstall
+          if ($LASTEXITCODE) { throw 'uninstall failed' }
+          if (Test-Path $env:THINGSTUDIO_HOME) { throw 'uninstall left the install folder behind' }
+          $userPath = (Get-Item HKCU:\Environment).GetValue('Path', '', 'DoNotExpandEnvironmentNames')
+          if ($userPath -like "*$env:THINGSTUDIO_HOME\bin*") { throw 'uninstall left bin on the user PATH' }
+          Remove-Item dist/SHA256SUMS
       - name: Remove signing keychain
         if: always() && runner.os == 'macOS'
         run: security delete-keychain "$RUNNER_TEMP/signing.keychain-db" 2>/dev/null || true
@@ -198,12 +229,12 @@ jobs:
           pattern: bundle-*
           path: dist
           merge-multiple: true
-      # install.sh goes out with each release, so .../releases/latest/download/install.sh is the stable
-      # install URL and the script always matches the archives beside it.
+      # install.sh and install.ps1 go out with each release, so .../releases/latest/download/install.sh (and
+      # install.ps1) are the stable install URLs and the scripts always match the archives beside them.
       - name: Checksums
         run: |
-          cp packaging/install.sh dist/install.sh
-          cd dist && sha256sum thingstudio-* install.sh > SHA256SUMS && cat SHA256SUMS
+          cp packaging/install.sh packaging/install.ps1 dist/
+          cd dist && sha256sum thingstudio-* install.sh install.ps1 > SHA256SUMS && cat SHA256SUMS
       - name: Create draft release
         env:
           GH_TOKEN: ${{ github.token }}

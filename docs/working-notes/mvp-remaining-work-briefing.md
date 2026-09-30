@@ -69,9 +69,9 @@ Shape:
 
 **Packaging (item 7)**
 
-- Windows: PowerShell one-liner (`install.ps1`, same release-asset pattern as `install.sh`), SmartScreen
-  "More info → Run anyway" documented, winget and scoop manifests. The Windows zip builds and passes CI's smoke
-  test but no person has run it yet.
+- Windows: ~~PowerShell one-liner~~ built 2026-09-30 (`install.ps1`, branch `windows-installer`, CI patch
+  pending), SmartScreen "More info → Run anyway" documented for the zip route. No person has run either on
+  Windows yet. winget and scoop manifests: post-MVP (Mike, 2026-09-30).
 - Homebrew tap (macOS/Linux), pointing at the release archives.
 - `thingstudio` as the command name, `thingstudio-backend` kept as an alias; `--help` still says the old name.
 - `thingstudio service` helper + launchd/systemd recipes. A launchd *agent* is not exempt from Local Network
@@ -104,7 +104,7 @@ following only the docs; every question they hit is answered in the docs or beco
 4. The password bug.
 5. Windows installer, then a real person on real Windows.
 6. Task guides and troubleshooting, shaped by step 2.
-7. Service helper, Homebrew, winget/scoop, fresh-VM acceptance, then the full newcomer test.
+7. Service helper, Homebrew, fresh-VM acceptance, then the full newcomer test. (winget/scoop: post-MVP.)
 
 ## Things to know before starting
 

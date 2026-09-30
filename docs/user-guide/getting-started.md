@@ -50,9 +50,30 @@ This doesn't add a `thingstudio` command. Start it from that folder, or by its f
 
 **Windows**
 
+Open PowerShell (search for it in the Start menu) and run:
+
+```powershell
+irm https://github.com/mkarliner/ThingStudio/releases/latest/download/install.ps1 | iex
+```
+
+It installs Thingstudio into `%LOCALAPPDATA%\Thingstudio` and adds the `thingstudio` command to your PATH. It
+works in that window straight away, and in any window you open afterwards. You don't need to be an
+administrator.
+
+To upgrade, run the same command again. To remove Thingstudio:
+
+```powershell
+& ([scriptblock]::Create((irm https://github.com/mkarliner/ThingStudio/releases/latest/download/install.ps1))) -Uninstall
+```
+
+Your flows and settings live in `%USERPROFILE%\.thingstudio`. Upgrading and removing never touch them.
+
+**Windows, without the installer**
+
 1. Download `thingstudio-VERSION-windows-x86_64.zip` from the [releases page](https://github.com/mkarliner/ThingStudio/releases/latest).
 2. Unzip it anywhere, for example into your Documents folder.
-3. In the unzipped folder, run `thingstudio.cmd`. If Windows asks whether to run it, choose **Run**.
+3. In the unzipped folder, run `thingstudio.cmd`. If Windows asks whether to run it, choose **Run**. If it says
+   "Windows protected your PC", click **More info**, then **Run anyway**. Thingstudio isn't signed for Windows yet.
 
 **From source**
 
@@ -66,7 +87,7 @@ In the repository folder, run `make`. This builds the editor and these docs, ins
 thingstudio
 ```
 
-On Windows, run `thingstudio.cmd`. From source, the command is `thingstudio-backend`, or `make run`. On a Mac, start it from Apple's **Terminal** app: macOS blocks WiFi connections from a copy run from source in other terminals, such as iTerm.
+Without the installer on Windows, run `thingstudio.cmd` in the unzipped folder. From source, the command is `thingstudio-backend`, or `make run`. On a Mac, start it from Apple's **Terminal** app: macOS blocks WiFi connections from a copy run from source in other terminals, such as iTerm.
 
 If your terminal says the command isn't found just after installing, open a new terminal.
 
