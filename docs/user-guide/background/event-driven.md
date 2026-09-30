@@ -44,7 +44,12 @@ Everything shares one event loop. A handler that stops and waits without handing
 handler too. In a function node, that means no `time.sleep()` and no long loops.
 
 To wait, use a node built for it: [`delay`](../nodes/delay.md) waits, [`timer`](../nodes/timer.md) repeats. They
-hand control back while they wait.
+hand control back while they wait. Inside a function node, `await asyncio.sleep(1)` does the same:
+
+```python
+await asyncio.sleep(1)
+return msg
+```
 
 ## More
 
