@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from "vitest";
 import { BUILTIN_DEFINITION_FILES } from "../src/definitions/builtin.js";
-import { pinStatus, renderDefinitionPage } from "../src/definitions/definition-page.js";
+import { pinStatus, renderDefinitionPage, renderUnknownBoardPage } from "../src/definitions/definition-page.js";
 import { buildDefinitionSet, type RawDefinitionFile } from "../src/definitions/definitions.js";
 import { buildTarget, resolveTarget, type Target } from "../src/definitions/target.js";
 
@@ -115,5 +115,50 @@ describe("renderDefinitionPage", () => {
     expect(html).not.toContain("<b>X</b>");
     expect(html).toContain("&lt;script&gt;alert(1)&lt;/script&gt;");
     expect(html).toContain("a &amp; b &lt; c");
+  });
+});
+
+describe("boards Thingstudio doesn't fully know (2026-09-30)", () => {
+  const chip = "WeAct Studio RP2040 with RP2040";
+
+  it("Auto finds the processor only: the page says the board's own pins are missing", () => {
+    const r = resolveTarget(defs, "auto", chip);
+    expect(r.how).toBe("detected");
+    expect(r.target?.board).toBeNull();
+    const html = renderDefinitionPage(r.target!, { ...OPTS, unlistedBoard: chip });
+    expect(html).toContain("Your board isn't in Thingstudio's list.");
+    expect(html).toContain(`<code>${chip}</code>`);
+    expect(html).toContain("<code>~/.thingstudio/boards/weact-studio-rp2040.json</code>");
+    expect(html).toContain('href="http://127.0.0.1:8765/docs/boards/#adding-a-board"');
+    // The notice comes before the pin tables, and the pins are still the processor's.
+    expect(html.indexOf("isn't in Thingstudio's list")).toBeLessThan(html.indexOf("<h2>All pins</h2>"));
+    expect(html).toContain("<h1>RP2040 (any board)</h1>");
+  });
+
+  it("the example board file on that page is one Thingstudio accepts, and then recognises the board", () => {
+    const html = renderDefinitionPage(resolveTarget(defs, "auto", chip).target!, { ...OPTS, unlistedBoard: chip });
+    const json = /<pre><code>([\s\S]*?)<\/code><\/pre>/.exec(html)![1]!.replace(/&quot;/g, '"').replace(/&amp;/g, "&");
+    const set = buildDefinitionSet(BUILTIN_DEFINITION_FILES, [
+      { kind: "board", id: "weact-studio-rp2040", source: "~/.thingstudio/boards/weact-studio-rp2040.json", data: JSON.parse(json) },
+    ]);
+    expect(set.problems).toEqual([]);
+    expect(resolveTarget(set, "auto", chip).target?.board?.id).toBe("weact-studio-rp2040");
+  });
+
+  it("no notice for a processor picked by hand, or a known board", () => {
+    const picked = renderDefinitionPage(buildTarget(defs.processors.get("rp2040")!, null), OPTS);
+    expect(picked).not.toContain("isn't in Thingstudio's list");
+    expect(renderDefinitionPage(boardTarget("pico"), { ...OPTS, unlistedBoard: chip })).not.toContain("isn't in Thingstudio's list");
+  });
+
+  it("an unknown processor gets a page saying what it reports and what to add", () => {
+    const unknown = "Some <Board> with STM32F405";
+    expect(resolveTarget(defs, "auto", unknown).target).toBeNull();
+    const html = renderUnknownBoardPage(unknown, OPTS);
+    expect(html).toContain("<h1>Unknown board</h1>");
+    expect(html).toContain("<code>Some &lt;Board&gt; with STM32F405</code>");
+    expect(html).toContain("no definition for its processor (<code>STM32F405</code>)");
+    expect(html).toContain('href="http://127.0.0.1:8765/docs/boards/#adding-a-processor"');
+    expect(html).not.toContain("<Board>");
   });
 });

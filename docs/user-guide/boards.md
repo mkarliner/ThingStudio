@@ -22,6 +22,11 @@ avoided, and why. Then which pins each SPI and I2C bus can use.
 
 The page is read from the definition files each time you click. After changing a file, click **Pins…** again.
 
+If Thingstudio knows the board's processor but not the board, the page shows the processor's pins and says the
+board's own ones, like its LED, are missing. It gives a starter file to add them: see
+[Adding a board](#adding-a-board). If it doesn't know the processor either, the page says what the board reports:
+see [Adding a processor](#adding-a-processor).
+
 ## What gets checked
 
 These stop the compile:

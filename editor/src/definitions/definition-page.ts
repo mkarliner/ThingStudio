@@ -14,7 +14,7 @@
 // Everything taken from a definition file is escaped: those files are hand-written.
 
 import { formatPinSet, type ProcessorDef } from "./definitions.js";
-import type { Target } from "./target.js";
+import { splitChipType, type Target } from "./target.js";
 
 function esc(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -112,14 +112,69 @@ tr.reserved td { background: var(--reserved); }
 tr.avoid td { background: var(--avoid); }
 tr.limited td { background: var(--limited); }
 .key { color: var(--muted); font-size: 0.9rem; margin: 6px 0 0; }
+.notice { background: var(--avoid); padding: 12px 16px; border-radius: 6px; margin: 0 0 16px; }
+.notice p { margin: 0 0 8px; }
+pre { overflow-x: auto; background: var(--head); padding: 10px 12px; border-radius: 4px; margin: 0 0 8px; }
 code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.92em; }
 footer { margin-top: 32px; color: var(--muted); font-size: 0.9rem; }
 @media print { body { padding: 0; } }
 `;
 
-/** The whole page for `target`. `generated` is a line for the footer (tests pass a fixed one). `docsUrl` is
- * the absolute URL of the boards docs page: the page opens from a blob: URL, which can't resolve "/docs/". */
-export function renderDefinitionPage(target: Target, opts: { generated: string; docsUrl: string }): string {
+export interface PageOptions {
+  /** A line for the footer (tests pass a fixed one). */
+  readonly generated: string;
+  /** Absolute URL of the boards docs page: the page opens from a blob: URL, which can't resolve "/docs/". */
+  readonly docsUrl: string;
+  /** What the connected board reports (HELLO chipType), when Auto found its processor but not the board
+   * itself. The page then says board-specific pins are missing and how to add a board file. */
+  readonly unlistedBoard?: string | null;
+}
+
+function page(title: string, body: string): string {
+  return (
+    `<!doctype html><html lang="en"><head><meta charset="utf-8">` +
+    `<meta name="viewport" content="width=device-width, initial-scale=1">` +
+    `<title>${esc(title)}</title><style>${STYLE}</style></head><body><main>${body}</main></body></html>`
+  );
+}
+
+/** A starter board file for a board that reports `boardPart`, on processor `processorId`. */
+function boardFileExample(boardPart: string, processorId: string): string {
+  const json = JSON.stringify({ name: boardPart, processor: processorId, match: [boardPart], pins: { LED: 2 } }, null, 2);
+  return `<pre><code>${esc(json)}</code></pre>`;
+}
+
+function unlistedBoardNote(chipType: string, processor: ProcessorDef, opts: PageOptions): string {
+  const { boardPart } = splitChipType(chipType);
+  const file = boardPart.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "my-board";
+  return (
+    `<div class="notice"><p><strong>Your board isn't in Thingstudio's list.</strong> It reports ` +
+    `<code>${esc(chipType)}</code>. Thingstudio knows its processor, so the pins below are the ${esc(processor.name)}'s. ` +
+    `Pins the board wires to something, such as its LED, aren't shown.</p>` +
+    `<p>To add them, save a file like this as <code>~/.thingstudio/boards/${esc(file)}.json</code>, with your ` +
+    `board's real pins, then click Pins… again:</p>` +
+    boardFileExample(boardPart, processor.id) +
+    `<p>See <a href="${esc(opts.docsUrl)}#adding-a-board">Adding a board</a>.</p></div>`
+  );
+}
+
+/** The page for a connected board whose processor matches no definition: what it reports, and what to add. */
+export function renderUnknownBoardPage(chipType: string, opts: PageOptions): string {
+  const { mcuPart } = splitChipType(chipType);
+  return page(
+    "Unknown board",
+    `<h1>Unknown board</h1><p class="sub">It reports <code>${esc(chipType)}</code>.</p>` +
+      `<p>Thingstudio has no definition for its processor (<code>${esc(mcuPart)}</code>), so it can't say which pins ` +
+      `are safe, and it can't check the pins in your flow.</p>` +
+      `<p>If it's a processor Thingstudio knows under another name, pick it in the Board menu. Otherwise add a ` +
+      `processor file in <code>~/.thingstudio/processors/</code>, then click Pins… again. ` +
+      `See <a href="${esc(opts.docsUrl)}#adding-a-processor">Adding a processor</a>.</p>` +
+      `<footer><p>${esc(opts.generated)}</p></footer>`,
+  );
+}
+
+/** The whole page for `target`. */
+export function renderDefinitionPage(target: Target, opts: PageOptions): string {
   const { board, processor } = target;
   const title = board ? board.name : `${processor.name} (any board)`;
   const facts = [`Processor: ${esc(processor.name)}`];
@@ -162,19 +217,18 @@ export function renderDefinitionPage(target: Target, opts: { generated: string; 
     .filter(Boolean)
     .join(" and ");
 
-  return (
-    `<!doctype html><html lang="en"><head><meta charset="utf-8">` +
-    `<meta name="viewport" content="width=device-width, initial-scale=1">` +
-    `<title>${esc(title)} pins</title><style>${STYLE}</style></head><body><main>` +
+  const notice = !board && opts.unlistedBoard ? unlistedBoardNote(opts.unlistedBoard, processor, opts) : "";
+  return page(
+    `${title} pins`,
     `<h1>${esc(title)}</h1><p class="sub">${facts.join(" · ")}</p>` +
-    notesHtml +
-    named +
-    pins +
-    spiSection(processor) +
-    i2cSection(processor) +
-    `<footer><p>From ${files}. Edit ${board ? "them" : "it"} to correct this page. ` +
-    `See <a href="${esc(opts.docsUrl)}">Boards and processors</a>.</p>` +
-    `<p>${esc(opts.generated)}</p></footer>` +
-    `</main></body></html>`
+      notice +
+      notesHtml +
+      named +
+      pins +
+      spiSection(processor) +
+      i2cSection(processor) +
+      `<footer><p>From ${files}. Edit ${board ? "them" : "it"} to correct this page. ` +
+      `See <a href="${esc(opts.docsUrl)}">Boards and processors</a>.</p>` +
+      `<p>${esc(opts.generated)}</p></footer>`,
   );
 }

@@ -55,6 +55,16 @@ inline, not a fresh check.
 - **Sequencing override set by Mike, 2026-08-20 — fully closed 2026-09-06.** Custom node authoring + docs done 2026-08-20; the narrow docs-only validation session run by Mike 2026-09-06, clean pass (docs sufficient, no gaps); normal backlog order now resumes. ([detail](outstanding-items/sequencing-override.md))
 - **[P5]** **RP2350 (Pico 2 / Pico 2 W) bring-up — in progress, wiring deferred.** Follow-up to the RP2040 bring-up session. **2026-09-06 (plain Pico 2, non-W): MicroPython flash + runtime deploy + boot-to-HELLO confirmed working.** Functional interrupt-flow pass and the memcheck RAM comparison against RP2040's ~209KB-free baseline deferred by Mike until he has time to wire the button. ([detail](outstanding-items/rp2350-bringup.md))
 
+## Boards / definitions
+
+- **[P2]** **ESP32-C6 (and H2, P4...) detected as a classic ESP32 -- new bug, 2026-09-30.** Found by a test for the
+  Pins… page. `target.ts`'s processor match is a substring test on the normalized MCU name, and
+  `processors/esp32.json` matches "ESP32", so a board reporting "... with ESP32C6" resolves to the classic ESP32:
+  its pin checks and its native arch (`xtensawin`, where the C6 is RISC-V) both apply. Not an MVP chip, but it
+  fails silently rather than saying "unknown processor". Fix: stop "ESP32" matching when a letter-variant
+  suffix follows (S2/S3/C3/C6/H2/P4), or match exact names per processor; either way an unknown ESP32 variant
+  should resolve to no processor, which the Pins… page and the console already explain.
+
 ## Network / config nodes
 
 - **Board forgets its WiFi-transport password on a power cycle -- new bug, 2026-09-27 (Mike, Pico W).** Password

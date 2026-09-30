@@ -80,7 +80,7 @@ function normalize(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
-function splitChipType(chipType: string): { boardPart: string; mcuPart: string } {
+export function splitChipType(chipType: string): { boardPart: string; mcuPart: string } {
   const at = chipType.lastIndexOf(" with ");
   if (at < 0) return { boardPart: chipType.trim(), mcuPart: chipType.trim() };
   return { boardPart: chipType.slice(0, at).trim(), mcuPart: chipType.slice(at + " with ".length).trim() };
