@@ -69,6 +69,10 @@ export interface BoardDef {
    * that says "no radio" takes the option away. */
   readonly wifi: boolean | null;
   readonly notes: string;
+  /** Physical header pin -> the GPIO on it, or a label such as "GND", "3V3" or "RUN" (2026-09-30). Empty
+   * when the file doesn't say. Keys are as written ("1".."40", or "P3-1" for a board with several
+   * connectors); in insertion order, except that JS sorts integer-like keys ascending. */
+  readonly header: ReadonlyMap<string, number | string>;
 }
 
 export type DefinitionKind = "processor" | "board";
@@ -197,7 +201,7 @@ function subset(pins: Iterable<number>, gpio: ReadonlySet<number>, where: string
 // ---------------------------------------------------------------------
 
 const PROCESSOR_KEYS = ["name", "match", "nativeArch", "nativeArchConfirmed", "gpio", "inputOnly", "noPull", "reserved", "avoid", "spi", "i2c", "notes"];
-const BOARD_KEYS = ["name", "processor", "match", "pins", "gpio", "reserved", "avoid", "notes", "wifi"];
+const BOARD_KEYS = ["name", "processor", "match", "pins", "gpio", "reserved", "avoid", "notes", "wifi", "header"];
 
 function parseSpi(v: unknown, gpio: ReadonlySet<number>): ProcessorDef["spi"] {
   if (!isObject(v)) throw new DefinitionError(`"spi": must be an object`);
@@ -345,7 +349,31 @@ export function parseBoard(id: string, data: unknown, processors: ReadonlyMap<st
     avoid,
     notes: data.notes === undefined ? "" : str(data.notes, `"notes"`),
     wifi: data.wifi === undefined ? null : bool(data.wifi, `"wifi"`),
+    header: data.header === undefined ? new Map() : parseHeader(data.header, available),
   };
+}
+
+/** `"header": {"1": 0, "3": "GND", ...}`. A GPIO must exist on the board and appear once: a header that
+ * says two physical pins carry the same GPIO is a typo, and this page exists to prevent wiring mistakes. */
+function parseHeader(v: unknown, available: ReadonlySet<number>): Map<string, number | string> {
+  if (!isObject(v)) throw new DefinitionError(`"header": must be an object like {"1": 0, "3": "GND"}`);
+  const out = new Map<string, number | string>();
+  const seen = new Map<number, string>();
+  for (const [pin, what] of Object.entries(v)) {
+    if (pin.trim() === "") throw new DefinitionError(`"header": physical pin names can't be empty`);
+    if (typeof what === "string") {
+      if (what.trim() === "") throw new DefinitionError(`"header.${pin}": the label can't be empty`);
+      out.set(pin, what);
+      continue;
+    }
+    const gpio = pinNumber(what, `"header.${pin}"`);
+    if (!available.has(gpio)) throw new DefinitionError(`"header.${pin}": GPIO ${gpio} doesn't exist on this board`);
+    const other = seen.get(gpio);
+    if (other !== undefined) throw new DefinitionError(`"header.${pin}": GPIO ${gpio} is already on header pin ${other}`);
+    seen.set(gpio, pin);
+    out.set(pin, gpio);
+  }
+  return out;
 }
 
 function bool(v: unknown, where: string): boolean {

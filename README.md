@@ -41,7 +41,7 @@ See `docs/thingstudio-design-doc.md` for the full design.
 3. **Device runtime** (on the microcontroller) — a MicroPython listener
    that receives the compiled flow, swaps it in, and keeps running it on
    its own once the cable's unplugged. The editor installs it onto a board
-   that already has MicroPython (**Install runtime…**).
+   that already has MicroPython (**Tools → Install runtime…**).
 
 Full reasoning, and how this compares to Node-RED MCU Edition,
 MicroBlocks, XOD, MicroFlo, and ESPHome/Tasmota: design doc §1–§2.
@@ -58,7 +58,7 @@ thingstudio-backend   # start it (or: make run)
 `make` only rebuilds what changed; `make test` runs the editor and backend tests. The
 Makefile's header lists the other targets.
 
-The editor opens at `http://127.0.0.1:8765/`; the **Docs** button opens the
+The editor opens at `http://127.0.0.1:8765/`; **Help → User guide** opens the
 user guide, served locally. Start with its Getting started page
 (`docs/user-guide/getting-started.md`), and Installing MicroPython if your
 board doesn't have it yet.

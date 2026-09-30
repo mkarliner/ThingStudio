@@ -93,15 +93,15 @@ If your terminal says the command isn't found just after installing, open a new 
 
 The editor opens in your browser at `http://127.0.0.1:8765/`. Leave the terminal open while you work; press Ctrl-C there to stop Thingstudio. Add `--no-browser` if you'd rather open the page yourself. If you restart Thingstudio with the editor still open, that tab reconnects and no new one opens.
 
-These docs are served locally too, so they work without an internet connection. The **Docs** button opens them.
+These docs are served locally too, so they work without an internet connection. **Help → User guide** opens them.
 
 ## Connect a board
 
 1. Plug the board in.
-2. Check the port list. When the editor opens it looks for boards, and picks yours if it's the only one plugged in. If you plugged it in afterwards, click **⟳ ports**.
-3. Click **Connect**.
+2. Check the port list. When the editor opens it looks for boards, and picks yours if it's the only one plugged in. If you plugged it in afterwards, click **⟳** next to the port list.
+3. Click **Connect**. Once connected, the button shows **● Connected · Disconnect**. Click it to disconnect.
 
-With more than one board plugged in, pick yours from the list. Port names depend on your operating system and the board's USB chip, so there's no fixed name to look for. If you're not sure which is yours, unplug it, click **⟳ ports**, plug it back in and click again. The one that appears is your board.
+With more than one board plugged in, pick yours from the list. Port names depend on your operating system and the board's USB chip, so there's no fixed name to look for. If you're not sure which is yours, unplug it, click **⟳**, plug it back in and click again. The one that appears is your board.
 
 The board replies with its chip type, runtime version and free memory. The console shows this.
 
@@ -117,7 +117,7 @@ There are two ways to install it. Use the editor unless you have a reason not to
 
 **From the editor**
 
-1. With the board's port selected, click **Install runtime…**. It takes about half a minute and shows each file as it goes.
+1. With the board's port selected, choose **Tools → Install runtime…**. It takes about half a minute and shows each file as it goes.
    If the board is busy and doesn't stop, the console asks you to press its reset button. A board without one, such as a Pico, can be unplugged and plugged back in instead.
 2. The board restarts when it's done. Click **Connect** again.
 

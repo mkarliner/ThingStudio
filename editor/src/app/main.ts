@@ -145,6 +145,7 @@ import { migrateI2cBusConfigs } from "../node-library/i2c-shared.js";
 import { BUILTIN_DEFINITION_FILES } from "../definitions/builtin.js";
 import { buildDefinitionSet, userDefinitionFiles, type DefinitionSet } from "../definitions/definitions.js";
 import { choiceForConnectedBoard, resolveTarget, type TargetResolution } from "../definitions/target.js";
+import { renderDefinitionPage, renderUnknownBoardPage } from "../definitions/definition-page.js";
 import type { BoardSettingsResultMessage, HelloMessage, Message, NodeStatusMessage, ProtocolVersion } from "../protocol/messages.js";
 import { checkRuntimeBuild, decideDeploy } from "../protocol/version.js";
 import { ClassicPreset } from "rete";
@@ -159,6 +160,7 @@ import { getCustomNodePackage, listCustomNodeDefinitions, missingNodeTypeMessage
 import { loadAllCustomNodes } from "./custom-node-loader.js";
 import { assignNodeToActivePane, paneOfNode, replacePanesFromFlowFile, resetPanes, setActivePane, panes as panesStore } from "./rete/panes-store.js";
 import PaletteSidebar from "./rete/PaletteSidebar.vue";
+import { setupMenus } from "./menus.js";
 import PropertyPanel from "./rete/PropertyPanel.vue";
 import PaneTabs from "./rete/PaneTabs.vue";
 import {
@@ -285,6 +287,9 @@ document.addEventListener("keydown", (e) => {
 // an `onX` prop as a listener for an emitted `x` event, same as if this
 // were a child component in a template (PaletteSidebar.vue's own
 // `defineEmits<...>()`).
+// Toolbar menus (2026-09-30): File / Tools / Help. Only opening and closing; the items keep their ids.
+setupMenus();
+
 createApp(PaletteSidebar, {
   onAdd: (kind: NodeKind) => {
     void addNodeOfKind(kind);
@@ -1375,16 +1380,18 @@ fireInjectNode.value = (node) => {
 };
 
 function setConnectedUi(connected: boolean): void {
-  el("pill").textContent = connected ? "connected" : "disconnected";
-  el("pill").className = connected ? "pill connected" : "pill disconnected";
   // Only the applicable one is shown (2026-09-23 top-bar tidy-up) -- two buttons with one always
-  // greyed out was just clutter. `disabled` kept in step too, belt and braces.
+  // greyed out was just clutter. `disabled` kept in step too, belt and braces. 2026-09-30: the separate
+  // "connected" pill is gone; the Disconnect button itself shows the state ("● Connected · Disconnect"),
+  // and ⟳ (look for boards again) hides while connected, since the port can't change then.
   el<HTMLButtonElement>("btnConnect").disabled = connected;
   el<HTMLButtonElement>("btnConnect").hidden = connected;
   el<HTMLButtonElement>("btnDisconnect").disabled = !connected;
   el<HTMLButtonElement>("btnDisconnect").hidden = !connected;
   el<HTMLButtonElement>("btnCheckStatus").disabled = !connected;
   el<HTMLButtonElement>("btnCheckStatus").hidden = !connected;
+  el("btnRefreshPorts").hidden = connected || currentConnMode() !== "backend";
+  el("btnDisconnect").title = connectionDescription();
   if (!connected) {
     boardAtPrompt = false;
     lastHello = null;
@@ -1399,6 +1406,14 @@ function setConnectedUi(connected: boolean): void {
   // the real source of truth for that, not this button's own state).
   if (connected) deployedClean = false;
   updateDeployButtonEnabled();
+}
+
+/** For the Disconnect button's tooltip: how this editor is connected. */
+function connectionDescription(): string {
+  const net = backendTransportOrNull();
+  if (net?.connectedOverNetwork) return `Connected over WiFi to ${net.connectedHostname ?? "the board"}. Click to disconnect.`;
+  const port = el<HTMLSelectElement>("backendPortSelect").value;
+  return `Connected over USB${port ? ` (${port})` : ""}. Click to disconnect.`;
 }
 
 // DEFAULT_BACKEND_WS_URL now lives in admin-api-client.ts (imported above)
@@ -1517,6 +1532,14 @@ function updateActiveTarget(): TargetResolution {
             : "Board: Auto";
   }
   select.title = resolution.note;
+  const pinsButton = el<HTMLButtonElement>("btnBoardPins");
+  // Enabled for a connected board Thingstudio doesn't know too: the page then says what to add.
+  pinsButton.disabled = !resolution.target && !lastHelloChipType;
+  pinsButton.title = resolution.target
+    ? `Show ${resolution.target.label}'s pins: which are free, reserved or wired to something, and why. Opens in a new tab.`
+    : lastHelloChipType
+      ? "Thingstudio doesn't know this board. Shows what it reports and what to add."
+      : "Pick a board in the Board menu, or connect one, to see its pins.";
   updateNativeArchLabel();
   refreshPreview();
   return resolution;
@@ -1536,6 +1559,40 @@ function updateNativeArchLabel(): void {
   autoOption.textContent = known ? `Arch: ${arch.arch}${arch.confirmed ? "" : " (unverified)"}` : "Arch: Auto";
 }
 el("nativeArchSelect").addEventListener("change", updateNativeArchLabel);
+
+// "Pins…" (Mike, 2026-09-30): the current target's definitions as a readable page, in a tab of its own so
+// it can sit beside the editor. The definition files are read again first, so an edit made in a text
+// editor shows at once -- click again to refresh the same tab. Built from activeTarget, the same object the
+// pin checks use. The tab is opened before the (async) reload, while the click still counts as the user's:
+// Safari blocks window.open after an await. The blob URL isn't revoked, so reloading that tab keeps
+// working; each page is a few kilobytes.
+el("btnBoardPins").addEventListener("click", async () => {
+  const win = window.open("", "thingstudio-pins");
+  if (!win) {
+    logLine("[board] The browser blocked the pins page from opening. Allow pop-ups for this page, then try again.", "err");
+    return;
+  }
+  await loadUserDefinitions(); // re-reads ~/.thingstudio's files and re-resolves the target
+  const resolution = resolveTarget(definitions, el<HTMLSelectElement>("boardSelect").value || "auto", lastHelloChipType);
+  const opts = {
+    generated: `Read from the files ${new Date().toLocaleString()}. Click Pins… again after changing them.`,
+    docsUrl: `${backendHttpBaseUrl(currentBackendWsUrl())}/docs/boards/`,
+    // Auto found the processor but not the board: the page says the board's own pins are missing.
+    unlistedBoard: resolution.how === "detected" && !resolution.target?.board ? lastHelloChipType : null,
+  };
+  let html: string;
+  if (resolution.target) {
+    html = renderDefinitionPage(resolution.target, opts);
+  } else if (lastHelloChipType) {
+    html = renderUnknownBoardPage(lastHelloChipType, opts);
+  } else {
+    win.close();
+    logLine("[board] Pick a board in the Board menu, or connect one, to see its pins.", "");
+    return;
+  }
+  win.location.href = URL.createObjectURL(new Blob([html], { type: "text/html" }));
+  win.focus();
+});
 
 function logTargetResolution(resolution: TargetResolution): void {
   logLine(`[board] ${resolution.note}`, resolution.target ? "ok" : "");
@@ -1720,7 +1777,7 @@ async function refreshBackendPorts(onLoad = false): Promise<void> {
     if (choice.selected && choice.selected !== previous) {
       logLine(`[ports] found a board on ${choice.selected} -- click "Connect"`, "");
     } else if (!choice.ordered.some(isUsbPort)) {
-      logLine('[ports] no USB board found. Plug one in, then click "⟳ ports".', "");
+      logLine('[ports] no USB board found. Plug one in, then click ⟳ next to the port list.', "");
     }
     let boards: NetworkBoardInfo[] = [];
     try {
@@ -1758,7 +1815,7 @@ async function refreshBackendPorts(onLoad = false): Promise<void> {
     select.innerHTML = '<option value="">(backend not running)</option>';
     const detail = err instanceof Error ? err.message : String(err);
     if (onLoad) {
-      logLine(`[ports] no backend at ${wsUrl} -- start it with "thingstudio-backend", then click "⟳ ports".`, "err");
+      logLine(`[ports] no backend at ${wsUrl} -- start it with "thingstudio-backend", then click ⟳ next to the port list.`, "err");
     } else {
       logLine(`[list ports failed] ${detail}`, "err");
     }
@@ -1856,7 +1913,7 @@ async function askBoardPassword(hostname: string, retry: boolean): Promise<{ pas
 function noPasswordHelp(hostname: string): string {
   return (
     `${hostname} has no WiFi password set, so it won't accept a WiFi connection. Connect it over USB, ` +
-    'click "Board settings…" to set a password, then click "⟳ ports".'
+    'choose "Tools → Board settings…" to set a password, then click ⟳ next to the port list.'
   );
 }
 
@@ -1874,7 +1931,7 @@ function explainNetworkConnectError(err: NetworkConnectError, host: string, boar
       return (
         `Connection refused by ${board?.hostname ?? host}. ` +
         'The board is on the network but not accepting WiFi connections. Has a WiFi password been set? ' +
-        'Connect it over USB and use "Board settings…".'
+        'Connect it over USB and use "Tools → Board settings…".'
       );
     case "timeout":
       return (
@@ -1941,7 +1998,7 @@ function logWifiStatus(hello: HelloMessage): void {
       "",
     );
   } else if (readiness === "no_password" && !backendTransportOrNull()?.connectedOverNetwork) {
-    logLine(`[wifi] ${hello.hostname} only accepts USB until it has a password. Set one in "Board settings…".`, "");
+    logLine(`[wifi] ${hello.hostname} only accepts USB until it has a password. Set one in "Tools → Board settings…".`, "");
   }
   updateBoardSettingsButton();
 }
@@ -2092,6 +2149,37 @@ setTimeout(() => void watchBackend(), 5000);
 el("btnDocs").addEventListener("click", () => {
   window.open(docUrl({ label: "Docs", path: "" }), "_blank", "noopener");
 });
+el("btnDocsGettingStarted").addEventListener("click", () => {
+  window.open(docUrl({ label: "Getting started", path: "getting-started/" }), "_blank", "noopener");
+});
+
+// Help -> About (2026-09-30): the versions to quote in a problem report. Thingstudio's own comes from the
+// backend (/api/alive); the board's runtime from the last HELLO.
+el("btnAbout").addEventListener("click", async () => {
+  const lines: string[] = [];
+  try {
+    const res = await fetch(`${backendHttpBaseUrl(currentBackendWsUrl())}/api/alive`, { cache: "no-store" });
+    const body = (await res.json()) as { version?: string };
+    lines.push(`Thingstudio ${body.version ?? "(version not reported)"}`);
+  } catch {
+    lines.push("Thingstudio (version unknown: can't reach its backend)");
+  }
+  const v = EDITOR_TARGET_VERSION;
+  lines.push(`Editor expects board runtime ${v.major}.x (built for ${v.major}.${v.minor}.${v.patch})`);
+  if (lastHello) {
+    const r = lastHello.runtimeVersion;
+    lines.push(
+      `Connected board: ${lastHello.chipType}, runtime ${r.major}.${r.minor}.${r.patch}` +
+        (lastHello.runtimeBuild ? ` (build ${lastHello.runtimeBuild.slice(0, 7)})` : ""),
+    );
+  } else {
+    lines.push("No board connected");
+  }
+  lines.push(`Browser: ${navigator.userAgent}`);
+  const p = el("aboutVersions");
+  p.replaceChildren(...lines.flatMap((l, i) => (i ? [document.createElement("br"), document.createTextNode(l)] : [document.createTextNode(l)])));
+  el<HTMLDialogElement>("aboutDialog").showModal();
+});
 
 // Install runtime and Remove flow each open the serial port themselves on the backend, so two at once
 // fight over the board (2026-09-24, real Pico: four clicks while the first install waited for a reset
@@ -2177,7 +2265,7 @@ el("btnInstallRuntime").addEventListener("click", exclusiveBoardJob(async () => 
   const wsUrl = currentBackendWsUrl();
   const portName = el<HTMLSelectElement>("backendPortSelect").value;
   if (!portName) {
-    logLine('[install runtime failed] choose a serial port from the list first ("⟳ ports")', "err");
+    logLine('[install runtime failed] choose a serial port from the list first (⟳ next to it looks for boards again)', "err");
     return;
   }
   if (parsePortSelection(portName).kind !== "serial") {
@@ -2229,7 +2317,7 @@ el("btnInstallRuntime").addEventListener("click", exclusiveBoardJob(async () => 
   // either. The board is rebooting into the newly-installed listener as
   // this line prints; "⟳ ports" may need a moment before the port
   // reappears if the OS re-enumerates the device.
-  logLine('[install runtime OK -- board reset into the new runtime. Click "⟳ ports" if needed, then "Connect".]', "ok");
+  logLine('[install runtime OK -- board reset into the new runtime. Click ⟳ next to the port list if needed, then "Connect".]', "ok");
 }));
 
 el("btnConnect").addEventListener("click", async () => {
@@ -2269,7 +2357,7 @@ el("btnConnect").addEventListener("click", async () => {
     const portName = el<HTMLSelectElement>("backendPortSelect").value;
     const selection = parsePortSelection(portName);
     if (selection.kind === "none" || selection.kind === "manual") {
-      logLine('[connect failed] choose a serial port or a WiFi board from the list first ("⟳ ports")', "err");
+      logLine('[connect failed] choose a serial port or a WiFi board from the list first (⟳ next to it looks for boards again)', "err");
       return;
     }
     if (selection.kind === "network") {
@@ -2587,7 +2675,7 @@ el("btnStopToPrompt").addEventListener("click", async () => {
       text:
         "Flow stopped. Commands now go straight to MicroPython's prompt. Click \"Restart Thingstudio\" " +
         "when you're done -- Deploy is off until then. A board running a runtime older than 2.0.0 ignores " +
-        "this; update it with \"Install runtime…\".",
+        "this; update it with \"Tools → Install runtime…\".",
       doc: DOC_COMMANDS,
     },
     "",
@@ -2613,7 +2701,7 @@ el("btnResume").addEventListener("click", async () => {
 el("btnRemoveFlow").addEventListener("click", exclusiveBoardJob(async () => {
   const portName = el<HTMLSelectElement>("backendPortSelect").value;
   if (!portName) {
-    logLine('[remove flow failed] choose the board\'s port first ("⟳ ports")', "err");
+    logLine('[remove flow failed] choose the board\'s port first (⟳ next to it looks for boards again)', "err");
     return;
   }
   if (parsePortSelection(portName).kind !== "serial") {

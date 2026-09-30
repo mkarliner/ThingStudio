@@ -47,7 +47,7 @@ const KNOWN_CAUSES: { test: (lower: string) => boolean; hint: string }[] = [
       m.includes("no such file or directory") || m.includes("cannot find the file") || m.includes("could not open port"),
     hint:
       "the board isn't showing up at that port any more -- check the USB cable is still plugged in, then " +
-      'click "⟳ ports" to refresh the list before connecting again.',
+      'click ⟳ next to the port list to refresh the list before connecting again.',
   },
 ];
 

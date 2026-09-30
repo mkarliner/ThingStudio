@@ -16,7 +16,7 @@ inject clicks all work the same way.
 ## Set the password and name
 
 1. Connect the board over USB.
-2. Click **Board settings…**. The top line names the board it will change: its chip, USB port and current name.
+2. Choose **Tools → Board settings…**. The top line names the board it will change: its chip, USB port and current name.
 3. Enter a network name and a password of 8 to 64 characters, then click **Save to board**.
 
 The name and password are stored on the board, not in the flow. The editor also remembers the password on this
@@ -26,7 +26,7 @@ A new name is used from the next time the board joins WiFi. Reset the board to u
 
 ## Connect
 
-Click **⟳ ports**. Boards on your network appear in the port menu under **WiFi**. Pick one and click
+Click **⟳** next to the port list. Boards on your network appear in the port menu under **WiFi**. Pick one and click
 **Connect**.
 
 If the board isn't listed, choose **WiFi address…** and type its name (for example `kitchen` or `kitchen.local`)
@@ -58,10 +58,10 @@ The console says what went wrong:
   **Terminal** app instead, which macOS always allows.
 - **No answer:** check the board is on, its flow has joined WiFi, and this computer is on the
   same network. If a `.local` name doesn't work, try the IP address, shown in the console when you connect over USB.
-- **Wrong password:** the editor asks again. To change it, connect over USB and use **Board settings…**.
+- **Wrong password:** the editor asks again. To change it, connect over USB and use **Tools → Board settings…**.
 - **Already has a network session:** another editor is connected. Disconnect it first.
 - **No password set** or **Connection refused:** the board has no password, so it only accepts USB. Set one over
-  USB in **Board settings…**, then click **⟳ ports**.
-- **Board not listed:** click **⟳ ports** again. If it's still missing, check its flow has joined WiFi, or use
+  USB in **Tools → Board settings…**, then click **⟳**.
+- **Board not listed:** click **⟳** again. If it's still missing, check its flow has joined WiFi, or use
   **WiFi address…**. If the console says the WiFi scan didn't run, the reason follows; on a Mac it's usually
   the Local Network permission (see **No route to host** above).

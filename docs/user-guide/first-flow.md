@@ -46,4 +46,4 @@ The **function** node turns the count into 1, 0, 1, 0 — the remainder after di
 
 - **Deploy is greyed out:** you aren't connected. Click **Connect**.
 - **Deploy fails:** the console says why. See [Board won't connect](debugging.md#board-wont-connect).
-- **Deploy works but the LED stays dark:** check the pin number. Some boards' LEDs light when the pin is off; the LED still blinks, just the other way round.
+- **Deploy works but the LED stays dark:** check the pin number. **Pins…** next to the Board menu shows your board's LED pin, if its definition names one. Some boards' LEDs light when the pin is off; the LED still blinks, just the other way round.

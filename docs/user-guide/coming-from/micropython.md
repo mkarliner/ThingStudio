@@ -5,7 +5,7 @@ and a way to write programs as flows, while the REPL and your own Python stay wi
 
 ## What goes on the board
 
-**Install runtime…** copies a small set of Python files onto the board's filesystem, including a `main.py` that
+**Tools → Install runtime…** copies a small set of Python files onto the board's filesystem, including a `main.py` that
 starts the Thingstudio runtime at boot. The runtime listens on USB or WiFi for the editor, and runs the last flow
 you deployed.
 
