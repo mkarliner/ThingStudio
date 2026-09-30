@@ -18,7 +18,7 @@ rates.
 There's no `loop()`. Each job is its own chain of nodes, started by an event: a timer, a pin change, a network
 message. Jobs don't wait for each other. See [event-driven programming](../background/event-driven.md).
 
-The `interrupt` node works like `attachInterrupt()`, with debouncing built in. The difference is that your code runs
+The `interrupt` node works like `attachInterrupt()`. The difference is that your code runs
 safely in the main program, not inside the interrupt, so you can do anything there.
 
 ## No compile-and-flash cycle
@@ -28,7 +28,7 @@ board swaps it in. Changing a flow and trying it again takes seconds.
 
 ## What stays the same
 
-Pins, pull-up resistors, I2C, SPI, PWM and level shifting all work as you'd expect. Thingstudio checks your pin
+Thingstudio checks your pin
 numbers against the board before deploying, and refuses pins that would crash it, such as those wired to the
 flash chip. See [boards and processors](../boards.md).
 

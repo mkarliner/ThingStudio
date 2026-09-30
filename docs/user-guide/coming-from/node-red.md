@@ -9,7 +9,6 @@ from where the flow runs: on a microcontroller, not on a server.
 The editor runs on your computer, but the flow runs on the board. Deploy compiles the flow to MicroPython and sends
 it to the board, which then runs on its own. Close the editor, unplug the USB cable, and the flow carries on.
 
-Each board runs one flow. A second board runs its own flow, deployed separately.
 
 ## Function nodes are Python
 
@@ -26,21 +25,21 @@ Much else is the same. `return msg` passes the message on, and returning nothing
 to several outputs. `context.get()`/`context.set()` and `flow.get()`/`flow.set()` work as you'd expect. There's no
 `global`, since there's only one flow. See the [function node](../nodes/function.md).
 
-Don't use `time.sleep()` in a function node. It stops the whole board, not just that node. Use a `delay` node
+Don't use `time.sleep()` in a function node. It stops the whole board, not just that node. Use await asyncio.sleep() or a `delay` node
 instead. See [event-driven programming](../background/event-driven.md).
 
 ## Messages
 
-Every message needs a `topic`, even an empty one (`''`). Ports have types, such as `int`, `bool` and `string`, and
+Every message needs a `topic`, even an empty one (`''`). Ports also have types, such as `int`, `bool` and `string`, and
 the editor refuses a wire between types that don't fit. See [canvas basics](../canvas-basics.md#wiring).
 
 ## Nodes
 
 The palette is smaller, and made for hardware. `timer`, `interrupt`, `gpio out`, `pwm out` and the sensor and
 display nodes work with the board directly. `inject`, `debug`, `function`, `delay`, `mqtt`, `http` and `udp` will
-look familiar. There's no `switch` or `change` node: a line in a function node does the same job.
+look familiar. 
 
-There's no npm and no palette manager. You add node types by writing a JSON file and a Python file. See
+You add node types by writing a JSON file and a Python file. See
 [writing custom nodes](../custom-nodes.md).
 
 ## Debugging
