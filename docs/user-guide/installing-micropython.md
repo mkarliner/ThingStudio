@@ -6,7 +6,7 @@ If your board already has MicroPython, skip this page and go to [Getting started
 
 ## Is it already installed?
 
-Connect to the board in Thingstudio and click **Install runtime…**. If MicroPython is missing, the console says so. A new board usually ships with something else on it, or nothing at all.
+Connect to the board in Thingstudio and choose **Tools → Install runtime…**. If MicroPython is missing, the console says so. A new board usually ships with something else on it, or nothing at all.
 
 ## Before you start
 
@@ -57,7 +57,7 @@ esptool.py --port PORT --baud 460800 write_flash ADDRESS firmware.bin
 
 `PORT` is the board's serial port. Names vary by operating system and board: on macOS and Linux they start with `/dev/`, on Windows they're `COM` followed by a number. To find yours, run `esptool.py flash_id` with no `--port`; esptool searches for the board and prints the port it found. If writing fails partway, leave out `--baud 460800`.
 
-Press **RESET** when it finishes. Boards that use the chip's own USB (most ESP32-S2 and S3 boards) may show up on a different port afterwards. Click **⟳ ports** in Thingstudio to refresh the list.
+Press **RESET** when it finishes. Boards that use the chip's own USB (most ESP32-S2 and S3 boards) may show up on a different port afterwards. Click **⟳**, next to the port list in Thingstudio, to refresh the list.
 
 ## Without a terminal
 

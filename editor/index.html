@@ -37,7 +37,7 @@
      "is the flow on this device the one I have open" without needing to
      match an opaque deployId against files on disk. */
   #flowNameInput { background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px;
-    padding: 6px 10px; font-size: 12px; font-family: inherit; width: 140px; }
+    padding: 6px 10px; font-size: 12px; font-family: inherit; width: 120px; }
   #flowNameInput:focus { outline: none; border-color: var(--accent); }
   /* Connection-mode picker (2026-09-07, editor-backend-wiring): design doc
      §4 requires this be an explicit user choice, never auto-detected --
@@ -49,14 +49,31 @@
   #connModeSelect, #backendUrlInput, #backendPortSelect, #flowSelect, #nativeArchSelect, #boardSelect { background: var(--bg); color: var(--text);
     border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; font-size: 12px; font-family: inherit; }
   #backendUrlInput { width: 170px; }
-  #backendPortSelect, #flowSelect { max-width: 180px; }
+  #backendPortSelect, #flowSelect { max-width: 150px; }
   /* Its options carry long explanatory labels; without a cap the closed select sizes to the longest
      one and pushes the toolbar onto extra rows. */
   #nativeArchSelect { max-width: 180px; }
-  #boardSelect { max-width: 260px; }
-  .pill { padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border); font-size: 11px; }
-  .pill.connected { border-color: var(--good); color: var(--good); }
-  .pill.disconnected { border-color: var(--bad); color: var(--bad); }
+  #boardSelect { max-width: 190px; }
+  /* Connected: one button shows the state and ends it (2026-09-30). */
+  /* :not([hidden]): an author `display` would otherwise override the hidden attribute and show it while disconnected. */
+  button.connected-state:not([hidden]) { display: inline-flex; align-items: center; gap: 6px; }
+  button.connected-state { border-color: var(--good); color: var(--good); }
+  button.connected-state .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--good); }
+  /* Toolbar menus (2026-09-30, menus.ts). Plain buttons in a positioned list; [hidden] items vanish. */
+  .menu { position: relative; }
+  .menu-list { position: absolute; top: calc(100% + 4px); left: 0; z-index: 50; min-width: 210px; display: flex;
+    flex-direction: column; gap: 1px; padding: 4px; background: var(--panel); border: 1px solid var(--border);
+    border-radius: 8px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45); min-width: 240px; }
+  .menu-list[hidden] { display: none; }
+  .menu-list.menu-right { left: auto; right: 0; }
+  .menu-list > button, .menu-list > .menu-link { border: none; border-radius: 5px; background: transparent; text-align: left;
+    padding: 7px 10px; font-size: 12px; color: var(--text); text-decoration: none; font-family: inherit; }
+  .menu-list > button:hover:not(:disabled), .menu-list > button:focus-visible, .menu-list > .menu-link:hover,
+    .menu-list > .menu-link:focus-visible { background: var(--bg); outline: none; }
+  .menu-list > hr { border: none; border-top: 1px solid var(--border); margin: 4px 2px; width: auto; }
+  .menu-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 10px;
+    font-size: 12px; color: var(--dim); white-space: nowrap; }
+  .menu-button[aria-expanded="true"] { border-color: var(--accent); }
 
   #main { flex: 1 1 auto; display: flex; min-height: 0; }
   #canvas-wrap { flex: 1 1 auto; position: relative; min-width: 0; background: #16161a; }
@@ -141,65 +158,89 @@
     padding: 6px 8px; font: inherit; }
   dialog .dialog-error { color: var(--bad); min-height: 1em; }
   dialog .dialog-board { font-weight: 600; }
+  dialog a { color: var(--accent); }
   dialog .dialog-buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
 </style>
 </head>
 <body>
 <div id="app">
   <div id="toolbar">
-    <!-- Order follows what a user does, left to right (Mike, 2026-09-23): the flow file, then the
-         board, then deploy. Docs sits by the title: it's help, not a step. -->
+    <!-- Order follows what a user does, left to right (Mike, 2026-09-23): the flow, then the board, then
+         deploy. 2026-09-30 (Mike, "top menu streamline"): Open/Save/New in a File menu; the connection
+         shown by one button (Connect, or "Connected · Disconnect"); occasional board jobs and the native
+         arch in Tools; the docs in Help. Menu items keep their element ids, so main.ts drives them
+         exactly as before (menus.ts only opens and closes the menus). -->
     <h1>Thingstudio</h1>
-    <button id="btnDocs" title="Open the user docs, served by the backend (works offline)">Docs</button>
     <div class="tb-group">
-    <!-- Flow -->
-    <button id="btnOpenFlow" title="Open a flow file, via the OS's own open dialog">Open…</button>
-    <button id="btnSaveFlow" title="Save this flow to a file you choose, via the OS's own save dialog">Save…</button>
-    <input id="flowNameInput" type="text" placeholder="untitled flow" title="This flow's name -- saved in the flow file, sent with every deploy so you can tell which flow a connected board is running" />
-    <button id="clear-canvas" title="Remove every node from the canvas">Clear</button>
-    <!-- flowSelect/btnRefreshFlows/btnDeleteFlow: backend-managed flow storage, 2026-09-08 for less
-         than a day (main.ts's header has the story) -- hidden, not removed, same git-reversible
-         posture as connModeSelect below. Flow save/open go through the OS's native file dialog
-         (file-io.ts). -->
-    <select id="flowSelect" title="Flows saved on the backend" hidden><option value="">(no flows loaded)</option></select>
-    <button id="btnRefreshFlows" title="Ask the backend for its current list of saved flows" hidden>⟳ flows</button>
-    <button id="btnDeleteFlow" title="Delete the flow selected above from the backend" hidden>Delete flow</button>
+      <div class="menu">
+        <button class="menu-button" aria-haspopup="menu" aria-expanded="false">File ▾</button>
+        <div class="menu-list" role="menu" hidden>
+          <button id="clear-canvas" role="menuitem" title="Start a new, empty flow: removes every node, pane and setting">New flow</button>
+          <button id="btnOpenFlow" role="menuitem" title="Open a flow file, via the OS's own open dialog">Open…</button>
+          <button id="btnSaveFlow" role="menuitem" title="Save this flow to a file you choose, via the OS's own save dialog">Save…</button>
+        </div>
+      </div>
+      <input id="flowNameInput" type="text" placeholder="untitled flow" title="This flow's name -- saved in the flow file, sent with every deploy so you can tell which flow a connected board is running" />
+      <!-- flowSelect/btnRefreshFlows/btnDeleteFlow: backend-managed flow storage, 2026-09-08 for less
+           than a day (main.ts's header has the story) -- hidden, not removed, same git-reversible
+           posture as connModeSelect below. Flow save/open go through the OS's native file dialog
+           (file-io.ts). -->
+      <select id="flowSelect" title="Flows saved on the backend" hidden><option value="">(no flows loaded)</option></select>
+      <button id="btnRefreshFlows" title="Ask the backend for its current list of saved flows" hidden>⟳ flows</button>
+      <button id="btnDeleteFlow" title="Delete the flow selected above from the backend" hidden>Delete flow</button>
     </div>
     <div class="tb-group">
-    <!-- Board -->
-    <!-- connModeSelect: hidden, 2026-09-23 (Mike: "it's always via backend"). The backend serves the
-         editor now, so there's nothing to choose. Kept in the DOM, value "backend", because main.ts
-         still reads it and the frozen "direct" WebSerial path still exists in git. -->
-    <select id="connModeSelect" hidden title="How the editor reaches your device">
-      <option id="connModeOptionDirect" value="direct" hidden>Direct (WebSerial)</option>
-      <option value="backend" selected>Via backend</option>
-    </select>
-    <!-- backendUrlInput: shown only under the Vite dev server (main.ts). When the backend serves the
-         editor, the URL is the page's own origin (initialBackendWsUrl) and there's nothing to set;
-         editor and backend are on the same machine for the MVP. -->
-    <input id="backendUrlInput" type="text" value="ws://127.0.0.1:8765/ws" title="Backend WebSocket URL (dev server only)" hidden />
-    <select id="backendPortSelect" title="The board's serial port"><option value="">(select port)</option></select>
-    <button id="btnRefreshPorts" title="Look for boards again">⟳ ports</button>
-    <button id="btnConnect" class="primary">Connect</button>
-    <button id="btnDisconnect" disabled hidden>Disconnect</button>
-    <span id="pill" class="pill disconnected">disconnected</span>
-    <button id="btnCheckStatus" disabled hidden title="Ask the board to identify itself again -- no reset, no redeploy">Check status</button>
-    <button id="btnBoardSettings" disabled hidden title="The board's network name and WiFi password. Change these over USB.">Board settings…</button>
-    <button id="btnInstallRuntime" title="Install the Thingstudio runtime on the board in the selected port. The board needs MicroPython first. Resets the board; reconnect afterwards.">Install runtime…</button>
+      <!-- connModeSelect: hidden, 2026-09-23 (Mike: "it's always via backend"). The backend serves the
+           editor now, so there's nothing to choose. Kept in the DOM, value "backend", because main.ts
+           still reads it and the frozen "direct" WebSerial path still exists in git. -->
+      <select id="connModeSelect" hidden title="How the editor reaches your device">
+        <option id="connModeOptionDirect" value="direct" hidden>Direct (WebSerial)</option>
+        <option value="backend" selected>Via backend</option>
+      </select>
+      <!-- backendUrlInput: shown only under the Vite dev server (main.ts). When the backend serves the
+           editor, the URL is the page's own origin (initialBackendWsUrl) and there's nothing to set;
+           editor and backend are on the same machine for the MVP. -->
+      <input id="backendUrlInput" type="text" value="ws://127.0.0.1:8765/ws" title="Backend WebSocket URL (dev server only)" hidden />
+      <select id="backendPortSelect" title="The board's serial port"><option value="">(select port)</option></select>
+      <button id="btnRefreshPorts" title="Look for boards again">⟳</button>
+      <button id="btnConnect" class="primary">Connect</button>
+      <!-- Shown instead of Connect while connected: the connection state and the way to end it, one control. -->
+      <button id="btnDisconnect" class="connected-state" disabled hidden><span class="dot"></span>Connected · Disconnect</button>
     </div>
     <div class="tb-group">
-    <!-- Deploy -->
-    <!-- boardSelect: the board or processor to check pins against (MVP item 4). Filled in by main.ts from
-         the built-in and ~/.thingstudio definitions. -->
-    <select id="boardSelect" title="The board or processor this flow is for. Pins are checked against it when you compile. Auto uses the connected board.">
-      <option value="auto" selected>Board: Auto</option>
-    </select>
-    <!-- btnBoardPins (2026-09-30): the readable page for the board/processor above (definition-page.ts). -->
-    <button id="btnBoardPins" disabled title="Pick a board in the Board menu, or connect one, to see its pins.">Pins…</button>
-    <select id="nativeArchSelect" title="mpy-cross -march target for @micropython.viper/@micropython.native code (e.g. display_spi's gs4/gs2/mono formats) -- only matters if a node in this flow actually uses one. Auto detects from the connected board's HELLO; override if Auto guesses wrong or no board is connected yet.">
-      <option value="auto" selected>Arch: Auto</option>
-    </select>
-    <button id="btnDeploy" disabled class="primary">Compile → Deploy</button>
+      <!-- boardSelect: the board or processor to check pins against (MVP item 4). Filled in by main.ts from
+           the built-in and ~/.thingstudio definitions. -->
+      <select id="boardSelect" title="The board or processor this flow is for. Pins are checked against it when you compile. Auto uses the connected board.">
+        <option value="auto" selected>Board: Auto</option>
+      </select>
+      <!-- btnBoardPins (2026-09-30): the readable page for the board/processor above (definition-page.ts). -->
+      <button id="btnBoardPins" disabled title="Pick a board in the Board menu, or connect one, to see its pins.">Pins…</button>
+      <button id="btnDeploy" disabled class="primary">Compile → Deploy</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="tb-group">
+      <div class="menu">
+        <button class="menu-button" aria-haspopup="menu" aria-expanded="false">Tools ▾</button>
+        <div class="menu-list menu-right" role="menu" hidden>
+          <button id="btnCheckStatus" role="menuitem" disabled hidden title="Ask the board to identify itself again -- no reset, no redeploy">Check status</button>
+          <button id="btnBoardSettings" role="menuitem" disabled hidden title="The board's network name and WiFi password. Change these over USB.">Board settings…</button>
+          <button id="btnInstallRuntime" role="menuitem" title="Install the Thingstudio runtime on the board in the selected port. The board needs MicroPython first. Resets the board; reconnect afterwards.">Install runtime…</button>
+          <hr />
+          <label class="menu-row" title="mpy-cross -march target for @micropython.viper/@micropython.native code (e.g. display_spi's gs4/gs2/mono formats) -- only matters if a node in this flow actually uses one. Auto detects from the connected board's HELLO; override if Auto guesses wrong or no board is connected yet.">Native code
+            <select id="nativeArchSelect"><option value="auto" selected>Arch: Auto</option></select>
+          </label>
+        </div>
+      </div>
+      <div class="menu">
+        <button class="menu-button" aria-haspopup="menu" aria-expanded="false">Help ▾</button>
+        <div class="menu-list menu-right" role="menu" hidden>
+          <button id="btnDocs" role="menuitem" title="The user guide, served by Thingstudio itself, so it works offline">User guide</button>
+          <button id="btnDocsGettingStarted" role="menuitem">Getting started</button>
+          <a class="menu-link" role="menuitem" href="https://github.com/mkarliner/ThingStudio/issues" target="_blank" rel="noopener">Report a problem</a>
+          <hr />
+          <button id="btnAbout" role="menuitem">About Thingstudio</button>
+        </div>
+      </div>
     </div>
   </div>
   <div id="main">
@@ -236,6 +277,16 @@
 </div>
 
 <!-- WiFi transport (2026-09-24): main.ts opens these. -->
+<dialog id="aboutDialog">
+  <form method="dialog">
+    <h2>About Thingstudio</h2>
+    <p id="aboutVersions"></p>
+    <p>Docs: <a href="https://docs.thingstudio.net/" target="_blank" rel="noopener">docs.thingstudio.net</a>.
+      Problems and ideas: <a href="https://github.com/mkarliner/ThingStudio/issues" target="_blank" rel="noopener">GitHub issues</a>.
+      Include these versions when you report a problem.</p>
+    <div class="dialog-buttons"><button value="close" class="primary">Close</button></div>
+  </form>
+</dialog>
 <dialog id="boardSettingsDialog">
   <form method="dialog">
     <h2>Board settings</h2>

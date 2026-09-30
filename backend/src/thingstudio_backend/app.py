@@ -42,6 +42,16 @@ from .ws_relay import make_websocket_handler
 EDITOR_SEEN_KEY = web.AppKey("editor_seen", dict)  # {"seen": bool} -- mutable: app state is frozen once started
 
 
+
+def backend_version() -> str:
+    """This install's version (backend/pyproject.toml), or "unknown" if the package metadata is missing."""
+    from importlib.metadata import PackageNotFoundError, version
+
+    try:
+        return version("thingstudio-backend")
+    except PackageNotFoundError:
+        return "unknown"
+
 def create_app(
     allowed_hosts: frozenset[str] = DEFAULT_ALLOWED_HOSTS,
     static_dir: Path | None = None,
@@ -67,7 +77,8 @@ def create_app(
 
     async def alive(request: web.Request) -> web.Response:
         request.app[EDITOR_SEEN_KEY]["seen"] = True
-        return web.json_response({"ok": True})
+        # The version is for the editor's Help -> About (2026-09-30).
+        return web.json_response({"ok": True, "version": backend_version()})
 
     app.router.add_get("/api/alive", alive)
 

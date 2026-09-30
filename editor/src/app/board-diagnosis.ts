@@ -44,7 +44,7 @@ const INSTALL_FAILURE_ADVICE: Record<string, Advice> = {
   silent: {
     text:
       "The board didn't reply at all. It probably doesn't have MicroPython yet -- install that first. " +
-      "If it does, press its reset button (or unplug it and plug it back in) while \"Install runtime…\" is " +
+      "If it does, press its reset button (or unplug it and plug it back in) while \"Tools → Install runtime…\" is " +
       "waiting.",
     doc: DOC_INSTALL_MICROPYTHON,
   },
@@ -69,8 +69,8 @@ const INSTALL_FAILURE_ADVICE: Record<string, Advice> = {
   // Editor-side, not from raw_repl.py: BackendTransport.installRuntime()'s idle timeout.
   stalled: {
     text:
-      "The install stopped making progress. Unplug the board, plug it back in, click \"⟳ ports\", then try " +
-      "\"Install runtime…\" again. If it stalls again, restart the backend.",
+      "The install stopped making progress. Unplug the board, plug it back in, click ⟳ next to the port list, then try " +
+      "\"Tools → Install runtime…\" again. If it stalls again, restart the backend.",
     doc: DOC_BOARD_WONT_CONNECT,
   },
 };
@@ -83,15 +83,15 @@ const DISCONNECT_FIRST = ' Click "Disconnect" before flashing, or the flashing t
 
 const NO_HELLO_ADVICE: Record<BoardReply, Advice> = {
   micropython: {
-    text: 'The board has MicroPython but not the Thingstudio runtime. Click "Install runtime…".',
+    text: 'The board has MicroPython but not the Thingstudio runtime. Choose "Tools → Install runtime…".',
     doc: DOC_BOARD_WONT_CONNECT,
   },
-  runtime: { text: 'The Thingstudio runtime is starting up. Wait a few seconds, then click "Check status".' },
+  runtime: { text: 'The Thingstudio runtime is starting up. Wait a few seconds, then choose "Tools → Check status".' },
   silent: {
     text:
       "Nothing came back at all. If the board is new, it may not have MicroPython yet." +
       DISCONNECT_FIRST +
-      ' Otherwise press its reset button and click "Check status". "Install runtime…" also checks what\'s ' +
+      ' Otherwise press its reset button and choose "Tools → Check status". "Tools → Install runtime…" also checks what\'s ' +
       "on the board.",
     doc: DOC_INSTALL_MICROPYTHON,
   },

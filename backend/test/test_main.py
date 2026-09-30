@@ -47,6 +47,7 @@ async def test_an_open_editor_tab_stops_a_second_one_opening(tmp_path, monkeypat
         assert app[EDITOR_SEEN_KEY]["seen"] is False
         resp = await client.get("/api/alive", headers={"Host": "127.0.0.1"})
         assert resp.status == 200
+        assert (await resp.json())["version"] not in ("", None)  # for Help -> About
         assert app[EDITOR_SEEN_KEY]["seen"] is True
         await asyncio.sleep(0.5)
     assert opened == []
