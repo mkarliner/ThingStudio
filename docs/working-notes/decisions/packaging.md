@@ -33,3 +33,7 @@
 - **2026-09-27 — `thingstudio-python` disclaims responsibility on start** (re-exec with the private
   `responsibility_spawnattrs_setdisclaim`, falls back with a note), so macOS judges Local Network access for
   Thingstudio rather than the terminal app. Smoke test fails if it can't. Briefing, "Step 6 as built".
+- **2026-09-30 — Windows one-liner: `irm .../install.ps1 | iex`, per-user, no admin.** Installs to
+  `%LOCALAPPDATA%\Thingstudio`, a `.cmd` shim in `bin` instead of a `current` link (links need admin), `bin` on
+  the user PATH via the raw registry value. Latest version read from the release's `SHA256SUMS`, not the GitHub
+  API. Briefing, "PowerShell one-liner as built".

@@ -7,11 +7,17 @@ server.
 
 **Docs:** https://docs.thingstudio.net/
 
-**Install** (macOS and Linux; Windows and other options in
-[Getting started](https://docs.thingstudio.net/getting-started/)):
+**Install** (other options in [Getting started](https://docs.thingstudio.net/getting-started/)).
+macOS and Linux:
 
 ```sh
 curl -fsSL https://github.com/mkarliner/ThingStudio/releases/latest/download/install.sh | sh
+```
+
+Windows, in PowerShell:
+
+```powershell
+irm https://github.com/mkarliner/ThingStudio/releases/latest/download/install.ps1 | iex
 ```
 
 ## Status
@@ -98,9 +104,9 @@ tools/           license-scan and build scripts
 
 ## Not built yet
 
-- **More install routes** — a Windows installer, Homebrew, winget/scoop
-  (MVP item 7). Releases today: the `curl | sh` installer for macOS and
-  Linux, and a zip for Windows.
+- **More install routes** — Homebrew, winget/scoop (MVP item 7).
+  Releases today: one-line installers for macOS, Linux and Windows, and a
+  zip or tarball per platform.
 - **Board-transport auth** — the `HELLO` handshake fields are designed,
   not yet wired in.
 

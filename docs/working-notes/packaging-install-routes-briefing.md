@@ -140,8 +140,8 @@ mDNS lands with or after posture-2; `outstanding-items/posture-2-auth.md` carrie
 1. ~~Assets inside the Python package (small, lands alone).~~ Done 2026-09-26 (below).
 2. ~~A relocatable folder per platform in CI~~ Built 2026-09-26, not yet run on GitHub (below). Next: a first
    workflow run, then try the macOS arm64 archive on Mike's Mac.
-3. ~~`curl | sh`~~ Built 2026-09-26 (below). Still to do: a fresh Linux VM check, then Windows and the
-   PowerShell one-liner. Until then Windows is the zip route, documented in `getting-started.md`.
+3. ~~`curl | sh`~~ Built 2026-09-26 (below). ~~PowerShell one-liner~~ built 2026-09-30 (below). Still to do: a
+   fresh Linux VM check, a real person on real Windows.
 4. `thingstudio` command name + alias, first-run checks.
 5. Service recipes and `thingstudio service` helper.
 6. Homebrew tap, scoop bucket, winget manifest. ~~Apple signing and notarization~~ written 2026-09-27, first CI
@@ -256,6 +256,43 @@ mDNS lands with or after posture-2; `outstanding-items/posture-2-auth.md` carrie
   hardened runtime, the signed build on macOS 14, and Local Network on a clean macOS 15+ account (above). That
   clean-account run used **Safari** (the new user's default browser): editor, discovery and WiFi connect all
   worked, so the packaged editor doesn't depend on Chrome (the backend relays serial; no Web Serial needed).
+
+## PowerShell one-liner as built (2026-09-30)
+
+- `packaging/install.ps1`, published with each release beside `install.sh`:
+  `irm https://github.com/mkarliner/ThingStudio/releases/latest/download/install.ps1 | iex`. Same shape as
+  `install.sh`: download, check against `SHA256SUMS`, unpack to `%LOCALAPPDATA%\Thingstudio\versions\<name>`,
+  keep the replaced version for one upgrade, remove older ones (a version still running is skipped, not an
+  error), check `--help` runs, rerun to upgrade, `-Uninstall` keeps `%USERPROFILE%\.thingstudio`.
+- Differences from `install.sh`, all Windows-driven:
+  - **No `current` link:** symlinks need administrator rights (junctions don't, but a shim is simpler). The
+    command is `bin\thingstudio.cmd`, a two-line `.cmd` naming the version's own launcher, rewritten on each
+    upgrade (written beside, then moved over).
+  - **PATH:** `bin` goes on the user PATH through the raw registry value (`HKCU\Environment`, read with
+    `DoNotExpandEnvironmentNames`, written as `REG_EXPAND_SZ`), because `[Environment]::SetEnvironmentVariable`
+    would expand `%VARS%` in other entries. A set-and-clear of a dummy user variable broadcasts the change so new
+    windows see it; the current window's `$env:Path` is updated too, so `thingstudio` works straight away.
+  - **Latest version:** read from the one Windows bundle name in `releases/latest/download/SHA256SUMS`, so no
+    GitHub API call (rate-limited) or redirect handling (which differs between PowerShell 5.1 and 7).
+  - **Never `exit` when piped into `iex`:** it would close the user's window. Errors print one red line; only a
+    run from a file (`-File`) sets exit code 1. `-Uninstall` is read from `$args`, so both `-File install.ps1
+    -Uninstall` and the documented `& ([scriptblock]::Create((irm ...))) -Uninstall` work.
+  - Windows PowerShell 5.1 (the stock one): TLS 1.2 forced on, the progress bar turned off (it makes
+    `Invoke-WebRequest` crawl), ASCII-only source (5.1 reads a BOM-less file as the ANSI code page).
+  - Only x64 (`AMD64`); ARM64 Windows refused with a pointer to the releases page (out of scope, decision 4).
+  - `install.sh` run from Git Bash/MSYS/Cygwin now points at the PowerShell command instead of failing on an
+    unknown `uname`.
+- SmartScreen doesn't apply to this route: nothing it downloads carries a Mark of the Web, and `irm | iex`
+  isn't a script file, so the execution policy doesn't apply either. The zip route still gets the "Windows
+  protected your PC" step, now documented in `getting-started.md`.
+- Tests: `packaging/test/install-ps1.tests.ps1` (pwsh, no Pester) runs on Linux with the platform check, the
+  `--help` run and the registry PATH stood in: install, reinstall, three upgrades and pruning, a tampered and a
+  launcher-less bundle refused with the old install intact, uninstall, the `iex` and `-File` forms. 35 checks.
+  PSScriptAnalyzer's 5.1 compatibility rules: clean. CI (patch, workflow files are Mike's to apply): the tests in
+  `ci.yml`'s new `packaging` job and `release.yml`'s assets job; a real Windows install in the bundle job under
+  PowerShell 7, then 5.1, then through `Invoke-Expression`, with the registry PATH checked after install and
+  after uninstall; `install.ps1` uploaded with each release and listed in `SHA256SUMS`.
+- Not done: winget and scoop manifests, a real person on real Windows.
 
 ## Out of scope
 
