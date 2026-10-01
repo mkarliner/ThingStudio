@@ -1,8 +1,9 @@
 # Thingstudio
 
-Thingstudio is a visual way to program microcontrollers. In your web browser, you drag boxes onto a canvas and join
-them with lines, in the style of [Node-RED](https://nodered.org/). Thingstudio turns the result into
-[MicroPython](https://micropython.org/), a version of Python for microcontrollers, and sends it to your board. The
+Thingstudio is a visual way to program microcontrollers. You build a program in your web browser from blocks, each
+doing one job: wait a second, read a sensor, switch a pin. You join the blocks with wires, and data flows along the
+wires from one block to the next. The style comes from [Node-RED](https://nodered.org/). Thingstudio turns the result
+into [MicroPython](https://micropython.org/), a version of Python for microcontrollers, and sends it to your board. The
 board then runs the program you just built. It keeps running it on its own, with no computer attached.
 
 ![The Thingstudio editor, showing a three-node flow: timer, function and gpio out](images/editor.png)
@@ -45,7 +46,7 @@ and what should happen next, and Thingstudio writes the code that runs them all 
 
 ## Events, nodes and wires
 
-Each response to an event is drawn as a small chain of **nodes**. A node does one job: fire every second, read a
+Each block is called a **node**. Each response to an event is drawn as a small chain of nodes. A node does one job: fire every second, read a
 pin, run some Python, switch an output. **Wires** join one node's output to the next node's input. Together they make a **flow**.
 
 Nodes pass **messages** along the wires. A message is a small bundle of data, with the main value in its
