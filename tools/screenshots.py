@@ -41,11 +41,84 @@ class Shot:
     name: str  # output file: images/<name>.png
     flow: str  # fixture in docs/screenshots/
     select_node: str | None = None  # node label to click, so the properties panel shows it
+    # Numbered callouts, in order: (element ids, what it is, where the number goes). Each callout outlines the box around the listed
+    # elements and puts its number on it. The numbers are what the docs' legend refers to, so keep the legend
+    # in docs/user-guide/canvas-basics.md in step with this list. A missing id fails the run, by name.
+    annotations: tuple[tuple[tuple[str, ...], str, str], ...] = ()
 
+
+# Ids that aren't plain element ids: "menu:File" is the toolbar menu button whose text starts with "File",
+# "row:cmdInput" is the row of controls containing #cmdInput, "sel:..." is a CSS selector.
+# Badge places: "below" the box, "top" centre inside it, "middle" of it, "right" end inside it, or the box's
+# top-left "corner".
+EDITOR_PARTS = (
+    (("menu:File",), "File menu", "below"),
+    (("flowNameInput",), "Flow name", "below"),
+    (("backendPortSelect", "btnRefreshPorts", "btnConnect"), "Port list and Connect", "below"),
+    (("boardSelect", "btnBoardPins"), "Board menu and Pins…", "below"),
+    (("btnDeploy",), "Compile → Deploy", "below"),
+    (("menu:Tools", "menu:Help"), "Tools and Help menus", "below"),
+    (("palette-mount",), "Palette", "top"),
+    (("sel:#pane-tabs-mount > *",), "Flow tabs", "right"),
+    (("rete-canvas",), "Canvas", "middle"),
+    (("property-panel-mount",), "Properties", "top"),
+    (("source-preview-panel",), "Compiled source", "corner"),
+    (("console",), "Console", "corner"),
+    (("row:cmdInput",), "Python prompt", "corner"),
+    (("row:btnStopToPrompt",), "Board buttons", "corner"),
+)
 
 SHOTS = [
     Shot(name="editor", flow="blink.flow.json", select_node="function"),
+    Shot(name="editor-parts", flow="blink.flow.json", select_node="function", annotations=EDITOR_PARTS),
 ]
+
+# Draws the callouts into the page itself, so the screenshot is the editor as rendered plus the overlay.
+ANNOTATE_JS = """
+(parts) => {
+  const find = (id) => {
+    if (id.startsWith('menu:')) {
+      const t = id.slice(5);
+      return [...document.querySelectorAll('#toolbar .menu-button')].find(b => b.textContent.trim().startsWith(t));
+    }
+    if (id.startsWith('sel:')) return document.querySelector(id.slice(4));
+    if (id.startsWith('row:')) return document.getElementById(id.slice(4))?.closest('.row');
+    if (id === 'source-preview-panel') return document.getElementById('source-preview')?.closest('details');
+    return document.getElementById(id);
+  };
+  const missing = [];
+  const layer = document.createElement('div');
+  layer.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:99999';
+  parts.forEach(([ids, label, where], i) => {
+    const els = ids.map(id => [id, find(id)]);
+    els.filter(([, e]) => !e).forEach(([id]) => missing.push(`${i + 1} (${label}): ${id}`));
+    const rects = els.filter(([, e]) => e).map(([, e]) => e.getBoundingClientRect()).filter(r => r.width && r.height);
+    if (!rects.length) { if (!missing.length) missing.push(`${i + 1} (${label}): not visible`); return; }
+    const l = Math.min(...rects.map(r => r.left)) - 3, t = Math.min(...rects.map(r => r.top)) - 3;
+    const r = Math.max(...rects.map(r => r.right)) + 3, b = Math.max(...rects.map(r => r.bottom)) + 3;
+    const box = document.createElement('div');
+    box.style.cssText = `position:fixed;left:${l}px;top:${t}px;width:${r - l}px;height:${b - t}px;` +
+      'border:2px solid #ffb020;border-radius:6px;box-sizing:border-box';
+    const n = document.createElement('div');
+    n.textContent = String(i + 1);
+    const at = {
+      below: [Math.max(l - 4, 2), b - 6],
+      top: [(l + r) / 2 - 11, t + 8],
+      middle: [(l + r) / 2 - 11, (t + b) / 2 - 11],
+      right: [r - 30, (t + b) / 2 - 11],
+      corner: [Math.max(l - 4, 2), t - 4],
+    }[where];
+    if (!at) { missing.push(`${i + 1} (${label}): unknown badge place '${where}'`); return; }
+    const [bx, by] = at;
+    n.style.cssText = `position:fixed;left:${bx}px;top:${by}px;` +
+      'width:22px;height:22px;border-radius:50%;background:#ffb020;color:#111;font:bold 13px/22px sans-serif;' +
+      'text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.6)';
+    layer.append(box, n);
+  });
+  document.body.append(layer);
+  return missing;
+}
+"""
 
 
 class ScreenshotError(Exception):
@@ -117,6 +190,12 @@ def take(page, base_url: str, shot: Shot) -> Path:
 
     # Let the canvas and panels settle (wire rendering, panel transition) before the shot.
     page.wait_for_timeout(800)
+    if shot.annotations:
+        missing = page.evaluate(ANNOTATE_JS, [[list(ids), label, where] for ids, label, where in shot.annotations])
+        if missing:
+            raise ScreenshotError(
+                f"[{shot.name}] annotated parts not found in the editor (renamed or removed?): " + "; ".join(missing)
+            )
     OUT.mkdir(parents=True, exist_ok=True)
     path = OUT / f"{shot.name}.png"
     page.screenshot(path=str(path))
@@ -169,7 +248,8 @@ def main() -> int:
                 browser.close()
     except ScreenshotError as e:
         log.seek(0)
-        print(f"screenshots: {e}\n--- thingstudio-backend output ---\n{log.read()}", file=sys.stderr)
+        tail = "".join(log.readlines()[-15:])
+        print(f"screenshots: {e}\n--- thingstudio-backend output (last 15 lines) ---\n{tail}", file=sys.stderr)
         return 1
     finally:
         proc.terminate()

@@ -1,5 +1,28 @@
 # Canvas basics
 
+## The editor
+
+<figure markdown="span">
+  [![The Thingstudio editor with its parts numbered 1 to 14](images/editor-parts.png)](images/editor-parts.png)<figcaption>The parts of the editor. Click to see it full size.</figcaption>
+</figure>
+
+<!-- These numbers match EDITOR_PARTS in tools/screenshots.py, which draws them. Change both together. -->
+
+1. **File menu:** start a new flow, open one, or save it.
+2. **Flow name:** saved with the flow. The board reports it, so you can tell what it's running.
+3. **Port list and Connect:** pick your board's port and connect to it. **⟳** looks for boards again.
+4. **Board menu and Pins…:** the board the flow is for, and a page of its pins.
+5. **Compile → Deploy:** turns the flow into MicroPython and sends it to the board.
+6. **Tools and Help:** occasional board jobs, such as installing the runtime, and these docs.
+7. **Palette:** every node you can add. Drag one onto the canvas.
+8. **Flow tabs:** a flow can be spread across several tabs.
+9. **Canvas:** where you build the flow.
+10. **Properties:** the selected node's settings.
+11. **Compiled source:** the MicroPython made from your flow. Click to open it.
+12. **Console:** messages from Thingstudio and the board, including your flow's output.
+13. **Python prompt:** runs a line of Python on the board.
+14. **Board buttons:** stop the flow and use MicroPython's own prompt, or remove the saved flow.
+
 ## Palette
 
 The left sidebar lists every node type you can drag onto the canvas, grouped the same three ways as this guide's [node reference](nodes/index.md): **General**, **Network**, **Hardware**. Custom nodes from `~/.thingstudio/custom-nodes/` (see [Writing custom nodes](custom-nodes.md)) appear under the group their package names, and **Reload custom nodes** at the bottom reads that folder again.

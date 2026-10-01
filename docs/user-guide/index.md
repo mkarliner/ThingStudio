@@ -8,7 +8,8 @@ board then runs the program you just built. It keeps running it on its own, with
 
 <figure markdown="span">
   [![The Thingstudio editor, showing a three-node flow: timer, function and gpio out](images/editor.png)](images/editor.png)<figcaption>The editor: nodes to drag in on the left, your flow in the middle, and on the right the selected
-  node's settings and the board's console. Click to see it full size.</figcaption>
+  node's settings and the board's console. Click to see it full size. [Canvas basics](canvas-basics.md#the-editor) labels every
+  part.</figcaption>
 </figure>
 
 Everything runs on your own computer and your own boards. Thingstudio isn't a cloud service.

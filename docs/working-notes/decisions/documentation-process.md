@@ -97,3 +97,7 @@ installing `mkdocs`/`mkdocs-material` and running a real build to confirm the si
   screenshots` retakes them locally (downloads Chromium the first time).
 - Playwright is pinned in `docs/screenshots/requirements.txt`, kept apart from `docs/requirements.txt`.
 - Shots that need a board (console after a deploy) stay as text in the docs for now.
+- Same day: `editor-parts.png`, the editor with its parts outlined and numbered, for the legend at the top of
+  `canvas-basics.md`. The script draws the callouts from the live DOM (element ids in `EDITOR_PARTS`), so they
+  follow layout changes; a renamed or removed id fails the run by name. The legend's numbers are kept in step with
+  `EDITOR_PARTS` by hand.
