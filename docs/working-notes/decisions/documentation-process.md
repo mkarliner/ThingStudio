@@ -65,3 +65,21 @@ installing `mkdocs`/`mkdocs-material` and running a real build to confirm the si
   - Packaging (MVP item 7) must bundle the built `site/` and pass `--docs-dir`; `site/` is now gitignored.
   - GitHub Pages returned 404 on 2026-09-23 — the workflow exists but the site isn't live. See
     `outstanding-items/documentation-site.md`.
+
+## 2026-10-01: onboarding is one straight line of numbered steps
+
+- **Decision (Mike, from the first newcomer test, 2026-09-30):** the route from a new board to a blinking LED reads
+  as a straight line that only points forward. "Getting started" opens with the list of steps, because people read
+  it first and skip anything before it. Steps, one page each, nav group "Getting started":
+  1. Install Thingstudio (`getting-started.md`), 2. Install MicroPython (`installing-micropython.md`),
+  3. Connect your board (`connecting.md`), 4. Install the runtime (`installing-runtime.md`),
+  5. Blink an LED (`first-flow.md`). Each page ends "Next: Step N+1".
+- Why: the old order put Installing MicroPython before Getting started, its first check needed Thingstudio already
+  installed, and it ended "Go back to Getting started". The volunteer (an experienced programmer, new to
+  microcontrollers) was unsure whether he had to install MicroPython at all.
+- Off-path detail (packages, no-installer routes, upgrade/remove, from source, `--no-browser`, command-line runtime
+  install) moved to `installing-more.md`, linked from step 1 and step 4.
+- Page URLs the editor links to (`getting-started/`, `installing-micropython/`) are unchanged, so released editors'
+  doc links still land on the right step.
+- Install MicroPython now names other chips (STM32 etc.) and points them at the MicroPython docs; see `CLAUDE.md`,
+  "Unsupported boards: expect them anyway".

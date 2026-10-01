@@ -7,7 +7,9 @@ server.
 
 **Docs:** https://docs.thingstudio.net/
 
-**Install** (other options in [Getting started](https://docs.thingstudio.net/getting-started/)).
+**Install:** download a package from the
+[releases page](https://github.com/mkarliner/ThingStudio/releases/latest), or run the installer script
+([read it first](https://docs.thingstudio.net/getting-started/#step-1-install-thingstudio) if you like).
 macOS and Linux:
 
 ```sh
@@ -60,8 +62,8 @@ Makefile's header lists the other targets.
 
 The editor opens at `http://127.0.0.1:8765/`; **Help → User guide** opens the
 user guide, served locally. Start with its Getting started page
-(`docs/user-guide/getting-started.md`), and Installing MicroPython if your
-board doesn't have it yet.
+(`docs/user-guide/getting-started.md`), which lists the steps to a blinking
+LED.
 
 **Working on the editor itself:** `cd editor && npm run dev` serves it with
 hot reload on Vite's own port, talking to a separately started backend on

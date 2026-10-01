@@ -1,4 +1,4 @@
-# Coming from Node-RED
+# If you know Node-RED
 
 Most of what you know carries over. You drag nodes onto a canvas, wire them, set properties and click Deploy.
 Messages carry `payload` and `topic`. Config nodes hold shared settings like an MQTT broker. The differences come

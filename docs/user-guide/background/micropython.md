@@ -29,7 +29,7 @@ Thingstudio runs on top of MicroPython. It installs a small runtime onto the boa
 into MicroPython code. The function node runs your own MicroPython. See
 [installing MicroPython](../installing-micropython.md) to get it onto your board.
 
-If you already use MicroPython, see [coming from MicroPython](../coming-from/micropython.md) for how Thingstudio
+If you already use MicroPython, see [if you know MicroPython](../coming-from/micropython.md) for how Thingstudio
 uses your board.
 
 ## More

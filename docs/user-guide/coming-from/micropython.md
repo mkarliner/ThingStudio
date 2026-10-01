@@ -1,4 +1,4 @@
-# Coming from MicroPython
+# If you know MicroPython
 
 Thingstudio sits on top of the MicroPython you already have. It doesn't replace your firmware. It adds a runtime
 and a way to write programs as flows, while the REPL and your own Python stay within reach.

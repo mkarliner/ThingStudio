@@ -3,12 +3,26 @@
 Thingstudio is a visual way to program microcontrollers. In your web browser, you drag boxes onto a canvas and join
 them with lines, in the style of [Node-RED](https://nodered.org/). Thingstudio turns the result into
 [MicroPython](https://micropython.org/), a version of Python for microcontrollers, and sends it to your board. The
-board then runs it on its own, with no computer attached.
+board then runs the program you just built. It keeps running it on its own, with no computer attached.
+
+Everything runs on your own computer and your own boards. Thingstudio isn't a cloud service.
+
+- **No account.** There's nothing to sign up for, and nothing is sent to us.
+- **Works offline.** Once installed, it needs no internet connection, docs included.
+- **Your files, in git.** Flows are plain, indented JSON files that you save where you like. Board definitions
+  are JSON files too. They diff cleanly and sit happily in a git repository. WiFi and MQTT passwords are kept
+  out of flow files, so a committed flow holds no secrets.
+- **Made to be extended.** Write your own [custom nodes](custom-nodes.md), and add your own
+  [boards](boards.md#adding-a-board) and [processors](boards.md#adding-a-processor). You drop their files into
+  a folder. There's nothing to rebuild.
+- **Free and open source.** Thingstudio is under the
+  [Apache 2.0 licence](https://github.com/mkarliner/ThingStudio/blob/main/LICENSE). You can use it, change it and
+  build on it, including in commercial products.
 
 !!! tip "Already know the background?"
-    If you know Node-RED, MicroPython and event-driven code, skip to what's different:
-    [coming from Node-RED](coming-from/node-red.md), [coming from MicroPython](coming-from/micropython.md) or
-    [coming from Arduino and C](coming-from/arduino.md). Or go straight to [Getting started](getting-started.md).
+    If you know Node-RED, MicroPython or Arduino, skip to what's different for you:
+    [Node-RED](coming-from/node-red.md), [MicroPython](coming-from/micropython.md) or
+    [Arduino and C](coming-from/arduino.md). Or go straight to [Getting started](getting-started.md).
 
 ## What's different about programming with Thingstudio?
 
@@ -66,15 +80,17 @@ time.
 
 ## What you need
 
-- A board with an ESP32-family or RP2040/RP2350 chip. See [boards and processors](boards.md).
+- A board with an ESP32-family or RP2040/RP2350 chip. See [boards and processors](boards.md). Other MicroPython
+  boards should work too, but we can't test everything. See
+  [other microcontrollers](installing-micropython.md#other-microcontrollers).
 - A USB cable that carries data, not just power.
-- Enough Python to write a few lines, and enough electronics to wire an LED.
+- Some knowledge of Python, enough to write a few lines.
+- Some knowledge of electronics, enough to wire up an LED.
 
 ## Next
 
-1. [Install MicroPython](installing-micropython.md) on your board, if it doesn't have it yet.
-2. [Get started](getting-started.md): install Thingstudio and connect your board.
-3. [Blink an LED](first-flow.md): your first flow.
+[Getting started](getting-started.md) lists the steps from a new board to a blinking LED, and starts you on the
+first one.
 
 These docs follow the latest code. The copy inside Thingstudio (**Help → User guide**) matches the version you have
 installed.

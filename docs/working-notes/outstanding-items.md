@@ -221,6 +221,14 @@ inline, not a fresh check.
 
 ## UI / editor
 
+- **[POST-MVP]** **Install MicroPython from the editor -- new item, 2026-10-01, from the first newcomer test.**
+  Getting MicroPython onto the board took nearly all of the 27-minute run's coaching; everything after it went
+  fine. Docs are restructured (`decisions/documentation-process.md`), but the step is still manual. Post-MVP on
+  Mike's call: too many variants. A board in BOOTSEL mode reports only its chip, not which board it is (Pico vs Pico W
+  vs third-party RP2040 boards need different `.uf2`s). ESP32 builds vary by PSRAM type and USB mode as well as chip.
+  Either way the user would still pick their board, and the editor would need to fetch and track firmware versions.
+  Revisit only if later newcomer runs still stall here after the docs fix.
+
 - **[P3]** **Custom node format parity with built-ins -- new item, 2026-09-30.** Built-in nodes are
   TypeScript modules that generate Python; custom nodes are a JSON descriptor plus Python. Built-ins may
   later ship as packages in a folder beside the install (`decisions/node-authoring.md`, 2026-09-30), which

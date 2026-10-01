@@ -21,7 +21,7 @@ Thingstudio takes Node-RED's way of working onto the microcontroller. The flow r
 board doesn't need a server to decide what to do. The two work well together: a Thingstudio board can publish
 readings over MQTT to a Node-RED flow on your server.
 
-If you already use Node-RED, see [coming from Node-RED](../coming-from/node-red.md) for what's different.
+If you already use Node-RED, see [if you know Node-RED](../coming-from/node-red.md) for what's different.
 
 ## More
 

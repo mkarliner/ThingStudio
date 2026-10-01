@@ -1,139 +1,82 @@
 # Getting started
 
-Thingstudio is a program you run on your computer. It opens its editor in your web browser. You build a flow there and deploy it to a board over USB.
+Five steps take you from a new board to a blinking LED. Each page ends with a link to the next one.
 
-You need a supported board with [MicroPython installed](installing-micropython.md), and a USB cable that carries data, not just power.
+1. **[Install Thingstudio](#step-1-install-thingstudio)** on your computer. See below.
+2. **[Install MicroPython](installing-micropython.md)** on your board.
+3. **[Connect your board](connecting.md)** to Thingstudio.
+4. **[Install the runtime](installing-runtime.md)**, the part of Thingstudio that runs on the board.
+5. **[Blink an LED](first-flow.md)**: build your first flow and deploy it.
 
-## Install
+You need a [supported board](boards.md) and a USB cable that carries data, not just power.
 
-Thingstudio comes with everything it needs, including its own Python. Nothing else needs installing.
+## Step 1: Install Thingstudio
 
-Each [release](https://github.com/mkarliner/ThingStudio/releases/latest) has a package for each platform:
+Thingstudio is a program you run on your computer. It opens its editor in your web browser. It comes with
+everything it needs, including its own Python. Nothing else needs installing.
 
-| Platform | Package |
-| --- | --- |
-| macOS, Apple Silicon (M1 and later) | `thingstudio-VERSION-macos-arm64.tar.gz` |
-| macOS, Intel | `thingstudio-VERSION-macos-x86_64.tar.gz` |
-| Linux, x86_64 | `thingstudio-VERSION-linux-x86_64.tar.gz` |
-| Linux, ARM 64-bit (Raspberry Pi 4 and 5 on a 64-bit OS) | `thingstudio-VERSION-linux-aarch64.tar.gz` |
-| Windows, x86_64 | `thingstudio-VERSION-windows-x86_64.zip` |
+There are two ways to install it. Both give you the same program.
 
-`SHA256SUMS` lists each package's checksum. The macOS packages are signed and notarized by Apple.
+- **Download a package** from the [releases page](https://github.com/mkarliner/ThingStudio/releases/latest) and
+  unpack it. Nothing runs until you start it. See [more on installing](installing-more.md#packages) for which
+  package to pick.
+- **Run the installer script.** It picks the right package, checks its checksum, and adds a `thingstudio`
+  command. It's quicker, and makes upgrading easier.
 
-**macOS and Linux**
+If you'd rather read a script before running it, download
+[install.sh](https://github.com/mkarliner/ThingStudio/releases/latest/download/install.sh) or
+[install.ps1](https://github.com/mkarliner/ThingStudio/releases/latest/download/install.ps1) and open it in a text
+editor first. Or use a package.
 
-The installer picks the right package for your computer, checks it and sets it up. Run this in a terminal:
+### Download a package
+
+**macOS and Linux:** unpack it with `tar -xzf thingstudio-VERSION-PLATFORM.tar.gz`. Thingstudio is the
+`thingstudio` file in the unpacked folder. Run it from there as `./thingstudio`.
+
+**Windows:** unzip it anywhere, for example into your Documents folder. Run `thingstudio.cmd` in the unzipped
+folder. If it says "Windows protected your PC", click **More info**, then **Run anyway**. Thingstudio isn't signed
+for Windows yet.
+
+### Run the installer script
+
+**macOS and Linux:** run this in a terminal. On a Mac, that's the **Terminal** app, in Applications → Utilities.
 
 ```sh
 curl -fsSL https://github.com/mkarliner/ThingStudio/releases/latest/download/install.sh | sh
 ```
 
-It installs Thingstudio into `~/.local/share/thingstudio` and adds the `thingstudio` command to `~/.local/bin`. If it says `~/.local/bin` isn't on your PATH, run the line it prints, then open a new terminal.
+If it says `~/.local/bin` isn't on your PATH, run the line it prints, then open a new terminal.
 
-On Linux, your account must be in the `dialout` group (`uucp` on Arch) to use USB boards. The installer tells you if it isn't, and gives the command to fix it.
+On Linux, your account must be in the `dialout` group (`uucp` on Arch) to use USB boards. The installer tells you if
+it isn't, and gives the command to fix it.
 
-To upgrade, run the same command again. To remove Thingstudio:
-
-```sh
-curl -fsSL https://github.com/mkarliner/ThingStudio/releases/latest/download/install.sh | sh -s -- --uninstall
-```
-
-Your flows and settings live in `~/.thingstudio`. Upgrading and removing never touch them.
-
-**macOS and Linux, without the installer**
-
-1. Download your platform's package from the [releases page](https://github.com/mkarliner/ThingStudio/releases/latest).
-2. Unpack it: `tar -xzf thingstudio-VERSION-PLATFORM.tar.gz`.
-3. Run `./thingstudio` in the unpacked folder.
-
-This doesn't add a `thingstudio` command. Start it from that folder, or by its full path. To upgrade, replace the folder with a newer one.
-
-**Windows**
-
-Open PowerShell (search for it in the Start menu) and run:
+**Windows:** open PowerShell (search for it in the Start menu) and run:
 
 ```powershell
 irm https://github.com/mkarliner/ThingStudio/releases/latest/download/install.ps1 | iex
 ```
 
-It installs Thingstudio into `%LOCALAPPDATA%\Thingstudio` and adds the `thingstudio` command to your PATH. It
-works in that window straight away, and in any window you open afterwards. You don't need to be an
-administrator.
+You don't need to be an administrator.
 
-To upgrade, run the same command again. To remove Thingstudio:
+To upgrade or remove Thingstudio, or build it from source, see [more on installing](installing-more.md).
 
-```powershell
-& ([scriptblock]::Create((irm https://github.com/mkarliner/ThingStudio/releases/latest/download/install.ps1))) -Uninstall
-```
+## Start Thingstudio
 
-Your flows and settings live in `%USERPROFILE%\.thingstudio`. Upgrading and removing never touch them.
-
-**Windows, without the installer**
-
-1. Download `thingstudio-VERSION-windows-x86_64.zip` from the [releases page](https://github.com/mkarliner/ThingStudio/releases/latest).
-2. Unzip it anywhere, for example into your Documents folder.
-3. In the unzipped folder, run `thingstudio.cmd`. If Windows asks whether to run it, choose **Run**. If it says
-   "Windows protected your PC", click **More info**, then **Run anyway**. Thingstudio isn't signed for Windows yet.
-
-**From source**
-
-For working on Thingstudio itself. You need Python 3.10 or later, Node.js 22.12 or later, and `make`. On a Mac, `make` comes with the Xcode command line tools (`xcode-select --install`).
-
-In the repository folder, run `make`. This builds the editor and these docs, installs Thingstudio into a `.venv` folder, and puts the `thingstudio-backend` command on your PATH. Run `make` again after updating the repository. It only rebuilds what changed. If your `python3` is older than 3.10, name a newer one: `make PYTHON=python3.12`.
-
-## Start
+If you used the installer script, run this in a terminal:
 
 ```sh
 thingstudio
 ```
 
-Without the installer on Windows, run `thingstudio.cmd` in the unzipped folder. From source, the command is `thingstudio-backend`, or `make run`. On a Mac, start it from Apple's **Terminal** app: macOS blocks WiFi connections from a copy run from source in other terminals, such as iTerm.
+If the command isn't found just after installing, open a new terminal and try again. If you downloaded a package,
+run `./thingstudio` (or `thingstudio.cmd` on Windows) in its folder.
 
-If your terminal says the command isn't found just after installing, open a new terminal.
+The editor opens in your browser at `http://127.0.0.1:8765/`. Leave the terminal open while you work. Press Ctrl-C
+there to stop Thingstudio.
 
-The editor opens in your browser at `http://127.0.0.1:8765/`. Leave the terminal open while you work; press Ctrl-C there to stop Thingstudio. Add `--no-browser` if you'd rather open the page yourself. If you restart Thingstudio with the editor still open, that tab reconnects and no new one opens.
-
-These docs are served locally too, so they work without an internet connection. **Help → User guide** opens them.
-
-## Connect a board
-
-1. Plug the board in.
-2. Check the port list. When the editor opens it looks for boards, and picks yours if it's the only one plugged in. If you plugged it in afterwards, click **⟳** next to the port list.
-3. Click **Connect**. Once connected, the button shows **● Connected · Disconnect**. Click it to disconnect.
-
-With more than one board plugged in, pick yours from the list. Port names depend on your operating system and the board's USB chip, so there's no fixed name to look for. If you're not sure which is yours, unplug it, click **⟳**, plug it back in and click again. The one that appears is your board.
-
-The board replies with its chip type, runtime version and free memory. The console shows this.
-
-Once a board with WiFi is set up, you can also connect to it over WiFi. See [Connecting over WiFi](wifi-connection.md).
-
-A board that's new to Thingstudio doesn't have its runtime yet. The console says so and suggests the next step.
-
-## Install the runtime
-
-The runtime is the part of Thingstudio that runs on the board. Each board needs it once.
-
-There are two ways to install it. Use the editor unless you have a reason not to.
-
-**From the editor**
-
-1. With the board's port selected, choose **Tools → Install runtime…**. It takes about half a minute and shows each file as it goes.
-   If the board is busy and doesn't stop, the console asks you to press its reset button. A board without one, such as a Pico, can be unplugged and plugged back in instead.
-2. The board restarts when it's done. Click **Connect** again.
-
-If something goes wrong, the console says what the board sent back and what to do. See [Board won't connect](debugging.md#board-wont-connect).
-
-**From the command line**
-
-Useful for scripting, or setting up several boards at once. Click **Disconnect** in the editor first, so the port is free.
-
-```sh
-pip install mpremote
-python3 test-flows/deploy_runtime.py --port PORT
-```
-
-`PORT` is the board's port, as shown in the editor's port list. When it finishes, click **Connect** in the editor.
+These docs are served by Thingstudio too, so they work without an internet connection. **Help → User guide** opens
+them.
 
 ## Next
 
-Build your first flow: [Blink an LED](first-flow.md). [Canvas basics](canvas-basics.md) covers the editor in more detail.
+Step 2: [install MicroPython](installing-micropython.md) on your board.

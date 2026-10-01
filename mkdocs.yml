@@ -48,13 +48,17 @@ nav:
       - Flows, nodes and messages: background/flows-and-nodes.md
       - Node-RED: background/node-red.md
       - MicroPython: background/micropython.md
-  - Coming from:
+  - If you already know:
       - Node-RED: coming-from/node-red.md
       - MicroPython: coming-from/micropython.md
       - Arduino and C: coming-from/arduino.md
-  - Installing MicroPython: installing-micropython.md
-  - Getting started: getting-started.md
-  - Blink an LED: first-flow.md
+  - Getting started:
+      - 1. Install Thingstudio: getting-started.md
+      - 2. Install MicroPython: installing-micropython.md
+      - 3. Connect your board: connecting.md
+      - 4. Install the runtime: installing-runtime.md
+      - 5. Blink an LED: first-flow.md
+      - More on installing: installing-more.md
   - Canvas basics: canvas-basics.md
   - Flow lifecycle: flow-lifecycle.md
   - Boards and processors: boards.md

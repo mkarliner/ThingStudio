@@ -41,6 +41,22 @@ the pattern already built into `udp-send.ts`/`udp-receive.ts`/`http-request.ts`/
 open-ended chase for a fix that works on every platform. Not a license to skip a real, cheaply-fixable bug — a
 call on where further effort actually pays off once a platform-specific quirk resists a clean general fix.
 
+## Unsupported boards: expect them anyway
+
+Thingstudio has a list of supported processors (ESP32 family, RP2040/RP2350), but expect people to connect anything
+that runs MicroPython -- STM32, nRF, SAMD, whatever they have to hand. We may not have tested it; they'll try it
+anyway. Docs and console messages shouldn't assume the board is on the list. Where a step differs by chip
+(installing MicroPython, pins, flashing), say what we cover and point everything else at the MicroPython docs
+(micropython.org/download, docs.micropython.org) rather than leaving the reader with nothing. Mike, 2026-10-01,
+from the first newcomer test.
+
+## Install instructions: never `curl | sh` alone
+
+Piping a downloaded script into a shell (`curl ... | sh`, `irm ... | iex`) is widely regarded as unsafe, and many
+readers will hesitate or refuse. Wherever docs give an installer one-liner, give a plain download (the GitHub
+releases page) alongside it as an equal choice, and say how to read the script before running it. Mike,
+2026-10-01.
+
 ## Any work that impacts the user experience should update the user documentation to reflect that.
 
 ## No premature optimization, but don't paint into an architectural dead end

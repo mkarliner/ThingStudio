@@ -1,20 +1,15 @@
-# Installing MicroPython
+# Step 2: Install MicroPython
 
-Thingstudio runs on top of MicroPython. Your board needs MicroPython before Thingstudio can install its runtime on it.
+Thingstudio runs on top of [MicroPython](background/micropython.md), a version of Python for microcontrollers. Your
+board needs MicroPython before Thingstudio can use it. You install it once.
 
-If your board already has MicroPython, skip this page and go to [Getting started](getting-started.md).
-
-## Is it already installed?
-
-Connect to the board in Thingstudio and choose **Tools → Install runtime…**. If MicroPython is missing, the console says so. A new board usually ships with something else on it, or nothing at all.
-
-## Before you start
-
-Click **Disconnect** in Thingstudio, and close any other program using the board, such as a serial monitor or the Arduino IDE. Only one program can use the port at a time. If Thingstudio still has it open, esptool and Thonny can't reach the board. esptool reports this as `Resource busy` or `could not open port`.
+A new board usually doesn't have MicroPython. If you know yours does, go to [step 3](connecting.md). If you're not
+sure, go to step 3 anyway: Thingstudio tells you if MicroPython is missing, and links back here.
 
 ## Get the firmware
 
-Download the firmware for your board from [micropython.org/download](https://micropython.org/download/). Pick your exact board if it's listed, or the generic build for your chip:
+Download the firmware for your board from [micropython.org/download](https://micropython.org/download/). Pick your
+exact board if it's listed, or the generic build for your chip:
 
 | Chip | Generic build | File type |
 | --- | --- | --- |
@@ -35,13 +30,17 @@ The board restarts into MicroPython on its own.
 
 ## ESP32 family: esptool
 
+If Thingstudio is connected to the board, click **Disconnect** first. Only one program can use the board's port at
+a time. If another program has it open, esptool reports `Resource busy` or `could not open port`.
+
 Install `esptool` once:
 
 ```sh
 pip install esptool
 ```
 
-Put the board into download mode. Hold **BOOT**, press and release **RESET**, then release **BOOT**. Many boards with a separate USB-serial chip do this for you, so try without it first.
+Put the board into download mode. Hold **BOOT**, press and release **RESET**, then release **BOOT**. Many boards
+with a separate USB-serial chip do this for you, so try without it first.
 
 Erase the flash, then write the firmware. The address depends on the chip:
 
@@ -55,16 +54,29 @@ esptool.py --port PORT --baud 460800 write_flash ADDRESS firmware.bin
 | ESP32, ESP32-S2 | `0x1000` |
 | ESP32-S3, ESP32-C3 | `0` |
 
-`PORT` is the board's serial port. Names vary by operating system and board: on macOS and Linux they start with `/dev/`, on Windows they're `COM` followed by a number. To find yours, run `esptool.py flash_id` with no `--port`; esptool searches for the board and prints the port it found. If writing fails partway, leave out `--baud 460800`.
+`PORT` is the board's serial port. Names vary by operating system and board: on macOS and Linux they start with
+`/dev/`, on Windows they're `COM` followed by a number. To find yours, run `esptool.py flash_id` with no `--port`;
+esptool searches for the board and prints the port it found. If writing fails partway, leave out `--baud 460800`.
 
-Press **RESET** when it finishes. Boards that use the chip's own USB (most ESP32-S2 and S3 boards) may show up on a different port afterwards. Click **⟳**, next to the port list in Thingstudio, to refresh the list.
+Press **RESET** when it finishes. Boards that use the chip's own USB (most ESP32-S2 and S3 boards) may show up on a
+different port afterwards.
 
-## Without a terminal
+## Without a terminal: Thonny
 
-[Thonny](https://thonny.org) can install MicroPython for you. Open **Tools → Options → Interpreter** and use **Install or update MicroPython**.
+[Thonny](https://thonny.org) is a free Python editor for beginners. It works with MicroPython boards, and can
+install MicroPython for you. Open **Tools → Options → Interpreter** and use **Install or update MicroPython**.
 
-When it's done, close Thonny before connecting from Thingstudio. The same one-program rule applies in both directions.
+When it's done, close Thonny. Like esptool, it needs the board's port to itself.
+
+## Other microcontrollers
+
+Other chips, such as STM32, have their own way of installing MicroPython. See your board's page on
+[micropython.org/download](https://micropython.org/download/) and the
+[MicroPython documentation](https://docs.micropython.org/en/latest/).
+
+Thingstudio is built and tested on the ESP32 and RP2 chips above. To try another chip, you'll need to
+[add a processor definition](boards.md#adding-a-processor).
 
 ## Next
 
-Go back to [Getting started](getting-started.md) and install the Thingstudio runtime.
+Step 3: [connect your board](connecting.md) to Thingstudio.

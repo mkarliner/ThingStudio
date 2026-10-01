@@ -1,4 +1,4 @@
-# Coming from Arduino and C
+# If you know Arduino and C
 
 If you've written `setup()` and `loop()` in C or C++, Thingstudio will feel different in three ways. It uses
 Python rather than C, you wire events together instead of writing a loop, and a change goes to the board in
@@ -32,4 +32,4 @@ Thingstudio checks your pin
 numbers against the board before deploying, and refuses pins that would crash it, such as those wired to the
 flash chip. See [boards and processors](../boards.md).
 
-Next: [install MicroPython](../installing-micropython.md) on your board.
+Next: [getting started](../getting-started.md).
