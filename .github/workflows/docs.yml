@@ -18,6 +18,10 @@ on:
       - "mkdocs.yml"
       - "docs/user-guide/**"
       - ".github/workflows/docs.yml"
+      # The screenshots are taken from the real editor, so editor changes republish the docs too.
+      - "editor/**"
+      - "docs/screenshots/**"
+      - "tools/screenshots.py"
   workflow_dispatch: {}
 
 permissions:
@@ -29,10 +33,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # vite.config.ts stamps the last commit touching device-runtime/src
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: editor/package-lock.json
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      # Pins live in docs/requirements.txt (shared with the Makefile) and must match
+      # Pins live in docs/requirements.txt and docs/screenshots/requirements.txt and must match
       # docs/third-party-licenses.md's "Documentation build tooling" entry.
-      - run: pip install -r docs/requirements.txt
+      - run: pip install -r docs/requirements.txt -r docs/screenshots/requirements.txt ./backend
+      - name: Build editor
+        working-directory: editor
+        run: |
+          npm ci --ignore-scripts
+          npm run build
+      # Retakes docs/user-guide/images/*.png from the editor just built, replacing the committed copies.
+      - name: Screenshots
+        run: |
+          playwright install --with-deps chromium
+          python tools/screenshots.py
       - run: mkdocs gh-deploy --force

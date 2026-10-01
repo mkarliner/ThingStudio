@@ -1,0 +1,5 @@
+# Screenshot tooling for the user guide (tools/screenshots.py), used by `make screenshots` and the docs and
+# release workflows. Kept apart from docs/requirements.txt so a plain `make` doesn't need it.
+# Versions must match docs/third-party-licenses.md's "Documentation build tooling" entry.
+# After installing: `playwright install chromium` (CI: `playwright install --with-deps chromium`).
+playwright==1.63.0

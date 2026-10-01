@@ -47,6 +47,11 @@ jobs:
         run: |
           npm ci --ignore-scripts
           npm run build
+      - name: Screenshots
+        run: |
+          pip install -r docs/screenshots/requirements.txt ./backend
+          playwright install --with-deps chromium
+          python tools/screenshots.py
       - name: Build docs
         run: |
           pip install -r docs/requirements.txt

@@ -83,3 +83,17 @@ installing `mkdocs`/`mkdocs-material` and running a real build to confirm the si
   doc links still land on the right step.
 - Install MicroPython now names other chips (STM32 etc.) and points them at the MicroPython docs; see `CLAUDE.md`,
   "Unsupported boards: expect them anyway".
+
+## 2026-10-01: user-guide screenshots are taken automatically from the built editor
+
+- **Decision (Mike's ask):** screenshots in the user guide come from `tools/screenshots.py`, not by hand, so they
+  keep up with the code. It starts `thingstudio-backend` on a spare port, opens the built editor in headless
+  Chromium (Python Playwright), loads a fixture flow from `docs/screenshots/` and saves PNGs to
+  `docs/user-guide/images/`. No board involved.
+- Flows load through the editor's existing `<input type=file>` fallback (the script deletes
+  `showOpenFilePicker`), so the editor needed no test hook.
+- Runs in the docs workflow (now also triggered by `editor/**` changes) and the release workflow before
+  `mkdocs build`. The PNGs are committed too, so a plain local `make` builds the docs without Playwright; `make
+  screenshots` retakes them locally (downloads Chromium the first time).
+- Playwright is pinned in `docs/screenshots/requirements.txt`, kept apart from `docs/requirements.txt`.
+- Shots that need a board (console after a deploy) stay as text in the docs for now.

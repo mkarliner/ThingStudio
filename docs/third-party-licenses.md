@@ -244,6 +244,8 @@ Versions and licenses confirmed 2026-09-23 from the installed packages' own meta
 |---|---|---|---|
 | mkdocs | 1.6.1 | BSD-2-Clause | Static site generator. Build-time only. |
 | mkdocs-material | 9.7.7 | MIT | Theme (`mkdocs.yml`'s `theme.name: material`). Its CSS/JS is in every built site the backend serves. `theme.font: false`, so no Google Fonts are fetched or bundled. |
+| playwright (Python) | 1.63.0 | Apache-2.0 | Drives headless Chromium for `tools/screenshots.py`. Build-time only; pinned in `docs/screenshots/requirements.txt`, not `docs/requirements.txt`, so a plain `make` doesn't install it. Pulls in greenlet 3.5.6 (MIT AND PSF-2.0), pyee 13.0.1 (MIT) and typing_extensions 4.16.0 (PSF-2.0). Versions/licenses from the installed packages' metadata, 2026-10-01. |
+| Chromium (Playwright's build) | as pinned by playwright 1.63.0 | BSD-3-Clause and others | Downloaded by `playwright install chromium` in CI and `make screenshots`. Build-time only; nothing from it ships. |
 
 Both pinned in `.github/workflows/docs.yml`'s `pip install` step -- update the pin there in the same change if
 either version changes here. Not gated by `CLAUDE.md`'s npm-specific install-flag rule (these are pip, not npm

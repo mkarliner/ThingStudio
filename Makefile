@@ -34,7 +34,7 @@ RUNTIME_SHA := $(shell git log -1 --format=%H -- device-runtime/src 2>/dev/null)
 # Plain `make` means `make all`, whatever order the rules below are in.
 .DEFAULT_GOAL := all
 .DELETE_ON_ERROR:
-.PHONY: all editor docs backend assets link run test typecheck test-editor test-backend clean distclean unlink check-node check-python
+.PHONY: all editor docs backend assets link run test typecheck test-editor test-backend clean distclean unlink check-node check-python screenshots
 
 # --- prerequisite checks ------------------------------------------------------------
 # Order-only (| check-...) below, so they run first but never force a rebuild.
@@ -156,6 +156,14 @@ test-backend: $(VENV)/.installed
 	cd backend && ../$(VPY) -m pytest -q
 
 # --- cleanup ------------------------------------------------------------------
+
+# Retake the user guide's screenshots (docs/user-guide/images/) from the built editor. Not part of `all`: it
+# downloads Chromium (about 150 MB) the first time. CI runs it on every docs build; the PNGs are committed so a
+# plain `make` doesn't need it.
+screenshots: editor $(VENV)/.installed
+	$(VPY) -m pip install --quiet -r docs/screenshots/requirements.txt
+	$(VENV)/bin/playwright install chromium
+	PATH="$(CURDIR)/$(VENV)/bin:$$PATH" $(VPY) tools/screenshots.py
 
 clean:
 	rm -rf editor/dist site $(STAMP) backend/src/thingstudio_backend/_assets backend/src/thingstudio_backend/_assets.tmp backend/build

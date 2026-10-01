@@ -5,13 +5,18 @@ them with lines, in the style of [Node-RED](https://nodered.org/). Thingstudio t
 [MicroPython](https://micropython.org/), a version of Python for microcontrollers, and sends it to your board. The
 board then runs the program you just built. It keeps running it on its own, with no computer attached.
 
+![The Thingstudio editor, showing a three-node flow: timer, function and gpio out](images/editor.png)
+
+The editor. Nodes to drag in on the left, your flow in the middle, and on the right the selected node's settings
+and the board's console.
+
 Everything runs on your own computer and your own boards. Thingstudio isn't a cloud service.
 
 - **No account.** There's nothing to sign up for, and nothing is sent to us.
 - **Works offline.** Once installed, it needs no internet connection, docs included.
-- **Your files, in git.** Flows are plain, indented JSON files that you save where you like. Board definitions
-  are JSON files too. They diff cleanly and sit happily in a git repository. WiFi and MQTT passwords are kept
-  out of flow files, so a committed flow holds no secrets.
+- **Your files, in git.** Thingstudio's files, your programs and your board definitions, are plain, indented
+  JSON that you save where you like. They diff cleanly and sit happily in a git repository. Passwords and
+  other credentials are stored separately, so a committed program holds no secrets.
 - **Made to be extended.** Write your own [custom nodes](custom-nodes.md), and add your own
   [boards](boards.md#adding-a-board) and [processors](boards.md#adding-a-processor). You drop their files into
   a folder. There's nothing to rebuild.
