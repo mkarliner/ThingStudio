@@ -884,6 +884,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#the-editor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The editor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#palette" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2127,6 +2138,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#the-editor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The editor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#palette" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2235,6 +2257,28 @@
 
 
 <h1 id="canvas-basics">Canvas basics</h1>
+<h2 id="the-editor">The editor</h2>
+<figure>
+  <a href="../images/editor-parts.png"><img alt="The Thingstudio editor with its parts numbered 1 to 14" src="../images/editor-parts.png" /></a><figcaption>The parts of the editor. Click to see it full size.</figcaption>
+</figure>
+<!-- These numbers match EDITOR_PARTS in tools/screenshots.py, which draws them. Change both together. -->
+
+<ol>
+<li><strong>File menu:</strong> start a new flow, open one, or save it.</li>
+<li><strong>Flow name:</strong> saved with the flow. The board reports it, so you can tell what it's running.</li>
+<li><strong>Port list and Connect:</strong> pick your board's port and connect to it. <strong>⟳</strong> looks for boards again.</li>
+<li><strong>Board menu and Pins…:</strong> the board the flow is for, and a page of its pins.</li>
+<li><strong>Compile → Deploy:</strong> turns the flow into MicroPython and sends it to the board.</li>
+<li><strong>Tools and Help:</strong> occasional board jobs, such as installing the runtime, and these docs.</li>
+<li><strong>Palette:</strong> every node you can add. Drag one onto the canvas.</li>
+<li><strong>Flow tabs:</strong> a flow can be spread across several tabs.</li>
+<li><strong>Canvas:</strong> where you build the flow.</li>
+<li><strong>Properties:</strong> the selected node's settings.</li>
+<li><strong>Compiled source:</strong> the MicroPython made from your flow. Click to open it.</li>
+<li><strong>Console:</strong> messages from Thingstudio and the board, including your flow's output.</li>
+<li><strong>Python prompt:</strong> runs a line of Python on the board.</li>
+<li><strong>Board buttons:</strong> stop the flow and use MicroPython's own prompt, or remove the saved flow.</li>
+</ol>
 <h2 id="palette">Palette</h2>
 <p>The left sidebar lists every node type you can drag onto the canvas, grouped the same three ways as this guide's <a href="../nodes/">node reference</a>: <strong>General</strong>, <strong>Network</strong>, <strong>Hardware</strong>. Custom nodes from <code>~/.thingstudio/custom-nodes/</code> (see <a href="../custom-nodes/">Writing custom nodes</a>) appear under the group their package names, and <strong>Reload custom nodes</strong> at the bottom reads that folder again.</p>
 <p>Drag a node onto the canvas, or click it to add it at a default position. Filter the list by typing in the search box above it.</p>
