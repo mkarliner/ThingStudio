@@ -2189,9 +2189,10 @@
 
 
 <h1 id="thingstudio">Thingstudio</h1>
-<p>Thingstudio is a visual way to program microcontrollers. In your web browser, you drag boxes onto a canvas and join
-them with lines, in the style of <a href="https://nodered.org/">Node-RED</a>. Thingstudio turns the result into
-<a href="https://micropython.org/">MicroPython</a>, a version of Python for microcontrollers, and sends it to your board. The
+<p>Thingstudio is a visual way to program microcontrollers. You build a program in your web browser from blocks, each
+doing one job: wait a second, read a sensor, switch a pin. You join the blocks with wires, and data flows along the
+wires from one block to the next. The style comes from <a href="https://nodered.org/">Node-RED</a>. Thingstudio turns the result
+into <a href="https://micropython.org/">MicroPython</a>, a version of Python for microcontrollers, and sends it to your board. The
 board then runs the program you just built. It keeps running it on its own, with no computer attached.</p>
 <p><img alt="The Thingstudio editor, showing a three-node flow: timer, function and gpio out" src="images/editor.png" /></p>
 <p>The editor. Nodes to drag in on the left, your flow in the middle, and on the right the selected node's settings
@@ -2227,7 +2228,7 @@ happens, and the board can wait for many events at once. This is
 manage tasks, callbacks and the code that ties them together. Thingstudio makes this easier. You draw each event
 and what should happen next, and Thingstudio writes the code that runs them all side by side.</p>
 <h2 id="events-nodes-and-wires">Events, nodes and wires</h2>
-<p>Each response to an event is drawn as a small chain of <strong>nodes</strong>. A node does one job: fire every second, read a
+<p>Each block is called a <strong>node</strong>. Each response to an event is drawn as a small chain of nodes. A node does one job: fire every second, read a
 pin, run some Python, switch an output. <strong>Wires</strong> join one node's output to the next node's input. Together they make a <strong>flow</strong>.</p>
 <p>Nodes pass <strong>messages</strong> along the wires. A message is a small bundle of data, with the main value in its
 <code>payload</code>. A timer sends a message, a function node changes its payload, and a pin output node acts on it. More on
