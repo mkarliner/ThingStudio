@@ -6,10 +6,10 @@ wires from one block to the next. The style comes from [Node-RED](https://nodere
 into [MicroPython](https://micropython.org/), a version of Python for microcontrollers, and sends it to your board. The
 board then runs the program you just built. It keeps running it on its own, with no computer attached.
 
-![The Thingstudio editor, showing a three-node flow: timer, function and gpio out](images/editor.png)
-
-The editor. Nodes to drag in on the left, your flow in the middle, and on the right the selected node's settings
-and the board's console.
+<figure markdown="span">
+  [![The Thingstudio editor, showing a three-node flow: timer, function and gpio out](images/editor.png)](images/editor.png)<figcaption>The editor: nodes to drag in on the left, your flow in the middle, and on the right the selected
+  node's settings and the board's console. Click to see it full size.</figcaption>
+</figure>
 
 Everything runs on your own computer and your own boards. Thingstudio isn't a cloud service.
 

@@ -38,6 +38,7 @@ theme:
 
 markdown_extensions:
   - admonition
+  - md_in_html # <figure markdown> for captioned screenshots
   - pymdownx.superfences
   - pymdownx.highlight
 
