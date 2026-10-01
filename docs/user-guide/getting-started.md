@@ -2,11 +2,16 @@
 
 Thingstudio is a program you run on your computer. It opens its editor in your web browser. You build a flow there and deploy it to a board over USB.
 
-You need a supported board with [MicroPython installed](installing-micropython.md), and a USB cable that carries data, not just power.
+You need a supported board and a USB cable that carries data, not just power.
+
+The board also needs MicroPython. If you know it doesn't have it, install it first: follow
+[Installing MicroPython](installing-micropython.md), then come back here. If you're not sure, carry on. When you
+connect the board, Thingstudio tells you whether MicroPython is there.
 
 ## Install
 
-Thingstudio comes with everything it needs, including its own Python. Nothing else needs installing.
+The Thingstudio program on your computer comes with everything it needs, including its own copy of Python, so
+there's nothing else to install on your computer. (The board's MicroPython is separate: see above.)
 
 Each [release](https://github.com/mkarliner/ThingStudio/releases/latest) has a package for each platform:
 

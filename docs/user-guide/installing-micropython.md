@@ -4,11 +4,17 @@ Thingstudio runs on top of MicroPython. Your board needs MicroPython before Thin
 
 If your board already has MicroPython, skip this page and go to [Getting started](getting-started.md).
 
-## Is it already installed?
+## Is MicroPython already installed?
 
-Connect to the board in Thingstudio and choose **Tools → Install runtime…**. If MicroPython is missing, the console says so. A new board usually ships with something else on it, or nothing at all.
+A new board usually ships with something else on it, or nothing at all. To check, install Thingstudio and
+[connect the board](getting-started.md#connect-a-board). The console then says one of these:
 
-## Before you start
+- **"The board has MicroPython but not the Thingstudio runtime."** MicroPython is installed. Skip this page and
+  [install the runtime](getting-started.md#install-the-runtime).
+- **"Nothing came back at all."** or **"The board replied, but not as MicroPython."** Install MicroPython, below.
+- **"This board is running CircuitPython."** Install MicroPython in its place, below.
+
+## Before you install MicroPython
 
 Click **Disconnect** in Thingstudio, and close any other program using the board, such as a serial monitor or the Arduino IDE. Only one program can use the port at a time. If Thingstudio still has it open, esptool and Thonny can't reach the board. esptool reports this as `Resource busy` or `could not open port`.
 
@@ -67,4 +73,5 @@ When it's done, close Thonny before connecting from Thingstudio. The same one-pr
 
 ## Next
 
-Go back to [Getting started](getting-started.md) and install the Thingstudio runtime.
+Install the Thingstudio runtime on the board: see [Install the runtime](getting-started.md#install-the-runtime).
+If you haven't installed Thingstudio on your computer yet, start at [Install](getting-started.md#install).

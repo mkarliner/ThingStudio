@@ -72,9 +72,9 @@ time.
 
 ## Next
 
-1. [Install MicroPython](installing-micropython.md) on your board, if it doesn't have it yet.
-2. [Get started](getting-started.md): install Thingstudio and connect your board.
-3. [Blink an LED](first-flow.md): your first flow.
+1. [Get started](getting-started.md): install Thingstudio and connect your board. It tells you if the board needs
+   MicroPython, and [Installing MicroPython](installing-micropython.md) shows how to add it.
+2. [Blink an LED](first-flow.md): your first flow.
 
 These docs follow the latest code. The copy inside Thingstudio (**Help → User guide**) matches the version you have
 installed.
