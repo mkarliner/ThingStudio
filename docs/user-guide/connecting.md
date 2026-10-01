@@ -13,15 +13,15 @@ plug it back in and click again. The one that appears is your board.
 
 ## What the console says
 
-A new board doesn't have the Thingstudio runtime yet. The console says so. That's expected: the next step installs
-it.
+With a new board, the console says the Thingstudio runtime isn't installed. That's expected. You install it in the
+next step.
 
 If the console says the board didn't reply, or isn't running MicroPython, go back to
 [step 2: install MicroPython](installing-micropython.md). Other messages are explained in
 [board won't connect](debugging.md#board-wont-connect).
 
-Once the runtime is installed, the board replies with its chip type, runtime version and free memory. The button
-then shows **● Connected · Disconnect**. Click it to disconnect.
+Once the runtime is installed, the board replies with its chip type, runtime version and free memory. The
+**Connect** button turns green to show the board is connected. Click it again to disconnect.
 
 Once a board with WiFi is set up, you can also connect to it over WiFi. See
 [connecting over WiFi](wifi-connection.md).
