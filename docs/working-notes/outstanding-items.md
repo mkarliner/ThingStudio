@@ -55,6 +55,40 @@ inline, not a fresh check.
 - **Sequencing override set by Mike, 2026-08-20 — fully closed 2026-09-06.** Custom node authoring + docs done 2026-08-20; the narrow docs-only validation session run by Mike 2026-09-06, clean pass (docs sufficient, no gaps); normal backlog order now resumes. ([detail](outstanding-items/sequencing-override.md))
 - **[P5]** **RP2350 (Pico 2 / Pico 2 W) bring-up — in progress, wiring deferred.** Follow-up to the RP2040 bring-up session. **2026-09-06 (plain Pico 2, non-W): MicroPython flash + runtime deploy + boot-to-HELLO confirmed working.** Functional interrupt-flow pass and the memcheck RAM comparison against RP2040's ~209KB-free baseline deferred by Mike until he has time to wire the button. ([detail](outstanding-items/rp2350-bringup.md))
 
+## Launch MVP (added 2026-10-05)
+
+Product work the launch plan made launch-critical. Order, spec and reasoning:
+`launch-mvp-scope-briefing.md`; decisions: `decisions/launch-scope.md`. Tagged **[LAUNCH]** (a gate for the
+one public launch) or **[LAUNCH-NICE]** (helps the launch, not a gate); Mike hasn't P-ranked these yet.
+Marketing-only work (copy, channels, video, community) is tracked in the ThingStudioMarketing repo,
+not here.
+
+- **[LAUNCH]** **GUI templating system, built properly.** Container/constraint layout (flexbox / X
+  Intrinsics), GUI view, `screens` section, unknown/stale value states; widgets limited to label, value,
+  button, status. Supersedes the `[POST-MVP]` templating item under "Network / config nodes".
+  Design: `decisions/gui-layout.md`, `gui-layout-widget-system-scoping.md`.
+- **[LAUNCH]** **Freenove FNK0104B board support.** Board definition; verify PSRAM; ILI9341 controller in
+  `display_spi` (real per-controller codegen); install docs for the octal-SPIRAM S3 firmware. Makes the
+  `[P4]` per-flow vendor-push item worth doing alongside.
+- **[LAUNCH]** **`touch_i2c` node (FT6336U first).** Event source; design for the GT911/FT6236/CST820
+  family. `touch-input-briefing.md`. `touch_spi` (classic CYD) can follow.
+- **[LAUNCH]** **Headliner example flow and task guide** — "a touch panel for the things you already own"
+  (BME280 + MQTT + Tasmota/WLED toggle + unknown/stale states). Confirm how the BME280 connects.
+- **[LAUNCH]** **Newcomer test with a target-group tester** (a maker who knows MicroPython). Re-runs the
+  `road-to-mvp.md` acceptance test after the docs restructure.
+- **[LAUNCH]** **Confirm the Pico W WiFi-password bug is fixed** on hardware (Mike thinks it is).
+- **[LAUNCH]** **Headless compile/validate.** CLI first (existing TS compiler under Node); a backend move is
+  its own design call. Needed for AI authoring.
+- **[LAUNCH]** **User-facing AI-authoring doc,** tested by a fresh agent session against a set task. Where
+  it lives (workspace `AGENTS.md`, docs page + `llms.txt`, skill) is open.
+- **[LAUNCH-NICE]** **Download the generated Python** (viewing already works).
+- **[LAUNCH-NICE]** **Landing page and README rewrite: technical side.** Content comes from the
+  ThingStudioMarketing repo; hosting, GoatCounter on the page, and a docs/README note saying GoatCounter is used
+  and what it counts.
+- **[LAUNCH-NICE]** **WS2812 node, speaker/tone node, analog-input node.**
+- **Repo-root `AGENTS.md` is empty (0 lines)** although `CLAUDE.md` imports it with `@AGENTS.md`. Fill it or
+  drop the import. Found 2026-10-05.
+
 ## Boards / definitions
 
 - **[P2]** **ESP32-C6 (and H2, P4...) detected as a classic ESP32 -- new bug, 2026-09-30.** Found by a test for the
@@ -115,7 +149,7 @@ inline, not a fresh check.
 - **[P4]** **AADC (Peter Hinch's §5 ADC-monitoring driver) node — deferred follow-up, 2026-09-17.** Split off from the eswitch/ebutton item below (now resolved) when eswitch/ebutton were built -- scoped out of that pass on Mike's call rather than bundled in, per [DRIVERS.md §5](https://github.com/peterhinch/micropython-async/blob/master/v3/docs/DRIVERS.md). Not started. His DRIVERS.md collection more broadly stays a candidate source for further nodes later, not scoped now.
 - **[P4]** **Remove the `interrupt` node's debounce option — new item, 2026-09-17, side effect of eswitch/ebutton landing.** `eswitch`/`ebutton` now own debounce for the switch/button use case (`ESwitch.debounce_ms`/`EButton.debounce_ms`), so `interrupt`'s own separate debounce-cooldown option (`interrupt.ts`) is redundant for that use case -- but `interrupt` is still the only source node for a raw, non-debounced pin-change event, so this isn't a clean "always remove," and removing a property is a breaking change to any already-saved flow using it. Flagged for Mike's call, not removed here.
 - **[P4]** **`interrupt` node still has no way to enable an internal pull resistor -- new item, 2026-09-17.** `eswitch`/`ebutton` just picked up a `pull` (none/up/down) property, prompted by a real EMF 2022 TiDAL badge test needing the chip's own internal pull-up on most of its buttons; `interrupt` has the identical "no internal pull, wire an external one" limitation and wasn't touched in that pass (scoped to the button test at hand). Same shape of fix if picked up: a `pull` property, default "none", threaded into `machine.Pin(pin, machine.Pin.IN, ...)`. ([detail](decisions/node-authoring.md))
-- **[POST-MVP]** **Templating UI nodes for displays — new item, 2026-09-08, split from the SSD1306 ask.** Generic way to template/lay out what gets drawn to a display node -- LVGL (or similar) was floated 2026-09-17 as the likely shape ("the more generic the actual graphics interface is the better"), sitting in front of the now-built `display_spi`/`display_i2c` nodes rather than replacing them; those nodes' full-frame-only `bytes` input was deliberately kept graphics-framework-agnostic with this in mind, but nothing LVGL-specific is built. Not scoped, expected to be hard (Mike's characterization).
+- **[SUPERSEDED 2026-10-05 → Launch MVP: GUI templating system]** **Templating UI nodes for displays — new item, 2026-09-08, split from the SSD1306 ask.** Generic way to template/lay out what gets drawn to a display node -- LVGL (or similar) was floated 2026-09-17 as the likely shape ("the more generic the actual graphics interface is the better"), sitting in front of the now-built `display_spi`/`display_i2c` nodes rather than replacing them; those nodes' full-frame-only `bytes` input was deliberately kept graphics-framework-agnostic with this in mind, but nothing LVGL-specific is built. Not scoped, expected to be hard (Mike's characterization).
 - **`display_spi`/framebuffer construction can blow the classic-ESP32 heap for a full-resolution
   RGB565 frame — new item, 2026-09-18, scoped (not built) per Mike's ask.** A full 240x320 RGB565
   frame is 153,600 bytes, which the CYD bring-up session hit as a hard `MemoryError` on a classic
