@@ -176,6 +176,13 @@ logged loudly. New toolbar Board menu (Auto from HELLO `chipType`, or a manual p
 nodes check pins, SPI/I2C buses and SPI speed against the target; errors vs warnings split as the brief
 suggested. 1 entry: `docs/working-notes/decisions/chip-board-definitions.md`.
 
+## Launch scope (product work for the public launch)
+
+One launch, after the headliner works; headliner is a touch panel on a Freenove FNK0104B (ESP32-S3); the GUI
+templating system moves from POST-MVP to the launch path, built properly (container layout, small widget set);
+headless compile/validate and a user-facing AI-authoring doc raised in priority (2026-10-05). 5 entries:
+`docs/working-notes/decisions/launch-scope.md`.
+
 ## What this list doesn't include
 
 Small per-file implementation judgment calls (exact property names, which
