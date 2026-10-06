@@ -140,3 +140,10 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
   About shows Thingstudio's version (backend `/api/alive` now returns it), the runtime the editor expects, and the
   connected board's runtime. Trade-off: Install runtime… is no longer a visible button; the console's "no
   runtime" advice names "Tools → Install runtime…", and the newcomer test will show whether that's enough.
+
+*(Moved here 2026-10-06 from `decisions/gui-layout.md`, where it had been misfiled.)*
+- 2026-09-25 (Mike): the device console gets a **Verbose** switch. Routine system reports (NET_INFO/NET_LISTENING/
+  session lines, listener boot lines, the board's NODE_STATUS prints, and the [HELLO]/[NODE_STATUS]/[DEPLOY_ACK]/
+  [BOARD_SETTINGS_RESULT] JSON echoes) are hidden unless it's on; flow output, warnings, errors and the editor's own
+  notes always show. Editor-side filter (`console-filter.ts`), no runtime change; hidden rows are kept, the choice is
+  remembered per browser.

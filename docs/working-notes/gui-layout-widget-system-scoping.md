@@ -1,194 +1,492 @@
 # GUI layout and widget system — scoping and recommendation
 
-Written 2026-09-18, in response to the idea of "a simple templating system for GUIs, templates like
-[jsonforms.io](https://jsonforms.io/), taking input from touch nodes and sending renders to display
-nodes." Revised the same day after Mike evaluated Hinch's micro-gui (too monolithic) and specified a
-requirement for **container-based layout rather than absolute coordinates** — flex/X-Intrinsics style.
-That requirement changed the central recommendation; this doc reflects the revision, not the original.
+Written 2026-09-18, from Mike's idea of "a simple templating system for GUIs, templates like
+[jsonforms.io](https://jsonforms.io/), taking input from touch nodes and sending renders to display nodes."
+**Supersedes `cyd-touch-gui-flash-budget-briefing.md`'s item 3** (GUI framework selection —
+nanogui/microgui/LVGL). That doc's items 1/4 (CYD display, flash budget) still stand on their own.
 
-Nothing built yet. Builds on `touch-input-briefing.md` and `framebuffer-display-node-scoping.md`.
+**Revised 2026-09-22** after Mike's steers: the GUI gets its own parallel editor view; GUI nodes are
+two-faced; MVC shapes the design; **unknown** is part of the visual language. That replaced the 2026-09-18
+named-slot design.
 
-## Verdict up front
+**Revised 2026-10-06** in a brainstorm with Mike: MVP scope and hero app; multiple displays; page
+navigation and modals as first-class; the Pico memory constraint; the pure-Python-vs-C decision examined;
+existing packages surveyed, with a nano-gui spike as the next step. New sections are marked (2026-10-06).
+Note: the repo copy of this file had not picked up the 2026-09-22 revision (only the Claude project copy
+had); this version consolidates both.
 
-Build our own, not on a framework. Structure lives in a **compiled layout document**; widgets stay
-**nodes on the canvas**, bound into named slots. The whole layout engine runs in the editor in
-TypeScript and ships **nothing** to the device — the device receives a flat rect table.
+Read `touch-input-briefing.md`, `framebuffer-display-node-scoping.md` (Claude project) and
+`node-definition-model.md` first. Nothing below is built.
 
-The fixed screen size is what makes this cheap, and retargeting across panels is what makes it worth
-doing at all.
+## Decisions taken
 
-## Why not JSONForms
+Recorded in `decisions/gui-layout.md`. Everything else in this doc is recommendation, not decision.
 
-Its actual value is a renderer registry resolving schema fragments to React/Angular components, after
-which the **browser** does layout, text metrics, scrolling, focus and hit-testing. On a framebuffer none
-of that exists, so copying it inherits the vocabulary and none of the leverage. It also drags in JSON
-Schema, a *validation* language ($ref, allOf/anyOf/oneOf, conditional subschemas) — a resolver nobody
-wants to write and certainly not one to put on-device.
+1. **2026-09-18 — Hinch's `micropython-micro-gui` / `micropython-touch` rejected as the runtime GUI
+   layer** (too monolithic).
+2. **2026-09-18 — layout is container-based, not absolute coordinates.**
+3. **2026-09-22 — the GUI gets its own editor view**; GUI nodes are two-faced; MVC is the guiding pattern.
+4. **2026-09-22 — unknown is a first-class value state** with its own visual treatment.
+5. **2026-10-06 — MVP scope:** a minimal widget set, enough for one hero app (a CYD home-monitoring
+   panel). Touch is architected; only tap-zone page navigation is built.
+6. **2026-10-06 — multiple displays are architected from the start** (e.g. a 320x240 TFT plus a 128x64
+   OLED on one board).
+7. **2026-10-06 — page navigation is first-class**, and **modals are full-screen**.
+8. **2026-10-06 — Pico constraint:** flows without a GUI must not be penalised on a Pico, and a Pico with
+   a small OLED must run a small GUI. The 320x240 hero app on a Pico is desirable, not mandated.
+9. **2026-10-06 — no custom firmware.** The GUI is Python on stock MicroPython's `framebuf`, with viper
+   for hot loops. Custom-firmware routes (LVGL, C user modules) rejected for MVP.
 
-Keep the one good idea: declarative-structure-as-data, with `(structure, data) → draw calls` as a pure,
-off-device-testable function.
+## Recommendation in one paragraph
+
+Build our own, on stock firmware, borrowing drawing code where it fits (nano-gui is the lead candidate).
+In the editor, a **GUI view** edits page trees per display and a **flow view** edits wiring; a GUI node is
+one record shown in both. The layout engine runs in the editor at compile time and ships the device only
+per-display tables of resolved rects. On the device, one **GUI subsystem** owns rendering, navigation,
+touch dispatch and widget values, across one or more display **surfaces**. Widget nodes are ordinary
+msg-in nodes whose generated code hands values to that subsystem. Every value carries a state — unknown,
+known, stale, pending, error — with a look that works in 4-bit grey and in mono.
+
+## MVP scope and the hero app (2026-10-06)
+
+**Hero app:** a home-monitoring panel on a CYD (ESP32-2432S028R), or its 8MB-PSRAM variant.
+
+- At least one real sensor: BME280 (temperature/pressure/humidity), already vendored.
+- A carousel of 3-4 pages with readouts and bars, showing unknown and stale honestly.
+- One drill-down detail page.
+- An alarm modal raised over MQTT, closable by the flow when the condition clears.
+
+**Touch:** architected, minimally built. The CYD has almost no free buttons, so the one touch feature
+built is **tap zones**: tap the left half for `prev`, the right half for `next`. That needs only raw
+`touch_spi` coordinates, no hit-testing or dispatch tables. BOOT (GPIO0) may serve as `home`/`back` once
+booted — to verify.
+
+**Widget set:** not finalised. Working list: static label, bound label, big numeric readout with units,
+bar/meter, status indicator (LED-style), page indicator, modal. Pending is the only value state that
+needs touch editing, so it is designed but not built; error can follow.
+
+**Second display:** architected, not needed by the hero app. On a CYD an I2C OLED would go on the spare
+connector (believed CN1, GPIO22/27 — check against the board definition).
+
+## Widgets are ordinary msg-in nodes (2026-10-06)
+
+Mike's question: why doesn't a widget just take a msg to set its value, like every other node? It does.
+On the canvas a widget is a normal node; `set_value` is only what its generated input handler calls.
+
+The one difference: a widget never draws when its msg arrives. It stores the value and marks its area
+dirty, and one subsystem draws. Widgets share things ordinary nodes don't:
+
+- **One framebuffer and one bus per display.** Independent drawing would interleave writes.
+- **Message rate is not frame rate.** 50 msgs a second must not mean 50 redraws and 50 SPI pushes.
+- **Layout is shared.** A widget doesn't know its rect, font or theme; the compiled tables do.
+- **Stale is a timer, not a message.** One loop dims values that have gone quiet.
+- **Touch, later, needs one owner** for hit-testing and pointer capture.
+
+For MVP, widgets are input-only: no `gui.event` output face is generated. The call stays in the
+subsystem's API so adding touch later doesn't strand deployed boards.
 
 ## "Panel", not "form" — the physics rules out dense forms
 
 - **Touch targets.** XPT2046 resistive with linear min/max calibration gives several mm of error. On a
-  2.8" 320×240 panel that is roughly a 40–50px minimum comfortable target — call it 6–8 usable controls
-  per screen. *Rule of thumb; measure on Mike's actual unit.* A dense scrolling form of labelled fields
-  is not operable.
-- **No keyboard.** An on-screen keyboard at that target size on resistive touch is miserable. Free text
-  entry is out of scope for v1 — which removes the most form-like widget there is.
+  2.8" 320x240 panel that is roughly a 40-50px minimum comfortable target — call it 6-8 usable controls
+  per screen. *Rule of thumb, not researched; measure on Mike's unit alongside the calibration pass
+  `touch-input-briefing.md` already owes.*
+- **No keyboard.** Free text entry is out of scope for v1.
 
-So: a **panel** — a few large controls, several screens, navigation between them. That deletes scroll
-containers, validation display, tab order and text inputs from scope.
+So the thing to build is a **panel**: a few large controls, several pages, navigation between them. No
+scroll containers, validation display, tab order or text inputs.
+
+## Why not JSONForms
+
+JSONForms' value is a renderer registry resolving schema fragments to React/Angular components, after
+which the **browser** does layout, text metrics, scrolling, focus and hit-testing. On a framebuffer none
+of that exists. It also drags in JSON Schema, a *validation* language nobody wants to resolve on-device.
+
+Keep the one good idea: declarative structure as data, with `(structure, values) -> draw calls` as a pure,
+off-device-testable function.
 
 ## Layout — the fixed screen is the whole gift
 
-Flexbox and X Intrinsics both do geometry at runtime because windows resize. **A CYD screen is 320×240
-forever.** So the entire layout algorithm runs in TypeScript in the editor, and the device gets a rect
-table. Flexbox's authoring model at zero flash, zero RAM, zero runtime cost — and the layout engine
-never ships, which is also the answer to "monolithic".
+Flexbox and X Intrinsics do geometry at runtime because windows resize. A display's size is fixed. So the
+layout algorithm runs in TypeScript in the editor and the device gets rect tables: flexbox's authoring
+model at zero flash, RAM or runtime cost.
 
-From Xt, take the part that survived into every modern toolkit: **two-pass measure then arrange**.
-Bottom-up, each widget reports a natural size; top-down, each container assigns rects to children. Skip
-the geometry *negotiation* protocol (`XtGeometryYes/No/Almost`, children requesting resizes at runtime)
-— that exists only because things change at runtime. Without it, layout is a single deterministic pass
-with no convergence question.
-
-The subset worth implementing, probably ~200 lines:
+From Xt, take **two-pass measure then arrange**; skip its runtime geometry negotiation. The subset, probably
+~200 lines of TypeScript:
 
 - `Row` / `Column` containers, nestable
 - `gap`, `padding`
-- per-child sizing: natural, or `grow: n` (weighted share of slack)
+- per-child sizing: natural, or `grow: n`
 - cross-axis alignment: `start | center | end | stretch`
-- main-axis leftover: `start | center | end | space-between`
+- main-axis distribution: `start | center | end | space-between`
 
-No wrap, no shrink, no `order`, no `align-content`. Bonus the web cannot offer: **overflow is a build
-error**, not a visual bug discovered on hardware.
+No wrap, shrink, `order` or `align-content`; each can be added later without changing the device tables.
 
-**Dirty-rect updates fall out free.** A full 320×240 gs4 blit is ~38KB over SPI; repainting one button
-is a few hundred bytes. That gap is most of the difference between a responsive GUI and a sluggish one,
-and a static resolved rect per widget makes partial updates trivial.
+Layout runs **once per display**, with that display's size and font metrics — a widget's natural size
+depends on where it is placed.
 
-## Architecture — structure as document, widgets as nodes
+**Overflow is a build error, not a visual bug**, with full attribution: "widget X's natural width 84px
+exceeds the 60px its column gives it on page Y of display Z."
 
-The earlier draft of this doc recommended pure widgets-as-nodes (Node-RED Dashboard style, everything a
-node, grouped by a config node). The container requirement kills that, for a concrete reason:
+## Two views, one model
 
-**Nested containers are a tree. A flow canvas is a wired graph, and a graph does not naturally express
-an *ordered* tree** — sibling order especially. Containers-as-config-nodes would need an explicit
-`order` property on every widget: miserable to author, easy to break silently.
+Wiring describes how data moves; layout describes where things sit. **One node record, two projections**,
+never two copies kept in sync.
 
-So the structure has to live in a document regardless. Hence the hybrid:
+- The **flow view** shows a widget's data face — a value in (events out, once touch exists).
+- The **GUI view** shows its presentation face — placement in a page tree, sizing, alignment, live preview.
+- The flow file gets a separate **`screens`** section holding the page trees per display, referencing
+  widget nodes by id. Not `layout` — `flow-file.ts` already uses that key for canvas positions.
 
-- **Structure is a document**, compiled in the editor — the container tree, gaps, grow weights, and
-  named **slots** at the leaves. Small, stable, rarely edited.
-- **Widgets stay nodes on the canvas**, each with a `slot` property naming where it lands. Wires carry
-  data in and events out, so the visual-dataflow property that justifies a flow editor survives.
+**Not everything is two-faced:** containers and static labels exist only in the GUI view; bound labels,
+interactive widgets, navigators and modals have both faces.
 
-Essentially `grid-template-areas`: structure in one place, content in another, each edited where it
-makes sense. It also sidesteps sibling ordering entirely — order is positional in the document.
+**Mechanics:**
 
-**What this costs:** the widget→slot relationship is a property, not a wire, so screen composition
-can't be read off the canvas. That is the standard Node-RED Dashboard complaint and it is legitimate.
-It argues for a **live layout preview** on the screen config node reasonably early — not needed to
-ship, but needed before the system is pleasant.
+- **Shared selection** across views.
+- **Deletion** deletes everywhere; removing from a container only unplaces.
+- **Unplaced tray:** a widget not placed on any display is a compile warning.
+- **Exact preview:** the GUI view runs the same layout engine, font metrics and palette as the build,
+  per display, and can show any widget in any value state.
+- **Display switcher** in the GUI view, one preview per display.
+- **Binding to hardware:** each display's screen set names its display node and (optionally) its touch
+  node, by node id. No wires between touch and widgets.
 
-## How touch events reach widgets
+**Placement properties belong to the placement, not the node (2026-10-06).** Size, alignment, variant
+("label + units" on the TFT, "value only" on the OLED) and font size live on the entry in `screens`. Data
+properties (`staleAfter`, units, controlled/uncontrolled) stay on the node.
 
-No wires between touch and widgets, and no runtime routing — **the compiler resolves it**.
+## Multiple displays (2026-10-06)
 
-- A `ui_screen` **config node** represents one screen and owns the layout document.
-- Each widget node references it plus a slot name.
-- `touch_spi` references the same config node. That is the entire binding.
+MVC makes this cheap: values are the model, each display is another view.
 
-Codegen sees the whole graph, resolves layout, and emits a **static dispatch table** (resolved rects
-paired with handlers) plus one dispatcher coroutine. Touch events and widgets never exchange `msg`s at
-runtime; they compile into the same loop.
+- **Each display has its own screen set**: its own pages, active page, navigator and optional touch node.
+- **Values are display-independent.** `set_value('temp', 21.5)` updates every place the widget appears.
+- **One placement per widget for MVP.** To show a value on both displays, wire the msg to two widgets.
+  `screens` references widgets by id, so allowing several placements later is a validation change only.
 
-**Why not broadcast-and-self-filter** (wire touch to every widget, each tests `rect.contains(x, y)`):
+**Device side:** one GUI subsystem — one value store, one render loop — driving a list of **surfaces**.
+Each surface has its own framebuffer and frame format (gs4 TFT, mono OLED), rect tables, dirty areas,
+active page and navigation state, optional touch binding, and redraw rate (I2C is much slower than SPI).
+One loop also serialises redraws if two displays share a bus.
 
-- **Pointer capture.** Press a slider, drag off it — the slider must keep receiving events; same for a
-  release landing outside the button that was pressed. Capture is inherently a single-owner stateful
-  decision and cannot be made independently per widget.
-- **Z-order.** Overlapping widgets both match, no single-winner semantics. (Row/Column nesting makes
-  overlap impossible anyway, which is a further argument for containers over absolute coords.)
-- **Canvas clutter.** N wires carrying no information.
+## Pages and navigation (2026-10-06)
 
-**Runtime state is tiny:** the captured widget, and the active screen index. Multiple screens are
-multiple tables with the dispatcher indexing the active one.
+Small displays mean many pages, so navigation is most of the experience. Generic MicroPython GUI libraries
+(LVGL, Hinch's) give screen load/push/pop and leave navigation design to the app; products that take it
+seriously (smartwatches, Nextion HMIs, 3D-printer LCD menus) put it at the centre.
 
-Keep one escape hatch: give `touch_spi` a raw-coordinate output for anyone bypassing the widget layer.
-Costs nothing, keeps the hardware node honest as a plain event source.
+**The active page is model state owned by the flow.** Navigation is built on that.
 
-## Hinch's frameworks — evaluated, not adopted
+**A navigator node per display** — the flow face of its screen set:
 
-`micropython-touch` (successor to `micro-gui`) is a complete GUI framework, not a driver: 20+ widgets,
-screen-stack navigation, modal windows, event-driven callbacks, stock MicroPython, `framebuf`-subclass
-drivers, and touch support covering XPT2046 **and** CST816S/CST820/FT6206/TSC2007 — both `touch_spi`
-and `touch_i2c` targets including CYDc's CST820. On paper a strong fit.
+- **Input:** commands as msgs — `next`, `prev`, `back`, `home`, or a page name.
+- **Output:** the current page (and modal open/close) whenever it changes.
 
-**Rejected as the runtime layer (Mike, 2026-09-18): too monolithic.** The specific mismatch — it wants
-you to *subclass into* its model, owning the event loop, screen stack, refresh policy and widget class
-hierarchy. Fine for hand-written Python, awkward for a code generator that wants to emit code rather
-than conform to an inheritance tree. And because layout is compile-time here, its geometry management —
-a main reason it exists — is dead weight.
+This gives:
 
-**Still worth taking, without adopting the framework:**
+- **Navigation without touch:** a GPIO button, a timer (kiosk auto-cycle) or an MQTT msg drives it.
+- **The flow knows what's on screen**, e.g. to poll an expensive sensor only while its page is visible.
+- **Linked displays are wiring:** one navigator's output drives another's input.
 
-- **Widget rendering routines.** Drawing a convincing slider thumb or dial is fiddly, debugged work.
-  Read or vendor individual draw routines — same precedent as reading micropython-lib's SSD1306 for its
-  `framebuf` shape without copying its design.
-- **`Writer` / `font_to_py`.** Standalone, not part of the framework, and exactly what the layout engine
-  needs. See the font dependency below.
+**Page structure: a tree, carousel at the top.**
+
+- The top level is a **carousel** — next/prev, optional wrap, page indicator.
+- Any page can have **child pages**; drill down, return with `back`.
+- **Goto by name** from anywhere.
+
+A flat carousel is a tree one level deep, so MVP can ship flat without a format change.
+
+**Designed in, built later:** idle return to home after N seconds; transitions (none for MVP — a page
+change is a full repaint); tappable back buttons and tab bars (act on the navigator directly, no wires);
+swipe (needs touch-move).
+
+**Page chrome via a per-display page template** — a header/content/footer container every page fills,
+carrying title and page dots. Possibly the real form of the original "templating" idea.
+
+**Rendering:** only the active page draws. Off-page widgets still store values and run stale timers, so a
+page is correct the moment it appears.
+
+## Modals (2026-10-06)
+
+Full-screen, matching the displays. No overlay drawing or dimming: opening or closing a modal is a page
+change. A modal is a page outside the carousel tree, stacked over the current page.
+
+**A modal is a two-faced node:**
+
+- **GUI face:** a page laid out in the GUI view, using the display's page template, with bound widgets.
+- **Input:** a msg opens it; its payload can fill content (the alarm text). `payload: None` closes it, so
+  a self-clearing condition closes its own modal.
+- **Output:** how it closed — `{'topic': '<modal name>', 'payload': 'ack' | 'timeout' | 'closed'}` — so
+  the flow can escalate an unacknowledged alarm.
+
+**Rules:**
+
+- **One visible modal per display;** others **queue**, and the visible one shows "+N more". Nothing is
+  dropped silently.
+- **Priority:** a higher-priority modal takes the screen; the interrupted one returns to the queue. MVP may
+  use one level, but the field exists.
+- While a modal is open, `next`/`prev` do nothing; `back`, a tap or BOOT dismisses. Idle return never
+  dismisses a modal.
+- Optional auto-dismiss timeout, reported as `timeout`.
+- Modals are per display; wire one msg to two modal nodes to alert on both.
+
+## MVC — where the line falls
+
+- **Model** — widget values and their states, the active page, the modal queue. The flow owns them.
+- **View** — rendering from the resolved rect tables, per surface.
+- **Controller** — touch dispatch, hit-testing, pointer capture, tap zones.
+
+Enforce hardest: **interaction state vs. value state.** Pressed, dragging and highlighted never enter the
+flow. Only values cross.
+
+## The device-side GUI subsystem and its two calls
+
+A single dispatcher/render coroutine owns the surfaces, rect tables, value store, navigation state,
+pointer capture and dirty areas. Widget nodes reach it through two calls, one per MVC direction. Neither
+takes a display argument.
+
+**`set_value` — model to view.** Stores and timestamps the payload, marks the widget's areas dirty on every
+surface where it is placed and visible. Never draws.
+
+**`event` — controller to model.** Wakes whoever waits on that widget when a touch produces a new value.
+Not generated for MVP.
+
+```python
+# Input face: msg in -> set_value (model -> view)
+async def slider_3_input(msg):
+    gui.set_value('slider_3', msg['payload'])        # None means unknown
+
+# Output face: event out (controller -> model) -- post-MVP
+async def slider_3_events():
+    while True:
+        value = await gui.event('slider_3')          # blocks until a user change
+        await emit_slider_3({'topic': 'slider_3', 'payload': value})
+```
+
+Why: rendering is decoupled from message rate; the input face is a sink and the output face an event source
+(`codegenEventSource`), likely no new codegen pattern — still to confirm against `node-definition.ts`; GUI
+code stays out of per-node codegen and is tested once.
+
+## Unknown state
+
+A thermostat panel that boots showing 20°C before hearing from the thermostat is lying. **Unknown is a
+first-class state**; flow-fed widgets never start from a default value.
+
+| State | Meaning | How it is entered |
+|---|---|---|
+| **unknown** | never reported, or explicitly cleared | boot, redeploy, `payload` of `None` |
+| **known** | a reported value | a real `payload` arrives |
+| **stale** | known, but older than the widget's `staleAfter` | render-loop timer |
+| **pending** | user asked for a value, awaiting confirmation | user edit on a flow-controlled widget |
+| **error** | the source reported a failure | a message flagging an error (shape open) |
+
+MVP builds unknown, known and stale. Every boot and redeploy starts flow-fed values at unknown.
+
+**Visual language** — must read in gs4, gs2 and mono, so shape and pattern, not tone alone:
+
+- **Unknown** — no value: `--` for a number, a track with no thumb, a centred toggle, a gauge with no
+  needle, a dashed outline.
+- **Stale** — last value dimmed in gs4/gs2; in mono, a dotted underline or similar pattern.
+- **Pending** — requested value drawn hollow, solid when confirmed.
+- **Error** — value area hatched or crossed, short text if there is room.
+
+**Messages:** `payload: None` sets unknown; any other payload sets known; stale is derived on the device;
+error shape open (one option: `{'payload': None, 'status': 'error'}`).
+
+**Input from unknown** (post-MVP): an unknown two-state control offers both states; an unknown slider takes
+wherever the user drags. Not decided.
+
+## Controlled and uncontrolled widgets
+
+Post-MVP (needs touch editing). Recommendation: **the wiring decides.**
+
+- **Input unwired → uncontrolled.** The widget is the source of truth, may have an initial value, never
+  unknown.
+- **Input wired → flow-controlled.** Starts unknown. A user edit shows **pending** until a `set_value`
+  arrives; a differing echo snaps to the flow's value; no echo within a timeout reverts and marks the edit
+  unconfirmed.
+
+Also borrow Node-RED Dashboard's pass-through option and emit-while-dragging vs. on-release.
+
+## Touch dispatch
+
+MVP: **tap zones only** (left/right halves → `prev`/`next` on that display's navigator), from raw
+`touch_spi` coordinates.
+
+Later: codegen emits a **static dispatch table** per surface and page (rects paired with widget ids); the
+subsystem handles pointer capture. Not broadcast-and-test, because of capture, z-order and canvas clutter.
+`touch_spi` keeps a raw-coordinate output for anyone bypassing the GUI.
+
+## Message shapes
+
+- **Widget events:** `topic` = widget name, `payload` = new value (following `ebutton`).
+- **Navigator out:** `topic` = navigator name, `payload` = current page name (modal open/close shape to
+  settle in implementation).
+- **Modal out:** `topic` = modal name, `payload` = close reason.
+- **Unknown commands or close reasons** produce a clear `NODE_ERROR`, never silent ignore.
+- Raw `touch_spi` coordinates: `{x, y}` in `payload` is the obvious candidate.
+
+## Memory and the Pico (2026-10-06)
+
+Two separate budgets; lazy loading helps only RAM.
+
+**Flash — what gets pushed.** `deploy_runtime.py`/`runtime_manifest.py` push every `VENDOR_FILES` entry to
+every board on every bootstrap (`outstanding-items.md`, P4 item, 2026-09-17). Adding a GUI framework,
+widget routines and fonts would cost every Pico flash even without a display. **The selective vendor push
+(only what the flow uses, from the compiler's node list) is a prerequisite for GUI work.**
+
+**RAM — what loads at runtime.**
+
+- Flows already compile to `.mpy` in the browser. Check whether runtime and vendored files also ship as
+  `.mpy`; if not, that is the cheapest RAM win.
+- **One module per widget type, imported only if the flow uses it** — imports decided at compile time.
+- **Per-page lazy loading: possible, not MVP.** MicroPython frees an unloaded module only when nothing
+  references it, fragmentation is real, and each page change would pause for a flash import. Keep it
+  possible: draw routines are plain functions behind a lookup table. A load failure shows an error page.
+- **Fonts are the item to watch.** Font data imported from `.mpy` lives in RAM. Mitigations, cheapest
+  first: subsets (digits-only for big readouts), few sizes per display, glyphs read from a file on demand.
+
+**Enforcement:** board definitions carry a memory budget; the compiler estimates a flow's GUI RAM
+(framebuffers, fonts, widgets) and warns or blocks with attribution; the board reports free heap after
+deploy so estimates can be checked.
+
+**Rough numbers, not measured:** Pico W free heap with networking up is perhaps 150-170KB. A 320x240 gs4
+framebuffer is 38.4KB; 128x64 mono is 1KB. CYD with PSRAM removes RAM as a constraint (even RGB565,
+~150KB, fits).
+
+**Keeping the hero-app-on-Pico option open — banded rendering.** Draw the screen in strips (320x40 gs4 is
+~6.4KB): draw every widget intersecting the strip, push it, move on. Uses the same display path partial
+redraws need. Only possible if widgets draw through the surface API with a clip area and offset, never
+assuming a full framebuffer.
+
+## Pure Python vs. C (2026-10-06)
+
+The 2026-09-18 rejection of LVGL-style options implied "pure Python, stock firmware". Examined explicitly.
+Four levels, not two:
+
+1. **`framebuf` in stock firmware.** `fill_rect`, `line`, `blit`, `text`, `ellipse` are C on every port.
+   A "pure-Python" GUI on it does its pixel-heavy work in C.
+2. **Viper / native decorators.** Python compiled to machine code by our own mpy-cross. Already used
+   (`display_spi`'s gs4/gs2/mono conversion; `native-arch.ts` picks `-march` per chip). No firmware change.
+3. **Dynamic native modules** (C compiled to `.mpy`). No custom firmware, but a build per chip × `.mpy`
+   sub-version (native code must match exactly — 6.3 since v1.23), restricted C (no static data, only
+   `mp_fun_table` firmware calls, float pain on armv6m), and per-chip C toolchains in our release pipeline.
+4. **Custom firmware** (LVGL, C user modules). Our own firmware per board; breaks the "flash stock
+   MicroPython, then connect" install route and the "people bring any MicroPython board" stance; large
+   flash footprint on a 2MB Pico. lvgl_micropython has no prebuilt binaries.
+
+For a dashboard redrawing a few times a second, levels 1-2 should suffice: the hot paths are pixel-format
+conversion (already viper) and glyph drawing (C `framebuf.blit`).
+
+**Decision (Mike, 2026-10-06):**
+
+- **Default:** Python on stock `framebuf`, viper for hot loops, stock firmware.
+- **Viper fallback:** each viper function has a plain-bytecode twin; the compiler picks, and says so when
+  it falls back (viper emitter missing on a port, or unverified `-march` for an unknown chip).
+- **Escape hatch:** hot paths (blit/convert, glyph draw, fill) sit behind a small accelerator interface,
+  so a per-chip dynamic native module can replace one later without touching widgets or firmware.
+- **Custom firmware rejected for MVP** on install-route and board-coverage cost, not performance. Revisit
+  only for a measured bottleneck levels 2-3 can't fix.
+
+## Existing packages (2026-10-06)
+
+| Package | What it is | Fit |
+|---|---|---|
+| **Hinch's nano-gui** (MIT) | Display-only GUI: Label, Meter, LED, Dial, Scale, Textbox, graphs. No event loop: `value()` writes the framebuffer, `refresh()` pushes. ILI9341/ST7789/SSD1306, Pico supported, 4-bit palette drivers. A CYD setup exists. | **Lead candidate for the drawing layer.** The passive sibling of micro-gui, so the "too monolithic" objection mostly doesn't apply. Matches MVP: flow-driven, deferred refresh. |
+| `font_to_py` / `Writer` | Font converter and renderer | Take, as planned. |
+| lvgl_micropython | Full LVGL binding, many drivers | Custom firmware, no prebuilt binaries, runtime layout and event loop. Not MVP. |
+| mpdisplay / pydisplay | Drivers + primitives, "not a GUI library", alpha | Not a dependency; borrow its idea of draw calls returning the changed area. |
+
+Open nano-gui questions, for the spike (`nano-gui-spike-briefing.md`): does it accept positions from our
+layout compiler cleanly; RAM and redraw speed on a CYD; can its widgets draw unknown/stale; does it fit our
+`display_spi` frame formats and drivers or bring its own; does it allow clip/offset drawing (banding).
+
+## Things to lock in now (2026-10-06)
+
+These would strand deployed boards if wrong; everything else can grow later.
+
+1. Rect and dispatch tables are per display, even for one display.
+2. The value store is keyed by widget id, not placement.
+3. Active page and navigation state (page stack + modal queue with priority) are per display.
+4. `set_value` and `event` take no display argument; `event` stays in the API though unused in MVP.
+5. Widgets draw through each surface's frame format and palette, with clip area and offset — never
+   assuming a full framebuffer.
+6. Pages are identified by stable names, not indices, in tables and msgs.
+7. The `screens` format is tree-shaped from day one.
+8. Navigator commands and modal close reasons are open vocabularies; unknown values give `NODE_ERROR`.
+9. Widget draw routines and font glyphs are reached through lookup functions, not direct data access.
+10. Board definitions carry a memory budget field.
+
+## The `display_spi` contract question
+
+`display_spi`/`display_i2c` take one full frame over one `bytes` port. Dirty areas are the main performance
+lever: a full 320x240 gs4 push is ~38KB; one widget is a few hundred bytes. **The display nodes need a
+partial-push path** — a second port, a msg carrying a rect with bytes, or a direct call from the GUI
+subsystem. Banded rendering needs the same path.
+
+**MVP may defer it (2026-10-06):** without touch, updates are infrequent, and a rate-limited full-frame
+push may be acceptable — rough reasoning, to measure in the spike. The subsystem tracks dirty areas
+regardless.
+
+Widget rendering goes through the `frameFormat`/`palette` abstraction, never assuming RGB565.
 
 ## Layering
 
-Three tiers; the middle must never import `machine`:
+1. **Hardware** — `touch_spi`/`touch_i2c` (event sources), `display_spi`/`display_i2c` (framebuffer
+   sinks). Unchanged apart from partial pushes.
+2. **GUI subsystem** — surfaces, value store and states, navigation and modals, dispatch, rendering, and
+   the accelerator interface. Never imports `machine` directly.
+3. **Adapter nodes** — generated, thin: widgets (`set_value` in), navigators, modals.
+4. **Editor** — GUI view, `screens` section, layout engine per display; compiles the tables.
 
-1. **Hardware** — `touch_spi`/`touch_i2c` (dumb event sources, raw/calibrated coordinates),
-   `display_spi`/`display_i2c` (pure framebuffer sinks). Unchanged from existing scoping.
-2. **UI runtime** — the generated dispatcher: hit-testing, capture, widget state, render. Hit-testing
-   does **not** belong in the touch node.
-3. **Layout + widget definitions** — editor-side TypeScript; compiles to the rect and dispatch tables.
-
-Payoff: tiers 2 and 3 test in vitest/pymock on synthetic `(x, y, down)` with no SPI mocking; only tier 1
-needs the CYD.
-
-**Flagged compiler question:** a widget node is both a sink and a source — msg in updates its bound
-value, touch in emits a change msg out. The four existing codegen patterns (`codegenSink`,
-`codegenEventSource`, `repeatMs`, function) may have no shape for that. Check `node-definition.ts`
-before committing; if not, it's a compiler change, not a node.
+Tiers 2-4 test in `vitest` and pymock on synthetic input, no SPI mocking. Value-state transitions,
+navigation and modal queueing are plain state-machine tests. Only tier 1 needs real hardware.
 
 ## Knock-ons
 
-- **Font metrics are now a blocker, not a footnote.** Intrinsic sizing means a button reports its
-  natural size = text width + padding, so the editor needs *the same metrics the device has* before the
-  layout engine can be implemented at all. Practical answer: one font source, one tool emitting both a
-  `.py` for the device and a metrics JSON for the editor. This gates everything else — settle it first.
-- **Retargeting is the real prize.** Absolute coordinates weld a flow to one panel; a layout tree
-  recompiles the same flow onto a 128×64 mono OLED. That is what justifies building this rather than
-  typing x/y — and it only works because layout is compile-time.
-- **gs4/gs2/mono constrains widget design.** No colour-coded state; pressed/selected/disabled must read
-  through fill, outline and inversion. Design the vocabulary against 4-bit grey from the start rather
-  than porting a colour design down.
-- **Multi-screen navigation is a state machine** and arrives with the second screen: current-screen,
-  transitions, back. Flow-expressed (a msg activates a screen) or a property of the screen graph? Not
-  decided.
-- **Touch-move becomes mandatory the moment a slider exists.** `touch-input-briefing.md` treats move as
-  possible-v2, but a slider you cannot drag is a bad slider. Decide "sliders in v1?" and "move in v1?"
-  together — move changes the touch node's event cadence entirely.
-- **Runtime-variable content** (a list of N items known only at runtime) has no answer in a
-  compile-time layout. Not a v1 problem; when it comes up, the likely shape is a fixed slot count or a
-  list widget owning its own internal layout. Flagged so it isn't rediscovered.
+- **Font metrics block the layout engine.** One font source, one tool emitting a `.py` for the device and
+  a metrics JSON for the editor. New vendored asset → `third-party-licenses.md` row.
+- **Retargeting:** a page tree recompiles onto a 128x64 OLED; absolute coordinates never could.
+- **gs4/gs2/mono constrains all widget design.** No colour-coded state.
+- **Touch-move is needed as soon as a slider or swipe exists.** Decide together, post-MVP.
+- **Runtime-variable content** (N items known only at runtime): not v1.
+- **Version-bump discipline** if the GUI subsystem ships as pushed files: `_RUNTIME_VERSION`/
+  `EDITOR_TARGET_VERSION`, plus a manifest entry (selective push).
+- **User-guide pages are owed** for the GUI view, navigator, modal and each widget node.
 
-## Next steps, in order
+## Phasing (revised 2026-10-06)
 
-1. **Settle the font/metrics pipeline.** It gates the layout engine.
-2. **Build the layout engine in TypeScript** — measure/arrange, the subset above, vitest-tested against
-   expected rect tables. No device involvement at all.
-3. **Define the layout document schema** and the slot-binding property on widget nodes.
-4. **One widget end to end** (a button), through codegen to a real CYD, before building a widget set.
+0. **nano-gui spike, on a branch** (`nano-gui-spike-briefing.md`). Decides vendor-whole, vendor-parts or
+   write-our-own; informs everything below.
+1. **Selective vendor push** — prerequisite for the Pico constraint.
+2. **Font/metrics pipeline.**
+3. **Layout engine in TypeScript**, per display, `vitest`-tested against expected rect tables.
+4. **GUI subsystem runtime** — surfaces, value states (unknown/known/stale), navigation, modal queue,
+   tested in pymock.
+5. **Widget set for the hero app** + navigator + modal nodes; tap-zone navigation.
+6. **GUI view v1:** outline tree per display plus live preview showing value states.
+7. **Hero app end to end on a CYD** with a BME280 and an MQTT alarm.
+8. **Pico + OLED check** against the memory budget.
+9. Post-MVP: partial pushes/banding if measured necessary, touch dispatch and interactive widgets,
+   pending/controlled widgets, direct manipulation in the preview.
 
-Open, not decided: multi-screen navigation model; sliders/move in v1; widget set scope.
+## Open questions
+
+- v1 widget set, finalised.
+- GUI view scope for MVP (outline tree + preview, or simpler).
+- Font pipeline: which font, sizes, subsets.
+- nano-gui: adopt whole, adopt parts, or own (spike).
+- Whether MVP needs partial pushes at all (measure).
+- Navigator output shape for modal open/close.
+- Post-MVP: controlled vs. uncontrolled by wiring or property; error-state shape; input from unknown;
+  pending timeout and `staleAfter` defaults; transitions and back behaviour details.
 
 Sources: [peterhinch/micropython-touch](https://github.com/peterhinch/micropython-touch),
-[peterhinch/micropython-micro-gui](https://github.com/peterhinch/micropython-micro-gui).
+[peterhinch/micropython-micro-gui](https://github.com/peterhinch/micropython-micro-gui),
+[peterhinch/micropython-nano-gui](https://github.com/peterhinch/micropython-nano-gui),
+[de-dh CYD LVGL/nano-gui setup](https://github.com/de-dh/ESP32-Cheap-Yellow-Display-Micropython-LVGL/),
+[kdschlosser/lvgl_micropython](https://github.com/kdschlosser/lvgl_micropython),
+[tdhoward/mpdisplay](https://github.com/tdhoward/mpdisplay),
+[MicroPython natmod docs](https://docs.micropython.org/en/latest/develop/natmod.html),
+[MicroPython .mpy compatibility](https://docs.micropython.org/en/latest/reference/mpyfiles.html).

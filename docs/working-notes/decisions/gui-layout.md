@@ -28,6 +28,7 @@ measure/arrange without its runtime geometry-negotiation protocol; layout overfl
 with full attribution rather than a visual bug found on hardware. Recommended -- **not decided** -- shape
 is a hybrid: screen structure as a compiled tree owned by a `ui_screen` config node, widgets as canvas
 nodes bound into named slots in that tree. ([detail](../gui-layout-widget-system-scoping.md))
+*(Note, 2026-10-06: the named-slot shape was superseded by the 2026-09-22 entry below.)*
 
 **2026-09-22 -- the GUI gets its own editor view; GUI nodes are two-faced; MVC is the guiding pattern.**
 Mike's direction: GUI layout and event management are orthogonal to the flow paradigm, so they get a
@@ -46,8 +47,38 @@ that rather than rely on default initial values. Flow-fed widgets start unknown 
 The recommended wider state set (unknown / known / stale / pending / error), its mono-safe visual
 treatments, and `payload: None` as the unknown signal are recommendations, not decisions.
 ([detail](../gui-layout-widget-system-scoping.md))
-- 2026-09-25 (Mike): the device console gets a **Verbose** switch. Routine system reports (NET_INFO/NET_LISTENING/
-  session lines, listener boot lines, the board's NODE_STATUS prints, and the [HELLO]/[NODE_STATUS]/[DEPLOY_ACK]/
-  [BOARD_SETTINGS_RESULT] JSON echoes) are hidden unless it's on; flow output, warnings, errors and the editor's own
-  notes always show. Editor-side filter (`console-filter.ts`), no runtime change; hidden rows are kept, the choice is
-  remembered per browser.
+
+**2026-10-06 -- MVP GUI scope: a minimal widget set for one hero app; touch architected, barely built.**
+Mike's call. The hero app is a home-monitoring panel on a CYD (or its 8MB-PSRAM variant): a BME280 sensor, a
+carousel of 3-4 pages, one drill-down page, an MQTT-driven alarm modal. Touch is designed in, but the only touch
+feature built for MVP is tap zones (left/right half -> prev/next page) from raw `touch_spi` coordinates. Widgets
+are ordinary msg-in nodes on the canvas; their generated code hands values to one GUI subsystem, which does all
+drawing (shared framebuffer/bus, message rate decoupled from frame rate). Widget set itself not yet finalised.
+([detail](../gui-layout-widget-system-scoping.md))
+
+**2026-10-06 -- multiple displays are architected from the start.** Mike's requirement (e.g. a 320x240 TFT plus
+a 128x64 OLED). Each display gets its own screen set, pages, navigator and optional touch binding; on the device,
+one GUI subsystem drives a list of surfaces, each with its own framebuffer, frame format, rect tables and redraw
+rate. Widget values are display-independent. Recommended, not decided: one placement per widget for MVP;
+placement-level presentation properties. ([detail](../gui-layout-widget-system-scoping.md))
+
+**2026-10-06 -- page navigation is first-class; modals are full-screen.** Mike's steer: small displays imply many
+pages, and other micro GUI systems under-invest in navigation; modals take the whole screen. Recommended, not
+decided: the active page is flow-owned model state; a navigator node per display (commands in, current page
+out); pages as a tree with a carousel top level; modals as two-faced nodes (msg opens, `payload: None` closes,
+close reason out) with a per-display queue and priority. ([detail](../gui-layout-widget-system-scoping.md))
+
+**2026-10-06 -- Pico constraint.** Mike's call: flows without a GUI must not be penalised on a Pico, and a Pico
+with a small OLED must run a small GUI; the 320x240 hero app on a Pico is desirable, not mandated. Consequences:
+the selective vendor push (`outstanding-items.md`, P4, 2026-09-17) becomes a prerequisite for GUI work; one
+module per widget type, imported only if used; board definitions get a memory budget the compiler checks;
+widgets draw with clip/offset so banded rendering stays possible. ([detail](../gui-layout-widget-system-scoping.md))
+
+**2026-10-06 -- no custom firmware: the GUI is Python on stock `framebuf`, with viper for hot loops.** Mike agreed
+after examining the implicit "pure Python" assumption. Stock `framebuf` primitives are already C; viper is
+already used (`display_spi`, `native-arch.ts`). Each viper function gets a plain-bytecode twin the compiler can
+fall back to, saying so. Hot paths sit behind an accelerator interface so a per-chip dynamic native module can
+replace one later. Custom-firmware routes (LVGL via lvgl_micropython, C user modules) rejected for MVP on
+install-route and board-coverage cost, not performance. Next step: a nano-gui spike on its own branch to decide
+vendor-whole / vendor-parts / write-our-own (`nano-gui-spike-briefing.md`).
+([detail](../gui-layout-widget-system-scoping.md))

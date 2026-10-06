@@ -87,7 +87,10 @@ the layout engine in the editor at compile time and ships nothing to the device.
 `cyd-touch-gui-flash-budget-briefing.md`'s item 3. Then (2026-09-22): the GUI gets its own editor view
 parallel to the flow view, GUI nodes are two-faced (one record, both views), MVC guides the design,
 superseding the named-slot design; unknown is a first-class value state in the GUI's visual language.
-4 entries: `docs/working-notes/decisions/gui-layout.md`.
+Then (2026-10-06): MVP scope is a minimal widget set for a CYD hero app, touch architected but barely built;
+multiple displays architected from the start; page navigation first-class, modals full-screen; Pico constraint
+(no penalty for GUI-less flows, small OLED GUI must work); no custom firmware -- Python on stock `framebuf` plus
+viper, nano-gui spike next. 9 entries: `docs/working-notes/decisions/gui-layout.md`.
 
 ## Session sequencing
 
