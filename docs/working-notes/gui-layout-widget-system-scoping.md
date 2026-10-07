@@ -62,8 +62,66 @@ built is **tap zones**: tap the left half for `prev`, the right half for `next`.
 booted — to verify.
 
 **Widget set:** not finalised. Working list: static label, bound label, big numeric readout with units,
-bar/meter, status indicator (LED-style), page indicator, modal. Pending is the only value state that
-needs touch editing, so it is designed but not built; error can follow.
+bar/meter, **trend (moving histogram)**, status indicator (LED-style), page indicator, modal. Pending is the
+only value state that needs touch editing, so it is designed but not built; error can follow.
+
+**No round dials; trends instead (Mike, 2026-10-07).** A dial spends a lot of screen on what a number says in
+less. A moving histogram shows what a number can't: which way a value is heading.
+
+**History lives in a `journal` node, not in the widget (2026-10-07).** Mike's references, in order:
+
+- His [node-red-contrib-journal](https://flows.nodered.org/node/node-red-contrib-journal) (v0.1.6, read from the
+  npm tarball): a fixed-length FIFO, clocked or message-driven, that outputs the series on each update and,
+  every `max` entries, the average on a second output, so journals cascade into longer windows.
+- **[RRDtool](https://oss.oetiker.ch/rrdtool/) as the model for this kind of display,** and Cacti (and MRTG
+  before it), which built on it. One round-robin database per data source holds several archives at different
+  resolutions; the classic Cacti/MRTG page shows the same quantity as daily, weekly, monthly and yearly graphs
+  one above the other. Each time scale shows something the others hide: minutes show spikes and events, hours
+  the daily cycle, days the weekly pattern and drift. That is the insight to deliver, not the storage trick.
+
+The trend widget is a pure view: it draws one journal. That is the MVC split this doc already
+argues for, and the journal is useful without a display (publish a summary over MQTT, feed a function node).
+Recommendations, not decided:
+
+- **One journal node per time scale, cascaded (Mike's call, 2026-10-07: "more modular").** As in
+  node-red-contrib-journal: each node is one RRDtool archive, and its consolidated output feeds the next node.
+  One sensor → minute journal → hour journal → day journal, each optionally driving its own trend widget.
+  Properties, in RRDtool terms:
+  - **First journal only** is clocked: `step` (e.g. 60 s) sets the x-axis in time; `heartbeat` is how long an
+    input stays valid, so a tick with no input younger than this records unknown (our `staleAfter`).
+  - **Downstream journals** are message-driven: each consolidated msg from upstream is one row.
+  - Every journal: `rows` (ring length) and `steps` (rows consolidated per output msg, e.g. 60 minutes → 1 hour).
+  - `xff` (RRDtool's "xfiles factor"): the fraction of unknown rows a consolidated output may contain and still
+    be known. Above it, the output is a gap. Averages are over known rows only, never treating a gap as zero.
+- **Min and max travel down the cascade.** An hourly average hides a spike the minute view shows, and a stage
+  fed only averages can't recover it. So each journal's output carries the consolidated `min` and `max` as
+  extra msg keys (`payload` stays the average, per the msg convention). A downstream journal takes the min of
+  incoming `min`s and max of incoming `max`es, falling back to `payload` when they're absent (a raw sensor
+  feeding the first stage). Each journal keeps three rings (avg/min/max), so a long-range trend can draw each
+  column as a min–max range with the average marked, as RRDtool/Cacti graphs do. Whether the widget draws
+  ranges in MVP is open; carrying min/max in the msg should be in from the start, since adding it later changes
+  the cascade's msg shape.
+- **Unknown is first-class, as in RRDtool:** gaps are NaN in the ring, drawn as gaps, never as a repeated last
+  value. `payload: None` in records unknown. Archives start empty on boot and redeploy.
+- **Storage:** three `array('f')` rings (avg/min/max) per journal, sized at compile time: 12 bytes per row.
+  Hour + day + week journals (60 + 24 + 7 rows) ≈ 1.1KB. A plain list of floats costs far
+  more on ESP32/RP2, where floats are heap objects.
+- **Trend widget draws one journal.** A Cacti-style page is several trend widgets, one per journal in a cascade,
+  stacked or as carousel pages. The GUI view's "trend" can offer time scales and create the journals, wiring and
+  widgets together.
+- **What crosses the msg is the open question.** Copying a series into a new list on every tick allocates on
+  every tick. Options: a read-only view of the ring plus its head index, or the widget holding a reference to the
+  journal's rings through `set_value` and reading them at draw time. Settle with the device runtime. Needs a
+  `series` port type so wiring a scalar into a trend is a compile error, not a blank widget.
+- **The journal's output** (every `steps` rows: `payload` the average, `min`, `max`, `topic` set) follows the msg
+  convention, so it feeds the next journal, a readout ("today's mean") or MQTT alike.
+- **Later, not MVP:** RRDtool's COUNTER/DERIVE data-source types (rates from an increasing counter, e.g. an
+  energy meter's pulse count); persistence (flash wear, and the board's clock may not be set); timestamps (with
+  a fixed step, order and interval are enough to draw).
+- **Fixed min/max on the widget for MVP.** Autoscale can come later without changing the msg shape.
+- **Redraw the whole trend rect each update** (`w` vlines); `framebuf.scroll()` moves the whole buffer, not a
+  rect.
+- Readout plus trend is the common pairing: wire the sensor to both the readout and the journal.
 
 **Second display:** architected, not needed by the hero app. On a CYD an I2C OLED would go on the spare
 connector (believed CN1, GPIO22/27 — check against the board definition).
@@ -479,6 +537,8 @@ navigation and modal queueing are plain state-machine tests. Only tier 1 needs r
 - nano-gui: adopt whole, adopt parts, or own (spike).
 - Whether MVP needs partial pushes at all (measure).
 - Navigator output shape for modal open/close.
+- How a `journal` series crosses a msg without allocating on every tick; the `series` port type; whether trends draw
+  min–max ranges in MVP; the journal node's name ("journal" vs. something RRD-flavoured).
 - Post-MVP: controlled vs. uncontrolled by wiring or property; error-state shape; input from unknown;
   pending timeout and `staleAfter` defaults; transitions and back behaviour details.
 

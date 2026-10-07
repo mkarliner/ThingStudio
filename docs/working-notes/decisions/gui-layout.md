@@ -82,3 +82,14 @@ replace one later. Custom-firmware routes (LVGL via lvgl_micropython, C user mod
 install-route and board-coverage cost, not performance. Next step: a nano-gui spike on its own branch to decide
 vendor-whole / vendor-parts / write-our-own (`nano-gui-spike-briefing.md`).
 ([detail](../gui-layout-widget-system-scoping.md))
+
+**2026-10-07 -- no round dials; a trend (moving histogram) widget instead.** Mike's steer: dials waste screen
+space and say no more than a number; moving histograms are useful for seeing trends. The trend widget joins the
+MVP working list. Mike pointed at his node-red-contrib-journal, then at RRDtool (and Cacti, built on it) as
+the model for this kind of display: the same quantity shown at several time scales, each giving a different
+insight. **Decided (Mike): one `journal` node per time scale, cascaded** ("more modular"), each one an
+RRDtool-style archive. Recommended, not decided: only the first journal is clocked (step, heartbeat); xff
+decides when a consolidated value becomes a gap; each output carries `min`/`max` alongside the average in
+`payload` so long scales keep spikes visible; trend widgets are pure views of one journal; how a series crosses
+the msg is open.
+([detail](../gui-layout-widget-system-scoping.md))

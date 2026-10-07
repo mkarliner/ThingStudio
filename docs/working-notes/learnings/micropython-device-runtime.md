@@ -227,3 +227,17 @@ loop -- about 60 ms at its default 8x oversampling, during which every other asy
 listener, WiFi transport, other nodes) is stalled. Most community sensor drivers are written for a plain script,
 not an asyncio flow. Check any driver before vendoring it for a blocking wait, and add an async path (see
 `device-runtime/src/vendor/bme280/README.md`, local patch 2) rather than calling the blocking method from a node.
+
+## FrameBuffer subclasses must call `super()`, not the unbound method, 2026-10-07
+
+Found in the nano-gui spike (`nano-gui-spike-briefing.md`, Q4). In a Python subclass of `framebuf.FrameBuffer`,
+an override that calls `framebuf.FrameBuffer.fill_rect(self, ...)` raises
+`TypeError: argument should be a 'FrameBuffer' not a '<subclass>'`. `super().fill_rect(...)` works. Matters for
+any surface wrapper that translates or clips drawing calls (banded rendering does exactly this).
+
+## nano-gui's `DObject` moves widgets that touch the screen edge, 2026-10-07
+
+Also from the nano-gui spike (Q1). `DObject.__init__` clamps with `row + height >= device.height` (same for
+columns), so a widget whose rect ends exactly on the bottom or right edge is silently moved 1px, with only a
+`print` warning. Its borders are drawn 2px outside the rect, and text isn't clipped to the widget. Relevant if
+any nano-gui widget code is used with rects from our layout compiler.
