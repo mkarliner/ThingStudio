@@ -157,7 +157,56 @@ export function decodeMessageBody(typeId: number, body: Uint8Array): Message {
       if (typeof ok !== "boolean") fail(name, `field "ok" must be a bool, got ${typeof ok}`);
       return { type: "BOARD_SETTINGS_RESULT", ok, error: expectOptionalString(obj, "error", name) };
     }
+    case "DEP_PUT":
+      return {
+        type: "DEP_PUT",
+        name: expectString(obj, "name", name),
+        hash: expectString(obj, "hash", name),
+        files: expectFileMap(obj, "files", name),
+      };
+    case "DEP_RESULT": {
+      const ok = requirePresent(obj, "ok", name);
+      if (typeof ok !== "boolean") fail(name, `field "ok" must be a bool, got ${typeof ok}`);
+      return {
+        type: "DEP_RESULT",
+        name: expectString(obj, "name", name),
+        ok,
+        code: expectOptionalString(obj, "code", name),
+        error: expectOptionalString(obj, "error", name),
+        freeFlashBytes: expectOptionalNonNegativeInt(obj, "freeFlashBytes", name),
+      };
+    }
   }
+}
+
+/** {string: string} or absent/null (flow dependencies' HELLO/DEPLOY `dependencies`; mirrors
+ * messages.py's _expect_optional_string_map). */
+function expectOptionalStringMap(obj: Record<string, unknown>, key: string, name: string): Record<string, string> | null {
+  const v = obj[key];
+  if (v === undefined || v === null) return null;
+  if (typeof v !== "object" || Array.isArray(v) || v instanceof Uint8Array) fail(name, `field "${key}" must be a map or absent/null`);
+  const out: Record<string, string> = {};
+  for (const [k, val] of Object.entries(v as Record<string, unknown>)) {
+    if (typeof val !== "string") fail(name, `field "${key}" must map strings to strings`);
+    out[k] = val;
+  }
+  return out;
+}
+
+/** DEP_PUT's `files`: a non-empty {file name: bytes} map (mirrors messages.py's _validate_dep_put). */
+function expectFileMap(obj: Record<string, unknown>, key: string, name: string): Record<string, Uint8Array> {
+  const v = obj[key];
+  if (typeof v !== "object" || v === null || Array.isArray(v) || v instanceof Uint8Array) {
+    fail(name, `field "${key}" must be a non-empty map of file name to bytes`);
+  }
+  const entries = Object.entries(v as Record<string, unknown>);
+  if (entries.length === 0) fail(name, `field "${key}" must be a non-empty map of file name to bytes`);
+  const out: Record<string, Uint8Array> = {};
+  for (const [k, data] of entries) {
+    if (!(data instanceof Uint8Array)) fail(name, `field "${key}" must map file names to byte strings`);
+    out[k] = data;
+  }
+  return out;
 }
 
 // -- per-field validators -----------------------------------------------
@@ -293,6 +342,7 @@ function validateHello(obj: Record<string, unknown>): Omit<HelloMessage, "type">
     authScheme: expectOptionalString(obj, "authScheme", "HELLO"),
     hasWifi: expectOptionalBool(obj, "hasWifi", "HELLO") ?? false,
     networkAddress: expectOptionalString(obj, "networkAddress", "HELLO"),
+    dependencies: expectOptionalStringMap(obj, "dependencies", "HELLO"),
   };
 }
 
@@ -303,6 +353,7 @@ function validateDeploy(obj: Record<string, unknown>): Omit<DeployMessage, "type
     flowName: expectOptionalString(obj, "flowName", "DEPLOY"),
     deployId: expectOptionalString(obj, "deployId", "DEPLOY"),
     wifiProvision: expectOptionalWifiProvision(obj, "wifiProvision", "DEPLOY"),
+    dependencies: expectOptionalStringMap(obj, "dependencies", "DEPLOY"),
   };
 }
 

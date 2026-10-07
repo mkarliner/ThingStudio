@@ -37,7 +37,7 @@ import sys
 import tempfile
 import time
 
-from hil_common import DutLink, F64_PREFIX, WitnessLink, compile_flow  # noqa: E402
+from hil_common import DutLink, F64_PREFIX, WitnessLink, compile_flow, deploy_message  # noqa: E402
 
 
 def check_per_task_boundary(dut, witness, mpy_cross, tmpdir, results):
@@ -81,7 +81,7 @@ def check_per_task_boundary(dut, witness, mpy_cross, tmpdir, results):
     witness.ser.write(b"WATCH_EDGES 3 2000\n")
     witness.ser.flush()
 
-    dut.send_message({"type": "DEPLOY", "bytecode": bytecode, "staticData": b""})
+    dut.send_message(deploy_message(dut, mpy_cross, tmpdir, source, bytecode))
 
     node_error = dut.wait_for_message(lambda m: m["type"] == "NODE_ERROR", timeout_s=5, description="NODE_ERROR from the broken chain")
     ok = node_error["nodeId"] == "99" and node_error["exceptionType"] == "ValueError"
@@ -128,7 +128,7 @@ def check_listener_hardening_regression(dut, mpy_cross, tmpdir, results):
 
     ok_source = "import runtime\nasync def _flow_0():\n    print('HIL_RECOVERY_CHECK_OK')\nruntime.spawn(_flow_0(), '1')\n"
     bytecode = compile_flow(mpy_cross, tmpdir, "flow_recovery", ok_source)
-    dut.send_message({"type": "DEPLOY", "bytecode": bytecode, "staticData": b""})
+    dut.send_message(deploy_message(dut, mpy_cross, tmpdir, ok_source, bytecode))
     ack = dut.wait_for_message(lambda m: m["type"] == "DEPLOY_ACK", timeout_s=8, description="DEPLOY_ACK after a malformed-frame recovery")
     results.append(("listener hardening: recovers from a malformed mid-transfer frame and still deploys", ack is not None, ack))
 
@@ -181,7 +181,7 @@ def check_fault_injection_soak(dut, witness, mpy_cross, tmpdir, results):
 
     ok_source = "import runtime\nasync def _flow_0():\n    print('HIL_SOAK_SURVIVED')\nruntime.spawn(_flow_0(), '1')\n"
     bytecode = compile_flow(mpy_cross, tmpdir, "flow_soak", ok_source)
-    dut.send_message({"type": "DEPLOY", "bytecode": bytecode, "staticData": b""})
+    dut.send_message(deploy_message(dut, mpy_cross, tmpdir, ok_source, bytecode))
     ack = dut.wait_for_message(lambda m: m["type"] == "DEPLOY_ACK", timeout_s=8, description="DEPLOY_ACK after the 50-frame soak")
     results.append(("fault-injection soak: listener still accepts a real DEPLOY after 50 malformed frames", ack is not None, ack))
 

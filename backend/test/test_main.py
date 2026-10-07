@@ -83,8 +83,26 @@ async def test_runtime_sources_serves_the_real_runtime_as_text(tmp_path) -> None
         resp = await client.get("/api/runtime-sources", headers={"Host": "127.0.0.1"})
         assert resp.status == 200
         names = [f["name"] for f in (await resp.json())["files"]]
-    assert "listener.py" in names and "net_transport.py" in names and "mqtt_as.py" in names
+    assert "listener.py" in names and "net_transport.py" in names and "deps.py" in names
     assert "main.py" not in names
+    assert "mqtt_as.py" not in names  # a flow dependency now (2026-10-07), served at /api/dependencies
+
+
+@pytest.mark.asyncio
+async def test_dependencies_serves_the_real_library_list(tmp_path) -> None:
+    from aiohttp.test_utils import TestClient, TestServer
+
+    from thingstudio_backend.app import create_app
+
+    app = create_app(data_dir=tmp_path, static_dir=tmp_path, docs_dir=tmp_path)
+    async with TestClient(TestServer(app)) as client:
+        resp = await client.get("/api/dependencies", headers={"Host": "127.0.0.1"})
+        assert resp.status == 200
+        body = await resp.json()
+    by_name = {d["name"]: d for d in body["dependencies"]}
+    assert by_name["events"]["requires"] == ["delay_ms"]
+    assert by_name["mqtt_as"]["files"][0]["name"] == "mqtt_as.py"
+    assert "class MQTTClient" in by_name["mqtt_as"]["files"][0]["source"]
 
 
 def test_compiled_field_is_checked() -> None:

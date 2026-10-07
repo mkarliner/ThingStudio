@@ -34,32 +34,29 @@ def _write_fake_device_runtime(root: Path) -> Path:
     (device_runtime / "runtime_manifest.py").write_text(
         "CORE_FILES = ['errors.py', 'runtime.py']\n"
         "LISTENER_FILE = 'listener.py'\n"
-        "VENDOR_FILES = [('somelib/somelib.py', 'somelib.py')]\n"
+        "DEPENDENCIES = [{'name': 'somelib', 'files': [('somelib/somelib.py', 'somelib.py')], 'requires': []}]\n"
+        "LEGACY_ROOT_FILES = ['oldlib.py']\n"
     )
     return src
 
 
-def test_build_file_list_reads_core_listener_and_vendor_files_in_order(tmp_path: Path) -> None:
+def test_build_file_list_is_the_runtime_only_no_libraries(tmp_path: Path) -> None:
+    # Flow dependencies (2026-10-07): vendored libraries are installed per flow by Deploy, not here.
     src_dir = _write_fake_device_runtime(tmp_path)
     installer = RuntimeInstaller(runtime_src_dir=src_dir)
 
-    files = installer.build_file_list(include_vendor=True)
+    files = installer.build_file_list()
 
-    assert [name for name, _ in files] == ["errors.py", "runtime.py", "main.py", "somelib.py"]
+    assert [name for name, _ in files] == ["errors.py", "runtime.py", "main.py"]
     by_name = dict(files)
     assert by_name["errors.py"] == b"# errors"
     # LISTENER_FILE's contents land under the "main.py" dest name, not its own source filename.
     assert by_name["main.py"] == b"# listener"
-    assert by_name["somelib.py"] == b"# vendored"
 
 
-def test_build_file_list_can_skip_vendor_files(tmp_path: Path) -> None:
-    src_dir = _write_fake_device_runtime(tmp_path)
-    installer = RuntimeInstaller(runtime_src_dir=src_dir)
-
-    files = installer.build_file_list(include_vendor=False)
-
-    assert [name for name, _ in files] == ["errors.py", "runtime.py", "main.py"]
+def test_legacy_root_files_cover_both_formats(tmp_path: Path) -> None:
+    installer = RuntimeInstaller(runtime_src_dir=_write_fake_device_runtime(tmp_path))
+    assert installer.legacy_root_files() == ["oldlib.py", "oldlib.mpy"]
 
 
 def test_build_file_list_raises_a_clear_error_for_a_missing_file(tmp_path: Path) -> None:
@@ -90,7 +87,9 @@ def test_install_drives_raw_repl_install_runtime_with_the_built_file_list(tmp_pa
     installer.install(sentinel_port)  # type: ignore[arg-type] -- a real serial.Serial in production
 
     assert captured["port"] is sentinel_port
-    assert [name for name, _ in captured["files"]] == ["errors.py", "runtime.py", "main.py", "somelib.py"]
+    assert [name for name, _ in captured["files"]] == ["errors.py", "runtime.py", "main.py"]
+    # Old root copies of vendored libraries are deleted: they would shadow /lib.
+    assert "oldlib.py" in captured["remove"] and "oldlib.mpy" in captured["remove"]  # type: ignore[operator]
 
 
 def test_runtime_installer_reads_the_real_manifest_without_pushing_anything() -> None:
@@ -99,7 +98,7 @@ def test_runtime_installer_reads_the_real_manifest_without_pushing_anything() ->
     needing a board. This is the test that would catch a renamed/removed vendor file the
     manifest wasn't updated for."""
     installer = RuntimeInstaller()  # default path: real device-runtime/src
-    files = installer.build_file_list(include_vendor=True)
+    files = installer.build_file_list()
     names = [name for name, _ in files]
     assert "main.py" in names  # the listener, always present under this dest name
     assert len(files) == len(set(names)), f"duplicate destination filenames: {names}"
@@ -150,7 +149,6 @@ def test_source_files_lists_every_py_with_listener_under_its_own_name(tmp_path: 
         ("errors.py", "# errors"),
         ("runtime.py", "# runtime"),
         ("listener.py", "# listener"),
-        ("somelib.py", "# vendored"),
     ]
 
 

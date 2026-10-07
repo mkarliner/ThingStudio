@@ -84,6 +84,8 @@ class ListenerProcess:
         env["THINGSTUDIO_FLOW_META_PATH"] = os.path.join(tmpdir, "_flow_meta.json")
         env["THINGSTUDIO_BOOT_COUNT_PATH"] = os.path.join(tmpdir, "_boot_count")
         env["THINGSTUDIO_STABLE_AFTER_MS"] = "400"
+        # Flow dependencies (2026-10-07): never the test host's real /lib.
+        env["THINGSTUDIO_LIB_DIR"] = os.path.join(tmpdir, "lib")
         listener_path = os.path.join(SRC_DIR, "listener.py")
         self.proc = subprocess.Popen(
             [MICROPYTHON_BIN, listener_path],
@@ -158,7 +160,8 @@ def test_hello_sent_on_boot():
             line = listener.wait_for(lambda l: l.startswith(F64_PREFIX), description="a HELLO frame")
             msg = _decode_f64_line(line)
             assert msg["type"] == "HELLO"
-            assert msg["runtimeVersion"] == {"major": 6, "minor": 0, "patch": 0}
+            assert msg["runtimeVersion"] == {"major": 7, "minor": 0, "patch": 0}
+            assert msg["dependencies"] == {}, msg["dependencies"]  # fresh board: no flow libraries yet
             assert isinstance(msg["freeRamBytes"], int) and msg["freeRamBytes"] > 0
             assert msg["freeIdfHeapBytes"] is None and msg["largestIdfHeapBlockBytes"] is None  # not an ESP32
             # WiFi transport fields (2026-09-24): fresh board -> generated hostname, no password.
@@ -341,7 +344,7 @@ def test_hello_request_resends_hello_no_side_effects():
             reply_line = listener.wait_for(lambda l: l.startswith(F64_PREFIX), description="HELLO_REQUEST's HELLO reply")
             msg = _decode_f64_line(reply_line)
             assert msg["type"] == "HELLO"
-            assert msg["runtimeVersion"] == {"major": 6, "minor": 0, "patch": 0}
+            assert msg["runtimeVersion"] == {"major": 7, "minor": 0, "patch": 0}
 
             # No side effects: a normal DEPLOY still works fine afterward.
             bytecode = _compile_flow(
@@ -571,6 +574,103 @@ def test_boot_time_resume_survives_corrupt_persisted_flow():
             )
             listener.send_message({"type": "DEPLOY", "bytecode": bytecode, "staticData": b""})
             listener.wait_for(lambda l: l == "STILL_ALIVE_AFTER_CORRUPT_RESUME", description="a normal DEPLOY still works after a corrupt persisted flow")
+        finally:
+            listener.close()
+
+
+def _next_message(listener, start, msg_type, description):
+    """The first msg_type message printed after history index `start`."""
+    def match(line):
+        return line.startswith(F64_PREFIX) and _decode_f64_line(line)["type"] == msg_type
+    deadline = time.time() + 5
+    while True:
+        with listener._lock:
+            snapshot = listener._history[start:]
+        for line in snapshot:
+            if match(line):
+                return _decode_f64_line(line)
+        if time.time() >= deadline:
+            raise AssertionError("timed out waiting for %s; saw:\n%s" % (description, "\n".join(snapshot)))
+        time.sleep(0.05)
+
+
+def _history_len(listener):
+    with listener._lock:
+        return len(listener._history)
+
+
+def test_flow_dependencies_end_to_end():
+    # Flow dependencies (2026-10-07): a flow that imports a library deploys only once the library is
+    # installed; a missing one is a DEPLOY_ERROR naming it with the old flow untouched; a new version
+    # replaces the old one on the next DEPLOY; a flow that no longer needs it removes it.
+    with tempfile.TemporaryDirectory() as tmpdir:
+        dep_v1 = _compile_flow(tmpdir, "ts_dep_demo_v1", "def hello():\n    return 'DEP_V1'\n")
+        dep_v2 = _compile_flow(tmpdir, "ts_dep_demo_v2", "def hello():\n    return 'DEP_V2'\n")
+        flow_plain = _compile_flow(
+            tmpdir, "flow_plain", "import runtime\nasync def _flow_0():\n    print('PLAIN_FLOW_RAN')\nruntime.spawn(_flow_0(), '1')\n"
+        )
+        flow_dep = _compile_flow(
+            tmpdir,
+            "flow_dep",
+            "import runtime\nimport ts_dep_demo\nasync def _flow_0():\n    print('DEP_SAYS ' + ts_dep_demo.hello())\nruntime.spawn(_flow_0(), '1')\n",
+        )
+        lib_dir = os.path.join(tmpdir, "lib")
+        listener = ListenerProcess(tmpdir)
+        try:
+            listener.wait_for(lambda l: l == "LISTENER_READY", description="LISTENER_READY")
+            mark = _history_len(listener)
+            listener.send_message({"type": "DEPLOY", "bytecode": flow_plain, "staticData": b"", "flowName": "plain", "deployId": "d1", "dependencies": {}})
+            _next_message(listener, mark, "DEPLOY_ACK", "DEPLOY_ACK for the plain flow")
+
+            # 1. Library not installed: refused, naming it, and the plain flow is still the current one.
+            mark = _history_len(listener)
+            listener.send_message({"type": "DEPLOY", "bytecode": flow_dep, "staticData": b"", "flowName": "needs dep", "deployId": "d2", "dependencies": {"ts_dep_demo": "h1"}})
+            err = _next_message(listener, mark, "DEPLOY_ERROR", "DEPLOY_ERROR for the missing library")
+            assert err["code"] == "MissingDependency", err
+            assert "ts_dep_demo is not on the board" in err["message"], err["message"]
+            mark = _history_len(listener)
+            listener.send_message({"type": "HELLO_REQUEST"})
+            hello = _next_message(listener, mark, "HELLO", "HELLO after the refused deploy")
+            assert hello["currentFlowName"] == "plain", "a refused deploy must leave the running flow alone: %r" % (hello["currentFlowName"],)
+
+            # 2. Install it, then deploy: the flow imports it from the library folder.
+            mark = _history_len(listener)
+            listener.send_message({"type": "DEP_PUT", "name": "ts_dep_demo", "hash": "h1", "files": {"ts_dep_demo.mpy": dep_v1}})
+            res = _next_message(listener, mark, "DEP_RESULT", "DEP_RESULT for v1")
+            assert res["ok"] is True and res["name"] == "ts_dep_demo", res
+            assert os.path.exists(os.path.join(lib_dir, "ts_dep_demo.mpy"))
+            mark = _history_len(listener)
+            listener.send_message({"type": "DEPLOY", "bytecode": flow_dep, "staticData": b"", "flowName": "needs dep", "deployId": "d3", "dependencies": {"ts_dep_demo": "h1"}})
+            _next_message(listener, mark, "DEPLOY_ACK", "DEPLOY_ACK with the library installed")
+            listener.wait_for(lambda l: l == "DEP_SAYS DEP_V1", description="the flow using library v1")
+
+            # 3. A new version replaces the old one, and the next deploy loads it (not the cached module).
+            mark = _history_len(listener)
+            listener.send_message({"type": "DEP_PUT", "name": "ts_dep_demo", "hash": "h2", "files": {"ts_dep_demo.mpy": dep_v2}})
+            assert _next_message(listener, mark, "DEP_RESULT", "DEP_RESULT for v2")["ok"] is True
+            mark = _history_len(listener)
+            listener.send_message({"type": "DEPLOY", "bytecode": flow_dep, "staticData": b"", "flowName": "needs dep", "deployId": "d4", "dependencies": {"ts_dep_demo": "h2"}})
+            _next_message(listener, mark, "DEPLOY_ACK", "DEPLOY_ACK with library v2")
+            listener.wait_for(lambda l: l == "DEP_SAYS DEP_V2", description="the flow using library v2")
+            mark = _history_len(listener)
+            listener.send_message({"type": "HELLO_REQUEST"})
+            assert _next_message(listener, mark, "HELLO", "HELLO with v2")["dependencies"] == {"ts_dep_demo": "h2"}
+
+            # 4. A flow that no longer needs it: the library is removed after the flow starts.
+            mark = _history_len(listener)
+            listener.send_message({"type": "DEPLOY", "bytecode": flow_plain, "staticData": b"", "flowName": "plain again", "deployId": "d5", "dependencies": {}})
+            _next_message(listener, mark, "DEPLOY_ACK", "DEPLOY_ACK for the plain flow again")
+            assert not os.path.exists(os.path.join(lib_dir, "ts_dep_demo.mpy")), os.listdir(lib_dir)
+            mark = _history_len(listener)
+            listener.send_message({"type": "HELLO_REQUEST"})
+            assert _next_message(listener, mark, "HELLO", "HELLO after cleanup")["dependencies"] == {}
+
+            # 5. A bad library name is refused with an attributed error, and the listener carries on.
+            mark = _history_len(listener)
+            listener.send_message({"type": "DEP_PUT", "name": "evil", "hash": "h", "files": {"../escape.mpy": b"x"}})
+            res = _next_message(listener, mark, "DEP_RESULT", "DEP_RESULT for a bad file name")
+            assert res["ok"] is False and res["code"] == "BadName", res
+            assert not os.path.exists(os.path.join(tmpdir, "escape.mpy"))
         finally:
             listener.close()
 
@@ -956,6 +1056,7 @@ TESTS = [
     test_no_network_listener_without_password,
     test_network_session_end_to_end,
     test_network_session_auth_timeout_and_garbage,
+    test_flow_dependencies_end_to_end,
 ]
 
 

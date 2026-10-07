@@ -211,3 +211,10 @@ assets built, dev checkout wins over `_assets/`; bundles on native runners, draf
 `install.sh` as a release asset; macOS signed + notarized with an Info.plist-carrying
 executable; Windows `irm | iex` one-liner, per-user, no admin; winget/scoop post-MVP (2026-09-30). 14 entries:
 `docs/working-notes/decisions/packaging.md`.
+
+## Flow dependencies
+
+A board gets only the libraries its flow uses, installed by Deploy through the listener; unused ones removed
+after a successful deploy (2026-10-07). Replaces "selective vendor push". Built the same day, runtime 7.0.0,
+off-device tests only. 2 entries:
+`docs/working-notes/decisions/flow-dependencies.md`.

@@ -148,6 +148,7 @@ import { choiceForConnectedBoard, resolveTarget, type TargetResolution } from ".
 import { renderDefinitionPage, renderUnknownBoardPage } from "../definitions/definition-page.js";
 import type { BoardSettingsResultMessage, HelloMessage, Message, NodeStatusMessage, ProtocolVersion } from "../protocol/messages.js";
 import { checkRuntimeBuild, decideDeploy } from "../protocol/version.js";
+import { dependencyHash, findImportedModules, librariesToSend, resolveDependencies, MAX_DEPENDENCY_BYTES, type DependencyInfo } from "../compiler/flow-dependencies.js";
 import { ClassicPreset } from "rete";
 import { createThingstudioEditor, type ThingstudioEditor } from "./rete/editor-setup.js";
 import { NODE_FACTORIES, CustomNode, FunctionNode, portSocket, functionOutputKey, functionNodeHeight, type AnyThingstudioNode } from "./rete/nodes.js";
@@ -1197,7 +1198,7 @@ function waitForMessage(match: (m: Message) => boolean, timeoutMs: number): Prom
 // bump-discipline rule), so this is the level that actually stops an
 // unsafe DEPLOY rather than letting it crash on the device.
 // 2.0.0 (2026-09-23): EXEC, STOP_TO_PROMPT, safe mode. Must match listener.py's _RUNTIME_VERSION.
-const EDITOR_TARGET_VERSION: ProtocolVersion = { major: 6, minor: 0, patch: 0 }; // 6.0.0 2026-09-26: bme280 driver on the board; 5.1.0 2026-09-25: startup reason (getattr, so 5.0.0 still runs it), ESP-IDF heap fields; 5.0.0 2026-09-25: mqtt_as active(True) guard; 4.0.0 2026-09-25: mqtt_as guard, ESP32 MQTT joins WiFi first; 3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS
+const EDITOR_TARGET_VERSION: ProtocolVersion = { major: 7, minor: 0, patch: 0 }; // 7.0.0 2026-10-07: flow dependencies (DEP_PUT, DEPLOY.dependencies; libraries in /lib, installed per flow); 6.0.0 2026-09-26: bme280 driver on the board; 5.1.0 2026-09-25: startup reason (getattr, so 5.0.0 still runs it), ESP-IDF heap fields; 5.0.0 2026-09-25: mqtt_as active(True) guard; 4.0.0 2026-09-25: mqtt_as guard, ESP32 MQTT joins WiFi first; 3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS
 
 // This editor's own device-runtime/src git SHA, injected at build/dev-
 // server-start time by vite.config.ts's `define` (see that file,
@@ -1293,6 +1294,7 @@ const transportEvents: TransportEvents = {
         logLine("[flow status] no flow currently running on this board", "");
       }
       lastHello = message;
+      boardDependencies = message.dependencies ? { ...message.dependencies } : null;
       logLine(formatMemoryLine(message), "");
       logWifiStatus(message);
     }
@@ -1328,6 +1330,7 @@ const transportEvents: TransportEvents = {
   onDisconnect(reason) {
     logLine(`[disconnected] ${reason ? String(reason) : "(clean)"}`, "");
     lastHello = null;
+    boardDependencies = null;
     lastHelloVersion = null;
     lastHelloChipType = null;
     updateActiveTarget();
@@ -2452,6 +2455,114 @@ el("btnDisconnect").addEventListener("click", async () => {
   setConnectedUi(false);
 });
 
+// --- Flow dependencies (2026-10-07, docs/working-notes/flow-dependencies-scoping.md) ----------------
+// A board holds only the libraries its flow imports, in /lib. Before DEPLOY, the editor works out which
+// libraries the compiled flow imports (flow-dependencies.ts), compiles them to .mpy, sends the ones the
+// board doesn't already have (DEP_PUT, one per library), then names the full set in DEPLOY so the board
+// can refuse cleanly if one is missing and remove the ones no longer used.
+
+// What the connected board holds in /lib, {name: hash}: from HELLO, then kept up to date by this
+// editor's own DEP_PUTs and deploys. null = unknown (no HELLO yet, or a refused deploy said it was
+// wrong), in which case every needed library is sent.
+let boardDependencies: Record<string, string> | null = null;
+
+/** Installs the libraries `source` imports on the board. Returns {name: hash} for DEPLOY, or null
+ * after logging why the deploy can't go ahead. */
+async function installFlowDependencies(source: string): Promise<Record<string, string> | null> {
+  const modules = findImportedModules(source);
+  let list: DependencyInfo[];
+  try {
+    const res = await fetch(`${backendHttpBaseUrl(currentBackendWsUrl())}/api/dependencies`, { cache: "no-store" });
+    const body = (await res.json()) as { dependencies?: DependencyInfo[]; error?: string };
+    if (!res.ok || !body.dependencies) throw new Error(body.error ?? `backend answered ${res.status}`);
+    list = body.dependencies;
+  } catch (err) {
+    logLine(
+      `[deploy blocked] couldn't get the library list from the backend (${err instanceof Error ? err.message : String(err)}), ` +
+        "so this editor can't tell which libraries the flow needs. Check the backend is running, then deploy again.",
+      "err",
+    );
+    return null;
+  }
+
+  let needed: DependencyInfo[];
+  try {
+    needed = resolveDependencies(modules, list);
+  } catch (err) {
+    logLine(`[deploy blocked] ${err instanceof Error ? err.message : String(err)}`, "err");
+    return null;
+  }
+  if (needed.length === 0) {
+    logLine("[libraries] none needed", "");
+    return {};
+  }
+
+  // Compile each library to bytecode (no -march: vendored libraries have no native code).
+  const compiled = new Map<string, { files: Record<string, Uint8Array>; hash: string; bytes: number }>();
+  for (const dep of needed) {
+    const files: Record<string, Uint8Array> = {};
+    let bytes = 0;
+    for (const f of dep.files) {
+      let mpy: Uint8Array;
+      try {
+        mpy = compileToMpy(f.source, null);
+      } catch (err) {
+        logLine(`[deploy blocked] library ${dep.name}: ${f.name} didn't compile (${err instanceof Error ? err.message : String(err)})`, "err");
+        return null;
+      }
+      files[f.name.replace(/\.py$/, ".mpy")] = mpy;
+      bytes += mpy.length;
+    }
+    if (bytes > MAX_DEPENDENCY_BYTES) {
+      logLine(`[deploy blocked] library ${dep.name} is ${bytes} bytes compiled, more than one message can carry (${MAX_DEPENDENCY_BYTES})`, "err");
+      return null;
+    }
+    compiled.set(dep.name, { files, hash: await dependencyHash(files), bytes });
+  }
+  const required: Record<string, string> = {};
+  for (const [name, c] of compiled) required[name] = c.hash;
+
+  // Without a known inventory, ask once: a board that's been running a while sent its HELLO long ago.
+  if (boardDependencies === null && lastHello === null) {
+    try {
+      const helloP = waitForMessage((m) => m.type === "HELLO", 3000);
+      await transport.send({ type: "HELLO_REQUEST" });
+      await helloP; // the HELLO handler sets boardDependencies
+    } catch {
+      // No answer: send everything below.
+    }
+  }
+
+  const toSend = librariesToSend(required, boardDependencies);
+  const already = Object.keys(required).filter((n) => !toSend.includes(n));
+  logLine(
+    `[libraries] this flow uses ${Object.keys(required).sort().join(", ")}` +
+      (already.length > 0 ? ` -- already on the board: ${already.sort().join(", ")}` : ""),
+    "",
+  );
+  for (const name of toSend) {
+    const c = compiled.get(name)!;
+    logLine(`[libraries] sending ${name} (${Math.max(1, Math.round(c.bytes / 1024))} KB)`, "");
+    const resultP = waitForMessage((m) => m.type === "DEP_RESULT" && m.name === name, DEPLOY_TIMEOUT_MS);
+    await transport.send({ type: "DEP_PUT", name, hash: c.hash, files: c.files });
+    let result: Message;
+    try {
+      result = await resultP;
+    } catch {
+      logLine(`[deploy failed] the board didn't confirm library ${name} within ${DEPLOY_TIMEOUT_MS / 1000}s. The flow wasn't changed.`, "err");
+      boardDependencies = null;
+      return null;
+    }
+    if (result.type === "DEP_RESULT" && !result.ok) {
+      logLine(`[deploy failed] couldn't install library ${name} on the board: ${result.error ?? result.code ?? "unknown error"}. The flow wasn't changed.`, "err");
+      boardDependencies = null;
+      return null;
+    }
+    if (boardDependencies !== null) boardDependencies[name] = c.hash;
+  }
+  return required;
+}
+
 const DEPLOY_TIMEOUT_MS = 30000; // comfortably exceeds listener.py's own READ_TIMEOUT_S=8 across a few internal phases
 
 el("btnDeploy").addEventListener("click", async () => {
@@ -2531,6 +2642,11 @@ el("btnDeploy").addEventListener("click", async () => {
     }
     logLine(`[compiled -- ${mpyBytes.length} bytes of bytecode]`, "");
 
+    // Libraries the flow imports go onto the board first (flow dependencies, 2026-10-07). A failure
+    // here is logged and leaves the board's current flow untouched.
+    const dependencies = await installFlowDependencies(preview.source);
+    if (dependencies === null) return;
+
     // Flow identity (2026-09-05, "flow identity" -- decisions.md): a
     // fresh id every single Deploy click, deliberately not reused even
     // for a redeploy of the identical unchanged flow -- this identifies
@@ -2550,12 +2666,21 @@ el("btnDeploy").addEventListener("click", async () => {
       flowName,
       deployId,
       wifiProvision: lastWifiProvision,
+      dependencies,
     });
     try {
       const result = await ackP;
       if (result.type === "DEPLOY_ERROR") {
         logLine(`[deploy failed] ${result.code}: ${result.message}`, "err");
+        if (result.code === "MissingDependency") {
+          // This editor's idea of the board's libraries was wrong (changed by another editor, or a
+          // failed write). Forget it, so the next Deploy sends every library the flow needs.
+          boardDependencies = null;
+          logLine("[deploy failed] the flow wasn't changed. Deploy again to send the missing libraries.", "err");
+        }
       } else {
+        // The board removes libraries the new flow doesn't use once it's running.
+        boardDependencies = { ...dependencies };
         logLine("[deploy OK -- flow is running on the device]", "ok");
         if (result.type === "DEPLOY_ACK") logLine(formatMemoryLine(result), "");
         // Only the real success path marks the button clean (Mike's ask,

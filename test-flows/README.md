@@ -66,9 +66,11 @@ pip install mpremote  # not yet a tracked project dependency -- see docs/third-p
 python3 test-flows/deploy_runtime.py --port /dev/tty.usbmodemXXXX
 ```
 
-Pushes `errors.py`, `cbor.py`, `framing.py`, `messages.py`, `protocol.py`,
-`runtime.py` as-is, `listener.py` as `main.py`, and (by default --
-`--no-vendor` to skip) `threadsafe_event.py` and `mqtt_as.py`. Reset the
+Pushes `runtime_manifest.py`'s `CORE_FILES` as-is and `listener.py` as
+`main.py`. Since 2026-10-07 (runtime 7.0.0, flow dependencies) it pushes no
+vendored libraries: Deploy (the editor, or `deploy_flow.py` below) installs
+the ones a flow imports into the board's `/lib`. It deletes the root copies
+older runtimes left behind, which would shadow `/lib`. Reset the
 board afterward and watch its first boot with a **passive** serial
 connection (`mpremote connect <port>` with no further subcommand, or any
 monitor that doesn't send Ctrl-C on open) -- `mpremote repl`/Thonny's Shell
@@ -117,15 +119,10 @@ wrapped. Not run on real hardware -- that's this experiment.
 
 **Two real prerequisites before deploying this, not polish:**
 
-1. **`threadsafe_event.py` has to already be on the device's filesystem.**
-   `device-runtime/src/vendor/threadsafe_event/README.md`'s own "Deploy
-   note" flags this: nothing in the compile/deploy pipeline pushes
-   `vendor/` files alongside a flow's bytecode yet, and this flow's
-   generated code does `from threadsafe_event import ThreadSafeEvent`,
-   which will fail with `ImportError` on-device if that file isn't there
-   already. `deploy_runtime.py` (above) now handles this as part of the
-   one-time board bootstrap -- no longer a separate manual step, as long
-   as it was run without `--no-vendor`.
+1. **`threadsafe_event.py` has to be on the device.** Since 2026-10-07
+   (flow dependencies) Deploy installs it into `/lib` because this flow's
+   generated code does `from threadsafe_event import ThreadSafeEvent`;
+   `deploy_flow.py` does the same. No manual step.
 2. **GPIO4 needs an external pull, or a button module with one built in.**
    `interrupt.ts`'s codegen is `machine.Pin(pin, machine.Pin.IN)` with no
    pull argument at all (matches `gpio_in`'s old scope, which also never

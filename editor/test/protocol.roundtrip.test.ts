@@ -33,6 +33,7 @@ const SAMPLE_MESSAGES: Message[] = [
     authScheme: null,
     hasWifi: false,
     networkAddress: null,
+    dependencies: null,
   },
   {
     // Same message type, second variant: a board that DOES have a runtime-build
@@ -56,12 +57,17 @@ const SAMPLE_MESSAGES: Message[] = [
     authScheme: "hmac-sha256-nonce",
     hasWifi: true,
     networkAddress: "192.168.1.42",
+    dependencies: { mqtt_as: "0123456789abcdef" },
   },
   // SET_BOARD_SETTINGS/BOARD_SETTINGS_RESULT (2026-09-24, WiFi transport).
   { type: "SET_BOARD_SETTINGS", hostname: "ts-kitchen", password: "correct horse", clearPassword: false },
   { type: "SET_BOARD_SETTINGS", hostname: null, password: null, clearPassword: true },
   { type: "BOARD_SETTINGS_RESULT", ok: true, error: null },
   { type: "BOARD_SETTINGS_RESULT", ok: false, error: "password must be 8-64 characters" },
+  // DEP_PUT/DEP_RESULT (2026-10-07, flow dependencies).
+  { type: "DEP_PUT", name: "mqtt_as", hash: "0123456789abcdef", files: { "mqtt_as.mpy": new Uint8Array([0x4d, 6, 0, 31]) } },
+  { type: "DEP_RESULT", name: "mqtt_as", ok: true, code: null, error: null, freeFlashBytes: 1200000 },
+  { type: "DEP_RESULT", name: "mqtt_as", ok: false, code: "NoSpace", error: "no space for mqtt_as: needs 11324 bytes, 9000 free", freeFlashBytes: null },
   {
     type: "DEPLOY",
     bytecode: new Uint8Array([0x4d, 0x06, 0x00, 0x01, 0x02, 0x03]),
@@ -74,6 +80,7 @@ const SAMPLE_MESSAGES: Message[] = [
     // wifiProvision (added 2026-09-14, wifi-provisioning-captive-portal.md): same "an old editor
     // simply doesn't send this" degrade as flowName/deployId just above.
     wifiProvision: null,
+    dependencies: null,
   },
   {
     // Second DEPLOY variant: a current editor, which always has a name
@@ -88,6 +95,7 @@ const SAMPLE_MESSAGES: Message[] = [
     // "unmanaged" with the reprovisioning fallback left off, the default this feature ships with
     // (wifi-provisioning-captive-portal.md's confirmed trigger semantics).
     wifiProvision: { selfProvision: true, allowReprovision: false },
+    dependencies: { mqtt_as: "0123456789abcdef" },
   },
   { type: "DEPLOY_ACK", freeFlashBytes: 3_400_000, freeRamBytes: 160_000, freeIdfHeapBytes: null, largestIdfHeapBlockBytes: null },
   { type: "DEPLOY_ACK", freeFlashBytes: 3_400_000, freeRamBytes: 160_000, freeIdfHeapBytes: 60_000, largestIdfHeapBlockBytes: 28_000 },
@@ -147,6 +155,7 @@ describe("message CBOR round-trip (codec.ts, per message type)", () => {
       flowName: null,
       deployId: null,
       wifiProvision: null,
+      dependencies: null,
     };
     const body = encodeMessageBody(msg);
     const raw = cborDecode(body) as { bytecode: unknown };

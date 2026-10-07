@@ -3,9 +3,8 @@
 #
 # Adapter between raw_repl.py (pure protocol, no filesystem/manifest opinions -- see its own
 # header) and runtime_manifest.py (the shared file list, device-runtime/runtime_manifest.py):
-# locates device-runtime/src on disk, reads CORE_FILES/LISTENER_FILE/(optionally) VENDOR_FILES
-# off it, and hands raw_repl.install_runtime() an already-ordered [(dest_name, bytes), ...]
-# list. Kept separate from raw_repl.py so that module stays testable with zero filesystem
+# locates device-runtime/src on disk, reads CORE_FILES/LISTENER_FILE off it, and hands
+# raw_repl.install_runtime() an already-ordered [(dest_name, bytes), ...] list. Kept separate from raw_repl.py so that module stays testable with zero filesystem
 # dependency, and separate from ws_relay.py's WS-message wiring so this piece stays testable
 # without a WebSocket at all.
 #
@@ -93,7 +92,7 @@ class RuntimeInstaller:
         except OSError as exc:
             raise raw_repl.RawReplError("reading local runtime file", f"{path}: {exc}") from exc
 
-    def build_file_list(self, include_vendor: bool = True) -> list[tuple[str, bytes]]:
+    def _load_manifest(self):
         """Imports runtime_manifest.py fresh each call (not at module import time) so a manifest
         edit is picked up without restarting the backend process -- cheap (a few small files),
         and matches this project's general "don't make a dev loop worse than it needs to be"
@@ -111,14 +110,28 @@ class RuntimeInstaller:
         # recursively or get re-imported elsewhere in the same process.
         sys.modules[spec.name] = manifest
         spec.loader.exec_module(manifest)
+        return manifest
 
+    def legacy_root_files(self) -> list[str]:
+        """Vendored libraries runtimes before 7.0.0 put in the board's root, as both .py and .mpy.
+        An install deletes them: they would shadow the versions Deploy installs in /lib (flow
+        dependencies, 2026-10-07)."""
+        out: list[str] = []
+        for name in getattr(self._load_manifest(), "LEGACY_ROOT_FILES", []):
+            out.append(name)
+            if name.endswith(".py"):
+                out.append(name[:-3] + ".mpy")
+        return out
+
+    def build_file_list(self) -> list[tuple[str, bytes]]:
+        """The runtime itself: CORE_FILES, the listener as main.py, and the build marker. Vendored
+        libraries are no longer part of an install (flow dependencies, 2026-10-07): Deploy installs
+        the ones a flow imports."""
+        manifest = self._load_manifest()
         files: list[tuple[str, bytes]] = []
         for name in manifest.CORE_FILES:
             files.append((name, self._read(name)))
         files.append(("main.py", self._read(manifest.LISTENER_FILE)))
-        if include_vendor:
-            for src_rel, dest_name in manifest.VENDOR_FILES:
-                files.append((dest_name, self._read(f"vendor/{src_rel}")))
         sha = runtime_build_sha(self.runtime_src_dir)
         if sha:
             files.append((RUNTIME_BUILD_FILE, sha.encode()))
@@ -126,12 +139,12 @@ class RuntimeInstaller:
             logger.warning("couldn't determine device-runtime/src's git SHA -- the board will report runtimeBuild=null")
         return files
 
-    def source_files(self, include_vendor: bool = True) -> list[tuple[str, str]]:
+    def source_files(self) -> list[tuple[str, str]]:
         """The .py files an editor can precompile, as (board file name, source text) -- every runtime
-        and vendored module, with listener.py under its own name (main.py becomes a stub when it's
-        compiled; see with_compiled()). Served at /api/runtime-sources."""
+        module, with listener.py under its own name (main.py becomes a stub when it's compiled; see
+        with_compiled()). Served at /api/runtime-sources."""
         out: list[tuple[str, str]] = []
-        for dest, data in self.build_file_list(include_vendor):
+        for dest, data in self.build_file_list():
             if dest == "main.py":
                 dest = "listener.py"
             if dest.endswith(".py"):
@@ -173,7 +186,6 @@ class RuntimeInstaller:
     def install(
         self,
         port: "_SerialPort",
-        include_vendor: bool = True,
         timeouts: RawReplTimeouts = RawReplTimeouts(),
         on_progress: "raw_repl.ProgressCallback | None" = None,
         compiled: dict[str, bytes] | None = None,
@@ -181,5 +193,8 @@ class RuntimeInstaller:
         """Pushes the full manifest onto `port`'s board and hard-resets it. Raises
         raw_repl.RawReplError (from whichever step failed) on any problem -- see
         raw_repl.install_runtime()'s own docstring on why there's no partial-success case."""
-        files, remove = self.with_compiled(self.build_file_list(include_vendor), compiled or {})
+        files, remove = self.with_compiled(self.build_file_list(), compiled or {})
+        for name in self.legacy_root_files():
+            if name not in remove:
+                remove.append(name)
         raw_repl.install_runtime(port, files, timeouts, on_progress, remove=remove)

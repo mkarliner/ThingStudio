@@ -88,3 +88,7 @@ real device. The interrupt node's generated code does
 once this vendored file is actually part of whatever gets pushed to the
 device's filesystem. Not this vendoring step's job to fix; tracked once,
 under `mqtt_as`'s entry, not duplicated per vendored dependency.
+
+**2026-10-07 — flow dependencies.** Superseded: vendored libraries are no longer pushed at runtime install.
+`device-runtime/runtime_manifest.py`'s `DEPENDENCIES` lists them, and Deploy installs the ones a flow imports into
+the board's `/lib` (`docs/working-notes/flow-dependencies-scoping.md`).

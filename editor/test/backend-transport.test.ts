@@ -32,6 +32,7 @@ const HELLO: Message = {
   authScheme: null,
   hasWifi: false,
   networkAddress: null,
+  dependencies: null,
 };
 
 type Listener = (ev: { data?: unknown }) => void;

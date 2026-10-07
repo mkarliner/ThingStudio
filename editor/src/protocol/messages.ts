@@ -87,6 +87,11 @@ export const MessageType = {
   // BOARD_SETTINGS_RESULT, then a fresh HELLO on success. USB serial only. Must match messages.py.
   SET_BOARD_SETTINGS: 14,
   BOARD_SETTINGS_RESULT: 15,
+  // Added 2026-10-07 (flow dependencies, flow-dependencies-scoping.md): editor -> device, install one
+  // library the next flow imports into the board's /lib; the device answers DEP_RESULT. Must match
+  // messages.py.
+  DEP_PUT: 16,
+  DEP_RESULT: 17,
 } as const;
 
 export type MessageTypeId = (typeof MessageType)[keyof typeof MessageType];
@@ -157,6 +162,9 @@ export interface HelloMessage {
   readonly authScheme: string | null;
   readonly hasWifi: boolean;
   readonly networkAddress: string | null;
+  /** Added 2026-10-07 (flow dependencies): {name: hash} of the libraries installed for flows in the
+   * board's /lib. null from runtimes older than 7.0.0. */
+  readonly dependencies: Readonly<Record<string, string>> | null;
 }
 
 /**
@@ -197,6 +205,14 @@ export interface DeployMessage {
    * simply ignores the key.
    */
   readonly wifiProvision: { selfProvision: boolean; allowReprovision: boolean } | null;
+  /**
+   * Flow dependencies (2026-10-07): {name: hash} of every library the flow imports. The device checks
+   * they're all installed before touching the running flow (DEPLOY_ERROR "MissingDependency" naming
+   * any that aren't), and removes installed libraries not listed once the new flow is running. This
+   * editor always sends it, {} for a flow with none; null (absent) means an older editor: no check,
+   * nothing removed.
+   */
+  readonly dependencies: Readonly<Record<string, string>> | null;
 }
 
 /**
@@ -370,6 +386,27 @@ export interface BoardSettingsResultMessage {
   readonly error: string | null;
 }
 
+/** Editor -> device (flow dependencies, 2026-10-07): install one library into the board's /lib.
+ * `files` maps a file name on the board ("mqtt_as.mpy") to its bytes -- a map, not a list, because
+ * the device's CBOR codec has no arrays. `hash` identifies this exact content (HELLO/DEPLOY). */
+export interface DepPutMessage {
+  readonly type: "DEP_PUT";
+  readonly name: string;
+  readonly hash: string;
+  readonly files: Readonly<Record<string, Uint8Array>>;
+}
+
+/** Device -> editor, the answer to DEP_PUT. When !ok, `code` is short (NoSpace, BadName,
+ * WriteFailed, Unsupported) and `error` says what went wrong, naming the library. */
+export interface DepResultMessage {
+  readonly type: "DEP_RESULT";
+  readonly name: string;
+  readonly ok: boolean;
+  readonly code: string | null;
+  readonly error: string | null;
+  readonly freeFlashBytes: number | null;
+}
+
 export type Message =
   | HelloMessage
   | DeployMessage
@@ -385,7 +422,9 @@ export type Message =
   | ExecMessage
   | StopToPromptMessage
   | SetBoardSettingsMessage
-  | BoardSettingsResultMessage;
+  | BoardSettingsResultMessage
+  | DepPutMessage
+  | DepResultMessage;
 
 export const MESSAGE_TYPE_BY_NAME: Record<Message["type"], MessageTypeId> = {
   HELLO: MessageType.HELLO,
@@ -403,6 +442,8 @@ export const MESSAGE_TYPE_BY_NAME: Record<Message["type"], MessageTypeId> = {
   STOP_TO_PROMPT: MessageType.STOP_TO_PROMPT,
   SET_BOARD_SETTINGS: MessageType.SET_BOARD_SETTINGS,
   BOARD_SETTINGS_RESULT: MessageType.BOARD_SETTINGS_RESULT,
+  DEP_PUT: MessageType.DEP_PUT,
+  DEP_RESULT: MessageType.DEP_RESULT,
 };
 
 export const MESSAGE_NAME_BY_TYPE: Record<MessageTypeId, Message["type"]> = {
@@ -421,4 +462,6 @@ export const MESSAGE_NAME_BY_TYPE: Record<MessageTypeId, Message["type"]> = {
   [MessageType.STOP_TO_PROMPT]: "STOP_TO_PROMPT",
   [MessageType.SET_BOARD_SETTINGS]: "SET_BOARD_SETTINGS",
   [MessageType.BOARD_SETTINGS_RESULT]: "BOARD_SETTINGS_RESULT",
+  [MessageType.DEP_PUT]: "DEP_PUT",
+  [MessageType.DEP_RESULT]: "DEP_RESULT",
 };

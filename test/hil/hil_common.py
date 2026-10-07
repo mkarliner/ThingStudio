@@ -120,3 +120,87 @@ def compile_flow(mpy_cross, tmpdir, name, source):
     subprocess.run([mpy_cross, "-o", mpy_path, py_path], check=True, capture_output=True)
     with open(mpy_path, "rb") as f:
         return f.read()
+
+
+# --- Flow dependencies (2026-10-07, docs/working-notes/flow-dependencies-scoping.md) ----------------
+# Runtimes from 7.0.0 hold vendored libraries only in /lib, installed per flow. A host tool that
+# deploys a flow installs the libraries it imports first, the same way the editor does. Always
+# sends every needed library (no inventory diff): test tools favour simple over fast.
+
+import hashlib  # noqa: E402
+import importlib.util  # noqa: E402
+import re  # noqa: E402
+
+_IMPORT_RE = re.compile(r"^\s*(?:import\s+([\w.]+(?:\s*,\s*[\w.]+)*)|from\s+([\w.]+)\s+import\b)", re.M)
+
+
+def imported_modules(source):
+    """Top-level module names a Python source imports (same rule as the editor's compiler)."""
+    out = set()
+    for m in _IMPORT_RE.finditer(source):
+        names = m.group(1).split(",") if m.group(1) else [m.group(2)]
+        for n in names:
+            out.add(n.strip().split(".")[0].split(" as ")[0].strip())
+    return out
+
+
+def _manifest_dependencies():
+    path = os.path.join(THIS_DIR, "..", "..", "device-runtime", "runtime_manifest.py")
+    spec = importlib.util.spec_from_file_location("hil_runtime_manifest", path)
+    manifest = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(manifest)
+    return {d["name"]: d for d in manifest.DEPENDENCIES}
+
+
+def needed_dependencies(source):
+    """Dependency entries (runtime_manifest.DEPENDENCIES) the source needs, with their requires."""
+    by_name = _manifest_dependencies()
+    by_module = {}
+    for d in by_name.values():
+        for _src, board_name in d["files"]:
+            by_module[board_name[:-3]] = d["name"]
+    todo = [by_module[m] for m in sorted(imported_modules(source)) if m in by_module]
+    out = []
+    while todo:
+        name = todo.pop(0)
+        if name in [d["name"] for d in out]:
+            continue
+        out.append(by_name[name])
+        todo.extend(by_name[name]["requires"])
+    return out
+
+
+def dependency_hash(files):
+    """files: {board file name: bytes}. Same scheme as the editor (flow-dependencies.ts)."""
+    h = hashlib.sha256()
+    for name in sorted(files):
+        h.update(("%s\n%d\n" % (name, len(files[name]))).encode())
+        h.update(files[name])
+    return h.hexdigest()[:16]
+
+
+def install_dependencies(dut, mpy_cross, tmpdir, source):
+    """Compiles and DEP_PUTs every library `source` imports. Returns {name: hash} for DEPLOY."""
+    vendor = os.path.join(SRC_DIR, "vendor")
+    required = {}
+    for dep in needed_dependencies(source):
+        files = {}
+        for src_rel, board_name in dep["files"]:
+            with open(os.path.join(vendor, src_rel)) as f:
+                mpy = compile_flow(mpy_cross, tmpdir, "dep_" + board_name[:-3], f.read())
+            files[board_name[:-3] + ".mpy"] = mpy
+        digest = dependency_hash(files)
+        dut.send_message({"type": "DEP_PUT", "name": dep["name"], "hash": digest, "files": files})
+        res = dut.wait_for_message(lambda m: m["type"] == "DEP_RESULT" and m.get("name") == dep["name"], timeout_s=15,
+                                   description="DEP_RESULT for %s" % dep["name"])
+        if not res["ok"]:
+            raise RuntimeError("installing %s failed: %s %s" % (dep["name"], res.get("code"), res.get("error")))
+        print("Installed library %s (%s)" % (dep["name"], digest))
+        required[dep["name"]] = digest
+    return required
+
+
+def deploy_message(dut, mpy_cross, tmpdir, source, bytecode):
+    """A DEPLOY for `source`'s bytecode, after installing the libraries it imports."""
+    return {"type": "DEPLOY", "bytecode": bytecode, "staticData": b"",
+            "dependencies": install_dependencies(dut, mpy_cross, tmpdir, source)}

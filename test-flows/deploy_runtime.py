@@ -47,55 +47,17 @@ _RUNTIME_SRC = os.path.join(_REPO_ROOT, "device-runtime", "src")
 # already shows that risk: wifi_provision.py and st7789py.py/ssd1306.py were each added here by
 # hand, at different times, with no automatic check the other consumer picked them up too).
 sys.path.insert(0, os.path.join(_REPO_ROOT, "device-runtime"))
-from runtime_manifest import CORE_FILES, LISTENER_FILE, VENDOR_FILES  # noqa: E402 -- needs sys.path set first
+from runtime_manifest import CORE_FILES, LEGACY_ROOT_FILES, LISTENER_FILE  # noqa: E402 -- needs sys.path set first
 
-# Vendor libs some (not all) node types need at runtime -- pushed by default since the cost is
-# trivial (a few KB of flash) against the alternative (rediscovering an ImportError mid-flow-
-# deploy later and having to come back to this script) -- the same "don't paint into a dead
-# end" reasoning CLAUDE.md already names elsewhere. --no-vendor skips them for a leaner image if
-# flash/RAM headroom is ever actually tight; rp2040-bringup-findings.md's own memory-headroom
-# data (>75% RAM free with the runtime + threadsafe_event + a real flow loaded) suggests it
-# isn't, for flows of similar size to what's been tested so far -- but that's one data point on
-# one board, not a guarantee for every board/flow combination, hence the escape hatch rather
-# than assuming it's always fine. VENDOR_FILES entries are (path relative to
-# device-runtime/src/vendor/, destination filename on-device) -- see runtime_manifest.py for the
-# actual list and why mqtt_as's own __init__.py lands flat as mqtt_as.py.
-
-
-def mpremote(port, *args):
-    cmd = ["mpremote", "connect", port] + list(args)
-    print("+ %s" % " ".join(cmd))
-    subprocess.run(cmd, check=True)
-
-
-def _runtime_build_sha():
-    """git SHA of the last commit that touched device-runtime/src, scoped
-    (not the whole repo's HEAD) so an unrelated editor/docs-only commit
-    doesn't make every already-bootstrapped board look stale for no
-    reason. Belt-and-braces companion to _RUNTIME_VERSION -- see
-    CLAUDE.md's "Device-runtime version bump discipline" and listener.py's
-    own header on _RUNTIME_BUILD. None if git isn't available or this
-    isn't a git checkout -- fails open (skips the marker, doesn't fail the
-    bootstrap), matching this project's fault-handling-over-happy-path
-    priority applied to tooling, not just device code."""
-    try:
-        out = subprocess.run(
-            ["git", "log", "-1", "--format=%H", "--", _RUNTIME_SRC],
-            cwd=_REPO_ROOT,
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        sha = out.stdout.strip()
-        return sha or None
-    except (OSError, subprocess.CalledProcessError):
-        return None
+# Vendored libraries are no longer pushed here (flow dependencies, 2026-10-07,
+# docs/working-notes/flow-dependencies-scoping.md): the editor's Deploy installs the ones a flow
+# imports into the board's /lib. What this script still does about them is delete the copies older
+# runtimes put in the root (LEGACY_ROOT_FILES), which would otherwise shadow the /lib versions.
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--port", required=True, help="serial device path, e.g. /dev/tty.usbmodemXXXX")
-    parser.add_argument("--no-vendor", action="store_true", help="skip vendor/ libs (threadsafe_event, mqtt_as, primitives_events, st7789py, ssd1306) -- see VENDOR_FILES comment")
     parser.add_argument(
         "--wipe",
         action="store_true",
@@ -141,10 +103,12 @@ def main():
             "same as any board bootstrapped before this feature existed."
         )
 
-    if not args.no_vendor:
-        for src_rel, dest_name in VENDOR_FILES:
-            local = os.path.join(_RUNTIME_SRC, "vendor", src_rel)
-            mpremote(args.port, "cp", local, ":%s" % dest_name)
+    # Old root copies of vendored libraries (see LEGACY_ROOT_FILES above). One exec, ignoring files
+    # that aren't there, so a board that never had them is fine.
+    legacy = []
+    for name in LEGACY_ROOT_FILES:
+        legacy += [name, name[:-3] + ".mpy"]
+    mpremote(args.port, "exec", "import os\nfor f in %r:\n try:\n  os.remove(f)\n except OSError:\n  pass" % (legacy,))
 
     print("\nDone. Files now on the device:")
     mpremote(args.port, "ls")

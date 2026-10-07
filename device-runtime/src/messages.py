@@ -14,7 +14,8 @@
 # waiting on. Copied 1:1, not re-derived:
 #   HELLO=1 DEPLOY=2 DEPLOY_ACK=3 DEPLOY_ERROR=4 VALUE_STREAM=5
 #   NODE_ERROR=6 STATE_READ=7 STATE_WRITE=8 TRIGGER=9 HELLO_REQUEST=10
-#   NODE_STATUS=11
+#   NODE_STATUS=11 EXEC=12 STOP_TO_PROMPT=13 SET_BOARD_SETTINGS=14
+#   BOARD_SETTINGS_RESULT=15 DEP_PUT=16 DEP_RESULT=17
 #
 # NODE_STATUS (2026-09-10, outstanding-items/node-status-indicators.md):
 # device -> editor, a lightweight per-node connection-status push,
@@ -79,6 +80,10 @@ MessageType = {
     # USB serial only; the device answers BOARD_SETTINGS_RESULT, then a fresh HELLO on success.
     "SET_BOARD_SETTINGS": 14,
     "BOARD_SETTINGS_RESULT": 15,
+    # Added 2026-10-07 (flow dependencies, flow-dependencies-scoping.md). Editor -> device: install one
+    # library the next flow imports (deps.py). The device answers DEP_RESULT, ok or an attributed error.
+    "DEP_PUT": 16,
+    "DEP_RESULT": 17,
 }
 
 MESSAGE_NAME_BY_TYPE = {v: k for k, v in MessageType.items()}
@@ -256,6 +261,48 @@ def _expect_optional_wifi_provision(obj, key, name):
     }
 
 
+def _expect_optional_string_map(obj, key, name):
+    """{str: str} or absent/None (absent means {}) -- the dependency inventory (HELLO) and the
+    dependencies a flow needs (DEPLOY). A sender predating flow dependencies never sends either."""
+    v = obj.get(key)
+    if v is None:
+        return None
+    if not isinstance(v, dict):
+        _fail(name, 'field "%s" must be a map or absent/None, got %r' % (key, type(v)))
+    out = {}
+    for k, val in v.items():
+        if not isinstance(k, str) or not isinstance(val, str):
+            _fail(name, 'field "%s" must map strings to strings' % (key,))
+        out[k] = val
+    return out
+
+
+def _validate_dep_put(obj, name):
+    # files: {file name: bytes}. A map, not a list: cbor.py deliberately supports no arrays.
+    files = obj.get("files")
+    if not isinstance(files, dict) or not files:
+        _fail(name, 'field "files" must be a non-empty map of file name to bytes')
+    out = {}
+    for fname, data in files.items():
+        if not isinstance(fname, str) or not isinstance(data, (bytes, bytearray)):
+            _fail(name, 'field "files" must map file names (strings) to byte strings')
+        out[fname] = bytes(data)
+    return {"name": _expect_string(obj, "name", name), "hash": _expect_string(obj, "hash", name), "files": out}
+
+
+def _validate_dep_result(obj, name):
+    ok = _require_present(obj, "ok", name)
+    if not isinstance(ok, bool):
+        _fail(name, 'field "ok" must be a bool, got %r' % (type(ok),))
+    return {
+        "name": _expect_string(obj, "name", name),
+        "ok": ok,
+        "code": _expect_optional_string(obj, "code", name),
+        "error": _expect_optional_string(obj, "error", name),
+        "freeFlashBytes": _expect_optional_non_negative_int(obj, "freeFlashBytes", name),
+    }
+
+
 def _validate_hello(obj, name):
     return {
         "chipType": _expect_string(obj, "chipType", name),
@@ -289,6 +336,9 @@ def _validate_hello(obj, name):
         "authScheme": _expect_optional_string(obj, "authScheme", name),
         "hasWifi": _expect_optional_bool(obj, "hasWifi", name) or False,
         "networkAddress": _expect_optional_string(obj, "networkAddress", name),
+        # Added 2026-10-07 (flow dependencies): {name: hash} of the libraries installed for flows
+        # (deps.py). Absent from runtimes older than 7.0.0, which hold every library in the root.
+        "dependencies": _expect_optional_string_map(obj, "dependencies", name),
     }
 
 
@@ -331,6 +381,10 @@ def _validate_deploy(obj, name):
         # convention as flowName/deployId above -- see
         # _expect_optional_wifi_provision's own doc comment.
         "wifiProvision": _expect_optional_wifi_provision(obj, "wifiProvision", name),
+        # Flow dependencies (2026-10-07): {name: hash} the flow imports. The listener checks every one
+        # is installed before touching the running flow, and removes the rest after a good import.
+        # Absent (an older editor): no check and nothing removed.
+        "dependencies": _expect_optional_string_map(obj, "dependencies", name),
     }
 
 
@@ -426,4 +480,6 @@ _VALIDATORS = {
     "STOP_TO_PROMPT": _validate_stop_to_prompt,
     "SET_BOARD_SETTINGS": _validate_set_board_settings,
     "BOARD_SETTINGS_RESULT": _validate_board_settings_result,
+    "DEP_PUT": _validate_dep_put,
+    "DEP_RESULT": _validate_dep_result,
 }

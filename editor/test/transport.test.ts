@@ -37,6 +37,7 @@ const HELLO: Message = {
   authScheme: null,
   hasWifi: false,
   networkAddress: null,
+  dependencies: null,
 };
 
 function bytesToBase64(bytes: Uint8Array): string {

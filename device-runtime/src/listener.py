@@ -87,6 +87,15 @@ except ImportError:
     # additive DEPLOY field in this file already follows (flowName/deployId, wifiProvision itself).
     wifi_provision = None
 
+# Flow dependencies (2026-10-07, flow-dependencies-scoping.md): the libraries flows import, installed
+# in /lib by DEP_PUT. Ships in CORE_FILES; missing means a partial install, so flows that need a
+# library can't be deployed (DEP_PUT says so), but everything else still works.
+try:
+    import deps
+except ImportError as _e:
+    print("LISTENER_WARN flow dependencies unavailable (%r)" % (_e,))
+    deps = None
+
 # WiFi transport (2026-09-24, wifi-transport-scoping.md). Both ship in CORE_FILES with this file, so
 # a missing module means a partial install -- degrade to serial-only rather than fail to boot.
 try:
@@ -145,7 +154,7 @@ F64_PREFIX = "F64:"
 _HEARTBEAT_PIN = 10
 _HEARTBEAT_PERIOD_MS = 200
 
-_RUNTIME_VERSION = {"major": 6, "minor": 0, "patch": 0}  # 6.0.0 2026-09-26: vendored bme280_float.py and runtime.shared() (bme280/I2C flows use both, so an older board fails them); 5.1.0 2026-09-25: runtime.start_reason, ESP-IDF heap in HELLO/DEPLOY_ACK -- minor only: startup codegen reads start_reason with getattr, so its flows still run on 5.0.0; 5.0.0 same day: mqtt_as active(True) only when inactive (4.0.0 same day: vendored mqtt_as wifi_connect() guard -- MQTT codegen now joins WiFi first on ESP32 (3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS; 2.0.0 was 2026-09-23: EXEC, STOP_TO_PROMPT, safe mode; 1.0.0 was 2026-09-10: NODE_STATUS)
+_RUNTIME_VERSION = {"major": 7, "minor": 0, "patch": 0}  # 7.0.0 2026-10-07: flow dependencies (DEP_PUT, DEPLOY.dependencies, libraries in /lib instead of every board getting every library); 6.0.0 2026-09-26: vendored bme280_float.py and runtime.shared() (bme280/I2C flows use both, so an older board fails them); 5.1.0 2026-09-25: runtime.start_reason, ESP-IDF heap in HELLO/DEPLOY_ACK -- minor only: startup codegen reads start_reason with getattr, so its flows still run on 5.0.0; 5.0.0 same day: mqtt_as active(True) only when inactive (4.0.0 same day: vendored mqtt_as wifi_connect() guard -- MQTT codegen now joins WiFi first on ESP32 (3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS; 2.0.0 was 2026-09-23: EXEC, STOP_TO_PROMPT, safe mode; 1.0.0 was 2026-09-10: NODE_STATUS)
 # (runtime.report_status) is a hard dependency of wifi-status.ts's/mqtt-shared.ts's codegen now -- an editor
 # with this change targeting a pre-2026-09-10 runtime would crash on deploy (AttributeError: report_status),
 # not degrade gracefully. See CLAUDE.md's "Device-runtime version bump discipline" -- decideDeploy() only
@@ -490,6 +499,7 @@ async def _send_hello():
             "authScheme": (board_settings.SCHEME if board_settings.password_set() else "none") if board_settings else None,
             "hasWifi": net_transport.has_wifi() if net_transport else False,
             "networkAddress": net_transport.listening_address() if net_transport else None,
+            "dependencies": deps.inventory() if deps else None,
         }
     )
 
@@ -511,6 +521,30 @@ def _handle_set_board_settings(msg, source):
     return err
 
 
+def _handle_dep_put(msg):
+    """DEP_PUT (flow dependencies, 2026-10-07): install one library into /lib (deps.py). Always
+    answers DEP_RESULT -- ok, or an error naming the library and what went wrong. Never touches the
+    running flow: a library replaced on flash is only loaded by the next DEPLOY."""
+    name = msg["name"]
+    if deps is None:
+        _send_message_safe({"type": "DEP_RESULT", "name": name, "ok": False, "code": "Unsupported",
+                            "error": "this board's Thingstudio software is incomplete (deps.py missing) -- install the runtime again"})
+        return
+    try:
+        deps.put(name, msg["hash"], list(msg["files"].items()))
+    except deps.DepError as e:
+        print("DEP_ERR %s %s" % (e.code, e.message))
+        _send_message_safe({"type": "DEP_RESULT", "name": name, "ok": False, "code": e.code, "error": e.message})
+        return
+    except Exception as e:  # noqa: BLE001 -- adversarial-shaped input, never allowed to kill the listener
+        print("DEP_ERR %r" % (e,))
+        _send_message_safe({"type": "DEP_RESULT", "name": name, "ok": False, "code": type(e).__name__, "error": "installing %s failed: %r" % (name, e)})
+        return
+    gc.collect()
+    print("DEP_OK %s" % (name,))
+    _send_message_safe({"type": "DEP_RESULT", "name": name, "ok": True, "freeFlashBytes": _free_flash_bytes()})
+
+
 async def _handle_deploy(msg):
     """Writes the deployed flow's bytecode (and, if present, static data)
     to the filesystem and imports it, same overall shape as
@@ -524,7 +558,30 @@ async def _handle_deploy(msg):
     contract); non-empty staticData goes to /_flow_static.bin, left for a
     future node type to read rather than interpreted here."""
     global _deploy_generation
+    required = msg.get("dependencies")
+    # Flow dependencies (2026-10-07): check every library the flow imports is installed BEFORE
+    # touching the running flow, so a missing one is a clear DEPLOY_ERROR naming it, the old flow
+    # keeps running, and nothing ever fails with an ImportError from deep inside the new flow.
+    if required is not None:
+        if deps is None:
+            _send_message_safe({"type": "DEPLOY_ERROR", "code": "MissingDependency",
+                                "message": "this flow needs libraries, but this board's Thingstudio software is incomplete (deps.py missing) -- install the runtime again"})
+            return
+        try:
+            problems = deps.missing(required)
+        except Exception as e:  # noqa: BLE001 -- never let the check itself kill the listener
+            problems = ["couldn't read the board's library index (%r)" % (e,)]
+        if problems:
+            print("DEPLOY_ERR missing dependencies: %s" % ("; ".join(problems),))
+            _send_message_safe({"type": "DEPLOY_ERROR", "code": "MissingDependency",
+                                "message": "the flow needs libraries the board doesn't have: %s" % ("; ".join(problems),)})
+            return
     await runtime.cancel_running()
+    if deps is not None:
+        try:
+            deps.forget_modules()  # the new flow must import the libraries now on flash, not old copies
+        except Exception as e:  # noqa: BLE001 -- worst case the flow reuses an already-imported library
+            print("DEPS_WARN couldn't reset library modules: %r" % (e,))
     # Nothing is genuinely running from this point until the code below
     # re-confirms otherwise -- added 2026-09-05 alongside flow identity:
     # previously a failed redeploy (import _flow raising, below) still
@@ -549,6 +606,13 @@ async def _handle_deploy(msg):
         _persist_wifi_provision_marker(msg.get("wifiProvision"))
         _set_current_flow(msg["flowName"], msg["deployId"])
         _deploy_generation += 1
+        if required is not None and deps is not None:
+            try:
+                removed = deps.remove_unused(required)
+                if removed:
+                    print("DEPS_REMOVED %s" % (", ".join(removed),))
+            except Exception as e:  # noqa: BLE001 -- the flow is already running; cleanup is best-effort
+                print("DEPS_WARN cleanup failed: %r" % (e,))
         gc.collect()
         idf_free, idf_largest = _idf_heap()
         _send_message_safe(
@@ -747,6 +811,8 @@ async def _dispatch_locked(result, source):
     msg_type = msg["type"]
     if msg_type == "DEPLOY":
         await _handle_deploy(msg)
+    elif msg_type == "DEP_PUT":
+        _handle_dep_put(msg)
     elif msg_type == "TRIGGER":
         # inject click-only live-fire feature (2026-09-02) -- fire-and-
         # forget, no ack (messages.py's own TRIGGER doc note): runtime.py's
@@ -943,6 +1009,10 @@ def main():
     # connection made after it's set, so before the portal or the saved flow can bring WiFi up.
     if net_transport is not None:
         net_transport.apply_hostname()
+
+    # Flow dependencies live in /lib; the saved flow below may import them.
+    if deps is not None:
+        deps.ensure_on_path()
 
     if _check_boot_loop():
         pass  # safe mode: skip WiFi provisioning and the saved flow; the listener still starts

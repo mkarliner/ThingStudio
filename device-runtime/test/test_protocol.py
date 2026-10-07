@@ -38,6 +38,7 @@ SAMPLE_MESSAGES = [
         "authScheme": None,
         "hasWifi": False,
         "networkAddress": None,
+        "dependencies": None,  # runtime older than 7.0.0
     },
     {
         # Same message type, second variant: a board that DOES have a
@@ -60,6 +61,8 @@ SAMPLE_MESSAGES = [
         "authScheme": "hmac-sha256-nonce",
         "hasWifi": True,
         "networkAddress": "192.168.1.42",
+        # Flow dependencies (2026-10-07, runtime 7.0.0): what the board holds in /lib.
+        "dependencies": {"mqtt_as": "0123456789abcdef", "bme280": "fedcba9876543210"},
     },
     {
         "type": "DEPLOY",
@@ -73,6 +76,7 @@ SAMPLE_MESSAGES = [
         # wifiProvision (added 2026-09-14, wifi-provisioning-captive-portal.md): same "an old editor
         # simply doesn't send this" degrade as flowName/deployId just above.
         "wifiProvision": None,
+        "dependencies": None,  # an editor predating flow dependencies
     },
     {
         # Second DEPLOY variant: a current editor, which always has a
@@ -87,6 +91,7 @@ SAMPLE_MESSAGES = [
         # is "unmanaged" with the reprovisioning fallback left off, the default this feature ships
         # with (wifi-provisioning-captive-portal.md's confirmed trigger semantics).
         "wifiProvision": {"selfProvision": True, "allowReprovision": False},
+        "dependencies": {"mqtt_as": "0123456789abcdef"},
     },
     {"type": "DEPLOY_ACK", "freeFlashBytes": 3400000, "freeRamBytes": 160000, "freeIdfHeapBytes": None, "largestIdfHeapBlockBytes": None},
     {"type": "DEPLOY_ACK", "freeFlashBytes": 3400000, "freeRamBytes": 160000, "freeIdfHeapBytes": 60000, "largestIdfHeapBlockBytes": 28000},
@@ -117,6 +122,10 @@ SAMPLE_MESSAGES = [
     {"type": "SET_BOARD_SETTINGS", "hostname": None, "password": None, "clearPassword": True},
     {"type": "BOARD_SETTINGS_RESULT", "ok": True, "error": None},
     {"type": "BOARD_SETTINGS_RESULT", "ok": False, "error": "password must be 8-64 characters"},
+    # DEP_PUT / DEP_RESULT added 2026-10-07 (flow dependencies).
+    {"type": "DEP_PUT", "name": "mqtt_as", "hash": "0123456789abcdef", "files": {"mqtt_as.mpy": bytes([0x4D, 6, 0, 31])}},
+    {"type": "DEP_RESULT", "name": "mqtt_as", "ok": True, "code": None, "error": None, "freeFlashBytes": 1200000},
+    {"type": "DEP_RESULT", "name": "mqtt_as", "ok": False, "code": "NoSpace", "error": "no space for mqtt_as: needs 11324 bytes, 9000 free", "freeFlashBytes": None},
 ]
 
 
@@ -417,6 +426,25 @@ def test_hello_wifi_fields_default_when_absent():
     assert decoded["networkAddress"] is None
 
 
+def test_rejects_bad_dependency_shapes():
+    for name, bad in (
+        ("DEP_PUT", {"name": "x", "hash": "h"}),
+        ("DEP_PUT", {"name": "x", "hash": "h", "files": {}}),
+        ("DEP_PUT", {"name": "x", "hash": "h", "files": {"x.mpy": "text"}}),
+        ("DEP_PUT", {"name": "x", "hash": "h", "files": b"x"}),
+        ("DEP_PUT", {"name": 5, "hash": "h", "files": {"x.mpy": b""}}),
+        ("DEP_RESULT", {"name": "x"}),
+        ("DEPLOY", {"bytecode": b"", "staticData": b"", "dependencies": 5}),
+        ("DEPLOY", {"bytecode": b"", "staticData": b"", "dependencies": {"mqtt_as": 5}}),
+        ("HELLO", {"chipType": "x", "runtimeVersion": {"major": 7, "minor": 0, "patch": 0}, "freeFlashBytes": 1, "freeRamBytes": 1, "dependencies": "mqtt_as"}),
+    ):
+        try:
+            messages.decode_message_body(messages.MessageType[name], cbor.encode(bad))
+            assert False, "expected MessageDecodeError for %s %r" % (name, bad)
+        except MessageDecodeError:
+            pass
+
+
 def test_rejects_bad_board_settings_shapes():
     for name, bad in (
         ("SET_BOARD_SETTINGS", {"hostname": 5}),
@@ -436,6 +464,7 @@ minitest.run(
     [
         test_hello_wifi_fields_default_when_absent,
         test_rejects_bad_board_settings_shapes,
+        test_rejects_bad_dependency_shapes,
         test_roundtrip_every_message_type,
         test_roundtrip_through_full_frame,
         test_bytes_fields_are_native_cbor_byte_strings,

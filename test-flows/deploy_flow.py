@@ -27,7 +27,7 @@ import time
 
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(_THIS_DIR, "..", "test", "hil"))
-from hil_common import DutLink, compile_flow  # noqa: E402
+from hil_common import DutLink, compile_flow, deploy_message  # noqa: E402
 
 
 def main():
@@ -54,7 +54,7 @@ def main():
                 print("No fresh HELLO seen in 8s -- continuing anyway (the DUT may already be running from a prior boot); DEPLOY still works without one, per main.ts's own soft-on-absence gate.")
 
             print("Sending DEPLOY (%d bytes bytecode)..." % len(bytecode))
-            dut.send_message({"type": "DEPLOY", "bytecode": bytecode, "staticData": b""})
+            dut.send_message(deploy_message(dut, args.mpy_cross, tmpdir, source, bytecode))
             dut.wait_for_message(lambda m: m["type"] == "DEPLOY_ACK", timeout_s=8, description="DEPLOY_ACK")
             print("DEPLOY_ACK received. Flow is running. Watching for NODE_ERROR / console output -- Ctrl-C to stop.")
 

@@ -103,7 +103,7 @@ def _fake_repo(root: Path) -> Path:
         write("editor/src/definitions/processors/rp2040.json", "{}"),
         write(
             "device-runtime/runtime_manifest.py",
-            'CORE_FILES = ["runtime.py"]\nLISTENER_FILE = "listener.py"\nVENDOR_FILES = [("lib/thing.py", "thing.py")]\n',
+            'CORE_FILES = ["runtime.py"]\nLISTENER_FILE = "listener.py"\nDEPENDENCIES = [{"name": "thing", "files": [("lib/thing.py", "thing.py")], "requires": []}]\n',
         ),
     ]
     for p in sources:
@@ -138,7 +138,11 @@ def test_build_produces_a_complete_packaged_layout(tmp_path) -> None:
     assert len(stamp) == 40 and "unstamped" not in summary[2]
     # The packaged runtime installs exactly as a checkout's would, stamp included.
     files = dict(RuntimeInstaller(dirs.runtime_src).build_file_list())
-    assert set(files) == {"runtime.py", "main.py", "thing.py", "_runtime_build.txt"}
+    # Libraries aren't part of an install (flow dependencies, 2026-10-07); Deploy installs them.
+    assert set(files) == {"runtime.py", "main.py", "_runtime_build.txt"}
+    from thingstudio_backend.dependencies import load_dependencies
+
+    assert [d.name for d in load_dependencies(dirs.runtime_src)] == ["thing"]
     assert files["_runtime_build.txt"].decode() == stamp
 
 

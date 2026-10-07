@@ -20,24 +20,40 @@ from __future__ import annotations
 # added 2026-09-14 (see listener.py's own guarded `import wifi_provision`, which degrades to a
 # no-op on a board bootstrapped before this line existed, so a re-run of an install onto an
 # already-bootstrapped board is never destructive just because this list grows).
-CORE_FILES: list[str] = ["errors.py", "cbor.py", "framing.py", "messages.py", "protocol.py", "runtime.py", "wifi_provision.py", "board_settings.py", "net_transport.py"]
+# deps.py added 2026-10-07 (flow dependencies).
+CORE_FILES: list[str] = ["errors.py", "cbor.py", "framing.py", "messages.py", "protocol.py", "runtime.py", "wifi_provision.py", "board_settings.py", "net_transport.py", "deps.py"]
 
 # Installed as main.py so the board boots straight into it.
 LISTENER_FILE: str = "listener.py"
 
-# (path relative to device-runtime/src/vendor/, destination filename on-device). mqtt_as's own
-# __init__.py needs to land flat as mqtt_as.py, not nested under an mqtt_as/ package dir --
-# MicroPython's import system finds either shape, but a flat file is simpler for a one-file-at-a-
-# time push and matches how generated code imports it (`import mqtt_as`, not a package import).
-# st7789py.py/ssd1306.py added 2026-09-17 for display_spi/display_i2c -- same unconditional-push
-# treatment as everything else here (outstanding-items.md's "VENDOR_FILES doesn't scale past a
-# few controllers" tracks the real cost of that, not solved by this list existing).
-VENDOR_FILES: list[tuple[str, str]] = [
-    ("threadsafe_event/threadsafe_event.py", "threadsafe_event.py"),
-    ("mqtt_as/__init__.py", "mqtt_as.py"),
-    ("primitives_events/events.py", "events.py"),
-    ("primitives_events/delay_ms.py", "delay_ms.py"),
-    ("st7789py_mpy/st7789py.py", "st7789py.py"),
-    ("ssd1306/ssd1306.py", "ssd1306.py"),
-    ("bme280/bme280_float.py", "bme280_float.py"),
+# Flow dependencies (2026-10-07, docs/working-notes/flow-dependencies-scoping.md). Replaces
+# VENDOR_FILES: vendored libraries are no longer pushed to every board at runtime install. Deploy
+# installs the ones a flow imports into the board's /lib (device-runtime/src/deps.py), and removes
+# them once no flow needs them.
+#
+# One entry per library:
+#   name     -- what the board's index and the DEP_PUT/DEPLOY messages call it. Kept equal to the
+#               module name, so the editor can map an `import x` in a compiled flow straight to it.
+#   files    -- (path relative to device-runtime/src/vendor/, file name on the board). Every file
+#               name, minus .py, is a module the library provides.
+#   requires -- other libraries this one imports. The editor installs those too.
+# Served to the editor as JSON at /api/dependencies (backend dependencies.py), which also checks
+# this list (names, files present, requires known, no cycles).
+DEPENDENCIES: list[dict] = [
+    {"name": "threadsafe_event", "files": [("threadsafe_event/threadsafe_event.py", "threadsafe_event.py")], "requires": []},
+    # mqtt_as's own __init__.py lands flat as mqtt_as.py: generated code does `import mqtt_as`.
+    {"name": "mqtt_as", "files": [("mqtt_as/__init__.py", "mqtt_as.py")], "requires": []},
+    {"name": "delay_ms", "files": [("primitives_events/delay_ms.py", "delay_ms.py")], "requires": []},
+    {"name": "events", "files": [("primitives_events/events.py", "events.py")], "requires": ["delay_ms"]},
+    {"name": "st7789py", "files": [("st7789py_mpy/st7789py.py", "st7789py.py")], "requires": []},
+    {"name": "ssd1306", "files": [("ssd1306/ssd1306.py", "ssd1306.py")], "requires": []},
+    {"name": "bme280_float", "files": [("bme280/bme280_float.py", "bme280_float.py")], "requires": []},
+]
+
+# What runtimes before 7.0.0 pushed into the board's root (the old VENDOR_FILES). The root comes
+# before /lib on sys.path, so a stale root copy would silently win over the library Deploy installs.
+# A runtime install deletes these (and their .mpy twins). A fixed historical list: new libraries
+# never go to the root.
+LEGACY_ROOT_FILES: list[str] = [
+    "threadsafe_event.py", "mqtt_as.py", "events.py", "delay_ms.py", "st7789py.py", "ssd1306.py", "bme280_float.py",
 ]

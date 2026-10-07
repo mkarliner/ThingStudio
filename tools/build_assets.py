@@ -73,7 +73,8 @@ def check_runtime_manifest(repo: Path) -> None:
     manifest = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(manifest)
     src = repo / "device-runtime" / "src"
-    names = [*manifest.CORE_FILES, manifest.LISTENER_FILE, *(f"vendor/{s}" for s, _dest in manifest.VENDOR_FILES)]
+    deps = getattr(manifest, "DEPENDENCIES", [])
+    names = [*manifest.CORE_FILES, manifest.LISTENER_FILE, *(f"vendor/{s}" for d in deps for s, _dest in d["files"])]
     missing = [n for n in names if not (src / n).is_file()]
     if missing:
         raise BuildError(f"runtime_manifest.py names files not in device-runtime/src: {', '.join(missing)}")

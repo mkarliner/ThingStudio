@@ -16,7 +16,17 @@ Custom node packages and saved credentials (see [Canvas basics](canvas-basics.md
 
 **Compile → Deploy** compiles the current canvas to MicroPython bytecode and sends it to the connected board, replacing whatever flow is currently running there.
 
-A successful deploy shows a confirmation in the console and the new flow starts running immediately. A failed one shows a specific error — either a compile error (something in the flow itself, like a missing required property) or a space error (the compiled flow doesn't fit in the board's available flash/RAM). The button grays out right after a successful deploy — it means the board is already running exactly what's on the canvas — and re-enables the moment you change anything (a property, a node, a wire). A failed deploy leaves it enabled so you can fix the problem and retry immediately.
+A successful deploy shows a confirmation in the console and the new flow starts running immediately. A failed one shows a specific error — a compile error (something in the flow itself, like a missing required property), a space error (the compiled flow doesn't fit in the board's available flash/RAM), or a library error (see below). A failed deploy leaves the board's current flow running. The button grays out right after a successful deploy — it means the board is already running exactly what's on the canvas — and re-enables the moment you change anything (a property, a node, a wire). A failed deploy leaves it enabled so you can fix the problem and retry immediately.
+
+### Libraries
+
+Some nodes need a library on the board, such as MQTT or a display driver. Deploy installs the libraries your flow uses
+and removes ones it no longer uses, so a board holds only what its flow needs. The console lists them on each deploy.
+A library already on the board isn't sent again.
+
+A [function node](nodes/function.md) that imports one of these libraries, such as `import mqtt_as`, gets it the same
+way. If the board can't take a library, for example because its flash is full, the console names the library and says
+why.
 
 **Tools → Check status** re-requests the board's identity — chip type, runtime version, and whichever flow is currently running — without resetting the board or redeploying anything. Useful for confirming what's actually on the board after reconnecting to a session already in progress.
 

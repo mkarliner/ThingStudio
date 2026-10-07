@@ -97,6 +97,10 @@ not something this node batch's off-device tests can exercise.~~
 single-file module, not `__init__.py` under a package dir — MicroPython's
 import resolution needs the flat name) by default; `--no-vendor` skips it.
 
+**2026-10-07 — flow dependencies.** Superseded: vendored libraries are no longer pushed at runtime install.
+`device-runtime/runtime_manifest.py`'s `DEPENDENCIES` lists them, and Deploy installs the ones a flow imports into
+the board's `/lib` (`docs/working-notes/flow-dependencies-scoping.md`).
+
 ## Local patches
 
 None. This file is vendored unmodified.
