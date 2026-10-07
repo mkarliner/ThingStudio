@@ -1,7 +1,7 @@
 # Flow dependencies — scoping
 
-Status: built 2026-10-07 on the `flow-dependencies` branch, runtime 7.0.0, then 8.0.0 (pieces, below); tested off-device (unix port, vitest,
-pytest), not yet on hardware. "Built" notes below mark where the build differs from the first sketch.
+Status: built 2026-10-07 on the `flow-dependencies` branch, runtime 7.0.0, then 8.0.0 (pieces, below), then 9.0.0
+(a reply per piece, below); tested off-device and on a Pico W and a CYD. "Built" notes below mark where the build differs from the first sketch.
 Replaces the "selective vendor push" P4 item in `outstanding-items.md` (2026-09-17). Phase 1 of
 `gui-layout-widget-system-scoping.md`'s phasing, and the module-push mechanism design doc §7 sketches.
 
@@ -71,7 +71,11 @@ no loops). Same single-list property, no new packaging step. A library's name eq
   data}` carries 1 KB, appended to the file's temp copy, no reply; `DEP_COMMIT {name, hash, files: {file: size}}`
   checks every file arrived whole, installs, and always answers `DEP_RESULT`. A piece the board couldn't read shows
   up as "arrived incomplete (x of y bytes)", plus what the board couldn't read. The editor also cancels pending
-  waits on disconnect (a stale 30 s wait had fired in the middle of the next deploy). Frames cap at 64KB (`framing.py`), so a dependency over
+  waits on disconnect (a stale 30 s wait had fired in the middle of the next deploy).
+- **Changed again (9.0.0): a reply to every piece.** On the CYD's USB-UART bridge (no flow control), pieces sent
+  back to back overran the board's input and arrived garbled. The board now answers each `DEP_PUT` with `DEP_ACK
+  {name, file, offset, ok, code, error}`, and the editor sends the next piece only after it (10 s timeout per piece,
+  failure attributed to the library, file and byte). Frames cap at 64KB (`framing.py`), so a dependency over
   that is split per file, and a single file over it is a compile-time error naming the file. (Largest today:
   `mqtt_as`, 37KB source; smaller as `.mpy`.)
 - **`DEPLOY` gains `dependencies: {name: hash}`.** Before importing the flow, the listener checks every one is

@@ -147,3 +147,13 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
   [BOARD_SETTINGS_RESULT] JSON echoes) are hidden unless it's on; flow output, warnings, errors and the editor's own
   notes always show. Editor-side filter (`console-filter.ts`), no runtime change; hidden rows are kept, the choice is
   remembered per browser.
+- 2026-10-07 (Mike: "the console is getting far too chatty ... it may need a log level"): the Verbose switch
+  becomes a **Show: Normal / Info / Debug** menu. Normal: flow output, warnings, errors, outcomes. Info: routine
+  reports (board detected, version check, memory, libraries, NET_*/LISTENER_* lines). Debug: protocol echoes, the
+  ESP32 boot ROM banner and ESP-IDF `I (...)` logs, NODE_STATUS prints, compiler and backend chatter. A line logged
+  as an error is always Normal. Still an editor-side filter (`console-filter.ts`); an old Verbose-on choice carries
+  over as Debug.
+- 2026-10-07 (Mike: "editor should display its version somewhere"): the toolbar shows the editor's version next
+  to its name (`v0.1.2 · <commit>`, `+` for uncommitted changes), with the full line in its tooltip, Help → About
+  and the browser console. Built in by `vite.config.ts`'s `editorBuild()` (backend/pyproject.toml's version, git
+  HEAD, build time); each part fails open. Prompted by a stale build that still targeted runtime 6.0.0.

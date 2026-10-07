@@ -20,6 +20,8 @@
     background: var(--panel); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
   #toolbar h1 { font-size: 13px; font-weight: 600; margin: 0 4px 0 0; color: var(--dim);
     text-transform: uppercase; letter-spacing: 0.04em; }
+  #toolbar h1 .editor-version { font-weight: 400; text-transform: none; letter-spacing: 0; margin-left: 4px;
+    font-size: 11px; }
   .sep { width: 1px; align-self: stretch; background: var(--border); margin: 0 4px; }
   .spacer { flex: 1 1 auto; }
   /* Each toolbar group (flow / board / deploy) stays on one line; when the window is too narrow the
@@ -125,7 +127,9 @@
     margin: 0 0 8px; cursor: pointer; }
   .panel:not([open]) summary { margin: 0; }
   .panel-action { position: absolute; top: 8px; right: 8px; padding: 2px 8px; font-size: 11px; }
-  .panel-action.verbose-toggle { right: 62px; display: flex; align-items: center; gap: 4px; color: var(--dim); }
+  .panel-action.console-level { right: 62px; display: flex; align-items: center; gap: 4px; color: var(--dim); }
+  .panel-action.console-level select { font: inherit; font-size: 11px; background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px; padding: 1px 2px; }
   .panel .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
   .console-tools { margin: 8px 0 0; }
   #cmdInput { flex: 1 1 auto; min-width: 0; background: var(--bg); color: var(--text); border: 1px solid var(--border);
@@ -170,7 +174,7 @@
          shown by one button (Connect, or "Connected · Disconnect"); occasional board jobs and the native
          arch in Tools; the docs in Help. Menu items keep their element ids, so main.ts drives them
          exactly as before (menus.ts only opens and closes the menus). -->
-    <h1>Thingstudio</h1>
+    <h1>Thingstudio <span id="editor-version" class="editor-version"></span></h1>
     <div class="tb-group">
       <div class="menu">
         <button class="menu-button" aria-haspopup="menu" aria-expanded="false">File ▾</button>
@@ -258,8 +262,12 @@
 
       <details class="panel" open>
         <summary>Device console</summary>
-        <label class="panel-action verbose-toggle" title="Also show routine system reports: network status, listener start-up, raw protocol messages. Warnings, errors and your flow's output always show.">
-          <input id="consoleVerbose" type="checkbox" /> Verbose</label>
+        <label class="panel-action console-level" title="How much to show. Normal: your flow's output, warnings, errors and results. Info: also routine reports (board detected, memory, libraries, network status). Debug: also raw protocol messages and boot output.">
+          Show <select id="consoleLevel">
+            <option value="normal">Normal</option>
+            <option value="info">Info</option>
+            <option value="debug">Debug</option>
+          </select></label>
         <button id="btnClear" class="panel-action">Clear</button>
         <div id="console"></div>
         <!-- Command box and board tools (2026-09-23). Commands run in the listener while a flow is

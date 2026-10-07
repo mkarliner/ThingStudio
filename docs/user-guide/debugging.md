@@ -4,7 +4,17 @@
 
 The **console** panel shows everything the connected board reports: deploy results, node errors, and anything a `debug` node prints. Clear it with the button in its corner.
 
-Routine system reports are hidden unless you tick **Verbose**: network status, the listener starting up, and the raw protocol messages. Tick it when you're chasing a connection problem. Warnings, errors and your flow's own output always show. Hidden lines are kept, so ticking it later shows what was already logged.
+The **Show** menu in its corner sets how much you see:
+
+- **Normal** shows your flow's output, warnings, errors and the results of what you do (deploy, flow status).
+- **Info** adds routine reports: board detected, versions, memory, libraries sent, network status.
+- **Debug** adds raw protocol messages and the board's boot output.
+
+Choose Info or Debug when you're chasing a problem. Hidden lines are kept, so switching later shows what was
+already logged.
+
+The editor's version is next to its name in the toolbar, and in **Help → About**. A `+` after it means it was
+built from uncommitted changes.
 
 The **source preview** panel shows the actual MicroPython the current canvas compiles to — useful for seeing exactly what a flow does, or for confirming a fix landed where you expected.
 

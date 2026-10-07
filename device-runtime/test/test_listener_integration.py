@@ -160,7 +160,7 @@ def test_hello_sent_on_boot():
             line = listener.wait_for(lambda l: l.startswith(F64_PREFIX), description="a HELLO frame")
             msg = _decode_f64_line(line)
             assert msg["type"] == "HELLO"
-            assert msg["runtimeVersion"] == {"major": 8, "minor": 0, "patch": 0}
+            assert msg["runtimeVersion"] == {"major": 9, "minor": 0, "patch": 0}
             assert msg["dependencies"] == {}, msg["dependencies"]  # fresh board: no flow libraries yet
             assert isinstance(msg["freeRamBytes"], int) and msg["freeRamBytes"] > 0
             assert msg["freeIdfHeapBytes"] is None and msg["largestIdfHeapBlockBytes"] is None  # not an ESP32
@@ -344,7 +344,7 @@ def test_hello_request_resends_hello_no_side_effects():
             reply_line = listener.wait_for(lambda l: l.startswith(F64_PREFIX), description="HELLO_REQUEST's HELLO reply")
             msg = _decode_f64_line(reply_line)
             assert msg["type"] == "HELLO"
-            assert msg["runtimeVersion"] == {"major": 8, "minor": 0, "patch": 0}
+            assert msg["runtimeVersion"] == {"major": 9, "minor": 0, "patch": 0}
 
             # No side effects: a normal DEPLOY still works fine afterward.
             bytecode = _compile_flow(
@@ -649,10 +649,14 @@ def _history_len(listener):
 
 def _send_library(listener, name, digest, files, piece=1024):
     """DEP_PUT pieces then DEP_COMMIT, as the editor sends them. Returns the DEP_RESULT."""
-    mark = _history_len(listener)
     for fname, data in files.items():
         for off in range(0, max(len(data), 1), piece):
+            # One piece at a time, each answered (DEP_ACK) before the next, as the editor sends them.
+            mark = _history_len(listener)
             listener.send_message({"type": "DEP_PUT", "name": name, "file": fname, "offset": off, "total": len(data), "data": data[off:off + piece]})
+            ack = _next_message(listener, mark, "DEP_ACK", "DEP_ACK for %s@%d" % (fname, off))
+            assert ack["offset"] == off and ack["file"] == fname, ack
+    mark = _history_len(listener)
     listener.send_message({"type": "DEP_COMMIT", "name": name, "hash": digest, "files": {f: len(d) for f, d in files.items()}})
     return _next_message(listener, mark, "DEP_RESULT", "DEP_RESULT for %s" % name)
 

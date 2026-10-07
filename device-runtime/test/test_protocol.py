@@ -124,6 +124,8 @@ SAMPLE_MESSAGES = [
     {"type": "BOARD_SETTINGS_RESULT", "ok": False, "error": "password must be 8-64 characters"},
     # DEP_PUT / DEP_RESULT added 2026-10-07 (flow dependencies).
     {"type": "DEP_PUT", "name": "mqtt_as", "file": "mqtt_as.mpy", "offset": 1024, "total": 11324, "data": bytes([0x4D, 6, 0, 31])},
+    {"type": "DEP_ACK", "name": "mqtt_as", "file": "mqtt_as.mpy", "offset": 1024, "ok": True, "code": None, "error": None},
+    {"type": "DEP_ACK", "name": "mqtt_as", "file": "mqtt_as.mpy", "offset": 0, "ok": False, "code": "NoSpace", "error": "no space for mqtt_as"},
     {"type": "RESTART", "hard": False},
     {"type": "RESTART", "hard": True},
     {"type": "DEP_COMMIT", "name": "mqtt_as", "hash": "0123456789abcdef", "files": {"mqtt_as.mpy": 11324}},

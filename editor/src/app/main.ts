@@ -138,7 +138,7 @@ import {
   type DocLink,
 } from "./board-diagnosis.js";
 import { explainBackendConnectError } from "./connect-error-help.js";
-import { isVerboseOnly } from "./console-filter.js";
+import { CONSOLE_LEVELS, consoleLevel, savedConsoleLevel, shownAt, type ConsoleLevel } from "./console-filter.js";
 import { NATIVE_ARCH_OPTIONS, inferNativeArch } from "./native-arch.js";
 import { formatMemoryLine } from "./memory-report.js";
 import { migrateI2cBusConfigs } from "../node-library/i2c-shared.js";
@@ -149,6 +149,7 @@ import { renderDefinitionPage, renderUnknownBoardPage } from "../definitions/def
 import type { BoardSettingsResultMessage, HelloMessage, Message, NodeStatusMessage, ProtocolVersion } from "../protocol/messages.js";
 import { checkRuntimeBuild, decideDeploy } from "../protocol/version.js";
 import { explainDeployImportError, networkWarningBeforeDeploy } from "./import-error-help.js";
+import { editorVersionLabel, editorVersionLine } from "./editor-version.js";
 import { RESTART_HINT, looksLikeOutOfMemory, lowMemoryWarningBeforeDeploy } from "./memory-advice.js";
 import { dependencyHash, findImportedModules, librariesToSend, libraryMessages, resolveDependencies, type DependencyInfo } from "../compiler/flow-dependencies.js";
 import { ClassicPreset } from "rete";
@@ -706,20 +707,19 @@ const consoleEl = el("console");
 // becomes clickable, wired to locateNode() below. Every call site below
 // that knows a node id passes it through; every other call (most of
 // them) simply omits it and gets the old plain, unclickable line.
-// Verbose switch (console-filter.ts): off by default, remembered per browser.
-let consoleVerbose = false;
+// Console level (console-filter.ts): Normal by default, remembered per browser.
+let consoleLevelChoice: ConsoleLevel = "normal";
 try {
-  consoleVerbose = localStorage.getItem("thingstudio.consoleVerbose") === "1";
+  consoleLevelChoice = savedConsoleLevel(localStorage.getItem("thingstudio.consoleLevel"), localStorage.getItem("thingstudio.consoleVerbose"));
 } catch {
-  // storage unavailable -- default off
+  // storage unavailable -- normal
 }
 
 function logLine(text: string, cls?: "ok" | "err" | "", nodeId?: string): void {
   const row = document.createElement("div");
-  if (isVerboseOnly(text, cls)) {
-    row.dataset.verbose = "1";
-    row.hidden = !consoleVerbose;
-  }
+  const level = consoleLevel(text, cls);
+  row.dataset.level = level;
+  row.hidden = !shownAt(level, consoleLevelChoice);
   const now = new Date();
   const ts = now.toLocaleTimeString(undefined, { hour12: false }) + "." + String(now.getMilliseconds()).padStart(3, "0");
   row.innerHTML = `<span class="t">[${ts}] </span><span class="${cls ?? ""}"></span>`;
@@ -1216,7 +1216,7 @@ function cancelAllWaits(reason: string): void {
 // bump-discipline rule), so this is the level that actually stops an
 // unsafe DEPLOY rather than letting it crash on the device.
 // 2.0.0 (2026-09-23): EXEC, STOP_TO_PROMPT, safe mode. Must match listener.py's _RUNTIME_VERSION.
-const EDITOR_TARGET_VERSION: ProtocolVersion = { major: 8, minor: 0, patch: 0 }; // 8.0.0 2026-10-07: libraries sent in 1 KB pieces + DEP_COMMIT (a whole-library DEP_PUT hit MemoryError on a fragmented ESP32 heap); 7.0.0 2026-10-07: flow dependencies (DEP_PUT, DEPLOY.dependencies; libraries in /lib, installed per flow); 6.0.0 2026-09-26: bme280 driver on the board; 5.1.0 2026-09-25: startup reason (getattr, so 5.0.0 still runs it), ESP-IDF heap fields; 5.0.0 2026-09-25: mqtt_as active(True) guard; 4.0.0 2026-09-25: mqtt_as guard, ESP32 MQTT joins WiFi first; 3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS
+const EDITOR_TARGET_VERSION: ProtocolVersion = { major: 9, minor: 0, patch: 0 }; // 9.0.0 2026-10-07: DEP_ACK per piece, so a USB-UART board isn't overrun; 8.0.0 2026-10-07: libraries sent in 1 KB pieces + DEP_COMMIT (a whole-library DEP_PUT hit MemoryError on a fragmented ESP32 heap); 7.0.0 2026-10-07: flow dependencies (DEP_PUT, DEPLOY.dependencies; libraries in /lib, installed per flow); 6.0.0 2026-09-26: bme280 driver on the board; 5.1.0 2026-09-25: startup reason (getattr, so 5.0.0 still runs it), ESP-IDF heap fields; 5.0.0 2026-09-25: mqtt_as active(True) guard; 4.0.0 2026-09-25: mqtt_as guard, ESP32 MQTT joins WiFi first; 3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS
 
 // This editor's own device-runtime/src git SHA, injected at build/dev-
 // server-start time by vite.config.ts's `define` (see that file,
@@ -1225,6 +1225,15 @@ const EDITOR_TARGET_VERSION: ProtocolVersion = { major: 8, minor: 0, patch: 0 };
 // built/started -- checkRuntimeBuild treats that as "can't compare",
 // not as a mismatch.
 const EDITOR_RUNTIME_BUILD: string | null = __RUNTIME_BUILD_SHA__;
+
+// The editor's own build, shown so a stale build is easy to spot (Mike, 2026-10-07).
+const EDITOR_VERSION_LINE = `${editorVersionLine(__EDITOR_BUILD__)}; expects board runtime ${EDITOR_TARGET_VERSION.major}.x`;
+{
+  const label = el("editor-version");
+  label.textContent = editorVersionLabel(__EDITOR_BUILD__);
+  label.title = EDITOR_VERSION_LINE;
+  console.info(`[thingstudio] ${EDITOR_VERSION_LINE}`);
+}
 
 const HELLO_WAIT_MS = 3000; // generous over a real boot's timing; only gates the "unverified" warning below, never blocks Connect itself
 
@@ -2152,17 +2161,18 @@ async function watchBackend(): Promise<void> {
 setTimeout(() => void watchBackend(), 5000);
 
 {
-  const box = el<HTMLInputElement>("consoleVerbose");
-  box.checked = consoleVerbose;
-  box.addEventListener("change", () => {
-    consoleVerbose = box.checked;
+  const picker = el<HTMLSelectElement>("consoleLevel");
+  picker.value = consoleLevelChoice;
+  picker.addEventListener("change", () => {
+    const v = picker.value as ConsoleLevel;
+    consoleLevelChoice = CONSOLE_LEVELS.includes(v) ? v : "normal";
     try {
-      localStorage.setItem("thingstudio.consoleVerbose", consoleVerbose ? "1" : "0");
+      localStorage.setItem("thingstudio.consoleLevel", consoleLevelChoice);
     } catch {
       // not remembered -- still applies to this page
     }
-    consoleEl.querySelectorAll<HTMLElement>("[data-verbose]").forEach((row) => {
-      row.hidden = !consoleVerbose;
+    consoleEl.querySelectorAll<HTMLElement>("[data-level]").forEach((row) => {
+      row.hidden = !shownAt(row.dataset.level as ConsoleLevel, consoleLevelChoice);
     });
     consoleEl.scrollTop = consoleEl.scrollHeight;
   });
@@ -2186,6 +2196,7 @@ el("btnAbout").addEventListener("click", async () => {
   } catch {
     lines.push("Thingstudio (version unknown: can't reach its backend)");
   }
+  lines.push(editorVersionLine(__EDITOR_BUILD__));
   const v = EDITOR_TARGET_VERSION;
   lines.push(`Editor expects board runtime ${v.major}.x (built for ${v.major}.${v.minor}.${v.patch})`);
   if (lastHello) {
@@ -2570,7 +2581,32 @@ async function installFlowDependencies(source: string): Promise<Record<string, s
     logLine(`[libraries] sending ${name} (${Math.max(1, Math.round(c.bytes / 1024))} KB)`, "");
     // Small pieces, then a commit the board always answers (libraryMessages' own comment says why).
     const { pieces, commit } = libraryMessages(name, c.hash, c.files);
-    for (const piece of pieces) await transport.send(piece);
+    // One piece at a time, each confirmed: a board behind a USB-UART bridge (CYD) has no flow control,
+    // and pieces sent back to back overran its input and arrived garbled (2026-10-07).
+    for (const piece of pieces) {
+      const ackP = waitForMessage(
+        (m) => m.type === "DEP_ACK" && m.name === name && m.file === piece.file && m.offset === piece.offset,
+        PIECE_TIMEOUT_MS,
+      );
+      await transport.send(piece);
+      let ack: Message;
+      try {
+        ack = await ackP;
+      } catch (err) {
+        const why = err instanceof Error && err.message.startsWith("timeout")
+          ? `didn't confirm part of library ${name} (${piece.file}, byte ${piece.offset}) within ${PIECE_TIMEOUT_MS / 1000}s`
+          : `stopped answering while receiving library ${name} (${err instanceof Error ? err.message : String(err)})`;
+        logLine(`[deploy failed] the board ${why}. The flow wasn't changed.`, "err");
+        boardDependencies = null;
+        return null;
+      }
+      if (ack.type === "DEP_ACK" && !ack.ok) {
+        logLine(`[deploy failed] the board couldn't take part of library ${name}: ${ack.error ?? ack.code ?? "unknown error"}. The flow wasn't changed.`, "err");
+        if (looksLikeOutOfMemory(ack.error)) logLine(`[deploy failed] the board ran short of memory. ${RESTART_HINT}`, "err");
+        boardDependencies = null;
+        return null;
+      }
+    }
     const resultP = waitForMessage((m) => m.type === "DEP_RESULT" && m.name === name, DEPLOY_TIMEOUT_MS);
     await transport.send(commit);
     let result: Message;
@@ -2593,6 +2629,7 @@ async function installFlowDependencies(source: string): Promise<Record<string, s
   return required;
 }
 
+const PIECE_TIMEOUT_MS = 10000; // one 1 KB piece: write to flash and answer
 const DEPLOY_TIMEOUT_MS = 30000; // comfortably exceeds listener.py's own READ_TIMEOUT_S=8 across a few internal phases
 
 el("btnDeploy").addEventListener("click", async () => {

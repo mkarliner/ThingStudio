@@ -44,3 +44,10 @@ Detail: `../flow-dependencies-scoping.md`.
   don't need it. Also: flow identity is now saved before the flow starts, and a HELLO during a deploy is reported as
   "the board restarted" with whether the new flow is running, instead of a 30 s timeout. Not yet checked on
   hardware: whether a soft reset gives WiFi its ESP-IDF memory back on a classic ESP32.
+
+- **2026-10-07 — A reply to every piece (runtime 9.0.0).** On the CYD (CH340 USB-UART bridge, no flow control),
+  1 KB pieces sent back to back arrived garbled (`CBOR map key must be a text string`, `incorrect padding`), then
+  the editor waited out its 30 s timeout. The board now answers each `DEP_PUT` with `DEP_ACK {name, file, offset,
+  ok, code, error}`, and the editor sends the next piece only after it: 10 s per piece, a failure names the library,
+  file and byte. One round trip per KB, under a second for the largest library over USB. Major bump: boards on
+  8.0.0 need the runtime installed again.

@@ -88,14 +88,17 @@ export const MessageType = {
   SET_BOARD_SETTINGS: 14,
   BOARD_SETTINGS_RESULT: 15,
   // Added 2026-10-07 (flow dependencies, flow-dependencies-scoping.md): editor -> device, one small piece
-  // of a library the next flow imports (no reply), then DEP_COMMIT, which the device answers with
-  // DEP_RESULT. Must match messages.py.
+  // of a library the next flow imports (answered by DEP_ACK), then DEP_COMMIT, which the device answers
+  // with DEP_RESULT. Must match messages.py.
   DEP_PUT: 16,
   DEP_RESULT: 17,
   DEP_COMMIT: 18,
   // Added 2026-10-07 (Mike: manual soft and hard reset). Editor -> device: restart the board; no reply,
   // its boot output and HELLO answer. Must match messages.py.
   RESTART: 19,
+  // Added 2026-10-07 (runtime 9.0.0): device -> editor, the answer to each DEP_PUT. The editor sends the
+  // next piece only after this, so a board behind a USB-UART bridge (no flow control) is never overrun.
+  DEP_ACK: 20,
 } as const;
 
 export type MessageTypeId = (typeof MessageType)[keyof typeof MessageType];
@@ -391,7 +394,7 @@ export interface BoardSettingsResultMessage {
 }
 
 /** Editor -> device (flow dependencies, 2026-10-07): one piece of one file of a library, written to a
- * temporary file in the board's /lib. No reply. Libraries go in small pieces because one large message
+ * temporary file in the board's /lib. Answered by DEP_ACK. Libraries go in small pieces because one large message
  * needs one large block of the board's RAM, which a fragmented heap may not have (found on a classic
  * ESP32 with a display flow running). `offset` must equal the bytes already sent for this file. */
 export interface DepPutMessage {
@@ -424,6 +427,18 @@ export interface DepResultMessage {
   readonly freeFlashBytes: number | null;
 }
 
+/** Device -> editor, the answer to one DEP_PUT (runtime 9.0.0). `name`/`file`/`offset` echo the piece.
+ * When !ok, `code`/`error` say why (BadPiece, NoSpace, Unreadable...); the editor stops sending. */
+export interface DepAckMessage {
+  readonly type: "DEP_ACK";
+  readonly name: string;
+  readonly file: string;
+  readonly offset: number;
+  readonly ok: boolean;
+  readonly code: string | null;
+  readonly error: string | null;
+}
+
 /** Editor -> device: restart the board. `hard` false: soft reset (interpreter only, USB stays up);
  * true: full chip reset (native-USB boards disconnect). */
 export interface RestartMessage {
@@ -450,7 +465,8 @@ export type Message =
   | DepPutMessage
   | DepResultMessage
   | DepCommitMessage
-  | RestartMessage;
+  | RestartMessage
+  | DepAckMessage;
 
 export const MESSAGE_TYPE_BY_NAME: Record<Message["type"], MessageTypeId> = {
   HELLO: MessageType.HELLO,
@@ -472,6 +488,7 @@ export const MESSAGE_TYPE_BY_NAME: Record<Message["type"], MessageTypeId> = {
   DEP_RESULT: MessageType.DEP_RESULT,
   DEP_COMMIT: MessageType.DEP_COMMIT,
   RESTART: MessageType.RESTART,
+  DEP_ACK: MessageType.DEP_ACK,
 };
 
 export const MESSAGE_NAME_BY_TYPE: Record<MessageTypeId, Message["type"]> = {
@@ -494,4 +511,5 @@ export const MESSAGE_NAME_BY_TYPE: Record<MessageTypeId, Message["type"]> = {
   [MessageType.DEP_RESULT]: "DEP_RESULT",
   [MessageType.DEP_COMMIT]: "DEP_COMMIT",
   [MessageType.RESTART]: "RESTART",
+  [MessageType.DEP_ACK]: "DEP_ACK",
 };

@@ -187,6 +187,19 @@ export function decodeMessageBody(typeId: number, body: Uint8Array): Message {
         freeFlashBytes: expectOptionalNonNegativeInt(obj, "freeFlashBytes", name),
       };
     }
+    case "DEP_ACK": {
+      const ok = requirePresent(obj, "ok", name);
+      if (typeof ok !== "boolean") fail(name, `field "ok" must be a bool, got ${typeof ok}`);
+      return {
+        type: "DEP_ACK",
+        name: expectString(obj, "name", name),
+        file: expectString(obj, "file", name),
+        offset: expectNonNegativeInt(obj, "offset", name),
+        ok,
+        code: expectOptionalString(obj, "code", name),
+        error: expectOptionalString(obj, "error", name),
+      };
+    }
   }
 }
 

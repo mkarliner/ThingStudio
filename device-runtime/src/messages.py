@@ -15,7 +15,7 @@
 #   HELLO=1 DEPLOY=2 DEPLOY_ACK=3 DEPLOY_ERROR=4 VALUE_STREAM=5
 #   NODE_ERROR=6 STATE_READ=7 STATE_WRITE=8 TRIGGER=9 HELLO_REQUEST=10
 #   NODE_STATUS=11 EXEC=12 STOP_TO_PROMPT=13 SET_BOARD_SETTINGS=14
-#   BOARD_SETTINGS_RESULT=15 DEP_PUT=16 DEP_RESULT=17 DEP_COMMIT=18 RESTART=19
+#   BOARD_SETTINGS_RESULT=15 DEP_PUT=16 DEP_RESULT=17 DEP_COMMIT=18 RESTART=19 DEP_ACK=20
 #
 # NODE_STATUS (2026-09-10, outstanding-items/node-status-indicators.md):
 # device -> editor, a lightweight per-node connection-status push,
@@ -81,7 +81,7 @@ MessageType = {
     "SET_BOARD_SETTINGS": 14,
     "BOARD_SETTINGS_RESULT": 15,
     # Added 2026-10-07 (flow dependencies, flow-dependencies-scoping.md). Editor -> device: one small
-    # piece of one file of a library the next flow imports (deps.py), no reply; then DEP_COMMIT, which
+    # piece of one file of a library the next flow imports (deps.py), answered by DEP_ACK; then DEP_COMMIT, which
     # the device answers with DEP_RESULT (ok, or an error naming the library). Pieces, not whole
     # libraries: one big message needs one big block of RAM, which a fragmented heap may not have.
     "DEP_PUT": 16,
@@ -92,6 +92,10 @@ MessageType = {
     # USB stays up); hard True: full chip reset (native-USB boards drop off the bus and come back). No
     # reply: the board's boot output and HELLO are the answer.
     "RESTART": 19,
+    # Added 2026-10-07. Device -> editor: the answer to each DEP_PUT piece. The editor sends the next piece
+    # only after this, so a board behind a USB-UART bridge (no flow control; CYD) never gets bytes faster
+    # than it can take them -- unpaced pieces overflowed its receive buffer while it wrote to flash.
+    "DEP_ACK": 20,
 }
 
 MESSAGE_NAME_BY_TYPE = {v: k for k, v in MessageType.items()}
@@ -308,6 +312,20 @@ def _validate_dep_commit(obj, name):
     return {"name": _expect_string(obj, "name", name), "hash": _expect_string(obj, "hash", name), "files": out}
 
 
+def _validate_dep_ack(obj, name):
+    ok = _require_present(obj, "ok", name)
+    if not isinstance(ok, bool):
+        _fail(name, 'field "ok" must be a bool, got %r' % (type(ok),))
+    return {
+        "name": _expect_string(obj, "name", name),
+        "file": _expect_string(obj, "file", name),
+        "offset": _expect_non_negative_int(obj, "offset", name),
+        "ok": ok,
+        "code": _expect_optional_string(obj, "code", name),
+        "error": _expect_optional_string(obj, "error", name),
+    }
+
+
 def _validate_restart(obj, name):
     return {"hard": _expect_optional_bool(obj, "hard", name) or False}
 
@@ -506,4 +524,5 @@ _VALIDATORS = {
     "DEP_RESULT": _validate_dep_result,
     "DEP_COMMIT": _validate_dep_commit,
     "RESTART": _validate_restart,
+    "DEP_ACK": _validate_dep_ack,
 }

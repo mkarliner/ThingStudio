@@ -66,6 +66,8 @@ const SAMPLE_MESSAGES: Message[] = [
   { type: "BOARD_SETTINGS_RESULT", ok: false, error: "password must be 8-64 characters" },
   // DEP_PUT/DEP_RESULT (2026-10-07, flow dependencies).
   { type: "DEP_PUT", name: "mqtt_as", file: "mqtt_as.mpy", offset: 1024, total: 11324, data: new Uint8Array([0x4d, 6, 0, 31]) },
+  { type: "DEP_ACK", name: "mqtt_as", file: "mqtt_as.mpy", offset: 1024, ok: true, code: null, error: null },
+  { type: "DEP_ACK", name: "mqtt_as", file: "mqtt_as.mpy", offset: 0, ok: false, code: "BadPiece", error: "piece at byte 2048" },
   { type: "RESTART", hard: false },
   { type: "RESTART", hard: true },
   { type: "DEP_COMMIT", name: "mqtt_as", hash: "0123456789abcdef", files: { "mqtt_as.mpy": 11324 } },

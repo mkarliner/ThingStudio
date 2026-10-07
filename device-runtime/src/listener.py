@@ -154,7 +154,7 @@ F64_PREFIX = "F64:"
 _HEARTBEAT_PIN = 10
 _HEARTBEAT_PERIOD_MS = 200
 
-_RUNTIME_VERSION = {"major": 8, "minor": 0, "patch": 0}  # 8.0.0 2026-10-07: libraries sent in 1 KB pieces (DEP_PUT) plus DEP_COMMIT -- one big DEP_PUT failed with MemoryError on a fragmented ESP32 heap; 7.0.0 2026-10-07: flow dependencies (DEP_PUT, DEPLOY.dependencies, libraries in /lib instead of every board getting every library); 6.0.0 2026-09-26: vendored bme280_float.py and runtime.shared() (bme280/I2C flows use both, so an older board fails them); 5.1.0 2026-09-25: runtime.start_reason, ESP-IDF heap in HELLO/DEPLOY_ACK -- minor only: startup codegen reads start_reason with getattr, so its flows still run on 5.0.0; 5.0.0 same day: mqtt_as active(True) only when inactive (4.0.0 same day: vendored mqtt_as wifi_connect() guard -- MQTT codegen now joins WiFi first on ESP32 (3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS; 2.0.0 was 2026-09-23: EXEC, STOP_TO_PROMPT, safe mode; 1.0.0 was 2026-09-10: NODE_STATUS)
+_RUNTIME_VERSION = {"major": 9, "minor": 0, "patch": 0}  # 9.0.0 2026-10-07: DEP_ACK per DEP_PUT piece (unpaced pieces overflowed a USB-UART board's receive buffer), RESTART; 8.0.0 2026-10-07: libraries sent in 1 KB pieces (DEP_PUT) plus DEP_COMMIT -- one big DEP_PUT failed with MemoryError on a fragmented ESP32 heap; 7.0.0 2026-10-07: flow dependencies (DEP_PUT, DEPLOY.dependencies, libraries in /lib instead of every board getting every library); 6.0.0 2026-09-26: vendored bme280_float.py and runtime.shared() (bme280/I2C flows use both, so an older board fails them); 5.1.0 2026-09-25: runtime.start_reason, ESP-IDF heap in HELLO/DEPLOY_ACK -- minor only: startup codegen reads start_reason with getattr, so its flows still run on 5.0.0; 5.0.0 same day: mqtt_as active(True) only when inactive (4.0.0 same day: vendored mqtt_as wifi_connect() guard -- MQTT codegen now joins WiFi first on ESP32 (3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS; 2.0.0 was 2026-09-23: EXEC, STOP_TO_PROMPT, safe mode; 1.0.0 was 2026-09-10: NODE_STATUS)
 # (runtime.report_status) is a hard dependency of wifi-status.ts's/mqtt-shared.ts's codegen now -- an editor
 # with this change targeting a pre-2026-09-10 runtime would crash on deploy (AttributeError: report_status),
 # not degrade gracefully. See CLAUDE.md's "Device-runtime version bump discipline" -- decideDeploy() only
@@ -521,8 +521,8 @@ def _handle_set_board_settings(msg, source):
     return err
 
 
-# Flow dependencies: errors from DEP_PUT pieces, reported by that library's DEP_COMMIT. Pieces get no
-# reply of their own (a reply per 1 KB piece would double the traffic); the commit always answers.
+# Flow dependencies: errors from DEP_PUT pieces, kept for that library's DEP_COMMIT (each piece's DEP_ACK
+# reports them too).
 _dep_put_errors = {}  # library name -> (code, message)
 # The last message the listener couldn't decode (MemoryError on a fragmented heap, garbled line...).
 # A piece that never decoded can't be attributed to a library, so a failed commit mentions this.
@@ -537,18 +537,29 @@ def _note_unreadable(what):
 
 def _handle_dep_put(msg):
     """DEP_PUT (flow dependencies, 2026-10-07): one piece of one file of a library, appended to its
-    temporary file in /lib (deps.py). Never touches the running flow."""
+    temporary file in /lib (deps.py). Always answered with DEP_ACK, ok or the error: the editor waits for
+    it before sending the next piece, which paces the transfer (see messages.py's DEP_ACK). A failure is
+    also kept for that library's DEP_COMMIT. Never touches the running flow."""
     name = msg["name"]
-    if deps is None or name in _dep_put_errors:
-        return  # reported at DEP_COMMIT
+    ack = {"type": "DEP_ACK", "name": name, "file": msg["file"], "offset": msg["offset"], "ok": True}
+    if deps is None:
+        _dep_put_errors[name] = ("Unsupported", "this board's Thingstudio software is incomplete (deps.py missing) -- install the runtime again")
+    if name in _dep_put_errors:
+        code, message = _dep_put_errors[name]
+        ack.update(ok=False, code=code, error=message)
+        _send_message_safe(ack)
+        return
     try:
         deps.put_chunk(name, msg["file"], msg["offset"], msg["total"], msg["data"])
     except deps.DepError as e:
         print("DEP_ERR %s %s" % (e.code, e.message))
         _dep_put_errors[name] = (e.code, e.message)
+        ack.update(ok=False, code=e.code, error=e.message)
     except Exception as e:  # noqa: BLE001 -- adversarial-shaped input, never allowed to kill the listener
         print("DEP_ERR %r" % (e,))
         _dep_put_errors[name] = (type(e).__name__, "writing %s failed: %r" % (name, e))
+        ack.update(ok=False, code=type(e).__name__, error="writing %s failed: %r" % (name, e))
+    _send_message_safe(ack)
 
 
 def _handle_dep_commit(msg):

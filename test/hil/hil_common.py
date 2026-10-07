@@ -190,12 +190,20 @@ def install_dependencies(dut, mpy_cross, tmpdir, source):
                 mpy = compile_flow(mpy_cross, tmpdir, "dep_" + board_name[:-3], f.read())
             files[board_name[:-3] + ".mpy"] = mpy
         digest = dependency_hash(files)
-        # 1 KB pieces then a commit, as the editor sends them (flow-dependencies.ts's libraryMessages).
+        # 1 KB pieces, each confirmed by DEP_ACK before the next (runtime 9.0.0: a USB-UART board has no
+        # flow control), then a commit -- as the editor sends them (flow-dependencies.ts, main.ts).
         for fname in sorted(files):
             data = files[fname]
             for off in range(0, max(len(data), 1), 1024):
                 dut.send_message({"type": "DEP_PUT", "name": dep["name"], "file": fname, "offset": off,
                                   "total": len(data), "data": data[off:off + 1024]})
+                ack = dut.wait_for_message(
+                    lambda m, f=fname, o=off: m["type"] == "DEP_ACK" and m.get("name") == dep["name"]
+                    and m.get("file") == f and m.get("offset") == o,
+                    timeout_s=10, description="DEP_ACK for %s %s@%d" % (dep["name"], fname, off))
+                if not ack["ok"]:
+                    raise RuntimeError("sending %s failed at %s byte %d: %s %s"
+                                       % (dep["name"], fname, off, ack.get("code"), ack.get("error")))
         dut.send_message({"type": "DEP_COMMIT", "name": dep["name"], "hash": digest,
                           "files": {f: len(d) for f, d in files.items()}})
         res = dut.wait_for_message(lambda m: m["type"] == "DEP_RESULT" and m.get("name") == dep["name"], timeout_s=15,

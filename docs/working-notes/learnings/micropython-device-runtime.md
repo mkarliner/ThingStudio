@@ -239,3 +239,12 @@ Found on a CYD (classic ESP32, no PSRAM) with `display-spi-gs4-cyd-test` running
   ESP-IDF memory when it runs short, and keeps it until reset. WiFi allocates from the ESP-IDF heap, so after a
   display flow has grown the heap, a WiFi/MQTT flow deployed without a reset has nothing to join with. Same mechanism
   as the 2026-09-25 ESP32-C3 entry. A deploy that starts the new flow from a fresh boot would avoid it.
+
+## A USB-UART board has no flow control: pace what you send, 2026-10-07
+
+Found on a CYD (classic ESP32 behind a CH340 bridge), sending a library in 1 KB pieces back to back. The board
+reported `CBOR map key must be a text string` and `incorrect padding` for pieces the editor had encoded correctly.
+The bridge has no flow control: while the board was busy writing one piece to flash, the next overran MicroPython's
+UART input buffer and bytes were lost mid-line. Native-USB boards (Pico W, ESP32-C3/S3) didn't show it, since USB
+CDC applies backpressure. Fix: the board answers each piece (`DEP_ACK`) and the sender waits for it. Any bulk
+transfer to a board should be paced by a reply, not just kept small.
