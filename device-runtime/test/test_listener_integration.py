@@ -160,7 +160,7 @@ def test_hello_sent_on_boot():
             line = listener.wait_for(lambda l: l.startswith(F64_PREFIX), description="a HELLO frame")
             msg = _decode_f64_line(line)
             assert msg["type"] == "HELLO"
-            assert msg["runtimeVersion"] == {"major": 7, "minor": 0, "patch": 0}
+            assert msg["runtimeVersion"] == {"major": 8, "minor": 0, "patch": 0}
             assert msg["dependencies"] == {}, msg["dependencies"]  # fresh board: no flow libraries yet
             assert isinstance(msg["freeRamBytes"], int) and msg["freeRamBytes"] > 0
             assert msg["freeIdfHeapBytes"] is None and msg["largestIdfHeapBlockBytes"] is None  # not an ESP32
@@ -344,7 +344,7 @@ def test_hello_request_resends_hello_no_side_effects():
             reply_line = listener.wait_for(lambda l: l.startswith(F64_PREFIX), description="HELLO_REQUEST's HELLO reply")
             msg = _decode_f64_line(reply_line)
             assert msg["type"] == "HELLO"
-            assert msg["runtimeVersion"] == {"major": 7, "minor": 0, "patch": 0}
+            assert msg["runtimeVersion"] == {"major": 8, "minor": 0, "patch": 0}
 
             # No side effects: a normal DEPLOY still works fine afterward.
             bytecode = _compile_flow(
@@ -401,6 +401,54 @@ def test_boot_time_flow_auto_resume():
             second.wait_for(lambda l: l == "INTEGRATION_FLOW_RESUMED", description="the persisted flow's own print output, with no DEPLOY sent this boot")
         finally:
             second.close()
+
+
+def test_flow_that_kills_the_board_while_starting_keeps_its_identity_after_reboot():
+    # 2026-10-07, CYD: a deploy hard-crashed the board (ESP32 abort()) while the new flow was starting;
+    # the reboot resumed the saved flow, but HELLO said "no flow running" because flow identity was only
+    # saved after a successful start. SystemExit stands in for the crash: it isn't an Exception, so it
+    # ends the listener process mid-deploy, the closest the unix port gets to a reset.
+    with tempfile.TemporaryDirectory() as tmpdir:
+        crashing = _compile_flow(
+            tmpdir,
+            "flow_crash",
+            "import runtime, sys, os\n"
+            "if not os.getenv('TS_NO_CRASH'):\n"
+            "    raise SystemExit(3)\n"
+            "async def _flow_0():\n"
+            "    print('CRASHY_FLOW_RUNNING')\n"
+            "runtime.spawn(_flow_0(), '1')\n",
+        )
+        first = ListenerProcess(tmpdir)
+        try:
+            first.wait_for(lambda l: l == "LISTENER_READY", description="LISTENER_READY (first boot)")
+            first.send_message({"type": "DEPLOY", "bytecode": crashing, "staticData": b"", "flowName": "crashy", "deployId": "dep-42"})
+            first.proc.wait(timeout=10)  # the "crash"
+        finally:
+            first.close()
+        second = ListenerProcess(tmpdir, {"TS_NO_CRASH": "1"})  # "after the reboot" the flow starts fine
+        try:
+            second.wait_for(lambda l: l == "CRASHY_FLOW_RUNNING", description="the saved flow resumed after the crash")
+            line = second.wait_for(lambda l: l.startswith(F64_PREFIX) and _decode_f64_line(l)["type"] == "HELLO", description="HELLO")
+            hello = _decode_f64_line(line)
+            assert hello["currentFlowName"] == "crashy", hello
+            assert hello["currentFlowDeployId"] == "dep-42", hello
+        finally:
+            second.close()
+
+
+def test_soft_restart_stops_the_flow_and_ends_the_interpreter():
+    # RESTART (2026-10-07). On the unix port machine.soft_reset() ends the process, the nearest thing to a
+    # board's interpreter restart; a real board then boots straight back into the listener.
+    with tempfile.TemporaryDirectory() as tmpdir:
+        listener = ListenerProcess(tmpdir)
+        try:
+            listener.wait_for(lambda l: l == "LISTENER_READY", description="LISTENER_READY")
+            listener.send_message({"type": "RESTART", "hard": False})
+            listener.wait_for(lambda l: l == "LISTENER_RESTART soft reset requested", description="the restart notice")
+            listener.proc.wait(timeout=10)
+        finally:
+            listener.close()
 
 
 def test_start_reason_is_deploy_then_boot_reason():
@@ -599,6 +647,16 @@ def _history_len(listener):
         return len(listener._history)
 
 
+def _send_library(listener, name, digest, files, piece=1024):
+    """DEP_PUT pieces then DEP_COMMIT, as the editor sends them. Returns the DEP_RESULT."""
+    mark = _history_len(listener)
+    for fname, data in files.items():
+        for off in range(0, max(len(data), 1), piece):
+            listener.send_message({"type": "DEP_PUT", "name": name, "file": fname, "offset": off, "total": len(data), "data": data[off:off + piece]})
+    listener.send_message({"type": "DEP_COMMIT", "name": name, "hash": digest, "files": {f: len(d) for f, d in files.items()}})
+    return _next_message(listener, mark, "DEP_RESULT", "DEP_RESULT for %s" % name)
+
+
 def test_flow_dependencies_end_to_end():
     # Flow dependencies (2026-10-07): a flow that imports a library deploys only once the library is
     # installed; a missing one is a DEPLOY_ERROR naming it with the old flow untouched; a new version
@@ -634,9 +692,7 @@ def test_flow_dependencies_end_to_end():
             assert hello["currentFlowName"] == "plain", "a refused deploy must leave the running flow alone: %r" % (hello["currentFlowName"],)
 
             # 2. Install it, then deploy: the flow imports it from the library folder.
-            mark = _history_len(listener)
-            listener.send_message({"type": "DEP_PUT", "name": "ts_dep_demo", "hash": "h1", "files": {"ts_dep_demo.mpy": dep_v1}})
-            res = _next_message(listener, mark, "DEP_RESULT", "DEP_RESULT for v1")
+            res = _send_library(listener, "ts_dep_demo", "h1", {"ts_dep_demo.mpy": dep_v1}, piece=16)  # many pieces
             assert res["ok"] is True and res["name"] == "ts_dep_demo", res
             assert os.path.exists(os.path.join(lib_dir, "ts_dep_demo.mpy"))
             mark = _history_len(listener)
@@ -645,9 +701,7 @@ def test_flow_dependencies_end_to_end():
             listener.wait_for(lambda l: l == "DEP_SAYS DEP_V1", description="the flow using library v1")
 
             # 3. A new version replaces the old one, and the next deploy loads it (not the cached module).
-            mark = _history_len(listener)
-            listener.send_message({"type": "DEP_PUT", "name": "ts_dep_demo", "hash": "h2", "files": {"ts_dep_demo.mpy": dep_v2}})
-            assert _next_message(listener, mark, "DEP_RESULT", "DEP_RESULT for v2")["ok"] is True
+            assert _send_library(listener, "ts_dep_demo", "h2", {"ts_dep_demo.mpy": dep_v2})["ok"] is True
             mark = _history_len(listener)
             listener.send_message({"type": "DEPLOY", "bytecode": flow_dep, "staticData": b"", "flowName": "needs dep", "deployId": "d4", "dependencies": {"ts_dep_demo": "h2"}})
             _next_message(listener, mark, "DEPLOY_ACK", "DEPLOY_ACK with library v2")
@@ -666,11 +720,21 @@ def test_flow_dependencies_end_to_end():
             assert _next_message(listener, mark, "HELLO", "HELLO after cleanup")["dependencies"] == {}
 
             # 5. A bad library name is refused with an attributed error, and the listener carries on.
-            mark = _history_len(listener)
-            listener.send_message({"type": "DEP_PUT", "name": "evil", "hash": "h", "files": {"../escape.mpy": b"x"}})
-            res = _next_message(listener, mark, "DEP_RESULT", "DEP_RESULT for a bad file name")
+            res = _send_library(listener, "evil", "h", {"../escape.mpy": b"x"})
             assert res["ok"] is False and res["code"] == "BadName", res
             assert not os.path.exists(os.path.join(tmpdir, "escape.mpy"))
+
+            # 6. A piece that never arrives (here: dropped; on hardware, one the board couldn't decode):
+            #    the commit says the library arrived incomplete, nothing is installed, the listener carries on.
+            mark = _history_len(listener)
+            listener.send_message({"type": "DEP_PUT", "name": "ts_dep_demo", "file": "ts_dep_demo.mpy", "offset": 0, "total": len(dep_v1), "data": dep_v1[:16]})
+            listener.send_raw_line("F64:!!!not base64 at all!!!")  # stands in for the piece the board couldn't read
+            listener.send_message({"type": "DEP_COMMIT", "name": "ts_dep_demo", "hash": "h3", "files": {"ts_dep_demo.mpy": len(dep_v1)}})
+            res = _next_message(listener, mark, "DEP_RESULT", "DEP_RESULT for an incomplete library")
+            assert res["ok"] is False and res["code"] == "Incomplete", res
+            assert "16 of %d bytes" % len(dep_v1) in res["error"], res["error"]
+            assert "couldn't read part of it" in res["error"], res["error"]
+            assert not any(n.endswith(".tmp") for n in os.listdir(lib_dir)), os.listdir(lib_dir)
         finally:
             listener.close()
 
@@ -1057,6 +1121,8 @@ TESTS = [
     test_network_session_end_to_end,
     test_network_session_auth_timeout_and_garbage,
     test_flow_dependencies_end_to_end,
+    test_flow_that_kills_the_board_while_starting_keeps_its_identity_after_reboot,
+    test_soft_restart_stops_the_flow_and_ends_the_interpreter,
 ]
 
 

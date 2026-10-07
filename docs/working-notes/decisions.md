@@ -216,5 +216,5 @@ executable; Windows `irm | iex` one-liner, per-user, no admin; winget/scoop post
 
 A board gets only the libraries its flow uses, installed by Deploy through the listener; unused ones removed
 after a successful deploy (2026-10-07). Replaces "selective vendor push". Built the same day, runtime 7.0.0,
-off-device tests only. 2 entries:
+hardware-checked on Pico W and an upgraded ESP32; libraries now sent in 1 KB pieces (runtime 8.0.0). 5 entries:
 `docs/working-notes/decisions/flow-dependencies.md`.

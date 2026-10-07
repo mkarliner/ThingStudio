@@ -87,11 +87,15 @@ export const MessageType = {
   // BOARD_SETTINGS_RESULT, then a fresh HELLO on success. USB serial only. Must match messages.py.
   SET_BOARD_SETTINGS: 14,
   BOARD_SETTINGS_RESULT: 15,
-  // Added 2026-10-07 (flow dependencies, flow-dependencies-scoping.md): editor -> device, install one
-  // library the next flow imports into the board's /lib; the device answers DEP_RESULT. Must match
-  // messages.py.
+  // Added 2026-10-07 (flow dependencies, flow-dependencies-scoping.md): editor -> device, one small piece
+  // of a library the next flow imports (no reply), then DEP_COMMIT, which the device answers with
+  // DEP_RESULT. Must match messages.py.
   DEP_PUT: 16,
   DEP_RESULT: 17,
+  DEP_COMMIT: 18,
+  // Added 2026-10-07 (Mike: manual soft and hard reset). Editor -> device: restart the board; no reply,
+  // its boot output and HELLO answer. Must match messages.py.
+  RESTART: 19,
 } as const;
 
 export type MessageTypeId = (typeof MessageType)[keyof typeof MessageType];
@@ -386,18 +390,31 @@ export interface BoardSettingsResultMessage {
   readonly error: string | null;
 }
 
-/** Editor -> device (flow dependencies, 2026-10-07): install one library into the board's /lib.
- * `files` maps a file name on the board ("mqtt_as.mpy") to its bytes -- a map, not a list, because
- * the device's CBOR codec has no arrays. `hash` identifies this exact content (HELLO/DEPLOY). */
+/** Editor -> device (flow dependencies, 2026-10-07): one piece of one file of a library, written to a
+ * temporary file in the board's /lib. No reply. Libraries go in small pieces because one large message
+ * needs one large block of the board's RAM, which a fragmented heap may not have (found on a classic
+ * ESP32 with a display flow running). `offset` must equal the bytes already sent for this file. */
 export interface DepPutMessage {
   readonly type: "DEP_PUT";
   readonly name: string;
-  readonly hash: string;
-  readonly files: Readonly<Record<string, Uint8Array>>;
+  readonly file: string;
+  readonly offset: number;
+  readonly total: number;
+  readonly data: Uint8Array;
 }
 
-/** Device -> editor, the answer to DEP_PUT. When !ok, `code` is short (NoSpace, BadName,
- * WriteFailed, Unsupported) and `error` says what went wrong, naming the library. */
+/** Editor -> device: every piece of library `name` has been sent. `files` maps each file name to its
+ * size; the device checks they all arrived whole, installs the library and answers DEP_RESULT. A map,
+ * not a list: the device's CBOR codec has no arrays. `hash` identifies this exact content. */
+export interface DepCommitMessage {
+  readonly type: "DEP_COMMIT";
+  readonly name: string;
+  readonly hash: string;
+  readonly files: Readonly<Record<string, number>>;
+}
+
+/** Device -> editor, the answer to DEP_COMMIT. When !ok, `code` is short (NoSpace, BadName, BadPiece,
+ * Incomplete, WriteFailed, Unsupported) and `error` says what went wrong, naming the library. */
 export interface DepResultMessage {
   readonly type: "DEP_RESULT";
   readonly name: string;
@@ -405,6 +422,13 @@ export interface DepResultMessage {
   readonly code: string | null;
   readonly error: string | null;
   readonly freeFlashBytes: number | null;
+}
+
+/** Editor -> device: restart the board. `hard` false: soft reset (interpreter only, USB stays up);
+ * true: full chip reset (native-USB boards disconnect). */
+export interface RestartMessage {
+  readonly type: "RESTART";
+  readonly hard: boolean;
 }
 
 export type Message =
@@ -424,7 +448,9 @@ export type Message =
   | SetBoardSettingsMessage
   | BoardSettingsResultMessage
   | DepPutMessage
-  | DepResultMessage;
+  | DepResultMessage
+  | DepCommitMessage
+  | RestartMessage;
 
 export const MESSAGE_TYPE_BY_NAME: Record<Message["type"], MessageTypeId> = {
   HELLO: MessageType.HELLO,
@@ -444,6 +470,8 @@ export const MESSAGE_TYPE_BY_NAME: Record<Message["type"], MessageTypeId> = {
   BOARD_SETTINGS_RESULT: MessageType.BOARD_SETTINGS_RESULT,
   DEP_PUT: MessageType.DEP_PUT,
   DEP_RESULT: MessageType.DEP_RESULT,
+  DEP_COMMIT: MessageType.DEP_COMMIT,
+  RESTART: MessageType.RESTART,
 };
 
 export const MESSAGE_NAME_BY_TYPE: Record<MessageTypeId, Message["type"]> = {
@@ -464,4 +492,6 @@ export const MESSAGE_NAME_BY_TYPE: Record<MessageTypeId, Message["type"]> = {
   [MessageType.BOARD_SETTINGS_RESULT]: "BOARD_SETTINGS_RESULT",
   [MessageType.DEP_PUT]: "DEP_PUT",
   [MessageType.DEP_RESULT]: "DEP_RESULT",
+  [MessageType.DEP_COMMIT]: "DEP_COMMIT",
+  [MessageType.RESTART]: "RESTART",
 };

@@ -100,6 +100,38 @@ def test_bad_names_rejected_before_anything_is_written():
     assert _ls() == [], _ls()
 
 
+def test_pieces_then_commit():
+    _fresh()
+    deps.put_chunk("mqtt_as", "mqtt_as.mpy", 0, 6, b"ABC")
+    deps.put_chunk("mqtt_as", "mqtt_as.mpy", 3, 6, b"DEF")
+    assert "mqtt_as.mpy" not in _ls(), "nothing under the real name before commit"
+    deps.commit("mqtt_as", "h", {"mqtt_as.mpy": 6})
+    assert _read("mqtt_as.mpy") == b"ABCDEF"
+    assert deps.inventory() == {"mqtt_as": "h"}
+    assert _ls() == ["_deps.json", "mqtt_as.mpy"], _ls()
+
+
+def test_out_of_order_piece_is_refused():
+    _fresh()
+    deps.put_chunk("a_lib", "a_lib.mpy", 0, 6, b"ABC")
+    e = _raises("BadPiece", deps.put_chunk, "a_lib", "a_lib.mpy", 4, 6, b"EF")  # byte 3 never arrived
+    assert "at byte 4" in e.message and "3 bytes had arrived" in e.message, e.message
+    _raises("BadPiece", deps.put_chunk, "a_lib", "a_lib.mpy", 0, 2, b"ABC")  # longer than total
+    _raises("BadPiece", deps.put_chunk, "b_lib", "b_lib.mpy", 2, 6, b"xx")  # no file started
+
+
+def test_incomplete_commit_is_refused_and_cleaned_up():
+    _fresh()
+    deps.put("a_lib", "old", [("a_lib.mpy", b"OLD")])
+    deps.put_chunk("a_lib", "a_lib.mpy", 0, 6, b"NEW")
+    e = _raises("Incomplete", deps.commit, "a_lib", "new", {"a_lib.mpy": 6})
+    assert "3 of 6 bytes" in e.message, e.message
+    assert _read("a_lib.mpy") == b"OLD", "the installed version is untouched"
+    assert deps.inventory() == {"a_lib": "old"}
+    assert _ls() == ["_deps.json", "a_lib.mpy"], _ls()
+    _raises("Incomplete", deps.commit, "a_lib", "new", {"a_lib.mpy": 6})  # nothing arrived at all
+
+
 def test_missing_reports_each_problem():
     _fresh()
     deps.put("mqtt_as", "aaaa", [("mqtt_as.mpy", b"x")])
@@ -190,6 +222,9 @@ minitest.run(
         test_put_removes_stale_other_format_copy,
         test_put_leaves_no_tmp_files,
         test_bad_names_rejected_before_anything_is_written,
+        test_pieces_then_commit,
+        test_out_of_order_piece_is_refused,
+        test_incomplete_commit_is_refused_and_cleaned_up,
         test_missing_reports_each_problem,
         test_remove_unused_keeps_required,
         test_remove_unused_with_nothing_required_clears_all,

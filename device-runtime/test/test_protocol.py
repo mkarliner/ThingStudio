@@ -123,7 +123,10 @@ SAMPLE_MESSAGES = [
     {"type": "BOARD_SETTINGS_RESULT", "ok": True, "error": None},
     {"type": "BOARD_SETTINGS_RESULT", "ok": False, "error": "password must be 8-64 characters"},
     # DEP_PUT / DEP_RESULT added 2026-10-07 (flow dependencies).
-    {"type": "DEP_PUT", "name": "mqtt_as", "hash": "0123456789abcdef", "files": {"mqtt_as.mpy": bytes([0x4D, 6, 0, 31])}},
+    {"type": "DEP_PUT", "name": "mqtt_as", "file": "mqtt_as.mpy", "offset": 1024, "total": 11324, "data": bytes([0x4D, 6, 0, 31])},
+    {"type": "RESTART", "hard": False},
+    {"type": "RESTART", "hard": True},
+    {"type": "DEP_COMMIT", "name": "mqtt_as", "hash": "0123456789abcdef", "files": {"mqtt_as.mpy": 11324}},
     {"type": "DEP_RESULT", "name": "mqtt_as", "ok": True, "code": None, "error": None, "freeFlashBytes": 1200000},
     {"type": "DEP_RESULT", "name": "mqtt_as", "ok": False, "code": "NoSpace", "error": "no space for mqtt_as: needs 11324 bytes, 9000 free", "freeFlashBytes": None},
 ]
@@ -428,11 +431,13 @@ def test_hello_wifi_fields_default_when_absent():
 
 def test_rejects_bad_dependency_shapes():
     for name, bad in (
-        ("DEP_PUT", {"name": "x", "hash": "h"}),
-        ("DEP_PUT", {"name": "x", "hash": "h", "files": {}}),
-        ("DEP_PUT", {"name": "x", "hash": "h", "files": {"x.mpy": "text"}}),
-        ("DEP_PUT", {"name": "x", "hash": "h", "files": b"x"}),
-        ("DEP_PUT", {"name": 5, "hash": "h", "files": {"x.mpy": b""}}),
+        ("DEP_PUT", {"name": "x", "file": "x.mpy", "offset": 0, "total": 1}),
+        ("DEP_PUT", {"name": "x", "file": "x.mpy", "offset": -1, "total": 1, "data": b"x"}),
+        ("DEP_PUT", {"name": "x", "file": "x.mpy", "offset": 0, "total": 1, "data": "text"}),
+        ("DEP_COMMIT", {"name": "x", "hash": "h", "files": {}}),
+        ("DEP_COMMIT", {"name": "x", "hash": "h", "files": {"x.mpy": "big"}}),
+        ("DEP_COMMIT", {"name": "x", "hash": "h", "files": {"x.mpy": True}}),
+        ("DEP_COMMIT", {"name": "x", "files": {"x.mpy": 1}}),
         ("DEP_RESULT", {"name": "x"}),
         ("DEPLOY", {"bytecode": b"", "staticData": b"", "dependencies": 5}),
         ("DEPLOY", {"bytecode": b"", "staticData": b"", "dependencies": {"mqtt_as": 5}}),

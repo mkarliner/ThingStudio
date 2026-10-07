@@ -154,7 +154,7 @@ F64_PREFIX = "F64:"
 _HEARTBEAT_PIN = 10
 _HEARTBEAT_PERIOD_MS = 200
 
-_RUNTIME_VERSION = {"major": 7, "minor": 0, "patch": 0}  # 7.0.0 2026-10-07: flow dependencies (DEP_PUT, DEPLOY.dependencies, libraries in /lib instead of every board getting every library); 6.0.0 2026-09-26: vendored bme280_float.py and runtime.shared() (bme280/I2C flows use both, so an older board fails them); 5.1.0 2026-09-25: runtime.start_reason, ESP-IDF heap in HELLO/DEPLOY_ACK -- minor only: startup codegen reads start_reason with getattr, so its flows still run on 5.0.0; 5.0.0 same day: mqtt_as active(True) only when inactive (4.0.0 same day: vendored mqtt_as wifi_connect() guard -- MQTT codegen now joins WiFi first on ESP32 (3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS; 2.0.0 was 2026-09-23: EXEC, STOP_TO_PROMPT, safe mode; 1.0.0 was 2026-09-10: NODE_STATUS)
+_RUNTIME_VERSION = {"major": 8, "minor": 0, "patch": 0}  # 8.0.0 2026-10-07: libraries sent in 1 KB pieces (DEP_PUT) plus DEP_COMMIT -- one big DEP_PUT failed with MemoryError on a fragmented ESP32 heap; 7.0.0 2026-10-07: flow dependencies (DEP_PUT, DEPLOY.dependencies, libraries in /lib instead of every board getting every library); 6.0.0 2026-09-26: vendored bme280_float.py and runtime.shared() (bme280/I2C flows use both, so an older board fails them); 5.1.0 2026-09-25: runtime.start_reason, ESP-IDF heap in HELLO/DEPLOY_ACK -- minor only: startup codegen reads start_reason with getattr, so its flows still run on 5.0.0; 5.0.0 same day: mqtt_as active(True) only when inactive (4.0.0 same day: vendored mqtt_as wifi_connect() guard -- MQTT codegen now joins WiFi first on ESP32 (3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS; 2.0.0 was 2026-09-23: EXEC, STOP_TO_PROMPT, safe mode; 1.0.0 was 2026-09-10: NODE_STATUS)
 # (runtime.report_status) is a hard dependency of wifi-status.ts's/mqtt-shared.ts's codegen now -- an editor
 # with this change targeting a pre-2026-09-10 runtime would crash on deploy (AttributeError: report_status),
 # not degrade gracefully. See CLAUDE.md's "Device-runtime version bump discipline" -- decideDeploy() only
@@ -521,25 +521,67 @@ def _handle_set_board_settings(msg, source):
     return err
 
 
+# Flow dependencies: errors from DEP_PUT pieces, reported by that library's DEP_COMMIT. Pieces get no
+# reply of their own (a reply per 1 KB piece would double the traffic); the commit always answers.
+_dep_put_errors = {}  # library name -> (code, message)
+# The last message the listener couldn't decode (MemoryError on a fragmented heap, garbled line...).
+# A piece that never decoded can't be attributed to a library, so a failed commit mentions this.
+_last_decode_error = None
+
+
+def _note_unreadable(what):
+    """Remembers that a line from the editor couldn't be read, for the next failed DEP_COMMIT."""
+    global _last_decode_error
+    _last_decode_error = str(what)[:200]
+
+
 def _handle_dep_put(msg):
-    """DEP_PUT (flow dependencies, 2026-10-07): install one library into /lib (deps.py). Always
-    answers DEP_RESULT -- ok, or an error naming the library and what went wrong. Never touches the
-    running flow: a library replaced on flash is only loaded by the next DEPLOY."""
+    """DEP_PUT (flow dependencies, 2026-10-07): one piece of one file of a library, appended to its
+    temporary file in /lib (deps.py). Never touches the running flow."""
     name = msg["name"]
+    if deps is None or name in _dep_put_errors:
+        return  # reported at DEP_COMMIT
+    try:
+        deps.put_chunk(name, msg["file"], msg["offset"], msg["total"], msg["data"])
+    except deps.DepError as e:
+        print("DEP_ERR %s %s" % (e.code, e.message))
+        _dep_put_errors[name] = (e.code, e.message)
+    except Exception as e:  # noqa: BLE001 -- adversarial-shaped input, never allowed to kill the listener
+        print("DEP_ERR %r" % (e,))
+        _dep_put_errors[name] = (type(e).__name__, "writing %s failed: %r" % (name, e))
+
+
+def _handle_dep_commit(msg):
+    """DEP_COMMIT: checks a library's pieces all arrived, installs it, and always answers DEP_RESULT --
+    ok, or an error naming the library and what went wrong."""
+    global _last_decode_error
+    name = msg["name"]
+    files = msg["files"]
     if deps is None:
         _send_message_safe({"type": "DEP_RESULT", "name": name, "ok": False, "code": "Unsupported",
                             "error": "this board's Thingstudio software is incomplete (deps.py missing) -- install the runtime again"})
         return
-    try:
-        deps.put(name, msg["hash"], list(msg["files"].items()))
-    except deps.DepError as e:
-        print("DEP_ERR %s %s" % (e.code, e.message))
-        _send_message_safe({"type": "DEP_RESULT", "name": name, "ok": False, "code": e.code, "error": e.message})
+    failure = _dep_put_errors.pop(name, None)
+    if failure is None:
+        try:
+            deps.commit(name, msg["hash"], files)
+        except deps.DepError as e:
+            failure = (e.code, e.message)
+        except Exception as e:  # noqa: BLE001 -- see _handle_dep_put
+            failure = (type(e).__name__, "installing %s failed: %r" % (name, e))
+    if failure is not None:
+        try:
+            deps.discard(files)
+        except Exception:  # noqa: BLE001 -- best-effort cleanup of temporary pieces
+            pass
+        code, message = failure
+        if _last_decode_error is not None:
+            message += " -- the board couldn't read part of it: %s" % (_last_decode_error,)
+        _last_decode_error = None
+        print("DEP_ERR %s %s" % (code, message))
+        _send_message_safe({"type": "DEP_RESULT", "name": name, "ok": False, "code": code, "error": message})
         return
-    except Exception as e:  # noqa: BLE001 -- adversarial-shaped input, never allowed to kill the listener
-        print("DEP_ERR %r" % (e,))
-        _send_message_safe({"type": "DEP_RESULT", "name": name, "ok": False, "code": type(e).__name__, "error": "installing %s failed: %r" % (name, e)})
-        return
+    _last_decode_error = None
     gc.collect()
     print("DEP_OK %s" % (name,))
     _send_message_safe({"type": "DEP_RESULT", "name": name, "ok": True, "freeFlashBytes": _free_flash_bytes()})
@@ -597,13 +639,17 @@ async def _handle_deploy(msg):
         if msg["staticData"]:
             with open(_STATIC_DATA_PATH, "wb") as f:
                 f.write(msg["staticData"])
+        # Saved with the flow file, before importing it (2026-10-07): a flow that hard-crashes the board
+        # while starting (an ESP32 abort() is not an exception) is resumed from flash on the reboot, and
+        # its name and deployId must come back with it -- otherwise HELLO says "no flow running" while it
+        # runs, and the editor can't tell its deploy did take effect.
+        _persist_flow_meta(msg["flowName"], msg["deployId"])
+        _persist_wifi_provision_marker(msg.get("wifiProvision"))
         if "_flow" in sys.modules:
             del sys.modules["_flow"]
         runtime.start_reason = "deploy"  # read by the startup node (startup.ts)
         import _flow  # noqa: F401 -- executes _flow's top-level code, which calls runtime.spawn(...)
-        _persist_flow_meta(msg["flowName"], msg["deployId"])
         _leave_safe_mode()
-        _persist_wifi_provision_marker(msg.get("wifiProvision"))
         _set_current_flow(msg["flowName"], msg["deployId"])
         _deploy_generation += 1
         if required is not None and deps is not None:
@@ -732,6 +778,28 @@ async def _handle_stop_to_prompt():
     asyncio.get_event_loop().stop()
 
 
+async def _handle_restart(msg):
+    """RESTART (2026-10-07): stop the flow cleanly (its cleanups run: an MQTT client disconnects
+    politely), then reset. A soft reset restarts only the interpreter, so the heap starts clean and USB
+    stays connected; a hard reset restarts the whole chip, which also frees memory the interpreter took
+    from ESP-IDF on ESP32, but drops native-USB boards off the bus. Either way the board boots straight
+    back into Thingstudio and the saved flow."""
+    hard = msg.get("hard", False)
+    await runtime.cancel_running()
+    _set_current_flow(None, None)
+    print("LISTENER_RESTART %s reset requested" % ("hard" if hard else "soft"))
+    await asyncio.sleep_ms(100)  # let that line reach the editor
+    if machine is None:
+        print("LISTENER_RESTART unsupported on this port")
+        return
+    if hard and hasattr(machine, "reset"):
+        machine.reset()
+    elif hasattr(machine, "soft_reset"):
+        machine.soft_reset()
+    else:
+        print("LISTENER_RESTART unsupported on this port")
+
+
 def _read_boot_count():
     try:
         with open(_BOOT_COUNT_PATH) as f:
@@ -805,6 +873,7 @@ async def _dispatch_locked(result, source):
         # fault-injection soak test (mvp-validation-plan.md) exercises 50x
         # in a row: log and move on, never raise past this function.
         print("LISTENER_ERR protocol %r -- recovering, not crashing" % (result["error"],))
+        _note_unreadable(result["error"])
         return
 
     msg = result["message"]
@@ -813,6 +882,8 @@ async def _dispatch_locked(result, source):
         await _handle_deploy(msg)
     elif msg_type == "DEP_PUT":
         _handle_dep_put(msg)
+    elif msg_type == "DEP_COMMIT":
+        _handle_dep_commit(msg)
     elif msg_type == "TRIGGER":
         # inject click-only live-fire feature (2026-09-02) -- fire-and-
         # forget, no ack (messages.py's own TRIGGER doc note): runtime.py's
@@ -831,6 +902,8 @@ async def _dispatch_locked(result, source):
         await _send_hello()
     elif msg_type == "EXEC":
         _handle_exec(msg["code"])
+    elif msg_type == "RESTART":
+        await _handle_restart(msg)
     elif msg_type == "STOP_TO_PROMPT":
         await _handle_stop_to_prompt()
     elif msg_type == "SET_BOARD_SETTINGS":
@@ -882,6 +955,7 @@ async def _serve_lines(sreader, source, idle_timeout_s):
                 print("LISTENER_NET_CLOSED read failed: %r" % (e,))
                 return  # a dead socket doesn't come back; the client reconnects
             print("LISTENER_ERR readline %r -- recovering, not crashing" % (e,))
+            _note_unreadable(e)
             decoder.reset()
             await asyncio.sleep_ms(50)
             continue
@@ -906,6 +980,7 @@ async def _serve_lines(sreader, source, idle_timeout_s):
                 frame_bytes = binascii.a2b_base64(b64)
             except Exception as e:  # noqa: BLE001 -- malformed base64 is adversarial input, not a bug
                 print("LISTENER_ERR bad base64 %r -- recovering" % (e,))
+                _note_unreadable(e)
                 continue
 
             results = decoder.push(frame_bytes)
@@ -935,12 +1010,14 @@ async def _serve_lines(sreader, source, idle_timeout_s):
                         "LISTENER_ERR frame decoder stalled (%d bytes buffered, no frame/error in %d pushes) -- resetting"
                         % (decoder.pending_byte_count, stall_pushes)
                     )
+                    _note_unreadable("a garbled message")
                     decoder.reset()
                     stall_pushes = 0
             else:
                 stall_pushes = 0
         except Exception as e:  # noqa: BLE001 -- hardening property 1, second half: dispatch itself must never kill this task either
             print("LISTENER_ERR dispatch %r -- recovering, not crashing" % (e,))
+            _note_unreadable(e)
             decoder.reset()
             stall_pushes = 0
 

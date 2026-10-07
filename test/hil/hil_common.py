@@ -190,7 +190,14 @@ def install_dependencies(dut, mpy_cross, tmpdir, source):
                 mpy = compile_flow(mpy_cross, tmpdir, "dep_" + board_name[:-3], f.read())
             files[board_name[:-3] + ".mpy"] = mpy
         digest = dependency_hash(files)
-        dut.send_message({"type": "DEP_PUT", "name": dep["name"], "hash": digest, "files": files})
+        # 1 KB pieces then a commit, as the editor sends them (flow-dependencies.ts's libraryMessages).
+        for fname in sorted(files):
+            data = files[fname]
+            for off in range(0, max(len(data), 1), 1024):
+                dut.send_message({"type": "DEP_PUT", "name": dep["name"], "file": fname, "offset": off,
+                                  "total": len(data), "data": data[off:off + 1024]})
+        dut.send_message({"type": "DEP_COMMIT", "name": dep["name"], "hash": digest,
+                          "files": {f: len(d) for f, d in files.items()}})
         res = dut.wait_for_message(lambda m: m["type"] == "DEP_RESULT" and m.get("name") == dep["name"], timeout_s=15,
                                    description="DEP_RESULT for %s" % dep["name"])
         if not res["ok"]:

@@ -227,3 +227,15 @@ loop -- about 60 ms at its default 8x oversampling, during which every other asy
 listener, WiFi transport, other nodes) is stalled. Most community sensor drivers are written for a plain script,
 not an asyncio flow. Check any driver before vendoring it for a blocking wait, and add an async path (see
 `device-runtime/src/vendor/bme280/README.md`, local patch 2) rather than calling the blocking method from a node.
+
+## A running display flow leaves too little memory for one large message -- or for WiFi, 2026-10-07
+
+Found on a CYD (classic ESP32, no PSRAM) with `display-spi-gs4-cyd-test` running (38 KB framebuffer). Two effects:
+
+- Decoding an 11 KB protocol message (a whole library) failed with MemoryError: the MicroPython heap had enough free
+  bytes in total but no 11 KB block. Fixed by sending libraries in 1 KB pieces (`flow-dependencies-scoping.md`).
+  Any message that carries a large `bytes` field (DEPLOY's bytecode too) has the same exposure; flows are small today.
+- HELLO then reported ESP-IDF heap 1 KB free (MicroPython 79 KB free). On ESP32 the MicroPython heap grows by taking
+  ESP-IDF memory when it runs short, and keeps it until reset. WiFi allocates from the ESP-IDF heap, so after a
+  display flow has grown the heap, a WiFi/MQTT flow deployed without a reset has nothing to join with. Same mechanism
+  as the 2026-09-25 ESP32-C3 entry. A deploy that starts the new flow from a fresh boot would avoid it.

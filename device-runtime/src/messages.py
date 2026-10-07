@@ -15,7 +15,7 @@
 #   HELLO=1 DEPLOY=2 DEPLOY_ACK=3 DEPLOY_ERROR=4 VALUE_STREAM=5
 #   NODE_ERROR=6 STATE_READ=7 STATE_WRITE=8 TRIGGER=9 HELLO_REQUEST=10
 #   NODE_STATUS=11 EXEC=12 STOP_TO_PROMPT=13 SET_BOARD_SETTINGS=14
-#   BOARD_SETTINGS_RESULT=15 DEP_PUT=16 DEP_RESULT=17
+#   BOARD_SETTINGS_RESULT=15 DEP_PUT=16 DEP_RESULT=17 DEP_COMMIT=18 RESTART=19
 #
 # NODE_STATUS (2026-09-10, outstanding-items/node-status-indicators.md):
 # device -> editor, a lightweight per-node connection-status push,
@@ -80,10 +80,18 @@ MessageType = {
     # USB serial only; the device answers BOARD_SETTINGS_RESULT, then a fresh HELLO on success.
     "SET_BOARD_SETTINGS": 14,
     "BOARD_SETTINGS_RESULT": 15,
-    # Added 2026-10-07 (flow dependencies, flow-dependencies-scoping.md). Editor -> device: install one
-    # library the next flow imports (deps.py). The device answers DEP_RESULT, ok or an attributed error.
+    # Added 2026-10-07 (flow dependencies, flow-dependencies-scoping.md). Editor -> device: one small
+    # piece of one file of a library the next flow imports (deps.py), no reply; then DEP_COMMIT, which
+    # the device answers with DEP_RESULT (ok, or an error naming the library). Pieces, not whole
+    # libraries: one big message needs one big block of RAM, which a fragmented heap may not have.
     "DEP_PUT": 16,
     "DEP_RESULT": 17,
+    "DEP_COMMIT": 18,
+    # Added 2026-10-07 (Mike: manual soft and hard reset, suggested by the editor when memory is the
+    # likely problem). Editor -> device: restart the board. hard False: soft reset (the interpreter only,
+    # USB stays up); hard True: full chip reset (native-USB boards drop off the bus and come back). No
+    # reply: the board's boot output and HELLO are the answer.
+    "RESTART": 19,
 }
 
 MESSAGE_NAME_BY_TYPE = {v: k for k, v in MessageType.items()}
@@ -278,16 +286,30 @@ def _expect_optional_string_map(obj, key, name):
 
 
 def _validate_dep_put(obj, name):
-    # files: {file name: bytes}. A map, not a list: cbor.py deliberately supports no arrays.
+    return {
+        "name": _expect_string(obj, "name", name),
+        "file": _expect_string(obj, "file", name),
+        "offset": _expect_non_negative_int(obj, "offset", name),
+        "total": _expect_non_negative_int(obj, "total", name),
+        "data": _expect_bytes(obj, "data", name),
+    }
+
+
+def _validate_dep_commit(obj, name):
+    # files: {file name: size in bytes}. A map, not a list: cbor.py deliberately supports no arrays.
     files = obj.get("files")
     if not isinstance(files, dict) or not files:
-        _fail(name, 'field "files" must be a non-empty map of file name to bytes')
+        _fail(name, 'field "files" must be a non-empty map of file name to size')
     out = {}
-    for fname, data in files.items():
-        if not isinstance(fname, str) or not isinstance(data, (bytes, bytearray)):
-            _fail(name, 'field "files" must map file names (strings) to byte strings')
-        out[fname] = bytes(data)
+    for fname, size in files.items():
+        if not isinstance(fname, str) or isinstance(size, bool) or not isinstance(size, int) or size < 0:
+            _fail(name, 'field "files" must map file names to sizes (non-negative integers)')
+        out[fname] = size
     return {"name": _expect_string(obj, "name", name), "hash": _expect_string(obj, "hash", name), "files": out}
+
+
+def _validate_restart(obj, name):
+    return {"hard": _expect_optional_bool(obj, "hard", name) or False}
 
 
 def _validate_dep_result(obj, name):
@@ -482,4 +504,6 @@ _VALIDATORS = {
     "BOARD_SETTINGS_RESULT": _validate_board_settings_result,
     "DEP_PUT": _validate_dep_put,
     "DEP_RESULT": _validate_dep_result,
+    "DEP_COMMIT": _validate_dep_commit,
+    "RESTART": _validate_restart,
 }

@@ -1,6 +1,6 @@
 # Flow dependencies — scoping
 
-Status: built 2026-10-07 on the `flow-dependencies` branch, runtime 7.0.0; tested off-device (unix port, vitest,
+Status: built 2026-10-07 on the `flow-dependencies` branch, runtime 7.0.0, then 8.0.0 (pieces, below); tested off-device (unix port, vitest,
 pytest), not yet on hardware. "Built" notes below mark where the build differs from the first sketch.
 Replaces the "selective vendor push" P4 item in `outstanding-items.md` (2026-09-17). Phase 1 of
 `gui-layout-widget-system-scoping.md`'s phasing, and the module-push mechanism design doc §7 sketches.
@@ -63,8 +63,15 @@ no loops). Same single-list property, no new packaging step. A library's name eq
 ### Wire protocol (§13)
 
 - **New `DEP_PUT`** (editor → device): `{name, hash, files}`, one per dependency; reply `DEP_RESULT {name, ok,
-  code, error, freeFlashBytes}`. **Built:** `files` is a map `{file name: bytes}`, not a list: the device's CBOR codec
-  deliberately has no arrays. Frames cap at 64KB (`framing.py`), so a dependency over
+  code, error, freeFlashBytes}`. **Built (7.0.0):** `files` is a map `{file name: bytes}`, not a list: the device's
+  CBOR codec deliberately has no arrays.
+- **Changed same day (8.0.0): pieces, then a commit.** A whole library in one message failed on a CYD running a
+  display flow: decoding an 11 KB `DEP_PUT` needed one 11 KB block and the heap was fragmented (MemoryError). The
+  board logged it but answered nothing, so the editor timed out after 30 s. Now `DEP_PUT {name, file, offset, total,
+  data}` carries 1 KB, appended to the file's temp copy, no reply; `DEP_COMMIT {name, hash, files: {file: size}}`
+  checks every file arrived whole, installs, and always answers `DEP_RESULT`. A piece the board couldn't read shows
+  up as "arrived incomplete (x of y bytes)", plus what the board couldn't read. The editor also cancels pending
+  waits on disconnect (a stale 30 s wait had fired in the middle of the next deploy). Frames cap at 64KB (`framing.py`), so a dependency over
   that is split per file, and a single file over it is a compile-time error naming the file. (Largest today:
   `mqtt_as`, 37KB source; smaller as `.mpy`.)
 - **`DEPLOY` gains `dependencies: {name: hash}`.** Before importing the flow, the listener checks every one is

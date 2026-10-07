@@ -51,13 +51,27 @@ For a full Python prompt, click **Stop flow & open prompt**. The flow and Things
 
 You can also use the prompt from another program, such as Thonny or `mpremote`: click **Disconnect** first.
 
+## Restarting the board
+
+A board can run short of memory after several deploys, or after a flow that uses a lot of it, such as a display.
+The console suggests a restart when that's the likely problem: a deploy fails with `MemoryError`, the board restarts
+while starting a flow, or an ESP32 reports too little memory left for WiFi.
+
+- **Tools → Restart board (soft)** restarts MicroPython. The saved flow starts again with clean memory. USB stays
+  connected.
+- **Tools → Reset board (hard)** resets the whole chip, like its reset button. It frees all memory, including what
+  WiFi needs on an ESP32. A board with native USB (Pico, ESP32-S2/S3/C3) disconnects; click **Connect** when it's
+  back.
+
+Try the soft restart first.
+
 ## Board stuck restarting
 
 A flow that crashes the board as it starts would crash it again on every restart. Thingstudio stops this itself: if the saved flow doesn't stay up for 10 seconds on three restarts in a row, the board starts without it. The console shows **[safe mode]**. Fix the flow and deploy it again, or remove it.
 
-**Remove flow…** (under the console) deletes the saved flow from the board. The board then starts with Thingstudio only, as after a fresh runtime install. Use it for any flow that stops the board answering:
+**Tools → Remove flow…** deletes the saved flow from the board. The board then starts with Thingstudio only, as after a fresh runtime install. Use it for any flow that stops the board answering:
 
-1. Select the board's port and click **Remove flow…**.
+1. Select the board's port and choose **Tools → Remove flow…**.
 2. If the console says so, press the board's reset button. Thingstudio keeps trying for a minute, so the timing doesn't matter.
 3. When it's done, click **Connect**.
 

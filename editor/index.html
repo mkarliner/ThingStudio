@@ -225,6 +225,9 @@
           <button id="btnCheckStatus" role="menuitem" disabled hidden title="Ask the board to identify itself again -- no reset, no redeploy">Check status</button>
           <button id="btnBoardSettings" role="menuitem" disabled hidden title="The board's network name and WiFi password. Change these over USB.">Board settings…</button>
           <button id="btnInstallRuntime" role="menuitem" title="Install the Thingstudio runtime on the board in the selected port. The board needs MicroPython first. Resets the board; reconnect afterwards.">Install runtime…</button>
+          <button id="btnRemoveFlow" role="menuitem" title="Delete the saved flow from the board in the selected port, even one that crashes it or won't let go. Keeps retrying while you press reset.">Remove flow…</button>
+          <button id="btnRestartSoft" role="menuitem" disabled title="Restart MicroPython on the board: the flow stops and starts again with clean memory. USB stays connected.">Restart board (soft)</button>
+          <button id="btnRestartHard" role="menuitem" disabled title="Reset the whole chip, like its reset button. Frees all memory. A board with native USB (Pico, ESP32-S2/S3/C3) disconnects: click Connect again.">Reset board (hard)</button>
           <hr />
           <label class="menu-row" title="mpy-cross -march target for @micropython.viper/@micropython.native code (e.g. display_spi's gs4/gs2/mono formats) -- only matters if a node in this flow actually uses one. Auto detects from the connected board's HELLO; override if Auto guesses wrong or no board is connected yet.">Native code
             <select id="nativeArchSelect"><option value="auto" selected>Arch: Auto</option></select>
@@ -269,7 +272,6 @@
         <div class="row console-tools">
           <button id="btnStopToPrompt" disabled title="Stop the flow and Thingstudio on the board, leaving MicroPython's own >>> prompt. Nothing is deleted.">Stop flow &amp; open prompt</button>
           <button id="btnResume" hidden title="Soft-reset the board (Ctrl-D): Thingstudio and the saved flow start again">Restart Thingstudio</button>
-          <button id="btnRemoveFlow" title="Delete the saved flow from the board, even one that crashes it or won't let go. Keeps retrying while you press reset.">Remove flow…</button>
         </div>
       </details>
     </div>

@@ -161,8 +161,19 @@ export function decodeMessageBody(typeId: number, body: Uint8Array): Message {
       return {
         type: "DEP_PUT",
         name: expectString(obj, "name", name),
+        file: expectString(obj, "file", name),
+        offset: expectNonNegativeInt(obj, "offset", name),
+        total: expectNonNegativeInt(obj, "total", name),
+        data: expectBytes(obj, "data", name),
+      };
+    case "RESTART":
+      return { type: "RESTART", hard: expectOptionalBool(obj, "hard", name) ?? false };
+    case "DEP_COMMIT":
+      return {
+        type: "DEP_COMMIT",
+        name: expectString(obj, "name", name),
         hash: expectString(obj, "hash", name),
-        files: expectFileMap(obj, "files", name),
+        files: expectSizeMap(obj, "files", name),
       };
     case "DEP_RESULT": {
       const ok = requirePresent(obj, "ok", name);
@@ -193,18 +204,18 @@ function expectOptionalStringMap(obj: Record<string, unknown>, key: string, name
   return out;
 }
 
-/** DEP_PUT's `files`: a non-empty {file name: bytes} map (mirrors messages.py's _validate_dep_put). */
-function expectFileMap(obj: Record<string, unknown>, key: string, name: string): Record<string, Uint8Array> {
+/** DEP_COMMIT's `files`: a non-empty {file name: size} map (mirrors messages.py's _validate_dep_commit). */
+function expectSizeMap(obj: Record<string, unknown>, key: string, name: string): Record<string, number> {
   const v = obj[key];
   if (typeof v !== "object" || v === null || Array.isArray(v) || v instanceof Uint8Array) {
-    fail(name, `field "${key}" must be a non-empty map of file name to bytes`);
+    fail(name, `field "${key}" must be a non-empty map of file name to size`);
   }
   const entries = Object.entries(v as Record<string, unknown>);
-  if (entries.length === 0) fail(name, `field "${key}" must be a non-empty map of file name to bytes`);
-  const out: Record<string, Uint8Array> = {};
-  for (const [k, data] of entries) {
-    if (!(data instanceof Uint8Array)) fail(name, `field "${key}" must map file names to byte strings`);
-    out[k] = data;
+  if (entries.length === 0) fail(name, `field "${key}" must be a non-empty map of file name to size`);
+  const out: Record<string, number> = {};
+  for (const [k, size] of entries) {
+    if (typeof size !== "number" || !Number.isInteger(size) || size < 0) fail(name, `field "${key}" must map file names to sizes`);
+    out[k] = size;
   }
   return out;
 }

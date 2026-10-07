@@ -151,49 +151,80 @@ def _free_bytes():
         return None  # unknown (unix port): don't pre-check, rely on the write itself failing
 
 
-def put(dep_name, dep_hash, files):
-    """Installs one dependency: files is [(file_name, bytes)]. Replaces any earlier version.
-    Raises DepError; on failure nothing under a real name has changed."""
+def put_chunk(dep_name, file_name, offset, total, data):
+    """Writes one piece of one file of a dependency to "<file>.tmp" (DEP_PUT). Libraries arrive in
+    small pieces so the board never needs one large block of memory for a whole library -- found on a
+    classic ESP32 (2026-10-07): with a display flow's framebuffer in RAM, decoding an 11 KB library sent
+    in one message failed with MemoryError. offset 0 starts the file; any other offset must equal what
+    has been written so far (a lost or repeated piece is an error, not a silently corrupt file).
+    Raises DepError."""
     check_name(dep_name)
-    if not isinstance(dep_hash, str) or not dep_hash:
-        raise DepError("BadName", "%s: missing hash" % (dep_name,))
+    check_file_name(dep_name, file_name)
+    if not isinstance(total, int) or total < 0 or not isinstance(offset, int) or offset < 0 or offset + len(data) > total:
+        raise DepError("BadPiece", "%s: piece of %s doesn't fit the file (offset %r, %d bytes, total %r)" % (dep_name, file_name, offset, len(data), total))
+    _ensure_dir()
+    tmp = _path(file_name + ".tmp")
+    if offset == 0:
+        free = _free_bytes()
+        if free is not None and total + _SPACE_MARGIN > free:
+            raise DepError("NoSpace", "no space for %s: %s needs %d bytes, %d free" % (dep_name, file_name, total, free))
+        mode = "wb"
+    else:
+        have = _size(tmp)
+        if have != offset:
+            raise DepError("BadPiece", "%s: %s piece at byte %d, but %s bytes had arrived" % (dep_name, file_name, offset, have))
+        mode = "ab"
+    try:
+        with open(tmp, mode) as f:
+            f.write(data)
+    except OSError as e:
+        _remove(tmp)
+        if e.args and e.args[0] == 28:  # ENOSPC
+            raise DepError("NoSpace", "no space for %s: flash filled while writing %s" % (dep_name, file_name))
+        raise DepError("WriteFailed", "writing %s failed: %r" % (dep_name, e))
+
+
+def _size(path):
+    try:
+        return os.stat(path)[6]
+    except OSError:
+        return None
+
+
+def discard(files):
+    """Removes the temporary pieces of `files` (file names), e.g. after a failed DEP_PUT."""
+    for file_name in files:
+        _remove(_path(file_name + ".tmp"))
+
+
+def commit(dep_name, dep_hash, files):
+    """DEP_COMMIT: files is {file name: expected size}. Checks every file arrived whole, then moves
+    them into place and records the dependency. Raises DepError; on failure nothing under a real name
+    has changed and the pieces are discarded."""
+    check_name(dep_name)
     if not files:
         raise DepError("BadName", "%s: no files" % (dep_name,))
-    for file_name, _data in files:
+    for file_name in files:
         check_file_name(dep_name, file_name)
-
-    _ensure_dir()
-    needed = 0
-    for _file_name, data in files:
-        needed += len(data)
-    free = _free_bytes()
-    if free is not None and needed + _SPACE_MARGIN > free:
-        raise DepError("NoSpace", "no space for %s: needs %d bytes, %d free" % (dep_name, needed, free))
-
-    written = []
-    try:
-        for file_name, data in files:
-            tmp = _path(file_name + ".tmp")
-            written.append(tmp)
-            with open(tmp, "wb") as f:
-                f.write(data)
-    except OSError as e:
-        for tmp in written:
-            _remove(tmp)
-        if e.args and e.args[0] == 28:  # ENOSPC
-            raise DepError("NoSpace", "no space for %s: needs %d bytes" % (dep_name, needed))
-        raise DepError("WriteFailed", "writing %s failed: %r" % (dep_name, e))
+    if not isinstance(dep_hash, str) or not dep_hash:
+        discard(files)
+        raise DepError("BadName", "%s: missing hash" % (dep_name,))
+    for file_name, size in files.items():
+        have = _size(_path(file_name + ".tmp"))
+        if have != size:
+            discard(files)
+            raise DepError("Incomplete", "%s: %s arrived incomplete (%s of %d bytes)" % (dep_name, file_name, 0 if have is None else have, size))
 
     index = read_index()
     old = index.get(dep_name)
     try:
-        for file_name, _data in files:
+        for file_name in files:
             mod = _module_of(file_name)
             # MicroPython imports x.py before x.mpy, so a stale copy in the other format would win.
             other = mod + (".py" if file_name.endswith(".mpy") else ".mpy")
             _remove(_path(other))
             _replace(_path(file_name + ".tmp"), _path(file_name))
-        new_names = [f for f, _d in files]
+        new_names = sorted(files)
         if old is not None:
             for stale in old["files"]:
                 if stale not in new_names:
@@ -201,8 +232,7 @@ def put(dep_name, dep_hash, files):
         index[dep_name] = {"hash": dep_hash, "files": new_names}
         _write_index(index)
     except OSError as e:
-        for tmp in written:
-            _remove(tmp)
+        discard(files)
         # Whatever was renamed may now be newer than the index says; drop the entry so the editor
         # resends instead of trusting a half-updated library.
         index.pop(dep_name, None)
@@ -211,6 +241,27 @@ def put(dep_name, dep_hash, files):
         except OSError:
             pass
         raise DepError("WriteFailed", "installing %s failed: %r" % (dep_name, e))
+
+
+def put(dep_name, dep_hash, files):
+    """Installs one whole dependency in one call: files is [(file_name, bytes)]. The pieces-then-commit
+    path in a single step (tests, and anything already holding the bytes in memory)."""
+    check_name(dep_name)
+    if not isinstance(dep_hash, str) or not dep_hash:
+        raise DepError("BadName", "%s: missing hash" % (dep_name,))
+    if not files:
+        raise DepError("BadName", "%s: no files" % (dep_name,))
+    sizes = {}
+    for file_name, data in files:
+        check_file_name(dep_name, file_name)
+        sizes[file_name] = len(data)
+    try:
+        for file_name, data in files:
+            put_chunk(dep_name, file_name, 0, len(data), data)
+    except DepError:
+        discard(sizes)
+        raise
+    commit(dep_name, dep_hash, sizes)
 
 
 def missing(required):

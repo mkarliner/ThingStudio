@@ -6,6 +6,7 @@ import {
   dependencyHash,
   findImportedModules,
   librariesToSend,
+  libraryMessages,
   resolveDependencies,
   type DependencyInfo,
 } from "../src/compiler/flow-dependencies.js";
@@ -65,6 +66,29 @@ describe("dependencyHash", () => {
     // Same input through test/hil/hil_common.py's dependency_hash() gives this value.
     expect(a).toBe("62300688121da499");
     expect(await dependencyHash({ "a.mpy": new Uint8Array([0x31]), "b.mpy": new Uint8Array([0x33]) })).not.toBe(a);
+  });
+});
+
+describe("libraryMessages", () => {
+  it("splits each file into in-order pieces and ends with a commit naming every file's size", () => {
+    const a = new Uint8Array(2500).map((_, i) => i % 251);
+    const { pieces, commit } = libraryMessages("lib", "h", { "z.mpy": new Uint8Array([1, 2]), "a.mpy": a }, 1024);
+    expect(pieces.map((p) => [p.file, p.offset, p.data.length, p.total])).toEqual([
+      ["a.mpy", 0, 1024, 2500],
+      ["a.mpy", 1024, 1024, 2500],
+      ["a.mpy", 2048, 452, 2500],
+      ["z.mpy", 0, 2, 2],
+    ]);
+    const joined = new Uint8Array(2500);
+    for (const p of pieces.filter((p) => p.file === "a.mpy")) joined.set(p.data, p.offset);
+    expect(joined).toEqual(a);
+    expect(commit).toEqual({ type: "DEP_COMMIT", name: "lib", hash: "h", files: { "a.mpy": 2500, "z.mpy": 2 } });
+  });
+
+  it("still sends one (empty) piece for an empty file, so the board creates it", () => {
+    const { pieces } = libraryMessages("lib", "h", { "e.mpy": new Uint8Array(0) });
+    expect(pieces).toHaveLength(1);
+    expect(pieces[0]!.total).toBe(0);
   });
 });
 

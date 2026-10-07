@@ -149,7 +149,8 @@ import { renderDefinitionPage, renderUnknownBoardPage } from "../definitions/def
 import type { BoardSettingsResultMessage, HelloMessage, Message, NodeStatusMessage, ProtocolVersion } from "../protocol/messages.js";
 import { checkRuntimeBuild, decideDeploy } from "../protocol/version.js";
 import { explainDeployImportError, networkWarningBeforeDeploy } from "./import-error-help.js";
-import { dependencyHash, findImportedModules, librariesToSend, resolveDependencies, MAX_DEPENDENCY_BYTES, type DependencyInfo } from "../compiler/flow-dependencies.js";
+import { RESTART_HINT, looksLikeOutOfMemory, lowMemoryWarningBeforeDeploy } from "./memory-advice.js";
+import { dependencyHash, findImportedModules, librariesToSend, libraryMessages, resolveDependencies, type DependencyInfo } from "../compiler/flow-dependencies.js";
 import { ClassicPreset } from "rete";
 import { createThingstudioEditor, type ThingstudioEditor } from "./rete/editor-setup.js";
 import { NODE_FACTORIES, CustomNode, FunctionNode, portSocket, functionOutputKey, functionNodeHeight, type AnyThingstudioNode } from "./rete/nodes.js";
@@ -1173,7 +1174,12 @@ refreshPreview();
 // protocol change, out of scope here -- flagged, not silently worked
 // around forever.
 // ---------------------------------------------------------------------
-let waiters: { match: (m: Message) => boolean; resolve: (m: Message) => void; timer: ReturnType<typeof setTimeout> }[] = [];
+let waiters: {
+  match: (m: Message) => boolean;
+  resolve: (m: Message) => void;
+  reject: (e: Error) => void;
+  timer: ReturnType<typeof setTimeout>;
+}[] = [];
 
 function waitForMessage(match: (m: Message) => boolean, timeoutMs: number): Promise<Message> {
   return new Promise((resolve, reject) => {
@@ -1181,8 +1187,19 @@ function waitForMessage(match: (m: Message) => boolean, timeoutMs: number): Prom
       waiters = waiters.filter((w) => w.timer !== timer);
       reject(new Error("timeout waiting for device response"));
     }, timeoutMs);
-    waiters.push({ match, resolve, timer });
+    waiters.push({ match, resolve, reject, timer });
   });
+}
+
+/** Fails every pending wait at once (2026-10-07): after a disconnect nothing will answer them, and a
+ * wait left running reported a stale "didn't confirm" timeout in the middle of the next deploy. */
+function cancelAllWaits(reason: string): void {
+  const pending = waiters;
+  waiters = [];
+  for (const w of pending) {
+    clearTimeout(w.timer);
+    w.reject(new Error(reason));
+  }
 }
 
 // The runtime version this editor's compiler/codegen currently targets
@@ -1199,7 +1216,7 @@ function waitForMessage(match: (m: Message) => boolean, timeoutMs: number): Prom
 // bump-discipline rule), so this is the level that actually stops an
 // unsafe DEPLOY rather than letting it crash on the device.
 // 2.0.0 (2026-09-23): EXEC, STOP_TO_PROMPT, safe mode. Must match listener.py's _RUNTIME_VERSION.
-const EDITOR_TARGET_VERSION: ProtocolVersion = { major: 7, minor: 0, patch: 0 }; // 7.0.0 2026-10-07: flow dependencies (DEP_PUT, DEPLOY.dependencies; libraries in /lib, installed per flow); 6.0.0 2026-09-26: bme280 driver on the board; 5.1.0 2026-09-25: startup reason (getattr, so 5.0.0 still runs it), ESP-IDF heap fields; 5.0.0 2026-09-25: mqtt_as active(True) guard; 4.0.0 2026-09-25: mqtt_as guard, ESP32 MQTT joins WiFi first; 3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS
+const EDITOR_TARGET_VERSION: ProtocolVersion = { major: 8, minor: 0, patch: 0 }; // 8.0.0 2026-10-07: libraries sent in 1 KB pieces + DEP_COMMIT (a whole-library DEP_PUT hit MemoryError on a fragmented ESP32 heap); 7.0.0 2026-10-07: flow dependencies (DEP_PUT, DEPLOY.dependencies; libraries in /lib, installed per flow); 6.0.0 2026-09-26: bme280 driver on the board; 5.1.0 2026-09-25: startup reason (getattr, so 5.0.0 still runs it), ESP-IDF heap fields; 5.0.0 2026-09-25: mqtt_as active(True) guard; 4.0.0 2026-09-25: mqtt_as guard, ESP32 MQTT joins WiFi first; 3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS
 
 // This editor's own device-runtime/src git SHA, injected at build/dev-
 // server-start time by vite.config.ts's `define` (see that file,
@@ -1261,7 +1278,7 @@ const transportEvents: TransportEvents = {
           {
             text:
               "The board's saved flow kept crashing it on start, so it hasn't been run this time. Fix the flow " +
-              "and deploy again, or click \"Remove flow…\".",
+              "and deploy again, or choose \"Tools → Remove flow…\".",
             doc: DOC_BOARD_STUCK,
           },
           "err",
@@ -1330,6 +1347,7 @@ const transportEvents: TransportEvents = {
   },
   onDisconnect(reason) {
     logLine(`[disconnected] ${reason ? String(reason) : "(clean)"}`, "");
+    cancelAllWaits("the board disconnected");
     lastHello = null;
     boardDependencies = null;
     lastHelloVersion = null;
@@ -2492,6 +2510,9 @@ async function installFlowDependencies(source: string): Promise<Record<string, s
 
   const netWarning = networkWarningBeforeDeploy(modules, lastHello ? lastHello.hasWifi : null);
   if (netWarning) logLine(`[deploy warning] ${netWarning}`, "err");
+  const usesNetworking = ["network", "socket", "usocket", "mqtt_as"].some((m) => modules.has(m));
+  const memWarning = lowMemoryWarningBeforeDeploy(lastHello, usesNetworking);
+  if (memWarning) logLine(`[deploy warning] ${memWarning}`, "err");
 
   let needed: DependencyInfo[];
   try {
@@ -2521,10 +2542,6 @@ async function installFlowDependencies(source: string): Promise<Record<string, s
       files[f.name.replace(/\.py$/, ".mpy")] = mpy;
       bytes += mpy.length;
     }
-    if (bytes > MAX_DEPENDENCY_BYTES) {
-      logLine(`[deploy blocked] library ${dep.name} is ${bytes} bytes compiled, more than one message can carry (${MAX_DEPENDENCY_BYTES})`, "err");
-      return null;
-    }
     compiled.set(dep.name, { files, hash: await dependencyHash(files), bytes });
   }
   const required: Record<string, string> = {};
@@ -2551,18 +2568,23 @@ async function installFlowDependencies(source: string): Promise<Record<string, s
   for (const name of toSend) {
     const c = compiled.get(name)!;
     logLine(`[libraries] sending ${name} (${Math.max(1, Math.round(c.bytes / 1024))} KB)`, "");
+    // Small pieces, then a commit the board always answers (libraryMessages' own comment says why).
+    const { pieces, commit } = libraryMessages(name, c.hash, c.files);
+    for (const piece of pieces) await transport.send(piece);
     const resultP = waitForMessage((m) => m.type === "DEP_RESULT" && m.name === name, DEPLOY_TIMEOUT_MS);
-    await transport.send({ type: "DEP_PUT", name, hash: c.hash, files: c.files });
+    await transport.send(commit);
     let result: Message;
     try {
       result = await resultP;
-    } catch {
-      logLine(`[deploy failed] the board didn't confirm library ${name} within ${DEPLOY_TIMEOUT_MS / 1000}s. The flow wasn't changed.`, "err");
+    } catch (err) {
+      const why = err instanceof Error && err.message.startsWith("timeout") ? `didn't confirm library ${name} within ${DEPLOY_TIMEOUT_MS / 1000}s` : `stopped answering while installing library ${name} (${err instanceof Error ? err.message : String(err)})`;
+      logLine(`[deploy failed] the board ${why}. The flow wasn't changed.`, "err");
       boardDependencies = null;
       return null;
     }
     if (result.type === "DEP_RESULT" && !result.ok) {
       logLine(`[deploy failed] couldn't install library ${name} on the board: ${result.error ?? result.code ?? "unknown error"}. The flow wasn't changed.`, "err");
+      if (looksLikeOutOfMemory(result.error)) logLine(`[deploy failed] the board ran short of memory. ${RESTART_HINT}`, "err");
       boardDependencies = null;
       return null;
     }
@@ -2664,7 +2686,9 @@ el("btnDeploy").addEventListener("click", async () => {
     const deployId = crypto.randomUUID();
     const flowName = currentFlowNameInput();
     logLine(`[deploying "${flowName}" as ${deployId}]`, "");
-    const ackP = waitForMessage((m) => m.type === "DEPLOY_ACK" || m.type === "DEPLOY_ERROR", DEPLOY_TIMEOUT_MS);
+    // A HELLO in place of the ack means the board restarted mid-deploy (2026-10-07, CYD: an ESP32 abort()
+    // while the new flow started). It answers the deploy as well as an ack does: it says what's running.
+    const ackP = waitForMessage((m) => m.type === "DEPLOY_ACK" || m.type === "DEPLOY_ERROR" || m.type === "HELLO", DEPLOY_TIMEOUT_MS);
     // lastWifiProvision was computed alongside this same compile, by the currentSource() call
     // refreshPreview() (above) just made -- see that field's own doc comment.
     await transport.send({
@@ -2678,10 +2702,29 @@ el("btnDeploy").addEventListener("click", async () => {
     });
     try {
       const result = await ackP;
-      if (result.type === "DEPLOY_ERROR") {
+      if (result.type === "HELLO") {
+        const running = result.currentFlowDeployId === deployId;
+        logAdvice(
+          "[deploy: board restarted]",
+          {
+            text: running
+              ? "The board restarted while starting the new flow -- probably a crash; any crash report is in the lines " +
+                "above. It's running the new flow now, after the restart. If this happens on every deploy, the board " +
+                "is probably short of memory: restart it before deploying (Tools → Restart board), or use a smaller flow."
+              : "The board restarted while starting the new flow -- probably a crash; any crash report is in the lines " +
+                "above. It isn't running the new flow. Deploy again; if it keeps happening, see the linked page.",
+            doc: DOC_BOARD_STUCK,
+          },
+          running ? "" : "err",
+        );
+        // boardDependencies already came from this HELLO: the board may not have removed unused
+        // libraries before restarting, so its own report beats what this deploy asked for.
+        if (running) deployedClean = true;
+      } else if (result.type === "DEPLOY_ERROR") {
         logLine(`[deploy failed] ${result.code}: ${result.message}`, "err");
         const importAdvice = result.code === "ImportError" ? explainDeployImportError(result.message, libraryModules) : null;
         if (importAdvice) logAdvice("[deploy failed]", importAdvice, "err");
+        if (looksLikeOutOfMemory(`${result.code} ${result.message}`)) logLine(`[deploy failed] the board ran short of memory. ${RESTART_HINT}`, "err");
         if (result.code === "MissingDependency") {
           // This editor's idea of the board's libraries was wrong (changed by another editor, or a
           // failed write). Forget it, so the next Deploy sends every library the flow needs.
@@ -2699,8 +2742,12 @@ el("btnDeploy").addEventListener("click", async () => {
         // available to retry, not go stale-disabled on a failed attempt.
         deployedClean = true;
       }
-    } catch {
-      logLine(`[deploy timeout] no DEPLOY_ACK/DEPLOY_ERROR within ${DEPLOY_TIMEOUT_MS}ms`, "err");
+    } catch (err) {
+      if (err instanceof Error && !err.message.startsWith("timeout")) {
+        logLine(`[deploy failed] ${err.message} before confirming the deploy. Connect again and check its status.`, "err");
+      } else {
+        logLine(`[deploy timeout] no DEPLOY_ACK/DEPLOY_ERROR within ${DEPLOY_TIMEOUT_MS}ms`, "err");
+      }
     }
   } finally {
     updateDeployButtonEnabled();
@@ -2742,6 +2789,8 @@ function updateBoardToolsUi(): void {
   el<HTMLInputElement>("cmdInput").disabled = !connected;
   el<HTMLButtonElement>("btnSendCmd").disabled = !connected;
   el<HTMLButtonElement>("btnStopToPrompt").disabled = !connected;
+  el<HTMLButtonElement>("btnRestartSoft").disabled = !connected;
+  el<HTMLButtonElement>("btnRestartHard").disabled = !connected || boardAtPrompt;
   el<HTMLButtonElement>("btnStopToPrompt").hidden = boardAtPrompt;
   el<HTMLButtonElement>("btnResume").hidden = !boardAtPrompt;
   el<HTMLInputElement>("cmdInput").placeholder = boardAtPrompt
@@ -2815,6 +2864,41 @@ el("btnStopToPrompt").addEventListener("click", async () => {
     },
     "",
   );
+});
+
+// Tools → Restart board (soft) / Reset board (hard) (Mike, 2026-10-07). Suggested by the console when
+// memory is the likely problem (memory-advice.ts). At the ">>>" prompt there's no listener to ask, so a
+// soft restart there is the same Ctrl-D as "Restart Thingstudio".
+el("btnRestartSoft").addEventListener("click", async () => {
+  if (boardAtPrompt) {
+    el<HTMLButtonElement>("btnResume").click();
+    return;
+  }
+  try {
+    await transport.send({ type: "RESTART", hard: false });
+  } catch (err) {
+    logLine(`[restart failed] ${err instanceof Error ? err.message : String(err)}`, "err");
+    return;
+  }
+  logLine("[restart] soft reset: the board restarts Thingstudio and its saved flow with clean memory (a few seconds)…", "");
+  await new Promise((r) => setTimeout(r, RESTART_WAIT_MS));
+  if (transport.isConnected) await requestHelloOrExplain();
+});
+
+el("btnRestartHard").addEventListener("click", async () => {
+  try {
+    await transport.send({ type: "RESTART", hard: true });
+  } catch (err) {
+    logLine(`[reset failed] ${err instanceof Error ? err.message : String(err)}`, "err");
+    return;
+  }
+  logLine(
+    "[reset] hard reset: the whole chip restarts, then Thingstudio and its saved flow. A board with native USB " +
+      "(Pico, ESP32-S2/S3/C3) disconnects: when it's back, click Connect.",
+    "",
+  );
+  await new Promise((r) => setTimeout(r, RESTART_WAIT_MS));
+  if (transport.isConnected) await requestHelloOrExplain();
 });
 
 el("btnResume").addEventListener("click", async () => {

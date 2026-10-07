@@ -11,6 +11,8 @@
 // at /api/dependencies) doesn't know is assumed to be built into the firmware (machine, network...).
 // Matches test/hil/hil_common.py's imported_modules(), which host test tools use.
 
+import type { DepCommitMessage, DepPutMessage } from "../protocol/messages.js";
+
 /** One library, as /api/dependencies describes it. */
 export interface DependencyInfo {
   readonly name: string;
@@ -91,6 +93,25 @@ export function librariesToSend(needed: Readonly<Record<string, string>>, invent
     .filter((name) => inventory === null || inventory[name] !== needed[name]);
 }
 
-/** One DEP_PUT has to fit a frame: the frame length field is 16 bits (framing.ts). This leaves room
- * for the CBOR map, names and hash. */
-export const MAX_DEPENDENCY_BYTES = 60_000;
+/** Size of one DEP_PUT piece. Small on purpose: the board decodes each message whole, and a fragmented
+ * heap (a display flow's framebuffer on a classic ESP32, 2026-10-07) may not have one large block. */
+export const LIBRARY_PIECE_BYTES = 1024;
+
+/** The DEP_PUT pieces for one library's compiled files, in order, then its DEP_COMMIT. */
+export function libraryMessages(
+  name: string,
+  hash: string,
+  files: Readonly<Record<string, Uint8Array>>,
+  pieceBytes = LIBRARY_PIECE_BYTES,
+): { pieces: DepPutMessage[]; commit: DepCommitMessage } {
+  const pieces: DepPutMessage[] = [];
+  const sizes: Record<string, number> = {};
+  for (const file of Object.keys(files).sort()) {
+    const data = files[file]!;
+    sizes[file] = data.length;
+    for (let offset = 0; offset < Math.max(data.length, 1); offset += pieceBytes) {
+      pieces.push({ type: "DEP_PUT", name, file, offset, total: data.length, data: data.subarray(offset, offset + pieceBytes) });
+    }
+  }
+  return { pieces, commit: { type: "DEP_COMMIT", name, hash, files: sizes } };
+}
