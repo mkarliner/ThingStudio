@@ -475,7 +475,7 @@ navigation and modal queueing are plain state-machine tests. Only tier 1 needs r
 
 - v1 widget set, finalised.
 - GUI view scope for MVP (outline tree + preview, or simpler).
-- Font pipeline: which font, sizes, subsets.
+- Font pipeline: which font, sizes, subsets. Scoped 2026-10-07: `gui-font-pipeline-scoping.md`.
 - nano-gui: adopt whole, adopt parts, or own (spike).
 - Whether MVP needs partial pushes at all (measure).
 - Navigator output shape for modal open/close.

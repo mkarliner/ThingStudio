@@ -82,3 +82,7 @@ replace one later. Custom-firmware routes (LVGL via lvgl_micropython, C user mod
 install-route and board-coverage cost, not performance. Next step: a nano-gui spike on its own branch to decide
 vendor-whole / vendor-parts / write-our-own (`nano-gui-spike-briefing.md`).
 ([detail](../gui-layout-widget-system-scoping.md))
+- 2026-10-07 (Mike): fonts for MVP are a **prebuilt set** -- a build-time tool converts a fixed list of (font, size,
+  charset) with `font_to_py` and commits the board modules and the editor's metrics/bitmap JSON. No FreeType in
+  the shipped product; per-flow subsets (backend converts at deploy) stay possible behind the font-id lookup if
+  RAM forces it. Family and size ladder still open. `gui-font-pipeline-scoping.md`.
