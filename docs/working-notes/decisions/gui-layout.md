@@ -86,3 +86,7 @@ vendor-whole / vendor-parts / write-our-own (`nano-gui-spike-briefing.md`).
   charset) with `font_to_py` and commits the board modules and the editor's metrics/bitmap JSON. No FreeType in
   the shipped product; per-flow subsets (backend converts at deploy) stay possible behind the font-id lookup if
   RAM forces it. Family and size ladder still open. `gui-font-pipeline-scoping.md`.
+- 2026-10-07 (Mike, from the look test): GUI font is **Atkinson Hyperlegible** (Regular body, Bold digits) --
+  distinct 0/O and 1/l/I, narrower digits that fit small displays. Body ladder 12/16/20/24 (no 10px), digits
+  16/24/32/48/64. Built the same day: `tools/build_fonts.py`, fonts as flow dependencies.
+  `gui-font-pipeline-scoping.md`.

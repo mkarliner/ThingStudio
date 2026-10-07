@@ -1,6 +1,6 @@
 # GUI font pipeline — scoping
 
-Status: scoping, 2026-10-07; option A (prebuilt set) chosen by Mike the same day. Phase 2 of
+Status: built 2026-10-07 (option A, Atkinson Hyperlegible, both chosen by Mike the same day). Phase 2 of
 `gui-layout-widget-system-scoping.md`'s phasing ("Font/metrics pipeline"), after flow dependencies (phase 1).
 Blocks the layout engine (phase 3): layout needs exact text widths. Inputs: the nano-gui spike's findings
 (`nano-gui-spike-briefing.md`, Q1, Q8) and the spike's `make_fonts.sh` on the `spike/nano-gui` branch.
@@ -94,6 +94,27 @@ render path already produces PNGs), then on the CYD and an OLED.
 - **RAM is close:** the hero page's eight fonts total 30.2 KB in DejaVu, 28.2 KB in Atkinson. Per font, e.g.
   body16 3.8 KB, digits48 4.2-4.6 KB, digits64 7.5-8.0 KB.
 - **Spleen** is crisp at 8 and 12px but monospaced and retro; only worth adding for an 8px size.
+
+## Built, 2026-10-07
+
+- **Font:** Atkinson Hyperlegible, Regular for body, Bold for digits. **Ladder:** body 12/16/20/24 (10 dropped:
+  Atkinson is cramped there), digits 16/24/32/48/64. Charsets as above.
+- **The list** lives in `device-runtime/runtime_manifest.py` (`FONT_SOURCES`, `FONT_CHARSETS`, `FONT_SIZES`,
+  `font_ids()`); each font is appended to `DEPENDENCIES` as `font_<charset><size>`, so the backend serves it and
+  a flow that imports `font_body16` gets only that font.
+- **`tools/build_fonts.py`** runs the vendored `font_to_py` (`tools/vendor/font_to_py/`) over `tools/fonts/`
+  and writes `device-runtime/src/vendor/fonts/font_<id>.py` and `editor/src/gui/fonts/font_<id>.json`
+  (height, baseline, max width, each glyph's width and bitmap, sample widths). `--check` fails on stale output.
+- **Editor:** `editor/src/gui/font-metrics.ts` -- `textWidth`, `missingChars`, `widestWidth`, `glyphBitmap`.
+- **Cross-check:** `device-runtime/test/test_fonts.py` imports every board module on the unix port and checks
+  each glyph's width and bitmap against the editor JSON. Vitest checks the editor's widths against
+  font_to_py's own sample widths.
+- **Found:** font_to_py's line height isn't exactly the size asked for (body16 is 17px, digits48 is 47px).
+  Layout must use `height` from the font, never the nominal size.
+- **Size as `.mpy`** (≈ RAM when imported): body12 2.6 KB, body16 4.3, body20 4.5, body24 6.3; digits16 1.1,
+  digits24 1.7, digits32 2.5, digits48 4.7, digits64 7.9.
+- Not yet: `Writer` itself isn't vendored (that comes with the widgets); a check against `Writer`'s own
+  `stringlen` belongs there.
 
 ## Proposed shape (option A)
 

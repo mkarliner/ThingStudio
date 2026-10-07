@@ -260,3 +260,9 @@ The bridge has no flow control: while the board was busy writing one piece to fl
 UART input buffer and bytes were lost mid-line. Native-USB boards (Pico W, ESP32-C3/S3) didn't show it, since USB
 CDC applies backpressure. Fix: the board answers each piece (`DEP_ACK`) and the sender waits for it. Any bulk
 transfer to a board should be paced by a reply, not just kept small.
+
+## font_to_py's height isn't the size you ask for, 2026-10-07
+
+`font_to_py <font> 16` gave Atkinson Hyperlegible a 17px line height; 48 gave 47px. The size argument is a
+target, not the result. Anything laying out text must read `height()` from the generated module (the editor's
+font JSON carries it), never assume the nominal size. `gui-font-pipeline-scoping.md`.

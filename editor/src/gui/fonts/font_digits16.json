@@ -1,0 +1,88 @@
+{
+ "id": "font_digits16",
+ "charset": "digits",
+ "size": 16,
+ "height": 16,
+ "baseline": 16,
+ "maxWidth": 23,
+ "errchar": "?",
+ "glyphs": {
+  " ": [
+   8,
+   "AAAAAAAAAAAAAAAAAAAAAA=="
+  ],
+  "%": [
+   23,
+   "HgHgP4HAf8OAcccAYccAcc4Af9wAP5zwHzn8AHP8APOOAOcOAcOOA4P8A4H8BwDw"
+  ],
+  "+": [
+   15,
+   "AAAAAAAAAAADgAOAA4ADgAOAf/x//H/8A4ADgAOAA4A="
+  ],
+  "-": [
+   9,
+   "AAAAAAAAAAAAAAAAAAAAAAAAfwB/AH8AAAAAAAAAAAA="
+  ],
+  ".": [
+   6,
+   "AAAAAAAAAAAAAAAweHh4MA=="
+  ],
+  "0": [
+   16,
+   "B+Af8B/4PDw+PH4efx57nnmeeN54/jh8PDwf+B/wB+A="
+  ],
+  "1": [
+   11,
+   "BwAHAA8AfwB/AH8ABwAHAAcABwAHAAcABwAHAAcABwA="
+  ],
+  "2": [
+   14,
+   "B8Af8D/4eHgIeAB4AHgA8AHwA+AHwB8APgB/+H/4f/g="
+  ],
+  "3": [
+   15,
+   "D8A/8H/4eHgAeAB4B/AH4AfwAPgAeBA4eHh/+D/wD8A="
+  ],
+  "4": [
+   15,
+   "APAB8APwA/AH8A/wDvAc8DzwePB//H/8f/wA8ADwAPA="
+  ],
+  "5": [
+   15,
+   "P/g/+D/4OAA4AH/Af/B/+Dh4ADgAPBA4eHg/+B/wD8A="
+  ],
+  "6": [
+   15,
+   "B+AP8B/4PAA4ADvgf/B/+Hx8eDx4PDg8PHg/+B/wB8A="
+  ],
+  "7": [
+   13,
+   "//D/8P/wAPAA8AHgAeADwAPAB4AHgA8ADwAeAB4APAA="
+  ],
+  "8": [
+   15,
+   "B8AP4B/wHHAccBxwH/Af8D/4eDx4PHg8eDw/+B/wD+A="
+  ],
+  "9": [
+   13,
+   "D4Af4D/gePBwcHBwcHB48D/wH+AP4APAA8AHgAeADwA="
+  ],
+  ":": [
+   6,
+   "AAAAADB4eHgwAAAweHh4MA=="
+  ],
+  "?": [
+   15,
+   "D+A/8H/4eDwAOAD4A/AHwAeADwAAAAcADwAPgA8ABwA="
+  ]
+ },
+ "samples": {
+  "-10.5": 57,
+  "21.9": 44,
+  "1013": 53,
+  "Temperature": 165,
+  "Living room": 158,
+  "48%": 53,
+  "°C": 30
+ }
+}

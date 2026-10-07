@@ -1,0 +1,88 @@
+{
+ "id": "font_digits24",
+ "charset": "digits",
+ "size": 24,
+ "height": 24,
+ "baseline": 24,
+ "maxWidth": 34,
+ "errchar": "?",
+ "glyphs": {
+  " ": [
+   11,
+   "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+  ],
+  "%": [
+   34,
+   "B8AB8AAf8APgAD/4B8AAP/wHgAB8fA8AAHg+HwAAeD4eAAB4PjwAAHx8fAAAP/x4AAA/+PD4AB/x8/4AB+Hn/wAAA8//AAAHz4+AAA+PB4AADw8HgAAfDweAAD4PB4AAPA+PgAB8D/8AAPgH/wAA8AP+AAHgAPgA"
+  ],
+  "+": [
+   22,
+   "AAAAAAAAAAAAAAAAAAAAAAAAAHgAAHgAAHgAAHgAAHgAAHgAAHgAP//wP//wP//wP//wAHgAAHgAAHgAAHgAAHgAAHgAAHgA"
+  ],
+  "-": [
+   13,
+   "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH/wf/B/8H/wAAAAAAAAAAAAAAAA"
+  ],
+  ".": [
+   9,
+   "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABwAfgB/AH8AfwB+ABwA"
+  ],
+  "0": [
+   23,
+   "AP4AA/+AB//AD//gH8fwH4PwP8H4P8H4P+D4PvD4PvD8Pnj8Pjz8Phz8Ph74Pg/4Pwf4PwP4H4PwH8fwD//gB//AA/+AAP4A"
+  ],
+  "1": [
+   16,
+   "APAA8AHwA/A/8D/wP/A/8AHwAfAB8AHwAfAB8AHwAfAB8AHwAfAB8AHwAfAB8AHw"
+  ],
+  "2": [
+   21,
+   "AfwAB/8AD/+AH//AP4/gPwfgBgPgAAPgAAfgAAfgAA/AAB/AAD+AAH8AAP4AAfwAA/gAD/AAH8AAP4AAf//gf//gf//gf//g"
+  ],
+  "3": [
+   21,
+   "AfwAD/+AH//AP//gPw/gXgfgAAPgAAfgAB/AAf+AAf8AAf+AAf/AAB/gAAfgAAPgAAPgDAPgfgfgPw/gP//AH/+AD/8AAfwA"
+  ],
+  "4": [
+   22,
+   "AA/AAB/AAD/AAD/AAH/AAP/AAf/AAf/AA+/AB+/AB8/AD4/AHw/APw/APg/Af//4f//4f//4f//4AA/AAA/AAA/AAA/AAA/A"
+  ],
+  "5": [
+   21,
+   "H//gH//gH//gH//gHgAAPgAAPgAAPgAAPv4AP/+AP//AP//gPw/gDgPgAAPwAAPwAAPwBAPwfgfgPw/gP//AH/+AB/8AAfwA"
+  ],
+  "6": [
+   22,
+   "AH4AAf+AB//AD//gD8eAH4AAHwAAPwAAPn8AP/+AP//AP//gP4fwPwPwPwHwPgHwPgHwPwHwHwPwH8fgD//gD//AA/+AAPwA"
+  ],
+  "7": [
+   19,
+   "f//Af//Af//Af//AAA/AAA+AAB+AAB+AAD8AAD8AAH4AAH4AAPwAAPwAAfgAAfgAA/AAA/AAA/AAB+AAB+AAD8AAD8AAH4AA"
+  ],
+  "8": [
+   22,
+   "APwAAf4AA/8AB/+AD8+AD4fAD4fAD4fAD8+AB/+AB/+AD//AH//gP4fwPgPwfgHwfgH4fgHwPwPwP4fwH//gH//AB/+AAf4A"
+  ],
+  "9": [
+   20,
+   "AfAAB/wAD/8AH/8APx+APg/APAfAfAfAfAfAfAfAPAfAPg+APx+AH/+AD/8AB/8AAf4AAH4AAHwAAPwAAPgAAfgAAfAAA/AA"
+  ],
+  ":": [
+   9,
+   "AAAAAAAAAAAAAAAAHAB+AH8AfwB/AH4APAAAAAAAAAAAABwAfgB/AH8AfwB+ABwA"
+  ],
+  "?": [
+   21,
+   "Af4AD/+AH//AP//gf4fwHgPwAgPwAAfwAB/gAH/AAP+AAf4AAfgAAfAAAfAAAAAAAAAAAeAAA/AAA/gAA/gAA/gAA/AAAeAA"
+  ]
+ },
+ "samples": {
+  "-10.5": 82,
+  "21.9": 66,
+  "1013": 76,
+  "Temperature": 231,
+  "Living room": 221,
+  "48%": 78,
+  "°C": 42
+ }
+}

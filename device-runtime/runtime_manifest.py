@@ -50,6 +50,32 @@ DEPENDENCIES: list[dict] = [
     {"name": "bme280_float", "files": [("bme280/bme280_float.py", "bme280_float.py")], "requires": []},
 ]
 
+# GUI fonts (2026-10-07, docs/working-notes/gui-font-pipeline-scoping.md): a prebuilt set, one library per
+# (charset, size), so a flow carries only the fonts its generated code imports. tools/build_fonts.py reads
+# these three tables, converts tools/fonts/<source> with font_to_py into vendor/fonts/font_<id>.py, and writes
+# the editor's metrics/bitmap JSON (editor/src/gui/fonts/<id>.json). Font data loaded from a .mpy stays in
+# RAM, so keep the set small. Atkinson Hyperlegible (SIL OFL 1.1), chosen by Mike from a look test.
+FONT_SOURCES: dict[str, str] = {
+    "body": "AtkinsonHyperlegible-Regular.ttf",
+    "digits": "AtkinsonHyperlegible-Bold.ttf",
+}
+FONT_CHARSETS: dict[str, str] = {
+    "body": "".join(chr(c) for c in range(32, 127)) + "\u00b0\u00b1\u00b5",  # printable ASCII + degree, plus-minus, micro
+    "digits": "0123456789.-+:% ",
+}
+FONT_SIZES: dict[str, list[int]] = {
+    "body": [12, 16, 20, 24],
+    "digits": [16, 24, 32, 48, 64],
+}
+
+
+def font_ids() -> list[str]:
+    """Every font id in the set, e.g. "font_body16"."""
+    return [f"font_{cs}{size}" for cs in sorted(FONT_SIZES) for size in FONT_SIZES[cs]]
+
+
+DEPENDENCIES += [{"name": fid, "files": [(f"fonts/{fid}.py", f"{fid}.py")], "requires": []} for fid in font_ids()]
+
 # What runtimes before 7.0.0 pushed into the board's root (the old VENDOR_FILES). The root comes
 # before /lib on sys.path, so a stale root copy would silently win over the library Deploy installs.
 # A runtime install deletes these (and their .mpy twins). A fixed historical list: new libraries

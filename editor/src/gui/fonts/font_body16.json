@@ -1,0 +1,412 @@
+{
+ "id": "font_body16",
+ "charset": "body",
+ "size": 16,
+ "height": 17,
+ "baseline": 14,
+ "maxWidth": 16,
+ "errchar": "?",
+ "glyphs": {
+  " ": [
+   5,
+   "AAAAAAAAAAAAAAAAAAAAAAA="
+  ],
+  "!": [
+   5,
+   "AAAgICAgICAgIAAAYGAAAAA="
+  ],
+  "\"": [
+   5,
+   "AABQUFBQAAAAAAAAAAAAAAA="
+  ],
+  "#": [
+   11,
+   "AAAAAAmACYAJAH/AGQAZABEAEwB/wBMAEgAyAAAAAAAAAA=="
+  ],
+  "$": [
+   10,
+   "CAAIAD8Aa4BIAGgAeAA+AAeACYAIgEiAe4AfAAgAAAAAAA=="
+  ],
+  "%": [
+   16,
+   "AAAAADgYZDBGYEJAZsA9gAE8A2YGQgRCDGYYPAAAAAAAAA=="
+  ],
+  "&": [
+   12,
+   "AAAAAB4AMwAxABMAHgA8QGZAQ8BBgEHAc2A+cAAAAAAAAA=="
+  ],
+  "'": [
+   3,
+   "AABAQEBAAAAAAAAAAAAAAAA="
+  ],
+  "(": [
+   5,
+   "AAAwICBgQEBAQEBAYCAgMBg="
+  ],
+  ")": [
+   5,
+   "AABgIDAQEBAQEBAQEDAgIEA="
+  ],
+  "*": [
+   7,
+   "AAAQVDw4LAAAAAAAAAAAAAA="
+  ],
+  "+": [
+   10,
+   "AAAAAAAAAAAAAAwADAAMAAwAf4AMAAwADAAMAAAAAAAAAA=="
+  ],
+  ",": [
+   3,
+   "AAAAAAAAAAAAAAAAYGBAQAA="
+  ],
+  "-": [
+   6,
+   "AAAAAAAAAAAAfAAAAAAAAAA="
+  ],
+  ".": [
+   3,
+   "AAAAAAAAAAAAAAAAYGAAAAA="
+  ],
+  "/": [
+   6,
+   "AAAMDAgYEBAwICBgQMAAAAA="
+  ],
+  "0": [
+   11,
+   "AAAAAB8AOYAwgHjAaMBswGbAYsBjwCGAMYAfAAAAAAAAAA=="
+  ],
+  "1": [
+   7,
+   "AAAIGHgICAgICAgICAgAAAA="
+  ],
+  "2": [
+   9,
+   "AAAAAB4AMwBhAAEAAQADAAYADAAYADAAYAB/gAAAAAAAAA=="
+  ],
+  "3": [
+   10,
+   "AAAAAB4AcwBhAAEAAwAOAAMAAYABgEGAcwA+AAAAAAAAAA=="
+  ],
+  "4": [
+   10,
+   "AAAAAAMABwAPAAsAGwAzACMAQwB/wAMAAwADAAAAAAAAAA=="
+  ],
+  "5": [
+   10,
+   "AAAAAD8AIAAgACAAfgBzACGAAYABgGGAMwAeAAAAAAAAAA=="
+  ],
+  "6": [
+   10,
+   "AAAAAB4AM4AgAGAAfgBzAGGAYIBggGGAMwAeAAAAAAAAAA=="
+  ],
+  "7": [
+   9,
+   "AAAAAP8AAwADAAIABgAEAAwACAAYABAAMAAwAAAAAAAAAA=="
+  ],
+  "8": [
+   10,
+   "AAAAAA4AEwAxACEAMwAfADGAYIBggGCAM4AfAAAAAAAAAA=="
+  ],
+  "9": [
+   10,
+   "AAAAAB4AMwBhgGCAYIBhgDOAHwACAAYABAAMAAAAAAAAAA=="
+  ],
+  ":": [
+   3,
+   "AAAAAABgYAAAAAAAYGAAAAA="
+  ],
+  ";": [
+   3,
+   "AAAAAABgYAAAAAAAYGBAQAA="
+  ],
+  "<": [
+   9,
+   "AAAAAAAAAAAAAAAAAYAPADgAYABwABwAB4AAgAAAAAAAAA=="
+  ],
+  "=": [
+   10,
+   "AAAAAAAAAAAAAAAAAAAAAH+AAAAAAH+AAAAAAAAAAAAAAA=="
+  ],
+  ">": [
+   9,
+   "AAAAAAAAAAAAAAAAYAA4AA4AA4AHABwAcABAAAAAAAAAAA=="
+  ],
+  "?": [
+   9,
+   "AAAAAD4AZwBDAAMAAwAGABgAGAAYAAAAGAAYAAAAAAAAAA=="
+  ],
+  "@": [
+   13,
+   "AAAAAA+AGOAwIGeQTJBIkEiQSZBv4DAAGIAPgAAAAAAAAA=="
+  ],
+  "A": [
+   11,
+   "AAAAAAwADgAKABoAEwAxADGAIYB/gGDAQMDAQAAAAAAAAA=="
+  ],
+  "B": [
+   11,
+   "AAAAAH8AYYBggGCAYYB/AGGAYMBgwGDAYYB/AAAAAAAAAA=="
+  ],
+  "C": [
+   11,
+   "AAAAAA8AOcAwQGAAYABAAEAAYABgADBgOcAPAAAAAAAAAA=="
+  ],
+  "D": [
+   11,
+   "AAAAAH4AY4BgwGBAYEBgYGBgYEBgQGDAY4B+AAAAAAAAAA=="
+  ],
+  "E": [
+   10,
+   "AAAAAH+AYABgAGAAYAB+AGAAYABgAGAAYAB/gAAAAAAAAA=="
+  ],
+  "F": [
+   9,
+   "AAAAAH+AYABgAGAAYAB/gGAAYABgAGAAYABgAAAAAAAAAA=="
+  ],
+  "G": [
+   12,
+   "AAAAAA8AOcAwQGAAYABAAEPgYGBgYDBgOeAPIAAAAAAAAA=="
+  ],
+  "H": [
+   12,
+   "AAAAAGBAYEBgQGBAYEB/wGBAYEBgQGBAYEBgQAAAAAAAAA=="
+  ],
+  "I": [
+   7,
+   "AAB8EBAQEBAQEBAQEHwAAAA="
+  ],
+  "J": [
+   9,
+   "AAAAAAIAAgACAAIAAgACAAIAAgDCAMIAZgA8AAAAAAAAAA=="
+  ],
+  "K": [
+   11,
+   "AAAAAGDAYYBjAGYAbAB8AHYAdgBjAGGAYYBgwAAAAAAAAA=="
+  ],
+  "L": [
+   9,
+   "AAAAAGAAYABgAGAAYABgAGAAYABgAGAAYAB/gAAAAAAAAA=="
+  ],
+  "M": [
+   14,
+   "AAAAAHA4cDh4eHh4aFhs2GzYZJhnmGeYYxhjGAAAAAAAAA=="
+  ],
+  "N": [
+   12,
+   "AAAAAHBAcEB4QGhAbEBkQGZAYkBjQGFAYcBgwAAAAAAAAA=="
+  ],
+  "O": [
+   12,
+   "AAAAAA+AOcAwYGBgYCBAMEAwYCBgYDBgOcAPgAAAAAAAAA=="
+  ],
+  "P": [
+   10,
+   "AAAAAH8AYYBggGDAYMBhgH8AYABgAGAAYABgAAAAAAAAAA=="
+  ],
+  "Q": [
+   13,
+   "AAAAAA+AOcAwYGBgYCBAMEMwY6Bh4DDgOfAPmAAQAAAAAA=="
+  ],
+  "R": [
+   11,
+   "AAAAAH8AYYBgwGDAYMBhgH8AZgBiAGMAYYBgwAAAAAAAAA=="
+  ],
+  "S": [
+   10,
+   "AAAAAB4Ac4BhAEAAYAA+AAeAAYAAgECAc4AeAAAAAAAAAA=="
+  ],
+  "T": [
+   9,
+   "AAAAAP+ADAAMAAwADAAMAAwADAAMAAwADAAMAAAAAAAAAA=="
+  ],
+  "U": [
+   12,
+   "AAAAAGBAYEBgQGBAYEBgQGBAYEBgQCDAOcAfAAAAAAAAAA=="
+  ],
+  "V": [
+   10,
+   "AAAAAMDAQIBhgGGAIQAzADMAEgAeAB4ADAAMAAAAAAAAAA=="
+  ],
+  "W": [
+   14,
+   "AAAAAMMMQwxDjGeIZphkmCSYNNA8cDxwGHAYYAAAAAAAAA=="
+  ],
+  "X": [
+   11,
+   "AAAAAODAYYAxgBsAHgAMAA4AHgATADGAYYDAwAAAAAAAAA=="
+  ],
+  "Y": [
+   10,
+   "AAAAAMDAYYAhgDMAEgAeAAwADAAMAAwADAAMAAAAAAAAAA=="
+  ],
+  "Z": [
+   10,
+   "AAAAAH+AAYABAAMABgAMAAwAGAAwACAAYAB/wAAAAAAAAA=="
+  ],
+  "[": [
+   5,
+   "AAB4YGBgYGBgYGBgYGBgYHg="
+  ],
+  "\\": [
+   6,
+   "AADAQGAgIDAQEBgIDAwAAAA="
+  ],
+  "]": [
+   5,
+   "AABwEBAQEBAQEBAQEBAQEHA="
+  ],
+  "^": [
+   9,
+   "AAAIAAwAHAAWADIAIwBhAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+  ],
+  "_": [
+   7,
+   "AAAAAAAAAAAAAAAAAAD+AAA="
+  ],
+  "`": [
+   5,
+   "AEBgMAAAAAAAAAAAAAAAAAA="
+  ],
+  "a": [
+   9,
+   "AAAAAAAAAAAAAB4AdgAjAAMAPwBjAEMAZwA5AAAAAAAAAA=="
+  ],
+  "b": [
+   10,
+   "AAAAAGAAYABgAG4AcwBhgGGAYYBhgGGAcwBOAAAAAAAAAA=="
+  ],
+  "c": [
+   9,
+   "AAAAAAAAAAAAAB4AMwBiAEAAQABAAGAAMwAcAAAAAAAAAA=="
+  ],
+  "d": [
+   10,
+   "AAAAAAEAAQABAB0AcwBhAEEAQQBBAGEAc4AdgAAAAAAAAA=="
+  ],
+  "e": [
+   9,
+   "AAAAAAAAAAAAAB4AMwBhAEGAf4BAAEAAMwAeAAAAAAAAAA=="
+  ],
+  "f": [
+   5,
+   "ADggICD4ICAgICAgICAAAAA="
+  ],
+  "g": [
+   10,
+   "AAAAAAAAAAAAAB0AdwBhAEEAQQBBAGEAdwA9AAEAYwA+AA=="
+  ],
+  "h": [
+   9,
+   "AAAAAGAAYABgAG4AcwBhAGEAYQBhAGEAYQBhAAAAAAAAAA=="
+  ],
+  "i": [
+   5,
+   "ADAwAABgICAgICAgICAAAAA="
+  ],
+  "j": [
+   5,
+   "AAAwMAAQEBAQEBAQEBAQMOA="
+  ],
+  "k": [
+   8,
+   "AABgYGBjZGx4eGxkZmMAAAA="
+  ],
+  "l": [
+   4,
+   "AABgYGBgYGBgYGBgYDAAAAA="
+  ],
+  "m": [
+   14,
+   "AAAAAAAAAAAAAE5wc5hjCGMIYwhjCGMIYwhjCAAAAAAAAA=="
+  ],
+  "n": [
+   9,
+   "AAAAAAAAAAAAAE4AcwBhAGEAYQBhAGEAYQBhAAAAAAAAAA=="
+  ],
+  "o": [
+   9,
+   "AAAAAAAAAAAAAB4AMwBhAEGAQYBBgGEAMwAeAAAAAAAAAA=="
+  ],
+  "p": [
+   10,
+   "AAAAAAAAAAAAAE4AcwBhgGGAYYBhgGGAcwBuAGAAYABgAA=="
+  ],
+  "q": [
+   11,
+   "AAAAAAAAAAAAAB0AcwBhAEEAQQBBAGEAcwAdAAEAAaAA4A=="
+  ],
+  "r": [
+   6,
+   "AAAAAABMcGBgYGBgYGAAAAA="
+  ],
+  "s": [
+   8,
+   "AAAAAAA8ZkBgPgJDZjwAAAA="
+  ],
+  "t": [
+   6,
+   "AAAAICD4ICAgICAgIDgAAAA="
+  ],
+  "u": [
+   9,
+   "AAAAAAAAAAAAAGMAYwBjAGMAYwBjAGMAZwA9AAAAAAAAAA=="
+  ],
+  "v": [
+   8,
+   "AAAAAADDRkZkJCw4GBgAAAA="
+  ],
+  "w": [
+   11,
+   "AAAAAAAAAAAAAMRgzmBKQEpAasB5wDGAMYAxgAAAAAAAAA=="
+  ],
+  "x": [
+   8,
+   "AAAAAADDZjw4GDwsZsMAAAA="
+  ],
+  "y": [
+   7,
+   "AAAAAADCxkZkbCwoOBgQMGA="
+  ],
+  "z": [
+   8,
+   "AAAAAAB+BgQIGDAgQH4AAAA="
+  ],
+  "{": [
+   5,
+   "AAA4ICAgICAgQGAgICAgIDg="
+  ],
+  "|": [
+   4,
+   "AABgYGBgYGBgYGBgYGBgYGA="
+  ],
+  "}": [
+   5,
+   "AABgMDAwMDAwGDAwMDAwMGA="
+  ],
+  "~": [
+   9,
+   "AAAAAAAAAAAAAAAAAAAAAHmATwAAAAAAAAAAAAAAAAAAAA=="
+  ],
+  "°": [
+   6,
+   "AAAwSEhIeAAAAAAAAAAAAAA="
+  ],
+  "±": [
+   10,
+   "AAAAAAAAAAAAAAwADAAMAH+ADAAMAAwAAAB/gAAAAAAAAA=="
+  ],
+  "µ": [
+   9,
+   "AAAAAAAAAAAAAGEAYQBhAGEAYQBjAGMAdwB9gGAAYABgAA=="
+  ]
+ },
+ "samples": {
+  "-10.5": 37,
+  "21.9": 29,
+  "1013": 35,
+  "Temperature": 96,
+  "Living room": 89,
+  "48%": 36,
+  "°C": 17
+ }
+}

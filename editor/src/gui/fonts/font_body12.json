@@ -1,0 +1,412 @@
+{
+ "id": "font_body12",
+ "charset": "body",
+ "size": 12,
+ "height": 11,
+ "baseline": 9,
+ "maxWidth": 11,
+ "errchar": "?",
+ "glyphs": {
+  " ": [
+   3,
+   "AAAAAAAAAAAAAAA="
+  ],
+  "!": [
+   3,
+   "AEBAQEBAQEBAAAA="
+  ],
+  "\"": [
+   4,
+   "AKCgoAAAAAAAAAA="
+  ],
+  "#": [
+   8,
+   "ABQUfiQk/igoAAA="
+  ],
+  "$": [
+   7,
+   "EHxUUHAcFtQ8EAA="
+  ],
+  "%": [
+   11,
+   "AABxgIkASgB0AAXACiASIDHAAAAAAA=="
+  ],
+  "&": [
+   8,
+   "ADgkJDh6zkZ7AAA="
+  ],
+  "'": [
+   2,
+   "AICAgAAAAAAAAAA="
+  ],
+  "(": [
+   4,
+   "ACBAQEBAQEBAQCA="
+  ],
+  ")": [
+   4,
+   "AEBAICAgICAgQMA="
+  ],
+  "*": [
+   5,
+   "ACBwcAAAAAAAAAA="
+  ],
+  "+": [
+   7,
+   "AAAAEBAQfhAQAAA="
+  ],
+  ",": [
+   2,
+   "AAAAAAAAAADAQEA="
+  ],
+  "-": [
+   4,
+   "AAAAAAAA8AAAAAA="
+  ],
+  ".": [
+   2,
+   "AAAAAAAAAEDAAAA="
+  ],
+  "/": [
+   5,
+   "ABAQICAgQECAAAA="
+  ],
+  "0": [
+   8,
+   "ADxmYlJKSkY8AAA="
+  ],
+  "1": [
+   5,
+   "ABDwEBAQEBAQAAA="
+  ],
+  "2": [
+   7,
+   "ADhEBAwIEGD8AAA="
+  ],
+  "3": [
+   7,
+   "ADhEBBgEhER4AAA="
+  ],
+  "4": [
+   7,
+   "AAgYOChI/ggIAAA="
+  ],
+  "5": [
+   7,
+   "AHxAeEQEBEQ4AAA="
+  ],
+  "6": [
+   7,
+   "ADhEQHhEREQ4AAA="
+  ],
+  "7": [
+   6,
+   "APwICBAQMCBgAAA="
+  ],
+  "8": [
+   7,
+   "ADgkJDxEQkQ8AAA="
+  ],
+  "9": [
+   7,
+   "ADhEREREOAgQAAA="
+  ],
+  ":": [
+   2,
+   "AAAAwEAAAEDAAAA="
+  ],
+  ";": [
+   2,
+   "AAAAwEAAAADAQEA="
+  ],
+  "<": [
+   7,
+   "AAAABBhg4BgEAAA="
+  ],
+  "=": [
+   7,
+   "AAAAAAB+AH4AAAA="
+  ],
+  ">": [
+   7,
+   "AAAAgHAMDHDAAAA="
+  ],
+  "?": [
+   6,
+   "AHjMCBggACAgAAA="
+  ],
+  "@": [
+   9,
+   "AAAeACEAXIBUgFSAWwBgABwAAAAAAA=="
+  ],
+  "A": [
+   8,
+   "ABgYKCREfEKCAAA="
+  ],
+  "B": [
+   7,
+   "AHxGRHxCQkJ8AAA="
+  ],
+  "C": [
+   8,
+   "ADxiQEBAQGI8AAA="
+  ],
+  "D": [
+   8,
+   "AHxGQkJCQkZ8AAA="
+  ],
+  "E": [
+   7,
+   "AHxAQHhAQEB8AAA="
+  ],
+  "F": [
+   7,
+   "AHxAQHxAQEBAAAA="
+  ],
+  "G": [
+   9,
+   "AAA8AGIAQABAAE8AQQBjAD0AAAAAAA=="
+  ],
+  "H": [
+   8,
+   "AEJCQn5CQkJCAAA="
+  ],
+  "I": [
+   5,
+   "AHAgICAgICBwAAA="
+  ],
+  "J": [
+   6,
+   "AAgICAgIiIhwAAA="
+  ],
+  "K": [
+   8,
+   "AEZMWFB4TERCAAA="
+  ],
+  "L": [
+   6,
+   "AEBAQEBAQEB8AAA="
+  ],
+  "M": [
+   10,
+   "AABhgGGAcoBSgFKATIBMgEyAAAAAAA=="
+  ],
+  "N": [
+   8,
+   "AGJiUlJKTkZGAAA="
+  ],
+  "O": [
+   9,
+   "AAA8AGIAQQBBAEEAQQBiADwAAAAAAA=="
+  ],
+  "P": [
+   7,
+   "AHxGQkZ8QEBAAAA="
+  ],
+  "Q": [
+   9,
+   "AAA8AGIAQQBBAE0ARwBjAD2AAAAAAA=="
+  ],
+  "R": [
+   7,
+   "AHxGQkZ8SExGAAA="
+  ],
+  "S": [
+   7,
+   "ADhEQHAMBsY8AAA="
+  ],
+  "T": [
+   7,
+   "AP4QEBAQEBAQAAA="
+  ],
+  "U": [
+   8,
+   "AEJCQkJCQmI8AAA="
+  ],
+  "V": [
+   7,
+   "AMJEREQoKCgQAAA="
+  ],
+  "W": [
+   10,
+   "AACMQEzATIBMgFKAM4AzADMAAAAAAA=="
+  ],
+  "X": [
+   7,
+   "AMZkKBgYLGTCAAA="
+  ],
+  "Y": [
+   7,
+   "AMZELCgQEBAQAAA="
+  ],
+  "Z": [
+   7,
+   "AH4ECBgQIEB+AAA="
+  ],
+  "[": [
+   4,
+   "AGBAQEBAQEBAQGA="
+  ],
+  "\\": [
+   5,
+   "AIBAQCAgIBAQAAA="
+  ],
+  "]": [
+   4,
+   "AOAgICAgICAgIOA="
+  ],
+  "^": [
+   7,
+   "EDAoSEQAAAAAAAA="
+  ],
+  "_": [
+   5,
+   "AAAAAAAAAAAA+AA="
+  ],
+  "`": [
+   3,
+   "QGAAAAAAAAAAAAA="
+  ],
+  "a": [
+   6,
+   "AAAAOEgcZMx0AAA="
+  ],
+  "b": [
+   7,
+   "AEBAeERERER4AAA="
+  ],
+  "c": [
+   6,
+   "AAAAOEzAwEw4AAA="
+  ],
+  "d": [
+   7,
+   "AAQEPETExEQ8AAA="
+  ],
+  "e": [
+   6,
+   "AAAAOET8wEw4AAA="
+  ],
+  "f": [
+   4,
+   "IEBA4EBAQEBAAAA="
+  ],
+  "g": [
+   7,
+   "AAAANEzExEw0BHg="
+  ],
+  "h": [
+   7,
+   "AEBAeEREREREAAA="
+  ],
+  "i": [
+   3,
+   "YAAAQEBAQEBAAAA="
+  ],
+  "j": [
+   4,
+   "IAAAICAgICAgIOA="
+  ],
+  "k": [
+   6,
+   "AEBASFBgUFhMAAA="
+  ],
+  "l": [
+   3,
+   "AEBAQEBAQEBgAAA="
+  ],
+  "m": [
+   10,
+   "AAAAAAAAe4BMgESARIBEgESAAAAAAA=="
+  ],
+  "n": [
+   7,
+   "AAAAeEREREREAAA="
+  ],
+  "o": [
+   7,
+   "AAAAOETExEQ4AAA="
+  ],
+  "p": [
+   7,
+   "AAAAeERERER4QEA="
+  ],
+  "q": [
+   8,
+   "AAAAPETExEQ8BAc="
+  ],
+  "r": [
+   4,
+   "AAAAcEBAQEBAAAA="
+  ],
+  "s": [
+   6,
+   "AAAAcMhgGIh4AAA="
+  ],
+  "t": [
+   4,
+   "AEBA4EBAQEBgAAA="
+  ],
+  "u": [
+   6,
+   "AAAAREREREx0AAA="
+  ],
+  "v": [
+   5,
+   "AAAAiEhQUDAgAAA="
+  ],
+  "w": [
+   8,
+   "AAAAmZpaamYkAAA="
+  ],
+  "x": [
+   6,
+   "AAAAyFAwMFDMAAA="
+  ],
+  "y": [
+   5,
+   "AAAAiEhQUDAgIMA="
+  ],
+  "z": [
+   6,
+   "AAAAeBgQIED4AAA="
+  ],
+  "{": [
+   4,
+   "ACBAQEBAgEBAQGA="
+  ],
+  "|": [
+   3,
+   "AEBAQEBAQEBAQEA="
+  ],
+  "}": [
+   4,
+   "AMAgICAgICAgIMA="
+  ],
+  "~": [
+   7,
+   "AAAAAABk3AAAAAA="
+  ],
+  "°": [
+   4,
+   "AGCQYAAAAAAAAAA="
+  ],
+  "±": [
+   7,
+   "AAAAEBB8EAB8AAA="
+  ],
+  "µ": [
+   7,
+   "AAAAREREREx0QEA="
+  ]
+ },
+ "samples": {
+  "-10.5": 26,
+  "21.9": 21,
+  "1013": 25,
+  "Temperature": 66,
+  "Living room": 62,
+  "48%": 25,
+  "°C": 12
+ }
+}
