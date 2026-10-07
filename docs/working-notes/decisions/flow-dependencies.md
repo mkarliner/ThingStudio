@@ -51,3 +51,6 @@ Detail: `../flow-dependencies-scoping.md`.
   ok, code, error}`, and the editor sends the next piece only after it: 10 s per piece, a failure names the library,
   file and byte. One round trip per KB, under a second for the largest library over USB. Major bump: boards on
   8.0.0 need the runtime installed again.
+- **2026-10-07 — Low ESP-IDF memory needs a hard reset (CYD, Mike).** A soft reset left the ESP-IDF heap low; only
+  a hard reset recovered it. The console now advises **Reset board (hard)** when an ESP32 is short of ESP-IDF memory
+  before a networking deploy, and keeps **Restart board (soft)** for a `MemoryError`. Still manual, not automatic.

@@ -101,3 +101,7 @@ installing `mkdocs`/`mkdocs-material` and running a real build to confirm the si
   `canvas-basics.md`. The script draws the callouts from the live DOM (element ids in `EDITOR_PARTS`), so they
   follow layout changes; a renamed or removed id fails the run by name. The legend's numbers are kept in step with
   `EDITOR_PARTS` by hand.
+- 2026-10-07 (Mike): the user guide gets a **FAQ** (`docs/user-guide/faq.md`, in the nav after Debugging), started
+  with ESP32 memory, display-plus-WiFi board choice, the hard reset for WiFi memory, runtime reinstalls and the
+  editor version. Standing rule in `CLAUDE.md` ("Watch for troubleshooting and FAQ entries"): sessions add
+  entries to the FAQ or `debugging.md` as they find things users would hit.

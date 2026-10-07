@@ -8,8 +8,9 @@ describe("lowMemoryWarningBeforeDeploy", () => {
   it("warns for a networking flow on an ESP32 with little ESP-IDF memory (the CYD's 1 KB case)", () => {
     const w = lowMemoryWarningBeforeDeploy({ freeIdfHeapBytes: 1368 }, true)!;
     expect(w).toContain("only 1 KB of ESP-IDF memory");
-    expect(w).toContain("Restart board (soft)");
+    // A soft reset doesn't return ESP-IDF memory (CYD, 2026-10-07), so only the hard reset is offered.
     expect(w).toContain("Reset board (hard)");
+    expect(w).not.toContain("Restart board (soft)");
   });
   it("stays quiet with enough memory, without networking, off ESP32, or with no HELLO", () => {
     expect(lowMemoryWarningBeforeDeploy({ freeIdfHeapBytes: LOW_IDF_HEAP_BYTES }, true)).toBeNull();

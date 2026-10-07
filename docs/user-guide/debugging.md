@@ -23,7 +23,8 @@ The **source preview** panel shows the actual MicroPython the current canvas com
 After each connect and deploy, a **[memory]** line shows how much RAM the board has free. On ESP32 boards
 it also shows the ESP-IDF heap and its largest free block. WiFi, MQTT and TLS use that heap, not
 MicroPython's. If WiFi won't join while MicroPython still has plenty free, a low ESP-IDF figure is the
-likely cause. The ESP32-C3 is the tightest.
+likely cause. The ESP32-C3 is the tightest. The [FAQ](faq.md) explains where an ESP32's memory
+goes.
 
 ## Board won't connect
 
@@ -69,11 +70,11 @@ while starting a flow, or an ESP32 reports too little memory left for WiFi.
 
 - **Tools → Restart board (soft)** restarts MicroPython. The saved flow starts again with clean memory. USB stays
   connected.
-- **Tools → Reset board (hard)** resets the whole chip, like its reset button. It frees all memory, including what
-  WiFi needs on an ESP32. A board with native USB (Pico, ESP32-S2/S3/C3) disconnects; click **Connect** when it's
-  back.
+- **Tools → Reset board (hard)** resets the whole chip, like its reset button. It frees all memory. A board with
+  native USB (Pico, ESP32-S2/S3/C3) disconnects; click **Connect** when it's back.
 
-Try the soft restart first.
+Try the soft restart first after a `MemoryError`. When an ESP32 is short of memory for WiFi, only the hard reset
+helps: a soft restart doesn't give that memory back. The console says which one to use.
 
 ## Board stuck restarting
 

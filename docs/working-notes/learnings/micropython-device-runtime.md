@@ -239,6 +239,18 @@ Found on a CYD (classic ESP32, no PSRAM) with `display-spi-gs4-cyd-test` running
   ESP-IDF memory when it runs short, and keeps it until reset. WiFi allocates from the ESP-IDF heap, so after a
   display flow has grown the heap, a WiFi/MQTT flow deployed without a reset has nothing to join with. Same mechanism
   as the 2026-09-25 ESP32-C3 entry. A deploy that starts the new flow from a fresh boot would avoid it.
+- Checked on the CYD the same day (Mike): a soft reset (`machine.soft_reset()`) does NOT give that ESP-IDF memory
+  back; the figure stayed low until a hard reset. The grown MicroPython heap survives a soft reset. So the console's
+  advice for low ESP-IDF memory is the hard reset (`memory-advice.ts`'s `HARD_RESET_HINT`); the soft restart is
+  only offered for a `MemoryError` (fragmentation).
+- Where a classic ESP32's 520 KB goes (CYD, display flow, `micropython.mem_info()` plus
+  `esp32.idf_heap_info(esp32.HEAP_DATA)`): six ESP-IDF heap regions total 233 KB, so ~287 KB is gone before any
+  heap (code in IRAM, flash cache, static data, Bluetooth's reservation -- not visible at run time; a component
+  split needs `idf.py size-components`). Of the 233 KB: MicroPython's GC heap 109 KB (`GC total: 112000`),
+  ESP-IDF/FreeRTOS/WiFi ~85 KB, free 33 KB, all of it in the last region as one 32 KB block. Five regions had 4
+  bytes free: filled by MicroPython's grown blocks and ESP-IDF. `max new split: 32768` means MicroPython may still
+  grow into that last block, which is what leaves WiFi ~1 KB. Inside the GC heap, 23 KB free but the largest gap
+  ~9 KB (`max free sz: 575` blocks of 16 bytes). User-facing summary: `docs/user-guide/faq.md`.
 
 ## A USB-UART board has no flow control: pace what you send, 2026-10-07
 
