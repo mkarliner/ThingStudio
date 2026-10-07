@@ -31,29 +31,22 @@ const KNOWN_CAUSES: { test: (lower: string) => boolean; hint: string }[] = [
   {
     test: (m) => m.includes("permission denied") || m.includes("access is denied"),
     hint:
-      'the OS is refusing access to this port. On macOS/Linux this is usually a udev/group-permission ' +
-      "issue -- unplugging and replugging the board sometimes fixes it, otherwise check the port isn't " +
-      "owned by root. On Windows, close any other program (Arduino IDE, a serial monitor) that might be " +
-      "holding it.",
+      "port access refused: replug the board, check port permissions, close other serial programs",
   },
   {
     test: (m) => m.includes("resource busy") || m.includes("already open") || m.includes("in use"),
     hint:
-      "another program already has this port open -- close any other serial monitor, IDE, or a second " +
-      "editor tab connected to the same board, then try again.",
+      "port in use: close other serial monitors, IDEs or editor tabs on this board",
   },
   {
     test: (m) =>
       m.includes("no such file or directory") || m.includes("cannot find the file") || m.includes("could not open port"),
     hint:
-      "the board isn't showing up at that port any more -- check the USB cable is still plugged in, then " +
-      'click ⟳ next to the port list to refresh the list before connecting again.',
+      "board gone from that port: check the cable, ⟳ the port list, connect again",
   },
 ];
 
-const FALLBACK_HINT =
-  "check the board is plugged in and powered, then try again -- if this keeps happening, try a different " +
-  "USB cable or port.";
+const FALLBACK_HINT = "check the board is plugged in and powered; if it repeats, try another cable or port";
 
 /** `rawMessage` is whatever `err.message` was on the rejected connectPort()/open()
  * promise -- normally the backend's NODE_ERROR text verbatim. Always returns the raw

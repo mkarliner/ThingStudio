@@ -31,25 +31,20 @@ export function explainDeployImportError(message: string, thingstudioLibraries: 
   if (thingstudioLibraries.has(top)) {
     return {
       text:
-        `The board couldn't load Thingstudio's ${top} library. Deploy again to resend it; if this keeps ` +
-        "happening, install the runtime again (Tools → Install runtime…).",
+        `Library ${top} wouldn't load. Deploy again to resend it; if it repeats, Tools → Install runtime…`,
     };
   }
   if (NETWORK_MODULES.has(top)) {
     return {
       text:
-        `This flow needs networking, but the MicroPython on this board has no '${top}' module. That usually ` +
-        "means the board has no WiFi (a Raspberry Pi Pico rather than a Pico W, for example), or its firmware " +
-        "was built without networking. Use a board with WiFi, or install a MicroPython build for your board " +
-        "that includes networking (micropython.org/download). The board's previous flow is still running.",
+        `No '${top}' module: this board's MicroPython has no networking (no WiFi, e.g. Pico not Pico W). ` +
+        "Use a WiFi board or a networking build. Old flow still running.",
       doc: DOC_BOARD_FIRMWARE_MODULES,
     };
   }
   return {
     text:
-      `The flow imports '${top}', which the MicroPython on this board doesn't have. Some modules are only in ` +
-      "some ports or builds. If it's in your own function node, check the module exists for this board " +
-      "(docs.micropython.org lists them per port). The board's previous flow is still running.",
+      `No '${top}' module in this board's MicroPython (some modules are port-specific). Old flow still running.`,
     doc: DOC_BOARD_FIRMWARE_MODULES,
   };
 }
@@ -61,7 +56,6 @@ export function networkWarningBeforeDeploy(importedModules: ReadonlySet<string>,
   const used = [...importedModules].filter((m) => NETWORK_MODULES.has(m) || m === "mqtt_as").sort();
   if (used.length === 0) return null;
   return (
-    `this flow uses networking (${used.join(", ")}), but the board reports no WiFi. ` +
-    "Unless it has Ethernet, the deploy will fail."
+    `flow uses networking (${used.join(", ")}) but the board reports no WiFi; will fail without Ethernet.`
   );
 }

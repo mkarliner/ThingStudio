@@ -17,21 +17,21 @@ describe("missingModuleName", () => {
 describe("explainDeployImportError", () => {
   it("explains a missing networking module as a board without WiFi (the plain-Pico case)", () => {
     const advice = explainDeployImportError("no module named 'socket'", LIBS)!;
-    expect(advice.text).toContain("needs networking");
+    expect(advice.text).toContain("no networking");
     expect(advice.text).toContain("'socket'");
-    expect(advice.text).toContain("previous flow is still running");
+    expect(advice.text).toContain("Old flow still running");
     expect(advice.doc?.path).toBe("debugging/#module-missing-on-the-board");
   });
 
   it("names any other firmware module and points at the per-port docs", () => {
     const advice = explainDeployImportError("no module named 'esp32'", LIBS)!;
-    expect(advice.text).toContain("imports 'esp32'");
-    expect(advice.text).toContain("docs.micropython.org");
+    expect(advice.text).toContain("No 'esp32' module");
+    expect(advice.doc).toBeDefined(); // the linked page lists modules per port
   });
 
   it("treats Thingstudio's own library differently: resend, then reinstall", () => {
     const advice = explainDeployImportError("no module named 'mqtt_as'", LIBS)!;
-    expect(advice.text).toContain("Thingstudio's mqtt_as library");
+    expect(advice.text).toContain("Library mqtt_as wouldn't load");
     expect(advice.text).toContain("Install runtime");
   });
 

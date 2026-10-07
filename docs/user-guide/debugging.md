@@ -73,6 +73,8 @@ while starting a flow, or an ESP32 reports too little memory left for WiFi.
 - **Tools → Reset board (hard)** resets the whole chip, like its reset button. It frees all memory. A board with
   native USB (Pico, ESP32-S2/S3/C3) disconnects; click **Connect** when it's back.
 
+Deploy is off until the board is back, which can take several seconds while it restarts its saved flow.
+
 Try the soft restart first after a `MemoryError`. When an ESP32 is short of memory for WiFi, only the hard reset
 helps: a soft restart doesn't give that memory back. The console says which one to use.
 

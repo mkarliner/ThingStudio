@@ -538,8 +538,8 @@ async function applyFlowFile(file: FlowFile): Promise<void> {
       typeof c.properties.credentialName === "string" && c.properties.credentialName ? `"${c.properties.credentialName}"` : `#${c.id.slice(0, 6)}`;
     const kept = wifi.configs.find((c) => c.type === WIFI_CONFIG_TYPE);
     logLine(
-      `[load] a flow now has one WiFi network, shared by every WiFi node: kept ${kept ? name(kept) : "?"}, ` +
-        `removed ${wifi.dropped.map(name).join(", ")}. Save the flow to keep this.`,
+      `[load] one WiFi network per flow now: kept ${kept ? name(kept) : "?"}, removed ` +
+        `${wifi.dropped.map(name).join(", ")}. Save to keep this.`,
       "",
     );
   }
@@ -548,7 +548,7 @@ async function applyFlowFile(file: FlowFile): Promise<void> {
   const i2c = migrateI2cBusConfigs(file.nodes, file.configs, () => crypto.randomUUID());
   if (i2c.moved > 0) {
     file = { ...file, nodes: i2c.nodes, configs: i2c.configs };
-    logLine(`[load] I2C pins now live in a shared "I2C bus" setting; moved ${i2c.moved} node(s) onto it. Save the flow to keep this.`, "");
+    logLine(`[load] I2C pins moved to a shared "I2C bus" setting (${i2c.moved} node(s)). Save to keep this.`, "");
     for (const note of i2c.notes) logLine(`[load] ${note}`, "err");
   }
   replaceAllConfigs(file.configs.map((c) => ({ id: c.id, type: c.type, properties: c.properties })));
@@ -1118,9 +1118,14 @@ let deployedClean = false;
  * command-box section at the end of this file. Declared up here because updateDeployButtonEnabled()
  * reads it and can run during startup. */
 let boardAtPrompt = false;
+// Set from Tools → Restart/Reset until the board's boot HELLO arrives (2026-10-07, CYD): a Deploy sent
+// while the board was still booting got lost, and the boot HELLO was then misread as a crash mid-deploy.
+let boardRestarting = false;
+// HELLO_REQUESTs sent and not yet answered. A HELLO that may be such a reply isn't taken as a restart.
+let helloRequestsPending = 0;
 
 function updateDeployButtonEnabled(): void {
-  el<HTMLButtonElement>("btnDeploy").disabled = !transport.isConnected || deployedClean || boardAtPrompt;
+  el<HTMLButtonElement>("btnDeploy").disabled = !transport.isConnected || deployedClean || boardAtPrompt || boardRestarting;
 }
 
 reteEditor.addPipe((context) => {
@@ -1286,8 +1291,7 @@ const transportEvents: TransportEvents = {
           "[safe mode]",
           {
             text:
-              "The board's saved flow kept crashing it on start, so it hasn't been run this time. Fix the flow " +
-              "and deploy again, or choose \"Tools → Remove flow…\".",
+              "Saved flow kept crashing the board, so it wasn't started. Fix and deploy, or Tools → Remove flow…",
             doc: DOC_BOARD_STUCK,
           },
           "err",
@@ -2024,8 +2028,8 @@ function logWifiStatus(hello: HelloMessage): void {
   if (readiness === "ready") {
     logLine(
       hello.networkAddress
-        ? `[wifi] ${hello.hostname} accepts WiFi connections at ${hello.networkAddress} (${hello.hostname}.local)`
-        : `[wifi] ${hello.hostname} has a password set; it accepts WiFi connections while its flow is on a network`,
+        ? `[wifi] ${hello.hostname} reachable over WiFi at ${hello.networkAddress} (${hello.hostname}.local)`
+        : `[wifi] ${hello.hostname} reachable over WiFi while its flow is on a network`,
       "",
     );
   } else if (readiness === "no_password" && !backendTransportOrNull()?.connectedOverNetwork) {
@@ -2127,7 +2131,7 @@ async function saveBoardSettings(): Promise<void> {
   logLine(
     `[board settings] saved on the ${hello.chipType} board: name ${hostname}` +
       (clear ? ", password removed (USB only now)" : newPassword ? ", new password set" : "") +
-      (newHostname ? ". The new name is used from the next time the board joins WiFi (reset it to apply now)." : ""),
+      (newHostname ? ". New name applies on the next WiFi join (reset to apply now)." : ""),
     "ok",
   );
   el<HTMLDialogElement>("boardSettingsDialog").close("save");
@@ -2287,7 +2291,7 @@ async function precompileRuntime(): Promise<Record<string, string> | undefined> 
     return out;
   } catch (err) {
     logLine(
-      `[install runtime] couldn't precompile the runtime (${err instanceof Error ? err.message : String(err)}) -- installing from source instead`,
+      `[install runtime] precompile failed, installing from source (${err instanceof Error ? err.message : String(err)})`,
       "err",
     );
     return undefined;
@@ -2350,7 +2354,7 @@ el("btnInstallRuntime").addEventListener("click", exclusiveBoardJob(async () => 
   // either. The board is rebooting into the newly-installed listener as
   // this line prints; "⟳ ports" may need a moment before the port
   // reappears if the OS re-enumerates the device.
-  logLine('[install runtime OK -- board reset into the new runtime. Click ⟳ next to the port list if needed, then "Connect".]', "ok");
+  logLine('[install runtime OK] board restarting. Click "Connect" (⟳ the port list if it\'s missing).', "ok");
 }));
 
 el("btnConnect").addEventListener("click", async () => {
@@ -2457,18 +2461,24 @@ el("btnConnect").addEventListener("click", async () => {
 async function requestHelloOrExplain(): Promise<void> {
   debugLinesSinceRequest = [];
   const helloP = waitForMessage((m) => m.type === "HELLO", HELLO_WAIT_MS);
+  helloRequestsPending += 1;
   try {
-    await transport.send({ type: "HELLO_REQUEST" });
-  } catch (err) {
-    // send() failing means the wait below times out the normal way -- the send error itself is
-    // still worth showing.
-    logLine(`[check status failed] ${err instanceof Error ? err.message : String(err)}`, "err");
-  }
-  try {
-    await helloP;
-  } catch {
-    const reply = classifyDebugLines(debugLinesSinceRequest);
-    logAdvice("[no HELLO]", explainNoHello(reply), "err");
+    try {
+      await transport.send({ type: "HELLO_REQUEST" });
+    } catch (err) {
+      // send() failing means the wait below times out the normal way -- the send error itself is
+      // still worth showing.
+      logLine(`[check status failed] ${err instanceof Error ? err.message : String(err)}`, "err");
+    }
+    try {
+      await helloP;
+    } catch {
+      if (!transport.isConnected) return; // disconnected meanwhile: the disconnect is already reported
+      const reply = classifyDebugLines(debugLinesSinceRequest);
+      logAdvice("[no HELLO]", explainNoHello(reply), "err");
+    }
+  } finally {
+    helloRequestsPending -= 1;
   }
 }
 
@@ -2512,8 +2522,7 @@ async function installFlowDependencies(source: string): Promise<Record<string, s
     libraryModules = new Set(list.flatMap((d) => d.files.map((f) => f.name.replace(/\.py$/, ""))));
   } catch (err) {
     logLine(
-      `[deploy blocked] couldn't get the library list from the backend (${err instanceof Error ? err.message : String(err)}), ` +
-        "so this editor can't tell which libraries the flow needs. Check the backend is running, then deploy again.",
+      `[deploy blocked] no library list from the backend, is it running? (${err instanceof Error ? err.message : String(err)})`,
       "err",
     );
     return null;
@@ -2562,8 +2571,13 @@ async function installFlowDependencies(source: string): Promise<Record<string, s
   if (boardDependencies === null && lastHello === null) {
     try {
       const helloP = waitForMessage((m) => m.type === "HELLO", 3000);
-      await transport.send({ type: "HELLO_REQUEST" });
-      await helloP; // the HELLO handler sets boardDependencies
+      helloRequestsPending += 1;
+      try {
+        await transport.send({ type: "HELLO_REQUEST" });
+        await helloP; // the HELLO handler sets boardDependencies
+      } finally {
+        helloRequestsPending -= 1;
+      }
     } catch {
       // No answer: send everything below.
     }
@@ -2594,15 +2608,15 @@ async function installFlowDependencies(source: string): Promise<Record<string, s
         ack = await ackP;
       } catch (err) {
         const why = err instanceof Error && err.message.startsWith("timeout")
-          ? `didn't confirm part of library ${name} (${piece.file}, byte ${piece.offset}) within ${PIECE_TIMEOUT_MS / 1000}s`
-          : `stopped answering while receiving library ${name} (${err instanceof Error ? err.message : String(err)})`;
-        logLine(`[deploy failed] the board ${why}. The flow wasn't changed.`, "err");
+          ? `no reply to library ${name} (${piece.file} byte ${piece.offset}) in ${PIECE_TIMEOUT_MS / 1000}s`
+          : `board stopped answering during library ${name} (${err instanceof Error ? err.message : String(err)})`;
+        logLine(`[deploy failed] ${why}, flow unchanged`, "err");
         boardDependencies = null;
         return null;
       }
       if (ack.type === "DEP_ACK" && !ack.ok) {
-        logLine(`[deploy failed] the board couldn't take part of library ${name}: ${ack.error ?? ack.code ?? "unknown error"}. The flow wasn't changed.`, "err");
-        if (looksLikeOutOfMemory(ack.error)) logLine(`[deploy failed] the board ran short of memory. ${RESTART_HINT}`, "err");
+        logLine(`[deploy failed] library ${name} not accepted, flow unchanged: ${ack.error ?? ack.code ?? "unknown error"}`, "err");
+        if (looksLikeOutOfMemory(ack.error)) logLine(`[deploy failed] board out of memory. ${RESTART_HINT}`, "err");
         boardDependencies = null;
         return null;
       }
@@ -2613,14 +2627,14 @@ async function installFlowDependencies(source: string): Promise<Record<string, s
     try {
       result = await resultP;
     } catch (err) {
-      const why = err instanceof Error && err.message.startsWith("timeout") ? `didn't confirm library ${name} within ${DEPLOY_TIMEOUT_MS / 1000}s` : `stopped answering while installing library ${name} (${err instanceof Error ? err.message : String(err)})`;
-      logLine(`[deploy failed] the board ${why}. The flow wasn't changed.`, "err");
+      const why = err instanceof Error && err.message.startsWith("timeout") ? `library ${name} not confirmed in ${DEPLOY_TIMEOUT_MS / 1000}s` : `board stopped answering during library ${name} (${err instanceof Error ? err.message : String(err)})`;
+      logLine(`[deploy failed] ${why}, flow unchanged`, "err");
       boardDependencies = null;
       return null;
     }
     if (result.type === "DEP_RESULT" && !result.ok) {
-      logLine(`[deploy failed] couldn't install library ${name} on the board: ${result.error ?? result.code ?? "unknown error"}. The flow wasn't changed.`, "err");
-      if (looksLikeOutOfMemory(result.error)) logLine(`[deploy failed] the board ran short of memory. ${RESTART_HINT}`, "err");
+      logLine(`[deploy failed] library ${name} not installed, flow unchanged: ${result.error ?? result.code ?? "unknown error"}`, "err");
+      if (looksLikeOutOfMemory(result.error)) logLine(`[deploy failed] board out of memory. ${RESTART_HINT}`, "err");
       boardDependencies = null;
       return null;
     }
@@ -2693,8 +2707,8 @@ el("btnDeploy").addEventListener("click", async () => {
       // (err-styled) specifically because this is the one case that can
       // actually bite, not just a generic "unconfirmed" footnote.
       logLine(
-        `[compile] this flow uses @micropython.viper/native, and -march=${nativeArch.arch} is an unverified guess for this board -- ` +
-          "if Deploy fails on-device with an arch/native-module error, pick the right value from the native arch dropdown and redeploy",
+        `[compile] viper/native code, -march=${nativeArch.arch} is a guess for this board. ` +
+          "If Deploy fails with an arch error, set native arch and redeploy",
         "err",
       );
     }
@@ -2725,7 +2739,11 @@ el("btnDeploy").addEventListener("click", async () => {
     logLine(`[deploying "${flowName}" as ${deployId}]`, "");
     // A HELLO in place of the ack means the board restarted mid-deploy (2026-10-07, CYD: an ESP32 abort()
     // while the new flow started). It answers the deploy as well as an ack does: it says what's running.
-    const ackP = waitForMessage((m) => m.type === "DEPLOY_ACK" || m.type === "DEPLOY_ERROR" || m.type === "HELLO", DEPLOY_TIMEOUT_MS);
+    // Not while a HELLO_REQUEST is unanswered: that HELLO is probably its reply, not a restart.
+    const ackP = waitForMessage(
+      (m) => m.type === "DEPLOY_ACK" || m.type === "DEPLOY_ERROR" || (m.type === "HELLO" && helloRequestsPending === 0),
+      DEPLOY_TIMEOUT_MS,
+    );
     // lastWifiProvision was computed alongside this same compile, by the currentSource() call
     // refreshPreview() (above) just made -- see that field's own doc comment.
     await transport.send({
@@ -2745,11 +2763,10 @@ el("btnDeploy").addEventListener("click", async () => {
           "[deploy: board restarted]",
           {
             text: running
-              ? "The board restarted while starting the new flow -- probably a crash; any crash report is in the lines " +
-                "above. It's running the new flow now, after the restart. If this happens on every deploy, the board " +
-                "is probably short of memory: restart it before deploying (Tools → Restart board), or use a smaller flow."
-              : "The board restarted while starting the new flow -- probably a crash; any crash report is in the lines " +
-                "above. It isn't running the new flow. Deploy again; if it keeps happening, see the linked page.",
+              ? "Board restarted starting the flow, probable crash, maybe low memory. Flow running now. If it repeats, " +
+                "try Tools → Reset board (hard) before deploying."
+              : "Board restarted starting the flow, probable crash, maybe low memory. New flow NOT running. " +
+                "Try Tools → Reset board (hard), then deploy again.",
             doc: DOC_BOARD_STUCK,
           },
           running ? "" : "err",
@@ -2761,7 +2778,7 @@ el("btnDeploy").addEventListener("click", async () => {
         logLine(`[deploy failed] ${result.code}: ${result.message}`, "err");
         const importAdvice = result.code === "ImportError" ? explainDeployImportError(result.message, libraryModules) : null;
         if (importAdvice) logAdvice("[deploy failed]", importAdvice, "err");
-        if (looksLikeOutOfMemory(`${result.code} ${result.message}`)) logLine(`[deploy failed] the board ran short of memory. ${RESTART_HINT}`, "err");
+        if (looksLikeOutOfMemory(`${result.code} ${result.message}`)) logLine(`[deploy failed] board out of memory. ${RESTART_HINT}`, "err");
         if (result.code === "MissingDependency") {
           // This editor's idea of the board's libraries was wrong (changed by another editor, or a
           // failed write). Forget it, so the next Deploy sends every library the flow needs.
@@ -2820,14 +2837,15 @@ if (!("serial" in navigator)) {
 const commandHistory: string[] = [];
 let historyIndex = 0;
 const RESTART_WAIT_MS = 3500; // listener.py's 3s boot window, plus a little
+const RESTART_BACK_MS = 20000; // a restart's boot HELLO: boot, the 3 s window, then resuming the saved flow
 
 function updateBoardToolsUi(): void {
   const connected = transport.isConnected;
   el<HTMLInputElement>("cmdInput").disabled = !connected;
   el<HTMLButtonElement>("btnSendCmd").disabled = !connected;
   el<HTMLButtonElement>("btnStopToPrompt").disabled = !connected;
-  el<HTMLButtonElement>("btnRestartSoft").disabled = !connected;
-  el<HTMLButtonElement>("btnRestartHard").disabled = !connected || boardAtPrompt;
+  el<HTMLButtonElement>("btnRestartSoft").disabled = !connected || boardRestarting;
+  el<HTMLButtonElement>("btnRestartHard").disabled = !connected || boardAtPrompt || boardRestarting;
   el<HTMLButtonElement>("btnStopToPrompt").hidden = boardAtPrompt;
   el<HTMLButtonElement>("btnResume").hidden = !boardAtPrompt;
   el<HTMLInputElement>("cmdInput").placeholder = boardAtPrompt
@@ -2894,9 +2912,7 @@ el("btnStopToPrompt").addEventListener("click", async () => {
     "[prompt]",
     {
       text:
-        "Flow stopped. Commands now go straight to MicroPython's prompt. Click \"Restart Thingstudio\" " +
-        "when you're done -- Deploy is off until then. A board running a runtime older than 2.0.0 ignores " +
-        "this; update it with \"Tools → Install runtime…\".",
+        "Flow stopped; commands go to MicroPython's prompt. Deploy is off until \"Restart Thingstudio\".",
       doc: DOC_COMMANDS,
     },
     "",
@@ -2906,6 +2922,26 @@ el("btnStopToPrompt").addEventListener("click", async () => {
 // Tools → Restart board (soft) / Reset board (hard) (Mike, 2026-10-07). Suggested by the console when
 // memory is the likely problem (memory-advice.ts). At the ">>>" prompt there's no listener to ask, so a
 // soft restart there is the same Ctrl-D as "Restart Thingstudio".
+/** After Tools → Restart/Reset: Deploy is off until the board's boot HELLO arrives. Booting can take a
+ * while -- the 3 s listener window, then resuming the saved flow (a display flow draws its first screen
+ * first) -- so this waits for the board rather than asking on a fixed timer (2026-10-07, CYD: a HELLO
+ * asked for 3.5 s after a soft reset timed out, a false "no reply", while the board was still booting). */
+async function waitForBoardBack(): Promise<void> {
+  boardRestarting = true;
+  updateBoardToolsUi();
+  try {
+    await waitForMessage((m) => m.type === "HELLO", RESTART_BACK_MS);
+    logLine("[restart] the board is back", "ok");
+  } catch {
+    // No boot HELLO: a native-USB board disconnected (reported already), or nothing came. Ask once,
+    // with the usual explanation if that fails too.
+    if (transport.isConnected) await requestHelloOrExplain();
+  } finally {
+    boardRestarting = false;
+    updateBoardToolsUi();
+  }
+}
+
 el("btnRestartSoft").addEventListener("click", async () => {
   if (boardAtPrompt) {
     el<HTMLButtonElement>("btnResume").click();
@@ -2917,9 +2953,8 @@ el("btnRestartSoft").addEventListener("click", async () => {
     logLine(`[restart failed] ${err instanceof Error ? err.message : String(err)}`, "err");
     return;
   }
-  logLine("[restart] soft reset: the board restarts Thingstudio and its saved flow with clean memory (a few seconds)…", "");
-  await new Promise((r) => setTimeout(r, RESTART_WAIT_MS));
-  if (transport.isConnected) await requestHelloOrExplain();
+  logLine("[restart] soft reset, Deploy off until the board is back…", "");
+  await waitForBoardBack();
 });
 
 el("btnRestartHard").addEventListener("click", async () => {
@@ -2930,12 +2965,10 @@ el("btnRestartHard").addEventListener("click", async () => {
     return;
   }
   logLine(
-    "[reset] hard reset: the whole chip restarts, then Thingstudio and its saved flow. A board with native USB " +
-      "(Pico, ESP32-S2/S3/C3) disconnects: when it's back, click Connect.",
+    "[reset] hard reset, Deploy off until the board is back. Native-USB boards disconnect: click Connect.",
     "",
   );
-  await new Promise((r) => setTimeout(r, RESTART_WAIT_MS));
-  if (transport.isConnected) await requestHelloOrExplain();
+  await waitForBoardBack();
 });
 
 el("btnResume").addEventListener("click", async () => {

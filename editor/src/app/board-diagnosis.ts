@@ -44,34 +44,30 @@ export const DOC_BOARD_FIRMWARE_MODULES: DocLink = { label: "Module missing on t
 const INSTALL_FAILURE_ADVICE: Record<string, Advice> = {
   silent: {
     text:
-      "The board didn't reply at all. It probably doesn't have MicroPython yet -- install that first. " +
-      "If it does, press its reset button (or unplug it and plug it back in) while \"Tools → Install runtime…\" is " +
-      "waiting.",
+      "No reply; probably no MicroPython yet, install it first. If it has, press reset while Install runtime waits.",
     doc: DOC_INSTALL_MICROPYTHON,
   },
   micropython: {
-    text: "MicroPython replied but didn't switch to install mode. Press the board's reset button and try again.",
+    text: "MicroPython replied but didn't enter install mode. Press reset and try again.",
     doc: DOC_BOARD_WONT_CONNECT,
   },
   circuitpython: {
-    text: "This board is running CircuitPython. Thingstudio needs MicroPython -- install that first.",
+    text: "Board runs CircuitPython; install MicroPython first.",
     doc: DOC_INSTALL_MICROPYTHON,
   },
   esp_rom: {
     text:
-      "The board is in its bootloader (download mode), not running MicroPython. Press reset without holding " +
-      "BOOT and try again. If it comes back here, MicroPython isn't installed.",
+      "Board is in its bootloader, not MicroPython. Press reset (not BOOT); if it repeats, install MicroPython.",
     doc: DOC_INSTALL_MICROPYTHON,
   },
   other: {
-    text: "The board replied, but not as MicroPython -- it may be running other firmware. Install MicroPython first.",
+    text: "Board replied, but not as MicroPython (other firmware?). Install MicroPython first.",
     doc: DOC_INSTALL_MICROPYTHON,
   },
   // Editor-side, not from raw_repl.py: BackendTransport.installRuntime()'s idle timeout.
   stalled: {
     text:
-      "The install stopped making progress. Unplug the board, plug it back in, click ⟳ next to the port list, then try " +
-      "\"Tools → Install runtime…\" again. If it stalls again, restart the backend.",
+      "Install stalled. Replug the board, ⟳ the port list, try again; if it repeats, restart the backend.",
     doc: DOC_BOARD_WONT_CONNECT,
   },
 };
@@ -80,20 +76,19 @@ const INSTALL_FAILURE_ADVICE: Record<string, Advice> = {
 // the port open until Disconnect, and esptool/Thonny then fail with "Resource busy" (Mike, real
 // hardware, 2026-09-23). The install-failure path needs no such note: Install runtime already closed
 // its own port by the time it reports.
-const DISCONNECT_FIRST = ' Click "Disconnect" before flashing, or the flashing tool can\'t open the port.';
+const DISCONNECT_FIRST = " Disconnect before flashing.";
 
 const NO_HELLO_ADVICE: Record<BoardReply, Advice> = {
   micropython: {
-    text: 'The board has MicroPython but not the Thingstudio runtime. Choose "Tools → Install runtime…".',
+    text: "MicroPython but no Thingstudio runtime: Tools → Install runtime…",
     doc: DOC_BOARD_WONT_CONNECT,
   },
-  runtime: { text: 'The Thingstudio runtime is starting up. Wait a few seconds, then choose "Tools → Check status".' },
+  runtime: { text: "Runtime still starting. Wait, then Tools → Check status." },
   silent: {
     text:
-      "Nothing came back at all. If the board is new, it may not have MicroPython yet." +
+      "Nothing came back. New board? Install MicroPython." +
       DISCONNECT_FIRST +
-      ' Otherwise press its reset button and choose "Tools → Check status". "Tools → Install runtime…" also checks what\'s ' +
-      "on the board.",
+      " Otherwise press reset, then Tools → Check status.",
     doc: DOC_INSTALL_MICROPYTHON,
   },
   circuitpython: withDisconnect(INSTALL_FAILURE_ADVICE.circuitpython!),
@@ -127,7 +122,7 @@ export function classifyDebugLines(lines: readonly string[]): BoardReply {
 /** Advice for Connect/Check status getting no HELLO back. */
 export function explainNoHello(reply: BoardReply): Advice {
   const advice = NO_HELLO_ADVICE[reply];
-  return { text: `No reply from the Thingstudio runtime. ${advice.text}`, doc: advice.doc };
+  return { text: `No reply from the runtime. ${advice.text}`, doc: advice.doc };
 }
 
 /** Full URL of a docs page on the backend's local copy. `backendHttpBase` is

@@ -19,12 +19,12 @@ describe("explainInstallFailure", () => {
   it("points a silent board at installing MicroPython, keeping the raw error", () => {
     const out = explainInstallFailure(SILENT_S2, "silent");
     expect(out.doc).toBe(DOC_INSTALL_MICROPYTHON);
-    expect(out.text).toContain("doesn't have MicroPython");
+    expect(out.text).toContain("no MicroPython yet");
     expect(out.text).toContain(SILENT_S2);
   });
 
   it("tells a board stuck in its ROM bootloader to reset without BOOT", () => {
-    expect(explainInstallFailure("x", "esp_rom").text).toContain("without holding BOOT");
+    expect(explainInstallFailure("x", "esp_rom").text).toContain("(not BOOT)");
   });
 
   it("returns the raw message unchanged with no diagnosis (failure mid-push)", () => {

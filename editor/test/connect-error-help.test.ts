@@ -18,7 +18,7 @@ describe("explainBackendConnectError", () => {
 
   it("adds a permission hint for the Windows access-denied wording", () => {
     const out = explainBackendConnectError("NODE_ERROR: serial open failed on COM3: Access is denied.");
-    expect(out.toLowerCase()).toContain("close any other program");
+    expect(out.toLowerCase()).toContain("close other serial programs");
   });
 
   it("adds a port-busy hint for a macOS resource-busy cause", () => {
@@ -26,13 +26,13 @@ describe("explainBackendConnectError", () => {
       "NODE_ERROR: serial open failed on /dev/cu.usbserial-1410: [Errno 16] could not open port " +
       "/dev/cu.usbserial-1410: [Errno 16] Resource busy: '/dev/cu.usbserial-1410'";
     const out = explainBackendConnectError(raw);
-    expect(out.toLowerCase()).toContain("another program already has this port open");
+    expect(out.toLowerCase()).toContain("port in use");
   });
 
   it("adds a device-vanished hint when the port no longer exists", () => {
     const raw = "NODE_ERROR: serial open failed on /dev/ttyUSB0: [Errno 2] No such file or directory: '/dev/ttyUSB0'";
     const out = explainBackendConnectError(raw);
-    expect(out.toLowerCase()).toContain("refresh the list");
+    expect(out.toLowerCase()).toContain("⟳ the port list");
   });
 
   it("falls back to a generic suggestion for an unrecognized cause, never dropping the raw text", () => {

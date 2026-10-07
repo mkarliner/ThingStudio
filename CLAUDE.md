@@ -59,6 +59,13 @@ releases page) alongside it as an equal choice, and say how to read the script b
 
 ## Any work that impacts the user experience should update the user documentation to reflect that.
 
+## Console messages: terse
+
+People skim the console, so a long message gets skipped. One line: what happened, then what to do, in
+fragments if that's shorter ("Board restarted starting the flow, probable crash, maybe low memory. Try Tools →
+Reset board (hard), then deploy."). No explaining why, no hedged asides; the detail goes on the linked docs page.
+Keep a raw error text in brackets when it helps a bug report. Mike, 2026-10-07.
+
 ## Watch for troubleshooting and FAQ entries
 
 Whenever a session turns up something a user could hit and wouldn't understand on their own -- a confusing error,

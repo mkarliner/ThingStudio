@@ -16,14 +16,10 @@ import type { HelloMessage } from "../protocol/messages.js";
  * board with WiFi up still has ~35-40 KB here (CYD and ESP32-C3, 2026-09-25 and 2026-10-07). */
 export const LOW_IDF_HEAP_BYTES = 30_000;
 
-export const RESTART_HINT =
-  "Use Tools → Restart board (soft) and deploy again. If that doesn't help, Tools → Reset board (hard) " +
-  "frees all memory, but a board with native USB disconnects and needs Connect again.";
+export const RESTART_HINT = "Try Tools → Restart board (soft), then deploy; if it repeats, Reset board (hard).";
 
 /** For low ESP-IDF memory: only a full chip reset returns it. */
-export const HARD_RESET_HINT =
-  "Only a full reset gives that memory back: use Tools → Reset board (hard), then deploy again. A board with " +
-  "native USB disconnects and needs Connect again.";
+export const HARD_RESET_HINT = "Try Tools → Reset board (hard), then deploy.";
 
 /** A warning before deploying a networking flow to a board short of ESP-IDF memory, or null. */
 export function lowMemoryWarningBeforeDeploy(
@@ -33,8 +29,7 @@ export function lowMemoryWarningBeforeDeploy(
   if (!hello || hello.freeIdfHeapBytes === null || !usesNetworking) return null;
   if (hello.freeIdfHeapBytes >= LOW_IDF_HEAP_BYTES) return null;
   return (
-    `the board has only ${Math.floor(hello.freeIdfHeapBytes / 1024)} KB of ESP-IDF memory free, and WiFi needs ` +
-    `more to start, so this flow may fail or crash the board. ${HARD_RESET_HINT}`
+    `only ${Math.floor(hello.freeIdfHeapBytes / 1024)} KB ESP-IDF memory free, WiFi may not start. ${HARD_RESET_HINT}`
   );
 }
 

@@ -34,3 +34,7 @@ Status: detail file for `decisions.md`'s "Editor connect-error UX" index entry.
     (MVP item 1) — see `outstanding-items/deploy-runtime-from-editor.md`'s 2026-09-22 update. A user
     doc page for connect troubleshooting doesn't exist yet either (`road-to-mvp.md`'s doc item 2 —
     no docs have real content yet, this isn't a regression from this change).
+- 2026-10-07 (Mike: "too wordy, human eyes will skip over them"): console advice rewritten terse, one line of what
+  happened plus what to do, detail left to the linked docs page. Covers the deploy-restart, safe-mode, library,
+  memory, import-error, no-HELLO/install diagnosis and connect-error texts. Rule in `CLAUDE.md` ("Console
+  messages: terse").
