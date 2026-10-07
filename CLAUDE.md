@@ -59,6 +59,14 @@ releases page) alongside it as an equal choice, and say how to read the script b
 
 ## Any work that impacts the user experience should update the user documentation to reflect that.
 
+## Watch for troubleshooting and FAQ entries
+
+Whenever a session turns up something a user could hit and wouldn't understand on their own -- a confusing error,
+a hardware limit, a board quirk, a "why does it do that" question from Mike -- add it, in the same change, to
+`docs/user-guide/faq.md` (a question someone would ask) or `docs/user-guide/debugging.md` (a symptom and what to
+do). Short entries in the user-guide style, linked rather than repeated. Mike, 2026-10-07, when the ESP32 memory
+breakdown turned out to be FAQ material.
+
 ## No premature optimization, but don't paint into an architectural dead end
 
 Default to the cheapest implementation that's actually correct — don't build the general/heavy version of something on

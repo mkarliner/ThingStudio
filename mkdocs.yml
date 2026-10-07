@@ -65,6 +65,7 @@ nav:
   - Boards and processors: boards.md
   - Connecting over WiFi: wifi-connection.md
   - Debugging & troubleshooting: debugging.md
+  - FAQ: faq.md
   - Node reference:
       - Overview: nodes/index.md
       - General:
