@@ -33,3 +33,9 @@ Status: detail file for `decisions.md`'s "Board recovery, command box, stop to p
     both new types.
 - **2026-09-23 — Confirmed on real hardware** (Mike, LOLIN S2 Mini, runtime 2.0.0 installed from the editor):
   command box, stop to prompt and restart, and Remove flow all worked as described ("all good").
+- **2026-10-07 — Restart waits for the board (CYD, Mike).** After Tools → Restart board (soft), the editor asked
+  for a HELLO 3.5 s later and reported "no reply" while the board was still booting: the 3 s listener window, then
+  resuming a display flow, took over 6 s. A Deploy clicked meanwhile was lost, and the board's boot HELLO was then
+  read as "the board restarted while starting the new flow". Now: after Restart or Reset, Deploy is off until the
+  boot HELLO arrives (up to 20 s, then one HELLO_REQUEST with the usual explanation). During a deploy, a HELLO is
+  read as a restart only when no HELLO_REQUEST is waiting for its answer.
