@@ -148,6 +148,7 @@ import { choiceForConnectedBoard, resolveTarget, type TargetResolution } from ".
 import { renderDefinitionPage, renderUnknownBoardPage } from "../definitions/definition-page.js";
 import type { BoardSettingsResultMessage, HelloMessage, Message, NodeStatusMessage, ProtocolVersion } from "../protocol/messages.js";
 import { checkRuntimeBuild, decideDeploy } from "../protocol/version.js";
+import { explainDeployImportError, networkWarningBeforeDeploy } from "./import-error-help.js";
 import { dependencyHash, findImportedModules, librariesToSend, resolveDependencies, MAX_DEPENDENCY_BYTES, type DependencyInfo } from "../compiler/flow-dependencies.js";
 import { ClassicPreset } from "rete";
 import { createThingstudioEditor, type ThingstudioEditor } from "./rete/editor-setup.js";
@@ -2465,6 +2466,9 @@ el("btnDisconnect").addEventListener("click", async () => {
 // editor's own DEP_PUTs and deploys. null = unknown (no HELLO yet, or a refused deploy said it was
 // wrong), in which case every needed library is sent.
 let boardDependencies: Record<string, string> | null = null;
+// Module names of every library in the last fetched library list -- lets a deploy's ImportError tell
+// "Thingstudio's library" from "a firmware module this board lacks" (import-error-help.ts).
+let libraryModules = new Set<string>();
 
 /** Installs the libraries `source` imports on the board. Returns {name: hash} for DEPLOY, or null
  * after logging why the deploy can't go ahead. */
@@ -2476,6 +2480,7 @@ async function installFlowDependencies(source: string): Promise<Record<string, s
     const body = (await res.json()) as { dependencies?: DependencyInfo[]; error?: string };
     if (!res.ok || !body.dependencies) throw new Error(body.error ?? `backend answered ${res.status}`);
     list = body.dependencies;
+    libraryModules = new Set(list.flatMap((d) => d.files.map((f) => f.name.replace(/\.py$/, ""))));
   } catch (err) {
     logLine(
       `[deploy blocked] couldn't get the library list from the backend (${err instanceof Error ? err.message : String(err)}), ` +
@@ -2484,6 +2489,9 @@ async function installFlowDependencies(source: string): Promise<Record<string, s
     );
     return null;
   }
+
+  const netWarning = networkWarningBeforeDeploy(modules, lastHello ? lastHello.hasWifi : null);
+  if (netWarning) logLine(`[deploy warning] ${netWarning}`, "err");
 
   let needed: DependencyInfo[];
   try {
@@ -2672,6 +2680,8 @@ el("btnDeploy").addEventListener("click", async () => {
       const result = await ackP;
       if (result.type === "DEPLOY_ERROR") {
         logLine(`[deploy failed] ${result.code}: ${result.message}`, "err");
+        const importAdvice = result.code === "ImportError" ? explainDeployImportError(result.message, libraryModules) : null;
+        if (importAdvice) logAdvice("[deploy failed]", importAdvice, "err");
         if (result.code === "MissingDependency") {
           // This editor's idea of the board's libraries was wrong (changed by another editor, or a
           // failed write). Forget it, so the next Deploy sends every library the flow needs.

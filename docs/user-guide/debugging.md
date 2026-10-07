@@ -63,6 +63,22 @@ A flow that crashes the board as it starts would crash it again on every restart
 
 The flow on your canvas isn't affected.
 
+## Module missing on the board
+
+A deploy can fail with `ImportError: no module named '...'`. The flow needs a module the board's MicroPython doesn't
+have. The board keeps running its previous flow.
+
+The usual cause is networking. MQTT, UDP, HTTP and WiFi nodes need the `network` and `socket` modules, which only
+boards with WiFi (or Ethernet) have. A Raspberry Pi Pico has none; a Pico W does. If the board reports no WiFi, the
+console warns you before the deploy.
+
+Other modules differ between ports and builds. If the import is in your own function node, check the module exists
+for your board in the [MicroPython docs](https://docs.micropython.org/). A board that should have it may need a
+different [MicroPython build](https://micropython.org/download/).
+
+Libraries Thingstudio provides, such as the MQTT client or display drivers, are sent by Deploy. See
+[Libraries](flow-lifecycle.md#libraries).
+
 ## I2C device not answering
 
 A sensor node's status dot shows **disconnected**, "no reply at 0x76", when nothing answers at its address.
