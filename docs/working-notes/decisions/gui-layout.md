@@ -90,3 +90,6 @@ vendor-whole / vendor-parts / write-our-own (`nano-gui-spike-briefing.md`).
   distinct 0/O and 1/l/I, narrower digits that fit small displays. Body ladder 12/16/20/24 (no 10px), digits
   16/24/32/48/64. Built the same day: `tools/build_fonts.py`, fonts as flow dependencies.
   `gui-font-pipeline-scoping.md`.
+- 2026-10-07: layout engine built as scoped (row/column, gap, padding, grow, align/alignSelf, justify incl.
+  space-between; no wrap or shrink). Results are whole pixels; leftover pixels go to the first growers/gaps.
+  Overflow and duplicate ids come back as a list of attributed errors, never thrown. `editor/src/gui/layout.ts`.

@@ -128,6 +128,13 @@ depends on where it is placed.
 **Overflow is a build error, not a visual bug**, with full attribution: "widget X's natural width 84px
 exceeds the 60px its column gives it on page Y of display Z."
 
+**Engine built 2026-10-07** (`editor/src/gui/layout.ts`, ~210 lines; `editor/test/gui-layout.test.ts`): the
+subset above, two passes, whole-pixel results (leftover grow and space-between pixels go to the first
+children). Leaves take a natural size from the caller; a hero-style page measured with the real fonts fits
+320x240 and is an attributed error on 128x64. Errors are collected, not thrown, so one build reports every
+problem. Not yet: the `screens` format, per-widget measurement (a widget's natural size from its font and
+widest value), and turning rects into device tables.
+
 ## Two views, one model
 
 Wiring describes how data moves; layout describes where things sit. **One node record, two projections**,
