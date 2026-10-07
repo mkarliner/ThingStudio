@@ -90,7 +90,8 @@ superseding the named-slot design; unknown is a first-class value state in the G
 Then (2026-10-06): MVP scope is a minimal widget set for a CYD hero app, touch architected but barely built;
 multiple displays architected from the start; page navigation first-class, modals full-screen; Pico constraint
 (no penalty for GUI-less flows, small OLED GUI must work); no custom firmware -- Python on stock `framebuf` plus
-viper, nano-gui spike next. 9 entries: `docs/working-notes/decisions/gui-layout.md`.
+viper, nano-gui spike next. Then (2026-10-07): no round dials; a trend widget fed by cascaded journal nodes,
+one per time scale (RRDtool model). 10 entries: `docs/working-notes/decisions/gui-layout.md`.
 
 ## Session sequencing
 
@@ -211,3 +212,9 @@ assets built, dev checkout wins over `_assets/`; bundles on native runners, draf
 `install.sh` as a release asset; macOS signed + notarized with an Info.plist-carrying
 executable; Windows `irm | iex` one-liner, per-user, no admin; winget/scoop post-MVP (2026-09-30). 14 entries:
 `docs/working-notes/decisions/packaging.md`.
+
+## Flow dependencies
+
+A board gets only the libraries its flow uses, installed by Deploy through the listener; unused ones removed
+after a successful deploy (2026-10-07). Replaces "selective vendor push". 1 entry:
+`docs/working-notes/decisions/flow-dependencies.md`.
