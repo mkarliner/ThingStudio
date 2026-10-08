@@ -27,6 +27,7 @@ See [flows, nodes and messages](../background/flows-and-nodes.md) for how they f
 | read a temperature, humidity or pressure sensor | [bme280](bme280.md) |
 | talk to another I2C device, or find its address | [i2c](i2c.md) |
 | draw on a display | [display spi](display-spi.md), [display i2c](display-i2c.md) |
+| show readings as pages on a display | [GUI nodes (preview)](gui.md) |
 | change a message, or decide where it goes | [function](function.md) |
 | send only changes, or limit the rate | [filter](filter.md) |
 | wait before passing a message on | [delay](delay.md) |

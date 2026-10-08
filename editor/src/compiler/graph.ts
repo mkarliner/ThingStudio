@@ -19,6 +19,8 @@
 // only ever destructures originId/targetId from a GraphLink), so there's
 // no reason to change what's already a throwaway number.
 
+import type { ScreensSection } from "../gui/screens.js";
+
 export interface GraphNode {
   id: string;
   type: string;
@@ -57,4 +59,6 @@ export interface GraphData {
    * it empty); every existing hand-built GraphData literal in the test
    * suite predates this field and stays valid unchanged. */
   configs?: GraphConfigNode[];
+  /** The GUI's page layouts, per GUI screen node (gui/screens.ts). Optional: flows without a GUI omit it. */
+  screens?: ScreensSection;
 }

@@ -196,6 +196,69 @@
         </label>
       </template>
 
+      <!-- GUI nodes (node-library/gui.ts, 2026-10-08). Placement (page, font, size) is in the flow's
+           `screens` section, edited in the flow file until the GUI view exists. -->
+      <template v-else-if="node.kind === 'gui_screen'">
+        <label>name <input type="text" v-model="node.properties.name" @input="touch" /></label>
+        <label>width (px) <input type="number" min="1" v-model.number="node.properties.width" @input="touch" /></label>
+        <label>height (px) <input type="number" min="1" v-model.number="node.properties.height" @input="touch" /></label>
+        <label>frame format
+          <select v-model="node.properties.frameFormat" @change="touch">
+            <option value="gs4">gs4 (16 greys)</option>
+            <option value="gs2">gs2 (4 greys)</option>
+            <option value="mono">mono</option>
+            <option value="rgb565">rgb565 (colour)</option>
+          </select>
+        </label>
+        <label>fastest redraw (ms) <input type="number" min="0" v-model.number="node.properties.minInterval" @input="touch" /></label>
+        <label><input type="checkbox" v-model="node.properties.wrap" @change="touch" /> next/prev wrap round</label>
+        <p class="hint">Sends a frame each time the screen changes. Wire it to a display node with the same size and
+          frame format.</p>
+      </template>
+
+      <template v-else-if="node.kind === 'gui_readout'">
+        <label>name <input type="text" v-model="node.properties.name" @input="touch" /></label>
+        <label>units <input type="text" v-model="node.properties.units" @input="touch" /></label>
+        <label>decimals <input type="number" min="0" max="6" v-model.number="node.properties.decimals" @input="touch" /></label>
+        <label>lowest value <input type="number" v-model.number="node.properties.lo" @input="touch" /></label>
+        <label>highest value <input type="number" v-model.number="node.properties.hi" @input="touch" /></label>
+        <label>stale after (s, 0 = never) <input type="number" min="0" v-model.number="node.properties.staleAfter" @input="touch" /></label>
+        <p class="hint">Shows msg.payload. Its space is sized for the lowest to highest value.</p>
+      </template>
+
+      <template v-else-if="node.kind === 'gui_label'">
+        <label>name <input type="text" v-model="node.properties.name" @input="touch" /></label>
+        <label>room for (characters) <input type="number" min="1" v-model.number="node.properties.maxChars" @input="touch" /></label>
+        <label>stale after (s, 0 = never) <input type="number" min="0" v-model.number="node.properties.staleAfter" @input="touch" /></label>
+      </template>
+
+      <template v-else-if="node.kind === 'gui_bar'">
+        <label>name <input type="text" v-model="node.properties.name" @input="touch" /></label>
+        <label>empty at <input type="number" v-model.number="node.properties.lo" @input="touch" /></label>
+        <label>full at <input type="number" v-model.number="node.properties.hi" @input="touch" /></label>
+        <label>stale after (s, 0 = never) <input type="number" min="0" v-model.number="node.properties.staleAfter" @input="touch" /></label>
+      </template>
+
+      <template v-else-if="node.kind === 'gui_led'">
+        <label>name <input type="text" v-model="node.properties.name" @input="touch" /></label>
+        <label>stale after (s, 0 = never) <input type="number" min="0" v-model.number="node.properties.staleAfter" @input="touch" /></label>
+        <p class="hint">On when msg.payload is true, off when false.</p>
+      </template>
+
+      <template v-else-if="node.kind === 'gui_navigator'">
+        <label>name <input type="text" v-model="node.properties.name" @input="touch" /></label>
+        <label>screen <input type="text" v-model="node.properties.screen" placeholder="only needed with two screens" @input="touch" /></label>
+        <p class="hint">msg.payload: next, prev, back, home or a page name. Sends the new page when it changes.</p>
+      </template>
+
+      <template v-else-if="node.kind === 'gui_modal'">
+        <label>name <input type="text" v-model="node.properties.name" @input="touch" /></label>
+        <label>screen <input type="text" v-model="node.properties.screen" placeholder="only needed with two screens" @input="touch" /></label>
+        <label>priority <input type="number" v-model.number="node.properties.priority" @input="touch" /></label>
+        <label>close after (s, 0 = never) <input type="number" min="0" v-model.number="node.properties.timeout" @input="touch" /></label>
+        <p class="hint">Opens with msg.payload as its content; a payload of None closes it.</p>
+      </template>
+
       <template v-else-if="node.kind === 'timer'">
         <label>interval (ms)
           <input type="number" min="1" v-model.number="node.properties.intervalMs" @input="touch" />

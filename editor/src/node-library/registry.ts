@@ -27,6 +27,7 @@ import { variableGetNode } from "./variable-get.js";
 import { variableSetNode } from "./variable-set.js";
 import { wifiGateNode } from "./wifi-gate.js";
 import { wifiStatusNode } from "./wifi-status.js";
+import { GUI_NODES } from "./gui.js";
 
 /**
  * The full v1 node type registry. The POC-D set (inject, function,
@@ -97,6 +98,7 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     filterNode,
     bme280Node,
     i2cGenericNode,
+    ...GUI_NODES,
   ]) {
     registry.set(def.type, def);
   }

@@ -17,6 +17,7 @@
 
 import type { GraphNode } from "./graph.js";
 import type { Target } from "../definitions/target.js";
+import type { ScreensSection } from "../gui/screens.js";
 
 export type NodeKind = "source" | "transform" | "sink";
 
@@ -196,6 +197,9 @@ export interface CodegenContext {
    * a mock without it just drops warnings.
    */
   warn?(message: string): void;
+  /** The flow's GUI layouts (gui/screens.ts), for the GUI nodes. Optional: absent in flows without a GUI and
+   * in hand-rolled mocks. */
+  screens?: ScreensSection;
 }
 
 export interface NodeDefinition {

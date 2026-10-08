@@ -227,6 +227,7 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
     findConfigsOfType(type: string): { id: string; properties: Record<string, unknown> }[] {
       return [...configsById.values()].filter((c) => c.type === type);
     },
+    screens: graphData.screens,
   };
 
   const imports = new Set<string>(["import runtime"]);

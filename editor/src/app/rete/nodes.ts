@@ -168,6 +168,8 @@ import { httpResponseNode } from "../../node-library/http-response.js";
 import { delayNode } from "../../node-library/delay.js";
 import { filterNode, type FilterMode } from "../../node-library/filter.js";
 import { bme280Node } from "../../node-library/bme280.js";
+import type { NodeDefinition } from "../../compiler/node-definition.js";
+import { guiBarNode, guiLabelNode, guiLedNode, guiModalNode, guiNavigatorNode, guiReadoutNode, guiScreenNode } from "../../node-library/gui.js";
 import { i2cGenericNode } from "../../node-library/i2c-generic.js";
 import { mqttPublishNode } from "../../node-library/mqtt-publish.js";
 import { mqttSubscribeNode } from "../../node-library/mqtt-subscribe.js";
@@ -479,6 +481,35 @@ export class Bme280Node extends ClassicPreset.Node {
     this.addOutput("msg", new ClassicPreset.Output(portSocket(bme280Node.ports?.outputs, "msg", this.properties), "msg"));
   }
 }
+
+// GUI nodes (node-library/gui.ts, 2026-10-08). Where widgets sit is the flow's `screens` section, not a node
+// property; these hold only data properties (range, units, how long until stale).
+function guiClass<K extends string, P extends Record<string, unknown>>(kind: K, nodeType: string, width: number, props: () => P, def: NodeDefinition, hasInput: boolean, outputName: string | null) {
+  return class extends ClassicPreset.Node {
+    width = width;
+    height = NODE_HEIGHT;
+    kind = kind;
+    nodeType = nodeType;
+    highlighted = false;
+    status: NodeStatusState | null = null;
+    statusText: string | null = null;
+    properties: P = props();
+
+    constructor() {
+      super(kind);
+      if (hasInput) this.addInput("msg", new ClassicPreset.Input(portSocket(def.ports?.inputs, "msg", this.properties), "msg", true));
+      if (outputName) this.addOutput(outputName, new ClassicPreset.Output(portSocket(def.ports?.outputs, outputName, this.properties), outputName));
+    }
+  };
+}
+
+export const GuiScreenNode = guiClass("gui_screen", "thingstudio/gui_screen", 110, () => ({ name: "screen", width: 320, height: 240, frameFormat: "gs4" as "gs4" | "gs2" | "mono" | "rgb565", minInterval: 200, wrap: true }), guiScreenNode, false, "frame");
+export const GuiLabelNode = guiClass("gui_label", "thingstudio/gui_label", 100, () => ({ name: "", maxChars: 8, staleAfter: 0 }), guiLabelNode, true, null);
+export const GuiReadoutNode = guiClass("gui_readout", "thingstudio/gui_readout", 110, () => ({ name: "", units: "", decimals: 1, lo: 0, hi: 100, staleAfter: 0 }), guiReadoutNode, true, null);
+export const GuiBarNode = guiClass("gui_bar", "thingstudio/gui_bar", 90, () => ({ name: "", lo: 0, hi: 100, staleAfter: 0 }), guiBarNode, true, null);
+export const GuiLedNode = guiClass("gui_led", "thingstudio/gui_led", 90, () => ({ name: "", staleAfter: 0 }), guiLedNode, true, null);
+export const GuiNavigatorNode = guiClass("gui_navigator", "thingstudio/gui_navigator", 120, () => ({ name: "navigator", screen: "" }), guiNavigatorNode, true, "page");
+export const GuiModalNode = guiClass("gui_modal", "thingstudio/gui_modal", 100, () => ({ name: "", screen: "", priority: 0, timeout: 0 }), guiModalNode, true, null);
 
 // Generic I2C read/write/scan on a shared bus (node-library/i2c-generic.ts). address/register are text so hex
 // ("0x29") can be typed; the compiler parses them.
@@ -1098,6 +1129,13 @@ export type AnyThingstudioNode =
   | FilterNode
   | Bme280Node
   | I2cNode
+  | InstanceType<typeof GuiScreenNode>
+  | InstanceType<typeof GuiLabelNode>
+  | InstanceType<typeof GuiReadoutNode>
+  | InstanceType<typeof GuiBarNode>
+  | InstanceType<typeof GuiLedNode>
+  | InstanceType<typeof GuiNavigatorNode>
+  | InstanceType<typeof GuiModalNode>
   | CustomNode;
 
 // One constructor per palette kind, shared between the app-shell's
@@ -1137,4 +1175,11 @@ export const NODE_FACTORIES: Record<NodeKind, () => AnyThingstudioNode> = {
   filter: () => new FilterNode(),
   bme280: () => new Bme280Node(),
   i2c: () => new I2cNode(),
+  gui_screen: () => new GuiScreenNode(),
+  gui_label: () => new GuiLabelNode(),
+  gui_readout: () => new GuiReadoutNode(),
+  gui_bar: () => new GuiBarNode(),
+  gui_led: () => new GuiLedNode(),
+  gui_navigator: () => new GuiNavigatorNode(),
+  gui_modal: () => new GuiModalNode(),
 };

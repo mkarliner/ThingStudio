@@ -71,6 +71,8 @@
 // this file's original header) -- nodes now share that same shape, not a
 // new one.
 
+import type { ScreensSection } from "../gui/screens.js";
+
 export const FLOW_FILE_FORMAT_VERSION = 1;
 
 /** Default flow name until the user sets one (main.ts's flow-name input) --
@@ -173,6 +175,10 @@ export interface FlowFile {
    * missing-entry handling `layout` already gets in main.ts's
    * applyFlowFile(). */
   paneOf: Record<string, string>;
+  /** The GUI's page layouts, per GUI screen node (gui/screens.ts) -- 2026-10-08. Like `layout`, where widgets
+   * sit isn't wiring, so it's kept apart from `nodes`. Omitted when the flow has no GUI, so flows without one
+   * save byte-for-byte as before. Checked for shape here; the compiler checks what it says. */
+  screens?: ScreensSection;
 }
 
 /** What main.ts's canvas-reading code hands in -- plain data, no live
@@ -208,6 +214,7 @@ export function buildFlowFile(
   // still gets a well-formed file rather than an empty `panes: []`,
   // which parseFlowFile would otherwise have no node to fall back onto.
   panes: FlowFilePane[] = [{ id: DEFAULT_PANE_ID, name: DEFAULT_PANE_NAME }],
+  screens: ScreensSection = {},
 ): FlowFile {
   const sortedNodes = [...nodes].sort((a, b) => cmpId(a.id, b.id));
   const sortedEdges = [...edges].sort((a, b) => cmpId(a[0], b[0]) || a[1] - b[1] || cmpId(a[2], b[2]) || a[3] - b[3]);
@@ -229,6 +236,7 @@ export function buildFlowFile(
     configs: sortedConfigs.map((c) => ({ id: c.id, type: c.type, properties: c.properties })),
     panes,
     paneOf,
+    ...(Object.keys(screens).length > 0 ? { screens: Object.fromEntries(Object.keys(screens).sort(cmpId).map((k) => [k, screens[k]!])) } : {}),
   };
 }
 
@@ -367,5 +375,16 @@ export function parseFlowFile(text: string): FlowFile {
     paneOf[key] = value;
   }
 
-  return { formatVersion: obj.formatVersion, flowName, nodes, edges, layout, configs, panes, paneOf };
+  let screens: ScreensSection | undefined;
+  if (obj.screens !== undefined) {
+    if (typeof obj.screens !== "object" || obj.screens === null || Array.isArray(obj.screens)) throw new FlowFileError('"screens" must be an object');
+    for (const [id, spec] of Object.entries(obj.screens as Record<string, unknown>)) {
+      if (typeof spec !== "object" || spec === null || !Array.isArray((spec as Record<string, unknown>).pages)) {
+        throw new FlowFileError(`screens["${id}"] must be an object with a "pages" array`);
+      }
+    }
+    screens = obj.screens as ScreensSection;
+  }
+
+  return { formatVersion: obj.formatVersion, flowName, nodes, edges, layout, configs, panes, paneOf, ...(screens ? { screens } : {}) };
 }
