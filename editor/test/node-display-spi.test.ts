@@ -35,6 +35,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const pymockDir = join(__dirname, "fixtures", "pymock");
 // The REAL vendored driver, not a stand-in -- see this file's header.
 const vendorDir = join(__dirname, "..", "..", "device-runtime", "src", "vendor", "st7789py_mpy");
+// st7796py (our own ST7796 start-up sequence on the ST77xx base) sits beside it.
+const vendorDir7796 = join(__dirname, "..", "..", "device-runtime", "src", "vendor", "st7796py");
 
 let uniqueCounter = 0;
 const ctx: CodegenContext = {
@@ -74,7 +76,7 @@ function runSink(properties: Record<string, unknown>, byteLength: number): strin
   // 240x240/135x240 offset table, or an explicit override), not a
   // TypeScript-side guess at what the driver would have picked.
   const setupCode = (result.statements ?? []).map((s) => s.code).join("\n");
-  const dispVarMatch = setupCode.match(/(\w+_disp) = ST7789\(/);
+  const dispVarMatch = setupCode.match(/(\w+_disp) = ST77(?:89|96)\(/);
   if (!dispVarMatch) throw new Error("couldn't find the generated ST7789(...) assignment to read .xstart/.ystart back from");
   const dispVar = dispVarMatch[1];
   const lines = [
@@ -104,7 +106,7 @@ function runSink(properties: Record<string, unknown>, byteLength: number): strin
   const scriptPath = join(dir, "_snippet.py");
   writeFileSync(scriptPath, lines.join("\n"));
   return execFileSync("python3", [scriptPath], {
-    env: { ...process.env, PYTHONPATH: `${pymockDir}${delimiter}${vendorDir}` },
+    env: { ...process.env, PYTHONPATH: `${pymockDir}${delimiter}${vendorDir}${delimiter}${vendorDir7796}` },
     encoding: "utf8",
     timeout: 10_000,
   });
@@ -122,7 +124,7 @@ function runSink(properties: Record<string, unknown>, byteLength: number): strin
 function runIndexed(frameFormat: "gs4" | "gs2" | "mono", properties: Record<string, unknown>, payloadHex: string, y?: number): string {
   const result = displaySpiNode.codegenSink!(node({ ...properties, frameFormat }), ctx);
   const setupCode = (result.statements ?? []).map((s) => s.code).join("\n");
-  const dispVarMatch = setupCode.match(/(\w+_disp) = ST7789\(/);
+  const dispVarMatch = setupCode.match(/(\w+_disp) = ST77(?:89|96)\(/);
   if (!dispVarMatch) throw new Error("couldn't find the generated ST7789(...) assignment");
   const dispVar = dispVarMatch[1];
   const lines = [
@@ -149,7 +151,7 @@ function runIndexed(frameFormat: "gs4" | "gs2" | "mono", properties: Record<stri
   const scriptPath = join(dir, "_snippet.py");
   writeFileSync(scriptPath, lines.join("\n"));
   return execFileSync("python3", [scriptPath], {
-    env: { ...process.env, PYTHONPATH: `${pymockDir}${delimiter}${vendorDir}` },
+    env: { ...process.env, PYTHONPATH: `${pymockDir}${delimiter}${vendorDir}${delimiter}${vendorDir7796}` },
     encoding: "utf8",
     timeout: 10_000,
   });
@@ -250,6 +252,60 @@ describe("thingstudio/display_spi node", () => {
       const stderr = String((err as { stderr?: string }).stderr ?? "");
       expect(stderr).toContain("Unsupported display");
     }
+  });
+
+  describe("controller st7796 (320x480, Freenove ESP32-S3 Display 4.0)", () => {
+    const freenove = { controller: "st7796", spiBus: 1, baudrate: 40000000, sck: 12, mosi: 11, dc: 46, cs: 10, reset: -1, backlight: 45, width: 320, height: 480, rotation: 1, invertColors: true };
+
+    it("imports the ST7796 driver and builds it with offsets 0, 0 (no hidden margin, no table lookup)", () => {
+      const result = displaySpiNode.codegenSink!(node(freenove), ctx);
+      expect(result.imports).toContain("from st7796py import ST7796");
+      expect((result.statements ?? [])[0]!.code).toMatch(/= ST7796\(/);
+      const output = runSink(freenove, 320 * 480 * 2);
+      expect(output).toContain("OFFSETS 0 0");
+      expect(output).toContain("SPI_INIT bus=1 baudrate=40000000 sck=12 mosi=11");
+      expect(output).toContain("SPI_WRITE 307200 bytes"); // one 320x480 RGB565 frame
+    });
+
+    it("sends the start-up sequence (software reset, sleep out, unlock, gamma, lock, display on) with no reset pin", () => {
+      const output = runIndexed("gs4", freenove, "00".repeat(160), 0);
+      const all = output.split("\n").find((l) => l.startsWith("PAYLOAD_WRITES"))!;
+      expect(all).toBeDefined();
+      // init-time writes: read them back through a second run that prints everything
+      const result = displaySpiNode.codegenSink!(node({ ...freenove, frameFormat: "gs4" }), ctx);
+      const setup = (result.statements ?? []).map((s) => s.code).join("\n");
+      const disp = setup.match(/(\w+_disp) = ST7796\(/)![1];
+      const script = ["import sys", "import machine", "import time_mock", 'sys.modules["time"] = time_mock', "import runtime", "ptr8 = ptr16 = ptr32 = int", ...(result.imports ?? []), ...(result.statements ?? []).map((x) => x.code), `print("INIT_WRITES", " ".join(w.hex() for w in ${disp}.spi.writes))`].join("\n");
+      const dir = mkdtempSync(join(tmpdir(), "thingstudio-nodetest-7796-"));
+      const path = join(dir, "_snippet.py");
+      writeFileSync(path, script);
+      const out = execFileSync("python3", [path], { env: { ...process.env, PYTHONPATH: `${pymockDir}${delimiter}${vendorDir}${delimiter}${vendorDir7796}` }, encoding: "utf8", timeout: 10_000 });
+      const writes = out.split("\n").find((l) => l.startsWith("INIT_WRITES"))!.split(" ").slice(1);
+      const at = (hex: string) => writes.indexOf(hex);
+      expect(at("01")).toBeGreaterThanOrEqual(0); // software reset
+      expect(at("11")).toBeGreaterThan(at("01")); // sleep out
+      expect(writes.slice(at("f0"), at("f0") + 4)).toEqual(["f0", "c3", "f0", "96"]); // extended registers unlocked
+      expect(at("e0")).toBeGreaterThan(at("96"));
+      expect(writes.lastIndexOf("3c")).toBeGreaterThan(at("e1")); // locked again
+      expect(writes).toContain("21"); // display_spi turns inversion on afterwards
+      expect(writes).toContain("29"); // display on
+    });
+
+    it("landscape (480x320, rotation 4 = MV): MADCTL swaps rows and columns, the window spans 480 columns", () => {
+      const land = { ...freenove, width: 480, height: 320, rotation: 4 };
+      const output = runSink(land, 480 * 320 * 2);
+      expect(output).toMatch(/LAST_WRITES 21 36 2c/); // inversion on, MADCTL = MV | MH | BGR
+      const strip = runIndexed("gs4", land, "00".repeat(480), 316);
+      expect(strip).toContain("2a 000001df"); // CASET 0..479
+      expect(strip).toContain("2b 013c013d"); // RASET 316..317
+    });
+
+    it("addresses the whole 320x480 glass: a strip at row 470 sets columns 0-319 and rows 470-471", () => {
+      const output = runIndexed("gs4", freenove, "00".repeat(320), 470);
+      const line = output.split("\n").find((l) => l.startsWith("PAYLOAD_WRITES"))!;
+      expect(line).toContain("2a 0000013f"); // CASET 0..319
+      expect(line).toContain("2b 01d601d7"); // RASET 470..471
+    });
   });
 
   it("declares a single bytes 'frame' input port (sink kind, no outputs)", () => {
