@@ -203,4 +203,22 @@ describe("the example GUI flow in test-flows/", () => {
     expect(r.warnings.filter((w) => w.includes("widget") || w.includes("GUI"))).toEqual([]);
     expect(r.source).toContain("_gui.add_surface");
   });
+
+  it("every wire in it is one the canvas accepts (a refused wire drops on load)", async () => {
+    const { readFileSync } = await import("node:fs");
+    const { parseFlowFile } = await import("../src/flow-file/flow-file.js");
+    const { socketForPayloadType } = await import("../src/app/rete/sockets.js");
+    const { resolvePortType } = await import("../src/compiler/node-definition.js");
+    const f = parseFlowFile(readFileSync(join(__dirname, "..", "..", "test-flows", "gui-hero-cyd.flow.json"), "utf8"));
+    const reg = buildRegistry();
+    const byId = new Map(f.nodes.map((n) => [n.id, n]));
+    for (const [from, slot, to] of f.edges) {
+      const a = byId.get(from)!;
+      const b = byId.get(to)!;
+      const outs = reg.get(a.type)!.ports?.outputs ?? [];
+      const out = resolvePortType(outs[slot] ?? outs[0]!, a.properties);
+      const inp = resolvePortType(reg.get(b.type)!.ports!.inputs![0]!, b.properties);
+      expect(socketForPayloadType(inp).isCompatibleWith(socketForPayloadType(out)), `${from} (${out}) -> ${to} (${inp})`).toBe(true);
+    }
+  });
 });

@@ -31,4 +31,9 @@
   leaves by one interface. Addresses from `getifaddrs` via ctypes (`net_interfaces.py`, no new dependency;
   Windows falls back). A scan that couldn't send anywhere now tells the editor why (`problem` in the `boards`
   message, shown in the console). `learnings/backend-security-research.md`, 2026-09-27.
-
+- 2026-10-08 (runtime 9.1.0): the transport's watcher only looks at the station when WiFi is wanted -- a board
+  password is set, or the running flow imports `network` (every network node's code does). If the WiFi driver
+  fails to start it prints one `NET_WARN` and backs off 60 s. Before, it created `network.WLAN(STA_IF)` every 2 s
+  on every board, which on an ESP32 starts the WiFi driver: a GUI flow with no networking on a CYD ran out of
+  ESP-IDF memory and ESP-IDF logged errors every 2 s. Minor bump: nothing generated depends on it.
+  `device-runtime/test/test_net_watch.py`.

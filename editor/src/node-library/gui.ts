@@ -161,7 +161,9 @@ export const guiLedNode = widgetNode("thingstudio/gui_led");
 export const guiNavigatorNode: NodeDefinition = {
   type: "thingstudio/gui_navigator",
   kind: "transform",
-  ports: { inputs: [{ name: "msg", type: "string" }], outputs: [{ name: "page", type: "string" }] },
+  // `any` in, checked when it arrives: a function or timer upstream is untyped, and a non-string command
+  // gets a NODE_ERROR naming what's accepted (the canvas refused any -> string wires, 2026-10-08).
+  ports: { inputs: [{ name: "msg", type: "any" }], outputs: [{ name: "page", type: "string" }] },
   codegenTransform(node: GraphNode, ctx: CodegenContext): TransformCodegenResult {
     const core = coreBlock(ctx);
     const sid = screenId(ctx, node);

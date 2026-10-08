@@ -67,6 +67,7 @@ _AUTH_FAIL_DELAY_MS = 1000
 _IDLE_TIMEOUT_S = 90
 _WATCH_TICK_MS = 250
 _WATCH_NETWORK_EVERY = 8  # ticks -> check the station every 2 s
+_WIFI_RETRY_S = 60  # after the WiFi driver fails to start
 _MIRROR_LIMIT = 16384
 PROBE_REQUEST = b"TSPROBE1"
 
@@ -87,7 +88,12 @@ def has_wifi():
         return _TEST_IP is not None
 
 
+_wifi_error = None  # what the last _sta_ip() raised, if anything (the watcher backs off on it)
+
+
 def _sta_ip():
+    global _wifi_error
+    _wifi_error = None
     if _TEST_IP is not None:
         return _TEST_IP
     try:
@@ -97,9 +103,23 @@ def _sta_ip():
         if sta.active() and sta.isconnected():
             ip = sta.ifconfig()[0]
             return ip if ip and ip != "0.0.0.0" else None
-    except Exception:  # noqa: BLE001 -- no network module, or a port-specific quirk: "not up"
+    except ImportError:
         pass
+    except Exception as e:  # noqa: BLE001 -- e.g. the WiFi driver failing to start for lack of memory
+        _wifi_error = e
     return None
+
+
+def _wifi_wanted():
+    """Whether to look at the station at all. On an ESP32, merely creating network.WLAN(STA_IF) starts the
+    WiFi driver, which takes tens of KB of ESP-IDF memory. A flow that never uses the network must not pay
+    that, and on a board short of memory (a display flow's framebuffer) the start fails and ESP-IDF logs
+    errors on every attempt (CYD, 2026-10-08). So: only with a password set (the WiFi transport) or a flow
+    that imports `network` (every network node's generated code does)."""
+    if board_settings.password_set():
+        return True
+    flow = sys.modules.get("_flow")
+    return flow is not None and getattr(flow, "network", None) is not None
 
 
 def listening_address():
@@ -372,10 +392,17 @@ async def watch(hooks):
     probe_sock = None
     tick = 0
     ip = None
+    backoff_until = 0  # tick before which the station isn't looked at again, after a WiFi start failure
     while True:
         try:
             if tick % _WATCH_NETWORK_EVERY == 0:
-                ip = _sta_ip()
+                if tick < backoff_until or not (_TEST_IP is not None or _wifi_wanted()):
+                    ip = None
+                else:
+                    ip = _sta_ip()
+                    if _wifi_error is not None:
+                        print("NET_WARN WiFi didn't start (%r) -- probably short of memory; trying again in %d s" % (_wifi_error, _WIFI_RETRY_S))
+                        backoff_until = tick + _WIFI_RETRY_S * 1000 // _WATCH_TICK_MS
                 want = ip is not None and board_settings.password_set()
                 if want and (_server is None or ip != _listen_ip):
                     if _server is not None:
