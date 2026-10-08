@@ -33,6 +33,6 @@ def make(diameter=12):
             if on:
                 fb.pixel(cx, cy, surface.fg)
             return
-        fb.ellipse(cx, cy, rr, rr, surface.colour_for(state), on)
+        fb.ellipse(cx, cy, rr, rr, surface.accent_for(state) if on else surface.colour_for(state), on)
 
     return draw

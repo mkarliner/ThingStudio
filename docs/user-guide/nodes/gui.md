@@ -21,6 +21,12 @@ pages are laid out by editing the flow file. The GUI view, where you lay them ou
 Each widget starts as `--` until a value arrives. With **stale after** set, a value that isn't updated in
 time is dimmed (or underlined, on a black-and-white display), so an old reading never looks current.
 
+## Colour
+
+Set the gui screen's frame format to `rgb565` for full colour, with the same format on the display. White text,
+grey for stale values, and a green accent for bars and lights that are on. Greys use less memory and send faster,
+so use them on boards with little RAM.
+
 ## Laying out pages
 
 Pages live in the flow file, under `"screens"`, keyed by the gui screen node's id. A page is a tree of

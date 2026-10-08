@@ -196,7 +196,23 @@ describe.skipIf(!MP || !existsSync(MP))("the compiled GUI flow on the MicroPytho
   });
 });
 
-describe.each(["gui-hero-cyd.flow.json", "gui-hero-cyd-dummy.flow.json"])("the example GUI flow test-flows/%s", (file) => {
+describe("a full-colour (RGB565) GUI screen", () => {
+  it("passes byte-swapped colours, so the strips are already in the panel's byte order", () => {
+    const g = heroGraph();
+    const screen = g.nodes.find((n) => n.type === "thingstudio/gui_screen")!;
+    screen.properties.frameFormat = "rgb565";
+    const { source } = compile(g, buildRegistry());
+    expect(source).toMatch(/BandSurface\("screen", 320, 240, framebuf\.RGB565,/);
+    expect(source).toContain(`, ${bandRowsFor(320, 240, "rgb565")}, 640, (0xffff, 0x2c63, 0x0000, 0xf13e))`);
+    expect(bandRowsFor(320, 240, "rgb565")).toBe(8);
+  });
+  it("leaves the grey formats without a colours argument", () => {
+    const { source } = compile(heroGraph(), buildRegistry());
+    expect(source).not.toContain("0xf13e");
+  });
+});
+
+describe.each(["gui-hero-cyd.flow.json", "gui-hero-cyd-dummy.flow.json", "gui-hero-freenove-s3-4in.flow.json", "gui-hero-freenove-s3-4in-colour.flow.json"])("the example GUI flow test-flows/%s", (file) => {
   it("loads and compiles without warnings", async () => {
     const { readFileSync } = await import("node:fs");
     const { parseFlowFile } = await import("../src/flow-file/flow-file.js");

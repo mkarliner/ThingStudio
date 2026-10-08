@@ -101,4 +101,37 @@ def test_a_strip_is_far_smaller_than_a_frame():
     assert len(s.band_buf) == 4800
 
 
-minitest.run([test_strips_add_up_to_the_full_frame, test_only_strips_a_changed_widget_crosses_are_sent_again, test_a_strip_is_far_smaller_than_a_frame])
+def test_full_colour_strips_are_big_endian_on_the_wire_and_use_the_accent():
+    # framebuf.RGB565 stores a pixel little-endian but an SPI panel wants big-endian: the screen node passes
+    # byte-swapped colour constants, so the strip bytes are already in wire order. A light that is on and a
+    # bar's fill are drawn in the accent (0x3EF1); text is white; the background stays black.
+    stride = W * 2
+    colours = (0xFFFF, 0x2C63, 0x0000, 0xF13E)  # fg, dim, bg, accent -- each byte-swapped, as the editor writes them
+    g = gui.GUI()
+    _widgets(g)
+    s = g.add_surface(gui.BandSurface("tft", W, H, framebuf.RGB565, PAGES, ["home"], band_rows=8, stride=stride, min_interval_ms=0, colours=colours))
+    g.set_value("temp", 21.4, now=0)
+    g.set_value("pbar", 1013, now=0)
+    g.set_value("alive", True, now=0)
+    screen = bytearray(stride * H)
+
+    async def collect():
+        for _ in range(H // 8):
+            y, rows = await s.next_band()
+            screen[y * stride:(y + rows) * stride] = s.band_buf[:rows * stride]
+
+    asyncio.run(collect())
+
+    def px(x, y):
+        o = y * stride + x * 2
+        return bytes(screen[o:o + 2])
+
+    assert px(227, 43) == b"\x3e\xf1", px(227, 43)  # centre of the light that is on: accent, high byte first
+    assert px(5, 5) == b"\x00\x00"
+    bar_row = 115 + 6
+    assert px(10, bar_row) == b"\x3e\xf1"  # inside the bar's fill
+    assert b"\xff\xff" in bytes(screen[70 * stride:118 * stride])  # the readout's digits are white
+    assert len(s.band_buf) == 8 * stride == 3840
+
+
+minitest.run([test_strips_add_up_to_the_full_frame, test_only_strips_a_changed_widget_crosses_are_sent_again, test_a_strip_is_far_smaller_than_a_frame, test_full_colour_strips_are_big_endian_on_the_wire_and_use_the_accent])

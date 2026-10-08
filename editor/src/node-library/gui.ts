@@ -39,6 +39,15 @@ export function bandRowsFor(width: number, height: number, format: GuiFrameForma
   return Math.max(1, Math.min(height, Math.floor(5120 / frameBytes(width, 1, format))));
 }
 
+/** Colours for a full-colour (RGB565) screen: foreground, dimmed (stale), background, accent (bar fill, light on).
+ * Written byte-swapped: framebuf.RGB565 stores a pixel little-endian but an SPI panel wants it big-endian, and
+ * drawing the swapped constant puts the right bytes on the wire without touching a single pixel afterwards. */
+export function rgb565Colours(): string {
+  const swap = (c: number) => ((c & 0xff) << 8) | (c >> 8);
+  const hex = (c: number) => `0x${swap(c).toString(16).padStart(4, "0")}`;
+  return `(${hex(0xffff)}, ${hex(0x632c)}, ${hex(0x0000)}, ${hex(0x3ef1)})`;
+}
+
 /** Bytes in one frame, the same formula display_spi checks incoming frames against. */
 export function frameBytes(width: number, height: number, format: GuiFrameFormat): number {
   switch (format) {
@@ -130,7 +139,8 @@ export const guiScreenNode: NodeDefinition = {
     const code = [
       ...surface.staticRegistrations,
       `${base}_s = _gui.add_surface(thingstudio_gui.BandSurface(${pyStr(node.id)}, ${width}, ${height}, ${fmt}, ` +
-        `${surface.pagesPy}, ${surface.carouselPy}, ${surface.modalsPy}, ${wrap}, ${minInterval}, ${bandRows}, ${stride}))`,
+        `${surface.pagesPy}, ${surface.carouselPy}, ${surface.modalsPy}, ${wrap}, ${minInterval}, ${bandRows}, ${stride}` +
+        `${format === "rgb565" ? `, ${rgb565Colours()}` : ""}))`,
     ].join("\n");
     const name = typeof node.properties.name === "string" && node.properties.name ? node.properties.name : node.id;
     return {

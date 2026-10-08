@@ -150,7 +150,15 @@ class FrameSurface(Surface):
         self.fb = fb
         self.push = push
         style = _STYLE.get(fmt, (1, 1, 0, False))
-        self.fg, self.dim, self.background, self.shades = colours + (True,) if colours else style
+        if colours:
+            # (fg, dim, background) or (fg, dim, background, accent): the accent is the colour of a bar's fill
+            # and a light that is on; without one they use the foreground.
+            self.fg, self.dim, self.background = colours[0], colours[1], colours[2]
+            self.accent = colours[3] if len(colours) > 3 else colours[0]
+            self.shades = True
+        else:
+            self.fg, self.dim, self.background, self.shades = style
+            self.accent = self.fg
         self.fmt = fmt if fmt is not None else (framebuf.MONO_HLSB if framebuf else 0)
         # A two-pixel palette in the frame's own format: glyph bit 0 -> [0], 1 -> [1] (nano-gui's BoolPalette).
         self._palette = framebuf.FrameBuffer(bytearray(4), 2, 1, self.fmt) if framebuf else None
@@ -183,6 +191,10 @@ class FrameSurface(Surface):
     def colour_for(self, state):
         """The colour to draw a value in: dim when stale (if the format has shades)."""
         return self.dim if state == STALE and self.shades else self.fg
+
+    def accent_for(self, state):
+        """The accent colour (bar fill, light on), dim when stale like colour_for()."""
+        return self.dim if state == STALE and self.shades else self.accent
 
     def render(self, gui):
         fb = self.fb

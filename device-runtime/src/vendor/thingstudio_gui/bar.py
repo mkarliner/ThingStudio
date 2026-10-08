@@ -42,6 +42,6 @@ def make(lo=0.0, hi=100.0):
             for i in range(x + 2, x + 2 + fill, 2):
                 fb.vline(i, y + 2, h - 4, surface.fg)
         else:
-            fb.fill_rect(x + 2, y + 2, fill, h - 4, surface.colour_for(state))
+            fb.fill_rect(x + 2, y + 2, fill, h - 4, surface.accent_for(state))
 
     return draw
