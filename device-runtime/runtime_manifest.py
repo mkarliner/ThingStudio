@@ -48,6 +48,9 @@ DEPENDENCIES: list[dict] = [
     {"name": "st7789py", "files": [("st7789py_mpy/st7789py.py", "st7789py.py")], "requires": []},
     {"name": "ssd1306", "files": [("ssd1306/ssd1306.py", "ssd1306.py")], "requires": []},
     {"name": "bme280_float", "files": [("bme280/bme280_float.py", "bme280_float.py")], "requires": []},
+    # Thingstudio's own GUI subsystem (gui-layout-widget-system-scoping.md, phase 4): a library, not part of the
+    # runtime, so flows without a GUI never carry it.
+    {"name": "thingstudio_gui", "files": [("thingstudio_gui/gui.py", "thingstudio_gui.py")], "requires": []},
 ]
 
 # GUI fonts (2026-10-07, docs/working-notes/gui-font-pipeline-scoping.md): a prebuilt set, one library per

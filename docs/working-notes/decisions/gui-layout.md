@@ -93,3 +93,8 @@ vendor-whole / vendor-parts / write-our-own (`nano-gui-spike-briefing.md`).
 - 2026-10-07: layout engine built as scoped (row/column, gap, padding, grow, align/alignSelf, justify incl.
   space-between; no wrap or shrink). Results are whole pixels; leftover pixels go to the first growers/gaps.
   Overflow and duplicate ids come back as a list of attributed errors, never thrown. `editor/src/gui/layout.ts`.
+- 2026-10-08 (Mike): **remote views are architected in** -- a phone or web page is one more surface, and the
+  editor's live preview is the first one ("kills two birds with one stone"). Built now: the subsystem's
+  surface is an interface (`FrameSurface` draws a framebuffer, `RemoteSurface` sends changes) plus an
+  `on_value` feed of every change. Transport, client and input (which needs board auth) not built.
+  `gui-layout-widget-system-scoping.md`, "Remote views".

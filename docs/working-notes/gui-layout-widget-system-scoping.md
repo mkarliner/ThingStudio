@@ -238,6 +238,31 @@ change. A modal is a page outside the carousel tree, stacked over the current pa
 - Optional auto-dismiss timeout, reported as `timeout`.
 - Modals are per display; wire one msg to two modal nodes to alert on both.
 
+## Remote views (2026-10-08)
+
+Mike's question: could a view be a remote app, a phone or a single-page web app? Yes, and the MVC split makes
+it cheap: a remote view is one more surface. Mike: "this kills two birds with one stone" -- the editor's
+live GUI preview (phase 6) is itself a remote view over the existing USB/WiFi connection, so building one
+builds most of the other.
+
+- **Board side:** no framebuffer, no drawing. The surface sends changes as messages: the whole visible
+  screen when the page or modal changes, then changed values. A board with **no display** (a Pico W) can
+  still have a GUI.
+- **Two shapes, both built into the subsystem:** a `RemoteSurface` is a display that lives elsewhere, with
+  its own page tree and navigation; the `on_value` feed reports every value and state change, on screen or
+  not, for a viewer that pages by itself (e.g. one retained MQTT topic per widget).
+- **Transport is the caller's:** MQTT (we ship `mqtt_as`; a web page joins the broker over WebSockets) is the
+  likely default; the editor connection (the reserved, unbuilt `VALUE_STREAM` message) for the preview; a
+  WebSocket server on the board later, if ever (flash and RAM, nothing built in).
+- **Rendering:** either a pixel-exact mirror of a real display (the editor has the layout engine and every
+  glyph as data), or a page tree of its own laid out for a phone with ordinary HTML widgets.
+- **A web page that can be installed** covers phones; no native app until there's a reason.
+- **Hard parts:** security -- a view you can tap is remote control of hardware, so input waits for board
+  authentication (HMAC scheme, designed, not built); read-only is low risk. Connection loss maps onto the
+  value states: when the link drops, everything shown goes stale. Scope: read-only display is a feature; a
+  full remote dashboard edges towards Node-RED Dashboard and Home Assistant.
+- **MVP:** architected, not built, beyond the two hooks above.
+
 ## MVC — where the line falls
 
 - **Model** — widget values and their states, the active page, the modal queue. The flow owns them.
@@ -471,6 +496,9 @@ navigation and modal queueing are plain state-machine tests. Only tier 1 needs r
 3. **Layout engine in TypeScript**, per display, `vitest`-tested against expected rect tables.
 4. **GUI subsystem runtime** — surfaces, value states (unknown/known/stale), navigation, modal queue,
    tested in pymock.
+   **Built 2026-10-08:** `device-runtime/src/vendor/thingstudio_gui/gui.py` (a flow dependency,
+   `thingstudio_gui`; 4.9 KB as `.mpy`), tested on the unix port with real `framebuf` in
+   `device-runtime/test/test_gui.py`. Widgets, the editor's table output and codegen come next.
 5. **Widget set for the hero app** + navigator + modal nodes; tap-zone navigation.
 6. **GUI view v1:** outline tree per display plus live preview showing value states.
 7. **Hero app end to end on a CYD** with a BME280 and an MQTT alarm.
