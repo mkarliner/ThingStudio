@@ -500,6 +500,16 @@ navigation and modal queueing are plain state-machine tests. Only tier 1 needs r
    `thingstudio_gui`; 4.9 KB as `.mpy`), tested on the unix port with real `framebuf` in
    `device-runtime/test/test_gui.py`. Widgets, the editor's table output and codegen come next.
 5. **Widget set for the hero app** + navigator + modal nodes; tap-zone navigation.
+   **Board side and measuring built 2026-10-08:** label (static or bound), readout with units, bar, status
+   light, page dots -- `device-runtime/src/vendor/thingstudio_gui/<widget>.py`, one library each
+   (`tsgui_<widget>`), drawing through the surface's own text and colour helpers. A readout's number field
+   is sized from its value range (`lo`, `hi`, `decimals`), every digit at the widest digit's width, so a
+   value in range never overflows and "11.1" sits where "88.8" would. The editor's measure is
+   `editor/src/gui/widgets.ts`; both sides are checked against `editor/test/fixtures/gui-widget-sizes.json`.
+   `device-runtime/test/test_gui_widgets.py` checks every widget stays inside its rect in every state, in
+   4-bit grey and mono. Text is drawn by our own ~20 lines (glyph framebuffer + two-colour palette blit,
+   nano-gui's technique), not Hinch's `Writer`: see `decisions/gui-layout.md`, 2026-10-08. Not yet: the
+   canvas nodes, navigator and modal nodes, tap zones, the `screens` format and codegen.
 6. **GUI view v1:** outline tree per display plus live preview showing value states.
 7. **Hero app end to end on a CYD** with a BME280 and an MQTT alarm.
 8. **Pico + OLED check** against the memory budget.

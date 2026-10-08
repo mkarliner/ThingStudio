@@ -43,6 +43,29 @@ KNOWN = 1
 STALE = 2
 STATE_NAMES = ("unknown", "known", "stale")
 
+try:
+    import framebuf
+
+    # Foreground, dimmed (stale) and background colours per frame format, and whether dim is a real shade
+    # (False on mono: stale is shown by a pattern instead). Widgets read them from their surface.
+    _STYLE = {
+        framebuf.MONO_VLSB: (1, 1, 0, False),
+        framebuf.MONO_HLSB: (1, 1, 0, False),
+        framebuf.MONO_HMSB: (1, 1, 0, False),
+        framebuf.GS2_HMSB: (3, 1, 0, True),
+        framebuf.GS4_HMSB: (15, 6, 0, True),
+        framebuf.GS8: (255, 100, 0, True),
+        framebuf.RGB565: (0xFFFF, 0x632C, 0, True),
+    }
+except ImportError:  # host tooling
+    framebuf = None
+    _STYLE = {}
+
+try:
+    from uctypes import addressof, bytearray_at
+except ImportError:
+    bytearray_at = None
+
 NAV_COMMANDS = ("next", "prev", "back", "home")
 CLOSE_REASONS = ("ack", "timeout", "closed")
 
@@ -122,11 +145,44 @@ class FrameSurface(Surface):
     """A physical display. `fb` is a framebuf.FrameBuffer in the panel's own format; `push(fb)` sends the
     frame to it. `background` is the fill colour for cleared areas, in that format."""
 
-    def __init__(self, name, fb, push, pages, carousel, modals=None, wrap=True, min_interval_ms=100, background=0):
+    def __init__(self, name, fb, push, pages, carousel, modals=None, wrap=True, min_interval_ms=100, fmt=None, colours=None):
         Surface.__init__(self, name, pages, carousel, modals, wrap, min_interval_ms)
         self.fb = fb
         self.push = push
-        self.background = background
+        style = _STYLE.get(fmt, (1, 1, 0, False))
+        self.fg, self.dim, self.background, self.shades = colours + (True,) if colours else style
+        self.fmt = fmt if fmt is not None else (framebuf.MONO_HLSB if framebuf else 0)
+        # A two-pixel palette in the frame's own format: glyph bit 0 -> [0], 1 -> [1] (nano-gui's BoolPalette).
+        self._palette = framebuf.FrameBuffer(bytearray(4), 2, 1, self.fmt) if framebuf else None
+
+    # -- drawing helpers for widgets ------------------------------------------------------------------------
+
+    def text(self, font, s, x, y, colour, right=None):
+        """Draws `s` in `font` (a font_to_py module) with its top-left at x, y. Stops before a glyph that would
+        cross `right` (exclusive; default: the frame's edge), so text never paints over a neighbour. Returns
+        the x after the last glyph drawn. The editor measured the same widths (font-metrics.ts)."""
+        fb = self.fb
+        pal = self._palette
+        pal.pixel(0, 0, self.background)
+        pal.pixel(1, 0, colour)
+        limit = right if right is not None else 1 << 15
+        for ch in s:
+            glyph, h, w = font.get_ch(ch)
+            if x + w > limit:
+                break
+            buf = bytearray_at(addressof(glyph), len(glyph)) if bytearray_at else bytearray(glyph)
+            fb.blit(framebuf.FrameBuffer(buf, w, h, framebuf.MONO_HLSB), x, y, -1, pal)
+            x += w
+        return x
+
+    def stale_mark(self, x, y, w):
+        """A dotted line: how stale shows where there's no dimmed shade (mono)."""
+        for i in range(x, x + w, 2):
+            self.fb.pixel(i, y, self.fg)
+
+    def colour_for(self, state):
+        """The colour to draw a value in: dim when stale (if the format has shades)."""
+        return self.dim if state == STALE and self.shades else self.fg
 
     def render(self, gui):
         fb = self.fb
@@ -142,12 +198,12 @@ class FrameSurface(Surface):
             if not self.full:
                 fb.fill_rect(x, y, rw, rh, self.background)
             try:
-                w.draw(fb, rect, w.value, w.state, gui)
+                w.draw(self, rect, w.value, w.state)
             except Exception as e:  # noqa: BLE001 -- one widget's bug must not blank the screen
                 fb.fill_rect(x, y, rw, rh, self.background)
-                fb.rect(x, y, rw, rh, 1)
-                fb.line(x, y, x + rw - 1, y + rh - 1, 1)
-                fb.line(x, y + rh - 1, x + rw - 1, y, 1)
+                fb.rect(x, y, rw, rh, self.fg)
+                fb.line(x, y, x + rw - 1, y + rh - 1, self.fg)
+                fb.line(x, y + rh - 1, x + rw - 1, y, self.fg)
                 gui._error(wid, e)
         self.push(fb)
 
@@ -195,7 +251,8 @@ class GUI:
     # -- setup, from generated code ---------------------------------------------------------------------
 
     def widget(self, wid, draw, stale_after_ms=0):
-        """Registers widget `wid`. draw(fb, rect, value, state, gui) paints it inside rect=(x, y, w, h).
+        """Registers widget `wid`. draw(surface, rect, value, state) paints it inside rect=(x, y, w, h) on
+        surface.fb, using the surface's helpers and colours (text(), colour_for(), fg/dim/background).
         stale_after_ms 0: never stale."""
         self.widgets[wid] = _Widget(wid, draw, stale_after_ms)
 

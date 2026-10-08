@@ -1,0 +1,116 @@
+{
+ "_comment": "Natural sizes of GUI widgets, checked by both editor/test/gui-widgets.test.ts and device-runtime/test/test_gui_widgets.py so the editor's layout and the board's drawing agree.",
+ "cases": [
+  {
+   "widget": "label",
+   "cfg": {
+    "font": "font_body16",
+    "text": "Temperature"
+   },
+   "natural": [
+    96,
+    17
+   ]
+  },
+  {
+   "widget": "label",
+   "cfg": {
+    "font": "font_body20",
+    "text": "Living room"
+   },
+   "natural": [
+    106,
+    19
+   ]
+  },
+  {
+   "widget": "label",
+   "cfg": {
+    "font": "font_body12",
+    "max_chars": 10
+   },
+   "natural": [
+    110,
+    11
+   ]
+  },
+  {
+   "widget": "readout",
+   "cfg": {
+    "font": "font_digits64",
+    "units_font": "font_body24",
+    "units": "°C",
+    "gap": 4,
+    "decimals": 1,
+    "lo": -20,
+    "hi": 50
+   },
+   "natural": [
+    265,
+    68
+   ]
+  },
+  {
+   "widget": "readout",
+   "cfg": {
+    "font": "font_digits32",
+    "units_font": "font_body16",
+    "units": "%",
+    "gap": 4,
+    "decimals": 0,
+    "lo": 0,
+    "hi": 100
+   },
+   "natural": [
+    107,
+    34
+   ]
+  },
+  {
+   "widget": "readout",
+   "cfg": {
+    "font": "font_digits24",
+    "decimals": 0,
+    "lo": 900,
+    "hi": 1100
+   },
+   "natural": [
+    92,
+    24
+   ]
+  },
+  {
+   "widget": "bar",
+   "cfg": {
+    "min_width": 60,
+    "height": 10
+   },
+   "natural": [
+    60,
+    10
+   ]
+  },
+  {
+   "widget": "led",
+   "cfg": {
+    "diameter": 14
+   },
+   "natural": [
+    14,
+    14
+   ]
+  },
+  {
+   "widget": "pagedots",
+   "cfg": {
+    "pages": 4,
+    "diameter": 6,
+    "gap": 4
+   },
+   "natural": [
+    36,
+    6
+   ]
+  }
+ ]
+}

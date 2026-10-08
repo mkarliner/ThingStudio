@@ -26,9 +26,9 @@ def _fb():
 
 def _box(colour):
     """A draw routine that fills its rect with a colour per state: unknown 1, known value, stale 2."""
-    def draw(fb, rect, value, state, g):
+    def draw(surface, rect, value, state):
         x, y, w, h = rect
-        fb.fill_rect(x, y, w, h, {gui.UNKNOWN: 1, gui.KNOWN: value if value is not None else 0, gui.STALE: 2}[state])
+        surface.fb.fill_rect(x, y, w, h, {gui.UNKNOWN: 1, gui.KNOWN: value if value is not None else 0, gui.STALE: 2}[state])
     return draw
 
 
@@ -50,7 +50,7 @@ def _setup(stale_after_ms=0, **surface_kw):
         "info": {"widgets": [], "priority": 0, "timeout_ms": 1000},
         "fire": {"widgets": [], "priority": 5, "timeout_ms": 0},
     }
-    s = gui.FrameSurface("tft", fb, lambda f: pushes.append(1), pages, ["home", "climate", "power"], modals, **surface_kw)
+    s = gui.FrameSurface("tft", fb, lambda f: pushes.append(1), pages, ["home", "climate", "power"], modals, fmt=framebuf.GS4_HMSB, **surface_kw)
     g.add_surface(s)
     return g, s, fb, pushes
 
@@ -197,14 +197,14 @@ def test_a_failing_widget_is_crossed_out_and_reported_others_carry_on():
     errors = []
     g.on_error = lambda who, e: errors.append((who, type(e).__name__))
 
-    def broken(fb, rect, value, state, gg):
+    def broken(surface, rect, value, state):
         raise ZeroDivisionError("boom")
 
     g.widgets["temp"].draw = broken
     g.navigate("tft", "home")
     g.step(now=0)
     assert errors == [("temp", "ZeroDivisionError")]
-    assert fb.pixel(0, 0) == 1 and fb.pixel(3, 3) == 1  # the cross
+    assert fb.pixel(0, 0) == 15 and fb.pixel(3, 3) == 15  # the cross, in the foreground colour
     assert len(pushes) == 1  # still pushed
 
 

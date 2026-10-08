@@ -98,3 +98,9 @@ vendor-whole / vendor-parts / write-our-own (`nano-gui-spike-briefing.md`).
   surface is an interface (`FrameSurface` draws a framebuffer, `RemoteSurface` sends changes) plus an
   `on_value` feed of every change. Transport, client and input (which needs board auth) not built.
   `gui-layout-widget-system-scoping.md`, "Remote views".
+- 2026-10-08: text is drawn by our own small routine on the surface (blit each glyph through a two-colour
+  palette, the technique nano-gui's `CWriter` uses), **not** a vendored `Writer`, against the spike's
+  recommendation. Why: `Writer` keeps a text cursor per device, wraps lines and needs a `palette` attribute on
+  the framebuffer, none of which we use, and it doesn't clip to a widget's rect, which we need; the
+  measuring is already in the editor. ~20 lines instead of ~320. Widgets: one library per type
+  (`tsgui_label`, `tsgui_readout`, `tsgui_bar`, `tsgui_led`, `tsgui_pagedots`).

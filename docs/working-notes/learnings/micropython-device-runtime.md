@@ -266,3 +266,11 @@ transfer to a board should be paced by a reply, not just kept small.
 `font_to_py <font> 16` gave Atkinson Hyperlegible a 17px line height; 48 gave 47px. The size argument is a
 target, not the result. Anything laying out text must read `height()` from the generated module (the editor's
 font JSON carries it), never assume the nominal size. `gui-font-pipeline-scoping.md`.
+
+## framebuf won't wrap a read-only buffer, 2026-10-08
+
+`framebuf.FrameBuffer(memoryview(some_bytes), ...)` raises "object with buffer protocol required" on the unix
+port: it needs a writable buffer. A font_to_py glyph is a memoryview into the module's `bytes`, so drawing it
+needs either a copy (`bytearray(glyph)`, an allocation per glyph) or `uctypes.bytearray_at(addressof(glyph),
+len(glyph))`, which nano-gui's `CWriter` uses and our GUI surface now does (falling back to the copy where
+`uctypes` is missing). `vendor/thingstudio_gui/gui.py`, `FrameSurface.text`.

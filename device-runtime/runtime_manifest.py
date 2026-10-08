@@ -51,6 +51,13 @@ DEPENDENCIES: list[dict] = [
     # Thingstudio's own GUI subsystem (gui-layout-widget-system-scoping.md, phase 4): a library, not part of the
     # runtime, so flows without a GUI never carry it.
     {"name": "thingstudio_gui", "files": [("thingstudio_gui/gui.py", "thingstudio_gui.py")], "requires": []},
+    # One library per widget type, so a flow carries only the widgets it uses. They draw through the surface
+    # they're given and import nothing from thingstudio_gui.
+    {"name": "tsgui_label", "files": [("thingstudio_gui/label.py", "tsgui_label.py")], "requires": []},
+    {"name": "tsgui_readout", "files": [("thingstudio_gui/readout.py", "tsgui_readout.py")], "requires": []},
+    {"name": "tsgui_bar", "files": [("thingstudio_gui/bar.py", "tsgui_bar.py")], "requires": []},
+    {"name": "tsgui_led", "files": [("thingstudio_gui/led.py", "tsgui_led.py")], "requires": []},
+    {"name": "tsgui_pagedots", "files": [("thingstudio_gui/pagedots.py", "tsgui_pagedots.py")], "requires": []},
 ]
 
 # GUI fonts (2026-10-07, docs/working-notes/gui-font-pipeline-scoping.md): a prebuilt set, one library per
