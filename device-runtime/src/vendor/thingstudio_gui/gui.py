@@ -193,19 +193,132 @@ class FrameSurface(Surface):
         else:
             todo = [(wid, rect) for wid, rect in widgets if wid in self.dirty]
         for wid, rect in todo:
-            w = gui.widgets[wid]
-            x, y, rw, rh = rect
             if not self.full:
-                fb.fill_rect(x, y, rw, rh, self.background)
-            try:
-                w.draw(self, rect, w.value, w.state)
-            except Exception as e:  # noqa: BLE001 -- one widget's bug must not blank the screen
-                fb.fill_rect(x, y, rw, rh, self.background)
-                fb.rect(x, y, rw, rh, self.fg)
-                fb.line(x, y, x + rw - 1, y + rh - 1, self.fg)
-                fb.line(x, y + rh - 1, x + rw - 1, y, self.fg)
-                gui._error(wid, e)
+                fb.fill_rect(rect[0], rect[1], rect[2], rect[3], self.background)
+            self._draw_widget(gui, wid, rect)
         self.push(fb)
+
+    def _draw_widget(self, gui, wid, rect):
+        fb = self.fb
+        w = gui.widgets[wid]
+        x, y, rw, rh = rect
+        try:
+            w.draw(self, rect, w.value, w.state)
+        except Exception as e:  # noqa: BLE001 -- one widget's bug must not blank the screen
+            fb.fill_rect(x, y, rw, rh, self.background)
+            fb.rect(x, y, rw, rh, self.fg)
+            fb.line(x, y, x + rw - 1, y + rh - 1, self.fg)
+            fb.line(x, y + rh - 1, x + rw - 1, y, self.fg)
+            gui._error(wid, e)
+
+
+if framebuf is not None:
+
+    class _Band(framebuf.FrameBuffer):
+        """A framebuffer holding `rows` rows of a taller screen, starting at row `y0`. Drawing calls take screen
+        coordinates and land in the band; anything outside it is clipped by framebuf as usual. (The nano-gui
+        spike's band.py; a FrameBuffer subclass must call super(), not FrameBuffer.method(self, ...).)"""
+
+        def __init__(self, buf, width, rows, fmt):
+            super().__init__(buf, width, rows, fmt)
+            self.y0 = 0
+
+        def pixel(self, x, y, c=None):
+            if c is None:
+                return super().pixel(x, y - self.y0)
+            super().pixel(x, y - self.y0, c)
+
+        def fill_rect(self, x, y, w, h, c):
+            super().fill_rect(x, y - self.y0, w, h, c)
+
+        def rect(self, x, y, w, h, c, f=False):
+            super().rect(x, y - self.y0, w, h, c, f)
+
+        def hline(self, x, y, w, c):
+            super().hline(x, y - self.y0, w, c)
+
+        def vline(self, x, y, h, c):
+            super().vline(x, y - self.y0, h, c)
+
+        def line(self, x1, y1, x2, y2, c):
+            super().line(x1, y1 - self.y0, x2, y2 - self.y0, c)
+
+        def ellipse(self, x, y, xr, yr, c, f=False, m=15):
+            super().ellipse(x, y - self.y0, xr, yr, c, f, m)
+
+        def blit(self, src, x, y, key=-1, palette=None):
+            super().blit(src, x, y - self.y0, key, palette)
+
+
+class BandSurface(FrameSurface):
+    """A display drawn in horizontal strips (gui-layout-widget-system-scoping.md, "banded rendering"): only one
+    strip of `band_rows` rows is ever in RAM, so a 240x320 gs4 screen needs 4.8 KB instead of a 38.4 KB frame
+    that a classic ESP32's fragmented heap often can't give (CYD, 2026-10-08: MemoryError allocating 38400).
+    The screen node's coroutine awaits next_band(), which draws the next strip that needs it and returns
+    (y, rows); the strip's bytes are band_buf[:rows * stride]. A strip is redrawn whole (every widget crossing
+    it), because the display shows exactly what's sent. GUI.step() doesn't render these; it still runs stale
+    timers and modal timeouts for them."""
+
+    banded = True
+
+    def __init__(self, name, width, height, fmt, pages, carousel, modals=None, wrap=True, min_interval_ms=100,
+                 band_rows=40, stride=None, colours=None):
+        self.width = width
+        self.height = height
+        self.band_rows = max(1, min(band_rows, height))
+        self.stride = stride
+        self.band_buf = bytearray(stride * self.band_rows)
+        fb = _Band(self.band_buf, width, self.band_rows, fmt)
+        FrameSurface.__init__(self, name, fb, None, pages, carousel, modals, wrap, min_interval_ms, fmt, colours)
+        self.gui = None
+        self._todo = []
+
+    def _bands_for(self, rects):
+        out = set()
+        for x, y, w, h in rects:
+            first = max(0, y) // self.band_rows
+            last = min(self.height - 1, y + h - 1) // self.band_rows
+            for b in range(first, last + 1):
+                out.add(b)
+        return sorted(out)
+
+    def _draw_band(self, y0, rows):
+        fb = self.fb
+        fb.y0 = y0
+        fb.fill(self.background)
+        for wid, rect in self.visible_widgets():
+            if rect[1] < y0 + rows and rect[1] + rect[3] > y0:
+                self._draw_widget(self.gui, wid, rect)
+
+    async def next_band(self, tick_ms=20):
+        """Waits until a strip needs sending, draws it, and returns (y, rows)."""
+        try:
+            import asyncio
+        except ImportError:
+            import uasyncio as asyncio
+        while True:
+            if self._todo:
+                b = self._todo.pop(0)
+                y0 = b * self.band_rows
+                rows = min(self.band_rows, self.height - y0)
+                try:
+                    self._draw_band(y0, rows)
+                except Exception as e:  # noqa: BLE001 -- keep the screen going
+                    if self.gui is not None:
+                        self.gui._error("display " + self.name, e)
+                return y0, rows
+            now = _ticks_ms()
+            if (self.full or self.dirty) and (self.last_push is None or _ticks_diff(now, self.last_push) >= self.min_interval_ms):
+                if self.full:
+                    self._todo = list(range((self.height + self.band_rows - 1) // self.band_rows))
+                else:
+                    self._todo = self._bands_for([r for wid, r in self.visible_widgets() if wid in self.dirty])
+                self.full = False
+                self.dirty = set()
+                self.last_push = now
+                self.pushes += 1
+                continue
+            await asyncio.sleep_ms(tick_ms)
 
 
 class RemoteSurface(Surface):
@@ -267,6 +380,7 @@ class GUI:
                         raise ValueError("%s %r on display %s places unknown widget %r" % (kind, pname, surface.name, wid))
                     w.placements.append((surface, pname, rect))
         self.surfaces[surface.name] = surface
+        surface.gui = self
         return surface
 
     # -- model: values ----------------------------------------------------------------------------------
@@ -429,8 +543,8 @@ class GUI:
                 timeout = s.modals[s.modal[0]].get("timeout_ms", 0)
                 if timeout and _ticks_diff(now, s.modal[3]) >= timeout:
                     self._close_visible(s, "timeout", now)
-            if not (s.full or s.dirty):
-                continue
+            if getattr(s, "banded", False) or not (s.full or s.dirty):
+                continue  # a banded surface is drawn by its screen's own coroutine (BandSurface.next_band)
             if s.last_push is not None and _ticks_diff(now, s.last_push) < s.min_interval_ms:
                 continue
             try:

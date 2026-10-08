@@ -34,6 +34,11 @@ import { compileScreens, GUI_SCREEN, GUI_MODAL, isWidgetType, modalName, nodeLab
 export type GuiFrameFormat = "gs4" | "gs2" | "mono" | "rgb565";
 const FRAMEBUF_FORMAT: Record<GuiFrameFormat, string> = { gs4: "GS4_HMSB", gs2: "GS2_HMSB", mono: "MONO_HMSB", rgb565: "RGB565" };
 
+/** Rows per strip: as many as fit in about 5 KB, at least 1, at most the whole screen. */
+export function bandRowsFor(width: number, height: number, format: GuiFrameFormat): number {
+  return Math.max(1, Math.min(height, Math.floor(5120 / frameBytes(width, 1, format))));
+}
+
 /** Bytes in one frame, the same formula display_spi checks incoming frames against. */
 export function frameBytes(width: number, height: number, format: GuiFrameFormat): number {
   switch (format) {
@@ -118,20 +123,22 @@ export const guiScreenNode: NodeDefinition = {
     const fmt = `framebuf.${FRAMEBUF_FORMAT[format]}`;
     const minInterval = Math.max(0, Math.round(Number(node.properties.minInterval ?? 200)));
     const wrap = node.properties.wrap === false ? "False" : "True";
+    // Drawn in strips (BandSurface): only one strip is ever in RAM. A full 240x320 gs4 frame is 38,400 bytes,
+    // which a classic ESP32's fragmented heap often can't give (CYD, 2026-10-08); a strip is ~4.8 KB.
+    const stride = frameBytes(width, 1, format);
+    const bandRows = bandRowsFor(width, height, format);
     const code = [
       ...surface.staticRegistrations,
-      `${base}_buf = bytearray(${frameBytes(width, height, format)})`,
-      `${base}_fb = framebuf.FrameBuffer(${base}_buf, ${width}, ${height}, ${fmt})`,
-      `${base}_evt = asyncio.Event()`,
-      `_gui.add_surface(thingstudio_gui.FrameSurface(${pyStr(node.id)}, ${base}_fb, lambda _f: ${base}_evt.set(), ` +
-        `${surface.pagesPy}, ${surface.carouselPy}, ${surface.modalsPy}, ${wrap}, ${minInterval}, ${fmt}))`,
+      `${base}_s = _gui.add_surface(thingstudio_gui.BandSurface(${pyStr(node.id)}, ${width}, ${height}, ${fmt}, ` +
+        `${surface.pagesPy}, ${surface.carouselPy}, ${surface.modalsPy}, ${wrap}, ${minInterval}, ${bandRows}, ${stride}))`,
     ].join("\n");
     const name = typeof node.properties.name === "string" && node.properties.name ? node.properties.name : node.id;
     return {
       imports: core.imports,
       statements: [...core.statements, { key: `gui_screen_${node.id}`, code }],
-      waitStatement: `await ${base}_evt.wait()\n${base}_evt.clear()`,
-      buildMsg: `msg = {'payload': ${base}_buf, 'topic': ${pyStr(name)}}`,
+      // One message per strip: `y` is its first row; display_spi writes it there.
+      waitStatement: `_band_y, _band_rows = await ${base}_s.next_band()`,
+      buildMsg: `msg = {'payload': memoryview(${base}_s.band_buf)[:_band_rows * ${stride}], 'topic': ${pyStr(name)}, 'y': _band_y}`,
     };
   },
 };

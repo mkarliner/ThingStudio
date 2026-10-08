@@ -14,7 +14,7 @@ import { describe, expect, it } from "vitest";
 import { compile } from "../src/compiler/compile.js";
 import type { GraphData, GraphNode } from "../src/compiler/graph.js";
 import type { ScreensSection } from "../src/gui/screens.js";
-import { frameBytes } from "../src/node-library/gui.js";
+import { bandRowsFor, frameBytes } from "../src/node-library/gui.js";
 import { buildRegistry } from "../src/node-library/registry.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -87,8 +87,10 @@ describe("compiling a GUI flow", () => {
     expect(source.match(/_gui = thingstudio_gui\.GUI/g)).toHaveLength(1);
     for (const id of ["temp", "press", "pbar", "alive"]) expect(source.match(new RegExp(`_gui\\.widget\\("${id}"`, "g")), id).toHaveLength(1);
     expect(source).toContain('tsgui_readout.make(font_digits64, font_body24, "°C", 1, -20, 50)');
-    expect(source).toContain(`bytearray(${frameBytes(320, 240, "gs4")})`);
-    expect(source).toMatch(/_gui\.add_surface\(thingstudio_gui\.FrameSurface\("screen"/);
+    // Drawn in strips: no full-frame buffer anywhere in the flow.
+    expect(source).not.toContain(`bytearray(${frameBytes(320, 240, "gs4")})`);
+    expect(source).toMatch(/_gui\.add_surface\(thingstudio_gui\.BandSurface\("screen", 320, 240, framebuf\.GS4_HMSB,/);
+    expect(source).toMatch(/_band_y, _band_rows = await \w+_s\.next_band\(\)/);
     expect(source).toContain('"alarm": {"widgets": [');
     for (const mod of ["thingstudio_gui", "tsgui_readout", "tsgui_bar", "tsgui_led", "tsgui_label", "tsgui_pagedots", "font_digits64", "font_body24", "font_body20"]) {
       expect(source).toContain(`import ${mod}\n`);
@@ -186,7 +188,8 @@ describe.skipIf(!MP || !existsSync(MP))("the compiled GUI flow on the MicroPytho
     const out = execFileSync(MP!, [join(dir, "driver.py")], { encoding: "utf8", timeout: 20000 });
     expect(out).toContain("TEMP 1 -10.5");
     expect(out).toContain("VISIBLE alarm 0");
-    expect(out).toContain(`FRAME ${frameBytes(320, 240, "gs4")}`);
+    // strips of bandRowsFor() rows; 240 rows of 320 px gs4 is 32 rows a strip, 7 full and one of 16
+    expect(out).toContain(`FRAME ${bandRowsFor(320, 240, "gs4") * frameBytes(320, 1, "gs4")}`);
     expect(out).toContain("DEBUG node=nav_dbg payload='climate'");
     expect(out).toMatch(/PAGE climate PUSHES [2-9]/);
     expect(out).not.toContain("NODE_ERROR");

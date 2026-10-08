@@ -23,6 +23,13 @@ level) shows the current figures.
 The Pico W's WiFi chip has its own processor and memory. On an ESP32 the whole WiFi stack runs on the main chip
 and uses its RAM. So a 264 KB Pico W leaves more for your flow than a 400 KB ESP32-C3.
 
+## Deploy failed with "MemoryError ... allocating 38400 bytes". Why, when there's more free memory than that?
+
+Free memory is in pieces. A big buffer needs one piece that size, and after a while an ESP32 may not have
+one. A 240x320 frame in 16 greys is 38,400 bytes. The [GUI nodes](nodes/gui.md) avoid this by drawing the
+screen in small strips. If your own `function` node builds a full frame, draw it in strips too, or restart
+the board before deploying.
+
 ## Which board should I use for a display and WiFi together?
 
 An ESP32 with external RAM (PSRAM), such as many ESP32-S3 boards. MicroPython puts its heap in the external RAM,

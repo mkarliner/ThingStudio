@@ -509,6 +509,10 @@ function expandFunctionBody(format: IndexedFrameFormat): string[] {
   ];
 }
 
+function indent4(line: string): string {
+  return `    ${line}`;
+}
+
 export const displaySpiNode: NodeDefinition = {
   type: "thingstudio/display_spi",
   kind: "sink",
@@ -692,27 +696,41 @@ export const displaySpiNode: NodeDefinition = {
       ? `    raise ValueError('display_spi: expected ${expectedBytes} bytes (${width}x${height} ${frameFormat}/framebuf.${FRAMEBUF_ATTR[frameFormat as IndexedFrameFormat]}, ${BITS_PER_PIXEL[frameFormat as IndexedFrameFormat]}bpp, ${strideBytes} bytes/row), got %d' % len(_buf))`
       : `    raise ValueError('display_spi: expected ${expectedBytes} bytes (${width}x${height} RGB565), got %d' % len(_buf))`;
 
+    // A whole frame, or (2026-10-08, the GUI's banded screens) a strip of whole rows with `msg['y']` its first
+    // row: a GUI screen never holds a full frame in RAM, so it sends strips. No `y`: a full frame, as before.
+    const rowBytes = isIndexed ? strideBytes! : width * 2;
+    const frameOrStrip = [
+      `_buf = msg.get('payload', b'')`,
+      `_y0 = msg.get('y')`,
+      `if _y0 is None:`,
+      `    if len(_buf) != ${expectedBytes}:`,
+      indent4(lengthCheck),
+      `    _y0 = 0`,
+      `    _rows = ${height}`,
+      `else:`,
+      `    _rows = len(_buf) // ${rowBytes}`,
+      `    if _rows < 1 or len(_buf) != _rows * ${rowBytes} or _y0 < 0 or _y0 + _rows > ${height}:`,
+      `        raise ValueError('display_spi: a strip must be whole rows of ${rowBytes} bytes inside the ${height}-row screen, got %d bytes at row %r' % (len(_buf), _y0))`,
+    ];
     const functionBody = isIndexed
       ? [
-          `_buf = msg.get('payload', b'')`,
-          `if len(_buf) != ${expectedBytes}:`,
-          lengthCheck,
+          ...frameOrStrip,
           // set_window once, then several write(None, ...) calls --
           // the same two primitives blit_buffer() itself calls, just
           // split apart. st7789py.py's own write() toggles cs_low()/
           // cs_high() around every call (confirmed by reading it
           // directly, this file's header), so each batch below is its
           // own complete, correctly-framed SPI transaction.
-          `${dispVar}.set_window(0, 0, ${width - 1}, ${height - 1})`,
+          `${dispVar}.set_window(0, _y0, ${width - 1}, _y0 + _rows - 1)`,
           `_row = 0`,
-          `while _row < ${height}:`,
-          `    _n = ${INDEXED_ROWS_PER_BATCH} if (${height} - _row) >= ${INDEXED_ROWS_PER_BATCH} else (${height} - _row)`,
+          `while _row < _rows:`,
+          `    _n = ${INDEXED_ROWS_PER_BATCH} if (_rows - _row) >= ${INDEXED_ROWS_PER_BATCH} else (_rows - _row)`,
           `    ${expandVar}(_buf, _row * ${strideBytes}, ${strideBytes}, ${scratchVar}, ${width}, _n, ${palVar})`,
           `    _cnt = ${width} * 2 * _n`,
           `    ${dispVar}.write(None, memoryview(${scratchVar})[:_cnt])`,
           `    _row += _n`,
         ].join("\n")
-      : [`_buf = msg.get('payload', b'')`, `if len(_buf) != ${expectedBytes}:`, lengthCheck, `${dispVar}.blit_buffer(_buf, 0, 0, ${width}, ${height})`].join("\n");
+      : [...frameOrStrip, `${dispVar}.blit_buffer(_buf, 0, _y0, ${width}, _rows)`].join("\n");
 
     return {
       imports,

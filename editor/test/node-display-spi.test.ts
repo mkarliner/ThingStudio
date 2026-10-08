@@ -119,7 +119,7 @@ function runSink(properties: Record<string, unknown>, byteLength: number): strin
  * never imports or defines those names; see fixtures/pymock/
  * micropython.py's own `viper` stub header for why real MicroPython
  * doesn't need this but plain CPython does. */
-function runIndexed(frameFormat: "gs4" | "gs2" | "mono", properties: Record<string, unknown>, payloadHex: string): string {
+function runIndexed(frameFormat: "gs4" | "gs2" | "mono", properties: Record<string, unknown>, payloadHex: string, y?: number): string {
   const result = displaySpiNode.codegenSink!(node({ ...properties, frameFormat }), ctx);
   const setupCode = (result.statements ?? []).map((s) => s.code).join("\n");
   const dispVarMatch = setupCode.match(/(\w+_disp) = ST7789\(/);
@@ -141,7 +141,7 @@ function runIndexed(frameFormat: "gs4" | "gs2" | "mono", properties: Record<stri
     indent(result.functionBody, 4),
     "",
     `_before = len(${dispVar}.spi.writes)`,
-    `msg = {'payload': bytes.fromhex('${payloadHex}'), 'topic': ''}`,
+    `msg = {'payload': bytes.fromhex('${payloadHex}'), 'topic': ''${y === undefined ? "" : `, 'y': ${y}`}}`,
     `asyncio.run(${result.functionName}(msg))`,
     `print("PAYLOAD_WRITES", " ".join(w.hex() for w in ${dispVar}.spi.writes[_before:]))`,
   ];
@@ -358,6 +358,30 @@ describe("thingstudio/display_spi node", () => {
       // 5 set_window writes (CASET cmd+data, RASET cmd+data, RAMWR cmd) + 1 data write.
       expect(writes.length).toBe(6);
       expect(writes[writes.length - 1]).toBe("0000fffff80007e0001fffe0");
+    });
+
+    it("writes a strip (msg['y']) to just its rows, as the GUI's banded screens send (2026-10-08)", () => {
+      // width=2, height=4, a 1-row strip at y=2: the window's RASET data names rows 2..2, and one data write.
+      const output = runIndexed("gs4", { sck: 12, mosi: 11, dc: 13, width: 2, height: 4, xstart: 0, ystart: 0 }, "45", 2);
+      const writes = output.match(/PAYLOAD_WRITES (.+)/)?.[1]?.trim().split(" ") ?? [];
+      expect(writes.length).toBe(6);
+      expect(writes[3]).toBe("00020002"); // RASET data: start row 2, end row 2
+      expect(writes[5]).toBe("001fffe0");
+    });
+
+    it("refuses a strip that isn't whole rows or runs off the screen", () => {
+      const props = { sck: 12, mosi: 11, dc: 13, width: 4, height: 4, xstart: 0, ystart: 0 }; // 2 bytes a row
+      const stderrOf = (hex: string, y: number): string => {
+        try {
+          runIndexed("gs4", props, hex, y);
+          return "";
+        } catch (err) {
+          return String((err as { stderr?: string }).stderr ?? "");
+        }
+      };
+      const msg = /display_spi: a strip must be whole rows of 2 bytes inside the 4-row screen/;
+      expect(stderrOf("000000", 0)).toMatch(msg); // 3 bytes: not whole rows
+      expect(stderrOf("00000000", 3)).toMatch(msg); // 2 rows from row 3: off the bottom
     });
 
     it("splits a taller gs4 frame into multiple row-batches (2 rows/transaction)", () => {

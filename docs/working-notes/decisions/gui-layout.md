@@ -104,3 +104,7 @@ vendor-whole / vendor-parts / write-our-own (`nano-gui-spike-briefing.md`).
   the framebuffer, none of which we use, and it doesn't clip to a widget's rect, which we need; the
   measuring is already in the editor. ~20 lines instead of ~320. Widgets: one library per type
   (`tsgui_label`, `tsgui_readout`, `tsgui_bar`, `tsgui_led`, `tsgui_pagedots`).
+- 2026-10-08: **the GUI always draws in strips** (`BandSurface`, ~5 KB each), never a full framebuffer. The
+  CYD couldn't allocate 38,400 contiguous bytes for a 240x320 gs4 frame on deploy despite enough free heap
+  in total (fragmentation). Strip messages carry `y`; `display_spi` accepts strips or whole frames.
+  `gui-layout-widget-system-scoping.md`, "banded rendering".

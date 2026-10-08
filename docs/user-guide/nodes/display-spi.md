@@ -56,6 +56,9 @@ The input is a raw RGB565-encoded buffer, exactly `width * height * 2` bytes —
 `framebuf.FrameBuffer` produces for an RGB565 surface. A wrong-length buffer raises a clear error rather
 than silently desyncing the panel.
 
+A message with a `y` key is a strip instead: whole rows, written starting at row `y`. The
+[gui screen](gui.md) node sends strips, so a large display never needs a full frame in memory.
+
 **Byte order: `framebuf.RGB565` and this node disagree, and you need to bridge that gap yourself.**
 MicroPython's `framebuf.RGB565` stores each pixel in CPU-native (little-endian on ESP32) byte order, but
 SPI TFT controllers including the ST7789 expect big-endian pixel bytes on the wire — this node forwards

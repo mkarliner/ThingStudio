@@ -5,8 +5,9 @@ pages are laid out by editing the flow file. The GUI view, where you lay them ou
 
 ## The nodes
 
-- **gui screen** — one per display. Sends a frame each time the screen changes. Wire it to a
-  [display spi](display-spi.md) node with the same width, height and frame format.
+- **gui screen** — one per display. Sends the screen each time it changes, in strips of about 5 KB, so
+  a whole frame never has to fit in memory at once. Wire it to a [display spi](display-spi.md) node with
+  the same width, height and frame format.
 - **gui readout** — shows `msg.payload` as a number with units. Set the lowest and highest value it will
   show, and how many decimals. Its space is sized for that range.
 - **gui label** — shows `msg.payload` as text.

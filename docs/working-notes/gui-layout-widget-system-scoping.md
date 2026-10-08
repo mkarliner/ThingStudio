@@ -392,6 +392,15 @@ framebuffer is 38.4KB; 128x64 mono is 1KB. CYD with PSRAM removes RAM as a const
 redraws need. Only possible if widgets draw through the surface API with a clip area and offset, never
 assuming a full framebuffer.
 
+**Built 2026-10-08, and the default, not just a Pico option.** The CYD (classic ESP32, no PSRAM) failed to
+allocate the 38,400-byte 240x320 gs4 frame on deploy: the heap had room in total but no contiguous block that
+big. `BandSurface` (`thingstudio_gui.py`) keeps one strip buffer (~5 KB, `bandRowsFor()` in `gui.ts`) and a
+y-offset `FrameBuffer` subclass, so widgets draw in screen coordinates unchanged. Each pass draws only the
+strips the dirty widgets touch; a full redraw sends every strip. `gui_screen` sends one message per strip
+(`payload` = strip bytes, `y` = first row); `display_spi` writes a message with `y` as a strip, one without
+as a full frame (old behaviour kept). `test_gui_bands.py` checks the strips are byte-identical to a full
+frame in gs4 and mono. Not done: `display_i2c` strips (SSD1306 frames are 1 KB, not needed yet).
+
 ## Pure Python vs. C (2026-10-06)
 
 The 2026-09-18 rejection of LVGL-style options implied "pure Python, stock firmware". Examined explicitly.
