@@ -75,6 +75,9 @@ while starting a flow, or an ESP32 reports too little memory left for WiFi.
 
 Deploy is off until the board is back, which can take several seconds while it restarts its saved flow.
 
+If Deploy says the board is **too full to receive the flow**, the flow already running is using the memory, and
+a restart just starts it again. Use **Tools → Remove flow…**, then **Reset board (hard)**, then deploy.
+
 Try the soft restart first after a `MemoryError`. When an ESP32 is short of memory for WiFi, only the hard reset
 helps: a soft restart doesn't give that memory back. The console says which one to use.
 
@@ -89,6 +92,13 @@ A flow that crashes the board as it starts would crash it again on every restart
 3. When it's done, click **Connect**.
 
 The flow on your canvas isn't affected.
+
+## MemoryError or a library that won't load
+
+On an ESP32 without external RAM, a flow can fail to load with `MemoryError` even though the **[memory]** line
+shows free RAM. The free RAM is in small pieces and the library needs one big piece. It is most likely after a
+display flow has run. Use **Tools → Reset board (hard)**, then deploy again. See the [FAQ](faq.md) for why an
+ESP32 has so little room. A board with external RAM (PSRAM) avoids it.
 
 ## Module missing on the board
 

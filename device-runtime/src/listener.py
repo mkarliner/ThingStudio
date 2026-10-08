@@ -154,7 +154,7 @@ F64_PREFIX = "F64:"
 _HEARTBEAT_PIN = 10
 _HEARTBEAT_PERIOD_MS = 200
 
-_RUNTIME_VERSION = {"major": 9, "minor": 1, "patch": 0}  # 9.1.0 2026-10-08: the WiFi watcher no longer starts the WiFi driver for a flow that doesn't use the network (it ate ESP-IDF memory, and failed noisily on a full CYD) -- minor: nothing generated depends on it; 9.0.0 2026-10-07: DEP_ACK per DEP_PUT piece (unpaced pieces overflowed a USB-UART board's receive buffer), RESTART; 8.0.0 2026-10-07: libraries sent in 1 KB pieces (DEP_PUT) plus DEP_COMMIT -- one big DEP_PUT failed with MemoryError on a fragmented ESP32 heap; 7.0.0 2026-10-07: flow dependencies (DEP_PUT, DEPLOY.dependencies, libraries in /lib instead of every board getting every library); 6.0.0 2026-09-26: vendored bme280_float.py and runtime.shared() (bme280/I2C flows use both, so an older board fails them); 5.1.0 2026-09-25: runtime.start_reason, ESP-IDF heap in HELLO/DEPLOY_ACK -- minor only: startup codegen reads start_reason with getattr, so its flows still run on 5.0.0; 5.0.0 same day: mqtt_as active(True) only when inactive (4.0.0 same day: vendored mqtt_as wifi_connect() guard -- MQTT codegen now joins WiFi first on ESP32 (3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS; 2.0.0 was 2026-09-23: EXEC, STOP_TO_PROMPT, safe mode; 1.0.0 was 2026-09-10: NODE_STATUS)
+_RUNTIME_VERSION = {"major": 9, "minor": 2, "patch": 0}  # 9.2.0 2026-10-08: a MemoryError receiving a message answers DEPLOY_ERROR instead of leaving the editor to time out -- minor: no codegen change; 9.1.0 2026-10-08: the WiFi watcher no longer starts the WiFi driver for a flow that doesn't use the network (it ate ESP-IDF memory, and failed noisily on a full CYD) -- minor: nothing generated depends on it; 9.0.0 2026-10-07: DEP_ACK per DEP_PUT piece (unpaced pieces overflowed a USB-UART board's receive buffer), RESTART; 8.0.0 2026-10-07: libraries sent in 1 KB pieces (DEP_PUT) plus DEP_COMMIT -- one big DEP_PUT failed with MemoryError on a fragmented ESP32 heap; 7.0.0 2026-10-07: flow dependencies (DEP_PUT, DEPLOY.dependencies, libraries in /lib instead of every board getting every library); 6.0.0 2026-09-26: vendored bme280_float.py and runtime.shared() (bme280/I2C flows use both, so an older board fails them); 5.1.0 2026-09-25: runtime.start_reason, ESP-IDF heap in HELLO/DEPLOY_ACK -- minor only: startup codegen reads start_reason with getattr, so its flows still run on 5.0.0; 5.0.0 same day: mqtt_as active(True) only when inactive (4.0.0 same day: vendored mqtt_as wifi_connect() guard -- MQTT codegen now joins WiFi first on ESP32 (3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS; 2.0.0 was 2026-09-23: EXEC, STOP_TO_PROMPT, safe mode; 1.0.0 was 2026-09-10: NODE_STATUS)
 # (runtime.report_status) is a hard dependency of wifi-status.ts's/mqtt-shared.ts's codegen now -- an editor
 # with this change targeting a pre-2026-09-10 runtime would crash on deploy (AttributeError: report_status),
 # not degrade gracefully. See CLAUDE.md's "Device-runtime version bump discipline" -- decideDeploy() only
@@ -533,6 +533,18 @@ def _note_unreadable(what):
     """Remembers that a line from the editor couldn't be read, for the next failed DEP_COMMIT."""
     global _last_decode_error
     _last_decode_error = str(what)[:200]
+
+
+def _report_receive_oom(e):
+    """A MemoryError while reading or decoding a message (9.2.0, 2026-10-08): almost always a DEPLOY, the one
+    big message, arriving while the running flow holds the memory (CYD: 9,169 bytes refused with a GUI flow
+    running). The message never reached _handle_deploy, so nothing answered it and the editor waited out its
+    30 s timeout. Answer with DEPLOY_ERROR instead; an editor not waiting for one just logs it."""
+    if not isinstance(e, MemoryError):
+        return
+    gc.collect()
+    _send_message_safe({"type": "DEPLOY_ERROR", "code": "MemoryError",
+                        "message": "no room to receive the flow; the running flow is using the memory"})
 
 
 def _handle_dep_put(msg):
@@ -968,6 +980,7 @@ async def _serve_lines(sreader, source, idle_timeout_s):
             print("LISTENER_ERR readline %r -- recovering, not crashing" % (e,))
             _note_unreadable(e)
             decoder.reset()
+            _report_receive_oom(e)
             await asyncio.sleep_ms(50)
             continue
 
@@ -1031,6 +1044,7 @@ async def _serve_lines(sreader, source, idle_timeout_s):
             _note_unreadable(e)
             decoder.reset()
             stall_pushes = 0
+            _report_receive_oom(e)
 
 
 async def _heartbeat():

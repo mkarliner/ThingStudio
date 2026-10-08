@@ -73,7 +73,7 @@ class ListenerProcess:
     itself is a long-running event loop -- this is the CPython-side
     equivalent of a WebSerial transport client's read loop)."""
 
-    def __init__(self, tmpdir, extra_env=None):
+    def __init__(self, tmpdir, extra_env=None, mp_args=()):
         self.tmpdir = tmpdir
         env = dict(os.environ)
         env["THINGSTUDIO_BOARD_SETTINGS_PATH"] = os.path.join(tmpdir, "_board.json")
@@ -88,7 +88,7 @@ class ListenerProcess:
         env["THINGSTUDIO_LIB_DIR"] = os.path.join(tmpdir, "lib")
         listener_path = os.path.join(SRC_DIR, "listener.py")
         self.proc = subprocess.Popen(
-            [MICROPYTHON_BIN, listener_path],
+            [MICROPYTHON_BIN, *mp_args, listener_path],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -160,7 +160,7 @@ def test_hello_sent_on_boot():
             line = listener.wait_for(lambda l: l.startswith(F64_PREFIX), description="a HELLO frame")
             msg = _decode_f64_line(line)
             assert msg["type"] == "HELLO"
-            assert msg["runtimeVersion"] == {"major": 9, "minor": 1, "patch": 0}
+            assert msg["runtimeVersion"] == {"major": 9, "minor": 2, "patch": 0}
             assert msg["dependencies"] == {}, msg["dependencies"]  # fresh board: no flow libraries yet
             assert isinstance(msg["freeRamBytes"], int) and msg["freeRamBytes"] > 0
             assert msg["freeIdfHeapBytes"] is None and msg["largestIdfHeapBlockBytes"] is None  # not an ESP32
@@ -193,6 +193,29 @@ def test_deploy_success_and_flow_runs():
             )
             msg = _decode_f64_line(line)
             assert msg["type"] == "DEPLOY_ACK"
+        finally:
+            listener.close()
+
+
+def test_deploy_too_big_for_memory_is_answered_not_timed_out():
+    # 9.2.0 (2026-10-08, CYD): a DEPLOY the board has no room to receive got no answer at all, so the editor
+    # waited out its 30 s timeout. Now it gets DEPLOY_ERROR MemoryError, and the listener keeps going.
+    with tempfile.TemporaryDirectory() as tmpdir:
+        small = _compile_flow(tmpdir, "flow_small", "print('SMALL_FLOW_RAN')\n")
+        # 200k: enough to boot the listener, not enough to take a 60 KB message on top (160k also works).
+        listener = ListenerProcess(tmpdir, mp_args=("-X", "heapsize=200k"))
+        try:
+            listener.wait_for(lambda l: l == "LISTENER_READY", description="LISTENER_READY")
+            listener.send_message({"type": "DEPLOY", "bytecode": small, "staticData": b"x" * 60000})
+            line = listener.wait_for(
+                lambda l: l.startswith(F64_PREFIX) and _decode_f64_line(l)["type"] == "DEPLOY_ERROR",
+                timeout=15,
+                description="DEPLOY_ERROR for a deploy too big to receive",
+            )
+            msg = _decode_f64_line(line)
+            assert msg["code"] == "MemoryError" and "no room" in msg["message"], msg
+            listener.send_message({"type": "DEPLOY", "bytecode": small, "staticData": b""})
+            listener.wait_for(lambda l: l == "SMALL_FLOW_RAN", description="a normal deploy afterwards")
         finally:
             listener.close()
 
@@ -344,7 +367,7 @@ def test_hello_request_resends_hello_no_side_effects():
             reply_line = listener.wait_for(lambda l: l.startswith(F64_PREFIX), description="HELLO_REQUEST's HELLO reply")
             msg = _decode_f64_line(reply_line)
             assert msg["type"] == "HELLO"
-            assert msg["runtimeVersion"] == {"major": 9, "minor": 1, "patch": 0}
+            assert msg["runtimeVersion"] == {"major": 9, "minor": 2, "patch": 0}
 
             # No side effects: a normal DEPLOY still works fine afterward.
             bytecode = _compile_flow(
@@ -1127,6 +1150,7 @@ TESTS = [
     test_flow_dependencies_end_to_end,
     test_flow_that_kills_the_board_while_starting_keeps_its_identity_after_reboot,
     test_soft_restart_stops_the_flow_and_ends_the_interpreter,
+    test_deploy_too_big_for_memory_is_answered_not_timed_out,
 ]
 
 

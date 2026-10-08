@@ -196,11 +196,11 @@ describe.skipIf(!MP || !existsSync(MP))("the compiled GUI flow on the MicroPytho
   });
 });
 
-describe("the example GUI flow in test-flows/", () => {
-  it("gui-hero-cyd.flow.json loads and compiles without warnings", async () => {
+describe.each(["gui-hero-cyd.flow.json", "gui-hero-cyd-dummy.flow.json"])("the example GUI flow test-flows/%s", (file) => {
+  it("loads and compiles without warnings", async () => {
     const { readFileSync } = await import("node:fs");
     const { parseFlowFile } = await import("../src/flow-file/flow-file.js");
-    const f = parseFlowFile(readFileSync(join(__dirname, "..", "..", "test-flows", "gui-hero-cyd.flow.json"), "utf8"));
+    const f = parseFlowFile(readFileSync(join(__dirname, "..", "..", "test-flows", file), "utf8"));
     const links = f.edges.map((e, i) => [i, e[0], e[1], e[2], e[3], "any"] as [number, string, number, string, number, string]);
     const r = compile({ nodes: f.nodes, links, configs: f.configs, screens: f.screens }, buildRegistry());
     expect(r.warnings.filter((w) => w.includes("widget") || w.includes("GUI"))).toEqual([]);
@@ -212,7 +212,7 @@ describe("the example GUI flow in test-flows/", () => {
     const { parseFlowFile } = await import("../src/flow-file/flow-file.js");
     const { socketForPayloadType } = await import("../src/app/rete/sockets.js");
     const { resolvePortType } = await import("../src/compiler/node-definition.js");
-    const f = parseFlowFile(readFileSync(join(__dirname, "..", "..", "test-flows", "gui-hero-cyd.flow.json"), "utf8"));
+    const f = parseFlowFile(readFileSync(join(__dirname, "..", "..", "test-flows", file), "utf8"));
     const reg = buildRegistry();
     const byId = new Map(f.nodes.map((n) => [n.id, n]));
     for (const [from, slot, to] of f.edges) {

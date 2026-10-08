@@ -37,3 +37,13 @@ export function lowMemoryWarningBeforeDeploy(
 export function looksLikeOutOfMemory(text: string | null | undefined): boolean {
   return !!text && /MemoryError|memory allocation failed/i.test(text);
 }
+
+/** The advice line after a failed deploy's DEPLOY_ERROR, or null when it isn't about memory. A board too full
+ * to even receive the flow (runtime 9.2.0) has the old flow holding the memory: a soft restart starts that
+ * same flow again, so the advice is to remove it first (CYD, 2026-10-08). */
+export function deployMemoryAdvice(code: string, message: string): string | null {
+  if (code === "MemoryError" && message.startsWith("no room to receive")) {
+    return "board too full to receive the flow. Tools → Remove flow…, then Reset board (hard), then deploy.";
+  }
+  return looksLikeOutOfMemory(`${code} ${message}`) ? `board out of memory. ${RESTART_HINT}` : null;
+}

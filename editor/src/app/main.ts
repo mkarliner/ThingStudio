@@ -150,7 +150,7 @@ import type { BoardSettingsResultMessage, HelloMessage, Message, NodeStatusMessa
 import { checkRuntimeBuild, decideDeploy } from "../protocol/version.js";
 import { explainDeployImportError, networkWarningBeforeDeploy } from "./import-error-help.js";
 import { editorVersionLabel, editorVersionLine } from "./editor-version.js";
-import { RESTART_HINT, looksLikeOutOfMemory, lowMemoryWarningBeforeDeploy } from "./memory-advice.js";
+import { RESTART_HINT, deployMemoryAdvice, looksLikeOutOfMemory, lowMemoryWarningBeforeDeploy } from "./memory-advice.js";
 import { dependencyHash, findImportedModules, librariesToSend, libraryMessages, resolveDependencies, type DependencyInfo } from "../compiler/flow-dependencies.js";
 import { ClassicPreset } from "rete";
 import { createThingstudioEditor, type ThingstudioEditor } from "./rete/editor-setup.js";
@@ -1228,7 +1228,7 @@ function cancelAllWaits(reason: string): void {
 // bump-discipline rule), so this is the level that actually stops an
 // unsafe DEPLOY rather than letting it crash on the device.
 // 2.0.0 (2026-09-23): EXEC, STOP_TO_PROMPT, safe mode. Must match listener.py's _RUNTIME_VERSION.
-const EDITOR_TARGET_VERSION: ProtocolVersion = { major: 9, minor: 1, patch: 0 }; // 9.1.0 2026-10-08: WiFi watcher leaves WiFi off unless wanted (minor, no codegen change); 9.0.0 2026-10-07: DEP_ACK per piece, so a USB-UART board isn't overrun; 8.0.0 2026-10-07: libraries sent in 1 KB pieces + DEP_COMMIT (a whole-library DEP_PUT hit MemoryError on a fragmented ESP32 heap); 7.0.0 2026-10-07: flow dependencies (DEP_PUT, DEPLOY.dependencies; libraries in /lib, installed per flow); 6.0.0 2026-09-26: bme280 driver on the board; 5.1.0 2026-09-25: startup reason (getattr, so 5.0.0 still runs it), ESP-IDF heap fields; 5.0.0 2026-09-25: mqtt_as active(True) guard; 4.0.0 2026-09-25: mqtt_as guard, ESP32 MQTT joins WiFi first; 3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS
+const EDITOR_TARGET_VERSION: ProtocolVersion = { major: 9, minor: 2, patch: 0 }; // 9.2.0 2026-10-08: DEPLOY_ERROR when the board has no room to receive a flow (minor, no codegen change); 9.1.0 2026-10-08: WiFi watcher leaves WiFi off unless wanted (minor, no codegen change); 9.0.0 2026-10-07: DEP_ACK per piece, so a USB-UART board isn't overrun; 8.0.0 2026-10-07: libraries sent in 1 KB pieces + DEP_COMMIT (a whole-library DEP_PUT hit MemoryError on a fragmented ESP32 heap); 7.0.0 2026-10-07: flow dependencies (DEP_PUT, DEPLOY.dependencies; libraries in /lib, installed per flow); 6.0.0 2026-09-26: bme280 driver on the board; 5.1.0 2026-09-25: startup reason (getattr, so 5.0.0 still runs it), ESP-IDF heap fields; 5.0.0 2026-09-25: mqtt_as active(True) guard; 4.0.0 2026-09-25: mqtt_as guard, ESP32 MQTT joins WiFi first; 3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS
 
 // This editor's own device-runtime/src git SHA, injected at build/dev-
 // server-start time by vite.config.ts's `define` (see that file,
@@ -2785,7 +2785,8 @@ el("btnDeploy").addEventListener("click", async () => {
         logLine(`[deploy failed] ${result.code}: ${result.message}`, "err");
         const importAdvice = result.code === "ImportError" ? explainDeployImportError(result.message, libraryModules) : null;
         if (importAdvice) logAdvice("[deploy failed]", importAdvice, "err");
-        if (looksLikeOutOfMemory(`${result.code} ${result.message}`)) logLine(`[deploy failed] board out of memory. ${RESTART_HINT}`, "err");
+        const memoryAdvice = deployMemoryAdvice(result.code, result.message);
+        if (memoryAdvice) logLine(`[deploy failed] ${memoryAdvice}`, "err");
         if (result.code === "MissingDependency") {
           // This editor's idea of the board's libraries was wrong (changed by another editor, or a
           // failed write). Forget it, so the next Deploy sends every library the flow needs.
