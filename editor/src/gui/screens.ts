@@ -117,7 +117,8 @@ export function isWidgetType(type: string): type is WidgetNodeType {
 
 /** How errors name a node: its `name` property, else its type and short id. */
 export function nodeLabel(node: GraphNode): string {
-  const n = typeof node.properties.name === "string" ? node.properties.name.trim() : "";
+  const pick = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+  const n = pick(node.properties.label) || pick(node.properties.name);
   return n ? `"${n}"` : `${node.type.replace("thingstudio/", "")} ${node.id.slice(0, 6)}`;
 }
 

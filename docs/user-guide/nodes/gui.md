@@ -28,7 +28,7 @@ time is dimmed (or underlined, on a black-and-white display), so an old reading 
 
 A button's **mode** says what a tap does.
 
-- **momentary** — sends its value: `{topic: <button's name>, payload: true}`.
+- **momentary** — sends its value: `{topic: <the button's topic>, payload: <its sends value>}`. The **caption** is only the text drawn on the button; **sends** is what leaves the output.
 - **toggle** — sends the opposite of its state. It shows its *on* and *off* text.
 - **navigate** — changes page: `next`, `prev`, `back`, `home` or a page name. It needs no wires.
 

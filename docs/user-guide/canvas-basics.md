@@ -41,6 +41,12 @@ An input can take any number of wires — connect several outputs to the same in
 
 Select a node to see its property panel on the right — every configurable field for that node type. Properties are read when you Compile → Deploy; nothing needs a redeploy just to preview a change.
 
+### Giving a node a label
+
+Every node has a **label** field at the top of its property panel. Type something (say `Fire!`) and the node
+shows it on the canvas instead of its kind (`gui_button`). Blank puts the kind back, except on GUI nodes, which then show their caption or name. Messages and errors that name
+the node use the label too.
+
 ## Presets
 
 Some node types (currently `display_spi` and `display_i2c` — the ones complex enough to be worth naming a

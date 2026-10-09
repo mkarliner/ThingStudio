@@ -939,7 +939,8 @@ setGuiNodeLister(() =>
   reteEditor.getNodes().flatMap((n) => {
     const t = (n as unknown as { nodeType?: string }).nodeType ?? "";
     if (!t.startsWith("thingstudio/gui_")) return [];
-    const name = (n as unknown as { properties?: { name?: unknown } }).properties?.name;
+    const pr = (n as unknown as { properties?: { name?: unknown; label?: unknown } }).properties;
+    const name = typeof pr?.label === "string" && pr.label.trim() ? pr.label : pr?.name;
     return [{ id: n.id, type: t, name: typeof name === "string" && name.trim() ? name.trim() : `${t.replace("thingstudio/", "")} ${n.id.slice(0, 6)}` }];
   }),
 );

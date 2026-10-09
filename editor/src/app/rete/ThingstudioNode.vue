@@ -63,7 +63,7 @@
       :title="isInject ? 'fire this inject node' : undefined"
       @pointerdown="onIconPointerDown"
     >{{ icon }}</div>
-    <div class="ts-label" data-testid="title">{{ data.label }}</div>
+    <div class="ts-label" data-testid="title">{{ title }}</div>
 
     <Ref
       v-for="(entry, i) in inputs"
@@ -98,7 +98,7 @@ import { CustomNode, InjectNode, type AnyThingstudioNode } from "./nodes";
 import { NODE_PALETTE, DEFAULT_KIND_STYLE, type NodeKind, type KindStyle } from "./palette";
 import type { NodeStatusState } from "../../protocol/messages";
 import { isNodeInActivePane, nodePaneVersion } from "./panes-store";
-import { fireInjectNode } from "./store";
+import { fireInjectNode, propertyVersion } from "./store";
 
 // `data` is the actual node instance (rete-vue-plugin hands the render
 // context's `payload` straight through as this prop) so `.kind`/
@@ -139,6 +139,17 @@ const palette = computed<KindStyle>(() => {
   return NODE_PALETTE[props.data.kind as NodeKind] ?? DEFAULT_KIND_STYLE;
 });
 const icon = computed(() => palette.value.icon);
+
+// A node's own title (the property panel's "label" field) wins over its kind's name. GUI nodes with no label
+// fall back to what they show or are called (a button's caption, then its name), so several buttons on the
+// canvas read differently without any setup.
+const title = computed(() => {
+  void propertyVersion.value; // properties change off-Vue
+  const pr = (props.data as unknown as { properties?: Record<string, unknown>; kind?: string }).properties ?? {};
+  const pick = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+  const gui = String((props.data as unknown as { kind?: string }).kind ?? "").startsWith("gui_");
+  return pick(pr.label) || (gui ? pick(pr.text) || pick(pr.name) : "") || props.data.label;
+});
 
 // Inject's two-clickable-targets fix (2026-09-13, Mike: "Inject should
 // have two clickables, the arrow which triggers an inject message and

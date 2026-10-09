@@ -129,8 +129,10 @@
     <template v-if="node">
       <h3>
         <span class="kind-dot" :style="{ background: kindStyle.color }" />
-        {{ node.label }} <span class="node-id">#{{ node.id.slice(0, 6) }}</span>
+        {{ displayTitle }} <span class="node-id">#{{ node.id.slice(0, 6) }}</span>
       </h3>
+      <!-- Every node can carry its own title for the canvas (a "label" property); blank shows the kind. -->
+      <label>label <input type="text" v-model="node.properties.label" :placeholder="node.label" @input="touch" /></label>
 
       <template v-if="node.kind === 'inject'">
         <label>payload type
@@ -253,7 +255,7 @@
       </template>
 
       <template v-else-if="node.kind === 'gui_button'">
-        <label>name (the topic of its output) <input type="text" v-model="node.properties.name" @input="touch" /></label>
+        <label>topic <input type="text" v-model="node.properties.name" @input="touch" /></label>
         <label>mode
           <select v-model="node.properties.mode" @change="touch">
             <option value="momentary">momentary: sends a value</option>
@@ -277,8 +279,8 @@
           </label>
         </template>
         <template v-if="node.properties.mode === 'momentary'">
-          <label>text <input type="text" v-model="node.properties.text" @input="touch" /></label>
-          <label>sends <input type="text" v-model="node.properties.value" :placeholder="buttonDefault(node.properties.valueType, 0)" @input="touch" /></label>
+          <label>caption (shown on the button) <input type="text" v-model="node.properties.text" @input="touch" /></label>
+          <label>sends (the payload) <input type="text" v-model="node.properties.value" :placeholder="buttonDefault(node.properties.valueType, 0)" @input="touch" /></label>
           <label>room for (characters, if no text) <input type="number" min="1" v-model.number="node.properties.maxChars" @input="touch" /></label>
         </template>
         <template v-else-if="node.properties.mode === 'toggle'">
@@ -297,8 +299,8 @@
           owns it: it shows <code>--</code> until the first report, a tap shows the requested state hollow until the input
           confirms it, and with no answer it goes back and flags the failure. Unwired, it keeps its own state. Its output
           sends the new state; wire it to whatever switches the device.</p>
-        <p v-else-if="node.properties.mode === 'momentary'" class="hint">Sends its value when tapped. A msg.payload on its input
-          replaces its text.</p>
+        <p v-else-if="node.properties.mode === 'momentary'" class="hint">Sends "sends" when tapped (the payload; the topic is above). The caption is only what is drawn on the button;
+          a msg.payload on its input replaces the caption.</p>
         <p v-else class="hint">Acts on its own screen; needs no wires.</p>
       </template>
 
@@ -847,6 +849,15 @@ const customDescriptor = computed(() => (node.value instanceof CustomNode ? node
 // regardless. Reads/writes the exact same object node.properties already
 // is, just via a loosely-typed local name.
 const customProperties = computed<Record<string, unknown>>(() => (node.value?.properties ?? {}) as Record<string, unknown>);
+
+// The node's own title if it has one (the "label" field), else its kind.
+const displayTitle = computed(() => {
+  const l = node.value?.properties?.label;
+  if (typeof l === "string" && l.trim()) return l.trim();
+  const p = node.value?.properties as Record<string, unknown> | undefined;
+  const pick = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+  return (node.value?.kind?.startsWith("gui_") ? pick(p?.text) || pick(p?.name) : "") || node.value?.label || "";
+});
 
 const kindStyle = computed<KindStyle>(() => {
   if (!node.value) return DEFAULT_KIND_STYLE;
