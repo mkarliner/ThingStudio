@@ -124,6 +124,14 @@
           :label="f.label"
           @update:model-value="(name) => { draft[f.name] = name; }"
         />
+        <!-- A reference to another config (a touch panel's I2C bus): this same widget, nested. -->
+        <ConfigRefField
+          v-else-if="f.kind === 'configRef'"
+          :config-type="f.configType!"
+          :model-value="(draft[f.name] as string) || undefined"
+          :label="f.label"
+          @update:model-value="(id) => { draft[f.name] = id; }"
+        />
         <label v-else class="field-row">
           <span class="field-label">{{ f.label }}</span>
           <select v-if="f.kind === 'select'" v-model="draft[f.name] as any">

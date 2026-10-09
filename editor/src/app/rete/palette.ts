@@ -113,7 +113,6 @@ export type NodeKind =
   | "gui_bar"
   | "gui_led"
   | "gui_button"
-  | "gui_touch"
   | "gui_navigator"
   | "gui_modal";
 
@@ -214,7 +213,6 @@ export const NODE_PALETTE: Record<NodeKind, KindStyle> = {
   gui_readout: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "#", label: "gui readout", group: "gui", priority: 40 },
   gui_label: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "T", label: "gui label", group: "gui", priority: 41 },
   gui_bar: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "▬", label: "gui bar", group: "gui", priority: 42 },
-  gui_touch: { color: "#3f5c6e", bgcolor: "#1f303a", icon: "☝", label: "gui touch", group: "gui", priority: 21 },
   gui_button: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "▭", label: "gui button", group: "gui", priority: 44 },
   gui_led: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "●", label: "gui light", group: "gui", priority: 43 },
 };

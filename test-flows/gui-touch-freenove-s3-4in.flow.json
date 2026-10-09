@@ -72,29 +72,6 @@
       }
     },
     {
-      "id": "n09-next",
-      "type": "thingstudio/function",
-      "properties": {
-        "code": "# A button 'down' turns the page; 'up' is ignored.\nif msg['payload'] != 'down':\n    return None\nmsg['payload'] = 'next'\nreturn msg\n",
-        "outputCount": 1
-      }
-    },
-    {
-      "id": "n10-nav",
-      "type": "thingstudio/gui_navigator",
-      "properties": {
-        "name": "nav",
-        "screen": ""
-      }
-    },
-    {
-      "id": "n11-navdbg",
-      "type": "thingstudio/debug",
-      "properties": {
-        "fullMessage": false
-      }
-    },
-    {
       "id": "n12-screen",
       "type": "thingstudio/gui_screen",
       "properties": {
@@ -103,7 +80,8 @@
         "height": 480,
         "frameFormat": "rgb565",
         "minInterval": 200,
-        "wrap": true
+        "wrap": true,
+        "touchPanelConfigId": "cfg-touch-panel"
       }
     },
     {
@@ -131,34 +109,13 @@
       }
     },
     {
-      "id": "n21-touch",
-      "type": "thingstudio/touch_i2c",
-      "properties": {
-        "i2cConfigId": "cfg-touch-i2c",
-        "address": 56,
-        "rstPin": 18,
-        "pollMs": 20,
-        "width": 320,
-        "height": 480,
-        "swapXY": false,
-        "flipX": false,
-        "flipY": false
-      }
-    },
-    {
-      "id": "n22-gtouch",
-      "type": "thingstudio/gui_touch",
-      "properties": {
-        "name": "touch",
-        "screen": ""
-      }
-    },
-    {
       "id": "n23-btn1",
       "type": "thingstudio/gui_button",
       "properties": {
-        "name": "next",
+        "name": "next page",
+        "mode": "navigate",
         "text": "Next page",
+        "target": "next",
         "maxChars": 8
       }
     },
@@ -166,8 +123,64 @@
       "id": "n24-btn2",
       "type": "thingstudio/gui_button",
       "properties": {
-        "name": "next",
+        "name": "next page",
+        "mode": "navigate",
         "text": "Next page",
+        "target": "next",
+        "maxChars": 8
+      }
+    },
+    {
+      "id": "n30-wifi",
+      "type": "thingstudio/wifi_status",
+      "properties": {
+        "pollMs": 5000,
+        "wifiConfigId": "cfg-wifi"
+      }
+    },
+    {
+      "id": "n31-plugstate",
+      "type": "thingstudio/mqtt_subscribe",
+      "properties": {
+        "topic": "stat/plug/POWER",
+        "qos": 0,
+        "brokerConfigId": "cfg-mqtt"
+      }
+    },
+    {
+      "id": "n32-plugcmd",
+      "type": "thingstudio/mqtt_publish",
+      "properties": {
+        "topic": "cmnd/plug/POWER",
+        "retain": false,
+        "qos": 0,
+        "brokerConfigId": "cfg-mqtt"
+      }
+    },
+    {
+      "id": "n33-plug",
+      "type": "thingstudio/gui_button",
+      "properties": {
+        "name": "plug",
+        "mode": "toggle",
+        "valueType": "string",
+        "onValue": "ON",
+        "offValue": "OFF",
+        "onText": "ON",
+        "offText": "OFF",
+        "fireOn": "release",
+        "pendingTimeout": 5,
+        "maxChars": 8
+      }
+    },
+    {
+      "id": "n34-btn3",
+      "type": "thingstudio/gui_button",
+      "properties": {
+        "name": "next page",
+        "mode": "navigate",
+        "text": "Next page",
+        "target": "next",
         "maxChars": 8
       }
     }
@@ -210,33 +223,21 @@
       0
     ],
     [
-      "n09-next",
-      0,
-      "n10-nav",
-      0
-    ],
-    [
-      "n10-nav",
-      0,
-      "n11-navdbg",
-      0
-    ],
-    [
       "n12-screen",
       0,
       "n13-display",
       0
     ],
     [
-      "n21-touch",
+      "n31-plugstate",
       0,
-      "n22-gtouch",
+      "n33-plug",
       0
     ],
     [
-      "n22-gtouch",
+      "n33-plug",
       0,
-      "n09-next",
+      "n32-plugcmd",
       0
     ]
   ],
@@ -283,24 +284,6 @@
         200
       ]
     },
-    "n09-next": {
-      "pos": [
-        80,
-        320
-      ]
-    },
-    "n10-nav": {
-      "pos": [
-        300,
-        320
-      ]
-    },
-    "n11-navdbg": {
-      "pos": [
-        520,
-        320
-      ]
-    },
     "n12-screen": {
       "pos": [
         740,
@@ -311,18 +294,6 @@
       "pos": [
         80,
         440
-      ]
-    },
-    "n21-touch": {
-      "pos": [
-        740,
-        200
-      ]
-    },
-    "n22-gtouch": {
-      "pos": [
-        80,
-        560
       ]
     },
     "n23-btn1": {
@@ -336,6 +307,36 @@
         520,
         440
       ]
+    },
+    "n30-wifi": {
+      "pos": [
+        80,
+        560
+      ]
+    },
+    "n31-plugstate": {
+      "pos": [
+        300,
+        560
+      ]
+    },
+    "n32-plugcmd": {
+      "pos": [
+        740,
+        560
+      ]
+    },
+    "n33-plug": {
+      "pos": [
+        520,
+        560
+      ]
+    },
+    "n34-btn3": {
+      "pos": [
+        740,
+        440
+      ]
     }
   },
   "configs": [
@@ -347,6 +348,37 @@
         "scl": 15,
         "sda": 16,
         "freq": 400000
+      }
+    },
+    {
+      "id": "cfg-touch-panel",
+      "type": "thingstudio/config/touch-panel",
+      "properties": {
+        "controller": "ft6336u",
+        "i2cConfigId": "cfg-touch-i2c",
+        "address": "0x38",
+        "rstPin": 18,
+        "pollMs": 20,
+        "width": 320,
+        "height": 480,
+        "swapXY": false,
+        "flipX": false,
+        "flipY": false
+      }
+    },
+    {
+      "id": "cfg-wifi",
+      "type": "thingstudio/config/wifi",
+      "properties": {
+        "credentialName": "mihome",
+        "security": "password"
+      }
+    },
+    {
+      "id": "cfg-mqtt",
+      "type": "thingstudio/config/mqtt-broker",
+      "properties": {
+        "credentialName": "lan-mqtt-broker"
       }
     }
   ],
@@ -364,15 +396,15 @@
     "n05-press": "pane-1",
     "n06-pbar": "pane-1",
     "n07-alive": "pane-1",
-    "n09-next": "pane-1",
-    "n10-nav": "pane-1",
-    "n11-navdbg": "pane-1",
     "n12-screen": "pane-1",
     "n13-display": "pane-1",
-    "n21-touch": "pane-1",
-    "n22-gtouch": "pane-1",
     "n23-btn1": "pane-1",
-    "n24-btn2": "pane-1"
+    "n24-btn2": "pane-1",
+    "n30-wifi": "pane-1",
+    "n31-plugstate": "pane-1",
+    "n32-plugcmd": "pane-1",
+    "n33-plug": "pane-1",
+    "n34-btn3": "pane-1"
   },
   "screens": {
     "n12-screen": {
@@ -500,6 +532,41 @@
               {
                 "kind": "widget",
                 "node": "n24-btn2",
+                "font": "font_body20",
+                "alignSelf": "center"
+              },
+              {
+                "kind": "pagedots",
+                "alignSelf": "center"
+              }
+            ]
+          }
+        },
+        {
+          "name": "plug",
+          "root": {
+            "kind": "column",
+            "gap": 6,
+            "padding": 4,
+            "children": [
+              {
+                "kind": "text",
+                "text": "Plug",
+                "font": "font_body20"
+              },
+              {
+                "kind": "widget",
+                "node": "n33-plug",
+                "font": "font_body24",
+                "alignSelf": "center"
+              },
+              {
+                "kind": "spacer",
+                "grow": 1
+              },
+              {
+                "kind": "widget",
+                "node": "n34-btn3",
                 "font": "font_body20",
                 "alignSelf": "center"
               },

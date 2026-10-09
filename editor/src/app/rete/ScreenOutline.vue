@@ -70,7 +70,7 @@ const nameOf = (id: string): string => nodes.value.find((n) => n.id === id)?.nam
 const unplaced = computed(() => {
   const placed = new Set<string>();
   for (const s of Object.values(screens.value)) for (const id of placedWidgets(s)) placed.add(id);
-  return nodes.value.filter((n) => n.type !== "thingstudio/gui_screen" && n.type !== GUI_MODAL && n.type !== "thingstudio/gui_navigator" && n.type !== "thingstudio/gui_touch" && !placed.has(n.id));
+  return nodes.value.filter((n) => n.type !== "thingstudio/gui_screen" && n.type !== GUI_MODAL && n.type !== "thingstudio/gui_navigator" && !placed.has(n.id));
 });
 const unplacedModals = computed(() => {
   const have = new Set((spec.value.modals ?? []).map((m) => m.node));

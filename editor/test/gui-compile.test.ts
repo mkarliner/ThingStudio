@@ -194,22 +194,10 @@ describe.skipIf(!MP || !existsSync(MP))("the compiled GUI flow on the MicroPytho
     expect(out).toMatch(/PAGE climate PUSHES [2-9]/);
     expect(out).not.toContain("NODE_ERROR");
   });
-  it("a touch on a button presses it and comes out of gui_touch as the button's name", () => {
-    const g = heroGraph({
-      screen: { pages: [{ name: "home", root: { kind: "column", padding: 6, children: [{ kind: "widget", node: "light", font: "font_body20" }] } }] },
-    });
-    const drop = ["temp", "press", "pbar", "alive", "alarm", "fn_temp", "fn_press", "nav_in", "nav", "nav_dbg"];
-    g.nodes = g.nodes.filter((n) => !drop.includes(n.id));
-    g.links = [[9, "screen", 0, "frame_fn", 0, "bytes"]];
-    g.nodes.push(
-      node("light", "gui_button", { name: "light", text: "Light" }),
-      node("fn_touch", "function", { code: "msg['topic'] = 'down'\nmsg['payload'] = {'x': 12, 'y': 12}\nreturn msg" }),
-      node("gt", "gui_touch", { name: "touch" }),
-      node("out", "debug"),
-    );
-    g.links.push([30, "start", 0, "fn_touch", 0, "any"], [31, "fn_touch", 0, "gt", 0, "any"], [32, "gt", 0, "out", 0, "any"]);
+  it("a tap on a toggle asks for the opposite state out of its output, goes pending, and settles when the flow confirms; a navigate button changes page", () => {
+    const g = buttonFlow({ mode: "toggle", valueType: "string", onValue: "ON", offValue: "OFF" }, { wiredIn: true, wiredOut: true, navigate: true });
     const { source } = compile(g, buildRegistry());
-    const dir = mkdtempSync(join(tmpdir(), "ts-gui-touch-"));
+    const dir = mkdtempSync(join(tmpdir(), "ts-gui-btn-"));
     const lib = join(dir, "lib");
     mkdirSync(lib);
     copyFileSync(join(RUNTIME, "vendor", "thingstudio_gui", "gui.py"), join(lib, "thingstudio_gui.py"));
@@ -226,12 +214,25 @@ describe.skipIf(!MP || !existsSync(MP))("the compiled GUI flow on the MicroPytho
         `sys.path.insert(0, ${JSON.stringify(dir)})`,
         "import asyncio",
         "import runtime",
+        "def mid(g, wid):",
+        "    r = g.widgets[wid].placements[0][2]",
+        "    return r[0] + r[2] // 2, r[1] + r[3] // 2",
         "async def main():",
         "    import flow",
         "    await asyncio.sleep_ms(300)",
         "    g = flow._gui",
-        "    print('HELD', g.surfaces['screen'].held, g.widgets['light'].pressed)",
-        "    print('UP', g.touch('screen', 'up', 200, 200))",
+        "    print('START', g.state('light'), g.value('light'))",  // the flow said OFF
+        "    x, y = mid(g, 'light')",
+        "    g.tap('screen', 'down', x, y)",
+        "    g.tap('screen', 'up', x, y)",
+        "    await asyncio.sleep_ms(300)",
+        "    print('PENDING', g.state('light'), g.value('light'))",
+        "    g.set_value('light', 'ON')",
+        "    print('CONFIRMED', g.state('light'), g.value('light'))",
+        "    x, y = mid(g, 'go')",
+        "    g.tap('screen', 'down', x, y)",
+        "    g.tap('screen', 'up', x, y)",
+        "    print('PAGE', g.surfaces['screen'].page)",
         "    raise SystemExit",
         "try:",
         "    asyncio.run(main())",
@@ -240,46 +241,129 @@ describe.skipIf(!MP || !existsSync(MP))("the compiled GUI flow on the MicroPytho
       ].join("\n"),
     );
     const out = execFileSync(MP!, [join(dir, "driver.py")], { encoding: "utf8", timeout: 20000 });
-    expect(out).toContain("DEBUG node=out payload='down'");
-    expect(out).toContain("HELD light True");
-    expect(out).toContain("UP ('light', 'up')");
+    expect(out).toContain("START 1 False");
+    expect(out).toContain("DEBUG node=out payload='ON'");
+    expect(out).toContain("PENDING 4 True");
+    expect(out).toContain("CONFIRMED 1 True");
+    expect(out).toContain("PAGE second");
     expect(out).not.toContain("NODE_ERROR");
   });
 });
 
-describe("touch buttons", () => {
-  const touchGraph = (): GraphData => {
-    const g = heroGraph({
+/** One screen with a button "light" (properties given) and, optionally, a navigate button "go" to page "second".
+ * wiredIn: a startup node feeds the button 'OFF'. wiredOut: its output goes to a debug node "out". */
+function buttonFlow(props: Record<string, unknown>, o: { wiredIn?: boolean; wiredOut?: boolean; navigate?: boolean; panel?: boolean } = {}): GraphData {
+  const children: unknown[] = [{ kind: "widget", node: "light", font: "font_body20" }];
+  if (o.navigate) children.push({ kind: "widget", node: "go", font: "font_body20" });
+  const g: GraphData = {
+    nodes: [
+      node("screen", "gui_screen", { name: "tft", width: 320, height: 240, frameFormat: "gs4", minInterval: 50, ...(o.panel ? { touchPanelConfigId: "panel" } : {}) }),
+      node("frame_fn", "function", { code: "return None" }),
+      node("light", "gui_button", { name: "light", text: "Light", ...props }),
+    ],
+    links: [[1, "screen", 0, "frame_fn", 0, "bytes"]],
+    screens: {
       screen: {
-        pages: [{ name: "home", root: { kind: "column", padding: 6, children: [{ kind: "widget", node: "light", font: "font_body20" }, { kind: "widget", node: "state", font: "font_body16" }] } }],
+        pages: [
+          { name: "home", root: { kind: "column", padding: 6, gap: 6, children } as never },
+          { name: "second", root: { kind: "column", children: [{ kind: "text", text: "Two", font: "font_body16" }] } },
+        ],
       },
-    });
-    g.nodes = g.nodes.filter((n) => !["temp", "press", "pbar", "alive", "alarm"].includes(n.id));
-    g.links = g.links.filter((l) => !["temp", "press", "pbar", "alive", "alarm"].includes(l[3]));
-    g.nodes.push(
-      node("light", "gui_button", { name: "light", text: "Light" }),
-      node("state", "gui_label", { name: "state" }),
-      node("bus", "config/i2c-bus", {}),
-      node("touch", "touch_i2c", { i2cConfigId: "bus", rstPin: 18 }),
-      node("gt", "gui_touch", { name: "touch" }),
-      node("press_dbg", "debug"),
-    );
-    g.links.push([20, "touch", 0, "gt", 0, "any"], [21, "gt", 0, "press_dbg", 0, "any"], [22, "gt", 0, "state", 0, "any"]);
-    return g;
+    },
   };
+  if (o.wiredIn) {
+    g.nodes.push(node("start", "startup", { payloadType: "string", payloadValue: "OFF" }));
+    g.links.push([2, "start", 0, "light", 0, "any"]);
+  }
+  if (o.wiredOut) {
+    g.nodes.push(node("out", "debug"));
+    g.links.push([3, "light", 0, "out", 0, "any"]);
+  }
+  if (o.navigate) g.nodes.push(node("go", "gui_button", { name: "go", mode: "navigate", text: "Go", target: "second" }));
+  if (o.panel) {
+    g.configs = [
+      { id: "bus", type: "thingstudio/config/i2c-bus", properties: { bus: 0, scl: 15, sda: 16, freq: 400000 } },
+      { id: "panel", type: "thingstudio/config/touch-panel", properties: { controller: "ft6336u", i2cConfigId: "bus", address: "0x38", rstPin: 18, pollMs: 20, width: 320, height: 480 } },
+    ] as never;
+  }
+  return g;
+}
 
-  it("registers a button as touchable, lays it out at its natural size, and routes touches through gui_touch", () => {
-    const g = touchGraph();
-    g.configs = [{ id: "bus", type: "thingstudio/config/i2c-bus", properties: { bus: 0, scl: 15, sda: 16, freq: 400000 } }] as never;
-    g.nodes = g.nodes.filter((n) => n.id !== "bus");
-    const { source } = compile(g, buildRegistry());
-    expect(source).toContain('_gui.widget("light", tsgui_button.make(font_body20, "Light"), 0, True)');
-    expect(source).toContain("import tsgui_button\n");
+/** Warnings other than the unrelated "no board known" pin note. */
+const ownWarnings = (w: string[]): string[] => w.filter((x) => !x.startsWith("No board or processor known"));
+
+describe("touch buttons", () => {
+  it("registers a flow-controlled toggle: touchable, its on/off values, and a two-faced node (input call + output coroutine)", () => {
+    const { source, warnings } = compile(buttonFlow({ mode: "toggle", valueType: "string", onValue: "ON", offValue: "OFF" }, { wiredIn: true, wiredOut: true, panel: true }), buildRegistry());
+    expect(ownWarnings(warnings)).toEqual([]);
+    expect(source).toContain('_gui.widget("light", tsgui_button.make(font_body20, None, "ON", "OFF"), 0, True)');
+    expect(source).toContain('_gui.button("light", "toggle", controlled=True, send=None, on_val="ON", off_val="OFF", on_press=False, target="", pending_ms=5000, initial=False)');
+    expect(source).toContain('_btn = await _gui.event("light")');
+    expect(source).toContain("msg = {'payload': _btn, 'topic': \"light\"}");
+    expect(source).toMatch(/_gui\.set_value\("light", msg\.get\('payload'\)\)/);
+    expect(source).not.toContain("_gui.touch(");
+  });
+
+  it("an unwired toggle keeps its own state, and a momentary one sends true by default", () => {
+    const own = compile(buttonFlow({ mode: "toggle", initial: true }, { wiredOut: true, panel: true }), buildRegistry()).source;
+    expect(own).toContain('_gui.button("light", "toggle", controlled=False, send=None, on_val=True, off_val=False, on_press=False, target="", pending_ms=5000, initial=True)');
+    const mom = compile(buttonFlow({}, { wiredOut: true, panel: true }), buildRegistry()).source;
+    expect(mom).toContain('_gui.button("light", "momentary", controlled=False, send=True,');
+    const num = compile(buttonFlow({ valueType: "number", value: "3", fireOn: "press" }, { wiredOut: true, panel: true }), buildRegistry()).source;
+    expect(num).toContain("send=3, on_val=1");
+    expect(num).toContain("on_press=True");
+  });
+
+  it("warns about a toggle or momentary button whose output goes nowhere, but not a navigate button", () => {
+    for (const mode of ["toggle", "momentary"]) {
+      const w = compile(buttonFlow({ mode }, { panel: true }), buildRegistry()).warnings;
+      expect(w.some((x) => x.includes('button "light"') && x.includes("nowhere")), mode).toBe(true);
+    }
+    expect(ownWarnings(compile(buttonFlow({ mode: "navigate", target: "next" }, { panel: true }), buildRegistry()).warnings)).toEqual([]);
+  });
+
+  it("checks a navigate target against the screen's pages, and wants a target at all", () => {
+    expect(() => compile(buttonFlow({ mode: "navigate", target: "nowhere" }), buildRegistry())).toThrow(/"nowhere" isn't next, prev, back, home or a page on its screen/);
+    expect(() => compile(buttonFlow({ mode: "navigate", target: "second" }), buildRegistry())).not.toThrow();
+    expect(() => compile(buttonFlow({ mode: "navigate", target: "" }), buildRegistry())).toThrow(/choose where it goes/);
+  });
+
+  it("rejects bad button settings with the button named", () => {
+    expect(() => compile(buttonFlow({ mode: "wobble" }, { wiredOut: true }), buildRegistry())).toThrow(/mode must be momentary, toggle or navigate/);
+    expect(() => compile(buttonFlow({ mode: "toggle", pendingTimeout: 2 }, { wiredOut: true }), buildRegistry())).toThrow(/wait for confirmation must be 5 s or more/);
+    expect(() => compile(buttonFlow({ valueType: "number", value: "x" }, { wiredOut: true }), buildRegistry())).toThrow(/not a valid number/);
+  });
+
+  it("the screen polls its touch panel itself: driver, status on the screen node, no touch wire", () => {
+    const { source } = compile(buttonFlow({ mode: "toggle" }, { wiredOut: true, panel: true }), buildRegistry());
     expect(source).toContain("import ft6336u\n");
-    expect(source).toMatch(/_gui\.touch\("screen", _kind, _pt\['x'\], _pt\['y'\]\)/);
-    expect(source).toContain("{'light': 'light'}".replace("'light': 'light'", '"light": "light"'));
-    // a value widget stays non-touchable
-    expect(source).toMatch(/_gui\.widget\("state", [^\n]*, 0\)\n/);
+    expect(source).toMatch(/runtime\.spawn\(_gui\.poll_touch\("screen", lambda: ft6336u\.FT6336U\(_i2c_bus_0, 56, machine\.Pin\(18, machine\.Pin\.OUT\), 320, 480, False, False, False\), 20, lambda st, text: runtime\.report_status\("screen", st, text\), "FT6336U at 0x38 on I2C bus 0"\), "screen"\)/);
+    expect(source).toContain("_i2c_bus_0 = runtime.shared('i2c', 0,");
+  });
+
+  it("warns when a screen has buttons but no touch panel", () => {
+    const w = compile(buttonFlow({ mode: "toggle" }, { wiredOut: true }), buildRegistry()).warnings;
+    expect(w.some((x) => x.includes('GUI screen "tft"') && x.includes("no touch panel"))).toBe(true);
+    expect(compile(buttonFlow({ mode: "toggle" }, { wiredOut: true, panel: true }), buildRegistry()).warnings.some((x) => x.includes("no touch panel"))).toBe(false);
+  });
+
+  it("a panel used by a gui screen and a touch node is refused, naming both", () => {
+    const g = buttonFlow({ mode: "toggle" }, { wiredOut: true, panel: true });
+    g.nodes.push(node("raw", "touch_i2c", { touchPanelConfigId: "panel" }), node("raw_dbg", "debug"));
+    g.links.push([40, "raw", 0, "raw_dbg", 0, "any"]);
+    expect(() => compile(g, buildRegistry())).toThrow(/both use the same touch panel/);
+    expect(() => compile(g, buildRegistry())).toThrow(/"tft"/);
+  });
+
+  it("a modal's output sends how it closed; the screen's modal is watched from import", () => {
+    const g = heroGraph();
+    g.nodes.push(node("closed_dbg", "debug"));
+    g.links.push([50, "alarm", 0, "closed_dbg", 0, "any"]);
+    const { source, warnings } = compile(g, buildRegistry());
+    expect(warnings).toEqual([]);
+    expect(source).toContain('_gui.watch_modal("screen", "alarm")');
+    expect(source).toContain('_reason = await _gui.modal_closed("screen", "alarm")');
+    expect(source).toContain("msg = {'payload': _reason, 'topic': \"alarm\"}");
   });
 });
 
@@ -305,7 +389,12 @@ describe.each(["gui-hero-cyd.flow.json", "gui-hero-cyd-dummy.flow.json", "gui-he
     const { parseFlowFile } = await import("../src/flow-file/flow-file.js");
     const f = parseFlowFile(readFileSync(join(__dirname, "..", "..", "test-flows", file), "utf8"));
     const links = f.edges.map((e, i) => [i, e[0], e[1], e[2], e[3], "any"] as [number, string, number, string, number, string]);
-    const r = compile({ nodes: f.nodes, links, configs: f.configs, screens: f.screens }, buildRegistry());
+    // Credentials are resolved by the editor from the backend at load; stand-ins here.
+    const configs = f.configs.map((c) =>
+      c.type === "thingstudio/config/mqtt-broker" ? { ...c, properties: { ...c.properties, broker: "broker.test", port: 1883 } }
+      : c.type === "thingstudio/config/wifi" ? { ...c, properties: { ...c.properties, ssid: "net", password: "pw" } }
+      : c);
+    const r = compile({ nodes: f.nodes, links, configs, screens: f.screens }, buildRegistry());
     expect(r.warnings.filter((w) => w.includes("widget") || w.includes("GUI"))).toEqual([]);
     expect(r.source).toContain("_gui.add_surface");
   });

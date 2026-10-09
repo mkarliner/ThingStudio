@@ -102,7 +102,6 @@ export type ScreensSection = Readonly<Record<string, ScreenSpec>>;
 export const GUI_SCREEN = "thingstudio/gui_screen";
 export const GUI_MODAL = "thingstudio/gui_modal";
 export const GUI_BUTTON = "thingstudio/gui_button";
-export const GUI_TOUCH = "thingstudio/gui_touch";
 export const WIDGET_TYPES = {
   "thingstudio/gui_label": "label",
   "thingstudio/gui_readout": "readout",
@@ -306,8 +305,19 @@ export function compileScreens(
           }
           case "button": {
             const font = el.font ?? "font_body16";
-            const text = typeof p.text === "string" && p.text !== "" ? p.text : undefined;
             const maxChars = el.maxChars ?? num(p.maxChars, 8);
+            if (p.mode === "toggle") {
+              // A toggle shows its on or off text (or "--" while unknown): room for the widest of them.
+              const onText = typeof p.onText === "string" && p.onText !== "" ? p.onText : "ON";
+              const offText = typeof p.offText === "string" && p.offText !== "" ? p.offText : "OFF";
+              if (!fontOk(font, `${onText}${offText}--`, `widget ${label} ${where}`)) return null;
+              const sizes = [onText, offText, "--"].map((t) => buttonNatural({ font, text: t, max_chars: maxChars }));
+              natural = sizes.reduce((a, b) => (b.width > a.width ? b : a));
+              draw = `tsgui_button.make(${font}, None, ${pyStr(onText)}, ${pyStr(offText)})`;
+              imports.add(font);
+              break;
+            }
+            const text = typeof p.text === "string" && p.text !== "" ? p.text : undefined;
             // A bound value replaces the text, so the font must have "--" and (for a bound-only button) the room.
             if (!fontOk(font, text ?? "--", `widget ${label} ${where}`)) return null;
             natural = buttonNatural({ font, text, max_chars: maxChars });

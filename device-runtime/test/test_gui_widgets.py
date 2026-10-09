@@ -224,8 +224,27 @@ def test_a_button_looks_different_held_down_and_shows_a_value():
     assert [a.fb.pixel(i, 16) for i in range(rect[2])] != [c.fb.pixel(i, 16) for i in range(rect[2])]
 
 
+def test_a_toggle_shows_on_off_and_its_unknown_pending_and_failed_looks_differ_and_stay_inside():
+    f = _font("font_body16")
+    b = button.make(f, None, "ON", "OFF")
+    rect = (4, 4) + button.natural(f, "OFF")
+    for fmt, size in FORMATS:
+        looks = {}
+        for name, value, state in (("on", True, gui.KNOWN), ("off", False, gui.KNOWN), ("unknown", None, gui.UNKNOWN),
+                                   ("pending", True, gui.PENDING), ("failed", False, gui.FAILED), ("held", True, gui.PRESSED)):
+            s = _surface(fmt, size)
+            b(s, rect, value, state)
+            assert _pixels_outside(s, rect) == 0, (name, "drew outside its rect")
+            looks[name] = [s.fb.pixel(i, j) for j in range(H) for i in range(W)]
+        names = list(looks)
+        for i in range(len(names)):
+            for j in range(i + 1, len(names)):
+                assert looks[names[i]] != looks[names[j]], (names[i], names[j], "look the same")
+
+
 minitest.run(
     [
+        test_a_toggle_shows_on_off_and_its_unknown_pending_and_failed_looks_differ_and_stay_inside,
         test_natural_sizes_match_the_editor,
         test_every_widget_stays_inside_its_rect_in_every_state_and_format,
         test_readout_states_look_different,

@@ -83,7 +83,10 @@ export interface ConfigFieldDescriptor {
   /** Must match the key this field is stored under in a config's own `properties`. */
   name: string;
   label: string;
-  kind: "text" | "password" | "number" | "select" | "credential" | "boolean";
+  kind: "text" | "password" | "number" | "select" | "credential" | "boolean" | "configRef";
+  /** Only meaningful when `kind` is "configRef" -- the config type this field points at (another config's id),
+   * edited with a nested ConfigRefField. First user: a touch panel's I2C bus. */
+  configType?: string;
   /** Only meaningful when `kind` is "select" -- the fixed set of allowed values. */
   options?: { value: string; label: string }[];
   /** Only meaningful when `kind` is "credential" -- which credential-store
@@ -184,6 +187,33 @@ export const CONFIG_TYPES: Record<string, ConfigTypeDescriptor> = {
       const pins = p.scl !== null && p.scl !== undefined && p.sda !== null && p.sda !== undefined ? `SCL ${String(p.scl)}, SDA ${String(p.sda)}` : "pins not set";
       return `bus ${String(p.bus ?? 0)}: ${pins}`;
     },
+  },
+  // Touch panel (2026-10-09, button rework): the controller, its I2C bus and the panel's geometry, set once. A gui
+  // screen names one and polls it itself; a touch_i2c node can name one for raw {x, y}. Using one panel from two
+  // places is a compile error (node-library/touch-panel-shared.ts).
+  "thingstudio/config/touch-panel": {
+    type: "thingstudio/config/touch-panel",
+    label: "Touch panel",
+    fields: [
+      {
+        name: "controller",
+        label: "controller",
+        kind: "select",
+        options: [{ value: "ft6336u", label: "FT6336U (Freenove ESP32 displays)" }],
+        help: "Other controllers (GT911, CST820) aren't supported yet.",
+      },
+      { name: "i2cConfigId", label: "I2C bus", kind: "configRef", configType: "thingstudio/config/i2c-bus" },
+      { name: "address", label: "address", kind: "text", help: "7-bit, e.g. 0x38." },
+      { name: "rstPin", label: "reset pin", kind: "text", help: "Blank if the panel has none." },
+      { name: "pollMs", label: "poll every (ms)", kind: "number" },
+      { name: "width", label: "panel width", kind: "number" },
+      { name: "height", label: "panel height", kind: "number", help: "The panel's own size. If the display is rotated, tick swap/flip until a touch lands where you pressed." },
+      { name: "swapXY", label: "swap x and y", kind: "boolean" },
+      { name: "flipX", label: "flip x", kind: "boolean" },
+      { name: "flipY", label: "flip y", kind: "boolean" },
+    ],
+    defaults: { controller: "ft6336u", i2cConfigId: "", address: "0x38", rstPin: "", pollMs: 20, width: 320, height: 480, swapXY: false, flipX: false, flipY: false },
+    summarize: (p) => `${String(p.controller ?? "ft6336u").toUpperCase()} ${String(p.width ?? "?")}x${String(p.height ?? "?")}`,
   },
   "thingstudio/config/mqtt-broker": {
     type: "thingstudio/config/mqtt-broker",

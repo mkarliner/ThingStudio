@@ -212,6 +212,12 @@
         </label>
         <label>fastest redraw (ms) <input type="number" min="0" v-model.number="node.properties.minInterval" @input="touch" /></label>
         <label><input type="checkbox" v-model="node.properties.wrap" @change="touch" /> next/prev wrap round</label>
+        <ConfigRefField
+          config-type="thingstudio/config/touch-panel"
+          label="touch panel (blank: no touch)"
+          :model-value="node.properties.touchPanelConfigId || undefined"
+          @update:model-value="(id) => setConfigId('touchPanelConfigId', id)"
+        />
         <p class="hint">Sends a frame each time the screen changes. Wire it to a display node with the same size and
           frame format.</p>
         <ScreenOutline :screen-id="node.id" />
@@ -247,18 +253,53 @@
       </template>
 
       <template v-else-if="node.kind === 'gui_button'">
-        <label>name (the topic of its events) <input type="text" v-model="node.properties.name" @input="touch" /></label>
-        <label>text <input type="text" v-model="node.properties.text" @input="touch" /></label>
-        <label>room for (characters, if no text) <input type="number" min="1" v-model.number="node.properties.maxChars" @input="touch" /></label>
-        <p class="hint">A touch button. A msg.payload replaces its text (send "ON"/"OFF" from a toggle). Its presses come
-          out of the gui touch node as msg.topic = this name, msg.payload = down or up.</p>
-      </template>
-
-      <template v-else-if="node.kind === 'gui_touch'">
-        <label>name <input type="text" v-model="node.properties.name" @input="touch" /></label>
-        <label>screen <input type="text" v-model="node.properties.screen" placeholder="only needed with two screens" @input="touch" /></label>
-        <p class="hint">Wire a touch node in. A finger landing on a button on the visible page sends the button's name
-          with payload <code>down</code>; lifting sends <code>up</code>. Touches on anything else send nothing.</p>
+        <label>name (the topic of its output) <input type="text" v-model="node.properties.name" @input="touch" /></label>
+        <label>mode
+          <select v-model="node.properties.mode" @change="touch">
+            <option value="momentary">momentary: sends a value</option>
+            <option value="toggle">toggle: sends the opposite of its state</option>
+            <option value="navigate">navigate: changes page</option>
+          </select>
+        </label>
+        <template v-if="node.properties.mode !== 'navigate'">
+          <label>value type
+            <select v-model="node.properties.valueType" @change="touch">
+              <option value="bool">true / false</option>
+              <option value="string">text</option>
+              <option value="number">number</option>
+            </select>
+          </label>
+          <label>send on
+            <select v-model="node.properties.fireOn" @change="touch">
+              <option value="release">release (inside the button)</option>
+              <option value="press">press</option>
+            </select>
+          </label>
+        </template>
+        <template v-if="node.properties.mode === 'momentary'">
+          <label>text <input type="text" v-model="node.properties.text" @input="touch" /></label>
+          <label>sends <input type="text" v-model="node.properties.value" @input="touch" /></label>
+          <label>room for (characters, if no text) <input type="number" min="1" v-model.number="node.properties.maxChars" @input="touch" /></label>
+        </template>
+        <template v-else-if="node.properties.mode === 'toggle'">
+          <label>on sends <input type="text" v-model="node.properties.onValue" @input="touch" /></label>
+          <label>off sends <input type="text" v-model="node.properties.offValue" @input="touch" /></label>
+          <label>on shows <input type="text" v-model="node.properties.onText" @input="touch" /></label>
+          <label>off shows <input type="text" v-model="node.properties.offText" @input="touch" /></label>
+          <label><input type="checkbox" v-model="node.properties.initial" @change="touch" /> starts on (when nothing is wired in)</label>
+          <label>wait for confirmation (s, 5 or more) <input type="number" min="5" v-model.number="node.properties.pendingTimeout" @input="touch" /></label>
+        </template>
+        <template v-else>
+          <label>text <input type="text" v-model="node.properties.text" @input="touch" /></label>
+          <label>goes to <input type="text" v-model="node.properties.target" placeholder="next, prev, back, home or a page name" @input="touch" /></label>
+        </template>
+        <p v-if="node.properties.mode === 'toggle'" class="hint">Wire its input to the real state (a plug's MQTT status) and the flow
+          owns it: it shows <code>--</code> until the first report, a tap shows the requested state hollow until the input
+          confirms it, and with no answer it goes back and flags the failure. Unwired, it keeps its own state. Its output
+          sends the new state; wire it to whatever switches the device.</p>
+        <p v-else-if="node.properties.mode === 'momentary'" class="hint">Sends its value when tapped. A msg.payload on its input
+          replaces its text.</p>
+        <p v-else class="hint">Acts on its own screen; needs no wires.</p>
       </template>
 
       <template v-else-if="node.kind === 'gui_navigator'">
@@ -272,7 +313,8 @@
         <label>screen <input type="text" v-model="node.properties.screen" placeholder="only needed with two screens" @input="touch" /></label>
         <label>priority <input type="number" v-model.number="node.properties.priority" @input="touch" /></label>
         <label>close after (s, 0 = never) <input type="number" min="0" v-model.number="node.properties.timeout" @input="touch" /></label>
-        <p class="hint">Opens with msg.payload as its content; a payload of None closes it.</p>
+        <p class="hint">Opens with msg.payload as its content; a payload of None closes it. The output sends how it closed:
+          <code>ack</code>, <code>timeout</code> or <code>closed</code>.</p>
       </template>
 
       <template v-else-if="node.kind === 'timer'">
@@ -308,28 +350,13 @@
 
       <template v-else-if="node.kind === 'touch_i2c'">
         <ConfigRefField
-          config-type="thingstudio/config/i2c-bus"
-          :model-value="node.properties.i2cConfigId || undefined"
-          @update:model-value="(id) => setConfigId('i2cConfigId', id)"
+          config-type="thingstudio/config/touch-panel"
+          :model-value="node.properties.touchPanelConfigId || undefined"
+          @update:model-value="(id) => setConfigId('touchPanelConfigId', id)"
         />
-        <label>reset pin (blank = none)
-          <input v-model="node.properties.rstPin" placeholder="e.g. 18" @input="touch" />
-        </label>
-        <label>poll every (ms)
-          <input type="number" min="5" v-model.number="node.properties.pollMs" @input="touch" />
-        </label>
-        <label>panel width
-          <input type="number" min="1" v-model.number="node.properties.width" @input="touch" />
-        </label>
-        <label>panel height
-          <input type="number" min="1" v-model.number="node.properties.height" @input="touch" />
-        </label>
-        <label><input type="checkbox" v-model="node.properties.swapXY" @change="touch" /> swap x and y</label>
-        <label><input type="checkbox" v-model="node.properties.flipX" @change="touch" /> flip x</label>
-        <label><input type="checkbox" v-model="node.properties.flipY" @change="touch" /> flip y</label>
-        <p class="hint">Sends {x, y} in msg.payload with topic <code>down</code> when a finger lands and
-          <code>up</code> when it lifts. Wire it to a gui screen. Width and height are the panel's own size;
-          if a display is rotated, tick swap/flip until a touch lands where you pressed.</p>
+        <p class="hint">Raw touch input, for flows that don't use the GUI. Sends {x, y} in msg.payload with topic
+          <code>down</code> when a finger lands and <code>up</code> when it lifts. A gui screen reads its panel
+          itself, so don't use this node with one, and one panel can't feed both.</p>
       </template>
 
       <template v-else-if="node.kind === 'i2c'">

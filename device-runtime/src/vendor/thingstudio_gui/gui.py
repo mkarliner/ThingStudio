@@ -19,6 +19,13 @@
 # draw routines reached through a lookup (the `draw` callable registered per widget), never assuming a
 # full-frame RGB565 buffer.
 #
+# Buttons (the controller half): GUI.button() gives a touchable widget a behaviour -- momentary, toggle or navigate --
+# and GUI.tap() turns a finger event into it. A button's output is an event queue read with `await gui.event(id)`;
+# the node's output wire is fed by a coroutine doing exactly that. With its input wired a toggle is *controlled*: the
+# flow owns its state, it starts unknown, a tap shows PENDING at the requested state, and a set_value() settles it;
+# no answer within pending_ms reverts it and draws it FAILED for a moment (and reports it). Unwired it keeps its own
+# state. The touch panel is polled here too (poll_touch), so no wire carries touches.
+#
 # Faults: a draw routine that raises is reported against its widget (NODE_ERROR through `on_error`), its rect
 # is crossed out, and every other widget and surface carries on. Unknown widget ids, pages, modals and
 # navigation commands raise ValueError naming them, which generated code turns into NODE_ERROR.
@@ -43,7 +50,13 @@ KNOWN = 1
 STALE = 2
 PRESS_MIN_MS = 150  # a button is drawn pressed for at least this long, however short the tap
 PRESSED = 3  # what a touchable widget's draw routine is given as `state` while a finger holds it (never stored)
-STATE_NAMES = ("unknown", "known", "stale")
+PENDING = 4  # a controlled button asked for a value and is waiting for the flow to confirm it (stored)
+FAILED = 5  # draw routines only: the request wasn't confirmed in time; shown for FAIL_SHOW_MS
+FAIL_SHOW_MS = 1500
+PENDING_MS = 5000  # default time a controlled button waits for confirmation
+EVENT_QUEUE_MAX = 16
+STATE_NAMES = ("unknown", "known", "stale", "pressed", "pending")
+MODES = ("momentary", "toggle", "navigate")
 
 try:
     import framebuf
@@ -72,10 +85,37 @@ NAV_COMMANDS = ("next", "prev", "back", "home")
 CLOSE_REASONS = ("ack", "timeout", "closed")
 
 
+class NoConfirmation(Exception):
+    """A controlled button's request wasn't confirmed in time (reported through GUI.on_error)."""
+
+
+def _asyncio():
+    try:
+        import asyncio
+    except ImportError:
+        import uasyncio as asyncio
+    return asyncio
+
+
 class _Widget:
-    __slots__ = ("id", "draw", "stale_after_ms", "value", "state", "at", "placements", "touchable", "pressed", "down_at", "release_at")
+    __slots__ = ("id", "draw", "stale_after_ms", "value", "state", "at", "placements", "touchable", "pressed", "down_at", "release_at",
+                 "mode", "controlled", "send", "on_val", "off_val", "on_press", "target", "pending_ms",
+                 "confirmed", "pending_at", "fail_until", "events", "evt")
 
     def __init__(self, wid, draw, stale_after_ms, touchable=False):
+        self.mode = None  # set by GUI.button(): "momentary", "toggle" or "navigate"
+        self.controlled = False
+        self.send = None
+        self.on_val = True
+        self.off_val = False
+        self.on_press = False
+        self.target = None
+        self.pending_ms = PENDING_MS
+        self.confirmed = None  # a controlled toggle's last confirmed value (None: unknown)
+        self.pending_at = None
+        self.fail_until = None
+        self.events = []
+        self.evt = None
         self.touchable = touchable
         self.pressed = False
         self.down_at = 0
@@ -222,7 +262,7 @@ class FrameSurface(Surface):
         w = gui.widgets[wid]
         x, y, rw, rh = rect
         try:
-            w.draw(self, rect, w.value, PRESSED if w.pressed else w.state)
+            w.draw(self, rect, w.value, PRESSED if w.pressed else (FAILED if w.fail_until is not None else w.state))
         except Exception as e:  # noqa: BLE001 -- one widget's bug must not blank the screen
             fb.fill_rect(x, y, rw, rh, self.background)
             fb.rect(x, y, rw, rh, self.fg)
@@ -376,6 +416,7 @@ class GUI:
         self.surfaces = {}
         self.on_error = on_error
         self.on_modal_close = None  # callback(surface_name, modal_name, reason)
+        self._modal_watch = {}  # (surface name, modal name) -> [reasons, Event or None]: the modal node's output
         # callback(widget_id, value, state_name) on every value or state change, on or off screen: a feed of
         # the whole model for a remote view that does its own paging (e.g. one retained MQTT topic per widget).
         self.on_value = None
@@ -388,6 +429,32 @@ class GUI:
         stale_after_ms 0: never stale. touchable: a button -- touch() can press it, and its draw routine is
         given state PRESSED (3) while it is held."""
         self.widgets[wid] = _Widget(wid, draw, stale_after_ms, touchable)
+
+    def button(self, wid, mode, controlled=False, send=None, on_val=True, off_val=False, on_press=False, target=None,
+               pending_ms=PENDING_MS, initial=False):
+        """Gives touchable widget `wid` its behaviour. mode: "momentary" (sends `send`), "toggle" (sends the
+        opposite of its state: on_val / off_val) or "navigate" (acts on its own screen: `target` is next, prev,
+        back, home or a page name). Fires on release inside the button, or on press if on_press. controlled: its
+        input is wired, so the flow owns a toggle's state (starts unknown, tap -> pending, timeout after
+        pending_ms). Unwired, a toggle keeps its own state, starting at `initial`."""
+        w = self.widgets.get(wid)
+        if w is None or not w.touchable:
+            raise ValueError("%r isn't a button" % (wid,))
+        if mode not in MODES:
+            raise ValueError("button mode must be one of %s, not %r" % (", ".join(MODES), mode))
+        w.mode = mode
+        w.controlled = controlled
+        w.send = send
+        w.on_val = on_val
+        w.off_val = off_val
+        w.on_press = on_press
+        w.target = target
+        w.pending_ms = pending_ms
+        if mode == "toggle" and not controlled:
+            w.value = bool(initial)
+            w.confirmed = w.value
+            w.state = KNOWN
+            w.at = _ticks_ms()
 
     def add_surface(self, surface):
         if surface.name in self.surfaces:
@@ -411,6 +478,13 @@ class GUI:
         w = self.widgets.get(wid)
         if w is None:
             raise ValueError("unknown widget %r" % (wid,))
+        if w.mode == "toggle":
+            # The flow's word on a toggle: its on/off payloads map to True/False, anything else is unknown. It
+            # also settles a pending tap -- whether it agrees with the request or not, the flow's value wins.
+            value = True if value == w.on_val else (False if value == w.off_val else None)
+            w.confirmed = value
+            w.pending_at = None
+            w.fail_until = None
         w.value = value
         w.state = UNKNOWN if value is None else KNOWN
         w.at = _ticks_ms() if now is None else now
@@ -480,6 +554,130 @@ class GUI:
             w.pressed = False
             self._mark(w)
             s.last_push = None
+
+    def tap(self, surface_name, kind, x, y, now=None):
+        """touch() plus what the button does with it: fires its action on release inside it (or on press, for an
+        on_press button). A release outside the button, or after the page changed under the finger, fires
+        nothing. Returns what touch() returns."""
+        s = self._surface(surface_name)
+        now = _ticks_ms() if now is None else now
+        inside = False
+        if kind == "up" and s.held is not None:
+            for wid, rect in s.visible_widgets():
+                if wid == s.held:
+                    inside = rect[0] <= x < rect[0] + rect[2] and rect[1] <= y < rect[1] + rect[3]
+        hit = self.touch(surface_name, kind, x, y, now)
+        if hit is None:
+            return None
+        w = self.widgets[hit[0]]
+        if w.mode is not None and ((hit[1] == "down" and w.on_press) or (hit[1] == "up" and inside and not w.on_press)):
+            try:
+                self._activate(w, s, now)
+            except Exception as e:  # noqa: BLE001 -- a bad navigation target must not stop touch handling
+                self._error(w.id, e)
+        return hit
+
+    def release_all(self, surface_name, now=None):
+        """Lets go of a held button without firing it: the finger is gone and nobody knows where it lifted (a lost
+        touch panel). Returns True if something was held."""
+        s = self._surface(surface_name)
+        if s.held is None:
+            return False
+        self._release(s, _ticks_ms() if now is None else now)
+        return True
+
+    def _activate(self, w, s, now):
+        if w.mode == "navigate":
+            self.navigate(s.name, w.target)
+        elif w.mode == "momentary":
+            self._emit(w, w.send)
+        elif w.state == PENDING:
+            return  # a toggle waiting for the flow: further taps are ignored
+        elif w.controlled:
+            # Unknown counts as off, so the first tap of an unreported toggle asks for on.
+            req = True if w.confirmed is None else (not w.confirmed)
+            w.value = req
+            w.state = PENDING
+            w.pending_at = now
+            w.fail_until = None
+            self._mark(w)
+            self._notify(w)
+            self._emit(w, w.on_val if req else w.off_val)
+        else:
+            w.value = not w.value
+            w.confirmed = w.value
+            w.at = now
+            self._mark(w)
+            self._notify(w)
+            self._emit(w, w.on_val if w.value else w.off_val)
+
+    def _emit(self, w, payload):
+        if len(w.events) >= EVENT_QUEUE_MAX:
+            self._error(w.id, OverflowError("button events aren't being consumed; dropped one"))
+            return
+        w.events.append(payload)
+        if w.evt is not None:
+            w.evt.set()
+
+    async def event(self, wid):
+        """Waits for the next thing button `wid` sends and returns its payload. One consumer per button: the
+        coroutine behind the button node's output."""
+        w = self.widgets.get(wid)
+        if w is None:
+            raise ValueError("unknown widget %r" % (wid,))
+        while not w.events:
+            if w.evt is None:
+                w.evt = _asyncio().Event()
+            await w.evt.wait()
+            w.evt.clear()
+        return w.events.pop(0)
+
+    async def poll_touch(self, surface_name, make_dev, poll_ms=20, status=None, where="touch panel"):
+        """Polls a touch panel for the life of the flow and feeds tap() with its down/up events. `make_dev()`
+        builds the driver (an object whose read() returns None or (x, y)); it is retried every poll while the
+        panel is missing. `status(state, text)` gets 'connected', 'disconnected' or 'error' when that changes.
+        A panel lost mid-press lets go of the button without firing it."""
+        asyncio = _asyncio()
+        sleep_ms = getattr(asyncio, "sleep_ms", None)
+        dev = None
+        last = None
+        st = None
+        while True:
+            pt = None
+            try:
+                if dev is None:
+                    dev = make_dev()
+                pt = dev.read()
+            except OSError:
+                dev = None
+                new = ("disconnected", "no reply from " + where)
+            except Exception as e:  # noqa: BLE001 -- a broken driver is reported, then retried
+                dev = None
+                new = ("error", str(e))
+            else:
+                new = ("connected", where)
+            if new != st:
+                st = new
+                if status is not None:
+                    try:
+                        status(new[0], new[1])
+                    except Exception as e:  # noqa: BLE001
+                        self._error("touch panel", e)
+            if new[0] != "connected":
+                if last is not None:
+                    last = None
+                    self.release_all(surface_name)
+            elif pt is not None:
+                if last is None:
+                    self.tap(surface_name, "down", pt[0], pt[1])
+                last = pt
+            elif last is not None:
+                self.tap(surface_name, "up", last[0], last[1])
+                last = None
+            if sleep_ms is not None:
+                await sleep_ms(poll_ms)
+            else:
+                await asyncio.sleep(poll_ms / 1000)
 
     # -- model: navigation ------------------------------------------------------------------------------
 
@@ -582,7 +780,30 @@ class GUI:
         s.full = True
         self._report_close(s, name, reason)
 
+    def watch_modal(self, surface_name, modal):
+        """Starts collecting how modal `modal` closes ('ack', 'timeout' or 'closed') for modal_closed(). Needs no
+        surface yet, so generated code can call it in any order at import."""
+        self._modal_watch.setdefault((surface_name, modal), [[], None])
+
+    async def modal_closed(self, surface_name, modal):
+        """Waits for the next close of a watched modal and returns the reason: the modal node's output."""
+        w = self._modal_watch.setdefault((surface_name, modal), [[], None])
+        while not w[0]:
+            if w[1] is None:
+                w[1] = _asyncio().Event()
+            await w[1].wait()
+            w[1].clear()
+        return w[0].pop(0)
+
     def _report_close(self, s, name, reason):
+        w = self._modal_watch.get((s.name, name))
+        if w is not None:
+            if len(w[0]) >= EVENT_QUEUE_MAX:
+                self._error(name, OverflowError("modal close reasons aren't being consumed; dropped one"))
+            else:
+                w[0].append(reason)
+                if w[1] is not None:
+                    w[1].set()
         if self.on_modal_close is not None:
             self.on_modal_close(s.name, name, reason)
 
@@ -602,6 +823,21 @@ class GUI:
             if w.release_at is not None and _ticks_diff(now, w.release_at) >= 0:
                 w.release_at = None
                 w.pressed = False
+                self._mark(w)
+                for s, _p, _r in w.placements:
+                    s.last_push = None
+            if w.state == PENDING and _ticks_diff(now, w.pending_at) >= w.pending_ms:
+                # No confirmation: back to what the flow last said, shown failed for a moment, and reported.
+                w.pending_at = None
+                w.value = w.confirmed
+                w.state = UNKNOWN if w.confirmed is None else KNOWN
+                w.at = now
+                w.fail_until = now + FAIL_SHOW_MS
+                self._mark(w)
+                self._notify(w)
+                self._error(w.id, NoConfirmation("no confirmation within %d s" % (w.pending_ms // 1000)))
+            if w.fail_until is not None and _ticks_diff(now, w.fail_until) >= 0:
+                w.fail_until = None
                 self._mark(w)
                 for s, _p, _r in w.placements:
                     s.last_push = None

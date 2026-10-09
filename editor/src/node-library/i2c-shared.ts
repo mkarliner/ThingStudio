@@ -23,7 +23,11 @@ import { checkI2c, checkPin } from "../definitions/pin-check.js";
 export const I2C_BUS_CONFIG_TYPE = "thingstudio/config/i2c-bus";
 
 /** Node types that reference an I2C bus config through `i2cConfigId`. Add new I2C nodes here. */
-export const I2C_NODE_TYPES = ["thingstudio/display_i2c", "thingstudio/bme280", "thingstudio/i2c", "thingstudio/touch_i2c"];
+export const I2C_NODE_TYPES = ["thingstudio/display_i2c", "thingstudio/bme280", "thingstudio/i2c"];
+/** A touch panel config (touch-panel-shared.ts) holds a bus reference of its own; it is in use when a gui screen or
+ * touch node names it. Spelled out here because touch-panel-shared.ts imports this file. */
+const TOUCH_PANEL_CONFIG = "thingstudio/config/touch-panel";
+const TOUCH_PANEL_USERS = ["thingstudio/gui_screen", "thingstudio/touch_i2c"];
 
 export const I2C_DEFAULT_FREQ = 100_000;
 
@@ -91,6 +95,13 @@ export function resolveI2cBus(ctx: CodegenContext, what: string, configId: unkno
   for (const type of I2C_NODE_TYPES) {
     for (const n of ctx.findNodesOfType?.(type) ?? []) {
       if (typeof n.properties.i2cConfigId === "string") inUse.add(n.properties.i2cConfigId);
+    }
+  }
+  const panels = ctx.findConfigsOfType?.(TOUCH_PANEL_CONFIG) ?? [];
+  for (const type of TOUCH_PANEL_USERS) {
+    for (const n of ctx.findNodesOfType?.(type) ?? []) {
+      const panel = panels.find((c) => c.id === n.properties.touchPanelConfigId);
+      if (panel && typeof panel.properties.i2cConfigId === "string") inUse.add(panel.properties.i2cConfigId);
     }
   }
   const clash = (ctx.findConfigsOfType?.(I2C_BUS_CONFIG_TYPE) ?? []).find(

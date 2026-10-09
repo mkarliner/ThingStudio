@@ -170,7 +170,7 @@ import { filterNode, type FilterMode } from "../../node-library/filter.js";
 import { bme280Node } from "../../node-library/bme280.js";
 import { touchI2cNode } from "../../node-library/touch-i2c.js";
 import type { NodeDefinition } from "../../compiler/node-definition.js";
-import { guiBarNode, guiButtonNode, guiLabelNode, guiLedNode, guiModalNode, guiNavigatorNode, guiReadoutNode, guiScreenNode, guiTouchNode } from "../../node-library/gui.js";
+import { guiBarNode, guiButtonNode, guiLabelNode, guiLedNode, guiModalNode, guiNavigatorNode, guiReadoutNode, guiScreenNode } from "../../node-library/gui.js";
 import { i2cGenericNode } from "../../node-library/i2c-generic.js";
 import { mqttPublishNode } from "../../node-library/mqtt-publish.js";
 import { mqttSubscribeNode } from "../../node-library/mqtt-subscribe.js";
@@ -493,17 +493,7 @@ export class TouchI2cNode extends ClassicPreset.Node {
   status: NodeStatusState | null = null;
   statusText: string | null = null;
 
-  properties: { i2cConfigId: string; address: number; rstPin: number | string; pollMs: number; width: number; height: number; swapXY: boolean; flipX: boolean; flipY: boolean } = {
-    i2cConfigId: "",
-    address: 0x38,
-    rstPin: "",
-    pollMs: 20,
-    width: 320,
-    height: 480,
-    swapXY: false,
-    flipX: false,
-    flipY: false,
-  };
+  properties: { touchPanelConfigId: string } = { touchPanelConfigId: "" };
 
   constructor() {
     super("touch");
@@ -532,15 +522,37 @@ function guiClass<K extends string, P extends Record<string, unknown>>(kind: K, 
   };
 }
 
-export const GuiScreenNode = guiClass("gui_screen", "thingstudio/gui_screen", 110, () => ({ name: "screen", width: 320, height: 240, frameFormat: "gs4" as "gs4" | "gs2" | "mono" | "rgb565", minInterval: 200, wrap: true }), guiScreenNode, false, "frame");
+export const GuiScreenNode = guiClass("gui_screen", "thingstudio/gui_screen", 110, () => ({ name: "screen", width: 320, height: 240, frameFormat: "gs4" as "gs4" | "gs2" | "mono" | "rgb565", minInterval: 200, wrap: true, touchPanelConfigId: "" }), guiScreenNode, false, "frame");
 export const GuiLabelNode = guiClass("gui_label", "thingstudio/gui_label", 100, () => ({ name: "", maxChars: 8, staleAfter: 0 }), guiLabelNode, true, null);
 export const GuiReadoutNode = guiClass("gui_readout", "thingstudio/gui_readout", 110, () => ({ name: "", units: "", decimals: 1, lo: 0, hi: 100, staleAfter: 0 }), guiReadoutNode, true, null);
 export const GuiBarNode = guiClass("gui_bar", "thingstudio/gui_bar", 90, () => ({ name: "", lo: 0, hi: 100, staleAfter: 0 }), guiBarNode, true, null);
 export const GuiLedNode = guiClass("gui_led", "thingstudio/gui_led", 90, () => ({ name: "", staleAfter: 0 }), guiLedNode, true, null);
-export const GuiButtonNode = guiClass("gui_button", "thingstudio/gui_button", 100, () => ({ name: "", text: "", maxChars: 8 }), guiButtonNode, true, null);
-export const GuiTouchNode = guiClass("gui_touch", "thingstudio/gui_touch", 110, () => ({ name: "touch", screen: "" }), guiTouchNode, true, "msg");
+export const GuiButtonNode = guiClass(
+  "gui_button",
+  "thingstudio/gui_button",
+  100,
+  () => ({
+    name: "",
+    mode: "momentary" as "momentary" | "toggle" | "navigate",
+    text: "",
+    maxChars: 8,
+    valueType: "bool" as "bool" | "string" | "number",
+    value: "true",
+    onValue: "true",
+    offValue: "false",
+    onText: "ON",
+    offText: "OFF",
+    initial: false,
+    fireOn: "release" as "release" | "press",
+    target: "",
+    pendingTimeout: 5,
+  }),
+  guiButtonNode,
+  true,
+  "msg",
+);
 export const GuiNavigatorNode = guiClass("gui_navigator", "thingstudio/gui_navigator", 120, () => ({ name: "navigator", screen: "" }), guiNavigatorNode, true, "page");
-export const GuiModalNode = guiClass("gui_modal", "thingstudio/gui_modal", 100, () => ({ name: "", screen: "", priority: 0, timeout: 0 }), guiModalNode, true, null);
+export const GuiModalNode = guiClass("gui_modal", "thingstudio/gui_modal", 100, () => ({ name: "", screen: "", priority: 0, timeout: 0 }), guiModalNode, true, "msg");
 
 // Generic I2C read/write/scan on a shared bus (node-library/i2c-generic.ts). address/register are text so hex
 // ("0x29") can be typed; the compiler parses them.
@@ -1167,7 +1179,6 @@ export type AnyThingstudioNode =
   | InstanceType<typeof GuiBarNode>
   | InstanceType<typeof GuiLedNode>
   | InstanceType<typeof GuiButtonNode>
-  | InstanceType<typeof GuiTouchNode>
   | InstanceType<typeof GuiNavigatorNode>
   | InstanceType<typeof GuiModalNode>
   | CustomNode;
@@ -1216,7 +1227,6 @@ export const NODE_FACTORIES: Record<NodeKind, () => AnyThingstudioNode> = {
   gui_bar: () => new GuiBarNode(),
   gui_led: () => new GuiLedNode(),
   gui_button: () => new GuiButtonNode(),
-  gui_touch: () => new GuiTouchNode(),
   gui_navigator: () => new GuiNavigatorNode(),
   gui_modal: () => new GuiModalNode(),
 };
