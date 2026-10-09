@@ -274,3 +274,22 @@ port: it needs a writable buffer. A font_to_py glyph is a memoryview into the mo
 needs either a copy (`bytearray(glyph)`, an allocation per glyph) or `uctypes.bytearray_at(addressof(glyph),
 len(glyph))`, which nano-gui's `CWriter` uses and our GUI surface now does (falling back to the copy where
 `uctypes` is missing). `vendor/thingstudio_gui/gui.py`, `FrameSurface.text`.
+
+## Fragmentation makes module loads erratic; a stock ESP32 is nearly full with one MQTT flow, 2026-10-08
+
+Mike's experience, not yet measured. On a CYD, loading `mqtt_basic` after the test display flow was erratic: it
+sometimes failed. Total free heap was not the limit; the largest free block was, since an imported `.mpy` needs
+its code and constants as large allocations. Same mechanism as the 11 KB message above. Separately, stock ESP32s
+(no PSRAM) have little room left with a single `mqtt_as` flow.
+
+Frozen modules run from flash and never touch the heap, so they would avoid both. Scoped as a spike:
+`frozen-firmware-spike-briefing.md`. Note `gc` has no largest-free-block call; use `micropython.mem_info()`
+(`max free sz`, in 16-byte blocks) or bisect with `bytearray(n)`. User-facing: `docs/user-guide/debugging.md`.
+
+## On an ESP32, network.WLAN(STA_IF) starts WiFi, 2026-10-08
+
+Just constructing the station object initialises the WiFi driver and its netif, which takes tens of KB of
+ESP-IDF memory, even if `active()` is never called. Our transport's watcher did that every 2 s on every board to
+check for an IP. With a GUI flow's framebuffer using the memory, the start failed each time and ESP-IDF logged
+`wifi:Expected to init 10 rx buffer, actual is 0` and `esp_netif_new_api: ... duplicate key` every 2 s (CYD,
+Mike). Don't touch `network.WLAN` unless the board or flow actually wants WiFi; back off when it fails.

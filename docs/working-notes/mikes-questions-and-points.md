@@ -31,3 +31,18 @@ same removal convention as this file's own 2026-09-07/2026-09-13 passes above.]
 [2026-09-23: boot-loop removal and pause-to-prompt items removed -- built, see
 `decisions/board-recovery-and-commands.md`.]
 [2026-09-25: startup-reason item removed -- built, see `decisions/node-authoring.md`'s 2026-09-25 entry.]
+
+
+- Do a spike to
+  - check the size of the mqtt_as mpy file
+  - do a test custom build for Thingstudio with the expensive code frozen in and see how much is saved.
+  - (see https://docs.micropython.org/en/latest/develop/optimizations.html)
+  - 2026-10-08: scoped, with the CYD fragmentation and full-ESP32 evidence, in `frozen-firmware-spike-briefing.md`.
+
+- Wifi issues
+ - It seems that reading RSSI can break the connection see https://github.com/orgs/micropython/discussions/10931
+ - There are similar issues with bluetooth and a hardware specific with RPi 2040
+
+ - Console
+   - In due course, we need to be ablel to change the width of the console.
+   - for the moment, make it 50% bigger for easier reading of long lines.

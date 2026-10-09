@@ -108,3 +108,7 @@ vendor-whole / vendor-parts / write-our-own (`nano-gui-spike-briefing.md`).
   CYD couldn't allocate 38,400 contiguous bytes for a 240x320 gs4 frame on deploy despite enough free heap
   in total (fragmentation). Strip messages carry `y`; `display_spi` accepts strips or whole frames.
   `gui-layout-widget-system-scoping.md`, "banded rendering".
+- 2026-10-08 (Mike): **frozen-firmware spike closed; custom firmware stays deferred.** Desk findings met its
+  goals (about 75% less heap when frozen, a pushed library can override a frozen one); board stages and
+  firmware builds not run. The GUI's own memory problems were fixed in Python (strips, per-flow libraries).
+  Optional firmware tier is post-MVP. `frozen-firmware-spike-briefing.md`, "Closed".

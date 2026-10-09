@@ -362,6 +362,11 @@ not here.
   requirement, distances and board count, which LoRa board. The generic `i2c` node (controller side) was built
   the same day and is separate from this.
 - **[POST-MVP]** **Package `device-runtime` as a single flashable image (frozen MicroPython build with the listener/runtime baked in).** Split out 2026-09-06 from the now-deleted Tasmota-style-install-page item: the install-page/doc UI itself is superseded by whatever the backend item ([P1] above) settles on, but the underlying packaging question survives as its own thing -- kept post-MVP. `deployment-and-distribution-notes.md`.
+  **2026-10-08:** the frozen-firmware spike is closed with only its desk half run (about 75% less heap when
+  frozen; a pushed library can override a frozen one). Board builds and stage measurements deferred, Mike's
+  call. Libraries already go as `.mpy`; the saving is over that baseline. Cheaper idea, not built: fonts
+  read from flash on demand instead of imported.
+  `frozen-firmware-spike-briefing.md`.
 
 - **[P5]** **CI vendor-neutrality — should CI be independent of GitHub specifically?** Mike's raised question (`mikes-questions-and-points.md`, "# CI"). Currently GitHub Actions (`repo-structure-and-conventions.md`). Not revisited. ([detail](outstanding-items/ci-vendor-neutrality.md))
 
