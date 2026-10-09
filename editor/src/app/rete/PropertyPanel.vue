@@ -278,12 +278,12 @@
         </template>
         <template v-if="node.properties.mode === 'momentary'">
           <label>text <input type="text" v-model="node.properties.text" @input="touch" /></label>
-          <label>sends <input type="text" v-model="node.properties.value" @input="touch" /></label>
+          <label>sends <input type="text" v-model="node.properties.value" :placeholder="buttonDefault(node.properties.valueType, 0)" @input="touch" /></label>
           <label>room for (characters, if no text) <input type="number" min="1" v-model.number="node.properties.maxChars" @input="touch" /></label>
         </template>
         <template v-else-if="node.properties.mode === 'toggle'">
-          <label>on sends <input type="text" v-model="node.properties.onValue" @input="touch" /></label>
-          <label>off sends <input type="text" v-model="node.properties.offValue" @input="touch" /></label>
+          <label>on sends <input type="text" v-model="node.properties.onValue" :placeholder="buttonDefault(node.properties.valueType, 0)" @input="touch" /></label>
+          <label>off sends <input type="text" v-model="node.properties.offValue" :placeholder="buttonDefault(node.properties.valueType, 1)" @input="touch" /></label>
           <label>on shows <input type="text" v-model="node.properties.onText" @input="touch" /></label>
           <label>off shows <input type="text" v-model="node.properties.offText" @input="touch" /></label>
           <label><input type="checkbox" v-model="node.properties.initial" @change="touch" /> starts on (when nothing is wired in)</label>
@@ -815,6 +815,11 @@
 </template>
 
 <script setup lang="ts">
+// What a gui_button sends when its value fields are blank, by value type (matches buttonConfig() in node-library/gui.ts).
+function buttonDefault(valueType: unknown, i: 0 | 1): string {
+  const d = ({ bool: ["true", "false"], string: ["ON", "OFF"], number: ["1", "0"] } as Record<string, string[]>)[String(valueType)] ?? ["true", "false"];
+  return d[i]!;
+}
 import { computed } from "vue";
 import { selectedNode, bumpPropertyVersion, propertyVersion, setFunctionNodeOutputCount, activeTarget } from "./store";
 import { FALLBACK_MAX_PIN } from "../../definitions/pin-check";

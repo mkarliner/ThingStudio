@@ -35,8 +35,8 @@ A button's **mode** says what a tap does.
 A button sends when your finger lifts inside it. Lift outside and nothing is sent. Set **send on** to *press*
 to send as soon as it is touched. It is drawn inverted while held.
 
-Values are `true` and `false` by default. Set the **value type** to text or number to send something else, such
-as `ON` and `OFF`.
+Leave the value fields blank and a button sends `true` and `false`; for text, `ON` and `OFF`; for a number, `1` and
+`0`. The grey placeholder shows which. Type a value to send something else.
 
 A button needs a [touch panel](touch-panel.md) on its screen to be pressed. Deploy warns if a screen has
 buttons and no panel, and if a momentary or toggle button's output goes nowhere.
