@@ -105,12 +105,15 @@ export type NodeKind =
   | "delay"
   | "filter"
   | "bme280"
+  | "touch_i2c"
   | "i2c"
   | "gui_screen"
   | "gui_label"
   | "gui_readout"
   | "gui_bar"
   | "gui_led"
+  | "gui_button"
+  | "gui_touch"
   | "gui_navigator"
   | "gui_modal";
 
@@ -199,6 +202,7 @@ export const NODE_PALETTE: Record<NodeKind, KindStyle> = {
   // bme280 added 2026-09-26: first I2C sensor. "hardware" group, brick red, "°" for temperature.
   // i2c (generic) added 2026-09-26: same indigo family as display_i2c, "⇄" for a two-way transfer.
   i2c: { color: "#2e3f8a", bgcolor: "#1f2a4a", icon: "⇄", label: "i2c", group: "hardware", priority: 45 },
+  touch_i2c: { color: "#8a4a2e", bgcolor: "#4a2a1f", icon: "☝", label: "touch", group: "hardware", priority: 16 },
   bme280: { color: "#8a4a2e", bgcolor: "#4a2a1f", icon: "°", label: "bme280", group: "hardware", priority: 15 },
   filter: { color: "#2e6e4a", bgcolor: "#1f3f2c", icon: "▽", label: "filter", group: "general", priority: 35 },
   // Blue -- see this file's header for the icon reasoning.
@@ -210,6 +214,8 @@ export const NODE_PALETTE: Record<NodeKind, KindStyle> = {
   gui_readout: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "#", label: "gui readout", group: "gui", priority: 40 },
   gui_label: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "T", label: "gui label", group: "gui", priority: 41 },
   gui_bar: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "▬", label: "gui bar", group: "gui", priority: 42 },
+  gui_touch: { color: "#3f5c6e", bgcolor: "#1f303a", icon: "☝", label: "gui touch", group: "gui", priority: 21 },
+  gui_button: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "▭", label: "gui button", group: "gui", priority: 44 },
   gui_led: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "●", label: "gui light", group: "gui", priority: 43 },
 };
 

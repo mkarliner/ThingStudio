@@ -77,6 +77,7 @@ const KNOWN_KINDS = new Set([
   "delay",
   "filter",
   "bme280",
+  "touch_i2c",
   "i2c",
 ]);
 

@@ -32,6 +32,15 @@ export interface ReadoutConfig {
   readonly gap?: number;
 }
 
+export interface ButtonConfig {
+  readonly font: string;
+  /** The button's text; absent: room for max_chars of the font's widest glyph (a bound value replaces the text). */
+  readonly text?: string;
+  readonly max_chars?: number;
+  /** Space between the text and the button's edge, all round. */
+  readonly pad?: number;
+}
+
 export interface BarConfig {
   readonly min_width?: number;
   readonly height?: number;
@@ -95,6 +104,12 @@ export function readoutNatural(cfg: ReadoutConfig): Size {
   return { width, height };
 }
 
+export function buttonNatural(cfg: ButtonConfig): Size {
+  const pad = cfg.pad ?? 8;
+  const t = labelNatural({ font: cfg.font, text: cfg.text || undefined, max_chars: cfg.max_chars });
+  return { width: t.width + 2 * pad, height: t.height + 2 * pad };
+}
+
 export function barNatural(cfg: BarConfig = {}): Size {
   return { width: cfg.min_width ?? 40, height: cfg.height ?? 12 };
 }
@@ -109,7 +124,7 @@ export function pageDotsNatural(cfg: PageDotsConfig): Size {
   return { width: cfg.pages * d + Math.max(0, cfg.pages - 1) * (cfg.gap ?? 4), height: d };
 }
 
-export type WidgetKind = "label" | "readout" | "bar" | "led" | "pagedots";
+export type WidgetKind = "label" | "readout" | "bar" | "led" | "pagedots" | "button";
 
 /** Natural size of any widget kind from its config (the fixture's shape). */
 export function widgetNatural(kind: WidgetKind, cfg: Record<string, unknown>): Size {
@@ -124,5 +139,7 @@ export function widgetNatural(kind: WidgetKind, cfg: Record<string, unknown>): S
       return ledNatural(cfg as LedConfig);
     case "pagedots":
       return pageDotsNatural(cfg as unknown as PageDotsConfig);
+    case "button":
+      return buttonNatural(cfg as unknown as ButtonConfig);
   }
 }

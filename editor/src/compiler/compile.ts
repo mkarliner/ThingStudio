@@ -189,7 +189,7 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
   for (const s of sources) walkForCycles(s.id, s.id);
 
   for (const n of graphData.nodes) {
-    if (!reachable.has(n.id)) {
+    if (!reachable.has(n.id) && !registry.get(n.type)!.allowUnwired) {
       throw new CompileError(`node ${n.id} (${n.type}) is disconnected from any source`);
     }
   }

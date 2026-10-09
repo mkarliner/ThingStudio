@@ -168,8 +168,9 @@ import { httpResponseNode } from "../../node-library/http-response.js";
 import { delayNode } from "../../node-library/delay.js";
 import { filterNode, type FilterMode } from "../../node-library/filter.js";
 import { bme280Node } from "../../node-library/bme280.js";
+import { touchI2cNode } from "../../node-library/touch-i2c.js";
 import type { NodeDefinition } from "../../compiler/node-definition.js";
-import { guiBarNode, guiLabelNode, guiLedNode, guiModalNode, guiNavigatorNode, guiReadoutNode, guiScreenNode } from "../../node-library/gui.js";
+import { guiBarNode, guiButtonNode, guiLabelNode, guiLedNode, guiModalNode, guiNavigatorNode, guiReadoutNode, guiScreenNode, guiTouchNode } from "../../node-library/gui.js";
 import { i2cGenericNode } from "../../node-library/i2c-generic.js";
 import { mqttPublishNode } from "../../node-library/mqtt-publish.js";
 import { mqttSubscribeNode } from "../../node-library/mqtt-subscribe.js";
@@ -482,6 +483,34 @@ export class Bme280Node extends ClassicPreset.Node {
   }
 }
 
+// Touch panel (FT6336U) on a shared I2C bus (node-library/touch-i2c.ts).
+export class TouchI2cNode extends ClassicPreset.Node {
+  width = 110;
+  height = NODE_HEIGHT;
+  kind = "touch_i2c" as const;
+  nodeType = "thingstudio/touch_i2c";
+  highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
+
+  properties: { i2cConfigId: string; address: number; rstPin: number | string; pollMs: number; width: number; height: number; swapXY: boolean; flipX: boolean; flipY: boolean } = {
+    i2cConfigId: "",
+    address: 0x38,
+    rstPin: "",
+    pollMs: 20,
+    width: 320,
+    height: 480,
+    swapXY: false,
+    flipX: false,
+    flipY: false,
+  };
+
+  constructor() {
+    super("touch");
+    this.addOutput("msg", new ClassicPreset.Output(portSocket(touchI2cNode.ports?.outputs, "msg", this.properties), "msg"));
+  }
+}
+
 // GUI nodes (node-library/gui.ts, 2026-10-08). Where widgets sit is the flow's `screens` section, not a node
 // property; these hold only data properties (range, units, how long until stale).
 function guiClass<K extends string, P extends Record<string, unknown>>(kind: K, nodeType: string, width: number, props: () => P, def: NodeDefinition, hasInput: boolean, outputName: string | null) {
@@ -508,6 +537,8 @@ export const GuiLabelNode = guiClass("gui_label", "thingstudio/gui_label", 100, 
 export const GuiReadoutNode = guiClass("gui_readout", "thingstudio/gui_readout", 110, () => ({ name: "", units: "", decimals: 1, lo: 0, hi: 100, staleAfter: 0 }), guiReadoutNode, true, null);
 export const GuiBarNode = guiClass("gui_bar", "thingstudio/gui_bar", 90, () => ({ name: "", lo: 0, hi: 100, staleAfter: 0 }), guiBarNode, true, null);
 export const GuiLedNode = guiClass("gui_led", "thingstudio/gui_led", 90, () => ({ name: "", staleAfter: 0 }), guiLedNode, true, null);
+export const GuiButtonNode = guiClass("gui_button", "thingstudio/gui_button", 100, () => ({ name: "", text: "", maxChars: 8 }), guiButtonNode, true, null);
+export const GuiTouchNode = guiClass("gui_touch", "thingstudio/gui_touch", 110, () => ({ name: "touch", screen: "" }), guiTouchNode, true, "msg");
 export const GuiNavigatorNode = guiClass("gui_navigator", "thingstudio/gui_navigator", 120, () => ({ name: "navigator", screen: "" }), guiNavigatorNode, true, "page");
 export const GuiModalNode = guiClass("gui_modal", "thingstudio/gui_modal", 100, () => ({ name: "", screen: "", priority: 0, timeout: 0 }), guiModalNode, true, null);
 
@@ -1128,12 +1159,15 @@ export type AnyThingstudioNode =
   | DelayNode
   | FilterNode
   | Bme280Node
+  | TouchI2cNode
   | I2cNode
   | InstanceType<typeof GuiScreenNode>
   | InstanceType<typeof GuiLabelNode>
   | InstanceType<typeof GuiReadoutNode>
   | InstanceType<typeof GuiBarNode>
   | InstanceType<typeof GuiLedNode>
+  | InstanceType<typeof GuiButtonNode>
+  | InstanceType<typeof GuiTouchNode>
   | InstanceType<typeof GuiNavigatorNode>
   | InstanceType<typeof GuiModalNode>
   | CustomNode;
@@ -1174,12 +1208,15 @@ export const NODE_FACTORIES: Record<NodeKind, () => AnyThingstudioNode> = {
   delay: () => new DelayNode(),
   filter: () => new FilterNode(),
   bme280: () => new Bme280Node(),
+  touch_i2c: () => new TouchI2cNode(),
   i2c: () => new I2cNode(),
   gui_screen: () => new GuiScreenNode(),
   gui_label: () => new GuiLabelNode(),
   gui_readout: () => new GuiReadoutNode(),
   gui_bar: () => new GuiBarNode(),
   gui_led: () => new GuiLedNode(),
+  gui_button: () => new GuiButtonNode(),
+  gui_touch: () => new GuiTouchNode(),
   gui_navigator: () => new GuiNavigatorNode(),
   gui_modal: () => new GuiModalNode(),
 };

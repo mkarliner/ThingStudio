@@ -206,6 +206,9 @@ export interface NodeDefinition {
   /** e.g. "thingstudio/gpio_out" */
   type: string;
   kind: NodeKind;
+  /** The node is valid with nothing wired to it, so "disconnected from any source" doesn't apply (a gui_button:
+   * it is useful as a pure input, with nothing to display). */
+  allowUnwired?: boolean;
   // Editor-side only (wire-type-system-scoping.md, "Governing call"): read
   // by app/rete/nodes.ts to construct each port's real socket instead of a
   // hardcoded AnySocket. compile.ts's own graph walk does not read this --

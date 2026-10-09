@@ -194,6 +194,93 @@ describe.skipIf(!MP || !existsSync(MP))("the compiled GUI flow on the MicroPytho
     expect(out).toMatch(/PAGE climate PUSHES [2-9]/);
     expect(out).not.toContain("NODE_ERROR");
   });
+  it("a touch on a button presses it and comes out of gui_touch as the button's name", () => {
+    const g = heroGraph({
+      screen: { pages: [{ name: "home", root: { kind: "column", padding: 6, children: [{ kind: "widget", node: "light", font: "font_body20" }] } }] },
+    });
+    const drop = ["temp", "press", "pbar", "alive", "alarm", "fn_temp", "fn_press", "nav_in", "nav", "nav_dbg"];
+    g.nodes = g.nodes.filter((n) => !drop.includes(n.id));
+    g.links = [[9, "screen", 0, "frame_fn", 0, "bytes"]];
+    g.nodes.push(
+      node("light", "gui_button", { name: "light", text: "Light" }),
+      node("fn_touch", "function", { code: "msg['topic'] = 'down'\nmsg['payload'] = {'x': 12, 'y': 12}\nreturn msg" }),
+      node("gt", "gui_touch", { name: "touch" }),
+      node("out", "debug"),
+    );
+    g.links.push([30, "start", 0, "fn_touch", 0, "any"], [31, "fn_touch", 0, "gt", 0, "any"], [32, "gt", 0, "out", 0, "any"]);
+    const { source } = compile(g, buildRegistry());
+    const dir = mkdtempSync(join(tmpdir(), "ts-gui-touch-"));
+    const lib = join(dir, "lib");
+    mkdirSync(lib);
+    copyFileSync(join(RUNTIME, "vendor", "thingstudio_gui", "gui.py"), join(lib, "thingstudio_gui.py"));
+    for (const w of ["label", "readout", "bar", "led", "pagedots", "button"]) copyFileSync(join(RUNTIME, "vendor", "thingstudio_gui", `${w}.py`), join(lib, `tsgui_${w}.py`));
+    for (const f of readdirSync(join(RUNTIME, "vendor", "fonts"))) if (f.endsWith(".py")) copyFileSync(join(RUNTIME, "vendor", "fonts", f), join(lib, f));
+    copyFileSync(join(RUNTIME, "vendor", "threadsafe_event", "threadsafe_event.py"), join(lib, "threadsafe_event.py"));
+    writeFileSync(join(dir, "flow.py"), source);
+    writeFileSync(
+      join(dir, "driver.py"),
+      [
+        "import sys",
+        `sys.path.insert(0, ${JSON.stringify(lib)})`,
+        `sys.path.insert(0, ${JSON.stringify(RUNTIME)})`,
+        `sys.path.insert(0, ${JSON.stringify(dir)})`,
+        "import asyncio",
+        "import runtime",
+        "async def main():",
+        "    import flow",
+        "    await asyncio.sleep_ms(300)",
+        "    g = flow._gui",
+        "    print('HELD', g.surfaces['screen'].held, g.widgets['light'].pressed)",
+        "    print('UP', g.touch('screen', 'up', 200, 200))",
+        "    raise SystemExit",
+        "try:",
+        "    asyncio.run(main())",
+        "except SystemExit:",
+        "    pass",
+      ].join("\n"),
+    );
+    const out = execFileSync(MP!, [join(dir, "driver.py")], { encoding: "utf8", timeout: 20000 });
+    expect(out).toContain("DEBUG node=out payload='down'");
+    expect(out).toContain("HELD light True");
+    expect(out).toContain("UP ('light', 'up')");
+    expect(out).not.toContain("NODE_ERROR");
+  });
+});
+
+describe("touch buttons", () => {
+  const touchGraph = (): GraphData => {
+    const g = heroGraph({
+      screen: {
+        pages: [{ name: "home", root: { kind: "column", padding: 6, children: [{ kind: "widget", node: "light", font: "font_body20" }, { kind: "widget", node: "state", font: "font_body16" }] } }],
+      },
+    });
+    g.nodes = g.nodes.filter((n) => !["temp", "press", "pbar", "alive", "alarm"].includes(n.id));
+    g.links = g.links.filter((l) => !["temp", "press", "pbar", "alive", "alarm"].includes(l[3]));
+    g.nodes.push(
+      node("light", "gui_button", { name: "light", text: "Light" }),
+      node("state", "gui_label", { name: "state" }),
+      node("bus", "config/i2c-bus", {}),
+      node("touch", "touch_i2c", { i2cConfigId: "bus", rstPin: 18 }),
+      node("gt", "gui_touch", { name: "touch" }),
+      node("press_dbg", "debug"),
+    );
+    g.links.push([20, "touch", 0, "gt", 0, "any"], [21, "gt", 0, "press_dbg", 0, "any"], [22, "gt", 0, "state", 0, "any"]);
+    return g;
+  };
+
+  it("registers a button as touchable, lays it out at its natural size, and routes touches through gui_touch", () => {
+    const g = touchGraph();
+    g.configs = [{ id: "bus", type: "thingstudio/config/i2c-bus", properties: { bus: 0, scl: 15, sda: 16, freq: 400000 } }] as never;
+    g.nodes = g.nodes.filter((n) => n.id !== "bus");
+    const { source } = compile(g, buildRegistry());
+    expect(source).toContain('_gui.widget("light", tsgui_button.make(font_body20, "Light"), 0, True)');
+    expect(source).toContain("import tsgui_button\n");
+    expect(source).toContain("import ft6336u\n");
+    expect(source).toMatch(/_gui\.touch\("screen", _kind, _pt\['x'\], _pt\['y'\]\)/);
+    expect(source).toContain("{'light': 'light'}".replace("'light': 'light'", '"light": "light"'));
+    // a value widget stays non-touchable
+    expect(source).toMatch(/_gui\.widget\("state", [^\n]*, 0\)\n/);
+  });
 });
 
 describe("a full-colour (RGB565) GUI screen", () => {
@@ -212,7 +299,7 @@ describe("a full-colour (RGB565) GUI screen", () => {
   });
 });
 
-describe.each(["gui-hero-cyd.flow.json", "gui-hero-cyd-dummy.flow.json", "gui-hero-freenove-s3-4in.flow.json", "gui-hero-freenove-s3-4in-colour.flow.json", "gui-hero-freenove-s3-4in-landscape.flow.json"])("the example GUI flow test-flows/%s", (file) => {
+describe.each(["gui-hero-cyd.flow.json", "gui-hero-cyd-dummy.flow.json", "gui-hero-freenove-s3-4in.flow.json", "gui-hero-freenove-s3-4in-colour.flow.json", "gui-hero-freenove-s3-4in-landscape.flow.json", "gui-touch-freenove-s3-4in.flow.json"])("the example GUI flow test-flows/%s", (file) => {
   it("loads and compiles without warnings", async () => {
     const { readFileSync } = await import("node:fs");
     const { parseFlowFile } = await import("../src/flow-file/flow-file.js");

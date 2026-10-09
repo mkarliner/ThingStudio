@@ -14,7 +14,7 @@
 
 import { getFont, missingChars } from "./font-metrics.js";
 import { layoutPage, type Align, type Container, type Justify, type LayoutNode, type Rect } from "./layout.js";
-import { barNatural, labelNatural, ledNatural, pageDotsNatural, readoutNatural } from "./widgets.js";
+import { barNatural, buttonNatural, labelNatural, ledNatural, pageDotsNatural, readoutNatural } from "./widgets.js";
 import type { GraphNode } from "../compiler/graph.js";
 
 // ---- the format ------------------------------------------------------------------------------------------
@@ -101,11 +101,14 @@ export type ScreensSection = Readonly<Record<string, ScreenSpec>>;
 
 export const GUI_SCREEN = "thingstudio/gui_screen";
 export const GUI_MODAL = "thingstudio/gui_modal";
+export const GUI_BUTTON = "thingstudio/gui_button";
+export const GUI_TOUCH = "thingstudio/gui_touch";
 export const WIDGET_TYPES = {
   "thingstudio/gui_label": "label",
   "thingstudio/gui_readout": "readout",
   "thingstudio/gui_bar": "bar",
   "thingstudio/gui_led": "led",
+  "thingstudio/gui_button": "button",
 } as const;
 export type WidgetNodeType = keyof typeof WIDGET_TYPES;
 
@@ -299,6 +302,17 @@ export function compileScreens(
             if (hi <= lo) throw new Error(`range low ${lo} must be below high ${hi}`);
             natural = barNatural({ min_width: el.minWidth, height: el.height });
             draw = `tsgui_bar.make(${pyNum(lo)}, ${pyNum(hi)})`;
+            break;
+          }
+          case "button": {
+            const font = el.font ?? "font_body16";
+            const text = typeof p.text === "string" && p.text !== "" ? p.text : undefined;
+            const maxChars = el.maxChars ?? num(p.maxChars, 8);
+            // A bound value replaces the text, so the font must have "--" and (for a bound-only button) the room.
+            if (!fontOk(font, text ?? "--", `widget ${label} ${where}`)) return null;
+            natural = buttonNatural({ font, text, max_chars: maxChars });
+            draw = `tsgui_button.make(${font}, ${text === undefined ? "None" : pyStr(text)})`;
+            imports.add(font);
             break;
           }
           case "led": {

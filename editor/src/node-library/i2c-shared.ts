@@ -23,7 +23,7 @@ import { checkI2c, checkPin } from "../definitions/pin-check.js";
 export const I2C_BUS_CONFIG_TYPE = "thingstudio/config/i2c-bus";
 
 /** Node types that reference an I2C bus config through `i2cConfigId`. Add new I2C nodes here. */
-export const I2C_NODE_TYPES = ["thingstudio/display_i2c", "thingstudio/bme280", "thingstudio/i2c"];
+export const I2C_NODE_TYPES = ["thingstudio/display_i2c", "thingstudio/bme280", "thingstudio/i2c", "thingstudio/touch_i2c"];
 
 export const I2C_DEFAULT_FREQ = 100_000;
 

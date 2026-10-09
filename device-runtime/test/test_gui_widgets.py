@@ -19,6 +19,7 @@ sys.path.insert(0, _SRC + "/vendor/thingstudio_gui")
 sys.path.insert(0, _SRC + "/vendor/fonts")
 
 import bar  # noqa: E402
+import button  # noqa: E402
 import gui  # noqa: E402
 import label  # noqa: E402
 import led  # noqa: E402
@@ -27,7 +28,7 @@ import readout  # noqa: E402
 
 _HERE = __file__.rsplit("/", 1)[0] if "/" in __file__ else "."
 _FIXTURE = _HERE + "/../../editor/test/fixtures/gui-widget-sizes.json"
-MODS = {"label": label, "readout": readout, "bar": bar, "led": led, "pagedots": pagedots}
+MODS = {"label": label, "readout": readout, "bar": bar, "led": led, "button": button, "pagedots": pagedots}
 W, H = 340, 90
 FORMATS = ((framebuf.GS4_HMSB, W * H // 2), (framebuf.MONO_HLSB, (W + 7) // 8 * H))
 
@@ -77,6 +78,8 @@ def _make(widget, raw):
         return bar.make()
     if widget == "led":
         return led.make(**cfg)
+    if widget == "button":
+        return button.make(cfg["font"], cfg.get("text"))
     cfg.pop("pages", None)
     return pagedots.make(**cfg)
 
@@ -86,6 +89,8 @@ def _widest_value(widget, raw):
         return raw.get("lo", 0) if len("%.*f" % (raw.get("decimals", 1), raw.get("lo", 0))) >= len(str(raw.get("hi"))) else raw.get("hi")
     if widget == "label":
         return "W" * raw.get("max_chars", 8)
+    if widget == "button":
+        return raw.get("text") or "W" * raw.get("max_chars", 8)
     return 100 if widget == "bar" else 1
 
 
@@ -105,7 +110,7 @@ def test_every_widget_stays_inside_its_rect_in_every_state_and_format():
             nat = MODS[c["widget"]].natural(**_cfg(c["cfg"]))
             rect = (3, 5, nat[0], nat[1])
             draw = _make(c["widget"], c["cfg"])
-            for state, value in ((gui.UNKNOWN, None), (gui.KNOWN, _widest_value(c["widget"], c["cfg"])), (gui.STALE, _widest_value(c["widget"], c["cfg"]))):
+            for state, value in ((gui.UNKNOWN, None), (gui.KNOWN, _widest_value(c["widget"], c["cfg"])), (gui.STALE, _widest_value(c["widget"], c["cfg"])), (gui.PRESSED, _widest_value(c["widget"], c["cfg"]))):
                 s = _surface(fmt, size, ("a", "b", "c", "d"))
                 s.fb.fill(0)
                 draw(s, rect, value, state)
@@ -202,6 +207,23 @@ def test_a_bad_value_is_reported_against_its_widget():
     assert errors and errors[0][0] == "pressure" and "high" in errors[0][1], errors
 
 
+def test_a_button_looks_different_held_down_and_shows_a_value():
+    f = _font("font_body16")
+    b = button.make(f, "Light")
+    rect = (0, 0) + button.natural(f, "Light")
+    looks = {}
+    for state in (gui.KNOWN, gui.PRESSED):
+        s = _surface(framebuf.GS4_HMSB, FORMATS[0][1])
+        b(s, rect, None, state)
+        looks[state] = sum(1 for j in range(rect[3]) for i in range(rect[2]) if s.fb.pixel(i, j) == 15)
+    assert looks[gui.PRESSED] > looks[gui.KNOWN] * 2  # filled, not just outlined
+    a = _surface(framebuf.GS4_HMSB, FORMATS[0][1])
+    b(a, rect, "ON", gui.KNOWN)  # a value replaces the text
+    c = _surface(framebuf.GS4_HMSB, FORMATS[0][1])
+    b(c, rect, None, gui.KNOWN)
+    assert [a.fb.pixel(i, 16) for i in range(rect[2])] != [c.fb.pixel(i, 16) for i in range(rect[2])]
+
+
 minitest.run(
     [
         test_natural_sizes_match_the_editor,
@@ -212,5 +234,6 @@ minitest.run(
         test_led_on_off_unknown,
         test_pagedots_follow_the_current_page,
         test_a_bad_value_is_reported_against_its_widget,
+        test_a_button_looks_different_held_down_and_shows_a_value,
     ]
 )

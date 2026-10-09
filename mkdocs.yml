@@ -95,6 +95,7 @@ nav:
           - display spi: nodes/display-spi.md
           - display i2c: nodes/display-i2c.md
           - bme280: nodes/bme280.md
+          - touch: nodes/touch-i2c.md
           - i2c: nodes/i2c.md
           - I2C buses: nodes/i2c-bus.md
       - GUI (preview): nodes/gui.md

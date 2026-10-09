@@ -292,9 +292,119 @@ def test_run_loop_steps_until_cancelled():
     assert len(pushes) == 1  # the first frame; nothing changed after it
 
 
+def test_one_widget_can_be_shown_on_several_displays():
+    # A widget's value is kept once, by id; where it appears is a list of placements, one per display page.
+    # So a readout shown on two panels (different sizes, one off the visible page) needs nothing from the widget.
+    g = gui.GUI()
+    g.widget("temp", _box(0))
+    buf1, fb1 = _fb()
+    buf2, fb2 = _fb()
+    one = gui.FrameSurface("tft", fb1, lambda f: None, {"home": {"parent": None, "widgets": [("temp", (0, 0, 8, 8))]}}, ["home"], fmt=framebuf.GS4_HMSB)
+    two = gui.FrameSurface("oled", fb2, lambda f: None, {
+        "other": {"parent": None, "widgets": []},
+        "home": {"parent": None, "widgets": [("temp", (16, 8, 4, 4))]},
+    }, ["other", "home"], fmt=framebuf.GS4_HMSB)
+    g.add_surface(one)
+    g.add_surface(two)
+    g.set_value("temp", 9, now=0)
+    g.step(now=0)
+    assert fb1.pixel(0, 0) == 9  # drawn on the first display
+    assert fb2.pixel(16, 8) == 0  # second display shows another page: nothing yet
+    g.navigate("oled", "next")
+    g.step(now=200)
+    assert fb2.pixel(16, 8) == 9  # and when its page comes up, the same value is there
+    g.set_value("temp", 5, now=300)
+    g.step(now=500)
+    assert fb1.pixel(0, 0) == 5 and fb2.pixel(16, 8) == 5  # one set_value reaches both
+
+
+def test_touch_presses_the_button_under_the_finger_and_releases_it():
+    g = gui.GUI()
+    seen = []
+
+    def button(surface, rect, value, state):
+        seen.append(state)
+        surface.fb.fill_rect(rect[0], rect[1], rect[2], rect[3], 9 if state == gui.PRESSED else 4)
+
+    g.widget("temp", _box(0))  # not touchable
+    g.widget("btn", button, 0, True)
+    g.widget("btn2", button, 0, True)
+    buf, fb = _fb()
+    pages = {
+        "home": {"parent": None, "widgets": [("temp", (0, 0, 8, 8)), ("btn", (8, 0, 8, 8)), ("btn2", (12, 0, 8, 8))]},
+        "other": {"parent": None, "widgets": []},
+    }
+    s = g.add_surface(gui.FrameSurface("tft", fb, lambda f: None, pages, ["home", "other"], fmt=framebuf.GS4_HMSB))
+    g.step(now=0)
+    assert g.touch("tft", "down", 2, 2) is None  # a value widget isn't a button
+    assert g.touch("tft", "down", 30, 12) is None  # empty space
+    assert g.touch("tft", "up", 30, 12) is None  # nothing held
+    assert g.touch("tft", "down", 9, 3, now=1000) == ("btn", "down")
+    g.step(now=1010)
+    assert fb.pixel(9, 3) == 9  # redrawn pressed
+    assert g.touch("tft", "down", 14, 3, now=1500) == ("btn2", "down")  # overlap at x=12..15: the later one wins; btn is let go
+    assert not g.widgets["btn"].pressed
+    assert g.touch("tft", "up", 100, 100, now=2000) == ("btn2", "up")  # released wherever the finger lifts
+    g.step(now=2001)
+    assert fb.pixel(14, 3) == 4 and fb.pixel(9, 3) == 4
+    assert s.held is None
+    # a button on a page that isn't showing can't be pressed
+    g.navigate("tft", "next")
+    assert g.touch("tft", "down", 9, 3) is None
+    try:
+        g.touch("tft", "move", 1, 1)
+        assert False, "move is not an event"
+    except ValueError:
+        pass
+    try:
+        g.touch("nope", "down", 1, 1)
+        assert False, "unknown display"
+    except ValueError:
+        pass
+
+
+def test_a_quick_tap_is_still_drawn_pressed_for_a_moment():
+    # A tap shorter than the redraw rate used to flash by unseen: down and up both landed before the next draw.
+    g = gui.GUI()
+    g.widget("btn", lambda surface, rect, value, state: surface.fb.fill_rect(rect[0], rect[1], rect[2], rect[3], 9 if state == gui.PRESSED else 4), 0, True)
+    buf, fb = _fb()
+    g.add_surface(gui.FrameSurface("tft", fb, lambda f: None, {"home": {"parent": None, "widgets": [("btn", (0, 0, 8, 8))]}}, ["home"], min_interval_ms=200, fmt=framebuf.GS4_HMSB))
+    g.step(now=0)
+    assert g.touch("tft", "down", 1, 1, now=1000) == ("btn", "down")
+    assert g.touch("tft", "up", 1, 1, now=1020) == ("btn", "up")  # the event is not delayed...
+    g.step(now=1030)  # ...and the press is drawn at once, inside the 200 ms redraw limit
+    assert fb.pixel(1, 1) == 9
+    g.step(now=1100)  # still held on screen (50..150 ms)
+    assert g.widgets["btn"].pressed
+    g.step(now=1160)  # past the minimum: let go and redrawn
+    assert not g.widgets["btn"].pressed
+    assert fb.pixel(1, 1) == 4
+    # a long press is released the moment the finger lifts
+    g.touch("tft", "down", 1, 1, now=2000)
+    g.touch("tft", "up", 1, 1, now=3000)
+    assert not g.widgets["btn"].pressed
+
+
+def test_a_modal_takes_the_touch():
+    g = gui.GUI()
+    g.widget("under", _box(0), 0, True)
+    g.widget("ok", _box(0), 0, True)
+    buf, fb = _fb()
+    s = g.add_surface(gui.FrameSurface(
+        "tft", fb, lambda f: None, {"home": {"parent": None, "widgets": [("under", (0, 0, 16, 16))]}}, ["home"],
+        {"alert": {"widgets": [("ok", (4, 4, 8, 8))], "priority": 1, "timeout_ms": 0}}, fmt=framebuf.GS4_HMSB))
+    g.open_modal("tft", "alert", "hi", now=0)
+    assert g.touch("tft", "down", 1, 1) is None  # the page behind is out of reach
+    assert g.touch("tft", "down", 5, 5) == ("ok", "down")
+
+
 minitest.run(
     [
         test_run_loop_steps_until_cancelled,
+        test_touch_presses_the_button_under_the_finger_and_releases_it,
+        test_a_modal_takes_the_touch,
+        test_a_quick_tap_is_still_drawn_pressed_for_a_moment,
+        test_one_widget_can_be_shown_on_several_displays,
         test_values_start_unknown_and_draw_as_unknown,
         test_stale_after_quiet_period,
         test_message_rate_is_not_frame_rate,

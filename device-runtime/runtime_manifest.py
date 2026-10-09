@@ -50,6 +50,8 @@ DEPENDENCIES: list[dict] = [
     {"name": "st7796py", "files": [("st7796py/st7796py.py", "st7796py.py")], "requires": ["st7789py"]},
     {"name": "ssd1306", "files": [("ssd1306/ssd1306.py", "ssd1306.py")], "requires": []},
     {"name": "bme280_float", "files": [("bme280/bme280_float.py", "bme280_float.py")], "requires": []},
+    # FT6336U capacitive touch controller (Thingstudio's own small driver).
+    {"name": "ft6336u", "files": [("ft6336u/ft6336u.py", "ft6336u.py")], "requires": []},
     # Thingstudio's own GUI subsystem (gui-layout-widget-system-scoping.md, phase 4): a library, not part of the
     # runtime, so flows without a GUI never carry it.
     {"name": "thingstudio_gui", "files": [("thingstudio_gui/gui.py", "thingstudio_gui.py")], "requires": []},
@@ -59,6 +61,7 @@ DEPENDENCIES: list[dict] = [
     {"name": "tsgui_readout", "files": [("thingstudio_gui/readout.py", "tsgui_readout.py")], "requires": []},
     {"name": "tsgui_bar", "files": [("thingstudio_gui/bar.py", "tsgui_bar.py")], "requires": []},
     {"name": "tsgui_led", "files": [("thingstudio_gui/led.py", "tsgui_led.py")], "requires": []},
+    {"name": "tsgui_button", "files": [("thingstudio_gui/button.py", "tsgui_button.py")], "requires": []},
     {"name": "tsgui_pagedots", "files": [("thingstudio_gui/pagedots.py", "tsgui_pagedots.py")], "requires": []},
 ]
 

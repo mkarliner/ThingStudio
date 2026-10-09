@@ -13,6 +13,8 @@
 //   gui_bar        a bar between low and high
 //   gui_led        on/off status light
 //   gui_navigator  commands in (next, prev, back, home, or a page name); the page out when it changes
+//   gui_button     a touch button (needs a gui_touch node on its screen to be pressed)
+//   gui_touch      touch events in (from touch_i2c); button down/up events out
 //   gui_modal      opens a full-screen modal with its payload; payload None closes it
 //
 // Every GUI node's codegen returns the same "gui_core" setup block (deduplicated by key), built once per
@@ -29,7 +31,7 @@ import type {
   SinkCodegenResult,
   TransformCodegenResult,
 } from "../compiler/node-definition.js";
-import { compileScreens, GUI_SCREEN, GUI_MODAL, isWidgetType, modalName, nodeLabel, pyStr, WIDGET_TYPES, type CompiledScreens, type ScreenSize } from "../gui/screens.js";
+import { compileScreens, GUI_BUTTON, GUI_TOUCH, GUI_SCREEN, GUI_MODAL, isWidgetType, modalName, nodeLabel, pyStr, WIDGET_TYPES, type CompiledScreens, type ScreenSize } from "../gui/screens.js";
 
 export type GuiFrameFormat = "gs4" | "gs2" | "mono" | "rgb565";
 const FRAMEBUF_FORMAT: Record<GuiFrameFormat, string> = { gs4: "GS4_HMSB", gs2: "GS2_HMSB", mono: "MONO_HMSB", rgb565: "RGB565" };
@@ -75,7 +77,7 @@ const compiled = new WeakMap<CodegenContext, CompiledScreens>();
 
 function guiNodes(ctx: CodegenContext): GraphNode[] {
   if (!ctx.findNodesOfType) throw new CompileError("GUI nodes need findNodesOfType in the codegen context");
-  return [GUI_SCREEN, GUI_MODAL, ...Object.keys(WIDGET_TYPES), "thingstudio/gui_navigator"].flatMap((t) => ctx.findNodesOfType!(t));
+  return [GUI_SCREEN, GUI_MODAL, ...Object.keys(WIDGET_TYPES), "thingstudio/gui_navigator", GUI_TOUCH].flatMap((t) => ctx.findNodesOfType!(t));
 }
 
 /** The whole flow's screens, compiled once per compile. Throws one CompileError listing every problem. */
@@ -98,7 +100,7 @@ function coreBlock(ctx: CodegenContext): { imports: string[]; statements: { key:
     if (!isWidgetType(n.type)) continue;
     const staleMs = Math.max(0, Math.round(Number(n.properties.staleAfter ?? 0) * 1000)) || 0;
     const draw = c.widgetDraws.get(n.id) ?? "lambda _s, _r, _v, _st: None";
-    lines.push(`_gui.widget(${pyStr(n.id)}, ${draw}, ${staleMs})`);
+    lines.push(`_gui.widget(${pyStr(n.id)}, ${draw}, ${staleMs}${n.type === GUI_BUTTON ? ", True" : ""})`);
   }
   lines.push(`runtime.spawn(_gui.run(), None)`);
   const imports = ["import thingstudio_gui", "import framebuf", ...[...c.imports].sort().map((m) => `import ${m}`)];
@@ -174,6 +176,38 @@ export const guiLabelNode = widgetNode("thingstudio/gui_label");
 export const guiReadoutNode = widgetNode("thingstudio/gui_readout");
 export const guiBarNode = widgetNode("thingstudio/gui_bar");
 export const guiLedNode = widgetNode("thingstudio/gui_led");
+export const guiButtonNode: NodeDefinition = { ...widgetNode(GUI_BUTTON), allowUnwired: true };
+
+/** Touch input for one gui screen. Wire a touch node (touch_i2c) into it: a finger landing on a button on the
+ * visible page sends {topic: <button's name>, payload: 'down'}, and lifting sends 'up' for the same button. Touches
+ * that land on nothing, or on anything that isn't a button, send nothing. Wire the output to whatever the button
+ * does (a switch node on msg.topic, say). */
+export const guiTouchNode: NodeDefinition = {
+  type: GUI_TOUCH,
+  kind: "transform",
+  ports: { inputs: [{ name: "msg", type: "any" }], outputs: [{ name: "msg", type: "any" }] },
+  codegenTransform(node: GraphNode, ctx: CodegenContext): TransformCodegenResult {
+    const core = coreBlock(ctx);
+    const sid = screenId(ctx, node);
+    const names = (ctx.findNodesOfType?.(GUI_BUTTON) ?? []).map((b) => `${pyStr(b.id)}: ${pyStr(typeof b.properties.name === "string" && b.properties.name ? b.properties.name : b.id)}`);
+    const table = ctx.uniqueName("gui_button_names");
+    return {
+      imports: core.imports,
+      statements: [...core.statements, { key: table, code: `${table} = {${names.join(", ")}}` }],
+      functionName: ctx.uniqueName("gui_touch"),
+      functionBody: [
+        `_kind = msg.get('topic')`,
+        `_pt = msg.get('payload')`,
+        `if _kind not in ('down', 'up') or not isinstance(_pt, dict):`,
+        `    raise ValueError('gui touch wants a touch node: topic down or up, payload {x, y}, got %r' % (_kind,))`,
+        `_hit = _gui.touch(${pyStr(sid)}, _kind, _pt['x'], _pt['y'])`,
+        `if _hit is None:`,
+        `    return None`,
+        `return {'topic': ${table}.get(_hit[0], _hit[0]), 'payload': _hit[1]}`,
+      ].join("\n"),
+    };
+  },
+};
 
 export const guiNavigatorNode: NodeDefinition = {
   type: "thingstudio/gui_navigator",
@@ -224,4 +258,4 @@ export const guiModalNode: NodeDefinition = {
   },
 };
 
-export const GUI_NODES: NodeDefinition[] = [guiScreenNode, guiLabelNode, guiReadoutNode, guiBarNode, guiLedNode, guiNavigatorNode, guiModalNode];
+export const GUI_NODES: NodeDefinition[] = [guiScreenNode, guiLabelNode, guiReadoutNode, guiBarNode, guiLedNode, guiButtonNode, guiTouchNode, guiNavigatorNode, guiModalNode];

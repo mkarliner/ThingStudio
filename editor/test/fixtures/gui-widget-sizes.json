@@ -111,6 +111,40 @@
     36,
     6
    ]
+  },
+  {
+   "widget": "button",
+   "cfg": {
+    "font": "font_body16",
+    "text": "Light"
+   },
+   "natural": [
+    55,
+    33
+   ]
+  },
+  {
+   "widget": "button",
+   "cfg": {
+    "font": "font_body20",
+    "text": "OK",
+    "pad": 6
+   },
+   "natural": [
+    40,
+    31
+   ]
+  },
+  {
+   "widget": "button",
+   "cfg": {
+    "font": "font_body16",
+    "max_chars": 6
+   },
+   "natural": [
+    112,
+    33
+   ]
   }
  ]
 }

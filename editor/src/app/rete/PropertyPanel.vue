@@ -245,6 +245,21 @@
         <p class="hint">On when msg.payload is true, off when false.</p>
       </template>
 
+      <template v-else-if="node.kind === 'gui_button'">
+        <label>name (the topic of its events) <input type="text" v-model="node.properties.name" @input="touch" /></label>
+        <label>text <input type="text" v-model="node.properties.text" @input="touch" /></label>
+        <label>room for (characters, if no text) <input type="number" min="1" v-model.number="node.properties.maxChars" @input="touch" /></label>
+        <p class="hint">A touch button. A msg.payload replaces its text (send "ON"/"OFF" from a toggle). Its presses come
+          out of the gui touch node as msg.topic = this name, msg.payload = down or up.</p>
+      </template>
+
+      <template v-else-if="node.kind === 'gui_touch'">
+        <label>name <input type="text" v-model="node.properties.name" @input="touch" /></label>
+        <label>screen <input type="text" v-model="node.properties.screen" placeholder="only needed with two screens" @input="touch" /></label>
+        <p class="hint">Wire a touch node in. A finger landing on a button on the visible page sends the button's name
+          with payload <code>down</code>; lifting sends <code>up</code>. Touches on anything else send nothing.</p>
+      </template>
+
       <template v-else-if="node.kind === 'gui_navigator'">
         <label>name <input type="text" v-model="node.properties.name" @input="touch" /></label>
         <label>screen <input type="text" v-model="node.properties.screen" placeholder="only needed with two screens" @input="touch" /></label>
@@ -288,6 +303,32 @@
         </label>
         <p class="hint">Sends {temperature °C, humidity %, pressure hPa} in msg.payload. A BMP280 works too; its
           humidity is null. The status dot shows whether the sensor is answering.</p>
+      </template>
+
+      <template v-else-if="node.kind === 'touch_i2c'">
+        <ConfigRefField
+          config-type="thingstudio/config/i2c-bus"
+          :model-value="node.properties.i2cConfigId || undefined"
+          @update:model-value="(id) => setConfigId('i2cConfigId', id)"
+        />
+        <label>reset pin (blank = none)
+          <input v-model="node.properties.rstPin" placeholder="e.g. 18" @input="touch" />
+        </label>
+        <label>poll every (ms)
+          <input type="number" min="5" v-model.number="node.properties.pollMs" @input="touch" />
+        </label>
+        <label>panel width
+          <input type="number" min="1" v-model.number="node.properties.width" @input="touch" />
+        </label>
+        <label>panel height
+          <input type="number" min="1" v-model.number="node.properties.height" @input="touch" />
+        </label>
+        <label><input type="checkbox" v-model="node.properties.swapXY" @change="touch" /> swap x and y</label>
+        <label><input type="checkbox" v-model="node.properties.flipX" @change="touch" /> flip x</label>
+        <label><input type="checkbox" v-model="node.properties.flipY" @change="touch" /> flip y</label>
+        <p class="hint">Sends {x, y} in msg.payload with topic <code>down</code> when a finger lands and
+          <code>up</code> when it lifts. Wire it to a gui screen. Width and height are the panel's own size;
+          if a display is rotated, tick swap/flip until a touch lands where you pressed.</p>
       </template>
 
       <template v-else-if="node.kind === 'i2c'">

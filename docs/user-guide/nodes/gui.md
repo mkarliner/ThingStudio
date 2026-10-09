@@ -13,6 +13,12 @@ pages are laid out by editing the flow file. The GUI view, where you lay them ou
 - **gui label** — shows `msg.payload` as text.
 - **gui bar** — a bar that fills between *empty at* and *full at*.
 - **gui light** — on when `msg.payload` is true, off when false.
+- **gui button** — a touch button with text on it. A `msg.payload` replaces the text (send `ON` or `OFF` from a
+  toggle). It needs nothing wired to it. Give it a **name**: that is the topic of its events.
+- **gui touch** — the screen's touch input. Wire a [touch](touch-i2c.md) node into it. A finger landing on a
+  button on the visible page sends `{topic: <button's name>, payload: 'down'}`; lifting sends `'up'`. The button
+  is drawn inverted while it is held. A touch on anything that isn't a button sends nothing, and a modal on
+  screen takes all the touches. `test-flows/gui-touch-freenove-s3-4in.flow.json` turns the page with a button.
 - **gui navigator** — changes the page. Send `next`, `prev`, `back`, `home` or a page name. Sends the new
   page name when it changes.
 - **gui modal** — a full-screen message. Send any payload to open it, `None` to close it. If several are

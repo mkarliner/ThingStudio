@@ -41,6 +41,8 @@ except AttributeError:  # CPython, for host tooling only
 UNKNOWN = 0
 KNOWN = 1
 STALE = 2
+PRESS_MIN_MS = 150  # a button is drawn pressed for at least this long, however short the tap
+PRESSED = 3  # what a touchable widget's draw routine is given as `state` while a finger holds it (never stored)
 STATE_NAMES = ("unknown", "known", "stale")
 
 try:
@@ -71,9 +73,13 @@ CLOSE_REASONS = ("ack", "timeout", "closed")
 
 
 class _Widget:
-    __slots__ = ("id", "draw", "stale_after_ms", "value", "state", "at", "placements")
+    __slots__ = ("id", "draw", "stale_after_ms", "value", "state", "at", "placements", "touchable", "pressed", "down_at", "release_at")
 
-    def __init__(self, wid, draw, stale_after_ms):
+    def __init__(self, wid, draw, stale_after_ms, touchable=False):
+        self.touchable = touchable
+        self.pressed = False
+        self.down_at = 0
+        self.release_at = None  # a quick tap stays drawn pressed until then, so it can be seen
         self.id = wid
         self.draw = draw
         self.stale_after_ms = stale_after_ms
@@ -115,6 +121,7 @@ class Surface:
         self.full = True  # everything on the visible page/modal needs (re)sending or (re)drawing
         self.last_push = None
         self.on_page = None  # callback(page_name): the navigator's output
+        self.held = None  # id of the touchable widget a finger is holding down, or None
         self.pushes = 0
 
     def visible(self):
@@ -215,7 +222,7 @@ class FrameSurface(Surface):
         w = gui.widgets[wid]
         x, y, rw, rh = rect
         try:
-            w.draw(self, rect, w.value, w.state)
+            w.draw(self, rect, w.value, PRESSED if w.pressed else w.state)
         except Exception as e:  # noqa: BLE001 -- one widget's bug must not blank the screen
             fb.fill_rect(x, y, rw, rh, self.background)
             fb.rect(x, y, rw, rh, self.fg)
@@ -375,11 +382,12 @@ class GUI:
 
     # -- setup, from generated code ---------------------------------------------------------------------
 
-    def widget(self, wid, draw, stale_after_ms=0):
+    def widget(self, wid, draw, stale_after_ms=0, touchable=False):
         """Registers widget `wid`. draw(surface, rect, value, state) paints it inside rect=(x, y, w, h) on
         surface.fb, using the surface's helpers and colours (text(), colour_for(), fg/dim/background).
-        stale_after_ms 0: never stale."""
-        self.widgets[wid] = _Widget(wid, draw, stale_after_ms)
+        stale_after_ms 0: never stale. touchable: a button -- touch() can press it, and its draw routine is
+        given state PRESSED (3) while it is held."""
+        self.widgets[wid] = _Widget(wid, draw, stale_after_ms, touchable)
 
     def add_surface(self, surface):
         if surface.name in self.surfaces:
@@ -426,6 +434,52 @@ class GUI:
         for s, pname, _rect in w.placements:
             if s.visible() == pname:
                 s.dirty.add(w.id)
+
+    # -- model: touch -----------------------------------------------------------------------------------
+
+    def touch(self, surface_name, kind, x, y, now=None):
+        """A finger event on one surface, in that surface's pixels: kind is "down" or "up". A down inside a
+        touchable widget on the visible page (or modal) presses it and returns (widget_id, "down"); the up that
+        follows -- wherever the finger lifts -- releases it and returns (widget_id, "up"). Anything else
+        (a touch on empty space or a non-button, an up with nothing held) returns None. Down and up only;
+        the widget is the topmost one under the finger (the last in the page's table)."""
+        s = self._surface(surface_name)
+        now = _ticks_ms() if now is None else now
+        if kind == "down":
+            hit = None
+            for wid, rect in s.visible_widgets():
+                w = self.widgets[wid]
+                if w.touchable and rect[0] <= x < rect[0] + rect[2] and rect[1] <= y < rect[1] + rect[3]:
+                    hit = w
+            if hit is None:
+                return None
+            if s.held is not None and s.held != hit.id:
+                self._release(s, now)
+            s.held = hit.id
+            hit.pressed = True
+            hit.down_at = now
+            hit.release_at = None
+            self._mark(hit)
+            s.last_push = None  # a press is drawn at once, not held back by the redraw rate limit
+            return (hit.id, "down")
+        if kind == "up":
+            if s.held is None:
+                return None
+            wid = s.held
+            self._release(s, now)
+            return (wid, "up")
+        raise ValueError("touch kind must be down or up, not %r" % (kind,))
+
+    def _release(self, s, now):
+        w = self.widgets[s.held]
+        s.held = None
+        wait = PRESS_MIN_MS - _ticks_diff(now, w.down_at)
+        if wait > 0:
+            w.release_at = now + wait  # step() lets go of it then
+        else:
+            w.pressed = False
+            self._mark(w)
+            s.last_push = None
 
     # -- model: navigation ------------------------------------------------------------------------------
 
@@ -545,6 +599,12 @@ class GUI:
         pushed."""
         now = _ticks_ms() if now is None else now
         for w in self.widgets.values():
+            if w.release_at is not None and _ticks_diff(now, w.release_at) >= 0:
+                w.release_at = None
+                w.pressed = False
+                self._mark(w)
+                for s, _p, _r in w.placements:
+                    s.last_push = None
             if w.state == KNOWN and w.stale_after_ms and _ticks_diff(now, w.at) >= w.stale_after_ms:
                 w.state = STALE
                 self._mark(w)
