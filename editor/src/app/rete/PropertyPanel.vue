@@ -214,6 +214,7 @@
         <label><input type="checkbox" v-model="node.properties.wrap" @change="touch" /> next/prev wrap round</label>
         <p class="hint">Sends a frame each time the screen changes. Wire it to a display node with the same size and
           frame format.</p>
+        <ScreenOutline :screen-id="node.id" />
       </template>
 
       <template v-else-if="node.kind === 'gui_readout'">
@@ -796,6 +797,7 @@ import { MAX_FUNCTION_OUTPUTS } from "../../node-library/function-node";
 import ConfigRefField from "./ConfigRefField.vue";
 import PresetRefField from "./PresetRefField.vue";
 import PaletteField from "./PaletteField.vue";
+import ScreenOutline from "./ScreenOutline.vue";
 
 const node = computed(() => {
   propertyVersion.value; // establish reactive dependency even though mutations happen off-Vue

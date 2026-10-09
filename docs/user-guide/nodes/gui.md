@@ -35,6 +35,14 @@ so use them on boards with little RAM.
 
 ## Laying out pages
 
+Select the gui screen node and open **Properties**: each page is listed as an outline of its rows and columns,
+top to bottom in the order things appear on screen. Use ↑ and ↓ to move an element earlier or later, ⇥ to move
+it into the row or column above it, ⇤ to move it out of its container, ✕ to remove it, and ⚙ to set its font,
+grow, gap or padding. Add a widget, spacer, text, row, column or page dots from the bar under each page, add
+and reorder pages (the order of the page dots) from the page's own ↑ ↓, and add a layout for a modal. There is
+no preview yet: if it doesn't fit, Deploy says which widget, on which page. The outline is a view of the
+flow file's `"screens"` section, which you can also edit by hand.
+
 Pages live in the flow file, under `"screens"`, keyed by the gui screen node's id. A page is a tree of
 `row` and `column` containers holding widgets (`"kind": "widget", "node": "<id>"`), fixed `text`,
 `pagedots` and `spacer`s. `test-flows/gui-hero-cyd.flow.json` is a complete example for the CYD.

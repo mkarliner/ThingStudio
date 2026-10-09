@@ -158,7 +158,7 @@ import { NODE_FACTORIES, CustomNode, FunctionNode, portSocket, functionOutputKey
 import { functionNode as functionNodeDefinition } from "../node-library/function-node.js";
 import { DRAG_MIME, CUSTOM_DRAG_MIME, type NodeKind } from "./rete/palette.js";
 import { toGraphData, socketIndex } from "./rete/graph-adapter.js";
-import type { ScreensSection } from "../gui/screens.js";
+import { screens as screensStore, setScreens, setGuiNodeLister } from "./rete/screens-store.js";
 import { CONFIG_TYPES } from "./rete/config-types.js";
 import { propertyVersion, configsVersion, configs as configsStore, replaceAllConfigs, clearConfigs, backendWsUrl, fireInjectNode, updateConfig, activeTarget } from "./rete/store.js";
 import { getCustomNodePackage, listCustomNodeDefinitions, missingNodeTypeMessage, replaceAllCustomNodePackages } from "./rete/custom-nodes-store.js";
@@ -263,7 +263,7 @@ el("clear-canvas").addEventListener("click", async () => {
   // Panes (2026-09-13) are flow-scoped the same way -- back to the single
   // starting pane, same as a brand new flow file.
   resetPanes();
-  currentScreens = {};
+  setScreens({});
   el<HTMLInputElement>("flowNameInput").value = "";
 });
 
@@ -554,7 +554,7 @@ async function applyFlowFile(file: FlowFile): Promise<void> {
     for (const note of i2c.notes) logLine(`[load] ${note}`, "err");
   }
   replaceAllConfigs(file.configs.map((c) => ({ id: c.id, type: c.type, properties: c.properties })));
-  currentScreens = file.screens ?? {};
+  setScreens(file.screens ?? {});
   // Credential storage (2026-09-13): resolve every WiFi/MQTT-broker
   // config's credentialName into real values before any node gets
   // constructed below -- a node's own PropertyPanel.vue block may read a
@@ -669,7 +669,7 @@ el("btnSaveFlow").addEventListener("click", async () => {
   try {
     const { nodes, edges } = extractCanvasSnapshot();
     const flowDisplayName = currentFlowNameInput();
-    const text = serializeFlowFileText(buildFlowFile(nodes, edges, extractConfigsSnapshot(), flowDisplayName, panesStore.value, currentScreens));
+    const text = serializeFlowFileText(buildFlowFile(nodes, edges, extractConfigsSnapshot(), flowDisplayName, panesStore.value, screensStore.value));
     // Suggested filename only -- the picker lets the user type over it
     // freely, same as any "Save As" dialog; nothing here treats this as a
     // storage key the way the brief backend-exclusive period did.
@@ -935,10 +935,17 @@ let lastCompileWarnings: string[] = [];
 
 // The flow's GUI layouts (gui/screens.ts), carried from load to save and into every compile. Until the GUI
 // view exists (phase 6 of gui-layout-widget-system-scoping.md) they're edited in the flow file itself.
-let currentScreens: ScreensSection = {};
+setGuiNodeLister(() =>
+  reteEditor.getNodes().flatMap((n) => {
+    const t = (n as unknown as { nodeType?: string }).nodeType ?? "";
+    if (!t.startsWith("thingstudio/gui_")) return [];
+    const name = (n as unknown as { properties?: { name?: unknown } }).properties?.name;
+    return [{ id: n.id, type: t, name: typeof name === "string" && name.trim() ? name.trim() : `${t.replace("thingstudio/", "")} ${n.id.slice(0, 6)}` }];
+  }),
+);
 
 function currentSource(): string {
-  const graphData = { ...toGraphData(reteEditor, [...configsStore.value.values()]), screens: currentScreens };
+  const graphData = { ...toGraphData(reteEditor, [...configsStore.value.values()]), screens: screensStore.value };
   // mergeCustomNodeRegistry throws (CustomNodeDescriptorError) if two
   // loaded custom packages collide on the same type id -- allowed to
   // propagate out to refreshPreview()'s existing catch below, which
