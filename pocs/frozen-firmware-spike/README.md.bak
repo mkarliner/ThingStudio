@@ -1,0 +1,17 @@
+# Frozen firmware spike (unix-port half)
+
+Briefing and findings: `docs/working-notes/frozen-firmware-spike-briefing.md`.
+
+Reproduce, from a MicroPython checkout in a scratch directory (never the shared mount):
+
+```sh
+MPY_CROSS=<mpy>/mpy-cross/build/mpy-cross ./make_mods.sh
+make -C <mpy>/ports/unix VARIANT=standard BUILD=build-frozen FROZEN_MANIFEST=$PWD/manifest.py
+<mpy>/ports/unix/build-frozen/micropython measure.py            # imports from frozen bytecode
+<mpy>/ports/unix/build-standard/micropython measure.py $PWD/fs  # imports the same modules as .mpy files
+<mpy>/ports/unix/build-frozen/micropython override.py append    # /lib after .frozen: the frozen copy wins
+<mpy>/ports/unix/build-frozen/micropython override.py insert    # /lib before .frozen: the filesystem copy wins
+```
+
+`measure.py` prints the heap each import keeps (`gc.mem_alloc()` after `gc.collect()`, before and after).
+Unix is 64-bit, so object overheads are about twice an ESP32's; the frozen/filesystem ratio is the point.
