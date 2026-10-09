@@ -160,3 +160,20 @@ the msg is open.
   only type ids, so colours and labels can change later without touching saved flows). The hardware buttons'
   labels become "gpio button" (`ebutton`) and "gpio switch" (`eswitch`) so they can't be mistaken for the
   on-screen one. Node-RED Dashboard is the precedent (`ui_button` type, "button" label, one colour).
+- 2026-10-09 (Mike agreed; the button rework, `gui-button-rework-briefing.md`): **a sink may also be an event source
+  (two-faced nodes in the compiler).** A `kind: "sink"` node may define `codegenEventSource`: the input face is the
+  sink call, the output face an event-source coroutine of its own, sending on the node's output wires. Sinks only
+  (a transform's output already means what it returned). The output face is a root; a loop from the output round
+  to the node's own input is two coroutines meeting at the widget's state, not a cycle. First users: `gui_button`
+  and `gui_modal`. The context gets `isInputWired`/`isOutputWired`.
+  - Built: button output `{topic: <name>, payload}` on release inside (or on press); modes momentary / toggle /
+    navigate; a wired toggle is flow-controlled (unknown, tap -> pending, confirm / timeout); the modal's output is
+    `'ack' | 'timeout' | 'closed'`; the touch panel is a config node (`thingstudio/config/touch-panel`, with a
+    reference to an I2C bus config) read by the gui screen, which polls it itself; `gui_touch` is gone; one panel
+    for a screen and a `touch_i2c` node (or two screens) is a compile error naming both.
+  - Mike's answers: toggle payloads default to **`true`/`false`** (on-screen buttons are not Tasmota's physical
+    buttons; on/off values and the value type are properties); pending timeout **at least 5 s** (default 5,
+    compile error below that); a wired toggle **maps the incoming payload through its on/off values**, anything
+    else shows unknown. A Tasmota plug reports text, so its toggle uses value type text with `ON`/`OFF`.
+  - Recommended, not decided: a tap on a still-unknown controlled toggle asks for **on**; taps while pending are
+    ignored; a timed-out request is also reported as a `NoConfirmation` node error so it shows on the console.

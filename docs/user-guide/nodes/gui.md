@@ -7,25 +7,61 @@ pages are laid out by editing the flow file. The GUI view, where you lay them ou
 
 - **gui screen** — one per display. Sends the screen each time it changes, in strips of about 5 KB, so
   a whole frame never has to fit in memory at once. Wire it to a [display spi](display-spi.md) node with
-  the same width, height and frame format.
+  the same width, height and frame format. To use touch, pick a [touch panel](touch-panel.md) in its properties.
 - **gui readout** — shows `msg.payload` as a number with units. Set the lowest and highest value it will
   show, and how many decimals. Its space is sized for that range.
 - **gui label** — shows `msg.payload` as text.
 - **gui bar** — a bar that fills between *empty at* and *full at*.
 - **gui light** — on when `msg.payload` is true, off when false.
-- **gui button** — a touch button with text on it. A `msg.payload` replaces the text (send `ON` or `OFF` from a
-  toggle). It needs nothing wired to it. Give it a **name**: that is the topic of its events.
-- **gui touch** — the screen's touch input. Wire a [touch](touch-i2c.md) node into it. A finger landing on a
-  button on the visible page sends `{topic: <button's name>, payload: 'down'}`; lifting sends `'up'`. The button
-  is drawn inverted while it is held. A touch on anything that isn't a button sends nothing, and a modal on
-  screen takes all the touches. `test-flows/gui-touch-freenove-s3-4in.flow.json` turns the page with a button.
+- **gui button** — a touch button. It has an input, which sets what it shows, and an output, which sends when it is
+  tapped. See [Buttons](#buttons).
 - **gui navigator** — changes the page. Send `next`, `prev`, `back`, `home` or a page name. Sends the new
   page name when it changes.
 - **gui modal** — a full-screen message. Send any payload to open it, `None` to close it. If several are
-  open, the highest priority shows and the rest wait.
+  open, the highest priority shows and the rest wait. Its output sends how it closed:
+  `{topic: <modal's name>, payload: 'ack' | 'timeout' | 'closed'}`.
 
 Each widget starts as `--` until a value arrives. With **stale after** set, a value that isn't updated in
 time is dimmed (or underlined, on a black-and-white display), so an old reading never looks current.
+
+## Buttons
+
+A button's **mode** says what a tap does.
+
+- **momentary** — sends its value: `{topic: <button's name>, payload: true}`.
+- **toggle** — sends the opposite of its state. It shows its *on* and *off* text.
+- **navigate** — changes page: `next`, `prev`, `back`, `home` or a page name. It needs no wires.
+
+A button sends when your finger lifts inside it. Lift outside and nothing is sent. Set **send on** to *press*
+to send as soon as it is touched. It is drawn inverted while held.
+
+Values are `true` and `false` by default. Set the **value type** to text or number to send something else, such
+as `ON` and `OFF`.
+
+A button needs a [touch panel](touch-panel.md) on its screen to be pressed. Deploy warns if a screen has
+buttons and no panel, and if a momentary or toggle button's output goes nowhere.
+
+### A toggle that follows the real device
+
+Wire the toggle's input to the device's real state, and its output to whatever switches it:
+
+```
+mqtt subscribe (stat/plug/POWER) -> toggle -> mqtt publish (cmnd/plug/POWER)
+```
+
+With the input wired, the flow owns the state:
+
+- Before the first report the toggle shows `--` (a dashed outline).
+- A tap shows the state you asked for, with a dotted outline, until the input confirms it.
+- If the input says something different, the toggle shows what the input says.
+- If nothing comes back in time, it returns to the last known state, shows a cross for a moment, and the
+  console reports it. See [a toggle goes back](../debugging.md#a-toggle-button-goes-back).
+
+The input is matched against the toggle's *on sends* and *off sends* values. Anything else shows `--`. Tasmota
+reports `ON` and `OFF` as text, so for a Tasmota plug set the value type to text and use `ON` and `OFF`.
+`test-flows/gui-touch-freenove-s3-4in.flow.json` has this on its last page.
+
+Unwired, the toggle keeps its own state and starts as set by *starts on*.
 
 ## Colour
 

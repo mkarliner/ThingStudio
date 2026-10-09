@@ -138,6 +138,19 @@ An empty list means nothing answered. Check, in this order:
 
 A different address from the one set on the node means the address is wrong, not the wiring.
 
+## A toggle button goes back
+
+A [gui toggle](nodes/gui.md#a-toggle-that-follows-the-real-device) with its input wired shows the state you asked
+for until the input confirms it. If nothing arrives in time (5 s by default), it returns to its last state, shows a
+cross for a moment, and the console prints `NODE_ERROR ... NoConfirmation: no confirmation within 5 s`.
+
+Check, in this order:
+
+- The device is reachable and the command reached it. Watch the command topic with a debug node.
+- The input is wired to the device's *state* topic, not the command topic.
+- The state is sent in a form the toggle matches. A toggle set to `true` and `false` ignores `ON` and `OFF`: set its
+  value type to text.
+
 ## Reading a node error
 
 When a node raises an exception on the device, the board reports which node and what went wrong. Every network node (`udp_send`, `udp_receive`, `http_request`, `mqtt_publish`, `mqtt_subscribe`) follows the same convention for its own errors: the operation and the host/port it was talking to are named directly in the message, not left for you to guess from a bare exception. If you see a raw, unattributed error with no context from a network node, that's worth reporting — every network node in this project is meant to wrap its own errors before they reach you.

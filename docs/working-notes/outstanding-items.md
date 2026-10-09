@@ -75,11 +75,13 @@ not here.
 - **[LAUNCH]** **CYD gate for custom firmware images.** Run the gate in `decisions/gui-layout.md` (2026-10-09)
   on a classic CYD. Pass: custom images are post-MVP. Fail: build a small set of custom images (classic ESP32
   first) with the packaging, hosting and flashing-docs work that brings. `frozen-firmware-spike-briefing.md`.
-- **[LAUNCH]** **Button rework: own output, modes, touch panel as a config node.** Per
-  `decisions/gui-layout.md` 2026-10-09: button output with momentary/toggle/navigate modes, input as the
-  shown state (controlled toggle with pending), touch panel config node read by the gui screen and by
-  `touch_i2c`; remove `gui_touch`; `allowUnwired` only for navigate buttons; update `nodes/gui.md`,
-  `touch-i2c.md`, the touch test flow. Needed by the headliner's plug toggle.
+- **[LAUNCH]** **Button rework -- built 2026-10-09, hardware checks owed.** Two-faced nodes in the compiler;
+  button output, modes and controlled toggle; modal close reason; touch panel config node polled by the gui
+  screen; `gui_touch` removed (`decisions/gui-layout.md` 2026-10-09, `gui-button-rework-briefing.md`). Owed on
+  the FNK0104S (Mike): the plug toggle end to end (unknown -> pending -> confirmed, and the 5 s revert), the
+  pending/unknown/failed looks, release-outside sends nothing, a navigate button, the touch panel config
+  (landscape axes still owed from the earlier review). Not done: an unknown toggle's tap sends *on* (a
+  recommendation, not decided); the GUI view's button properties; GT911/CST820 panel controllers.
 - **[LAUNCH-NICE]** **Palette: one colour per group; labels without `gui`.** Per `decisions/gui-layout.md`
   2026-10-09: recolour every kind in `palette.ts` by group, relabel the GUI kinds, `ebutton`/`eswitch` as
   "gpio button"/"gpio switch". Retake the annotated editor screenshots in the user docs afterwards.

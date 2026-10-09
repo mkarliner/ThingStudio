@@ -59,3 +59,14 @@ Connect and deploy again.
 
 It's next to **Thingstudio** in the toolbar, and in **Help → About**. A `+` after it means the editor was built
 from changes that weren't committed yet.
+
+## My gui toggle shows `--`. Why?
+
+A toggle with its input wired shows `--` until the input sends a value it recognises. It matches the input against
+its *on sends* and *off sends* values, `true` and `false` unless you changed them. A Tasmota plug reports `ON` and
+`OFF` as text: set the toggle's value type to text. See [a toggle that follows the real device](nodes/gui.md#a-toggle-that-follows-the-real-device).
+
+## Why can't I use a touch node and a gui screen on the same panel?
+
+Both would poll the same chip, and each would take touches from the other. A gui screen reads its panel itself.
+Use the touch node only when you aren't using the GUI. Deploy stops and names both nodes if a panel is picked twice.

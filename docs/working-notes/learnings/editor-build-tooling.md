@@ -89,3 +89,12 @@ Status: detail file, split out of `learnings.md` on 2026-09-06 to keep that inde
   compile pipeline yet to pick a different value automatically, flagged as a real open gap, not solved
   here. `docs/working-notes/outstanding-items/display-spi-framebuffer-memory.md`,
   `decisions/node-authoring.md`'s 2026-09-18 entries.
+
+## The editor's MicroPython end-to-end tests read `device-runtime/` from beside the editor, 2026-10-09
+
+`gui-compile.test.ts` (run with `MICROPYTHON_BIN` set) copies `gui.py` and the widget modules from
+`../../device-runtime/src` relative to the test file. In a scratch copy of the tree, copy `device-runtime/` again
+after editing it: a stale copy runs the old library against newly generated code and fails with an
+`AttributeError` on a method the new code calls, which looks like a codegen bug and isn't. Also: a build started
+with `nohup ... &` from a tool call dies with that call's shell, so build the MicroPython unix port in
+steps (`make -C mpy-cross`, then `make submodules`, then `make`), each inside one call.

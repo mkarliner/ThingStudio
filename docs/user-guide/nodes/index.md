@@ -90,6 +90,8 @@ Some settings are set once and shared by the nodes that use them:
 - **WiFi network** and **MQTT broker**: config nodes, with the real passwords kept outside the flow file. See
   [config nodes](../canvas-basics.md#config-nodes).
 - **I2C bus**: the pins and clock for a bus, shared by every I2C node on it. See [I2C buses](i2c-bus.md).
+- **Touch panel**: the controller, bus and size of a touch screen, used by a gui screen or a touch node. See
+  [touch panels](touch-panel.md).
 
 ## Something missing?
 
