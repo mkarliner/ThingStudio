@@ -75,16 +75,17 @@ not here.
 - **[LAUNCH]** **CYD gate for custom firmware images.** Run the gate in `decisions/gui-layout.md` (2026-10-09)
   on a classic CYD. Pass: custom images are post-MVP. Fail: build a small set of custom images (classic ESP32
   first) with the packaging, hosting and flashing-docs work that brings. `frozen-firmware-spike-briefing.md`.
-- **[LAUNCH]** **Button rework -- built 2026-10-09, hardware checks owed.** Two-faced nodes in the compiler;
-  button output, modes and controlled toggle; modal close reason; touch panel config node polled by the gui
-  screen; `gui_touch` removed (`decisions/gui-layout.md` 2026-10-09, `gui-button-rework-briefing.md`). Owed on
-  the FNK0104S (Mike): the plug toggle end to end (unknown -> pending -> confirmed, and the 5 s revert), the
-  pending/unknown/failed looks, release-outside sends nothing, a navigate button, the touch panel config
-  (landscape axes still owed from the earlier review). Not done: an unknown toggle's tap sends *on* (a
-  recommendation, not decided); the GUI view's button properties; GT911/CST820 panel controllers.
-- **[LAUNCH-NICE]** **Palette: one colour per group; labels without `gui`.** Per `decisions/gui-layout.md`
-  2026-10-09: recolour every kind in `palette.ts` by group, relabel the GUI kinds, `ebutton`/`eswitch` as
-  "gpio button"/"gpio switch". Retake the annotated editor screenshots in the user docs afterwards.
+- **[LAUNCH]** **Button rework -- built and hardware-checked 2026-10-09.** Two-faced nodes in the compiler;
+  button output, modes and controlled toggle; modal close reason; touch panel config node (with presets) polled by
+  the gui screen; `gui_touch` removed (`decisions/gui-layout.md` 2026-10-09, `gui-button-rework-briefing.md`).
+  Mike checked on the FNK0104S: the plug toggle (confirm and 5 s revert), release-outside, navigate, equal rows,
+  text confirming a toggle. Still owed: the touch panel's landscape axes (from the earlier review) and a
+  rotation control (display rotation, screen size and touch axes are three separate settings and nothing links
+  them; a "rotate 0/90/180/270" choice would set all three). Not done: the GUI view's button properties;
+  GT911/CST820 panel controllers.
+- **[LAUNCH-NICE]** **Palette: one colour per group.** Per `decisions/gui-layout.md` 2026-10-09: recolour every
+  kind in `palette.ts` by group, `ebutton`/`eswitch` as "gpio button"/"gpio switch". (Done: the GUI labels have no
+  `gui` prefix and the group is "GUI".) Retake the annotated editor screenshots in the user docs afterwards.
 - **[LAUNCH]** **`touch_i2c` node (FT6336U first).** Event source; design for the GT911/FT6236/CST820
   family. `touch-input-briefing.md`. `touch_spi` (classic CYD) can follow.
 - **[LAUNCH]** **Headliner example flow and task guide** — "a touch panel for the things you already own"

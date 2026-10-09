@@ -177,3 +177,35 @@ the msg is open.
     else shows unknown. A Tasmota plug reports text, so its toggle uses value type text with `ON`/`OFF`.
   - Recommended, not decided: a tap on a still-unknown controlled toggle asks for **on**; taps while pending are
     ignored; a timed-out request is also reported as a `NoConfirmation` node error so it shows on the console.
+- 2026-10-09 (Mike, after hardware checks of the button rework): **toggle timeout stays "revert to the last known
+  state"** with the cross shown for a moment and a `NoConfirmation` node error. Not "go to unknown": a plug whose
+  command went unanswered most likely didn't change. Settled by Mike ("toggle timeout fine"). The two open
+  recommendations above are now decided as built: an unknown toggle's first tap asks for **on**; taps while
+  pending are ignored.
+- 2026-10-09 (Mike): **a controlled toggle matches text from the flow.** MQTT and UDP deliver text, so the text
+  `true`/`false` (any case) matches a true/false toggle and `1`/`0` a number toggle (`_same()` in `gui.py`); a
+  value type of text still compares exactly. Found when a bool toggle fed from `mqtt_subscribe` stayed unknown.
+- 2026-10-09 (Mike): **two labels, and no more defaults of `true`.** Every node has a **flow label**
+  (`properties.label`): the title on the canvas and the name in messages, editor-only, never sent to the board;
+  blank shows the kind. A button's **board label** (its `text`) is what is drawn on it, blank meaning the flow
+  label, so one label is usually enough. A button's old "name (the topic of its output)" is now **topic**; the
+  other GUI nodes keep `name`, which screens, modals and navigators are referred to by. A button's value fields
+  are blank by default, showing the default for the value type as a placeholder (it had been pre-filled with
+  `true`, which stayed put when the type changed to text). Rejected: caption and label as separate things with
+  one overriding the other (Mike: redundant).
+- 2026-10-09 (Mike): **widgets in a row share it equally.** A widget directly inside a row with no `grow` set
+  gets grow 1 and starts from nothing (new `flex` flag in `layout.ts`, CSS `flex: 1`), so equal weights give equal
+  widths, never below the natural width (such a widget keeps its natural width and the rest share the remainder).
+  `grow: 0` keeps a widget at its natural size. Rows only: columns, text, spacers and page dots are unchanged.
+  Existing rows with widgets and no `grow` change width.
+- 2026-10-09 (Mike): **one widget on several pages of a screen.** Only one page shows at a time, so a widget (a
+  navigation button on every page) may sit on any number of a screen's pages and modals, drawn the same way on each
+  (same font and options, else a compile error), sharing one value and state. Twice on one page, or on two screens,
+  is still an error. The device side already kept a list of placements per widget. The outline's add menus list
+  widgets not already on that page. Deleting a widget node now also takes it out of every layout.
+- 2026-10-09 (Mike): **the navigator is hidden from the palette.** A navigate button does the same from the
+  screen; `gui_navigator` stays in the compiler so saved flows still compile. Remove it entirely only if nothing
+  uses it. The palette group is "GUI" and the labels have no `gui` prefix (the recolour by group is still owed).
+- 2026-10-09 (Mike): **touch panels get presets** like the display nodes: the touch-panel config's edit form has the
+  preset control (`touch_panel` presets). The I2C bus reference is not saved in a preset.
+
