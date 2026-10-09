@@ -46,6 +46,8 @@ DEPENDENCIES: list[dict] = [
     {"name": "delay_ms", "files": [("primitives_events/delay_ms.py", "delay_ms.py")], "requires": []},
     {"name": "events", "files": [("primitives_events/events.py", "events.py")], "requires": ["delay_ms"]},
     {"name": "st7789py", "files": [("st7789py_mpy/st7789py.py", "st7789py.py")], "requires": []},
+    # ST7796 (320x480) panels: Thingstudio's own start-up sequence on st7789py's ST77xx base.
+    {"name": "st7796py", "files": [("st7796py/st7796py.py", "st7796py.py")], "requires": ["st7789py"]},
     {"name": "ssd1306", "files": [("ssd1306/ssd1306.py", "ssd1306.py")], "requires": []},
     {"name": "bme280_float", "files": [("bme280/bme280_float.py", "bme280_float.py")], "requires": []},
     # Thingstudio's own GUI subsystem (gui-layout-widget-system-scoping.md, phase 4): a library, not part of the

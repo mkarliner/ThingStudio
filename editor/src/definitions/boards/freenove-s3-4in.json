@@ -1,0 +1,18 @@
+{
+  "name": "Freenove ESP32-S3 Display 4.0\" (FNK0104S, ST7796)",
+  "processor": "esp32-s3",
+  "wifi": true,
+  "match": [],
+  "pins": {
+    "TFT_SCK": 12,
+    "TFT_MOSI": 11,
+    "TFT_CS": 10,
+    "TFT_DC": 46,
+    "BACKLIGHT": 45,
+    "TOUCH_SDA": 16,
+    "TOUCH_SCL": 15,
+    "TOUCH_INT": 17,
+    "TOUCH_RST": 18
+  },
+  "notes": "Reports itself as a generic ESP32-S3, so pick it by hand in the Board menu. 320x480 ST7796 over SPI, no reset pin, backlight on high, colours inverted. Touch is an FT6336U on I2C. Pins are from Freenove's own TFT_eSPI setup and touch example; check your own unit. Use SPI bus 1 for the display's fast pins. Display rotation 1 is portrait; rotation 4 is landscape with the USB socket on the right (rotation 7 puts it on the left)."
+}

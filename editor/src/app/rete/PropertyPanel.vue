@@ -441,6 +441,7 @@
         <label>controller
           <select v-model="node.properties.controller" @change="touch">
             <option value="st7789">ST7789</option>
+            <option value="st7796">ST7796 (320x480)</option>
           </select>
         </label>
         <label>frame format

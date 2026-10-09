@@ -11,7 +11,8 @@ defaults below are exactly what saving a "cyd" preset from a correctly-configure
 
 ## Properties
 
-- **controller** — the display chip. Only `ST7789` today.
+- **controller** — the display chip: `ST7789` (240x240, 135x240, 240x320) or `ST7796` (320x480). An
+  ST7796 panel has no offset, so leave xstart / ystart at `-1`.
 - **frame format** — `rgb565` (default, full color, `width * height * 2` bytes), or an indexed
   format: `gs4` (4-bit, a quarter the memory), `gs2` (2-bit, an eighth), or `mono` (1-bit, a
   sixteenth). Switch away from `rgb565` if a full RGB565 buffer won't fit in memory — the lower the

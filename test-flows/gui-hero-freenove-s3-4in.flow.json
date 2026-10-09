@@ -1,0 +1,432 @@
+{
+  "formatVersion": 1,
+  "flowName": "gui-hero-freenove-s3-4in",
+  "nodes": [
+    {
+      "id": "n01-sensor",
+      "type": "thingstudio/timer",
+      "properties": {
+        "intervalMs": 2000
+      }
+    },
+    {
+      "id": "n02-split",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "# Fake readings (no BME280 wired): slow triangle waves from the tick count.\nk = msg['payload']\nw = k % 40\nw = w if w < 20 else 40 - w\nt = {'topic': 'temperature', 'payload': 15 + w * 0.6}\nh = {'topic': 'humidity', 'payload': 40 + w * 2}\np = {'topic': 'pressure', 'payload': 990 + w * 2}\nok = {'topic': 'sensor', 'payload': k % 2 == 0}\nreturn [t, h, p, ok]\n",
+        "outputCount": 4
+      }
+    },
+    {
+      "id": "n03-temp",
+      "type": "thingstudio/gui_readout",
+      "properties": {
+        "name": "Temperature",
+        "units": "°C",
+        "decimals": 1,
+        "lo": -20,
+        "hi": 50,
+        "staleAfter": 15
+      }
+    },
+    {
+      "id": "n04-hum",
+      "type": "thingstudio/gui_readout",
+      "properties": {
+        "name": "Humidity",
+        "units": "%",
+        "decimals": 0,
+        "lo": 0,
+        "hi": 100,
+        "staleAfter": 15
+      }
+    },
+    {
+      "id": "n05-press",
+      "type": "thingstudio/gui_readout",
+      "properties": {
+        "name": "Pressure",
+        "units": "hPa",
+        "decimals": 0,
+        "lo": 900,
+        "hi": 1100,
+        "staleAfter": 15
+      }
+    },
+    {
+      "id": "n06-pbar",
+      "type": "thingstudio/gui_bar",
+      "properties": {
+        "name": "Pressure bar",
+        "lo": 950,
+        "hi": 1050,
+        "staleAfter": 15
+      }
+    },
+    {
+      "id": "n07-alive",
+      "type": "thingstudio/gui_led",
+      "properties": {
+        "name": "Sensor",
+        "staleAfter": 15
+      }
+    },
+    {
+      "id": "n08-tick",
+      "type": "thingstudio/timer",
+      "properties": {
+        "intervalMs": 8000
+      }
+    },
+    {
+      "id": "n09-next",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "msg['payload'] = 'next'\nreturn msg\n",
+        "outputCount": 1
+      }
+    },
+    {
+      "id": "n10-nav",
+      "type": "thingstudio/gui_navigator",
+      "properties": {
+        "name": "nav",
+        "screen": ""
+      }
+    },
+    {
+      "id": "n11-navdbg",
+      "type": "thingstudio/debug",
+      "properties": {
+        "fullMessage": false
+      }
+    },
+    {
+      "id": "n12-screen",
+      "type": "thingstudio/gui_screen",
+      "properties": {
+        "name": "tft",
+        "width": 320,
+        "height": 480,
+        "frameFormat": "gs4",
+        "minInterval": 200,
+        "wrap": true
+      }
+    },
+    {
+      "id": "n13-display",
+      "type": "thingstudio/display_spi",
+      "properties": {
+        "controller": "st7796",
+        "frameFormat": "gs4",
+        "spiBus": 1,
+        "baudrate": 40000000,
+        "sck": 12,
+        "mosi": 11,
+        "dc": 46,
+        "cs": 10,
+        "reset": -1,
+        "backlight": 45,
+        "width": 320,
+        "height": 480,
+        "rotation": 1,
+        "xstart": -1,
+        "ystart": -1,
+        "colorOrder": "bgr",
+        "invertColors": true,
+        "dataLatchOrder": true
+      }
+    }
+  ],
+  "edges": [
+    [
+      "n01-sensor",
+      0,
+      "n02-split",
+      0
+    ],
+    [
+      "n02-split",
+      0,
+      "n03-temp",
+      0
+    ],
+    [
+      "n02-split",
+      1,
+      "n04-hum",
+      0
+    ],
+    [
+      "n02-split",
+      2,
+      "n05-press",
+      0
+    ],
+    [
+      "n02-split",
+      2,
+      "n06-pbar",
+      0
+    ],
+    [
+      "n02-split",
+      3,
+      "n07-alive",
+      0
+    ],
+    [
+      "n08-tick",
+      0,
+      "n09-next",
+      0
+    ],
+    [
+      "n09-next",
+      0,
+      "n10-nav",
+      0
+    ],
+    [
+      "n10-nav",
+      0,
+      "n11-navdbg",
+      0
+    ],
+    [
+      "n12-screen",
+      0,
+      "n13-display",
+      0
+    ]
+  ],
+  "layout": {
+    "n01-sensor": {
+      "pos": [
+        80,
+        80
+      ]
+    },
+    "n02-split": {
+      "pos": [
+        300,
+        80
+      ]
+    },
+    "n03-temp": {
+      "pos": [
+        520,
+        80
+      ]
+    },
+    "n04-hum": {
+      "pos": [
+        740,
+        80
+      ]
+    },
+    "n05-press": {
+      "pos": [
+        80,
+        200
+      ]
+    },
+    "n06-pbar": {
+      "pos": [
+        300,
+        200
+      ]
+    },
+    "n07-alive": {
+      "pos": [
+        520,
+        200
+      ]
+    },
+    "n08-tick": {
+      "pos": [
+        740,
+        200
+      ]
+    },
+    "n09-next": {
+      "pos": [
+        80,
+        320
+      ]
+    },
+    "n10-nav": {
+      "pos": [
+        300,
+        320
+      ]
+    },
+    "n11-navdbg": {
+      "pos": [
+        520,
+        320
+      ]
+    },
+    "n12-screen": {
+      "pos": [
+        740,
+        320
+      ]
+    },
+    "n13-display": {
+      "pos": [
+        80,
+        440
+      ]
+    }
+  },
+  "configs": [],
+  "panes": [
+    {
+      "id": "pane-1",
+      "name": "Flow 1"
+    }
+  ],
+  "paneOf": {
+    "n01-sensor": "pane-1",
+    "n02-split": "pane-1",
+    "n03-temp": "pane-1",
+    "n04-hum": "pane-1",
+    "n05-press": "pane-1",
+    "n06-pbar": "pane-1",
+    "n07-alive": "pane-1",
+    "n08-tick": "pane-1",
+    "n09-next": "pane-1",
+    "n10-nav": "pane-1",
+    "n11-navdbg": "pane-1",
+    "n12-screen": "pane-1",
+    "n13-display": "pane-1"
+  },
+  "screens": {
+    "n12-screen": {
+      "pages": [
+        {
+          "name": "climate",
+          "root": {
+            "kind": "column",
+            "gap": 6,
+            "padding": 4,
+            "children": [
+              {
+                "kind": "row",
+                "padding": 6,
+                "alignSelf": "stretch",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "Living room",
+                    "font": "font_body20",
+                    "grow": 1
+                  },
+                  {
+                    "kind": "widget",
+                    "node": "n07-alive",
+                    "diameter": 14
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "Temperature",
+                "font": "font_body16"
+              },
+              {
+                "kind": "widget",
+                "node": "n03-temp",
+                "font": "font_digits48",
+                "unitsFont": "font_body24",
+                "alignSelf": "center"
+              },
+              {
+                "kind": "text",
+                "text": "Humidity",
+                "font": "font_body16"
+              },
+              {
+                "kind": "widget",
+                "node": "n04-hum",
+                "font": "font_digits48",
+                "unitsFont": "font_body24",
+                "alignSelf": "center"
+              },
+              {
+                "kind": "spacer",
+                "grow": 1
+              },
+              {
+                "kind": "pagedots",
+                "alignSelf": "center"
+              }
+            ]
+          }
+        },
+        {
+          "name": "pressure",
+          "root": {
+            "kind": "column",
+            "gap": 6,
+            "padding": 4,
+            "children": [
+              {
+                "kind": "row",
+                "padding": 6,
+                "alignSelf": "stretch",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "Pressure",
+                    "font": "font_body20",
+                    "grow": 1
+                  }
+                ]
+              },
+              {
+                "kind": "widget",
+                "node": "n05-press",
+                "font": "font_digits48",
+                "unitsFont": "font_body20",
+                "alignSelf": "center"
+              },
+              {
+                "kind": "widget",
+                "node": "n06-pbar",
+                "height": 16,
+                "alignSelf": "stretch"
+              },
+              {
+                "kind": "row",
+                "alignSelf": "stretch",
+                "justify": "space-between",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "950",
+                    "font": "font_body12"
+                  },
+                  {
+                    "kind": "text",
+                    "text": "1050",
+                    "font": "font_body12"
+                  }
+                ]
+              },
+              {
+                "kind": "spacer",
+                "grow": 1
+              },
+              {
+                "kind": "pagedots",
+                "alignSelf": "center"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

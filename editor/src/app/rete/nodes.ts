@@ -725,7 +725,7 @@ export class DisplaySpiNode extends ClassicPreset.Node {
   statusText: string | null = null;
 
   properties: {
-    controller: "st7789";
+    controller: "st7789" | "st7796";
     frameFormat: "rgb565" | "gs4" | "gs2" | "mono";
     palette: number[];
     spiBus: number;

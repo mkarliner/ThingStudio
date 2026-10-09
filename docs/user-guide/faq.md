@@ -30,6 +30,12 @@ one. A 240x320 frame in 16 greys is 38,400 bytes. The [GUI nodes](nodes/gui.md) 
 screen in small strips. If your own `function` node builds a full frame, draw it in strips too, or restart
 the board before deploying.
 
+## My ESP32-S3 board has PSRAM, but the console shows only about 120 KB free. Why?
+
+The firmware doesn't use the PSRAM. The generic ESP32-S3 build leaves it off. Flash the build for boards with
+octal PSRAM (the `SPIRAM_OCT` variant) from [micropython.org/download](https://micropython.org/download/ESP32_GENERIC_S3/).
+The console then shows megabytes free. Freenove's S3 display boards are an example: 121 KB before, 7.8 MB after.
+
 ## Which board should I use for a display and WiFi together?
 
 An ESP32 with external RAM (PSRAM), such as many ESP32-S3 boards. MicroPython puts its heap in the external RAM,

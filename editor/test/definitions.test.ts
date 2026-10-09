@@ -55,7 +55,7 @@ describe("built-in definitions", () => {
   it("all load with no problems", () => {
     expect(defs.problems).toEqual([]);
     expect([...defs.processors.keys()].sort()).toEqual(["esp32", "esp32-c3", "esp32-s2", "esp32-s3", "rp2040", "rp2350"]);
-    expect([...defs.boards.keys()].sort()).toEqual(["cyd", "lolin-s2-mini", "pico", "pico-2", "pico-w"]);
+    expect([...defs.boards.keys()].sort()).toEqual(["cyd", "freenove-s3-4in", "lolin-s2-mini", "pico", "pico-2", "pico-w"]);
   });
 
   it("FALLBACK_MAX_PIN is the widest range any built-in processor has", () => {

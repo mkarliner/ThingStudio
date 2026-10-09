@@ -243,7 +243,7 @@ import { checkOptionalPin, checkPin, checkSpi } from "../definitions/pin-check.j
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, NodeDefinition, SinkCodegenResult } from "../compiler/node-definition.js";
 
-const CONTROLLERS = ["st7789"] as const;
+const CONTROLLERS = ["st7789", "st7796"] as const;
 type Controller = (typeof CONTROLLERS)[number];
 
 const FRAME_FORMATS = ["rgb565", "gs4", "gs2", "mono"] as const;
@@ -607,7 +607,11 @@ export const displaySpiNode: NodeDefinition = {
     const strideBytes = isIndexed ? Math.ceil(width / PIXELS_PER_BYTE[frameFormat as IndexedFrameFormat]) : null;
     const expectedBytes = isIndexed ? strideBytes! * height : width * height * 2; // RGB565
 
+    // ST7796 (320x480) is its own small driver on the ST77xx base, so a flow without one never carries it.
+    // Its constructor takes no offset table: -1 means 0 there.
+    const driverClass = controller === "st7796" ? "ST7796" : "ST7789";
     const imports = ["import machine", "from st7789py import ST7789, ST7789_MADCTL"];
+    if (controller === "st7796") imports.push("from st7796py import ST7796");
     if (isIndexed) {
       imports.push("import array");
       if (!DIAGNOSTIC_PLAIN_PYTHON) imports.push("import micropython");
@@ -622,7 +626,7 @@ export const displaySpiNode: NodeDefinition = {
           `${dcVar} = machine.Pin(${dc}, machine.Pin.OUT)`,
           `${resetVar} = ${resetExpr}`,
           `${blVar} = ${blExpr}`,
-          `${dispVar} = ST7789(${spiVar}, ${width}, ${height}, ${resetVar}, ${dcVar}, cs=${csVar}, backlight=${blVar}, xstart=${xstart}, ystart=${ystart})`,
+          `${dispVar} = ${driverClass}(${spiVar}, ${width}, ${height}, ${resetVar}, ${dcVar}, cs=${csVar}, backlight=${blVar}, xstart=${xstart}, ystart=${ystart})`,
           `${dispVar}.init()`,
           // Overrides ST7789.init()'s own hardcoded inversion_mode(True)
           // and _set_mem_access_mode(4, True, True, False) calls -- see
