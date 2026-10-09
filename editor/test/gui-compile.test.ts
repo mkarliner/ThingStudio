@@ -364,6 +364,29 @@ describe("touch buttons", () => {
     expect(src({ text: "", label: "Fire!" })).toContain('tsgui_button.make(font_body20, "Fire!")');
   });
 
+  describe("a screen and its display agree on size", () => {
+    const withDisplay = (screenW: number, screenH: number, display: Record<string, unknown>): GraphData => {
+      const g = buttonFlow({ mode: "momentary" }, { wiredOut: true });
+      g.nodes = g.nodes.filter((n) => n.id !== "frame_fn");
+      g.links = g.links.filter((l) => l[1] !== "screen");
+      const scr = g.nodes.find((n) => n.id === "screen")!;
+      scr.properties.width = screenW;
+      scr.properties.height = screenH;
+      scr.properties.frameFormat = "rgb565";
+      g.nodes.push(node("disp", "display_spi", { controller: "st7796", frameFormat: "rgb565", spiBus: 1, baudrate: 40000000, sck: 12, mosi: 11, dc: 46, cs: 10, backlight: 45, width: 320, height: 480, rotation: 0, xstart: -1, ystart: -1, ...display }));
+      g.links.push([9, "screen", 0, "disp", 0, "bytes"]);
+      return g;
+    };
+    it("an oriented display wants the screen at the panel's own size, and says so", () => {
+      expect(() => compile(withDisplay(320, 240, { orientation: "90" }), buildRegistry())).toThrow(/is 320x240 but .* shows 480x320: set the screen's width and height to 320x480/);
+      expect(() => compile(withDisplay(320, 480, { orientation: "90" }), buildRegistry())).not.toThrow();
+    });
+    it("without an orientation the two sizes must simply match", () => {
+      expect(() => compile(withDisplay(320, 240, {}), buildRegistry())).toThrow(/set the screen's width and height to 320x480/);
+      expect(() => compile(withDisplay(320, 480, {}), buildRegistry())).not.toThrow();
+    });
+  });
+
   it("a panel with no I2C bus is refused, naming the screen that uses it", () => {
     const g = buttonFlow({ mode: "toggle" }, { wiredOut: true, panel: true });
     for (const n of g.configs ?? []) if (n.type === "thingstudio/config/touch-panel") n.properties.i2cConfigId = "";

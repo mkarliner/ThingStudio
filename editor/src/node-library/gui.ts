@@ -81,6 +81,25 @@ function screenSize(node: GraphNode, ctx: CodegenContext): ScreenSize & { format
   return { width, height, format };
 }
 
+/** A screen and the SPI display it is wired to must agree on the picture's size, or the display reads the frames at
+ * the wrong width and shows scrambled rows. With an orientation, both nodes hold the panel's own size. */
+function checkDisplaySize(node: GraphNode, ctx: CodegenContext, width: number, height: number): void {
+  const display = ctx.findWiredTargets?.(node.id).find((n) => n.type === "thingstudio/display_spi");
+  if (!display) return;
+  const dw = Math.round(Number(display.properties.width));
+  const dh = Math.round(Number(display.properties.height));
+  if (!(dw > 0 && dh > 0)) return;
+  const angle = resolveOrientation(ctx, display, "display_spi");
+  const want = angle === null ? { width: dw, height: dh } : turnedSize(dw, dh, angle);
+  if (want.width === width && want.height === height) return;
+  const screenW = Math.round(Number(node.properties.width));
+  const screenH = Math.round(Number(node.properties.height));
+  const fix = angle === null ? `${want.width}x${want.height}` : `${dw}x${dh}, the panel's own size, since the display's orientation is ${angle}`;
+  throw new CompileError(
+    `GUI screen ${nodeLabel(node)} is ${screenW}x${screenH} but the display it is wired to (${nodeLabel(display)}) shows ${want.width}x${want.height}: set the screen's width and height to ${fix}`,
+  );
+}
+
 const compiled = new WeakMap<CodegenContext, CompiledScreens>();
 
 function guiNodes(ctx: CodegenContext): GraphNode[] {
@@ -195,6 +214,7 @@ export const guiScreenNode: NodeDefinition = {
   ports: { outputs: [{ name: "frame", type: "bytes" }] },
   codegenEventSource(node: GraphNode, ctx: CodegenContext): EventSourceCodegenResult {
     const { width, height, format } = screenSize(node, ctx);
+    checkDisplaySize(node, ctx, width, height);
     const core = coreBlock(ctx);
     const c = screensFor(ctx);
     const surface = c.surfaces.find((s) => s.screen === node.id);
