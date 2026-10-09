@@ -15,8 +15,9 @@ pages are laid out by editing the flow file. The GUI view, where you lay them ou
 - **gui light** — on when `msg.payload` is true, off when false.
 - **gui button** — a touch button. It has an input, which sets what it shows, and an output, which sends when it is
   tapped. See [Buttons](#buttons).
-- **gui navigator** — changes the page. Send `next`, `prev`, `back`, `home` or a page name. Sends the new
-  page name when it changes.
+- **gui navigator** — changes the page from the flow. Send `next`, `prev`, `back`, `home` or a page name. Sends
+  the new page name when it changes. It is no longer in the palette (a *navigate* button does the same from the
+  screen), but flows that already have one still work.
 - **gui modal** — a full-screen message. Send any payload to open it, `None` to close it. If several are
   open, the highest priority shows and the rest wait. Its output sends how it closed:
   `{topic: <modal's name>, payload: 'ack' | 'timeout' | 'closed'}`.
@@ -57,7 +58,8 @@ With the input wired, the flow owns the state:
 - If nothing comes back in time, it returns to the last known state, shows a cross for a moment, and the
   console reports it. See [a toggle goes back](../debugging.md#a-toggle-button-goes-back).
 
-The input is matched against the toggle's *on sends* and *off sends* values. Anything else shows `--`. Tasmota
+The input is matched against the toggle's *on sends* and *off sends* values. MQTT delivers text, so the text `true`
+matches a true/false toggle and `1` matches a number toggle. Anything else shows `--`. Tasmota
 reports `ON` and `OFF` as text, so for a Tasmota plug set the value type to text and use `ON` and `OFF`.
 `test-flows/gui-touch-freenove-s3-4in.flow.json` has this on its last page.
 
@@ -75,7 +77,10 @@ Select the gui screen node and open **Properties**: each page is listed as an ou
 top to bottom in the order things appear on screen. Use ↑ and ↓ to move an element earlier or later, ⇥ to move
 it into the row or column above it, ⇤ to move it out of its container, ✕ to remove it, and ⚙ to set its font,
 grow, gap or padding. Each row and column has a **+ add…** menu: pick a widget, spacer, text, row, column or page dots and it
-goes at the end of that row or column. Add and reorder pages (the order of the page dots) from the page's own ↑ ↓, and add a layout for a modal. Widgets
+goes at the end of that row or column. Add and reorder pages (the order of the page dots) from the page's own ↑ ↓, and add a layout for a modal. The same widget can be on
+several pages of a screen (a navigation button on every page, say). It must be drawn the same way on each, with
+the same font and options, and it shows the same value everywhere. Each page's **+ add…** menu lists the widgets
+not already on that page. A widget belongs to one screen. Widgets
 in a row share it equally, so two buttons side by side are each half the row (never narrower than their text
 needs). Set **grow** to `0` on one to keep it at its natural size, or to a bigger number for a bigger share. There is
 no preview yet: if it doesn't fit, Deploy says which widget, on which page. The outline is a view of the

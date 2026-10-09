@@ -410,6 +410,22 @@ class RemoteSurface(Surface):
             self.send({"type": "values", "display": self.name, "values": values})
 
 
+def _same(value, ref):
+    """Does the flow's `value` mean `ref`? MQTT and UDP deliver text, so "true" means True and "1" means 1."""
+    if value == ref:
+        return True
+    if isinstance(value, (bytes, bytearray)):
+        value = bytes(value).decode()
+    if not isinstance(value, str) or isinstance(ref, str):
+        return False
+    if isinstance(ref, bool):
+        return value.strip().lower() == ("true" if ref else "false")
+    try:
+        return float(value) == ref
+    except ValueError:
+        return False
+
+
 class GUI:
     def __init__(self, on_error=None):
         self.widgets = {}
@@ -481,7 +497,7 @@ class GUI:
         if w.mode == "toggle":
             # The flow's word on a toggle: its on/off payloads map to True/False, anything else is unknown. It
             # also settles a pending tap -- whether it agrees with the request or not, the flow's value wins.
-            value = True if value == w.on_val else (False if value == w.off_val else None)
+            value = True if _same(value, w.on_val) else (False if _same(value, w.off_val) else None)
             w.confirmed = value
             w.pending_at = None
             w.fail_until = None

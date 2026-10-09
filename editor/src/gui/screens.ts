@@ -179,7 +179,7 @@ export function compileScreens(
   const widgetDraws = new Map<string, string>();
   const surfaces: CompiledSurface[] = [];
   const byId = new Map(nodes.map((n) => [n.id, n]));
-  const placedOn = new Map<string, string>(); // widget node id -> where
+  const placedOn = new Map<string, { screen: string; where: string }>(); // widget node id -> first placement
 
   for (const [screenId, spec] of Object.entries(screens)) {
     const screen = byId.get(screenId);
@@ -261,11 +261,13 @@ export function compileScreens(
       }
       const label = nodeLabel(node);
       const prev = placedOn.get(node.id);
-      if (prev) {
-        errors.push(`widget ${label} is placed twice (${prev} and ${where}); place it once, or wire its input to a second widget`);
+      // A widget may sit on several pages of one screen (only one page shows at a time), drawn the same way
+      // on each; on two screens it would need two draws, which one widget node cannot give.
+      if (prev && prev.screen !== screenId) {
+        errors.push(`widget ${label} is placed on two screens (${prev.where} and ${where}); a widget belongs to one screen`);
         return null;
       }
-      placedOn.set(node.id, where);
+      if (!prev) placedOn.set(node.id, { screen: screenId, where });
       const kind = WIDGET_TYPES[node.type];
       const p = node.properties;
       let natural;
@@ -340,6 +342,11 @@ export function compileScreens(
         return null;
       }
       imports.add(`tsgui_${kind}`);
+      const earlier = widgetDraws.get(node.id);
+      if (earlier !== undefined && earlier !== draw) {
+        errors.push(`widget ${label} is drawn differently ${prev!.where} and ${where}; give it the same font and options on each page`);
+        return null;
+      }
       widgetDraws.set(node.id, draw);
       return { kind: "leaf", id: node.id, label: `widget ${label}`, natural, ...common };
     };

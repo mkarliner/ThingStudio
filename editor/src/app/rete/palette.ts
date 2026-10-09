@@ -123,6 +123,8 @@ export interface KindStyle {
   bgcolor: string;
   icon: string;
   label: string;
+  /** Not offered in the palette; flows that already have the node still load and compile. */
+  hidden?: boolean;
   /** Palette section this kind sorts into (PaletteSidebar.vue). One of
    * DEFAULT_NODE_GROUPS for every built-in kind today, but not typed as
    * that closed union -- a custom node's own descriptor.group (custom-
@@ -208,7 +210,7 @@ export const NODE_PALETTE: Record<NodeKind, KindStyle> = {
   pwm_out: { color: "#1f5c8a", bgcolor: "#12334a", icon: "∿", label: "pwm out", group: "hardware", priority: 30 },
   // GUI nodes, 2026-10-08 (node-library/gui.ts): their own "GUI" group, one slate-green family.
   gui_screen: { color: "#3f6e5c", bgcolor: "#1f3a30", icon: "▣", label: "screen", group: "GUI", priority: 10 },
-  gui_navigator: { color: "#3f5c6e", bgcolor: "#1f303a", icon: "⇆", label: "navigator", group: "GUI", priority: 20 },
+  gui_navigator: { color: "#3f5c6e", bgcolor: "#1f303a", icon: "⇆", label: "navigator", group: "GUI", priority: 20, hidden: true },
   gui_modal: { color: "#6e3f3f", bgcolor: "#3a1f1f", icon: "!", label: "modal", group: "GUI", priority: 30 },
   gui_readout: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "#", label: "readout", group: "GUI", priority: 40 },
   gui_label: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "T", label: "label", group: "GUI", priority: 41 },

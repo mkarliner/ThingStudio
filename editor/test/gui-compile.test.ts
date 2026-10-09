@@ -112,11 +112,22 @@ describe("compiling a GUI flow", () => {
     const g = heroGraph();
     const base = (g.screens as ScreensSection).screen!;
     const twice: ScreensSection = { screen: { ...base, pages: [{ name: "home", root: { kind: "column", children: [{ kind: "widget", node: "temp" }, { kind: "widget", node: "temp" }] } }] } };
-    expect(() => compile({ ...g, screens: twice }, buildRegistry())).toThrow(/widget "Temperature" is placed twice/);
+    expect(() => compile({ ...g, screens: twice }, buildRegistry())).toThrow(/"temp" appears twice on page "home"/);
     const glyph: ScreensSection = { screen: { ...base, pages: [{ name: "home", root: { kind: "text", text: "Größe", font: "font_body16" } }] } };
     expect(() => compile({ ...g, screens: glyph }, buildRegistry())).toThrow(/font font_body16 has no "ö", "ß"/);
     const ghost: ScreensSection = { screen: { ...base, pages: [{ name: "home", root: { kind: "widget", node: "nope" } }] } };
     expect(() => compile({ ...g, screens: ghost }, buildRegistry())).toThrow(/"nope" isn't a GUI widget node/);
+  });
+
+  it("lets one widget sit on several pages of a screen, drawn the same way, and refuses a different draw", () => {
+    const g = heroGraph();
+    const base = (g.screens as ScreensSection).screen!;
+    const page = (name: string, font?: string) => ({ name, root: { kind: "column" as const, children: [{ kind: "widget" as const, node: "temp", ...(font ? { font } : {}) }] } });
+    const ok: ScreensSection = { screen: { ...base, pages: [page("a"), page("b")] } };
+    const r = compile({ ...g, screens: ok }, buildRegistry());
+    expect(r.source.match(/"temp", \(/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
+    const odd: ScreensSection = { screen: { ...base, pages: [page("a"), page("b", "font_body16")] } };
+    expect(() => compile({ ...g, screens: odd }, buildRegistry())).toThrow(/drawn differently/);
   });
 
   it("warns about a widget that isn't on any screen", () => {

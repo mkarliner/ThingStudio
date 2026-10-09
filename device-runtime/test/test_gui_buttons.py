@@ -301,12 +301,28 @@ def test_a_driver_error_is_reported_as_status_and_retried():
     assert status[-1][0] == "connected" and len(made) == 2
 
 
+def test_text_from_mqtt_confirms_a_true_false_or_number_toggle():
+    g, errors = _setup(mode="toggle", controlled=True)  # on_val True, off_val False
+    g.set_value("b", "true")
+    assert g.value("b") is True
+    g.set_value("b", "False")
+    assert g.value("b") is False
+    g.set_value("b", "ON")
+    assert g.value("b") is None
+    g2, _ = _setup(mode="toggle", controlled=True, on_val=1, off_val=0)
+    g2.set_value("b", "1")
+    assert g2.value("b") is True
+    g2.set_value("b", b"0")
+    assert g2.value("b") is False
+
+
 minitest.run(
     [
         test_a_momentary_button_sends_its_value_on_release_inside,
         test_a_release_outside_the_button_sends_nothing_and_still_lets_go,
         test_on_press_fires_on_the_press_and_not_again_on_release,
         test_an_unwired_toggle_keeps_its_own_state_and_sends_the_opposite,
+        test_text_from_mqtt_confirms_a_true_false_or_number_toggle,
         test_a_controlled_toggle_starts_unknown_and_a_tap_goes_pending_until_confirmed,
         test_the_flows_payloads_map_through_the_on_off_values_and_anything_else_is_unknown,
         test_no_confirmation_reverts_shows_failed_for_a_moment_and_reports,

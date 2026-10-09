@@ -22,7 +22,7 @@
           <button title="remove this page" @click="edit((s) => removePage(s, page.name))">✕</button>
         </span>
       </div>
-      <TreeRows :root="page.root" :target="{ page: page.name }" :names="nameOf" :unplaced="unplaced" @op="onOp" @add="onAdd" />
+      <TreeRows :root="page.root" :target="{ page: page.name }" :names="nameOf" :unplaced="widgetsFor(page.root)" @op="onOp" @add="onAdd" />
     </div>
 
     <div class="addrow">
@@ -37,7 +37,7 @@
           <strong>{{ nameOf(m.node) }}</strong>
           <span class="btns"><button title="remove this modal's layout" @click="edit((s) => removeModal(s, m.node))">✕</button></span>
         </div>
-        <TreeRows :root="m.root" :target="{ modal: m.node }" :names="nameOf" :unplaced="unplaced" @op="onOp" @add="onAdd" />
+        <TreeRows :root="m.root" :target="{ modal: m.node }" :names="nameOf" :unplaced="widgetsFor(m.root)" @op="onOp" @add="onAdd" />
       </div>
       <div v-if="unplacedModals.length" class="addrow">
         <select v-model="newModal" @change="addModalNow">
@@ -64,11 +64,14 @@ const nodes = computed<GuiNodeInfo[]>(() => {
   return listGuiNodes();
 });
 const nameOf = (id: string): string => nodes.value.find((n) => n.id === id)?.name ?? id;
-const unplaced = computed(() => {
-  const placed = new Set<string>();
-  for (const s of Object.values(screens.value)) for (const id of placedWidgets(s)) placed.add(id);
-  return nodes.value.filter((n) => n.type !== "thingstudio/gui_screen" && n.type !== GUI_MODAL && n.type !== "thingstudio/gui_navigator" && !placed.has(n.id));
-});
+// What can be added to a page or modal of THIS screen: widgets not on another screen and not already in this
+// page (the same widget may appear on several pages of one screen).
+const widgetsFor = (root: ElementSpec): GuiNodeInfo[] => {
+  const elsewhere = new Set<string>();
+  for (const [id, s] of Object.entries(screens.value)) if (id !== props.screenId) for (const w of placedWidgets(s)) elsewhere.add(w);
+  const here = new Set(placedWidgets({ pages: [{ name: "", root }] }));
+  return nodes.value.filter((n) => n.type !== "thingstudio/gui_screen" && n.type !== GUI_MODAL && n.type !== "thingstudio/gui_navigator" && !elsewhere.has(n.id) && !here.has(n.id));
+};
 const unplacedModals = computed(() => {
   const have = new Set((spec.value.modals ?? []).map((m) => m.node));
   return nodes.value.filter((n) => n.type === GUI_MODAL && !have.has(n.id));

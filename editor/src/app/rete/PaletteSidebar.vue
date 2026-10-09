@@ -150,6 +150,7 @@ const allRows = computed<PaletteRow[]>(() => {
   const needle = filter.value.trim().toLowerCase();
 
   const builtinRows: PaletteRow[] = (Object.keys(NODE_PALETTE) as NodeKind[])
+    .filter((kind) => !NODE_PALETTE[kind].hidden)
     .filter((kind) => NODE_PALETTE[kind].label.toLowerCase().includes(needle))
     .map((kind) => {
       const style = NODE_PALETTE[kind];
