@@ -10,3 +10,5 @@
 **Still unbuilt:** resizable panes (collapse/hide only, no drag-to-resize), a notes/README sheet for documenting
 a flow. Delete node/wire split out into its own tracked item, 2026-09-04 -- see
 `outstanding-items/delete-node-wire.md`, not repeated here.
+
+- 2026-10-09: the flow notes sheet is built (a Notes panel, saved in the flow file as `notes`; plain text).

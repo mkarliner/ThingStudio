@@ -264,6 +264,7 @@ el("clear-canvas").addEventListener("click", async () => {
   // starting pane, same as a brand new flow file.
   resetPanes();
   setScreens({});
+  el<HTMLTextAreaElement>("flowNotes").value = "";
   el<HTMLInputElement>("flowNameInput").value = "";
 });
 
@@ -555,6 +556,9 @@ async function applyFlowFile(file: FlowFile): Promise<void> {
   }
   replaceAllConfigs(file.configs.map((c) => ({ id: c.id, type: c.type, properties: c.properties })));
   setScreens(file.screens ?? {});
+  // Notes: shown open when a flow has some, so someone loading an example reads what it is for.
+  el<HTMLTextAreaElement>("flowNotes").value = file.notes ?? "";
+  el<HTMLDetailsElement>("notesPanel").open = (file.notes ?? "").trim() !== "";
   // Credential storage (2026-09-13): resolve every WiFi/MQTT-broker
   // config's credentialName into real values before any node gets
   // constructed below -- a node's own PropertyPanel.vue block may read a
@@ -669,7 +673,7 @@ el("btnSaveFlow").addEventListener("click", async () => {
   try {
     const { nodes, edges } = extractCanvasSnapshot();
     const flowDisplayName = currentFlowNameInput();
-    const text = serializeFlowFileText(buildFlowFile(nodes, edges, extractConfigsSnapshot(), flowDisplayName, panesStore.value, screensStore.value));
+    const text = serializeFlowFileText(buildFlowFile(nodes, edges, extractConfigsSnapshot(), flowDisplayName, panesStore.value, screensStore.value, el<HTMLTextAreaElement>("flowNotes").value));
     // Suggested filename only -- the picker lets the user type over it
     // freely, same as any "Save As" dialog; nothing here treats this as a
     // storage key the way the brief backend-exclusive period did.

@@ -86,6 +86,11 @@ Some properties are shared across multiple nodes rather than typed into each one
 
 Other node types don't show this yet — it's currently limited to connection-oriented nodes; `http_request` doesn't get one since it isn't a persistent connection.
 
+## Notes
+
+The **Notes** panel at the right is free text for the flow as a whole: what it does, what to wire up, how to use
+it. It is saved in the flow file, and it opens by itself when you load a flow that has notes. New flow clears it.
+
 ## Deleting
 
 Click a node or a wire to select it, then press Delete or Backspace to remove it. Ctrl-click to select several nodes at once and delete them together. Deleting a node also removes any wires attached to it.

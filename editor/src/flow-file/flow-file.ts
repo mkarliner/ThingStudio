@@ -179,6 +179,9 @@ export interface FlowFile {
    * sit isn't wiring, so it's kept apart from `nodes`. Omitted when the flow has no GUI, so flows without one
    * save byte-for-byte as before. Checked for shape here; the compiler checks what it says. */
   screens?: ScreensSection;
+  /** Free text the flow's author wrote about what it does and how to use it (2026-10-09, Mike's "flows should have
+   * a notes section"). Omitted when empty, so flows without notes save byte-for-byte as before. */
+  notes?: string;
 }
 
 /** What main.ts's canvas-reading code hands in -- plain data, no live
@@ -215,6 +218,7 @@ export function buildFlowFile(
   // which parseFlowFile would otherwise have no node to fall back onto.
   panes: FlowFilePane[] = [{ id: DEFAULT_PANE_ID, name: DEFAULT_PANE_NAME }],
   screens: ScreensSection = {},
+  notes: string = "",
 ): FlowFile {
   const sortedNodes = [...nodes].sort((a, b) => cmpId(a.id, b.id));
   const sortedEdges = [...edges].sort((a, b) => cmpId(a[0], b[0]) || a[1] - b[1] || cmpId(a[2], b[2]) || a[3] - b[3]);
@@ -237,6 +241,7 @@ export function buildFlowFile(
     panes,
     paneOf,
     ...(Object.keys(screens).length > 0 ? { screens: Object.fromEntries(Object.keys(screens).sort(cmpId).map((k) => [k, screens[k]!])) } : {}),
+    ...(notes.trim() !== "" ? { notes } : {}),
   };
 }
 
@@ -386,5 +391,8 @@ export function parseFlowFile(text: string): FlowFile {
     screens = obj.screens as ScreensSection;
   }
 
-  return { formatVersion: obj.formatVersion, flowName, nodes, edges, layout, configs, panes, paneOf, ...(screens ? { screens } : {}) };
+  if (obj.notes !== undefined && typeof obj.notes !== "string") throw new FlowFileError('"notes" must be a string');
+  const notes = typeof obj.notes === "string" && obj.notes.trim() !== "" ? obj.notes : undefined;
+
+  return { formatVersion: obj.formatVersion, flowName, nodes, edges, layout, configs, panes, paneOf, ...(screens ? { screens } : {}), ...(notes !== undefined ? { notes } : {}) };
 }

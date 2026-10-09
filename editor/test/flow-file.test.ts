@@ -306,3 +306,18 @@ describe("parseFlowFile: round-trip and validation", () => {
     expect(() => parseFlowFile(JSON.stringify({ ...base, paneOf: { "1": 42 } }))).toThrow(/paneOf\["1"\] must be a string/);
   });
 });
+
+describe("flow notes", () => {
+  it("are saved and loaded, and left out when empty", () => {
+    const withNotes = buildFlowFile([], [], [], "n", undefined, {}, "Press the button.\nSecond line.");
+    expect(withNotes.notes).toBe("Press the button.\nSecond line.");
+    expect(parseFlowFile(serializeFlowFileText(withNotes)).notes).toBe("Press the button.\nSecond line.");
+    const without = buildFlowFile([], [], [], "n", undefined, {}, "  \n");
+    expect("notes" in without).toBe(false);
+    expect(parseFlowFile(serializeFlowFileText(without)).notes).toBeUndefined();
+  });
+  it("must be a string", () => {
+    const text = JSON.stringify({ ...buildFlowFile([], []), notes: 5 });
+    expect(() => parseFlowFile(text)).toThrow(/"notes" must be a string/);
+  });
+});

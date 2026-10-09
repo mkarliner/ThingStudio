@@ -135,6 +135,9 @@
   #cmdInput { flex: 1 1 auto; min-width: 0; background: var(--bg); color: var(--text); border: 1px solid var(--border);
     border-radius: 6px; padding: 6px 8px; font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
   #cmdInput:focus { outline: none; border-color: var(--accent); }
+  #flowNotes { width: 100%; box-sizing: border-box; resize: vertical; background: #0a0c10; color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: 8px; font: inherit; font-size: 13px; line-height: 1.4; }
+  #flowNotes:focus { outline: none; border-color: var(--accent); }
   #source-preview, #console { background: #0a0c10; border: 1px solid var(--border); border-radius: 6px;
     padding: 8px; white-space: pre-wrap; word-break: break-word; line-height: 1.4; max-height: 260px;
     overflow-y: auto; font-size: 11px; }
@@ -255,6 +258,11 @@
     <div id="canvas-wrap"><div id="pane-tabs-mount"></div><div id="rete-canvas"></div></div>
     <div id="property-panel-mount"></div>
     <div id="sidebar">
+      <details class="panel" id="notesPanel">
+        <summary>Notes</summary>
+        <textarea id="flowNotes" rows="8" spellcheck="true" placeholder="What this flow does and how to use it. Saved in the flow file."></textarea>
+      </details>
+
       <details class="panel">
         <summary>Compiled source (preview)</summary>
         <div id="source-preview">—</div>

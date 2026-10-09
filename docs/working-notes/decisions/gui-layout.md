@@ -220,4 +220,4 @@ the msg is open.
   `rotation` means how the panel is mounted (0 to 3, mirror bits only). MADCTL bits and touch flags are derived by
   search (`orientation-shared.ts`); 90 matches Adafruit's table (MV|MX from rotation 0). No orientation: today's raw
   behaviour. Not yet supported with an orientation: panel offsets (xstart/ystart, 135x240). `touch_i2c` (raw) is not
-  turned. Old flows with orientation configs ignore them. Hardware check on the FNK0104S is owed.
+  turned. Old flows with orientation configs ignore them. Checked on the FNK0104S (2026-10-09): 90 and 270 draw correctly and touch lands (smoke test). The screen-vs-display size check refuses a mismatch at deploy.
