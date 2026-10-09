@@ -74,8 +74,10 @@ so use them on boards with little RAM.
 Select the gui screen node and open **Properties**: each page is listed as an outline of its rows and columns,
 top to bottom in the order things appear on screen. Use ↑ and ↓ to move an element earlier or later, ⇥ to move
 it into the row or column above it, ⇤ to move it out of its container, ✕ to remove it, and ⚙ to set its font,
-grow, gap or padding. Add a widget, spacer, text, row, column or page dots from the bar under each page, add
-and reorder pages (the order of the page dots) from the page's own ↑ ↓, and add a layout for a modal. There is
+grow, gap or padding. Each row and column has a **+ add…** menu: pick a widget, spacer, text, row, column or page dots and it
+goes at the end of that row or column. Add and reorder pages (the order of the page dots) from the page's own ↑ ↓, and add a layout for a modal. Widgets
+in a row share it equally, so two buttons side by side are each half the row (never narrower than their text
+needs). Set **grow** to `0` on one to keep it at its natural size, or to a bigger number for a bigger share. There is
 no preview yet: if it doesn't fit, Deploy says which widget, on which page. The outline is a view of the
 flow file's `"screens"` section, which you can also edit by hand.
 

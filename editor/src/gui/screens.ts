@@ -206,12 +206,14 @@ export function compileScreens(
     const rectsByPage = new Map<string, ReadonlyMap<string, Rect>>();
 
     // Turns an element into a layout node, registering what it draws. `where` names it in errors.
-    const toLayout = (el: ElementSpec, where: string, path: string): LayoutNode | null => {
-      const common = { grow: el.grow, alignSelf: el.alignSelf };
+    const toLayout = (el: ElementSpec, where: string, path: string, inRow = false): LayoutNode | null => {
+      // Widgets in a row fill it equally unless told otherwise (grow: 0 keeps one at its natural size).
+      const fill = el.kind === "widget" && inRow && el.grow === undefined;
+      const common = { grow: fill ? 1 : el.grow, alignSelf: el.alignSelf, ...(fill ? { flex: true } : {}) };
       switch (el.kind) {
         case "row":
         case "column": {
-          const children = el.children.map((c, i) => toLayout(c, where, `${path}.${i}`)).filter((c): c is LayoutNode => c !== null);
+          const children = el.children.map((c, i) => toLayout(c, where, `${path}.${i}`, el.kind === "row")).filter((c): c is LayoutNode => c !== null);
           const c: Container = { kind: el.kind, id: `${screenId}:${path}`, label: `${el.kind} ${path}`, children, gap: el.gap, padding: el.padding, align: el.align, justify: el.justify, ...common };
           return c;
         }

@@ -124,3 +124,19 @@ describe("a hero-style page, measured with the real fonts", () => {
     expect(out.errors.some((e) => e.id === "page" && e.message.includes(`of display "oled"`))).toBe(true);
   });
 });
+
+describe("flex children", () => {
+  it("equal weights split the whole row equally, whatever the natural widths", () => {
+    expect(rects(row("r", [leaf("a", 20, 10, { grow: 1, flex: true }), leaf("b", 40, 10, { grow: 1, flex: true })], { gap: 10 }))).toMatchObject({
+      a: { x: 0, width: 45 },
+      b: { x: 55, width: 45 },
+    });
+  });
+  it("a child whose natural size beats its share keeps it and the rest share what is left", () => {
+    expect(rects(row("r", [leaf("a", 80, 10, { grow: 1, flex: true }), leaf("b", 10, 10, { grow: 1, flex: true }), leaf("c", 10, 10, { grow: 1, flex: true })]))).toMatchObject({
+      a: { width: 80 },
+      b: { x: 80, width: 10 },
+      c: { x: 90, width: 10 },
+    });
+  });
+});

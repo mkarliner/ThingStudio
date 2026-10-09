@@ -37,6 +37,9 @@ interface Common {
   readonly label?: string;
   /** Share of the parent's free main-axis space. 0 or absent: natural size. */
   readonly grow?: number;
+  /** With grow: start from nothing instead of the natural size, so equal weights give equal sizes (CSS
+   * `flex: 1`), never smaller than natural. Without it, grow shares only the space left over. */
+  readonly flex?: boolean;
   /** Overrides the parent's `align` for this child. */
   readonly alignSelf?: Align;
 }
@@ -127,15 +130,40 @@ export function layoutPage(root: LayoutNode, display: Size, ctx: LayoutContext):
 
     const natural = kids.map(naturalSize);
     const sizes = natural.map((s) => main(c, s));
-    const free = innerMain - (kids.length - 1) * gap - sizes.reduce((a, b) => a + b, 0);
-    if (free < 0) {
-      const needed = innerMain - free;
+    const freeNatural = innerMain - (kids.length - 1) * gap - sizes.reduce((a, b) => a + b, 0);
+    if (freeNatural < 0) {
+      const needed = innerMain - freeNatural;
       errors.push({
         id: c.id,
         message:
           `${name(c)}'s contents need ${needed}px of ${mainName(c)} but it has ${innerMain}px ${where(ctx)}: ` +
           kids.map((k, i) => `${name(k)} ${sizes[i]}px`).join(", "),
       });
+    }
+
+    // Flex children (grow with `flex`) split the whole main axis, not just what is left over: equal weights,
+    // equal sizes, except that none goes below its natural size (it is frozen there and the rest shares on).
+    let free = freeNatural;
+    const flexIdx = kids.map((_k, i) => i).filter((i) => kids[i]!.flex === true && (kids[i]!.grow ?? 0) > 0);
+    if (freeNatural >= 0 && flexIdx.length > 0) {
+      let remaining = innerMain - (kids.length - 1) * gap - sizes.reduce((a, b, i) => a + (flexIdx.includes(i) ? 0 : b), 0);
+      let active = flexIdx.slice();
+      for (;;) {
+        const w = active.reduce((a, i) => a + kids[i]!.grow!, 0);
+        const tight = active.filter((i) => sizes[i]! > (remaining * kids[i]!.grow!) / w);
+        if (tight.length === 0) break;
+        for (const i of tight) remaining -= sizes[i]!;
+        active = active.filter((i) => !tight.includes(i));
+        if (active.length === 0) break;
+      }
+      if (active.length > 0) {
+        const w = active.reduce((a, i) => a + kids[i]!.grow!, 0);
+        const shares = active.map((i) => Math.floor((remaining * kids[i]!.grow!) / w));
+        let left = remaining - shares.reduce((a, b) => a + b, 0);
+        for (let k = 0; k < active.length && left > 0; k++, left--) shares[k]! += 1;
+        active.forEach((i, k) => (sizes[i] = shares[k]!));
+      }
+      free = innerMain - (kids.length - 1) * gap - sizes.reduce((a, b) => a + b, 0);
     }
 
     // Grow: share the free space by weight, whole pixels; leftover pixels go to the first growers.
