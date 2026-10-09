@@ -46,3 +46,6 @@ same removal convention as this file's own 2026-09-07/2026-09-13 passes above.]
  - Console
    - In due course, we need to be ablel to change the width of the console.
    - for the moment, make it 50% bigger for easier reading of long lines.
+
+- Flows
+ - Should have a notes section so we can explain what they do or how to use them.
