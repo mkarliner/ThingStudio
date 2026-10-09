@@ -22,8 +22,7 @@
           <button title="remove this page" @click="edit((s) => removePage(s, page.name))">✕</button>
         </span>
       </div>
-      <TreeRows :root="page.root" :target="{ page: page.name }" :names="nameOf" @op="onOp" />
-      <AddBar :target="{ page: page.name }" :unplaced="unplaced" :name-of="nameOf" @add="onAdd" />
+      <TreeRows :root="page.root" :target="{ page: page.name }" :names="nameOf" :unplaced="unplaced" @op="onOp" @add="onAdd" />
     </div>
 
     <div class="addrow">
@@ -38,15 +37,13 @@
           <strong>{{ nameOf(m.node) }}</strong>
           <span class="btns"><button title="remove this modal's layout" @click="edit((s) => removeModal(s, m.node))">✕</button></span>
         </div>
-        <TreeRows :root="m.root" :target="{ modal: m.node }" :names="nameOf" @op="onOp" />
-        <AddBar :target="{ modal: m.node }" :unplaced="unplaced" :name-of="nameOf" @add="onAdd" />
+        <TreeRows :root="m.root" :target="{ modal: m.node }" :names="nameOf" :unplaced="unplaced" @op="onOp" @add="onAdd" />
       </div>
       <div v-if="unplacedModals.length" class="addrow">
-        <select v-model="newModal">
+        <select v-model="newModal" @change="addModalNow">
           <option value="">lay out a modal…</option>
           <option v-for="n in unplacedModals" :key="n.id" :value="n.id">{{ n.name }}</option>
         </select>
-        <button :disabled="!newModal" @click="addModalNow">add</button>
       </div>
     </template>
   </div>
@@ -123,8 +120,9 @@ const TreeRows = defineComponent({
     root: { type: Object as PropType<ElementSpec>, required: true },
     target: { type: Object as PropType<Target>, required: true },
     names: { type: Function as PropType<(id: string) => string>, required: true },
+    unplaced: { type: Array as PropType<GuiNodeInfo[]>, required: true },
   },
-  emits: ["op"],
+  emits: ["op", "add"],
   setup(p, { emit }) {
     const open = ref<Record<string, boolean>>({});
     return () =>
@@ -150,10 +148,39 @@ const TreeRows = defineComponent({
         if (e.kind === "text") extras.push(field("text", "text", 100, false));
         extras.push(field("grow", "grow", 34, true));
         if (r.container) extras.push(field("gap", "gap", 34, true), field("padding", "padding", 34, true));
+        // Add into THIS container: choosing from the dropdown adds at once, at the end of this row/column.
+        const addInto = () => {
+          const go = (element: ElementSpec) => emit("add", { target: p.target, path: r.path, element });
+          const choices: Record<string, () => ElementSpec> = {
+            "@spacer": () => ({ kind: "spacer", grow: 1 }),
+            "@text": () => ({ kind: "text", text: "Text", font: "font_body16" }),
+            "@row": () => ({ ...newColumn(), kind: "row", gap: 6, padding: 0 }),
+            "@column": () => ({ ...newColumn(), padding: 0 }),
+            "@dots": () => ({ kind: "pagedots", alignSelf: "center" }),
+          };
+          return h("select", {
+            class: "addsel", title: "add into this " + e.kind, value: "",
+            onChange: (ev: Event) => {
+              const sel = ev.target as HTMLSelectElement;
+              const v = sel.value;
+              sel.value = "";
+              if (!v) return;
+              go(v.startsWith("@") ? choices[v]!() : { kind: "widget", node: v });
+            },
+          }, [
+            h("option", { value: "" }, "+ add…"),
+            ...(p.unplaced.length ? [h("optgroup", { label: "widgets" }, p.unplaced.map((n) => h("option", { value: n.id }, n.name)))] : []),
+            h("optgroup", { label: "other" }, [
+              h("option", { value: "@spacer" }, "spacer"), h("option", { value: "@text" }, "text"),
+              h("option", { value: "@row" }, "row"), h("option", { value: "@column" }, "column"), h("option", { value: "@dots" }, "page dots"),
+            ]),
+          ]);
+        };
         return h("div", { class: "rowwrap" }, [
           h("div", { class: "row", style: { paddingLeft: `${r.depth * 14}px` } }, [
             h("span", { class: ["lbl", r.container ? "ctr" : ""] }, label),
             h("span", { class: "btns" }, [
+              ...(r.container ? [addInto()] : []),
               h("button", { title: "properties", class: open.value[key] ? "on" : "", onClick: () => (open.value = { ...open.value, [key]: !open.value[key] }) }, "⚙"),
               ...(r.path.length === 0 ? [] : [
                 btn("↑", "earlier", r.canUp, "up"),
@@ -170,33 +197,6 @@ const TreeRows = defineComponent({
   },
 });
 
-// ---- adding things ---------------------------------------------------------------------------------------
-
-const AddBar = defineComponent({
-  props: {
-    target: { type: Object as PropType<Target>, required: true },
-    unplaced: { type: Array as PropType<GuiNodeInfo[]>, required: true },
-    nameOf: { type: Function as PropType<(id: string) => string>, required: true },
-  },
-  emits: ["add"],
-  setup(p, { emit }) {
-    const pick = ref("");
-    const go = (element: ElementSpec) => emit("add", { target: p.target, path: [] as Path, element });
-    return () =>
-      h("div", { class: "addrow" }, [
-        h("select", { value: pick.value, onChange: (ev: Event) => (pick.value = (ev.target as HTMLSelectElement).value) }, [
-          h("option", { value: "" }, "add widget…"),
-          ...p.unplaced.map((n) => h("option", { value: n.id }, n.name)),
-        ]),
-        h("button", { disabled: !pick.value, onClick: () => { go({ kind: "widget", node: pick.value }); pick.value = ""; } }, "add"),
-        h("button", { title: "empty space that can grow", onClick: () => go({ kind: "spacer", grow: 1 }) }, "+ spacer"),
-        h("button", { onClick: () => go({ kind: "text", text: "Text", font: "font_body16" }) }, "+ text"),
-        h("button", { title: "a row or column to group widgets", onClick: () => go({ ...newColumn(), kind: "row", gap: 6, padding: 0 }) }, "+ row"),
-        h("button", { onClick: () => go({ ...newColumn(), padding: 0 }) }, "+ column"),
-        h("button", { onClick: () => go({ kind: "pagedots", alignSelf: "center" }) }, "+ dots"),
-      ]);
-  },
-});
 void bumpPropertyVersion;
 </script>
 
@@ -217,5 +217,6 @@ void bumpPropertyVersion;
 .outline .btns button,.outline .addrow button,.outline .target-head button { padding: 0 5px !important; margin: 0 !important; height: 20px !important; min-width: 20px; line-height: 1; font-size: 11px !important; }
 .outline .addrow select,.outline .addrow input { height: 22px; font-size: 11px; }
 .outline .addrow { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
+.outline .addsel { height: 20px; font-size: 11px; width: 62px; }
 .outline .addrow input,.outline .addrow select { flex: 1; min-width: 80px; }
 </style>

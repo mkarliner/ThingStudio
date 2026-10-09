@@ -116,7 +116,7 @@ export type NodeKind =
   | "gui_navigator"
   | "gui_modal";
 
-export const DEFAULT_NODE_GROUPS = ["general", "network", "hardware", "gui"] as const;
+export const DEFAULT_NODE_GROUPS = ["general", "network", "hardware", "GUI"] as const;
 
 export interface KindStyle {
   color: string;
@@ -206,15 +206,15 @@ export const NODE_PALETTE: Record<NodeKind, KindStyle> = {
   filter: { color: "#2e6e4a", bgcolor: "#1f3f2c", icon: "▽", label: "filter", group: "general", priority: 35 },
   // Blue -- see this file's header for the icon reasoning.
   pwm_out: { color: "#1f5c8a", bgcolor: "#12334a", icon: "∿", label: "pwm out", group: "hardware", priority: 30 },
-  // GUI nodes, 2026-10-08 (node-library/gui.ts): their own "gui" group, one slate-green family.
-  gui_screen: { color: "#3f6e5c", bgcolor: "#1f3a30", icon: "▣", label: "gui screen", group: "gui", priority: 10 },
-  gui_navigator: { color: "#3f5c6e", bgcolor: "#1f303a", icon: "⇆", label: "gui navigator", group: "gui", priority: 20 },
-  gui_modal: { color: "#6e3f3f", bgcolor: "#3a1f1f", icon: "!", label: "gui modal", group: "gui", priority: 30 },
-  gui_readout: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "#", label: "gui readout", group: "gui", priority: 40 },
-  gui_label: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "T", label: "gui label", group: "gui", priority: 41 },
-  gui_bar: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "▬", label: "gui bar", group: "gui", priority: 42 },
-  gui_button: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "▭", label: "gui button", group: "gui", priority: 44 },
-  gui_led: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "●", label: "gui light", group: "gui", priority: 43 },
+  // GUI nodes, 2026-10-08 (node-library/gui.ts): their own "GUI" group, one slate-green family.
+  gui_screen: { color: "#3f6e5c", bgcolor: "#1f3a30", icon: "▣", label: "screen", group: "GUI", priority: 10 },
+  gui_navigator: { color: "#3f5c6e", bgcolor: "#1f303a", icon: "⇆", label: "navigator", group: "GUI", priority: 20 },
+  gui_modal: { color: "#6e3f3f", bgcolor: "#3a1f1f", icon: "!", label: "modal", group: "GUI", priority: 30 },
+  gui_readout: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "#", label: "readout", group: "GUI", priority: 40 },
+  gui_label: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "T", label: "label", group: "GUI", priority: 41 },
+  gui_bar: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "▬", label: "bar", group: "GUI", priority: 42 },
+  gui_button: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "▭", label: "button", group: "GUI", priority: 44 },
+  gui_led: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "●", label: "light", group: "GUI", priority: 43 },
 };
 
 // priority: 1000 -- a custom node that doesn't declare its own priority

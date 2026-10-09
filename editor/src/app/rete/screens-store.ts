@@ -9,6 +9,7 @@
 import { shallowRef } from "vue";
 import type { ScreenSpec, ScreensSection } from "../../gui/screens";
 import { bumpPropertyVersion } from "./store";
+import { forgetNodes } from "../../gui/screen-edit";
 
 export const screens = shallowRef<ScreensSection>({});
 
@@ -22,6 +23,14 @@ export function updateScreen(screenId: string, fn: (s: ScreenSpec) => ScreenSpec
   const next = fn(current);
   if (next === current) return;
   screens.value = { ...screens.value, [screenId]: next };
+  bumpPropertyVersion();
+}
+
+/** Deleted nodes leave the layouts too: a deleted screen drops its layout, a deleted widget or modal leaves every page. */
+export function forgetGuiNodes(ids: ReadonlySet<string>): void {
+  const next: Record<string, ScreenSpec> = {};
+  for (const [id, spec] of Object.entries(screens.value)) if (!ids.has(id)) next[id] = forgetNodes(spec, ids);
+  screens.value = next;
   bumpPropertyVersion();
 }
 

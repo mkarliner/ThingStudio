@@ -44,6 +44,7 @@ import { functionNode as functionNodeDefinition, MAX_FUNCTION_OUTPUTS } from "..
 import { installConnectionValidation } from "./validation";
 import { selectedNode, selectedConnection, clearNodeSelection, setFunctionNodeOutputCount, bumpPropertyVersion } from "./store";
 import { forgetNode, nodeIdsInPane, removePane } from "./panes-store";
+import { forgetGuiNodes } from "./screens-store";
 import ThingstudioNode from "./ThingstudioNode.vue";
 import ThingstudioSocket from "./ThingstudioSocket.vue";
 import ThingstudioConnection from "./ThingstudioConnection.vue";
@@ -306,6 +307,7 @@ export async function createThingstudioEditor(container: HTMLElement) {
           forgetNode(id); // multi-pane-canvas.md's node-delete upkeep -- panes-store.ts's own header
         }
         if (selectedNode.value && selectedIds.has(selectedNode.value.id)) selectedNode.value = null;
+        forgetGuiNodes(selectedIds); // out of the screen layouts too
         bumpPropertyVersion();
         return;
       }
@@ -337,6 +339,7 @@ export async function createThingstudioEditor(container: HTMLElement) {
           forgetNode(id);
         }
         if (selectedNode.value && nodeIds.has(selectedNode.value.id)) selectedNode.value = null;
+        forgetGuiNodes(nodeIds);
         bumpPropertyVersion();
       }
       return removePane(paneId);

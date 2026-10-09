@@ -192,6 +192,15 @@ export function removeModal(screen: ScreenSpec, node: string): ScreenSpec {
   return { ...screen, modals: (screen.modals ?? []).filter((m) => m.node !== node) };
 }
 
+/** Takes every widget in `ids` out of the screen's pages and modals, and drops the modals those nodes laid out. */
+export function forgetNodes(screen: ScreenSpec, ids: ReadonlySet<string>): ScreenSpec {
+  const prune = (e: ElementSpec): ElementSpec =>
+    isContainer(e) ? { ...e, children: e.children.filter((c) => !(c.kind === "widget" && ids.has((c as WidgetSpec).node))).map(prune) } : e;
+  const pages = screen.pages.map((p) => ({ ...p, root: prune(p.root) }));
+  const modals = (screen.modals ?? []).filter((m) => !ids.has(m.node)).map((m) => ({ ...m, root: prune(m.root) }));
+  return { ...screen, pages, ...(screen.modals ? { modals } : {}) };
+}
+
 // ---- reading the tree for display -------------------------------------------------------------------------
 
 export interface OutlineRow {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { add, addModal, addPage, indent, move, movePage, outdent, outline, placedWidgets, remove, removePage, setProps, type Target } from "../src/gui/screen-edit.js";
+import { add, addModal, forgetNodes, addPage, indent, move, movePage, outdent, outline, placedWidgets, remove, removePage, setProps, type Target } from "../src/gui/screen-edit.js";
 import type { ElementSpec, ScreenSpec } from "../src/gui/screens.js";
 
 const w = (node: string): ElementSpec => ({ kind: "widget", node });
@@ -93,5 +93,16 @@ describe("screen-edit", () => {
     s = move(s, t, [1], -1);
     expect(names(s, t)).toEqual(["y", "x"]);
     expect([...placedWidgets(s)].sort()).toEqual(["a", "b", "c", "d", "x", "y"]);
+  });
+
+  it("forgetNodes takes deleted widgets out of every page, nested rows included, and drops a deleted modal", () => {
+    let s = addModal(base(), "m");
+    s = add(s, { modal: "m" }, w("b"));
+    s = add(s, { page: "two" }, w("c"));
+    const out = forgetNodes(s, new Set(["b", "m"]));
+    expect(names(out)).toEqual(["a", "row", "  c", "d"]);
+    expect(names(out, { page: "two" })).toEqual(["c"]);
+    expect(out.modals).toEqual([]);
+    expect(forgetNodes(base(), new Set(["zzz"]))).toEqual(base());
   });
 });
