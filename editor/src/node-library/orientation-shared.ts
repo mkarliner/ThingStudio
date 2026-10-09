@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 // editor/src/node-library/orientation-shared.ts
 //
-// Screen orientation as a config node (2026-10-09, Mike). `thingstudio/config/orientation` holds one angle, the
-// clockwise turn of the picture from the panel's natural (unrotated) orientation: 0, 90, 180 or 270. Three nodes
-// point at it and each works out its own part:
+// Screen orientation (2026-10-09, Mike). An `orientation` setting on each SPI display holds one angle, the
+// clockwise turn of the picture from the panel's natural (unrotated) orientation: 0, 90, 180 or 270. Three
+// nodes use it and each works out its own part (a gui screen follows the display it is wired to):
 //   display_spi   writes the MADCTL bits for the turn, and takes the panel's own width/height as its size
 //   gui_screen    lays out at the turned size (width and height swap at 90 and 270)
 //   touch panel   (through the gui screen) flips/swaps raw touch coordinates to match
@@ -20,7 +20,7 @@ import { CompileError } from "../compiler/errors.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext } from "../compiler/node-definition.js";
 
-export const ORIENTATION_CONFIG_TYPE = "thingstudio/config/orientation";
+const DISPLAY_SPI_TYPE = "thingstudio/display_spi";
 export type Angle = 0 | 90 | 180 | 270;
 
 export const MADCTL_MV = 0x20;
@@ -125,12 +125,16 @@ export function orientedTouch(base: TouchFlags, angle: Angle, width: number, hei
 
 /** The angle a node's `orientationConfigId` picks, or null when it has none (today's raw behaviour). */
 export function resolveOrientation(ctx: CodegenContext, node: GraphNode, what: string): Angle | null {
-  const id = node.properties.orientationConfigId;
-  if (typeof id !== "string" || id === "") return null;
-  const raw = ctx.resolveConfig(id).angle;
-  const angle = Number(raw ?? 0);
+  // The orientation is a setting on the SPI display. A gui screen follows the display it is wired to.
+  let display: GraphNode | undefined = node;
+  if (node.type !== DISPLAY_SPI_TYPE) {
+    display = ctx.findWiredTargets?.(node.id).find((n) => n.type === DISPLAY_SPI_TYPE);
+  }
+  const raw = display?.properties.orientation;
+  if (raw === undefined || raw === null || raw === "") return null;
+  const angle = Number(raw);
   if (angle !== 0 && angle !== 90 && angle !== 180 && angle !== 270) {
-    throw new CompileError(`${what}: orientation angle "${String(raw)}" must be 0, 90, 180 or 270`);
+    throw new CompileError(`${what}: orientation "${String(raw)}" must be 0, 90, 180 or 270`);
   }
   return angle;
 }

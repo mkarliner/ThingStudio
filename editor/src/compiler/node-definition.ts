@@ -205,6 +205,8 @@ export interface CodegenContext {
    * Optional, like findNodesOfType: absent in hand-rolled mocks. */
   isInputWired?(nodeId: string): boolean;
   isOutputWired?(nodeId: string): boolean;
+  /** The nodes this node's outputs are wired to directly, in link order (a gui screen finds its display this way). */
+  findWiredTargets?(nodeId: string): GraphNode[];
 }
 
 export interface NodeDefinition {

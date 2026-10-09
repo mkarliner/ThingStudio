@@ -73,10 +73,11 @@ so use them on boards with little RAM.
 
 ## Rotating the screen
 
-Add an **Orientation** config node (angle 0, 90, 180 or 270, the picture turned clockwise) and pick it on the gui
-screen and on the display node. Set the display's width and height to the panel's own size, and its rotation to how
-the panel is mounted (0 to 3, as before); the screen turns the size itself, and the touch axes follow the picture.
-With no orientation the display behaves as it always did. An orientation can't yet be combined with a panel offset
+On the display node, set **orientation** to 0, 90, 180 or 270 (the picture turned clockwise). It is one setting
+on each display, so a display can't have two. Set the display's width and height to the panel's own size, and its
+rotation to how the panel is mounted (0 to 3, as before). The gui screen wired to that display turns its size to
+match and its touch axes follow, so set the screen's width and height to the panel's own size too. With
+orientation off the display behaves as it always did. An orientation can't yet be combined with a panel offset
 (`xstart`/`ystart`, or the 135x240 panel).
 
 ## Laying out pages

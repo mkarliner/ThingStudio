@@ -220,13 +220,8 @@
           :model-value="node.properties.touchPanelConfigId || undefined"
           @update:model-value="(id) => setConfigId('touchPanelConfigId', id)"
         />
-        <ConfigRefField
-          config-type="thingstudio/config/orientation"
-          label="orientation (blank: raw rotation)"
-          :model-value="node.properties.orientationConfigId || undefined"
-          @update:model-value="(id) => setConfigId('orientationConfigId', id)"
-        />
-        <p class="hint" v-if="node.properties.orientationConfigId">With an orientation, width and height are the panel's own size; the screen turns them itself.</p>
+        <p class="hint">Rotation is set on the display this screen is wired to; with one set, width and height here are the
+          panel's own size.</p>
         <p class="hint">Sends a frame each time the screen changes. Wire it to a display node with the same size and
           frame format.</p>
         <ScreenOutline :screen-id="node.id" />
@@ -516,12 +511,17 @@
 
       <template v-else-if="node.kind === 'display_spi'">
         <PresetRefField :key="node.id" preset-type="display_spi" :properties="node.properties" @applied="touch" />
-        <ConfigRefField
-          config-type="thingstudio/config/orientation"
-          label="orientation (blank: raw rotation)"
-          :model-value="node.properties.orientationConfigId || undefined"
-          @update:model-value="(id) => setConfigId('orientationConfigId', id)"
-        />
+        <label>orientation
+          <select v-model="node.properties.orientation" @change="touch">
+            <option value="">off (raw rotation)</option>
+            <option value="0">0° (the panel's own)</option>
+            <option value="90">90° clockwise</option>
+            <option value="180">180°</option>
+            <option value="270">270° clockwise</option>
+          </select>
+        </label>
+        <p class="hint" v-if="node.properties.orientation">Width and height are the panel's own size; rotation is how the panel is
+          mounted (0 to 3). A gui screen wired to this display turns its size and touch to match.</p>
         <label>controller
           <select v-model="node.properties.controller" @change="touch">
             <option value="st7789">ST7789</option>

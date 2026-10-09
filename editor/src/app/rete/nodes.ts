@@ -522,7 +522,7 @@ function guiClass<K extends string, P extends Record<string, unknown>>(kind: K, 
   };
 }
 
-export const GuiScreenNode = guiClass("gui_screen", "thingstudio/gui_screen", 110, () => ({ name: "screen", width: 320, height: 240, frameFormat: "gs4" as "gs4" | "gs2" | "mono" | "rgb565", minInterval: 200, wrap: true, touchPanelConfigId: "", orientationConfigId: "" }), guiScreenNode, false, "frame");
+export const GuiScreenNode = guiClass("gui_screen", "thingstudio/gui_screen", 110, () => ({ name: "screen", width: 320, height: 240, frameFormat: "gs4" as "gs4" | "gs2" | "mono" | "rgb565", minInterval: 200, wrap: true, touchPanelConfigId: "" }), guiScreenNode, false, "frame");
 export const GuiLabelNode = guiClass("gui_label", "thingstudio/gui_label", 100, () => ({ name: "", maxChars: 8, staleAfter: 0 }), guiLabelNode, true, null);
 export const GuiReadoutNode = guiClass("gui_readout", "thingstudio/gui_readout", 110, () => ({ name: "", units: "", decimals: 1, lo: 0, hi: 100, staleAfter: 0 }), guiReadoutNode, true, null);
 export const GuiBarNode = guiClass("gui_bar", "thingstudio/gui_bar", 90, () => ({ name: "", lo: 0, hi: 100, staleAfter: 0 }), guiBarNode, true, null);
@@ -787,7 +787,7 @@ export class DisplaySpiNode extends ClassicPreset.Node {
     dataLatchOrder: boolean;
     xstart: number;
     ystart: number;
-    orientationConfigId: string;
+    orientation: "" | "0" | "90" | "180" | "270";
   } = {
     controller: "st7789",
     // frameFormat/palette added 2026-09-18 (display-spi.ts's own header
@@ -834,7 +834,7 @@ export class DisplaySpiNode extends ClassicPreset.Node {
     dataLatchOrder: true,
     xstart: -1,
     ystart: -1,
-    orientationConfigId: "",
+    orientation: "",
   };
 
   constructor() {

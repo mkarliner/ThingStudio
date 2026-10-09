@@ -27,7 +27,7 @@ that name to fill the form. The I2C bus is not saved, since it belongs to the fl
 
 ## Rotated screens
 
-If the gui screen has an [orientation](gui.md#rotating-the-screen), its touch axes are turned to match the picture.
+If the display the gui screen is wired to has an [orientation](gui.md#rotating-the-screen), the screen's touch axes are turned to match the picture.
 The raw [touch_i2c](touch-i2c.md) node is not turned.
 
 ## Other touch chips

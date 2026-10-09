@@ -252,6 +252,7 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
     },
     screens: graphData.screens,
     isInputWired: (nodeId: string): boolean => (incomingCount.get(nodeId) ?? 0) > 0,
+    findWiredTargets: (nodeId: string): GraphNode[] => (childrenOf.get(nodeId) ?? []).map((l) => nodesById.get(l[3])!),
     isOutputWired: (nodeId: string): boolean => (childrenOf.get(nodeId)?.length ?? 0) > 0,
   };
 
