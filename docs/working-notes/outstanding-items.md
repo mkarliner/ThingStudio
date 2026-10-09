@@ -67,9 +67,22 @@ not here.
   Intrinsics), GUI view, `screens` section, unknown/stale value states; widgets limited to label, value,
   button, status. Supersedes the `[POST-MVP]` templating item under "Network / config nodes".
   Design: `decisions/gui-layout.md`, `gui-layout-widget-system-scoping.md`.
-- **[LAUNCH]** **Freenove FNK0104B board support.** Board definition; verify PSRAM; ILI9341 controller in
-  `display_spi` (real per-controller codegen); install docs for the octal-SPIRAM S3 firmware. Makes the
-  `[P4]` per-flow vendor-push item worth doing alongside.
+- **[LAUNCH]** **Freenove FNK0104S board support -- built 2026-10-08, hardware checks owed.** Board
+  definition `freenove-s3-4in`, ST7796 in `display_spi`, full colour, landscape; install docs name the
+  `SPIRAM_OCT` S3 build. Replaces the FNK0104B (2026-10-09, `decisions/launch-scope.md`); ILI9341 is no longer
+  launch work. Owed on hardware: landscape touch axes, the press-highlight fix. `st7796py`'s README still says
+  "not confirmed on real hardware": update it (confirmed on Mike's panel only).
+- **[LAUNCH]** **CYD gate for custom firmware images.** Run the gate in `decisions/gui-layout.md` (2026-10-09)
+  on a classic CYD. Pass: custom images are post-MVP. Fail: build a small set of custom images (classic ESP32
+  first) with the packaging, hosting and flashing-docs work that brings. `frozen-firmware-spike-briefing.md`.
+- **[LAUNCH]** **Button rework: own output, modes, touch panel as a config node.** Per
+  `decisions/gui-layout.md` 2026-10-09: button output with momentary/toggle/navigate modes, input as the
+  shown state (controlled toggle with pending), touch panel config node read by the gui screen and by
+  `touch_i2c`; remove `gui_touch`; `allowUnwired` only for navigate buttons; update `nodes/gui.md`,
+  `touch-i2c.md`, the touch test flow. Needed by the headliner's plug toggle.
+- **[LAUNCH-NICE]** **Palette: one colour per group; labels without `gui`.** Per `decisions/gui-layout.md`
+  2026-10-09: recolour every kind in `palette.ts` by group, relabel the GUI kinds, `ebutton`/`eswitch` as
+  "gpio button"/"gpio switch". Retake the annotated editor screenshots in the user docs afterwards.
 - **[LAUNCH]** **`touch_i2c` node (FT6336U first).** Event source; design for the GT911/FT6236/CST820
   family. `touch-input-briefing.md`. `touch_spi` (classic CYD) can follow.
 - **[LAUNCH]** **Headliner example flow and task guide** — "a touch panel for the things you already own"

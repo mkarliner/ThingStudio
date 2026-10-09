@@ -123,3 +123,40 @@ decides when a consolidated value becomes a gap; each output carries `min`/`max`
 `payload` so long scales keep spikes visible; trend widgets are pure views of one journal; how a series crosses
 the msg is open.
 ([detail](../gui-layout-widget-system-scoping.md))
+
+- 2026-10-08 (Mike, recorded 2026-10-09): **touch in the MVP is buttons, down/up only, one finger.** No move,
+  drag, swipe or sliders. Built: `touch_i2c` (FT6336U driver, `vendor/ft6336u/`), a button widget, and a
+  `gui_touch` node that hit-tests the visible page or modal. The button and `gui_touch` shape is replaced by
+  the 2026-10-09 entry below. A **layout outline** in the gui screen's properties (`ScreenOutline.vue`) stands
+  in for the GUI view: edit the page tree, no preview, no drag.
+- 2026-10-09 (Mike): **the headliner ships on the Freenove ESP32-S3 Display 4.0" (FNK0104S: ST7796, 320x480,
+  FT6336U touch)**, Mike's own unit, not the 2.8" FNK0104B in `launch-mvp-scope-briefing.md`. The ST7796
+  driver and the `freenove-s3-4in` board definition are the headliner's hardware; ILI9341 leaves the MVP path.
+  Also in `decisions/launch-scope.md`.
+- 2026-10-09 (Mike): **custom firmware images are decided by the CYD gate.** The driver is deploying a modest
+  GUI app on a classic CYD. Gate: from a fresh runtime install, deploy the hero GUI flow (BME280, MQTT, 3-4
+  pages), then a different flow, then the GUI flow again, five times over, with no removing flows, no manual
+  resets and no reboots beyond what Deploy does. Stock firmware passes: custom images are post-MVP. It fails:
+  the MVP ships a small set of custom images, classic ESP32 first. Mike expects the latter. Replaces the
+  2026-10-08 "optional firmware tier is post-MVP" above.
+- 2026-10-09 (Mike's direction; details recommended, not decided): **buttons get their own output; touch
+  plumbing leaves the canvas.** Mike: a button "floating in the air doesn't look right"; GUI-only plumbing
+  shouldn't be visible; `touch_i2c` is for non-GUI uses. Recommended shape:
+  - The button sends `topic` = its name, `payload` = a value set on the button, on release inside it (or on
+    press, by property). Modes: momentary (sends its value), toggle (sends the opposite of its state, shows
+    ON/OFF), navigate (next/prev/home/page on its own screen, no wire; the only button allowed unwired; any
+    other unwired button gets a warning).
+  - The input sets what the button shows. Wired, the flow owns the state: a toggle fed by the plug's MQTT
+    state shows the real state, and a tap shows **pending** until it is confirmed (the controlled widget in
+    `gui-layout-widget-system-scoping.md`). Unwired, the button keeps its own state.
+  - The touch panel becomes a **config node** (controller, I2C bus, address, size, swap/flip, reset pin). The
+    gui screen names it in its properties and the GUI polls it itself; `touch_i2c` references the same config
+    for raw use. Both on one panel: a compile error in the MVP. The `gui_touch` node goes.
+  - Open: whether the screen-to-`display_spi` wire should also become a screen property. Left as is for now.
+- 2026-10-09 (Mike): **node colour means group; labels drop the `gui` prefix.** One colour per palette group,
+  the icon and label tell nodes apart: general slate `#5c6370`, network blue `#3b6ea6`, hardware copper
+  `#a0522d`, gui teal `#2e8a74` (dark backgrounds of the same hues). GUI labels read "button", "readout",
+  "bar", "light", "label", "screen", "navigator", "modal"; type ids keep `thingstudio/gui_*` (flow files store
+  only type ids, so colours and labels can change later without touching saved flows). The hardware buttons'
+  labels become "gpio button" (`ebutton`) and "gpio switch" (`eswitch`) so they can't be mistaken for the
+  on-screen one. Node-RED Dashboard is the precedent (`ui_button` type, "button" label, one colour).

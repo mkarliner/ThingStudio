@@ -39,7 +39,7 @@ blink in 15 minutes) still stands. These items are added to it.
 
 **"A touch panel for the things you already own."**
 
-**Hardware:** Freenove FNK0104B (ESP32-S3, 2.8" 240×320 touch display) plus a BME280 on I2C, an MQTT broker,
+**Hardware (changed 2026-10-09: the 4.0" FNK0104S, ST7796 320x480, replaces the FNK0104B below; `decisions/launch-scope.md`):** Freenove FNK0104B (ESP32-S3, 2.8" 240×320 touch display) plus a BME280 on I2C, an MQTT broker,
 and a Tasmota plug or WLED strip that speaks MQTT. Chosen over the classic CYD because viewers can buy the
 same board with published schematics; the classic CYD ships in several display variants with no visible
 difference (Mike's unit is ST7789 despite ILI9341 docs). The classic CYD stays a supported board.
@@ -95,6 +95,9 @@ button, status.** More widgets later should be additions, not redesigns.
 The old `[POST-MVP]` "Templating UI nodes for displays" item in `outstanding-items.md` is superseded by this.
 
 ### 2. Freenove FNK0104B board support
+
+*2026-10-09: superseded by the FNK0104S (4.0", ST7796), already supported (`freenove-s3-4in`, `vendor/st7796py/`).
+ILI9341 is no longer launch work.*
 
 - A board definition (`definitions/boards/`), processor `esp32-s3`.
 - Verify PSRAM on Mike's unit. With PSRAM, a full RGB565 240×320 frame (153,600 bytes) should fit, so the

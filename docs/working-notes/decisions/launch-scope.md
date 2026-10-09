@@ -23,3 +23,6 @@ separate ThingStudioMarketing repo — not logged here.
   cheap first option to check.
 - **2026-10-05 — a user-facing AI-authoring doc** (for agents working in the user's folder, not the repo)
   becomes launch work, tested like a newcomer test.
+- **2026-10-09 — the headliner board is the Freenove FNK0104S (4.0", ST7796, 320x480), not the FNK0104B.**
+  Mike's own unit, already running the GUI and touch. ILI9341 support leaves the launch path. Detail and the
+  CYD gate for custom firmware images: `decisions/gui-layout.md`.

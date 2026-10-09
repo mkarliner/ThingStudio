@@ -91,7 +91,7 @@ Then (2026-10-06): MVP scope is a minimal widget set for a CYD hero app, touch a
 multiple displays architected from the start; page navigation first-class, modals full-screen; Pico constraint
 (no penalty for GUI-less flows, small OLED GUI must work); no custom firmware -- Python on stock `framebuf` plus
 viper, nano-gui spike next. Then (2026-10-07): no round dials; a trend widget fed by cascaded journal nodes,
-one per time scale (RRDtool model). 17 entries: `docs/working-notes/decisions/gui-layout.md`.
+one per time scale (RRDtool model). 22 entries: `docs/working-notes/decisions/gui-layout.md`.
 
 ## Session sequencing
 
@@ -179,9 +179,10 @@ suggested. 1 entry: `docs/working-notes/decisions/chip-board-definitions.md`.
 
 ## Launch scope (product work for the public launch)
 
-One launch, after the headliner works; headliner is a touch panel on a Freenove FNK0104B (ESP32-S3); the GUI
+One launch, after the headliner works; headliner is a touch panel on a Freenove ESP32-S3 board (FNK0104S
+4.0" since 2026-10-09, was FNK0104B); the GUI
 templating system moves from POST-MVP to the launch path, built properly (container layout, small widget set);
-headless compile/validate and a user-facing AI-authoring doc raised in priority (2026-10-05). 5 entries:
+headless compile/validate and a user-facing AI-authoring doc raised in priority (2026-10-05). 6 entries:
 `docs/working-notes/decisions/launch-scope.md`.
 
 ## What this list doesn't include
