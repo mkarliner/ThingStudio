@@ -49,3 +49,13 @@ same removal convention as this file's own 2026-09-07/2026-09-13 passes above.]
 
 - Flows
  - Should have a notes section so we can explain what they do or how to use them.
+
+-  Licenses
+ - Have we listed our partial use of nano-gui?
+
+- Palette
+ - Collapsable node groups
+
+- Strange artifact
+ - on mac, the first time a file selection model is opened the flow file is greyed out, but works on all subsequent opens:wq
+ 
