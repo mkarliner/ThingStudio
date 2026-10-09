@@ -293,3 +293,17 @@ ESP-IDF memory, even if `active()` is never called. Our transport's watcher did 
 check for an IP. With a GUI flow's framebuffer using the memory, the start failed each time and ESP-IDF logged
 `wifi:Expected to init 10 rx buffer, actual is 0` and `esp_netif_new_api: ... duplicate key` every 2 s (CYD,
 Mike). Don't touch `network.WLAN` unless the board or flow actually wants WiFi; back off when it fails.
+
+## FrameBuffer subclasses must call `super()`, not the unbound method, 2026-10-07
+
+Found in the nano-gui spike (`nano-gui-spike-briefing.md`, Q4). In a Python subclass of `framebuf.FrameBuffer`,
+an override that calls `framebuf.FrameBuffer.fill_rect(self, ...)` raises
+`TypeError: argument should be a 'FrameBuffer' not a '<subclass>'`. `super().fill_rect(...)` works. Matters for
+any surface wrapper that translates or clips drawing calls (banded rendering does exactly this).
+
+## nano-gui's `DObject` moves widgets that touch the screen edge, 2026-10-07
+
+Also from the nano-gui spike (Q1). `DObject.__init__` clamps with `row + height >= device.height` (same for
+columns), so a widget whose rect ends exactly on the bottom or right edge is silently moved 1px, with only a
+`print` warning. Its borders are drawn 2px outside the rect, and text isn't clipped to the widget. Relevant if
+any nano-gui widget code is used with rects from our layout compiler.

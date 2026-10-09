@@ -90,7 +90,8 @@ superseding the named-slot design; unknown is a first-class value state in the G
 Then (2026-10-06): MVP scope is a minimal widget set for a CYD hero app, touch architected but barely built;
 multiple displays architected from the start; page navigation first-class, modals full-screen; Pico constraint
 (no penalty for GUI-less flows, small OLED GUI must work); no custom firmware -- Python on stock `framebuf` plus
-viper, nano-gui spike next. 9 entries: `docs/working-notes/decisions/gui-layout.md`.
+viper, nano-gui spike next. Then (2026-10-07): no round dials; a trend widget fed by cascaded journal nodes,
+one per time scale (RRDtool model). 17 entries: `docs/working-notes/decisions/gui-layout.md`.
 
 ## Session sequencing
 

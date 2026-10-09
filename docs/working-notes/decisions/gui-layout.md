@@ -112,3 +112,14 @@ vendor-whole / vendor-parts / write-our-own (`nano-gui-spike-briefing.md`).
   goals (about 75% less heap when frozen, a pushed library can override a frozen one); board stages and
   firmware builds not run. The GUI's own memory problems were fixed in Python (strips, per-flow libraries).
   Optional firmware tier is post-MVP. `frozen-firmware-spike-briefing.md`, "Closed".
+
+**2026-10-07 -- no round dials; a trend (moving histogram) widget instead.** Mike's steer: dials waste screen
+space and say no more than a number; moving histograms are useful for seeing trends. The trend widget joins the
+MVP working list. Mike pointed at his node-red-contrib-journal, then at RRDtool (and Cacti, built on it) as
+the model for this kind of display: the same quantity shown at several time scales, each giving a different
+insight. **Decided (Mike): one `journal` node per time scale, cascaded** ("more modular"), each one an
+RRDtool-style archive. Recommended, not decided: only the first journal is clocked (step, heartbeat); xff
+decides when a consolidated value becomes a gap; each output carries `min`/`max` alongside the average in
+`payload` so long scales keep spikes visible; trend widgets are pure views of one journal; how a series crosses
+the msg is open.
+([detail](../gui-layout-widget-system-scoping.md))
