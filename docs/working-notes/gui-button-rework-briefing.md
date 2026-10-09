@@ -142,3 +142,50 @@ the history graph, fonts, the GUI view, the screen-to-display wire question.
 - `tsc` clean; editor tests pass apart from the known eswitch timing test; MicroPython suites pass.
 - Docs and test flows updated; decisions and outstanding items updated.
 - Mike has the commit commands and a short list of what to check on the FNK0104S.
+
+## Mike's answers (2026-10-09) and the item 1 design
+
+**Answers.** (1) Compiler design agreed in principle; the section below is the written form, for his OK before
+building. (2) Toggle payloads default to `true`/`false`, not `ON`/`OFF`: on-screen buttons aren't Tasmota's
+physical buttons and can stand for something else. Both are properties. (3) Pending timeout: at least 5 s
+(default 5 s, a property). (4) A wired toggle maps the incoming payload through its on/off properties; anything
+matching neither shows unknown.
+
+### Item 1 design: a node with an input face and an event-output face
+
+**Rule.** A node of kind `sink` (sinks only: a transform's output wire already means what it returned) may also
+define `codegenEventSource`. That hook is its *output face*: compiled as an ordinary event-source coroutine,
+exactly as `gui_screen`'s and `interrupt`'s are today. The node's `kind` keeps describing its input face, so
+`emit()` and everything that reads `kind` are unchanged. The existing "a source defines exactly one of the two
+hooks" rule stays for `kind: "source"`.
+
+**Changes, all in `compile.ts` / `node-definition.ts`:**
+
+1. *Roots.* The list of coroutine roots becomes the `source`-kind nodes plus every non-source node that defines
+   `codegenEventSource`. The existing event-source branch compiles the output face unchanged. The spawn call's
+   fallback node id is the node's own id, so a fault in the output face is attributed to it.
+2. *Checks.* "Sink has an outgoing connection" is skipped for a sink with an output face. "Source has an incoming
+   connection" still applies to `kind: "source"` only.
+3. *Cycles and reachability.* A dual node reached as a link target is marked reachable and **not descended into**:
+   its input face is terminal, its output face runs in its own coroutine. Walked as a root it descends normally.
+   So `button output -> mqtt_publish`, and `mqtt_subscribe -> button input` wired back round to the same button,
+   is not a cycle. It is two coroutines meeting at the widget's state, which is the headliner's shape. A dual
+   node is always a root, so it is never "disconnected", and `allowUnwired` is no longer needed for the button.
+4. *Context.* Add `ctx.isOutputWired?(nodeId)` and `ctx.isInputWired?(nodeId)`, optional like `findNodesOfType`,
+   so the button's codegen can warn about a momentary or toggle button with nothing on its output (the brief's
+   rule) and pick controlled or uncontrolled by whether its input is wired.
+5. *Shared setup.* The two hooks run separately. Anything they share lives in the device-side GUI object, keyed
+   by node id (`_gui.event(id)` and `_gui.set_value(id, ...)`), and in setup statements already deduplicated by
+   `key` (`coreBlock`). No shared Python names are needed between the two hooks.
+
+**Unchanged:** the single-output transform contract, fan-out cloning, fault boundaries, line ranges (the output
+face has none, like any source), every existing node's generated Python byte for byte.
+
+**Tests (`compiler.general.test.ts` or a new file):** dual node compiles to a sink function plus a spawned
+coroutine; its output fans out and reaches downstream nodes; a sink without an output face still rejects an
+outgoing wire; output wired back to the same node's input compiles; a dual node with nothing wired compiles; a
+`kind: "source"` node with an incoming wire still errors.
+
+**Not a runtime change:** the compiled Python uses only `runtime.spawn` and `asyncio` as now, so the
+`_RUNTIME_VERSION` rule isn't triggered by item 1. The `gui.event()` device-side call (item 3) lives in a
+`tsgui_*` flow dependency.

@@ -200,6 +200,11 @@ export interface CodegenContext {
   /** The flow's GUI layouts (gui/screens.ts), for the GUI nodes. Optional: absent in flows without a GUI and
    * in hand-rolled mocks. */
   screens?: ScreensSection;
+  /** Whether any wire ends at this node's input / starts at this node's output. Lets a two-faced node choose its
+   * mode (a wired input means the flow owns the node's state) and warn about an output nothing listens to.
+   * Optional, like findNodesOfType: absent in hand-rolled mocks. */
+  isInputWired?(nodeId: string): boolean;
+  isOutputWired?(nodeId: string): boolean;
 }
 
 export interface NodeDefinition {
@@ -248,6 +253,15 @@ export interface NodeDefinition {
    * external event rather than poll-or-sleep -- see EventSourceCodegenResult.
    * A source node defines exactly one of codegenSource/codegenEventSource,
    * never both; compile.ts's graph walk picks whichever is present.
+   *
+   * A kind "sink" node may also define it: the node is then two-faced. Its
+   * input is a normal sink call (codegenSink); its output wires carry what
+   * this event source builds, in a coroutine of its own. Neither face is
+   * called from the other, so state they share lives outside both (the GUI
+   * subsystem keeps a button's state by node id). Loop wiring from such a
+   * node's output back to its own input is legal -- two coroutines, not a
+   * cycle. Used by gui_button and gui_modal. Not allowed on a transform: its
+   * output wire already means "what the transform returned".
    */
   codegenEventSource?(node: GraphNode, ctx: CodegenContext): EventSourceCodegenResult;
   codegenTransform?(node: GraphNode, ctx: CodegenContext): TransformCodegenResult;

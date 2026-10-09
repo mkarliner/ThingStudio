@@ -143,20 +143,36 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
   }
 
   const sources = graphData.nodes.filter((n) => registry.get(n.type)!.kind === "source");
-  if (sources.length === 0) {
-    throw new CompileError("graph has no source node (e.g. inject) to drive any flow");
-  }
   for (const s of sources) {
     if (incomingCount.has(s.id)) {
       throw new CompileError(`source node ${s.id} (${s.type}) has an incoming connection -- sources take no input`);
     }
   }
 
+  // Two-faced nodes: a sink that also defines codegenEventSource has an input face (the sink call, reached from
+  // upstream) and an output face (its own event-source coroutine, which sends on the node's output wires). The
+  // output face is a root like any source. Only sinks may be two-faced: a transform's output wire already means
+  // "what the transform returned", so a second source of messages on it would be ambiguous.
+  function isTwoFaced(n: GraphNode): boolean {
+    const def = registry.get(n.type)!;
+    return def.kind !== "source" && def.codegenEventSource !== undefined;
+  }
+  for (const n of graphData.nodes) {
+    if (isTwoFaced(n) && registry.get(n.type)!.kind !== "sink") {
+      throw new CompileError(`node ${n.id} (${n.type}) defines codegenEventSource but is not a sink -- only sinks can also be event sources`);
+    }
+  }
+  // Roots: one spawned coroutine each, in graph order.
+  const roots = graphData.nodes.filter((n) => registry.get(n.type)!.kind === "source" || isTwoFaced(n));
+  if (roots.length === 0) {
+    throw new CompileError("graph has no source node (e.g. inject) to drive any flow");
+  }
+
   // Sinks are terminal from anywhere in the graph, fan-in or not -- a
   // sink with any outgoing link at all is rejected up front, rather than
   // relying on the codegen walk to notice.
   for (const n of graphData.nodes) {
-    if (registry.get(n.type)!.kind === "sink" && (childrenOf.get(n.id)?.length ?? 0) > 0) {
+    if (registry.get(n.type)!.kind === "sink" && !isTwoFaced(n) && (childrenOf.get(n.id)?.length ?? 0) > 0) {
       throw new CompileError(`node ${n.id} (${n.type}) is a sink but has an outgoing connection -- sinks must be terminal`);
     }
   }
@@ -173,7 +189,14 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
   // validated) but it's still reachable.
   const color = new Map<string, "gray" | "black">();
   const reachable = new Set<string>();
-  function walkForCycles(sourceId: string, nodeId: string): void {
+  function walkForCycles(sourceId: string, nodeId: string, isRoot = false): void {
+    // A two-faced node reached from upstream is terminal: its input face is a plain sink call, and its output
+    // face runs in its own coroutine. So a loop through its two faces (button out -> ... -> same button in) is
+    // two coroutines meeting at the widget's state, not a cycle.
+    if (!isRoot && isTwoFaced(nodesById.get(nodeId)!)) {
+      reachable.add(nodeId);
+      return;
+    }
     const existing = color.get(nodeId);
     if (existing === "black") return;
     if (existing === "gray") {
@@ -186,7 +209,7 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
     }
     color.set(nodeId, "black");
   }
-  for (const s of sources) walkForCycles(s.id, s.id);
+  for (const r of roots) walkForCycles(r.id, r.id, true);
 
   for (const n of graphData.nodes) {
     if (!reachable.has(n.id) && !registry.get(n.type)!.allowUnwired) {
@@ -228,6 +251,8 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
       return [...configsById.values()].filter((c) => c.type === type);
     },
     screens: graphData.screens,
+    isInputWired: (nodeId: string): boolean => (incomingCount.get(nodeId) ?? 0) > 0,
+    isOutputWired: (nodeId: string): boolean => (childrenOf.get(nodeId)?.length ?? 0) > 0,
   };
 
   const imports = new Set<string>(["import runtime"]);
@@ -390,12 +415,13 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
     return [...cloneStmts, ...branchCodes].join("\n");
   }
 
-  sources.forEach((source, chainIndex) => {
+  roots.forEach((source, chainIndex) => {
     const sourceDef = registry.get(source.type)!;
     const chainBody = emitChildren(childrenOf.get(source.id) ?? [], "msg");
 
     let loopBody: string;
     if (sourceDef.codegenEventSource) {
+      // (Also the output face of a two-faced sink: same coroutine shape, its output wires are its children.)
       // Event-driven source (node-definition.ts's EventSourceCodegenResult):
       // wait-on-event, not poll-or-sleep, so this always loops forever --
       // there's no repeatMs-style "run once" case, the wait itself is the
