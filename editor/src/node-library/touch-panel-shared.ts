@@ -68,7 +68,7 @@ export function resolveTouchPanel(ctx: CodegenContext, node: GraphNode): TouchPa
   const p = ctx.resolveConfig(configId);
   const controller = String(p.controller ?? "ft6336u");
   if (controller !== "ft6336u") throw new CompileError(`touch panel controller "${controller}" isn't supported yet (FT6336U only)`);
-  const bus = resolveI2cBus(ctx, "touch panel", p.i2cConfigId);
+  const bus = resolveI2cBus(ctx, `touch panel for ${who}`, p.i2cConfigId);
   const address = whole(p, "address", 0x38, 0x08, "address");
   if (address > 0x77) throw new CompileError(`touch panel address "${String(p.address)}" must be 0x08 to 0x77`);
   const pollMs = whole(p, "pollMs", 20, 5, "poll interval");

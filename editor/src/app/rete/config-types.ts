@@ -127,6 +127,9 @@ export interface ConfigTypeDescriptor {
    * one on the lowest unused key. Two configs made to share a key by editing are a compile error in the
    * nodes that use them (i2c-shared.ts). Values are compared as numbers. */
   keyField?: string;
+  /** Preset type (admin API /api/presets/{type}) for a save/load control in the edit panel (2026-10-09, touch panel).
+   * Applying a preset copies its values into the config being edited; config references (the I2C bus) stay put. */
+  presetType?: string;
 }
 
 export const CONFIG_TYPES: Record<string, ConfigTypeDescriptor> = {
@@ -194,6 +197,7 @@ export const CONFIG_TYPES: Record<string, ConfigTypeDescriptor> = {
   "thingstudio/config/touch-panel": {
     type: "thingstudio/config/touch-panel",
     label: "Touch panel",
+    presetType: "touch_panel",
     fields: [
       {
         name: "controller",

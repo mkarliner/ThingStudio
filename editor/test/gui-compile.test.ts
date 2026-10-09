@@ -347,6 +347,12 @@ describe("touch buttons", () => {
     expect(compile(buttonFlow({ mode: "toggle" }, { wiredOut: true, panel: true }), buildRegistry()).warnings.some((x) => x.includes("no touch panel"))).toBe(false);
   });
 
+  it("a panel with no I2C bus is refused, naming the screen that uses it", () => {
+    const g = buttonFlow({ mode: "toggle" }, { wiredOut: true, panel: true });
+    for (const n of g.configs ?? []) if (n.type === "thingstudio/config/touch-panel") n.properties.i2cConfigId = "";
+    expect(() => compile(g, buildRegistry())).toThrow(/touch panel for .*"tft".* has no I2C bus/);
+  });
+
   it("a panel used by a gui screen and a touch node is refused, naming both", () => {
     const g = buttonFlow({ mode: "toggle" }, { wiredOut: true, panel: true });
     g.nodes.push(node("raw", "touch_i2c", { touchPanelConfigId: "panel" }), node("raw_dbg", "debug"));

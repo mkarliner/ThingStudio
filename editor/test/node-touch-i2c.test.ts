@@ -114,7 +114,7 @@ describe("thingstudio/touch_i2c node", () => {
   it("rejects bad settings, a missing bus and a missing panel", () => {
     expect(() => touchI2cNode.codegenSource!(node(), ctx({ pollMs: 1 }))).toThrow(/poll interval/);
     expect(() => touchI2cNode.codegenSource!(node(), ctx({ address: "0x90" }))).toThrow(/0x08 to 0x77/);
-    expect(() => touchI2cNode.codegenSource!(node(), ctx({ i2cConfigId: "" }))).toThrow(/has no I2C bus/);
+    expect(() => touchI2cNode.codegenSource!(node(), ctx({ i2cConfigId: "" }))).toThrow(/touch panel for .* has no I2C bus/);
     expect(() => touchI2cNode.codegenSource!(node(), ctx({ controller: "gt911" }))).toThrow(/FT6336U only/);
     expect(() => touchI2cNode.codegenSource!(node({ touchPanelConfigId: "" }), ctx())).toThrow(/has no touch panel/);
   });

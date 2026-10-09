@@ -108,6 +108,8 @@
 
     <div v-if="editingId" class="config-edit-panel">
       <div class="config-edit-header">editing {{ descriptor.label }} <span class="config-edit-id">#{{ editingId.slice(0, 6) }}</span></div>
+      <!-- Save/load a named preset of this config's values (touch panel); applies into draft, which auto-saves. -->
+      <PresetRefField v-if="descriptor.presetType" :key="editingId" :preset-type="descriptor.presetType" :properties="draft" />
       <template v-for="f in descriptor.fields" :key="f.name">
         <!-- CredentialRefField renders its own label (it needs to, for its
              standalone use inside PropertyPanel.vue in principle, even
@@ -196,6 +198,7 @@ import { CONFIG_TYPES } from "./config-types";
 import { CREDENTIAL_TYPES } from "./credential-types";
 import { AdminApiError, listCredentials, putCredential } from "../../flow-file/admin-api-client";
 import CredentialRefField from "./CredentialRefField.vue";
+import PresetRefField from "./PresetRefField.vue";
 
 // Prefixes a not-yet-used saved credential's name in the merged dropdown's
 // `<option value>` -- lets onSelect() tell "pick this existing config" (a
