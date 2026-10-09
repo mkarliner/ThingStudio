@@ -90,6 +90,14 @@ not here.
   family. `touch-input-briefing.md`. `touch_spi` (classic CYD) can follow.
 - **[LAUNCH]** **Headliner example flow and task guide** — "a touch panel for the things you already own"
   (BME280 + MQTT + Tasmota/WLED toggle + unknown/stale states). Confirm how the BME280 connects.
+- **[LAUNCH]** **Memory-gate example flows on the common boards (Mike, 2026-10-09).** Besides the headliner (S3,
+  PSRAM), define a few more examples that run on the most common boards: **RP2040/RP2350 (Pico W, Pico 2 W)** and
+  **classic ESP32 (the CYD, no PSRAM)**. Their job is to find the memory limits: if these work, memory is not an
+  issue until after the MVP. Candidates: classic ESP32 -- the GUI hero (readouts, MQTT, strips) on the CYD, display
+  only until `touch_spi` exists; Pico W -- a small mono OLED GUI (`display_i2c`, gs1) with MQTT readouts and a GPIO
+  button; both with WiFi and MQTT up, as a real flow would. Each runs for a while and records free heap before and
+  after deploy and at steady state; what breaks feeds the board memory budget the compiler should check
+  (`decisions/gui-layout.md`, 2026-10-06 Pico constraint). Not scoped further yet.
 - **[LAUNCH]** **Newcomer test with a target-group tester** (a maker who knows MicroPython). Re-runs the
   `road-to-mvp.md` acceptance test after the docs restructure.
 - **[LAUNCH]** **Confirm the Pico W WiFi-password bug is fixed** on hardware (Mike thinks it is).

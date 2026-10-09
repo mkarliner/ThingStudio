@@ -49,6 +49,7 @@ same removal convention as this file's own 2026-09-07/2026-09-13 passes above.]
 
 - Flows
  - Should have a notes section so we can explain what they do or how to use them.
+ - I think we could to with Label nodes (see KiCad) which would allow wiring between flow sheets. Labels come in pairs and all they do is forward messages from the output Label to the input Label regardless of where they are rendered. So a GUI app can be split up into multiple sheets each handling one aspect of the UI
 
 -  Licenses
  - Have we listed our partial use of nano-gui?
@@ -58,4 +59,4 @@ same removal convention as this file's own 2026-09-07/2026-09-13 passes above.]
 
 - Strange artifact
  - on mac, the first time a file selection model is opened the flow file is greyed out, but works on all subsequent opens:wq
- 
+

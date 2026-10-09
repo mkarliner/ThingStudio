@@ -91,7 +91,7 @@ Then (2026-10-06): MVP scope is a minimal widget set for a CYD hero app, touch a
 multiple displays architected from the start; page navigation first-class, modals full-screen; Pico constraint
 (no penalty for GUI-less flows, small OLED GUI must work); no custom firmware -- Python on stock `framebuf` plus
 viper, nano-gui spike next. Then (2026-10-07): no round dials; a trend widget fed by cascaded journal nodes,
-one per time scale (RRDtool model). Then (2026-10-09): buttons get their own output, modes and a controlled state, via two-faced nodes in the compiler; the touch panel is a config node; then the button's hardware pass: toggle revert settled, text confirms a toggle, flow label and board label, rows share their width, a widget on several pages, the navigator hidden, touch-panel presets. 30 entries: `docs/working-notes/decisions/gui-layout.md`.
+one per time scale (RRDtool model). Then (2026-10-09): buttons get their own output, modes and a controlled state, via two-faced nodes in the compiler; the touch panel is a config node; then the button rework hardware pass: toggle revert settled, text confirms a toggle, flow label and board label, rows share their width, a widget on several pages, the navigator hidden, touch-panel presets. 31 entries: `docs/working-notes/decisions/gui-layout.md`.
 
 ## Session sequencing
 

@@ -238,6 +238,7 @@
 // analogy from `gs4`'s already-working loop -- the bit-order difference
 // is exactly the kind of thing an analogy would get wrong silently.
 
+import { orientedMadctl, resolveOrientation, turnedSize } from "./orientation-shared.js";
 import { CompileError } from "../compiler/errors.js";
 import { checkOptionalPin, checkPin, checkSpi } from "../definitions/pin-check.js";
 import type { GraphNode } from "../compiler/graph.js";
@@ -549,11 +550,15 @@ export const displaySpiNode: NodeDefinition = {
     const backlight = checkOptionalPin(ctx, "display_spi backlight pin", node.properties.backlight, "output");
     checkSpi(ctx, "display_spi", spiBus, { sck, mosi }, baudrate);
 
-    const width = Math.round(Number(node.properties.width ?? 135));
-    const height = Math.round(Number(node.properties.height ?? 240));
-    if (!Number.isFinite(width) || width <= 0 || !Number.isFinite(height) || height <= 0) {
+    const panelWidth = Math.round(Number(node.properties.width ?? 135));
+    const panelHeight = Math.round(Number(node.properties.height ?? 240));
+    if (!Number.isFinite(panelWidth) || panelWidth <= 0 || !Number.isFinite(panelHeight) || panelHeight <= 0) {
       throw new CompileError(`display_spi width/height "${String(node.properties.width)}x${String(node.properties.height)}" must be positive integers`);
     }
+    // With an orientation config (orientation-shared.ts) width/height are the panel's own size and the picture is
+    // turned by writing different MADCTL bits; the driver and the frame then use the turned size.
+    const angle = resolveOrientation(ctx, node, "display_spi");
+    const { width, height } = angle === null ? { width: panelWidth, height: panelHeight } : turnedSize(panelWidth, panelHeight, angle);
 
     // Default 1 (CYD's confirmed real-hardware config -- see this file's
     // header) -- was 0 before 2026-09-18. TiDAL's own flow pins 0
@@ -578,10 +583,17 @@ export const displaySpiNode: NodeDefinition = {
     // rotation is already range-checked to 0-7 above, so this lookup always
     // hits -- the non-null assertion is for TypeScript's indexed-access typing,
     // not a runtime possibility.
-    const madctl = ROTATION_BITS[rotation]! | (dataLatchOrder ? MADCTL_MH : 0) | (bgr ? MADCTL_BGR : 0);
-
     const xstart = optionalOffset(node.properties.xstart, "xstart");
     const ystart = optionalOffset(node.properties.ystart, "ystart");
+    let axisBits = ROTATION_BITS[rotation]!;
+    if (angle !== null) {
+      if (rotation > 3) throw new CompileError(`display_spi rotation ${rotation} swaps axes: with an orientation, use 0 to 3 for how the panel is mounted`);
+      if (xstart !== -1 || ystart !== -1 || (panelWidth === 135 && panelHeight === 240)) {
+        throw new CompileError("display_spi: an orientation isn't supported with a panel offset (xstart/ystart, or a 135x240 panel) yet. Clear the orientation, or set rotation by hand.");
+      }
+      axisBits = orientedMadctl(axisBits, angle, panelWidth, panelHeight);
+    }
+    const madctl = axisBits | (dataLatchOrder ? MADCTL_MH : 0) | (bgr ? MADCTL_BGR : 0);
 
     const base = ctx.uniqueName("display_spi");
     const spiVar = `${base}_spi`;

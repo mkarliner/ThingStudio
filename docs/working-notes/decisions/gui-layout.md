@@ -208,4 +208,14 @@ the msg is open.
   uses it. The palette group is "GUI" and the labels have no `gui` prefix (the recolour by group is still owed).
 - 2026-10-09 (Mike): **touch panels get presets** like the display nodes: the touch-panel config's edit form has the
   preset control (`touch_panel` presets). The I2C bus reference is not saved in a preset.
+- 2026-10-09 (Mike): **memory is proven by a few examples on the common boards, not by a general budget yet.**
+  Alongside the headliner, a small set of example flows runs on RP2040/RP2350 and the classic ESP32 (CYD). If those
+  fit, memory is not an issue before the MVP. See `outstanding-items.md` ("Memory-gate example flows").
 
+- 2026-10-09 (Mike): **screen orientation is a referenced config node.** `thingstudio/config/orientation` has one
+  field, `angle` (0/90/180/270, the picture turned clockwise). A `gui_screen` and a `display_spi` can point at it;
+  the touch axes follow through the gui screen's touch panel. With an orientation, width/height are the panel's own
+  size (the screen turns them), and the display's `rotation` means how the panel is mounted (0 to 3, mirror bits
+  only). MADCTL bits and touch flags are derived by search (`orientation-shared.ts`) and 90 matches Adafruit's table
+  (MV|MX from rotation 0). No orientation: today's raw behaviour. Not yet supported with an orientation: panel
+  offsets (xstart/ystart, 135x240). `touch_i2c` (raw) is not turned. Hardware check on the FNK0104S is owed.

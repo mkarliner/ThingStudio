@@ -220,6 +220,13 @@
           :model-value="node.properties.touchPanelConfigId || undefined"
           @update:model-value="(id) => setConfigId('touchPanelConfigId', id)"
         />
+        <ConfigRefField
+          config-type="thingstudio/config/orientation"
+          label="orientation (blank: raw rotation)"
+          :model-value="node.properties.orientationConfigId || undefined"
+          @update:model-value="(id) => setConfigId('orientationConfigId', id)"
+        />
+        <p class="hint" v-if="node.properties.orientationConfigId">With an orientation, width and height are the panel's own size; the screen turns them itself.</p>
         <p class="hint">Sends a frame each time the screen changes. Wire it to a display node with the same size and
           frame format.</p>
         <ScreenOutline :screen-id="node.id" />
@@ -509,6 +516,12 @@
 
       <template v-else-if="node.kind === 'display_spi'">
         <PresetRefField :key="node.id" preset-type="display_spi" :properties="node.properties" @applied="touch" />
+        <ConfigRefField
+          config-type="thingstudio/config/orientation"
+          label="orientation (blank: raw rotation)"
+          :model-value="node.properties.orientationConfigId || undefined"
+          @update:model-value="(id) => setConfigId('orientationConfigId', id)"
+        />
         <label>controller
           <select v-model="node.properties.controller" @change="touch">
             <option value="st7789">ST7789</option>

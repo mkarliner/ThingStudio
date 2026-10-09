@@ -219,6 +219,29 @@ export const CONFIG_TYPES: Record<string, ConfigTypeDescriptor> = {
     defaults: { controller: "ft6336u", i2cConfigId: "", address: "0x38", rstPin: "", pollMs: 20, width: 320, height: 480, swapXY: false, flipX: false, flipY: false },
     summarize: (p) => `${String(p.controller ?? "ft6336u").toUpperCase()} ${String(p.width ?? "?")}x${String(p.height ?? "?")}`,
   },
+  // Orientation (2026-10-09): how far the picture is turned clockwise from the panel's natural orientation. A
+  // display_spi and a gui screen name one (and the screen's touch panel follows); width/height on those nodes are
+  // then the panel's own size. See node-library/orientation-shared.ts.
+  "thingstudio/config/orientation": {
+    type: "thingstudio/config/orientation",
+    label: "Orientation",
+    fields: [
+      {
+        name: "angle",
+        label: "turn the picture",
+        kind: "select",
+        options: [
+          { value: "0", label: "0° (the panel's own orientation)" },
+          { value: "90", label: "90° clockwise" },
+          { value: "180", label: "180°" },
+          { value: "270", label: "270° clockwise" },
+        ],
+        help: "On the display and the gui screen, width and height are then the panel's own size, not the turned one.",
+      },
+    ],
+    defaults: { angle: "0" },
+    summarize: (p) => `${String(p.angle ?? 0)}°`,
+  },
   "thingstudio/config/mqtt-broker": {
     type: "thingstudio/config/mqtt-broker",
     label: "MQTT Broker",

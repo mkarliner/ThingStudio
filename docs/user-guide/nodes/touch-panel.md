@@ -25,6 +25,11 @@ The touch panel's edit form has a **preset** control, like the display nodes. Fi
 disk button, and give the set a name (for example `freenove-4in`). In another flow, open a new touch panel and pick
 that name to fill the form. The I2C bus is not saved, since it belongs to the flow; pick or add it after loading.
 
+## Rotated screens
+
+If the gui screen has an [orientation](gui.md#rotating-the-screen), its touch axes are turned to match the picture.
+The raw [touch_i2c](touch-i2c.md) node is not turned.
+
 ## Other touch chips
 
 GT911, CST820 and others aren't supported yet. Read one from a [function](function.md) node with

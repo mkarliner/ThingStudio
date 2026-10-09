@@ -26,6 +26,7 @@
 import { CompileError } from "../compiler/errors.js";
 import { placedWidgets } from "../gui/screen-edit.js";
 import { pyPayloadLiteral } from "./py-literals.js";
+import { resolveOrientation, turnedSize } from "./orientation-shared.js";
 import { resolveTouchPanel } from "./touch-panel-shared.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type {
@@ -68,10 +69,13 @@ export function frameBytes(width: number, height: number, format: GuiFrameFormat
   }
 }
 
-function screenSize(node: GraphNode): ScreenSize & { format: GuiFrameFormat } {
-  const width = Math.round(Number(node.properties.width ?? 320));
-  const height = Math.round(Number(node.properties.height ?? 240));
+function screenSize(node: GraphNode, ctx: CodegenContext): ScreenSize & { format: GuiFrameFormat } {
+  let width = Math.round(Number(node.properties.width ?? 320));
+  let height = Math.round(Number(node.properties.height ?? 240));
   if (!(width > 0 && height > 0)) throw new CompileError(`GUI screen ${nodeLabel(node)}: width and height must be positive, got ${String(node.properties.width)}x${String(node.properties.height)}`);
+  // With an orientation config, width/height are the panel's own size and the picture is laid out turned.
+  const angle = resolveOrientation(ctx, node, `GUI screen ${nodeLabel(node)}`);
+  if (angle !== null) ({ width, height } = turnedSize(width, height, angle));
   const format = String(node.properties.frameFormat ?? "gs4") as GuiFrameFormat;
   if (!(format in FRAMEBUF_FORMAT)) throw new CompileError(`GUI screen ${nodeLabel(node)}: frameFormat must be one of ${Object.keys(FRAMEBUF_FORMAT).join(", ")}`);
   return { width, height, format };
@@ -89,7 +93,7 @@ function screensFor(ctx: CodegenContext): CompiledScreens {
   let c = compiled.get(ctx);
   if (!c) {
     const nodes = guiNodes(ctx);
-    c = compileScreens(ctx.screens ?? {}, nodes, (n) => screenSize(n));
+    c = compileScreens(ctx.screens ?? {}, nodes, (n) => screenSize(n, ctx));
     if (c.errors.length > 0) throw new CompileError(`GUI layout:\n  ${c.errors.join("\n  ")}`);
     for (const w of c.warnings) ctx.warn?.(w);
     compiled.set(ctx, c);
@@ -190,7 +194,7 @@ export const guiScreenNode: NodeDefinition = {
   kind: "source",
   ports: { outputs: [{ name: "frame", type: "bytes" }] },
   codegenEventSource(node: GraphNode, ctx: CodegenContext): EventSourceCodegenResult {
-    const { width, height, format } = screenSize(node);
+    const { width, height, format } = screenSize(node, ctx);
     const core = coreBlock(ctx);
     const c = screensFor(ctx);
     const surface = c.surfaces.find((s) => s.screen === node.id);

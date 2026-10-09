@@ -71,6 +71,14 @@ Set the gui screen's frame format to `rgb565` for full colour, with the same for
 grey for stale values, and a green accent for bars and lights that are on. Greys use less memory and send faster,
 so use them on boards with little RAM.
 
+## Rotating the screen
+
+Add an **Orientation** config node (angle 0, 90, 180 or 270, the picture turned clockwise) and pick it on the gui
+screen and on the display node. Set the display's width and height to the panel's own size, and its rotation to how
+the panel is mounted (0 to 3, as before); the screen turns the size itself, and the touch axes follow the picture.
+With no orientation the display behaves as it always did. An orientation can't yet be combined with a panel offset
+(`xstart`/`ystart`, or the 135x240 panel).
+
 ## Laying out pages
 
 Select the gui screen node and open **Properties**: each page is listed as an outline of its rows and columns,

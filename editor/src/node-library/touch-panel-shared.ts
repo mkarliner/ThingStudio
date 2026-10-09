@@ -15,6 +15,7 @@ import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext } from "../compiler/node-definition.js";
 import { checkPin } from "../definitions/pin-check.js";
 import { nodeLabel } from "../gui/screens.js";
+import { orientedTouch, resolveOrientation } from "./orientation-shared.js";
 import { resolveI2cBus, type I2cBusSetup } from "./i2c-shared.js";
 
 export const TOUCH_PANEL_CONFIG_TYPE = "thingstudio/config/touch-panel";
@@ -74,7 +75,14 @@ export function resolveTouchPanel(ctx: CodegenContext, node: GraphNode): TouchPa
   const pollMs = whole(p, "pollMs", 20, 5, "poll interval");
   const width = whole(p, "width", 320, 1, "width");
   const height = whole(p, "height", 480, 1, "height");
-  const py = (b: unknown) => (b === true ? "True" : "False");
+  // A gui screen with an orientation turns the touches with its picture: the panel's own flags (how the touch
+  // matches the unturned picture) are composed with the turn. A touch_i2c node stays raw.
+  let flags = { swapXY: p.swapXY === true, flipX: p.flipX === true, flipY: p.flipY === true };
+  if (node.type === "thingstudio/gui_screen") {
+    const angle = resolveOrientation(ctx, node, `GUI screen ${nodeLabel(node)}`);
+    if (angle !== null) flags = orientedTouch(flags, angle, width, height);
+  }
+  const py = (b: boolean) => (b ? "True" : "False");
   const rstRaw = p.rstPin;
   const hasRst = rstRaw !== undefined && rstRaw !== null && rstRaw !== "";
   const rst = hasRst ? `machine.Pin(${checkPin(ctx, "touch panel reset pin", rstRaw, "output")}, machine.Pin.OUT)` : "None";
@@ -83,7 +91,7 @@ export function resolveTouchPanel(ctx: CodegenContext, node: GraphNode): TouchPa
     bus,
     pollMs,
     where: `FT6336U at ${hex} on I2C bus ${bus.bus}`,
-    makeDevice: `ft6336u.FT6336U(${bus.varName}, ${address}, ${rst}, ${width}, ${height}, ${py(p.swapXY)}, ${py(p.flipX)}, ${py(p.flipY)})`,
+    makeDevice: `ft6336u.FT6336U(${bus.varName}, ${address}, ${rst}, ${width}, ${height}, ${py(flags.swapXY)}, ${py(flags.flipX)}, ${py(flags.flipY)})`,
     imports: ["import machine", "import ft6336u"],
   };
 }
