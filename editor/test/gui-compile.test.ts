@@ -347,6 +347,12 @@ describe("touch buttons", () => {
     expect(compile(buttonFlow({ mode: "toggle" }, { wiredOut: true, panel: true }), buildRegistry()).warnings.some((x) => x.includes("no touch panel"))).toBe(false);
   });
 
+  it("a button draws its board label, else its flow label", () => {
+    const src = (props: Record<string, unknown>) => compile(buttonFlow(props, { wiredOut: true }), buildRegistry()).source;
+    expect(src({ text: "Go", label: "Fire!" })).toContain('tsgui_button.make(font_body20, "Go")');
+    expect(src({ text: "", label: "Fire!" })).toContain('tsgui_button.make(font_body20, "Fire!")');
+  });
+
   it("a panel with no I2C bus is refused, naming the screen that uses it", () => {
     const g = buttonFlow({ mode: "toggle" }, { wiredOut: true, panel: true });
     for (const n of g.configs ?? []) if (n.type === "thingstudio/config/touch-panel") n.properties.i2cConfigId = "";

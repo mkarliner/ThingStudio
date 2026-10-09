@@ -318,7 +318,8 @@ export function compileScreens(
               imports.add(font);
               break;
             }
-            const text = typeof p.text === "string" && p.text !== "" ? p.text : undefined;
+            // The board label, else the flow label (so one label is enough for most buttons).
+            const text = [p.text, p.label].map((v) => (typeof v === "string" ? v.trim() : "")).find((v) => v !== "") || undefined;
             // A bound value replaces the text, so the font must have "--" and (for a bound-only button) the room.
             if (!fontOk(font, text ?? "--", `widget ${label} ${where}`)) return null;
             natural = buttonNatural({ font, text, max_chars: maxChars });

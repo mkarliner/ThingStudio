@@ -41,11 +41,14 @@ An input can take any number of wires — connect several outputs to the same in
 
 Select a node to see its property panel on the right — every configurable field for that node type. Properties are read when you Compile → Deploy; nothing needs a redeploy just to preview a change.
 
-### Giving a node a label
+### Giving a node a flow label
 
-Every node has a **label** field at the top of its property panel. Type something (say `Fire!`) and the node
-shows it on the canvas instead of its kind (`gui_button`). Blank puts the kind back, except on GUI nodes, which then show their caption or name. Messages and errors that name
-the node use the label too.
+Every node has a **flow label** field at the top of its property panel. Type something (say `Fire!`) and the node
+shows it on the canvas instead of its kind (`gui_button`). Blank puts the kind back. Messages and errors that name
+the node use it too. It exists only in the editor; it is never sent to the board.
+
+A button also has a **board label**, the text drawn on the button itself. Leave it blank and the button uses the
+flow label, so one label is usually enough.
 
 ## Presets
 

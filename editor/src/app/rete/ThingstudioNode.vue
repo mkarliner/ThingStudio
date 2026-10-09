@@ -140,15 +140,11 @@ const palette = computed<KindStyle>(() => {
 });
 const icon = computed(() => palette.value.icon);
 
-// A node's own title (the property panel's "label" field) wins over its kind's name. GUI nodes with no label
-// fall back to what they show or are called (a button's caption, then its name), so several buttons on the
-// canvas read differently without any setup.
+// A node's own title (the property panel's "flow label" field) wins over its kind's name.
 const title = computed(() => {
   void propertyVersion.value; // properties change off-Vue
-  const pr = (props.data as unknown as { properties?: Record<string, unknown>; kind?: string }).properties ?? {};
-  const pick = (v: unknown) => (typeof v === "string" ? v.trim() : "");
-  const gui = String((props.data as unknown as { kind?: string }).kind ?? "").startsWith("gui_");
-  return pick(pr.label) || (gui ? pick(pr.text) || pick(pr.name) : "") || props.data.label;
+  const l = (props.data as unknown as { properties?: { label?: unknown } }).properties?.label;
+  return typeof l === "string" && l.trim() ? l.trim() : props.data.label;
 });
 
 // Inject's two-clickable-targets fix (2026-09-13, Mike: "Inject should

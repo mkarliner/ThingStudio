@@ -132,7 +132,7 @@
         {{ displayTitle }} <span class="node-id">#{{ node.id.slice(0, 6) }}</span>
       </h3>
       <!-- Every node can carry its own title for the canvas (a "label" property); blank shows the kind. -->
-      <label>label <input type="text" v-model="node.properties.label" :placeholder="node.label" @input="touch" /></label>
+      <label>flow label (the title on the canvas) <input type="text" v-model="node.properties.label" :placeholder="node.label" @input="touch" /></label>
 
       <template v-if="node.kind === 'inject'">
         <label>payload type
@@ -279,7 +279,7 @@
           </label>
         </template>
         <template v-if="node.properties.mode === 'momentary'">
-          <label>caption (shown on the button) <input type="text" v-model="node.properties.text" @input="touch" /></label>
+          <label>board label (drawn on the button) <input type="text" v-model="node.properties.text" :placeholder="node.properties.label || ''" @input="touch" /></label>
           <label>sends (the payload) <input type="text" v-model="node.properties.value" :placeholder="buttonDefault(node.properties.valueType, 0)" @input="touch" /></label>
           <label>room for (characters, if no text) <input type="number" min="1" v-model.number="node.properties.maxChars" @input="touch" /></label>
         </template>
@@ -299,8 +299,8 @@
           owns it: it shows <code>--</code> until the first report, a tap shows the requested state hollow until the input
           confirms it, and with no answer it goes back and flags the failure. Unwired, it keeps its own state. Its output
           sends the new state; wire it to whatever switches the device.</p>
-        <p v-else-if="node.properties.mode === 'momentary'" class="hint">Sends "sends" when tapped (the payload; the topic is above). The caption is only what is drawn on the button;
-          a msg.payload on its input replaces the caption.</p>
+        <p v-else-if="node.properties.mode === 'momentary'" class="hint">Sends "sends" when tapped (the payload; the topic is above). The board label is what is drawn on the button
+          (blank: the flow label); a msg.payload on its input replaces it.</p>
         <p v-else class="hint">Acts on its own screen; needs no wires.</p>
       </template>
 
@@ -853,10 +853,7 @@ const customProperties = computed<Record<string, unknown>>(() => (node.value?.pr
 // The node's own title if it has one (the "label" field), else its kind.
 const displayTitle = computed(() => {
   const l = node.value?.properties?.label;
-  if (typeof l === "string" && l.trim()) return l.trim();
-  const p = node.value?.properties as Record<string, unknown> | undefined;
-  const pick = (v: unknown) => (typeof v === "string" ? v.trim() : "");
-  return (node.value?.kind?.startsWith("gui_") ? pick(p?.text) || pick(p?.name) : "") || node.value?.label || "";
+  return typeof l === "string" && l.trim() ? l.trim() : node.value?.label ?? "";
 });
 
 const kindStyle = computed<KindStyle>(() => {
