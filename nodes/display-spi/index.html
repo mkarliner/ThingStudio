@@ -1013,6 +1013,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../supported-hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Supported hardware
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../boards/" class="md-nav__link">
         
   
@@ -1136,10 +1163,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_16" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_17" checked>
         
           
-          <label class="md-nav__link" for="__nav_16" id="__nav_16_label" tabindex="">
+          <label class="md-nav__link" for="__nav_17" id="__nav_17_label" tabindex="">
             
   
   
@@ -1157,8 +1184,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_16_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_16">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_17_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_17">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1213,10 +1240,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_16_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_17_2" >
         
           
-          <label class="md-nav__link" for="__nav_16_2" id="__nav_16_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_17_2" id="__nav_17_2_label" tabindex="0">
             
   
   
@@ -1234,8 +1261,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_16_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_16_2">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_17_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_17_2">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1522,10 +1549,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_16_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_17_3" >
         
           
-          <label class="md-nav__link" for="__nav_16_3" id="__nav_16_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_17_3" id="__nav_17_3_label" tabindex="0">
             
   
   
@@ -1543,8 +1570,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_16_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_16_3">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_17_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_17_3">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1833,10 +1860,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_16_4" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_17_4" checked>
         
           
-          <label class="md-nav__link" for="__nav_16_4" id="__nav_16_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_17_4" id="__nav_17_4_label" tabindex="0">
             
   
   
@@ -1854,8 +1881,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_16_4_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_16_4">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_17_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_17_4">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2211,7 +2238,7 @@
   <span class="md-ellipsis">
     
   
-    i2c
+    i2c device
   
 
     
@@ -2239,7 +2266,7 @@
   <span class="md-ellipsis">
     
   
-    I2C buses
+    I2C bus
   
 
     
@@ -2303,7 +2330,7 @@
   <span class="md-ellipsis">
     
   
-    GUI (preview)
+    GUI
   
 
     
@@ -2431,8 +2458,8 @@
 
 
 <h1 id="display-spi">display spi</h1>
-<p>Pushes an already-rendered frame to an SPI color TFT panel (ST7789 today — the <code>controller</code> property
-leaves room for others later). Build the frame upstream (a <code>function</code> node using <code>framebuf.FrameBuffer</code>,
+<p>Pushes an already-rendered frame to an SPI color TFT panel. <a href="../../supported-hardware/#displays">Supported hardware</a>
+lists the display chips. Build the frame upstream (a <code>function</code> node using <code>framebuf.FrameBuffer</code>,
 or eventually a graphics-framework node) and wire it into this node's input.</p>
 <p>This node's property panel has a <strong>preset</strong> picker (see <a href="../../canvas-basics/#presets">Canvas basics</a>) —
 save a real panel's whole setup (pins, bus, resolution, rotation, color order, and so on) under a name
@@ -2440,8 +2467,7 @@ once, then load it again on this or another <code>display_spi</code> node instea
 defaults below are exactly what saving a "cyd" preset from a correctly-configured node would capture.</p>
 <h2 id="properties">Properties</h2>
 <ul>
-<li><strong>controller</strong> — the display chip: <code>ST7789</code> (240x240, 135x240, 240x320) or <code>ST7796</code> (320x480). An
-  ST7796 panel has no offset, so leave xstart / ystart at <code>-1</code>.</li>
+<li><strong>controller</strong> — the display chip. See <a href="../../supported-hardware/#displays">Supported hardware</a>.</li>
 <li><strong>frame format</strong> — <code>rgb565</code> (default, full color, <code>width * height * 2</code> bytes), or an indexed
   format: <code>gs4</code> (4-bit, a quarter the memory), <code>gs2</code> (2-bit, an eighth), or <code>mono</code> (1-bit, a
   sixteenth). Switch away from <code>rgb565</code> if a full RGB565 buffer won't fit in memory — the lower the
@@ -2472,7 +2498,8 @@ defaults below are exactly what saving a "cyd" preset from a correctly-configure
   blits into the wrong window of the controller's real GRAM, so content shows up clipped/offset and the
   visible glass shows whatever stale pixels were already sitting in the uncovered part of memory
   (confirmed on real TiDAL hardware, 2026-09-18 — see <code>test-flows/README.md</code>'s
-  <code>display-spi-tidal-test.flow.json</code> section for the full story).</li>
+  <code>display-spi-tidal-test.flow.json</code> section for the full story).
+  An ST7796 panel has no offset: leave both at <code>-1</code>.</li>
 </ul>
 <p>Pins, bus, resolution, rotation, color order, inversion, and data latch order all vary board to board —
 there's no sensible default that works for more than one board, so confirm these against your own panel.
