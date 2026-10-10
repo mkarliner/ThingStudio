@@ -33,4 +33,4 @@ once. Boards whose firmware has no `ntptime` module report that on the node inst
 The `seg7` fonts (`font_seg748`, `font_seg764`, `font_seg796`) have only `0-9 : . -` and a space. On a 320-pixel-wide
 screen `font_seg764` fits `14:05` (221 px) and `font_seg748` fits `14:05:09` (254 px). `font_seg796` is for wider
 screens. The font is DSEG by Keshikan (SIL Open Font License 1.1); see
-[third-party licences](../../third-party-licenses.md).
+[third-party licences](https://github.com/mkarliner/ThingStudio/blob/main/docs/third-party-licenses.md).
