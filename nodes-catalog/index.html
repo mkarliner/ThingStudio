@@ -1,0 +1,4020 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Node-and-wire visual programming for microcontrollers.">
+      
+      
+      
+        <link rel="canonical" href="https://docs.thingstudio.net/nodes-catalog/">
+      
+      
+        <link rel="prev" href="../check-a-flow/">
+      
+      
+        <link rel="next" href="../ai-authoring/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Node catalog - Thingstudio</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#node-catalog" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Thingstudio" class="md-header__button md-logo" aria-label="Thingstudio" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Thingstudio
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Node catalog
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/mkarliner/ThingStudio" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    mkarliner/ThingStudio
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Thingstudio" class="md-nav__button md-logo" aria-label="Thingstudio" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Thingstudio
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/mkarliner/ThingStudio" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    mkarliner/ThingStudio
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Background
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Background
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../background/event-driven/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Event-driven programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../background/flows-and-nodes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flows, nodes and messages
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../background/node-red/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node-RED
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../background/micropython/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MicroPython
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    If you already know
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    If you already know
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../coming-from/node-red/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node-RED
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../coming-from/micropython/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MicroPython
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../coming-from/arduino/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arduino and C
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    1. Install Thingstudio
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installing-micropython/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2. Install MicroPython
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../connecting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    3. Connect your board
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installing-runtime/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    4. Install the runtime
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../first-flow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    5. Blink an LED
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installing-more/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    More on installing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../canvas-basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Canvas basics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../check-a-flow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Check a flow without the editor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node catalog
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node catalog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#general" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        general
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="general">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#clock" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        clock
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#debug" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        debug
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        delay
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        filter
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        function
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inject" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        inject
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#journal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        journal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#startup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        startup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#timer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        timer
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gui" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GUI
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="GUI">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#bar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        bar
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#button" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        button
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#label" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        label
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#light" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        light
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#modal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        modal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#navigator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        navigator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#readout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        readout
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#screen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        screen
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#trend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        trend
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hardware" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        hardware
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="hardware">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#bme280" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        bme280
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#display-i2c" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        display i2c
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#display-spi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        display spi
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ebutton" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ebutton
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eswitch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        eswitch
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gpio-out" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        gpio out
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#i2c" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        i2c
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#interrupt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        interrupt
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pwm-out" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        pwm out
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#touch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        touch
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#network" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        network
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="network">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#http-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        http in
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#http-request" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        http request
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#http-response" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        http response
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mqtt-publish" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mqtt publish
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mqtt-subscribe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mqtt subscribe
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#udp-receive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        udp receive
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#udp-send" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        udp send
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wifi-gate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wifi gate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wifi-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wifi status
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#compile-only-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compile-only types
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#config-nodes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Config nodes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Config nodes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#i2c-bus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        I2C bus
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mqtt-broker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MQTT Broker
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#touch-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Touch panel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wifi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WiFi
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai-authoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Writing flows with an AI assistant
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sensor-display/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    A sensor display
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../flow-lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flow lifecycle
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../boards/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Boards and processors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../wifi-connection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Connecting over WiFi
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Debugging & troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_15" >
+        
+          
+          <label class="md-nav__link" for="__nav_15" id="__nav_15_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_15_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_15">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Node reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_15_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_15_2" id="__nav_15_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    General
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_15_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_15_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    General
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/inject/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    inject
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/startup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    startup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/timer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    timer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/function/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    function
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/delay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    delay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/filter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    filter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/journal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    journal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/clock/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    clock
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/debug/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    debug
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_15_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_15_3" id="__nav_15_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Network
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_15_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_15_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Network
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/wifi-status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    wifi status
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/wifi-gate/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    wifi gate
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/udp-receive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    udp receive
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/mqtt-subscribe/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    mqtt subscribe
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/http-request/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    http request
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/http-in/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    http in
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/http-response/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    http response
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/udp-send/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    udp send
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/mqtt-publish/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    mqtt publish
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_15_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_15_4" id="__nav_15_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_15_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_15_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Hardware
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/interrupt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    interrupt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/eswitch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    eswitch
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ebutton/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ebutton
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/gpio-out/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    gpio out
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/pwm-out/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pwm out
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/display-spi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    display spi
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/display-i2c/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    display i2c
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/bme280/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    bme280
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/touch-i2c/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    touch
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/i2c/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    i2c
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/i2c-bus/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    I2C buses
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/touch-panel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Touch panels
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/gui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GUI (preview)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../custom-nodes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Writing custom nodes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#general" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        general
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="general">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#clock" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        clock
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#debug" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        debug
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        delay
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        filter
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        function
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inject" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        inject
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#journal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        journal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#startup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        startup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#timer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        timer
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gui" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GUI
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="GUI">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#bar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        bar
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#button" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        button
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#label" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        label
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#light" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        light
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#modal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        modal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#navigator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        navigator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#readout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        readout
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#screen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        screen
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#trend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        trend
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hardware" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        hardware
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="hardware">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#bme280" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        bme280
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#display-i2c" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        display i2c
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#display-spi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        display spi
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ebutton" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ebutton
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eswitch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        eswitch
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gpio-out" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        gpio out
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#i2c" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        i2c
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#interrupt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        interrupt
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pwm-out" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        pwm out
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#touch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        touch
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#network" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        network
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="network">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#http-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        http in
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#http-request" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        http request
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#http-response" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        http response
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mqtt-publish" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mqtt publish
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mqtt-subscribe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mqtt subscribe
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#udp-receive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        udp receive
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#udp-send" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        udp send
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wifi-gate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wifi gate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wifi-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wifi status
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#compile-only-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compile-only types
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#config-nodes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Config nodes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Config nodes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#i2c-bus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        I2C bus
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mqtt-broker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MQTT Broker
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#touch-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Touch panel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wifi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WiFi
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="node-catalog">Node catalog</h1>
+<!-- Generated by `node dist-cli/thingstudio-compile.mjs --describe-all --markdown`. Do not edit by hand: a test fails when it is out of date. -->
+
+<p>Every node a flow file can use: its type id, its ports with their payload types, and its properties with the default
+the editor gives a new node. A property a flow file leaves out gets this default. Allowed values and ranges are
+checked when the flow is compiled, and the error says what is allowed. See <a href="../check-a-flow/">Check a flow without the editor</a>.</p>
+<p>Ports are numbered from 0 in a flow file's <code>edges</code>: <code>[fromNodeId, outputNumber, toNodeId, inputNumber]</code>, in the order listed here.</p>
+<h2 id="general">general</h2>
+<h3 id="clock">clock</h3>
+<p>Type <code>thingstudio/clock</code>, kind transform, palette group general.</p>
+<ul>
+<li>Inputs: msg (any)</li>
+<li>Outputs: time (any), date (any)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>server</code>, string, default <code>"pool.ntp.org"</code></li>
+<li><code>utcOffset</code>, number, default <code>0</code> — hours from UTC for standard time, -12 to 14; the daylight-saving hour is added by <code>dst</code></li>
+<li><code>dst</code>, string, default <code>"eu"</code> — eu adds the UK/EU summer hour automatically; none adds nothing</li>
+<li><code>hour12</code>, boolean, default <code>false</code></li>
+<li><code>seconds</code>, boolean, default <code>false</code></li>
+<li><code>blink</code>, boolean, default <code>false</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="debug">debug</h3>
+<p>Type <code>thingstudio/debug</code>, kind sink, palette group general.</p>
+<ul>
+<li>Inputs: msg (any)</li>
+<li>Outputs: none</li>
+<li>Properties (name, type, default):<ul>
+<li><code>fullMessage</code>, boolean, default <code>false</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="delay">delay</h3>
+<p>Type <code>thingstudio/delay</code>, kind transform, palette group general.</p>
+<ul>
+<li>Inputs: msg (any)</li>
+<li>Outputs: msg (any)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>delayMs</code>, number, default <code>1000</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="filter">filter</h3>
+<p>Type <code>thingstudio/filter</code>, kind transform, palette group general.</p>
+<ul>
+<li>Inputs: msg (any)</li>
+<li>Outputs: msg (any)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>mode</code>, string, default <code>"change"</code></li>
+<li><code>threshold</code>, number, default <code>1</code></li>
+<li><code>intervalMs</code>, number, default <code>1000</code></li>
+<li><code>ignoreFirst</code>, boolean, default <code>false</code></li>
+<li><code>perTopic</code>, boolean, default <code>true</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="function">function</h3>
+<p>Type <code>thingstudio/function</code>, kind transform, palette group general.</p>
+<ul>
+<li>Inputs: msg (any)</li>
+<li>Outputs: msg (any) (the number of outputs is the node's <code>outputCount</code> property)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>code</code>, string, default <code>"msg['payload'] = msg['payload']\nreturn msg\n"</code> — the body of a MicroPython function; <code>msg</code> in, return the message, None, or a list with one entry per output</li>
+<li><code>outputCount</code>, number, default <code>1</code> — how many outputs, 1 to 10</li>
+</ul>
+</li>
+</ul>
+<h3 id="inject">inject</h3>
+<p>Type <code>thingstudio/inject</code>, kind source, palette group general.</p>
+<ul>
+<li>Inputs: none</li>
+<li>Outputs: msg (bool)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>payloadType</code>, string, default <code>"bool"</code></li>
+<li><code>payloadValue</code>, string, default <code>"true"</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="journal">journal</h3>
+<p>Type <code>thingstudio/journal</code>, kind transform, palette group general.</p>
+<ul>
+<li>Inputs: msg (any)</li>
+<li>Outputs: series (any), rollup (any)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>rows</code>, number, default <code>60</code> — how many rows are kept, 1 to 256</li>
+<li><code>stepSeconds</code>, number, default <code>60</code> — seconds per row; 0 makes every message its own row</li>
+<li><code>steps</code>, number, default <code>0</code> — rows per roll-up to the second output; 0 sends none</li>
+<li><code>xff</code>, number, default <code>0.5</code> — 0 to 1: a roll-up becomes a gap if more than this fraction of its rows are gaps</li>
+</ul>
+</li>
+</ul>
+<h3 id="startup">startup</h3>
+<p>Type <code>thingstudio/startup</code>, kind source, palette group general.</p>
+<ul>
+<li>Inputs: none</li>
+<li>Outputs: msg (bool)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>payloadType</code>, string, default <code>"bool"</code></li>
+<li><code>payloadValue</code>, string, default <code>"true"</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="timer">timer</h3>
+<p>Type <code>thingstudio/timer</code>, kind source, palette group general.</p>
+<ul>
+<li>Inputs: none</li>
+<li>Outputs: msg (int)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>intervalMs</code>, number, default <code>1000</code> — milliseconds between messages; the payload is a count that rises 1, 2, 3...</li>
+</ul>
+</li>
+</ul>
+<h2 id="gui">GUI</h2>
+<h3 id="bar">bar</h3>
+<p>Type <code>thingstudio/gui_bar</code>, kind sink, palette group GUI.</p>
+<ul>
+<li>Inputs: msg (any)</li>
+<li>Outputs: none</li>
+<li>Properties (name, type, default):<ul>
+<li><code>name</code>, string, default <code>""</code></li>
+<li><code>lo</code>, number, default <code>0</code> — the value at which the bar is empty</li>
+<li><code>hi</code>, number, default <code>100</code> — the value at which the bar is full</li>
+<li><code>staleAfter</code>, number, default <code>0</code> — seconds without a new value before it dims; 0 = never</li>
+</ul>
+</li>
+</ul>
+<h3 id="button">button</h3>
+<p>Type <code>thingstudio/gui_button</code>, kind sink, palette group GUI.</p>
+<ul>
+<li>Inputs: msg (any)</li>
+<li>Outputs: msg (any)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>name</code>, string, default <code>""</code></li>
+<li><code>mode</code>, string, default <code>"momentary"</code> — momentary, toggle or navigate</li>
+<li><code>text</code>, string, default <code>""</code> — what is drawn on the button; empty uses <code>name</code></li>
+<li><code>maxChars</code>, number, default <code>8</code> — room for this many characters (a value replaces the text)</li>
+<li><code>valueType</code>, string, default <code>"bool"</code> — bool, string or number: the type of what it sends</li>
+<li><code>value</code>, string, default <code>""</code> — momentary: what it sends; empty sends true, 'ON' or 1 by valueType</li>
+<li><code>onValue</code>, string, default <code>""</code> — toggle: what it sends to turn on</li>
+<li><code>offValue</code>, string, default <code>""</code> — toggle: what it sends to turn off</li>
+<li><code>onText</code>, string, default <code>"ON"</code></li>
+<li><code>offText</code>, string, default <code>"OFF"</code></li>
+<li><code>initial</code>, boolean, default <code>false</code></li>
+<li><code>fireOn</code>, string, default <code>"release"</code> — release (default: the finger lifts inside the button) or press</li>
+<li><code>target</code>, string, default <code>""</code> — navigate: next, prev, back, home or a page name from <code>screens</code></li>
+<li><code>pendingTimeout</code>, number, default <code>5</code> — toggle with a wired input: seconds to wait for the input to confirm before going back</li>
+</ul>
+</li>
+</ul>
+<h3 id="label">label</h3>
+<p>Type <code>thingstudio/gui_label</code>, kind sink, palette group GUI.</p>
+<ul>
+<li>Inputs: msg (any)</li>
+<li>Outputs: none</li>
+<li>Properties (name, type, default):<ul>
+<li><code>name</code>, string, default <code>""</code></li>
+<li><code>maxChars</code>, number, default <code>8</code> — room for this many characters</li>
+<li><code>staleAfter</code>, number, default <code>0</code> — seconds without a new value before it dims; 0 = never</li>
+</ul>
+</li>
+</ul>
+<h3 id="light">light</h3>
+<p>Type <code>thingstudio/gui_led</code>, kind sink, palette group GUI.</p>
+<ul>
+<li>Inputs: msg (any)</li>
+<li>Outputs: none</li>
+<li>Properties (name, type, default):<ul>
+<li><code>name</code>, string, default <code>""</code></li>
+<li><code>staleAfter</code>, number, default <code>0</code> — seconds without a new value before it goes grey; 0 = never</li>
+</ul>
+</li>
+</ul>
+<h3 id="modal">modal</h3>
+<p>Type <code>thingstudio/gui_modal</code>, kind sink, palette group GUI.</p>
+<ul>
+<li>Inputs: msg (any)</li>
+<li>Outputs: msg (any)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>name</code>, string, default <code>""</code></li>
+<li><code>screen</code>, string, default <code>""</code> — the id of the gui_screen node this modal belongs to</li>
+<li><code>priority</code>, number, default <code>0</code> — a higher priority takes the screen from a lower one; the other waits</li>
+<li><code>timeout</code>, number, default <code>0</code> — seconds before the modal closes itself; 0 never</li>
+</ul>
+</li>
+</ul>
+<h3 id="navigator">navigator</h3>
+<p>Type <code>thingstudio/gui_navigator</code>, kind transform, palette group GUI.</p>
+<ul>
+<li>Inputs: msg (any)</li>
+<li>Outputs: page (string)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>name</code>, string, default <code>"navigator"</code></li>
+<li><code>screen</code>, string, default <code>""</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="readout">readout</h3>
+<p>Type <code>thingstudio/gui_readout</code>, kind sink, palette group GUI.</p>
+<ul>
+<li>Inputs: msg (any)</li>
+<li>Outputs: none</li>
+<li>Properties (name, type, default):<ul>
+<li><code>name</code>, string, default <code>""</code></li>
+<li><code>units</code>, string, default <code>""</code> — text shown after the number</li>
+<li><code>decimals</code>, number, default <code>1</code></li>
+<li><code>lo</code>, number, default <code>0</code> — lowest value it will show; with hi, sizes the space the number gets</li>
+<li><code>hi</code>, number, default <code>100</code> — highest value it will show; with lo, sizes the space the number gets</li>
+<li><code>staleAfter</code>, number, default <code>0</code> — seconds without a new value before it dims; 0 = never</li>
+</ul>
+</li>
+</ul>
+<h3 id="screen">screen</h3>
+<p>Type <code>thingstudio/gui_screen</code>, kind source, palette group GUI.</p>
+<ul>
+<li>Inputs: none</li>
+<li>Outputs: frame (bytes)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>name</code>, string, default <code>"screen"</code></li>
+<li><code>width</code>, number, default <code>320</code> — the panel's own width in pixels, whatever the orientation; must match the display it is wired to</li>
+<li><code>height</code>, number, default <code>240</code> — the panel's own height in pixels, whatever the orientation; must match the display it is wired to</li>
+<li><code>frameFormat</code>, string, default <code>"gs4"</code> — rgb565, gs4, gs2 or mono; must match the display</li>
+<li><code>minInterval</code>, number, default <code>200</code> — least milliseconds between screen updates</li>
+<li><code>wrap</code>, boolean, default <code>true</code> — whether next/prev wrap around at the ends of the pages</li>
+<li><code>touchPanelConfigId</code>, string, default <code>""</code>, the id of a <code>thingstudio/config/touch-panel</code> config — the touch-panel config to read touches from; empty for none</li>
+</ul>
+</li>
+</ul>
+<h3 id="trend">trend</h3>
+<p>Type <code>thingstudio/gui_trend</code>, kind sink, palette group GUI.</p>
+<ul>
+<li>Inputs: msg (any)</li>
+<li>Outputs: none</li>
+<li>Properties (name, type, default):<ul>
+<li><code>name</code>, string, default <code>""</code></li>
+<li><code>lo</code>, number, default <code>0</code> — value at the bottom of the bars; the range is fixed</li>
+<li><code>hi</code>, number, default <code>100</code> — value at the top of the bars; the range is fixed</li>
+<li><code>columns</code>, number, default <code>60</code> — natural width in bars; in a layout it can stretch to show more</li>
+<li><code>colWidth</code>, number, default <code>3</code> — pixels per bar</li>
+<li><code>height</code>, number, default <code>48</code> — natural height in pixels</li>
+<li><code>staleAfter</code>, number, default <code>0</code> — seconds without a new row before it dims; 0 = never</li>
+</ul>
+</li>
+</ul>
+<h2 id="hardware">hardware</h2>
+<h3 id="bme280">bme280</h3>
+<p>Type <code>thingstudio/bme280</code>, kind source, palette group hardware.</p>
+<ul>
+<li>Inputs: none</li>
+<li>Outputs: msg (any)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>i2cConfigId</code>, string, default <code>""</code>, the id of a <code>thingstudio/config/i2c-bus</code> config</li>
+<li><code>address</code>, number, default <code>118</code> — the I2C address as a plain number: 118 is 0x76, 119 is 0x77</li>
+<li><code>intervalMs</code>, number, default <code>5000</code> — milliseconds between readings, at least 100</li>
+</ul>
+</li>
+</ul>
+<h3 id="display-i2c">display i2c</h3>
+<p>Type <code>thingstudio/display_i2c</code>, kind sink, palette group hardware.</p>
+<ul>
+<li>Inputs: frame (bytes)</li>
+<li>Outputs: none</li>
+<li>Properties (name, type, default):<ul>
+<li><code>controller</code>, string, default <code>"ssd1306"</code></li>
+<li><code>i2cConfigId</code>, string, default <code>""</code>, the id of a <code>thingstudio/config/i2c-bus</code> config</li>
+<li><code>addr</code>, number, default <code>60</code> — the I2C address as a plain number: 60 is 0x3C, the usual SSD1306 address</li>
+<li><code>width</code>, number, default <code>128</code></li>
+<li><code>height</code>, number, default <code>64</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="display-spi">display spi</h3>
+<p>Type <code>thingstudio/display_spi</code>, kind sink, palette group hardware.</p>
+<ul>
+<li>Inputs: frame (bytes)</li>
+<li>Outputs: none</li>
+<li>Properties (name, type, default):<ul>
+<li><code>controller</code>, string, default <code>"st7789"</code></li>
+<li><code>frameFormat</code>, string, default <code>"rgb565"</code> — rgb565, gs4, gs2 or mono; must match the gui screen</li>
+<li><code>palette</code>, object, default <code>[0,65535,63488,2016,31,65504,2047,63519,33808,16904,50712,64800,32768,1024,16,1040]</code></li>
+<li><code>spiBus</code>, number, default <code>2</code></li>
+<li><code>baudrate</code>, number, default <code>40000000</code></li>
+<li><code>sck</code>, number, default <code>12</code></li>
+<li><code>mosi</code>, number, default <code>11</code></li>
+<li><code>dc</code>, number, default <code>13</code></li>
+<li><code>cs</code>, number, default <code>-1</code> — GPIO, or -1 for none</li>
+<li><code>reset</code>, number, default <code>-1</code> — GPIO, or -1 for none</li>
+<li><code>backlight</code>, number, default <code>-1</code> — GPIO, or -1 for none</li>
+<li><code>width</code>, number, default <code>135</code> — the panel's own width in pixels</li>
+<li><code>height</code>, number, default <code>240</code> — the panel's own height in pixels</li>
+<li><code>rotation</code>, number, default <code>0</code> — how the panel is mounted, 0 to 7 (MADCTL); with an orientation, 0 to 3 only</li>
+<li><code>colorOrder</code>, string, default <code>"bgr"</code></li>
+<li><code>invertColors</code>, boolean, default <code>false</code></li>
+<li><code>dataLatchOrder</code>, boolean, default <code>true</code></li>
+<li><code>xstart</code>, number, default <code>-1</code> — -1 lets the driver choose; set both only for an unusual panel offset</li>
+<li><code>ystart</code>, number, default <code>-1</code></li>
+<li><code>orientation</code>, string, default <code>""</code> — empty = off (the raw <code>rotation</code>), or 0, 90, 180, 270 as a string: the picture turned clockwise. Portrait 320x480 needs none</li>
+</ul>
+</li>
+</ul>
+<h3 id="ebutton">ebutton</h3>
+<p>Type <code>thingstudio/ebutton</code>, kind source, palette group hardware.</p>
+<ul>
+<li>Inputs: none</li>
+<li>Outputs: msg (bool)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>pin</code>, number, default <code>5</code></li>
+<li><code>suppress</code>, boolean, default <code>false</code></li>
+<li><code>senseMode</code>, string, default <code>"auto"</code></li>
+<li><code>debounceMs</code>, number, default <code>50</code></li>
+<li><code>longPressMs</code>, number, default <code>1000</code></li>
+<li><code>doubleClickMs</code>, number, default <code>400</code></li>
+<li><code>pull</code>, string, default <code>"none"</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="eswitch">eswitch</h3>
+<p>Type <code>thingstudio/eswitch</code>, kind source, palette group hardware.</p>
+<ul>
+<li>Inputs: none</li>
+<li>Outputs: msg (bool)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>pin</code>, number, default <code>4</code></li>
+<li><code>lopen</code>, number, default <code>1</code></li>
+<li><code>debounceMs</code>, number, default <code>50</code></li>
+<li><code>pull</code>, string, default <code>"none"</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="gpio-out">gpio out</h3>
+<p>Type <code>thingstudio/gpio_out</code>, kind sink, palette group hardware.</p>
+<ul>
+<li>Inputs: signal (bool)</li>
+<li>Outputs: none</li>
+<li>Properties (name, type, default):<ul>
+<li><code>pin</code>, number, default <code>12</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="i2c">i2c</h3>
+<p>Type <code>thingstudio/i2c</code>, kind transform, palette group hardware.</p>
+<ul>
+<li>Inputs: msg (any)</li>
+<li>Outputs: msg (any)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>i2cConfigId</code>, string, default <code>""</code>, the id of a <code>thingstudio/config/i2c-bus</code> config</li>
+<li><code>operation</code>, string, default <code>"read"</code></li>
+<li><code>address</code>, string, default <code>""</code></li>
+<li><code>register</code>, string, default <code>""</code></li>
+<li><code>length</code>, number, default <code>1</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="interrupt">interrupt</h3>
+<p>Type <code>thingstudio/interrupt</code>, kind source, palette group hardware.</p>
+<ul>
+<li>Inputs: none</li>
+<li>Outputs: msg (bool)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>pin</code>, number, default <code>4</code></li>
+<li><code>edge</code>, string, default <code>"rising"</code></li>
+<li><code>debounce</code>, boolean, default <code>true</code></li>
+<li><code>debounceMs</code>, number, default <code>50</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="pwm-out">pwm out</h3>
+<p>Type <code>thingstudio/pwm_out</code>, kind sink, palette group hardware.</p>
+<ul>
+<li>Inputs: duty (number)</li>
+<li>Outputs: none</li>
+<li>Properties (name, type, default):<ul>
+<li><code>pin</code>, number, default <code>12</code></li>
+<li><code>freq</code>, number, default <code>1000</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="touch">touch</h3>
+<p>Type <code>thingstudio/touch_i2c</code>, kind source, palette group hardware.</p>
+<ul>
+<li>Inputs: none</li>
+<li>Outputs: msg (any)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>touchPanelConfigId</code>, string, default <code>""</code>, the id of a <code>thingstudio/config/touch-panel</code> config</li>
+</ul>
+</li>
+</ul>
+<h2 id="network">network</h2>
+<h3 id="http-in">http in</h3>
+<p>Type <code>thingstudio/http_in</code>, kind source, palette group network.</p>
+<ul>
+<li>Inputs: none</li>
+<li>Outputs: msg (any)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>port</code>, number, default <code>8080</code></li>
+<li><code>path</code>, string, default <code>"/"</code></li>
+<li><code>method</code>, string, default <code>"GET"</code></li>
+<li><code>responseTimeoutMs</code>, number, default <code>10000</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="http-request">http request</h3>
+<p>Type <code>thingstudio/http_request</code>, kind transform, palette group network.</p>
+<ul>
+<li>Inputs: msg (any)</li>
+<li>Outputs: msg (any)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>url</code>, string, default <code>""</code></li>
+<li><code>method</code>, string, default <code>"GET"</code></li>
+<li><code>timeoutMs</code>, number, default <code>5000</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="http-response">http response</h3>
+<p>Type <code>thingstudio/http_response</code>, kind sink, palette group network.</p>
+<ul>
+<li>Inputs: msg (any)</li>
+<li>Outputs: none</li>
+<li>Properties: none</li>
+</ul>
+<h3 id="mqtt-publish">mqtt publish</h3>
+<p>Type <code>thingstudio/mqtt_publish</code>, kind sink, palette group network.</p>
+<ul>
+<li>Inputs: msg (any)</li>
+<li>Outputs: none</li>
+<li>Properties (name, type, default):<ul>
+<li><code>topic</code>, string, default <code>""</code></li>
+<li><code>retain</code>, boolean, default <code>false</code></li>
+<li><code>qos</code>, number, default <code>0</code> — 0 or 1</li>
+<li><code>brokerConfigId</code>, string, default <code>""</code>, the id of a <code>thingstudio/config/mqtt-broker</code> config</li>
+</ul>
+</li>
+</ul>
+<h3 id="mqtt-subscribe">mqtt subscribe</h3>
+<p>Type <code>thingstudio/mqtt_subscribe</code>, kind source, palette group network.</p>
+<ul>
+<li>Inputs: none</li>
+<li>Outputs: msg (any)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>topic</code>, string, default <code>""</code></li>
+<li><code>qos</code>, number, default <code>0</code></li>
+<li><code>brokerConfigId</code>, string, default <code>""</code>, the id of a <code>thingstudio/config/mqtt-broker</code> config</li>
+</ul>
+</li>
+</ul>
+<h3 id="udp-receive">udp receive</h3>
+<p>Type <code>thingstudio/udp_receive</code>, kind source, palette group network.</p>
+<ul>
+<li>Inputs: none</li>
+<li>Outputs: msg (bytes)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>port</code>, number, default <code>9998</code></li>
+<li><code>pollMs</code>, number, default <code>20</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="udp-send">udp send</h3>
+<p>Type <code>thingstudio/udp_send</code>, kind sink, palette group network.</p>
+<ul>
+<li>Inputs: msg (any)</li>
+<li>Outputs: none</li>
+<li>Properties (name, type, default):<ul>
+<li><code>host</code>, string, default <code>""</code></li>
+<li><code>port</code>, number, default <code>9999</code></li>
+<li><code>timeoutMs</code>, number, default <code>2000</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="wifi-gate">wifi gate</h3>
+<p>Type <code>thingstudio/wifi_gate</code>, kind transform, palette group network.</p>
+<ul>
+<li>Inputs: msg (any)</li>
+<li>Outputs: msg (any)</li>
+<li>Properties: none</li>
+</ul>
+<h3 id="wifi-status">wifi status</h3>
+<p>Type <code>thingstudio/wifi_status</code>, kind source, palette group network.</p>
+<ul>
+<li>Inputs: none</li>
+<li>Outputs: msg (bool)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>pollMs</code>, number, default <code>5000</code></li>
+<li><code>wifiConfigId</code>, string, default <code>""</code>, the id of a <code>thingstudio/config/wifi</code> config</li>
+</ul>
+</li>
+</ul>
+<h2 id="compile-only-types">Compile-only types</h2>
+<p>The compiler accepts these but the canvas has no node for them: <code>thingstudio/variable_get</code>, <code>thingstudio/variable_set</code>.</p>
+<h2 id="config-nodes">Config nodes</h2>
+<p>A config node is listed under <code>configs</code> in a flow file as <code>{id, type, properties}</code>. A node names it by id in a property such as <code>i2cConfigId</code>. Credentials are saved by name (<code>credentialName</code>), never as secrets in the file.</p>
+<h3 id="i2c-bus">I2C bus</h3>
+<p>Type <code>thingstudio/config/i2c-bus</code>.</p>
+<ul>
+<li><code>bus</code>, number</li>
+<li><code>scl</code>, number</li>
+<li><code>sda</code>, number</li>
+<li><code>freq</code>, number: 100000 suits most sensors; 400000 for displays that can take it.</li>
+</ul>
+<p>Defaults: <code>{"bus":0,"scl":null,"sda":null,"freq":100000}</code></p>
+<h3 id="mqtt-broker">MQTT Broker</h3>
+<p>Type <code>thingstudio/config/mqtt-broker</code>.</p>
+<ul>
+<li><code>credentialName</code>, credential</li>
+</ul>
+<p>Defaults: <code>{"credentialName":""}</code></p>
+<h3 id="touch-panel">Touch panel</h3>
+<p>Type <code>thingstudio/config/touch-panel</code>.</p>
+<ul>
+<li><code>controller</code>, select: one of <code>ft6336u</code>; Other controllers (GT911, CST820) aren't supported yet.</li>
+<li><code>i2cConfigId</code>, configRef: the id of a <code>thingstudio/config/i2c-bus</code> config</li>
+<li><code>address</code>, text: 7-bit, e.g. 0x38.</li>
+<li><code>rstPin</code>, text: Blank if the panel has none.</li>
+<li><code>pollMs</code>, number</li>
+<li><code>width</code>, number</li>
+<li><code>height</code>, number: The panel's own size. If the display is rotated, tick swap/flip until a touch lands where you pressed.</li>
+<li><code>swapXY</code>, boolean</li>
+<li><code>flipX</code>, boolean</li>
+<li><code>flipY</code>, boolean</li>
+</ul>
+<p>Defaults: <code>{"controller":"ft6336u","i2cConfigId":"","address":"0x38","rstPin":"","pollMs":20,"width":320,"height":480,"swapXY":false,"flipX":false,"flipY":false}</code></p>
+<h3 id="wifi">WiFi</h3>
+<p>Type <code>thingstudio/config/wifi</code>, one per flow.</p>
+<ul>
+<li><code>credentialName</code>, credential</li>
+<li><code>security</code>, select: one of <code>password</code>, <code>open</code>, <code>unmanaged</code></li>
+<li><code>allowReprovisioning</code>, boolean: Off by default: the device only opens its setup AP on first run. Turning this on lets it reopen that AP any time WiFi drops, not just once -- only do this on a trusted, physically-controlled network. Anyone in radio range while WiFi is down could otherwise connect to the AP and redirect this device to a different network.</li>
+</ul>
+<p>Defaults: <code>{"credentialName":"","security":"password","allowReprovisioning":false}</code></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "search.suggest", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

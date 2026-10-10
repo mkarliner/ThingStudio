@@ -10,11 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://docs.thingstudio.net/custom-nodes/">
+        <link rel="canonical" href="https://docs.thingstudio.net/check-a-flow/">
       
       
-        <link rel="prev" href="../nodes/gui/">
+        <link rel="prev" href="../canvas-basics/">
       
+      
+        <link rel="next" href="../nodes-catalog/">
       
       
         
@@ -25,7 +27,7 @@
     
     
       
-        <title>Writing custom nodes - Thingstudio</title>
+        <title>Check a flow without the editor - Thingstudio</title>
       
     
     
@@ -70,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#writing-a-custom-node-for-thingstudio" class="md-skip">
+        <a href="#check-a-flow-without-the-editor" class="md-skip">
           Skip to content
         </a>
       
@@ -106,7 +108,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Writing custom nodes
+              Check a flow without the editor
             
           </span>
         </div>
@@ -846,10 +848,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../check-a-flow/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Check a flow without the editor
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -865,6 +894,81 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#build-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Build it
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#use-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Use it
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Options
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-it-checks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What it checks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-it-doesnt-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What it doesn't check
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -2215,37 +2319,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Writing custom nodes
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../custom-nodes/" class="md-nav__link">
         
   
   
@@ -2261,131 +2338,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#loading-a-custom-node" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Loading a custom node
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#the-descriptor-namenodejson" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The descriptor: &lt;name&gt;.node.json
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#the-behavior-namenodepy" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The behavior: &lt;name&gt;.node.py
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="The behavior: &lt;name&gt;.node.py">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#example-a-temperature-sensor-source" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Example: a temperature sensor source
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#nonlocal-not-global" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        nonlocal, not global
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#cleanup" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Cleanup
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#event-driven-sources" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Event-driven sources
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#errors" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Errors
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#limitations" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Limitations
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -2417,10 +2369,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#loading-a-custom-node" class="md-nav__link">
+  <a href="#build-it" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Loading a custom node
+        Build it
       
     </span>
   </a>
@@ -2428,10 +2380,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-descriptor-namenodejson" class="md-nav__link">
+  <a href="#use-it" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The descriptor: &lt;name&gt;.node.json
+        Use it
       
     </span>
   </a>
@@ -2439,71 +2391,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-behavior-namenodepy" class="md-nav__link">
+  <a href="#options" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The behavior: &lt;name&gt;.node.py
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="The behavior: &lt;name&gt;.node.py">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#example-a-temperature-sensor-source" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Example: a temperature sensor source
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#nonlocal-not-global" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        nonlocal, not global
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#cleanup" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Cleanup
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#event-driven-sources" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Event-driven sources
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#errors" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Errors
+        Options
       
     </span>
   </a>
@@ -2511,10 +2402,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#limitations" class="md-nav__link">
+  <a href="#what-it-checks" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Limitations
+        What it checks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-it-doesnt-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What it doesn't check
       
     </span>
   </a>
@@ -2541,206 +2443,56 @@
   
 
 
-<h1 id="writing-a-custom-node-for-thingstudio">Writing a custom node for Thingstudio</h1>
-<p>A custom node is two files sharing a base name: <code>&lt;name&gt;.node.json</code> (the
-descriptor) and <code>&lt;name&gt;.node.py</code> (the behavior), placed in the backend's
-<code>~/.thingstudio/custom-nodes/</code> directory. Thingstudio loads it for you,
-and you drag it onto the canvas like any built-in node. This document is
-complete on its own — no other Thingstudio docs needed.</p>
-<h2 id="loading-a-custom-node">Loading a custom node</h2>
-<p>Put both files in <code>~/.thingstudio/custom-nodes/</code> on the computer running
-Thingstudio. There's no upload button in the editor yet.</p>
-<p>The editor loads every package in that folder when it starts, and again
-when you switch back to its window. After changing a file, you can also
-click <strong>Reload custom nodes</strong> at the bottom of the palette. The console
-lists what loaded. Each node appears in the palette under its <code>group</code>.</p>
-<p>A package with a problem isn't loaded, and the console says which file
-and why. The others still load. If two packages use the same <code>type</code>, the
-first one by file name is loaded and the other is reported.</p>
-<p>The folder starts with two examples, <code>doubler</code> and <code>dht22</code>, under
-<strong>examples</strong> in the palette. Read them, change them or delete them.
-Thingstudio adds them only the first time it runs, so deleted examples
-stay deleted.</p>
-<h2 id="the-descriptor-namenodejson">The descriptor: <code>&lt;name&gt;.node.json</code></h2>
-<p>Example — a node that doubles a numeric payload:</p>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"custom/doubler"</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"transform"</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"doubler"</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"color"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#6e3b8a"</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"bgcolor"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#3f1f4a"</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"icon"</span><span class="p">:</span><span class="w"> </span><span class="s2">"×2"</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"ports"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">"inputs"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"msg"</span><span class="p">,</span><span class="w"> </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"any"</span><span class="w"> </span><span class="p">}],</span>
-<span class="w">    </span><span class="nt">"outputs"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"msg"</span><span class="p">,</span><span class="w"> </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"any"</span><span class="w"> </span><span class="p">}]</span>
-<span class="w">  </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"factor"</span><span class="p">,</span><span class="w"> </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"factor"</span><span class="p">,</span><span class="w"> </span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"number"</span><span class="p">,</span><span class="w"> </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">}</span>
-<span class="w">  </span><span class="p">]</span>
-<span class="p">}</span>
+<h1 id="check-a-flow-without-the-editor">Check a flow without the editor</h1>
+<p><code>thingstudio-compile</code> compiles and checks a flow file from the command line, with the same errors the editor gives.
+Use it in a script, in CI, or to let an AI assistant check a flow it has written.</p>
+<h2 id="build-it">Build it</h2>
+<p>From the <code>editor/</code> folder:</p>
+<div class="highlight"><pre><span></span><code>npm ci
+npm run build:cli
 </code></pre></div>
-<p><strong><code>type</code></strong> (required) — unique id, shaped <code>namespace/name</code> (lowercase
-letters, digits, underscores). Must not start with <code>thingstudio/</code> —
-reserved for built-in nodes.</p>
-<p><strong><code>kind</code></strong> (required) — one of:</p>
+<p>This writes <code>dist-cli/thingstudio-compile.mjs</code>, one script that needs only Node 22 or later.</p>
+<h2 id="use-it">Use it</h2>
+<div class="highlight"><pre><span></span><code>node dist-cli/thingstudio-compile.mjs my-flow.flow.json
+</code></pre></div>
+<p>A good flow prints one line:</p>
+<div class="highlight"><pre><span></span><code>OK  my-flow.flow.json: 25 nodes, 21 wires, 4 configs, 38980 bytes of MicroPython, 0 warnings
+</code></pre></div>
+<p>A bad one lists every problem it found:</p>
+<div class="highlight"><pre><span></span><code>FAIL  my-flow.flow.json: 2 errors
+  error: wire from node t1 output 4 to node g1 input 1: node t1 has no output 4 (it has 1)
+  error: node x1: unknown node type "thingstudio/teleporter"
+</code></pre></div>
+<p>The exit code is 0 for a valid flow, 1 for a flow with errors, and 2 for a bad command or a file it can't read.</p>
+<h2 id="options">Options</h2>
 <ul>
-<li><code>source</code> — generates messages on its own. 0 input ports, 1 output
-  port. Must declare a numeric <code>intervalMs</code> property (below).</li>
-<li><code>transform</code> — one message in, one out. 1 input port, 1 output port.</li>
-<li><code>sink</code> — consumes a message, produces nothing. 1 input port, 0 output
-  ports.</li>
+<li><code>--board board:freenove-s3-4in</code> checks pins against that board. <code>--list-boards</code> shows the choices. Without a
+  board, pins are checked against the widest range and a warning says so.</li>
+<li><code>--board-info board:freenove-s3-4in</code> prints that board's labelled pins (the LED, the display, the I2C pins), the
+  GPIOs that exist, and the ones to avoid or that are reserved, as JSON.</li>
+<li><code>--out flow.py</code> writes the generated MicroPython.</li>
+<li><code>--json</code> prints the result as JSON: <code>ok</code>, <code>errors</code>, <code>warnings</code>, <code>notes</code>, <code>stats</code> and the <code>source</code>.</li>
+<li><code>--strict</code> makes warnings fail the check.</li>
+<li><code>--describe timer</code> prints a node's type, ports and properties with their defaults. <code>--describe-all</code> prints every
+  node and config node (add <code>--json</code> for JSON). The same list is on the <a href="../nodes-catalog/">node catalog</a> page,
+  generated from the code.</li>
+<li><code>--no-syntax</code> skips the MicroPython syntax check. <code>--arch</code> sets its <code>-march</code> (default <code>xtensawin</code>).</li>
 </ul>
-<p><strong><code>label</code></strong> (required) — name shown on the canvas and in the palette.</p>
-<p><strong><code>color</code></strong> / <strong><code>bgcolor</code></strong> (optional) — CSS colors for the node's
-outline and fill. Default is gray.</p>
-<p><strong><code>icon</code></strong> (optional) — one or two characters shown in the icon chip.</p>
-<p><strong><code>group</code></strong> (optional) — which palette section the node sorts into.
-Defaults to "general". Any name works; a new one gets its own section,
-added after the built-in ones.</p>
-<p><strong><code>priority</code></strong> (optional) — a number controlling order within <code>group</code>,
-lower first. Omit it and the node sorts after every built-in node in
-that group.</p>
-<p><strong><code>ports.inputs</code></strong> / <strong><code>ports.outputs</code></strong> — arrays of <code>{ name, type }</code>.
-<code>type</code> is one of <code>int</code>, <code>number</code>, <code>bool</code>, <code>string</code>, <code>bytes</code>, <code>any</code> — the
-same types built-in nodes use, with the same wire-compatibility checks.
-Use <code>any</code> when unsure.</p>
-<p>Custom nodes support only one output port. The built-in <code>function</code> node
-supports multiple, configurable outputs -- that hasn't been extended to
-the custom-node format yet.</p>
-<p><strong><code>properties</code></strong> (optional) — fields shown in the property panel when
-the node is selected:</p>
-<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"factor"</span><span class="p">,</span><span class="w"> </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"factor"</span><span class="p">,</span><span class="w"> </span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"number"</span><span class="p">,</span><span class="w"> </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">}</span>
-</code></pre></div>
+<h2 id="what-it-checks">What it checks</h2>
 <ul>
-<li><strong><code>name</code></strong> — identifier. Your Python reads the value by this key.</li>
-<li><strong><code>label</code></strong> — shown in the property panel.</li>
-<li><strong><code>kind</code></strong> — <code>text</code>, <code>number</code>, <code>boolean</code>, or <code>select</code>.</li>
-<li><strong><code>default</code></strong> — used when a node instance doesn't set the property.
-  Type must match <code>kind</code>.</li>
-<li><strong><code>options</code></strong> — required for <code>select</code>: array of <code>{ value, label }</code>.
-  <code>default</code> must be one of the values.</li>
+<li>The file is a flow file, and every node type exists.</li>
+<li>Every wire joins real ports, and is one the editor would accept. The editor drops a wire it refuses when it opens the file.</li>
+<li>A property the file leaves out gets the editor's default, as when you open the file in the editor.</li>
+<li>The flow compiles: pins, properties, GUI layouts, nodes with nothing wired to them.</li>
+<li>The generated code is valid MicroPython. This uses the same <code>mpy-cross</code> the editor deploys with, and catches a
+  typo in a function node's code before you deploy.</li>
 </ul>
-<p>A <code>source</code> node must declare a numeric property named <code>intervalMs</code> — it
-sets the poll interval.</p>
-<h2 id="the-behavior-namenodepy">The behavior: <code>&lt;name&gt;.node.py</code></h2>
-<p>Ordinary MicroPython. Define exactly one top-level function, named for
-your node's <code>kind</code>:</p>
+<h2 id="what-it-doesnt-check">What it doesn't check</h2>
 <ul>
-<li><code>transform</code> / <code>sink</code> → <code>async def run(msg, properties):</code></li>
-<li><code>source</code> → <code>async def emit(properties):</code></li>
-</ul>
-<p><code>msg</code> is a dict with a <code>payload</code> key, a <code>topic</code> key, and room for any
-extra keys you add. <code>topic</code> is a routing/identification string — the
-<code>mqtt_subscribe</code> built-in node, for instance, fills it with the real
-MQTT topic a message arrived on. Most nodes have no natural topic of
-their own; set it to <code>''</code> rather than a real value. The key is
-required either way — don't leave it out. <code>properties</code> is a dict of
-the node instance's configured values.</p>
-<p>Transform — return the (possibly modified) <code>msg</code>, or <code>None</code> to stop it
-propagating:</p>
-<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">properties</span><span class="p">):</span>
-    <span class="n">msg</span><span class="p">[</span><span class="s1">'payload'</span><span class="p">]</span> <span class="o">=</span> <span class="n">msg</span><span class="p">[</span><span class="s1">'payload'</span><span class="p">]</span> <span class="o">*</span> <span class="n">properties</span><span class="p">[</span><span class="s1">'factor'</span><span class="p">]</span>
-    <span class="k">return</span> <span class="n">msg</span>
-</code></pre></div>
-<p>Sink — return value is ignored:</p>
-<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">properties</span><span class="p">):</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">'got:'</span><span class="p">,</span> <span class="n">msg</span><span class="p">[</span><span class="s1">'payload'</span><span class="p">])</span>
-</code></pre></div>
-<p>Source — called once per <code>intervalMs</code>, must return a <code>msg</code>:</p>
-<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">emit</span><span class="p">(</span><span class="n">properties</span><span class="p">):</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s1">'payload'</span><span class="p">:</span> <span class="mi">42</span><span class="p">,</span> <span class="s1">'topic'</span><span class="p">:</span> <span class="s1">''</span><span class="p">}</span>
-</code></pre></div>
-<p>Anything else — imports, helper functions, setup code — is ordinary
-Python.</p>
-<h3 id="example-a-temperature-sensor-source">Example: a temperature sensor source</h3>
-<p><code>temp_sensor.node.json</code>:</p>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"myproject/temp_sensor"</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"source"</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"temp sensor"</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"ports"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"outputs"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"msg"</span><span class="p">,</span><span class="w"> </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"number"</span><span class="w"> </span><span class="p">}]</span><span class="w"> </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pin"</span><span class="p">,</span><span class="w"> </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"data pin"</span><span class="p">,</span><span class="w"> </span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"number"</span><span class="p">,</span><span class="w"> </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="w"> </span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"intervalMs"</span><span class="p">,</span><span class="w"> </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"read interval (ms)"</span><span class="p">,</span><span class="w"> </span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"number"</span><span class="p">,</span><span class="w"> </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="mi">5000</span><span class="w"> </span><span class="p">}</span>
-<span class="w">  </span><span class="p">]</span>
-<span class="p">}</span>
-</code></pre></div>
-<p><code>temp_sensor.node.py</code>:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">dht</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">machine</span>
-
-<span class="n">_sensor</span> <span class="o">=</span> <span class="n">dht</span><span class="o">.</span><span class="n">DHT22</span><span class="p">(</span><span class="n">machine</span><span class="o">.</span><span class="n">Pin</span><span class="p">(</span><span class="n">properties</span><span class="p">[</span><span class="s1">'pin'</span><span class="p">]))</span>
-
-<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">emit</span><span class="p">(</span><span class="n">properties</span><span class="p">):</span>
-    <span class="n">_sensor</span><span class="o">.</span><span class="n">measure</span><span class="p">()</span>
-    <span class="n">msg</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'payload'</span><span class="p">:</span> <span class="n">_sensor</span><span class="o">.</span><span class="n">temperature</span><span class="p">(),</span> <span class="s1">'topic'</span><span class="p">:</span> <span class="s1">''</span><span class="p">}</span>
-    <span class="n">msg</span><span class="p">[</span><span class="s1">'humidity'</span><span class="p">]</span> <span class="o">=</span> <span class="n">_sensor</span><span class="o">.</span><span class="n">humidity</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">msg</span>
-</code></pre></div>
-<p>The sensor is built once, at setup, not on every <code>emit()</code> call —
-top-level code and <code>emit</code> share the same <code>properties</code>.</p>
-<p>Temperature goes in <code>payload</code>, not humidity, because <code>payload</code> is the
-field the port's declared type (<code>number</code>, here) checks against, and
-the field a generic downstream node reads — <code>debug</code> prints
-<code>msg['payload']</code> and nothing else, whatever else is in <code>msg</code>. Put
-whichever value you want wired and type-checked that way in <code>payload</code>.
-Anything else is a passenger: <code>humidity</code> rides along in the same <code>msg</code>,
-but only a node written to look for it specifically will ever read it.</p>
-<h3 id="nonlocal-not-global"><code>nonlocal</code>, not <code>global</code></h3>
-<p>Your file's top-level code doesn't run at true module scope — each node
-instance gets its own wrapper function, so two instances of the same
-custom type never share state. To keep a value across calls, use
-<code>nonlocal</code>:</p>
-<div class="highlight"><pre><span></span><code><span class="n">_count</span> <span class="o">=</span> <span class="mi">0</span>
-
-<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">emit</span><span class="p">(</span><span class="n">properties</span><span class="p">):</span>
-    <span class="k">nonlocal</span> <span class="n">_count</span>
-    <span class="n">_count</span> <span class="o">+=</span> <span class="mi">1</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s1">'payload'</span><span class="p">:</span> <span class="n">_count</span><span class="p">,</span> <span class="s1">'topic'</span><span class="p">:</span> <span class="s1">''</span><span class="p">}</span>
-</code></pre></div>
-<p><code>global</code> raises <code>NameError</code> here — there's no module-level name to find.</p>
-<h3 id="cleanup">Cleanup</h3>
-<p>If your node opens something that needs closing on redeploy — a socket,
-typically — register it:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">socket</span>
-
-<span class="n">_sock</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_INET</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">SOCK_DGRAM</span><span class="p">)</span>
-<span class="n">runtime</span><span class="o">.</span><span class="n">register_cleanup</span><span class="p">(</span><span class="s1">'my_node_socket'</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">_sock</span><span class="o">.</span><span class="n">close</span><span class="p">())</span>
-
-<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">properties</span><span class="p">):</span>
-    <span class="n">_sock</span><span class="o">.</span><span class="n">sendto</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">msg</span><span class="p">[</span><span class="s1">'payload'</span><span class="p">])</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span> <span class="p">(</span><span class="s1">'192.168.1.50'</span><span class="p">,</span> <span class="mi">9000</span><span class="p">))</span>
-</code></pre></div>
-<p><code>runtime</code> is already available — no import needed. Without cleanup, a
-redeployed flow can leave the old socket open and fail with
-<code>EADDRINUSE</code> on the next deploy.</p>
-<h3 id="event-driven-sources">Event-driven sources</h3>
-<p>Not supported. A <code>source</code> node's <code>emit</code> runs on a fixed <code>intervalMs</code>
-schedule, not in response to an external event like an interrupt.</p>
-<h2 id="errors">Errors</h2>
-<p><strong>Load time</strong> — a malformed <code>.node.json</code> is rejected immediately, with
-a message naming what's wrong: bad <code>type</code>, wrong port count, missing
-<code>intervalMs</code>, and so on.</p>
-<p><strong>Compile time</strong> — a bad property value on a specific node instance
-(e.g. a non-numeric <code>number</code> field) errors out naming that node and
-property.</p>
-<p><strong>Deploy time</strong> — <code>.node.py</code> is spliced into the flow as-is;
-Thingstudio doesn't check it. A typo surfaces as a runtime error (e.g.
-<code>NameError</code>) reported from the device, attributed to your node.</p>
-<h2 id="limitations">Limitations</h2>
-<ul>
-<li><strong>One output port</strong> — a current compiler limit, not a format limit.</li>
-<li><strong>No event-driven sources</strong> — <code>intervalMs</code> polling only.</li>
-<li><strong>No resource-sharing between instances.</strong> Two built-in <code>gpio_out</code>
-  nodes on the same pin share one <code>Pin</code> object; two instances of your
-  custom node don't — each gets its own independent setup. Don't put
-  two instances of the same stateful custom node on the same physical
-  resource (e.g. the same pin).</li>
-<li><strong>No sandboxing.</strong> Custom node Python runs with the same trust as any
-  other node — the same trust Thingstudio's <code>function</code> node already
-  has. Loading a package only adds it to the palette. Its Python runs
-  on a board only when you place the node and deploy. There's no
-  registry and no URL install, only files you put in the folder
-  yourself. Don't put a package there that you haven't read.</li>
+<li><strong>WiFi and MQTT credentials.</strong> The secrets are in the backend, so the check uses stand-in values and says so in a
+  note. A missing credential shows up when you open the flow in the editor.</li>
+<li><strong>Custom node packages.</strong> A flow that uses one fails with "unknown node type".</li>
+<li><strong>A real board.</strong> It can't tell you the display is wired right, or that the memory is enough. Deploy does that.</li>
 </ul>
 
 

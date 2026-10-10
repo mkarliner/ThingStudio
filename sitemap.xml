@@ -2,206 +2,234 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://docs.thingstudio.net/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.thingstudio.net/ai-authoring/</loc>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/boards/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/canvas-basics/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.thingstudio.net/check-a-flow/</loc>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/connecting/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/custom-nodes/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/debugging/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/faq/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/first-flow/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/flow-lifecycle/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/getting-started/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/installing-micropython/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/installing-more/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/installing-runtime/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.thingstudio.net/nodes-catalog/</loc>
+         <lastmod>2026-10-10</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.thingstudio.net/sensor-display/</loc>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/wifi-connection/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/wifi-provisioning/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/background/event-driven/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/background/flows-and-nodes/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/background/micropython/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/background/node-red/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/coming-from/arduino/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/coming-from/micropython/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/coming-from/node-red/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/nodes/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/nodes/bme280/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.thingstudio.net/nodes/clock/</loc>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/nodes/debug/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/nodes/delay/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/nodes/display-i2c/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/nodes/display-spi/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/nodes/ebutton/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/nodes/eswitch/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/nodes/filter/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/nodes/function/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/nodes/gpio-out/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/nodes/gui/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/nodes/http-in/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/nodes/http-request/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/nodes/http-response/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/nodes/i2c-bus/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/nodes/i2c/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/nodes/inject/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/nodes/interrupt/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.thingstudio.net/nodes/journal/</loc>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/nodes/mqtt-publish/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/nodes/mqtt-subscribe/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/nodes/pwm-out/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/nodes/startup/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/nodes/timer/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/nodes/touch-i2c/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.thingstudio.net/nodes/touch-panel/</loc>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/nodes/udp-receive/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/nodes/udp-send/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/nodes/wifi-gate/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
     <url>
          <loc>https://docs.thingstudio.net/nodes/wifi-status/</loc>
-         <lastmod>2026-10-09</lastmod>
+         <lastmod>2026-10-10</lastmod>
     </url>
 </urlset>
