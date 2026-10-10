@@ -220,7 +220,9 @@ describe("thingstudio/eswitch node", () => {
     // lopen=1: electrical 1 = open, electrical 0 = closed. Boot state 1
     // (open) -- no event for the boot state itself, only for the CHANGES
     // that follow.
-    const topics = runScheduledFlow(graph, { 10: [[0.0, 1], [0.06, 0], [0.12, 1]] });
+    // Wall-clock schedule run by CPython: each state is held 300 ms so a busy CI runner (tests run in parallel)
+    // can't stall the switch's poll loop past a whole state and skip it. 60 ms steps failed that way on CI.
+    const topics = runScheduledFlow(graph, { 10: [[0.0, 1], [0.3, 0], [0.6, 1]] }, 1.2);
     expect(topics).toEqual(["close", "open"]);
   });
 });
