@@ -199,6 +199,36 @@
         "steps": 0,
         "xff": 0.5
       }
+    },
+    {
+      "id": "n30-pub-t",
+      "type": "thingstudio/mqtt_publish",
+      "properties": {
+        "topic": "thingstudio/headliner/temperature",
+        "retain": false,
+        "qos": 0,
+        "brokerConfigId": "cfg-mqtt"
+      }
+    },
+    {
+      "id": "n31-pub-h",
+      "type": "thingstudio/mqtt_publish",
+      "properties": {
+        "topic": "thingstudio/headliner/humidity",
+        "retain": false,
+        "qos": 0,
+        "brokerConfigId": "cfg-mqtt"
+      }
+    },
+    {
+      "id": "n32-pub-p",
+      "type": "thingstudio/mqtt_publish",
+      "properties": {
+        "topic": "thingstudio/headliner/pressure",
+        "retain": false,
+        "qos": 0,
+        "brokerConfigId": "cfg-mqtt"
+      }
     }
   ],
   "edges": [
@@ -290,6 +320,24 @@
       "n24-pj",
       0,
       "n06-pbar",
+      0
+    ],
+    [
+      "n02-split",
+      0,
+      "n30-pub-t",
+      0
+    ],
+    [
+      "n02-split",
+      1,
+      "n31-pub-h",
+      0
+    ],
+    [
+      "n02-split",
+      2,
+      "n32-pub-p",
       0
     ]
   ],
@@ -401,6 +449,24 @@
         1220,
         300
       ]
+    },
+    "n30-pub-t": {
+      "pos": [
+        760,
+        200
+      ]
+    },
+    "n31-pub-h": {
+      "pos": [
+        760,
+        270
+      ]
+    },
+    "n32-pub-p": {
+      "pos": [
+        760,
+        340
+      ]
     }
   },
   "configs": [
@@ -428,6 +494,22 @@
         "swapXY": false,
         "flipX": false,
         "flipY": false
+      }
+    },
+    {
+      "id": "cfg-wifi",
+      "type": "thingstudio/config/wifi",
+      "properties": {
+        "credentialName": "mihome",
+        "security": "password",
+        "allowReprovisioning": false
+      }
+    },
+    {
+      "id": "cfg-mqtt",
+      "type": "thingstudio/config/mqtt-broker",
+      "properties": {
+        "credentialName": "verdi-mqtt-broker"
       }
     }
   ],
@@ -607,5 +689,5 @@
       ]
     }
   },
-  "notes": "Climate on the Freenove FNK0104S: a BME280 on the touch panel's I2C bus (SCL 15, SDA 16, address 0x76) shows temperature, humidity and pressure in landscape (the display's orientation is 90).\n\nReadings come every 5 seconds. Two journals keep the temperature, as in RRDtool: one row per 10 seconds for the last 26 minutes, and its per-minute roll-up (average, with min and max) for the last 2.6 hours. Each bar is the average and the thin line its min to max. Pressure keeps a row a minute. The trend range is fixed (15 to 30 C, 970 to 1050 hPa): change it in the trend's properties. A reading that stops arriving dims the numbers after 15 seconds and the Sensor light goes grey. The pages change by themselves every 8 seconds.\n\nWire the sensor to 3V3, GND, SCL 15 and SDA 16. Set the screen's width and height to the panel's own size (320x480) when you turn the display."
+  "notes": "Climate on the Freenove FNK0104S: a BME280 on the touch panel's I2C bus (SCL 15, SDA 16, address 0x76) shows temperature, humidity and pressure in landscape (the display's orientation is 90).\n\nReadings come every 5 seconds. Two journals keep the temperature, as in RRDtool: one row per 10 seconds for the last 26 minutes, and its per-minute roll-up (average, with min and max) for the last 2.6 hours. Each bar is the average and the thin line its min to max. Pressure keeps a row a minute. The trend range is fixed (15 to 30 C, 970 to 1050 hPa): change it in the trend's properties. A reading that stops arriving dims the numbers after 15 seconds and the Sensor light goes grey. The pages change by themselves every 8 seconds.\n\nEach reading is also published over MQTT to thingstudio/headliner/temperature, /humidity and /pressure on your broker (the WiFi and broker settings are the ones named mihome and verdi-mqtt-broker: change them in the flow's settings to your own).\n\nWire the sensor to 3V3, GND, SCL 15 and SDA 16. Set the screen's width and height to the panel's own size (320x480) when you turn the display."
 }

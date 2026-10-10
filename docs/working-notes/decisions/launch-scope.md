@@ -26,3 +26,7 @@ separate ThingStudioMarketing repo — not logged here.
 - **2026-10-09 — the headliner board is the Freenove FNK0104S (4.0", ST7796, 320x480), not the FNK0104B.**
   Mike's own unit, already running the GUI and touch. ILI9341 support leaves the launch path. Detail and the
   CYD gate for custom firmware images: `decisions/gui-layout.md`.
+- **2026-10-10 -- headliner split.** The toggle is dropped from the showreel flow (not useful on video). The headliner
+  is the BME280 readouts, trends and MQTT publish; a separate external-controls flow (Tasmota/WLED state, toggle,
+  unknown/stale) keeps the launch acceptance. Mike's call.
+

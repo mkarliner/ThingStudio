@@ -20,7 +20,12 @@ function compileFlow(mutate?: (f: ReturnType<typeof load>) => void) {
   const f = load();
   mutate?.(f);
   const links = f.edges.map((e, i) => [i, e[0], e[1], e[2], e[3], "any"] as [number, string, number, string, number, string]);
-  return compile({ nodes: f.nodes, links, configs: f.configs, screens: f.screens }, buildRegistry());
+  // Credentials are resolved by the editor from the backend at load; stand-ins here.
+  const configs = f.configs.map((c) =>
+    c.type === "thingstudio/config/mqtt-broker" ? { ...c, properties: { ...c.properties, broker: "broker.test", port: 1883 } }
+    : c.type === "thingstudio/config/wifi" ? { ...c, properties: { ...c.properties, ssid: "net", password: "pw" } }
+    : c);
+  return compile({ nodes: f.nodes, links, configs, screens: f.screens }, buildRegistry());
 }
 
 describe("trend widget", () => {
@@ -54,6 +59,11 @@ describe("journal in a flow", () => {
     expect(source).toContain("_Journal(156, 10000, 6, 0.5)");
     expect(source).toContain("_Journal(156, 0, 0, 0.5)");
     expect(source).toContain("_Journal(156, 60000, 0, 0.5)");
+  });
+
+  it("the headliner also publishes each reading over MQTT", () => {
+    const { source } = compileFlow();
+    for (const t of ["temperature", "humidity", "pressure"]) expect(source).toContain(`thingstudio/headliner/${t}`);
   });
 
   it("a flow with a bad journal property says which one", () => {

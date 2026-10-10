@@ -88,11 +88,16 @@ not here.
   `gui` prefix and the group is "GUI".) Retake the annotated editor screenshots in the user docs afterwards.
 - **[LAUNCH]** **`touch_i2c` node (FT6336U first).** Event source; design for the GT911/FT6236/CST820
   family. `touch-input-briefing.md`. `touch_spi` (classic CYD) can follow.
-- **[LAUNCH]** **Headliner example flow and task guide** — "a touch panel for the things you already own"
-  (BME280 + MQTT + Tasmota/WLED toggle + unknown/stale states). Confirm how the BME280 connects.
-- **[LAUNCH]** **Trend (moving histogram) widget and `journal` node -- built 2026-10-10 (hardware check owed), after being
-  decided 2026-10-07 and untracked until then.** Built: see `decisions/gui-layout.md` (2026-10-10). Owed: on the
-  FNK0104S with the headliner flow; memory on the Pico/CYD; a `series` port type, autoscale. Original note: Mike asked for an rrdtool/Cacti-style live histogram, and the headliner flow wants one beside the
+- **[LAUNCH]** **Headliner (showreel) flow and task guide** -- the flow is built
+  (`test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json`): BME280 readouts and trends are hardware-checked
+  2026-10-10; the MQTT publish was added after and is not yet run on the board. Owed: that check, and the task
+  guide in the user docs.
+- **[LAUNCH]** **External controls example flow (split from the headliner, Mike 2026-10-10).** A Tasmota plug or WLED
+  strip: its state subscribed and shown, an on-screen toggle over MQTT, unknown/stale values, WiFi pulled changes the
+  screen. Carries the launch acceptance for touch, MQTT both ways and unknown/stale on hardware. Mike chooses the
+  device. Not built.
+- **[LAUNCH]** **Trend (moving histogram) widget and `journal` node -- built and hardware-checked 2026-10-10, after being
+  decided 2026-10-07 and untracked until then.** Built: see `decisions/gui-layout.md` (2026-10-10). Still open: memory on the Pico/CYD; a `series` port type, autoscale. Original note: Mike asked for an rrdtool/Cacti-style live histogram, and the headliner flow wants one beside the
   temperature number (it currently has only a plain `gui_bar`, copied from the hero flow). Decisions are in
   `decisions/gui-layout.md` (2026-10-07) and scoping in `gui-layout-widget-system-scoping.md`: one `journal` node per
   time scale, cascaded; the trend widget is a pure view of one journal; unknown is a gap. Open: how a series crosses
