@@ -689,3 +689,29 @@ ambiguous."
 - **[DEFERRED]** **ESP32-C3 slow, lossy pings over WiFi** (2-324 ms, ~33% loss; Pico W 2-25 ms, none). Probably
   the C3's default modem sleep; not confirmed (`w.config(pm=w.PM_NONE)` then ping). Mike, 2026-09-25: defer unless
   it causes other problems. A fix would switch power saving off during a WiFi session only (`net_transport.py`).
+
+## Added 2026-10-10 (Mike, after the AI-authoring work)
+
+- **[LAUNCH-NICE]** **`adc` node: Peter Hinch's `AADC`** (`micropython-async` `v3/primitives/aadc.py`, MIT, same repo as the
+  vendored `events.py`/`delay_ms.py`; docs `v3/docs/DRIVERS.md` section 5). `AADC(adc)` is awaitable: it wakes when the
+  reading leaves bounds, either absolute (`lower`, `upper`) or relative (current value plus or minus a delta), with
+  `sense(False)` to wait for the value to be inside the bounds. `read_u16(last=False)` gives the reading. No callbacks;
+  it uses the stream I/O mechanism. Node shape to decide: pin (from the board definition), bounds mode and values, an
+  optional poll output. Design points: ADC2 pins don't work with WiFi on ESP32 (check against the board definitions
+  and refuse in the compile), the 16-bit range is the same on every board (`read_u16`), outputs raw counts plus an
+  optional volts or scaled value. Vendor with a pin and a README as for `primitives_events`, and add a row to
+  `third-party-licenses.md`. This resolves the ADC half of design doc section 11's open `micropython-async` question.
+- **[LAUNCH-NICE]** **`encoder` node: Hinch's quadrature `Encoder`** (`v3/primitives/encoder.py`, DRIVERS.md section 6).
+  Constructor: `pin_x`, `pin_y` (inputs with pull-ups), `v`, `div`, `vmin`/`vmax`, `mod`, `callback(v, delta)`,
+  `delay=100` ms (debounce and callback rate limit). Callback runs in asyncio context, not IRQ. Not for CNC-grade
+  counting. Order of processing: division, clamp, modulo. Node outputs value and delta; properties as above. The same
+  ADC half of section 11 resolved here for encoders. Pairs well with a GUI (an encoder driving a navigate or a
+  readout), so check for a way to feed `gui_button`-style next/prev.
+- **[LAUNCH-NICE]** **`neopixel` node.** Built-in `neopixel` module (WS2812). Needs: pin, number of pixels, colour
+  order (GRB or RGB; RGBW variants), brightness. Input design to decide: a colour for all pixels, a list of colours,
+  or `{index, colour}`; the node writes on each message. Check the RP2 and ESP32 `neopixel` ports behave the same, and
+  note the 3.3 V data line caveat in the docs.
+- **[UI]** **Foldable palette groups.** Each group in the node palette gets a header that collapses and expands,
+  remembering state per browser. Related to the existing "palette: one colour per group" item (`palette.ts`).
+- **[UI]** **Wider or resizable console.** The console panel is fixed width; let it be dragged wider, or at least
+  wider by default. Part of the older resizable-panes item ([P5] general UI wishlist).

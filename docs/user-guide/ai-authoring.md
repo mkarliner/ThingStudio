@@ -12,7 +12,7 @@ GPT/Gem), so it reads this page before it writes a flow:
 
 ```text
 When I ask for a Thingstudio flow or custom node, first read the Thingstudio authoring guide:
-https://<your docs site>/user-guide/ai-authoring/ (the whole docs set is one file at /llms-full.txt).
+https://docs.thingstudio.net/ai-authoring/ (the whole docs set is one file at https://docs.thingstudio.net/llms-full.txt).
 Write the flow as a .flow.json file, run the thingstudio-compile check with --board for my board,
 fix every error until it prints OK, then tell me: the board id you checked against, which credential
 names I must create, what you assumed about wiring, and what you could not check.
