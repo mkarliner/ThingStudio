@@ -160,7 +160,48 @@ describe("the command", () => {
     expect(run(["--strict", "--board", "board:freenove-s3-4in", f]).status).toBe(0);
   });
 
+  it("describes a node, or all of them, and fails for an unknown one", () => {
+    const one = run(["--describe", "timer"]);
+    expect(one.status).toBe(0);
+    expect(one.stdout).toMatch(/Type `thingstudio\/timer`/);
+    expect(one.stdout).toMatch(/`intervalMs`, number, default `1000`/);
+    const all = JSON.parse(run(["--describe-all", "--json"]).stdout);
+    expect(all.nodes.length).toBeGreaterThan(30);
+    expect(all.configs.length).toBeGreaterThan(2);
+    expect(run(["--describe", "nope"]).status).toBe(1);
+  });
+
+  it("prints a board's pins with --board-info", () => {
+    const r = run(["--board-info", "board:freenove-s3-4in"]);
+    expect(r.status).toBe(0);
+    const info = JSON.parse(r.stdout);
+    expect(info.labelledPins).toMatchObject({ TFT_SCK: 12, TOUCH_SDA: 16, TOUCH_SCL: 15 });
+    expect(info.gpio).toContain(15);
+    expect(run(["--board-info", "board:nope"]).status).toBe(1);
+  });
+
   it("lists the boards", () => {
     expect(run(["--list-boards"]).stdout).toMatch(/board:freenove-s3-4in/);
+  });
+});
+
+describe("docs/user-guide/ai-authoring.md", () => {
+  const page = readFileSync(join(__dirname, "..", "..", "docs", "user-guide", "ai-authoring.md"), "utf8");
+
+  it("its blink example passes the check on the board it names", () => {
+    const m = /```json\n(\{\n  "formatVersion": 1,\n  "flowName": "blink"[\s\S]*?\n\})\n```/.exec(page);
+    expect(m, "the blink example block was not found").not.toBeNull();
+    const r = checkFlowText(m![1]!, { board: "board:lolin-s2-mini" });
+    expect(r.errors).toEqual([]);
+    expect(r.warnings).toEqual([]);
+  });
+
+  it("every board, example file and page it names exists", () => {
+    for (const f of page.matchAll(/`(?:test-flows\/)?([\w-]+\.flow\.json)`/g)) {
+      expect(() => readFileSync(join(flowsDir, f[1]!), "utf8"), f[1]).not.toThrow();
+    }
+    for (const l of page.matchAll(/\]\(([\w-]+\.md)\)/g)) {
+      expect(() => readFileSync(join(__dirname, "..", "..", "docs", "user-guide", l[1]!), "utf8"), l[1]).not.toThrow();
+    }
   });
 });

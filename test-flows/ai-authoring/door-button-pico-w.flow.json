@@ -1,0 +1,19 @@
+{
+  "formatVersion": 1,
+  "flowName": "shed door button",
+  "notes": "Button on GP14 (to ground, internal pull-up) lights the LED on GP15 while held; each press publishes 'pressed' to shed/door.",
+  "nodes": [
+    { "id": "btn", "type": "thingstudio/eswitch", "properties": { "pin": 14, "pull": "up", "lopen": 1, "debounceMs": 50 } },
+    { "id": "led", "type": "thingstudio/gpio_out", "properties": { "pin": 15 } },
+    { "id": "onlypress", "type": "thingstudio/function",
+      "properties": { "code": "if msg['payload']:\n    msg['payload'] = 'pressed'\n    return msg\nreturn None", "outputCount": 1 } },
+    { "id": "pub", "type": "thingstudio/mqtt_publish",
+      "properties": { "topic": "shed/door", "retain": false, "qos": 0, "brokerConfigId": "cfg-broker" } }
+  ],
+  "edges": [["btn", 0, "led", 0], ["btn", 0, "onlypress", 0], ["onlypress", 0, "pub", 0]],
+  "layout": { "btn": { "pos": [80, 200] }, "led": { "pos": [520, 100] }, "onlypress": { "pos": [300, 300] }, "pub": { "pos": [520, 300] } },
+  "configs": [
+    { "id": "cfg-wifi", "type": "thingstudio/config/wifi", "properties": { "credentialName": "shed-wifi", "security": "password" } },
+    { "id": "cfg-broker", "type": "thingstudio/config/mqtt-broker", "properties": { "credentialName": "shed-broker" } }
+  ]
+}

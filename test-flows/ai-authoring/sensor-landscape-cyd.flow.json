@@ -1,0 +1,215 @@
+{
+  "formatVersion": 1,
+  "flowName": "cyd-climate",
+  "nodes": [
+    {
+      "id": "sensor",
+      "type": "thingstudio/bme280",
+      "properties": {
+        "i2cConfigId": "cfg-i2c",
+        "address": 118,
+        "intervalMs": 5000
+      }
+    },
+    {
+      "id": "split",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "r = msg['payload']\nt = {'topic': 'temperature', 'payload': r['temperature']}\nh = {'topic': 'humidity', 'payload': r['humidity']}\nreturn [t, h]\n",
+        "outputCount": 2
+      }
+    },
+    {
+      "id": "temp",
+      "type": "thingstudio/gui_readout",
+      "properties": {
+        "name": "Temperature",
+        "units": "°C",
+        "decimals": 1,
+        "lo": -20,
+        "hi": 50,
+        "staleAfter": 15
+      }
+    },
+    {
+      "id": "hum",
+      "type": "thingstudio/gui_readout",
+      "properties": {
+        "name": "Humidity",
+        "units": "%",
+        "decimals": 0,
+        "lo": 0,
+        "hi": 100,
+        "staleAfter": 15
+      }
+    },
+    {
+      "id": "screen",
+      "type": "thingstudio/gui_screen",
+      "properties": {
+        "name": "tft",
+        "width": 240,
+        "height": 320,
+        "frameFormat": "rgb565",
+        "minInterval": 200,
+        "wrap": true
+      }
+    },
+    {
+      "id": "display",
+      "type": "thingstudio/display_spi",
+      "properties": {
+        "controller": "st7789",
+        "frameFormat": "rgb565",
+        "spiBus": 2,
+        "baudrate": 27000000,
+        "sck": 14,
+        "mosi": 13,
+        "dc": 2,
+        "cs": 15,
+        "reset": -1,
+        "backlight": 21,
+        "width": 240,
+        "height": 320,
+        "rotation": 1,
+        "orientation": "90",
+        "xstart": -1,
+        "ystart": -1,
+        "colorOrder": "bgr",
+        "invertColors": false,
+        "dataLatchOrder": true
+      }
+    }
+  ],
+  "edges": [
+    [
+      "sensor",
+      0,
+      "split",
+      0
+    ],
+    [
+      "split",
+      0,
+      "temp",
+      0
+    ],
+    [
+      "split",
+      1,
+      "hum",
+      0
+    ],
+    [
+      "screen",
+      0,
+      "display",
+      0
+    ]
+  ],
+  "layout": {
+    "sensor": {
+      "pos": [
+        80,
+        80
+      ]
+    },
+    "split": {
+      "pos": [
+        300,
+        80
+      ]
+    },
+    "temp": {
+      "pos": [
+        520,
+        40
+      ]
+    },
+    "hum": {
+      "pos": [
+        520,
+        140
+      ]
+    },
+    "screen": {
+      "pos": [
+        740,
+        80
+      ]
+    },
+    "display": {
+      "pos": [
+        960,
+        80
+      ]
+    }
+  },
+  "configs": [
+    {
+      "id": "cfg-i2c",
+      "type": "thingstudio/config/i2c-bus",
+      "properties": {
+        "bus": 0,
+        "scl": 27,
+        "sda": 22,
+        "freq": 100000
+      }
+    }
+  ],
+  "notes": "BME280 on I2C (SDA 22, SCL 27) shown as temperature and humidity on the CYD display, landscape, colour.",
+  "screens": {
+    "screen": {
+      "pages": [
+        {
+          "name": "climate",
+          "root": {
+            "kind": "row",
+            "gap": 6,
+            "padding": 4,
+            "children": [
+              {
+                "kind": "column",
+                "grow": 1,
+                "gap": 4,
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "Temperature",
+                    "font": "font_body20"
+                  },
+                  {
+                    "kind": "widget",
+                    "node": "temp",
+                    "font": "font_digits32",
+                    "unitsFont": "font_body20",
+                    "alignSelf": "center"
+                  }
+                ]
+              },
+              {
+                "kind": "column",
+                "grow": 1,
+                "gap": 4,
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "Humidity",
+                    "font": "font_body20"
+                  },
+                  {
+                    "kind": "widget",
+                    "node": "hum",
+                    "font": "font_digits32",
+                    "unitsFont": "font_body20",
+                    "alignSelf": "center"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

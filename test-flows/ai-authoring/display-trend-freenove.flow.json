@@ -1,0 +1,225 @@
+{
+  "formatVersion": 1,
+  "flowName": "temperature-display",
+  "nodes": [
+    {
+      "id": "bme",
+      "type": "thingstudio/bme280",
+      "properties": {
+        "i2cConfigId": "cfg-i2c",
+        "address": 118,
+        "intervalMs": 5000
+      }
+    },
+    {
+      "id": "pick",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "msg['payload'] = msg['payload']['temperature']\nreturn msg\n",
+        "outputCount": 1
+      }
+    },
+    {
+      "id": "jrn",
+      "type": "thingstudio/journal",
+      "properties": {
+        "rows": 60,
+        "stepSeconds": 30,
+        "steps": 0,
+        "xff": 0.5
+      }
+    },
+    {
+      "id": "temp",
+      "type": "thingstudio/gui_readout",
+      "properties": {
+        "name": "Temperature",
+        "units": "°C",
+        "decimals": 1,
+        "lo": -20,
+        "hi": 50,
+        "staleAfter": 30
+      }
+    },
+    {
+      "id": "trend",
+      "type": "thingstudio/gui_trend",
+      "properties": {
+        "name": "Last 30 min",
+        "lo": 0,
+        "hi": 40,
+        "columns": 60,
+        "colWidth": 4,
+        "height": 120,
+        "staleAfter": 120
+      }
+    },
+    {
+      "id": "screen",
+      "type": "thingstudio/gui_screen",
+      "properties": {
+        "name": "tft",
+        "width": 320,
+        "height": 480,
+        "frameFormat": "gs4",
+        "minInterval": 200,
+        "wrap": true
+      }
+    },
+    {
+      "id": "disp",
+      "type": "thingstudio/display_spi",
+      "properties": {
+        "controller": "st7796",
+        "frameFormat": "gs4",
+        "spiBus": 1,
+        "baudrate": 40000000,
+        "sck": 12,
+        "mosi": 11,
+        "dc": 46,
+        "cs": 10,
+        "reset": -1,
+        "backlight": 45,
+        "width": 320,
+        "height": 480,
+        "rotation": 1,
+        "xstart": -1,
+        "ystart": -1,
+        "colorOrder": "bgr",
+        "invertColors": true,
+        "dataLatchOrder": true
+      }
+    }
+  ],
+  "edges": [
+    [
+      "bme",
+      0,
+      "pick",
+      0
+    ],
+    [
+      "pick",
+      0,
+      "temp",
+      0
+    ],
+    [
+      "pick",
+      0,
+      "jrn",
+      0
+    ],
+    [
+      "jrn",
+      0,
+      "trend",
+      0
+    ],
+    [
+      "screen",
+      0,
+      "disp",
+      0
+    ]
+  ],
+  "layout": {
+    "bme": {
+      "pos": [
+        80,
+        140
+      ]
+    },
+    "pick": {
+      "pos": [
+        300,
+        140
+      ]
+    },
+    "jrn": {
+      "pos": [
+        520,
+        140
+      ]
+    },
+    "temp": {
+      "pos": [
+        740,
+        80
+      ]
+    },
+    "trend": {
+      "pos": [
+        740,
+        200
+      ]
+    },
+    "screen": {
+      "pos": [
+        960,
+        140
+      ]
+    },
+    "disp": {
+      "pos": [
+        1180,
+        140
+      ]
+    }
+  },
+  "configs": [
+    {
+      "id": "cfg-i2c",
+      "type": "thingstudio/config/i2c-bus",
+      "properties": {
+        "bus": 0,
+        "scl": 15,
+        "sda": 16,
+        "freq": 100000
+      }
+    }
+  ],
+  "screens": {
+    "screen": {
+      "pages": [
+        {
+          "name": "main",
+          "root": {
+            "kind": "column",
+            "gap": 6,
+            "padding": 4,
+            "children": [
+              {
+                "kind": "text",
+                "text": "Temperature",
+                "font": "font_body20"
+              },
+              {
+                "kind": "widget",
+                "node": "temp",
+                "font": "font_digits64",
+                "unitsFont": "font_body24",
+                "alignSelf": "center"
+              },
+              {
+                "kind": "text",
+                "text": "Last 30 minutes",
+                "font": "font_body16"
+              },
+              {
+                "kind": "widget",
+                "node": "trend",
+                "alignSelf": "stretch"
+              },
+              {
+                "kind": "spacer",
+                "grow": 1
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "notes": "BME280 (0x76) on the touch panel I2C bus (SCL 15, SDA 16). Temperature shown large; 60 rows x 30 s = last 30 minutes as a trend. Portrait, display rotation 1."
+}

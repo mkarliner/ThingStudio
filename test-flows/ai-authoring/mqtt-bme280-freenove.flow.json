@@ -1,0 +1,17 @@
+{
+  "formatVersion": 1,
+  "flowName": "bme280 to mqtt",
+  "notes": "Reads a BME280 on the I2C bus (SCL 15, SDA 16, shared with the touch panel pins) every 10 s and publishes the temperature to home/livingroom/temperature. Credentials: WiFi 'home', broker 'lan-broker'.",
+  "nodes": [
+    { "id": "sensor", "type": "thingstudio/bme280", "properties": { "i2cConfigId": "cfg-i2c", "address": 118, "intervalMs": 10000 } },
+    { "id": "pick", "type": "thingstudio/function", "properties": { "code": "msg['payload'] = msg['payload']['temperature']\nreturn msg", "outputCount": 1 } },
+    { "id": "pub", "type": "thingstudio/mqtt_publish", "properties": { "topic": "home/livingroom/temperature", "retain": false, "qos": 0, "brokerConfigId": "cfg-broker" } }
+  ],
+  "edges": [["sensor", 0, "pick", 0], ["pick", 0, "pub", 0]],
+  "layout": { "sensor": { "pos": [80, 200] }, "pick": { "pos": [300, 200] }, "pub": { "pos": [520, 200] } },
+  "configs": [
+    { "id": "cfg-i2c", "type": "thingstudio/config/i2c-bus", "properties": { "bus": 0, "scl": 15, "sda": 16, "freq": 100000 } },
+    { "id": "cfg-wifi", "type": "thingstudio/config/wifi", "properties": { "credentialName": "home", "security": "password" } },
+    { "id": "cfg-broker", "type": "thingstudio/config/mqtt-broker", "properties": { "credentialName": "lan-broker" } }
+  ]
+}

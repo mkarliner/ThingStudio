@@ -22,6 +22,8 @@ on:
       - "editor/**"
       - "docs/screenshots/**"
       - "tools/screenshots.py"
+      - "tools/build_llms_txt.py"
+      - "tools/mkdocs_llms_hook.py"
   workflow_dispatch: {}
 
 permissions:

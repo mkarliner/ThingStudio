@@ -11,7 +11,8 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { boardChoices, checkFlowText, type CheckResult } from "./check-flow.js";
+import { boardChoices, boardInfo, checkFlowText, type CheckResult } from "./check-flow.js";
+import { buildCatalog, findNode, renderMarkdown, renderNode } from "./describe.js";
 
 const USAGE = `thingstudio-compile: compile and check a Thingstudio flow file without the editor.
 
@@ -25,6 +26,9 @@ Options:
   --no-syntax        Skip the MicroPython syntax check of the generated code (mpy-cross)
   --arch <march>     mpy-cross -march for that check (default xtensawin)
   --list-boards      Print the values --board takes
+  --board-info <choice>  Print a board's labelled pins, usable pins and the ones to avoid, as JSON
+  --describe <node>  Print a node's type, ports and properties with their defaults ("timer" or "thingstudio/timer")
+  --describe-all     Print every node and config node (with --json for JSON, --markdown for the catalog page)
   --help             This text
 
 Checks: the file parses, every node type exists, every wire is one the editor would accept, the flow compiles
@@ -38,11 +42,15 @@ interface Args {
   json: boolean;
   strict: boolean;
   syntax: boolean;
+  describe?: string;
+  boardInfo?: string;
+  describeAll: boolean;
+  markdown: boolean;
   arch: string;
 }
 
 function parseArgs(argv: string[]): Args | string {
-  const a: Args = { files: [], json: false, strict: false, syntax: true, arch: "xtensawin" };
+  const a: Args = { files: [], json: false, strict: false, syntax: true, describeAll: false, markdown: false, arch: "xtensawin" };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]!;
     const value = (): string | undefined => {
@@ -54,6 +62,10 @@ function parseArgs(argv: string[]): Args | string {
       case "--list-boards": return "boards";
       case "--json": a.json = true; break;
       case "--strict": a.strict = true; break;
+      case "--describe-all": a.describeAll = true; break;
+      case "--board-info": { const v = value(); if (!v) return "--board-info needs a value (see --list-boards)"; a.boardInfo = v; break; }
+      case "--markdown": a.markdown = true; break;
+      case "--describe": { const v = value(); if (!v) return "--describe needs a node name, e.g. timer"; a.describe = v; break; }
       case "--no-syntax": a.syntax = false; break;
       case "--board": { const v = value(); if (!v) return "--board needs a value (see --list-boards)"; a.board = v; break; }
       case "--out": { const v = value(); if (!v) return "--out needs a file name"; a.out = v; break; }
@@ -63,6 +75,7 @@ function parseArgs(argv: string[]): Args | string {
         a.files.push(arg);
     }
   }
+  if (a.describe || a.describeAll || a.boardInfo) return a;
   if (a.files.length === 0) return "no flow file given";
   if (a.out && a.files.length > 1) return "--out takes one flow file";
   return a;
@@ -114,6 +127,24 @@ async function main(): Promise<number> {
   if (args === "help") { console.log(USAGE); return 0; }
   if (args === "boards") { console.log(boardChoices().join("\n")); return 0; }
   if (typeof args === "string") { console.error(`thingstudio-compile: ${args}\n\n${USAGE}`); return 2; }
+
+  if (args.boardInfo) {
+    const info = boardInfo(args.boardInfo);
+    if (!info) { console.error(`thingstudio-compile: unknown board \"${args.boardInfo}\". Choices: ${boardChoices().join(", ")}`); return 1; }
+    console.log(JSON.stringify(info, null, 2));
+    return 0;
+  }
+  if (args.describe || args.describeAll) {
+    const catalog = buildCatalog();
+    if (args.describe) {
+      const n = findNode(catalog, args.describe);
+      if (!n) { console.error(`thingstudio-compile: no node "${args.describe}". Try --describe-all.`); return 1; }
+      console.log(args.json ? JSON.stringify(n, null, 2) : renderNode(n, "##"));
+    } else {
+      console.log(args.json ? JSON.stringify(catalog, null, 2) : renderMarkdown(catalog).trimEnd());
+    }
+    return 0;
+  }
 
   const mpy = args.syntax ? await loadMpyCross() : null;
   const results: { file: string; result: CheckResult }[] = [];

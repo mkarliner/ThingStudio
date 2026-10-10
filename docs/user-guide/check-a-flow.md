@@ -40,9 +40,14 @@ The exit code is 0 for a valid flow, 1 for a flow with errors, and 2 for a bad c
 
 - `--board board:freenove-s3-4in` checks pins against that board. `--list-boards` shows the choices. Without a
   board, pins are checked against the widest range and a warning says so.
+- `--board-info board:freenove-s3-4in` prints that board's labelled pins (the LED, the display, the I2C pins), the
+  GPIOs that exist, and the ones to avoid or that are reserved, as JSON.
 - `--out flow.py` writes the generated MicroPython.
 - `--json` prints the result as JSON: `ok`, `errors`, `warnings`, `notes`, `stats` and the `source`.
 - `--strict` makes warnings fail the check.
+- `--describe timer` prints a node's type, ports and properties with their defaults. `--describe-all` prints every
+  node and config node (add `--json` for JSON). The same list is on the [node catalog](nodes-catalog.md) page,
+  generated from the code.
 - `--no-syntax` skips the MicroPython syntax check. `--arch` sets its `-march` (default `xtensawin`).
 
 ## What it checks

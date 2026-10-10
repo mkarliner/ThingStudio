@@ -15,6 +15,10 @@ repo_name: mkarliner/ThingStudio
 docs_dir: docs/user-guide
 site_dir: site
 
+# Writes llms.txt and llms-full.txt into the built site (tools/build_llms_txt.py).
+hooks:
+  - tools/mkdocs_llms_hook.py
+
 theme:
   name: material
   # No Google Fonts: the backend serves these docs locally (/docs/) and they must work offline.
@@ -62,6 +66,8 @@ nav:
       - More on installing: installing-more.md
   - Canvas basics: canvas-basics.md
   - Check a flow without the editor: check-a-flow.md
+  - Node catalog: nodes-catalog.md
+  - Writing flows with an AI assistant: ai-authoring.md
   - A sensor display: sensor-display.md
   - Flow lifecycle: flow-lifecycle.md
   - Boards and processors: boards.md

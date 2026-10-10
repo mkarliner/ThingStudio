@@ -27,6 +27,7 @@ defaults below are exactly what saving a "cyd" preset from a correctly-configure
 - **cs / reset / backlight pins** — optional GPIO pins (−1 for "not wired"). Some boards tie
   reset or CS high in hardware and don't expose them as GPIOs, or have no backlight control at all.
 - **width / height** — panel resolution in pixels.
+- **orientation** — off by default. Set it to 0, 90, 180 or 270 to turn the picture clockwise; the gui screen wired to the display and its touch follow. With an orientation, set width and height to the panel's own size, `rotation` to how the panel is mounted (0 to 3), and `xstart`/`ystart` to `-1` (an orientation can't be combined with a panel offset). See [Rotating the screen](gui.md#rotating-the-screen).
 - **rotation** — 0–7, the panel's MADCTL orientation code (which of MY/MX/MV to set). Default `1`.
 - **color order** — `rgb` or `bgr`, whichever matches your panel's own wiring. Default `bgr`.
 - **invert colors** — on or off. Some panels need this flipped to show true colors instead of their

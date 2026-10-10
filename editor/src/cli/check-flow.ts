@@ -211,3 +211,37 @@ function describePort(file: FlowFile, nodeId: string, slot: number, side: "input
   const port = ports[slot] ?? ports[0];
   return port ? `${resolvePortType(port, n.properties)} ${side === "outputs" ? "from" : "to"} ${n.type.replace("thingstudio/", "")}` : "?";
 }
+
+/** What a pin check knows about a board or processor, for an author choosing pins. Null for an unknown choice. */
+export function boardInfo(choice: string): {
+  id: string;
+  name: string;
+  processor: string;
+  notes: string;
+  wifi: boolean | null;
+  labelledPins: Record<string, number>;
+  gpio: number[];
+  inputOnly: number[];
+  noPullUp: number[];
+  reserved: Record<string, string>;
+  avoid: Record<string, string>;
+} | null {
+  const res = resolveTarget(builtinDefinitions(), choice, null);
+  const target = res.target;
+  if (!target) return null;
+  const obj = (m: ReadonlyMap<number, string>) => Object.fromEntries([...m.entries()].sort((a, b) => a[0] - b[0]).map(([k, v]) => [String(k), v]));
+  const num = (s: ReadonlySet<number>) => [...s].sort((a, b) => a - b);
+  return {
+    id: choice,
+    name: target.label,
+    processor: target.processor.id,
+    notes: [target.processor.notes, target.board?.notes ?? ""].filter(Boolean).join(" "),
+    wifi: target.board?.wifi ?? null,
+    labelledPins: Object.fromEntries([...(target.board?.pins ?? [])].sort((a, b) => a[1] - b[1])),
+    gpio: num(target.gpio),
+    inputOnly: num(target.inputOnly),
+    noPullUp: num(target.noPull),
+    reserved: obj(target.reserved),
+    avoid: obj(target.avoid),
+  };
+}
