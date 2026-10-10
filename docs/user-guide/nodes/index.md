@@ -25,9 +25,9 @@ See [flows, nodes and messages](../background/flows-and-nodes.md) for how they f
 | switch an LED or relay | [gpio out](gpio-out.md) |
 | dim an LED or set a motor's speed | [pwm out](pwm-out.md) |
 | read a temperature, humidity or pressure sensor | [bme280](bme280.md) |
-| talk to another I2C device, or find its address | [i2c](i2c.md) |
+| talk to another I2C device, or find its address | [i2c device](i2c.md) |
 | draw on a display | [display spi](display-spi.md), [display i2c](display-i2c.md) |
-| show readings as pages on a display | [GUI nodes (preview)](gui.md) |
+| show readings as pages on a display | [GUI nodes](gui.md) |
 | change a message, or decide where it goes | [function](function.md) |
 | send only changes, or limit the rate | [filter](filter.md) |
 | keep a number's history and show its trend | [journal](journal.md) |
@@ -83,7 +83,7 @@ Pin numbers are checked against your board before a deploy. See [boards and proc
 | [gpio out](gpio-out.md) | sink | Sets a pin high or low. |
 | [pwm out](pwm-out.md) | sink | Drives a pin with a variable duty cycle. |
 | [bme280](bme280.md) | source | Reads a BME280 or BMP280 sensor at a fixed interval. |
-| [i2c](i2c.md) | transform | Reads, writes or scans an I2C device that has no node of its own. |
+| [i2c device](i2c.md) | transform | Reads, writes or scans an I2C device that has no node of its own. |
 | [display spi](display-spi.md) | sink | Sends a frame to an SPI color display (ST7789). |
 | [display i2c](display-i2c.md) | sink | Sends a frame to an I2C OLED display (SSD1306). |
 
@@ -93,7 +93,7 @@ Some settings are set once and shared by the nodes that use them:
 
 - **WiFi network** and **MQTT broker**: config nodes, with the real passwords kept outside the flow file. See
   [config nodes](../canvas-basics.md#config-nodes).
-- **I2C bus**: the pins and clock for a bus, shared by every I2C node on it. See [I2C buses](i2c-bus.md).
+- **I2C bus**: the pins and clock for a bus, shared by every I2C node on it. See [I2C bus](i2c-bus.md).
 - **Touch panel**: the controller, bus and size of a touch screen, used by a gui screen or a touch node. See
   [touch panels](touch-panel.md).
 

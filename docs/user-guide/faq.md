@@ -60,6 +60,11 @@ Connect and deploy again.
 It's next to **Thingstudio** in the toolbar, and in **Help → About**. A `+` after it means the editor was built
 from changes that weren't committed yet.
 
+## My clock shows `--` and never the time. Why?
+
+The clock hasn't synced yet. It needs WiFi, and the clock node doesn't join WiFi itself. Add a node that does, such
+as [wifi status](nodes/wifi-status.md), and set its WiFi. See [clock](nodes/clock.md#behavior).
+
 ## My gui toggle shows `--`. Why?
 
 A toggle with its input wired shows `--` until the input sends a value it recognises. It matches the input against

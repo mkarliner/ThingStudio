@@ -319,7 +319,7 @@ Type `thingstudio/gpio_out`, kind sink, palette group hardware.
 - Properties (name, type, default):
     - `pin`, number, default `12`
 
-### i2c
+### i2c device
 
 Type `thingstudio/i2c`, kind transform, palette group hardware.
 

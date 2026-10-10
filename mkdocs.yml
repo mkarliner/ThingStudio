@@ -71,6 +71,7 @@ nav:
   - Writing flows with an AI assistant: ai-authoring.md
   - A sensor display: sensor-display.md
   - Flow lifecycle: flow-lifecycle.md
+  - Supported hardware: supported-hardware.md
   - Boards and processors: boards.md
   - Connecting over WiFi: wifi-connection.md
   - Debugging & troubleshooting: debugging.md
@@ -107,8 +108,8 @@ nav:
           - display i2c: nodes/display-i2c.md
           - bme280: nodes/bme280.md
           - touch: nodes/touch-i2c.md
-          - i2c: nodes/i2c.md
-          - I2C buses: nodes/i2c-bus.md
+          - i2c device: nodes/i2c.md
+          - I2C bus: nodes/i2c-bus.md
           - Touch panels: nodes/touch-panel.md
-      - GUI (preview): nodes/gui.md
+      - GUI: nodes/gui.md
   - Writing custom nodes: custom-nodes.md

@@ -1,7 +1,7 @@
-# GUI nodes (preview)
+# GUI nodes
 
-Show readings on a display as pages of labels, numbers, bars and lights. A preview: the nodes work, but
-pages are laid out by editing the flow file. The GUI view, where you lay them out by dragging, is coming.
+Show readings on a display as pages of labels, numbers, bars and lights. Lay out the pages in the gui screen node's
+property panel: see [Laying out pages](#laying-out-pages).
 
 ## The nodes
 
@@ -131,8 +131,8 @@ several pages of a screen (a navigation button on every page, say). It must be d
 the same font and options, and it shows the same value everywhere. Each page's **+ add…** menu lists the widgets
 not already on that page. A widget belongs to one screen. Widgets
 in a row share it equally, so two buttons side by side are each half the row (never narrower than their text
-needs). Set **grow** to `0` on one to keep it at its natural size, or to a bigger number for a bigger share. There is
-no preview yet: if it doesn't fit, Deploy says which widget, on which page. The outline is a view of the
+needs). Set **grow** to `0` on one to keep it at its natural size, or to a bigger number for a bigger share. The editor
+doesn't draw the page: if it doesn't fit, Deploy says which widget, on which page. The outline is a view of the
 flow file's `"screens"` section, which you can also edit by hand.
 
 Pages live in the flow file, under `"screens"`, keyed by the gui screen node's id. A page is a tree of

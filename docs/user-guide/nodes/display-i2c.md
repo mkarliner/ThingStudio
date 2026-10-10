@@ -11,7 +11,7 @@ save a real panel's pin/address setup under a name once, then load it again on t
 ## Properties
 
 - **controller** — the display chip. Only `SSD1306` today.
-- **I2C bus** — the bus the panel is wired to. See [I2C buses](i2c-bus.md).
+- **I2C bus** — the bus the panel is wired to. See [I2C bus](i2c-bus.md).
 - **address** — the I2C address, `addr` in the flow file, as a plain number: `60` is `0x3C`, the usual SSD1306 address.
 - **width / height** — panel resolution in pixels. Height must be a multiple of 8.
 

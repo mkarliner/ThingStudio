@@ -711,6 +711,10 @@ ambiguous."
   order (GRB or RGB; RGBW variants), brightness. Input design to decide: a colour for all pixels, a list of colours,
   or `{index, colour}`; the node writes on each message. Check the RP2 and ESP32 `neopixel` ports behave the same, and
   note the 3.3 V data line caveat in the docs.
+- **`ntp` node replaces `clock`** (Mike, docs review). `clock` mixes time sync, time zone and display formatting,
+  and shows `--` for ever with no error when nothing in the flow joins WiFi. New Network `ntp` node with a format
+  option (unix time, date/time text); remove `clock`; 7-segment stays a gui label font.
+  ([detail](outstanding-items/ntp-node-replaces-clock.md))
 - **[UI]** **Foldable palette groups.** Each group in the node palette gets a header that collapses and expands,
   remembering state per browser. Related to the existing "palette: one colour per group" item (`palette.ts`).
 - **[UI]** **Wider or resizable console.** The console panel is fixed width; let it be dragged wider, or at least

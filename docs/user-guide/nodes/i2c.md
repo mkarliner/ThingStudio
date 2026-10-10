@@ -1,10 +1,10 @@
-# i2c
+# i2c device
 
 Talks to an I2C device that has no node of its own. Each message that arrives does one transfer.
 
 ## Properties
 
-- **I2C bus** — the bus the device is wired to. See [I2C buses](i2c-bus.md).
+- **I2C bus** — the bus the device is wired to. See [I2C bus](i2c-bus.md).
 - **operation** — `read`, `write` or `scan`.
 - **address** — the device's address, such as `0x29`. Not used by `scan`.
 - **register** — the register to read or write, such as `0x80`. Leave empty for a device without registers.

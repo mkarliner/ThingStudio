@@ -23,8 +23,9 @@ Nothing is sent until the first sync, so a label shows `--` rather than a wrong 
 
 ## Behavior
 
-The board asks the NTP server once WiFi is up (the flow needs a WiFi setting, which an MQTT node brings in), tries
-again every 30 seconds until it works, and then every hour. Between syncs the board's own clock keeps time. The
+The board asks the NTP server once WiFi is up, tries again every 30 seconds until it works, and then every hour. The
+clock node doesn't join WiFi itself. The flow needs a node that does, such as [wifi status](wifi-status.md) or any
+MQTT, HTTP or UDP node. Between syncs the board's own clock keeps time. The
 request takes up to a second and holds up the flow while it runs. A failure while WiFi is up shows on the node
 once. Boards whose firmware has no `ntptime` module report that on the node instead of failing at start.
 

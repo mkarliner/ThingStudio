@@ -205,7 +205,7 @@ export const NODE_PALETTE: Record<NodeKind, KindStyle> = {
   // filter added 2026-09-26: teal, "▽" (a funnel) -- it lets fewer messages through than arrive.
   // bme280 added 2026-09-26: first I2C sensor. "hardware" group, brick red, "°" for temperature.
   // i2c (generic) added 2026-09-26: same indigo family as display_i2c, "⇄" for a two-way transfer.
-  i2c: { color: "#2e3f8a", bgcolor: "#1f2a4a", icon: "⇄", label: "i2c", group: "hardware", priority: 45 },
+  i2c: { color: "#2e3f8a", bgcolor: "#1f2a4a", icon: "⇄", label: "i2c device", group: "hardware", priority: 45 },
   touch_i2c: { color: "#8a4a2e", bgcolor: "#4a2a1f", icon: "☝", label: "touch", group: "hardware", priority: 16 },
   bme280: { color: "#8a4a2e", bgcolor: "#4a2a1f", icon: "°", label: "bme280", group: "hardware", priority: 15 },
   // journal added 2026-10-10: teal beside filter, "≋" for a stream kept over time.

@@ -38,63 +38,91 @@ Everything runs on your own computer and your own boards. Thingstudio isn't a cl
 
 ## What's different about programming with Thingstudio?
 
-Most microcontroller programs are one big loop. Read the sensors, check the buttons, update the outputs, go round
-again. It works, but every new job makes the loop longer and its timing harder to reason about.
+A typical microcontroller program, in Arduino for example, has a `setup()` section that runs once at boot, then a
+main loop that runs forever. The loop might:
 
-Thingstudio programs respond to events instead. When the button is pressed, turn on the light. Every ten seconds,
-read the temperature. When a message arrives from the network, update the display. Nothing runs until something
-happens, and the board can wait for many events at once. This is
+- read the sensors
+- check the buttons
+- update the outputs
+- check the network
+- go round again
+
+Each new job makes the loop longer. A slow step, such as a network call, holds up everything else, and the timing
+gets hard to reason about.
+
+Thingstudio programs respond to events instead. When a button is pressed, turn on a light. Every ten seconds, read
+the temperature. When a message arrives from the network, update the display. Each response runs only when its event
+happens, and the board waits for many events at once. This is
 [event-driven programming](background/event-driven.md).
 
-Event-driven code can be tricky to write and to follow. The program no longer reads top to bottom, and you have to
-manage tasks, callbacks and the code that ties them together. Thingstudio makes this easier. You draw each event
-and what should happen next, and Thingstudio writes the code that runs them all side by side.
+Event-driven code is harder to write by hand. In MicroPython it means
+[`asyncio`](https://docs.micropython.org/en/latest/library/asyncio.html): tasks, `await`, and code to start the
+tasks and pass data between them. The program no longer reads top to bottom, and one blocking call stalls every
+task. Thingstudio writes this code for you. You draw each event and what happens next, and Thingstudio generates the
+tasks and the connections between them.
 
 ## Events, nodes and wires
 
-Each block is called a **node**. Each response to an event is drawn as a small chain of nodes. A node does one job: fire every second, read a
-pin, run some Python, switch an output. **Wires** join one node's output to the next node's input. Together they make a **flow**.
+A program is made of **nodes** joined by **wires**. There are three types of node:
 
-Nodes pass **messages** along the wires. A message is a small bundle of data, with the main value in its
-`payload`. A timer sends a message, a function node changes its payload, and a pin output node acts on it. More on
-this in [flows, nodes and messages](background/flows-and-nodes.md).
+- **Sources** start messages when something happens: a timer fires, a button is pressed, an MQTT message arrives.
+- **Transforms** take a message in and send a message on: a function, a filter, a delay.
+- **Sinks** act on a message: switch a pin, update a display, publish to MQTT.
+
+A wire joins one node's output to the next node's input. The nodes and wires together make a **flow**. A flow can
+hold any number of chains, each starting at a source.
+
+Nodes pass **messages** along the wires. A message is a dict, with its main value in `payload`. More on this in
+[flows, nodes and messages](background/flows-and-nodes.md).
 
 This way of working comes from [Node-RED](background/node-red.md), a popular tool for home automation and IoT. In
 Node-RED, flows run on a server or a Raspberry Pi. In Thingstudio, they run on the microcontroller.
+
+## Your own Python
+
+The [node reference](nodes/index.md) lists the built-in nodes. For anything they don't cover, use a
+[function](nodes/function.md) node. It runs your Python on each message that arrives:
+
+```python
+# payload arrives in degrees C, leaves in degrees F
+msg['payload'] = msg['payload'] * 1.8 + 32
+return msg
+```
+
+`msg` is a dict, with the main value in `msg['payload']`. Return it to pass it on, or return nothing to stop it. A
+function node can also keep state between messages and have more than one output.
+
+To reuse code across flows, make it a [custom node](custom-nodes.md). A custom node has its own place in the palette
+and its own properties in the property panel. It can transform messages, act on them, or send them on a schedule.
+
+You can also run Python directly on the board from the editor. See
+[Commands and the Python prompt](debugging.md#commands-and-the-python-prompt).
 
 ## Running on the board
 
 The board runs [MicroPython](background/micropython.md), a version of Python 3 made for microcontrollers. You install
 it once, then Thingstudio adds a small runtime of its own on top.
 
-Thingstudio's events rest on MicroPython's
-[`asyncio`](https://docs.micropython.org/en/latest/library/asyncio.html) module, its built-in support for
-event-driven programming. `asyncio` lets one program wait for many things at once: timers, pins and the network.
-Every flow you build runs as `asyncio` tasks.
-
 When you click **Deploy**, the editor turns your flow into MicroPython code and compiles it. It sends the result to
 the board over USB or WiFi, and the board swaps it in and starts running it. There's no firmware to flash, so
 changing a flow and trying it again takes seconds. The board keeps the flow and runs it again after a restart.
 
-## Where your own code goes
+## Built on standard parts
 
-Nodes cover the common jobs: timers, pins, displays, sensors, WiFi, MQTT, HTTP. For anything else there's the
-**function** node, which runs a few lines of your own Python on each message:
+Thingstudio tries not to reinvent the wheel.
 
-```python
-msg['payload'] = msg['payload'] * 1.8 + 32
-return msg
-```
-
-When you find yourself writing the same function node twice, you can make it a node of its own. See
-[writing custom nodes](custom-nodes.md). And you can still reach the board's Python prompt from the editor at any
-time.
+- MicroPython's [`asyncio`](https://docs.micropython.org/en/latest/library/asyncio.html) provides the event-driven
+  primitives.
+- Tried and tested libraries provide extra functionality and hardware drivers, such as Peter Hinch's
+  [`mqtt_as`](https://github.com/peterhinch/micropython-mqtt) and
+  [`micropython-async`](https://github.com/peterhinch/micropython-async), and drivers from
+  [`micropython-lib`](https://github.com/micropython/micropython-lib).
+- What comes out is plain MicroPython. You can read it in the editor's **Compiled source** panel.
 
 ## What you need
 
-- A board with an ESP32-family or RP2040/RP2350 chip. See [boards and processors](boards.md). Other MicroPython
-  boards should work too, but we can't test everything. See
-  [other microcontrollers](installing-micropython.md#other-microcontrollers).
+- A board with an ESP32 or RP2040/RP2350 processor. [Supported hardware](supported-hardware.md) lists what's been
+  tested. Other boards that run MicroPython may work.
 - A USB cable that carries data, not just power.
 - Some knowledge of Python, enough to write a few lines.
 - Some knowledge of electronics, enough to wire up an LED.
@@ -104,5 +132,5 @@ time.
 [Getting started](getting-started.md) lists the steps from a new board to a blinking LED, and starts you on the
 first one.
 
-These docs follow the latest code. The copy inside Thingstudio (**Help → User guide**) matches the version you have
-installed.
+The docs on [docs.thingstudio.net](https://docs.thingstudio.net/) follow the latest code. The docs inside Thingstudio
+(**Help → User guide**) match the version you have installed.

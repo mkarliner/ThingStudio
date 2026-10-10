@@ -10,7 +10,7 @@ button being held is let go without sending.
 ## Settings
 
 - **controller** — the touch chip. Only the FT6336U (as on the Freenove ESP32-S3 displays) is supported so far.
-- **I2C bus** — the bus the panel is wired to. See [I2C buses](i2c-bus.md). On the Freenove 4.0" board: SDA 16,
+- **I2C bus** — the bus the panel is wired to. See [I2C bus](i2c-bus.md). On the Freenove 4.0" board: SDA 16,
   SCL 15.
 - **address** — the chip's I2C address. 0x38 for the FT6336U.
 - **reset pin** — the panel's reset pin, if it has one (Freenove: 18). Blank for none.

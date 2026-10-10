@@ -1,7 +1,7 @@
 # display spi
 
-Pushes an already-rendered frame to an SPI color TFT panel (ST7789 today — the `controller` property
-leaves room for others later). Build the frame upstream (a `function` node using `framebuf.FrameBuffer`,
+Pushes an already-rendered frame to an SPI color TFT panel. [Supported hardware](../supported-hardware.md#displays)
+lists the display chips. Build the frame upstream (a `function` node using `framebuf.FrameBuffer`,
 or eventually a graphics-framework node) and wire it into this node's input.
 
 This node's property panel has a **preset** picker (see [Canvas basics](../canvas-basics.md#presets)) —
@@ -11,8 +11,7 @@ defaults below are exactly what saving a "cyd" preset from a correctly-configure
 
 ## Properties
 
-- **controller** — the display chip: `ST7789` (240x240, 135x240, 240x320) or `ST7796` (320x480). An
-  ST7796 panel has no offset, so leave xstart / ystart at `-1`.
+- **controller** — the display chip. See [Supported hardware](../supported-hardware.md#displays).
 - **frame format** — `rgb565` (default, full color, `width * height * 2` bytes), or an indexed
   format: `gs4` (4-bit, a quarter the memory), `gs2` (2-bit, an eighth), or `mono` (1-bit, a
   sixteenth). Switch away from `rgb565` if a full RGB565 buffer won't fit in memory — the lower the
@@ -44,6 +43,7 @@ defaults below are exactly what saving a "cyd" preset from a correctly-configure
   visible glass shows whatever stale pixels were already sitting in the uncovered part of memory
   (confirmed on real TiDAL hardware, 2026-09-18 — see `test-flows/README.md`'s
   `display-spi-tidal-test.flow.json` section for the full story).
+  An ST7796 panel has no offset: leave both at `-1`.
 
 Pins, bus, resolution, rotation, color order, inversion, and data latch order all vary board to board —
 there's no sensible default that works for more than one board, so confirm these against your own panel.
