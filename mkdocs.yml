@@ -61,6 +61,7 @@ nav:
       - 5. Blink an LED: first-flow.md
       - More on installing: installing-more.md
   - Canvas basics: canvas-basics.md
+  - A sensor display: sensor-display.md
   - Flow lifecycle: flow-lifecycle.md
   - Boards and processors: boards.md
   - Connecting over WiFi: wifi-connection.md
@@ -76,6 +77,7 @@ nav:
           - delay: nodes/delay.md
           - filter: nodes/filter.md
           - journal: nodes/journal.md
+          - clock: nodes/clock.md
           - debug: nodes/debug.md
       - Network:
           - wifi status: nodes/wifi-status.md

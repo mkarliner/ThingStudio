@@ -74,14 +74,17 @@ DEPENDENCIES: list[dict] = [
 FONT_SOURCES: dict[str, str] = {
     "body": "AtkinsonHyperlegible-Regular.ttf",
     "digits": "AtkinsonHyperlegible-Bold.ttf",
+    "seg7": "DSEG7Classic-Bold.ttf",  # a seven-segment look, for clocks (SIL OFL 1.1, tools/fonts/DSEG-LICENSE.txt)
 }
 FONT_CHARSETS: dict[str, str] = {
     "body": "".join(chr(c) for c in range(32, 127)) + "\u00b0\u00b1\u00b5",  # printable ASCII + degree, plus-minus, micro
     "digits": "0123456789.-+:% ",
+    "seg7": "0123456789:.- ",
 }
 FONT_SIZES: dict[str, list[int]] = {
     "body": [12, 16, 20, 24],
     "digits": [16, 24, 32, 48, 64],
+    "seg7": [48, 64, 96],
 }
 
 

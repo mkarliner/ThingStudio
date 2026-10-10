@@ -113,6 +113,7 @@ export type NodeKind =
   | "gui_bar"
   | "gui_trend"
   | "journal"
+  | "clock"
   | "gui_led"
   | "gui_button"
   | "gui_navigator"
@@ -208,6 +209,8 @@ export const NODE_PALETTE: Record<NodeKind, KindStyle> = {
   touch_i2c: { color: "#8a4a2e", bgcolor: "#4a2a1f", icon: "☝", label: "touch", group: "hardware", priority: 16 },
   bme280: { color: "#8a4a2e", bgcolor: "#4a2a1f", icon: "°", label: "bme280", group: "hardware", priority: 15 },
   // journal added 2026-10-10: teal beside filter, "≋" for a stream kept over time.
+  // clock added 2026-10-10.
+  clock: { color: "#2e6e4a", bgcolor: "#1f3f2c", icon: "◷", label: "clock", group: "general", priority: 37 },
   journal: { color: "#2e6e4a", bgcolor: "#1f3f2c", icon: "≋", label: "journal", group: "general", priority: 36 },
   filter: { color: "#2e6e4a", bgcolor: "#1f3f2c", icon: "▽", label: "filter", group: "general", priority: 35 },
   // Blue -- see this file's header for the icon reasoning.

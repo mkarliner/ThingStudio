@@ -47,9 +47,17 @@ import time as _real_time
 
 class _Clock:
     now = 0
+    # Wall-clock UTC seconds for time.time(); ntptime's mock sets it. None until set (falls through to the real
+    # clock, as before).
+    epoch = None
 
 
 CLOCK = _Clock()
+
+
+def time():
+    # Added 2026-10-10 for node-clock.test.ts. Tests set CLOCK.epoch directly.
+    return _real_time.time() if CLOCK.epoch is None else CLOCK.epoch
 
 
 def ticks_ms():

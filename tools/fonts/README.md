@@ -13,3 +13,8 @@ sizes and character sets is in `device-runtime/runtime_manifest.py` (`FONT_SOURC
 
 Chosen by Mike, 2026-10-07, from a look test against DejaVu Sans and Spleen
 (`docs/working-notes/gui-font-pipeline-scoping.md`).
+
+- `DSEG7Classic-Bold.ttf`: DSEG7 Classic Bold from DSEG v0.46 by Keshikan
+  ([keshikan/DSEG](https://github.com/keshikan/DSEG)), seven-segment display font. SIL Open Font License 1.1,
+  `DSEG-LICENSE.txt`; Reserved Font Name "DSEG". Unmodified. sha256 begins `d16181c4eeae29e695ca`.
+  Used as the `seg7` set (digits, colon, dot, minus, space) for clock readouts.

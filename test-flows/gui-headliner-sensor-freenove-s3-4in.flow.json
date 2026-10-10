@@ -229,6 +229,43 @@
         "qos": 0,
         "brokerConfigId": "cfg-mqtt"
       }
+    },
+    {
+      "id": "n41-ctick",
+      "type": "thingstudio/timer",
+      "properties": {
+        "intervalMs": 1000
+      }
+    },
+    {
+      "id": "n40-clock",
+      "type": "thingstudio/clock",
+      "properties": {
+        "server": "pool.ntp.org",
+        "utcOffset": 0,
+        "dst": "eu",
+        "hour12": false,
+        "seconds": false,
+        "blink": false
+      }
+    },
+    {
+      "id": "n42-ctime",
+      "type": "thingstudio/gui_label",
+      "properties": {
+        "name": "Time",
+        "maxChars": 5,
+        "staleAfter": 0
+      }
+    },
+    {
+      "id": "n43-cdate",
+      "type": "thingstudio/gui_label",
+      "properties": {
+        "name": "Date",
+        "maxChars": 10,
+        "staleAfter": 0
+      }
     }
   ],
   "edges": [
@@ -338,6 +375,24 @@
       "n02-split",
       2,
       "n32-pub-p",
+      0
+    ],
+    [
+      "n41-ctick",
+      0,
+      "n40-clock",
+      0
+    ],
+    [
+      "n40-clock",
+      0,
+      "n42-ctime",
+      0
+    ],
+    [
+      "n40-clock",
+      1,
+      "n43-cdate",
       0
     ]
   ],
@@ -467,6 +522,30 @@
         760,
         340
       ]
+    },
+    "n41-ctick": {
+      "pos": [
+        60,
+        780
+      ]
+    },
+    "n40-clock": {
+      "pos": [
+        280,
+        780
+      ]
+    },
+    "n42-ctime": {
+      "pos": [
+        520,
+        780
+      ]
+    },
+    "n43-cdate": {
+      "pos": [
+        520,
+        850
+      ]
     }
   },
   "configs": [
@@ -532,7 +611,11 @@
     "n10-nav": "pane-1",
     "n11-navdbg": "pane-1",
     "n12-screen": "pane-1",
-    "n13-display": "pane-1"
+    "n13-display": "pane-1",
+    "n41-ctick": "pane-1",
+    "n40-clock": "pane-1",
+    "n42-ctime": "pane-1",
+    "n43-cdate": "pane-1"
   },
   "screens": {
     "n12-screen": {
@@ -685,9 +768,56 @@
               }
             ]
           }
+        },
+        {
+          "name": "clock",
+          "root": {
+            "kind": "column",
+            "gap": 6,
+            "padding": 4,
+            "children": [
+              {
+                "kind": "row",
+                "padding": 6,
+                "alignSelf": "stretch",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "Clock",
+                    "font": "font_body20",
+                    "grow": 1
+                  }
+                ]
+              },
+              {
+                "kind": "spacer",
+                "grow": 1
+              },
+              {
+                "kind": "widget",
+                "node": "n42-ctime",
+                "font": "font_seg764",
+                "alignSelf": "center"
+              },
+              {
+                "kind": "widget",
+                "node": "n43-cdate",
+                "font": "font_body24",
+                "alignSelf": "center"
+              },
+              {
+                "kind": "spacer",
+                "grow": 2
+              },
+              {
+                "kind": "pagedots",
+                "alignSelf": "center"
+              }
+            ]
+          }
         }
       ]
     }
   },
-  "notes": "Climate on the Freenove FNK0104S: a BME280 on the touch panel's I2C bus (SCL 15, SDA 16, address 0x76) shows temperature, humidity and pressure in landscape (the display's orientation is 90).\n\nReadings come every 5 seconds. Two journals keep the temperature, as in RRDtool: one row per 10 seconds for the last 26 minutes, and its per-minute roll-up (average, with min and max) for the last 2.6 hours. Each bar is the average and the thin line its min to max. Pressure keeps a row a minute. The trend range is fixed (15 to 30 C, 970 to 1050 hPa): change it in the trend's properties. A reading that stops arriving dims the numbers after 15 seconds and the Sensor light goes grey. The pages change by themselves every 8 seconds.\n\nEach reading is also published over MQTT to thingstudio/headliner/temperature, /humidity and /pressure on your broker (the WiFi and broker settings are the ones named mihome and verdi-mqtt-broker: change them in the flow's settings to your own).\n\nWire the sensor to 3V3, GND, SCL 15 and SDA 16. Set the screen's width and height to the panel's own size (320x480) when you turn the display."
+  "notes": "Climate on the Freenove FNK0104S: a BME280 on the touch panel's I2C bus (SCL 15, SDA 16, address 0x76) shows temperature, humidity and pressure in landscape (the display's orientation is 90).\n\nReadings come every 5 seconds. Two journals keep the temperature, as in RRDtool: one row per 10 seconds for the last 26 minutes, and its per-minute roll-up (average, with min and max) for the last 2.6 hours. Each bar is the average and the thin line its min to max. Pressure keeps a row a minute. The trend range is fixed (15 to 30 C, 970 to 1050 hPa): change it in the trend's properties. A reading that stops arriving dims the numbers after 15 seconds and the Sensor light goes grey. The pages change by themselves every 8 seconds. The third page is a clock in seven-segment digits: the time comes from NTP over WiFi (UK / EU summer time applied automatically, UTC offset 0: set the clock node's offset for other zones), so it shows -- until WiFi is up and the first sync works.\n\nEach reading is also published over MQTT to thingstudio/headliner/temperature, /humidity and /pressure on your broker (the WiFi and broker settings are the ones named mihome and verdi-mqtt-broker: change them in the flow's settings to your own).\n\nWire the sensor to 3V3, GND, SCL 15 and SDA 16. Set the screen's width and height to the panel's own size (320x480) when you turn the display."
 }

@@ -5,10 +5,11 @@ import { describe, expect, it } from "vitest";
 import { fontIds, getFont, glyphBitmap, missingChars, textWidth, widestWidth } from "../src/gui/font-metrics.js";
 
 describe("font set", () => {
-  it("has the body and digits ladders", () => {
+  it("has the body, digits and seven-segment ladders", () => {
     expect(fontIds()).toEqual([
       "font_body12", "font_body16", "font_body20", "font_body24",
       "font_digits16", "font_digits24", "font_digits32", "font_digits48", "font_digits64",
+      "font_seg748", "font_seg764", "font_seg796",
     ]);
   });
 

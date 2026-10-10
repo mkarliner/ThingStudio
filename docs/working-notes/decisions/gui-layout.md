@@ -220,7 +220,7 @@ the msg is open.
   `rotation` means how the panel is mounted (0 to 3, mirror bits only). MADCTL bits and touch flags are derived by
   search (`orientation-shared.ts`); 90 matches Adafruit's table (MV|MX from rotation 0). No orientation: today's raw
   behaviour. Not yet supported with an orientation: panel offsets (xstart/ystart, 135x240). `touch_i2c` (raw) is not
-  turned. Old flows with orientation configs ignore them. Checked on the FNK0104S (2026-10-09): 90 and 270 draw correctly and touch lands (smoke test). The screen-vs-display size check refuses a mismatch at deploy.
+  turned. Old flows with orientation configs ignore them. Checked on the FNK0104S: 90 and 270 draw correctly and touch lands (smoke test, 2026-10-09); touch checked at 90, 180 and 270 and the press highlight (hold, slide off) with the orientation test flow, 2026-10-10. The screen-vs-display size check refuses a mismatch at deploy.
 - 2026-10-10 (Mike): **trend widget and journal node built** (the 2026-10-07 decision), as one piece. `journal`: one
   RRDtool-style archive, rows of avg/min/max in three `array('f')` rings (12 bytes a row, up to 256 rows), gaps as
   NaN, an optional roll-up output every N rows (xff = gaps allowed) so journals cascade, min and max travelling down.
@@ -232,4 +232,12 @@ the msg is open.
   `series` port type (wiring a scalar into a trend is a runtime error on the widget, not a compile error),
   autoscale, persistence, RRDtool COUNTER/DERIVE types, a GUI-view helper that creates a journal cascade.
   The headliner flow uses two journals for temperature (26 minutes, 2.6 hours) and one for pressure.
+- **Clock (2026-10-10, Mike: "automatic UK/EU daylight saving is enough"; "no blink (or option)").** A `clock` node
+  (transform on timer ticks; outputs time and date text, each only on change) with its own `ntptime.settime()` sync:
+  retry every 30 s, hourly once synced, nothing sent until synced. No NTP node: MicroPython has no zones, so the
+  clock node holds the offset and the EU rule (01:00 UTC last Sunday of March to October). Other DST rules are out of
+  scope (offset by hand). Colon steady; "blink the colon" option off by default. `seg7` font set from DSEG7 Classic
+  Bold (OFL 1.1), sizes 48/64/96, charset `0123456789:.- `. HH:MM is 221 px at 64 and 331 px at 96, so a 320-wide
+  portrait screen uses 64 (48 with seconds). Hardware-checked on the S3 (Freenove 4in) 2026-10-10. Not yet checked: `ntptime` on other boards
+  (the import is guarded), and the blocking sync (up to ~1 s) holding up other messages.
 

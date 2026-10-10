@@ -70,8 +70,9 @@ not here.
 - **[LAUNCH]** **Freenove FNK0104S board support -- built 2026-10-08, hardware checks owed.** Board
   definition `freenove-s3-4in`, ST7796 in `display_spi`, full colour, landscape; install docs name the
   `SPIRAM_OCT` S3 build. Replaces the FNK0104B (2026-10-09, `decisions/launch-scope.md`); ILI9341 is no longer
-  launch work. Owed on hardware: landscape touch axes, the press-highlight fix. `st7796py`'s README still says
-  "not confirmed on real hardware": update it (confirmed on Mike's panel only).
+  launch work. Hardware-checked 2026-10-10 with `test-flows/gui-orientation-test-freenove-s3-4in.flow.json`: touch lands right at 90, 180 and 270, and
+  the press highlight holds and releases (hold, slide off). Orientation 0 is the unturned picture the earlier hero/touch flows already used.
+  `st7796py`'s README updated 2026-10-10 (confirmed on Mike's panel only).
 - **[LAUNCH]** **CYD gate for custom firmware images.** Run the gate in `decisions/gui-layout.md` (2026-10-09)
   on a classic CYD. Pass: custom images are post-MVP. Fail: build a small set of custom images (classic ESP32
   first) with the packaging, hosting and flashing-docs work that brings. `frozen-firmware-spike-briefing.md`.
@@ -89,10 +90,10 @@ not here.
 - **[LAUNCH]** **`touch_i2c` node (FT6336U first).** Event source; design for the GT911/FT6236/CST820
   family. `touch-input-briefing.md`. `touch_spi` (classic CYD) can follow.
 - **[LAUNCH]** **Headliner (showreel) flow and task guide** -- the flow is built
-  (`test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json`): BME280 readouts and trends are hardware-checked
-  2026-10-10; the MQTT publish was added after and is not yet run on the board. Owed: that check, and the task
-  guide in the user docs.
-- **[LAUNCH]** **External controls example flow (split from the headliner, Mike 2026-10-10).** A Tasmota plug or WLED
+  (`test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json`): BME280 readouts, trends and MQTT publish are all
+  hardware-checked 2026-10-10. A clock page (third page, `clock` node + seven-segment label) was added 2026-10-10 and is
+  hardware-checked 2026-10-10 (NTP sync, summer time, `ntptime` present on the S3). The task guide is written (`docs/user-guide/sensor-display.md`, 2026-10-10).
+- **[LAUNCH]** **External controls example flow (split from the headliner, Mike 2026-10-10).** **Moved to the end of the MVP queue (Mike, 2026-10-10).** A Tasmota plug or WLED
   strip: its state subscribed and shown, an on-screen toggle over MQTT, unknown/stale values, WiFi pulled changes the
   screen. Carries the launch acceptance for touch, MQTT both ways and unknown/stale on hardware. Mike chooses the
   device. Not built.
@@ -105,7 +106,7 @@ not here.
   spectrum from a function node), the journal being just one producer. First version: one journal (fixed step, ring,
   gaps) and one widget (min-max bars with the average marked); cascading and the message format settled with Mike
   first. Memory-bounded: check the Pico and CYD.
-- **[LAUNCH]** **Memory-gate example flows on the common boards (Mike, 2026-10-09).** Besides the headliner (S3,
+- **[LAUNCH]** **Memory-gate example flows on the common boards (Mike, 2026-10-09).** **Moved to the end of the MVP queue (Mike, 2026-10-10).** Besides the headliner (S3,
   PSRAM), define a few more examples that run on the most common boards: **RP2040/RP2350 (Pico W, Pico 2 W)** and
   **classic ESP32 (the CYD, no PSRAM)**. Their job is to find the memory limits: if these work, memory is not an
   issue until after the MVP. Candidates: classic ESP32 -- the GUI hero (readouts, MQTT, strips) on the CYD, display
@@ -115,7 +116,7 @@ not here.
   (`decisions/gui-layout.md`, 2026-10-06 Pico constraint). Not scoped further yet.
 - **[LAUNCH]** **Newcomer test with a target-group tester** (a maker who knows MicroPython). Re-runs the
   `road-to-mvp.md` acceptance test after the docs restructure.
-- **[LAUNCH]** **Confirm the Pico W WiFi-password bug is fixed** on hardware (Mike thinks it is).
+- **[RESOLVED 2026-10-10]** **Pico W WiFi-password bug** -- Mike has confirmed on hardware (at least twice) that it is fixed.
 - **[LAUNCH]** **Headless compile/validate.** CLI first (existing TS compiler under Node); a backend move is
   its own design call. Needed for AI authoring.
 - **[LAUNCH]** **User-facing AI-authoring doc,** tested by a fresh agent session against a set task. Where

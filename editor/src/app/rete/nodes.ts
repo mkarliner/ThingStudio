@@ -168,6 +168,7 @@ import { httpResponseNode } from "../../node-library/http-response.js";
 import { delayNode } from "../../node-library/delay.js";
 import { filterNode, type FilterMode } from "../../node-library/filter.js";
 import { journalNode } from "../../node-library/journal.js";
+import { clockNode } from "../../node-library/clock.js";
 import { bme280Node } from "../../node-library/bme280.js";
 import { touchI2cNode } from "../../node-library/touch-i2c.js";
 import type { NodeDefinition } from "../../compiler/node-definition.js";
@@ -488,6 +489,33 @@ export class JournalNode extends ClassicPreset.Node {
   }
 }
 
+// Time of day from NTP, as text for a display (node-library/clock.ts). Output 1 is the time, output 2 the date.
+export class ClockNode extends ClassicPreset.Node {
+  width = 100;
+  height = NODE_HEIGHT + 20;
+  kind = "clock" as const;
+  nodeType = "thingstudio/clock";
+  highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
+
+  properties: { server: string; utcOffset: number; dst: "eu" | "none"; hour12: boolean; seconds: boolean; blink: boolean } = {
+    server: "pool.ntp.org",
+    utcOffset: 0,
+    dst: "eu",
+    hour12: false,
+    seconds: false,
+    blink: false,
+  };
+
+  constructor() {
+    super("clock");
+    this.addInput("msg", new ClassicPreset.Input(portSocket(clockNode.ports?.inputs, "msg", this.properties), "msg", true));
+    this.addOutput("time", new ClassicPreset.Output(portSocket(clockNode.ports?.outputs, "time", this.properties), "time"));
+    this.addOutput("date", new ClassicPreset.Output(portSocket(clockNode.ports?.outputs, "date", this.properties), "date"));
+  }
+}
+
 // BME280/BMP280 sensor on a shared I2C bus (node-library/bme280.ts).
 export class Bme280Node extends ClassicPreset.Node {
   width = 110;
@@ -530,6 +558,19 @@ export class TouchI2cNode extends ClassicPreset.Node {
 
 // GUI nodes (node-library/gui.ts, 2026-10-08). Where widgets sit is the flow's `screens` section, not a node
 // property; these hold only data properties (range, units, how long until stale).
+// The title a GUI node shows on the canvas until the user sets a flow label: what the node is for, not its type id.
+const GUI_CANVAS_TITLES: Record<string, string> = {
+  gui_screen: "screen",
+  gui_label: "show text",
+  gui_readout: "show number",
+  gui_bar: "show level",
+  gui_trend: "show history",
+  gui_led: "status light",
+  gui_button: "touch button",
+  gui_navigator: "change page",
+  gui_modal: "pop-up alert",
+};
+
 function guiClass<K extends string, P extends Record<string, unknown>>(kind: K, nodeType: string, width: number, props: () => P, def: NodeDefinition, hasInput: boolean, outputName: string | null) {
   return class extends ClassicPreset.Node {
     width = width;
@@ -542,7 +583,7 @@ function guiClass<K extends string, P extends Record<string, unknown>>(kind: K, 
     properties: P = props();
 
     constructor() {
-      super(kind);
+      super(GUI_CANVAS_TITLES[kind] ?? kind);
       if (hasInput) this.addInput("msg", new ClassicPreset.Input(portSocket(def.ports?.inputs, "msg", this.properties), "msg", true));
       if (outputName) this.addOutput(outputName, new ClassicPreset.Output(portSocket(def.ports?.outputs, outputName, this.properties), outputName));
     }
@@ -1209,6 +1250,7 @@ export type AnyThingstudioNode =
   | InstanceType<typeof GuiBarNode>
   | InstanceType<typeof GuiTrendNode>
   | JournalNode
+  | ClockNode
   | InstanceType<typeof GuiLedNode>
   | InstanceType<typeof GuiButtonNode>
   | InstanceType<typeof GuiNavigatorNode>
@@ -1259,6 +1301,7 @@ export const NODE_FACTORIES: Record<NodeKind, () => AnyThingstudioNode> = {
   gui_bar: () => new GuiBarNode(),
   gui_trend: () => new GuiTrendNode(),
   journal: () => new JournalNode(),
+  clock: () => new ClockNode(),
   gui_led: () => new GuiLedNode(),
   gui_button: () => new GuiButtonNode(),
   gui_navigator: () => new GuiNavigatorNode(),

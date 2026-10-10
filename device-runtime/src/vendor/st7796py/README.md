@@ -10,4 +10,4 @@ uses the same sequence. Only the sequence is shared, no code is copied.
 - No hard reset when the board has no reset pin; a software reset runs either way.
 - Offsets are 0: this controller has no hidden margin, unlike ST7789 panels smaller than 240x320.
 
-Not yet confirmed on real hardware: the Freenove board is the first one it has been written for.
+Confirmed on real hardware (2026-10-10) on one panel only: Mike's Freenove ESP32-S3 Display 4.0" (FNK0104S), in full colour, at orientations 90, 180 and 270, with touch (0 is the unturned picture the earlier flows use).

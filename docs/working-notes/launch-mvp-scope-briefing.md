@@ -54,8 +54,8 @@ difference (Mike's unit is ST7789 despite ILI9341 docs). The classic CYD stays a
 
 **Split, 2026-10-10 (Mike): the showreel and the external-controls flow are two flows.** The toggle is not much use
 in a showreel video. The **headliner** is now parts 1 and the trends: BME280 readings, their history (journal and
-trend widgets), and publishing over MQTT (`test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json`; sensor and trends
-hardware-checked 2026-10-10, MQTT publish not yet run). A separate **external controls flow** carries parts 2 to 4 (listen, act, fail clearly: a Tasmota/WLED
+trend widgets), and publishing over MQTT (`test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json`; hardware-checked
+2026-10-10, including the MQTT publish). A separate **external controls flow** carries parts 2 to 4 (listen, act, fail clearly: a Tasmota/WLED
 state shown, a toggle, unknown and stale values, WiFi pulled). It stays a launch item, because the acceptance below
 (touch, MQTT both ways, unknown/stale on real hardware) is tested by it, not by the showreel. Mike picks the device.
 

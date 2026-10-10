@@ -403,6 +403,25 @@
           addresses that answer. Hex (0x29) or decimal both work.</p>
       </template>
 
+      <template v-else-if="node.kind === 'clock'">
+        <label>NTP server <input type="text" v-model="node.properties.server" @input="touch" /></label>
+        <label>UTC offset (hours)
+          <input type="number" min="-12" max="14" step="0.5" v-model.number="node.properties.utcOffset" @input="touch" />
+        </label>
+        <label>daylight saving
+          <select v-model="node.properties.dst" @change="touch">
+            <option value="eu">UK / EU: automatic</option>
+            <option value="none">none</option>
+          </select>
+        </label>
+        <label><input type="checkbox" v-model="node.properties.hour12" @change="touch" /> 12-hour</label>
+        <label><input type="checkbox" v-model="node.properties.seconds" @change="touch" /> show seconds</label>
+        <label><input type="checkbox" v-model="node.properties.blink" @change="touch" /> blink the colon</label>
+        <p class="hint">Wire a timer in (1 s for a clock with seconds). The first output sends the time, the second the date,
+          each only when it changes. Nothing is sent until the first NTP sync over WiFi, which is retried every 30 s and
+          repeated hourly. The offset is for standard time; UK / EU adds the summer hour itself.</p>
+      </template>
+
       <template v-else-if="node.kind === 'journal'">
         <label>rows kept <input type="number" min="1" max="256" v-model.number="node.properties.rows" @input="touch" /></label>
         <label>seconds per row (0 = one row per message)
