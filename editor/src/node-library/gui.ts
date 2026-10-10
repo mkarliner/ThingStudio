@@ -11,6 +11,7 @@
 //   gui_label      a value shown as text
 //   gui_readout    a number with units, sized for its value range
 //   gui_bar        a bar between low and high
+//   gui_trend      a moving histogram of a journal's series (or any list of numbers)
 //   gui_led        on/off status light
 //   gui_navigator  commands in (next, prev, back, home, or a page name); the page out when it changes
 //   gui_button     a touch button: momentary, toggle or navigate. Two-faced: its input sets what it shows, its
@@ -285,6 +286,7 @@ function widgetNode(type: string): NodeDefinition {
 export const guiLabelNode = widgetNode("thingstudio/gui_label");
 export const guiReadoutNode = widgetNode("thingstudio/gui_readout");
 export const guiBarNode = widgetNode("thingstudio/gui_bar");
+export const guiTrendNode = widgetNode("thingstudio/gui_trend");
 export const guiLedNode = widgetNode("thingstudio/gui_led");
 /** Two-faced (compiler/node-definition.ts, codegenEventSource): the input sets what the button shows -- a toggle's
  * state, or a value replacing its text -- and the output sends when it is tapped: {topic: <name>, payload: ...}.
@@ -381,4 +383,4 @@ function modalOnScreen(ctx: CodegenContext, node: GraphNode): void {
   }
 }
 
-export const GUI_NODES: NodeDefinition[] = [guiScreenNode, guiLabelNode, guiReadoutNode, guiBarNode, guiLedNode, guiButtonNode, guiNavigatorNode, guiModalNode];
+export const GUI_NODES: NodeDefinition[] = [guiScreenNode, guiLabelNode, guiReadoutNode, guiBarNode, guiTrendNode, guiLedNode, guiButtonNode, guiNavigatorNode, guiModalNode];

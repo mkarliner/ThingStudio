@@ -46,6 +46,12 @@ export interface BarConfig {
   readonly height?: number;
 }
 
+export interface TrendConfig {
+  readonly columns?: number;
+  readonly col_width?: number;
+  readonly height?: number;
+}
+
 export interface LedConfig {
   readonly diameter?: number;
 }
@@ -114,6 +120,10 @@ export function barNatural(cfg: BarConfig = {}): Size {
   return { width: cfg.min_width ?? 40, height: cfg.height ?? 12 };
 }
 
+export function trendNatural(cfg: TrendConfig = {}): Size {
+  return { width: (cfg.columns ?? 60) * (cfg.col_width ?? 3) + 4, height: cfg.height ?? 48 };
+}
+
 export function ledNatural(cfg: LedConfig = {}): Size {
   const d = cfg.diameter ?? 12;
   return { width: d, height: d };
@@ -124,7 +134,7 @@ export function pageDotsNatural(cfg: PageDotsConfig): Size {
   return { width: cfg.pages * d + Math.max(0, cfg.pages - 1) * (cfg.gap ?? 4), height: d };
 }
 
-export type WidgetKind = "label" | "readout" | "bar" | "led" | "pagedots" | "button";
+export type WidgetKind = "label" | "readout" | "bar" | "trend" | "led" | "pagedots" | "button";
 
 /** Natural size of any widget kind from its config (the fixture's shape). */
 export function widgetNatural(kind: WidgetKind, cfg: Record<string, unknown>): Size {
@@ -135,6 +145,8 @@ export function widgetNatural(kind: WidgetKind, cfg: Record<string, unknown>): S
       return readoutNatural(cfg as unknown as ReadoutConfig);
     case "bar":
       return barNatural(cfg as BarConfig);
+    case "trend":
+      return trendNatural(cfg as TrendConfig);
     case "led":
       return ledNatural(cfg as LedConfig);
     case "pagedots":

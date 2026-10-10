@@ -12,6 +12,7 @@ pages are laid out by editing the flow file. The GUI view, where you lay them ou
   show, and how many decimals. Its space is sized for that range.
 - **gui label** — shows `msg.payload` as text.
 - **gui bar** — a bar that fills between *empty at* and *full at*.
+- **gui trend** — a moving histogram: a row of bars, oldest on the left, newest on the right. See [Trend](#trend).
 - **gui light** — on when `msg.payload` is true, off when false.
 - **gui button** — a touch button. It has an input, which sets what it shows, and an output, which sends when it is
   tapped. See [Buttons](#buttons).
@@ -24,6 +25,19 @@ pages are laid out by editing the flow file. The GUI view, where you lay them ou
 
 Each widget starts as `--` until a value arrives. With **stale after** set, a value that isn't updated in
 time is dimmed (or underlined, on a black-and-white display), so an old reading never looks current.
+
+## Trend
+
+Shows what a number can't: which way it is heading. Wire it to the first output of a [journal](journal.md), or to
+any node that sends a list of numbers (a `None` is a gap), such as a spectrum from a function node.
+
+Each bar is a row's average, with a thin line from the row's min to its max. A gap is empty. A wider space shows more
+history: it draws as many bars as fit, newest at the right edge.
+
+- **bottom at / top at** — the range of the bars. Values outside are cut off at the edge. The range is fixed.
+- **columns, column width, height** — the natural size: it is as wide as columns times column width, plus the border.
+  In a layout it can stretch, and then shows more rows.
+- **stale after** — dims the bars if nothing new arrives in this time.
 
 ## Buttons
 

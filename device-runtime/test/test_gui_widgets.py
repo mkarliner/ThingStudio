@@ -25,6 +25,7 @@ import label  # noqa: E402
 import led  # noqa: E402
 import pagedots  # noqa: E402
 import readout  # noqa: E402
+import trend  # noqa: E402
 
 _HERE = __file__.rsplit("/", 1)[0] if "/" in __file__ else "."
 _FIXTURE = _HERE + "/../../editor/test/fixtures/gui-widget-sizes.json"
@@ -242,6 +243,90 @@ def test_a_toggle_shows_on_off_and_its_unknown_pending_and_failed_looks_differ_a
                 assert looks[names[i]] != looks[names[j]], (names[i], names[j], "look the same")
 
 
+class _Series:
+    """What a journal sends, in the shape the widget reads."""
+
+    def __init__(self, rows, values):
+        nan = float("nan")
+        self.rows = rows
+        self.avg = [nan] * rows
+        self.lo = [nan] * rows
+        self.hi = [nan] * rows
+        self.n = 0
+        self.head = 0
+        for a, lo, hi in values:
+            self.avg[self.head], self.lo[self.head], self.hi[self.head] = a, lo, hi
+            self.head = (self.head + 1) % rows
+            self.n = min(self.n + 1, rows)
+
+
+def _column_has_ink(s, x, y, h):
+    return any(s.fb.pixel(x, j) != s.background for j in range(y, y + h))
+
+
+def test_trend_draws_the_newest_on_the_right_and_leaves_gaps_empty():
+    draw = trend.make(0, 100, 3)
+    rect = (0, 0, 40, 30)  # 36 px inside -> 12 columns of 3
+    nan = float("nan")
+    series = _Series(8, [(50, 50, 50), (nan, nan, nan), (100, 100, 100)])
+    s = _surface(framebuf.GS4_HMSB, FORMATS[0][1])
+    draw(s, rect, series, gui.KNOWN)
+    # 3 rows: the oldest at columns 2 columns left of the newest; the newest sits against the right edge.
+    right = 40 - 2
+    assert _column_has_ink(s, right - 3, 0, 30)  # newest (100): full height
+    assert not _column_has_ink(s, right - 6, 3, 24)  # gap
+    assert _column_has_ink(s, right - 9, 3, 24)  # oldest (50)
+    full = sum(1 for j in range(30) if s.fb.pixel(right - 3, j) == 15 or s.fb.pixel(right - 3, j) == s.accent)
+    assert full >= 26
+
+
+def test_trend_draws_min_max_whiskers_and_plain_lists():
+    draw = trend.make(0, 100, 3)
+    rect = (0, 0, 40, 40)
+    s = _surface(framebuf.GS4_HMSB, FORMATS[0][1])
+    draw(s, rect, _Series(4, [(20, 10, 80)]), gui.KNOWN)
+    centre = 40 - 2 - 3 + 1
+    assert s.fb.pixel(centre, 40 - 2 - 28) == s.fg  # a line well above the bar's top (20% of 36 = 7 px)
+    t = _surface(framebuf.GS4_HMSB, FORMATS[0][1])
+    draw(t, rect, [10, None, 90], gui.KNOWN)  # a plain list, None is a gap
+    assert _column_has_ink(t, 40 - 2 - 3, 2, 36) and not _column_has_ink(t, 40 - 2 - 6, 2, 36)
+
+
+def test_trend_shows_only_what_fits_and_rejects_a_scalar():
+    draw = trend.make(0, 10, 2)
+    rect = (0, 0, 14, 20)  # 10 px inside -> 5 columns
+    s = _surface(framebuf.GS4_HMSB, FORMATS[0][1])
+    draw(s, rect, list(range(1, 11)), gui.KNOWN)  # 10 values, the last 5 are shown
+    assert [i for i in range(2, 12) if _column_has_ink(s, i, 2, 16)] == [2, 4, 6, 8, 10]  # 5 columns of 2 px, one bar px each
+    try:
+        draw(s, rect, 42, gui.KNOWN)
+    except ValueError as e:
+        assert "series or a list" in str(e)
+    else:
+        raise AssertionError("a scalar was accepted")
+
+
+def test_trend_unknown_known_and_stale_look_different_and_stay_inside():
+    draw = trend.make(0, 100, 3)
+    nat = trend.natural(10, 3, 30)
+    rect = (3, 5) + nat
+    for fmt, size in FORMATS:
+        looks = {}
+        for name, value, state in (("unknown", None, gui.UNKNOWN), ("known", [10, 40, 70, 100] * 3, gui.KNOWN), ("stale", [10, 40, 70, 100] * 3, gui.STALE)):
+            s = _surface(fmt, size)
+            s.fb.fill(0)
+            draw(s, rect, value, state)
+            assert _pixels_outside(s, rect) == 0, (name, fmt)
+            looks[name] = [s.fb.pixel(i, j) for j in range(H) for i in range(W)]
+        assert looks["unknown"] != looks["known"] and looks["known"] != looks["stale"]
+
+
+def test_trend_natural_size():
+    assert list(trend.natural(60, 3, 48)) == [184, 48]
+    assert list(trend.natural(10, 2, 20)) == [24, 20]
+
+
+
 minitest.run(
     [
         test_a_toggle_shows_on_off_and_its_unknown_pending_and_failed_looks_differ_and_stay_inside,
@@ -254,5 +339,10 @@ minitest.run(
         test_pagedots_follow_the_current_page,
         test_a_bad_value_is_reported_against_its_widget,
         test_a_button_looks_different_held_down_and_shows_a_value,
+        test_trend_draws_the_newest_on_the_right_and_leaves_gaps_empty,
+        test_trend_draws_min_max_whiskers_and_plain_lists,
+        test_trend_shows_only_what_fits_and_rejects_a_scalar,
+        test_trend_unknown_known_and_stale_look_different_and_stay_inside,
+        test_trend_natural_size,
     ]
 )

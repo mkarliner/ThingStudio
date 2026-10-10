@@ -5,6 +5,7 @@ import { displayI2cNode } from "./display-i2c.js";
 import { displaySpiNode } from "./display-spi.js";
 import { delayNode } from "./delay.js";
 import { filterNode } from "./filter.js";
+import { journalNode } from "./journal.js";
 import { bme280Node } from "./bme280.js";
 import { touchI2cNode } from "./touch-i2c.js";
 import { i2cGenericNode } from "./i2c-generic.js";
@@ -97,6 +98,7 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     udpReceiveNode,
     delayNode,
     filterNode,
+    journalNode,
     bme280Node,
     touchI2cNode,
     i2cGenericNode,

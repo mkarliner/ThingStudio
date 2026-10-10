@@ -167,10 +167,11 @@ import { httpInNode } from "../../node-library/http-in.js";
 import { httpResponseNode } from "../../node-library/http-response.js";
 import { delayNode } from "../../node-library/delay.js";
 import { filterNode, type FilterMode } from "../../node-library/filter.js";
+import { journalNode } from "../../node-library/journal.js";
 import { bme280Node } from "../../node-library/bme280.js";
 import { touchI2cNode } from "../../node-library/touch-i2c.js";
 import type { NodeDefinition } from "../../compiler/node-definition.js";
-import { guiBarNode, guiButtonNode, guiLabelNode, guiLedNode, guiModalNode, guiNavigatorNode, guiReadoutNode, guiScreenNode } from "../../node-library/gui.js";
+import { guiBarNode, guiTrendNode, guiButtonNode, guiLabelNode, guiLedNode, guiModalNode, guiNavigatorNode, guiReadoutNode, guiScreenNode } from "../../node-library/gui.js";
 import { i2cGenericNode } from "../../node-library/i2c-generic.js";
 import { mqttPublishNode } from "../../node-library/mqtt-publish.js";
 import { mqttSubscribeNode } from "../../node-library/mqtt-subscribe.js";
@@ -461,6 +462,32 @@ export class FilterNode extends ClassicPreset.Node {
   }
 }
 
+// A rolling archive of readings, one row per time step or per message (node-library/journal.ts). Output 1 is the
+// series (for a trend widget), output 2 the consolidated value every `steps` rows (for the next journal).
+export class JournalNode extends ClassicPreset.Node {
+  width = 100;
+  height = NODE_HEIGHT + 20;
+  kind = "journal" as const;
+  nodeType = "thingstudio/journal";
+  highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
+
+  properties: { rows: number; stepSeconds: number; steps: number; xff: number } = {
+    rows: 60,
+    stepSeconds: 60,
+    steps: 0,
+    xff: 0.5,
+  };
+
+  constructor() {
+    super("journal");
+    this.addInput("msg", new ClassicPreset.Input(portSocket(journalNode.ports?.inputs, "msg", this.properties), "msg", true));
+    this.addOutput("series", new ClassicPreset.Output(portSocket(journalNode.ports?.outputs, "series", this.properties), "series"));
+    this.addOutput("rollup", new ClassicPreset.Output(portSocket(journalNode.ports?.outputs, "rollup", this.properties), "rollup"));
+  }
+}
+
 // BME280/BMP280 sensor on a shared I2C bus (node-library/bme280.ts).
 export class Bme280Node extends ClassicPreset.Node {
   width = 110;
@@ -526,6 +553,7 @@ export const GuiScreenNode = guiClass("gui_screen", "thingstudio/gui_screen", 11
 export const GuiLabelNode = guiClass("gui_label", "thingstudio/gui_label", 100, () => ({ name: "", maxChars: 8, staleAfter: 0 }), guiLabelNode, true, null);
 export const GuiReadoutNode = guiClass("gui_readout", "thingstudio/gui_readout", 110, () => ({ name: "", units: "", decimals: 1, lo: 0, hi: 100, staleAfter: 0 }), guiReadoutNode, true, null);
 export const GuiBarNode = guiClass("gui_bar", "thingstudio/gui_bar", 90, () => ({ name: "", lo: 0, hi: 100, staleAfter: 0 }), guiBarNode, true, null);
+export const GuiTrendNode = guiClass("gui_trend", "thingstudio/gui_trend", 100, () => ({ name: "", lo: 0, hi: 100, columns: 60, colWidth: 3, height: 48, staleAfter: 0 }), guiTrendNode, true, null);
 export const GuiLedNode = guiClass("gui_led", "thingstudio/gui_led", 90, () => ({ name: "", staleAfter: 0 }), guiLedNode, true, null);
 export const GuiButtonNode = guiClass(
   "gui_button",
@@ -1179,6 +1207,8 @@ export type AnyThingstudioNode =
   | InstanceType<typeof GuiLabelNode>
   | InstanceType<typeof GuiReadoutNode>
   | InstanceType<typeof GuiBarNode>
+  | InstanceType<typeof GuiTrendNode>
+  | JournalNode
   | InstanceType<typeof GuiLedNode>
   | InstanceType<typeof GuiButtonNode>
   | InstanceType<typeof GuiNavigatorNode>
@@ -1227,6 +1257,8 @@ export const NODE_FACTORIES: Record<NodeKind, () => AnyThingstudioNode> = {
   gui_label: () => new GuiLabelNode(),
   gui_readout: () => new GuiReadoutNode(),
   gui_bar: () => new GuiBarNode(),
+  gui_trend: () => new GuiTrendNode(),
+  journal: () => new JournalNode(),
   gui_led: () => new GuiLedNode(),
   gui_button: () => new GuiButtonNode(),
   gui_navigator: () => new GuiNavigatorNode(),

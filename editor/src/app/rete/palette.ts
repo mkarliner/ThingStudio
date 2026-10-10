@@ -111,6 +111,8 @@ export type NodeKind =
   | "gui_label"
   | "gui_readout"
   | "gui_bar"
+  | "gui_trend"
+  | "journal"
   | "gui_led"
   | "gui_button"
   | "gui_navigator"
@@ -205,6 +207,8 @@ export const NODE_PALETTE: Record<NodeKind, KindStyle> = {
   i2c: { color: "#2e3f8a", bgcolor: "#1f2a4a", icon: "⇄", label: "i2c", group: "hardware", priority: 45 },
   touch_i2c: { color: "#8a4a2e", bgcolor: "#4a2a1f", icon: "☝", label: "touch", group: "hardware", priority: 16 },
   bme280: { color: "#8a4a2e", bgcolor: "#4a2a1f", icon: "°", label: "bme280", group: "hardware", priority: 15 },
+  // journal added 2026-10-10: teal beside filter, "≋" for a stream kept over time.
+  journal: { color: "#2e6e4a", bgcolor: "#1f3f2c", icon: "≋", label: "journal", group: "general", priority: 36 },
   filter: { color: "#2e6e4a", bgcolor: "#1f3f2c", icon: "▽", label: "filter", group: "general", priority: 35 },
   // Blue -- see this file's header for the icon reasoning.
   pwm_out: { color: "#1f5c8a", bgcolor: "#12334a", icon: "∿", label: "pwm out", group: "hardware", priority: 30 },
@@ -215,6 +219,7 @@ export const NODE_PALETTE: Record<NodeKind, KindStyle> = {
   gui_readout: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "#", label: "readout", group: "GUI", priority: 40 },
   gui_label: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "T", label: "label", group: "GUI", priority: 41 },
   gui_bar: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "▬", label: "bar", group: "GUI", priority: 42 },
+  gui_trend: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "▁▃▆", label: "trend", group: "GUI", priority: 45 },
   gui_button: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "▭", label: "button", group: "GUI", priority: 44 },
   gui_led: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "●", label: "light", group: "GUI", priority: 43 },
 };

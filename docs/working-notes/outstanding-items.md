@@ -90,6 +90,16 @@ not here.
   family. `touch-input-briefing.md`. `touch_spi` (classic CYD) can follow.
 - **[LAUNCH]** **Headliner example flow and task guide** — "a touch panel for the things you already own"
   (BME280 + MQTT + Tasmota/WLED toggle + unknown/stale states). Confirm how the BME280 connects.
+- **[LAUNCH]** **Trend (moving histogram) widget and `journal` node -- built 2026-10-10 (hardware check owed), after being
+  decided 2026-10-07 and untracked until then.** Built: see `decisions/gui-layout.md` (2026-10-10). Owed: on the
+  FNK0104S with the headliner flow; memory on the Pico/CYD; a `series` port type, autoscale. Original note: Mike asked for an rrdtool/Cacti-style live histogram, and the headliner flow wants one beside the
+  temperature number (it currently has only a plain `gui_bar`, copied from the hero flow). Decisions are in
+  `decisions/gui-layout.md` (2026-10-07) and scoping in `gui-layout-widget-system-scoping.md`: one `journal` node per
+  time scale, cascaded; the trend widget is a pure view of one journal; unknown is a gap. Open: how a series crosses
+  the msg. Suggested (2026-10-10, not decided): a list payload, so the same widget also draws any array (a
+  spectrum from a function node), the journal being just one producer. First version: one journal (fixed step, ring,
+  gaps) and one widget (min-max bars with the average marked); cascading and the message format settled with Mike
+  first. Memory-bounded: check the Pico and CYD.
 - **[LAUNCH]** **Memory-gate example flows on the common boards (Mike, 2026-10-09).** Besides the headliner (S3,
   PSRAM), define a few more examples that run on the most common boards: **RP2040/RP2350 (Pico W, Pico 2 W)** and
   **classic ESP32 (the CYD, no PSRAM)**. Their job is to find the memory limits: if these work, memory is not an

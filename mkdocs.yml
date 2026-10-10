@@ -75,6 +75,7 @@ nav:
           - function: nodes/function.md
           - delay: nodes/delay.md
           - filter: nodes/filter.md
+          - journal: nodes/journal.md
           - debug: nodes/debug.md
       - Network:
           - wifi status: nodes/wifi-status.md

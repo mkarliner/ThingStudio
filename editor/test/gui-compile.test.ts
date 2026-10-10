@@ -429,7 +429,7 @@ describe("a full-colour (RGB565) GUI screen", () => {
   });
 });
 
-describe.each(["gui-hero-cyd.flow.json", "gui-hero-cyd-dummy.flow.json", "gui-hero-freenove-s3-4in.flow.json", "gui-hero-freenove-s3-4in-colour.flow.json", "gui-hero-freenove-s3-4in-landscape.flow.json", "gui-touch-freenove-s3-4in.flow.json"])("the example GUI flow test-flows/%s", (file) => {
+describe.each(["gui-hero-cyd.flow.json", "gui-hero-cyd-dummy.flow.json", "gui-hero-freenove-s3-4in.flow.json", "gui-hero-freenove-s3-4in-colour.flow.json", "gui-hero-freenove-s3-4in-landscape.flow.json", "gui-touch-freenove-s3-4in.flow.json", "gui-headliner-sensor-freenove-s3-4in.flow.json"])("the example GUI flow test-flows/%s", (file) => {
   it("loads and compiles without warnings", async () => {
     const { readFileSync } = await import("node:fs");
     const { parseFlowFile } = await import("../src/flow-file/flow-file.js");

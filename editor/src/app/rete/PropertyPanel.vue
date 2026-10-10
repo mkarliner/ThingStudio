@@ -250,6 +250,18 @@
         <label>stale after (s, 0 = never) <input type="number" min="0" v-model.number="node.properties.staleAfter" @input="touch" /></label>
       </template>
 
+      <template v-else-if="node.kind === 'gui_trend'">
+        <label>name <input type="text" v-model="node.properties.name" @input="touch" /></label>
+        <label>bottom at <input type="number" step="any" v-model.number="node.properties.lo" @input="touch" /></label>
+        <label>top at <input type="number" step="any" v-model.number="node.properties.hi" @input="touch" /></label>
+        <label>columns (natural width) <input type="number" min="1" v-model.number="node.properties.columns" @input="touch" /></label>
+        <label>column width (px) <input type="number" min="1" v-model.number="node.properties.colWidth" @input="touch" /></label>
+        <label>height (px) <input type="number" min="8" v-model.number="node.properties.height" @input="touch" /></label>
+        <label>stale after (s, 0 = never) <input type="number" min="0" v-model.number="node.properties.staleAfter" @input="touch" /></label>
+        <p class="hint">Draws the series a journal sends, newest on the right, or any list of numbers (None is a gap).
+          A wider space shows more history.</p>
+      </template>
+
       <template v-else-if="node.kind === 'gui_led'">
         <label>name <input type="text" v-model="node.properties.name" @input="touch" /></label>
         <label>stale after (s, 0 = never) <input type="number" min="0" v-model.number="node.properties.staleAfter" @input="touch" /></label>
@@ -389,6 +401,23 @@
         </label>
         <p class="hint">One transfer per incoming message. Read puts the bytes in msg.payload; scan puts the list of
           addresses that answer. Hex (0x29) or decimal both work.</p>
+      </template>
+
+      <template v-else-if="node.kind === 'journal'">
+        <label>rows kept <input type="number" min="1" max="256" v-model.number="node.properties.rows" @input="touch" /></label>
+        <label>seconds per row (0 = one row per message)
+          <input type="number" min="0" step="any" v-model.number="node.properties.stepSeconds" @input="touch" />
+        </label>
+        <label>rows per roll-up (0 = none)
+          <input type="number" min="0" v-model.number="node.properties.steps" @input="touch" />
+        </label>
+        <label v-if="node.properties.steps > 0">gaps allowed in a roll-up (0 to 1)
+          <input type="number" min="0" max="1" step="0.05" v-model.number="node.properties.xff" @input="touch" />
+        </label>
+        <p class="hint">Keeps the last rows of a number, as an average with its min and max. The first output sends the
+          series (wire it to a trend); the second sends one summary message every roll-up (wire it to the next journal for a
+          longer time scale). Rows with no readings are gaps. With seconds per row set, a row closes when a message
+          arrives after its time is up.</p>
       </template>
 
       <template v-else-if="node.kind === 'filter'">

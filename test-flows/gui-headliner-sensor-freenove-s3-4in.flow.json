@@ -1,0 +1,611 @@
+{
+  "formatVersion": 1,
+  "flowName": "gui-headliner-sensor-freenove-s3-4in",
+  "nodes": [
+    {
+      "id": "n01-sensor",
+      "type": "thingstudio/bme280",
+      "properties": {
+        "i2cConfigId": "cfg-i2c",
+        "address": 118,
+        "intervalMs": 5000
+      }
+    },
+    {
+      "id": "n02-split",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "# One BME280 reading in; one value out each way. A BMP280 has no humidity, so that output stays quiet.\np = msg['payload']\nt = {'topic': 'temperature', 'payload': p['temperature']}\nh = None\nif p['humidity'] is not None:\n    h = {'topic': 'humidity', 'payload': p['humidity']}\npr = {'topic': 'pressure', 'payload': p['pressure']}\nok = {'topic': 'sensor', 'payload': True}\nreturn [t, h, pr, pr, ok]\n",
+        "outputCount": 5
+      }
+    },
+    {
+      "id": "n03-temp",
+      "type": "thingstudio/gui_readout",
+      "properties": {
+        "name": "Temperature",
+        "units": "\u00b0C",
+        "decimals": 1,
+        "lo": -20,
+        "hi": 50,
+        "staleAfter": 15
+      }
+    },
+    {
+      "id": "n04-hum",
+      "type": "thingstudio/gui_readout",
+      "properties": {
+        "name": "Humidity",
+        "units": "%",
+        "decimals": 0,
+        "lo": 0,
+        "hi": 100,
+        "staleAfter": 15
+      }
+    },
+    {
+      "id": "n05-press",
+      "type": "thingstudio/gui_readout",
+      "properties": {
+        "name": "Pressure",
+        "units": "hPa",
+        "decimals": 0,
+        "lo": 900,
+        "hi": 1100,
+        "staleAfter": 15
+      }
+    },
+    {
+      "id": "n06-pbar",
+      "type": "thingstudio/gui_trend",
+      "properties": {
+        "name": "Pressure trend",
+        "lo": 970,
+        "hi": 1050,
+        "columns": 60,
+        "colWidth": 3,
+        "height": 120,
+        "staleAfter": 30
+      }
+    },
+    {
+      "id": "n07-alive",
+      "type": "thingstudio/gui_led",
+      "properties": {
+        "name": "Sensor",
+        "staleAfter": 15
+      }
+    },
+    {
+      "id": "n08-tick",
+      "type": "thingstudio/timer",
+      "properties": {
+        "intervalMs": 8000
+      }
+    },
+    {
+      "id": "n09-next",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "msg['payload'] = 'next'\nreturn msg\n",
+        "outputCount": 1
+      }
+    },
+    {
+      "id": "n10-nav",
+      "type": "thingstudio/gui_navigator",
+      "properties": {
+        "name": "nav",
+        "screen": ""
+      }
+    },
+    {
+      "id": "n11-navdbg",
+      "type": "thingstudio/debug",
+      "properties": {
+        "fullMessage": false
+      }
+    },
+    {
+      "id": "n12-screen",
+      "type": "thingstudio/gui_screen",
+      "properties": {
+        "name": "tft",
+        "width": 320,
+        "height": 480,
+        "frameFormat": "rgb565",
+        "minInterval": 200,
+        "wrap": true,
+        "touchPanelConfigId": "cfg-touch"
+      }
+    },
+    {
+      "id": "n13-display",
+      "type": "thingstudio/display_spi",
+      "properties": {
+        "controller": "st7796",
+        "frameFormat": "rgb565",
+        "spiBus": 1,
+        "baudrate": 40000000,
+        "sck": 12,
+        "mosi": 11,
+        "dc": 46,
+        "cs": 10,
+        "reset": -1,
+        "backlight": 45,
+        "width": 320,
+        "height": 480,
+        "rotation": 1,
+        "xstart": -1,
+        "ystart": -1,
+        "colorOrder": "bgr",
+        "invertColors": true,
+        "dataLatchOrder": true,
+        "orientation": "90"
+      }
+    },
+    {
+      "id": "n20-tj1",
+      "type": "thingstudio/journal",
+      "properties": {
+        "rows": 156,
+        "stepSeconds": 10,
+        "steps": 6,
+        "xff": 0.5
+      }
+    },
+    {
+      "id": "n21-tj2",
+      "type": "thingstudio/journal",
+      "properties": {
+        "rows": 156,
+        "stepSeconds": 0,
+        "steps": 0,
+        "xff": 0.5
+      }
+    },
+    {
+      "id": "n22-ttrend1",
+      "type": "thingstudio/gui_trend",
+      "properties": {
+        "name": "Temperature, minutes",
+        "lo": 15,
+        "hi": 30,
+        "columns": 60,
+        "colWidth": 3,
+        "height": 52,
+        "staleAfter": 30
+      }
+    },
+    {
+      "id": "n23-ttrend2",
+      "type": "thingstudio/gui_trend",
+      "properties": {
+        "name": "Temperature, hours",
+        "lo": 15,
+        "hi": 30,
+        "columns": 60,
+        "colWidth": 3,
+        "height": 52,
+        "staleAfter": 0
+      }
+    },
+    {
+      "id": "n24-pj",
+      "type": "thingstudio/journal",
+      "properties": {
+        "rows": 156,
+        "stepSeconds": 60,
+        "steps": 0,
+        "xff": 0.5
+      }
+    }
+  ],
+  "edges": [
+    [
+      "n01-sensor",
+      0,
+      "n02-split",
+      0
+    ],
+    [
+      "n02-split",
+      0,
+      "n03-temp",
+      0
+    ],
+    [
+      "n02-split",
+      1,
+      "n04-hum",
+      0
+    ],
+    [
+      "n02-split",
+      2,
+      "n05-press",
+      0
+    ],
+    [
+      "n02-split",
+      4,
+      "n07-alive",
+      0
+    ],
+    [
+      "n08-tick",
+      0,
+      "n09-next",
+      0
+    ],
+    [
+      "n09-next",
+      0,
+      "n10-nav",
+      0
+    ],
+    [
+      "n10-nav",
+      0,
+      "n11-navdbg",
+      0
+    ],
+    [
+      "n12-screen",
+      0,
+      "n13-display",
+      0
+    ],
+    [
+      "n02-split",
+      0,
+      "n20-tj1",
+      0
+    ],
+    [
+      "n20-tj1",
+      0,
+      "n22-ttrend1",
+      0
+    ],
+    [
+      "n20-tj1",
+      1,
+      "n21-tj2",
+      0
+    ],
+    [
+      "n21-tj2",
+      0,
+      "n23-ttrend2",
+      0
+    ],
+    [
+      "n02-split",
+      3,
+      "n24-pj",
+      0
+    ],
+    [
+      "n24-pj",
+      0,
+      "n06-pbar",
+      0
+    ]
+  ],
+  "layout": {
+    "n01-sensor": {
+      "pos": [
+        60,
+        200
+      ]
+    },
+    "n02-split": {
+      "pos": [
+        280,
+        200
+      ]
+    },
+    "n20-tj1": {
+      "pos": [
+        520,
+        40
+      ]
+    },
+    "n22-ttrend1": {
+      "pos": [
+        760,
+        40
+      ]
+    },
+    "n21-tj2": {
+      "pos": [
+        760,
+        120
+      ]
+    },
+    "n23-ttrend2": {
+      "pos": [
+        980,
+        120
+      ]
+    },
+    "n03-temp": {
+      "pos": [
+        520,
+        220
+      ]
+    },
+    "n04-hum": {
+      "pos": [
+        520,
+        290
+      ]
+    },
+    "n07-alive": {
+      "pos": [
+        520,
+        360
+      ]
+    },
+    "n05-press": {
+      "pos": [
+        520,
+        430
+      ]
+    },
+    "n24-pj": {
+      "pos": [
+        520,
+        510
+      ]
+    },
+    "n06-pbar": {
+      "pos": [
+        760,
+        510
+      ]
+    },
+    "n08-tick": {
+      "pos": [
+        60,
+        640
+      ]
+    },
+    "n09-next": {
+      "pos": [
+        280,
+        640
+      ]
+    },
+    "n10-nav": {
+      "pos": [
+        520,
+        640
+      ]
+    },
+    "n11-navdbg": {
+      "pos": [
+        760,
+        640
+      ]
+    },
+    "n12-screen": {
+      "pos": [
+        1000,
+        300
+      ]
+    },
+    "n13-display": {
+      "pos": [
+        1220,
+        300
+      ]
+    }
+  },
+  "configs": [
+    {
+      "id": "cfg-i2c",
+      "type": "thingstudio/config/i2c-bus",
+      "properties": {
+        "bus": 0,
+        "scl": 15,
+        "sda": 16,
+        "freq": 100000
+      }
+    },
+    {
+      "id": "cfg-touch",
+      "type": "thingstudio/config/touch-panel",
+      "properties": {
+        "controller": "ft6336u",
+        "i2cConfigId": "cfg-i2c",
+        "address": "0x38",
+        "rstPin": "",
+        "pollMs": 20,
+        "width": 320,
+        "height": 480,
+        "swapXY": false,
+        "flipX": false,
+        "flipY": false
+      }
+    }
+  ],
+  "panes": [
+    {
+      "id": "pane-1",
+      "name": "Flow 1"
+    }
+  ],
+  "paneOf": {
+    "n01-sensor": "pane-1",
+    "n02-split": "pane-1",
+    "n03-temp": "pane-1",
+    "n04-hum": "pane-1",
+    "n05-press": "pane-1",
+    "n06-pbar": "pane-1",
+    "n07-alive": "pane-1",
+    "n08-tick": "pane-1",
+    "n09-next": "pane-1",
+    "n10-nav": "pane-1",
+    "n11-navdbg": "pane-1",
+    "n12-screen": "pane-1",
+    "n13-display": "pane-1"
+  },
+  "screens": {
+    "n12-screen": {
+      "pages": [
+        {
+          "name": "climate",
+          "root": {
+            "kind": "column",
+            "gap": 6,
+            "padding": 4,
+            "children": [
+              {
+                "kind": "row",
+                "padding": 6,
+                "alignSelf": "stretch",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "Living room",
+                    "font": "font_body20",
+                    "grow": 1
+                  },
+                  {
+                    "kind": "widget",
+                    "node": "n07-alive",
+                    "diameter": 14
+                  }
+                ]
+              },
+              {
+                "kind": "row",
+                "alignSelf": "stretch",
+                "justify": "space-around",
+                "padding": 6,
+                "children": [
+                  {
+                    "kind": "column",
+                    "gap": 4,
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Temperature",
+                        "font": "font_body16"
+                      },
+                      {
+                        "kind": "widget",
+                        "node": "n03-temp",
+                        "font": "font_digits48",
+                        "unitsFont": "font_body24"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "column",
+                    "gap": 4,
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Humidity",
+                        "font": "font_body16"
+                      },
+                      {
+                        "kind": "widget",
+                        "node": "n04-hum",
+                        "font": "font_digits48",
+                        "unitsFont": "font_body24"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "Last 26 minutes",
+                "font": "font_body12"
+              },
+              {
+                "kind": "widget",
+                "node": "n22-ttrend1",
+                "alignSelf": "stretch",
+                "height": 52
+              },
+              {
+                "kind": "text",
+                "text": "Last 2.6 hours",
+                "font": "font_body12"
+              },
+              {
+                "kind": "widget",
+                "node": "n23-ttrend2",
+                "alignSelf": "stretch",
+                "height": 52
+              },
+              {
+                "kind": "spacer",
+                "grow": 1
+              },
+              {
+                "kind": "pagedots",
+                "alignSelf": "center"
+              }
+            ]
+          }
+        },
+        {
+          "name": "pressure",
+          "root": {
+            "kind": "column",
+            "gap": 6,
+            "padding": 4,
+            "children": [
+              {
+                "kind": "row",
+                "padding": 6,
+                "alignSelf": "stretch",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "Pressure",
+                    "font": "font_body20",
+                    "grow": 1
+                  }
+                ]
+              },
+              {
+                "kind": "widget",
+                "node": "n05-press",
+                "font": "font_digits48",
+                "unitsFont": "font_body20",
+                "alignSelf": "center"
+              },
+              {
+                "kind": "widget",
+                "node": "n06-pbar",
+                "alignSelf": "stretch",
+                "height": 120
+              },
+              {
+                "kind": "text",
+                "text": "Last 2.6 hours, 970 to 1050 hPa",
+                "font": "font_body12"
+              },
+              {
+                "kind": "spacer",
+                "grow": 1
+              },
+              {
+                "kind": "pagedots",
+                "alignSelf": "center"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "notes": "Climate on the Freenove FNK0104S: a BME280 on the touch panel's I2C bus (SCL 15, SDA 16, address 0x76) shows temperature, humidity and pressure in landscape (the display's orientation is 90).\n\nReadings come every 5 seconds. Two journals keep the temperature, as in RRDtool: one row per 10 seconds for the last 26 minutes, and its per-minute roll-up (average, with min and max) for the last 2.6 hours. Each bar is the average and the thin line its min to max. Pressure keeps a row a minute. The trend range is fixed (15 to 30 C, 970 to 1050 hPa): change it in the trend's properties. A reading that stops arriving dims the numbers after 15 seconds and the Sensor light goes grey. The pages change by themselves every 8 seconds.\n\nWire the sensor to 3V3, GND, SCL 15 and SDA 16. Set the screen's width and height to the panel's own size (320x480) when you turn the display."
+}

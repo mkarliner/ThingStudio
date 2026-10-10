@@ -221,3 +221,15 @@ the msg is open.
   search (`orientation-shared.ts`); 90 matches Adafruit's table (MV|MX from rotation 0). No orientation: today's raw
   behaviour. Not yet supported with an orientation: panel offsets (xstart/ystart, 135x240). `touch_i2c` (raw) is not
   turned. Old flows with orientation configs ignore them. Checked on the FNK0104S (2026-10-09): 90 and 270 draw correctly and touch lands (smoke test). The screen-vs-display size check refuses a mismatch at deploy.
+- 2026-10-10 (Mike): **trend widget and journal node built** (the 2026-10-07 decision), as one piece. `journal`: one
+  RRDtool-style archive, rows of avg/min/max in three `array('f')` rings (12 bytes a row, up to 256 rows), gaps as
+  NaN, an optional roll-up output every N rows (xff = gaps allowed) so journals cascade, min and max travelling down.
+  Rows close by time (`stepSeconds`, checked when a message arrives: no timer task) or one per message (0, for a
+  cascaded journal). Output 1 sends the journal itself as the series (live ring, no copy per row); output 2 the
+  roll-up. `gui_trend`: draws a row of columns, newest at the right, as many as fit the rect; bar to the average,
+  a line from min to max, gap empty; fixed range. It takes a journal or any plain list of numbers (None is a gap), so
+  one widget also serves a static histogram / spectrum, which Mike asked about -- no second widget. Not done: a
+  `series` port type (wiring a scalar into a trend is a runtime error on the widget, not a compile error),
+  autoscale, persistence, RRDtool COUNTER/DERIVE types, a GUI-view helper that creates a journal cascade.
+  The headliner flow uses two journals for temperature (26 minutes, 2.6 hours) and one for pressure.
+

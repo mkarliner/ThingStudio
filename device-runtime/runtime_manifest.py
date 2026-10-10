@@ -60,6 +60,7 @@ DEPENDENCIES: list[dict] = [
     {"name": "tsgui_label", "files": [("thingstudio_gui/label.py", "tsgui_label.py")], "requires": []},
     {"name": "tsgui_readout", "files": [("thingstudio_gui/readout.py", "tsgui_readout.py")], "requires": []},
     {"name": "tsgui_bar", "files": [("thingstudio_gui/bar.py", "tsgui_bar.py")], "requires": []},
+    {"name": "tsgui_trend", "files": [("thingstudio_gui/trend.py", "tsgui_trend.py")], "requires": []},
     {"name": "tsgui_led", "files": [("thingstudio_gui/led.py", "tsgui_led.py")], "requires": []},
     {"name": "tsgui_button", "files": [("thingstudio_gui/button.py", "tsgui_button.py")], "requires": []},
     {"name": "tsgui_pagedots", "files": [("thingstudio_gui/pagedots.py", "tsgui_pagedots.py")], "requires": []},

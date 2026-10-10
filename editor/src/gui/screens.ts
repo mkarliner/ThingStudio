@@ -14,7 +14,7 @@
 
 import { getFont, missingChars } from "./font-metrics.js";
 import { layoutPage, type Align, type Container, type Justify, type LayoutNode, type Rect } from "./layout.js";
-import { barNatural, buttonNatural, labelNatural, ledNatural, pageDotsNatural, readoutNatural } from "./widgets.js";
+import { barNatural, buttonNatural, labelNatural, ledNatural, pageDotsNatural, readoutNatural, trendNatural } from "./widgets.js";
 import type { GraphNode } from "../compiler/graph.js";
 
 // ---- the format ------------------------------------------------------------------------------------------
@@ -106,6 +106,7 @@ export const WIDGET_TYPES = {
   "thingstudio/gui_label": "label",
   "thingstudio/gui_readout": "readout",
   "thingstudio/gui_bar": "bar",
+  "thingstudio/gui_trend": "trend",
   "thingstudio/gui_led": "led",
   "thingstudio/gui_button": "button",
 } as const;
@@ -306,6 +307,16 @@ export function compileScreens(
             if (hi <= lo) throw new Error(`range low ${lo} must be below high ${hi}`);
             natural = barNatural({ min_width: el.minWidth, height: el.height });
             draw = `tsgui_bar.make(${pyNum(lo)}, ${pyNum(hi)})`;
+            break;
+          }
+          case "trend": {
+            const lo = num(p.lo, 0);
+            const hi = num(p.hi, 100);
+            if (hi <= lo) throw new Error(`range low ${lo} must be below high ${hi}`);
+            const colWidth = Math.max(1, Math.round(num(p.colWidth, 3)));
+            const columns = Math.max(1, Math.round(num(p.columns, 60)));
+            natural = trendNatural({ columns, col_width: colWidth, height: el.height ?? Math.max(8, Math.round(num(p.height, 48))) });
+            draw = `tsgui_trend.make(${pyNum(lo)}, ${pyNum(hi)}, ${colWidth})`;
             break;
           }
           case "button": {
