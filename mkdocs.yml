@@ -61,6 +61,7 @@ nav:
       - 5. Blink an LED: first-flow.md
       - More on installing: installing-more.md
   - Canvas basics: canvas-basics.md
+  - Check a flow without the editor: check-a-flow.md
   - A sensor display: sensor-display.md
   - Flow lifecycle: flow-lifecycle.md
   - Boards and processors: boards.md

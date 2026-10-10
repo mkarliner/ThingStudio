@@ -119,6 +119,11 @@ not here.
 - **[RESOLVED 2026-10-10]** **Pico W WiFi-password bug** -- Mike has confirmed on hardware (at least twice) that it is fixed.
 - **[LAUNCH]** **Headless compile/validate.** CLI first (existing TS compiler under Node); a backend move is
   its own design call. Needed for AI authoring.
+  **Built 2026-10-10** (`editor/src/cli/`, `npm run build:cli`, `docs/user-guide/check-a-flow.md`): a pure `checkFlowText` plus
+  a `thingstudio-compile` command (exit 0/1/2, `--json`, `--board`, `--out`, `--strict`), with the loader's wire checks, the
+  editor's property defaults and an mpy-cross syntax check. Not covered: credentials (stand-ins), custom node packages.
+  Open: an MCP wrapper (Mike asked 2026-10-10; recommendation: only if the AI-authoring test shows a shell command isn't
+  enough, or for a wider tool surface), and the backend move.
 - **[LAUNCH]** **User-facing AI-authoring doc,** tested by a fresh agent session against a set task. Where
   it lives (workspace `AGENTS.md`, docs page + `llms.txt`, skill) is open.
 - **[LAUNCH-NICE]** **Download the generated Python** (viewing already works).
