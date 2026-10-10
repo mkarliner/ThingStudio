@@ -125,7 +125,7 @@ not here.
   Open: an MCP wrapper (Mike asked 2026-10-10; recommendation: only if the AI-authoring test shows a shell command isn't
   enough, or for a wider tool surface), and the backend move.
 - **[LAUNCH]** **User-facing AI-authoring doc,** tested by a fresh agent session against a set task. Where
-  it lives (workspace `AGENTS.md`, docs page + `llms.txt`, skill) is open.
+  it lives (workspace `AGENTS.md`, docs page + `llms.txt`, skill) is open. Scoped 2026-10-10: `ai-authoring-doc-scoping.md` (generated node catalog via `--describe`; docs page + `llms.txt` first; four decisions owed by Mike).
 - **[LAUNCH-NICE]** **Download the generated Python** (viewing already works).
 - **[LAUNCH-NICE]** **Landing page and README rewrite: technical side.** Content comes from the
   ThingStudioMarketing repo; hosting, GoatCounter on the page, and a docs/README note saying GoatCounter is used
