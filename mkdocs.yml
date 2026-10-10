@@ -64,6 +64,7 @@ nav:
       - 4. Install the runtime: installing-runtime.md
       - 5. Blink an LED: first-flow.md
       - More on installing: installing-more.md
+  - The Thingstudio folder: thingstudio-folder.md
   - Canvas basics: canvas-basics.md
   - Check a flow without the editor: check-a-flow.md
   - Node catalog: nodes-catalog.md

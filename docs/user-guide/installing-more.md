@@ -20,10 +20,10 @@ Each [release](https://github.com/mkarliner/ThingStudio/releases/latest) has a p
 ## Where the installer puts things
 
 On macOS and Linux, the installer puts Thingstudio in `~/.local/share/thingstudio` and the `thingstudio` command in
-`~/.local/bin`. Your flows and settings live in `~/.thingstudio`.
+`~/.local/bin`. Your settings live in `~/.thingstudio` (see [The Thingstudio folder](thingstudio-folder.md)).
 
 On Windows, it puts Thingstudio in `%LOCALAPPDATA%\Thingstudio` and adds the `thingstudio` command to your PATH.
-Your flows and settings live in `%USERPROFILE%\.thingstudio`.
+Your settings live in `%USERPROFILE%\.thingstudio`.
 
 Upgrading and removing never touch your flows and settings.
 

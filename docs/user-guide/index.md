@@ -1,10 +1,12 @@
 # Thingstudio
 
-Thingstudio is a visual way to program microcontrollers. You build a program in your web browser from blocks, each
-doing one job: wait a second, read a sensor, switch a pin. You join the blocks with wires, and data flows along the
-wires from one block to the next. The style comes from [Node-RED](https://nodered.org/). Thingstudio turns the result
-into [MicroPython](https://micropython.org/), a version of Python for microcontrollers, and sends it to your board. The
-board then runs the program you just built. It keeps running it on its own, with no computer attached.
+Thingstudio is a visual, low-code way to program microcontrollers. You build a program, called a flow, in a
+node-based editor in your web browser. Nodes are functional blocks, and wires carry data between them. The design is
+inspired by [Node-RED](https://nodered.org/).
+
+Thingstudio converts the flow to [MicroPython](https://micropython.org/), a version of Python for microcontrollers,
+compiles it and sends it to your board. The flow is saved on the board. It runs without the editor connected, and
+starts again after a reset or power cycle.
 
 <figure markdown="span">
   [![The Thingstudio editor, showing a three-node flow: timer, function and gpio out](images/editor.png)](images/editor.png)<figcaption>The editor: nodes to drag in on the left, your flow in the middle, and on the right the selected
@@ -16,7 +18,7 @@ Everything runs on your own computer and your own boards. Thingstudio isn't a cl
 
 - **No account.** There's nothing to sign up for, and nothing is sent to us.
 - **Works offline.** Once installed, it needs no internet connection, docs included.
-- **Your files, in git.** Thingstudio's files, your programs and your board definitions, are plain, indented
+- **Git friendly.** Thingstudio's files, your programs and your board definitions, are plain, indented
   JSON that you save where you like. They diff cleanly and sit happily in a git repository. Passwords and
   other credentials are stored separately, so a committed program holds no secrets.
 - **Made to be extended.** Write your own [custom nodes](custom-nodes.md), and add your own
@@ -27,9 +29,12 @@ Everything runs on your own computer and your own boards. Thingstudio isn't a cl
   build on it, including in commercial products.
 
 !!! tip "Already know the background?"
-    If you know Node-RED, MicroPython or Arduino, skip to what's different for you:
-    [Node-RED](coming-from/node-red.md), [MicroPython](coming-from/micropython.md) or
-    [Arduino and C](coming-from/arduino.md). Or go straight to [Getting started](getting-started.md).
+    If you know Node-RED, MicroPython or Arduino, read what's different for you, or go straight to
+    [Getting started](getting-started.md).
+
+    - [Node-RED](coming-from/node-red.md)
+    - [MicroPython](coming-from/micropython.md)
+    - [Arduino and C](coming-from/arduino.md)
 
 ## What's different about programming with Thingstudio?
 
