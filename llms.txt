@@ -4,7 +4,7 @@
 
 ## Pages
 
-- [Home](https://docs.thingstudio.net/): Thingstudio is a visual way to program microcontrollers.
+- [Home](https://docs.thingstudio.net/): Thingstudio is a visual, low-code way to program microcontrollers.
 
 ## Background
 
@@ -30,6 +30,7 @@
 
 ## Pages
 
+- [The Thingstudio folder](https://docs.thingstudio.net/thingstudio-folder/): Thingstudio keeps its own files in one folder on your computer:
 - [Canvas basics](https://docs.thingstudio.net/canvas-basics/): <figure markdown="span"> ![The Thingstudio editor with its parts numbered 1 to 14](images/editor-parts.png)<figcaption>The parts of the editor.
 - [Check a flow without the editor](https://docs.thingstudio.net/check-a-flow/): thingstudio-compile compiles and checks a flow file from the command line, with the same errors the editor gives.
 - [Node catalog](https://docs.thingstudio.net/nodes-catalog/): Every node a flow file can use: its type id, its ports with their payload types, and its properties with the default the editor gives a new node.

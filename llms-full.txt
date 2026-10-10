@@ -9,11 +9,13 @@ Source: https://docs.thingstudio.net/
 
 # Thingstudio
 
-Thingstudio is a visual way to program microcontrollers. You build a program in your web browser from blocks, each
-doing one job: wait a second, read a sensor, switch a pin. You join the blocks with wires, and data flows along the
-wires from one block to the next. The style comes from [Node-RED](https://nodered.org/). Thingstudio turns the result
-into [MicroPython](https://micropython.org/), a version of Python for microcontrollers, and sends it to your board. The
-board then runs the program you just built. It keeps running it on its own, with no computer attached.
+Thingstudio is a visual, low-code way to program microcontrollers. You build a program, called a flow, in a
+node-based editor in your web browser. Nodes are functional blocks, and wires carry data between them. The design is
+inspired by [Node-RED](https://nodered.org/).
+
+Thingstudio converts the flow to [MicroPython](https://micropython.org/), a version of Python for microcontrollers,
+compiles it and sends it to your board. The flow is saved on the board. It runs without the editor connected, and
+starts again after a reset or power cycle.
 
 <figure markdown="span">
   [![The Thingstudio editor, showing a three-node flow: timer, function and gpio out](images/editor.png)](images/editor.png)<figcaption>The editor: nodes to drag in on the left, your flow in the middle, and on the right the selected
@@ -25,7 +27,7 @@ Everything runs on your own computer and your own boards. Thingstudio isn't a cl
 
 - **No account.** There's nothing to sign up for, and nothing is sent to us.
 - **Works offline.** Once installed, it needs no internet connection, docs included.
-- **Your files, in git.** Thingstudio's files, your programs and your board definitions, are plain, indented
+- **Git friendly.** Thingstudio's files, your programs and your board definitions, are plain, indented
   JSON that you save where you like. They diff cleanly and sit happily in a git repository. Passwords and
   other credentials are stored separately, so a committed program holds no secrets.
 - **Made to be extended.** Write your own [custom nodes](custom-nodes.md), and add your own
@@ -36,9 +38,12 @@ Everything runs on your own computer and your own boards. Thingstudio isn't a cl
   build on it, including in commercial products.
 
 !!! tip "Already know the background?"
-    If you know Node-RED, MicroPython or Arduino, skip to what's different for you:
-    [Node-RED](coming-from/node-red.md), [MicroPython](coming-from/micropython.md) or
-    [Arduino and C](coming-from/arduino.md). Or go straight to [Getting started](getting-started.md).
+    If you know Node-RED, MicroPython or Arduino, read what's different for you, or go straight to
+    [Getting started](getting-started.md).
+
+    - [Node-RED](coming-from/node-red.md)
+    - [MicroPython](coming-from/micropython.md)
+    - [Arduino and C](coming-from/arduino.md)
 
 ## What's different about programming with Thingstudio?
 
@@ -796,10 +801,10 @@ Each [release](https://github.com/mkarliner/ThingStudio/releases/latest) has a p
 ## Where the installer puts things
 
 On macOS and Linux, the installer puts Thingstudio in `~/.local/share/thingstudio` and the `thingstudio` command in
-`~/.local/bin`. Your flows and settings live in `~/.thingstudio`.
+`~/.local/bin`. Your settings live in `~/.thingstudio` (see [The Thingstudio folder](thingstudio-folder.md)).
 
 On Windows, it puts Thingstudio in `%LOCALAPPDATA%\Thingstudio` and adds the `thingstudio` command to your PATH.
-Your flows and settings live in `%USERPROFILE%\.thingstudio`.
+Your settings live in `%USERPROFILE%\.thingstudio`.
 
 Upgrading and removing never touch your flows and settings.
 
@@ -853,6 +858,77 @@ python3 test-flows/deploy_runtime.py --port PORT
 ```
 
 `PORT` is the board's port, as shown in the editor's port list. When it finishes, click **Connect** in the editor.
+
+
+---
+
+Source: https://docs.thingstudio.net/thingstudio-folder/
+
+# The Thingstudio folder
+
+Thingstudio keeps its own files in one folder on your computer:
+
+- macOS and Linux: `~/.thingstudio`
+- Windows: `%USERPROFILE%\.thingstudio`
+
+Thingstudio creates the folder the first time it starts. Your flows are not kept here. They are saved wherever you
+choose (see [Flow lifecycle](flow-lifecycle.md#save-and-open)).
+
+## What's in it
+
+| Folder | Holds | Edit by hand? |
+|---|---|---|
+| `credentials/` | WiFi and MQTT broker logins, saved by name | No, use the editor |
+| `presets/` | Saved node settings, one folder per node type | Yes |
+| `custom-nodes/` | Your own node types | Yes |
+| `boards/` | Board definitions | Yes |
+| `processors/` | Processor definitions | Yes |
+
+Every file is plain JSON, except the Python half of a custom node. The editor reads these folders through the
+Thingstudio backend, so the direct (WebSerial-only) connection mode can't use them.
+
+## Credentials
+
+A WiFi or MQTT broker config node holds only the name of a credential. The SSID, password, broker address and login
+are stored in `credentials/wifi/<name>.json` or `credentials/mqtt-broker/<name>.json`. This keeps secrets out of flow
+files you share or commit. Create and edit credentials from the config node (see
+[Config nodes](canvas-basics.md#config-nodes)).
+
+The files are not encrypted. Anyone who can read your home folder can read them. Don't commit this folder or copy it
+to shared storage.
+
+## Presets
+
+A preset is a named set of property values for one node type, such as the pins and size of a display panel. You save
+and load presets from a node's property panel (see [Presets](canvas-basics.md#presets)). Each one is a file at
+`presets/<node type>/<name>.json`. A file that isn't valid JSON appears in the list disabled, with the file named.
+
+## Custom nodes
+
+A custom node is two files with the same base name: `<name>.node.json` and `<name>.node.py`. The first time
+Thingstudio starts, it puts two examples here. Deleted examples don't come back. See
+[Custom nodes](custom-nodes.md).
+
+## Boards and processors
+
+At every start, Thingstudio copies any built-in definition that's missing from `boards/` and `processors/`. It never
+overwrites a file that's already there.
+
+- To change a built-in, edit its file.
+- To get the original back, delete the file and restart Thingstudio.
+- After an upgrade, an existing copy still wins over a changed built-in, until you delete it.
+
+See [Boards and processors](boards.md).
+
+## Using a different folder
+
+Start Thingstudio with `--data-dir`:
+
+```sh
+thingstudio --data-dir ~/projects/greenhouse/thingstudio-data
+```
+
+This keeps separate sets of credentials, presets and custom nodes, for example one per project.
 
 
 ---
