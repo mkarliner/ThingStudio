@@ -171,9 +171,9 @@ Type `thingstudio/gui_modal`, kind sink, palette group GUI.
 - Outputs: msg (any)
 - Properties (name, type, default):
     - `name`, string, default `""`
-    - `screen`, string, default `""`
-    - `priority`, number, default `0`
-    - `timeout`, number, default `0`
+    - `screen`, string, default `""` — the id of the gui_screen node this modal belongs to
+    - `priority`, number, default `0` — a higher priority takes the screen from a lower one; the other waits
+    - `timeout`, number, default `0` — seconds before the modal closes itself; 0 never
 
 ### navigator
 
@@ -251,7 +251,7 @@ Type `thingstudio/display_i2c`, kind sink, palette group hardware.
 - Properties (name, type, default):
     - `controller`, string, default `"ssd1306"`
     - `i2cConfigId`, string, default `""`, the id of a `thingstudio/config/i2c-bus` config
-    - `addr`, number, default `60`
+    - `addr`, number, default `60` — the I2C address as a plain number: 60 is 0x3C, the usual SSD1306 address
     - `width`, number, default `128`
     - `height`, number, default `64`
 

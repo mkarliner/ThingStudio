@@ -5,6 +5,22 @@ without the editor. It is complete on its own, with two companions: the generate
 the `thingstudio-compile` command ([Check a flow without the editor](check-a-flow.md)). The whole docs set is also
 one file at `/llms-full.txt` on the docs site, with an index at `/llms.txt`.
 
+## Setting up your assistant
+
+Paste this into the assistant's standing instructions (a project's instructions, `AGENTS.md`, `CLAUDE.md`, or a custom
+GPT/Gem), so it reads this page before it writes a flow:
+
+```text
+When I ask for a Thingstudio flow or custom node, first read the Thingstudio authoring guide:
+https://<your docs site>/user-guide/ai-authoring/ (the whole docs set is one file at /llms-full.txt).
+Write the flow as a .flow.json file, run the thingstudio-compile check with --board for my board,
+fix every error until it prints OK, then tell me: the board id you checked against, which credential
+names I must create, what you assumed about wiring, and what you could not check.
+Never say a flow works on the board; say it passes the check. No HTTPS in http_request.
+```
+
+Claude users can instead save the same text as a skill. The check needs Node and the built `thingstudio-compile.mjs`.
+
 ## The loop
 
 1. Write the flow as a `.flow.json` file.
@@ -87,8 +103,24 @@ Numbers go into `bool` inputs (zero is off), and an `int` into a `number`; a `nu
 Addresses are written two ways, because the nodes differ: the `bme280` `address` is a plain number (`118` is `0x76`);
 a touch panel config's `address` is text (`"0x38"`). The [catalog](nodes-catalog.md) notes which.
 
-A node that uses the network (`mqtt_publish`, `http_request`, and so on) uses the flow's WiFi: add a WiFi config to
+A node that uses the network (`mqtt_publish`, `http_request`, `http_in` and so on) uses the flow's WiFi: add a WiFi config to
 `configs` and it is picked up; the node has no WiFi property of its own.
+
+Things to know before you pick a node:
+
+- `http_request` is plain `http://` only (no HTTPS), GET or POST. A reply with any status is passed on with an integer
+  `msg['status']`; a failed connection or a timeout sends nothing on and logs an error. So test `msg['status'] == 200`
+  in a `function`, and expect no message at all when the server is unreachable.
+- `mqtt_subscribe` payloads arrive as text when they decode, otherwise bytes. For a number, use `float(msg['payload'])`
+  in a `function`.
+- `function` code can `import` standard modules (`json`, `framebuf`, `time`) inside the body.
+- `http_in` gives a `payload` of `None` and `http_response` sets no `Content-Type`. Use port 80 unless something else
+  on the board already uses it.
+- `bme280` has no input: it reads on its own interval. To answer a web request with a current value, keep the
+  latest reading with `flow.set('temp', ...)` in a `function` after the sensor, and read it with `flow.get('temp')`
+  in a `function` between `http_in` and `http_response` (send a 503 before the first reading arrives).
+- To print text on a `display_i2c` (SSD1306), draw with `framebuf` in a `function` and send the buffer: see
+  [display i2c](nodes/display-i2c.md#text-on-the-panel). Its address property is `addr`, a plain number (`60` is `0x3C`).
 
 ## Pins: take them from the board
 
@@ -148,8 +180,24 @@ Rules that cause most failures:
 - A page that doesn't fit gives an error that names the widget and page and how many pixels it needs. Use a smaller
   font or fewer things per row. Rows need the screen width minus the container's padding (in landscape on a
   320-wide panel that is under 312 px).
-- Orientation with a CYD: `xstart` and `ystart` must be `-1` (the CYD example flow uses 0, which an orientation refuses).
+- With an `orientation`, `xstart` and `ystart` must be `-1`, which means "no offset" (the CYD example flow uses 0,
+  which an orientation refuses; `-1` is always allowed). At `"90"` or `"270"` the picture is the panel turned, so a
+  320 x 480 panel gives 480 wide by 320 high to lay out.
+- A modal is laid out in `screens.<screenId>.modals`, not in `pages`: see the format below.
 - A trend takes a journal's first output, and a journal takes numbers: `sensor → journal → trend`.
+
+A modal (`gui_modal`, with `screen` set to the `gui_screen` node's id) is listed next to `pages`. Its `root` holds what
+it shows, and not the modal node itself:
+
+```json
+"modals": [ { "node": "<modalNodeId>", "root": { "kind": "column", "padding": 8, "children": [
+  { "kind": "text", "text": "Too hot", "font": "font_body24" },
+  { "kind": "widget", "node": "<labelId>", "font": "font_body20", "maxChars": 20 }
+] } } ]
+```
+
+Any message opens it; a message with `payload` `None` closes it; `timeout` (seconds, `0` for never) closes it by
+itself; a navigate button with `target` `back` acknowledges it. Its output sends `'ack'`, `'timeout'` or `'closed'`.
 
 Placement keys, in `screens`:
 

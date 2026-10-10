@@ -21,7 +21,9 @@ pages are laid out by editing the flow file. The GUI view, where you lay them ou
   screen), but flows that already have one still work.
 - **gui modal** — a full-screen message. Send any payload to open it, `None` to close it. If several are
   open, the highest priority shows and the rest wait. Its output sends how it closed:
-  `{topic: <modal's name>, payload: 'ack' | 'timeout' | 'closed'}`.
+  `{topic: <modal's name>, payload: 'ack' | 'timeout' | 'closed'}`. Properties: **screen** (the id of the `gui_screen` it
+  belongs to), **priority**, and **timeout** in seconds (`0` never closes by itself). The modal's layout is under its
+  screen in the flow file, see [Modals in the flow file](#modals-in-the-flow-file).
 
 Each widget starts as `--` until a value arrives. With **stale after** set, a value that isn't updated in
 time is dimmed (or underlined, on a black-and-white display), so an old reading never looks current.
@@ -92,7 +94,31 @@ on each display, so a display can't have two. Set the display's width and height
 rotation to how the panel is mounted (0 to 3, as before). The gui screen wired to that display turns its size to
 match and its touch axes follow, so set the screen's width and height to the panel's own size too. With
 orientation off the display behaves as it always did. An orientation can't yet be combined with a panel offset
-(`xstart`/`ystart`, or the 135x240 panel).
+(`xstart`/`ystart`, or the 135x240 panel). `xstart`/`ystart` of `-1` mean "no offset" and are the right values with an
+orientation. At 90 or 270 the usable picture is the panel turned: 480 wide by 320 high on a 320x480 panel.
+
+## Modals in the flow file
+
+A modal is laid out like a page, but in the screen's `modals` list, next to `pages`. Each entry names the `gui_modal`
+node and gives its layout as `root`. The modal node is not itself placed inside `root`; `root` holds only what the
+modal shows (text, and widget nodes wired to it or to the flow):
+
+```json
+"screens": { "<screenId>": {
+  "pages": [ ... ],
+  "modals": [
+    { "node": "<modalNodeId>", "root": { "kind": "column", "gap": 8, "padding": 8, "children": [
+      { "kind": "text", "text": "Too hot", "font": "font_body24" },
+      { "kind": "widget", "node": "<labelId>", "font": "font_body20", "maxChars": 20 }
+    ] } }
+  ]
+} }
+```
+
+Send any payload to the modal node to open it; what is drawn is its layout, so wire a label or readout widget in the
+layout to the data you want shown (a modal can hold the same widget a page does). Send `None` to close it (a function node
+returning a message whose `payload` is `None`). A navigate button in the layout with target `back` acknowledges it,
+and a **timeout** above `0` closes it on its own. The modal node's output says which of the three happened.
 
 ## Laying out pages
 

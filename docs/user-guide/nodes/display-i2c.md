@@ -12,7 +12,7 @@ save a real panel's pin/address setup under a name once, then load it again on t
 
 - **controller** — the display chip. Only `SSD1306` today.
 - **I2C bus** — the bus the panel is wired to. See [I2C buses](i2c-bus.md).
-- **address** — the I2C address. Default `0x3C`.
+- **address** — the I2C address, `addr` in the flow file, as a plain number: `60` is `0x3C`, the usual SSD1306 address.
 - **width / height** — panel resolution in pixels. Height must be a multiple of 8.
 
 A flow saved before I2C buses existed has its pins on the node. The editor moves them into an I2C bus
@@ -28,3 +28,23 @@ Only I2C wiring is supported — an SSD1306 wired over SPI isn't covered by this
 if that's ever needed for this chip).
 
 No drawing primitives here — this node only pushes a complete, already-rendered frame on every message.
+
+## Text on the panel
+
+Draw in a `function` node with `framebuf` (an `import` inside the function body works) and send the **buffer**, not the
+`FrameBuffer` object. `fb.text()` uses a fixed 8x8 font, so a 128x64 panel holds 16 characters on each of 8 lines. The
+node accepts `bytearray` or `bytes`. A panel sharing a bus with a sensor such as a BME280 works at the bus's one
+speed; the default is fine for both.
+
+```python
+import framebuf
+buf = context.get('buf')
+if buf is None:
+    buf = bytearray(128 * 8)
+    context.set('buf', buf)
+fb = framebuf.FrameBuffer(buf, 128, 64, framebuf.MONO_VLSB)
+fb.fill(0)
+fb.text('%.1f C' % msg['payload']['temperature'], 0, 28, 1)
+msg['payload'] = buf
+return msg
+```

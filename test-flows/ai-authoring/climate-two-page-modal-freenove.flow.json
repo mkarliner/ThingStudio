@@ -1,0 +1,482 @@
+{
+ "formatVersion": 1,
+ "flowName": "climate",
+ "nodes": [
+  {
+   "id": "mqtt-temp",
+   "type": "thingstudio/mqtt_subscribe",
+   "properties": {
+    "topic": "home/temp",
+    "qos": 0,
+    "brokerConfigId": "cfg-mqtt"
+   }
+  },
+  {
+   "id": "mqtt-hum",
+   "type": "thingstudio/mqtt_subscribe",
+   "properties": {
+    "topic": "home/humidity",
+    "qos": 0,
+    "brokerConfigId": "cfg-mqtt"
+   }
+  },
+  {
+   "id": "fn-temp",
+   "type": "thingstudio/function",
+   "properties": {
+    "code": "try:\n    v = float(msg['payload'])\nexcept (ValueError, TypeError):\n    return None\nreturn {'topic': 'temperature', 'payload': v}\n",
+    "outputCount": 1
+   }
+  },
+  {
+   "id": "fn-hum",
+   "type": "thingstudio/function",
+   "properties": {
+    "code": "try:\n    v = float(msg['payload'])\nexcept (ValueError, TypeError):\n    return None\nreturn {'topic': 'humidity', 'payload': v}\n",
+    "outputCount": 1
+   }
+  },
+  {
+   "id": "fn-alarm",
+   "type": "thingstudio/function",
+   "properties": {
+    "code": "v = msg['payload']\nhot = v > 28\nif hot == context.get('hot'):\n    return None\ncontext['hot'] = hot\nif hot:\n    return [{'topic': 'alarm', 'payload': 'Temperature above 28'}, None]\nreturn [None, {'topic': 'alarm', 'payload': None}]\n",
+    "outputCount": 2
+   }
+  },
+  {
+   "id": "ro-temp",
+   "type": "thingstudio/gui_readout",
+   "properties": {
+    "name": "Temperature",
+    "units": "\u00b0C",
+    "decimals": 1,
+    "lo": -30,
+    "hi": 60,
+    "staleAfter": 0
+   }
+  },
+  {
+   "id": "ro-hum",
+   "type": "thingstudio/gui_readout",
+   "properties": {
+    "name": "Humidity",
+    "units": "%",
+    "decimals": 0,
+    "lo": 0,
+    "hi": 100,
+    "staleAfter": 0
+   }
+  },
+  {
+   "id": "jr",
+   "type": "thingstudio/journal",
+   "properties": {
+    "rows": 120,
+    "stepSeconds": 60,
+    "steps": 0,
+    "xff": 0.5
+   }
+  },
+  {
+   "id": "tr",
+   "type": "thingstudio/gui_trend",
+   "properties": {
+    "name": "Temp 2h",
+    "lo": 0,
+    "hi": 40,
+    "columns": 120,
+    "colWidth": 2,
+    "height": 200
+   }
+  },
+  {
+   "id": "btn-trend",
+   "type": "thingstudio/gui_button",
+   "properties": {
+    "name": "trend",
+    "mode": "navigate",
+    "text": "Trend",
+    "target": "trend",
+    "maxChars": 8
+   }
+  },
+  {
+   "id": "btn-now",
+   "type": "thingstudio/gui_button",
+   "properties": {
+    "name": "now",
+    "mode": "navigate",
+    "text": "Back",
+    "target": "now",
+    "maxChars": 8
+   }
+  },
+  {
+   "id": "modal",
+   "type": "thingstudio/gui_modal",
+   "properties": {
+    "name": "Too hot",
+    "screen": "screen",
+    "priority": 0,
+    "timeout": 0
+   }
+  },
+  {
+   "id": "screen",
+   "type": "thingstudio/gui_screen",
+   "properties": {
+    "name": "tft",
+    "width": 320,
+    "height": 480,
+    "frameFormat": "rgb565",
+    "minInterval": 200,
+    "wrap": true,
+    "touchPanelConfigId": "cfg-touch-panel"
+   }
+  },
+  {
+   "id": "display",
+   "type": "thingstudio/display_spi",
+   "properties": {
+    "controller": "st7796",
+    "frameFormat": "rgb565",
+    "spiBus": 1,
+    "baudrate": 40000000,
+    "sck": 12,
+    "mosi": 11,
+    "dc": 46,
+    "cs": 10,
+    "reset": -1,
+    "backlight": 45,
+    "width": 320,
+    "height": 480,
+    "rotation": 1,
+    "xstart": -1,
+    "ystart": -1,
+    "colorOrder": "bgr",
+    "invertColors": true,
+    "dataLatchOrder": true
+   }
+  }
+ ],
+ "edges": [
+  [
+   "mqtt-temp",
+   0,
+   "fn-temp",
+   0
+  ],
+  [
+   "mqtt-hum",
+   0,
+   "fn-hum",
+   0
+  ],
+  [
+   "fn-temp",
+   0,
+   "ro-temp",
+   0
+  ],
+  [
+   "fn-temp",
+   0,
+   "jr",
+   0
+  ],
+  [
+   "fn-temp",
+   0,
+   "fn-alarm",
+   0
+  ],
+  [
+   "fn-hum",
+   0,
+   "ro-hum",
+   0
+  ],
+  [
+   "jr",
+   0,
+   "tr",
+   0
+  ],
+  [
+   "fn-alarm",
+   0,
+   "modal",
+   0
+  ],
+  [
+   "fn-alarm",
+   1,
+   "modal",
+   0
+  ],
+  [
+   "screen",
+   0,
+   "display",
+   0
+  ]
+ ],
+ "layout": {
+  "mqtt-temp": {
+   "pos": [
+    80,
+    80
+   ]
+  },
+  "mqtt-hum": {
+   "pos": [
+    300,
+    80
+   ]
+  },
+  "fn-temp": {
+   "pos": [
+    520,
+    80
+   ]
+  },
+  "fn-hum": {
+   "pos": [
+    740,
+    80
+   ]
+  },
+  "fn-alarm": {
+   "pos": [
+    960,
+    80
+   ]
+  },
+  "ro-temp": {
+   "pos": [
+    80,
+    200
+   ]
+  },
+  "ro-hum": {
+   "pos": [
+    300,
+    200
+   ]
+  },
+  "jr": {
+   "pos": [
+    520,
+    200
+   ]
+  },
+  "tr": {
+   "pos": [
+    740,
+    200
+   ]
+  },
+  "btn-trend": {
+   "pos": [
+    960,
+    200
+   ]
+  },
+  "btn-now": {
+   "pos": [
+    80,
+    320
+   ]
+  },
+  "modal": {
+   "pos": [
+    300,
+    320
+   ]
+  },
+  "screen": {
+   "pos": [
+    520,
+    320
+   ]
+  },
+  "display": {
+   "pos": [
+    740,
+    320
+   ]
+  }
+ },
+ "configs": [
+  {
+   "id": "cfg-touch-i2c",
+   "type": "thingstudio/config/i2c-bus",
+   "properties": {
+    "bus": 0,
+    "scl": 15,
+    "sda": 16,
+    "freq": 400000
+   }
+  },
+  {
+   "id": "cfg-touch-panel",
+   "type": "thingstudio/config/touch-panel",
+   "properties": {
+    "controller": "ft6336u",
+    "i2cConfigId": "cfg-touch-i2c",
+    "address": "0x38",
+    "rstPin": 18,
+    "pollMs": 20,
+    "width": 320,
+    "height": 480,
+    "swapXY": false,
+    "flipX": false,
+    "flipY": false
+   }
+  },
+  {
+   "id": "cfg-wifi",
+   "type": "thingstudio/config/wifi",
+   "properties": {
+    "credentialName": "home",
+    "security": "password"
+   }
+  },
+  {
+   "id": "cfg-mqtt",
+   "type": "thingstudio/config/mqtt-broker",
+   "properties": {
+    "credentialName": "lan-broker"
+   }
+  }
+ ],
+ "screens": {
+  "screen": {
+   "pages": [
+    {
+     "name": "now",
+     "root": {
+      "kind": "column",
+      "gap": 8,
+      "padding": 6,
+      "children": [
+       {
+        "kind": "text",
+        "text": "Temperature",
+        "font": "font_body24"
+       },
+       {
+        "kind": "widget",
+        "node": "ro-temp",
+        "font": "font_digits48",
+        "unitsFont": "font_body24",
+        "alignSelf": "center"
+       },
+       {
+        "kind": "text",
+        "text": "Humidity",
+        "font": "font_body24"
+       },
+       {
+        "kind": "widget",
+        "node": "ro-hum",
+        "font": "font_digits48",
+        "unitsFont": "font_body24",
+        "alignSelf": "center"
+       },
+       {
+        "kind": "spacer",
+        "grow": 1
+       },
+       {
+        "kind": "widget",
+        "node": "btn-trend",
+        "font": "font_body24",
+        "alignSelf": "center"
+       },
+       {
+        "kind": "pagedots",
+        "alignSelf": "center"
+       }
+      ]
+     }
+    },
+    {
+     "name": "trend",
+     "root": {
+      "kind": "column",
+      "gap": 8,
+      "padding": 6,
+      "children": [
+       {
+        "kind": "text",
+        "text": "Temperature, last 2 h",
+        "font": "font_body24"
+       },
+       {
+        "kind": "widget",
+        "node": "tr",
+        "height": 200,
+        "alignSelf": "stretch"
+       },
+       {
+        "kind": "spacer",
+        "grow": 1
+       },
+       {
+        "kind": "widget",
+        "node": "btn-now",
+        "font": "font_body24",
+        "alignSelf": "center"
+       },
+       {
+        "kind": "pagedots",
+        "alignSelf": "center"
+       }
+      ]
+     }
+    }
+   ],
+   "modals": [
+    {
+     "node": "modal",
+     "root": {
+      "kind": "column",
+      "gap": 10,
+      "padding": 10,
+      "children": [
+       {
+        "kind": "spacer",
+        "grow": 1
+       },
+       {
+        "kind": "text",
+        "text": "WARNING",
+        "font": "font_body24",
+        "align": "center"
+       },
+       {
+        "kind": "text",
+        "text": "Too hot: over 28 C",
+        "font": "font_body20",
+        "align": "center"
+       },
+       {
+        "kind": "text",
+        "text": "Tap to dismiss",
+        "font": "font_body16",
+        "align": "center"
+       },
+       {
+        "kind": "spacer",
+        "grow": 1
+       }
+      ]
+     }
+    }
+   ]
+  }
+ },
+ "notes": "Temperature and humidity from MQTT (home/temp, home/humidity). Page 'now' shows numbers, page 'trend' a 2 h temperature history (120 rows x 60 s). A full-screen modal opens when temperature > 28 and closes itself when it is back at or below 28."
+}

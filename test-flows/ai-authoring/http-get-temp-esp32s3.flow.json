@@ -1,0 +1,18 @@
+{
+  "formatVersion": 1,
+  "flowName": "http temp",
+  "nodes": [
+    { "id": "bme", "type": "thingstudio/bme280", "properties": { "i2cConfigId": "cfg-i2c", "address": 118, "intervalMs": 100 } },
+    { "id": "store", "type": "thingstudio/function", "properties": { "code": "flow.set('temp', msg['payload']['temperature'])\nreturn None\n", "outputCount": 1 } },
+    { "id": "req", "type": "thingstudio/http_in", "properties": { "port": 80, "path": "/temp", "method": "GET", "responseTimeoutMs": 10000 } },
+    { "id": "body", "type": "thingstudio/function", "properties": { "code": "t = flow.get('temp')\nif t is None:\n    msg['statusCode'] = 503\n    msg['payload'] = '{\"error\": \"no reading yet\"}'\nelse:\n    msg['payload'] = '{\"temperature\": %.1f}' % t\nreturn msg\n", "outputCount": 1 } },
+    { "id": "resp", "type": "thingstudio/http_response", "properties": {} }
+  ],
+  "edges": [["bme", 0, "store", 0], ["req", 0, "body", 0], ["body", 0, "resp", 0]],
+  "layout": { "bme": {"pos": [80, 100]}, "store": {"pos": [300, 100]}, "req": {"pos": [80, 260]}, "body": {"pos": [300, 260]}, "resp": {"pos": [520, 260]} },
+  "configs": [
+    { "id": "cfg-i2c", "type": "thingstudio/config/i2c-bus", "properties": { "bus": 0, "scl": 9, "sda": 8, "freq": 100000 } },
+    { "id": "cfg-wifi", "type": "thingstudio/config/wifi", "properties": { "credentialName": "workshop", "security": "password" } }
+  ],
+  "notes": "GET /temp on port 80 returns {\"temperature\": 21.4}. The BME280 (I2C 0, SDA 8, SCL 9, 0x76) is read every 100 ms (the node's minimum) and the latest value is kept; the node cannot be triggered per request."
+}

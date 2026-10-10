@@ -1,0 +1,81 @@
+{
+  "formatVersion": 1,
+  "flowName": "BME280 temperature on OLED",
+  "nodes": [
+    {
+      "id": "sensor",
+      "type": "thingstudio/bme280",
+      "properties": {
+        "i2cConfigId": "cfg-i2c",
+        "address": 118,
+        "intervalMs": 10000
+      }
+    },
+    {
+      "id": "draw",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "import framebuf\nbuf = context.get('buf')\nif buf is None:\n    buf = bytearray(128 * 8)\n    context.set('buf', buf)\nfb = framebuf.FrameBuffer(buf, 128, 64, framebuf.MONO_VLSB)\nfb.fill(0)\nt = msg['payload']['temperature']\nfb.text('Temperature', 0, 8, 1)\nfb.text('%.1f C' % t, 0, 28, 1)\nmsg['payload'] = buf\nreturn msg\n",
+        "outputCount": 1
+      }
+    },
+    {
+      "id": "oled",
+      "type": "thingstudio/display_i2c",
+      "properties": {
+        "controller": "ssd1306",
+        "i2cConfigId": "cfg-i2c",
+        "addr": 60,
+        "width": 128,
+        "height": 64
+      }
+    }
+  ],
+  "edges": [
+    [
+      "sensor",
+      0,
+      "draw",
+      0
+    ],
+    [
+      "draw",
+      0,
+      "oled",
+      0
+    ]
+  ],
+  "configs": [
+    {
+      "id": "cfg-i2c",
+      "type": "thingstudio/config/i2c-bus",
+      "properties": {
+        "bus": 0,
+        "scl": 5,
+        "sda": 4,
+        "freq": 100000
+      }
+    }
+  ],
+  "layout": {
+    "sensor": {
+      "pos": [
+        80,
+        200
+      ]
+    },
+    "draw": {
+      "pos": [
+        300,
+        200
+      ]
+    },
+    "oled": {
+      "pos": [
+        520,
+        200
+      ]
+    }
+  },
+  "notes": "BME280 (0x76) read every 10 s; a function node draws the temperature into a 128x64 MONO_VLSB frame, sent to the SSD1306 (0x3C). Both share I2C bus 0 (SDA GP4, SCL GP5)."
+}

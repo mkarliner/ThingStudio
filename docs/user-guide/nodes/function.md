@@ -22,7 +22,7 @@ return msg
 
 ## Multiple outputs
 
-A function node can have more than one output — set **outputs** in its properties (up to 10). Return an array to route to specific outputs, Node-RED style:
+A function node can have more than one output — set **outputs** in its properties (`outputCount` in the flow file, up to 10). Return an array to route to specific outputs, Node-RED style:
 
 ```python
 if msg['payload'] > 100:

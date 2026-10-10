@@ -18,6 +18,23 @@ they wrote are in `test-flows/ai-authoring/` for hardware runs (Mike, on the boa
 | 2 | Touch toggle that follows a Tasmota plug, landscape | Freenove | yes | `lamp-toggle-freenove.flow.json` |
 | 2 | Custom node, Celsius to Fahrenheit | none | n/a | no checker; files written and the Python body run on sample input |
 
+| 3 | HTTP GET every minute, LED shows up/down | LOLIN S2 Mini | yes, 2nd run | first used `https://` (not supported). `http-health-led-lolin-s2-mini.flow.json` |
+| 3 | BME280 and SSD1306 on one bus, text on the OLED | Pico 2 | yes | `bme280-oled-pico2.flow.json` |
+| 3 | Two-page climate display, MQTT in, alarm modal | Freenove | yes, 5th run | modal layout format was undocumented. `climate-two-page-modal-freenove.flow.json` |
+| 3 | Serve temperature over HTTP GET /temp | ESP32-S3 | yes | needed a cached reading (bme280 has no input). `http-get-temp-esp32s3.flow.json` |
+| 3 | Add a fan toggle to an existing lamp flow | Freenove | yes | `lamp-add-fan-freenove.flow.json` |
+
+## Round 3 changes
+
+- `http_request`: no HTTPS, what it sends on any status, and what happens on failure or timeout, now in `http-request.md`
+  and the authoring page.
+- Modal layout (`screens.<id>.modals`), dismissal and timeout, in `gui.md` and the authoring page.
+- OLED text recipe in `display-i2c.md`; the `addr` property is a number (catalog note added).
+- Per-request sensor reads (cache with `flow.set`), MQTT payloads as text, imports in function nodes, `http_in` port.
+- `-1` for `xstart`/`ystart` means no offset and is allowed with an orientation; usable size at 90/270.
+- `function` outputs is `outputCount` in the file.
+- Still unverified: that a `FrameBuffer`-based flow and `json` import in a function node work on a board.
+
 ## What the agents had to guess, and what changed
 
 - Board ids: the doc gave one example. Now lists all ids. (Three agents guessed wrong first.)
@@ -33,7 +50,7 @@ they wrote are in `test-flows/ai-authoring/` for hardware runs (Mike, on the boa
 ## Not covered or still open
 
 - The agents had the doc's examples, so the first-run pass rate flatters it. The CYD landscape task, the one that was not
-  in the examples, is the one that failed. Round 3 should use tasks nobody has written an example for.
+  in the examples, is the one that failed. Round 3 used tasks nobody had written an example for: 5 of 5 passed, two needed a retry for undocumented behaviour (HTTPS, modal layout).
 - Nothing here ran on a board. A flow that passes the check is not a flow that works; the board runs are Mike's.
 - Not asked: the AI-authoring doc used with a non-Claude assistant.
 - The checker can't check custom nodes; a loader check (`--check-node`) would close that.

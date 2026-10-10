@@ -1,0 +1,111 @@
+{
+  "formatVersion": 1,
+  "flowName": "health LED",
+  "nodes": [
+    {
+      "id": "start",
+      "type": "thingstudio/startup",
+      "properties": {}
+    },
+    {
+      "id": "tick",
+      "type": "thingstudio/timer",
+      "properties": {
+        "intervalMs": 300000
+      }
+    },
+    {
+      "id": "req",
+      "type": "thingstudio/http_request",
+      "properties": {
+        "url": "http://status.example.com/api/health",
+        "method": "GET",
+        "timeoutMs": 5000
+      }
+    },
+    {
+      "id": "chk",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "import json\nok = False\ntry:\n    if msg.get('status') == 200:\n        ok = json.loads(msg['payload']).get('ok') is True\nexcept Exception:\n    ok = False\nmsg['payload'] = ok\nreturn msg",
+        "outputCount": 1
+      }
+    },
+    {
+      "id": "led",
+      "type": "thingstudio/gpio_out",
+      "properties": {
+        "pin": 15
+      }
+    }
+  ],
+  "edges": [
+    [
+      "start",
+      0,
+      "req",
+      0
+    ],
+    [
+      "tick",
+      0,
+      "req",
+      0
+    ],
+    [
+      "req",
+      0,
+      "chk",
+      0
+    ],
+    [
+      "chk",
+      0,
+      "led",
+      0
+    ]
+  ],
+  "layout": {
+    "start": {
+      "pos": [
+        80,
+        120
+      ]
+    },
+    "tick": {
+      "pos": [
+        80,
+        260
+      ]
+    },
+    "req": {
+      "pos": [
+        300,
+        190
+      ]
+    },
+    "chk": {
+      "pos": [
+        520,
+        190
+      ]
+    },
+    "led": {
+      "pos": [
+        740,
+        190
+      ]
+    }
+  },
+  "configs": [
+    {
+      "id": "cfg-wifi",
+      "type": "thingstudio/config/wifi",
+      "properties": {
+        "credentialName": "office-wifi",
+        "security": "password"
+      }
+    }
+  ],
+  "notes": "Fetches the health URL at start and every 5 minutes; LED (GPIO 15) on when JSON ok is true, off otherwise."
+}
