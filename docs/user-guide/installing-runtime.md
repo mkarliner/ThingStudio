@@ -1,9 +1,9 @@
-# Step 4: Install the runtime
+# Step 5: Install the runtime
 
 The runtime is the part of Thingstudio that runs on the board. It receives your flows and runs them. Each board needs
 it once. Libraries that some nodes need are installed later, by Deploy, only when a flow uses them.
 
-1. Check the board's port is selected in the port list, as in [step 3](connecting.md).
+1. Check the board's port is selected in the port list, as in [step 4](connecting.md).
 2. Choose **Tools → Install runtime…**. It takes about half a minute and shows each file as it goes.
    If the board is busy and doesn't stop, the console asks you to press its reset button. A board without one, such
    as a Pico, can be unplugged and plugged back in instead.
@@ -18,4 +18,4 @@ To install the runtime from the command line instead, see [more on installing](i
 
 ## Next
 
-Step 5: [blink an LED](first-flow.md), your first flow.
+Step 6: [blink an LED](first-flow.md), your first flow.

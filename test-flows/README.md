@@ -162,7 +162,7 @@ Needs a real local broker reachable from the board (Mosquitto, matching
 `mqtt-hardware-validation-and-network-followups-briefing.md`'s
 recommended setup) -- broker host/port/credentials are a saved credential
 (`lan-mqtt-broker`), edit or replace it via the editor's own MQTT broker
-config widget (see [Canvas basics](../docs/user-guide/canvas-basics.md#config-nodes))
+config widget (see [Working in the editor](../docs/user-guide/working-in-the-editor.md#config-nodes))
 before deploying, not in this file itself. Load via the browser ("Open
 Flow") same as the other files in this directory.
 

@@ -5,7 +5,7 @@ Reports the board's WiFi connection state. In a flow with no other WiFi node, it
 ## Properties
 
 - **poll interval (ms)** — how often to check the connection. Default 5000ms.
-- **WiFi** — the flow's WiFi network. Every WiFi node in a flow shares this one setting (see [Canvas basics](../canvas-basics.md#config-nodes)).
+- **WiFi** — the flow's WiFi network. Every WiFi node in a flow shares this one setting (see [Working in the editor](../working-in-the-editor.md#config-nodes)).
 
 ## Behavior
 
@@ -19,6 +19,6 @@ Pick "unmanaged" on the WiFi config when you don't want this node issuing its ow
 
 If no connection is ever made, this node just reports disconnected, the same as any other failed connect — provisioning changes how the interface gets its credentials, not how wifi_status reports on them.
 
-Shows a connection-status dot on the canvas (see [Canvas basics](../canvas-basics.md#node-status)) once connected to a device.
+Shows a connection-status dot on the canvas (see [Working in the editor](../working-in-the-editor.md#node-status)) once connected to a device.
 
 While this node has the board on a network, the editor can connect to the board over WiFi. See [Connecting over WiFi](../wifi-connection.md).

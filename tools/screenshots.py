@@ -16,6 +16,7 @@ Needs:  pip install -r docs/screenshots/requirements.txt && playwright install c
 from __future__ import annotations
 
 import argparse
+import base64
 import shutil
 import socket
 import subprocess
@@ -41,31 +42,32 @@ class Shot:
     name: str  # output file: images/<name>.png
     flow: str  # fixture in docs/screenshots/
     select_node: str | None = None  # node label to click, so the properties panel shows it
-    # Numbered callouts, in order: (element ids, what it is, where the number goes). Each callout outlines the box around the listed
-    # elements and puts its number on it. The numbers are what the docs' legend refers to, so keep the legend
-    # in docs/user-guide/canvas-basics.md in step with this list. A missing id fails the run, by name.
-    annotations: tuple[tuple[tuple[str, ...], str, str], ...] = ()
+    # Labelled callouts: (element ids, label, side, position). Each part gets an outline, and its label sits in a margin
+    # added around the screenshot on that side ("top", "bottom", "left", "right"), with an arrow to the part. Position
+    # is where along that side the label goes, in screenshot pixels (x for top/bottom, y for left/right); None centres
+    # it on the part. Side "inside" puts the label in the middle of the part, with no arrow. The labels are named in
+    # docs/user-guide/editor-tour.md, so keep the two in step. A missing id fails the run, by name.
+    annotations: tuple[tuple[tuple[str, ...], str, str, int | None], ...] = ()
 
 
 # Ids that aren't plain element ids: "menu:File" is the toolbar menu button whose text starts with "File",
 # "row:cmdInput" is the row of controls containing #cmdInput, "sel:..." is a CSS selector.
-# Badge places: "below" the box, "top" centre inside it, "middle" of it, "right" end inside it, or the box's
-# top-left "corner".
 EDITOR_PARTS = (
-    (("menu:File",), "File menu", "below"),
-    (("flowNameInput",), "Flow name", "below"),
-    (("backendPortSelect", "btnRefreshPorts", "btnConnect"), "Port list and Connect", "below"),
-    (("boardSelect", "btnBoardPins"), "Board menu and Pins…", "below"),
-    (("btnDeploy",), "Compile → Deploy", "below"),
-    (("menu:Tools", "menu:Help"), "Tools and Help menus", "below"),
-    (("palette-mount",), "Palette", "top"),
-    (("sel:#pane-tabs-mount > *",), "Flow tabs", "right"),
-    (("rete-canvas",), "Canvas", "middle"),
-    (("property-panel-mount",), "Properties", "top"),
-    (("source-preview-panel",), "Compiled source", "corner"),
-    (("console",), "Console", "corner"),
-    (("row:cmdInput",), "Python prompt", "corner"),
-    (("row:btnStopToPrompt",), "Board buttons", "corner"),
+    (("menu:File",), "File", "top", None),
+    (("flowNameInput",), "Flow name", "top", None),
+    (("backendPortSelect", "btnRefreshPorts", "btnConnect"), "Port list and Connect", "top", None),
+    (("boardSelect", "btnBoardPins"), "Board menu and Pins…", "top", None),
+    (("btnDeploy",), "Compile → Deploy", "top", None),
+    (("menu:Tools", "menu:Help"), "Tools and Help", "top", None),
+    (("palette-mount",), "Palette", "left", 300),
+    (("sel:#pane-tabs-mount > *",), "Flow tabs", "bottom", 760),
+    (("rete-canvas",), "Canvas", "inside", None),
+    (("property-panel-mount",), "Properties", "right", 620),
+    (("notesPanel",), "Notes", "right", None),
+    (("source-preview-panel",), "Compiled source", "right", None),
+    (("console",), "Console", "right", None),
+    (("row:cmdInput",), "Python prompt", "right", None),
+    (("row:btnStopToPrompt",), "Board buttons", "right", None),
 )
 
 SHOTS = [
@@ -73,8 +75,11 @@ SHOTS = [
     Shot(name="editor-parts", flow="blink.flow.json", select_node="function", annotations=EDITOR_PARTS),
 ]
 
-# Draws the callouts into the page itself, so the screenshot is the editor as rendered plus the overlay.
-ANNOTATE_JS = """
+# Margins added around an annotated screenshot for the labels, in pixels.
+MARGIN = {"top": 56, "bottom": 56, "left": 130, "right": 190}
+
+# Returns each part's box [left, top, right, bottom] in the page, or the parts it couldn't find.
+RECTS_JS = """
 (parts) => {
   const find = (id) => {
     if (id.startsWith('menu:')) {
@@ -86,37 +91,70 @@ ANNOTATE_JS = """
     if (id === 'source-preview-panel') return document.getElementById('source-preview')?.closest('details');
     return document.getElementById(id);
   };
-  const missing = [];
-  const layer = document.createElement('div');
-  layer.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:99999';
-  parts.forEach(([ids, label, where], i) => {
+  const missing = [], boxes = [];
+  parts.forEach(([ids, label]) => {
     const els = ids.map(id => [id, find(id)]);
-    els.filter(([, e]) => !e).forEach(([id]) => missing.push(`${i + 1} (${label}): ${id}`));
+    els.filter(([, e]) => !e).forEach(([id]) => missing.push(`${label}: ${id}`));
     const rects = els.filter(([, e]) => e).map(([, e]) => e.getBoundingClientRect()).filter(r => r.width && r.height);
-    if (!rects.length) { if (!missing.length) missing.push(`${i + 1} (${label}): not visible`); return; }
-    const l = Math.min(...rects.map(r => r.left)) - 3, t = Math.min(...rects.map(r => r.top)) - 3;
-    const r = Math.max(...rects.map(r => r.right)) + 3, b = Math.max(...rects.map(r => r.bottom)) + 3;
-    const box = document.createElement('div');
-    box.style.cssText = `position:fixed;left:${l}px;top:${t}px;width:${r - l}px;height:${b - t}px;` +
-      'border:2px solid #ffb020;border-radius:6px;box-sizing:border-box';
-    const n = document.createElement('div');
-    n.textContent = String(i + 1);
-    const at = {
-      below: [Math.max(l - 4, 2), b - 6],
-      top: [(l + r) / 2 - 11, t + 8],
-      middle: [(l + r) / 2 - 11, (t + b) / 2 - 11],
-      right: [r - 30, (t + b) / 2 - 11],
-      corner: [Math.max(l - 4, 2), t - 4],
-    }[where];
-    if (!at) { missing.push(`${i + 1} (${label}): unknown badge place '${where}'`); return; }
-    const [bx, by] = at;
-    n.style.cssText = `position:fixed;left:${bx}px;top:${by}px;` +
-      'width:22px;height:22px;border-radius:50%;background:#ffb020;color:#111;font:bold 13px/22px sans-serif;' +
-      'text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.6)';
-    layer.append(box, n);
+    if (!rects.length) { missing.push(`${label}: not visible`); boxes.push(null); return; }
+    boxes.push([Math.min(...rects.map(r => r.left)) - 3, Math.min(...rects.map(r => r.top)) - 3,
+                Math.max(...rects.map(r => r.right)) + 3, Math.max(...rects.map(r => r.bottom)) + 3]);
   });
-  document.body.append(layer);
-  return missing;
+  return { missing, boxes };
+}
+"""
+
+# Draws the screenshot inside its margins, with an outline on each part and a label and arrow for it.
+COMPOSE_JS = """
+([png, w, h, m, parts]) => {
+  const W = w + m.left + m.right, H = h + m.top + m.bottom, ox = m.left, oy = m.top;
+  document.body.style.cssText = 'margin:0;background:#26262b';
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('width', W); svg.setAttribute('height', H);
+  svg.innerHTML = '<defs><marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" ' +
+    'orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#ffb020"/></marker></defs>' +
+    `<image href="data:image/png;base64,${png}" x="${ox}" y="${oy}" width="${w}" height="${h}"/>`;
+  document.body.append(svg);  // in the page first, so text can be measured
+  const add = (tag, attrs, text) => {
+    const e = document.createElementNS(ns, tag);
+    for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+    if (text) e.textContent = text;
+    svg.append(e); return e;
+  };
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const labels = [];
+  parts.forEach(([box, label, side, pos]) => {
+    const [l, t, r, b] = [box[0] + ox, box[1] + oy, box[2] + ox, box[3] + oy];
+    add('rect', { x: l, y: t, width: r - l, height: b - t, rx: 6, fill: 'none', stroke: '#ffb020', 'stroke-width': 2 });
+    let cx, cy, tx, ty;  // label centre, arrow tip
+    const along = pos === null ? null : pos;
+    if (side === 'top') { cx = along === null ? (l + r) / 2 : along + ox; cy = m.top / 2; tx = clamp(cx, l + 8, r - 8); ty = t; }
+    else if (side === 'bottom') { cx = along === null ? (l + r) / 2 : along + ox; cy = H - m.bottom / 2; tx = clamp(cx, l + 8, r - 8); ty = b; }
+    else if (side === 'left') { cx = m.left / 2; cy = along === null ? (t + b) / 2 : along + oy; tx = l; ty = clamp(cy, t + 8, b - 8); }
+    else if (side === 'right') { cx = W - m.right / 2; cy = along === null ? (t + b) / 2 : along + oy; tx = r; ty = clamp(cy, t + 8, b - 8); }
+    else { cx = (l + r) / 2; cy = (t + b) / 2; }
+    labels.push([label, side, cx, cy, tx, ty]);
+  });
+  // Arrows first, then labels on top of them.
+  const sized = labels.map(([label, side, cx, cy, tx, ty]) => {
+    const text = add('text', { x: 0, y: 0, 'font-family': 'Helvetica, Arial, sans-serif', 'font-size': 15,
+      'font-weight': 'bold' }, label);
+    const tw = text.getBBox().width; text.remove();
+    return [label, side, cx, cy, tx, ty, tw + 20, 26];
+  });
+  sized.forEach(([, side, cx, cy, tx, ty, bw, bh]) => {
+    if (side === 'inside') return;
+    const sx = side === 'left' ? cx + bw / 2 : side === 'right' ? cx - bw / 2 : cx;
+    const sy = side === 'top' ? cy + bh / 2 : side === 'bottom' ? cy - bh / 2 : cy;
+    add('line', { x1: sx, y1: sy, x2: tx, y2: ty, stroke: '#ffb020', 'stroke-width': 2.5, 'marker-end': 'url(#head)' });
+  });
+  sized.forEach(([label, , cx, cy, , , bw, bh]) => {
+    add('rect', { x: cx - bw / 2, y: cy - bh / 2, width: bw, height: bh, rx: 6, fill: '#ffb020' });
+    add('text', { x: cx, y: cy + 5, 'text-anchor': 'middle', 'font-family': 'Helvetica, Arial, sans-serif',
+      'font-size': 15, 'font-weight': 'bold', fill: '#111' }, label);
+  });
+  return [W, H];
 }
 """
 
@@ -190,17 +228,29 @@ def take(page, base_url: str, shot: Shot) -> Path:
 
     # Let the canvas and panels settle (wire rendering, panel transition) before the shot.
     page.wait_for_timeout(800)
-    if shot.annotations:
-        missing = page.evaluate(ANNOTATE_JS, [[list(ids), label, where] for ids, label, where in shot.annotations])
-        if missing:
-            raise ScreenshotError(
-                f"[{shot.name}] annotated parts not found in the editor (renamed or removed?): " + "; ".join(missing)
-            )
     OUT.mkdir(parents=True, exist_ok=True)
     path = OUT / f"{shot.name}.png"
+    if not shot.annotations:
+        page.screenshot(path=str(path))
+        return path
+
+    found = page.evaluate(RECTS_JS, [[list(ids), label] for ids, label, _side, _pos in shot.annotations])
+    if found["missing"]:
+        raise ScreenshotError(
+            f"[{shot.name}] annotated parts not found in the editor (renamed or removed?): " + "; ".join(found["missing"])
+        )
+    bad = [label for _ids, label, side, _pos in shot.annotations if side not in ("top", "bottom", "left", "right", "inside")]
+    if bad:
+        raise ScreenshotError(f"[{shot.name}] unknown label side for: " + ", ".join(bad))
+    png = base64.b64encode(page.screenshot()).decode("ascii")
+    parts = [[box, label, side, pos] for box, (_ids, label, side, pos) in zip(found["boxes"], shot.annotations)]
+    w, h = VIEWPORT["width"], VIEWPORT["height"]
+    page.set_viewport_size({"width": w + MARGIN["left"] + MARGIN["right"], "height": h + MARGIN["top"] + MARGIN["bottom"]})
+    page.set_content("<!doctype html><html><body></body></html>")
+    page.evaluate(COMPOSE_JS, [png, w, h, MARGIN, parts])
+    page.wait_for_timeout(200)
     page.screenshot(path=str(path))
     return path
-
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)

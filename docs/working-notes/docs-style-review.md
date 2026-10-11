@@ -169,6 +169,21 @@ Done: "(preview)" removed from title, nav and node index. The intro also said pa
 file and "the GUI view ... is coming"; out of date (the property panel has the page outline). Rewritten to the
 current state; "There is no preview yet" in Laying out pages reworded.
 
+#### `first-flow.md` and Canvas basics (2026-10-11)
+
+> In blink a led, we have a table of just two board's led pins. It's better to reference the supported hardware page
+> (and mention the Pins button on the canvas).
+>
+> Canvas basics (better name is Editor Tour or something like that, is in the wrong place. If you can't find your way
+> around the UI, how are you going to make your first flow?
+
+> split the page. (i'd prefer if the tour screen shot had an overlay of arrows with text labels, other wise I have to
+> go back and forth from the picture to the list.
+
+Done: `editor-tour.md` is Getting started step 3 (later steps renumbered 4-6); the reference half of Canvas basics
+is `working-in-the-editor.md`. `tools/screenshots.py` now draws labels in a margin with arrows (run in the cloud
+container against Mike's `editor/dist`; the VM can't download Chromium).
+
 ## Patterns
 
 (Not grouped yet.)

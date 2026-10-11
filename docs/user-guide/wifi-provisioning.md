@@ -4,7 +4,7 @@ A device can learn its WiFi credentials on its own, over the air, instead of hav
 
 ## Turning it on
 
-Set a WiFi config's security to **"unmanaged"** (see [Canvas basics](canvas-basics.md#config-nodes)). This tells the device to bring up its own setup network the first time it boots with no stored credential, instead of connecting itself.
+Set a WiFi config's security to **"unmanaged"** (see [Working in the editor](working-in-the-editor.md#config-nodes)). This tells the device to bring up its own setup network the first time it boots with no stored credential, instead of connecting itself.
 
 ## What happens on the device
 

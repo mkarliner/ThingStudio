@@ -38,7 +38,7 @@ whose types don't fit.
 ## Config nodes
 
 Settings that several nodes share, like a WiFi network or an MQTT broker, live in a **config node**. You set it up
-once and pick it from each node that uses it. See [canvas basics](../canvas-basics.md#config-nodes).
+once and pick it from each node that uses it. See [Working in the editor](../working-in-the-editor.md#config-nodes).
 
 ## Background
 

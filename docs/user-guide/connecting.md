@@ -1,4 +1,4 @@
-# Step 3: Connect your board
+# Step 4: Connect your board
 
 Start Thingstudio if it isn't running. See [step 1](getting-started.md#start-thingstudio).
 
@@ -28,4 +28,4 @@ Once a board with WiFi is set up, you can also connect to it over WiFi. See
 
 ## Next
 
-Step 4: [install the runtime](installing-runtime.md).
+Step 5: [install the runtime](installing-runtime.md).

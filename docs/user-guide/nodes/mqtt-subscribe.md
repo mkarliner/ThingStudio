@@ -6,7 +6,7 @@ Emits one message per incoming message on a subscribed MQTT topic.
 
 - **topic** — the topic to subscribe to. Required.
 - **QoS** — `0` or `1`. QoS 2 isn't supported.
-- **broker** — which MQTT broker config to use (see [Canvas basics](../canvas-basics.md#config-nodes)). Required — won't compile without one.
+- **broker** — which MQTT broker config to use (see [Working in the editor](../working-in-the-editor.md#config-nodes)). Required — won't compile without one.
 
 ## Behavior
 
@@ -16,4 +16,4 @@ The message carries the payload (decoded as text when possible, raw bytes otherw
 
 There's currently no guarantee that a subscription is fully confirmed before an `mqtt_publish` node on the same broker sends its first message — usually not an issue, but worth knowing if an early publish goes unheard by a subscriber that was still connecting.
 
-Shows a connection-status dot on the canvas (see [Canvas basics](../canvas-basics.md#node-status)) once connected to a device, same as `mqtt_publish`.
+Shows a connection-status dot on the canvas (see [Working in the editor](../working-in-the-editor.md#node-status)) once connected to a device, same as `mqtt_publish`.

@@ -1,17 +1,14 @@
-# Step 5: Blink an LED
+# Step 6: Blink an LED
 
 Your first flow: make an LED blink once a second. It takes three nodes.
 
-Your board should be connected, with the runtime installed: steps [3](connecting.md) and [4](installing-runtime.md).
+Your board should be connected, with the runtime installed: steps [4](connecting.md) and [5](installing-runtime.md).
 
 ## Find your LED's pin
 
-Many boards have an LED you can drive from a GPIO pin. Check your board's documentation for its number. Two common ones:
-
-| Board | LED pin |
-| --- | --- |
-| LOLIN S2 Mini | 15 |
-| Raspberry Pi Pico (RP2040) | 25 |
+Many boards have an LED you can drive from a GPIO pin. To find it, click **Pins…** next to the **Board** menu: pins
+the board names, such as `LED`, are listed first. [Supported hardware](supported-hardware.md) lists the boards
+Thingstudio knows. For any other board, check its documentation.
 
 The Pico W and Pico 2 W LEDs are wired through the WiFi chip, not a GPIO pin, so `gpio out` can't reach them. On those boards, or any board without an LED, wire an LED and a 330 Ω resistor from a free GPIO pin to GND.
 

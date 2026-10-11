@@ -10,7 +10,7 @@ starts again after a reset or power cycle.
 
 <figure markdown="span">
   [![The Thingstudio editor, showing a three-node flow: timer, function and gpio out](images/editor.png)](images/editor.png)<figcaption>The editor: nodes to drag in on the left, your flow in the middle, and on the right the selected
-  node's settings and the board's console. Click to see it full size. [Canvas basics](canvas-basics.md#the-editor) labels every
+  node's settings and the board's console. Click to see it full size. [Tour the editor](editor-tour.md) labels every
   part.</figcaption>
 </figure>
 

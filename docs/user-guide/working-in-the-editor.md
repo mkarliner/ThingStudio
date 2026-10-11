@@ -1,47 +1,17 @@
-# Canvas basics
+# Working in the editor
 
-## The editor
-
-<figure markdown="span">
-  [![The Thingstudio editor with its parts numbered 1 to 14](images/editor-parts.png)](images/editor-parts.png)<figcaption>The parts of the editor. Click to see it full size.</figcaption>
-</figure>
-
-<!-- These numbers match EDITOR_PARTS in tools/screenshots.py, which draws them. Change both together. -->
-
-1. **File menu:** start a new flow, open one, or save it.
-2. **Flow name:** saved with the flow. The board reports it, so you can tell what it's running.
-3. **Port list and Connect:** pick your board's port and connect to it. **⟳** looks for boards again.
-4. **Board menu and Pins…:** the board the flow is for, and a page of its pins.
-5. **Compile → Deploy:** turns the flow into MicroPython and sends it to the board.
-6. **Tools and Help:** occasional board jobs, such as installing the runtime, and these docs.
-7. **Palette:** every node you can add. Drag one onto the canvas.
-8. **Flow tabs:** a flow can be spread across several tabs.
-9. **Canvas:** where you build the flow.
-10. **Properties:** the selected node's settings.
-11. **Compiled source:** the MicroPython made from your flow. Click to open it.
-12. **Console:** messages from Thingstudio and the board, including your flow's output.
-13. **Python prompt:** runs a line of Python on the board.
-14. **Board buttons:** stop the flow and use MicroPython's own prompt, or remove the saved flow.
-
-## Palette
-
-The left sidebar lists every node type you can drag onto the canvas, grouped the same three ways as this guide's [node reference](nodes/index.md): **General**, **Network**, **Hardware**. Custom nodes from `~/.thingstudio/custom-nodes/` (see [Writing custom nodes](custom-nodes.md)) appear under the group their package names, and **Reload custom nodes** at the bottom reads that folder again.
-
-Drag a node onto the canvas, or click it to add it at a default position. Filter the list by typing in the search box above it.
+What the [editor tour](editor-tour.md) leaves out: wire types, node labels, presets, config nodes, node status and
+notes.
 
 ## Wiring
 
-Drag from one node's output port to another's input to connect them. Every port has a type — `int`, `number`, `bool`, `string`, `bytes`, or `any`.
+Every port has a type — `int`, `number`, `bool`, `string`, `bytes`, or `any`.
 
 The editor refuses a connection that doesn't make sense: a `bool` input accepts a wire from anything (Python's `bool()` never fails), and a `number` input accepts an `int` (safe widening) but not the other way around. An `any` output can't connect straight into a concrete typed input without an explicit conversion in between. A refused connection is the editor catching a real mismatch, not a bug.
 
 An input can take any number of wires — connect several outputs to the same input and the node fires once per incoming message, whichever one arrives. An output can already fan out to several inputs the same way.
 
-## Property panel
-
-Select a node to see its property panel on the right — every configurable field for that node type. Properties are read when you Compile → Deploy; nothing needs a redeploy just to preview a change.
-
-### Giving a node a flow label
+## Giving a node a flow label
 
 Every node has a **flow label** field at the top of its property panel. Type something (say `Fire!`) and the node
 shows it on the canvas instead of its kind (`gui_button`). Blank puts the kind back. Messages and errors that name
@@ -90,10 +60,6 @@ Other node types don't show this yet — it's currently limited to connection-or
 
 The **Notes** panel at the right is free text for the flow as a whole: what it does, what to wire up, how to use
 it. It is saved in the flow file, and it opens by itself when you load a flow that has notes. New flow clears it.
-
-## Deleting
-
-Click a node or a wire to select it, then press Delete or Backspace to remove it. Ctrl-click to select several nodes at once and delete them together. Deleting a node also removes any wires attached to it.
 
 ## Current limitations
 

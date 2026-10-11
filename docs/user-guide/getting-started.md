@@ -1,12 +1,13 @@
 # Getting started
 
-Five steps take you from a new board to a blinking LED. Each page ends with a link to the next one.
+Six steps take you from a new board to a blinking LED. Each page ends with a link to the next one.
 
 1. **[Install Thingstudio](#step-1-install-thingstudio)** on your computer. See below.
 2. **[Install MicroPython](installing-micropython.md)** on your board.
-3. **[Connect your board](connecting.md)** to Thingstudio.
-4. **[Install the runtime](installing-runtime.md)**, the part of Thingstudio that runs on the board.
-5. **[Blink an LED](first-flow.md)**: build your first flow and deploy it.
+3. **[Tour the editor](editor-tour.md)**: what each part of the screen does.
+4. **[Connect your board](connecting.md)** to Thingstudio.
+5. **[Install the runtime](installing-runtime.md)**, the part of Thingstudio that runs on the board.
+6. **[Blink an LED](first-flow.md)**: build your first flow and deploy it.
 
 You need a [supported board](boards.md) and a USB cable that carries data, not just power.
 
