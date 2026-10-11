@@ -10,10 +10,10 @@ Emits one message per incoming message on a subscribed MQTT topic.
 
 ## Behavior
 
-Uses the flow's WiFi network and its own broker config, same as `mqtt_publish`. An "unmanaged" WiFi config isn't accepted here, for the same reason.
+Uses the flow's WiFi network and its own broker config, same as **mqtt publish**. An "unmanaged" WiFi config isn't accepted here, for the same reason.
 
 The message carries the payload (decoded as text when possible, raw bytes otherwise), the actual topic it arrived on, and whether the broker sent it as a retained message.
 
-There's currently no guarantee that a subscription is fully confirmed before an `mqtt_publish` node on the same broker sends its first message — usually not an issue, but worth knowing if an early publish goes unheard by a subscriber that was still connecting.
+A subscription isn't guaranteed to be fully confirmed before an **mqtt publish** node on the same broker sends its first message. This is usually not an issue, but an early publish can go unheard by a subscriber that was still connecting.
 
-Shows a connection-status dot on the canvas (see [Editor in depth](../working-in-the-editor.md#node-status)) once connected to a device, same as `mqtt_publish`.
+Shows a connection-status dot on the canvas (see [Editor in depth](../working-in-the-editor.md#node-status)) once connected to a device, same as **mqtt publish**.

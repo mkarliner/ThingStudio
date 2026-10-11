@@ -3,18 +3,21 @@
 Build a three-page touch display: the room's temperature, humidity and pressure with their recent history, and a
 clock. The flow also publishes the readings over MQTT.
 
-The finished flow is
-[`test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json`](https://github.com/mkarliner/ThingStudio/blob/main/test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json)
-in the Thingstudio repository. Download it and open it with **File → Open…** to see it, then pick your own WiFi
-and MQTT credentials in its config nodes. Or follow the steps below to build it.
+The finished flow is in the Thingstudio repository:
+[`test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json`](https://github.com/mkarliner/ThingStudio/blob/main/test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json).
+Open it in one of two ways:
+
+- **Open the finished flow.** Download it and open it with **File → Open…**, then set your own WiFi and MQTT
+  credentials in its config nodes.
+- **Build it yourself.** Follow the steps below.
 
 ## What you need
 
 The steps use this hardware and setup:
 
 - A Freenove ESP32-S3 4.0" touch display (FNK0104S), with MicroPython and the runtime installed
-  ([steps 3 to 5](installing-micropython.md) of Getting started). Pick it by hand in the **Board** menu. Other
-  boards work too; the pins below are this board's.
+  ([Getting started steps 3 to 5](installing-micropython.md)). Pick it by hand in the **Board**
+  menu. Other boards work too; the pins below are this board's.
 - A BME280 sensor board. A BMP280 also works, without humidity. Wire it to 3V3, GND, **SCL 15** and **SDA 16**,
   the touch panel's I2C bus.
 - A WiFi network for the clock and MQTT, and an MQTT broker. See [Connecting over WiFi](wifi-connection.md).
@@ -126,8 +129,8 @@ pass, and the clock starts once the board has the time.
 
 Each symptom below has its own fix:
 
-- **The picture is scrambled:** the gui screen's and display spi's width and height must be the panel's own size,
-  `320` and `480`, even when the picture is turned. Deploy checks this and says so.
+- **The picture is scrambled:** the **width** and **height** on both the gui screen and the display spi must be the
+  panel's own size, `320` and `480`, even when the picture is turned. Deploy checks this and says so.
 - **Touches land in the wrong place:** see [Touch panels](nodes/touch-panel.md).
 - **No readings:** check the wiring and the address (`0x76` or `0x77`), and test with a debug node.
 - **The clock stays at `--`:** the board has no WiFi, or can't reach the NTP server. It tries again every 30

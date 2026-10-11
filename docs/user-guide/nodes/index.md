@@ -43,6 +43,8 @@ See [flows, nodes and messages](../background/flows-and-nodes.md) for how they f
 
 ## General
 
+Nodes that don't need a network or hardware:
+
 | Node | Kind | What it does |
 | --- | --- | --- |
 | [inject](inject.md) | source | Sends one message with a fixed payload when you click it in the editor. |
@@ -99,5 +101,5 @@ Some settings are set once and shared by the nodes that use them:
 
 ## Something missing?
 
-A few lines in a [function](function.md) node cover most gaps: a comparison, a sum, reading an ADC pin. For
+A [function](function.md) node covers most gaps: a comparison, a sum, reading an ADC pin. For
 something you'll use again, [write a custom node](../custom-nodes.md).

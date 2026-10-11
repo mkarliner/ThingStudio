@@ -3,15 +3,6 @@
 Keeps the recent history of a number, as rows of average, minimum and maximum, the way RRDtool and Cacti do. Wire
 it to a [trend](gui.md#trend) to see the history, and to another journal for a longer time scale.
 
-## Wiring
-
-- **Input** — `msg.payload` is a number. `None` records a gap. A message that carries `min` and `max` (the
-  roll-up of another journal) is folded in with them, so a longer time scale keeps the spikes.
-- **Output 1, series** — sent each time a row is added. The payload is the journal itself, to wire to a trend. It is
-  the live history, not a copy, so it costs no memory per row.
-- **Output 2, roll-up** — sent every **rows per roll-up** rows: `payload` the average, `min`, `max`, and the input's
-  `topic`. Wire it to another journal, a readout or MQTT.
-
 ## Properties
 
 - **rows kept** — how many rows the history holds, 1 to 256. At 12 bytes a row, 156 rows is under 2 KB.
@@ -22,18 +13,27 @@ it to a [trend](gui.md#trend) to see the history, and to another journal for a l
   are gaps, the roll-up is a gap too (`payload` of `None`). Averages use the known rows only; a gap is never
   counted as zero.
 
+## Wiring
+
+- **Input** — `msg.payload` is a number. `None` records a gap. A message that carries `min` and `max` (the
+  roll-up of another journal) is folded in with them, so a longer time scale keeps the spikes.
+- **Output 1, series** — sent each time a row is added. The payload is the journal itself, to wire to a trend. It
+  is the live history, not a copy, so it costs no memory per row.
+- **Output 2, roll-up** — sent every **rows per roll-up** rows: `payload` the average, `min`, `max`, and the
+  input's `topic`. Wire it to another journal, a readout or MQTT.
+
 ## Behavior
 
 A gap is empty, never a copy of the last value. The history starts empty each time the flow starts.
 
 With **seconds per row** set, a row closes when a message arrives after its time is up, so a sensor that has gone
-quiet adds no gaps until it speaks again. Set the trend's **stale after** to dim it meanwhile. Choose a row longer than
-your sensor's interval (10 seconds for a reading every 5): a row that happens to catch no reading is a gap.
+quiet adds no gaps until it speaks again. Set the trend's **stale after** to dim it meanwhile. Choose a row longer
+than your sensor's interval (10 seconds for a reading every 5): a row that happens to catch no reading is a gap.
 
 A payload that isn't a number is dropped. The first time that happens, the node reports an error; the flow keeps
 running.
 
-## Example: minutes and hours
+### Cascading two journals
 
 A sensor reads every 5 seconds.
 

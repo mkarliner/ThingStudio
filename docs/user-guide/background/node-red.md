@@ -8,7 +8,7 @@ programs, called flows, in a browser by dragging nodes onto a canvas and wiring 
 
 Node-RED is popular for home automation and IoT. A typical flow might take sensor readings from MQTT, check them,
 store them in a database and send an alert when something is out of range. It has thousands of add-on nodes and a
-dashboard for building simple web UIs.
+dashboard for building web UIs.
 
 ## Where it runs
 
@@ -24,6 +24,8 @@ readings over MQTT to a Node-RED flow on your server.
 If you already use Node-RED, see [if you know Node-RED](../coming-from/node-red.md) for what's different.
 
 ## More
+
+Further reading:
 
 - [Node-RED concepts](https://nodered.org/docs/user-guide/concepts)
 - [Node-RED getting started](https://nodered.org/docs/getting-started/)

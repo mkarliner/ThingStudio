@@ -5,8 +5,8 @@ two [labels](gui.md) to make a clock page.
 
 ## Wiring
 
-- **Input** — any message; each one is a look at the clock. Use a timer of 1 second (or a few seconds if you show
-  no seconds).
+- **Input** — any message; each one is a look at the clock. Use a timer of 1 second, or longer if you show no
+  seconds.
 - **Output 1, time** — `payload` such as `14:05` (or `14:05:09`, or `2:05` in 12-hour). Sent only when the text changes.
 - **Output 2, date** — `payload` such as `Sat 10 Oct`. Sent when the day changes.
 
@@ -34,4 +34,4 @@ once. Boards whose firmware has no `ntptime` module report that on the node inst
 The `seg7` fonts (`font_seg748`, `font_seg764`, `font_seg796`) have only `0-9 : . -` and a space. On a 320-pixel-wide
 screen `font_seg764` fits `14:05` (221 px) and `font_seg748` fits `14:05:09` (254 px). `font_seg796` is for wider
 screens. The font is DSEG by Keshikan (SIL Open Font License 1.1); see
-[third-party licences](https://github.com/mkarliner/ThingStudio/blob/main/docs/third-party-licenses.md).
+[third-party licenses](https://github.com/mkarliner/ThingStudio/blob/main/docs/third-party-licenses.md).

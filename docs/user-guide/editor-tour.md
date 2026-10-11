@@ -1,6 +1,7 @@
 # Step 2: Tour the editor
 
-Start Thingstudio if it isn't running: see [step 1](getting-started.md#start-thingstudio).
+A tour of the editor, naming each part of the screen. Start Thingstudio if it isn't running: see
+[step 1](getting-started.md#start-thingstudio).
 
 <figure markdown="span">
   [![The Thingstudio editor with each part labelled](images/editor-parts.png)](images/editor-parts.png)<figcaption>The parts of the editor. Click to see it full size.</figcaption>
@@ -30,7 +31,8 @@ name, or in **General**.
 
 ## Canvas
 
-**Build the flow here.** **Sheets of this flow:** the tabs above the canvas spread one flow across several sheets.
+The canvas is where you build the flow. The tabs above it, **Sheets of this flow**, spread one flow across several
+sheets.
 
 The canvas works like this:
 
@@ -52,8 +54,8 @@ The right-hand side holds the selected node's settings and what the board sends 
   **Info** to add routine reports such as memory, **Debug** for everything.
 - **Run Python on the board:** type a line of Python and click **Send**. It runs on the board alongside the flow.
   See [Commands and the Python prompt](debugging.md#commands-and-the-python-prompt).
-- **Escape to REPL:** **Stop flow & open prompt** stops the flow and gives you MicroPython's own `>>>` prompt (the
-  REPL). **Restart Thingstudio** starts the flow again.
+- **Escape to REPL:** **Stop flow & open prompt** stops the flow and gives you MicroPython's own `>>>` prompt.
+  **Restart Thingstudio** starts the flow again.
 
 [Editor in depth](working-in-the-editor.md) covers wire types, node labels, presets, config nodes and node status.
 

@@ -7,10 +7,10 @@ Sends one message with a fixed payload each time the flow starts.
 - **payload type** — `bool`, `number`, `string`, or `start reason`.
 - **value** — the fixed value to send, matching the chosen type. Not used with `start reason`.
 
-## Output
+## Wiring
 
-Every message has a `reason` field saying why the flow started. With payload type `start reason`,
-the payload is that same string.
+**Output** — the fixed value, with a `reason` field saying why the flow started. With payload type
+`start reason`, the payload is that same string.
 
 | reason | the flow started because |
 | --- | --- |
@@ -23,7 +23,7 @@ the payload is that same string.
 | `unknown` | the board can't tell |
 
 Not every board reports every reason. ESP32 boards report the reset button as `power_on`, because on those
-chips the button cuts power to the core. A board running a runtime older than 5.1.0 always sends `unknown`.
+chips the button cuts power to the core.
 
 ## Behavior
 

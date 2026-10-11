@@ -26,8 +26,8 @@ and uses its RAM. So a 264 KB Pico W leaves more for your flow than a 400 KB ESP
 ## Deploy failed with "MemoryError ... allocating 38400 bytes". Why, when there's more free memory than that?
 
 Free memory is in pieces. A big buffer needs one piece that size, and after a while an ESP32 may not have
-one. A 240x320 frame in 16 greys is 38,400 bytes. The [GUI nodes](nodes/gui.md) avoid this by drawing the
-screen in small strips. If your own `function` node builds a full frame, draw it in strips too, or restart
+one. A 240x320 frame in 16 grays is 38,400 bytes. The [GUI nodes](nodes/gui.md) avoid this by drawing the
+screen in strips. If your own `function` node builds a full frame, draw it in strips too, or restart
 the board before deploying.
 
 ## My ESP32-S3 board has PSRAM, but the console shows only about 120 KB free. Why?
@@ -40,7 +40,7 @@ The console then shows megabytes free. Freenove's S3 display boards are an examp
 
 An ESP32 with external RAM (PSRAM), such as many ESP32-S3 boards. MicroPython puts its heap in the external RAM,
 leaving the chip's own RAM for WiFi. A classic ESP32 or ESP32-C3 without PSRAM can run a display and WiFi, but
-only at lower colour depths and with little to spare.
+only at lower color depths and with little to spare.
 
 ## My WiFi flow worked before, but now the board crashes or won't join. Why?
 
@@ -57,8 +57,8 @@ Connect and deploy again.
 
 ## How do I tell which version of the editor I'm running?
 
-It's next to **Thingstudio** in the toolbar, and in **Help → About**. A `+` after it means the editor was built
-from changes that weren't committed yet.
+It's next to **Thingstudio** in the toolbar, and in **Help → About**. A `+` after it means you built the editor
+from uncommitted changes.
 
 ## My clock shows `--` and never the time. Why?
 
@@ -81,7 +81,7 @@ Use the touch node only when you aren't using the GUI. Deploy stops and names bo
 A function node's output has the type `any`, and `pwm out`'s input takes a `number`. The editor refuses a wire from
 `any` to `number`, `int` or `string` inputs. See [Wiring](working-in-the-editor.md#wiring).
 
-## Why is Compile → Deploy greyed out after a deploy?
+## Why is Compile → Deploy grayed out after a deploy?
 
 The board already runs the flow on the canvas. Deploy comes back when you change the flow. See
-[Deploy is greyed out](debugging.md#deploy-is-greyed-out).
+[Deploy is grayed out](debugging.md#deploy-is-grayed-out).

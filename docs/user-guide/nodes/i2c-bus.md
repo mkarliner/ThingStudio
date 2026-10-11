@@ -1,7 +1,7 @@
 # I2C bus
 
-An I2C bus is a pair of wires, SCL and SDA, shared by one or more devices. A display and a sensor can sit on
-the same bus, each at its own address.
+An I2C bus is shared by one or more devices. A display and a sensor can sit on the same bus, each at its own
+address.
 
 Each I2C node has an **I2C bus** field. Pick a bus, or add one with **+**. The pins and clock are set once,
 on the bus, and every node on that bus uses them.

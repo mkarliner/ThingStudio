@@ -18,8 +18,8 @@ choose (see [Flow lifecycle](flow-lifecycle.md#save-and-open)).
 | `boards/` | Board definitions | Yes |
 | `processors/` | Processor definitions | Yes |
 
-Every file is plain JSON, except the Python half of a custom node. The editor reads these folders through the
-Thingstudio backend, so the direct (WebSerial-only) connection mode can't use them.
+Every file is plain JSON, except the `.node.py` file of a custom node. The editor reads these folders through the
+Thingstudio backend, so they aren't available when the editor talks to the board directly over USB.
 
 ## Credentials
 

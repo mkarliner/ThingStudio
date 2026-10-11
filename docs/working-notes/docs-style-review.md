@@ -456,3 +456,61 @@ the `curl | sh` lines with the plain download and how to read the script as an e
 `variable_get`/`variable_set` detail), "Target hardware" (a changing list that also said users must bring a board
 with MicroPython on it, no longer true): Getting started and Supported hardware links replace them. Factual: the
 backend also talks to boards over WiFi (`tcp_relay.py`), and keeps board definitions in `~/.thingstudio`.
+
+## Whole-set style pass (2026-10-11, after the P1 rewrite)
+
+A wording pass over `docs/user-guide/`, 46 files, applied from the guide alone. Its job was wording, not structure:
+the P1 rewrite and the P2/P3 work keep their own scope. Not an interactive pass; recorded here after the fact from
+the diff. Categories:
+
+- **US spelling:** licence → license, colour → color, grey → gray.
+- **Sizing words dropped** where they overstate or vary: "a few hundred kilobytes" → "hundreds of kilobytes", "a
+  small runtime" → "a runtime", "Microcontrollers are small" → "limited", "the simplest way" → "the way", "a small
+  fixed palette" → "a fixed palette".
+- **"just" → "only"** where "just" was ambiguous, or dropped ("not just power" → "not only power").
+- **Current state only:** "not yet", "planned but not built", "today", "so far", runtime version floors (5.1.0,
+  "3.0.0 or later"), and a "Not yet supported" heading → "Limitations".
+- **Asides removed:** hardware-confirmation footnotes, dates, `test-flows/README.md` and
+  `decisions/node-authoring.md` pointers, "by design", "worth knowing up front", TiDAL/EMF history, the unmerged
+  byte-order PR, "leaves room for others later".
+- **Node names as in the palette:** code forms (`mqtt_publish`, `display_i2c`, `wifi_status`, `http_in`, `touch_i2c`)
+  became bold palette names (**mqtt publish**, **display i2c**, **wifi status**, **http in**, touch), per the
+  guide's `i2c device`/`gui screen` examples.
+- **Lists get a lead-in:** "Further reading:", "To connect:", "The fields are:", "In practice, that means:".
+- **Openings:** added a first line saying what the page is for (`boards.md`, `debugging.md`, `flow-lifecycle.md`,
+  `working-in-the-editor.md`, `connecting.md`); removed the page-describing opening (`editor-tour.md`).
+- **Sentence-level clarity** edits, e.g. `% 2` in `first-flow.md`, "uses Python's own truth test" in `gpio-out.md`.
+
+Not touched: the P2 structural work (node pages to the fixed layout, chip lists linked to Supported hardware). This
+pass changed node-page wording only; `user-docs-rewrite.md` still lists those pages as P2.
+
+## Node pages rewrite (2026-10-11)
+
+P2 item 5/6 (`user-docs-rewrite.md`): `docs/user-guide/nodes/` and `nodes/index.md` brought to the guide's fixed
+layout — one-line purpose, Properties, Wiring (inputs and outputs), Behavior, Errors. Structural, no meaning
+changed. Calls:
+
+- **Fixed headings:** "#"; one-line purpose; `## Properties`; `## Wiring` (with an **Input**/**Output** lead-in);
+  `## Behavior`; `## Errors` where the node has a distinct error list. Renamed the old `## Output` sections to
+  `## Wiring` (`bme280`, `i2c device`, `startup`, `touch`, `display i2c`, `display spi`) and `function`'s
+  `## Multiple outputs` to `## Wiring` (one input, N outputs).
+- **`display spi`:** folded the indexed-mode and byte-order material under `## Behavior` as subsections; dropped the
+  EMF 2022 TiDAL asides from `xstart`/`ystart` and the "chosen for consistency … confirmed against MicroPython's C
+  source" aside from the `mono` warning. Reference content (buffer sizes, the byte-swap fix, the `MONO_HMSB`
+  requirement) kept.
+- **`gui.md`:** removed the two `test-flows/...` example pointers (examples belong in tutorials); kept the family
+  layout and every anchor other pages link to.
+- **Chip lists link to Supported hardware:** `display i2c` (#displays), `touch panels` (#touch-panels), `bme280`
+  (#sensors); `display spi` already linked.
+- **Examples folded into Behavior** (`filter`, `journal`'s cascading note) rather than a standalone `## Example`.
+- **`nodes/index.md`:** added the missing lead-in sentence above the General table.
+- **Anchors preserved:** `gui.md#the-nodes`/`#trend`/`#buttons`/`#a-toggle-that-follows-the-real-device`/
+  `#rotating-the-screen`/`#laying-out-pages`, `function.md#context-and-flow-variables`,
+  `display-i2c.md#text-on-the-panel` (linked from `ai-authoring.md`).
+- **Facts:** none changed; behavior claims carried over as written, not re-derived this session.
+
+Checks: `mkdocs build --strict` (exit 0) and `python3 tools/build_llms_txt.py --check` (nav 62 pages), both clean.
+`clock.md` left alone (to be replaced by `ntp.md`); `ai-authoring.md` and `nodes-catalog.md` out of scope.
+
+Still P2: `boards.md`, `custom-nodes.md`, `faq.md`, `flow-lifecycle.md`, `wifi-connection.md`, `check-a-flow.md`;
+P3 the background/coming-from pages.

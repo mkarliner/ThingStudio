@@ -30,7 +30,5 @@ the console.
 
 Everything resets when you deploy or the board restarts.
 
-## Example
-
-A temperature sensor read every second, into a `filter` in `deadband` mode with threshold `0.5`, into
-`mqtt publish`. The broker only hears about changes of half a degree or more.
+A temperature sensor read every second, into `filter` in `deadband` mode with threshold `0.5`, into
+`mqtt publish`, tells the broker only about changes of half a degree or more.

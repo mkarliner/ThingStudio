@@ -17,7 +17,7 @@ It emits when connection identity changes (connect/disconnect, or a change to `i
 
 Pick "unmanaged" on the WiFi config when you don't want this node issuing its own connect — either because something else already manages the connection, or because you want the device to learn its credentials on its own over the air. See [WiFi provisioning](../wifi-provisioning.md) for how that self-provisioning flow works, including the setup network's password and the reprovisioning-fallback option.
 
-If no connection is ever made, this node just reports disconnected, the same as any other failed connect — provisioning changes how the interface gets its credentials, not how wifi_status reports on them.
+If no connection is ever made, this node reports disconnected, the same as any other failed connect — provisioning changes how the interface gets its credentials, not how wifi_status reports on them.
 
 Shows a connection-status dot on the canvas (see [Editor in depth](../working-in-the-editor.md#node-status)) once connected to a device.
 

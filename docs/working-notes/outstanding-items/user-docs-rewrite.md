@@ -22,10 +22,10 @@ factual fixes: `docs-style-review.md`, "Rewrite log (2026-10-11)".
 
 ## P2: reference the reader looks up
 
-5. Node pages to the fixed layout (once Mike confirms it): start with the long ones, `nodes/gui.md` (1630) and
-   `nodes/display-spi.md` (1539, still carries dates and test-rig history in xstart/ystart), then the rest.
-   `display-i2c.md`, `touch-panel.md`, `bme280.md`: link chip lists to Supported hardware.
-6. `nodes/index.md` (1013).
+5. **Done 2026-10-11.** Node pages brought to the fixed layout; `display-i2c.md`, `touch-panel.md`, `bme280.md`
+   chip lists now link to Supported hardware; `display-spi.md` and `gui.md` trimmed. Calls:
+   `docs-style-review.md`, "Node pages rewrite (2026-10-11)".
+6. **Done 2026-10-11** (`nodes/index.md`).
 7. `boards.md` (1462): built-in board and processor tables now overlap Supported hardware; keep pin detail here,
    tested status there.
 8. `custom-nodes.md` (1346), `faq.md` (759), `flow-lifecycle.md` (624, older verbose style), `wifi-connection.md`

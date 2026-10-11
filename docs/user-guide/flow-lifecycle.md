@@ -1,22 +1,47 @@
 # Flow lifecycle
 
+How a flow is saved, opened, deployed and disconnected.
+
 ## Save and open
 
-Flows save to a file you choose, via your browser's own save dialog — no backend needed for this part. **File → Save…** writes the current canvas — node types and properties, wiring, canvas layout, and config nodes, each kept in its own section — to a `.flow.json` file wherever you point it, so it can live inside a project's git repo like any other file you're tracking.
+Flows save to a file you choose, via your browser's own save dialog. **File → Save…** writes the current canvas —
+node types and properties, wiring, canvas layout, and config nodes, each kept in its own section — to a `.flow.json`
+file wherever you point it, so it can live inside a project's git repo like any other file you're tracking.
 
-**File → Open…** opens the matching native dialog to load one back, canvas layout included. There's no in-editor list of saved flows and no delete button — the file lives wherever you saved it, so browsing and deleting it is your OS's/git's job, the same as any other document.
+**File → Open…** opens the matching native dialog to load one back, canvas layout included. Thingstudio keeps no
+list of saved flows; the file lives wherever you saved it, so browsing and deleting it is your OS's or git's job,
+the same as any other document.
 
-**The flow name** field is saved inside the file itself and is sent with every deploy — so a connected board's identity is visible in the console rather than just an opaque deploy id. It also suggests a filename for the save dialog (spaces and punctuation become dashes), but you can type over that suggestion freely; nothing enforces a match between the two.
+**The flow name** field is saved inside the file itself and is sent with every deploy, so a connected board's
+identity is visible in the console instead of a bare deployment id. It also suggests a filename for the save dialog
+(spaces and punctuation become dashes), but you can type over that suggestion freely; nothing enforces a match
+between the two.
 
-In Chrome or Edge this is the real OS file dialog each time — Save and Open don't remember the last file you picked, so you choose a target on every save (the browser's own dialog handles confirming an overwrite if you pick a file that already exists). Safari and Firefox don't support this file-picker API at all, so there **File → Save…** falls back to a plain browser download and **File → Open…** to a plain file-upload picker.
+In Chrome or Edge this is the real OS file dialog each time — Save and Open don't remember the last file you picked,
+so you choose a target on every save (the browser's own dialog handles confirming an overwrite if you pick a file
+that already exists). Safari and Firefox don't support this file-picker API, so there **File → Save…** falls back to
+a plain browser download and **File → Open…** to a plain file-upload picker.
 
-Custom node packages and saved credentials (see [Editor in depth](working-in-the-editor.md#config-nodes)) are the two things that still live on the backend, in `~/.thingstudio/custom-nodes/` and `~/.thingstudio/credentials/`. They're shared across flows rather than tied to one project, unlike a flow itself — a saved credential referenced by name from a config node never gets written into the `.flow.json` file.
+Custom node packages and saved credentials live in `~/.thingstudio/custom-nodes/` and `~/.thingstudio/credentials/`.
+They're shared across flows rather than tied to one project, unlike a flow itself — a saved credential referenced by
+name from a config node is never written into the `.flow.json` file. See
+[The Thingstudio folder](thingstudio-folder.md).
 
 ## Deploy
 
-**Compile → Deploy** compiles the current canvas to MicroPython bytecode and sends it to the connected board, replacing whatever flow is currently running there.
+**Compile → Deploy** compiles the current canvas to MicroPython bytecode and sends it to the connected board,
+replacing whatever flow is currently running there.
 
-A successful deploy shows a confirmation in the console and the new flow starts running immediately. A failed one shows a specific error — a compile error (something in the flow itself, like a missing required property), a space error (the compiled flow doesn't fit in the board's available flash/RAM), or a library error (see below). A failed deploy leaves the board's current flow running. The button grays out right after a successful deploy — it means the board is already running exactly what's on the canvas — and re-enables the moment you change anything (a property, a node, a wire). A failed deploy leaves it enabled so you can fix the problem and retry immediately.
+A successful deploy shows a confirmation in the console and the new flow starts running immediately. A failed deploy
+leaves the board's current flow running and shows a specific error:
+
+- a compile error — something in the flow itself, such as a missing required property
+- a space error — the compiled flow doesn't fit in the board's available flash/RAM
+- a library error — see below
+
+After a successful deploy the button grays out: the board is already running exactly what's on the canvas. It
+re-enables the moment you change anything (a property, a node, a wire). A failed deploy leaves it enabled so you can
+fix the problem and retry.
 
 ### Libraries
 

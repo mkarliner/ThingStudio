@@ -1,5 +1,7 @@
 # Editor in depth
 
+How the editor's wiring, node labels, presets, config nodes and node status work.
+
 ## Wiring
 
 Every port has a type: `int`, `number`, `bool`, `string`, `bytes` or `any`. The editor refuses a wire between
@@ -15,7 +17,8 @@ types that don't fit. What each input type accepts:
 | `bytes` | `bytes`, `any` |
 
 A `string` that isn't a number fails on the board when it reaches a `number` or `int` input, with a `NODE_ERROR`.
-An `any` output, such as a [function](nodes/function.md) node's, connects only to `any`, `bool` and `bytes` inputs.
+An `any` output, such as the output of a [function](nodes/function.md) node, connects only to `any`, `bool` and
+`bytes` inputs.
 
 An input can take any number of wires. The node runs once for each message that arrives, whichever wire it came
 on. An output can feed any number of inputs.
@@ -65,13 +68,13 @@ change it on one and it changes on all. A flow doesn't need a `wifi status` node
 
 ## Node status
 
-Some nodes show a coloured dot and a line of text under the node while the editor is connected to the board:
+Some nodes show a colored dot and a line of text under the node while the editor is connected to the board:
 
 | Dot | Meaning |
 | --- | --- |
 | Green | connected |
 | Amber | connecting |
-| Grey | disconnected |
+| Gray | disconnected |
 | Red | error |
 
 The dot shows what the board reports, not the editor's guess. It appears once the running flow first reports, and

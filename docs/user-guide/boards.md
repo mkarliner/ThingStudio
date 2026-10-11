@@ -1,5 +1,7 @@
 # Boards and processors
 
+Each board and processor has a definition file that says which pins a flow may use. This page covers picking a board, seeing its pins, what gets checked, and writing your own definition files.
+
 Thingstudio checks every pin in a flow against the board the flow is for. If a pin doesn't exist on that board, or using it would crash the board, the compile stops and says why.
 
 Each board has a definition file, and so does each processor. Thingstudio comes with definitions for the boards and processors below. You can [change them or add your own](#your-definition-files).
@@ -17,9 +19,13 @@ If no board is connected and none is picked, pins are only checked against the r
 ## Seeing a board's pins
 
 Click **Pins…** next to the **Board** menu. It opens a page, in its own tab, for the board or processor picked
-there. Pins the board names, such as its LED, come first. For boards whose definition has a `header`, such as the
-Pico family, the board's physical pins come next, laid out like the board, with power and ground marked. Then every
-pin, with whether it's free, reserved or best avoided, and why. Then which pins each SPI and I2C bus can use.
+there. The page lists, in order:
+
+- the pins the board names, such as its LED
+- for boards whose definition has a `header`, such as the Pico family, the physical pins, laid out like the board,
+  with power and ground marked
+- every pin, with whether it's free, reserved or best avoided, and why
+- which pins each SPI and I2C bus can use
 
 The page is read from the definition files each time you click. After changing a file, click **Pins…** again.
 
@@ -56,7 +62,7 @@ In the properties panel, a pin field shows the board's name for that pin, such a
 | Raspberry Pi Pico 2 | RP2350 | GPIO 0–29. LED on GPIO 25. |
 | LOLIN S2 Mini | ESP32-S2 | LED on GPIO 15, button on GPIO 0 |
 | CYD (ESP32-2432S028, ST7789) | ESP32 | Pick by hand. Display, touch, SD, RGB LED and speaker pins are labelled. |
-| Freenove ESP32-S3 Display 4.0" (FNK0104S, ST7796) | ESP32-S3 | Pick by hand. Display and touch pins are labelled. 320x480, SPI bus 1. Rotation 1 is portrait. For landscape, set the display's `orientation` to 90 (or 270 for the other way up) and keep the screen and display at 320x480; the older raw codes still work without an orientation: 4 is landscape with USB on the right, 7 with USB on the left (then size the screen 480x320). Display and touch (FT6336U) work. |
+| Freenove ESP32-S3 Display 4.0" (FNK0104S, ST7796) | ESP32-S3 | Pick by hand. Display and touch pins are labelled. 320x480, SPI bus 1. Rotation 1 is portrait. For landscape, set the display's `orientation` to 90 (or 270 for the other way up) and keep the screen and display at 320x480. Display and touch (FT6336U) work. |
 
 ## Built-in processors
 
@@ -79,8 +85,8 @@ The definition files list every pin to avoid, with the reason.
 
 Definition files live in `~/.thingstudio/boards/` and `~/.thingstudio/processors/`. When Thingstudio starts, it copies in any built-in file that's missing, so you can read and edit them there.
 
-To change a built-in board, edit its file. To get the original back, delete the file and restart Thingstudio. A newer version of Thingstudio doesn't update a file you already have. Delete it to get the new one.
-For example, the built-in Pico files now say `"wifi": false`; an older copy without that line still offers WiFi.
+To change a built-in board, edit its file. To get the original back, delete the file and restart Thingstudio. A newer
+version of Thingstudio doesn't update a file you already have, so delete a file to pick up its new built-in version.
 
 Thingstudio reads these files when the editor starts, when you connect, and when you deploy. If a file has a mistake, it isn't loaded and the built-in is used instead. The console says what's wrong, and the Board menu lists the file under **Invalid files**.
 
@@ -98,6 +104,8 @@ Save a JSON file in `~/.thingstudio/boards/`. The file name, without `.json`, is
   "notes": "Hand-built, rev 2."
 }
 ```
+
+The fields are:
 
 | Field | Meaning |
 | --- | --- |
@@ -122,6 +130,8 @@ To find the name MicroPython reports, connect the board and look for `chipType` 
 ## Adding a processor
 
 Save a JSON file in `~/.thingstudio/processors/`, named the same way as a board file. The built-in files in that folder are good examples.
+
+The fields are:
 
 | Field | Meaning |
 | --- | --- |

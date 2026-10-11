@@ -11,8 +11,8 @@ Fires immediately when a GPIO pin changes state — genuinely event-driven, not 
 
 ## Behavior
 
-The payload is the pin's level (`true`/`false`) at the moment the node wakes, not a record of every intermediate change — a burst of bounces inside the debounce window collapses into one report of the settled state, by design.
+The payload is the pin's level (`true`/`false`) at the moment the node wakes, not a record of every intermediate change — a burst of bounces inside the debounce window collapses into one report of the settled state.
 
 No internal pull resistor is configured. Wire an external pull resistor, or use a button module with one built in.
 
-Two `interrupt` nodes configured for the same pin silently share the first one's edge/debounce settings rather than erroring — a real limitation, not a crash, but worth knowing if a second interrupt node on the same pin doesn't seem to behave the way its own property panel says.
+Two `interrupt` nodes configured for the same pin silently share the first one's edge and debounce settings. A second interrupt node on the same pin won't use its own property panel values.
