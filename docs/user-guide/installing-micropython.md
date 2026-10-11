@@ -1,10 +1,10 @@
-# Step 2: Install MicroPython
+# Step 3: Install MicroPython
 
 Thingstudio runs on top of [MicroPython](background/micropython.md), a version of Python for microcontrollers. Your
 board needs MicroPython before Thingstudio can use it. You install it once.
 
-A new board usually doesn't have MicroPython. If you know yours does, go to [step 3](editor-tour.md). If you're not
-sure, carry on to [step 4](connecting.md) anyway: Thingstudio tells you if MicroPython is missing, and links back here.
+A new board usually doesn't have MicroPython. If yours already has it, or you're not sure, go to
+[step 4](connecting.md). Thingstudio tells you if MicroPython is missing, and links back here.
 
 ## Get the firmware
 
@@ -79,4 +79,4 @@ Thingstudio is built and tested on the ESP32 and RP2 chips above. To try another
 
 ## Next
 
-Step 3: [tour the editor](editor-tour.md).
+Step 4: [connect your board](connecting.md) to Thingstudio.

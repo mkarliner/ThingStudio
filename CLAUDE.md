@@ -250,16 +250,8 @@ state what a thing is and how to use it, not the full case for why it's
 built that way. Short sentences, short paragraphs, definitions over
 elaboration, an example only where one actually clarifies.
 
-**Interim style reference, until we have our own:** Mike pointed at
-[Node-RED's "Concepts" page](https://nodered.org/docs/user-guide/concepts)
-as the shape to aim for — short (10–20 word) sentences, 3–4-sentence
-paragraphs, a neutral/direct tone with no flourish, one clarifying
-sentence per concept rather than a paragraph, and links out to
-"Working with..." pages instead of embedding that detail inline. Not a
-license to copy its wording — a reference for pacing and register while
-we work out our own house style. Once Mike's happy with a piece written
-this way, write the actual style guide from that example and replace this
-paragraph with a pointer to it.
+**Style guide:** `docs/working-notes/docs-style-guide.md` (draft, 2026-10-11, from Mike's review of the docs).
+Read it before writing or editing anything in `docs/user-guide/`.
 
 ## Handoff/briefing note filenames: lead with the topic, not "next-session-picks" -- this keeps getting ignored, read it before you name the file
 

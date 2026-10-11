@@ -17,7 +17,7 @@ With a new board, the console says the Thingstudio runtime isn't installed. That
 next step.
 
 If the console says the board didn't reply, or isn't running MicroPython, go back to
-[step 2: install MicroPython](installing-micropython.md). Other messages are explained in
+[step 3: install MicroPython](installing-micropython.md). Other messages are explained in
 [board won't connect](debugging.md#board-wont-connect).
 
 Once the runtime is installed, the board replies with its chip type, runtime version and free memory. The

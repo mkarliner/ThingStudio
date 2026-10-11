@@ -3,8 +3,8 @@
 Six steps take you from a new board to a blinking LED. Each page ends with a link to the next one.
 
 1. **[Install Thingstudio](#step-1-install-thingstudio)** on your computer. See below.
-2. **[Install MicroPython](installing-micropython.md)** on your board.
-3. **[Tour the editor](editor-tour.md)**: what each part of the screen does.
+2. **[Tour the editor](editor-tour.md)**: what each part of the screen does.
+3. **[Install MicroPython](installing-micropython.md)** on your board.
 4. **[Connect your board](connecting.md)** to Thingstudio.
 5. **[Install the runtime](installing-runtime.md)**, the part of Thingstudio that runs on the board.
 6. **[Blink an LED](first-flow.md)**: build your first flow and deploy it.
@@ -19,7 +19,7 @@ everything it needs, including its own Python. Nothing else needs installing.
 There are two ways to install it. Both give you the same program.
 
 - **Download a package** from the [releases page](https://github.com/mkarliner/ThingStudio/releases/latest) and
-  unpack it. Nothing runs until you start it. See [more on installing](installing-more.md#packages) for which
+  unpack it. Nothing runs until you start it. See [installation details](installation-details.md#packages) for which
   package to pick.
 - **Run the installer script.** It picks the right package, checks its checksum, and adds a `thingstudio`
   command. It's quicker, and makes upgrading easier.
@@ -59,7 +59,7 @@ irm https://github.com/mkarliner/ThingStudio/releases/latest/download/install.ps
 
 You don't need to be an administrator.
 
-To upgrade or remove Thingstudio, or build it from source, see [more on installing](installing-more.md).
+To upgrade or remove Thingstudio, or build it from source, see [installation details](installation-details.md).
 
 ## Start Thingstudio
 
@@ -80,4 +80,4 @@ them.
 
 ## Next
 
-Step 2: [install MicroPython](installing-micropython.md) on your board.
+Step 2: [tour the editor](editor-tour.md).

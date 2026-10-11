@@ -373,6 +373,12 @@ not here.
 
 ## Docs / process
 
+- **[BACKLOG]** **"Future" page in the user docs** (Mike, 2026-10-11). One clearly labelled page for planned
+  features, inviting feedback, so the rest of the docs can describe only the current state. Not scheduled.
+- **User docs rewrite to the style guide -- new item, 2026-10-11 (Mike, docs style review).** Prioritised page list:
+  P1 the Getting started pages, `working-in-the-editor.md`, `sensor-display.md`, `debugging.md`; P2 node pages to a
+  fixed layout, `boards.md`, `custom-nodes.md`, `faq.md`, `flow-lifecycle.md`; P3 background pages. Rules:
+  `docs-style-guide.md`. ([detail](outstanding-items/user-docs-rewrite.md))
 - **User docs on GitHub Pages -- new item, 2026-09-27 (Mike).** `docs.yml` already deploys to the `gh-pages`
   branch successfully; Pages isn't switched on in the repo settings. Then check links and link it from the
   README, release notes and `install.sh`. ([detail](mvp-remaining-work-briefing.md), item A)

@@ -59,15 +59,16 @@ nav:
       - Arduino and C: coming-from/arduino.md
   - Getting started:
       - 1. Install Thingstudio: getting-started.md
-      - 2. Install MicroPython: installing-micropython.md
-      - 3. Tour the editor: editor-tour.md
+      - 2. Tour the editor: editor-tour.md
+      - 3. Install MicroPython: installing-micropython.md
       - 4. Connect your board: connecting.md
       - 5. Install the runtime: installing-runtime.md
       - 6. Blink an LED: first-flow.md
-      - More on installing: installing-more.md
+      - Installation details: installation-details.md
   - The Thingstudio folder: thingstudio-folder.md
   - Working in the editor: working-in-the-editor.md
   - Check a flow without the editor: check-a-flow.md
+  - Command line: command-line.md
   - Node catalog: nodes-catalog.md
   - Writing flows with an AI assistant: ai-authoring.md
   - A sensor display: sensor-display.md
@@ -75,6 +76,7 @@ nav:
   - Supported hardware: supported-hardware.md
   - Boards and processors: boards.md
   - Connecting over WiFi: wifi-connection.md
+  - WiFi provisioning: wifi-provisioning.md
   - Debugging & troubleshooting: debugging.md
   - FAQ: faq.md
   - Node reference:

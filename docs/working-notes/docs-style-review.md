@@ -184,6 +184,40 @@ Done: `editor-tour.md` is Getting started step 3 (later steps renumbered 4-6); t
 is `working-in-the-editor.md`. `tools/screenshots.py` now draws labels in a margin with arrows (run in the cloud
 container against Mike's `editor/dist`; the VM can't download Chromium).
 
+> are still the wrong order, I'm going
+> * Thingstudio (computer)
+> * micropython (board)
+> * Thingstudio (computer)
+> * connect(board)
+>
+> understand?  pages and the manual in general shouldn't break the logical folow unecessarily
+
+Done: tour is step 2, MicroPython step 3.
+
+#### `installing-more.md` (2026-10-11)
+
+> [Getting started] covers installing Thingstudio. This page covers the rest. ??
+> Whats wrong with this
+
+Then "yes" to the fix: renamed `installation-details.md`, opening says what's on the page, sections reordered to
+match Getting started (packages, installer script, source); start options and the CLI runtime install moved to a new
+`command-line.md`.
+
 ## Patterns
 
-(Not grouped yet.)
+Grouped from the remarks above. Each is written up, with examples, in `docs-style-guide.md`.
+
+- **Reader:** programmers (Node-RED, MicroPython, C/C++); don't teach basics. (Opening answers; "Most microcontroller
+  programs are one big loop" remark.)
+- **Voice:** neutral, no humour, no "we". (Opening answers; Built on standard parts.)
+- **Current state only:** no internal terms, no "preview"/"coming", nothing likely to change. (Opening answers;
+  stock-firmware removal; GUI (preview).)
+- **Name things:** reader's terms, editor's labels, specific nouns. (Opening paragraph; "These docs"; i2c device.)
+- **No false sizing words.** ("small chain", "small bundle".)
+- **Order follows the work.** (Section order on Home; Getting started; More on installing.)
+- **Open with the page's purpose.** (More on installing.)
+- **Lists get an intro sentence; link choices go in lists.** (Built on standard parts; background tip.)
+- **One home for changing facts.** (display-spi controller list; Blink an LED pin table.)
+- **Pictures labelled in place.** (Editor tour.)
+- **Design follows docs:** a node that's awkward to document may be badly designed. (clock; logged as an item.)
+

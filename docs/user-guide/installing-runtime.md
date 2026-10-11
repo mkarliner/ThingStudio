@@ -14,7 +14,7 @@ The console now shows the board's chip type, runtime version and free memory.
 If something goes wrong, the console says what the board sent back and what to do. See
 [board won't connect](debugging.md#board-wont-connect).
 
-To install the runtime from the command line instead, see [more on installing](installing-more.md).
+To install the runtime from the command line instead, see [Command line](command-line.md#installing-the-runtime-from-the-command-line).
 
 ## Next
 

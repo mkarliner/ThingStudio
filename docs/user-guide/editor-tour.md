@@ -1,4 +1,4 @@
-# Step 3: Tour the editor
+# Step 2: Tour the editor
 
 Start Thingstudio if it isn't running. See [step 1](getting-started.md#start-thingstudio). The editor opens in your
 web browser.
@@ -46,4 +46,4 @@ The editor refuses a wire between ports whose types don't fit. See [Wiring](work
 
 ## Next
 
-Step 4: [connect your board](connecting.md) to Thingstudio.
+Step 3: [install MicroPython](installing-micropython.md) on your board.
