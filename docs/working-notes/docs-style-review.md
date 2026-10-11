@@ -445,3 +445,14 @@ Done: the opening is now the list's lead-in only, "From a new board to a blinkin
 Same fix applied, unprompted, to the other openings written in Part 1 that described the page:
 `installing-micropython.md`, `connecting.md`, `installing-runtime.md`, `editor-tour.md` ("How to...", "The parts
 of...") and `debugging.md` (opening removed; its sections say what they are).
+
+### `README.md` (2026-10-11)
+
+> the readme.md needs to be reviewed.
+
+Rewritten to the guide (CLAUDE.md lists READMEs as human-facing docs). Opening matches `index.md`'s; install keeps
+the `curl | sh` lines with the plain download and how to read the script as an equal choice. Removed: "Status"
+(pre-v1, road to MVP), "Not built yet" (a list of what's missing), "Node library" (a node count and internal
+`variable_get`/`variable_set` detail), "Target hardware" (a changing list that also said users must bring a board
+with MicroPython on it, no longer true): Getting started and Supported hardware links replace them. Factual: the
+backend also talks to boards over WiFi (`tcp_relay.py`), and keeps board definitions in `~/.thingstudio`.
