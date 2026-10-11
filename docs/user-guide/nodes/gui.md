@@ -77,7 +77,6 @@ With the input wired, the flow owns the state:
 The input is matched against the toggle's *on sends* and *off sends* values. MQTT delivers text, so the text `true`
 matches a true/false toggle and `1` matches a number toggle. Anything else shows `--`. Tasmota
 reports `ON` and `OFF` as text, so for a Tasmota plug set the value type to text and use `ON` and `OFF`.
-`test-flows/gui-touch-freenove-s3-4in.flow.json` has this on its last page.
 
 Unwired, the toggle keeps its own state and starts as set by *starts on*.
 
@@ -137,6 +136,6 @@ flow file's `"screens"` section, which you can also edit by hand.
 
 Pages live in the flow file, under `"screens"`, keyed by the gui screen node's id. A page is a tree of
 `row` and `column` containers holding widgets (`"kind": "widget", "node": "<id>"`), fixed `text`,
-`pagedots` and `spacer`s. `test-flows/gui-hero-cyd.flow.json` is a complete example for the CYD.
+`pagedots` and `spacer`s.
 
 If something doesn't fit, Deploy stops and says which widget, on which page, needs how many pixels.

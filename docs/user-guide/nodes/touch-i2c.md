@@ -1,7 +1,7 @@
 # touch
 
-Raw touch input, for flows that don't use the GUI. It reads a capacitive touch panel and sends a message when
-a finger lands and when it lifts.
+Raw touch input, for flows that don't use the GUI. It reads a capacitive [touch panel](touch-panel.md) and sends
+a message when a finger lands and when it lifts.
 
 A [gui screen](gui.md) reads its panel itself, so you don't need this node to press buttons. One panel can't be
 used by both a gui screen and a touch node: Deploy stops and names them.
@@ -10,7 +10,9 @@ used by both a gui screen and a touch node: Deploy stops and names them.
 
 - **touch panel** — which [touch panel](touch-panel.md) to read. Pick one, or add one with **+**.
 
-## Output
+## Wiring
+
+**Output** — down and up, each with the touch point:
 
 ```python
 msg = {'payload': {'x': 120, 'y': 340}, 'topic': 'down'}   # a finger lands

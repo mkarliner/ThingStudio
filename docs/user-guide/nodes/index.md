@@ -43,6 +43,8 @@ See [flows, nodes and messages](../background/flows-and-nodes.md) for how they f
 
 ## General
 
+Nodes that don't need a network or hardware:
+
 | Node | Kind | What it does |
 | --- | --- | --- |
 | [inject](inject.md) | source | Sends one message with a fixed payload when you click it in the editor. |
