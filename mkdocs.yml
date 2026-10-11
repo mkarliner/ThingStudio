@@ -113,6 +113,7 @@ nav:
           - Touch panels: nodes/touch-panel.md
       - GUI: nodes/gui.md
   - Extending and automating:
+      - Node conventions: node-conventions.md
       - Writing custom nodes: custom-nodes.md
       - Writing flows with an AI assistant: ai-authoring.md
       - Check a flow without the editor: check-a-flow.md
