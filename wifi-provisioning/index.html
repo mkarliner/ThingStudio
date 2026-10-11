@@ -13,6 +13,10 @@
         <link rel="canonical" href="https://docs.thingstudio.net/wifi-provisioning/">
       
       
+        <link rel="prev" href="../wifi-connection/">
+      
+      
+        <link rel="next" href="../debugging/">
       
       
         
@@ -673,14 +677,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../installing-micropython/" class="md-nav__link">
+      <a href="../editor-tour/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    2. Install MicroPython
+    2. Tour the editor
   
 
     
@@ -701,14 +705,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../editor-tour/" class="md-nav__link">
+      <a href="../installing-micropython/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    3. Tour the editor
+    3. Install MicroPython
   
 
     
@@ -813,14 +817,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../installing-more/" class="md-nav__link">
+      <a href="../installation-details/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    More on installing
+    Installation details
   
 
     
@@ -910,6 +914,33 @@
     
   
     Check a flow without the editor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../command-line/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command line
   
 
     
@@ -1115,6 +1146,135 @@
       
   
   
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    WiFi provisioning
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    WiFi provisioning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#turning-it-on" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Turning it on
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-happens-on-the-device" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What happens on the device
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reprovisioning-fallback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reprovisioning fallback
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#changing-the-setup-networks-password" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changing the setup network's password
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#starting-over" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Starting over
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
   
   
     <li class="md-nav__item">
@@ -1185,10 +1345,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_17" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_19" >
         
           
-          <label class="md-nav__link" for="__nav_17" id="__nav_17_label" tabindex="">
+          <label class="md-nav__link" for="__nav_19" id="__nav_19_label" tabindex="">
             
   
   
@@ -1206,8 +1366,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_17_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_17">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_19_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_19">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1262,10 +1422,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_17_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_19_2" >
         
           
-          <label class="md-nav__link" for="__nav_17_2" id="__nav_17_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_19_2" id="__nav_19_2_label" tabindex="0">
             
   
   
@@ -1283,8 +1443,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_17_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_17_2">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_19_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_19_2">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1571,10 +1731,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_17_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_19_3" >
         
           
-          <label class="md-nav__link" for="__nav_17_3" id="__nav_17_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_19_3" id="__nav_19_3_label" tabindex="0">
             
   
   
@@ -1592,8 +1752,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_17_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_17_3">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_19_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_19_3">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1880,10 +2040,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_17_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_19_4" >
         
           
-          <label class="md-nav__link" for="__nav_17_4" id="__nav_17_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_19_4" id="__nav_19_4_label" tabindex="0">
             
   
   
@@ -1901,8 +2061,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_17_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_17_4">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_19_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_19_4">
             <span class="md-nav__icon md-icon"></span>
             
   

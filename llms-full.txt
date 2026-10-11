@@ -500,8 +500,8 @@ Source: https://docs.thingstudio.net/getting-started/
 Six steps take you from a new board to a blinking LED. Each page ends with a link to the next one.
 
 1. **[Install Thingstudio](#step-1-install-thingstudio)** on your computer. See below.
-2. **[Install MicroPython](installing-micropython.md)** on your board.
-3. **[Tour the editor](editor-tour.md)**: what each part of the screen does.
+2. **[Tour the editor](editor-tour.md)**: what each part of the screen does.
+3. **[Install MicroPython](installing-micropython.md)** on your board.
 4. **[Connect your board](connecting.md)** to Thingstudio.
 5. **[Install the runtime](installing-runtime.md)**, the part of Thingstudio that runs on the board.
 6. **[Blink an LED](first-flow.md)**: build your first flow and deploy it.
@@ -516,7 +516,7 @@ everything it needs, including its own Python. Nothing else needs installing.
 There are two ways to install it. Both give you the same program.
 
 - **Download a package** from the [releases page](https://github.com/mkarliner/ThingStudio/releases/latest) and
-  unpack it. Nothing runs until you start it. See [more on installing](installing-more.md#packages) for which
+  unpack it. Nothing runs until you start it. See [installation details](installation-details.md#packages) for which
   package to pick.
 - **Run the installer script.** It picks the right package, checks its checksum, and adds a `thingstudio`
   command. It's quicker, and makes upgrading easier.
@@ -556,7 +556,7 @@ irm https://github.com/mkarliner/ThingStudio/releases/latest/download/install.ps
 
 You don't need to be an administrator.
 
-To upgrade or remove Thingstudio, or build it from source, see [more on installing](installing-more.md).
+To upgrade or remove Thingstudio, or build it from source, see [installation details](installation-details.md).
 
 ## Start Thingstudio
 
@@ -577,20 +577,75 @@ them.
 
 ## Next
 
-Step 2: [install MicroPython](installing-micropython.md) on your board.
+Step 2: [tour the editor](editor-tour.md).
+
+
+---
+
+Source: https://docs.thingstudio.net/editor-tour/
+
+# Step 2: Tour the editor
+
+Start Thingstudio if it isn't running. See [step 1](getting-started.md#start-thingstudio). The editor opens in your
+web browser.
+
+<figure markdown="span">
+  [![The Thingstudio editor with each part labelled](images/editor-parts.png)](images/editor-parts.png)<figcaption>The parts of the editor. Click to see it full size.</figcaption>
+</figure>
+
+<!-- The labels on the picture come from EDITOR_PARTS in tools/screenshots.py. Keep the names below in step. -->
+
+## Toolbar
+
+- **File:** start a new flow, open one, or save it.
+- **Flow name:** saved with the flow. The board reports it, so you can tell what it's running.
+- **Port list and Connect:** pick your board's port and connect to it. **⟳** looks for boards again.
+- **Board menu and Pins…:** the board the flow is for, and a page of its pins.
+- **Compile → Deploy:** turns the flow into MicroPython and sends it to the board.
+- **Tools and Help:** occasional board jobs, such as installing the runtime, and these docs.
+
+## Palette
+
+Every node you can add, in three groups: **General**, **Network** and **Hardware**. Drag a node onto the canvas, or
+click it. Type in the filter box to find one. [Custom nodes](custom-nodes.md) appear under their own group.
+
+## Canvas
+
+Where you build the flow. The flow tabs along the top spread a flow across several sheets.
+
+- **Wire two nodes:** drag from one node's output, on its right, to another node's input, on its left.
+- **Select:** click a node or a wire. Ctrl-click to select several nodes.
+- **Delete:** select, then press Delete or Backspace. Deleting a node removes its wires too.
+
+The editor refuses a wire between ports whose types don't fit. See [Wiring](working-in-the-editor.md#wiring).
+
+## Properties, notes and console
+
+- **Properties:** the selected node's settings.
+- **Notes:** free text about the flow, saved with it.
+- **Compiled source:** the MicroPython made from your flow. Click to open it.
+- **Console:** messages from Thingstudio and the board, including your flow's output.
+- **Python prompt:** runs a line of Python on the board.
+- **Board buttons:** stop the flow and use MicroPython's own prompt, or remove the saved flow.
+
+[Working in the editor](working-in-the-editor.md) covers node labels, presets, config nodes and node status.
+
+## Next
+
+Step 3: [install MicroPython](installing-micropython.md) on your board.
 
 
 ---
 
 Source: https://docs.thingstudio.net/installing-micropython/
 
-# Step 2: Install MicroPython
+# Step 3: Install MicroPython
 
 Thingstudio runs on top of [MicroPython](background/micropython.md), a version of Python for microcontrollers. Your
 board needs MicroPython before Thingstudio can use it. You install it once.
 
-A new board usually doesn't have MicroPython. If you know yours does, go to [step 3](editor-tour.md). If you're not
-sure, carry on to [step 4](connecting.md) anyway: Thingstudio tells you if MicroPython is missing, and links back here.
+A new board usually doesn't have MicroPython. If yours already has it, or you're not sure, go to
+[step 4](connecting.md). Thingstudio tells you if MicroPython is missing, and links back here.
 
 ## Get the firmware
 
@@ -665,61 +720,6 @@ Thingstudio is built and tested on the ESP32 and RP2 chips above. To try another
 
 ## Next
 
-Step 3: [tour the editor](editor-tour.md).
-
-
----
-
-Source: https://docs.thingstudio.net/editor-tour/
-
-# Step 3: Tour the editor
-
-Start Thingstudio if it isn't running. See [step 1](getting-started.md#start-thingstudio). The editor opens in your
-web browser.
-
-<figure markdown="span">
-  [![The Thingstudio editor with each part labelled](images/editor-parts.png)](images/editor-parts.png)<figcaption>The parts of the editor. Click to see it full size.</figcaption>
-</figure>
-
-<!-- The labels on the picture come from EDITOR_PARTS in tools/screenshots.py. Keep the names below in step. -->
-
-## Toolbar
-
-- **File:** start a new flow, open one, or save it.
-- **Flow name:** saved with the flow. The board reports it, so you can tell what it's running.
-- **Port list and Connect:** pick your board's port and connect to it. **⟳** looks for boards again.
-- **Board menu and Pins…:** the board the flow is for, and a page of its pins.
-- **Compile → Deploy:** turns the flow into MicroPython and sends it to the board.
-- **Tools and Help:** occasional board jobs, such as installing the runtime, and these docs.
-
-## Palette
-
-Every node you can add, in three groups: **General**, **Network** and **Hardware**. Drag a node onto the canvas, or
-click it. Type in the filter box to find one. [Custom nodes](custom-nodes.md) appear under their own group.
-
-## Canvas
-
-Where you build the flow. The flow tabs along the top spread a flow across several sheets.
-
-- **Wire two nodes:** drag from one node's output, on its right, to another node's input, on its left.
-- **Select:** click a node or a wire. Ctrl-click to select several nodes.
-- **Delete:** select, then press Delete or Backspace. Deleting a node removes its wires too.
-
-The editor refuses a wire between ports whose types don't fit. See [Wiring](working-in-the-editor.md#wiring).
-
-## Properties, notes and console
-
-- **Properties:** the selected node's settings.
-- **Notes:** free text about the flow, saved with it.
-- **Compiled source:** the MicroPython made from your flow. Click to open it.
-- **Console:** messages from Thingstudio and the board, including your flow's output.
-- **Python prompt:** runs a line of Python on the board.
-- **Board buttons:** stop the flow and use MicroPython's own prompt, or remove the saved flow.
-
-[Working in the editor](working-in-the-editor.md) covers node labels, presets, config nodes and node status.
-
-## Next
-
 Step 4: [connect your board](connecting.md) to Thingstudio.
 
 
@@ -746,7 +746,7 @@ With a new board, the console says the Thingstudio runtime isn't installed. That
 next step.
 
 If the console says the board didn't reply, or isn't running MicroPython, go back to
-[step 2: install MicroPython](installing-micropython.md). Other messages are explained in
+[step 3: install MicroPython](installing-micropython.md). Other messages are explained in
 [board won't connect](debugging.md#board-wont-connect).
 
 Once the runtime is installed, the board replies with its chip type, runtime version and free memory. The
@@ -780,7 +780,7 @@ The console now shows the board's chip type, runtime version and free memory.
 If something goes wrong, the console says what the board sent back and what to do. See
 [board won't connect](debugging.md#board-wont-connect).
 
-To install the runtime from the command line instead, see [more on installing](installing-more.md).
+To install the runtime from the command line instead, see [Command line](command-line.md#installing-the-runtime-from-the-command-line).
 
 ## Next
 
@@ -858,12 +858,12 @@ The **function** node turns the count into 1, 0, 1, 0 — the remainder after di
 
 ---
 
-Source: https://docs.thingstudio.net/installing-more/
+Source: https://docs.thingstudio.net/installation-details/
 
-# More on installing
+# Installation details
 
-[Getting started](getting-started.md#step-1-install-thingstudio) covers installing Thingstudio. This page covers
-the rest.
+How Thingstudio is packaged, where it puts its files, how to upgrade and remove it, and how to build it from source.
+[Getting started](getting-started.md#step-1-install-thingstudio) has the quick version.
 
 ## Packages
 
@@ -879,7 +879,12 @@ Each [release](https://github.com/mkarliner/ThingStudio/releases/latest) has a p
 
 `SHA256SUMS` lists each package's checksum. The macOS packages are signed and notarized by Apple.
 
-## Where the installer puts things
+
+A package doesn't add a `thingstudio` command; start it from its folder, or by its full path. To upgrade, replace
+the folder with a newer one. To remove it, delete the folder. On Linux, add your account to the `dialout` group
+(`uucp` on Arch) yourself to use USB boards.
+
+## Installer script
 
 On macOS and Linux, the installer puts Thingstudio in `~/.local/share/thingstudio` and the `thingstudio` command in
 `~/.local/bin`. Your settings live in `~/.thingstudio` (see [The Thingstudio folder](thingstudio-folder.md)).
@@ -887,13 +892,9 @@ On macOS and Linux, the installer puts Thingstudio in `~/.local/share/thingstudi
 On Windows, it puts Thingstudio in `%LOCALAPPDATA%\Thingstudio` and adds the `thingstudio` command to your PATH.
 Your settings live in `%USERPROFILE%\.thingstudio`.
 
-Upgrading and removing never touch your flows and settings.
+To upgrade, run the installer script again.
 
-## Upgrading and removing
-
-If you used the installer script, run it again to upgrade.
-
-To remove an installer-script install on macOS and Linux:
+To remove Thingstudio on macOS and Linux:
 
 ```sh
 curl -fsSL https://github.com/mkarliner/ThingStudio/releases/latest/download/install.sh | sh -s -- --uninstall
@@ -905,11 +906,7 @@ On Windows:
 & ([scriptblock]::Create((irm https://github.com/mkarliner/ThingStudio/releases/latest/download/install.ps1))) -Uninstall
 ```
 
-## Packages: upgrading and removing
-
-A package doesn't add a `thingstudio` command; start it from its folder, or by its full path. To upgrade, replace
-the folder with a newer one. To remove it, delete the folder. On Linux, add your account to the `dialout` group
-(`uucp` on Arch) yourself to use USB boards.
+Upgrading and removing never touch `~/.thingstudio`, or your flows, which are saved wherever you chose.
 
 ## From source
 
@@ -922,23 +919,6 @@ only rebuilds what changed. If your `python3` is older than 3.10, name a newer o
 
 Start it with `thingstudio-backend`, or `make run`. On a Mac, start it from Apple's **Terminal** app: macOS blocks
 WiFi connections from a copy run from source in other terminals, such as iTerm.
-
-## Starting options
-
-Add `--no-browser` if you'd rather open the editor page yourself. If you restart Thingstudio with the editor still
-open, that tab reconnects and no new one opens.
-
-## Installing the runtime from the command line
-
-Useful for scripting, or setting up several boards at once. It needs a copy of the source repository. Click
-**Disconnect** in the editor first, so the port is free.
-
-```sh
-pip install mpremote
-python3 test-flows/deploy_runtime.py --port PORT
-```
-
-`PORT` is the board's port, as shown in the editor's port list. When it finishes, click **Connect** in the editor.
 
 
 ---
@@ -1155,6 +1135,41 @@ The exit code is 0 for a valid flow, 1 for a flow with errors, and 2 for a bad c
   note. A missing credential shows up when you open the flow in the editor.
 - **Custom node packages.** A flow that uses one fails with "unknown node type".
 - **A real board.** It can't tell you the display is wired right, or that the memory is enough. Deploy does that.
+
+
+---
+
+Source: https://docs.thingstudio.net/command-line/
+
+# Command line
+
+Options for starting Thingstudio, and a way to install the runtime without the editor. To check a flow file from
+the command line, see [Check a flow without the editor](check-a-flow.md).
+
+## Starting options
+
+Add these after `thingstudio` (or `thingstudio-backend`, from source). `thingstudio --help` lists them all.
+
+| Option | What it does |
+| --- | --- |
+| `--no-browser` | Don't open the editor in a browser. Open `http://127.0.0.1:8765/` yourself. |
+| `--port N` | Serve the editor on port `N` instead of 8765. |
+| `--data-dir DIR` | Use `DIR` instead of `~/.thingstudio`. See [The Thingstudio folder](thingstudio-folder.md#using-a-different-folder). |
+| `--log-level LEVEL` | How much Thingstudio prints in its terminal: `DEBUG`, `INFO` (default), `WARNING` or `ERROR`. |
+
+If you restart Thingstudio with the editor still open, that tab reconnects and no new one opens.
+
+## Installing the runtime from the command line
+
+Useful for scripting, or setting up several boards at once. It needs a copy of the source repository. Click
+**Disconnect** in the editor first, so the port is free.
+
+```sh
+pip install mpremote
+python3 test-flows/deploy_runtime.py --port PORT
+```
+
+`PORT` is the board's port, as shown in the editor's port list. When it finishes, click **Connect** in the editor.
 
 
 ---
@@ -2362,6 +2377,55 @@ The console says what went wrong:
 - **Board not listed:** click **⟳** again. If it's still missing, check its flow has joined WiFi, or use
   **WiFi address…**. If the console says the WiFi scan didn't run, the reason follows; on a Mac it's usually
   the Local Network permission (see **No route to host** above).
+
+
+---
+
+Source: https://docs.thingstudio.net/wifi-provisioning/
+
+# WiFi provisioning
+
+A device can learn its WiFi credentials on its own, over the air, instead of having them baked into a flow. This is for a device you're handing to someone else, or setting up somewhere you don't want to type a password into the editor.
+
+## Turning it on
+
+Set a WiFi config's security to **"unmanaged"** (see [Working in the editor](working-in-the-editor.md#config-nodes)). This tells the device to bring up its own setup network the first time it boots with no stored credential, instead of connecting itself.
+
+## What happens on the device
+
+On first boot with nothing stored, the device opens its own WiFi network — named **Thingstudio-Setup-XXXX**, password `thingstudio` by default. Connect a phone or laptop to it; most phones prompt you to sign in automatically. If not, browse to `http://192.168.4.1/`.
+
+Pick your network from the list, or type its name directly if it isn't listed — some boards' WiFi scans don't reliably find every nearby network, so the form always accepts a typed name too. Enter the password and submit.
+
+Once it connects, the device saves what you entered and joins that network on every later boot. It won't reopen its setup network again unless you've turned on the reprovisioning fallback below.
+
+## Reprovisioning fallback
+
+By default, provisioning only happens once. If the saved network later becomes unreachable, the device just stays disconnected — it doesn't try to reopen its setup network on its own.
+
+The WiFi config has an **"Allow reprovisioning on connect failure"** field for that case. Turning it on means the setup network reopens any time the saved connection fails, not just on first boot.
+
+**Only turn this on for a device on a trusted, physically-controlled network.** An unauthenticated-by-default recovery network that reopens whenever WiFi drops is itself a risk — anyone in radio range during the drop could connect and redirect the device to a different network.
+
+## Changing the setup network's password
+
+There's no editor setting for this yet. The default is `thingstudio`; to set your own, connect to the board and run:
+
+```
+mpremote connect /dev/tty.usbmodemXXXX exec "import wifi_provision; wifi_provision.set_ap_password('yournewpassword')"
+```
+
+Reset the board afterward. Run the same command with `'thingstudio'` to go back to the default.
+
+## Starting over
+
+To make a device forget its saved network and run first-run setup again, delete its saved state:
+
+```
+mpremote connect /dev/tty.usbmodemXXXX fs rm :/_wifi_provision.json
+```
+
+This also clears any AP password override you'd set.
 
 
 ---

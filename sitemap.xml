@@ -17,6 +17,10 @@
          <lastmod>2026-10-11</lastmod>
     </url>
     <url>
+         <loc>https://docs.thingstudio.net/command-line/</loc>
+         <lastmod>2026-10-11</lastmod>
+    </url>
+    <url>
          <loc>https://docs.thingstudio.net/connecting/</loc>
          <lastmod>2026-10-11</lastmod>
     </url>
@@ -49,11 +53,11 @@
          <lastmod>2026-10-11</lastmod>
     </url>
     <url>
-         <loc>https://docs.thingstudio.net/installing-micropython/</loc>
+         <loc>https://docs.thingstudio.net/installation-details/</loc>
          <lastmod>2026-10-11</lastmod>
     </url>
     <url>
-         <loc>https://docs.thingstudio.net/installing-more/</loc>
+         <loc>https://docs.thingstudio.net/installing-micropython/</loc>
          <lastmod>2026-10-11</lastmod>
     </url>
     <url>
