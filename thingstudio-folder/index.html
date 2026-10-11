@@ -16,7 +16,7 @@
         <link rel="prev" href="../installing-more/">
       
       
-        <link rel="next" href="../canvas-basics/">
+        <link rel="next" href="../working-in-the-editor/">
       
       
         
@@ -705,6 +705,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../editor-tour/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    3. Tour the editor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../connecting/" class="md-nav__link">
         
   
@@ -712,7 +740,7 @@
   <span class="md-ellipsis">
     
   
-    3. Connect your board
+    4. Connect your board
   
 
     
@@ -740,7 +768,7 @@
   <span class="md-ellipsis">
     
   
-    4. Install the runtime
+    5. Install the runtime
   
 
     
@@ -768,7 +796,7 @@
   <span class="md-ellipsis">
     
   
-    5. Blink an LED
+    6. Blink an LED
   
 
     
@@ -964,14 +992,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../canvas-basics/" class="md-nav__link">
+      <a href="../working-in-the-editor/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Canvas basics
+    Working in the editor
   
 
     
@@ -2570,12 +2598,12 @@ Thingstudio backend, so the direct (WebSerial-only) connection mode can't use th
 <p>A WiFi or MQTT broker config node holds only the name of a credential. The SSID, password, broker address and login
 are stored in <code>credentials/wifi/&lt;name&gt;.json</code> or <code>credentials/mqtt-broker/&lt;name&gt;.json</code>. This keeps secrets out of flow
 files you share or commit. Create and edit credentials from the config node (see
-<a href="../canvas-basics/#config-nodes">Config nodes</a>).</p>
+<a href="../working-in-the-editor/#config-nodes">Config nodes</a>).</p>
 <p>The files are not encrypted. Anyone who can read your home folder can read them. Don't commit this folder or copy it
 to shared storage.</p>
 <h2 id="presets">Presets</h2>
 <p>A preset is a named set of property values for one node type, such as the pins and size of a display panel. You save
-and load presets from a node's property panel (see <a href="../canvas-basics/#presets">Presets</a>). Each one is a file at
+and load presets from a node's property panel (see <a href="../working-in-the-editor/#presets">Presets</a>). Each one is a file at
 <code>presets/&lt;node type&gt;/&lt;name&gt;.json</code>. A file that isn't valid JSON appears in the list disabled, with the file named.</p>
 <h2 id="custom-nodes">Custom nodes</h2>
 <p>A custom node is two files with the same base name: <code>&lt;name&gt;.node.json</code> and <code>&lt;name&gt;.node.py</code>. The first time

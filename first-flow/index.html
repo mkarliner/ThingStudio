@@ -27,7 +27,7 @@
     
     
       
-        <title>5. Blink an LED - Thingstudio</title>
+        <title>6. Blink an LED - Thingstudio</title>
       
     
     
@@ -72,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#step-5-blink-an-led" class="md-skip">
+        <a href="#step-6-blink-an-led" class="md-skip">
           Skip to content
         </a>
       
@@ -108,7 +108,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              5. Blink an LED
+              6. Blink an LED
             
           </span>
         </div>
@@ -707,6 +707,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../editor-tour/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    3. Tour the editor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../connecting/" class="md-nav__link">
         
   
@@ -714,7 +742,7 @@
   <span class="md-ellipsis">
     
   
-    3. Connect your board
+    4. Connect your board
   
 
     
@@ -742,7 +770,7 @@
   <span class="md-ellipsis">
     
   
-    4. Install the runtime
+    5. Install the runtime
   
 
     
@@ -779,7 +807,7 @@
   <span class="md-ellipsis">
     
   
-    5. Blink an LED
+    6. Blink an LED
   
 
     
@@ -797,7 +825,7 @@
   <span class="md-ellipsis">
     
   
-    5. Blink an LED
+    6. Blink an LED
   
 
     
@@ -955,14 +983,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../canvas-basics/" class="md-nav__link">
+      <a href="../working-in-the-editor/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Canvas basics
+    Working in the editor
   
 
     
@@ -2499,29 +2527,13 @@
   
 
 
-<h1 id="step-5-blink-an-led">Step 5: Blink an LED</h1>
+<h1 id="step-6-blink-an-led">Step 6: Blink an LED</h1>
 <p>Your first flow: make an LED blink once a second. It takes three nodes.</p>
-<p>Your board should be connected, with the runtime installed: steps <a href="../connecting/">3</a> and <a href="../installing-runtime/">4</a>.</p>
+<p>Your board should be connected, with the runtime installed: steps <a href="../connecting/">4</a> and <a href="../installing-runtime/">5</a>.</p>
 <h2 id="find-your-leds-pin">Find your LED's pin</h2>
-<p>Many boards have an LED you can drive from a GPIO pin. Check your board's documentation for its number. Two common ones:</p>
-<table>
-<thead>
-<tr>
-<th>Board</th>
-<th>LED pin</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>LOLIN S2 Mini</td>
-<td>15</td>
-</tr>
-<tr>
-<td>Raspberry Pi Pico (RP2040)</td>
-<td>25</td>
-</tr>
-</tbody>
-</table>
+<p>Many boards have an LED you can drive from a GPIO pin. To find it, click <strong>Pins…</strong> next to the <strong>Board</strong> menu: pins
+the board names, such as <code>LED</code>, are listed first. <a href="../supported-hardware/">Supported hardware</a> lists the boards
+Thingstudio knows. For any other board, check its documentation.</p>
 <p>The Pico W and Pico 2 W LEDs are wired through the WiFi chip, not a GPIO pin, so <code>gpio out</code> can't reach them. On those boards, or any board without an LED, wire an LED and a 330 Ω resistor from a free GPIO pin to GND.</p>
 <p>Don't forget the resistor. Without it, the LED draws too much current and can damage the board. The LED's longer
 leg goes towards the GPIO pin.</p>

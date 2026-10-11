@@ -19,7 +19,7 @@ starts again after a reset or power cycle.
 
 <figure markdown="span">
   [![The Thingstudio editor, showing a three-node flow: timer, function and gpio out](images/editor.png)](images/editor.png)<figcaption>The editor: nodes to drag in on the left, your flow in the middle, and on the right the selected
-  node's settings and the board's console. Click to see it full size. [Canvas basics](canvas-basics.md#the-editor) labels every
+  node's settings and the board's console. Click to see it full size. [Tour the editor](editor-tour.md) labels every
   part.</figcaption>
 </figure>
 
@@ -253,7 +253,7 @@ whose types don't fit.
 ## Config nodes
 
 Settings that several nodes share, like a WiFi network or an MQTT broker, live in a **config node**. You set it up
-once and pick it from each node that uses it. See [canvas basics](../canvas-basics.md#config-nodes).
+once and pick it from each node that uses it. See [Working in the editor](../working-in-the-editor.md#config-nodes).
 
 ## Background
 
@@ -379,7 +379,7 @@ instead. See [event-driven programming](../background/event-driven.md).
 ## Messages
 
 Every message needs a `topic`, even an empty one (`''`). Ports also have types, such as `int`, `bool` and `string`, and
-the editor refuses a wire between types that don't fit. See [canvas basics](../canvas-basics.md#wiring).
+the editor refuses a wire between types that don't fit. See [Working in the editor](../working-in-the-editor.md#wiring).
 
 ## Nodes
 
@@ -497,13 +497,14 @@ Source: https://docs.thingstudio.net/getting-started/
 
 # Getting started
 
-Five steps take you from a new board to a blinking LED. Each page ends with a link to the next one.
+Six steps take you from a new board to a blinking LED. Each page ends with a link to the next one.
 
 1. **[Install Thingstudio](#step-1-install-thingstudio)** on your computer. See below.
 2. **[Install MicroPython](installing-micropython.md)** on your board.
-3. **[Connect your board](connecting.md)** to Thingstudio.
-4. **[Install the runtime](installing-runtime.md)**, the part of Thingstudio that runs on the board.
-5. **[Blink an LED](first-flow.md)**: build your first flow and deploy it.
+3. **[Tour the editor](editor-tour.md)**: what each part of the screen does.
+4. **[Connect your board](connecting.md)** to Thingstudio.
+5. **[Install the runtime](installing-runtime.md)**, the part of Thingstudio that runs on the board.
+6. **[Blink an LED](first-flow.md)**: build your first flow and deploy it.
 
 You need a [supported board](boards.md) and a USB cable that carries data, not just power.
 
@@ -588,8 +589,8 @@ Source: https://docs.thingstudio.net/installing-micropython/
 Thingstudio runs on top of [MicroPython](background/micropython.md), a version of Python for microcontrollers. Your
 board needs MicroPython before Thingstudio can use it. You install it once.
 
-A new board usually doesn't have MicroPython. If you know yours does, go to [step 3](connecting.md). If you're not
-sure, go to step 3 anyway: Thingstudio tells you if MicroPython is missing, and links back here.
+A new board usually doesn't have MicroPython. If you know yours does, go to [step 3](editor-tour.md). If you're not
+sure, carry on to [step 4](connecting.md) anyway: Thingstudio tells you if MicroPython is missing, and links back here.
 
 ## Get the firmware
 
@@ -664,14 +665,69 @@ Thingstudio is built and tested on the ESP32 and RP2 chips above. To try another
 
 ## Next
 
-Step 3: [connect your board](connecting.md) to Thingstudio.
+Step 3: [tour the editor](editor-tour.md).
+
+
+---
+
+Source: https://docs.thingstudio.net/editor-tour/
+
+# Step 3: Tour the editor
+
+Start Thingstudio if it isn't running. See [step 1](getting-started.md#start-thingstudio). The editor opens in your
+web browser.
+
+<figure markdown="span">
+  [![The Thingstudio editor with each part labelled](images/editor-parts.png)](images/editor-parts.png)<figcaption>The parts of the editor. Click to see it full size.</figcaption>
+</figure>
+
+<!-- The labels on the picture come from EDITOR_PARTS in tools/screenshots.py. Keep the names below in step. -->
+
+## Toolbar
+
+- **File:** start a new flow, open one, or save it.
+- **Flow name:** saved with the flow. The board reports it, so you can tell what it's running.
+- **Port list and Connect:** pick your board's port and connect to it. **⟳** looks for boards again.
+- **Board menu and Pins…:** the board the flow is for, and a page of its pins.
+- **Compile → Deploy:** turns the flow into MicroPython and sends it to the board.
+- **Tools and Help:** occasional board jobs, such as installing the runtime, and these docs.
+
+## Palette
+
+Every node you can add, in three groups: **General**, **Network** and **Hardware**. Drag a node onto the canvas, or
+click it. Type in the filter box to find one. [Custom nodes](custom-nodes.md) appear under their own group.
+
+## Canvas
+
+Where you build the flow. The flow tabs along the top spread a flow across several sheets.
+
+- **Wire two nodes:** drag from one node's output, on its right, to another node's input, on its left.
+- **Select:** click a node or a wire. Ctrl-click to select several nodes.
+- **Delete:** select, then press Delete or Backspace. Deleting a node removes its wires too.
+
+The editor refuses a wire between ports whose types don't fit. See [Wiring](working-in-the-editor.md#wiring).
+
+## Properties, notes and console
+
+- **Properties:** the selected node's settings.
+- **Notes:** free text about the flow, saved with it.
+- **Compiled source:** the MicroPython made from your flow. Click to open it.
+- **Console:** messages from Thingstudio and the board, including your flow's output.
+- **Python prompt:** runs a line of Python on the board.
+- **Board buttons:** stop the flow and use MicroPython's own prompt, or remove the saved flow.
+
+[Working in the editor](working-in-the-editor.md) covers node labels, presets, config nodes and node status.
+
+## Next
+
+Step 4: [connect your board](connecting.md) to Thingstudio.
 
 
 ---
 
 Source: https://docs.thingstudio.net/connecting/
 
-# Step 3: Connect your board
+# Step 4: Connect your board
 
 Start Thingstudio if it isn't running. See [step 1](getting-started.md#start-thingstudio).
 
@@ -701,19 +757,19 @@ Once a board with WiFi is set up, you can also connect to it over WiFi. See
 
 ## Next
 
-Step 4: [install the runtime](installing-runtime.md).
+Step 5: [install the runtime](installing-runtime.md).
 
 
 ---
 
 Source: https://docs.thingstudio.net/installing-runtime/
 
-# Step 4: Install the runtime
+# Step 5: Install the runtime
 
 The runtime is the part of Thingstudio that runs on the board. It receives your flows and runs them. Each board needs
 it once. Libraries that some nodes need are installed later, by Deploy, only when a flow uses them.
 
-1. Check the board's port is selected in the port list, as in [step 3](connecting.md).
+1. Check the board's port is selected in the port list, as in [step 4](connecting.md).
 2. Choose **Tools → Install runtime…**. It takes about half a minute and shows each file as it goes.
    If the board is busy and doesn't stop, the console asks you to press its reset button. A board without one, such
    as a Pico, can be unplugged and plugged back in instead.
@@ -728,27 +784,24 @@ To install the runtime from the command line instead, see [more on installing](i
 
 ## Next
 
-Step 5: [blink an LED](first-flow.md), your first flow.
+Step 6: [blink an LED](first-flow.md), your first flow.
 
 
 ---
 
 Source: https://docs.thingstudio.net/first-flow/
 
-# Step 5: Blink an LED
+# Step 6: Blink an LED
 
 Your first flow: make an LED blink once a second. It takes three nodes.
 
-Your board should be connected, with the runtime installed: steps [3](connecting.md) and [4](installing-runtime.md).
+Your board should be connected, with the runtime installed: steps [4](connecting.md) and [5](installing-runtime.md).
 
 ## Find your LED's pin
 
-Many boards have an LED you can drive from a GPIO pin. Check your board's documentation for its number. Two common ones:
-
-| Board | LED pin |
-| --- | --- |
-| LOLIN S2 Mini | 15 |
-| Raspberry Pi Pico (RP2040) | 25 |
+Many boards have an LED you can drive from a GPIO pin. To find it, click **Pins…** next to the **Board** menu: pins
+the board names, such as `LED`, are listed first. [Supported hardware](supported-hardware.md) lists the boards
+Thingstudio knows. For any other board, check its documentation.
 
 The Pico W and Pico 2 W LEDs are wired through the WiFi chip, not a GPIO pin, so `gpio out` can't reach them. On those boards, or any board without an LED, wire an LED and a 330 Ω resistor from a free GPIO pin to GND.
 
@@ -920,7 +973,7 @@ Thingstudio backend, so the direct (WebSerial-only) connection mode can't use th
 A WiFi or MQTT broker config node holds only the name of a credential. The SSID, password, broker address and login
 are stored in `credentials/wifi/<name>.json` or `credentials/mqtt-broker/<name>.json`. This keeps secrets out of flow
 files you share or commit. Create and edit credentials from the config node (see
-[Config nodes](canvas-basics.md#config-nodes)).
+[Config nodes](working-in-the-editor.md#config-nodes)).
 
 The files are not encrypted. Anyone who can read your home folder can read them. Don't commit this folder or copy it
 to shared storage.
@@ -928,7 +981,7 @@ to shared storage.
 ## Presets
 
 A preset is a named set of property values for one node type, such as the pins and size of a display panel. You save
-and load presets from a node's property panel (see [Presets](canvas-basics.md#presets)). Each one is a file at
+and load presets from a node's property panel (see [Presets](working-in-the-editor.md#presets)). Each one is a file at
 `presets/<node type>/<name>.json`. A file that isn't valid JSON appears in the list disabled, with the file named.
 
 ## Custom nodes
@@ -961,52 +1014,22 @@ This keeps separate sets of credentials, presets and custom nodes, for example o
 
 ---
 
-Source: https://docs.thingstudio.net/canvas-basics/
+Source: https://docs.thingstudio.net/working-in-the-editor/
 
-# Canvas basics
+# Working in the editor
 
-## The editor
-
-<figure markdown="span">
-  [![The Thingstudio editor with its parts numbered 1 to 14](images/editor-parts.png)](images/editor-parts.png)<figcaption>The parts of the editor. Click to see it full size.</figcaption>
-</figure>
-
-<!-- These numbers match EDITOR_PARTS in tools/screenshots.py, which draws them. Change both together. -->
-
-1. **File menu:** start a new flow, open one, or save it.
-2. **Flow name:** saved with the flow. The board reports it, so you can tell what it's running.
-3. **Port list and Connect:** pick your board's port and connect to it. **⟳** looks for boards again.
-4. **Board menu and Pins…:** the board the flow is for, and a page of its pins.
-5. **Compile → Deploy:** turns the flow into MicroPython and sends it to the board.
-6. **Tools and Help:** occasional board jobs, such as installing the runtime, and these docs.
-7. **Palette:** every node you can add. Drag one onto the canvas.
-8. **Flow tabs:** a flow can be spread across several tabs.
-9. **Canvas:** where you build the flow.
-10. **Properties:** the selected node's settings.
-11. **Compiled source:** the MicroPython made from your flow. Click to open it.
-12. **Console:** messages from Thingstudio and the board, including your flow's output.
-13. **Python prompt:** runs a line of Python on the board.
-14. **Board buttons:** stop the flow and use MicroPython's own prompt, or remove the saved flow.
-
-## Palette
-
-The left sidebar lists every node type you can drag onto the canvas, grouped the same three ways as this guide's [node reference](nodes/index.md): **General**, **Network**, **Hardware**. Custom nodes from `~/.thingstudio/custom-nodes/` (see [Writing custom nodes](custom-nodes.md)) appear under the group their package names, and **Reload custom nodes** at the bottom reads that folder again.
-
-Drag a node onto the canvas, or click it to add it at a default position. Filter the list by typing in the search box above it.
+What the [editor tour](editor-tour.md) leaves out: wire types, node labels, presets, config nodes, node status and
+notes.
 
 ## Wiring
 
-Drag from one node's output port to another's input to connect them. Every port has a type — `int`, `number`, `bool`, `string`, `bytes`, or `any`.
+Every port has a type — `int`, `number`, `bool`, `string`, `bytes`, or `any`.
 
 The editor refuses a connection that doesn't make sense: a `bool` input accepts a wire from anything (Python's `bool()` never fails), and a `number` input accepts an `int` (safe widening) but not the other way around. An `any` output can't connect straight into a concrete typed input without an explicit conversion in between. A refused connection is the editor catching a real mismatch, not a bug.
 
 An input can take any number of wires — connect several outputs to the same input and the node fires once per incoming message, whichever one arrives. An output can already fan out to several inputs the same way.
 
-## Property panel
-
-Select a node to see its property panel on the right — every configurable field for that node type. Properties are read when you Compile → Deploy; nothing needs a redeploy just to preview a change.
-
-### Giving a node a flow label
+## Giving a node a flow label
 
 Every node has a **flow label** field at the top of its property panel. Type something (say `Fire!`) and the node
 shows it on the canvas instead of its kind (`gui_button`). Blank puts the kind back. Messages and errors that name
@@ -1055,10 +1078,6 @@ Other node types don't show this yet — it's currently limited to connection-or
 
 The **Notes** panel at the right is free text for the flow as a whole: what it does, what to wire up, how to use
 it. It is saved in the flow file, and it opens by itself when you load a flow that has notes. New flow clears it.
-
-## Deleting
-
-Click a node or a wire to select it, then press Delete or Backspace to remove it. Ctrl-click to select several nodes at once and delete them together. Deleting a node also removes any wires attached to it.
 
 ## Current limitations
 
@@ -2028,7 +2047,7 @@ Flows save to a file you choose, via your browser's own save dialog — no backe
 
 In Chrome or Edge this is the real OS file dialog each time — Save and Open don't remember the last file you picked, so you choose a target on every save (the browser's own dialog handles confirming an overwrite if you pick a file that already exists). Safari and Firefox don't support this file-picker API at all, so there **File → Save…** falls back to a plain browser download and **File → Open…** to a plain file-upload picker.
 
-Custom node packages and saved credentials (see [Canvas basics](canvas-basics.md#config-nodes)) are the two things that still live on the backend, in `~/.thingstudio/custom-nodes/` and `~/.thingstudio/credentials/`. They're shared across flows rather than tied to one project, unlike a flow itself — a saved credential referenced by name from a config node never gets written into the `.flow.json` file.
+Custom node packages and saved credentials (see [Working in the editor](working-in-the-editor.md#config-nodes)) are the two things that still live on the backend, in `~/.thingstudio/custom-nodes/` and `~/.thingstudio/credentials/`. They're shared across flows rather than tied to one project, unlike a flow itself — a saved credential referenced by name from a config node never gets written into the `.flow.json` file.
 
 ## Deploy
 
@@ -2700,7 +2719,7 @@ Pin numbers are checked against your board before a deploy. See [boards and proc
 Some settings are set once and shared by the nodes that use them:
 
 - **WiFi network** and **MQTT broker**: config nodes, with the real passwords kept outside the flow file. See
-  [config nodes](../canvas-basics.md#config-nodes).
+  [config nodes](../working-in-the-editor.md#config-nodes).
 - **I2C bus**: the pins and clock for a bus, shared by every I2C node on it. See [I2C bus](i2c-bus.md).
 - **Touch panel**: the controller, bus and size of a touch screen, used by a gui screen or a touch node. See
   [touch panels](touch-panel.md).
@@ -3011,7 +3030,7 @@ Reports the board's WiFi connection state. In a flow with no other WiFi node, it
 ## Properties
 
 - **poll interval (ms)** — how often to check the connection. Default 5000ms.
-- **WiFi** — the flow's WiFi network. Every WiFi node in a flow shares this one setting (see [Canvas basics](../canvas-basics.md#config-nodes)).
+- **WiFi** — the flow's WiFi network. Every WiFi node in a flow shares this one setting (see [Working in the editor](../working-in-the-editor.md#config-nodes)).
 
 ## Behavior
 
@@ -3025,7 +3044,7 @@ Pick "unmanaged" on the WiFi config when you don't want this node issuing its ow
 
 If no connection is ever made, this node just reports disconnected, the same as any other failed connect — provisioning changes how the interface gets its credentials, not how wifi_status reports on them.
 
-Shows a connection-status dot on the canvas (see [Canvas basics](../canvas-basics.md#node-status)) once connected to a device.
+Shows a connection-status dot on the canvas (see [Working in the editor](../working-in-the-editor.md#node-status)) once connected to a device.
 
 While this node has the board on a network, the editor can connect to the board over WiFi. See [Connecting over WiFi](../wifi-connection.md).
 
@@ -3085,7 +3104,7 @@ Emits one message per incoming message on a subscribed MQTT topic.
 
 - **topic** — the topic to subscribe to. Required.
 - **QoS** — `0` or `1`. QoS 2 isn't supported.
-- **broker** — which MQTT broker config to use (see [Canvas basics](../canvas-basics.md#config-nodes)). Required — won't compile without one.
+- **broker** — which MQTT broker config to use (see [Working in the editor](../working-in-the-editor.md#config-nodes)). Required — won't compile without one.
 
 ## Behavior
 
@@ -3095,7 +3114,7 @@ The message carries the payload (decoded as text when possible, raw bytes otherw
 
 There's currently no guarantee that a subscription is fully confirmed before an `mqtt_publish` node on the same broker sends its first message — usually not an issue, but worth knowing if an early publish goes unheard by a subscriber that was still connecting.
 
-Shows a connection-status dot on the canvas (see [Canvas basics](../canvas-basics.md#node-status)) once connected to a device, same as `mqtt_publish`.
+Shows a connection-status dot on the canvas (see [Working in the editor](../working-in-the-editor.md#node-status)) once connected to a device, same as `mqtt_publish`.
 
 
 ---
@@ -3212,13 +3231,13 @@ Publishes a message's payload to an MQTT topic.
 - **topic** — the topic to publish to. Required.
 - **retain** — publish as a retained message.
 - **QoS** — `0` or `1`. QoS 2 isn't supported.
-- **broker** — which MQTT broker config to use (see [Canvas basics](../canvas-basics.md#config-nodes)). Required — won't compile without one.
+- **broker** — which MQTT broker config to use (see [Working in the editor](../working-in-the-editor.md#config-nodes)). Required — won't compile without one.
 
 ## Behavior
 
 Uses the flow's WiFi network (the WiFi config in the flow, shared by every WiFi node; this node has no WiFi property of its own) and its own broker config for the MQTT connection. In a flow with MQTT nodes, MQTT manages the WiFi connection. An "unmanaged" WiFi config isn't accepted here: this node manages its own WiFi reconnection, so it needs a real network to connect to. The payload is sent as bytes (a string is UTF-8 encoded, other types are converted).
 
-Shows a connection-status dot on the canvas (see [Canvas basics](../canvas-basics.md#node-status)) once connected to a device — reports its own broker connection state even when it shares that broker with an `mqtt_subscribe` node. Because this node only runs when a message actually arrives to publish, the dot stays blank until the first message passes through it, even if the flow has been running for a while — it doesn't open its broker connection until there's actually something to send (this is how the node works, not a fault).
+Shows a connection-status dot on the canvas (see [Working in the editor](../working-in-the-editor.md#node-status)) once connected to a device — reports its own broker connection state even when it shares that broker with an `mqtt_subscribe` node. Because this node only runs when a message actually arrives to publish, the dot stays blank until the first message passes through it, even if the flow has been running for a while — it doesn't open its broker connection until there's actually something to send (this is how the node works, not a fault).
 
 
 ---
@@ -3360,7 +3379,7 @@ Pushes an already-rendered frame to an SPI color TFT panel. [Supported hardware]
 lists the display chips. Build the frame upstream (a `function` node using `framebuf.FrameBuffer`,
 or eventually a graphics-framework node) and wire it into this node's input.
 
-This node's property panel has a **preset** picker (see [Canvas basics](../canvas-basics.md#presets)) —
+This node's property panel has a **preset** picker (see [Working in the editor](../working-in-the-editor.md#presets)) —
 save a real panel's whole setup (pins, bus, resolution, rotation, color order, and so on) under a name
 once, then load it again on this or another `display_spi` node instead of retyping every field. The CYD
 defaults below are exactly what saving a "cyd" preset from a correctly-configured node would capture.
@@ -3494,7 +3513,7 @@ Pushes an already-rendered frame to an I2C mono OLED panel (SSD1306 today — th
 leaves room for others later, like SH1106). Build the frame upstream (a `function` node using
 `framebuf.FrameBuffer`, or eventually a graphics-framework node) and wire it into this node's input.
 
-This node's property panel has a **preset** picker (see [Canvas basics](../canvas-basics.md#presets)) —
+This node's property panel has a **preset** picker (see [Working in the editor](../working-in-the-editor.md#presets)) —
 save a real panel's pin/address setup under a name once, then load it again on this or another
 `display_i2c` node instead of retyping it.
 

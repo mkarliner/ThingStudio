@@ -705,6 +705,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../editor-tour/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    3. Tour the editor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../connecting/" class="md-nav__link">
         
   
@@ -712,7 +740,7 @@
   <span class="md-ellipsis">
     
   
-    3. Connect your board
+    4. Connect your board
   
 
     
@@ -740,7 +768,7 @@
   <span class="md-ellipsis">
     
   
-    4. Install the runtime
+    5. Install the runtime
   
 
     
@@ -768,7 +796,7 @@
   <span class="md-ellipsis">
     
   
-    5. Blink an LED
+    6. Blink an LED
   
 
     
@@ -851,14 +879,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../canvas-basics/" class="md-nav__link">
+      <a href="../../working-in-the-editor/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Canvas basics
+    Working in the editor
   
 
     
@@ -2440,7 +2468,7 @@
 <h2 id="properties">Properties</h2>
 <ul>
 <li><strong>poll interval (ms)</strong> — how often to check the connection. Default 5000ms.</li>
-<li><strong>WiFi</strong> — the flow's WiFi network. Every WiFi node in a flow shares this one setting (see <a href="../../canvas-basics/#config-nodes">Canvas basics</a>).</li>
+<li><strong>WiFi</strong> — the flow's WiFi network. Every WiFi node in a flow shares this one setting (see <a href="../../working-in-the-editor/#config-nodes">Working in the editor</a>).</li>
 </ul>
 <h2 id="behavior">Behavior</h2>
 <p>This node is optional: other network nodes don't need it. In a flow with MQTT nodes, MQTT manages the WiFi connection and this node only reports on it.</p>
@@ -2448,7 +2476,7 @@
 <p>It emits when connection identity changes (connect/disconnect, or a change to <code>ip</code>/<code>subnet</code>/<code>gateway</code>/<code>dns</code>), not on every poll — except the very first poll, which always reports. <code>rssi</code> doesn't trigger a re-emit on its own — it drifts constantly even on an idle connection, so it's included whenever a message fires for another reason, but its own changes don't cause one. It's a snapshot, not a live reading.</p>
 <p>Pick "unmanaged" on the WiFi config when you don't want this node issuing its own connect — either because something else already manages the connection, or because you want the device to learn its credentials on its own over the air. See <a href="../../wifi-provisioning/">WiFi provisioning</a> for how that self-provisioning flow works, including the setup network's password and the reprovisioning-fallback option.</p>
 <p>If no connection is ever made, this node just reports disconnected, the same as any other failed connect — provisioning changes how the interface gets its credentials, not how wifi_status reports on them.</p>
-<p>Shows a connection-status dot on the canvas (see <a href="../../canvas-basics/#node-status">Canvas basics</a>) once connected to a device.</p>
+<p>Shows a connection-status dot on the canvas (see <a href="../../working-in-the-editor/#node-status">Working in the editor</a>) once connected to a device.</p>
 <p>While this node has the board on a network, the editor can connect to the board over WiFi. See <a href="../../wifi-connection/">Connecting over WiFi</a>.</p>
 
 

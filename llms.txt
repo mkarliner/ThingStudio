@@ -21,17 +21,18 @@
 
 ## Getting started
 
-- [1. Install Thingstudio](https://docs.thingstudio.net/getting-started/): Five steps take you from a new board to a blinking LED.
+- [1. Install Thingstudio](https://docs.thingstudio.net/getting-started/): Six steps take you from a new board to a blinking LED.
 - [2. Install MicroPython](https://docs.thingstudio.net/installing-micropython/): Thingstudio runs on top of MicroPython, a version of Python for microcontrollers.
-- [3. Connect your board](https://docs.thingstudio.net/connecting/): Start Thingstudio if it isn't running.
-- [4. Install the runtime](https://docs.thingstudio.net/installing-runtime/): The runtime is the part of Thingstudio that runs on the board.
-- [5. Blink an LED](https://docs.thingstudio.net/first-flow/): Your first flow: make an LED blink once a second.
+- [3. Tour the editor](https://docs.thingstudio.net/editor-tour/): Start Thingstudio if it isn't running.
+- [4. Connect your board](https://docs.thingstudio.net/connecting/): Start Thingstudio if it isn't running.
+- [5. Install the runtime](https://docs.thingstudio.net/installing-runtime/): The runtime is the part of Thingstudio that runs on the board.
+- [6. Blink an LED](https://docs.thingstudio.net/first-flow/): Your first flow: make an LED blink once a second.
 - [More on installing](https://docs.thingstudio.net/installing-more/): Getting started covers installing Thingstudio.
 
 ## Pages
 
 - [The Thingstudio folder](https://docs.thingstudio.net/thingstudio-folder/): Thingstudio keeps its own files in one folder on your computer:
-- [Canvas basics](https://docs.thingstudio.net/canvas-basics/): <figure markdown="span"> ![The Thingstudio editor with its parts numbered 1 to 14](images/editor-parts.png)<figcaption>The parts of the editor.
+- [Working in the editor](https://docs.thingstudio.net/working-in-the-editor/): What the editor tour leaves out: wire types, node labels, presets, config nodes, node status and notes.
 - [Check a flow without the editor](https://docs.thingstudio.net/check-a-flow/): thingstudio-compile compiles and checks a flow file from the command line, with the same errors the editor gives.
 - [Node catalog](https://docs.thingstudio.net/nodes-catalog/): Every node a flow file can use: its type id, its ports with their payload types, and its properties with the default the editor gives a new node.
 - [Writing flows with an AI assistant](https://docs.thingstudio.net/ai-authoring/): This page is for an AI assistant (or a person) writing a Thingstudio flow file or a custom node in the user's folder, without the editor.
