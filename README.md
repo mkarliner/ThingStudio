@@ -1,3 +1,6 @@
+# WARNING!: This has been heavily vibe-coded. If you don't like that, please move on.
+
+
 # Thingstudio
 
 A browser-based, drag-and-drop node/wire programming environment whose
