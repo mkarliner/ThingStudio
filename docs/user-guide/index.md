@@ -53,9 +53,8 @@ the temperature. When a message arrives from the network, update the display. Ea
 happens, and the board waits for many events at once. This is
 [event-driven programming](background/event-driven.md).
 
-Writing event-driven code is can be tricker tto learn. In MicroPython supports it natively with 
-[`asyncio`](https://docs.micropython.org/en/latest/library/asyncio.html): tasks, `await`, and code to start the
-tasks and pass data between them. The program no longer reads top to bottom, so it can be harder to grasp what it's doing. Thingstudio makes it easier to create event driven programs and understand what they do by providing a graphical editor of events, functions and outputs.
+MicroPython supports this style of programming natively with the 
+[`asyncio`](https://docs.micropython.org/en/latest/library/asyncio.html): primitives. When you write ansynio programs the code no longer reads top to bottom, so it can be harder to grasp what it's doing. Thingstudio makes it easier to create event driven programs and understand what they do by providing a graphical editor of events, functions and outputs.
 
 ## Events, nodes and wires
 
