@@ -25,11 +25,13 @@
 // Mike's own call, 2026-09-17, over extending EventSourceCodegenResult for
 // multi-output sources (no existing precedent; TransformCodegenResult's
 // multi-output is transform-only, node-definition.ts's own `outputCount`
-// comment). `topic` already exists in this project's msg envelope
-// specifically as "a routing/identification string" (CLAUDE.md) -- 'close'
-// or 'open' is exactly that, not a repurposing. `payload` carries the same
+// comment). The event name goes in `msg['event']` ('close' or 'open'), NOT
+// `msg['topic']`: `topic` is a routing/identification string that belongs to
+// the protocol (mqtt) or is '' for a node with no natural topic, and every
+// other source in the library (timer, interrupt, wifi_status ...) sets it to
+// ''. Moved off `topic` 2026-10-11, before MVP launch. `payload` carries the
 // state as a bool (true = closed), so a downstream node that only cares
-// about current state can read `payload` and ignore `topic` entirely.
+// about current state can read `payload` and ignore `event`.
 //
 // Waiting on "either of two named Events, tell me which fired" is exactly
 // what the vendored `WaitAny` class does (events.py) -- used here instead
@@ -130,7 +132,7 @@ export const eswitchNode: NodeDefinition = {
       // real correctness fix, not a style choice, even though ESwitch's
       // own open/close pair can never actually fire simultaneously the way
       // EButton's press/double can.
-      buildMsg: [`_is_close = _trig is ${esVar}.close`, `_trig.clear()`, `msg = {'payload': _is_close, 'topic': 'close' if _is_close else 'open'}`].join("\n"),
+      buildMsg: [`_is_close = _trig is ${esVar}.close`, `_trig.clear()`, `msg = {'payload': _is_close, 'topic': '', 'event': 'close' if _is_close else 'open'}`].join("\n"),
     };
   },
 };

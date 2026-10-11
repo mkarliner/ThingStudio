@@ -1,6 +1,6 @@
 // outstanding-items.md's "[P4] eswitch/ebutton nodes" item -- eswitch.ts's
-// own header has the full design story (topic-carries-event-identity
-// single output, WaitAny multiplexing, why polling not IRQ).
+// own header has the full design story (single output with the event name in
+// `msg['event']`, WaitAny multiplexing, why polling not IRQ).
 //
 // Unlike node-interrupt.test.ts, this file's behavioral tests run the REAL
 // vendored driver (device-runtime/src/vendor/primitives_events/events.py,
@@ -131,7 +131,7 @@ function runScheduledFlow(graph: GraphData, schedule: Record<number, Array<[numb
     env: { ...process.env, PYTHONPATH: `${pymockDir}${delimiter}${vendorDir}`, PYMOCK_MAX_RUN_S: String(maxRunS) },
     encoding: "utf8",
   });
-  return [...output.matchAll(/'topic': '(\w+)'/g)].map((m) => m[1]!);
+  return [...output.matchAll(/'event': '(\w+)'/g)].map((m) => m[1]!);
 }
 
 describe("thingstudio/eswitch node", () => {
@@ -185,6 +185,7 @@ describe("thingstudio/eswitch node", () => {
     expect(source).toContain("while True:");
     expect(source).toMatch(/_trig = await .*\.wait\(\)/);
     expect(source).toContain("_trig.clear()");
+    expect(source).toContain("'topic': '', 'event': 'close' if _is_close else 'open'");
     expect(source).toMatch(/runtime\.spawn\(/);
   });
 
@@ -222,7 +223,7 @@ describe("thingstudio/eswitch node", () => {
     // that follow.
     // Wall-clock schedule run by CPython: each state is held 300 ms so a busy CI runner (tests run in parallel)
     // can't stall the switch's poll loop past a whole state and skip it. 60 ms steps failed that way on CI.
-    const topics = runScheduledFlow(graph, { 10: [[0.0, 1], [0.3, 0], [0.6, 1]] }, 1.2);
-    expect(topics).toEqual(["close", "open"]);
+    const events = runScheduledFlow(graph, { 10: [[0.0, 1], [0.3, 0], [0.6, 1]] }, 1.2);
+    expect(events).toEqual(["close", "open"]);
   });
 });

@@ -631,3 +631,14 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   packages in a folder shipped with the install, placed ahead of the user's folder in `custom_node_dirs`;
   the reserved `thingstudio/` namespace keeps a user package from replacing one by accident. That needs the
   package format to reach parity first (tracked in `outstanding-items.md`, "Custom node format parity").
+- **2026-10-11 — eswitch/ebutton event moved off `topic` into `msg['event']`.** The 2026-09-17 design put the
+  event name (`close`/`open`; `press`/`release`/`long`/`double`) in `msg['topic']`. That was inconsistent with
+  every other source in the library (`timer`, `interrupt`, `wifi_status`, `startup` all set `topic: ''`), and it
+  hid the event from `debug`, which prints only `payload`. Now `payload` stays the bool state (still wires
+  straight to `gpio out`/`filter`), `topic` is `''`, and the event name is a named envelope field
+  `msg['event']`, alongside the other extra fields a node may add (`wifi status`'s `ip`/`subnet`/…). Done before
+  MVP launch, when breaking the message shape costs nothing. Editor-only (`node-library/ebutton.ts`,
+  `eswitch.ts`) — generated flow code changes but `device-runtime/src` doesn't, so no runtime version bump. The
+  fuller alternative (one output per event, i.e. multi-output *sources*, which would let a flow wire `double`
+  directly) still needs `EventSourceCodegenResult` and `compile.ts`'s source loop extended; the named field
+  doesn't foreclose it.

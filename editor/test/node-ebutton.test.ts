@@ -100,7 +100,7 @@ function runScheduledFlow(graph: GraphData, schedule: Record<number, Array<[numb
     env: { ...process.env, PYTHONPATH: `${pymockDir}${delimiter}${vendorDir}`, PYMOCK_MAX_RUN_S: String(maxRunS) },
     encoding: "utf8",
   });
-  return [...output.matchAll(/'topic': '(\w+)'/g)].map((m) => m[1]!);
+  return [...output.matchAll(/'event': '(\w+)'/g)].map((m) => m[1]!);
 }
 
 describe("thingstudio/ebutton node", () => {
@@ -160,6 +160,7 @@ describe("thingstudio/ebutton node", () => {
     expect(source).toContain("from events import EButton, WaitAny");
     expect(source).toContain("WaitAny([_ebutton_7.press, _ebutton_7.release, _ebutton_7.long, _ebutton_7.double])");
     expect(source).toContain("_trig.clear()");
+    expect(source).toContain("'topic': '', 'event': _event");
     expect(source).toMatch(/runtime\.spawn\(/);
   });
 
@@ -186,8 +187,8 @@ describe("thingstudio/ebutton node", () => {
     // release at 350ms -- a 50ms hold, well under the 300ms long-press
     // threshold, and no second press follows within the 100ms
     // double-click window.
-    const topics = runScheduledFlow(graph, { 11: [[0.0, 0], [0.3, 1], [0.35, 0]] }, 1.2);
-    expect(topics).toEqual(["press", "release"]);
+    const events = runScheduledFlow(graph, { 11: [[0.0, 0], [0.3, 1], [0.35, 0]] }, 1.2);
+    expect(events).toEqual(["press", "release"]);
   });
 
   it("reports a real long press through the actual vendored EButton driver", () => {
@@ -206,8 +207,8 @@ describe("thingstudio/ebutton node", () => {
     // margin as the short-press test above. Held from 300ms to 500ms --
     // 200ms, comfortably past the 100ms long-press threshold, so `long`
     // fires while still held, before release.
-    const topics = runScheduledFlow(graph, { 12: [[0.0, 0], [0.3, 1], [0.5, 0]] }, 1.2);
-    expect(topics).toEqual(["press", "long", "release"]);
+    const events = runScheduledFlow(graph, { 12: [[0.0, 0], [0.3, 1], [0.5, 0]] }, 1.2);
+    expect(events).toEqual(["press", "long", "release"]);
   });
 
   it("reports BOTH press and double on a rapid second click -- regression test for the WaitAny full-clear bug (see this file's header)", () => {
@@ -229,7 +230,7 @@ describe("thingstudio/ebutton node", () => {
     // that started ticking at press #1 -- so press #2's own _pf() finds
     // dtim still running and fires `double`, while ALSO firing `press`
     // unconditionally (suppress=False). Release #2 at 380ms.
-    const topics = runScheduledFlow(
+    const events = runScheduledFlow(
       graph,
       {
         13: [
@@ -242,9 +243,9 @@ describe("thingstudio/ebutton node", () => {
       },
       1.2,
     );
-    expect(topics).toContain("double");
-    expect(topics.filter((t) => t === "press").length).toBe(2);
-    expect(topics.filter((t) => t === "release").length).toBe(2);
-    expect(topics).not.toContain("long");
+    expect(events).toContain("double");
+    expect(events.filter((t) => t === "press").length).toBe(2);
+    expect(events.filter((t) => t === "release").length).toBe(2);
+    expect(events).not.toContain("long");
   });
 });

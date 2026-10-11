@@ -10,13 +10,14 @@
 // -- not re-explained here.
 //
 // Four possible firing events instead of ESwitch's two: press, release,
-// long, double. `topic` is 'press'/'release'/'long'/'double';
-// `payload` is the button's current debounced logical state (true =
-// pressed, EButton.__call__()) at the moment the event fired -- for
-// 'press' this is always true and for 'release' always false, but for
-// 'long'/'double' it tells a downstream node whether the button is still
-// held at the moment the event fired, matching what EButton itself reports
-// via call syntax.
+// long, double. The event name goes in `msg['event']` ('press'/'release'/
+// 'long'/'double'), NOT `msg['topic']` -- moved off `topic` 2026-10-11; see
+// eswitch.ts's header for why. `topic` is '' and `payload` is the button's
+// current debounced logical state (true = pressed, EButton.__call__()) at
+// the moment the event fired -- for 'press' this is always true and for
+// 'release' always false, but for 'long'/'double' it tells a downstream
+// node whether the button is still held at the moment the event fired,
+// matching what EButton itself reports via call syntax.
 //
 // suppress/sense/debounce/long-press/double-click are all real EButton
 // constructor args / class attributes (DRIVERS.md §4.1/§4.1.1) exposed
@@ -113,13 +114,13 @@ export const ebuttonNode: NodeDefinition = {
       waitStatement: `_trig = await ${waitVar}.wait()`,
       buildMsg: [
         `if _trig is ${btnVar}.press:`,
-        `    _topic = 'press'`,
+        `    _event = 'press'`,
         `elif _trig is ${btnVar}.release:`,
-        `    _topic = 'release'`,
+        `    _event = 'release'`,
         `elif _trig is ${btnVar}.long:`,
-        `    _topic = 'long'`,
+        `    _event = 'long'`,
         `else:`,
-        `    _topic = 'double'`,
+        `    _event = 'double'`,
         // Clears ONLY the Event that actually fired (`_trig`), not every
         // event WaitAny is watching. Real correctness fix, not a style
         // choice: EButton's own `_pf()` can set BOTH `press` and `double`
@@ -134,7 +135,7 @@ export const ebuttonNode: NodeDefinition = {
         // (a fresh WaitAny watcher task per call, events.py's own `wait()`)
         // picks it up immediately instead of losing it.
         `_trig.clear()`,
-        `msg = {'payload': ${btnVar}(), 'topic': _topic}`,
+        `msg = {'payload': ${btnVar}(), 'topic': '', 'event': _event}`,
       ].join("\n"),
     };
   },
