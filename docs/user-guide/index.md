@@ -14,7 +14,7 @@ starts again after a reset or power cycle.
   part.</figcaption>
 </figure>
 
-Everything runs on your own computer and your own boards. Thingstudio isn't a cloud service.
+All development is done locally, there is no cloud service.
 
 - **No account.** There's nothing to sign up for, and nothing is sent to us.
 - **Works offline.** Once installed, it needs no internet connection, docs included.
