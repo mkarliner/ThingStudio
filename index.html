@@ -2982,9 +2982,8 @@ gets hard to reason about.</p>
 the temperature. When a message arrives from the network, update the display. Each response runs only when its event
 happens, and the board waits for many events at once. This is
 <a href="background/event-driven/">event-driven programming</a>.</p>
-<p>Writing event-driven code is can be tricker tto learn. In MicroPython supports it natively with 
-<a href="https://docs.micropython.org/en/latest/library/asyncio.html"><code>asyncio</code></a>: tasks, <code>await</code>, and code to start the
-tasks and pass data between them. The program no longer reads top to bottom, so it can be harder to grasp what it's doing. Thingstudio makes it easier to create event driven programs and understand what they do by providing a graphical editor of events, functions and outputs.</p>
+<p>MicroPython supports this style of programming natively with the 
+<a href="https://docs.micropython.org/en/latest/library/asyncio.html"><code>asyncio</code></a>: primitives. When you write ansynio programs the code no longer reads top to bottom, so it can be harder to grasp what it's doing. Thingstudio makes it easier to create event driven programs and understand what they do by providing a graphical editor of events, functions and outputs.</p>
 <h2 id="events-nodes-and-wires">Events, nodes and wires</h2>
 <p>A program is made of <strong>nodes</strong> joined by <strong>wires</strong>. There are three types of node:</p>
 <ul>
