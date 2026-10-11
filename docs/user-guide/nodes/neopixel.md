@@ -8,7 +8,6 @@ Drives a WS2812 / NeoPixel strip: sets the pixels from each message and writes. 
 - **pin** — the strip's data pin.
 - **count** — how many pixels.
 - **order** — the wire colour order of your strip: `GRB` (most WS2812), `RGB`, `RGBW` or `GRBW`.
-- **brightness** — 0 to 255; scales every channel.
 
 ## Wiring
 

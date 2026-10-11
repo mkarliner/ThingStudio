@@ -644,9 +644,6 @@
             <option value="GRBW">GRBW -- with a white channel</option>
           </select>
         </label>
-        <label>brightness (0-255)
-          <input type="number" min="0" max="255" v-model.number="node.properties.brightness" @input="touch" />
-        </label>
         <p class="hint">
           WS2812/NeoPixel strip (built-in neopixel module). Payload is a 24-bit colour 0xRRGGBB for the whole strip,
           a list of colours for one per pixel, or {index, colour} for one pixel. RGBW strips take 0xWWRRGGBB.

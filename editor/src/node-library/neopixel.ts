@@ -10,8 +10,8 @@
 //   - payload is a list/tuple of such ints -> one colour per pixel (up to the count)
 //   - payload is {index, colour}       -> one pixel
 //
-// Colour order and brightness are properties; brightness scales every channel. A bad payload reports the
-// node's status dot and is ignored, rather than raising (which would end the source's loop).
+// Colour order is a property; a bad payload reports the node's status dot and is ignored, rather than raising
+// (which would end the source's loop).
 
 import { CompileError } from "../compiler/errors.js";
 import { checkPin } from "../definitions/pin-check.js";
@@ -36,21 +36,17 @@ export const neopixelNode: NodeDefinition = {
     if (!(ORDERS as readonly string[]).includes(order)) {
       throw new CompileError(`neopixel order "${order}" must be one of ${ORDERS.join(", ")}`);
     }
-    const brightness = Math.round(Number(node.properties.brightness ?? 255));
-    if (!Number.isFinite(brightness) || brightness < 0 || brightness > 255) {
-      throw new CompileError(`neopixel brightness "${String(node.properties.brightness)}" must be 0 to 255`);
-    }
 
     const bpp = order.endsWith("W") ? 4 : 3;
     const neoVar = ctx.uniqueName("neopixel_dev");
     const colourFn = ctx.uniqueName("neopixel_colour");
     const id = JSON.stringify(String(node.id));
 
-    const scale = (shift: number) => `((_c >> ${shift}) & 0xff) * ${brightness} // 255`;
-    const r = scale(16);
-    const g = scale(8);
-    const b = scale(0);
-    const w = scale(24);
+    const chan = (shift: number) => `((_c >> ${shift}) & 0xff)`;
+    const r = chan(16);
+    const g = chan(8);
+    const b = chan(0);
+    const w = chan(24);
     const tuple =
       order === "RGB"
         ? `(${r}, ${g}, ${b})`

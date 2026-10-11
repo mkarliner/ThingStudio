@@ -28,10 +28,9 @@ function node(properties: Record<string, unknown>, id = "n1"): GraphNode {
 }
 
 describe("thingstudio/neopixel node", () => {
-  it("rejects a bad count, order and brightness", () => {
+  it("rejects a bad count and order", () => {
     expect(() => neopixelNode.codegenSink!(node({ pin: 13, count: 0 }), ctx())).toThrow(/count/);
     expect(() => neopixelNode.codegenSink!(node({ pin: 13, order: "BGR" }), ctx())).toThrow(/order/);
-    expect(() => neopixelNode.codegenSink!(node({ pin: 13, brightness: 300 }), ctx())).toThrow(/brightness/);
   });
 
   it("is a sink with one any input and no output", () => {

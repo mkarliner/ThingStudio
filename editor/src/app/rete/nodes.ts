@@ -902,12 +902,10 @@ export class NeopixelNode extends ClassicPreset.Node {
     pin: number;
     count: number;
     order: "RGB" | "GRB" | "RGBW" | "GRBW";
-    brightness: number;
   } = {
     pin: 13,
     count: 8,
     order: "GRB",
-    brightness: 255,
   };
 
   constructor() {

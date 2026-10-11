@@ -783,6 +783,6 @@ quadrature knob: each settled turn prints the value and the `delta`.
 
 ## `neopixel-test.flow.json`
 
-The `neopixel` node: `timer 500 ms -> function -> neopixel` (pin 13, 8 pixels, GRB, brightness 64). The timer's
+The `neopixel` node: `timer 500 ms -> function -> neopixel` (pin 13, 8 pixels, GRB). The timer's
 count is scaled into a 24-bit colour each tick, so a WS2812 strip of 8 pixels cycles through colours. Change
 `count`/`order`/`pin` for your strip.
