@@ -1291,10 +1291,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-happens-on-the-device" class="md-nav__link">
+  <a href="#entering-the-network-on-the-board" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What happens on the device
+        Entering the network on the board
       
     </span>
   </a>
@@ -1302,10 +1302,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#reprovisioning-fallback" class="md-nav__link">
+  <a href="#reopening-setup-when-wifi-fails" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Reprovisioning fallback
+        Reopening setup when WiFi fails
       
     </span>
   </a>
@@ -2828,10 +2828,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-happens-on-the-device" class="md-nav__link">
+  <a href="#entering-the-network-on-the-board" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What happens on the device
+        Entering the network on the board
       
     </span>
   </a>
@@ -2839,10 +2839,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#reprovisioning-fallback" class="md-nav__link">
+  <a href="#reopening-setup-when-wifi-fails" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Reprovisioning fallback
+        Reopening setup when WiFi fails
       
     </span>
   </a>
@@ -2892,27 +2892,42 @@
 
 
 <h1 id="wifi-provisioning">WiFi provisioning</h1>
-<p>A device can learn its WiFi credentials on its own, over the air, instead of having them baked into a flow. This is for a device you're handing to someone else, or setting up somewhere you don't want to type a password into the editor.</p>
+<p>You can leave a flow's WiFi network and password out, and enter them on the board when it first starts. Use this
+for a board you hand to someone else, or one that goes on a network you don't have the password for.</p>
 <h2 id="turning-it-on">Turning it on</h2>
-<p>Set a WiFi config's security to <strong>"unmanaged"</strong> (see <a href="../working-in-the-editor/#config-nodes">Working in the editor</a>). This tells the device to bring up its own setup network the first time it boots with no stored credential, instead of connecting itself.</p>
-<h2 id="what-happens-on-the-device">What happens on the device</h2>
-<p>On first boot with nothing stored, the device opens its own WiFi network — named <strong>Thingstudio-Setup-XXXX</strong>, password <code>thingstudio</code> by default. Connect a phone or laptop to it; most phones prompt you to sign in automatically. If not, browse to <code>http://192.168.4.1/</code>.</p>
-<p>Pick your network from the list, or type its name directly if it isn't listed — some boards' WiFi scans don't reliably find every nearby network, so the form always accepts a typed name too. Enter the password and submit.</p>
-<p>Once it connects, the device saves what you entered and joins that network on every later boot. It won't reopen its setup network again unless you've turned on the reprovisioning fallback below.</p>
-<h2 id="reprovisioning-fallback">Reprovisioning fallback</h2>
-<p>By default, provisioning only happens once. If the saved network later becomes unreachable, the device just stays disconnected — it doesn't try to reopen its setup network on its own.</p>
-<p>The WiFi config has an <strong>"Allow reprovisioning on connect failure"</strong> field for that case. Turning it on means the setup network reopens any time the saved connection fails, not just on first boot.</p>
-<p><strong>Only turn this on for a device on a trusted, physically-controlled network.</strong> An unauthenticated-by-default recovery network that reopens whenever WiFi drops is itself a risk — anyone in radio range during the drop could connect and redirect the device to a different network.</p>
+<p>In the flow's WiFi config, set <strong>security</strong> to <strong>Unmanaged</strong> and leave the <strong>credential</strong> blank. See
+<a href="../working-in-the-editor/#config-nodes">Config nodes</a>. Deploy as usual.</p>
+<h2 id="entering-the-network-on-the-board">Entering the network on the board</h2>
+<p>When the board starts with no saved network, it opens its own WiFi network, <strong>Thingstudio-Setup-XXXX</strong>, with the
+password <code>thingstudio</code>:</p>
+<ol>
+<li>Connect a phone or laptop to <strong>Thingstudio-Setup-XXXX</strong>. Most phones open the setup page by themselves. If not,
+   browse to <code>http://192.168.4.1/</code>.</li>
+<li>Pick your network from the list, or type its name. Some boards' scans miss nearby networks, so typing always
+   works.</li>
+<li>Enter the password and submit.</li>
+</ol>
+<p>Once the board connects, it saves the network and joins it on every later start. If nobody enters a network within
+10 minutes, the board carries on starting without WiFi.</p>
+<h2 id="reopening-setup-when-wifi-fails">Reopening setup when WiFi fails</h2>
+<p>By default, setup only runs while no network is saved. If the saved network later becomes unreachable, the board
+stays disconnected.</p>
+<p>Tick <strong>Allow reprovisioning on connect failure</strong> in the WiFi config to reopen the setup network whenever the saved
+network fails. Only do this on a network you control: while the setup network is open, anyone in range who knows its
+password can point the board at a different network.</p>
 <h2 id="changing-the-setup-networks-password">Changing the setup network's password</h2>
-<p>There's no editor setting for this yet. The default is <code>thingstudio</code>; to set your own, connect to the board and run:</p>
-<div class="highlight"><pre><span></span><code>mpremote connect /dev/tty.usbmodemXXXX exec "import wifi_provision; wifi_provision.set_ap_password('yournewpassword')"
+<p>There's no field for it in the editor. Connect to the board and type this in the command box under the console
+(see <a href="../debugging/#commands-and-the-python-prompt">Commands and the Python prompt</a>):</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">wifi_provision</span><span class="p">;</span> <span class="n">wifi_provision</span><span class="o">.</span><span class="n">set_ap_password</span><span class="p">(</span><span class="s1">'yournewpassword'</span><span class="p">)</span>
 </code></pre></div>
-<p>Reset the board afterward. Run the same command with <code>'thingstudio'</code> to go back to the default.</p>
+<p>Then choose <strong>Tools → Reset board (hard)</strong>. Use at least 8 characters: with fewer, the setup network doesn't open.
+Set it to <code>'thingstudio'</code> to go back to the default.</p>
 <h2 id="starting-over">Starting over</h2>
-<p>To make a device forget its saved network and run first-run setup again, delete its saved state:</p>
-<div class="highlight"><pre><span></span><code>mpremote connect /dev/tty.usbmodemXXXX fs rm :/_wifi_provision.json
+<p>To make the board forget its saved network and run setup again, type this in the command box, then reset the
+board:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">os</span><span class="p">;</span> <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s1">'/_wifi_provision.json'</span><span class="p">)</span>
 </code></pre></div>
-<p>This also clears any AP password override you'd set.</p>
+<p>This also clears a changed setup password.</p>
 
 
 
