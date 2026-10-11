@@ -14,9 +14,7 @@ starts again after a reset or power cycle.
   part.</figcaption>
 </figure>
 
-All development is done locally, there is no cloud service.
-
-- **No account.** There's nothing to sign up for, and nothing is sent to us.
+- **Local Dev** All development is done locally, there is no cloud service.
 - **Works offline.** Once installed, it needs no internet connection, docs included.
 - **Git friendly.** Thingstudio's files, your programs and your board definitions, are plain, indented
   JSON that you save where you like. They diff cleanly and sit happily in a git repository. Passwords and
@@ -55,11 +53,9 @@ the temperature. When a message arrives from the network, update the display. Ea
 happens, and the board waits for many events at once. This is
 [event-driven programming](background/event-driven.md).
 
-Event-driven code is harder to write by hand. In MicroPython it means
+Writing event-driven code is can be tricker tto learn. In MicroPython supports it natively with 
 [`asyncio`](https://docs.micropython.org/en/latest/library/asyncio.html): tasks, `await`, and code to start the
-tasks and pass data between them. The program no longer reads top to bottom, and one blocking call stalls every
-task. Thingstudio writes this code for you. You draw each event and what happens next, and Thingstudio generates the
-tasks and the connections between them.
+tasks and pass data between them. The program no longer reads top to bottom, so it can be harder to grasp what it's doing. Thingstudio makes it easier to create event driven programs and understand what they do by providing a graphical editor of events, functions and outputs.
 
 ## Events, nodes and wires
 
