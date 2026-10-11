@@ -3,28 +3,30 @@
 Status: index, started 2026-08-19. An append-only ledger of hard-won
 technical facts and gotchas — things that cost real time to discover and
 will bite again if forgotten, but aren't a behavioral rule for how a
-session should operate (that's `CLAUDE.md`'s job — a few of these
-*did* get promoted there, e.g. the git-lock issue and the stray-`.js`
-issue, and are cross-referenced rather than duplicated below). Each entry
+session should operate (that's the project rules' job — `AGENTS.md`, plus
+`CLAUDE.md` for the sandbox-specific ones; a few of these *did* get
+promoted there, e.g. the git-lock issue and the stray-`.js` issue, and are
+cross-referenced rather than duplicated below). Each entry
 is short: what was learned, why it matters, where the full story is.
 
 **Maintenance rule:** whenever a session hits something like this — a
 surprising platform behavior, a library gotcha, a test-methodology trap,
 a hardware quirk — add one line here in the same change, not batched for
-later. If it turns out to be a repeatable process rule Claude should
-always follow (not just a fact worth knowing), promote it to `CLAUDE.md`
-instead, and leave a pointer here rather than duplicating the text.
+later. If it turns out to be a repeatable process rule a session should
+always follow (not just a fact worth knowing), promote it into the project
+rules (`AGENTS.md`, or `CLAUDE.md` if it's sandbox-specific) instead, and
+leave a pointer here rather than duplicating the text.
 
 ---
 
 **2026-09-06 pass:** split every topic section except this one out into its own file under `docs/working-notes/learnings/`, same reasoning and pattern as `decisions.md`'s own split the same day — this file is now a fast index, not something to read end to end regardless of task. While in there, folded in the full incident narratives for two of the five rules below that had been living only in `CLAUDE.md` (the `register_trigger` version-bump incident and the npm/vitest native-binding incidents) — `CLAUDE.md` itself was trimmed to just the operative rules, pointing here for the "why." Nothing here was reworded or deleted otherwise.
 
-## Already promoted to `CLAUDE.md` (standing rules, not repeated here)
+## Already promoted to the project rules (`AGENTS.md` / `CLAUDE.md`) (standing rules, not repeated here)
 
-Five standing rules started as findings here and got promoted to `CLAUDE.md`
-once they turned out to be repeatable process rules, not just facts worth
-knowing. CLAUDE.md carries the rule itself; this file carries the incident
-that motivated it, so CLAUDE.md doesn't have to.
+Five standing rules started as findings here and got promoted into the project
+rules once they turned out to be repeatable process rules, not just facts worth
+knowing. The rules files carry the rule itself; this file carries the incident
+that motivated it, so they don't have to.
 
 - **Git writes from the agent sandbox leave stale `.git/*.lock` files
   behind** on the live-mounted repo (confirmed for `.git/index.lock`,
@@ -39,7 +41,7 @@ that motivated it, so CLAUDE.md doesn't have to.
   the agent sandbox."
 - **Stray compiled `.js` files can shadow real `.ts` sources** when a
   sandboxed `npx tsc --noEmit` silently doesn't respect the flag — check
-  and delete before trusting any test/build result. `CLAUDE.md`, "Check for
+  and delete before trusting any test/build result. `AGENTS.md`, "Check for
   stray compiled `.js`..."
 - **`npm install`/`build`/`test` against the live-mounted `editor/`
   corrupts `node_modules` for Mike's Mac** (Linux native bindings written
