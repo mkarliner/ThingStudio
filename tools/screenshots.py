@@ -45,7 +45,9 @@ class Shot:
     # Labelled callouts: (element ids, label, side, position). Each part gets an outline, and its label sits in a margin
     # added around the screenshot on that side ("top", "bottom", "left", "right"), with an arrow to the part. Position
     # is where along that side the label goes, in screenshot pixels (x for top/bottom, y for left/right); None centres
-    # it on the part. Side "inside" puts the label in the middle of the part, with no arrow. The labels are named in
+    # it on the part. Side "inside" puts the label in the middle of the part, with no arrow. Side "below" puts the label
+    # over the screenshot, `position` pixels below the part, with an arrow up to it. Labels may cover the screenshot:
+    # the picture is for finding your way round, and big labels matter more than what they hide. The labels are named in
     # docs/user-guide/editor-tour.md, so keep the two in step. A missing id fails the run, by name.
     annotations: tuple[tuple[tuple[str, ...], str, str, int | None], ...] = ()
 
@@ -53,21 +55,21 @@ class Shot:
 # Ids that aren't plain element ids: "menu:File" is the toolbar menu button whose text starts with "File",
 # "row:cmdInput" is the row of controls containing #cmdInput, "sel:..." is a CSS selector.
 EDITOR_PARTS = (
-    (("menu:File",), "File", "top", None),
-    (("flowNameInput",), "Flow name", "top", None),
-    (("backendPortSelect", "btnRefreshPorts", "btnConnect"), "Port list and Connect", "top", None),
-    (("boardSelect", "btnBoardPins"), "Board menu and Pins…", "top", None),
-    (("btnDeploy",), "Compile → Deploy", "top", None),
-    (("menu:Tools", "menu:Help"), "Tools and Help", "top", None),
-    (("palette-mount",), "Palette", "left", 300),
-    (("sel:#pane-tabs-mount > *",), "Flow tabs", "bottom", 760),
-    (("rete-canvas",), "Canvas", "inside", None),
-    (("property-panel-mount",), "Properties", "right", 620),
-    (("notesPanel",), "Notes", "right", None),
-    (("source-preview-panel",), "Compiled source", "right", None),
-    (("console",), "Console", "right", None),
-    (("row:cmdInput",), "Python prompt", "right", None),
-    (("row:btnStopToPrompt",), "Board buttons", "right", None),
+    (("menu:File",), "New, open, save", "top", None),
+    (("flowNameInput",), "This flow's name", "top", None),
+    (("backendPortSelect", "btnRefreshPorts", "btnConnect"), "Connect to a board", "top", None),
+    (("boardSelect", "btnBoardPins"), "Board type, pin map", "top", None),
+    (("btnDeploy",), "Deploy flow to board", "top", None),
+    (("menu:Tools", "menu:Help"), "Board tools, user guide", "top", None),
+    (("palette-mount",), "Nodes to add", "left", 300),
+    (("sel:#pane-tabs-mount > *",), "Sheets of this flow", "below", 60),
+    (("rete-canvas",), "Build the flow here", "inside", None),
+    (("property-panel-mount",), "Selected node's settings", "right", 620),
+    (("notesPanel",), "Notes on this flow", "right", None),
+    (("source-preview-panel",), "Generated MicroPython", "right", None),
+    (("console",), "Messages from the board", "right", None),
+    (("row:cmdInput",), "Run Python on the board", "right", None),
+    (("row:btnStopToPrompt",), "Escape to REPL", "right", None),
 )
 
 SHOTS = [
@@ -76,7 +78,7 @@ SHOTS = [
 ]
 
 # Margins added around an annotated screenshot for the labels, in pixels.
-MARGIN = {"top": 56, "bottom": 56, "left": 130, "right": 190}
+MARGIN = {"top": 60, "bottom": 20, "left": 130, "right": 250}
 
 # Returns each part's box [left, top, right, bottom] in the page, or the parts it couldn't find.
 RECTS_JS = """
@@ -123,36 +125,63 @@ COMPOSE_JS = """
     svg.append(e); return e;
   };
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
-  const labels = [];
-  parts.forEach(([box, label, side, pos]) => {
-    const [l, t, r, b] = [box[0] + ox, box[1] + oy, box[2] + ox, box[3] + oy];
-    add('rect', { x: l, y: t, width: r - l, height: b - t, rx: 6, fill: 'none', stroke: '#ffb020', 'stroke-width': 2 });
-    let cx, cy, tx, ty;  // label centre, arrow tip
-    const along = pos === null ? null : pos;
-    if (side === 'top') { cx = along === null ? (l + r) / 2 : along + ox; cy = m.top / 2; tx = clamp(cx, l + 8, r - 8); ty = t; }
-    else if (side === 'bottom') { cx = along === null ? (l + r) / 2 : along + ox; cy = H - m.bottom / 2; tx = clamp(cx, l + 8, r - 8); ty = b; }
-    else if (side === 'left') { cx = m.left / 2; cy = along === null ? (t + b) / 2 : along + oy; tx = l; ty = clamp(cy, t + 8, b - 8); }
-    else if (side === 'right') { cx = W - m.right / 2; cy = along === null ? (t + b) / 2 : along + oy; tx = r; ty = clamp(cy, t + 8, b - 8); }
-    else { cx = (l + r) / 2; cy = (t + b) / 2; }
-    labels.push([label, side, cx, cy, tx, ty]);
-  });
-  // Arrows first, then labels on top of them.
-  const sized = labels.map(([label, side, cx, cy, tx, ty]) => {
-    const text = add('text', { x: 0, y: 0, 'font-family': 'Helvetica, Arial, sans-serif', 'font-size': 15,
+  const FONT = 18, BH = 32, GAP = 10;
+  const measure = (label) => {
+    const text = add('text', { x: 0, y: 0, 'font-family': 'Helvetica, Arial, sans-serif', 'font-size': FONT,
       'font-weight': 'bold' }, label);
     const tw = text.getBBox().width; text.remove();
-    return [label, side, cx, cy, tx, ty, tw + 20, 26];
+    return tw + 24;
+  };
+  // Label centre (cx, cy), size (bw, BH), arrow tip (tx, ty). Labels may overlap the screenshot itself.
+  const labels = parts.map(([box, label, side, pos]) => {
+    const [l, t, r, b] = [box[0] + ox, box[1] + oy, box[2] + ox, box[3] + oy];
+    add('rect', { x: l, y: t, width: r - l, height: b - t, rx: 6, fill: 'none', stroke: '#ffb020', 'stroke-width': 2 });
+    const bw = measure(label);
+    const L = { label, side, bw, l, t, r, b };
+    if (side === 'top') { L.cx = pos === null ? (l + r) / 2 : pos + ox; L.cy = m.top / 2; }
+    else if (side === 'bottom') { L.cx = pos === null ? (l + r) / 2 : pos + ox; L.cy = H - m.bottom / 2; }
+    else if (side === 'left') { L.cx = 8 + bw / 2; L.cy = pos === null ? (t + b) / 2 : pos + oy; }
+    else if (side === 'right') { L.cx = W - 8 - bw / 2; L.cy = pos === null ? (t + b) / 2 : pos + oy; }
+    else if (side === 'below') { L.cx = (l + r) / 2; L.cy = b + (pos === null ? 50 : pos); }
+    else { L.cx = (l + r) / 2; L.cy = (t + b) / 2; }
+    return L;
   });
-  sized.forEach(([, side, cx, cy, tx, ty, bw, bh]) => {
-    if (side === 'inside') return;
-    const sx = side === 'left' ? cx + bw / 2 : side === 'right' ? cx - bw / 2 : cx;
-    const sy = side === 'top' ? cy + bh / 2 : side === 'bottom' ? cy - bh / 2 : cy;
-    add('line', { x1: sx, y1: sy, x2: tx, y2: ty, stroke: '#ffb020', 'stroke-width': 2.5, 'marker-end': 'url(#head)' });
+  // Spread labels that share a side so none overlap: left to right along the top and bottom, top to bottom down the
+  // sides, then shift the row back inside the picture if it ran off the end.
+  const spread = (row, key, size, lo, hi) => {
+    row.sort((p, q) => p[key] - q[key]);
+    for (let i = 1; i < row.length; i++) {
+      const min = row[i - 1][key] + size(row[i - 1]) / 2 + GAP + size(row[i]) / 2;
+      if (row[i][key] < min) row[i][key] = min;
+    }
+    const last = row[row.length - 1];
+    const over = last ? last[key] + size(last) / 2 - hi : 0;
+    if (over > 0) row.forEach((p) => { p[key] -= over; });
+    const first = row[0];
+    const under = first ? lo - (first[key] - size(first) / 2) : 0;
+    if (under > 0) row.forEach((p) => { p[key] += under; });
+  };
+  for (const side of ['top', 'bottom']) spread(labels.filter((p) => p.side === side), 'cx', (p) => p.bw, 8, W - 8);
+  for (const side of ['left', 'right']) spread(labels.filter((p) => p.side === side), 'cy', () => BH, 8, H - 8);
+  labels.forEach((p) => {
+    if (p.side === 'top') { p.tx = clamp(p.cx, p.l + 8, p.r - 8); p.ty = p.t; }
+    else if (p.side === 'bottom') { p.tx = clamp(p.cx, p.l + 8, p.r - 8); p.ty = p.b; }
+    else if (p.side === 'left') { p.tx = p.l; p.ty = clamp(p.cy, p.t + 8, p.b - 8); }
+    else if (p.side === 'right') { p.tx = p.r; p.ty = clamp(p.cy, p.t + 8, p.b - 8); }
+    else if (p.side === 'below') { p.tx = clamp(p.cx, p.l + 8, p.r - 8); p.ty = p.b; }
   });
-  sized.forEach(([label, , cx, cy, , , bw, bh]) => {
-    add('rect', { x: cx - bw / 2, y: cy - bh / 2, width: bw, height: bh, rx: 6, fill: '#ffb020' });
-    add('text', { x: cx, y: cy + 5, 'text-anchor': 'middle', 'font-family': 'Helvetica, Arial, sans-serif',
-      'font-size': 15, 'font-weight': 'bold', fill: '#111' }, label);
+  // Arrows first, then labels on top of them.
+  labels.forEach((p) => {
+    if (p.side === 'inside') return;
+    const sx = p.side === 'left' ? p.cx + p.bw / 2 : p.side === 'right' ? p.cx - p.bw / 2 : p.cx;
+    const sy = p.side === 'top' ? p.cy + BH / 2 : p.side === 'bottom' ? p.cy - BH / 2 : p.side === 'below' ? p.cy - BH / 2 : p.cy;
+    add('line', { x1: sx, y1: sy, x2: p.tx, y2: p.ty, stroke: '#ffb020', 'stroke-width': 3, 'marker-end': 'url(#head)' });
+  });
+  labels.forEach((p) => {
+    add('rect', { x: p.cx - p.bw / 2, y: p.cy - BH / 2, width: p.bw, height: BH, rx: 7, fill: '#ffb020',
+      stroke: '#111', 'stroke-width': 1 });
+    add('text', { x: p.cx, y: p.cy + 6, 'text-anchor': 'middle', 'font-family': 'Helvetica, Arial, sans-serif',
+      'font-size': FONT, 'font-weight': 'bold', fill: '#111' }, p.label);
   });
   return [W, H];
 }
@@ -239,7 +268,7 @@ def take(page, base_url: str, shot: Shot) -> Path:
         raise ScreenshotError(
             f"[{shot.name}] annotated parts not found in the editor (renamed or removed?): " + "; ".join(found["missing"])
         )
-    bad = [label for _ids, label, side, _pos in shot.annotations if side not in ("top", "bottom", "left", "right", "inside")]
+    bad = [label for _ids, label, side, _pos in shot.annotations if side not in ("top", "bottom", "left", "right", "inside", "below")]
     if bad:
         raise ScreenshotError(f"[{shot.name}] unknown label side for: " + ", ".join(bad))
     png = base64.b64encode(page.screenshot()).decode("ascii")

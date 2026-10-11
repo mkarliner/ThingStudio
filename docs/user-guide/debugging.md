@@ -1,54 +1,37 @@
 # Debugging & troubleshooting
 
+The tools for finding out what a board is doing, then what to do about the problems you may meet, in the order you
+meet them: connecting, deploying, running, and recovering a stuck board.
+
 ## Console and compiled source
 
-The **console** panel shows everything the connected board reports: deploy results, node errors, and anything a `debug` node prints. Clear it with the button in its corner.
+The **console** shows what the board and Thingstudio report: deploy results, node errors, and what `debug` nodes
+and `print()` send. **Clear** empties it.
 
-The **Show** menu in its corner sets how much you see:
+Its **Show** menu sets how much it shows:
 
-- **Normal** shows your flow's output, warnings, errors and the results of what you do (deploy, flow status).
-- **Info** adds routine reports: board detected, versions, memory, libraries sent, network status.
-- **Debug** adds raw protocol messages and the board's boot output.
+- **Normal:** your flow's output, warnings, errors, and the results of what you do, such as a deploy.
+- **Info:** adds routine reports: board detected, versions, memory, libraries sent, network status.
+- **Debug:** adds raw protocol messages and the board's boot output.
 
-Choose Info or Debug when you're chasing a problem. Hidden lines are kept, so switching later shows what was
-already logged.
+Hidden lines are kept, so choosing Info or Debug later shows what was already logged.
 
-The editor's version is next to its name in the toolbar, and in **Help → About**. A `+` after it means it was
-built from uncommitted changes.
+The **Compiled source** panel shows the MicroPython your flow compiles to.
 
-The **source preview** panel shows the actual MicroPython the current canvas compiles to — useful for seeing exactly what a flow does, or for confirming a fix landed where you expected.
+The editor's version is next to its name in the toolbar, and in **Help → About Thingstudio**. A `+` after it means
+it was built from uncommitted changes. Include the versions when you report a problem.
 
 ### Memory
 
-After each connect and deploy, a **[memory]** line shows how much RAM the board has free. On ESP32 boards
-it also shows the ESP-IDF heap and its largest free block. WiFi, MQTT and TLS use that heap, not
-MicroPython's. If WiFi won't join while MicroPython still has plenty free, a low ESP-IDF figure is the
-likely cause. The ESP32-C3 is the tightest. The [FAQ](faq.md) explains where an ESP32's memory
-goes.
-
-## Board won't connect
-
-When **Connect**, **Tools → Check status** or **Tools → Install runtime…** gets no proper reply, the console says what the board sent instead. Each case has a next step.
-
-| Console says | What it means | What to do |
-| --- | --- | --- |
-| The board didn't reply at all | Usually no MicroPython on the board | [Install MicroPython](installing-micropython.md). If it's already there, press reset and try again. |
-| MicroPython but not the Thingstudio runtime | MicroPython is fine; the runtime is missing | Choose **Tools → Install runtime…**. |
-| The board is in its bootloader | An ESP32 is in download mode | Press reset without holding BOOT. |
-| Running CircuitPython, or other firmware | Not MicroPython | [Install MicroPython](installing-micropython.md). |
-| The runtime is starting up | It's still booting | Wait a few seconds, then choose **Tools → Check status**. |
-
-The raw error from the backend stays in the message in brackets. Include it if you report a problem.
-
-### Watching a board start up
-
-To see a board's own startup messages, connect with `mpremote connect <port>` and no further command, or a serial monitor that doesn't send Ctrl-C when it opens. A working runtime prints `LISTENER_BOOTING`, then `LISTENER_READY`.
-
-`mpremote repl` and Thonny's Shell interrupt the board as they connect. That looks just like a board that never starts, even when it's fine. Close them before connecting from Thingstudio; only one program can use the port at a time.
+With **Show** set to **Info**, a `[memory]` line after each connect and deploy shows the board's free RAM. On an
+ESP32 it also shows the ESP-IDF heap and its largest free block. WiFi, MQTT and TLS use the ESP-IDF heap, not
+MicroPython's. If WiFi won't join while MicroPython has plenty free, a low ESP-IDF figure is the likely cause. The
+[FAQ](faq.md) explains where an ESP32's memory goes.
 
 ## Commands and the Python prompt
 
-The box under the console runs Python on the board. Type a line and press Enter; the result appears in the console. Up and down arrows bring back earlier commands.
+The box under the console runs Python on the board. Type a line and press Enter; the result appears in the console.
+The up and down arrows bring back earlier commands.
 
 ```python
 gc.mem_free()
@@ -56,113 +39,167 @@ import machine; machine.Pin(15).value()
 os.listdir()
 ```
 
-Commands run alongside your flow, and variables you set stay for the next command. A slow command (a long `sleep`, a loop) pauses the flow until it finishes, so keep them short.
+Commands run alongside your flow, and variables you set stay for the next command. A command that takes time, such
+as a `sleep` or a loop, holds up the flow until it finishes.
 
-For a full Python prompt, click **Stop flow & open prompt**. The flow and Thingstudio stop, and the board waits at MicroPython's own `>>>` prompt. Nothing is deleted. Anything you type in the box now goes straight to that prompt. Deploy is off while you're there. Click **Restart Thingstudio** when you're done; the board restarts Thingstudio and your saved flow.
+For MicroPython's own `>>>` prompt, click **Stop flow & open prompt**. The flow and the runtime stop; nothing is
+deleted. What you type in the box now goes to that prompt, and Deploy is off. Click **Restart Thingstudio** to start
+the runtime and the saved flow again.
 
-You can also use the prompt from another program, such as Thonny or `mpremote`: click **Disconnect** first.
+To use the prompt from another program, such as Thonny or `mpremote`, click **Connected · Disconnect** first.
 
-## Restarting the board
+### Watching a board start up
 
-A board can run short of memory after several deploys, or after a flow that uses a lot of it, such as a display.
-The console suggests a restart when that's the likely problem: a deploy fails with `MemoryError`, the board restarts
-while starting a flow, or an ESP32 reports too little memory left for WiFi.
+To see a board's own startup messages, connect with `mpremote connect PORT` and no further command, or a serial
+monitor that doesn't send Ctrl-C when it opens. A working runtime prints `LISTENER_BOOTING`, then
+`LISTENER_READY`.
 
-- **Tools → Restart board (soft)** restarts MicroPython. The saved flow starts again with clean memory. USB stays
-  connected.
-- **Tools → Reset board (hard)** resets the whole chip, like its reset button. It frees all memory. A board with
-  native USB (Pico, ESP32-S2/S3/C3) disconnects; click **Connect** when it's back.
+`mpremote repl` and Thonny's Shell interrupt the board as they connect, which looks like a board that never starts.
+Close them before connecting from Thingstudio: only one program can use the port at a time.
 
-Deploy is off until the board is back, which can take several seconds while it restarts its saved flow.
+## Board won't connect
 
-If Deploy says the board is **too full to receive the flow**, the flow already running is using the memory, and
-a restart just starts it again. Use **Tools → Remove flow…**, then **Reset board (hard)**, then deploy.
+When **Connect**, **Tools → Check status** or **Tools → Install runtime…** gets no proper reply, the console says
+what the board sent instead, and what to do:
 
-Try the soft restart first after a `MemoryError`. When an ESP32 is short of memory for WiFi, only the hard reset
-helps: a soft restart doesn't give that memory back. The console says which one to use.
+| Console says | What to do |
+| --- | --- |
+| Nothing came back | Usually no MicroPython. [Install MicroPython](installing-micropython.md). If it's there, press reset, then **Tools → Check status**. |
+| MicroPython but no Thingstudio runtime | **Tools → Install runtime…**. |
+| MicroPython replied but didn't enter install mode | Press reset and install again. |
+| Board is in its bootloader | An ESP32 in download mode. Press reset, not BOOT. If it repeats, install MicroPython. |
+| Board runs CircuitPython, or replied but not as MicroPython | [Install MicroPython](installing-micropython.md). |
+| Runtime still starting | Wait, then **Tools → Check status**. |
+| Install stalled | Replug the board, click **⟳**, and try again. If it repeats, restart Thingstudio. |
 
-## Board stuck restarting
+If the port itself won't open, the console says why:
 
-A flow that crashes the board as it starts would crash it again on every restart. Thingstudio stops this itself: if the saved flow doesn't stay up for 10 seconds on three restarts in a row, the board starts without it. The console shows **[safe mode]**. Fix the flow and deploy it again, or remove it.
+| Console says | What to do |
+| --- | --- |
+| port in use | Close other serial monitors, IDEs, or editor tabs using the board. |
+| port access refused | Replug the board and check port permissions. On Linux, check you're in the `dialout` group. |
+| board gone from that port | Check the cable, click **⟳**, and connect again. |
 
-**Tools → Remove flow…** deletes the saved flow from the board. The board then starts with Thingstudio only, as after a fresh runtime install. Use it for any flow that stops the board answering:
+The raw error stays in the message, in brackets. Include it if you report a problem.
 
-1. Select the board's port and choose **Tools → Remove flow…**.
-2. If the console says so, press the board's reset button. Thingstudio keeps trying for a minute, so the timing doesn't matter.
-3. When it's done, click **Connect**.
+## Deploy is greyed out
 
-The flow on your canvas isn't affected.
+**Compile → Deploy** is greyed out when:
 
-## MemoryError or a library that won't load
-
-On an ESP32 without external RAM, a flow can fail to load with `MemoryError` even though the **[memory]** line
-shows free RAM. The free RAM is in small pieces and the library needs one big piece. It is most likely after a
-display flow has run. Use **Tools → Reset board (hard)**, then deploy again. See the [FAQ](faq.md) for why an
-ESP32 has so little room. A board with external RAM (PSRAM) avoids it.
+- the editor isn't connected to a board;
+- the flow on the board is the one on the canvas, deployed and unchanged since;
+- the flow is stopped at the Python prompt (click **Restart Thingstudio**);
+- the board is restarting.
 
 ## Module missing on the board
 
-A deploy can fail with `ImportError: no module named '...'`. The flow needs a module the board's MicroPython doesn't
+A deploy can fail with `ImportError: no module named '...'`: the flow needs a module the board's MicroPython doesn't
 have. The board keeps running its previous flow.
 
 The usual cause is networking. MQTT, UDP, HTTP and WiFi nodes need the `network` and `socket` modules, which only
-boards with WiFi (or Ethernet) have. A Raspberry Pi Pico has none; a Pico W does. If the board reports no WiFi, the
+boards with WiFi or Ethernet have. A Raspberry Pi Pico has neither; a Pico W does. If the board reports no WiFi, the
 console warns you before the deploy.
 
 Other modules differ between ports and builds. If the import is in your own function node, check the module exists
 for your board in the [MicroPython docs](https://docs.micropython.org/). A board that should have it may need a
 different [MicroPython build](https://micropython.org/download/).
 
-Libraries Thingstudio provides, such as the MQTT client or display drivers, are sent by Deploy. See
+Thingstudio's own libraries, such as the MQTT client and display drivers, are sent by Deploy. See
 [Libraries](flow-lifecycle.md#libraries).
+
+## MemoryError or a library that won't load
+
+On an ESP32 without external RAM (PSRAM), a flow can fail to load with `MemoryError` even though the `[memory]` line
+shows free RAM. The free RAM is in pieces, and the library needs one large piece. This is most likely after a display
+flow has run. Use **Tools → Reset board (hard)**, then deploy again. See the [FAQ](faq.md) for why an ESP32 has
+little room.
+
+If Deploy says the board is **too full to receive the flow**, the running flow is using the memory. Use
+**Tools → Remove flow…**, then **Tools → Reset board (hard)**, then deploy.
+
+## WiFi Internal State Error on deploy
+
+On an ESP32, deploying a flow with MQTT nodes can fail with "Wifi Internal State Error". The board is still
+reconnecting to the network the previous flow used, and refuses a new connection until that finishes. The MQTT nodes
+retry up to three times. If it still fails, deploy again.
+
+## Reading a node error
+
+When a node fails on the board, the console shows a `[NODE_ERROR]` line naming the node and the error, and the node
+is highlighted on the canvas. Network nodes (`udp send`, `udp receive`, `http request`, `mqtt publish`,
+`mqtt subscribe`) also name the operation and the host and port. A network node error without them is worth
+[reporting](https://github.com/mkarliner/ThingStudio/issues).
 
 ## I2C device not answering
 
-A sensor node's status dot shows **disconnected**, "no reply at 0x76", when nothing answers at its address.
-Scan the bus to see what is there. Type these two lines in the command box, one at a time, with your bus
-and pins:
+A sensor node's status dot shows **disconnected**, with "no reply at 0x76", when nothing answers at its address.
+Scan the bus to see what is there. Type these two lines in the command box, one at a time, with your bus and pins:
 
 ```python
 i2c = machine.I2C(0, scl=machine.Pin(5), sda=machine.Pin(4))
 [hex(a) for a in i2c.scan()]
 ```
 
-An `i2c` node set to **scan** does the same from a flow.
+An [i2c device](nodes/i2c.md) node set to **scan** does the same from a flow.
 
-An empty list means nothing answered. Check, in this order:
+An empty list means nothing answered. Check these, in order:
 
 - The pin numbers. On a Pico, GP4 and GP5 are physical pins 6 and 7.
 - SDA and SCL swapped.
 - Power (3.3 V) and ground to the device.
 - Solder joints on the header pins.
 
-A different address from the one set on the node means the address is wrong, not the wiring.
+An address different from the node's means the address is wrong, not the wiring.
 
 ## A toggle button goes back
 
 A [gui toggle](nodes/gui.md#a-toggle-that-follows-the-real-device) with its input wired shows the state you asked
-for until the input confirms it. If nothing arrives in time (5 s by default), it returns to its last state, shows a
-cross for a moment, and the console prints `NODE_ERROR ... NoConfirmation: no confirmation within 5 s`.
+for until the input confirms it. If nothing arrives within **wait for confirmation** (5 s by default), it goes back
+to its last state, shows a cross for a moment, and the console shows
+`NODE_ERROR ... NoConfirmation: no confirmation within 5 s`.
 
-Check, in this order:
+Check these, in order:
 
 - The device is reachable and the command reached it. Watch the command topic with a debug node.
 - The input is wired to the device's *state* topic, not the command topic.
 - The state is sent in a form the toggle matches. A toggle set to `true` and `false` ignores `ON` and `OFF`: set its
-  value type to text.
-
-## Reading a node error
-
-When a node raises an exception on the device, the board reports which node and what went wrong. Every network node (`udp_send`, `udp_receive`, `http_request`, `mqtt_publish`, `mqtt_subscribe`) follows the same convention for its own errors: the operation and the host/port it was talking to are named directly in the message, not left for you to guess from a bare exception. If you see a raw, unattributed error with no context from a network node, that's worth reporting — every network node in this project is meant to wrap its own errors before they reach you.
+  **value type** to text.
 
 ## Native code (Tools → Native code)
 
-A few nodes (currently `display_spi`'s `gs4`/`gs2`/`mono` frame formats) compile part of their code to native machine code, not portable bytecode. That needs the right target architecture for your board's chip.
+The `gs4`, `gs2` and `mono` frame formats of [display spi](nodes/display-spi.md) compile part of their code to
+native machine code, which needs the right architecture for the board's chip.
 
-**Tools → Native code** defaults to Auto, which uses the processor of the board in the [Board menu](boards.md) and shows the result, for example **Arch: xtensawin**. If Auto picks the wrong one, choose your board's chip from the list instead.
+**Tools → Native code** defaults to **Arch: Auto**, which uses the processor of the board in the
+[Board menu](boards.md). If Deploy fails with an architecture or native-module error, pick your board's chip from
+the list and deploy again.
 
-If Deploy fails with an architecture or native-module error, check this setting: pick your board's chip explicitly and redeploy.
+## Restarting the board
 
-## Known platform limitation: WiFi/MQTT connect ordering
+A board can run short of memory after several deploys, or after a flow that uses a lot of it, such as a display.
+The console suggests a restart when a deploy fails with `MemoryError`, the board restarts while starting a flow, or an
+ESP32 has too little memory left for WiFi.
 
-On ESP32 boards, a flow with MQTT nodes can hit a WiFi connection error at deploy time ("Wifi Internal State Error"). The board is still reconnecting to a network an earlier flow used, and refuses a new connect until that finishes. The MQTT nodes stop that reconnect and try again, up to three times. If it still fails, deploy again. It's a platform timing issue, not a mistake in your flow.
+The Tools menu has two restarts:
+
+- **Tools → Restart board (soft)** restarts MicroPython. The saved flow starts again with clean memory. USB stays
+  connected.
+- **Tools → Reset board (hard)** resets the whole chip, like its reset button, and frees all memory. A board with
+  native USB (Pico, ESP32-S2, S3 and C3) disconnects; click **Connect** when it's back.
+
+Try the soft restart first after a `MemoryError`. When an ESP32 is short of memory for WiFi, only the hard reset
+gives it back. The console says which to use. Deploy is off until the board is back, which can take several seconds.
+
+## Board stuck restarting
+
+A flow that crashes the board as it starts would crash it on every restart. If the saved flow doesn't stay up for 10
+seconds on three restarts in a row, the board starts without it, and the console shows **[safe mode]**. Fix the flow
+and deploy it again, or remove it.
+
+**Tools → Remove flow…** deletes the saved flow from the board, for any flow that stops the board answering:
+
+1. Select the board's port and choose **Tools → Remove flow…**.
+2. If the console asks, press the board's reset button. Thingstudio keeps trying for a minute.
+3. When it's done, click **Connect**.
+
+The board then starts with the runtime only, as after a fresh install. The flow on your canvas isn't affected.

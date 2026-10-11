@@ -1,28 +1,31 @@
 # A sensor display
 
-Build a three-page display: the room's temperature, humidity and pressure with their recent history, and a
-clock. The readings are also published over MQTT. It is the kind of flow you would put on a desk or a wall.
+Build a three-page touch display: the room's temperature, humidity and pressure with their recent history, and a
+clock. The flow also publishes the readings over MQTT.
 
-The finished flow is `test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json`. Open it from **File → Open** to
-see it, or follow the steps below to build your own.
+The finished flow is
+[`test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json`](https://github.com/mkarliner/ThingStudio/blob/main/test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json)
+in the Thingstudio repository. Download it and open it with **File → Open…** to see it, then pick your own WiFi
+and MQTT credentials in its config nodes. Or follow the steps below to build it.
 
 ## What you need
 
-- A Freenove ESP32-S3 4.0" touch display (FNK0104S), connected and with the runtime installed
-  ([steps 2 to 4](installing-micropython.md)). Other boards work; the pins below are this board's.
-- A BME280 sensor board (a BMP280 works too, without humidity). Wire it to 3V3, GND, **SCL 15** and **SDA 16**,
-  the touch panel's I2C bus. Its address is usually `0x76`, or `0x77`.
-- WiFi set up for the board ([Connecting over WiFi](wifi-connection.md)). The clock needs it for the time, and
-  MQTT needs it for the broker. Skip the MQTT part and you need WiFi only for the clock.
+The steps use this hardware and setup:
+
+- A Freenove ESP32-S3 4.0" touch display (FNK0104S), with MicroPython and the runtime installed
+  ([steps 3 to 5](installing-micropython.md) of Getting started). Pick it by hand in the **Board** menu. Other
+  boards work too; the pins below are this board's.
+- A BME280 sensor board. A BMP280 also works, without humidity. Wire it to 3V3, GND, **SCL 15** and **SDA 16**,
+  the touch panel's I2C bus.
+- A WiFi network for the clock and MQTT, and an MQTT broker. See [Connecting over WiFi](wifi-connection.md).
 
 ## 1. Read the sensor
 
-1. Add an **I2C bus** (in the **bme280** node's I2C bus field, **new**): bus `0`, SCL `15`, SDA `16`.
-2. Drag a **bme280** onto the canvas. Pick the I2C bus, set the address (`0x76` is `118`), and **interval (ms)**
-   to `5000`.
-3. Drag a **function** node, set **outputs** to `5`, wire the sensor to it, and use this code. It sends each
-   reading on its own output, so each widget gets only its own number (output 4 is a second copy of the pressure,
-   for its journal, and output 5 says the sensor is alive):
+1. Drag a **bme280** onto the canvas. In its **I2C bus** field, click **+** and make a bus: bus `0`, SCL `15`,
+   SDA `16`.
+2. Set the bme280's **address** to `0x76`, or `0x77` if your sensor board ties SDO high, and **interval (ms)** to
+   `5000`.
+3. Drag a **function** node, set **outputs** to `5`, wire the bme280 to it, and use this code:
 
     ```python
     p = msg['payload']
@@ -35,69 +38,99 @@ see it, or follow the steps below to build your own.
     return [t, h, pr, pr, ok]
     ```
 
-Test it first: wire the sensor to a **debug** node and deploy. You should see a reading every 5 seconds. See
+    Each reading goes out on its own output, so each widget gets only its own number. Output 4 is a second copy of
+    the pressure, for its journal. Output 5 says the sensor is alive.
+
+To test the sensor first, wire the bme280 to a **debug** node and deploy. A reading appears every 5 seconds. See
 [bme280](nodes/bme280.md).
 
 ## 2. Show it on the display
 
-1. Drag a **display spi** onto the canvas and pick the Freenove 4.0" **preset** (a st7796 panel,
-   `320 × 480`). Set **orientation** to `90` so the screen is turned the way you want it.
-2. Drag a **gui screen**. Set its width and height to the panel's own size (`320 × 480`), its frame format to
-   `rgb565` (colour) and pick the touch panel. Wire it to the display.
-3. Drag three **readout** nodes (temperature, humidity, pressure) and a **light** for the sensor. Wire the function's
-   outputs to them. In each readout's properties set the units, decimals, and a range.
-4. Lay out the pages: select the gui screen and use its **Properties** outline to add a column with a row of text
-   and readouts. See [GUI nodes](nodes/gui.md#laying-out-pages).
+1. Drag a **display spi** onto the canvas and set it for the Freenove panel:
 
-A reading that stops arriving dims the number after its **stale after** time, and the light goes grey, so you can
-tell a dead sensor from a steady room.
+    | Property | Value |
+    | --- | --- |
+    | controller | `st7796` |
+    | frame format | `rgb565` |
+    | SPI bus | `1` |
+    | baudrate | `40000000` |
+    | sck, mosi, dc, cs pin | `12`, `11`, `46`, `10` |
+    | reset pin | `-1` |
+    | backlight pin | `45` |
+    | width, height | `320`, `480` |
+    | rotation | `1` |
+    | orientation | `90° clockwise` |
+    | color order | `BGR` |
+    | invert colors, data latch order | on |
+
+    Click 💾 to save these as a [preset](working-in-the-editor.md#presets) for next time.
+2. Drag a **gui screen**. Set its **width** and **height** to the panel's own size, `320` and `480`, and its
+   **frame format** to `rgb565`. Wire it to the display spi.
+3. In the gui screen's **touch panel** field, click **+** and make a Touch panel: controller FT6336U, the same I2C
+   bus, address `0x38`, width `320`, height `480`.
+4. Drag three **gui readout** nodes (temperature, humidity, pressure) and a **gui light** for the sensor. Wire the
+   function's outputs 1, 2, 3 and 5 to them. In each readout, set **units**, **decimals**, **lowest value** and
+   **highest value**.
+5. Lay out the pages: select the gui screen and use the page outline in its properties to add rows of text and
+   readouts. See [Laying out pages](nodes/gui.md#laying-out-pages).
+
+Set **stale after** on the readouts and the light. A reading that stops arriving is then dimmed, so a dead sensor
+looks different from a steady room.
 
 ## 3. Add the history
 
-A [**journal**](nodes/journal.md) keeps the recent readings; a **trend** draws them.
+A [journal](nodes/journal.md) keeps the recent readings, and a **gui trend** draws them.
 
-- Wire the temperature to a journal with **seconds per row** `10`, **rows kept** `156` and **rows per roll-up**
-  `6`. Wire its first output to a **trend**: the last 26 minutes.
-- Wire its **second** output (one summary per minute, with min and max) to a second journal with **seconds per
-  row** `0`, then to a second trend: the last 2.6 hours.
-- Pressure is one journal at 60 seconds a row and one trend.
+1. Wire the temperature output to a journal with **seconds per row** `10`, **rows kept** `156` and **rows per
+   roll-up** `6`. Wire its first output to a gui trend. That trend shows the last 26 minutes.
+2. Wire the journal's second output, one summary per minute, to a second journal with **seconds per row** `0`. Wire
+   that journal to a second gui trend, which shows the last 2.6 hours.
+3. Wire output 4, the pressure copy, to a journal with **seconds per row** `60`, and that to a third gui trend.
 
-Each bar is the average of its row, and the thin line the min to max. The range of a trend is fixed: set its
-**low** and **high** to what you expect to see (for temperature, 15 to 30). See [trend](nodes/gui.md#trend).
+Each bar is the average of its row, and the thin line runs from the row's min to its max. Set each trend's
+**bottom at** and **top at** to the range you expect, for example 15 to 30 for temperature. See
+[Trend](nodes/gui.md#trend).
 
 ## 4. Add the clock
 
-1. Drag a **timer** with **interval (ms)** `1000`, and a **clock** node. Wire timer → clock.
-2. In the clock, set the **UTC offset** for your zone's standard time. Leave **daylight saving** on UK / EU if
-   that is where you are. See [clock](nodes/clock.md).
-3. Add two **text** nodes (gui label), one for the time (**max characters** `5`) and one for the date (`10`).
-   Wire the clock's first output to the time and the second to the date.
-4. On a new page, use `font_seg764` for the time label (seven-segment digits) and `font_body24` for the date.
+1. Drag a **timer** with **interval (ms)** `1000`, and a **clock** node. Wire the timer to the clock.
+2. In the clock, set **UTC offset (hours)** for your zone's standard time. Set **daylight saving** to **UK / EU:
+   automatic** if that's where you are, otherwise **none**. See [clock](nodes/clock.md).
+3. Add two **gui label** nodes, one for the time with **room for (characters)** `5`, and one for the date with
+   `10`. Wire the clock's first output to the time and its second to the date.
+4. On a new page, give the time label the font `font_seg764` (seven-segment digits) and the date `font_body24`.
 
-Until the board has the time from the internet, the clock shows `--`.
+The clock node doesn't join WiFi itself. In this flow the mqtt publish nodes do. Without them, add a
+[wifi status](nodes/wifi-status.md) node. Until the board has the time, the clock shows `--`.
 
-## 5. Change pages by themselves
+## 5. Turn the pages
 
-A **timer** of `8000` ms, wired to a **function** that sets `msg['payload'] = 'next'`, wired to a **gui navigator**,
-turns the page every 8 seconds. Or add a *navigate* button to each page so you can turn them by touch
-([Buttons](nodes/gui.md#buttons)).
+Add a **gui button** with **mode** `navigate` to each page, so you can turn the pages by touch. See
+[Buttons](nodes/gui.md#buttons).
+
+The example flow also turns the pages every 8 seconds with a **gui navigator** node, which isn't in the palette.
+See [GUI nodes](nodes/gui.md#the-nodes).
 
 ## 6. Publish the readings
 
-Drag three **mqtt publish** nodes, one per reading, with topics like `thingstudio/headliner/temperature`. Wire each
-function output to its publisher and pick your broker. See [mqtt publish](nodes/mqtt-publish.md).
+Drag three **mqtt publish** nodes, one per reading, with topics such as `thingstudio/headliner/temperature`. Wire
+outputs 1 to 3 of the function to them, and pick your MQTT broker and WiFi. See
+[mqtt publish](nodes/mqtt-publish.md).
 
 ## Deploy
 
-**Compile → Deploy**. The display lights, the readings appear within 5 seconds, the trends fill as the minutes
-pass and the clock starts when the time arrives.
+Click **Compile → Deploy**. The display lights, the readings appear within 5 seconds, the trends fill as the minutes
+pass, and the clock starts once the board has the time.
 
 ## If it doesn't work
 
-- **The picture is scrambled:** the screen's width and height must be the panel's own size, `320 × 480`, even
-  when you turn it. The deploy checks this and says so.
+Each symptom below has its own fix:
+
+- **The picture is scrambled:** the gui screen's and display spi's width and height must be the panel's own size,
+  `320` and `480`, even when the picture is turned. Deploy checks this and says so.
 - **Touches land in the wrong place:** see [Touch panels](nodes/touch-panel.md).
-- **No readings:** check the wiring and the address (`0x76` or `0x77`), and test with a debug node first.
-- **The clock stays at `--`:** the board has no WiFi yet, or can't reach the NTP server. It tries again every 30 seconds.
-- **A compile error says a node is "disconnected from any source":** a widget has nothing wired to it. Wire it, or
-  reload the editor if the wires are there.
+- **No readings:** check the wiring and the address (`0x76` or `0x77`), and test with a debug node.
+- **The clock stays at `--`:** the board has no WiFi, or can't reach the NTP server. It tries again every 30
+  seconds.
+- **Compile says a node is "disconnected from any source":** a widget has nothing wired to it. Wire it, or reload
+  the editor if the wires are there.

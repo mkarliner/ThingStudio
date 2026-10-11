@@ -1,7 +1,7 @@
 # Step 2: Tour the editor
 
-Start Thingstudio if it isn't running. See [step 1](getting-started.md#start-thingstudio). The editor opens in your
-web browser.
+The parts of the Thingstudio editor and what each one is for. Start Thingstudio if it isn't running: see
+[step 1](getting-started.md#start-thingstudio).
 
 <figure markdown="span">
   [![The Thingstudio editor with each part labelled](images/editor-parts.png)](images/editor-parts.png)<figcaption>The parts of the editor. Click to see it full size.</figcaption>
@@ -11,21 +11,29 @@ web browser.
 
 ## Toolbar
 
-- **File:** start a new flow, open one, or save it.
-- **Flow name:** saved with the flow. The board reports it, so you can tell what it's running.
-- **Port list and Connect:** pick your board's port and connect to it. **⟳** looks for boards again.
-- **Board menu and Pins…:** the board the flow is for, and a page of its pins.
-- **Compile → Deploy:** turns the flow into MicroPython and sends it to the board.
-- **Tools and Help:** occasional board jobs, such as installing the runtime, and these docs.
+The toolbar runs left to right in the order you work: the flow, the board, then deploy.
+
+- **New, open, save:** the **File** menu.
+- **This flow's name:** saved with the flow. The board reports it, so you can tell which flow it's running.
+- **Connect to a board:** pick the board's port from the list, then click **Connect**. **⟳** looks for boards
+  again.
+- **Board type, pin map:** the **Board** menu sets the board the flow is for; **Auto** uses the connected board.
+  **Pins…** opens a page listing that board's pins.
+- **Deploy flow to board:** **Compile → Deploy** turns the flow into MicroPython and sends it to the board.
+- **Board tools, user guide:** the **Tools** menu has board jobs, such as installing the runtime or removing a flow.
+  The **Help** menu opens this user guide.
 
 ## Palette
 
-Every node you can add, in three groups: **General**, **Network** and **Hardware**. Drag a node onto the canvas, or
-click it. Type in the filter box to find one. [Custom nodes](custom-nodes.md) appear under their own group.
+**Nodes to add:** every node, in groups such as **General**, **Network** and **Hardware**. Drag a node onto the
+canvas, or click it. Type in the filter box to find one. [Custom nodes](custom-nodes.md) appear in the group they
+name, or in **General**.
 
 ## Canvas
 
-Where you build the flow. The flow tabs along the top spread a flow across several sheets.
+**Build the flow here.** **Sheets of this flow:** the tabs above the canvas spread one flow across several sheets.
+
+The canvas works like this:
 
 - **Wire two nodes:** drag from one node's output, on its right, to another node's input, on its left.
 - **Select:** click a node or a wire. Ctrl-click to select several nodes.
@@ -35,12 +43,18 @@ The editor refuses a wire between ports whose types don't fit. See [Wiring](work
 
 ## Properties, notes and console
 
-- **Properties:** the selected node's settings.
-- **Notes:** free text about the flow, saved with it.
-- **Compiled source:** the MicroPython made from your flow. Click to open it.
-- **Console:** messages from Thingstudio and the board, including your flow's output.
-- **Python prompt:** runs a line of Python on the board.
-- **Board buttons:** stop the flow and use MicroPython's own prompt, or remove the saved flow.
+The right-hand side holds the selected node's settings and what the board sends back:
+
+- **Selected node's settings:** the properties panel.
+- **Notes on this flow:** the **Notes** panel, free text saved with the flow.
+- **Generated MicroPython:** the **Compiled source** panel. Click it to open it.
+- **Messages from the board:** the **Device console**, with messages from Thingstudio and the board, including your
+  flow's output. Its **Show** menu sets how much it shows: **Normal** for your flow's output, results and errors,
+  **Info** to add routine reports such as memory, **Debug** for everything.
+- **Run Python on the board:** type a line of Python and click **Send**. It runs on the board alongside the flow.
+  See [Commands and the Python prompt](debugging.md#commands-and-the-python-prompt).
+- **Escape to REPL:** **Stop flow & open prompt** stops the flow and gives you MicroPython's own `>>>` prompt (the
+  REPL). **Restart Thingstudio** starts the flow again.
 
 [Working in the editor](working-in-the-editor.md) covers node labels, presets, config nodes and node status.
 

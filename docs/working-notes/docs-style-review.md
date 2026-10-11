@@ -221,3 +221,167 @@ Grouped from the remarks above. Each is written up, with examples, in `docs-styl
 - **Pictures labelled in place.** (Editor tour.)
 - **Design follows docs:** a node that's awkward to document may be badly designed. (clock; logged as an item.)
 
+
+## Rewrite log (2026-10-11)
+
+Part 1 of `user-docs-rewrite-briefing.md`: the P1 pages, rewritten from the guide alone. Per page: calls the guide
+didn't settle, then factual fixes (checked against `editor/src`, `device-runtime/src`, `backend/src`).
+
+### Cross-page calls
+
+- **Node name styling:** the guide says "names as in the palette" but not bold or code. Used code (`gpio out`) in
+  prose and reference pages, bold in tutorial steps where the reader drags the node (**timer**). Not consistent
+  with every existing page.
+- **GUI node names:** the palette shows `screen`, `readout`, `button` in a GUI group; the guide's word list says
+  `gui screen`. Followed the guide and `nodes/gui.md`: `gui screen`, `gui readout`, `gui button`.
+- **"Every list has a sentence before it":** on troubleshooting lists the sentence is filler ("Each symptom below
+  has its own fix"). Added it anyway. The rule may want an exception for symptom lists under their own heading.
+- **Console text:** quoted exact console messages (connecting, debugging). They change when the code's wording
+  changes; the guide's "one home for changing facts" doesn't say whether that applies to UI text.
+- **Console level:** several pages described lines that only show at **Info**. Said which level a line needs
+  wherever a page shows or describes console output. Worth a rule.
+- **Picture labels vs editor labels:** the editor tour's picture says "Console" and "Compiled source"; the panels
+  are titled "Device console" and "Compiled source (preview)". Kept the picture's names. The guide doesn't say
+  which wins, or what to do when an editor label has a banned word ("preview").
+- **Durations:** treated "about half a minute" like a sizing word and removed it.
+
+### `getting-started.md`
+
+- The page is both the Getting started overview and step 1; opening sentence names both.
+- Moved "read the script first" into the installer section, from between the two choices (order rule;
+  `CLAUDE.md`'s `curl | sh` rule still met).
+- "Start Thingstudio": the three routes as a list (choices rule).
+- "a supported board" (linked to `boards.md`) became "a board that runs MicroPython", linking Supported hardware
+  (one home rule; `CLAUDE.md`'s unsupported-boards rule).
+- Kept "Start Thingstudio if it isn't running" on steps 2 and 4: each page can be opened on its own (Help →
+  Getting started). The guide doesn't say whether steps repeat prerequisites.
+- Factual: none.
+
+### `editor-tour.md`
+
+- Added intro sentences to the three lists.
+- Factual: "Board buttons ... or remove the saved flow" was wrong; Remove flow is in Tools, the console buttons are
+  Stop flow & open prompt / Restart Thingstudio. Custom nodes go in the group they name, else General, not "their
+  own group".
+
+### `installing-micropython.md`
+
+- Kept the chip/build and esptool address tables: task data, not support status, so not moved to Supported
+  hardware.
+- Download mode moved after the commands, as the fallback ("try without it first" was buried).
+- Dropped "for beginners" from Thonny (reader rule). Other chips named as STM32, nRF, SAMD per `CLAUDE.md`.
+- Factual: "To try another chip, add a processor definition" now points at Supported hardware's Other boards.
+
+### `connecting.md`
+
+- Factual: **Connect** doesn't turn green; it becomes **Connected · Disconnect**, as soon as the port opens, not
+  after the runtime replies. The chip type, runtime version and free memory only show at Info. Port pre-selection
+  is "the only USB device", not "the only board".
+
+### `installing-runtime.md`
+
+- Added: after an upgrade, a runtime major mismatch blocks Deploy (`version.ts`).
+- Factual: per-file progress only shows at Info. You don't need to be connected; Install runtime disconnects first.
+
+### `first-flow.md`
+
+- Factual: the sample console output had `[compiled -- ...]` (Debug) and `[memory]` (Info) lines a reader at Normal
+  never sees. Deploy is also greyed out after a deploy until the flow changes, at the prompt, and while restarting.
+  Pin fields take the GPIO number.
+
+### `working-in-the-editor.md`
+
+- Cut Presets and Config nodes to what and how (dropped "This is deliberate..." and the direct-mode remarks).
+- Wiring rules as a table.
+- Dropped "Current limitations" (no resizable panes): the guide says no lists of what's missing, and no page is
+  where the reader meets it.
+- Factual: wire rules were wrong: `any` goes into `bytes`, `string` goes into `number`/`int`, `int` doesn't go into
+  `string`, and the "explicit conversion" node doesn't exist (logged:
+  `outstanding-items/function-output-into-typed-inputs.md`). The flow label *is* sent to the board for a gui button
+  with no board label. Presets also exist on the Touch panel config. Node status: seven node types, not three. The
+  I2C bus and Touch panel configs weren't listed.
+
+### `sensor-display.md`
+
+- Gave the full display spi settings as a table, since no Freenove preset ships (one home vs a tutorial needing
+  values: kept them in the tutorial).
+- The example flow turns pages with a `gui navigator`, which is hidden from the palette. Mentioned it in one line;
+  **question for Mike:** is a timed page turn worth a palette node, or should the example drop it?
+- Factual: "steps 2 to 4" should be 3 to 5. No "Freenove 4.0" preset" exists on a new install. bme280 address is a
+  0x76/0x77 menu, not a number. The touch panel config wasn't explained. Labels: "room for (characters)", "bottom
+  at / top at", "+" not "new". "Skip MQTT and you need WiFi only for the clock" was wrong: the clock doesn't join
+  WiFi. The example flow isn't installed with Thingstudio; linked it on GitHub and said to pick your own
+  credentials.
+
+### `debugging.md`
+
+- Reordered by the work: tools (console, commands), then connecting, deploying, running, recovering. Kept the
+  tool-named headings (Console, Commands, Restarting the board): the editor links to their anchors, and the guide's
+  "symptom first" doesn't say what to do with a tools section on a troubleshooting page.
+- Renamed "Known platform limitation: WiFi/MQTT connect ordering" to the symptom, "WiFi Internal State Error on
+  deploy".
+- Added "Deploy is greyed out".
+- Factual: the Board won't connect table didn't match the console's wording and missed three cases (install mode,
+  install stalled) and the port-open errors (`connect-error-help.ts`). `[memory]` shows only at Info. Help menu
+  item is "About Thingstudio"; "source preview panel" is Compiled source.
+
+### Added on the way
+
+- `faq.md`: why a function won't wire into `pwm out`; why Deploy is greyed out after a deploy.
+- `outstanding-items/function-output-into-typed-inputs.md`, plus an index line.
+
+## Remarks during the rewrite (2026-10-11)
+
+Mike, sent while Part 1 was running (read against the pages as they were):
+
+> In blink a led:
+> After how it works, suggest the reader try a few mods
+> - changed the timing
+> - use a different method for the blink
+>  - check the gpio value and set the led the other way
+>  - use a context value (make a link to contexts)
+>
+> Point out how this shows that flows are stateless unless explictly give state with context
+>
+> - If it doesn't blink should also link to troubleshooting
+>
+> Sections
+>
+> There is only
+> - Background
+> - Getting Started
+> - Node reference
+>
+> After blink a led, its just a list of non-getting-started items with no obvious order
+
+Done: `first-flow.md` has "Try these changes" (timing, read the pin, `context`) and a closing line on where a flow
+keeps state; "If it doesn't blink" ends with a link to Debugging & troubleshooting. Nav regrouped: Tutorials,
+Building flows, Boards and networks, Node reference, Extending and automating, Troubleshooting.
+
+Sorted (Part 2's four kinds), as candidates for the guide once Mike confirms:
+
+- **Rule missing:** a tutorial ends with changes for the reader to try, each teaching one idea, and says what they
+  show.
+- **Rule missing:** a troubleshooting section on a task page ends with a link to the main troubleshooting page.
+- **Rule missing:** the nav groups pages into sections in the order of the reader's work; no loose top-level pages
+  after Getting started. The "order follows the reader's work" rule covers pages and sections within a page, not
+  the nav's grouping.
+
+### Editor tour picture (2026-10-11)
+
+> Many of the labels just repeat whats in the UI, 'Compiie - deploy' doesn't give me any new information.  Maybe
+> ;Deploy flow to board' etc? The flow tabs label is at the bottom pointing to the top..
+>
+> Board buttons is just wrong. It should be 'escape to REPL' Similarly python prompt, which not right.
+
+> You can have the label bigger and it doesn't matter too much if they obscure some of the screen, this image is
+> just so people can navigate around....
+
+Done: labels say what each part is for ("Deploy flow to board", "Escape to REPL", "Run Python on the board");
+`editor-tour.md` uses them as the bullet names and names the UI control in the text. `tools/screenshots.py`:
+18 px labels, labels on one side spread so they don't overlap, a "below" side (the flow tabs label now sits under
+the tabs, pointing up), wider right margin. Regenerated in the cloud container; settles the "picture labels vs
+editor labels" call in the rewrite log.
+
+- **Rule missing (Pictures):** a label says what the part is for, in words the UI doesn't already show. Labels can
+  be large and cover the screenshot; finding your way matters more than what they hide.

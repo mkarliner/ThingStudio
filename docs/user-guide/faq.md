@@ -75,3 +75,13 @@ its *on sends* and *off sends* values, `true` and `false` unless you changed the
 
 Both would poll the same chip, and each would take touches from the other. A gui screen reads its panel itself.
 Use the touch node only when you aren't using the GUI. Deploy stops and names both nodes if a panel is picked twice.
+
+## Why won't a function node's output wire into pwm out?
+
+A function node's output has the type `any`, and `pwm out`'s input takes a `number`. The editor refuses a wire from
+`any` to `number`, `int` or `string` inputs. See [Wiring](working-in-the-editor.md#wiring).
+
+## Why is Compile → Deploy greyed out after a deploy?
+
+The board already runs the flow on the canvas. Deploy comes back when you change the flow. See
+[Deploy is greyed out](debugging.md#deploy-is-greyed-out).

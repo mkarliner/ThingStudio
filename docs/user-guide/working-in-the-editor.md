@@ -1,66 +1,89 @@
 # Working in the editor
 
-What the [editor tour](editor-tour.md) leaves out: wire types, node labels, presets, config nodes, node status and
-notes.
+Wire types, node labels, presets, config nodes, node status and notes: the parts of the editor the
+[editor tour](editor-tour.md) doesn't cover.
 
 ## Wiring
 
-Every port has a type — `int`, `number`, `bool`, `string`, `bytes`, or `any`.
+Every port has a type: `int`, `number`, `bool`, `string`, `bytes` or `any`. The editor refuses a wire between
+types that don't fit. What each input type accepts:
 
-The editor refuses a connection that doesn't make sense: a `bool` input accepts a wire from anything (Python's `bool()` never fails), and a `number` input accepts an `int` (safe widening) but not the other way around. An `any` output can't connect straight into a concrete typed input without an explicit conversion in between. A refused connection is the editor catching a real mismatch, not a bug.
+| Input | Accepts wires from |
+| --- | --- |
+| `any` | any output |
+| `bool` | any output. The value is tested with Python's `bool()`. |
+| `number` | `number`, `int`, `string` |
+| `int` | `int`, `string` |
+| `string` | `string` |
+| `bytes` | `bytes`, `any` |
 
-An input can take any number of wires — connect several outputs to the same input and the node fires once per incoming message, whichever one arrives. An output can already fan out to several inputs the same way.
+A `string` that isn't a number fails on the board when it reaches a `number` or `int` input, with a `NODE_ERROR`.
+An `any` output, such as a [function](nodes/function.md) node's, connects only to `any`, `bool` and `bytes` inputs.
+
+An input can take any number of wires. The node runs once for each message that arrives, whichever wire it came
+on. An output can feed any number of inputs.
 
 ## Giving a node a flow label
 
-Every node has a **flow label** field at the top of its property panel. Type something (say `Fire!`) and the node
-shows it on the canvas instead of its kind (`gui_button`). Blank puts the kind back. Messages and errors that name
-the node use it too. It exists only in the editor; it is never sent to the board.
+Every node has a **flow label** field at the top of its property panel. Type something, say `Fire!`, and the canvas
+shows it instead of the node's name. Leave it blank to show the name again. Console messages and errors that name
+the node use the flow label too.
 
-A button also has a **board label**, the text drawn on the button itself. Leave it blank and the button uses the
-flow label, so one label is usually enough.
+A `gui button` also has a **board label**, the text drawn on the button. If the board label is blank, the button
+shows the flow label.
 
 ## Presets
 
-Some node types (currently `display_spi` and `display_i2c` — the ones complex enough to be worth naming a
-setup) have a **preset** picker at the top of their property panel: a dropdown of saved presets, a save
-button, and a refresh button.
+A preset is a named set of property values, such as the pins and size of one display panel. `display spi`,
+`display i2c` and the Touch panel config have a **preset** menu at the top of their property panel:
 
-Presets are a snapshot, not a live link. Saving one copies that node's current property values under a name
-you choose; loading one copies those saved values back onto the node's properties, once, right then. Nothing
-stays linked to the preset afterward — editing a field, or editing the saved preset file later, doesn't
-change anything already applied. This is deliberate: unlike a WiFi/MQTT credential (see "Config nodes"
-below), a preset holds no secret, so there's no reason to keep it out of a flow file you save or commit —
-applying one just fills in real values, the same as typing them in yourself.
+- Pick a preset to copy its values into the node's properties.
+- Click 💾 to save the current values as a preset, under a name you choose.
+- Click ↻ to read the preset files again.
 
-Presets are saved on the backend as plain JSON files, one per name, under
-`~/.thingstudio/presets/<node type>/`, meant to be hand-edited if you'd rather write one directly than build
-it by hand in the panel — a good way to keep, say, one file per real display panel you own. A preset file
-that doesn't parse as valid JSON shows up in the dropdown disabled, with a warning naming which file is
-broken and where to find it, rather than failing silently or applying garbage.
+Applying a preset copies the values once. Later changes to the node or the preset don't affect each other.
 
-Presets need a backend connection, same as saved credentials — the direct/WebSerial-only connection mode
-doesn't support them.
+Each preset is a JSON file in `~/.thingstudio/presets/<node type>/`, which you can also write by hand. A file that
+isn't valid JSON appears in the menu disabled, with the file named. See
+[The Thingstudio folder](thingstudio-folder.md#presets).
 
 ## Config nodes
 
-Some properties are shared across multiple nodes rather than typed into each one separately — WiFi credentials and MQTT broker details. These live in **config nodes**: a WiFi config (a saved credential, plus a security mode — password, open, or [unmanaged](wifi-provisioning.md)) and an MQTT broker config (a saved credential holding host, port, and optional username/password). Reference one from a node's property panel instead of retyping the same SSID into five different nodes.
+A config node holds settings that several nodes share. A node's property panel has a field to pick one; ✎ edits it
+and **+** makes a new one. The config nodes are:
 
-**The real secret values live in a saved credential, not in the config node or the flow file.** A config node's own credential field is a dropdown of your saved credentials, plus a pencil icon to edit one and a "+" to save a new one — pick an existing WiFi network or MQTT broker, or create one on the spot. Credentials are saved by name on the backend (not in the flow file), so a flow you commit to git never has a real SSID or password in it, and picking the same saved credential from two different flows reuses the one value — editing it in one place updates every flow that references it. This needs a backend connection; the direct/WebSerial-only connection mode doesn't support saved credentials.
+- **WiFi:** a saved credential and a security mode: password, open, or [unmanaged](wifi-provisioning.md).
+- **MQTT Broker:** a saved credential holding the host, port and optional username and password.
+- **I2C bus:** the bus number, SCL and SDA pins, and frequency. See [I2C bus](nodes/i2c-bus.md).
+- **Touch panel:** the touch controller, its I2C bus and address, and its size and orientation. See
+  [Touch panels](nodes/touch-panel.md).
 
-**A flow has one WiFi network.** Every node that uses WiFi has a **WiFi** field, and they all show the same setting. Set it on any of them and it changes for all. A board has one radio, so this is one shared setting, not one per node. A flow doesn't need a `wifi_status` node just to use the network.
+The WiFi and MQTT Broker configs hold only the name of a saved credential. The SSID, passwords and broker address
+are saved by name in `~/.thingstudio/credentials/`, not in the flow file, so a flow you share or commit holds no
+secrets. Two flows that use the same credential share its values: edit it once and both change. Pick, edit or add a
+credential from the config's **credential** field. See [The Thingstudio folder](thingstudio-folder.md#credentials).
+
+A flow has one WiFi network. Every node that uses WiFi has a **WiFi** field, and they all show the same setting:
+change it on one and it changes on all. A flow doesn't need a `wifi status` node to use the network.
 
 ## Node status
 
-`wifi_status`, `mqtt_publish`, and `mqtt_subscribe` show a small colored dot and a line of text below the node while connected to a device — green for connected, amber for connecting, red for error, grey for disconnected. This reflects what the device is actually doing right now (a real push from the running flow), not the editor's own guess — it only appears once you're connected and the device has reported at least once, and it resets to nothing on every redeploy until the new flow reports its own state.
+Some nodes show a coloured dot and a line of text under the node while the editor is connected to the board:
 
-Other node types don't show this yet — it's currently limited to connection-oriented nodes; `http_request` doesn't get one since it isn't a persistent connection.
+| Dot | Meaning |
+| --- | --- |
+| Green | connected |
+| Amber | connecting |
+| Grey | disconnected |
+| Red | error |
+
+The dot shows what the board reports, not the editor's guess. It appears once the running flow first reports, and
+clears on every deploy until the new flow reports.
+
+The nodes with a status are `wifi status`, `mqtt publish`, `mqtt subscribe`, `i2c device`, `bme280`, `touch`, and a
+`gui screen` with a touch panel.
 
 ## Notes
 
-The **Notes** panel at the right is free text for the flow as a whole: what it does, what to wire up, how to use
-it. It is saved in the flow file, and it opens by itself when you load a flow that has notes. New flow clears it.
-
-## Current limitations
-
-- **No resizable panes**, beyond collapsing the palette and property panel to a thin rail.
+The **Notes** panel on the right is free text about the flow: what it does, what to wire up, how to use it. It's
+saved in the flow file, and opens by itself when you open a flow that has notes. **File → New flow** clears it.

@@ -65,20 +65,17 @@ nav:
       - 5. Install the runtime: installing-runtime.md
       - 6. Blink an LED: first-flow.md
       - Installation details: installation-details.md
-  - The Thingstudio folder: thingstudio-folder.md
-  - Working in the editor: working-in-the-editor.md
-  - Check a flow without the editor: check-a-flow.md
-  - Command line: command-line.md
-  - Node catalog: nodes-catalog.md
-  - Writing flows with an AI assistant: ai-authoring.md
-  - A sensor display: sensor-display.md
-  - Flow lifecycle: flow-lifecycle.md
-  - Supported hardware: supported-hardware.md
-  - Boards and processors: boards.md
-  - Connecting over WiFi: wifi-connection.md
-  - WiFi provisioning: wifi-provisioning.md
-  - Debugging & troubleshooting: debugging.md
-  - FAQ: faq.md
+  - Tutorials:
+      - A sensor display: sensor-display.md
+  - Building flows:
+      - Working in the editor: working-in-the-editor.md
+      - Flow lifecycle: flow-lifecycle.md
+      - The Thingstudio folder: thingstudio-folder.md
+  - Boards and networks:
+      - Supported hardware: supported-hardware.md
+      - Boards and processors: boards.md
+      - Connecting over WiFi: wifi-connection.md
+      - WiFi provisioning: wifi-provisioning.md
   - Node reference:
       - Overview: nodes/index.md
       - General:
@@ -115,4 +112,12 @@ nav:
           - I2C bus: nodes/i2c-bus.md
           - Touch panels: nodes/touch-panel.md
       - GUI: nodes/gui.md
-  - Writing custom nodes: custom-nodes.md
+  - Extending and automating:
+      - Writing custom nodes: custom-nodes.md
+      - Writing flows with an AI assistant: ai-authoring.md
+      - Check a flow without the editor: check-a-flow.md
+      - Command line: command-line.md
+      - Node catalog: nodes-catalog.md
+  - Troubleshooting:
+      - Debugging & troubleshooting: debugging.md
+      - FAQ: faq.md

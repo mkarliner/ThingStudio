@@ -1,30 +1,35 @@
 # Step 4: Connect your board
 
-Start Thingstudio if it isn't running. See [step 1](getting-started.md#start-thingstudio).
+How to connect Thingstudio to your board over USB, and what the console tells you when you do. Start Thingstudio if
+it isn't running: see [step 1](getting-started.md#start-thingstudio).
 
 1. Plug the board in.
-2. Check the port list in the toolbar. When the editor opens it looks for boards, and picks yours if it's the only
-   one plugged in. If you plugged it in afterwards, click **⟳** next to the port list.
-3. Click **Connect**.
+2. Check the port list in the toolbar. When the editor opens it looks for boards, and selects yours if it's the only
+   USB device plugged in. If you plugged the board in afterwards, click **⟳** next to the port list.
+3. Click **Connect**. It changes to **Connected · Disconnect**. Click that to disconnect.
 
-With more than one board plugged in, pick yours from the list. Port names depend on your operating system and the
-board's USB chip, so there's no fixed name to look for. If you're not sure which is yours, unplug it, click **⟳**,
-plug it back in and click again. The one that appears is your board.
+With more than one USB device plugged in, pick your board from the port list. Port names depend on your operating
+system and the board's USB chip. To tell which port is your board, unplug it, click **⟳**, plug it back in and
+click **⟳** again. The port that appears is your board.
 
 ## What the console says
 
-With a new board, the console says the Thingstudio runtime isn't installed. That's expected. You install it in the
-next step.
+A board with MicroPython but no Thingstudio runtime gives this message:
 
-If the console says the board didn't reply, or isn't running MicroPython, go back to
+```text
+No reply from the runtime. MicroPython but no Thingstudio runtime: Tools → Install runtime…
+```
+
+You install the runtime in the next step.
+
+If the console says nothing came back, or the board replied but not as MicroPython, go back to
 [step 3: install MicroPython](installing-micropython.md). Other messages are explained in
-[board won't connect](debugging.md#board-wont-connect).
+[Board won't connect](debugging.md#board-wont-connect).
 
-Once the runtime is installed, the board replies with its chip type, runtime version and free memory. The
-**Connect** button turns green to show the board is connected. Click it again to disconnect.
+Once the runtime is installed, the console shows which flow the board is running, if any.
 
 Once a board with WiFi is set up, you can also connect to it over WiFi. See
-[connecting over WiFi](wifi-connection.md).
+[Connecting over WiFi](wifi-connection.md).
 
 ## Next
 

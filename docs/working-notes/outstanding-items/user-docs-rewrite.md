@@ -10,6 +10,9 @@ Priority is the order a newcomer meets the page, then how far it is from the gui
 
 ## P1: the first hour
 
+Rewritten 2026-10-11 (Part 1 of `user-docs-rewrite-briefing.md`); awaiting Mike's review (Part 2). Calls and
+factual fixes: `docs-style-review.md`, "Rewrite log (2026-10-11)".
+
 1. `getting-started.md` (493), `installing-micropython.md` (514), `connecting.md` (232), `installing-runtime.md`
    (178), `first-flow.md` (515). Full pass: only step order and links changed so far. Check "you" isn't overdone.
 2. `working-in-the-editor.md` (936). Split from Canvas basics, wording untouched: Presets and Config nodes are long

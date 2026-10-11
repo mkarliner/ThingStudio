@@ -1,19 +1,20 @@
 # Step 6: Blink an LED
 
-Your first flow: make an LED blink once a second. It takes three nodes.
+Your first flow: make an LED blink once a second, using three nodes.
 
 Your board should be connected, with the runtime installed: steps [4](connecting.md) and [5](installing-runtime.md).
 
 ## Find your LED's pin
 
-Many boards have an LED you can drive from a GPIO pin. To find it, click **Pins…** next to the **Board** menu: pins
-the board names, such as `LED`, are listed first. [Supported hardware](supported-hardware.md) lists the boards
-Thingstudio knows. For any other board, check its documentation.
+Many boards have an LED wired to a GPIO pin. To find it, click **Pins…** next to the **Board** menu. Pins the board
+names, such as `LED`, are listed first. [Supported hardware](supported-hardware.md) lists the boards Thingstudio
+has definitions for. For any other board, check its documentation.
 
-The Pico W and Pico 2 W LEDs are wired through the WiFi chip, not a GPIO pin, so `gpio out` can't reach them. On those boards, or any board without an LED, wire an LED and a 330 Ω resistor from a free GPIO pin to GND.
+The Pico W and Pico 2 W LEDs are wired through the WiFi chip, not a GPIO pin, so `gpio out` can't reach them. On
+those boards, or any board without an LED, wire an LED and a 330 Ω resistor from a free GPIO pin to GND. The LED's
+longer leg goes towards the GPIO pin.
 
-Don't forget the resistor. Without it, the LED draws too much current and can damage the board. The LED's longer
-leg goes towards the GPIO pin.
+Don't leave out the resistor. Without it, the LED draws too much current and can damage the board.
 
 ## Build the flow
 
@@ -25,21 +26,22 @@ leg goes towards the GPIO pin.
     return msg
     ```
 
-3. Drag a **gpio out** onto the canvas. Set **pin** to your LED's pin.
+3. Drag a **gpio out** onto the canvas. Set **pin** to your LED's GPIO number.
 4. Wire **timer** → **function** → **gpio out**.
 
 ## Deploy
 
-Click **Compile → Deploy**. The console shows each stage. A successful deploy ends like this:
+Click **Compile → Deploy**. A successful deploy ends like this in the console:
 
 ```text
-[compiled -- 1840 bytes of bytecode]
 [deploying "my flow" as 3f2a…]
 [deploy OK -- flow is running on the device]
-[memory] MicroPython 180 KB free
 ```
 
-The numbers and names will differ. The LED now blinks: on for half a second, off for half a second.
+The flow name and ID will differ. Set the console's **Show** menu to **Info** or **Debug** to see each stage,
+including the board's free memory.
+
+The LED now blinks: on for half a second, off for half a second.
 
 The flow keeps running on the board after you unplug it from your computer and power it another way.
 
@@ -47,17 +49,53 @@ The flow keeps running on the board after you unplug it from your computer and p
 
 The **timer** sends a message every 500 ms. Its payload is a count: 1, 2, 3, and so on.
 
-**gpio out** turns the pin on for any payload that isn't zero. Wired straight to the timer, the LED would switch on and stay on.
+**gpio out** turns the pin on for any payload that isn't zero. Wired straight to the timer, the LED would switch on
+and stay on.
 
-The **function** node turns the count into 1, 0, 1, 0 — the remainder after dividing by 2. That gives on, off, on, off.
+The **function** node turns the count into 1, 0, 1, 0: the remainder after dividing by 2. That gives on, off, on,
+off.
+
+## Try these changes
+
+Each change below edits the flow you built. Deploy after each one.
+
+- **Change the timing.** Set the timer's **interval (ms)** to `100` for a fast flicker, or `2000` for a slow blink.
+- **Read the pin instead of counting.** Replace the function's code with this, using your LED's GPIO number in
+  place of `2`. Each message sets the LED to the opposite of what the pin reads now.
+
+    ```python
+    import machine
+    msg['payload'] = 0 if machine.Pin(2).value() else 1
+    return msg
+    ```
+
+- **Keep your own state.** Replace the function's code with this. `context` stores a value between messages, private
+  to this function node. See [Context and flow variables](nodes/function.md#context-and-flow-variables).
+
+    ```python
+    on = not context.get('on', False)
+    context.set('on', on)
+    msg['payload'] = on
+    return msg
+    ```
+
+The function node keeps nothing from one message to the next. In the first version the state is the timer's count,
+in the second it's the pin, in the third it's `context`. A flow keeps state only where you put it: in a message, on
+the hardware, or in `context`.
 
 ## If it doesn't blink
 
-- **Deploy is greyed out:** you aren't connected. Click **Connect**.
+Each symptom below has its own fix:
+
+- **Deploy is greyed out:** you aren't connected, so click **Connect**. Deploy is also greyed out after a deploy
+  until you change the flow, while the flow is stopped at the Python prompt, and while the board restarts.
 - **Compile fails:** usually a mistake in the function node's code, such as a missing quote or wrong
   indentation. The console shows the Python error in red, with its line, and highlights the node. Fix the code and
   deploy again.
 - **Deploy works, then the console shows `[NODE_ERROR]`:** the code ran on the board and failed, for example on a
   misspelt name. The message names the error, and the node is highlighted.
 - **Deploy fails:** the console says why. See [Board won't connect](debugging.md#board-wont-connect).
-- **Deploy works but the LED stays dark:** check the pin number. **Pins…** next to the Board menu shows your board's LED pin, if its definition names one. Some boards' LEDs light when the pin is off; the LED still blinks, just the other way round.
+- **Deploy works but the LED stays dark:** check the pin number against **Pins…**. Some boards' LEDs light when
+  the pin is off; the LED still blinks, the other way round.
+
+For anything else, see [Debugging & troubleshooting](debugging.md).
