@@ -375,6 +375,18 @@ Type `thingstudio/interrupt`, kind source, palette group hardware.
     - `debounce`, boolean, default `true`
     - `debounceMs`, number, default `50`
 
+### neopixel
+
+Type `thingstudio/neopixel`, kind sink, palette group hardware.
+
+- Inputs: msg (any)
+- Outputs: none
+- Properties (name, type, default):
+    - `pin`, number, default `13` — the strip's data pin
+    - `count`, number, default `8` — how many pixels on the strip
+    - `order`, string, default `"GRB"` — RGB, GRB, RGBW or GRBW: the wire colour order of your strip
+    - `brightness`, number, default `255` — 0 to 255: scales every channel
+
 ### pwm out
 
 Type `thingstudio/pwm_out`, kind sink, palette group hardware.

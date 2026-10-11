@@ -780,3 +780,9 @@ plus one a second. GPIO34 isn't an ADC pin on a Pico (ADC is GPIO26-29 there), s
 
 The `encoder` node into `debug`, pins 18 and 19 (valid on both an ESP32 and a Pico), every pulse (`div` 1). Turn a
 quadrature knob: each settled turn prints the value and the `delta`.
+
+## `neopixel-test.flow.json`
+
+The `neopixel` node: `timer 500 ms -> function -> neopixel` (pin 13, 8 pixels, GRB, brightness 64). The timer's
+count is scaled into a 24-bit colour each tick, so a WS2812 strip of 8 pixels cycles through colours. Change
+`count`/`order`/`pin` for your strip.

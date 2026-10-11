@@ -135,6 +135,10 @@ export const PROPERTY_NOTES: Record<string, string> = {
   "encoder.vmax": "highest value, or blank for no limit",
   "encoder.mod": "wrap the value at this number, or blank for none",
   "encoder.delay": "ms to wait for motion to settle; also limits how often it sends",
+  "neopixel.pin": "the strip's data pin",
+  "neopixel.count": "how many pixels on the strip",
+  "neopixel.order": "RGB, GRB, RGBW or GRBW: the wire colour order of your strip",
+  "neopixel.brightness": "0 to 255: scales every channel",
 };
 
 const typeOf = (v: unknown): string => (typeof v === "string" || typeof v === "number" || typeof v === "boolean" ? typeof v : "object");

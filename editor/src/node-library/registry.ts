@@ -14,6 +14,7 @@ import { ebuttonNode } from "./ebutton.js";
 import { eswitchNode } from "./eswitch.js";
 import { adcNode } from "./adc.js";
 import { encoderNode } from "./encoder.js";
+import { neopixelNode } from "./neopixel.js";
 import { functionNode } from "./function-node.js";
 import { gpioOutNode } from "./gpio-out.js";
 import { httpInNode } from "./http-in.js";
@@ -88,6 +89,7 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     ebuttonNode,
     adcNode,
     encoderNode,
+    neopixelNode,
     displaySpiNode,
     displayI2cNode,
     pwmOutNode,

@@ -160,6 +160,7 @@ import { eswitchNode } from "../../node-library/eswitch.js";
 import { ebuttonNode } from "../../node-library/ebutton.js";
 import { adcNode } from "../../node-library/adc.js";
 import { encoderNode } from "../../node-library/encoder.js";
+import { neopixelNode } from "../../node-library/neopixel.js";
 import { wifiStatusNode } from "../../node-library/wifi-status.js";
 import { wifiGateNode } from "../../node-library/wifi-gate.js";
 import { udpSendNode } from "../../node-library/udp-send.js";
@@ -887,6 +888,34 @@ export class EncoderNode extends ClassicPreset.Node {
   }
 }
 
+// neopixel added 2026-10-11 (same briefing). Sink: one `any` input, no output.
+export class NeopixelNode extends ClassicPreset.Node {
+  width = 110;
+  height = NODE_HEIGHT;
+  kind = "neopixel" as const;
+  nodeType = "thingstudio/neopixel";
+  highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
+
+  properties: {
+    pin: number;
+    count: number;
+    order: "RGB" | "GRB" | "RGBW" | "GRBW";
+    brightness: number;
+  } = {
+    pin: 13,
+    count: 8,
+    order: "GRB",
+    brightness: 255,
+  };
+
+  constructor() {
+    super("neopixel");
+    this.addInput("msg", new ClassicPreset.Input(portSocket(neopixelNode.ports?.inputs, "msg", this.properties), "msg", true));
+  }
+}
+
 // display_spi/display_i2c added 2026-09-17 -- framebuffer-display-node-
 // scoping.md's converged design (Mike's steer): two node families split
 // by bus (SPI/I2C), each taking a single pre-rendered framebuf-format
@@ -1303,6 +1332,7 @@ export type AnyThingstudioNode =
   | EbuttonNode
   | AdcNode
   | EncoderNode
+  | NeopixelNode
   | DisplaySpiNode
   | DisplayI2cNode
   | WifiStatusNode
@@ -1356,6 +1386,7 @@ export const NODE_FACTORIES: Record<NodeKind, () => AnyThingstudioNode> = {
   ebutton: () => new EbuttonNode(),
   adc: () => new AdcNode(),
   encoder: () => new EncoderNode(),
+  neopixel: () => new NeopixelNode(),
   display_spi: () => new DisplaySpiNode(),
   display_i2c: () => new DisplayI2cNode(),
   wifi_status: () => new WifiStatusNode(),

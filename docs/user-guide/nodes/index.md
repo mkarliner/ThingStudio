@@ -24,6 +24,7 @@ See [flows, nodes and messages](../background/flows-and-nodes.md) for how they f
 | respond to presses, long presses and double clicks | [ebutton](ebutton.md) |
 | read an analog input | [adc](adc.md) |
 | read a rotary knob | [encoder](encoder.md) |
+| drive an LED strip | [neopixel](neopixel.md) |
 | switch an LED or relay | [gpio out](gpio-out.md) |
 | dim an LED or set a motor's speed | [pwm out](pwm-out.md) |
 | read a temperature, humidity or pressure sensor | [bme280](bme280.md) |
@@ -86,6 +87,7 @@ Pin numbers are checked against your board before a deploy. See [boards and proc
 | [ebutton](ebutton.md) | source | Reports presses, releases, long presses and double clicks. |
 | [adc](adc.md) | source | Reads an analog pin, sending when the reading moves past its bounds. |
 | [encoder](encoder.md) | source | Reports a rotary knob's value as it turns. |
+| [neopixel](neopixel.md) | sink | Lights a WS2812 / NeoPixel strip. |
 | [gpio out](gpio-out.md) | sink | Sets a pin high or low. |
 | [pwm out](pwm-out.md) | sink | Drives a pin with a variable duty cycle. |
 | [bme280](bme280.md) | source | Reads a BME280 or BMP280 sensor at a fixed interval. |

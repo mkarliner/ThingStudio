@@ -628,6 +628,31 @@
         </p>
       </template>
 
+      <template v-else-if="node.kind === 'neopixel'">
+        <label>pin
+          <input type="number" min="0" :max="pinMax" v-model.number="node.properties.pin" @input="touch" />
+          <span v-if="pinInfo(node.properties.pin)" class="pin-hint" :class="{ bad: pinInfo(node.properties.pin)!.bad }" :title="pinInfo(node.properties.pin)!.title">{{ pinInfo(node.properties.pin)!.text }}</span>
+        </label>
+        <label>count
+          <input type="number" min="1" v-model.number="node.properties.count" @input="touch" />
+        </label>
+        <label>order
+          <select v-model="node.properties.order" @change="touch">
+            <option value="GRB">GRB -- most WS2812 strips (default)</option>
+            <option value="RGB">RGB</option>
+            <option value="RGBW">RGBW -- with a white channel</option>
+            <option value="GRBW">GRBW -- with a white channel</option>
+          </select>
+        </label>
+        <label>brightness (0-255)
+          <input type="number" min="0" max="255" v-model.number="node.properties.brightness" @input="touch" />
+        </label>
+        <p class="hint">
+          WS2812/NeoPixel strip (built-in neopixel module). Payload is a 24-bit colour 0xRRGGBB for the whole strip,
+          a list of colours for one per pixel, or {index, colour} for one pixel. RGBW strips take 0xWWRRGGBB.
+        </p>
+      </template>
+
       <template v-else-if="node.kind === 'display_spi'">
         <PresetRefField :key="node.id" preset-type="display_spi" :properties="node.properties" @applied="touch" />
         <label>orientation
