@@ -31,7 +31,7 @@ instead. See [event-driven programming](../background/event-driven.md).
 ## Messages
 
 Every message needs a `topic`, even an empty one (`''`). Ports also have types, such as `int`, `bool` and `string`, and
-the editor refuses a wire between types that don't fit. See [Working in the editor](../working-in-the-editor.md#wiring).
+the editor refuses a wire between types that don't fit. See [Editor in depth](../working-in-the-editor.md#wiring).
 
 ## Nodes
 

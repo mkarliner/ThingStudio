@@ -385,3 +385,63 @@ editor labels" call in the rewrite log.
 
 - **Rule missing (Pictures):** a label says what the part is for, in words the UI doesn't already show. Labels can
   be large and cover the screenshot; finding your way matters more than what they hide.
+
+### `working-in-the-editor.md` opening (2026-10-11)
+
+> Wire types, node labels, presets, config nodes, node status and notes: the parts of the editor the [editor
+> tour](http://127.0.0.1:8765/docs/editor-tour/) doesn't cover.
+>
+> not very useful
+
+Done: the opening now says what the reader can do with the page (wire mismatched types, name a node, reuse
+settings, keep passwords out of flow files, see a node's state on the board).
+
+- **Rule unclear (Open with what the page is for):** the rewrite read "what the page covers" as a list of topics,
+  plus a pointer to another page. The rule should say: what the reader can do after reading it, in their terms, not
+  a table of contents. Bad example: this opening.
+
+> I think working in the editor could be Editor details or editor in depth without an intro
+>
+> rather than list the unrelated topics in the intro para turn wiring,flow label, etc into subsection
+
+Done: page titled "Editor in depth" (file name unchanged, so links and anchors hold), no intro; each topic is its
+own section. Link text updated on every page that pointed here.
+
+- **Rule unclear (Open with what the page is for):** a page of unrelated reference topics needs no opening at all;
+  a title that says what it is ("Editor in depth") and one section per topic does the job. The rule should allow
+  that.
+
+### `wifi-provisioning.md` opening (2026-10-11)
+
+> A device can learn its WiFi credentials on its own, over the air, instead of having them baked into a flow.
+>
+> is just not right.
+>
+> 'You can leave wifi credentials blank to be filled in at run time
+
+Done: rewritten from the reader's action ("You can leave a flow's WiFi network and password out, and enter them on
+the board when it first starts"); "Turning it on" says to leave the credential blank (checked: `wifi-status.ts`
+needs no SSID when security is unmanaged). Rest of the page brought to the guide on the way (P2 page): numbered
+setup steps, "yet" removed, `PORT` instead of a macOS device name, added the 10-minute portal timeout
+(`wifi_provision.py`'s `_PORTAL_TIMEOUT_S`) and the 8-character password minimum.
+
+- **Rule missing (Say what the reader does):** open with what the reader does, in plain terms, not what the system
+  does in its own vocabulary ("learn its credentials over the air", "baked into a flow").
+
+### `getting-started.md` opening (2026-10-11)
+
+> Getting started takes you from a new board to a blinking LED in six steps. This page is step 1: installing and
+> starting Thingstudio.
+>
+> not useful
+
+Done: the opening is now the list's lead-in only, "From a new board to a blinking LED:".
+
+- **Rule unclear (Open with what the page is for):** third remark of the same kind today (with Editor in depth and
+  WiFi provisioning). The rewrite kept describing the page itself ("This page is step 1", "takes you from").
+  Proposed rule: no sentences about the page or the docs; start with the content. Where the title and the first
+  heading already say it, add nothing.
+
+Same fix applied, unprompted, to the other openings written in Part 1 that described the page:
+`installing-micropython.md`, `connecting.md`, `installing-runtime.md`, `editor-tour.md` ("How to...", "The parts
+of...") and `debugging.md` (opening removed; its sections say what they are).

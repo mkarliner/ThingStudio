@@ -1,7 +1,7 @@
 # Step 5: Install the runtime
 
-How to install the Thingstudio runtime on your board. The runtime is the part of Thingstudio that runs on the
-board: it receives your flows and runs them. Libraries that some nodes need are sent later, by Deploy, when a flow
+The runtime is the part of Thingstudio that runs on the board: it receives your flows and runs them. Each board
+needs it once. Libraries that some nodes need are sent later, by Deploy, when a flow
 uses them.
 
 1. Check the board's port is selected in the port list, as in [step 4](connecting.md).

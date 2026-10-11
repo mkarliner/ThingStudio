@@ -4,7 +4,7 @@ Pushes an already-rendered frame to an SPI color TFT panel. [Supported hardware]
 lists the display chips. Build the frame upstream (a `function` node using `framebuf.FrameBuffer`,
 or eventually a graphics-framework node) and wire it into this node's input.
 
-This node's property panel has a **preset** picker (see [Working in the editor](../working-in-the-editor.md#presets)) —
+This node's property panel has a **preset** picker (see [Editor in depth](../working-in-the-editor.md#presets)) —
 save a real panel's whole setup (pins, bus, resolution, rotation, color order, and so on) under a name
 once, then load it again on this or another `display_spi` node instead of retyping every field. The CYD
 defaults below are exactly what saving a "cyd" preset from a correctly-configured node would capture.

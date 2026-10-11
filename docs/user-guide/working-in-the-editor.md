@@ -1,7 +1,4 @@
-# Working in the editor
-
-Wire types, node labels, presets, config nodes, node status and notes: the parts of the editor the
-[editor tour](editor-tour.md) doesn't cover.
+# Editor in depth
 
 ## Wiring
 

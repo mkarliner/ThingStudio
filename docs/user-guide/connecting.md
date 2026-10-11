@@ -1,7 +1,6 @@
 # Step 4: Connect your board
 
-How to connect Thingstudio to your board over USB, and what the console tells you when you do. Start Thingstudio if
-it isn't running: see [step 1](getting-started.md#start-thingstudio).
+Start Thingstudio if it isn't running: see [step 1](getting-started.md#start-thingstudio).
 
 1. Plug the board in.
 2. Check the port list in the toolbar. When the editor opens it looks for boards, and selects yours if it's the only

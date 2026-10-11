@@ -1,7 +1,6 @@
 # Getting started
 
-Getting started takes you from a new board to a blinking LED in six steps. This page is step 1: installing and
-starting Thingstudio.
+From a new board to a blinking LED:
 
 1. **[Install Thingstudio](#step-1-install-thingstudio)** on your computer.
 2. **[Tour the editor](editor-tour.md)**: what each part of the screen does.

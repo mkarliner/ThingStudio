@@ -1,7 +1,7 @@
 # Step 3: Install MicroPython
 
-How to install MicroPython on your board. Thingstudio runs on top of [MicroPython](background/micropython.md), a
-version of Python for microcontrollers, so the board needs it first. You install it once per board.
+Thingstudio runs on top of [MicroPython](background/micropython.md), a version of Python for microcontrollers, so
+the board needs it first. You install it once per board.
 
 A new board usually doesn't have MicroPython. If yours already has it, or you're not sure, go to
 [step 4](connecting.md). If MicroPython is missing, the console says so when you connect, and links back here.

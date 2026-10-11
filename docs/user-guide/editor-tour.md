@@ -1,7 +1,6 @@
 # Step 2: Tour the editor
 
-The parts of the Thingstudio editor and what each one is for. Start Thingstudio if it isn't running: see
-[step 1](getting-started.md#start-thingstudio).
+Start Thingstudio if it isn't running: see [step 1](getting-started.md#start-thingstudio).
 
 <figure markdown="span">
   [![The Thingstudio editor with each part labelled](images/editor-parts.png)](images/editor-parts.png)<figcaption>The parts of the editor. Click to see it full size.</figcaption>
@@ -56,7 +55,7 @@ The right-hand side holds the selected node's settings and what the board sends 
 - **Escape to REPL:** **Stop flow & open prompt** stops the flow and gives you MicroPython's own `>>>` prompt (the
   REPL). **Restart Thingstudio** starts the flow again.
 
-[Working in the editor](working-in-the-editor.md) covers node labels, presets, config nodes and node status.
+[Editor in depth](working-in-the-editor.md) covers wire types, node labels, presets, config nodes and node status.
 
 ## Next
 

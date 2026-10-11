@@ -1,8 +1,5 @@
 # Debugging & troubleshooting
 
-The tools for finding out what a board is doing, then what to do about the problems you may meet, in the order you
-meet them: connecting, deploying, running, and recovering a stuck board.
-
 ## Console and compiled source
 
 The **console** shows what the board and Thingstudio report: deploy results, node errors, and what `debug` nodes
