@@ -231,6 +231,21 @@ Type `thingstudio/gui_trend`, kind sink, palette group GUI.
 
 ## hardware
 
+### adc
+
+Type `thingstudio/adc`, kind source, palette group hardware.
+
+- Inputs: none
+- Outputs: msg (any)
+- Properties (name, type, default):
+    - `pin`, number, default `34` — the ADC pin to read; on ESP32, use an ADC1 pin if the flow uses WiFi (ADC2 can't with the radio on)
+    - `mode`, string, default `"relative"` — relative (current value +- delta) or absolute (lower..upper)
+    - `delta`, number, default `2000` — relative mode: how far the reading must move from the last sent one to fire
+    - `lower`, number, default `0` — absolute mode: the low bound
+    - `upper`, number, default `50000` — absolute mode: the high bound
+    - `sense`, string, default `"outside"` — outside (fire when the value leaves the bounds) or inside (fire when it returns)
+    - `pollMs`, number, default `0` — also send every this many ms; 0 = only on a bounds crossing
+
 ### bme280
 
 Type `thingstudio/bme280`, kind source, palette group hardware.
@@ -297,6 +312,22 @@ Type `thingstudio/ebutton`, kind source, palette group hardware.
     - `longPressMs`, number, default `1000`
     - `doubleClickMs`, number, default `400`
     - `pull`, string, default `"none"`
+
+### encoder
+
+Type `thingstudio/encoder`, kind source, palette group hardware.
+
+- Inputs: none
+- Outputs: msg (number)
+- Properties (name, type, default):
+    - `pinX`, number, default `10` — one of the two quadrature switch pins
+    - `pinY`, number, default `11` — the other quadrature switch pin
+    - `div`, number, default `1` — divide the count by this to track detents; 1 counts every pulse
+    - `value`, number, default `0` — the starting value
+    - `vmin`, string, default `""` — lowest value, or blank for no limit
+    - `vmax`, string, default `""` — highest value, or blank for no limit
+    - `mod`, string, default `""` — wrap the value at this number, or blank for none
+    - `delay`, number, default `100` — ms to wait for motion to settle; also limits how often it sends
 
 ### eswitch
 

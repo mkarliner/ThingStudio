@@ -12,6 +12,8 @@ import { touchI2cNode } from "./touch-i2c.js";
 import { i2cGenericNode } from "./i2c-generic.js";
 import { ebuttonNode } from "./ebutton.js";
 import { eswitchNode } from "./eswitch.js";
+import { adcNode } from "./adc.js";
+import { encoderNode } from "./encoder.js";
 import { functionNode } from "./function-node.js";
 import { gpioOutNode } from "./gpio-out.js";
 import { httpInNode } from "./http-in.js";
@@ -84,6 +86,8 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     interruptNode,
     eswitchNode,
     ebuttonNode,
+    adcNode,
+    encoderNode,
     displaySpiNode,
     displayI2cNode,
     pwmOutNode,

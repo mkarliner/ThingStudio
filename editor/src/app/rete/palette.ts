@@ -91,6 +91,8 @@ export type NodeKind =
   | "interrupt"
   | "eswitch"
   | "ebutton"
+  | "adc"
+  | "encoder"
   | "display_spi"
   | "display_i2c"
   | "wifi_status"
@@ -171,6 +173,11 @@ export const NODE_PALETTE: Record<NodeKind, KindStyle> = {
   // distinct from both.
   eswitch: { color: "#a67c3f", bgcolor: "#4a3a1f", icon: "○", label: "eswitch", group: "hardware", priority: 11 },
   ebutton: { color: "#a6633f", bgcolor: "#4a2e1f", icon: "⏺", label: "ebutton", group: "hardware", priority: 12 },
+  // adc/encoder added 2026-10-11 (adc-encoder-neopixel-briefing.md) -- hardware group, input side, alongside
+  // interrupt/eswitch/ebutton/bme280. adc: olive, "∼" for an analog reading. encoder: violet-magenta, "⟳" for a
+  // rotary knob (distinct from display_spi's indigo and mqtt_publish's magenta).
+  adc: { color: "#6e8a2e", bgcolor: "#3a4a1f", icon: "∼", label: "adc", group: "hardware", priority: 13 },
+  encoder: { color: "#8a3f7a", bgcolor: "#4a1f42", icon: "⟳", label: "encoder", group: "hardware", priority: 14 },
   // display_spi/display_i2c, 2026-09-17 -- see this file's header for the
   // color/icon reasoning. Priorities 40/41 (pwm_out's own 30 is the last
   // used hardware-group slot so far), sorting after gpio_out/pwm_out.
