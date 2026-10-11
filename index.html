@@ -1120,7 +1120,7 @@
   <span class="md-ellipsis">
     
   
-    Working in the editor
+    Editor in depth
   
 
     
@@ -2943,9 +2943,8 @@ starts again after a reset or power cycle.</p>
   node's settings and the board's console. Click to see it full size. <a href="editor-tour/">Tour the editor</a> labels every
   part.</figcaption>
 </figure>
-<p>All development is done locally, there is no cloud service.</p>
 <ul>
-<li><strong>No account.</strong> There's nothing to sign up for, and nothing is sent to us.</li>
+<li><strong>Local Dev</strong> All development is done locally, there is no cloud service.</li>
 <li><strong>Works offline.</strong> Once installed, it needs no internet connection, docs included.</li>
 <li><strong>Git friendly.</strong> Thingstudio's files, your programs and your board definitions, are plain, indented
   JSON that you save where you like. They diff cleanly and sit happily in a git repository. Passwords and
@@ -2983,11 +2982,9 @@ gets hard to reason about.</p>
 the temperature. When a message arrives from the network, update the display. Each response runs only when its event
 happens, and the board waits for many events at once. This is
 <a href="background/event-driven/">event-driven programming</a>.</p>
-<p>Event-driven code is harder to write by hand. In MicroPython it means
+<p>Writing event-driven code is can be tricker tto learn. In MicroPython supports it natively with 
 <a href="https://docs.micropython.org/en/latest/library/asyncio.html"><code>asyncio</code></a>: tasks, <code>await</code>, and code to start the
-tasks and pass data between them. The program no longer reads top to bottom, and one blocking call stalls every
-task. Thingstudio writes this code for you. You draw each event and what happens next, and Thingstudio generates the
-tasks and the connections between them.</p>
+tasks and pass data between them. The program no longer reads top to bottom, so it can be harder to grasp what it's doing. Thingstudio makes it easier to create event driven programs and understand what they do by providing a graphical editor of events, functions and outputs.</p>
 <h2 id="events-nodes-and-wires">Events, nodes and wires</h2>
 <p>A program is made of <strong>nodes</strong> joined by <strong>wires</strong>. There are three types of node:</p>
 <ul>

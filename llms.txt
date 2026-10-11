@@ -35,7 +35,7 @@
 
 ## Building flows
 
-- [Working in the editor](https://docs.thingstudio.net/working-in-the-editor/): Every port has a type: int, number, bool, string, bytes or any.
+- [Editor in depth](https://docs.thingstudio.net/working-in-the-editor/): Every port has a type: int, number, bool, string, bytes or any.
 - [Flow lifecycle](https://docs.thingstudio.net/flow-lifecycle/): Flows save to a file you choose, via your browser's own save dialog — no backend needed for this part.
 - [The Thingstudio folder](https://docs.thingstudio.net/thingstudio-folder/): Thingstudio keeps its own files in one folder on your computer:
 
