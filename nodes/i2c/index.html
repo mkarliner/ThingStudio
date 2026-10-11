@@ -2327,10 +2327,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#output" class="md-nav__link">
+  <a href="#wiring" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Output
+        Wiring
       
     </span>
   </a>
@@ -2349,10 +2349,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
+  <a href="#errors" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Example
+        Errors
       
     </span>
   </a>
@@ -2518,6 +2518,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../node-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -2819,10 +2847,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#output" class="md-nav__link">
+  <a href="#wiring" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Output
+        Wiring
       
     </span>
   </a>
@@ -2841,10 +2869,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
+  <a href="#errors" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Example
+        Errors
       
     </span>
   </a>
@@ -2882,20 +2910,24 @@
 <li><strong>length</strong> — for <code>read</code>, how many bytes.</li>
 </ul>
 <p>Hex (<code>0x29</code>) and decimal (<code>41</code>) both work.</p>
-<h2 id="output">Output</h2>
+<h2 id="wiring">Wiring</h2>
+<p><strong>Input</strong> — for <code>write</code>, the bytes to send in <code>payload</code>. <code>read</code> and <code>scan</code> need no input.</p>
+<p><strong>Output</strong> — depends on the operation:</p>
 <ul>
-<li><strong>read</strong> — <code>msg.payload</code> is the bytes read.</li>
-<li><strong>write</strong> — writes <code>msg.payload</code> and passes the message on unchanged. The payload can be bytes, a list
-  of numbers 0–255, or one number.</li>
-<li><strong>scan</strong> — <code>msg.payload</code> is the list of addresses that answer.</li>
+<li><strong>read</strong> — <code>payload</code> is the bytes read. Reading register <code>0x92</code> at address <code>0x29</code> (a TCS34725 ID register)
+  returns <code>b'D'</code>.</li>
+<li><strong>write</strong> — sends <code>payload</code> and passes the message on unchanged. The payload can be bytes, a list of numbers
+  0–255, or one number.</li>
+<li><strong>scan</strong> — <code>payload</code> is the list of addresses that answer.</li>
 </ul>
 <p>Other message fields are kept.</p>
 <h2 id="behavior">Behavior</h2>
-<p>If a transfer fails, the node sends nothing and its status dot says why: <strong>disconnected</strong> when nothing
-answers, <strong>error</strong> when the payload can't be written. The next message tries again.</p>
-<h2 id="example">Example</h2>
-<p>Read a TCS34725 colour sensor's ID register: address <code>0x29</code>, register <code>0x92</code>, length 1. An <code>inject</code> into
-this node, into <code>debug</code>, prints <code>b'D'</code> (0x44).</p>
+<p>If a transfer fails, the node sends nothing and its status dot says why. The next message tries again.</p>
+<h2 id="errors">Errors</h2>
+<ul>
+<li><strong>disconnected</strong> — nothing answers at that address.</li>
+<li><strong>error</strong> — the payload can't be written.</li>
+</ul>
 
 
 

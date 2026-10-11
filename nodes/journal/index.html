@@ -1614,10 +1614,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#wiring" class="md-nav__link">
+  <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Wiring
+        Properties
       
     </span>
   </a>
@@ -1625,10 +1625,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#properties" class="md-nav__link">
+  <a href="#wiring" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Properties
+        Wiring
       
     </span>
   </a>
@@ -1644,16 +1644,22 @@
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#example-minutes-and-hours" class="md-nav__link">
+    <nav class="md-nav" aria-label="Behavior">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cascading-two-journals" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Example: minutes and hours
+        Cascading two journals
       
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -2526,6 +2532,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../node-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../custom-nodes/" class="md-nav__link">
         
   
@@ -2808,10 +2842,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#wiring" class="md-nav__link">
+  <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Wiring
+        Properties
       
     </span>
   </a>
@@ -2819,10 +2853,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#properties" class="md-nav__link">
+  <a href="#wiring" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Properties
+        Wiring
       
     </span>
   </a>
@@ -2838,16 +2872,22 @@
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#example-minutes-and-hours" class="md-nav__link">
+    <nav class="md-nav" aria-label="Behavior">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cascading-two-journals" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Example: minutes and hours
+        Cascading two journals
       
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -2874,15 +2914,6 @@
 <h1 id="journal">journal</h1>
 <p>Keeps the recent history of a number, as rows of average, minimum and maximum, the way RRDtool and Cacti do. Wire
 it to a <a href="../gui/#trend">trend</a> to see the history, and to another journal for a longer time scale.</p>
-<h2 id="wiring">Wiring</h2>
-<ul>
-<li><strong>Input</strong> — <code>msg.payload</code> is a number. <code>None</code> records a gap. A message that carries <code>min</code> and <code>max</code> (the
-  roll-up of another journal) is folded in with them, so a longer time scale keeps the spikes.</li>
-<li><strong>Output 1, series</strong> — sent each time a row is added. The payload is the journal itself, to wire to a trend. It is
-  the live history, not a copy, so it costs no memory per row.</li>
-<li><strong>Output 2, roll-up</strong> — sent every <strong>rows per roll-up</strong> rows: <code>payload</code> the average, <code>min</code>, <code>max</code>, and the input's
-  <code>topic</code>. Wire it to another journal, a readout or MQTT.</li>
-</ul>
 <h2 id="properties">Properties</h2>
 <ul>
 <li><strong>rows kept</strong> — how many rows the history holds, 1 to 256. At 12 bytes a row, 156 rows is under 2 KB.</li>
@@ -2893,14 +2924,23 @@ it to a <a href="../gui/#trend">trend</a> to see the history, and to another jou
   are gaps, the roll-up is a gap too (<code>payload</code> of <code>None</code>). Averages use the known rows only; a gap is never
   counted as zero.</li>
 </ul>
+<h2 id="wiring">Wiring</h2>
+<ul>
+<li><strong>Input</strong> — <code>msg.payload</code> is a number. <code>None</code> records a gap. A message that carries <code>min</code> and <code>max</code> (the
+  roll-up of another journal) is folded in with them, so a longer time scale keeps the spikes.</li>
+<li><strong>Output 1, series</strong> — sent each time a row is added. The payload is the journal itself, to wire to a trend. It
+  is the live history, not a copy, so it costs no memory per row.</li>
+<li><strong>Output 2, roll-up</strong> — sent every <strong>rows per roll-up</strong> rows: <code>payload</code> the average, <code>min</code>, <code>max</code>, and the
+  input's <code>topic</code>. Wire it to another journal, a readout or MQTT.</li>
+</ul>
 <h2 id="behavior">Behavior</h2>
 <p>A gap is empty, never a copy of the last value. The history starts empty each time the flow starts.</p>
 <p>With <strong>seconds per row</strong> set, a row closes when a message arrives after its time is up, so a sensor that has gone
-quiet adds no gaps until it speaks again. Set the trend's <strong>stale after</strong> to dim it meanwhile. Choose a row longer than
-your sensor's interval (10 seconds for a reading every 5): a row that happens to catch no reading is a gap.</p>
+quiet adds no gaps until it speaks again. Set the trend's <strong>stale after</strong> to dim it meanwhile. Choose a row longer
+than your sensor's interval (10 seconds for a reading every 5): a row that happens to catch no reading is a gap.</p>
 <p>A payload that isn't a number is dropped. The first time that happens, the node reports an error; the flow keeps
 running.</p>
-<h2 id="example-minutes-and-hours">Example: minutes and hours</h2>
+<h3 id="cascading-two-journals">Cascading two journals</h3>
 <p>A sensor reads every 5 seconds.</p>
 <ol>
 <li>Journal A: rows 156, <strong>seconds per row</strong> 10, <strong>rows per roll-up</strong> 6. Its first output goes to a trend: the

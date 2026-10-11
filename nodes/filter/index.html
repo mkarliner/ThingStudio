@@ -1607,17 +1607,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Example
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -2515,6 +2504,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../node-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../custom-nodes/" class="md-nav__link">
         
   
@@ -2818,17 +2835,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Example
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -2875,9 +2881,8 @@ happens, the node reports an error; the flow keeps running.</p>
 <p>A node tracks up to 32 topics. After that it forgets them all and starts again, and says so once in
 the console.</p>
 <p>Everything resets when you deploy or the board restarts.</p>
-<h2 id="example">Example</h2>
-<p>A temperature sensor read every second, into a <code>filter</code> in <code>deadband</code> mode with threshold <code>0.5</code>, into
-<code>mqtt publish</code>. The broker only hears about changes of half a degree or more.</p>
+<p>A temperature sensor read every second, into <code>filter</code> in <code>deadband</code> mode with threshold <code>0.5</code>, into
+<code>mqtt publish</code>, tells the broker only about changes of half a degree or more.</p>
 
 
 

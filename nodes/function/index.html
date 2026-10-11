@@ -1541,6 +1541,29 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Behavior
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Behavior">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#context-and-flow-variables" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1550,15 +1573,9 @@
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#multiple-outputs" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Multiple outputs
-      
-    </span>
-  </a>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -2515,6 +2532,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../node-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../custom-nodes/" class="md-nav__link">
         
   
@@ -2808,6 +2853,29 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Behavior
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Behavior">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#context-and-flow-variables" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2817,15 +2885,9 @@
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#multiple-outputs" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Multiple outputs
-      
-    </span>
-  </a>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -2850,24 +2912,15 @@
 
 
 <h1 id="function">function</h1>
-<p>Runs your own MicroPython on each message. The most flexible node in the library — anything not covered by a dedicated node type usually belongs here.</p>
+<p>Runs your own MicroPython on each message. Use it for anything a dedicated node type doesn't cover.</p>
 <h2 id="properties">Properties</h2>
 <ul>
-<li><strong>code</strong> — the function body, run once per incoming message. <code>msg</code> is a dict; <code>msg['payload']</code> is what you'll usually read and write. Return the (possibly modified) message to pass it on, or nothing to stop it there.</li>
+<li><strong>code</strong> — the function body, run once per incoming message. <code>msg</code> is a dict; <code>msg['payload']</code> is what you'll
+  usually read and write. Return the (possibly modified) message to pass it on, or nothing to stop it there.</li>
+<li><strong>outputs</strong> — how many outputs the node has (<code>outputCount</code> in the flow file, up to 10).</li>
 </ul>
-<h2 id="context-and-flow-variables">Context and flow variables</h2>
-<p>Two ways to keep state across messages, both available as plain objects inside your code:</p>
-<ul>
-<li><strong><code>context</code></strong> — private to this one <code>function</code> node. Use it for a counter or running total only this node needs.</li>
-<li><strong><code>flow</code></strong> — shared across the whole flow. <code>flow.set('name', value)</code> / <code>flow.get('name')</code> works from any function node, and reads/writes the same store a <code>variable_get</code>/<code>variable_set</code> node uses by name.</li>
-</ul>
-<div class="highlight"><pre><span></span><code><span class="n">count</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'count'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
-<span class="n">context</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'count'</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span>
-<span class="n">msg</span><span class="p">[</span><span class="s1">'payload'</span><span class="p">]</span> <span class="o">=</span> <span class="n">count</span>
-<span class="k">return</span> <span class="n">msg</span>
-</code></pre></div>
-<h2 id="multiple-outputs">Multiple outputs</h2>
-<p>A function node can have more than one output — set <strong>outputs</strong> in its properties (<code>outputCount</code> in the flow file, up to 10). Return an array to route to specific outputs, Node-RED style:</p>
+<h2 id="wiring">Wiring</h2>
+<p>One input, any message. With more than one output, return an array to route to specific outputs, Node-RED style:</p>
 <div class="highlight"><pre><span></span><code><span class="k">if</span> <span class="n">msg</span><span class="p">[</span><span class="s1">'payload'</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">:</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">msg</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>   <span class="c1"># output 1 only</span>
 <span class="k">else</span><span class="p">:</span>
@@ -2875,10 +2928,25 @@
 </code></pre></div>
 <ul>
 <li><code>None</code> in a slot sends nothing out that output.</li>
-<li>A plain <code>return msg</code> (no array) still works, and always targets output 1.</li>
-<li>A slot holding a list of messages sends all of them out that one output, in order: <code>return [[msg1, msg2], None]</code>.</li>
-<li>Returning fewer elements than the node has outputs leaves the missing ones as <code>None</code>; returning more just ignores the extras.</li>
+<li>A plain <code>return msg</code> (no array) always targets output 1.</li>
+<li>A slot holding a list of messages sends all of them out that one output, in order:
+  <code>return [[msg1, msg2], None]</code>.</li>
+<li>Returning fewer elements than the node has outputs leaves the missing ones as <code>None</code>; returning more ignores the
+  extras.</li>
 </ul>
+<h2 id="behavior">Behavior</h2>
+<h3 id="context-and-flow-variables">Context and flow variables</h3>
+<p>Two ways to keep state across messages, both available as plain objects inside your code:</p>
+<ul>
+<li><strong><code>context</code></strong> — private to this one <code>function</code> node. Use it for a counter or running total only this node needs.</li>
+<li><strong><code>flow</code></strong> — shared across the whole flow. <code>flow.set('name', value)</code> / <code>flow.get('name')</code> works from any function
+  node, and reads/writes the same store a <code>variable_get</code>/<code>variable_set</code> node uses by name.</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="n">count</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'count'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="n">context</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'count'</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span>
+<span class="n">msg</span><span class="p">[</span><span class="s1">'payload'</span><span class="p">]</span> <span class="o">=</span> <span class="n">count</span>
+<span class="k">return</span> <span class="n">msg</span>
+</code></pre></div>
 
 
 

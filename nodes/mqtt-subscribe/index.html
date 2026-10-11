@@ -2504,6 +2504,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../node-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../custom-nodes/" class="md-nav__link">
         
   
@@ -2836,10 +2864,10 @@
 <li><strong>broker</strong> — which MQTT broker config to use (see <a href="../../working-in-the-editor/#config-nodes">Editor in depth</a>). Required — won't compile without one.</li>
 </ul>
 <h2 id="behavior">Behavior</h2>
-<p>Uses the flow's WiFi network and its own broker config, same as <code>mqtt_publish</code>. An "unmanaged" WiFi config isn't accepted here, for the same reason.</p>
+<p>Uses the flow's WiFi network and its own broker config, same as <strong>mqtt publish</strong>. An "unmanaged" WiFi config isn't accepted here, for the same reason.</p>
 <p>The message carries the payload (decoded as text when possible, raw bytes otherwise), the actual topic it arrived on, and whether the broker sent it as a retained message.</p>
-<p>There's currently no guarantee that a subscription is fully confirmed before an <code>mqtt_publish</code> node on the same broker sends its first message — usually not an issue, but worth knowing if an early publish goes unheard by a subscriber that was still connecting.</p>
-<p>Shows a connection-status dot on the canvas (see <a href="../../working-in-the-editor/#node-status">Editor in depth</a>) once connected to a device, same as <code>mqtt_publish</code>.</p>
+<p>A subscription isn't guaranteed to be fully confirmed before an <strong>mqtt publish</strong> node on the same broker sends its first message. This is usually not an issue, but an early publish can go unheard by a subscriber that was still connecting.</p>
+<p>Shows a connection-status dot on the canvas (see <a href="../../working-in-the-editor/#node-status">Editor in depth</a>) once connected to a device, same as <strong>mqtt publish</strong>.</p>
 
 
 

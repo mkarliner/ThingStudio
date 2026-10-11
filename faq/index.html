@@ -2429,6 +2429,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../node-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../custom-nodes/" class="md-nav__link">
         
   
@@ -2850,10 +2878,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#why-is-compile-deploy-greyed-out-after-a-deploy" class="md-nav__link">
+  <a href="#why-is-compile-deploy-grayed-out-after-a-deploy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Why is Compile → Deploy greyed out after a deploy?
+        Why is Compile → Deploy grayed out after a deploy?
       
     </span>
   </a>
@@ -3035,10 +3063,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#why-is-compile-deploy-greyed-out-after-a-deploy" class="md-nav__link">
+  <a href="#why-is-compile-deploy-grayed-out-after-a-deploy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Why is Compile → Deploy greyed out after a deploy?
+        Why is Compile → Deploy grayed out after a deploy?
       
     </span>
   </a>
@@ -3104,8 +3132,8 @@ level) shows the current figures.</p>
 and uses its RAM. So a 264 KB Pico W leaves more for your flow than a 400 KB ESP32-C3.</p>
 <h2 id="deploy-failed-with-memoryerror-allocating-38400-bytes-why-when-theres-more-free-memory-than-that">Deploy failed with "MemoryError ... allocating 38400 bytes". Why, when there's more free memory than that?</h2>
 <p>Free memory is in pieces. A big buffer needs one piece that size, and after a while an ESP32 may not have
-one. A 240x320 frame in 16 greys is 38,400 bytes. The <a href="../nodes/gui/">GUI nodes</a> avoid this by drawing the
-screen in small strips. If your own <code>function</code> node builds a full frame, draw it in strips too, or restart
+one. A 240x320 frame in 16 grays is 38,400 bytes. The <a href="../nodes/gui/">GUI nodes</a> avoid this by drawing the
+screen in strips. If your own <code>function</code> node builds a full frame, draw it in strips too, or restart
 the board before deploying.</p>
 <h2 id="my-esp32-s3-board-has-psram-but-the-console-shows-only-about-120-kb-free-why">My ESP32-S3 board has PSRAM, but the console shows only about 120 KB free. Why?</h2>
 <p>The firmware doesn't use the PSRAM. The generic ESP32-S3 build leaves it off. Flash the build for boards with
@@ -3114,7 +3142,7 @@ The console then shows megabytes free. Freenove's S3 display boards are an examp
 <h2 id="which-board-should-i-use-for-a-display-and-wifi-together">Which board should I use for a display and WiFi together?</h2>
 <p>An ESP32 with external RAM (PSRAM), such as many ESP32-S3 boards. MicroPython puts its heap in the external RAM,
 leaving the chip's own RAM for WiFi. A classic ESP32 or ESP32-C3 without PSRAM can run a display and WiFi, but
-only at lower colour depths and with little to spare.</p>
+only at lower color depths and with little to spare.</p>
 <h2 id="my-wifi-flow-worked-before-but-now-the-board-crashes-or-wont-join-why">My WiFi flow worked before, but now the board crashes or won't join. Why?</h2>
 <p>On an ESP32, MicroPython's heap grows by taking memory from ESP-IDF when a flow needs more, and keeps it until the
 chip is reset. After a flow that uses a lot of memory, such as a display, WiFi may not have enough left to start.
@@ -3125,8 +3153,8 @@ memory back. See <a href="../debugging/#restarting-the-board">Restarting the boa
 runtime can't run flows from the newer editor, so Deploy stops and says so. Use <strong>Tools → Install runtime…</strong>, then
 Connect and deploy again.</p>
 <h2 id="how-do-i-tell-which-version-of-the-editor-im-running">How do I tell which version of the editor I'm running?</h2>
-<p>It's next to <strong>Thingstudio</strong> in the toolbar, and in <strong>Help → About</strong>. A <code>+</code> after it means the editor was built
-from changes that weren't committed yet.</p>
+<p>It's next to <strong>Thingstudio</strong> in the toolbar, and in <strong>Help → About</strong>. A <code>+</code> after it means you built the editor
+from uncommitted changes.</p>
 <h2 id="my-clock-shows-and-never-the-time-why">My clock shows <code>--</code> and never the time. Why?</h2>
 <p>The clock hasn't synced yet. It needs WiFi, and the clock node doesn't join WiFi itself. Add a node that does, such
 as <a href="../nodes/wifi-status/">wifi status</a>, and set its WiFi. See <a href="../nodes/clock/#behavior">clock</a>.</p>
@@ -3140,9 +3168,9 @@ Use the touch node only when you aren't using the GUI. Deploy stops and names bo
 <h2 id="why-wont-a-function-nodes-output-wire-into-pwm-out">Why won't a function node's output wire into pwm out?</h2>
 <p>A function node's output has the type <code>any</code>, and <code>pwm out</code>'s input takes a <code>number</code>. The editor refuses a wire from
 <code>any</code> to <code>number</code>, <code>int</code> or <code>string</code> inputs. See <a href="../working-in-the-editor/#wiring">Wiring</a>.</p>
-<h2 id="why-is-compile-deploy-greyed-out-after-a-deploy">Why is Compile → Deploy greyed out after a deploy?</h2>
+<h2 id="why-is-compile-deploy-grayed-out-after-a-deploy">Why is Compile → Deploy grayed out after a deploy?</h2>
 <p>The board already runs the flow on the canvas. Deploy comes back when you change the flow. See
-<a href="../debugging/#deploy-is-greyed-out">Deploy is greyed out</a>.</p>
+<a href="../debugging/#deploy-is-grayed-out">Deploy is grayed out</a>.</p>
 
 
 

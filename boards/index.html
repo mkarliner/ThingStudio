@@ -2568,6 +2568,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../node-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../custom-nodes/" class="md-nav__link">
         
   
@@ -2958,6 +2986,7 @@
 
 
 <h1 id="boards-and-processors">Boards and processors</h1>
+<p>Each board and processor has a definition file that says which pins a flow may use. This page covers picking a board, seeing its pins, what gets checked, and writing your own definition files.</p>
 <p>Thingstudio checks every pin in a flow against the board the flow is for. If a pin doesn't exist on that board, or using it would crash the board, the compile stops and says why.</p>
 <p>Each board has a definition file, and so does each processor. Thingstudio comes with definitions for the boards and processors below. You can <a href="#your-definition-files">change them or add your own</a>.</p>
 <h2 id="picking-the-board">Picking the board</h2>
@@ -2967,9 +2996,14 @@
 <p>If no board is connected and none is picked, pins are only checked against the range 0–48.</p>
 <h2 id="seeing-a-boards-pins">Seeing a board's pins</h2>
 <p>Click <strong>Pins…</strong> next to the <strong>Board</strong> menu. It opens a page, in its own tab, for the board or processor picked
-there. Pins the board names, such as its LED, come first. For boards whose definition has a <code>header</code>, such as the
-Pico family, the board's physical pins come next, laid out like the board, with power and ground marked. Then every
-pin, with whether it's free, reserved or best avoided, and why. Then which pins each SPI and I2C bus can use.</p>
+there. The page lists, in order:</p>
+<ul>
+<li>the pins the board names, such as its LED</li>
+<li>for boards whose definition has a <code>header</code>, such as the Pico family, the physical pins, laid out like the board,
+  with power and ground marked</li>
+<li>every pin, with whether it's free, reserved or best avoided, and why</li>
+<li>which pins each SPI and I2C bus can use</li>
+</ul>
 <p>The page is read from the definition files each time you click. After changing a file, click <strong>Pins…</strong> again.</p>
 <p>If Thingstudio knows the board's processor but not the board, the page shows the processor's pins and says the
 board's own ones, like its LED, are missing. It gives a starter file to add them: see
@@ -3029,7 +3063,7 @@ see <a href="#adding-a-processor">Adding a processor</a>.</p>
 <tr>
 <td>Freenove ESP32-S3 Display 4.0" (FNK0104S, ST7796)</td>
 <td>ESP32-S3</td>
-<td>Pick by hand. Display and touch pins are labelled. 320x480, SPI bus 1. Rotation 1 is portrait. For landscape, set the display's <code>orientation</code> to 90 (or 270 for the other way up) and keep the screen and display at 320x480; the older raw codes still work without an orientation: 4 is landscape with USB on the right, 7 with USB on the left (then size the screen 480x320). Display and touch (FT6336U) work.</td>
+<td>Pick by hand. Display and touch pins are labelled. 320x480, SPI bus 1. Rotation 1 is portrait. For landscape, set the display's <code>orientation</code> to 90 (or 270 for the other way up) and keep the screen and display at 320x480. Display and touch (FT6336U) work.</td>
 </tr>
 </tbody>
 </table>
@@ -3080,8 +3114,8 @@ see <a href="#adding-a-processor">Adding a processor</a>.</p>
 <p>The definition files list every pin to avoid, with the reason.</p>
 <h2 id="your-definition-files">Your definition files</h2>
 <p>Definition files live in <code>~/.thingstudio/boards/</code> and <code>~/.thingstudio/processors/</code>. When Thingstudio starts, it copies in any built-in file that's missing, so you can read and edit them there.</p>
-<p>To change a built-in board, edit its file. To get the original back, delete the file and restart Thingstudio. A newer version of Thingstudio doesn't update a file you already have. Delete it to get the new one.
-For example, the built-in Pico files now say <code>"wifi": false</code>; an older copy without that line still offers WiFi.</p>
+<p>To change a built-in board, edit its file. To get the original back, delete the file and restart Thingstudio. A newer
+version of Thingstudio doesn't update a file you already have, so delete a file to pick up its new built-in version.</p>
 <p>Thingstudio reads these files when the editor starts, when you connect, and when you deploy. If a file has a mistake, it isn't loaded and the built-in is used instead. The console says what's wrong, and the Board menu lists the file under <strong>Invalid files</strong>.</p>
 <h2 id="adding-a-board">Adding a board</h2>
 <p>Save a JSON file in <code>~/.thingstudio/boards/</code>. The file name, without <code>.json</code>, is the board's id. Use lowercase letters, digits, <code>-</code> and <code>_</code>.</p>
@@ -3094,6 +3128,7 @@ For example, the built-in Pico files now say <code>"wifi": false</code>; an olde
 <span class="w">  </span><span class="nt">"notes"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Hand-built, rev 2."</span>
 <span class="p">}</span>
 </code></pre></div>
+<p>The fields are:</p>
 <table>
 <thead>
 <tr>
@@ -3150,6 +3185,7 @@ is drawn in two columns, like the Pico's. For a board with several connectors, n
 <p>To find the name MicroPython reports, connect the board and look for <code>chipType</code> in the console's <code>[HELLO]</code> line. The board name is the part before " with ".</p>
 <h2 id="adding-a-processor">Adding a processor</h2>
 <p>Save a JSON file in <code>~/.thingstudio/processors/</code>, named the same way as a board file. The built-in files in that folder are good examples.</p>
+<p>The fields are:</p>
 <table>
 <thead>
 <tr>

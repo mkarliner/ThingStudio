@@ -2504,6 +2504,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../node-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../custom-nodes/" class="md-nav__link">
         
   
@@ -2836,7 +2864,7 @@
 <li><strong>sense</strong> — which electrical level means "pressed": <code>auto</code> (default, reads the pin's own boot state as
   "not pressed"), <code>0</code>, or <code>1</code>.</li>
 <li><strong>suppress</strong> — off by default. When on, <code>press</code>/<code>release</code> are held back until it's clear the click isn't the
-  first half of a double — a plain single click still reports <code>press</code> then <code>release</code>, just delayed by up to the
+  first half of a double — a plain single click still reports <code>press</code> then <code>release</code>, delayed by up to the
   double-click window; an actual double-click reports only <code>double</code>, not <code>press</code>/<code>release</code> for the first click too.</li>
 <li><strong>debounce (ms)</strong> — default 50ms.</li>
 <li><strong>long press (ms)</strong> — how long a press must hold to count as <code>long</code>. Default 1000ms.</li>
@@ -2844,9 +2872,9 @@
   less than long press.</li>
 </ul>
 <h2 id="behavior">Behavior</h2>
-<p><code>topic</code> is one of <code>press</code>, <code>release</code>, <code>long</code>, <code>double</code>. <code>payload</code> is the button's state at the moment the event
+<p><code>event</code> is one of <code>press</code>, <code>release</code>, <code>long</code>, <code>double</code>. <code>payload</code> is the button's state at the moment the event
 fired (<code>true</code> = currently pressed) — always <code>true</code> for <code>press</code>, always <code>false</code> for <code>release</code>, and whatever the
-button is doing right now for <code>long</code>/<code>double</code>.</p>
+button is doing right now for <code>long</code>/<code>double</code>. <code>topic</code> is empty.</p>
 <p>With <code>suppress</code> off (the default), a press always reports immediately, whether or not a second press follows —
 so a rapid double-click reports both a <code>press</code> and a <code>double</code>, not <code>double</code> alone. Turn <code>suppress</code> on if a plain
 single press should never be reported when it turns out to be part of a double-click.</p>

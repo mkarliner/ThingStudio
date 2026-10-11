@@ -1485,10 +1485,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#output" class="md-nav__link">
+  <a href="#wiring" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Output
+        Wiring
       
     </span>
   </a>
@@ -2515,6 +2515,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../node-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../custom-nodes/" class="md-nav__link">
         
   
@@ -2808,10 +2836,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#output" class="md-nav__link">
+  <a href="#wiring" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Output
+        Wiring
       
     </span>
   </a>
@@ -2856,9 +2884,9 @@
 <li><strong>payload type</strong> — <code>bool</code>, <code>number</code>, <code>string</code>, or <code>start reason</code>.</li>
 <li><strong>value</strong> — the fixed value to send, matching the chosen type. Not used with <code>start reason</code>.</li>
 </ul>
-<h2 id="output">Output</h2>
-<p>Every message has a <code>reason</code> field saying why the flow started. With payload type <code>start reason</code>,
-the payload is that same string.</p>
+<h2 id="wiring">Wiring</h2>
+<p><strong>Output</strong> — the fixed value, with a <code>reason</code> field saying why the flow started. With payload type
+<code>start reason</code>, the payload is that same string.</p>
 <table>
 <thead>
 <tr>
@@ -2898,7 +2926,7 @@ the payload is that same string.</p>
 </tbody>
 </table>
 <p>Not every board reports every reason. ESP32 boards report the reset button as <code>power_on</code>, because on those
-chips the button cuts power to the core. A board running a runtime older than 5.1.0 always sends <code>unknown</code>.</p>
+chips the button cuts power to the core.</p>
 <h2 id="behavior">Behavior</h2>
 <p>The flow starts after every Deploy, and again whenever the board resets or powers up with a saved flow.
 So <code>startup</code> runs even when the editor isn't connected. Use it for setup work, such as setting an output

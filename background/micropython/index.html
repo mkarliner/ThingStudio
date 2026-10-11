@@ -2524,6 +2524,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../node-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../custom-nodes/" class="md-nav__link">
         
   
@@ -2870,28 +2898,29 @@
 
 
 <h1 id="micropython">MicroPython</h1>
-<p><a href="https://micropython.org/">MicroPython</a> is a version of Python 3 made to run on microcontrollers. It fits in a few
-hundred kilobytes and runs directly on the chip, with no operating system underneath.</p>
+<p><a href="https://micropython.org/">MicroPython</a> is a version of Python 3 made to run on microcontrollers. It fits in
+hundreds of kilobytes and runs directly on the chip, with no operating system underneath.</p>
 <h2 id="how-it-works">How it works</h2>
 <p>You flash MicroPython onto the board once, like any firmware. After that the board runs Python files from its own
-small filesystem, and gives you a Python prompt, the REPL, over USB. You can type Python at the board and see the
+filesystem, and gives you a Python prompt, the REPL, over USB. You can type Python at the board and see the
 result at once.</p>
-<p>MicroPython keeps most of the Python language and a small part of its standard library. It adds modules for
+<p>MicroPython keeps most of the Python language and part of its standard library. It adds modules for
 hardware: <code>machine</code> for pins, I2C, SPI and PWM, <code>network</code> for WiFi, and <code>asyncio</code> for running several tasks at once.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">machine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pin</span>
 <span class="n">led</span> <span class="o">=</span> <span class="n">Pin</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="n">Pin</span><span class="o">.</span><span class="n">OUT</span><span class="p">)</span>
 <span class="n">led</span><span class="o">.</span><span class="n">on</span><span class="p">()</span>
 </code></pre></div>
 <h2 id="the-limits">The limits</h2>
-<p>Microcontrollers are small. A board typically has a few hundred kilobytes of RAM, and MicroPython itself uses some
+<p>Microcontrollers are limited. A board typically has hundreds of kilobytes of RAM, and MicroPython itself uses some
 of it. Python is also much slower than C, though fast enough for most sensing, switching and networking jobs.</p>
 <h2 id="where-thingstudio-fits">Where Thingstudio fits</h2>
-<p>Thingstudio runs on top of MicroPython. It installs a small runtime onto the board, and turns each flow you deploy
+<p>Thingstudio runs on top of MicroPython. It installs a runtime onto the board, and turns each flow you deploy
 into MicroPython code. The function node runs your own MicroPython. See
 <a href="../../installing-micropython/">installing MicroPython</a> to get it onto your board.</p>
 <p>If you already use MicroPython, see <a href="../../coming-from/micropython/">if you know MicroPython</a> for how Thingstudio
 uses your board.</p>
 <h2 id="more">More</h2>
+<p>Further reading:</p>
 <ul>
 <li><a href="https://docs.micropython.org/en/latest/">MicroPython documentation</a></li>
 <li><a href="https://docs.micropython.org/en/latest/esp32/quickref.html">MicroPython quick reference for ESP32</a> and

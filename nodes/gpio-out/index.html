@@ -2504,6 +2504,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../node-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../custom-nodes/" class="md-nav__link">
         
   
@@ -2834,7 +2862,8 @@
 <li><strong>pin</strong> — GPIO pin number. Checked against your <a href="../../boards/">board</a>.</li>
 </ul>
 <h2 id="behavior">Behavior</h2>
-<p>Any truthy payload sets the pin high; anything falsy sets it low. Since the incoming wire can be any type, "truthy" follows Python's own rule (<code>0</code>, <code>""</code>, <code>None</code>, and <code>False</code> are falsy; nearly everything else is truthy) — a <code>bool</code> input works exactly as you'd expect, and other types convert sensibly too.</p>
+<p>A truthy <code>payload</code> sets the pin high, a falsy one sets it low, using Python's own truth test. <code>0</code>, <code>""</code>, <code>None</code> and
+<code>False</code> are low; a <code>bool</code> input works as you'd expect, and other types convert to one of the two.</p>
 
 
 

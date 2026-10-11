@@ -2513,6 +2513,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../node-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../custom-nodes/" class="md-nav__link">
         
   
@@ -2849,7 +2877,7 @@
 
 <h1 id="installation-details">Installation details</h1>
 <p>How Thingstudio is packaged, where it puts its files, how to upgrade and remove it, and how to build it from source.
-<a href="../getting-started/#step-1-install-thingstudio">Getting started</a> has the quick version.</p>
+<a href="../getting-started/#step-1-install-thingstudio">Getting started</a> has the install steps.</p>
 <h2 id="packages">Packages</h2>
 <p>Each <a href="https://github.com/mkarliner/ThingStudio/releases/latest">release</a> has a package for each platform:</p>
 <table>
@@ -2902,10 +2930,10 @@ Your settings live in <code>%USERPROFILE%\.thingstudio</code>.</p>
 <h2 id="from-source">From source</h2>
 <p>For working on Thingstudio itself. You need Python 3.10 or later, Node.js 22.12 or later, and <code>make</code>. On a Mac,
 <code>make</code> comes with the Xcode command line tools (<code>xcode-select --install</code>).</p>
-<p>In the repository folder, run <code>make</code>. This builds the editor and these docs, installs Thingstudio into a <code>.venv</code>
+<p>In the repository folder, run <code>make</code>. This builds the editor and the user guide, installs Thingstudio into a <code>.venv</code>
 folder, and puts the <code>thingstudio-backend</code> command on your PATH. Run <code>make</code> again after updating the repository. It
 only rebuilds what changed. If your <code>python3</code> is older than 3.10, name a newer one: <code>make PYTHON=python3.12</code>.</p>
-<p>Start it with <code>thingstudio-backend</code>, or <code>make run</code>. On a Mac, start it from Apple's <strong>Terminal</strong> app: macOS blocks
+<p>Start it with <code>thingstudio-backend</code>, or <code>make run</code>. On a Mac, start it from Apple's <strong>Terminal</strong> app. macOS blocks
 WiFi connections from a copy run from source in other terminals, such as iTerm.</p>
 
 

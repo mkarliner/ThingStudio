@@ -2504,6 +2504,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../node-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../custom-nodes/" class="md-nav__link">
         
   
@@ -2832,11 +2860,11 @@
 <h2 id="properties">Properties</h2>
 <p>None.</p>
 <h2 id="behavior">Behavior</h2>
-<p>A <code>transform</code>, like <code>function</code> or <code>delay</code> — one input, one output, same <code>msg</code> in and out unchanged when the WiFi link is up. When the link is down, the message is dropped: nothing propagates past this node, the same way a <code>function</code> node's own <code>return null</code> stops a message.</p>
+<p>A <code>transform</code>, like <code>function</code> or <code>delay</code> — one input, one output, same <code>msg</code> in and out unchanged when the WiFi link is up. When the link is down, the message is dropped: nothing propagates past this node, the same way a <code>function</code> node's <code>return None</code> stops a message.</p>
 <p>Uses the flow's WiFi network (its <strong>WiFi</strong> field, shared by every WiFi node).</p>
-<p>This checks the WiFi station's live link state at the moment each message arrives, not a value read off <code>wifi_status</code>'s own output messages. <code>wifi_status</code> only emits when its connection identity changes, so a fast-firing source (a timer or sensor) gated off <code>wifi_status</code>'s wire could easily be checking stale state; this node reads the hardware directly instead, so it's always answering "is the link up right now."</p>
-<p>The motivating case: a GPIO/timer/sensor source fires on its own schedule with no awareness of whether WiFi happens to be up. Put a <code>wifi_gate</code> between that source and whatever sends the result over the network, and messages that arrive while the link is down are quietly dropped instead of failing downstream (or queuing up for a retry a node like <code>http_request</code> might otherwise attempt).</p>
-<p>This only checks the WiFi link itself — not whether a specific MQTT broker or HTTP server is reachable beyond that. <code>mqtt_publish</code>/<code>mqtt_subscribe</code> and <code>http_request</code> already handle their own connection lifecycle on top of a working WiFi link.</p>
+<p>This checks the WiFi station's live link state at the moment each message arrives, not a value read off <code>wifi status</code>'s own output messages. <code>wifi status</code> only emits when its connection identity changes, so a fast-firing source (a timer or sensor) gated off <code>wifi status</code>'s wire could be checking stale state. This node reads the hardware directly, so it always answers "is the link up right now."</p>
+<p>A GPIO, timer or sensor source fires on its own schedule with no awareness of whether WiFi is up. Put a <code>wifi gate</code> between that source and whatever sends the result over the network: messages that arrive while the link is down are dropped instead of failing downstream (or queuing for a retry a node like <code>http request</code> might otherwise attempt).</p>
+<p>This only checks the WiFi link itself — not whether a specific MQTT broker or HTTP server is reachable beyond that. <code>mqtt publish</code>, <code>mqtt subscribe</code> and <code>http request</code> already handle their own connection lifecycle on top of a working WiFi link.</p>
 
 
 

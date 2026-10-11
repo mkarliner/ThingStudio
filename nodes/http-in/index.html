@@ -1917,10 +1917,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#not-yet-supported" class="md-nav__link">
+  <a href="#limitations" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Not yet supported
+        Limitations
       
     </span>
   </a>
@@ -2515,6 +2515,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../node-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../custom-nodes/" class="md-nav__link">
         
   
@@ -2819,10 +2847,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#not-yet-supported" class="md-nav__link">
+  <a href="#limitations" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Not yet supported
+        Limitations
       
     </span>
   </a>
@@ -2850,26 +2878,27 @@
 
 
 <h1 id="http-in">http in</h1>
-<p>Starts (or joins) a small HTTP server on the device and fires a message for each matching incoming request.</p>
+<p>Starts (or joins) an HTTP server on the device and fires a message for each matching incoming request.</p>
 <h2 id="properties">Properties</h2>
 <ul>
 <li><strong>port</strong> — the TCP port to listen on (1–65535).</li>
-<li><strong>path</strong> — the exact path to match, e.g. <code>/status</code>. <strong>No named parameters yet</strong> (no <code>/user/:id</code> — see "Not yet supported" below).</li>
+<li><strong>path</strong> — the exact path to match, e.g. <code>/status</code>. No named parameters: <code>path</code> matches one exact string (no <code>/user/:id</code>).</li>
 <li><strong>method</strong> — <code>GET</code> or <code>POST</code>. No other methods are supported.</li>
-<li><strong>response timeout (ms)</strong> — how long to wait for a paired <code>http_response</code> node to actually reply before the request times out with a 500. Default 10000ms.</li>
+<li><strong>response timeout (ms)</strong> — how long to wait for a paired <code>http response</code> node to actually reply before the request times out with a 500. Default 10000ms.</li>
 </ul>
 <h2 id="behavior">Behavior</h2>
-<p>Any number of <code>http_in</code> nodes can share one <code>port</code> — each one claims its own exact <code>(method, path)</code> pair, and the device runs one shared server per port, routing each incoming request to whichever <code>http_in</code> node matches. Two <code>http_in</code> nodes claiming the same <code>(method, path)</code> on the same port is a compile error.</p>
-<p>Fires once per matching request. The message carries <code>req.method</code> and <code>req.path</code>; <strong><code>payload</code> is always <code>None</code></strong> — v1 doesn't parse the request body (see "Not yet supported" below). Pair every <code>http_in</code> with a downstream <a href="../http-response/"><code>http_response</code></a> node to actually answer the request — a request whose flow never reaches one gets a 500 automatically once the response timeout above elapses, rather than hanging the client forever.</p>
+<p>Any number of <code>http in</code> nodes can share one <code>port</code> — each one claims its own exact <code>(method, path)</code> pair, and the device runs one shared server per port, routing each incoming request to whichever <code>http in</code> node matches. Two <code>http in</code> nodes claiming the same <code>(method, path)</code> on the same port is a compile error.</p>
+<p>Fires once per matching request. The message carries <code>req.method</code> and <code>req.path</code>; <strong><code>payload</code> is always <code>None</code></strong> — the request body isn't parsed (see "Limitations" below). Pair every <code>http in</code> with a downstream <a href="../http-response/"><code>http response</code></a> node to actually answer the request — a request whose flow never reaches one gets a 500 automatically once the response timeout above elapses, rather than hanging the client forever.</p>
 <p>A second request to the <em>same</em> route while an earlier one is still being processed queues behind it (this node processes one request at a time). Requests to <em>different</em> routes — even on the same port — are handled concurrently.</p>
 <p>Uses the flow's WiFi network (its <strong>WiFi</strong> field, shared by every WiFi node).</p>
-<h2 id="not-yet-supported">Not yet supported</h2>
-<p>Two real gaps, not oversights — both tracked as follow-up work:</p>
+<h2 id="limitations">Limitations</h2>
 <ul>
-<li><strong>No named path parameters.</strong> Node-RED's <code>/user/:name</code> style, with the captured value showing up on <code>msg.req.params</code>, isn't implemented yet — <code>path</code> matches one exact string.</li>
-<li><strong>No request body parsing.</strong> <code>msg.payload</code> never reflects a <code>POST</code>/<code>PUT</code> body in v1 — a request's body is read off the wire (so it doesn't corrupt the next request on the same connection) but discarded.</li>
+<li><strong>No named path parameters.</strong> <code>path</code> matches one exact string, not Node-RED's <code>/user/:name</code> style.</li>
+<li><strong>No request body parsing.</strong> <code>payload</code> is always <code>None</code>; a <code>POST</code>/<code>PUT</code> body is read off the wire so it doesn't
+  corrupt the next request, then discarded.</li>
+<li><strong>No cap on requests in flight.</strong> The device's own memory and socket limits apply, so this suits a handful of
+  well-behaved clients rather than untrusted traffic.</li>
 </ul>
-<p>No explicit cap on how many requests can be in flight at once, either — this relies on the device's own memory/socket limits, fine for a handful of well-behaved clients, not something to expose to untrusted traffic.</p>
 
 
 

@@ -2504,6 +2504,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../node-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../custom-nodes/" class="md-nav__link">
         
   
@@ -2837,9 +2865,9 @@
 <li><strong>debounce (ms)</strong> — the debounce window, shown when debounce is on. Default 50ms.</li>
 </ul>
 <h2 id="behavior">Behavior</h2>
-<p>The payload is the pin's level (<code>true</code>/<code>false</code>) at the moment the node wakes, not a record of every intermediate change — a burst of bounces inside the debounce window collapses into one report of the settled state, by design.</p>
+<p>The payload is the pin's level (<code>true</code>/<code>false</code>) at the moment the node wakes, not a record of every intermediate change — a burst of bounces inside the debounce window collapses into one report of the settled state.</p>
 <p>No internal pull resistor is configured. Wire an external pull resistor, or use a button module with one built in.</p>
-<p>Two <code>interrupt</code> nodes configured for the same pin silently share the first one's edge/debounce settings rather than erroring — a real limitation, not a crash, but worth knowing if a second interrupt node on the same pin doesn't seem to behave the way its own property panel says.</p>
+<p>Two <code>interrupt</code> nodes configured for the same pin silently share the first one's edge and debounce settings. A second interrupt node on the same pin won't use its own property panel values.</p>
 
 
 

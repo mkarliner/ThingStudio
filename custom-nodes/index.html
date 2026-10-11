@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://docs.thingstudio.net/custom-nodes/">
       
       
-        <link rel="prev" href="../nodes/gui/">
+        <link rel="prev" href="../node-conventions/">
       
       
         <link rel="next" href="../ai-authoring/">
@@ -2430,6 +2430,34 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../node-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -2995,11 +3023,10 @@
 <p>A custom node is two files sharing a base name: <code>&lt;name&gt;.node.json</code> (the
 descriptor) and <code>&lt;name&gt;.node.py</code> (the behavior), placed in the backend's
 <code>~/.thingstudio/custom-nodes/</code> directory. Thingstudio loads it for you,
-and you drag it onto the canvas like any built-in node. This document is
-complete on its own — no other Thingstudio docs needed.</p>
+and you drag it onto the canvas like any built-in node.</p>
 <h2 id="loading-a-custom-node">Loading a custom node</h2>
 <p>Put both files in <code>~/.thingstudio/custom-nodes/</code> on the computer running
-Thingstudio. There's no upload button in the editor yet.</p>
+Thingstudio.</p>
 <p>The editor loads every package in that folder when it starts, and again
 when you switch back to its window. After changing a file, you can also
 click <strong>Reload custom nodes</strong> at the bottom of the palette. The console
@@ -3054,9 +3081,8 @@ that group.</p>
 <code>type</code> is one of <code>int</code>, <code>number</code>, <code>bool</code>, <code>string</code>, <code>bytes</code>, <code>any</code> — the
 same types built-in nodes use, with the same wire-compatibility checks.
 Use <code>any</code> when unsure.</p>
-<p>Custom nodes support only one output port. The built-in <code>function</code> node
-supports multiple, configurable outputs -- that hasn't been extended to
-the custom-node format yet.</p>
+<p>A custom node has one output port. The built-in <code>function</code> node's
+multiple, configurable outputs aren't available to custom nodes.</p>
 <p><strong><code>properties</code></strong> (optional) — fields shown in the property panel when
 the node is selected:</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"factor"</span><span class="p">,</span><span class="w"> </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"factor"</span><span class="p">,</span><span class="w"> </span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"number"</span><span class="p">,</span><span class="w"> </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">}</span>
@@ -3081,7 +3107,7 @@ your node's <code>kind</code>:</p>
 </ul>
 <p><code>msg</code> is a dict with a <code>payload</code> key, a <code>topic</code> key, and room for any
 extra keys you add. <code>topic</code> is a routing/identification string — the
-<code>mqtt_subscribe</code> built-in node, for instance, fills it with the real
+<code>mqtt subscribe</code> built-in node, for instance, fills it with the real
 MQTT topic a message arrived on. Most nodes have no natural topic of
 their own; set it to <code>''</code> rather than a real value. The key is
 required either way — don't leave it out. <code>properties</code> is a dict of
@@ -3177,21 +3203,15 @@ property.</p>
 Thingstudio doesn't check it. A typo surfaces as a runtime error (e.g.
 <code>NameError</code>) reported from the device, attributed to your node.</p>
 <h2 id="limitations">Limitations</h2>
-<ul>
-<li><strong>One output port</strong> — a current compiler limit, not a format limit.</li>
-<li><strong>No event-driven sources</strong> — <code>intervalMs</code> polling only.</li>
-<li><strong>No resource-sharing between instances.</strong> Two built-in <code>gpio_out</code>
-  nodes on the same pin share one <code>Pin</code> object; two instances of your
-  custom node don't — each gets its own independent setup. Don't put
-  two instances of the same stateful custom node on the same physical
-  resource (e.g. the same pin).</li>
-<li><strong>No sandboxing.</strong> Custom node Python runs with the same trust as any
-  other node — the same trust Thingstudio's <code>function</code> node already
-  has. Loading a package only adds it to the palette. Its Python runs
-  on a board only when you place the node and deploy. There's no
-  registry and no URL install, only files you put in the folder
-  yourself. Don't put a package there that you haven't read.</li>
-</ul>
+<p>A custom node has one output port. A <code>source</code> node's <code>emit</code> runs on a fixed <code>intervalMs</code> schedule, not in response to
+an external event.</p>
+<p>Two instances of the same custom node get independent setup, unlike two built-in <code>gpio out</code> nodes on the same pin,
+which share one <code>Pin</code> object. Don't put two instances of the same stateful custom node on the same physical resource,
+such as the same pin.</p>
+<p>Custom node Python runs with the same trust as any other node, including Thingstudio's <code>function</code> node. Loading a
+package only adds it to the palette; its Python runs on a board only when you place the node and deploy. Only files
+you place in the folder are loaded — there's no registry and no URL install — so don't put a package there that you
+haven't read.</p>
 
 
 

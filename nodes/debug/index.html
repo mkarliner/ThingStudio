@@ -2504,6 +2504,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../node-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../custom-nodes/" class="md-nav__link">
         
   
@@ -2828,13 +2856,13 @@
 
 
 <h1 id="debug">debug</h1>
-<p>Prints a message's payload to the device's console — the simplest way to see what's actually flowing through a wire.</p>
+<p>Prints a message's payload to the device's console — the way to see what's actually flowing through a wire.</p>
 <h2 id="properties">Properties</h2>
 <ul>
-<li><strong>full message</strong> — off by default. Prints the whole message (topic, and any other fields a source node adds — for example <code>wifi_status</code>'s <code>ip</code>/<code>subnet</code>/<code>gateway</code>/<code>dns</code>/<code>rssi</code>) instead of just <code>payload</code>.</li>
+<li><strong>full message</strong> — off by default. Prints the whole message (topic, and any other fields a source node adds — for example <code>wifi status</code>'s <code>ip</code>/<code>subnet</code>/<code>gateway</code>/<code>dns</code>/<code>rssi</code>) instead of only <code>payload</code>.</li>
 </ul>
 <h2 id="behavior">Behavior</h2>
-<p>Output currently goes to the device's serial console (visible in the editor's console panel once connected), not a dedicated live-value inspector — that's planned but not built yet. For now, <code>debug</code> is the way to see a value without guessing.</p>
+<p>Output goes to the device's serial console, visible in the editor's console panel once connected. Use it to see a value flowing through a wire without guessing.</p>
 
 
 

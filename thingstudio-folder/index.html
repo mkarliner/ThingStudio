@@ -2546,6 +2546,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../node-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../custom-nodes/" class="md-nav__link">
         
   
@@ -2958,8 +2986,8 @@ choose (see <a href="../flow-lifecycle/#save-and-open">Flow lifecycle</a>).</p>
 </tr>
 </tbody>
 </table>
-<p>Every file is plain JSON, except the Python half of a custom node. The editor reads these folders through the
-Thingstudio backend, so the direct (WebSerial-only) connection mode can't use them.</p>
+<p>Every file is plain JSON, except the <code>.node.py</code> file of a custom node. The editor reads these folders through the
+Thingstudio backend, so they aren't available when the editor talks to the board directly over USB.</p>
 <h2 id="credentials">Credentials</h2>
 <p>A WiFi or MQTT broker config node holds only the name of a credential. The SSID, password, broker address and login
 are stored in <code>credentials/wifi/&lt;name&gt;.json</code> or <code>credentials/mqtt-broker/&lt;name&gt;.json</code>. This keeps secrets out of flow

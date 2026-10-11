@@ -23,7 +23,9 @@ starts again after a reset or power cycle.
   part.</figcaption>
 </figure>
 
-- **Local Dev** All development is done locally, there is no cloud service.
+In practice, that means:
+
+- **Local dev.** Development happens locally; there is no cloud service.
 - **Works offline.** Once installed, it needs no internet connection, docs included.
 - **Git friendly.** Thingstudio's files, your programs and your board definitions, are plain, indented
   JSON that you save where you like. They diff cleanly and sit happily in a git repository. Passwords and
@@ -32,7 +34,7 @@ starts again after a reset or power cycle.
   [boards](boards.md#adding-a-board) and [processors](boards.md#adding-a-processor). You drop their files into
   a folder. There's nothing to rebuild.
 - **Free and open source.** Thingstudio is under the
-  [Apache 2.0 licence](https://github.com/mkarliner/ThingStudio/blob/main/LICENSE). You can use it, change it and
+  [Apache 2.0 license](https://github.com/mkarliner/ThingStudio/blob/main/LICENSE). You can use it, change it and
   build on it, including in commercial products.
 
 !!! tip "Already know the background?"
@@ -62,8 +64,10 @@ the temperature. When a message arrives from the network, update the display. Ea
 happens, and the board waits for many events at once. This is
 [event-driven programming](background/event-driven.md).
 
-MicroPython supports this style of programming natively with the 
-[`asyncio`](https://docs.micropython.org/en/latest/library/asyncio.html): primitives. When you write ansynio programs the code no longer reads top to bottom, so it can be harder to grasp what it's doing. Thingstudio makes it easier to create event driven programs and understand what they do by providing a graphical editor of events, functions and outputs.
+MicroPython supports this style natively with
+[`asyncio`](https://docs.micropython.org/en/latest/library/asyncio.html). An `asyncio` program no longer reads top to
+bottom, which makes it harder to see what it does. Thingstudio's graphical editor of events, functions and outputs
+makes an event-driven program easier to build and follow.
 
 ## Events, nodes and wires
 
@@ -76,8 +80,8 @@ A program is made of **nodes** joined by **wires**. There are three types of nod
 A wire joins one node's output to the next node's input. The nodes and wires together make a **flow**. A flow can
 hold any number of chains, each starting at a source.
 
-Nodes pass **messages** along the wires. A message is a dict, with its main value in `payload`. More on this in
-[flows, nodes and messages](background/flows-and-nodes.md).
+Nodes pass **messages** along the wires. A message is a dict, with its main value in `payload`. Messages are covered
+in more detail in [flows, nodes and messages](background/flows-and-nodes.md).
 
 This way of working comes from [Node-RED](background/node-red.md), a popular tool for home automation and IoT. In
 Node-RED, flows run on a server or a Raspberry Pi. In Thingstudio, they run on the microcontroller.
@@ -104,8 +108,8 @@ You can also run Python directly on the board from the editor. See
 
 ## Running on the board
 
-The board runs [MicroPython](background/micropython.md), a version of Python 3 made for microcontrollers. You install
-it once, then Thingstudio adds a small runtime of its own on top.
+The board runs [MicroPython](background/micropython.md). You install it once, then Thingstudio adds a runtime of its
+own on top.
 
 When you click **Deploy**, the editor turns your flow into MicroPython code and compiles it. It sends the result to
 the board over USB or WiFi, and the board swaps it in and starts running it. There's no firmware to flash, so
@@ -127,14 +131,12 @@ Thingstudio tries not to reinvent the wheel.
 
 - A board with an ESP32 or RP2040/RP2350 processor. [Supported hardware](supported-hardware.md) lists what's been
   tested. Other boards that run MicroPython may work.
-- A USB cable that carries data, not just power.
-- Some knowledge of Python, enough to write a few lines.
-- Some knowledge of electronics, enough to wire up an LED.
+- A USB cable that carries data, not only power.
 
 ## Next
 
-[Getting started](getting-started.md) lists the steps from a new board to a blinking LED, and starts you on the
-first one.
+[Getting started](getting-started.md) lists the steps from a new board to a blinking LED, and starts you on the first
+step.
 
 The docs on [docs.thingstudio.net](https://docs.thingstudio.net/) follow the latest code. The docs inside Thingstudio
 (**Help → User guide**) match the version you have installed.
@@ -146,7 +148,7 @@ Source: https://docs.thingstudio.net/background/event-driven/
 
 # Event-driven programming
 
-An event-driven program waits for things to happen, and runs a short piece of code for each one. A button press,
+An event-driven program waits for things to happen, and runs a piece of code for each one. A button press,
 a timer tick and an incoming network message are all events. The code that handles one is often called a
 handler.
 
@@ -199,9 +201,10 @@ return msg
 
 ## More
 
+Further reading:
+
 - [MicroPython's asyncio](https://docs.micropython.org/en/latest/library/asyncio.html)
-- [Peter Hinch's asyncio tutorial for MicroPython](https://github.com/peterhinch/micropython-async/blob/master/v3/docs/TUTORIAL.md),
-  the most thorough guide there is
+- [Peter Hinch's asyncio tutorial for MicroPython](https://github.com/peterhinch/micropython-async/blob/master/v3/docs/TUTORIAL.md)
 
 
 ---
@@ -271,7 +274,7 @@ programs, called flows, in a browser by dragging nodes onto a canvas and wiring 
 
 Node-RED is popular for home automation and IoT. A typical flow might take sensor readings from MQTT, check them,
 store them in a database and send an alert when something is out of range. It has thousands of add-on nodes and a
-dashboard for building simple web UIs.
+dashboard for building web UIs.
 
 ## Where it runs
 
@@ -288,6 +291,8 @@ If you already use Node-RED, see [if you know Node-RED](../coming-from/node-red.
 
 ## More
 
+Further reading:
+
 - [Node-RED concepts](https://nodered.org/docs/user-guide/concepts)
 - [Node-RED getting started](https://nodered.org/docs/getting-started/)
 
@@ -298,16 +303,16 @@ Source: https://docs.thingstudio.net/background/micropython/
 
 # MicroPython
 
-[MicroPython](https://micropython.org/) is a version of Python 3 made to run on microcontrollers. It fits in a few
-hundred kilobytes and runs directly on the chip, with no operating system underneath.
+[MicroPython](https://micropython.org/) is a version of Python 3 made to run on microcontrollers. It fits in
+hundreds of kilobytes and runs directly on the chip, with no operating system underneath.
 
 ## How it works
 
 You flash MicroPython onto the board once, like any firmware. After that the board runs Python files from its own
-small filesystem, and gives you a Python prompt, the REPL, over USB. You can type Python at the board and see the
+filesystem, and gives you a Python prompt, the REPL, over USB. You can type Python at the board and see the
 result at once.
 
-MicroPython keeps most of the Python language and a small part of its standard library. It adds modules for
+MicroPython keeps most of the Python language and part of its standard library. It adds modules for
 hardware: `machine` for pins, I2C, SPI and PWM, `network` for WiFi, and `asyncio` for running several tasks at once.
 
 ```python
@@ -318,12 +323,12 @@ led.on()
 
 ## The limits
 
-Microcontrollers are small. A board typically has a few hundred kilobytes of RAM, and MicroPython itself uses some
+Microcontrollers are limited. A board typically has hundreds of kilobytes of RAM, and MicroPython itself uses some
 of it. Python is also much slower than C, though fast enough for most sensing, switching and networking jobs.
 
 ## Where Thingstudio fits
 
-Thingstudio runs on top of MicroPython. It installs a small runtime onto the board, and turns each flow you deploy
+Thingstudio runs on top of MicroPython. It installs a runtime onto the board, and turns each flow you deploy
 into MicroPython code. The function node runs your own MicroPython. See
 [installing MicroPython](../installing-micropython.md) to get it onto your board.
 
@@ -331,6 +336,8 @@ If you already use MicroPython, see [if you know MicroPython](../coming-from/mic
 uses your board.
 
 ## More
+
+Further reading:
 
 - [MicroPython documentation](https://docs.micropython.org/en/latest/)
 - [MicroPython quick reference for ESP32](https://docs.micropython.org/en/latest/esp32/quickref.html) and
@@ -368,7 +375,7 @@ Much else is the same. `return msg` passes the message on, and returning nothing
 to several outputs. `context.get()`/`context.set()` and `flow.get()`/`flow.set()` work as you'd expect. There's no
 `global`, since there's only one flow. See the [function node](../nodes/function.md).
 
-Don't use `time.sleep()` in a function node. It stops the whole board, not just that node. Use await asyncio.sleep() or a `delay` node
+Don't use `time.sleep()` in a function node. It stops the whole board, not only that node. Use `await asyncio.sleep()` or a `delay` node
 instead. See [event-driven programming](../background/event-driven.md).
 
 ## Messages
@@ -392,7 +399,7 @@ saying which node, and the rest of the flow keeps running. See [debugging](../de
 
 ## Using both
 
-Node-RED is still the better place for dashboards, databases and cloud services. A common setup is Thingstudio
+Node-RED is the better place for dashboards, databases and cloud services. A common setup is Thingstudio
 boards publishing over MQTT to a Node-RED flow on a server or Raspberry Pi.
 
 Next: [getting started](../getting-started.md).
@@ -409,7 +416,7 @@ and a way to write programs as flows, while the REPL and your own Python stay wi
 
 ## What goes on the board
 
-**Tools → Install runtime…** copies a small set of Python files onto the board's filesystem, including a `main.py` that
+**Tools → Install runtime…** copies a set of Python files onto the board's filesystem, including a `main.py` that
 starts the Thingstudio runtime at boot. The runtime listens on USB or WiFi for the editor, and runs the last flow
 you deployed.
 
@@ -433,7 +440,7 @@ The board saves the flow and runs it again after a restart.
 
 ## The REPL
 
-The box under the editor's console runs Python on the board while the flow runs, for quick checks like
+The command box under the editor's console runs Python on the board while the flow runs, for checks like
 `gc.mem_free()`. For the full `>>>` prompt, click **Stop flow & open prompt**. To use Thonny or `mpremote`, click
 **Disconnect** first. See [commands and the Python prompt](../debugging.md#commands-and-the-python-prompt).
 
@@ -474,7 +481,7 @@ safely in the main program, not inside the interrupt, so you can do anything the
 
 ## No compile-and-flash cycle
 
-The firmware stays the same. Deploying a flow sends a small compiled file to the board, over USB or WiFi, and the
+The firmware stays the same. Deploying a flow sends a compiled file to the board, over USB or WiFi, and the
 board swaps it in. Changing a flow and trying it again takes seconds.
 
 ## What stays the same
@@ -492,7 +499,7 @@ Source: https://docs.thingstudio.net/getting-started/
 
 # Getting started
 
-From a new board to a blinking LED:
+From a new board to a blinking LED, in six steps:
 
 1. **[Install Thingstudio](#step-1-install-thingstudio)** on your computer.
 2. **[Tour the editor](editor-tour.md)**: what each part of the screen does.
@@ -519,7 +526,7 @@ There are two ways to install it. Both give you the same program.
 
 Download the package for your computer from the
 [releases page](https://github.com/mkarliner/ThingStudio/releases/latest).
-[Installation details](installation-details.md#packages) lists which package is which.
+[Installation details](installation-details.md#packages) lists the package for each platform.
 
 **macOS and Linux:** unpack it with `tar -xzf thingstudio-VERSION-PLATFORM.tar.gz`. Thingstudio is the
 `thingstudio` file in the unpacked folder.
@@ -530,7 +537,8 @@ package isn't signed.
 
 ### Run the installer script
 
-The installer script is piped from the download straight into a shell. To read it first, download
+The commands below download the installer script and pipe it straight into a shell. To read the script before
+running it, download
 [install.sh](https://github.com/mkarliner/ThingStudio/releases/latest/download/install.sh) or
 [install.ps1](https://github.com/mkarliner/ThingStudio/releases/latest/download/install.ps1) and open it in a text
 editor.
@@ -541,10 +549,10 @@ editor.
 curl -fsSL https://github.com/mkarliner/ThingStudio/releases/latest/download/install.sh | sh
 ```
 
-If it says `~/.local/bin` isn't on your PATH, run the line it prints, then open a new terminal.
+If the installer says `~/.local/bin` isn't on your PATH, run the command it prints, then open a new terminal.
 
-On Linux, your account must be in the `dialout` group (`uucp` on Arch) to use USB boards. The installer says so if
-it isn't, and gives the command to fix it.
+On Linux, your account must be in the `dialout` group (`uucp` on Arch) to use USB boards. The installer reports this
+if your account isn't in the group, and prints the command to fix it.
 
 **Windows:** open PowerShell from the Start menu and run this. It doesn't need administrator rights.
 
@@ -579,7 +587,8 @@ Source: https://docs.thingstudio.net/editor-tour/
 
 # Step 2: Tour the editor
 
-Start Thingstudio if it isn't running: see [step 1](getting-started.md#start-thingstudio).
+A tour of the editor, naming each part of the screen. Start Thingstudio if it isn't running: see
+[step 1](getting-started.md#start-thingstudio).
 
 <figure markdown="span">
   [![The Thingstudio editor with each part labelled](images/editor-parts.png)](images/editor-parts.png)<figcaption>The parts of the editor. Click to see it full size.</figcaption>
@@ -609,7 +618,8 @@ name, or in **General**.
 
 ## Canvas
 
-**Build the flow here.** **Sheets of this flow:** the tabs above the canvas spread one flow across several sheets.
+The canvas is where you build the flow. The tabs above it, **Sheets of this flow**, spread one flow across several
+sheets.
 
 The canvas works like this:
 
@@ -631,8 +641,8 @@ The right-hand side holds the selected node's settings and what the board sends 
   **Info** to add routine reports such as memory, **Debug** for everything.
 - **Run Python on the board:** type a line of Python and click **Send**. It runs on the board alongside the flow.
   See [Commands and the Python prompt](debugging.md#commands-and-the-python-prompt).
-- **Escape to REPL:** **Stop flow & open prompt** stops the flow and gives you MicroPython's own `>>>` prompt (the
-  REPL). **Restart Thingstudio** starts the flow again.
+- **Escape to REPL:** **Stop flow & open prompt** stops the flow and gives you MicroPython's own `>>>` prompt.
+  **Restart Thingstudio** starts the flow again.
 
 [Editor in depth](working-in-the-editor.md) covers wire types, node labels, presets, config nodes and node status.
 
@@ -647,8 +657,8 @@ Source: https://docs.thingstudio.net/installing-micropython/
 
 # Step 3: Install MicroPython
 
-Thingstudio runs on top of [MicroPython](background/micropython.md), a version of Python for microcontrollers, so
-the board needs it first. You install it once per board.
+Thingstudio runs on top of [MicroPython](background/micropython.md), so the board needs it first. You install it once
+per board.
 
 A new board usually doesn't have MicroPython. If yours already has it, or you're not sure, go to
 [step 4](connecting.md). If MicroPython is missing, the console says so when you connect, and links back here.
@@ -715,8 +725,8 @@ a different port afterwards.
 
 ## Without a terminal: Thonny
 
-[Thonny](https://thonny.org) is a free Python editor that works with MicroPython boards and can install MicroPython
-for you. Open **Tools → Options → Interpreter** and use **Install or update MicroPython**.
+[Thonny](https://thonny.org) installs MicroPython on the board through a GUI. Open
+**Tools → Options → Interpreter** and use **Install or update MicroPython**.
 
 When it's done, close Thonny. Like esptool, it needs the board's port to itself.
 
@@ -740,7 +750,10 @@ Source: https://docs.thingstudio.net/connecting/
 
 # Step 4: Connect your board
 
-Start Thingstudio if it isn't running: see [step 1](getting-started.md#start-thingstudio).
+Connect the board over USB so the editor can talk to it. Start Thingstudio if it isn't running: see
+[step 1](getting-started.md#start-thingstudio).
+
+To connect:
 
 1. Plug the board in.
 2. Check the port list in the toolbar. When the editor opens it looks for boards, and selects yours if it's the only
@@ -761,7 +774,7 @@ No reply from the runtime. MicroPython but no Thingstudio runtime: Tools → Ins
 
 You install the runtime in the next step.
 
-If the console says nothing came back, or the board replied but not as MicroPython, go back to
+If the console says nothing came back, or the board replied but isn't running MicroPython, go back to
 [step 3: install MicroPython](installing-micropython.md). Other messages are explained in
 [Board won't connect](debugging.md#board-wont-connect).
 
@@ -782,12 +795,11 @@ Source: https://docs.thingstudio.net/installing-runtime/
 # Step 5: Install the runtime
 
 The runtime is the part of Thingstudio that runs on the board: it receives your flows and runs them. Each board
-needs it once. Libraries that some nodes need are sent later, by Deploy, when a flow
-uses them.
+needs it once. Libraries that a flow's nodes need are installed later, by Deploy.
 
 1. Check the board's port is selected in the port list, as in [step 4](connecting.md).
-2. Choose **Tools → Install runtime…**. If you're connected, it disconnects first. The console shows progress; set
-   its **Show** menu to **Info** to see each file.
+2. Choose **Tools → Install runtime…**. If you're connected, Thingstudio disconnects first. The console shows
+   progress; set the console's **Show** menu to **Info** to see each file.
 3. If the board is busy and doesn't stop, the console asks you to press its reset button. On a board without one,
    such as a Pico, unplug it and plug it back in.
 4. The board restarts when the install is done. Click **Connect**. If the port has gone from the list, click **⟳**
@@ -819,8 +831,8 @@ Your board should be connected, with the runtime installed: steps [4](connecting
 
 ## Find your LED's pin
 
-Many boards have an LED wired to a GPIO pin. To find it, click **Pins…** next to the **Board** menu. Pins the board
-names, such as `LED`, are listed first. [Supported hardware](supported-hardware.md) lists the boards Thingstudio
+Many boards have an LED wired to a GPIO pin. To find it, click **Pins…** next to the **Board** menu. Pins that the
+board names, such as `LED`, are listed first. [Supported hardware](supported-hardware.md) lists the boards Thingstudio
 has definitions for. For any other board, check its documentation.
 
 The Pico W and Pico 2 W LEDs are wired through the WiFi chip, not a GPIO pin, so `gpio out` can't reach them. On
@@ -865,14 +877,13 @@ The **timer** sends a message every 500 ms. Its payload is a count: 1, 2, 3, and
 **gpio out** turns the pin on for any payload that isn't zero. Wired straight to the timer, the LED would switch on
 and stay on.
 
-The **function** node turns the count into 1, 0, 1, 0: the remainder after dividing by 2. That gives on, off, on,
-off.
+The **function** node turns the count into 1, 0, 1, 0 with `% 2`. That gives on, off, on, off.
 
 ## Try these changes
 
 Each change below edits the flow you built. Deploy after each one.
 
-- **Change the timing.** Set the timer's **interval (ms)** to `100` for a fast flicker, or `2000` for a slow blink.
+- **Change the timing.** Set the timer's **interval (ms)** to `100`, or `2000` for a slower blink.
 - **Read the pin instead of counting.** Replace the function's code with this, using your LED's GPIO number in
   place of `2`. Each message sets the LED to the opposite of what the pin reads now.
 
@@ -900,8 +911,9 @@ the hardware, or in `context`.
 
 Each symptom below has its own fix:
 
-- **Deploy is greyed out:** you aren't connected, so click **Connect**. Deploy is also greyed out after a deploy
-  until you change the flow, while the flow is stopped at the Python prompt, and while the board restarts.
+- **Deploy is grayed out:** you aren't connected, so click **Connect**. Deploy is also grayed out after a deploy
+  until you change the flow, while the flow is stopped at the Python prompt (**Stop flow & open prompt**), and while
+  the board restarts.
 - **Compile fails:** usually a mistake in the function node's code, such as a missing quote or wrong
   indentation. The console shows the Python error in red, with its line, and highlights the node. Fix the code and
   deploy again.
@@ -921,7 +933,7 @@ Source: https://docs.thingstudio.net/installation-details/
 # Installation details
 
 How Thingstudio is packaged, where it puts its files, how to upgrade and remove it, and how to build it from source.
-[Getting started](getting-started.md#step-1-install-thingstudio) has the quick version.
+[Getting started](getting-started.md#step-1-install-thingstudio) has the install steps.
 
 ## Packages
 
@@ -971,11 +983,11 @@ Upgrading and removing never touch `~/.thingstudio`, or your flows, which are sa
 For working on Thingstudio itself. You need Python 3.10 or later, Node.js 22.12 or later, and `make`. On a Mac,
 `make` comes with the Xcode command line tools (`xcode-select --install`).
 
-In the repository folder, run `make`. This builds the editor and these docs, installs Thingstudio into a `.venv`
+In the repository folder, run `make`. This builds the editor and the user guide, installs Thingstudio into a `.venv`
 folder, and puts the `thingstudio-backend` command on your PATH. Run `make` again after updating the repository. It
 only rebuilds what changed. If your `python3` is older than 3.10, name a newer one: `make PYTHON=python3.12`.
 
-Start it with `thingstudio-backend`, or `make run`. On a Mac, start it from Apple's **Terminal** app: macOS blocks
+Start it with `thingstudio-backend`, or `make run`. On a Mac, start it from Apple's **Terminal** app. macOS blocks
 WiFi connections from a copy run from source in other terminals, such as iTerm.
 
 
@@ -988,18 +1000,21 @@ Source: https://docs.thingstudio.net/sensor-display/
 Build a three-page touch display: the room's temperature, humidity and pressure with their recent history, and a
 clock. The flow also publishes the readings over MQTT.
 
-The finished flow is
-[`test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json`](https://github.com/mkarliner/ThingStudio/blob/main/test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json)
-in the Thingstudio repository. Download it and open it with **File → Open…** to see it, then pick your own WiFi
-and MQTT credentials in its config nodes. Or follow the steps below to build it.
+The finished flow is in the Thingstudio repository:
+[`test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json`](https://github.com/mkarliner/ThingStudio/blob/main/test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json).
+Open it in one of two ways:
+
+- **Open the finished flow.** Download it and open it with **File → Open…**, then set your own WiFi and MQTT
+  credentials in its config nodes.
+- **Build it yourself.** Follow the steps below.
 
 ## What you need
 
 The steps use this hardware and setup:
 
 - A Freenove ESP32-S3 4.0" touch display (FNK0104S), with MicroPython and the runtime installed
-  ([steps 3 to 5](installing-micropython.md) of Getting started). Pick it by hand in the **Board** menu. Other
-  boards work too; the pins below are this board's.
+  ([Getting started steps 3 to 5](installing-micropython.md)). Pick it by hand in the **Board**
+  menu. Other boards work too; the pins below are this board's.
 - A BME280 sensor board. A BMP280 also works, without humidity. Wire it to 3V3, GND, **SCL 15** and **SDA 16**,
   the touch panel's I2C bus.
 - A WiFi network for the clock and MQTT, and an MQTT broker. See [Connecting over WiFi](wifi-connection.md).
@@ -1111,8 +1126,8 @@ pass, and the clock starts once the board has the time.
 
 Each symptom below has its own fix:
 
-- **The picture is scrambled:** the gui screen's and display spi's width and height must be the panel's own size,
-  `320` and `480`, even when the picture is turned. Deploy checks this and says so.
+- **The picture is scrambled:** the **width** and **height** on both the gui screen and the display spi must be the
+  panel's own size, `320` and `480`, even when the picture is turned. Deploy checks this and says so.
 - **Touches land in the wrong place:** see [Touch panels](nodes/touch-panel.md).
 - **No readings:** check the wiring and the address (`0x76` or `0x77`), and test with a debug node.
 - **The clock stays at `--`:** the board has no WiFi, or can't reach the NTP server. It tries again every 30
@@ -1126,6 +1141,8 @@ Each symptom below has its own fix:
 Source: https://docs.thingstudio.net/working-in-the-editor/
 
 # Editor in depth
+
+How the editor's wiring, node labels, presets, config nodes and node status work.
 
 ## Wiring
 
@@ -1142,7 +1159,8 @@ types that don't fit. What each input type accepts:
 | `bytes` | `bytes`, `any` |
 
 A `string` that isn't a number fails on the board when it reaches a `number` or `int` input, with a `NODE_ERROR`.
-An `any` output, such as a [function](nodes/function.md) node's, connects only to `any`, `bool` and `bytes` inputs.
+An `any` output, such as the output of a [function](nodes/function.md) node, connects only to `any`, `bool` and
+`bytes` inputs.
 
 An input can take any number of wires. The node runs once for each message that arrives, whichever wire it came
 on. An output can feed any number of inputs.
@@ -1192,13 +1210,13 @@ change it on one and it changes on all. A flow doesn't need a `wifi status` node
 
 ## Node status
 
-Some nodes show a coloured dot and a line of text under the node while the editor is connected to the board:
+Some nodes show a colored dot and a line of text under the node while the editor is connected to the board:
 
 | Dot | Meaning |
 | --- | --- |
 | Green | connected |
 | Amber | connecting |
-| Grey | disconnected |
+| Gray | disconnected |
 | Red | error |
 
 The dot shows what the board reports, not the editor's guess. It appears once the running flow first reports, and
@@ -1219,23 +1237,48 @@ Source: https://docs.thingstudio.net/flow-lifecycle/
 
 # Flow lifecycle
 
+How a flow is saved, opened, deployed and disconnected.
+
 ## Save and open
 
-Flows save to a file you choose, via your browser's own save dialog — no backend needed for this part. **File → Save…** writes the current canvas — node types and properties, wiring, canvas layout, and config nodes, each kept in its own section — to a `.flow.json` file wherever you point it, so it can live inside a project's git repo like any other file you're tracking.
+Flows save to a file you choose, via your browser's own save dialog. **File → Save…** writes the current canvas —
+node types and properties, wiring, canvas layout, and config nodes, each kept in its own section — to a `.flow.json`
+file wherever you point it, so it can live inside a project's git repo like any other file you're tracking.
 
-**File → Open…** opens the matching native dialog to load one back, canvas layout included. There's no in-editor list of saved flows and no delete button — the file lives wherever you saved it, so browsing and deleting it is your OS's/git's job, the same as any other document.
+**File → Open…** opens the matching native dialog to load one back, canvas layout included. Thingstudio keeps no
+list of saved flows; the file lives wherever you saved it, so browsing and deleting it is your OS's or git's job,
+the same as any other document.
 
-**The flow name** field is saved inside the file itself and is sent with every deploy — so a connected board's identity is visible in the console rather than just an opaque deploy id. It also suggests a filename for the save dialog (spaces and punctuation become dashes), but you can type over that suggestion freely; nothing enforces a match between the two.
+**The flow name** field is saved inside the file itself and is sent with every deploy, so a connected board's
+identity is visible in the console instead of a bare deployment id. It also suggests a filename for the save dialog
+(spaces and punctuation become dashes), but you can type over that suggestion freely; nothing enforces a match
+between the two.
 
-In Chrome or Edge this is the real OS file dialog each time — Save and Open don't remember the last file you picked, so you choose a target on every save (the browser's own dialog handles confirming an overwrite if you pick a file that already exists). Safari and Firefox don't support this file-picker API at all, so there **File → Save…** falls back to a plain browser download and **File → Open…** to a plain file-upload picker.
+In Chrome or Edge this is the real OS file dialog each time — Save and Open don't remember the last file you picked,
+so you choose a target on every save (the browser's own dialog handles confirming an overwrite if you pick a file
+that already exists). Safari and Firefox don't support this file-picker API, so there **File → Save…** falls back to
+a plain browser download and **File → Open…** to a plain file-upload picker.
 
-Custom node packages and saved credentials (see [Editor in depth](working-in-the-editor.md#config-nodes)) are the two things that still live on the backend, in `~/.thingstudio/custom-nodes/` and `~/.thingstudio/credentials/`. They're shared across flows rather than tied to one project, unlike a flow itself — a saved credential referenced by name from a config node never gets written into the `.flow.json` file.
+Custom node packages and saved credentials live in `~/.thingstudio/custom-nodes/` and `~/.thingstudio/credentials/`.
+They're shared across flows rather than tied to one project, unlike a flow itself — a saved credential referenced by
+name from a config node is never written into the `.flow.json` file. See
+[The Thingstudio folder](thingstudio-folder.md).
 
 ## Deploy
 
-**Compile → Deploy** compiles the current canvas to MicroPython bytecode and sends it to the connected board, replacing whatever flow is currently running there.
+**Compile → Deploy** compiles the current canvas to MicroPython bytecode and sends it to the connected board,
+replacing whatever flow is currently running there.
 
-A successful deploy shows a confirmation in the console and the new flow starts running immediately. A failed one shows a specific error — a compile error (something in the flow itself, like a missing required property), a space error (the compiled flow doesn't fit in the board's available flash/RAM), or a library error (see below). A failed deploy leaves the board's current flow running. The button grays out right after a successful deploy — it means the board is already running exactly what's on the canvas — and re-enables the moment you change anything (a property, a node, a wire). A failed deploy leaves it enabled so you can fix the problem and retry immediately.
+A successful deploy shows a confirmation in the console and the new flow starts running immediately. A failed deploy
+leaves the board's current flow running and shows a specific error:
+
+- a compile error — something in the flow itself, such as a missing required property
+- a space error — the compiled flow doesn't fit in the board's available flash/RAM
+- a library error — see below
+
+After a successful deploy the button grays out: the board is already running exactly what's on the canvas. It
+re-enables the moment you change anything (a property, a node, a wire). A failed deploy leaves it enabled so you can
+fix the problem and retry.
 
 ### Libraries
 
@@ -1276,8 +1319,8 @@ choose (see [Flow lifecycle](flow-lifecycle.md#save-and-open)).
 | `boards/` | Board definitions | Yes |
 | `processors/` | Processor definitions | Yes |
 
-Every file is plain JSON, except the Python half of a custom node. The editor reads these folders through the
-Thingstudio backend, so the direct (WebSerial-only) connection mode can't use them.
+Every file is plain JSON, except the `.node.py` file of a custom node. The editor reads these folders through the
+Thingstudio backend, so they aren't available when the editor talks to the board directly over USB.
 
 ## Credentials
 
@@ -1341,7 +1384,7 @@ been deployed and run on that hardware. Pin details for boards and processors ar
 | Raspberry Pi Pico W | RP2040 | Yes, including WiFi |
 | Raspberry Pi Pico 2 | RP2350 | Yes |
 | LOLIN S2 Mini | ESP32-S2 | Yes |
-| CYD (ESP32-2432S028, ST7789) | ESP32 | Yes, with the display. Touch, SD card, RGB LED and speaker not yet. |
+| CYD (ESP32-2432S028, ST7789) | ESP32 | Yes, display only. |
 | Freenove ESP32-S3 Display 4.0" (FNK0104S) | ESP32-S3 | Yes, with the display and touch |
 
 ## Processors without a board definition
@@ -1364,7 +1407,7 @@ Any board with one of these processors can be used by picking the processor from
 | --- | --- | --- | --- |
 | ST7789 | 240x240, 135x240, 240x320 | [display spi](nodes/display-spi.md) | Yes, on the CYD |
 | ST7796 | 320x480 | [display spi](nodes/display-spi.md) | Yes, on the Freenove ESP32-S3 4.0" |
-| SSD1306 (I2C only) | 128x64, or set width and height | [display i2c](nodes/display-i2c.md) | Not yet confirmed |
+| SSD1306 (I2C only) | 128x64, or set width and height | [display i2c](nodes/display-i2c.md) | Untested |
 
 ## Touch panels
 
@@ -1377,7 +1420,7 @@ Any board with one of these processors can be used by picking the processor from
 | Chip | Node | Tested |
 | --- | --- | --- |
 | BME280 | [bme280](nodes/bme280.md) | Yes, on a Pico |
-| BMP280 | [bme280](nodes/bme280.md) | Not yet confirmed |
+| BMP280 | [bme280](nodes/bme280.md) | Untested |
 
 Other I2C devices can be read with a [function](nodes/function.md) node and the chip's datasheet.
 
@@ -1409,6 +1452,8 @@ Source: https://docs.thingstudio.net/boards/
 
 # Boards and processors
 
+Each board and processor has a definition file that says which pins a flow may use. This page covers picking a board, seeing its pins, what gets checked, and writing your own definition files.
+
 Thingstudio checks every pin in a flow against the board the flow is for. If a pin doesn't exist on that board, or using it would crash the board, the compile stops and says why.
 
 Each board has a definition file, and so does each processor. Thingstudio comes with definitions for the boards and processors below. You can [change them or add your own](#your-definition-files).
@@ -1426,9 +1471,13 @@ If no board is connected and none is picked, pins are only checked against the r
 ## Seeing a board's pins
 
 Click **Pins…** next to the **Board** menu. It opens a page, in its own tab, for the board or processor picked
-there. Pins the board names, such as its LED, come first. For boards whose definition has a `header`, such as the
-Pico family, the board's physical pins come next, laid out like the board, with power and ground marked. Then every
-pin, with whether it's free, reserved or best avoided, and why. Then which pins each SPI and I2C bus can use.
+there. The page lists, in order:
+
+- the pins the board names, such as its LED
+- for boards whose definition has a `header`, such as the Pico family, the physical pins, laid out like the board,
+  with power and ground marked
+- every pin, with whether it's free, reserved or best avoided, and why
+- which pins each SPI and I2C bus can use
 
 The page is read from the definition files each time you click. After changing a file, click **Pins…** again.
 
@@ -1465,7 +1514,7 @@ In the properties panel, a pin field shows the board's name for that pin, such a
 | Raspberry Pi Pico 2 | RP2350 | GPIO 0–29. LED on GPIO 25. |
 | LOLIN S2 Mini | ESP32-S2 | LED on GPIO 15, button on GPIO 0 |
 | CYD (ESP32-2432S028, ST7789) | ESP32 | Pick by hand. Display, touch, SD, RGB LED and speaker pins are labelled. |
-| Freenove ESP32-S3 Display 4.0" (FNK0104S, ST7796) | ESP32-S3 | Pick by hand. Display and touch pins are labelled. 320x480, SPI bus 1. Rotation 1 is portrait. For landscape, set the display's `orientation` to 90 (or 270 for the other way up) and keep the screen and display at 320x480; the older raw codes still work without an orientation: 4 is landscape with USB on the right, 7 with USB on the left (then size the screen 480x320). Display and touch (FT6336U) work. |
+| Freenove ESP32-S3 Display 4.0" (FNK0104S, ST7796) | ESP32-S3 | Pick by hand. Display and touch pins are labelled. 320x480, SPI bus 1. Rotation 1 is portrait. For landscape, set the display's `orientation` to 90 (or 270 for the other way up) and keep the screen and display at 320x480. Display and touch (FT6336U) work. |
 
 ## Built-in processors
 
@@ -1488,8 +1537,8 @@ The definition files list every pin to avoid, with the reason.
 
 Definition files live in `~/.thingstudio/boards/` and `~/.thingstudio/processors/`. When Thingstudio starts, it copies in any built-in file that's missing, so you can read and edit them there.
 
-To change a built-in board, edit its file. To get the original back, delete the file and restart Thingstudio. A newer version of Thingstudio doesn't update a file you already have. Delete it to get the new one.
-For example, the built-in Pico files now say `"wifi": false`; an older copy without that line still offers WiFi.
+To change a built-in board, edit its file. To get the original back, delete the file and restart Thingstudio. A newer
+version of Thingstudio doesn't update a file you already have, so delete a file to pick up its new built-in version.
 
 Thingstudio reads these files when the editor starts, when you connect, and when you deploy. If a file has a mistake, it isn't loaded and the built-in is used instead. The console says what's wrong, and the Board menu lists the file under **Invalid files**.
 
@@ -1507,6 +1556,8 @@ Save a JSON file in `~/.thingstudio/boards/`. The file name, without `.json`, is
   "notes": "Hand-built, rev 2."
 }
 ```
+
+The fields are:
 
 | Field | Meaning |
 | --- | --- |
@@ -1532,6 +1583,8 @@ To find the name MicroPython reports, connect the board and look for `chipType` 
 
 Save a JSON file in `~/.thingstudio/processors/`, named the same way as a board file. The built-in files in that folder are good examples.
 
+The fields are:
+
 | Field | Meaning |
 | --- | --- |
 | `name` | Name shown in the Board menu. Required. |
@@ -1550,12 +1603,12 @@ Source: https://docs.thingstudio.net/wifi-connection/
 
 # Connecting over WiFi
 
-Once a board is set up, the editor can reach it over WiFi instead of USB. Deploy, the console, Check status and
-inject clicks all work the same way.
+The editor can connect to a board over WiFi instead of USB. Once connected over WiFi, everything works the same as
+over USB: deploy, the console, **Tools → Check status**, and clicking an inject node.
 
 ## What you need
 
-- A board with WiFi, running Thingstudio runtime 3.0.0 or later. Plain Raspberry Pi Pico and Pico 2 boards have no
+- A board with WiFi and the Thingstudio runtime. Plain Raspberry Pi Pico and Pico 2 boards have no
   WiFi.
 - A flow on the board that uses WiFi and has joined your network. The board is only reachable while that flow is
   running. It starts again by itself after a reset.
@@ -1566,7 +1619,7 @@ inject clicks all work the same way.
 ## Set the password and name
 
 1. Connect the board over USB.
-2. Choose **Tools → Board settings…**. The top line names the board it will change: its chip, USB port and current name.
+2. Choose **Tools → Board settings…**. The top line names the board these settings apply to: its chip, USB port and current name.
 3. Enter a network name and a password of 8 to 64 characters, then click **Save to board**.
 
 The name and password are stored on the board, not in the flow. The editor also remembers the password on this
@@ -1601,11 +1654,11 @@ A board with no password is listed as **no password set**. It won't accept a WiF
 The console says what went wrong:
 
 - **No route to host (Mac):** macOS is blocking local network access. The first time Thingstudio reaches for the
-  network, macOS asks whether it may find devices on your local network: choose **Allow**, then click
-  **Connect** again (the attempt that raised the question can fail). If you chose **Don't Allow**, turn
-  **thingstudio-python** on in System Settings > Privacy & Security > Local Network, then restart Thingstudio.
-  Running from source (`thingstudio-backend`), macOS may block it without asking: start it from Apple's
-  **Terminal** app instead, which macOS always allows.
+  network, macOS asks whether it may find devices on your local network; choose **Allow**, then click **Connect**
+  again (the attempt that raised the question can fail). If you chose **Don't Allow**, turn **thingstudio-python**
+  on in System Settings → Privacy & Security → Local Network, then restart Thingstudio. When running from source
+  (`thingstudio-backend`), macOS may block it without asking: start it from Apple's **Terminal** app instead, which
+  macOS always allows.
 - **No answer:** check the board is on, its flow has joined WiFi, and this computer is on the
   same network. If a `.local` name doesn't work, try the IP address, shown in the console when you connect over USB.
 - **Wrong password:** the editor asks again. To change it, connect over USB and use **Tools → Board settings…**.
@@ -1727,6 +1780,8 @@ See [flows, nodes and messages](../background/flows-and-nodes.md) for how they f
 
 ## General
 
+Nodes that don't need a network or hardware:
+
 | Node | Kind | What it does |
 | --- | --- | --- |
 | [inject](inject.md) | source | Sends one message with a fixed payload when you click it in the editor. |
@@ -1783,7 +1838,7 @@ Some settings are set once and shared by the nodes that use them:
 
 ## Something missing?
 
-A few lines in a [function](function.md) node cover most gaps: a comparison, a sum, reading an ADC pin. For
+A [function](function.md) node covers most gaps: a comparison, a sum, reading an ADC pin. For
 something you'll use again, [write a custom node](../custom-nodes.md).
 
 
@@ -1818,10 +1873,10 @@ Sends one message with a fixed payload each time the flow starts.
 - **payload type** — `bool`, `number`, `string`, or `start reason`.
 - **value** — the fixed value to send, matching the chosen type. Not used with `start reason`.
 
-## Output
+## Wiring
 
-Every message has a `reason` field saying why the flow started. With payload type `start reason`,
-the payload is that same string.
+**Output** — the fixed value, with a `reason` field saying why the flow started. With payload type
+`start reason`, the payload is that same string.
 
 | reason | the flow started because |
 | --- | --- |
@@ -1834,7 +1889,7 @@ the payload is that same string.
 | `unknown` | the board can't tell |
 
 Not every board reports every reason. ESP32 boards report the reset button as `power_on`, because on those
-chips the button cuts power to the core. A board running a runtime older than 5.1.0 always sends `unknown`.
+chips the button cuts power to the core.
 
 ## Behavior
 
@@ -1869,29 +1924,17 @@ Source: https://docs.thingstudio.net/nodes/function/
 
 # function
 
-Runs your own MicroPython on each message. The most flexible node in the library — anything not covered by a dedicated node type usually belongs here.
+Runs your own MicroPython on each message. Use it for anything a dedicated node type doesn't cover.
 
 ## Properties
 
-- **code** — the function body, run once per incoming message. `msg` is a dict; `msg['payload']` is what you'll usually read and write. Return the (possibly modified) message to pass it on, or nothing to stop it there.
+- **code** — the function body, run once per incoming message. `msg` is a dict; `msg['payload']` is what you'll
+  usually read and write. Return the (possibly modified) message to pass it on, or nothing to stop it there.
+- **outputs** — how many outputs the node has (`outputCount` in the flow file, up to 10).
 
-## Context and flow variables
+## Wiring
 
-Two ways to keep state across messages, both available as plain objects inside your code:
-
-- **`context`** — private to this one `function` node. Use it for a counter or running total only this node needs.
-- **`flow`** — shared across the whole flow. `flow.set('name', value)` / `flow.get('name')` works from any function node, and reads/writes the same store a `variable_get`/`variable_set` node uses by name.
-
-```python
-count = context.get('count', 0) + 1
-context.set('count', count)
-msg['payload'] = count
-return msg
-```
-
-## Multiple outputs
-
-A function node can have more than one output — set **outputs** in its properties (`outputCount` in the flow file, up to 10). Return an array to route to specific outputs, Node-RED style:
+One input, any message. With more than one output, return an array to route to specific outputs, Node-RED style:
 
 ```python
 if msg['payload'] > 100:
@@ -1901,9 +1944,28 @@ else:
 ```
 
 - `None` in a slot sends nothing out that output.
-- A plain `return msg` (no array) still works, and always targets output 1.
-- A slot holding a list of messages sends all of them out that one output, in order: `return [[msg1, msg2], None]`.
-- Returning fewer elements than the node has outputs leaves the missing ones as `None`; returning more just ignores the extras.
+- A plain `return msg` (no array) always targets output 1.
+- A slot holding a list of messages sends all of them out that one output, in order:
+  `return [[msg1, msg2], None]`.
+- Returning fewer elements than the node has outputs leaves the missing ones as `None`; returning more ignores the
+  extras.
+
+## Behavior
+
+### Context and flow variables
+
+Two ways to keep state across messages, both available as plain objects inside your code:
+
+- **`context`** — private to this one `function` node. Use it for a counter or running total only this node needs.
+- **`flow`** — shared across the whole flow. `flow.set('name', value)` / `flow.get('name')` works from any function
+  node, and reads/writes the same store a `variable_get`/`variable_set` node uses by name.
+
+```python
+count = context.get('count', 0) + 1
+context.set('count', count)
+msg['payload'] = count
+return msg
+```
 
 
 ---
@@ -1920,7 +1982,10 @@ Passes a message through unchanged, after waiting a configured interval.
 
 ## Behavior
 
-**The wait blocks the message's own source, not just this one message.** A `timer` node ticking every 200ms feeding a `delay` of 5000ms will not keep ticking every 200ms once a message reaches the delay — the timer's next tick can't fire until the whole chain, including the delay, finishes. This isn't unique to `delay` (any slow node has the same effect on its own source), but `delay`'s entire job is waiting, so it's worth knowing up front rather than discovering it as a mysteriously slowing timer.
+**The wait blocks the message's own source, not only this one message.** A `timer` node ticking every 200ms feeding
+a `delay` of 5000ms stops ticking every 200ms once a message reaches the delay: the timer's next tick can't fire
+until the whole chain, including the delay, finishes. Any slow node has the same effect on its own source, but
+`delay`'s entire job is waiting, so it pays to know this up front.
 
 
 ---
@@ -1959,10 +2024,8 @@ the console.
 
 Everything resets when you deploy or the board restarts.
 
-## Example
-
-A temperature sensor read every second, into a `filter` in `deadband` mode with threshold `0.5`, into
-`mqtt publish`. The broker only hears about changes of half a degree or more.
+A temperature sensor read every second, into `filter` in `deadband` mode with threshold `0.5`, into
+`mqtt publish`, tells the broker only about changes of half a degree or more.
 
 
 ---
@@ -1974,15 +2037,6 @@ Source: https://docs.thingstudio.net/nodes/journal/
 Keeps the recent history of a number, as rows of average, minimum and maximum, the way RRDtool and Cacti do. Wire
 it to a [trend](gui.md#trend) to see the history, and to another journal for a longer time scale.
 
-## Wiring
-
-- **Input** — `msg.payload` is a number. `None` records a gap. A message that carries `min` and `max` (the
-  roll-up of another journal) is folded in with them, so a longer time scale keeps the spikes.
-- **Output 1, series** — sent each time a row is added. The payload is the journal itself, to wire to a trend. It is
-  the live history, not a copy, so it costs no memory per row.
-- **Output 2, roll-up** — sent every **rows per roll-up** rows: `payload` the average, `min`, `max`, and the input's
-  `topic`. Wire it to another journal, a readout or MQTT.
-
 ## Properties
 
 - **rows kept** — how many rows the history holds, 1 to 256. At 12 bytes a row, 156 rows is under 2 KB.
@@ -1993,18 +2047,27 @@ it to a [trend](gui.md#trend) to see the history, and to another journal for a l
   are gaps, the roll-up is a gap too (`payload` of `None`). Averages use the known rows only; a gap is never
   counted as zero.
 
+## Wiring
+
+- **Input** — `msg.payload` is a number. `None` records a gap. A message that carries `min` and `max` (the
+  roll-up of another journal) is folded in with them, so a longer time scale keeps the spikes.
+- **Output 1, series** — sent each time a row is added. The payload is the journal itself, to wire to a trend. It
+  is the live history, not a copy, so it costs no memory per row.
+- **Output 2, roll-up** — sent every **rows per roll-up** rows: `payload` the average, `min`, `max`, and the
+  input's `topic`. Wire it to another journal, a readout or MQTT.
+
 ## Behavior
 
 A gap is empty, never a copy of the last value. The history starts empty each time the flow starts.
 
 With **seconds per row** set, a row closes when a message arrives after its time is up, so a sensor that has gone
-quiet adds no gaps until it speaks again. Set the trend's **stale after** to dim it meanwhile. Choose a row longer than
-your sensor's interval (10 seconds for a reading every 5): a row that happens to catch no reading is a gap.
+quiet adds no gaps until it speaks again. Set the trend's **stale after** to dim it meanwhile. Choose a row longer
+than your sensor's interval (10 seconds for a reading every 5): a row that happens to catch no reading is a gap.
 
 A payload that isn't a number is dropped. The first time that happens, the node reports an error; the flow keeps
 running.
 
-## Example: minutes and hours
+### Cascading two journals
 
 A sensor reads every 5 seconds.
 
@@ -2027,8 +2090,8 @@ two [labels](gui.md) to make a clock page.
 
 ## Wiring
 
-- **Input** — any message; each one is a look at the clock. Use a timer of 1 second (or a few seconds if you show
-  no seconds).
+- **Input** — any message; each one is a look at the clock. Use a timer of 1 second, or longer if you show no
+  seconds.
 - **Output 1, time** — `payload` such as `14:05` (or `14:05:09`, or `2:05` in 12-hour). Sent only when the text changes.
 - **Output 2, date** — `payload` such as `Sat 10 Oct`. Sent when the day changes.
 
@@ -2056,7 +2119,7 @@ once. Boards whose firmware has no `ntptime` module report that on the node inst
 The `seg7` fonts (`font_seg748`, `font_seg764`, `font_seg796`) have only `0-9 : . -` and a space. On a 320-pixel-wide
 screen `font_seg764` fits `14:05` (221 px) and `font_seg748` fits `14:05:09` (254 px). `font_seg796` is for wider
 screens. The font is DSEG by Keshikan (SIL Open Font License 1.1); see
-[third-party licences](https://github.com/mkarliner/ThingStudio/blob/main/docs/third-party-licenses.md).
+[third-party licenses](https://github.com/mkarliner/ThingStudio/blob/main/docs/third-party-licenses.md).
 
 
 ---
@@ -2065,15 +2128,15 @@ Source: https://docs.thingstudio.net/nodes/debug/
 
 # debug
 
-Prints a message's payload to the device's console — the simplest way to see what's actually flowing through a wire.
+Prints a message's payload to the device's console — the way to see what's actually flowing through a wire.
 
 ## Properties
 
-- **full message** — off by default. Prints the whole message (topic, and any other fields a source node adds — for example `wifi_status`'s `ip`/`subnet`/`gateway`/`dns`/`rssi`) instead of just `payload`.
+- **full message** — off by default. Prints the whole message (topic, and any other fields a source node adds — for example `wifi status`'s `ip`/`subnet`/`gateway`/`dns`/`rssi`) instead of only `payload`.
 
 ## Behavior
 
-Output currently goes to the device's serial console (visible in the editor's console panel once connected), not a dedicated live-value inspector — that's planned but not built yet. For now, `debug` is the way to see a value without guessing.
+Output goes to the device's serial console, visible in the editor's console panel once connected. Use it to see a value flowing through a wire without guessing.
 
 
 ---
@@ -2099,7 +2162,7 @@ It emits when connection identity changes (connect/disconnect, or a change to `i
 
 Pick "unmanaged" on the WiFi config when you don't want this node issuing its own connect — either because something else already manages the connection, or because you want the device to learn its credentials on its own over the air. See [WiFi provisioning](../wifi-provisioning.md) for how that self-provisioning flow works, including the setup network's password and the reprovisioning-fallback option.
 
-If no connection is ever made, this node just reports disconnected, the same as any other failed connect — provisioning changes how the interface gets its credentials, not how wifi_status reports on them.
+If no connection is ever made, this node reports disconnected, the same as any other failed connect — provisioning changes how the interface gets its credentials, not how wifi_status reports on them.
 
 Shows a connection-status dot on the canvas (see [Editor in depth](../working-in-the-editor.md#node-status)) once connected to a device.
 
@@ -2120,15 +2183,15 @@ None.
 
 ## Behavior
 
-A `transform`, like `function` or `delay` — one input, one output, same `msg` in and out unchanged when the WiFi link is up. When the link is down, the message is dropped: nothing propagates past this node, the same way a `function` node's own `return null` stops a message.
+A `transform`, like `function` or `delay` — one input, one output, same `msg` in and out unchanged when the WiFi link is up. When the link is down, the message is dropped: nothing propagates past this node, the same way a `function` node's `return None` stops a message.
 
 Uses the flow's WiFi network (its **WiFi** field, shared by every WiFi node).
 
-This checks the WiFi station's live link state at the moment each message arrives, not a value read off `wifi_status`'s own output messages. `wifi_status` only emits when its connection identity changes, so a fast-firing source (a timer or sensor) gated off `wifi_status`'s wire could easily be checking stale state; this node reads the hardware directly instead, so it's always answering "is the link up right now."
+This checks the WiFi station's live link state at the moment each message arrives, not a value read off `wifi status`'s own output messages. `wifi status` only emits when its connection identity changes, so a fast-firing source (a timer or sensor) gated off `wifi status`'s wire could be checking stale state. This node reads the hardware directly, so it always answers "is the link up right now."
 
-The motivating case: a GPIO/timer/sensor source fires on its own schedule with no awareness of whether WiFi happens to be up. Put a `wifi_gate` between that source and whatever sends the result over the network, and messages that arrive while the link is down are quietly dropped instead of failing downstream (or queuing up for a retry a node like `http_request` might otherwise attempt).
+A GPIO, timer or sensor source fires on its own schedule with no awareness of whether WiFi is up. Put a `wifi gate` between that source and whatever sends the result over the network: messages that arrive while the link is down are dropped instead of failing downstream (or queuing for a retry a node like `http request` might otherwise attempt).
 
-This only checks the WiFi link itself — not whether a specific MQTT broker or HTTP server is reachable beyond that. `mqtt_publish`/`mqtt_subscribe` and `http_request` already handle their own connection lifecycle on top of a working WiFi link.
+This only checks the WiFi link itself — not whether a specific MQTT broker or HTTP server is reachable beyond that. `mqtt publish`, `mqtt subscribe` and `http request` already handle their own connection lifecycle on top of a working WiFi link.
 
 
 ---
@@ -2165,13 +2228,13 @@ Emits one message per incoming message on a subscribed MQTT topic.
 
 ## Behavior
 
-Uses the flow's WiFi network and its own broker config, same as `mqtt_publish`. An "unmanaged" WiFi config isn't accepted here, for the same reason.
+Uses the flow's WiFi network and its own broker config, same as **mqtt publish**. An "unmanaged" WiFi config isn't accepted here, for the same reason.
 
 The message carries the payload (decoded as text when possible, raw bytes otherwise), the actual topic it arrived on, and whether the broker sent it as a retained message.
 
-There's currently no guarantee that a subscription is fully confirmed before an `mqtt_publish` node on the same broker sends its first message — usually not an issue, but worth knowing if an early publish goes unheard by a subscriber that was still connecting.
+A subscription isn't guaranteed to be fully confirmed before an **mqtt publish** node on the same broker sends its first message. This is usually not an issue, but an early publish can go unheard by a subscriber that was still connecting.
 
-Shows a connection-status dot on the canvas (see [Editor in depth](../working-in-the-editor.md#node-status)) once connected to a device, same as `mqtt_publish`.
+Shows a connection-status dot on the canvas (see [Editor in depth](../working-in-the-editor.md#node-status)) once connected to a device, same as **mqtt publish**.
 
 
 ---
@@ -2203,33 +2266,32 @@ Source: https://docs.thingstudio.net/nodes/http-in/
 
 # http in
 
-Starts (or joins) a small HTTP server on the device and fires a message for each matching incoming request.
+Starts (or joins) an HTTP server on the device and fires a message for each matching incoming request.
 
 ## Properties
 
 - **port** — the TCP port to listen on (1–65535).
-- **path** — the exact path to match, e.g. `/status`. **No named parameters yet** (no `/user/:id` — see "Not yet supported" below).
+- **path** — the exact path to match, e.g. `/status`. No named parameters: `path` matches one exact string (no `/user/:id`).
 - **method** — `GET` or `POST`. No other methods are supported.
-- **response timeout (ms)** — how long to wait for a paired `http_response` node to actually reply before the request times out with a 500. Default 10000ms.
+- **response timeout (ms)** — how long to wait for a paired `http response` node to actually reply before the request times out with a 500. Default 10000ms.
 
 ## Behavior
 
-Any number of `http_in` nodes can share one `port` — each one claims its own exact `(method, path)` pair, and the device runs one shared server per port, routing each incoming request to whichever `http_in` node matches. Two `http_in` nodes claiming the same `(method, path)` on the same port is a compile error.
+Any number of `http in` nodes can share one `port` — each one claims its own exact `(method, path)` pair, and the device runs one shared server per port, routing each incoming request to whichever `http in` node matches. Two `http in` nodes claiming the same `(method, path)` on the same port is a compile error.
 
-Fires once per matching request. The message carries `req.method` and `req.path`; **`payload` is always `None`** — v1 doesn't parse the request body (see "Not yet supported" below). Pair every `http_in` with a downstream [`http_response`](http-response.md) node to actually answer the request — a request whose flow never reaches one gets a 500 automatically once the response timeout above elapses, rather than hanging the client forever.
+Fires once per matching request. The message carries `req.method` and `req.path`; **`payload` is always `None`** — the request body isn't parsed (see "Limitations" below). Pair every `http in` with a downstream [`http response`](http-response.md) node to actually answer the request — a request whose flow never reaches one gets a 500 automatically once the response timeout above elapses, rather than hanging the client forever.
 
 A second request to the *same* route while an earlier one is still being processed queues behind it (this node processes one request at a time). Requests to *different* routes — even on the same port — are handled concurrently.
 
 Uses the flow's WiFi network (its **WiFi** field, shared by every WiFi node).
 
-## Not yet supported
+## Limitations
 
-Two real gaps, not oversights — both tracked as follow-up work:
-
-- **No named path parameters.** Node-RED's `/user/:name` style, with the captured value showing up on `msg.req.params`, isn't implemented yet — `path` matches one exact string.
-- **No request body parsing.** `msg.payload` never reflects a `POST`/`PUT` body in v1 — a request's body is read off the wire (so it doesn't corrupt the next request on the same connection) but discarded.
-
-No explicit cap on how many requests can be in flight at once, either — this relies on the device's own memory/socket limits, fine for a handful of well-behaved clients, not something to expose to untrusted traffic.
+- **No named path parameters.** `path` matches one exact string, not Node-RED's `/user/:name` style.
+- **No request body parsing.** `payload` is always `None`; a `POST`/`PUT` body is read off the wire so it doesn't
+  corrupt the next request, then discarded.
+- **No cap on requests in flight.** The device's own memory and socket limits apply, so this suits a handful of
+  well-behaved clients rather than untrusted traffic.
 
 
 ---
@@ -2238,7 +2300,7 @@ Source: https://docs.thingstudio.net/nodes/http-response/
 
 # http response
 
-Completes a request that arrived via a matching [`http_in`](http-in.md) node.
+Completes a request that arrived via a matching [`http in`](http-in.md) node.
 
 ## Properties
 
@@ -2249,9 +2311,9 @@ None — everything comes off the message at runtime, same field names Node-RED 
 
 ## Behavior
 
-Must fire on a message that originated from an `http_in` node — firing it on any other message (one built from scratch, or one whose originating request already got its response) raises a clear error rather than failing silently.
+Must fire on a message that originated from an `http in` node — firing it on any other message (one built from scratch, or one whose originating request already got its response) raises a clear error rather than failing silently.
 
-No per-node Content-Type property yet — the response is always sent as plain bytes/text with no `Content-Type` header set. Add one on the client/consuming side if you need to interpret the body as JSON.
+The response is sent as plain bytes/text with no `Content-Type` header. Add one on the client side if you need to interpret the body as JSON.
 
 
 ---
@@ -2294,7 +2356,10 @@ Publishes a message's payload to an MQTT topic.
 
 Uses the flow's WiFi network (the WiFi config in the flow, shared by every WiFi node; this node has no WiFi property of its own) and its own broker config for the MQTT connection. In a flow with MQTT nodes, MQTT manages the WiFi connection. An "unmanaged" WiFi config isn't accepted here: this node manages its own WiFi reconnection, so it needs a real network to connect to. The payload is sent as bytes (a string is UTF-8 encoded, other types are converted).
 
-Shows a connection-status dot on the canvas (see [Editor in depth](../working-in-the-editor.md#node-status)) once connected to a device — reports its own broker connection state even when it shares that broker with an `mqtt_subscribe` node. Because this node only runs when a message actually arrives to publish, the dot stays blank until the first message passes through it, even if the flow has been running for a while — it doesn't open its broker connection until there's actually something to send (this is how the node works, not a fault).
+Shows a connection-status dot on the canvas (see [Editor in depth](../working-in-the-editor.md#node-status)) once
+connected to a device. It reports its own broker connection state, even when it shares that broker with an
+`mqtt subscribe` node. The node opens its broker connection only when there's actually something to publish, so the
+dot stays blank until the first message reaches it, even if the flow has been running a while.
 
 
 ---
@@ -2314,11 +2379,11 @@ Fires immediately when a GPIO pin changes state — genuinely event-driven, not 
 
 ## Behavior
 
-The payload is the pin's level (`true`/`false`) at the moment the node wakes, not a record of every intermediate change — a burst of bounces inside the debounce window collapses into one report of the settled state, by design.
+The payload is the pin's level (`true`/`false`) at the moment the node wakes, not a record of every intermediate change — a burst of bounces inside the debounce window collapses into one report of the settled state.
 
 No internal pull resistor is configured. Wire an external pull resistor, or use a button module with one built in.
 
-Two `interrupt` nodes configured for the same pin silently share the first one's edge/debounce settings rather than erroring — a real limitation, not a crash, but worth knowing if a second interrupt node on the same pin doesn't seem to behave the way its own property panel says.
+Two `interrupt` nodes configured for the same pin silently share the first one's edge and debounce settings. A second interrupt node on the same pin won't use its own property panel values.
 
 
 ---
@@ -2327,8 +2392,7 @@ Source: https://docs.thingstudio.net/nodes/eswitch/
 
 # eswitch
 
-Reports when a debounced switch opens or closes. Polling-based, not the hard-IRQ `interrupt` node — use this when a
-simple debounced switch is all you need.
+Reports when a debounced switch opens or closes. Polling-based, not the interrupt-driven `interrupt` node.
 
 ## Properties
 
@@ -2340,8 +2404,8 @@ simple debounced switch is all you need.
 
 ## Behavior
 
-Fires once per transition: `topic` is `close` or `open`, `payload` is `true` when closed. A downstream node that
-only cares about current state can read `payload` alone and ignore `topic`.
+Fires once per transition: `event` is `close` or `open`, `payload` is `true` when closed, and `topic` is empty. A
+downstream node that only cares about current state can read `payload` alone and ignore `event`.
 
 No internal pull is enabled by default — wire an external pull resistor, use a switch module with one built in,
 or set **pull** if the switch instead relies on the board's own internal pull-up/pull-down.
@@ -2365,7 +2429,7 @@ Reports press, release, long-press, and double-click events from a single deboun
 - **sense** — which electrical level means "pressed": `auto` (default, reads the pin's own boot state as
   "not pressed"), `0`, or `1`.
 - **suppress** — off by default. When on, `press`/`release` are held back until it's clear the click isn't the
-  first half of a double — a plain single click still reports `press` then `release`, just delayed by up to the
+  first half of a double — a plain single click still reports `press` then `release`, delayed by up to the
   double-click window; an actual double-click reports only `double`, not `press`/`release` for the first click too.
 - **debounce (ms)** — default 50ms.
 - **long press (ms)** — how long a press must hold to count as `long`. Default 1000ms.
@@ -2374,9 +2438,9 @@ Reports press, release, long-press, and double-click events from a single deboun
 
 ## Behavior
 
-`topic` is one of `press`, `release`, `long`, `double`. `payload` is the button's state at the moment the event
+`event` is one of `press`, `release`, `long`, `double`. `payload` is the button's state at the moment the event
 fired (`true` = currently pressed) — always `true` for `press`, always `false` for `release`, and whatever the
-button is doing right now for `long`/`double`.
+button is doing right now for `long`/`double`. `topic` is empty.
 
 With `suppress` off (the default), a press always reports immediately, whether or not a second press follows —
 so a rapid double-click reports both a `press` and a `double`, not `double` alone. Turn `suppress` on if a plain
@@ -2405,7 +2469,8 @@ Drives a GPIO pin high or low based on an incoming message.
 
 ## Behavior
 
-Any truthy payload sets the pin high; anything falsy sets it low. Since the incoming wire can be any type, "truthy" follows Python's own rule (`0`, `""`, `None`, and `False` are falsy; nearly everything else is truthy) — a `bool` input works exactly as you'd expect, and other types convert sensibly too.
+A truthy `payload` sets the pin high, a falsy one sets it low, using Python's own truth test. `0`, `""`, `None` and
+`False` are low; a `bool` input works as you'd expect, and other types convert to one of the two.
 
 
 ---
@@ -2433,90 +2498,80 @@ Source: https://docs.thingstudio.net/nodes/display-spi/
 # display spi
 
 Pushes an already-rendered frame to an SPI color TFT panel. [Supported hardware](../supported-hardware.md#displays)
-lists the display chips. Build the frame upstream (a `function` node using `framebuf.FrameBuffer`,
-or eventually a graphics-framework node) and wire it into this node's input.
+lists the display chips. Build the frame upstream (a `function` node using `framebuf.FrameBuffer`) and wire it into
+this node's input.
 
 This node's property panel has a **preset** picker (see [Editor in depth](../working-in-the-editor.md#presets)) —
-save a real panel's whole setup (pins, bus, resolution, rotation, color order, and so on) under a name
-once, then load it again on this or another `display_spi` node instead of retyping every field. The CYD
-defaults below are exactly what saving a "cyd" preset from a correctly-configured node would capture.
+save a real panel's whole setup (pins, bus, resolution, rotation, color order, and so on) under a name once, then
+load it again on this or another **display spi** node instead of retyping every field.
 
 ## Properties
 
 - **controller** — the display chip. See [Supported hardware](../supported-hardware.md#displays).
-- **frame format** — `rgb565` (default, full color, `width * height * 2` bytes), or an indexed
-  format: `gs4` (4-bit, a quarter the memory), `gs2` (2-bit, an eighth), or `mono` (1-bit, a
-  sixteenth). Switch away from `rgb565` if a full RGB565 buffer won't fit in memory — the lower the
-  depth, the smaller the buffer, at the cost of fewer colors (see "Indexed modes" below).
-- **palette** — always 16 RGB565 colors, used by every indexed format (`gs4` reads all 16, `gs2` only
-  the first 4, `mono` only the first 2). Shown as color swatches under frame format when an indexed
-  format is picked; click one to change it, or **reset** to go back to the built-in colors. Colors
-  are stored as RGB565, so a picked color is rounded to the nearest one the panel can show.
+- **frame format** — `rgb565` (default, full color, `width * height * 2` bytes), or an indexed format: `gs4`
+  (4-bit, a quarter the memory), `gs2` (2-bit, an eighth), or `mono` (1-bit, a sixteenth). Switch away from
+  `rgb565` if a full buffer won't fit in memory; the lower the depth, the smaller the buffer, at the cost of fewer
+  colors.
+- **palette** — 16 RGB565 colors, used by every indexed format (`gs4` reads all 16, `gs2` only the first 4, `mono`
+  only the first 2). Shown as swatches under frame format when an indexed format is picked; click one to change it,
+  or **reset** for the built-in colors. Colors are rounded to the nearest the panel can show.
 - **SPI bus** — which hardware SPI peripheral to use. Default 2.
-- **baudrate** — SPI clock speed. Default 40MHz. On an ESP32, use 27MHz or less unless sck and mosi are the bus's fast pins; the compile tells you if the speed is too high for your [board](../boards.md).
-- **sck / mosi / dc pins** — required GPIO pins. Checked against your [board](../boards.md), along with the SPI bus and speed.
-- **cs / reset / backlight pins** — optional GPIO pins (−1 for "not wired"). Some boards tie
-  reset or CS high in hardware and don't expose them as GPIOs, or have no backlight control at all.
+- **baudrate** — SPI clock speed. Default 40MHz. On an ESP32, use 27MHz or less unless sck and mosi are the bus's
+  fast pins; the compile tells you if the speed is too high for your [board](../boards.md).
+- **sck / mosi / dc pins** — required GPIO pins, checked against your [board](../boards.md).
+- **cs / reset / backlight pins** — optional GPIO pins (−1 for "not wired"). Some boards tie reset or CS high in
+  hardware, or have no backlight control at all.
 - **width / height** — panel resolution in pixels.
-- **orientation** — off by default. Set it to 0, 90, 180 or 270 to turn the picture clockwise; the gui screen wired to the display and its touch follow. With an orientation, set width and height to the panel's own size, `rotation` to how the panel is mounted (0 to 3), and `xstart`/`ystart` to `-1` (an orientation can't be combined with a panel offset). See [Rotating the screen](gui.md#rotating-the-screen).
-- **rotation** — 0–7, the panel's MADCTL orientation code (which of MY/MX/MV to set). Default `1`.
-- **color order** — `rgb` or `bgr`, whichever matches your panel's own wiring. Default `bgr`.
-- **invert colors** — on or off. Some panels need this flipped to show true colors instead of their
-  negative. Default off.
-- **data latch order** — on or off, a separate MADCTL bit (`MH`) some panels need alongside rotation for
-  correct left-right orientation — not the same bit as rotation's own mirror options, and not always
-  needed. Default on.
-- **xstart / ystart** — the panel's offset into the ST7789 controller's own (larger) GRAM. Default `-1`,
-  which lets the vendored driver's own built-in table resolve this automatically for the two panel sizes
-  it knows about (240×240 → `0, 0`; 135×240, including the EMF 2022 TiDAL badge's own panel → `52, 40`).
-  Any other resolution needs `xstart`/`ystart` set explicitly, or the driver raises a clear error at
-  flow-boot time rather than silently guessing. Getting this wrong doesn't error either way — it just
-  blits into the wrong window of the controller's real GRAM, so content shows up clipped/offset and the
-  visible glass shows whatever stale pixels were already sitting in the uncovered part of memory
-  (confirmed on real TiDAL hardware, 2026-09-18 — see `test-flows/README.md`'s
-  `display-spi-tidal-test.flow.json` section for the full story).
+- **orientation** — off by default. Set it to 0, 90, 180 or 270 to turn the picture clockwise; the gui screen wired
+  to the display and its touch follow. With an orientation, set width and height to the panel's own size, `rotation`
+  to how the panel is mounted (0 to 3), and `xstart`/`ystart` to `-1`. See
+  [Rotating the screen](gui.md#rotating-the-screen).
+- **rotation** — 0–7, the panel controller's orientation code. Default `1`.
+- **color order** — `rgb` or `bgr`, matching your panel's own wiring. Default `bgr`.
+- **invert colors** — on or off. Some panels need this flipped to show true colors instead of their negative.
+- **data latch order** — on or off, a separate controller bit (`MH`) some panels need alongside rotation for
+  correct left-right orientation.
+- **xstart / ystart** — the panel's offset into the ST7789 controller's own (larger) frame memory (GRAM). Default
+  `-1` resolves it from the driver's built-in table for the two panel sizes it knows (240×240 → `0, 0`; 135×240 →
+  `52, 40`). Any other resolution needs both set explicitly, or the driver raises an error at flow-boot time.
+  Getting it wrong doesn't error: it blits into the wrong window of GRAM, so content shows up clipped or offset.
   An ST7796 panel has no offset: leave both at `-1`.
 
-Pins, bus, resolution, rotation, color order, inversion, and data latch order all vary board to board —
-there's no sensible default that works for more than one board, so confirm these against your own panel.
-The defaults above match a real Cheap Yellow Display (ESP32-2432S028) unit confirmed working 2026-09-18;
-a different board, or even a different unit of the same board, may need different values — see
-`docs/working-notes/decisions/node-authoring.md`'s 2026-09-18 entry for how that unit's values were found,
-if you need to work out your own panel's.
+Pins, bus, resolution, rotation, color order, inversion and data latch order vary board to board — there's no
+sensible default that works for more than one board, so confirm these against your own panel. The defaults above
+match a Cheap Yellow Display (ESP32-2432S028); a different board (or unit) may need different values.
+
+## Wiring
+
+**Input** — a raw RGB565-encoded buffer, exactly `width * height * 2` bytes, the same format
+`framebuf.FrameBuffer` produces for an RGB565 surface. A wrong-length buffer raises a clear error rather than
+silently desyncing the panel.
+
+A message with a `y` key is a strip instead: whole rows, written starting at row `y`. The [gui screen](gui.md) node
+sends strips, so a large display never needs a full frame in memory.
 
 ## Behavior
 
-The input is a raw RGB565-encoded buffer, exactly `width * height * 2` bytes — the same format
-`framebuf.FrameBuffer` produces for an RGB565 surface. A wrong-length buffer raises a clear error rather
-than silently desyncing the panel.
+### RGB565 byte order
 
-A message with a `y` key is a strip instead: whole rows, written starting at row `y`. The
-[gui screen](gui.md) node sends strips, so a large display never needs a full frame in memory.
-
-**Byte order: `framebuf.RGB565` and this node disagree, and you need to bridge that gap yourself.**
-MicroPython's `framebuf.RGB565` stores each pixel in CPU-native (little-endian on ESP32) byte order, but
-SPI TFT controllers including the ST7789 expect big-endian pixel bytes on the wire — this node forwards
-whatever bytes it's given as-is (there's no flush/transform step to hide this in), so a buffer built
-straight from `framebuf.FrameBuffer(..., framebuf.RGB565)` comes out with red and blue channels scrambled
-(confirmed on real hardware: an intended pure green circle rendered red). There's no MicroPython-level
-flag to pick big-endian storage instead (a [PR that would have added
-one](https://github.com/micropython/micropython/pull/3536) was never merged). Fix: byte-swap the buffer
-before handing it to this node —
+`framebuf.RGB565` stores each pixel in CPU-native (little-endian on ESP32) byte order, but SPI TFT controllers
+including the ST7789 expect big-endian pixel bytes on the wire. This node forwards whatever bytes it's given as-is,
+so a buffer built straight from `framebuf.FrameBuffer(..., framebuf.RGB565)` comes out with red and blue scrambled
+(an intended pure green circle renders red). There's no MicroPython-level flag to pick big-endian storage. Fix:
+byte-swap the buffer before handing it to this node —
 
 ```python
 for i in range(0, len(buf), 2):
     buf[i], buf[i + 1] = buf[i + 1], buf[i]
 ```
 
-— right after drawing, before `msg['payload'] = buf`. A color where both bytes happen to match
-(pure white `0xFFFF`, pure black `0x0000`) is unaffected either way, which is why a swap bug can hide
-behind text/background colors and only show up on saturated colors like a pure green or blue fill.
+— right after drawing, before `msg['payload'] = buf`. A color whose two bytes match (pure white `0xFFFF`, pure
+black `0x0000`) is unaffected either way, which is why a swap bug can hide behind text and background colors.
 
-## Indexed modes: lower memory, a fixed palette
+### Indexed modes
 
-Switch frame format away from `rgb565` if a full RGB565 buffer won't fit in memory — a real problem
-on some boards at larger resolutions. Build the frame upstream with `framebuf.FrameBuffer(...,
-framebuf.<FORMAT>)` instead of `RGB565`, where `<FORMAT>` matches the frame format property:
+Build an indexed frame with `framebuf.FrameBuffer(..., framebuf.<FORMAT>)`, where `<FORMAT>` matches the frame
+format property:
 
 | frame format | `framebuf` constant | bits/pixel | palette indices used | 240×320 frame size |
 |---|---|---|---|---|
@@ -2525,39 +2580,25 @@ framebuf.<FORMAT>)` instead of `RGB565`, where `<FORMAT>` matches the frame form
 | `gs2` | `GS2_HMSB` | 2 | 0–3 (first 4) | 19,200 bytes |
 | `mono` | `MONO_HMSB` | 1 | 0–1 (first 2) | 9,600 bytes |
 
-Send the `bytearray` itself as the payload (`msg['payload'] = buf`). `bytes(buf)` makes a second full-size
-copy, and a board can run out of memory for it even when plenty looks free. For a flow that redraws often,
-keep the buffer in `context` and reuse it rather than allocating a new one each time.
+Send the `bytearray` itself as the payload (`msg['payload'] = buf`). `bytes(buf)` makes a second full-size copy the
+board may not have memory for. For a flow that redraws often, keep the buffer in `context` and reuse it.
 
-Pixel values become palette indices, not colors — this node expands each pixel to real color using
-the palette property when it sends the frame.
+Pixel values are palette indices, not colors — this node expands each one to real color using the palette property.
+Indexed modes have no byte-order gotcha: the palette already stores colors in the order this node expects.
 
-**`mono` needs `framebuf.MONO_HMSB` specifically, not `MONO_VLSB` or `MONO_HLSB`.** MicroPython has
-three different 1-bit `framebuf` formats and they are NOT interchangeable — building your source
-buffer with the wrong one silently produces a garbled image, not an error, because this node has no
-way to tell which one you actually used. `MONO_VLSB` (the common OLED/SSD1306 convention, and what
-this project's own `display_i2c` node uses) packs pixels into *vertical* byte columns; this node
-streams frames out row-by-row like every other format here, so `MONO_VLSB` will not work. Of the two
-row-oriented options, `MONO_HLSB` and `MONO_HMSB` pack their 8 pixels-per-byte in opposite bit orders
-from each other — this node was built against `MONO_HMSB` specifically (chosen for consistency with
-`GS4_HMSB`/`GS2_HMSB`'s own naming, confirmed directly against MicroPython's real C source, not
-assumed from the name), so `MONO_HLSB` will come out with every row's pixels in the wrong order.
+The buffer isn't "1/N the size of RGB565": each row is padded to a whole number of bytes, so a width that isn't an
+exact multiple of the format's pixels-per-byte (2 for `gs4`, 4 for `gs2`, 8 for `mono`) needs slightly more than a
+flat `width * height / bitsPerByte` formula gives. This node works out and checks the real size, and names the
+expected byte count on a mismatch.
 
-The input buffer isn't simply "1/N the size of RGB565" for any of these — each row is padded to a
-whole number of bytes, so a width that isn't an exact multiple of the format's pixels-per-byte (2 for
-`gs4`, 4 for `gs2`, 8 for `mono`) needs slightly more than a flat `width * height / bitsPerByte`
-formula would give. This node works out and checks the real size for you, and raises a clear error
-naming the exact expected byte count (including the format and bits/pixel) on a mismatch.
+`mono` needs `framebuf.MONO_HMSB` specifically, not `MONO_VLSB` or `MONO_HLSB`. MicroPython's three 1-bit formats
+are not interchangeable — the wrong one silently produces a garbled image, not an error, because this node can't
+tell which you used. `MONO_VLSB` packs pixels into vertical byte columns (the OLED convention **display i2c**
+uses); this node streams rows, so `MONO_VLSB` won't work. `MONO_HLSB` and `MONO_HMSB` pack their 8 pixels-per-byte
+in opposite orders; this node expects `MONO_HMSB`, and `MONO_HLSB` comes out with each row's pixels in the wrong
+order.
 
-Indexed modes have no byte-order gotcha — the palette already stores colors in the order this node
-expects.
-
-Fewer colors as the depth drops (16 for `gs4`, 4 for `gs2`, 2 for `mono` — effectively black/white
-unless you override the palette), so these suit a UI with a small fixed palette (buttons, status
-text, simple icons), not photos or arbitrary images; `mono` in particular is closer to an e-ink-style
-UI than a color one.
-
-No drawing primitives here — this node only pushes a complete, already-rendered frame on every message.
+Fewer colors as the depth drops, so these suit a UI with a fixed palette (buttons, status text, icons), not photos.
 
 
 ---
@@ -2566,41 +2607,42 @@ Source: https://docs.thingstudio.net/nodes/display-i2c/
 
 # display i2c
 
-Pushes an already-rendered frame to an I2C mono OLED panel (SSD1306 today — the `controller` property
-leaves room for others later, like SH1106). Build the frame upstream (a `function` node using
-`framebuf.FrameBuffer`, or eventually a graphics-framework node) and wire it into this node's input.
+Pushes an already-rendered frame to an I2C mono OLED panel. The `controller` property selects the display chip;
+[Supported hardware](../supported-hardware.md#displays) lists it. Build the frame upstream (a `function` node
+using `framebuf.FrameBuffer`) and wire it into this node's input.
 
 This node's property panel has a **preset** picker (see [Editor in depth](../working-in-the-editor.md#presets)) —
 save a real panel's pin/address setup under a name once, then load it again on this or another
-`display_i2c` node instead of retyping it.
+**display i2c** node instead of retyping it.
 
 ## Properties
 
-- **controller** — the display chip. Only `SSD1306` today.
+- **controller** — the display chip. `SSD1306`.
 - **I2C bus** — the bus the panel is wired to. See [I2C bus](i2c-bus.md).
-- **address** — the I2C address, `addr` in the flow file, as a plain number: `60` is `0x3C`, the usual SSD1306 address.
+- **address** — the I2C address, `addr` in the flow file, as a plain number: `60` is `0x3C`, the usual SSD1306
+  address.
 - **width / height** — panel resolution in pixels. Height must be a multiple of 8.
 
 A flow saved before I2C buses existed has its pins on the node. The editor moves them into an I2C bus
 when it opens the flow. Save the flow to keep the change.
 
-## Behavior
+## Wiring
 
-The input is a raw MONO_VLSB-encoded buffer, exactly `width * (height / 8)` bytes — the same format
+**Input** — a raw MONO_VLSB-encoded buffer, exactly `width * (height / 8)` bytes, the same format
 `framebuf.FrameBuffer` produces for a 1-bit surface. A wrong-length buffer raises a clear error rather
 than silently corrupting the display's internal buffer indexing.
 
-Only I2C wiring is supported — an SSD1306 wired over SPI isn't covered by this node (see `display spi`
-if that's ever needed for this chip).
+## Behavior
 
-No drawing primitives here — this node only pushes a complete, already-rendered frame on every message.
+Only I2C wiring is supported — an SSD1306 wired over SPI isn't covered by this node. No drawing primitives here:
+this node only pushes a complete, already-rendered frame on every message.
 
 ## Text on the panel
 
-Draw in a `function` node with `framebuf` (an `import` inside the function body works) and send the **buffer**, not the
-`FrameBuffer` object. `fb.text()` uses a fixed 8x8 font, so a 128x64 panel holds 16 characters on each of 8 lines. The
-node accepts `bytearray` or `bytes`. A panel sharing a bus with a sensor such as a BME280 works at the bus's one
-speed; the default is fine for both.
+Draw in a `function` node with `framebuf` (an `import` inside the function body works) and send the **buffer**, not
+the `FrameBuffer` object. `fb.text()` uses a fixed 8x8 font, so a 128x64 panel holds 16 characters on each of 8
+lines. The node accepts `bytearray` or `bytes`. A panel sharing a bus with a sensor such as a BME280 works at the
+bus's one speed; the default is fine for both.
 
 ```python
 import framebuf
@@ -2622,8 +2664,8 @@ Source: https://docs.thingstudio.net/nodes/bme280/
 
 # bme280
 
-Reads a BME280 temperature, humidity and pressure sensor at a fixed interval. A BMP280 works too; it has no
-humidity sensor.
+Reads a BME280 or BMP280 temperature, humidity and pressure sensor at a fixed interval.
+[Supported hardware](../supported-hardware.md#sensors) lists the chips.
 
 ## Properties
 
@@ -2631,7 +2673,9 @@ humidity sensor.
 - **address** — `0x76` (most boards) or `0x77`.
 - **interval (ms)** — how often to read. At least 100.
 
-## Output
+## Wiring
+
+**Output** — one reading per interval:
 
 ```python
 msg = {'payload': {'temperature': 21.43, 'humidity': 48.2, 'pressure': 1012.6}, 'topic': ''}
@@ -2639,17 +2683,20 @@ msg = {'payload': {'temperature': 21.43, 'humidity': 48.2, 'pressure': 1012.6}, 
 
 Temperature is in °C, humidity in %, pressure in hPa. On a BMP280, `humidity` is `None`.
 
-To use one reading, pick it out in a `function` node: `msg['payload'] = msg['payload']['temperature']`.
+To use one reading, pick it out in a [function](function.md) node:
+`msg['payload'] = msg['payload']['temperature']`.
 
 ## Behavior
 
-The status dot shows whether the sensor is answering. If a read fails, the node sends nothing and the
-dot says why:
+The status dot shows whether the sensor is answering. The node tries again at the next interval, and picks up a
+sensor connected after the flow starts.
+
+## Errors
+
+If a read fails, the node sends nothing and the dot says why:
 
 - **disconnected**, `no reply at 0x76 on I2C bus 0` — nothing answered. Check the wiring, pins and address.
 - **error**, `no BME280/BMP280 at 0x76 (chip id 0x..)` — a different chip is at that address.
-
-The node tries again at the next interval. A sensor connected after the flow starts is picked up then.
 
 
 ---
@@ -2658,8 +2705,8 @@ Source: https://docs.thingstudio.net/nodes/touch-i2c/
 
 # touch
 
-Raw touch input, for flows that don't use the GUI. It reads a capacitive touch panel and sends a message when
-a finger lands and when it lifts.
+Raw touch input, for flows that don't use the GUI. It reads a capacitive [touch panel](touch-panel.md) and sends
+a message when a finger lands and when it lifts.
 
 A [gui screen](gui.md) reads its panel itself, so you don't need this node to press buttons. One panel can't be
 used by both a gui screen and a touch node: Deploy stops and names them.
@@ -2668,7 +2715,9 @@ used by both a gui screen and a touch node: Deploy stops and names them.
 
 - **touch panel** — which [touch panel](touch-panel.md) to read. Pick one, or add one with **+**.
 
-## Output
+## Wiring
+
+**Output** — down and up, each with the touch point:
 
 ```python
 msg = {'payload': {'x': 120, 'y': 340}, 'topic': 'down'}   # a finger lands
@@ -2703,24 +2752,28 @@ Talks to an I2C device that has no node of its own. Each message that arrives do
 
 Hex (`0x29`) and decimal (`41`) both work.
 
-## Output
+## Wiring
 
-- **read** — `msg.payload` is the bytes read.
-- **write** — writes `msg.payload` and passes the message on unchanged. The payload can be bytes, a list
-  of numbers 0–255, or one number.
-- **scan** — `msg.payload` is the list of addresses that answer.
+**Input** — for `write`, the bytes to send in `payload`. `read` and `scan` need no input.
+
+**Output** — depends on the operation:
+
+- **read** — `payload` is the bytes read. Reading register `0x92` at address `0x29` (a TCS34725 ID register)
+  returns `b'D'`.
+- **write** — sends `payload` and passes the message on unchanged. The payload can be bytes, a list of numbers
+  0–255, or one number.
+- **scan** — `payload` is the list of addresses that answer.
 
 Other message fields are kept.
 
 ## Behavior
 
-If a transfer fails, the node sends nothing and its status dot says why: **disconnected** when nothing
-answers, **error** when the payload can't be written. The next message tries again.
+If a transfer fails, the node sends nothing and its status dot says why. The next message tries again.
 
-## Example
+## Errors
 
-Read a TCS34725 colour sensor's ID register: address `0x29`, register `0x92`, length 1. An `inject` into
-this node, into `debug`, prints `b'D'` (0x44).
+- **disconnected** — nothing answers at that address.
+- **error** — the payload can't be written.
 
 
 ---
@@ -2729,8 +2782,8 @@ Source: https://docs.thingstudio.net/nodes/i2c-bus/
 
 # I2C bus
 
-An I2C bus is a pair of wires, SCL and SDA, shared by one or more devices. A display and a sensor can sit on
-the same bus, each at its own address.
+An I2C bus is shared by one or more devices. A display and a sensor can sit on the same bus, each at its own
+address.
 
 Each I2C node has an **I2C bus** field. Pick a bus, or add one with **+**. The pins and clock are set once,
 on the bus, and every node on that bus uses them.
@@ -2764,7 +2817,8 @@ button being held is let go without sending.
 
 ## Settings
 
-- **controller** — the touch chip. Only the FT6336U (as on the Freenove ESP32-S3 displays) is supported so far.
+- **controller** — the touch chip. [Supported hardware](../supported-hardware.md#touch-panels) lists the chips
+  covered (the FT6336U, as on the Freenove ESP32-S3 displays).
 - **I2C bus** — the bus the panel is wired to. See [I2C bus](i2c-bus.md). On the Freenove 4.0" board: SDA 16,
   SCL 15.
 - **address** — the chip's I2C address. 0x38 for the FT6336U.
@@ -2783,11 +2837,11 @@ that name to fill the form. The I2C bus is not saved, since it belongs to the fl
 ## Rotated screens
 
 If the display the gui screen is wired to has an [orientation](gui.md#rotating-the-screen), the screen's touch axes are turned to match the picture.
-The raw [touch_i2c](touch-i2c.md) node is not turned.
+The raw [touch](touch-i2c.md) node is not turned.
 
 ## Other touch chips
 
-GT911, CST820 and others aren't supported yet. Read one from a [function](function.md) node with
+For a chip this node doesn't cover, such as GT911 or CST820, read it from a [function](function.md) node with
 `runtime.shared('i2c', 0)`, using the chip's datasheet and a MicroPython driver for it. See
 [docs.micropython.org](https://docs.micropython.org/en/latest/library/machine.I2C.html) for the I2C calls.
 
@@ -2815,8 +2869,8 @@ property panel: see [Laying out pages](#laying-out-pages).
 - **gui button** — a touch button. It has an input, which sets what it shows, and an output, which sends when it is
   tapped. See [Buttons](#buttons).
 - **gui navigator** — changes the page from the flow. Send `next`, `prev`, `back`, `home` or a page name. Sends
-  the new page name when it changes. It is no longer in the palette (a *navigate* button does the same from the
-  screen), but flows that already have one still work.
+  the new page name when it changes. It isn't in the palette; a *navigate* button does the same from the
+  screen.
 - **gui modal** — a full-screen message. Send any payload to open it, `None` to close it. If several are
   open, the highest priority shows and the rest wait. Its output sends how it closed:
   `{topic: <modal's name>, payload: 'ack' | 'timeout' | 'closed'}`. Properties: **screen** (the id of the `gui_screen` it
@@ -2851,7 +2905,7 @@ A button sends when your finger lifts inside it. Lift outside and nothing is sen
 to send as soon as it is touched. It is drawn inverted while held.
 
 Leave the value fields blank and a button sends `true` and `false`; for text, `ON` and `OFF`; for a number, `1` and
-`0`. The grey placeholder shows which. Type a value to send something else.
+`0`. The gray placeholder shows which. Type a value to send something else.
 
 A button needs a [touch panel](touch-panel.md) on its screen to be pressed. Deploy warns if a screen has
 buttons and no panel, and if a momentary or toggle button's output goes nowhere.
@@ -2875,25 +2929,24 @@ With the input wired, the flow owns the state:
 The input is matched against the toggle's *on sends* and *off sends* values. MQTT delivers text, so the text `true`
 matches a true/false toggle and `1` matches a number toggle. Anything else shows `--`. Tasmota
 reports `ON` and `OFF` as text, so for a Tasmota plug set the value type to text and use `ON` and `OFF`.
-`test-flows/gui-touch-freenove-s3-4in.flow.json` has this on its last page.
 
 Unwired, the toggle keeps its own state and starts as set by *starts on*.
 
-## Colour
+## Color
 
-Set the gui screen's frame format to `rgb565` for full colour, with the same format on the display. White text,
-grey for stale values, and a green accent for bars and lights that are on. Greys use less memory and send faster,
+Set the gui screen's frame format to `rgb565` for full color, with the same format on the display. White text,
+gray for stale values, and a green accent for bars and lights that are on. Grays use less memory and send faster,
 so use them on boards with little RAM.
 
 ## Rotating the screen
 
 On the display node, set **orientation** to 0, 90, 180 or 270 (the picture turned clockwise). It is one setting
 on each display, so a display can't have two. Set the display's width and height to the panel's own size, and its
-rotation to how the panel is mounted (0 to 3, as before). The gui screen wired to that display turns its size to
-match and its touch axes follow, so set the screen's width and height to the panel's own size too. With
-orientation off the display behaves as it always did. An orientation can't yet be combined with a panel offset
-(`xstart`/`ystart`, or the 135x240 panel). `xstart`/`ystart` of `-1` mean "no offset" and are the right values with an
-orientation. At 90 or 270 the usable picture is the panel turned: 480 wide by 320 high on a 320x480 panel.
+rotation to how the panel is mounted (0 to 3). The gui screen wired to that display turns its size to
+match and its touch axes follow, so set the screen's width and height to the panel's own size too. An orientation
+can't be combined with a panel offset (`xstart`/`ystart`, or the 135x240 panel). `xstart`/`ystart` of `-1` mean
+"no offset" and are the right values with an orientation. At 90 or 270 the usable picture is the panel turned:
+480 wide by 320 high on a 320x480 panel.
 
 ## Modals in the flow file
 
@@ -2935,9 +2988,61 @@ flow file's `"screens"` section, which you can also edit by hand.
 
 Pages live in the flow file, under `"screens"`, keyed by the gui screen node's id. A page is a tree of
 `row` and `column` containers holding widgets (`"kind": "widget", "node": "<id>"`), fixed `text`,
-`pagedots` and `spacer`s. `test-flows/gui-hero-cyd.flow.json` is a complete example for the CYD.
+`pagedots` and `spacer`s.
 
 If something doesn't fit, Deploy stops and says which widget, on which page, needs how many pixels.
+
+
+---
+
+Source: https://docs.thingstudio.net/node-conventions/
+
+# Node conventions
+
+A node moves a message from one point in a flow to the next. These are the rules a custom node follows; the file
+format itself is in [Writing custom nodes](custom-nodes.md).
+
+## The message
+
+A message is a dict: `msg = {'payload': ..., 'topic': ..., <anything else>}`.
+
+- **`payload`** is the node's value. It is what the output port's declared type checks against and the one key a
+  generic downstream node reads — `debug` prints only `payload`. Put the value you want wired and checked here.
+- **`topic`** is a routing string. Set it to a real protocol topic when the node has one, otherwise `''`. Don't put
+  the node's own event or state in `topic`; use a named field instead.
+- **anything else** rides along under its own name, and only a node written to read that name sees it.
+
+Put one value in `payload` and leave the rest as named fields. The DHT22 example sends the temperature in `payload`
+and the humidity in `msg['humidity']`.
+
+## Ports
+
+Port types are `int`, `number`, `bool`, `string`, `bytes` and `any`, the same as built-in nodes, with the same wire
+checks. A declared output type must match what the node puts in `payload`. Use `any` when unsure. A custom node has
+one input and one output: a source has the output, a sink the input.
+
+## Kind
+
+Every node is one of three kinds:
+
+- **source** — makes its own messages, on the `intervalMs` schedule.
+- **transform** — one message in, one out. Return the message, or `None` to stop it.
+- **sink** — consumes a message and produces nothing.
+
+## Errors
+
+A runtime error in your Python is reported from the board, attributed to your node. A `transform` that returns
+`None` stops that message; anything it passes on continues. The full list is under [Errors](custom-nodes.md#errors)
+in Writing custom nodes.
+
+## Limits
+
+A custom node has the following limits:
+
+- A source's `emit` runs on a timer, not on an external event — there are no event-driven custom sources.
+- Two instances of the same custom node get independent setup, so don't put two on the same physical resource, such
+  as the same pin.
+- Your Python runs with the same trust as the `function` node. Read a package before you put it in the folder.
 
 
 ---
@@ -2949,13 +3054,12 @@ Source: https://docs.thingstudio.net/custom-nodes/
 A custom node is two files sharing a base name: `<name>.node.json` (the
 descriptor) and `<name>.node.py` (the behavior), placed in the backend's
 `~/.thingstudio/custom-nodes/` directory. Thingstudio loads it for you,
-and you drag it onto the canvas like any built-in node. This document is
-complete on its own — no other Thingstudio docs needed.
+and you drag it onto the canvas like any built-in node.
 
 ## Loading a custom node
 
 Put both files in `~/.thingstudio/custom-nodes/` on the computer running
-Thingstudio. There's no upload button in the editor yet.
+Thingstudio.
 
 The editor loads every package in that folder when it starts, and again
 when you switch back to its window. After changing a file, you can also
@@ -3025,9 +3129,8 @@ that group.
 same types built-in nodes use, with the same wire-compatibility checks.
 Use `any` when unsure.
 
-Custom nodes support only one output port. The built-in `function` node
-supports multiple, configurable outputs -- that hasn't been extended to
-the custom-node format yet.
+A custom node has one output port. The built-in `function` node's
+multiple, configurable outputs aren't available to custom nodes.
 
 **`properties`** (optional) — fields shown in the property panel when
 the node is selected:
@@ -3057,7 +3160,7 @@ your node's `kind`:
 
 `msg` is a dict with a `payload` key, a `topic` key, and room for any
 extra keys you add. `topic` is a routing/identification string — the
-`mqtt_subscribe` built-in node, for instance, fills it with the real
+`mqtt subscribe` built-in node, for instance, fills it with the real
 MQTT topic a message arrived on. Most nodes have no natural topic of
 their own; set it to `''` rather than a real value. The key is
 required either way — don't leave it out. `properties` is a dict of
@@ -3190,19 +3293,17 @@ Thingstudio doesn't check it. A typo surfaces as a runtime error (e.g.
 
 ## Limitations
 
-- **One output port** — a current compiler limit, not a format limit.
-- **No event-driven sources** — `intervalMs` polling only.
-- **No resource-sharing between instances.** Two built-in `gpio_out`
-  nodes on the same pin share one `Pin` object; two instances of your
-  custom node don't — each gets its own independent setup. Don't put
-  two instances of the same stateful custom node on the same physical
-  resource (e.g. the same pin).
-- **No sandboxing.** Custom node Python runs with the same trust as any
-  other node — the same trust Thingstudio's `function` node already
-  has. Loading a package only adds it to the palette. Its Python runs
-  on a board only when you place the node and deploy. There's no
-  registry and no URL install, only files you put in the folder
-  yourself. Don't put a package there that you haven't read.
+A custom node has one output port. A `source` node's `emit` runs on a fixed `intervalMs` schedule, not in response to
+an external event.
+
+Two instances of the same custom node get independent setup, unlike two built-in `gpio out` nodes on the same pin,
+which share one `Pin` object. Don't put two instances of the same stateful custom node on the same physical resource,
+such as the same pin.
+
+Custom node Python runs with the same trust as any other node, including Thingstudio's `function` node. Loading a
+package only adds it to the palette; its Python runs on a board only when you place the node and deploy. Only files
+you place in the folder are loaded — there's no registry and no URL install — so don't put a package there that you
+haven't read.
 
 
 ---
@@ -4084,6 +4185,8 @@ Source: https://docs.thingstudio.net/debugging/
 
 # Debugging & troubleshooting
 
+What the console and compiled source show, and what to do when a board or deploy fails.
+
 ## Console and compiled source
 
 The **console** shows what the board and Thingstudio report: deploy results, node errors, and what `debug` nodes
@@ -4100,7 +4203,7 @@ Hidden lines are kept, so choosing Info or Debug later shows what was already lo
 The **Compiled source** panel shows the MicroPython your flow compiles to.
 
 The editor's version is next to its name in the toolbar, and in **Help → About Thingstudio**. A `+` after it means
-it was built from uncommitted changes. Include the versions when you report a problem.
+you built it from uncommitted changes. Include the versions when you report a problem.
 
 ### Memory
 
@@ -4111,8 +4214,8 @@ MicroPython's. If WiFi won't join while MicroPython has plenty free, a low ESP-I
 
 ## Commands and the Python prompt
 
-The box under the console runs Python on the board. Type a line and press Enter; the result appears in the console.
-The up and down arrows bring back earlier commands.
+The command box under the console runs Python on the board. Type a line and press Enter; the result appears in the
+console. The up and down arrows bring back earlier commands.
 
 ```python
 gc.mem_free()
@@ -4163,9 +4266,9 @@ If the port itself won't open, the console says why:
 
 The raw error stays in the message, in brackets. Include it if you report a problem.
 
-## Deploy is greyed out
+## Deploy is grayed out
 
-**Compile → Deploy** is greyed out when:
+**Compile → Deploy** is grayed out when:
 
 - the editor isn't connected to a board;
 - the flow on the board is the one on the canvas, deployed and unchanged since;
@@ -4318,8 +4421,8 @@ and uses its RAM. So a 264 KB Pico W leaves more for your flow than a 400 KB ESP
 ## Deploy failed with "MemoryError ... allocating 38400 bytes". Why, when there's more free memory than that?
 
 Free memory is in pieces. A big buffer needs one piece that size, and after a while an ESP32 may not have
-one. A 240x320 frame in 16 greys is 38,400 bytes. The [GUI nodes](nodes/gui.md) avoid this by drawing the
-screen in small strips. If your own `function` node builds a full frame, draw it in strips too, or restart
+one. A 240x320 frame in 16 grays is 38,400 bytes. The [GUI nodes](nodes/gui.md) avoid this by drawing the
+screen in strips. If your own `function` node builds a full frame, draw it in strips too, or restart
 the board before deploying.
 
 ## My ESP32-S3 board has PSRAM, but the console shows only about 120 KB free. Why?
@@ -4332,7 +4435,7 @@ The console then shows megabytes free. Freenove's S3 display boards are an examp
 
 An ESP32 with external RAM (PSRAM), such as many ESP32-S3 boards. MicroPython puts its heap in the external RAM,
 leaving the chip's own RAM for WiFi. A classic ESP32 or ESP32-C3 without PSRAM can run a display and WiFi, but
-only at lower colour depths and with little to spare.
+only at lower color depths and with little to spare.
 
 ## My WiFi flow worked before, but now the board crashes or won't join. Why?
 
@@ -4349,8 +4452,8 @@ Connect and deploy again.
 
 ## How do I tell which version of the editor I'm running?
 
-It's next to **Thingstudio** in the toolbar, and in **Help → About**. A `+` after it means the editor was built
-from changes that weren't committed yet.
+It's next to **Thingstudio** in the toolbar, and in **Help → About**. A `+` after it means you built the editor
+from uncommitted changes.
 
 ## My clock shows `--` and never the time. Why?
 
@@ -4373,7 +4476,7 @@ Use the touch node only when you aren't using the GUI. Deploy stops and names bo
 A function node's output has the type `any`, and `pwm out`'s input takes a `number`. The editor refuses a wire from
 `any` to `number`, `int` or `string` inputs. See [Wiring](working-in-the-editor.md#wiring).
 
-## Why is Compile → Deploy greyed out after a deploy?
+## Why is Compile → Deploy grayed out after a deploy?
 
 The board already runs the flow on the canvas. Deploy comes back when you change the flow. See
-[Deploy is greyed out](debugging.md#deploy-is-greyed-out).
+[Deploy is grayed out](debugging.md#deploy-is-grayed-out).

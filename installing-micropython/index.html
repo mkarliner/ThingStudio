@@ -2546,6 +2546,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../node-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../custom-nodes/" class="md-nav__link">
         
   
@@ -2914,8 +2942,8 @@
 
 
 <h1 id="step-3-install-micropython">Step 3: Install MicroPython</h1>
-<p>Thingstudio runs on top of <a href="../background/micropython/">MicroPython</a>, a version of Python for microcontrollers, so
-the board needs it first. You install it once per board.</p>
+<p>Thingstudio runs on top of <a href="../background/micropython/">MicroPython</a>, so the board needs it first. You install it once
+per board.</p>
 <p>A new board usually doesn't have MicroPython. If yours already has it, or you're not sure, go to
 <a href="../connecting/">step 4</a>. If MicroPython is missing, the console says so when you connect, and links back here.</p>
 <h2 id="get-the-firmware">Get the firmware</h2>
@@ -3008,8 +3036,8 @@ fails partway, leave out <code>--baud 460800</code>.</p>
 <p>Press <strong>RESET</strong> when it finishes. A board that uses the chip's own USB (most ESP32-S2 and S3 boards) may show up on
 a different port afterwards.</p>
 <h2 id="without-a-terminal-thonny">Without a terminal: Thonny</h2>
-<p><a href="https://thonny.org">Thonny</a> is a free Python editor that works with MicroPython boards and can install MicroPython
-for you. Open <strong>Tools → Options → Interpreter</strong> and use <strong>Install or update MicroPython</strong>.</p>
+<p><a href="https://thonny.org">Thonny</a> installs MicroPython on the board through a GUI. Open
+<strong>Tools → Options → Interpreter</strong> and use <strong>Install or update MicroPython</strong>.</p>
 <p>When it's done, close Thonny. Like esptool, it needs the board's port to itself.</p>
 <h2 id="other-microcontrollers">Other microcontrollers</h2>
 <p>Other chips, such as STM32, nRF or SAMD, each have their own way of installing MicroPython. See your board's page

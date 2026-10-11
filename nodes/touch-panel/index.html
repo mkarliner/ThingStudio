@@ -2526,6 +2526,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../node-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../custom-nodes/" class="md-nav__link">
         
   
@@ -2879,7 +2907,8 @@ button presses. There is no wire to draw. If the panel stops answering, the scre
 button being held is let go without sending.</p>
 <h2 id="settings">Settings</h2>
 <ul>
-<li><strong>controller</strong> — the touch chip. Only the FT6336U (as on the Freenove ESP32-S3 displays) is supported so far.</li>
+<li><strong>controller</strong> — the touch chip. <a href="../../supported-hardware/#touch-panels">Supported hardware</a> lists the chips
+  covered (the FT6336U, as on the Freenove ESP32-S3 displays).</li>
 <li><strong>I2C bus</strong> — the bus the panel is wired to. See <a href="../i2c-bus/">I2C bus</a>. On the Freenove 4.0" board: SDA 16,
   SCL 15.</li>
 <li><strong>address</strong> — the chip's I2C address. 0x38 for the FT6336U.</li>
@@ -2895,9 +2924,9 @@ disk button, and give the set a name (for example <code>freenove-4in</code>). In
 that name to fill the form. The I2C bus is not saved, since it belongs to the flow; pick or add it after loading.</p>
 <h2 id="rotated-screens">Rotated screens</h2>
 <p>If the display the gui screen is wired to has an <a href="../gui/#rotating-the-screen">orientation</a>, the screen's touch axes are turned to match the picture.
-The raw <a href="../touch-i2c/">touch_i2c</a> node is not turned.</p>
+The raw <a href="../touch-i2c/">touch</a> node is not turned.</p>
 <h2 id="other-touch-chips">Other touch chips</h2>
-<p>GT911, CST820 and others aren't supported yet. Read one from a <a href="../function/">function</a> node with
+<p>For a chip this node doesn't cover, such as GT911 or CST820, read it from a <a href="../function/">function</a> node with
 <code>runtime.shared('i2c', 0)</code>, using the chip's datasheet and a MicroPython driver for it. See
 <a href="https://docs.micropython.org/en/latest/library/machine.I2C.html">docs.micropython.org</a> for the I2C calls.</p>
 

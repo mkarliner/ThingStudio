@@ -2553,6 +2553,34 @@
   
   
     <li class="md-nav__item">
+      <a href="node-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="custom-nodes/" class="md-nav__link">
         
   
@@ -2943,8 +2971,9 @@ starts again after a reset or power cycle.</p>
   node's settings and the board's console. Click to see it full size. <a href="editor-tour/">Tour the editor</a> labels every
   part.</figcaption>
 </figure>
+<p>In practice, that means:</p>
 <ul>
-<li><strong>Local Dev</strong> All development is done locally, there is no cloud service.</li>
+<li><strong>Local dev.</strong> Development happens locally; there is no cloud service.</li>
 <li><strong>Works offline.</strong> Once installed, it needs no internet connection, docs included.</li>
 <li><strong>Git friendly.</strong> Thingstudio's files, your programs and your board definitions, are plain, indented
   JSON that you save where you like. They diff cleanly and sit happily in a git repository. Passwords and
@@ -2953,7 +2982,7 @@ starts again after a reset or power cycle.</p>
   <a href="boards/#adding-a-board">boards</a> and <a href="boards/#adding-a-processor">processors</a>. You drop their files into
   a folder. There's nothing to rebuild.</li>
 <li><strong>Free and open source.</strong> Thingstudio is under the
-  <a href="https://github.com/mkarliner/ThingStudio/blob/main/LICENSE">Apache 2.0 licence</a>. You can use it, change it and
+  <a href="https://github.com/mkarliner/ThingStudio/blob/main/LICENSE">Apache 2.0 license</a>. You can use it, change it and
   build on it, including in commercial products.</li>
 </ul>
 <div class="admonition tip">
@@ -2982,8 +3011,10 @@ gets hard to reason about.</p>
 the temperature. When a message arrives from the network, update the display. Each response runs only when its event
 happens, and the board waits for many events at once. This is
 <a href="background/event-driven/">event-driven programming</a>.</p>
-<p>MicroPython supports this style of programming natively with the 
-<a href="https://docs.micropython.org/en/latest/library/asyncio.html"><code>asyncio</code></a>: primitives. When you write ansynio programs the code no longer reads top to bottom, so it can be harder to grasp what it's doing. Thingstudio makes it easier to create event driven programs and understand what they do by providing a graphical editor of events, functions and outputs.</p>
+<p>MicroPython supports this style natively with
+<a href="https://docs.micropython.org/en/latest/library/asyncio.html"><code>asyncio</code></a>. An <code>asyncio</code> program no longer reads top to
+bottom, which makes it harder to see what it does. Thingstudio's graphical editor of events, functions and outputs
+makes an event-driven program easier to build and follow.</p>
 <h2 id="events-nodes-and-wires">Events, nodes and wires</h2>
 <p>A program is made of <strong>nodes</strong> joined by <strong>wires</strong>. There are three types of node:</p>
 <ul>
@@ -2993,8 +3024,8 @@ happens, and the board waits for many events at once. This is
 </ul>
 <p>A wire joins one node's output to the next node's input. The nodes and wires together make a <strong>flow</strong>. A flow can
 hold any number of chains, each starting at a source.</p>
-<p>Nodes pass <strong>messages</strong> along the wires. A message is a dict, with its main value in <code>payload</code>. More on this in
-<a href="background/flows-and-nodes/">flows, nodes and messages</a>.</p>
+<p>Nodes pass <strong>messages</strong> along the wires. A message is a dict, with its main value in <code>payload</code>. Messages are covered
+in more detail in <a href="background/flows-and-nodes/">flows, nodes and messages</a>.</p>
 <p>This way of working comes from <a href="background/node-red/">Node-RED</a>, a popular tool for home automation and IoT. In
 Node-RED, flows run on a server or a Raspberry Pi. In Thingstudio, they run on the microcontroller.</p>
 <h2 id="your-own-python">Your own Python</h2>
@@ -3011,8 +3042,8 @@ and its own properties in the property panel. It can transform messages, act on 
 <p>You can also run Python directly on the board from the editor. See
 <a href="debugging/#commands-and-the-python-prompt">Commands and the Python prompt</a>.</p>
 <h2 id="running-on-the-board">Running on the board</h2>
-<p>The board runs <a href="background/micropython/">MicroPython</a>, a version of Python 3 made for microcontrollers. You install
-it once, then Thingstudio adds a small runtime of its own on top.</p>
+<p>The board runs <a href="background/micropython/">MicroPython</a>. You install it once, then Thingstudio adds a runtime of its
+own on top.</p>
 <p>When you click <strong>Deploy</strong>, the editor turns your flow into MicroPython code and compiles it. It sends the result to
 the board over USB or WiFi, and the board swaps it in and starts running it. There's no firmware to flash, so
 changing a flow and trying it again takes seconds. The board keeps the flow and runs it again after a restart.</p>
@@ -3031,13 +3062,11 @@ changing a flow and trying it again takes seconds. The board keeps the flow and 
 <ul>
 <li>A board with an ESP32 or RP2040/RP2350 processor. <a href="supported-hardware/">Supported hardware</a> lists what's been
   tested. Other boards that run MicroPython may work.</li>
-<li>A USB cable that carries data, not just power.</li>
-<li>Some knowledge of Python, enough to write a few lines.</li>
-<li>Some knowledge of electronics, enough to wire up an LED.</li>
+<li>A USB cable that carries data, not only power.</li>
 </ul>
 <h2 id="next">Next</h2>
-<p><a href="getting-started/">Getting started</a> lists the steps from a new board to a blinking LED, and starts you on the
-first one.</p>
+<p><a href="getting-started/">Getting started</a> lists the steps from a new board to a blinking LED, and starts you on the first
+step.</p>
 <p>The docs on <a href="https://docs.thingstudio.net/">docs.thingstudio.net</a> follow the latest code. The docs inside Thingstudio
 (<strong>Help → User guide</strong>) match the version you have installed.</p>
 

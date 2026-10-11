@@ -2504,6 +2504,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../node-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../custom-nodes/" class="md-nav__link">
         
   
@@ -2828,7 +2856,7 @@
 
 
 <h1 id="http-response">http response</h1>
-<p>Completes a request that arrived via a matching <a href="../http-in/"><code>http_in</code></a> node.</p>
+<p>Completes a request that arrived via a matching <a href="../http-in/"><code>http in</code></a> node.</p>
 <h2 id="properties">Properties</h2>
 <p>None — everything comes off the message at runtime, same field names Node-RED uses:</p>
 <ul>
@@ -2836,8 +2864,8 @@
 <li><strong><code>msg.payload</code></strong> — the response body. A string is UTF-8 encoded; other types are converted; <code>None</code> sends an empty body.</li>
 </ul>
 <h2 id="behavior">Behavior</h2>
-<p>Must fire on a message that originated from an <code>http_in</code> node — firing it on any other message (one built from scratch, or one whose originating request already got its response) raises a clear error rather than failing silently.</p>
-<p>No per-node Content-Type property yet — the response is always sent as plain bytes/text with no <code>Content-Type</code> header set. Add one on the client/consuming side if you need to interpret the body as JSON.</p>
+<p>Must fire on a message that originated from an <code>http in</code> node — firing it on any other message (one built from scratch, or one whose originating request already got its response) raises a clear error rather than failing silently.</p>
+<p>The response is sent as plain bytes/text with no <code>Content-Type</code> header. Add one on the client side if you need to interpret the body as JSON.</p>
 
 
 

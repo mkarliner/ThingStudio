@@ -2535,6 +2535,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../node-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../custom-nodes/" class="md-nav__link">
         
   
@@ -2895,7 +2923,7 @@
 <p>Thingstudio sits on top of the MicroPython you already have. It doesn't replace your firmware. It adds a runtime
 and a way to write programs as flows, while the REPL and your own Python stay within reach.</p>
 <h2 id="what-goes-on-the-board">What goes on the board</h2>
-<p><strong>Tools → Install runtime…</strong> copies a small set of Python files onto the board's filesystem, including a <code>main.py</code> that
+<p><strong>Tools → Install runtime…</strong> copies a set of Python files onto the board's filesystem, including a <code>main.py</code> that
 starts the Thingstudio runtime at boot. The runtime listens on USB or WiFi for the editor, and runs the last flow
 you deployed.</p>
 <p>If your board already has a <code>main.py</code> of your own, copy it off first.</p>
@@ -2913,7 +2941,7 @@ a reset. Compiling on your computer means the board never needs RAM for the comp
   See <a href="../../custom-nodes/">writing custom nodes</a>.</li>
 </ul>
 <h2 id="the-repl">The REPL</h2>
-<p>The box under the editor's console runs Python on the board while the flow runs, for quick checks like
+<p>The command box under the editor's console runs Python on the board while the flow runs, for checks like
 <code>gc.mem_free()</code>. For the full <code>&gt;&gt;&gt;</code> prompt, click <strong>Stop flow &amp; open prompt</strong>. To use Thonny or <code>mpremote</code>, click
 <strong>Disconnect</strong> first. See <a href="../../debugging/#commands-and-the-python-prompt">commands and the Python prompt</a>.</p>
 <h2 id="memory">Memory</h2>

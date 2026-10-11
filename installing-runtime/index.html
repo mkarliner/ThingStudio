@@ -2491,6 +2491,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../node-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../custom-nodes/" class="md-nav__link">
         
   
@@ -2805,12 +2833,11 @@
 
 <h1 id="step-5-install-the-runtime">Step 5: Install the runtime</h1>
 <p>The runtime is the part of Thingstudio that runs on the board: it receives your flows and runs them. Each board
-needs it once. Libraries that some nodes need are sent later, by Deploy, when a flow
-uses them.</p>
+needs it once. Libraries that a flow's nodes need are installed later, by Deploy.</p>
 <ol>
 <li>Check the board's port is selected in the port list, as in <a href="../connecting/">step 4</a>.</li>
-<li>Choose <strong>Tools → Install runtime…</strong>. If you're connected, it disconnects first. The console shows progress; set
-   its <strong>Show</strong> menu to <strong>Info</strong> to see each file.</li>
+<li>Choose <strong>Tools → Install runtime…</strong>. If you're connected, Thingstudio disconnects first. The console shows
+   progress; set the console's <strong>Show</strong> menu to <strong>Info</strong> to see each file.</li>
 <li>If the board is busy and doesn't stop, the console asks you to press its reset button. On a board without one,
    such as a Pico, unplug it and plug it back in.</li>
 <li>The board restarts when the install is done. Click <strong>Connect</strong>. If the port has gone from the list, click <strong>⟳</strong>

@@ -2535,6 +2535,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../node-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../custom-nodes/" class="md-nav__link">
         
   
@@ -2892,11 +2920,11 @@
 
 
 <h1 id="connecting-over-wifi">Connecting over WiFi</h1>
-<p>Once a board is set up, the editor can reach it over WiFi instead of USB. Deploy, the console, Check status and
-inject clicks all work the same way.</p>
+<p>The editor can connect to a board over WiFi instead of USB. Once connected over WiFi, everything works the same as
+over USB: deploy, the console, <strong>Tools → Check status</strong>, and clicking an inject node.</p>
 <h2 id="what-you-need">What you need</h2>
 <ul>
-<li>A board with WiFi, running Thingstudio runtime 3.0.0 or later. Plain Raspberry Pi Pico and Pico 2 boards have no
+<li>A board with WiFi and the Thingstudio runtime. Plain Raspberry Pi Pico and Pico 2 boards have no
   WiFi.</li>
 <li>A flow on the board that uses WiFi and has joined your network. The board is only reachable while that flow is
   running. It starts again by itself after a reset.</li>
@@ -2907,7 +2935,7 @@ inject clicks all work the same way.</p>
 <h2 id="set-the-password-and-name">Set the password and name</h2>
 <ol>
 <li>Connect the board over USB.</li>
-<li>Choose <strong>Tools → Board settings…</strong>. The top line names the board it will change: its chip, USB port and current name.</li>
+<li>Choose <strong>Tools → Board settings…</strong>. The top line names the board these settings apply to: its chip, USB port and current name.</li>
 <li>Enter a network name and a password of 8 to 64 characters, then click <strong>Save to board</strong>.</li>
 </ol>
 <p>The name and password are stored on the board, not in the flow. The editor also remembers the password on this
@@ -2934,11 +2962,11 @@ or its IP address.</p>
 <p>The console says what went wrong:</p>
 <ul>
 <li><strong>No route to host (Mac):</strong> macOS is blocking local network access. The first time Thingstudio reaches for the
-  network, macOS asks whether it may find devices on your local network: choose <strong>Allow</strong>, then click
-  <strong>Connect</strong> again (the attempt that raised the question can fail). If you chose <strong>Don't Allow</strong>, turn
-  <strong>thingstudio-python</strong> on in System Settings &gt; Privacy &amp; Security &gt; Local Network, then restart Thingstudio.
-  Running from source (<code>thingstudio-backend</code>), macOS may block it without asking: start it from Apple's
-  <strong>Terminal</strong> app instead, which macOS always allows.</li>
+  network, macOS asks whether it may find devices on your local network; choose <strong>Allow</strong>, then click <strong>Connect</strong>
+  again (the attempt that raised the question can fail). If you chose <strong>Don't Allow</strong>, turn <strong>thingstudio-python</strong>
+  on in System Settings → Privacy &amp; Security → Local Network, then restart Thingstudio. When running from source
+  (<code>thingstudio-backend</code>), macOS may block it without asking: start it from Apple's <strong>Terminal</strong> app instead, which
+  macOS always allows.</li>
 <li><strong>No answer:</strong> check the board is on, its flow has joined WiFi, and this computer is on the
   same network. If a <code>.local</code> name doesn't work, try the IP address, shown in the console when you connect over USB.</li>
 <li><strong>Wrong password:</strong> the editor asks again. To change it, connect over USB and use <strong>Tools → Board settings…</strong>.</li>

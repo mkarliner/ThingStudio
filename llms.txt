@@ -8,7 +8,7 @@
 
 ## Background
 
-- [Event-driven programming](https://docs.thingstudio.net/background/event-driven/): An event-driven program waits for things to happen, and runs a short piece of code for each one.
+- [Event-driven programming](https://docs.thingstudio.net/background/event-driven/): An event-driven program waits for things to happen, and runs a piece of code for each one.
 - [Flows, nodes and messages](https://docs.thingstudio.net/background/flows-and-nodes/): A Thingstudio program is a **flow**: a set of **nodes** joined by **wires**.
 - [Node-RED](https://docs.thingstudio.net/background/node-red/): Node-RED is a free tool for wiring together devices, web services and APIs.
 - [MicroPython](https://docs.thingstudio.net/background/micropython/): MicroPython is a version of Python 3 made to run on microcontrollers.
@@ -21,10 +21,10 @@
 
 ## Getting started
 
-- [1. Install Thingstudio](https://docs.thingstudio.net/getting-started/): From a new board to a blinking LED:
-- [2. Tour the editor](https://docs.thingstudio.net/editor-tour/): Start Thingstudio if it isn't running: see step 1.
-- [3. Install MicroPython](https://docs.thingstudio.net/installing-micropython/): Thingstudio runs on top of MicroPython, a version of Python for microcontrollers, so the board needs it first.
-- [4. Connect your board](https://docs.thingstudio.net/connecting/): Start Thingstudio if it isn't running: see step 1.
+- [1. Install Thingstudio](https://docs.thingstudio.net/getting-started/): From a new board to a blinking LED, in six steps:
+- [2. Tour the editor](https://docs.thingstudio.net/editor-tour/): A tour of the editor, naming each part of the screen.
+- [3. Install MicroPython](https://docs.thingstudio.net/installing-micropython/): Thingstudio runs on top of MicroPython, so the board needs it first.
+- [4. Connect your board](https://docs.thingstudio.net/connecting/): Connect the board over USB so the editor can talk to it.
 - [5. Install the runtime](https://docs.thingstudio.net/installing-runtime/): The runtime is the part of Thingstudio that runs on the board: it receives your flows and runs them.
 - [6. Blink an LED](https://docs.thingstudio.net/first-flow/): Your first flow: make an LED blink once a second, using three nodes.
 - [Installation details](https://docs.thingstudio.net/installation-details/): How Thingstudio is packaged, where it puts its files, how to upgrade and remove it, and how to build it from source.
@@ -35,15 +35,15 @@
 
 ## Building flows
 
-- [Editor in depth](https://docs.thingstudio.net/working-in-the-editor/): Every port has a type: int, number, bool, string, bytes or any.
-- [Flow lifecycle](https://docs.thingstudio.net/flow-lifecycle/): Flows save to a file you choose, via your browser's own save dialog — no backend needed for this part.
+- [Editor in depth](https://docs.thingstudio.net/working-in-the-editor/): How the editor's wiring, node labels, presets, config nodes and node status work.
+- [Flow lifecycle](https://docs.thingstudio.net/flow-lifecycle/): How a flow is saved, opened, deployed and disconnected.
 - [The Thingstudio folder](https://docs.thingstudio.net/thingstudio-folder/): Thingstudio keeps its own files in one folder on your computer:
 
 ## Boards and networks
 
 - [Supported hardware](https://docs.thingstudio.net/supported-hardware/): The boards, processors, displays, touch panels and sensors below have built-in support.
-- [Boards and processors](https://docs.thingstudio.net/boards/): Thingstudio checks every pin in a flow against the board the flow is for.
-- [Connecting over WiFi](https://docs.thingstudio.net/wifi-connection/): Once a board is set up, the editor can reach it over WiFi instead of USB.
+- [Boards and processors](https://docs.thingstudio.net/boards/): Each board and processor has a definition file that says which pins a flow may use.
+- [Connecting over WiFi](https://docs.thingstudio.net/wifi-connection/): The editor can connect to a board over WiFi instead of USB.
 - [WiFi provisioning](https://docs.thingstudio.net/wifi-provisioning/): You can leave a flow's WiFi network and password out, and enter them on the board when it first starts.
 
 ## Node reference
@@ -60,7 +60,7 @@
 - [filter](https://docs.thingstudio.net/nodes/filter/): Passes a message on only when it's worth sending, and drops the rest.
 - [journal](https://docs.thingstudio.net/nodes/journal/): Keeps the recent history of a number, as rows of average, minimum and maximum, the way RRDtool and Cacti do.
 - [clock](https://docs.thingstudio.net/nodes/clock/): The time and date, from the internet, as text for a display.
-- [debug](https://docs.thingstudio.net/nodes/debug/): Prints a message's payload to the device's console — the simplest way to see what's actually flowing through a wire.
+- [debug](https://docs.thingstudio.net/nodes/debug/): Prints a message's payload to the device's console — the way to see what's actually flowing through a wire.
 
 ## Network
 
@@ -69,8 +69,8 @@
 - [udp receive](https://docs.thingstudio.net/nodes/udp-receive/): Listens on a UDP port and emits one message per datagram received.
 - [mqtt subscribe](https://docs.thingstudio.net/nodes/mqtt-subscribe/): Emits one message per incoming message on a subscribed MQTT topic.
 - [http request](https://docs.thingstudio.net/nodes/http-request/): Makes one HTTP request per incoming message and returns the response.
-- [http in](https://docs.thingstudio.net/nodes/http-in/): Starts (or joins) a small HTTP server on the device and fires a message for each matching incoming request.
-- [http response](https://docs.thingstudio.net/nodes/http-response/): Completes a request that arrived via a matching http_in node.
+- [http in](https://docs.thingstudio.net/nodes/http-in/): Starts (or joins) an HTTP server on the device and fires a message for each matching incoming request.
+- [http response](https://docs.thingstudio.net/nodes/http-response/): Completes a request that arrived via a matching http in node.
 - [udp send](https://docs.thingstudio.net/nodes/udp-send/): Sends a message's payload as a UDP datagram to a fixed host and port.
 - [mqtt publish](https://docs.thingstudio.net/nodes/mqtt-publish/): Publishes a message's payload to an MQTT topic.
 
@@ -82,16 +82,17 @@
 - [gpio out](https://docs.thingstudio.net/nodes/gpio-out/): Drives a GPIO pin high or low based on an incoming message.
 - [pwm out](https://docs.thingstudio.net/nodes/pwm-out/): Drives a PWM signal on a GPIO pin — for dimming an LED, driving a motor, or anything else that wants a variable duty cycle rather than a plain on/off.
 - [display spi](https://docs.thingstudio.net/nodes/display-spi/): Pushes an already-rendered frame to an SPI color TFT panel.
-- [display i2c](https://docs.thingstudio.net/nodes/display-i2c/): Pushes an already-rendered frame to an I2C mono OLED panel (SSD1306 today — the controller property leaves room for others later, like SH1106).
-- [bme280](https://docs.thingstudio.net/nodes/bme280/): Reads a BME280 temperature, humidity and pressure sensor at a fixed interval.
+- [display i2c](https://docs.thingstudio.net/nodes/display-i2c/): Pushes an already-rendered frame to an I2C mono OLED panel.
+- [bme280](https://docs.thingstudio.net/nodes/bme280/): Reads a BME280 or BMP280 temperature, humidity and pressure sensor at a fixed interval.
 - [touch](https://docs.thingstudio.net/nodes/touch-i2c/): Raw touch input, for flows that don't use the GUI.
 - [i2c device](https://docs.thingstudio.net/nodes/i2c/): Talks to an I2C device that has no node of its own.
-- [I2C bus](https://docs.thingstudio.net/nodes/i2c-bus/): An I2C bus is a pair of wires, SCL and SDA, shared by one or more devices.
+- [I2C bus](https://docs.thingstudio.net/nodes/i2c-bus/): An I2C bus is shared by one or more devices.
 - [Touch panels](https://docs.thingstudio.net/nodes/touch-panel/): A touch panel is a capacitive touch screen on an I2C bus.
 - [GUI](https://docs.thingstudio.net/nodes/gui/): Show readings on a display as pages of labels, numbers, bars and lights.
 
 ## Extending and automating
 
+- [Node conventions](https://docs.thingstudio.net/node-conventions/): A node moves a message from one point in a flow to the next.
 - [Writing custom nodes](https://docs.thingstudio.net/custom-nodes/): A custom node is two files sharing a base name: <name>.node.json (the descriptor) and <name>.node.py (the behavior), placed in the backend's ~/.thingstudio/cus…
 - [Writing flows with an AI assistant](https://docs.thingstudio.net/ai-authoring/): This page is for an AI assistant (or a person) writing a Thingstudio flow file or a custom node in the user's folder, without the editor.
 - [Check a flow without the editor](https://docs.thingstudio.net/check-a-flow/): thingstudio-compile compiles and checks a flow file from the command line, with the same errors the editor gives.
@@ -100,5 +101,5 @@
 
 ## Troubleshooting
 
-- [Debugging & troubleshooting](https://docs.thingstudio.net/debugging/): The **console** shows what the board and Thingstudio report: deploy results, node errors, and what debug nodes and print() send.
+- [Debugging & troubleshooting](https://docs.thingstudio.net/debugging/): What the console and compiled source show, and what to do when a board or deploy fails.
 - [FAQ](https://docs.thingstudio.net/faq/): An ESP32's RAM is shared between MicroPython and the chip's own software: ESP-IDF, its FreeRTOS scheduler, and the WiFi stack.

@@ -2579,6 +2579,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../node-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../custom-nodes/" class="md-nav__link">
         
   
@@ -2982,16 +3010,20 @@
 <h1 id="a-sensor-display">A sensor display</h1>
 <p>Build a three-page touch display: the room's temperature, humidity and pressure with their recent history, and a
 clock. The flow also publishes the readings over MQTT.</p>
-<p>The finished flow is
-<a href="https://github.com/mkarliner/ThingStudio/blob/main/test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json"><code>test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json</code></a>
-in the Thingstudio repository. Download it and open it with <strong>File → Open…</strong> to see it, then pick your own WiFi
-and MQTT credentials in its config nodes. Or follow the steps below to build it.</p>
+<p>The finished flow is in the Thingstudio repository:
+<a href="https://github.com/mkarliner/ThingStudio/blob/main/test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json"><code>test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json</code></a>.
+Open it in one of two ways:</p>
+<ul>
+<li><strong>Open the finished flow.</strong> Download it and open it with <strong>File → Open…</strong>, then set your own WiFi and MQTT
+  credentials in its config nodes.</li>
+<li><strong>Build it yourself.</strong> Follow the steps below.</li>
+</ul>
 <h2 id="what-you-need">What you need</h2>
 <p>The steps use this hardware and setup:</p>
 <ul>
 <li>A Freenove ESP32-S3 4.0" touch display (FNK0104S), with MicroPython and the runtime installed
-  (<a href="../installing-micropython/">steps 3 to 5</a> of Getting started). Pick it by hand in the <strong>Board</strong> menu. Other
-  boards work too; the pins below are this board's.</li>
+  (<a href="../installing-micropython/">Getting started steps 3 to 5</a>). Pick it by hand in the <strong>Board</strong>
+  menu. Other boards work too; the pins below are this board's.</li>
 <li>A BME280 sensor board. A BMP280 also works, without humidity. Wire it to 3V3, GND, <strong>SCL 15</strong> and <strong>SDA 16</strong>,
   the touch panel's I2C bus.</li>
 <li>A WiFi network for the clock and MQTT, and an MQTT broker. See <a href="../wifi-connection/">Connecting over WiFi</a>.</li>
@@ -3133,8 +3165,8 @@ pass, and the clock starts once the board has the time.</p>
 <h2 id="if-it-doesnt-work">If it doesn't work</h2>
 <p>Each symptom below has its own fix:</p>
 <ul>
-<li><strong>The picture is scrambled:</strong> the gui screen's and display spi's width and height must be the panel's own size,
-  <code>320</code> and <code>480</code>, even when the picture is turned. Deploy checks this and says so.</li>
+<li><strong>The picture is scrambled:</strong> the <strong>width</strong> and <strong>height</strong> on both the gui screen and the display spi must be the
+  panel's own size, <code>320</code> and <code>480</code>, even when the picture is turned. Deploy checks this and says so.</li>
 <li><strong>Touches land in the wrong place:</strong> see <a href="../nodes/touch-panel/">Touch panels</a>.</li>
 <li><strong>No readings:</strong> check the wiring and the address (<code>0x76</code> or <code>0x77</code>), and test with a debug node.</li>
 <li><strong>The clock stays at <code>--</code>:</strong> the board has no WiFi, or can't reach the NTP server. It tries again every 30

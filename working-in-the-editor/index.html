@@ -2546,6 +2546,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../node-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../custom-nodes/" class="md-nav__link">
         
   
@@ -2914,6 +2942,7 @@
 
 
 <h1 id="editor-in-depth">Editor in depth</h1>
+<p>How the editor's wiring, node labels, presets, config nodes and node status work.</p>
 <h2 id="wiring">Wiring</h2>
 <p>Every port has a type: <code>int</code>, <code>number</code>, <code>bool</code>, <code>string</code>, <code>bytes</code> or <code>any</code>. The editor refuses a wire between
 types that don't fit. What each input type accepts:</p>
@@ -2952,7 +2981,8 @@ types that don't fit. What each input type accepts:</p>
 </tbody>
 </table>
 <p>A <code>string</code> that isn't a number fails on the board when it reaches a <code>number</code> or <code>int</code> input, with a <code>NODE_ERROR</code>.
-An <code>any</code> output, such as a <a href="../nodes/function/">function</a> node's, connects only to <code>any</code>, <code>bool</code> and <code>bytes</code> inputs.</p>
+An <code>any</code> output, such as the output of a <a href="../nodes/function/">function</a> node, connects only to <code>any</code>, <code>bool</code> and
+<code>bytes</code> inputs.</p>
 <p>An input can take any number of wires. The node runs once for each message that arrives, whichever wire it came
 on. An output can feed any number of inputs.</p>
 <h2 id="giving-a-node-a-flow-label">Giving a node a flow label</h2>
@@ -2990,7 +3020,7 @@ credential from the config's <strong>credential</strong> field. See <a href="../
 <p>A flow has one WiFi network. Every node that uses WiFi has a <strong>WiFi</strong> field, and they all show the same setting:
 change it on one and it changes on all. A flow doesn't need a <code>wifi status</code> node to use the network.</p>
 <h2 id="node-status">Node status</h2>
-<p>Some nodes show a coloured dot and a line of text under the node while the editor is connected to the board:</p>
+<p>Some nodes show a colored dot and a line of text under the node while the editor is connected to the board:</p>
 <table>
 <thead>
 <tr>
@@ -3008,7 +3038,7 @@ change it on one and it changes on all. A flow doesn't need a <code>wifi status<
 <td>connecting</td>
 </tr>
 <tr>
-<td>Grey</td>
+<td>Gray</td>
 <td>disconnected</td>
 </tr>
 <tr>

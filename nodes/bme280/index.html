@@ -2271,10 +2271,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#output" class="md-nav__link">
+  <a href="#wiring" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Output
+        Wiring
       
     </span>
   </a>
@@ -2286,6 +2286,17 @@
     <span class="md-ellipsis">
       
         Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
       
     </span>
   </a>
@@ -2507,6 +2518,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../node-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -2808,10 +2847,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#output" class="md-nav__link">
+  <a href="#wiring" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Output
+        Wiring
       
     </span>
   </a>
@@ -2823,6 +2862,17 @@
     <span class="md-ellipsis">
       
         Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
       
     </span>
   </a>
@@ -2850,27 +2900,30 @@
 
 
 <h1 id="bme280">bme280</h1>
-<p>Reads a BME280 temperature, humidity and pressure sensor at a fixed interval. A BMP280 works too; it has no
-humidity sensor.</p>
+<p>Reads a BME280 or BMP280 temperature, humidity and pressure sensor at a fixed interval.
+<a href="../../supported-hardware/#sensors">Supported hardware</a> lists the chips.</p>
 <h2 id="properties">Properties</h2>
 <ul>
 <li><strong>I2C bus</strong> — the bus the sensor is wired to. See <a href="../i2c-bus/">I2C bus</a>.</li>
 <li><strong>address</strong> — <code>0x76</code> (most boards) or <code>0x77</code>.</li>
 <li><strong>interval (ms)</strong> — how often to read. At least 100.</li>
 </ul>
-<h2 id="output">Output</h2>
+<h2 id="wiring">Wiring</h2>
+<p><strong>Output</strong> — one reading per interval:</p>
 <div class="highlight"><pre><span></span><code><span class="n">msg</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'payload'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'temperature'</span><span class="p">:</span> <span class="mf">21.43</span><span class="p">,</span> <span class="s1">'humidity'</span><span class="p">:</span> <span class="mf">48.2</span><span class="p">,</span> <span class="s1">'pressure'</span><span class="p">:</span> <span class="mf">1012.6</span><span class="p">},</span> <span class="s1">'topic'</span><span class="p">:</span> <span class="s1">''</span><span class="p">}</span>
 </code></pre></div>
 <p>Temperature is in °C, humidity in %, pressure in hPa. On a BMP280, <code>humidity</code> is <code>None</code>.</p>
-<p>To use one reading, pick it out in a <code>function</code> node: <code>msg['payload'] = msg['payload']['temperature']</code>.</p>
+<p>To use one reading, pick it out in a <a href="../function/">function</a> node:
+<code>msg['payload'] = msg['payload']['temperature']</code>.</p>
 <h2 id="behavior">Behavior</h2>
-<p>The status dot shows whether the sensor is answering. If a read fails, the node sends nothing and the
-dot says why:</p>
+<p>The status dot shows whether the sensor is answering. The node tries again at the next interval, and picks up a
+sensor connected after the flow starts.</p>
+<h2 id="errors">Errors</h2>
+<p>If a read fails, the node sends nothing and the dot says why:</p>
 <ul>
 <li><strong>disconnected</strong>, <code>no reply at 0x76 on I2C bus 0</code> — nothing answered. Check the wiring, pins and address.</li>
 <li><strong>error</strong>, <code>no BME280/BMP280 at 0x76 (chip id 0x..)</code> — a different chip is at that address.</li>
 </ul>
-<p>The node tries again at the next interval. A sensor connected after the flow starts is picked up then.</p>
 
 
 

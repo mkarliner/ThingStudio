@@ -2526,6 +2526,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../node-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../custom-nodes/" class="md-nav__link">
         
   
@@ -2876,8 +2904,8 @@
 two <a href="../gui/">labels</a> to make a clock page.</p>
 <h2 id="wiring">Wiring</h2>
 <ul>
-<li><strong>Input</strong> — any message; each one is a look at the clock. Use a timer of 1 second (or a few seconds if you show
-  no seconds).</li>
+<li><strong>Input</strong> — any message; each one is a look at the clock. Use a timer of 1 second, or longer if you show no
+  seconds.</li>
 <li><strong>Output 1, time</strong> — <code>payload</code> such as <code>14:05</code> (or <code>14:05:09</code>, or <code>2:05</code> in 12-hour). Sent only when the text changes.</li>
 <li><strong>Output 2, date</strong> — <code>payload</code> such as <code>Sat 10 Oct</code>. Sent when the day changes.</li>
 </ul>
@@ -2901,7 +2929,7 @@ once. Boards whose firmware has no <code>ntptime</code> module report that on th
 <p>The <code>seg7</code> fonts (<code>font_seg748</code>, <code>font_seg764</code>, <code>font_seg796</code>) have only <code>0-9 : . -</code> and a space. On a 320-pixel-wide
 screen <code>font_seg764</code> fits <code>14:05</code> (221 px) and <code>font_seg748</code> fits <code>14:05:09</code> (254 px). <code>font_seg796</code> is for wider
 screens. The font is DSEG by Keshikan (SIL Open Font License 1.1); see
-<a href="https://github.com/mkarliner/ThingStudio/blob/main/docs/third-party-licenses.md">third-party licences</a>.</p>
+<a href="https://github.com/mkarliner/ThingStudio/blob/main/docs/third-party-licenses.md">third-party licenses</a>.</p>
 
 
 

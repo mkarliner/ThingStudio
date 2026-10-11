@@ -2504,6 +2504,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../node-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../custom-nodes/" class="md-nav__link">
         
   
@@ -2828,8 +2856,7 @@
 
 
 <h1 id="eswitch">eswitch</h1>
-<p>Reports when a debounced switch opens or closes. Polling-based, not the hard-IRQ <code>interrupt</code> node — use this when a
-simple debounced switch is all you need.</p>
+<p>Reports when a debounced switch opens or closes. Polling-based, not the interrupt-driven <code>interrupt</code> node.</p>
 <h2 id="properties">Properties</h2>
 <ul>
 <li><strong>pin</strong> — GPIO pin number. Default 4. Checked against your <a href="../../boards/">board</a>.</li>
@@ -2839,8 +2866,8 @@ simple debounced switch is all you need.</p>
 <li><strong>debounce (ms)</strong> — how long a level must hold before it's accepted as real. Default 50ms.</li>
 </ul>
 <h2 id="behavior">Behavior</h2>
-<p>Fires once per transition: <code>topic</code> is <code>close</code> or <code>open</code>, <code>payload</code> is <code>true</code> when closed. A downstream node that
-only cares about current state can read <code>payload</code> alone and ignore <code>topic</code>.</p>
+<p>Fires once per transition: <code>event</code> is <code>close</code> or <code>open</code>, <code>payload</code> is <code>true</code> when closed, and <code>topic</code> is empty. A
+downstream node that only cares about current state can read <code>payload</code> alone and ignore <code>event</code>.</p>
 <p>No internal pull is enabled by default — wire an external pull resistor, use a switch module with one built in,
 or set <strong>pull</strong> if the switch instead relies on the board's own internal pull-up/pull-down.</p>
 <p>Two <code>eswitch</code> nodes on the same pin share one underlying driver instance rather than each polling independently —

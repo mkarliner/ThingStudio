@@ -2504,6 +2504,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../node-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../custom-nodes/" class="md-nav__link">
         
   
@@ -2834,7 +2862,10 @@
 <li><strong>delay (ms)</strong> — how long to hold the message before releasing it. Must be a positive number.</li>
 </ul>
 <h2 id="behavior">Behavior</h2>
-<p><strong>The wait blocks the message's own source, not just this one message.</strong> A <code>timer</code> node ticking every 200ms feeding a <code>delay</code> of 5000ms will not keep ticking every 200ms once a message reaches the delay — the timer's next tick can't fire until the whole chain, including the delay, finishes. This isn't unique to <code>delay</code> (any slow node has the same effect on its own source), but <code>delay</code>'s entire job is waiting, so it's worth knowing up front rather than discovering it as a mysteriously slowing timer.</p>
+<p><strong>The wait blocks the message's own source, not only this one message.</strong> A <code>timer</code> node ticking every 200ms feeding
+a <code>delay</code> of 5000ms stops ticking every 200ms once a message reaches the delay: the timer's next tick can't fire
+until the whole chain, including the delay, finishes. Any slow node has the same effect on its own source, but
+<code>delay</code>'s entire job is waiting, so it pays to know this up front.</p>
 
 
 
