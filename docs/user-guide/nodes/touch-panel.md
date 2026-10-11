@@ -9,7 +9,7 @@ button being held is let go without sending.
 
 ## Settings
 
-- **controller** — the touch chip. Only the FT6336U (as on the Freenove ESP32-S3 displays) is supported so far.
+- **controller** — the touch chip. The FT6336U (as on the Freenove ESP32-S3 displays).
 - **I2C bus** — the bus the panel is wired to. See [I2C bus](i2c-bus.md). On the Freenove 4.0" board: SDA 16,
   SCL 15.
 - **address** — the chip's I2C address. 0x38 for the FT6336U.
@@ -28,10 +28,10 @@ that name to fill the form. The I2C bus is not saved, since it belongs to the fl
 ## Rotated screens
 
 If the display the gui screen is wired to has an [orientation](gui.md#rotating-the-screen), the screen's touch axes are turned to match the picture.
-The raw [touch_i2c](touch-i2c.md) node is not turned.
+The raw [touch](touch-i2c.md) node is not turned.
 
 ## Other touch chips
 
-GT911, CST820 and others aren't supported yet. Read one from a [function](function.md) node with
+For a chip this node doesn't cover, such as GT911 or CST820, read it from a [function](function.md) node with
 `runtime.shared('i2c', 0)`, using the chip's datasheet and a MicroPython driver for it. See
 [docs.micropython.org](https://docs.micropython.org/en/latest/library/machine.I2C.html) for the I2C calls.

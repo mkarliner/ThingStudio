@@ -25,7 +25,7 @@ Much else is the same. `return msg` passes the message on, and returning nothing
 to several outputs. `context.get()`/`context.set()` and `flow.get()`/`flow.set()` work as you'd expect. There's no
 `global`, since there's only one flow. See the [function node](../nodes/function.md).
 
-Don't use `time.sleep()` in a function node. It stops the whole board, not just that node. Use await asyncio.sleep() or a `delay` node
+Don't use `time.sleep()` in a function node. It stops the whole board, not only that node. Use `await asyncio.sleep()` or a `delay` node
 instead. See [event-driven programming](../background/event-driven.md).
 
 ## Messages
@@ -49,7 +49,7 @@ saying which node, and the rest of the flow keeps running. See [debugging](../de
 
 ## Using both
 
-Node-RED is still the better place for dashboards, databases and cloud services. A common setup is Thingstudio
+Node-RED is the better place for dashboards, databases and cloud services. A common setup is Thingstudio
 boards publishing over MQTT to a Node-RED flow on a server or Raspberry Pi.
 
 Next: [getting started](../getting-started.md).

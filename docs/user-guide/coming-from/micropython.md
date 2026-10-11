@@ -5,7 +5,7 @@ and a way to write programs as flows, while the REPL and your own Python stay wi
 
 ## What goes on the board
 
-**Tools → Install runtime…** copies a small set of Python files onto the board's filesystem, including a `main.py` that
+**Tools → Install runtime…** copies a set of Python files onto the board's filesystem, including a `main.py` that
 starts the Thingstudio runtime at boot. The runtime listens on USB or WiFi for the editor, and runs the last flow
 you deployed.
 
@@ -29,7 +29,7 @@ The board saves the flow and runs it again after a restart.
 
 ## The REPL
 
-The box under the editor's console runs Python on the board while the flow runs, for quick checks like
+The command box under the editor's console runs Python on the board while the flow runs, for checks like
 `gc.mem_free()`. For the full `>>>` prompt, click **Stop flow & open prompt**. To use Thonny or `mpremote`, click
 **Disconnect** first. See [commands and the Python prompt](../debugging.md#commands-and-the-python-prompt).
 

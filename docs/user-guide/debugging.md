@@ -1,5 +1,7 @@
 # Debugging & troubleshooting
 
+What the console and compiled source show, and what to do when a board or deploy fails.
+
 ## Console and compiled source
 
 The **console** shows what the board and Thingstudio report: deploy results, node errors, and what `debug` nodes
@@ -16,7 +18,7 @@ Hidden lines are kept, so choosing Info or Debug later shows what was already lo
 The **Compiled source** panel shows the MicroPython your flow compiles to.
 
 The editor's version is next to its name in the toolbar, and in **Help → About Thingstudio**. A `+` after it means
-it was built from uncommitted changes. Include the versions when you report a problem.
+you built it from uncommitted changes. Include the versions when you report a problem.
 
 ### Memory
 
@@ -27,8 +29,8 @@ MicroPython's. If WiFi won't join while MicroPython has plenty free, a low ESP-I
 
 ## Commands and the Python prompt
 
-The box under the console runs Python on the board. Type a line and press Enter; the result appears in the console.
-The up and down arrows bring back earlier commands.
+The command box under the console runs Python on the board. Type a line and press Enter; the result appears in the
+console. The up and down arrows bring back earlier commands.
 
 ```python
 gc.mem_free()
@@ -79,9 +81,9 @@ If the port itself won't open, the console says why:
 
 The raw error stays in the message, in brackets. Include it if you report a problem.
 
-## Deploy is greyed out
+## Deploy is grayed out
 
-**Compile → Deploy** is greyed out when:
+**Compile → Deploy** is grayed out when:
 
 - the editor isn't connected to a board;
 - the flow on the board is the one on the canvas, deployed and unchanged since;

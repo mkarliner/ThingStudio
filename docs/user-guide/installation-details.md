@@ -1,7 +1,7 @@
 # Installation details
 
 How Thingstudio is packaged, where it puts its files, how to upgrade and remove it, and how to build it from source.
-[Getting started](getting-started.md#step-1-install-thingstudio) has the quick version.
+[Getting started](getting-started.md#step-1-install-thingstudio) has the install steps.
 
 ## Packages
 
@@ -51,9 +51,9 @@ Upgrading and removing never touch `~/.thingstudio`, or your flows, which are sa
 For working on Thingstudio itself. You need Python 3.10 or later, Node.js 22.12 or later, and `make`. On a Mac,
 `make` comes with the Xcode command line tools (`xcode-select --install`).
 
-In the repository folder, run `make`. This builds the editor and these docs, installs Thingstudio into a `.venv`
+In the repository folder, run `make`. This builds the editor and the user guide, installs Thingstudio into a `.venv`
 folder, and puts the `thingstudio-backend` command on your PATH. Run `make` again after updating the repository. It
 only rebuilds what changed. If your `python3` is older than 3.10, name a newer one: `make PYTHON=python3.12`.
 
-Start it with `thingstudio-backend`, or `make run`. On a Mac, start it from Apple's **Terminal** app: macOS blocks
+Start it with `thingstudio-backend`, or `make run`. On a Mac, start it from Apple's **Terminal** app. macOS blocks
 WiFi connections from a copy run from source in other terminals, such as iTerm.

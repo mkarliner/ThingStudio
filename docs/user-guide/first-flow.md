@@ -6,8 +6,8 @@ Your board should be connected, with the runtime installed: steps [4](connecting
 
 ## Find your LED's pin
 
-Many boards have an LED wired to a GPIO pin. To find it, click **Pins…** next to the **Board** menu. Pins the board
-names, such as `LED`, are listed first. [Supported hardware](supported-hardware.md) lists the boards Thingstudio
+Many boards have an LED wired to a GPIO pin. To find it, click **Pins…** next to the **Board** menu. Pins that the
+board names, such as `LED`, are listed first. [Supported hardware](supported-hardware.md) lists the boards Thingstudio
 has definitions for. For any other board, check its documentation.
 
 The Pico W and Pico 2 W LEDs are wired through the WiFi chip, not a GPIO pin, so `gpio out` can't reach them. On
@@ -52,14 +52,13 @@ The **timer** sends a message every 500 ms. Its payload is a count: 1, 2, 3, and
 **gpio out** turns the pin on for any payload that isn't zero. Wired straight to the timer, the LED would switch on
 and stay on.
 
-The **function** node turns the count into 1, 0, 1, 0: the remainder after dividing by 2. That gives on, off, on,
-off.
+The **function** node turns the count into 1, 0, 1, 0 with `% 2`. That gives on, off, on, off.
 
 ## Try these changes
 
 Each change below edits the flow you built. Deploy after each one.
 
-- **Change the timing.** Set the timer's **interval (ms)** to `100` for a fast flicker, or `2000` for a slow blink.
+- **Change the timing.** Set the timer's **interval (ms)** to `100`, or `2000` for a slower blink.
 - **Read the pin instead of counting.** Replace the function's code with this, using your LED's GPIO number in
   place of `2`. Each message sets the LED to the opposite of what the pin reads now.
 
@@ -87,8 +86,9 @@ the hardware, or in `context`.
 
 Each symptom below has its own fix:
 
-- **Deploy is greyed out:** you aren't connected, so click **Connect**. Deploy is also greyed out after a deploy
-  until you change the flow, while the flow is stopped at the Python prompt, and while the board restarts.
+- **Deploy is grayed out:** you aren't connected, so click **Connect**. Deploy is also grayed out after a deploy
+  until you change the flow, while the flow is stopped at the Python prompt (**Stop flow & open prompt**), and while
+  the board restarts.
 - **Compile fails:** usually a mistake in the function node's code, such as a missing quote or wrong
   indentation. The console shows the Python error in red, with its line, and highlights the node. Fix the code and
   deploy again.

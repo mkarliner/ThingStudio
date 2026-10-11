@@ -9,7 +9,7 @@ Reports press, release, long-press, and double-click events from a single deboun
 - **sense** — which electrical level means "pressed": `auto` (default, reads the pin's own boot state as
   "not pressed"), `0`, or `1`.
 - **suppress** — off by default. When on, `press`/`release` are held back until it's clear the click isn't the
-  first half of a double — a plain single click still reports `press` then `release`, just delayed by up to the
+  first half of a double — a plain single click still reports `press` then `release`, delayed by up to the
   double-click window; an actual double-click reports only `double`, not `press`/`release` for the first click too.
 - **debounce (ms)** — default 50ms.
 - **long press (ms)** — how long a press must hold to count as `long`. Default 1000ms.

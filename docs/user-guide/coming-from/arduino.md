@@ -23,7 +23,7 @@ safely in the main program, not inside the interrupt, so you can do anything the
 
 ## No compile-and-flash cycle
 
-The firmware stays the same. Deploying a flow sends a small compiled file to the board, over USB or WiFi, and the
+The firmware stays the same. Deploying a flow sends a compiled file to the board, over USB or WiFi, and the
 board swaps it in. Changing a flow and trying it again takes seconds.
 
 ## What stays the same

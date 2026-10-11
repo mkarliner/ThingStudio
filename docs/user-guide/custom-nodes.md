@@ -3,13 +3,12 @@
 A custom node is two files sharing a base name: `<name>.node.json` (the
 descriptor) and `<name>.node.py` (the behavior), placed in the backend's
 `~/.thingstudio/custom-nodes/` directory. Thingstudio loads it for you,
-and you drag it onto the canvas like any built-in node. This document is
-complete on its own — no other Thingstudio docs needed.
+and you drag it onto the canvas like any built-in node.
 
 ## Loading a custom node
 
 Put both files in `~/.thingstudio/custom-nodes/` on the computer running
-Thingstudio. There's no upload button in the editor yet.
+Thingstudio.
 
 The editor loads every package in that folder when it starts, and again
 when you switch back to its window. After changing a file, you can also
@@ -79,9 +78,8 @@ that group.
 same types built-in nodes use, with the same wire-compatibility checks.
 Use `any` when unsure.
 
-Custom nodes support only one output port. The built-in `function` node
-supports multiple, configurable outputs -- that hasn't been extended to
-the custom-node format yet.
+A custom node has one output port. The built-in `function` node's
+multiple, configurable outputs aren't available to custom nodes.
 
 **`properties`** (optional) — fields shown in the property panel when
 the node is selected:
@@ -111,7 +109,7 @@ your node's `kind`:
 
 `msg` is a dict with a `payload` key, a `topic` key, and room for any
 extra keys you add. `topic` is a routing/identification string — the
-`mqtt_subscribe` built-in node, for instance, fills it with the real
+`mqtt subscribe` built-in node, for instance, fills it with the real
 MQTT topic a message arrived on. Most nodes have no natural topic of
 their own; set it to `''` rather than a real value. The key is
 required either way — don't leave it out. `properties` is a dict of
@@ -244,16 +242,14 @@ Thingstudio doesn't check it. A typo surfaces as a runtime error (e.g.
 
 ## Limitations
 
-- **One output port** — a current compiler limit, not a format limit.
-- **No event-driven sources** — `intervalMs` polling only.
-- **No resource-sharing between instances.** Two built-in `gpio_out`
-  nodes on the same pin share one `Pin` object; two instances of your
-  custom node don't — each gets its own independent setup. Don't put
-  two instances of the same stateful custom node on the same physical
-  resource (e.g. the same pin).
-- **No sandboxing.** Custom node Python runs with the same trust as any
-  other node — the same trust Thingstudio's `function` node already
-  has. Loading a package only adds it to the palette. Its Python runs
-  on a board only when you place the node and deploy. There's no
-  registry and no URL install, only files you put in the folder
-  yourself. Don't put a package there that you haven't read.
+A custom node has one output port. A `source` node's `emit` runs on a fixed `intervalMs` schedule, not in response to
+an external event.
+
+Two instances of the same custom node get independent setup, unlike two built-in `gpio out` nodes on the same pin,
+which share one `Pin` object. Don't put two instances of the same stateful custom node on the same physical resource,
+such as the same pin.
+
+Custom node Python runs with the same trust as any other node, including Thingstudio's `function` node. Loading a
+package only adds it to the palette; its Python runs on a board only when you place the node and deploy. Only files
+you place in the folder are loaded — there's no registry and no URL install — so don't put a package there that you
+haven't read.

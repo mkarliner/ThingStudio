@@ -1,7 +1,7 @@
 # Step 3: Install MicroPython
 
-Thingstudio runs on top of [MicroPython](background/micropython.md), a version of Python for microcontrollers, so
-the board needs it first. You install it once per board.
+Thingstudio runs on top of [MicroPython](background/micropython.md), so the board needs it first. You install it once
+per board.
 
 A new board usually doesn't have MicroPython. If yours already has it, or you're not sure, go to
 [step 4](connecting.md). If MicroPython is missing, the console says so when you connect, and links back here.
@@ -68,8 +68,8 @@ a different port afterwards.
 
 ## Without a terminal: Thonny
 
-[Thonny](https://thonny.org) is a free Python editor that works with MicroPython boards and can install MicroPython
-for you. Open **Tools → Options → Interpreter** and use **Install or update MicroPython**.
+[Thonny](https://thonny.org) installs MicroPython on the board through a GUI. Open
+**Tools → Options → Interpreter** and use **Install or update MicroPython**.
 
 When it's done, close Thonny. Like esptool, it needs the board's port to itself.
 

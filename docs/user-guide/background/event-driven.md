@@ -1,6 +1,6 @@
 # Event-driven programming
 
-An event-driven program waits for things to happen, and runs a short piece of code for each one. A button press,
+An event-driven program waits for things to happen, and runs a piece of code for each one. A button press,
 a timer tick and an incoming network message are all events. The code that handles one is often called a
 handler.
 
@@ -53,6 +53,7 @@ return msg
 
 ## More
 
+Further reading:
+
 - [MicroPython's asyncio](https://docs.micropython.org/en/latest/library/asyncio.html)
-- [Peter Hinch's asyncio tutorial for MicroPython](https://github.com/peterhinch/micropython-async/blob/master/v3/docs/TUTORIAL.md),
-  the most thorough guide there is
+- [Peter Hinch's asyncio tutorial for MicroPython](https://github.com/peterhinch/micropython-async/blob/master/v3/docs/TUTORIAL.md)

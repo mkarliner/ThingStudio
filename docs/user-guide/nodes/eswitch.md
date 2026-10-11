@@ -1,7 +1,6 @@
 # eswitch
 
-Reports when a debounced switch opens or closes. Polling-based, not the hard-IRQ `interrupt` node — use this when a
-simple debounced switch is all you need.
+Reports when a debounced switch opens or closes. Polling-based, not the interrupt-driven `interrupt` node.
 
 ## Properties
 

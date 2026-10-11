@@ -14,7 +14,9 @@ starts again after a reset or power cycle.
   part.</figcaption>
 </figure>
 
-- **Local Dev** All development is done locally, there is no cloud service.
+In practice, that means:
+
+- **Local dev.** Development happens locally; there is no cloud service.
 - **Works offline.** Once installed, it needs no internet connection, docs included.
 - **Git friendly.** Thingstudio's files, your programs and your board definitions, are plain, indented
   JSON that you save where you like. They diff cleanly and sit happily in a git repository. Passwords and
@@ -23,7 +25,7 @@ starts again after a reset or power cycle.
   [boards](boards.md#adding-a-board) and [processors](boards.md#adding-a-processor). You drop their files into
   a folder. There's nothing to rebuild.
 - **Free and open source.** Thingstudio is under the
-  [Apache 2.0 licence](https://github.com/mkarliner/ThingStudio/blob/main/LICENSE). You can use it, change it and
+  [Apache 2.0 license](https://github.com/mkarliner/ThingStudio/blob/main/LICENSE). You can use it, change it and
   build on it, including in commercial products.
 
 !!! tip "Already know the background?"
@@ -53,8 +55,10 @@ the temperature. When a message arrives from the network, update the display. Ea
 happens, and the board waits for many events at once. This is
 [event-driven programming](background/event-driven.md).
 
-MicroPython supports this style of programming natively with the 
-[`asyncio`](https://docs.micropython.org/en/latest/library/asyncio.html): primitives. When you write ansynio programs the code no longer reads top to bottom, so it can be harder to grasp what it's doing. Thingstudio makes it easier to create event driven programs and understand what they do by providing a graphical editor of events, functions and outputs.
+MicroPython supports this style natively with
+[`asyncio`](https://docs.micropython.org/en/latest/library/asyncio.html). An `asyncio` program no longer reads top to
+bottom, which makes it harder to see what it does. Thingstudio's graphical editor of events, functions and outputs
+makes an event-driven program easier to build and follow.
 
 ## Events, nodes and wires
 
@@ -67,8 +71,8 @@ A program is made of **nodes** joined by **wires**. There are three types of nod
 A wire joins one node's output to the next node's input. The nodes and wires together make a **flow**. A flow can
 hold any number of chains, each starting at a source.
 
-Nodes pass **messages** along the wires. A message is a dict, with its main value in `payload`. More on this in
-[flows, nodes and messages](background/flows-and-nodes.md).
+Nodes pass **messages** along the wires. A message is a dict, with its main value in `payload`. Messages are covered
+in more detail in [flows, nodes and messages](background/flows-and-nodes.md).
 
 This way of working comes from [Node-RED](background/node-red.md), a popular tool for home automation and IoT. In
 Node-RED, flows run on a server or a Raspberry Pi. In Thingstudio, they run on the microcontroller.
@@ -95,8 +99,8 @@ You can also run Python directly on the board from the editor. See
 
 ## Running on the board
 
-The board runs [MicroPython](background/micropython.md), a version of Python 3 made for microcontrollers. You install
-it once, then Thingstudio adds a small runtime of its own on top.
+The board runs [MicroPython](background/micropython.md). You install it once, then Thingstudio adds a runtime of its
+own on top.
 
 When you click **Deploy**, the editor turns your flow into MicroPython code and compiles it. It sends the result to
 the board over USB or WiFi, and the board swaps it in and starts running it. There's no firmware to flash, so
@@ -118,14 +122,12 @@ Thingstudio tries not to reinvent the wheel.
 
 - A board with an ESP32 or RP2040/RP2350 processor. [Supported hardware](supported-hardware.md) lists what's been
   tested. Other boards that run MicroPython may work.
-- A USB cable that carries data, not just power.
-- Some knowledge of Python, enough to write a few lines.
-- Some knowledge of electronics, enough to wire up an LED.
+- A USB cable that carries data, not only power.
 
 ## Next
 
-[Getting started](getting-started.md) lists the steps from a new board to a blinking LED, and starts you on the
-first one.
+[Getting started](getting-started.md) lists the steps from a new board to a blinking LED, and starts you on the first
+step.
 
 The docs on [docs.thingstudio.net](https://docs.thingstudio.net/) follow the latest code. The docs inside Thingstudio
 (**Help → User guide**) match the version you have installed.

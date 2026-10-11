@@ -1,11 +1,11 @@
 # Connecting over WiFi
 
-Once a board is set up, the editor can reach it over WiFi instead of USB. Deploy, the console, Check status and
-inject clicks all work the same way.
+The editor can connect to a board over WiFi instead of USB. Once connected over WiFi, everything works the same as
+over USB: deploy, the console, **Tools → Check status**, and clicking an inject node.
 
 ## What you need
 
-- A board with WiFi, running Thingstudio runtime 3.0.0 or later. Plain Raspberry Pi Pico and Pico 2 boards have no
+- A board with WiFi and the Thingstudio runtime. Plain Raspberry Pi Pico and Pico 2 boards have no
   WiFi.
 - A flow on the board that uses WiFi and has joined your network. The board is only reachable while that flow is
   running. It starts again by itself after a reset.
@@ -16,7 +16,7 @@ inject clicks all work the same way.
 ## Set the password and name
 
 1. Connect the board over USB.
-2. Choose **Tools → Board settings…**. The top line names the board it will change: its chip, USB port and current name.
+2. Choose **Tools → Board settings…**. The top line names the board these settings apply to: its chip, USB port and current name.
 3. Enter a network name and a password of 8 to 64 characters, then click **Save to board**.
 
 The name and password are stored on the board, not in the flow. The editor also remembers the password on this
@@ -51,11 +51,11 @@ A board with no password is listed as **no password set**. It won't accept a WiF
 The console says what went wrong:
 
 - **No route to host (Mac):** macOS is blocking local network access. The first time Thingstudio reaches for the
-  network, macOS asks whether it may find devices on your local network: choose **Allow**, then click
-  **Connect** again (the attempt that raised the question can fail). If you chose **Don't Allow**, turn
-  **thingstudio-python** on in System Settings > Privacy & Security > Local Network, then restart Thingstudio.
-  Running from source (`thingstudio-backend`), macOS may block it without asking: start it from Apple's
-  **Terminal** app instead, which macOS always allows.
+  network, macOS asks whether it may find devices on your local network; choose **Allow**, then click **Connect**
+  again (the attempt that raised the question can fail). If you chose **Don't Allow**, turn **thingstudio-python**
+  on in System Settings → Privacy & Security → Local Network, then restart Thingstudio. When running from source
+  (`thingstudio-backend`), macOS may block it without asking: start it from Apple's **Terminal** app instead, which
+  macOS always allows.
 - **No answer:** check the board is on, its flow has joined WiFi, and this computer is on the
   same network. If a `.local` name doesn't work, try the IP address, shown in the console when you connect over USB.
 - **Wrong password:** the editor asks again. To change it, connect over USB and use **Tools → Board settings…**.

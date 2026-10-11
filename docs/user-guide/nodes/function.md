@@ -1,6 +1,6 @@
 # function
 
-Runs your own MicroPython on each message. The most flexible node in the library — anything not covered by a dedicated node type usually belongs here.
+Runs your own MicroPython on each message. Use it for anything a dedicated node type doesn't cover.
 
 ## Properties
 
@@ -34,4 +34,4 @@ else:
 - `None` in a slot sends nothing out that output.
 - A plain `return msg` (no array) still works, and always targets output 1.
 - A slot holding a list of messages sends all of them out that one output, in order: `return [[msg1, msg2], None]`.
-- Returning fewer elements than the node has outputs leaves the missing ones as `None`; returning more just ignores the extras.
+- Returning fewer elements than the node has outputs leaves the missing ones as `None`; returning more ignores the extras.

@@ -12,7 +12,7 @@ been deployed and run on that hardware. Pin details for boards and processors ar
 | Raspberry Pi Pico W | RP2040 | Yes, including WiFi |
 | Raspberry Pi Pico 2 | RP2350 | Yes |
 | LOLIN S2 Mini | ESP32-S2 | Yes |
-| CYD (ESP32-2432S028, ST7789) | ESP32 | Yes, with the display. Touch, SD card, RGB LED and speaker not yet. |
+| CYD (ESP32-2432S028, ST7789) | ESP32 | Yes, display only. |
 | Freenove ESP32-S3 Display 4.0" (FNK0104S) | ESP32-S3 | Yes, with the display and touch |
 
 ## Processors without a board definition
@@ -35,7 +35,7 @@ Any board with one of these processors can be used by picking the processor from
 | --- | --- | --- | --- |
 | ST7789 | 240x240, 135x240, 240x320 | [display spi](nodes/display-spi.md) | Yes, on the CYD |
 | ST7796 | 320x480 | [display spi](nodes/display-spi.md) | Yes, on the Freenove ESP32-S3 4.0" |
-| SSD1306 (I2C only) | 128x64, or set width and height | [display i2c](nodes/display-i2c.md) | Not yet confirmed |
+| SSD1306 (I2C only) | 128x64, or set width and height | [display i2c](nodes/display-i2c.md) | Untested |
 
 ## Touch panels
 
@@ -48,7 +48,7 @@ Any board with one of these processors can be used by picking the processor from
 | Chip | Node | Tested |
 | --- | --- | --- |
 | BME280 | [bme280](nodes/bme280.md) | Yes, on a Pico |
-| BMP280 | [bme280](nodes/bme280.md) | Not yet confirmed |
+| BMP280 | [bme280](nodes/bme280.md) | Untested |
 
 Other I2C devices can be read with a [function](nodes/function.md) node and the chip's datasheet.
 

@@ -28,5 +28,5 @@ answers, **error** when the payload can't be written. The next message tries aga
 
 ## Example
 
-Read a TCS34725 colour sensor's ID register: address `0x29`, register `0x92`, length 1. An `inject` into
-this node, into `debug`, prints `b'D'` (0x44).
+Read a TCS34725 color sensor's ID register: address `0x29`, register `0x92`, length 1. Wire an `inject` into the
+i2c device node, then into `debug`, to print `b'D'` (0x44).

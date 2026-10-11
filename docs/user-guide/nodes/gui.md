@@ -17,8 +17,8 @@ property panel: see [Laying out pages](#laying-out-pages).
 - **gui button** — a touch button. It has an input, which sets what it shows, and an output, which sends when it is
   tapped. See [Buttons](#buttons).
 - **gui navigator** — changes the page from the flow. Send `next`, `prev`, `back`, `home` or a page name. Sends
-  the new page name when it changes. It is no longer in the palette (a *navigate* button does the same from the
-  screen), but flows that already have one still work.
+  the new page name when it changes. It isn't in the palette; a *navigate* button does the same from the
+  screen.
 - **gui modal** — a full-screen message. Send any payload to open it, `None` to close it. If several are
   open, the highest priority shows and the rest wait. Its output sends how it closed:
   `{topic: <modal's name>, payload: 'ack' | 'timeout' | 'closed'}`. Properties: **screen** (the id of the `gui_screen` it
@@ -53,7 +53,7 @@ A button sends when your finger lifts inside it. Lift outside and nothing is sen
 to send as soon as it is touched. It is drawn inverted while held.
 
 Leave the value fields blank and a button sends `true` and `false`; for text, `ON` and `OFF`; for a number, `1` and
-`0`. The grey placeholder shows which. Type a value to send something else.
+`0`. The gray placeholder shows which. Type a value to send something else.
 
 A button needs a [touch panel](touch-panel.md) on its screen to be pressed. Deploy warns if a screen has
 buttons and no panel, and if a momentary or toggle button's output goes nowhere.
@@ -81,21 +81,21 @@ reports `ON` and `OFF` as text, so for a Tasmota plug set the value type to text
 
 Unwired, the toggle keeps its own state and starts as set by *starts on*.
 
-## Colour
+## Color
 
-Set the gui screen's frame format to `rgb565` for full colour, with the same format on the display. White text,
-grey for stale values, and a green accent for bars and lights that are on. Greys use less memory and send faster,
+Set the gui screen's frame format to `rgb565` for full color, with the same format on the display. White text,
+gray for stale values, and a green accent for bars and lights that are on. Grays use less memory and send faster,
 so use them on boards with little RAM.
 
 ## Rotating the screen
 
 On the display node, set **orientation** to 0, 90, 180 or 270 (the picture turned clockwise). It is one setting
 on each display, so a display can't have two. Set the display's width and height to the panel's own size, and its
-rotation to how the panel is mounted (0 to 3, as before). The gui screen wired to that display turns its size to
-match and its touch axes follow, so set the screen's width and height to the panel's own size too. With
-orientation off the display behaves as it always did. An orientation can't yet be combined with a panel offset
-(`xstart`/`ystart`, or the 135x240 panel). `xstart`/`ystart` of `-1` mean "no offset" and are the right values with an
-orientation. At 90 or 270 the usable picture is the panel turned: 480 wide by 320 high on a 320x480 panel.
+rotation to how the panel is mounted (0 to 3). The gui screen wired to that display turns its size to
+match and its touch axes follow, so set the screen's width and height to the panel's own size too. An orientation
+can't be combined with a panel offset (`xstart`/`ystart`, or the 135x240 panel). `xstart`/`ystart` of `-1` mean
+"no offset" and are the right values with an orientation. At 90 or 270 the usable picture is the panel turned:
+480 wide by 320 high on a 320x480 panel.
 
 ## Modals in the flow file
 

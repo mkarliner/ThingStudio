@@ -1,6 +1,6 @@
 # Getting started
 
-From a new board to a blinking LED:
+From a new board to a blinking LED, in six steps:
 
 1. **[Install Thingstudio](#step-1-install-thingstudio)** on your computer.
 2. **[Tour the editor](editor-tour.md)**: what each part of the screen does.
@@ -27,7 +27,7 @@ There are two ways to install it. Both give you the same program.
 
 Download the package for your computer from the
 [releases page](https://github.com/mkarliner/ThingStudio/releases/latest).
-[Installation details](installation-details.md#packages) lists which package is which.
+[Installation details](installation-details.md#packages) lists the package for each platform.
 
 **macOS and Linux:** unpack it with `tar -xzf thingstudio-VERSION-PLATFORM.tar.gz`. Thingstudio is the
 `thingstudio` file in the unpacked folder.
@@ -38,7 +38,8 @@ package isn't signed.
 
 ### Run the installer script
 
-The installer script is piped from the download straight into a shell. To read it first, download
+The commands below download the installer script and pipe it straight into a shell. To read the script before
+running it, download
 [install.sh](https://github.com/mkarliner/ThingStudio/releases/latest/download/install.sh) or
 [install.ps1](https://github.com/mkarliner/ThingStudio/releases/latest/download/install.ps1) and open it in a text
 editor.
@@ -49,10 +50,10 @@ editor.
 curl -fsSL https://github.com/mkarliner/ThingStudio/releases/latest/download/install.sh | sh
 ```
 
-If it says `~/.local/bin` isn't on your PATH, run the line it prints, then open a new terminal.
+If the installer says `~/.local/bin` isn't on your PATH, run the command it prints, then open a new terminal.
 
-On Linux, your account must be in the `dialout` group (`uucp` on Arch) to use USB boards. The installer says so if
-it isn't, and gives the command to fix it.
+On Linux, your account must be in the `dialout` group (`uucp` on Arch) to use USB boards. The installer reports this
+if your account isn't in the group, and prints the command to fix it.
 
 **Windows:** open PowerShell from the Start menu and run this. It doesn't need administrator rights.
 

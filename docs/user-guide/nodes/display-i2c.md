@@ -1,16 +1,15 @@
 # display i2c
 
-Pushes an already-rendered frame to an I2C mono OLED panel (SSD1306 today — the `controller` property
-leaves room for others later, like SH1106). Build the frame upstream (a `function` node using
-`framebuf.FrameBuffer`, or eventually a graphics-framework node) and wire it into this node's input.
+Pushes an already-rendered frame to an I2C mono OLED panel. The `controller` property selects the display chip.
+Build the frame upstream (a `function` node using `framebuf.FrameBuffer`) and wire it into this node's input.
 
 This node's property panel has a **preset** picker (see [Editor in depth](../working-in-the-editor.md#presets)) —
 save a real panel's pin/address setup under a name once, then load it again on this or another
-`display_i2c` node instead of retyping it.
+**display i2c** node instead of retyping it.
 
 ## Properties
 
-- **controller** — the display chip. Only `SSD1306` today.
+- **controller** — the display chip. `SSD1306`.
 - **I2C bus** — the bus the panel is wired to. See [I2C bus](i2c-bus.md).
 - **address** — the I2C address, `addr` in the flow file, as a plain number: `60` is `0x3C`, the usual SSD1306 address.
 - **width / height** — panel resolution in pixels. Height must be a multiple of 8.
@@ -24,8 +23,7 @@ The input is a raw MONO_VLSB-encoded buffer, exactly `width * (height / 8)` byte
 `framebuf.FrameBuffer` produces for a 1-bit surface. A wrong-length buffer raises a clear error rather
 than silently corrupting the display's internal buffer indexing.
 
-Only I2C wiring is supported — an SSD1306 wired over SPI isn't covered by this node (see `display spi`
-if that's ever needed for this chip).
+Only I2C wiring is supported — an SSD1306 wired over SPI isn't covered by this node.
 
 No drawing primitives here — this node only pushes a complete, already-rendered frame on every message.
 

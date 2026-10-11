@@ -99,5 +99,5 @@ Some settings are set once and shared by the nodes that use them:
 
 ## Something missing?
 
-A few lines in a [function](function.md) node cover most gaps: a comparison, a sum, reading an ADC pin. For
+A [function](function.md) node covers most gaps: a comparison, a sum, reading an ADC pin. For
 something you'll use again, [write a custom node](../custom-nodes.md).
