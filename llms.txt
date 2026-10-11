@@ -21,30 +21,30 @@
 
 ## Getting started
 
-- [1. Install Thingstudio](https://docs.thingstudio.net/getting-started/): Six steps take you from a new board to a blinking LED.
-- [2. Tour the editor](https://docs.thingstudio.net/editor-tour/): Start Thingstudio if it isn't running.
-- [3. Install MicroPython](https://docs.thingstudio.net/installing-micropython/): Thingstudio runs on top of MicroPython, a version of Python for microcontrollers.
-- [4. Connect your board](https://docs.thingstudio.net/connecting/): Start Thingstudio if it isn't running.
-- [5. Install the runtime](https://docs.thingstudio.net/installing-runtime/): The runtime is the part of Thingstudio that runs on the board.
-- [6. Blink an LED](https://docs.thingstudio.net/first-flow/): Your first flow: make an LED blink once a second.
+- [1. Install Thingstudio](https://docs.thingstudio.net/getting-started/): Getting started takes you from a new board to a blinking LED in six steps.
+- [2. Tour the editor](https://docs.thingstudio.net/editor-tour/): The parts of the Thingstudio editor and what each one is for.
+- [3. Install MicroPython](https://docs.thingstudio.net/installing-micropython/): How to install MicroPython on your board.
+- [4. Connect your board](https://docs.thingstudio.net/connecting/): How to connect Thingstudio to your board over USB, and what the console tells you when you do.
+- [5. Install the runtime](https://docs.thingstudio.net/installing-runtime/): How to install the Thingstudio runtime on your board.
+- [6. Blink an LED](https://docs.thingstudio.net/first-flow/): Your first flow: make an LED blink once a second, using three nodes.
 - [Installation details](https://docs.thingstudio.net/installation-details/): How Thingstudio is packaged, where it puts its files, how to upgrade and remove it, and how to build it from source.
 
-## Pages
+## Tutorials
 
-- [The Thingstudio folder](https://docs.thingstudio.net/thingstudio-folder/): Thingstudio keeps its own files in one folder on your computer:
-- [Working in the editor](https://docs.thingstudio.net/working-in-the-editor/): What the editor tour leaves out: wire types, node labels, presets, config nodes, node status and notes.
-- [Check a flow without the editor](https://docs.thingstudio.net/check-a-flow/): thingstudio-compile compiles and checks a flow file from the command line, with the same errors the editor gives.
-- [Command line](https://docs.thingstudio.net/command-line/): Options for starting Thingstudio, and a way to install the runtime without the editor.
-- [Node catalog](https://docs.thingstudio.net/nodes-catalog/): Every node a flow file can use: its type id, its ports with their payload types, and its properties with the default the editor gives a new node.
-- [Writing flows with an AI assistant](https://docs.thingstudio.net/ai-authoring/): This page is for an AI assistant (or a person) writing a Thingstudio flow file or a custom node in the user's folder, without the editor.
-- [A sensor display](https://docs.thingstudio.net/sensor-display/): Build a three-page display: the room's temperature, humidity and pressure with their recent history, and a clock.
+- [A sensor display](https://docs.thingstudio.net/sensor-display/): Build a three-page touch display: the room's temperature, humidity and pressure with their recent history, and a clock.
+
+## Building flows
+
+- [Working in the editor](https://docs.thingstudio.net/working-in-the-editor/): Wire types, node labels, presets, config nodes, node status and notes: the parts of the editor the editor tour doesn't cover.
 - [Flow lifecycle](https://docs.thingstudio.net/flow-lifecycle/): Flows save to a file you choose, via your browser's own save dialog — no backend needed for this part.
+- [The Thingstudio folder](https://docs.thingstudio.net/thingstudio-folder/): Thingstudio keeps its own files in one folder on your computer:
+
+## Boards and networks
+
 - [Supported hardware](https://docs.thingstudio.net/supported-hardware/): The boards, processors, displays, touch panels and sensors below have built-in support.
 - [Boards and processors](https://docs.thingstudio.net/boards/): Thingstudio checks every pin in a flow against the board the flow is for.
 - [Connecting over WiFi](https://docs.thingstudio.net/wifi-connection/): Once a board is set up, the editor can reach it over WiFi instead of USB.
 - [WiFi provisioning](https://docs.thingstudio.net/wifi-provisioning/): A device can learn its WiFi credentials on its own, over the air, instead of having them baked into a flow.
-- [Debugging & troubleshooting](https://docs.thingstudio.net/debugging/): The **console** panel shows everything the connected board reports: deploy results, node errors, and anything a debug node prints.
-- [FAQ](https://docs.thingstudio.net/faq/): An ESP32's RAM is shared between MicroPython and the chip's own software: ESP-IDF, its FreeRTOS scheduler, and the WiFi stack.
 
 ## Node reference
 
@@ -90,6 +90,15 @@
 - [Touch panels](https://docs.thingstudio.net/nodes/touch-panel/): A touch panel is a capacitive touch screen on an I2C bus.
 - [GUI](https://docs.thingstudio.net/nodes/gui/): Show readings on a display as pages of labels, numbers, bars and lights.
 
-## Pages
+## Extending and automating
 
 - [Writing custom nodes](https://docs.thingstudio.net/custom-nodes/): A custom node is two files sharing a base name: <name>.node.json (the descriptor) and <name>.node.py (the behavior), placed in the backend's ~/.thingstudio/cus…
+- [Writing flows with an AI assistant](https://docs.thingstudio.net/ai-authoring/): This page is for an AI assistant (or a person) writing a Thingstudio flow file or a custom node in the user's folder, without the editor.
+- [Check a flow without the editor](https://docs.thingstudio.net/check-a-flow/): thingstudio-compile compiles and checks a flow file from the command line, with the same errors the editor gives.
+- [Command line](https://docs.thingstudio.net/command-line/): Options for starting Thingstudio, and a way to install the runtime without the editor.
+- [Node catalog](https://docs.thingstudio.net/nodes-catalog/): Every node a flow file can use: its type id, its ports with their payload types, and its properties with the default the editor gives a new node.
+
+## Troubleshooting
+
+- [Debugging & troubleshooting](https://docs.thingstudio.net/debugging/): The tools for finding out what a board is doing, then what to do about the problems you may meet, in the order you meet them: connecting, deploying, running, a…
+- [FAQ](https://docs.thingstudio.net/faq/): An ESP32's RAM is shared between MicroPython and the chip's own software: ESP-IDF, its FreeRTOS scheduler, and the WiFi stack.
