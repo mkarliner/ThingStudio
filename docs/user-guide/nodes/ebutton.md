@@ -18,9 +18,14 @@ Reports press, release, long-press, and double-click events from a single deboun
 
 ## Behavior
 
-`event` is one of `press`, `release`, `long`, `double`. `payload` is the button's state at the moment the event
-fired (`true` = currently pressed) — always `true` for `press`, always `false` for `release`, and whatever the
-button is doing right now for `long`/`double`. `topic` is empty.
+Each event sends one message, a dict with two keys:
+
+```python
+msg = {'payload': 'press', 'topic': ''}
+```
+
+- **`payload`** — the event that fired: `press`, `release`, `long` or `double`.
+- **`topic`** — empty.
 
 With `suppress` off (the default), a press always reports immediately, whether or not a second press follows —
 so a rapid double-click reports both a `press` and a `double`, not `double` alone. Turn `suppress` on if a plain

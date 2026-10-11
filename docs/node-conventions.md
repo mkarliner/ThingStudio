@@ -50,8 +50,9 @@ Every message is `msg = {'payload': ..., 'topic': ..., <extra named fields>}`:
   (`mqtt subscribe` does); otherwise `''`. Never carry the node's own event or state here — putting the interesting
   value in `topic` hides it from `debug` and from every generic node.
 - **extra fields** — anything else rides along under its own name, read only by a node written to look for it
-  specifically (`wifi status`'s `ip`/`subnet`/…; `ebutton`/`eswitch`'s `event`). Prefer a named field over
-  overloading `payload` or `topic`.
+  specifically (`wifi status`'s `ip`/`subnet`/…). Prefer a named field over overloading `payload` or `topic`.
+  `payload` stays the node's main value even when that value is *which of several things happened*: `ebutton` puts
+  `press`/`release`/`long`/`double` there, typed `string` — not in `topic` and not in a side field.
 
 Full explanation: design doc §6 and `AGENTS.md`'s "Message shape".
 

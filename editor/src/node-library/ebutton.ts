@@ -10,14 +10,13 @@
 // -- not re-explained here.
 //
 // Four possible firing events instead of ESwitch's two: press, release,
-// long, double. The event name goes in `msg['event']` ('press'/'release'/
-// 'long'/'double'), NOT `msg['topic']` -- moved off `topic` 2026-10-11; see
-// eswitch.ts's header for why. `topic` is '' and `payload` is the button's
-// current debounced logical state (true = pressed, EButton.__call__()) at
-// the moment the event fired -- for 'press' this is always true and for
-// 'release' always false, but for 'long'/'double' it tells a downstream
-// node whether the button is still held at the moment the event fired,
-// matching what EButton itself reports via call syntax.
+// long, double. The event name IS the payload ('press'/'release'/'long'/
+// 'double') and `topic` is '' -- moved into `payload` 2026-10-11, matching
+// Node-RED's "payload is the default property most nodes work with" (so
+// `debug` shows the event) and this project's own "payload is the node's
+// main value" convention (docs/node-conventions.md). The output port is
+// therefore typed `string`, not `bool`; a consumer that wants the held state
+// tracks it from the events.
 //
 // suppress/sense/debounce/long-press/double-click are all real EButton
 // constructor args / class attributes (DRIVERS.md §4.1/§4.1.1) exposed
@@ -58,7 +57,7 @@ export const ebuttonNode: NodeDefinition = {
   type: "thingstudio/ebutton",
   kind: "source",
   ports: {
-    outputs: [{ name: "msg", type: "bool" }],
+    outputs: [{ name: "msg", type: "string" }],
   },
   codegenEventSource(node: GraphNode, ctx: CodegenContext): EventSourceCodegenResult {
     const pin = checkPin(ctx, "ebutton pin", node.properties.pin, "input", { pull: String(node.properties.pull ?? "none") !== "none" });
@@ -135,7 +134,7 @@ export const ebuttonNode: NodeDefinition = {
         // (a fresh WaitAny watcher task per call, events.py's own `wait()`)
         // picks it up immediately instead of losing it.
         `_trig.clear()`,
-        `msg = {'payload': ${btnVar}(), 'topic': '', 'event': _event}`,
+        `msg = {'payload': _event, 'topic': ''}`,
       ].join("\n"),
     };
   },

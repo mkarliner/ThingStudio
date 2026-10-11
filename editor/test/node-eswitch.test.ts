@@ -1,6 +1,6 @@
 // outstanding-items.md's "[P4] eswitch/ebutton nodes" item -- eswitch.ts's
-// own header has the full design story (single output with the event name in
-// `msg['event']`, WaitAny multiplexing, why polling not IRQ).
+// own header has the full design story (single output, `payload` = the state
+// bool, WaitAny multiplexing, why polling not IRQ).
 //
 // Unlike node-interrupt.test.ts, this file's behavioral tests run the REAL
 // vendored driver (device-runtime/src/vendor/primitives_events/events.py,
@@ -117,7 +117,7 @@ function buildRunnerScript(source: string, scheduleLiteral: string, maxRunS: num
   const trailer = [`    await _real_asyncio.sleep(${maxRunS})`, "", "_real_asyncio.run(_flow_main())"];
   return [...outerPreamble, indentedSource, ...trailer].join("\n");
 }
-function runScheduledFlow(graph: GraphData, schedule: Record<number, Array<[number, 0 | 1]>>, maxRunS = 1.0): string[] {
+function runScheduledFlow(graph: GraphData, schedule: Record<number, Array<[number, 0 | 1]>>, maxRunS = 1.0): boolean[] {
   const { source } = compile(graph, buildRegistry());
   const scheduleLiteral = Object.entries(schedule)
     .map(([pin, entries]) => `${pin}: [${entries.map(([t, v]) => `(${t}, ${v})`).join(", ")}]`)
@@ -131,7 +131,7 @@ function runScheduledFlow(graph: GraphData, schedule: Record<number, Array<[numb
     env: { ...process.env, PYTHONPATH: `${pymockDir}${delimiter}${vendorDir}`, PYMOCK_MAX_RUN_S: String(maxRunS) },
     encoding: "utf8",
   });
-  return [...output.matchAll(/'event': '(\w+)'/g)].map((m) => m[1]!);
+  return [...output.matchAll(/'payload': (True|False)/g)].map((m) => m[1] === "True");
 }
 
 describe("thingstudio/eswitch node", () => {
@@ -185,7 +185,7 @@ describe("thingstudio/eswitch node", () => {
     expect(source).toContain("while True:");
     expect(source).toMatch(/_trig = await .*\.wait\(\)/);
     expect(source).toContain("_trig.clear()");
-    expect(source).toContain("'topic': '', 'event': 'close' if _is_close else 'open'");
+    expect(source).toContain("msg = {'payload': _is_close, 'topic': ''}");
     expect(source).toMatch(/runtime\.spawn\(/);
   });
 
@@ -224,6 +224,6 @@ describe("thingstudio/eswitch node", () => {
     // Wall-clock schedule run by CPython: each state is held 300 ms so a busy CI runner (tests run in parallel)
     // can't stall the switch's poll loop past a whole state and skip it. 60 ms steps failed that way on CI.
     const events = runScheduledFlow(graph, { 10: [[0.0, 1], [0.3, 0], [0.6, 1]] }, 1.2);
-    expect(events).toEqual(["close", "open"]);
+    expect(events).toEqual([true, false]);
   });
 });

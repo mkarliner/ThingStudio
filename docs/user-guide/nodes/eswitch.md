@@ -12,8 +12,16 @@ Reports when a debounced switch opens or closes. Polling-based, not the interrup
 
 ## Behavior
 
-Fires once per transition: `event` is `close` or `open`, `payload` is `true` when closed, and `topic` is empty. A
-downstream node that only cares about current state can read `payload` alone and ignore `event`.
+Each transition sends one message, a dict with two keys:
+
+```python
+msg = {'payload': True, 'topic': ''}
+```
+
+- **`payload`** — the switch state: `true` when closed, `false` when open.
+- **`topic`** — empty.
+
+`payload` is a bool, so it wires straight to `gpio out` to mirror the switch.
 
 No internal pull is enabled by default — wire an external pull resistor, use a switch module with one built in,
 or set **pull** if the switch instead relies on the board's own internal pull-up/pull-down.

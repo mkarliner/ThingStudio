@@ -288,7 +288,7 @@ Type `thingstudio/display_spi`, kind sink, palette group hardware.
 Type `thingstudio/ebutton`, kind source, palette group hardware.
 
 - Inputs: none
-- Outputs: msg (bool)
+- Outputs: msg (string)
 - Properties (name, type, default):
     - `pin`, number, default `5`
     - `suppress`, boolean, default `false`

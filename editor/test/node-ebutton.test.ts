@@ -100,7 +100,7 @@ function runScheduledFlow(graph: GraphData, schedule: Record<number, Array<[numb
     env: { ...process.env, PYTHONPATH: `${pymockDir}${delimiter}${vendorDir}`, PYMOCK_MAX_RUN_S: String(maxRunS) },
     encoding: "utf8",
   });
-  return [...output.matchAll(/'event': '(\w+)'/g)].map((m) => m[1]!);
+  return [...output.matchAll(/'payload': '(\w+)'/g)].map((m) => m[1]!);
 }
 
 describe("thingstudio/ebutton node", () => {
@@ -160,7 +160,7 @@ describe("thingstudio/ebutton node", () => {
     expect(source).toContain("from events import EButton, WaitAny");
     expect(source).toContain("WaitAny([_ebutton_7.press, _ebutton_7.release, _ebutton_7.long, _ebutton_7.double])");
     expect(source).toContain("_trig.clear()");
-    expect(source).toContain("'topic': '', 'event': _event");
+    expect(source).toContain("msg = {'payload': _event, 'topic': ''}");
     expect(source).toMatch(/runtime\.spawn\(/);
   });
 

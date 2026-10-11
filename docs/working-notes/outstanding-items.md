@@ -724,8 +724,16 @@ ambiguous."
 - **A function node can't feed a `number` input** (2026-10-11, found in the docs rewrite). `function`'s output is
   `any`, and `number`/`int`/`string` inputs refuse `any`, so a function can't drive `pwm out`'s duty and there's no
   conversion node. Options: allow `any` into numbers (fail on the board), typed function outputs, or a conversion
-  node. ([detail](outstanding-items/function-output-into-typed-inputs.md))
+  node (now tracked: `convert-node.md`). ([detail](outstanding-items/function-output-into-typed-inputs.md))
 - **[UI]** **Foldable palette groups.** Each group in the node palette gets a header that collapses and expands,
   remembering state per browser. Related to the existing "palette: one colour per group" item (`palette.ts`).
 - **[UI]** **Wider or resizable console.** The console panel is fixed width; let it be dragged wider, or at least
   wider by default. Part of the older resizable-panes item ([P5] general UI wishlist).
+
+## Added 2026-10-11
+
+- **`convert` node — explicit port-type conversion.** New item, 2026-10-11, from the typed-port discussion. Builds
+  the conversions `sockets.ts` refuses (`bytes` ↔ `string`, `any` → a concrete type, ...), which the system already
+  points at as "an explicit conversion node". Would unblock `function` → `pwm out`. Pairs with loosening `any`
+  compatibility (allow `any` into concrete inputs, fault at runtime) — decide both together.
+  ([detail](outstanding-items/convert-node.md))

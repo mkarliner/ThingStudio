@@ -21,17 +21,14 @@
 // doesn't and the simpler polling driver (plus its double/long-press
 // sibling, ebutton.ts) is the better fit.
 //
-// One output port carries BOTH of ESwitch's events (open and close) --
-// Mike's own call, 2026-09-17, over extending EventSourceCodegenResult for
-// multi-output sources (no existing precedent; TransformCodegenResult's
-// multi-output is transform-only, node-definition.ts's own `outputCount`
-// comment). The event name goes in `msg['event']` ('close' or 'open'), NOT
-// `msg['topic']`: `topic` is a routing/identification string that belongs to
-// the protocol (mqtt) or is '' for a node with no natural topic, and every
-// other source in the library (timer, interrupt, wifi_status ...) sets it to
-// ''. Moved off `topic` 2026-10-11, before MVP launch. `payload` carries the
-// state as a bool (true = closed), so a downstream node that only cares
-// about current state can read `payload` and ignore `event`.
+// One output port. `payload` carries the switch state as a bool (true =
+// closed) and `topic` is '' -- the open/close identity an earlier version
+// put in `topic`, then in `msg['event']`, is redundant with the bool, so it
+// is dropped (2026-10-11). This is the Node-RED-natural shape for a switch
+// (payload is the state) and keeps a direct wire to a bool input like
+// `gpio out` working. A source with genuinely distinct events (see
+// ebutton.ts, four of them, where payload is the event name) is the case
+// that needs an enum rather than a bool.
 //
 // Waiting on "either of two named Events, tell me which fired" is exactly
 // what the vendored `WaitAny` class does (events.py) -- used here instead
@@ -132,7 +129,7 @@ export const eswitchNode: NodeDefinition = {
       // real correctness fix, not a style choice, even though ESwitch's
       // own open/close pair can never actually fire simultaneously the way
       // EButton's press/double can.
-      buildMsg: [`_is_close = _trig is ${esVar}.close`, `_trig.clear()`, `msg = {'payload': _is_close, 'topic': '', 'event': 'close' if _is_close else 'open'}`].join("\n"),
+      buildMsg: [`_is_close = _trig is ${esVar}.close`, `_trig.clear()`, `msg = {'payload': _is_close, 'topic': ''}`].join("\n"),
     };
   },
 };
