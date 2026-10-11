@@ -757,8 +757,9 @@ export class InterruptNode extends ClassicPreset.Node {
 }
 
 // eswitch/ebutton added 2026-09-17 -- eswitch.ts/ebutton.ts's own headers
-// have the full design story (wrapping Peter Hinch's ESwitch/EButton,
-// topic-carries-event-identity single output). Defaults here match each
+// have the full design story (wrapping Peter Hinch's ESwitch/EButton; single
+// output, msg.payload = the state for eswitch, the event name for ebutton).
+// Defaults here match each
 // file's own codegen defaults exactly, same invariant InterruptNode's own
 // comment states just above.
 export class EswitchNode extends ClassicPreset.Node {

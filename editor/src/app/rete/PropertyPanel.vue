@@ -511,7 +511,7 @@
         </label>
         <p class="hint">
           Debounced (polling, not IRQ-driven -- see device-runtime/src/vendor/primitives_events/README.md). One
-          output: msg.topic is "close" or "open", msg.payload is the same state as a bool. No internal pull
+          output: msg.payload is the switch state as a bool (true = closed); msg.topic is empty. No internal pull
           enabled by default -- wire an external pull resistor, use a switch module with one built in, or set
           pull above if the pin needs the RP2040/ESP32's own internal one.
         </p>
@@ -550,10 +550,81 @@
           <input type="number" min="1" v-model.number="node.properties.doubleClickMs" @input="touch" />
         </label>
         <p class="hint">
-          Debounced (polling, not IRQ-driven). One output: msg.topic is "press"/"release"/"long"/"double",
-          msg.payload is the button's current pressed state as a bool. No internal pull enabled by default --
+          Debounced (polling, not IRQ-driven). One output: msg.payload is the event name
+          ("press"/"release"/"long"/"double"); msg.topic is empty. No internal pull enabled by default --
           wire an external pull resistor, use a button module with one built in, or set pull above if the pin
           needs the RP2040/ESP32's own internal one. double-click time must be less than long-press time.
+        </p>
+      </template>
+
+      <template v-else-if="node.kind === 'adc'">
+        <label>pin
+          <input type="number" min="0" :max="pinMax" v-model.number="node.properties.pin" @input="touch" />
+          <span v-if="pinInfo(node.properties.pin)" class="pin-hint" :class="{ bad: pinInfo(node.properties.pin)!.bad }" :title="pinInfo(node.properties.pin)!.title">{{ pinInfo(node.properties.pin)!.text }}</span>
+        </label>
+        <label>mode
+          <select v-model="node.properties.mode" @change="touch">
+            <option value="relative">relative -- fire when it moves by delta from the last message</option>
+            <option value="absolute">absolute -- fire outside lower..upper</option>
+          </select>
+        </label>
+        <label v-if="node.properties.mode === 'relative'">delta (counts)
+          <input type="number" min="1" v-model.number="node.properties.delta" @input="touch" />
+        </label>
+        <template v-else>
+          <label>lower
+            <input type="number" min="0" max="65535" v-model.number="node.properties.lower" @input="touch" />
+          </label>
+          <label>upper
+            <input type="number" min="0" max="65535" v-model.number="node.properties.upper" @input="touch" />
+          </label>
+        </template>
+        <label>sense
+          <select v-model="node.properties.sense" @change="touch">
+            <option value="outside">outside -- fire when it leaves the bounds (default)</option>
+            <option value="inside">inside -- fire when it returns to them</option>
+          </select>
+        </label>
+        <label>poll (ms)
+          <input type="number" min="0" v-model.number="node.properties.pollMs" @input="touch" />
+        </label>
+        <p class="hint">
+          AADC (awaitable). Payload is a dict: raw (0-65535), volts, percent. On ESP32 an ADC2 pin can't be used
+          while WiFi is up, so Deploy refuses one when the flow uses the network. poll 0 sends only on a bounds
+          crossing.
+        </p>
+      </template>
+
+      <template v-else-if="node.kind === 'encoder'">
+        <label>pin x
+          <input type="number" min="0" :max="pinMax" v-model.number="node.properties.pinX" @input="touch" />
+          <span v-if="pinInfo(node.properties.pinX)" class="pin-hint" :class="{ bad: pinInfo(node.properties.pinX)!.bad }" :title="pinInfo(node.properties.pinX)!.title">{{ pinInfo(node.properties.pinX)!.text }}</span>
+        </label>
+        <label>pin y
+          <input type="number" min="0" :max="pinMax" v-model.number="node.properties.pinY" @input="touch" />
+          <span v-if="pinInfo(node.properties.pinY)" class="pin-hint" :class="{ bad: pinInfo(node.properties.pinY)!.bad }" :title="pinInfo(node.properties.pinY)!.title">{{ pinInfo(node.properties.pinY)!.text }}</span>
+        </label>
+        <label>divide by (div)
+          <input type="number" min="1" v-model.number="node.properties.div" @input="touch" />
+        </label>
+        <label>start value
+          <input type="number" v-model.number="node.properties.value" @input="touch" />
+        </label>
+        <label>lowest (blank for none)
+          <input type="number" v-model.number="node.properties.vmin" @input="touch" />
+        </label>
+        <label>highest (blank for none)
+          <input type="number" v-model.number="node.properties.vmax" @input="touch" />
+        </label>
+        <label>wrap at (blank for none)
+          <input type="number" min="1" v-model.number="node.properties.mod" @input="touch" />
+        </label>
+        <label>settle (ms)
+          <input type="number" min="0" v-model.number="node.properties.delay" @input="touch" />
+        </label>
+        <p class="hint">
+          Quadrature encoder (Hinch's Encoder). Payload is the value; delta is the change since the last message.
+          div is the pulses per detent (4 or 2 for a mechanical click); lowest/highest/wrap blank for none.
         </p>
       </template>
 
