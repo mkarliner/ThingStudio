@@ -253,7 +253,7 @@ whose types don't fit.
 ## Config nodes
 
 Settings that several nodes share, like a WiFi network or an MQTT broker, live in a **config node**. You set it up
-once and pick it from each node that uses it. See [Working in the editor](../working-in-the-editor.md#config-nodes).
+once and pick it from each node that uses it. See [Editor in depth](../working-in-the-editor.md#config-nodes).
 
 ## Background
 
@@ -379,7 +379,7 @@ instead. See [event-driven programming](../background/event-driven.md).
 ## Messages
 
 Every message needs a `topic`, even an empty one (`''`). Ports also have types, such as `int`, `bool` and `string`, and
-the editor refuses a wire between types that don't fit. See [Working in the editor](../working-in-the-editor.md#wiring).
+the editor refuses a wire between types that don't fit. See [Editor in depth](../working-in-the-editor.md#wiring).
 
 ## Nodes
 
@@ -497,8 +497,7 @@ Source: https://docs.thingstudio.net/getting-started/
 
 # Getting started
 
-Getting started takes you from a new board to a blinking LED in six steps. This page is step 1: installing and
-starting Thingstudio.
+From a new board to a blinking LED:
 
 1. **[Install Thingstudio](#step-1-install-thingstudio)** on your computer.
 2. **[Tour the editor](editor-tour.md)**: what each part of the screen does.
@@ -585,8 +584,7 @@ Source: https://docs.thingstudio.net/editor-tour/
 
 # Step 2: Tour the editor
 
-The parts of the Thingstudio editor and what each one is for. Start Thingstudio if it isn't running: see
-[step 1](getting-started.md#start-thingstudio).
+Start Thingstudio if it isn't running: see [step 1](getting-started.md#start-thingstudio).
 
 <figure markdown="span">
   [![The Thingstudio editor with each part labelled](images/editor-parts.png)](images/editor-parts.png)<figcaption>The parts of the editor. Click to see it full size.</figcaption>
@@ -641,7 +639,7 @@ The right-hand side holds the selected node's settings and what the board sends 
 - **Escape to REPL:** **Stop flow & open prompt** stops the flow and gives you MicroPython's own `>>>` prompt (the
   REPL). **Restart Thingstudio** starts the flow again.
 
-[Working in the editor](working-in-the-editor.md) covers node labels, presets, config nodes and node status.
+[Editor in depth](working-in-the-editor.md) covers wire types, node labels, presets, config nodes and node status.
 
 ## Next
 
@@ -654,8 +652,8 @@ Source: https://docs.thingstudio.net/installing-micropython/
 
 # Step 3: Install MicroPython
 
-How to install MicroPython on your board. Thingstudio runs on top of [MicroPython](background/micropython.md), a
-version of Python for microcontrollers, so the board needs it first. You install it once per board.
+Thingstudio runs on top of [MicroPython](background/micropython.md), a version of Python for microcontrollers, so
+the board needs it first. You install it once per board.
 
 A new board usually doesn't have MicroPython. If yours already has it, or you're not sure, go to
 [step 4](connecting.md). If MicroPython is missing, the console says so when you connect, and links back here.
@@ -747,8 +745,7 @@ Source: https://docs.thingstudio.net/connecting/
 
 # Step 4: Connect your board
 
-How to connect Thingstudio to your board over USB, and what the console tells you when you do. Start Thingstudio if
-it isn't running: see [step 1](getting-started.md#start-thingstudio).
+Start Thingstudio if it isn't running: see [step 1](getting-started.md#start-thingstudio).
 
 1. Plug the board in.
 2. Check the port list in the toolbar. When the editor opens it looks for boards, and selects yours if it's the only
@@ -789,8 +786,8 @@ Source: https://docs.thingstudio.net/installing-runtime/
 
 # Step 5: Install the runtime
 
-How to install the Thingstudio runtime on your board. The runtime is the part of Thingstudio that runs on the
-board: it receives your flows and runs them. Libraries that some nodes need are sent later, by Deploy, when a flow
+The runtime is the part of Thingstudio that runs on the board: it receives your flows and runs them. Each board
+needs it once. Libraries that some nodes need are sent later, by Deploy, when a flow
 uses them.
 
 1. Check the board's port is selected in the port list, as in [step 4](connecting.md).
@@ -1133,10 +1130,7 @@ Each symptom below has its own fix:
 
 Source: https://docs.thingstudio.net/working-in-the-editor/
 
-# Working in the editor
-
-Wire types, node labels, presets, config nodes, node status and notes: the parts of the editor the
-[editor tour](editor-tour.md) doesn't cover.
+# Editor in depth
 
 ## Wiring
 
@@ -1240,7 +1234,7 @@ Flows save to a file you choose, via your browser's own save dialog — no backe
 
 In Chrome or Edge this is the real OS file dialog each time — Save and Open don't remember the last file you picked, so you choose a target on every save (the browser's own dialog handles confirming an overwrite if you pick a file that already exists). Safari and Firefox don't support this file-picker API at all, so there **File → Save…** falls back to a plain browser download and **File → Open…** to a plain file-upload picker.
 
-Custom node packages and saved credentials (see [Working in the editor](working-in-the-editor.md#config-nodes)) are the two things that still live on the backend, in `~/.thingstudio/custom-nodes/` and `~/.thingstudio/credentials/`. They're shared across flows rather than tied to one project, unlike a flow itself — a saved credential referenced by name from a config node never gets written into the `.flow.json` file.
+Custom node packages and saved credentials (see [Editor in depth](working-in-the-editor.md#config-nodes)) are the two things that still live on the backend, in `~/.thingstudio/custom-nodes/` and `~/.thingstudio/credentials/`. They're shared across flows rather than tied to one project, unlike a flow itself — a saved credential referenced by name from a config node never gets written into the `.flow.json` file.
 
 ## Deploy
 
@@ -2098,7 +2092,7 @@ Reports the board's WiFi connection state. In a flow with no other WiFi node, it
 ## Properties
 
 - **poll interval (ms)** — how often to check the connection. Default 5000ms.
-- **WiFi** — the flow's WiFi network. Every WiFi node in a flow shares this one setting (see [Working in the editor](../working-in-the-editor.md#config-nodes)).
+- **WiFi** — the flow's WiFi network. Every WiFi node in a flow shares this one setting (see [Editor in depth](../working-in-the-editor.md#config-nodes)).
 
 ## Behavior
 
@@ -2112,7 +2106,7 @@ Pick "unmanaged" on the WiFi config when you don't want this node issuing its ow
 
 If no connection is ever made, this node just reports disconnected, the same as any other failed connect — provisioning changes how the interface gets its credentials, not how wifi_status reports on them.
 
-Shows a connection-status dot on the canvas (see [Working in the editor](../working-in-the-editor.md#node-status)) once connected to a device.
+Shows a connection-status dot on the canvas (see [Editor in depth](../working-in-the-editor.md#node-status)) once connected to a device.
 
 While this node has the board on a network, the editor can connect to the board over WiFi. See [Connecting over WiFi](../wifi-connection.md).
 
@@ -2172,7 +2166,7 @@ Emits one message per incoming message on a subscribed MQTT topic.
 
 - **topic** — the topic to subscribe to. Required.
 - **QoS** — `0` or `1`. QoS 2 isn't supported.
-- **broker** — which MQTT broker config to use (see [Working in the editor](../working-in-the-editor.md#config-nodes)). Required — won't compile without one.
+- **broker** — which MQTT broker config to use (see [Editor in depth](../working-in-the-editor.md#config-nodes)). Required — won't compile without one.
 
 ## Behavior
 
@@ -2182,7 +2176,7 @@ The message carries the payload (decoded as text when possible, raw bytes otherw
 
 There's currently no guarantee that a subscription is fully confirmed before an `mqtt_publish` node on the same broker sends its first message — usually not an issue, but worth knowing if an early publish goes unheard by a subscriber that was still connecting.
 
-Shows a connection-status dot on the canvas (see [Working in the editor](../working-in-the-editor.md#node-status)) once connected to a device, same as `mqtt_publish`.
+Shows a connection-status dot on the canvas (see [Editor in depth](../working-in-the-editor.md#node-status)) once connected to a device, same as `mqtt_publish`.
 
 
 ---
@@ -2299,13 +2293,13 @@ Publishes a message's payload to an MQTT topic.
 - **topic** — the topic to publish to. Required.
 - **retain** — publish as a retained message.
 - **QoS** — `0` or `1`. QoS 2 isn't supported.
-- **broker** — which MQTT broker config to use (see [Working in the editor](../working-in-the-editor.md#config-nodes)). Required — won't compile without one.
+- **broker** — which MQTT broker config to use (see [Editor in depth](../working-in-the-editor.md#config-nodes)). Required — won't compile without one.
 
 ## Behavior
 
 Uses the flow's WiFi network (the WiFi config in the flow, shared by every WiFi node; this node has no WiFi property of its own) and its own broker config for the MQTT connection. In a flow with MQTT nodes, MQTT manages the WiFi connection. An "unmanaged" WiFi config isn't accepted here: this node manages its own WiFi reconnection, so it needs a real network to connect to. The payload is sent as bytes (a string is UTF-8 encoded, other types are converted).
 
-Shows a connection-status dot on the canvas (see [Working in the editor](../working-in-the-editor.md#node-status)) once connected to a device — reports its own broker connection state even when it shares that broker with an `mqtt_subscribe` node. Because this node only runs when a message actually arrives to publish, the dot stays blank until the first message passes through it, even if the flow has been running for a while — it doesn't open its broker connection until there's actually something to send (this is how the node works, not a fault).
+Shows a connection-status dot on the canvas (see [Editor in depth](../working-in-the-editor.md#node-status)) once connected to a device — reports its own broker connection state even when it shares that broker with an `mqtt_subscribe` node. Because this node only runs when a message actually arrives to publish, the dot stays blank until the first message passes through it, even if the flow has been running for a while — it doesn't open its broker connection until there's actually something to send (this is how the node works, not a fault).
 
 
 ---
@@ -2447,7 +2441,7 @@ Pushes an already-rendered frame to an SPI color TFT panel. [Supported hardware]
 lists the display chips. Build the frame upstream (a `function` node using `framebuf.FrameBuffer`,
 or eventually a graphics-framework node) and wire it into this node's input.
 
-This node's property panel has a **preset** picker (see [Working in the editor](../working-in-the-editor.md#presets)) —
+This node's property panel has a **preset** picker (see [Editor in depth](../working-in-the-editor.md#presets)) —
 save a real panel's whole setup (pins, bus, resolution, rotation, color order, and so on) under a name
 once, then load it again on this or another `display_spi` node instead of retyping every field. The CYD
 defaults below are exactly what saving a "cyd" preset from a correctly-configured node would capture.
@@ -2581,7 +2575,7 @@ Pushes an already-rendered frame to an I2C mono OLED panel (SSD1306 today — th
 leaves room for others later, like SH1106). Build the frame upstream (a `function` node using
 `framebuf.FrameBuffer`, or eventually a graphics-framework node) and wire it into this node's input.
 
-This node's property panel has a **preset** picker (see [Working in the editor](../working-in-the-editor.md#presets)) —
+This node's property panel has a **preset** picker (see [Editor in depth](../working-in-the-editor.md#presets)) —
 save a real panel's pin/address setup under a name once, then load it again on this or another
 `display_i2c` node instead of retyping it.
 
@@ -4094,9 +4088,6 @@ Defaults: `{"credentialName":"","security":"password","allowReprovisioning":fals
 Source: https://docs.thingstudio.net/debugging/
 
 # Debugging & troubleshooting
-
-The tools for finding out what a board is doing, then what to do about the problems you may meet, in the order you
-meet them: connecting, deploying, running, and recovering a stuck board.
 
 ## Console and compiled source
 
