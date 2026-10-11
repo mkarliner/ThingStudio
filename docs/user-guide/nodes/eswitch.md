@@ -12,8 +12,8 @@ Reports when a debounced switch opens or closes. Polling-based, not the interrup
 
 ## Behavior
 
-Fires once per transition: `topic` is `close` or `open`, `payload` is `true` when closed. A downstream node that
-only cares about current state can read `payload` alone and ignore `topic`.
+Fires once per transition: `event` is `close` or `open`, `payload` is `true` when closed, and `topic` is empty. A
+downstream node that only cares about current state can read `payload` alone and ignore `event`.
 
 No internal pull is enabled by default — wire an external pull resistor, use a switch module with one built in,
 or set **pull** if the switch instead relies on the board's own internal pull-up/pull-down.
