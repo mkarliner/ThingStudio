@@ -67,6 +67,11 @@ export default defineConfig({
     __RUNTIME_BUILD_SHA__: JSON.stringify(runtimeBuildSha()),
     __EDITOR_BUILD__: JSON.stringify(editorBuild()),
   },
+  // The editor is one ~600 kB chunk (~170 kB gzipped), mostly Vue, Rete and our own code. Vite's 500 kB warning is
+  // aimed at sites loaded over the internet; the editor is served by the local backend, so splitting it would add
+  // complexity for no load-time gain (2026-10-12). Raise the limit rather than ignore a standing warning, so a
+  // real jump (a large dependency pulled in by mistake) still shows up.
+  build: { chunkSizeWarningLimit: 800 },
   test: {
     include: ["test/**/*.test.ts"],
     environment: "node",
