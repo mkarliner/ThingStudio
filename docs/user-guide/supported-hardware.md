@@ -12,6 +12,7 @@ been deployed and run on that hardware. Pin details for boards and processors ar
 | Raspberry Pi Pico W | RP2040 | Yes, including WiFi |
 | Raspberry Pi Pico 2 | RP2350 | Yes |
 | LOLIN S2 Mini | ESP32-S2 | Yes |
+| LuatOS ESP32C3-CORE | ESP32-C3 | No |
 | CYD (ESP32-2432S028, ST7789) | ESP32 | Yes, display only. |
 | Freenove ESP32-S3 Display 4.0" (FNK0104S) | ESP32-S3 | Yes, with the display and touch |
 
