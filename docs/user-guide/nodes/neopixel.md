@@ -25,3 +25,6 @@ A colour is a 24-bit `0xRRGGBB` (red, green, blue, 0–255 each). An `RGBW` or `
 ## Behavior
 
 The whole strip is written on every message, so the last message sets the colours. The node has no output.
+
+Two `neopixel` nodes on the same pin share one strip, so they must have the same count and order, or the compile
+stops. See [Hardware is shared](index.md#hardware-is-shared).

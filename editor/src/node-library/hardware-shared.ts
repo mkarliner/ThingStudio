@@ -61,6 +61,23 @@ export function sharedPin(
   return { varName, statement: { key: `gpio-${pin}`, code: `${varName} = ${sharedPinExpr(pin, mode, pull)}` } };
 }
 
+/** Claims the ADC channel on GPIO `pin` and returns the setup statement binding `_adc_<pin>`. */
+export function sharedAdc(
+  ctx: CodegenContext,
+  node: GraphNode,
+  pin: number,
+): { varName: string; statement: { key: string; code: string } } {
+  claimResource(ctx, `GPIO ${pin}`, "ADC input", node);
+  const varName = `_adc_${pin}`;
+  return {
+    varName,
+    statement: {
+      key: `adc-${pin}`,
+      code: `${varName} = runtime.shared('adc', ${pin}, (), lambda: machine.ADC(machine.Pin(${pin})))`,
+    },
+  };
+}
+
 /** Claims GPIO `pin` for PWM at `freq` Hz and returns the setup statement binding `_pwm_<pin>`. */
 export function sharedPwm(ctx: CodegenContext, node: GraphNode, pin: number, freq: number): { varName: string; statement: { key: string; code: string } } {
   claimResource(ctx, `GPIO ${pin}`, `PWM at ${freq} Hz`, node);

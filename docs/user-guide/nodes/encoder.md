@@ -21,3 +21,6 @@ msg = {'payload': 0, 'topic': '', 'delta': 0}
 ```
 
 `payload` is the current value; `delta` is how far it moved, positive or negative.
+
+Two `encoder` nodes on the same pins share one encoder, so they must have the same settings, or the compile stops.
+See [Hardware is shared](index.md#hardware-is-shared).

@@ -13,6 +13,7 @@
 // Colour order is a property; a bad payload reports the node's status dot and is ignored, rather than raising
 // (which would end the source's loop).
 
+import { claimResource, sharedPin } from "./hardware-shared.js";
 import { CompileError } from "../compiler/errors.js";
 import { checkPin } from "../definitions/pin-check.js";
 import type { GraphNode } from "../compiler/graph.js";
@@ -37,8 +38,13 @@ export const neopixelNode: NodeDefinition = {
       throw new CompileError(`neopixel order "${order}" must be one of ${ORDERS.join(", ")}`);
     }
 
+    // The data pin is a keyed singleton (hardware-shared.ts, decisions/hardware-singletons.md); the NeoPixel
+    // driver on it is claimed too, so two neopixel nodes on the same pin with a different count/order are a
+    // compile error rather than two strips fighting over the pin. Same settings share the one device.
+    const shared = sharedPin(ctx, node, pin, "out");
+    claimResource(ctx, `GPIO ${pin} neopixel`, `count ${count}, order ${order}`, node);
     const bpp = order.endsWith("W") ? 4 : 3;
-    const neoVar = ctx.uniqueName("neopixel_dev");
+    const neoVar = `_neopixel_${pin}`;
     const colourFn = ctx.uniqueName("neopixel_colour");
     const id = JSON.stringify(String(node.id));
 
@@ -80,7 +86,8 @@ export const neopixelNode: NodeDefinition = {
     return {
       imports: ["import machine", "import neopixel"],
       statements: [
-        { key: `neopixel-${pin}`, code: `${neoVar} = neopixel.NeoPixel(machine.Pin(${pin}), ${count}, bpp=${bpp})` },
+        shared.statement,
+        { key: `neopixel-${pin}`, code: `${neoVar} = neopixel.NeoPixel(${shared.varName}, ${count}, bpp=${bpp})` },
         { key: colourFn, code: `def ${colourFn}(_c):\n    return ${tuple}` },
       ],
       functionName: ctx.uniqueName("neopixel"),

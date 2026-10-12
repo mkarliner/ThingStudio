@@ -17,6 +17,7 @@
 // (see ADC2_PINS -- a stopgap; this pin data belongs in the board definitions, tracked in
 // outstanding-items/adc-esp32-adc2-pins.md).
 
+import { claimResource, sharedAdc } from "./hardware-shared.js";
 import { CompileError } from "../compiler/errors.js";
 import { checkPin } from "../definitions/pin-check.js";
 import type { GraphNode } from "../compiler/graph.js";
@@ -97,7 +98,9 @@ export const adcNode: NodeDefinition = {
     const pollMs = wholeNumber(node.properties.pollMs ?? 0, "pollMs");
     if (pollMs < 0) throw new CompileError(`adc pollMs "${String(node.properties.pollMs)}" must be 0 or more`);
 
-    const adcVar = `_adc_${pin}`;
+    const shared = sharedAdc(ctx, node, pin);
+    claimResource(ctx, `GPIO ${pin} aadc`, `${mode} ${boundsArgs}, sense ${sense}, poll ${pollMs} ms`, node);
+    const adcVar = shared.varName;
     const aadcVar = ctx.uniqueName("aadc");
     const errVar = `_adc_err_${pin}`;
     const id = JSON.stringify(String(node.id));
@@ -136,7 +139,7 @@ export const adcNode: NodeDefinition = {
     return {
       imports: ["import asyncio", "import machine", "from aadc import AADC"],
       statements: [
-        { key: `adc-${pin}`, code: `${adcVar} = machine.ADC(machine.Pin(${pin}))` },
+        shared.statement,
         { key: `${errVar}`, code: `${errVar} = None` },
         { key: aadcVar, code: aadcSetup.join("\n") },
       ],

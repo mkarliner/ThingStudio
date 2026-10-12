@@ -56,3 +56,7 @@ pin up differently.
 - 2026-10-12: rule recorded here and in AGENTS.md; every built-in pin, PWM and SPI user moved onto it. No per-pin
   config objects in the flow file: the compile-time claim gives the same conflict check from the pin number each
   node already stores, without a second copy of it to keep in step.
+- 2026-10-12 (later): the `adc`, `encoder` and `neopixel` nodes -- built 2026-10-11 on a side branch, before this
+  infrastructure landed -- moved onto it too when that branch merged. `sharedAdc()` added (`runtime.shared('adc',
+  <pin>, ...)`) for the ADC channel; both encoder pins and the neopixel data pin via `sharedPin()`; each driver
+  claimed as its own resource (`GPIO <pin> aadc`, `GPIO <x>,<y> encoder`, `GPIO <pin> neopixel`).

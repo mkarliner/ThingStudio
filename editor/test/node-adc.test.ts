@@ -80,6 +80,12 @@ describe("thingstudio/adc node", () => {
     expect(r.buildMsg).toContain("'percent'");
   });
 
+  it("shares the ADC channel through runtime.shared", () => {
+    const r = adcNode.codegenEventSource!(node({ pin: 34 }), ctx());
+    const code = (r.statements ?? []).map((s) => s.code).join("\n");
+    expect(code).toContain("_adc_34 = runtime.shared('adc', 34, (), lambda: machine.ADC(machine.Pin(34)))");
+  });
+
   it("passes absolute bounds, and adds a poll timeout when pollMs is set", () => {
     const abs = adcNode.codegenEventSource!(node({ pin: 34, mode: "absolute", lower: 1000, upper: 50000 }), ctx());
     expect(abs.waitStatement).toBe("await _aadc(1000, 50000)");

@@ -41,13 +41,21 @@ describe("thingstudio/neopixel node", () => {
 
   it("builds the strip with bpp from the order, and a colour helper in that order", () => {
     const grb = neopixelNode.codegenSink!(node({ pin: 13, count: 4, order: "GRB" }), ctx());
+    const grbCode = (grb.statements ?? []).map((s) => s.code).join("\n");
     expect(grb.imports).toContain("import neopixel");
-    expect(grb.statements?.[0]?.code).toContain("neopixel.NeoPixel(machine.Pin(13), 4, bpp=3)");
+    expect(grbCode).toContain("neopixel.NeoPixel(_gpio_13, 4, bpp=3)");
     // GRB: green (>>8) comes first in the tuple
-    expect(grb.statements?.[1]?.code).toMatch(/return \(\(\(_c >> 8\)/);
+    expect(grbCode).toMatch(/return \(\(\(_c >> 8\)/);
     const rgbw = neopixelNode.codegenSink!(node({ pin: 13, order: "RGBW" }), ctx());
-    expect(rgbw.statements?.[0]?.code).toContain("bpp=4");
-    expect(rgbw.statements?.[1]?.code).toContain(">> 24"); // white channel
+    const rgbwCode = (rgbw.statements ?? []).map((s) => s.code).join("\n");
+    expect(rgbwCode).toContain("bpp=4");
+    expect(rgbwCode).toContain(">> 24"); // white channel
+  });
+
+  it("shares the data pin through runtime.shared", () => {
+    const r = neopixelNode.codegenSink!(node({ pin: 13, count: 4, order: "GRB" }), ctx());
+    const code = (r.statements ?? []).map((s) => s.code).join("\n");
+    expect(code).toContain("_gpio_13 = runtime.shared('pin', 13, ('out', 'none'), lambda: machine.Pin(13, machine.Pin.OUT))");
   });
 
   it("writes the strip and reports a bad payload instead of raising", () => {
@@ -67,7 +75,7 @@ describe("thingstudio/neopixel node", () => {
       links: [[1, "1", 0, "2", 0, "any"]],
     };
     const { source } = compile(graph, buildRegistry());
-    expect(source).toContain("neopixel.NeoPixel(machine.Pin(13), 4, bpp=3)");
+    expect(source).toContain("neopixel.NeoPixel(_gpio_13, 4, bpp=3)");
     expect(source).toContain(".write()");
   });
 });

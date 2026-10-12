@@ -15,11 +15,15 @@
 // final value. Its async iterator carries only the value, so the delta is computed here by remembering
 // the last one (prevVar below), not by the driver's own callback.
 //
-// Pins are fixed-name'd (`_encoder_<x>_<y>`) so two encoder nodes on the same pins share one driver
-// instance (mergeSetup's first-writer-wins), matching interrupt/eswitch/ebutton's same-pin convention.
+// The two pins are keyed singletons (hardware-shared.ts, decisions/hardware-singletons.md): claimed at compile
+// time and fetched through runtime.shared('pin', ...), so an encoder and any other node on either pin must
+// agree, or the compile stops. The Encoder driver is fixed-name'd (`_encoder_<x>_<y>`, claimed as its own
+// resource) so two encoder nodes on the same pair with the same settings share one instance
+// (mergeSetup's first-writer-wins), matching interrupt/eswitch/ebutton's same-pin convention.
 // Two nodes on the same pair is unusual; both await the one driver's iterator and both emit, which is
 // acceptable, but it is not a supported configuration.
 
+import { claimResource, sharedPin } from "./hardware-shared.js";
 import { CompileError } from "../compiler/errors.js";
 import { checkPin } from "../definitions/pin-check.js";
 import type { GraphNode } from "../compiler/graph.js";
@@ -62,8 +66,8 @@ export const encoderNode: NodeDefinition = {
       throw new CompileError(`encoder delay "${String(node.properties.delay)}" must be a whole number of ms, 0 or more`);
     }
 
-    const pxVar = `_encoder_pin_x_${pinX}`;
-    const pyVar = `_encoder_pin_y_${pinY}`;
+    const px = sharedPin(ctx, node, pinX, "in", "up");
+    const py = sharedPin(ctx, node, pinY, "in", "up");
     const encVar = `_encoder_${pinX}_${pinY}`;
     const prevVar = ctx.uniqueName("encoder_prev");
 
@@ -73,17 +77,16 @@ export const encoderNode: NodeDefinition = {
     if (mod !== null) args.push(`mod=${mod}`);
     args.push(`delay=${delay}`);
 
+    // The Encoder driver on the two shared pins is claimed too, so two encoder
+    // nodes on the same pair with different settings are a compile error.
+    claimResource(ctx, `GPIO ${pinX},${pinY} encoder`, args.join(", "), node);
+
     return {
       imports: ["import machine", "from encoder import Encoder"],
       statements: [
-        {
-          key: `encoder-${pinX}-${pinY}`,
-          code: [
-            `${pxVar} = machine.Pin(${pinX}, machine.Pin.IN, machine.Pin.PULL_UP)`,
-            `${pyVar} = machine.Pin(${pinY}, machine.Pin.IN, machine.Pin.PULL_UP)`,
-            `${encVar} = Encoder(${pxVar}, ${pyVar}, ${args.join(", ")})`,
-          ].join("\n"),
-        },
+        px.statement,
+        py.statement,
+        { key: `encoder-${pinX}-${pinY}`, code: `${encVar} = Encoder(${px.varName}, ${py.varName}, ${args.join(", ")})` },
         { key: prevVar, code: `${prevVar} = ${value}` },
       ],
       waitStatement: `_enc_val = await ${encVar}.__anext__()`,

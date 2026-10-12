@@ -38,21 +38,30 @@ describe("thingstudio/encoder node", () => {
 
   it("generates one output, value in payload and delta alongside", () => {
     const r = encoderNode.codegenEventSource!(node({ pinX: 10, pinY: 11 }), ctx());
+    const code = (r.statements ?? []).map((s) => s.code).join("\n");
     expect(r.imports).toContain("from encoder import Encoder");
-    expect(r.statements?.[0]?.code).toContain("Encoder(_encoder_pin_x_10, _encoder_pin_y_11, v=0, div=1, delay=100)");
+    expect(code).toContain("Encoder(_gpio_10, _gpio_11, v=0, div=1, delay=100)");
     expect(r.waitStatement).toContain(".__anext__()");
     expect(r.buildMsg).toContain("'payload': _enc_val");
     expect(r.buildMsg).toContain("'delta': _enc_delta");
     expect(encoderNode.ports?.outputs?.[0]?.type).toBe("number");
   });
 
+  it("shares both pins through runtime.shared", () => {
+    const r = encoderNode.codegenEventSource!(node({ pinX: 10, pinY: 11 }), ctx());
+    const code = (r.statements ?? []).map((s) => s.code).join("\n");
+    expect(code).toContain("_gpio_10 = runtime.shared('pin', 10, ('in', 'up'), lambda: machine.Pin(10, machine.Pin.IN, machine.Pin.PULL_UP))");
+    expect(code).toContain("_gpio_11 = runtime.shared('pin', 11, ('in', 'up'), lambda: machine.Pin(11, machine.Pin.IN, machine.Pin.PULL_UP))");
+    expect(code).not.toMatch(/machine\.Pin\(10, machine\.Pin\.IN, machine\.Pin\.PULL_UP\)\n_encoder/);
+  });
+
   it("passes vmin/vmax/mod only when set", () => {
     const r = encoderNode.codegenEventSource!(node({ pinX: 10, pinY: 11, vmin: 0, vmax: 100, mod: 10 }), ctx());
-    const code = r.statements?.[0]?.code ?? "";
+    const code = (r.statements ?? []).map((s) => s.code).join("\n");
     expect(code).toContain("vmin=0");
     expect(code).toContain("vmax=100");
     expect(code).toContain("mod=10");
     const bare = encoderNode.codegenEventSource!(node({ pinX: 10, pinY: 11 }), ctx());
-    expect(bare.statements?.[0]?.code).not.toContain("vmin=");
+    expect((bare.statements ?? []).map((s) => s.code).join("\n")).not.toContain("vmin=");
   });
 });

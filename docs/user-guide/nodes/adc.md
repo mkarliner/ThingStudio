@@ -28,3 +28,6 @@ msg = {'payload': {'raw': 0, 'volts': 0.0, 'percent': 0.0}, 'topic': ''}
 The reading is noisy, so `relative` mode with a few thousand counts is the common setup; `absolute` suits an alarm
 or a threshold. With `inside`, a message arrives when the reading comes back within the bounds, so a flow can see
 both leaving and returning.
+
+Two `adc` nodes on the same pin share one channel, so they must have the same settings, or the compile stops. See
+[Hardware is shared](index.md#hardware-is-shared).

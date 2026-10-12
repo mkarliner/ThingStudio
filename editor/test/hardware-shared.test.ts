@@ -9,9 +9,12 @@ import { compile } from "../src/compiler/compile.js";
 import type { GraphData, GraphNode } from "../src/compiler/graph.js";
 import type { CodegenContext } from "../src/compiler/node-definition.js";
 import { buildRegistry } from "../src/node-library/registry.js";
+import { adcNode } from "../src/node-library/adc.js";
 import { displaySpiNode } from "../src/node-library/display-spi.js";
+import { encoderNode } from "../src/node-library/encoder.js";
 import { gpioOutNode } from "../src/node-library/gpio-out.js";
 import { i2cBusFromPins } from "../src/node-library/i2c-shared.js";
+import { neopixelNode } from "../src/node-library/neopixel.js";
 
 /** A ctx with compile.ts's claim rule, so node codegen hooks can be run one after another. */
 function claimingCtx(): CodegenContext {
@@ -91,5 +94,25 @@ describe("hardware resources are keyed singletons", () => {
     const ctx = claimingCtx();
     i2cBusFromPins(ctx, { bus: 0, scl: 9, sda: 8 });
     expect(() => gpioOutNode.codegenSink!(gpioOut("g1", 8), ctx)).toThrow("GPIO 8: gpio_out g1 sets it up as output, but I2C bus 0 already has it as I2C bus 0 SDA.");
+  });
+
+  it("an adc node's channel can't also be a gpio_out", () => {
+    const ctx = claimingCtx();
+    adcNode.codegenEventSource!({ id: "a1", type: "thingstudio/adc", properties: { pin: 34 } }, ctx);
+    expect(() => gpioOutNode.codegenSink!(gpioOut("g1", 34), ctx)).toThrow(/GPIO 34: gpio_out g1 sets it up as output, but adc a1 already has it as ADC input/);
+  });
+
+  it("two encoder nodes on the same pins must agree on their settings", () => {
+    const ctx = claimingCtx();
+    const enc = (id: string, props: Record<string, unknown> = {}): GraphNode => ({ id, type: "thingstudio/encoder", properties: { pinX: 10, pinY: 11, ...props } });
+    encoderNode.codegenEventSource!(enc("e1", { div: 4 }), ctx);
+    expect(() => encoderNode.codegenEventSource!(enc("e2", { div: 2 }), ctx)).toThrow(/GPIO 10,11 encoder: encoder e2/);
+  });
+
+  it("two neopixel nodes on the same pin must agree on count and order", () => {
+    const ctx = claimingCtx();
+    const neo = (id: string, props: Record<string, unknown> = {}): GraphNode => ({ id, type: "thingstudio/neopixel", properties: { pin: 13, count: 8, order: "GRB", ...props } });
+    neopixelNode.codegenSink!(neo("n1"), ctx);
+    expect(() => neopixelNode.codegenSink!(neo("n2", { count: 4 }), ctx)).toThrow(/GPIO 13 neopixel: neopixel n2/);
   });
 });
