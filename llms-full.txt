@@ -1570,6 +1570,7 @@ The fields are:
 | `gpio` | The pins this board has, if fewer than its processor. For example `["0-29"]`. |
 | `reserved` | Pins that must not be used, each with a reason. |
 | `avoid` | Pins that give a warning, each with a reason. |
+| `free` | Pins the processor reserves or warns about that are fine on this board. For example `["12-13"]` on an ESP32-C3 board whose flash doesn't use them. |
 | `notes` | Anything else worth knowing. |
 | `wifi` | `false` if the board has no WiFi. Hides [connecting over WiFi](wifi-connection.md) for it. Leave it out if unsure. |
 | `header` | What each physical pin carries: a GPIO number, or a label such as `"GND"` or `"3V3"`. Shown on the **Pins…** page. For example `{ "1": 0, "3": "GND", "40": "VBUS" }`. |
