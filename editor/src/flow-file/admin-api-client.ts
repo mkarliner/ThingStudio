@@ -322,6 +322,8 @@ export interface DefinitionFileInfo {
   valid: boolean;
   error: string | null;
   data: unknown;
+  /** Still exactly the built-in the backend copied (older backends leave it out). */
+  untouchedCopy?: boolean;
 }
 
 export interface UserDefinitionFiles {

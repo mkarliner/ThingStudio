@@ -91,6 +91,8 @@ export interface RawDefinitionFile {
   readonly data: unknown;
   /** Set when the file didn't even parse (the backend reports this). */
   readonly parseError?: string | null;
+  /** The backend's copy of a built-in, unedited since it was copied (builtin_reference.py). */
+  readonly untouchedCopy?: boolean;
 }
 
 export interface DefinitionProblem {
@@ -106,6 +108,8 @@ export interface DefinitionSet {
   /** Invalid files, and user files that replaced a built-in. Show every one. */
   readonly problems: readonly DefinitionProblem[];
   readonly overrides: readonly { kind: DefinitionKind; id: string; source: string }[];
+  /** Unedited copies of a built-in that has changed since: in use, but out of date. Not in `overrides`. */
+  readonly staleCopies: readonly { kind: DefinitionKind; id: string; source: string }[];
 }
 
 export class DefinitionError extends Error {}
@@ -412,6 +416,7 @@ function errorText(err: unknown): string {
 export function buildDefinitionSet(builtin: readonly RawDefinitionFile[], user: readonly RawDefinitionFile[]): DefinitionSet {
   const problems: DefinitionProblem[] = [];
   const overrides: { kind: DefinitionKind; id: string; source: string }[] = [];
+  const staleCopies: { kind: DefinitionKind; id: string; source: string }[] = [];
   const processors = new Map<string, ProcessorDef>();
   const boards = new Map<string, BoardDef>();
   // The backend copies every missing built-in into the user folders (builtin_reference.py), so most
@@ -429,7 +434,7 @@ export function buildDefinitionSet(builtin: readonly RawDefinitionFile[], user: 
       else boards.set(file.id, parseBoard(file.id, file.data, processors));
       const original = builtinData.get(`${file.kind}:${file.id}`);
       if (!builtin.includes(file) && original !== undefined && original !== JSON.stringify(file.data)) {
-        overrides.push({ kind: file.kind, id: file.id, source: file.source });
+        (file.untouchedCopy ? staleCopies : overrides).push({ kind: file.kind, id: file.id, source: file.source });
       }
     } catch (err) {
       problems.push({ kind: file.kind, id: file.id, source: file.source, message: errorText(err) });
@@ -437,7 +442,7 @@ export function buildDefinitionSet(builtin: readonly RawDefinitionFile[], user: 
   };
   for (const f of ordered) if (f.kind === "processor") tryAdd(f);
   for (const f of ordered) if (f.kind === "board") tryAdd(f);
-  return { processors, boards, problems, overrides };
+  return { processors, boards, problems, overrides, staleCopies };
 }
 
 /** "0-19, 21-23, 32-39" -- compact text for a pin set, used in messages and the UI. */
@@ -454,17 +459,20 @@ export function formatPinSet(pins: Iterable<number>): string {
   return parts.join(", ");
 }
 
+type DefinitionListingEntry = { name: string; valid: boolean; error: string | null; data: unknown; untouchedCopy?: boolean };
+
 /** Turns the backend's /api/definitions listing into RawDefinitionFiles. */
 export function userDefinitionFiles(listing: {
-  processors: readonly { name: string; valid: boolean; error: string | null; data: unknown }[];
-  boards: readonly { name: string; valid: boolean; error: string | null; data: unknown }[];
+  processors: readonly DefinitionListingEntry[];
+  boards: readonly DefinitionListingEntry[];
 }): RawDefinitionFile[] {
-  const convert = (kind: DefinitionKind, dir: string) => (f: { name: string; valid: boolean; error: string | null; data: unknown }) => ({
+  const convert = (kind: DefinitionKind, dir: string) => (f: DefinitionListingEntry) => ({
     kind,
     id: f.name,
     source: `~/.thingstudio/${dir}/${f.name}.json`,
     data: f.valid ? f.data : null,
     parseError: f.valid ? null : (f.error ?? "invalid file"),
+    untouchedCopy: f.untouchedCopy === true,
   });
   return [...listing.processors.map(convert("processor", "processors")), ...listing.boards.map(convert("board", "boards"))];
 }

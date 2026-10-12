@@ -104,3 +104,10 @@ Status: detail file for `decisions.md`'s "Processor and board definitions" index
   key `free`: a pin list that drops the processor's `reserved` and `avoid` entries for those pins in
   `buildTarget`. The board's own `reserved`/`avoid` can't name a `free` pin (validation error), and `free` pins
   must be on the board. Board file `luatos-esp32c3-core.json` from the LuatOS wiki pinout, untested on hardware.
+- **2026-10-12 — The editor says when a user file is an old, unedited copy of a built-in (Mike: "yes").** Found
+  when the backend copied a first draft of the LuatOS board into `~/.thingstudio/boards/` and that copy quietly
+  beat the fixed built-in. Files are still never overwritten. `copy_missing_builtins` now records a sha256 per
+  copied file in `<kind>/.builtin-copies` (no `.json` suffix, so it's never listed), and records an existing file
+  that already equals the built-in. `/api/definitions` adds `untouchedCopy`. An untouched copy that differs from
+  the current built-in goes in `DefinitionSet.staleCopies`, not `overrides`, and the console says to delete it.
+  It's still used, as before. Copies made before this and since changed can't be told apart, so they get no line.

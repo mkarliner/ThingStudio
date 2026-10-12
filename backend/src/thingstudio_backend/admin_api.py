@@ -57,7 +57,7 @@ def _preset_info_json(info: PresetInfo) -> dict:
 
 
 def _definition_json(info: DefinitionFile) -> dict:
-    return {"name": info.name, "valid": info.valid, "error": info.error, "data": info.data}
+    return {"name": info.name, "valid": info.valid, "error": info.error, "data": info.data, "untouchedCopy": info.untouched_copy}
 
 
 def make_admin_routes(store: PersistedStore) -> list[web.RouteDef]:

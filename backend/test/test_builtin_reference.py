@@ -4,6 +4,7 @@
 import json
 import logging
 
+from thingstudio_backend.persisted_store import PersistedStore
 from thingstudio_backend.builtin_reference import (
     EXAMPLE_NODES_DIR,
     copy_example_custom_nodes,
@@ -43,6 +44,46 @@ def test_never_touches_an_existing_file_and_restores_a_deleted_one(tmp_path) -> 
     assert copy_missing_builtins(data, src) == ["boards/b.json"]
     assert (data / "boards" / "b.json").read_text() == '{"b": 1}'
     assert copy_missing_builtins(data, src) == []
+
+
+def _source(tmp_path, board_a: str):
+    src = tmp_path / "src"
+    for kind in ("boards", "processors"):
+        (src / kind).mkdir(parents=True, exist_ok=True)
+    (src / "boards" / "a.json").write_text(board_a)
+    return src
+
+
+def _untouched(data) -> dict[str, bool]:
+    return {f.name: f.untouched_copy for f in PersistedStore(data).list_definitions("boards")}
+
+
+def test_a_copy_stays_untouched_until_edited_and_the_record_is_not_listed(tmp_path) -> None:
+    src = _source(tmp_path, '{"v": 1}')
+    data = tmp_path / "data"
+    copy_missing_builtins(data, src)
+    assert _untouched(data) == {"a": True}
+    # The built-in changes later: the user's copy is still the untouched old one.
+    (src / "boards" / "a.json").write_text('{"v": 2}')
+    assert copy_missing_builtins(data, src) == []
+    assert _untouched(data) == {"a": True}
+    (data / "boards" / "a.json").write_text('{"v": 1, "mine": true}')
+    assert _untouched(data) == {"a": False}
+
+
+def test_an_existing_file_equal_to_the_built_in_is_recorded_but_an_edited_one_is_not(tmp_path) -> None:
+    src = _source(tmp_path, '{"v": 1}')
+    data = tmp_path / "data"
+    (data / "boards").mkdir(parents=True)
+    (data / "boards" / "a.json").write_text('{"v": 1}')
+    copy_missing_builtins(data, src)
+    assert _untouched(data) == {"a": True}
+
+    other = tmp_path / "other"
+    (other / "boards").mkdir(parents=True)
+    (other / "boards" / "a.json").write_text('{"v": 0}')
+    copy_missing_builtins(other, src)
+    assert _untouched(other) == {"a": False}
 
 
 def test_seed_logs_and_carries_on_when_the_source_is_missing(tmp_path, caplog) -> None:

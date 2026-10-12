@@ -435,7 +435,7 @@ async def test_list_definitions_returns_parsed_files_and_flags_bad_ones(tmp_path
     (base / "processors" / "esp32.json").write_text(json.dumps({"name": "My ESP32"}))
     async with _client(tmp_path) as client:
         body = await (await client.get("/api/definitions")).json()
-    assert body["processors"] == [{"name": "esp32", "valid": True, "error": None, "data": {"name": "My ESP32"}}]
+    assert body["processors"] == [{"name": "esp32", "valid": True, "error": None, "data": {"name": "My ESP32"}, "untouchedCopy": False}]
     boards = {b["name"]: b for b in body["boards"]}
     assert set(boards) == {"bad name", "broken", "my-board"}
     assert boards["my-board"] == {
@@ -443,6 +443,7 @@ async def test_list_definitions_returns_parsed_files_and_flags_bad_ones(tmp_path
         "valid": True,
         "error": None,
         "data": {"name": "Mine", "processor": "esp32", "match": [], "pins": {"LED": 2}},
+        "untouchedCopy": False,
     }
     assert boards["broken"]["valid"] is False
     assert "line 3" in boards["broken"]["error"]

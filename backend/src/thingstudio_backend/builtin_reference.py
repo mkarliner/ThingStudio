@@ -14,6 +14,11 @@
 # only reports a user file as replacing a built-in when its content actually
 # differs (definitions.ts), so untouched copies stay quiet.
 #
+# Each kind folder also gets a record of what was copied (BUILTIN_COPIES_FILE, a hash per file, 2026-10-12).
+# A copy whose hash still matches is untouched; when it no longer equals the current built-in, it's an old
+# copy, and the editor says so instead of quietly using it over the new built-in. A file already there that
+# equals the current built-in is recorded too, so copies made before the record existed are covered.
+#
 # Runs at backend start rather than "install time" because Thingstudio has
 # no install step of its own yet (pip install -e + a build). A failure here
 # is logged and ignored: it must never stop the editor from starting, and
@@ -24,10 +29,12 @@
 
 from __future__ import annotations
 
+import json
 import logging
 from pathlib import Path
 
 from .assets import asset_dirs
+from .persisted_store import BUILTIN_COPIES_FILE, read_builtin_copies, sha256_bytes
 
 log = logging.getLogger(__name__)
 
@@ -50,12 +57,20 @@ def copy_missing_builtins(data_dir: Path, source_dir: Path | None = None) -> lis
     for kind in KINDS:
         out = data_dir / kind
         out.mkdir(parents=True, exist_ok=True)
+        record = read_builtin_copies(out)
+        before = dict(record)
         for src in sorted((source_dir / kind).glob("*.json")):
             dest = out / src.name
+            content = src.read_bytes()
             if dest.exists():
+                if src.name not in record and dest.read_bytes() == content:
+                    record[src.name] = sha256_bytes(content)
                 continue
-            dest.write_bytes(src.read_bytes())
+            dest.write_bytes(content)
+            record[src.name] = sha256_bytes(content)
             copied.append(f"{kind}/{src.name}")
+        if record != before:
+            (out / BUILTIN_COPIES_FILE).write_text(json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return copied
 
 

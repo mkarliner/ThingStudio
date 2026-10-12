@@ -158,6 +158,17 @@ describe("definition file validation", () => {
     expect(set.problems).toEqual([]);
   });
 
+  it("reports an unedited copy of an older built-in as stale, not as an override", () => {
+    const old = { name: "Raspberry Pi Pico", processor: "rp2040", match: ["Raspberry Pi Pico"], pins: {} };
+    const set = buildDefinitionSet(BUILTIN_DEFINITION_FILES, [{ ...user("board", "pico", old), untouchedCopy: true }]);
+    expect(set.staleCopies).toEqual([{ kind: "board", id: "pico", source: "~/.thingstudio/boards/pico.json" }]);
+    expect(set.overrides).toEqual([]);
+    expect(set.boards.get("pico")!.pins.size).toBe(0);
+    const pico = BUILTIN_DEFINITION_FILES.find((f) => f.kind === "board" && f.id === "pico")!;
+    const current = buildDefinitionSet(BUILTIN_DEFINITION_FILES, [{ ...user("board", "pico", JSON.parse(JSON.stringify(pico.data))), untouchedCopy: true }]);
+    expect(current.staleCopies).toEqual([]);
+  });
+
   it("keeps the built-in and reports the problem when a replacing user file is invalid", () => {
     const set = buildDefinitionSet(BUILTIN_DEFINITION_FILES, [user("board", "pico", { name: "My Pico" })]);
     expect(set.boards.get("pico")!.name).toBe("Raspberry Pi Pico");
