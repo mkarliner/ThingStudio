@@ -16,7 +16,7 @@
         <link rel="prev" href="../eswitch/">
       
       
-        <link rel="next" href="../gpio-out/">
+        <link rel="next" href="../adc/">
       
       
         
@@ -2157,6 +2157,90 @@
   
   
     <li class="md-nav__item">
+      <a href="../adc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    adc
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../encoder/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    encoder
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../neopixel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    neopixel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../gpio-out/" class="md-nav__link">
         
   
@@ -2872,9 +2956,13 @@
   less than long press.</li>
 </ul>
 <h2 id="behavior">Behavior</h2>
-<p><code>event</code> is one of <code>press</code>, <code>release</code>, <code>long</code>, <code>double</code>. <code>payload</code> is the button's state at the moment the event
-fired (<code>true</code> = currently pressed) — always <code>true</code> for <code>press</code>, always <code>false</code> for <code>release</code>, and whatever the
-button is doing right now for <code>long</code>/<code>double</code>. <code>topic</code> is empty.</p>
+<p>Each event sends one message, a dict with two keys:</p>
+<div class="highlight"><pre><span></span><code><span class="n">msg</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'payload'</span><span class="p">:</span> <span class="s1">'press'</span><span class="p">,</span> <span class="s1">'topic'</span><span class="p">:</span> <span class="s1">''</span><span class="p">}</span>
+</code></pre></div>
+<ul>
+<li><strong><code>payload</code></strong> — the event that fired: <code>press</code>, <code>release</code>, <code>long</code> or <code>double</code>.</li>
+<li><strong><code>topic</code></strong> — empty.</li>
+</ul>
 <p>With <code>suppress</code> off (the default), a press always reports immediately, whether or not a second press follows —
 so a rapid double-click reports both a <code>press</code> and a <code>double</code>, not <code>double</code> alone. Turn <code>suppress</code> on if a plain
 single press should never be reported when it turns out to be part of a double-click.</p>

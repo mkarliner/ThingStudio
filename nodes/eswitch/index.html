@@ -2157,6 +2157,90 @@
   
   
     <li class="md-nav__item">
+      <a href="../adc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    adc
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../encoder/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    encoder
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../neopixel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    neopixel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../gpio-out/" class="md-nav__link">
         
   
@@ -2866,8 +2950,14 @@
 <li><strong>debounce (ms)</strong> — how long a level must hold before it's accepted as real. Default 50ms.</li>
 </ul>
 <h2 id="behavior">Behavior</h2>
-<p>Fires once per transition: <code>event</code> is <code>close</code> or <code>open</code>, <code>payload</code> is <code>true</code> when closed, and <code>topic</code> is empty. A
-downstream node that only cares about current state can read <code>payload</code> alone and ignore <code>event</code>.</p>
+<p>Each transition sends one message, a dict with two keys:</p>
+<div class="highlight"><pre><span></span><code><span class="n">msg</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'payload'</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">'topic'</span><span class="p">:</span> <span class="s1">''</span><span class="p">}</span>
+</code></pre></div>
+<ul>
+<li><strong><code>payload</code></strong> — the switch state: <code>true</code> when closed, <code>false</code> when open.</li>
+<li><strong><code>topic</code></strong> — empty.</li>
+</ul>
+<p><code>payload</code> is a bool, so it wires straight to <code>gpio out</code> to mirror the switch.</p>
 <p>No internal pull is enabled by default — wire an external pull resistor, use a switch module with one built in,
 or set <strong>pull</strong> if the switch instead relies on the board's own internal pull-up/pull-down.</p>
 <p>Two <code>eswitch</code> nodes on the same pin share one switch, so they must have the same settings, or the compile stops. See

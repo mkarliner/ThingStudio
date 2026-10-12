@@ -2084,6 +2084,90 @@
   
   
     <li class="md-nav__item">
+      <a href="../nodes/adc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    adc
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/encoder/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    encoder
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/neopixel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    neopixel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../nodes/gpio-out/" class="md-nav__link">
         
   
@@ -2877,6 +2961,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#adc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        adc
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#bme280" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2921,6 +3016,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#encoder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        encoder
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#eswitch" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2958,6 +3064,17 @@
     <span class="md-ellipsis">
       
         interrupt
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#neopixel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        neopixel
       
     </span>
   </a>
@@ -3581,6 +3698,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#adc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        adc
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#bme280" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3625,6 +3753,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#encoder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        encoder
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#eswitch" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3662,6 +3801,17 @@
     <span class="md-ellipsis">
       
         interrupt
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#neopixel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        neopixel
       
     </span>
   </a>
@@ -4148,6 +4298,22 @@ checked when the flow is compiled, and the error says what is allowed. See <a hr
 </li>
 </ul>
 <h2 id="hardware">hardware</h2>
+<h3 id="adc">adc</h3>
+<p>Type <code>thingstudio/adc</code>, kind source, palette group hardware.</p>
+<ul>
+<li>Inputs: none</li>
+<li>Outputs: msg (any)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>pin</code>, number, default <code>34</code> — the ADC pin to read; on ESP32, use an ADC1 pin if the flow uses WiFi (ADC2 can't with the radio on)</li>
+<li><code>mode</code>, string, default <code>"relative"</code> — relative (current value +- delta) or absolute (lower..upper)</li>
+<li><code>delta</code>, number, default <code>2000</code> — relative mode: how far the reading must move from the last sent one to fire</li>
+<li><code>lower</code>, number, default <code>0</code> — absolute mode: the low bound</li>
+<li><code>upper</code>, number, default <code>50000</code> — absolute mode: the high bound</li>
+<li><code>sense</code>, string, default <code>"outside"</code> — outside (fire when the value leaves the bounds) or inside (fire when it returns)</li>
+<li><code>pollMs</code>, number, default <code>0</code> — also send every this many ms; 0 = only on a bounds crossing</li>
+</ul>
+</li>
+</ul>
 <h3 id="bme280">bme280</h3>
 <p>Type <code>thingstudio/bme280</code>, kind source, palette group hardware.</p>
 <ul>
@@ -4207,7 +4373,7 @@ checked when the flow is compiled, and the error says what is allowed. See <a hr
 <p>Type <code>thingstudio/ebutton</code>, kind source, palette group hardware.</p>
 <ul>
 <li>Inputs: none</li>
-<li>Outputs: msg (bool)</li>
+<li>Outputs: msg (string)</li>
 <li>Properties (name, type, default):<ul>
 <li><code>pin</code>, number, default <code>5</code></li>
 <li><code>suppress</code>, boolean, default <code>false</code></li>
@@ -4216,6 +4382,23 @@ checked when the flow is compiled, and the error says what is allowed. See <a hr
 <li><code>longPressMs</code>, number, default <code>1000</code></li>
 <li><code>doubleClickMs</code>, number, default <code>400</code></li>
 <li><code>pull</code>, string, default <code>"none"</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="encoder">encoder</h3>
+<p>Type <code>thingstudio/encoder</code>, kind source, palette group hardware.</p>
+<ul>
+<li>Inputs: none</li>
+<li>Outputs: msg (number)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>pinX</code>, number, default <code>10</code> — one of the two quadrature switch pins</li>
+<li><code>pinY</code>, number, default <code>11</code> — the other quadrature switch pin</li>
+<li><code>div</code>, number, default <code>1</code> — divide the count by this to track detents; 1 counts every pulse</li>
+<li><code>value</code>, number, default <code>0</code> — the starting value</li>
+<li><code>vmin</code>, string, default <code>""</code> — lowest value, or blank for no limit</li>
+<li><code>vmax</code>, string, default <code>""</code> — highest value, or blank for no limit</li>
+<li><code>mod</code>, string, default <code>""</code> — wrap the value at this number, or blank for none</li>
+<li><code>delay</code>, number, default <code>100</code> — ms to wait for motion to settle; also limits how often it sends</li>
 </ul>
 </li>
 </ul>
@@ -4266,6 +4449,18 @@ checked when the flow is compiled, and the error says what is allowed. See <a hr
 <li><code>edge</code>, string, default <code>"rising"</code></li>
 <li><code>debounce</code>, boolean, default <code>true</code></li>
 <li><code>debounceMs</code>, number, default <code>50</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="neopixel">neopixel</h3>
+<p>Type <code>thingstudio/neopixel</code>, kind sink, palette group hardware.</p>
+<ul>
+<li>Inputs: msg (any)</li>
+<li>Outputs: none</li>
+<li>Properties (name, type, default):<ul>
+<li><code>pin</code>, number, default <code>13</code> — the strip's data pin</li>
+<li><code>count</code>, number, default <code>8</code> — how many pixels on the strip</li>
+<li><code>order</code>, string, default <code>"GRB"</code> — RGB, GRB, RGBW or GRBW: the wire colour order of your strip</li>
 </ul>
 </li>
 </ul>

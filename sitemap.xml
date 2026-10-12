@@ -129,6 +129,10 @@
          <lastmod>2026-10-12</lastmod>
     </url>
     <url>
+         <loc>https://docs.thingstudio.net/nodes/adc/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
          <loc>https://docs.thingstudio.net/nodes/bme280/</loc>
          <lastmod>2026-10-12</lastmod>
     </url>
@@ -154,6 +158,10 @@
     </url>
     <url>
          <loc>https://docs.thingstudio.net/nodes/ebutton/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.thingstudio.net/nodes/encoder/</loc>
          <lastmod>2026-10-12</lastmod>
     </url>
     <url>
@@ -214,6 +222,10 @@
     </url>
     <url>
          <loc>https://docs.thingstudio.net/nodes/mqtt-subscribe/</loc>
+         <lastmod>2026-10-12</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.thingstudio.net/nodes/neopixel/</loc>
          <lastmod>2026-10-12</lastmod>
     </url>
     <url>

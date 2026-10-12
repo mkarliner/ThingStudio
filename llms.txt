@@ -79,6 +79,9 @@
 - [interrupt](https://docs.thingstudio.net/nodes/interrupt/): Fires immediately when a GPIO pin changes state — genuinely event-driven, not polled.
 - [eswitch](https://docs.thingstudio.net/nodes/eswitch/): Reports when a debounced switch opens or closes.
 - [ebutton](https://docs.thingstudio.net/nodes/ebutton/): Reports press, release, long-press, and double-click events from a single debounced button.
+- [adc](https://docs.thingstudio.net/nodes/adc/): Reads an ADC pin and sends a message when the reading moves outside (or back inside) the set bounds, and on a poll interval if one is set.
+- [encoder](https://docs.thingstudio.net/nodes/encoder/): Reads a quadrature encoder (a rotary knob) and sends its value each time it turns.
+- [neopixel](https://docs.thingstudio.net/nodes/neopixel/): Drives a WS2812 / NeoPixel strip: sets the pixels from each message and writes.
 - [gpio out](https://docs.thingstudio.net/nodes/gpio-out/): Drives a GPIO pin high or low based on an incoming message.
 - [pwm out](https://docs.thingstudio.net/nodes/pwm-out/): Drives a PWM signal on a GPIO pin — for dimming an LED, driving a motor, or anything else that wants a variable duty cycle rather than a plain on/off.
 - [display spi](https://docs.thingstudio.net/nodes/display-spi/): Pushes an already-rendered frame to an SPI color TFT panel.
