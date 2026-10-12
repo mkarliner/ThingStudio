@@ -31,7 +31,7 @@ import { describe, expect, it } from "vitest";
 import { compile } from "../src/compiler/compile.js";
 import type { GraphData, GraphNode } from "../src/compiler/graph.js";
 import type { CodegenContext } from "../src/compiler/node-definition.js";
-import { functionNode } from "../src/node-library/function-node.js";
+import { dedent, functionNode } from "../src/node-library/function-node.js";
 import { buildRegistry } from "../src/node-library/registry.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -123,6 +123,34 @@ function runCallsForNodes(nodeCodes: string[], callsPerNode: number): string[] {
   }
   return runFile(lines).trim().split("\n");
 }
+
+describe("thingstudio/function node -- pasted indented code (2026-10-12)", () => {
+  it("strips the indent every line shares, keeping the indent inside blocks", () => {
+    const pasted = "  if msg['payload'] in ('press', 'release'):\n      msg['payload'] = msg['payload'] == 'press'\n      return msg\n\n  return None";
+    expect(dedent(pasted)).toBe("if msg['payload'] in ('press', 'release'):\n    msg['payload'] = msg['payload'] == 'press'\n    return msg\n\nreturn None");
+  });
+
+  it("leaves flush-left code, and code with no shared indent, unchanged", () => {
+    expect(dedent("x = 1\nif x:\n    return msg")).toBe("x = 1\nif x:\n    return msg");
+    expect(dedent("  a = 1\n\tb = 2")).toBe("  a = 1\n\tb = 2");
+  });
+
+  it("compiles a uniformly indented paste that used to fail with IndentationError", () => {
+    const graph: GraphData = {
+      nodes: [
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "press", repeat: "manual" } },
+        { id: "2", type: "thingstudio/function", properties: { code: "  msg['payload'] = msg['payload'] == 'press'\n  return msg" } },
+        { id: "3", type: "thingstudio/debug", properties: {} },
+      ],
+      links: [
+        [1, "1", 0, "2", 0, "string"],
+        [2, "2", 0, "3", 0, "any"],
+      ],
+    };
+    const { source } = compile(graph, buildRegistry());
+    expect(source).toMatch(/^    msg\['payload'\] = msg\['payload'\] == 'press'$/m);
+  });
+});
 
 describe("thingstudio/function node -- context scope", () => {
   it("persists across repeated calls to the same node instance", () => {

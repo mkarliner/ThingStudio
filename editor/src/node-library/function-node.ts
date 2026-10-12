@@ -63,6 +63,25 @@ const CONTEXT_STORE_CLASS = `class _Store:
 // reasonable ceiling -- not a wire-format or protocol limit (GraphLink's
 // slot fields are plain numbers, node-definition-model.md), so raising it
 // later costs nothing beyond changing this one constant.
+/** Removes the leading whitespace every non-blank line shares, like Python's textwrap.dedent. */
+export function dedent(code: string): string {
+  const lines = code.split("\n");
+  let common: string | null = null;
+  for (const line of lines) {
+    if (line.trim() === "") continue;
+    const lead = /^[ \t]*/.exec(line)![0];
+    if (common === null) common = lead;
+    else {
+      let n = 0;
+      while (n < common.length && n < lead.length && common[n] === lead[n]) n++;
+      common = common.slice(0, n);
+    }
+    if (common === "") return code;
+  }
+  if (!common) return code;
+  return lines.map((l) => (l.startsWith(common!) ? l.slice(common!.length) : l.trim() === "" ? "" : l)).join("\n");
+}
+
 export const MAX_FUNCTION_OUTPUTS = 10;
 
 export const functionNode: NodeDefinition = {
@@ -100,7 +119,9 @@ export const functionNode: NodeDefinition = {
     return Math.min(n, MAX_FUNCTION_OUTPUTS);
   },
   codegenTransform(node: GraphNode, ctx: CodegenContext): TransformCodegenResult {
-    const userCode = String(node.properties.code ?? "").replace(/\r\n/g, "\n");
+    // Dedented: code pasted with every line indented the same (copied out of a list in a chat or a doc) would
+    // otherwise fail with "IndentationError: unexpected indent" on code that's fine (Mike, 2026-10-12).
+    const userCode = dedent(String(node.properties.code ?? "").replace(/\r\n/g, "\n"));
     if (!userCode.trim()) throw new CompileError("function node's code is empty");
 
     // Node-instance-private store: a fresh dict per function node
