@@ -50,6 +50,17 @@ anyway. Docs and console messages shouldn't assume the board is on the list. Whe
 (micropython.org/download, docs.micropython.org) rather than leaving the reader with nothing. Mike, 2026-10-01,
 from the first newcomer test.
 
+## Hardware resources are keyed singletons
+
+Every unique hardware resource -- GPIO pin, ADC channel, I2C or SPI bus, PWM output -- is a keyed singleton after
+Peter Hinch's [functor_singleton](https://github.com/peterhinch/micropython-samples/blob/master/functor_singleton/README.md)
+pattern: the first user builds the one object, later users get the same object. A node that touches hardware must
+(1) claim each pin and bus at compile time with `claimResource()` (`editor/src/node-library/hardware-shared.ts`), and
+(2) get the object on the board through `runtime.shared(kind, key, signature, factory)`, never by constructing
+`machine.Pin`/`ADC`/`I2C`/`SPI`/`PWM` itself. Unlike Hinch's version, a second user with different settings is an
+error, not silently ignored. Mike, 2026-09-08, restated 2026-10-12 after it was found missing from five pin nodes:
+`docs/working-notes/decisions/hardware-singletons.md`.
+
 ## Install instructions: never `curl | sh` alone
 
 Piping a downloaded script into a shell (`curl ... | sh`, `irm ... | iex`) is widely regarded as unsafe, and many
@@ -264,6 +275,10 @@ pointing at that topic's own detail file under `docs/working-notes/decisions/` o
 the index to see what topics exist and orient fast; open only the detail file(s) matching your task's topic, not the
 whole set — read everything only for genuinely cross-cutting work (a new architecture decision, or a dedicated
 audit/consolidation session).
+
+A design rule Mike states ("X should always work like Y") goes into `decisions/` the day he states it, even when
+building it waits: a rule parked only as an `outstanding-items.md` entry doesn't bind the work done meanwhile. The
+hardware-singleton rule was lost for a month this way (`decisions/hardware-singletons.md`, History).
 
 Update in the same change, not batched for later: any session that writes or updates a
 `Status: decision`/`Status: resolved` note, or resolves a design-doc open question, adds one line to the relevant

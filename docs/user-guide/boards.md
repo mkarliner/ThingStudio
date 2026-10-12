@@ -120,6 +120,8 @@ The fields are:
 | `free` | Pins the processor reserves or warns about that are fine on this board. For example `["12-13"]` on an ESP32-C3 board whose flash doesn't use them. |
 | `notes` | Anything else worth knowing. |
 | `wifi` | `false` if the board has no WiFi. Hides [connecting over WiFi](wifi-connection.md) for it. Leave it out if unsure. |
+| `headerOrder` | `"down"` if the right-hand row is numbered top to bottom, like the left. Leave it out for a header numbered down the left and back up the right, like the Pico's. |
+| `usb` | Where the USB connector is, with pin 1 at the top left: `"top"` or `"bottom"`. Shown on the **Pins…** page. Needs `header`. |
 | `header` | What each physical pin carries: a GPIO number, or a label such as `"GND"` or `"3V3"`. Shown on the **Pins…** page. For example `{ "1": 0, "3": "GND", "40": "VBUS" }`. |
 
 Numbers in `header` are physical pin numbers, as printed on the board or its datasheet. A header numbered 1 to N

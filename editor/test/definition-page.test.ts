@@ -212,6 +212,35 @@ describe("physical header pins (2026-09-30)", () => {
     expect(html).toContain('<td class="right ground">AGND</td>');
   });
 
+  it("draws the USB connector at the end the board says: the top on the Pico, the bottom on the LuatOS C3", () => {
+    const pico = renderDefinitionPage(boardTarget("pico"), OPTS);
+    expect(pico).toMatch(/<tbody><tr><td><\/td><td class="num usb" colspan="2">USB<\/td><td><\/td><\/tr><tr><td class="left free"[^>]*>GPIO 0<\/td>/);
+    expect(pico).toContain("The USB connector is at the top.");
+    const c3 = renderDefinitionPage(boardTarget("luatos-esp32c3-core"), OPTS);
+    expect(c3).toMatch(/<td class="right ground">GND<\/td><\/tr><tr><td><\/td><td class="num usb" colspan="2">USB<\/td><td><\/td><\/tr><\/tbody>/);
+    expect(c3).toContain("The USB connector is at the bottom.");
+  });
+
+  it("numbers a headerOrder \"down\" board down both sides: 1 opposite 17, 16 opposite 32", () => {
+    const html = renderDefinitionPage(boardTarget("luatos-esp32c3-core"), OPTS);
+    expect(html).toContain("numbered down the left side, then down the right");
+    expect(html).toMatch(/<td class="left ground">GND<\/td><td class="num">1<\/td><td class="num">17<\/td><td class="right ground">GND<\/td>/);
+    expect(html).toMatch(/<td class="num">2<\/td><td class="num">18<\/td><td class="right power">3V3<\/td>/);
+    expect(html).toMatch(/<td class="left power">5V<\/td><td class="num">16<\/td><td class="num">32<\/td>/);
+  });
+
+  it("refuses a bad usb or headerOrder value, or either without a header", () => {
+    const board = (extra: object) =>
+      buildDefinitionSet(BUILTIN_DEFINITION_FILES, [
+        { kind: "board", id: "u", source: "~/.thingstudio/boards/u.json", data: { name: "U", processor: "rp2040", match: [], pins: {}, ...extra } },
+      ]).problems[0]?.message;
+    expect(board({ header: { "1": 0 }, usb: "left" })).toContain('"usb": must be "top" or "bottom"');
+    expect(board({ header: { "1": 0 }, headerOrder: "zigzag" })).toContain('"headerOrder": must be "around" or "down"');
+    expect(board({ usb: "top" })).toContain('"usb": needs "header"');
+    expect(board({ headerOrder: "down" })).toContain('"headerOrder": needs "header"');
+    expect(board({ header: { "1": 0 }, usb: "top", headerOrder: "down" })).toBeUndefined();
+  });
+
   it("says where each pin is: the LED isn't on the header, GPIO 0 is pin 1", () => {
     const html = renderDefinitionPage(boardTarget("pico"), OPTS);
     expect(html).toContain('<tr><td>LED</td><td class="gpio">GPIO 25</td><td>not on the header</td>');

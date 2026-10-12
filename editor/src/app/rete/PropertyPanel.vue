@@ -510,10 +510,8 @@
           <input type="number" min="1" v-model.number="node.properties.debounceMs" @input="touch" />
         </label>
         <p class="hint">
-          Debounced (polling, not IRQ-driven -- see device-runtime/src/vendor/primitives_events/README.md). One
-          output: msg.topic is "close" or "open", msg.payload is the same state as a bool. No internal pull
-          enabled by default -- wire an external pull resistor, use a switch module with one built in, or set
-          pull above if the pin needs the RP2040/ESP32's own internal one.
+          Sends a message each time the switch opens or closes. msg.event is "close" or "open", and msg.payload is
+          true when closed. Set pull to use the pin's own pull resistor, or leave it at none if the switch has one.
         </p>
       </template>
 
@@ -550,10 +548,9 @@
           <input type="number" min="1" v-model.number="node.properties.doubleClickMs" @input="touch" />
         </label>
         <p class="hint">
-          Debounced (polling, not IRQ-driven). One output: msg.topic is "press"/"release"/"long"/"double",
-          msg.payload is the button's current pressed state as a bool. No internal pull enabled by default --
-          wire an external pull resistor, use a button module with one built in, or set pull above if the pin
-          needs the RP2040/ESP32's own internal one. double-click time must be less than long-press time.
+          Sends a message on each press, release, long press and double click. msg.event is "press", "release",
+          "long" or "double", and msg.payload is true while the button is held. Set pull to use the pin's own pull
+          resistor, or leave it at none if the button has one. Double click must be shorter than long press.
         </p>
       </template>
 

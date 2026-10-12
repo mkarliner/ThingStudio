@@ -31,5 +31,5 @@ or set **pull** if the button instead relies on the board's own internal pull-up
 boards with buttons wired straight to a GPIO with no resistor of their own — e.g. most of an EMF 2022 TiDAL
 badge's buttons).
 
-Two `ebutton` nodes on the same pin share one underlying driver instance rather than each polling independently —
-the first node's settings win, matching `eswitch`/`interrupt`'s own same-pin behavior.
+Two `ebutton` nodes on the same pin share one button, so they must have the same settings, or the compile stops. See
+[Hardware is shared](index.md#hardware-is-shared).

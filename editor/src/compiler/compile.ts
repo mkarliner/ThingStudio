@@ -221,6 +221,7 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
 
   const usedNames = new Set<string>();
   const warnings = new Set<string>();
+  const claims = new Map<string, { use: string; who: string }>(); // hardware resource -> first claim (hardware-shared.ts)
   const ctx: CodegenContext = {
     target: options.target ?? null,
     warn(message: string): void {
@@ -254,6 +255,16 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
     isInputWired: (nodeId: string): boolean => (incomingCount.get(nodeId) ?? 0) > 0,
     findWiredTargets: (nodeId: string): GraphNode[] => (childrenOf.get(nodeId) ?? []).map((l) => nodesById.get(l[3])!),
     isOutputWired: (nodeId: string): boolean => (childrenOf.get(nodeId)?.length ?? 0) > 0,
+    claimResource(resource: string, use: string, who: string): void {
+      const prev = claims.get(resource);
+      if (!prev) claims.set(resource, { use, who });
+      else if (prev.use !== use) {
+        throw new CompileError(
+          `${resource}: ${who} sets it up as ${use}, but ${prev.who} already has it as ${prev.use}. ` +
+            "Set both up the same way, or use another pin.",
+        );
+      }
+    },
   };
 
   const imports = new Set<string>(["import runtime"]);

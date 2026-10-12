@@ -9,6 +9,7 @@
     "24": "Senses USB power (VBUS).",
     "29": "Measures the supply voltage (VSYS)."
   },
+  "usb": "top",
   "header": {
     "1": 0, "2": 1, "3": "GND", "4": 2, "5": 3,
     "6": 4, "7": 5, "8": "GND", "9": 6, "10": 7,

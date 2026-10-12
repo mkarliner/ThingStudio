@@ -15,4 +15,5 @@ The payload is the pin's level (`true`/`false`) at the moment the node wakes, no
 
 No internal pull resistor is configured. Wire an external pull resistor, or use a button module with one built in.
 
-Two `interrupt` nodes configured for the same pin silently share the first one's edge and debounce settings. A second interrupt node on the same pin won't use its own property panel values.
+Two `interrupt` nodes on the same pin must have the same edge and debounce settings, or the compile stops. See
+[Hardware is shared](index.md#hardware-is-shared).

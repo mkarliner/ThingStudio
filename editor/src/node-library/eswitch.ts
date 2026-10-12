@@ -69,6 +69,7 @@
 // already-generated flow's behavior byte-for-byte unchanged; this is
 // purely additive, not a breaking change to the node's own contract.
 
+import { claimResource, sharedPin, type Pull } from "./hardware-shared.js";
 import { CompileError } from "../compiler/errors.js";
 import { checkPin } from "../definitions/pin-check.js";
 import type { GraphNode } from "../compiler/graph.js";
@@ -94,7 +95,6 @@ export const eswitchNode: NodeDefinition = {
     if (pull !== "none" && pull !== "up" && pull !== "down") {
       throw new CompileError(`eswitch pull "${pull}" must be "none", "up", or "down"`);
     }
-    const pullArg = pull === "up" ? ", machine.Pin.PULL_UP" : pull === "down" ? ", machine.Pin.PULL_DOWN" : "";
 
     // Fixed, pin-derived names for the shared Pin+ESwitch pair -- see this
     // file's header for why (interrupt.ts's own header gives the fuller
@@ -108,17 +108,21 @@ export const eswitchNode: NodeDefinition = {
     // in full for EButton's three class attributes, applied here to
     // ESwitch's one: set the class attribute immediately before
     // constructing THIS instance, since __init__ never re-reads it later.
-    const pinVar = `_eswitch_pin_${pin}`;
+    // The pin and the ESwitch on it are keyed singletons (hardware-shared.ts, decisions/hardware-singletons.md):
+    // a second eswitch on this pin with different settings is a compile error, not silently the first's.
+    const shared = sharedPin(ctx, node, pin, "in", pull as Pull);
+    claimResource(ctx, `GPIO ${pin} eswitch`, `open level ${lopen}, debounce ${debounceMs} ms`, node);
+    const pinVar = shared.varName;
     const esVar = `_eswitch_${pin}`;
     const waitVar = ctx.uniqueName("eswitch_wait");
 
     return {
       imports: ["import machine", "from events import ESwitch, WaitAny"],
       statements: [
+        shared.statement,
         {
           key: `eswitch-${pin}`,
           code: [
-            `${pinVar} = machine.Pin(${pin}, machine.Pin.IN${pullArg})`,
             `ESwitch.debounce_ms = ${debounceMs}`,
             `${esVar} = ESwitch(${pinVar}, lopen=${lopen})`,
           ].join("\n"),

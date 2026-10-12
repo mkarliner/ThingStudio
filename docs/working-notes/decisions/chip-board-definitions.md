@@ -111,3 +111,9 @@ Status: detail file for `decisions.md`'s "Processor and board definitions" index
   that already equals the built-in. `/api/definitions` adds `untouchedCopy`. An untouched copy that differs from
   the current built-in goes in `DefinitionSet.staleCopies`, not `overrides`, and the console says to delete it.
   It's still used, as before. Copies made before this and since changed can't be told apart, so they get no line.
+- **2026-10-12 — Header numbering and USB end (Mike, from the LuatOS board's pinout picture).** The LuatOS
+  ESP32C3-CORE numbers its right row top to bottom (17 opposite 1), not back up like the Pico, so the Pins… page
+  drew it wrong. New optional board keys, both needing `header`: `headerOrder` ("around", the default, or "down")
+  and `usb` ("top" = the pin 1 end, or "bottom"). The page draws a USB row at that end and says so in words. Set
+  on the four boards with a header: Pico, Pico W, Pico 2 top; LuatOS bottom, "down". The LOLIN S2 Mini, CYD and
+  Freenove have no `header`, so there's nothing to show the USB end against.

@@ -260,7 +260,7 @@ describe("thingstudio/display_spi node", () => {
     it("imports the ST7796 driver and builds it with offsets 0, 0 (no hidden margin, no table lookup)", () => {
       const result = displaySpiNode.codegenSink!(node(freenove), ctx);
       expect(result.imports).toContain("from st7796py import ST7796");
-      expect((result.statements ?? [])[0]!.code).toMatch(/= ST7796\(/);
+      expect((result.statements ?? []).map((s) => s.code).join("\n")).toMatch(/= ST7796\(/);
       const output = runSink(freenove, 320 * 480 * 2);
       expect(output).toContain("OFFSETS 0 0");
       expect(output).toContain("SPI_INIT bus=1 baudrate=40000000 sck=12 mosi=11");

@@ -76,6 +76,11 @@ export interface BoardDef {
    * when the file doesn't say. Keys are as written ("1".."40", or "P3-1" for a board with several
    * connectors); in insertion order, except that JS sorts integer-like keys ascending. */
   readonly header: ReadonlyMap<string, number | string>;
+  /** How a 1..N dual-row header is numbered (2026-10-12): "around" goes down the left side and back up the
+   * right (the Pico), "down" goes down both sides (pin N/2+1 top right, the LuatOS ESP32C3-CORE). */
+  readonly headerOrder: "around" | "down";
+  /** Which end of the header drawing the USB connector is at: "top" is the pin 1 end. Needs `header`. */
+  readonly usb: "top" | "bottom" | null;
 }
 
 export type DefinitionKind = "processor" | "board";
@@ -208,7 +213,7 @@ function subset(pins: Iterable<number>, gpio: ReadonlySet<number>, where: string
 // ---------------------------------------------------------------------
 
 const PROCESSOR_KEYS = ["name", "match", "nativeArch", "nativeArchConfirmed", "gpio", "inputOnly", "noPull", "reserved", "avoid", "spi", "i2c", "notes"];
-const BOARD_KEYS = ["name", "processor", "match", "pins", "gpio", "reserved", "avoid", "notes", "wifi", "header", "free"];
+const BOARD_KEYS = ["name", "processor", "match", "pins", "gpio", "reserved", "avoid", "notes", "wifi", "header", "free", "headerOrder", "usb"];
 
 function parseSpi(v: unknown, gpio: ReadonlySet<number>): ProcessorDef["spi"] {
   if (!isObject(v)) throw new DefinitionError(`"spi": must be an object`);
@@ -347,6 +352,11 @@ export function parseBoard(id: string, data: unknown, processors: ReadonlyMap<st
   subset(avoid.keys(), available, `"avoid"`);
   const free = new Set(data.free === undefined ? [] : pinList(data.free, `"free"`));
   subset(free, available, `"free"`);
+  const headerOrder = data.headerOrder === undefined ? "around" : oneOf(data.headerOrder, ["around", "down"] as const, `"headerOrder"`);
+  const usb = data.usb === undefined ? null : oneOf(data.usb, ["top", "bottom"] as const, `"usb"`);
+  if ((data.headerOrder !== undefined || usb !== null) && data.header === undefined) {
+    throw new DefinitionError(`"${data.usb !== undefined ? "usb" : "headerOrder"}": needs "header", the pins it describes`);
+  }
   for (const p of free) {
     if (reserved.has(p) || avoid.has(p)) {
       throw new DefinitionError(`"free": GPIO ${p} is also in this board's own "${reserved.has(p) ? "reserved" : "avoid"}"`);
@@ -365,6 +375,8 @@ export function parseBoard(id: string, data: unknown, processors: ReadonlyMap<st
     notes: data.notes === undefined ? "" : str(data.notes, `"notes"`),
     wifi: data.wifi === undefined ? null : bool(data.wifi, `"wifi"`),
     header: data.header === undefined ? new Map() : parseHeader(data.header, available),
+    headerOrder,
+    usb,
   };
 }
 
@@ -389,6 +401,13 @@ function parseHeader(v: unknown, available: ReadonlySet<number>): Map<string, nu
     out.set(pin, gpio);
   }
   return out;
+}
+
+function oneOf<T extends string>(v: unknown, allowed: readonly T[], where: string): T {
+  if (typeof v !== "string" || !allowed.includes(v as T)) {
+    throw new DefinitionError(`${where}: must be ${allowed.map((a) => `"${a}"`).join(" or ")}`);
+  }
+  return v as T;
 }
 
 function bool(v: unknown, where: string): boolean {

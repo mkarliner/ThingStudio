@@ -207,6 +207,10 @@ export interface CodegenContext {
   isOutputWired?(nodeId: string): boolean;
   /** The nodes this node's outputs are wired to directly, in link order (a gui screen finds its display this way). */
   findWiredTargets?(nodeId: string): GraphNode[];
+  /** Records that `who` uses hardware `resource` ("GPIO 5") as `use` ("input, pull-up"); a different use from an
+   * earlier claim throws a CompileError naming both. Call it through node-library/hardware-shared.ts's
+   * claimResource() (decisions/hardware-singletons.md). Optional: absent in hand-rolled mocks. */
+  claimResource?(resource: string, use: string, who: string): void;
 }
 
 export interface NodeDefinition {

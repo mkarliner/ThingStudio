@@ -62,7 +62,7 @@ function headerPinsByGpio(board: BoardDef | null): Map<number, string[]> {
   return out;
 }
 
-/** 1..N with N even: a dual-row header numbered down one side and back up the other (the Pico's). */
+/** 1..N with N even: a dual-row header, numbered as the board's `headerOrder` says. */
 function isDualRow(keys: string[]): number | null {
   if (keys.length < 4 || keys.length % 2 !== 0) return null;
   const nums = keys.map((k) => (/^\d+$/.test(k) ? Number(k) : NaN));
@@ -89,21 +89,28 @@ function headerSection(target: Target): string {
     `it can destroy the board. Pink pins control the board itself, such as RUN, which resets it.</p>`;
   const n = isDualRow(keys);
   if (n !== null) {
+    const down = board.headerOrder === "down";
     const rows: string[] = [];
+    const usbRow = `<tr><td></td><td class="num usb" colspan="2">USB</td><td></td></tr>`;
+    if (board.usb === "top") rows.push(usbRow);
     for (let i = 1; i <= n / 2; i++) {
-      const j = n + 1 - i;
+      const j = down ? n / 2 + i : n + 1 - i;
       rows.push(
         `<tr>${headerCell(target, board.header.get(String(i)), "left")}<td class="num">${i}</td>` +
           `<td class="num">${j}</td>${headerCell(target, board.header.get(String(j)), "right")}</tr>`,
       );
     }
+    if (board.usb === "bottom") rows.push(usbRow);
+    const order = down ? "numbered down the left side, then down the right" : "numbered down the left side and back up the right";
+    const usbText = board.usb ? ` The USB connector is at the ${board.usb}.` : "";
     return (
-      `<h2>Physical pins</h2>${warn}<p>As on the board: pin 1 top left, numbered down the left side and back up the right.</p>` +
+      `<h2>Physical pins</h2>${warn}<p>As on the board: pin 1 top left, ${order}.${usbText}</p>` +
       `<div class="scroll"><table class="header"><tbody>${rows.join("")}</tbody></table></div>`
     );
   }
   const rows = keys.map((k) => `<tr><td class="num">${esc(k)}</td>${headerCell(target, board.header.get(k), "left")}</tr>`);
-  return `<h2>Physical pins</h2>${warn}<table class="header"><thead><tr><th>Pin</th><th>Connected to</th></tr></thead><tbody>${rows.join("")}</tbody></table>`;
+  const usbText = board.usb ? `<p>The USB connector is at the ${board.usb === "top" ? "pin 1" : "last pin"} end.</p>` : "";
+  return `<h2>Physical pins</h2>${warn}${usbText}<table class="header"><thead><tr><th>Pin</th><th>Connected to</th></tr></thead><tbody>${rows.join("")}</tbody></table>`;
 }
 
 function spiSection(proc: ProcessorDef): string {
@@ -180,6 +187,7 @@ table.header td { white-space: nowrap; }
 table.header td.num { width: 2.5em; text-align: center; font-weight: 600; background: var(--head); }
 table.header td.right { text-align: left; }
 table.header td.left { text-align: right; }
+table.header td.usb { border: 2px solid var(--accent); letter-spacing: 0.1em; }
 td.power { background: var(--power); color: var(--power-fg); font-weight: 600; }
 td.ground { background: var(--ground); color: var(--ground-fg); font-weight: 600; }
 td.other { background: var(--other); }

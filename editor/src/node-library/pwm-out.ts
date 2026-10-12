@@ -16,6 +16,7 @@
 // worth the wiring cleanup before this node's own hardware pass, not
 // this node's problem to work around in software.
 
+import { sharedPwm } from "./hardware-shared.js";
 import { CompileError } from "../compiler/errors.js";
 import { checkPin } from "../definitions/pin-check.js";
 import type { GraphNode } from "../compiler/graph.js";
@@ -40,11 +41,12 @@ export const pwmOutNode: NodeDefinition = {
     if (!Number.isFinite(freq) || freq <= 0) {
       throw new CompileError(`pwm_out freq "${String(node.properties.freq)}" must be a positive number`);
     }
-    const pwmVar = `_pwm_${pin}`;
+    // The PWM output is a keyed singleton (hardware-shared.ts, decisions/hardware-singletons.md).
+    const { varName: pwmVar, statement } = sharedPwm(ctx, node, pin, freq);
 
     return {
       imports: ["import machine"],
-      statements: [{ key: `pin-${pin}-pwm`, code: `${pwmVar} = machine.PWM(machine.Pin(${pin}, machine.Pin.OUT), freq=${freq})` }],
+      statements: [statement],
       functionName: ctx.uniqueName("pwm_out"),
       functionBody: `${pwmVar}.duty_u16(int(max(0.0, min(1.0, msg.get('payload', 0))) * 65535))`,
     };

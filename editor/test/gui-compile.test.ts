@@ -348,7 +348,7 @@ describe("touch buttons", () => {
   it("the screen polls its touch panel itself: driver, status on the screen node, no touch wire", () => {
     const { source } = compile(buttonFlow({ mode: "toggle" }, { wiredOut: true, panel: true }), buildRegistry());
     expect(source).toContain("import ft6336u\n");
-    expect(source).toMatch(/runtime\.spawn\(_gui\.poll_touch\("screen", lambda: ft6336u\.FT6336U\(_i2c_bus_0, 56, machine\.Pin\(18, machine\.Pin\.OUT\), 320, 480, False, False, False\), 20, lambda st, text: runtime\.report_status\("screen", st, text\), "FT6336U at 0x38 on I2C bus 0"\), "screen"\)/);
+    expect(source).toMatch(/runtime\.spawn\(_gui\.poll_touch\("screen", lambda: ft6336u\.FT6336U\(_i2c_bus_0, 56, runtime\.shared\('pin', 18, \('out', 'none'\), lambda: machine\.Pin\(18, machine\.Pin\.OUT\)\), 320, 480, False, False, False\), 20, lambda st, text: runtime\.report_status\("screen", st, text\), "FT6336U at 0x38 on I2C bus 0"\), "screen"\)/);
     expect(source).toContain("_i2c_bus_0 = runtime.shared('i2c', 0,");
   });
 

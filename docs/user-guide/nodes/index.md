@@ -89,6 +89,16 @@ Pin numbers are checked against your board before a deploy. See [boards and proc
 | [display spi](display-spi.md) | sink | Sends a frame to an SPI color display (ST7789). |
 | [display i2c](display-i2c.md) | sink | Sends a frame to an I2C OLED display (SSD1306). |
 
+### Hardware is shared
+
+Each pin, PWM output, I2C bus and SPI bus is set up once, and every node that uses it shares that one setup. Two nodes
+can use the same pin only if they set it up the same way. For example, an `interrupt` and an `eswitch` can both read
+an input pin with no pull, but a `gpio out` can't drive a pin an `eswitch` reads. When two nodes clash, the compile
+stops and names both.
+
+A [function](function.md) or [custom](../custom-nodes.md#pins-and-buses) node gets the same objects with
+`runtime.shared()`, for example `runtime.shared('i2c', 0)`.
+
 ## Shared settings
 
 Some settings are set once and shared by the nodes that use them:
@@ -101,5 +111,6 @@ Some settings are set once and shared by the nodes that use them:
 
 ## Something missing?
 
-A [function](function.md) node covers most gaps: a comparison, a sum, reading an ADC pin. For
+A [function](function.md) node covers most gaps: a comparison, a sum, reading an ADC pin
+(`runtime.shared('adc', 26, (), lambda: machine.ADC(26))`). For
 something you'll use again, [write a custom node](../custom-nodes.md).

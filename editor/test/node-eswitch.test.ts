@@ -146,7 +146,7 @@ describe("thingstudio/eswitch node", () => {
 
   it("defaults lopen to 1", () => {
     const result = eswitchNode.codegenEventSource!(node({ pin: 4 }), ctx);
-    expect(result.statements?.[0]?.code).toContain("ESwitch(_eswitch_pin_4, lopen=1)");
+    expect((result.statements ?? []).map((st) => st.code).join("\n")).toContain("ESwitch(_gpio_4, lopen=1)");
   });
 
   it("rejects an invalid pull value", () => {
@@ -157,17 +157,17 @@ describe("thingstudio/eswitch node", () => {
 
   it("defaults pull to none -- no internal pull configured, matching this node's original 2026-09-08 behavior", () => {
     const result = eswitchNode.codegenEventSource!(node({ pin: 4 }), ctx);
-    expect(result.statements?.[0]?.code).toContain("machine.Pin(4, machine.Pin.IN)");
+    expect((result.statements ?? []).map((st) => st.code).join("\n")).toContain("machine.Pin(4, machine.Pin.IN)");
   });
 
   it("enables the internal pull-up when pull is 'up' -- real-hardware finding, TiDAL badge buttons", () => {
     const result = eswitchNode.codegenEventSource!(node({ pin: 4, pull: "up" }), ctx);
-    expect(result.statements?.[0]?.code).toContain("machine.Pin(4, machine.Pin.IN, machine.Pin.PULL_UP)");
+    expect((result.statements ?? []).map((st) => st.code).join("\n")).toContain("machine.Pin(4, machine.Pin.IN, machine.Pin.PULL_UP)");
   });
 
   it("enables the internal pull-down when pull is 'down'", () => {
     const result = eswitchNode.codegenEventSource!(node({ pin: 4, pull: "down" }), ctx);
-    expect(result.statements?.[0]?.code).toContain("machine.Pin(4, machine.Pin.IN, machine.Pin.PULL_DOWN)");
+    expect((result.statements ?? []).map((st) => st.code).join("\n")).toContain("machine.Pin(4, machine.Pin.IN, machine.Pin.PULL_DOWN)");
   });
 
   it("compiles into a full flow with the expected structure -- event-driven WaitAny, not repeatMs/sleep_ms in this node's own codegen", () => {
@@ -180,7 +180,7 @@ describe("thingstudio/eswitch node", () => {
     };
     const { source } = compile(graph, buildRegistry());
     expect(source).toContain("from events import ESwitch, WaitAny");
-    expect(source).toContain("ESwitch(_eswitch_pin_6, lopen=1)");
+    expect(source).toContain("ESwitch(_gpio_6, lopen=1)");
     expect(source).toContain("WaitAny([_eswitch_6.close, _eswitch_6.open])");
     expect(source).toContain("while True:");
     expect(source).toMatch(/_trig = await .*\.wait\(\)/);
@@ -189,7 +189,7 @@ describe("thingstudio/eswitch node", () => {
     expect(source).toMatch(/runtime\.spawn\(/);
   });
 
-  it("two eswitch nodes on the same pin share one underlying driver instance (first-writer-wins, matching gpio-out/interrupt's own precedent)", () => {
+  it("two eswitch nodes on the same pin with the same settings share one pin and one driver", () => {
     const graph: GraphData = {
       nodes: [
         { id: "1", type: "thingstudio/eswitch", properties: { pin: 8, lopen: 1 } },
@@ -203,11 +203,27 @@ describe("thingstudio/eswitch node", () => {
       ],
     };
     const { source } = compile(graph, buildRegistry());
-    expect(source.match(/ESwitch\(_eswitch_pin_8/g)?.length).toBe(1);
+    expect(source.match(/ESwitch\(_gpio_8/g)?.length).toBe(1);
     // But each node instance still gets its OWN WaitAny wrapper -- exactly
     // two, not deduped onto one, per this file's header on why sharing a
     // WaitAny across two independent coroutines would be a real race.
     expect(source.match(/= WaitAny\(\[_eswitch_8\.close, _eswitch_8\.open\]\)/g)?.length).toBe(2);
+  });
+
+  it("two eswitch nodes on the same pin with different settings stop the compile, naming both", () => {
+    const graph: GraphData = {
+      nodes: [
+        { id: "1", type: "thingstudio/eswitch", properties: { pin: 8, lopen: 1 } },
+        { id: "2", type: "thingstudio/debug", properties: {} },
+        { id: "3", type: "thingstudio/eswitch", properties: { pin: 8, lopen: 1, pull: "up" } },
+        { id: "4", type: "thingstudio/debug", properties: {} },
+      ],
+      links: [
+        [1, "1", 0, "2", 0, "bool"],
+        [2, "3", 0, "4", 0, "bool"],
+      ],
+    };
+    expect(() => compile(graph, buildRegistry())).toThrow("GPIO 8: eswitch 3 sets it up as input, pull-up, but eswitch 1 already has it as input, no pull.");
   });
 
   it("reports a real close-then-open transition through the actual vendored ESwitch driver", () => {
