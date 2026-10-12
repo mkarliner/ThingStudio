@@ -2577,6 +2577,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#pins-and-buses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pins and buses
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#cleanup" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2951,6 +2962,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#pins-and-buses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pins and buses
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#cleanup" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3145,7 +3167,8 @@ Python.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">dht</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">machine</span>
 
-<span class="n">_sensor</span> <span class="o">=</span> <span class="n">dht</span><span class="o">.</span><span class="n">DHT22</span><span class="p">(</span><span class="n">machine</span><span class="o">.</span><span class="n">Pin</span><span class="p">(</span><span class="n">properties</span><span class="p">[</span><span class="s1">'pin'</span><span class="p">]))</span>
+<span class="n">_pin</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="s1">'pin'</span><span class="p">]</span>
+<span class="n">_sensor</span> <span class="o">=</span> <span class="n">dht</span><span class="o">.</span><span class="n">DHT22</span><span class="p">(</span><span class="n">runtime</span><span class="o">.</span><span class="n">shared</span><span class="p">(</span><span class="s1">'pin'</span><span class="p">,</span> <span class="n">_pin</span><span class="p">,</span> <span class="p">(</span><span class="s1">'dht22'</span><span class="p">,),</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">machine</span><span class="o">.</span><span class="n">Pin</span><span class="p">(</span><span class="n">_pin</span><span class="p">)))</span>
 
 <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">emit</span><span class="p">(</span><span class="n">properties</span><span class="p">):</span>
     <span class="n">_sensor</span><span class="o">.</span><span class="n">measure</span><span class="p">()</span>
@@ -3175,6 +3198,15 @@ custom type never share state. To keep a value across calls, use
     <span class="k">return</span> <span class="p">{</span><span class="s1">'payload'</span><span class="p">:</span> <span class="n">_count</span><span class="p">,</span> <span class="s1">'topic'</span><span class="p">:</span> <span class="s1">''</span><span class="p">}</span>
 </code></pre></div>
 <p><code>global</code> raises <code>NameError</code> here — there's no module-level name to find.</p>
+<h3 id="pins-and-buses">Pins and buses</h3>
+<p>Get a pin or bus with <code>runtime.shared(kind, key, settings, make)</code>, not by building it yourself. The first node to
+ask builds it with <code>make()</code>; every later node gets the same object. If a later node asks with different <code>settings</code>,
+the flow stops with an error naming both, instead of one node quietly changing the pin under another.</p>
+<div class="highlight"><pre><span></span><code><span class="n">_pin</span> <span class="o">=</span> <span class="n">runtime</span><span class="o">.</span><span class="n">shared</span><span class="p">(</span><span class="s1">'pin'</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="p">(</span><span class="s1">'in'</span><span class="p">,</span> <span class="s1">'up'</span><span class="p">),</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">machine</span><span class="o">.</span><span class="n">Pin</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">machine</span><span class="o">.</span><span class="n">Pin</span><span class="o">.</span><span class="n">IN</span><span class="p">,</span> <span class="n">machine</span><span class="o">.</span><span class="n">Pin</span><span class="o">.</span><span class="n">PULL_UP</span><span class="p">))</span>
+<span class="n">_i2c</span> <span class="o">=</span> <span class="n">runtime</span><span class="o">.</span><span class="n">shared</span><span class="p">(</span><span class="s1">'i2c'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># fetch a bus another node in the flow set up</span>
+</code></pre></div>
+<p>The built-in nodes use these settings: <code>('in', 'none' | 'up' | 'down')</code> and <code>('out', 'none')</code> for pins. Pins, PWM,
+I2C and SPI all work this way: see <a href="../nodes/#hardware-is-shared">Hardware is shared</a>.</p>
 <h3 id="cleanup">Cleanup</h3>
 <p>If your node opens something that needs closing on redeploy — a socket,
 typically — register it:</p>
@@ -3205,9 +3237,9 @@ Thingstudio doesn't check it. A typo surfaces as a runtime error (e.g.
 <h2 id="limitations">Limitations</h2>
 <p>A custom node has one output port. A <code>source</code> node's <code>emit</code> runs on a fixed <code>intervalMs</code> schedule, not in response to
 an external event.</p>
-<p>Two instances of the same custom node get independent setup, unlike two built-in <code>gpio out</code> nodes on the same pin,
-which share one <code>Pin</code> object. Don't put two instances of the same stateful custom node on the same physical resource,
-such as the same pin.</p>
+<p>Two instances of the same custom node get independent setup. Thingstudio can't see inside a custom node's Python, so
+it can't check its pins when compiling. Use <code>runtime.shared()</code> for pins and buses, so a clash is caught when the flow
+starts.</p>
 <p>Custom node Python runs with the same trust as any other node, including Thingstudio's <code>function</code> node. Loading a
 package only adds it to the palette; its Python runs on a board only when you place the node and deploy. Only files
 you place in the folder are loaded — there's no registry and no URL install — so don't put a package there that you

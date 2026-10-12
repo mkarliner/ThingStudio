@@ -2882,8 +2882,8 @@ single press should never be reported when it turns out to be part of a double-c
 or set <strong>pull</strong> if the button instead relies on the board's own internal pull-up/pull-down (a common case for
 boards with buttons wired straight to a GPIO with no resistor of their own — e.g. most of an EMF 2022 TiDAL
 badge's buttons).</p>
-<p>Two <code>ebutton</code> nodes on the same pin share one underlying driver instance rather than each polling independently —
-the first node's settings win, matching <code>eswitch</code>/<code>interrupt</code>'s own same-pin behavior.</p>
+<p>Two <code>ebutton</code> nodes on the same pin share one button, so they must have the same settings, or the compile stops. See
+<a href="../#hardware-is-shared">Hardware is shared</a>.</p>
 
 
 

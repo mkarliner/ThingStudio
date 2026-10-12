@@ -2870,8 +2870,8 @@
 downstream node that only cares about current state can read <code>payload</code> alone and ignore <code>event</code>.</p>
 <p>No internal pull is enabled by default — wire an external pull resistor, use a switch module with one built in,
 or set <strong>pull</strong> if the switch instead relies on the board's own internal pull-up/pull-down.</p>
-<p>Two <code>eswitch</code> nodes on the same pin share one underlying driver instance rather than each polling independently —
-the first node's <code>lopen</code>/debounce/pull settings win, matching <code>interrupt</code>'s own same-pin behavior.</p>
+<p>Two <code>eswitch</code> nodes on the same pin share one switch, so they must have the same settings, or the compile stops. See
+<a href="../#hardware-is-shared">Hardware is shared</a>.</p>
 
 
 

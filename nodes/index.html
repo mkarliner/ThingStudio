@@ -1419,6 +1419,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Hardware">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#hardware-is-shared" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hardware is shared
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2919,6 +2936,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Hardware">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#hardware-is-shared" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hardware is shared
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -3251,6 +3285,13 @@ all, grouped as in the editor's palette: General, Network and Hardware.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="hardware-is-shared">Hardware is shared</h3>
+<p>Each pin, PWM output, I2C bus and SPI bus is set up once, and every node that uses it shares that one setup. Two nodes
+can use the same pin only if they set it up the same way. For example, an <code>interrupt</code> and an <code>eswitch</code> can both read
+an input pin with no pull, but a <code>gpio out</code> can't drive a pin an <code>eswitch</code> reads. When two nodes clash, the compile
+stops and names both.</p>
+<p>A <a href="function/">function</a> or <a href="../custom-nodes/#pins-and-buses">custom</a> node gets the same objects with
+<code>runtime.shared()</code>, for example <code>runtime.shared('i2c', 0)</code>.</p>
 <h2 id="shared-settings">Shared settings</h2>
 <p>Some settings are set once and shared by the nodes that use them:</p>
 <ul>
@@ -3261,7 +3302,8 @@ all, grouped as in the editor's palette: General, Network and Hardware.</p>
   <a href="touch-panel/">touch panels</a>.</li>
 </ul>
 <h2 id="something-missing">Something missing?</h2>
-<p>A <a href="function/">function</a> node covers most gaps: a comparison, a sum, reading an ADC pin. For
+<p>A <a href="function/">function</a> node covers most gaps: a comparison, a sum, reading an ADC pin
+(<code>runtime.shared('adc', 26, (), lambda: machine.ADC(26))</code>). For
 something you'll use again, <a href="../custom-nodes/">write a custom node</a>.</p>
 
 

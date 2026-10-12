@@ -3183,6 +3183,14 @@ version of Thingstudio doesn't update a file you already have, so delete a file 
 <td><code>false</code> if the board has no WiFi. Hides <a href="../wifi-connection/">connecting over WiFi</a> for it. Leave it out if unsure.</td>
 </tr>
 <tr>
+<td><code>headerOrder</code></td>
+<td><code>"down"</code> if the right-hand row is numbered top to bottom, like the left. Leave it out for a header numbered down the left and back up the right, like the Pico's.</td>
+</tr>
+<tr>
+<td><code>usb</code></td>
+<td>Where the USB connector is, with pin 1 at the top left: <code>"top"</code> or <code>"bottom"</code>. Shown on the <strong>Pins…</strong> page. Needs <code>header</code>.</td>
+</tr>
+<tr>
 <td><code>header</code></td>
 <td>What each physical pin carries: a GPIO number, or a label such as <code>"GND"</code> or <code>"3V3"</code>. Shown on the <strong>Pins…</strong> page. For example <code>{ "1": 0, "3": "GND", "40": "VBUS" }</code>.</td>
 </tr>
