@@ -644,6 +644,9 @@ The right-hand side holds the selected node's settings and what the board sends 
 - **Escape to REPL:** **Stop flow & open prompt** stops the flow and gives you MicroPython's own `>>>` prompt.
   **Restart Thingstudio** starts the flow again.
 
+To make the notes, compiled source and console column wider or narrower, drag its left edge. Double-click the edge
+to reset it.
+
 [Editor in depth](working-in-the-editor.md) covers wire types, node labels, presets, config nodes and node status.
 
 ## Next
