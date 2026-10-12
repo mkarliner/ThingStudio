@@ -3,12 +3,9 @@
   "processor": "esp32-c3",
   "wifi": true,
   "match": [],
-  "pins": {
-    "LED_D4": 12,
-    "LED_D5": 13,
-    "BOOT": 9
-  },
+  "pins": { "LED_D4": 12, "LED_D5": 13, "BOOT": 9 },
   "gpio": ["0-13", "18-21"],
+  "free": ["12-13"],
   "reserved": {
     "11": "Powers the flash chip (VDD_SPI). It only becomes a GPIO after a one-way eFuse burn."
   },
@@ -18,5 +15,5 @@
     "17": "GND", "18": "3V3", "19": 2, "20": 3, "21": 10, "22": 6, "23": 7, "24": 11,
     "25": "GND", "26": "3V3", "27": 5, "28": 4, "29": 8, "30": 9, "31": "5V", "32": "GND"
   },
-  "notes": "Reports itself as a generic ESP32-C3, so pick it by hand in the Board menu. Two LEDs, D4 on GPIO 12 and D5 on GPIO 13, both on when high. The BOOT button is GPIO 9, low when pressed. The flash runs in DIO mode, so GPIO 12 and 13 are free for the LEDs. The classic version has a CH343 USB-serial chip on GPIO 20 and 21. The newer version uses native USB on GPIO 18 and 19. Boards sold without external flash can't use GPIO 11-13. Pins are from the LuatOS wiki."
+  "notes": "Reports itself as a generic ESP32-C3, so pick it by hand in the Board menu. Two LEDs, D4 on GPIO 12 and D5 on GPIO 13, both on when high. The BOOT button is GPIO 9, low when pressed. The flash runs in DIO mode, so GPIO 12 and 13 aren't flash pins on this board. The classic version has a CH343 USB-serial chip on GPIO 20 and 21. The newer version uses native USB on GPIO 18 and 19. Boards sold without external flash can't use GPIO 11-13. Pins are from the LuatOS wiki."
 }

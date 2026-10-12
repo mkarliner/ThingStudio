@@ -97,3 +97,10 @@ Status: detail file for `decisions.md`'s "Processor and board definitions" index
   pinout: Pico, Pico W and Pico 2 from Raspberry Pi's pinout SVGs (their documentation repo), all three
   identical; a test checks every GPIO but 23/24/25/29 is on it. LOLIN S2 Mini and CYD left without a header:
   Wemos doesn't number the S2 Mini's pins and the CYD's connectors are community-documented only.
+- **2026-10-12 — Boards can lift processor pin rules with `free` (Mike, adding the LuatOS ESP32C3-CORE).**
+  The C3 processor file reserves GPIO 12-17 as flash pins, but this board runs its flash in DIO mode and wires
+  its LEDs to 12 and 13. Mike rejected both narrowing the processor's reservation (leaves QIO/in-package-flash C3
+  boards unprotected) and downgrading 12-13 to avoid (a warning that's wrong on this board). New optional board
+  key `free`: a pin list that drops the processor's `reserved` and `avoid` entries for those pins in
+  `buildTarget`. The board's own `reserved`/`avoid` can't name a `free` pin (validation error), and `free` pins
+  must be on the board. Board file `luatos-esp32c3-core.json` from the LuatOS wiki pinout, untested on hardware.

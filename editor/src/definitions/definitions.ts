@@ -64,6 +64,9 @@ export interface BoardDef {
   readonly gpio: ReadonlySet<number> | null;
   readonly reserved: ReadonlyMap<number, string>;
   readonly avoid: ReadonlyMap<number, string>;
+  /** Pins the processor reserves or warns about that are free on this board (2026-10-12: the LuatOS
+   * ESP32C3-CORE runs its flash in DIO mode, so the C3's GPIO 12-13 flash pins carry its LEDs). */
+  readonly free: ReadonlySet<number>;
   /** Whether the board has a WiFi radio (WiFi transport, 2026-09-24). false hides the network
    * connection and board password; null (not stated) offers them -- Mike's call: only a definition
    * that says "no radio" takes the option away. */
@@ -201,7 +204,7 @@ function subset(pins: Iterable<number>, gpio: ReadonlySet<number>, where: string
 // ---------------------------------------------------------------------
 
 const PROCESSOR_KEYS = ["name", "match", "nativeArch", "nativeArchConfirmed", "gpio", "inputOnly", "noPull", "reserved", "avoid", "spi", "i2c", "notes"];
-const BOARD_KEYS = ["name", "processor", "match", "pins", "gpio", "reserved", "avoid", "notes", "wifi", "header"];
+const BOARD_KEYS = ["name", "processor", "match", "pins", "gpio", "reserved", "avoid", "notes", "wifi", "header", "free"];
 
 function parseSpi(v: unknown, gpio: ReadonlySet<number>): ProcessorDef["spi"] {
   if (!isObject(v)) throw new DefinitionError(`"spi": must be an object`);
@@ -338,6 +341,13 @@ export function parseBoard(id: string, data: unknown, processors: ReadonlyMap<st
   const avoid = data.avoid === undefined ? new Map<number, string>() : pinReasons(data.avoid, `"avoid"`);
   subset(reserved.keys(), available, `"reserved"`);
   subset(avoid.keys(), available, `"avoid"`);
+  const free = new Set(data.free === undefined ? [] : pinList(data.free, `"free"`));
+  subset(free, available, `"free"`);
+  for (const p of free) {
+    if (reserved.has(p) || avoid.has(p)) {
+      throw new DefinitionError(`"free": GPIO ${p} is also in this board's own "${reserved.has(p) ? "reserved" : "avoid"}"`);
+    }
+  }
   return {
     id,
     name: str(data.name, `"name"`),
@@ -347,6 +357,7 @@ export function parseBoard(id: string, data: unknown, processors: ReadonlyMap<st
     gpio,
     reserved,
     avoid,
+    free,
     notes: data.notes === undefined ? "" : str(data.notes, `"notes"`),
     wifi: data.wifi === undefined ? null : bool(data.wifi, `"wifi"`),
     header: data.header === undefined ? new Map() : parseHeader(data.header, available),
