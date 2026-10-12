@@ -61,6 +61,7 @@ In the properties panel, a pin field shows the board's name for that pin, such a
 | Raspberry Pi Pico W | RP2040 | GPIO 23, 24, 25 and 29 go to the WiFi chip. The LED isn't on a GPIO. |
 | Raspberry Pi Pico 2 | RP2350 | GPIO 0–29. LED on GPIO 25. |
 | LOLIN S2 Mini | ESP32-S2 | LED on GPIO 15, button on GPIO 0 |
+| LuatOS ESP32C3-CORE | ESP32-C3 | Pick by hand. LEDs on GPIO 12 and 13, button on GPIO 9. |
 | CYD (ESP32-2432S028, ST7789) | ESP32 | Pick by hand. Display, touch, SD, RGB LED and speaker pins are labelled. |
 | Freenove ESP32-S3 Display 4.0" (FNK0104S, ST7796) | ESP32-S3 | Pick by hand. Display and touch pins are labelled. 320x480, SPI bus 1. Rotation 1 is portrait. For landscape, set the display's `orientation` to 90 (or 270 for the other way up) and keep the screen and display at 320x480. Display and touch (FT6336U) work. |
 
@@ -116,8 +117,11 @@ The fields are:
 | `gpio` | The pins this board has, if fewer than its processor. For example `["0-29"]`. |
 | `reserved` | Pins that must not be used, each with a reason. |
 | `avoid` | Pins that give a warning, each with a reason. |
+| `free` | Pins the processor reserves or warns about that are fine on this board. For example `["12-13"]` on an ESP32-C3 board whose flash doesn't use them. |
 | `notes` | Anything else worth knowing. |
 | `wifi` | `false` if the board has no WiFi. Hides [connecting over WiFi](wifi-connection.md) for it. Leave it out if unsure. |
+| `headerOrder` | `"down"` if the right-hand row is numbered top to bottom, like the left. Leave it out for a header numbered down the left and back up the right, like the Pico's. |
+| `usb` | Where the USB connector is, with pin 1 at the top left: `"top"` or `"bottom"`. Shown on the **Pins…** page. Needs `header`. |
 | `header` | What each physical pin carries: a GPIO number, or a label such as `"GND"` or `"3V3"`. Shown on the **Pins…** page. For example `{ "1": 0, "3": "GND", "40": "VBUS" }`. |
 
 Numbers in `header` are physical pin numbers, as printed on the board or its datasheet. A header numbered 1 to N

@@ -97,3 +97,23 @@ Status: detail file for `decisions.md`'s "Processor and board definitions" index
   pinout: Pico, Pico W and Pico 2 from Raspberry Pi's pinout SVGs (their documentation repo), all three
   identical; a test checks every GPIO but 23/24/25/29 is on it. LOLIN S2 Mini and CYD left without a header:
   Wemos doesn't number the S2 Mini's pins and the CYD's connectors are community-documented only.
+- **2026-10-12 — Boards can lift processor pin rules with `free` (Mike, adding the LuatOS ESP32C3-CORE).**
+  The C3 processor file reserves GPIO 12-17 as flash pins, but this board runs its flash in DIO mode and wires
+  its LEDs to 12 and 13. Mike rejected both narrowing the processor's reservation (leaves QIO/in-package-flash C3
+  boards unprotected) and downgrading 12-13 to avoid (a warning that's wrong on this board). New optional board
+  key `free`: a pin list that drops the processor's `reserved` and `avoid` entries for those pins in
+  `buildTarget`. The board's own `reserved`/`avoid` can't name a `free` pin (validation error), and `free` pins
+  must be on the board. Board file `luatos-esp32c3-core.json` from the LuatOS wiki pinout, untested on hardware.
+- **2026-10-12 — The editor says when a user file is an old, unedited copy of a built-in (Mike: "yes").** Found
+  when the backend copied a first draft of the LuatOS board into `~/.thingstudio/boards/` and that copy quietly
+  beat the fixed built-in. Files are still never overwritten. `copy_missing_builtins` now records a sha256 per
+  copied file in `<kind>/.builtin-copies` (no `.json` suffix, so it's never listed), and records an existing file
+  that already equals the built-in. `/api/definitions` adds `untouchedCopy`. An untouched copy that differs from
+  the current built-in goes in `DefinitionSet.staleCopies`, not `overrides`, and the console says to delete it.
+  It's still used, as before. Copies made before this and since changed can't be told apart, so they get no line.
+- **2026-10-12 — Header numbering and USB end (Mike, from the LuatOS board's pinout picture).** The LuatOS
+  ESP32C3-CORE numbers its right row top to bottom (17 opposite 1), not back up like the Pico, so the Pins… page
+  drew it wrong. New optional board keys, both needing `header`: `headerOrder` ("around", the default, or "down")
+  and `usb` ("top" = the pin 1 end, or "bottom"). The page draws a USB row at that end and says so in words. Set
+  on the four boards with a header: Pico, Pico W, Pico 2 top; LuatOS bottom, "down". The LOLIN S2 Mini, CYD and
+  Freenove have no `header`, so there's nothing to show the USB end against.

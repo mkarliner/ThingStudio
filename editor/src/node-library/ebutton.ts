@@ -48,6 +48,7 @@
 // about rather than left to be rediscovered while debugging a flow with
 // more than one ebutton node.
 
+import { claimResource, sharedPin, type Pull } from "./hardware-shared.js";
 import { CompileError } from "../compiler/errors.js";
 import { checkPin } from "../definitions/pin-check.js";
 import type { GraphNode } from "../compiler/graph.js";
@@ -89,15 +90,21 @@ export const ebuttonNode: NodeDefinition = {
     if (pull !== "none" && pull !== "up" && pull !== "down") {
       throw new CompileError(`ebutton pull "${pull}" must be "none", "up", or "down"`);
     }
-    const pullArg = pull === "up" ? ", machine.Pin.PULL_UP" : pull === "down" ? ", machine.Pin.PULL_DOWN" : "";
-
-    const pinVar = `_ebutton_pin_${pin}`;
+    // The pin and the EButton on it are keyed singletons (hardware-shared.ts, decisions/hardware-singletons.md):
+    // a second ebutton on this pin with different settings is a compile error, not silently the first's.
+    const shared = sharedPin(ctx, node, pin, "in", pull as Pull);
+    claimResource(
+      ctx,
+      `GPIO ${pin} ebutton`,
+      `sense ${senseMode}, suppress ${suppress ? "on" : "off"}, debounce ${debounceMs} ms, long press ${longPressMs} ms, double click ${doubleClickMs} ms`,
+      node,
+    );
+    const pinVar = shared.varName;
     const btnVar = `_ebutton_${pin}`;
     const waitVar = ctx.uniqueName("ebutton_wait");
     const senseArg = senseMode === "auto" ? "" : `, sense=${senseMode}`;
 
     const setupLines = [
-      `${pinVar} = machine.Pin(${pin}, machine.Pin.IN${pullArg})`,
       `EButton.debounce_ms = ${debounceMs}`,
       `EButton.long_press_ms = ${longPressMs}`,
       `EButton.double_click_ms = ${doubleClickMs}`,
@@ -107,6 +114,7 @@ export const ebuttonNode: NodeDefinition = {
     return {
       imports: ["import machine", "from events import EButton, WaitAny"],
       statements: [
+        shared.statement,
         { key: `ebutton-${pin}`, code: setupLines.join("\n") },
         { key: waitVar, code: `${waitVar} = WaitAny([${btnVar}.press, ${btnVar}.release, ${btnVar}.long, ${btnVar}.double])` },
       ],

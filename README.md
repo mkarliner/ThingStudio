@@ -1,4 +1,4 @@
-# WARNING!: This has been heavily vibe-coded. If you don't like that, please move on.
+Please note: This project contains AI generated code. 
 
 
 # Thingstudio

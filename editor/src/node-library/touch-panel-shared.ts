@@ -10,6 +10,7 @@
 // One physical panel can't feed both, or two screens: whichever polled it would steal touches from the other. That
 // is a CompileError naming both nodes.
 
+import { claimResource, sharedPinExpr } from "./hardware-shared.js";
 import { CompileError } from "../compiler/errors.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext } from "../compiler/node-definition.js";
@@ -85,7 +86,13 @@ export function resolveTouchPanel(ctx: CodegenContext, node: GraphNode): TouchPa
   const py = (b: boolean) => (b ? "True" : "False");
   const rstRaw = p.rstPin;
   const hasRst = rstRaw !== undefined && rstRaw !== null && rstRaw !== "";
-  const rst = hasRst ? `machine.Pin(${checkPin(ctx, "touch panel reset pin", rstRaw, "output")}, machine.Pin.OUT)` : "None";
+  // A keyed singleton pin (hardware-shared.ts): a plain output, so a display on the same reset line can share it.
+  let rst = "None";
+  if (hasRst) {
+    const rstPin = checkPin(ctx, "touch panel reset pin", rstRaw, "output");
+    claimResource(ctx, `GPIO ${rstPin}`, "output", node);
+    rst = sharedPinExpr(rstPin, "out");
+  }
   const hex = `0x${address.toString(16)}`;
   return {
     bus,

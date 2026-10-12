@@ -13,6 +13,7 @@
 // input and an output would silently dedup onto ONE wrongly-configured
 // Pin object instead of two independently-correct ones.
 
+import { sharedPin } from "./hardware-shared.js";
 import { checkPin } from "../definitions/pin-check.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, NodeDefinition, SinkCodegenResult } from "../compiler/node-definition.js";
@@ -33,12 +34,13 @@ export const gpioOutNode: NodeDefinition = {
   },
   codegenSink(node: GraphNode, ctx: CodegenContext): SinkCodegenResult {
     const pin = checkPin(ctx, "gpio_out pin", node.properties.pin, "output");
-    const pinVar = `_pin_${pin}`;
+    // The pin is a keyed singleton (hardware-shared.ts, decisions/hardware-singletons.md).
+    const { varName, statement } = sharedPin(ctx, node, pin, "out");
     return {
       imports: ["import machine"],
-      statements: [{ key: `pin-${pin}-out`, code: `${pinVar} = machine.Pin(${pin}, machine.Pin.OUT)` }],
+      statements: [statement],
       functionName: ctx.uniqueName("gpio_out"),
-      functionBody: `${pinVar}.value(1 if msg.get('payload') else 0)`,
+      functionBody: `${varName}.value(1 if msg.get('payload') else 0)`,
     };
   },
 };

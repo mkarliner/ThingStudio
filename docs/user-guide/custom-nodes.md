@@ -164,7 +164,8 @@ Python.
 import dht
 import machine
 
-_sensor = dht.DHT22(machine.Pin(properties['pin']))
+_pin = properties['pin']
+_sensor = dht.DHT22(runtime.shared('pin', _pin, ('dht22',), lambda: machine.Pin(_pin)))
 
 async def emit(properties):
     _sensor.measure()
@@ -201,6 +202,20 @@ async def emit(properties):
 ```
 
 `global` raises `NameError` here — there's no module-level name to find.
+
+### Pins and buses
+
+Get a pin or bus with `runtime.shared(kind, key, settings, make)`, not by building it yourself. The first node to
+ask builds it with `make()`; every later node gets the same object. If a later node asks with different `settings`,
+the flow stops with an error naming both, instead of one node quietly changing the pin under another.
+
+```python
+_pin = runtime.shared('pin', 5, ('in', 'up'), lambda: machine.Pin(5, machine.Pin.IN, machine.Pin.PULL_UP))
+_i2c = runtime.shared('i2c', 0)  # fetch a bus another node in the flow set up
+```
+
+The built-in nodes use these settings: `('in', 'none' | 'up' | 'down')` and `('out', 'none')` for pins. Pins, PWM,
+I2C and SPI all work this way: see [Hardware is shared](nodes/index.md#hardware-is-shared).
 
 ### Cleanup
 
@@ -245,9 +260,9 @@ Thingstudio doesn't check it. A typo surfaces as a runtime error (e.g.
 A custom node has one output port. A `source` node's `emit` runs on a fixed `intervalMs` schedule, not in response to
 an external event.
 
-Two instances of the same custom node get independent setup, unlike two built-in `gpio out` nodes on the same pin,
-which share one `Pin` object. Don't put two instances of the same stateful custom node on the same physical resource,
-such as the same pin.
+Two instances of the same custom node get independent setup. Thingstudio can't see inside a custom node's Python, so
+it can't check its pins when compiling. Use `runtime.shared()` for pins and buses, so a clash is caught when the flow
+starts.
 
 Custom node Python runs with the same trust as any other node, including Thingstudio's `function` node. Loading a
 package only adds it to the palette; its Python runs on a board only when you place the node and deploy. Only files

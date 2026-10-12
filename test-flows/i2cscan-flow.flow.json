@@ -6,7 +6,7 @@
       "id": "0e16e4c3c968917f",
       "type": "thingstudio/function",
       "properties": {
-        "code": "import machine\nimport runtime\n\nBUS, SCL, SDA = 0, 5, 4,    # only used if no node in this flow already uses this bus\n\ntry:\n    i2c = runtime.shared('i2c', BUS)      # the flow's own bus, if a bme280/display_i2c set it up\nexcept (KeyError, AttributeError):        # no I2C node on this bus, or a runtime older than 6.0.0\n    i2c = machine.I2C(BUS, scl=machine.Pin(SCL), sda=machine.Pin(SDA), freq=100000)\n\nKNOWN = {0x29: 'TCS34725', 0x3c: 'SSD1306', 0x3d: 'SSD1306', 0x68: 'MPU-9250', 0x69: 'MPU-9250',\n         0x76: 'BME280/BMP280', 0x77: 'BME280/BMP280'}\nfound = i2c.scan()\nmsg['payload'] = ['0x%02x %s' % (a, KNOWN.get(a, '?')) for a in found] or 'nothing found'\nreturn msg",
+        "code": "import machine\nimport runtime\n\nBUS, SCL, SDA, FREQ = 0, 5, 4, 100000   # only used if no node in this flow already set this bus up\n\n# The bus is a keyed singleton (docs/working-notes/decisions/hardware-singletons.md): fetch the flow's own bus if a\n# bme280/display_i2c set it up, else build it here the same way, so a node added later shares it.\ntry:\n    i2c = runtime.shared('i2c', BUS)\nexcept KeyError:\n    i2c = runtime.shared('i2c', BUS, (SCL, SDA, FREQ), lambda: machine.I2C(BUS, scl=machine.Pin(SCL), sda=machine.Pin(SDA), freq=FREQ))\n\nKNOWN = {0x29: 'TCS34725', 0x3c: 'SSD1306', 0x3d: 'SSD1306', 0x68: 'MPU-9250', 0x69: 'MPU-9250',\n         0x76: 'BME280/BMP280', 0x77: 'BME280/BMP280'}\nfound = i2c.scan()\nmsg['payload'] = ['0x%02x %s' % (a, KNOWN.get(a, '?')) for a in found] or 'nothing found'\nreturn msg",
         "outputCount": 1
       }
     },

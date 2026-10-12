@@ -1614,6 +1614,58 @@ function updateNativeArchLabel(): void {
 }
 el("nativeArchSelect").addEventListener("change", updateNativeArchLabel);
 
+// Right-hand column (notes, compiled source, console): drag its left edge to resize (Mike, 2026-10-12).
+// The width is kept per browser; double-click goes back to the default (630px, in index.html's CSS).
+const SIDEBAR_MIN_WIDTH = 300;
+function clampSidebarWidth(px: number): number {
+  return Math.round(Math.max(SIDEBAR_MIN_WIDTH, Math.min(px, window.innerWidth - 400)));
+}
+function setSidebarWidth(px: number | null): void {
+  const sidebar = el<HTMLDivElement>("sidebar");
+  if (px === null) sidebar.style.removeProperty("--sidebar-width");
+  else sidebar.style.setProperty("--sidebar-width", `${clampSidebarWidth(px)}px`);
+}
+{
+  let saved: string | null = null;
+  try {
+    saved = localStorage.getItem("thingstudio.sidebarWidth");
+  } catch {
+    // storage blocked: use the default
+  }
+  if (saved !== null && Number.isFinite(Number(saved))) setSidebarWidth(Number(saved));
+  const handle = el<HTMLDivElement>("sidebar-resizer");
+  handle.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    handle.setPointerCapture(e.pointerId);
+    handle.classList.add("dragging");
+    const startX = e.clientX;
+    const startWidth = el<HTMLDivElement>("sidebar").getBoundingClientRect().width;
+    const move = (ev: PointerEvent): void => setSidebarWidth(startWidth + (startX - ev.clientX));
+    const up = (): void => {
+      handle.removeEventListener("pointermove", move);
+      handle.removeEventListener("pointerup", up);
+      handle.removeEventListener("pointercancel", up);
+      handle.classList.remove("dragging");
+      try {
+        localStorage.setItem("thingstudio.sidebarWidth", String(Math.round(el<HTMLDivElement>("sidebar").getBoundingClientRect().width)));
+      } catch {
+        // storage blocked: the width just isn't remembered
+      }
+    };
+    handle.addEventListener("pointermove", move);
+    handle.addEventListener("pointerup", up);
+    handle.addEventListener("pointercancel", up);
+  });
+  handle.addEventListener("dblclick", () => {
+    setSidebarWidth(null);
+    try {
+      localStorage.removeItem("thingstudio.sidebarWidth");
+    } catch {
+      // nothing to forget
+    }
+  });
+}
+
 // "Pins…" (Mike, 2026-09-30): the current target's definitions as a readable page, in a tab of its own so
 // it can sit beside the editor. The definition files are read again first, so an edit made in a text
 // editor shows at once -- click again to refresh the same tab. Built from activeTarget, the same object the
@@ -1669,6 +1721,10 @@ async function loadUserDefinitions(): Promise<void> {
   definitions = buildDefinitionSet(BUILTIN_DEFINITION_FILES, userDefinitionFiles(listing));
   const lines = [
     ...definitions.overrides.map((o) => ({ text: `[definitions] ${o.source} replaces the built-in ${o.kind} "${o.id}"`, cls: "" as const })),
+    ...definitions.staleCopies.map((o) => ({
+      text: `[definitions] ${o.source} is an old copy of the built-in ${o.kind} "${o.id}" and is used instead of it. Delete the file to use the current one.`,
+      cls: "err" as const,
+    })),
     ...definitions.problems.map((p) => ({ text: `[definitions] ${p.source} is not loaded: ${p.message}`, cls: "err" as const })),
   ];
   const report = JSON.stringify(lines);

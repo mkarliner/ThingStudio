@@ -16,6 +16,7 @@
 // CompileError naming the bus -- the setup statement's first-writer-wins dedup would otherwise silently
 // pick one config's pins.
 
+import { claimResource } from "./hardware-shared.js";
 import { CompileError } from "../compiler/errors.js";
 import type { CodegenContext } from "../compiler/node-definition.js";
 import { checkI2c, checkPin } from "../definitions/pin-check.js";
@@ -62,6 +63,10 @@ export function i2cBusFromPins(ctx: CodegenContext, raw: Record<string, unknown>
   const scl = checkPin(ctx, `${what} scl pin`, raw.scl, "bidirectional");
   const sda = checkPin(ctx, `${what} sda pin`, raw.sda, "bidirectional");
   if (scl === sda) throw new CompileError(`${what} uses pin ${scl} for both SCL and SDA`);
+  // The bus's pins are claimed like any other (hardware-shared.ts, decisions/hardware-singletons.md), so a
+  // gpio_out on SDA is a compile error.
+  claimResource(ctx, `GPIO ${scl}`, `${what} SCL`, what);
+  claimResource(ctx, `GPIO ${sda}`, `${what} SDA`, what);
   checkI2c(ctx, what, bus, { scl, sda });
   const freq = raw.freq === null || raw.freq === undefined || raw.freq === "" ? I2C_DEFAULT_FREQ : Number(raw.freq);
   if (!Number.isInteger(freq) || freq <= 0) {

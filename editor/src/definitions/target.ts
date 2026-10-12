@@ -49,9 +49,11 @@ export function buildTarget(processor: ProcessorDef, board: BoardDef | null): Ta
   const gpio = board?.gpio ?? processor.gpio;
   const reserved = new Map<number, string>();
   const avoid = new Map<number, string>();
-  for (const [p, r] of processor.avoid) if (gpio.has(p)) avoid.set(p, r);
+  // A board's `free` pins lift the processor's entries for them, never the board's own.
+  const free = board?.free ?? new Set<number>();
+  for (const [p, r] of processor.avoid) if (gpio.has(p) && !free.has(p)) avoid.set(p, r);
   for (const [p, r] of board?.avoid ?? []) avoid.set(p, r);
-  for (const [p, r] of processor.reserved) if (gpio.has(p)) reserved.set(p, r);
+  for (const [p, r] of processor.reserved) if (gpio.has(p) && !free.has(p)) reserved.set(p, r);
   for (const [p, r] of board?.reserved ?? []) reserved.set(p, r);
   const pinLabels = new Map<number, string[]>();
   for (const [label, p] of board?.pins ?? []) {

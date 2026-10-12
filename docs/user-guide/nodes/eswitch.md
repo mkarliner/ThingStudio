@@ -26,5 +26,5 @@ msg = {'payload': True, 'topic': ''}
 No internal pull is enabled by default — wire an external pull resistor, use a switch module with one built in,
 or set **pull** if the switch instead relies on the board's own internal pull-up/pull-down.
 
-Two `eswitch` nodes on the same pin share one underlying driver instance rather than each polling independently —
-the first node's `lopen`/debounce/pull settings win, matching `interrupt`'s own same-pin behavior.
+Two `eswitch` nodes on the same pin share one switch, so they must have the same settings, or the compile stops. See
+[Hardware is shared](index.md#hardware-is-shared).

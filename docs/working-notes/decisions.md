@@ -54,6 +54,12 @@ The Tier 1 node-type triage (interrupt/pin-change, filter/event-compression, fou
 
 The redeploy-cleanup and WiFi/MQTT hardening work: the socket-leak cleanup registry, mandatory `wifiConfigId`, the WiFi `security` field's three states, the `wifi_status`-vs-`mqtt_as` connect-race fix (kept local rather than patching upstream), `wifi_status` becoming the flow's sole WiFi-credential owner, the runtime/editor version-check gap (semver rule plus a git-SHA backstop), `HELLO_REQUEST`, boot-time flow auto-resume, the CBOR `None`-encoding fix, `flowName`/`deployId` flow identity, the call to accept the ESP32 ordering-race's current failure mode as a documented limitation rather than keep chasing a universal fix, and `wifi_status` deferring connection ownership (not just credentials) to `mqtt_as` entirely when the flow has any mqtt node, fixing WiFi visibly cycling up/down that the new status dots made observable. The single largest, most active section in this log. 13 entries: `docs/working-notes/decisions/redeploy-network.md`.
 
+## Hardware singletons
+
+Every unique hardware resource (GPIO pin, ADC channel, I2C/SPI bus, PWM) is a keyed singleton after Peter Hinch's
+`functor_singleton` pattern: claimed at compile time, shared on the board through `runtime.shared()`. 1 entry:
+`docs/working-notes/decisions/hardware-singletons.md`.
+
 ## Node authoring / extensibility
 
 Custom nodes as a two-file package inlined via a generic `NodeDefinition` builder, no new wire protocol; same trust boundary as the `function` node, no sandboxing; output ports capped at 1 by codegen validation, not the package format; package persistence deferred to the backend; `eswitch`/`ebutton` nodes vendoring Peter Hinch's

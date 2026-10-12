@@ -93,7 +93,7 @@ function runEvents(properties: Record<string, unknown>, events: Array<{ t: numbe
   // doesn't define (monotonic, etc.) to the real stdlib time module, so
   // this swap doesn't break Python's own internals if something else in
   // the process needs real time functions -- see that file's header.
-  const preamble = ["import sys", "import time_mock", 'sys.modules["time"] = time_mock'];
+  const preamble = ["import sys", "import time_mock", 'sys.modules["time"] = time_mock', "import runtime"];
   const lines = [...preamble, ...setup, ...loop];
   const dir = mkdtempSync(join(tmpdir(), "thingstudio-nodetest-"));
   const scriptPath = join(dir, "_snippet.py");
@@ -125,7 +125,7 @@ describe("thingstudio/interrupt node", () => {
 
   it("defaults edge to rising and debounce to enabled with debounceMs 50", () => {
     const result = interruptNode.codegenEventSource!(node({ pin: 12 }), ctx);
-    expect(result.statements?.[0]?.code).toContain("machine.Pin.IRQ_RISING");
+    expect((result.statements ?? []).map((s) => s.code).join("\n")).toContain("machine.Pin.IRQ_RISING");
     expect(result.statements?.[0]?.code).not.toContain("IRQ_FALLING");
   });
 
@@ -148,7 +148,7 @@ describe("thingstudio/interrupt node", () => {
     expect(source).toMatch(/runtime\.spawn\(/);
   });
 
-  it("an interrupt and gpio_out on the same pin number get two independently-configured Pin objects", () => {
+  it("an interrupt and a gpio_out on the same pin is a compile error naming both (hardware-singletons.md)", () => {
     const graph: GraphData = {
       nodes: [
         { id: "1", type: "thingstudio/interrupt", properties: { pin: 12, edge: "rising" } },
@@ -157,9 +157,26 @@ describe("thingstudio/interrupt node", () => {
       ],
       links: [[1, "2", 0, "3", 0, "bool"]],
     };
-    const { source } = compile(graph, buildRegistry());
-    expect(source).toContain("machine.Pin(12, machine.Pin.IN)");
-    expect(source).toContain("machine.Pin(12, machine.Pin.OUT)");
+    expect(() => compile(graph, buildRegistry())).toThrow(
+      "GPIO 12: gpio_out 3 sets it up as output, but interrupt 1 already has it as input, no pull. Set both up the same way, or use another pin.",
+    );
+  });
+
+  it("two interrupt nodes on one pin share it with the same settings, and stop the compile with different ones", () => {
+    const graph = (edge2: string): GraphData => ({
+      nodes: [
+        { id: "1", type: "thingstudio/interrupt", properties: { pin: 12, edge: "rising" } },
+        { id: "2", type: "thingstudio/interrupt", properties: { pin: 12, edge: edge2 } },
+        { id: "3", type: "thingstudio/debug", properties: {} },
+      ],
+      links: [
+        [1, "1", 0, "3", 0, "bool"],
+        [2, "2", 0, "3", 0, "bool"],
+      ],
+    });
+    const { source } = compile(graph("rising"), buildRegistry());
+    expect(source.match(/runtime\.shared\('pin', 12,/g)).toHaveLength(1);
+    expect(() => compile(graph("falling"), buildRegistry())).toThrow(/GPIO 12 interrupt: interrupt 2 sets it up as falling edge/);
   });
 
   describe("debounce cooldown (single-edge trigger)", () => {

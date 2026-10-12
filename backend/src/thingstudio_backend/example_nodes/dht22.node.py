@@ -5,7 +5,10 @@
 import dht
 import machine
 
-_sensor = dht.DHT22(machine.Pin(properties['pin']))
+# runtime.shared() gives every node on this pin the same Pin object, and stops the flow with a clear error
+# if another node has set the pin up differently.
+_pin = properties['pin']
+_sensor = dht.DHT22(runtime.shared('pin', _pin, ('dht22',), lambda: machine.Pin(_pin)))
 
 async def emit(properties):
     _sensor.measure()

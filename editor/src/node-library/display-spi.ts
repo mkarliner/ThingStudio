@@ -238,6 +238,7 @@
 // analogy from `gs4`'s already-working loop -- the bit-order difference
 // is exactly the kind of thing an analogy would get wrong silently.
 
+import { claimResource, sharedPinExpr, sharedSpi } from "./hardware-shared.js";
 import { orientedMadctl, resolveOrientation, turnedSize } from "./orientation-shared.js";
 import { CompileError } from "../compiler/errors.js";
 import { checkOptionalPin, checkPin, checkSpi } from "../definitions/pin-check.js";
@@ -596,7 +597,15 @@ export const displaySpiNode: NodeDefinition = {
     const madctl = axisBits | (dataLatchOrder ? MADCTL_MH : 0) | (bgr ? MADCTL_BGR : 0);
 
     const base = ctx.uniqueName("display_spi");
-    const spiVar = `${base}_spi`;
+    // The SPI bus and every pin are keyed singletons (hardware-shared.ts, decisions/hardware-singletons.md). DC
+    // and CS belong to this display alone; reset and backlight are plain outputs another node may share (a
+    // gpio_out switching the backlight, a touch panel on the same reset line).
+    const spiShared = sharedSpi(ctx, node, spiBus, sck, mosi, baudrate);
+    const spiVar = spiShared.varName;
+    claimResource(ctx, `GPIO ${dc}`, "display DC", node);
+    if (cs !== null) claimResource(ctx, `GPIO ${cs}`, "SPI CS", node);
+    if (reset !== null) claimResource(ctx, `GPIO ${reset}`, "output", node);
+    if (backlight !== null) claimResource(ctx, `GPIO ${backlight}`, "output", node);
     const csVar = `${base}_cs`;
     const dcVar = `${base}_dc`;
     const resetVar = `${base}_reset`;
@@ -606,9 +615,9 @@ export const displaySpiNode: NodeDefinition = {
     const expandVar = `${base}_expand`;
     const scratchVar = `${base}_scratch`;
 
-    const csExpr = cs === null ? "None" : `machine.Pin(${cs}, machine.Pin.OUT)`;
-    const resetExpr = reset === null ? "None" : `machine.Pin(${reset}, machine.Pin.OUT)`;
-    const blExpr = backlight === null ? "None" : `machine.Pin(${backlight}, machine.Pin.OUT)`;
+    const csExpr = cs === null ? "None" : sharedPinExpr(cs, "out");
+    const resetExpr = reset === null ? "None" : sharedPinExpr(reset, "out");
+    const blExpr = backlight === null ? "None" : sharedPinExpr(backlight, "out");
 
     // Every indexed format pads its per-row byte stride UP to a whole
     // byte -- Math.ceil(width / pixelsPerByte) is that padded per-row
@@ -630,12 +639,12 @@ export const displaySpiNode: NodeDefinition = {
     }
 
     const statements: SinkCodegenResult["statements"] = [
+      spiShared.statement,
       {
         key: base,
         code: [
-          `${spiVar} = machine.SPI(${spiBus}, baudrate=${baudrate}, polarity=0, phase=0, sck=machine.Pin(${sck}), mosi=machine.Pin(${mosi}))`,
           `${csVar} = ${csExpr}`,
-          `${dcVar} = machine.Pin(${dc}, machine.Pin.OUT)`,
+          `${dcVar} = ${sharedPinExpr(dc, "out")}`,
           `${resetVar} = ${resetExpr}`,
           `${blVar} = ${blExpr}`,
           `${dispVar} = ${driverClass}(${spiVar}, ${width}, ${height}, ${resetVar}, ${dcVar}, cs=${csVar}, backlight=${blVar}, xstart=${xstart}, ystart=${ystart})`,

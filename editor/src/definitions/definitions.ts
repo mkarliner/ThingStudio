@@ -64,6 +64,9 @@ export interface BoardDef {
   readonly gpio: ReadonlySet<number> | null;
   readonly reserved: ReadonlyMap<number, string>;
   readonly avoid: ReadonlyMap<number, string>;
+  /** Pins the processor reserves or warns about that are free on this board (2026-10-12: the LuatOS
+   * ESP32C3-CORE runs its flash in DIO mode, so the C3's GPIO 12-13 flash pins carry its LEDs). */
+  readonly free: ReadonlySet<number>;
   /** Whether the board has a WiFi radio (WiFi transport, 2026-09-24). false hides the network
    * connection and board password; null (not stated) offers them -- Mike's call: only a definition
    * that says "no radio" takes the option away. */
@@ -73,6 +76,11 @@ export interface BoardDef {
    * when the file doesn't say. Keys are as written ("1".."40", or "P3-1" for a board with several
    * connectors); in insertion order, except that JS sorts integer-like keys ascending. */
   readonly header: ReadonlyMap<string, number | string>;
+  /** How a 1..N dual-row header is numbered (2026-10-12): "around" goes down the left side and back up the
+   * right (the Pico), "down" goes down both sides (pin N/2+1 top right, the LuatOS ESP32C3-CORE). */
+  readonly headerOrder: "around" | "down";
+  /** Which end of the header drawing the USB connector is at: "top" is the pin 1 end. Needs `header`. */
+  readonly usb: "top" | "bottom" | null;
 }
 
 export type DefinitionKind = "processor" | "board";
@@ -88,6 +96,8 @@ export interface RawDefinitionFile {
   readonly data: unknown;
   /** Set when the file didn't even parse (the backend reports this). */
   readonly parseError?: string | null;
+  /** The backend's copy of a built-in, unedited since it was copied (builtin_reference.py). */
+  readonly untouchedCopy?: boolean;
 }
 
 export interface DefinitionProblem {
@@ -103,6 +113,8 @@ export interface DefinitionSet {
   /** Invalid files, and user files that replaced a built-in. Show every one. */
   readonly problems: readonly DefinitionProblem[];
   readonly overrides: readonly { kind: DefinitionKind; id: string; source: string }[];
+  /** Unedited copies of a built-in that has changed since: in use, but out of date. Not in `overrides`. */
+  readonly staleCopies: readonly { kind: DefinitionKind; id: string; source: string }[];
 }
 
 export class DefinitionError extends Error {}
@@ -201,7 +213,7 @@ function subset(pins: Iterable<number>, gpio: ReadonlySet<number>, where: string
 // ---------------------------------------------------------------------
 
 const PROCESSOR_KEYS = ["name", "match", "nativeArch", "nativeArchConfirmed", "gpio", "inputOnly", "noPull", "reserved", "avoid", "spi", "i2c", "notes"];
-const BOARD_KEYS = ["name", "processor", "match", "pins", "gpio", "reserved", "avoid", "notes", "wifi", "header"];
+const BOARD_KEYS = ["name", "processor", "match", "pins", "gpio", "reserved", "avoid", "notes", "wifi", "header", "free", "headerOrder", "usb"];
 
 function parseSpi(v: unknown, gpio: ReadonlySet<number>): ProcessorDef["spi"] {
   if (!isObject(v)) throw new DefinitionError(`"spi": must be an object`);
@@ -338,6 +350,18 @@ export function parseBoard(id: string, data: unknown, processors: ReadonlyMap<st
   const avoid = data.avoid === undefined ? new Map<number, string>() : pinReasons(data.avoid, `"avoid"`);
   subset(reserved.keys(), available, `"reserved"`);
   subset(avoid.keys(), available, `"avoid"`);
+  const free = new Set(data.free === undefined ? [] : pinList(data.free, `"free"`));
+  subset(free, available, `"free"`);
+  const headerOrder = data.headerOrder === undefined ? "around" : oneOf(data.headerOrder, ["around", "down"] as const, `"headerOrder"`);
+  const usb = data.usb === undefined ? null : oneOf(data.usb, ["top", "bottom"] as const, `"usb"`);
+  if ((data.headerOrder !== undefined || usb !== null) && data.header === undefined) {
+    throw new DefinitionError(`"${data.usb !== undefined ? "usb" : "headerOrder"}": needs "header", the pins it describes`);
+  }
+  for (const p of free) {
+    if (reserved.has(p) || avoid.has(p)) {
+      throw new DefinitionError(`"free": GPIO ${p} is also in this board's own "${reserved.has(p) ? "reserved" : "avoid"}"`);
+    }
+  }
   return {
     id,
     name: str(data.name, `"name"`),
@@ -347,9 +371,12 @@ export function parseBoard(id: string, data: unknown, processors: ReadonlyMap<st
     gpio,
     reserved,
     avoid,
+    free,
     notes: data.notes === undefined ? "" : str(data.notes, `"notes"`),
     wifi: data.wifi === undefined ? null : bool(data.wifi, `"wifi"`),
     header: data.header === undefined ? new Map() : parseHeader(data.header, available),
+    headerOrder,
+    usb,
   };
 }
 
@@ -374,6 +401,13 @@ function parseHeader(v: unknown, available: ReadonlySet<number>): Map<string, nu
     out.set(pin, gpio);
   }
   return out;
+}
+
+function oneOf<T extends string>(v: unknown, allowed: readonly T[], where: string): T {
+  if (typeof v !== "string" || !allowed.includes(v as T)) {
+    throw new DefinitionError(`${where}: must be ${allowed.map((a) => `"${a}"`).join(" or ")}`);
+  }
+  return v as T;
 }
 
 function bool(v: unknown, where: string): boolean {
@@ -401,6 +435,7 @@ function errorText(err: unknown): string {
 export function buildDefinitionSet(builtin: readonly RawDefinitionFile[], user: readonly RawDefinitionFile[]): DefinitionSet {
   const problems: DefinitionProblem[] = [];
   const overrides: { kind: DefinitionKind; id: string; source: string }[] = [];
+  const staleCopies: { kind: DefinitionKind; id: string; source: string }[] = [];
   const processors = new Map<string, ProcessorDef>();
   const boards = new Map<string, BoardDef>();
   // The backend copies every missing built-in into the user folders (builtin_reference.py), so most
@@ -418,7 +453,7 @@ export function buildDefinitionSet(builtin: readonly RawDefinitionFile[], user: 
       else boards.set(file.id, parseBoard(file.id, file.data, processors));
       const original = builtinData.get(`${file.kind}:${file.id}`);
       if (!builtin.includes(file) && original !== undefined && original !== JSON.stringify(file.data)) {
-        overrides.push({ kind: file.kind, id: file.id, source: file.source });
+        (file.untouchedCopy ? staleCopies : overrides).push({ kind: file.kind, id: file.id, source: file.source });
       }
     } catch (err) {
       problems.push({ kind: file.kind, id: file.id, source: file.source, message: errorText(err) });
@@ -426,7 +461,7 @@ export function buildDefinitionSet(builtin: readonly RawDefinitionFile[], user: 
   };
   for (const f of ordered) if (f.kind === "processor") tryAdd(f);
   for (const f of ordered) if (f.kind === "board") tryAdd(f);
-  return { processors, boards, problems, overrides };
+  return { processors, boards, problems, overrides, staleCopies };
 }
 
 /** "0-19, 21-23, 32-39" -- compact text for a pin set, used in messages and the UI. */
@@ -443,17 +478,20 @@ export function formatPinSet(pins: Iterable<number>): string {
   return parts.join(", ");
 }
 
+type DefinitionListingEntry = { name: string; valid: boolean; error: string | null; data: unknown; untouchedCopy?: boolean };
+
 /** Turns the backend's /api/definitions listing into RawDefinitionFiles. */
 export function userDefinitionFiles(listing: {
-  processors: readonly { name: string; valid: boolean; error: string | null; data: unknown }[];
-  boards: readonly { name: string; valid: boolean; error: string | null; data: unknown }[];
+  processors: readonly DefinitionListingEntry[];
+  boards: readonly DefinitionListingEntry[];
 }): RawDefinitionFile[] {
-  const convert = (kind: DefinitionKind, dir: string) => (f: { name: string; valid: boolean; error: string | null; data: unknown }) => ({
+  const convert = (kind: DefinitionKind, dir: string) => (f: DefinitionListingEntry) => ({
     kind,
     id: f.name,
     source: `~/.thingstudio/${dir}/${f.name}.json`,
     data: f.valid ? f.data : null,
     parseError: f.valid ? null : (f.error ?? "invalid file"),
+    untouchedCopy: f.untouchedCopy === true,
   });
   return [...listing.processors.map(convert("processor", "processors")), ...listing.boards.map(convert("board", "boards"))];
 }

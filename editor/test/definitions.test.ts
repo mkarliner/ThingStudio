@@ -55,7 +55,7 @@ describe("built-in definitions", () => {
   it("all load with no problems", () => {
     expect(defs.problems).toEqual([]);
     expect([...defs.processors.keys()].sort()).toEqual(["esp32", "esp32-c3", "esp32-s2", "esp32-s3", "rp2040", "rp2350"]);
-    expect([...defs.boards.keys()].sort()).toEqual(["cyd", "freenove-s3-4in", "lolin-s2-mini", "pico", "pico-2", "pico-w"]);
+    expect([...defs.boards.keys()].sort()).toEqual(["cyd", "freenove-s3-4in", "lolin-s2-mini", "luatos-esp32c3-core", "pico", "pico-2", "pico-w"]);
   });
 
   it("FALLBACK_MAX_PIN is the widest range any built-in processor has", () => {
@@ -126,6 +126,18 @@ describe("definition file validation", () => {
     expect(b.problems[0]!.message).toMatch(/GPIO 40 doesn't exist on this board/);
   });
 
+  it("rejects a board's free pin that it also reserves or avoids, or doesn't have", () => {
+    const board = { name: "B", processor: "esp32-c3", match: [], pins: {} };
+    const cases: [unknown, RegExp][] = [
+      [{ ...board, free: [12], reserved: { "12": "x" } }, /"free": GPIO 12 is also in this board's own "reserved"/],
+      [{ ...board, free: [12], avoid: { "12": "x" } }, /"free": GPIO 12 is also in this board's own "avoid"/],
+      [{ ...board, free: [30] }, /"free": GPIO 30 isn't in "gpio"/],
+    ];
+    for (const [data, re] of cases) {
+      expect(buildDefinitionSet(BUILTIN_DEFINITION_FILES, [user("board", "b", data)]).problems[0]?.message).toMatch(re);
+    }
+  });
+
   it("rejects a file name that isn't a plain id", () => {
     const set = buildDefinitionSet([], [user("processor", "My Chip", minimalProcessor)]);
     expect(set.problems[0]!.message).toMatch(/file name "My Chip"/);
@@ -144,6 +156,17 @@ describe("definition file validation", () => {
     const set = buildDefinitionSet(BUILTIN_DEFINITION_FILES, [user("board", "pico", JSON.parse(JSON.stringify(pico.data)))]);
     expect(set.overrides).toEqual([]);
     expect(set.problems).toEqual([]);
+  });
+
+  it("reports an unedited copy of an older built-in as stale, not as an override", () => {
+    const old = { name: "Raspberry Pi Pico", processor: "rp2040", match: ["Raspberry Pi Pico"], pins: {} };
+    const set = buildDefinitionSet(BUILTIN_DEFINITION_FILES, [{ ...user("board", "pico", old), untouchedCopy: true }]);
+    expect(set.staleCopies).toEqual([{ kind: "board", id: "pico", source: "~/.thingstudio/boards/pico.json" }]);
+    expect(set.overrides).toEqual([]);
+    expect(set.boards.get("pico")!.pins.size).toBe(0);
+    const pico = BUILTIN_DEFINITION_FILES.find((f) => f.kind === "board" && f.id === "pico")!;
+    const current = buildDefinitionSet(BUILTIN_DEFINITION_FILES, [{ ...user("board", "pico", JSON.parse(JSON.stringify(pico.data))), untouchedCopy: true }]);
+    expect(current.staleCopies).toEqual([]);
   });
 
   it("keeps the built-in and reports the problem when a replacing user file is invalid", () => {
@@ -225,6 +248,16 @@ describe("target resolution from HELLO chipType", () => {
     expect(t.avoid.has(19)).toBe(false);
   });
 
+  it("lifts the processor's reserved and avoid entries for a board's free pins, and only those", () => {
+    expect(targetFor("processor:esp32-c3").reserved.has(12)).toBe(true);
+    const t = targetFor("board:luatos-esp32c3-core");
+    expect(t.reserved.has(12)).toBe(false);
+    expect(t.reserved.has(13)).toBe(false);
+    expect(t.avoid.has(12)).toBe(false);
+    expect(t.reserved.has(11)).toBe(true);
+    expect(t.avoid.has(8)).toBe(true);
+  });
+
   it("narrows the pin set on a board with a smaller package (Pico 2 is RP2350A)", () => {
     expect(Math.max(...targetFor("board:pico-2").gpio)).toBe(29);
     expect(Math.max(...targetFor("processor:rp2350").gpio)).toBe(47);
@@ -261,6 +294,14 @@ describe("pin checks in nodes", () => {
     expect(gpioOut(0, targetFor("processor:esp32-s2"))).toHaveLength(1);
     expect(gpioOut(0, targetFor("board:lolin-s2-mini"))).toEqual([]);
     expect(gpioOut(24, targetFor("board:pico"))).toEqual(["gpio_out pin 24 on Raspberry Pi Pico (RP2040): Senses USB power (VBUS)."]);
+  });
+
+  it("compiles the LuatOS ESP32C3-CORE's LEDs with no warning, but still stops on GPIO 11", () => {
+    const t = targetFor("board:luatos-esp32c3-core");
+    expect(gpioOut(12, t)).toEqual([]);
+    expect(gpioOut(13, t)).toEqual([]);
+    expect(() => gpioOut(11, t)).toThrow(/Powers the flash chip/);
+    expect(() => gpioOut(12, targetFor("processor:esp32-c3"))).toThrow(/Wired to the flash chip/);
   });
 
   it("with no target, allows 0-48 and warns once that checks are limited", () => {

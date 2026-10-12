@@ -39,6 +39,7 @@
 // accepted, not just whether there was any edge recently" gap the
 // scoping note flagged rather than left to be rediscovered mid-build.
 
+import { claimResource, sharedPin } from "./hardware-shared.js";
 import { CompileError } from "../compiler/errors.js";
 import { checkPin } from "../definitions/pin-check.js";
 import type { GraphNode } from "../compiler/graph.js";
@@ -69,29 +70,15 @@ export const interruptNode: NodeDefinition = {
       throw new CompileError(`interrupt debounceMs "${String(node.properties.debounceMs)}" must be a positive number when debounce is enabled`);
     }
 
-    // Fixed, pin-derived variable names -- NOT ctx.uniqueName -- matching
-    // gpio-in.ts/gpio-out.ts's own convention, and for the same reason
-    // their own headers give: mergeSetup dedups this node's `statements`
-    // entry by a pin-scoped key (`interrupt-${pin}` below), first
-    // instance's setup wins. If these names were ctx.uniqueName'd (so two
-    // interrupt nodes on the same pin got instance-suffixed names like
-    // `_irq_pin_12` / `_irq_pin_12_2`), the SECOND instance's own setup
-    // would be silently dropped by that dedup, while its buildMsg kept
-    // referencing the never-emitted `_2`-suffixed names -- a NameError at
-    // runtime, not a graceful "redundant setup, harmlessly deduped" the
-    // way gpio-in/gpio-out's fixed-name convention actually achieves. Own
-    // pin-claim key/variable naming (not shared with gpio_out's `_pin_N`),
-    // so a flow that (incorrectly) wires the same physical pin as both an
-    // interrupt and a gpio_out still gets two independently-configured Pin
-    // objects instead of one silently misconfigured one -- not real
-    // pin-conflict detection (still not built, per node-definition-
-    // model.md's "No resource-conflict checking"), just the same cheap
-    // insurance gpio-in.ts already established. Two interrupt nodes
-    // genuinely claiming the same pin still silently share the first
-    // instance's trigger/debounce config (mergeSetup's own documented
-    // "first node's code wins") -- a real limitation, but a graceful one
-    // now, not a crash.
-    const pinVar = `_irq_pin_${pin}`;
+    // Fixed, pin-derived names -- NOT ctx.uniqueName -- so a second interrupt node on the same pin, which the
+    // claim below guarantees has the same settings, dedups onto the first's setup (mergeSetup keeps the first
+    // statement per key) and its buildMsg names variables that exist.
+    // The pin is a keyed singleton shared with any other node on it (hardware-shared.ts,
+    // decisions/hardware-singletons.md); the irq handler is claimed too, so two interrupt nodes on one pin
+    // with different settings are a compile error instead of the second silently taking the first's.
+    const shared = sharedPin(ctx, node, pin, "in");
+    claimResource(ctx, `GPIO ${pin} interrupt`, `${edge} edge, ${debounce ? `debounce ${debounceMs} ms` : "no debounce"}`, node);
+    const pinVar = shared.varName;
     const evtVar = `_irq_evt_${pin}`;
     const handlerName = `_irq_handler_${pin}`;
     const tsVar = debounce ? `_irq_debounce_ts_${pin}` : null;
@@ -113,7 +100,6 @@ export const interruptNode: NodeDefinition = {
     // behavior, not an accidental one arising from ticks_ms()'s wraparound
     // arithmetic being asked to compare against a bogus zero baseline.
     const setupLines = [
-      `${pinVar} = machine.Pin(${pin}, machine.Pin.IN)`,
       `${evtVar} = ThreadSafeEvent()`,
       `def ${handlerName}(pin):`,
       `    ${evtVar}.set()`,
@@ -144,7 +130,7 @@ export const interruptNode: NodeDefinition = {
 
     return {
       imports: ["import machine", "import time", "from threadsafe_event import ThreadSafeEvent"],
-      statements: [{ key: `interrupt-${pin}`, code: setupLines.join("\n") }],
+      statements: [shared.statement, { key: `interrupt-${pin}`, code: setupLines.join("\n") }],
       waitStatement: `await ${evtVar}.wait()\n${evtVar}.clear()`,
       buildMsg: bodyLines.join("\n"),
     };

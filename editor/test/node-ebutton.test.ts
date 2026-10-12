@@ -120,16 +120,16 @@ describe("thingstudio/ebutton node", () => {
 
   it("defaults match EButton's own upstream defaults", () => {
     const result = ebuttonNode.codegenEventSource!(node({ pin: 4 }), ctx);
-    const code = result.statements?.[0]?.code ?? "";
+    const code = (result.statements ?? []).map((st) => st.code).join("\n") ?? "";
     expect(code).toContain("EButton.debounce_ms = 50");
     expect(code).toContain("EButton.long_press_ms = 1000");
     expect(code).toContain("EButton.double_click_ms = 400");
-    expect(code).toContain("EButton(_ebutton_pin_4, suppress=False)");
+    expect(code).toContain("EButton(_gpio_4, suppress=False)");
   });
 
   it("passes an explicit sense value through when senseMode isn't auto", () => {
     const result = ebuttonNode.codegenEventSource!(node({ pin: 4, senseMode: "0" }), ctx);
-    expect(result.statements?.[0]?.code).toContain("EButton(_ebutton_pin_4, suppress=False, sense=0)");
+    expect((result.statements ?? []).map((st) => st.code).join("\n")).toContain("EButton(_gpio_4, suppress=False, sense=0)");
   });
 
   it("rejects an invalid pull value", () => {
@@ -140,12 +140,12 @@ describe("thingstudio/ebutton node", () => {
 
   it("defaults pull to none -- no internal pull configured, matching this node's original 2026-09-08 behavior", () => {
     const result = ebuttonNode.codegenEventSource!(node({ pin: 4 }), ctx);
-    expect(result.statements?.[0]?.code).toContain("machine.Pin(4, machine.Pin.IN)");
+    expect((result.statements ?? []).map((st) => st.code).join("\n")).toContain("machine.Pin(4, machine.Pin.IN)");
   });
 
   it("enables the internal pull-up when pull is 'up' -- real-hardware finding, TiDAL badge buttons", () => {
     const result = ebuttonNode.codegenEventSource!(node({ pin: 4, pull: "up" }), ctx);
-    expect(result.statements?.[0]?.code).toContain("machine.Pin(4, machine.Pin.IN, machine.Pin.PULL_UP)");
+    expect((result.statements ?? []).map((st) => st.code).join("\n")).toContain("machine.Pin(4, machine.Pin.IN, machine.Pin.PULL_UP)");
   });
 
   it("compiles into a full flow with the expected structure", () => {

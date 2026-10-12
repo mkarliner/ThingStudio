@@ -190,7 +190,10 @@ not here.
   **2026-09-26: both halves exist, used by the I2C bus.** Editor: `keyField` on a config type (one config per
   key). Device: `runtime.shared(kind, key, signature, factory)`, Hinch's pattern keyed, with a mismatched
   signature raising and the table cleared on redeploy (`decisions/config-nodes-tier1-scope.md`). GPIO pins are
-  the obvious next user.
+  the obvious next user. **2026-10-12: resolved -- now a rule, `decisions/hardware-singletons.md` and AGENTS.md.**
+  Every built-in pin, PWM and SPI user claims its resources at compile time (`node-library/hardware-shared.ts`)
+  and gets them through `runtime.shared()`; a clash is a compile error naming both nodes. No per-pin config
+  objects in the flow file (the claim does the conflict check from each node's own pin number).
 - **[P4]** **AADC (Peter Hinch's §5 ADC-monitoring driver) node — deferred follow-up, 2026-09-17.** Split off from the eswitch/ebutton item below (now resolved) when eswitch/ebutton were built -- scoped out of that pass on Mike's call rather than bundled in, per [DRIVERS.md §5](https://github.com/peterhinch/micropython-async/blob/master/v3/docs/DRIVERS.md). Not started. His DRIVERS.md collection more broadly stays a candidate source for further nodes later, not scoped now.
 - **[P4]** **Remove the `interrupt` node's debounce option — new item, 2026-09-17, side effect of eswitch/ebutton landing.** `eswitch`/`ebutton` now own debounce for the switch/button use case (`ESwitch.debounce_ms`/`EButton.debounce_ms`), so `interrupt`'s own separate debounce-cooldown option (`interrupt.ts`) is redundant for that use case -- but `interrupt` is still the only source node for a raw, non-debounced pin-change event, so this isn't a clean "always remove," and removing a property is a breaking change to any already-saved flow using it. Flagged for Mike's call, not removed here.
 - **[P4]** **`interrupt` node still has no way to enable an internal pull resistor -- new item, 2026-09-17.** `eswitch`/`ebutton` just picked up a `pull` (none/up/down) property, prompted by a real EMF 2022 TiDAL badge test needing the chip's own internal pull-up on most of its buttons; `interrupt` has the identical "no internal pull, wire an external one" limitation and wasn't touched in that pass (scoped to the button test at hand). Same shape of fix if picked up: a `pull` property, default "none", threaded into `machine.Pin(pin, machine.Pin.IN, ...)`. ([detail](decisions/node-authoring.md))
@@ -707,6 +710,8 @@ ambiguous."
   and refuse in the compile), the 16-bit range is the same on every board (`read_u16`), outputs raw counts plus an
   optional volts or scaled value. Vendor with a pin and a README as for `primitives_events`, and add a row to
   `third-party-licenses.md`. This resolves the ADC half of design doc section 11's open `micropython-async` question.
+  Must follow `decisions/hardware-singletons.md`: claim the pin, and get the `machine.ADC` through
+  `runtime.shared('adc', <pin>, ...)` so a function node can read the same channel.
 - **[LAUNCH-NICE]** **`encoder` node: Hinch's quadrature `Encoder`** (`v3/primitives/encoder.py`, DRIVERS.md section 6).
   Constructor: `pin_x`, `pin_y` (inputs with pull-ups), `v`, `div`, `vmin`/`vmax`, `mod`, `callback(v, delta)`,
   `delay=100` ms (debounce and callback rate limit). Callback runs in asyncio context, not IRQ. Not for CNC-grade
@@ -728,7 +733,8 @@ ambiguous."
 - **[UI]** **Foldable palette groups.** Each group in the node palette gets a header that collapses and expands,
   remembering state per browser. Related to the existing "palette: one colour per group" item (`palette.ts`).
 - **[UI]** **Wider or resizable console.** The console panel is fixed width; let it be dragged wider, or at least
-  wider by default. Part of the older resizable-panes item ([P5] general UI wishlist).
+  wider by default. Part of the older resizable-panes item ([P5] general UI wishlist). **2026-10-12: done** -- the
+  right-hand column defaults to 630px and its left edge drags (width kept per browser, double-click resets).
 
 ## Added 2026-10-11
 
