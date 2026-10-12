@@ -743,3 +743,7 @@ ambiguous."
   points at as "an explicit conversion node". Would unblock `function` → `pwm out`. Pairs with loosening `any`
   compatibility (allow `any` into concrete inputs, fault at runtime) — decide both together.
   ([detail](outstanding-items/convert-node.md))
+- **ADC2 pins: move the ESP32 map into the board definitions.** New item, 2026-10-11, with the `adc` node. The node
+  refuses an ESP32 ADC2 pin when the flow uses WiFi, using a hardcoded pin map keyed by processor id; it belongs in
+  the processor definitions like `gpio`/`reserved`.
+  ([detail](outstanding-items/adc-esp32-adc2-pins.md))

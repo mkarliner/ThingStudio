@@ -45,6 +45,9 @@ DEPENDENCIES: list[dict] = [
     {"name": "mqtt_as", "files": [("mqtt_as/__init__.py", "mqtt_as.py")], "requires": []},
     {"name": "delay_ms", "files": [("primitives_events/delay_ms.py", "delay_ms.py")], "requires": []},
     {"name": "events", "files": [("primitives_events/events.py", "events.py")], "requires": ["delay_ms"]},
+    # AADC / Encoder (2026-10-11, adc/encoder nodes) -- same upstream repo as events/delay_ms, MIT.
+    {"name": "aadc", "files": [("primitives_aadc/aadc.py", "aadc.py")], "requires": []},
+    {"name": "encoder", "files": [("primitives_encoder/encoder.py", "encoder.py")], "requires": []},
     {"name": "st7789py", "files": [("st7789py_mpy/st7789py.py", "st7789py.py")], "requires": []},
     # ST7796 (320x480) panels: Thingstudio's own start-up sequence on st7789py's ST77xx base.
     {"name": "st7796py", "files": [("st7796py/st7796py.py", "st7796py.py")], "requires": ["st7789py"]},

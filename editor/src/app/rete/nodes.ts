@@ -158,6 +158,9 @@ import { timerNode } from "../../node-library/timer.js";
 import { interruptNode } from "../../node-library/interrupt.js";
 import { eswitchNode } from "../../node-library/eswitch.js";
 import { ebuttonNode } from "../../node-library/ebutton.js";
+import { adcNode } from "../../node-library/adc.js";
+import { encoderNode } from "../../node-library/encoder.js";
+import { neopixelNode } from "../../node-library/neopixel.js";
 import { wifiStatusNode } from "../../node-library/wifi-status.js";
 import { wifiGateNode } from "../../node-library/wifi-gate.js";
 import { udpSendNode } from "../../node-library/udp-send.js";
@@ -755,8 +758,9 @@ export class InterruptNode extends ClassicPreset.Node {
 }
 
 // eswitch/ebutton added 2026-09-17 -- eswitch.ts/ebutton.ts's own headers
-// have the full design story (wrapping Peter Hinch's ESwitch/EButton,
-// topic-carries-event-identity single output). Defaults here match each
+// have the full design story (wrapping Peter Hinch's ESwitch/EButton; single
+// output, msg.payload = the state for eswitch, the event name for ebutton).
+// Defaults here match each
 // file's own codegen defaults exactly, same invariant InterruptNode's own
 // comment states just above.
 export class EswitchNode extends ClassicPreset.Node {
@@ -811,6 +815,102 @@ export class EbuttonNode extends ClassicPreset.Node {
   constructor() {
     super("ebutton");
     this.addOutput("msg", new ClassicPreset.Output(portSocket(ebuttonNode.ports?.outputs, "msg", this.properties), "msg"));
+  }
+}
+
+// adc/encoder added 2026-10-11 (adc-encoder-neopixel-briefing.md). Defaults match each node-library file's own
+// codegen fallbacks, same invariant every hardware node class here follows.
+export class AdcNode extends ClassicPreset.Node {
+  width = 110;
+  height = NODE_HEIGHT;
+  kind = "adc" as const;
+  nodeType = "thingstudio/adc";
+  highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
+
+  properties: {
+    pin: number;
+    mode: "relative" | "absolute";
+    delta: number;
+    lower: number;
+    upper: number;
+    sense: "outside" | "inside";
+    pollMs: number;
+  } = {
+    pin: 34,
+    mode: "relative",
+    delta: 2000,
+    lower: 0,
+    upper: 50000,
+    sense: "outside",
+    pollMs: 0,
+  };
+
+  constructor() {
+    super("adc");
+    this.addOutput("msg", new ClassicPreset.Output(portSocket(adcNode.ports?.outputs, "msg", this.properties), "msg"));
+  }
+}
+
+export class EncoderNode extends ClassicPreset.Node {
+  width = 110;
+  height = NODE_HEIGHT;
+  kind = "encoder" as const;
+  nodeType = "thingstudio/encoder";
+  highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
+
+  properties: {
+    pinX: number;
+    pinY: number;
+    div: number;
+    value: number;
+    vmin: number | "";
+    vmax: number | "";
+    mod: number | "";
+    delay: number;
+  } = {
+    pinX: 10,
+    pinY: 11,
+    div: 1,
+    value: 0,
+    vmin: "",
+    vmax: "",
+    mod: "",
+    delay: 100,
+  };
+
+  constructor() {
+    super("encoder");
+    this.addOutput("msg", new ClassicPreset.Output(portSocket(encoderNode.ports?.outputs, "msg", this.properties), "msg"));
+  }
+}
+
+// neopixel added 2026-10-11 (same briefing). Sink: one `any` input, no output.
+export class NeopixelNode extends ClassicPreset.Node {
+  width = 110;
+  height = NODE_HEIGHT;
+  kind = "neopixel" as const;
+  nodeType = "thingstudio/neopixel";
+  highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
+
+  properties: {
+    pin: number;
+    count: number;
+    order: "RGB" | "GRB" | "RGBW" | "GRBW";
+  } = {
+    pin: 13,
+    count: 8,
+    order: "GRB",
+  };
+
+  constructor() {
+    super("neopixel");
+    this.addInput("msg", new ClassicPreset.Input(portSocket(neopixelNode.ports?.inputs, "msg", this.properties), "msg", true));
   }
 }
 
@@ -1228,6 +1328,9 @@ export type AnyThingstudioNode =
   | InterruptNode
   | EswitchNode
   | EbuttonNode
+  | AdcNode
+  | EncoderNode
+  | NeopixelNode
   | DisplaySpiNode
   | DisplayI2cNode
   | WifiStatusNode
@@ -1279,6 +1382,9 @@ export const NODE_FACTORIES: Record<NodeKind, () => AnyThingstudioNode> = {
   interrupt: () => new InterruptNode(),
   eswitch: () => new EswitchNode(),
   ebutton: () => new EbuttonNode(),
+  adc: () => new AdcNode(),
+  encoder: () => new EncoderNode(),
+  neopixel: () => new NeopixelNode(),
   display_spi: () => new DisplaySpiNode(),
   display_i2c: () => new DisplayI2cNode(),
   wifi_status: () => new WifiStatusNode(),

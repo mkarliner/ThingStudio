@@ -1,0 +1,11 @@
+{
+  "formatVersion": 1,
+  "flowName": "encoder-test",
+  "notes": "encoder pins X/Y into debug. Turn the knob; each settled turn prints the value and the delta.",
+  "nodes": [
+    { "id": "1", "type": "thingstudio/encoder", "properties": { "pinX": 18, "pinY": 19, "div": 1, "value": 0, "vmin": "", "vmax": "", "mod": "", "delay": 100 } },
+    { "id": "2", "type": "thingstudio/debug", "properties": { "fullMessage": true } }
+  ],
+  "edges": [["1", 0, "2", 0]],
+  "layout": { "1": { "pos": [80, 80] }, "2": { "pos": [380, 80] } }
+}

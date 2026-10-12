@@ -1,0 +1,12 @@
+{
+  "formatVersion": 1,
+  "flowName": "neopixel-test",
+  "notes": "timer -> function -> neopixel. Every 500 ms the count is scaled into a 24-bit colour and the strip (8 WS2812 pixels, GRB) is set; the colours cycle. Change count/order for your strip.",
+  "nodes": [
+    { "id": "1", "type": "thingstudio/timer", "properties": { "intervalMs": 500 } },
+    { "id": "2", "type": "thingstudio/function", "properties": { "code": "msg['payload'] = (msg['payload'] * 40000) & 0xffffff\nreturn msg", "outputCount": 1 } },
+    { "id": "3", "type": "thingstudio/neopixel", "properties": { "pin": 13, "count": 8, "order": "GRB" } }
+  ],
+  "edges": [["1", 0, "2", 0], ["2", 0, "3", 0]],
+  "layout": { "1": { "pos": [80, 80] }, "2": { "pos": [320, 80] }, "3": { "pos": [600, 80] } }
+}

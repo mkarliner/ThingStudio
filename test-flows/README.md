@@ -769,3 +769,20 @@ bus 0, SDA GP4, SCL GP5, sensor at 0x76; change the I2C bus setting and the `i2c
 The compensate code was checked against the Bosch datasheet's worked example (25.08 C, 1006.53 hPa); the flow
 compiles through mpy-cross for RP2040. Run on a Pico 2026-09-26 (Mike): works. Unplugging the sensor should turn the `i2c` nodes'
 status dots to disconnected, and they should recover when it's back.
+
+## `adc-test.flow.json`
+
+The `adc` node (AADC) into `debug`. ESP32 GPIO34 (ADC1, input-only), relative bounds of 2000 counts, and a 1 s poll
+so a message prints even without a crossing. Move a pot on the pin (or touch it): a message per 2000-count change,
+plus one a second. GPIO34 isn't an ADC pin on a Pico (ADC is GPIO26-29 there), so pick a pin for your board.
+
+## `encoder-test.flow.json`
+
+The `encoder` node into `debug`, pins 18 and 19 (valid on both an ESP32 and a Pico), every pulse (`div` 1). Turn a
+quadrature knob: each settled turn prints the value and the `delta`.
+
+## `neopixel-test.flow.json`
+
+The `neopixel` node: `timer 500 ms -> function -> neopixel` (pin 13, 8 pixels, GRB). The timer's
+count is scaled into a 24-bit colour each tick, so a WS2812 strip of 8 pixels cycles through colours. Change
+`count`/`order`/`pin` for your strip.

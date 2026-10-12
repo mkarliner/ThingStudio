@@ -1,0 +1,11 @@
+{
+  "formatVersion": 1,
+  "flowName": "adc-test",
+  "notes": "adc on an ADC1 pin, into debug. Turn a pot on the pin (or touch it); a message prints when the reading moves by 2000 counts, and every second regardless (pollMs).",
+  "nodes": [
+    { "id": "1", "type": "thingstudio/adc", "properties": { "pin": 34, "mode": "relative", "delta": 2000, "lower": 0, "upper": 50000, "sense": "outside", "pollMs": 1000 } },
+    { "id": "2", "type": "thingstudio/debug", "properties": { "fullMessage": true } }
+  ],
+  "edges": [["1", 0, "2", 0]],
+  "layout": { "1": { "pos": [80, 80] }, "2": { "pos": [380, 80] } }
+}

@@ -4,7 +4,8 @@
 // outstanding-items.md's "[P4] eswitch/ebutton nodes" item, 2026-09-08 --
 // wraps EButton (v3/primitives/events.py, DRIVERS.md §4.1), eswitch.ts's
 // sibling. See eswitch.ts's own header for the shared design decisions
-// (topic-carries-event-identity single output, WaitAny for the "wait on
+// (single output, payload = the event name for ebutton / the state for
+// eswitch, WaitAny for the "wait on
 // several named Events, tell me which fired" multiplex, fixed-name pin
 // dedup for the shared driver instance with a per-node-instance WaitAny)
 // -- not re-explained here.

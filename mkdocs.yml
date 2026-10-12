@@ -102,6 +102,9 @@ nav:
           - interrupt: nodes/interrupt.md
           - eswitch: nodes/eswitch.md
           - ebutton: nodes/ebutton.md
+          - adc: nodes/adc.md
+          - encoder: nodes/encoder.md
+          - neopixel: nodes/neopixel.md
           - gpio out: nodes/gpio-out.md
           - pwm out: nodes/pwm-out.md
           - display spi: nodes/display-spi.md
