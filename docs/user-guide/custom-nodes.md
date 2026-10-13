@@ -214,8 +214,9 @@ _pin = runtime.shared('pin', 5, ('in', 'up'), lambda: machine.Pin(5, machine.Pin
 _i2c = runtime.shared('i2c', 0)  # fetch a bus another node in the flow set up
 ```
 
-The built-in nodes use these settings: `('in', 'none' | 'up' | 'down')` and `('out', 'none')` for pins. Pins, PWM,
-I2C and SPI all work this way: see [Hardware is shared](nodes/index.md#hardware-is-shared).
+The built-in nodes use these settings: `('in', 'none' | 'up' | 'down')` and `('out', 'none')` for pins, and `()`
+for an ADC (`runtime.shared('adc', 26, (), lambda: machine.ADC(machine.Pin(26)))`). Pins, ADC, PWM, I2C and SPI all
+work this way: see [Hardware is shared](nodes/index.md#hardware-is-shared).
 
 ### Cleanup
 

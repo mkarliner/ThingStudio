@@ -1,0 +1,125 @@
+{
+  "formatVersion": 1,
+  "flowName": "neopixel-demo",
+  "notes": "NeoPixel demo for the LuatOS ESP32C3-CORE: an 8-pixel WS2812 strip (GRB) with its data line on GPIO 6 (header pin 22), 5V and GND from the board. Three animations: rainbow, comet, breathe. Press BOOT to step to the next; the debug node shows which. Brightness is capped at 48 of 255 (B in the animate function). For another strip, change the neopixel node's count and order, and N in the animate function.",
+  "nodes": [
+    {
+      "id": "tick",
+      "type": "thingstudio/timer",
+      "properties": {
+        "intervalMs": 40
+      }
+    },
+    {
+      "id": "anim",
+      "type": "thingstudio/function",
+      "properties": {
+        "label": "animate",
+        "code": "# One frame of the current animation. The BOOT button picks the mode (flow 'mode').\nN = 8        # pixels: match the neopixel node's count\nB = 48       # brightness cap, 0-255: 8 pixels at full white is a lot for USB power\n\nf = context.get('f', 0) + 1\ncontext.set('f', f)\nmode = flow.get('mode', 0)\n\ndef wheel(p):\n    # Colour wheel 0-255 -> (r, g, b): red -> green -> blue -> red.\n    p = p % 256\n    if p < 85:\n        return (255 - p * 3, p * 3, 0)\n    if p < 170:\n        p -= 85\n        return (0, 255 - p * 3, p * 3)\n    p -= 170\n    return (p * 3, 0, 255 - p * 3)\n\ndef pack(rgb, level):\n    # (r, g, b) at level 0-255 of the brightness cap -> 0xRRGGBB\n    r, g, b = rgb\n    k = B * level // 255\n    return ((r * k // 255) << 16) | ((g * k // 255) << 8) | (b * k // 255)\n\nif mode == 0:\n    # Rainbow drifting along the strip.\n    msg['payload'] = [pack(wheel(f * 3 + i * 256 // N), 255) for i in range(N)]\nelif mode == 1:\n    # Comet: a bright head with a fading tail, changing colour as it goes.\n    head = (f // 2) % N\n    colour = wheel(f)\n    px = []\n    for i in range(N):\n        d = (head - i) % N\n        px.append(pack(colour, 255 >> (d * 2)) if d < 4 else 0)\n    msg['payload'] = px\nelse:\n    # Breathe: the whole strip fades up and down in one slowly changing colour.\n    t = f % 100\n    level = t * 255 // 50 if t < 50 else (100 - t) * 255 // 50\n    msg['payload'] = pack(wheel(f // 4), level)\nreturn msg\n",
+        "outputCount": 1
+      }
+    },
+    {
+      "id": "strip",
+      "type": "thingstudio/neopixel",
+      "properties": {
+        "pin": 6,
+        "count": 8,
+        "order": "GRB"
+      }
+    },
+    {
+      "id": "boot",
+      "type": "thingstudio/ebutton",
+      "properties": {
+        "pin": 9,
+        "pull": "up",
+        "senseMode": "auto",
+        "suppress": false,
+        "debounceMs": 50,
+        "longPressMs": 1000,
+        "doubleClickMs": 400
+      }
+    },
+    {
+      "id": "next",
+      "type": "thingstudio/function",
+      "properties": {
+        "label": "next mode",
+        "code": "# BOOT button: each press steps to the next animation.\nif msg['payload'] != 'press':\n    return None\nnames = ['rainbow', 'comet', 'breathe']\nmode = (flow.get('mode', 0) + 1) % len(names)\nflow.set('mode', mode)\nmsg['payload'] = names[mode]\nreturn msg\n",
+        "outputCount": 1
+      }
+    },
+    {
+      "id": "show",
+      "type": "thingstudio/debug",
+      "properties": {
+        "fullMessage": false
+      }
+    }
+  ],
+  "edges": [
+    [
+      "tick",
+      0,
+      "anim",
+      0
+    ],
+    [
+      "anim",
+      0,
+      "strip",
+      0
+    ],
+    [
+      "boot",
+      0,
+      "next",
+      0
+    ],
+    [
+      "next",
+      0,
+      "show",
+      0
+    ]
+  ],
+  "layout": {
+    "tick": {
+      "pos": [
+        80,
+        80
+      ]
+    },
+    "anim": {
+      "pos": [
+        300,
+        80
+      ]
+    },
+    "strip": {
+      "pos": [
+        520,
+        80
+      ]
+    },
+    "boot": {
+      "pos": [
+        80,
+        220
+      ]
+    },
+    "next": {
+      "pos": [
+        300,
+        220
+      ]
+    },
+    "show": {
+      "pos": [
+        520,
+        220
+      ]
+    }
+  }
+}

@@ -1,0 +1,125 @@
+{
+  "formatVersion": 1,
+  "flowName": "neopixel-single",
+  "notes": "Single NeoPixel demo for the LuatOS ESP32C3-CORE: one WS2812 pixel (GRB) with its data line on GPIO 6 (header pin 22), 5V and GND from the board. Three effects: colour cycle, breathe, police flash. Press BOOT to step to the next; the debug node shows which. Brightness is capped at 64 of 255 (B in the animate function). For another board, change the neopixel node's pin and the ebutton's pin.",
+  "nodes": [
+    {
+      "id": "tick",
+      "type": "thingstudio/timer",
+      "properties": {
+        "intervalMs": 40
+      }
+    },
+    {
+      "id": "anim",
+      "type": "thingstudio/function",
+      "properties": {
+        "label": "animate",
+        "code": "# One frame for a single pixel. The BOOT button picks the mode (flow 'mode').\nB = 64       # brightness cap, 0-255\n\nf = context.get('f', 0) + 1\ncontext.set('f', f)\nmode = flow.get('mode', 0)\n\ndef wheel(p):\n    # Colour wheel 0-255 -> (r, g, b): red -> green -> blue -> red.\n    p = p % 256\n    if p < 85:\n        return (255 - p * 3, p * 3, 0)\n    if p < 170:\n        p -= 85\n        return (0, 255 - p * 3, p * 3)\n    p -= 170\n    return (p * 3, 0, 255 - p * 3)\n\ndef pack(rgb, level):\n    # (r, g, b) at level 0-255 of the brightness cap -> 0xRRGGBB\n    r, g, b = rgb\n    k = B * level // 255\n    return ((r * k // 255) << 16) | ((g * k // 255) << 8) | (b * k // 255)\n\nif mode == 0:\n    # Colour cycle: once round the wheel about every 4 seconds.\n    msg['payload'] = pack(wheel(f * 3), 255)\nelif mode == 1:\n    # Breathe: fade up and down, a new colour each breath.\n    t = f % 100\n    level = t * 255 // 50 if t < 50 else (100 - t) * 255 // 50\n    msg['payload'] = pack(wheel((f // 100) * 40), level)\nelse:\n    # Police: two red flashes, two blue flashes.\n    t = f % 20\n    on = t in (0, 2, 10, 12)\n    msg['payload'] = pack((255, 0, 0) if t < 10 else (0, 0, 255), 255 if on else 0)\nreturn msg\n",
+        "outputCount": 1
+      }
+    },
+    {
+      "id": "pixel",
+      "type": "thingstudio/neopixel",
+      "properties": {
+        "pin": 6,
+        "count": 1,
+        "order": "GRB"
+      }
+    },
+    {
+      "id": "boot",
+      "type": "thingstudio/ebutton",
+      "properties": {
+        "pin": 9,
+        "pull": "up",
+        "senseMode": "auto",
+        "suppress": false,
+        "debounceMs": 50,
+        "longPressMs": 1000,
+        "doubleClickMs": 400
+      }
+    },
+    {
+      "id": "next",
+      "type": "thingstudio/function",
+      "properties": {
+        "label": "next effect",
+        "code": "# BOOT button: each press steps to the next effect.\nif msg['payload'] != 'press':\n    return None\nnames = ['colour cycle', 'breathe', 'police']\nmode = (flow.get('mode', 0) + 1) % len(names)\nflow.set('mode', mode)\nmsg['payload'] = names[mode]\nreturn msg\n",
+        "outputCount": 1
+      }
+    },
+    {
+      "id": "show",
+      "type": "thingstudio/debug",
+      "properties": {
+        "fullMessage": false
+      }
+    }
+  ],
+  "edges": [
+    [
+      "tick",
+      0,
+      "anim",
+      0
+    ],
+    [
+      "anim",
+      0,
+      "pixel",
+      0
+    ],
+    [
+      "boot",
+      0,
+      "next",
+      0
+    ],
+    [
+      "next",
+      0,
+      "show",
+      0
+    ]
+  ],
+  "layout": {
+    "tick": {
+      "pos": [
+        80,
+        80
+      ]
+    },
+    "anim": {
+      "pos": [
+        300,
+        80
+      ]
+    },
+    "pixel": {
+      "pos": [
+        520,
+        80
+      ]
+    },
+    "boot": {
+      "pos": [
+        80,
+        220
+      ]
+    },
+    "next": {
+      "pos": [
+        300,
+        220
+      ]
+    },
+    "show": {
+      "pos": [
+        520,
+        220
+      ]
+    }
+  }
+}

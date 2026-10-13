@@ -1,6 +1,6 @@
 # Supported hardware
 
-The boards, processors, displays, touch panels and sensors below have built-in support. "Tested" means flows have
+The boards, processors, displays, touch panels, sensors and other hardware below have built-in support. "Tested" means flows have
 been deployed and run on that hardware. Pin details for boards and processors are in
 [Boards and processors](boards.md).
 
@@ -12,7 +12,7 @@ been deployed and run on that hardware. Pin details for boards and processors ar
 | Raspberry Pi Pico W | RP2040 | Yes, including WiFi |
 | Raspberry Pi Pico 2 | RP2350 | Yes |
 | LOLIN S2 Mini | ESP32-S2 | Yes |
-| LuatOS ESP32C3-CORE | ESP32-C3 | No |
+| LuatOS ESP32C3-CORE | ESP32-C3 | Yes, with the adc and neopixel nodes |
 | CYD (ESP32-2432S028, ST7789) | ESP32 | Yes, display only. |
 | Freenove ESP32-S3 Display 4.0" (FNK0104S) | ESP32-S3 | Yes, with the display and touch |
 
@@ -52,6 +52,13 @@ Any board with one of these processors can be used by picking the processor from
 | BMP280 | [bme280](nodes/bme280.md) | Untested |
 
 Other I2C devices can be read with a [function](nodes/function.md) node and the chip's datasheet.
+
+## Other hardware
+
+| Hardware | Node | Tested |
+| --- | --- | --- |
+| Analog input (the chip's ADC) | [adc](nodes/adc.md) | Yes, on the LuatOS ESP32C3-CORE |
+| WS2812 / NeoPixel LEDs | [neopixel](nodes/neopixel.md) | Yes, on the LuatOS ESP32C3-CORE |
 
 ## Other boards
 

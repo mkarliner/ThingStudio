@@ -117,6 +117,5 @@ Some settings are set once and shared by the nodes that use them:
 
 ## Something missing?
 
-A [function](function.md) node covers most gaps: a comparison, a sum, reading an ADC pin
-(`runtime.shared('adc', 26, (), lambda: machine.ADC(26))`). For
+A [function](function.md) node covers most gaps: a comparison, a sum, a calculation on a reading. For
 something you'll use again, [write a custom node](../custom-nodes.md).
