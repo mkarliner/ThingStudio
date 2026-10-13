@@ -41,7 +41,7 @@
 
 ## Boards and networks
 
-- [Supported hardware](https://docs.thingstudio.net/supported-hardware/): The boards, processors, displays, touch panels and sensors below have built-in support.
+- [Supported hardware](https://docs.thingstudio.net/supported-hardware/): The boards, processors, displays, touch panels, sensors and other hardware below have built-in support.
 - [Boards and processors](https://docs.thingstudio.net/boards/): Each board and processor has a definition file that says which pins a flow may use.
 - [Connecting over WiFi](https://docs.thingstudio.net/wifi-connection/): The editor can connect to a board over WiFi instead of USB.
 - [WiFi provisioning](https://docs.thingstudio.net/wifi-provisioning/): You can leave a flow's WiFi network and password out, and enter them on the board when it first starts.

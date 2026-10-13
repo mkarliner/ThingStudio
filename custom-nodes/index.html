@@ -3289,8 +3289,9 @@ the flow stops with an error naming both, instead of one node quietly changing t
 <div class="highlight"><pre><span></span><code><span class="n">_pin</span> <span class="o">=</span> <span class="n">runtime</span><span class="o">.</span><span class="n">shared</span><span class="p">(</span><span class="s1">'pin'</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="p">(</span><span class="s1">'in'</span><span class="p">,</span> <span class="s1">'up'</span><span class="p">),</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">machine</span><span class="o">.</span><span class="n">Pin</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">machine</span><span class="o">.</span><span class="n">Pin</span><span class="o">.</span><span class="n">IN</span><span class="p">,</span> <span class="n">machine</span><span class="o">.</span><span class="n">Pin</span><span class="o">.</span><span class="n">PULL_UP</span><span class="p">))</span>
 <span class="n">_i2c</span> <span class="o">=</span> <span class="n">runtime</span><span class="o">.</span><span class="n">shared</span><span class="p">(</span><span class="s1">'i2c'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># fetch a bus another node in the flow set up</span>
 </code></pre></div>
-<p>The built-in nodes use these settings: <code>('in', 'none' | 'up' | 'down')</code> and <code>('out', 'none')</code> for pins. Pins, PWM,
-I2C and SPI all work this way: see <a href="../nodes/#hardware-is-shared">Hardware is shared</a>.</p>
+<p>The built-in nodes use these settings: <code>('in', 'none' | 'up' | 'down')</code> and <code>('out', 'none')</code> for pins, and <code>()</code>
+for an ADC (<code>runtime.shared('adc', 26, (), lambda: machine.ADC(machine.Pin(26)))</code>). Pins, ADC, PWM, I2C and SPI all
+work this way: see <a href="../nodes/#hardware-is-shared">Hardware is shared</a>.</p>
 <h3 id="cleanup">Cleanup</h3>
 <p>If your node opens something that needs closing on redeploy — a socket,
 typically — register it:</p>

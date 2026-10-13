@@ -1251,6 +1251,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#other-hardware" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Other hardware
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#other-boards" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3006,6 +3017,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#other-hardware" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Other hardware
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#other-boards" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3048,7 +3070,7 @@
 
 
 <h1 id="supported-hardware">Supported hardware</h1>
-<p>The boards, processors, displays, touch panels and sensors below have built-in support. "Tested" means flows have
+<p>The boards, processors, displays, touch panels, sensors and other hardware below have built-in support. "Tested" means flows have
 been deployed and run on that hardware. Pin details for boards and processors are in
 <a href="../boards/">Boards and processors</a>.</p>
 <h2 id="boards">Boards</h2>
@@ -3084,7 +3106,7 @@ been deployed and run on that hardware. Pin details for boards and processors ar
 <tr>
 <td>LuatOS ESP32C3-CORE</td>
 <td>ESP32-C3</td>
-<td>No</td>
+<td>Yes, with the adc and neopixel nodes</td>
 </tr>
 <tr>
 <td>CYD (ESP32-2432S028, ST7789)</td>
@@ -3206,6 +3228,28 @@ been deployed and run on that hardware. Pin details for boards and processors ar
 </tbody>
 </table>
 <p>Other I2C devices can be read with a <a href="../nodes/function/">function</a> node and the chip's datasheet.</p>
+<h2 id="other-hardware">Other hardware</h2>
+<table>
+<thead>
+<tr>
+<th>Hardware</th>
+<th>Node</th>
+<th>Tested</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Analog input (the chip's ADC)</td>
+<td><a href="../nodes/adc/">adc</a></td>
+<td>Yes, on the LuatOS ESP32C3-CORE</td>
+</tr>
+<tr>
+<td>WS2812 / NeoPixel LEDs</td>
+<td><a href="../nodes/neopixel/">neopixel</a></td>
+<td>Yes, on the LuatOS ESP32C3-CORE</td>
+</tr>
+</tbody>
+</table>
 <h2 id="other-boards">Other boards</h2>
 <p>Other boards that run MicroPython may work. Thingstudio needs a processor definition for the chip, and a board
 definition if you want the board's own pins labelled. See <a href="../boards/#adding-a-board">Adding a board</a> and

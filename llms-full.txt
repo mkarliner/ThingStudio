@@ -1375,7 +1375,7 @@ Source: https://docs.thingstudio.net/supported-hardware/
 
 # Supported hardware
 
-The boards, processors, displays, touch panels and sensors below have built-in support. "Tested" means flows have
+The boards, processors, displays, touch panels, sensors and other hardware below have built-in support. "Tested" means flows have
 been deployed and run on that hardware. Pin details for boards and processors are in
 [Boards and processors](boards.md).
 
@@ -1387,7 +1387,7 @@ been deployed and run on that hardware. Pin details for boards and processors ar
 | Raspberry Pi Pico W | RP2040 | Yes, including WiFi |
 | Raspberry Pi Pico 2 | RP2350 | Yes |
 | LOLIN S2 Mini | ESP32-S2 | Yes |
-| LuatOS ESP32C3-CORE | ESP32-C3 | No |
+| LuatOS ESP32C3-CORE | ESP32-C3 | Yes, with the adc and neopixel nodes |
 | CYD (ESP32-2432S028, ST7789) | ESP32 | Yes, display only. |
 | Freenove ESP32-S3 Display 4.0" (FNK0104S) | ESP32-S3 | Yes, with the display and touch |
 
@@ -1427,6 +1427,13 @@ Any board with one of these processors can be used by picking the processor from
 | BMP280 | [bme280](nodes/bme280.md) | Untested |
 
 Other I2C devices can be read with a [function](nodes/function.md) node and the chip's datasheet.
+
+## Other hardware
+
+| Hardware | Node | Tested |
+| --- | --- | --- |
+| Analog input (the chip's ADC) | [adc](nodes/adc.md) | Yes, on the LuatOS ESP32C3-CORE |
+| WS2812 / NeoPixel LEDs | [neopixel](nodes/neopixel.md) | Yes, on the LuatOS ESP32C3-CORE |
 
 ## Other boards
 
@@ -1862,8 +1869,7 @@ Some settings are set once and shared by the nodes that use them:
 
 ## Something missing?
 
-A [function](function.md) node covers most gaps: a comparison, a sum, reading an ADC pin
-(`runtime.shared('adc', 26, (), lambda: machine.ADC(26))`). For
+A [function](function.md) node covers most gaps: a comparison, a sum, a calculation on a reading. For
 something you'll use again, [write a custom node](../custom-nodes.md).
 
 
@@ -3411,8 +3417,9 @@ _pin = runtime.shared('pin', 5, ('in', 'up'), lambda: machine.Pin(5, machine.Pin
 _i2c = runtime.shared('i2c', 0)  # fetch a bus another node in the flow set up
 ```
 
-The built-in nodes use these settings: `('in', 'none' | 'up' | 'down')` and `('out', 'none')` for pins. Pins, PWM,
-I2C and SPI all work this way: see [Hardware is shared](nodes/index.md#hardware-is-shared).
+The built-in nodes use these settings: `('in', 'none' | 'up' | 'down')` and `('out', 'none')` for pins, and `()`
+for an ADC (`runtime.shared('adc', 26, (), lambda: machine.ADC(machine.Pin(26)))`). Pins, ADC, PWM, I2C and SPI all
+work this way: see [Hardware is shared](nodes/index.md#hardware-is-shared).
 
 ### Cleanup
 
