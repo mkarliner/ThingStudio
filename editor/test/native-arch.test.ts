@@ -37,6 +37,10 @@ describe("inferNativeArch", () => {
     expect(inferNativeArch("Raspberry Pi Pico 2 with RP2350")).toEqual({ arch: "armv7emsp", confirmed: false });
   });
 
+  it("maps an STM32F4 (the pyboard's STM32F405) to armv7emsp, confirmed", () => {
+    expect(inferNativeArch("PYBv1.0 with STM32F405RG")).toEqual({ arch: "armv7emsp", confirmed: true });
+  });
+
   it("falls back to xtensawin, not confirmed, for an unrecognized board", () => {
     expect(inferNativeArch("some future board nobody has seen yet")).toEqual({ arch: "xtensawin", confirmed: false });
   });

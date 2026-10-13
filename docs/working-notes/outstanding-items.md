@@ -701,7 +701,7 @@ ambiguous."
 
 ## Added 2026-10-10 (Mike, after the AI-authoring work)
 
-- **[LAUNCH-NICE]** **`adc` node: Peter Hinch's `AADC`** (`micropython-async` `v3/primitives/aadc.py`, MIT, same repo as the
+- **[LAUNCH-NICE]** **Done and tested on hardware 2026-10-12 (LuatOS ESP32C3-CORE).** **`adc` node: Peter Hinch's `AADC`** (`micropython-async` `v3/primitives/aadc.py`, MIT, same repo as the
   vendored `events.py`/`delay_ms.py`; docs `v3/docs/DRIVERS.md` section 5). `AADC(adc)` is awaitable: it wakes when the
   reading leaves bounds, either absolute (`lower`, `upper`) or relative (current value plus or minus a delta), with
   `sense(False)` to wait for the value to be inside the bounds. `read_u16(last=False)` gives the reading. No callbacks;
@@ -718,7 +718,7 @@ ambiguous."
   counting. Order of processing: division, clamp, modulo. Node outputs value and delta; properties as above. The same
   ADC half of section 11 resolved here for encoders. Pairs well with a GUI (an encoder driving a navigate or a
   readout), so check for a way to feed `gui_button`-style next/prev.
-- **[LAUNCH-NICE]** **`neopixel` node.** Built-in `neopixel` module (WS2812). Needs: pin, number of pixels, colour
+- **[LAUNCH-NICE]** **Done and tested on hardware 2026-10-12 (LuatOS ESP32C3-CORE).** **`neopixel` node.** Built-in `neopixel` module (WS2812). Needs: pin, number of pixels, colour
   order (GRB or RGB; RGBW variants), brightness. Input design to decide: a colour for all pixels, a list of colours,
   or `{index, colour}`; the node writes on each message. Check the RP2 and ESP32 `neopixel` ports behave the same, and
   note the 3.3 V data line caveat in the docs.
@@ -747,3 +747,10 @@ ambiguous."
   refuses an ESP32 ADC2 pin when the flow uses WiFi, using a hardcoded pin map keyed by processor id; it belongs in
   the processor definitions like `gpio`/`reserved`.
   ([detail](outstanding-items/adc-esp32-adc2-pins.md))
+
+## Added 2026-10-13
+
+- **STM32 / pyboard support.** New item, 2026-10-13, from connecting a pyboard v1.0. Deploy fails with ENODEV: the
+  runtime writes its files under `/`, but the stm32 port mounts its filesystem at `/flash`. Beyond that fix, STM32
+  pins are named (`X1`), not numbered, so the pin model needs a decision first. `-march` for STM32F4 is fixed.
+  ([detail](outstanding-items/stm32-pyboard-support.md))

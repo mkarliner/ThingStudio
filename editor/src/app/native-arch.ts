@@ -68,7 +68,7 @@ export const NATIVE_ARCH_OPTIONS: readonly NativeArchOption[] = [
   { value: "xtensawin", label: "xtensawin — ESP32 / ESP32-S3 (Xtensa)" },
   { value: "rv32imc", label: "rv32imc — ESP32-C3 (RISC-V)" },
   { value: "armv6m", label: "armv6m — RP2040 (Cortex-M0+)" },
-  { value: "armv7emsp", label: "armv7emsp — RP2350 (Cortex-M33, FPU) — community-sourced, not hardware-verified" },
+  { value: "armv7emsp", label: "armv7emsp — STM32F4 (Cortex-M4F); RP2350 (Cortex-M33, FPU), not hardware-verified" },
   { value: "armv7m", label: "armv7m — RP2350, no-FPU fallback" },
 ];
 
@@ -101,6 +101,12 @@ export function inferNativeArch(chipType: string): NativeArchGuess {
   }
   if (s.includes("rp2350")) {
     return { arch: "armv7emsp", confirmed: false };
+  }
+  // STM32F4 (the pyboard's STM32F405, 2026-10-13) is a Cortex-M4F: "armv7emsp -- eg Cortex-M4F" in MicroPython's own
+  // arch table, so confirmed. Thingstudio has no STM32 processor definition (STM32 pins are named, not numbered), so
+  // this only sets -march; outstanding-items.md's STM32/pyboard item covers the rest.
+  if (s.includes("stm32f4")) {
+    return { arch: "armv7emsp", confirmed: true };
   }
   // Unrecognized board -- "xtensawin" was this project's unconditional
   // default before board-awareness existed, proven harmless for every

@@ -2768,7 +2768,9 @@ el("btnDeploy").addEventListener("click", async () => {
           : activeTarget.value
             ? ` (auto, from the ${activeTarget.value.processor.name} definition)`
             : lastHelloChipType
-              ? ` (auto-detected from "${lastHelloChipType}")`
+              ? nativeArch.confirmed
+                ? ` (auto, from "${lastHelloChipType}")`
+                : ` (a guess: no processor definition or known chip matches "${lastHelloChipType}")`
               : " (auto, no board chipType known yet)"),
       "",
     );
