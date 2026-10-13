@@ -97,6 +97,11 @@ not here.
   strip: its state subscribed and shown, an on-screen toggle over MQTT, unknown/stale values, WiFi pulled changes the
   screen. Carries the launch acceptance for touch, MQTT both ways and unknown/stale on hardware. Mike chooses the
   device. Not built.
+  **Marketing, 2026-10-13: Mike dropped this flow from the launch** (ThingStudioMarketing `marketing-plan.md`
+  section 6). The launch uses the showreel alone. The neighbours story moves to Home Assistant: the showreel's
+  MQTT readings in HA (Mike to check on his own HA), and HA auto-discovery proposed as the first post-launch
+  feature. Whether the touch/MQTT-both-ways/unknown-stale acceptance moves elsewhere is a product call, not made
+  here.
 - **[LAUNCH]** **Trend (moving histogram) widget and `journal` node -- built and hardware-checked 2026-10-10, after being
   decided 2026-10-07 and untracked until then.** Built: see `decisions/gui-layout.md` (2026-10-10). Still open: memory on the Pico/CYD; a `series` port type, autoscale. Original note: Mike asked for an rrdtool/Cacti-style live histogram, and the headliner flow wants one beside the
   temperature number (it currently has only a plain `gui_bar`, copied from the hero flow). Decisions are in
