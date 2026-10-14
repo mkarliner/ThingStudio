@@ -54,8 +54,8 @@ const minimalProcessor = { name: "Test", match: ["TEST1"], nativeArch: "armv6m",
 describe("built-in definitions", () => {
   it("all load with no problems", () => {
     expect(defs.problems).toEqual([]);
-    expect([...defs.processors.keys()].sort()).toEqual(["esp32", "esp32-c3", "esp32-s2", "esp32-s3", "rp2040", "rp2350"]);
-    expect([...defs.boards.keys()].sort()).toEqual(["cyd", "freenove-s3-4in", "lolin-s2-mini", "luatos-esp32c3-core", "pico", "pico-2", "pico-w"]);
+    expect([...defs.processors.keys()].sort()).toEqual(["esp32", "esp32-c3", "esp32-s2", "esp32-s3", "rp2040", "rp2350", "stm32f405"]);
+    expect([...defs.boards.keys()].sort()).toEqual(["cyd", "freenove-s3-4in", "lolin-s2-mini", "luatos-esp32c3-core", "pico", "pico-2", "pico-w", "pyboard-v10"]);
   });
 
   it("FALLBACK_MAX_PIN is the widest range any built-in processor has", () => {
@@ -70,6 +70,7 @@ describe("built-in definitions", () => {
       "esp32-c3": "LuatOS-Core-ESP32C3 with ESP32C3",
       rp2040: "Raspberry Pi Pico W with RP2040",
       rp2350: "Raspberry Pi Pico2 with RP2350",
+      stm32f405: "PYBv1.0 with STM32F405RG",
     };
     for (const [id, chipType] of Object.entries(samples)) {
       const p = defs.processors.get(id)!;
@@ -196,6 +197,7 @@ describe("target resolution from HELLO chipType", () => {
     expect(detect("Raspberry Pi Pico with RP2040")).toBe("pico/rp2040");
     expect(detect("Raspberry Pi Pico W with RP2040")).toBe("pico-w/rp2040");
     expect(detect("Raspberry Pi Pico2 with RP2350")).toBe("pico-2/rp2350");
+    expect(detect("PYBv1.0 with STM32F405RG")).toBe("pyboard-v10/stm32f405");
   });
 
   it("falls back to the processor alone when the board isn't known (the CYD reports as a generic ESP32)", () => {

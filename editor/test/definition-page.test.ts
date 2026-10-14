@@ -152,12 +152,12 @@ describe("boards Thingstudio doesn't fully know (2026-09-30)", () => {
   });
 
   it("an unknown processor gets a page saying what it reports and what to add", () => {
-    const unknown = "Some <Board> with STM32F405";
+    const unknown = "Some <Board> with NRF52840";
     expect(resolveTarget(defs, "auto", unknown).target).toBeNull();
     const html = renderUnknownBoardPage(unknown, OPTS);
     expect(html).toContain("<h1>Unknown board</h1>");
-    expect(html).toContain("<code>Some &lt;Board&gt; with STM32F405</code>");
-    expect(html).toContain("no definition for its processor (<code>STM32F405</code>)");
+    expect(html).toContain("<code>Some &lt;Board&gt; with NRF52840</code>");
+    expect(html).toContain("no definition for its processor (<code>NRF52840</code>)");
     expect(html).toContain('href="http://127.0.0.1:8765/docs/boards/#adding-a-processor"');
     expect(html).not.toContain("<Board>");
   });

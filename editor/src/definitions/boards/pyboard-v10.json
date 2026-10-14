@@ -1,0 +1,8 @@
+{
+  "name": "Pyboard v1.0",
+  "processor": "stm32f405",
+  "match": ["PYBv1.0"],
+  "pins": {},
+  "wifi": false,
+  "notes": "The micro-USB port talks to Thingstudio. The board's filesystem is mounted at /flash. The four LEDs are pyb.LED(1-4); X23/X24 don't exist on v1.0."
+}
