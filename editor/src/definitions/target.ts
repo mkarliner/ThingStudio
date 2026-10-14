@@ -31,6 +31,9 @@ export interface Target {
   readonly avoid: ReadonlyMap<PinId, string>;
   /** Pin -> board labels ("LED"). Empty without a board. */
   readonly pinLabels: ReadonlyMap<PinId, readonly string[]>;
+  /** Hardware features this target has (processor's, plus the board's, with `board.wifi` folded in).
+   * A node's `requires` is checked against this (definitions/capability-check.ts). */
+  readonly capabilities: ReadonlySet<string>;
 }
 
 /** Board menu value: "auto", "board:<id>" or "processor:<id>". */
@@ -75,7 +78,21 @@ export function buildTarget(processor: ProcessorDef, board: BoardDef | null): Ta
     reserved,
     avoid,
     pinLabels,
+    capabilities: effectiveCapabilities(processor, board),
   };
+}
+
+/** The capabilities a target has: the processor's own, plus the board's, with the board's `wifi`
+ * tri-state folded in (`false` denies "wifi", `true` adds it, unstated defers to the processor). The
+ * one place "has a radio" and the rest of the capability vocabulary are reconciled. */
+export function effectiveCapabilities(processor: ProcessorDef, board: BoardDef | null): ReadonlySet<string> {
+  const caps = new Set<string>(processor.capabilities);
+  for (const c of board?.capabilities ?? []) caps.add(c);
+  if (board) {
+    if (board.wifi === false) caps.delete("wifi");
+    else if (board.wifi === true) caps.add("wifi");
+  }
+  return caps;
 }
 
 function normalize(s: string): string {

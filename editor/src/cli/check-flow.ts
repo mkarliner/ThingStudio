@@ -225,6 +225,8 @@ export function boardInfo(choice: string): {
   noPullUp: PinId[];
   reserved: Record<string, string>;
   avoid: Record<string, string>;
+  /** Hardware features this target has (wifi, espnow, pio...); a node's `requires` is checked against these. */
+  capabilities: string[];
 } | null {
   const res = resolveTarget(builtinDefinitions(), choice, null);
   const target = res.target;
@@ -249,5 +251,6 @@ export function boardInfo(choice: string): {
     noPullUp: num(target.noPull),
     reserved: obj(target.reserved),
     avoid: obj(target.avoid),
+    capabilities: [...target.capabilities].sort(),
   };
 }

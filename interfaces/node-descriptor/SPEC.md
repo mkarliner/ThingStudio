@@ -23,9 +23,10 @@ Both implementations agree on:
   A declared output type must match what the codegen puts in `payload`.
 - **The message envelope** — every message is `{payload, topic, ...}`, per `../../AGENTS.md` and design doc §6.
 - **Palette styling** — `label`, `group`, `color`/`bgcolor`, `icon`, and a `priority` for order within a group.
+- **Hardware requirements** — optional `requires.capabilities` (see §2). A node that needs a radio or a
+  peripheral feature the board lacks is refused at compile time; the palette greys it out when a target is known.
 
-A node descriptor does **not** declare what hardware or board it needs. Board/processor data lives in
-`../board-descriptor/`; the absence of a node→board requirement is a known gap (see §4).
+Board/processor capability data itself lives in `../board-descriptor/` (its `capabilities` key).
 
 ## 2. Custom node descriptor (`.node.json`)
 
@@ -40,6 +41,7 @@ A node descriptor does **not** declare what hardware or board it needs. Board/pr
 | `priority` | number | no | Order within `group`, lower first. Omit to sort after built-ins. |
 | `ports` | `{inputs, outputs}` | no | Arrays of `{name, type}`. |
 | `properties` | array | no | Fields shown in the property panel (below). |
+| `requires` | `{capabilities: string[]}` | no | Hardware the node needs (e.g. `["pio"]`, `["espnow"]`). Checked centrally against the board at compile time (see §4). |
 
 A property field is `{name, label, kind, default, options?}`. `kind` is `text`, `number`, `boolean` or `select`;
 `default` must match `kind`; `options` (`[{value, label}]`) is required for `select` and `default` must be one of
@@ -74,12 +76,12 @@ deliberately rather than accrete:
   JSON and its behaviour in Python. There is no bridge — a built-in cannot be forked into a custom node, because
   its descriptor isn't exposed and the custom format can't express its codegen (nor can a browser-loaded editor
   safely execute arbitrary codegen).
-- A node descriptor says nothing about which boards or processor families it is valid on (an ESP-NOW or RP2040
-  PIO node would be offered everywhere and fail at deploy).
+- ~~A node descriptor says nothing about which boards or processor families it is valid on.~~ Addressed: a
+  node can declare `requires.capabilities` (an ESP-NOW node needs `espnow`, an RP2040 PIO node needs `pio`), the
+  compile checks it centrally against the target, and the palette greys out a node the current board can't run.
 
 Tracked as open work: `../../docs/working-notes/outstanding-items/node-descriptor-unification.md` (the built-in /
-custom split) and `../../docs/working-notes/outstanding-items/board-specific-node-collections.md` /
-`editor-board-awareness.md` (node→board applicability). Not resolved in v1.
+custom split). The node→board applicability above is now built (`decisions/node-board-mapping.md`).
 
 ## 5. Conformance
 

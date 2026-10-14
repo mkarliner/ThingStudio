@@ -18,9 +18,11 @@ function target(processorId: string, label = "ESP32"): Target {
     match: [],
     nativeArch: "xtensawin",
     nativeArchConfirmed: true,
+    capabilities: new Set(),
     gpio,
     inputOnly: new Set(),
     noPull: new Set(),
+    adc2: new Set([0, 2, 4, 12, 13, 14, 15, 25, 26, 27]), // classic ESP32 ADC2 pins (pin 25 in the test)
     reserved: new Map(),
     avoid: new Map(),
     spi: null,
@@ -37,6 +39,7 @@ function target(processorId: string, label = "ESP32"): Target {
     reserved: new Map(),
     avoid: new Map(),
     pinLabels: new Map(),
+    capabilities: new Set(),
   };
 }
 

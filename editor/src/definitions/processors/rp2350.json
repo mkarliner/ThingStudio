@@ -2,6 +2,7 @@
   "name": "RP2350",
   "match": ["RP2350"],
   "nativeArch": "armv7emsp",
+  "capabilities": ["pio"],
   "nativeArchConfirmed": false,
   "gpio": ["0-47"],
   "spi": {

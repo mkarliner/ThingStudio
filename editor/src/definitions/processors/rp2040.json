@@ -2,6 +2,7 @@
   "name": "RP2040",
   "match": ["RP2040"],
   "nativeArch": "armv6m",
+  "capabilities": ["pio"],
   "gpio": ["0-29"],
   "spi": {
     "maxHz": 62500000,

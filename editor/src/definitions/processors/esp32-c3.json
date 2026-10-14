@@ -2,6 +2,8 @@
   "name": "ESP32-C3",
   "match": ["ESP32C3"],
   "nativeArch": "rv32imc",
+  "capabilities": ["wifi", "ble", "espnow"],
+  "adc2": [5],
   "gpio": ["0-21"],
   "reserved": {
     "12-17": "Wired to the flash chip. Using them crashes the board."

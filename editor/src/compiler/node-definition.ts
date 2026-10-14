@@ -217,6 +217,9 @@ export interface NodeDefinition {
   /** e.g. "thingstudio/gpio_out" */
   type: string;
   kind: NodeKind;
+  /** Hardware capabilities this node needs (e.g. `["espnow"]`), checked centrally against the
+   * compile's Target by definitions/capability-check.ts. Absent = needs nothing in particular. */
+  requires?: { readonly capabilities?: readonly string[] };
   /** The node is valid with nothing wired to it, so "disconnected from any source" doesn't apply (a gui_button:
    * it is useful as a pure input, with nothing to display). */
   allowUnwired?: boolean;

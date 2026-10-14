@@ -54,9 +54,15 @@ export interface ProcessorDef {
   readonly match: readonly string[];
   readonly nativeArch: string;
   readonly nativeArchConfirmed: boolean;
+  /** Hardware features the chip has (e.g. "wifi", "espnow", "pio"); a node's `requires` is checked
+   * against these (capability-check.ts). Open vocabulary, lower-case words. */
+  readonly capabilities: ReadonlySet<string>;
   readonly gpio: ReadonlySet<PinId>;
   readonly inputOnly: ReadonlySet<PinId>;
   readonly noPull: ReadonlySet<PinId>;
+  /** Pins on the chip's second ADC (ESP32 family). ADC2 can't be used while WiFi is up, so the adc
+   * node refuses one when the flow uses the network. Empty when the chip has no separate ADC2. */
+  readonly adc2: ReadonlySet<PinId>;
   readonly reserved: ReadonlyMap<PinId, string>;
   readonly avoid: ReadonlyMap<PinId, string>;
   readonly spi: { readonly maxHz?: number; readonly otherPinsMaxHz?: number; readonly buses: ReadonlyMap<number, SpiBusDef> } | null;
@@ -82,8 +88,11 @@ export interface BoardDef {
   readonly free: ReadonlySet<PinId>;
   /** Whether the board has a WiFi radio (WiFi transport, 2026-09-24). false hides the network
    * connection and board password; null (not stated) offers them -- Mike's call: only a definition
-   * that says "no radio" takes the option away. */
+   * that says "no radio" takes the option away. Folded into `capabilities` by target.ts's
+   * effectiveCapabilities (false denies "wifi", true adds it). */
   readonly wifi: boolean | null;
+  /** Hardware features this board adds to (or, via `wifi: false`, takes from) its processor's set. */
+  readonly capabilities: ReadonlySet<string>;
   readonly notes: string;
   /** Physical header pin -> the GPIO on it, a named pin, or a label such as "GND", "3V3" or "RUN"
    * (2026-09-30). A string value that's a declared pin on this board is that pin; any other string is a
@@ -259,8 +268,8 @@ function parsePinValue(v: unknown, where: string): PinId {
 // Schemas in interfaces/board-descriptor/ list the same keys -- the schema is
 // a contract for people writing ~/.thingstudio/{processors,boards}/*.json, so
 // it must not drift from this parser.
-export const PROCESSOR_KEYS = ["name", "match", "nativeArch", "nativeArchConfirmed", "gpio", "inputOnly", "noPull", "reserved", "avoid", "spi", "i2c", "notes"];
-export const BOARD_KEYS = ["name", "processor", "match", "pins", "gpio", "reserved", "avoid", "notes", "wifi", "header", "free", "headerOrder", "usb"];
+export const PROCESSOR_KEYS = ["name", "match", "nativeArch", "nativeArchConfirmed", "capabilities", "gpio", "inputOnly", "noPull", "adc2", "reserved", "avoid", "spi", "i2c", "notes"];
+export const BOARD_KEYS = ["name", "processor", "match", "pins", "gpio", "reserved", "avoid", "notes", "wifi", "capabilities", "header", "free", "headerOrder", "usb"];
 
 function parseSpi(v: unknown, gpio: ReadonlySet<PinId>): ProcessorDef["spi"] {
   if (!isObject(v)) throw new DefinitionError(`"spi": must be an object`);
@@ -341,10 +350,12 @@ export function parseProcessor(id: string, data: unknown): ProcessorDef {
   if (gpio.size === 0) throw new DefinitionError(`"gpio": must list at least one pin`);
   const inputOnly = new Set(data.inputOnly === undefined ? [] : pinList(data.inputOnly, `"inputOnly"`));
   const noPull = new Set(data.noPull === undefined ? [] : pinList(data.noPull, `"noPull"`));
+  const adc2 = new Set(data.adc2 === undefined ? [] : pinList(data.adc2, `"adc2"`));
   const reserved = data.reserved === undefined ? new Map<PinId, string>() : pinReasons(data.reserved, `"reserved"`);
   const avoid = data.avoid === undefined ? new Map<PinId, string>() : pinReasons(data.avoid, `"avoid"`);
   subset(inputOnly, gpio, `"inputOnly"`);
   subset(noPull, gpio, `"noPull"`);
+  subset(adc2, gpio, `"adc2"`);
   subset(reserved.keys(), gpio, `"reserved"`);
   subset(avoid.keys(), gpio, `"avoid"`);
   if (data.nativeArchConfirmed !== undefined && typeof data.nativeArchConfirmed !== "boolean") {
@@ -356,9 +367,11 @@ export function parseProcessor(id: string, data: unknown): ProcessorDef {
     match: strList(data.match, `"match"`),
     nativeArch: str(data.nativeArch, `"nativeArch"`),
     nativeArchConfirmed: data.nativeArchConfirmed !== false,
+    capabilities: new Set(data.capabilities === undefined ? [] : strList(data.capabilities, `"capabilities"`)),
     gpio,
     inputOnly,
     noPull,
+    adc2,
     reserved,
     avoid,
     spi: data.spi === undefined ? null : parseSpi(data.spi, gpio),
@@ -421,6 +434,7 @@ export function parseBoard(id: string, data: unknown, processors: ReadonlyMap<st
     free,
     notes: data.notes === undefined ? "" : str(data.notes, `"notes"`),
     wifi: data.wifi === undefined ? null : bool(data.wifi, `"wifi"`),
+    capabilities: new Set(data.capabilities === undefined ? [] : strList(data.capabilities, `"capabilities"`)),
     header: data.header === undefined ? new Map() : parseHeader(data.header, available),
     headerOrder,
     usb,

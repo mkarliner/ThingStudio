@@ -28,9 +28,22 @@
         "outputs": { "type": "array", "items": { "$ref": "#/$defs/port" } }
       }
     },
-    "properties": { "type": "array", "items": { "$ref": "#/$defs/propertyField" } }
+    "properties": { "type": "array", "items": { "$ref": "#/$defs/propertyField" } },
+    "requires": { "$ref": "#/$defs/requires" }
   },
   "$defs": {
+    "requires": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Hardware the node needs; checked centrally against the target at compile time.",
+      "properties": {
+        "capabilities": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "description": "Capability names the node needs, e.g. [\"pio\"] or [\"espnow\"]."
+        }
+      }
+    },
     "port": {
       "type": "object",
       "additionalProperties": false,

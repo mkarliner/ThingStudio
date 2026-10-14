@@ -215,6 +215,23 @@ describe("validateCustomNodeDescriptor", () => {
   it("rejects a non-finite priority", () => {
     expect(() => validateCustomNodeDescriptor({ ...TRANSFORM_DESCRIPTOR_RAW, priority: Number.POSITIVE_INFINITY })).toThrow(/"priority" must be a finite number/);
   });
+
+  // Node -> board mapping (decisions/node-board-mapping.md): a custom node can declare the hardware it
+  // needs, checked centrally against the target like a built-in's `requires`.
+  it("carries a requires.capabilities list onto the descriptor", () => {
+    const d = validateCustomNodeDescriptor({ ...TRANSFORM_DESCRIPTOR_RAW, requires: { capabilities: ["pio"] } });
+    expect(d.requires).toEqual({ capabilities: ["pio"] });
+  });
+
+  it("defaults requires to an empty object when present with no capabilities", () => {
+    expect(validateCustomNodeDescriptor({ ...TRANSFORM_DESCRIPTOR_RAW, requires: {} }).requires).toEqual({});
+  });
+
+  it("rejects an unknown requires key, and a bad capabilities value", () => {
+    expect(() => validateCustomNodeDescriptor({ ...TRANSFORM_DESCRIPTOR_RAW, requires: { radios: ["wifi"] } })).toThrow(/not recognised/);
+    expect(() => validateCustomNodeDescriptor({ ...TRANSFORM_DESCRIPTOR_RAW, requires: { capabilities: "pio" } })).toThrow(/non-empty strings/);
+    expect(() => validateCustomNodeDescriptor({ ...TRANSFORM_DESCRIPTOR_RAW, requires: { capabilities: [""] } })).toThrow(/non-empty strings/);
+  });
 });
 
 describe("buildCustomNodeDefinition -- transform", () => {
@@ -225,6 +242,11 @@ describe("buildCustomNodeDefinition -- transform", () => {
     expect(def.type).toBe("custom/doubler");
     expect(def.kind).toBe("transform");
     expect(def.ports?.inputs?.[0]).toEqual({ name: "msg", type: "any" });
+  });
+
+  it("carries its requires onto the produced NodeDefinition", () => {
+    const d = validateCustomNodeDescriptor({ ...TRANSFORM_DESCRIPTOR_RAW, requires: { capabilities: ["pio"] } });
+    expect(buildCustomNodeDefinition(d, TRANSFORM_SOURCE).requires).toEqual({ capabilities: ["pio"] });
   });
 
   it("runs the node author's run(msg, properties) and returns the modified msg", () => {

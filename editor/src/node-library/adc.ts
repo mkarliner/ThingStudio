@@ -14,8 +14,7 @@
 // bounds each iteration so relative bounds recompute against the current value.
 //
 // ESP32 ADC2 pins do not work while WiFi is up, so the compile refuses one when the flow also uses WiFi
-// (see ADC2_PINS -- a stopgap; this pin data belongs in the board definitions, tracked in
-// outstanding-items/adc-esp32-adc2-pins.md).
+// (see ctx.target.processor.adc2, from the processor definition's `adc2` pin list).
 
 import { claimResource, pinVarSegment, sharedAdc } from "./hardware-shared.js";
 import { CompileError } from "../compiler/errors.js";
@@ -24,7 +23,9 @@ import { checkPin } from "../definitions/pin-check.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, EventSourceCodegenResult, NodeDefinition } from "../compiler/node-definition.js";
 
-/** Node types that make the compiled flow start WiFi (so ESP32 ADC2 is unavailable). */
+/**
+ * Node types that make the compiled flow start WiFi (so ESP32 ADC2 is unavailable).
+ */
 const WIFI_NODE_TYPES = [
   "thingstudio/wifi_status",
   "thingstudio/wifi_gate",
@@ -36,17 +37,6 @@ const WIFI_NODE_TYPES = [
   "thingstudio/udp_send",
   "thingstudio/udp_receive",
 ];
-
-/**
- * ESP32-family ADC2 pins, keyed by processor definition id. Stopgap until the board definitions carry ADC
- * data (outstanding-items/adc-esp32-adc2-pins.md); values from each chip's datasheet.
- */
-const ADC2_PINS: Record<string, number[]> = {
-  esp32: [0, 2, 4, 12, 13, 14, 15, 25, 26, 27],
-  "esp32-s2": [11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-  "esp32-s3": [11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-  "esp32-c3": [5],
-};
 
 function flowUsesWifi(ctx: CodegenContext): boolean {
   if (!ctx.findNodesOfType) return false;
@@ -68,8 +58,8 @@ export const adcNode: NodeDefinition = {
   codegenEventSource(node: GraphNode, ctx: CodegenContext): EventSourceCodegenResult {
     const pin = checkPin(ctx, "adc pin", node.properties.pin, "input");
 
-    const processorId = ctx.target?.processor.id;
-    if (processorId && typeof pin === "number" && ADC2_PINS[processorId]?.includes(pin) && flowUsesWifi(ctx)) {
+    const adc2 = ctx.target?.processor.adc2;
+    if (typeof pin === "number" && adc2?.has(pin) && flowUsesWifi(ctx)) {
       throw new CompileError(
         `adc pin ${pin} is an ADC2 pin on ${ctx.target!.label} and the flow uses WiFi, which makes ADC2 unusable. ` +
           `Use an ADC1 pin, or drop the flow's network nodes.`,

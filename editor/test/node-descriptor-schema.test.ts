@@ -41,4 +41,10 @@ describe("custom node descriptor schema conformance", () => {
   it("required keys are the ones the validator insists on", () => {
     expect(schema.required.sort()).toEqual(["kind", "label", "type"]);
   });
+
+  it("describes requires as an object permitting only capabilities (node -> board mapping)", () => {
+    expect(schema.properties.requires.$ref).toBe("#/$defs/requires");
+    expect(schema.$defs.requires.additionalProperties).toBe(false);
+    expect(schema.$defs.requires.properties.capabilities.items.type).toBe("string");
+  });
 });

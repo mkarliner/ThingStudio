@@ -38,6 +38,9 @@ export interface NodeInfo {
   /** The number of outputs depends on a property (the function node's outputCount). */
   variableOutputs: boolean;
   properties: PropertyInfo[];
+  /** Hardware capabilities the node needs (e.g. `["espnow"]`); empty for most. A flow using one of
+   * these is refused at compile time on a board without it (definitions/capability-check.ts). */
+  requires: string[];
 }
 export interface ConfigFieldInfo { name: string; kind: string; options?: string[]; configType?: string; help?: string }
 export interface ConfigInfo { type: string; label: string; singleton: boolean; fields: ConfigFieldInfo[]; defaults: Record<string, unknown> }
@@ -167,6 +170,7 @@ export function buildCatalog(): Catalog {
       outputs: ports(def?.ports?.outputs, node.properties),
       variableOutputs: def?.outputCount !== undefined,
       properties,
+      requires: [...(def?.requires?.capabilities ?? [])],
     });
   }
   nodes.sort((a, b) => a.group.localeCompare(b.group) || a.type.localeCompare(b.type));
@@ -201,6 +205,7 @@ export function renderNode(n: NodeInfo, heading = "###"): string {
   const lines = [`${heading} ${n.label}`, "", `Type \`${n.type}\`, kind ${n.kind}${n.group ? `, palette group ${n.group}` : ""}.`, ""];
   lines.push(`- Inputs: ${portList(n.inputs)}`);
   lines.push(`- Outputs: ${portList(n.outputs)}${n.variableOutputs ? " (the number of outputs is the node's `outputCount` property)" : ""}`);
+  if (n.requires.length) lines.push(`- Needs hardware: ${n.requires.join(", ")} (checked against the board at compile time)`);
   if (n.properties.length === 0) {
     lines.push("- Properties: none");
   } else {

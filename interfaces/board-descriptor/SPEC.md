@@ -39,8 +39,10 @@ numbers and names.
 | `nativeArch` | string | yes | The `mpy-cross -march` value, e.g. `xtensawin`. |
 | `gpio` | pin list | yes | Every pin the processor has (numbers, or named pins); at least one pin. |
 | `nativeArchConfirmed` | boolean | no | `false` marks `nativeArch` a guess (shown as unverified). Default `true`. |
+| `capabilities` | string[] | no | Hardware the chip has: open, lower-case words such as `wifi`, `ble`, `espnow`, `pio`. A node's `requires.capabilities` is checked against this at compile time. |
 | `inputOnly` | pin list | no | Pins that can't drive an output. Must be in `gpio`. |
 | `noPull` | pin list | no | Pins with no internal pull resistors. Must be in `gpio`. |
+| `adc2` | pin list | no | Pins on the chip's second ADC (ESP32 family), unusable while WiFi is up. Must be in `gpio`. |
 | `reserved` | {pin/range: reason} | no | Pins that must not be used. Keys must be in `gpio`. |
 | `avoid` | {pin/range: reason} | no | Pins that warn. Keys must be in `gpio`. |
 | `spi` | object | no | SPI buses and speed limits (below). |
@@ -73,7 +75,8 @@ A board names a `processor` and may narrow its pin set.
 | `avoid` | {pin/range: reason} | no | As for a processor; keys must exist on the board. |
 | `free` | pin list | no | Pins the processor `reserved`/`avoid` that are fine here (e.g. a board running flash in DIO mode). Must exist on the board and not be in this board's own `reserved`/`avoid`. |
 | `notes` | string | no | Shown on the Pins page. |
-| `wifi` | boolean | no | `false` if the board has no WiFi radio (hides WiFi connect). Omit if unsure; unstated offers it. |
+| `wifi` | boolean | no | `false` if the board has no WiFi radio (hides WiFi connect). Omit if unsure; unstated offers it. Folded into `capabilities` (false denies `wifi`, true adds it). |
+| `capabilities` | string[] | no | Hardware this board adds to (or, via `wifi: false`, takes from) its processor's set. A node's `requires.capabilities` is checked against the combined set at compile time. |
 | `header` | {physical pin: pin or label} | no | What each physical pin carries, for the Pins page. A value that's a pin on this board (a GPIO number, or a string naming a pin) is that pin; any other string is a label (`"GND"`). A pin must exist on the board and appear at most once. |
 | `headerOrder` | `"around"` \| `"down"` | no | Numbering of a 1..N dual-row header. Default `"around"`. Needs `header`. |
 | `usb` | `"top"` \| `"bottom"` | no | Which end the USB connector is at (pin 1 top left). Needs `header`. |

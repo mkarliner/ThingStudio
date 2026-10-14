@@ -27,6 +27,11 @@
     "free": { "$ref": "#/$defs/pinList", "description": "Pins the processor reserves or warns about that are fine on this board. Must exist on the board, and not also be in this board's reserved or avoid." },
     "notes": { "type": "string", "description": "Anything worth knowing, shown on the Pins page." },
     "wifi": { "type": "boolean", "description": "false if the board has no WiFi radio (hides WiFi connect). Omit if unsure." },
+    "capabilities": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "description": "Hardware features this board adds to (or, via wifi: false, takes from) its processor's set. A node's requires.capabilities is checked against these at compile time."
+    },
     "header": {
       "type": "object",
       "description": "Physical pin name (e.g. \"1\", or \"P3-1\") -> a pin (GPIO number or a named pin) or a label like \"GND\"/\"3V3\". A string that names a pin on this board is that pin; any other string is a label. Pins must exist on the board and appear at most once.",

@@ -57,6 +57,7 @@
 import { CompileError } from "./errors.js";
 import type { GraphConfigNode, GraphData, GraphLink, GraphNode } from "./graph.js";
 import type { CodegenContext, NodeDefinition, SinkCodegenResult, TransformCodegenResult } from "./node-definition.js";
+import { checkCapabilities } from "../definitions/capability-check.js";
 import type { Target } from "../definitions/target.js";
 
 /** One node's generated function occupies this 1-indexed, inclusive line
@@ -266,6 +267,11 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
       }
     },
   };
+
+  // Node -> board capability checks (definitions/capability-check.ts): central, so every node type is
+  // covered, including a custom node whose Python can't call this. Runs once ctx exists so the
+  // no-target case can warn.
+  for (const n of graphData.nodes) checkCapabilities(ctx, n, registry.get(n.type)!.requires);
 
   const imports = new Set<string>(["import runtime"]);
   const setupStatements = new Map<string, string>(); // key -> code, dedup'd (e.g. two nodes claiming the same pin)

@@ -137,6 +137,9 @@ export interface CustomNodeDescriptor {
     outputs?: CustomNodePort[];
   };
   properties?: CustomNodePropertyField[];
+  /** Hardware this node needs (e.g. `{capabilities: ["pio"]}`); checked centrally against the target
+   * (definitions/capability-check.ts), same as a built-in node's `requires`. */
+  requires?: { capabilities?: string[] };
 }
 
 const IDENTIFIER_RE = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
@@ -266,6 +269,19 @@ export function validateCustomNodeDescriptor(raw: unknown): CustomNodeDescriptor
   if (typeof obj.color === "string") descriptor.color = obj.color;
   if (typeof obj.bgcolor === "string") descriptor.bgcolor = obj.bgcolor;
   if (typeof obj.icon === "string") descriptor.icon = obj.icon;
+  if (obj.requires !== undefined) {
+    if (typeof obj.requires !== "object" || obj.requires === null) fail('"requires" must be an object like {"capabilities": ["pio"]}');
+    const req = obj.requires as Record<string, unknown>;
+    for (const key of Object.keys(req)) if (key !== "capabilities") fail(`"requires.${key}" is not recognised (only "capabilities")`);
+    if (req.capabilities !== undefined) {
+      if (!Array.isArray(req.capabilities) || req.capabilities.some((c) => typeof c !== "string" || c.trim() === "")) {
+        fail('"requires.capabilities" must be a list of non-empty strings');
+      }
+      descriptor.requires = { capabilities: req.capabilities as string[] };
+    } else {
+      descriptor.requires = {};
+    }
+  }
   if (obj.group !== undefined) {
     if (typeof obj.group !== "string" || obj.group.length === 0) fail('"group" must be a non-empty string when present');
     descriptor.group = obj.group;
@@ -392,6 +408,7 @@ export function buildCustomNodeDefinition(descriptor: CustomNodeDescriptor, pyth
     kind: descriptor.kind,
     ports: { inputs: toPortDefinitions(descriptor.ports?.inputs), outputs: toPortDefinitions(descriptor.ports?.outputs) },
   };
+  if (descriptor.requires !== undefined) def.requires = descriptor.requires;
 
   if (descriptor.kind === "source") {
     def.codegenSource = (node: GraphNode, ctx: CodegenContext): SourceCodegenResult => {

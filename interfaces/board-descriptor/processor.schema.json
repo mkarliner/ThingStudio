@@ -15,9 +15,15 @@
     },
     "nativeArch": { "type": "string", "minLength": 1, "description": "The mpy-cross -march value, e.g. xtensawin." },
     "nativeArchConfirmed": { "type": "boolean", "description": "false marks nativeArch as a guess (shown as unverified). Default true." },
+    "capabilities": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "description": "Hardware features the chip has, e.g. \"wifi\", \"ble\", \"espnow\", \"pio\". A node's requires.capabilities is checked against these at compile time."
+    },
     "gpio": { "$ref": "#/$defs/pinList", "description": "Every pin the processor has (GPIO numbers, or named pins). Required, at least one pin." },
     "inputOnly": { "$ref": "#/$defs/pinList", "description": "Pins that cannot drive an output. Must be in gpio." },
     "noPull": { "$ref": "#/$defs/pinList", "description": "Pins with no internal pull resistors. Must be in gpio." },
+    "adc2": { "$ref": "#/$defs/pinList", "description": "Pins on the chip's second ADC (ESP32 family), unusable while WiFi is up. Must be in gpio. Empty/absent when there is none." },
     "reserved": { "$ref": "#/$defs/pinReasons", "description": "Pins that must not be used, with a reason each. Keys must be in gpio." },
     "avoid": { "$ref": "#/$defs/pinReasons", "description": "Pins that warn, with a reason each. Keys must be in gpio." },
     "spi": {

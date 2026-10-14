@@ -2,6 +2,8 @@
   "name": "ESP32-S3",
   "match": ["ESP32S3"],
   "nativeArch": "xtensawin",
+  "capabilities": ["wifi", "ble", "espnow"],
+  "adc2": [11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
   "gpio": ["0-21", "26-48"],
   "reserved": {
     "27-32": "Wired to the flash chip. Using them crashes the board."
