@@ -25,7 +25,10 @@ The editor loads these files on start, on connect and on deploy. An invalid file
 would have replaced stays in use, and the problem is listed (Board menu's "Invalid files", plus the console).
 
 A definition file is exactly one object. All keys are optional unless the table says required. A "pin or range"
-string is `"5"` or `"6-11"`; pins are 0–255.
+string is `"5"` or `"6-11"`; pins are 0–255. A processor whose pins aren't numbered (the STM32 pyboard's `X1`,
+`A13`) uses **named pins**: any string that isn't a number or a numeric range, starting with a letter and
+containing only letters, digits, `_` and `-`. A named pin can appear anywhere a pin can. A pin list may mix
+numbers and names.
 
 ## 2. Processor
 
@@ -34,7 +37,7 @@ string is `"5"` or `"6-11"`; pins are 0–255.
 | `name` | string | yes | Name shown in the Board menu. |
 | `match` | string[] | yes | Substrings matched against the MCU part of `HELLO`'s `chipType` (the part after `" with "`), case-, space- and dash-insensitive. |
 | `nativeArch` | string | yes | The `mpy-cross -march` value, e.g. `xtensawin`. |
-| `gpio` | pin list | yes | Every GPIO the processor has; at least one pin. |
+| `gpio` | pin list | yes | Every pin the processor has (numbers, or named pins); at least one pin. |
 | `nativeArchConfirmed` | boolean | no | `false` marks `nativeArch` a guess (shown as unverified). Default `true`. |
 | `inputOnly` | pin list | no | Pins that can't drive an output. Must be in `gpio`. |
 | `noPull` | pin list | no | Pins with no internal pull resistors. Must be in `gpio`. |
@@ -47,9 +50,10 @@ string is `"5"` or `"6-11"`; pins are 0–255.
 `spi`: `maxHz` and `otherPinsMaxHz` (positive integers), and `buses` — an object keyed by bus number (as a
 string, e.g. `"1"`). Each bus is `{}` (usable with any pins) or carries:
 
-- `fastPins` — `{sck, mosi, miso}` GPIO numbers that reach the bus without the GPIO matrix (ESP32 family). Not a
+- `fastPins` — `{sck, mosi, miso}` pins that reach the bus without the GPIO matrix (ESP32 family). Not a
   restriction.
-- `pins` — when present, the **only** pins this bus can use, per role, as pin lists (RP2 family).
+- `pins` — when present, the **only** pins this bus can use, per role, as pin lists (RP2 family; numbers or
+  named pins).
 
 `i2c`: `buses`, same shape; each bus is `{}` or `pins` — `{sda, scl}` pin lists that are the only pins the bus can
 use.
@@ -63,14 +67,14 @@ A board names a `processor` and may narrow its pin set.
 | `name` | string | yes | Name shown in the Board menu. |
 | `processor` | string | yes | Id of a known processor. |
 | `match` | string[] | yes | Board names MicroPython reports, exact (case-insensitive) against the part of `chipType` before `" with "`. `[]` to pick by hand. |
-| `pins` | {label: GPIO} | yes | Human labels for pins, shown in the properties panel. May be `{}`. |
+| `pins` | {label: pin} | yes | Human labels for pins (a GPIO number, or a named pin), shown in the properties panel. May be `{}`. |
 | `gpio` | pin list | no | The pins this board has, if fewer than its processor. Must be a subset of the processor's. |
 | `reserved` | {pin/range: reason} | no | As for a processor; keys must exist on the board. |
 | `avoid` | {pin/range: reason} | no | As for a processor; keys must exist on the board. |
 | `free` | pin list | no | Pins the processor `reserved`/`avoid` that are fine here (e.g. a board running flash in DIO mode). Must exist on the board and not be in this board's own `reserved`/`avoid`. |
 | `notes` | string | no | Shown on the Pins page. |
 | `wifi` | boolean | no | `false` if the board has no WiFi radio (hides WiFi connect). Omit if unsure; unstated offers it. |
-| `header` | {physical pin: GPIO or label} | no | What each physical pin carries, for the Pins page. A GPIO must exist on the board and appear at most once. |
+| `header` | {physical pin: pin or label} | no | What each physical pin carries, for the Pins page. A value that's a pin on this board (a GPIO number, or a string naming a pin) is that pin; any other string is a label (`"GND"`). A pin must exist on the board and appear at most once. |
 | `headerOrder` | `"around"` \| `"down"` | no | Numbering of a 1..N dual-row header. Default `"around"`. Needs `header`. |
 | `usb` | `"top"` \| `"bottom"` | no | Which end the USB connector is at (pin 1 top left). Needs `header`. |
 

@@ -15,7 +15,7 @@
     },
     "nativeArch": { "type": "string", "minLength": 1, "description": "The mpy-cross -march value, e.g. xtensawin." },
     "nativeArchConfirmed": { "type": "boolean", "description": "false marks nativeArch as a guess (shown as unverified). Default true." },
-    "gpio": { "$ref": "#/$defs/pinList", "description": "Every GPIO the processor has. Required, at least one pin." },
+    "gpio": { "$ref": "#/$defs/pinList", "description": "Every pin the processor has (GPIO numbers, or named pins). Required, at least one pin." },
     "inputOnly": { "$ref": "#/$defs/pinList", "description": "Pins that cannot drive an output. Must be in gpio." },
     "noPull": { "$ref": "#/$defs/pinList", "description": "Pins with no internal pull resistors. Must be in gpio." },
     "reserved": { "$ref": "#/$defs/pinReasons", "description": "Pins that must not be used, with a reason each. Keys must be in gpio." },
@@ -40,9 +40,9 @@
                 "additionalProperties": false,
                 "description": "Pins that reach the bus without the GPIO matrix (ESP32 family). Not a restriction.",
                 "properties": {
-                  "sck": { "type": "integer", "minimum": 0, "maximum": 255 },
-                  "mosi": { "type": "integer", "minimum": 0, "maximum": 255 },
-                  "miso": { "type": "integer", "minimum": 0, "maximum": 255 }
+                  "sck": { "$ref": "#/$defs/pinId" },
+                  "mosi": { "$ref": "#/$defs/pinId" },
+                  "miso": { "$ref": "#/$defs/pinId" }
                 }
               },
               "pins": {
@@ -89,20 +89,26 @@
     "notes": { "type": "string", "description": "Anything worth knowing, shown on the Pins page." }
   },
   "$defs": {
+    "pinId": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+      "description": "A named pin on a processor whose pins aren't numbered, e.g. the pyboard's \"X1\" or \"A13\"."
+    },
     "pinList": {
       "type": "array",
-      "description": "Pins as numbers (0-255) or range strings like \"4-7\".",
+      "description": "Pins as numbers (0-255), range strings like \"4-7\", or named pins like \"X1\".",
       "items": {
         "anyOf": [
           { "type": "integer", "minimum": 0, "maximum": 255 },
-          { "type": "string", "pattern": "^\\s*\\d+\\s*(-\\s*\\d+\\s*)?$" }
+          { "type": "string", "pattern": "^\\s*\\d+\\s*(-\\s*\\d+\\s*)?$" },
+          { "$ref": "#/$defs/pinId" }
         ]
       }
     },
     "pinReasons": {
       "type": "object",
-      "description": "Pin or range (as a key, e.g. \"6-11\") -> a non-empty reason.",
-      "propertyNames": { "pattern": "^\\s*\\d+\\s*(-\\s*\\d+\\s*)?$" },
+      "description": "Pin or range (as a key, e.g. \"6-11\", or a name) -> a non-empty reason.",
+      "propertyNames": { "anyOf": [{ "pattern": "^\\s*\\d+\\s*(-\\s*\\d+\\s*)?$" }, { "pattern": "^[A-Za-z][A-Za-z0-9_-]*$" }] },
       "additionalProperties": { "type": "string", "minLength": 1 }
     }
   }

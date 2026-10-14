@@ -16,8 +16,10 @@
     },
     "pins": {
       "type": "object",
-      "description": "Label -> GPIO number (0-255). Labels non-empty and unique; each pin must exist on the board.",
-      "additionalProperties": { "type": "integer", "minimum": 0, "maximum": 255 }
+      "description": "Label -> pin (a GPIO number 0-255, or a named pin like \"X1\"). Labels non-empty and unique; each pin must exist on the board.",
+      "additionalProperties": {
+        "anyOf": [{ "type": "integer", "minimum": 0, "maximum": 255 }, { "$ref": "#/$defs/pinId" }]
+      }
     },
     "gpio": { "$ref": "#/$defs/pinList", "description": "The pins this board has, if fewer than its processor. Must be pins the processor has." },
     "reserved": { "$ref": "#/$defs/pinReasons", "description": "Pins that must not be used, with a reason each. Keys must exist on the board." },
@@ -27,7 +29,7 @@
     "wifi": { "type": "boolean", "description": "false if the board has no WiFi radio (hides WiFi connect). Omit if unsure." },
     "header": {
       "type": "object",
-      "description": "Physical pin name (e.g. \"1\", or \"P3-1\") -> GPIO number or a label like \"GND\"/\"3V3\". GPIOs must exist on the board and appear at most once.",
+      "description": "Physical pin name (e.g. \"1\", or \"P3-1\") -> a pin (GPIO number or a named pin) or a label like \"GND\"/\"3V3\". A string that names a pin on this board is that pin; any other string is a label. Pins must exist on the board and appear at most once.",
       "additionalProperties": { "anyOf": [{ "type": "integer", "minimum": 0, "maximum": 255 }, { "type": "string", "minLength": 1 }] }
     },
     "headerOrder": {
@@ -40,20 +42,26 @@
     }
   },
   "$defs": {
+    "pinId": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+      "description": "A named pin on a processor whose pins aren't numbered, e.g. the pyboard's \"X1\" or \"A13\"."
+    },
     "pinList": {
       "type": "array",
-      "description": "Pins as numbers (0-255) or range strings like \"4-7\".",
+      "description": "Pins as numbers (0-255), range strings like \"4-7\", or named pins like \"X1\".",
       "items": {
         "anyOf": [
           { "type": "integer", "minimum": 0, "maximum": 255 },
-          { "type": "string", "pattern": "^\\s*\\d+\\s*(-\\s*\\d+\\s*)?$" }
+          { "type": "string", "pattern": "^\\s*\\d+\\s*(-\\s*\\d+\\s*)?$" },
+          { "$ref": "#/$defs/pinId" }
         ]
       }
     },
     "pinReasons": {
       "type": "object",
-      "description": "Pin or range (as a key, e.g. \"6-11\") -> a non-empty reason.",
-      "propertyNames": { "pattern": "^\\s*\\d+\\s*(-\\s*\\d+\\s*)?$" },
+      "description": "Pin or range (as a key, e.g. \"6-11\", or a name) -> a non-empty reason.",
+      "propertyNames": { "anyOf": [{ "pattern": "^\\s*\\d+\\s*(-\\s*\\d+\\s*)?$" }, { "pattern": "^[A-Za-z][A-Za-z0-9_-]*$" }] },
       "additionalProperties": { "type": "string", "minLength": 1 }
     }
   }
