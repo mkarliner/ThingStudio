@@ -73,9 +73,13 @@ import type {
 } from "../compiler/node-definition.js";
 import { pyStringLiteral } from "./py-literals.js";
 
-const PAYLOAD_TYPES: readonly PayloadType[] = ["int", "number", "bool", "string", "bytes", "any"];
-const NODE_KINDS: readonly NodeKind[] = ["source", "transform", "sink"];
-const PROPERTY_KINDS = ["text", "number", "boolean", "select"] as const;
+// Exported (2026-10-14) so editor/test/node-descriptor-schema.test.ts can
+// assert the published schema in interfaces/node-descriptor/ lists the same
+// values -- the format users write .node.json against must not drift from
+// this validator.
+export const PAYLOAD_TYPES: readonly PayloadType[] = ["int", "number", "bool", "string", "bytes", "any"];
+export const NODE_KINDS: readonly NodeKind[] = ["source", "transform", "sink"];
+export const PROPERTY_KINDS = ["text", "number", "boolean", "select"] as const;
 type CustomPropertyKind = (typeof PROPERTY_KINDS)[number];
 
 /** Package-loading/shape errors -- distinct from CompileError (per-instance
@@ -136,7 +140,7 @@ export interface CustomNodeDescriptor {
 }
 
 const IDENTIFIER_RE = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
-const TYPE_ID_RE = /^[a-z][a-z0-9_]*\/[a-z][a-z0-9_]*$/;
+export const TYPE_ID_RE = /^[a-z][a-z0-9_]*\/[a-z][a-z0-9_]*$/;
 
 function fail(detail: string): never {
   throw new CustomNodeDescriptorError(`invalid custom node descriptor: ${detail}`);

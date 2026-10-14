@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://thingstudio.net/schemas/board.schema.json",
+  "title": "Thingstudio board definition",
+  "description": "A ~/.thingstudio/boards/<id>.json file, or a built-in under editor/src/definitions/boards/. The file name without .json is the id (lowercase letters, digits, - and _). Authoritative prose: interfaces/board-descriptor/SPEC.md; user walkthrough: docs/user-guide/boards.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "processor", "match", "pins"],
+  "properties": {
+    "name": { "type": "string", "minLength": 1, "description": "Name shown in the Board menu." },
+    "processor": { "type": "string", "minLength": 1, "description": "Id of a known processor, e.g. esp32-c3." },
+    "match": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "description": "Board names MicroPython reports, for Auto. Exact (case-insensitive) against the part of chipType before ' with '. Use [] to pick the board by hand."
+    },
+    "pins": {
+      "type": "object",
+      "description": "Label -> GPIO number (0-255). Labels non-empty and unique; each pin must exist on the board.",
+      "additionalProperties": { "type": "integer", "minimum": 0, "maximum": 255 }
+    },
+    "gpio": { "$ref": "#/$defs/pinList", "description": "The pins this board has, if fewer than its processor. Must be pins the processor has." },
+    "reserved": { "$ref": "#/$defs/pinReasons", "description": "Pins that must not be used, with a reason each. Keys must exist on the board." },
+    "avoid": { "$ref": "#/$defs/pinReasons", "description": "Pins that warn, with a reason each. Keys must exist on the board." },
+    "free": { "$ref": "#/$defs/pinList", "description": "Pins the processor reserves or warns about that are fine on this board. Must exist on the board, and not also be in this board's reserved or avoid." },
+    "notes": { "type": "string", "description": "Anything worth knowing, shown on the Pins page." },
+    "wifi": { "type": "boolean", "description": "false if the board has no WiFi radio (hides WiFi connect). Omit if unsure." },
+    "header": {
+      "type": "object",
+      "description": "Physical pin name (e.g. \"1\", or \"P3-1\") -> GPIO number or a label like \"GND\"/\"3V3\". GPIOs must exist on the board and appear at most once.",
+      "additionalProperties": { "anyOf": [{ "type": "integer", "minimum": 0, "maximum": 255 }, { "type": "string", "minLength": 1 }] }
+    },
+    "headerOrder": {
+      "enum": ["around", "down"],
+      "description": "How a 1..N dual-row header is numbered: 'around' down one side and back up the other (the Pico); 'down' down both sides. Needs header. Default 'around'."
+    },
+    "usb": {
+      "enum": ["top", "bottom"],
+      "description": "Which end the USB connector is at, pin 1 at the top left. Needs header."
+    }
+  },
+  "$defs": {
+    "pinList": {
+      "type": "array",
+      "description": "Pins as numbers (0-255) or range strings like \"4-7\".",
+      "items": {
+        "anyOf": [
+          { "type": "integer", "minimum": 0, "maximum": 255 },
+          { "type": "string", "pattern": "^\\s*\\d+\\s*(-\\s*\\d+\\s*)?$" }
+        ]
+      }
+    },
+    "pinReasons": {
+      "type": "object",
+      "description": "Pin or range (as a key, e.g. \"6-11\") -> a non-empty reason.",
+      "propertyNames": { "pattern": "^\\s*\\d+\\s*(-\\s*\\d+\\s*)?$" },
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    }
+  }
+}

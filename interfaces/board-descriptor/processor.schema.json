@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://thingstudio.net/schemas/processor.schema.json",
+  "title": "Thingstudio processor definition",
+  "description": "A ~/.thingstudio/processors/<id>.json file, or a built-in under editor/src/definitions/processors/. The file name without .json is the id (lowercase letters, digits, - and _). Authoritative prose: interfaces/board-descriptor/SPEC.md; user walkthrough: docs/user-guide/boards.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "match", "nativeArch", "gpio"],
+  "properties": {
+    "name": { "type": "string", "minLength": 1, "description": "Name shown in the Board menu." },
+    "match": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "description": "Substrings matched against the MCU part of HELLO's chipType (after ' with '), case-, space- and dash-insensitive."
+    },
+    "nativeArch": { "type": "string", "minLength": 1, "description": "The mpy-cross -march value, e.g. xtensawin." },
+    "nativeArchConfirmed": { "type": "boolean", "description": "false marks nativeArch as a guess (shown as unverified). Default true." },
+    "gpio": { "$ref": "#/$defs/pinList", "description": "Every GPIO the processor has. Required, at least one pin." },
+    "inputOnly": { "$ref": "#/$defs/pinList", "description": "Pins that cannot drive an output. Must be in gpio." },
+    "noPull": { "$ref": "#/$defs/pinList", "description": "Pins with no internal pull resistors. Must be in gpio." },
+    "reserved": { "$ref": "#/$defs/pinReasons", "description": "Pins that must not be used, with a reason each. Keys must be in gpio." },
+    "avoid": { "$ref": "#/$defs/pinReasons", "description": "Pins that warn, with a reason each. Keys must be in gpio." },
+    "spi": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "SPI buses and speed limits. Omit for a processor with no SPI.",
+      "properties": {
+        "maxHz": { "type": "integer", "exclusiveMinimum": 0, "description": "Top SPI clock on the bus's own pins." },
+        "otherPinsMaxHz": { "type": "integer", "exclusiveMinimum": 0, "description": "Top SPI clock on other pins (ESP32 GPIO matrix)." },
+        "buses": {
+          "type": "object",
+          "description": "Bus id (a number as a string, e.g. \"1\") -> bus. Use {} for a usable bus with any pins.",
+          "propertyNames": { "pattern": "^[0-9]+$" },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "fastPins": {
+                "type": "object",
+                "additionalProperties": false,
+                "description": "Pins that reach the bus without the GPIO matrix (ESP32 family). Not a restriction.",
+                "properties": {
+                  "sck": { "type": "integer", "minimum": 0, "maximum": 255 },
+                  "mosi": { "type": "integer", "minimum": 0, "maximum": 255 },
+                  "miso": { "type": "integer", "minimum": 0, "maximum": 255 }
+                }
+              },
+              "pins": {
+                "type": "object",
+                "additionalProperties": false,
+                "description": "When present, the ONLY pins this bus can use per role (RP2 family).",
+                "properties": {
+                  "sck": { "$ref": "#/$defs/pinList" },
+                  "mosi": { "$ref": "#/$defs/pinList" },
+                  "miso": { "$ref": "#/$defs/pinList" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "i2c": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "I2C buses. Omit for a processor with no I2C.",
+      "properties": {
+        "buses": {
+          "type": "object",
+          "propertyNames": { "pattern": "^[0-9]+$" },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "pins": {
+                "type": "object",
+                "additionalProperties": false,
+                "description": "When present, the ONLY pins this bus can use per role (RP2 family).",
+                "properties": {
+                  "sda": { "$ref": "#/$defs/pinList" },
+                  "scl": { "$ref": "#/$defs/pinList" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "notes": { "type": "string", "description": "Anything worth knowing, shown on the Pins page." }
+  },
+  "$defs": {
+    "pinList": {
+      "type": "array",
+      "description": "Pins as numbers (0-255) or range strings like \"4-7\".",
+      "items": {
+        "anyOf": [
+          { "type": "integer", "minimum": 0, "maximum": 255 },
+          { "type": "string", "pattern": "^\\s*\\d+\\s*(-\\s*\\d+\\s*)?$" }
+        ]
+      }
+    },
+    "pinReasons": {
+      "type": "object",
+      "description": "Pin or range (as a key, e.g. \"6-11\") -> a non-empty reason.",
+      "propertyNames": { "pattern": "^\\s*\\d+\\s*(-\\s*\\d+\\s*)?$" },
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    }
+  }
+}

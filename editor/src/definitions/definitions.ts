@@ -212,8 +212,13 @@ function subset(pins: Iterable<number>, gpio: ReadonlySet<number>, where: string
 // Processor and board validation
 // ---------------------------------------------------------------------
 
-const PROCESSOR_KEYS = ["name", "match", "nativeArch", "nativeArchConfirmed", "gpio", "inputOnly", "noPull", "reserved", "avoid", "spi", "i2c", "notes"];
-const BOARD_KEYS = ["name", "processor", "match", "pins", "gpio", "reserved", "avoid", "notes", "wifi", "header", "free", "headerOrder", "usb"];
+// The exact key set each definition file may contain. Exported so
+// editor/test/board-descriptor-schema.test.ts can assert the published JSON
+// Schemas in interfaces/board-descriptor/ list the same keys -- the schema is
+// a contract for people writing ~/.thingstudio/{processors,boards}/*.json, so
+// it must not drift from this parser.
+export const PROCESSOR_KEYS = ["name", "match", "nativeArch", "nativeArchConfirmed", "gpio", "inputOnly", "noPull", "reserved", "avoid", "spi", "i2c", "notes"];
+export const BOARD_KEYS = ["name", "processor", "match", "pins", "gpio", "reserved", "avoid", "notes", "wifi", "header", "free", "headerOrder", "usb"];
 
 function parseSpi(v: unknown, gpio: ReadonlySet<number>): ProcessorDef["spi"] {
   if (!isObject(v)) throw new DefinitionError(`"spi": must be an object`);

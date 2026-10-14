@@ -23,6 +23,15 @@ log's scope boundary, and its maintenance rule. Context: `../architecture-review
   so editor tests can't pass against a fictional API; no `editor/src` codegen references an undeclared
   `runtime.<name>`) and `device-runtime/test/test_runtime_api.py` (the real module's surface under MicroPython).
   Fixed drift found by the check: `pymock` was missing `start_reason`.
+- **2026-10-14 — The node descriptor and the board/processor descriptor are specified.** `interfaces/board-descriptor/`
+  (`SPEC.md` + `board.schema.json` + `processor.schema.json`) is the format of `~/.thingstudio/{boards,processors}/*.json`
+  and the built-ins; `editor/test/board-descriptor-schema.test.ts` asserts the schemas' key sets equal the parser's
+  (`PROCESSOR_KEYS`/`BOARD_KEYS`, now exported from `definitions.ts`), so the published schema can't drift from the
+  code that enforces it. `interfaces/node-descriptor/` (`SPEC.md` + `custom-node.schema.json`) is the node-type
+  contract in both forms — built-in (TypeScript `NodeDefinition` + palette + property panel + codegen) and custom
+  (`.node.json` + `.node.py`); `editor/test/node-descriptor-schema.test.ts` keeps the schema's enums/pattern in step
+  with `custom-node.ts` (whose validator constants are now exported). §4 of the node spec names the review's
+  built-in/custom divergence explicitly and points at the new `outstanding-items/node-descriptor-unification.md`.
 - **2026-10-14 — Conformance immediately found a real cross-implementation gap.** The editor's cborg codec can
   encode a CBOR **float**; the device's hand-rolled `device-runtime/src/cbor.py` rejects major type 7 outright. So
   a `VALUE_STREAM.payload` that is a float (every `number`-typed port value) would decrypt fine in the editor and

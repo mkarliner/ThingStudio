@@ -124,8 +124,10 @@ spec*, never against a guess or a neighbouring implementation:
   `device-runtime/test/test_conformance.py` and `backend/test/test_conformance.py`.
 - **Device runtime API and dependency manifest** — `interfaces/runtime-api/SPEC.md` + `api.json`, checked by
   `editor/test/runtime-api-conformance.test.ts` and `device-runtime/test/test_runtime_api.py`.
-- **Node descriptor, board/processor descriptor** — same rule, once each has its spec (the remaining phase-1
-  pieces).
+- **Node descriptor** — `interfaces/node-descriptor/SPEC.md` + `custom-node.schema.json`, checked by
+  `editor/test/node-descriptor-schema.test.ts`.
+- **Board/processor descriptor** — `interfaces/board-descriptor/SPEC.md` + `{board,processor}.schema.json`, checked
+  by `editor/test/board-descriptor-schema.test.ts`.
 
 **Before implementing or changing code that emits, parses, stores or transmits anything an interface defines, read
 that interface's spec, and run its conformance test.** If what you need isn't expressible in the spec, that's a
