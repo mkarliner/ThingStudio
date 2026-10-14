@@ -139,5 +139,7 @@ Status: detail file for `decisions.md`'s "Processor and board definitions" index
 - **2026-10-14 — First named-pin built-in: `stm32f405` processor + `pyboard-v10` board.** gpio is the pyboard's
   header pins (X1–X12, X17–X22, Y1–Y12; X13–X16 are reset/ground/power, not GPIO), from the PYBv1.0 `pins.csv`.
   SPI/I2C bus pin lists are the F405's hardware mappings (`spi.maxHz` 21 MHz, SPI2's limit). `wifi: false`. The
-  board's four LEDs are `pyb.LED(1-4)`, not header pins, so `pins` is `{}`. Not verified on hardware. The
-  filesystem-root fix that makes a pyboard deploy at all is in `board_fs.py` (`learnings/micropython-device-runtime.md`).
+  four onboard LEDs (A13/A14/A15/B4) and the user switch (X17, PB3) are in `gpio` and labelled in `pins`
+  (`LED_RED`, `LED_GREEN`, `LED_YELLOW`, `LED_BLUE`, `SW`), so a gpio_out can drive them; the LEDs are also
+  `pyb.LED(1-4)`. Not verified on hardware. The filesystem-root fix that makes a pyboard deploy at all is in
+  `board_fs.py` (`learnings/micropython-device-runtime.md`).

@@ -2,7 +2,7 @@
   "name": "Pyboard v1.0",
   "processor": "stm32f405",
   "match": ["PYBv1.0"],
-  "pins": {},
+  "pins": { "LED_RED": "A13", "LED_GREEN": "A14", "LED_YELLOW": "A15", "LED_BLUE": "B4", "SW": "X17" },
   "wifi": false,
-  "notes": "The micro-USB port talks to Thingstudio. The board's filesystem is mounted at /flash. The four LEDs are pyb.LED(1-4); X23/X24 don't exist on v1.0."
+  "notes": "The micro-USB port talks to Thingstudio. The board's filesystem is mounted at /flash. The four onboard LEDs are on pins A13/A14/A15/B4 (LED_RED/LED_GREEN/LED_YELLOW/LED_BLUE), the same four pyb.LED(1-4) drives; the user switch SW is on X17 (PB3). X23/X24 don't exist on v1.0."
 }

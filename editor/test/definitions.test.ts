@@ -439,4 +439,13 @@ describe("named pins (processors whose pins aren't numbered, e.g. the STM32 pybo
   it("gates a named pin behind the pin pattern, not arbitrary text", () => {
     expect(() => gpioOutNode.codegenSink!(node("thingstudio/gpio_out", { pin: "not a pin" }), ctxFor(namedTarget()))).toThrow(/isn't a GPIO number or a pin name/);
   });
+
+  it("exposes and labels the built-in pyboard's onboard LEDs and switch", () => {
+    const t = targetFor("board:pyboard-v10");
+    expect(t.gpio.has("A13")).toBe(true);
+    expect(t.pinLabels.get("A13")).toEqual(["LED_RED"]);
+    expect(t.pinLabels.get("A15")).toEqual(["LED_YELLOW"]);
+    expect(t.pinLabels.get("X17")).toEqual(["SW"]);
+    expect(() => gpioOutNode.codegenSink!(node("thingstudio/gpio_out", { pin: "A13" }), ctxFor(t))).not.toThrow();
+  });
 });

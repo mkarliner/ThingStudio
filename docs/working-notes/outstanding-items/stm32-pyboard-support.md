@@ -25,5 +25,7 @@ Status: mostly done, 2026-10-14; **not yet verified on real hardware**. Found co
    and link the docs' "Adding a processor", instead of compiling with guessed numeric pins (AGENTS.md, "make the
    failure legible"). The Board menu note names the unknown chip but doesn't spell out that pin nodes can't be
    trusted.
-3. **Onboard LEDs / switch.** The pyboard's four LEDs are `pyb.LED(1-4)` and the switch is `pyb.Switch()`, not
-   header pins. A node could drive them; today a `gpio_out` on the LED's port pin isn't the same thing.
+3. **Onboard LEDs / switch -- exposed as pins.** The pyboard's four LEDs are on A13/A14/A15/B4 and the user
+   switch SW is on X17 (PB3); the `pyboard-v10` board labels them (`LED_RED`/`LED_GREEN`/`LED_YELLOW`/`LED_BLUE`,
+   `SW`) and the processor's `gpio` includes them, so a `gpio_out` can drive them via `machine.Pin("A13")`. They
+   are also `pyb.LED(1-4)` / `pyb.Switch()`; a dedicated node for those isn't built.

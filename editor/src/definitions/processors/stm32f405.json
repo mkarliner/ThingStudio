@@ -3,7 +3,7 @@
   "match": ["STM32F405"],
   "nativeArch": "armv7emsp",
   "nativeArchConfirmed": true,
-  "gpio": ["X1", "X2", "X3", "X4", "X5", "X6", "X7", "X8", "X9", "X10", "X11", "X12", "X17", "X18", "X19", "X20", "X21", "X22", "Y1", "Y2", "Y3", "Y4", "Y5", "Y6", "Y7", "Y8", "Y9", "Y10", "Y11", "Y12"],
+  "gpio": ["X1", "X2", "X3", "X4", "X5", "X6", "X7", "X8", "X9", "X10", "X11", "X12", "X17", "X18", "X19", "X20", "X21", "X22", "Y1", "Y2", "Y3", "Y4", "Y5", "Y6", "Y7", "Y8", "Y9", "Y10", "Y11", "Y12", "A13", "A14", "A15", "B4"],
   "spi": {
     "maxHz": 21000000,
     "buses": {
@@ -17,5 +17,5 @@
       "2": { "pins": { "scl": ["Y9"], "sda": ["Y10"] } }
     }
   },
-  "notes": "Pins are named, not numbered: X1-X12 and X17-X22 (left), Y1-Y12 (right), as printed on the board. X13-X16 are reset, ground and power, not GPIO. SPI and I2C pins are the pyboard's own hardware mappings; SPI is limited to 21 MHz (SPI2's limit -- SPI1 can go faster). The pyboard's four LEDs are pyb.LED(1-4), not header pins."
+  "notes": "Pins are named, not numbered: X1-X12 and X17-X22 (left), Y1-Y12 (right), as printed on the board. X13-X16 are reset, ground and power, not GPIO. The four LEDs are also pins: A13 (red), A14 (green), A15 (yellow), B4 (blue) -- the same four pyb.LED(1-4) drives. SPI and I2C pins are the pyboard's own hardware mappings; SPI is limited to 21 MHz (SPI2's limit -- SPI1 can go faster)."
 }
