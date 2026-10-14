@@ -17,6 +17,9 @@ A node is a few pieces that have to agree:
   and `editor/src/app/rete/palette.ts` (group, colour, order). Each port key here must exactly match the
   `NodeDefinition`'s `ports` name.
 - **Property panel** — the descriptor's `properties` crossed with the class's fields and sockets.
+- **Hardware it needs** — `requires.capabilities` on the `NodeDefinition` (e.g. `{ capabilities: ["espnow"] }`)
+  when the node only works on chips with a feature (radio, PIO). The compile refuses it on a board without it, and
+  the palette greys it out (`decisions/node-board-mapping.md`). Omit for a node that works anywhere.
 - **Device-side behaviour** — generated Python, not a separate module. A node that needs a third-party driver
   vendors it (see Vendoring).
 - **A user docs page** — `docs/user-guide/nodes/<name>.md`, in the fixed layout.

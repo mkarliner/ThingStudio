@@ -49,6 +49,8 @@ These give a warning, but the flow still compiles:
 - a pin to avoid, such as a strapping pin that changes how the board starts
 - a pull-up or pull-down on a pin that has no internal pull resistor
 
+A node that needs hardware the board doesn't have, such as an ESP-NOW node on a Pico, is refused the same way. The palette greys out such a node while the board is known.
+
 Warnings appear in the console when you deploy, and at the end of the compiled source.
 
 In the properties panel, a pin field shows the board's name for that pin, such as `LED`. It also flags reserved pins and pins to avoid. On a board whose pins are named rather than numbered, the field is a dropdown of the board's pins. See [Pins that aren't numbers](#pins-that-arent-numbers).
@@ -116,6 +118,7 @@ The fields are:
 | `processor` | Id of the processor, such as `esp32` or `rp2040`. Required. |
 | `match` | Board names MicroPython reports, for Auto. Use `[]` to pick the board by hand. Required. |
 | `pins` | Names for pins, shown in the properties panel. Required, can be `{}`. |
+| `capabilities` | Hardware this board adds to its processor, such as `["wifi"]`. A board with no radio usually sets `wifi` to `false` instead. |
 | `gpio` | The pins this board has, if fewer than its processor. For example `["0-29"]`. |
 | `reserved` | Pins that must not be used, each with a reason. |
 | `avoid` | Pins that give a warning, each with a reason. |
@@ -147,6 +150,8 @@ The fields are:
 | `gpio` | Every pin the processor has. Numbers, or names on a processor whose pins aren't numbered. Required. |
 | `inputOnly` | Pins that can't drive an output. |
 | `noPull` | Pins without internal pull resistors. |
+| `capabilities` | Hardware the chip has, such as `["wifi", "ble", "espnow"]` or `["pio"]`. A node that needs one the board lacks is refused. |
+| `adc2` | Pins on a second ADC that can't be used while WiFi is up (ESP32 family). |
 | `reserved`, `avoid` | As for boards. |
 | `spi`, `i2c` | Bus numbers, pins each bus can use, and SPI speed limits. |
 

@@ -26,3 +26,28 @@ maintenance rule. Plan and full recon: `../node-board-capability-mapping-briefin
   (built-ins keep TS codegen); custom packages carry their own docs; relax the custom-node restrictions (multi-
   output, config refs, event sources) so more built-ins can be cloned. The full plugin model (built-ins as loaded
   packages) stays the one-way door, not taken. A memory / custom-firmware review precedes settling it.
+
+## Built (2026-10-14)
+
+Phase 1 landed on the two existing descriptor shapes, as planned:
+
+- **Capability vocabulary** -- `capabilities: string[]` on processor and board JSON (`ProcessorDef`/`BoardDef`,
+  `PROCESSOR_KEYS`/`BOARD_KEYS`), reconciled into `Target.capabilities` by `effectiveCapabilities()`, which folds
+  `board.wifi` in (false denies "wifi", true adds it). Built-in values: ESP32/S3/C3 get `wifi`/`ble`/`espnow`,
+  S2 `wifi`/`espnow` (no Bluetooth), RP2040/RP2350 `pio`; WiFi boards are the `wifi: true`/`false` boards.
+- **Node `requires`** -- `requires: {capabilities: [...]}` on `NodeDefinition` and a custom `.node.json`
+  descriptor, carried by `buildCustomNodeDefinition`.
+- **Central check** -- `definitions/capability-check.ts`, called once per node from `compile()`. Known target
+  missing a capability: `CompileError` naming node, target and what's missing. No target: a warning, never a
+  block.
+- **Palette** -- `PaletteSidebar.vue` greys out and disables a row whose capability the target lacks, keeping it
+  visible with a tooltip; everything shows with no target.
+- **Catalog / CLI** -- `requires` surfaces in `describe.ts`/`nodes-catalog.md`; `--board-info` lists the target's
+  `capabilities`.
+- **ADC2 migration** -- `adc.ts`'s hardcoded `ADC2_PINS` moved to an `adc2` pin list on each ESP32-family
+  processor file, parsed into `ProcessorDef.adc2`
+  (`outstanding-items/adc-esp32-adc2-pins.md`, closed).
+
+No built-in node declares `requires` yet: ESP-NOW/PIO nodes are the point of the mechanism, not part of it. The
+interface change (board/processor descriptor `capabilities`/`adc2`, node `requires`) was the permission Mike gave
+the 2026-10-14 session (`interfaces/board-descriptor/`, `interfaces/node-descriptor/`).
