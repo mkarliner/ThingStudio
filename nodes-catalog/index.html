@@ -4592,8 +4592,8 @@ checked when the flow is compiled, and the error says what is allowed. See <a hr
 <p>Type <code>thingstudio/config/i2c-bus</code>.</p>
 <ul>
 <li><code>bus</code>, number</li>
-<li><code>scl</code>, number</li>
-<li><code>sda</code>, number</li>
+<li><code>scl</code>, pin</li>
+<li><code>sda</code>, pin</li>
 <li><code>freq</code>, number: 100000 suits most sensors; 400000 for displays that can take it.</li>
 </ul>
 <p>Defaults: <code>{"bus":0,"scl":null,"sda":null,"freq":100000}</code></p>
@@ -4609,7 +4609,7 @@ checked when the flow is compiled, and the error says what is allowed. See <a hr
 <li><code>controller</code>, select: one of <code>ft6336u</code>; Other controllers (GT911, CST820) aren't supported yet.</li>
 <li><code>i2cConfigId</code>, configRef: the id of a <code>thingstudio/config/i2c-bus</code> config</li>
 <li><code>address</code>, text: 7-bit, e.g. 0x38.</li>
-<li><code>rstPin</code>, text: Blank if the panel has none.</li>
+<li><code>rstPin</code>, pin: Blank if the panel has none.</li>
 <li><code>pollMs</code>, number</li>
 <li><code>width</code>, number</li>
 <li><code>height</code>, number: The panel's own size. If the display is rotated, tick swap/flip until a touch lands where you pressed.</li>

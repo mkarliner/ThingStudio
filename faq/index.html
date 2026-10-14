@@ -2972,6 +2972,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#why-are-the-pin-fields-dropdowns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why are the pin fields dropdowns?
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3157,6 +3168,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#why-are-the-pin-fields-dropdowns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why are the pin fields dropdowns?
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3255,6 +3277,10 @@ Use the touch node only when you aren't using the GUI. Deploy stops and names bo
 <h2 id="why-is-compile-deploy-grayed-out-after-a-deploy">Why is Compile → Deploy grayed out after a deploy?</h2>
 <p>The board already runs the flow on the canvas. Deploy comes back when you change the flow. See
 <a href="../debugging/#deploy-is-grayed-out">Deploy is grayed out</a>.</p>
+<h2 id="why-are-the-pin-fields-dropdowns">Why are the pin fields dropdowns?</h2>
+<p>Your processor names its pins instead of numbering them. The STM32 on a pyboard uses <code>X1</code>, <code>A13</code> and so on. Pin
+fields then list the chip's own pins rather than take a number. See
+<a href="../boards/#pins-that-arent-numbers">Pins that aren't numbers</a>.</p>
 
 
 

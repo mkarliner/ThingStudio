@@ -1311,6 +1311,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#pins-that-arent-numbers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pins that aren't numbers
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3049,6 +3060,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#pins-that-arent-numbers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pins that aren't numbers
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3108,7 +3130,7 @@ see <a href="#adding-a-processor">Adding a processor</a>.</p>
 <li>a pull-up or pull-down on a pin that has no internal pull resistor</li>
 </ul>
 <p>Warnings appear in the console when you deploy, and at the end of the compiled source.</p>
-<p>In the properties panel, a pin field shows the board's name for that pin, such as <code>LED</code>. It also flags reserved pins and pins to avoid.</p>
+<p>In the properties panel, a pin field shows the board's name for that pin, such as <code>LED</code>. It also flags reserved pins and pins to avoid. On a board whose pins are named rather than numbered, the field is a dropdown of the board's pins. See <a href="#pins-that-arent-numbers">Pins that aren't numbers</a>.</p>
 <h2 id="built-in-boards">Built-in boards</h2>
 <table>
 <thead>
@@ -3240,7 +3262,7 @@ version of Thingstudio doesn't update a file you already have, so delete a file 
 </tr>
 <tr>
 <td><code>pins</code></td>
-<td>Names for GPIO pins, shown in the properties panel. Required, can be <code>{}</code>.</td>
+<td>Names for pins, shown in the properties panel. Required, can be <code>{}</code>.</td>
 </tr>
 <tr>
 <td><code>gpio</code></td>
@@ -3276,13 +3298,13 @@ version of Thingstudio doesn't update a file you already have, so delete a file 
 </tr>
 <tr>
 <td><code>header</code></td>
-<td>What each physical pin carries: a GPIO number, or a label such as <code>"GND"</code> or <code>"3V3"</code>. Shown on the <strong>Pins…</strong> page. For example <code>{ "1": 0, "3": "GND", "40": "VBUS" }</code>.</td>
+<td>What each physical pin carries: a pin (a GPIO number, or a named pin), or a label such as <code>"GND"</code> or <code>"3V3"</code>. Shown on the <strong>Pins…</strong> page. For example <code>{ "1": 0, "3": "GND", "40": "VBUS" }</code>. A string that's one of the board's pins is that pin; any other string is a label.</td>
 </tr>
 </tbody>
 </table>
 <p>Numbers in <code>header</code> are physical pin numbers, as printed on the board or its datasheet. A header numbered 1 to N
 is drawn in two columns, like the Pico's. For a board with several connectors, name the pins <code>"P3-1"</code> and so on.</p>
-<p>Pin lists take numbers and ranges: <code>[0, 2, "4-7"]</code>. In <code>reserved</code> and <code>avoid</code>, the key is a pin or a range: <code>{ "6-11": "Wired to the flash chip." }</code>.</p>
+<p>Pin lists take numbers and ranges: <code>[0, 2, "4-7"]</code>. In <code>reserved</code> and <code>avoid</code>, the key is a pin or a range: <code>{ "6-11": "Wired to the flash chip." }</code>. A processor whose pins are named uses the names in the same places: see <a href="#pins-that-arent-numbers">Pins that aren't numbers</a>.</p>
 <p>To find the name MicroPython reports, connect the board and look for <code>chipType</code> in the console's <code>[HELLO]</code> line. The board name is the part before " with ".</p>
 <h2 id="adding-a-processor">Adding a processor</h2>
 <p>Save a JSON file in <code>~/.thingstudio/processors/</code>, named the same way as a board file. The built-in files in that folder are good examples.</p>
@@ -3309,7 +3331,7 @@ is drawn in two columns, like the Pico's. For a board with several connectors, n
 </tr>
 <tr>
 <td><code>gpio</code></td>
-<td>Every GPIO pin the processor has. Required.</td>
+<td>Every pin the processor has. Numbers, or names on a processor whose pins aren't numbered. Required.</td>
 </tr>
 <tr>
 <td><code>inputOnly</code></td>
@@ -3329,6 +3351,16 @@ is drawn in two columns, like the Pico's. For a board with several connectors, n
 </tr>
 </tbody>
 </table>
+<h2 id="pins-that-arent-numbers">Pins that aren't numbers</h2>
+<p>Some processors, such as the STM32 on a pyboard, name their pins (<code>X1</code>, <code>A13</code>) instead of numbering them. In a definition file, a pin is either a number, a range <code>"4-7"</code>, or a name: a string that starts with a letter and contains only letters, digits, <code>_</code> and <code>-</code>. Names go wherever numbers do — <code>gpio</code>, <code>pins</code>, <code>reserved</code>, <code>avoid</code>, a bus's pins — and a list can mix both. Ranges work for numbers only; list named pins one by one.</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Pyboard"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"match"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"STM32F405"</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">"nativeArch"</span><span class="p">:</span><span class="w"> </span><span class="s2">"armv7emsp"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"gpio"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"X1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"X2"</span><span class="p">,</span><span class="w"> </span><span class="s2">"X3"</span><span class="p">,</span><span class="w"> </span><span class="s2">"X4"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Y1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Y2"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Y3"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Y4"</span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>In the editor, a pin field on a named-pin board is a dropdown of the board's pins rather than a number input.</p>
 
 
 
