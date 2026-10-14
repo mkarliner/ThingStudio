@@ -80,8 +80,11 @@
           v-for="row in group.rows"
           :key="row.key"
           class="palette-row"
+          :class="{ 'is-unmet': row.unmet.length > 0 }"
           :style="{ borderColor: row.color }"
-          draggable="true"
+          :disabled="row.unmet.length > 0"
+          :title="row.unmet.length ? `Needs ${row.unmet.join(', ')}, which this board doesn't have` : undefined"
+          :draggable="row.unmet.length === 0"
           @click="onRowClick(row)"
           @dragstart="onRowDragStart($event, row)"
         >
@@ -103,12 +106,27 @@
 import { computed, ref } from "vue";
 import { NODE_PALETTE, DEFAULT_KIND_STYLE, DEFAULT_NODE_GROUPS, DRAG_MIME, CUSTOM_DRAG_MIME, type NodeKind } from "./palette";
 import { customNodePackages, customNodesVersion } from "./custom-nodes-store";
+import { activeTarget } from "./store";
+import { buildRegistry } from "../../node-library/registry";
 
 const emit = defineEmits<{
   add: [kind: NodeKind];
   addCustom: [type: string];
   reloadCustomNodes: [];
 }>();
+
+// The compiler's node registry, once: each built-in row's `requires` (what hardware it needs) lives on
+// its NodeDefinition. A custom row's comes from its descriptor. Used to grey out rows the current target
+// can't run (node->board mapping, decisions/node-board-mapping.md).
+const registry = buildRegistry();
+
+/** The capability names this board is missing from `capabilities` -- empty when all are met, or when
+ * no target is known (nothing to judge against, so nothing is greyed). */
+function unmetCapabilities(capabilities: readonly string[] | undefined): string[] {
+  const t = activeTarget.value;
+  if (!t) return [];
+  return (capabilities ?? []).filter((c) => !t.capabilities.has(c));
+}
 
 // Display order within each group is data, not a list here -- see
 // palette.ts's KindStyle.priority (built-in kinds) / custom-node.ts's
@@ -143,6 +161,8 @@ interface PaletteRow {
   icon: string;
   group: string;
   priority: number;
+  /** Capabilities this node needs that the current target lacks. Empty = usable (or no target known). */
+  unmet: string[];
 }
 
 const allRows = computed<PaletteRow[]>(() => {
@@ -164,6 +184,7 @@ const allRows = computed<PaletteRow[]>(() => {
         icon: style.icon,
         group: style.group,
         priority: style.priority,
+        unmet: unmetCapabilities(registry.get(`thingstudio/${kind}`)?.requires?.capabilities),
       };
     });
 
@@ -185,6 +206,7 @@ const allRows = computed<PaletteRow[]>(() => {
       // priority sorts after every built-in entry (DEFAULT_KIND_STYLE's
       // own doc comment on this field).
       priority: pkg.descriptor.priority ?? DEFAULT_KIND_STYLE.priority,
+      unmet: unmetCapabilities(pkg.descriptor.requires?.capabilities),
     }))
     .filter((row) => row.label.toLowerCase().includes(needle));
 
@@ -215,6 +237,7 @@ const groupedRows = computed(() => {
 });
 
 function onRowClick(row: PaletteRow): void {
+  if (row.unmet.length > 0) return; // a greyed row for this board
   if (row.origin === "builtin") emit("add", row.value as NodeKind);
   else emit("addCustom", row.value);
 }
@@ -228,6 +251,7 @@ function onRowClick(row: PaletteRow): void {
 // (main.ts) needs a way to tell which table to resolve it against without
 // guessing from its shape.
 function onRowDragStart(event: DragEvent, row: PaletteRow): void {
+  if (row.unmet.length > 0) return;
   event.dataTransfer?.setData(row.origin === "builtin" ? DRAG_MIME : CUSTOM_DRAG_MIME, row.value);
   if (event.dataTransfer) event.dataTransfer.effectAllowed = "copy";
 }
@@ -319,6 +343,15 @@ function onRowDragStart(event: DragEvent, row: PaletteRow): void {
 }
 .palette-row:hover {
   background: #2a2a30;
+}
+/* A node the current board can't run (node->board mapping): kept visible, greyed, not clickable. */
+.palette-row:disabled,
+.palette-row.is-unmet {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.palette-row.is-unmet:hover {
+  background: #232328;
 }
 .palette-icon {
   flex: 0 0 auto;
