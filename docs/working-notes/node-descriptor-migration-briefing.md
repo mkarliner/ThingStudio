@@ -1,0 +1,101 @@
+# Briefing: node descriptor migration — continue family by family
+
+Written 2026-10-14. This continues the scoping brief's work
+(`node-descriptor-unification-briefing.md`): the shape is settled, the mechanism is built, and five node
+families are migrated. The deliverable of the session that picks this up is more families migrated with no
+behavior change, in the order below — not a re-derivation of the shape.
+
+## Where this comes from
+
+- `node-descriptor-unification-briefing.md` — the scoping brief (the shape questions, the seven places a
+  built-in used to live, the migration order). Read it first; this file assumes it.
+- `decisions/node-board-mapping.md` — the direction ("descriptor unification, family 1" section has what
+  landed).
+- `outstanding-items/node-descriptor-unification.md` — the live checklist; keep it current as you go.
+- `interfaces/node-descriptor/SPEC.md` — now **v2**: the canonical `NodeDescriptor`, worked example, and what's
+  still coming. Interface shape is settled; changing it again needs Mike's permission.
+
+## What's done (don't re-litigate)
+
+The canonical `NodeDescriptor` (`editor/src/compiler/node-descriptor.ts`) exists; `NodeDefinition`
+(`compiler/node-definition.ts`) composes it with the codegen hooks. One generic Rete class
+(`nodes.ts`'s `buildDescriptorNodeClass(descriptor)`) and one lookup
+(`app/rete/node-descriptors.ts`'s `descriptorFor`/`paletteStyleFor`) drive the canvas, palette, property panel
+and catalog. Migrated families: **`debug`, `timer`, `delay`, `gpio_out`, `pwm_out`**. No behavior change
+(node-<name> tests + the catalog are the guard; full `npm test` green).
+
+`palette.ts`'s per-kind rows are optional during migration: a descriptor with a `paletteId` is "migrated" and
+`paletteStyleFor` reads it; one without still falls back to `palette.ts`. `NODE_PALETTE` is now
+`Partial<Record<NodeKind, KindStyle>>`, so `palette.ts` can simply omit a migrated kind's row.
+
+## The mechanism in recon form (so you don't re-read everything)
+
+- **Descriptor metadata** lives on the `NodeDefinition` in `editor/src/node-library/<name>.ts`:
+  `paletteId`/`label`/`group`/`priority`/`color`/`bgcolor`/`icon`/`width`/`description`, plus `properties`
+  (`PropertyFieldDescriptor[]`: `{name,label,kind,default,options?,configType?,credentialType?,help?,optional?,
+  min?,max?,step?,showIf?}`). Copy the values from the old `palette.ts` row and the old `PropertyPanel.vue`
+  block — the goal is byte-identical behavior.
+- **The generic class** derives width, title, ports and default properties from the descriptor. Keep the
+  exported class name (e.g. `export class TimerNode extends buildDescriptorNodeClass(timerNode) {}`) —
+  tests and `AnyThingstudioNode` reference these names even though the body is now empty.
+- **The property panel's generic branch** (`PropertyPanel.vue`, `v-else-if="nodeDescriptor"`, last in the
+  `v-if` chain) renders `text`/`number`/`boolean`/`select`/`pin` today, with `min`/`max`/`step`/`showIf`. It
+  uses `nodeProperties`/`setProp` (already defined). Remove the old per-kind `v-else-if` block once migrated.
+- **Palette** (`palette.ts`) delete the row; (`PaletteSidebar.vue`) already enumerates legacy keys ∪ descriptor
+  keys via `builtinDescriptors()`, so nothing else to do. **Catalog** (`cli/describe.ts`) uses
+  `paletteStyleFor` and the registry; it must come out byte-identical unless you mean to change it.
+
+## Per family, the loop
+
+1. Add descriptor metadata + `properties` to `node-library/<name>.ts`.
+2. Delete the bespoke class in `nodes.ts`; add `export class <Name> extends buildDescriptorNodeClass(<name>Node) {}`.
+3. Delete the `palette.ts` row.
+4. Delete the `PropertyPanel.vue` `v-else-if="node.kind === '<kind>'"` block (unless it uses a widget the
+   generic branch doesn't yet render — see below).
+5. `find editor/src editor/test -name "*.js" -type f -delete`; `./node_modules/.bin/tsc --noEmit`; `npm test`;
+   `npm run build`. The catalog test fails loudly if the generated `docs/user-guide/nodes-catalog.md` drifts.
+
+## What's next, in order
+
+1. **`configRef` widget, then the network family (`udp_send` first).** Add a `configRef` field kind to the
+   generic panel, wrapping `ConfigRefField` (`:config-type="f.configType"`, `:model-value=...`,
+   `@update:model-value="(id) => setProp(f.name, id)"`). **Wrinkle to resolve first:** `udp_send`/`udp_receive`/
+   `http_*`/`mqtt_*` panels show a *display-only* WiFi `ConfigRefField` bound to `undefined` (the WiFi config is
+   a flow singleton, not a property of these nodes) plus a hint. The generic renderer needs a way to express an
+   info-only field (no `name`/`setProp`) — decide the shape before migrating these, or migrate the simpler
+   `i2c`/`bme280` configRef nodes first. `mqtt_*` also carry a real `brokerConfigId` configRef.
+2. **GPIO cluster:** `interrupt`/`eswitch`/`ebutton`/`adc`/`encoder`/`neopixel`. Mostly `pin`/`select`/
+   `boolean`/`number` with `showIf` (e.g. `adc`'s `delta` only in relative mode, `lower`/`upper` only in
+   absolute; `interrupt`'s `debounceMs` only when `debounce`). The long per-node panel hints become the field's
+   `help` (or the descriptor `description`). Watch `encoder`'s `vmin`/`vmax`/`mod` which are number-or-blank.
+3. **`function` last.** Its dynamic `outputCount` is the one real escape hatch: the generic class has no
+   `outputCount` hook, and `nodes.ts`'s `FunctionNode` constructor builds N outputs plus `retypeOutput`-style
+   behavior. Either give `buildDescriptorNodeClass` an optional dynamic-ports hook or leave `function` as the
+   one hand-written class (the briefing allows this).
+4. **Then close the transitional state:** once every family is migrated, make the palette metadata required on
+   `NodeDescriptor`, delete `palette.ts`'s now-empty rows (keep `DEFAULT_NODE_GROUPS`/`DEFAULT_KIND_STYLE`), and
+   simplify `paletteStyleFor`.
+5. **Relax the custom `.node.json`** (separate, later): multi-output (the compiler supports it), `configRef`
+   properties, event sources, plus the package's own docs (`description`/`<name>.node.md`, sanitized). The
+   custom format's surface is unchanged today; changing it needs Mike's permission and a `custom-node.schema.json`
+   + conformance-test update.
+
+## Constraints and gotchas
+
+- **No behavior change** is the bar for a migration step. The catalog and node tests are the guard; a UI-only
+  regression (a label, a width, a hint) won't be caught by tests — diff the old panel/palette values carefully.
+- **Do not change interface shape** without Mike. Adding a `PropertyFieldKind` (e.g. `configRef` is already in
+  the union; a new widget kind is not) is a shape question — raise it.
+- `palette.ts`'s `NodeKind` union still lists every kind (including migrated ones) because `NODE_FACTORIES` is
+  keyed by it. Don't remove names from the union when deleting rows.
+- `NODE_PALETTE` being `Partial` means `NODE_PALETTE[kind]` can be undefined — go through `paletteStyleFor`.
+- Delete stray compiled `.js` before trusting any `tsc`/`vitest` run (root `AGENTS.md`).
+- Working-notes line width <120; keep `outstanding-items/node-descriptor-unification.md` and
+  `decisions/node-board-mapping.md` updated in the same change.
+
+## Git state
+
+- `HEAD = b09da5d` ("node descriptor: migrate timer/delay and gpio_out/pwm_out"), pushed to `https/main`.
+  `0ff8bd1` is the mechanism + `debug`.
+- `tools/build-thingstudio-firmware.sh` and `tools/install-build-tools.sh` are untracked from an earlier
+  session — leave them alone.

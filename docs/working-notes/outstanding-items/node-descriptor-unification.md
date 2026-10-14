@@ -57,3 +57,6 @@ minus codegen). `interfaces/node-descriptor/SPEC.md` is now v2. Remaining work, 
 3. Still out: dynamic ports and arbitrary codegen stay built-in-only; compile-time resource claims stay a
    documented limit; the plugin model (option (d)) remains the one-way door, not taken.
 
+**Per-family handoff for picking this up:** `../node-descriptor-migration-briefing.md` (the mechanism in recon
+form, the per-family loop, the `configRef`/info-only wrinkle, and the git state).
+
