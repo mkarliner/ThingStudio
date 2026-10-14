@@ -36,6 +36,14 @@ Top-level platform calls: MicroPython over CircuitPython; Rete.js over Litegraph
 
 The wire protocol made a shared, language-neutral artifact — new top-level `interfaces/` holding cross-subsystem specs, starting with `interfaces/protocol/` (spec + message table + conformance vectors), run by all three implementations; the first concrete interface boundary from the architecture review. Followed by `interfaces/runtime-api/` (the `runtime` module surface generated code calls + the dependency manifest), with conformance keeping the real runtime, the editor's pymock fixture and codegen honest. Wire conformance immediately found, and it's now fixed, a real CBOR-float bug: the device and the editor could not exchange a float in either direction (non-canonical doubles in the hand-rolled `cbor.py`); `VALUE_STREAM` stays reserved, not built (Mike: no live value streaming — real-time flows, no Node-RED equivalent). The node descriptor (built-in + custom) and the board/processor descriptor round out the four v1 interfaces. Boundaries enforced mechanically: a module-boundary test, per-subsystem `AGENTS.md`, `CODEOWNERS`, and interface conformance in CI (backend + editor; device-runtime still owed). `AGENTS.md` gains "architecture first at subsystem interfaces: MVP-ready is not tester-ready" and "interface specs: read before you implement, change only with permission" (echoed in `CLAUDE.md`). Multi-repo decomposition under investigation, not decided (the 2026-08-12 single-monorepo call stands until reversed). 7 entries: `docs/working-notes/decisions/subsystem-interfaces.md`.
 
+## Node ↔ board mapping
+
+A node declares what hardware it needs (`requires.capabilities`), processor/board definitions declare a
+`capabilities` set, and a central compile-time check compares them (not per-node codegen, so custom nodes
+participate); the palette greys out unmet nodes rather than hiding them; `board.wifi` folds into the vocabulary.
+Built-in/custom unification goes metadata-first with self-documenting, relaxed custom packages, not the plugin
+model. Resolves the review's two open concerns. 5 entries: `docs/working-notes/decisions/node-board-mapping.md`.
+
 ## Repo / tooling
 
 Monorepo structure; TypeScript editor / Python device-runtime split; Vite + Vitest; `ruff` config; Apache-2.0 license; the "harness" → `runtime`/`listener` rename; today's CLAUDE.md/decisions.md/learnings.md context-size restructuring; the top-level Makefile (2026-09-24). 8 entries: `docs/working-notes/decisions/repo-tooling.md`.
