@@ -893,30 +893,24 @@
         <p class="hint">Broker config required -- won't compile without one. One WiFi network per flow: every WiFi node shares this setting. In a flow with MQTT nodes, MQTT manages the WiFi connection, so "unmanaged" isn't accepted.</p>
       </template>
 
-      <template v-else-if="node.kind === 'debug'">
-        <label class="checkbox-label">
-          <input type="checkbox" v-model="node.properties.fullMessage" @change="touch" />
-          full message
-        </label>
-        <p class="hint">Prints the inbound payload to the device console. Check "full message" to print the whole message (topic, and any other fields a source node adds -- e.g. wifi_status's ip/subnet/gateway/dns/rssi) instead of just payload.</p>
-      </template>
-
-      <template v-else-if="node.kind === 'custom' && customDescriptor">
-        <template v-for="f in customDescriptor.properties ?? []" :key="f.name">
+      <template v-else-if="nodeDescriptor">
+        <p v-if="nodeDescriptor.description" class="hint">{{ nodeDescriptor.description }}</p>
+        <template v-for="f in nodeDescriptor.properties ?? []" :key="f.name">
           <label v-if="f.kind === 'boolean'" class="checkbox-label">
-            <input type="checkbox" v-model="customProperties[f.name]" @change="touch" />
+            <input type="checkbox" v-model="nodeProperties[f.name]" @change="touch" />
             {{ f.label }}
           </label>
           <label v-else>
             {{ f.label }}
-            <select v-if="f.kind === 'select'" v-model="customProperties[f.name]" @change="touch">
+            <select v-if="f.kind === 'select'" v-model="nodeProperties[f.name]" @change="touch">
               <option v-for="opt in f.options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
             </select>
-            <input v-else-if="f.kind === 'number'" type="number" v-model.number="customProperties[f.name]" @input="touch" />
-            <input v-else type="text" v-model="customProperties[f.name]" @input="touch" />
+            <input v-else-if="f.kind === 'number'" type="number" v-model.number="nodeProperties[f.name]" @input="touch" />
+            <input v-else type="text" v-model="nodeProperties[f.name]" @input="touch" />
           </label>
+          <p v-if="f.help" class="hint">{{ f.help }}</p>
         </template>
-        <p class="hint">Custom node ({{ customDescriptor.type }}) -- loaded this session only; reload its package after a page refresh.</p>
+        <p v-if="isCustomNode" class="hint">Custom node ({{ nodeDescriptor.type }}) -- loaded this session only; reload its package after a page refresh.</p>
       </template>
     </template>
   </div>
@@ -930,8 +924,10 @@ function buttonDefault(valueType: unknown, i: 0 | 1): string {
 }
 import { computed } from "vue";
 import { selectedNode, bumpPropertyVersion, propertyVersion, setFunctionNodeOutputCount } from "./store";
-import { NODE_PALETTE, DEFAULT_KIND_STYLE, type NodeKind, type KindStyle } from "./palette";
+import { DEFAULT_KIND_STYLE, type KindStyle } from "./palette";
+import { paletteStyleFor } from "./node-descriptors";
 import { InjectNode, StartupNode, CustomNode, FunctionNode } from "./nodes";
+import type { NodeDescriptor } from "../../compiler/node-descriptor";
 import { MAX_FUNCTION_OUTPUTS } from "../../node-library/function-node";
 import ConfigRefField from "./ConfigRefField.vue";
 import PresetRefField from "./PresetRefField.vue";
@@ -944,17 +940,22 @@ const node = computed(() => {
   return selectedNode.value;
 });
 
-const customDescriptor = computed(() => (node.value instanceof CustomNode ? node.value.descriptor : null));
+// Any node built from a canonical descriptor -- a migrated built-in (nodes.ts's
+// buildDescriptorNodeClass) or a loaded CustomNode -- exposes a `descriptor`. Its property schema
+// renders through the one generic branch at the end of the template; a still-bespoke kind has no
+// descriptor and keeps its own block.
+const nodeDescriptor = computed<NodeDescriptor | null>(
+  () => (node.value as unknown as { descriptor?: NodeDescriptor } | null)?.descriptor ?? null,
+);
+const isCustomNode = computed(() => node.value instanceof CustomNode);
 
-// A plain untyped view onto the selected custom node's properties, purely
-// so the template above can use ordinary `customProperties[f.name]`
-// v-model bindings without a TS cast inside the template expression --
-// this project has no vue-tsc in its toolchain (package.json), so .vue
-// templates aren't type-checked today, and keeping template expressions
-// simple/uncast is one less thing to get wrong in the SFC compiler
-// regardless. Reads/writes the exact same object node.properties already
-// is, just via a loosely-typed local name.
-const customProperties = computed<Record<string, unknown>>(() => (node.value?.properties ?? {}) as Record<string, unknown>);
+// A plain untyped view onto the selected node's properties, purely so the template above can use
+// ordinary `nodeProperties[f.name]` v-model bindings without a TS cast inside the template
+// expression -- this project has no vue-tsc in its toolchain (package.json), so .vue templates
+// aren't type-checked today, and keeping template expressions simple/uncast is one less thing to
+// get wrong in the SFC compiler regardless. Reads/writes the exact same object node.properties
+// already is, just via a loosely-typed local name.
+const nodeProperties = computed<Record<string, unknown>>(() => (node.value?.properties ?? {}) as Record<string, unknown>);
 
 // The node's own title if it has one (the "label" field), else its kind.
 const displayTitle = computed(() => {
@@ -964,11 +965,17 @@ const displayTitle = computed(() => {
 
 const kindStyle = computed<KindStyle>(() => {
   if (!node.value) return DEFAULT_KIND_STYLE;
-  if (node.value instanceof CustomNode) {
-    const d = node.value.descriptor;
-    return { color: d.color ?? DEFAULT_KIND_STYLE.color, bgcolor: d.bgcolor ?? DEFAULT_KIND_STYLE.bgcolor, icon: d.icon ?? "◆", label: d.label };
-  }
-  return NODE_PALETTE[node.value.kind as NodeKind] ?? DEFAULT_KIND_STYLE;
+  const base = paletteStyleFor(node.value.kind as string);
+  const d = nodeDescriptor.value;
+  if (!d) return base;
+  return {
+    color: d.color ?? base.color,
+    bgcolor: d.bgcolor ?? base.bgcolor,
+    icon: d.icon ?? base.icon,
+    label: d.label ?? base.label,
+    group: d.group ?? base.group,
+    priority: d.priority ?? base.priority,
+  };
 });
 
 function touch(): void {

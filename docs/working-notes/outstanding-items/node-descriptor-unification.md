@@ -36,3 +36,22 @@ decision and does **not** gate any node work, because node descriptors/panel/doc
 compiled flow and its imported libraries reach a board). What remains here is the built-in/custom split itself.
 **Scoping brief to start it:** `../node-descriptor-unification-briefing.md` (the settled direction, the shape
 questions to answer, the seven places a built-in lives, and the first actions).
+
+**2026-10-14 (continuation), option (a)+(c) chosen and started:** metadata-first convergence, built
+(`decisions/node-board-mapping.md`'s "descriptor unification, family 1"). The canonical `NodeDescriptor`
+(`compiler/node-descriptor.ts`) exists, `NodeDefinition` composes it, one generic descriptor-driven class +
+property-panel path + palette/catalog lookups read it, and **`debug` is migrated** (option (c): the per-node
+property UI now comes from the descriptor; option (a): the custom `.node.json` is to become the same shape,
+minus codegen). `interfaces/node-descriptor/SPEC.md` is now v2. Remaining work, in order:
+
+1. Move the remaining built-in families onto the descriptor, per the briefing: `timer`/`delay` → `gpio_out`/
+   `pwm_out` → `udp_send` → the GPIO cluster (`interrupt`/`eswitch`/`ebutton`/`adc`/`encoder`/`neopixel`) →
+   `function` last (dynamic `outputCount`). Then make `palette.ts`'s rows go away. The generic property-panel
+   branch (`PropertyPanel.vue`) currently renders `text`/`number`/`boolean`/`select`; it needs `pin`, `configRef`,
+   `credential`/`password` widgets (wrapping `PinField`/`ConfigRefField`/`CredentialRefField`) before the
+   `gpio_out`/`udp_send` families can migrate without losing their fields.
+2. Relax the custom `.node.json` format (multi-output, `configRef` properties, event sources) so more built-ins
+   can be cloned, and add the package's own docs (`description`/`.node.md`, sanitized).
+3. Still out: dynamic ports and arbitrary codegen stay built-in-only; compile-time resource claims stay a
+   documented limit; the plugin model (option (d)) remains the one-way door, not taken.
+

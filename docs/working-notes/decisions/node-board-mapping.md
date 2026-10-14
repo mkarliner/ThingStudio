@@ -51,3 +51,29 @@ Phase 1 landed on the two existing descriptor shapes, as planned:
 No built-in node declares `requires` yet: ESP-NOW/PIO nodes are the point of the mechanism, not part of it. The
 interface change (board/processor descriptor `capabilities`/`adc2`, node `requires`) was the permission Mike gave
 the 2026-10-14 session (`interfaces/board-descriptor/`, `interfaces/node-descriptor/`).
+
+## Built (2026-10-14, continuation): descriptor unification, family 1
+
+The metadata-first unification (`node-descriptor-unification-briefing.md`) began. Mike confirmed the concrete shape
+("all six as proposed") and authorized the `interfaces/node-descriptor/SPEC.md` change to v2:
+
+- **One canonical `NodeDescriptor`** in `editor/src/compiler/node-descriptor.ts`: `type`, `kind`, `paletteId`,
+  `label`, `group`, `priority`, `color`/`bgcolor`/`icon`, `width`, `description`, `requires`, `allowUnwired`,
+  `ports`, `properties`. The primitive port types moved here from `node-definition.ts`, which re-exports them.
+- **`NodeDefinition extends NodeDescriptor`** adds the non-serializable codegen hooks (`codegen*`) and `outputCount`.
+  The palette metadata fields are optional during migration: a descriptor with a `paletteId` is "migrated", one
+  without still falls back to `palette.ts`.
+- **The shared field vocabulary** (`PropertyFieldKind`) moved down too; `config-types.ts`'s `ConfigFieldDescriptor`
+  reuses it, so a node field and a config field are the same shape.
+- **Generic consumers**: `app/rete/node-descriptors.ts` (`descriptorFor`/`paletteStyleFor`) is the one lookup the
+  canvas (`ThingstudioNode.vue`), palette (`PaletteSidebar.vue`), property panel (`PropertyPanel.vue`) and catalog
+  (`cli/describe.ts`) read; `nodes.ts`'s `buildDescriptorNodeClass()` derives a Rete class from a descriptor (ports,
+  properties, width, type) instead of a hand-written subclass.
+- **`debug` is the first family migrated**: its metadata/property schema now live in `node-library/debug.ts`, its
+  bespoke class/palette row/panel block are gone. No behavior change -- node tests and the catalog are the guard,
+  full `npm test` green (1066 passed).
+- **Still coming**: migrate the remaining families in the order in the briefing (timer/delay → gpio_out/pwm_out →
+  udp_send → the GPIO cluster → function last); relax the custom `.node.json` format (multi-output, `configRef`,
+  event sources) so built-ins can be cloned; then make the palette metadata required and delete `palette.ts`'s rows.
+  Tracked in `outstanding-items/node-descriptor-unification.md`.
+

@@ -14,7 +14,7 @@ import type { PortDefinition } from "../compiler/node-definition.js";
 import { resolvePortType } from "../compiler/node-definition.js";
 import { CONFIG_TYPES } from "../app/rete/config-types.js";
 import { NODE_FACTORIES } from "../app/rete/nodes.js";
-import { NODE_PALETTE } from "../app/rete/palette.js";
+import { paletteStyleFor } from "../app/rete/node-descriptors.js";
 import { buildRegistry } from "../node-library/registry.js";
 
 export interface PortInfo { name: string; type: string }
@@ -152,7 +152,7 @@ export function buildCatalog(): Catalog {
   for (const [kind, factory] of Object.entries(NODE_FACTORIES)) {
     const node = factory() as unknown as { nodeType: string; properties: Record<string, unknown> };
     const def = registry.get(node.nodeType);
-    const style = (NODE_PALETTE as Record<string, { label: string; group: string }>)[kind];
+    const style = paletteStyleFor(kind);
     seen.add(node.nodeType);
     const properties = Object.entries(node.properties).map(([name, value]): PropertyInfo => {
       const p: PropertyInfo = { name, type: typeOf(value), default: value };

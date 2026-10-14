@@ -174,7 +174,7 @@ import { journalNode } from "../../node-library/journal.js";
 import { clockNode } from "../../node-library/clock.js";
 import { bme280Node } from "../../node-library/bme280.js";
 import { touchI2cNode } from "../../node-library/touch-i2c.js";
-import type { NodeDefinition } from "../../compiler/node-definition.js";
+import type { NodeDefinition, NodeDescriptor } from "../../compiler/node-definition.js";
 import { guiBarNode, guiTrendNode, guiButtonNode, guiLabelNode, guiLedNode, guiModalNode, guiNavigatorNode, guiReadoutNode, guiScreenNode } from "../../node-library/gui.js";
 import { i2cGenericNode } from "../../node-library/i2c-generic.js";
 import { mqttPublishNode } from "../../node-library/mqtt-publish.js";
@@ -652,24 +652,42 @@ export class I2cNode extends ClassicPreset.Node {
   }
 }
 
-export class DebugNode extends ClassicPreset.Node {
-  width = 84;
-  height = NODE_HEIGHT;
-  kind = "debug" as const;
-  nodeType = "thingstudio/debug";
-  highlighted = false;
-  status: NodeStatusState | null = null;
-  statusText: string | null = null;
+// --- Descriptor-driven built-in nodes (node-descriptor-unification-briefing.md) ---
+//
+// A built-in whose descriptor (compiler/node-descriptor.ts) carries its palette styling, ports and
+// property schema gets its Rete class from here instead of a hand-written subclass -- the same
+// generic, descriptor-driven path CustomNode (bottom of this file) already uses for loaded custom
+// types. Migrating a family means adding the metadata to its node-library/*.ts descriptor, deleting
+// its bespoke class here, and letting this build it; the node tests are the "no behavior change"
+// guard. `descriptor` on the instance is what PropertyPanel.vue's generic branch and
+// ThingstudioNode.vue's palette read.
+function buildDescriptorNodeClass(descriptor: NodeDescriptor) {
+  return class extends ClassicPreset.Node {
+    width = descriptor.width ?? 100;
+    height = NODE_HEIGHT;
+    kind = descriptor.paletteId ?? descriptor.type;
+    nodeType = descriptor.type;
+    descriptor: NodeDescriptor = descriptor;
+    highlighted = false;
+    status: NodeStatusState | null = null;
+    statusText: string | null = null;
+    properties: Record<string, unknown> = Object.fromEntries((descriptor.properties ?? []).map((f) => [f.name, f.default]));
 
-  // `fullMessage` added 2026-09-09 (wifi-status-completeness.md): opt-in,
-  // default `false` -- see node-library/debug.ts's own header for why.
-  properties: { fullMessage: boolean } = { fullMessage: false };
-
-  constructor() {
-    super("debug");
-    this.addInput("msg", new ClassicPreset.Input(portSocket(debugNode.ports?.inputs, "msg", this.properties), "msg", true));
-  }
+    constructor() {
+      super(descriptor.label ?? descriptor.paletteId ?? descriptor.type);
+      for (const input of descriptor.ports?.inputs ?? []) {
+        this.addInput(input.name, new ClassicPreset.Input(portSocket(descriptor.ports?.inputs, input.name, this.properties), input.name, true));
+      }
+      for (const output of descriptor.ports?.outputs ?? []) {
+        this.addOutput(output.name, new ClassicPreset.Output(portSocket(descriptor.ports?.outputs, output.name, this.properties), output.name));
+      }
+    }
+  };
 }
+
+// First family migrated onto the canonical descriptor (its data now lives in node-library/debug.ts).
+// The class name is kept because tests and AnyThingstudioNode reference it.
+export class DebugNode extends buildDescriptorNodeClass(debugNode) {}
 
 export class GpioOutNode extends ClassicPreset.Node {
   width = 104;

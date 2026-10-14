@@ -18,37 +18,12 @@
 import type { GraphNode } from "./graph.js";
 import type { Target } from "../definitions/target.js";
 import type { ScreensSection } from "../gui/screens.js";
+import type { NodeDescriptor } from "./node-descriptor.js";
 
-export type NodeKind = "source" | "transform" | "sink";
-
-// §6's fixed payload type set (design doc §6, "payload itself is typed
-// from a small fixed set"). Single source of truth for both sides that
-// need it: rete/sockets.ts maps each of these to a real socket class for
-// the editor's wire-connect-time check, and this file's own `ports` field
-// (below) is what a node-library/*.ts declares its ports' types against.
-export type PayloadType = "int" | "number" | "bool" | "string" | "bytes" | "any";
-
-// A port's type is usually fixed, but not always -- inject's single
-// output is `bool`/`number`/`string` depending on its own `payloadType`
-// property (node-library/inject.ts), the one node in the current 5-node
-// canvas set whose port type isn't static. A function taking the node's
-// resolved `properties` covers that case without a second, parallel
-// mechanism for "ports that can retype" -- see resolvePortType below and
-// rete/nodes.ts's InjectNode.retypeOutput().
-export type PortType = PayloadType | ((properties: Record<string, unknown>) => PayloadType);
-
-export interface PortDefinition {
-  /** Must match the port's key in app/rete/nodes.ts's addInput/addOutput calls exactly. */
-  name: string;
-  type: PortType;
-}
-
-/** Resolves a possibly-dynamic PortDefinition against one node instance's
- * current properties. The one place `typeof type === "function"` gets
- * checked -- callers (rete/nodes.ts) never branch on that themselves. */
-export function resolvePortType(port: PortDefinition, properties: Record<string, unknown>): PayloadType {
-  return typeof port.type === "function" ? port.type(properties) : port.type;
-}
+// The descriptor primitives (NodeKind/PayloadType/PortType/PortDefinition/resolvePortType) and the
+// canonical NodeDescriptor now live in ./node-descriptor.ts -- re-exported here so every existing
+// `from "./node-definition.js"` import keeps resolving.
+export * from "./node-descriptor.js";
 
 /** Code generated at module scope, before any coroutine bodies -- pin/bus setup, imports, etc. */
 export interface SetupCode {
@@ -213,32 +188,14 @@ export interface CodegenContext {
   claimResource?(resource: string, use: string, who: string): void;
 }
 
-export interface NodeDefinition {
-  /** e.g. "thingstudio/gpio_out" */
-  type: string;
-  kind: NodeKind;
-  /** Hardware capabilities this node needs (e.g. `["espnow"]`), checked centrally against the
-   * compile's Target by definitions/capability-check.ts. Absent = needs nothing in particular. */
-  requires?: { readonly capabilities?: readonly string[] };
-  /** The node is valid with nothing wired to it, so "disconnected from any source" doesn't apply (a gui_button:
-   * it is useful as a pure input, with nothing to display). */
-  allowUnwired?: boolean;
-  // Editor-side only (wire-type-system-scoping.md, "Governing call"): read
-  // by app/rete/nodes.ts to construct each port's real socket instead of a
-  // hardcoded AnySocket. compile.ts's own graph walk does not read this --
-  // confirmed when this field was added, matching the scoping note's
-  // framing that §6's type check is a wire-connect-time editor concern,
-  // not something codegen needs. Optional, and only populated for the 5
-  // node types currently on the canvas (inject, function, debug, gpio_out,
-  // timer) -- the other 11 registered types stay untouched, out of scope
-  // per the scoping note's question 5. A node type with no `ports` here
-  // simply isn't constructible on the canvas yet (rete/nodes.ts has no
-  // class for it either), so there's no "falls back to what" case to
-  // handle.
-  ports?: {
-    inputs?: PortDefinition[];
-    outputs?: PortDefinition[];
-  };
+/**
+ * A built-in node type: the canonical data descriptor plus the TypeScript codegen hooks a custom
+ * `.node.json` deliberately cannot carry. `type`/`kind`/`requires`/`allowUnwired`/`ports`/editor
+ * metadata/property schema all come from `NodeDescriptor` (./node-descriptor.ts); a node being
+ * migrated onto the descriptor fills in that data and the canvas/palette/panel/catalog read it from
+ * here instead of their own hardcoded copies.
+ */
+export interface NodeDefinition extends NodeDescriptor {
   /**
    * Overrides `ports.outputs?.length` for how many outputs THIS
    * PARTICULAR node instance has -- only needed when output count varies

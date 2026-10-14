@@ -27,12 +27,33 @@ import type { CodegenContext, NodeDefinition, SinkCodegenResult } from "../compi
 export const debugNode: NodeDefinition = {
   type: "thingstudio/debug",
   kind: "sink",
+  // Descriptor metadata (compiler/node-descriptor.ts): the canvas, palette, property panel and
+  // catalog read these instead of palette.ts/PropertyPanel.vue's own copies -- debug is the first
+  // family migrated onto the canonical descriptor (node-descriptor-unification-briefing.md).
+  paletteId: "debug",
+  label: "debug",
+  group: "general",
+  priority: 50,
+  color: "#2e4a6e",
+  bgcolor: "#1f2c3f",
+  icon: "≡",
+  width: 84,
+  description: "Prints a message to the device console.",
   // `any` in -- debug prints whatever payload it receives (`msg.get
   // ('payload')` below, unconditionally), so it accepts every source type,
   // same reasoning as function's own `any` input.
   ports: {
     inputs: [{ name: "msg", type: "any" }],
   },
+  properties: [
+    {
+      name: "fullMessage",
+      label: "full message",
+      kind: "boolean",
+      default: false,
+      help: "Print the whole message (topic and any extra fields a source adds) instead of just payload.",
+    },
+  ],
   codegenSink(node: GraphNode, ctx: CodegenContext): SinkCodegenResult {
     const fullMessage = node.properties.fullMessage === true;
     const functionBody = fullMessage

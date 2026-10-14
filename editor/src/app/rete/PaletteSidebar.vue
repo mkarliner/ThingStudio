@@ -105,6 +105,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { NODE_PALETTE, DEFAULT_KIND_STYLE, DEFAULT_NODE_GROUPS, DRAG_MIME, CUSTOM_DRAG_MIME, type NodeKind } from "./palette";
+import { paletteStyleFor, builtinDescriptors } from "./node-descriptors";
 import { customNodePackages, customNodesVersion } from "./custom-nodes-store";
 import { activeTarget } from "./store";
 import { buildRegistry } from "../../node-library/registry";
@@ -169,24 +170,25 @@ const allRows = computed<PaletteRow[]>(() => {
   customNodesVersion.value; // reactive dependency -- see custom-nodes-store.ts's own header
   const needle = filter.value.trim().toLowerCase();
 
-  const builtinRows: PaletteRow[] = (Object.keys(NODE_PALETTE) as NodeKind[])
-    .filter((kind) => !NODE_PALETTE[kind].hidden)
-    .filter((kind) => NODE_PALETTE[kind].label.toLowerCase().includes(needle))
-    .map((kind) => {
-      const style = NODE_PALETTE[kind];
-      return {
-        key: kind,
-        origin: "builtin",
-        value: kind,
-        label: style.label,
-        color: style.color,
-        bgcolor: style.bgcolor,
-        icon: style.icon,
-        group: style.group,
-        priority: style.priority,
-        unmet: unmetCapabilities(registry.get(`thingstudio/${kind}`)?.requires?.capabilities),
-      };
-    });
+  // Built-in rows: every legacy palette kind plus every migrated descriptor kind (a family moves its
+  // row onto its descriptor as it migrates -- node-descriptors.ts's paletteStyleFor prefers that row).
+  const builtinKinds = [...new Set<string>([...Object.keys(NODE_PALETTE), ...builtinDescriptors().keys()])];
+  const builtinRows: PaletteRow[] = builtinKinds
+    .map((kind) => ({ kind, style: paletteStyleFor(kind) }))
+    .filter(({ style }) => !style.hidden)
+    .filter(({ style }) => style.label.toLowerCase().includes(needle))
+    .map(({ kind, style }) => ({
+      key: kind,
+      origin: "builtin" as const,
+      value: kind,
+      label: style.label,
+      color: style.color,
+      bgcolor: style.bgcolor,
+      icon: style.icon,
+      group: style.group,
+      priority: style.priority,
+      unmet: unmetCapabilities(registry.get(`thingstudio/${kind}`)?.requires?.capabilities),
+    }));
 
   const customRows: PaletteRow[] = [...customNodePackages.value.values()]
     .map((pkg) => ({

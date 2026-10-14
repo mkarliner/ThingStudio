@@ -150,7 +150,7 @@ export interface KindStyle {
   priority: number;
 }
 
-export const NODE_PALETTE: Record<NodeKind, KindStyle> = {
+export const NODE_PALETTE: Partial<Record<NodeKind, KindStyle>> = {
   inject: { color: "#2e5c2e", bgcolor: "#1f3f1f", icon: "▶", label: "inject", group: "general", priority: 10 },
   // startup, 2026-09-24 -- olive green, close to inject's green since both
   // are fixed-payload sources, but distinct. "⏻" (power) for "runs at
@@ -158,7 +158,6 @@ export const NODE_PALETTE: Record<NodeKind, KindStyle> = {
   // after inject.
   startup: { color: "#5c5c2e", bgcolor: "#3a3a1f", icon: "⏻", label: "startup", group: "general", priority: 11 },
   function: { color: "#6e5b2e", bgcolor: "#3f341f", icon: "ƒ", label: "function", group: "general", priority: 30 },
-  debug: { color: "#2e4a6e", bgcolor: "#1f2c3f", icon: "≡", label: "debug", group: "general", priority: 50 },
   gpio_out: { color: "#6e3b3b", bgcolor: "#3f1f1f", icon: "■", label: "gpio out", group: "hardware", priority: 20 },
   timer: { color: "#5b3b6e", bgcolor: "#331f3f", icon: "◷", label: "timer", group: "general", priority: 20 },
   // Distinct from every existing color -- amber/orange, no prior node type

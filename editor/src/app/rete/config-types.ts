@@ -79,11 +79,15 @@
 // credential-store namespace ("wifi" or "mqtt-broker") the field resolves
 // against; see credential-types.ts for that store's own field shapes.
 
+import type { PropertyFieldKind } from "../../compiler/node-descriptor.js";
+
 export interface ConfigFieldDescriptor {
   /** Must match the key this field is stored under in a config's own `properties`. */
   name: string;
   label: string;
-  kind: "text" | "password" | "number" | "select" | "credential" | "boolean" | "configRef" | "pin";
+  /** The shared property-field vocabulary (compiler/node-descriptor.ts) -- a config's fields and a
+   * node's fields are the same shapes, so one panel renderer can dispatch on either. */
+  kind: PropertyFieldKind;
   /** Only meaningful when `kind` is "configRef" -- the config type this field points at (another config's id),
    * edited with a nested ConfigRefField. First user: a touch panel's I2C bus. */
   configType?: string;

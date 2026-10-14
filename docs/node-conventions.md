@@ -12,10 +12,18 @@ a different mechanism — see `docs/user-guide/custom-nodes.md` and the publishe
 A node is a few pieces that have to agree:
 
 - **Editor descriptor and codegen** — `editor/src/node-library/<name>.ts`, a `NodeDefinition`
-  (`editor/src/compiler/node-definition.ts`). Register it in `editor/src/node-library/registry.ts`.
-- **Editor node class and palette entry** — `editor/src/app/rete/nodes.ts` (`NODE_FACTORIES`, `addInput`/`addOutput`)
-  and `editor/src/app/rete/palette.ts` (group, colour, order). Each port key here must exactly match the
-  `NodeDefinition`'s `ports` name.
+  (`editor/src/compiler/node-definition.ts`): the canonical `NodeDescriptor`
+  (`editor/src/compiler/node-descriptor.ts`) plus the codegen hook. A migrated node carries its palette
+  styling (`paletteId`/`label`/`group`/`priority`/`color`/`icon`/`width`) and its property schema
+  (`properties`) on that descriptor, and the canvas, palette, property panel and catalog read them from
+  there; an unmigrated kind still falls back to `palette.ts` and `PropertyPanel.vue`
+  (`../docs/working-notes/outstanding-items/node-descriptor-unification.md`). Register it in
+  `editor/src/node-library/registry.ts`.
+- **Editor node class and palette entry** — for a migrated node the class comes from the descriptor
+  (`nodes.ts`'s `buildDescriptorNodeClass`); otherwise a hand-written class in
+  `editor/src/app/rete/nodes.ts` (`NODE_FACTORIES`, `addInput`/`addOutput`) and a palette row in
+  `editor/src/app/rete/palette.ts` (group, colour, order). Each port key must exactly match the
+  descriptor's `ports` name.
 - **Property panel** — the descriptor's `properties` crossed with the class's fields and sockets.
 - **Hardware it needs** — `requires.capabilities` on the `NodeDefinition` (e.g. `{ capabilities: ["espnow"] }`)
   when the node only works on chips with a feature (radio, PIO). The compile refuses it on a board without it, and

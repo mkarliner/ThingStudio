@@ -94,8 +94,10 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { Ref } from "rete-vue-plugin";
-import { CustomNode, InjectNode, type AnyThingstudioNode } from "./nodes";
-import { NODE_PALETTE, DEFAULT_KIND_STYLE, type NodeKind, type KindStyle } from "./palette";
+import { InjectNode, type AnyThingstudioNode } from "./nodes";
+import type { KindStyle } from "./palette";
+import { paletteStyleFor } from "./node-descriptors";
+import type { NodeDescriptor } from "../../compiler/node-descriptor";
 import type { NodeStatusState } from "../../protocol/messages";
 import { isNodeInActivePane, nodePaneVersion } from "./panes-store";
 import { fireInjectNode, propertyVersion } from "./store";
@@ -132,11 +134,16 @@ const paneHidden = computed(() => {
 });
 
 const palette = computed<KindStyle>(() => {
-  if (props.data instanceof CustomNode) {
-    const d = props.data.descriptor;
-    return { color: d.color ?? DEFAULT_KIND_STYLE.color, bgcolor: d.bgcolor ?? DEFAULT_KIND_STYLE.bgcolor, icon: d.icon ?? "◆", label: d.label };
-  }
-  return NODE_PALETTE[props.data.kind as NodeKind] ?? DEFAULT_KIND_STYLE;
+  const base = paletteStyleFor(props.data.kind as string);
+  const d = (props.data as unknown as { descriptor?: NodeDescriptor }).descriptor;
+  if (!d) return base;
+  return {
+    ...base,
+    color: d.color ?? base.color,
+    bgcolor: d.bgcolor ?? base.bgcolor,
+    icon: d.icon ?? base.icon,
+    label: d.label ?? base.label,
+  };
 });
 const icon = computed(() => palette.value.icon);
 
