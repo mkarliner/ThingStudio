@@ -50,10 +50,20 @@ import type { CodegenContext, NodeDefinition, TransformCodegenResult } from "../
 export const delayNode: NodeDefinition = {
   type: "thingstudio/delay",
   kind: "transform",
+  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor.
+  paletteId: "delay",
+  label: "delay",
+  group: "general",
+  priority: 40,
+  color: "#4a4a6e",
+  bgcolor: "#2a2a3f",
+  icon: "⌛",
+  width: 100,
   ports: {
     inputs: [{ name: "msg", type: "any" }],
     outputs: [{ name: "msg", type: "any" }],
   },
+  properties: [{ name: "delayMs", label: "delay (ms)", kind: "number", default: 1000, min: 1 }],
   codegenTransform(node: GraphNode, ctx: CodegenContext): TransformCodegenResult {
     const delayMs = Math.round(Number(node.properties.delayMs ?? 1000));
     if (!Number.isFinite(delayMs) || delayMs <= 0) {

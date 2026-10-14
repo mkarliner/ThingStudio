@@ -20,6 +20,15 @@ import type { CodegenContext, NodeDefinition, SourceCodegenResult } from "../com
 export const timerNode: NodeDefinition = {
   type: "thingstudio/timer",
   kind: "source",
+  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor.
+  paletteId: "timer",
+  label: "timer",
+  group: "general",
+  priority: 20,
+  color: "#5b3b6e",
+  bgcolor: "#331f3f",
+  icon: "◷",
+  width: 84,
   // The tick counter below is a genuine Python int (`counterVar += 1`,
   // starting at 0) -- `int`, not `number`, is the precise type; `int ->
   // number` widening (bucket 2, sockets.ts) means this still feeds a
@@ -28,6 +37,7 @@ export const timerNode: NodeDefinition = {
   ports: {
     outputs: [{ name: "msg", type: "int" }],
   },
+  properties: [{ name: "intervalMs", label: "interval (ms)", kind: "number", default: 1000, min: 1 }],
   codegenSource(node: GraphNode, ctx: CodegenContext): SourceCodegenResult {
     const intervalMs = Math.round(Number(node.properties.intervalMs ?? 1000));
     if (!Number.isFinite(intervalMs) || intervalMs <= 0) {

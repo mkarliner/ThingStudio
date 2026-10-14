@@ -158,8 +158,6 @@ export const NODE_PALETTE: Partial<Record<NodeKind, KindStyle>> = {
   // after inject.
   startup: { color: "#5c5c2e", bgcolor: "#3a3a1f", icon: "⏻", label: "startup", group: "general", priority: 11 },
   function: { color: "#6e5b2e", bgcolor: "#3f341f", icon: "ƒ", label: "function", group: "general", priority: 30 },
-  gpio_out: { color: "#6e3b3b", bgcolor: "#3f1f1f", icon: "■", label: "gpio out", group: "hardware", priority: 20 },
-  timer: { color: "#5b3b6e", bgcolor: "#331f3f", icon: "◷", label: "timer", group: "general", priority: 20 },
   // Distinct from every existing color -- amber/orange, no prior node type
   // uses this range. "⚡" for the hard-IRQ-driven, event-fired nature (vs.
   // timer's "◷" clock glyph for its own poll/sleep-shaped source).
@@ -210,8 +208,6 @@ export const NODE_PALETTE: Partial<Record<NodeKind, KindStyle>> = {
   // Magenta/purple pair -- see this file's header for the icon reasoning.
   mqtt_publish: { color: "#8a3b6e", bgcolor: "#4a1f3a", icon: "⇧", label: "mqtt publish", group: "network", priority: 31 },
   mqtt_subscribe: { color: "#6e3b8a", bgcolor: "#3a1f4a", icon: "⇩", label: "mqtt subscribe", group: "network", priority: 30 },
-  // Slate-blue -- see this file's header for the icon reasoning.
-  delay: { color: "#4a4a6e", bgcolor: "#2a2a3f", icon: "⌛", label: "delay", group: "general", priority: 40 },
   // filter added 2026-09-26: teal, "▽" (a funnel) -- it lets fewer messages through than arrive.
   // bme280 added 2026-09-26: first I2C sensor. "hardware" group, brick red, "°" for temperature.
   // i2c (generic) added 2026-09-26: same indigo family as display_i2c, "⇄" for a two-way transfer.
@@ -223,8 +219,6 @@ export const NODE_PALETTE: Partial<Record<NodeKind, KindStyle>> = {
   clock: { color: "#2e6e4a", bgcolor: "#1f3f2c", icon: "◷", label: "clock", group: "general", priority: 37 },
   journal: { color: "#2e6e4a", bgcolor: "#1f3f2c", icon: "≋", label: "journal", group: "general", priority: 36 },
   filter: { color: "#2e6e4a", bgcolor: "#1f3f2c", icon: "▽", label: "filter", group: "general", priority: 35 },
-  // Blue -- see this file's header for the icon reasoning.
-  pwm_out: { color: "#1f5c8a", bgcolor: "#12334a", icon: "∿", label: "pwm out", group: "hardware", priority: 30 },
   // GUI nodes, 2026-10-08 (node-library/gui.ts): their own "GUI" group, one slate-green family.
   gui_screen: { color: "#3f6e5c", bgcolor: "#1f3a30", icon: "▣", label: "screen", group: "GUI", priority: 10 },
   gui_navigator: { color: "#3f5c6e", bgcolor: "#1f303a", icon: "⇆", label: "navigator", group: "GUI", priority: 20, hidden: true },

@@ -181,17 +181,6 @@
         <p class="hint">Return an array to route to multiple outputs, Node-RED style: e.g. <code>return [msg, null]</code> sends to output 1 only. A plain <code>return msg</code> still works and always targets output 1.</p>
       </template>
 
-      <template v-else-if="node.kind === 'gpio_out'">
-        <PinField label="pin" :model-value="node.properties.pin" @update:model-value="(v) => setProp('pin', v)" />
-      </template>
-
-      <template v-else-if="node.kind === 'pwm_out'">
-        <PinField label="pin" :model-value="node.properties.pin" @update:model-value="(v) => setProp('pin', v)" />
-        <label>frequency (Hz)
-          <input type="number" min="1" v-model.number="node.properties.freq" @input="touch" />
-        </label>
-      </template>
-
       <!-- GUI nodes (node-library/gui.ts, 2026-10-08). Placement (page, font, size) is in the flow's
            `screens` section, edited in the flow file until the GUI view exists. -->
       <template v-else-if="node.kind === 'gui_screen'">
@@ -325,18 +314,6 @@
         <label>close after (s, 0 = never) <input type="number" min="0" v-model.number="node.properties.timeout" @input="touch" /></label>
         <p class="hint">Opens with msg.payload as its content; a payload of None closes it. The output sends how it closed:
           <code>ack</code>, <code>timeout</code> or <code>closed</code>.</p>
-      </template>
-
-      <template v-else-if="node.kind === 'timer'">
-        <label>interval (ms)
-          <input type="number" min="1" v-model.number="node.properties.intervalMs" @input="touch" />
-        </label>
-      </template>
-
-      <template v-else-if="node.kind === 'delay'">
-        <label>delay (ms)
-          <input type="number" min="1" v-model.number="node.properties.delayMs" @input="touch" />
-        </label>
       </template>
 
       <template v-else-if="node.kind === 'bme280'">
@@ -896,19 +873,28 @@
       <template v-else-if="nodeDescriptor">
         <p v-if="nodeDescriptor.description" class="hint">{{ nodeDescriptor.description }}</p>
         <template v-for="f in nodeDescriptor.properties ?? []" :key="f.name">
-          <label v-if="f.kind === 'boolean'" class="checkbox-label">
-            <input type="checkbox" v-model="nodeProperties[f.name]" @change="touch" />
-            {{ f.label }}
-          </label>
-          <label v-else>
-            {{ f.label }}
-            <select v-if="f.kind === 'select'" v-model="nodeProperties[f.name]" @change="touch">
-              <option v-for="opt in f.options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-            </select>
-            <input v-else-if="f.kind === 'number'" type="number" v-model.number="nodeProperties[f.name]" @input="touch" />
-            <input v-else type="text" v-model="nodeProperties[f.name]" @input="touch" />
-          </label>
-          <p v-if="f.help" class="hint">{{ f.help }}</p>
+          <template v-if="!f.showIf || f.showIf(nodeProperties)">
+            <PinField
+              v-if="f.kind === 'pin'"
+              :label="f.label"
+              :optional="f.optional"
+              :model-value="nodeProperties[f.name]"
+              @update:model-value="(v) => setProp(f.name, v)"
+            />
+            <label v-else-if="f.kind === 'boolean'" class="checkbox-label">
+              <input type="checkbox" v-model="nodeProperties[f.name]" @change="touch" />
+              {{ f.label }}
+            </label>
+            <label v-else>
+              {{ f.label }}
+              <select v-if="f.kind === 'select'" v-model="nodeProperties[f.name]" @change="touch">
+                <option v-for="opt in f.options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+              </select>
+              <input v-else-if="f.kind === 'number'" type="number" :min="f.min" :max="f.max" :step="f.step" v-model.number="nodeProperties[f.name]" @input="touch" />
+              <input v-else type="text" v-model="nodeProperties[f.name]" @input="touch" />
+            </label>
+            <p v-if="f.help" class="hint">{{ f.help }}</p>
+          </template>
         </template>
         <p v-if="isCustomNode" class="hint">Custom node ({{ nodeDescriptor.type }}) -- loaded this session only; reload its package after a page refresh.</p>
       </template>

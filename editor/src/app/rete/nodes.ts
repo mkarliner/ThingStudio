@@ -420,25 +420,7 @@ export class FunctionNode extends ClassicPreset.Node {
 // project's own precedent for a registry-only node type (same state
 // http_request was in before 2026-09-05).
 
-export class DelayNode extends ClassicPreset.Node {
-  width = 100;
-  height = NODE_HEIGHT;
-  kind = "delay" as const;
-  nodeType = "thingstudio/delay";
-  highlighted = false;
-  status: NodeStatusState | null = null;
-  statusText: string | null = null;
-
-  properties: { delayMs: number } = {
-    delayMs: 1000,
-  };
-
-  constructor() {
-    super("delay");
-    this.addInput("msg", new ClassicPreset.Input(portSocket(delayNode.ports?.inputs, "msg", this.properties), "msg", true));
-    this.addOutput("msg", new ClassicPreset.Output(portSocket(delayNode.ports?.outputs, "msg", this.properties), "msg"));
-  }
-}
+export class DelayNode extends buildDescriptorNodeClass(delayNode) {}
 
 // Drops messages that aren't worth sending: unchanged, inside a deadband, or too soon
 // (node-library/filter.ts).
@@ -689,24 +671,7 @@ function buildDescriptorNodeClass(descriptor: NodeDescriptor) {
 // The class name is kept because tests and AnyThingstudioNode reference it.
 export class DebugNode extends buildDescriptorNodeClass(debugNode) {}
 
-export class GpioOutNode extends ClassicPreset.Node {
-  width = 104;
-  height = NODE_HEIGHT;
-  kind = "gpio_out" as const;
-  nodeType = "thingstudio/gpio_out";
-  highlighted = false;
-  status: NodeStatusState | null = null;
-  statusText: string | null = null;
-
-  // Default 12 -- matches app/nodes.ts's GpioOutNode (LuatOS ESP32-C3 test
-  // board's visible onboard LED).
-  properties: { pin: number } = { pin: 12 };
-
-  constructor() {
-    super("gpio out");
-    this.addInput("signal", new ClassicPreset.Input(portSocket(gpioOutNode.ports?.inputs, "signal", this.properties), "signal", true));
-  }
-}
+export class GpioOutNode extends buildDescriptorNodeClass(gpioOutNode) {}
 
 // Given canvas presence 2026-09-06 (outstanding-items/canvas-presence-
 // gaps.md) -- previously registry-only since introduction, same batch as
@@ -715,39 +680,9 @@ export class GpioOutNode extends ClassicPreset.Node {
 // Sink kind, one input -- same single-port shape as GpioOutNode just
 // above, `duty` named for what it actually carries (pwm-out.ts's own
 // header explains the naming choice).
-export class PwmOutNode extends ClassicPreset.Node {
-  width = 104;
-  height = NODE_HEIGHT;
-  kind = "pwm_out" as const;
-  nodeType = "thingstudio/pwm_out";
-  highlighted = false;
-  status: NodeStatusState | null = null;
-  statusText: string | null = null;
+export class PwmOutNode extends buildDescriptorNodeClass(pwmOutNode) {}
 
-  properties: { pin: number; freq: number } = { pin: 12, freq: 1000 };
-
-  constructor() {
-    super("pwm out");
-    this.addInput("duty", new ClassicPreset.Input(portSocket(pwmOutNode.ports?.inputs, "duty", this.properties), "duty", true));
-  }
-}
-
-export class TimerNode extends ClassicPreset.Node {
-  width = 84;
-  height = NODE_HEIGHT;
-  kind = "timer" as const;
-  nodeType = "thingstudio/timer";
-  highlighted = false;
-  status: NodeStatusState | null = null;
-  statusText: string | null = null;
-
-  properties: { intervalMs: number } = { intervalMs: 1000 };
-
-  constructor() {
-    super("timer");
-    this.addOutput("msg", new ClassicPreset.Output(portSocket(timerNode.ports?.outputs, "msg", this.properties), "msg"));
-  }
-}
+export class TimerNode extends buildDescriptorNodeClass(timerNode) {}
 
 export class InterruptNode extends ClassicPreset.Node {
   width = 104;

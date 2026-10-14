@@ -21,6 +21,15 @@ import type { CodegenContext, NodeDefinition, SinkCodegenResult } from "../compi
 export const gpioOutNode: NodeDefinition = {
   type: "thingstudio/gpio_out",
   kind: "sink",
+  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor.
+  paletteId: "gpio_out",
+  label: "gpio out",
+  group: "hardware",
+  priority: 20,
+  color: "#6e3b3b",
+  bgcolor: "#3f1f1f",
+  icon: "■",
+  width: 104,
   // The one concretely-typed *input* that exists on today's 5-node canvas
   // (wire-type-system-scoping.md's scope-of-protection analysis) --
   // `signal` feeds `machine.Pin.value(1 if msg.get('payload') else 0)`
@@ -32,6 +41,7 @@ export const gpioOutNode: NodeDefinition = {
   ports: {
     inputs: [{ name: "signal", type: "bool" }],
   },
+  properties: [{ name: "pin", label: "pin", kind: "pin", default: 12 }],
   codegenSink(node: GraphNode, ctx: CodegenContext): SinkCodegenResult {
     const pin = checkPin(ctx, "gpio_out pin", node.properties.pin, "output");
     // The pin is a keyed singleton (hardware-shared.ts, decisions/hardware-singletons.md).

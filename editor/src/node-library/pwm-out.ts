@@ -32,9 +32,22 @@ import type { CodegenContext, NodeDefinition, SinkCodegenResult } from "../compi
 export const pwmOutNode: NodeDefinition = {
   type: "thingstudio/pwm_out",
   kind: "sink",
+  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor.
+  paletteId: "pwm_out",
+  label: "pwm out",
+  group: "hardware",
+  priority: 30,
+  color: "#1f5c8a",
+  bgcolor: "#12334a",
+  icon: "∿",
+  width: 104,
   ports: {
     inputs: [{ name: "duty", type: "number" }],
   },
+  properties: [
+    { name: "pin", label: "pin", kind: "pin", default: 12 },
+    { name: "freq", label: "frequency (Hz)", kind: "number", default: 1000, min: 1 },
+  ],
   codegenSink(node: GraphNode, ctx: CodegenContext): SinkCodegenResult {
     const pin = checkPin(ctx, "pwm_out pin", node.properties.pin, "output");
     const freq = Math.round(Number(node.properties.freq ?? 1000));

@@ -44,12 +44,14 @@ property-panel path + palette/catalog lookups read it, and **`debug` is migrated
 property UI now comes from the descriptor; option (a): the custom `.node.json` is to become the same shape,
 minus codegen). `interfaces/node-descriptor/SPEC.md` is now v2. Remaining work, in order:
 
-1. Move the remaining built-in families onto the descriptor, per the briefing: `timer`/`delay` → `gpio_out`/
-   `pwm_out` → `udp_send` → the GPIO cluster (`interrupt`/`eswitch`/`ebutton`/`adc`/`encoder`/`neopixel`) →
+1. Move the remaining built-in families onto the descriptor, per the briefing. Done: `debug`, then `timer`/
+   `delay` and `gpio_out`/`pwm_out` (the latter added the generic `pin` field, wrapping `PinField`). Next:
+   `udp_send` and the rest of the network family (needs a `configRef` field kind; note `udp_send`'s panel has a
+   display-only WiFi `ConfigRefField` bound to no property, which the generic renderer doesn't yet express), the
+   GPIO cluster (`interrupt`/`eswitch`/`ebutton`/`adc`/`encoder`/`neopixel`; `select`/`boolean`/`showIf`), then
    `function` last (dynamic `outputCount`). Then make `palette.ts`'s rows go away. The generic property-panel
-   branch (`PropertyPanel.vue`) currently renders `text`/`number`/`boolean`/`select`; it needs `pin`, `configRef`,
-   `credential`/`password` widgets (wrapping `PinField`/`ConfigRefField`/`CredentialRefField`) before the
-   `gpio_out`/`udp_send` families can migrate without losing their fields.
+   branch (`PropertyPanel.vue`) currently renders `text`/`number`/`boolean`/`select`/`pin`; it still needs
+   `configRef` and `credential`/`password` widgets (wrapping `ConfigRefField`/`CredentialRefField`).
 2. Relax the custom `.node.json` format (multi-output, `configRef` properties, event sources) so more built-ins
    can be cloned, and add the package's own docs (`description`/`.node.md`, sanitized).
 3. Still out: dynamic ports and arbitrary codegen stay built-in-only; compile-time resource claims stay a
