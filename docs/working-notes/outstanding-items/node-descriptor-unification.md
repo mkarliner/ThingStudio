@@ -28,3 +28,11 @@ The decision to surface: converge on the *data* format (achievable now, cheaply)
 (a security/architecture change). Related: the node→board applicability gap
 (`board-specific-node-collections.md`, `editor-board-awareness.md`), which also needs a home on whatever descriptor
 becomes canonical.
+
+**2026-10-14:** the node→board part is built (`decisions/node-board-mapping.md`): `requires` now lives on both
+descriptor shapes, so the canonical one only has to absorb an existing field. The memory/firmware review that was
+to precede settling this is written (`custom-firmware-tier-note.md`): a firmware tier is a device-packaging
+decision and does **not** gate any node work, because node descriptors/panel/docs are editor-side only (only the
+compiled flow and its imported libraries reach a board). What remains here is the built-in/custom split itself.
+**Scoping brief to start it:** `../node-descriptor-unification-briefing.md` (the settled direction, the shape
+questions to answer, the seven places a built-in lives, and the first actions).

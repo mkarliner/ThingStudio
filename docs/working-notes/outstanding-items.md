@@ -426,6 +426,9 @@ not here.
   call. Libraries already go as `.mpy`; the saving is over that baseline. Cheaper idea, not built: fonts
   read from flash on demand instead of imported.
   `frozen-firmware-spike-briefing.md`.
+  **2026-10-14:** the decision-ready note is written (`custom-firmware-tier-note.md`): build post-MVP for
+  the classic-ESP32-without-PSRAM / C3 / Pico class only, stock install stays default. It is a device-packaging
+  decision and does **not** gate the node-descriptor work (nodes touch only editor files).
 
 - **[P5]** **CI vendor-neutrality — should CI be independent of GitHub specifically?** Mike's raised question (`mikes-questions-and-points.md`, "# CI"). Currently GitHub Actions (`repo-structure-and-conventions.md`). Not revisited. ([detail](outstanding-items/ci-vendor-neutrality.md))
 
