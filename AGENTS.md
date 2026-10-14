@@ -143,6 +143,13 @@ field.
 **These specs are written for humans and must stay readable** — plain language, short sections, tables, a worked
 example. A spec only an author can follow is a spec that will drift.
 
+**The boundaries are enforced mechanically, not just documented.** Each subsystem has its own `AGENTS.md`
+(`editor/`, `backend/`, `device-runtime/`, `interfaces/`); `.github/CODEOWNERS` routes every interface and its
+conformance test to Mike; `editor/test/module-boundaries.test.ts` (run by `npm test`, and therefore CI) fails a
+forbidden cross-layer import; and each interface has a conformance test. CI runs the editor's and backend's; the
+device-runtime conformance suite is not yet in CI (`outstanding-items/enforce-interface-conformance-in-ci.md`).
+When a boundary test catches a coupling, fix the coupling — don't relax the test.
+
 ## Commits
 
 Prompt Mike at suitable points to commit — don't assume auto-commit and don't let uncommitted work pile up silently.

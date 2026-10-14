@@ -1,0 +1,24 @@
+# Thingstudio code owners.
+#
+# This is a single-maintainer project, so the default owner is Mike. The
+# point of the specific entries is to route review on the files that are
+# cross-subsystem contracts (AGENTS.md "Interface specs"): a change there has
+# blast radius beyond one component, so it should never land without Mike
+# looking at it, however many agents are working in the repo.
+
+* @mkarliner
+
+# Cross-subsystem interface specs and their conformance tests.
+/interfaces/          @mkarliner
+/editor/test/protocol-conformance.test.ts        @mkarliner
+/editor/test/runtime-api-conformance.test.ts     @mkarliner
+/editor/test/node-descriptor-schema.test.ts      @mkarliner
+/editor/test/board-descriptor-schema.test.ts     @mkarliner
+/editor/test/module-boundaries.test.ts           @mkarliner
+/backend/test/test_conformance.py                @mkarliner
+/device-runtime/test/test_conformance.py         @mkarliner
+/device-runtime/test/test_runtime_api.py         @mkarliner
+
+# The project rules and the interface boundary itself.
+/AGENTS.md    @mkarliner
+/CLAUDE.md    @mkarliner

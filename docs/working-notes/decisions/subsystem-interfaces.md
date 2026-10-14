@@ -32,6 +32,13 @@ log's scope boundary, and its maintenance rule. Context: `../architecture-review
   (`.node.json` + `.node.py`); `editor/test/node-descriptor-schema.test.ts` keeps the schema's enums/pattern in step
   with `custom-node.ts` (whose validator constants are now exported). §4 of the node spec names the review's
   built-in/custom divergence explicitly and points at the new `outstanding-items/node-descriptor-unification.md`.
+- **2026-10-14 — The boundaries are enforced mechanically, not just documented.** `editor/test/module-boundaries.test.ts`
+  (dependency-free; scans the real import graph, run by `npm test` and CI) fails a forbidden editor cross-layer edge:
+  only `app/` and `cli/` may import `app/`; `protocol/` imports no other subsystem; `compiler/` imports neither
+  `node-library/` nor `app/`; nothing escapes `editor/src`. Each subsystem gets its own `AGENTS.md` (`editor/`,
+  `backend/`, `device-runtime/`, `interfaces/`); `.github/CODEOWNERS` routes every interface and conformance test to
+  Mike; and a `backend` CI job now runs `pytest` (including the wire-protocol conformance vectors). The
+  device-runtime conformance suite is still not in CI — `outstanding-items/enforce-interface-conformance-in-ci.md`.
 - **2026-10-14 — Conformance immediately found a real cross-implementation gap.** The editor's cborg codec can
   encode a CBOR **float**; the device's hand-rolled `device-runtime/src/cbor.py` rejects major type 7 outright. So
   a `VALUE_STREAM.payload` that is a float (every `number`-typed port value) would decrypt fine in the editor and

@@ -37,8 +37,25 @@ jobs:
       - run: shellcheck -s sh packaging/install.sh packaging/launcher/thingstudio
       - run: pwsh -NoProfile -File packaging/test/install-ps1.tests.ps1
 
+  # The backend: pytest, including the wire-protocol conformance vectors
+  # (backend/test/test_conformance.py) against the shared interfaces/protocol/
+  # spec, so the relay can't drift from the editor and device.
+  backend:
+    name: backend (pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e './backend[test]'
+      - run: pytest -q
+        working-directory: backend
+
   # device-runtime: headless MicroPython unix-port tests -- not added yet.
-  # device-runtime/test/ is still a placeholder (no unix-port build wired
-  # up in this environment). Add a job here once that exists; don't run
-  # this job against real hardware under any circumstances -- that's
+  # They need a MicroPython build (device-runtime/test/README.md: clone,
+  # mpy-cross, ports/unix), which is heavier than the rest of CI; the
+  # protocol/runtime-api conformance vectors run there and should be wired in
+  # (tracked as outstanding-items/enforce-interface-conformance-in-ci.md).
+  # Don't run this job against real hardware under any circumstances -- that's
   # test/hil/'s job, and it's deliberately excluded from CI.
