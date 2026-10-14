@@ -2,7 +2,15 @@
 
 **A drag-and-drop, low-code environment for programming microcontrollers**
 
-Status: draft v0.1 · 2026-08-09
+Status: draft v0.2 · revised 2026-10-14 (v0.1 was 2026-08-09)
+
+This revision updates the doc to match the shipped v0.2.0 system (runtime 10, editor release 2026-10-13): the
+backend-first connection model and WiFi transport that replaced WebSerial-only talk, the board/processor
+definition system, the display/GUI/touch and adc/encoder/neopixel node families, per-flow dependency delivery
+(DEP_PUT/DEP_COMMIT), the security reality (board password + random-nonce session auth, not the never-built
+monotonic-counter mechanism v0.1 described), and the roadmap as it actually stands. Sections whose content has
+not changed carry forward largely untouched; the wire-protocol sketch (§13) and roadmap (§10) have drifted the
+farthest and are the most rewritten. Working-notes pointers use the current paths under `docs/working-notes/`.
 
 ## Contents
 
@@ -18,189 +26,427 @@ Status: draft v0.1 · 2026-08-09
 - [10. Phased roadmap](#10-phased-roadmap)
 - [11. Open questions](#11-open-questions)
 - [12. Licensing and open-source suitability](#12-licensing-and-open-source-suitability)
-- [13. Wire protocol (v1 sketch)](#13-wire-protocol-v1-sketch)
+- [13. Wire protocol (v1, shipped)](#13-wire-protocol-v1-shipped)
 - [14. Project license and governance](#14-project-license-and-governance)
 - [15. Proof-of-concept validation](#15-proof-of-concept-validation)
 - [Sources](#sources)
 
 ## 1. Vision
 
-Thingstudio is a browser-based, node-and-wire visual programming environment, in the spirit of Node-RED, whose output runs directly on a microcontroller rather than on a server. A user drags nodes onto a canvas — sensors, GPIO, timers, logic, math, network — wires them together, and pushes the resulting flow to a physically connected or networked device. The device runs the flow autonomously, with no host machine required afterward.
+Thingstudio is a browser-based, node-and-wire visual programming environment, in the spirit of Node-RED, whose
+output runs directly on a microcontroller rather than on a server. A user drags nodes onto a canvas — sensors,
+GPIO, timers, logic, math, network — wires them together, and pushes the resulting flow to a physically
+connected or networked device. The device runs the flow autonomously, with no host machine required afterward.
 
-Flows are interpreted live by a small on-device virtual machine rather than compiled to native firmware. A running system can be edited without a flash-and-reboot cycle; live values are visible on the wires; a flow swaps in under a second.
+Flows are interpreted live by a small on-device virtual machine rather than compiled to native firmware. A
+running system can be edited without a flash-and-reboot cycle; live values are visible in the editor; a flow
+swaps in under a second.
 
 ## 2. Target audience
 
-The same demographic Node-RED itself serves — home-automation tinkerers and IoT/automation professionals already comfortable with flow-based tools, MQTT, and JSON, who want a fast test/modify/deploy loop — not the education/beginner-programming audience that Scratch-derived block tools like MicroBlocks primarily serve. That framing has a direct design consequence already reflected in §5: a compile-and-flash cycle (XOD's and node-red-mcu's approach) is a worse fit for this audience's iteration-speed expectations than a live interpreter, even at the cost of some runtime performance.
+The same demographic Node-RED itself serves — home-automation tinkerers and IoT/automation professionals already
+comfortable with flow-based tools, MQTT, and JSON, who want a fast test/modify/deploy loop — not the
+education/beginner-programming audience that Scratch-derived block tools like MicroBlocks primarily serve. That
+framing has a direct design consequence already reflected in §5: a compile-and-flash cycle (XOD's and
+node-red-mcu's approach) is a worse fit for this audience's iteration-speed expectations than a live
+interpreter, even at the cost of some runtime performance.
 
 ## 3. Target hardware
 
-At least:
+The "at least" list from v0.1 — ESP32 all models, RP2040/RP2350, RISC-V, STM32 — has become a concrete,
+definition-driven support matrix rather than a wish list:
 
-- ESP32, all models
-- Raspberry Pi 2040 and 2530
-- RISC-V
-- STM32
+- **ESP32 family (ESP32, S2, S3, C3), RP2040, RP2350** are supported and tested. Named tested boards include
+  the Raspberry Pi Pico (RP2040), Pico W (RP2040 + WiFi), Pico 2 (RP2350), LOLIN S2 Mini (ESP32-S2), LuatOS
+  ESP32C3-CORE (ESP32-C3), the classic CYD ESP32-2432S028 (ESP32, display), and the Freenove ESP32-S3 Display
+  4.0" FNK0104S (ESP32-S3, display + touch). See `docs/user-guide/supported-hardware.md` for the full tested
+  table.
+- Any MicroPython board can be used by picking its **processor** from the Board menu; named **board**
+  definitions additionally label the board's own pins. `ui`/`pin-check` and compile (`-march`, pin
+  reservation checks) read from hand-editable JSON definition files, merged built-ins plus user files in
+  `~/.thingstudio` (see `docs/working-notes/decisions/chip-board-definitions.md`).
+- **RISC-V** ESP32 variants (C6/H2/P4): an open bug — they resolve to the classic ESP32 processor by substring
+  match, getting wrong pin checks and `-march`. Not an MVP chip, tracked in `outstanding-items.md`.
+- **STM32/F4 pyboard**: compiles (`-march=armv7emsp`), but the runtime cannot reach the filesystem yet
+  (`ENODEV` on every absolute path — stm32 mounts at `/flash`); tracked as `outstanding-items/stm32-pyboard-support.md`.
+
+The design consequence of "expect any MicroPython board" is stated in the project rules: docs and console
+messages do not assume the board is on the supported list, and the runtime install step says which chips are
+covered and points everything else at the MicroPython docs.
 
 ## 4. System architecture
 
 Three components, talking over a swappable transport:
 
-**Editor** — a browser-based canvas application where flows are built, node values are inspected live, and deploys are triggered. A thin local backend owns serial I/O, flow-file I/O, and static serving; the compiler and the `mpy-cross` WASM build stay client-side.
+**Editor** — a browser-based canvas application where flows are built and deploys are triggered. It compiles the
+flow itself: to MicroPython source, then to `.mpy` bytecode with a WebAssembly build of `mpy-cross` running
+client-side. It talks to a local backend over one multiplexed WebSocket plus an HTTP admin API.
 
-Two connection modes, chosen explicitly by the user rather than auto-detected: **direct** (WebSerial, local-only, no remote access, no auth) and **via backend** — network-secured (localhost behind a VPN) by default, or app-secured (LAN-exposed) as an explicit opt-in. See `working-notes/rete-migration-decision.md`, `working-notes/deployment-and-distribution-notes.md`.
+**Backend** — a thin local Python (`aiohttp`) program, the primary connection path. It relays board traffic
+(USB serial and WiFi TCP), owns the `~/.thingstudio` data store (credentials, custom nodes, presets,
+definitions), installs the device runtime over raw REPL, and serves the built editor and user docs. It binds to
+loopback only (`__main__.py`) until a remote-access auth posture is built.
 
-Flows save to an ordinary file the user can `git init` and commit (§6) — the backend's own filesystem access under the backend-mediated path, or the browser's File System Access API (Chrome/Edge, manual export/import elsewhere) under direct/WebSerial.
+How the editor connects, two modes — **via backend** (default) and **direct/WebSerial** (kept as a working but
+hidden fallback since the backend became the owner of persisted data, 2026-09-06; see
+`docs/working-notes/decisions/backend.md`). The user picks explicitly; neither is auto-detected. Flows save to
+an ordinary file the user can `git init` and commit (§6) — via the browser's File System Access API
+(Chrome/Edge; manual export/import elsewhere), **not** through the backend's filesystem.
 
-**Transport** — the link between editor and device: USB serial (WebSerial in-browser, no drivers on Chrome/Edge) for the primary bring-up experience, with BLE (Web Bluetooth) and WiFi (local mDNS-discovered device, HTTP/WebSocket) as later additions for untethered deployment.
-
-**Device runtime** — the on-device virtual machine: a bytecode interpreter, a fixed table of native node implementations (GPIO, timers, math, I2C/SPI, network, etc.), a scheduler for concurrent flow execution, and a thin protocol handler that accepts flow updates and streams live values back.
+**Device runtime** — the on-device virtual machine: MicroPython, a protocol listener, a small scheduler glue
+over `uasyncio`, and a fixed API surface (`runtime.py`) that generated flow code calls; the node
+"implementations" themselves are the generated Python, delivered per-deploy (§6, §7).
 
 ```
- ┌─────────────────────┐        serial / BLE / WiFi        ┌───────────────────────┐
- │   Browser Editor     │ ───────────────────────────────▶  │   Device Runtime (MCU) │
- │  canvas + node       │ ◀─────────────────────────────── │  VM + scheduler +      │
- │  palette + inspector │     live values, logs, status     │  native node table     │
- └─────────────────────┘                                    └───────────────────────┘
+ ┌─────────────────────┐   WebSocket / HTTP   ┌────────────────────┐   serial (F64 lines)   ┌───────────────────────┐
+ │   Browser Editor     │ ───────────────────▶ │  Local backend      │ ─────────────────────▶ │  Device Runtime (MCU) │
+ │  canvas + palette +  │ ◀─────────────────── │  relay + ~/.thing-  │ ◀───────────────────── │  listener + runtime + │
+ │  compiler + mpy-cross│  F64 frames, debug   │  studio store       │  F64 frames, print()   │  generated _flow      │
+ │  (WASM)              │                     │                     │  WiFi TCP:7462 (auth)  │                       │
+ └─────────────────────┘                      └────────────────────┘                        └───────────────────────┘
 ```
 
 ## 5. Execution model: on-device VM
 
-The device ships a single runtime image once, flashed like any firmware. After that, flows are pushed as data (a compact bytecode/graph representation), not as new firmware, so redeploying a flow is a protocol message, not a flash cycle.
+The device ships a single runtime image once, flashed like any firmware. After that, flows are pushed as data
+(compiled bytecode plus any libraries they import), not as new firmware, so redeploying a flow is a protocol
+message, not a flash cycle.
 
-MicroPython is the on-device interpreter. It has ports for both target chip families (ESP32, RP2040/RP2350), a driver ecosystem for I2C/SPI sensors and peripherals, and `uasyncio`, a built-in async/await scheduler — each node or triggered subgraph is a coroutine/task on the event loop. The editor compiles the graph to Python source targeting a constrained subset, then precompiles it with `mpy-cross` into `.mpy` bytecode before sending it to the device; the device never runs the Python compiler itself. On-device compilation isn't an option at scale: MicroPython's own compiler needs RAM on top of whatever the resulting code needs, so it can fail outright (OOM) on a memory-constrained board even when the identical code runs fine once it's bytecode.
+MicroPython is the on-device interpreter. It has ports for both target chip families (ESP32, RP2040/RP2350), a
+driver ecosystem for I2C/SPI sensors, and `uasyncio`, a built-in async/await scheduler — each node or triggered
+subgraph is a coroutine/task on the event loop. The editor compiles the graph to Python source targeting a
+constrained subset, then precompiles it with `mpy-cross` into `.mpy` bytecode before sending it to the device;
+the device never runs the Python compiler itself. On-device compilation isn't an option at scale: MicroPython's
+own compiler needs RAM on top of whatever the resulting code needs, so it can fail outright (OOM) on a
+memory-constrained board even when the identical code runs fine once it's bytecode. This is unchanged from v0.1
+and has held.
 
-`mpy-cross` runs client-side as WebAssembly. The editor bundles a WASM build of `mpy-cross` and runs the compile step client-side; no local helper process or native binary is required. The WASM build needs rebuilding and testing against each MicroPython version bump.
+`mpy-cross` runs client-side as WebAssembly, bundled with the editor (`mpy-cross-wasm/`); the compile is
+`-march`-aware per board/processor target. The WASM build needs rebuilding and testing against each MicroPython
+version bump.
 
-The scheduler is `uasyncio`'s event loop directly: each node (or each independently-triggered subgraph — a timer, a GPIO interrupt, a network message) is a coroutine that runs to its next `await` and yields control. `uasyncio`'s own RAM/flash footprint is roughly 16–64KB depending on port and configuration, negligible against available RAM on both target platforms.
+The scheduler is `uasyncio`'s event loop directly: each independently-triggered subgraph — a timer, a GPIO
+interrupt, a network message — is a coroutine that runs to its next `await` and yields. The listener's tasks
+(protocol receive loop, heartbeat, HELLO sender, WiFi session watcher) share the same loop.
 
-Live values: when the editor has a flow open, the device streams a throttled sample of tagged node outputs back over the transport, and wires show real data.
+Fault isolation, shipped: an uncaught exception inside a node's coroutine is caught at the per-task boundary
+instead of crashing the whole event loop. Every generated node call is wrapped so the failure is attributed to
+the exact node (`raise runtime.NodeError(nodeId, e)`); the failing subgraph's task reports `NODE_ERROR` (node
+ID, exception type and message) and stops, while the rest of the flow keeps running. The listener's own
+receive loop never exits on an unhandled exception, every read is time-bounded, and a `MemoryError` while
+receiving answers `DEPLOY_ERROR` rather than leaving the editor to time out. A boot-time window (a few seconds)
+keeps the interrupt character live before the runtime commits to taking over the transport.
 
-Fault isolation: an uncaught exception inside a node's coroutine is caught at the per-task boundary (`uasyncio` surfaces exceptions on task completion rather than letting them propagate) instead of crashing the whole event loop. The failing subgraph's task stops and reports a structured error back over the transport (node ID, exception type and message) for the editor's inspector (§8); the rest of the flow keeps running. A device-side watchdog resets the device if the VM itself wedges — an infinite loop that never hits an `await` — and the last-deployed flow resumes from flash, same as any power-cycle recovery.
+Boot-loop protection, shipped: if the deployed flow fails to stay up for ~10 s on three boots in a row, the
+runtime enters safe mode and does not resume the flow, so a bad flow can't brick a board into a reset loop. A
+device-side watchdog for a wedged flow that never hits `await` is **not** built — tracked under §10.
 
-The listener task — owning the raw transport stream, and per §9 disabling the interrupt-character escape hatch while it does — needs the same fault isolation: its dispatch loop must never exit on an unhandled exception (every phase wrapped, logged as a structured error, loop continues), and every blocking read within it is time-bounded rather than able to hang indefinitely on a partial or garbled transfer. A boot-time window (a few seconds) keeps the interrupt character live before the runtime commits to taking over the transport, as a fallback independent of the above.
+Persistence covers one thing today: the last-deployed flow's bytecode and identity survive power loss — the
+device writes `/_flow.mpy` and `/_flow_meta.json` on deploy and `import _flow` resumes the flow at boot,
+including through safe mode decisions. Also on flash: the boot counter, board settings (`/_board.json` —
+hostname, password salt+derived key), WiFi provisioning credentials, and the flow-dependency index (`/lib`).
+The v0.1 §5 flash-backed **state store** (a node-ID-keyed key/value area surviving redeploys, read/write over
+`STATE_READ`/`STATE_WRITE`) is **not built** and deliberately deferred (§10); those message types exist on the
+wire but the listener logs them as ignored Tier 2.
 
-Persistence covers two things. The last-deployed flow's bytecode and static data live in flash, so the device resumes the flow after power loss without the editor connected. Separately, user-facing runtime state — the value held by a variable get/set node, a calibration constant a node keeps — lives in its own flash-backed key/value area, keyed by node ID, distinct from the flow bytecode. This state survives a flow redeploy by default; a node can opt out and request its state be cleared on every deploy. The editor can read this store back over the transport for inspection.
+Hardware resources are **keyed singletons** — every unique resource (GPIO pin, ADC channel, PWM, SPI/I2C bus,
+touch panel) is claimed at compile time (`claimResource`: a second node wanting a different use of the same pin
+is a `CompileError` naming both nodes) and obtained on the board through `runtime.shared(kind, key, signature,
+factory)`, Peter Hinch's functor-singleton pattern with a stricter rule: a later user with different settings
+is an error, never silently ignored. Singletons are cleared on every redeploy. See
+`docs/working-notes/decisions/hardware-singletons.md`.
 
-Updating the runtime image itself (MicroPython plus the node library) is separate from redeploying a flow. v1 does this via a standard USB reflash (`esptool`/MicroPython's normal firmware-update flow). OTA is deferred to v2; the ESP32 build already lays out OTA-capable partitions (`ota_0`/`ota_1` plus OTA-data, with rollback on boot failure), so no already-deployed device needs a manual reflash later to become OTA-eligible. RP2040/RP2350 has no equivalent standard dual-partition scheme in the Pico SDK. A major-version runtime update may wipe the deployed flow and persisted state; recovery is redeploying the flow file from git. Minor/patch updates preserve the deployed flow.
+Updating the runtime image itself is separate from redeploying a flow, and no longer happens via a manual
+`esptool` step: the editor's **Tools → Install runtime…** pushes the whole `device-runtime/src` package over
+USB serial through the backend's raw-REPL path (base64-chunked file writes, then reset), with the version being
+a git-SHA build stamp plus the semver `_RUNTIME_VERSION`. OTA is still deferred: the ESP32 build's OTA-capable
+partition layout remains tracked (`outstanding-items/ota-partition-table.md`) but Mike deferred building it past
+MVP — no field devices exist yet, so a manual reflash of early boards is the cheaper call.
 
 ## 6. Flow / graph representation
 
-Flows are authored as a JSON graph — nodes with typed properties, edges connecting an output port on one node to an input port on another — close to Node-RED's own `flows.json` shape. The editor's in-browser compiler walks this graph and emits the compact bytecode/table representation the device actually consumes; the JSON graph is the thing saved, versioned, and diffed, never sent to the device directly. The compiled `.mpy` bytecode is a build artifact, not something checked in.
+Flows are authored as a JSON graph — nodes with typed properties, edges connecting an output port on one node
+to an input port on another — close to Node-RED's own `flows.json` shape. The editor's in-browser compiler
+walks this graph and emits the Python source the device actually runs; the JSON graph is the thing saved,
+versioned, and diffed, never sent to the device directly. The compiled `.mpy` bytecode is a build artifact, not
+something checked in.
 
-The flow file splits `nodes`/`edges` (changes only when behavior changes) from a separate `layout` section (positions, canvas viewport, visual grouping; changes only when someone rearranges the canvas). Serialization is deterministic — stable key ordering, stable node ordering by ID, consistent indentation — so re-saving an untouched flow produces a zero-diff. A project directory holds as many flow files as needed; a fleet of devices is a directory of flow files, each independently diffable.
+The flow file splits `nodes`/`edges` from a separate `layout` section (positions, canvas viewport, pane
+membership), configs into their own `configs` array, and GUI screens into `screens` — so "moved a node" diffs
+separately from "changed behavior". Serialization is deterministic (stable key ordering, stable node ordering
+by ID, consistent indentation): re-saving an untouched flow is a zero-diff; a project directory holds as many
+flow files as needed, each independently diffable. Node IDs are stable UUIDs, never renumbered.
 
-Node categories for v1: GPIO in (interrupt/pin-change via `machine.Pin.irq()`, bridged into `uasyncio`, with a debounce cooldown property) and GPIO out/PWM; timers/intervals; I2C/SPI peripheral nodes (a handful of common sensors); simple state (variable get/set); WiFi status; HTTP request; MQTT publish/subscribe; UDP send/receive and TCP send/listen-receive; inject and debug; filter/event compression (change-only forwarding, rate-limiting). There's no dedicated boolean/arithmetic/comparator node and no ADC node — both reduce to a one-line function-node body (`payload > threshold`, `machine.ADC(pin).read_u16()`).
+The current node library (registry in `editor/src/node-library/registry.ts`, ~37 types) covers:
 
-UDP send/receive is connectionless; receive is event-driven, not polled. TCP send is one-shot request/response with a lazy-expiry connection-reuse cache; TCP listen-receive is event-driven via `uasyncio.start_server`, bounded by a `maxConnections` property. Neither validates payload content; an open listening port is a known attack surface.
+- **GPIO/timing**: `gpio_out`, `pwm_out`, `interrupt` (raw pin-change event source), `eswitch`/`ebutton`
+  (Peter Hinch's debounced async switch/button primitives), `timer` (interval/poll source), `startup` (fires
+  once at flow start, after deploy or boot resume), `inject`, `delay`.
+- **Displays/GUI/touch** (v0.2.0's headline): `display_spi` and `display_i2c` (ST7789/ST7796 color TFTs,
+  SSD1306 OLED, with `rgb565`/`gs4`/`gs2`/`mono` framebuffer depths), a GUI family — `gui_screen`,
+  `gui_label`, `gui_readout`, `gui_bar`, `gui_trend`, `gui_led`, `gui_button`, `gui_navigator`, `gui_modal` —
+  driven by the vendored `thingstudio_gui` subsystem, plus `touch_i2c` (FT6336U first) and `i2c_generic`.
+- **Sensors/analog**: `adc` (async sampled), `encoder` (Hinch's quadrature), `bme280` (I2C), `neopixel`
+  (WS2812).
+- **Network**: `wifi_status`, `wifi_gate`, `http_request`, `http_in`/`http_response` (exact-path-match v1
+  server), `mqtt_publish`/`mqtt_subscribe` (vendored `mqtt_as`), `udp_send`/`udp_receive`. TCP send/listen-
+  receive were scoped but **never built** — deferred (§10).
+- **Logic/state**: `function` (runs actual precompiled MicroPython, single or multiple outputs), `variable_get`/
+  `variable_set` (in-RAM `_flow_vars` store; the dedicated canvas nodes are hidden pending a Node-RED-style
+  context model), `filter` (change-only/rate-limiting event compression), `journal` (ring-buffer time series for
+  the trend widget), `clock` (NTP-synced time source), `debug` (prints to the device console), `inject`.
+- No dedicated boolean/arithmetic/comparator/ADC node: those reduce to a one-line function-node body
+  (`payload > threshold`, `machine.ADC(pin).read_u16()`). Mike's 2026-08-21 call on that held.
 
-The function node runs actual (precompiled) MicroPython, not an invented expression language. It isn't sandboxed against its own author. The same watchdog that catches a wedged native node also catches a function node stuck in a loop that never yields.
+Config nodes follow Node-RED's "Server" dropdown pattern: config objects live in the `configs` array, sorted
+deterministically, and are referenced by string id from consuming nodes — never wired. `CodegenContext.resolveConfig(id)`
+resolves a referenced config's properties or throws `CompileError` naming the missing id. Config types shipped:
+`thingstudio/config/wifi` (a singleton — a board has one radio), `thingstudio/config/i2c-bus` (a **keyed**
+singleton, one per bus number), `thingstudio/config/touch-panel` (controller, I2C bus ref, geometry and
+orientation, with presets), and `thingstudio/config/mqtt-broker`. `http_request` migrated from raw
+ssid/password node properties onto the WiFi config.
 
-Message model: wires carry a `msg` envelope — `payload` (the primary value), `topic` (a routing/identification string), and arbitrary extra properties a node can attach. `payload` is typed from a fixed set — `int`, `number` (float), `bool`, `string`, `bytes`, `any` — and the editor checks type compatibility at wire-connect time (an `int` output can feed a `number` input; a `bytes` output can't feed a `string` input without an explicit conversion node); an incompatible connection is refused outright.
+The real secrets — `ssid`/`password` for WiFi, `broker`/`port`/`username`/`password` for an MQTT broker, and
+the board's WiFi-transport password — live in a named credential in the backend's own store
+(`~/.thingstudio/credentials/{wifi,mqtt-broker,board}/<name>.json`), not in the config node or the flow file. A
+config's `credentialName` is resolved (fetched from the backend) at flow-load time and merged into the
+in-memory config properties `resolveConfig()` reads; only the name round-trips into a saved `.flow.json`. A
+credential is shared by name across every flow/config that references it. Renaming/deleting saved credentials
+is out of scope.
 
-Config nodes follow Node-RED's "Server" dropdown pattern: a config object is defined once per flow file (in a `configs` array, sibling to `nodes`/`edges`, sorted deterministically by id) and referenced by string id from consuming nodes. `CodegenContext.resolveConfig(id)` resolves a referenced config's properties or throws `CompileError` naming the missing id. Configs are referenced, never wired — they don't enter the compiler's node bookkeeping (`nodesById`/`childrenOf`/`sources`/reachability).
+Message model: wires carry a `msg` envelope — `payload` (the primary value), `topic` (a routing/identification
+string, required on every message), and arbitrary extra properties a node can attach. `payload` is typed from a
+fixed set — `int`, `number` (float), `bool`, `string`, `bytes`, `any` — and the editor checks compatibility at
+wire-connect time (an `int` output can feed a `number` input; a `bytes` output can't feed a `string` input
+without an explicit conversion; an incompatible connection is refused outright). Generated code treats `msg` as
+a plain dict: sources build it, transforms return a (possibly new) `msg`, fan-out clones per branch
+(`dict(msg)`) so branches can diverge, sinks read `msg.get('payload')`.
 
-Two config types: `thingstudio/config/wifi` (`security` plus a `credentialName`) and `thingstudio/config/mqtt-broker` (just a `credentialName`). A node can reference both independently (`wifiConfigId`, `brokerConfigId`). `wifi_status`, `udp_send`, `udp_receive`, `mqtt_publish`, and `mqtt_subscribe` reference configs this way; `http_request` still reads raw `ssid`/`password` node properties directly (§10). A config value is shared by every node in a flow that references it; there is no per-device override/template layering yet (§10).
-
-The real secret values — `ssid`/`password` for WiFi, `broker`/`port`/`username`/`password` for an MQTT broker — live in a named credential in the backend's own store (`~/.thingstudio/credentials/{wifi,mqtt-broker}/<name>.json`), not in the config node or the flow file. A config's `credentialName` is resolved to its backend-stored bundle once, at flow-load time, and merged into the in-memory config properties `resolveConfig()` reads; only the `credentialName` (and, for WiFi, `security`) round-trip back into a saved `.flow.json`. A credential is shared by name across every flow/config that references it, the same as any other config value. Renaming or deleting a saved credential is out of scope for v1.
-
-Deferred past v1: a catch/error node the flow can react to; a self-hosted mini dashboard (gauge/switch/chart served from the device's own HTTP stack, needing an on-device HTTP server and a new UI-node category); Home Assistant auto-discovery on top of the MQTT node; on-demand log retrieval from a disconnected device; a Tasmota-style AP/captive-portal mode for boards with no configured WiFi credentials.
-
-Single flow per device is a v1 scope choice. Every node/subgraph is a coroutine on one shared event loop (§5); the scheduler doesn't distinguish between two flows' tasks and one flow's tasks. MicroPython's `uasyncio` has a single global event loop with no multi-loop or per-`Runner` isolation, and RP2040/RP2350's second core can't host its own loop under standard `uasyncio`. If the second core is used for offloading blocking work via `_thread`, Peter Hinch's `micropython-async` project has threadsafe primitives (`ThreadSafeQueue`, `ThreadSafeEvent`) for it.
-
-Multiple independently-deployed flows (deferred to v2, §10) need: node IDs globally unique across every flow on a device, not just within one; `DEPLOY` scoped to which node IDs it's replacing; and the editor tracking cumulative RAM/flash budget across every flow already deployed. Pin/peripheral conflicts between independently-authored flows are also not caught until runtime.
+Single flow per device is a v1 scope choice. Every node/subgraph is a coroutine on one shared `uasyncio` event
+loop; the scheduler doesn't distinguish between two flows' tasks and one flow's tasks. Multiple independently-
+deployed flows (deferred to v2, §10) need: globally unique node IDs across flows, `DEPLOY` scoped to which node
+IDs it replaces, and per-flow RAM/flash budget tracking; pin conflicts across independently-authored flows
+remain runtime-only even then.
 
 ## 7. Extensibility
 
-Node definitions have two halves: a small JSON descriptor for the editor (palette entry, ports, property UI) and a Python module implementing the node's behavior. Adding a new node type means pushing a new `.mpy` module to the device's filesystem alongside the flow, not rebuilding and reflashing the runtime. Existing MicroPython drivers for I2C/SPI sensors can generally be wrapped as a node with a thin adapter.
+v0.1's "node set fixed at flash time" is superseded. The device runtime ships a small, stable API surface
+(`runtime.py`: `spawn`, `shared`, `NodeError`, `register_cleanup`, `register_trigger`/`fire_trigger`,
+`report_status`, `cancel_running`, `start_reason`); **every node's device-side behavior is generated Python
+code, authored as a TypeScript codegen module in the editor** and shipped inside the deployed flow. Adding a
+node type means adding a `NodeDefinition` to `editor/src/node-library/` (descriptor: kind, ports, property UI;
+codegen half: Python template strings), registering it, and documenting it in the nodes catalog — no runtime
+reflash.
 
-Performance- or timing-critical nodes (tight PWM/bit-banging, high-rate sampling) can use MicroPython's C-native modules and the `@micropython.native`/viper code emitters instead of pure Python.
+Two additional delivery mechanisms land on top of that:
 
-v1's node set is fixed at flash time as part of the runtime image; there's no separate node distribution/version-skew mechanism yet. The node table's version is the runtime image's version, carried by `HELLO`'s major.minor.patch (§13). Post-v1, pushing a node without reflashing would add: the compiler emitting an `import` of a separately-pushed module, a module-push message, and a version/hash field in `HELLO`. Timing-critical nodes needing C-native modules generally still need a firmware rebuild, unless built on MicroPython's native `.mpy` loadable-module feature.
+- **Flow dependencies** (runtime ≥ 7): libraries a flow imports — vendored drivers (`mqtt_as`, display
+  drivers, GUI + fonts, sensor drivers) — are not baked into the runtime image; the editor scans the compiled
+  Python for imports, compiles the needed libraries to `.mpy`, and ships them per-deploy into `/lib` via
+  `DEP_PUT`/`DEP_COMMIT`, so a board only ever carries what its flows use. The dep catalog lives in
+  `device-runtime/src/runtime_manifest.py` and is served at `/api/dependencies`. See
+  `docs/working-notes/decisions/flow-dependencies.md`.
+- **Custom nodes**: a package is two files — `<name>.node.json` (inert descriptor) + `<name>.node.py` (opaque
+  MicroPython spliced into generated source inside a per-instance closure) — stored in `~/.thingstudio` and
+  merged into the registry at compile; no compiler-core changes. See `docs/working-notes/node-definition-model.md`.
+- **Headless compile**: `thingstudio-compile` (`editor/src/cli/`) runs the same compiler and the same
+  vendored `mpy-cross` WASM outside the browser, so an AI authoring agent can validate a flow file before a
+  deploy. `--describe` generates the nodes catalog (`docs/user-guide/nodes-catalog.md`).
 
-See `working-notes/node-definition-model.md` for the node-authoring contract.
+Performance- or timing-critical code can use MicroPython's native emitters (`@micropython.native`/`viper`) —
+already shipped inside the display-framebuffer expansion loops — and native modules generally need a firmware
+rebuild. Timing-critical nodes needing C-native modules still carry that cost.
 
 ## 8. Deployment and live debugging
 
-Deploy is a diff where avoidable: on "Deploy," the editor compiles the graph, and (at least for small edits) the device can patch only what changed rather than reloading the whole flow. v1 can start with "replace the whole flow" and optimize later. The status/log/inspector panel shows connection state, per-node errors, and live port values.
+Deploy is full-flow replacement: on "Deploy," the editor type-checks nothing new (wires were checked at connect
+time), compiles the canvas to Python, then to `.mpy` via mpy-cross WASM, computes the flow's dependency set,
+ships missing libraries (`DEP_PUT`/`DEP_COMMIT`), and sends one `DEPLOY` message with the bytecode. The device
+verifies dependencies before touching the running flow, cancels the running flow's tasks, writes `/_flow.mpy`,
+and `import _flow`s the new one. Incremental/diff deploys remain a v2 candidate (§10).
+
+The status/log/inspector panel shows: connection state (backend/serial/WiFi), the board's HELLO identity and
+version checks (major-mismatch gating, §9/§13), **per-node status dots** (`NODE_STATUS`: connected/
+disconnected/connecting/error — for `wifi_status` and MQTT nodes), **per-node errors** (`NODE_ERROR` red-
+highlighting the failing node), and the device's plain `print()` console output (including `debug` node lines).
+**Wire-level live value streaming (`VALUE_STREAM`) was not built** — Mike's call: not actually asked for; the
+near-term bar was the connection-status indicator, shipped 2026-09-10. `VALUE_STREAM` stays reserved on the
+wire (§13) with validators on both sides, and the `debug` node documents that emitting it later is additive.
 
 ## 9. Security considerations
 
-The transport authenticates before accepting a flow write. The direct/WebSerial-only connection mode is gated by physical access; the backend-mediated path is not, since the backend can be reached remotely — board-runtime auth applies to both connection modes regardless. WiFi deployment (once built) requires a pairing step (e.g. a code shown on-device, or a first-use-over-USB provisioning flow).
+The transport authenticates before accepting a flow write where the transport can be reached remotely. Two
+different mechanisms apply:
 
-**v1 mechanism**: HMAC-SHA256 over a shared secret, with a persisted monotonic counter in place of a random challenge nonce. `HELLO` reserves `authRequired`/`authScheme` fields even though v1 ships `authRequired: false`. Full mechanism and what's deferred (WiFi pairing/provisioning, the backend's own editor-facing auth, confidentiality/TLS): `working-notes/transport-auth-design.md`.
+- **Serial (USB)**: unauthenticated in v1 — gated by physical access.
+- **WiFi transport (shipped 2026-09-24)**: a **board password** set over USB (Board settings…) is the pairing
+  step. Each session opens with a **random-nonce HMAC-SHA256 challenge** (the radio is up, so the RNG is real)
+  — the board sends `TSAUTH1 <hostname> <nonce> <salt> <iterations>`, the backend answers with
+  `HMAC-SHA256(derived_key, nonce)`; the password itself never crosses the wire. A board with no password set
+  opens no network listener at all. `HELLO.authRequired`/`authScheme` carry the state. Detail:
+  `docs/working-notes/decisions/wifi-transport.md`, `docs/working-notes/transport-auth-design.md`.
 
-WiFi self-provisioning (built 2026-09-14): a flow whose WiFi config is set to "unmanaged" makes the device open its own soft-AP captive portal on first boot to collect real network credentials, instead of the flow needing them baked in. That portal doesn't reopen on its own if the saved credential later stops working — an opt-in per-config flag is needed for that — because reopening an unauthenticated AP any time WiFi drops is itself an attack surface: anyone in radio range during the drop could connect and redirect the device to a different network. Detail: `working-notes/outstanding-items/wifi-provisioning-captive-portal.md`.
+This **replaces** v0.1 §9's "HMAC-SHA256 over a shared secret with a persisted monotonic counter" — that
+mechanism was never built; designing around a counter assumed no trustworthy on-chip RNG, which the WiFi path
+does not need (§13 notes the change).
 
-WiFi transport (built 2026-09-24, MVP item 6): a board password set over USB is the pairing step. WiFi sessions
-open with a random-nonce HMAC-SHA256 challenge (the radio is up, so the RNG is real); serial needs no password in
-v1, and a board with no password accepts no network connection. Detail: `working-notes/wifi-transport-scoping.md`.
+WiFi self-provisioning (built 2026-09-14): a flow whose WiFi config is "unmanaged" makes the device open its
+own soft-AP captive portal on first boot to collect real network credentials. The portal does **not** reopen on
+its own if the saved credential later stops working — reopening an unauthenticated AP any time WiFi drops is
+itself an attack surface (anyone in radio range could connect and redirect the device); reopening is an opt-in
+per-config flag (`allowReprovisioning`). Detail: `docs/working-notes/outstanding-items/wifi-provisioning-captive-portal.md`.
 
-The function node (§6) is unsandboxed; it sits inside the same deploy-access trust perimeter as any native node.
+Backend posture: binds loopback-only; a Host-header allowlist middleware (DNS-rebinding defense) 403s anything
+outside `localhost`/`127.0.0.1`/`[::1]` by default, and CORS reflects the request's Origin (the editor is
+served from the same backend by default). A remote-access posture (opt-in, authenticated) is out of scope for
+now; remote use goes through a loopback tunnel.
+
+The function node (§6) is unsandboxed; it sits inside the same deploy-access trust perimeter as any native
+node.
 
 ## 10. Phased roadmap
 
-Before v1: three independent proof-of-concept spikes de-risked the core assumptions this roadmap depends on, followed by a fourth integration spike proving the full pipeline end-to-end — see §15.
+Where v0.1 had a plan, this is the record. The pre-v1 spikes (§15) de-risked the core bets; v1 was then
+deliberately grown past its original "ESP32-C3 + WebSerial only" scope as the backend relay and board-support
+work landed.
 
-v1 (bring-up): ESP32-C3 (or a higher-spec ESP32-family member) only, USB serial (WebSerial) transport, the v1 node set (§6), full-flow redeploy (no diffing), live value streaming, flow persistence across power cycles.
+**Shipped (v0.2.0, released 2026-10-13, runtime 10):**
 
-v2 candidates, roughly in order of likely value: RP2040/RP2350 support; BLE and WiFi transport with pairing/auth; per-device override for config nodes; a catch/error node; Home Assistant auto-discovery; `http_request` config-node coverage; MQTTS (MQTT over TLS) for `mqtt_publish`/`mqtt_subscribe`; incremental flow updates instead of full redeploy; mDNS device/service discovery; a TCP client node's proactive connection expiry.
+- Backend relay (serial + WiFi TCP) with the multiplexed WebSocket and HTTP admin API; editor served by the
+  backend; WebSerial kept as a hidden fallback.
+- WiFi transport with board-password/random-nonce auth, UDP probe discovery, board settings (hostname,
+  password) — the original `HELLO`/pairing requirements.
+- Editor-driven runtime install over serial (Tools → Install runtime) and Remove flow / board recovery.
+- Board/processor definition system (named boards, per-board pins, `-march`-aware compile, Pins… page).
+- Flow dependencies (libraries shipped per-deploy into `/lib`, runtime 7+), full-flow redeploy, boot-time
+  flow auto-resume, safe mode, NODE_STATUS dots, EXEC/STOP_TO_PROMPT/RESTART tool commands.
+- Display/GUI/touch family (display-spi/i2c, gui screen + widgets, touch-i2c, journal/trend, clock) —
+  the v0.2.0 headline; plus `adc`, `encoder`, `neopixel`, `eswitch`/`ebutton`, `filter`, `startup`, `wifi_gate`,
+  HTTP server nodes (`http_in`/`http_response`).
+- Headless `thingstudio-compile` CLI and AI-authoring docs/catalog.
+- Hardware singletons (`runtime.shared` + compile-time `claimResource`).
 
-v3+: a self-hosted mini dashboard (§6), multi-device flows (one flow spanning devices via network nodes), a companion server for team libraries and fleet deployment.
+**v2 / post-MVP candidates** (from `docs/working-notes/outstanding-items.md`, roughly in value order, all
+Mike-prioritized): Home Assistant auto-discovery (proposed first post-launch); a catch/error node; **flash-
+backed state store** (`STATE_READ`/`STATE_WRITE` — deferred design work, §5); **wire-level live value
+streaming** (`VALUE_STREAM`); MQTTS (MQTT over TLS); incremental flow updates; BLE transport; per-device config
+override; TCP send/listen-receive nodes (scoped, never built); OTA-capable ESP32 partitions (deferred: no field
+devices yet); device-side watchdog; a Node-RED-style context model for `variable_get`/`variable_set`; parallel
+multicore support; `touch_spi` for classic CYDs; GT911/CST820 touch controllers; install-MicroPython-from-the-
+editor (deferred: too many firmware variants).
+
+**v3+**: multi-device flows (one flow spanning devices via network nodes), a companion server for team
+libraries and fleet deployment.
 
 ## 11. Open questions
 
-~~Open: whether to adopt Peter Hinch's `micropython-async` — hardware driver primitives (switches/buttons/ADC/encoders), `ThreadSafeQueue`/`ThreadSafeEvent`, a cron-like scheduler, `aiorepl`, and `asyncio_alt` (a low-latency/lightsleep event loop variant). Not evaluated yet.~~ **Partially resolved, 2026-09-17:** adopted for switches/buttons. `thingstudio/eswitch`/`thingstudio/ebutton` vendor his `ESwitch`/`EButton`/`WaitAny`/`Delay_ms` classes (`device-runtime/src/vendor/primitives_events/`) verbatim, same vendoring convention as `ThreadSafeEvent`/`mqtt_as`. Still open for ADC (his §5 `AADC` driver, deferred as a follow-up item) and for encoders, `ThreadSafeQueue`, the cron-like scheduler, `aiorepl`, and `asyncio_alt` — none of those evaluated yet. `docs/working-notes/decisions/node-authoring.md` has the full reasoning.
+Many of v0.1's open questions have since resolved in place; these are the live ones.
+
+- ~~Whether to adopt Peter Hinch's `micropython-async`~~ **Resolved in stages (2026-09-17, 2026-10-11):**
+  switches/buttons (`eswitch`/`ebutton`, vendored `primitives_events/`), async ADC (`adc`, vendored `aadc`),
+  and quadrature encoder (`encoder`, vendored `primitives_encoder`) are adopted; `ThreadSafeEvent` and
+  `mqtt_as` are vendored. Still open: `ThreadSafeQueue`, the cron-like scheduler, `aiorepl`, and `asyncio_alt`,
+  none evaluated yet. `docs/working-notes/decisions/node-authoring.md` has the full reasoning.
+- **The flash-backed state store's design** (scope, storage format, opt-out-on-deploy semantics) is the largest
+  open architecture item; it connects to the un-scoped Node-RED-style context model (`stateful-nodes-join.md`).
+- **Networking races across boards** are accepted limitations, not chases: the `wifi_status`-vs-`mqtt_as`
+  ordering race holds on RP2040 but not ESP32, and the ESP32 WLAN state isn't torn down on redeploy — both
+  documented per the project rule ("make the failure legible" over playing whack-a-mole).
+- **RISC-V ESP32 variants** (C6/H2/P4) misidentify as classic ESP32; **STM32** filesystem support is open.
+- Whether to file an upstream issue for the `mqtt_as` WiFi-reconnect race: undecided, Mike's call (the same
+  fix class has been raised upstream before without landing; Thingstudio fixed it locally).
 
 ## 12. Licensing and open-source suitability
 
-Every third-party component this project depends on should carry an OSI-approved license, permissive (MIT/BSD/Apache-2.0) by default:
+Every third-party component this project depends on should carry an OSI-approved license, permissive
+(MIT/BSD/Apache-2.0) by default. The authoritative running ledger is `docs/third-party-licenses.md`; the core
+components:
 
 | Component | Role | License | Notes |
 |---|---|---|---|
-| MicroPython (core VM, `uasyncio`, `mpy-cross`) | on-device runtime | MIT | permissive, no concerns |
+| MicroPython (core VM, `uasyncio`, `mpy-cross`) | on-device runtime / toolchain | MIT | permissive, no concerns |
 | ESP-IDF | ESP32 port substrate | Apache-2.0 | see caveat below on WiFi/BT binary blobs |
 | FreeRTOS | RTOS underlying the ESP32 port | MIT | permissive since the v10.4+ relicense |
 | lwIP | TCP/IP stack (ESP-IDF, RP2040 WiFi) | modified BSD | permissive |
 | Raspberry Pi Pico SDK | RP2040/RP2350 port substrate | BSD-3-Clause | permissive |
-| rete | browser canvas/node-editor library — headless core | MIT | replaces Litegraph.js (§15); release hiatus but not a maintenance hiatus (10 open issues against 12k stars) |
-| rete-area-plugin | canvas rendering surface (pan/zoom/drag) | MIT | peer of `rete` above |
-| rete-connection-plugin | wire drag gesture | MIT | peer of `rete` above |
-| rete-render-utils | shared rendering utilities | MIT | peer of `rete-vue-plugin` |
-| rete-vue-plugin | Vue 3 node/control renderer | MIT | sole maintainer `ni55an` — a bus-factor risk |
-| vue | UI framework, peer dependency of `rete-vue-plugin` | MIT | |
-| WebSerial / Web Bluetooth | browser transport APIs | n/a (browser platform APIs, not distributed code) | no license implication |
+| rete / rete-area / rete-connection-plugin / rete-render-utils / rete-vue-plugin | canvas/node-editor (replaced Litegraph.js, §15) | MIT | `rete-vue-plugin`'s sole maintainer remains a bus-factor risk |
+| vue | UI framework, peer of `rete-vue-plugin` | MIT | |
+| peterhinch/micropython-async (mqtt_as, ThreadSafeEvent, primitives) | vendored flow dependencies | MIT | vendored under `device-runtime/src/vendor/` |
+| mqtt_as (MIT), ssd1306 (MIT), st7789py-st7796 (MIT), bme280 (MIT), ft6336u (Thingstudio's own) | vendored drivers | MIT | per-flow deps, see the ledger |
+| Atkinson Hyperlegible + DSEG7 bitmap fonts | GUI fonts | OFL | generated by `tools/vendor/font_to_py/` |
+| WebSerial / Web Bluetooth | browser transport APIs | n/a (browser platform APIs) | no license implication |
 
-Caveat: Espressif distributes the ESP32 WiFi/Bluetooth and RF-calibration libraries as precompiled binary blobs bundled inside ESP-IDF, under Apache-2.0 redistribution terms — no license-obligation conflict, but not source-auditable at the radio-stack layer. Platform-wide ESP-IDF limitation, not specific to this design. RP2040/RP2350 builds don't have this issue for WiFi.
+Caveat: Espressif distributes the ESP32 WiFi/Bluetooth and RF-calibration libraries as precompiled binary blobs
+bundled inside ESP-IDF, under Apache-2.0 redistribution terms — no license-obligation conflict, but not
+source-auditable at the radio-stack layer. Platform-wide ESP-IDF limitation, not specific to this design.
 
-Before any public release: run an automated license scan (e.g., SPDX-based) over the pinned dependency tree, including indirect dependencies (npm packages, etc.) not audited above; treat this section as engineering due diligence, not legal advice — get an actual legal review, particularly for the ESP-IDF blob question.
+Before any public release: run an automated license scan (e.g., SPDX-based) over the pinned dependency tree,
+including indirect dependencies not audited above; treat this section as engineering due diligence, not legal
+advice.
 
-## 13. Wire protocol (v1 sketch)
+## 13. Wire protocol (v1, shipped)
 
-Concrete enough to build against, not a frozen spec. Framing: length-prefixed frames over the raw transport — a 2-byte length header plus payload, identical across serial/BLE/WiFi — with a 1-byte message type and a CBOR-encoded body.
+Concrete and built, not a sketch. Framing: a frame is a 2-byte big-endian length header (counting the type byte
+plus body) + a 1-byte message type + a CBOR-encoded body, bounded at 64 KB. Over the transport each complete
+frame is base64-encoded into one `F64:`-prefixed text line — identical on serial and WiFi TCP — a deliberate
+workaround for a real hardware bug (partial `read(n)` returns on some USB-UART bridges). Plain `print()` lines
+from the device ride the same stream un-prefixed and are surfaced to the editor as debug text. The backend
+relays frame bytes verbatim between WebSocket binary messages and `F64:` lines; it never decodes CBOR. The
+device's CBOR is hand-rolled (no arrays/tags/indefinite lengths) and editors encode canonically, dropping
+`null` keys — a `None`-encoding bug broke live messages once (2026-09-05); see `learnings/micropython-device-runtime.md`.
 
-Message types: `HELLO` (chip type, MicroPython/runtime version as major.minor.patch, free flash/RAM, plus ESP-IDF heap free/largest block on ESP32-family boards, `authRequired`/`authScheme`); `DEPLOY` (full flow bytecode plus static data, replacing whatever's currently deployed); `DEPLOY_ACK` / `DEPLOY_ERROR`; `VALUE_STREAM` (device → editor, throttled live port values); `NODE_ERROR` (device → editor, node ID plus exception type/message); `STATE_READ` / `STATE_WRITE` (the persisted variable store, §5).
+Message types, shipped (20; appended, never renumbered):
 
-Generated flow code is human-readable Python (named per-node functions/variables tied to node IDs), not a compact intermediate form.
+| Type | Direction | Purpose |
+|---|---|---|
+| `HELLO` | board → editor | chip, `runtimeVersion` (major.minor.patch), `runtimeBuild` (git SHA stamp), flow identity, free flash/RAM (+ ESP-IDF heap on ESP32), `safeMode`, `hostname`, `authRequired`/`authScheme`, `hasWifi`/`networkAddress`, dependency inventory |
+| `HELLO_REQUEST` | editor → board | ask for a fresh HELLO without resetting |
+| `DEPLOY` | editor → board | full flow: `bytecode` (the compiled `.mpy`), `staticData` (reserved, empty today), `flowName`/`deployId`, optional `wifiProvision` marker, optional `dependencies` map |
+| `DEPLOY_ACK` / `DEPLOY_ERROR` | board → editor | result with memory figures, or a code+message (missing dependency → old flow keeps running) |
+| `DEP_PUT` / `DEP_ACK` / `DEP_COMMIT` / `DEP_RESULT` | both | per-deploy library delivery: libraries split into 1 KB pieces, each acked, then committed into `/lib` |
+| `NODE_ERROR` | board → editor | node ID + exception type/message (fault attribution) |
+| `NODE_STATUS` | board → editor | per-node connection/state dot (`connected`/`disconnected`/`connecting`/`error`) |
+| `TRIGGER` | editor → board | live-fire an inject node from the canvas |
+| `EXEC` / `STOP_TO_PROMPT` / `RESTART` | editor → board | tool commands (run a snippet, drop to REPL, soft/hard reset) |
+| `SET_BOARD_SETTINGS` / `BOARD_SETTINGS_RESULT` | both | hostname, WiFi-transport password |
+| `VALUE_STREAM` | board → editor | reserved, validated on both sides, **not emitted yet** (Tier 2, §8) |
+| `STATE_READ` / `STATE_WRITE` | both | reserved, validated, **explicitly ignored** by the listener (state store unbuilt, §5/§10) |
 
-The `auth` payload on `DEPLOY`/`STATE_WRITE` (scheme, counter, MAC) isn't fixed yet. WiFi pairing's handshake fields remain deferred, pending §9's WiFi pairing design.
+Generated flow code is human-readable Python (named per-node functions/variables tied to node IDs), not a
+compact intermediate form. Auth moved from per-message payloads to the **session level**: the WiFi transport
+authenticates the session (TSAUTH1, §9) and every subsequent message on it is trusted; serial carries no auth.
+HELLO's `authRequired`/`authScheme` reflect whether the board has a password set.
 
 ## 14. Project license and governance
 
-The project ships under a single, permissive license: Apache-2.0, for the explicit patent grant, matching ESP-IDF's own license.
+The project ships under a single, permissive license: Apache-2.0, for the explicit patent grant, matching
+ESP-IDF's own license.
 
-Repo structure: a single monorepo (editor, device runtime glue, node library). Splitting into separate repos is a possible v2 move. Vendored third-party code keeps its own upstream license file (§12).
+Repo structure: a single monorepo (editor, backend, device runtime, docs, test-flows, POCs). Splitting into
+separate repos is a possible v2 move. Vendored third-party code keeps its own upstream license file (§12).
 
 ## 15. Proof-of-concept validation
 
-Four proof-of-concept spikes de-risked this design's core assumptions before v1 work began, each testing a separate risk with no dependency on the others finishing first:
+Four proof-of-concept spikes de-risked this design's core assumptions before v1 work began, each testing a
+separate risk with no dependency on the others finishing first:
 
-- **POC-A** (core runtime + redeploy loop): a live MicroPython/`uasyncio` runtime on real ESP32-C3 hardware, driven from a browser. Deploy-to-observable-change latency: ~99ms; 50 consecutive redeploys with no crash or memory creep.
-- **POC-B** (`mpy-cross`-to-WASM toolchain): `mpy-cross` cross-compiled to WebAssembly, running client-side in a real Chrome tab with no special hosting requirements. Compile latency averaged under 1ms; output was byte-identical (SHA-256) to a native `mpy-cross` build.
-- **POC-C** (canvas library feel): a side-by-side of Litegraph.js and Drawflow settled §4's canvas library choice at the time — Litegraph needed no custom infrastructure for type-checked wiring, live value propagation, or multi-select, where Drawflow needed all three hand-rolled. (The canvas library was later changed again, from Litegraph.js to Rete.js — see §12.)
-- **POC-D** (canvas → compile → deploy → run): the full pipeline, authoring a flow on-canvas, compiling and cross-compiling it client-side, and deploying it to run correctly on real ESP32-C3 hardware — end to end, in one click. Surfaced the hardware-only fault-isolation gaps now folded into §5 and §9 (a listener task that must survive an unhandled exception, a client/device timeout mismatch, a `sys.stdin.read(n)` call that hangs the event loop outright).
+- **POC-A** (core runtime + redeploy loop): a live MicroPython/`uasyncio` runtime on real ESP32-C3 hardware,
+  driven from a browser. Deploy-to-observable-change latency: ~99ms; 50 consecutive redeploys with no crash or
+  memory creep.
+- **POC-B** (`mpy-cross`-to-WASM toolchain): `mpy-cross` cross-compiled to WebAssembly, running client-side in
+  a real Chrome tab with no special hosting requirements. Compile latency averaged under 1ms; output was
+  byte-identical (SHA-256) to a native `mpy-cross` build.
+- **POC-C** (canvas library feel): a side-by-side of Litegraph.js and Drawflow settled the canvas library
+  choice at the time — Litegraph needed no custom infrastructure for type-checked wiring, live value
+  propagation, or multi-select. (The canvas library was later changed again, from Litegraph.js to Rete.js —
+  see `docs/working-notes/decisions/editor-canvas.md`.)
+- **POC-D** (canvas → compile → deploy → run): the full pipeline end to end on real ESP32-C3 hardware.
+  Surfaced the hardware-only fault-isolation gaps now folded into §5 and §9 (a listener task that must survive
+  an unhandled exception, a client/device timeout mismatch, a `sys.stdin.read(n)` call that hangs the event
+  loop — the direct ancestor of today's `F64:` line framing, §13).
 
-Full methodology, measurements, and hardware-debugging detail: each spike's own README (`pocs/poc-a/` through `pocs/poc-d/`).
+Full methodology, measurements, and hardware-debugging detail: each spike's own README (`pocs/poc-a/` through
+`pocs/poc-d/`).
 
 ## Sources
 
@@ -208,7 +454,7 @@ Full methodology, measurements, and hardware-debugging detail: each spike's own 
 - [XOD](https://xod.io/) — node-based dataflow language for Arduino/microcontrollers, compiles to native code — via [Wikipedia](https://en.wikipedia.org/wiki/XOD_(programming_language)), [Hackaday](https://hackaday.com/2017/08/13/visual-development-with-xod/)
 - [node-red-mcu (phoddie)](https://github.com/phoddie/node-red-mcu) — Node-RED for microcontrollers via the Moddable XS engine — via [Node-RED flow library listing](https://flows.nodered.org/node/@ralphwetzel/node-red-mcu-plugin)
 - [MicroPython](https://micropython.org/) RAM/flash footprint on ESP32/RP2040 — via [MicroPython docs: constrained devices](https://docs.micropython.org/en/latest/reference/constrained.html), [ESP32 port README](https://github.com/micropython/micropython/blob/master/ports/esp32/README.md)
-- [Litegraph.js](https://github.com/jagenjo/litegraph.js/) and [Drawflow](https://github.com/jerosoler/Drawflow) — lightweight JS node-graph editor libraries, both MIT-licensed — via [LibHunt comparison](https://js.libhunt.com/compare-litegraph-js-vs-blockly), [Drawflow LICENSE](https://github.com/jerosoler/Drawflow/blob/master/LICENSE), [litegraph.js LICENSE](https://github.com/jagenjo/litegraph.js/blob/master/LICENSE)
+- [Litegraph.js](https://github.com/jagenjo/litegraph.js/) and [Drawflow](https://github.com/jerosoler/drawflow) — lightweight JS node-graph editor libraries, both MIT-licensed — via [LibHunt comparison](https://js.libhunt.com/compare-litegraph-js-vs-blockly), [Drawflow LICENSE](https://github.com/jerosoler/Drawflow/blob/master/LICENSE), [litegraph.js LICENSE](https://github.com/jagenjo/litegraph.js/blob/master/LICENSE)
 - ESP-IDF WiFi/Bluetooth binary blob licensing — Apache-2.0 redistribution terms, closed-source blobs — via [esp-coex-lib](https://github.com/espressif/esp-coex-lib), [Tarlogic: Liberating Bluetooth on the ESP32](https://www.tarlogic.com/blog/liberating-bluetooth-on-the-esp32/)
 - MicroPython-to-WebAssembly precedent, including an `mpy-cross`-specific in-browser compile demo — via [MicroPython `ports/wasm`](https://github.com/micropython/micropython/tree/master/ports/wasm), [micro:bit Foundation browser-compiler-playground](https://github.com/microbit-foundation/micropython-browser-compiler-playground)
 - MicroPython `uasyncio` single-global-event-loop limitation, no per-thread/per-core loop support — via [micropython/micropython issue #5947](https://github.com/micropython/micropython/issues/5947), [micropython discussion #12423](https://github.com/orgs/micropython/discussions/12423)

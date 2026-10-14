@@ -30,6 +30,8 @@ Same convention already established for `docs/third-party-licenses.md`.
 
 Top-level platform calls: MicroPython over CircuitPython; Rete.js over Litegraph.js (with the reversal history); human-readable generated Python, not a compact form; no function-node sandboxing, no node distribution/versioning, no simulation mode for v1; USB-only v1 updates with OTA-capable partitions reserved; precompiled `.mpy` bytecode over raw-source `exec()`. 9 entries: `docs/working-notes/decisions/architecture.md`.
 
+**2026-10-14:** design doc revised to v0.2 — brings §3 (board/processor definitions, tested boards), §4 (backend-first connection), §5 (shipped fault isolation, no state store), §6 (full node library, four config types), §7 (flow dependencies, custom nodes, headless compile), §9 (shipped WiFi auth — the never-built monotonic-counter scheme is replaced), §10 (shipped vs v2 roadmap), and §13 (20-message protocol) in line with v0.2.0. Recorded in `docs/thingstudio-design-doc.md` itself, per its §11 convention.
+
 ## Repo / tooling
 
 Monorepo structure; TypeScript editor / Python device-runtime split; Vite + Vitest; `ruff` config; Apache-2.0 license; the "harness" → `runtime`/`listener` rename; today's CLAUDE.md/decisions.md/learnings.md context-size restructuring; the top-level Makefile (2026-09-24). 8 entries: `docs/working-notes/decisions/repo-tooling.md`.
