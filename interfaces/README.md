@@ -12,17 +12,19 @@ with permission."**
 | Interface | Status | Spec |
 |---|---|---|
 | Wire protocol (editor ↔ backend ↔ device) | shipped | [`protocol/`](protocol/README.md) |
+| Device runtime API + dependency manifest (generated code ↔ device) | shipped | [`runtime-api/SPEC.md`](runtime-api/SPEC.md) |
 
-Planned (each gets a folder here as it lands, per the architecture review): the device runtime API
-(`runtime.py`'s functions that generated flow code calls) and its dependency manifest, the node descriptor, and the
+Planned (each gets a folder here as it lands, per the architecture review): the node descriptor and the
 board/processor descriptor.
 
 ## How to work with one
 
 1. **Read the spec before implementing or changing anything that emits, parses, stores or transmits what it
    defines.**
-2. **Run its conformance test** in the same change. For the wire protocol: `editor/test/protocol-conformance.test.ts`,
-   `device-runtime/test/test_conformance.py`, `backend/test/test_conformance.py`.
+2. **Run its conformance test** in the same change. Wire protocol:
+   `editor/test/protocol-conformance.test.ts`, `device-runtime/test/test_conformance.py`,
+   `backend/test/test_conformance.py`. Runtime API: `editor/test/runtime-api-conformance.test.ts`,
+   `device-runtime/test/test_runtime_api.py`.
 3. **Do not change the interface** (an id, field, framing rule, descriptor shape, or API signature — adding or
    removing one) **without Mike's explicit permission in the session.** Adding conformance vectors and fixing an
    implementation that has drifted is allowed; moving the contract under boards and saved flows already in the

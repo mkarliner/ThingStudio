@@ -122,8 +122,10 @@ spec*, never against a guess or a neighbouring implementation:
 - **Wire protocol** — `interfaces/protocol/SPEC.md` + `interfaces/protocol/messages.json`, with conformance vectors
   in `interfaces/protocol/vectors/` run by `editor/test/protocol-conformance.test.ts`,
   `device-runtime/test/test_conformance.py` and `backend/test/test_conformance.py`.
-- **Device runtime API, dependency manifest, node descriptor, board/processor descriptor** — same rule, once each
-  has its spec (the remaining phase-1 pieces).
+- **Device runtime API and dependency manifest** — `interfaces/runtime-api/SPEC.md` + `api.json`, checked by
+  `editor/test/runtime-api-conformance.test.ts` and `device-runtime/test/test_runtime_api.py`.
+- **Node descriptor, board/processor descriptor** — same rule, once each has its spec (the remaining phase-1
+  pieces).
 
 **Before implementing or changing code that emits, parses, stores or transmits anything an interface defines, read
 that interface's spec, and run its conformance test.** If what you need isn't expressible in the spec, that's a

@@ -100,6 +100,12 @@ if not hasattr(asyncio, "ThreadSafeFlag"):
 # contract closely enough to be a faithful stand-in either way.
 _cleanups = {}
 
+# start_reason, added to the mock 2026-10-14 so it matches the documented runtime-API surface
+# (interfaces/runtime-api/api.json, checked by editor/test/runtime-api-conformance.test.ts). The
+# real runtime.py sets this just before importing a flow (listener.py's _boot_reason); generated
+# startup code reads it with getattr. The mock never runs a listener, so "unknown" is its one value.
+start_reason = "unknown"
+
 
 def register_cleanup(key, fn):
     if key not in _cleanups:

@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "module": "runtime",
+  "surface": [
+    { "name": "asyncio",            "kind": "attribute", "caller": ["codegen"],         "note": "generated code does `asyncio = runtime.asyncio`, then uses asyncio.sleep_ms" },
+    { "name": "spawn",              "kind": "function",  "caller": ["codegen"],         "signature": "spawn(coro, node_id=None)" },
+    { "name": "shared",             "kind": "function",  "caller": ["codegen", "user"], "signature": "shared(kind, key, signature=None, factory=None)" },
+    { "name": "NodeError",          "kind": "class",     "caller": ["codegen"],         "signature": "NodeError(node_id, orig)" },
+    { "name": "register_cleanup",   "kind": "function",  "caller": ["codegen", "user"], "signature": "register_cleanup(key, fn)" },
+    { "name": "register_trigger",   "kind": "function",  "caller": ["codegen"],         "signature": "register_trigger(node_id, event)" },
+    { "name": "report_status",      "kind": "function",  "caller": ["codegen"],         "signature": "report_status(node_id, state, text=None)" },
+    { "name": "start_reason",       "kind": "attribute", "caller": ["codegen"],         "note": "read via getattr in generated startup code" },
+    { "name": "_report_error",      "kind": "function",  "caller": ["codegen"],         "signature": "_report_error(node_id, exc)" },
+    { "name": "fire_trigger",       "kind": "function",  "caller": ["listener"],        "signature": "fire_trigger(node_id)" },
+    { "name": "cancel_running",     "kind": "function",  "caller": ["listener"],        "signature": "async cancel_running()" },
+    { "name": "on_node_error",      "kind": "attribute", "caller": ["listener"],        "note": "hook the listener sets; signature on_node_error(node_id, type, message)" },
+    { "name": "on_node_status",     "kind": "attribute", "caller": ["listener"],        "note": "hook the listener sets; signature on_node_status(node_id, state, text)" },
+    { "name": "_guarded",           "kind": "function",  "caller": ["internal"],        "signature": "async _guarded(coro, fallback_node_id)" }
+  ]
+}

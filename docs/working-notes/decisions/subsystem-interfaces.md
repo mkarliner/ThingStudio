@@ -13,6 +13,16 @@ log's scope boundary, and its maintenance rule. Context: `../architecture-review
   planned `thingstudio-protocol` component, and is reversible (it adds no new runtime dependency). Rule: change the
   protocol by editing `interfaces/protocol/` first, then every implementation. Checks are semantic (map key order is
   irrelevant); byte-exactness is required only for framing.
+- **2026-10-14 — The device runtime API and dependency manifest are specified too.** `interfaces/runtime-api/`
+  (`SPEC.md` + `api.json`) documents the `runtime` module surface generated flow code may call
+  (`spawn`, `shared`, `NodeError`, `register_cleanup`, `register_trigger`, `report_status`, `start_reason`,
+  `_report_error`, `asyncio`, plus the listener-facing `fire_trigger`/`cancel_running`/`on_node_*` hooks), the
+  module manifest (`runtime_manifest.py`'s `CORE_FILES`/`LISTENER_FILE`/`DEPENDENCIES`), and the dependency-catalog
+  entry shape. Conformance keeps the four copies honest: `editor/test/runtime-api-conformance.test.ts` (real
+  `runtime.py` has every documented name; the editor's `pymock/runtime.py` fixture has every codegen-facing name,
+  so editor tests can't pass against a fictional API; no `editor/src` codegen references an undeclared
+  `runtime.<name>`) and `device-runtime/test/test_runtime_api.py` (the real module's surface under MicroPython).
+  Fixed drift found by the check: `pymock` was missing `start_reason`.
 - **2026-10-14 — Conformance immediately found a real cross-implementation gap.** The editor's cborg codec can
   encode a CBOR **float**; the device's hand-rolled `device-runtime/src/cbor.py` rejects major type 7 outright. So
   a `VALUE_STREAM.payload` that is a float (every `number`-typed port value) would decrypt fine in the editor and
