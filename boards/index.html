@@ -3176,6 +3176,11 @@ see <a href="#adding-a-processor">Adding a processor</a>.</p>
 <td>ESP32-S3</td>
 <td>Pick by hand. Display and touch pins are labelled. 320x480, SPI bus 1. Rotation 1 is portrait. For landscape, set the display's <code>orientation</code> to 90 (or 270 for the other way up) and keep the screen and display at 320x480. Display and touch (FT6336U) work.</td>
 </tr>
+<tr>
+<td>Pyboard v1.0</td>
+<td>STM32F405</td>
+<td>Pins are named <code>X1</code>–<code>X22</code> and <code>Y1</code>–<code>Y12</code>. The four LEDs are <code>pyb.LED(1-4)</code>, not header pins.</td>
+</tr>
 </tbody>
 </table>
 <h2 id="built-in-processors">Built-in processors</h2>
@@ -3216,6 +3221,11 @@ see <a href="#adding-a-processor">Adding a processor</a>.</p>
 <tr>
 <td>RP2350</td>
 <td>0–47 (0–29 on the RP2350A)</td>
+<td>none</td>
+</tr>
+<tr>
+<td>STM32F405</td>
+<td>X1–X22, Y1–Y12 (named pins, not numbers)</td>
 <td>none</td>
 </tr>
 </tbody>
