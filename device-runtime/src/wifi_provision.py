@@ -101,15 +101,21 @@ try:
 except ImportError:
     os = None
 
+try:
+    import board_fs
+except ImportError:
+    board_fs = None
+
 # ---------------------------------------------------------------------------------------------
 # Persisted state: the learned STA credential plus (optionally) an AP-password override. One file,
 # not two -- both are small, both are this feature's own, and there's no case where a caller needs
 # one without ever touching the other. THINGSTUDIO_WIFI_PROVISION_PATH is the same test-only-env-var-
 # override pattern listener.py's own _FLOW_PATH uses (off-device tests have no device flash; real
-# hardware never sets this).
+# hardware never sets this). The default follows the board's filesystem root (board_fs.py): "/" on
+# ESP32/RP2, "/flash" on the stm32 port.
 # ---------------------------------------------------------------------------------------------
 
-_CRED_PATH = "/_wifi_provision.json"
+_CRED_PATH = board_fs.under_root("_wifi_provision.json") if board_fs is not None else "/_wifi_provision.json"
 try:
     _CRED_PATH = os.getenv("THINGSTUDIO_WIFI_PROVISION_PATH", _CRED_PATH)
 except (AttributeError, TypeError):

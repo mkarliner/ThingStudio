@@ -28,7 +28,12 @@ try:
 except ImportError:
     os = None
 
-_PATH = "/_board.json"
+try:
+    import board_fs
+except ImportError:
+    board_fs = None
+
+_PATH = board_fs.under_root("_board.json") if board_fs is not None else "/_board.json"
 try:
     _PATH = os.getenv("THINGSTUDIO_BOARD_SETTINGS_PATH", _PATH)
 except AttributeError:

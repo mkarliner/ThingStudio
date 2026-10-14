@@ -2,9 +2,11 @@
 # device-runtime/src/deps.py
 #
 # Flow dependencies (docs/working-notes/flow-dependencies-scoping.md, 2026-10-07): the libraries a
-# deployed flow imports (mqtt_as, display drivers, sensor drivers...) live in LIB_DIR ("/lib", on
-# MicroPython's default sys.path for ESP32 and RP2), installed by DEP_PUT and recorded in an index
-# file, instead of every vendored library going onto every board at runtime install.
+# deployed flow imports (mqtt_as, display drivers, sensor drivers...) live in LIB_DIR, installed by
+# DEP_PUT and recorded in an index file, instead of every vendored library going onto every board at
+# runtime install. LIB_DIR is "<root>/lib" under the board's filesystem root (board_fs.py): "/lib"
+# on MicroPython's default sys.path for ESP32 and RP2, but "/flash/lib" on the stm32 port, where "/"
+# is only a mount point.
 #
 # This module only manages files; listener.py wires it to DEP_PUT, DEPLOY and HELLO. Kept separate
 # so it can be tested on the unix port without a listener.
@@ -26,7 +28,12 @@ try:
 except ImportError:
     os = None
 
-LIB_DIR = "/lib"
+try:
+    import board_fs
+except ImportError:
+    board_fs = None
+
+LIB_DIR = board_fs.under_root("lib") if board_fs is not None else "/lib"
 try:
     LIB_DIR = os.getenv("THINGSTUDIO_LIB_DIR", LIB_DIR)  # off-device tests only, like THINGSTUDIO_FLOW_PATH
 except AttributeError:
@@ -39,7 +46,7 @@ INDEX_NAME = "_deps.json"
 # on sys.path, so it would never load.
 _RESERVED = (
     "errors", "cbor", "framing", "messages", "protocol", "runtime", "wifi_provision",
-    "board_settings", "net_transport", "listener", "deps", "main", "boot", "_flow",
+    "board_settings", "board_fs", "net_transport", "listener", "deps", "main", "boot", "_flow",
 )
 
 _SPACE_MARGIN = 4096  # filesystem block overhead and the index rewrite; better to refuse early

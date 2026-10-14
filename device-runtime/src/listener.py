@@ -96,6 +96,21 @@ except ImportError as _e:
     print("LISTENER_WARN flow dependencies unavailable (%r)" % (_e,))
     deps = None
 
+# The filesystem root every persisted path is built from (board_fs.py): "/" on ESP32/RP2, "/flash"
+# on the stm32 port, where "/" holds only mount points and an absolute "/_flow.mpy" fails with
+# ENODEV. Ships in CORE_FILES; missing means a board bootstrapped before this existed, so fall back
+# to the old "/" default rather than fail to boot.
+try:
+    import board_fs
+except ImportError:
+    board_fs = None
+
+
+def _under_root(name):
+    """The device path for `name` (a bare file name like "_flow.mpy"), built on the board's
+    filesystem root. Falls back to "/" when board_fs is unavailable (an old install)."""
+    return board_fs.under_root(name) if board_fs is not None else "/" + name
+
 # WiFi transport (2026-09-24, wifi-transport-scoping.md). Both ship in CORE_FILES with this file, so
 # a missing module means a partial install -- degrade to serial-only rather than fail to boot.
 try:
@@ -130,8 +145,8 @@ except (AttributeError, ValueError):
 # these off-device tests run against has NO device flash -- "/" is the
 # real host filesystem root, which a test must never write to. Real
 # hardware never sets these env vars, so this is a no-op there.
-_FLOW_PATH = "/_flow.mpy"
-_STATIC_DATA_PATH = "/_flow_static.bin"
+_FLOW_PATH = _under_root("_flow.mpy")
+_STATIC_DATA_PATH = _under_root("_flow_static.bin")
 try:
     _FLOW_PATH = os.getenv("THINGSTUDIO_FLOW_PATH", _FLOW_PATH)
     _STATIC_DATA_PATH = os.getenv("THINGSTUDIO_STATIC_DATA_PATH", _STATIC_DATA_PATH)
@@ -154,7 +169,7 @@ F64_PREFIX = "F64:"
 _HEARTBEAT_PIN = 10
 _HEARTBEAT_PERIOD_MS = 200
 
-_RUNTIME_VERSION = {"major": 10, "minor": 0, "patch": 0}  # 10.0.0 2026-10-11: new adc/encoder/neopixel nodes (vendored AADC/Encoder flow deps) -- codegen-visible, so major. 9.2.0 2026-10-08: a MemoryError receiving a message answers DEPLOY_ERROR instead of leaving the editor to time out -- minor: no codegen change; 9.1.0 2026-10-08: the WiFi watcher no longer starts the WiFi driver for a flow that doesn't use the network (it ate ESP-IDF memory, and failed noisily on a full CYD) -- minor: nothing generated depends on it; 9.0.0 2026-10-07: DEP_ACK per DEP_PUT piece (unpaced pieces overflowed a USB-UART board's receive buffer), RESTART; 8.0.0 2026-10-07: libraries sent in 1 KB pieces (DEP_PUT) plus DEP_COMMIT -- one big DEP_PUT failed with MemoryError on a fragmented ESP32 heap; 7.0.0 2026-10-07: flow dependencies (DEP_PUT, DEPLOY.dependencies, libraries in /lib instead of every board getting every library); 6.0.0 2026-09-26: vendored bme280_float.py and runtime.shared() (bme280/I2C flows use both, so an older board fails them); 5.1.0 2026-09-25: runtime.start_reason, ESP-IDF heap in HELLO/DEPLOY_ACK -- minor only: startup codegen reads start_reason with getattr, so its flows still run on 5.0.0; 5.0.0 same day: mqtt_as active(True) only when inactive (4.0.0 same day: vendored mqtt_as wifi_connect() guard -- MQTT codegen now joins WiFi first on ESP32 (3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS; 2.0.0 was 2026-09-23: EXEC, STOP_TO_PROMPT, safe mode; 1.0.0 was 2026-09-10: NODE_STATUS)
+_RUNTIME_VERSION = {"major": 10, "minor": 1, "patch": 0}  # 10.1.0 2026-10-14: persisted paths follow the board's filesystem root (board_fs.py), so the stm32/pyboard port (mounted at /flash, not /) can write its flow/state -- minor: no codegen change; 10.0.0 2026-10-11: new adc/encoder/neopixel nodes (vendored AADC/Encoder flow deps) -- codegen-visible, so major. 9.2.0 2026-10-08: a MemoryError receiving a message answers DEPLOY_ERROR instead of leaving the editor to time out -- minor: no codegen change; 9.1.0 2026-10-08: the WiFi watcher no longer starts the WiFi driver for a flow that doesn't use the network (it ate ESP-IDF memory, and failed noisily on a full CYD) -- minor: nothing generated depends on it; 9.0.0 2026-10-07: DEP_ACK per DEP_PUT piece (unpaced pieces overflowed a USB-UART board's receive buffer), RESTART; 8.0.0 2026-10-07: libraries sent in 1 KB pieces (DEP_PUT) plus DEP_COMMIT -- one big DEP_PUT failed with MemoryError on a fragmented ESP32 heap; 7.0.0 2026-10-07: flow dependencies (DEP_PUT, DEPLOY.dependencies, libraries in /lib instead of every board getting every library); 6.0.0 2026-09-26: vendored bme280_float.py and runtime.shared() (bme280/I2C flows use both, so an older board fails them); 5.1.0 2026-09-25: runtime.start_reason, ESP-IDF heap in HELLO/DEPLOY_ACK -- minor only: startup codegen reads start_reason with getattr, so its flows still run on 5.0.0; 5.0.0 same day: mqtt_as active(True) only when inactive (4.0.0 same day: vendored mqtt_as wifi_connect() guard -- MQTT codegen now joins WiFi first on ESP32 (3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS; 2.0.0 was 2026-09-23: EXEC, STOP_TO_PROMPT, safe mode; 1.0.0 was 2026-09-10: NODE_STATUS)
 # (runtime.report_status) is a hard dependency of wifi-status.ts's/mqtt-shared.ts's codegen now -- an editor
 # with this change targeting a pre-2026-09-10 runtime would crash on deploy (AttributeError: report_status),
 # not degrade gracefully. See CLAUDE.md's "Device-runtime version bump discipline" -- decideDeploy() only
@@ -210,7 +225,7 @@ _deploy_generation = 0  # bumped on every DEPLOY, purely diagnostic (not part of
 # _resume_flow (boot-time auto-resume), deliberately NOT re-read from
 # disk on every HELLO: this must reflect whichever flow is *actually*
 # running right now, and a live redeploy changes that without a reboot.
-_FLOW_META_PATH = "/_flow_meta.json"
+_FLOW_META_PATH = _under_root("_flow_meta.json")
 try:
     # Same THINGSTUDIO_*_PATH override reasoning as _FLOW_PATH/
     # _STATIC_DATA_PATH just above -- the unix-port build these
@@ -228,7 +243,7 @@ except AttributeError:
 # {"selfProvision": bool, "allowReprovision": bool}, or absent -- whether the CURRENTLY deployed
 # flow's wifi_status config says "unmanaged" (wifi-status.ts's computeWifiProvisionMarker(),
 # editor-side). Same env-var-override reasoning as every other THINGSTUDIO_*_PATH above.
-_WIFI_PROVISION_MARKER_PATH = "/_flow_wifi_provision.json"
+_WIFI_PROVISION_MARKER_PATH = _under_root("_flow_wifi_provision.json")
 
 # Boot-loop safe mode (2026-09-23, Mike: "need a way of deleting flows that cause a boot loop or
 # similar lock out"). A flow that hard-crashes the board (MemoryError while loading, watchdog, a
@@ -238,7 +253,7 @@ _WIFI_PROVISION_MARKER_PATH = "/_flow_wifi_provision.json"
 # _SAFE_MODE_AFTER boots in a row that never got that far, the listener starts WITHOUT the flow and
 # says so (a LISTENER_SAFE_MODE line, and HELLO.safeMode). A successful DEPLOY clears it.
 # Catches crashes, not a flow that merely hogs the CPU -- the editor's "Remove flow" covers that.
-_BOOT_COUNT_PATH = "/_boot_count"
+_BOOT_COUNT_PATH = _under_root("_boot_count")
 _SAFE_MODE_AFTER = 3
 _STABLE_AFTER_MS = 10000
 _safe_mode = False
@@ -357,7 +372,7 @@ def _free_flash_bytes():
     if os is None:
         return 0
     try:
-        st = os.statvfs("/")
+        st = os.statvfs(board_fs.ROOT if board_fs is not None else "/")
         return st[0] * st[3]  # f_frsize * f_bfree
     except (AttributeError, OSError):
         return 0  # unix-port dev filesystem, or a port without statvfs -- not a real device, 0 is honest

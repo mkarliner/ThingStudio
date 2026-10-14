@@ -21,7 +21,9 @@ from __future__ import annotations
 # no-op on a board bootstrapped before this line existed, so a re-run of an install onto an
 # already-bootstrapped board is never destructive just because this list grows).
 # deps.py added 2026-10-07 (flow dependencies).
-CORE_FILES: list[str] = ["errors.py", "cbor.py", "framing.py", "messages.py", "protocol.py", "runtime.py", "wifi_provision.py", "board_settings.py", "net_transport.py", "deps.py"]
+# board_fs.py added 2026-10-14 (the filesystem root, so paths work on the stm32 port, which mounts
+# its filesystem at /flash rather than /).
+CORE_FILES: list[str] = ["errors.py", "cbor.py", "framing.py", "messages.py", "protocol.py", "runtime.py", "wifi_provision.py", "board_settings.py", "net_transport.py", "deps.py", "board_fs.py"]
 
 # Installed as main.py so the board boots straight into it.
 LISTENER_FILE: str = "listener.py"

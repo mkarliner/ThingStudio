@@ -30,6 +30,7 @@
 
 import base64
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -45,6 +46,20 @@ import cbor  # noqa: E402
 import framing  # noqa: E402
 import messages  # noqa: E402
 import protocol  # noqa: E402
+
+
+def _listener_runtime_version():
+    """The runtime version a board should report, read from listener.py's own _RUNTIME_VERSION
+    rather than hardcoded here -- a literal drifted unnoticed once (still 9.2.0 after the 10.0.0
+    bump), and this suite isn't in CI, so keep it in step automatically."""
+    with open(os.path.join(SRC_DIR, "listener.py")) as f:
+        for line in f:
+            if line.startswith("_RUNTIME_VERSION"):
+                return {k: int(v) for k, v in re.findall(r'"(major|minor|patch)":\s*(\d+)', line)}
+    raise AssertionError("no _RUNTIME_VERSION found in listener.py")
+
+
+_RUNTIME_VERSION = _listener_runtime_version()
 
 MICROPYTHON_BIN = os.environ.get("MICROPYTHON_BIN")
 MPY_CROSS_BIN = os.environ.get("MPY_CROSS_BIN")
@@ -83,6 +98,10 @@ class ListenerProcess:
         env["THINGSTUDIO_STATIC_DATA_PATH"] = os.path.join(tmpdir, "_flow_static.bin")
         env["THINGSTUDIO_FLOW_META_PATH"] = os.path.join(tmpdir, "_flow_meta.json")
         env["THINGSTUDIO_BOOT_COUNT_PATH"] = os.path.join(tmpdir, "_boot_count")
+        # The WiFi-provisioning files too, so a listener run never writes its own copy into the
+        # checkout (they default to the board's filesystem root, which off-device is the cwd).
+        env["THINGSTUDIO_WIFI_PROVISION_MARKER_PATH"] = os.path.join(tmpdir, "_flow_wifi_provision.json")
+        env["THINGSTUDIO_WIFI_PROVISION_PATH"] = os.path.join(tmpdir, "_wifi_provision.json")
         env["THINGSTUDIO_STABLE_AFTER_MS"] = "400"
         # Flow dependencies (2026-10-07): never the test host's real /lib.
         env["THINGSTUDIO_LIB_DIR"] = os.path.join(tmpdir, "lib")
@@ -160,7 +179,7 @@ def test_hello_sent_on_boot():
             line = listener.wait_for(lambda l: l.startswith(F64_PREFIX), description="a HELLO frame")
             msg = _decode_f64_line(line)
             assert msg["type"] == "HELLO"
-            assert msg["runtimeVersion"] == {"major": 9, "minor": 2, "patch": 0}
+            assert msg["runtimeVersion"] == _RUNTIME_VERSION
             assert msg["dependencies"] == {}, msg["dependencies"]  # fresh board: no flow libraries yet
             assert isinstance(msg["freeRamBytes"], int) and msg["freeRamBytes"] > 0
             assert msg["freeIdfHeapBytes"] is None and msg["largestIdfHeapBlockBytes"] is None  # not an ESP32
@@ -367,7 +386,7 @@ def test_hello_request_resends_hello_no_side_effects():
             reply_line = listener.wait_for(lambda l: l.startswith(F64_PREFIX), description="HELLO_REQUEST's HELLO reply")
             msg = _decode_f64_line(reply_line)
             assert msg["type"] == "HELLO"
-            assert msg["runtimeVersion"] == {"major": 9, "minor": 2, "patch": 0}
+            assert msg["runtimeVersion"] == _RUNTIME_VERSION
 
             # No side effects: a normal DEPLOY still works fine afterward.
             bytecode = _compile_flow(
