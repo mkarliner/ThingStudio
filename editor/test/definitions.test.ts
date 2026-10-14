@@ -436,6 +436,16 @@ describe("named pins (processors whose pins aren't numbered, e.g. the STM32 pybo
     expect(() => gpioOutNode.codegenSink!(node("thingstudio/gpio_out", { pin: 5 }), ctxFor(t))).toThrow(/gpio_out pin 5 doesn't exist on Pyboard/);
   });
 
+  it("explains a number/name mismatch instead of a bare 'doesn't exist'", () => {
+    const named = namedTarget();
+    expect(() => gpioOutNode.codegenSink!(node("thingstudio/gpio_out", { pin: 15 }), ctxFor(named))).toThrow(
+      /doesn't exist on Pyboard -- this board names its pins \(X1, X2, Y1\), it has no GPIO numbers\. Pins: /,
+    );
+    expect(() => gpioOutNode.codegenSink!(node("thingstudio/gpio_out", { pin: "X1" }), ctxFor(targetFor("processor:esp32")))).toThrow(
+      /doesn't exist on ESP32 -- this board uses GPIO numbers, not pin names\. Pins: /,
+    );
+  });
+
   it("gates a named pin behind the pin pattern, not arbitrary text", () => {
     expect(() => gpioOutNode.codegenSink!(node("thingstudio/gpio_out", { pin: "not a pin" }), ctxFor(namedTarget()))).toThrow(/isn't a GPIO number or a pin name/);
   });

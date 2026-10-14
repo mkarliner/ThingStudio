@@ -42,6 +42,21 @@ function labelSuffix(target: Target, pin: PinId): string {
   return labels && labels.length > 0 ? ` (${labels.join(", ")})` : "";
 }
 
+/** A short clause for the confusing case: a number asked of a board that names its pins (the STM32
+ * pyboard), or a name asked of a board that numbers them. Without this the plain "doesn't exist"
+ * reads as if the pin were merely out of range. */
+function pinKindHint(target: Target, pin: PinId): string {
+  const named = [...target.gpio].filter((p): p is string => typeof p === "string");
+  const hasNumbers = [...target.gpio].some((p) => typeof p === "number");
+  if (typeof pin === "number" && named.length > 0 && !hasNumbers) {
+    return ` -- this board names its pins (${named.slice(0, 3).join(", ")}), it has no GPIO numbers`;
+  }
+  if (typeof pin === "string" && named.length === 0 && hasNumbers) {
+    return " -- this board uses GPIO numbers, not pin names";
+  }
+  return "";
+}
+
 /** Reads a node's pin property as a pin id: a number (or numeric string) stays a number; a named pin
  * ("X1") stays its string. Anything else is a CompileError. */
 function pinFromValue(value: unknown, what: string): PinId {
@@ -78,7 +93,7 @@ export function checkPin(ctx: CodegenContext, what: string, value: unknown, use:
     return pin;
   }
   if (!target.gpio.has(pin)) {
-    throw new CompileError(`${what} ${pin} doesn't exist on ${target.label}. Pins: ${formatPinSet(target.gpio)}`);
+    throw new CompileError(`${what} ${pin} doesn't exist on ${target.label}${pinKindHint(target, pin)}. Pins: ${formatPinSet(target.gpio)}`);
   }
   const reason = target.reserved.get(pin);
   if (reason !== undefined) {
