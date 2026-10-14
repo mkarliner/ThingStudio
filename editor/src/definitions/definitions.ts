@@ -18,21 +18,33 @@
 // the file it came from, never dropped (presets.md's "invalid must be
 // flagged loudly" rule).
 
-/** Pin list as written in a file: numbers, or "a-b" range strings. */
+/**
+ * A pin identifier: a GPIO number, or a named pin on processors whose pins aren't numbered (the STM32
+ * pyboard's "X1", "A13"). A string in a pin list is a range ("4-7") when it looks numeric -- those still
+ * expand to numbers, so every existing definition and flow is unchanged -- and a named pin otherwise.
+ */
+export type PinId = number | string;
+
+/** Pin list as written in a file: numbers, "a-b" range strings, or named pins. */
 export type PinListJson = Array<number | string>;
-/** Pin -> reason, keyed by "n" or "a-b". */
+/** Pin -> reason, keyed by "n", "a-b", or a named pin. */
 export type PinReasonsJson = Record<string, string>;
+
+/** "GPIO 5" for a number, "pin X1" for a name -- the wording every message and resource key uses. */
+export function pinLabel(pin: PinId): string {
+  return typeof pin === "number" ? `GPIO ${pin}` : `pin ${pin}`;
+}
 
 export interface SpiBusDef {
   /** Pins that reach this bus without the GPIO matrix (ESP32 family). Not a restriction. */
-  readonly fastPins?: { readonly sck?: number; readonly mosi?: number; readonly miso?: number };
+  readonly fastPins?: { readonly sck?: PinId; readonly mosi?: PinId; readonly miso?: PinId };
   /** When present, the ONLY pins this bus can use per role (RP2 family). */
-  readonly pins?: { readonly sck?: readonly number[]; readonly mosi?: readonly number[]; readonly miso?: readonly number[] };
+  readonly pins?: { readonly sck?: readonly PinId[]; readonly mosi?: readonly PinId[]; readonly miso?: readonly PinId[] };
 }
 
 export interface I2cBusDef {
   /** When present, the ONLY pins this bus can use per role (RP2 family). */
-  readonly pins?: { readonly sda?: readonly number[]; readonly scl?: readonly number[] };
+  readonly pins?: { readonly sda?: readonly PinId[]; readonly scl?: readonly PinId[] };
 }
 
 export interface ProcessorDef {
@@ -42,11 +54,11 @@ export interface ProcessorDef {
   readonly match: readonly string[];
   readonly nativeArch: string;
   readonly nativeArchConfirmed: boolean;
-  readonly gpio: ReadonlySet<number>;
-  readonly inputOnly: ReadonlySet<number>;
-  readonly noPull: ReadonlySet<number>;
-  readonly reserved: ReadonlyMap<number, string>;
-  readonly avoid: ReadonlyMap<number, string>;
+  readonly gpio: ReadonlySet<PinId>;
+  readonly inputOnly: ReadonlySet<PinId>;
+  readonly noPull: ReadonlySet<PinId>;
+  readonly reserved: ReadonlyMap<PinId, string>;
+  readonly avoid: ReadonlyMap<PinId, string>;
   readonly spi: { readonly maxHz?: number; readonly otherPinsMaxHz?: number; readonly buses: ReadonlyMap<number, SpiBusDef> } | null;
   readonly i2c: { readonly buses: ReadonlyMap<number, I2cBusDef> } | null;
   readonly notes: string;
@@ -58,24 +70,26 @@ export interface BoardDef {
   readonly processor: string;
   /** Exact (case-insensitive) matches for the board part of HELLO's chipType (before " with "). */
   readonly match: readonly string[];
-  /** Label -> GPIO number. UI only; flows always store GPIO numbers. */
-  readonly pins: ReadonlyMap<string, number>;
+  /** Label -> GPIO number, or a named pin on processors whose pins aren't numbered. UI only; flows store
+   * whatever pin value the flow author picked. */
+  readonly pins: ReadonlyMap<string, PinId>;
   /** Narrows the processor's gpio set when present. */
-  readonly gpio: ReadonlySet<number> | null;
-  readonly reserved: ReadonlyMap<number, string>;
-  readonly avoid: ReadonlyMap<number, string>;
+  readonly gpio: ReadonlySet<PinId> | null;
+  readonly reserved: ReadonlyMap<PinId, string>;
+  readonly avoid: ReadonlyMap<PinId, string>;
   /** Pins the processor reserves or warns about that are free on this board (2026-10-12: the LuatOS
    * ESP32C3-CORE runs its flash in DIO mode, so the C3's GPIO 12-13 flash pins carry its LEDs). */
-  readonly free: ReadonlySet<number>;
+  readonly free: ReadonlySet<PinId>;
   /** Whether the board has a WiFi radio (WiFi transport, 2026-09-24). false hides the network
    * connection and board password; null (not stated) offers them -- Mike's call: only a definition
    * that says "no radio" takes the option away. */
   readonly wifi: boolean | null;
   readonly notes: string;
-  /** Physical header pin -> the GPIO on it, or a label such as "GND", "3V3" or "RUN" (2026-09-30). Empty
-   * when the file doesn't say. Keys are as written ("1".."40", or "P3-1" for a board with several
-   * connectors); in insertion order, except that JS sorts integer-like keys ascending. */
-  readonly header: ReadonlyMap<string, number | string>;
+  /** Physical header pin -> the GPIO on it, a named pin, or a label such as "GND", "3V3" or "RUN"
+   * (2026-09-30). A string value that's a declared pin on this board is that pin; any other string is a
+   * free label. Empty when the file doesn't say. Keys are as written ("1".."40", or "P3-1" for a board with
+   * several connectors); in insertion order, except that JS sorts integer-like keys ascending. */
+  readonly header: ReadonlyMap<string, PinId | string>;
   /** How a 1..N dual-row header is numbered (2026-10-12): "around" goes down the left side and back up the
    * right (the Pico), "down" goes down both sides (pin N/2+1 top right, the LuatOS ESP32C3-CORE). */
   readonly headerOrder: "around" | "down";
@@ -145,7 +159,21 @@ function pinNumber(v: unknown, where: string): number {
   return v;
 }
 
-/** "5" -> [5], "6-11" -> [6..11]. */
+/** A named pin (STM32's "X1", "A13"): a letter first, then letters/digits/underscore/hyphen. */
+const NAMED_PIN_RE = /^[A-Za-z][A-Za-z0-9_-]*$/;
+
+/** True for a string that can be a named pin ("X1", "A13"), not a numeric pin or range. The one rule the
+ * pin-check and the UI share. */
+export function isNamedPinName(s: string): boolean {
+  return NAMED_PIN_RE.test(s) && !isNumericPinToken(s);
+}
+
+/** True for "5" and "6-11" -- the strings parsePinSpec expands to numbers. */
+function isNumericPinToken(spec: string): boolean {
+  return /^\s*\d+\s*(?:-\s*\d+\s*)?$/.test(spec);
+}
+
+/** "5" -> [5], "6-11" -> [6..11]. Named pins never reach here. */
 export function parsePinSpec(spec: string, where: string): number[] {
   const m = /^\s*(\d+)\s*(?:-\s*(\d+)\s*)?$/.exec(spec);
   if (!m) throw new DefinitionError(`${where}: "${spec}" isn't a pin or a range like "0-19"`);
@@ -157,25 +185,32 @@ export function parsePinSpec(spec: string, where: string): number[] {
   return out;
 }
 
-function pinList(v: unknown, where: string): number[] {
-  if (!Array.isArray(v)) throw new DefinitionError(`${where}: must be a list, e.g. [0, 2, "4-7"]`);
-  const out: number[] = [];
-  for (const item of v) {
-    if (typeof item === "number") out.push(pinNumber(item, where));
-    else if (typeof item === "string") out.push(...parsePinSpec(item, where));
-    else throw new DefinitionError(`${where}: ${JSON.stringify(item)} isn't a pin number or range`);
+/** One pin-list item -> the pin id(s) it names: a number, a numeric range string, or a named pin. */
+function parsePinToken(item: unknown, where: string): PinId[] {
+  if (typeof item === "number") return [pinNumber(item, where)];
+  if (typeof item === "string") {
+    if (isNumericPinToken(item)) return parsePinSpec(item, where);
+    const name = item.trim();
+    if (NAMED_PIN_RE.test(name)) return [name];
   }
+  throw new DefinitionError(`${where}: ${JSON.stringify(item)} isn't a pin or a range like "0-19", or a pin name`);
+}
+
+function pinList(v: unknown, where: string): PinId[] {
+  if (!Array.isArray(v)) throw new DefinitionError(`${where}: must be a list, e.g. [0, 2, "4-7"]`);
+  const out: PinId[] = [];
+  for (const item of v) out.push(...parsePinToken(item, where));
   return out;
 }
 
-function pinReasons(v: unknown, where: string): Map<number, string> {
+function pinReasons(v: unknown, where: string): Map<PinId, string> {
   if (!isObject(v)) throw new DefinitionError(`${where}: must be an object like {"6-11": "reason"}`);
-  const out = new Map<number, string>();
+  const out = new Map<PinId, string>();
   for (const [spec, reason] of Object.entries(v)) {
     if (typeof reason !== "string" || reason.trim() === "") {
       throw new DefinitionError(`${where}."${spec}": the reason must be a non-empty string`);
     }
-    for (const p of parsePinSpec(spec, where)) out.set(p, reason);
+    for (const p of parsePinToken(spec, where)) out.set(p, reason);
   }
   return out;
 }
@@ -202,10 +237,17 @@ function busId(key: string, where: string): number {
   return Number(key);
 }
 
-function subset(pins: Iterable<number>, gpio: ReadonlySet<number>, where: string): void {
+function subset(pins: Iterable<PinId>, gpio: ReadonlySet<PinId>, where: string): void {
   for (const p of pins) {
-    if (!gpio.has(p)) throw new DefinitionError(`${where}: GPIO ${p} isn't in "gpio"`);
+    if (!gpio.has(p)) throw new DefinitionError(`${where}: ${pinLabel(p)} isn't in "gpio"`);
   }
+}
+
+/** A single pin value (a board's `pins` map value): a number or a named pin. */
+function parsePinValue(v: unknown, where: string): PinId {
+  const pins = parsePinToken(v, where);
+  if (pins.length !== 1) throw new DefinitionError(`${where}: ${JSON.stringify(v)} names more than one pin`);
+  return pins[0]!;
 }
 
 // ---------------------------------------------------------------------
@@ -220,7 +262,7 @@ function subset(pins: Iterable<number>, gpio: ReadonlySet<number>, where: string
 export const PROCESSOR_KEYS = ["name", "match", "nativeArch", "nativeArchConfirmed", "gpio", "inputOnly", "noPull", "reserved", "avoid", "spi", "i2c", "notes"];
 export const BOARD_KEYS = ["name", "processor", "match", "pins", "gpio", "reserved", "avoid", "notes", "wifi", "header", "free", "headerOrder", "usb"];
 
-function parseSpi(v: unknown, gpio: ReadonlySet<number>): ProcessorDef["spi"] {
+function parseSpi(v: unknown, gpio: ReadonlySet<PinId>): ProcessorDef["spi"] {
   if (!isObject(v)) throw new DefinitionError(`"spi": must be an object`);
   checkKeys(v, ["maxHz", "otherPinsMaxHz", "buses"], `"spi"`);
   const maxHz = v.maxHz === undefined ? undefined : positiveInt(v.maxHz, `"spi.maxHz"`);
@@ -236,9 +278,9 @@ function parseSpi(v: unknown, gpio: ReadonlySet<number>): ProcessorDef["spi"] {
     if (raw.fastPins !== undefined) {
       if (!isObject(raw.fastPins)) throw new DefinitionError(`${where}.fastPins: must be an object`);
       checkKeys(raw.fastPins, ["sck", "mosi", "miso"], `${where}.fastPins`);
-      const fp: { sck?: number; mosi?: number; miso?: number } = {};
+      const fp: { sck?: PinId; mosi?: PinId; miso?: PinId } = {};
       for (const role of ["sck", "mosi", "miso"] as const) {
-        if (raw.fastPins[role] !== undefined) fp[role] = pinNumber(raw.fastPins[role], `${where}.fastPins.${role}`);
+        if (raw.fastPins[role] !== undefined) fp[role] = parsePinValue(raw.fastPins[role], `${where}.fastPins.${role}`);
       }
       subset(Object.values(fp), gpio, `${where}.fastPins`);
       bus.fastPins = fp;
@@ -246,7 +288,7 @@ function parseSpi(v: unknown, gpio: ReadonlySet<number>): ProcessorDef["spi"] {
     if (raw.pins !== undefined) {
       if (!isObject(raw.pins)) throw new DefinitionError(`${where}.pins: must be an object`);
       checkKeys(raw.pins, ["sck", "mosi", "miso"], `${where}.pins`);
-      const pins: { sck?: number[]; mosi?: number[]; miso?: number[] } = {};
+      const pins: { sck?: PinId[]; mosi?: PinId[]; miso?: PinId[] } = {};
       for (const role of ["sck", "mosi", "miso"] as const) {
         if (raw.pins[role] !== undefined) {
           pins[role] = pinList(raw.pins[role], `${where}.pins.${role}`);
@@ -260,7 +302,7 @@ function parseSpi(v: unknown, gpio: ReadonlySet<number>): ProcessorDef["spi"] {
   return { maxHz, otherPinsMaxHz, buses };
 }
 
-function parseI2c(v: unknown, gpio: ReadonlySet<number>): ProcessorDef["i2c"] {
+function parseI2c(v: unknown, gpio: ReadonlySet<PinId>): ProcessorDef["i2c"] {
   if (!isObject(v)) throw new DefinitionError(`"i2c": must be an object`);
   checkKeys(v, ["buses"], `"i2c"`);
   if (!isObject(v.buses)) throw new DefinitionError(`"i2c.buses": must be an object like {"0": {}}`);
@@ -274,7 +316,7 @@ function parseI2c(v: unknown, gpio: ReadonlySet<number>): ProcessorDef["i2c"] {
     if (raw.pins !== undefined) {
       if (!isObject(raw.pins)) throw new DefinitionError(`${where}.pins: must be an object`);
       checkKeys(raw.pins, ["sda", "scl"], `${where}.pins`);
-      const pins: { sda?: number[]; scl?: number[] } = {};
+      const pins: { sda?: PinId[]; scl?: PinId[] } = {};
       for (const role of ["sda", "scl"] as const) {
         if (raw.pins[role] !== undefined) {
           pins[role] = pinList(raw.pins[role], `${where}.pins.${role}`);
@@ -299,8 +341,8 @@ export function parseProcessor(id: string, data: unknown): ProcessorDef {
   if (gpio.size === 0) throw new DefinitionError(`"gpio": must list at least one pin`);
   const inputOnly = new Set(data.inputOnly === undefined ? [] : pinList(data.inputOnly, `"inputOnly"`));
   const noPull = new Set(data.noPull === undefined ? [] : pinList(data.noPull, `"noPull"`));
-  const reserved = data.reserved === undefined ? new Map<number, string>() : pinReasons(data.reserved, `"reserved"`);
-  const avoid = data.avoid === undefined ? new Map<number, string>() : pinReasons(data.avoid, `"avoid"`);
+  const reserved = data.reserved === undefined ? new Map<PinId, string>() : pinReasons(data.reserved, `"reserved"`);
+  const avoid = data.avoid === undefined ? new Map<PinId, string>() : pinReasons(data.avoid, `"avoid"`);
   subset(inputOnly, gpio, `"inputOnly"`);
   subset(noPull, gpio, `"noPull"`);
   subset(reserved.keys(), gpio, `"reserved"`);
@@ -337,22 +379,22 @@ export function parseBoard(id: string, data: unknown, processors: ReadonlyMap<st
   if (!processor) {
     throw new DefinitionError(`"processor": no processor "${processorId}" (known: ${[...processors.keys()].sort().join(", ")})`);
   }
-  let gpio: Set<number> | null = null;
+  let gpio: Set<PinId> | null = null;
   if (data.gpio !== undefined) {
     gpio = new Set(pinList(data.gpio, `"gpio"`));
     subset(gpio, processor.gpio, `"gpio" (must be pins ${processor.name} has)`);
   }
   const available = gpio ?? processor.gpio;
   if (!isObject(data.pins)) throw new DefinitionError(`"pins": must be an object like {"LED": 15}`);
-  const pins = new Map<string, number>();
+  const pins = new Map<string, PinId>();
   for (const [label, pin] of Object.entries(data.pins)) {
     if (label.trim() === "") throw new DefinitionError(`"pins": labels can't be empty`);
-    const p = pinNumber(pin, `"pins.${label}"`);
-    if (!available.has(p)) throw new DefinitionError(`"pins.${label}": GPIO ${p} doesn't exist on this board`);
+    const p = parsePinValue(pin, `"pins.${label}"`);
+    if (!available.has(p)) throw new DefinitionError(`"pins.${label}": ${pinLabel(p)} doesn't exist on this board`);
     pins.set(label, p);
   }
-  const reserved = data.reserved === undefined ? new Map<number, string>() : pinReasons(data.reserved, `"reserved"`);
-  const avoid = data.avoid === undefined ? new Map<number, string>() : pinReasons(data.avoid, `"avoid"`);
+  const reserved = data.reserved === undefined ? new Map<PinId, string>() : pinReasons(data.reserved, `"reserved"`);
+  const avoid = data.avoid === undefined ? new Map<PinId, string>() : pinReasons(data.avoid, `"avoid"`);
   subset(reserved.keys(), available, `"reserved"`);
   subset(avoid.keys(), available, `"avoid"`);
   const free = new Set(data.free === undefined ? [] : pinList(data.free, `"free"`));
@@ -364,7 +406,7 @@ export function parseBoard(id: string, data: unknown, processors: ReadonlyMap<st
   }
   for (const p of free) {
     if (reserved.has(p) || avoid.has(p)) {
-      throw new DefinitionError(`"free": GPIO ${p} is also in this board's own "${reserved.has(p) ? "reserved" : "avoid"}"`);
+      throw new DefinitionError(`"free": ${pinLabel(p)} is also in this board's own "${reserved.has(p) ? "reserved" : "avoid"}"`);
     }
   }
   return {
@@ -386,24 +428,29 @@ export function parseBoard(id: string, data: unknown, processors: ReadonlyMap<st
 }
 
 /** `"header": {"1": 0, "3": "GND", ...}`. A GPIO must exist on the board and appear once: a header that
- * says two physical pins carry the same GPIO is a typo, and this page exists to prevent wiring mistakes. */
-function parseHeader(v: unknown, available: ReadonlySet<number>): Map<string, number | string> {
+ * says two physical pins carry the same GPIO is a typo, and this page exists to prevent wiring mistakes.
+ * A string value that names a pin on this board is that pin; any other string is a free label ("GND"). */
+function parseHeader(v: unknown, available: ReadonlySet<PinId>): Map<string, PinId | string> {
   if (!isObject(v)) throw new DefinitionError(`"header": must be an object like {"1": 0, "3": "GND"}`);
-  const out = new Map<string, number | string>();
-  const seen = new Map<number, string>();
+  const out = new Map<string, PinId | string>();
+  const seen = new Map<PinId, string>();
+  const claim = (pin: string, id: PinId): void => {
+    const other = seen.get(id);
+    if (other !== undefined) throw new DefinitionError(`"header.${pin}": ${pinLabel(id)} is already on header pin ${other}`);
+    seen.set(id, pin);
+    out.set(pin, id);
+  };
   for (const [pin, what] of Object.entries(v)) {
     if (pin.trim() === "") throw new DefinitionError(`"header": physical pin names can't be empty`);
     if (typeof what === "string") {
       if (what.trim() === "") throw new DefinitionError(`"header.${pin}": the label can't be empty`);
-      out.set(pin, what);
+      if (available.has(what)) claim(pin, what);
+      else out.set(pin, what);
       continue;
     }
-    const gpio = pinNumber(what, `"header.${pin}"`);
-    if (!available.has(gpio)) throw new DefinitionError(`"header.${pin}": GPIO ${gpio} doesn't exist on this board`);
-    const other = seen.get(gpio);
-    if (other !== undefined) throw new DefinitionError(`"header.${pin}": GPIO ${gpio} is already on header pin ${other}`);
-    seen.set(gpio, pin);
-    out.set(pin, gpio);
+    const id = parsePinValue(what, `"header.${pin}"`);
+    if (!available.has(id)) throw new DefinitionError(`"header.${pin}": ${pinLabel(id)} doesn't exist on this board`);
+    claim(pin, id);
   }
   return out;
 }
@@ -469,10 +516,17 @@ export function buildDefinitionSet(builtin: readonly RawDefinitionFile[], user: 
   return { processors, boards, problems, overrides, staleCopies };
 }
 
-/** "0-19, 21-23, 32-39" -- compact text for a pin set, used in messages and the UI. */
-export function formatPinSet(pins: Iterable<number>): string {
-  const sorted = [...new Set(pins)].sort((a, b) => a - b);
+/** "0-19, 21-23, 32-39" -- compact text for named pins, used in messages and the UI. Numbers are
+ * range-compacted and listed first; named pins (STM32's "X1") follow, sorted for stable output. */
+export function formatPinSet(pins: Iterable<PinId>): string {
+  const numbers: number[] = [];
+  const names: string[] = [];
+  for (const p of pins) {
+    if (typeof p === "number") numbers.push(p);
+    else if (!names.includes(p)) names.push(p);
+  }
   const parts: string[] = [];
+  const sorted = [...new Set(numbers)].sort((a, b) => a - b);
   let i = 0;
   while (i < sorted.length) {
     let j = i;
@@ -480,6 +534,7 @@ export function formatPinSet(pins: Iterable<number>): string {
     parts.push(j === i ? String(sorted[i]) : `${sorted[i]}-${sorted[j]}`);
     i = j + 1;
   }
+  parts.push(...names.sort((a, b) => a.localeCompare(b)));
   return parts.join(", ");
 }
 

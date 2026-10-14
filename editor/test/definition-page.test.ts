@@ -69,7 +69,7 @@ describe("renderDefinitionPage", () => {
     const t = boardTarget("lolin-s2-mini");
     const html = renderDefinitionPage(t, OPTS);
     const rows = [...html.matchAll(/<td class="gpio">(\d+)<\/td>/g)].map((m) => Number(m[1]));
-    const expected = [...new Set([...t.gpio, ...t.reserved.keys()])].sort((a, b) => a - b);
+    const expected = [...new Set([...t.gpio, ...t.reserved.keys()])].filter((p): p is number => typeof p === "number").sort((a, b) => a - b);
     expect(rows).toEqual(expected);
   });
 
@@ -176,7 +176,7 @@ describe("physical header pins (2026-09-30)", () => {
       const board = defs.boards.get(id)!;
       expect(board.header.size).toBe(40);
       const onHeader = [...board.header.values()].filter((v): v is number => typeof v === "number").sort((a, b) => a - b);
-      const expected = [...boardTarget(id).gpio].filter((p) => ![23, 24, 25, 29].includes(p)).sort((a, b) => a - b);
+      const expected = [...boardTarget(id).gpio].filter((p): p is number => typeof p === "number").filter((p) => ![23, 24, 25, 29].includes(p)).sort((a, b) => a - b);
       expect(onHeader).toEqual(expected);
       expect(board.header.get("3")).toBe("GND");
       expect(board.header.get("36")).toBe("3V3(OUT)");

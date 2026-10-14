@@ -23,8 +23,9 @@
 // Two nodes on the same pair is unusual; both await the one driver's iterator and both emit, which is
 // acceptable, but it is not a supported configuration.
 
-import { claimResource, sharedPin } from "./hardware-shared.js";
+import { claimResource, pinVarSegment, sharedPin } from "./hardware-shared.js";
 import { CompileError } from "../compiler/errors.js";
+import { pinLabel } from "../definitions/definitions.js";
 import { checkPin } from "../definitions/pin-check.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, EventSourceCodegenResult, NodeDefinition } from "../compiler/node-definition.js";
@@ -68,7 +69,7 @@ export const encoderNode: NodeDefinition = {
 
     const px = sharedPin(ctx, node, pinX, "in", "up");
     const py = sharedPin(ctx, node, pinY, "in", "up");
-    const encVar = `_encoder_${pinX}_${pinY}`;
+    const encVar = `_encoder_${pinVarSegment(pinX)}_${pinVarSegment(pinY)}`;
     const prevVar = ctx.uniqueName("encoder_prev");
 
     const args = [`v=${value}`, `div=${div}`];
@@ -79,7 +80,8 @@ export const encoderNode: NodeDefinition = {
 
     // The Encoder driver on the two shared pins is claimed too, so two encoder
     // nodes on the same pair with different settings are a compile error.
-    claimResource(ctx, `GPIO ${pinX},${pinY} encoder`, args.join(", "), node);
+    const pairLabel = typeof pinX === "number" && typeof pinY === "number" ? `GPIO ${pinX},${pinY}` : `${pinLabel(pinX)},${pinLabel(pinY)}`;
+    claimResource(ctx, `${pairLabel} encoder`, args.join(", "), node);
 
     return {
       imports: ["import machine", "from encoder import Encoder"],

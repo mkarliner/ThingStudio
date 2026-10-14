@@ -22,7 +22,7 @@
 import { compile } from "../compiler/compile.js";
 import type { GraphConfigNode, GraphData, GraphLink, GraphNode } from "../compiler/graph.js";
 import { resolvePortType } from "../compiler/node-definition.js";
-import { buildDefinitionSet, type DefinitionSet } from "../definitions/definitions.js";
+import { buildDefinitionSet, type DefinitionSet, type PinId } from "../definitions/definitions.js";
 import { BUILTIN_DEFINITION_FILES } from "../definitions/builtin.js";
 import { resolveTarget, type Target } from "../definitions/target.js";
 import { parseFlowFile, FlowFileError, type FlowFile } from "../flow-file/flow-file.js";
@@ -219,25 +219,31 @@ export function boardInfo(choice: string): {
   processor: string;
   notes: string;
   wifi: boolean | null;
-  labelledPins: Record<string, number>;
-  gpio: number[];
-  inputOnly: number[];
-  noPullUp: number[];
+  labelledPins: Record<string, PinId>;
+  gpio: PinId[];
+  inputOnly: PinId[];
+  noPullUp: PinId[];
   reserved: Record<string, string>;
   avoid: Record<string, string>;
 } | null {
   const res = resolveTarget(builtinDefinitions(), choice, null);
   const target = res.target;
   if (!target) return null;
-  const obj = (m: ReadonlyMap<number, string>) => Object.fromEntries([...m.entries()].sort((a, b) => a[0] - b[0]).map(([k, v]) => [String(k), v]));
-  const num = (s: ReadonlySet<number>) => [...s].sort((a, b) => a - b);
+  const byPin = (a: PinId, b: PinId): number => {
+    if (typeof a === "number" && typeof b === "number") return a - b;
+    if (typeof a === "number") return -1;
+    if (typeof b === "number") return 1;
+    return a.localeCompare(b);
+  };
+  const obj = (m: ReadonlyMap<PinId, string>) => Object.fromEntries([...m.entries()].sort((a, b) => byPin(a[0], b[0])).map(([k, v]) => [String(k), v]));
+  const num = (s: ReadonlySet<PinId>) => [...s].sort(byPin);
   return {
     id: choice,
     name: target.label,
     processor: target.processor.id,
     notes: [target.processor.notes, target.board?.notes ?? ""].filter(Boolean).join(" "),
     wifi: target.board?.wifi ?? null,
-    labelledPins: Object.fromEntries([...(target.board?.pins ?? [])].sort((a, b) => a[1] - b[1])),
+    labelledPins: Object.fromEntries([...(target.board?.pins ?? [])].sort((a, b) => byPin(a[1], b[1]))),
     gpio: num(target.gpio),
     inputOnly: num(target.inputOnly),
     noPullUp: num(target.noPull),

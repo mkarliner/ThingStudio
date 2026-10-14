@@ -49,8 +49,9 @@
 // about rather than left to be rediscovered while debugging a flow with
 // more than one ebutton node.
 
-import { claimResource, sharedPin, type Pull } from "./hardware-shared.js";
+import { claimResource, pinVarSegment, sharedPin, type Pull } from "./hardware-shared.js";
 import { CompileError } from "../compiler/errors.js";
+import { pinLabel } from "../definitions/definitions.js";
 import { checkPin } from "../definitions/pin-check.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, EventSourceCodegenResult, NodeDefinition } from "../compiler/node-definition.js";
@@ -96,12 +97,12 @@ export const ebuttonNode: NodeDefinition = {
     const shared = sharedPin(ctx, node, pin, "in", pull as Pull);
     claimResource(
       ctx,
-      `GPIO ${pin} ebutton`,
+      `${pinLabel(pin)} ebutton`,
       `sense ${senseMode}, suppress ${suppress ? "on" : "off"}, debounce ${debounceMs} ms, long press ${longPressMs} ms, double click ${doubleClickMs} ms`,
       node,
     );
     const pinVar = shared.varName;
-    const btnVar = `_ebutton_${pin}`;
+    const btnVar = `_ebutton_${pinVarSegment(pin)}`;
     const waitVar = ctx.uniqueName("ebutton_wait");
     const senseArg = senseMode === "auto" ? "" : `, sense=${senseMode}`;
 

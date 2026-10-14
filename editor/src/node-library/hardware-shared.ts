@@ -16,7 +16,21 @@
 
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext } from "../compiler/node-definition.js";
+import { pinLabel, type PinId } from "../definitions/definitions.js";
 import { nodeLabel } from "../gui/screens.js";
+import { pyStringLiteral } from "./py-literals.js";
+
+/** The Python argument for one pin: a GPIO number as-is, a named pin ("X1") as a quoted literal. */
+export function pyPinLiteral(pin: PinId): string {
+  return typeof pin === "number" ? String(pin) : pyStringLiteral(pin);
+}
+
+/** A Python-identifier-safe, injective segment for a pin's `_gpio_`-style variable name. Non-alphanumeric
+ * characters are hex-encoded, so two different named pins can never collide on one variable. */
+export function pinVarSegment(pin: PinId): string {
+  if (typeof pin === "number") return String(pin);
+  return pin.replace(/[^A-Za-z0-9]/g, (c) => "_" + c.charCodeAt(0).toString(16));
+}
 
 /**
  * Claims `resource` (e.g. "GPIO 5", "SPI bus 1", "GPIO 5 eswitch") for `use` (e.g. "input, pull-up") on behalf of
@@ -34,13 +48,14 @@ function pullText(pull: Pull): string {
 }
 
 /** The runtime.shared() expression for one GPIO pin, as an input (with its pull) or an output. */
-export function sharedPinExpr(pin: number, mode: "in" | "out", pull: Pull = "none"): string {
+export function sharedPinExpr(pin: PinId, mode: "in" | "out", pull: Pull = "none"): string {
+  const arg = pyPinLiteral(pin);
   const args =
     mode === "out"
       ? "machine.Pin.OUT"
       : `machine.Pin.IN${pull === "up" ? ", machine.Pin.PULL_UP" : pull === "down" ? ", machine.Pin.PULL_DOWN" : ""}`;
   const sig = mode === "out" ? "('out', 'none')" : `('in', '${pull}')`;
-  return `runtime.shared('pin', ${pin}, ${sig}, lambda: machine.Pin(${pin}, ${args}))`;
+  return `runtime.shared('pin', ${arg}, ${sig}, lambda: machine.Pin(${arg}, ${args}))`;
 }
 
 /**
@@ -51,13 +66,13 @@ export function sharedPinExpr(pin: number, mode: "in" | "out", pull: Pull = "non
 export function sharedPin(
   ctx: CodegenContext,
   node: GraphNode,
-  pin: number,
+  pin: PinId,
   mode: "in" | "out",
   pull: Pull = "none",
   role?: string,
 ): { varName: string; statement: { key: string; code: string } } {
-  claimResource(ctx, `GPIO ${pin}`, role ?? (mode === "out" ? "output" : `input, ${pullText(pull)}`), node);
-  const varName = `_gpio_${pin}`;
+  claimResource(ctx, pinLabel(pin), role ?? (mode === "out" ? "output" : `input, ${pullText(pull)}`), node);
+  const varName = `_gpio_${pinVarSegment(pin)}`;
   return { varName, statement: { key: `gpio-${pin}`, code: `${varName} = ${sharedPinExpr(pin, mode, pull)}` } };
 }
 
@@ -65,28 +80,30 @@ export function sharedPin(
 export function sharedAdc(
   ctx: CodegenContext,
   node: GraphNode,
-  pin: number,
+  pin: PinId,
 ): { varName: string; statement: { key: string; code: string } } {
-  claimResource(ctx, `GPIO ${pin}`, "ADC input", node);
-  const varName = `_adc_${pin}`;
+  claimResource(ctx, pinLabel(pin), "ADC input", node);
+  const arg = pyPinLiteral(pin);
+  const varName = `_adc_${pinVarSegment(pin)}`;
   return {
     varName,
     statement: {
       key: `adc-${pin}`,
-      code: `${varName} = runtime.shared('adc', ${pin}, (), lambda: machine.ADC(machine.Pin(${pin})))`,
+      code: `${varName} = runtime.shared('adc', ${arg}, (), lambda: machine.ADC(machine.Pin(${arg})))`,
     },
   };
 }
 
 /** Claims GPIO `pin` for PWM at `freq` Hz and returns the setup statement binding `_pwm_<pin>`. */
-export function sharedPwm(ctx: CodegenContext, node: GraphNode, pin: number, freq: number): { varName: string; statement: { key: string; code: string } } {
-  claimResource(ctx, `GPIO ${pin}`, `PWM at ${freq} Hz`, node);
-  const varName = `_pwm_${pin}`;
+export function sharedPwm(ctx: CodegenContext, node: GraphNode, pin: PinId, freq: number): { varName: string; statement: { key: string; code: string } } {
+  claimResource(ctx, pinLabel(pin), `PWM at ${freq} Hz`, node);
+  const arg = pyPinLiteral(pin);
+  const varName = `_pwm_${pinVarSegment(pin)}`;
   return {
     varName,
     statement: {
       key: `pwm-${pin}`,
-      code: `${varName} = runtime.shared('pwm', ${pin}, (${freq},), lambda: machine.PWM(machine.Pin(${pin}, machine.Pin.OUT), freq=${freq}))`,
+      code: `${varName} = runtime.shared('pwm', ${arg}, (${freq},), lambda: machine.PWM(machine.Pin(${arg}, machine.Pin.OUT), freq=${freq}))`,
     },
   };
 }
@@ -96,21 +113,23 @@ export function sharedSpi(
   ctx: CodegenContext,
   node: GraphNode,
   bus: number,
-  sck: number,
-  mosi: number,
+  sck: PinId,
+  mosi: PinId,
   baudrate: number,
 ): { varName: string; statement: { key: string; code: string } } {
+  const sckArg = pyPinLiteral(sck);
+  const mosiArg = pyPinLiteral(mosi);
   claimResource(ctx, `SPI bus ${bus}`, `SCK ${sck}, MOSI ${mosi} at ${baudrate} Hz`, node);
-  claimResource(ctx, `GPIO ${sck}`, `SPI bus ${bus} SCK`, node);
-  claimResource(ctx, `GPIO ${mosi}`, `SPI bus ${bus} MOSI`, node);
+  claimResource(ctx, pinLabel(sck), `SPI bus ${bus} SCK`, node);
+  claimResource(ctx, pinLabel(mosi), `SPI bus ${bus} MOSI`, node);
   const varName = `_spi_bus_${bus}`;
   return {
     varName,
     statement: {
       key: varName,
       code:
-        `${varName} = runtime.shared('spi', ${bus}, (${sck}, ${mosi}, ${baudrate}), lambda: machine.SPI(${bus}, ` +
-        `baudrate=${baudrate}, polarity=0, phase=0, sck=machine.Pin(${sck}), mosi=machine.Pin(${mosi})))`,
+        `${varName} = runtime.shared('spi', ${bus}, (${sckArg}, ${mosiArg}, ${baudrate}), lambda: machine.SPI(${bus}, ` +
+        `baudrate=${baudrate}, polarity=0, phase=0, sck=machine.Pin(${sckArg}), mosi=machine.Pin(${mosiArg})))`,
     },
   };
 }

@@ -14,6 +14,7 @@ import { claimResource, sharedPinExpr } from "./hardware-shared.js";
 import { CompileError } from "../compiler/errors.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext } from "../compiler/node-definition.js";
+import { pinLabel } from "../definitions/definitions.js";
 import { checkPin } from "../definitions/pin-check.js";
 import { nodeLabel } from "../gui/screens.js";
 import { orientedTouch, resolveOrientation } from "./orientation-shared.js";
@@ -90,7 +91,7 @@ export function resolveTouchPanel(ctx: CodegenContext, node: GraphNode): TouchPa
   let rst = "None";
   if (hasRst) {
     const rstPin = checkPin(ctx, "touch panel reset pin", rstRaw, "output");
-    claimResource(ctx, `GPIO ${rstPin}`, "output", node);
+    claimResource(ctx, pinLabel(rstPin), "output", node);
     rst = sharedPinExpr(rstPin, "out");
   }
   const hex = `0x${address.toString(16)}`;

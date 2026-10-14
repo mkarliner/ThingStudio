@@ -115,4 +115,28 @@ describe("hardware resources are keyed singletons", () => {
     neopixelNode.codegenSink!(neo("n1"), ctx);
     expect(() => neopixelNode.codegenSink!(neo("n2", { count: 4 }), ctx)).toThrow(/GPIO 13 neopixel: neopixel n2/);
   });
+
+  it("a named pin becomes a quoted Python literal and an identifier-safe variable name", () => {
+    const graph: GraphData = {
+      nodes: [
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: "2", type: "thingstudio/gpio_out", properties: { pin: "X1" } },
+      ],
+      links: [[1, "1", 0, "2", 0, "bool"]],
+    };
+    const { source } = compile(graph, buildRegistry());
+    expect(source).toContain(`_gpio_X1 = runtime.shared('pin', "X1", ('out', 'none'), lambda: machine.Pin("X1", machine.Pin.OUT))`);
+  });
+
+  it("a named pin with punctuation gets an injective, valid variable name", () => {
+    const graph: GraphData = {
+      nodes: [
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: "2", type: "thingstudio/gpio_out", properties: { pin: "P3-1" } },
+      ],
+      links: [[1, "1", 0, "2", 0, "bool"]],
+    };
+    const { source } = compile(graph, buildRegistry());
+    expect(source).toContain(`_gpio_P3_2d1 = runtime.shared('pin', "P3-1"`);
+  });
 });

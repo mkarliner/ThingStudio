@@ -259,8 +259,9 @@ describe("target resolution from HELLO chipType", () => {
   });
 
   it("narrows the pin set on a board with a smaller package (Pico 2 is RP2350A)", () => {
-    expect(Math.max(...targetFor("board:pico-2").gpio)).toBe(29);
-    expect(Math.max(...targetFor("processor:rp2350").gpio)).toBe(47);
+    const maxPin = (t: Target) => Math.max(...[...t.gpio].filter((p): p is number => typeof p === "number"));
+    expect(maxPin(targetFor("board:pico-2"))).toBe(29);
+    expect(maxPin(targetFor("processor:rp2350"))).toBe(47);
   });
 });
 
@@ -304,10 +305,11 @@ describe("pin checks in nodes", () => {
     expect(() => gpioOut(12, targetFor("processor:esp32-c3"))).toThrow(/Wired to the flash chip/);
   });
 
-  it("with no target, allows 0-48 and warns once that checks are limited", () => {
+  it("with no target, allows 0-48 and named pins, and warns once that checks are limited", () => {
     expect(gpioOut(40, null)).toEqual([NO_TARGET_WARNING]);
     expect(() => gpioOut(49, null)).toThrow(/out of range \(0-48/);
-    expect(() => gpioOut("LED", null)).toThrow(/isn't a GPIO number/);
+    expect(gpioOut("X1", null)).toEqual([NO_TARGET_WARNING]);
+    expect(() => gpioOut("2x", null)).toThrow(/isn't a GPIO number or a pin name/);
   });
 
   it("warns when a pull resistor is asked of a pin without one", () => {
@@ -382,5 +384,57 @@ describe("SPI and I2C checks", () => {
 describe("buildTarget", () => {
   it("labels a processor-only target with just the processor name", () => {
     expect(buildTarget(defs.processors.get("esp32")!, null).label).toBe("ESP32");
+  });
+});
+
+describe("named pins (processors whose pins aren't numbered, e.g. the STM32 pyboard)", () => {
+  const namedProcessor = { name: "Pyboard", match: ["STM32F405"], nativeArch: "armv7emsp", gpio: ["X1", "X2", "Y1", "Y2"] };
+  const defSet = (board?: unknown) =>
+    buildDefinitionSet([], [
+      user("processor", "pyboard", namedProcessor),
+      ...(board === undefined ? [] : [user("board", "pyboard-v1", board)]),
+    ]);
+  const namedTarget = () => buildTarget(defSet().processors.get("pyboard")!, null);
+
+  it("parses named pins, a named board, and mixed sets; formats names after the numeric ranges", () => {
+    const set = defSet({ name: "Pyboard v1.0", processor: "pyboard", match: ["PYBv1.0"], pins: { LED_RED: "X1", USER: "X2" } });
+    expect(set.problems).toEqual([]);
+    expect(set.processors.get("pyboard")!.gpio.has("X1")).toBe(true);
+    expect(set.boards.get("pyboard-v1")!.pins.get("LED_RED")).toBe("X1");
+    expect(formatPinSet([3, "X1", 1, 2, "A13", 5])).toBe("1-3, 5, A13, X1");
+  });
+
+  it("resolves a header value that names a pin to that pin, leaving other strings as labels", () => {
+    const set = defSet({
+      name: "Pyboard v1.0",
+      processor: "pyboard",
+      match: [],
+      pins: {},
+      header: { "1": "X1", "2": "GND", "3": "X2" },
+    });
+    const header = set.boards.get("pyboard-v1")!.header;
+    expect(header.get("1")).toBe("X1");
+    expect(header.get("2")).toBe("GND");
+    expect(header.get("3")).toBe("X2");
+  });
+
+  it("refuses a header that names the same pin twice", () => {
+    const set = defSet({ name: "B", processor: "pyboard", match: [], pins: {}, header: { "1": "X1", "2": "X1" } });
+    expect(set.problems[0]!.message).toMatch(/pin X1 is already on header pin 1/);
+  });
+
+  it("checks a named pin against the target, and emits it as a quoted Python literal", () => {
+    const t = namedTarget();
+    const ok = ctxFor(t);
+    const result = gpioOutNode.codegenSink!(node("thingstudio/gpio_out", { pin: "X1" }), ok);
+    expect(result.statements![0]!.code).toContain('machine.Pin("X1"');
+    expect(result.functionBody).toContain("_gpio_X1");
+    expect(() => gpioOutNode.codegenSink!(node("thingstudio/gpio_out", { pin: "Z9" }), ctxFor(t))).toThrow(/Z9 doesn't exist on Pyboard/);
+    // A numeric pin isn't on a named-pin board.
+    expect(() => gpioOutNode.codegenSink!(node("thingstudio/gpio_out", { pin: 5 }), ctxFor(t))).toThrow(/gpio_out pin 5 doesn't exist on Pyboard/);
+  });
+
+  it("gates a named pin behind the pin pattern, not arbitrary text", () => {
+    expect(() => gpioOutNode.codegenSink!(node("thingstudio/gpio_out", { pin: "not a pin" }), ctxFor(namedTarget()))).toThrow(/isn't a GPIO number or a pin name/);
   });
 });

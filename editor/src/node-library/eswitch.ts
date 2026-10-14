@@ -66,8 +66,9 @@
 // already-generated flow's behavior byte-for-byte unchanged; this is
 // purely additive, not a breaking change to the node's own contract.
 
-import { claimResource, sharedPin, type Pull } from "./hardware-shared.js";
+import { claimResource, pinVarSegment, sharedPin, type Pull } from "./hardware-shared.js";
 import { CompileError } from "../compiler/errors.js";
+import { pinLabel } from "../definitions/definitions.js";
 import { checkPin } from "../definitions/pin-check.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, EventSourceCodegenResult, NodeDefinition } from "../compiler/node-definition.js";
@@ -108,9 +109,9 @@ export const eswitchNode: NodeDefinition = {
     // The pin and the ESwitch on it are keyed singletons (hardware-shared.ts, decisions/hardware-singletons.md):
     // a second eswitch on this pin with different settings is a compile error, not silently the first's.
     const shared = sharedPin(ctx, node, pin, "in", pull as Pull);
-    claimResource(ctx, `GPIO ${pin} eswitch`, `open level ${lopen}, debounce ${debounceMs} ms`, node);
+    claimResource(ctx, `${pinLabel(pin)} eswitch`, `open level ${lopen}, debounce ${debounceMs} ms`, node);
     const pinVar = shared.varName;
-    const esVar = `_eswitch_${pin}`;
+    const esVar = `_eswitch_${pinVarSegment(pin)}`;
     const waitVar = ctx.uniqueName("eswitch_wait");
 
     return {

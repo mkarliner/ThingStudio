@@ -16,21 +16,21 @@
 // case and punctuation ignored ("ESP32S2" matches "ESP32-S2FN4R2"), and the
 // longest match wins so "ESP32" never beats "ESP32S2".
 
-import { formatPinSet, type BoardDef, type DefinitionSet, type ProcessorDef } from "./definitions.js";
+import { formatPinSet, type BoardDef, type DefinitionSet, type PinId, type ProcessorDef } from "./definitions.js";
 
 export interface Target {
   readonly processor: ProcessorDef;
   readonly board: BoardDef | null;
   /** "LOLIN S2 Mini (ESP32-S2)" or "ESP32-S2". */
   readonly label: string;
-  readonly gpio: ReadonlySet<number>;
-  readonly inputOnly: ReadonlySet<number>;
-  readonly noPull: ReadonlySet<number>;
+  readonly gpio: ReadonlySet<PinId>;
+  readonly inputOnly: ReadonlySet<PinId>;
+  readonly noPull: ReadonlySet<PinId>;
   /** Board entries win over the processor's for the same pin. */
-  readonly reserved: ReadonlyMap<number, string>;
-  readonly avoid: ReadonlyMap<number, string>;
-  /** GPIO -> board labels ("LED"). Empty without a board. */
-  readonly pinLabels: ReadonlyMap<number, readonly string[]>;
+  readonly reserved: ReadonlyMap<PinId, string>;
+  readonly avoid: ReadonlyMap<PinId, string>;
+  /** Pin -> board labels ("LED"). Empty without a board. */
+  readonly pinLabels: ReadonlyMap<PinId, readonly string[]>;
 }
 
 /** Board menu value: "auto", "board:<id>" or "processor:<id>". */
@@ -47,15 +47,15 @@ export interface TargetResolution {
 
 export function buildTarget(processor: ProcessorDef, board: BoardDef | null): Target {
   const gpio = board?.gpio ?? processor.gpio;
-  const reserved = new Map<number, string>();
-  const avoid = new Map<number, string>();
+  const reserved = new Map<PinId, string>();
+  const avoid = new Map<PinId, string>();
   // A board's `free` pins lift the processor's entries for them, never the board's own.
-  const free = board?.free ?? new Set<number>();
+  const free = board?.free ?? new Set<PinId>();
   for (const [p, r] of processor.avoid) if (gpio.has(p) && !free.has(p)) avoid.set(p, r);
   for (const [p, r] of board?.avoid ?? []) avoid.set(p, r);
   for (const [p, r] of processor.reserved) if (gpio.has(p) && !free.has(p)) reserved.set(p, r);
   for (const [p, r] of board?.reserved ?? []) reserved.set(p, r);
-  const pinLabels = new Map<number, string[]>();
+  const pinLabels = new Map<PinId, string[]>();
   for (const [label, p] of board?.pins ?? []) {
     if (!pinLabels.has(p)) pinLabels.set(p, []);
     pinLabels.get(p)!.push(label);
@@ -175,10 +175,11 @@ export function choiceForConnectedBoard(
   };
 }
 
-/** Every pin any known processor has -- the fallback range when there's no target. */
+/** Every pin any known processor has that is a number -- the fallback range when there's no target. Named
+ * pins can't be enumerated as a range, so they're not part of this. */
 export function widestGpio(defs: DefinitionSet): ReadonlySet<number> {
   const all = new Set<number>();
-  for (const p of defs.processors.values()) for (const g of p.gpio) all.add(g);
+  for (const p of defs.processors.values()) for (const g of p.gpio) if (typeof g === "number") all.add(g);
   return all;
 }
 

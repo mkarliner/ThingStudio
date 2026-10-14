@@ -13,11 +13,19 @@
 // Pure: returns an HTML string, touches no DOM, so it's unit-tested (test/definition-page.test.ts).
 // Everything taken from a definition file is escaped: those files are hand-written.
 
-import { formatPinSet, type BoardDef, type ProcessorDef } from "./definitions.js";
+import { formatPinSet, pinLabel, type PinId, type ProcessorDef } from "./definitions.js";
 import { splitChipType, type Target } from "./target.js";
 
 function esc(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+/** Numbers first (ascending), then named pins alphabetically -- a stable page order for mixed sets. */
+function comparePins(a: PinId, b: PinId): number {
+  if (typeof a === "number" && typeof b === "number") return a - b;
+  if (typeof a === "number") return -1;
+  if (typeof b === "number") return 1;
+  return a.localeCompare(b);
 }
 
 /** One GPIO's status on this target, in the words the page uses. `kind` drives the row colour. */
@@ -27,7 +35,7 @@ export interface PinStatus {
   readonly why: string;
 }
 
-export function pinStatus(target: Target, pin: number): PinStatus {
+export function pinStatus(target: Target, pin: PinId): PinStatus {
   const reserved = target.reserved.get(pin);
   if (reserved !== undefined) return { kind: "reserved", status: "Reserved: the compile stops", why: reserved };
   const avoid = target.avoid.get(pin);
@@ -51,11 +59,12 @@ export function headerLabelKind(label: string): "ground" | "power" | "other" {
   return "other";
 }
 
-/** GPIO -> the physical header pin(s) carrying it, from the board's `header`. */
-function headerPinsByGpio(board: BoardDef | null): Map<number, string[]> {
-  const out = new Map<number, string[]>();
-  for (const [pin, what] of board?.header ?? []) {
-    if (typeof what !== "number") continue;
+/** Pin -> the physical header pin(s) carrying it, from the board's `header`. A header value that isn't a
+ * pin on this target (a string label like "GND") is skipped. */
+function headerPinsByGpio(target: Target): Map<PinId, string[]> {
+  const out = new Map<PinId, string[]>();
+  for (const [pin, what] of target.board?.header ?? []) {
+    if (typeof what === "string" && !target.gpio.has(what)) continue;
     if (!out.has(what)) out.set(what, []);
     out.get(what)!.push(pin);
   }
@@ -71,12 +80,12 @@ function isDualRow(keys: string[]): number | null {
   return keys.length;
 }
 
-function headerCell(target: Target, what: number | string | undefined, align: "left" | "right"): string {
+function headerCell(target: Target, what: PinId | string | undefined, align: "left" | "right"): string {
   if (what === undefined) return `<td class="${align}"></td>`;
-  if (typeof what === "string") return `<td class="${align} ${headerLabelKind(what)}">${esc(what)}</td>`;
+  if (typeof what === "string" && !target.gpio.has(what)) return `<td class="${align} ${headerLabelKind(what)}">${esc(what)}</td>`;
   const s = pinStatus(target, what);
   const names = target.pinLabels.get(what) ?? [];
-  const text = `GPIO ${what}` + (names.length ? ` · ${names.join(", ")}` : "");
+  const text = pinLabel(what) + (names.length ? ` · ${names.join(", ")}` : "");
   return `<td class="${align} ${s.kind}" title="${esc(s.status + (s.why ? `. ${s.why}` : ""))}">${esc(text)}</td>`;
 }
 
@@ -268,8 +277,8 @@ export function renderDefinitionPage(target: Target, opts: PageOptions): string 
   const notesHtml = notes.length ? `<div class="notes">${notes.map((n) => `<p>${esc(n)}</p>`).join("")}</div>` : "";
 
   const hasHeader = !!board && board.header.size > 0;
-  const onHeader = headerPinsByGpio(board);
-  const headerPinText = (pin: number): string => {
+  const onHeader = headerPinsByGpio(target);
+  const headerPinText = (pin: PinId): string => {
     const at = onHeader.get(pin);
     return at ? `pin ${at.join(", ")}` : "not on the header";
   };
@@ -277,36 +286,37 @@ export function renderDefinitionPage(target: Target, opts: PageOptions): string 
   let named = "";
   if (board && board.pins.size > 0) {
     const rows = [...board.pins]
-      .sort((a, b) => a[1] - b[1] || a[0].localeCompare(b[0]))
+      .sort((a, b) => comparePins(a[1], b[1]) || a[0].localeCompare(b[0]))
       .map(([label, pin]) => {
         const s = pinStatus(target, pin);
         const why = s.kind === "free" ? "" : `${s.status}. ${s.why}`.trim();
         return (
-          `<tr><td>${esc(label)}</td><td class="gpio">GPIO ${pin}</td>` +
+          `<tr><td>${esc(label)}</td><td class="gpio">${esc(pinLabel(pin))}</td>` +
           (hasHeader ? `<td>${esc(headerPinText(pin))}</td>` : "") +
           `<td>${esc(why)}</td></tr>`
         );
       });
     named =
-      `<h2>Named pins</h2><p>Pins wired to something on this board. Pin fields in the editor take the GPIO number.</p>` +
-      `<table><thead><tr><th>Name</th><th>GPIO</th>${hasHeader ? "<th>Header</th>" : ""}<th>Notes</th></tr></thead>` +
+      `<h2>Named pins</h2><p>Pins wired to something on this board. Pin fields in the editor take the pin's name or number.</p>` +
+      `<table><thead><tr><th>Name</th><th>Pin</th>${hasHeader ? "<th>Header</th>" : ""}<th>Notes</th></tr></thead>` +
       `<tbody>${rows.join("")}</tbody></table>`;
   }
 
-  // Every usable GPIO, plus any reserved pin outside that set, so nothing the compile mentions is missing.
-  const all = [...new Set([...target.gpio, ...target.reserved.keys()])].sort((a, b) => a - b);
+  // Every usable pin, plus any reserved pin outside that set, so nothing the compile mentions is missing.
+  const all = [...new Set([...target.gpio, ...target.reserved.keys()])].sort(comparePins);
   const pinRows = all.map((pin) => {
     const s = pinStatus(target, pin);
     const labels = target.pinLabels.get(pin) ?? [];
+    const shown = typeof pin === "number" ? String(pin) : pin;
     return (
-      `<tr class="${s.kind}"><td class="gpio">${pin}</td><td>${esc(labels.join(", "))}</td>` +
+      `<tr class="${s.kind}"><td class="gpio">${esc(shown)}</td><td>${esc(labels.join(", "))}</td>` +
       (hasHeader ? `<td>${esc(onHeader.has(pin) ? onHeader.get(pin)!.join(", ") : "")}</td>` : "") +
       `<td>${esc(s.status)}</td><td>${esc(s.why)}</td></tr>`
     );
   });
   const pins =
     `<h2>All pins</h2>` +
-    `<div class="scroll"><table><thead><tr><th>GPIO</th><th>Name</th>${hasHeader ? "<th>Header pin</th>" : ""}` +
+    `<div class="scroll"><table><thead><tr><th>Pin</th><th>Name</th>${hasHeader ? "<th>Header pin</th>" : ""}` +
     `<th>Status</th><th>Why</th></tr></thead><tbody>${pinRows.join("")}</tbody></table></div>` +
     `<p class="key">Reserved pins stop the compile. Pins to avoid work, but the compile warns. Blue rows have limits.</p>`;
 

@@ -17,8 +17,9 @@
 // (see ADC2_PINS -- a stopgap; this pin data belongs in the board definitions, tracked in
 // outstanding-items/adc-esp32-adc2-pins.md).
 
-import { claimResource, sharedAdc } from "./hardware-shared.js";
+import { claimResource, pinVarSegment, sharedAdc } from "./hardware-shared.js";
 import { CompileError } from "../compiler/errors.js";
+import { pinLabel } from "../definitions/definitions.js";
 import { checkPin } from "../definitions/pin-check.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, EventSourceCodegenResult, NodeDefinition } from "../compiler/node-definition.js";
@@ -68,7 +69,7 @@ export const adcNode: NodeDefinition = {
     const pin = checkPin(ctx, "adc pin", node.properties.pin, "input");
 
     const processorId = ctx.target?.processor.id;
-    if (processorId && ADC2_PINS[processorId]?.includes(pin) && flowUsesWifi(ctx)) {
+    if (processorId && typeof pin === "number" && ADC2_PINS[processorId]?.includes(pin) && flowUsesWifi(ctx)) {
       throw new CompileError(
         `adc pin ${pin} is an ADC2 pin on ${ctx.target!.label} and the flow uses WiFi, which makes ADC2 unusable. ` +
           `Use an ADC1 pin, or drop the flow's network nodes.`,
@@ -99,10 +100,10 @@ export const adcNode: NodeDefinition = {
     if (pollMs < 0) throw new CompileError(`adc pollMs "${String(node.properties.pollMs)}" must be 0 or more`);
 
     const shared = sharedAdc(ctx, node, pin);
-    claimResource(ctx, `GPIO ${pin} aadc`, `${mode} ${boundsArgs}, sense ${sense}, poll ${pollMs} ms`, node);
+    claimResource(ctx, `${pinLabel(pin)} aadc`, `${mode} ${boundsArgs}, sense ${sense}, poll ${pollMs} ms`, node);
     const adcVar = shared.varName;
     const aadcVar = ctx.uniqueName("aadc");
-    const errVar = `_adc_err_${pin}`;
+    const errVar = `_adc_err_${pinVarSegment(pin)}`;
     const id = JSON.stringify(String(node.id));
 
     const aadcSetup = [`${aadcVar} = AADC(${adcVar})`];

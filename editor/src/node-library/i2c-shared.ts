@@ -16,9 +16,10 @@
 // CompileError naming the bus -- the setup statement's first-writer-wins dedup would otherwise silently
 // pick one config's pins.
 
-import { claimResource } from "./hardware-shared.js";
+import { claimResource, pyPinLiteral } from "./hardware-shared.js";
 import { CompileError } from "../compiler/errors.js";
 import type { CodegenContext } from "../compiler/node-definition.js";
+import { pinLabel, type PinId } from "../definitions/definitions.js";
 import { checkI2c, checkPin } from "../definitions/pin-check.js";
 
 export const I2C_BUS_CONFIG_TYPE = "thingstudio/config/i2c-bus";
@@ -42,8 +43,8 @@ export interface I2cBusSetup {
 
 export interface I2cBusPins {
   bus: number;
-  scl: number;
-  sda: number;
+  scl: PinId;
+  sda: PinId;
   freq: number;
 }
 
@@ -65,13 +66,15 @@ export function i2cBusFromPins(ctx: CodegenContext, raw: Record<string, unknown>
   if (scl === sda) throw new CompileError(`${what} uses pin ${scl} for both SCL and SDA`);
   // The bus's pins are claimed like any other (hardware-shared.ts, decisions/hardware-singletons.md), so a
   // gpio_out on SDA is a compile error.
-  claimResource(ctx, `GPIO ${scl}`, `${what} SCL`, what);
-  claimResource(ctx, `GPIO ${sda}`, `${what} SDA`, what);
+  claimResource(ctx, pinLabel(scl), `${what} SCL`, what);
+  claimResource(ctx, pinLabel(sda), `${what} SDA`, what);
   checkI2c(ctx, what, bus, { scl, sda });
   const freq = raw.freq === null || raw.freq === undefined || raw.freq === "" ? I2C_DEFAULT_FREQ : Number(raw.freq);
   if (!Number.isInteger(freq) || freq <= 0) {
     throw new CompileError(`${what} frequency "${String(raw.freq)}" must be a whole number of Hz above 0`);
   }
+  const sclArg = pyPinLiteral(scl);
+  const sdaArg = pyPinLiteral(sda);
   const varName = `_i2c_bus_${bus}`;
   return {
     varName,
@@ -80,7 +83,7 @@ export function i2cBusFromPins(ctx: CodegenContext, raw: Record<string, unknown>
       key: varName,
       // runtime.shared(): the device-side keyed singleton (runtime.py), so function and custom nodes can
       // fetch this same bus with runtime.shared('i2c', <bus>).
-      code: `${varName} = runtime.shared('i2c', ${bus}, (${scl}, ${sda}, ${freq}), lambda: machine.I2C(${bus}, scl=machine.Pin(${scl}), sda=machine.Pin(${sda}), freq=${freq}))`,
+      code: `${varName} = runtime.shared('i2c', ${bus}, (${sclArg}, ${sdaArg}, ${freq}), lambda: machine.I2C(${bus}, scl=machine.Pin(${sclArg}), sda=machine.Pin(${sdaArg}), freq=${freq}))`,
     },
   };
 }

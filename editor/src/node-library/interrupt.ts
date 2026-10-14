@@ -39,8 +39,9 @@
 // accepted, not just whether there was any edge recently" gap the
 // scoping note flagged rather than left to be rediscovered mid-build.
 
-import { claimResource, sharedPin } from "./hardware-shared.js";
+import { claimResource, pinVarSegment, sharedPin } from "./hardware-shared.js";
 import { CompileError } from "../compiler/errors.js";
+import { pinLabel } from "../definitions/definitions.js";
 import { checkPin } from "../definitions/pin-check.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, EventSourceCodegenResult, NodeDefinition } from "../compiler/node-definition.js";
@@ -77,12 +78,13 @@ export const interruptNode: NodeDefinition = {
     // decisions/hardware-singletons.md); the irq handler is claimed too, so two interrupt nodes on one pin
     // with different settings are a compile error instead of the second silently taking the first's.
     const shared = sharedPin(ctx, node, pin, "in");
-    claimResource(ctx, `GPIO ${pin} interrupt`, `${edge} edge, ${debounce ? `debounce ${debounceMs} ms` : "no debounce"}`, node);
+    claimResource(ctx, `${pinLabel(pin)} interrupt`, `${edge} edge, ${debounce ? `debounce ${debounceMs} ms` : "no debounce"}`, node);
+    const seg = pinVarSegment(pin);
     const pinVar = shared.varName;
-    const evtVar = `_irq_evt_${pin}`;
-    const handlerName = `_irq_handler_${pin}`;
-    const tsVar = debounce ? `_irq_debounce_ts_${pin}` : null;
-    const levelVar = debounce && edge === "both" ? `_irq_debounce_level_${pin}` : null;
+    const evtVar = `_irq_evt_${seg}`;
+    const handlerName = `_irq_handler_${seg}`;
+    const tsVar = debounce ? `_irq_debounce_ts_${seg}` : null;
+    const levelVar = debounce && edge === "both" ? `_irq_debounce_level_${seg}` : null;
 
     const triggerExpr =
       edge === "rising"

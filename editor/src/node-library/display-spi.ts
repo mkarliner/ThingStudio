@@ -241,6 +241,7 @@
 import { claimResource, sharedPinExpr, sharedSpi } from "./hardware-shared.js";
 import { orientedMadctl, resolveOrientation, turnedSize } from "./orientation-shared.js";
 import { CompileError } from "../compiler/errors.js";
+import { pinLabel } from "../definitions/definitions.js";
 import { checkOptionalPin, checkPin, checkSpi } from "../definitions/pin-check.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, NodeDefinition, SinkCodegenResult } from "../compiler/node-definition.js";
@@ -602,10 +603,10 @@ export const displaySpiNode: NodeDefinition = {
     // gpio_out switching the backlight, a touch panel on the same reset line).
     const spiShared = sharedSpi(ctx, node, spiBus, sck, mosi, baudrate);
     const spiVar = spiShared.varName;
-    claimResource(ctx, `GPIO ${dc}`, "display DC", node);
-    if (cs !== null) claimResource(ctx, `GPIO ${cs}`, "SPI CS", node);
-    if (reset !== null) claimResource(ctx, `GPIO ${reset}`, "output", node);
-    if (backlight !== null) claimResource(ctx, `GPIO ${backlight}`, "output", node);
+    claimResource(ctx, pinLabel(dc), "display DC", node);
+    if (cs !== null) claimResource(ctx, pinLabel(cs), "SPI CS", node);
+    if (reset !== null) claimResource(ctx, pinLabel(reset), "output", node);
+    if (backlight !== null) claimResource(ctx, pinLabel(backlight), "output", node);
     const csVar = `${base}_cs`;
     const dcVar = `${base}_dc`;
     const resetVar = `${base}_reset`;
