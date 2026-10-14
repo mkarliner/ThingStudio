@@ -15,6 +15,7 @@ been deployed and run on that hardware. Pin details for boards and processors ar
 | LuatOS ESP32C3-CORE | ESP32-C3 | Yes, with the adc and neopixel nodes |
 | CYD (ESP32-2432S028, ST7789) | ESP32 | Yes, display only. |
 | Freenove ESP32-S3 Display 4.0" (FNK0104S) | ESP32-S3 | Yes, with the display and touch |
+| Pyboard v1.0 | STM32F405 | Untested |
 
 ## Processors without a board definition
 

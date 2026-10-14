@@ -136,3 +136,8 @@ Status: detail file for `decisions.md`'s "Processor and board definitions" index
   config forms (config-types.ts gains a `pin` field kind).
   Scope: this is the mechanism. STM32/pyboard deploy still needs the separate filesystem-root fix
   (`outstanding-items/stm32-pyboard-support.md`). Custom nodes don't get a `pin` property kind yet (later).
+- **2026-10-14 — First named-pin built-in: `stm32f405` processor + `pyboard-v10` board.** gpio is the pyboard's
+  header pins (X1–X12, X17–X22, Y1–Y12; X13–X16 are reset/ground/power, not GPIO), from the PYBv1.0 `pins.csv`.
+  SPI/I2C bus pin lists are the F405's hardware mappings (`spi.maxHz` 21 MHz, SPI2's limit). `wifi: false`. The
+  board's four LEDs are `pyb.LED(1-4)`, not header pins, so `pins` is `{}`. Not verified on hardware. The
+  filesystem-root fix that makes a pyboard deploy at all is in `board_fs.py` (`learnings/micropython-device-runtime.md`).

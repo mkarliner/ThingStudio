@@ -67,8 +67,10 @@ definition-driven support matrix rather than a wish list:
   `~/.thingstudio` (see `docs/working-notes/decisions/chip-board-definitions.md`).
 - **RISC-V** ESP32 variants (C6/H2/P4): an open bug — they resolve to the classic ESP32 processor by substring
   match, getting wrong pin checks and `-march`. Not an MVP chip, tracked in `outstanding-items.md`.
-- **STM32/F4 pyboard**: compiles (`-march=armv7emsp`), but the runtime cannot reach the filesystem yet
-  (`ENODEV` on every absolute path — stm32 mounts at `/flash`); tracked as `outstanding-items/stm32-pyboard-support.md`.
+- **STM32/F4 pyboard**: a built-in `stm32f405` processor and `pyboard-v10` board definition (named pins,
+  `X1`/`Y1`), and the runtime now builds every persisted path from the board's filesystem root (`os.getcwd()`,
+  `/flash` on stm32) instead of a hardcoded `/`. Not yet verified on real hardware; tracked as
+  `outstanding-items/stm32-pyboard-support.md`.
 
 The design consequence of "expect any MicroPython board" is stated in the project rules: docs and console
 messages do not assume the board is on the supported list, and the runtime install step says which chips are

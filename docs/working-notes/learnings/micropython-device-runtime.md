@@ -321,3 +321,13 @@ Also from the nano-gui spike (Q1). `DObject.__init__` clamps with `row + height 
 columns), so a widget whose rect ends exactly on the bottom or right edge is silently moved 1px, with only a
 `print` warning. Its borders are drawn 2px outside the rect, and text isn't clipped to the widget. Relevant if
 any nano-gui widget code is used with rects from our layout compiler.
+
+## The stm32 port mounts its filesystem at `/flash`, not `/`, 2026-10-14
+
+Found connecting a pyboard v1.0 (`stm32-pyboard-support.md`): every runtime write failed with
+`OSError [Errno 19] ENODEV` because the paths were absolute under `/` (`/_flow.mpy`, `/lib`,
+`/_board.json`, ...). The stm32 port mounts the flash filesystem at `/flash` (or `/sd` when booted from a
+card), and `/` holds only the mount points, so opening `/x` is ENODEV. ESP32 and RP2 mount at `/`, which is
+why it never showed before. `os.getcwd()` is the mount root on every port (the installer already relied on it,
+copying files by relative name). Fix (`board_fs.py`): take the root once and build every persisted path from
+it. A relative path (`_runtime_build.txt`) already worked, since cwd is the root.
