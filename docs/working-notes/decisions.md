@@ -32,6 +32,10 @@ Top-level platform calls: MicroPython over CircuitPython; Rete.js over Litegraph
 
 **2026-10-14:** design doc revised to v0.2 — brings §3 (board/processor definitions, tested boards), §4 (backend-first connection), §5 (shipped fault isolation, no state store), §6 (full node library, four config types), §7 (flow dependencies, custom nodes, headless compile), §9 (shipped WiFi auth — the never-built monotonic-counter scheme is replaced), §10 (shipped vs v2 roadmap), and §13 (20-message protocol) in line with v0.2.0. Recorded in `docs/thingstudio-design-doc.md` itself, per its §11 convention.
 
+## Subsystem interfaces
+
+The wire protocol made a shared, language-neutral artifact — new top-level `interfaces/` holding cross-subsystem specs, starting with `interfaces/protocol/` (spec + message table + conformance vectors), run by all three implementations; the first concrete interface boundary from the architecture review. Conformance immediately found a real CBOR-float gap (editor encodes, device rejects). `AGENTS.md` gains "architecture first at subsystem interfaces: MVP-ready is not tester-ready" and "interface specs: read before you implement, change only with permission" (echoed in `CLAUDE.md`). Multi-repo decomposition under investigation, not decided (the 2026-08-12 single-monorepo call stands until reversed). 4 entries: `docs/working-notes/decisions/subsystem-interfaces.md`.
+
 ## Repo / tooling
 
 Monorepo structure; TypeScript editor / Python device-runtime split; Vite + Vitest; `ruff` config; Apache-2.0 license; the "harness" → `runtime`/`listener` rename; today's CLAUDE.md/decisions.md/learnings.md context-size restructuring; the top-level Makefile (2026-09-24). 8 entries: `docs/working-notes/decisions/repo-tooling.md`.

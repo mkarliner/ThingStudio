@@ -1,0 +1,54 @@
+# protocol/
+
+The single, language-neutral home for Thingstudio's wire protocol. This is the first concrete **subsystem
+interface boundary** (see `../../docs/working-notes/architecture-review-continuation-briefing.md` and `AGENTS.md`'s
+"Architecture first at subsystem interfaces"): the editor, the device runtime and the backend all implement this
+protocol, and until now nothing but prose held them together.
+
+- `SPEC.md` — the authoritative spec. Read this before changing any implementation.
+- `messages.json` — machine-readable message id/name/direction table and the `NODE_STATUS` state vocabulary.
+- `vectors/` — conformance cases all three implementations run (`messages.json`, `framing.json`, `invalid.json`).
+
+## The rule
+
+Read `SPEC.md` before implementing or changing anything that emits, parses, stores or transmits these bytes, and
+run the conformance vectors (below) in the same change. Code is written against the spec, not against another
+implementation's accidental behaviour.
+
+Changing the protocol means editing **this directory first**, then every implementation, so the vectors go red
+until all three agree. Do not edit one implementation's copy of a message table, id, or field shape on its own.
+
+**The protocol changes only with Mike's explicit permission.** Sessions may add conformance vectors and fix an
+implementation that has drifted from the spec; they may not change a message id, field, framing rule, or add or
+remove one, without Mike's say-so in the session. This is a contract for devices and saved flows already in the
+field.
+
+Numeric type ids and message names are append-only and never renumbered (`messages.json`). Adding a type: append a
+new id, add its vectors, add the `Message` union member and codec case in `editor/src/protocol/`, the
+`MessageType`/`decode_message_body` mirror in `device-runtime/src/messages.py`, and the spec table here.
+
+These docs are written for people. Keep `SPEC.md` in plain language, with tables and a worked example.
+
+## Byte strings across the JSON boundary
+
+Vectors are JSON, which has no bytes type. Byte strings are written as `{"$bytes": "<lowercase hex>"}`. Each
+runner converts to its own byte type before use (the editor's helper is in
+`editor/test/protocol-conformance.test.ts`). Everything else is a plain JSON value.
+
+## Running conformance
+
+| Implementation | Command |
+|---|---|
+| Editor (TypeScript) | `cd editor && npm test` (case: `test/protocol-conformance.test.ts`) |
+| Device runtime (MicroPython) | `micropython device-runtime/test/test_conformance.py` (see `device-runtime/test/README.md` to build the interpreter) |
+| Backend (CPython) | `cd backend && ../.venv/bin/python -m pytest test/test_conformance.py` |
+
+The checks are semantic: a decoded message compares equal regardless of CBOR map key order. Byte-exactness is
+required only for framing.
+
+## Regenerating the vectors
+
+`vectors/messages.json`'s `frameHex` values are produced by the editor codec (the canonical encoder), so they are
+generated, not hand-written. The generator is intentionally not kept in the tree — it is a throwaway
+`editor/test/*.test.ts` that imports `encodeMessage`/`encodeFrame`, writes the three files, and is deleted. When
+you add or change a message, regenerate, then confirm all three runners pass.

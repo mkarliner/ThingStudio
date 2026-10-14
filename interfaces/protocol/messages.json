@@ -1,0 +1,35 @@
+{
+  "protocolVersion": 1,
+  "frame": {
+    "lengthHeaderBytes": 2,
+    "lengthByteOrder": "big-endian",
+    "lengthCounts": "the type byte plus the CBOR body, not the length header itself",
+    "typeBytes": 1,
+    "maxFramePayloadLength": 65535,
+    "bodyEncoding": "cbor",
+    "transportEncoding": "base64 of the whole frame (length header + type + body), one line prefixed F64:"
+  },
+  "nodeStatusStates": ["connected", "disconnected", "connecting", "error"],
+  "messages": [
+    { "id": 1,  "name": "HELLO",                 "direction": "device->editor", "summary": "chip, runtime version/build, flow identity, free flash/RAM, safe mode, hostname, authRequired/authScheme, hasWifi, networkAddress, dependencies" },
+    { "id": 2,  "name": "DEPLOY",                "direction": "editor->device", "summary": "full flow: bytecode, staticData, flowName, deployId, wifiProvision, dependencies" },
+    { "id": 3,  "name": "DEPLOY_ACK",            "direction": "device->editor", "summary": "deploy succeeded, with free-space figures after the new flow started" },
+    { "id": 4,  "name": "DEPLOY_ERROR",          "direction": "device->editor", "summary": "deploy failed: a short code and a message" },
+    { "id": 5,  "name": "VALUE_STREAM",          "direction": "device->editor", "summary": "reserved: live port values (validated on both sides, not emitted yet)" },
+    { "id": 6,  "name": "NODE_ERROR",            "direction": "device->editor", "summary": "node ID plus exception type/message (fault attribution)" },
+    { "id": 7,  "name": "STATE_READ",            "direction": "both",           "summary": "reserved: persisted state read (no value key = request, value present = response)" },
+    { "id": 8,  "name": "STATE_WRITE",           "direction": "editor->device", "summary": "reserved: persisted state write" },
+    { "id": 9,  "name": "TRIGGER",               "direction": "editor->device", "summary": "fire one source node's live-trigger event now" },
+    { "id": 10, "name": "HELLO_REQUEST",         "direction": "editor->device", "summary": "resend the current HELLO without resetting" },
+    { "id": 11, "name": "NODE_STATUS",           "direction": "device->editor", "summary": "per-node connection/state dot (nodeId, state, optional text)" },
+    { "id": 12, "name": "EXEC",                  "direction": "editor->device", "summary": "run a line of Python in the listener; output comes back as console lines" },
+    { "id": 13, "name": "STOP_TO_PROMPT",        "direction": "editor->device", "summary": "stop the flow and listener, leaving the board at the REPL prompt" },
+    { "id": 14, "name": "SET_BOARD_SETTINGS",    "direction": "editor->device", "summary": "save hostname and/or WiFi-transport password (USB serial only)" },
+    { "id": 15, "name": "BOARD_SETTINGS_RESULT", "direction": "device->editor", "summary": "answer to SET_BOARD_SETTINGS" },
+    { "id": 16, "name": "DEP_PUT",               "direction": "editor->device", "summary": "one piece of one file of a library the next flow imports" },
+    { "id": 17, "name": "DEP_RESULT",            "direction": "device->editor", "summary": "answer to DEP_COMMIT" },
+    { "id": 18, "name": "DEP_COMMIT",            "direction": "editor->device", "summary": "every piece of a library has been sent; install it" },
+    { "id": 19, "name": "RESTART",               "direction": "editor->device", "summary": "restart the board (hard=false soft reset, hard=true full chip reset)" },
+    { "id": 20, "name": "DEP_ACK",               "direction": "device->editor", "summary": "answer to one DEP_PUT piece (paces the sender)" }
+  ]
+}

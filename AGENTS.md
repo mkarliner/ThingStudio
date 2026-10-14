@@ -6,7 +6,8 @@ Keep responses concise and focused on code.Do not repeat large blocks of unchang
 Orientation for anyone (human or AI) picking this project up: `docs/thingstudio-design-doc.md` is the design doc,
 `docs/working-notes/` is active planning. Read the design doc in full before proposing architecture changes.
 Adding or changing a built-in node: `docs/node-conventions.md` (message envelope, codegen patterns, ports, naming,
-fault handling, docs/catalog/tests, vendoring).
+fault handling, docs/catalog/tests, vendoring). Cross-subsystem interface specs live in `interfaces/` (wire protocol
+first; see its `README.md`).
 
 ## Message shape: the `msg`/`payload` convention
 
@@ -98,6 +99,45 @@ build before either feature is built (`mvp-feature-priorities.md`, Tier 0) are b
 foreclose the expensive one" calls, not exceptions to the cheap-by-default rule. Worth naming explicitly so it's
 applied consistently to new work — including plain engineering-effort trade-offs, not just protocol/hardware one-way
 doors — rather than re-derived per feature.
+
+## Architecture first at subsystem interfaces: MVP-ready is not tester-ready
+
+Two bars, not one. "MVP" means feature-complete enough to demonstrate and dogfood on hardware we hold; "suitable for
+initial testers" is higher — the subsystems are settled enough that a stranger's saved flows, deployed boards and
+editor survive normal use. Don't read "we're on the MVP path" as permission to defer structure.
+
+A known architectural problem gets fixed now, in the change that names it: a boundary an agent can couple across
+wrongly, a format implemented in more than one place and left to drift, a descriptor with no single home. This is the
+one-way-door rule above applied to structure rather than to a field or a message. The cross-subsystem interfaces —
+editor ↔ backend ↔ device-runtime, the wire protocol, the flow file, the node and board descriptors — are where a
+cheap-but-wrong shape today becomes a breaking change once boards and saved flows are in the field. Still not a
+license to build the general version of everything on spec: the cheapest-correct default holds *within* a settled
+boundary.
+
+## Interface specs: read before you implement, change only with permission
+
+Each cross-subsystem interface has one specification artifact. Code that touches one is written *against that
+spec*, never against a guess or a neighbouring implementation:
+
+- **Wire protocol** — `interfaces/protocol/SPEC.md` + `interfaces/protocol/messages.json`, with conformance vectors
+  in `interfaces/protocol/vectors/` run by `editor/test/protocol-conformance.test.ts`,
+  `device-runtime/test/test_conformance.py` and `backend/test/test_conformance.py`.
+- **Device runtime API, dependency manifest, node descriptor, board/processor descriptor** — same rule, once each
+  has its spec (the remaining phase-1 pieces).
+
+**Before implementing or changing code that emits, parses, stores or transmits anything an interface defines, read
+that interface's spec, and run its conformance test.** If what you need isn't expressible in the spec, that's a
+signal to stop and raise it, not to widen the code quietly and leave the spec behind.
+
+**Interfaces change only with Mike's explicit permission.** A session may add conformance vectors and fix an
+implementation that has drifted; it may not change a message id, field, framing rule, descriptor shape, or runtime
+API signature — or add or remove one — without Mike saying so in the session. Propose the change, state the blast
+radius (deployed boards, saved flows, the other implementations), and wait. This is the one-way-door rule at the
+interface level: the spec is the contract, and the point is that it does not move under anything already in the
+field.
+
+**These specs are written for humans and must stay readable** — plain language, short sections, tables, a worked
+example. A spec only an author can follow is a spec that will drift.
 
 ## Commits
 

@@ -1,0 +1,435 @@
+{
+  "protocolVersion": 1,
+  "vectors": [
+    {
+      "name": "HELLO-0",
+      "type": "HELLO",
+      "typeId": 1,
+      "message": {
+        "type": "HELLO",
+        "chipType": "ESP32-C3",
+        "runtimeVersion": {
+          "major": 10,
+          "minor": 0,
+          "patch": 0
+        },
+        "runtimeBuild": null,
+        "currentFlowName": null,
+        "currentFlowDeployId": null,
+        "freeFlashBytes": 3500000,
+        "freeRamBytes": 168000,
+        "freeIdfHeapBytes": 65536,
+        "largestIdfHeapBlockBytes": 31744,
+        "safeMode": false,
+        "hostname": null,
+        "authRequired": false,
+        "authScheme": null,
+        "hasWifi": false,
+        "networkAddress": null,
+        "dependencies": null
+      },
+      "frameHex": "00b301a96768617357696669f46863686970547970656845535033322d433368736166654d6f6465f46c617574685265717569726564f46c6672656552616d42797465731a000290406e66726565466c61736842797465731a003567e06e72756e74696d6556657273696f6ea3656d616a6f720a656d696e6f72006570617463680070667265654964664865617042797465731a0001000078186c61726765737449646648656170426c6f636b4279746573197c00"
+    },
+    {
+      "name": "HELLO-1",
+      "type": "HELLO",
+      "typeId": 1,
+      "message": {
+        "type": "HELLO",
+        "chipType": "Raspberry Pi Pico W with RP2040",
+        "runtimeVersion": {
+          "major": 10,
+          "minor": 0,
+          "patch": 1
+        },
+        "runtimeBuild": "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678",
+        "currentFlowName": "basic mqtt smoke test",
+        "currentFlowDeployId": "6f1c9b2a-8e3d-4a5b-9c1e-2d3f4a5b6c7d",
+        "freeFlashBytes": 757760,
+        "freeRamBytes": 179200,
+        "freeIdfHeapBytes": null,
+        "largestIdfHeapBlockBytes": null,
+        "safeMode": true,
+        "hostname": "ts-kitchen",
+        "authRequired": true,
+        "authScheme": "hmac-sha256-nonce",
+        "hasWifi": true,
+        "networkAddress": "192.168.1.42",
+        "dependencies": {
+          "mqtt_as": "0123456789abcdef"
+        }
+      },
+      "frameHex": "01a301ae6768617357696669f5686368697054797065781f526173706265727279205069205069636f205720776974682052503230343068686f73746e616d656a74732d6b69746368656e68736166654d6f6465f56a61757468536368656d6571686d61632d7368613235362d6e6f6e63656c617574685265717569726564f56c646570656e64656e63696573a1676d7174745f617370303132333435363738396162636465666c6672656552616d42797465731a0002bc006c72756e74696d654275696c647828613162326333643465356636303731383239336134623563366437653866393031323334353637386e66726565466c61736842797465731a000b90006e6e6574776f726b416464726573736c3139322e3136382e312e34326e72756e74696d6556657273696f6ea3656d616a6f720a656d696e6f7200657061746368016f63757272656e74466c6f774e616d65756261736963206d71747420736d6f6b6520746573747363757272656e74466c6f774465706c6f794964782436663163396232612d386533642d346135622d396331652d326433663461356236633764"
+    },
+    {
+      "name": "DEPLOY-2",
+      "type": "DEPLOY",
+      "typeId": 2,
+      "message": {
+        "type": "DEPLOY",
+        "bytecode": {
+          "$bytes": "4d0600040506"
+        },
+        "staticData": {
+          "$bytes": "010203"
+        },
+        "flowName": "untitled flow",
+        "deployId": "9d8c7b6a-5e4f-3d2c-1b0a-f9e8d7c6b5a4",
+        "wifiProvision": {
+          "selfProvision": true,
+          "allowReprovision": false
+        },
+        "dependencies": {
+          "mqtt_as": "0123456789abcdef"
+        }
+      },
+      "frameHex": "00be02a66862797465636f6465464d0600040506686465706c6f794964782439643863376236612d356534662d336432632d316230612d66396538643763366235613468666c6f774e616d656d756e7469746c656420666c6f776a73746174696344617461430102036c646570656e64656e63696573a1676d7174745f617370303132333435363738396162636465666d7769666950726f766973696f6ea26d73656c6650726f766973696f6ef570616c6c6f77526570726f766973696f6ef4"
+    },
+    {
+      "name": "DEPLOY-3",
+      "type": "DEPLOY",
+      "typeId": 2,
+      "message": {
+        "type": "DEPLOY",
+        "bytecode": {
+          "$bytes": "4d0600010203"
+        },
+        "staticData": {
+          "$bytes": ""
+        },
+        "flowName": null,
+        "deployId": null,
+        "wifiProvision": null,
+        "dependencies": null
+      },
+      "frameHex": "001e02a26862797465636f6465464d06000102036a7374617469634461746140"
+    },
+    {
+      "name": "DEPLOY_ACK-4",
+      "type": "DEPLOY_ACK",
+      "typeId": 3,
+      "message": {
+        "type": "DEPLOY_ACK",
+        "freeFlashBytes": 3400000,
+        "freeRamBytes": 160000,
+        "freeIdfHeapBytes": 60000,
+        "largestIdfHeapBlockBytes": 28000
+      },
+      "frameHex": "005903a46c6672656552616d42797465731a000271006e66726565466c61736842797465731a0033e140706672656549646648656170427974657319ea6078186c61726765737449646648656170426c6f636b4279746573196d60"
+    },
+    {
+      "name": "DEPLOY_ACK-5",
+      "type": "DEPLOY_ACK",
+      "typeId": 3,
+      "message": {
+        "type": "DEPLOY_ACK",
+        "freeFlashBytes": 3400000,
+        "freeRamBytes": 160000,
+        "freeIdfHeapBytes": null,
+        "largestIdfHeapBlockBytes": null
+      },
+      "frameHex": "002803a26c6672656552616d42797465731a000271006e66726565466c61736842797465731a0033e140"
+    },
+    {
+      "name": "DEPLOY_ERROR-6",
+      "type": "DEPLOY_ERROR",
+      "typeId": 4,
+      "message": {
+        "type": "DEPLOY_ERROR",
+        "code": "insufficient_space",
+        "message": "flow needs 12000 bytes flash, 8000 available"
+      },
+      "frameHex": "005004a264636f646572696e73756666696369656e745f7370616365676d657373616765782c666c6f77206e6565647320313230303020627974657320666c6173682c203830303020617661696c61626c65"
+    },
+    {
+      "name": "VALUE_STREAM-7",
+      "type": "VALUE_STREAM",
+      "typeId": 5,
+      "message": {
+        "type": "VALUE_STREAM",
+        "nodeId": "n3",
+        "portId": "out0",
+        "payload": 42,
+        "timestampMs": 1723000000123
+      },
+      "frameHex": "003705a4666e6f64654964626e3366706f72744964646f757430677061796c6f6164182a6b74696d657374616d704d731b000001912acd8e7b"
+    },
+    {
+      "name": "VALUE_STREAM-8",
+      "type": "VALUE_STREAM",
+      "typeId": 5,
+      "message": {
+        "type": "VALUE_STREAM",
+        "nodeId": "n6",
+        "portId": "out0",
+        "payload": {
+          "$bytes": "010203"
+        },
+        "timestampMs": 1
+      },
+      "frameHex": "003105a4666e6f64654964626e3666706f72744964646f757430677061796c6f6164430102036b74696d657374616d704d7301"
+    },
+    {
+      "name": "NODE_ERROR-9",
+      "type": "NODE_ERROR",
+      "typeId": 6,
+      "message": {
+        "type": "NODE_ERROR",
+        "nodeId": "n7",
+        "exceptionType": "ZeroDivisionError",
+        "exceptionMessage": "division by zero"
+      },
+      "frameHex": "004e06a3666e6f64654964626e376d657863657074696f6e54797065715a65726f4469766973696f6e4572726f7270657863657074696f6e4d657373616765706469766973696f6e206279207a65726f"
+    },
+    {
+      "name": "STATE_READ-10",
+      "type": "STATE_READ",
+      "typeId": 7,
+      "message": {
+        "type": "STATE_READ",
+        "nodeId": "n8",
+        "key": "counter"
+      },
+      "frameHex": "001807a2636b657967636f756e746572666e6f64654964626e38"
+    },
+    {
+      "name": "STATE_READ-11",
+      "type": "STATE_READ",
+      "typeId": 7,
+      "message": {
+        "type": "STATE_READ",
+        "nodeId": "n8",
+        "key": "counter",
+        "value": 42
+      },
+      "frameHex": "002007a3636b657967636f756e7465726576616c7565182a666e6f64654964626e38"
+    },
+    {
+      "name": "STATE_WRITE-12",
+      "type": "STATE_WRITE",
+      "typeId": 8,
+      "message": {
+        "type": "STATE_WRITE",
+        "nodeId": "n8",
+        "key": "counter",
+        "value": 42
+      },
+      "frameHex": "002008a3636b657967636f756e7465726576616c7565182a666e6f64654964626e38"
+    },
+    {
+      "name": "TRIGGER-13",
+      "type": "TRIGGER",
+      "typeId": 9,
+      "message": {
+        "type": "TRIGGER",
+        "nodeId": "n9"
+      },
+      "frameHex": "000c09a1666e6f64654964626e39"
+    },
+    {
+      "name": "HELLO_REQUEST-14",
+      "type": "HELLO_REQUEST",
+      "typeId": 10,
+      "message": {
+        "type": "HELLO_REQUEST"
+      },
+      "frameHex": "00020aa0"
+    },
+    {
+      "name": "NODE_STATUS-15",
+      "type": "NODE_STATUS",
+      "typeId": 11,
+      "message": {
+        "type": "NODE_STATUS",
+        "nodeId": "n10",
+        "state": "connected",
+        "text": "192.168.1.42"
+      },
+      "frameHex": "002f0ba364746578746c3139322e3136382e312e343265737461746569636f6e6e6563746564666e6f64654964636e3130"
+    },
+    {
+      "name": "NODE_STATUS-16",
+      "type": "NODE_STATUS",
+      "typeId": 11,
+      "message": {
+        "type": "NODE_STATUS",
+        "nodeId": "n11",
+        "state": "disconnected"
+      },
+      "frameHex": "00200ba26573746174656c646973636f6e6e6563746564666e6f64654964636e3131"
+    },
+    {
+      "name": "EXEC-17",
+      "type": "EXEC",
+      "typeId": 12,
+      "message": {
+        "type": "EXEC",
+        "code": "print(1+1)"
+      },
+      "frameHex": "00120ca164636f64656a7072696e7428312b3129"
+    },
+    {
+      "name": "STOP_TO_PROMPT-18",
+      "type": "STOP_TO_PROMPT",
+      "typeId": 13,
+      "message": {
+        "type": "STOP_TO_PROMPT"
+      },
+      "frameHex": "00020da0"
+    },
+    {
+      "name": "SET_BOARD_SETTINGS-19",
+      "type": "SET_BOARD_SETTINGS",
+      "typeId": 14,
+      "message": {
+        "type": "SET_BOARD_SETTINGS",
+        "hostname": "ts-kitchen",
+        "password": "correct horse",
+        "clearPassword": false
+      },
+      "frameHex": "003c0ea368686f73746e616d656a74732d6b69746368656e6870617373776f72646d636f727265637420686f7273656d636c65617250617373776f7264f4"
+    },
+    {
+      "name": "SET_BOARD_SETTINGS-20",
+      "type": "SET_BOARD_SETTINGS",
+      "typeId": 14,
+      "message": {
+        "type": "SET_BOARD_SETTINGS",
+        "hostname": null,
+        "password": null,
+        "clearPassword": true
+      },
+      "frameHex": "00110ea16d636c65617250617373776f7264f5"
+    },
+    {
+      "name": "BOARD_SETTINGS_RESULT-21",
+      "type": "BOARD_SETTINGS_RESULT",
+      "typeId": 15,
+      "message": {
+        "type": "BOARD_SETTINGS_RESULT",
+        "ok": true,
+        "error": null
+      },
+      "frameHex": "00060fa1626f6bf5"
+    },
+    {
+      "name": "BOARD_SETTINGS_RESULT-22",
+      "type": "BOARD_SETTINGS_RESULT",
+      "typeId": 15,
+      "message": {
+        "type": "BOARD_SETTINGS_RESULT",
+        "ok": false,
+        "error": "password must be 8-64 characters"
+      },
+      "frameHex": "002e0fa2626f6bf4656572726f72782070617373776f7264206d75737420626520382d36342063686172616374657273"
+    },
+    {
+      "name": "DEP_PUT-23",
+      "type": "DEP_PUT",
+      "typeId": 16,
+      "message": {
+        "type": "DEP_PUT",
+        "name": "mqtt_as",
+        "file": "mqtt_as.mpy",
+        "offset": 1024,
+        "total": 11324,
+        "data": {
+          "$bytes": "4d06001f"
+        }
+      },
+      "frameHex": "003d10a56464617461444d06001f6466696c656b6d7174745f61732e6d7079646e616d65676d7174745f617365746f74616c192c3c666f6666736574190400"
+    },
+    {
+      "name": "DEP_RESULT-24",
+      "type": "DEP_RESULT",
+      "typeId": 17,
+      "message": {
+        "type": "DEP_RESULT",
+        "name": "mqtt_as",
+        "ok": true,
+        "code": null,
+        "error": null,
+        "freeFlashBytes": 1200000
+      },
+      "frameHex": "002711a3626f6bf5646e616d65676d7174745f61736e66726565466c61736842797465731a00124f80"
+    },
+    {
+      "name": "DEP_RESULT-25",
+      "type": "DEP_RESULT",
+      "typeId": 17,
+      "message": {
+        "type": "DEP_RESULT",
+        "name": "mqtt_as",
+        "ok": false,
+        "code": "NoSpace",
+        "error": "no space for mqtt_as: needs 11324 bytes, 9000 free",
+        "freeFlashBytes": null
+      },
+      "frameHex": "005a11a4626f6bf464636f6465674e6f5370616365646e616d65676d7174745f6173656572726f7278326e6f20737061636520666f72206d7174745f61733a206e656564732031313332342062797465732c20393030302066726565"
+    },
+    {
+      "name": "DEP_COMMIT-26",
+      "type": "DEP_COMMIT",
+      "typeId": 18,
+      "message": {
+        "type": "DEP_COMMIT",
+        "name": "mqtt_as",
+        "hash": "0123456789abcdef",
+        "files": {
+          "mqtt_as.mpy": 11324
+        }
+      },
+      "frameHex": "003b12a364686173687030313233343536373839616263646566646e616d65676d7174745f61736566696c6573a16b6d7174745f61732e6d7079192c3c"
+    },
+    {
+      "name": "RESTART-27",
+      "type": "RESTART",
+      "typeId": 19,
+      "message": {
+        "type": "RESTART",
+        "hard": false
+      },
+      "frameHex": "000813a16468617264f4"
+    },
+    {
+      "name": "RESTART-28",
+      "type": "RESTART",
+      "typeId": 19,
+      "message": {
+        "type": "RESTART",
+        "hard": true
+      },
+      "frameHex": "000813a16468617264f5"
+    },
+    {
+      "name": "DEP_ACK-29",
+      "type": "DEP_ACK",
+      "typeId": 20,
+      "message": {
+        "type": "DEP_ACK",
+        "name": "mqtt_as",
+        "file": "mqtt_as.mpy",
+        "offset": 1024,
+        "ok": true,
+        "code": null,
+        "error": null
+      },
+      "frameHex": "002e14a4626f6bf56466696c656b6d7174745f61732e6d7079646e616d65676d7174745f6173666f6666736574190400"
+    },
+    {
+      "name": "DEP_ACK-30",
+      "type": "DEP_ACK",
+      "typeId": 20,
+      "message": {
+        "type": "DEP_ACK",
+        "name": "mqtt_as",
+        "file": "mqtt_as.mpy",
+        "offset": 0,
+        "ok": false,
+        "code": "BadPiece",
+        "error": "piece at byte 2048"
+      },
+      "frameHex": "005314a6626f6bf464636f64656842616450696563656466696c656b6d7174745f61732e6d7079646e616d65676d7174745f6173656572726f7272706965636520617420627974652032303438666f666673657400"
+    }
+  ]
+}

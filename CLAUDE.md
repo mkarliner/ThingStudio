@@ -6,6 +6,14 @@ Shared project rules live in `AGENTS.md`, imported above. The two sections below
 Code agent sandbox, which shares a live-mounted copy of this repo with Mike's real Mac. Other runtimes (opencode)
 work directly in the repo and don't load this file, so these rules don't apply to them.
 
+## Interface specs (applies to Claude Code, from `AGENTS.md`)
+
+The `AGENTS.md` sections **"Architecture first at subsystem interfaces"** and **"Interface specs: read before you
+implement, change only with permission"** apply to Claude Code in full, imported above. In particular, before
+implementing or changing any code that emits, parses, stores or transmits something a cross-subsystem interface
+defines (the wire protocol in `interfaces/protocol/` first, and each later spec as it lands): read that spec, run its
+conformance test, and do not change the interface itself without Mike's explicit permission in the session.
+
 ## Git writes from the agent sandbox
 
 The agent sandbox and Mike's real Mac share the same live-mounted repo, and the sandbox cannot delete files it just

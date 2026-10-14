@@ -1,0 +1,25 @@
+{
+  "protocolVersion": 1,
+  "vectors": [
+    {
+      "name": "unknown-type-byte",
+      "frameHex": "000163",
+      "errorAt": "decode"
+    },
+    {
+      "name": "body-not-a-map",
+      "frameHex": "00020a80",
+      "errorAt": "decode"
+    },
+    {
+      "name": "cbor-indefinite-map",
+      "frameHex": "00030abfff",
+      "errorAt": "decode"
+    },
+    {
+      "name": "node-error-missing-nodeId",
+      "frameHex": "000a06a1666261646b657901",
+      "errorAt": "decode"
+    }
+  ]
+}

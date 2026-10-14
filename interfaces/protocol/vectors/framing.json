@@ -1,0 +1,79 @@
+{
+  "protocolVersion": 1,
+  "vectors": [
+    {
+      "name": "single-frame",
+      "chunks": [
+        "00010a"
+      ],
+      "expect": [
+        {
+          "frame": {
+            "type": 10,
+            "bodyHex": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "split-across-pushes",
+      "chunks": [
+        "000c09",
+        "a1666e6f64654964626e39"
+      ],
+      "expect": [
+        {
+          "frame": {
+            "type": 9,
+            "bodyHex": "a1666e6f64654964626e39"
+          }
+        }
+      ]
+    },
+    {
+      "name": "two-frames-one-push",
+      "chunks": [
+        "00010a00010d"
+      ],
+      "expect": [
+        {
+          "frame": {
+            "type": 10,
+            "bodyHex": ""
+          }
+        },
+        {
+          "frame": {
+            "type": 13,
+            "bodyHex": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "zero-length-header",
+      "chunks": [
+        "0000"
+      ],
+      "expect": [
+        {
+          "error": true
+        }
+      ]
+    },
+    {
+      "name": "truncated-header",
+      "chunks": [
+        "00"
+      ],
+      "expect": []
+    },
+    {
+      "name": "truncated-body",
+      "chunks": [
+        "000c09a1666e"
+      ],
+      "expect": []
+    }
+  ]
+}

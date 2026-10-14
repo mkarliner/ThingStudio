@@ -12,14 +12,14 @@
 // explicitly rather than silently decided, matching this session's
 // convention for filling a genuine spec gap:
 //
-// 1. Numeric type-byte assignments (MessageType below). §13 lists these
-//    in a specific order; this file just assigns that order 1..8 (0
-//    reserved/invalid). Whatever the real device-side listener is built
-//    against (Tier 0's "fault isolation" work, a separate chat) has to
-//    use this exact same table -- there's no other source of truth yet
-//    since device-runtime/src/runtime.py doesn't implement the listener.
+// 1. Numeric type-byte assignments (MessageType below). The authority is
+//    interfaces/protocol/messages.json; this file and device-runtime/src/messages.py
+//    both mirror it, and editor/test/protocol-conformance.test.ts fails if
+//    either drifts. Ids are append-only: a new type takes the next free
+//    number, existing ids are never reused or renumbered (0 is reserved).
 // 2. Per-message field names/shapes below, each commented with which
-//    part of §5/§13's prose they're read from.
+//    part of §5/§13's prose they're read from -- also mirrored in
+//    interfaces/protocol/SPEC.md §4 and checked by the conformance vectors.
 //
 // Every field name here is intentionally verbose over terse (`nodeId`
 // not `id`, `exceptionMessage` not `msg`) since NODE_ERROR's `msg` would
@@ -36,9 +36,9 @@ export interface ProtocolVersion {
 
 /**
  * Wire byte values for each message type's 1-byte frame header field
- * (framing.ts). See file header note (1): this exact numbering is a
- * decision made in this chat, not sourced from the design doc, and has
- * to be mirrored by whatever implements the device-side listener.
+ * (framing.ts). The authority is interfaces/protocol/messages.json; this table and
+ * device-runtime/src/messages.py's MessageType mirror it (both checked by
+ * the shared conformance vectors).
  */
 export const MessageType = {
   HELLO: 1,
@@ -267,11 +267,10 @@ export interface NodeErrorMessage {
   readonly exceptionMessage: string;
 }
 
-/** NODE_STATUS's fixed state vocabulary (matches messages.py's
- * NODE_STATUS_STATES exactly -- has to be mirrored by hand, same
- * "no shared config file between the two languages" reasoning this
- * file's own header already gives for the MessageType table). A real
- * runtime array, not just a type union, so codec.ts's decoder can
+/** NODE_STATUS's fixed state vocabulary (mirrored by messages.py's
+ * NODE_STATUS_STATES and listed in interfaces/protocol/messages.json; the editor and
+ * device conformance runners both fail if either drifts from the spec). A
+ * real runtime array, not just a type union, so codec.ts's decoder can
  * validate an incoming `state` string against it at runtime -- a bare
  * `type` alias erases at compile time and gives decodeMessageBody
  * nothing to check an untrusted wire value against. */

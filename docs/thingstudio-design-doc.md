@@ -417,6 +417,10 @@ compact intermediate form. Auth moved from per-message payloads to the **session
 authenticates the session (TSAUTH1, §9) and every subsequent message on it is trusted; serial carries no auth.
 HELLO's `authRequired`/`authScheme` reflect whether the board has a password set.
 
+The byte-level authority for this section is `interfaces/protocol/SPEC.md` (with `interfaces/protocol/messages.json`
+and the conformance vectors in `interfaces/protocol/vectors/`), which the editor, device runtime and backend all run
+as a shared test; this section remains the design-level narrative.
+
 ## 14. Project license and governance
 
 The project ships under a single, permissive license: Apache-2.0, for the explicit patent grant, matching

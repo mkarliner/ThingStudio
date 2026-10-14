@@ -8,10 +8,10 @@
 # the functions below).
 #
 # The numeric type-byte table below MUST match
-# editor/src/protocol/messages.ts's MessageType exactly -- that file's own
-# header comment says it is "the only source of truth right now" for these
-# values, and this is the real device-side listener that comment was
-# waiting on. Copied 1:1, not re-derived:
+# editor/src/protocol/messages.ts's MessageType exactly. The authority for
+# both is interfaces/protocol/messages.json (with interfaces/protocol/SPEC.md as the prose spec),
+# and device-runtime/test/test_conformance.py fails if this table drifts.
+# Copied 1:1, not re-derived:
 #   HELLO=1 DEPLOY=2 DEPLOY_ACK=3 DEPLOY_ERROR=4 VALUE_STREAM=5
 #   NODE_ERROR=6 STATE_READ=7 STATE_WRITE=8 TRIGGER=9 HELLO_REQUEST=10
 #   NODE_STATUS=11 EXEC=12 STOP_TO_PROMPT=13 SET_BOARD_SETTINGS=14
@@ -101,10 +101,11 @@ MessageType = {
 MESSAGE_NAME_BY_TYPE = {v: k for k, v in MessageType.items()}
 
 # NODE_STATUS's fixed state vocabulary -- the one enum this protocol
-# validates by value, not just by field type. Shared with runtime.py's
-# report_status() (the one legitimate caller) so the valid set is defined
-# in exactly one place, not duplicated between "what's accepted on
-# decode" and "what a caller is allowed to send".
+# validates by value, not just by field type. The spec is
+# interfaces/protocol/messages.json; test_conformance.py checks this tuple against
+# it. Shared here with runtime.py's report_status() (the one legitimate
+# caller) so the valid set is defined once for "what's accepted on decode"
+# and "what a caller is allowed to send".
 NODE_STATUS_STATES = ("connected", "disconnected", "connecting", "error")
 
 
