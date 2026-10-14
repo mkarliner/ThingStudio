@@ -6,7 +6,6 @@ import { displaySpiNode } from "./display-spi.js";
 import { delayNode } from "./delay.js";
 import { filterNode } from "./filter.js";
 import { journalNode } from "./journal.js";
-import { clockNode } from "./clock.js";
 import { bme280Node } from "./bme280.js";
 import { touchI2cNode } from "./touch-i2c.js";
 import { i2cGenericNode } from "./i2c-generic.js";
@@ -29,6 +28,7 @@ import { startupNode } from "./startup.js";
 import { timerNode } from "./timer.js";
 import { udpReceiveNode } from "./udp-receive.js";
 import { udpSendNode } from "./udp-send.js";
+import { ntpNode } from "./ntp.js";
 import { variableGetNode } from "./variable-get.js";
 import { variableSetNode } from "./variable-set.js";
 import { wifiGateNode } from "./wifi-gate.js";
@@ -103,10 +103,10 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     mqttSubscribeNode,
     udpSendNode,
     udpReceiveNode,
+    ntpNode,
     delayNode,
     filterNode,
     journalNode,
-    clockNode,
     bme280Node,
     touchI2cNode,
     i2cGenericNode,

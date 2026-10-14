@@ -84,7 +84,7 @@ A complete flow, a blinking LED on a LOLIN S2 Mini (its LED is pin 15):
 | drive a pin | `gpio_out` (on/off), `pwm_out` |
 | change or route a message | `function`; `filter` to pass only changes; `delay` |
 | keep a number's history | `journal`, shown by a `gui_trend` |
-| show the time | `clock` |
+| show the time | `ntp` (two for time and date: `format` `time` and `date`) |
 | talk MQTT / HTTP / UDP | `mqtt_publish`, `mqtt_subscribe`, `http_request`, `http_in` and `http_response`, `udp_send`, `udp_receive` |
 | draw on a screen | `gui_screen` with `gui_*` widgets, wired to `display_spi` |
 

@@ -62,8 +62,8 @@ from uncommitted changes.
 
 ## My clock shows `--` and never the time. Why?
 
-The clock hasn't synced yet. It needs WiFi, and the clock node doesn't join WiFi itself. Add a node that does, such
-as [wifi status](nodes/wifi-status.md), and set its WiFi. See [clock](nodes/clock.md#behavior).
+The ntp node hasn't synced yet. Its status says why: **waiting for WiFi**, or **NTP from *server* failed** when the
+board can't reach the server. It tries again every 30 seconds. See [ntp](nodes/ntp.md#errors).
 
 ## My gui toggle shows `--`. Why?
 

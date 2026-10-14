@@ -331,3 +331,10 @@ card), and `/` holds only the mount points, so opening `/x` is ENODEV. ESP32 and
 why it never showed before. `os.getcwd()` is the mount root on every port (the installer already relied on it,
 copying files by relative name). Fix (`board_fs.py`): take the root once and build every persisted path from
 it. A relative path (`_runtime_build.txt`) already worked, since cwd is the root.
+
+## The unix port's `time.time()` is a float, 2026-10-14
+
+Running the `ntp` node's generated helpers on the MicroPython unix port gave `unix` as a float
+(`1792069509.24`): the unix port's `time.time()` returns a float, while ESP32 and RP2 return an int. CPython tests
+with `time_mock` (which returns whatever the test sets) can't see this. Fix in `ntp.ts`: `int(time.time())`. Any
+generated code that sends `time.time()` on a port typed `int` should do the same.

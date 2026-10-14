@@ -10,20 +10,6 @@ Ports are numbered from 0 in a flow file's `edges`: `[fromNodeId, outputNumber, 
 
 ## general
 
-### clock
-
-Type `thingstudio/clock`, kind transform, palette group general.
-
-- Inputs: msg (any)
-- Outputs: time (any), date (any)
-- Properties (name, type, default):
-    - `server`, string, default `"pool.ntp.org"`
-    - `utcOffset`, number, default `0` — hours from UTC for standard time, -12 to 14; the daylight-saving hour is added by `dst`
-    - `dst`, string, default `"eu"` — eu adds the UK/EU summer hour automatically; none adds nothing
-    - `hour12`, boolean, default `false`
-    - `seconds`, boolean, default `false`
-    - `blink`, boolean, default `false`
-
 ### debug
 
 Type `thingstudio/debug`, kind sink, palette group general.
@@ -460,6 +446,18 @@ Type `thingstudio/mqtt_subscribe`, kind source, palette group network.
     - `topic`, string, default `""`
     - `qos`, number, default `0`
     - `brokerConfigId`, string, default `""`, the id of a `thingstudio/config/mqtt-broker` config
+
+### ntp
+
+Type `thingstudio/ntp`, kind sink, palette group network.
+
+- Inputs: msg (any)
+- Outputs: msg (any)
+- Properties (name, type, default):
+    - `server`, string, default `"pool.ntp.org"`
+    - `utcOffset`, number, default `0` — hours from UTC for standard time, -12 to 14 (5.5 for India); the summer hour is added by `dst`
+    - `dst`, string, default `"eu"` — eu adds the UK/EU summer hour automatically; none adds nothing
+    - `format`, string, default `"time"` — what goes in payload: unix (int), time (14:05), time_seconds, time_12h (2:05 pm), date (Wed 14 Oct), date_iso, iso. Every message also carries all seven as fields of those names
 
 ### udp receive
 

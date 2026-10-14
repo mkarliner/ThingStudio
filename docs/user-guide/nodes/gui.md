@@ -86,6 +86,14 @@ Set the gui screen's frame format to `rgb565` for full color, with the same form
 gray for stale values, and a green accent for bars and lights that are on. Grays use less memory and send faster,
 so use them on boards with little RAM.
 
+## Seven-segment digits
+
+The `seg7` fonts (`font_seg748`, `font_seg764`, `font_seg796`) have only `0-9 : . -` and a space, so they suit the
+`time` and `time_seconds` formats of the [ntp](ntp.md) node. On a 320-pixel-wide screen `font_seg764` fits `14:05`
+(221 px) and `font_seg748` fits `14:05:09` (254 px). `font_seg796` is for wider screens. The font is DSEG by
+Keshikan (SIL Open Font License 1.1); see
+[third-party licenses](https://github.com/mkarliner/ThingStudio/blob/main/docs/third-party-licenses.md).
+
 ## Rotating the screen
 
 On the display node, set **orientation** to 0, 90, 180 or 270 (the picture turned clockwise). It is one setting

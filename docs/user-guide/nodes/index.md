@@ -34,7 +34,7 @@ See [flows, nodes and messages](../background/flows-and-nodes.md) for how they f
 | change a message, or decide where it goes | [function](function.md) |
 | send only changes, or limit the rate | [filter](filter.md) |
 | keep a number's history and show its trend | [journal](journal.md) |
-| show the time of day | [clock](clock.md) |
+| show the time of day | [ntp](ntp.md) |
 | wait before passing a message on | [delay](delay.md) |
 | see what's in a message | [debug](debug.md) |
 | send or receive MQTT messages | [mqtt publish](mqtt-publish.md), [mqtt subscribe](mqtt-subscribe.md) |
@@ -57,7 +57,6 @@ Nodes that don't need a network or hardware:
 | [delay](delay.md) | transform | Passes each message on after a set wait. |
 | [filter](filter.md) | transform | Passes a message on only if it changed enough, or enough time has passed. |
 | [journal](journal.md) | transform | Keeps the recent history of a number as average, min and max rows, for a trend. |
-| [clock](clock.md) | transform | The time and date from NTP, as text for a display. |
 | [debug](debug.md) | sink | Prints a message to the editor's console. |
 
 ## Network
@@ -68,6 +67,7 @@ These nodes share the flow's WiFi network. A flow has one, set on any WiFi node'
 | --- | --- | --- |
 | [wifi status](wifi-status.md) | source | Reports when the WiFi connection comes up or goes down. |
 | [wifi gate](wifi-gate.md) | transform | Passes a message on only while WiFi is connected. |
+| [ntp](ntp.md) | in and out | Sets the board's clock from the internet and sends the time. |
 | [mqtt subscribe](mqtt-subscribe.md) | source | Sends a message for each MQTT message on a topic. |
 | [mqtt publish](mqtt-publish.md) | sink | Publishes a message's payload to an MQTT topic. |
 | [http request](http-request.md) | transform | Makes an HTTP request per message and passes on the response. |

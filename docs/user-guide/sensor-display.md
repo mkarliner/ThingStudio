@@ -96,15 +96,15 @@ Each bar is the average of its row, and the thin line runs from the row's min to
 
 ## 4. Add the clock
 
-1. Drag a **timer** with **interval (ms)** `1000`, and a **clock** node. Wire the timer to the clock.
-2. In the clock, set **UTC offset (hours)** for your zone's standard time. Set **daylight saving** to **UK / EU:
-   automatic** if that's where you are, otherwise **none**. See [clock](nodes/clock.md).
+1. Drag a **timer** with **interval (ms)** `1000`, and two **ntp** nodes. Wire the timer to both.
+2. Set one ntp node's **format** to `time` and the other's to `date`. In both, set **UTC offset (hours)** for your
+   zone's standard time, and **daylight saving** to **UK / EU: automatic** if that's where you are, otherwise
+   **none**. See [ntp](nodes/ntp.md).
 3. Add two **gui label** nodes, one for the time with **room for (characters)** `5`, and one for the date with
-   `10`. Wire the clock's first output to the time and its second to the date.
+   `10`. Wire the `time` ntp node to the first and the `date` one to the second.
 4. On a new page, give the time label the font `font_seg764` (seven-segment digits) and the date `font_body24`.
 
-The clock node doesn't join WiFi itself. In this flow the mqtt publish nodes do. Without them, add a
-[wifi status](nodes/wifi-status.md) node. Until the board has the time, the clock shows `--`.
+Until the board has the time, the labels show `--`.
 
 ## 5. Turn the pages
 
@@ -133,7 +133,7 @@ Each symptom below has its own fix:
   panel's own size, `320` and `480`, even when the picture is turned. Deploy checks this and says so.
 - **Touches land in the wrong place:** see [Touch panels](nodes/touch-panel.md).
 - **No readings:** check the wiring and the address (`0x76` or `0x77`), and test with a debug node.
-- **The clock stays at `--`:** the board has no WiFi, or can't reach the NTP server. It tries again every 30
-  seconds.
+- **The clock stays at `--`:** the ntp node's status says why: no WiFi yet, or the NTP server can't be reached.
+  It tries again every 30 seconds.
 - **Compile says a node is "disconnected from any source":** a widget has nothing wired to it. Wire it, or reload
   the editor if the wires are there.

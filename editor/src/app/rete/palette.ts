@@ -116,7 +116,7 @@ export type NodeKind =
   | "gui_bar"
   | "gui_trend"
   | "journal"
-  | "clock"
+  | "ntp"
   | "gui_led"
   | "gui_button"
   | "gui_navigator"
@@ -195,6 +195,8 @@ export const NODE_PALETTE: Partial<Record<NodeKind, KindStyle>> = {
   // travel the same way interrupt's "⚡" echoes its own trigger mechanism.
   udp_send: { color: "#3b5c8a", bgcolor: "#1f2e4a", icon: "↑", label: "udp send", group: "network", priority: 21 },
   udp_receive: { color: "#3b8a6e", bgcolor: "#1f4a3a", icon: "↓", label: "udp receive", group: "network", priority: 20 },
+  // ntp, 2026-10-14 (replaces clock): wifi_status's teal family, "◷" for time. After the WiFi pair.
+  ntp: { color: "#1f5c6e", bgcolor: "#12343f", icon: "◷", label: "ntp", group: "network", priority: 15 },
   // Amber/gold -- see this file's header for the icon reasoning.
   http_request: { color: "#8a6e1f", bgcolor: "#4a3a1f", icon: "⇄", label: "http request", group: "network", priority: 41 },
   // http_in/http_response, 2026-09-08 -- same amber/gold family as
@@ -215,8 +217,6 @@ export const NODE_PALETTE: Partial<Record<NodeKind, KindStyle>> = {
   touch_i2c: { color: "#8a4a2e", bgcolor: "#4a2a1f", icon: "☝", label: "touch", group: "hardware", priority: 16 },
   bme280: { color: "#8a4a2e", bgcolor: "#4a2a1f", icon: "°", label: "bme280", group: "hardware", priority: 15 },
   // journal added 2026-10-10: teal beside filter, "≋" for a stream kept over time.
-  // clock added 2026-10-10.
-  clock: { color: "#2e6e4a", bgcolor: "#1f3f2c", icon: "◷", label: "clock", group: "general", priority: 37 },
   journal: { color: "#2e6e4a", bgcolor: "#1f3f2c", icon: "≋", label: "journal", group: "general", priority: 36 },
   filter: { color: "#2e6e4a", bgcolor: "#1f3f2c", icon: "▽", label: "filter", group: "general", priority: 35 },
   // GUI nodes, 2026-10-08 (node-library/gui.ts): their own "GUI" group, one slate-green family.

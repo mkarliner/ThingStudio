@@ -374,25 +374,6 @@
           addresses that answer. Hex (0x29) or decimal both work.</p>
       </template>
 
-      <template v-else-if="node.kind === 'clock'">
-        <label>NTP server <input type="text" v-model="node.properties.server" @input="touch" /></label>
-        <label>UTC offset (hours)
-          <input type="number" min="-12" max="14" step="0.5" v-model.number="node.properties.utcOffset" @input="touch" />
-        </label>
-        <label>daylight saving
-          <select v-model="node.properties.dst" @change="touch">
-            <option value="eu">UK / EU: automatic</option>
-            <option value="none">none</option>
-          </select>
-        </label>
-        <label><input type="checkbox" v-model="node.properties.hour12" @change="touch" /> 12-hour</label>
-        <label><input type="checkbox" v-model="node.properties.seconds" @change="touch" /> show seconds</label>
-        <label><input type="checkbox" v-model="node.properties.blink" @change="touch" /> blink the colon</label>
-        <p class="hint">Wire a timer in (1 s for a clock with seconds). The first output sends the time, the second the date,
-          each only when it changes. Nothing is sent until the first NTP sync over WiFi, which is retried every 30 s and
-          repeated hourly. The offset is for standard time; UK / EU adds the summer hour itself.</p>
-      </template>
-
       <template v-else-if="node.kind === 'journal'">
         <label>rows kept <input type="number" min="1" max="256" v-model.number="node.properties.rows" @input="touch" /></label>
         <label>seconds per row (0 = one row per message)
@@ -736,6 +717,38 @@
           :model-value="undefined"
           @update:model-value="() => touch()"
         />
+      </template>
+
+      <template v-else-if="node.kind === 'ntp'">
+        <label>NTP server <input type="text" v-model="node.properties.server" @input="touch" /></label>
+        <label>UTC offset (hours)
+          <input type="number" min="-12" max="14" step="0.5" v-model.number="node.properties.utcOffset" @input="touch" />
+        </label>
+        <label>daylight saving
+          <select v-model="node.properties.dst" @change="touch">
+            <option value="eu">UK / EU: automatic</option>
+            <option value="none">none</option>
+          </select>
+        </label>
+        <label>format
+          <select v-model="node.properties.format" @change="touch">
+            <option value="time">time (14:05)</option>
+            <option value="time_seconds">time with seconds (14:05:09)</option>
+            <option value="time_12h">12-hour time (2:05 pm)</option>
+            <option value="date">date (Wed 14 Oct)</option>
+            <option value="date_iso">ISO date (2026-10-14)</option>
+            <option value="iso">ISO date and time</option>
+            <option value="unix">Unix time (seconds)</option>
+          </select>
+        </label>
+        <ConfigRefField
+          config-type="thingstudio/config/wifi"
+          :model-value="undefined"
+          @update:model-value="() => touch()"
+        />
+        <p class="hint">Sends the time after each sync, and for each message in once synced: wire a timer in (1 s
+          with seconds) for a clock that ticks. Format picks the payload; every message also has all the formats as
+          fields. The offset is for standard time; UK / EU adds the summer hour itself.</p>
       </template>
 
       <template v-else-if="node.kind === 'udp_send'">

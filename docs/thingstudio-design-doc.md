@@ -191,12 +191,12 @@ The current node library (registry in `editor/src/node-library/registry.ts`, ~37
 - **Sensors/analog**: `adc` (async sampled), `encoder` (Hinch's quadrature), `bme280` (I2C), `neopixel`
   (WS2812).
 - **Network**: `wifi_status`, `wifi_gate`, `http_request`, `http_in`/`http_response` (exact-path-match v1
-  server), `mqtt_publish`/`mqtt_subscribe` (vendored `mqtt_as`), `udp_send`/`udp_receive`. TCP send/listen-
+  server), `mqtt_publish`/`mqtt_subscribe` (vendored `mqtt_as`), `udp_send`/`udp_receive`, `ntp` (sets the RTC, sends the time). TCP send/listen-
   receive were scoped but **never built** — deferred (§10).
 - **Logic/state**: `function` (runs actual precompiled MicroPython, single or multiple outputs), `variable_get`/
   `variable_set` (in-RAM `_flow_vars` store; the dedicated canvas nodes are hidden pending a Node-RED-style
   context model), `filter` (change-only/rate-limiting event compression), `journal` (ring-buffer time series for
-  the trend widget), `clock` (NTP-synced time source), `debug` (prints to the device console), `inject`.
+  the trend widget), `debug` (prints to the device console), `inject`.
 - No dedicated boolean/arithmetic/comparator/ADC node: those reduce to a one-line function-node body
   (`payload > threshold`, `machine.ADC(pin).read_u16()`). Mike's 2026-08-21 call on that held.
 

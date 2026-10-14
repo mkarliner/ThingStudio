@@ -238,15 +238,23 @@
       }
     },
     {
-      "id": "n40-clock",
-      "type": "thingstudio/clock",
+      "id": "n40-ntp-time",
+      "type": "thingstudio/ntp",
       "properties": {
         "server": "pool.ntp.org",
         "utcOffset": 0,
         "dst": "eu",
-        "hour12": false,
-        "seconds": false,
-        "blink": false
+        "format": "time"
+      }
+    },
+    {
+      "id": "n44-ntp-date",
+      "type": "thingstudio/ntp",
+      "properties": {
+        "server": "pool.ntp.org",
+        "utcOffset": 0,
+        "dst": "eu",
+        "format": "date"
       }
     },
     {
@@ -380,18 +388,24 @@
     [
       "n41-ctick",
       0,
-      "n40-clock",
+      "n40-ntp-time",
       0
     ],
     [
-      "n40-clock",
+      "n41-ctick",
+      0,
+      "n44-ntp-date",
+      0
+    ],
+    [
+      "n40-ntp-time",
       0,
       "n42-ctime",
       0
     ],
     [
-      "n40-clock",
-      1,
+      "n44-ntp-date",
+      0,
       "n43-cdate",
       0
     ]
@@ -529,10 +543,16 @@
         780
       ]
     },
-    "n40-clock": {
+    "n40-ntp-time": {
       "pos": [
         280,
         780
+      ]
+    },
+    "n44-ntp-date": {
+      "pos": [
+        280,
+        850
       ]
     },
     "n42-ctime": {
@@ -613,7 +633,8 @@
     "n12-screen": "pane-1",
     "n13-display": "pane-1",
     "n41-ctick": "pane-1",
-    "n40-clock": "pane-1",
+    "n40-ntp-time": "pane-1",
+    "n44-ntp-date": "pane-1",
     "n42-ctime": "pane-1",
     "n43-cdate": "pane-1"
   },
@@ -819,5 +840,5 @@
       ]
     }
   },
-  "notes": "Climate on the Freenove FNK0104S: a BME280 on the touch panel's I2C bus (SCL 15, SDA 16, address 0x76) shows temperature, humidity and pressure in landscape (the display's orientation is 90).\n\nReadings come every 5 seconds. Two journals keep the temperature, as in RRDtool: one row per 10 seconds for the last 26 minutes, and its per-minute roll-up (average, with min and max) for the last 2.6 hours. Each bar is the average and the thin line its min to max. Pressure keeps a row a minute. The trend range is fixed (15 to 30 C, 970 to 1050 hPa): change it in the trend's properties. A reading that stops arriving dims the numbers after 15 seconds and the Sensor light goes grey. The pages change by themselves every 8 seconds. The third page is a clock in seven-segment digits: the time comes from NTP over WiFi (UK / EU summer time applied automatically, UTC offset 0: set the clock node's offset for other zones), so it shows -- until WiFi is up and the first sync works.\n\nEach reading is also published over MQTT to thingstudio/headliner/temperature, /humidity and /pressure on your broker (the WiFi and broker settings are the ones named mihome and verdi-mqtt-broker: change them in the flow's settings to your own).\n\nWire the sensor to 3V3, GND, SCL 15 and SDA 16. Set the screen's width and height to the panel's own size (320x480) when you turn the display."
+  "notes": "Climate on the Freenove FNK0104S: a BME280 on the touch panel's I2C bus (SCL 15, SDA 16, address 0x76) shows temperature, humidity and pressure in landscape (the display's orientation is 90).\n\nReadings come every 5 seconds. Two journals keep the temperature, as in RRDtool: one row per 10 seconds for the last 26 minutes, and its per-minute roll-up (average, with min and max) for the last 2.6 hours. Each bar is the average and the thin line its min to max. Pressure keeps a row a minute. The trend range is fixed (15 to 30 C, 970 to 1050 hPa): change it in the trend's properties. A reading that stops arriving dims the numbers after 15 seconds and the Sensor light goes grey. The pages change by themselves every 8 seconds. The third page is a clock in seven-segment digits: two ntp nodes, one sending the time and one the date, get it over WiFi (UK / EU summer time applied automatically, UTC offset 0: set both ntp nodes' offset for other zones). It shows -- until WiFi is up and the first sync works.\n\nEach reading is also published over MQTT to thingstudio/headliner/temperature, /humidity and /pressure on your broker (the WiFi and broker settings are the ones named mihome and verdi-mqtt-broker: change them in the flow's settings to your own).\n\nWire the sensor to 3V3, GND, SCL 15 and SDA 16. Set the screen's width and height to the panel's own size (320x480) when you turn the display."
 }

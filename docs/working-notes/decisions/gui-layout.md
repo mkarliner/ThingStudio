@@ -240,4 +240,8 @@ the msg is open.
   Bold (OFL 1.1), sizes 48/64/96, charset `0123456789:.- `. HH:MM is 221 px at 64 and 331 px at 96, so a 320-wide
   portrait screen uses 64 (48 with seconds). Hardware-checked on the S3 (Freenove 4in) 2026-10-10. Not yet checked: `ntptime` on other boards
   (the import is guarded), and the blocking sync (up to ~1 s) holding up other messages.
+- **`ntp` replaces `clock` (2026-10-14, Mike).** Time sync is a Network node, display is the display's: `ntp` holds
+  the offset and UK/EU summer time, joins WiFi itself, sends after each sync and per input once synced, with a
+  `format` for `payload` (unix, time, time_seconds, time_12h, date, date_iso, iso) and every format as a named
+  field. No blinking colon. `clock` removed. Detail: `outstanding-items/ntp-node-replaces-clock.md`.
 

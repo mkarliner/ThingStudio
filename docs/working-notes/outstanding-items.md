@@ -730,9 +730,10 @@ ambiguous."
   order (GRB or RGB; RGBW variants), brightness. Input design to decide: a colour for all pixels, a list of colours,
   or `{index, colour}`; the node writes on each message. Check the RP2 and ESP32 `neopixel` ports behave the same, and
   note the 3.3 V data line caveat in the docs.
-- **`ntp` node replaces `clock`** (Mike, docs review). `clock` mixes time sync, time zone and display formatting,
-  and shows `--` for ever with no error when nothing in the flow joins WiFi. New Network `ntp` node with a format
-  option (unix time, date/time text); remove `clock`; 7-segment stays a gui label font.
+- **Built 2026-10-14, owes a hardware check.** **`ntp` node replaces `clock`** (Mike, docs review). `clock` mixes
+  time sync, time zone and display formatting, and shows `--` for ever with no error when nothing in the flow joins
+  WiFi. New Network `ntp` node with a format option (unix time, date/time text); remove `clock`; 7-segment stays a
+  gui label font.
   ([detail](outstanding-items/ntp-node-replaces-clock.md))
 - **A function node can't feed a `number` input** (2026-10-11, found in the docs rewrite). `function`'s output is
   `any`, and `number`/`int`/`string` inputs refuse `any`, so a function can't drive `pwm out`'s duty and there's no

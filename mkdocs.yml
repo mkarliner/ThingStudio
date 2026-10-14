@@ -86,11 +86,11 @@ nav:
           - delay: nodes/delay.md
           - filter: nodes/filter.md
           - journal: nodes/journal.md
-          - clock: nodes/clock.md
           - debug: nodes/debug.md
       - Network:
           - wifi status: nodes/wifi-status.md
           - wifi gate: nodes/wifi-gate.md
+          - ntp: nodes/ntp.md
           - udp receive: nodes/udp-receive.md
           - mqtt subscribe: nodes/mqtt-subscribe.md
           - http request: nodes/http-request.md
