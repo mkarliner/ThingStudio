@@ -3129,6 +3129,7 @@ see <a href="#adding-a-processor">Adding a processor</a>.</p>
 <li>a pin to avoid, such as a strapping pin that changes how the board starts</li>
 <li>a pull-up or pull-down on a pin that has no internal pull resistor</li>
 </ul>
+<p>A node that needs hardware the board doesn't have, such as an ESP-NOW node on a Pico, is refused the same way. The palette greys out such a node while the board is known.</p>
 <p>Warnings appear in the console when you deploy, and at the end of the compiled source.</p>
 <p>In the properties panel, a pin field shows the board's name for that pin, such as <code>LED</code>. It also flags reserved pins and pins to avoid. On a board whose pins are named rather than numbered, the field is a dropdown of the board's pins. See <a href="#pins-that-arent-numbers">Pins that aren't numbers</a>.</p>
 <h2 id="built-in-boards">Built-in boards</h2>
@@ -3275,6 +3276,10 @@ version of Thingstudio doesn't update a file you already have, so delete a file 
 <td>Names for pins, shown in the properties panel. Required, can be <code>{}</code>.</td>
 </tr>
 <tr>
+<td><code>capabilities</code></td>
+<td>Hardware this board adds to its processor, such as <code>["wifi"]</code>. A board with no radio usually sets <code>wifi</code> to <code>false</code> instead.</td>
+</tr>
+<tr>
 <td><code>gpio</code></td>
 <td>The pins this board has, if fewer than its processor. For example <code>["0-29"]</code>.</td>
 </tr>
@@ -3350,6 +3355,14 @@ is drawn in two columns, like the Pico's. For a board with several connectors, n
 <tr>
 <td><code>noPull</code></td>
 <td>Pins without internal pull resistors.</td>
+</tr>
+<tr>
+<td><code>capabilities</code></td>
+<td>Hardware the chip has, such as <code>["wifi", "ble", "espnow"]</code> or <code>["pio"]</code>. A node that needs one the board lacks is refused.</td>
+</tr>
+<tr>
+<td><code>adc2</code></td>
+<td>Pins on a second ADC that can't be used while WiFi is up (ESP32 family).</td>
 </tr>
 <tr>
 <td><code>reserved</code>, <code>avoid</code></td>
