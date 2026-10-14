@@ -51,7 +51,7 @@ These give a warning, but the flow still compiles:
 
 Warnings appear in the console when you deploy, and at the end of the compiled source.
 
-In the properties panel, a pin field shows the board's name for that pin, such as `LED`. It also flags reserved pins and pins to avoid.
+In the properties panel, a pin field shows the board's name for that pin, such as `LED`. It also flags reserved pins and pins to avoid. On a board whose pins are named rather than numbered, the field is a dropdown of the board's pins. See [Pins that aren't numbers](#pins-that-arent-numbers).
 
 ## Built-in boards
 
@@ -113,7 +113,7 @@ The fields are:
 | `name` | Name shown in the Board menu. Required. |
 | `processor` | Id of the processor, such as `esp32` or `rp2040`. Required. |
 | `match` | Board names MicroPython reports, for Auto. Use `[]` to pick the board by hand. Required. |
-| `pins` | Names for GPIO pins, shown in the properties panel. Required, can be `{}`. |
+| `pins` | Names for pins, shown in the properties panel. Required, can be `{}`. |
 | `gpio` | The pins this board has, if fewer than its processor. For example `["0-29"]`. |
 | `reserved` | Pins that must not be used, each with a reason. |
 | `avoid` | Pins that give a warning, each with a reason. |
@@ -122,12 +122,12 @@ The fields are:
 | `wifi` | `false` if the board has no WiFi. Hides [connecting over WiFi](wifi-connection.md) for it. Leave it out if unsure. |
 | `headerOrder` | `"down"` if the right-hand row is numbered top to bottom, like the left. Leave it out for a header numbered down the left and back up the right, like the Pico's. |
 | `usb` | Where the USB connector is, with pin 1 at the top left: `"top"` or `"bottom"`. Shown on the **Pins…** page. Needs `header`. |
-| `header` | What each physical pin carries: a GPIO number, or a label such as `"GND"` or `"3V3"`. Shown on the **Pins…** page. For example `{ "1": 0, "3": "GND", "40": "VBUS" }`. |
+| `header` | What each physical pin carries: a pin (a GPIO number, or a named pin), or a label such as `"GND"` or `"3V3"`. Shown on the **Pins…** page. For example `{ "1": 0, "3": "GND", "40": "VBUS" }`. A string that's one of the board's pins is that pin; any other string is a label. |
 
 Numbers in `header` are physical pin numbers, as printed on the board or its datasheet. A header numbered 1 to N
 is drawn in two columns, like the Pico's. For a board with several connectors, name the pins `"P3-1"` and so on.
 
-Pin lists take numbers and ranges: `[0, 2, "4-7"]`. In `reserved` and `avoid`, the key is a pin or a range: `{ "6-11": "Wired to the flash chip." }`.
+Pin lists take numbers and ranges: `[0, 2, "4-7"]`. In `reserved` and `avoid`, the key is a pin or a range: `{ "6-11": "Wired to the flash chip." }`. A processor whose pins are named uses the names in the same places: see [Pins that aren't numbers](#pins-that-arent-numbers).
 
 To find the name MicroPython reports, connect the board and look for `chipType` in the console's `[HELLO]` line. The board name is the part before " with ".
 
@@ -142,8 +142,23 @@ The fields are:
 | `name` | Name shown in the Board menu. Required. |
 | `match` | Text in the processor name MicroPython reports, such as `ESP32S3`. Case, spaces and `-` are ignored. Required. |
 | `nativeArch` | The mpy-cross `-march` value, such as `xtensawin`. Required. |
-| `gpio` | Every GPIO pin the processor has. Required. |
+| `gpio` | Every pin the processor has. Numbers, or names on a processor whose pins aren't numbered. Required. |
 | `inputOnly` | Pins that can't drive an output. |
 | `noPull` | Pins without internal pull resistors. |
 | `reserved`, `avoid` | As for boards. |
 | `spi`, `i2c` | Bus numbers, pins each bus can use, and SPI speed limits. |
+
+## Pins that aren't numbers
+
+Some processors, such as the STM32 on a pyboard, name their pins (`X1`, `A13`) instead of numbering them. In a definition file, a pin is either a number, a range `"4-7"`, or a name: a string that starts with a letter and contains only letters, digits, `_` and `-`. Names go wherever numbers do — `gpio`, `pins`, `reserved`, `avoid`, a bus's pins — and a list can mix both. Ranges work for numbers only; list named pins one by one.
+
+```json
+{
+  "name": "Pyboard",
+  "match": ["STM32F405"],
+  "nativeArch": "armv7emsp",
+  "gpio": ["X1", "X2", "X3", "X4", "Y1", "Y2", "Y3", "Y4"]
+}
+```
+
+In the editor, a pin field on a named-pin board is a dropdown of the board's pins rather than a number input.

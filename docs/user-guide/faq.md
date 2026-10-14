@@ -85,3 +85,9 @@ A function node's output has the type `any`, and `pwm out`'s input takes a `numb
 
 The board already runs the flow on the canvas. Deploy comes back when you change the flow. See
 [Deploy is grayed out](debugging.md#deploy-is-grayed-out).
+
+## Why are the pin fields dropdowns?
+
+Your processor names its pins instead of numbering them. The STM32 on a pyboard uses `X1`, `A13` and so on. Pin
+fields then list the chip's own pins rather than take a number. See
+[Pins that aren't numbers](boards.md#pins-that-arent-numbers).

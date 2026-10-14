@@ -196,7 +196,9 @@ mechanism a future board-preset type could sit on top of. 1 entry:
 (read-only `GET /api/definitions`), id = file name, user file replaces a built-in whole, invalid files
 logged loudly. New toolbar Board menu (Auto from HELLO `chipType`, or a manual pick). All 7 pin-taking
 nodes check pins, SPI/I2C buses and SPI speed against the target; errors vs warnings split as the brief
-suggested. 1 entry: `docs/working-notes/decisions/chip-board-definitions.md`.
+suggested. 2026-10-14: a pin may be a name as well as a number (`X1`), so a processor whose pins aren't
+numbered (STM32/pyboard) is describable, and a pin field becomes a dropdown on such a board. 1 entry:
+`docs/working-notes/decisions/chip-board-definitions.md`.
 
 ## Launch scope (product work for the public launch)
 

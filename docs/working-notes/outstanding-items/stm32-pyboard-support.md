@@ -19,7 +19,9 @@ fallback), and the console says "a guess" instead of "auto-detected" when no def
 2. **A clear "not supported" message.** On HELLO from a processor with no definition, say pin nodes won't work and
    link the docs' "Adding a processor", instead of compiling with guessed numeric pins (AGENTS.md, "make the
    failure legible").
-3. **Real support (bigger).** STM32 pins are named (`X1`, `A13`), not numbered, and the pyboard's LEDs are
-   `pyb.LED(n)`, not pins. The pin model (`checkPin`, definitions' integer `gpio`, `machine.Pin(<int>)` codegen,
-   `runtime.shared('pin', <int>, ...)`) assumes integers throughout. Needs a decision on named pins in definitions
-   and codegen before any STM32 processor definition is useful.
+3. **Named pins -- done 2026-10-14.** A pin id is now a number or a name (`PinId`): definitions, `checkPin`, the
+   SPI/I2C checks, codegen (`machine.Pin("X1", ...)`) and the shared `PinField.vue` all take named pins, and a
+   pyboard processor/board (`gpio: ["X1", ...]`) is describable. See
+   `decisions/chip-board-definitions.md` (2026-10-14). What's left for real support is item 1 (the `/flash`
+   filesystem root), a built-in `stm32f405`/pyboard definition, and the pyboard's onboard LEDs (`pyb.LED(n)`,
+   not pins) if a node should drive those.

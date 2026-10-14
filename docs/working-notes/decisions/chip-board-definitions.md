@@ -117,3 +117,22 @@ Status: detail file for `decisions.md`'s "Processor and board definitions" index
   and `usb` ("top" = the pin 1 end, or "bottom"). The page draws a USB row at that end and says so in words. Set
   on the four boards with a header: Pico, Pico W, Pico 2 top; LuatOS bottom, "down". The LOLIN S2 Mini, CYD and
   Freenove have no `header`, so there's nothing to show the USB end against.
+- **2026-10-14 — Named pins (Mike: "architect support for eg: PyBoard, implies gpio pins as strings as well as
+  ints").** A pin id is now a number or a name: `PinId = number | string`. A string in a pin list is a range
+  (`"4-7"`) only when it looks numeric -- those still expand to numbers, so every existing definition, flow and
+  built-in is unchanged -- and a named pin otherwise (`^[A-Za-z][A-Za-z0-9_-]*$`, the STM32 pyboard's `X1`/`A13`).
+  Named *ranges* aren't supported; list names one by one. The board/processor descriptor accepts names anywhere a
+  pin goes (`gpio`, `inputOnly`, `noPull`, `reserved`, `avoid`, `free`, `pins`, a bus's pins, SPI `fastPins`). In a
+  board's `header`, a string value that names one of the board's pins is that pin; any other string stays a label
+  (`"GND"`) -- so a named pin always wins over a same-spelled label. This is the interface change permission Mike
+  gave the same session (`interfaces/board-descriptor/` SPEC + schemas updated).
+  Codegen: `checkPin`/`checkOptionalPin` return a `PinId`; a named pin is emitted as a quoted Python literal
+  (`machine.Pin("X1", ...)`, `runtime.shared('pin', "X1", ...)`), and the pin-derived variable names
+  (`_gpio_*`, `_ebutton_*`, `_irq_*`, ...) hex-encode anything but `[A-Za-z0-9]` so two different names can't
+  collide on one variable. No `device-runtime/src` change: `runtime.shared`'s key was always arbitrary, so no
+  version bump. With no target, a named pin is allowed with the existing no-target warning (it can't be checked).
+  UI: one shared `editor/src/app/rete/PinField.vue` -- a number input on a numeric target, a dropdown of the
+  target's pins on a named-pin one, a text field with no target -- used by every pin-taking node and the I2C/touch
+  config forms (config-types.ts gains a `pin` field kind).
+  Scope: this is the mechanism. STM32/pyboard deploy still needs the separate filesystem-root fix
+  (`outstanding-items/stm32-pyboard-support.md`). Custom nodes don't get a `pin` property kind yet (later).
