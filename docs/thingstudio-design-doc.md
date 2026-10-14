@@ -270,8 +270,10 @@ version checks (major-mismatch gating, §9/§13), **per-node status dots** (`NOD
 disconnected/connecting/error — for `wifi_status` and MQTT nodes), **per-node errors** (`NODE_ERROR` red-
 highlighting the failing node), and the device's plain `print()` console output (including `debug` node lines).
 **Wire-level live value streaming (`VALUE_STREAM`) was not built** — Mike's call: not actually asked for; the
-near-term bar was the connection-status indicator, shipped 2026-09-10. `VALUE_STREAM` stays reserved on the
-wire (§13) with validators on both sides, and the `debug` node documents that emitting it later is additive.
+near-term bar was the connection-status indicator, shipped 2026-09-10. **2026-10-14: decided not to build it** —
+live value streaming targets real-time events and would slow flows, and Node-RED has no equivalent. `VALUE_STREAM`
+stays reserved on the wire (§13) with validators on both sides; the `debug` node documents that emitting it later is
+additive.
 
 ## 9. Security considerations
 

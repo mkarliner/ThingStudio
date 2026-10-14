@@ -51,6 +51,27 @@ def test_roundtrip_float():
         assert abs(decoded - v) < 1e-9, "float roundtrip mismatch: %r != %r" % (decoded, v)
 
 
+def test_float_uses_canonical_double_encoding():
+    # Canonical double: major 7, additional info 27 directly (0xfb), then 8
+    # big-endian IEEE-754 bytes -- exactly what cborg (the editor) emits. The
+    # old encoder emitted the non-canonical "f8 1b" simple-value form and could
+    # not decode this form, so the two ends could not exchange a float at all;
+    # the shared protocol conformance vectors caught it (2026-10-14).
+    assert cbor.encode(3.14) == b"\xfb\x40\x09\x1e\xb8\x51\xeb\x85\x1f"
+    assert cbor.decode(b"\xfb\x40\x09\x1e\xb8\x51\xeb\x85\x1f") == 3.14
+
+
+def test_decode_rejects_half_and_single_float():
+    # A float16 (info 25) and a float32 (info 26) -- valid CBOR, but this
+    # protocol only carries double (info 27); reject cleanly, don't misparse.
+    for data in (bytes([0xF9, 0x3C, 0x00]), bytes([0xFA, 0x3F, 0x80, 0x00, 0x00])):
+        try:
+            cbor.decode(data)
+            assert False, "expected CBORDecodeError on half/single float"
+        except CBORDecodeError:
+            pass
+
+
 def test_roundtrip_string():
     for v in ("", "hello", "unicode: éè", "x" * 300):
         _roundtrip(v)
@@ -185,6 +206,8 @@ minitest.run(
         test_roundtrip_uint,
         test_roundtrip_negint,
         test_roundtrip_float,
+        test_float_uses_canonical_double_encoding,
+        test_decode_rejects_half_and_single_float,
         test_roundtrip_string,
         test_roundtrip_bytes,
         test_roundtrip_map,

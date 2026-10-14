@@ -149,10 +149,10 @@
         "type": "VALUE_STREAM",
         "nodeId": "n3",
         "portId": "out0",
-        "payload": 42,
+        "payload": 3.14,
         "timestampMs": 1723000000123
       },
-      "frameHex": "003705a4666e6f64654964626e3366706f72744964646f757430677061796c6f6164182a6b74696d657374616d704d731b000001912acd8e7b"
+      "frameHex": "003e05a4666e6f64654964626e3366706f72744964646f757430677061796c6f6164fb40091eb851eb851f6b74696d657374616d704d731b000001912acd8e7b"
     },
     {
       "name": "VALUE_STREAM-8",

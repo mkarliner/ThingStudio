@@ -85,6 +85,20 @@ Status: detail file, split out of `learnings.md` on 2026-09-06 to keep that inde
   encoding) rather than at the one call site that happened to trigger it
   -- any future optional-and-sometimes-unknown field gets this for free.
   `decisions.md`'s 2026-09-05 entry.
+- **A hand-rolled CBOR encoder/decoder can be self-consistent yet
+  non-canonical, so it interoperates with nothing.** `cbor.py` encoded a
+  double as major 7 + additional-info 24 + a byte 27 (`f8 1b`) instead of
+  the canonical `fb` the editor's cborg emits, and its decoder read
+  additional-info 27 as an 8-byte integer length, so it rejected cborg's
+  form -- the two ends could not exchange a float in either direction. It
+  round-tripped with itself in `test_cbor.py`, which is exactly why the
+  unit tests missed it; found 2026-10-14 only when the shared protocol
+  conformance vectors put an editor-encoded float through the device
+  decoder. Fixed by emitting and accepting the canonical double (`fb` + 8
+  big-endian bytes). The lesson: a round-trip test on one implementation
+  proves nothing about interop -- cross-implementation conformance vectors
+  are what catch encoding drift. `decisions/subsystem-interfaces.md`
+  2026-10-14.
 - **A `device-runtime/src` change with no codegen-visible effect is safe to
   skip a version bump for; almost anything else isn't, and nothing enforced
   that judgment call automatically until 2026-09-05.** `register_trigger`

@@ -55,17 +55,19 @@ length smaller than the one-byte type field is nonsense and also drops the buffe
 The body is always a CBOR **map** with text-string keys. The device's codec is hand-rolled
 (`device-runtime/src/cbor.py`) and understands only these value types:
 
-| CBOR type | Example use |
-|---|---|
-| unsigned / negative integer | byte counts, versions, pins |
-| byte string | `DEPLOY.bytecode`, `DEP_PUT.data` |
-| text string | node ids, hostnames |
-| boolean | `ok`, `hard` |
-| map | `runtimeVersion`, nested config |
+| CBOR type | Encoding | Example use |
+|---|---|---|
+| unsigned / negative integer | shortest form | byte counts, versions, pins |
+| byte string | | `DEPLOY.bytecode`, `DEP_PUT.data` |
+| text string | UTF-8 | node ids, hostnames |
+| boolean | `f4`/`f5` | `ok`, `hard` |
+| double float | `fb` + 8 big-endian IEEE-754 bytes | a `number` port value |
+| map | string keys | `runtimeVersion`, the message body itself |
 
-Deliberately **not** supported: arrays, CBOR tags, indefinite-length items, `null`/`undefined`, and non-finite
-floats. There is one open caveat: the editor can encode a float but the device cannot decode one — see
-`../../docs/working-notes/outstanding-items/wire-float-support.md`.
+Deliberately **not** supported: arrays, CBOR tags, indefinite-length items, `null`/`undefined`, and half/single
+floats (`f9`/`fa`) — only the canonical double (`fb`) is carried. Both implementations must encode a double as
+`fb`; the device's `cbor.py` once emitted a non-canonical form and could not read `fb`, so the two ends could not
+exchange a float at all. Found and fixed 2026-10-14 by the conformance vectors (§7).
 
 **Optional fields are left out, never sent as null.** Both encoders drop a `null`/`None` before encoding, because
 the device decoder has no null. On decode, a missing key and an explicit null both mean "not provided".
@@ -135,13 +137,16 @@ renumbered.
 | `code` | string | required |
 | `message` | string | required |
 
-### VALUE_STREAM — ← device (reserved, not emitted yet)
+### VALUE_STREAM — ← device (reserved; decided not to build)
 | Field | Type | |
 |---|---|---|
 | `nodeId` | string | required |
 | `portId` | string | required |
 | `payload` | any CBOR in the §3 profile | required |
 | `timestampMs` | uint | required |
+
+Reserved, not emitted, and not planned: live value streaming targets real-time events and would slow flows (Mike,
+2026-10-14). The type id stays reserved so it costs nothing; see §7.
 
 ### NODE_ERROR — ← device
 | Field | Type | |

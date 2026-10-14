@@ -39,13 +39,16 @@ log's scope boundary, and its maintenance rule. Context: `../architecture-review
   `backend/`, `device-runtime/`, `interfaces/`); `.github/CODEOWNERS` routes every interface and conformance test to
   Mike; and a `backend` CI job now runs `pytest` (including the wire-protocol conformance vectors). The
   device-runtime conformance suite is still not in CI — `outstanding-items/enforce-interface-conformance-in-ci.md`.
-- **2026-10-14 — Conformance immediately found a real cross-implementation gap.** The editor's cborg codec can
-  encode a CBOR **float**; the device's hand-rolled `device-runtime/src/cbor.py` rejects major type 7 outright. So
-  a `VALUE_STREAM.payload` that is a float (every `number`-typed port value) would decrypt fine in the editor and
-  fail on the device. Latent only because `VALUE_STREAM` is reserved and not emitted yet, but it is a hard
-  constraint on the reserved live-value-streaming type and any future float-carrying field. Resolved for now by
-  keeping the vectors within the documented CBOR profile (ints/text/bytes/bool/maps); the gap itself is
-  open — see `outstanding-items/wire-float-support.md`.
+- **2026-10-14 — Conformance found a real cross-implementation bug, now fixed.** The editor's cborg encodes a CBOR
+  float as the canonical double (`fb` + 8 bytes); the device's hand-rolled `cbor.py` emitted the non-canonical
+  "f8 1b" simple-value form and its decoder read info 27 as an 8-byte integer length, so **neither side could decode
+  the other's float** — in either direction. Latent because the reserved `VALUE_STREAM` is the only "any CBOR"
+  field and nothing emits it. Fixed by making `cbor.py` encode and accept canonical doubles
+  (`device-runtime/src/cbor.py`), with a float vector restored to `interfaces/protocol/vectors/` and a pinned unit
+  test (`device-runtime/test/test_cbor.py`). No runtime version bump: no codegen emits a float today, so no
+  `decideDeploy`-visible change — but the fix is in a pushed file (`learnings/micropython-device-runtime.md`).
+  Separately, Mike's verdict on the feature the field exists for: **do not build `VALUE_STREAM`** — live value
+  streaming targets real-time events and would slow flows; Node-RED has no equivalent. It stays reserved.
 - **2026-10-14 — `AGENTS.md` gains two sections, and `CLAUDE.md` echoes them.** "Architecture first at subsystem
   interfaces: MVP-ready is not tester-ready" (a known architectural problem is fixed in the change that names it, not
   deferred into technical debt — the one-way-door rule applied to structure), and "Interface specs: read before you

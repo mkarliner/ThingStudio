@@ -93,7 +93,16 @@ def encode(value):
             return _encode_head(_MAJOR_UINT, value)
         return _encode_head(_MAJOR_NEGINT, -1 - value)
     if isinstance(value, float):
-        return _encode_head(_MAJOR_SIMPLE, _SIMPLE_DOUBLE) + struct.pack(">d", value)
+        # Canonical double: major 7, additional info 27 directly, then 8
+        # big-endian IEEE-754 bytes (RFC 8949 §3.3). Deliberately NOT routed
+        # through _encode_head: for major 7 the additional info is not a
+        # length prefix, so the length-style head would emit the non-canonical
+        # "f8 1b" simple-value form instead of "fb". Found 2026-10-14 by the
+        # shared protocol conformance vectors: the old encoder emitted "f8 1b",
+        # cborg (the editor) emits canonical "fb", and neither side could
+        # decode the other's float -- latent only because the reserved
+        # VALUE_STREAM is the one "any CBOR" field and nothing emits it.
+        return bytes([(_MAJOR_SIMPLE << 5) | _SIMPLE_DOUBLE]) + struct.pack(">d", value)
     if isinstance(value, str):
         data = value.encode("utf-8")
         return _encode_head(_MAJOR_TEXT, len(data)) + data
@@ -129,6 +138,19 @@ def _decode_head(data, offset):
     major = first >> 5
     info = first & 0x1F
     offset += 1
+    # Major 7 is the one major type whose additional-info value is not a
+    # length prefix: 25/26/27 mean a half/single/double float body follows
+    # (read by the caller), and 24 means a 1-byte simple value follows.
+    # Handled before the generic "info is a length" path so a canonical `fb`
+    # double (info 27) is not misread as an 8-byte integer length.
+    if major == _MAJOR_SIMPLE:
+        if info == 24:
+            _need(data, offset, 1, "a 1-byte simple value")
+            return major, data[offset], offset + 1
+        if info >= 28:
+            # 28-30 reserved, 31 indefinite-length -- never emitted or accepted.
+            raise CBORDecodeError("unsupported CBOR additional-info value %d (indefinite-length/reserved items not supported)" % (info,))
+        return major, info, offset
     if info < 24:
         return major, info, offset
     if info == 24:
@@ -191,10 +213,10 @@ def _decode_value(data, offset):
             _need(data, offset, 8, "a double-precision float body")
             (v,) = struct.unpack(">d", data[offset : offset + 8])
             return v, offset + 8
-        # null (22), undefined (23), half/single float (25/26), other
-        # simple values (24, 28-30) -- none of this protocol's message
-        # shapes ever use them (messages.py's optional fields are omitted
-        # from the map entirely, never encoded as CBOR null/undefined).
+        # null (22), undefined (23), half/single float (25/26), other simple
+        # values -- none of this protocol's message shapes ever use them
+        # (messages.py's optional fields are omitted from the map entirely,
+        # never encoded as CBOR null/undefined).
         raise CBORDecodeError("unsupported CBOR simple/float value (major 7, additional info %d)" % (length,))
 
     # major 4 (array) and 6 (tag) -- never used by this protocol.
