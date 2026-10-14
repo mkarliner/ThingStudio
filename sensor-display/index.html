@@ -1726,34 +1726,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../nodes/clock/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    clock
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../nodes/debug/" class="md-nav__link">
         
   
@@ -1875,6 +1847,34 @@
     
   
     wifi gate
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ntp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ntp
   
 
     
@@ -3225,15 +3225,15 @@ looks different from a steady room.</p>
 <a href="../nodes/gui/#trend">Trend</a>.</p>
 <h2 id="4-add-the-clock">4. Add the clock</h2>
 <ol>
-<li>Drag a <strong>timer</strong> with <strong>interval (ms)</strong> <code>1000</code>, and a <strong>clock</strong> node. Wire the timer to the clock.</li>
-<li>In the clock, set <strong>UTC offset (hours)</strong> for your zone's standard time. Set <strong>daylight saving</strong> to <strong>UK / EU:
-   automatic</strong> if that's where you are, otherwise <strong>none</strong>. See <a href="../nodes/clock/">clock</a>.</li>
+<li>Drag a <strong>timer</strong> with <strong>interval (ms)</strong> <code>1000</code>, and two <strong>ntp</strong> nodes. Wire the timer to both.</li>
+<li>Set one ntp node's <strong>format</strong> to <code>time</code> and the other's to <code>date</code>. In both, set <strong>UTC offset (hours)</strong> for your
+   zone's standard time, and <strong>daylight saving</strong> to <strong>UK / EU: automatic</strong> if that's where you are, otherwise
+   <strong>none</strong>. See <a href="../nodes/ntp/">ntp</a>.</li>
 <li>Add two <strong>gui label</strong> nodes, one for the time with <strong>room for (characters)</strong> <code>5</code>, and one for the date with
-   <code>10</code>. Wire the clock's first output to the time and its second to the date.</li>
+   <code>10</code>. Wire the <code>time</code> ntp node to the first and the <code>date</code> one to the second.</li>
 <li>On a new page, give the time label the font <code>font_seg764</code> (seven-segment digits) and the date <code>font_body24</code>.</li>
 </ol>
-<p>The clock node doesn't join WiFi itself. In this flow the mqtt publish nodes do. Without them, add a
-<a href="../nodes/wifi-status/">wifi status</a> node. Until the board has the time, the clock shows <code>--</code>.</p>
+<p>Until the board has the time, the labels show <code>--</code>.</p>
 <h2 id="5-turn-the-pages">5. Turn the pages</h2>
 <p>Add a <strong>gui button</strong> with <strong>mode</strong> <code>navigate</code> to each page, so you can turn the pages by touch. See
 <a href="../nodes/gui/#buttons">Buttons</a>.</p>
@@ -3253,8 +3253,8 @@ pass, and the clock starts once the board has the time.</p>
   panel's own size, <code>320</code> and <code>480</code>, even when the picture is turned. Deploy checks this and says so.</li>
 <li><strong>Touches land in the wrong place:</strong> see <a href="../nodes/touch-panel/">Touch panels</a>.</li>
 <li><strong>No readings:</strong> check the wiring and the address (<code>0x76</code> or <code>0x77</code>), and test with a debug node.</li>
-<li><strong>The clock stays at <code>--</code>:</strong> the board has no WiFi, or can't reach the NTP server. It tries again every 30
-  seconds.</li>
+<li><strong>The clock stays at <code>--</code>:</strong> the ntp node's status says why: no WiFi yet, or the NTP server can't be reached.
+  It tries again every 30 seconds.</li>
 <li><strong>Compile says a node is "disconnected from any source":</strong> a widget has nothing wired to it. Wire it, or reload
   the editor if the wires are there.</li>
 </ul>

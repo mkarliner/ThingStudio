@@ -137,10 +137,6 @@
          <lastmod>2026-10-14</lastmod>
     </url>
     <url>
-         <loc>https://docs.thingstudio.net/nodes/clock/</loc>
-         <lastmod>2026-10-14</lastmod>
-    </url>
-    <url>
          <loc>https://docs.thingstudio.net/nodes/debug/</loc>
          <lastmod>2026-10-14</lastmod>
     </url>
@@ -226,6 +222,10 @@
     </url>
     <url>
          <loc>https://docs.thingstudio.net/nodes/neopixel/</loc>
+         <lastmod>2026-10-14</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.thingstudio.net/nodes/ntp/</loc>
          <lastmod>2026-10-14</lastmod>
     </url>
     <url>

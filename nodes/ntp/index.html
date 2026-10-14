@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://docs.thingstudio.net/nodes/clock/">
+        <link rel="canonical" href="https://docs.thingstudio.net/nodes/ntp/">
       
       
-        <link rel="prev" href="../journal/">
+        <link rel="prev" href="../wifi-gate/">
       
       
-        <link rel="next" href="../debug/">
+        <link rel="next" href="../udp-receive/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>clock - Thingstudio</title>
+        <title>ntp - Thingstudio</title>
       
     
     
@@ -72,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#clock" class="md-skip">
+        <a href="#ntp" class="md-skip">
           Skip to content
         </a>
       
@@ -108,7 +108,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              clock
+              ntp
             
           </span>
         </div>
@@ -1332,8 +1332,6 @@
                 
   
   
-    
-  
   
   
     
@@ -1343,11 +1341,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_2" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_2" >
         
           
           <label class="md-nav__link" for="__nav_8_2" id="__nav_8_2_label" tabindex="0">
@@ -1368,7 +1366,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_2_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_2_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_8_2">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1579,125 +1577,6 @@
                 
   
   
-    
-  
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    clock
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    clock
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#wiring" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Wiring
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#properties" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Properties
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#behavior" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Behavior
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#seven-segment-digits" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Seven-segment digits
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
   
   
     <li class="md-nav__item">
@@ -1734,6 +1613,8 @@
                 
   
   
+    
+  
   
   
     
@@ -1743,11 +1624,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_3" checked>
         
           
           <label class="md-nav__link" for="__nav_8_3" id="__nav_8_3_label" tabindex="0">
@@ -1768,7 +1649,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_8_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1830,6 +1711,125 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ntp
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ntp
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Properties
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -2920,10 +2920,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#wiring" class="md-nav__link">
+  <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Wiring
+        Properties
       
     </span>
   </a>
@@ -2931,10 +2931,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#properties" class="md-nav__link">
+  <a href="#wiring" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Properties
+        Wiring
       
     </span>
   </a>
@@ -2953,10 +2953,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#seven-segment-digits" class="md-nav__link">
+  <a href="#errors" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Seven-segment digits
+        Errors
       
     </span>
   </a>
@@ -2983,37 +2983,76 @@
   
 
 
-<h1 id="clock">clock</h1>
-<p>The time and date, from the internet, as text for a display. Wire a <a href="../timer/">timer</a> in, and the time and date out to
-two <a href="../gui/">labels</a> to make a clock page.</p>
-<h2 id="wiring">Wiring</h2>
-<ul>
-<li><strong>Input</strong> — any message; each one is a look at the clock. Use a timer of 1 second, or longer if you show no
-  seconds.</li>
-<li><strong>Output 1, time</strong> — <code>payload</code> such as <code>14:05</code> (or <code>14:05:09</code>, or <code>2:05</code> in 12-hour). Sent only when the text changes.</li>
-<li><strong>Output 2, date</strong> — <code>payload</code> such as <code>Sat 10 Oct</code>. Sent when the day changes.</li>
-</ul>
-<p>Nothing is sent until the first sync, so a label shows <code>--</code> rather than a wrong time.</p>
+<h1 id="ntp">ntp</h1>
+<p>Sets the board's clock from the internet and sends the time, as text for a display or as Unix time.</p>
 <h2 id="properties">Properties</h2>
 <ul>
 <li><strong>NTP server</strong> — default <code>pool.ntp.org</code>.</li>
 <li><strong>UTC offset (hours)</strong> — for standard time in your zone, for example <code>1</code> for central Europe or <code>5.5</code> for India.</li>
 <li><strong>daylight saving</strong> — <strong>UK / EU: automatic</strong> adds an hour from 01:00 UTC on the last Sunday of March to 01:00 UTC
-  on the last Sunday of October. <strong>none</strong> leaves the offset alone. Other countries' rules are not built in: set the
-  offset yourself.</li>
-<li><strong>12-hour</strong>, <strong>show seconds</strong>, <strong>blink the colon</strong> — the colon is steady unless you turn blinking on.</li>
+  on the last Sunday of October. <strong>none</strong> leaves the offset alone. For other countries' rules, set the offset
+  yourself.</li>
+<li><strong>format</strong> — what goes in <code>payload</code>. Each message also carries every format as a field of the same name:</li>
 </ul>
+<table>
+<thead>
+<tr>
+<th>format</th>
+<th><code>payload</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>time</code></td>
+<td><code>14:05</code></td>
+</tr>
+<tr>
+<td><code>time_seconds</code></td>
+<td><code>14:05:09</code></td>
+</tr>
+<tr>
+<td><code>time_12h</code></td>
+<td><code>2:05 pm</code></td>
+</tr>
+<tr>
+<td><code>date</code></td>
+<td><code>Wed 14 Oct</code></td>
+</tr>
+<tr>
+<td><code>date_iso</code></td>
+<td><code>2026-10-14</code></td>
+</tr>
+<tr>
+<td><code>iso</code></td>
+<td><code>2026-10-14T14:05:09+01:00</code></td>
+</tr>
+<tr>
+<td><code>unix</code></td>
+<td><code>1791983109</code>, an int: seconds since 1970 UTC, whatever the offset</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>WiFi</strong> — the flow's WiFi network, shared by every WiFi node.</li>
+</ul>
+<h2 id="wiring">Wiring</h2>
+<ul>
+<li><strong>Input</strong> — any message asks for the time now. Wire a <a href="../timer/">timer</a> in for a clock that ticks: 1 second with
+  seconds shown, otherwise 1 to 5 seconds.</li>
+<li><strong>Output</strong> — one message after each sync, and one for each input once the board has the time. Nothing is sent
+  before the first sync, so a <a href="../gui/">label</a> shows <code>--</code> rather than a wrong time.</li>
+</ul>
+<p>To show the time and the date on one screen, use two ntp nodes, one with format <code>time</code> and one with <code>date</code>.</p>
 <h2 id="behavior">Behavior</h2>
-<p>The board asks the NTP server once WiFi is up, tries again every 30 seconds until it works, and then every hour. The
-clock node doesn't join WiFi itself. The flow needs a node that does, such as <a href="../wifi-status/">wifi status</a> or any
-MQTT, HTTP or UDP node. Between syncs the board's own clock keeps time. The
-request takes up to a second and holds up the flow while it runs. A failure while WiFi is up shows on the node
-once. Boards whose firmware has no <code>ntptime</code> module report that on the node instead of failing at start.</p>
-<h2 id="seven-segment-digits">Seven-segment digits</h2>
-<p>The <code>seg7</code> fonts (<code>font_seg748</code>, <code>font_seg764</code>, <code>font_seg796</code>) have only <code>0-9 : . -</code> and a space. On a 320-pixel-wide
-screen <code>font_seg764</code> fits <code>14:05</code> (221 px) and <code>font_seg748</code> fits <code>14:05:09</code> (254 px). <code>font_seg796</code> is for wider
-screens. The font is DSEG by Keshikan (SIL Open Font License 1.1); see
-<a href="https://github.com/mkarliner/ThingStudio/blob/main/docs/third-party-licenses.md">third-party licenses</a>.</p>
+<p>The ntp node joins the flow's WiFi itself. Once WiFi is up it asks the NTP server for the time, tries again every 30
+seconds until it works, and then every hour. Between syncs the board's own clock keeps time. The request takes up
+to a second and holds up the flow while it runs.</p>
+<p>The board's clock is kept in UTC. The offset and summer time are added to each message, so the hour changes on
+time.</p>
+<h2 id="errors">Errors</h2>
+<p>The node's status shows <strong>waiting for WiFi</strong>, <strong>synced</strong>, or <strong>NTP from <em>server</em> failed</strong>. The first failure in a
+row also goes to the console. A board whose MicroPython has no <code>ntptime</code> module says so instead of failing at
+start. A flow with no WiFi network doesn't compile.</p>
 
 
 

@@ -1096,15 +1096,15 @@ Each bar is the average of its row, and the thin line runs from the row's min to
 
 ## 4. Add the clock
 
-1. Drag a **timer** with **interval (ms)** `1000`, and a **clock** node. Wire the timer to the clock.
-2. In the clock, set **UTC offset (hours)** for your zone's standard time. Set **daylight saving** to **UK / EU:
-   automatic** if that's where you are, otherwise **none**. See [clock](nodes/clock.md).
+1. Drag a **timer** with **interval (ms)** `1000`, and two **ntp** nodes. Wire the timer to both.
+2. Set one ntp node's **format** to `time` and the other's to `date`. In both, set **UTC offset (hours)** for your
+   zone's standard time, and **daylight saving** to **UK / EU: automatic** if that's where you are, otherwise
+   **none**. See [ntp](nodes/ntp.md).
 3. Add two **gui label** nodes, one for the time with **room for (characters)** `5`, and one for the date with
-   `10`. Wire the clock's first output to the time and its second to the date.
+   `10`. Wire the `time` ntp node to the first and the `date` one to the second.
 4. On a new page, give the time label the font `font_seg764` (seven-segment digits) and the date `font_body24`.
 
-The clock node doesn't join WiFi itself. In this flow the mqtt publish nodes do. Without them, add a
-[wifi status](nodes/wifi-status.md) node. Until the board has the time, the clock shows `--`.
+Until the board has the time, the labels show `--`.
 
 ## 5. Turn the pages
 
@@ -1133,8 +1133,8 @@ Each symptom below has its own fix:
   panel's own size, `320` and `480`, even when the picture is turned. Deploy checks this and says so.
 - **Touches land in the wrong place:** see [Touch panels](nodes/touch-panel.md).
 - **No readings:** check the wiring and the address (`0x76` or `0x77`), and test with a debug node.
-- **The clock stays at `--`:** the board has no WiFi, or can't reach the NTP server. It tries again every 30
-  seconds.
+- **The clock stays at `--`:** the ntp node's status says why: no WiFi yet, or the NTP server can't be reached.
+  It tries again every 30 seconds.
 - **Compile says a node is "disconnected from any source":** a widget has nothing wired to it. Wire it, or reload
   the editor if the wires are there.
 
@@ -1809,7 +1809,7 @@ See [flows, nodes and messages](../background/flows-and-nodes.md) for how they f
 | change a message, or decide where it goes | [function](function.md) |
 | send only changes, or limit the rate | [filter](filter.md) |
 | keep a number's history and show its trend | [journal](journal.md) |
-| show the time of day | [clock](clock.md) |
+| show the time of day | [ntp](ntp.md) |
 | wait before passing a message on | [delay](delay.md) |
 | see what's in a message | [debug](debug.md) |
 | send or receive MQTT messages | [mqtt publish](mqtt-publish.md), [mqtt subscribe](mqtt-subscribe.md) |
@@ -1832,7 +1832,6 @@ Nodes that don't need a network or hardware:
 | [delay](delay.md) | transform | Passes each message on after a set wait. |
 | [filter](filter.md) | transform | Passes a message on only if it changed enough, or enough time has passed. |
 | [journal](journal.md) | transform | Keeps the recent history of a number as average, min and max rows, for a trend. |
-| [clock](clock.md) | transform | The time and date from NTP, as text for a display. |
 | [debug](debug.md) | sink | Prints a message to the editor's console. |
 
 ## Network
@@ -1843,6 +1842,7 @@ These nodes share the flow's WiFi network. A flow has one, set on any WiFi node'
 | --- | --- | --- |
 | [wifi status](wifi-status.md) | source | Reports when the WiFi connection comes up or goes down. |
 | [wifi gate](wifi-gate.md) | transform | Passes a message on only while WiFi is connected. |
+| [ntp](ntp.md) | in and out | Sets the board's clock from the internet and sends the time. |
 | [mqtt subscribe](mqtt-subscribe.md) | source | Sends a message for each MQTT message on a topic. |
 | [mqtt publish](mqtt-publish.md) | sink | Publishes a message's payload to an MQTT topic. |
 | [http request](http-request.md) | transform | Makes an HTTP request per message and passes on the response. |
@@ -2135,49 +2135,6 @@ A sensor reads every 5 seconds.
 
 ---
 
-Source: https://docs.thingstudio.net/nodes/clock/
-
-# clock
-
-The time and date, from the internet, as text for a display. Wire a [timer](timer.md) in, and the time and date out to
-two [labels](gui.md) to make a clock page.
-
-## Wiring
-
-- **Input** — any message; each one is a look at the clock. Use a timer of 1 second, or longer if you show no
-  seconds.
-- **Output 1, time** — `payload` such as `14:05` (or `14:05:09`, or `2:05` in 12-hour). Sent only when the text changes.
-- **Output 2, date** — `payload` such as `Sat 10 Oct`. Sent when the day changes.
-
-Nothing is sent until the first sync, so a label shows `--` rather than a wrong time.
-
-## Properties
-
-- **NTP server** — default `pool.ntp.org`.
-- **UTC offset (hours)** — for standard time in your zone, for example `1` for central Europe or `5.5` for India.
-- **daylight saving** — **UK / EU: automatic** adds an hour from 01:00 UTC on the last Sunday of March to 01:00 UTC
-  on the last Sunday of October. **none** leaves the offset alone. Other countries' rules are not built in: set the
-  offset yourself.
-- **12-hour**, **show seconds**, **blink the colon** — the colon is steady unless you turn blinking on.
-
-## Behavior
-
-The board asks the NTP server once WiFi is up, tries again every 30 seconds until it works, and then every hour. The
-clock node doesn't join WiFi itself. The flow needs a node that does, such as [wifi status](wifi-status.md) or any
-MQTT, HTTP or UDP node. Between syncs the board's own clock keeps time. The
-request takes up to a second and holds up the flow while it runs. A failure while WiFi is up shows on the node
-once. Boards whose firmware has no `ntptime` module report that on the node instead of failing at start.
-
-## Seven-segment digits
-
-The `seg7` fonts (`font_seg748`, `font_seg764`, `font_seg796`) have only `0-9 : . -` and a space. On a 320-pixel-wide
-screen `font_seg764` fits `14:05` (221 px) and `font_seg748` fits `14:05:09` (254 px). `font_seg796` is for wider
-screens. The font is DSEG by Keshikan (SIL Open Font License 1.1); see
-[third-party licenses](https://github.com/mkarliner/ThingStudio/blob/main/docs/third-party-licenses.md).
-
-
----
-
 Source: https://docs.thingstudio.net/nodes/debug/
 
 # debug
@@ -2246,6 +2203,60 @@ This checks the WiFi station's live link state at the moment each message arrive
 A GPIO, timer or sensor source fires on its own schedule with no awareness of whether WiFi is up. Put a `wifi gate` between that source and whatever sends the result over the network: messages that arrive while the link is down are dropped instead of failing downstream (or queuing for a retry a node like `http request` might otherwise attempt).
 
 This only checks the WiFi link itself — not whether a specific MQTT broker or HTTP server is reachable beyond that. `mqtt publish`, `mqtt subscribe` and `http request` already handle their own connection lifecycle on top of a working WiFi link.
+
+
+---
+
+Source: https://docs.thingstudio.net/nodes/ntp/
+
+# ntp
+
+Sets the board's clock from the internet and sends the time, as text for a display or as Unix time.
+
+## Properties
+
+- **NTP server** — default `pool.ntp.org`.
+- **UTC offset (hours)** — for standard time in your zone, for example `1` for central Europe or `5.5` for India.
+- **daylight saving** — **UK / EU: automatic** adds an hour from 01:00 UTC on the last Sunday of March to 01:00 UTC
+  on the last Sunday of October. **none** leaves the offset alone. For other countries' rules, set the offset
+  yourself.
+- **format** — what goes in `payload`. Each message also carries every format as a field of the same name:
+
+| format | `payload` |
+| --- | --- |
+| `time` | `14:05` |
+| `time_seconds` | `14:05:09` |
+| `time_12h` | `2:05 pm` |
+| `date` | `Wed 14 Oct` |
+| `date_iso` | `2026-10-14` |
+| `iso` | `2026-10-14T14:05:09+01:00` |
+| `unix` | `1791983109`, an int: seconds since 1970 UTC, whatever the offset |
+
+- **WiFi** — the flow's WiFi network, shared by every WiFi node.
+
+## Wiring
+
+- **Input** — any message asks for the time now. Wire a [timer](timer.md) in for a clock that ticks: 1 second with
+  seconds shown, otherwise 1 to 5 seconds.
+- **Output** — one message after each sync, and one for each input once the board has the time. Nothing is sent
+  before the first sync, so a [label](gui.md) shows `--` rather than a wrong time.
+
+To show the time and the date on one screen, use two ntp nodes, one with format `time` and one with `date`.
+
+## Behavior
+
+The ntp node joins the flow's WiFi itself. Once WiFi is up it asks the NTP server for the time, tries again every 30
+seconds until it works, and then every hour. Between syncs the board's own clock keeps time. The request takes up
+to a second and holds up the flow while it runs.
+
+The board's clock is kept in UTC. The offset and summer time are added to each message, so the hour changes on
+time.
+
+## Errors
+
+The node's status shows **waiting for WiFi**, **synced**, or **NTP from *server* failed**. The first failure in a
+row also goes to the console. A board whose MicroPython has no `ntptime` module says so instead of failing at
+start. A flow with no WiFi network doesn't compile.
 
 
 ---
@@ -3113,6 +3124,14 @@ Set the gui screen's frame format to `rgb565` for full color, with the same form
 gray for stale values, and a green accent for bars and lights that are on. Grays use less memory and send faster,
 so use them on boards with little RAM.
 
+## Seven-segment digits
+
+The `seg7` fonts (`font_seg748`, `font_seg764`, `font_seg796`) have only `0-9 : . -` and a space, so they suit the
+`time` and `time_seconds` formats of the [ntp](ntp.md) node. On a 320-pixel-wide screen `font_seg764` fits `14:05`
+(221 px) and `font_seg748` fits `14:05:09` (254 px). `font_seg796` is for wider screens. The font is DSEG by
+Keshikan (SIL Open Font License 1.1); see
+[third-party licenses](https://github.com/mkarliner/ThingStudio/blob/main/docs/third-party-licenses.md).
+
 ## Rotating the screen
 
 On the display node, set **orientation** to 0, 90, 180 or 270 (the picture turned clockwise). It is one setting
@@ -3587,7 +3606,7 @@ A complete flow, a blinking LED on a LOLIN S2 Mini (its LED is pin 15):
 | drive a pin | `gpio_out` (on/off), `pwm_out` |
 | change or route a message | `function`; `filter` to pass only changes; `delay` |
 | keep a number's history | `journal`, shown by a `gui_trend` |
-| show the time | `clock` |
+| show the time | `ntp` (two for time and date: `format` `time` and `date`) |
 | talk MQTT / HTTP / UDP | `mqtt_publish`, `mqtt_subscribe`, `http_request`, `http_in` and `http_response`, `udp_send`, `udp_receive` |
 | draw on a screen | `gui_screen` with `gui_*` widgets, wired to `display_spi` |
 
@@ -3866,20 +3885,6 @@ checked when the flow is compiled, and the error says what is allowed. See [Chec
 Ports are numbered from 0 in a flow file's `edges`: `[fromNodeId, outputNumber, toNodeId, inputNumber]`, in the order listed here.
 
 ## general
-
-### clock
-
-Type `thingstudio/clock`, kind transform, palette group general.
-
-- Inputs: msg (any)
-- Outputs: time (any), date (any)
-- Properties (name, type, default):
-    - `server`, string, default `"pool.ntp.org"`
-    - `utcOffset`, number, default `0` — hours from UTC for standard time, -12 to 14; the daylight-saving hour is added by `dst`
-    - `dst`, string, default `"eu"` — eu adds the UK/EU summer hour automatically; none adds nothing
-    - `hour12`, boolean, default `false`
-    - `seconds`, boolean, default `false`
-    - `blink`, boolean, default `false`
 
 ### debug
 
@@ -4318,6 +4323,18 @@ Type `thingstudio/mqtt_subscribe`, kind source, palette group network.
     - `qos`, number, default `0`
     - `brokerConfigId`, string, default `""`, the id of a `thingstudio/config/mqtt-broker` config
 
+### ntp
+
+Type `thingstudio/ntp`, kind sink, palette group network.
+
+- Inputs: msg (any)
+- Outputs: msg (any)
+- Properties (name, type, default):
+    - `server`, string, default `"pool.ntp.org"`
+    - `utcOffset`, number, default `0` — hours from UTC for standard time, -12 to 14 (5.5 for India); the summer hour is added by `dst`
+    - `dst`, string, default `"eu"` — eu adds the UK/EU summer hour automatically; none adds nothing
+    - `format`, string, default `"time"` — what goes in payload: unix (int), time (14:05), time_seconds, time_12h (2:05 pm), date (Wed 14 Oct), date_iso, iso. Every message also carries all seven as fields of those names
+
 ### udp receive
 
 Type `thingstudio/udp_receive`, kind source, palette group network.
@@ -4690,8 +4707,8 @@ from uncommitted changes.
 
 ## My clock shows `--` and never the time. Why?
 
-The clock hasn't synced yet. It needs WiFi, and the clock node doesn't join WiFi itself. Add a node that does, such
-as [wifi status](nodes/wifi-status.md), and set its WiFi. See [clock](nodes/clock.md#behavior).
+The ntp node hasn't synced yet. Its status says why: **waiting for WiFi**, or **NTP from *server* failed** when the
+board can't reach the server. It tries again every 30 seconds. See [ntp](nodes/ntp.md#errors).
 
 ## My gui toggle shows `--`. Why?
 

@@ -1580,34 +1580,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../clock/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    clock
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../debug/" class="md-nav__link">
         
   
@@ -1729,6 +1701,34 @@
     
   
     wifi gate
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ntp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ntp
   
 
     
@@ -2551,6 +2551,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#seven-segment-digits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Seven-segment digits
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#rotating-the-screen" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3029,6 +3040,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#seven-segment-digits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Seven-segment digits
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#rotating-the-screen" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3152,6 +3174,12 @@ reports <code>ON</code> and <code>OFF</code> as text, so for a Tasmota plug set 
 <p>Set the gui screen's frame format to <code>rgb565</code> for full color, with the same format on the display. White text,
 gray for stale values, and a green accent for bars and lights that are on. Grays use less memory and send faster,
 so use them on boards with little RAM.</p>
+<h2 id="seven-segment-digits">Seven-segment digits</h2>
+<p>The <code>seg7</code> fonts (<code>font_seg748</code>, <code>font_seg764</code>, <code>font_seg796</code>) have only <code>0-9 : . -</code> and a space, so they suit the
+<code>time</code> and <code>time_seconds</code> formats of the <a href="../ntp/">ntp</a> node. On a 320-pixel-wide screen <code>font_seg764</code> fits <code>14:05</code>
+(221 px) and <code>font_seg748</code> fits <code>14:05:09</code> (254 px). <code>font_seg796</code> is for wider screens. The font is DSEG by
+Keshikan (SIL Open Font License 1.1); see
+<a href="https://github.com/mkarliner/ThingStudio/blob/main/docs/third-party-licenses.md">third-party licenses</a>.</p>
 <h2 id="rotating-the-screen">Rotating the screen</h2>
 <p>On the display node, set <strong>orientation</strong> to 0, 90, 180 or 270 (the picture turned clockwise). It is one setting
 on each display, so a display can't have two. Set the display's width and height to the panel's own size, and its

@@ -1576,34 +1576,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../nodes/clock/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    clock
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../nodes/debug/" class="md-nav__link">
         
   
@@ -1725,6 +1697,34 @@
     
   
     wifi gate
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ntp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ntp
   
 
     
@@ -3262,8 +3262,8 @@ Connect and deploy again.</p>
 <p>It's next to <strong>Thingstudio</strong> in the toolbar, and in <strong>Help → About</strong>. A <code>+</code> after it means you built the editor
 from uncommitted changes.</p>
 <h2 id="my-clock-shows-and-never-the-time-why">My clock shows <code>--</code> and never the time. Why?</h2>
-<p>The clock hasn't synced yet. It needs WiFi, and the clock node doesn't join WiFi itself. Add a node that does, such
-as <a href="../nodes/wifi-status/">wifi status</a>, and set its WiFi. See <a href="../nodes/clock/#behavior">clock</a>.</p>
+<p>The ntp node hasn't synced yet. Its status says why: <strong>waiting for WiFi</strong>, or <strong>NTP from <em>server</em> failed</strong> when the
+board can't reach the server. It tries again every 30 seconds. See <a href="../nodes/ntp/#errors">ntp</a>.</p>
 <h2 id="my-gui-toggle-shows-why">My gui toggle shows <code>--</code>. Why?</h2>
 <p>A toggle with its input wired shows <code>--</code> until the input sends a value it recognises. It matches the input against
 its <em>on sends</em> and <em>off sends</em> values, <code>true</code> and <code>false</code> unless you changed them. A Tasmota plug reports <code>ON</code> and

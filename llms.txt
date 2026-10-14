@@ -59,13 +59,13 @@
 - [delay](https://docs.thingstudio.net/nodes/delay/): Passes a message through unchanged, after waiting a configured interval.
 - [filter](https://docs.thingstudio.net/nodes/filter/): Passes a message on only when it's worth sending, and drops the rest.
 - [journal](https://docs.thingstudio.net/nodes/journal/): Keeps the recent history of a number, as rows of average, minimum and maximum, the way RRDtool and Cacti do.
-- [clock](https://docs.thingstudio.net/nodes/clock/): The time and date, from the internet, as text for a display.
 - [debug](https://docs.thingstudio.net/nodes/debug/): Prints a message's payload to the device's console — the way to see what's actually flowing through a wire.
 
 ## Network
 
 - [wifi status](https://docs.thingstudio.net/nodes/wifi-status/): Reports the board's WiFi connection state.
 - [wifi gate](https://docs.thingstudio.net/nodes/wifi-gate/): Passes a message through unchanged if the WiFi station is currently connected, or drops it if it isn't.
+- [ntp](https://docs.thingstudio.net/nodes/ntp/): Sets the board's clock from the internet and sends the time, as text for a display or as Unix time.
 - [udp receive](https://docs.thingstudio.net/nodes/udp-receive/): Listens on a UDP port and emits one message per datagram received.
 - [mqtt subscribe](https://docs.thingstudio.net/nodes/mqtt-subscribe/): Emits one message per incoming message on a subscribed MQTT topic.
 - [http request](https://docs.thingstudio.net/nodes/http-request/): Makes one HTTP request per incoming message and returns the response.

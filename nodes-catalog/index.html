@@ -1578,34 +1578,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../nodes/clock/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    clock
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../nodes/debug/" class="md-nav__link">
         
   
@@ -1727,6 +1699,34 @@
     
   
     wifi gate
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nodes/ntp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ntp
   
 
     
@@ -2729,17 +2729,6 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#clock" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        clock
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#debug" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3169,6 +3158,17 @@
     <span class="md-ellipsis">
       
         mqtt subscribe
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ntp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ntp
       
     </span>
   </a>
@@ -3466,17 +3466,6 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#clock" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        clock
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#debug" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3913,6 +3902,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#ntp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ntp
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#udp-receive" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4061,21 +4061,6 @@ the editor gives a new node. A property a flow file leaves out gets this default
 checked when the flow is compiled, and the error says what is allowed. See <a href="../check-a-flow/">Check a flow without the editor</a>.</p>
 <p>Ports are numbered from 0 in a flow file's <code>edges</code>: <code>[fromNodeId, outputNumber, toNodeId, inputNumber]</code>, in the order listed here.</p>
 <h2 id="general">general</h2>
-<h3 id="clock">clock</h3>
-<p>Type <code>thingstudio/clock</code>, kind transform, palette group general.</p>
-<ul>
-<li>Inputs: msg (any)</li>
-<li>Outputs: time (any), date (any)</li>
-<li>Properties (name, type, default):<ul>
-<li><code>server</code>, string, default <code>"pool.ntp.org"</code></li>
-<li><code>utcOffset</code>, number, default <code>0</code> — hours from UTC for standard time, -12 to 14; the daylight-saving hour is added by <code>dst</code></li>
-<li><code>dst</code>, string, default <code>"eu"</code> — eu adds the UK/EU summer hour automatically; none adds nothing</li>
-<li><code>hour12</code>, boolean, default <code>false</code></li>
-<li><code>seconds</code>, boolean, default <code>false</code></li>
-<li><code>blink</code>, boolean, default <code>false</code></li>
-</ul>
-</li>
-</ul>
 <h3 id="debug">debug</h3>
 <p>Type <code>thingstudio/debug</code>, kind sink, palette group general.</p>
 <ul>
@@ -4540,6 +4525,19 @@ checked when the flow is compiled, and the error says what is allowed. See <a hr
 <li><code>topic</code>, string, default <code>""</code></li>
 <li><code>qos</code>, number, default <code>0</code></li>
 <li><code>brokerConfigId</code>, string, default <code>""</code>, the id of a <code>thingstudio/config/mqtt-broker</code> config</li>
+</ul>
+</li>
+</ul>
+<h3 id="ntp">ntp</h3>
+<p>Type <code>thingstudio/ntp</code>, kind sink, palette group network.</p>
+<ul>
+<li>Inputs: msg (any)</li>
+<li>Outputs: msg (any)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>server</code>, string, default <code>"pool.ntp.org"</code></li>
+<li><code>utcOffset</code>, number, default <code>0</code> — hours from UTC for standard time, -12 to 14 (5.5 for India); the summer hour is added by <code>dst</code></li>
+<li><code>dst</code>, string, default <code>"eu"</code> — eu adds the UK/EU summer hour automatically; none adds nothing</li>
+<li><code>format</code>, string, default <code>"time"</code> — what goes in payload: unix (int), time (14:05), time_seconds, time_12h (2:05 pm), date (Wed 14 Oct), date_iso, iso. Every message also carries all seven as fields of those names</li>
 </ul>
 </li>
 </ul>
