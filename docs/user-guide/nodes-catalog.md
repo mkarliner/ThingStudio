@@ -513,8 +513,8 @@ A config node is listed under `configs` in a flow file as `{id, type, properties
 Type `thingstudio/config/i2c-bus`.
 
 - `bus`, number
-- `scl`, number
-- `sda`, number
+- `scl`, pin
+- `sda`, pin
 - `freq`, number: 100000 suits most sensors; 400000 for displays that can take it.
 
 Defaults: `{"bus":0,"scl":null,"sda":null,"freq":100000}`
@@ -534,7 +534,7 @@ Type `thingstudio/config/touch-panel`.
 - `controller`, select: one of `ft6336u`; Other controllers (GT911, CST820) aren't supported yet.
 - `i2cConfigId`, configRef: the id of a `thingstudio/config/i2c-bus` config
 - `address`, text: 7-bit, e.g. 0x38.
-- `rstPin`, text: Blank if the panel has none.
+- `rstPin`, pin: Blank if the panel has none.
 - `pollMs`, number
 - `width`, number
 - `height`, number: The panel's own size. If the display is rotated, tick swap/flip until a touch lands where you pressed.

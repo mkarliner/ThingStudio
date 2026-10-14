@@ -134,6 +134,15 @@
           :label="f.label"
           @update:model-value="(id) => { draft[f.name] = id; }"
         />
+        <!-- A hardware pin (an I2C bus's SCL/SDA, a touch panel's reset): the shared PinField, so a
+             named-pin board gets a dropdown. Blank means "not wired" (optional). -->
+        <PinField
+          v-else-if="f.kind === 'pin'"
+          :label="f.label"
+          :optional="true"
+          :model-value="draft[f.name]"
+          @update:model-value="(v) => { draft[f.name] = v; }"
+        />
         <label v-else class="field-row">
           <span class="field-label">{{ f.label }}</span>
           <select v-if="f.kind === 'select'" v-model="draft[f.name] as any">
@@ -198,6 +207,7 @@ import { CONFIG_TYPES } from "./config-types";
 import { CREDENTIAL_TYPES } from "./credential-types";
 import { AdminApiError, listCredentials, putCredential } from "../../flow-file/admin-api-client";
 import CredentialRefField from "./CredentialRefField.vue";
+import PinField from "./PinField.vue";
 import PresetRefField from "./PresetRefField.vue";
 
 // Prefixes a not-yet-used saved credential's name in the merged dropdown's

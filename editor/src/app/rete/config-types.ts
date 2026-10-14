@@ -83,7 +83,7 @@ export interface ConfigFieldDescriptor {
   /** Must match the key this field is stored under in a config's own `properties`. */
   name: string;
   label: string;
-  kind: "text" | "password" | "number" | "select" | "credential" | "boolean" | "configRef";
+  kind: "text" | "password" | "number" | "select" | "credential" | "boolean" | "configRef" | "pin";
   /** Only meaningful when `kind` is "configRef" -- the config type this field points at (another config's id),
    * edited with a nested ConfigRefField. First user: a touch panel's I2C bus. */
   configType?: string;
@@ -181,8 +181,8 @@ export const CONFIG_TYPES: Record<string, ConfigTypeDescriptor> = {
     keyField: "bus",
     fields: [
       { name: "bus", label: "bus", kind: "number" },
-      { name: "scl", label: "scl pin", kind: "number" },
-      { name: "sda", label: "sda pin", kind: "number" },
+      { name: "scl", label: "scl pin", kind: "pin" },
+      { name: "sda", label: "sda pin", kind: "pin" },
       { name: "freq", label: "frequency (Hz)", kind: "number", help: "100000 suits most sensors; 400000 for displays that can take it." },
     ],
     defaults: { bus: 0, scl: null, sda: null, freq: 100000 },
@@ -208,7 +208,7 @@ export const CONFIG_TYPES: Record<string, ConfigTypeDescriptor> = {
       },
       { name: "i2cConfigId", label: "I2C bus", kind: "configRef", configType: "thingstudio/config/i2c-bus" },
       { name: "address", label: "address", kind: "text", help: "7-bit, e.g. 0x38." },
-      { name: "rstPin", label: "reset pin", kind: "text", help: "Blank if the panel has none." },
+      { name: "rstPin", label: "reset pin", kind: "pin", help: "Blank if the panel has none." },
       { name: "pollMs", label: "poll every (ms)", kind: "number" },
       { name: "width", label: "panel width", kind: "number" },
       { name: "height", label: "panel height", kind: "number", help: "The panel's own size. If the display is rotated, tick swap/flip until a touch lands where you pressed." },
