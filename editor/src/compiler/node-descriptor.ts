@@ -90,10 +90,11 @@ export interface PropertyFieldDescriptor {
   placeholder?: string;
   /** A pin field where -1/blank means "not wired"; a configRef that may be left unset. */
   optional?: boolean;
-  /** Number-field bounds/step, forwarded to the <input type="number">. */
+  /** Number-field bounds/step, forwarded to the <input type="number">. `step` may be the literal
+   * "any" (HTML's arbitrary-precision step) as well as a number. */
   min?: number;
   max?: number;
-  step?: number;
+  step?: number | "any";
   /** Show this field only when the predicate holds (e.g. a "deadband" threshold only in deadband mode). Built-in
    * only -- a function, so it can't serialize to a custom `.node.json` (custom nodes get no conditionals). */
   showIf?: (properties: Record<string, unknown>) => boolean;

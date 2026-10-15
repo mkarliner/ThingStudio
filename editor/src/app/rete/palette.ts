@@ -163,17 +163,6 @@ export const NODE_PALETTE: Partial<Record<NodeKind, KindStyle>> = {
   // used hardware-group slot so far), sorting after gpio_out/pwm_out.
   display_spi: { color: "#4a3f8a", bgcolor: "#2a1f4a", icon: "▤", label: "display spi", group: "hardware", priority: 40 },
   display_i2c: { color: "#3f2e8a", bgcolor: "#1f144a", icon: "▦", label: "display i2c", group: "hardware", priority: 41 },
-  // Teal -- a status/radio glyph ("◉") for the polling connectivity check.
-  wifi_status: { color: "#1f6e6e", bgcolor: "#123f3f", icon: "◉", label: "wifi status", group: "network", priority: 10 },
-  // Teal-green, distinct from wifi_status's own teal -- same family (both
-  // WiFi-link-state related) but visually distinguishable. "⊘" (circled
-  // slash) for the pass-or-drop gating behavior, added 2026-09-14 (wifi-
-  // gate.ts's own header has the full scope story).
-  wifi_gate: { color: "#1f8a5a", bgcolor: "#123f2a", icon: "⊘", label: "wifi gate", group: "network", priority: 11 },
-  // filter added 2026-09-26: teal, "▽" (a funnel) -- it lets fewer messages through than arrive.
-  // journal added 2026-10-10: teal beside filter, "≋" for a stream kept over time.
-  journal: { color: "#2e6e4a", bgcolor: "#1f3f2c", icon: "≋", label: "journal", group: "general", priority: 36 },
-  filter: { color: "#2e6e4a", bgcolor: "#1f3f2c", icon: "▽", label: "filter", group: "general", priority: 35 },
   // GUI nodes, 2026-10-08 (node-library/gui.ts): their own "GUI" group, one slate-green family.
   gui_screen: { color: "#3f6e5c", bgcolor: "#1f3a30", icon: "▣", label: "screen", group: "GUI", priority: 10 },
   gui_navigator: { color: "#3f5c6e", bgcolor: "#1f303a", icon: "⇆", label: "navigator", group: "GUI", priority: 20, hidden: true },

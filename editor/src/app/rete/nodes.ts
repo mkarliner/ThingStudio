@@ -169,7 +169,7 @@ import { httpRequestNode } from "../../node-library/http-request.js";
 import { httpInNode } from "../../node-library/http-in.js";
 import { httpResponseNode } from "../../node-library/http-response.js";
 import { delayNode } from "../../node-library/delay.js";
-import { filterNode, type FilterMode } from "../../node-library/filter.js";
+import { filterNode } from "../../node-library/filter.js";
 import { journalNode } from "../../node-library/journal.js";
 import { ntpNode } from "../../node-library/ntp.js";
 import { bme280Node } from "../../node-library/bme280.js";
@@ -422,57 +422,9 @@ export class FunctionNode extends ClassicPreset.Node {
 
 export class DelayNode extends buildDescriptorNodeClass(delayNode) {}
 
-// Drops messages that aren't worth sending: unchanged, inside a deadband, or too soon
-// (node-library/filter.ts).
-export class FilterNode extends ClassicPreset.Node {
-  width = 100;
-  height = NODE_HEIGHT;
-  kind = "filter" as const;
-  nodeType = "thingstudio/filter";
-  highlighted = false;
-  status: NodeStatusState | null = null;
-  statusText: string | null = null;
-
-  properties: { mode: FilterMode; threshold: number; intervalMs: number; ignoreFirst: boolean; perTopic: boolean } = {
-    mode: "change",
-    threshold: 1,
-    intervalMs: 1000,
-    ignoreFirst: false,
-    perTopic: true,
-  };
-
-  constructor() {
-    super("filter");
-    this.addInput("msg", new ClassicPreset.Input(portSocket(filterNode.ports?.inputs, "msg", this.properties), "msg", true));
-    this.addOutput("msg", new ClassicPreset.Output(portSocket(filterNode.ports?.outputs, "msg", this.properties), "msg"));
-  }
-}
-
-// A rolling archive of readings, one row per time step or per message (node-library/journal.ts). Output 1 is the
-// series (for a trend widget), output 2 the consolidated value every `steps` rows (for the next journal).
-export class JournalNode extends ClassicPreset.Node {
-  width = 100;
-  height = NODE_HEIGHT + 20;
-  kind = "journal" as const;
-  nodeType = "thingstudio/journal";
-  highlighted = false;
-  status: NodeStatusState | null = null;
-  statusText: string | null = null;
-
-  properties: { rows: number; stepSeconds: number; steps: number; xff: number } = {
-    rows: 60,
-    stepSeconds: 60,
-    steps: 0,
-    xff: 0.5,
-  };
-
-  constructor() {
-    super("journal");
-    this.addInput("msg", new ClassicPreset.Input(portSocket(journalNode.ports?.inputs, "msg", this.properties), "msg", true));
-    this.addOutput("series", new ClassicPreset.Output(portSocket(journalNode.ports?.outputs, "series", this.properties), "series"));
-    this.addOutput("rollup", new ClassicPreset.Output(portSocket(journalNode.ports?.outputs, "rollup", this.properties), "rollup"));
-  }
-}
+// filter (drops messages that aren't worth sending: unchanged, inside a deadband, or too soon) and journal
+// (node-library/filter.ts, journal.ts) are descriptor-driven (buildDescriptorNodeClass below). journal's two
+// outputs make the generic class taller.
 
 // The time of day from NTP (node-library/ntp.ts, replaces clock 2026-10-14). Two-faced: a message in asks for the
 // time now; the output sends it, also after each sync. Network group: it joins the flow's WiFi itself --
@@ -567,7 +519,8 @@ export const GuiModalNode = guiClass("gui_modal", "thingstudio/gui_modal", 100, 
 function buildDescriptorNodeClass(descriptor: NodeDescriptor) {
   return class extends ClassicPreset.Node {
     width = descriptor.width ?? 100;
-    height = NODE_HEIGHT;
+    // Taller when the node has more than one output, so its output rows fit (journal's own height).
+    height = (descriptor.ports?.outputs?.length ?? 0) > 1 ? NODE_HEIGHT + 20 : NODE_HEIGHT;
     kind = descriptor.paletteId ?? descriptor.type;
     nodeType = descriptor.type;
     descriptor: NodeDescriptor = descriptor;
@@ -640,6 +593,14 @@ export class AdcNode extends buildDescriptorNodeClass(adcNode) {}
 export class EncoderNode extends buildDescriptorNodeClass(encoderNode) {}
 
 export class NeopixelNode extends buildDescriptorNodeClass(neopixelNode) {}
+
+export class FilterNode extends buildDescriptorNodeClass(filterNode) {}
+
+export class JournalNode extends buildDescriptorNodeClass(journalNode) {}
+
+export class WifiStatusNode extends buildDescriptorNodeClass(wifiStatusNode) {}
+
+export class WifiGateNode extends buildDescriptorNodeClass(wifiGateNode) {}
 
 // The GPIO cluster -- interrupt/eswitch/ebutton/adc/encoder/neopixel -- is descriptor-driven
 // (buildDescriptorNodeClass below). Their defaults match each node-library file's own codegen
@@ -773,57 +734,10 @@ export class DisplayI2cNode extends ClassicPreset.Node {
   }
 }
 
-export class WifiStatusNode extends ClassicPreset.Node {
-  width = 120;
-  height = NODE_HEIGHT;
-  kind = "wifi_status" as const;
-  nodeType = "thingstudio/wifi_status";
-  highlighted = false;
-  status: NodeStatusState | null = null;
-  statusText: string | null = null;
-
-  // wifiConfigId: "" means "no config referenced" -- resolveWifiCredentials()'s
-  // own contract (wifi-status.ts), same "empty string sentinel, not
-  // undefined" convention as every other string property already on this
-  // canvas (e.g. gpio_out has no string property, but inject's
-  // payloadValue defaults to a real value, never undefined -- properties
-  // objects on this canvas are always fully populated, never partial).
-  properties: { pollMs: number; wifiConfigId: string } = { pollMs: 5000, wifiConfigId: "" };
-
-  constructor() {
-    super("wifi status");
-    this.addOutput("msg", new ClassicPreset.Output(portSocket(wifiStatusNode.ports?.outputs, "msg", this.properties), "msg"));
-  }
-}
-
-// Pass-or-drop WiFi link gate, built 2026-09-14 (wifi-gate.ts's own header
-// has the full scope story): a transform, not a source/sink, so it needs
-// both an input and an output port like DelayNode/FunctionNode above --
-// unlike WifiStatusNode (a pure source) it sits mid-flow. No configurable
-// properties (same "no properties" shape as HttpResponseNode above) --
-// it derives its WiFi config from the flow's own sole wifi_status node,
-// same as UdpSendNode/UdpReceiveNode below.
-export class WifiGateNode extends ClassicPreset.Node {
-  width = 110;
-  height = NODE_HEIGHT;
-  kind = "wifi_gate" as const;
-  nodeType = "thingstudio/wifi_gate";
-  highlighted = false;
-  status: NodeStatusState | null = null;
-  statusText: string | null = null;
-
-  properties: Record<string, never> = {};
-
-  constructor() {
-    super("wifi gate");
-    this.addInput("msg", new ClassicPreset.Input(portSocket(wifiGateNode.ports?.inputs, "msg", this.properties), "msg", true));
-    this.addOutput("msg", new ClassicPreset.Output(portSocket(wifiGateNode.ports?.outputs, "msg", this.properties), "msg"));
-  }
-}
-
 // The network family -- udp_send/udp_receive/http_request/http_in/http_response/mqtt_publish/
-// mqtt_subscribe -- is descriptor-driven (buildDescriptorNodeClass below). Their panels show the flow's
-// WiFi config as an info-only field (the config is a flow singleton, not a node property).
+// mqtt_subscribe, plus wifi_status (a source with a real wifiConfigId) and wifi_gate (a pass-or-drop
+// transform with no properties) -- is descriptor-driven (buildDescriptorNodeClass below). Their panels
+// show the flow's WiFi config as an info-only field (the config is a flow singleton, not a node property).
 
 // --- Custom nodes (docs/working-notes/custom-node-authoring-scoping.md) ---
 //

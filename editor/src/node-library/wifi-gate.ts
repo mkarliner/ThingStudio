@@ -42,10 +42,29 @@ import { flowHasMqttNodes, resolveFlowWifiCredentials, wifiSetupStatement } from
 export const wifiGateNode: NodeDefinition = {
   type: "thingstudio/wifi_gate",
   kind: "transform",
+  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor.
+  paletteId: "wifi_gate",
+  label: "wifi gate",
+  group: "network",
+  priority: 11,
+  color: "#1f8a5a",
+  bgcolor: "#123f2a",
+  icon: "⊘",
+  width: 110,
+  description:
+    "Passes the message through unchanged if the WiFi station link is currently up, or drops it (same as a function " +
+    "node's own \"return null\") if it isn't. Checks the live link state at message-arrival-time, not wifi_status's " +
+    "own emitted messages -- wifi_status only emits on a connection-identity change, so a fast-firing source gated " +
+    "off its output wire could be checking stale state. One WiFi network per flow: every WiFi node shares this " +
+    "setting.",
   ports: {
     inputs: [{ name: "msg", type: "any" }],
     outputs: [{ name: "msg", type: "any" }],
   },
+  properties: [
+    // Info-only: the WiFi config is a flow singleton, not a property of this node.
+    { kind: "configRef", configType: "thingstudio/config/wifi", label: "WiFi" },
+  ],
   codegenTransform(_node: GraphNode, ctx: CodegenContext): TransformCodegenResult {
     const { ssid, password, security } = resolveFlowWifiCredentials(ctx, "wifi_gate");
 

@@ -420,6 +420,18 @@ export function wifiSetupStatement(ssid: unknown, password: unknown, security: W
 export const wifiStatusNode: NodeDefinition = {
   type: "thingstudio/wifi_status",
   kind: "source",
+  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor.
+  paletteId: "wifi_status",
+  label: "wifi status",
+  group: "network",
+  priority: 10,
+  color: "#1f6e6e",
+  bgcolor: "#123f3f",
+  icon: "◉",
+  width: 120,
+  description:
+    "One WiFi network per flow: every WiFi node shares this setting. Pick \"unmanaged\" if the board joins WiFi " +
+    "some other way (e.g. its setup AP).",
   // `msg`'s payload is always bool (buildMsg's `_wifi_connected` below) --
   // `ip` is envelope metadata alongside payload, not the typed payload
   // itself, same "only the payload gets a socket type" treatment
@@ -427,6 +439,10 @@ export const wifiStatusNode: NodeDefinition = {
   ports: {
     outputs: [{ name: "msg", type: "bool" }],
   },
+  properties: [
+    { name: "pollMs", label: "poll interval (ms)", kind: "number", default: 5000, min: 1 },
+    { name: "wifiConfigId", label: "WiFi", kind: "configRef", configType: "thingstudio/config/wifi", default: "" },
+  ],
   codegenSource(node: GraphNode, ctx: CodegenContext): SourceCodegenResult {
     const pollMs = Math.round(Number(node.properties.pollMs ?? 5000));
     if (!Number.isFinite(pollMs) || pollMs <= 0) {

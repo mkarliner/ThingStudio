@@ -316,47 +316,6 @@
           <code>ack</code>, <code>timeout</code> or <code>closed</code>.</p>
       </template>
 
-      <template v-else-if="node.kind === 'journal'">
-        <label>rows kept <input type="number" min="1" max="256" v-model.number="node.properties.rows" @input="touch" /></label>
-        <label>seconds per row (0 = one row per message)
-          <input type="number" min="0" step="any" v-model.number="node.properties.stepSeconds" @input="touch" />
-        </label>
-        <label>rows per roll-up (0 = none)
-          <input type="number" min="0" v-model.number="node.properties.steps" @input="touch" />
-        </label>
-        <label v-if="node.properties.steps > 0">gaps allowed in a roll-up (0 to 1)
-          <input type="number" min="0" max="1" step="0.05" v-model.number="node.properties.xff" @input="touch" />
-        </label>
-        <p class="hint">Keeps the last rows of a number, as an average with its min and max. The first output sends the
-          series (wire it to a trend); the second sends one summary message every roll-up (wire it to the next journal for a
-          longer time scale). Rows with no readings are gaps. With seconds per row set, a row closes when a message
-          arrives after its time is up.</p>
-      </template>
-
-      <template v-else-if="node.kind === 'filter'">
-        <label>mode
-          <select v-model="node.properties.mode" @change="touch">
-            <option value="change">change: only when the payload changes</option>
-            <option value="deadband">deadband: only when a number moves enough</option>
-            <option value="rate">rate: at most one per interval</option>
-          </select>
-        </label>
-        <label v-if="node.properties.mode === 'deadband'">threshold
-          <input type="number" min="0" step="any" v-model.number="node.properties.threshold" @input="touch" />
-        </label>
-        <label v-if="node.properties.mode === 'rate'">interval (ms)
-          <input type="number" min="1" v-model.number="node.properties.intervalMs" @input="touch" />
-        </label>
-        <label v-if="node.properties.mode !== 'rate'" class="checkbox-label">
-          <input type="checkbox" v-model="node.properties.ignoreFirst" @change="touch" />
-          ignore first message
-        </label>
-        <label class="checkbox-label">
-          <input type="checkbox" v-model="node.properties.perTopic" @change="touch" />
-          separately for each topic
-        </label>
-      </template>
-
       <template v-else-if="node.kind === 'display_spi'">
         <PresetRefField :key="node.id" preset-type="display_spi" :properties="node.properties" @applied="touch" />
         <label>orientation
@@ -475,27 +434,6 @@
           corrupting the display's internal buffer indexing. The I2C bus holds the pins and clock, shared with
           every other I2C node on the same bus.
         </p>
-      </template>
-
-      <template v-else-if="node.kind === 'wifi_status'">
-        <label>poll interval (ms)
-          <input type="number" min="1" v-model.number="node.properties.pollMs" @input="touch" />
-        </label>
-        <ConfigRefField
-          config-type="thingstudio/config/wifi"
-          :model-value="node.properties.wifiConfigId || undefined"
-          @update:model-value="(id) => setWifiConfigId(id)"
-        />
-        <p class="hint">One WiFi network per flow: every WiFi node shares this setting. Pick "unmanaged" if the board joins WiFi some other way (e.g. its setup AP).</p>
-      </template>
-
-      <template v-else-if="node.kind === 'wifi_gate'">
-        <p class="hint">Passes the message through unchanged if the WiFi station link is currently up, or drops it (same as a function node's own "return null") if it isn't. Checks the live link state at message-arrival-time, not wifi_status's own emitted messages -- wifi_status only emits on a connection-identity change, so a fast-firing source gated off its output wire could be checking stale state. One WiFi network per flow: every WiFi node shares this setting.</p>
-        <ConfigRefField
-          config-type="thingstudio/config/wifi"
-          :model-value="undefined"
-          @update:model-value="() => touch()"
-        />
       </template>
 
       <template v-else-if="nodeDescriptor">
@@ -669,20 +607,10 @@ function setFunctionOutputCount(count: number): void {
 }
 
 
-// ConfigRefField's own `update:modelValue` hands back a fresh/selected
-// config id -- written onto whichever field the current node kind uses
-// (every wifi-referencing kind on this canvas uses the same
-// `wifiConfigId` property name, wifi-status.ts's own convention), same
-// `touch()` signal as every other field edit.
-function setWifiConfigId(id: string): void {
-  if (!node.value) return;
-  (node.value.properties as Record<string, unknown>).wifiConfigId = id;
-  touch();
-}
-
-// Same pattern as setWifiConfigId() above, for a node's own config reference
-// (a touch panel's I2C bus, an i2c bus) -- its own small function rather than
-// generalizing the wifi_status binding into one helper for symmetry alone.
+// ConfigRefField's own `update:modelValue` hands back a fresh/selected config id -- written onto the
+// node's own config-reference property, same `touch()` signal as every other field edit. (Migrated
+// nodes go through the generic branch's setField; this stays for the still-bespoke gui_screen/
+// display_i2c.)
 /** Points the selected node at a config (e.g. its I2C bus). */
 function setConfigId(key: string, id: string): void {
   if (!node.value) return;

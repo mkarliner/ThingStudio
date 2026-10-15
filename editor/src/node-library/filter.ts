@@ -65,10 +65,36 @@ function numberProp(node: GraphNode, key: string, fallback: number): number {
 export const filterNode: NodeDefinition = {
   type: "thingstudio/filter",
   kind: "transform",
+  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor.
+  paletteId: "filter",
+  label: "filter",
+  group: "general",
+  priority: 35,
+  color: "#2e6e4a",
+  bgcolor: "#1f3f2c",
+  icon: "▽",
+  width: 100,
   ports: {
     inputs: [{ name: "msg", type: "any" }],
     outputs: [{ name: "msg", type: "any" }],
   },
+  properties: [
+    {
+      name: "mode",
+      label: "mode",
+      kind: "select",
+      default: "change",
+      options: [
+        { value: "change", label: "change: only when the payload changes" },
+        { value: "deadband", label: "deadband: only when a number moves enough" },
+        { value: "rate", label: "rate: at most one per interval" },
+      ],
+    },
+    { name: "threshold", label: "threshold", kind: "number", default: 1, min: 0, step: "any", showIf: (p) => p.mode === "deadband" },
+    { name: "intervalMs", label: "interval (ms)", kind: "number", default: 1000, min: 1, showIf: (p) => p.mode === "rate" },
+    { name: "ignoreFirst", label: "ignore first message", kind: "boolean", default: false, showIf: (p) => p.mode !== "rate" },
+    { name: "perTopic", label: "separately for each topic", kind: "boolean", default: true },
+  ],
   codegenTransform(node: GraphNode, ctx: CodegenContext): TransformCodegenResult {
     const mode = (node.properties.mode as string | undefined) ?? "change";
     if (!(FILTER_MODES as readonly string[]).includes(mode)) {
