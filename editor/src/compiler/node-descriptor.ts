@@ -65,10 +65,41 @@ export interface PropertyFieldOption {
   label: string;
 }
 
+/** A serializable field-visibility predicate: show the field only when `properties[field]` satisfies
+ * the one condition given. The data form of a conditional -- a custom `.node.json` can carry it (the
+ * earlier function-valued `showIf` could not, a built-in-only corner). */
+export interface FieldPredicate {
+  /** The property whose value decides visibility (a missing property compares as `undefined`). */
+  field: string;
+  equals?: string | number | boolean;
+  notEquals?: string | number | boolean;
+  /** True when the value is one of these. */
+  in?: (string | number | boolean)[];
+  /** Number comparisons; a non-numeric value is NaN and so fails all of them. */
+  gt?: number;
+  gte?: number;
+  lt?: number;
+  lte?: number;
+}
+
+/** True when the predicate holds for these properties. An empty predicate (no operator) is always true. */
+export function evaluatePredicate(predicate: FieldPredicate, properties: Record<string, unknown>): boolean {
+  const value = properties[predicate.field];
+  if (predicate.equals !== undefined) return value === predicate.equals;
+  if (predicate.notEquals !== undefined) return value !== predicate.notEquals;
+  if (predicate.in !== undefined) return predicate.in.includes(value as string | number | boolean);
+  const n = Number(value);
+  if (predicate.gt !== undefined) return n > predicate.gt;
+  if (predicate.gte !== undefined) return n >= predicate.gte;
+  if (predicate.lt !== undefined) return n < predicate.lt;
+  if (predicate.lte !== undefined) return n <= predicate.lte;
+  return true;
+}
+
 /** One field in a node's property panel -- a generic renderer (PropertyPanel.vue) dispatches on
  * `kind`. Mirrors config-types.ts's ConfigFieldDescriptor plus the two things a node field needs that
  * a config field doesn't: a `default` (seeds a freshly-dropped node's `properties`) and optional
- * number bounds / a `showIf` visibility predicate. */
+ * number bounds / a `visibleWhen` visibility predicate. */
 export interface PropertyFieldDescriptor {
   /** Dict key in the node's `properties` and in the generated Python `properties` argument. Absent for
    * an **info-only** field: the panel renders the widget but it binds to no property (the display-only
@@ -96,9 +127,9 @@ export interface PropertyFieldDescriptor {
   min?: number;
   max?: number;
   step?: number | "any";
-  /** Show this field only when the predicate holds (e.g. a "deadband" threshold only in deadband mode). Built-in
-   * only -- a function, so it can't serialize to a custom `.node.json` (custom nodes get no conditionals). */
-  showIf?: (properties: Record<string, unknown>) => boolean;
+  /** Show this field only when this predicate holds (e.g. a "deadband" threshold only in deadband mode).
+   * Serializable data, so a custom `.node.json` can carry it too. */
+  visibleWhen?: FieldPredicate;
   /** Changing this field re-resolves the node's port sockets -- for a port whose `type` is a function of
    * properties (e.g. inject/startup's output tracks `payloadType`). Built-in only. */
   retype?: boolean;

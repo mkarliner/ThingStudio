@@ -76,9 +76,9 @@ export const i2cGenericNode: NodeDefinition = {
         { value: "scan", label: "scan the bus" },
       ],
     },
-    { name: "address", label: "address", kind: "text", default: "", placeholder: "e.g. 0x29", showIf: (p) => p.operation !== "scan" },
-    { name: "register", label: "register", kind: "text", default: "", placeholder: "none", showIf: (p) => p.operation !== "scan" },
-    { name: "length", label: "length (bytes)", kind: "number", default: 1, min: 1, max: 256, showIf: (p) => p.operation === "read" },
+    { name: "address", label: "address", kind: "text", default: "", placeholder: "e.g. 0x29", visibleWhen: { field: "operation", notEquals: "scan" } },
+    { name: "register", label: "register", kind: "text", default: "", placeholder: "none", visibleWhen: { field: "operation", notEquals: "scan" } },
+    { name: "length", label: "length (bytes)", kind: "number", default: 1, min: 1, max: 256, visibleWhen: { field: "operation", equals: "read" } },
   ],
   codegenTransform(node: GraphNode, ctx: CodegenContext): TransformCodegenResult {
     const bus = resolveI2cBus(ctx, "i2c", node.properties.i2cConfigId);

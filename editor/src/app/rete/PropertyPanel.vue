@@ -213,7 +213,7 @@
         />
         <p v-if="nodeDescriptor.description" class="hint">{{ nodeDescriptor.description }}</p>
         <template v-for="f in nodeDescriptor.properties ?? []" :key="f.name ?? f.label">
-          <template v-if="!f.showIf || f.showIf(nodeProperties)">
+          <template v-if="!f.visibleWhen || evaluatePredicate(f.visibleWhen, nodeProperties)">
             <PinField
               v-if="f.kind === 'pin'"
               :label="f.label"
@@ -274,7 +274,7 @@ import { selectedNode, bumpPropertyVersion, propertyVersion, setFunctionNodeOutp
 import { DEFAULT_KIND_STYLE, type KindStyle } from "./palette";
 import { paletteStyleFor } from "./node-descriptors";
 import { CustomNode, FunctionNode } from "./nodes";
-import type { NodeDescriptor, PropertyFieldDescriptor } from "../../compiler/node-descriptor";
+import { evaluatePredicate, type NodeDescriptor, type PropertyFieldDescriptor } from "../../compiler/node-descriptor";
 import { MAX_FUNCTION_OUTPUTS } from "../../node-library/function-node";
 import ConfigRefField from "./ConfigRefField.vue";
 import CredentialRefField from "./CredentialRefField.vue";

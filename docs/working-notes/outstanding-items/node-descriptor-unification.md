@@ -53,7 +53,7 @@ minus codegen). `interfaces/node-descriptor/SPEC.md` is now v2. Remaining work, 
    (`bme280`'s address, mqtt `qos`), and a field with no `name` is **info-only** (renders the widget, binds to
    no property -- the display-only WiFi picker on every network node). The GPIO cluster
    (`interrupt`/`eswitch`/`ebutton`/`adc`/`encoder`/`neopixel`) is done too -- it needed no new widget
-   (`select`/`boolean`/`showIf`), only a catalog regeneration for two nodes whose descriptor order follows the
+   (`select`/`boolean`/`visibleWhen`), only a catalog regeneration for two nodes whose descriptor order follows the
    panel rather than the old class order. Then `filter`/`journal`/`wifi_status`/`wifi_gate` (a third shape
    change Mike approved 2026-10-15: `step` widened to `number | "any"` for fractional fields); the generic
    class now also grows taller for a multi-output node, matching journal's old height. Then `display_spi`/

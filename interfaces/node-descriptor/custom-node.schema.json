@@ -81,7 +81,23 @@
         "min": { "type": "number", "description": "Number/pin lower bound." },
         "max": { "type": "number", "description": "Number/pin upper bound." },
         "step": { "description": "Number step: a number, or \"any\" for arbitrary fractional values." },
-        "optional": { "type": "boolean", "description": "A pin field where -1/blank means 'not wired'." }
+        "optional": { "type": "boolean", "description": "A pin field where -1/blank means 'not wired'." },
+        "visibleWhen": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["field"],
+          "description": "Show this field only when the named property satisfies the condition (a data-driven conditional).",
+          "properties": {
+            "field": { "type": "string", "minLength": 1 },
+            "equals": { "type": ["string", "number", "boolean"] },
+            "notEquals": { "type": ["string", "number", "boolean"] },
+            "in": { "type": "array", "minItems": 1, "items": { "type": ["string", "number", "boolean"] } },
+            "gt": { "type": "number" },
+            "gte": { "type": "number" },
+            "lt": { "type": "number" },
+            "lte": { "type": "number" }
+          }
+        }
       },
       "allOf": [
         { "if": { "properties": { "kind": { "const": "select" } }, "required": ["kind"] }, "then": { "required": ["options"] } },

@@ -667,8 +667,9 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   [P3]).
   **Two rules, binding new node work now:**
   - **Data-equivalent rule.** A new descriptor capability must have a serializable (data) form, not a
-    JS-function-only one. `showIf` (a function) is the known corner; `PortType`-as-function and
-    `outputCount` are the same shape. Prefer data; where a function is genuinely unavoidable, record it as an
+    JS-function-only one. `PortType`-as-function and `outputCount` are still corners; `showIf` (a function)
+    was one too and was removed the same day, replaced by the serializable `visibleWhen` predicate. Prefer
+    data; where a function is genuinely unavoidable, record it as an
     explicit, revisitable divergence rather than letting it accrete.
   - **One-vocabulary rule.** The custom `.node.json` schema stays a strict subset of the canonical
     `NodeDescriptor` — never a parallel vocabulary that can drift.

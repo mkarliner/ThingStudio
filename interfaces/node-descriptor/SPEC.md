@@ -69,14 +69,16 @@ A property field is `{name, label, kind, default, options?}`. `kind` is shared w
 `pin`, `palette` (the indexed-colour palette editor). `default` seeds a freshly-dropped node. A `select`'s option `value` is a string, or a number for a
 select over numeric values (e.g. bme280's I2C address). A custom `.node.json` may use the `text`,
 `number`, `boolean`, `select`, `configRef` and `pin` kinds, with the same `help`/`placeholder`/`min`/`max`/
-`step`/`optional` field attributes (a `configRef` field also carries `configType`); the remaining kinds
-(`credential`, `palette`) and attributes (`showIf`, `retype`) are built-in editor widgets today.
+`step`/`optional` field attributes and a data-driven `visibleWhen` predicate (a `configRef` field also
+carries `configType`); the remaining kinds (`credential`, `palette`) and attribute (`retype`) are built-in
+editor widgets today.
 
 A field with **no `name`** (and no `default`) is **info-only**: the panel renders its widget but it binds to
 no property. Used for a `configRef` to a flow-singleton config (e.g. the WiFi picker shown on a network
-node). Built-in fields may also carry `optional`, `min`/`max`/`step` (`step` may be the literal `"any"` for
-arbitrary fractional values), `help`, `placeholder`, a `showIf(properties)` visibility predicate (a function,
-so built-in only), and `retype` (changing the field re-resolves the node's port sockets — for a port whose
+node). Fields may also carry `optional`, `min`/`max`/`step` (`step` may be the literal `"any"` for
+arbitrary fractional values), `help`, `placeholder`, `visibleWhen` (a serializable conditional: show the
+field only when `properties[field]` equals/notEquals/is in/compares against a value), and `retype` (changing
+the field re-resolves the node's port sockets — for a port whose
 `type` is a function of properties, e.g. inject/startup's output tracking `payloadType`).
 
 **Worked example** — the built-in `debug` node's descriptor (its codegen hook omitted):

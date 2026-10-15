@@ -109,6 +109,10 @@ the node is selected:
   **`optional`** — optional, the same panel hints a built-in field has.
   `pin` fields take a `number` default; `optional` marks one where
   `-1`/blank means "not wired".
+- **`visibleWhen`** — optional: show the field only when another property
+  satisfies a condition, e.g.
+  `{ "field": "mode", "equals": "deadband" }`. Operators: `equals`,
+  `notEquals`, `in` (an array), `gt`, `gte`, `lt`, `lte`.
 
 A `source` node must declare a numeric property named `intervalMs` — it
 sets the poll interval.

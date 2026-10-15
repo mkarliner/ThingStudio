@@ -79,9 +79,9 @@ export const adcNode: NodeDefinition = {
         { value: "absolute", label: "absolute -- fire outside lower..upper" },
       ],
     },
-    { name: "delta", label: "delta (counts)", kind: "number", default: 2000, min: 1, showIf: (p) => p.mode === "relative" },
-    { name: "lower", label: "lower", kind: "number", default: 0, min: 0, max: 65535, showIf: (p) => p.mode === "absolute" },
-    { name: "upper", label: "upper", kind: "number", default: 50000, min: 0, max: 65535, showIf: (p) => p.mode === "absolute" },
+    { name: "delta", label: "delta (counts)", kind: "number", default: 2000, min: 1, visibleWhen: { field: "mode", equals: "relative" } },
+    { name: "lower", label: "lower", kind: "number", default: 0, min: 0, max: 65535, visibleWhen: { field: "mode", equals: "absolute" } },
+    { name: "upper", label: "upper", kind: "number", default: 50000, min: 0, max: 65535, visibleWhen: { field: "mode", equals: "absolute" } },
     {
       name: "sense",
       label: "sense",

@@ -48,7 +48,7 @@ old height). Mike approved the `placeholder`, numeric-option, info-only, `step: 
   `paletteId`/`label`/`title`/`hidden`/`group`/`priority`/`color`/`bgcolor`/`icon`/`width`/`description`/
   `presetType`/`screenOutline`, plus
   `properties` (`PropertyFieldDescriptor[]`: `{name?,label,kind,default?,options?,configType?,credentialType?,
-  help?,placeholder?,optional?,min?,max?,step?,showIf?,retype?}`; `options[].value` is `string | number`,
+  help?,placeholder?,optional?,min?,max?,step?,visibleWhen?,retype?}`; `options[].value` is `string | number`,
   `step` may be `"any"`; kinds include `palette`). A field with no `name` (and no `default`) is info-only; a
   `retype` field re-resolves the node's output sockets when changed. Copy the values from the old `palette.ts`
   row and the old `PropertyPanel.vue` block — the goal is byte-identical behavior.
@@ -58,7 +58,7 @@ old height). Mike approved the `placeholder`, numeric-option, info-only, `step: 
   tests and `AnyThingstudioNode` reference these names even though the body is now empty.
 - **The property panel's generic branch** (`PropertyPanel.vue`, `v-else-if="nodeDescriptor"`, last in the
   `v-if` chain) renders `text`/`password`/`number`/`boolean`/`select`/`pin`/`configRef`/`credential`, with
-  `min`/`max`/`step`/`placeholder`/`showIf`. It uses `nodeProperties`/`setProp` (already defined). Remove the
+  `min`/`max`/`step`/`placeholder`/`visibleWhen`. It uses `nodeProperties`/`setProp` (already defined). Remove the
   old per-kind `v-else-if` block once migrated.
 - **Palette** (`palette.ts`) delete the row; (`PaletteSidebar.vue`) already enumerates legacy keys ∪ descriptor
   keys via `builtinDescriptors()`, so nothing else to do. **Catalog** (`cli/describe.ts`) uses

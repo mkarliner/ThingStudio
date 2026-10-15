@@ -63,6 +63,7 @@ import type { GraphNode } from "../compiler/graph.js";
 import type {
   CodegenContext,
   EventSourceCodegenResult,
+  FieldPredicate,
   NodeDefinition,
   NodeKind,
   PayloadType,
@@ -124,6 +125,9 @@ export interface CustomNodePropertyField {
   step?: number | "any";
   /** A pin field where -1/blank means "not wired". */
   optional?: boolean;
+  /** Show this field only when this predicate holds (e.g. a field only in one mode). Serializable data,
+   * matching PropertyFieldDescriptor's `visibleWhen`. Added 2026-10-15 (parity). */
+  visibleWhen?: FieldPredicate;
 }
 
 export interface CustomNodeDescriptor {
@@ -190,6 +194,29 @@ function validatePort(raw: unknown, where: string): CustomNodePort {
   return { name, type: type as PayloadType };
 }
 
+function validatePredicate(raw: unknown, where: string): FieldPredicate {
+  if (typeof raw !== "object" || raw === null) fail(`${where} must be an object`);
+  const rec = raw as Record<string, unknown>;
+  const field = requireString(rec, "field");
+  const ops = ["equals", "notEquals", "in", "gt", "gte", "lt", "lte"] as const;
+  const present = ops.filter((op) => rec[op] !== undefined);
+  if (present.length !== 1) fail(`${where} must have exactly one of ${ops.join(", ")}`);
+  const op = present[0]!;
+  const value = rec[op];
+  if (op === "in") {
+    if (!Array.isArray(value) || value.length === 0 || value.some((v) => !["string", "number", "boolean"].includes(typeof v))) {
+      fail(`${where}.in must be a non-empty array of strings, numbers or booleans`);
+    }
+    return { field, in: value as (string | number | boolean)[] };
+  }
+  if (op === "gt" || op === "gte" || op === "lt" || op === "lte") {
+    if (typeof value !== "number" || !Number.isFinite(value)) fail(`${where}.${op} must be a finite number`);
+    return { field, [op]: value } as FieldPredicate;
+  }
+  if (!["string", "number", "boolean"].includes(typeof value)) fail(`${where}.${op} must be a string, number or boolean`);
+  return { field, [op]: value } as FieldPredicate;
+}
+
 function validatePropertyField(raw: unknown, where: string): CustomNodePropertyField {
   if (typeof raw !== "object" || raw === null) fail(`${where} must be an object`);
   const rec = raw as Record<string, unknown>;
@@ -242,6 +269,9 @@ function validatePropertyField(raw: unknown, where: string): CustomNodePropertyF
   if (rec.optional !== undefined) {
     if (typeof rec.optional !== "boolean") fail(`${where}.optional must be a boolean when present`);
     field.optional = rec.optional;
+  }
+  if (rec.visibleWhen !== undefined) {
+    field.visibleWhen = validatePredicate(rec.visibleWhen, `${where}.visibleWhen`);
   }
   // default's shape must already match kind -- a mismatched default would
   // otherwise only surface the first time some node instance's property

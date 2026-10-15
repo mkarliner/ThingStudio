@@ -78,7 +78,7 @@ export const startupNode: NodeDefinition = {
       ],
       retype: true,
     },
-    { name: "payloadValue", label: "value", kind: "text", default: "true", showIf: (p) => p.payloadType !== "reason" },
+    { name: "payloadValue", label: "value", kind: "text", default: "true", visibleWhen: { field: "payloadType", notEquals: "reason" } },
   ],
   codegenSource(node: GraphNode, _ctx: CodegenContext): SourceCodegenResult {
     const payloadType = (node.properties.payloadType as string | undefined) ?? "bool";

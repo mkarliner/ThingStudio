@@ -152,7 +152,7 @@ export const journalNode: NodeDefinition = {
     { name: "rows", label: "rows kept", kind: "number", default: 60, min: 1, max: 256 },
     { name: "stepSeconds", label: "seconds per row (0 = one row per message)", kind: "number", default: 60, min: 0, step: "any" },
     { name: "steps", label: "rows per roll-up (0 = none)", kind: "number", default: 0, min: 0 },
-    { name: "xff", label: "gaps allowed in a roll-up (0 to 1)", kind: "number", default: 0.5, min: 0, max: 1, step: 0.05, showIf: (p) => Number(p.steps) > 0 },
+    { name: "xff", label: "gaps allowed in a roll-up (0 to 1)", kind: "number", default: 0.5, min: 0, max: 1, step: 0.05, visibleWhen: { field: "steps", gt: 0 } },
   ],
   codegenTransform(node: GraphNode, ctx: CodegenContext): TransformCodegenResult {
     const rows = intProp(node, "rows", 60, 1, JOURNAL_MAX_ROWS, "rows");

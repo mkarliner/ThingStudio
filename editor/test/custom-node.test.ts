@@ -22,6 +22,7 @@ import { describe, expect, it } from "vitest";
 import { compile } from "../src/compiler/compile.js";
 import { CompileError } from "../src/compiler/errors.js";
 import type { GraphData, GraphNode } from "../src/compiler/graph.js";
+import { evaluatePredicate } from "../src/compiler/node-descriptor.js";
 import type { CodegenContext } from "../src/compiler/node-definition.js";
 import { buildRegistry } from "../src/node-library/registry.js";
 import {
@@ -219,6 +220,16 @@ describe("validateCustomNodeDescriptor", () => {
     expect(() => validateCustomNodeDescriptor({ ...base, properties: [{ name: "pin", label: "pin", kind: "pin", default: "4" }] })).toThrow(/must be a number/);
     expect(() => validateCustomNodeDescriptor({ ...base, properties: [{ name: "n", label: "n", kind: "number", default: 0, step: "sometimes" }] })).toThrow(/step must be a finite number or "any"/);
     expect(() => validateCustomNodeDescriptor({ ...base, properties: [{ name: "m", label: "m", kind: "number", default: 0, min: "0" }] })).toThrow(/min must be a finite number/);
+  });
+
+  it("accepts a data-driven visibleWhen predicate and rejects malformed ones", () => {
+    const base = { type: "custom/x", kind: "sink", label: "x", ports: { inputs: [{ name: "msg", type: "any" }] } };
+    const field = (visibleWhen: unknown) => [{ name: "delta", label: "delta", kind: "number", default: 1, visibleWhen }];
+    expect(validateCustomNodeDescriptor({ ...base, properties: field({ field: "mode", equals: "relative" }) }).properties?.[0]?.visibleWhen).toEqual({ field: "mode", equals: "relative" });
+    expect(() => validateCustomNodeDescriptor({ ...base, properties: field({ equals: "x" }) })).toThrow(/must be a non-empty string/);
+    expect(() => validateCustomNodeDescriptor({ ...base, properties: field({ field: "mode" }) })).toThrow(/exactly one of/);
+    expect(() => validateCustomNodeDescriptor({ ...base, properties: field({ field: "mode", equals: "a", gt: 1 }) })).toThrow(/exactly one of/);
+    expect(() => validateCustomNodeDescriptor({ ...base, properties: field({ field: "n", gt: "1" }) })).toThrow(/must be a finite number/);
   });
 
   it("rejects a boolean property with a non-boolean default", () => {
@@ -568,5 +579,23 @@ describe("custom node inside a full compile()", () => {
     // output slot indexes into it, using None for a slot the list doesn't reach.
     expect(source).toMatch(/isinstance\([a-z0-9_]+, list\)/);
     expect(source).toContain("else None");
+  });
+});
+
+describe("evaluatePredicate (the data-driven field conditional)", () => {
+  const p = (props: Record<string, unknown>, pred: Parameters<typeof evaluatePredicate>[0]) => evaluatePredicate(pred, props);
+  it("covers equals/notEquals/in and the numeric comparisons", () => {
+    expect(p({ mode: "relative" }, { field: "mode", equals: "relative" })).toBe(true);
+    expect(p({ mode: "absolute" }, { field: "mode", equals: "relative" })).toBe(false);
+    expect(p({ mode: "relative" }, { field: "mode", notEquals: "relative" })).toBe(false);
+    expect(p({ mode: "scan" }, { field: "mode", in: ["read", "scan"] })).toBe(true);
+    expect(p({ steps: 3 }, { field: "steps", gt: 0 })).toBe(true);
+    expect(p({ steps: 0 }, { field: "steps", gt: 0 })).toBe(false);
+    expect(p({ n: 5 }, { field: "n", lte: 5 })).toBe(true);
+    // a missing property compares as undefined, and a non-numeric value fails numeric comparisons
+    expect(p({}, { field: "mode", equals: "relative" })).toBe(false);
+    expect(p({ steps: "x" }, { field: "steps", gt: 0 })).toBe(false);
+    // an empty predicate is always visible
+    expect(p({}, { field: "anything" })).toBe(true);
   });
 });

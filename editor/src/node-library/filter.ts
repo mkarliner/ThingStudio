@@ -90,9 +90,9 @@ export const filterNode: NodeDefinition = {
         { value: "rate", label: "rate: at most one per interval" },
       ],
     },
-    { name: "threshold", label: "threshold", kind: "number", default: 1, min: 0, step: "any", showIf: (p) => p.mode === "deadband" },
-    { name: "intervalMs", label: "interval (ms)", kind: "number", default: 1000, min: 1, showIf: (p) => p.mode === "rate" },
-    { name: "ignoreFirst", label: "ignore first message", kind: "boolean", default: false, showIf: (p) => p.mode !== "rate" },
+    { name: "threshold", label: "threshold", kind: "number", default: 1, min: 0, step: "any", visibleWhen: { field: "mode", equals: "deadband" } },
+    { name: "intervalMs", label: "interval (ms)", kind: "number", default: 1000, min: 1, visibleWhen: { field: "mode", equals: "rate" } },
+    { name: "ignoreFirst", label: "ignore first message", kind: "boolean", default: false, visibleWhen: { field: "mode", notEquals: "rate" } },
     { name: "perTopic", label: "separately for each topic", kind: "boolean", default: true },
   ],
   codegenTransform(node: GraphNode, ctx: CodegenContext): TransformCodegenResult {

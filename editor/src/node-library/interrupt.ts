@@ -85,7 +85,7 @@ export const interruptNode: NodeDefinition = {
       ],
     },
     { name: "debounce", label: "debounce", kind: "boolean", default: true },
-    { name: "debounceMs", label: "debounce (ms)", kind: "number", default: 50, min: 1, showIf: (p) => p.debounce === true },
+    { name: "debounceMs", label: "debounce (ms)", kind: "number", default: 50, min: 1, visibleWhen: { field: "debounce", equals: true } },
   ],
   codegenEventSource(node: GraphNode, ctx: CodegenContext): EventSourceCodegenResult {
     const pin = checkPin(ctx, "interrupt pin", node.properties.pin, "input");

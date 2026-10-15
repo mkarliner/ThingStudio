@@ -330,11 +330,12 @@ not here.
   **Landed 2026-10-15:** multi-output `transform`s (a returned list routes across the declared outputs,
   compile.ts's contract), a package `description`, `configRef` properties (the picked config's
   properties are inlined into the node's Python `properties`; an empty id is `None`), event-driven
-  sources (`eventSource: true` + `async def wait(properties)` then `emit`), and `pin` fields plus the
-  shared field attributes (`help`/`placeholder`/`min`/`max`/`step`/`optional`). Parity is the end state
-  (`decisions/node-authoring.md`, 2026-10-15): the remaining gaps are a data-driven field conditional
-  (today `showIf` is a JS function), `credential`/`palette` field kinds, `title`/`hidden`/`presetType`/
-  `screenOutline`, context parity (flow/compile context for packages), capability parity (dynamic ports,
+  sources (`eventSource: true` + `async def wait(properties)` then `emit`), `pin` fields plus the
+  shared field attributes (`help`/`placeholder`/`min`/`max`/`step`/`optional`), and a data-driven
+  `visibleWhen` field conditional (replacing the built-in-only function `showIf`). Parity is the end state
+  (`decisions/node-authoring.md`, 2026-10-15): the remaining gaps are the `credential`/`palette` field
+  kinds, `title`/`hidden`/`presetType`/`screenOutline`, context parity (flow/compile context for packages),
+  capability parity (dynamic ports,
   multi-output sources, resource claims, presets, native code), and the Node-RED location model (built-ins
   as packages).
 
