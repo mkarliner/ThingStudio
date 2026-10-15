@@ -263,6 +263,7 @@ Type `thingstudio/display_spi`, kind sink, palette group hardware.
 - Inputs: frame (bytes)
 - Outputs: none
 - Properties (name, type, default):
+    - `orientation`, string, default `""` — empty = off (the raw `rotation`), or 0, 90, 180, 270 as a string: the picture turned clockwise. Portrait 320x480 needs none
     - `controller`, string, default `"st7789"`
     - `frameFormat`, string, default `"rgb565"` — rgb565, gs4, gs2 or mono; must match the gui screen
     - `palette`, object, default `[0,65535,63488,2016,31,65504,2047,63519,33808,16904,50712,64800,32768,1024,16,1040]`
@@ -282,7 +283,6 @@ Type `thingstudio/display_spi`, kind sink, palette group hardware.
     - `dataLatchOrder`, boolean, default `true`
     - `xstart`, number, default `-1` — -1 lets the driver choose; set both only for an unusual panel offset
     - `ystart`, number, default `-1`
-    - `orientation`, string, default `""` — empty = off (the raw `rotation`), or 0, 90, 180, 270 as a string: the picture turned clockwise. Portrait 320x480 needs none
 
 ### ebutton
 

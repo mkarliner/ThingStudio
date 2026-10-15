@@ -59,10 +59,11 @@ carry these keys.
 | `allowUnwired` | boolean | no | The node is valid with nothing wired to it. |
 | `ports` | `{inputs, outputs}` | no | Arrays of `{name, type}`. |
 | `properties` | array | no | Property-panel fields (below). |
+| `presetType` | string | no | Preset type (admin API `/api/presets/{type}`) for a save/load-preset control at the top of the panel. |
 
 A property field is `{name, label, kind, default, options?}`. `kind` is shared with config fields
 (`config-types.ts`): `text`, `password`, `number`, `select`, `boolean`, `credential`, `configRef`,
-`pin`. `default` seeds a freshly-dropped node. A `select`'s option `value` is a string, or a number for a
+`pin`, `palette` (the indexed-colour palette editor). `default` seeds a freshly-dropped node. A `select`'s option `value` is a string, or a number for a
 select over numeric values (e.g. bme280's I2C address). A custom `.node.json` may only use the `text`,
 `number`, `boolean` and `select` kinds, with string options; the rest are built-in editor widgets.
 
@@ -116,8 +117,8 @@ files with no bridge — is being closed deliberately, family by family, with no
   of their own copies. Migrated families: `debug`, `timer`, `delay`, `gpio_out`, `pwm_out`, the I2C
   family (`touch_i2c`, `i2c`, `bme280`), the network family (`udp_send`, `udp_receive`, `http_*`,
   `mqtt_*`, `ntp`), the GPIO cluster (`interrupt`, `eswitch`, `ebutton`, `adc`, `encoder`,
-  `neopixel`), and `filter`/`journal`/`wifi_status`/`wifi_gate`. A descriptor missing the palette
-  metadata is "not yet migrated" and still falls back to `palette.ts`.
+  `neopixel`), `filter`/`journal`/`wifi_status`/`wifi_gate`, and `display_spi`/`display_i2c`. A
+  descriptor missing the palette metadata is "not yet migrated" and still falls back to `palette.ts`.
 - **Still coming.** Relax the custom format so more built-ins can be cloned: multi-output (the
   compiler already supports it), `configRef` properties, and event sources. Dynamic ports (`function`'s
   `outputCount`) and arbitrary codegen stay built-in-only. Compile-time hardware resource claims stay

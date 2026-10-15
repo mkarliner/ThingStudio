@@ -56,11 +56,12 @@ minus codegen). `interfaces/node-descriptor/SPEC.md` is now v2. Remaining work, 
    (`select`/`boolean`/`showIf`), only a catalog regeneration for two nodes whose descriptor order follows the
    panel rather than the old class order. Then `filter`/`journal`/`wifi_status`/`wifi_gate` (a third shape
    change Mike approved 2026-10-15: `step` widened to `number | "any"` for fractional fields); the generic
-   class now also grows taller for a multi-output node, matching journal's old height. Still bespoke, needing
-   the dynamic-ports mechanism (an output whose socket type follows a property): `inject`/`startup`
-   (`payloadType` retypes the output) and `function` (dynamic `outputCount`). Also still bespoke: `display_spi`/
-   `display_i2c` (use `PresetRefField`, which the generic panel doesn't render yet) and the nine `gui_*` nodes.
-   Then make `palette.ts`'s rows go away.
+   class now also grows taller for a multi-output node, matching journal's old height. Then `display_spi`/
+   `display_i2c`, which needed two more shape changes Mike approved 2026-10-15: a descriptor-level
+   `presetType` (the generic panel renders `PresetRefField` at the top) and a `palette` field kind (the
+   `PaletteField` indexed-colour editor). Still bespoke, needing the dynamic-ports mechanism (an output whose
+   socket type follows a property): `inject`/`startup` (`payloadType` retypes the output) and `function`
+   (dynamic `outputCount`). Also still bespoke: the nine `gui_*` nodes. Then make `palette.ts`'s rows go away.
 2. Relax the custom `.node.json` format (multi-output, `configRef` properties, event sources) so more built-ins
    can be cloned, and add the package's own docs (`description`/`.node.md`, sanitized).
 3. Still out: dynamic ports and arbitrary codegen stay built-in-only; compile-time resource claims stay a

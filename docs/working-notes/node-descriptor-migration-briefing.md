@@ -24,13 +24,15 @@ The canonical `NodeDescriptor` (`editor/src/compiler/node-descriptor.ts`) exists
 and catalog. Migrated families: **`debug`, `timer`, `delay`, `gpio_out`, `pwm_out`, `touch_i2c`, `i2c`,
 `bme280`, the whole network family (`udp_send`, `udp_receive`, `http_request`, `http_in`, `http_response`,
 `mqtt_publish`, `mqtt_subscribe`, `ntp`), the GPIO cluster (`interrupt`, `eswitch`, `ebutton`, `adc`,
-`encoder`, `neopixel`), and `filter`/`journal`/`wifi_status`/`wifi_gate`**. The generic property panel gained
-`configRef` (wrapping `ConfigRefField`), `credential` (wrapping `CredentialRefField`), `password`,
-`placeholder`, a numeric `select` option (`PropertyFieldOption.value: string | number`), `step: "any"`, and an
-**info-only field** (a field with no `name` renders its widget but binds to no property -- the display-only
-WiFi picker on every network node). The generic class also grows taller for a multi-output node (journal's old
-height). Mike approved the `placeholder`, numeric-option, info-only and `step: "any"` shape changes
-2026-10-15. No behavior change (node-<name> tests + the catalog are the guard; full `npm test` green).
+`encoder`, `neopixel`), `filter`/`journal`/`wifi_status`/`wifi_gate`, and `display_spi`/`display_i2c`**. The
+generic property panel gained `configRef` (wrapping `ConfigRefField`), `credential` (wrapping
+`CredentialRefField`), `password`, `placeholder`, `palette` (wrapping `PaletteField`), a numeric `select`
+option (`PropertyFieldOption.value: string | number`), `step: "any"`, an **info-only field** (a field with no
+`name` renders its widget but binds to no property -- the display-only WiFi picker on every network node), and
+a descriptor-level `presetType` (renders `PresetRefField` at the top). The generic class also grows taller for
+a multi-output node (journal's old height). Mike approved the `placeholder`, numeric-option, info-only,
+`step: "any"`, `presetType` and `palette` shape changes 2026-10-15. No behavior change (node-<name> tests + the
+catalog are the guard; full `npm test` green).
 
 `palette.ts`'s per-kind rows are optional during migration: a descriptor with a `paletteId` is "migrated" and
 `paletteStyleFor` reads it; one without still falls back to `palette.ts`. `NODE_PALETTE` is now
@@ -39,11 +41,11 @@ height). Mike approved the `placeholder`, numeric-option, info-only and `step: "
 ## The mechanism in recon form (so you don't re-read everything)
 
 - **Descriptor metadata** lives on the `NodeDefinition` in `editor/src/node-library/<name>.ts`:
-  `paletteId`/`label`/`group`/`priority`/`color`/`bgcolor`/`icon`/`width`/`description`, plus `properties`
-  (`PropertyFieldDescriptor[]`: `{name?,label,kind,default?,options?,configType?,credentialType?,help?,
-  placeholder?,optional?,min?,max?,step?,showIf?}`; `options[].value` is `string | number`, `step` may be
-  `"any"`). A field with no `name` (and no `default`) is info-only. Copy the values from the old `palette.ts`
-  row and the old `PropertyPanel.vue` block — the goal is byte-identical behavior.
+  `paletteId`/`label`/`group`/`priority`/`color`/`bgcolor`/`icon`/`width`/`description`/`presetType`, plus
+  `properties` (`PropertyFieldDescriptor[]`: `{name?,label,kind,default?,options?,configType?,credentialType?,
+  help?,placeholder?,optional?,min?,max?,step?,showIf?}`; `options[].value` is `string | number`, `step` may
+  be `"any"`; kinds include `palette`). A field with no `name` (and no `default`) is info-only. Copy the values
+  from the old `palette.ts` row and the old `PropertyPanel.vue` block — the goal is byte-identical behavior.
 - **The generic class** derives width, title, ports and default properties from the descriptor (and grows
   taller by 20px when there's more than one output). Keep the
   exported class name (e.g. `export class TimerNode extends buildDescriptorNodeClass(timerNode) {}`) —
@@ -70,21 +72,20 @@ height). Mike approved the `placeholder`, numeric-option, info-only and `step: "
 
 1. **Done:** `debug`/`timer`/`delay`/`gpio_out`/`pwm_out`, the I2C family (`touch_i2c`/`i2c`/`bme280`), the
    network family (`udp_send`/`udp_receive`/`http_request`/`http_in`/`http_response`/`mqtt_publish`/
-   `mqtt_subscribe`/`ntp`), the GPIO cluster (`interrupt`/`eswitch`/`ebutton`/`adc`/`encoder`/`neopixel`), and
-   `filter`/`journal`/`wifi_status`/`wifi_gate`. The shape changes that unblocked them landed 2026-10-15
-   (Mike): `PropertyFieldOption.value` is `string | number`, a field with no `name` is info-only (the
-   display-only WiFi picker on each network node, via `fieldValue`/`setField` in `PropertyPanel.vue`), and
-   `step` may be `"any"`. The generic class now also grows taller for a multi-output node (journal's old
-   height). One catalog regeneration: `eswitch`/`ebutton` descriptor property order follows their panel, not
-   their old class order (generated doc only).
+   `mqtt_subscribe`/`ntp`), the GPIO cluster (`interrupt`/`eswitch`/`ebutton`/`adc`/`encoder`/`neopixel`),
+   `filter`/`journal`/`wifi_status`/`wifi_gate`, and `display_spi`/`display_i2c`. The shape changes that
+   unblocked them landed 2026-10-15 (Mike): `PropertyFieldOption.value` is `string | number`, a field with no
+   `name` is info-only (the display-only WiFi picker on each network node, via `fieldValue`/`setField` in
+   `PropertyPanel.vue`), `step` may be `"any"`, and the panel gained `presetType` (→ `PresetRefField`) and a
+   `palette` kind (→ `PaletteField`). The generic class now also grows taller for a multi-output node
+   (journal's old height). Two catalog regenerations: `eswitch`/`ebutton` and `display_spi` descriptor property
+   order follows their panel, not their old class order (generated doc only).
 2. **Still bespoke — needs the dynamic-ports mechanism (an output whose socket type follows a property):**
    `inject`/`startup` (`payloadType` retypes the output) and `function` (dynamic `outputCount`). The generic
    class builds sockets once in its constructor, so it needs an optional hook to re-run `portSocket` (or a
    `retypeOutput`) when a property changes. Either add that hook or leave these three hand-written (the
    briefing allows this).
-3. **Still bespoke — display and GUI:** `display_spi`/`display_i2c` (use `PresetRefField`, which the generic
-   panel doesn't render yet) and the nine `gui_*` nodes (`guiClass`; some use `ConfigRefField`/screen
-   geometry).
+3. **Still bespoke — GUI:** the nine `gui_*` nodes (`guiClass`; some use `ConfigRefField`/screen geometry).
 4. **Then close the transitional state:** once every family is migrated, make the palette metadata required on
    `NodeDescriptor`, delete `palette.ts`'s now-empty rows (keep `DEFAULT_NODE_GROUPS`/`DEFAULT_KIND_STYLE`), and
    simplify `paletteStyleFor`.

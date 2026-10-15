@@ -158,11 +158,6 @@ export const NODE_PALETTE: Partial<Record<NodeKind, KindStyle>> = {
   // after inject.
   startup: { color: "#5c5c2e", bgcolor: "#3a3a1f", icon: "⏻", label: "startup", group: "general", priority: 11 },
   function: { color: "#6e5b2e", bgcolor: "#3f341f", icon: "ƒ", label: "function", group: "general", priority: 30 },
-  // display_spi/display_i2c, 2026-09-17 -- see this file's header for the
-  // color/icon reasoning. Priorities 40/41 (pwm_out's own 30 is the last
-  // used hardware-group slot so far), sorting after gpio_out/pwm_out.
-  display_spi: { color: "#4a3f8a", bgcolor: "#2a1f4a", icon: "▤", label: "display spi", group: "hardware", priority: 40 },
-  display_i2c: { color: "#3f2e8a", bgcolor: "#1f144a", icon: "▦", label: "display i2c", group: "hardware", priority: 41 },
   // GUI nodes, 2026-10-08 (node-library/gui.ts): their own "GUI" group, one slate-green family.
   gui_screen: { color: "#3f6e5c", bgcolor: "#1f3a30", icon: "▣", label: "screen", group: "GUI", priority: 10 },
   gui_navigator: { color: "#3f5c6e", bgcolor: "#1f303a", icon: "⇆", label: "navigator", group: "GUI", priority: 20, hidden: true },

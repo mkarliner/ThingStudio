@@ -519,9 +519,102 @@ function indent4(line: string): string {
 export const displaySpiNode: NodeDefinition = {
   type: "thingstudio/display_spi",
   kind: "sink",
+  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor.
+  paletteId: "display_spi",
+  label: "display spi",
+  group: "hardware",
+  priority: 40,
+  color: "#4a3f8a",
+  bgcolor: "#2a1f4a",
+  icon: "▤",
+  width: 128,
+  presetType: "display_spi",
+  description:
+    "One input: msg.payload must already be a framebuf.FrameBuffer buffer matching frame format above -- RGB565 " +
+    "(width * height * 2 bytes) by default, or an indexed format: GS4 4-bit (framebuf.GS4_HMSB, a quarter the " +
+    "memory, palette indices 0-15), GS2 2-bit (framebuf.GS2_HMSB, an eighth, indices 0-3), or Mono 1-bit " +
+    "(framebuf.MONO_HMSB -- not MONO_VLSB/MONO_HLSB, see this node's own docs page for why -- a sixteenth, indices " +
+    "0-1). Build the source buffer upstream with a function node using framebuf.FrameBuffer, or a future " +
+    "graphics-framework node. Note: MicroPython's framebuf.RGB565 stores each pixel in CPU-native (little-endian) " +
+    "byte order, but SPI TFT controllers including this one expect big-endian pixel bytes on the wire -- byte-swap " +
+    "an RGB565 buffer (swap each pair of bytes) before sending, or colors come out wrong (e.g. green renders as " +
+    "red); indexed modes don't need this, the palette is defined in real RGB565 order already. Wrong-length input " +
+    "raises a NODE_ERROR rather than corrupting the panel silently. Pins vary board to board -- there's no sensible " +
+    "default for more than one board, so set them from your board's pinout. -1 on cs/reset/backlight means that pin " +
+    "isn't wired (some boards tie reset/cs high or omit backlight control entirely). -1 on xstart/ystart (the " +
+    "default) lets the vendored st7789py_mpy driver's own built-in offset table handle 240x240 and 135x240 panels " +
+    "(TiDAL's own panel needs xstart=52, ystart=40 -- the driver applies this automatically at -1); any other " +
+    "resolution needs xstart/ystart set explicitly or the driver raises a clear error at flow-boot time. Indexed " +
+    "modes use the palette swatches under frame format: GS2 reads the first 4 colors, Mono the first 2.",
   ports: {
     inputs: [{ name: "frame", type: "bytes" }],
   },
+  properties: [
+    {
+      name: "orientation",
+      label: "orientation",
+      kind: "select",
+      default: "",
+      options: [
+        { value: "", label: "off (raw rotation)" },
+        { value: "0", label: "0° (the panel's own)" },
+        { value: "90", label: "90° clockwise" },
+        { value: "180", label: "180°" },
+        { value: "270", label: "270° clockwise" },
+      ],
+      help:
+        "Width and height are the panel's own size; rotation is how the panel is mounted (0 to 3). A gui screen " +
+        "wired to this display turns its size and touch to match.",
+    },
+    {
+      name: "controller",
+      label: "controller",
+      kind: "select",
+      default: "st7789",
+      options: [
+        { value: "st7789", label: "ST7789" },
+        { value: "st7796", label: "ST7796 (320x480)" },
+      ],
+    },
+    {
+      name: "frameFormat",
+      label: "frame format",
+      kind: "select",
+      default: "rgb565",
+      options: [
+        { value: "rgb565", label: "RGB565 (full color, default)" },
+        { value: "gs4", label: "GS4 4-bit indexed (1/4 the memory, 16-color palette)" },
+        { value: "gs2", label: "GS2 2-bit indexed (1/8 the memory, 4-color palette)" },
+        { value: "mono", label: "Mono 1-bit indexed (1/16 the memory, 2-color palette)" },
+      ],
+    },
+    { name: "palette", label: "palette", kind: "palette", default: [...DEFAULT_PALETTE_GS4] },
+    { name: "spiBus", label: "SPI bus", kind: "number", default: 2, min: 0 },
+    { name: "baudrate", label: "baudrate", kind: "number", default: 40000000, min: 1 },
+    { name: "sck", label: "sck pin", kind: "pin", default: 12 },
+    { name: "mosi", label: "mosi pin", kind: "pin", default: 11 },
+    { name: "dc", label: "dc pin", kind: "pin", default: 13 },
+    { name: "cs", label: "cs pin (-1 = not wired)", kind: "pin", default: -1, optional: true },
+    { name: "reset", label: "reset pin (-1 = not wired)", kind: "pin", default: -1, optional: true },
+    { name: "backlight", label: "backlight pin (-1 = not wired)", kind: "pin", default: -1, optional: true },
+    { name: "width", label: "width (px)", kind: "number", default: 135, min: 1 },
+    { name: "height", label: "height (px)", kind: "number", default: 240, min: 1 },
+    { name: "rotation", label: "rotation (0-7)", kind: "number", default: 0, min: 0, max: 7 },
+    {
+      name: "colorOrder",
+      label: "color order",
+      kind: "select",
+      default: "bgr",
+      options: [
+        { value: "bgr", label: "BGR (default)" },
+        { value: "rgb", label: "RGB" },
+      ],
+    },
+    { name: "invertColors", label: "invert colors", kind: "boolean", default: false },
+    { name: "dataLatchOrder", label: "data latch order (MH bit)", kind: "boolean", default: true },
+    { name: "xstart", label: "xstart (-1 = auto)", kind: "number", default: -1, min: -1 },
+    { name: "ystart", label: "ystart (-1 = auto)", kind: "number", default: -1, min: -1 },
+  ],
   codegenSink(node: GraphNode, ctx: CodegenContext): SinkCodegenResult {
     const controller = String(node.properties.controller ?? "st7789") as Controller;
     if (!CONTROLLERS.includes(controller)) {

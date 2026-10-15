@@ -60,9 +60,37 @@ type Controller = (typeof CONTROLLERS)[number];
 export const displayI2cNode: NodeDefinition = {
   type: "thingstudio/display_i2c",
   kind: "sink",
+  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor.
+  paletteId: "display_i2c",
+  label: "display i2c",
+  group: "hardware",
+  priority: 41,
+  color: "#3f2e8a",
+  bgcolor: "#1f144a",
+  icon: "▦",
+  width: 128,
+  presetType: "display_i2c",
+  description:
+    "One input: msg.payload must already be a MONO_VLSB-encoded framebuf.FrameBuffer buffer, width * (height / 8) " +
+    "bytes -- build it upstream. Wrong-length input raises a NODE_ERROR rather than silently corrupting the " +
+    "display's internal buffer indexing. The I2C bus holds the pins and clock, shared with every other I2C node on " +
+    "the same bus.",
   ports: {
     inputs: [{ name: "frame", type: "bytes" }],
   },
+  properties: [
+    {
+      name: "controller",
+      label: "controller",
+      kind: "select",
+      default: "ssd1306",
+      options: [{ value: "ssd1306", label: "SSD1306" }],
+    },
+    { name: "i2cConfigId", label: "I2C bus", kind: "configRef", configType: "thingstudio/config/i2c-bus", default: "" },
+    { name: "addr", label: "address", kind: "number", default: 0x3c, min: 0, max: 127 },
+    { name: "width", label: "width (px)", kind: "number", default: 128, min: 1 },
+    { name: "height", label: "height (px, multiple of 8)", kind: "number", default: 64, min: 8, step: 8 },
+  ],
   codegenSink(node: GraphNode, ctx: CodegenContext): SinkCodegenResult {
     const controller = String(node.properties.controller ?? "ssd1306") as Controller;
     if (!CONTROLLERS.includes(controller)) {

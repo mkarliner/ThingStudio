@@ -602,137 +602,17 @@ export class WifiStatusNode extends buildDescriptorNodeClass(wifiStatusNode) {}
 
 export class WifiGateNode extends buildDescriptorNodeClass(wifiGateNode) {}
 
+export class DisplaySpiNode extends buildDescriptorNodeClass(displaySpiNode) {}
+
+export class DisplayI2cNode extends buildDescriptorNodeClass(displayI2cNode) {}
+
 // The GPIO cluster -- interrupt/eswitch/ebutton/adc/encoder/neopixel -- is descriptor-driven
 // (buildDescriptorNodeClass below). Their defaults match each node-library file's own codegen
 // fallbacks (the invariant every hardware node class here followed).
 
-// display_spi/display_i2c added 2026-09-17 -- framebuffer-display-node-
-// scoping.md's converged design (Mike's steer): two node families split
-// by bus (SPI/I2C), each taking a single pre-rendered framebuf-format
-// `frame` (bytes) input and pushing it to a vendored driver
-// (display-spi.ts/display-i2c.ts's own headers have the full design
-// story, including the VENDOR_FILES scaling concern this design tracks
-// but doesn't solve). Defaults here match each file's own codegen
-// defaults exactly, same invariant every other hardware node class in
-// this file follows -- a freshly-dropped node's properties and a
-// freshly-omitted property on a hand-edited flow file should compile to
-// the same thing. `cs`/`reset`/`backlight` default to -1 (display-spi.ts's
-// "not wired" sentinel, not a Thingstudio-specific convention -- see that
-// file's header).
-export class DisplaySpiNode extends ClassicPreset.Node {
-  width = 128;
-  height = NODE_HEIGHT;
-  kind = "display_spi" as const;
-  nodeType = "thingstudio/display_spi";
-  highlighted = false;
-  status: NodeStatusState | null = null;
-  statusText: string | null = null;
-
-  properties: {
-    controller: "st7789" | "st7796";
-    frameFormat: "rgb565" | "gs4" | "gs2" | "mono";
-    palette: number[];
-    spiBus: number;
-    baudrate: number;
-    sck: number;
-    mosi: number;
-    dc: number;
-    cs: number;
-    reset: number;
-    backlight: number;
-    width: number;
-    height: number;
-    rotation: number;
-    colorOrder: "rgb" | "bgr";
-    invertColors: boolean;
-    dataLatchOrder: boolean;
-    xstart: number;
-    ystart: number;
-    orientation: "" | "0" | "90" | "180" | "270";
-  } = {
-    controller: "st7789",
-    // frameFormat/palette added 2026-09-18 (display-spi.ts's own header
-    // has the full story) -- "rgb565" is the default so a freshly-dropped
-    // node still compiles identically to before this property existed,
-    // same invariant this class's own header comment states. gs2/mono
-    // (also 2026-09-18, same day) widen the union but don't change this
-    // default. DEFAULT_PALETTE_GS4 (display-spi.ts) is mirrored here
-    // rather than imported -- this file already duplicates other codegen
-    // defaults (e.g. rotation/xstart/ystart) rather than importing them,
-    // same pattern.
-    frameFormat: "rgb565",
-    palette: [
-      0x0000, 0xffff, 0xf800, 0x07e0, 0x001f, 0xffe0, 0x07ff, 0xf81f, 0x8410, 0x4208, 0xc618, 0xfd20, 0x8000, 0x0400, 0x0010, 0x0410,
-    ],
-    spiBus: 2,
-    baudrate: 40000000,
-    sck: 12,
-    mosi: 11,
-    dc: 13,
-    cs: -1,
-    reset: -1,
-    backlight: -1,
-    width: 135,
-    height: 240,
-    rotation: 0,
-    // colorOrder/invertColors/dataLatchOrder added 2026-09-22, closing the
-    // PropertyPanel.vue gap MVP item 5 named explicitly ("colorOrder,
-    // invertColors, dataLatchOrder are missing today") -- picked up
-    // alongside the presets work (docs/working-notes/outstanding-items/
-    // presets-design.md) since a "save this display's SPI setup as a
-    // preset" feature is a lot less useful if three of its real properties
-    // can't be seen or set from the panel that's doing the saving. Values
-    // match display-spi.ts's own codegen fallback defaults exactly (its
-    // `?? "bgr"` / `=== undefined ? false` / `=== undefined ? true`), same
-    // "a freshly-dropped node and a freshly-omitted flow-file property
-    // compile to the same thing" invariant this class's own header states
-    // -- NOT the CYD-tuned `rotation: 1` default that same header
-    // paragraph in display-spi.ts also mentions; this class's `rotation: 0`
-    // above predates that CYD default change and is left alone here, out
-    // of scope for this change.
-    colorOrder: "bgr",
-    invertColors: false,
-    dataLatchOrder: true,
-    xstart: -1,
-    ystart: -1,
-    orientation: "",
-  };
-
-  constructor() {
-    super("display spi");
-    this.addInput("frame", new ClassicPreset.Input(portSocket(displaySpiNode.ports?.inputs, "frame", this.properties), "frame", true));
-  }
-}
-
-export class DisplayI2cNode extends ClassicPreset.Node {
-  width = 128;
-  height = NODE_HEIGHT;
-  kind = "display_i2c" as const;
-  nodeType = "thingstudio/display_i2c";
-  highlighted = false;
-  status: NodeStatusState | null = null;
-  statusText: string | null = null;
-
-  // Bus, pins and clock live in a shared I2C bus config (node-library/i2c-shared.ts, 2026-09-26).
-  properties: {
-    controller: "ssd1306";
-    i2cConfigId: string;
-    addr: number;
-    width: number;
-    height: number;
-  } = {
-    controller: "ssd1306",
-    i2cConfigId: "",
-    addr: 0x3c,
-    width: 128,
-    height: 64,
-  };
-
-  constructor() {
-    super("display i2c");
-    this.addInput("frame", new ClassicPreset.Input(portSocket(displayI2cNode.ports?.inputs, "frame", this.properties), "frame", true));
-  }
-}
+// display_spi/display_i2c (node-library/display-spi.ts, display-i2c.ts) are descriptor-driven
+// (buildDescriptorNodeClass below); their panels use PresetRefField (presetType) and, for display_spi,
+// the PaletteField palette editor.
 
 // The network family -- udp_send/udp_receive/http_request/http_in/http_response/mqtt_publish/
 // mqtt_subscribe, plus wifi_status (a source with a real wifiConfigId) and wifi_gate (a pass-or-drop

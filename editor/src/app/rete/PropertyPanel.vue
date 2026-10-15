@@ -316,127 +316,14 @@
           <code>ack</code>, <code>timeout</code> or <code>closed</code>.</p>
       </template>
 
-      <template v-else-if="node.kind === 'display_spi'">
-        <PresetRefField :key="node.id" preset-type="display_spi" :properties="node.properties" @applied="touch" />
-        <label>orientation
-          <select v-model="node.properties.orientation" @change="touch">
-            <option value="">off (raw rotation)</option>
-            <option value="0">0° (the panel's own)</option>
-            <option value="90">90° clockwise</option>
-            <option value="180">180°</option>
-            <option value="270">270° clockwise</option>
-          </select>
-        </label>
-        <p class="hint" v-if="node.properties.orientation">Width and height are the panel's own size; rotation is how the panel is
-          mounted (0 to 3). A gui screen wired to this display turns its size and touch to match.</p>
-        <label>controller
-          <select v-model="node.properties.controller" @change="touch">
-            <option value="st7789">ST7789</option>
-            <option value="st7796">ST7796 (320x480)</option>
-          </select>
-        </label>
-        <label>frame format
-          <select v-model="node.properties.frameFormat" @change="touch">
-            <option value="rgb565">RGB565 (full color, default)</option>
-            <option value="gs4">GS4 4-bit indexed (1/4 the memory, 16-color palette)</option>
-            <option value="gs2">GS2 2-bit indexed (1/8 the memory, 4-color palette)</option>
-            <option value="mono">Mono 1-bit indexed (1/16 the memory, 2-color palette)</option>
-          </select>
-        </label>
-        <PaletteField :properties="node.properties" @changed="touch" />
-        <label>SPI bus
-          <input type="number" min="0" v-model.number="node.properties.spiBus" @input="touch" />
-        </label>
-        <label>baudrate
-          <input type="number" min="1" v-model.number="node.properties.baudrate" @input="touch" />
-        </label>
-        <PinField label="sck pin" :model-value="node.properties.sck" @update:model-value="(v) => setProp('sck', v)" />
-        <PinField label="mosi pin" :model-value="node.properties.mosi" @update:model-value="(v) => setProp('mosi', v)" />
-        <PinField label="dc pin" :model-value="node.properties.dc" @update:model-value="(v) => setProp('dc', v)" />
-        <PinField label="cs pin (-1 = not wired)" :optional="true" :model-value="node.properties.cs" @update:model-value="(v) => setProp('cs', v)" />
-        <PinField label="reset pin (-1 = not wired)" :optional="true" :model-value="node.properties.reset" @update:model-value="(v) => setProp('reset', v)" />
-        <PinField label="backlight pin (-1 = not wired)" :optional="true" :model-value="node.properties.backlight" @update:model-value="(v) => setProp('backlight', v)" />
-        <label>width (px)
-          <input type="number" min="1" v-model.number="node.properties.width" @input="touch" />
-        </label>
-        <label>height (px)
-          <input type="number" min="1" v-model.number="node.properties.height" @input="touch" />
-        </label>
-        <label>rotation (0-7)
-          <input type="number" min="0" max="7" v-model.number="node.properties.rotation" @input="touch" />
-        </label>
-        <label>color order
-          <select v-model="node.properties.colorOrder" @change="touch">
-            <option value="bgr">BGR (default)</option>
-            <option value="rgb">RGB</option>
-          </select>
-        </label>
-        <label class="checkbox-label">
-          <input type="checkbox" v-model="node.properties.invertColors" @change="touch" />
-          invert colors
-        </label>
-        <label class="checkbox-label">
-          <input type="checkbox" v-model="node.properties.dataLatchOrder" @change="touch" />
-          data latch order (MH bit)
-        </label>
-        <label>xstart (-1 = auto)
-          <input type="number" min="-1" v-model.number="node.properties.xstart" @input="touch" />
-        </label>
-        <label>ystart (-1 = auto)
-          <input type="number" min="-1" v-model.number="node.properties.ystart" @input="touch" />
-        </label>
-        <p class="hint">
-          One input: msg.payload must already be a framebuf.FrameBuffer buffer matching frame format above --
-          RGB565 (width * height * 2 bytes) by default, or an indexed format: GS4 4-bit (framebuf.GS4_HMSB, a
-          quarter the memory, palette indices 0-15), GS2 2-bit (framebuf.GS2_HMSB, an eighth, indices 0-3), or
-          Mono 1-bit (framebuf.MONO_HMSB -- not MONO_VLSB/MONO_HLSB, see this node's own docs page for why --
-          a sixteenth, indices 0-1). Build the source buffer upstream with a function node using
-          framebuf.FrameBuffer, or a future graphics-framework node. Note: MicroPython's framebuf.RGB565 stores
-          each pixel in CPU-native (little-endian) byte order, but SPI TFT controllers including this one expect
-          big-endian pixel bytes on the wire -- byte-swap an RGB565 buffer (swap each pair of bytes) before
-          sending, or colors come out wrong (e.g. green renders as red); indexed modes don't need this, the
-          palette is defined in real RGB565 order already. Wrong-length input raises a NODE_ERROR rather than
-          corrupting the panel silently. Pins vary board to board -- there's no sensible default for more than
-          one board, so set them from your board's pinout. -1 on cs/reset/backlight means that pin isn't wired
-          (some boards tie reset/cs high or omit backlight control entirely). -1 on xstart/ystart (the default)
-          lets the vendored st7789py_mpy driver's own built-in offset table handle 240x240 and 135x240 panels
-          (TiDAL's own panel needs xstart=52, ystart=40 -- the driver applies this automatically at -1); any
-          other resolution needs xstart/ystart set explicitly or the driver raises a clear error at flow-boot
-          time. Indexed modes use the palette swatches under frame format: GS2 reads the first 4 colors, Mono the
-          first 2.
-        </p>
-      </template>
-
-      <template v-else-if="node.kind === 'display_i2c'">
-        <PresetRefField :key="node.id" preset-type="display_i2c" :properties="node.properties" @applied="touch" />
-        <label>controller
-          <select v-model="node.properties.controller" @change="touch">
-            <option value="ssd1306">SSD1306</option>
-          </select>
-        </label>
-        <ConfigRefField
-          config-type="thingstudio/config/i2c-bus"
-          :model-value="node.properties.i2cConfigId || undefined"
-          @update:model-value="(id) => setConfigId('i2cConfigId', id)"
-        />
-        <label>address
-          <input type="number" min="0" max="127" v-model.number="node.properties.addr" @input="touch" />
-        </label>
-        <label>width (px)
-          <input type="number" min="1" v-model.number="node.properties.width" @input="touch" />
-        </label>
-        <label>height (px, multiple of 8)
-          <input type="number" min="8" step="8" v-model.number="node.properties.height" @input="touch" />
-        </label>
-        <p class="hint">
-          One input: msg.payload must already be a MONO_VLSB-encoded framebuf.FrameBuffer buffer, width *
-          (height / 8) bytes -- build it upstream. Wrong-length input raises a NODE_ERROR rather than silently
-          corrupting the display's internal buffer indexing. The I2C bus holds the pins and clock, shared with
-          every other I2C node on the same bus.
-        </p>
-      </template>
-
       <template v-else-if="nodeDescriptor">
+        <PresetRefField
+          v-if="nodeDescriptor.presetType"
+          :key="node.id"
+          :preset-type="nodeDescriptor.presetType"
+          :properties="nodeProperties"
+          @applied="touch"
+        />
         <p v-if="nodeDescriptor.description" class="hint">{{ nodeDescriptor.description }}</p>
         <template v-for="f in nodeDescriptor.properties ?? []" :key="f.name ?? f.label">
           <template v-if="!f.showIf || f.showIf(nodeProperties)">
@@ -446,6 +333,11 @@
               :optional="f.optional"
               :model-value="nodeProperties[f.name!]"
               @update:model-value="(v) => setProp(f.name!, v)"
+            />
+            <PaletteField
+              v-else-if="f.kind === 'palette'"
+              :properties="nodeProperties"
+              @changed="touch"
             />
             <ConfigRefField
               v-else-if="f.kind === 'configRef'"

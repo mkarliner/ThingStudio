@@ -55,7 +55,8 @@ export type PropertyFieldKind =
   | "boolean"
   | "credential"
   | "configRef"
-  | "pin";
+  | "pin"
+  | "palette";
 
 export interface PropertyFieldOption {
   /** A string for most fields; a number for a `select` over numeric values (e.g. bme280's I2C address).
@@ -147,4 +148,7 @@ export interface NodeDescriptor {
   };
   /** The property panel's field schema. */
   properties?: PropertyFieldDescriptor[];
+  /** Preset type (admin API `/api/presets/{type}`): when set, the panel shows a save/load-preset
+   * control at the top (`PresetRefField`). The preset snapshots the node's whole `properties` object. */
+  presetType?: string;
 }
