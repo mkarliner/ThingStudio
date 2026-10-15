@@ -79,7 +79,7 @@ import { pyStringLiteral } from "./py-literals.js";
 // this validator.
 export const PAYLOAD_TYPES: readonly PayloadType[] = ["int", "number", "bool", "string", "bytes", "any"];
 export const NODE_KINDS: readonly NodeKind[] = ["source", "transform", "sink"];
-export const PROPERTY_KINDS = ["text", "number", "boolean", "select", "configRef"] as const;
+export const PROPERTY_KINDS = ["text", "number", "boolean", "select", "configRef", "pin"] as const;
 type CustomPropertyKind = (typeof PROPERTY_KINDS)[number];
 
 /** Package-loading/shape errors -- distinct from CompileError (per-instance
@@ -104,7 +104,7 @@ export interface CustomNodePropertyField {
   name: string;
   label: string;
   kind: CustomPropertyKind;
-  /** Must match `kind` (number -> number, boolean -> boolean, text/select/configRef -> string). */
+  /** Must match `kind` (number/pin -> number, boolean -> boolean, text/select/configRef -> string). */
   default: unknown;
   /** Required, non-empty, when kind is "select"; ignored otherwise. */
   options?: CustomNodePropertyOption[];
@@ -112,6 +112,18 @@ export interface CustomNodePropertyField {
    * "thingstudio/config/i2c-bus"). At compile time the picked config's own properties are resolved and
    * passed to the node's Python as a dict (see pyPropertiesLiteral); an empty id passes None. */
   configType?: string;
+  // -- optional field attributes (the generic panel renders each where it applies), matching the canonical
+  // PropertyFieldDescriptor so a custom node can express what a built-in's panel does --
+  /** Short plain-text note rendered under the field. */
+  help?: string;
+  /** Hint text shown in an empty text/number input. */
+  placeholder?: string;
+  /** Number-field bounds/step, forwarded to the <input type="number">; `step` may be "any". */
+  min?: number;
+  max?: number;
+  step?: number | "any";
+  /** A pin field where -1/blank means "not wired". */
+  optional?: boolean;
 }
 
 export interface CustomNodeDescriptor {
@@ -206,12 +218,37 @@ function validatePropertyField(raw: unknown, where: string): CustomNodePropertyF
     }
     field.configType = configType;
   }
+  // -- optional attributes (any kind; validated only when present), matching PropertyFieldDescriptor --
+  if (rec.help !== undefined) {
+    if (typeof rec.help !== "string" || rec.help.length === 0) fail(`${where}.help must be a non-empty string when present`);
+    field.help = rec.help;
+  }
+  if (rec.placeholder !== undefined) {
+    if (typeof rec.placeholder !== "string" || rec.placeholder.length === 0) fail(`${where}.placeholder must be a non-empty string when present`);
+    field.placeholder = rec.placeholder;
+  }
+  if (rec.min !== undefined) {
+    if (typeof rec.min !== "number" || !Number.isFinite(rec.min)) fail(`${where}.min must be a finite number when present`);
+    field.min = rec.min;
+  }
+  if (rec.max !== undefined) {
+    if (typeof rec.max !== "number" || !Number.isFinite(rec.max)) fail(`${where}.max must be a finite number when present`);
+    field.max = rec.max;
+  }
+  if (rec.step !== undefined) {
+    if (rec.step !== "any" && (typeof rec.step !== "number" || !Number.isFinite(rec.step))) fail(`${where}.step must be a finite number or "any" when present`);
+    field.step = rec.step as number | "any";
+  }
+  if (rec.optional !== undefined) {
+    if (typeof rec.optional !== "boolean") fail(`${where}.optional must be a boolean when present`);
+    field.optional = rec.optional;
+  }
   // default's shape must already match kind -- a mismatched default would
   // otherwise only surface the first time some node instance's property
   // panel field gets left untouched, at compile time, far from the actual
   // mistake (CLAUDE.md's fault-handling priority: fail at the boundary,
   // not downstream).
-  if (kind === "number" && typeof field.default !== "number") fail(`${where}.default must be a number when kind is "number"`);
+  if ((kind === "number" || kind === "pin") && typeof field.default !== "number") fail(`${where}.default must be a number when kind is "${kind}"`);
   if (kind === "boolean" && typeof field.default !== "boolean") fail(`${where}.default must be a boolean when kind is "boolean"`);
   if ((kind === "text" || kind === "select" || kind === "configRef") && typeof field.default !== "string") fail(`${where}.default must be a string when kind is "${kind}"`);
   if (kind === "select" && !field.options!.some((o) => o.value === field.default)) {
@@ -393,6 +430,7 @@ function pyPropertiesLiteral(descriptor: CustomNodeDescriptor, rawProperties: Re
     let literal: string;
     switch (f.kind) {
       case "number":
+      case "pin":
         literal = pyNumberLiteral(raw, fieldLabel);
         break;
       case "boolean":

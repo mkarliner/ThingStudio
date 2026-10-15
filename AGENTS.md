@@ -100,6 +100,23 @@ foreclose the expensive one" calls, not exceptions to the cheap-by-default rule.
 applied consistently to new work — including plain engineering-effort trade-offs, not just protocol/hardware one-way
 doors — rather than re-derived per feature.
 
+## Node format parity: built-in and custom nodes are one thing
+
+The end state is the Node-RED model — a node is one package (descriptor + device-side Python behavior), core
+nodes shipped in a folder ahead of the user's, same format, copyable and editable. "No difference between
+custom nodes and builtin nodes" is the target; the reviewer's test is "could a built-in be rewritten as a
+package with no loss." One divergence stays by design (the editor never executes package code —
+`custom-node-authoring-scoping.md` Decision 5). Two rules bind new node work, so nothing here paints us into
+a corner:
+
+- **Data-equivalent rule** — a new descriptor capability must have a serializable form, not a
+  JS-function-only one. `showIf` (function), `PortType`-as-function and `outputCount` are the existing
+  corners; prefer data, and treat a genuinely unavoidable function as an explicit, revisitable divergence.
+- **One-vocabulary rule** — the custom `.node.json` schema stays a strict subset of the canonical
+  `NodeDescriptor`; never a parallel vocabulary that can drift.
+
+Full reasoning, rules and the phased roadmap: `docs/working-notes/decisions/node-authoring.md` (2026-10-15).
+
 ## Architecture first at subsystem interfaces: MVP-ready is not tester-ready
 
 Two bars, not one. "MVP" means feature-complete enough to demonstrate and dogfood on hardware we hold; "suitable for

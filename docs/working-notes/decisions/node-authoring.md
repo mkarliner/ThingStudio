@@ -655,3 +655,29 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   per-flow and per-instance (setup statements plus a function body, not the custom format's single
   `run(msg, properties)` shape), so a clone seeds an editable package the user then owns, and won't
   auto-track upstream fixes. Next to the option-(b) follow-on already noted in the unification briefing.
+
+- **2026-10-15 — End state: built-in and custom nodes are the same thing (the Node-RED model).** Mike's
+  directive, on the back of the format-parity work the same day: "no difference between custom nodes and
+  builtin nodes", per the overall "mimic node-red as far as is reasonable" call — and "eliminate all
+  obstacles to that... don't paint yourself into a corner". In Node-RED a node is one package (a runtime half
+  + an editor half); core nodes ship with the install, user nodes in `~/.node-red`, same format, copy and
+  edit. Thingstudio's target is the same, with the one divergence already on record
+  (`custom-node-authoring-scoping.md` Decision 5): the editor never executes package code. The reviewer's own
+  parity test stands — "could a built-in be rewritten as a package with no loss" (`outstanding-items.md`,
+  [P3]).
+  **Two rules, binding new node work now:**
+  - **Data-equivalent rule.** A new descriptor capability must have a serializable (data) form, not a
+    JS-function-only one. `showIf` (a function) is the known corner; `PortType`-as-function and
+    `outputCount` are the same shape. Prefer data; where a function is genuinely unavoidable, record it as an
+    explicit, revisitable divergence rather than letting it accrete.
+  - **One-vocabulary rule.** The custom `.node.json` schema stays a strict subset of the canonical
+    `NodeDescriptor` — never a parallel vocabulary that can drift.
+  **Roadmap (phases):** 0 — no-corner rules + unify the two editor node-class builders
+  (`buildDescriptorNodeClass` + `CustomNode`); 1 — descriptor/UI parity (field kinds `pin`/`credential`/
+  `palette`; attributes `help`/`placeholder`/`min`/`max`/`step`/`optional`; `title`/`hidden`/`presetType`/
+  `screenOutline`; a data-driven conditional; finish migrating `function`/`gui_button`); 2 — context parity
+  (expose flow/compile context to packages: config singletons + credential-by-name, `findNodesOfType`,
+  wired-ness, screens, target); 3 — capability parity (dynamic ports, multi-output sources, resource claims +
+  a real checker, presets, native code); 4 — location parity (a core packages folder ahead of the user folder,
+  one load path, codegen retired or demoted to a build-time generator). Phase 4 needs Mike's call on the
+  behavior model (built-ins as packages) and codegen's fate (generate the core `.node.py` vs re-author it).

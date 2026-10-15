@@ -62,7 +62,7 @@
       "properties": {
         "name": { "type": "string", "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$", "description": "Dict key your Python reads the value by." },
         "label": { "type": "string", "minLength": 1, "description": "Shown in the property panel." },
-        "kind": { "enum": ["text", "number", "boolean", "select", "configRef"], "description": "Field type. 'default' must match it (a string for text/select/configRef)." },
+        "kind": { "enum": ["text", "number", "boolean", "select", "configRef", "pin"], "description": "Field type. 'default' must match it (a number for number/pin, a string for text/select/configRef)." },
         "default": { "description": "Used when a node instance doesn't set the property. Type must match kind." },
         "options": {
           "type": "array",
@@ -75,7 +75,13 @@
           },
           "description": "Required for kind 'select'; 'default' must be one of the values."
         },
-        "configType": { "type": "string", "minLength": 1, "description": "Required for kind 'configRef': the config type the picker offers, e.g. 'thingstudio/config/i2c-bus'." }
+        "configType": { "type": "string", "minLength": 1, "description": "Required for kind 'configRef': the config type the picker offers, e.g. 'thingstudio/config/i2c-bus'." },
+        "help": { "type": "string", "minLength": 1, "description": "Short note shown under the field." },
+        "placeholder": { "type": "string", "minLength": 1, "description": "Hint text in an empty text/number input." },
+        "min": { "type": "number", "description": "Number/pin lower bound." },
+        "max": { "type": "number", "description": "Number/pin upper bound." },
+        "step": { "description": "Number step: a number, or \"any\" for arbitrary fractional values." },
+        "optional": { "type": "boolean", "description": "A pin field where -1/blank means 'not wired'." }
       },
       "allOf": [
         { "if": { "properties": { "kind": { "const": "select" } }, "required": ["kind"] }, "then": { "required": ["options"] } },

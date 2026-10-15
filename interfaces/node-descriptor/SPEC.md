@@ -68,8 +68,9 @@ A property field is `{name, label, kind, default, options?}`. `kind` is shared w
 (`config-types.ts`): `text`, `password`, `number`, `select`, `boolean`, `credential`, `configRef`,
 `pin`, `palette` (the indexed-colour palette editor). `default` seeds a freshly-dropped node. A `select`'s option `value` is a string, or a number for a
 select over numeric values (e.g. bme280's I2C address). A custom `.node.json` may use the `text`,
-`number`, `boolean`, `select` and `configRef` kinds (a `configRef` field also carries `configType`);
-the rest are built-in editor widgets.
+`number`, `boolean`, `select`, `configRef` and `pin` kinds, with the same `help`/`placeholder`/`min`/`max`/
+`step`/`optional` field attributes (a `configRef` field also carries `configType`); the remaining kinds
+(`credential`, `palette`) and attributes (`showIf`, `retype`) are built-in editor widgets today.
 
 A field with **no `name`** (and no `default`) is **info-only**: the panel renders its widget but it binds to
 no property. Used for a `configRef` to a flow-singleton config (e.g. the WiFi picker shown on a network

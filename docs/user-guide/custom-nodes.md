@@ -97,7 +97,7 @@ the node is selected:
 
 - **`name`** — identifier. Your Python reads the value by this key.
 - **`label`** — shown in the property panel.
-- **`kind`** — `text`, `number`, `boolean`, `select`, or `configRef`.
+- **`kind`** — `text`, `number`, `boolean`, `select`, `configRef`, or `pin`.
 - **`default`** — used when a node instance doesn't set the property.
   Type must match `kind`.
 - **`options`** — required for `select`: array of `{ value, label }`.
@@ -105,6 +105,10 @@ the node is selected:
 - **`configType`** — required for `configRef`: the config type the picker
   offers (e.g. `thingstudio/config/i2c-bus`). At compile time the picked
   config's own properties become a dict the node reads — see below.
+- **`help`** / **`placeholder`** / **`min`** / **`max`** / **`step`** /
+  **`optional`** — optional, the same panel hints a built-in field has.
+  `pin` fields take a `number` default; `optional` marks one where
+  `-1`/blank means "not wired".
 
 A `source` node must declare a numeric property named `intervalMs` — it
 sets the poll interval.

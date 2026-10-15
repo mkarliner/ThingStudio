@@ -97,8 +97,10 @@ sibling) -- and, later the same day, both confirmed working on real CYD hardware
 three indexed depths end to end. `startup` node start reason (2026-09-25); `bme280` and generic `i2c` nodes (2026-09-26); custom nodes auto-load from
 `~/.thingstudio/custom-nodes/` (2026-09-27, built 2026-09-30); built-ins stay out of `~/.thingstudio` (2026-09-30);
 eswitch/ebutton off `topic` — ebutton `payload` = event, eswitch `payload` = bool (2026-10-11); a user must be
-able to view any built-in's generated Python and copy it as the basis for their own node (2026-10-15).
-22 entries: `docs/working-notes/decisions/node-authoring.md`.
+able to view any built-in's generated Python and copy it as the basis for their own node (2026-10-15); the
+end state is built-in/custom parity (the Node-RED model), with a data-equivalent and one-vocabulary rule
+binding new node work (2026-10-15).
+23 entries: `docs/working-notes/decisions/node-authoring.md`.
 
 ## GUI layout / widget system
 

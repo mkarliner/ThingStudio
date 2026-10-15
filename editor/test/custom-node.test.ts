@@ -198,6 +198,29 @@ describe("validateCustomNodeDescriptor", () => {
     ).toThrow(/must be a string/);
   });
 
+  it("accepts a pin field and the shared field attributes", () => {
+    const raw = {
+      type: "custom/gpiothing",
+      kind: "sink",
+      label: "gpiothing",
+      ports: { inputs: [{ name: "msg", type: "any" }] },
+      properties: [
+        { name: "pin", label: "pin", kind: "pin", default: 4, min: 0, max: 40, optional: true, help: "the output pin" },
+        { name: "level", label: "level", kind: "number", default: 0, step: "any", placeholder: "0-1" },
+      ],
+    };
+    const d = validateCustomNodeDescriptor(raw);
+    expect(d.properties?.[0]).toMatchObject({ kind: "pin", default: 4, optional: true, min: 0, max: 40, help: "the output pin" });
+    expect(d.properties?.[1]).toMatchObject({ step: "any", placeholder: "0-1" });
+  });
+
+  it("rejects a bad pin default and malformed attributes", () => {
+    const base = { type: "custom/x", kind: "sink", label: "x", ports: { inputs: [{ name: "msg", type: "any" }] } };
+    expect(() => validateCustomNodeDescriptor({ ...base, properties: [{ name: "pin", label: "pin", kind: "pin", default: "4" }] })).toThrow(/must be a number/);
+    expect(() => validateCustomNodeDescriptor({ ...base, properties: [{ name: "n", label: "n", kind: "number", default: 0, step: "sometimes" }] })).toThrow(/step must be a finite number or "any"/);
+    expect(() => validateCustomNodeDescriptor({ ...base, properties: [{ name: "m", label: "m", kind: "number", default: 0, min: "0" }] })).toThrow(/min must be a finite number/);
+  });
+
   it("rejects a boolean property with a non-boolean default", () => {
     const bad = {
       type: "custom/x",
@@ -386,6 +409,19 @@ describe("buildCustomNodeDefinition -- sink", () => {
       [`msg = {'payload': 42, 'topic': ''}`, `await ${result.functionName}(msg)`].join("\n"),
     );
     expect(output.trim()).toBe("sensor: 42");
+  });
+
+  it("renders a pin property as a number in the properties dict", () => {
+    const descriptor = validateCustomNodeDescriptor({
+      type: "custom/blink",
+      kind: "sink",
+      label: "blink",
+      ports: { inputs: [{ name: "msg", type: "any" }] },
+      properties: [{ name: "pin", label: "pin", kind: "pin", default: 2 }],
+    });
+    const def = buildCustomNodeDefinition(descriptor, "async def run(msg, properties):\n    pass\n");
+    const result = def.codegenSink!(node(1, { pin: 5 }), freshCtx());
+    expect((result.statements ?? []).map((s) => s.code).join("\n")).toContain('"pin": 5');
   });
 });
 
