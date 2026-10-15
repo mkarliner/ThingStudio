@@ -62,10 +62,14 @@ carry these keys.
 
 A property field is `{name, label, kind, default, options?}`. `kind` is shared with config fields
 (`config-types.ts`): `text`, `password`, `number`, `select`, `boolean`, `credential`, `configRef`,
-`pin`. `default` seeds a freshly-dropped node. A custom `.node.json` may only use `text`, `number`,
-`boolean` and `select`; the rest are built-in editor widgets. Built-in fields may also carry
-`optional`, `min`/`max`/`step`, `help`, `placeholder`, and a `showIf(properties)` visibility predicate (a
-function, so built-in only).
+`pin`. `default` seeds a freshly-dropped node. A `select`'s option `value` is a string, or a number for a
+select over numeric values (e.g. bme280's I2C address). A custom `.node.json` may only use the `text`,
+`number`, `boolean` and `select` kinds, with string options; the rest are built-in editor widgets.
+
+A field with **no `name`** (and no `default`) is **info-only**: the panel renders its widget but it binds to
+no property. Used for a `configRef` to a flow-singleton config (e.g. the WiFi picker shown on a network
+node). Built-in fields may also carry `optional`, `min`/`max`/`step`, `help`, `placeholder`, and a
+`showIf(properties)` visibility predicate (a function, so built-in only).
 
 **Worked example** — the built-in `debug` node's descriptor (its codegen hook omitted):
 
@@ -106,10 +110,12 @@ not `global`. Pins and buses go through `runtime.shared(...)` — see `../runtim
 v1's divergence — a built-in described in up to seven hand-maintained places, a custom node in two
 files with no bridge — is being closed deliberately, family by family, with no behavior change:
 
-- **Built (this change).** `NodeDescriptor` is the single shape; `NodeDefinition` composes it. The
+- **Built so far.** `NodeDescriptor` is the single shape; `NodeDefinition` composes it. The
   canvas class factory, property panel, palette and catalog read a migrated node's descriptor instead
-  of their own copies. `debug` is the first family migrated. A descriptor missing the palette
-  metadata is "not yet migrated" and still falls back to `palette.ts`.
+  of their own copies. Migrated families: `debug`, `timer`, `delay`, `gpio_out`, `pwm_out`, the I2C
+  family (`touch_i2c`, `i2c`, `bme280`) and the network family (`udp_send`, `udp_receive`, `http_*`,
+  `mqtt_*`, `ntp`). A descriptor missing the palette metadata is "not yet migrated" and still falls
+  back to `palette.ts`.
 - **Still coming.** Relax the custom format so more built-ins can be cloned: multi-output (the
   compiler already supports it), `configRef` properties, and event sources. Dynamic ports (`function`'s
   `outputCount`) and arbitrary codegen stay built-in-only. Compile-time hardware resource claims stay

@@ -202,12 +202,56 @@ function ntpSetup(node: GraphNode, ctx: CodegenContext): SetupCode & { instance:
 export const ntpNode: NodeDefinition = {
   type: "thingstudio/ntp",
   kind: "sink",
+  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor.
+  paletteId: "ntp",
+  label: "ntp",
+  group: "network",
+  priority: 15,
+  color: "#1f5c6e",
+  bgcolor: "#12343f",
+  icon: "◷",
+  width: 84,
+  description:
+    "Sends the time after each sync, and for each message in once synced: wire a timer in (1 s with seconds) for " +
+    "a clock that ticks. Format picks the payload; every message also has all the formats as fields. The offset is " +
+    "for standard time; UK / EU adds the summer hour itself.",
   // Useful with nothing wired in: it still sends after each sync.
   allowUnwired: true,
   ports: {
     inputs: [{ name: "msg", type: "any" }],
     outputs: [{ name: "msg", type: "any" }],
   },
+  properties: [
+    { name: "server", label: "NTP server", kind: "text", default: "pool.ntp.org" },
+    { name: "utcOffset", label: "UTC offset (hours)", kind: "number", default: 0, min: -12, max: 14, step: 0.5 },
+    {
+      name: "dst",
+      label: "daylight saving",
+      kind: "select",
+      default: "eu",
+      options: [
+        { value: "eu", label: "UK / EU: automatic" },
+        { value: "none", label: "none" },
+      ],
+    },
+    {
+      name: "format",
+      label: "format",
+      kind: "select",
+      default: "time",
+      options: [
+        { value: "time", label: "time (14:05)" },
+        { value: "time_seconds", label: "time with seconds (14:05:09)" },
+        { value: "time_12h", label: "12-hour time (2:05 pm)" },
+        { value: "date", label: "date (Wed 14 Oct)" },
+        { value: "date_iso", label: "ISO date (2026-10-14)" },
+        { value: "iso", label: "ISO date and time" },
+        { value: "unix", label: "Unix time (seconds)" },
+      ],
+    },
+    // Info-only: the WiFi config is a flow singleton, not a property of this node.
+    { kind: "configRef", configType: "thingstudio/config/wifi", label: "WiFi" },
+  ],
   codegenSink(node: GraphNode, ctx: CodegenContext): SinkCodegenResult {
     const { instance, imports, statements } = ntpSetup(node, ctx);
     return { imports, statements, functionName: ctx.uniqueName("ntp_in"), functionBody: `${instance}.poke()` };

@@ -29,6 +29,18 @@ import type { CodegenContext, NodeDefinition, SinkCodegenResult } from "../compi
 export const httpResponseNode: NodeDefinition = {
   type: "thingstudio/http_response",
   kind: "sink",
+  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor.
+  paletteId: "http_response",
+  label: "http response",
+  group: "network",
+  priority: 42,
+  color: "#6e5216",
+  bgcolor: "#3a2c14",
+  icon: "↗",
+  width: 130,
+  description:
+    "No properties -- reads msg.statusCode (default 200) and msg.payload (the response body) at runtime, Node-RED's " +
+    "own field names. Must fire on a msg that originally came from an http_in node.",
   ports: {
     inputs: [{ name: "msg", type: "any" }],
   },

@@ -110,6 +110,16 @@ function parseHttpUrl(rawUrl: unknown): ParsedUrl {
 export const httpRequestNode: NodeDefinition = {
   type: "thingstudio/http_request",
   kind: "transform",
+  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor.
+  paletteId: "http_request",
+  label: "http request",
+  group: "network",
+  priority: 41,
+  color: "#8a6e1f",
+  bgcolor: "#4a3a1f",
+  icon: "⇄",
+  width: 130,
+  description: "http:// only -- no TLS/HTTPS in v1. One WiFi network per flow: every WiFi node shares this setting.",
   // input/output `msg` type `any` -- the inbound payload can be
   // anything (str/bytes/other, POST-body-encoded per the switch in
   // codegenTransform below), and the response body is decoded to a
@@ -120,6 +130,22 @@ export const httpRequestNode: NodeDefinition = {
     inputs: [{ name: "msg", type: "any" }],
     outputs: [{ name: "msg", type: "any" }],
   },
+  properties: [
+    { name: "url", label: "url", kind: "text", default: "", placeholder: "http://host:port/path" },
+    {
+      name: "method",
+      label: "method",
+      kind: "select",
+      default: "GET",
+      options: [
+        { value: "GET", label: "GET" },
+        { value: "POST", label: "POST" },
+      ],
+    },
+    { name: "timeoutMs", label: "timeout (ms)", kind: "number", default: 5000, min: 1 },
+    // Info-only: the WiFi config is a flow singleton, not a property of this node.
+    { kind: "configRef", configType: "thingstudio/config/wifi", label: "WiFi" },
+  ],
   codegenTransform(node: GraphNode, ctx: CodegenContext): TransformCodegenResult {
     const { host, port, path } = parseHttpUrl(node.properties.url);
 

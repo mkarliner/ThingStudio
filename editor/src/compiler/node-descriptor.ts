@@ -58,7 +58,9 @@ export type PropertyFieldKind =
   | "pin";
 
 export interface PropertyFieldOption {
-  value: string;
+  /** A string for most fields; a number for a `select` over numeric values (e.g. bme280's I2C address).
+   * A custom `.node.json` may only use string options (custom-node.schema.json). */
+  value: string | number;
   label: string;
 }
 
@@ -67,12 +69,15 @@ export interface PropertyFieldOption {
  * a config field doesn't: a `default` (seeds a freshly-dropped node's `properties`) and optional
  * number bounds / a `showIf` visibility predicate. */
 export interface PropertyFieldDescriptor {
-  /** Dict key in the node's `properties` and in the generated Python `properties` argument. */
-  name: string;
+  /** Dict key in the node's `properties` and in the generated Python `properties` argument. Absent for
+   * an **info-only** field: the panel renders the widget but it binds to no property (the display-only
+   * WiFi `configRef` on a network node, where the config is a flow singleton). */
+  name?: string;
   label: string;
   kind: PropertyFieldKind;
-  /** Seed value for a freshly-dropped node; also the fallback for a flow file that omits the field. */
-  default: unknown;
+  /** Seed value for a freshly-dropped node; also the fallback for a flow file that omits the field.
+   * Absent for an info-only field (one with no `name`). */
+  default?: unknown;
   /** Required, non-empty, when kind is "select"; `default` must be one of the values. */
   options?: PropertyFieldOption[];
   /** Only meaningful when `kind` is "configRef" -- the config type this field points at. */

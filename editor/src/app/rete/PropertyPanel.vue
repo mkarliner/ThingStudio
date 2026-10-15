@@ -316,25 +316,6 @@
           <code>ack</code>, <code>timeout</code> or <code>closed</code>.</p>
       </template>
 
-      <template v-else-if="node.kind === 'bme280'">
-        <ConfigRefField
-          config-type="thingstudio/config/i2c-bus"
-          :model-value="node.properties.i2cConfigId || undefined"
-          @update:model-value="(id) => setConfigId('i2cConfigId', id)"
-        />
-        <label>address
-          <select v-model.number="node.properties.address" @change="touch">
-            <option :value="0x76">0x76 (SDO to GND, most boards)</option>
-            <option :value="0x77">0x77 (SDO to VCC)</option>
-          </select>
-        </label>
-        <label>interval (ms)
-          <input type="number" min="100" v-model.number="node.properties.intervalMs" @input="touch" />
-        </label>
-        <p class="hint">Sends {temperature °C, humidity %, pressure hPa} in msg.payload. A BMP280 works too; its
-          humidity is null. The status dot shows whether the sensor is answering.</p>
-      </template>
-
       <template v-else-if="node.kind === 'journal'">
         <label>rows kept <input type="number" min="1" max="256" v-model.number="node.properties.rows" @input="touch" /></label>
         <label>seconds per row (0 = one row per message)
@@ -680,207 +661,43 @@
         />
       </template>
 
-      <template v-else-if="node.kind === 'ntp'">
-        <label>NTP server <input type="text" v-model="node.properties.server" @input="touch" /></label>
-        <label>UTC offset (hours)
-          <input type="number" min="-12" max="14" step="0.5" v-model.number="node.properties.utcOffset" @input="touch" />
-        </label>
-        <label>daylight saving
-          <select v-model="node.properties.dst" @change="touch">
-            <option value="eu">UK / EU: automatic</option>
-            <option value="none">none</option>
-          </select>
-        </label>
-        <label>format
-          <select v-model="node.properties.format" @change="touch">
-            <option value="time">time (14:05)</option>
-            <option value="time_seconds">time with seconds (14:05:09)</option>
-            <option value="time_12h">12-hour time (2:05 pm)</option>
-            <option value="date">date (Wed 14 Oct)</option>
-            <option value="date_iso">ISO date (2026-10-14)</option>
-            <option value="iso">ISO date and time</option>
-            <option value="unix">Unix time (seconds)</option>
-          </select>
-        </label>
-        <ConfigRefField
-          config-type="thingstudio/config/wifi"
-          :model-value="undefined"
-          @update:model-value="() => touch()"
-        />
-        <p class="hint">Sends the time after each sync, and for each message in once synced: wire a timer in (1 s
-          with seconds) for a clock that ticks. Format picks the payload; every message also has all the formats as
-          fields. The offset is for standard time; UK / EU adds the summer hour itself.</p>
-      </template>
-
-      <template v-else-if="node.kind === 'udp_send'">
-        <label>host
-          <input v-model="node.properties.host" @input="touch" />
-        </label>
-        <label>port
-          <input type="number" min="1" max="65535" v-model.number="node.properties.port" @input="touch" />
-        </label>
-        <label>timeout (ms)
-          <input type="number" min="1" v-model.number="node.properties.timeoutMs" @input="touch" />
-        </label>
-        <ConfigRefField
-          config-type="thingstudio/config/wifi"
-          :model-value="undefined"
-          @update:model-value="() => touch()"
-        />
-        <p class="hint">One WiFi network per flow: every WiFi node shares this setting.</p>
-      </template>
-
-      <template v-else-if="node.kind === 'udp_receive'">
-        <label>port
-          <input type="number" min="1" max="65535" v-model.number="node.properties.port" @input="touch" />
-        </label>
-        <label>poll interval (ms)
-          <input type="number" min="1" v-model.number="node.properties.pollMs" @input="touch" />
-        </label>
-        <ConfigRefField
-          config-type="thingstudio/config/wifi"
-          :model-value="undefined"
-          @update:model-value="() => touch()"
-        />
-        <p class="hint">One WiFi network per flow: every WiFi node shares this setting.</p>
-      </template>
-
-      <template v-else-if="node.kind === 'http_request'">
-        <label>url
-          <input v-model="node.properties.url" @input="touch" placeholder="http://host:port/path" />
-        </label>
-        <label>method
-          <select v-model="node.properties.method" @change="touch">
-            <option value="GET">GET</option>
-            <option value="POST">POST</option>
-          </select>
-        </label>
-        <label>timeout (ms)
-          <input type="number" min="1" v-model.number="node.properties.timeoutMs" @input="touch" />
-        </label>
-        <ConfigRefField
-          config-type="thingstudio/config/wifi"
-          :model-value="undefined"
-          @update:model-value="() => touch()"
-        />
-        <p class="hint">http:// only -- no TLS/HTTPS in v1. One WiFi network per flow: every WiFi node shares this setting.</p>
-      </template>
-
-      <template v-else-if="node.kind === 'http_in'">
-        <label>port
-          <input type="number" min="1" max="65535" v-model.number="node.properties.port" @input="touch" />
-        </label>
-        <label>path
-          <input v-model="node.properties.path" @input="touch" placeholder="/status" />
-        </label>
-        <label>method
-          <select v-model="node.properties.method" @change="touch">
-            <option value="GET">GET</option>
-            <option value="POST">POST</option>
-          </select>
-        </label>
-        <label>response timeout (ms)
-          <input type="number" min="1" v-model.number="node.properties.responseTimeoutMs" @input="touch" />
-        </label>
-        <ConfigRefField
-          config-type="thingstudio/config/wifi"
-          :model-value="undefined"
-          @update:model-value="() => touch()"
-        />
-        <p class="hint">Exact path match only -- no ":name" path parameters yet. Fires once per matching inbound request; pair with an http_response node to actually reply (a request that never reaches one times out with a 500). One WiFi network per flow: every WiFi node shares this setting.</p>
-      </template>
-
-      <template v-else-if="node.kind === 'http_response'">
-        <p class="hint">No properties -- reads msg.statusCode (default 200) and msg.payload (the response body) at runtime, Node-RED's own field names. Must fire on a msg that originally came from an http_in node.</p>
-      </template>
-
-      <template v-else-if="node.kind === 'mqtt_publish'">
-        <label>topic
-          <input v-model="node.properties.topic" @input="touch" />
-        </label>
-        <label class="checkbox-label">
-          <input type="checkbox" v-model="node.properties.retain" @change="touch" />
-          retain
-        </label>
-        <label>qos
-          <select v-model.number="node.properties.qos" @change="touch">
-            <option :value="0">0</option>
-            <option :value="1">1</option>
-          </select>
-        </label>
-        <ConfigRefField
-          config-type="thingstudio/config/mqtt-broker"
-          :model-value="node.properties.brokerConfigId || undefined"
-          @update:model-value="(id) => setBrokerConfigId(id)"
-        />
-        <ConfigRefField
-          config-type="thingstudio/config/wifi"
-          :model-value="undefined"
-          @update:model-value="() => touch()"
-        />
-        <p class="hint">Broker config required -- won't compile without one. One WiFi network per flow: every WiFi node shares this setting. In a flow with MQTT nodes, MQTT manages the WiFi connection, so "unmanaged" isn't accepted.</p>
-      </template>
-
-      <template v-else-if="node.kind === 'mqtt_subscribe'">
-        <label>topic
-          <input v-model="node.properties.topic" @input="touch" />
-        </label>
-        <label>qos
-          <select v-model.number="node.properties.qos" @change="touch">
-            <option :value="0">0</option>
-            <option :value="1">1</option>
-          </select>
-        </label>
-        <ConfigRefField
-          config-type="thingstudio/config/mqtt-broker"
-          :model-value="node.properties.brokerConfigId || undefined"
-          @update:model-value="(id) => setBrokerConfigId(id)"
-        />
-        <ConfigRefField
-          config-type="thingstudio/config/wifi"
-          :model-value="undefined"
-          @update:model-value="() => touch()"
-        />
-        <p class="hint">Broker config required -- won't compile without one. One WiFi network per flow: every WiFi node shares this setting. In a flow with MQTT nodes, MQTT manages the WiFi connection, so "unmanaged" isn't accepted.</p>
-      </template>
-
       <template v-else-if="nodeDescriptor">
         <p v-if="nodeDescriptor.description" class="hint">{{ nodeDescriptor.description }}</p>
-        <template v-for="f in nodeDescriptor.properties ?? []" :key="f.name">
+        <template v-for="f in nodeDescriptor.properties ?? []" :key="f.name ?? f.label">
           <template v-if="!f.showIf || f.showIf(nodeProperties)">
             <PinField
               v-if="f.kind === 'pin'"
               :label="f.label"
               :optional="f.optional"
-              :model-value="nodeProperties[f.name]"
-              @update:model-value="(v) => setProp(f.name, v)"
+              :model-value="nodeProperties[f.name!]"
+              @update:model-value="(v) => setProp(f.name!, v)"
             />
             <ConfigRefField
               v-else-if="f.kind === 'configRef'"
               :config-type="f.configType!"
               :label="f.label"
-              :model-value="(nodeProperties[f.name] as string) || undefined"
-              @update:model-value="(id) => setProp(f.name, id)"
+              :model-value="(fieldValue(f) as string) || undefined"
+              @update:model-value="(id) => setField(f, id)"
             />
             <CredentialRefField
               v-else-if="f.kind === 'credential'"
               :credential-type="f.credentialType!"
               :label="f.label"
-              :model-value="(nodeProperties[f.name] as string) || undefined"
-              @update:model-value="(name) => setProp(f.name, name)"
+              :model-value="(fieldValue(f) as string) || undefined"
+              @update:model-value="(name) => setField(f, name)"
             />
             <label v-else-if="f.kind === 'boolean'" class="checkbox-label">
-              <input type="checkbox" v-model="nodeProperties[f.name]" @change="touch" />
+              <input type="checkbox" v-model="nodeProperties[f.name!]" @change="touch" />
               {{ f.label }}
             </label>
             <label v-else>
               {{ f.label }}
-              <select v-if="f.kind === 'select'" v-model="nodeProperties[f.name]" @change="touch">
+              <select v-if="f.kind === 'select'" v-model="nodeProperties[f.name!]" @change="touch">
                 <option v-for="opt in f.options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
               </select>
-              <input v-else-if="f.kind === 'number'" type="number" :min="f.min" :max="f.max" :step="f.step" :placeholder="f.placeholder" v-model.number="nodeProperties[f.name]" @input="touch" />
-              <input v-else-if="f.kind === 'password'" type="password" :placeholder="f.placeholder" v-model="nodeProperties[f.name]" @input="touch" />
-              <input v-else type="text" :placeholder="f.placeholder" v-model="nodeProperties[f.name]" @input="touch" />
+              <input v-else-if="f.kind === 'number'" type="number" :min="f.min" :max="f.max" :step="f.step" :placeholder="f.placeholder" v-model.number="nodeProperties[f.name!]" @input="touch" />
+              <input v-else-if="f.kind === 'password'" type="password" :placeholder="f.placeholder" v-model="nodeProperties[f.name!]" @input="touch" />
+              <input v-else type="text" :placeholder="f.placeholder" v-model="nodeProperties[f.name!]" @input="touch" />
             </label>
             <p v-if="f.help" class="hint">{{ f.help }}</p>
           </template>
@@ -902,7 +719,7 @@ import { selectedNode, bumpPropertyVersion, propertyVersion, setFunctionNodeOutp
 import { DEFAULT_KIND_STYLE, type KindStyle } from "./palette";
 import { paletteStyleFor } from "./node-descriptors";
 import { InjectNode, StartupNode, CustomNode, FunctionNode } from "./nodes";
-import type { NodeDescriptor } from "../../compiler/node-descriptor";
+import type { NodeDescriptor, PropertyFieldDescriptor } from "../../compiler/node-descriptor";
 import { MAX_FUNCTION_OUTPUTS } from "../../node-library/function-node";
 import ConfigRefField from "./ConfigRefField.vue";
 import CredentialRefField from "./CredentialRefField.vue";
@@ -965,6 +782,17 @@ function setProp(key: string, value: unknown): void {
   touch();
 }
 
+/** A descriptor field's current value; undefined for an info-only field (one with no `name`). */
+function fieldValue(f: PropertyFieldDescriptor): unknown {
+  return f.name ? nodeProperties.value[f.name] : undefined;
+}
+
+/** Writes a descriptor field's value; an info-only field (no `name`) just refreshes the panel. */
+function setField(f: PropertyFieldDescriptor, value: unknown): void {
+  if (f.name) setProp(f.name, value);
+  else touch();
+}
+
 // payloadType's own @change handler (template above) -- v-model has
 // already written the new value into node.properties.payloadType by the
 // time this fires, so retypeOutput() (nodes.ts) picks it up correctly.
@@ -1015,22 +843,13 @@ function setWifiConfigId(id: string): void {
   touch();
 }
 
-// Same pattern as setWifiConfigId() above, for mqtt_publish/mqtt_subscribe's
-// second, independent config reference -- kept as its own small function
-// rather than generalizing both into one `setConfigId(key, id)` helper, so
-// this change doesn't touch the already-working wifi_status/udp_send/
-// udp_receive bindings for symmetry alone (CLAUDE.md's cheapest-correct-
-// change principle).
+// Same pattern as setWifiConfigId() above, for a node's own config reference
+// (a touch panel's I2C bus, an i2c bus) -- its own small function rather than
+// generalizing the wifi_status binding into one helper for symmetry alone.
 /** Points the selected node at a config (e.g. its I2C bus). */
 function setConfigId(key: string, id: string): void {
   if (!node.value) return;
   (node.value.properties as Record<string, unknown>)[key] = id;
-  touch();
-}
-
-function setBrokerConfigId(id: string): void {
-  if (!node.value) return;
-  (node.value.properties as Record<string, unknown>).brokerConfigId = id;
   touch();
 }
 </script>

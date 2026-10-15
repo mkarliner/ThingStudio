@@ -31,9 +31,35 @@ export const BME280_ADDRESSES = [0x76, 0x77];
 export const bme280Node: NodeDefinition = {
   type: "thingstudio/bme280",
   kind: "source",
+  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor.
+  paletteId: "bme280",
+  label: "bme280",
+  group: "hardware",
+  priority: 15,
+  color: "#8a4a2e",
+  bgcolor: "#4a2a1f",
+  icon: "°",
+  width: 110,
+  description:
+    "Sends {temperature °C, humidity %, pressure hPa} in msg.payload. A BMP280 works too; its humidity is null. " +
+    "The status dot shows whether the sensor is answering.",
   ports: {
     outputs: [{ name: "msg", type: "any" }],
   },
+  properties: [
+    { name: "i2cConfigId", label: "I2C bus", kind: "configRef", configType: "thingstudio/config/i2c-bus", default: "" },
+    {
+      name: "address",
+      label: "address",
+      kind: "select",
+      default: 0x76,
+      options: [
+        { value: 0x76, label: "0x76 (SDO to GND, most boards)" },
+        { value: 0x77, label: "0x77 (SDO to VCC)" },
+      ],
+    },
+    { name: "intervalMs", label: "interval (ms)", kind: "number", default: 5000, min: 100 },
+  ],
   codegenSource(node: GraphNode, ctx: CodegenContext): SourceCodegenResult {
     const bus = resolveI2cBus(ctx, "bme280", node.properties.i2cConfigId);
     const address = Number(node.properties.address ?? 0x76);

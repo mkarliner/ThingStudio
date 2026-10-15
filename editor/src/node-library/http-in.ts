@@ -37,6 +37,19 @@ import { HTTP_IN_TYPE, httpInQueueVar, httpServerSetupStatement, queueClassSetup
 export const httpInNode: NodeDefinition = {
   type: HTTP_IN_TYPE,
   kind: "source",
+  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor.
+  paletteId: "http_in",
+  label: "http in",
+  group: "network",
+  priority: 40,
+  color: "#a67c1f",
+  bgcolor: "#4a3a1f",
+  icon: "↙",
+  width: 120,
+  description:
+    "Exact path match only -- no \":name\" path parameters yet. Fires once per matching inbound request; pair with " +
+    "an http_response node to actually reply (a request that never reaches one times out with a 500). One WiFi " +
+    "network per flow: every WiFi node shares this setting.",
   // payload is always None in v1 (no body parsing, see this file's
   // header) -- "any" here, same convention every other "the payload
   // could genuinely be anything, or in this case nothing" port already
@@ -44,6 +57,23 @@ export const httpInNode: NodeDefinition = {
   ports: {
     outputs: [{ name: "msg", type: "any" }],
   },
+  properties: [
+    { name: "port", label: "port", kind: "number", default: 8080, min: 1, max: 65535 },
+    { name: "path", label: "path", kind: "text", default: "/", placeholder: "/status" },
+    {
+      name: "method",
+      label: "method",
+      kind: "select",
+      default: "GET",
+      options: [
+        { value: "GET", label: "GET" },
+        { value: "POST", label: "POST" },
+      ],
+    },
+    { name: "responseTimeoutMs", label: "response timeout (ms)", kind: "number", default: 10000, min: 1 },
+    // Info-only: the WiFi config is a flow singleton, not a property of this node.
+    { kind: "configRef", configType: "thingstudio/config/wifi", label: "WiFi" },
+  ],
   codegenEventSource(node: GraphNode, ctx: CodegenContext): EventSourceCodegenResult {
     const props = resolveHttpInProperties(node);
     const queueVar = httpInQueueVar(node.id);

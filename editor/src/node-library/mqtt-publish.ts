@@ -59,12 +59,41 @@ import { wifiSetupStatement } from "./wifi-status.js";
 export const mqttPublishNode: NodeDefinition = {
   type: "thingstudio/mqtt_publish",
   kind: "sink",
+  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor.
+  paletteId: "mqtt_publish",
+  label: "mqtt publish",
+  group: "network",
+  priority: 31,
+  color: "#8a3b6e",
+  bgcolor: "#4a1f3a",
+  icon: "⇧",
+  width: 128,
+  description:
+    "Broker config required -- won't compile without one. One WiFi network per flow: every WiFi node shares this " +
+    "setting. In a flow with MQTT nodes, MQTT manages the WiFi connection, so \"unmanaged\" isn't accepted.",
   // input `msg` type `any` -- payloadToBytesSnippet handles bytes/str/other
   // uniformly (same reasoning udp_send's own `any` input gets,
   // wire-type-system-scoping.md).
   ports: {
     inputs: [{ name: "msg", type: "any" }],
   },
+  properties: [
+    { name: "topic", label: "topic", kind: "text", default: "" },
+    { name: "retain", label: "retain", kind: "boolean", default: false },
+    {
+      name: "qos",
+      label: "qos",
+      kind: "select",
+      default: 0,
+      options: [
+        { value: 0, label: "0" },
+        { value: 1, label: "1" },
+      ],
+    },
+    { name: "brokerConfigId", label: "MQTT Broker", kind: "configRef", configType: "thingstudio/config/mqtt-broker", default: "" },
+    // Info-only: the WiFi config is a flow singleton, not a property of this node.
+    { kind: "configRef", configType: "thingstudio/config/wifi", label: "WiFi" },
+  ],
   codegenSink(node: GraphNode, ctx: CodegenContext): SinkCodegenResult {
     const cfg = parseMqttBrokerProps(node.properties, ctx, "mqtt_publish");
 

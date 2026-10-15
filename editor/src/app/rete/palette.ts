@@ -191,28 +191,7 @@ export const NODE_PALETTE: Partial<Record<NodeKind, KindStyle>> = {
   // slash) for the pass-or-drop gating behavior, added 2026-09-14 (wifi-
   // gate.ts's own header has the full scope story).
   wifi_gate: { color: "#1f8a5a", bgcolor: "#123f2a", icon: "⊘", label: "wifi gate", group: "network", priority: 11 },
-  // Blue/green send-receive pair, up/down arrows echoing direction of
-  // travel the same way interrupt's "⚡" echoes its own trigger mechanism.
-  udp_send: { color: "#3b5c8a", bgcolor: "#1f2e4a", icon: "↑", label: "udp send", group: "network", priority: 21 },
-  udp_receive: { color: "#3b8a6e", bgcolor: "#1f4a3a", icon: "↓", label: "udp receive", group: "network", priority: 20 },
-  // ntp, 2026-10-14 (replaces clock): wifi_status's teal family, "◷" for time. After the WiFi pair.
-  ntp: { color: "#1f5c6e", bgcolor: "#12343f", icon: "◷", label: "ntp", group: "network", priority: 15 },
-  // Amber/gold -- see this file's header for the icon reasoning.
-  http_request: { color: "#8a6e1f", bgcolor: "#4a3a1f", icon: "⇄", label: "http request", group: "network", priority: 41 },
-  // http_in/http_response, 2026-09-08 -- same amber/gold family as
-  // http_request (all three are the one "http" node family) but a
-  // distinct shade each, and direction-of-travel arrows echoing
-  // udp_send/udp_receive/mqtt_publish/mqtt_subscribe's own convention:
-  // "↙" (inbound) for http_in (a source, like udp_receive/mqtt_subscribe),
-  // "↗" (outbound) for http_response (a sink, like udp_send/mqtt_publish).
-  http_in: { color: "#a67c1f", bgcolor: "#4a3a1f", icon: "↙", label: "http in", group: "network", priority: 40 },
-  http_response: { color: "#6e5216", bgcolor: "#3a2c14", icon: "↗", label: "http response", group: "network", priority: 42 },
-  // Magenta/purple pair -- see this file's header for the icon reasoning.
-  mqtt_publish: { color: "#8a3b6e", bgcolor: "#4a1f3a", icon: "⇧", label: "mqtt publish", group: "network", priority: 31 },
-  mqtt_subscribe: { color: "#6e3b8a", bgcolor: "#3a1f4a", icon: "⇩", label: "mqtt subscribe", group: "network", priority: 30 },
   // filter added 2026-09-26: teal, "▽" (a funnel) -- it lets fewer messages through than arrive.
-  // bme280 added 2026-09-26: first I2C sensor. "hardware" group, brick red, "°" for temperature.
-  bme280: { color: "#8a4a2e", bgcolor: "#4a2a1f", icon: "°", label: "bme280", group: "hardware", priority: 15 },
   // journal added 2026-10-10: teal beside filter, "≋" for a stream kept over time.
   journal: { color: "#2e6e4a", bgcolor: "#1f3f2c", icon: "≋", label: "journal", group: "general", priority: 36 },
   filter: { color: "#2e6e4a", bgcolor: "#1f3f2c", icon: "▽", label: "filter", group: "general", priority: 35 },

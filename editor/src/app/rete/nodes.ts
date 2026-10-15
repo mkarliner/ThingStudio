@@ -475,51 +475,11 @@ export class JournalNode extends ClassicPreset.Node {
 }
 
 // The time of day from NTP (node-library/ntp.ts, replaces clock 2026-10-14). Two-faced: a message in asks for the
-// time now; the output sends it, also after each sync. Network group: it joins the flow's WiFi itself.
-export class NtpNode extends ClassicPreset.Node {
-  width = 84;
-  height = NODE_HEIGHT;
-  kind = "ntp" as const;
-  nodeType = "thingstudio/ntp";
-  highlighted = false;
-  status: NodeStatusState | null = null;
-  statusText: string | null = null;
+// time now; the output sends it, also after each sync. Network group: it joins the flow's WiFi itself --
+// descriptor-driven (buildDescriptorNodeClass below).
 
-  properties: { server: string; utcOffset: number; dst: "eu" | "none"; format: string } = {
-    server: "pool.ntp.org",
-    utcOffset: 0,
-    dst: "eu",
-    format: "time",
-  };
-
-  constructor() {
-    super("ntp");
-    this.addInput("msg", new ClassicPreset.Input(portSocket(ntpNode.ports?.inputs, "msg", this.properties), "msg", true));
-    this.addOutput("msg", new ClassicPreset.Output(portSocket(ntpNode.ports?.outputs, "msg", this.properties), "msg"));
-  }
-}
-
-// BME280/BMP280 sensor on a shared I2C bus (node-library/bme280.ts).
-export class Bme280Node extends ClassicPreset.Node {
-  width = 110;
-  height = NODE_HEIGHT;
-  kind = "bme280" as const;
-  nodeType = "thingstudio/bme280";
-  highlighted = false;
-  status: NodeStatusState | null = null;
-  statusText: string | null = null;
-
-  properties: { i2cConfigId: string; address: number; intervalMs: number } = {
-    i2cConfigId: "",
-    address: 0x76,
-    intervalMs: 5000,
-  };
-
-  constructor() {
-    super("bme280");
-    this.addOutput("msg", new ClassicPreset.Output(portSocket(bme280Node.ports?.outputs, "msg", this.properties), "msg"));
-  }
-}
+// BME280/BMP280 sensor on a shared I2C bus (node-library/bme280.ts) -- descriptor-driven
+// (buildDescriptorNodeClass below).
 
 // Touch panel (FT6336U) on a shared I2C bus (node-library/touch-i2c.ts) -- descriptor-driven
 // (buildDescriptorNodeClass below).
@@ -614,7 +574,9 @@ function buildDescriptorNodeClass(descriptor: NodeDescriptor) {
     highlighted = false;
     status: NodeStatusState | null = null;
     statusText: string | null = null;
-    properties: Record<string, unknown> = Object.fromEntries((descriptor.properties ?? []).map((f) => [f.name, f.default]));
+    properties: Record<string, unknown> = Object.fromEntries(
+      (descriptor.properties ?? []).filter((f) => f.name !== undefined).map((f) => [f.name!, f.default]),
+    );
 
     constructor() {
       super(descriptor.label ?? descriptor.paletteId ?? descriptor.type);
@@ -648,6 +610,24 @@ export class TimerNode extends buildDescriptorNodeClass(timerNode) {}
 export class TouchI2cNode extends buildDescriptorNodeClass(touchI2cNode) {}
 
 export class I2cNode extends buildDescriptorNodeClass(i2cGenericNode) {}
+
+export class Bme280Node extends buildDescriptorNodeClass(bme280Node) {}
+
+export class NtpNode extends buildDescriptorNodeClass(ntpNode) {}
+
+export class UdpSendNode extends buildDescriptorNodeClass(udpSendNode) {}
+
+export class UdpReceiveNode extends buildDescriptorNodeClass(udpReceiveNode) {}
+
+export class HttpRequestNode extends buildDescriptorNodeClass(httpRequestNode) {}
+
+export class HttpInNode extends buildDescriptorNodeClass(httpInNode) {}
+
+export class HttpResponseNode extends buildDescriptorNodeClass(httpResponseNode) {}
+
+export class MqttPublishNode extends buildDescriptorNodeClass(mqttPublishNode) {}
+
+export class MqttSubscribeNode extends buildDescriptorNodeClass(mqttSubscribeNode) {}
 
 export class InterruptNode extends ClassicPreset.Node {
   width = 104;
@@ -1008,189 +988,9 @@ export class WifiGateNode extends ClassicPreset.Node {
   }
 }
 
-export class UdpSendNode extends ClassicPreset.Node {
-  width = 110;
-  height = NODE_HEIGHT;
-  kind = "udp_send" as const;
-  nodeType = "thingstudio/udp_send";
-  highlighted = false;
-  status: NodeStatusState | null = null;
-  statusText: string | null = null;
-
-  properties: { host: string; port: number; timeoutMs: number } = {
-    host: "",
-    port: 9999,
-    timeoutMs: 2000,
-  };
-
-  constructor() {
-    super("udp send");
-    this.addInput("msg", new ClassicPreset.Input(portSocket(udpSendNode.ports?.inputs, "msg", this.properties), "msg", true));
-  }
-}
-
-export class UdpReceiveNode extends ClassicPreset.Node {
-  width = 110;
-  height = NODE_HEIGHT;
-  kind = "udp_receive" as const;
-  nodeType = "thingstudio/udp_receive";
-  highlighted = false;
-  status: NodeStatusState | null = null;
-  statusText: string | null = null;
-
-  properties: { port: number; pollMs: number } = {
-    port: 9998,
-    pollMs: 20,
-  };
-
-  constructor() {
-    super("udp receive");
-    this.addOutput("msg", new ClassicPreset.Output(portSocket(udpReceiveNode.ports?.outputs, "msg", this.properties), "msg"));
-  }
-}
-
-export class HttpRequestNode extends ClassicPreset.Node {
-  width = 130;
-  height = NODE_HEIGHT;
-  kind = "http_request" as const;
-  nodeType = "thingstudio/http_request";
-  highlighted = false;
-  status: NodeStatusState | null = null;
-  statusText: string | null = null;
-
-  // Defaults match http-request.ts's own codegen defaults exactly (GET,
-  // 5000ms timeout) -- a freshly-dropped node and a freshly-omitted
-  // property on a hand-edited flow file compile the same, same
-  // convention every other class here follows. url has no sensible
-  // non-empty default (unlike udp_send's own empty-string host, which at
-  // least compiles to a CompileError with the same message either way) --
-  // parseHttpUrl (http-request.ts) already rejects an empty url with a
-  // clear CompileError, so "" here just reaches that same error path
-  // immediately rather than needing its own placeholder check.
-  properties: { url: string; method: "GET" | "POST"; timeoutMs: number } = {
-    url: "",
-    method: "GET",
-    timeoutMs: 5000,
-  };
-
-  constructor() {
-    super("http request");
-    this.addInput("msg", new ClassicPreset.Input(portSocket(httpRequestNode.ports?.inputs, "msg", this.properties), "msg", true));
-    this.addOutput("msg", new ClassicPreset.Output(portSocket(httpRequestNode.ports?.outputs, "msg", this.properties), "msg"));
-  }
-}
-
-// http_in/http_response added 2026-09-08 (outstanding-items.md's "HTTP
-// in / HTTP response nodes" P3 MVP item; http-server-shared.ts's own
-// header has the full architecture and v1 scope cuts -- exact
-// (method, path) match only, no :name params, no body-to-payload
-// parsing). http_in is a source (one output, fires on a real matching
-// inbound HTTP request); http_response is a sink (one input, completes
-// whichever request the msg came from). Given real canvas presence from
-// the start -- no registry-only interim period, unlike http_request's
-// own history (this file's header table).
-export class HttpInNode extends ClassicPreset.Node {
-  width = 120;
-  height = NODE_HEIGHT;
-  kind = "http_in" as const;
-  nodeType = "thingstudio/http_in";
-  highlighted = false;
-  status: NodeStatusState | null = null;
-  statusText: string | null = null;
-
-  // Defaults match http-server-shared.ts's own codegen defaults exactly
-  // (GET, 10000ms response timeout) -- a freshly-dropped node and a
-  // freshly-omitted property on a hand-edited flow file compile the same,
-  // same convention every other class here follows. path "/" is a valid,
-  // real route (unlike http_request's url, which has no sensible non-empty
-  // default) -- kept as the default anyway since a flow author still needs
-  // to pick their own path deliberately.
-  properties: { port: number; path: string; method: "GET" | "POST"; responseTimeoutMs: number } = {
-    port: 8080,
-    path: "/",
-    method: "GET",
-    responseTimeoutMs: 10000,
-  };
-
-  constructor() {
-    super("http in");
-    this.addOutput("msg", new ClassicPreset.Output(portSocket(httpInNode.ports?.outputs, "msg", this.properties), "msg"));
-  }
-}
-
-export class HttpResponseNode extends ClassicPreset.Node {
-  width = 130;
-  height = NODE_HEIGHT;
-  kind = "http_response" as const;
-  nodeType = "thingstudio/http_response";
-  highlighted = false;
-  status: NodeStatusState | null = null;
-  statusText: string | null = null;
-
-  // No properties -- status/body come from msg.statusCode/msg.payload at
-  // runtime (Node-RED's own field names), matching this node's own
-  // codegen (http-response.ts). Same "no configurable properties" shape
-  // as DebugNode above.
-  properties: Record<string, never> = {};
-
-  constructor() {
-    super("http response");
-    this.addInput("msg", new ClassicPreset.Input(portSocket(httpResponseNode.ports?.inputs, "msg", this.properties), "msg", true));
-  }
-}
-
-export class MqttPublishNode extends ClassicPreset.Node {
-  width = 128;
-  height = NODE_HEIGHT;
-  kind = "mqtt_publish" as const;
-  nodeType = "thingstudio/mqtt_publish";
-  highlighted = false;
-  status: NodeStatusState | null = null;
-  statusText: string | null = null;
-
-  // brokerConfigId: "" sentinel, same convention as WifiStatusNode's own
-  // wifiConfigId. Just one config reference now, not two -- this class's
-  // own wifiConfigId was removed 2026-09-04 (this file's header
-  // paragraph); the WiFi network now comes from the flow's own
-  // wifi_status node instead (mqtt-shared.ts's header). retain defaults
-  // false / qos defaults 0, matching mqtt-publish.ts's own
-  // Number(...??...) defaults exactly (a freshly-dropped node and a
-  // freshly-omitted property on a hand-edited flow file compile the same).
-  properties: { topic: string; retain: boolean; qos: 0 | 1; brokerConfigId: string } = {
-    topic: "",
-    retain: false,
-    qos: 0,
-    brokerConfigId: "",
-  };
-
-  constructor() {
-    super("mqtt publish");
-    this.addInput("msg", new ClassicPreset.Input(portSocket(mqttPublishNode.ports?.inputs, "msg", this.properties), "msg", true));
-  }
-}
-
-export class MqttSubscribeNode extends ClassicPreset.Node {
-  width = 132;
-  height = NODE_HEIGHT;
-  kind = "mqtt_subscribe" as const;
-  nodeType = "thingstudio/mqtt_subscribe";
-  highlighted = false;
-  status: NodeStatusState | null = null;
-  statusText: string | null = null;
-
-  // brokerConfigId: "" sentinel -- wifiConfigId removed 2026-09-04, see
-  // MqttPublishNode's own comment above (identical reasoning).
-  properties: { topic: string; qos: 0 | 1; brokerConfigId: string } = {
-    topic: "",
-    qos: 0,
-    brokerConfigId: "",
-  };
-
-  constructor() {
-    super("mqtt subscribe");
-    this.addOutput("msg", new ClassicPreset.Output(portSocket(mqttSubscribeNode.ports?.outputs, "msg", this.properties), "msg"));
-  }
-}
+// The network family -- udp_send/udp_receive/http_request/http_in/http_response/mqtt_publish/
+// mqtt_subscribe -- is descriptor-driven (buildDescriptorNodeClass below). Their panels show the flow's
+// WiFi config as an info-only field (the config is a flow singleton, not a node property).
 
 // --- Custom nodes (docs/working-notes/custom-node-authoring-scoping.md) ---
 //

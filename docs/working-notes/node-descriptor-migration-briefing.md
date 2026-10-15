@@ -21,10 +21,14 @@ The canonical `NodeDescriptor` (`editor/src/compiler/node-descriptor.ts`) exists
 (`compiler/node-definition.ts`) composes it with the codegen hooks. One generic Rete class
 (`nodes.ts`'s `buildDescriptorNodeClass(descriptor)`) and one lookup
 (`app/rete/node-descriptors.ts`'s `descriptorFor`/`paletteStyleFor`) drive the canvas, palette, property panel
-and catalog. Migrated families: **`debug`, `timer`, `delay`, `gpio_out`, `pwm_out`, `touch_i2c`, `i2c`**. The
-generic property panel gained `configRef` (wrapping `ConfigRefField`), `credential` (wrapping
-`CredentialRefField`), `password`, and a `placeholder` field (Mike, 2026-10-15); `i2c` first exercises
-`select`/`showIf`. No behavior change (node-<name> tests + the catalog are the guard; full `npm test` green).
+and catalog. Migrated families: **`debug`, `timer`, `delay`, `gpio_out`, `pwm_out`, `touch_i2c`, `i2c`,
+`bme280`, and the whole network family (`udp_send`, `udp_receive`, `http_request`, `http_in`, `http_response`,
+`mqtt_publish`, `mqtt_subscribe`, `ntp`)**. The generic property panel gained `configRef` (wrapping
+`ConfigRefField`), `credential` (wrapping `CredentialRefField`), `password`, `placeholder`, a numeric
+`select` option (`PropertyFieldOption.value: string | number`), and an **info-only field** (a field with no
+`name` renders its widget but binds to no property -- the display-only WiFi picker on every network node).
+Mike approved the `placeholder`, numeric-option and info-only shape changes 2026-10-15. No behavior change
+(node-<name> tests + the catalog are the guard; full `npm test` green).
 
 `palette.ts`'s per-kind rows are optional during migration: a descriptor with a `paletteId` is "migrated" and
 `paletteStyleFor` reads it; one without still falls back to `palette.ts`. `NODE_PALETTE` is now
@@ -34,9 +38,10 @@ generic property panel gained `configRef` (wrapping `ConfigRefField`), `credenti
 
 - **Descriptor metadata** lives on the `NodeDefinition` in `editor/src/node-library/<name>.ts`:
   `paletteId`/`label`/`group`/`priority`/`color`/`bgcolor`/`icon`/`width`/`description`, plus `properties`
-  (`PropertyFieldDescriptor[]`: `{name,label,kind,default,options?,configType?,credentialType?,help?,optional?,
-  min?,max?,step?,showIf?}`). Copy the values from the old `palette.ts` row and the old `PropertyPanel.vue`
-  block — the goal is byte-identical behavior.
+  (`PropertyFieldDescriptor[]`: `{name?,label,kind,default?,options?,configType?,credentialType?,help?,
+  placeholder?,optional?,min?,max?,step?,showIf?}`; `options[].value` is `string | number`). A field with no
+  `name` (and no `default`) is info-only. Copy the values from the old `palette.ts` row and the old
+  `PropertyPanel.vue` block — the goal is byte-identical behavior.
 - **The generic class** derives width, title, ports and default properties from the descriptor. Keep the
   exported class name (e.g. `export class TimerNode extends buildDescriptorNodeClass(timerNode) {}`) —
   tests and `AnyThingstudioNode` reference these names even though the body is now empty.
@@ -60,20 +65,12 @@ generic property panel gained `configRef` (wrapping `ConfigRefField`), `credenti
 
 ## What's next, in order
 
-1. **The I2C family is done (`touch_i2c`, `i2c`); the network family is next.** The generic `configRef` field
-   kind landed with `touch_i2c` (`:config-type="f.configType"`, `:model-value=...`,
-   `@update:model-value="(id) => setProp(f.name, id)"`). **Two shape decisions still block the rest:**
-   - **`bme280`** is the only I2C-family node left: its `address` is a numeric `select`, but
-     `PropertyFieldOption.value` is `string`, so a migrated select would store `"118"` not `118`. Needs a
-     widened option type (or a numeric-select kind) — ask Mike.
-   - **The network family** (`udp_send`/`udp_receive`/`http_*`/`mqtt_*`) shows a *display-only* WiFi
-     `ConfigRefField` bound to `undefined` (the WiFi config is a flow singleton, not a property of these nodes)
-     plus a hint. The generic renderer needs an info-only field (no `name`/`setProp`) — a new
-     `PropertyFieldKind` or a flag on `PropertyFieldDescriptor`. Needs Mike.
-   `mqtt_*` also carry a real `brokerConfigId` configRef.
-   **`ntp` (added 2026-10-14, replaces `clock`; `outstanding-items/ntp-node-replaces-clock.md`) is part of this
-   family and has the same display-only WiFi field** — built in the network family's unmigrated shape, migrate
-   it with them once the info-only field shape is settled.
+1. **The I2C family and the whole network family are done** (`touch_i2c`, `i2c`, `bme280`, and
+   `udp_send`/`udp_receive`/`http_request`/`http_in`/`http_response`/`mqtt_publish`/`mqtt_subscribe`/`ntp`).
+   The two shape changes that unblocked them landed 2026-10-15 (Mike): `PropertyFieldOption.value` is
+   `string | number`, and a field with no `name` is info-only (the display-only WiFi picker on each network
+   node, via `fieldValue`/`setField` in `PropertyPanel.vue`). `mqtt_*` carry a real `brokerConfigId`
+   `configRef` as well as the info-only WiFi one.
 2. **GPIO cluster:** `interrupt`/`eswitch`/`ebutton`/`adc`/`encoder`/`neopixel`. Mostly `pin`/`select`/
    `boolean`/`number` with `showIf` (e.g. `adc`'s `delta` only in relative mode, `lower`/`upper` only in
    absolute; `interrupt`'s `debounceMs` only when `debounce`). The long per-node panel hints become the field's

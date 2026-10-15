@@ -114,12 +114,28 @@ const MANDATORY_YIELD_MS = 10;
 export const udpReceiveNode: NodeDefinition = {
   type: "thingstudio/udp_receive",
   kind: "source",
+  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor.
+  paletteId: "udp_receive",
+  label: "udp receive",
+  group: "network",
+  priority: 20,
+  color: "#3b8a6e",
+  bgcolor: "#1f4a3a",
+  icon: "↓",
+  width: 110,
+  description: "One WiFi network per flow: every WiFi node shares this setting.",
   // output `msg` type `bytes` -- payload is always the raw `_udp_data` from
   // recvfrom(), never decoded (this file's own header, "not validating
   // payload content").
   ports: {
     outputs: [{ name: "msg", type: "bytes" }],
   },
+  properties: [
+    { name: "port", label: "port", kind: "number", default: 9998, min: 1, max: 65535 },
+    { name: "pollMs", label: "poll interval (ms)", kind: "number", default: 20, min: 1 },
+    // Info-only: the WiFi config is a flow singleton, not a property of this node.
+    { kind: "configRef", configType: "thingstudio/config/wifi", label: "WiFi" },
+  ],
   codegenSource(node: GraphNode, ctx: CodegenContext): SourceCodegenResult {
     const port = Math.round(Number(node.properties.port));
     if (!Number.isFinite(port) || port <= 0 || port > 65535) {

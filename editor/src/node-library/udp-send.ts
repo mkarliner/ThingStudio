@@ -104,12 +104,29 @@ const SEND_RETRY_POLL_MS = 10;
 export const udpSendNode: NodeDefinition = {
   type: "thingstudio/udp_send",
   kind: "sink",
+  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor.
+  paletteId: "udp_send",
+  label: "udp send",
+  group: "network",
+  priority: 21,
+  color: "#3b5c8a",
+  bgcolor: "#1f2e4a",
+  icon: "↑",
+  width: 110,
+  description: "One WiFi network per flow: every WiFi node shares this setting.",
   // input `msg` type `any` -- payloadToBytesSnippet handles bytes/str/other
   // uniformly (same bucket-3-avoiding reasoning mqtt_publish's own `any`
   // input gets, wire-type-system-scoping.md).
   ports: {
     inputs: [{ name: "msg", type: "any" }],
   },
+  properties: [
+    { name: "host", label: "host", kind: "text", default: "" },
+    { name: "port", label: "port", kind: "number", default: 9999, min: 1, max: 65535 },
+    { name: "timeoutMs", label: "timeout (ms)", kind: "number", default: 2000, min: 1 },
+    // Info-only: the WiFi config is a flow singleton, not a property of this node.
+    { kind: "configRef", configType: "thingstudio/config/wifi", label: "WiFi" },
+  ],
   codegenSink(node: GraphNode, ctx: CodegenContext): SinkCodegenResult {
     const host = typeof node.properties.host === "string" ? node.properties.host.trim() : "";
     if (!host) {

@@ -69,6 +69,18 @@ import { wifiSetupStatement } from "./wifi-status.js";
 export const mqttSubscribeNode: NodeDefinition = {
   type: "thingstudio/mqtt_subscribe",
   kind: "source",
+  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor.
+  paletteId: "mqtt_subscribe",
+  label: "mqtt subscribe",
+  group: "network",
+  priority: 30,
+  color: "#6e3b8a",
+  bgcolor: "#3a1f4a",
+  icon: "⇩",
+  width: 132,
+  description:
+    "Broker config required -- won't compile without one. One WiFi network per flow: every WiFi node shares this " +
+    "setting. In a flow with MQTT nodes, MQTT manages the WiFi connection, so \"unmanaged\" isn't accepted.",
   // output `msg` type `any` -- buildMsg's payload field falls back to the
   // raw (possibly non-string) decoded value when the incoming bytes
   // aren't valid text (`isinstance(..., (bytes, bytearray))` check
@@ -76,6 +88,22 @@ export const mqttSubscribeNode: NodeDefinition = {
   ports: {
     outputs: [{ name: "msg", type: "any" }],
   },
+  properties: [
+    { name: "topic", label: "topic", kind: "text", default: "" },
+    {
+      name: "qos",
+      label: "qos",
+      kind: "select",
+      default: 0,
+      options: [
+        { value: 0, label: "0" },
+        { value: 1, label: "1" },
+      ],
+    },
+    { name: "brokerConfigId", label: "MQTT Broker", kind: "configRef", configType: "thingstudio/config/mqtt-broker", default: "" },
+    // Info-only: the WiFi config is a flow singleton, not a property of this node.
+    { kind: "configRef", configType: "thingstudio/config/wifi", label: "WiFi" },
+  ],
   codegenSource(node: GraphNode, ctx: CodegenContext): SourceCodegenResult {
     const cfg = parseMqttBrokerProps(node.properties, ctx, "mqtt_subscribe");
 
