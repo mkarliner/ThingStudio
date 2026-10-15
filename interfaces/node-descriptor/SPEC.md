@@ -67,8 +67,9 @@ carry these keys.
 A property field is `{name, label, kind, default, options?}`. `kind` is shared with config fields
 (`config-types.ts`): `text`, `password`, `number`, `select`, `boolean`, `credential`, `configRef`,
 `pin`, `palette` (the indexed-colour palette editor). `default` seeds a freshly-dropped node. A `select`'s option `value` is a string, or a number for a
-select over numeric values (e.g. bme280's I2C address). A custom `.node.json` may only use the `text`,
-`number`, `boolean` and `select` kinds, with string options; the rest are built-in editor widgets.
+select over numeric values (e.g. bme280's I2C address). A custom `.node.json` may use the `text`,
+`number`, `boolean`, `select` and `configRef` kinds (a `configRef` field also carries `configType`);
+the rest are built-in editor widgets.
 
 A field with **no `name`** (and no `default`) is **info-only**: the panel renders its widget but it binds to
 no property. Used for a `configRef` to a flow-singleton config (e.g. the WiFi picker shown on a network
@@ -126,7 +127,8 @@ files with no bridge — is being closed deliberately, family by family, with no
   `inject`/`startup`, and eight of the nine GUI nodes. A descriptor missing the palette metadata is
   "not yet migrated" and still falls back to `palette.ts`.
 - **Still coming.** Relax the custom format so more built-ins can be cloned. Landed 2026-10-15:
-  multi-output `transform`s and a package `description`. Still to come: `configRef` properties and
+  multi-output `transform`s, a package `description`, and `configRef` properties (the picked config's
+  properties are inlined into the node's Python `properties`; an empty id is `None`). Still to come:
   event-driven sources. Dynamic ports (`function`'s `outputCount`) and arbitrary codegen stay
   built-in-only. Compile-time hardware resource claims stay a documented limit (a custom node uses
   `runtime.shared` only). Once every family is migrated, the descriptor's palette metadata becomes

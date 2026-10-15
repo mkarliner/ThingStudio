@@ -166,6 +166,31 @@ describe("validateCustomNodeDescriptor", () => {
     expect(() => validateCustomNodeDescriptor(bad)).toThrow(/not one of the declared options/);
   });
 
+  it("accepts a configRef property and requires configType", () => {
+    const raw = {
+      type: "custom/busreader",
+      kind: "transform",
+      label: "busreader",
+      ports: { inputs: [{ name: "msg", type: "any" }], outputs: [{ name: "msg", type: "any" }] },
+      properties: [{ name: "bus", label: "I2C bus", kind: "configRef", configType: "thingstudio/config/i2c-bus", default: "" }],
+    };
+    expect(validateCustomNodeDescriptor(raw).properties?.[0]).toMatchObject({ kind: "configRef", configType: "thingstudio/config/i2c-bus" });
+    const withoutConfigType = { name: "bus", label: "I2C bus", kind: "configRef", default: "" };
+    expect(() => validateCustomNodeDescriptor({ ...raw, properties: [withoutConfigType] })).toThrow(/configType/);
+  });
+
+  it("requires a string default for a configRef property", () => {
+    expect(() =>
+      validateCustomNodeDescriptor({
+        type: "custom/busreader",
+        kind: "transform",
+        label: "busreader",
+        ports: { inputs: [{ name: "msg", type: "any" }], outputs: [{ name: "msg", type: "any" }] },
+        properties: [{ name: "bus", label: "bus", kind: "configRef", configType: "thingstudio/config/i2c-bus", default: 0 }],
+      }),
+    ).toThrow(/must be a string/);
+  });
+
   it("rejects a boolean property with a non-boolean default", () => {
     const bad = {
       type: "custom/x",
@@ -270,6 +295,31 @@ describe("buildCustomNodeDefinition -- transform", () => {
 
   it("rejects a non-numeric property value at codegen time", () => {
     expect(() => def.codegenTransform!(node(1, { factor: "not a number" }), freshCtx())).toThrow(CompileError);
+  });
+
+  it("inlines a resolved configRef property's config as a dict (and None for an empty id)", () => {
+    const busDescriptor = validateCustomNodeDescriptor({
+      type: "custom/busreader",
+      kind: "transform",
+      label: "busreader",
+      ports: { inputs: [{ name: "msg", type: "any" }], outputs: [{ name: "msg", type: "any" }] },
+      properties: [{ name: "bus", label: "bus", kind: "configRef", configType: "thingstudio/config/i2c-bus", default: "" }],
+    });
+    const busDef = buildCustomNodeDefinition(busDescriptor, "async def run(msg, properties):\n    msg['payload'] = properties['bus']['bus']\n    return msg\n");
+
+    const ctx = freshCtx();
+    ctx.resolveConfig = (id: string) => (id === "cfg1" ? { bus: 0, scl: 22, sda: 21, freq: 100000 } : {});
+    const result = busDef.codegenTransform!(node(1, { bus: "cfg1" }), ctx);
+    const output = runPython(
+      [...(result.statements ?? []), wrapCallable(result)],
+      [`msg = {'payload': None, 'topic': ''}`, `msg = await ${result.functionName}(msg)`, `print(msg['payload'])`].join("\n"),
+    );
+    expect(output.trim()).toBe("0");
+
+    // An empty id resolves to None, and resolveConfig isn't called for it.
+    const emptyCtx = freshCtx();
+    const emptyResult = busDef.codegenTransform!(node(2, {}), emptyCtx); // default is ""
+    expect(emptyResult.statements?.[0]?.code).toContain('"bus": None');
   });
 
   it("gives two instances of the same custom type independent closures, not shared state", () => {

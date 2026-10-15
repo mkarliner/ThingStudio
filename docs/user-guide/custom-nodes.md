@@ -94,11 +94,14 @@ the node is selected:
 
 - **`name`** — identifier. Your Python reads the value by this key.
 - **`label`** — shown in the property panel.
-- **`kind`** — `text`, `number`, `boolean`, or `select`.
+- **`kind`** — `text`, `number`, `boolean`, `select`, or `configRef`.
 - **`default`** — used when a node instance doesn't set the property.
   Type must match `kind`.
 - **`options`** — required for `select`: array of `{ value, label }`.
   `default` must be one of the values.
+- **`configType`** — required for `configRef`: the config type the picker
+  offers (e.g. `thingstudio/config/i2c-bus`). At compile time the picked
+  config's own properties become a dict the node reads — see below.
 
 A `source` node must declare a numeric property named `intervalMs` — it
 sets the poll interval.
@@ -221,6 +224,24 @@ _i2c = runtime.shared('i2c', 0)  # fetch a bus another node in the flow set up
 The built-in nodes use these settings: `('in', 'none' | 'up' | 'down')` and `('out', 'none')` for pins, and `()`
 for an ADC (`runtime.shared('adc', 26, (), lambda: machine.ADC(machine.Pin(26)))`). Pins, ADC, PWM, I2C and SPI all
 work this way: see [Hardware is shared](nodes/index.md#hardware-is-shared).
+
+### Sharing a config (I2C bus, touch panel)
+
+A `configRef` property lets your node pick one of the flow's config nodes. Its value in
+`properties` is that config's own properties as a dict (or `None` if none is picked), so a custom
+I2C node can join the same bus a built-in `i2c`/`bme280` node uses:
+
+```json
+{ "name": "bus", "label": "I2C bus", "kind": "configRef", "configType": "thingstudio/config/i2c-bus", "default": "" }
+```
+
+```python
+_i2c = runtime.shared('i2c', properties['bus']['bus'])  # the flow's shared bus, by its number
+```
+
+The bus/pins come from the config; keep the same `runtime.shared` key a built-in would use so a
+clash is reported, not silently shared. (Network configs — WiFi, MQTT — expose only the
+credential's name, not the secret, so a custom node can't make a WiFi connection from one.)
 
 ### Cleanup
 

@@ -61,7 +61,7 @@
       "properties": {
         "name": { "type": "string", "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$", "description": "Dict key your Python reads the value by." },
         "label": { "type": "string", "minLength": 1, "description": "Shown in the property panel." },
-        "kind": { "enum": ["text", "number", "boolean", "select"], "description": "Field type. 'default' must match it." },
+        "kind": { "enum": ["text", "number", "boolean", "select", "configRef"], "description": "Field type. 'default' must match it (a string for text/select/configRef)." },
         "default": { "description": "Used when a node instance doesn't set the property. Type must match kind." },
         "options": {
           "type": "array",
@@ -73,10 +73,12 @@
             "properties": { "value": { "type": "string" }, "label": { "type": "string", "minLength": 1 } }
           },
           "description": "Required for kind 'select'; 'default' must be one of the values."
-        }
+        },
+        "configType": { "type": "string", "minLength": 1, "description": "Required for kind 'configRef': the config type the picker offers, e.g. 'thingstudio/config/i2c-bus'." }
       },
       "allOf": [
-        { "if": { "properties": { "kind": { "const": "select" } }, "required": ["kind"] }, "then": { "required": ["options"] } }
+        { "if": { "properties": { "kind": { "const": "select" } }, "required": ["kind"] }, "then": { "required": ["options"] } },
+        { "if": { "properties": { "kind": { "const": "configRef" } }, "required": ["kind"] }, "then": { "required": ["configType"] } }
       ]
     }
   }

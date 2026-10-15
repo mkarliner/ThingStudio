@@ -78,7 +78,7 @@ import { pyStringLiteral } from "./py-literals.js";
 // this validator.
 export const PAYLOAD_TYPES: readonly PayloadType[] = ["int", "number", "bool", "string", "bytes", "any"];
 export const NODE_KINDS: readonly NodeKind[] = ["source", "transform", "sink"];
-export const PROPERTY_KINDS = ["text", "number", "boolean", "select"] as const;
+export const PROPERTY_KINDS = ["text", "number", "boolean", "select", "configRef"] as const;
 type CustomPropertyKind = (typeof PROPERTY_KINDS)[number];
 
 /** Package-loading/shape errors -- distinct from CompileError (per-instance
@@ -103,10 +103,14 @@ export interface CustomNodePropertyField {
   name: string;
   label: string;
   kind: CustomPropertyKind;
-  /** Must match `kind` (number -> number, boolean -> boolean, text/select -> string). */
+  /** Must match `kind` (number -> number, boolean -> boolean, text/select/configRef -> string). */
   default: unknown;
   /** Required, non-empty, when kind is "select"; ignored otherwise. */
   options?: CustomNodePropertyOption[];
+  /** Required when kind is "configRef": the config type the picker offers (e.g.
+   * "thingstudio/config/i2c-bus"). At compile time the picked config's own properties are resolved and
+   * passed to the node's Python as a dict (see pyPropertiesLiteral); an empty id passes None. */
+  configType?: string;
 }
 
 export interface CustomNodeDescriptor {
@@ -190,6 +194,13 @@ function validatePropertyField(raw: unknown, where: string): CustomNodePropertyF
       return { value: requireString(orec, "value"), label: requireString(orec, "label") };
     });
   }
+  if (kind === "configRef") {
+    const configType = rec.configType;
+    if (typeof configType !== "string" || configType.length === 0) {
+      fail(`${where}.configType must be a non-empty string when kind is "configRef"`);
+    }
+    field.configType = configType;
+  }
   // default's shape must already match kind -- a mismatched default would
   // otherwise only surface the first time some node instance's property
   // panel field gets left untouched, at compile time, far from the actual
@@ -197,7 +208,7 @@ function validatePropertyField(raw: unknown, where: string): CustomNodePropertyF
   // not downstream).
   if (kind === "number" && typeof field.default !== "number") fail(`${where}.default must be a number when kind is "number"`);
   if (kind === "boolean" && typeof field.default !== "boolean") fail(`${where}.default must be a boolean when kind is "boolean"`);
-  if ((kind === "text" || kind === "select") && typeof field.default !== "string") fail(`${where}.default must be a string when kind is "${kind}"`);
+  if ((kind === "text" || kind === "select" || kind === "configRef") && typeof field.default !== "string") fail(`${where}.default must be a string when kind is "${kind}"`);
   if (kind === "select" && !field.options!.some((o) => o.value === field.default)) {
     fail(`${where}.default "${String(field.default)}" is not one of the declared options`);
   }
@@ -324,6 +335,27 @@ function pyNumberLiteral(value: unknown, contextLabel: string): string {
   return String(n);
 }
 
+/** Renders an arbitrary config property value as a Python literal (str/int/float/bool/None/list/dict).
+ * Used to inline a resolved config's properties for a custom node's `configRef` field. */
+function pyValueLiteral(value: unknown, contextLabel: string): string {
+  if (value === null || value === undefined) return "None";
+  if (typeof value === "boolean") return value ? "True" : "False";
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) throw new CompileError(`${contextLabel} is not a finite number: ${JSON.stringify(value)}`);
+    return String(value);
+  }
+  if (typeof value === "string") return pyStringLiteral(value);
+  if (Array.isArray(value)) return `[${value.map((v) => pyValueLiteral(v, contextLabel)).join(", ")}]`;
+  if (typeof value === "object") {
+    const rec = value as Record<string, unknown>;
+    const entries = Object.keys(rec)
+      .sort()
+      .map((k) => `${pyStringLiteral(k)}: ${pyValueLiteral(rec[k], `${contextLabel}[${k}]`)}`);
+    return `{${entries.join(", ")}}`;
+  }
+  throw new CompileError(`${contextLabel} has a value this cannot render: ${JSON.stringify(value)}`);
+}
+
 /**
  * Resolves one node instance's raw properties (node.properties, from the
  * graph) against its descriptor's property schema -- missing keys fall
@@ -335,8 +367,14 @@ function pyNumberLiteral(value: unknown, contextLabel: string): string {
  * (present but not declared in the schema) are ignored, not rejected --
  * forward-compatible with a `.node.json` that grows a new field after a
  * flow file was last saved with the old one.
+ *
+ * A `configRef` field's value is a config id; `ctx.resolveConfig` is called
+ * to inline the referenced config's own properties as a nested dict (an
+ * empty id becomes None). This is the same compile-time resolution a
+ * built-in config-referencing node does -- the custom node's Python gets the
+ * bus/pins/etc. it needs to `runtime.shared(...)`.
  */
-function pyPropertiesLiteral(descriptor: CustomNodeDescriptor, rawProperties: Record<string, unknown>, contextLabel: string): string {
+function pyPropertiesLiteral(descriptor: CustomNodeDescriptor, rawProperties: Record<string, unknown>, contextLabel: string, ctx: CodegenContext): string {
   const fields = descriptor.properties ?? [];
   const entries = fields.map((f) => {
     const raw = f.name in rawProperties ? rawProperties[f.name] : f.default;
@@ -355,6 +393,11 @@ function pyPropertiesLiteral(descriptor: CustomNodeDescriptor, rawProperties: Re
         }
         literal = pyStringLiteral(raw);
         break;
+      case "configRef": {
+        const id = raw === undefined || raw === null ? "" : String(raw);
+        literal = id === "" ? "None" : pyValueLiteral(ctx.resolveConfig(id), fieldLabel);
+        break;
+      }
       case "text":
       default:
         literal = pyStringLiteral(String(raw));
@@ -404,7 +447,7 @@ export function buildCustomNodeDefinition(descriptor: CustomNodeDescriptor, pyth
     const propsVar = ctx.uniqueName(`${hint}_props`);
     const setupFn = ctx.uniqueName(`${hint}_setup`);
     const entryVar = ctx.uniqueName(`${hint}_${entryPointName}`);
-    const propsLiteral = pyPropertiesLiteral(descriptor, node.properties, `node ${node.id} (${descriptor.type})`);
+    const propsLiteral = pyPropertiesLiteral(descriptor, node.properties, `node ${node.id} (${descriptor.type})`, ctx);
     const indented = pythonSource
       .split("\n")
       .map((line) => (line.length ? "    " + line : line))
