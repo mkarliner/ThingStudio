@@ -91,3 +91,8 @@ The board already runs the flow on the canvas. Deploy comes back when you change
 Your processor names its pins instead of numbering them. The STM32 on a pyboard uses `X1`, `A13` and so on. Pin
 fields then list the chip's own pins rather than take a number. See
 [Pins that aren't numbers](boards.md#pins-that-arent-numbers).
+
+## Why can't I use SPI bus 0 or 1 on an nRF52840?
+
+On the nRF52840, SPI 0 and 1 share hardware with I2C 0 and 1, so a flow using both would fail on the board.
+Thingstudio offers SPI on buses 2 and 3 only. See [Boards and processors](boards.md#built-in-processors).

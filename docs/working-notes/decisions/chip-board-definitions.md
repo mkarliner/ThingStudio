@@ -143,3 +143,12 @@ Status: detail file for `decisions.md`'s "Processor and board definitions" index
   (`LED_RED`, `LED_GREEN`, `LED_YELLOW`, `LED_BLUE`, `SW`), so a gpio_out can drive them; the LEDs are also
   `pyb.LED(1-4)`. Not verified on hardware. The filesystem-root fix that makes a pyboard deploy at all is in
   `board_fs.py` (`learnings/micropython-device-runtime.md`).
+- **2026-10-15 — `nrf52840` processor + `xiao-nrf52840` board.** From MicroPython's `ports/nrf` source
+  (`boards/SEEED_XIAO_NRF52`, `modules/machine`, `nrfx_config.h`). Pins are ints 0–47 (port*32 + pin), which the
+  nrf `pin_find` accepts. Any pin routes to SPI/I2C. SPIM0/1 share peripheral ids with TWI0/1, so only SPI buses
+  2–3 and I2C buses 0–1 are listed, rather than letting a flow claim both halves of one peripheral and fail on the
+  board. `spi.maxHz` 8 MHz (only SPIM3 goes to 32 MHz; one maxHz per processor). No `ble` capability: the nrf port
+  has `ubluepy`, not the `bluetooth` module the ESP32's `ble` implies. `nativeArch` armv7emsp unconfirmed. Board:
+  match `XIAO nRF52840 Sense` (plain and Sense run the same firmware), QSPI 20–25 reserved, battery pins
+  (14/31/13) and charge LED (17) in `avoid` per Seeed's battery-charging page. `/flash` root is covered by
+  `board_fs.py` (nrf `_boot.py` chdirs there). Not verified on hardware.

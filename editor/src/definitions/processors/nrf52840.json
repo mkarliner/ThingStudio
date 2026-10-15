@@ -1,0 +1,25 @@
+{
+  "name": "nRF52840",
+  "match": ["NRF52840"],
+  "nativeArch": "armv7emsp",
+  "nativeArchConfirmed": false,
+  "gpio": ["0-47"],
+  "avoid": {
+    "9-10": "NFC antenna pins by default. Usable as GPIO only after the chip's UICR NFCPINS setting is changed.",
+    "18": "The reset pin on most boards."
+  },
+  "spi": {
+    "maxHz": 8000000,
+    "buses": {
+      "2": {},
+      "3": {}
+    }
+  },
+  "i2c": {
+    "buses": {
+      "0": {},
+      "1": {}
+    }
+  },
+  "notes": "Cortex-M4F. Pins are numbered port*32 + pin: P0.00-P0.31 are 0-31, P1.00-P1.15 are 32-47. Any pin can be routed to SPI or I2C. SPI 0 and 1 share hardware with I2C 0 and 1, so SPI is offered on buses 2 and 3 only. SPI runs at up to 8 MHz (bus 3 alone can reach 32 MHz, not offered here). ADC inputs: 2, 3, 4, 5, 28, 29, 30, 31. Has BLE, but MicroPython's nRF port drives it through ubluepy, not the bluetooth module, so no ble capability is listed. Native arch armv7emsp is not yet checked on hardware."
+}

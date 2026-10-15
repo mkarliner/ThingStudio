@@ -1,0 +1,31 @@
+{
+  "name": "Seeed XIAO nRF52840 (Sense)",
+  "processor": "nrf52840",
+  "match": ["XIAO nRF52840 Sense"],
+  "wifi": false,
+  "gpio": [2, 3, 4, 5, 6, 7, 9, 10, 11, 13, 14, 16, 17, "20-32", 40, 42, "43-47"],
+  "pins": {
+    "D0": 2, "D1": 3, "D2": 28, "D3": 29, "D4": 4, "D5": 5,
+    "D6": 43, "D7": 44, "D8": 45, "D9": 46, "D10": 47,
+    "LED_RED": 26, "LED_GREEN": 30, "LED_BLUE": 6, "CHG_LED": 17,
+    "NFC1": 9, "NFC2": 10,
+    "VBAT_ADC": 31, "VBAT_ENABLE": 14, "HICHG": 13,
+    "IMU_SDA": 7, "IMU_SCL": 27, "IMU_INT1": 11, "IMU_PWR": 40,
+    "PDM_CLK": 32, "PDM_DATA": 16, "MIC_PWR": 42
+  },
+  "reserved": {
+    "20-25": "Wired to the 2 MB QSPI flash chip."
+  },
+  "avoid": {
+    "14": "Battery-read enable. Drive it low to read the battery on 31. Never set it high while charging: that can damage pin 31.",
+    "31": "Battery voltage divider, read only with the ADC. Never drive it.",
+    "13": "Sets the battery charge current (low: 100 mA, high: 50 mA).",
+    "17": "Charge LED, also driven by the charger chip. Read it to see whether the battery is charging; don't drive it."
+  },
+  "usb": "top",
+  "header": {
+    "1": 2, "2": 3, "3": 28, "4": 29, "5": 4, "6": 5, "7": 43,
+    "8": 44, "9": 45, "10": 46, "11": 47, "12": "3V3", "13": "GND", "14": "5V"
+  },
+  "notes": "The plain XIAO nRF52840 and the Sense run the same MicroPython firmware and both report XIAO nRF52840 Sense. D0-D5 are also A0-A5; D4/D5 are the usual I2C SDA/SCL, D6/D7 UART TX/RX, D8-D10 SPI SCK/MISO/MOSI. The RGB LED is active low: value 0 turns it on. NFC1/NFC2 are pads on the back. IMU (LSM6DS3TR-C) and microphone pins exist on the Sense only; set IMU_PWR or MIC_PWR high before using them. Files live under /flash. Bluetooth is through ubluepy only."
+}

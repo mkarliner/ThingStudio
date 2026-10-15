@@ -54,8 +54,8 @@ const minimalProcessor = { name: "Test", match: ["TEST1"], nativeArch: "armv6m",
 describe("built-in definitions", () => {
   it("all load with no problems", () => {
     expect(defs.problems).toEqual([]);
-    expect([...defs.processors.keys()].sort()).toEqual(["esp32", "esp32-c3", "esp32-s2", "esp32-s3", "rp2040", "rp2350", "stm32f405"]);
-    expect([...defs.boards.keys()].sort()).toEqual(["cyd", "freenove-s3-4in", "lolin-s2-mini", "luatos-esp32c3-core", "pico", "pico-2", "pico-w", "pyboard-v10"]);
+    expect([...defs.processors.keys()].sort()).toEqual(["esp32", "esp32-c3", "esp32-s2", "esp32-s3", "nrf52840", "rp2040", "rp2350", "stm32f405"]);
+    expect([...defs.boards.keys()].sort()).toEqual(["cyd", "freenove-s3-4in", "lolin-s2-mini", "luatos-esp32c3-core", "pico", "pico-2", "pico-w", "pyboard-v10", "xiao-nrf52840"]);
   });
 
   it("FALLBACK_MAX_PIN is the widest range any built-in processor has", () => {

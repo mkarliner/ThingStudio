@@ -67,6 +67,7 @@ In the properties panel, a pin field shows the board's name for that pin, such a
 | CYD (ESP32-2432S028, ST7789) | ESP32 | Pick by hand. Display, touch, SD, RGB LED and speaker pins are labelled. |
 | Freenove ESP32-S3 Display 4.0" (FNK0104S, ST7796) | ESP32-S3 | Pick by hand. Display and touch pins are labelled. 320x480, SPI bus 1. Rotation 1 is portrait. For landscape, set the display's `orientation` to 90 (or 270 for the other way up) and keep the screen and display at 320x480. Display and touch (FT6336U) work. |
 | Pyboard v1.0 | STM32F405 | Pins are named `X1`–`X22` and `Y1`–`Y12`. The four onboard LEDs are on `A13`, `A14`, `A15` and `B4` (labelled `LED_RED`–`LED_BLUE`); the user switch `SW` is on `X17`. |
+| Seeed XIAO nRF52840 (Sense) | nRF52840 | Pins `D0`–`D10` are labelled. RGB LED on 26, 30 and 6, on when the pin is 0. GPIO 20–25 go to the flash chip. Battery, IMU and microphone pins are labelled; IMU and microphone are on the Sense only. No WiFi. |
 
 ## Built-in processors
 
@@ -79,10 +80,13 @@ In the properties panel, a pin field shows the board's name for that pin, such a
 | RP2040 | 0–29 | none |
 | RP2350 | 0–47 (0–29 on the RP2350A) | none |
 | STM32F405 | X1–X22, Y1–Y12 (named pins, not numbers) | none |
+| nRF52840 | 0–47 (P1.x is 32 + x) | none |
 
 The ESP32 runs SPI at up to 27 MHz on most pins. Faster speeds need the bus's own fast pins (SCK 14 and MOSI 13 on bus 1, SCK 18 and MOSI 23 on bus 2).
 
 On the RP2040 and RP2350, each SPI and I2C bus can only use certain pins. The compile error lists the pins that work.
+
+On the nRF52840, any pin works for SPI and I2C. SPI uses buses 2 and 3, up to 8 MHz; I2C uses buses 0 and 1.
 
 The definition files list every pin to avoid, with the reason.
 
