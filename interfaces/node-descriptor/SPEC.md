@@ -55,6 +55,9 @@ carry these keys.
 | `icon` | string | no | One or two characters. |
 | `width` | number | no | Canvas pill width in px. |
 | `description` | string | no | Short self-documenting blurb, shown in the editor. |
+| `title` | string | no | Canvas title when it differs from `label` (e.g. `gui_label` shows "show text" on the canvas). Defaults to `label`. |
+| `hidden` | boolean | no | Hide from the palette (still usable in a flow file). |
+| `screenOutline` | boolean | no | Show the `ScreenOutline` widget in the panel (a `gui_screen`'s widget layout). |
 | `requires` | `{capabilities: string[]}` | no | Hardware the node needs (e.g. `["pio"]`, `["espnow"]`), checked centrally at compile time (§4). |
 | `allowUnwired` | boolean | no | The node is valid with nothing wired to it. |
 | `ports` | `{inputs, outputs}` | no | Arrays of `{name, type}`. |
@@ -118,9 +121,9 @@ files with no bridge — is being closed deliberately, family by family, with no
   of their own copies. Migrated families: `debug`, `timer`, `delay`, `gpio_out`, `pwm_out`, the I2C
   family (`touch_i2c`, `i2c`, `bme280`), the network family (`udp_send`, `udp_receive`, `http_*`,
   `mqtt_*`, `ntp`), the GPIO cluster (`interrupt`, `eswitch`, `ebutton`, `adc`, `encoder`,
-  `neopixel`), `filter`/`journal`/`wifi_status`/`wifi_gate`, `display_spi`/`display_i2c`, and
-  `inject`/`startup`. A descriptor missing the palette metadata is "not yet migrated" and still falls
-  back to `palette.ts`.
+  `neopixel`), `filter`/`journal`/`wifi_status`/`wifi_gate`, `display_spi`/`display_i2c`,
+  `inject`/`startup`, and eight of the nine GUI nodes. A descriptor missing the palette metadata is
+  "not yet migrated" and still falls back to `palette.ts`.
 - **Still coming.** Relax the custom format so more built-ins can be cloned: multi-output (the
   compiler already supports it), `configRef` properties, and event sources. Dynamic ports (`function`'s
   `outputCount`) and arbitrary codegen stay built-in-only. Compile-time hardware resource claims stay

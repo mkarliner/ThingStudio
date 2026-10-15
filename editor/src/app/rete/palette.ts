@@ -153,15 +153,8 @@ export interface KindStyle {
 export const NODE_PALETTE: Partial<Record<NodeKind, KindStyle>> = {
   function: { color: "#6e5b2e", bgcolor: "#3f341f", icon: "ƒ", label: "function", group: "general", priority: 30 },
   // GUI nodes, 2026-10-08 (node-library/gui.ts): their own "GUI" group, one slate-green family.
-  gui_screen: { color: "#3f6e5c", bgcolor: "#1f3a30", icon: "▣", label: "screen", group: "GUI", priority: 10 },
-  gui_navigator: { color: "#3f5c6e", bgcolor: "#1f303a", icon: "⇆", label: "navigator", group: "GUI", priority: 20, hidden: true },
-  gui_modal: { color: "#6e3f3f", bgcolor: "#3a1f1f", icon: "!", label: "modal", group: "GUI", priority: 30 },
-  gui_readout: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "#", label: "readout", group: "GUI", priority: 40 },
-  gui_label: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "T", label: "label", group: "GUI", priority: 41 },
-  gui_bar: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "▬", label: "bar", group: "GUI", priority: 42 },
-  gui_trend: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "▁▃▆", label: "trend", group: "GUI", priority: 45 },
+  // gui_button is the only one still unmigrated (its panel needs dynamic placeholders/per-mode hints).
   gui_button: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "▭", label: "button", group: "GUI", priority: 44 },
-  gui_led: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "●", label: "light", group: "GUI", priority: 43 },
 };
 
 // priority: 1000 -- a custom node that doesn't declare its own priority

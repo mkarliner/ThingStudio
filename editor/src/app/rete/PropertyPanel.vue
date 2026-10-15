@@ -153,74 +153,6 @@
 
       <!-- GUI nodes (node-library/gui.ts, 2026-10-08). Placement (page, font, size) is in the flow's
            `screens` section, edited in the flow file until the GUI view exists. -->
-      <template v-else-if="node.kind === 'gui_screen'">
-        <label>name <input type="text" v-model="node.properties.name" @input="touch" /></label>
-        <label>width (px) <input type="number" min="1" v-model.number="node.properties.width" @input="touch" /></label>
-        <label>height (px) <input type="number" min="1" v-model.number="node.properties.height" @input="touch" /></label>
-        <label>frame format
-          <select v-model="node.properties.frameFormat" @change="touch">
-            <option value="gs4">gs4 (16 greys)</option>
-            <option value="gs2">gs2 (4 greys)</option>
-            <option value="mono">mono</option>
-            <option value="rgb565">rgb565 (colour)</option>
-          </select>
-        </label>
-        <label>fastest redraw (ms) <input type="number" min="0" v-model.number="node.properties.minInterval" @input="touch" /></label>
-        <label><input type="checkbox" v-model="node.properties.wrap" @change="touch" /> next/prev wrap round</label>
-        <ConfigRefField
-          config-type="thingstudio/config/touch-panel"
-          label="touch panel (blank: no touch)"
-          :model-value="node.properties.touchPanelConfigId || undefined"
-          @update:model-value="(id) => setConfigId('touchPanelConfigId', id)"
-        />
-        <p class="hint">Rotation is set on the display this screen is wired to; with one set, width and height here are the
-          panel's own size.</p>
-        <p class="hint">Sends a frame each time the screen changes. Wire it to a display node with the same size and
-          frame format.</p>
-        <ScreenOutline :screen-id="node.id" />
-      </template>
-
-      <template v-else-if="node.kind === 'gui_readout'">
-        <label>name <input type="text" v-model="node.properties.name" @input="touch" /></label>
-        <label>units <input type="text" v-model="node.properties.units" @input="touch" /></label>
-        <label>decimals <input type="number" min="0" max="6" v-model.number="node.properties.decimals" @input="touch" /></label>
-        <label>lowest value <input type="number" v-model.number="node.properties.lo" @input="touch" /></label>
-        <label>highest value <input type="number" v-model.number="node.properties.hi" @input="touch" /></label>
-        <label>stale after (s, 0 = never) <input type="number" min="0" v-model.number="node.properties.staleAfter" @input="touch" /></label>
-        <p class="hint">Shows msg.payload. Its space is sized for the lowest to highest value.</p>
-      </template>
-
-      <template v-else-if="node.kind === 'gui_label'">
-        <label>name <input type="text" v-model="node.properties.name" @input="touch" /></label>
-        <label>room for (characters) <input type="number" min="1" v-model.number="node.properties.maxChars" @input="touch" /></label>
-        <label>stale after (s, 0 = never) <input type="number" min="0" v-model.number="node.properties.staleAfter" @input="touch" /></label>
-      </template>
-
-      <template v-else-if="node.kind === 'gui_bar'">
-        <label>name <input type="text" v-model="node.properties.name" @input="touch" /></label>
-        <label>empty at <input type="number" v-model.number="node.properties.lo" @input="touch" /></label>
-        <label>full at <input type="number" v-model.number="node.properties.hi" @input="touch" /></label>
-        <label>stale after (s, 0 = never) <input type="number" min="0" v-model.number="node.properties.staleAfter" @input="touch" /></label>
-      </template>
-
-      <template v-else-if="node.kind === 'gui_trend'">
-        <label>name <input type="text" v-model="node.properties.name" @input="touch" /></label>
-        <label>bottom at <input type="number" step="any" v-model.number="node.properties.lo" @input="touch" /></label>
-        <label>top at <input type="number" step="any" v-model.number="node.properties.hi" @input="touch" /></label>
-        <label>columns (natural width) <input type="number" min="1" v-model.number="node.properties.columns" @input="touch" /></label>
-        <label>column width (px) <input type="number" min="1" v-model.number="node.properties.colWidth" @input="touch" /></label>
-        <label>height (px) <input type="number" min="8" v-model.number="node.properties.height" @input="touch" /></label>
-        <label>stale after (s, 0 = never) <input type="number" min="0" v-model.number="node.properties.staleAfter" @input="touch" /></label>
-        <p class="hint">Draws the series a journal sends, newest on the right, or any list of numbers (None is a gap).
-          A wider space shows more history.</p>
-      </template>
-
-      <template v-else-if="node.kind === 'gui_led'">
-        <label>name <input type="text" v-model="node.properties.name" @input="touch" /></label>
-        <label>stale after (s, 0 = never) <input type="number" min="0" v-model.number="node.properties.staleAfter" @input="touch" /></label>
-        <p class="hint">On when msg.payload is true, off when false.</p>
-      </template>
-
       <template v-else-if="node.kind === 'gui_button'">
         <label>topic <input type="text" v-model="node.properties.name" @input="touch" /></label>
         <label>mode
@@ -269,21 +201,6 @@
         <p v-else-if="node.properties.mode === 'momentary'" class="hint">Sends "sends" when tapped (the payload; the topic is above). The board label is what is drawn on the button
           (blank: the flow label); a msg.payload on its input replaces it.</p>
         <p v-else class="hint">Acts on its own screen; needs no wires.</p>
-      </template>
-
-      <template v-else-if="node.kind === 'gui_navigator'">
-        <label>name <input type="text" v-model="node.properties.name" @input="touch" /></label>
-        <label>screen <input type="text" v-model="node.properties.screen" placeholder="only needed with two screens" @input="touch" /></label>
-        <p class="hint">msg.payload: next, prev, back, home or a page name. Sends the new page when it changes.</p>
-      </template>
-
-      <template v-else-if="node.kind === 'gui_modal'">
-        <label>name <input type="text" v-model="node.properties.name" @input="touch" /></label>
-        <label>screen <input type="text" v-model="node.properties.screen" placeholder="only needed with two screens" @input="touch" /></label>
-        <label>priority <input type="number" v-model.number="node.properties.priority" @input="touch" /></label>
-        <label>close after (s, 0 = never) <input type="number" min="0" v-model.number="node.properties.timeout" @input="touch" /></label>
-        <p class="hint">Opens with msg.payload as its content; a payload of None closes it. The output sends how it closed:
-          <code>ack</code>, <code>timeout</code> or <code>closed</code>.</p>
       </template>
 
       <template v-else-if="nodeDescriptor">
@@ -339,6 +256,7 @@
             <p v-if="f.help" class="hint">{{ f.help }}</p>
           </template>
         </template>
+        <ScreenOutline v-if="nodeDescriptor.screenOutline" :screen-id="node.id" />
         <p v-if="isCustomNode" class="hint">Custom node ({{ nodeDescriptor.type }}) -- loaded this session only; reload its package after a page refresh.</p>
       </template>
     </template>
@@ -454,18 +372,6 @@ const maxFunctionOutputs = MAX_FUNCTION_OUTPUTS;
 function setFunctionOutputCount(count: number): void {
   if (!(node.value instanceof FunctionNode) || !Number.isFinite(count)) return;
   void setFunctionNodeOutputCount.value?.(node.value, count);
-  touch();
-}
-
-
-// ConfigRefField's own `update:modelValue` hands back a fresh/selected config id -- written onto the
-// node's own config-reference property, same `touch()` signal as every other field edit. (Migrated
-// nodes go through the generic branch's setField; this stays for the still-bespoke gui_screen/
-// display_i2c.)
-/** Points the selected node at a config (e.g. its I2C bus). */
-function setConfigId(key: string, id: string): void {
-  if (!node.value) return;
-  (node.value.properties as Record<string, unknown>)[key] = id;
   touch();
 }
 </script>

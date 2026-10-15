@@ -392,12 +392,10 @@ function guiClass<K extends string, P extends Record<string, unknown>>(kind: K, 
   };
 }
 
-export const GuiScreenNode = guiClass("gui_screen", "thingstudio/gui_screen", 110, () => ({ name: "screen", width: 320, height: 240, frameFormat: "gs4" as "gs4" | "gs2" | "mono" | "rgb565", minInterval: 200, wrap: true, touchPanelConfigId: "" }), guiScreenNode, false, "frame");
-export const GuiLabelNode = guiClass("gui_label", "thingstudio/gui_label", 100, () => ({ name: "", maxChars: 8, staleAfter: 0 }), guiLabelNode, true, null);
-export const GuiReadoutNode = guiClass("gui_readout", "thingstudio/gui_readout", 110, () => ({ name: "", units: "", decimals: 1, lo: 0, hi: 100, staleAfter: 0 }), guiReadoutNode, true, null);
-export const GuiBarNode = guiClass("gui_bar", "thingstudio/gui_bar", 90, () => ({ name: "", lo: 0, hi: 100, staleAfter: 0 }), guiBarNode, true, null);
-export const GuiTrendNode = guiClass("gui_trend", "thingstudio/gui_trend", 100, () => ({ name: "", lo: 0, hi: 100, columns: 60, colWidth: 3, height: 48, staleAfter: 0 }), guiTrendNode, true, null);
-export const GuiLedNode = guiClass("gui_led", "thingstudio/gui_led", 90, () => ({ name: "", staleAfter: 0 }), guiLedNode, true, null);
+// gui_screen/gui_label/gui_readout/gui_bar/gui_trend/gui_led/gui_navigator/gui_modal are descriptor-driven
+// (buildDescriptorNodeClass below). gui_button stays hand-written here (its panel needs dynamic
+// placeholders and per-mode hints, which the generic panel doesn't express).
+
 export const GuiButtonNode = guiClass(
   "gui_button",
   "thingstudio/gui_button",
@@ -422,8 +420,6 @@ export const GuiButtonNode = guiClass(
   true,
   "msg",
 );
-export const GuiNavigatorNode = guiClass("gui_navigator", "thingstudio/gui_navigator", 120, () => ({ name: "navigator", screen: "" }), guiNavigatorNode, true, "page");
-export const GuiModalNode = guiClass("gui_modal", "thingstudio/gui_modal", 100, () => ({ name: "", screen: "", priority: 0, timeout: 0 }), guiModalNode, true, "msg");
 
 // Generic I2C read/write/scan on a shared bus (node-library/i2c-generic.ts) -- descriptor-driven
 // (buildDescriptorNodeClass below). address/register are text so hex ("0x29") can be typed; the compiler
@@ -454,7 +450,7 @@ function buildDescriptorNodeClass(descriptor: NodeDescriptor) {
     );
 
     constructor() {
-      super(descriptor.label ?? descriptor.paletteId ?? descriptor.type);
+      super(descriptor.title ?? descriptor.label ?? descriptor.paletteId ?? descriptor.type);
       for (const input of descriptor.ports?.inputs ?? []) {
         this.addInput(input.name, new ClassicPreset.Input(portSocket(descriptor.ports?.inputs, input.name, this.properties), input.name, true));
       }
@@ -541,6 +537,22 @@ export class WifiGateNode extends buildDescriptorNodeClass(wifiGateNode) {}
 export class DisplaySpiNode extends buildDescriptorNodeClass(displaySpiNode) {}
 
 export class DisplayI2cNode extends buildDescriptorNodeClass(displayI2cNode) {}
+
+export class GuiScreenNode extends buildDescriptorNodeClass(guiScreenNode) {}
+
+export class GuiLabelNode extends buildDescriptorNodeClass(guiLabelNode) {}
+
+export class GuiReadoutNode extends buildDescriptorNodeClass(guiReadoutNode) {}
+
+export class GuiBarNode extends buildDescriptorNodeClass(guiBarNode) {}
+
+export class GuiTrendNode extends buildDescriptorNodeClass(guiTrendNode) {}
+
+export class GuiLedNode extends buildDescriptorNodeClass(guiLedNode) {}
+
+export class GuiNavigatorNode extends buildDescriptorNodeClass(guiNavigatorNode) {}
+
+export class GuiModalNode extends buildDescriptorNodeClass(guiModalNode) {}
 
 // The GPIO cluster -- interrupt/eswitch/ebutton/adc/encoder/neopixel -- is descriptor-driven
 // (buildDescriptorNodeClass below). Their defaults match each node-library file's own codegen

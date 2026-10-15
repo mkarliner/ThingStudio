@@ -212,7 +212,42 @@ function screenId(ctx: CodegenContext, node: GraphNode, prop = "screen"): string
 export const guiScreenNode: NodeDefinition = {
   type: GUI_SCREEN,
   kind: "source",
+  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor.
+  paletteId: "gui_screen",
+  label: "screen",
+  title: "screen",
+  group: "GUI",
+  priority: 10,
+  color: "#3f6e5c",
+  bgcolor: "#1f3a30",
+  icon: "▣",
+  width: 110,
+  screenOutline: true,
+  description:
+    "Rotation is set on the display this screen is wired to; with one set, width and height here are the panel's " +
+    "own size. Sends a frame each time the screen changes. Wire it to a display node with the same size and frame " +
+    "format.",
   ports: { outputs: [{ name: "frame", type: "bytes" }] },
+  properties: [
+    { name: "name", label: "name", kind: "text", default: "screen" },
+    { name: "width", label: "width (px)", kind: "number", default: 320, min: 1 },
+    { name: "height", label: "height (px)", kind: "number", default: 240, min: 1 },
+    {
+      name: "frameFormat",
+      label: "frame format",
+      kind: "select",
+      default: "gs4",
+      options: [
+        { value: "gs4", label: "gs4 (16 greys)" },
+        { value: "gs2", label: "gs2 (4 greys)" },
+        { value: "mono", label: "mono" },
+        { value: "rgb565", label: "rgb565 (colour)" },
+      ],
+    },
+    { name: "minInterval", label: "fastest redraw (ms)", kind: "number", default: 200, min: 0 },
+    { name: "wrap", label: "next/prev wrap round", kind: "boolean", default: true },
+    { name: "touchPanelConfigId", label: "touch panel (blank: no touch)", kind: "configRef", configType: "thingstudio/config/touch-panel", default: "" },
+  ],
   codegenEventSource(node: GraphNode, ctx: CodegenContext): EventSourceCodegenResult {
     const { width, height, format } = screenSize(node, ctx);
     checkDisplaySize(node, ctx, width, height);
@@ -283,11 +318,103 @@ function widgetNode(type: string): NodeDefinition {
   };
 }
 
-export const guiLabelNode = widgetNode("thingstudio/gui_label");
-export const guiReadoutNode = widgetNode("thingstudio/gui_readout");
-export const guiBarNode = widgetNode("thingstudio/gui_bar");
-export const guiTrendNode = widgetNode("thingstudio/gui_trend");
-export const guiLedNode = widgetNode("thingstudio/gui_led");
+export const guiLabelNode: NodeDefinition = {
+  ...widgetNode("thingstudio/gui_label"),
+  paletteId: "gui_label",
+  label: "label",
+  title: "show text",
+  group: "GUI",
+  priority: 41,
+  color: "#4a6e3f",
+  bgcolor: "#2a3a1f",
+  icon: "T",
+  width: 100,
+  properties: [
+    { name: "name", label: "name", kind: "text", default: "" },
+    { name: "maxChars", label: "room for (characters)", kind: "number", default: 8, min: 1 },
+    { name: "staleAfter", label: "stale after (s, 0 = never)", kind: "number", default: 0, min: 0 },
+  ],
+};
+export const guiReadoutNode: NodeDefinition = {
+  ...widgetNode("thingstudio/gui_readout"),
+  paletteId: "gui_readout",
+  label: "readout",
+  title: "show number",
+  group: "GUI",
+  priority: 40,
+  color: "#4a6e3f",
+  bgcolor: "#2a3a1f",
+  icon: "#",
+  width: 110,
+  description: "Shows msg.payload. Its space is sized for the lowest to highest value.",
+  properties: [
+    { name: "name", label: "name", kind: "text", default: "" },
+    { name: "units", label: "units", kind: "text", default: "" },
+    { name: "decimals", label: "decimals", kind: "number", default: 1, min: 0, max: 6 },
+    { name: "lo", label: "lowest value", kind: "number", default: 0 },
+    { name: "hi", label: "highest value", kind: "number", default: 100 },
+    { name: "staleAfter", label: "stale after (s, 0 = never)", kind: "number", default: 0, min: 0 },
+  ],
+};
+export const guiBarNode: NodeDefinition = {
+  ...widgetNode("thingstudio/gui_bar"),
+  paletteId: "gui_bar",
+  label: "bar",
+  title: "show level",
+  group: "GUI",
+  priority: 42,
+  color: "#4a6e3f",
+  bgcolor: "#2a3a1f",
+  icon: "▬",
+  width: 90,
+  properties: [
+    { name: "name", label: "name", kind: "text", default: "" },
+    { name: "lo", label: "empty at", kind: "number", default: 0 },
+    { name: "hi", label: "full at", kind: "number", default: 100 },
+    { name: "staleAfter", label: "stale after (s, 0 = never)", kind: "number", default: 0, min: 0 },
+  ],
+};
+export const guiTrendNode: NodeDefinition = {
+  ...widgetNode("thingstudio/gui_trend"),
+  paletteId: "gui_trend",
+  label: "trend",
+  title: "show history",
+  group: "GUI",
+  priority: 45,
+  color: "#4a6e3f",
+  bgcolor: "#2a3a1f",
+  icon: "▁▃▆",
+  width: 100,
+  description:
+    "Draws the series a journal sends, newest on the right, or any list of numbers (None is a gap). A wider space " +
+    "shows more history.",
+  properties: [
+    { name: "name", label: "name", kind: "text", default: "" },
+    { name: "lo", label: "bottom at", kind: "number", default: 0, step: "any" },
+    { name: "hi", label: "top at", kind: "number", default: 100, step: "any" },
+    { name: "columns", label: "columns (natural width)", kind: "number", default: 60, min: 1 },
+    { name: "colWidth", label: "column width (px)", kind: "number", default: 3, min: 1 },
+    { name: "height", label: "height (px)", kind: "number", default: 48, min: 8 },
+    { name: "staleAfter", label: "stale after (s, 0 = never)", kind: "number", default: 0, min: 0 },
+  ],
+};
+export const guiLedNode: NodeDefinition = {
+  ...widgetNode("thingstudio/gui_led"),
+  paletteId: "gui_led",
+  label: "light",
+  title: "status light",
+  group: "GUI",
+  priority: 43,
+  color: "#4a6e3f",
+  bgcolor: "#2a3a1f",
+  icon: "●",
+  width: 90,
+  description: "On when msg.payload is true, off when false.",
+  properties: [
+    { name: "name", label: "name", kind: "text", default: "" },
+    { name: "staleAfter", label: "stale after (s, 0 = never)", kind: "number", default: 0, min: 0 },
+  ],
+};
 /** Two-faced (compiler/node-definition.ts, codegenEventSource): the input sets what the button shows -- a toggle's
  * state, or a value replacing its text -- and the output sends when it is tapped: {topic: <name>, payload: ...}.
  * A navigate button has no output; it acts on its own screen. */
@@ -318,9 +445,25 @@ export const guiButtonNode: NodeDefinition = {
 export const guiNavigatorNode: NodeDefinition = {
   type: "thingstudio/gui_navigator",
   kind: "transform",
+  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor.
+  paletteId: "gui_navigator",
+  label: "navigator",
+  title: "change page",
+  group: "GUI",
+  priority: 20,
+  color: "#3f5c6e",
+  bgcolor: "#1f303a",
+  icon: "⇆",
+  width: 120,
+  hidden: true,
+  description: "msg.payload: next, prev, back, home or a page name. Sends the new page when it changes.",
   // `any` in, checked when it arrives: a function or timer upstream is untyped, and a non-string command
   // gets a NODE_ERROR naming what's accepted (the canvas refused any -> string wires, 2026-10-08).
   ports: { inputs: [{ name: "msg", type: "any" }], outputs: [{ name: "page", type: "string" }] },
+  properties: [
+    { name: "name", label: "name", kind: "text", default: "navigator" },
+    { name: "screen", label: "screen", kind: "text", default: "", placeholder: "only needed with two screens" },
+  ],
   codegenTransform(node: GraphNode, ctx: CodegenContext): TransformCodegenResult {
     const core = coreBlock(ctx);
     const sid = screenId(ctx, node);
@@ -349,7 +492,26 @@ export const guiNavigatorNode: NodeDefinition = {
 export const guiModalNode: NodeDefinition = {
   type: GUI_MODAL,
   kind: "sink",
+  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor.
+  paletteId: "gui_modal",
+  label: "modal",
+  title: "pop-up alert",
+  group: "GUI",
+  priority: 30,
+  color: "#6e3f3f",
+  bgcolor: "#3a1f1f",
+  icon: "!",
+  width: 100,
+  description:
+    "Opens with msg.payload as its content; a payload of None closes it. The output sends how it closed: ack, " +
+    "timeout or closed.",
   ports: { inputs: [{ name: "msg", type: "any" }], outputs: [{ name: "msg", type: "any" }] },
+  properties: [
+    { name: "name", label: "name", kind: "text", default: "" },
+    { name: "screen", label: "screen", kind: "text", default: "", placeholder: "only needed with two screens" },
+    { name: "priority", label: "priority", kind: "number", default: 0 },
+    { name: "timeout", label: "close after (s, 0 = never)", kind: "number", default: 0, min: 0 },
+  ],
   codegenSink(node: GraphNode, ctx: CodegenContext): SinkCodegenResult {
     const core = coreBlock(ctx);
     const sid = screenId(ctx, node);

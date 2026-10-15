@@ -61,10 +61,13 @@ minus codegen). `interfaces/node-descriptor/SPEC.md` is now v2. Remaining work, 
    `presetType` (the generic panel renders `PresetRefField` at the top) and a `palette` field kind (the
    `PaletteField` indexed-colour editor). Then `inject`/`startup` (a `retype` field flag, Mike approved
    2026-10-15: changing the field re-resolves the node's output sockets -- the generic class gained
-   `retypeOutputs()`). Still bespoke: `function` (its `code` field is a textarea and its `outputCount` needs
-   the live editor/area resize path -- `setFunctionNodeOutputCount` -- plus its own output-key/height
-   convention; the briefing allows leaving it hand-written) and the nine `gui_*` nodes. Then make `palette.ts`'s
-   rows go away.
+   `retypeOutputs()`). Then eight of the nine GUI nodes (`gui_screen`/`gui_label`/`gui_readout`/`gui_bar`/
+   `gui_trend`/`gui_led`/`gui_navigator`/`gui_modal`), which needed three more shape changes Mike approved
+   2026-10-15: `title` (canvas title ≠ palette label), `hidden` (gui_navigator), and a `screenOutline` flag
+   (the generic panel renders `ScreenOutline`). Still bespoke: `function` (its `code` field is a textarea and
+   its `outputCount` needs the live editor/area resize path -- `setFunctionNodeOutputCount` -- plus its own
+   output-key/height convention) and `gui_button` (dynamic placeholders and per-mode hints). Then make
+   `palette.ts`'s rows go away.
 2. Relax the custom `.node.json` format (multi-output, `configRef` properties, event sources) so more built-ins
    can be cloned, and add the package's own docs (`description`/`.node.md`, sanitized).
 3. Still out: dynamic ports and arbitrary codegen stay built-in-only; compile-time resource claims stay a

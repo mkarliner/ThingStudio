@@ -44,6 +44,7 @@ export function paletteStyleFor(kind: string): KindStyle {
       label: d.label,
       group: d.group,
       priority: d.priority,
+      ...(d.hidden ? { hidden: true } : {}),
     };
   }
   return NODE_PALETTE[kind as NodeKind] ?? DEFAULT_KIND_STYLE;

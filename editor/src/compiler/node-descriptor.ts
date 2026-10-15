@@ -123,6 +123,13 @@ export interface NodeDescriptor {
   paletteId?: string;
   /** Name shown on the canvas and in the palette. */
   label?: string;
+  /** Canvas title, when it differs from the palette `label` (e.g. gui_label shows "show text" on the canvas
+   * but is "label" in the palette). Defaults to `label`. */
+  title?: string;
+  /** Hide from the palette (still usable in a flow file). */
+  hidden?: boolean;
+  /** Show the `ScreenOutline` widget in the property panel (a gui_screen's widget layout). */
+  screenOutline?: boolean;
   /** Palette section (PaletteSidebar.vue); one of palette.ts's DEFAULT_NODE_GROUPS for most built-ins. */
   group?: string;
   /** Order within `group`, lower first. */
