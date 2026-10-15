@@ -323,7 +323,10 @@ not here.
   only poll on `intervalMs`); more than one output port; setup shared between instances (two `gpio_out` on
   one pin share a `Pin`); references to config nodes (WiFi, MQTT broker, I2C bus); pin checks against the
   board definition; presets; `NODE_STATUS` reporting; native-code parts (`display_spi`); vendored runtime
-  files. The test of each: could a built-in be rewritten as a package with no loss.
+  files. The test of each: could a built-in be rewritten as a package with no loss. **Mike's 2026-10-15
+  requirement sharpens this:** a user should be able to view any built-in's generated Python and copy it as
+  the basis for their own node (e.g. `i2c` → a specific chip node); see `decisions/node-authoring.md`
+  (2026-10-15) for what "the code" is (the generated Python, not the TypeScript) and the snapshot caveat.
 
 - **[P3]** **Deploy the runtime itself from the browser editor, not just compiled flows.** Confirmed untracked
   anywhere until 2026-09-12. Today, `test-flows/deploy_runtime.py` is a standalone `mpremote`-based script pushing

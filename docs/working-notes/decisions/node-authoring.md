@@ -641,3 +641,17 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   (`node-library/ebutton.ts`, `eswitch.ts`) — generated flow code changes but `device-runtime/src` doesn't, so no
   runtime version bump. The fuller alternative (one output per event, i.e. multi-output *sources*) still needs
   `EventSourceCodegenResult` and `compile.ts`'s source loop extended; not foreclosed.
+
+- **2026-10-15 — Mike: a user must be able to look at any built-in's code, copy it, and use it as the basis for
+  their own node.** Stated as a requirement, not one of the four options the unification review listed — this is
+  the "clone a built-in" use case (option (b), `outstanding-items/node-descriptor-unification.md`), with the
+  `i2c`-as-a-specific-chip-node example. What "the code" is: the built-in's **generated Python** (what actually
+  runs on the board) — viewing it already works, and `outstanding-items.md` already tracks a download
+  ("Download the generated Python", LAUNCH-NICE). The TypeScript codegen itself stays editor-side and
+  built-in-only (the one-way door the 2026-10-14 direction keeps shut); it is the *output* that gets copied.
+  Two consequences for the plan: (1) the custom package format must reach parity so a copied built-in has
+  somewhere to land — the same prerequisite as the 2026-09-30 Node-RED model (same format, different place),
+  tracked as "Custom node format parity"; (2) the copy is a snapshot, not a live link: generated Python is
+  per-flow and per-instance (setup statements plus a function body, not the custom format's single
+  `run(msg, properties)` shape), so a clone seeds an editable package the user then owns, and won't
+  auto-track upstream fixes. Next to the option-(b) follow-on already noted in the unification briefing.
