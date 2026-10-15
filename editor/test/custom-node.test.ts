@@ -116,9 +116,10 @@ describe("validateCustomNodeDescriptor", () => {
     expect(() => validateCustomNodeDescriptor({ ...TRANSFORM_DESCRIPTOR_RAW, type: "Custom/Doubler" })).toThrow(/namespace\/name/);
   });
 
-  it("rejects more than one declared output port", () => {
-    const bad = { ...TRANSFORM_DESCRIPTOR_RAW, ports: { inputs: [{ name: "msg", type: "any" }], outputs: [{ name: "a", type: "any" }, { name: "b", type: "any" }] } };
-    expect(() => validateCustomNodeDescriptor(bad)).toThrow(/at most 1/);
+  it("allows a transform to declare more than one output port", () => {
+    const multi = { ...TRANSFORM_DESCRIPTOR_RAW, ports: { inputs: [{ name: "msg", type: "any" }], outputs: [{ name: "a", type: "any" }, { name: "b", type: "any" }] } };
+    const d = validateCustomNodeDescriptor(multi);
+    expect(d.ports?.outputs?.map((p) => p.name)).toEqual(["a", "b"]);
   });
 
   it("rejects the wrong input/output port count for each kind", () => {
@@ -421,5 +422,34 @@ describe("custom node inside a full compile()", () => {
     expect(source).toContain("def _custom_custom_doubler_setup");
     expect(source).toContain("properties['factor']");
     expect(source).toMatch(/runtime\.spawn\(/);
+  });
+
+  it("routes a multi-output custom transform's returned list across its outputs", () => {
+    const descriptor = validateCustomNodeDescriptor({
+      ...TRANSFORM_DESCRIPTOR_RAW,
+      type: "custom/splitter",
+      ports: { inputs: [{ name: "msg", type: "any" }], outputs: [{ name: "a", type: "any" }, { name: "b", type: "any" }] },
+    });
+    const def = buildCustomNodeDefinition(descriptor, "async def run(msg, properties):\n    return [msg, msg]\n");
+    const registry = mergeCustomNodeRegistry(buildRegistry(), [def]);
+
+    const graph: GraphData = {
+      nodes: [
+        { id: "1", type: "thingstudio/timer", properties: { intervalMs: 1000 } },
+        { id: "2", type: "custom/splitter", properties: { factor: 2 } },
+        { id: "3", type: "thingstudio/debug", properties: {} },
+        { id: "4", type: "thingstudio/debug", properties: {} },
+      ],
+      links: [
+        [1, "1", 0, "2", 0, "number"],
+        [2, "2", 0, "3", 0, "any"],
+        [2, "2", 1, "4", 0, "any"],
+      ],
+    };
+    const { source } = compile(graph, registry);
+    // The multi-output contract (compile.ts): the returned value is coerced to a list and each wired
+    // output slot indexes into it, using None for a slot the list doesn't reach.
+    expect(source).toMatch(/isinstance\([a-z0-9_]+, list\)/);
+    expect(source).toContain("else None");
   });
 });

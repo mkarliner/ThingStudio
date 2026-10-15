@@ -327,6 +327,8 @@ not here.
   requirement sharpens this:** a user should be able to view any built-in's generated Python and copy it as
   the basis for their own node (e.g. `i2c` → a specific chip node); see `decisions/node-authoring.md`
   (2026-10-15) for what "the code" is (the generated Python, not the TypeScript) and the snapshot caveat.
+  **Landed 2026-10-15:** multi-output `transform`s (a returned list routes across the declared outputs,
+  compile.ts's contract) and a package `description`. Remaining: `configRef` properties and event sources.
 
 - **[P3]** **Deploy the runtime itself from the browser editor, not just compiled flows.** Confirmed untracked
   anywhere until 2026-09-12. Today, `test-flows/deploy_runtime.py` is a standalone `mpremote`-based script pushing

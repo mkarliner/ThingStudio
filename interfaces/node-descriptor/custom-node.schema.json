@@ -15,6 +15,7 @@
     },
     "kind": { "enum": ["source", "transform", "sink"], "description": "Decides where the node sits in a flow and which entry function .node.py must define." },
     "label": { "type": "string", "minLength": 1, "description": "Name shown on the canvas and in the palette." },
+    "description": { "type": "string", "minLength": 1, "description": "Short self-documenting blurb shown in the property panel." },
     "color": { "type": "string", "description": "CSS color for the node outline. Default grey." },
     "bgcolor": { "type": "string", "description": "CSS color for the node fill. Default grey." },
     "icon": { "type": "string", "description": "One or two characters shown in the icon chip." },

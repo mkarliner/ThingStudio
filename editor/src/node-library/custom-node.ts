@@ -50,14 +50,13 @@
 // module scope, a different code shape than a custom node's wrapped
 // closure.
 //
-// Output-port cardinality (scoping note, resolved with Mike 2026-08-20):
-// at most one declared output port per custom node, enforced by
-// validateCustomNodeDescriptor() below, NOT by PortDefinition/ports'
-// underlying shape (still a real array, unrestricted) -- a codegen
-// restriction (this file only knows how to route one `return` value to
-// one output, same ceiling every first-party node already has), not a
-// package-format one. Loosens the moment a real multi-output compiler
-// contract exists, without needing `.node.json` to change shape.
+// Output-port cardinality: a custom `transform` may declare more than one
+// output port (2026-10-15, format-parity work) -- compile.ts's multi-output
+// routing (node-definition.ts's TransformCodegenResult doc) already routes
+// a returned list across N outputs, so this is now a package-format
+// capability, not a codegen ceiling. A `source` still declares exactly one
+// output and a `sink` none (the compiler has no multi-output-source
+// contract). validateCustomNodeDescriptor() below enforces it.
 
 import { CompileError } from "../compiler/errors.js";
 import type { GraphNode } from "../compiler/graph.js";
@@ -116,6 +115,9 @@ export interface CustomNodeDescriptor {
   type: string;
   kind: NodeKind;
   label: string;
+  /** Short self-documenting blurb shown in the editor (PropertyPanel.vue's generic branch), like a
+   * built-in descriptor's `description`. Added 2026-10-15 (format parity). */
+  description?: string;
   color?: string;
   bgcolor?: string;
   /** Single-glyph icon, matching palette.ts's own convention for built-in kinds. */
@@ -225,6 +227,9 @@ export function validateCustomNodeDescriptor(raw: unknown): CustomNodeDescriptor
   }
 
   const label = requireString(obj, "label");
+  if (obj.description !== undefined && (typeof obj.description !== "string" || obj.description.length === 0)) {
+    fail('"description" must be a non-empty string when present');
+  }
 
   const portsRaw = (obj.ports ?? {}) as Record<string, unknown>;
   if (typeof portsRaw !== "object" || portsRaw === null) fail('"ports" must be an object');
@@ -235,14 +240,20 @@ export function validateCustomNodeDescriptor(raw: unknown): CustomNodeDescriptor
   const inputs = inputsRaw.map((p, i) => validatePort(p, `ports.inputs[${i}]`));
   const outputs = outputsRaw.map((p, i) => validatePort(p, `ports.outputs[${i}]`));
 
-  if (outputs.length > 1) fail(`"ports.outputs" has ${outputs.length} entries -- at most 1 is supported for now (see custom-node.ts header)`);
   const expectedInputs = kind === "source" ? 0 : 1;
-  const expectedOutputs = kind === "sink" ? 0 : 1;
   if (inputs.length !== expectedInputs) {
     fail(`kind "${kind}" must declare exactly ${expectedInputs} input port${expectedInputs === 1 ? "" : "s"}, got ${inputs.length}`);
   }
-  if (outputs.length !== expectedOutputs) {
-    fail(`kind "${kind}" must declare exactly ${expectedOutputs} output port${expectedOutputs === 1 ? "" : "s"}, got ${outputs.length}`);
+  // A transform may declare several outputs (return a list to route across them, Node-RED style); a
+  // source and a sink are fixed (there is no multi-output-source contract in the compiler).
+  if (kind === "source" && outputs.length !== 1) {
+    fail(`kind "source" must declare exactly 1 output port, got ${outputs.length}`);
+  }
+  if (kind === "sink" && outputs.length !== 0) {
+    fail(`kind "sink" must declare exactly 0 output ports, got ${outputs.length}`);
+  }
+  if (kind === "transform" && outputs.length < 1) {
+    fail(`kind "transform" must declare at least 1 output port, got ${outputs.length}`);
   }
 
   const propertiesRaw = obj.properties ?? [];
@@ -266,6 +277,7 @@ export function validateCustomNodeDescriptor(raw: unknown): CustomNodeDescriptor
   }
 
   const descriptor: CustomNodeDescriptor = { type, kind: kind as NodeKind, label, ports: { inputs, outputs }, properties };
+  if (obj.description !== undefined) descriptor.description = obj.description as string;
   if (typeof obj.color === "string") descriptor.color = obj.color;
   if (typeof obj.bgcolor === "string") descriptor.bgcolor = obj.bgcolor;
   if (typeof obj.icon === "string") descriptor.icon = obj.icon;
@@ -408,6 +420,7 @@ export function buildCustomNodeDefinition(descriptor: CustomNodeDescriptor, pyth
     kind: descriptor.kind,
     ports: { inputs: toPortDefinitions(descriptor.ports?.inputs), outputs: toPortDefinitions(descriptor.ports?.outputs) },
   };
+  if (descriptor.description !== undefined) def.description = descriptor.description;
   if (descriptor.requires !== undefined) def.requires = descriptor.requires;
 
   if (descriptor.kind === "source") {

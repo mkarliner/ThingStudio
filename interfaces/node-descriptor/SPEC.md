@@ -97,13 +97,14 @@ so built-in only), and `retype` (changing the field re-resolves the node's port 
 
 ## 3. Custom node descriptor (`.node.json`)
 
-A custom package serializes the same shape. Its keys today are a strict subset — `type`, `kind`,
-`label`, `color`, `bgcolor`, `icon`, `group`, `priority`, `ports`, `properties`, `requires` — defined
-by `custom-node.schema.json` and validated by `validateCustomNodeDescriptor`. The remaining
+A custom package serializes the same shape. Its keys today are a subset — `type`, `kind`, `label`,
+`description`, `color`, `bgcolor`, `icon`, `group`, `priority`, `ports`, `properties`, `requires` —
+defined by `custom-node.schema.json` and validated by `validateCustomNodeDescriptor`. The remaining
 cross-field rules the schema can't express:
 
-- Port counts by kind: `source` = 0 in / 1 out; `transform` = 1 in / 1 out; `sink` = 1 in / 0 out.
-- At most one output port (a codegen ceiling, relaxed in a later change — §4).
+- Port counts by kind: `source` = 0 in / 1 out; `transform` = 1 in / ≥1 out; `sink` = 1 in / 0 out.
+  A `transform` may declare several outputs and return a list to route across them (compile.ts's
+  multi-output contract; there is no multi-output-source contract).
 - A `source` must declare a numeric property named `intervalMs` (its poll interval).
 
 **Behaviour (`.node.py`).** Ordinary MicroPython defining exactly one top-level function named for the
@@ -124,11 +125,12 @@ files with no bridge — is being closed deliberately, family by family, with no
   `neopixel`), `filter`/`journal`/`wifi_status`/`wifi_gate`, `display_spi`/`display_i2c`,
   `inject`/`startup`, and eight of the nine GUI nodes. A descriptor missing the palette metadata is
   "not yet migrated" and still falls back to `palette.ts`.
-- **Still coming.** Relax the custom format so more built-ins can be cloned: multi-output (the
-  compiler already supports it), `configRef` properties, and event sources. Dynamic ports (`function`'s
-  `outputCount`) and arbitrary codegen stay built-in-only. Compile-time hardware resource claims stay
-  a documented limit (a custom node uses `runtime.shared` only). Once every family is migrated, the
-  descriptor's palette metadata becomes required and `palette.ts`'s per-kind rows are removed.
+- **Still coming.** Relax the custom format so more built-ins can be cloned. Landed 2026-10-15:
+  multi-output `transform`s and a package `description`. Still to come: `configRef` properties and
+  event-driven sources. Dynamic ports (`function`'s `outputCount`) and arbitrary codegen stay
+  built-in-only. Compile-time hardware resource claims stay a documented limit (a custom node uses
+  `runtime.shared` only). Once every family is migrated, the descriptor's palette metadata becomes
+  required and `palette.ts`'s per-kind rows are removed.
 
 The one-way door stays closed: a built-in's codegen is not loaded code, and a browser-loaded editor
 never executes arbitrary codegen.

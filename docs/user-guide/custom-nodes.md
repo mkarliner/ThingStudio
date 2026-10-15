@@ -60,6 +60,9 @@ reserved for built-in nodes.
 
 **`label`** (required) — name shown on the canvas and in the palette.
 
+**`description`** (optional) — a short line shown at the top of the
+property panel, like a built-in node's own description.
+
 **`color`** / **`bgcolor`** (optional) — CSS colors for the node's
 outline and fill. Default is gray.
 
@@ -78,8 +81,9 @@ that group.
 same types built-in nodes use, with the same wire-compatibility checks.
 Use `any` when unsure.
 
-A custom node has one output port. The built-in `function` node's
-multiple, configurable outputs aren't available to custom nodes.
+A `transform` may declare more than one output. Return a list to route
+messages across them, Node-RED style (e.g. `return [msg, None]` sends to
+output 1 only). A `source` has one output; a `sink` none.
 
 **`properties`** (optional) — fields shown in the property panel when
 the node is selected:
@@ -258,8 +262,7 @@ Thingstudio doesn't check it. A typo surfaces as a runtime error (e.g.
 
 ## Limitations
 
-A custom node has one output port. A `source` node's `emit` runs on a fixed `intervalMs` schedule, not in response to
-an external event.
+A `source` node's `emit` runs on a fixed `intervalMs` schedule, not in response to an external event.
 
 Two instances of the same custom node get independent setup. Thingstudio can't see inside a custom node's Python, so
 it can't check its pins when compiling. Use `runtime.shared()` for pins and buses, so a clash is caught when the flow
