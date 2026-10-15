@@ -53,8 +53,11 @@ reserved for built-in nodes.
 **`kind`** (required) — one of:
 
 - `source` — generates messages on its own. 0 input ports, 1 output
-  port. Must declare a numeric `intervalMs` property (below).
-- `transform` — one message in, one out. 1 input port, 1 output port.
+  port. Must declare a numeric `intervalMs` property (below) — unless
+  `eventSource` is true (below), in which case it waits on an event
+  instead.
+- `transform` — one message in, one or more out. 1 input port, 1+ output
+  ports.
 - `sink` — consumes a message, produces nothing. 1 input port, 0 output
   ports.
 
@@ -264,8 +267,38 @@ redeployed flow can leave the old socket open and fail with
 
 ### Event-driven sources
 
-Not supported. A `source` node's `emit` runs on a fixed `intervalMs`
-schedule, not in response to an external event like an interrupt.
+A `source` that reacts to something other than the clock sets `"eventSource": true` and defines a
+second function, `async def wait(properties)`, alongside `emit`. `wait` is awaited, so it blocks
+until your event fires; then `emit` builds the message. No `intervalMs` is needed.
+
+```json
+{
+  "type": "custom/button",
+  "kind": "source",
+  "label": "button",
+  "eventSource": true,
+  "ports": { "outputs": [{ "name": "msg", "type": "bool" }] }
+}
+```
+
+```python
+import machine
+
+_evt = runtime.asyncio.Event()
+
+def _irq(_pin):
+    _evt.set()
+
+async def wait(properties):
+    _evt.clear()
+    await _evt.wait()
+
+async def emit(properties):
+    return {'payload': True, 'topic': ''}
+```
+
+Keep any state the two share at the top of the file (both functions come from one per-instance
+closure, so `nonlocal` works across them).
 
 ## Errors
 
@@ -283,7 +316,7 @@ Thingstudio doesn't check it. A typo surfaces as a runtime error (e.g.
 
 ## Limitations
 
-A `source` node's `emit` runs on a fixed `intervalMs` schedule, not in response to an external event.
+A polled `source` node's `emit` runs on a fixed `intervalMs` schedule; an `eventSource` source waits on `wait` instead.
 
 Two instances of the same custom node get independent setup. Thingstudio can't see inside a custom node's Python, so
 it can't check its pins when compiling. Use `runtime.shared()` for pins and buses, so a clash is caught when the flow

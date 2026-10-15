@@ -328,9 +328,11 @@ not here.
   the basis for their own node (e.g. `i2c` → a specific chip node); see `decisions/node-authoring.md`
   (2026-10-15) for what "the code" is (the generated Python, not the TypeScript) and the snapshot caveat.
   **Landed 2026-10-15:** multi-output `transform`s (a returned list routes across the declared outputs,
-  compile.ts's contract), a package `description`, and `configRef` properties (the picked config's
-  properties are inlined into the node's Python `properties`; an empty id is `None`). Remaining:
-  event-driven sources.
+  compile.ts's contract), a package `description`, `configRef` properties (the picked config's
+  properties are inlined into the node's Python `properties`; an empty id is `None`), and event-driven
+  sources (`eventSource: true` + `async def wait(properties)` then `emit`). Still open from the gap
+  list above: shared per-instance setup, board pin checks, presets, `NODE_STATUS`, native-code parts,
+  and vendored runtime files.
 
 - **[P3]** **Deploy the runtime itself from the browser editor, not just compiled flows.** Confirmed untracked
   anywhere until 2026-09-12. Today, `test-flows/deploy_runtime.py` is a standalone `mpremote`-based script pushing

@@ -30,7 +30,8 @@
       }
     },
     "properties": { "type": "array", "items": { "$ref": "#/$defs/propertyField" } },
-    "requires": { "$ref": "#/$defs/requires" }
+    "requires": { "$ref": "#/$defs/requires" },
+    "eventSource": { "type": "boolean", "description": "A source that waits on an external event: .node.py must also define 'async def wait(properties)'. No intervalMs needed. Only valid with kind 'source'." }
   },
   "$defs": {
     "requires": {

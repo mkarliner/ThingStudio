@@ -62,6 +62,7 @@ import { CompileError } from "../compiler/errors.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type {
   CodegenContext,
+  EventSourceCodegenResult,
   NodeDefinition,
   NodeKind,
   PayloadType,
@@ -146,6 +147,10 @@ export interface CustomNodeDescriptor {
   /** Hardware this node needs (e.g. `{capabilities: ["pio"]}`); checked centrally against the target
    * (definitions/capability-check.ts), same as a built-in node's `requires`. */
   requires?: { capabilities?: string[] };
+  /** A `source` that waits on an external event rather than polling: its `.node.py` must also define
+   * `async def wait(properties)` (awaited each loop iteration), then the usual `async def emit(properties)`
+   * builds the message. No `intervalMs` needed. Added 2026-10-15 (format parity). */
+  eventSource?: boolean;
 }
 
 const IDENTIFIER_RE = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
@@ -276,18 +281,24 @@ export function validateCustomNodeDescriptor(raw: unknown): CustomNodeDescriptor
     names.add(p.name);
   }
 
-  // Source nodes drive their own poll loop via a declared numeric
-  // `intervalMs` property (scoping note, Decision 3) -- there's no other
-  // way for the generic codegen below to know how often to call `emit()`,
-  // since event-driven custom sources aren't supported (same note).
-  if (kind === "source") {
+  const isEventSource = obj.eventSource === true;
+  if (obj.eventSource !== undefined && typeof obj.eventSource !== "boolean") {
+    fail('"eventSource" must be a boolean when present');
+  }
+  if (isEventSource && kind !== "source") fail('"eventSource" is only valid on a "source" node');
+
+  // A polled source drives its own loop via a declared numeric `intervalMs` property (scoping note,
+  // Decision 3). An event source (2026-10-15) waits on `wait(properties)` instead, so it needs no
+  // interval.
+  if (kind === "source" && !isEventSource) {
     const interval = properties.find((p) => p.name === "intervalMs");
     if (!interval || interval.kind !== "number") {
-      fail('a "source" custom node must declare a "properties" entry named "intervalMs" with kind "number" (drives the poll interval; see docs/custom-nodes.md)');
+      fail('a "source" custom node must declare a "properties" entry named "intervalMs" with kind "number" (drives the poll interval; see docs/custom-nodes.md) -- or set "eventSource": true and define wait()');
     }
   }
 
   const descriptor: CustomNodeDescriptor = { type, kind: kind as NodeKind, label, ports: { inputs, outputs }, properties };
+  if (isEventSource) descriptor.eventSource = true;
   if (obj.description !== undefined) descriptor.description = obj.description as string;
   if (typeof obj.color === "string") descriptor.color = obj.color;
   if (typeof obj.bgcolor === "string") descriptor.bgcolor = obj.bgcolor;
@@ -443,19 +454,27 @@ export function buildCustomNodeDefinition(descriptor: CustomNodeDescriptor, pyth
   const entryPointName = descriptor.kind === "source" ? "emit" : "run";
   const hint = identifierHint(descriptor.type);
 
-  function emitSetup(node: GraphNode, ctx: CodegenContext): { entryVar: string; propsVar: string; statements: { key: string; code: string }[] } {
+  function emitSetup(
+    node: GraphNode,
+    ctx: CodegenContext,
+    entries: string[],
+  ): { vars: string[]; propsVar: string; statements: { key: string; code: string }[] } {
     const propsVar = ctx.uniqueName(`${hint}_props`);
     const setupFn = ctx.uniqueName(`${hint}_setup`);
-    const entryVar = ctx.uniqueName(`${hint}_${entryPointName}`);
+    const vars = entries.map((name) => ctx.uniqueName(`${hint}_${name}`));
     const propsLiteral = pyPropertiesLiteral(descriptor, node.properties, `node ${node.id} (${descriptor.type})`, ctx);
     const indented = pythonSource
       .split("\n")
       .map((line) => (line.length ? "    " + line : line))
       .join("\n");
-    const code = [`def ${setupFn}(properties):`, indented, `    return ${entryPointName}`, `${propsVar} = ${propsLiteral}`, `${entryVar} = ${setupFn}(${propsVar})`].join(
-      "\n",
-    );
-    return { entryVar, propsVar, statements: [{ key: entryVar, code }] };
+    const code = [
+      `def ${setupFn}(properties):`,
+      indented,
+      `    return ${entries.join(", ")}`,
+      `${propsVar} = ${propsLiteral}`,
+      `${vars.join(", ")} = ${setupFn}(${propsVar})`,
+    ].join("\n");
+    return { vars, propsVar, statements: [{ key: setupFn, code }] };
   }
 
   const def: NodeDefinition = {
@@ -466,21 +485,29 @@ export function buildCustomNodeDefinition(descriptor: CustomNodeDescriptor, pyth
   if (descriptor.description !== undefined) def.description = descriptor.description;
   if (descriptor.requires !== undefined) def.requires = descriptor.requires;
 
-  if (descriptor.kind === "source") {
+  if (descriptor.kind === "source" && descriptor.eventSource) {
+    // Event source: `wait(properties)` is awaited each loop iteration, then `emit(properties)` builds the
+    // message -- mirroring a built-in event source (e.g. interrupt.ts). Both come from the one per-instance
+    // closure, so they share the author's `nonlocal` state.
+    def.codegenEventSource = (node: GraphNode, ctx: CodegenContext): EventSourceCodegenResult => {
+      const { vars, propsVar, statements } = emitSetup(node, ctx, ["wait", "emit"]);
+      return { statements, waitStatement: `await ${vars[0]!}(${propsVar})`, buildMsg: `msg = await ${vars[1]!}(${propsVar})` };
+    };
+  } else if (descriptor.kind === "source") {
     def.codegenSource = (node: GraphNode, ctx: CodegenContext): SourceCodegenResult => {
-      const { entryVar, propsVar, statements } = emitSetup(node, ctx);
+      const { vars, propsVar, statements } = emitSetup(node, ctx, [entryPointName]);
       const repeatMs = resolveIntervalMs(descriptor, node.properties, `node ${node.id} (${descriptor.type})`);
-      return { statements, buildMsg: `msg = await ${entryVar}(${propsVar})`, repeatMs };
+      return { statements, buildMsg: `msg = await ${vars[0]!}(${propsVar})`, repeatMs };
     };
   } else if (descriptor.kind === "transform") {
     def.codegenTransform = (node: GraphNode, ctx: CodegenContext): TransformCodegenResult => {
-      const { entryVar, propsVar, statements } = emitSetup(node, ctx);
-      return { statements, functionName: ctx.uniqueName(`${hint}_call`), functionBody: `return await ${entryVar}(msg, ${propsVar})` };
+      const { vars, propsVar, statements } = emitSetup(node, ctx, [entryPointName]);
+      return { statements, functionName: ctx.uniqueName(`${hint}_call`), functionBody: `return await ${vars[0]!}(msg, ${propsVar})` };
     };
   } else {
     def.codegenSink = (node: GraphNode, ctx: CodegenContext): SinkCodegenResult => {
-      const { entryVar, propsVar, statements } = emitSetup(node, ctx);
-      return { statements, functionName: ctx.uniqueName(`${hint}_call`), functionBody: `await ${entryVar}(msg, ${propsVar})` };
+      const { vars, propsVar, statements } = emitSetup(node, ctx, [entryPointName]);
+      return { statements, functionName: ctx.uniqueName(`${hint}_call`), functionBody: `await ${vars[0]!}(msg, ${propsVar})` };
     };
   }
 

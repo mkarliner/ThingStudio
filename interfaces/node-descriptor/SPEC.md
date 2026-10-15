@@ -99,19 +99,23 @@ so built-in only), and `retype` (changing the field re-resolves the node's port 
 ## 3. Custom node descriptor (`.node.json`)
 
 A custom package serializes the same shape. Its keys today are a subset — `type`, `kind`, `label`,
-`description`, `color`, `bgcolor`, `icon`, `group`, `priority`, `ports`, `properties`, `requires` —
-defined by `custom-node.schema.json` and validated by `validateCustomNodeDescriptor`. The remaining
-cross-field rules the schema can't express:
+`description`, `color`, `bgcolor`, `icon`, `group`, `priority`, `ports`, `properties`, `requires`,
+`eventSource` — defined by `custom-node.schema.json` and validated by `validateCustomNodeDescriptor`.
+The remaining cross-field rules the schema can't express:
 
 - Port counts by kind: `source` = 0 in / 1 out; `transform` = 1 in / ≥1 out; `sink` = 1 in / 0 out.
   A `transform` may declare several outputs and return a list to route across them (compile.ts's
   multi-output contract; there is no multi-output-source contract).
-- A `source` must declare a numeric property named `intervalMs` (its poll interval).
+- A polled `source` must declare a numeric property named `intervalMs` (its poll interval). An
+  `eventSource: true` source instead defines `wait` (below) and needs no `intervalMs`; `eventSource`
+  is only valid on a `source`.
 
 **Behaviour (`.node.py`).** Ordinary MicroPython defining exactly one top-level function named for the
-kind: `async def run(msg, properties)` (transform/sink) or `async def emit(properties)` (source). It
-is spliced into the generated flow inside a per-instance function, so mutable state uses `nonlocal`,
-not `global`. Pins and buses go through `runtime.shared(...)` — see `../runtime-api/SPEC.md`.
+kind: `async def run(msg, properties)` (transform/sink) or `async def emit(properties)` (source). An
+`eventSource` source also defines `async def wait(properties)` — awaited each loop iteration, then
+`emit(properties)` builds the message. It is spliced into the generated flow inside a per-instance
+function, so mutable state uses `nonlocal`, not `global`. Pins and buses go through `runtime.shared(...)`
+— see `../runtime-api/SPEC.md`.
 
 ## 4. Convergence: what is built, and what is still coming
 
@@ -127,12 +131,12 @@ files with no bridge — is being closed deliberately, family by family, with no
   `inject`/`startup`, and eight of the nine GUI nodes. A descriptor missing the palette metadata is
   "not yet migrated" and still falls back to `palette.ts`.
 - **Still coming.** Relax the custom format so more built-ins can be cloned. Landed 2026-10-15:
-  multi-output `transform`s, a package `description`, and `configRef` properties (the picked config's
-  properties are inlined into the node's Python `properties`; an empty id is `None`). Still to come:
-  event-driven sources. Dynamic ports (`function`'s `outputCount`) and arbitrary codegen stay
-  built-in-only. Compile-time hardware resource claims stay a documented limit (a custom node uses
-  `runtime.shared` only). Once every family is migrated, the descriptor's palette metadata becomes
-  required and `palette.ts`'s per-kind rows are removed.
+  multi-output `transform`s, a package `description`, `configRef` properties (the picked config's
+  properties are inlined into the node's Python `properties`; an empty id is `None`), and event-driven
+  `source`s (`eventSource: true` + `wait`/`emit`). Dynamic ports (`function`'s `outputCount`) and
+  arbitrary codegen stay built-in-only. Compile-time hardware resource claims stay a documented limit
+  (a custom node uses `runtime.shared` only). Once every family is migrated, the descriptor's palette
+  metadata becomes required and `palette.ts`'s per-kind rows are removed.
 
 The one-way door stays closed: a built-in's codegen is not loaded code, and a browser-loaded editor
 never executes arbitrary codegen.

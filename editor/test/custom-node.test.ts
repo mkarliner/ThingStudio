@@ -155,6 +155,13 @@ describe("validateCustomNodeDescriptor", () => {
     ).toThrow(/intervalMs/);
   });
 
+  it("accepts an eventSource source with no intervalMs, but only on a source", () => {
+    const eventSrc = { type: "custom/watcher", kind: "source", label: "watcher", eventSource: true, ports: { outputs: [{ name: "msg", type: "any" }] } };
+    expect(validateCustomNodeDescriptor(eventSrc).eventSource).toBe(true);
+    expect(() => validateCustomNodeDescriptor({ ...eventSrc, kind: "transform", ports: { inputs: [{ name: "msg", type: "any" }], outputs: [{ name: "msg", type: "any" }] } })).toThrow(/only valid on a "source"/);
+    expect(() => validateCustomNodeDescriptor({ ...eventSrc, eventSource: "yes" })).toThrow(/must be a boolean/);
+  });
+
   it("rejects a select property whose default isn't one of its options", () => {
     const bad = {
       type: "custom/x",
@@ -409,6 +416,30 @@ describe("buildCustomNodeDefinition -- source", () => {
       [result.buildMsg, "print(msg['payload'])", result.buildMsg, "print(msg['payload'])", result.buildMsg, "print(msg['payload'])"].join("\n"),
     );
     expect(output.trim().split("\n")).toEqual(["1", "2", "3"]);
+  });
+});
+
+describe("buildCustomNodeDefinition -- event source", () => {
+  const descriptor = validateCustomNodeDescriptor({
+    type: "custom/watcher",
+    kind: "source",
+    label: "watcher",
+    eventSource: true,
+    ports: { outputs: [{ name: "msg", type: "number" }] },
+  });
+
+  it("builds a codegenEventSource whose wait/emit come from one closure", () => {
+    const source = ["_n = 0", "", "async def wait(properties):", "    pass", "", "async def emit(properties):", "    nonlocal _n", "    _n += 1", "    return {'payload': _n, 'topic': ''}"].join("\n");
+    const def = buildCustomNodeDefinition(descriptor, source);
+    expect(def.codegenEventSource).toBeTypeOf("function");
+    expect(def.codegenSource).toBeUndefined();
+    const result = def.codegenEventSource!(node(1, {}), freshCtx());
+    expect(result.waitStatement).toMatch(/await _custom_custom_watcher_wait\(/);
+    expect(result.buildMsg).toMatch(/msg = await _custom_custom_watcher_emit\(/);
+    // One setup statement: both entry functions come from the same per-instance closure.
+    expect(result.statements).toHaveLength(1);
+    const output = runPython(result.statements ?? [], [result.waitStatement, result.buildMsg, "print(msg['payload'])"].join("\n"));
+    expect(output.trim()).toBe("1");
   });
 });
 
