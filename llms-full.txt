@@ -3303,12 +3303,18 @@ reserved for built-in nodes.
 **`kind`** (required) — one of:
 
 - `source` — generates messages on its own. 0 input ports, 1 output
-  port. Must declare a numeric `intervalMs` property (below).
-- `transform` — one message in, one out. 1 input port, 1 output port.
+  port. Must declare a numeric `intervalMs` property (below) — unless
+  `eventSource` is true (below), in which case it waits on an event
+  instead.
+- `transform` — one message in, one or more out. 1 input port, 1+ output
+  ports.
 - `sink` — consumes a message, produces nothing. 1 input port, 0 output
   ports.
 
 **`label`** (required) — name shown on the canvas and in the palette.
+
+**`description`** (optional) — a short line shown at the top of the
+property panel, like a built-in node's own description.
 
 **`color`** / **`bgcolor`** (optional) — CSS colors for the node's
 outline and fill. Default is gray.
@@ -3328,8 +3334,9 @@ that group.
 same types built-in nodes use, with the same wire-compatibility checks.
 Use `any` when unsure.
 
-A custom node has one output port. The built-in `function` node's
-multiple, configurable outputs aren't available to custom nodes.
+A `transform` may declare more than one output. Return a list to route
+messages across them, Node-RED style (e.g. `return [msg, None]` sends to
+output 1 only). A `source` has one output; a `sink` none.
 
 **`properties`** (optional) — fields shown in the property panel when
 the node is selected:
@@ -3340,11 +3347,14 @@ the node is selected:
 
 - **`name`** — identifier. Your Python reads the value by this key.
 - **`label`** — shown in the property panel.
-- **`kind`** — `text`, `number`, `boolean`, or `select`.
+- **`kind`** — `text`, `number`, `boolean`, `select`, or `configRef`.
 - **`default`** — used when a node instance doesn't set the property.
   Type must match `kind`.
 - **`options`** — required for `select`: array of `{ value, label }`.
   `default` must be one of the values.
+- **`configType`** — required for `configRef`: the config type the picker
+  offers (e.g. `thingstudio/config/i2c-bus`). At compile time the picked
+  config's own properties become a dict the node reads — see below.
 
 A `source` node must declare a numeric property named `intervalMs` — it
 sets the poll interval.
@@ -3468,6 +3478,24 @@ The built-in nodes use these settings: `('in', 'none' | 'up' | 'down')` and `('o
 for an ADC (`runtime.shared('adc', 26, (), lambda: machine.ADC(machine.Pin(26)))`). Pins, ADC, PWM, I2C and SPI all
 work this way: see [Hardware is shared](nodes/index.md#hardware-is-shared).
 
+### Sharing a config (I2C bus, touch panel)
+
+A `configRef` property lets your node pick one of the flow's config nodes. Its value in
+`properties` is that config's own properties as a dict (or `None` if none is picked), so a custom
+I2C node can join the same bus a built-in `i2c`/`bme280` node uses:
+
+```json
+{ "name": "bus", "label": "I2C bus", "kind": "configRef", "configType": "thingstudio/config/i2c-bus", "default": "" }
+```
+
+```python
+_i2c = runtime.shared('i2c', properties['bus']['bus'])  # the flow's shared bus, by its number
+```
+
+The bus/pins come from the config; keep the same `runtime.shared` key a built-in would use so a
+clash is reported, not silently shared. (Network configs — WiFi, MQTT — expose only the
+credential's name, not the secret, so a custom node can't make a WiFi connection from one.)
+
 ### Cleanup
 
 If your node opens something that needs closing on redeploy — a socket,
@@ -3489,8 +3517,38 @@ redeployed flow can leave the old socket open and fail with
 
 ### Event-driven sources
 
-Not supported. A `source` node's `emit` runs on a fixed `intervalMs`
-schedule, not in response to an external event like an interrupt.
+A `source` that reacts to something other than the clock sets `"eventSource": true` and defines a
+second function, `async def wait(properties)`, alongside `emit`. `wait` is awaited, so it blocks
+until your event fires; then `emit` builds the message. No `intervalMs` is needed.
+
+```json
+{
+  "type": "custom/button",
+  "kind": "source",
+  "label": "button",
+  "eventSource": true,
+  "ports": { "outputs": [{ "name": "msg", "type": "bool" }] }
+}
+```
+
+```python
+import machine
+
+_evt = runtime.asyncio.Event()
+
+def _irq(_pin):
+    _evt.set()
+
+async def wait(properties):
+    _evt.clear()
+    await _evt.wait()
+
+async def emit(properties):
+    return {'payload': True, 'topic': ''}
+```
+
+Keep any state the two share at the top of the file (both functions come from one per-instance
+closure, so `nonlocal` works across them).
 
 ## Errors
 
@@ -3508,8 +3566,7 @@ Thingstudio doesn't check it. A typo surfaces as a runtime error (e.g.
 
 ## Limitations
 
-A custom node has one output port. A `source` node's `emit` runs on a fixed `intervalMs` schedule, not in response to
-an external event.
+A polled `source` node's `emit` runs on a fixed `intervalMs` schedule; an `eventSource` source waits on `wait` instead.
 
 Two instances of the same custom node get independent setup. Thingstudio can't see inside a custom node's Python, so
 it can't check its pins when compiling. Use `runtime.shared()` for pins and buses, so a clash is caught when the flow
