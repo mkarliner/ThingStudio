@@ -596,7 +596,7 @@ export class CustomNode extends ClassicPreset.Node {
   properties: Record<string, unknown>;
 
   constructor(descriptor: CustomNodeDescriptor) {
-    super(descriptor.label);
+    super(descriptor.title ?? descriptor.label);
     this.descriptor = descriptor;
     this.nodeType = descriptor.type;
     this.properties = Object.fromEntries((descriptor.properties ?? []).map((f) => [f.name, f.default]));

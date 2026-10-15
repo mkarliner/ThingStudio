@@ -63,8 +63,18 @@ reserved for built-in nodes.
 
 **`label`** (required) — name shown on the canvas and in the palette.
 
+**`title`** (optional) — the canvas title, when it should differ from
+`label`.
+
+**`hidden`** (optional) — hide the node from the palette (a flow file can
+still use it).
+
 **`description`** (optional) — a short line shown at the top of the
 property panel, like a built-in node's own description.
+
+**`presetType`** / **`screenOutline`** (optional) — show a save/load-preset
+control or the screen-layout outline in the property panel, as the relevant
+built-in nodes do.
 
 **`color`** / **`bgcolor`** (optional) — CSS colors for the node's
 outline and fill. Default is gray.

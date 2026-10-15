@@ -136,6 +136,14 @@ export interface CustomNodeDescriptor {
   type: string;
   kind: NodeKind;
   label: string;
+  /** Canvas title, when it differs from the palette `label`. Defaults to `label`. */
+  title?: string;
+  /** Hide from the palette (still usable in a flow file). */
+  hidden?: boolean;
+  /** Preset type: when set, the panel shows a save/load-preset control (see PropertyPanel.vue). */
+  presetType?: string;
+  /** Show the ScreenOutline widget in the panel (a gui_screen's widget layout). */
+  screenOutline?: boolean;
   /** Short self-documenting blurb shown in the editor (PropertyPanel.vue's generic branch), like a
    * built-in descriptor's `description`. Added 2026-10-15 (format parity). */
   description?: string;
@@ -313,6 +321,12 @@ export function validateCustomNodeDescriptor(raw: unknown): CustomNodeDescriptor
   if (obj.description !== undefined && (typeof obj.description !== "string" || obj.description.length === 0)) {
     fail('"description" must be a non-empty string when present');
   }
+  for (const k of ["title", "presetType"] as const) {
+    if (obj[k] !== undefined && (typeof obj[k] !== "string" || obj[k].length === 0)) fail(`"${k}" must be a non-empty string when present`);
+  }
+  for (const k of ["hidden", "screenOutline"] as const) {
+    if (obj[k] !== undefined && typeof obj[k] !== "boolean") fail(`"${k}" must be a boolean when present`);
+  }
 
   const portsRaw = (obj.ports ?? {}) as Record<string, unknown>;
   if (typeof portsRaw !== "object" || portsRaw === null) fail('"ports" must be an object');
@@ -367,6 +381,10 @@ export function validateCustomNodeDescriptor(raw: unknown): CustomNodeDescriptor
   const descriptor: CustomNodeDescriptor = { type, kind: kind as NodeKind, label, ports: { inputs, outputs }, properties };
   if (isEventSource) descriptor.eventSource = true;
   if (obj.description !== undefined) descriptor.description = obj.description as string;
+  if (obj.title !== undefined) descriptor.title = obj.title as string;
+  if (obj.hidden !== undefined) descriptor.hidden = obj.hidden as boolean;
+  if (obj.presetType !== undefined) descriptor.presetType = obj.presetType as string;
+  if (obj.screenOutline !== undefined) descriptor.screenOutline = obj.screenOutline as boolean;
   if (typeof obj.color === "string") descriptor.color = obj.color;
   if (typeof obj.bgcolor === "string") descriptor.bgcolor = obj.bgcolor;
   if (typeof obj.icon === "string") descriptor.icon = obj.icon;

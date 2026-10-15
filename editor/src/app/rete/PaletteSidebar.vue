@@ -191,6 +191,7 @@ const allRows = computed<PaletteRow[]>(() => {
     }));
 
   const customRows: PaletteRow[] = [...customNodePackages.value.values()]
+    .filter((pkg) => !pkg.descriptor.hidden)
     .map((pkg) => ({
       key: pkg.descriptor.type,
       origin: "custom" as const,

@@ -102,8 +102,9 @@ the field re-resolves the node's port sockets — for a port whose
 ## 3. Custom node descriptor (`.node.json`)
 
 A custom package serializes the same shape. Its keys today are a subset — `type`, `kind`, `label`,
-`description`, `color`, `bgcolor`, `icon`, `group`, `priority`, `ports`, `properties`, `requires`,
-`eventSource` — defined by `custom-node.schema.json` and validated by `validateCustomNodeDescriptor`.
+`title`, `hidden`, `presetType`, `screenOutline`, `description`, `color`, `bgcolor`, `icon`, `group`,
+`priority`, `ports`, `properties`, `requires`, `eventSource` — defined by `custom-node.schema.json` and
+validated by `validateCustomNodeDescriptor`.
 The remaining cross-field rules the schema can't express:
 
 - Port counts by kind: `source` = 0 in / 1 out; `transform` = 1 in / ≥1 out; `sink` = 1 in / 0 out.

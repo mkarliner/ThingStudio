@@ -232,6 +232,22 @@ describe("validateCustomNodeDescriptor", () => {
     expect(() => validateCustomNodeDescriptor({ ...base, properties: field({ field: "n", gt: "1" }) })).toThrow(/must be a finite number/);
   });
 
+  it("accepts title/hidden/presetType/screenOutline and rejects bad types", () => {
+    const d = validateCustomNodeDescriptor({
+      type: "custom/x",
+      kind: "sink",
+      label: "x",
+      title: "show x",
+      hidden: true,
+      presetType: "x",
+      screenOutline: true,
+      ports: { inputs: [{ name: "msg", type: "any" }] },
+    });
+    expect(d).toMatchObject({ title: "show x", hidden: true, presetType: "x", screenOutline: true });
+    expect(() => validateCustomNodeDescriptor({ type: "custom/x", kind: "sink", label: "x", hidden: "yes" })).toThrow(/"hidden" must be a boolean/);
+    expect(() => validateCustomNodeDescriptor({ type: "custom/x", kind: "sink", label: "x", title: "" })).toThrow(/"title" must be a non-empty string/);
+  });
+
   it("rejects a boolean property with a non-boolean default", () => {
     const bad = {
       type: "custom/x",
