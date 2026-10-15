@@ -4139,6 +4139,7 @@ Type `thingstudio/display_spi`, kind sink, palette group hardware.
 - Inputs: frame (bytes)
 - Outputs: none
 - Properties (name, type, default):
+    - `orientation`, string, default `""` — empty = off (the raw `rotation`), or 0, 90, 180, 270 as a string: the picture turned clockwise. Portrait 320x480 needs none
     - `controller`, string, default `"st7789"`
     - `frameFormat`, string, default `"rgb565"` — rgb565, gs4, gs2 or mono; must match the gui screen
     - `palette`, object, default `[0,65535,63488,2016,31,65504,2047,63519,33808,16904,50712,64800,32768,1024,16,1040]`
@@ -4158,7 +4159,6 @@ Type `thingstudio/display_spi`, kind sink, palette group hardware.
     - `dataLatchOrder`, boolean, default `true`
     - `xstart`, number, default `-1` — -1 lets the driver choose; set both only for an unusual panel offset
     - `ystart`, number, default `-1`
-    - `orientation`, string, default `""` — empty = off (the raw `rotation`), or 0, 90, 180, 270 as a string: the picture turned clockwise. Portrait 320x480 needs none
 
 ### ebutton
 
@@ -4168,12 +4168,12 @@ Type `thingstudio/ebutton`, kind source, palette group hardware.
 - Outputs: msg (string)
 - Properties (name, type, default):
     - `pin`, number, default `5`
-    - `suppress`, boolean, default `false`
+    - `pull`, string, default `"none"`
     - `senseMode`, string, default `"auto"`
+    - `suppress`, boolean, default `false`
     - `debounceMs`, number, default `50`
     - `longPressMs`, number, default `1000`
     - `doubleClickMs`, number, default `400`
-    - `pull`, string, default `"none"`
 
 ### encoder
 
@@ -4199,9 +4199,9 @@ Type `thingstudio/eswitch`, kind source, palette group hardware.
 - Outputs: msg (bool)
 - Properties (name, type, default):
     - `pin`, number, default `4`
+    - `pull`, string, default `"none"`
     - `lopen`, number, default `1`
     - `debounceMs`, number, default `50`
-    - `pull`, string, default `"none"`
 
 ### gpio out
 

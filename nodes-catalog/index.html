@@ -4331,6 +4331,7 @@ checked when the flow is compiled, and the error says what is allowed. See <a hr
 <li>Inputs: frame (bytes)</li>
 <li>Outputs: none</li>
 <li>Properties (name, type, default):<ul>
+<li><code>orientation</code>, string, default <code>""</code> — empty = off (the raw <code>rotation</code>), or 0, 90, 180, 270 as a string: the picture turned clockwise. Portrait 320x480 needs none</li>
 <li><code>controller</code>, string, default <code>"st7789"</code></li>
 <li><code>frameFormat</code>, string, default <code>"rgb565"</code> — rgb565, gs4, gs2 or mono; must match the gui screen</li>
 <li><code>palette</code>, object, default <code>[0,65535,63488,2016,31,65504,2047,63519,33808,16904,50712,64800,32768,1024,16,1040]</code></li>
@@ -4350,7 +4351,6 @@ checked when the flow is compiled, and the error says what is allowed. See <a hr
 <li><code>dataLatchOrder</code>, boolean, default <code>true</code></li>
 <li><code>xstart</code>, number, default <code>-1</code> — -1 lets the driver choose; set both only for an unusual panel offset</li>
 <li><code>ystart</code>, number, default <code>-1</code></li>
-<li><code>orientation</code>, string, default <code>""</code> — empty = off (the raw <code>rotation</code>), or 0, 90, 180, 270 as a string: the picture turned clockwise. Portrait 320x480 needs none</li>
 </ul>
 </li>
 </ul>
@@ -4361,12 +4361,12 @@ checked when the flow is compiled, and the error says what is allowed. See <a hr
 <li>Outputs: msg (string)</li>
 <li>Properties (name, type, default):<ul>
 <li><code>pin</code>, number, default <code>5</code></li>
-<li><code>suppress</code>, boolean, default <code>false</code></li>
+<li><code>pull</code>, string, default <code>"none"</code></li>
 <li><code>senseMode</code>, string, default <code>"auto"</code></li>
+<li><code>suppress</code>, boolean, default <code>false</code></li>
 <li><code>debounceMs</code>, number, default <code>50</code></li>
 <li><code>longPressMs</code>, number, default <code>1000</code></li>
 <li><code>doubleClickMs</code>, number, default <code>400</code></li>
-<li><code>pull</code>, string, default <code>"none"</code></li>
 </ul>
 </li>
 </ul>
@@ -4394,9 +4394,9 @@ checked when the flow is compiled, and the error says what is allowed. See <a hr
 <li>Outputs: msg (bool)</li>
 <li>Properties (name, type, default):<ul>
 <li><code>pin</code>, number, default <code>4</code></li>
+<li><code>pull</code>, string, default <code>"none"</code></li>
 <li><code>lopen</code>, number, default <code>1</code></li>
 <li><code>debounceMs</code>, number, default <code>50</code></li>
-<li><code>pull</code>, string, default <code>"none"</code></li>
 </ul>
 </li>
 </ul>
