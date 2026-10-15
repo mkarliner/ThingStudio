@@ -337,6 +337,8 @@ not here.
   2026-10-15): the remaining gaps are the `credential`/`palette` field kinds, context parity (flow/compile
   context for packages), capability parity (dynamic ports, multi-output sources, resource claims, presets,
   native code), and the Node-RED location model (built-ins as packages).
+  **Next-session handoff:** `node-format-parity-briefing.md` (the mechanism in recon form, the roadmap,
+  constraints, git state).
 
 - **[P3]** **Deploy the runtime itself from the browser editor, not just compiled flows.** Confirmed untracked
   anywhere until 2026-09-12. Today, `test-flows/deploy_runtime.py` is a standalone `mpremote`-based script pushing
