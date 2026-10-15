@@ -51,9 +51,11 @@ minus codegen). `interfaces/node-descriptor/SPEC.md` is now v2. Remaining work, 
    generic panel gained `configRef` (wrapping `ConfigRefField`), `credential`/`password`, a `placeholder` field,
    and two shape changes Mike approved 2026-10-15: `PropertyFieldOption.value` widened to `string | number`
    (`bme280`'s address, mqtt `qos`), and a field with no `name` is **info-only** (renders the widget, binds to
-   no property -- the display-only WiFi picker on every network node). Next: the GPIO cluster
-   (`interrupt`/`eswitch`/`ebutton`/`adc`/`encoder`/`neopixel`; `select`/`boolean`/`showIf`), then `function`
-   last (dynamic `outputCount`). Then make `palette.ts`'s rows go away.
+   no property -- the display-only WiFi picker on every network node). The GPIO cluster
+   (`interrupt`/`eswitch`/`ebutton`/`adc`/`encoder`/`neopixel`) is done too -- it needed no new widget
+   (`select`/`boolean`/`showIf`), only a catalog regeneration for two nodes whose descriptor order follows the
+   panel rather than the old class order. Next: `function` last (dynamic `outputCount`). Then make
+   `palette.ts`'s rows go away.
 2. Relax the custom `.node.json` format (multi-output, `configRef` properties, event sources) so more built-ins
    can be cloned, and add the package's own docs (`description`/`.node.md`, sanitized).
 3. Still out: dynamic ports and arbitrary codegen stay built-in-only; compile-time resource claims stay a

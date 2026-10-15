@@ -292,12 +292,12 @@ Type `thingstudio/ebutton`, kind source, palette group hardware.
 - Outputs: msg (string)
 - Properties (name, type, default):
     - `pin`, number, default `5`
-    - `suppress`, boolean, default `false`
+    - `pull`, string, default `"none"`
     - `senseMode`, string, default `"auto"`
+    - `suppress`, boolean, default `false`
     - `debounceMs`, number, default `50`
     - `longPressMs`, number, default `1000`
     - `doubleClickMs`, number, default `400`
-    - `pull`, string, default `"none"`
 
 ### encoder
 
@@ -323,9 +323,9 @@ Type `thingstudio/eswitch`, kind source, palette group hardware.
 - Outputs: msg (bool)
 - Properties (name, type, default):
     - `pin`, number, default `4`
+    - `pull`, string, default `"none"`
     - `lopen`, number, default `1`
     - `debounceMs`, number, default `50`
-    - `pull`, string, default `"none"`
 
 ### gpio out
 

@@ -41,9 +41,31 @@ function optInt(v: unknown, what: string): number | null {
 export const encoderNode: NodeDefinition = {
   type: "thingstudio/encoder",
   kind: "source",
+  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor.
+  paletteId: "encoder",
+  label: "encoder",
+  group: "hardware",
+  priority: 14,
+  color: "#8a3f7a",
+  bgcolor: "#4a1f42",
+  icon: "⟳",
+  width: 110,
+  description:
+    "Quadrature encoder (Hinch's Encoder). Payload is the value; delta is the change since the last message. div is " +
+    "the pulses per detent (4 or 2 for a mechanical click); lowest/highest/wrap blank for none.",
   ports: {
     outputs: [{ name: "msg", type: "number" }],
   },
+  properties: [
+    { name: "pinX", label: "pin x", kind: "pin", default: 10 },
+    { name: "pinY", label: "pin y", kind: "pin", default: 11 },
+    { name: "div", label: "divide by (div)", kind: "number", default: 1, min: 1 },
+    { name: "value", label: "start value", kind: "number", default: 0 },
+    { name: "vmin", label: "lowest (blank for none)", kind: "number", default: "" },
+    { name: "vmax", label: "highest (blank for none)", kind: "number", default: "" },
+    { name: "mod", label: "wrap at (blank for none)", kind: "number", default: "", min: 1 },
+    { name: "delay", label: "settle (ms)", kind: "number", default: 100, min: 0 },
+  ],
   codegenEventSource(node: GraphNode, ctx: CodegenContext): EventSourceCodegenResult {
     const pinX = checkPin(ctx, "encoder pin x", node.properties.pinX, "input", { pull: true });
     const pinY = checkPin(ctx, "encoder pin y", node.properties.pinY, "input", { pull: true });

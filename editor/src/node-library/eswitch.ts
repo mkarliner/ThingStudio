@@ -76,9 +76,46 @@ import type { CodegenContext, EventSourceCodegenResult, NodeDefinition } from ".
 export const eswitchNode: NodeDefinition = {
   type: "thingstudio/eswitch",
   kind: "source",
+  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor.
+  paletteId: "eswitch",
+  label: "eswitch",
+  group: "hardware",
+  priority: 11,
+  color: "#a67c3f",
+  bgcolor: "#4a3a1f",
+  icon: "○",
+  width: 104,
+  description:
+    "Sends a message each time the switch opens or closes. msg.payload is true when closed. Set pull to use the " +
+    "pin's own pull resistor, or leave it at none if the switch has one.",
   ports: {
     outputs: [{ name: "msg", type: "bool" }],
   },
+  properties: [
+    { name: "pin", label: "pin", kind: "pin", default: 4 },
+    {
+      name: "pull",
+      label: "pull",
+      kind: "select",
+      default: "none",
+      options: [
+        { value: "none", label: "none -- external pull or self-pulling switch (default)" },
+        { value: "up", label: "up -- enable the pin's internal pull-up" },
+        { value: "down", label: "down -- enable the pin's internal pull-down" },
+      ],
+    },
+    {
+      name: "lopen",
+      label: "open level (lopen)",
+      kind: "select",
+      default: 1,
+      options: [
+        { value: 1, label: "1 -- switch to gnd, pulled up (default)" },
+        { value: 0, label: "0 -- switch to 3V3, pulled down" },
+      ],
+    },
+    { name: "debounceMs", label: "debounce (ms)", kind: "number", default: 50, min: 1 },
+  ],
   codegenEventSource(node: GraphNode, ctx: CodegenContext): EventSourceCodegenResult {
     const pin = checkPin(ctx, "eswitch pin", node.properties.pin, "input", { pull: String(node.properties.pull ?? "none") !== "none" });
     const lopen = Math.round(Number(node.properties.lopen ?? 1));

@@ -59,9 +59,51 @@ import type { CodegenContext, EventSourceCodegenResult, NodeDefinition } from ".
 export const ebuttonNode: NodeDefinition = {
   type: "thingstudio/ebutton",
   kind: "source",
+  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor.
+  paletteId: "ebutton",
+  label: "ebutton",
+  group: "hardware",
+  priority: 12,
+  color: "#a6633f",
+  bgcolor: "#4a2e1f",
+  icon: "⏺",
+  width: 104,
+  description:
+    "Sends a message on each press, release, long press and double click. msg.payload is \"press\", \"release\", " +
+    "\"long\" or \"double\". Set pull to use the pin's own pull resistor, or leave it at none if the button has " +
+    "one. Double click must be shorter than long press.",
   ports: {
     outputs: [{ name: "msg", type: "string" }],
   },
+  properties: [
+    { name: "pin", label: "pin", kind: "pin", default: 5 },
+    {
+      name: "pull",
+      label: "pull",
+      kind: "select",
+      default: "none",
+      options: [
+        { value: "none", label: "none -- external pull or self-pulling button (default)" },
+        { value: "up", label: "up -- enable the pin's internal pull-up" },
+        { value: "down", label: "down -- enable the pin's internal pull-down" },
+      ],
+    },
+    {
+      name: "senseMode",
+      label: "sense",
+      kind: "select",
+      default: "auto",
+      options: [
+        { value: "auto", label: "auto -- assume not pressed at boot (default)" },
+        { value: "0", label: "0 -- unpressed reads as gnd" },
+        { value: "1", label: "1 -- unpressed reads as 3V3" },
+      ],
+    },
+    { name: "suppress", label: "suppress (delay/suppress release in favor of double/long)", kind: "boolean", default: false },
+    { name: "debounceMs", label: "debounce (ms)", kind: "number", default: 50, min: 1 },
+    { name: "longPressMs", label: "long press (ms)", kind: "number", default: 1000, min: 1 },
+    { name: "doubleClickMs", label: "double click (ms)", kind: "number", default: 400, min: 1 },
+  ],
   codegenEventSource(node: GraphNode, ctx: CodegenContext): EventSourceCodegenResult {
     const pin = checkPin(ctx, "ebutton pin", node.properties.pin, "input", { pull: String(node.properties.pull ?? "none") !== "none" });
     const suppress = Boolean(node.properties.suppress ?? false);

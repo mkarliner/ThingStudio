@@ -25,9 +25,37 @@ const ORDERS = ["RGB", "GRB", "RGBW", "GRBW"] as const;
 export const neopixelNode: NodeDefinition = {
   type: "thingstudio/neopixel",
   kind: "sink",
+  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor.
+  paletteId: "neopixel",
+  label: "neopixel",
+  group: "hardware",
+  priority: 42,
+  color: "#8a2e5a",
+  bgcolor: "#4a1f30",
+  icon: "✦",
+  width: 110,
+  description:
+    "WS2812/NeoPixel strip (built-in neopixel module). Payload is a 24-bit colour 0xRRGGBB for the whole strip, a " +
+    "list of colours for one per pixel, or {index, colour} for one pixel. RGBW strips take 0xWWRRGGBB.",
   ports: {
     inputs: [{ name: "msg", type: "any" }],
   },
+  properties: [
+    { name: "pin", label: "pin", kind: "pin", default: 13 },
+    { name: "count", label: "count", kind: "number", default: 8, min: 1 },
+    {
+      name: "order",
+      label: "order",
+      kind: "select",
+      default: "GRB",
+      options: [
+        { value: "GRB", label: "GRB -- most WS2812 strips (default)" },
+        { value: "RGB", label: "RGB" },
+        { value: "RGBW", label: "RGBW -- with a white channel" },
+        { value: "GRBW", label: "GRBW -- with a white channel" },
+      ],
+    },
+  ],
   codegenSink(node: GraphNode, ctx: CodegenContext): SinkCodegenResult {
     const pin = checkPin(ctx, "neopixel pin", node.properties.pin, "output");
     const count = Math.round(Number(node.properties.count ?? 8));

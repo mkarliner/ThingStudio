@@ -158,27 +158,6 @@ export const NODE_PALETTE: Partial<Record<NodeKind, KindStyle>> = {
   // after inject.
   startup: { color: "#5c5c2e", bgcolor: "#3a3a1f", icon: "⏻", label: "startup", group: "general", priority: 11 },
   function: { color: "#6e5b2e", bgcolor: "#3f341f", icon: "ƒ", label: "function", group: "general", priority: 30 },
-  // Distinct from every existing color -- amber/orange, no prior node type
-  // uses this range. "⚡" for the hard-IRQ-driven, event-fired nature (vs.
-  // timer's "◷" clock glyph for its own poll/sleep-shaped source).
-  interrupt: { color: "#8a5a1f", bgcolor: "#3f2e14", icon: "⚡", label: "interrupt", group: "hardware", priority: 10 },
-  // eswitch/ebutton, 2026-09-17 -- same amber family as interrupt (all
-  // three are debounced-digital-input siblings), distinct shades each,
-  // priorities 11/12 (interrupt's own family-of-tens convention, this
-  // file's header) so they sort right after it, before gpio_out/pwm_out.
-  // "○"/"●" (open/filled circle) for eswitch's own open/close states;
-  // "⏺" (filled record-dot) for ebutton's press/release/long/double,
-  // distinct from both.
-  eswitch: { color: "#a67c3f", bgcolor: "#4a3a1f", icon: "○", label: "eswitch", group: "hardware", priority: 11 },
-  ebutton: { color: "#a6633f", bgcolor: "#4a2e1f", icon: "⏺", label: "ebutton", group: "hardware", priority: 12 },
-  // adc/encoder added 2026-10-11 (adc-encoder-neopixel-briefing.md) -- hardware group, input side, alongside
-  // interrupt/eswitch/ebutton/bme280. adc: olive, "∼" for an analog reading. encoder: violet-magenta, "⟳" for a
-  // rotary knob (distinct from display_spi's indigo and mqtt_publish's magenta).
-  adc: { color: "#6e8a2e", bgcolor: "#3a4a1f", icon: "∼", label: "adc", group: "hardware", priority: 13 },
-  encoder: { color: "#8a3f7a", bgcolor: "#4a1f42", icon: "⟳", label: "encoder", group: "hardware", priority: 14 },
-  // neopixel added 2026-10-11 (same briefing) -- hardware output, near display_spi/display_i2c. Magenta-pink, "✦"
-  // for a lit pixel.
-  neopixel: { color: "#8a2e5a", bgcolor: "#4a1f30", icon: "✦", label: "neopixel", group: "hardware", priority: 42 },
   // display_spi/display_i2c, 2026-09-17 -- see this file's header for the
   // color/icon reasoning. Priorities 40/41 (pwm_out's own 30 is the last
   // used hardware-group slot so far), sorting after gpio_out/pwm_out.

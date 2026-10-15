@@ -629,188 +629,21 @@ export class MqttPublishNode extends buildDescriptorNodeClass(mqttPublishNode) {
 
 export class MqttSubscribeNode extends buildDescriptorNodeClass(mqttSubscribeNode) {}
 
-export class InterruptNode extends ClassicPreset.Node {
-  width = 104;
-  height = NODE_HEIGHT;
-  kind = "interrupt" as const;
-  nodeType = "thingstudio/interrupt";
-  highlighted = false;
-  status: NodeStatusState | null = null;
-  statusText: string | null = null;
+export class InterruptNode extends buildDescriptorNodeClass(interruptNode) {}
 
-  // Defaults match interrupt.ts's own codegen defaults exactly (edge
-  // "rising", debounce true, debounceMs 50) -- a freshly-dropped node's
-  // properties and a freshly-omitted property on a hand-edited flow file
-  // should compile to the same thing.
-  properties: { pin: number; edge: "rising" | "falling" | "both"; debounce: boolean; debounceMs: number } = {
-    pin: 4,
-    edge: "rising",
-    debounce: true,
-    debounceMs: 50,
-  };
+export class EswitchNode extends buildDescriptorNodeClass(eswitchNode) {}
 
-  constructor() {
-    super("interrupt");
-    this.addOutput("msg", new ClassicPreset.Output(portSocket(interruptNode.ports?.outputs, "msg", this.properties), "msg"));
-  }
-}
+export class EbuttonNode extends buildDescriptorNodeClass(ebuttonNode) {}
 
-// eswitch/ebutton added 2026-09-17 -- eswitch.ts/ebutton.ts's own headers
-// have the full design story (wrapping Peter Hinch's ESwitch/EButton; single
-// output, msg.payload = the state for eswitch, the event name for ebutton).
-// Defaults here match each
-// file's own codegen defaults exactly, same invariant InterruptNode's own
-// comment states just above.
-export class EswitchNode extends ClassicPreset.Node {
-  width = 104;
-  height = NODE_HEIGHT;
-  kind = "eswitch" as const;
-  nodeType = "thingstudio/eswitch";
-  highlighted = false;
-  status: NodeStatusState | null = null;
-  statusText: string | null = null;
+export class AdcNode extends buildDescriptorNodeClass(adcNode) {}
 
-  properties: { pin: number; lopen: 0 | 1; debounceMs: number; pull: "none" | "up" | "down" } = {
-    pin: 4,
-    lopen: 1,
-    debounceMs: 50,
-    pull: "none",
-  };
+export class EncoderNode extends buildDescriptorNodeClass(encoderNode) {}
 
-  constructor() {
-    super("eswitch");
-    this.addOutput("msg", new ClassicPreset.Output(portSocket(eswitchNode.ports?.outputs, "msg", this.properties), "msg"));
-  }
-}
+export class NeopixelNode extends buildDescriptorNodeClass(neopixelNode) {}
 
-export class EbuttonNode extends ClassicPreset.Node {
-  width = 104;
-  height = NODE_HEIGHT;
-  kind = "ebutton" as const;
-  nodeType = "thingstudio/ebutton";
-  highlighted = false;
-  status: NodeStatusState | null = null;
-  statusText: string | null = null;
-
-  properties: {
-    pin: number;
-    suppress: boolean;
-    senseMode: "auto" | "0" | "1";
-    debounceMs: number;
-    longPressMs: number;
-    doubleClickMs: number;
-    pull: "none" | "up" | "down";
-  } = {
-    pin: 5,
-    suppress: false,
-    senseMode: "auto",
-    debounceMs: 50,
-    longPressMs: 1000,
-    doubleClickMs: 400,
-    pull: "none",
-  };
-
-  constructor() {
-    super("ebutton");
-    this.addOutput("msg", new ClassicPreset.Output(portSocket(ebuttonNode.ports?.outputs, "msg", this.properties), "msg"));
-  }
-}
-
-// adc/encoder added 2026-10-11 (adc-encoder-neopixel-briefing.md). Defaults match each node-library file's own
-// codegen fallbacks, same invariant every hardware node class here follows.
-export class AdcNode extends ClassicPreset.Node {
-  width = 110;
-  height = NODE_HEIGHT;
-  kind = "adc" as const;
-  nodeType = "thingstudio/adc";
-  highlighted = false;
-  status: NodeStatusState | null = null;
-  statusText: string | null = null;
-
-  properties: {
-    pin: number;
-    mode: "relative" | "absolute";
-    delta: number;
-    lower: number;
-    upper: number;
-    sense: "outside" | "inside";
-    pollMs: number;
-  } = {
-    pin: 34,
-    mode: "relative",
-    delta: 2000,
-    lower: 0,
-    upper: 50000,
-    sense: "outside",
-    pollMs: 0,
-  };
-
-  constructor() {
-    super("adc");
-    this.addOutput("msg", new ClassicPreset.Output(portSocket(adcNode.ports?.outputs, "msg", this.properties), "msg"));
-  }
-}
-
-export class EncoderNode extends ClassicPreset.Node {
-  width = 110;
-  height = NODE_HEIGHT;
-  kind = "encoder" as const;
-  nodeType = "thingstudio/encoder";
-  highlighted = false;
-  status: NodeStatusState | null = null;
-  statusText: string | null = null;
-
-  properties: {
-    pinX: number;
-    pinY: number;
-    div: number;
-    value: number;
-    vmin: number | "";
-    vmax: number | "";
-    mod: number | "";
-    delay: number;
-  } = {
-    pinX: 10,
-    pinY: 11,
-    div: 1,
-    value: 0,
-    vmin: "",
-    vmax: "",
-    mod: "",
-    delay: 100,
-  };
-
-  constructor() {
-    super("encoder");
-    this.addOutput("msg", new ClassicPreset.Output(portSocket(encoderNode.ports?.outputs, "msg", this.properties), "msg"));
-  }
-}
-
-// neopixel added 2026-10-11 (same briefing). Sink: one `any` input, no output.
-export class NeopixelNode extends ClassicPreset.Node {
-  width = 110;
-  height = NODE_HEIGHT;
-  kind = "neopixel" as const;
-  nodeType = "thingstudio/neopixel";
-  highlighted = false;
-  status: NodeStatusState | null = null;
-  statusText: string | null = null;
-
-  properties: {
-    pin: number;
-    count: number;
-    order: "RGB" | "GRB" | "RGBW" | "GRBW";
-  } = {
-    pin: 13,
-    count: 8,
-    order: "GRB",
-  };
-
-  constructor() {
-    super("neopixel");
-    this.addInput("msg", new ClassicPreset.Input(portSocket(neopixelNode.ports?.inputs, "msg", this.properties), "msg", true));
-  }
-}
+// The GPIO cluster -- interrupt/eswitch/ebutton/adc/encoder/neopixel -- is descriptor-driven
+// (buildDescriptorNodeClass below). Their defaults match each node-library file's own codegen
+// fallbacks (the invariant every hardware node class here followed).
 
 // display_spi/display_i2c added 2026-09-17 -- framebuffer-display-node-
 // scoping.md's converged design (Mike's steer): two node families split

@@ -52,9 +52,48 @@ function wholeNumber(v: unknown, what: string): number {
 export const adcNode: NodeDefinition = {
   type: "thingstudio/adc",
   kind: "source",
+  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor.
+  paletteId: "adc",
+  label: "adc",
+  group: "hardware",
+  priority: 13,
+  color: "#6e8a2e",
+  bgcolor: "#3a4a1f",
+  icon: "∼",
+  width: 110,
+  description:
+    "AADC (awaitable). Payload is a dict: raw (0-65535), volts, percent. On ESP32 an ADC2 pin can't be used while " +
+    "WiFi is up, so Deploy refuses one when the flow uses the network. poll 0 sends only on a bounds crossing.",
   ports: {
     outputs: [{ name: "msg", type: "any" }],
   },
+  properties: [
+    { name: "pin", label: "pin", kind: "pin", default: 34 },
+    {
+      name: "mode",
+      label: "mode",
+      kind: "select",
+      default: "relative",
+      options: [
+        { value: "relative", label: "relative -- fire when it moves by delta from the last message" },
+        { value: "absolute", label: "absolute -- fire outside lower..upper" },
+      ],
+    },
+    { name: "delta", label: "delta (counts)", kind: "number", default: 2000, min: 1, showIf: (p) => p.mode === "relative" },
+    { name: "lower", label: "lower", kind: "number", default: 0, min: 0, max: 65535, showIf: (p) => p.mode === "absolute" },
+    { name: "upper", label: "upper", kind: "number", default: 50000, min: 0, max: 65535, showIf: (p) => p.mode === "absolute" },
+    {
+      name: "sense",
+      label: "sense",
+      kind: "select",
+      default: "outside",
+      options: [
+        { value: "outside", label: "outside -- fire when it leaves the bounds (default)" },
+        { value: "inside", label: "inside -- fire when it returns to them" },
+      ],
+    },
+    { name: "pollMs", label: "poll (ms)", kind: "number", default: 0, min: 0 },
+  ],
   codegenEventSource(node: GraphNode, ctx: CodegenContext): EventSourceCodegenResult {
     const pin = checkPin(ctx, "adc pin", node.properties.pin, "input");
 

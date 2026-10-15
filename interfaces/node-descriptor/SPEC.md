@@ -113,8 +113,9 @@ files with no bridge — is being closed deliberately, family by family, with no
 - **Built so far.** `NodeDescriptor` is the single shape; `NodeDefinition` composes it. The
   canvas class factory, property panel, palette and catalog read a migrated node's descriptor instead
   of their own copies. Migrated families: `debug`, `timer`, `delay`, `gpio_out`, `pwm_out`, the I2C
-  family (`touch_i2c`, `i2c`, `bme280`) and the network family (`udp_send`, `udp_receive`, `http_*`,
-  `mqtt_*`, `ntp`). A descriptor missing the palette metadata is "not yet migrated" and still falls
+  family (`touch_i2c`, `i2c`, `bme280`), the network family (`udp_send`, `udp_receive`, `http_*`,
+  `mqtt_*`, `ntp`) and the GPIO cluster (`interrupt`, `eswitch`, `ebutton`, `adc`, `encoder`,
+  `neopixel`). A descriptor missing the palette metadata is "not yet migrated" and still falls
   back to `palette.ts`.
 - **Still coming.** Relax the custom format so more built-ins can be cloned: multi-output (the
   compiler already supports it), `configRef` properties, and event sources. Dynamic ports (`function`'s

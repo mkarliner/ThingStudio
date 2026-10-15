@@ -51,6 +51,18 @@ const VALID_EDGES = new Set(["rising", "falling", "both"]);
 export const interruptNode: NodeDefinition = {
   type: "thingstudio/interrupt",
   kind: "source",
+  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor.
+  paletteId: "interrupt",
+  label: "interrupt",
+  group: "hardware",
+  priority: 10,
+  color: "#8a5a1f",
+  bgcolor: "#3f2e14",
+  icon: "⚡",
+  width: 104,
+  description:
+    "Event-driven (machine.Pin.irq()), not polled. No internal pull configured -- wire an external pull resistor " +
+    "(or a button module with one built in), see test-flows/README.md.",
   // Added when this node was wired into the Rete canvas (app/rete/nodes.ts's
   // InterruptNode) -- not present when this file was first built, matching
   // gpio_in's own precedent of shipping registry-only with no canvas
@@ -59,6 +71,22 @@ export const interruptNode: NodeDefinition = {
   ports: {
     outputs: [{ name: "msg", type: "bool" }],
   },
+  properties: [
+    { name: "pin", label: "pin", kind: "pin", default: 4 },
+    {
+      name: "edge",
+      label: "edge",
+      kind: "select",
+      default: "rising",
+      options: [
+        { value: "rising", label: "rising" },
+        { value: "falling", label: "falling" },
+        { value: "both", label: "both" },
+      ],
+    },
+    { name: "debounce", label: "debounce", kind: "boolean", default: true },
+    { name: "debounceMs", label: "debounce (ms)", kind: "number", default: 50, min: 1, showIf: (p) => p.debounce === true },
+  ],
   codegenEventSource(node: GraphNode, ctx: CodegenContext): EventSourceCodegenResult {
     const pin = checkPin(ctx, "interrupt pin", node.properties.pin, "input");
     const edge = String(node.properties.edge ?? "rising");
