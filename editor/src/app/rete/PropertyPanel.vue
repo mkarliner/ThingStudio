@@ -335,45 +335,6 @@
           humidity is null. The status dot shows whether the sensor is answering.</p>
       </template>
 
-      <template v-else-if="node.kind === 'touch_i2c'">
-        <ConfigRefField
-          config-type="thingstudio/config/touch-panel"
-          :model-value="node.properties.touchPanelConfigId || undefined"
-          @update:model-value="(id) => setConfigId('touchPanelConfigId', id)"
-        />
-        <p class="hint">Raw touch input, for flows that don't use the GUI. Sends {x, y} in msg.payload with topic
-          <code>down</code> when a finger lands and <code>up</code> when it lifts. A gui screen reads its panel
-          itself, so don't use this node with one, and one panel can't feed both.</p>
-      </template>
-
-      <template v-else-if="node.kind === 'i2c'">
-        <ConfigRefField
-          config-type="thingstudio/config/i2c-bus"
-          :model-value="node.properties.i2cConfigId || undefined"
-          @update:model-value="(id) => setConfigId('i2cConfigId', id)"
-        />
-        <label>operation
-          <select v-model="node.properties.operation" @change="touch">
-            <option value="read">read bytes</option>
-            <option value="write">write msg.payload</option>
-            <option value="scan">scan the bus</option>
-          </select>
-        </label>
-        <template v-if="node.properties.operation !== 'scan'">
-          <label>address
-            <input v-model="node.properties.address" placeholder="e.g. 0x29" @input="touch" />
-          </label>
-          <label>register
-            <input v-model="node.properties.register" placeholder="none" @input="touch" />
-          </label>
-        </template>
-        <label v-if="node.properties.operation === 'read'">length (bytes)
-          <input type="number" min="1" max="256" v-model.number="node.properties.length" @input="touch" />
-        </label>
-        <p class="hint">One transfer per incoming message. Read puts the bytes in msg.payload; scan puts the list of
-          addresses that answer. Hex (0x29) or decimal both work.</p>
-      </template>
-
       <template v-else-if="node.kind === 'journal'">
         <label>rows kept <input type="number" min="1" max="256" v-model.number="node.properties.rows" @input="touch" /></label>
         <label>seconds per row (0 = one row per message)
@@ -894,6 +855,20 @@
               :model-value="nodeProperties[f.name]"
               @update:model-value="(v) => setProp(f.name, v)"
             />
+            <ConfigRefField
+              v-else-if="f.kind === 'configRef'"
+              :config-type="f.configType!"
+              :label="f.label"
+              :model-value="(nodeProperties[f.name] as string) || undefined"
+              @update:model-value="(id) => setProp(f.name, id)"
+            />
+            <CredentialRefField
+              v-else-if="f.kind === 'credential'"
+              :credential-type="f.credentialType!"
+              :label="f.label"
+              :model-value="(nodeProperties[f.name] as string) || undefined"
+              @update:model-value="(name) => setProp(f.name, name)"
+            />
             <label v-else-if="f.kind === 'boolean'" class="checkbox-label">
               <input type="checkbox" v-model="nodeProperties[f.name]" @change="touch" />
               {{ f.label }}
@@ -903,8 +878,9 @@
               <select v-if="f.kind === 'select'" v-model="nodeProperties[f.name]" @change="touch">
                 <option v-for="opt in f.options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
               </select>
-              <input v-else-if="f.kind === 'number'" type="number" :min="f.min" :max="f.max" :step="f.step" v-model.number="nodeProperties[f.name]" @input="touch" />
-              <input v-else type="text" v-model="nodeProperties[f.name]" @input="touch" />
+              <input v-else-if="f.kind === 'number'" type="number" :min="f.min" :max="f.max" :step="f.step" :placeholder="f.placeholder" v-model.number="nodeProperties[f.name]" @input="touch" />
+              <input v-else-if="f.kind === 'password'" type="password" :placeholder="f.placeholder" v-model="nodeProperties[f.name]" @input="touch" />
+              <input v-else type="text" :placeholder="f.placeholder" v-model="nodeProperties[f.name]" @input="touch" />
             </label>
             <p v-if="f.help" class="hint">{{ f.help }}</p>
           </template>
@@ -929,6 +905,7 @@ import { InjectNode, StartupNode, CustomNode, FunctionNode } from "./nodes";
 import type { NodeDescriptor } from "../../compiler/node-descriptor";
 import { MAX_FUNCTION_OUTPUTS } from "../../node-library/function-node";
 import ConfigRefField from "./ConfigRefField.vue";
+import CredentialRefField from "./CredentialRefField.vue";
 import PresetRefField from "./PresetRefField.vue";
 import PaletteField from "./PaletteField.vue";
 import PinField from "./PinField.vue";

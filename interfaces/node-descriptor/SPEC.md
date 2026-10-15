@@ -64,8 +64,8 @@ A property field is `{name, label, kind, default, options?}`. `kind` is shared w
 (`config-types.ts`): `text`, `password`, `number`, `select`, `boolean`, `credential`, `configRef`,
 `pin`. `default` seeds a freshly-dropped node. A custom `.node.json` may only use `text`, `number`,
 `boolean` and `select`; the rest are built-in editor widgets. Built-in fields may also carry
-`optional`, `min`/`max`/`step`, `help`, and a `showIf(properties)` visibility predicate (a function,
-so built-in only).
+`optional`, `min`/`max`/`step`, `help`, `placeholder`, and a `showIf(properties)` visibility predicate (a
+function, so built-in only).
 
 **Worked example** — the built-in `debug` node's descriptor (its codegen hook omitted):
 

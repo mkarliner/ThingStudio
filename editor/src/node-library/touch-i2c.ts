@@ -21,9 +21,25 @@ import { resolveTouchPanel } from "./touch-panel-shared.js";
 export const touchI2cNode: NodeDefinition = {
   type: "thingstudio/touch_i2c",
   kind: "source",
+  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor.
+  paletteId: "touch_i2c",
+  label: "touch",
+  group: "hardware",
+  priority: 16,
+  color: "#8a4a2e",
+  bgcolor: "#4a2a1f",
+  icon: "☝",
+  width: 110,
+  description:
+    "Raw touch input, for flows that don't use the GUI. Sends {x, y} in msg.payload with topic down when a finger " +
+    "lands and up when it lifts. A gui screen reads its panel itself, so don't use this node with one, and one " +
+    "panel can't feed both.",
   ports: {
     outputs: [{ name: "msg", type: "any" }],
   },
+  properties: [
+    { name: "touchPanelConfigId", label: "Touch panel", kind: "configRef", configType: "thingstudio/config/touch-panel", default: "" },
+  ],
   codegenSource(node: GraphNode, ctx: CodegenContext): SourceCodegenResult {
     const panel = resolveTouchPanel(ctx, node);
     const id = JSON.stringify(String(node.id));

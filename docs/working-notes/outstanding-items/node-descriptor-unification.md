@@ -45,15 +45,21 @@ property UI now comes from the descriptor; option (a): the custom `.node.json` i
 minus codegen). `interfaces/node-descriptor/SPEC.md` is now v2. Remaining work, in order:
 
 1. Move the remaining built-in families onto the descriptor, per the briefing. Done: `debug`, then `timer`/
-   `delay` and `gpio_out`/`pwm_out` (the latter added the generic `pin` field, wrapping `PinField`). Next:
-   `udp_send` and the rest of the network family (needs a `configRef` field kind; note `udp_send`'s panel has a
-   display-only WiFi `ConfigRefField` bound to no property, which the generic renderer doesn't yet express), the
-   GPIO cluster (`interrupt`/`eswitch`/`ebutton`/`adc`/`encoder`/`neopixel`; `select`/`boolean`/`showIf`), then
-   `function` last (dynamic `outputCount`). Then make `palette.ts`'s rows go away.
+   `delay` and `gpio_out`/`pwm_out` (the latter added the generic `pin` field, wrapping `PinField`), then
+   `touch_i2c` and `i2c` (the generic `configRef` field kind landed with `touch_i2c`, wrapping
+   `ConfigRefField`; `credential`/`password` widgets and a `placeholder` field (Mike, 2026-10-15) added too;
+   `i2c` first exercises `select`/`showIf`). Next: `bme280` (blocked on the numeric `select` option question
+   below), then `udp_send` and the rest of the network family (needs an info-only field for the display-only
+   WiFi `ConfigRefField` bound to no property, below), the GPIO cluster
+   (`interrupt`/`eswitch`/`ebutton`/`adc`/`encoder`/`neopixel`; `select`/`boolean`/`showIf`), then `function`
+   last (dynamic `outputCount`). Then make `palette.ts`'s rows go away.
    `ntp` (new 2026-10-14) was built in the network family's unmigrated shape for the same WiFi-field reason:
-   migrate it with them. The generic property-panel
-   branch (`PropertyPanel.vue`) currently renders `text`/`number`/`boolean`/`select`/`pin`; it still needs
-   `configRef` and `credential`/`password` widgets (wrapping `ConfigRefField`/`CredentialRefField`).
+   migrate it with them.
+   Two descriptor-shape questions surfaced migrating the I2C family, both needing Mike before the nodes that hit
+   them can move: (a) an **info-only field** (the display-only WiFi `ConfigRefField` has no property to bind, so
+   the generic renderer needs a way to express a field with no `name`/`setProp` — a new `PropertyFieldKind` or a
+   flag on `PropertyFieldDescriptor`); (b) **numeric `select` options** (`bme280`'s address is a `number` select,
+   but `PropertyFieldOption.value` is `string`, so a migrated select would store `"118"` not `118`).
 2. Relax the custom `.node.json` format (multi-output, `configRef` properties, event sources) so more built-ins
    can be cloned, and add the package's own docs (`description`/`.node.md`, sanitized).
 3. Still out: dynamic ports and arbitrary codegen stay built-in-only; compile-time resource claims stay a

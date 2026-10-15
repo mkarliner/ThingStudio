@@ -21,8 +21,10 @@ The canonical `NodeDescriptor` (`editor/src/compiler/node-descriptor.ts`) exists
 (`compiler/node-definition.ts`) composes it with the codegen hooks. One generic Rete class
 (`nodes.ts`'s `buildDescriptorNodeClass(descriptor)`) and one lookup
 (`app/rete/node-descriptors.ts`'s `descriptorFor`/`paletteStyleFor`) drive the canvas, palette, property panel
-and catalog. Migrated families: **`debug`, `timer`, `delay`, `gpio_out`, `pwm_out`**. No behavior change
-(node-<name> tests + the catalog are the guard; full `npm test` green).
+and catalog. Migrated families: **`debug`, `timer`, `delay`, `gpio_out`, `pwm_out`, `touch_i2c`, `i2c`**. The
+generic property panel gained `configRef` (wrapping `ConfigRefField`), `credential` (wrapping
+`CredentialRefField`), `password`, and a `placeholder` field (Mike, 2026-10-15); `i2c` first exercises
+`select`/`showIf`. No behavior change (node-<name> tests + the catalog are the guard; full `npm test` green).
 
 `palette.ts`'s per-kind rows are optional during migration: a descriptor with a `paletteId` is "migrated" and
 `paletteStyleFor` reads it; one without still falls back to `palette.ts`. `NODE_PALETTE` is now
@@ -39,8 +41,9 @@ and catalog. Migrated families: **`debug`, `timer`, `delay`, `gpio_out`, `pwm_ou
   exported class name (e.g. `export class TimerNode extends buildDescriptorNodeClass(timerNode) {}`) —
   tests and `AnyThingstudioNode` reference these names even though the body is now empty.
 - **The property panel's generic branch** (`PropertyPanel.vue`, `v-else-if="nodeDescriptor"`, last in the
-  `v-if` chain) renders `text`/`number`/`boolean`/`select`/`pin` today, with `min`/`max`/`step`/`showIf`. It
-  uses `nodeProperties`/`setProp` (already defined). Remove the old per-kind `v-else-if` block once migrated.
+  `v-if` chain) renders `text`/`password`/`number`/`boolean`/`select`/`pin`/`configRef`/`credential`, with
+  `min`/`max`/`step`/`placeholder`/`showIf`. It uses `nodeProperties`/`setProp` (already defined). Remove the
+  old per-kind `v-else-if` block once migrated.
 - **Palette** (`palette.ts`) delete the row; (`PaletteSidebar.vue`) already enumerates legacy keys ∪ descriptor
   keys via `builtinDescriptors()`, so nothing else to do. **Catalog** (`cli/describe.ts`) uses
   `paletteStyleFor` and the registry; it must come out byte-identical unless you mean to change it.
@@ -57,13 +60,20 @@ and catalog. Migrated families: **`debug`, `timer`, `delay`, `gpio_out`, `pwm_ou
 
 ## What's next, in order
 
-1. **`configRef` widget, then the network family (`udp_send` first).** Add a `configRef` field kind to the
-   generic panel, wrapping `ConfigRefField` (`:config-type="f.configType"`, `:model-value=...`,
-   `@update:model-value="(id) => setProp(f.name, id)"`). **Wrinkle to resolve first:** `udp_send`/`udp_receive`/
-   `http_*`/`mqtt_*` panels show a *display-only* WiFi `ConfigRefField` bound to `undefined` (the WiFi config is
-   a flow singleton, not a property of these nodes) plus a hint. The generic renderer needs a way to express an
-   info-only field (no `name`/`setProp`) — decide the shape before migrating these, or migrate the simpler
-   `i2c`/`bme280` configRef nodes first. `mqtt_*` also carry a real `brokerConfigId` configRef.
+1. **The I2C family is done (`touch_i2c`, `i2c`); the network family is next.** The generic `configRef` field
+   kind landed with `touch_i2c` (`:config-type="f.configType"`, `:model-value=...`,
+   `@update:model-value="(id) => setProp(f.name, id)"`). **Two shape decisions still block the rest:**
+   - **`bme280`** is the only I2C-family node left: its `address` is a numeric `select`, but
+     `PropertyFieldOption.value` is `string`, so a migrated select would store `"118"` not `118`. Needs a
+     widened option type (or a numeric-select kind) — ask Mike.
+   - **The network family** (`udp_send`/`udp_receive`/`http_*`/`mqtt_*`) shows a *display-only* WiFi
+     `ConfigRefField` bound to `undefined` (the WiFi config is a flow singleton, not a property of these nodes)
+     plus a hint. The generic renderer needs an info-only field (no `name`/`setProp`) — a new
+     `PropertyFieldKind` or a flag on `PropertyFieldDescriptor`. Needs Mike.
+   `mqtt_*` also carry a real `brokerConfigId` configRef.
+   **`ntp` (added 2026-10-14, replaces `clock`; `outstanding-items/ntp-node-replaces-clock.md`) is part of this
+   family and has the same display-only WiFi field** — built in the network family's unmigrated shape, migrate
+   it with them once the info-only field shape is settled.
 2. **GPIO cluster:** `interrupt`/`eswitch`/`ebutton`/`adc`/`encoder`/`neopixel`. Mostly `pin`/`select`/
    `boolean`/`number` with `showIf` (e.g. `adc`'s `delta` only in relative mode, `lower`/`upper` only in
    absolute; `interrupt`'s `debounceMs` only when `debounce`). The long per-node panel hints become the field's

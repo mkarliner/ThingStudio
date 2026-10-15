@@ -47,10 +47,39 @@ function optionalInt(value: unknown): number | null {
 export const i2cGenericNode: NodeDefinition = {
   type: "thingstudio/i2c",
   kind: "transform",
+  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor.
+  paletteId: "i2c",
+  label: "i2c device",
+  group: "hardware",
+  priority: 45,
+  color: "#2e3f8a",
+  bgcolor: "#1f2a4a",
+  icon: "⇄",
+  width: 90,
+  description:
+    "One transfer per incoming message. Read puts the bytes in msg.payload; scan puts the list of addresses that " +
+    "answer. Hex (0x29) or decimal both work.",
   ports: {
     inputs: [{ name: "msg", type: "any" }],
     outputs: [{ name: "msg", type: "any" }],
   },
+  properties: [
+    { name: "i2cConfigId", label: "I2C bus", kind: "configRef", configType: "thingstudio/config/i2c-bus", default: "" },
+    {
+      name: "operation",
+      label: "operation",
+      kind: "select",
+      default: "read",
+      options: [
+        { value: "read", label: "read bytes" },
+        { value: "write", label: "write msg.payload" },
+        { value: "scan", label: "scan the bus" },
+      ],
+    },
+    { name: "address", label: "address", kind: "text", default: "", placeholder: "e.g. 0x29", showIf: (p) => p.operation !== "scan" },
+    { name: "register", label: "register", kind: "text", default: "", placeholder: "none", showIf: (p) => p.operation !== "scan" },
+    { name: "length", label: "length (bytes)", kind: "number", default: 1, min: 1, max: 256, showIf: (p) => p.operation === "read" },
+  ],
   codegenTransform(node: GraphNode, ctx: CodegenContext): TransformCodegenResult {
     const bus = resolveI2cBus(ctx, "i2c", node.properties.i2cConfigId);
     const op = String(node.properties.operation ?? "read");

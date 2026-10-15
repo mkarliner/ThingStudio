@@ -81,6 +81,8 @@ export interface PropertyFieldDescriptor {
   credentialType?: "wifi" | "mqtt-broker";
   /** Short plain-text note rendered under the field, any kind. */
   help?: string;
+  /** Hint text shown in an empty text/number input (e.g. "e.g. 0x29"), any kind. */
+  placeholder?: string;
   /** A pin field where -1/blank means "not wired"; a configRef that may be left unset. */
   optional?: boolean;
   /** Number-field bounds/step, forwarded to the <input type="number">. */

@@ -521,23 +521,8 @@ export class Bme280Node extends ClassicPreset.Node {
   }
 }
 
-// Touch panel (FT6336U) on a shared I2C bus (node-library/touch-i2c.ts).
-export class TouchI2cNode extends ClassicPreset.Node {
-  width = 110;
-  height = NODE_HEIGHT;
-  kind = "touch_i2c" as const;
-  nodeType = "thingstudio/touch_i2c";
-  highlighted = false;
-  status: NodeStatusState | null = null;
-  statusText: string | null = null;
-
-  properties: { touchPanelConfigId: string } = { touchPanelConfigId: "" };
-
-  constructor() {
-    super("touch");
-    this.addOutput("msg", new ClassicPreset.Output(portSocket(touchI2cNode.ports?.outputs, "msg", this.properties), "msg"));
-  }
-}
+// Touch panel (FT6336U) on a shared I2C bus (node-library/touch-i2c.ts) -- descriptor-driven
+// (buildDescriptorNodeClass below).
 
 // GUI nodes (node-library/gui.ts, 2026-10-08). Where widgets sit is the flow's `screens` section, not a node
 // property; these hold only data properties (range, units, how long until stale).
@@ -606,31 +591,9 @@ export const GuiButtonNode = guiClass(
 export const GuiNavigatorNode = guiClass("gui_navigator", "thingstudio/gui_navigator", 120, () => ({ name: "navigator", screen: "" }), guiNavigatorNode, true, "page");
 export const GuiModalNode = guiClass("gui_modal", "thingstudio/gui_modal", 100, () => ({ name: "", screen: "", priority: 0, timeout: 0 }), guiModalNode, true, "msg");
 
-// Generic I2C read/write/scan on a shared bus (node-library/i2c-generic.ts). address/register are text so hex
-// ("0x29") can be typed; the compiler parses them.
-export class I2cNode extends ClassicPreset.Node {
-  width = 90;
-  height = NODE_HEIGHT;
-  kind = "i2c" as const;
-  nodeType = "thingstudio/i2c";
-  highlighted = false;
-  status: NodeStatusState | null = null;
-  statusText: string | null = null;
-
-  properties: { i2cConfigId: string; operation: "read" | "write" | "scan"; address: string; register: string; length: number } = {
-    i2cConfigId: "",
-    operation: "read",
-    address: "",
-    register: "",
-    length: 1,
-  };
-
-  constructor() {
-    super("i2c");
-    this.addInput("msg", new ClassicPreset.Input(portSocket(i2cGenericNode.ports?.inputs, "msg", this.properties), "msg", true));
-    this.addOutput("msg", new ClassicPreset.Output(portSocket(i2cGenericNode.ports?.outputs, "msg", this.properties), "msg"));
-  }
-}
+// Generic I2C read/write/scan on a shared bus (node-library/i2c-generic.ts) -- descriptor-driven
+// (buildDescriptorNodeClass below). address/register are text so hex ("0x29") can be typed; the compiler
+// parses them.
 
 // --- Descriptor-driven built-in nodes (node-descriptor-unification-briefing.md) ---
 //
@@ -681,6 +644,10 @@ export class GpioOutNode extends buildDescriptorNodeClass(gpioOutNode) {}
 export class PwmOutNode extends buildDescriptorNodeClass(pwmOutNode) {}
 
 export class TimerNode extends buildDescriptorNodeClass(timerNode) {}
+
+export class TouchI2cNode extends buildDescriptorNodeClass(touchI2cNode) {}
+
+export class I2cNode extends buildDescriptorNodeClass(i2cGenericNode) {}
 
 export class InterruptNode extends ClassicPreset.Node {
   width = 104;
