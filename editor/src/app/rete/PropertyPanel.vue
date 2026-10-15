@@ -134,37 +134,7 @@
       <!-- Every node can carry its own title for the canvas (a "label" property); blank shows the kind. -->
       <label>flow label (the title on the canvas) <input type="text" v-model="node.properties.label" :placeholder="node.label" @input="touch" /></label>
 
-      <template v-if="node.kind === 'inject'">
-        <label>payload type
-          <select v-model="node.properties.payloadType" @change="retypeInjectOutput">
-            <option value="bool">bool</option>
-            <option value="number">number</option>
-            <option value="string">string</option>
-          </select>
-        </label>
-        <label>value
-          <input v-model="node.properties.payloadValue" @input="touch" />
-        </label>
-        <p class="hint">Click this node on the canvas while connected to fire it once.</p>
-      </template>
-
-      <template v-else-if="node.kind === 'startup'">
-        <label>payload type
-          <select v-model="node.properties.payloadType" @change="retypeInjectOutput">
-            <option value="bool">bool</option>
-            <option value="number">number</option>
-            <option value="string">string</option>
-            <option value="reason">start reason</option>
-          </select>
-        </label>
-        <label v-if="node.properties.payloadType !== 'reason'">value
-          <input v-model="node.properties.payloadValue" @input="touch" />
-        </label>
-        <p class="hint">Sends this once each time the flow starts: after Deploy, and after the board resets or powers up.
-          <code>msg.reason</code> says which.</p>
-      </template>
-
-      <template v-else-if="node.kind === 'function'">
+      <template v-if="node.kind === 'function'">
         <label class="code-label">
           code
           <textarea v-model="node.properties.code" @input="touch" rows="10" spellcheck="false"></textarea>
@@ -354,17 +324,17 @@
               @update:model-value="(name) => setField(f, name)"
             />
             <label v-else-if="f.kind === 'boolean'" class="checkbox-label">
-              <input type="checkbox" v-model="nodeProperties[f.name!]" @change="touch" />
+              <input type="checkbox" v-model="nodeProperties[f.name!]" @change="onFieldChange(f)" />
               {{ f.label }}
             </label>
             <label v-else>
               {{ f.label }}
-              <select v-if="f.kind === 'select'" v-model="nodeProperties[f.name!]" @change="touch">
+              <select v-if="f.kind === 'select'" v-model="nodeProperties[f.name!]" @change="onFieldChange(f)">
                 <option v-for="opt in f.options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
               </select>
-              <input v-else-if="f.kind === 'number'" type="number" :min="f.min" :max="f.max" :step="f.step" :placeholder="f.placeholder" v-model.number="nodeProperties[f.name!]" @input="touch" />
-              <input v-else-if="f.kind === 'password'" type="password" :placeholder="f.placeholder" v-model="nodeProperties[f.name!]" @input="touch" />
-              <input v-else type="text" :placeholder="f.placeholder" v-model="nodeProperties[f.name!]" @input="touch" />
+              <input v-else-if="f.kind === 'number'" type="number" :min="f.min" :max="f.max" :step="f.step" :placeholder="f.placeholder" v-model.number="nodeProperties[f.name!]" @input="onFieldChange(f)" />
+              <input v-else-if="f.kind === 'password'" type="password" :placeholder="f.placeholder" v-model="nodeProperties[f.name!]" @input="onFieldChange(f)" />
+              <input v-else type="text" :placeholder="f.placeholder" v-model="nodeProperties[f.name!]" @input="onFieldChange(f)" />
             </label>
             <p v-if="f.help" class="hint">{{ f.help }}</p>
           </template>
@@ -385,7 +355,7 @@ import { computed } from "vue";
 import { selectedNode, bumpPropertyVersion, propertyVersion, setFunctionNodeOutputCount } from "./store";
 import { DEFAULT_KIND_STYLE, type KindStyle } from "./palette";
 import { paletteStyleFor } from "./node-descriptors";
-import { InjectNode, StartupNode, CustomNode, FunctionNode } from "./nodes";
+import { CustomNode, FunctionNode } from "./nodes";
 import type { NodeDescriptor, PropertyFieldDescriptor } from "../../compiler/node-descriptor";
 import { MAX_FUNCTION_OUTPUTS } from "../../node-library/function-node";
 import ConfigRefField from "./ConfigRefField.vue";
@@ -460,21 +430,10 @@ function setField(f: PropertyFieldDescriptor, value: unknown): void {
   else touch();
 }
 
-// payloadType's own @change handler (template above) -- v-model has
-// already written the new value into node.properties.payloadType by the
-// time this fires, so retypeOutput() (nodes.ts) picks it up correctly.
-// Real socket-instance swap, not just a `properties` edit, so it needs its
-// own handler rather than reusing plain `touch()` the way every other
-// field on this panel does. Deliberately does NOT try to force a visual
-// repaint of the socket dot (tried, then removed -- ThingstudioSocket.vue's
-// own header explains why, and what it would have taken to make that
-// visible): nothing on this canvas currently displays a socket's type
-// except the property panel itself, which `touch()` already refreshes.
-// Shared by inject and startup, which have the same dynamic output socket.
-function retypeInjectOutput(): void {
-  if (node.value instanceof InjectNode || node.value instanceof StartupNode) {
-    node.value.retypeOutput();
-  }
+/** A generic-branch field changed (v-model already wrote it): re-resolve port sockets when the field
+ * affects a port's type, then refresh the panel. */
+function onFieldChange(f: PropertyFieldDescriptor): void {
+  if (f.retype) (node.value as unknown as { retypeOutputs?: () => void } | null)?.retypeOutputs?.();
   touch();
 }
 

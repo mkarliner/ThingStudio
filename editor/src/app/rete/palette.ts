@@ -151,12 +151,6 @@ export interface KindStyle {
 }
 
 export const NODE_PALETTE: Partial<Record<NodeKind, KindStyle>> = {
-  inject: { color: "#2e5c2e", bgcolor: "#1f3f1f", icon: "▶", label: "inject", group: "general", priority: 10 },
-  // startup, 2026-09-24 -- olive green, close to inject's green since both
-  // are fixed-payload sources, but distinct. "⏻" (power) for "runs at
-  // boot/reset", vs. inject's "▶" (click to fire). Priority 11: right
-  // after inject.
-  startup: { color: "#5c5c2e", bgcolor: "#3a3a1f", icon: "⏻", label: "startup", group: "general", priority: 11 },
   function: { color: "#6e5b2e", bgcolor: "#3f341f", icon: "ƒ", label: "function", group: "general", priority: 30 },
   // GUI nodes, 2026-10-08 (node-library/gui.ts): their own "GUI" group, one slate-green family.
   gui_screen: { color: "#3f6e5c", bgcolor: "#1f3a30", icon: "▣", label: "screen", group: "GUI", priority: 10 },

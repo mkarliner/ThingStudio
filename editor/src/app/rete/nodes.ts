@@ -263,87 +263,9 @@ export function portSocket(defs: PortDefinition[] | undefined, name: string, pro
 // resets every node back to this same "never heard from" null state on
 // every redeploy attempt (Mike's "clear on every redeploy" call), same
 // point clearNodeHighlights() already resets `highlighted` from.
-export class InjectNode extends ClassicPreset.Node {
-  width = 96;
-  height = NODE_HEIGHT;
-  kind = "inject" as const;
-  nodeType = "thingstudio/inject";
-  highlighted = false;
-  status: NodeStatusState | null = null;
-  statusText: string | null = null;
-
-  // Behavior change, 2026-09-02 (inject click-only live-fire feature,
-  // node-library/inject.ts's own header): `repeat` is gone -- inject fires
-  // only on a real §13 TRIGGER (a canvas click while live-connected,
-  // main.ts), never on a timer.
-  properties: { payloadType: "bool" | "number" | "string"; payloadValue: string } = {
-    payloadType: "bool",
-    payloadValue: "true",
-  };
-
-  constructor() {
-    super("inject");
-    this.addOutput("msg", new ClassicPreset.Output(portSocket(injectNode.ports?.outputs, "msg", this.properties), "msg"));
-  }
-
-  // Swaps the output socket for the one matching the current
-  // `payloadType` property -- poc-rete's InjectNode.retypeOutput()
-  // (pocs/poc-rete/src/nodes.ts), ported onto the real coercion-aware
-  // socket classes instead of that spike's strict same-class ones.
-  // PropertyPanel.vue calls this from the payload-type select's `@change`
-  // (the constructor above only sets the *initial* socket, same gap
-  // poc-rete's own version existed to close).
-  //
-  // Deliberately does NOT drop or flag any now-invalid existing
-  // connection a retype might produce. wire-type-system-scoping.md's
-  // question 3 resolved what that behavior *should* eventually be (drop
-  // the wire, flag the drop via the `highlighted` mechanism above) but
-  // also that it's currently unreachable in practice: gpio_out's `signal`
-  // is the only concretely-typed input on today's 5-node canvas, and
-  // "anything -> bool" is unconditionally allowed (sockets.ts, bucket 1)
-  // -- no payloadType change can produce a wire this app would ever need
-  // to drop yet. Recording that as intent here, not building it blind:
-  // add the drop-and-flag behavior when a non-bool-typed input actually
-  // lands on the canvas (one of the other 11 node-library/registry.ts
-  // types), not before.
-  retypeOutput(): ClassicPreset.Socket {
-    const socket = portSocket(injectNode.ports?.outputs, "msg", this.properties);
-    this.outputs.msg!.socket = socket;
-    return socket;
-  }
-}
-
-// Fires once at flow start: right after a DEPLOY, and after a reset that
-// resumes the saved flow (listener.py's _resume_flow). Same properties and
-// dynamic output socket as InjectNode, but no click-to-fire.
-// node-library/startup.ts has the design story.
-export class StartupNode extends ClassicPreset.Node {
-  width = 104;
-  height = NODE_HEIGHT;
-  kind = "startup" as const;
-  nodeType = "thingstudio/startup";
-  highlighted = false;
-  status: NodeStatusState | null = null;
-  statusText: string | null = null;
-
-  // "reason": the payload is why the flow started (node-library/startup.ts); payloadValue is unused.
-  properties: { payloadType: "bool" | "number" | "string" | "reason"; payloadValue: string } = {
-    payloadType: "bool",
-    payloadValue: "true",
-  };
-
-  constructor() {
-    super("startup");
-    this.addOutput("msg", new ClassicPreset.Output(portSocket(startupNode.ports?.outputs, "msg", this.properties), "msg"));
-  }
-
-  /** Same as InjectNode.retypeOutput(). */
-  retypeOutput(): ClassicPreset.Socket {
-    const socket = portSocket(startupNode.ports?.outputs, "msg", this.properties);
-    this.outputs.msg!.socket = socket;
-    return socket;
-  }
-}
+// inject/startup (node-library/inject.ts, startup.ts) are descriptor-driven (buildDescriptorNodeClass
+// below); their output socket type tracks `payloadType` (the generic class's retypeOutputs, called from
+// the panel's `retype` field).
 
 // Output key convention for FunctionNode's dynamic ports (multi-output-
 // port support, outstanding-items/connection-state-gate-router-nodes.md,
@@ -540,12 +462,26 @@ function buildDescriptorNodeClass(descriptor: NodeDescriptor) {
         this.addOutput(output.name, new ClassicPreset.Output(portSocket(descriptor.ports?.outputs, output.name, this.properties), output.name));
       }
     }
+
+    /** Re-resolves every output socket from the current properties -- for a port whose `type` is a
+     * function of properties (inject/startup's `payloadType`). Called from the property panel when a
+     * field marked `retype` changes. */
+    retypeOutputs(): void {
+      for (const output of descriptor.ports?.outputs ?? []) {
+        const port = this.outputs[output.name];
+        if (port) port.socket = portSocket(descriptor.ports?.outputs, output.name, this.properties);
+      }
+    }
   };
 }
 
 // First family migrated onto the canonical descriptor (its data now lives in node-library/debug.ts).
 // The class name is kept because tests and AnyThingstudioNode reference it.
 export class DebugNode extends buildDescriptorNodeClass(debugNode) {}
+
+export class InjectNode extends buildDescriptorNodeClass(injectNode) {}
+
+export class StartupNode extends buildDescriptorNodeClass(startupNode) {}
 
 export class GpioOutNode extends buildDescriptorNodeClass(gpioOutNode) {}
 

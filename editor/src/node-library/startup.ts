@@ -47,11 +47,39 @@ function startupOutputType(payloadType: unknown): PayloadType {
 export const startupNode: NodeDefinition = {
   type: "thingstudio/startup",
   kind: "source",
+  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor.
+  paletteId: "startup",
+  label: "startup",
+  group: "general",
+  priority: 11,
+  color: "#5c5c2e",
+  bgcolor: "#3a3a1f",
+  icon: "⏻",
+  width: 104,
+  description:
+    "Sends this once each time the flow starts: after Deploy, and after the board resets or powers up. msg.reason " +
+    "says which.",
   // Same dynamic-output-type pattern as inject's own single port (see that
   // file's header comment) -- output type tracks `payloadType` exactly.
   ports: {
     outputs: [{ name: "msg", type: (properties) => startupOutputType(properties.payloadType) }],
   },
+  properties: [
+    {
+      name: "payloadType",
+      label: "payload type",
+      kind: "select",
+      default: "bool",
+      options: [
+        { value: "bool", label: "bool" },
+        { value: "number", label: "number" },
+        { value: "string", label: "string" },
+        { value: "reason", label: "start reason" },
+      ],
+      retype: true,
+    },
+    { name: "payloadValue", label: "value", kind: "text", default: "true", showIf: (p) => p.payloadType !== "reason" },
+  ],
   codegenSource(node: GraphNode, _ctx: CodegenContext): SourceCodegenResult {
     const payloadType = (node.properties.payloadType as string | undefined) ?? "bool";
     const payload =

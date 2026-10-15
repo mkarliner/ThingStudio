@@ -70,8 +70,9 @@ select over numeric values (e.g. bme280's I2C address). A custom `.node.json` ma
 A field with **no `name`** (and no `default`) is **info-only**: the panel renders its widget but it binds to
 no property. Used for a `configRef` to a flow-singleton config (e.g. the WiFi picker shown on a network
 node). Built-in fields may also carry `optional`, `min`/`max`/`step` (`step` may be the literal `"any"` for
-arbitrary fractional values), `help`, `placeholder`, and a `showIf(properties)` visibility predicate (a
-function, so built-in only).
+arbitrary fractional values), `help`, `placeholder`, a `showIf(properties)` visibility predicate (a function,
+so built-in only), and `retype` (changing the field re-resolves the node's port sockets — for a port whose
+`type` is a function of properties, e.g. inject/startup's output tracking `payloadType`).
 
 **Worked example** — the built-in `debug` node's descriptor (its codegen hook omitted):
 
@@ -117,8 +118,9 @@ files with no bridge — is being closed deliberately, family by family, with no
   of their own copies. Migrated families: `debug`, `timer`, `delay`, `gpio_out`, `pwm_out`, the I2C
   family (`touch_i2c`, `i2c`, `bme280`), the network family (`udp_send`, `udp_receive`, `http_*`,
   `mqtt_*`, `ntp`), the GPIO cluster (`interrupt`, `eswitch`, `ebutton`, `adc`, `encoder`,
-  `neopixel`), `filter`/`journal`/`wifi_status`/`wifi_gate`, and `display_spi`/`display_i2c`. A
-  descriptor missing the palette metadata is "not yet migrated" and still falls back to `palette.ts`.
+  `neopixel`), `filter`/`journal`/`wifi_status`/`wifi_gate`, `display_spi`/`display_i2c`, and
+  `inject`/`startup`. A descriptor missing the palette metadata is "not yet migrated" and still falls
+  back to `palette.ts`.
 - **Still coming.** Relax the custom format so more built-ins can be cloned: multi-output (the
   compiler already supports it), `configRef` properties, and event sources. Dynamic ports (`function`'s
   `outputCount`) and arbitrary codegen stay built-in-only. Compile-time hardware resource claims stay

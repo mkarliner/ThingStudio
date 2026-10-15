@@ -65,6 +65,16 @@ import { pyPayloadLiteral } from "./py-literals.js";
 export const injectNode: NodeDefinition = {
   type: "thingstudio/inject",
   kind: "source",
+  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor.
+  paletteId: "inject",
+  label: "inject",
+  group: "general",
+  priority: 10,
+  color: "#2e5c2e",
+  bgcolor: "#1f3f1f",
+  icon: "▶",
+  width: 96,
+  description: "Click this node on the canvas while connected to fire it once.",
   // The one dynamic port in the current node set (node-definition.ts's
   // PortType header comment) -- output type tracks the `payloadType`
   // property exactly the way codegenEventSource's own `payloadType` read
@@ -74,6 +84,21 @@ export const injectNode: NodeDefinition = {
   ports: {
     outputs: [{ name: "msg", type: (properties) => (properties.payloadType as PayloadType | undefined) ?? "bool" }],
   },
+  properties: [
+    {
+      name: "payloadType",
+      label: "payload type",
+      kind: "select",
+      default: "bool",
+      options: [
+        { value: "bool", label: "bool" },
+        { value: "number", label: "number" },
+        { value: "string", label: "string" },
+      ],
+      retype: true,
+    },
+    { name: "payloadValue", label: "value", kind: "text", default: "true" },
+  ],
   codegenEventSource(node: GraphNode, _ctx: CodegenContext): EventSourceCodegenResult {
     const payloadType = (node.properties.payloadType as string | undefined) ?? "bool";
     const payloadLiteral = pyPayloadLiteral(payloadType, node.properties.payloadValue, "inject payload");

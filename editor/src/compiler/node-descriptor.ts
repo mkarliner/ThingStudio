@@ -99,6 +99,9 @@ export interface PropertyFieldDescriptor {
   /** Show this field only when the predicate holds (e.g. a "deadband" threshold only in deadband mode). Built-in
    * only -- a function, so it can't serialize to a custom `.node.json` (custom nodes get no conditionals). */
   showIf?: (properties: Record<string, unknown>) => boolean;
+  /** Changing this field re-resolves the node's port sockets -- for a port whose `type` is a function of
+   * properties (e.g. inject/startup's output tracks `payloadType`). Built-in only. */
+  retype?: boolean;
 }
 
 /** The canonical node descriptor: plain data only, plus (on a built-in's NodeDefinition) the codegen
