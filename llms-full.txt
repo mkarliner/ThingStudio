@@ -3313,8 +3313,18 @@ reserved for built-in nodes.
 
 **`label`** (required) — name shown on the canvas and in the palette.
 
+**`title`** (optional) — the canvas title, when it should differ from
+`label`.
+
+**`hidden`** (optional) — hide the node from the palette (a flow file can
+still use it).
+
 **`description`** (optional) — a short line shown at the top of the
 property panel, like a built-in node's own description.
+
+**`presetType`** / **`screenOutline`** (optional) — show a save/load-preset
+control or the screen-layout outline in the property panel, as the relevant
+built-in nodes do.
 
 **`color`** / **`bgcolor`** (optional) — CSS colors for the node's
 outline and fill. Default is gray.
@@ -3347,7 +3357,7 @@ the node is selected:
 
 - **`name`** — identifier. Your Python reads the value by this key.
 - **`label`** — shown in the property panel.
-- **`kind`** — `text`, `number`, `boolean`, `select`, or `configRef`.
+- **`kind`** — `text`, `number`, `boolean`, `select`, `configRef`, or `pin`.
 - **`default`** — used when a node instance doesn't set the property.
   Type must match `kind`.
 - **`options`** — required for `select`: array of `{ value, label }`.
@@ -3355,6 +3365,14 @@ the node is selected:
 - **`configType`** — required for `configRef`: the config type the picker
   offers (e.g. `thingstudio/config/i2c-bus`). At compile time the picked
   config's own properties become a dict the node reads — see below.
+- **`help`** / **`placeholder`** / **`min`** / **`max`** / **`step`** /
+  **`optional`** — optional, the same panel hints a built-in field has.
+  `pin` fields take a `number` default; `optional` marks one where
+  `-1`/blank means "not wired".
+- **`visibleWhen`** — optional: show the field only when another property
+  satisfies a condition, e.g.
+  `{ "field": "mode", "equals": "deadband" }`. Operators: `equals`,
+  `notEquals`, `in` (an array), `gt`, `gte`, `lt`, `lte`.
 
 A `source` node must declare a numeric property named `intervalMs` — it
 sets the poll interval.

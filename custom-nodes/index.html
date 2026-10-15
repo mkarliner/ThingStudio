@@ -3199,8 +3199,15 @@ reserved for built-in nodes.</p>
   ports.</li>
 </ul>
 <p><strong><code>label</code></strong> (required) — name shown on the canvas and in the palette.</p>
+<p><strong><code>title</code></strong> (optional) — the canvas title, when it should differ from
+<code>label</code>.</p>
+<p><strong><code>hidden</code></strong> (optional) — hide the node from the palette (a flow file can
+still use it).</p>
 <p><strong><code>description</code></strong> (optional) — a short line shown at the top of the
 property panel, like a built-in node's own description.</p>
+<p><strong><code>presetType</code></strong> / <strong><code>screenOutline</code></strong> (optional) — show a save/load-preset
+control or the screen-layout outline in the property panel, as the relevant
+built-in nodes do.</p>
 <p><strong><code>color</code></strong> / <strong><code>bgcolor</code></strong> (optional) — CSS colors for the node's
 outline and fill. Default is gray.</p>
 <p><strong><code>icon</code></strong> (optional) — one or two characters shown in the icon chip.</p>
@@ -3224,7 +3231,7 @@ the node is selected:</p>
 <ul>
 <li><strong><code>name</code></strong> — identifier. Your Python reads the value by this key.</li>
 <li><strong><code>label</code></strong> — shown in the property panel.</li>
-<li><strong><code>kind</code></strong> — <code>text</code>, <code>number</code>, <code>boolean</code>, <code>select</code>, or <code>configRef</code>.</li>
+<li><strong><code>kind</code></strong> — <code>text</code>, <code>number</code>, <code>boolean</code>, <code>select</code>, <code>configRef</code>, or <code>pin</code>.</li>
 <li><strong><code>default</code></strong> — used when a node instance doesn't set the property.
   Type must match <code>kind</code>.</li>
 <li><strong><code>options</code></strong> — required for <code>select</code>: array of <code>{ value, label }</code>.
@@ -3232,6 +3239,14 @@ the node is selected:</p>
 <li><strong><code>configType</code></strong> — required for <code>configRef</code>: the config type the picker
   offers (e.g. <code>thingstudio/config/i2c-bus</code>). At compile time the picked
   config's own properties become a dict the node reads — see below.</li>
+<li><strong><code>help</code></strong> / <strong><code>placeholder</code></strong> / <strong><code>min</code></strong> / <strong><code>max</code></strong> / <strong><code>step</code></strong> /
+  <strong><code>optional</code></strong> — optional, the same panel hints a built-in field has.
+  <code>pin</code> fields take a <code>number</code> default; <code>optional</code> marks one where
+  <code>-1</code>/blank means "not wired".</li>
+<li><strong><code>visibleWhen</code></strong> — optional: show the field only when another property
+  satisfies a condition, e.g.
+  <code>{ "field": "mode", "equals": "deadband" }</code>. Operators: <code>equals</code>,
+  <code>notEquals</code>, <code>in</code> (an array), <code>gt</code>, <code>gte</code>, <code>lt</code>, <code>lte</code>.</li>
 </ul>
 <p>A <code>source</code> node must declare a numeric property named <code>intervalMs</code> — it
 sets the poll interval.</p>
