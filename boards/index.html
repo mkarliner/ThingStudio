@@ -3182,6 +3182,11 @@ see <a href="#adding-a-processor">Adding a processor</a>.</p>
 <td>STM32F405</td>
 <td>Pins are named <code>X1</code>–<code>X22</code> and <code>Y1</code>–<code>Y12</code>. The four onboard LEDs are on <code>A13</code>, <code>A14</code>, <code>A15</code> and <code>B4</code> (labelled <code>LED_RED</code>–<code>LED_BLUE</code>); the user switch <code>SW</code> is on <code>X17</code>.</td>
 </tr>
+<tr>
+<td>Seeed XIAO nRF52840 (Sense)</td>
+<td>nRF52840</td>
+<td>Pins <code>D0</code>–<code>D10</code> are labelled. RGB LED on 26, 30 and 6, on when the pin is 0. GPIO 20–25 go to the flash chip. Battery, IMU and microphone pins are labelled; IMU and microphone are on the Sense only. No WiFi.</td>
+</tr>
 </tbody>
 </table>
 <h2 id="built-in-processors">Built-in processors</h2>
@@ -3229,10 +3234,16 @@ see <a href="#adding-a-processor">Adding a processor</a>.</p>
 <td>X1–X22, Y1–Y12 (named pins, not numbers)</td>
 <td>none</td>
 </tr>
+<tr>
+<td>nRF52840</td>
+<td>0–47 (P1.x is 32 + x)</td>
+<td>none</td>
+</tr>
 </tbody>
 </table>
 <p>The ESP32 runs SPI at up to 27 MHz on most pins. Faster speeds need the bus's own fast pins (SCK 14 and MOSI 13 on bus 1, SCK 18 and MOSI 23 on bus 2).</p>
 <p>On the RP2040 and RP2350, each SPI and I2C bus can only use certain pins. The compile error lists the pins that work.</p>
+<p>On the nRF52840, any pin works for SPI and I2C. SPI uses buses 2 and 3, up to 8 MHz; I2C uses buses 0 and 1.</p>
 <p>The definition files list every pin to avoid, with the reason.</p>
 <h2 id="your-definition-files">Your definition files</h2>
 <p>Definition files live in <code>~/.thingstudio/boards/</code> and <code>~/.thingstudio/processors/</code>. When Thingstudio starts, it copies in any built-in file that's missing, so you can read and edit them there.</p>

@@ -2983,6 +2983,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#why-cant-i-use-spi-bus-0-or-1-on-an-nrf52840" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why can't I use SPI bus 0 or 1 on an nRF52840?
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3179,6 +3190,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#why-cant-i-use-spi-bus-0-or-1-on-an-nrf52840" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why can't I use SPI bus 0 or 1 on an nRF52840?
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3281,6 +3303,9 @@ Use the touch node only when you aren't using the GUI. Deploy stops and names bo
 <p>Your processor names its pins instead of numbering them. The STM32 on a pyboard uses <code>X1</code>, <code>A13</code> and so on. Pin
 fields then list the chip's own pins rather than take a number. See
 <a href="../boards/#pins-that-arent-numbers">Pins that aren't numbers</a>.</p>
+<h2 id="why-cant-i-use-spi-bus-0-or-1-on-an-nrf52840">Why can't I use SPI bus 0 or 1 on an nRF52840?</h2>
+<p>On the nRF52840, SPI 0 and 1 share hardware with I2C 0 and 1, so a flow using both would fail on the board.
+Thingstudio offers SPI on buses 2 and 3 only. See <a href="../boards/#built-in-processors">Boards and processors</a>.</p>
 
 
 
