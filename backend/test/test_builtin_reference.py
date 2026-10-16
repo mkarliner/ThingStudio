@@ -98,7 +98,16 @@ def test_seed_logs_and_carries_on_when_the_source_is_missing(tmp_path, caplog) -
 
 def test_first_run_copies_the_example_packages(tmp_path) -> None:
     copied = copy_example_custom_nodes(tmp_path)
-    assert copied == ["dht22.node.json", "dht22.node.py", "doubler.node.json", "doubler.node.py"]
+    assert copied == [
+        "dht22.node.json",
+        "dht22.node.py",
+        "doubler.node.json",
+        "doubler.node.py",
+        "lsm6ds3.node.json",
+        "lsm6ds3.node.py",
+        "lsm6ds3_int.node.json",
+        "lsm6ds3_int.node.py",
+    ]
     for name in copied:
         assert (tmp_path / "custom-nodes" / name).read_bytes() == (EXAMPLE_NODES_DIR / name).read_bytes()
     # Every descriptor has its implementation beside it, and parses.

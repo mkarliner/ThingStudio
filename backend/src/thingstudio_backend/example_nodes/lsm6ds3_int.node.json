@@ -1,0 +1,35 @@
+{
+  "type": "st/lsm6ds3_int",
+  "kind": "source",
+  "label": "lsm6ds3 (interrupt)",
+  "title": "imu on interrupt",
+  "icon": "⚡",
+  "group": "hardware",
+  "eventSource": true,
+  "description": "The LSM6DS3TR-C IMU read only when its INT1 pin fires: data ready, wake-up, tap or free-fall. The chip watches the motion, so the board can sleep between events. Defaults suit the Seeed XIAO nRF52840 Sense (I2C 0, SCL 27, SDA 7, power 40, INT1 11).",
+  "ports": {
+    "outputs": [{ "name": "msg", "type": "any" }]
+  },
+  "properties": [
+    { "name": "bus", "label": "I2C bus", "kind": "number", "default": 0 },
+    { "name": "scl", "label": "SCL pin", "kind": "number", "default": 27 },
+    { "name": "sda", "label": "SDA pin", "kind": "number", "default": 7 },
+    { "name": "powerPin", "label": "power pin (-1: none)", "kind": "number", "default": 40 },
+    { "name": "intPin", "label": "INT1 pin", "kind": "pin", "default": 11, "pinUse": "input" },
+    { "name": "address", "label": "address", "kind": "select", "default": "0x6A",
+      "options": [{ "value": "0x6A", "label": "0x6A (SDO low)" }, { "value": "0x6B", "label": "0x6B (SDO high)" }] },
+    { "name": "mode", "label": "event", "kind": "select", "default": "data_ready",
+      "options": [
+        { "value": "data_ready", "label": "data ready (a new sample)" },
+        { "value": "wake", "label": "wake-up (movement)" },
+        { "value": "single_tap", "label": "single tap" },
+        { "value": "double_tap", "label": "double tap" },
+        { "value": "free_fall", "label": "free fall" }
+      ] },
+    { "name": "accelRange", "label": "accel range", "kind": "select", "default": "4",
+      "options": [{ "value": "2", "label": "±2 g" }, { "value": "4", "label": "±4 g" },
+                  { "value": "8", "label": "±8 g" }, { "value": "16", "label": "±16 g" }] },
+    { "name": "thresholdMg", "label": "motion threshold (mg)", "kind": "number", "default": 100,
+      "visibleWhen": { "field": "mode", "in": ["wake", "single_tap", "double_tap"] } }
+  ]
+}

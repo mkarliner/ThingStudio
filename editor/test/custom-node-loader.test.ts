@@ -153,8 +153,8 @@ describe("the example packages the backend ships", () => {
     .map((f) => f.slice(0, -".node.json".length))
     .sort();
 
-  it("are the two expected ones", () => {
-    expect(names).toEqual(["dht22", "doubler"]);
+  it("are the expected ones", () => {
+    expect(names).toEqual(["dht22", "doubler", "lsm6ds3", "lsm6ds3_int"]);
   });
 
   it("all load, and compile into a flow whose Python parses", async () => {

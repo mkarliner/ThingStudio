@@ -382,6 +382,12 @@ not here.
 
 ## Hardware / rig
 
+- **[P3]** **LSM6DS3TR-C interrupt-example node — needs a real-hardware pass, 2026-10-15.** The example
+  package `st/lsm6ds3_int` (`backend/.../example_nodes/`) proves a custom node can be a hardware-interrupt
+  source (`eventSource` + `ThreadSafeEvent` + `Pin.irq`). Its data-ready path is the well-trodden one; its
+  wake / single-tap / double-tap / free-fall register settings are the LSM6DS3TR-C datasheet's and want
+  confirming on a XIAO nRF52840 Sense (INT1 = pin 11). If a mode misfires, iterate the register map here and
+  log the finding in `learnings/`.
 - **[P5]** **CBOR-over-JSON (§13) — the original revisit trigger has technically passed.** The real wire protocol has shipped, so the "revisit once real payload sizes exist" trigger has passed, but no explicit revisit of the size trade-off has happened since. Low priority, worth closing out formally or dropping. **2026-09-06, Mike's call:** review last, once everything else MVP-scoped is complete. ([detail](outstanding-items/cbor-over-json-revisit.md))
 
 ## Backend / auth

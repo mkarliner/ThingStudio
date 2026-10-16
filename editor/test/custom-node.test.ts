@@ -627,6 +627,50 @@ describe("buildCustomNodeDefinition -- event source", () => {
     const output = runPython(result.statements ?? [], [result.waitStatement, result.buildMsg, "print(msg['payload'])"].join("\n"));
     expect(output.trim()).toBe("1");
   });
+
+  it("supports a hardware-interrupt source (ThreadSafeEvent + Pin.irq)", () => {
+    const source = [
+      "import machine",
+      "from threadsafe_event import ThreadSafeEvent",
+      "",
+      "_evt = ThreadSafeEvent()",
+      "_pin = runtime.shared('pin', properties['pin'], ('in', 'none'), lambda: machine.Pin(properties['pin'], machine.Pin.IN))",
+      "",
+      "def _irq(_p):",
+      "    _evt.set()",
+      "",
+      "_pin.irq(trigger=machine.Pin.IRQ_RISING, handler=_irq)",
+      "",
+      "async def wait(properties):",
+      "    await _evt.wait()",
+      "    _evt.clear()",
+      "",
+      "async def emit(properties):",
+      "    return {'payload': True, 'topic': ''}",
+    ].join("\n");
+    const irqDescriptor = validateCustomNodeDescriptor({
+      type: "custom/irqbutton",
+      kind: "source",
+      label: "irqbutton",
+      eventSource: true,
+      ports: { outputs: [{ name: "msg", type: "bool" }] },
+      properties: [{ name: "pin", label: "pin", kind: "pin", default: 11, pinUse: "input" }],
+    });
+    const def = buildCustomNodeDefinition(irqDescriptor, source);
+    const claims: string[] = [];
+    const ctx = freshCtx();
+    ctx.claimResource = (resource: string, use: string): void => {
+      claims.push(`${resource}|${use}`);
+    };
+    const result = def.codegenEventSource!(node(1, { pin: 11 }), ctx);
+    const code = (result.statements ?? []).map((s) => s.code).join("\n");
+    expect(code).toContain("from threadsafe_event import ThreadSafeEvent");
+    expect(code).toContain("_pin.irq(trigger=machine.Pin.IRQ_RISING, handler=_irq)");
+    expect(code).toContain('"pin": 11');
+    expect(result.waitStatement).toMatch(/await .*_wait\(/);
+    // The pin is board-checked and claimed (phase 2a), so an IRQ package shares/conflicts like a built-in.
+    expect(claims).toEqual(["GPIO 11|input, no pull"]);
+  });
 });
 
 describe("mergeCustomNodeRegistry", () => {

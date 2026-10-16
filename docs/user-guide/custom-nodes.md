@@ -309,25 +309,38 @@ until your event fires; then `emit` builds the message. No `intervalMs` is neede
   "kind": "source",
   "label": "button",
   "eventSource": true,
-  "ports": { "outputs": [{ "name": "msg", "type": "bool" }] }
+  "ports": { "outputs": [{ "name": "msg", "type": "bool" }] },
+  "properties": [{ "name": "pin", "label": "pin", "kind": "pin", "default": 11, "pinUse": "input" }]
 }
 ```
 
+A hardware interrupt (`machine.Pin.irq`) is the usual reason to use this. Bridge it into `asyncio`
+with the vendored `ThreadSafeEvent` — its `set()` is the one call safe in a hard-IRQ handler — and
+register the handler:
+
 ```python
 import machine
+from threadsafe_event import ThreadSafeEvent   # pushed with the flow because you import it
 
-_evt = runtime.asyncio.Event()
+_evt = ThreadSafeEvent()
 
 def _irq(_pin):
-    _evt.set()
+    _evt.set()          # a hard-IRQ handler may only do this: no allocation, no print, nothing else
+
+_pin = runtime.shared('pin', properties['pin'], ('in', 'up'),
+                      lambda: machine.Pin(properties['pin'], machine.Pin.IN, machine.Pin.PULL_UP))
+_pin.irq(trigger=machine.Pin.IRQ_RISING, handler=_irq)
 
 async def wait(properties):
-    _evt.clear()
     await _evt.wait()
+    _evt.clear()
 
 async def emit(properties):
     return {'payload': True, 'topic': ''}
 ```
+
+`runtime.asyncio.Event()` is fine when the event is set from other asyncio code; for a real IRQ use
+`ThreadSafeEvent`, which survives the hard-IRQ context.
 
 Keep any state the two share at the top of the file (both functions come from one per-instance
 closure, so `nonlocal` works across them).
@@ -350,9 +363,10 @@ Thingstudio doesn't check it. A typo surfaces as a runtime error (e.g.
 
 A polled `source` node's `emit` runs on a fixed `intervalMs` schedule; an `eventSource` source waits on `wait` instead.
 
-Two instances of the same custom node get independent setup. Thingstudio can't see inside a custom node's Python, so
-it can't check its pins when compiling. Use `runtime.shared()` for pins and buses, so a clash is caught when the flow
-starts.
+Two instances of the same custom node get independent setup. For a `pin` field that declares `pinUse`,
+Thingstudio checks it against the board and claims it at compile time; a pin you build in Python yourself (or
+read from a plain `number` field) it can't see, so use `runtime.shared()` for those, and a clash is caught when
+the flow starts.
 
 Custom node Python runs with the same trust as any other node, including Thingstudio's `function` node. Loading a
 package only adds it to the palette; its Python runs on a board only when you place the node and deploy. Only files

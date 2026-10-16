@@ -1,0 +1,25 @@
+{
+  "type": "st/lsm6ds3",
+  "kind": "source",
+  "label": "lsm6ds3",
+  "icon": "↻",
+  "group": "hardware",
+  "ports": {
+    "outputs": [{ "name": "msg", "type": "any" }]
+  },
+  "properties": [
+    { "name": "bus", "label": "I2C bus", "kind": "number", "default": 0 },
+    { "name": "scl", "label": "SCL pin", "kind": "number", "default": 27 },
+    { "name": "sda", "label": "SDA pin", "kind": "number", "default": 7 },
+    { "name": "powerPin", "label": "power pin (-1: none)", "kind": "number", "default": 40 },
+    { "name": "address", "label": "address", "kind": "select", "default": "0x6A",
+      "options": [{ "value": "0x6A", "label": "0x6A (SDO low)" }, { "value": "0x6B", "label": "0x6B (SDO high)" }] },
+    { "name": "accelRange", "label": "accel range", "kind": "select", "default": "4",
+      "options": [{ "value": "2", "label": "±2 g" }, { "value": "4", "label": "±4 g" },
+                  { "value": "8", "label": "±8 g" }, { "value": "16", "label": "±16 g" }] },
+    { "name": "gyroRange", "label": "gyro range", "kind": "select", "default": "500",
+      "options": [{ "value": "250", "label": "±250 °/s" }, { "value": "500", "label": "±500 °/s" },
+                  { "value": "1000", "label": "±1000 °/s" }, { "value": "2000", "label": "±2000 °/s" }] },
+    { "name": "intervalMs", "label": "read interval (ms)", "kind": "number", "default": 100 }
+  ]
+}
