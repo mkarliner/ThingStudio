@@ -354,8 +354,9 @@ not here.
   **Next-session handoff:** `node-format-parity-briefing.md` (the mechanism in recon form, the roadmap,
   constraints, git state).   **Phase 2 scoped 2026-10-15:** `node-context-parity-scoping.md` (what "context
   parity" means, the facility inventory, the proposed field-kind mechanism, the open questions for Mike).
-  **Phase 4 (built-ins as packages) scoped 2026-10-15:** `builtins-as-packages-scoping.md` — the two
-  options, the trade-off, and the recommendation; needs Mike's model decision.
+  **Phase 4 (built-ins as packages) scoped and decided 2026-10-15:** `builtins-as-packages-scoping.md` — Mike chose
+  **option A** (generate core packages from the existing TS codegen, one load path, `function`/`gui_*` residue);
+  the first work item (`i2c` end-to-end proof + core-folder load path) is §9 of that note.
 
 - **[P3]** **Deploy the runtime itself from the browser editor, not just compiled flows.** Confirmed untracked
   anywhere until 2026-09-12. Today, `test-flows/deploy_runtime.py` is a standalone `mpremote`-based script pushing

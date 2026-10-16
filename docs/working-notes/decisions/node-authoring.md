@@ -755,3 +755,17 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   time only, no device-runtime change. The other half of the vendor story -- the palette offering a board-specific
   node only for that board -- stays the separate board-specific-node-collections item
   (`outstanding-items/board-specific-node-collections.md`). `node-context-parity-scoping.md` §4(e).
+
+- **2026-10-15, same session — phase 4 model decided (Mike): built-ins keep the TypeScript codegen, packages
+  are generated from it (option A); one load path; a documented residue.** The end state is one load path and
+  one package format; the extensibility goal does not require rewriting built-ins as hand-written Python. A
+  build step will emit each built-in's package (its `NodeDescriptor` + a `.node.py` derived from its existing
+  codegen), and every node -- built-in or installed -- goes through the one generic compile path, so the TS
+  codegen becomes a build-time generator whose output is the only thing that compiles (built-ins get no special
+  compile path, so the generator cannot silently keep a codegen hook and leave a latent second producer).
+  **Residue stays built-in-only:** `function` (verbatim user code) and `gui_*` (the `screens` model,
+  out of scope by architecture, `node-context-parity-scoping.md` §4(g)) -- documented, revisitable, not goals.
+  The generated `.node.py` is **not committed** (one source in-repo: the TS); the editor's compiled-source
+  preview already lets a user view/copy a built-in's generated Python. **Marketplace deferred**: no
+  install-from-elsewhere mechanism now (it is exactly Decision 5's sandboxing trigger); a separate deliberate
+  call. Rationale, trade-off and the first work item: `builtins-as-packages-scoping.md`.

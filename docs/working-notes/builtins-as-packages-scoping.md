@@ -1,8 +1,16 @@
 # Built-ins as packages (roadmap phase 4, location parity) — scoping
 
-Status: proposal, 2026-10-15. Needs Mike's decision (the one-way door). Part of the node-format-parity work;
+Status: **decided 2026-10-15 (Mike): option A** — see "Decision" below. Part of the node-format-parity work;
 see `decisions/node-authoring.md` (2026-10-15) for the goal and security policy, and `node-format-parity-briefing.md`
 for the roadmap. Read those first.
+
+## 0. Decision (2026-10-15)
+
+Mike chose **A: built-ins keep the TypeScript codegen; a build step generates each built-in's package from it**.
+One load path (a core packages folder ahead of the user's); the generated `.node.py` is not committed; the
+residue (`function`, `gui_*`) stays built-in-only; the marketplace is deferred. Full rationale in
+`decisions/node-authoring.md` (2026-10-15, "phase 4 model decided"). The rest of this note is the scoping that
+led to it; §8's questions are answered below, and the first work item is §9.
 
 ## 1. The decision
 
@@ -87,12 +95,31 @@ flow-dependent ones as the format grows. `function` and `gui_*` are the named ex
   `runtime.*` call — a version-bumped interface).
 - **Not a rewrite under A:** the ~40 `node-library/*.ts` files keep working as the authoring layer.
 
-## 8. Open questions for Mike
+## 8. Questions — answered 2026-10-15
 
-1. **A or B** (§1) — generate from TS, or re-author built-ins in Python? (Recommendation: A, with the residue.)
-2. **Does the residue stay built-in-only**, or is closing it (`function`, `gui_*`) worth the format cost later?
-3. **Generator timing** — is a build-time generator acceptable long-term, or should the core `.node.py` be
-   committed (so a package is readable in the repo without a build)?
-4. **Marketplace timing** — the goal motivates the model, but a marketplace is exactly Decision 5's sandboxing
-   trigger (`custom-node-authoring-scoping.md`); the data-only posture keeps the editor clean, but this is the
-   decision to make deliberately before any install-from-elsewhere mechanism exists.
+1. **A or B** — **A** (generate from the TS codegen), with the residue.
+2. **Residue** — stays built-in-only (`function`, `gui_*`), documented; not a goal.
+3. **Generator timing** — build-time, into the shipped artifact; the generated `.node.py` is **not committed**
+   (one source in-repo: the TS). The compiled-source preview already serves the "view/copy a built-in" goal.
+4. **Marketplace timing** — deferred; a separate deliberate call (Decision 5's sandboxing trigger).
+
+## 9. First work item
+
+Prove the model end to end on one node, before generalizing: **`st/lsm6ds3` already shows the custom path;
+`i2c` is the built-in to convert.** Two coupled pieces, one change:
+
+1. **One load path.** A core packages folder placed ahead of `custom_node_dirs` (the backend already searches an
+   ordered list; `persisted_store`), and one registry merge (`mergeCustomNodeRegistry` already merges a package
+   into the built-in registry for one compile). The built-in being converted is removed from `buildRegistry()`
+   and loaded as a core package instead, so there is exactly one producer for it.
+2. **The generator, for one node.** A build step that runs `i2c`'s codegen and emits its package
+   (`<name>.node.json` from the descriptor + `<name>.node.py`), which then compiles through the *same* generic
+   path a user package uses. Gate it on the no-loss test: the generated Python must match what the built-in
+   produces today for the same flow.
+
+Only then widen to the leaf hardware/network nodes and, as the format grows, the flow-dependent ones. `function`
+and `gui_*` stay built-in-only.
+
+**Note:** the generator can only flatten a built-in whose codegen is flow-independent; anything reading the graph
+(`gui_*`, `wifi_status`) needs its decisions moved into descriptor data first (phase 2/3) or stays residue. `i2c`
+is flow-independent (config + pins), so it is the honest first case.
