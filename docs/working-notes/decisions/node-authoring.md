@@ -745,3 +745,13 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   or an AI to audit easily (no obfuscation). Consequence: opening codegen itself to external authors (an extension
   shipping editor-executed code) is the architected version of "install a stranger's code into your editor" and is
   not taken; if a real case ever needs it, it is a sandboxing decision, not just an API one.
+
+- **2026-10-15, same session — a `target` field kind: packages can identify the exact board.** Mike: packages may
+  be very board-specific (a vendor writing a node for their exact board, e.g. the XIAO nRF52840's IMU), and
+  exposing the target opens no vulnerability. A custom `target` field's Python key receives the resolved
+  board/processor identity at compile time (`boardId`, `boardName`, `processorId`, `processorName`, `label`,
+  `capabilities`) or `None` when no board is known, so a board-specific package must guard for "unknown". Added to
+  the canonical `PropertyFieldDescriptor` and the custom `.node.json` subset (schema + SPEC + user guide). Compile
+  time only, no device-runtime change. The other half of the vendor story -- the palette offering a board-specific
+  node only for that board -- stays the separate board-specific-node-collections item
+  (`outstanding-items/board-specific-node-collections.md`). `node-context-parity-scoping.md` §4(e).

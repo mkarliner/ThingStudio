@@ -57,6 +57,7 @@ export type PropertyFieldKind =
   | "credential"
   | "configRef"
   | "pin"
+  | "target"
   | "palette";
 
 export interface PropertyFieldOption {

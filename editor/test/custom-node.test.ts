@@ -230,14 +230,17 @@ describe("validateCustomNodeDescriptor", () => {
       properties: [
         { name: "bus", label: "bus", kind: "configRef", configType: "thingstudio/config/i2c-bus", default: "", singleton: true },
         { name: "pin", label: "pin", kind: "pin", default: 4, pinUse: "output", pinPull: "up" },
+        { name: "board", label: "board", kind: "target", default: "" },
       ],
     });
     expect(ok.properties?.[0]).toMatchObject({ singleton: true });
     expect(ok.properties?.[1]).toMatchObject({ pinUse: "output", pinPull: "up" });
+    expect(ok.properties?.[2]).toMatchObject({ kind: "target" });
     expect(() => validateCustomNodeDescriptor({ ...base, properties: [{ name: "n", label: "n", kind: "number", default: 0, singleton: true }] })).toThrow(/singleton is only valid/);
     expect(() => validateCustomNodeDescriptor({ ...base, properties: [{ name: "t", label: "t", kind: "text", default: "", pinUse: "output" }] })).toThrow(/pinUse is only valid/);
     expect(() => validateCustomNodeDescriptor({ ...base, properties: [{ name: "p", label: "p", kind: "pin", default: 4, pinUse: "sideways" }] })).toThrow(/pinUse must be/);
     expect(() => validateCustomNodeDescriptor({ ...base, properties: [{ name: "p", label: "p", kind: "pin", default: 4, pinPull: "middle" }] })).toThrow(/pinPull must be/);
+    expect(() => validateCustomNodeDescriptor({ ...base, properties: [{ name: "b", label: "b", kind: "target", default: 5 }] })).toThrow(/must be a string/);
   });
 
   it("accepts a data-driven visibleWhen predicate and rejects malformed ones", () => {
@@ -537,6 +540,38 @@ describe("buildCustomNodeDefinition -- sink", () => {
     ctx.target = target;
     expect(() => def.codegenSink!(node(1, { pin: 9 }), ctx)).toThrow(/doesn't exist on TestBoard/);
     expect(() => def.codegenSink!(node(2, { pin: 3 }), ctx)).toThrow(/input-only/);
+  });
+
+  it("inlines the board identity for a target field, and None with no board", () => {
+    const descriptor = validateCustomNodeDescriptor({
+      type: "custom/imu",
+      kind: "sink",
+      label: "imu",
+      ports: { inputs: [{ name: "msg", type: "any" }] },
+      properties: [{ name: "board", label: "board", kind: "target", default: "" }],
+    });
+    const def = buildCustomNodeDefinition(descriptor, "async def run(msg, properties):\n    pass\n");
+    const noneCode = (def.codegenSink!(node(1, {}), freshCtx()).statements ?? []).map((s) => s.code).join("\n");
+    expect(noneCode).toContain('"board": None');
+
+    const ctx = freshCtx();
+    ctx.target = {
+      label: "Seeed XIAO nRF52840",
+      processor: { id: "nrf52840", name: "nRF52840" },
+      board: { id: "xiao-nrf52840", name: "Seeed XIAO nRF52840" },
+      capabilities: new Set(["ble"]),
+      gpio: new Set(),
+      inputOnly: new Set(),
+      noPull: new Set(),
+      reserved: new Map(),
+      avoid: new Map(),
+      pinLabels: new Map(),
+    } as unknown as Target;
+    const code = (def.codegenSink!(node(2, {}), ctx).statements ?? []).map((s) => s.code).join("\n");
+    expect(code).toContain('"boardId": "xiao-nrf52840"');
+    expect(code).toContain('"boardName": "Seeed XIAO nRF52840"');
+    expect(code).toContain('"processorId": "nrf52840"');
+    expect(code).toContain('"capabilities": ["ble"]');
   });
 });
 

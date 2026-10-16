@@ -107,7 +107,7 @@ the node is selected:
 
 - **`name`** — identifier. Your Python reads the value by this key.
 - **`label`** — shown in the property panel.
-- **`kind`** — `text`, `textarea`, `number`, `boolean`, `select`, `configRef`, or `pin`.
+- **`kind`** — `text`, `textarea`, `number`, `boolean`, `select`, `configRef`, `pin`, or `target`.
 - **`default`** — used when a node instance doesn't set the property.
   Type must match `kind`.
 - **`options`** — required for `select`: array of `{ value, label }`.
@@ -123,6 +123,11 @@ the node is selected:
   `output`, and the pull (`none`/`up`/`down`). The compiler then checks the
   pin against the board and claims it, so two nodes can't quietly set the
   same pin up two ways.
+- **`target`** — a kind for a board-specific node. Its value in Python is a
+  dict of the board/processor this flow is compiled for — `boardId`,
+  `boardName`, `processorId`, `processorName`, `label`, `capabilities` —
+  or `None` if no board is chosen, so guard for that. Use it to identify
+  your exact board (e.g. a XIAO nRF52840's own IMU).
 - **`help`** / **`placeholder`** / **`min`** / **`max`** / **`step`** /
   **`optional`** / **`rows`** — optional, the same panel hints a built-in
   field has. `rows` sets a `textarea`'s height (default 4). `pin` fields

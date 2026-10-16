@@ -68,7 +68,7 @@ A property field is `{name, label, kind, default, options?}`. `kind` is shared w
 (`config-types.ts`): `text`, `textarea`, `password`, `number`, `select`, `boolean`, `credential`,
 `configRef`, `pin`, `palette` (the indexed-colour palette editor). `default` seeds a freshly-dropped node. A `select`'s option `value` is a string, or a number for a
 select over numeric values (e.g. bme280's I2C address). A custom `.node.json` may use the `text`,
-`textarea`, `number`, `boolean`, `select`, `configRef` and `pin` kinds, with the same `help`/`placeholder`/
+`textarea`, `number`, `boolean`, `select`, `configRef`, `pin` and `target` kinds, with the same `help`/`placeholder`/
 `min`/`max`/`step`/`optional` field attributes (`textarea` also takes `rows`) and a data-driven
 `visibleWhen` predicate (a `configRef` field also carries `configType`); the remaining kinds
 (`credential`, `palette`) and attributes (`retype`, `placeholderWhen`) are built-in
@@ -81,6 +81,10 @@ may carry **`pinUse`** (`"input"` default, or `"output"`) and **`pinPull`** (`"n
 the compiler checks the pin against the board and claims it as a hardware resource (a custom and a built-in
 node on the same pin, same mode, share it; a different mode is a compile error). Added 2026-10-15
 (node context parity, phase 2a).
+
+A **`target`** field inlines the board/processor this flow is compiled for, as a dict (`boardId`,
+`boardName`, `processorId`, `processorName`, `label`, `capabilities`), or `None` when no board is known — so a
+board-specific package can identify its exact board and guard for "unknown" (2026-10-15, workstream e).
 
 A field with **no `name`** (and no `default`) is **info-only**: the panel renders its widget but it binds to
 no property. Used for a `configRef` to a flow-singleton config (e.g. the WiFi picker shown on a network

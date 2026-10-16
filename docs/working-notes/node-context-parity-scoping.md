@@ -5,7 +5,9 @@ between custom nodes and builtin nodes"). Phase 1 (descriptor/UI parity) and pha
 This note scopes phase 2 — "context parity" — before any code, per the project's architecture-first rule. It
 proposes; it does not commit. Every interface addition here needs Mike's explicit OK in the session that lands it.
 **Phase 2a landed 2026-10-15** (Mike's OK): workstreams (a) singleton `configRef` and (b) pin checks + resource
-claims are built (`decisions/node-authoring.md`, 2026-10-15). (c)–(g) and the §8 questions remain.
+claims are built, and (e) board/target exposure — the `target` field kind — followed the same day
+(`decisions/node-authoring.md`, 2026-10-15). (c) wired-ness, (d) credential-by-name and (f) flow queries remain
+(deferred); (g) GUI is out of scope by architecture.
 
 ## 1. The problem, stated plainly
 
@@ -87,8 +89,12 @@ warning only.)
 the secret bundle, the way a config's is. **Open question:** is this wanted at all, given `configRef` to the WiFi
 config already delivers the secrets? See §8.
 
-**(e) Board/target exposure.** Give a package the target's identity/capabilities as data (beyond
-`requires.capabilities`). Only build if a concrete package needs more than capability gating.
+**(e) Board/target exposure — landed 2026-10-15.** Mike: packages can be very board-specific (a vendor writing a
+node for their exact board, e.g. the XIAO nRF52840's IMU), and exposing identity opens no vulnerability. Built a
+`target` field kind: its Python key receives the resolved board/processor identity (`boardId`, `boardName`,
+`processorId`, `processorName`, `label`, `capabilities`) or `None` when no board is known. (The other half of the
+vendor story — the palette offering a board-specific node only for that board — is the separate
+board-specific-node-collections item.)
 
 **(f) Flow-node queries (`findNodesOfType`).** A general presence/count query ("is there an mqtt node in this
 flow") — `adc.ts` uses it to detect WiFi, `wifi-status.ts` to decide who owns the connection. Niche; defer until a
@@ -161,8 +167,8 @@ workstream (c) has no non-GUI reference for now.
    Build it, or document configRef as the route and drop (d)?
 2. **Flow-node queries (f) — in scope?** A general "does this flow contain type X" query (`adc`/`wifi-status` use
    it internally). Worth a data form for packages, or defer until a real package needs it?
-3. **Board/target (e) — how much?** Capability gating already exists (`requires`). Is `adc`'s ADC2-vs-WiFi kind of
-   check worth a generic data form, or does pin validation (b) cover the practical need?
+3. **Board/target (e) — resolved 2026-10-15:** expose the target's identity to packages (a `target` field
+   kind), for board-specific/vendor nodes. Done; see §4(e).
 4. **Ordering.** Confirm (a)+(b) as phase 2a, (c) as 2b, (d) only if wanted. Phase 3 (dynamic ports, multi-output
    sources, presets, native code) stays after.
 

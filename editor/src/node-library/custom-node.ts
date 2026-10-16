@@ -83,7 +83,7 @@ import { claimResource, pullText, pyPinLiteral } from "./hardware-shared.js";
 // this validator.
 export const PAYLOAD_TYPES: readonly PayloadType[] = ["int", "number", "bool", "string", "bytes", "any"];
 export const NODE_KINDS: readonly NodeKind[] = ["source", "transform", "sink"];
-export const PROPERTY_KINDS = ["text", "textarea", "number", "boolean", "select", "configRef", "pin"] as const;
+export const PROPERTY_KINDS = ["text", "textarea", "number", "boolean", "select", "configRef", "pin", "target"] as const;
 type CustomPropertyKind = (typeof PROPERTY_KINDS)[number];
 
 /** Package-loading/shape errors -- distinct from CompileError (per-instance
@@ -324,7 +324,7 @@ function validatePropertyField(raw: unknown, where: string): CustomNodePropertyF
   // not downstream).
   if ((kind === "number" || kind === "pin") && typeof field.default !== "number") fail(`${where}.default must be a number when kind is "${kind}"`);
   if (kind === "boolean" && typeof field.default !== "boolean") fail(`${where}.default must be a boolean when kind is "boolean"`);
-  if ((kind === "text" || kind === "textarea" || kind === "select" || kind === "configRef") && typeof field.default !== "string") fail(`${where}.default must be a string when kind is "${kind}"`);
+  if ((kind === "text" || kind === "textarea" || kind === "select" || kind === "configRef" || kind === "target") && typeof field.default !== "string") fail(`${where}.default must be a string when kind is "${kind}"`);
   if (kind === "select" && !field.options!.some((o) => o.value === field.default)) {
     fail(`${where}.default "${String(field.default)}" is not one of the declared options`);
   }
@@ -537,6 +537,9 @@ function pyPropertiesLiteral(descriptor: CustomNodeDescriptor, node: GraphNode, 
         }
         break;
       }
+      case "target":
+        literal = targetLiteral(ctx);
+        break;
       case "text":
       default:
         literal = pyStringLiteral(String(raw));
@@ -573,6 +576,23 @@ function singletonConfigLiteral(f: CustomNodePropertyField, fieldLabel: string, 
   if (found.length === 0) throw new CompileError(`${fieldLabel}: needs a "${configType}" config -- add one to the flow`);
   if (found.length > 1) throw new CompileError(`${fieldLabel}: the flow has ${found.length} "${configType}" configs, but a singleton reference needs exactly one -- reopen the flow to merge them`);
   return pyValueLiteral(found[0]!.properties, fieldLabel);
+}
+
+/** A `target` field's Python literal: the board/processor this flow is compiled for, as a dict the node's
+ * Python can branch on -- `None` when no board is known (a flow checked with no board picked), so a
+ * board-specific package must guard for it (context parity, workstream e). */
+function targetLiteral(ctx: CodegenContext): string {
+  const t = ctx.target;
+  if (!t) return "None";
+  const entries = [
+    `"boardId": ${t.board ? pyStringLiteral(t.board.id) : "None"}`,
+    `"boardName": ${t.board ? pyStringLiteral(t.board.name) : "None"}`,
+    `"processorId": ${pyStringLiteral(t.processor.id)}`,
+    `"processorName": ${pyStringLiteral(t.processor.name)}`,
+    `"label": ${pyStringLiteral(t.label)}`,
+    `"capabilities": [${[...t.capabilities].sort().map(pyStringLiteral).join(", ")}]`,
+  ];
+  return `{${entries.join(", ")}}`;
 }
 
 /** The number this custom source's poll loop sleeps between calls to
