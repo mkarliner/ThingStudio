@@ -26,6 +26,12 @@ a folder ahead of the user's; same format, copyable and editable (Node-RED's mod
 test: "could a built-in be rewritten as a package with no loss." The one deliberate divergence — the editor
 never executes package code — stays.
 
+**The goal, stated (2026-10-15):** maximize how much node capability can be added *without changing the core
+codebase*, so extensions live outside core as packages (a community marketplace), not as PRs. **Security
+policy:** the user's computer is sacrosanct — the editor never executes package code (no supply-chain-attack
+surface); the device is looser (caveat emptor after an explicit deploy), mitigated by packages being small and
+readable enough for a human or AI to audit. Both in `decisions/node-authoring.md` (2026-10-15).
+
 ## The named corner is gone (updated 2026-10-15, later session)
 
 - **Every built-in is descriptor-driven.** `function` and `gui_button` were the last two off the canonical
@@ -100,7 +106,9 @@ never executes package code — stays.
 6. **Phase 4 — location parity:** a core packages folder ahead of the user folder, one load path, TS codegen
    retired or demoted to a build-time generator. **Needs Mike's decision first** — the behavior model
    (built-ins as packages) and codegen's fate (generate the core `.node.py` from the TS codegen, or
-   re-author core nodes as Python packages). This is the one-way-door call.
+   re-author core nodes as Python packages). This is the one-way-door call. **Scoped 2026-10-15:**
+   `builtins-as-packages-scoping.md` (the two options, the trade-off, the recommendation: generate from TS
+   with a documented `function`/`gui_*` residue, and four open questions in §8).
 
 ## Constraints and gotchas
 

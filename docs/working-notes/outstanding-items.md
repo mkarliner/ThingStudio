@@ -351,8 +351,10 @@ not here.
   board-checked and claimed as hardware resources. Remaining phase-2 questions (credential-by-name, flow
   queries, target exposure) are in `node-context-parity-scoping.md` §8.
   **Next-session handoff:** `node-format-parity-briefing.md` (the mechanism in recon form, the roadmap,
-  constraints, git state). **Phase 2 scoped 2026-10-15:** `node-context-parity-scoping.md` (what "context
+  constraints, git state).   **Phase 2 scoped 2026-10-15:** `node-context-parity-scoping.md` (what "context
   parity" means, the facility inventory, the proposed field-kind mechanism, the open questions for Mike).
+  **Phase 4 (built-ins as packages) scoped 2026-10-15:** `builtins-as-packages-scoping.md` — the two
+  options, the trade-off, and the recommendation; needs Mike's model decision.
 
 - **[P3]** **Deploy the runtime itself from the browser editor, not just compiled flows.** Confirmed untracked
   anywhere until 2026-09-12. Today, `test-flows/deploy_runtime.py` is a standalone `mpremote`-based script pushing

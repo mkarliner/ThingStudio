@@ -727,3 +727,21 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   `.node.json` subset (schema + SPEC + user guide). No device-runtime change, so no runtime bump: both resolve at
   compile time into the `properties` dict the package's Python already receives. Mechanism/scoping:
   `node-context-parity-scoping.md`. `tsc --noEmit` clean, full `vitest run` 1077 pass.
+
+- **2026-10-15, same session — the extensibility goal and the security policy, stated explicitly.** Mike's
+  implicit goal, made explicit: **maximize how much node capability can be added without changing the core
+  codebase.** Motive: 2026 is AI-heavy and OSS maintainers are swamped with PRs, so an architecture where
+  extensions live outside core -- as packages -- turns "send us a node" into "publish a package", enabling a
+  community marketplace. The measure of the architecture is therefore how long the core can go without a change
+  when a new capability appears; every descriptor/context facility (phase 2) and the runtime API exist so an
+  extension author need never touch core. Design discipline: keep the core surface general and composable rather
+  than one facility per node; "a built-in needed a core change" is the signal to generalise, not to special-case.
+  **Security policy, explicit: the user's computer is sacrosanct.** The editor (and any browser-side tooling) must
+  never execute package code, hidden or otherwise -- no supply-chain-attack surface on the user's machine. This
+  restates Decision 5 (`custom-node-authoring-scoping.md`) as standing policy, and it is what makes a marketplace
+  defensible at all: a data-only extension (descriptor + device Python) executes nothing in the editor. The
+  **device has looser constraints** -- a package's Python runs on the board only after the user explicitly deploys,
+  so it is more caveat emptor -- with the mitigant that a package should be small and readable enough for a human
+  or an AI to audit easily (no obfuscation). Consequence: opening codegen itself to external authors (an extension
+  shipping editor-executed code) is the architected version of "install a stranger's code into your editor" and is
+  not taken; if a real case ever needs it, it is a sandboxing decision, not just an API one.
