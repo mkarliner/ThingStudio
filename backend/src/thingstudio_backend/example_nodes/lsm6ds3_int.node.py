@@ -16,7 +16,8 @@
 # chip's status register (below) then clears the latched interrupt.
 #
 # NOTE (hardware-in-the-loop): the data-ready path is the well-trodden one; the wake/tap/free-fall
-# register settings are the datasheet's and want confirmation on a real board.
+# register settings are the datasheet's and want confirmation on a real board. Double-tap in particular
+# needs a high accel ODR (>= 416 Hz, ST AN5130) and the SINGLE_DOUBLE_TAP bit -- both set below.
 
 import machine
 import struct
@@ -43,6 +44,7 @@ _ACCEL = {'2': (0b00, 0.061e-3), '4': (0b10, 0.122e-3), '8': (0b11, 0.244e-3), '
 # full scale -> (FS bits for CTRL2_G, dps per LSB)
 _GYRO = {'250': (0b00, 8.75e-3), '500': (0b01, 17.5e-3), '1000': (0b10, 35e-3), '2000': (0b11, 70e-3)}
 _ODR_104HZ = 0x40
+_ODR_416HZ = 0x60  # tap detection needs a high accel ODR (ST AN5130)
 
 _bus = int(properties['bus'])
 _scl = properties['scl']
@@ -87,10 +89,13 @@ def _threshold(bits):
 _write(_CTRL3_C, 0x01)  # software reset
 time.sleep_ms(10)
 _write(_CTRL3_C, 0x44)  # block data update, register auto-increment
-_write(_CTRL1_XL, _ODR_104HZ | (_xl_bits << 2) | 0x02)  # accel at 104 Hz
-_write(_CTRL2_G, _ODR_104HZ | (_g_bits << 2))           # gyro at 104 Hz
 
 _mode = str(properties['mode'])
+# Tap recognition needs a high accel ODR (>= 416 Hz, ST AN5130); 104 Hz is enough for the rest.
+_xl_odr = _ODR_416HZ if _mode in ('single_tap', 'double_tap') else _ODR_104HZ
+_write(_CTRL1_XL, _xl_odr | (_xl_bits << 2) | 0x02)
+_write(_CTRL2_G, _ODR_104HZ | (_g_bits << 2))  # gyro at 104 Hz
+
 if _mode == 'data_ready':
     _status_reg, _event = None, 'data_ready'
     _write(_INT1_CTRL, 0x01)  # INT1_DRDY_XL
@@ -101,10 +106,10 @@ elif _mode == 'wake':
     _write(_MD1_CFG, 0x20)                 # INT1_WU
 elif _mode in ('single_tap', 'double_tap'):
     _status_reg, _event = _TAP_SRC, _mode
-    _write(_TAP_CFG, 0x8F)                 # INTERRUPTS_ENABLE + LIR + tap on X/Y/Z
+    _write(_TAP_CFG, 0x8E)                 # INTERRUPTS_ENABLE + tap on X/Y/Z
     _write(_TAP_THS_6D, _threshold(5))     # TAP_THS[4:0]
     _write(_INT_DUR2, 0x7F)                # tap duration / quiet / shock
-    _write(_WAKE_UP_THS, 0x40 if _mode == 'double_tap' else 0x00)  # SINGLE_DOUBLE_TAP bit
+    _write(_WAKE_UP_THS, 0x80 if _mode == 'double_tap' else 0x00)  # SINGLE_DOUBLE_TAP on
     _write(_MD1_CFG, 0x08 if _mode == 'double_tap' else 0x40)      # INT1_DOUBLE_TAP / INT1_SINGLE_TAP
 elif _mode == 'free_fall':
     _status_reg, _event = _WAKE_UP_SRC, 'free_fall'
