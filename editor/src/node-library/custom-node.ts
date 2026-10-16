@@ -73,6 +73,9 @@ import type {
   TransformCodegenResult,
 } from "../compiler/node-definition.js";
 import { pyStringLiteral } from "./py-literals.js";
+import { checkOptionalPin, checkPin } from "../definitions/pin-check.js";
+import { pinLabel } from "../definitions/definitions.js";
+import { claimResource, pullText, pyPinLiteral } from "./hardware-shared.js";
 
 // Exported (2026-10-14) so editor/test/node-descriptor-schema.test.ts can
 // assert the published schema in interfaces/node-descriptor/ lists the same
@@ -113,6 +116,16 @@ export interface CustomNodePropertyField {
    * "thingstudio/config/i2c-bus"). At compile time the picked config's own properties are resolved and
    * passed to the node's Python as a dict (see pyPropertiesLiteral); an empty id passes None. */
   configType?: string;
+  /** On a `configRef` field: resolve the flow's single config of `configType` at compile time instead of
+   * the stored id (the singleton WiFi/I2C-bus route a built-in uses). Zero or many is a compile error; the
+   * stored value is ignored. Added 2026-10-15 (context parity, phase 2a). */
+  singleton?: boolean;
+  /** On a `pin` field: "input" (default) or "output" -- checked against the board and claimed as a
+   * resource at compile time. Added 2026-10-15 (context parity, phase 2a). */
+  pinUse?: "input" | "output";
+  /** On an input `pin` field: "none" (default), "up" or "down" -- the pull the node configures, for the
+   * resource claim's text and the no-pull warning. Added 2026-10-15 (context parity, phase 2a). */
+  pinPull?: "none" | "up" | "down";
   // -- optional field attributes (the generic panel renders each where it applies), matching the canonical
   // PropertyFieldDescriptor so a custom node can express what a built-in's panel does --
   /** Short plain-text note rendered under the field. */
@@ -255,6 +268,22 @@ function validatePropertyField(raw: unknown, where: string): CustomNodePropertyF
       fail(`${where}.configType must be a non-empty string when kind is "configRef"`);
     }
     field.configType = configType;
+  }
+  // -- singletons, pin direction/pull (context parity, phase 2a) --
+  if (rec.singleton !== undefined) {
+    if (kind !== "configRef") fail(`${where}.singleton is only valid on a "configRef" field`);
+    if (typeof rec.singleton !== "boolean") fail(`${where}.singleton must be a boolean when present`);
+    field.singleton = rec.singleton;
+  }
+  if (rec.pinUse !== undefined) {
+    if (kind !== "pin") fail(`${where}.pinUse is only valid on a "pin" field`);
+    if (rec.pinUse !== "input" && rec.pinUse !== "output") fail(`${where}.pinUse must be "input" or "output"`);
+    field.pinUse = rec.pinUse;
+  }
+  if (rec.pinPull !== undefined) {
+    if (kind !== "pin") fail(`${where}.pinPull is only valid on a "pin" field`);
+    if (rec.pinPull !== "none" && rec.pinPull !== "up" && rec.pinPull !== "down") fail(`${where}.pinPull must be "none", "up" or "down"`);
+    field.pinPull = rec.pinPull;
   }
   // -- optional attributes (any kind; validated only when present), matching PropertyFieldDescriptor --
   if (rec.help !== undefined) {
@@ -477,7 +506,7 @@ function pyValueLiteral(value: unknown, contextLabel: string): string {
  * built-in config-referencing node does -- the custom node's Python gets the
  * bus/pins/etc. it needs to `runtime.shared(...)`.
  */
-function pyPropertiesLiteral(descriptor: CustomNodeDescriptor, rawProperties: Record<string, unknown>, contextLabel: string, ctx: CodegenContext): string {
+function pyPropertiesLiteral(descriptor: CustomNodeDescriptor, node: GraphNode, rawProperties: Record<string, unknown>, contextLabel: string, ctx: CodegenContext): string {
   const fields = descriptor.properties ?? [];
   const entries = fields.map((f) => {
     const raw = f.name in rawProperties ? rawProperties[f.name] : f.default;
@@ -485,8 +514,10 @@ function pyPropertiesLiteral(descriptor: CustomNodeDescriptor, rawProperties: Re
     let literal: string;
     switch (f.kind) {
       case "number":
-      case "pin":
         literal = pyNumberLiteral(raw, fieldLabel);
+        break;
+      case "pin":
+        literal = pinFieldLiteral(node, f, raw, fieldLabel, ctx);
         break;
       case "boolean":
         literal = pyBoolLiteral(raw, fieldLabel);
@@ -498,8 +529,12 @@ function pyPropertiesLiteral(descriptor: CustomNodeDescriptor, rawProperties: Re
         literal = pyStringLiteral(raw);
         break;
       case "configRef": {
-        const id = raw === undefined || raw === null ? "" : String(raw);
-        literal = id === "" ? "None" : pyValueLiteral(ctx.resolveConfig(id), fieldLabel);
+        if (f.singleton) {
+          literal = singletonConfigLiteral(f, fieldLabel, ctx);
+        } else {
+          const id = raw === undefined || raw === null ? "" : String(raw);
+          literal = id === "" ? "None" : pyValueLiteral(ctx.resolveConfig(id), fieldLabel);
+        }
         break;
       }
       case "text":
@@ -510,6 +545,34 @@ function pyPropertiesLiteral(descriptor: CustomNodeDescriptor, rawProperties: Re
     return `${pyStringLiteral(f.name)}: ${literal}`;
   });
   return `{${entries.join(", ")}}`;
+}
+
+/** A `pin` field's Python literal: checked against the target board and claimed as a hardware resource
+ * (context parity, phase 2a), then rendered as a bare number or a quoted named pin. An `optional` pin
+ * that is blank/-1 becomes None. */
+function pinFieldLiteral(node: GraphNode, f: CustomNodePropertyField, raw: unknown, fieldLabel: string, ctx: CodegenContext): string {
+  const use = f.pinUse ?? "input";
+  const pull = f.pinPull ?? "none";
+  const pin = f.optional ? checkOptionalPin(ctx, fieldLabel, raw, use) : checkPin(ctx, fieldLabel, raw, use, { pull: use === "input" && pull !== "none" });
+  if (pin === null) return "None";
+  // Same use text a built-in's sharedPin/sharedAdc claims, so a custom and a built-in node on the same
+  // pin with the same mode share it, and a genuinely different mode conflicts (hardware-shared.ts).
+  claimResource(ctx, pinLabel(pin), use === "output" ? "output" : `input, ${pullText(pull)}`, node);
+  return pyPinLiteral(pin);
+}
+
+/** A singleton `configRef` field's Python literal: the flow's one config of `configType`, resolved at
+ * compile time (context parity, phase 2a). Zero or many is a CompileError naming the node and field. */
+function singletonConfigLiteral(f: CustomNodePropertyField, fieldLabel: string, ctx: CodegenContext): string {
+  const configType = f.configType!;
+  const finder = ctx.findConfigsOfType;
+  if (!finder) {
+    throw new CompileError(`${fieldLabel}: this compiler context can't look up the flow's config (findConfigsOfType missing) -- internal error, not a flow-authoring mistake`);
+  }
+  const found = finder(configType);
+  if (found.length === 0) throw new CompileError(`${fieldLabel}: needs a "${configType}" config -- add one to the flow`);
+  if (found.length > 1) throw new CompileError(`${fieldLabel}: the flow has ${found.length} "${configType}" configs, but a singleton reference needs exactly one -- reopen the flow to merge them`);
+  return pyValueLiteral(found[0]!.properties, fieldLabel);
 }
 
 /** The number this custom source's poll loop sleeps between calls to
@@ -555,7 +618,7 @@ export function buildCustomNodeDefinition(descriptor: CustomNodeDescriptor, pyth
     const propsVar = ctx.uniqueName(`${hint}_props`);
     const setupFn = ctx.uniqueName(`${hint}_setup`);
     const vars = entries.map((name) => ctx.uniqueName(`${hint}_${name}`));
-    const propsLiteral = pyPropertiesLiteral(descriptor, node.properties, `node ${node.id} (${descriptor.type})`, ctx);
+    const propsLiteral = pyPropertiesLiteral(descriptor, node, node.properties, `node ${node.id} (${descriptor.type})`, ctx);
     const indented = pythonSource
       .split("\n")
       .map((line) => (line.length ? "    " + line : line))

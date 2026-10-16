@@ -74,6 +74,14 @@ select over numeric values (e.g. bme280's I2C address). A custom `.node.json` ma
 (`credential`, `palette`) and attributes (`retype`, `placeholderWhen`) are built-in
 editor widgets today.
 
+A `configRef` field may carry **`singleton: true`**: at compile time the flow's *one* config of
+`configType` is resolved (`findConfigsOfType`) rather than the node's stored id — the way a built-in treats
+the singleton WiFi config; zero or many is a compile error and the stored value is ignored. A `pin` field
+may carry **`pinUse`** (`"input"` default, or `"output"`) and **`pinPull`** (`"none"`/`"up"`/`"down"`):
+the compiler checks the pin against the board and claims it as a hardware resource (a custom and a built-in
+node on the same pin, same mode, share it; a different mode is a compile error). Added 2026-10-15
+(node context parity, phase 2a).
+
 A field with **no `name`** (and no `default`) is **info-only**: the panel renders its widget but it binds to
 no property. Used for a `configRef` to a flow-singleton config (e.g. the WiFi picker shown on a network
 node). Fields may also carry `optional`, `min`/`max`/`step` (`step` may be the literal `"any"` for

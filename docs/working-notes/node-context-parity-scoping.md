@@ -4,6 +4,8 @@ Status: scoping, 2026-10-15. Part of the node-format-parity work (`decisions/nod
 between custom nodes and builtin nodes"). Phase 1 (descriptor/UI parity) and phase 0 (one node class) are done.
 This note scopes phase 2 — "context parity" — before any code, per the project's architecture-first rule. It
 proposes; it does not commit. Every interface addition here needs Mike's explicit OK in the session that lands it.
+**Phase 2a landed 2026-10-15** (Mike's OK): workstreams (a) singleton `configRef` and (b) pin checks + resource
+claims are built (`decisions/node-authoring.md`, 2026-10-15). (c)–(g) and the §8 questions remain.
 
 ## 1. The problem, stated plainly
 

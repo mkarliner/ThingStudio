@@ -24,6 +24,7 @@ import { CompileError } from "../src/compiler/errors.js";
 import type { GraphData, GraphNode } from "../src/compiler/graph.js";
 import { evaluatePredicate } from "../src/compiler/node-descriptor.js";
 import type { CodegenContext } from "../src/compiler/node-definition.js";
+import type { Target } from "../src/definitions/target.js";
 import { buildRegistry } from "../src/node-library/registry.js";
 import {
   buildCustomNodeDefinition,
@@ -220,6 +221,23 @@ describe("validateCustomNodeDescriptor", () => {
     expect(() => validateCustomNodeDescriptor({ ...base, properties: [{ name: "pin", label: "pin", kind: "pin", default: "4" }] })).toThrow(/must be a number/);
     expect(() => validateCustomNodeDescriptor({ ...base, properties: [{ name: "n", label: "n", kind: "number", default: 0, step: "sometimes" }] })).toThrow(/step must be a finite number or "any"/);
     expect(() => validateCustomNodeDescriptor({ ...base, properties: [{ name: "m", label: "m", kind: "number", default: 0, min: "0" }] })).toThrow(/min must be a finite number/);
+  });
+
+  it("accepts singleton configRef and pin direction/pull, and rejects misuse", () => {
+    const base = { type: "custom/x", kind: "sink", label: "x", ports: { inputs: [{ name: "msg", type: "any" }] } };
+    const ok = validateCustomNodeDescriptor({
+      ...base,
+      properties: [
+        { name: "bus", label: "bus", kind: "configRef", configType: "thingstudio/config/i2c-bus", default: "", singleton: true },
+        { name: "pin", label: "pin", kind: "pin", default: 4, pinUse: "output", pinPull: "up" },
+      ],
+    });
+    expect(ok.properties?.[0]).toMatchObject({ singleton: true });
+    expect(ok.properties?.[1]).toMatchObject({ pinUse: "output", pinPull: "up" });
+    expect(() => validateCustomNodeDescriptor({ ...base, properties: [{ name: "n", label: "n", kind: "number", default: 0, singleton: true }] })).toThrow(/singleton is only valid/);
+    expect(() => validateCustomNodeDescriptor({ ...base, properties: [{ name: "t", label: "t", kind: "text", default: "", pinUse: "output" }] })).toThrow(/pinUse is only valid/);
+    expect(() => validateCustomNodeDescriptor({ ...base, properties: [{ name: "p", label: "p", kind: "pin", default: 4, pinUse: "sideways" }] })).toThrow(/pinUse must be/);
+    expect(() => validateCustomNodeDescriptor({ ...base, properties: [{ name: "p", label: "p", kind: "pin", default: 4, pinPull: "middle" }] })).toThrow(/pinPull must be/);
   });
 
   it("accepts a data-driven visibleWhen predicate and rejects malformed ones", () => {
@@ -449,6 +467,76 @@ describe("buildCustomNodeDefinition -- sink", () => {
     const def = buildCustomNodeDefinition(descriptor, "async def run(msg, properties):\n    pass\n");
     const result = def.codegenSink!(node(1, { pin: 5 }), freshCtx());
     expect((result.statements ?? []).map((s) => s.code).join("\n")).toContain('"pin": 5');
+  });
+
+  it("resolves a singleton configRef from the flow's one config of that type", () => {
+    const descriptor = validateCustomNodeDescriptor({
+      type: "custom/wifireader",
+      kind: "transform",
+      label: "wifireader",
+      ports: { inputs: [{ name: "msg", type: "any" }], outputs: [{ name: "msg", type: "any" }] },
+      properties: [{ name: "wifi", label: "WiFi", kind: "configRef", configType: "thingstudio/config/wifi", default: "", singleton: true }],
+    });
+    const def = buildCustomNodeDefinition(descriptor, "async def run(msg, properties):\n    msg['payload'] = properties['wifi']['ssid']\n    return msg\n");
+    const ctx = freshCtx();
+    ctx.findConfigsOfType = (t: string) => (t === "thingstudio/config/wifi" ? [{ id: "w1", properties: { ssid: "mynet", password: "pw" } }] : []);
+    const result = def.codegenTransform!(node(1, {}), ctx);
+    const output = runPython(
+      [...(result.statements ?? []), wrapCallable(result)],
+      [`msg = {'payload': None, 'topic': ''}`, `msg = await ${result.functionName}(msg)`, `print(msg['payload'])`].join("\n"),
+    );
+    expect(output.trim()).toBe("mynet");
+
+    const zero = freshCtx();
+    zero.findConfigsOfType = () => [];
+    expect(() => def.codegenTransform!(node(2, {}), zero)).toThrow(/needs a/);
+    const many = freshCtx();
+    many.findConfigsOfType = () => [{ id: "a", properties: {} }, { id: "b", properties: {} }];
+    expect(() => def.codegenTransform!(node(3, {}), many)).toThrow(/exactly one/);
+  });
+
+  it("checks a custom pin against the board and claims it as a resource", () => {
+    const descriptor = validateCustomNodeDescriptor({
+      type: "custom/ledthing",
+      kind: "sink",
+      label: "ledthing",
+      ports: { inputs: [{ name: "msg", type: "any" }] },
+      properties: [{ name: "pin", label: "pin", kind: "pin", default: 4, pinUse: "output" }],
+    });
+    const def = buildCustomNodeDefinition(descriptor, "async def run(msg, properties):\n    pass\n");
+    const claims: string[] = [];
+    const ctx = freshCtx();
+    ctx.claimResource = (resource: string, use: string): void => {
+      claims.push(`${resource}|${use}`);
+    };
+    const result = def.codegenSink!(node(1, { pin: 5 }), ctx);
+    expect((result.statements ?? []).map((s) => s.code).join("\n")).toContain('"pin": 5');
+    expect(claims).toEqual(["GPIO 5|output"]);
+  });
+
+  it("refuses a custom pin that isn't on the board, and an output on an input-only pin", () => {
+    const descriptor = validateCustomNodeDescriptor({
+      type: "custom/ledthing2",
+      kind: "sink",
+      label: "ledthing2",
+      ports: { inputs: [{ name: "msg", type: "any" }] },
+      properties: [{ name: "pin", label: "pin", kind: "pin", default: 2, pinUse: "output" }],
+    });
+    const def = buildCustomNodeDefinition(descriptor, "async def run(msg, properties):\n    pass\n");
+    const target = {
+      label: "TestBoard",
+      gpio: new Set([0, 1, 2, 3]),
+      inputOnly: new Set([3]),
+      noPull: new Set(),
+      reserved: new Map(),
+      avoid: new Map(),
+      pinLabels: new Map(),
+      capabilities: new Set(),
+    } as unknown as Target;
+    const ctx = freshCtx();
+    ctx.target = target;
+    expect(() => def.codegenSink!(node(1, { pin: 9 }), ctx)).toThrow(/doesn't exist on TestBoard/);
+    expect(() => def.codegenSink!(node(2, { pin: 3 }), ctx)).toThrow(/input-only/);
   });
 });
 

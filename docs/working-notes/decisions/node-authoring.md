@@ -714,3 +714,16 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   classes — the compiler-side `codegen*` hooks are the only remaining divergence, by design. Internal only:
   no interface change, no behavior change, no user-doc impact. `tsc --noEmit` clean, full `vitest run` 1073
   pass.
+
+- **2026-10-15, same session — context parity phase 2a landed (Mike's explicit OK for the interface additions).**
+  Two custom-descriptor capabilities, closing the "no loss" test against `i2c`/`bme280`: (1) a **singleton
+  `configRef`** — `singleton: true` resolves the flow's *one* config of `configType` at compile time
+  (`findConfigsOfType`) instead of the node's stored id, the way a built-in treats the singleton WiFi config;
+  zero or many is a `CompileError` and the stored value is ignored. (2) **`pinUse`/`pinPull` on a `pin` field** —
+  the generic codegen now runs `checkPin`/`checkOptionalPin` against `ctx.target` and `claimResource` with the
+  same use text `hardware-shared.ts` uses ("output", "input, no pull"/"pull-up"/"pull-down"), so a custom node's
+  pin is board-checked and a custom/built-in pair on one pin with the same mode shares it while a different mode
+  conflicts. `singleton`/`pinUse`/`pinPull` were added to the canonical `PropertyFieldDescriptor` and the custom
+  `.node.json` subset (schema + SPEC + user guide). No device-runtime change, so no runtime bump: both resolve at
+  compile time into the `properties` dict the package's Python already receives. Mechanism/scoping:
+  `node-context-parity-scoping.md`. `tsc --noEmit` clean, full `vitest run` 1077 pass.

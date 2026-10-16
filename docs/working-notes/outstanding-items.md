@@ -346,6 +346,10 @@ not here.
   capability parity (dynamic ports — the data `dynamicOutputs` exists but is not yet in the custom
   schema — multi-output sources, resource claims, presets, native code), and the Node-RED location model
   (built-ins as packages).
+  **Context parity phase 2a landed 2026-10-15:** a custom `configRef` may be `singleton` (the flow's one
+  config of that type, via `findConfigsOfType`); custom `pin` fields take `pinUse`/`pinPull` and are now
+  board-checked and claimed as hardware resources. Remaining phase-2 questions (credential-by-name, flow
+  queries, target exposure) are in `node-context-parity-scoping.md` §8.
   **Next-session handoff:** `node-format-parity-briefing.md` (the mechanism in recon form, the roadmap,
   constraints, git state). **Phase 2 scoped 2026-10-15:** `node-context-parity-scoping.md` (what "context
   parity" means, the facility inventory, the proposed field-kind mechanism, the open questions for Mike).

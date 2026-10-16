@@ -80,6 +80,9 @@
           "description": "Required for kind 'select'; 'default' must be one of the values."
         },
         "configType": { "type": "string", "minLength": 1, "description": "Required for kind 'configRef': the config type the picker offers, e.g. 'thingstudio/config/i2c-bus'." },
+        "singleton": { "type": "boolean", "description": "On a configRef: resolve the flow's single config of 'configType' at compile time instead of the stored id (the singleton WiFi/I2C-bus route). Only valid with kind 'configRef'." },
+        "pinUse": { "enum": ["input", "output"], "description": "On a pin: whether it is read or driven; checked against the board and claimed as a resource. Default 'input'. Only valid with kind 'pin'." },
+        "pinPull": { "enum": ["none", "up", "down"], "description": "On an input pin: the internal pull the node configures. Default 'none'. Only valid with kind 'pin'." },
         "help": { "type": "string", "minLength": 1, "description": "Short note shown under the field." },
         "placeholder": { "type": "string", "minLength": 1, "description": "Hint text in an empty text/number input." },
         "rows": { "type": "integer", "minimum": 1, "description": "Rows for a textarea field (default 4)." },
@@ -106,7 +109,10 @@
       },
       "allOf": [
         { "if": { "properties": { "kind": { "const": "select" } }, "required": ["kind"] }, "then": { "required": ["options"] } },
-        { "if": { "properties": { "kind": { "const": "configRef" } }, "required": ["kind"] }, "then": { "required": ["configType"] } }
+        { "if": { "properties": { "kind": { "const": "configRef" } }, "required": ["kind"] }, "then": { "required": ["configType"] } },
+        { "if": { "required": ["singleton"] }, "then": { "properties": { "kind": { "const": "configRef" } } } },
+        { "if": { "required": ["pinUse"] }, "then": { "properties": { "kind": { "const": "pin" } } } },
+        { "if": { "required": ["pinPull"] }, "then": { "properties": { "kind": { "const": "pin" } } } }
       ]
     }
   }

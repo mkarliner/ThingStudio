@@ -43,7 +43,7 @@ export function claimResource(ctx: CodegenContext, resource: string, use: string
 
 export type Pull = "none" | "up" | "down";
 
-function pullText(pull: Pull): string {
+export function pullText(pull: Pull): string {
   return pull === "none" ? "no pull" : `pull-${pull}`;
 }
 

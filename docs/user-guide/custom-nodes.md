@@ -115,6 +115,14 @@ the node is selected:
 - **`configType`** — required for `configRef`: the config type the picker
   offers (e.g. `thingstudio/config/i2c-bus`). At compile time the picked
   config's own properties become a dict the node reads — see below.
+- **`singleton`** — optional, on a `configRef`: resolve the flow's one
+  config of `configType` at compile time instead of an id you store (how a
+  built-in uses the shared WiFi setting). Zero or two such configs is a
+  compile error.
+- **`pinUse`** / **`pinPull`** — optional, on a `pin`: `input` (default) or
+  `output`, and the pull (`none`/`up`/`down`). The compiler then checks the
+  pin against the board and claims it, so two nodes can't quietly set the
+  same pin up two ways.
 - **`help`** / **`placeholder`** / **`min`** / **`max`** / **`step`** /
   **`optional`** / **`rows`** — optional, the same panel hints a built-in
   field has. `rows` sets a `textarea`'s height (default 4). `pin` fields

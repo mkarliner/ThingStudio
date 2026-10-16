@@ -160,6 +160,16 @@ export interface PropertyFieldDescriptor {
   /** Changing this field re-resolves the node's port sockets -- for a port whose `type` is a function of
    * properties (e.g. inject/startup's output tracks `payloadType`). Built-in only. */
   retype?: boolean;
+  /** On a `configRef` field: resolve the flow's single config of `configType` at compile time
+   * (`findConfigsOfType`) rather than the config the node's stored id names -- how a built-in treats the
+   * singleton WiFi config. Zero or many is a compile error; the field's stored value is ignored. */
+  singleton?: boolean;
+  /** On a `pin` field: whether the pin is driven or read, so the compiler can check it against the board
+   * (`checkPin`) and claim it as a resource. Defaults to "input". */
+  pinUse?: "input" | "output";
+  /** On an input `pin` field: the internal pull the node configures, used for the resource claim's text
+   * (so it shares with a built-in using the same mode) and the no-pull warning. Defaults to "none". */
+  pinPull?: "none" | "up" | "down";
 }
 
 /** Outputs that vary per instance with a numeric property -- the data form of the old function-valued
