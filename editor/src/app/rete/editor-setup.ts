@@ -39,7 +39,7 @@ import { ConnectionPlugin, Presets as ConnectionPresets } from "rete-connection-
 import { VuePlugin, Presets as VuePresets } from "rete-vue-plugin";
 
 import type { AreaExtra, Schemes } from "./schemes";
-import { type AnyThingstudioNode, type DynamicOutputNode } from "./nodes";
+import { type AnyThingstudioNode } from "./nodes";
 import { installConnectionValidation } from "./validation";
 import { selectedNode, selectedConnection, clearNodeSelection, setFunctionNodeOutputCount, bumpPropertyVersion } from "./store";
 import { forgetNode, nodeIdsInPane, removePane } from "./panes-store";
@@ -153,14 +153,13 @@ export async function createThingstudioEditor(container: HTMLElement) {
   // why that matters (JS object key enumeration order for non-numeric-looking string keys is insertion
   // order, and graph-adapter.ts's socketIndex() depends on that order matching output position).
   setFunctionNodeOutputCount.value = async (node: AnyThingstudioNode, count: number) => {
-    const dynamic = node as unknown as DynamicOutputNode;
-    const spec = dynamic.descriptor?.dynamicOutputs;
+    const spec = node.descriptor.dynamicOutputs;
     if (!spec) return;
     const clamped = Math.max(spec.min, Math.min(spec.max, Math.round(count) || spec.min));
-    const current = Object.keys(dynamic.outputs).length;
+    const current = Object.keys(node.outputs).length;
     if (clamped === current) return;
     if (clamped > current) {
-      for (let i = current; i < clamped; i++) dynamic.addDynamicOutputAt(i);
+      for (let i = current; i < clamped; i++) node.addDynamicOutputAt(i);
     } else {
       // Shrinking: remove any wire attached to a port before removing the
       // port itself -- Rete core has no cascading removal of its own
@@ -174,11 +173,11 @@ export async function createThingstudioEditor(container: HTMLElement) {
         for (const c of [...editor.getConnections()]) {
           if (c.source === node.id && c.sourceOutput === key) await editor.removeConnection(c.id);
         }
-        dynamic.removeDynamicOutputAt(i);
+        node.removeDynamicOutputAt(i);
       }
     }
     node.properties[spec.property] = clamped;
-    dynamic.setDynamicOutputHeight(clamped);
+    node.setDynamicOutputHeight(clamped);
     await area.update("node", node.id);
   };
 

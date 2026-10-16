@@ -153,8 +153,8 @@ import { editorVersionLabel, editorVersionLine } from "./editor-version.js";
 import { RESTART_HINT, deployMemoryAdvice, looksLikeOutOfMemory, lowMemoryWarningBeforeDeploy } from "./memory-advice.js";
 import { dependencyHash, findImportedModules, librariesToSend, libraryMessages, resolveDependencies, type DependencyInfo } from "../compiler/flow-dependencies.js";
 import { createThingstudioEditor, type ThingstudioEditor } from "./rete/editor-setup.js";
-import { NODE_FACTORIES, CustomNode, type AnyThingstudioNode, type DynamicOutputNode } from "./rete/nodes.js";
-import { resolveOutputCount, type DynamicOutputs } from "../compiler/node-descriptor.js";
+import { NODE_FACTORIES, CustomNode, type AnyThingstudioNode } from "./rete/nodes.js";
+import { resolveOutputCount } from "../compiler/node-descriptor.js";
 import { DRAG_MIME, CUSTOM_DRAG_MIME, type NodeKind } from "./rete/palette.js";
 import { toGraphData, socketIndex } from "./rete/graph-adapter.js";
 import { screens as screensStore, setScreens, setGuiNodeLister } from "./rete/screens-store.js";
@@ -612,15 +612,14 @@ async function applyFlowFile(file: FlowFile): Promise<void> {
     // there's no already-rendered canvas state to force a re-render of -- the node is constructed
     // correctly from the start instead. Uses the descriptor's own `dynamicOutputs` spec for the same
     // clamping a garbage/out-of-range saved value gets anywhere else, rather than a second copy here.
-    const dyn = (node as unknown as { descriptor?: { dynamicOutputs?: DynamicOutputs } }).descriptor?.dynamicOutputs;
+    const dyn = node.descriptor.dynamicOutputs;
     if (dyn) {
-      const dynamic = node as unknown as DynamicOutputNode;
       const wanted = resolveOutputCount(dyn, node.properties);
       const current = Object.keys(node.outputs).length;
-      for (let i = current; i < wanted; i++) dynamic.addDynamicOutputAt(i);
-      for (let i = wanted; i < current; i++) dynamic.removeDynamicOutputAt(i);
+      for (let i = current; i < wanted; i++) node.addDynamicOutputAt(i);
+      for (let i = wanted; i < current; i++) node.removeDynamicOutputAt(i);
       node.properties[dyn.property] = wanted;
-      dynamic.setDynamicOutputHeight(wanted);
+      node.setDynamicOutputHeight(wanted);
     }
     const layoutEntry = file.layout[n.id];
     const position = layoutEntry ? { x: layoutEntry.pos[0], y: layoutEntry.pos[1] } : { x: 0, y: 0 };

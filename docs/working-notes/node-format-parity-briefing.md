@@ -70,8 +70,9 @@ never executes package code — stays.
 - **Generic panel:** `PropertyPanel.vue`'s `v-else-if="nodeDescriptor"` branch renders every field kind and
   attribute (`text`/`password`/`number`/`boolean`/`select`/`pin`/`configRef`/`credential`/`palette`;
   `help`/`placeholder`/`min`/`max`/`step`/`optional`/`visibleWhen`/`retype`; `presetType`, `screenOutline`,
-  `description`). Built-ins reach it via `buildDescriptorNodeClass`; custom via `CustomNode` (both in
-  `app/rete/nodes.ts`). **Two class builders still exist** — unifying them is a Phase 0/1 task.
+  `description`). Built-ins and custom nodes both reach it through the one `DescriptorNode` base
+  (`app/rete/nodes.ts`); the custom loader passes the package descriptor to the constructor. **One class
+  builder now** (unified 2026-10-15, same session).
 - **Palette:** `PaletteSidebar.vue` — built-in rows from `paletteStyleFor` ∪ `palette.ts`'s legacy rows;
   custom rows from `custom-nodes-store`, honoring `hidden`.
 - **Backend/distribution:** `persisted_store.custom_node_dirs` (ordered, first-folder-wins with shadow
@@ -85,8 +86,9 @@ never executes package code — stays.
 2. **`credential`/`palette` field kinds for custom nodes.** `palette` is small (the generic panel already
    renders `PaletteField`). `credential` needs the Phase 2 runtime support to be useful. Both are interface
    additions (custom schema + `PROPERTY_KINDS` + SPEC + conformance).
-3. **Unify the two node-class builders** (`buildDescriptorNodeClass` + `CustomNode`) into one
-   descriptor-driven class (per-instance for custom descriptors).
+3. ~~Unify the two node-class builders (`buildDescriptorNodeClass` + `CustomNode`).~~ **Done 2026-10-15
+   (same session)** — one `DescriptorNode` base now backs both; `AnyThingstudioNode` collapses to it. See
+   `decisions/node-authoring.md` (2026-10-15, "one node class").
 4. **Phase 2 — context parity (the real work).** Expose what built-in codegen reads as package-visible
    facilities: config singletons + credential-by-name, `findNodesOfType`/`findConfigsOfType`, wired-ness,
    `screens`, `target`/board. Close each against a concrete built-in (the "no loss" test).
@@ -119,14 +121,13 @@ never executes package code — stays.
 
 ## Git state
 
-- **Uncommitted work, 2026-10-15 (later session)** — the `function`/`gui_button` migration and the three
-  descriptor additions (see "The named corner is gone"): `editor/src/{compiler,node-library,app,cli}`,
-  `interfaces/node-descriptor/{SPEC.md,custom-node.schema.json}`, `docs/user-guide/*`. Prompt Mike to commit.
-- `HEAD = 2dfbf2f` ("node parity: custom descriptors gain title/hidden/presetType/screenOutline"), pushed
-  to `https/main`. Parity commits: `6b6f92c`, `39b8539`, `2dfbf2f` (on top of the custom-format work
-  `6aae6ad`/`473a6fb`/`b5a2865`).
-- `tools/build-thingstudio-firmware.sh`, `tools/install-build-tools.sh` are untracked from an earlier
-  session — leave them alone.
+- **2026-10-15 (later session)** — the `function`/`gui_button` migration and its three descriptor
+  additions, then the one-node-class unification: commits `343fdb0` (node parity) and `62060a2` (tools
+  scripts), plus this class-unification change. Files: `editor/src/{compiler,node-library,app,cli}`,
+  `interfaces/node-descriptor/{SPEC.md,custom-node.schema.json}`, `docs/user-guide/*`, `docs/working-notes/*`.
+- Before those: `HEAD` was `2dfbf2f` ("node parity: custom descriptors gain title/hidden/presetType/
+  screenOutline"), pushed to `https/main`. Parity commits: `6b6f92c`, `39b8539`, `2dfbf2f` (on top of the
+  custom-format work `6aae6ad`/`473a6fb`/`b5a2865`).
 - Pushing needs a PAT: `git push "https://x-access-token:<PAT>@github.com/mkarliner/ThingStudio.git" main`
   (the `https` and SSH remotes do not authenticate from this sandbox). If the remote has moved, fetch/rebase
   first. Rotate any PAT that was pasted into a session.

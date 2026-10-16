@@ -43,13 +43,10 @@
   Vue-reactive (see nodes.ts's own comment on the field).
 
   Custom nodes (docs/working-notes/custom-node-authoring-scoping.md,
-  2026-08-20): `palette` below special-cases a CustomNode instance to read
-  its own descriptor's color/bgcolor/icon instead of looking `data.kind`
-  ("custom", for every loaded custom type) up in NODE_PALETTE, which would
-  otherwise fall through to DEFAULT_KIND_STYLE for all of them
-  indistinguishably. `data.label` needs no equivalent fix -- Rete's own
-  `ClassicPreset.Node` label is already set from the descriptor in
-  CustomNode's constructor (nodes.ts).
+  2026-08-20): `palette` below reads the node's own `descriptor` for
+  color/bgcolor/icon -- every node (built-in or custom) is a `DescriptorNode`
+  now (nodes.ts), so no `instanceof CustomNode` branch is needed. `data.label`
+  is likewise set from the descriptor by `DescriptorNode`'s constructor.
 -->
 <template>
   <div

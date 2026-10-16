@@ -104,21 +104,14 @@
 // graph-adapter.ts/main.ts used to compute on the fly via
 // `` `thingstudio/${n.kind}` ``. That string-concat assumed every node's
 // compiler type is the `thingstudio/` namespace plus its `kind` -- true
-// for all 9 classes here, but wrong for a loaded custom node type (own
-// namespace, e.g. "custom/dht22", no relationship to `kind`). Zero
-// behavior change for the 9 classes below: `nodeType` is set to exactly
-// what the old concatenation already produced, verified against the
-// existing test suite. `CustomNode` (bottom of this file) is the new,
-// generic, descriptor-driven class this work actually adds -- one class
-// for every loaded custom type instead of one hand-written subclass per
-// type, closing the "keep hand-writing a Litegraph/Rete subclass per node
-// type, or move to a data-driven descriptor consumed by one generic node
-// class" question node-definition-model.md flagged as open back at POC
-// time and never revisited since (the 9 first-party classes below simply
-// never grew past hand-writing being cheap enough not to bother).
-// First-party classes are deliberately left as hand-written subclasses,
-// not migrated onto the generic path -- no reason to touch 9 already
-// hardware-validated node classes for symmetry alone.
+// for the built-in classes, but wrong for a loaded custom node type (own
+// namespace, e.g. "custom/dht22", no relationship to `kind`).
+//
+// **Every node is now one class** (2026-10-15, node-format-parity roadmap phase 0): `DescriptorNode`
+// below is the single descriptor-driven base; a built-in subclass fixes its descriptor at class-build
+// time and `CustomNode` passes the package's descriptor per instance. The concrete subclasses below are
+// kept only for `instanceof` checks and node-library tests. The compiler-side hooks are the sole
+// built-in/custom divergence -- the editor class is identical.
 //
 // **Multi-connection inputs, 2026-09-10** (Mike's ask -- outstanding-
 // items/multi-connection-node-inputs.md): every `new ClassicPreset.Input
@@ -314,8 +307,6 @@ export function functionOutputKey(index: number): string {
 // project's own precedent for a registry-only node type (same state
 // http_request was in before 2026-09-05).
 
-export class DelayNode extends buildDescriptorNodeClass(delayNode) {}
-
 // filter (drops messages that aren't worth sending: unchanged, inside a deadband, or too soon) and journal
 // (node-library/filter.ts, journal.ts) are descriptor-driven (buildDescriptorNodeClass below). journal's two
 // outputs make the generic class taller.
@@ -339,93 +330,99 @@ export class DelayNode extends buildDescriptorNodeClass(delayNode) {}
 // (buildDescriptorNodeClass below). address/register are text so hex ("0x29") can be typed; the compiler
 // parses them.
 
-// --- Descriptor-driven built-in nodes (node-descriptor-unification-briefing.md) ---
+// --- The one descriptor-driven node class (node-descriptor-unification-briefing.md) ---
 //
-// A built-in whose descriptor (compiler/node-descriptor.ts) carries its palette styling, ports and
-// property schema gets its Rete class from here instead of a hand-written subclass -- the same
-// generic, descriptor-driven path CustomNode (bottom of this file) already uses for loaded custom
-// types. Migrating a family means adding the metadata to its node-library/*.ts descriptor, deleting
-// its bespoke class here, and letting this build it; the node tests are the "no behavior change"
-// guard. `descriptor` on the instance is what PropertyPanel.vue's generic branch and
-// ThingstudioNode.vue's palette read.
-function buildDescriptorNodeClass(descriptor: NodeDescriptor) {
-  return class extends ClassicPreset.Node {
-    width = descriptor.width ?? 100;
-    // Height is fixed for most nodes; a dynamic-output node (the function node) sets it per instance
-    // from the output count in the constructor and on resize.
-    height = (descriptor.ports?.outputs?.length ?? 0) > 1 ? NODE_HEIGHT + 20 : NODE_HEIGHT;
-    kind = descriptor.paletteId ?? descriptor.type;
-    nodeType = descriptor.type;
-    descriptor: NodeDescriptor = descriptor;
-    highlighted = false;
-    status: NodeStatusState | null = null;
-    statusText: string | null = null;
-    properties: Record<string, unknown> = Object.fromEntries(
+// Every node -- a built-in or a loaded custom type -- is a `DescriptorNode`: its descriptor's ports,
+// dynamic outputs, property defaults and palette metadata drive it, with no per-type hand-written class
+// left. The two producers differ only in *when* the descriptor is known: a built-in subclass below fixes
+// its descriptor at class-build time (`buildDescriptorNodeClass`), while a custom node passes the
+// package's descriptor to the constructor, since that descriptor is only known at load time. The
+// compiler-side hooks (`codegen*`) are the sole thing a custom package cannot carry (`custom-node.ts`
+// builds its `NodeDefinition`); the editor-side class is now identical for both. `descriptor` on the
+// instance is what PropertyPanel.vue's generic branch and ThingstudioNode.vue's palette read.
+export class DescriptorNode extends ClassicPreset.Node {
+  width: number;
+  // Height is fixed for most nodes; a dynamic-output node (the function node) sets it per instance from
+  // the output count in the constructor and on resize.
+  height: number;
+  /** The short palette key (e.g. "function"), or "custom" for a loaded custom type. */
+  kind: string;
+  nodeType: string;
+  descriptor: NodeDescriptor;
+  highlighted = false;
+  status: NodeStatusState | null = null;
+  statusText: string | null = null;
+  properties: Record<string, unknown>;
+
+  constructor(descriptor: NodeDescriptor) {
+    super(descriptor.title ?? descriptor.label ?? descriptor.paletteId ?? descriptor.type);
+    this.descriptor = descriptor;
+    this.width = descriptor.width ?? 100;
+    this.height = (descriptor.ports?.outputs?.length ?? 0) > 1 ? NODE_HEIGHT + 20 : NODE_HEIGHT;
+    this.kind = descriptor.paletteId ?? "custom";
+    this.nodeType = descriptor.type;
+    this.properties = Object.fromEntries(
       (descriptor.properties ?? []).filter((f) => f.name !== undefined).map((f) => [f.name!, f.default]),
     );
-
-    constructor() {
-      super(descriptor.title ?? descriptor.label ?? descriptor.paletteId ?? descriptor.type);
-      for (const input of descriptor.ports?.inputs ?? []) {
-        this.addInput(input.name, new ClassicPreset.Input(portSocket(descriptor.ports?.inputs, input.name, this.properties), input.name, true));
-      }
-      const spec = descriptor.dynamicOutputs;
-      if (spec) {
-        const count = resolveOutputCount(spec, this.properties);
-        for (let i = 0; i < count; i++) this.addDynamicOutputAt(i);
-        this.setDynamicOutputHeight(count);
-      } else {
-        for (const output of descriptor.ports?.outputs ?? []) {
-          this.addOutput(output.name, new ClassicPreset.Output(portSocket(descriptor.ports?.outputs, output.name, this.properties), output.name));
-        }
-      }
+    for (const input of descriptor.ports?.inputs ?? []) {
+      this.addInput(input.name, new ClassicPreset.Input(portSocket(descriptor.ports?.inputs, input.name, this.properties), input.name, true));
     }
-
-    /** Adds the dynamic output at `index`, keyed per the descriptor's `dynamicOutputs` spec (e.g.
-     * "out0"), from the single `ports.outputs` template. */
-    addDynamicOutputAt(index: number): void {
-      const spec = descriptor.dynamicOutputs!;
-      const template = descriptor.ports?.outputs?.[0];
-      if (!template) throw new Error(`nodes.ts: dynamic-output node "${descriptor.type}" has no ports.outputs template`);
-      this.addOutput(`${spec.namePrefix}${index}`, new ClassicPreset.Output(portSocket(descriptor.ports?.outputs, template.name, this.properties), String(index + 1)));
-    }
-
-    /** Removes the dynamic output at `index`. The caller (editor-setup.ts) removes any wire on it first. */
-    removeDynamicOutputAt(index: number): void {
-      this.removeOutput(`${descriptor.dynamicOutputs!.namePrefix}${index}`);
-    }
-
-    /** Resizes the pill to fit `count` dynamic outputs. */
-    setDynamicOutputHeight(count: number): void {
-      this.height = NODE_HEIGHT + Math.max(0, count - 1) * descriptor.dynamicOutputs!.rowHeightPx;
-    }
-
-    /** Re-resolves every output socket from the current properties -- for a port whose `type` is a
-     * function of properties (inject/startup's `payloadType`). Called from the property panel when a
-     * field marked `retype` changes. */
-    retypeOutputs(): void {
+    const spec = descriptor.dynamicOutputs;
+    if (spec) {
+      const count = resolveOutputCount(spec, this.properties);
+      for (let i = 0; i < count; i++) this.addDynamicOutputAt(i);
+      this.setDynamicOutputHeight(count);
+    } else {
       for (const output of descriptor.ports?.outputs ?? []) {
-        const port = this.outputs[output.name];
-        if (port) port.socket = portSocket(descriptor.ports?.outputs, output.name, this.properties);
+        this.addOutput(output.name, new ClassicPreset.Output(portSocket(descriptor.ports?.outputs, output.name, this.properties), output.name));
       }
     }
-  };
+  }
+
+  /** Adds the dynamic output at `index`, keyed per the descriptor's `dynamicOutputs` spec (e.g.
+   * "out0"), from the single `ports.outputs` template. */
+  addDynamicOutputAt(index: number): void {
+    const spec = this.descriptor.dynamicOutputs!;
+    const template = this.descriptor.ports?.outputs?.[0];
+    if (!template) throw new Error(`nodes.ts: dynamic-output node "${this.descriptor.type}" has no ports.outputs template`);
+    this.addOutput(`${spec.namePrefix}${index}`, new ClassicPreset.Output(portSocket(this.descriptor.ports?.outputs, template.name, this.properties), String(index + 1)));
+  }
+
+  /** Removes the dynamic output at `index`. The caller (editor-setup.ts) removes any wire on it first. */
+  removeDynamicOutputAt(index: number): void {
+    this.removeOutput(`${this.descriptor.dynamicOutputs!.namePrefix}${index}`);
+  }
+
+  /** Resizes the pill to fit `count` dynamic outputs. */
+  setDynamicOutputHeight(count: number): void {
+    this.height = NODE_HEIGHT + Math.max(0, count - 1) * this.descriptor.dynamicOutputs!.rowHeightPx;
+  }
+
+  /** Re-resolves every output socket from the current properties -- for a port whose `type` is a
+   * function of properties (inject/startup's `payloadType`). Called from the property panel when a
+   * field marked `retype` changes. */
+  retypeOutputs(): void {
+    for (const output of this.descriptor.ports?.outputs ?? []) {
+      const port = this.outputs[output.name];
+      if (port) port.socket = portSocket(this.descriptor.ports?.outputs, output.name, this.properties);
+    }
+  }
 }
 
-/** A class built by buildDescriptorNodeClass -- the descriptor plus its dynamic-output resize methods. */
-export interface DynamicOutputNode {
-  descriptor: NodeDescriptor;
-  properties: Record<string, unknown>;
-  outputs: Record<string, unknown>;
-  height: number;
-  addDynamicOutputAt(index: number): void;
-  removeDynamicOutputAt(index: number): void;
-  setDynamicOutputHeight(count: number): void;
+/** A built-in subclass fixed to one descriptor at class-build time. */
+function buildDescriptorNodeClass(descriptor: NodeDescriptor) {
+  return class extends DescriptorNode {
+    constructor() {
+      super(descriptor);
+    }
+  };
 }
 
 // First family migrated onto the canonical descriptor (its data now lives in node-library/debug.ts).
 // The class name is kept because tests and AnyThingstudioNode reference it.
 export class DebugNode extends buildDescriptorNodeClass(debugNode) {}
+
+export class DelayNode extends buildDescriptorNodeClass(delayNode) {}
 
 export class InjectNode extends buildDescriptorNodeClass(injectNode) {}
 
@@ -525,89 +522,25 @@ export class GuiModalNode extends buildDescriptorNodeClass(guiModalNode) {}
 
 // --- Custom nodes (docs/working-notes/custom-node-authoring-scoping.md) ---
 //
-// One generic class for every loaded custom node type, instead of a
-// hand-written subclass per type -- driven entirely by the type's
-// CustomNodeDescriptor (custom-node.ts), loaded at runtime from a
-// `.node.json`/`.node.py` package (custom-node-io.ts), never known about
-// at editor-build time. `kind` here is deliberately the *literal* string
-// "custom", not the descriptor's own `kind` ("source"/"transform"/"sink")
-// -- PropertyPanel.vue and palette.ts both switch on `.kind` to mean "which
-// UI shape," and "custom" is its own single UI shape (a generic
-// descriptor-driven form) regardless of which of the three compiler kinds
-// the underlying node actually is. `nodeType` is the thing that carries
-// the real, descriptor-declared, unprefixed type id (e.g. "custom/dht22")
-// -- exactly the field every other class above now carries too, which is
-// what makes graph-adapter.ts/main.ts's read of `n.nodeType` work
-// uniformly across first-party and custom nodes without a branch.
-export class CustomNode extends ClassicPreset.Node {
+// A loaded custom type is the same `DescriptorNode` a built-in is -- one class for every custom type,
+// since the descriptor is passed per instance rather than fixed at class-build time. `kind` is the
+// literal "custom" (DescriptorNode's own fallback when the descriptor has no `paletteId`), not the
+// descriptor's own "source"/"transform"/"sink": PropertyPanel.vue and the palette treat "custom" as its
+// own UI shape regardless of the compiler kind. `nodeType` carries the real, unprefixed type id (e.g.
+// "custom/dht22"), which is what makes graph-adapter.ts/main.ts's read of `n.nodeType` work uniformly
+// across first-party and custom nodes without a branch.
+export class CustomNode extends DescriptorNode {
+  // Custom packages have no `width` today, so keep them a little wider than the base default (100) --
+  // a user-chosen label is likelier to be long. Drop this once the format carries `width`.
   width = 128;
-  height = NODE_HEIGHT;
-  kind = "custom" as const;
-  nodeType: string;
-  descriptor: CustomNodeDescriptor;
-  highlighted = false;
-  status: NodeStatusState | null = null;
-  statusText: string | null = null;
-
-  properties: Record<string, unknown>;
-
   constructor(descriptor: CustomNodeDescriptor) {
-    super(descriptor.title ?? descriptor.label);
-    this.descriptor = descriptor;
-    this.nodeType = descriptor.type;
-    this.properties = Object.fromEntries((descriptor.properties ?? []).map((f) => [f.name, f.default]));
-
-    for (const input of descriptor.ports?.inputs ?? []) {
-      this.addInput(input.name, new ClassicPreset.Input(socketForPayloadType(input.type), input.name, true));
-    }
-    for (const output of descriptor.ports?.outputs ?? []) {
-      this.addOutput(output.name, new ClassicPreset.Output(socketForPayloadType(output.type), output.name));
-    }
+    super(descriptor);
   }
 }
 
-export type AnyThingstudioNode =
-  | InjectNode
-  | StartupNode
-  | FunctionNode
-  | DebugNode
-  | GpioOutNode
-  | PwmOutNode
-  | TimerNode
-  | InterruptNode
-  | EswitchNode
-  | EbuttonNode
-  | AdcNode
-  | EncoderNode
-  | NeopixelNode
-  | DisplaySpiNode
-  | DisplayI2cNode
-  | WifiStatusNode
-  | WifiGateNode
-  | UdpSendNode
-  | UdpReceiveNode
-  | HttpRequestNode
-  | HttpInNode
-  | HttpResponseNode
-  | MqttPublishNode
-  | MqttSubscribeNode
-  | DelayNode
-  | FilterNode
-  | Bme280Node
-  | TouchI2cNode
-  | I2cNode
-  | InstanceType<typeof GuiScreenNode>
-  | InstanceType<typeof GuiLabelNode>
-  | InstanceType<typeof GuiReadoutNode>
-  | InstanceType<typeof GuiBarNode>
-  | InstanceType<typeof GuiTrendNode>
-  | JournalNode
-  | NtpNode
-  | InstanceType<typeof GuiLedNode>
-  | InstanceType<typeof GuiButtonNode>
-  | InstanceType<typeof GuiNavigatorNode>
-  | InstanceType<typeof GuiModalNode>
-  | CustomNode;
+// Every node class above is a DescriptorNode; the concrete subclasses exist only for `instanceof`
+// checks (InjectNode's fire target) and node-library tests, so the union is just the base.
+export type AnyThingstudioNode = DescriptorNode;
 
 // One constructor per palette kind, shared between the app-shell's
 // click-to-add/drag-drop handler (main.ts) and applyFlowFile()'s per-node

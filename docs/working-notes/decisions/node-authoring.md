@@ -699,3 +699,18 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   `guiClass`/`GUI_CANVAS_TITLES` removed. SPEC + custom schema + conformance updated, catalog regenerated.
   `dynamicOutputs` stays built-in-only (not in the custom schema) until the canvas can build dynamic ports for
   a custom node too — the phase-3 capability-parity item. `node-format-parity-briefing.md` updated in place.
+
+- **2026-10-15, same session — one node class: `DescriptorNode` replaces the two builders (roadmap phase 0).**
+  `nodes.ts` had two editor node-class builders: `buildDescriptorNodeClass` (built-ins, descriptor fixed at
+  class-build time) and `CustomNode` (custom types, descriptor passed per instance). They diverged only in
+  when the descriptor is known and in trivial defaults. Now a single `DescriptorNode` base holds all the
+  generic logic (ports, dynamic outputs, property defaults, palette metadata, `retypeOutputs`); a built-in
+  subclass fixes its descriptor at class-build time and `CustomNode extends DescriptorNode` passes the loaded
+  package's descriptor to the constructor. The concrete built-in subclasses stay only for `instanceof` checks
+  (InjectNode's fire target) and node-library tests, so `AnyThingstudioNode` collapses to `DescriptorNode`.
+  The `DynamicOutputNode` cast interface is gone (the methods live on the base); `editor-setup.ts`, `main.ts`,
+  `check-flow.ts` and `PropertyPanel.vue` no longer cast. Custom nodes keep their 128px default width (the
+  package format has no `width` yet); everything else is now identical between built-in and custom editor
+  classes — the compiler-side `codegen*` hooks are the only remaining divergence, by design. Internal only:
+  no interface change, no behavior change, no user-doc impact. `tsc --noEmit` clean, full `vitest run` 1073
+  pass.

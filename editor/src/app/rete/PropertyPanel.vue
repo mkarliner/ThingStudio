@@ -202,7 +202,7 @@ import { computed } from "vue";
 import { selectedNode, bumpPropertyVersion, propertyVersion, setFunctionNodeOutputCount } from "./store";
 import { DEFAULT_KIND_STYLE, type KindStyle } from "./palette";
 import { paletteStyleFor } from "./node-descriptors";
-import { CustomNode, type AnyThingstudioNode } from "./nodes";
+import { CustomNode } from "./nodes";
 import { evaluatePredicate, resolveConditionalText, type NodeDescriptor, type PropertyFieldDescriptor } from "../../compiler/node-descriptor";
 import ConfigRefField from "./ConfigRefField.vue";
 import CredentialRefField from "./CredentialRefField.vue";
@@ -302,7 +302,7 @@ function onFieldChange(f: PropertyFieldDescriptor): void {
 // snapping the port count while someone's typing a two-digit number.
 function setDynamicOutputCount(count: number): void {
   if (!node.value || !Number.isFinite(count)) return;
-  void setFunctionNodeOutputCount.value?.(node.value as AnyThingstudioNode, count);
+  void setFunctionNodeOutputCount.value?.(node.value, count);
 }
 </script>
 

@@ -27,10 +27,10 @@ import { BUILTIN_DEFINITION_FILES } from "../definitions/builtin.js";
 import { resolveTarget, type Target } from "../definitions/target.js";
 import { parseFlowFile, FlowFileError, type FlowFile } from "../flow-file/flow-file.js";
 import { buildRegistry } from "../node-library/registry.js";
-import { NODE_FACTORIES, type DynamicOutputNode } from "../app/rete/nodes.js";
+import { NODE_FACTORIES, type DescriptorNode } from "../app/rete/nodes.js";
 import { ClassicPreset } from "rete";
 import { type ThingstudioSocket } from "../app/rete/sockets.js";
-import { resolveOutputCount, type DynamicOutputs } from "../compiler/node-descriptor.js";
+import { resolveOutputCount } from "../compiler/node-descriptor.js";
 
 export interface CheckOptions {
   /** Board menu value: "board:<id>" or "processor:<id>". Absent: no board, pins are checked against the widest range. */
@@ -79,9 +79,9 @@ function buildNode(type: string, fileProps: Record<string, unknown>): ReteNode |
   if (!factory) return null;
   const node = factory() as ReteNode;
   Object.assign(node.properties, fileProps);
-  const dyn = (node as unknown as { descriptor?: { dynamicOutputs?: DynamicOutputs } }).descriptor?.dynamicOutputs;
+  const dynamic = node as unknown as DescriptorNode;
+  const dyn = dynamic.descriptor.dynamicOutputs;
   if (dyn) {
-    const dynamic = node as unknown as DynamicOutputNode;
     const wanted = resolveOutputCount(dyn, node.properties);
     const current = Object.keys(node.outputs).length;
     for (let i = current; i < wanted; i++) dynamic.addDynamicOutputAt(i);
