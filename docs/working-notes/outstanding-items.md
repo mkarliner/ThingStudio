@@ -362,9 +362,10 @@ not here.
   restores the compile-time bus/pin validate-and-claim checks a package lost, and `bme280` is a core package now.
   `filter`, `journal`, `http_response` flipped the same session; `wifi_gate` is deliberately deferred (it needs
   flow-query context parity — see the scoping note §9). `pwm_out` and `neopixel` followed (the `pin` resource).
-  Next: `interrupt`/`eswitch`/`ebutton`; `adc` is blocked on a node-specific context query (its ADC2-vs-WiFi
-  guard), `encoder` on a pin-pair claim, and `display_i2c`/`touch_i2c`/`display_spi` are the complex remainder.
-  See `shared-resource-facility-scoping.md` §9.
+  Remaining: `interrupt` is blocked on a package event-source "drop this wake" gap (`emit`'s `None` isn't guarded
+  in `compile.ts`'s event path); `eswitch`/`ebutton` are portable but need a `runtime.shared` driver decision;
+  `adc` is blocked on a node-specific context query (its ADC2-vs-WiFi guard); `encoder` on a pin-pair claim; and
+  `display_i2c`/`touch_i2c`/`display_spi` are the complex remainder. See `shared-resource-facility-scoping.md` §9.
 
 - **[P3]** **Deploy the runtime itself from the browser editor, not just compiled flows.** Confirmed untracked
   anywhere until 2026-09-12. Today, `test-flows/deploy_runtime.py` is a standalone `mpremote`-based script pushing

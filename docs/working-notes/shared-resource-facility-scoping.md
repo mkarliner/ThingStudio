@@ -153,7 +153,18 @@ recipe: `filter`, `journal`, `wifi_gate`, `http_response`.
     before converting.
   - **Complex, not yet attempted:** `display_i2c`/`touch_i2c` (i2c resource + touch-panel config) and
     `display_spi` (spi resource + many pins + viper codegen).
-  - Also unconverted: `interrupt`, `eswitch`, `ebutton` (pin input + a derived device claim; event sources).
+  - **`interrupt` is blocked on a package-format gap.** Its debounce drops a wake with a bare `continue` in
+    `buildMsg` (the built-in's event-source contract allows it). A package event source is
+    `waitStatement` + `buildMsg: msg = await emit(props)` (`custom-node.ts`), and `compile.ts`'s event-source
+    path has **no `msg is None` guard** (unlike the polled-source and transform paths) — so a package `emit`
+    returning `None` would pass `None` straight to the children. Porting `interrupt` needs a "drop this wake"
+    convention for package event sources (make `emit`'s `None` skip `chainBody`, mirroring the polled-source
+    guard). A small compiler change; scope before doing.
+  - **`eswitch`/`ebutton` are portable in principle** (no wake-drop needed: `wait` can stash the `WaitAny` winner
+    in a `nonlocal`, `emit` reads it), but their driver is deduped at compile time (a fixed-name `_eswitch_<pin>`
+    statement keyed `eswitch-<pin>`). A package would build one driver per instance; to keep one driver per pin,
+    wrap the driver in `runtime.shared(...)` — a node-specific choice to make when converting, not a facility
+    change. Deferred to a follow-up rather than rushed.
 - **Pure-software nodes flipped the same session** (the settled recipe, no facility needed): `filter`,
   `journal`, `http_response` are core packages now (`core-packages/{filter,journal,http-response}.ts`; the TS
   files deleted). The accepted difference repeats: a package's per-instance closure holds state/helpers rather
