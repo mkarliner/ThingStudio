@@ -145,7 +145,7 @@ import type { NodeKind } from "./palette";
 import { injectNode } from "../../node-library/inject.js";
 import { startupNode } from "../../node-library/startup.js";
 import { functionNode } from "../../node-library/function-node.js";
-import { debugNode } from "../../node-library/debug.js";
+import { descriptor as debugCoreDescriptor } from "../../node-library/core-packages/debug.js";
 import { descriptor as gpioOutCoreDescriptor } from "../../node-library/core-packages/gpio-out.js";
 import { timerNode } from "../../node-library/timer.js";
 import { interruptNode } from "../../node-library/interrupt.js";
@@ -421,7 +421,7 @@ function buildDescriptorNodeClass(descriptor: NodeDescriptor) {
 
 // First family migrated onto the canonical descriptor (its data now lives in node-library/debug.ts).
 // The class name is kept because tests and AnyThingstudioNode reference it.
-export class DebugNode extends buildDescriptorNodeClass(debugNode) {}
+export class DebugNode extends buildDescriptorNodeClass(debugCoreDescriptor) {}
 
 export class DelayNode extends buildDescriptorNodeClass(delayCoreDescriptor) {}
 

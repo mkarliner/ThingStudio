@@ -188,3 +188,10 @@ built-in's (`node <id> (...) property "pin" 5 doesn't exist ...` vs `gpio_out pi
 acceptable under the no-loss test, but they mean tests that asserted the built-in's exact code/text need
 retargeting per node. Error-message wording is a candidate for a small compatibility pass (label a field's check
 with the node's palette id) if the churn proves annoying.
+
+## 15. Fourth leaf node: debug
+
+`thingstudio/debug` is a core package too (`core-packages/debug.ts`; `debug.ts` deleted). It needed an internal
+`nodeId` field for "DEBUG node=<id>"; the catalog filters it like the other internal fields. A widely-used sink,
+so this was a good stress test: only the tests asserting the built-in's exact generated function name (`_debug`)
+needed a one-word regex relaxation; the behaviour tests (running the generated flow) passed unchanged.

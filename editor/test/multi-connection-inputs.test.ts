@@ -158,7 +158,7 @@ describe("multi-connection node inputs -- end-to-end fan-in through the Rete edi
     // debug's Python function is defined exactly once, same "shared sink,
     // one function, called from each incoming path" guarantee
     // compiler.general.test.ts's own fan-in test already established.
-    expect(source.match(/^async def _debug\(msg\):/gm)?.length).toBe(1);
+    expect(source.match(/^async def _\w*debug\w*\(msg\):/gm)?.length).toBe(1);
     expect(source.match(/^runtime\.spawn\(/gm)?.length).toBe(2);
 
     const output = runGenerated(source);

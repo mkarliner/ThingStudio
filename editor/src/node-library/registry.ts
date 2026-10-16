@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import type { NodeDefinition } from "../compiler/node-definition.js";
-import { debugNode } from "./debug.js";
+import { descriptor as debugCoreDescriptor, python as debugCorePython } from "./core-packages/debug.js";
 import { displayI2cNode } from "./display-i2c.js";
 import { displaySpiNode } from "./display-spi.js";
 import { descriptor as delayCoreDescriptor, python as delayCorePython } from "./core-packages/delay.js";
@@ -84,7 +84,7 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     buildCoreNodeDefinition(gpioOutCoreDescriptor, gpioOutCorePython),
     variableGetNode,
     variableSetNode,
-    debugNode,
+    buildCoreNodeDefinition(debugCoreDescriptor, debugCorePython),
     interruptNode,
     eswitchNode,
     ebuttonNode,

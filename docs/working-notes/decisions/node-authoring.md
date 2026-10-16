@@ -821,3 +821,9 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   search. It does re-raise the **marketplace/sandboxing** question (Decision 5) -- fetching a registry/list and
   installing a third party's package is that trigger -- which the data-only posture keeps survivable. Design
   questions for when it's scoped: registry index format, trust/update, version pinning.
+
+- **2026-10-15, same session — fourth leaf node flipped (`debug`).** `thingstudio/debug` is a core package now
+  (`core-packages/debug.ts`; `debug.ts` deleted), using an internal `nodeId` field for its "DEBUG node=<id>"
+  output. Being the most-used sink, it was a good stress test: behaviour tests passed unchanged, only assertions
+  of the built-in's exact generated function name needed relaxing. Four built-ins are now packages (i2c, delay,
+  gpio_out, debug).
