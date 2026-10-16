@@ -790,3 +790,12 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   codegen now enforces number `min`/`max` and a new serializable `integer` text-field attribute (hex/decimal
   parsed, range-checked, inlined as a number). Residual deviation: a missing address/bus is a runtime error
   (conditionally-required fields aren't expressible yet). The catalog hides the internal `nodeId` field.
+
+- **2026-10-15, same session — `pinUse` is the opt-in for a pin claim; example nodes take presets and named pins.**
+  Two points from Mike on the IMU example. (1) A custom `pin` field with **no `pinUse`** is now a plain pin value:
+  existence-checked against the board, but *not* claimed as a hardware resource — so a bus line (SCL/SDA) can be a
+  `pin` field (getting the named-pin dropdown on a pyboard) without a spurious GPIO claim. `pinUse` remains the
+  opt-in for the direction check + claim (SPEC + user guide updated). (2) The example IMU nodes now carry a
+  `presetType` (custom-node presets already worked via the schema's `presetType`; the examples just weren't using
+  it), and their pins are `pin` fields, so `scl`/`sda` accept a named pin on a pyboard. Their `.node.py` uses the
+  pin value directly (no `int()`), so a named pin passes through to `machine.Pin`.

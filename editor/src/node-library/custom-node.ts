@@ -594,17 +594,21 @@ function pyPropertiesLiteral(descriptor: { properties?: PropertyFieldDescriptor[
   return `{${entries.join(", ")}}`;
 }
 
-/** A `pin` field's Python literal: checked against the target board and claimed as a hardware resource
- * (context parity, phase 2a), then rendered as a bare number or a quoted named pin. An `optional` pin
- * that is blank/-1 becomes None. */
+/** A `pin` field's Python literal. `pinUse` opts the field into a direction check and a hardware-resource
+ * claim (a GPIO the node drives or reads); without it the field is just a pin value (a bus line, say) --
+ * existence-checked against the board, never claimed. `pinPull` is the input pull. An `optional` pin that is
+ * blank/-1 becomes None. */
 function pinFieldLiteral(node: GraphNode, f: PropertyFieldDescriptor, raw: unknown, fieldLabel: string, ctx: CodegenContext): string {
+  const declared = f.pinUse !== undefined;
   const use = f.pinUse ?? "input";
   const pull = f.pinPull ?? "none";
-  const pin = f.optional ? checkOptionalPin(ctx, fieldLabel, raw, use) : checkPin(ctx, fieldLabel, raw, use, { pull: use === "input" && pull !== "none" });
+  const pin = f.optional ? checkOptionalPin(ctx, fieldLabel, raw, use) : checkPin(ctx, fieldLabel, raw, use, { pull: declared && use === "input" && pull !== "none" });
   if (pin === null) return "None";
-  // Same use text a built-in's sharedPin/sharedAdc claims, so a custom and a built-in node on the same
-  // pin with the same mode share it, and a genuinely different mode conflicts (hardware-shared.ts).
-  claimResource(ctx, pinLabel(pin), use === "output" ? "output" : `input, ${pullText(pull)}`, node);
+  if (declared) {
+    // Same use text a built-in's sharedPin/sharedAdc claims, so a custom and a built-in node on the same
+    // pin with the same mode share it, and a genuinely different mode conflicts (hardware-shared.ts).
+    claimResource(ctx, pinLabel(pin), use === "output" ? "output" : `input, ${pullText(pull)}`, node);
+  }
   return pyPinLiteral(pin);
 }
 

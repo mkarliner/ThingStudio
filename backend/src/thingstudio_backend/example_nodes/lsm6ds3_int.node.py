@@ -45,11 +45,11 @@ _GYRO = {'250': (0b00, 8.75e-3), '500': (0b01, 17.5e-3), '1000': (0b10, 35e-3), 
 _ODR_104HZ = 0x40
 
 _bus = int(properties['bus'])
-_scl = int(properties['scl'])
-_sda = int(properties['sda'])
+_scl = properties['scl']
+_sda = properties['sda']
 _addr = int(properties['address'], 16)
 _int = properties['intPin']
-_where = 'I2C %d (SCL %d, SDA %d) at 0x%02X' % (_bus, _scl, _sda, _addr)
+_where = 'I2C %d (SCL %s, SDA %s) at 0x%02X' % (_bus, _scl, _sda, _addr)
 
 if str(properties['accelRange']) not in _ACCEL:
     raise ValueError('lsm6ds3_int: unknown accel range "%s"' % str(properties['accelRange']))
@@ -57,8 +57,8 @@ _xl_bits, _xl_scale = _ACCEL[str(properties['accelRange'])]
 _g_bits, _g_scale = _GYRO['500']
 _xl_fs_g = float(str(properties['accelRange']))
 
-_pwr = int(properties['powerPin'])
-if _pwr >= 0:
+_pwr = properties['powerPin']
+if _pwr is not None:
     _p = runtime.shared('pin', _pwr, ('out', 'none'), lambda: machine.Pin(_pwr, machine.Pin.OUT))
     _p.value(1)
     time.sleep_ms(50)  # turn-on time is up to 35 ms

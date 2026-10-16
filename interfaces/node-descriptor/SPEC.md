@@ -79,7 +79,8 @@ A `configRef` field may carry **`singleton: true`**: at compile time the flow's 
 the singleton WiFi config; zero or many is a compile error and the stored value is ignored. A `pin` field
 may carry **`pinUse`** (`"input"` default, or `"output"`) and **`pinPull`** (`"none"`/`"up"`/`"down"`):
 the compiler checks the pin against the board and claims it as a hardware resource (a custom and a built-in
-node on the same pin, same mode, share it; a different mode is a compile error). Added 2026-10-15
+node on the same pin, same mode, share it; a different mode is a compile error). A `pin` field with **no
+`pinUse`** is a plain pin value — checked to exist on the board, never claimed (a bus line, say). Added 2026-10-15
 (node context parity, phase 2a).
 
 A **`target`** field inlines the board/processor this flow is compiled for, as a dict (`boardId`,

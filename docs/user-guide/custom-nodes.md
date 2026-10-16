@@ -119,10 +119,11 @@ the node is selected:
   config of `configType` at compile time instead of an id you store (how a
   built-in uses the shared WiFi setting). Zero or two such configs is a
   compile error.
-- **`pinUse`** / **`pinPull`** — optional, on a `pin`: `input` (default) or
-  `output`, and the pull (`none`/`up`/`down`). The compiler then checks the
-  pin against the board and claims it, so two nodes can't quietly set the
-  same pin up two ways.
+- **`pinUse`** / **`pinPull`** — optional, on a `pin`: `input` or `output`,
+  and the pull (`none`/`up`/`down`). Adding `pinUse` makes the compiler
+  claim the pin, so two nodes can't quietly set the same pin up two ways. A
+  `pin` without `pinUse` is just a value (checked to exist on the board) —
+  use that for a bus line like SCL/SDA.
 - **`target`** — a kind for a board-specific node. Its value in Python is a
   dict of the board/processor this flow is compiled for — `boardId`,
   `boardName`, `processorId`, `processorName`, `label`, `capabilities` —

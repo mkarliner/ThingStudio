@@ -797,3 +797,26 @@ describe("evaluatePredicate (the data-driven field conditional)", () => {
     expect(p({}, { field: "anything" })).toBe(true);
   });
 });
+
+describe("pin fields: direction opt-in and named pins", () => {
+  const descriptor = (props: object[]) =>
+    validateCustomNodeDescriptor({ type: "custom/gpio", kind: "sink", label: "gpio", ports: { inputs: [{ name: "msg", type: "any" }] }, properties: props as never });
+
+  it("a pin field with no pinUse is a plain value: checked, never claimed", () => {
+    const def = buildCustomNodeDefinition(descriptor([{ name: "scl", label: "scl", kind: "pin", default: 5 }]), "async def run(msg, properties):\n    pass\n");
+    const claims: string[] = [];
+    const ctx = freshCtx();
+    ctx.claimResource = (resource: string): void => {
+      claims.push(resource);
+    };
+    const result = def.codegenSink!(node(1, { scl: 5 }), ctx);
+    expect((result.statements ?? []).map((s) => s.code).join("\n")).toContain('"scl": 5');
+    expect(claims).toEqual([]);
+  });
+
+  it("accepts a named pin value, inlined as a quoted string", () => {
+    const def = buildCustomNodeDefinition(descriptor([{ name: "scl", label: "scl", kind: "pin", default: 5 }]), "async def run(msg, properties):\n    pass\n");
+    const result = def.codegenSink!(node(1, { scl: "X1" }), freshCtx());
+    expect((result.statements ?? []).map((s) => s.code).join("\n")).toContain('"scl": "X1"');
+  });
+});

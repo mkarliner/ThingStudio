@@ -4,14 +4,15 @@
   "label": "lsm6ds3",
   "icon": "↻",
   "group": "hardware",
+  "presetType": "lsm6ds3",
   "ports": {
     "outputs": [{ "name": "msg", "type": "any" }]
   },
   "properties": [
     { "name": "bus", "label": "I2C bus", "kind": "number", "default": 0 },
-    { "name": "scl", "label": "SCL pin", "kind": "number", "default": 27 },
-    { "name": "sda", "label": "SDA pin", "kind": "number", "default": 7 },
-    { "name": "powerPin", "label": "power pin (-1: none)", "kind": "number", "default": 40 },
+    { "name": "scl", "label": "SCL pin", "kind": "pin", "default": 27 },
+    { "name": "sda", "label": "SDA pin", "kind": "pin", "default": 7 },
+    { "name": "powerPin", "label": "power pin (blank: none)", "kind": "pin", "default": 40, "optional": true, "pinUse": "output" },
     { "name": "address", "label": "address", "kind": "select", "default": "0x6A",
       "options": [{ "value": "0x6A", "label": "0x6A (SDO low)" }, { "value": "0x6B", "label": "0x6B (SDO high)" }] },
     { "name": "accelRange", "label": "accel range", "kind": "select", "default": "4",
