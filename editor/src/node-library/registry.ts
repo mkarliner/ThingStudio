@@ -10,8 +10,8 @@ import { descriptor as bme280CoreDescriptor, python as bme280CorePython } from "
 import { touchI2cNode } from "./touch-i2c.js";
 import { buildCoreNodeDefinition } from "./custom-node.js";
 import { descriptor as i2cCoreDescriptor, python as i2cCorePython } from "./core-packages/i2c.js";
-import { ebuttonNode } from "./ebutton.js";
-import { eswitchNode } from "./eswitch.js";
+import { descriptor as eswitchCoreDescriptor, python as eswitchCorePython } from "./core-packages/eswitch.js";
+import { descriptor as ebuttonCoreDescriptor, python as ebuttonCorePython } from "./core-packages/ebutton.js";
 import { adcNode } from "./adc.js";
 import { encoderNode } from "./encoder.js";
 import { descriptor as neopixelCoreDescriptor, python as neopixelCorePython } from "./core-packages/neopixel.js";
@@ -86,8 +86,8 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     variableSetNode,
     buildCoreNodeDefinition(debugCoreDescriptor, debugCorePython),
     buildCoreNodeDefinition(interruptCoreDescriptor, interruptCorePython),
-    eswitchNode,
-    ebuttonNode,
+    buildCoreNodeDefinition(eswitchCoreDescriptor, eswitchCorePython),
+    buildCoreNodeDefinition(ebuttonCoreDescriptor, ebuttonCorePython),
     adcNode,
     encoderNode,
     buildCoreNodeDefinition(neopixelCoreDescriptor, neopixelCorePython),

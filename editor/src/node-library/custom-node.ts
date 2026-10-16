@@ -551,10 +551,20 @@ function pyPropertiesLiteral(descriptor: { properties?: PropertyFieldDescriptor[
     const fieldLabel = `${contextLabel} property "${f.name}"`;
     let literal: string;
     switch (f.kind) {
-      case "number":
-        checkRange(f, Number(raw), fieldLabel);
+      case "number": {
+        const n = Number(raw);
+        checkRange(f, n, fieldLabel);
+        if (f.lessThan !== undefined) {
+          const other = fields.find((p) => p.name === f.lessThan);
+          const otherRaw = other && f.lessThan in rawProperties ? rawProperties[f.lessThan] : other?.default;
+          const otherN = Number(otherRaw);
+          if (Number.isFinite(n) && Number.isFinite(otherN) && !(n < otherN)) {
+            throw new CompileError(`${fieldLabel} ${n} must be less than ${f.lessThan} (${otherN})`);
+          }
+        }
         literal = pyNumberLiteral(raw, fieldLabel);
         break;
+      }
       case "pin":
         literal = pinFieldLiteral(node, f, raw, fieldLabel, ctx);
         break;

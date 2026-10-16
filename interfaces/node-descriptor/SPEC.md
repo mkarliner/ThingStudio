@@ -98,10 +98,11 @@ same compile-time checks a built-in's own codegen did (`editor/src/node-library/
 (from a `configRef` field) is validated against the board, its SCL/SDA pins claimed, and two in-use configs on one
 bus number refused; an `spi` bus (from `bus`/`sck`/`mosi`/`baudrate` properties) is `checkSpi`'d and its bus/pins
 claimed; a `pin` is direction/pull-checked and claimed with a role/use text, plus an optional derived device claim
-for two devices on one pin. The package's own `.node.py` still builds and fetches the object through
-`runtime.shared(...)` — `resources` restores the checks, not the object plumbing. **Core-only:** it is a
-`NodeDescriptor` field but is deliberately **not** in `custom-node.schema.json` yet (2026-10-16). Full reasoning:
-`../../docs/working-notes/shared-resource-facility-scoping.md`.
+for two devices on one pin. A pin resource's pull is either a fixed `pull` (`"none"`/`"up"`/`"down"`) or a
+`pullProperty` naming a property that holds it (eswitch/ebutton's configurable pull). The package's own `.node.py`
+still builds and fetches the object through `runtime.shared(...)` — `resources` restores the checks, not the object
+plumbing. **Core-only:** it is a `NodeDescriptor` field but is deliberately **not** in `custom-node.schema.json`
+yet (2026-10-16). Full reasoning: `../../docs/working-notes/shared-resource-facility-scoping.md`.
 
 A field with **no `name`** (and no `default`) is **info-only**: the panel renders its widget but it binds to
 no property. Used for a `configRef` to a flow-singleton config (e.g. the WiFi picker shown on a network
@@ -109,7 +110,9 @@ node). Fields may also carry `optional`, `min`/`max`/`step` (`step` may be the l
 arbitrary fractional values), `help`, `placeholder`, `visibleWhen` (a serializable conditional: show the
 field only when `properties[field]` equals/notEquals/is in/compares against a value), and `retype` (changing
 the field re-resolves the node's port sockets — for a port whose
-`type` is a function of properties, e.g. inject/startup's output tracking `payloadType`).
+`type` is a function of properties, e.g. inject/startup's output tracking `payloadType`). A numeric field may also
+carry **`lessThan`** (the name of another property it must be below, checked at compile time — e.g. ebutton's
+`doubleClickMs` less than `longPressMs`); core-only, added 2026-10-16.
 
 **Worked example** — the built-in `debug` node's descriptor (its codegen hook omitted):
 

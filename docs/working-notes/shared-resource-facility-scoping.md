@@ -150,17 +150,18 @@ recipe: `filter`, `journal`, `wifi_gate`, `http_response`.
     needed two things first: its `debounce`/`debounceMs` removed (Mike's call — `eswitch`/`ebutton` own debounce),
     and `eventSource` added to the canonical `NodeDescriptor` (it existed only on the custom descriptor, so a core
     package couldn't be an event source). Both landed.
+  - **Converted 2026-10-16:** `eswitch` and `ebutton` (the `pin` resource). Needed two small canonical additions
+    (both approved): **`pullProperty`** (a pin resource's pull can come from a property, so the claim text and the
+    no-internal-pull warning follow eswitch/ebutton's `pull` select) and **`lessThan`** (a numeric field must be
+    below another property — ebutton's `doubleClickMs` < `longPressMs`, a vendored-driver constraint with no other
+    way to express it). The driver is a keyed singleton via `runtime.shared('eswitch'|'ebutton', pin, ...)`; the
+    per-instance `WaitAny` stays per instance.
   - **Blocked:** `adc` needs a node-specific compile-time context query (its ESP32 ADC2-vs-WiFi guard reads
     `ctx.findNodesOfType`), which the package format can't express yet. `encoder` needs a claim on a *pin pair*
     (`GPIO x,y encoder`), expressible only via `{property}` interpolation of both pins — TODO/adjust the shape
     before converting.
   - **Complex, not yet attempted:** `display_i2c`/`touch_i2c` (i2c resource + touch-panel config) and
     `display_spi` (spi resource + many pins + viper codegen).
-  - **`eswitch`/`ebutton` are portable in principle** (no wake-drop needed: `wait` can stash the `WaitAny` winner
-    in a `nonlocal`, `emit` reads it), but their driver is deduped at compile time (a fixed-name `_eswitch_<pin>`
-    statement keyed `eswitch-<pin>`). A package would build one driver per instance; to keep one driver per pin,
-    wrap the driver in `runtime.shared(...)` — a node-specific choice to make when converting, not a facility
-    change. Deferred to a follow-up rather than rushed.
   - **Latent format gap, not currently blocking anything:** a package event source can't drop a wake — its
     `buildMsg` is `msg = await emit(props)` and `compile.ts`'s event-source path has no `msg is None` guard (the
     polled-source and transform paths do). `interrupt` no longer needs it (debounce is gone), but any future

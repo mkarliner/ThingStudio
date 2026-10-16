@@ -18,9 +18,11 @@ import { descriptor as gpioOutDescriptor, python as gpioOutPython } from "../src
 import { buildCoreNodeDefinition } from "../src/node-library/custom-node.js";
 
 const gpioOutNode = buildCoreNodeDefinition(gpioOutDescriptor, gpioOutPython);
-import { ebuttonNode } from "../src/node-library/ebutton.js";
+import { descriptor as ebuttonDescriptor, python as ebuttonPython } from "../src/node-library/core-packages/ebutton.js";
 import { displaySpiNode } from "../src/node-library/display-spi.js";
 import { displayI2cNode } from "../src/node-library/display-i2c.js";
+
+const ebuttonNode = buildCoreNodeDefinition(ebuttonDescriptor, ebuttonPython);
 
 const defs = buildDefinitionSet(BUILTIN_DEFINITION_FILES, []);
 

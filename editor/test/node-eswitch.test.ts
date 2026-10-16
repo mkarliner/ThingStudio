@@ -32,8 +32,11 @@ import { compile } from "../src/compiler/compile.js";
 import { CompileError } from "../src/compiler/errors.js";
 import type { GraphData, GraphNode } from "../src/compiler/graph.js";
 import type { CodegenContext } from "../src/compiler/node-definition.js";
-import { eswitchNode } from "../src/node-library/eswitch.js";
+import { descriptor as eswitchDescriptor, python as eswitchPython } from "../src/node-library/core-packages/eswitch.js";
+import { buildCoreNodeDefinition } from "../src/node-library/custom-node.js";
 import { buildRegistry } from "../src/node-library/registry.js";
+
+const eswitchNode = buildCoreNodeDefinition(eswitchDescriptor, eswitchPython);
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const pymockDir = join(__dirname, "fixtures", "pymock");
@@ -141,36 +144,43 @@ describe("thingstudio/eswitch node", () => {
   });
 
   it("rejects an invalid lopen value", () => {
-    expect(() => eswitchNode.codegenEventSource!(node({ pin: 4, lopen: 2 }), ctx)).toThrow(/must be 0 or 1/);
+    expect(() => eswitchNode.codegenEventSource!(node({ pin: 4, lopen: 2 }), ctx)).toThrow(/not one of the declared options/);
   });
 
   it("defaults lopen to 1", () => {
+    expect(eswitchNode.properties?.find((p) => p.name === "lopen")?.default).toBe(1);
     const result = eswitchNode.codegenEventSource!(node({ pin: 4 }), ctx);
-    expect((result.statements ?? []).map((st) => st.code).join("\n")).toContain("ESwitch(_gpio_4, lopen=1)");
+    const code = (result.statements ?? []).map((st) => st.code).join("\n");
+    expect(code).toContain('"lopen": 1');
+    expect(code).toContain("ESwitch(_pin, lopen=_lopen)");
   });
 
   it("rejects an invalid pull value", () => {
-    expect(() => eswitchNode.codegenEventSource!(node({ pin: 4, pull: "sideways" }), ctx)).toThrow(
-      /must be "none", "up", or "down"/,
-    );
+    expect(() => eswitchNode.codegenEventSource!(node({ pin: 4, pull: "sideways" }), ctx)).toThrow(/must be "none", "up", or "down"/);
   });
 
   it("defaults pull to none -- no internal pull configured, matching this node's original 2026-09-08 behavior", () => {
     const result = eswitchNode.codegenEventSource!(node({ pin: 4 }), ctx);
-    expect((result.statements ?? []).map((st) => st.code).join("\n")).toContain("machine.Pin(4, machine.Pin.IN)");
+    const code = (result.statements ?? []).map((st) => st.code).join("\n");
+    expect(code).toContain('"pull": "none"');
+    expect(code).toContain("machine.Pin(_pin_num, machine.Pin.IN)");
   });
 
-  it("enables the internal pull-up when pull is 'up' -- real-hardware finding, TiDAL badge buttons", () => {
+  it("configures the internal pull-up when pull is 'up' -- real-hardware finding, TiDAL badge buttons", () => {
     const result = eswitchNode.codegenEventSource!(node({ pin: 4, pull: "up" }), ctx);
-    expect((result.statements ?? []).map((st) => st.code).join("\n")).toContain("machine.Pin(4, machine.Pin.IN, machine.Pin.PULL_UP)");
+    const code = (result.statements ?? []).map((st) => st.code).join("\n");
+    expect(code).toContain('"pull": "up"');
+    expect(code).toContain("machine.Pin.PULL_UP");
   });
 
-  it("enables the internal pull-down when pull is 'down'", () => {
+  it("configures the internal pull-down when pull is 'down'", () => {
     const result = eswitchNode.codegenEventSource!(node({ pin: 4, pull: "down" }), ctx);
-    expect((result.statements ?? []).map((st) => st.code).join("\n")).toContain("machine.Pin(4, machine.Pin.IN, machine.Pin.PULL_DOWN)");
+    const code = (result.statements ?? []).map((st) => st.code).join("\n");
+    expect(code).toContain('"pull": "down"');
+    expect(code).toContain("machine.Pin.PULL_DOWN");
   });
 
-  it("compiles into a full flow with the expected structure -- event-driven WaitAny, not repeatMs/sleep_ms in this node's own codegen", () => {
+  it("compiles into a full flow with the expected structure -- event-driven WaitAny, shared driver", () => {
     const graph: GraphData = {
       nodes: [
         { id: "1", type: "thingstudio/eswitch", properties: { pin: 6, lopen: 1 } },
@@ -180,16 +190,16 @@ describe("thingstudio/eswitch node", () => {
     };
     const { source } = compile(graph, buildRegistry());
     expect(source).toContain("from events import ESwitch, WaitAny");
-    expect(source).toContain("ESwitch(_gpio_6, lopen=1)");
-    expect(source).toContain("WaitAny([_eswitch_6.close, _eswitch_6.open])");
+    expect(source).toContain("runtime.shared('eswitch', _pin_num");
+    expect(source).toContain("WaitAny([_es.close, _es.open])");
     expect(source).toContain("while True:");
-    expect(source).toMatch(/_trig = await .*\.wait\(\)/);
+    expect(source).toMatch(/_trig = await _wait\.wait\(\)/);
     expect(source).toContain("_trig.clear()");
-    expect(source).toContain("msg = {'payload': _is_close, 'topic': ''}");
+    expect(source).toContain("return {'payload': _is_close, 'topic': ''}");
     expect(source).toMatch(/runtime\.spawn\(/);
   });
 
-  it("two eswitch nodes on the same pin with the same settings share one pin and one driver", () => {
+  it("two eswitch nodes on the same pin with the same settings share one pin and one driver on the device", () => {
     const graph: GraphData = {
       nodes: [
         { id: "1", type: "thingstudio/eswitch", properties: { pin: 8, lopen: 1 } },
@@ -203,11 +213,12 @@ describe("thingstudio/eswitch node", () => {
       ],
     };
     const { source } = compile(graph, buildRegistry());
-    expect(source.match(/ESwitch\(_gpio_8/g)?.length).toBe(1);
-    // But each node instance still gets its OWN WaitAny wrapper -- exactly
-    // two, not deduped onto one, per this file's header on why sharing a
-    // WaitAny across two independent coroutines would be a real race.
-    expect(source.match(/= WaitAny\(\[_eswitch_8\.close, _eswitch_8\.open\]\)/g)?.length).toBe(2);
+    // A package emits per-instance setup; the on-device keys singletons give one Pin and one ESwitch per pin.
+    expect(source.match(/runtime\.shared\('pin', _pin_num,/g)?.length).toBe(2);
+    expect(source.match(/runtime\.shared\('eswitch', _pin_num,/g)?.length).toBe(2);
+    // But each node instance still gets its OWN WaitAny wrapper -- sharing one across two coroutines would race
+    // that instance's internal bookkeeping, per this file's header.
+    expect(source.match(/WaitAny\(\[_es\.close, _es\.open\]\)/g)?.length).toBe(2);
   });
 
   it("two eswitch nodes on the same pin with different settings stop the compile, naming both", () => {

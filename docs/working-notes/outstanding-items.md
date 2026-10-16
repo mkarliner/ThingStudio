@@ -361,11 +361,11 @@ not here.
   (`shared-resource-facility-scoping.md`): a `NodeDescriptor.resources` array (core-only; `resource-check.ts`)
   restores the compile-time bus/pin validate-and-claim checks a package lost, and `bme280` is a core package now.
   `filter`, `journal`, `http_response` flipped the same session; `wifi_gate` is deliberately deferred (it needs
-  flow-query context parity — see the scoping note §9).   `pwm_out`, `neopixel` and `interrupt` followed (the `pin` resource; `interrupt` also needed `eventSource` on the
-  canonical descriptor, and lost its debounce — Mike's call). Remaining: `eswitch`/`ebutton` are portable but need
-  a `runtime.shared` driver decision; `adc` is blocked on a node-specific context query (its ADC2-vs-WiFi guard);
-  `encoder` on a pin-pair claim; and `display_i2c`/`touch_i2c`/`display_spi` are the complex remainder. See
-  `shared-resource-facility-scoping.md` §9.
+  flow-query context parity — see the scoping note §9). `pwm_out`, `neopixel`, `interrupt`, `eswitch` and
+  `ebutton` followed (the `pin` resource; `interrupt` also needed `eventSource` on the canonical descriptor and
+  lost its debounce; eswitch/ebutton needed `pullProperty` and `lessThan`). Remaining: `adc` is blocked on a
+  node-specific context query (its ADC2-vs-WiFi guard); `encoder` on a pin-pair claim;
+  `display_i2c`/`touch_i2c`/`display_spi` are the complex remainder. See `shared-resource-facility-scoping.md` §9.
 
 - **[P3]** **Deploy the runtime itself from the browser editor, not just compiled flows.** Confirmed untracked
   anywhere until 2026-09-12. Today, `test-flows/deploy_runtime.py` is a standalone `mpremote`-based script pushing

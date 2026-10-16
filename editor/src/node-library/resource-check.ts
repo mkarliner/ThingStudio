@@ -64,7 +64,11 @@ function defaultPinUse(direction: "input" | "output" | "bidirectional", pull: Pu
 }
 
 function checkPinResource(ctx: CodegenContext, node: GraphNode, what: string, spec: PinResourceSpec): void {
-  const pull: Pull = spec.pull ?? "none";
+  const rawPull = spec.pullProperty ? node.properties[spec.pullProperty] : spec.pull;
+  const pull: Pull = rawPull === undefined || rawPull === null || rawPull === "" ? "none" : (String(rawPull) as Pull);
+  if (pull !== "none" && pull !== "up" && pull !== "down") {
+    throw new CompileError(`${what} pin pull "${String(rawPull)}" must be "none", "up", or "down"`);
+  }
   const pin = checkPin(ctx, `${what} pin`, node.properties[spec.property], spec.direction, {
     pull: spec.direction === "input" && pull !== "none",
   });

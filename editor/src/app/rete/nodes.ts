@@ -12,8 +12,8 @@
 //   - gpio_out:     pin                                       (node-library/gpio-out.ts)
 //   - timer:        intervalMs                                (node-library/timer.ts)
 //   - interrupt:    pin, edge                                 (node-library/core-packages/interrupt.ts)
-//   - eswitch:      pin, lopen, debounceMs                     (node-library/eswitch.ts, 2026-09-17)
-//   - ebutton:      pin, suppress, senseMode, debounceMs, longPressMs, doubleClickMs (node-library/ebutton.ts, 2026-09-17)
+//   - eswitch:      pin, pull, lopen, debounceMs                     (node-library/core-packages/eswitch.ts)
+//   - ebutton:      pin, pull, suppress, senseMode, debounceMs, longPressMs, doubleClickMs (node-library/core-packages/ebutton.ts)
 //   - wifi_status:  pollMs, wifiConfigId                       (node-library/wifi-status.ts -- the flow's ONLY node with its own wifiConfigId, 2026-09-04, see that file's header)
 //   - udp_send:     host, port, timeoutMs                      (node-library/udp-send.ts -- wifiConfigId removed 2026-09-04, derives from the flow's wifi_status node instead)
 //   - udp_receive:  port, pollMs                                (node-library/udp-receive.ts -- same removal)
@@ -149,8 +149,8 @@ import { descriptor as debugCoreDescriptor } from "../../node-library/core-packa
 import { descriptor as gpioOutCoreDescriptor } from "../../node-library/core-packages/gpio-out.js";
 import { timerNode } from "../../node-library/timer.js";
 import { descriptor as interruptCoreDescriptor } from "../../node-library/core-packages/interrupt.js";
-import { eswitchNode } from "../../node-library/eswitch.js";
-import { ebuttonNode } from "../../node-library/ebutton.js";
+import { descriptor as eswitchCoreDescriptor } from "../../node-library/core-packages/eswitch.js";
+import { descriptor as ebuttonCoreDescriptor } from "../../node-library/core-packages/ebutton.js";
 import { adcNode } from "../../node-library/adc.js";
 import { encoderNode } from "../../node-library/encoder.js";
 import { descriptor as neopixelCoreDescriptor } from "../../node-library/core-packages/neopixel.js";
@@ -468,9 +468,9 @@ export class MqttSubscribeNode extends buildDescriptorNodeClass(mqttSubscribeNod
 
 export class InterruptNode extends buildDescriptorNodeClass(interruptCoreDescriptor) {}
 
-export class EswitchNode extends buildDescriptorNodeClass(eswitchNode) {}
+export class EswitchNode extends buildDescriptorNodeClass(eswitchCoreDescriptor) {}
 
-export class EbuttonNode extends buildDescriptorNodeClass(ebuttonNode) {}
+export class EbuttonNode extends buildDescriptorNodeClass(ebuttonCoreDescriptor) {}
 
 export class AdcNode extends buildDescriptorNodeClass(adcNode) {}
 

@@ -24,8 +24,11 @@ import { compile } from "../src/compiler/compile.js";
 import { CompileError } from "../src/compiler/errors.js";
 import type { GraphData, GraphNode } from "../src/compiler/graph.js";
 import type { CodegenContext } from "../src/compiler/node-definition.js";
-import { ebuttonNode } from "../src/node-library/ebutton.js";
+import { descriptor as ebuttonDescriptor, python as ebuttonPython } from "../src/node-library/core-packages/ebutton.js";
+import { buildCoreNodeDefinition } from "../src/node-library/custom-node.js";
 import { buildRegistry } from "../src/node-library/registry.js";
+
+const ebuttonNode = buildCoreNodeDefinition(ebuttonDescriptor, ebuttonPython);
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const pymockDir = join(__dirname, "fixtures", "pymock");
@@ -109,27 +112,30 @@ describe("thingstudio/ebutton node", () => {
   });
 
   it("rejects an invalid senseMode", () => {
-    expect(() => ebuttonNode.codegenEventSource!(node({ pin: 4, senseMode: "sideways" }), ctx)).toThrow(/auto.*0.*1/);
+    expect(() => ebuttonNode.codegenEventSource!(node({ pin: 4, senseMode: "sideways" }), ctx)).toThrow(/not one of the declared options/);
   });
 
   it("rejects doubleClickMs >= longPressMs", () => {
     expect(() => ebuttonNode.codegenEventSource!(node({ pin: 4, doubleClickMs: 1000, longPressMs: 1000 }), ctx)).toThrow(
-      /doubleClickMs.*must be less than longPressMs/,
+      /must be less than longPressMs/,
     );
   });
 
   it("defaults match EButton's own upstream defaults", () => {
     const result = ebuttonNode.codegenEventSource!(node({ pin: 4 }), ctx);
-    const code = (result.statements ?? []).map((st) => st.code).join("\n") ?? "";
-    expect(code).toContain("EButton.debounce_ms = 50");
-    expect(code).toContain("EButton.long_press_ms = 1000");
-    expect(code).toContain("EButton.double_click_ms = 400");
-    expect(code).toContain("EButton(_gpio_4, suppress=False)");
+    const code = (result.statements ?? []).map((st) => st.code).join("\n");
+    expect(code).toContain('"debounceMs": 50');
+    expect(code).toContain('"longPressMs": 1000');
+    expect(code).toContain('"doubleClickMs": 400');
+    expect(code).toContain("EButton.debounce_ms = _debounce_ms");
+    expect(code).toContain("EButton(_pin, suppress=_suppress)");
   });
 
   it("passes an explicit sense value through when senseMode isn't auto", () => {
     const result = ebuttonNode.codegenEventSource!(node({ pin: 4, senseMode: "0" }), ctx);
-    expect((result.statements ?? []).map((st) => st.code).join("\n")).toContain("EButton(_gpio_4, suppress=False, sense=0)");
+    const code = (result.statements ?? []).map((st) => st.code).join("\n");
+    expect(code).toContain('"senseMode": "0"');
+    expect(code).toContain("EButton(_pin, suppress=_suppress, sense=int(_sense))");
   });
 
   it("rejects an invalid pull value", () => {
@@ -140,12 +146,16 @@ describe("thingstudio/ebutton node", () => {
 
   it("defaults pull to none -- no internal pull configured, matching this node's original 2026-09-08 behavior", () => {
     const result = ebuttonNode.codegenEventSource!(node({ pin: 4 }), ctx);
-    expect((result.statements ?? []).map((st) => st.code).join("\n")).toContain("machine.Pin(4, machine.Pin.IN)");
+    const code = (result.statements ?? []).map((st) => st.code).join("\n");
+    expect(code).toContain('"pull": "none"');
+    expect(code).toContain("machine.Pin(_pin_num, machine.Pin.IN)");
   });
 
-  it("enables the internal pull-up when pull is 'up' -- real-hardware finding, TiDAL badge buttons", () => {
+  it("configures the internal pull-up when pull is 'up' -- real-hardware finding, TiDAL badge buttons", () => {
     const result = ebuttonNode.codegenEventSource!(node({ pin: 4, pull: "up" }), ctx);
-    expect((result.statements ?? []).map((st) => st.code).join("\n")).toContain("machine.Pin(4, machine.Pin.IN, machine.Pin.PULL_UP)");
+    const code = (result.statements ?? []).map((st) => st.code).join("\n");
+    expect(code).toContain('"pull": "up"');
+    expect(code).toContain("machine.Pin.PULL_UP");
   });
 
   it("compiles into a full flow with the expected structure", () => {
@@ -158,9 +168,10 @@ describe("thingstudio/ebutton node", () => {
     };
     const { source } = compile(graph, buildRegistry());
     expect(source).toContain("from events import EButton, WaitAny");
-    expect(source).toContain("WaitAny([_ebutton_7.press, _ebutton_7.release, _ebutton_7.long, _ebutton_7.double])");
+    expect(source).toContain("runtime.shared('ebutton', _pin_num");
+    expect(source).toContain("WaitAny([_btn.press, _btn.release, _btn.long, _btn.double])");
     expect(source).toContain("_trig.clear()");
-    expect(source).toContain("msg = {'payload': _event, 'topic': ''}");
+    expect(source).toContain("return {'payload': _event, 'topic': ''}");
     expect(source).toMatch(/runtime\.spawn\(/);
   });
 

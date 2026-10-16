@@ -862,3 +862,11 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   optional canonical field (`compiler/node-descriptor.ts`, SPEC §2), mirroring the custom descriptor's flag; no
   schema change (already present there), no wire/runtime change, no version bump. Unblocks any core-package event
   source (the remaining hardware event nodes). Mike's explicit OK, same session.
+- **2026-10-16, same session — two more canonical additions, converting eswitch/ebutton.** Both approved by Mike.
+  `PinResourceSpec.pullProperty` lets a pin resource read its pull from a property (so eswitch/ebutton's `pull`
+  select drives the claim text and the no-internal-pull warning, not a fixed literal). `PropertyFieldDescriptor.lessThan`
+  is a compile-time cross-field numeric constraint (value < the named property) — expressible as data, needed for
+  ebutton's vendored-driver rule `doubleClickMs < longPressMs`, which the package format had no way to state. Both
+  core-only (`resources` is not in the custom schema; `lessThan` is canonical for now). `eswitch`, `ebutton`,
+  `interrupt`, `pwm_out`, `neopixel` joined the package set; `adc`/`encoder`/the display nodes remain (a hard-coded
+  context query, a pin-pair claim, and larger codegen respectively).

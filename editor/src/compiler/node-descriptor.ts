@@ -170,6 +170,9 @@ export interface PropertyFieldDescriptor {
    * (`findConfigsOfType`) rather than the config the node's stored id names -- how a built-in treats the
    * singleton WiFi config. Zero or many is a compile error; the field's stored value is ignored. */
   singleton?: boolean;
+  /** On a numeric field: the field's value must be less than the named property's value, checked at compile
+   * time (e.g. ebutton's double-click must be shorter than its long-press). Added 2026-10-16, core-only. */
+  lessThan?: string;
   /** On a `pin` field: whether the pin is driven or read, so the compiler can check it against the board
    * (`checkPin`) and claim it as a resource. Defaults to "input". */
   pinUse?: "input" | "output";
@@ -239,6 +242,9 @@ export interface PinResourceSpec {
   direction: "input" | "output" | "bidirectional";
   /** Input pull, for the check and the default claim text. Default `"none"`. */
   pull?: "none" | "up" | "down";
+  /** A property holding the pull (`"none"`/`"up"`/`"down"`), when the pull is configurable rather than fixed.
+   * Takes precedence over `pull`. Added 2026-10-16 for eswitch/ebutton, whose `pull` is a select property. */
+  pullProperty?: string;
   /** The claim's use text; `{pin}` and any `{property}` are interpolated. Defaults to the direction/pull text. */
   use?: string;
   /** A second, derived claim for a device on the pin (its own settings), so two devices with different settings
