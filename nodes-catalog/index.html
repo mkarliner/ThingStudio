@@ -4173,18 +4173,18 @@ checked when the flow is compiled, and the error says what is allowed. See <a hr
 <li>Properties (name, type, default):<ul>
 <li><code>name</code>, string, default <code>""</code></li>
 <li><code>mode</code>, string, default <code>"momentary"</code> — momentary, toggle or navigate</li>
-<li><code>text</code>, string, default <code>""</code> — what is drawn on the button; empty uses <code>name</code></li>
-<li><code>maxChars</code>, number, default <code>8</code> — room for this many characters (a value replaces the text)</li>
 <li><code>valueType</code>, string, default <code>"bool"</code> — bool, string or number: the type of what it sends</li>
+<li><code>fireOn</code>, string, default <code>"release"</code> — release (default: the finger lifts inside the button) or press</li>
+<li><code>text</code>, string, default <code>""</code> — what is drawn on the button; empty uses <code>name</code></li>
 <li><code>value</code>, string, default <code>""</code> — momentary: what it sends; empty sends true, 'ON' or 1 by valueType</li>
+<li><code>maxChars</code>, number, default <code>8</code> — room for this many characters (a value replaces the text)</li>
 <li><code>onValue</code>, string, default <code>""</code> — toggle: what it sends to turn on</li>
 <li><code>offValue</code>, string, default <code>""</code> — toggle: what it sends to turn off</li>
 <li><code>onText</code>, string, default <code>"ON"</code></li>
 <li><code>offText</code>, string, default <code>"OFF"</code></li>
 <li><code>initial</code>, boolean, default <code>false</code></li>
-<li><code>fireOn</code>, string, default <code>"release"</code> — release (default: the finger lifts inside the button) or press</li>
-<li><code>target</code>, string, default <code>""</code> — navigate: next, prev, back, home or a page name from <code>screens</code></li>
 <li><code>pendingTimeout</code>, number, default <code>5</code> — toggle with a wired input: seconds to wait for the input to confirm before going back</li>
+<li><code>target</code>, string, default <code>""</code> — navigate: next, prev, back, home or a page name from <code>screens</code></li>
 </ul>
 </li>
 </ul>
