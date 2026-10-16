@@ -128,6 +128,9 @@ the node is selected:
   `boardName`, `processorId`, `processorName`, `label`, `capabilities` —
   or `None` if no board is chosen, so guard for that. Use it to identify
   your exact board (e.g. a XIAO nRF52840's own IMU).
+- **`nodeId`** — a kind whose Python value is this node's own id (a string).
+  Use it to report status about yourself:
+  `runtime.report_status(properties['id'], 'connected')`.
 - **`help`** / **`placeholder`** / **`min`** / **`max`** / **`step`** /
   **`optional`** / **`rows`** — optional, the same panel hints a built-in
   field has. `rows` sets a `textarea`'s height (default 4). `pin` fields

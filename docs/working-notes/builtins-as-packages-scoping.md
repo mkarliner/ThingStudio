@@ -123,3 +123,20 @@ and `gui_*` stay built-in-only.
 **Note:** the generator can only flatten a built-in whose codegen is flow-independent; anything reading the graph
 (`gui_*`, `wifi_status`) needs its decisions moved into descriptor data first (phase 2/3) or stays residue. `i2c`
 is flow-independent (config + pins), so it is the honest first case.
+
+## 10. Refinements 2026-10-15 (from starting §9)
+
+- **Bundling (settled):** core packages are **bundled TS modules** — a descriptor object + a Python-source
+  string — imported statically, so Vite, the headless CLI and any Node consumer all get them with no fs or
+  network. `buildRegistry()` builds their definitions via a `buildCoreNodeDefinition` (the generic wrapper, but
+  spreading the full descriptor so palette/catalog metadata survives). The backend `custom_node_dirs` core folder
+  later holds an inspection-only copy. This is required because the headless compiler (`cli/check-flow.ts`) has
+  no backend and no package loader.
+- **"Generate from TS" is really a per-node hand-port.** The TS codegen is imperative string-assembly, not a pure
+  function of properties, so no automatic generator can turn it into a static `.node.py`. Under A each built-in's
+  device logic is ported to Python once (TS as the reference and no-loss target); A's edge over B is keeping TS
+  as source-of-truth and not committing generated files, not free generation. The effort estimate should read
+  accordingly.
+- **`nodeId` field kind landed** (2026-10-15): a package's Python key receives the instance's own node id, so it
+  can `runtime.report_status(...)` about itself — the NODE_STATUS gap that otherwise makes `i2c` (and every
+  status-reporting built-in) unportable without loss. With it, the `i2c` end-to-end proof is the next step.

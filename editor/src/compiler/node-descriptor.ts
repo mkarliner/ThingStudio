@@ -58,6 +58,7 @@ export type PropertyFieldKind =
   | "configRef"
   | "pin"
   | "target"
+  | "nodeId"
   | "palette";
 
 export interface PropertyFieldOption {

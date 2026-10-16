@@ -231,11 +231,13 @@ describe("validateCustomNodeDescriptor", () => {
         { name: "bus", label: "bus", kind: "configRef", configType: "thingstudio/config/i2c-bus", default: "", singleton: true },
         { name: "pin", label: "pin", kind: "pin", default: 4, pinUse: "output", pinPull: "up" },
         { name: "board", label: "board", kind: "target", default: "" },
+        { name: "id", label: "id", kind: "nodeId", default: "" },
       ],
     });
     expect(ok.properties?.[0]).toMatchObject({ singleton: true });
     expect(ok.properties?.[1]).toMatchObject({ pinUse: "output", pinPull: "up" });
     expect(ok.properties?.[2]).toMatchObject({ kind: "target" });
+    expect(ok.properties?.[3]).toMatchObject({ kind: "nodeId" });
     expect(() => validateCustomNodeDescriptor({ ...base, properties: [{ name: "n", label: "n", kind: "number", default: 0, singleton: true }] })).toThrow(/singleton is only valid/);
     expect(() => validateCustomNodeDescriptor({ ...base, properties: [{ name: "t", label: "t", kind: "text", default: "", pinUse: "output" }] })).toThrow(/pinUse is only valid/);
     expect(() => validateCustomNodeDescriptor({ ...base, properties: [{ name: "p", label: "p", kind: "pin", default: 4, pinUse: "sideways" }] })).toThrow(/pinUse must be/);
@@ -572,6 +574,19 @@ describe("buildCustomNodeDefinition -- sink", () => {
     expect(code).toContain('"boardName": "Seeed XIAO nRF52840"');
     expect(code).toContain('"processorId": "nrf52840"');
     expect(code).toContain('"capabilities": ["ble"]');
+  });
+
+  it("inlines the node's own id for a nodeId field (so a package can report its status)", () => {
+    const descriptor = validateCustomNodeDescriptor({
+      type: "custom/statuser",
+      kind: "transform",
+      label: "statuser",
+      ports: { inputs: [{ name: "msg", type: "any" }], outputs: [{ name: "msg", type: "any" }] },
+      properties: [{ name: "id", label: "id", kind: "nodeId", default: "" }],
+    });
+    const def = buildCustomNodeDefinition(descriptor, "async def run(msg, properties):\n    msg['payload'] = properties['id']\n    return msg\n");
+    const code = (def.codegenTransform!(node(7, {}), freshCtx()).statements ?? []).map((s) => s.code).join("\n");
+    expect(code).toContain('"id": "7"');
   });
 });
 

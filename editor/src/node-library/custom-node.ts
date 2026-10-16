@@ -83,7 +83,7 @@ import { claimResource, pullText, pyPinLiteral } from "./hardware-shared.js";
 // this validator.
 export const PAYLOAD_TYPES: readonly PayloadType[] = ["int", "number", "bool", "string", "bytes", "any"];
 export const NODE_KINDS: readonly NodeKind[] = ["source", "transform", "sink"];
-export const PROPERTY_KINDS = ["text", "textarea", "number", "boolean", "select", "configRef", "pin", "target"] as const;
+export const PROPERTY_KINDS = ["text", "textarea", "number", "boolean", "select", "configRef", "pin", "target", "nodeId"] as const;
 type CustomPropertyKind = (typeof PROPERTY_KINDS)[number];
 
 /** Package-loading/shape errors -- distinct from CompileError (per-instance
@@ -324,7 +324,7 @@ function validatePropertyField(raw: unknown, where: string): CustomNodePropertyF
   // not downstream).
   if ((kind === "number" || kind === "pin") && typeof field.default !== "number") fail(`${where}.default must be a number when kind is "${kind}"`);
   if (kind === "boolean" && typeof field.default !== "boolean") fail(`${where}.default must be a boolean when kind is "boolean"`);
-  if ((kind === "text" || kind === "textarea" || kind === "select" || kind === "configRef" || kind === "target") && typeof field.default !== "string") fail(`${where}.default must be a string when kind is "${kind}"`);
+  if ((kind === "text" || kind === "textarea" || kind === "select" || kind === "configRef" || kind === "target" || kind === "nodeId") && typeof field.default !== "string") fail(`${where}.default must be a string when kind is "${kind}"`);
   if (kind === "select" && !field.options!.some((o) => o.value === field.default)) {
     fail(`${where}.default "${String(field.default)}" is not one of the declared options`);
   }
@@ -539,6 +539,11 @@ function pyPropertiesLiteral(descriptor: CustomNodeDescriptor, node: GraphNode, 
       }
       case "target":
         literal = targetLiteral(ctx);
+        break;
+      case "nodeId":
+        // The instance's own id, so a package can call runtime.report_status(properties[...]) and otherwise
+        // speak about itself. Added 2026-10-15 (context parity; NODE_STATUS was the gap).
+        literal = pyStringLiteral(node.id);
         break;
       case "text":
       default:

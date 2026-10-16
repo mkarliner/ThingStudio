@@ -769,3 +769,10 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   preview already lets a user view/copy a built-in's generated Python. **Marketplace deferred**: no
   install-from-elsewhere mechanism now (it is exactly Decision 5's sandboxing trigger); a separate deliberate
   call. Rationale, trade-off and the first work item: `builtins-as-packages-scoping.md`.
+
+- **2026-10-15, same session — a `nodeId` field kind (Mike's OK): a package can speak about itself.** Porting the
+  `i2c` built-in as a package (phase 4's first work item) hit the NODE_STATUS gap concretely: the built-in calls
+  `runtime.report_status(node.id, ...)`, but a package never received its own id. Added a `nodeId` field kind whose
+  Python key receives the instance's id at compile time (canonical + custom schema + SPEC + user guide). Small,
+  phase-2 style. Also recorded in `builtins-as-packages-scoping.md` §10: core packages are bundled TS modules
+  (descriptor + Python string), and "generate from TS" is really a per-node hand-port with TS as the reference.
