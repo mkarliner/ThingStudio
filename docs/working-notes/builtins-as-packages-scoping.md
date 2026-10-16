@@ -140,3 +140,18 @@ is flow-independent (config + pins), so it is the honest first case.
 - **`nodeId` field kind landed** (2026-10-15): a package's Python key receives the instance's own node id, so it
   can `runtime.report_status(...)` about itself — the NODE_STATUS gap that otherwise makes `i2c` (and every
   status-reporting built-in) unportable without loss. With it, the `i2c` end-to-end proof is the next step.
+
+## 11. Progress 2026-10-15
+
+- **`buildCoreNodeDefinition` landed** (`custom-node.ts`): the generic package wrapper, but spreading the *full*
+  descriptor so palette/catalog metadata survives. `buildCustomNodeDefinition` now shares the wrapper
+  (`packageCodegen`).
+- **The `i2c` proof landed**: `node-library/core-packages/i2c.ts` (the built-in's descriptor + a ported `.node.py`)
+  and `test/core-packages.test.ts`, which drops the core definition into the registry *in place of* the TS one
+  and compiles a real `inject -> i2c -> debug` flow: the shared bus (`runtime.shared('i2c'`), the transfer, and
+  the status report via the `nodeId` field all appear, and the generated Python parses. Two documented
+  deviations from the TS codegen (the generic codegen can't see inside the Python): property ranges are checked
+  at runtime, not compile time; and the bus pins aren't compile-checked (that stays in `i2c-shared.ts`).
+- **Still to do:** flip `buildRegistry()` to build `thingstudio/i2c` from the core package (retire the TS one);
+  the generator (a per-node hand-port, TS as reference); then widen to the other leaf nodes. `function`/`gui_*`
+  remain built-in-only.

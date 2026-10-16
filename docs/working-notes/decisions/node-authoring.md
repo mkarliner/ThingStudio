@@ -776,3 +776,10 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   Python key receives the instance's id at compile time (canonical + custom schema + SPEC + user guide). Small,
   phase-2 style. Also recorded in `builtins-as-packages-scoping.md` §10: core packages are bundled TS modules
   (descriptor + Python string), and "generate from TS" is really a per-node hand-port with TS as the reference.
+
+- **2026-10-15, same session — the first built-in-as-package proof landed (`i2c`).** `buildCoreNodeDefinition`
+  (`custom-node.ts`) builds a full NodeDefinition from a `NodeDescriptor` + a `.node.py`, sharing the wrapper with
+  `buildCustomNodeDefinition`. `node-library/core-packages/i2c.ts` carries the `i2c` built-in's descriptor plus a
+  ported device `.node.py`; `test/core-packages.test.ts` compiles a real flow through the generic path with the
+  core package in place of the TS one (shared bus, transfer, status via `nodeId`). The registry flip and the
+  per-node port of the rest are the next steps (`builtins-as-packages-scoping.md` §11).

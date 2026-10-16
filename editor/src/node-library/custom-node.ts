@@ -65,9 +65,11 @@ import type {
   EventSourceCodegenResult,
   FieldPredicate,
   NodeDefinition,
+  NodeDescriptor,
   NodeKind,
   PayloadType,
   PortDefinition,
+  PropertyFieldDescriptor,
   SinkCodegenResult,
   SourceCodegenResult,
   TransformCodegenResult,
@@ -506,8 +508,8 @@ function pyValueLiteral(value: unknown, contextLabel: string): string {
  * built-in config-referencing node does -- the custom node's Python gets the
  * bus/pins/etc. it needs to `runtime.shared(...)`.
  */
-function pyPropertiesLiteral(descriptor: CustomNodeDescriptor, node: GraphNode, rawProperties: Record<string, unknown>, contextLabel: string, ctx: CodegenContext): string {
-  const fields = descriptor.properties ?? [];
+function pyPropertiesLiteral(descriptor: { properties?: PropertyFieldDescriptor[] }, node: GraphNode, rawProperties: Record<string, unknown>, contextLabel: string, ctx: CodegenContext): string {
+  const fields = (descriptor.properties ?? []).filter((f): f is PropertyFieldDescriptor & { name: string } => f.name !== undefined);
   const entries = fields.map((f) => {
     const raw = f.name in rawProperties ? rawProperties[f.name] : f.default;
     const fieldLabel = `${contextLabel} property "${f.name}"`;
@@ -558,7 +560,7 @@ function pyPropertiesLiteral(descriptor: CustomNodeDescriptor, node: GraphNode, 
 /** A `pin` field's Python literal: checked against the target board and claimed as a hardware resource
  * (context parity, phase 2a), then rendered as a bare number or a quoted named pin. An `optional` pin
  * that is blank/-1 becomes None. */
-function pinFieldLiteral(node: GraphNode, f: CustomNodePropertyField, raw: unknown, fieldLabel: string, ctx: CodegenContext): string {
+function pinFieldLiteral(node: GraphNode, f: PropertyFieldDescriptor, raw: unknown, fieldLabel: string, ctx: CodegenContext): string {
   const use = f.pinUse ?? "input";
   const pull = f.pinPull ?? "none";
   const pin = f.optional ? checkOptionalPin(ctx, fieldLabel, raw, use) : checkPin(ctx, fieldLabel, raw, use, { pull: use === "input" && pull !== "none" });
@@ -571,7 +573,7 @@ function pinFieldLiteral(node: GraphNode, f: CustomNodePropertyField, raw: unkno
 
 /** A singleton `configRef` field's Python literal: the flow's one config of `configType`, resolved at
  * compile time (context parity, phase 2a). Zero or many is a CompileError naming the node and field. */
-function singletonConfigLiteral(f: CustomNodePropertyField, fieldLabel: string, ctx: CodegenContext): string {
+function singletonConfigLiteral(f: PropertyFieldDescriptor, fieldLabel: string, ctx: CodegenContext): string {
   const configType = f.configType!;
   const finder = ctx.findConfigsOfType;
   if (!finder) {
@@ -605,7 +607,7 @@ function targetLiteral(ctx: CodegenContext): string {
  * validateCustomNodeDescriptor(). Read directly from the raw node
  * properties (not the Python literal above) since compile.ts's
  * SourceCodegenResult.repeatMs is a JS number, not generated code. */
-function resolveIntervalMs(descriptor: CustomNodeDescriptor, rawProperties: Record<string, unknown>, contextLabel: string): number {
+function resolveIntervalMs(descriptor: { properties?: PropertyFieldDescriptor[] }, rawProperties: Record<string, unknown>, contextLabel: string): number {
   const field = descriptor.properties!.find((p) => p.name === "intervalMs")!;
   const raw = "intervalMs" in rawProperties ? rawProperties.intervalMs : field.default;
   const n = Number(raw);
@@ -619,19 +621,24 @@ function toPortDefinitions(ports: CustomNodePort[] | undefined): PortDefinition[
   return ports?.map((p) => ({ name: p.name, type: p.type }));
 }
 
+/** The descriptor shape the shared package-codegen wrapper needs. A custom `.node.json` descriptor and a
+ * built-in `NodeDescriptor` both satisfy it (a custom one only narrows the field kinds). */
+type PackageDescriptor = {
+  type: string;
+  kind: NodeKind;
+  properties?: PropertyFieldDescriptor[];
+  eventSource?: boolean;
+};
+
 /**
- * Wraps `pythonSource` (one custom node type's `.node.py`, unmodified user
- * text -- never parsed or executed by this file, only spliced) in a
- * per-instance closure and produces an ordinary NodeDefinition, matching
- * the file header's contract. `entryPointName` is "emit" for source,
- * "run" for transform/sink -- the one top-level name `pythonSource` must
- * define; a typo or the wrong kind's function name surfaces as a NameError
- * at deploy time (the device raises it importing the generated flow, when
- * this node's setup code actually runs), not caught statically here --
- * this file has no Python parser. See docs/custom-nodes.md's own "if
- * something goes wrong" section for how that shows up and how to read it.
+ * The codegen hooks shared by every package: a custom `.node.py` (buildCustomNodeDefinition) and a built-in's
+ * generated core package (buildCoreNodeDefinition). Wraps `pythonSource` (unmodified text -- never parsed or
+ * executed by this file, only spliced) in a per-instance closure and returns the hook for the descriptor's kind.
+ * `entryPointName` is "emit" for source, "run" for transform/sink -- the one top-level name `pythonSource` must
+ * define; a typo or the wrong kind's function name surfaces as a NameError at deploy time, not caught statically
+ * here (no Python parser). See docs/user-guide/custom-nodes.md's "if something goes wrong" section.
  */
-export function buildCustomNodeDefinition(descriptor: CustomNodeDescriptor, pythonSource: string): NodeDefinition {
+function packageCodegen(descriptor: PackageDescriptor, pythonSource: string): Pick<NodeDefinition, "codegenSource" | "codegenEventSource" | "codegenTransform" | "codegenSink"> {
   const entryPointName = descriptor.kind === "source" ? "emit" : "run";
   const hint = identifierHint(descriptor.type);
 
@@ -658,6 +665,40 @@ export function buildCustomNodeDefinition(descriptor: CustomNodeDescriptor, pyth
     return { vars, propsVar, statements: [{ key: setupFn, code }] };
   }
 
+  const hooks: Pick<NodeDefinition, "codegenSource" | "codegenEventSource" | "codegenTransform" | "codegenSink"> = {};
+  if (descriptor.kind === "source" && descriptor.eventSource) {
+    // Event source: `wait(properties)` is awaited each loop iteration, then `emit(properties)` builds the
+    // message -- mirroring a built-in event source (e.g. interrupt.ts). Both come from the one per-instance
+    // closure, so they share the author's `nonlocal` state.
+    hooks.codegenEventSource = (node: GraphNode, ctx: CodegenContext): EventSourceCodegenResult => {
+      const { vars, propsVar, statements } = emitSetup(node, ctx, ["wait", "emit"]);
+      return { statements, waitStatement: `await ${vars[0]!}(${propsVar})`, buildMsg: `msg = await ${vars[1]!}(${propsVar})` };
+    };
+  } else if (descriptor.kind === "source") {
+    hooks.codegenSource = (node: GraphNode, ctx: CodegenContext): SourceCodegenResult => {
+      const { vars, propsVar, statements } = emitSetup(node, ctx, [entryPointName]);
+      const repeatMs = resolveIntervalMs(descriptor, node.properties, `node ${node.id} (${descriptor.type})`);
+      return { statements, buildMsg: `msg = await ${vars[0]!}(${propsVar})`, repeatMs };
+    };
+  } else if (descriptor.kind === "transform") {
+    hooks.codegenTransform = (node: GraphNode, ctx: CodegenContext): TransformCodegenResult => {
+      const { vars, propsVar, statements } = emitSetup(node, ctx, [entryPointName]);
+      return { statements, functionName: ctx.uniqueName(`${hint}_call`), functionBody: `return await ${vars[0]!}(msg, ${propsVar})` };
+    };
+  } else {
+    hooks.codegenSink = (node: GraphNode, ctx: CodegenContext): SinkCodegenResult => {
+      const { vars, propsVar, statements } = emitSetup(node, ctx, [entryPointName]);
+      return { statements, functionName: ctx.uniqueName(`${hint}_call`), functionBody: `await ${vars[0]!}(msg, ${propsVar})` };
+    };
+  }
+  return hooks;
+}
+
+/**
+ * A custom `.node.json` package: the descriptor's declared subset (type/kind/ports/description/requires), plus
+ * the codegen hooks its `.node.py` produces.
+ */
+export function buildCustomNodeDefinition(descriptor: CustomNodeDescriptor, pythonSource: string): NodeDefinition {
   const def: NodeDefinition = {
     type: descriptor.type,
     kind: descriptor.kind,
@@ -665,34 +706,17 @@ export function buildCustomNodeDefinition(descriptor: CustomNodeDescriptor, pyth
   };
   if (descriptor.description !== undefined) def.description = descriptor.description;
   if (descriptor.requires !== undefined) def.requires = descriptor.requires;
+  return { ...def, ...packageCodegen(descriptor, pythonSource) };
+}
 
-  if (descriptor.kind === "source" && descriptor.eventSource) {
-    // Event source: `wait(properties)` is awaited each loop iteration, then `emit(properties)` builds the
-    // message -- mirroring a built-in event source (e.g. interrupt.ts). Both come from the one per-instance
-    // closure, so they share the author's `nonlocal` state.
-    def.codegenEventSource = (node: GraphNode, ctx: CodegenContext): EventSourceCodegenResult => {
-      const { vars, propsVar, statements } = emitSetup(node, ctx, ["wait", "emit"]);
-      return { statements, waitStatement: `await ${vars[0]!}(${propsVar})`, buildMsg: `msg = await ${vars[1]!}(${propsVar})` };
-    };
-  } else if (descriptor.kind === "source") {
-    def.codegenSource = (node: GraphNode, ctx: CodegenContext): SourceCodegenResult => {
-      const { vars, propsVar, statements } = emitSetup(node, ctx, [entryPointName]);
-      const repeatMs = resolveIntervalMs(descriptor, node.properties, `node ${node.id} (${descriptor.type})`);
-      return { statements, buildMsg: `msg = await ${vars[0]!}(${propsVar})`, repeatMs };
-    };
-  } else if (descriptor.kind === "transform") {
-    def.codegenTransform = (node: GraphNode, ctx: CodegenContext): TransformCodegenResult => {
-      const { vars, propsVar, statements } = emitSetup(node, ctx, [entryPointName]);
-      return { statements, functionName: ctx.uniqueName(`${hint}_call`), functionBody: `return await ${vars[0]!}(msg, ${propsVar})` };
-    };
-  } else {
-    def.codegenSink = (node: GraphNode, ctx: CodegenContext): SinkCodegenResult => {
-      const { vars, propsVar, statements } = emitSetup(node, ctx, [entryPointName]);
-      return { statements, functionName: ctx.uniqueName(`${hint}_call`), functionBody: `await ${vars[0]!}(msg, ${propsVar})` };
-    };
-  }
-
-  return def;
+/**
+ * A built-in expressed as a package (node-format-parity phase 4, option A): the *full* descriptor -- palette and
+ * catalog metadata included -- plus the codegen hooks its generated `.node.py` produces. Unlike
+ * buildCustomNodeDefinition, every descriptor field is kept. A core package uses the reserved `thingstudio/`
+ * namespace, so it is built directly (never through validateCustomNodeDescriptor).
+ */
+export function buildCoreNodeDefinition(descriptor: NodeDescriptor, pythonSource: string): NodeDefinition {
+  return { ...descriptor, ...packageCodegen(descriptor, pythonSource) };
 }
 
 /**

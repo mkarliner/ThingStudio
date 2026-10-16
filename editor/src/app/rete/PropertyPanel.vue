@@ -178,7 +178,7 @@
               {{ f.label }}
             </label>
             <p v-else-if="f.kind === 'target'" class="hint">{{ f.label }} — the board/processor this flow targets, resolved when the flow is compiled.</p>
-            <p v-else-if="f.kind === 'nodeId'" class="hint">{{ f.label }} — this node's own id, filled in when the flow is compiled.</p>
+            <template v-else-if="f.kind === 'nodeId'"></template>
             <label v-else>
               {{ f.label }}
               <select v-if="f.kind === 'select'" v-model="nodeProperties[f.name!]" @change="onFieldChange(f)">
