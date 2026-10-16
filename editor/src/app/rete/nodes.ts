@@ -169,7 +169,7 @@ import { bme280Node } from "../../node-library/bme280.js";
 import { touchI2cNode } from "../../node-library/touch-i2c.js";
 import type { NodeDescriptor } from "../../compiler/node-definition.js";
 import { guiBarNode, guiTrendNode, guiButtonNode, guiLabelNode, guiLedNode, guiModalNode, guiNavigatorNode, guiReadoutNode, guiScreenNode } from "../../node-library/gui.js";
-import { i2cGenericNode } from "../../node-library/i2c-generic.js";
+import { descriptor as i2cCoreDescriptor } from "../../node-library/core-packages/i2c.js";
 import { mqttPublishNode } from "../../node-library/mqtt-publish.js";
 import { mqttSubscribeNode } from "../../node-library/mqtt-subscribe.js";
 import { pwmOutNode } from "../../node-library/pwm-out.js";
@@ -326,7 +326,8 @@ export function functionOutputKey(index: number): string {
 // included as of 2026-10-15 -- are descriptor-driven (buildDescriptorNodeClass below); their canvas title
 // comes from each descriptor's own `title`.
 
-// Generic I2C read/write/scan on a shared bus (node-library/i2c-generic.ts) -- descriptor-driven
+// Generic I2C read/write/scan on a shared bus -- a core package now (node-library/core-packages/i2c.ts), built
+// through buildDescriptorNodeClass like every other node.
 // (buildDescriptorNodeClass below). address/register are text so hex ("0x29") can be typed; the compiler
 // parses them.
 
@@ -445,7 +446,7 @@ export class TimerNode extends buildDescriptorNodeClass(timerNode) {}
 
 export class TouchI2cNode extends buildDescriptorNodeClass(touchI2cNode) {}
 
-export class I2cNode extends buildDescriptorNodeClass(i2cGenericNode) {}
+export class I2cNode extends buildDescriptorNodeClass(i2cCoreDescriptor) {}
 
 export class Bme280Node extends buildDescriptorNodeClass(bme280Node) {}
 

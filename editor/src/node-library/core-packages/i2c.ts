@@ -2,16 +2,16 @@
 // editor/src/node-library/core-packages/i2c.ts
 //
 // A built-in expressed as a package (node-format-parity phase 4, option A): the same descriptor the
-// TypeScript node-library/i2c-generic.ts carries, plus a `.node.py` (below) whose device behaviour the
-// generic package codegen splices -- exactly like a user's custom node. `buildRegistry()` will build its
-// NodeDefinition with buildCoreNodeDefinition() once the load path lands; the tests compile it through the
-// generic path today. The TS i2c-generic.ts stays the reference until then.
+// TypeScript node-library/i2c-generic.ts carried, plus a `.node.py` (below) whose device behaviour the
+// generic package codegen splices -- exactly like a user's custom node. `buildRegistry()` builds its
+// NodeDefinition with buildCoreNodeDefinition(), and the editor's I2cNode class uses this descriptor; the TS
+// i2c-generic.ts is retired.
 //
-// Two deliberate, documented deviations from the TS codegen, both because the generic codegen cannot see
-// inside the package's Python:
-//   - compile-time property validation (address/register/length ranges) becomes a runtime ValueError;
-//   - the shared-bus pins aren't compile-checked (that lives in i2c-shared.ts's resolveI2cBus).
-// Everything the node *does* on the device -- the transfers, the status dot, the shared bus -- is matched.
+// Property ranges (address/register/length) are checked at compile time by the generic codegen -- the `integer`
+// attribute parses a text field (hex or decimal) into a number and range-checks it, and number `min`/`max` are
+// enforced -- so i2c keeps its compile-time errors. The one residual deviation: a *missing* address (or bus) is
+// caught at runtime, not compile time, because the field is conditionally required (only for read/write), which
+// the format expresses as `optional` + a runtime guard rather than a conditional compile-time requirement.
 
 import type { NodeDescriptor } from "../../compiler/node-descriptor.js";
 
@@ -46,10 +46,10 @@ export const descriptor: NodeDescriptor = {
         { value: "scan", label: "scan the bus" },
       ],
     },
-    { name: "address", label: "address", kind: "text", default: "", placeholder: "e.g. 0x29", visibleWhen: { field: "operation", notEquals: "scan" } },
-    { name: "register", label: "register", kind: "text", default: "", placeholder: "none", visibleWhen: { field: "operation", notEquals: "scan" } },
+    { name: "address", label: "address", kind: "text", default: "", placeholder: "e.g. 0x29", integer: true, min: 0, max: 0x7f, optional: true, visibleWhen: { field: "operation", notEquals: "scan" } },
+    { name: "register", label: "register", kind: "text", default: "", placeholder: "none", integer: true, min: 0, max: 0xff, optional: true, visibleWhen: { field: "operation", notEquals: "scan" } },
     { name: "length", label: "length (bytes)", kind: "number", default: 1, min: 1, max: 256, visibleWhen: { field: "operation", equals: "read" } },
-    // Internal plumbing: the node's own id, so it can report its status (see the header).
+    // Internal plumbing: the node's own id, so it can report its status (see packageCodegen / the nodeId kind).
     { name: "nodeId", label: "node id", kind: "nodeId", default: "" },
   ],
 };
@@ -59,6 +59,9 @@ export const python = `import machine
 _bus = properties['i2cConfigId']
 _op = str(properties['operation'])
 _node_id = properties['nodeId']
+_address = properties['address']
+_register = properties['register']
+_length = properties['length']
 _state = None
 
 if _bus is None:
@@ -72,18 +75,6 @@ if _bus.get('scl') is None or _bus.get('sda') is None:
 _i2c = runtime.shared('i2c', _bus_num, (_bus['scl'], _bus['sda'], _bus['freq']),
                       lambda: machine.I2C(_bus_num, scl=machine.Pin(_bus['scl']),
                                           sda=machine.Pin(_bus['sda']), freq=_bus['freq']))
-
-
-def _int(text, what, lo, hi):
-    if text is None or str(text).strip() == '':
-        return None
-    try:
-        n = int(str(text), 0)
-    except ValueError:
-        raise ValueError('i2c %s "%s" is not a number' % (what, text))
-    if not (lo <= n <= hi):
-        raise ValueError('i2c %s "%s" must be %d-%d' % (what, text, lo, hi))
-    return n
 
 
 def _to_bytes(v):
@@ -118,19 +109,16 @@ async def run(msg, properties):
         _status('connected', None)
         return msg
 
-    address = _int(properties.get('address'), 'address', 0x00, 0x7f)
-    if address is None:
+    if _address is None:
         raise ValueError('i2c: set the device address (7-bit, e.g. 0x29)')
-    register = _int(properties.get('register'), 'register', 0x00, 0xff)
-    where = 'at 0x%02x on I2C bus %d' % (address, _bus_num)
+    where = 'at 0x%02x on I2C bus %d' % (_address, _bus_num)
 
     if _op == 'read':
-        length = _int(properties.get('length'), 'length', 1, 256) or 1
         try:
-            if register is None:
-                msg['payload'] = _i2c.readfrom(address, length)
+            if _register is None:
+                msg['payload'] = _i2c.readfrom(_address, _length)
             else:
-                msg['payload'] = _i2c.readfrom_mem(address, register, length)
+                msg['payload'] = _i2c.readfrom_mem(_address, _register, _length)
         except OSError:
             _status('disconnected', 'no reply %s' % where)
             return None
@@ -140,10 +128,10 @@ async def run(msg, properties):
     if _op == 'write':
         try:
             buf = _to_bytes(msg.get('payload'))
-            if register is None:
-                _i2c.writeto(address, buf)
+            if _register is None:
+                _i2c.writeto(_address, buf)
             else:
-                _i2c.writeto_mem(address, register, buf)
+                _i2c.writeto_mem(_address, _register, buf)
         except OSError:
             _status('disconnected', 'no reply %s' % where)
             return None

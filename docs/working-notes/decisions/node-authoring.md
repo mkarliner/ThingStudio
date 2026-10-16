@@ -783,3 +783,10 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   ported device `.node.py`; `test/core-packages.test.ts` compiles a real flow through the generic path with the
   core package in place of the TS one (shared bus, transfer, status via `nodeId`). The registry flip and the
   per-node port of the rest are the next steps (`builtins-as-packages-scoping.md` §11).
+
+- **2026-10-15, same session — the `i2c` flip landed (first built-in retired to a package).** `thingstudio/i2c`
+  is now built from `core-packages/i2c.ts` in `buildRegistry()` and the editor's `I2cNode`; the TypeScript
+  `i2c-generic.ts` is deleted (one producer). To keep its compile-time errors without a codegen hook, the generic
+  codegen now enforces number `min`/`max` and a new serializable `integer` text-field attribute (hex/decimal
+  parsed, range-checked, inlined as a number). Residual deviation: a missing address/bus is a runtime error
+  (conditionally-required fields aren't expressible yet). The catalog hides the internal `nodeId` field.

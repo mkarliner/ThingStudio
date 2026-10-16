@@ -1,5 +1,10 @@
-// Generic i2c node (editor/src/node-library/i2c-generic.ts). The generated transform runs in real CPython against a
-// small fake bus defined here, one message at a time.
+// SPDX-License-Identifier: Apache-2.0
+// editor/test/node-i2c.test.ts
+//
+// The i2c core package (editor/src/node-library/core-packages/i2c.ts). Its generated transform runs in real
+// CPython against a small fake bus defined here, one message at a time (port of the old TypeScript node's
+// tests). The package gets its bus from runtime.shared('i2c', ...), so the fake bus is injected by patching
+// machine.I2C before the setup runs.
 
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, writeFileSync } from "node:fs";
@@ -10,8 +15,9 @@ import { describe, expect, it } from "vitest";
 import { CompileError } from "../src/compiler/errors.js";
 import type { GraphNode } from "../src/compiler/graph.js";
 import type { CodegenContext } from "../src/compiler/node-definition.js";
+import { descriptor, python } from "../src/node-library/core-packages/i2c.js";
+import { buildCoreNodeDefinition } from "../src/node-library/custom-node.js";
 import { I2C_BUS_CONFIG_TYPE } from "../src/node-library/i2c-shared.js";
-import { i2cGenericNode } from "../src/node-library/i2c-generic.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const BUS0 = { id: "bus0", type: I2C_BUS_CONFIG_TYPE, properties: { bus: 0, scl: 5, sda: 4, freq: 100000 } };
@@ -38,6 +44,8 @@ function ctx(): CodegenContext {
 function node(properties: Record<string, unknown>): GraphNode {
   return { id: "i1", type: "thingstudio/i2c", properties: { i2cConfigId: "bus0", ...properties } };
 }
+
+const i2c = buildCoreNodeDefinition(descriptor, python);
 
 const FAKE_BUS = `
 class _FakeBus:
@@ -66,7 +74,7 @@ class _FakeBus:
 
 /** Each step: optional Python to run first, then the payload literal sent in. Prints each result. */
 function run(properties: Record<string, unknown>, steps: { pre?: string; py: string }[]): string[] {
-  const r = i2cGenericNode.codegenTransform!(node(properties), ctx());
+  const r = i2c.codegenTransform!(node(properties), ctx());
   const body = r.functionBody
     .split("\n")
     .map((l) => "    " + l)
@@ -76,15 +84,15 @@ function run(properties: Record<string, unknown>, steps: { pre?: string; py: str
     .join("\n");
   const lines = [
     "import runtime",
-    ...(r.imports ?? []),
-    ...(r.statements ?? []).map((s) => s.code),
+    "import machine",
     FAKE_BUS,
-    "_i2c_bus_0 = _FakeBus()",
+    "machine.I2C = lambda *a, **k: _FakeBus()",
+    ...(r.statements ?? []).map((s) => s.code),
     `async def ${r.functionName}(msg):`,
     body,
     "async def _main():",
     feed,
-    "    print('LOG', _i2c_bus_0.log)",
+    "    print('LOG', runtime.shared('i2c', 0).log)",
     "runtime.asyncio.run(_main())",
   ];
   const dir = mkdtempSync(join(tmpdir(), "thingstudio-i2c-"));
@@ -97,7 +105,7 @@ function run(properties: Record<string, unknown>, steps: { pre?: string; py: str
     .filter((l) => !l.startsWith("I2C_INIT") && !l.startsWith("PIN_INIT"));
 }
 
-describe("thingstudio/i2c node", () => {
+describe("thingstudio/i2c core package", () => {
   it("reads bytes from a register, or with no register", () => {
     expect(run({ operation: "read", address: "0x29", register: "0x10", length: 3 }, [{ py: "None" }])).toEqual([
       "NODE_STATUS node=i1 state=connected text=None",
@@ -128,7 +136,7 @@ describe("thingstudio/i2c node", () => {
   });
 
   it("a missing device shows disconnected, sends nothing, and recovers", () => {
-    const out = run({ operation: "read", address: "0x29" }, [{ pre: "_i2c_bus_0.present = False", py: "None" }, { py: "None" }, { pre: "_i2c_bus_0.present = True", py: "None" }]);
+    const out = run({ operation: "read", address: "0x29" }, [{ pre: "runtime.shared('i2c', 0).present = False", py: "None" }, { py: "None" }, { pre: "runtime.shared('i2c', 0).present = True", py: "None" }]);
     expect(out).toEqual([
       "NODE_STATUS node=i1 state=disconnected text=no reply at 0x29 on I2C bus 0",
       "-",
@@ -143,12 +151,10 @@ describe("thingstudio/i2c node", () => {
     expect(run({ operation: "scan" }, [{ py: "None" }])[1]).toBe("[41, 118]");
   });
 
-  it("rejects bad properties at compile time", () => {
-    expect(() => i2cGenericNode.codegenTransform!(node({ operation: "read", address: "" }), ctx())).toThrow(/7-bit address/);
-    expect(() => i2cGenericNode.codegenTransform!(node({ operation: "read", address: "0x80" }), ctx())).toThrow(/7-bit address/);
-    expect(() => i2cGenericNode.codegenTransform!(node({ operation: "read", address: "0x29", register: "0x100" }), ctx())).toThrow(/0-255/);
-    expect(() => i2cGenericNode.codegenTransform!(node({ operation: "read", address: "0x29", length: 0 }), ctx())).toThrow(/1-256/);
-    expect(() => i2cGenericNode.codegenTransform!(node({ operation: "poke" }), ctx())).toThrow(/must be one of/);
-    expect(() => i2cGenericNode.codegenTransform!(node({ operation: "scan", i2cConfigId: "" }), ctx())).toThrow(/no I2C bus/);
+  it("checks address/register/length ranges at compile time", () => {
+    expect(() => i2c.codegenTransform!(node({ operation: "read", address: "0x80" }), ctx())).toThrow(/above its maximum, 127/);
+    expect(() => i2c.codegenTransform!(node({ operation: "read", address: "0x29", register: "0x100" }), ctx())).toThrow(/above its maximum, 255/);
+    expect(() => i2c.codegenTransform!(node({ operation: "read", address: "0x29", length: 0 }), ctx())).toThrow(/below its minimum, 1/);
+    expect(() => i2c.codegenTransform!(node({ operation: "poke" }), ctx())).toThrow(/not one of the declared options/);
   });
 });

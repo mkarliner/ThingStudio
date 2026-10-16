@@ -89,6 +89,7 @@
         "min": { "type": "number", "description": "Number/pin lower bound." },
         "max": { "type": "number", "description": "Number/pin upper bound." },
         "step": { "description": "Number step: a number, or \"any\" for arbitrary fractional values." },
+        "integer": { "type": "boolean", "description": "On a text field: the value is a whole number (decimal or 0x hex), range-checked against min/max and inlined as a number. Empty is an error unless 'optional'." },
         "optional": { "type": "boolean", "description": "A pin field where -1/blank means 'not wired'." },
         "visibleWhen": {
           "type": "object",
@@ -112,7 +113,8 @@
         { "if": { "properties": { "kind": { "const": "configRef" } }, "required": ["kind"] }, "then": { "required": ["configType"] } },
         { "if": { "required": ["singleton"] }, "then": { "properties": { "kind": { "const": "configRef" } } } },
         { "if": { "required": ["pinUse"] }, "then": { "properties": { "kind": { "const": "pin" } } } },
-        { "if": { "required": ["pinPull"] }, "then": { "properties": { "kind": { "const": "pin" } } } }
+        { "if": { "required": ["pinPull"] }, "then": { "properties": { "kind": { "const": "pin" } } } },
+        { "if": { "required": ["integer"] }, "then": { "properties": { "kind": { "const": "text" } } } }
       ]
     }
   }

@@ -156,6 +156,10 @@ export interface PropertyFieldDescriptor {
   min?: number;
   max?: number;
   step?: number | "any";
+  /** On a `text` field: the value is a whole number (decimal or 0x hex), parsed and range-checked against
+   * `min`/`max` at compile time and inlined as a number, not a string (e.g. an I2C address/register). An
+   * empty value is a compile error unless `optional`, in which case it becomes `None`. */
+  integer?: boolean;
   /** Show this field only when this predicate holds (e.g. a "deadband" threshold only in deadband mode).
    * Serializable data, so a custom `.node.json` can carry it too. */
   visibleWhen?: FieldPredicate;

@@ -155,3 +155,16 @@ is flow-independent (config + pins), so it is the honest first case.
 - **Still to do:** flip `buildRegistry()` to build `thingstudio/i2c` from the core package (retire the TS one);
   the generator (a per-node hand-port, TS as reference); then widen to the other leaf nodes. `function`/`gui_*`
   remain built-in-only.
+
+## 12. The i2c flip landed 2026-10-15
+
+`thingstudio/i2c` is now built from the core package, end to end: `buildRegistry()` and the editor's `I2cNode`
+use `core-packages/i2c.ts`, and the TypeScript `node-library/i2c-generic.ts` is **deleted** -- one producer. The
+catalog filters the internal `nodeId` field, and the node's behavior tests were ported to the package (running
+its generated transform against a fake bus). To keep i2c's compile-time errors, the generic codegen now
+**enforces number `min`/`max`** and a new **`integer` attribute** parses a text field (hex/decimal) to a
+range-checked number at compile time. The one residual deviation: a *missing* address/bus is a runtime error, not
+compile-time, because conditionally-required fields aren't expressible yet (tracked).
+
+Next: the per-node port of the other leaf built-ins (the "generator" is a hand-port with TS as reference), then
+the remaining flow-dependent ones as the format grows. `function`/`gui_*` stay built-in-only.

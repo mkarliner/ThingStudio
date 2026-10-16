@@ -141,6 +141,10 @@ export interface CustomNodePropertyField {
   min?: number;
   max?: number;
   step?: number | "any";
+  /** On a `text` field: the value is a whole number (decimal or 0x hex), parsed and range-checked against
+   * `min`/`max` at compile time and inlined as a number (e.g. an I2C address/register). Empty is a compile
+   * error unless `optional` (then `None`). Added 2026-10-15 (closing the last i2c no-loss gap). */
+  integer?: boolean;
   /** A pin field where -1/blank means "not wired". */
   optional?: boolean;
   /** Show this field only when this predicate holds (e.g. a field only in one mode). Serializable data,
@@ -311,6 +315,11 @@ function validatePropertyField(raw: unknown, where: string): CustomNodePropertyF
   if (rec.step !== undefined) {
     if (rec.step !== "any" && (typeof rec.step !== "number" || !Number.isFinite(rec.step))) fail(`${where}.step must be a finite number or "any" when present`);
     field.step = rec.step as number | "any";
+  }
+  if (rec.integer !== undefined) {
+    if (kind !== "text") fail(`${where}.integer is only valid on a "text" field`);
+    if (typeof rec.integer !== "boolean") fail(`${where}.integer must be a boolean when present`);
+    field.integer = rec.integer;
   }
   if (rec.optional !== undefined) {
     if (typeof rec.optional !== "boolean") fail(`${where}.optional must be a boolean when present`);
@@ -490,6 +499,31 @@ function pyValueLiteral(value: unknown, contextLabel: string): string {
   throw new CompileError(`${contextLabel} has a value this cannot render: ${JSON.stringify(value)}`);
 }
 
+/** Enforces a number field's declared `min`/`max` at compile time (a NaN is left to pyNumberLiteral's own
+ * "not a finite number" error). */
+function checkRange(f: PropertyFieldDescriptor, n: number, fieldLabel: string): void {
+  if (!Number.isFinite(n)) return;
+  if (f.min !== undefined && n < f.min) throw new CompileError(`${fieldLabel} ${n} is below its minimum, ${f.min}`);
+  if (f.max !== undefined && n > f.max) throw new CompileError(`${fieldLabel} ${n} is above its maximum, ${f.max}`);
+}
+
+/** A `text` field declared `integer`: parse "0x2a"/"42" to a whole number, range-check `min`/`max`, and inline
+ * the *number* (so the package's Python reads an int). Empty is a compile error unless `optional` (then None). */
+function integerTextLiteral(f: PropertyFieldDescriptor, raw: unknown, fieldLabel: string): string {
+  const s = raw === undefined || raw === null ? "" : String(raw).trim();
+  if (s === "") {
+    if (f.optional) return "None";
+    throw new CompileError(`${fieldLabel} must be a whole number (decimal or 0x hex)`);
+  }
+  let n: number;
+  if (/^0x[0-9a-f]+$/i.test(s)) n = parseInt(s, 16);
+  else if (/^[+-]?\d+$/.test(s)) n = parseInt(s, 10);
+  else throw new CompileError(`${fieldLabel} "${s}" must be a whole number (decimal or 0x hex)`);
+  if (f.min !== undefined && n < f.min) throw new CompileError(`${fieldLabel} "${s}" is below its minimum, ${f.min}`);
+  if (f.max !== undefined && n > f.max) throw new CompileError(`${fieldLabel} "${s}" is above its maximum, ${f.max}`);
+  return String(n);
+}
+
 /**
  * Resolves one node instance's raw properties (node.properties, from the
  * graph) against its descriptor's property schema -- missing keys fall
@@ -516,6 +550,7 @@ function pyPropertiesLiteral(descriptor: { properties?: PropertyFieldDescriptor[
     let literal: string;
     switch (f.kind) {
       case "number":
+        checkRange(f, Number(raw), fieldLabel);
         literal = pyNumberLiteral(raw, fieldLabel);
         break;
       case "pin":
@@ -548,6 +583,8 @@ function pyPropertiesLiteral(descriptor: { properties?: PropertyFieldDescriptor[
         literal = pyStringLiteral(node.id);
         break;
       case "text":
+        literal = f.integer ? integerTextLiteral(f, raw, fieldLabel) : pyStringLiteral(String(raw));
+        break;
       default:
         literal = pyStringLiteral(String(raw));
         break;

@@ -49,10 +49,23 @@ describe("core package: i2c (phase 4 proof)", () => {
 
     const { source } = compile(graph, registry);
     expect(source).toContain("runtime.shared('i2c'");
-    expect(source).toContain(".readfrom(address, length)"); // address/length are runtime-checked in the package
+    expect(source).toContain('"address": 41'); // "0x29" parsed to a number at compile time
+    expect(source).toContain('"length": 2');
+    expect(source).toContain(".readfrom(_address, _length)");
     expect(source).toContain('"nodeId": "2"'); // the nodeId field is inlined
     expect(source).toContain("runtime.report_status(_node_id");
     execFileSync("python3", ["-c", "import ast, sys; ast.parse(sys.stdin.read())"], { input: source });
+  });
+
+  it("checks property ranges at compile time (like the TS built-in did)", () => {
+    const registry = buildRegistry();
+    registry.set(def.type, def);
+    const graph = searchableFlow("read");
+    graph.nodes[1]!.properties.address = "0x80"; // 7-bit max is 0x7f
+    expect(() => compile(graph, registry)).toThrow(/above its maximum, 127/);
+    graph.nodes[1]!.properties.address = "0x29";
+    graph.nodes[1]!.properties.length = 0; // min 1
+    expect(() => compile(graph, registry)).toThrow(/below its minimum, 1/);
   });
 
   it("compiles a write flow unchanged from a user package's shape", () => {
@@ -61,7 +74,7 @@ describe("core package: i2c (phase 4 proof)", () => {
     const graph = searchableFlow("write");
     graph.nodes[1]!.properties.address = "0x29";
     const { source } = compile(graph, registry);
-    expect(source).toContain(".writeto(address, buf)");
+    expect(source).toContain(".writeto(_address, buf)");
     execFileSync("python3", ["-c", "import ast, sys; ast.parse(sys.stdin.read())"], { input: source });
   });
 });

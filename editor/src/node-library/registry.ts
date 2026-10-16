@@ -8,7 +8,8 @@ import { filterNode } from "./filter.js";
 import { journalNode } from "./journal.js";
 import { bme280Node } from "./bme280.js";
 import { touchI2cNode } from "./touch-i2c.js";
-import { i2cGenericNode } from "./i2c-generic.js";
+import { buildCoreNodeDefinition } from "./custom-node.js";
+import { descriptor as i2cCoreDescriptor, python as i2cCorePython } from "./core-packages/i2c.js";
 import { ebuttonNode } from "./ebutton.js";
 import { eswitchNode } from "./eswitch.js";
 import { adcNode } from "./adc.js";
@@ -109,7 +110,9 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     journalNode,
     bme280Node,
     touchI2cNode,
-    i2cGenericNode,
+    // i2c is a core package now (node-format-parity phase 4, option A) -- built from its descriptor + .node.py,
+    // not a TypeScript codegen hook. See node-library/core-packages/i2c.ts.
+    buildCoreNodeDefinition(i2cCoreDescriptor, i2cCorePython),
     ...GUI_NODES,
   ]) {
     registry.set(def.type, def);
