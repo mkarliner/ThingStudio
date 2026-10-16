@@ -3243,10 +3243,11 @@ the node is selected:</p>
   config of <code>configType</code> at compile time instead of an id you store (how a
   built-in uses the shared WiFi setting). Zero or two such configs is a
   compile error.</li>
-<li><strong><code>pinUse</code></strong> / <strong><code>pinPull</code></strong> — optional, on a <code>pin</code>: <code>input</code> (default) or
-  <code>output</code>, and the pull (<code>none</code>/<code>up</code>/<code>down</code>). The compiler then checks the
-  pin against the board and claims it, so two nodes can't quietly set the
-  same pin up two ways.</li>
+<li><strong><code>pinUse</code></strong> / <strong><code>pinPull</code></strong> — optional, on a <code>pin</code>: <code>input</code> or <code>output</code>,
+  and the pull (<code>none</code>/<code>up</code>/<code>down</code>). Adding <code>pinUse</code> makes the compiler
+  claim the pin, so two nodes can't quietly set the same pin up two ways. A
+  <code>pin</code> without <code>pinUse</code> is just a value (checked to exist on the board) —
+  use that for a bus line like SCL/SDA.</li>
 <li><strong><code>target</code></strong> — a kind for a board-specific node. Its value in Python is a
   dict of the board/processor this flow is compiled for — <code>boardId</code>,
   <code>boardName</code>, <code>processorId</code>, <code>processorName</code>, <code>label</code>, <code>capabilities</code> —
