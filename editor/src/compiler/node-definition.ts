@@ -82,13 +82,13 @@ export interface TransformCodegenResult extends SetupCode {
    * `def <functionName>(msg):`.
    *
    * Single-output node (the default -- no `ports.outputs` beyond one
-   * entry, and no `outputCount` hook returning >1): must return the
+   * entry, and no `dynamicOutputs` spec resolving to >1): must return the
    * (possibly modified) msg, or None to stop propagation -- unchanged,
    * original contract, exactly as before multi-output existed.
    *
    * Multi-output node (`ports.outputs.length > 1`, or
-   * `outputCount(properties) > 1` -- see NodeDefinition.outputCount
-   * above): must return a value routed across every output, Node-RED's
+   * `dynamicOutputs` resolving to >1 -- see NodeDescriptor.dynamicOutputs):
+   * must return a value routed across every output, Node-RED's
    * own convention
    * (https://nodered.org/docs/user-guide/writing-functions#multiple-outputs).
    * compile.ts's emit() applies LOOSE tolerance when unpacking it (Mike's
@@ -196,23 +196,6 @@ export interface CodegenContext {
  * here instead of their own hardcoded copies.
  */
 export interface NodeDefinition extends NodeDescriptor {
-  /**
-   * Overrides `ports.outputs?.length` for how many outputs THIS
-   * PARTICULAR node instance has -- only needed when output count varies
-   * per instance rather than being fixed by the node type (today: only
-   * `function`, via its own `properties.outputCount`; see
-   * function-node.ts). Absent for every other node type, where
-   * `ports.outputs?.length ?? 1` is already the right, fixed answer.
-   * compile.ts's emit() calls this (falling back to `ports.outputs?.length
-   * ?? 1` when absent) to decide whether a transform's return value is a
-   * plain msg-or-None (1 output, the original/default contract, unchanged)
-   * or a Node-RED-style array routed across N outputs -- see
-   * TransformCodegenResult.functionBody's own doc comment below for that
-   * contract. Added for multi-output-port support,
-   * docs/working-notes/outstanding-items/connection-state-gate-router-nodes.md,
-   * 2026-09-12.
-   */
-  outputCount?(properties: Record<string, unknown>): number;
   codegenSource?(node: GraphNode, ctx: CodegenContext): SourceCodegenResult;
   /**
    * Alternative to codegenSource for kind "source" nodes that wait on an

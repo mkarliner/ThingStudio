@@ -134,76 +134,9 @@
       <!-- Every node can carry its own title for the canvas (a "label" property); blank shows the kind. -->
       <label>flow label (the title on the canvas) <input type="text" v-model="node.properties.label" :placeholder="node.label" @input="touch" /></label>
 
-      <template v-if="node.kind === 'function'">
-        <label class="code-label">
-          code
-          <textarea v-model="node.properties.code" @input="touch" rows="10" spellcheck="false"></textarea>
-        </label>
-        <label>outputs
-          <input
-            type="number"
-            :min="1"
-            :max="maxFunctionOutputs"
-            :value="node.properties.outputCount"
-            @change="setFunctionOutputCount(($event.target as HTMLInputElement).valueAsNumber)"
-          />
-        </label>
-        <p class="hint">Return an array to route to multiple outputs, Node-RED style: e.g. <code>return [msg, null]</code> sends to output 1 only. A plain <code>return msg</code> still works and always targets output 1.</p>
-      </template>
-
-      <!-- GUI nodes (node-library/gui.ts, 2026-10-08). Placement (page, font, size) is in the flow's
-           `screens` section, edited in the flow file until the GUI view exists. -->
-      <template v-else-if="node.kind === 'gui_button'">
-        <label>topic <input type="text" v-model="node.properties.name" @input="touch" /></label>
-        <label>mode
-          <select v-model="node.properties.mode" @change="touch">
-            <option value="momentary">momentary: sends a value</option>
-            <option value="toggle">toggle: sends the opposite of its state</option>
-            <option value="navigate">navigate: changes page</option>
-          </select>
-        </label>
-        <template v-if="node.properties.mode !== 'navigate'">
-          <label>value type
-            <select v-model="node.properties.valueType" @change="touch">
-              <option value="bool">true / false</option>
-              <option value="string">text</option>
-              <option value="number">number</option>
-            </select>
-          </label>
-          <label>send on
-            <select v-model="node.properties.fireOn" @change="touch">
-              <option value="release">release (inside the button)</option>
-              <option value="press">press</option>
-            </select>
-          </label>
-        </template>
-        <template v-if="node.properties.mode === 'momentary'">
-          <label>board label (drawn on the button) <input type="text" v-model="node.properties.text" :placeholder="node.properties.label || ''" @input="touch" /></label>
-          <label>sends (the payload) <input type="text" v-model="node.properties.value" :placeholder="buttonDefault(node.properties.valueType, 0)" @input="touch" /></label>
-          <label>room for (characters, if no text) <input type="number" min="1" v-model.number="node.properties.maxChars" @input="touch" /></label>
-        </template>
-        <template v-else-if="node.properties.mode === 'toggle'">
-          <label>on sends <input type="text" v-model="node.properties.onValue" :placeholder="buttonDefault(node.properties.valueType, 0)" @input="touch" /></label>
-          <label>off sends <input type="text" v-model="node.properties.offValue" :placeholder="buttonDefault(node.properties.valueType, 1)" @input="touch" /></label>
-          <label>on shows <input type="text" v-model="node.properties.onText" @input="touch" /></label>
-          <label>off shows <input type="text" v-model="node.properties.offText" @input="touch" /></label>
-          <label><input type="checkbox" v-model="node.properties.initial" @change="touch" /> starts on (when nothing is wired in)</label>
-          <label>wait for confirmation (s, 5 or more) <input type="number" min="5" v-model.number="node.properties.pendingTimeout" @input="touch" /></label>
-        </template>
-        <template v-else>
-          <label>text <input type="text" v-model="node.properties.text" @input="touch" /></label>
-          <label>goes to <input type="text" v-model="node.properties.target" placeholder="next, prev, back, home or a page name" @input="touch" /></label>
-        </template>
-        <p v-if="node.properties.mode === 'toggle'" class="hint">Wire its input to the real state (a plug's MQTT status) and the flow
-          owns it: it shows <code>--</code> until the first report, a tap shows the requested state hollow until the input
-          confirms it, and with no answer it goes back and flags the failure. Unwired, it keeps its own state. Its output
-          sends the new state; wire it to whatever switches the device.</p>
-        <p v-else-if="node.properties.mode === 'momentary'" class="hint">Sends "sends" when tapped (the payload; the topic is above). The board label is what is drawn on the button
-          (blank: the flow label); a msg.payload on its input replaces it.</p>
-        <p v-else class="hint">Acts on its own screen; needs no wires.</p>
-      </template>
-
-      <template v-else-if="nodeDescriptor">
+      <!-- Every node is descriptor-driven now (built-in or custom): the one generic branch renders its
+           property schema. -->
+      <template v-if="nodeDescriptor">
         <PresetRefField
           v-if="nodeDescriptor.presetType"
           :key="node.id"
@@ -249,9 +182,10 @@
               <select v-if="f.kind === 'select'" v-model="nodeProperties[f.name!]" @change="onFieldChange(f)">
                 <option v-for="opt in f.options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
               </select>
-              <input v-else-if="f.kind === 'number'" type="number" :min="f.min" :max="f.max" :step="f.step" :placeholder="f.placeholder" v-model.number="nodeProperties[f.name!]" @input="onFieldChange(f)" />
-              <input v-else-if="f.kind === 'password'" type="password" :placeholder="f.placeholder" v-model="nodeProperties[f.name!]" @input="onFieldChange(f)" />
-              <input v-else type="text" :placeholder="f.placeholder" v-model="nodeProperties[f.name!]" @input="onFieldChange(f)" />
+              <textarea v-else-if="f.kind === 'textarea'" :rows="f.rows ?? 4" :placeholder="fieldPlaceholder(f)" spellcheck="false" v-model="nodeProperties[f.name!]" @input="onFieldChange(f)"></textarea>
+              <input v-else-if="f.kind === 'number'" type="number" :min="f.min" :max="f.max" :step="f.step" :placeholder="fieldPlaceholder(f)" v-model.number="nodeProperties[f.name!]" @input="onFieldChange(f)" />
+              <input v-else-if="f.kind === 'password'" type="password" :placeholder="fieldPlaceholder(f)" v-model="nodeProperties[f.name!]" @input="onFieldChange(f)" />
+              <input v-else type="text" :placeholder="fieldPlaceholder(f)" v-model="nodeProperties[f.name!]" @input="onFieldChange(f)" />
             </label>
             <p v-if="f.help" class="hint">{{ f.help }}</p>
           </template>
@@ -264,18 +198,12 @@
 </template>
 
 <script setup lang="ts">
-// What a gui_button sends when its value fields are blank, by value type (matches buttonConfig() in node-library/gui.ts).
-function buttonDefault(valueType: unknown, i: 0 | 1): string {
-  const d = ({ bool: ["true", "false"], string: ["ON", "OFF"], number: ["1", "0"] } as Record<string, string[]>)[String(valueType)] ?? ["true", "false"];
-  return d[i]!;
-}
 import { computed } from "vue";
 import { selectedNode, bumpPropertyVersion, propertyVersion, setFunctionNodeOutputCount } from "./store";
 import { DEFAULT_KIND_STYLE, type KindStyle } from "./palette";
 import { paletteStyleFor } from "./node-descriptors";
-import { CustomNode, FunctionNode } from "./nodes";
-import { evaluatePredicate, type NodeDescriptor, type PropertyFieldDescriptor } from "../../compiler/node-descriptor";
-import { MAX_FUNCTION_OUTPUTS } from "../../node-library/function-node";
+import { CustomNode, type AnyThingstudioNode } from "./nodes";
+import { evaluatePredicate, resolveConditionalText, type NodeDescriptor, type PropertyFieldDescriptor } from "../../compiler/node-descriptor";
 import ConfigRefField from "./ConfigRefField.vue";
 import CredentialRefField from "./CredentialRefField.vue";
 import PresetRefField from "./PresetRefField.vue";
@@ -288,10 +216,9 @@ const node = computed(() => {
   return selectedNode.value;
 });
 
-// Any node built from a canonical descriptor -- a migrated built-in (nodes.ts's
-// buildDescriptorNodeClass) or a loaded CustomNode -- exposes a `descriptor`. Its property schema
-// renders through the one generic branch at the end of the template; a still-bespoke kind has no
-// descriptor and keeps its own block.
+// Any node built from a canonical descriptor -- every migrated built-in (nodes.ts's
+// buildDescriptorNodeClass) or a loaded CustomNode -- exposes a `descriptor`, and its property schema
+// renders through the one generic branch in the template. Every node type is descriptor-driven now.
 const nodeDescriptor = computed<NodeDescriptor | null>(
   () => (node.value as unknown as { descriptor?: NodeDescriptor } | null)?.descriptor ?? null,
 );
@@ -348,14 +275,19 @@ function setField(f: PropertyFieldDescriptor, value: unknown): void {
   else touch();
 }
 
-/** A generic-branch field changed (v-model already wrote it): re-resolve port sockets when the field
- * affects a port's type, then refresh the panel. */
+/** A field's current placeholder: a `placeholderWhen` variant that matches the node's properties,
+ * else the field's own static `placeholder`. */
+function fieldPlaceholder(f: PropertyFieldDescriptor): string | undefined {
+  return resolveConditionalText(f.placeholderWhen, f.placeholder, nodeProperties.value);
+}
+
+/** A generic-branch field changed (v-model already wrote it): resize dynamic outputs when the field
+ * drives them, re-resolve port sockets when the field affects a port's type, then refresh the panel. */
 function onFieldChange(f: PropertyFieldDescriptor): void {
+  if (nodeDescriptor.value?.dynamicOutputs?.property === f.name) setDynamicOutputCount(Number(nodeProperties.value[f.name!]));
   if (f.retype) (node.value as unknown as { retypeOutputs?: () => void } | null)?.retypeOutputs?.();
   touch();
 }
-
-const maxFunctionOutputs = MAX_FUNCTION_OUTPUTS;
 
 // Pin fields moved to the shared PinField.vue (a number input for a numeric target, a dropdown for a
 // named-pin board like the STM32 pyboard), which reads activeTarget itself.
@@ -366,13 +298,11 @@ const maxFunctionOutputs = MAX_FUNCTION_OUTPUTS;
 // Rete editor/area instances actually live (this panel never imports
 // them directly, same reasoning ConfigRefField.vue's own header gives for
 // staying editor-instance-agnostic). A bare-NaN input (field cleared
-// mid-edit) is ignored rather than resized to 1 -- less surprising than
-// snapping the port count to 1 on every keystroke while someone's typing
-// a two-digit number.
-function setFunctionOutputCount(count: number): void {
-  if (!(node.value instanceof FunctionNode) || !Number.isFinite(count)) return;
-  void setFunctionNodeOutputCount.value?.(node.value, count);
-  touch();
+// mid-edit) is ignored rather than resized to min -- less surprising than
+// snapping the port count while someone's typing a two-digit number.
+function setDynamicOutputCount(count: number): void {
+  if (!node.value || !Number.isFinite(count)) return;
+  void setFunctionNodeOutputCount.value?.(node.value as AnyThingstudioNode, count);
 }
 </script>
 
@@ -450,7 +380,7 @@ function setFunctionOutputCount(count: number): void {
   padding: 4px 6px;
   font-family: inherit;
 }
-.code-label textarea {
+.property-panel textarea {
   font-family: ui-monospace, monospace;
   font-size: 11px;
 }

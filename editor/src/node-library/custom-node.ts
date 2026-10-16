@@ -80,7 +80,7 @@ import { pyStringLiteral } from "./py-literals.js";
 // this validator.
 export const PAYLOAD_TYPES: readonly PayloadType[] = ["int", "number", "bool", "string", "bytes", "any"];
 export const NODE_KINDS: readonly NodeKind[] = ["source", "transform", "sink"];
-export const PROPERTY_KINDS = ["text", "number", "boolean", "select", "configRef", "pin"] as const;
+export const PROPERTY_KINDS = ["text", "textarea", "number", "boolean", "select", "configRef", "pin"] as const;
 type CustomPropertyKind = (typeof PROPERTY_KINDS)[number];
 
 /** Package-loading/shape errors -- distinct from CompileError (per-instance
@@ -105,7 +105,7 @@ export interface CustomNodePropertyField {
   name: string;
   label: string;
   kind: CustomPropertyKind;
-  /** Must match `kind` (number/pin -> number, boolean -> boolean, text/select/configRef -> string). */
+  /** Must match `kind` (number/pin -> number, boolean -> boolean, text/textarea/select/configRef -> string). */
   default: unknown;
   /** Required, non-empty, when kind is "select"; ignored otherwise. */
   options?: CustomNodePropertyOption[];
@@ -119,6 +119,9 @@ export interface CustomNodePropertyField {
   help?: string;
   /** Hint text shown in an empty text/number input. */
   placeholder?: string;
+  /** Rows for a `textarea` field (default 4 when absent). Added 2026-10-15 (parity with the function
+   * node's code editor). */
+  rows?: number;
   /** Number-field bounds/step, forwarded to the <input type="number">; `step` may be "any". */
   min?: number;
   max?: number;
@@ -262,6 +265,10 @@ function validatePropertyField(raw: unknown, where: string): CustomNodePropertyF
     if (typeof rec.placeholder !== "string" || rec.placeholder.length === 0) fail(`${where}.placeholder must be a non-empty string when present`);
     field.placeholder = rec.placeholder;
   }
+  if (rec.rows !== undefined) {
+    if (typeof rec.rows !== "number" || !Number.isInteger(rec.rows) || rec.rows < 1) fail(`${where}.rows must be a positive whole number when present`);
+    field.rows = rec.rows;
+  }
   if (rec.min !== undefined) {
     if (typeof rec.min !== "number" || !Number.isFinite(rec.min)) fail(`${where}.min must be a finite number when present`);
     field.min = rec.min;
@@ -288,7 +295,7 @@ function validatePropertyField(raw: unknown, where: string): CustomNodePropertyF
   // not downstream).
   if ((kind === "number" || kind === "pin") && typeof field.default !== "number") fail(`${where}.default must be a number when kind is "${kind}"`);
   if (kind === "boolean" && typeof field.default !== "boolean") fail(`${where}.default must be a boolean when kind is "boolean"`);
-  if ((kind === "text" || kind === "select" || kind === "configRef") && typeof field.default !== "string") fail(`${where}.default must be a string when kind is "${kind}"`);
+  if ((kind === "text" || kind === "textarea" || kind === "select" || kind === "configRef") && typeof field.default !== "string") fail(`${where}.default must be a string when kind is "${kind}"`);
   if (kind === "select" && !field.options!.some((o) => o.value === field.default)) {
     fail(`${where}.default "${String(field.default)}" is not one of the declared options`);
   }

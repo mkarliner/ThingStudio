@@ -87,6 +87,18 @@ export const MAX_FUNCTION_OUTPUTS = 10;
 export const functionNode: NodeDefinition = {
   type: "thingstudio/function",
   kind: "transform",
+  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor.
+  paletteId: "function",
+  label: "function",
+  group: "general",
+  priority: 30,
+  color: "#6e5b2e",
+  bgcolor: "#3f341f",
+  icon: "ƒ",
+  width: 100,
+  description:
+    "The body of a MicroPython function: `msg` in, return the message, None, or a list with one entry per " +
+    "output. `context` (this node only) and `flow` (shared flow-wide) hold state between messages.",
   // `any` in, `any` out -- the flow author's code can do anything to
   // `msg.payload` (verbatim user code, per this file's own header), so
   // there's no narrower static type to declare here. This is also what
@@ -96,28 +108,38 @@ export const functionNode: NodeDefinition = {
   // (sockets.ts).
   //
   // Single "any" entry regardless of the node's actual output count --
-  // `outputCount` below is what tells compile.ts how many outputs THIS
-  // INSTANCE really has (per-instance, unlike every other node type's
-  // fixed port list); every output on a function node is equally untyped
-  // `any` regardless of index, so one entry fully describes the TYPE every
-  // output shares. Count is a separate question, answered below.
+  // `dynamicOutputs` below is what tells the canvas and compile.ts how many
+  // outputs THIS INSTANCE really has (per-instance, unlike every other node
+  // type's fixed port list); every output on a function node is equally
+  // untyped `any` regardless of index, so one entry fully describes the
+  // TYPE every output shares. Count is a separate question, answered below.
   ports: {
     inputs: [{ name: "msg", type: "any" }],
     outputs: [{ name: "msg", type: "any" }],
   },
   // Node-RED-style configurable output count (multi-output-port support,
   // docs/working-notes/outstanding-items/connection-state-gate-router-nodes.md,
-  // 2026-09-12): a per-instance property (nodes.ts's FunctionNode class),
-  // not a fixed part of the type's `ports` declaration above. Absent or
-  // non-numeric `properties.outputCount` -- every flow saved before this
-  // feature existed -- defaults to 1, preserving the original
-  // single-output contract exactly; compile.ts's emit() only takes the
-  // multi-output path at all once this returns more than 1.
-  outputCount(properties: Record<string, unknown>): number {
-    const n = Math.round(Number(properties.outputCount));
-    if (!Number.isFinite(n) || n < 1) return 1;
-    return Math.min(n, MAX_FUNCTION_OUTPUTS);
-  },
+  // 2026-09-12): a per-instance property, expressed as data (the descriptor's
+  // `dynamicOutputs`) rather than a codegen hook. A missing or non-numeric
+  // `properties.outputCount` -- every flow saved before this feature existed
+  // -- resolves to 1, preserving the original single-output contract exactly;
+  // compile.ts's emit() only takes the multi-output path at all once this
+  // resolves to more than 1.
+  dynamicOutputs: { property: "outputCount", min: 1, max: MAX_FUNCTION_OUTPUTS, namePrefix: "out", rowHeightPx: 18 },
+  properties: [
+    { name: "code", label: "code", kind: "textarea", rows: 10, default: "msg['payload'] = msg['payload']\nreturn msg\n" },
+    {
+      name: "outputCount",
+      label: "outputs",
+      kind: "number",
+      default: 1,
+      min: 1,
+      max: MAX_FUNCTION_OUTPUTS,
+      help:
+        "Return an array to route to multiple outputs, Node-RED style: e.g. `return [msg, null]` sends to output 1 " +
+        "only. A plain `return msg` still works and always targets output 1.",
+    },
+  ],
   codegenTransform(node: GraphNode, ctx: CodegenContext): TransformCodegenResult {
     // Dedented: code pasted with every line indented the same (copied out of a list in a chat or a doc) would
     // otherwise fail with "IndentationError: unexpected indent" on code that's fine (Mike, 2026-10-12).

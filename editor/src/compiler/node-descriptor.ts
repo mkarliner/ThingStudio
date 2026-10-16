@@ -49,6 +49,7 @@ export function resolvePortType(port: PortDefinition, properties: Record<string,
 // vocabulary.
 export type PropertyFieldKind =
   | "text"
+  | "textarea"
   | "password"
   | "number"
   | "select"
@@ -80,6 +81,26 @@ export interface FieldPredicate {
   gte?: number;
   lt?: number;
   lte?: number;
+}
+
+/** A piece of text chosen by a condition -- the data form of a placeholder that changes with another
+ * property's value (the gui_button's value field: "ON"/"OFF"/"true"/"false" by `valueType`). The first
+ * variant whose `when` holds wins; a variant with no `when` is the fallback. */
+export interface ConditionalText {
+  when?: FieldPredicate;
+  text: string;
+}
+
+/** Picks a conditional text (a `placeholderWhen` entry): first matching variant, else `fallback`. */
+export function resolveConditionalText(
+  variants: readonly ConditionalText[] | undefined,
+  fallback: string | undefined,
+  properties: Record<string, unknown>,
+): string | undefined {
+  for (const v of variants ?? []) {
+    if (!v.when || evaluatePredicate(v.when, properties)) return v.text;
+  }
+  return fallback;
 }
 
 /** True when the predicate holds for these properties. An empty predicate (no operator) is always true. */
@@ -120,6 +141,12 @@ export interface PropertyFieldDescriptor {
   help?: string;
   /** Hint text shown in an empty text/number input (e.g. "e.g. 0x29"), any kind. */
   placeholder?: string;
+  /** A placeholder that changes with another property's value; the first matching variant wins, falling
+   * back to `placeholder`. Serializable data, so a custom `.node.json` could carry it (not exposed there
+   * yet). */
+  placeholderWhen?: ConditionalText[];
+  /** Rows for a `textarea` field (the function node's code editor uses 10). */
+  rows?: number;
   /** A pin field where -1/blank means "not wired"; a configRef that may be left unset. */
   optional?: boolean;
   /** Number-field bounds/step, forwarded to the <input type="number">. `step` may be the literal
@@ -133,6 +160,31 @@ export interface PropertyFieldDescriptor {
   /** Changing this field re-resolves the node's port sockets -- for a port whose `type` is a function of
    * properties (e.g. inject/startup's output tracks `payloadType`). Built-in only. */
   retype?: boolean;
+}
+
+/** Outputs that vary per instance with a numeric property -- the data form of the old function-valued
+ * `outputCount` hook (today: only the function node). The canvas class builds one output per unit from
+ * the single `ports.outputs` template, named `<namePrefix><index>` (e.g. "out0") and labelled "1", "2",
+ * ...; the pill grows by `rowHeightPx` per output past the first. The compiler reads the same count to
+ * decide whether a transform's return routes across several outputs. */
+export interface DynamicOutputs {
+  /** The numeric property on the node instance holding the count. */
+  property: string;
+  /** Count bounds; a missing/non-numeric property resolves to `min`. */
+  min: number;
+  max: number;
+  /** Output key prefix: the output at position `i` is `<namePrefix><i>`. */
+  namePrefix: string;
+  /** Extra pill height per output past the first, in px. */
+  rowHeightPx: number;
+}
+
+/** The output count this instance has under a `dynamicOutputs` spec: `round(properties[property])`,
+ * clamped to `min`..`max`, with `min` for a missing/non-numeric value. */
+export function resolveOutputCount(spec: DynamicOutputs, properties: Record<string, unknown>): number {
+  const n = Math.round(Number(properties[spec.property]));
+  if (!Number.isFinite(n) || n < spec.min) return spec.min;
+  return Math.min(n, spec.max);
 }
 
 /** The canonical node descriptor: plain data only, plus (on a built-in's NodeDefinition) the codegen
@@ -187,6 +239,9 @@ export interface NodeDescriptor {
     inputs?: PortDefinition[];
     outputs?: PortDefinition[];
   };
+  /** Outputs that vary per instance with a numeric property (the function node's `outputCount`). When
+   * set, `ports.outputs` declares one template that types every dynamic output. Built-in only for now. */
+  dynamicOutputs?: DynamicOutputs;
   /** The property panel's field schema. */
   properties?: PropertyFieldDescriptor[];
   /** Preset type (admin API `/api/presets/{type}`): when set, the panel shows a save/load-preset

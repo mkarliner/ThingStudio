@@ -26,10 +26,27 @@ a folder ahead of the user's; same format, copyable and editable (Node-RED's mod
 test: "could a built-in be rewritten as a package with no loss." The one deliberate divergence — the editor
 never executes package code — stays.
 
-## What's done (2026-10-15, this and the immediately preceding session)
+## The named corner is gone (updated 2026-10-15, later session)
+
+- **Every built-in is descriptor-driven.** `function` and `gui_button` were the last two off the canonical
+  descriptor; migrated this session, so `palette.ts`'s `NODE_PALETTE` is now empty (a fallback slot only).
+- **Three descriptor additions** (Mike's explicit OK in-session — they change the descriptor shape):
+  - `textarea` field kind + `rows` attribute (serializable; in the custom `.node.json` subset too).
+  - `placeholderWhen` — a `ConditionalText[]` reusing `FieldPredicate`, for a placeholder that tracks
+    another property's value (the button's value fields by `valueType`). Canonical-only for now.
+  - `dynamicOutputs` — the data form of the old function-valued `outputCount(properties)` hook:
+    `{property, min, max, namePrefix, rowHeightPx}`. It replaced `NodeDefinition.outputCount`; `compile.ts`,
+    `check-flow.ts`, `buildDescriptorNodeClass`, `main.ts` and the catalog all read it. **Still built-in-only**
+    (not in the custom schema).
+- `guiClass`/`GUI_CANVAS_TITLES` removed; the function code editor, output stepper and pill-height rule are
+  generic; gui_button's per-mode hints became `help` on mode-scoped fields. SPEC + custom schema + conformance
+  updated; `docs/user-guide/nodes-catalog.md` regenerated. `tsc --noEmit` clean; full `vitest run` 1073 pass.
+
+## The named corner that came before (2026-10-15, earlier session)
 
 - **Descriptor unified.** One `NodeDescriptor` (`compiler/node-descriptor.ts`); the canvas, palette, panel
-  and catalog read it. ~36 built-ins migrated; `function` and `gui_button` are the only two still bespoke.
+  and catalog read it. ~36 built-ins migrated; `function` and `gui_button` were the only two still bespoke
+  (resolved above).
 - **Custom `.node.json` gained** (all with schema + SPEC + tests + user-guide updates): `configRef`
   properties (the picked config's properties are inlined into the node's Python `properties`; empty id →
   `None`), multi-output `transform`s (return a list), event sources (`"eventSource": true` + `async def
@@ -63,21 +80,19 @@ never executes package code — stays.
 
 ## What's next, in order
 
-1. **Finish the built-in migration (`function`, `gui_button`)** so `palette.ts`'s last two rows go and
-   every canvas node is descriptor-driven. `function` needs a textarea field kind (its `code`), a dynamic
-   `outputCount` (build N outputs; live resize via `setFunctionNodeOutputCount`), and its own height rule
-   (`functionNodeHeight`). `gui_button` needs dynamic placeholders (`buttonDefault`) and per-mode hint
-   paragraphs. Either add the missing widgets/attributes or record these two as the documented
-   built-in-only residue.
+1. ~~Finish the built-in migration (`function`, `gui_button`).~~ **Done 2026-10-15 (later session)** — see
+   "The named corner is gone" above. `NODE_PALETTE` is empty; every canvas node is descriptor-driven.
 2. **`credential`/`palette` field kinds for custom nodes.** `palette` is small (the generic panel already
-   renders `PaletteField`). `credential` needs the Phase 2 runtime support to be useful.
+   renders `PaletteField`). `credential` needs the Phase 2 runtime support to be useful. Both are interface
+   additions (custom schema + `PROPERTY_KINDS` + SPEC + conformance).
 3. **Unify the two node-class builders** (`buildDescriptorNodeClass` + `CustomNode`) into one
    descriptor-driven class (per-instance for custom descriptors).
 4. **Phase 2 — context parity (the real work).** Expose what built-in codegen reads as package-visible
    facilities: config singletons + credential-by-name, `findNodesOfType`/`findConfigsOfType`, wired-ness,
    `screens`, `target`/board. Close each against a concrete built-in (the "no loss" test).
-5. **Phase 3 — capability parity:** dynamic ports, multi-output sources, resource claims + a real checker,
-   presets, native/viper code.
+5. **Phase 3 — capability parity:** dynamic ports (the `dynamicOutputs` data exists built-in-side — put it in
+   the custom schema and build dynamic ports for a custom node), multi-output sources, resource claims + a real
+   checker, presets, native/viper code.
 6. **Phase 4 — location parity:** a core packages folder ahead of the user folder, one load path, TS codegen
    retired or demoted to a build-time generator. **Needs Mike's decision first** — the behavior model
    (built-ins as packages) and codegen's fate (generate the core `.node.py` from the TS codegen, or
@@ -87,7 +102,8 @@ never executes package code — stays.
 
 - **Data-equivalent rule + one-vocabulary rule** (`AGENTS.md`) bind every addition: prefer a serializable
   form over a JS function; keep the custom `.node.json` a strict subset of `NodeDescriptor` (never a
-  parallel vocabulary). Remaining function corners: `PortType`-as-function and `outputCount`.
+  parallel vocabulary). The only remaining function corner is `PortType`-as-function (inject/startup's
+  retyping output) — `outputCount` was removed as a hook this session, replaced by the data `dynamicOutputs`.
 - Interface changes (the schema, `NodeDescriptor`, `SPEC.md`) need Mike's explicit permission; the
   conformance tests must stay green and the SPEC readable (plain language, tables, an example).
 - `test/node-descriptor-schema.test.ts` compares the schema's `kind` enum to `PROPERTY_KINDS` — update
@@ -103,6 +119,9 @@ never executes package code — stays.
 
 ## Git state
 
+- **Uncommitted work, 2026-10-15 (later session)** — the `function`/`gui_button` migration and the three
+  descriptor additions (see "The named corner is gone"): `editor/src/{compiler,node-library,app,cli}`,
+  `interfaces/node-descriptor/{SPEC.md,custom-node.schema.json}`, `docs/user-guide/*`. Prompt Mike to commit.
 - `HEAD = 2dfbf2f` ("node parity: custom descriptors gain title/hidden/presetType/screenOutline"), pushed
   to `https/main`. Parity commits: `6b6f92c`, `39b8539`, `2dfbf2f` (on top of the custom-format work
   `6aae6ad`/`473a6fb`/`b5a2865`).

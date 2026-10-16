@@ -65,12 +65,13 @@ carry these keys.
 | `presetType` | string | no | Preset type (admin API `/api/presets/{type}`) for a save/load-preset control at the top of the panel. |
 
 A property field is `{name, label, kind, default, options?}`. `kind` is shared with config fields
-(`config-types.ts`): `text`, `password`, `number`, `select`, `boolean`, `credential`, `configRef`,
-`pin`, `palette` (the indexed-colour palette editor). `default` seeds a freshly-dropped node. A `select`'s option `value` is a string, or a number for a
+(`config-types.ts`): `text`, `textarea`, `password`, `number`, `select`, `boolean`, `credential`,
+`configRef`, `pin`, `palette` (the indexed-colour palette editor). `default` seeds a freshly-dropped node. A `select`'s option `value` is a string, or a number for a
 select over numeric values (e.g. bme280's I2C address). A custom `.node.json` may use the `text`,
-`number`, `boolean`, `select`, `configRef` and `pin` kinds, with the same `help`/`placeholder`/`min`/`max`/
-`step`/`optional` field attributes and a data-driven `visibleWhen` predicate (a `configRef` field also
-carries `configType`); the remaining kinds (`credential`, `palette`) and attribute (`retype`) are built-in
+`textarea`, `number`, `boolean`, `select`, `configRef` and `pin` kinds, with the same `help`/`placeholder`/
+`min`/`max`/`step`/`optional` field attributes (`textarea` also takes `rows`) and a data-driven
+`visibleWhen` predicate (a `configRef` field also carries `configType`); the remaining kinds
+(`credential`, `palette`) and attributes (`retype`, `placeholderWhen`) are built-in
 editor widgets today.
 
 A field with **no `name`** (and no `default`) is **info-only**: the panel renders its widget but it binds to
@@ -132,13 +133,16 @@ files with no bridge — is being closed deliberately, family by family, with no
   family (`touch_i2c`, `i2c`, `bme280`), the network family (`udp_send`, `udp_receive`, `http_*`,
   `mqtt_*`, `ntp`), the GPIO cluster (`interrupt`, `eswitch`, `ebutton`, `adc`, `encoder`,
   `neopixel`), `filter`/`journal`/`wifi_status`/`wifi_gate`, `display_spi`/`display_i2c`,
-  `inject`/`startup`, and eight of the nine GUI nodes. A descriptor missing the palette metadata is
-  "not yet migrated" and still falls back to `palette.ts`.
+  `inject`/`startup`, all nine GUI nodes, and `function` (whose output count is now the data descriptor
+  field `dynamicOutputs` rather than a codegen hook). Every built-in family is migrated; `palette.ts`'s
+  per-kind rows are gone.
 - **Still coming.** Relax the custom format so more built-ins can be cloned. Landed 2026-10-15:
   multi-output `transform`s, a package `description`, `configRef` properties (the picked config's
-  properties are inlined into the node's Python `properties`; an empty id is `None`), and event-driven
-  `source`s (`eventSource: true` + `wait`/`emit`). Dynamic ports (`function`'s `outputCount`) and
-  arbitrary codegen stay built-in-only. Compile-time hardware resource claims stay a documented limit
+  properties are inlined into the node's Python `properties`; an empty id is `None`),   and event-driven
+  `source`s (`eventSource: true` + `wait`/`emit`). Dynamic output ports are a data descriptor field
+  (`dynamicOutputs`: the function node's `outputCount`) but stay built-in-only (not in the custom
+  schema) until the canvas can build them for a custom node too, as does arbitrary codegen. Compile-time
+  hardware resource claims stay a documented limit
   (a custom node uses `runtime.shared` only). Once every family is migrated, the descriptor's palette
   metadata becomes required and `palette.ts`'s per-kind rows are removed.
 

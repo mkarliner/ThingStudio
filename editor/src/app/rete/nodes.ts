@@ -174,7 +174,7 @@ import { journalNode } from "../../node-library/journal.js";
 import { ntpNode } from "../../node-library/ntp.js";
 import { bme280Node } from "../../node-library/bme280.js";
 import { touchI2cNode } from "../../node-library/touch-i2c.js";
-import type { NodeDefinition, NodeDescriptor } from "../../compiler/node-definition.js";
+import type { NodeDescriptor } from "../../compiler/node-definition.js";
 import { guiBarNode, guiTrendNode, guiButtonNode, guiLabelNode, guiLedNode, guiModalNode, guiNavigatorNode, guiReadoutNode, guiScreenNode } from "../../node-library/gui.js";
 import { i2cGenericNode } from "../../node-library/i2c-generic.js";
 import { mqttPublishNode } from "../../node-library/mqtt-publish.js";
@@ -182,7 +182,7 @@ import { mqttSubscribeNode } from "../../node-library/mqtt-subscribe.js";
 import { pwmOutNode } from "../../node-library/pwm-out.js";
 import { displaySpiNode } from "../../node-library/display-spi.js";
 import { displayI2cNode } from "../../node-library/display-i2c.js";
-import { resolvePortType, type PortDefinition } from "../../compiler/node-definition.js";
+import { resolvePortType, resolveOutputCount, type PortDefinition } from "../../compiler/node-definition.js";
 import type { CustomNodeDescriptor } from "../../node-library/custom-node.js";
 import type { NodeStatusState } from "../../protocol/messages.js";
 
@@ -283,53 +283,25 @@ export function portSocket(defs: PortDefinition[] | undefined, name: string, pro
 // resize that only ever adds/removes from the tail (which
 // setFunctionNodeOutputCount does) always regrows in the same order it
 // shrank from.
+// Output key convention for a dynamic-output node's ports (the function node's outputCount -- multi-
+// output-port support, outstanding-items/connection-state-gate-router-nodes.md, 2026-09-12). Reads the
+// prefix from the descriptor (`dynamicOutputs.namePrefix`) so the class and graph-adapter.test.ts agree
+// on what the output at position `i` is called (e.g. "out0"). Deliberately NOT a numeric-looking string
+// ("0", "1", ...): JS object property enumeration always lists integer-index-like keys first, in ascending
+// numeric order, regardless of insertion order -- which would silently break graph-adapter.ts's
+// socketIndex() (position in Object.keys(node.outputs) at serialize time, the thing compile.ts's per-output
+// routing actually keys off) the moment a function node's first output isn't also its first-inserted one,
+// e.g. after a shrink then a regrow. "out0"/"out1"/... aren't numeric-index-like strings, so they keep
+// ordinary insertion-order semantics, and a resize that only ever adds/removes from the tail (which
+// setFunctionNodeOutputCount does) always regrows in the same order it shrank from.
 export function functionOutputKey(index: number): string {
-  return `out${index}`;
+  return `${functionNode.dynamicOutputs!.namePrefix}${index}`;
 }
 
-// Grows the pill with output count rather than packing ports tighter into
-// a fixed height (Mike's call, 2026-09-12, over CustomNode's existing
-// "pack into NODE_HEIGHT regardless of count" precedent for inputs --
-// legible at a function node's realistic 2-4 output range matters more
-// here than staying pixel-uniform with every other node type). 18px/row
-// is comfortably wider than ThingstudioNode.vue's own 10px SOCKET_SIZE,
-// leaving real spacing between adjacent output dots instead of just
-// clearing overlap.
-const FUNCTION_OUTPUT_ROW_HEIGHT = 18;
-export function functionNodeHeight(outputCount: number): number {
-  return NODE_HEIGHT + Math.max(0, outputCount - 1) * FUNCTION_OUTPUT_ROW_HEIGHT;
-}
-
-export class FunctionNode extends ClassicPreset.Node {
-  width = 100;
-  height = NODE_HEIGHT;
-  kind = "function" as const;
-  nodeType = "thingstudio/function";
-  highlighted = false;
-  status: NodeStatusState | null = null;
-  statusText: string | null = null;
-
-  // `outputCount` (multi-output-port support, outstanding-items/
-  // connection-state-gate-router-nodes.md, 2026-09-12): defaults to 1,
-  // matching every function node saved before this property existed.
-  // Kept in `properties`, not a separate field, so it round-trips through
-  // the flow file the same way every other node property already does --
-  // no flow-file-format change needed, same "reuse the existing
-  // properties bag" precedent config nodes already established
-  // (config-node-and-palette-implementation-briefing.md).
-  properties: { code: string; outputCount: number } = {
-    code: "msg['payload'] = msg['payload']\nreturn msg\n",
-    outputCount: 1,
-  };
-
-  constructor() {
-    super("function");
-    this.addInput("msg", new ClassicPreset.Input(portSocket(functionNode.ports?.inputs, "msg", this.properties), "msg", true));
-    for (let i = 0; i < this.properties.outputCount; i++) {
-      this.addOutput(functionOutputKey(i), new ClassicPreset.Output(portSocket(functionNode.ports?.outputs, "msg", this.properties), String(i + 1)));
-    }
-  }
-}
+// The function node's Rete class is descriptor-driven now (buildDescriptorNodeClass below, from
+// node-library/function-node.ts's descriptor + its `dynamicOutputs` spec) -- its pill height grows with
+// output count via the generic class's setDynamicOutputHeight (the spec's own rowHeightPx), so the old
+// standalone functionNodeHeight() helper is gone with it.
 
 // variable_get/variable_set deliberately have NO Rete class here --
 // hidden from the canvas 2026-09-06 (see palette.ts's own header for
@@ -359,67 +331,9 @@ export class DelayNode extends buildDescriptorNodeClass(delayNode) {}
 // (buildDescriptorNodeClass below).
 
 // GUI nodes (node-library/gui.ts, 2026-10-08). Where widgets sit is the flow's `screens` section, not a node
-// property; these hold only data properties (range, units, how long until stale).
-// The title a GUI node shows on the canvas until the user sets a flow label: what the node is for, not its type id.
-const GUI_CANVAS_TITLES: Record<string, string> = {
-  gui_screen: "screen",
-  gui_label: "show text",
-  gui_readout: "show number",
-  gui_bar: "show level",
-  gui_trend: "show history",
-  gui_led: "status light",
-  gui_button: "touch button",
-  gui_navigator: "change page",
-  gui_modal: "pop-up alert",
-};
-
-function guiClass<K extends string, P extends Record<string, unknown>>(kind: K, nodeType: string, width: number, props: () => P, def: NodeDefinition, hasInput: boolean, outputName: string | null) {
-  return class extends ClassicPreset.Node {
-    width = width;
-    height = NODE_HEIGHT;
-    kind = kind;
-    nodeType = nodeType;
-    highlighted = false;
-    status: NodeStatusState | null = null;
-    statusText: string | null = null;
-    properties: P = props();
-
-    constructor() {
-      super(GUI_CANVAS_TITLES[kind] ?? kind);
-      if (hasInput) this.addInput("msg", new ClassicPreset.Input(portSocket(def.ports?.inputs, "msg", this.properties), "msg", true));
-      if (outputName) this.addOutput(outputName, new ClassicPreset.Output(portSocket(def.ports?.outputs, outputName, this.properties), outputName));
-    }
-  };
-}
-
-// gui_screen/gui_label/gui_readout/gui_bar/gui_trend/gui_led/gui_navigator/gui_modal are descriptor-driven
-// (buildDescriptorNodeClass below). gui_button stays hand-written here (its panel needs dynamic
-// placeholders and per-mode hints, which the generic panel doesn't express).
-
-export const GuiButtonNode = guiClass(
-  "gui_button",
-  "thingstudio/gui_button",
-  100,
-  () => ({
-    name: "",
-    mode: "momentary" as "momentary" | "toggle" | "navigate",
-    text: "",
-    maxChars: 8,
-    valueType: "bool" as "bool" | "string" | "number",
-    value: "",
-    onValue: "",
-    offValue: "",
-    onText: "ON",
-    offText: "OFF",
-    initial: false,
-    fireOn: "release" as "release" | "press",
-    target: "",
-    pendingTimeout: 5,
-  }),
-  guiButtonNode,
-  true,
-  "msg",
-);
+// property; these hold only data properties (range, units, how long until stale). All nine -- gui_button
+// included as of 2026-10-15 -- are descriptor-driven (buildDescriptorNodeClass below); their canvas title
+// comes from each descriptor's own `title`.
 
 // Generic I2C read/write/scan on a shared bus (node-library/i2c-generic.ts) -- descriptor-driven
 // (buildDescriptorNodeClass below). address/register are text so hex ("0x29") can be typed; the compiler
@@ -437,7 +351,8 @@ export const GuiButtonNode = guiClass(
 function buildDescriptorNodeClass(descriptor: NodeDescriptor) {
   return class extends ClassicPreset.Node {
     width = descriptor.width ?? 100;
-    // Taller when the node has more than one output, so its output rows fit (journal's own height).
+    // Height is fixed for most nodes; a dynamic-output node (the function node) sets it per instance
+    // from the output count in the constructor and on resize.
     height = (descriptor.ports?.outputs?.length ?? 0) > 1 ? NODE_HEIGHT + 20 : NODE_HEIGHT;
     kind = descriptor.paletteId ?? descriptor.type;
     nodeType = descriptor.type;
@@ -454,9 +369,35 @@ function buildDescriptorNodeClass(descriptor: NodeDescriptor) {
       for (const input of descriptor.ports?.inputs ?? []) {
         this.addInput(input.name, new ClassicPreset.Input(portSocket(descriptor.ports?.inputs, input.name, this.properties), input.name, true));
       }
-      for (const output of descriptor.ports?.outputs ?? []) {
-        this.addOutput(output.name, new ClassicPreset.Output(portSocket(descriptor.ports?.outputs, output.name, this.properties), output.name));
+      const spec = descriptor.dynamicOutputs;
+      if (spec) {
+        const count = resolveOutputCount(spec, this.properties);
+        for (let i = 0; i < count; i++) this.addDynamicOutputAt(i);
+        this.setDynamicOutputHeight(count);
+      } else {
+        for (const output of descriptor.ports?.outputs ?? []) {
+          this.addOutput(output.name, new ClassicPreset.Output(portSocket(descriptor.ports?.outputs, output.name, this.properties), output.name));
+        }
       }
+    }
+
+    /** Adds the dynamic output at `index`, keyed per the descriptor's `dynamicOutputs` spec (e.g.
+     * "out0"), from the single `ports.outputs` template. */
+    addDynamicOutputAt(index: number): void {
+      const spec = descriptor.dynamicOutputs!;
+      const template = descriptor.ports?.outputs?.[0];
+      if (!template) throw new Error(`nodes.ts: dynamic-output node "${descriptor.type}" has no ports.outputs template`);
+      this.addOutput(`${spec.namePrefix}${index}`, new ClassicPreset.Output(portSocket(descriptor.ports?.outputs, template.name, this.properties), String(index + 1)));
+    }
+
+    /** Removes the dynamic output at `index`. The caller (editor-setup.ts) removes any wire on it first. */
+    removeDynamicOutputAt(index: number): void {
+      this.removeOutput(`${descriptor.dynamicOutputs!.namePrefix}${index}`);
+    }
+
+    /** Resizes the pill to fit `count` dynamic outputs. */
+    setDynamicOutputHeight(count: number): void {
+      this.height = NODE_HEIGHT + Math.max(0, count - 1) * descriptor.dynamicOutputs!.rowHeightPx;
     }
 
     /** Re-resolves every output socket from the current properties -- for a port whose `type` is a
@@ -471,11 +412,24 @@ function buildDescriptorNodeClass(descriptor: NodeDescriptor) {
   };
 }
 
+/** A class built by buildDescriptorNodeClass -- the descriptor plus its dynamic-output resize methods. */
+export interface DynamicOutputNode {
+  descriptor: NodeDescriptor;
+  properties: Record<string, unknown>;
+  outputs: Record<string, unknown>;
+  height: number;
+  addDynamicOutputAt(index: number): void;
+  removeDynamicOutputAt(index: number): void;
+  setDynamicOutputHeight(count: number): void;
+}
+
 // First family migrated onto the canonical descriptor (its data now lives in node-library/debug.ts).
 // The class name is kept because tests and AnyThingstudioNode reference it.
 export class DebugNode extends buildDescriptorNodeClass(debugNode) {}
 
 export class InjectNode extends buildDescriptorNodeClass(injectNode) {}
+
+export class FunctionNode extends buildDescriptorNodeClass(functionNode) {}
 
 export class StartupNode extends buildDescriptorNodeClass(startupNode) {}
 
@@ -549,6 +503,8 @@ export class GuiBarNode extends buildDescriptorNodeClass(guiBarNode) {}
 export class GuiTrendNode extends buildDescriptorNodeClass(guiTrendNode) {}
 
 export class GuiLedNode extends buildDescriptorNodeClass(guiLedNode) {}
+
+export class GuiButtonNode extends buildDescriptorNodeClass(guiButtonNode) {}
 
 export class GuiNavigatorNode extends buildDescriptorNodeClass(guiNavigatorNode) {}
 

@@ -66,7 +66,7 @@
       "properties": {
         "name": { "type": "string", "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$", "description": "Dict key your Python reads the value by." },
         "label": { "type": "string", "minLength": 1, "description": "Shown in the property panel." },
-        "kind": { "enum": ["text", "number", "boolean", "select", "configRef", "pin"], "description": "Field type. 'default' must match it (a number for number/pin, a string for text/select/configRef)." },
+        "kind": { "enum": ["text", "textarea", "number", "boolean", "select", "configRef", "pin"], "description": "Field type. 'default' must match it (a number for number/pin, a string for text/textarea/select/configRef)." },
         "default": { "description": "Used when a node instance doesn't set the property. Type must match kind." },
         "options": {
           "type": "array",
@@ -82,6 +82,7 @@
         "configType": { "type": "string", "minLength": 1, "description": "Required for kind 'configRef': the config type the picker offers, e.g. 'thingstudio/config/i2c-bus'." },
         "help": { "type": "string", "minLength": 1, "description": "Short note shown under the field." },
         "placeholder": { "type": "string", "minLength": 1, "description": "Hint text in an empty text/number input." },
+        "rows": { "type": "integer", "minimum": 1, "description": "Rows for a textarea field (default 4)." },
         "min": { "type": "number", "description": "Number/pin lower bound." },
         "max": { "type": "number", "description": "Number/pin upper bound." },
         "step": { "description": "Number step: a number, or \"any\" for arbitrary fractional values." },

@@ -115,18 +115,18 @@ Type `thingstudio/gui_button`, kind sink, palette group GUI.
 - Properties (name, type, default):
     - `name`, string, default `""`
     - `mode`, string, default `"momentary"` — momentary, toggle or navigate
-    - `text`, string, default `""` — what is drawn on the button; empty uses `name`
-    - `maxChars`, number, default `8` — room for this many characters (a value replaces the text)
     - `valueType`, string, default `"bool"` — bool, string or number: the type of what it sends
+    - `fireOn`, string, default `"release"` — release (default: the finger lifts inside the button) or press
+    - `text`, string, default `""` — what is drawn on the button; empty uses `name`
     - `value`, string, default `""` — momentary: what it sends; empty sends true, 'ON' or 1 by valueType
+    - `maxChars`, number, default `8` — room for this many characters (a value replaces the text)
     - `onValue`, string, default `""` — toggle: what it sends to turn on
     - `offValue`, string, default `""` — toggle: what it sends to turn off
     - `onText`, string, default `"ON"`
     - `offText`, string, default `"OFF"`
     - `initial`, boolean, default `false`
-    - `fireOn`, string, default `"release"` — release (default: the finger lifts inside the button) or press
-    - `target`, string, default `""` — navigate: next, prev, back, home or a page name from `screens`
     - `pendingTimeout`, number, default `5` — toggle with a wired input: seconds to wait for the input to confirm before going back
+    - `target`, string, default `""` — navigate: next, prev, back, home or a page name from `screens`
 
 ### label
 

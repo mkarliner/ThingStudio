@@ -57,6 +57,7 @@
 import { CompileError } from "./errors.js";
 import type { GraphConfigNode, GraphData, GraphLink, GraphNode } from "./graph.js";
 import type { CodegenContext, NodeDefinition, SinkCodegenResult, TransformCodegenResult } from "./node-definition.js";
+import { resolveOutputCount } from "./node-descriptor.js";
 import { checkCapabilities } from "../definitions/capability-check.js";
 import type { Target } from "../definitions/target.js";
 
@@ -135,12 +136,13 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
 
   // How many outputs THIS node instance actually has -- ports.outputs's
   // length for every ordinary (fixed-output-count) node type, or the
-  // type's own outputCount() hook when output count varies per instance
-  // (today: only `function`, node-definition.ts's own doc comment on
-  // NodeDefinition.outputCount has the full reasoning).
+  // descriptor's own `dynamicOutputs` spec resolved against properties
+  // when output count varies per instance (today: only `function`,
+  // node-descriptor.ts's own doc comment on DynamicOutputs has the full
+  // reasoning).
   function outputCountOf(node: GraphNode): number {
     const def = registry.get(node.type)!;
-    return def.outputCount?.(node.properties) ?? def.ports?.outputs?.length ?? 1;
+    return def.dynamicOutputs ? resolveOutputCount(def.dynamicOutputs, node.properties) : def.ports?.outputs?.length ?? 1;
   }
 
   const sources = graphData.nodes.filter((n) => registry.get(n.type)!.kind === "source");

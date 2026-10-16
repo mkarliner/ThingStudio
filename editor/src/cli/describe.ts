@@ -169,7 +169,7 @@ export function buildCatalog(): Catalog {
       group: style?.group ?? "",
       inputs: ports(def?.ports?.inputs, node.properties),
       outputs: ports(def?.ports?.outputs, node.properties),
-      variableOutputs: def?.outputCount !== undefined,
+      variableOutputs: def?.dynamicOutputs !== undefined,
       properties,
       requires: [...(def?.requires?.capabilities ?? [])],
     });

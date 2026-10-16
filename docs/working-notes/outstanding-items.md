@@ -333,10 +333,15 @@ not here.
   sources (`eventSource: true` + `async def wait(properties)` then `emit`), `pin` fields plus the
   shared field attributes (`help`/`placeholder`/`min`/`max`/`step`/`optional`), a data-driven `visibleWhen`
   field conditional (replacing the built-in-only function `showIf`), and the descriptor-level
-  `title`/`hidden`/`presetType`/`screenOutline`. Parity is the end state (`decisions/node-authoring.md`,
-  2026-10-15): the remaining gaps are the `credential`/`palette` field kinds, context parity (flow/compile
-  context for packages), capability parity (dynamic ports, multi-output sources, resource claims, presets,
-  native code), and the Node-RED location model (built-ins as packages).
+  `title`/`hidden`/`presetType`/`screenOutline`. **Later the same day:** the last two built-ins off the
+  descriptor (`function`, `gui_button`) were migrated, emptying `palette.ts`'s per-kind rows; a serializable
+  `textarea` field kind (+`rows`, in the custom subset too); a data-driven conditional placeholder
+  (`placeholderWhen`, canonical-only); and `dynamicOutputs`, the data form of the old `outputCount`
+  function hook. Parity is the end state (`decisions/node-authoring.md`, 2026-10-15): the remaining gaps
+  are the `credential`/`palette` field kinds, context parity (flow/compile context for packages),
+  capability parity (dynamic ports — the data `dynamicOutputs` exists but is not yet in the custom
+  schema — multi-output sources, resource claims, presets, native code), and the Node-RED location model
+  (built-ins as packages).
   **Next-session handoff:** `node-format-parity-briefing.md` (the mechanism in recon form, the roadmap,
   constraints, git state).
 

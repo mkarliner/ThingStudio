@@ -420,7 +420,108 @@ export const guiLedNode: NodeDefinition = {
  * A navigate button has no output; it acts on its own screen. */
 export const guiButtonNode: NodeDefinition = {
   ...widgetNode(GUI_BUTTON),
+  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor. Title
+  // matches the old GUI_CANVAS_TITLES.gui_button ("touch button").
+  paletteId: "gui_button",
+  label: "button",
+  title: "touch button",
+  group: "GUI",
+  priority: 44,
+  color: "#4a6e3f",
+  bgcolor: "#2a3a1f",
+  icon: "▭",
+  width: 100,
   ports: { inputs: [{ name: "msg", type: "any" }], outputs: [{ name: "msg", type: "any" }] },
+  properties: [
+    { name: "name", label: "topic", kind: "text", default: "" },
+    {
+      name: "mode",
+      label: "mode",
+      kind: "select",
+      default: "momentary",
+      options: [
+        { value: "momentary", label: "momentary: sends a value" },
+        { value: "toggle", label: "toggle: sends the opposite of its state" },
+        { value: "navigate", label: "navigate: changes page" },
+      ],
+    },
+    {
+      name: "valueType",
+      label: "value type",
+      kind: "select",
+      default: "bool",
+      visibleWhen: { field: "mode", notEquals: "navigate" },
+      options: [
+        { value: "bool", label: "true / false" },
+        { value: "string", label: "text" },
+        { value: "number", label: "number" },
+      ],
+    },
+    {
+      name: "fireOn",
+      label: "send on",
+      kind: "select",
+      default: "release",
+      visibleWhen: { field: "mode", notEquals: "navigate" },
+      options: [
+        { value: "release", label: "release (inside the button)" },
+        { value: "press", label: "press" },
+      ],
+    },
+    { name: "text", label: "board label (drawn on the button)", kind: "text", default: "", visibleWhen: { field: "mode", equals: "momentary" }, help: "What is drawn on the button; blank uses the flow label." },
+    {
+      name: "value",
+      label: "sends (the payload)",
+      kind: "text",
+      default: "",
+      visibleWhen: { field: "mode", equals: "momentary" },
+      placeholderWhen: [
+        { when: { field: "valueType", equals: "string" }, text: "ON" },
+        { when: { field: "valueType", equals: "number" }, text: "1" },
+        { text: "true" },
+      ],
+      help: "Sends this when tapped (the topic is above). The board label is what is drawn on the button (blank: the flow label); a msg.payload on its input replaces it.",
+    },
+    { name: "maxChars", label: "room for (characters, if no text)", kind: "number", default: 8, min: 1, visibleWhen: { field: "mode", equals: "momentary" } },
+    {
+      name: "onValue",
+      label: "on sends",
+      kind: "text",
+      default: "",
+      visibleWhen: { field: "mode", equals: "toggle" },
+      placeholderWhen: [
+        { when: { field: "valueType", equals: "string" }, text: "ON" },
+        { when: { field: "valueType", equals: "number" }, text: "1" },
+        { text: "true" },
+      ],
+      help: "Wire its input to the real state (a plug's MQTT status) and the flow owns it: it shows -- until the first report, a tap shows the requested state hollow until the input confirms it, and with no answer it goes back and flags the failure. Unwired, it keeps its own state. Its output sends the new state; wire it to whatever switches the device.",
+    },
+    {
+      name: "offValue",
+      label: "off sends",
+      kind: "text",
+      default: "",
+      visibleWhen: { field: "mode", equals: "toggle" },
+      placeholderWhen: [
+        { when: { field: "valueType", equals: "string" }, text: "OFF" },
+        { when: { field: "valueType", equals: "number" }, text: "0" },
+        { text: "false" },
+      ],
+    },
+    { name: "onText", label: "on shows", kind: "text", default: "ON", visibleWhen: { field: "mode", equals: "toggle" } },
+    { name: "offText", label: "off shows", kind: "text", default: "OFF", visibleWhen: { field: "mode", equals: "toggle" } },
+    { name: "initial", label: "starts on (when nothing is wired in)", kind: "boolean", default: false, visibleWhen: { field: "mode", equals: "toggle" } },
+    { name: "pendingTimeout", label: "wait for confirmation (s, 5 or more)", kind: "number", default: 5, min: 5, visibleWhen: { field: "mode", equals: "toggle" } },
+    {
+      name: "target",
+      label: "goes to",
+      kind: "text",
+      default: "",
+      visibleWhen: { field: "mode", equals: "navigate" },
+      placeholder: "next, prev, back, home or a page name",
+      help: "Acts on its own screen; needs no wires.",
+    },
+  ],
   codegenEventSource(node: GraphNode, ctx: CodegenContext): EventSourceCodegenResult {
     const core = coreBlock(ctx);
     const b = buttonConfig(node);

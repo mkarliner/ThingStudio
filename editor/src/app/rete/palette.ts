@@ -150,12 +150,11 @@ export interface KindStyle {
   priority: number;
 }
 
-export const NODE_PALETTE: Partial<Record<NodeKind, KindStyle>> = {
-  function: { color: "#6e5b2e", bgcolor: "#3f341f", icon: "ƒ", label: "function", group: "general", priority: 30 },
-  // GUI nodes, 2026-10-08 (node-library/gui.ts): their own "GUI" group, one slate-green family.
-  // gui_button is the only one still unmigrated (its panel needs dynamic placeholders/per-mode hints).
-  gui_button: { color: "#4a6e3f", bgcolor: "#2a3a1f", icon: "▭", label: "button", group: "GUI", priority: 44 },
-};
+// Every built-in kind is migrated onto its canonical descriptor now (compiler/node-descriptor.ts):
+// its palette styling, ports and property schema all live in the node's node-library/*.ts descriptor, and
+// node-descriptors.ts's paletteStyleFor() reads that. This table is deliberately empty and kept only as
+// the fallback slot for an unmigrated/custom kind (which falls through to DEFAULT_KIND_STYLE).
+export const NODE_PALETTE: Partial<Record<NodeKind, KindStyle>> = {};
 
 // priority: 1000 -- a custom node that doesn't declare its own priority
 // sorts after every built-in entry above (all in the 10-50 range) within

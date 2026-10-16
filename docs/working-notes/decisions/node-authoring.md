@@ -682,3 +682,20 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   a real checker, presets, native code); 4 — location parity (a core packages folder ahead of the user folder,
   one load path, codegen retired or demoted to a build-time generator). Phase 4 needs Mike's call on the
   behavior model (built-ins as packages) and codegen's fate (generate the core `.node.py` vs re-author it).
+
+- **2026-10-15, later session — `function`/`gui_button` migrated; the last two function corners became data.**
+  Finishing roadmap phase 1. `function` and `gui_button` were the only built-ins still off the descriptor
+  (each kept a bespoke property-panel block and a `palette.ts` row); migrating them emptied `NODE_PALETTE` —
+  every built-in kind now declares its own palette metadata, so `palette.ts` is a fallback slot only. Three
+  additions, all with Mike's explicit OK in-session (they change the descriptor shape): a serializable
+  `textarea` field kind with a `rows` attribute (added to the custom `.node.json` subset too), a data-driven
+  conditional `placeholderWhen` (a `ConditionalText[]` reusing `FieldPredicate`, for the button's value fields
+  whose placeholder tracks `valueType`; canonical-only for now), and `dynamicOutputs` — the data form of the
+  old function-valued `outputCount(properties)` hook (`{property, min, max, namePrefix, rowHeightPx}`),
+  replacing it on `NodeDefinition` so `compile.ts`, `check-flow.ts`, the canvas class and the catalog all read
+  one data form instead of a function. The function code editor's textarea, its output-count stepper and its
+  pill-height rule are now generic (`buildDescriptorNodeClass` + `PropertyPanel.vue`); `gui_button`'s per-mode
+  hint paragraphs became `help` on mode-scoped fields, and its dynamic placeholders `placeholderWhen`.
+  `guiClass`/`GUI_CANVAS_TITLES` removed. SPEC + custom schema + conformance updated, catalog regenerated.
+  `dynamicOutputs` stays built-in-only (not in the custom schema) until the canvas can build dynamic ports for
+  a custom node too — the phase-3 capability-parity item. `node-format-parity-briefing.md` updated in place.

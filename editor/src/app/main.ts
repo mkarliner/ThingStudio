@@ -152,10 +152,9 @@ import { explainDeployImportError, networkWarningBeforeDeploy } from "./import-e
 import { editorVersionLabel, editorVersionLine } from "./editor-version.js";
 import { RESTART_HINT, deployMemoryAdvice, looksLikeOutOfMemory, lowMemoryWarningBeforeDeploy } from "./memory-advice.js";
 import { dependencyHash, findImportedModules, librariesToSend, libraryMessages, resolveDependencies, type DependencyInfo } from "../compiler/flow-dependencies.js";
-import { ClassicPreset } from "rete";
 import { createThingstudioEditor, type ThingstudioEditor } from "./rete/editor-setup.js";
-import { NODE_FACTORIES, CustomNode, FunctionNode, portSocket, functionOutputKey, functionNodeHeight, type AnyThingstudioNode } from "./rete/nodes.js";
-import { functionNode as functionNodeDefinition } from "../node-library/function-node.js";
+import { NODE_FACTORIES, CustomNode, type AnyThingstudioNode, type DynamicOutputNode } from "./rete/nodes.js";
+import { resolveOutputCount, type DynamicOutputs } from "../compiler/node-descriptor.js";
 import { DRAG_MIME, CUSTOM_DRAG_MIME, type NodeKind } from "./rete/palette.js";
 import { toGraphData, socketIndex } from "./rete/graph-adapter.js";
 import { screens as screensStore, setScreens, setGuiNodeLister } from "./rete/screens-store.js";
@@ -601,35 +600,27 @@ async function applyFlowFile(file: FlowFile): Promise<void> {
     node.id = n.id;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     Object.assign(node.properties as any, n.properties);
-    // Rebuild a loaded function node's real output ports to match its
-    // saved `outputCount` (multi-output-port support, outstanding-items/
-    // connection-state-gate-router-nodes.md, 2026-09-12) -- the factory()
-    // call above just built a fresh FunctionNode with the DEFAULT
-    // outputCount (1), before the Object.assign above overwrote
-    // `properties.outputCount` with whatever the file actually says;
-    // `node.outputs` itself (the real Rete port record) isn't touched by
-    // that assignment at all, so without this a flow saved with 3 outputs
-    // would load back with `properties.outputCount === 3` but only ONE
-    // real output port -- any edge targeting slot 1 or 2 would then
-    // silently fail to resolve in the edge-restoring loop below
-    // (`Object.keys(originNode.outputs)[originSlot]` undefined). Runs
-    // before reteHandle.addNode() so there's no already-rendered canvas
-    // state to force a re-render of -- the node is constructed correctly
-    // from the start instead. Reuses functionNodeDefinition's own
-    // outputCount() hook (function-node.ts) for the same clamping a
-    // garbage/out-of-range saved value gets anywhere else, rather than a
-    // second copy of that clamp logic here.
-    if (node instanceof FunctionNode) {
-      const wanted = functionNodeDefinition.outputCount!(node.properties);
+    // Rebuild a loaded dynamic-output node's real output ports to match its saved count (the function
+    // node's `outputCount`: multi-output-port support, outstanding-items/connection-state-gate-router-
+    // nodes.md, 2026-09-12) -- the factory() call above just built a fresh node with the DEFAULT count
+    // (1), before the Object.assign above overwrote `properties.outputCount` with whatever the file
+    // actually says; `node.outputs` itself (the real Rete port record) isn't touched by that assignment
+    // at all, so without this a flow saved with 3 outputs would load back with
+    // `properties.outputCount === 3` but only ONE real output port -- any edge targeting slot 1 or 2
+    // would then silently fail to resolve in the edge-restoring loop below
+    // (`Object.keys(originNode.outputs)[originSlot]` undefined). Runs before reteHandle.addNode() so
+    // there's no already-rendered canvas state to force a re-render of -- the node is constructed
+    // correctly from the start instead. Uses the descriptor's own `dynamicOutputs` spec for the same
+    // clamping a garbage/out-of-range saved value gets anywhere else, rather than a second copy here.
+    const dyn = (node as unknown as { descriptor?: { dynamicOutputs?: DynamicOutputs } }).descriptor?.dynamicOutputs;
+    if (dyn) {
+      const dynamic = node as unknown as DynamicOutputNode;
+      const wanted = resolveOutputCount(dyn, node.properties);
       const current = Object.keys(node.outputs).length;
-      for (let i = current; i < wanted; i++) {
-        node.addOutput(functionOutputKey(i), new ClassicPreset.Output(portSocket(functionNodeDefinition.ports?.outputs, "msg", node.properties), String(i + 1)));
-      }
-      for (let i = wanted; i < current; i++) {
-        node.removeOutput(functionOutputKey(i));
-      }
-      node.properties.outputCount = wanted;
-      node.height = functionNodeHeight(wanted);
+      for (let i = current; i < wanted; i++) dynamic.addDynamicOutputAt(i);
+      for (let i = wanted; i < current; i++) dynamic.removeDynamicOutputAt(i);
+      node.properties[dyn.property] = wanted;
+      dynamic.setDynamicOutputHeight(wanted);
     }
     const layoutEntry = file.layout[n.id];
     const position = layoutEntry ? { x: layoutEntry.pos[0], y: layoutEntry.pos[1] } : { x: 0, y: 0 };

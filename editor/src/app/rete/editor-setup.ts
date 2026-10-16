@@ -39,8 +39,7 @@ import { ConnectionPlugin, Presets as ConnectionPresets } from "rete-connection-
 import { VuePlugin, Presets as VuePresets } from "rete-vue-plugin";
 
 import type { AreaExtra, Schemes } from "./schemes";
-import { type AnyThingstudioNode, FunctionNode, portSocket, functionOutputKey, functionNodeHeight } from "./nodes";
-import { functionNode as functionNodeDefinition, MAX_FUNCTION_OUTPUTS } from "../../node-library/function-node";
+import { type AnyThingstudioNode, type DynamicOutputNode } from "./nodes";
 import { installConnectionValidation } from "./validation";
 import { selectedNode, selectedConnection, clearNodeSelection, setFunctionNodeOutputCount, bumpPropertyVersion } from "./store";
 import { forgetNode, nodeIdsInPane, removePane } from "./panes-store";
@@ -146,25 +145,22 @@ export async function createThingstudioEditor(container: HTMLElement) {
   };
   AreaExtensions.simpleNodesOrder(area);
 
-  // Function-node output-count resize (multi-output-port support,
-  // outstanding-items/connection-state-gate-router-nodes.md, 2026-09-12).
-  // store.ts's own comment on setFunctionNodeOutputCount explains why this
-  // lives here rather than in PropertyPanel.vue directly: `editor`/`area`
-  // are only in scope inside this function. Only ever resizes from the
-  // TAIL (adds/removes the highest-indexed output(s)) -- nodes.ts's
-  // functionOutputKey() doc comment explains why that matters (JS object
-  // key enumeration order for non-numeric-looking string keys is
-  // insertion order, and graph-adapter.ts's socketIndex() depends on that
-  // order matching output position).
+  // Dynamic output-count resize (multi-output-port support, outstanding-items/connection-state-gate-
+  // router-nodes.md, 2026-09-12; generalized to any dynamic-output node 2026-10-15). store.ts's own
+  // comment on setFunctionNodeOutputCount explains why this lives here rather than in PropertyPanel.vue
+  // directly: `editor`/`area` are only in scope inside this function. Only ever resizes from the TAIL
+  // (adds/removes the highest-indexed output(s)) -- nodes.ts's functionOutputKey() doc comment explains
+  // why that matters (JS object key enumeration order for non-numeric-looking string keys is insertion
+  // order, and graph-adapter.ts's socketIndex() depends on that order matching output position).
   setFunctionNodeOutputCount.value = async (node: AnyThingstudioNode, count: number) => {
-    if (!(node instanceof FunctionNode)) return;
-    const clamped = Math.max(1, Math.min(MAX_FUNCTION_OUTPUTS, Math.round(count) || 1));
-    const current = Object.keys(node.outputs).length;
+    const dynamic = node as unknown as DynamicOutputNode;
+    const spec = dynamic.descriptor?.dynamicOutputs;
+    if (!spec) return;
+    const clamped = Math.max(spec.min, Math.min(spec.max, Math.round(count) || spec.min));
+    const current = Object.keys(dynamic.outputs).length;
     if (clamped === current) return;
     if (clamped > current) {
-      for (let i = current; i < clamped; i++) {
-        node.addOutput(functionOutputKey(i), new ClassicPreset.Output(portSocket(functionNodeDefinition.ports?.outputs, "msg", node.properties), String(i + 1)));
-      }
+      for (let i = current; i < clamped; i++) dynamic.addDynamicOutputAt(i);
     } else {
       // Shrinking: remove any wire attached to a port before removing the
       // port itself -- Rete core has no cascading removal of its own
@@ -174,15 +170,15 @@ export async function createThingstudioEditor(container: HTMLElement) {
       // next compile (graph-adapter.ts's socketIndex() throws on a socket
       // key it can't find).
       for (let i = clamped; i < current; i++) {
-        const key = functionOutputKey(i);
+        const key = `${spec.namePrefix}${i}`;
         for (const c of [...editor.getConnections()]) {
           if (c.source === node.id && c.sourceOutput === key) await editor.removeConnection(c.id);
         }
-        node.removeOutput(key);
+        dynamic.removeDynamicOutputAt(i);
       }
     }
-    node.properties.outputCount = clamped;
-    node.height = functionNodeHeight(clamped);
+    node.properties[spec.property] = clamped;
+    dynamic.setDynamicOutputHeight(clamped);
     await area.update("node", node.id);
   };
 
