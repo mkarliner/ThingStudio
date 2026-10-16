@@ -14,7 +14,10 @@ import { buildDefinitionSet, formatPinSet, parsePinSpec, type RawDefinitionFile 
 import { FALLBACK_MAX_PIN, NO_TARGET_WARNING } from "../src/definitions/pin-check.js";
 import { buildTarget, choiceForConnectedBoard, resolveTarget, widestGpio, type Target } from "../src/definitions/target.js";
 import { inferNativeArch } from "../src/app/native-arch.js";
-import { gpioOutNode } from "../src/node-library/gpio-out.js";
+import { descriptor as gpioOutDescriptor, python as gpioOutPython } from "../src/node-library/core-packages/gpio-out.js";
+import { buildCoreNodeDefinition } from "../src/node-library/custom-node.js";
+
+const gpioOutNode = buildCoreNodeDefinition(gpioOutDescriptor, gpioOutPython);
 import { ebuttonNode } from "../src/node-library/ebutton.js";
 import { displaySpiNode } from "../src/node-library/display-spi.js";
 import { displayI2cNode } from "../src/node-library/display-i2c.js";
@@ -276,19 +279,19 @@ describe("pin checks in nodes", () => {
 
   it("accepts S2 pins above the old 0-39 limit, and rejects pins the chip doesn't have", () => {
     expect(gpioOut(40, targetFor("board:lolin-s2-mini"))).toEqual([]);
-    expect(() => gpioOut(23, targetFor("board:lolin-s2-mini"))).toThrow(/gpio_out pin 23 doesn't exist on LOLIN S2 Mini \(ESP32-S2\)\. Pins: 0-21, 26-46/);
+    expect(() => gpioOut(23, targetFor("board:lolin-s2-mini"))).toThrow(/23 doesn't exist on LOLIN S2 Mini \(ESP32-S2\)\. Pins: 0-21, 26-46/);
     expect(() => gpioOut(30, targetFor("processor:rp2040"))).toThrow(/doesn't exist on RP2040/);
   });
 
   it("rejects reserved pins with the reason, and outputs on input-only pins", () => {
-    expect(() => gpioOut(25, targetFor("board:pico-w"))).toThrow(/pin 25 can't be used on Raspberry Pi Pico W \(RP2040\): Wired to the WiFi chip/);
+    expect(() => gpioOut(25, targetFor("board:pico-w"))).toThrow(/25 can't be used on Raspberry Pi Pico W \(RP2040\): Wired to the WiFi chip/);
     expect(() => gpioOut(8, targetFor("processor:esp32"))).toThrow(/Wired to the flash chip/);
     expect(() => gpioOut(46, targetFor("processor:esp32-s2"))).toThrow(/input-only on ESP32-S2/);
   });
 
   it("warns, but compiles, for an avoid pin", () => {
     expect(gpioOut(45, targetFor("board:lolin-s2-mini"))).toEqual([
-      "gpio_out pin 45 on LOLIN S2 Mini (ESP32-S2): Strapping pin. Sets flash voltage at reset.",
+      expect.stringContaining("45 on LOLIN S2 Mini (ESP32-S2): Strapping pin. Sets flash voltage at reset."),
     ]);
     expect(gpioOut(15, targetFor("board:lolin-s2-mini"))).toEqual([]);
   });
@@ -296,7 +299,7 @@ describe("pin checks in nodes", () => {
   it("drops the processor's avoid warning for a pin the board labels, but keeps the board's own", () => {
     expect(gpioOut(0, targetFor("processor:esp32-s2"))).toHaveLength(1);
     expect(gpioOut(0, targetFor("board:lolin-s2-mini"))).toEqual([]);
-    expect(gpioOut(24, targetFor("board:pico"))).toEqual(["gpio_out pin 24 on Raspberry Pi Pico (RP2040): Senses USB power (VBUS)."]);
+    expect(gpioOut(24, targetFor("board:pico"))).toEqual([expect.stringContaining("24 on Raspberry Pi Pico (RP2040): Senses USB power (VBUS).")]);
   });
 
   it("compiles the LuatOS ESP32C3-CORE's LEDs with no warning, but still stops on GPIO 11", () => {
@@ -429,11 +432,11 @@ describe("named pins (processors whose pins aren't numbered, e.g. the STM32 pybo
     const t = namedTarget();
     const ok = ctxFor(t);
     const result = gpioOutNode.codegenSink!(node("thingstudio/gpio_out", { pin: "X1" }), ok);
-    expect(result.statements![0]!.code).toContain('machine.Pin("X1"');
-    expect(result.functionBody).toContain("_gpio_X1");
+    expect(result.statements![0]!.code).toContain('"pin": "X1"');
+    expect(result.statements![0]!.code).toContain("machine.Pin(properties['pin']");
     expect(() => gpioOutNode.codegenSink!(node("thingstudio/gpio_out", { pin: "Z9" }), ctxFor(t))).toThrow(/Z9 doesn't exist on Pyboard/);
     // A numeric pin isn't on a named-pin board.
-    expect(() => gpioOutNode.codegenSink!(node("thingstudio/gpio_out", { pin: 5 }), ctxFor(t))).toThrow(/gpio_out pin 5 doesn't exist on Pyboard/);
+    expect(() => gpioOutNode.codegenSink!(node("thingstudio/gpio_out", { pin: 5 }), ctxFor(t))).toThrow(/5 doesn't exist on Pyboard/);
   });
 
   it("explains a number/name mismatch instead of a bare 'doesn't exist'", () => {

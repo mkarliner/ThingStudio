@@ -804,3 +804,20 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   (`core-packages/delay.ts`; `delay.ts` deleted), the simplest case (a `.node.py` using the generated flow's
   `asyncio` global, no setup). The per-node recipe is settled: descriptor + `.node.py`, flip `registry.ts` and the
   editor class, delete the TS node, retarget its test. Next leaf nodes follow the same path.
+
+- **2026-10-15, same session — third leaf node flipped (`gpio_out`); package-vs-built-in differences noted.**
+  `thingstudio/gpio_out` is a core package now (`core-packages/gpio-out.ts`; `gpio-out.ts` deleted). Two
+  differences from a built-in, both behavioural-equivalent but worth knowing: (1) compile-time setup dedup (a
+  built-in's shared `_gpio_5` statement) becomes per-instance setup calls that rely on the on-device
+  `runtime.shared` singleton -- one Pin, slightly larger code; (2) a package's pin-check/claim messages are
+  worded differently from a built-in's. Tests that asserted the built-in's exact text were retargeted.
+
+- **2026-10-15, same session — custom-node distribution direction: registry repos, a search-path list.** Mike:
+  custom nodes may number in the hundreds, so a **separate repo per node collection, with a registry structure
+  the backend can query to get the list of nodes available to include**; the registry search path is a **list**, so
+  a user can add a manufacturer's registry for their own nodes. Recorded as a direction, not yet scoped. It is
+  orthogonal to phase 4 (built-ins-as-packages, which are bundled in the app): the two meet only at
+  `mergeCustomNodeRegistry`, and a registry is a distribution layer over the existing ordered `custom_node_dirs`
+  search. It does re-raise the **marketplace/sandboxing** question (Decision 5) -- fetching a registry/list and
+  installing a third party's package is that trigger -- which the data-only posture keeps survivable. Design
+  questions for when it's scoped: registry index format, trust/update, version pinning.

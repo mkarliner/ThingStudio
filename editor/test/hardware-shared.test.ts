@@ -12,7 +12,10 @@ import { buildRegistry } from "../src/node-library/registry.js";
 import { adcNode } from "../src/node-library/adc.js";
 import { displaySpiNode } from "../src/node-library/display-spi.js";
 import { encoderNode } from "../src/node-library/encoder.js";
-import { gpioOutNode } from "../src/node-library/gpio-out.js";
+import { descriptor as gpioOutDescriptor, python as gpioOutPython } from "../src/node-library/core-packages/gpio-out.js";
+import { buildCoreNodeDefinition } from "../src/node-library/custom-node.js";
+
+const gpioOutNode = buildCoreNodeDefinition(gpioOutDescriptor, gpioOutPython);
 import { i2cBusFromPins } from "../src/node-library/i2c-shared.js";
 import { neopixelNode } from "../src/node-library/neopixel.js";
 
@@ -39,7 +42,7 @@ const display = (id: string, props: Record<string, unknown> = {}): GraphNode => 
 const gpioOut = (id: string, pin: number): GraphNode => ({ id, type: "thingstudio/gpio_out", properties: { pin } });
 
 describe("hardware resources are keyed singletons", () => {
-  it("two gpio_out nodes on one pin share one runtime.shared Pin", () => {
+  it("two gpio_out nodes on one pin both call runtime.shared for it (one Pin on the board)", () => {
     const graph: GraphData = {
       nodes: [
         { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
@@ -52,8 +55,9 @@ describe("hardware resources are keyed singletons", () => {
       ],
     };
     const { source } = compile(graph, buildRegistry());
-    expect(source).toContain("_gpio_5 = runtime.shared('pin', 5, ('out', 'none'), lambda: machine.Pin(5, machine.Pin.OUT))");
-    expect(source.match(/runtime\.shared\('pin', 5,/g)).toHaveLength(1);
+    expect(source).toContain('"pin": 5');
+    // Each package instance calls runtime.shared itself; the singleton gives one Pin on the board.
+    expect(source.match(/runtime\.shared\('pin', properties\['pin'\], \('out', 'none'\)/g)).toHaveLength(2);
     expect(source).not.toMatch(/^_\w+ = machine\.Pin\(/m);
   });
 
@@ -125,7 +129,8 @@ describe("hardware resources are keyed singletons", () => {
       links: [[1, "1", 0, "2", 0, "bool"]],
     };
     const { source } = compile(graph, buildRegistry());
-    expect(source).toContain(`_gpio_X1 = runtime.shared('pin', "X1", ('out', 'none'), lambda: machine.Pin("X1", machine.Pin.OUT))`);
+    expect(source).toContain('"pin": "X1"');
+    expect(source).toContain("runtime.shared('pin', properties['pin'], ('out', 'none')");
   });
 
   it("a named pin with punctuation gets an injective, valid variable name", () => {
@@ -137,6 +142,7 @@ describe("hardware resources are keyed singletons", () => {
       links: [[1, "1", 0, "2", 0, "bool"]],
     };
     const { source } = compile(graph, buildRegistry());
-    expect(source).toContain(`_gpio_P3_2d1 = runtime.shared('pin', "P3-1"`);
+    expect(source).toContain('"pin": "P3-1"');
+    expect(source).toContain("runtime.shared('pin', properties['pin'], ('out', 'none')");
   });
 });

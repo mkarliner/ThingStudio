@@ -16,7 +16,7 @@ import { adcNode } from "./adc.js";
 import { encoderNode } from "./encoder.js";
 import { neopixelNode } from "./neopixel.js";
 import { functionNode } from "./function-node.js";
-import { gpioOutNode } from "./gpio-out.js";
+import { descriptor as gpioOutCoreDescriptor, python as gpioOutCorePython } from "./core-packages/gpio-out.js";
 import { httpInNode } from "./http-in.js";
 import { httpRequestNode } from "./http-request.js";
 import { httpResponseNode } from "./http-response.js";
@@ -81,7 +81,7 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     injectNode,
     startupNode,
     functionNode,
-    gpioOutNode,
+    buildCoreNodeDefinition(gpioOutCoreDescriptor, gpioOutCorePython),
     variableGetNode,
     variableSetNode,
     debugNode,

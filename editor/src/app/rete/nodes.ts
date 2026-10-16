@@ -146,7 +146,7 @@ import { injectNode } from "../../node-library/inject.js";
 import { startupNode } from "../../node-library/startup.js";
 import { functionNode } from "../../node-library/function-node.js";
 import { debugNode } from "../../node-library/debug.js";
-import { gpioOutNode } from "../../node-library/gpio-out.js";
+import { descriptor as gpioOutCoreDescriptor } from "../../node-library/core-packages/gpio-out.js";
 import { timerNode } from "../../node-library/timer.js";
 import { interruptNode } from "../../node-library/interrupt.js";
 import { eswitchNode } from "../../node-library/eswitch.js";
@@ -431,7 +431,7 @@ export class FunctionNode extends buildDescriptorNodeClass(functionNode) {}
 
 export class StartupNode extends buildDescriptorNodeClass(startupNode) {}
 
-export class GpioOutNode extends buildDescriptorNodeClass(gpioOutNode) {}
+export class GpioOutNode extends buildDescriptorNodeClass(gpioOutCoreDescriptor) {}
 
 // Given canvas presence 2026-09-06 (outstanding-items/canvas-presence-
 // gaps.md) -- previously registry-only since introduction, same batch as

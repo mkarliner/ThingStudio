@@ -176,3 +176,15 @@ transform, so it also proves the simplest case: a `.node.py` that just uses `asy
 global) with no setup. Its `delayMs` `min` is enforced at compile time by the generic codegen. The pattern per
 node: write the descriptor + `.node.py`, flip `registry.ts` and the editor class, delete the TS node, retarget its
 test.
+
+## 14. Third leaf node: gpio_out, and a package-vs-builtin difference
+
+`thingstudio/gpio_out` is a core package too (`core-packages/gpio-out.ts`; `gpio-out.ts` deleted). Finding worth
+recording: a built-in deduped its setup at compile time (two `gpio_out` on one pin shared one `_gpio_5 = ...`
+statement, keyed by pin); a package emits a per-instance setup closure, so it calls `runtime.shared('pin', ...)`
+once per instance and relies on the **on-device singleton** to hand back one `Pin`. Behaviour is the same (one
+Pin), the generated code is a little larger, and the error messages a package produces differ in wording from a
+built-in's (`node <id> (...) property "pin" 5 doesn't exist ...` vs `gpio_out pin 5 doesn't exist ...`). Both are
+acceptable under the no-loss test, but they mean tests that asserted the built-in's exact code/text need
+retargeting per node. Error-message wording is a candidate for a small compatibility pass (label a field's check
+with the node's palette id) if the churn proves annoying.
