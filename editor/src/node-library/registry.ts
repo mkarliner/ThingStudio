@@ -4,9 +4,9 @@ import { descriptor as debugCoreDescriptor, python as debugCorePython } from "./
 import { displayI2cNode } from "./display-i2c.js";
 import { displaySpiNode } from "./display-spi.js";
 import { descriptor as delayCoreDescriptor, python as delayCorePython } from "./core-packages/delay.js";
-import { filterNode } from "./filter.js";
-import { journalNode } from "./journal.js";
-import { bme280Node } from "./bme280.js";
+import { descriptor as filterCoreDescriptor, python as filterCorePython } from "./core-packages/filter.js";
+import { descriptor as journalCoreDescriptor, python as journalCorePython } from "./core-packages/journal.js";
+import { descriptor as bme280CoreDescriptor, python as bme280CorePython } from "./core-packages/bme280.js";
 import { touchI2cNode } from "./touch-i2c.js";
 import { buildCoreNodeDefinition } from "./custom-node.js";
 import { descriptor as i2cCoreDescriptor, python as i2cCorePython } from "./core-packages/i2c.js";
@@ -19,7 +19,7 @@ import { functionNode } from "./function-node.js";
 import { descriptor as gpioOutCoreDescriptor, python as gpioOutCorePython } from "./core-packages/gpio-out.js";
 import { httpInNode } from "./http-in.js";
 import { httpRequestNode } from "./http-request.js";
-import { httpResponseNode } from "./http-response.js";
+import { descriptor as httpResponseCoreDescriptor, python as httpResponseCorePython } from "./core-packages/http-response.js";
 import { injectNode } from "./inject.js";
 import { interruptNode } from "./interrupt.js";
 import { mqttPublishNode } from "./mqtt-publish.js";
@@ -99,7 +99,7 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     wifiGateNode,
     httpRequestNode,
     httpInNode,
-    httpResponseNode,
+    buildCoreNodeDefinition(httpResponseCoreDescriptor, httpResponseCorePython),
     mqttPublishNode,
     mqttSubscribeNode,
     udpSendNode,
@@ -107,9 +107,9 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     ntpNode,
     // A core package (phase 4): descriptor + .node.py, no TypeScript hook. See core-packages/delay.ts.
     buildCoreNodeDefinition(delayCoreDescriptor, delayCorePython),
-    filterNode,
-    journalNode,
-    bme280Node,
+    buildCoreNodeDefinition(filterCoreDescriptor, filterCorePython),
+    buildCoreNodeDefinition(journalCoreDescriptor, journalCorePython),
+    buildCoreNodeDefinition(bme280CoreDescriptor, bme280CorePython),
     touchI2cNode,
     // i2c is a core package now (node-format-parity phase 4, option A) -- built from its descriptor + .node.py,
     // not a TypeScript codegen hook. See node-library/core-packages/i2c.ts.

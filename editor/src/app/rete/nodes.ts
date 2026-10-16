@@ -160,12 +160,12 @@ import { udpSendNode } from "../../node-library/udp-send.js";
 import { udpReceiveNode } from "../../node-library/udp-receive.js";
 import { httpRequestNode } from "../../node-library/http-request.js";
 import { httpInNode } from "../../node-library/http-in.js";
-import { httpResponseNode } from "../../node-library/http-response.js";
+import { descriptor as httpResponseCoreDescriptor } from "../../node-library/core-packages/http-response.js";
 import { descriptor as delayCoreDescriptor } from "../../node-library/core-packages/delay.js";
-import { filterNode } from "../../node-library/filter.js";
-import { journalNode } from "../../node-library/journal.js";
+import { descriptor as filterCoreDescriptor } from "../../node-library/core-packages/filter.js";
+import { descriptor as journalCoreDescriptor } from "../../node-library/core-packages/journal.js";
 import { ntpNode } from "../../node-library/ntp.js";
-import { bme280Node } from "../../node-library/bme280.js";
+import { descriptor as bme280CoreDescriptor } from "../../node-library/core-packages/bme280.js";
 import { touchI2cNode } from "../../node-library/touch-i2c.js";
 import type { NodeDescriptor } from "../../compiler/node-definition.js";
 import { guiBarNode, guiTrendNode, guiButtonNode, guiLabelNode, guiLedNode, guiModalNode, guiNavigatorNode, guiReadoutNode, guiScreenNode } from "../../node-library/gui.js";
@@ -315,8 +315,8 @@ export function functionOutputKey(index: number): string {
 // time now; the output sends it, also after each sync. Network group: it joins the flow's WiFi itself --
 // descriptor-driven (buildDescriptorNodeClass below).
 
-// BME280/BMP280 sensor on a shared I2C bus (node-library/bme280.ts) -- descriptor-driven
-// (buildDescriptorNodeClass below).
+// BME280/BMP280 sensor on a shared I2C bus -- a core package now (node-library/core-packages/bme280.ts),
+// descriptor-driven (buildDescriptorNodeClass below).
 
 // Touch panel (FT6336U) on a shared I2C bus (node-library/touch-i2c.ts) -- descriptor-driven
 // (buildDescriptorNodeClass below).
@@ -448,7 +448,7 @@ export class TouchI2cNode extends buildDescriptorNodeClass(touchI2cNode) {}
 
 export class I2cNode extends buildDescriptorNodeClass(i2cCoreDescriptor) {}
 
-export class Bme280Node extends buildDescriptorNodeClass(bme280Node) {}
+export class Bme280Node extends buildDescriptorNodeClass(bme280CoreDescriptor) {}
 
 export class NtpNode extends buildDescriptorNodeClass(ntpNode) {}
 
@@ -460,7 +460,7 @@ export class HttpRequestNode extends buildDescriptorNodeClass(httpRequestNode) {
 
 export class HttpInNode extends buildDescriptorNodeClass(httpInNode) {}
 
-export class HttpResponseNode extends buildDescriptorNodeClass(httpResponseNode) {}
+export class HttpResponseNode extends buildDescriptorNodeClass(httpResponseCoreDescriptor) {}
 
 export class MqttPublishNode extends buildDescriptorNodeClass(mqttPublishNode) {}
 
@@ -478,9 +478,9 @@ export class EncoderNode extends buildDescriptorNodeClass(encoderNode) {}
 
 export class NeopixelNode extends buildDescriptorNodeClass(neopixelNode) {}
 
-export class FilterNode extends buildDescriptorNodeClass(filterNode) {}
+export class FilterNode extends buildDescriptorNodeClass(filterCoreDescriptor) {}
 
-export class JournalNode extends buildDescriptorNodeClass(journalNode) {}
+export class JournalNode extends buildDescriptorNodeClass(journalCoreDescriptor) {}
 
 export class WifiStatusNode extends buildDescriptorNodeClass(wifiStatusNode) {}
 

@@ -357,9 +357,12 @@ not here.
   **Phase 4 (built-ins as packages) scoped and decided 2026-10-15:** `builtins-as-packages-scoping.md` — Mike chose
   **option A** (generate core packages from the existing TS codegen, one load path, `function`/`gui_*` residue);
   the first work item (`i2c` end-to-end proof + core-folder load path) is §9 of that note. **Progress 2026-10-15/16:**
-  `i2c`, `delay`, `gpio_out`, `debug` are core packages now. **Next deliverable — a shared-resource/bus facility**
-  (validate/claim/dedup a shared bus or pin from descriptor data), without which the hardware family (`bme280`,
-  adc, encoder, neopixel, interrupt, display_*, ...) can't flip cleanly. Handoff: `builtins-as-packages-phase4-briefing.md`.
+  `i2c`, `delay`, `gpio_out`, `debug` are core packages now. **Shared-resource/bus facility landed 2026-10-16**
+  (`shared-resource-facility-scoping.md`): a `NodeDescriptor.resources` array (core-only; `resource-check.ts`)
+  restores the compile-time bus/pin validate-and-claim checks a package lost, and `bme280` is a core package now.
+  `filter`, `journal`, `http_response` flipped the same session; `wifi_gate` is deliberately deferred (it needs
+  flow-query context parity — see the scoping note §9). Next: the rest of the hardware family (`adc`, `encoder`,
+  `neopixel`, `eswitch`, `ebutton`, `interrupt`, `touch_i2c`, `display_i2c`, `display_spi`).
 
 - **[P3]** **Deploy the runtime itself from the browser editor, not just compiled flows.** Confirmed untracked
   anywhere until 2026-09-12. Today, `test-flows/deploy_runtime.py` is a standalone `mpremote`-based script pushing

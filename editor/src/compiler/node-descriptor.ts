@@ -203,6 +203,49 @@ export function resolveOutputCount(spec: DynamicOutputs, properties: Record<stri
   return Math.min(n, spec.max);
 }
 
+/** A shared hardware resource a node declares, so the generic package codegen can validate it and claim it the
+ * way a built-in's own codegen did through `hardware-shared.ts` / `i2c-shared.ts` (node-library/
+ * resource-check.ts). Core-only for now: not part of the custom `.node.json` schema. A package's `.node.py`
+ * still builds and fetches the resource object itself through `runtime.shared(...)` -- this restores the
+ * compile-time checks, not the object plumbing (the on-device singleton already shares it). */
+export type ResourceSpec = I2cResourceSpec | SpiResourceSpec | PinResourceSpec;
+
+/** An I2C bus resolved from a flow config, validated (`checkI2c`, SCL/SDA) and claimed; two in-use configs on
+ * one bus number are a `CompileError`, as `i2c-shared.ts`'s `resolveI2cBus` already refuses. */
+export interface I2cResourceSpec {
+  kind: "i2c";
+  /** The `configRef` property naming the flow's I2C bus config. */
+  config: string;
+}
+
+/** An SPI bus resolved from node properties: `checkPin` on SCK/MOSI, `checkSpi` against the board, and the
+ * bus/pin claims (`hardware-shared.ts`'s `sharedSpi`). */
+export interface SpiResourceSpec {
+  kind: "spi";
+  /** Property names holding the bus number, the SCK and MOSI pins, and the baudrate. */
+  bus: string;
+  sck: string;
+  mosi: string;
+  baudrate: string;
+}
+
+/** One pin (or pin pair's first pin) claimed with a role/use text and an optional derived device claim, for the
+ * conflict checks a built-in got from `claimResource`. */
+export interface PinResourceSpec {
+  kind: "pin";
+  /** Property holding the pin's value. */
+  property: string;
+  /** Direction checked against the board. */
+  direction: "input" | "output" | "bidirectional";
+  /** Input pull, for the check and the default claim text. Default `"none"`. */
+  pull?: "none" | "up" | "down";
+  /** The claim's use text; `{pin}` and any `{property}` are interpolated. Defaults to the direction/pull text. */
+  use?: string;
+  /** A second, derived claim for a device on the pin (its own settings), so two devices with different settings
+   * on one pin conflict. `{pin}`/`{property}` interpolated. */
+  claim?: { resource: string; use: string };
+}
+
 /** The canonical node descriptor: plain data only, plus (on a built-in's NodeDefinition) the codegen
  * hooks that a custom `.node.json` deliberately cannot carry. */
 export interface NodeDescriptor {
@@ -246,6 +289,9 @@ export interface NodeDescriptor {
   /** Hardware capabilities this node needs (e.g. `["espnow"]`), checked centrally against the compile's
    * Target by definitions/capability-check.ts. Absent = needs nothing in particular. */
   requires?: { readonly capabilities?: readonly string[] };
+  /** Shared hardware resources (a bus, a claimed pin) the generic package codegen validates and claims
+   * (`node-library/resource-check.ts`). Core-only for now (not in the custom `.node.json` schema). */
+  resources?: readonly ResourceSpec[];
   /** The node is valid with nothing wired to it, so "disconnected from any source" doesn't apply (a gui_button:
    * it is useful as a pure input, with nothing to display). */
   allowUnwired?: boolean;

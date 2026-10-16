@@ -59,6 +59,7 @@ carry these keys.
 | `hidden` | boolean | no | Hide from the palette (still usable in a flow file). |
 | `screenOutline` | boolean | no | Show the `ScreenOutline` widget in the panel (a `gui_screen`'s widget layout). |
 | `requires` | `{capabilities: string[]}` | no | Hardware the node needs (e.g. `["pio"]`, `["espnow"]`), checked centrally at compile time (§4). |
+| `resources` | `ResourceSpec[]` | no | Shared hardware a **core package** declares so the generic codegen validates and claims it (an I2C bus, an SPI bus, a claimed pin). Core-only: not part of the custom `.node.json` schema (§4). |
 | `allowUnwired` | boolean | no | The node is valid with nothing wired to it. |
 | `ports` | `{inputs, outputs}` | no | Arrays of `{name, type}`. |
 | `properties` | array | no | Property-panel fields (below). |
@@ -90,6 +91,16 @@ board-specific package can identify its exact board and guard for "unknown" (202
 A **`nodeId`** field inlines the instance's own node id (a string) under its Python key, so a package can call
 `runtime.report_status(properties["id"], ...)` (and speak about itself otherwise) — closing the NODE_STATUS gap
 for custom nodes (2026-10-15).
+
+A **`resources`** array declares shared hardware a core package touches, so the generic package codegen runs the
+same compile-time checks a built-in's own codegen did (`editor/src/node-library/resource-check.ts`): an `i2c` bus
+(from a `configRef` field) is validated against the board, its SCL/SDA pins claimed, and two in-use configs on one
+bus number refused; an `spi` bus (from `bus`/`sck`/`mosi`/`baudrate` properties) is `checkSpi`'d and its bus/pins
+claimed; a `pin` is direction/pull-checked and claimed with a role/use text, plus an optional derived device claim
+for two devices on one pin. The package's own `.node.py` still builds and fetches the object through
+`runtime.shared(...)` — `resources` restores the checks, not the object plumbing. **Core-only:** it is a
+`NodeDescriptor` field but is deliberately **not** in `custom-node.schema.json` yet (2026-10-16). Full reasoning:
+`../../docs/working-notes/shared-resource-facility-scoping.md`.
 
 A field with **no `name`** (and no `default`) is **info-only**: the panel renders its widget but it binds to
 no property. Used for a `configRef` to a flow-singleton config (e.g. the WiFi picker shown on a network
@@ -158,10 +169,11 @@ files with no bridge — is being closed deliberately, family by family, with no
   properties are inlined into the node's Python `properties`; an empty id is `None`),   and event-driven
   `source`s (`eventSource: true` + `wait`/`emit`). Dynamic output ports are a data descriptor field
   (`dynamicOutputs`: the function node's `outputCount`) but stay built-in-only (not in the custom
-  schema) until the canvas can build them for a custom node too, as does arbitrary codegen. Compile-time
-  hardware resource claims stay a documented limit
-  (a custom node uses `runtime.shared` only). Once every family is migrated, the descriptor's palette
-  metadata becomes required and `palette.ts`'s per-kind rows are removed.
+  schema) until the canvas can build them for a custom node too, as does arbitrary codegen. **Landed 2026-10-16:**
+  a **core-only** `resources` field (a core package declares an I2C/SPI bus or a claimed pin the generic codegen
+  validates and claims — §2); it is deliberately not in the custom schema. Compile-time hardware resource claims
+  therefore stay a documented limit **for a custom node** (it uses `runtime.shared` only). Once every family is
+  migrated, the descriptor's palette metadata becomes required and `palette.ts`'s per-kind rows are removed.
 
 The one-way door stays closed: a built-in's codegen is not loaded code, and a browser-loaded editor
 never executes arbitrary codegen.

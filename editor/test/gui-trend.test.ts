@@ -53,12 +53,15 @@ describe("trend widget", () => {
 });
 
 describe("journal in a flow", () => {
-  it("compiles its ring once per journal, with the class written once", () => {
+  it("compiles one ring per journal, each journal carrying its own class", () => {
     const { source } = compileFlow();
-    expect(source.match(/class _Journal/g)?.length).toBe(1);
-    expect(source).toContain("_Journal(156, 10000, 6, 0.5)");
-    expect(source).toContain("_Journal(156, 0, 0, 0.5)");
-    expect(source).toContain("_Journal(156, 60000, 0, 0.5)");
+    // journal is a core package now: each instance is its own closure, so the class is defined per instance
+    // (three journals here). Behaviour is identical (builtins-as-packages-scoping.md §14).
+    expect(source.match(/class _Journal/g)?.length).toBe(3);
+    expect(source).toContain('"rows": 156');
+    expect(source).toContain('"stepSeconds": 10');
+    expect(source).toContain('"stepSeconds": 0');
+    expect(source).toContain('"stepSeconds": 60');
   });
 
   it("the headliner also publishes each reading over MQTT", () => {
@@ -71,6 +74,6 @@ describe("journal in a flow", () => {
       compileFlow((f) => {
         f.nodes.find((x) => x.id === "n20-tj1")!.properties.rows = 0;
       }),
-    ).toThrow(/journal node's rows "0"/);
+    ).toThrow(/property "rows" 0 is below its minimum, 1/);
   });
 });

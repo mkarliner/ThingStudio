@@ -70,6 +70,7 @@ import type {
   PayloadType,
   PortDefinition,
   PropertyFieldDescriptor,
+  ResourceSpec,
   SinkCodegenResult,
   SourceCodegenResult,
   TransformCodegenResult,
@@ -78,6 +79,7 @@ import { pyStringLiteral } from "./py-literals.js";
 import { checkOptionalPin, checkPin } from "../definitions/pin-check.js";
 import { pinLabel } from "../definitions/definitions.js";
 import { claimResource, pullText, pyPinLiteral } from "./hardware-shared.js";
+import { checkResources } from "./resource-check.js";
 
 // Exported (2026-10-14) so editor/test/node-descriptor-schema.test.ts can
 // assert the published schema in interfaces/node-descriptor/ lists the same
@@ -670,8 +672,10 @@ function toPortDefinitions(ports: CustomNodePort[] | undefined): PortDefinition[
 type PackageDescriptor = {
   type: string;
   kind: NodeKind;
+  paletteId?: string;
   properties?: PropertyFieldDescriptor[];
   eventSource?: boolean;
+  resources?: readonly ResourceSpec[];
 };
 
 /**
@@ -691,6 +695,9 @@ function packageCodegen(descriptor: PackageDescriptor, pythonSource: string): Pi
     ctx: CodegenContext,
     entries: string[],
   ): { vars: string[]; propsVar: string; statements: { key: string; code: string }[] } {
+    // Validate and claim any shared hardware resource the descriptor declares, before the properties literal is
+    // built -- the same checks a built-in's own codegen did, now for a package (resource-check.ts).
+    checkResources(ctx, node, descriptor);
     const propsVar = ctx.uniqueName(`${hint}_props`);
     const setupFn = ctx.uniqueName(`${hint}_setup`);
     const vars = entries.map((name) => ctx.uniqueName(`${hint}_${name}`));

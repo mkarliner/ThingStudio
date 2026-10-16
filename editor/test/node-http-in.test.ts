@@ -33,7 +33,11 @@ import { CompileError } from "../src/compiler/errors.js";
 import type { GraphNode } from "../src/compiler/graph.js";
 import type { CodegenContext } from "../src/compiler/node-definition.js";
 import { httpInNode } from "../src/node-library/http-in.js";
-import { httpResponseNode } from "../src/node-library/http-response.js";
+import { descriptor as httpResponseDescriptor, python as httpResponsePython } from "../src/node-library/core-packages/http-response.js";
+import { buildCoreNodeDefinition } from "../src/node-library/custom-node.js";
+
+// http_response is a core package now; this is the NodeDefinition shape the test drives.
+const httpResponseNode = buildCoreNodeDefinition(httpResponseDescriptor, httpResponsePython);
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -153,6 +157,14 @@ async function startServer(routes: Route[]): Promise<void> {
     }
     const loopBody = bodyLines.join("\n");
     consumeFns.push(`async def _consume_${route.id}():\n${indent(`while True:\n${indent(loopBody, 4)}`, 4)}`);
+  }
+
+  // http_response's own setup (it is a package now: the per-instance closure the generic codegen emits).
+  for (const stmt of responseResult.statements ?? []) {
+    if (!seenKeys.has(stmt.key)) {
+      seenKeys.add(stmt.key);
+      setupBlocks.push(stmt.code);
+    }
   }
 
   // "import runtime" + "asyncio = runtime.asyncio", NOT a bare "import
@@ -289,7 +301,7 @@ describe("thingstudio/http_in + thingstudio/http_response nodes", () => {
 
   it("http_response completing a request that was never asked for raises a clear, attributable error", () => {
     const responseResult = httpResponseNode.codegenSink!({ id: "resp", type: "thingstudio/http_response", properties: {} }, ctx);
-    expect(responseResult.functionBody).toContain("did not come from an http_in node");
+    expect((responseResult.statements ?? []).map((s) => s.code).join("\n")).toContain("did not come from an http_in node");
   });
 
   // Real bug, hit on Mike's own second real-browser deploy of a flow with
@@ -314,7 +326,7 @@ describe("thingstudio/http_in + thingstudio/http_response nodes", () => {
     const src = httpInNode.codegenEventSource!(httpInNodes[0]!, ctx);
     const responseResult = httpResponseNode.codegenSink!({ id: "resp", type: "thingstudio/http_response", properties: {} }, ctx);
 
-    const setupCode = (src.statements ?? []).map((s) => s.code).join("\n\n");
+    const setupCode = [...(src.statements ?? []), ...(responseResult.statements ?? [])].map((s) => s.code).join("\n\n");
     const script = [
       "import runtime",
       "asyncio = runtime.asyncio",

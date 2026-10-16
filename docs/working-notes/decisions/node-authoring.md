@@ -834,3 +834,19 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   compile-time checks from descriptor data. So `bme280` (and the other i2c/hardware-family nodes) stay built-in
   until the format gains a descriptor-declared shared-resource/bus facility. The attempt did produce a small
   framework fix, kept: the generic codegen now inlines a numeric `select` option value as a number.
+
+- **2026-10-16 — shared-resource facility: Option 2, core-only (`NodeDescriptor.resources`).** Mike's call on
+  `shared-resource-facility-scoping.md`: a core package declares shared hardware (`i2c` from a configRef, `spi`
+  from properties, a claimed `pin`) in a `resources` array; the generic package codegen validates and claims it
+  (`resource-check.ts`, reusing `resolveI2cBus`/`checkPin`/`checkSpi`/`claimResource`), while the package's own
+  `.node.py` still builds the object through `runtime.shared(...)`. The trade taken: no compile-time setup-statement
+  dedup (the on-device singleton shares the object), already an accepted package-vs-built-in difference. The
+  vocabulary is **core-only** for now -- deliberately not in `custom-node.schema.json`, since a new user-facing
+  vocabulary shouldn't land before the shape is proven on core. Adds a canonical `NodeDescriptor` field (SPEC §2),
+  no runtime/wire change, no version bump. `bme280` converted; `filter`/`journal`/`http_response` flipped the same
+  session. `wifi_gate` stays built-in: it needs flow-query context parity (`flowHasMqttNodes`/the `deferToMqtt`
+  wifi setup), and a naive port would reintroduce the WiFi-flapping bug.
+- **2026-10-16 — node-format parity: `function` and `gui_*` are the named built-in-only residue.** Restated by
+  conversion experience: every node that touches hardware or is pure software has now been shown convertible (or,
+  for `wifi_gate`, blocked only on a named missing capability); `function` (verbatim user code) and the `gui_*`
+  family (the `screens` layout model) remain outside the format by architecture, per `builtins-as-packages-scoping.md`.

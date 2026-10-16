@@ -1,6 +1,8 @@
-// bme280 (editor/src/node-library/bme280.ts) and the shared I2C bus config (i2c-shared.ts). The generated
-// read runs in real CPython against the real vendored driver (device-runtime/src/vendor/bme280/) and a fake
-// I2C bus holding the Bosch datasheet's worked example (fixtures/pymock/fake_bme280_i2c.py).
+// bme280 as a core package (editor/src/node-library/core-packages/bme280.ts) and the shared I2C bus config
+// (i2c-shared.ts). The generated read runs in real CPython against the real vendored driver
+// (device-runtime/src/vendor/bme280/) and a fake I2C bus holding the Bosch datasheet's worked example
+// (fixtures/pymock/fake_bme280_i2c.py). The package fetches the shared bus through runtime.shared('i2c', ...),
+// so the fake bus is pre-seeded as the on-device singleton.
 
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, writeFileSync } from "node:fs";
@@ -12,9 +14,13 @@ import { compile } from "../src/compiler/compile.js";
 import { CompileError } from "../src/compiler/errors.js";
 import type { GraphData, GraphNode } from "../src/compiler/graph.js";
 import type { CodegenContext } from "../src/compiler/node-definition.js";
-import { bme280Node } from "../src/node-library/bme280.js";
+import { descriptor as bme280Descriptor, python as bme280Python } from "../src/node-library/core-packages/bme280.js";
+import { buildCoreNodeDefinition } from "../src/node-library/custom-node.js";
 import { I2C_BUS_CONFIG_TYPE, migrateI2cBusConfigs } from "../src/node-library/i2c-shared.js";
 import { buildRegistry } from "../src/node-library/registry.js";
+
+// The built-in's NodeDefinition shape, for tests that call its codegen hook directly.
+const bme280Node = buildCoreNodeDefinition(bme280Descriptor, bme280Python);
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PYMOCK = join(__dirname, "fixtures", "pymock");
@@ -64,11 +70,12 @@ function run(properties: Record<string, unknown>, steps: string[], chipId = 0x60
     "import sys",
     "import runtime",
     "sys.modules['uasyncio'] = runtime.asyncio", // has sleep_ms, unlike CPython's asyncio
-    ...(r.imports ?? []),
-    ...(r.statements ?? []).map((s) => s.code),
     "from fake_bme280_i2c import FakeI2C",
     `_bus = FakeI2C(chip_id=${chipId})`,
-    "_i2c_bus_0 = _bus",
+    // The package fetches its bus through runtime.shared('i2c', ...) at setup; seed the on-device singleton
+    // with the fake so no real machine.I2C is built.
+    "runtime._singletons[('i2c', 0)] = ((22, 21, 100000), _bus)",
+    ...(r.statements ?? []).map((s) => s.code),
     "",
     "async def _read():",
     indent(r.buildMsg),
@@ -131,8 +138,8 @@ describe("thingstudio/bme280 node", () => {
   });
 
   it("rejects a bad address or interval, and a missing bus", () => {
-    expect(() => bme280Node.codegenSource!(node({ address: 0x50 }), ctxWith())).toThrow(/0x76/);
-    expect(() => bme280Node.codegenSource!(node({ intervalMs: 10 }), ctxWith())).toThrow(/100 or more/);
+    expect(() => bme280Node.codegenSource!(node({ address: 0x50 }), ctxWith())).toThrow(/not one of the declared options/);
+    expect(() => bme280Node.codegenSource!(node({ intervalMs: 10 }), ctxWith())).toThrow(/below its minimum, 100/);
     expect(() => bme280Node.codegenSource!(node({ i2cConfigId: "" }), ctxWith())).toThrow(/has no I2C bus/);
   });
 });
@@ -141,13 +148,16 @@ describe("shared I2C bus", () => {
   const bmeNode = { id: "b1", type: "thingstudio/bme280", properties: { i2cConfigId: "bus0", intervalMs: 1000 } };
   const displayNode = { id: "d1", type: "thingstudio/display_i2c", properties: { i2cConfigId: "bus0", width: 16, height: 8 } };
 
-  it("a display and a sensor on one bus share one machine.I2C", () => {
+  it("a display and a sensor on one bus share one bus object at runtime", () => {
     const graph: GraphData = { nodes: [bmeNode, displayNode], links: [[1, "b1", 0, "d1", 0, "any"]], configs: [BUS0] } as GraphData;
     const { source } = compile(graph, buildRegistry());
-    expect(source.match(/machine\.I2C\(/g)).toHaveLength(1);
+    // display_i2c (still a built-in) emits the shared setup statement; bme280 (now a package) fetches the same
+    // runtime.shared singleton from inside its closure -- one bus object on the device, two text occurrences
+    // (the accepted package-vs-built-in difference, builtins-as-packages-scoping.md §14).
     expect(source).toContain(
       "_i2c_bus_0 = runtime.shared('i2c', 0, (22, 21, 100000), lambda: machine.I2C(0, scl=machine.Pin(22), sda=machine.Pin(21), freq=100000))",
     );
+    expect(source).toContain("runtime.shared('i2c', _bus_num, (_bus['scl'], _bus['sda'], _bus['freq'])");
   });
 
   it("two in-use configs claiming the same bus are a compile error", () => {

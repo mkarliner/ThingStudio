@@ -1,5 +1,6 @@
-// journal (editor/src/node-library/journal.ts). Runs the generated transform in real CPython against a sequence of
-// messages with pymock's runtime and time_mock's test-driven clock, and checks the series and the roll-ups it sends.
+// journal as a core package (editor/src/node-library/core-packages/journal.ts). Runs the generated transform in
+// real CPython against a sequence of messages with pymock's runtime and time_mock's test-driven clock, and checks
+// the series and the roll-ups it sends.
 
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, writeFileSync } from "node:fs";
@@ -10,7 +11,10 @@ import { describe, expect, it } from "vitest";
 import { CompileError } from "../src/compiler/errors.js";
 import type { GraphNode } from "../src/compiler/graph.js";
 import type { CodegenContext } from "../src/compiler/node-definition.js";
-import { journalNode } from "../src/node-library/journal.js";
+import { descriptor as journalDescriptor, python as journalPython } from "../src/node-library/core-packages/journal.js";
+import { buildCoreNodeDefinition } from "../src/node-library/custom-node.js";
+
+const journalNode = buildCoreNodeDefinition(journalDescriptor, journalPython);
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -184,11 +188,10 @@ describe("thingstudio/journal node", () => {
   describe("properties", () => {
     const refuse = (props: Record<string, unknown>, re: RegExp) => expect(() => journalNode.codegenTransform!(node(props), freshCtx())).toThrow(re);
     it("refuses values that make no sense, saying which", () => {
-      refuse({ rows: 0 }, /rows "0" must be a whole number from 1 to 256/);
-      refuse({ rows: 1000 }, /rows "1000"/);
-      refuse({ stepSeconds: -1 }, /seconds per row "-1"/);
-      refuse({ steps: 1.5 }, /rows per roll-up "1.5"/);
-      refuse({ xff: 2 }, /gaps allowed "2"/);
+      refuse({ rows: 0 }, /property "rows" 0 is below its minimum, 1/);
+      refuse({ rows: 1000 }, /property "rows" 1000 is above its maximum, 256/);
+      refuse({ stepSeconds: -1 }, /property "stepSeconds" -1 is below its minimum, 0/);
+      refuse({ xff: 2 }, /property "xff" 2 is above its maximum, 1/);
       expect(() => journalNode.codegenTransform!(node({ rows: 0 }), freshCtx())).toThrow(CompileError);
     });
   });

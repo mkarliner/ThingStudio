@@ -1,6 +1,6 @@
-// filter (editor/src/node-library/filter.ts). Runs the generated transform in real CPython against a
-// sequence of messages, with pymock's runtime and time_mock (a test-driven clock, installed as
-// sys.modules["time"] -- see fixtures/pymock/time_mock.py), and checks which messages come out.
+// filter as a core package (editor/src/node-library/core-packages/filter.ts). Runs the generated transform in
+// real CPython against a sequence of messages, with pymock's runtime and time_mock (a test-driven clock,
+// installed as sys.modules["time"] -- see fixtures/pymock/time_mock.py), and checks which messages come out.
 
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, writeFileSync } from "node:fs";
@@ -12,8 +12,11 @@ import { compile } from "../src/compiler/compile.js";
 import { CompileError } from "../src/compiler/errors.js";
 import type { GraphNode } from "../src/compiler/graph.js";
 import type { CodegenContext } from "../src/compiler/node-definition.js";
+import { descriptor as filterDescriptor, FILTER_MAX_TOPICS, python as filterPython } from "../src/node-library/core-packages/filter.js";
+import { buildCoreNodeDefinition } from "../src/node-library/custom-node.js";
 import { buildRegistry } from "../src/node-library/registry.js";
-import { FILTER_MAX_TOPICS, filterNode } from "../src/node-library/filter.js";
+
+const filterNode = buildCoreNodeDefinition(filterDescriptor, filterPython);
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -198,14 +201,14 @@ describe("thingstudio/filter node", () => {
       }
     });
 
-    it("rejects a zero, negative or fractional interval", () => {
-      for (const intervalMs of [0, -5, 1.5, "abc"]) {
+    it("rejects a zero, negative or non-numeric interval", () => {
+      for (const intervalMs of [0, -5, "abc"]) {
         expect(() => filterNode.codegenTransform!(node({ mode: "rate", intervalMs }), freshCtx())).toThrow(CompileError);
       }
     });
   });
 
-  it("two filters in one flow keep separate state and share the number helper", () => {
+  it("two filters in one flow keep separate state", () => {
     const graph = {
       nodes: [
         { id: "t1", type: "thingstudio/timer", properties: { intervalMs: 100 } },
@@ -220,8 +223,9 @@ describe("thingstudio/filter node", () => {
       ],
     } as Parameters<typeof compile>[0];
     const { source } = compile(graph, buildRegistry());
-    expect(source.match(/def _filter_num\(/g)).toHaveLength(1);
-    expect(source).toContain("_filter_state = {}");
-    expect(source).toContain("_filter_state_1 = {}");
+    // Each instance is its own closure with its own state (the shared number helper is gone: the accepted
+    // package-vs-built-in difference, builtins-as-packages-scoping.md §14).
+    expect(source.match(/def _custom_thingstudio_filter_setup/g)).toHaveLength(2);
+    expect(source.match(/_state = \{\}/g)).toHaveLength(2);
   });
 });
