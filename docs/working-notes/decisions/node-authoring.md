@@ -850,3 +850,15 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   conversion experience: every node that touches hardware or is pure software has now been shown convertible (or,
   for `wifi_gate`, blocked only on a named missing capability); `function` (verbatim user code) and the `gui_*`
   family (the `screens` layout model) remain outside the format by architecture, per `builtins-as-packages-scoping.md`.
+- **2026-10-16 — `interrupt` loses its debounce; a raw edge node doesn't need one (Mike).** Mike's call:
+  "interrupt does not need debounce now there is ebutton." `eswitch`/`ebutton` own debounce for the switch/button
+  case, so the `debounce`/`debounceMs` properties and the cooldown logic are removed (resolving the [P4] item from
+  2026-09-17). A saved flow carrying the properties just ignores them. This also let `interrupt` become a core
+  package: without debounce its generated message no longer needs to drop a wake, so it fits the package
+  event-source shape.
+- **2026-10-16 — `eventSource` added to the canonical `NodeDescriptor`.** Converting `interrupt` (an event source)
+  to a core package exposed the gap: `eventSource` existed only on the custom `.node.json` descriptor, so a core
+  package couldn't be an event source (`packageCodegen` fell through to the polled-source branch). Added as an
+  optional canonical field (`compiler/node-descriptor.ts`, SPEC §2), mirroring the custom descriptor's flag; no
+  schema change (already present there), no wire/runtime change, no version bump. Unblocks any core-package event
+  source (the remaining hardware event nodes). Mike's explicit OK, same session.

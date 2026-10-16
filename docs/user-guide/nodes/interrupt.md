@@ -6,14 +6,16 @@ Fires immediately when a GPIO pin changes state — genuinely event-driven, not 
 
 - **pin** — GPIO pin number. Checked against your [board](../boards.md).
 - **edge** — `rising`, `falling`, or `both`.
-- **debounce** — on by default. Ignores further transitions within the debounce window after an accepted one.
-- **debounce (ms)** — the debounce window, shown when debounce is on. Default 50ms.
 
 ## Behavior
 
-The payload is the pin's level (`true`/`false`) at the moment the node wakes, not a record of every intermediate change — a burst of bounces inside the debounce window collapses into one report of the settled state.
+The payload is the pin's level (`true`/`false`) at the moment the node wakes — a level, not a record of every
+intermediate change.
 
 No internal pull resistor is configured. Wire an external pull resistor, or use a button module with one built in.
 
-Two `interrupt` nodes on the same pin must have the same edge and debounce settings, or the compile stops. See
+For a debounced switch or button, use [eswitch](eswitch.md) or [ebutton](ebutton.md) — they ignore contact bounce.
+`interrupt` is the raw edge node.
+
+Two `interrupt` nodes on the same pin must have the same edge, or the compile stops. See
 [Hardware is shared](index.md#hardware-is-shared).

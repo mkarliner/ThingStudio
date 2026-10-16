@@ -6,9 +6,7 @@
       "type": "thingstudio/interrupt",
       "properties": {
         "pin": 16,
-        "edge": "both",
-        "debounce": true,
-        "debounceMs": 50
+        "edge": "both"
       }
     },
     {

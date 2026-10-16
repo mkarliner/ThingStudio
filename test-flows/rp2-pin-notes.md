@@ -153,8 +153,8 @@ check its own silkscreen/pinout first.
 4. Manual test, same three checks as the ESP32-C3 pass, plus the one gap
    still open from that session:
    - Press/release toggles the LED, with a debug line per transition.
-   - Rapid presses don't flicker/double-fire within the 50ms debounce
-     window.
+   - Rapid presses report each edge (the `interrupt` node has no debounce
+     since 2026-10-16; use `eswitch`/`ebutton` if bounce needs ignoring).
    - **New this round:** deploy once, let it run, then deploy the *same*
      flow again without power-cycling the board — confirm the LED still
      responds correctly afterward (no leaked IRQ handler, no crash, no

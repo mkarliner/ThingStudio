@@ -21,7 +21,7 @@ import { httpInNode } from "./http-in.js";
 import { httpRequestNode } from "./http-request.js";
 import { descriptor as httpResponseCoreDescriptor, python as httpResponseCorePython } from "./core-packages/http-response.js";
 import { injectNode } from "./inject.js";
-import { interruptNode } from "./interrupt.js";
+import { descriptor as interruptCoreDescriptor, python as interruptCorePython } from "./core-packages/interrupt.js";
 import { mqttPublishNode } from "./mqtt-publish.js";
 import { mqttSubscribeNode } from "./mqtt-subscribe.js";
 import { descriptor as pwmOutCoreDescriptor, python as pwmOutCorePython } from "./core-packages/pwm-out.js";
@@ -85,7 +85,7 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     variableGetNode,
     variableSetNode,
     buildCoreNodeDefinition(debugCoreDescriptor, debugCorePython),
-    interruptNode,
+    buildCoreNodeDefinition(interruptCoreDescriptor, interruptCorePython),
     eswitchNode,
     ebuttonNode,
     adcNode,

@@ -204,7 +204,7 @@ not here.
   and gets them through `runtime.shared()`; a clash is a compile error naming both nodes. No per-pin config
   objects in the flow file (the claim does the conflict check from each node's own pin number).
 - **[P4]** **AADC (Peter Hinch's §5 ADC-monitoring driver) node — deferred follow-up, 2026-09-17.** Split off from the eswitch/ebutton item below (now resolved) when eswitch/ebutton were built -- scoped out of that pass on Mike's call rather than bundled in, per [DRIVERS.md §5](https://github.com/peterhinch/micropython-async/blob/master/v3/docs/DRIVERS.md). Not started. His DRIVERS.md collection more broadly stays a candidate source for further nodes later, not scoped now.
-- **[P4]** **Remove the `interrupt` node's debounce option — new item, 2026-09-17, side effect of eswitch/ebutton landing.** `eswitch`/`ebutton` now own debounce for the switch/button use case (`ESwitch.debounce_ms`/`EButton.debounce_ms`), so `interrupt`'s own separate debounce-cooldown option (`interrupt.ts`) is redundant for that use case -- but `interrupt` is still the only source node for a raw, non-debounced pin-change event, so this isn't a clean "always remove," and removing a property is a breaking change to any already-saved flow using it. Flagged for Mike's call, not removed here.
+- **[RESOLVED 2026-10-16]** **Remove the `interrupt` node's debounce option (was [P4], new 2026-09-17).** Mike's call ("interrupt does not need debounce now there is ebutton"): `eswitch`/`ebutton` own debounce, and a raw edge node doesn't need its own cooldown. `debounce`/`debounceMs` removed; the node is a core package now (`core-packages/interrupt.ts`). Old flows carrying the properties just ignore them.
 - **[P4]** **`interrupt` node still has no way to enable an internal pull resistor -- new item, 2026-09-17.** `eswitch`/`ebutton` just picked up a `pull` (none/up/down) property, prompted by a real EMF 2022 TiDAL badge test needing the chip's own internal pull-up on most of its buttons; `interrupt` has the identical "no internal pull, wire an external one" limitation and wasn't touched in that pass (scoped to the button test at hand). Same shape of fix if picked up: a `pull` property, default "none", threaded into `machine.Pin(pin, machine.Pin.IN, ...)`. ([detail](decisions/node-authoring.md))
 - **[SUPERSEDED 2026-10-05 → Launch MVP: GUI templating system]** **Templating UI nodes for displays — new item, 2026-09-08, split from the SSD1306 ask.** Generic way to template/lay out what gets drawn to a display node -- LVGL (or similar) was floated 2026-09-17 as the likely shape ("the more generic the actual graphics interface is the better"), sitting in front of the now-built `display_spi`/`display_i2c` nodes rather than replacing them; those nodes' full-frame-only `bytes` input was deliberately kept graphics-framework-agnostic with this in mind, but nothing LVGL-specific is built. Not scoped, expected to be hard (Mike's characterization).
 - **`display_spi`/framebuffer construction can blow the classic-ESP32 heap for a full-resolution
@@ -361,11 +361,11 @@ not here.
   (`shared-resource-facility-scoping.md`): a `NodeDescriptor.resources` array (core-only; `resource-check.ts`)
   restores the compile-time bus/pin validate-and-claim checks a package lost, and `bme280` is a core package now.
   `filter`, `journal`, `http_response` flipped the same session; `wifi_gate` is deliberately deferred (it needs
-  flow-query context parity — see the scoping note §9). `pwm_out` and `neopixel` followed (the `pin` resource).
-  Remaining: `interrupt` is blocked on a package event-source "drop this wake" gap (`emit`'s `None` isn't guarded
-  in `compile.ts`'s event path); `eswitch`/`ebutton` are portable but need a `runtime.shared` driver decision;
-  `adc` is blocked on a node-specific context query (its ADC2-vs-WiFi guard); `encoder` on a pin-pair claim; and
-  `display_i2c`/`touch_i2c`/`display_spi` are the complex remainder. See `shared-resource-facility-scoping.md` §9.
+  flow-query context parity — see the scoping note §9).   `pwm_out`, `neopixel` and `interrupt` followed (the `pin` resource; `interrupt` also needed `eventSource` on the
+  canonical descriptor, and lost its debounce — Mike's call). Remaining: `eswitch`/`ebutton` are portable but need
+  a `runtime.shared` driver decision; `adc` is blocked on a node-specific context query (its ADC2-vs-WiFi guard);
+  `encoder` on a pin-pair claim; and `display_i2c`/`touch_i2c`/`display_spi` are the complex remainder. See
+  `shared-resource-facility-scoping.md` §9.
 
 - **[P3]** **Deploy the runtime itself from the browser editor, not just compiled flows.** Confirmed untracked
   anywhere until 2026-09-12. Today, `test-flows/deploy_runtime.py` is a standalone `mpremote`-based script pushing

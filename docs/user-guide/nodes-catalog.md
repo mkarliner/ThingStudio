@@ -358,8 +358,6 @@ Type `thingstudio/interrupt`, kind source, palette group hardware.
 - Properties (name, type, default):
     - `pin`, number, default `4`
     - `edge`, string, default `"rising"`
-    - `debounce`, boolean, default `true`
-    - `debounceMs`, number, default `50`
 
 ### neopixel
 

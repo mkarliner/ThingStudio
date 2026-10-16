@@ -87,12 +87,11 @@ directory.
 ## `interrupt-basic.flow.json`
 
 Tier 1 item 5's interrupt/pin-change node, first hands-on test since it
-was built this session. `thingstudio/interrupt` (pin 1, both edges,
-debounce on, 50ms cooldown) fans out to `thingstudio/gpio_out` (pin 12,
-the onboard LED on the LuatOS CORE-ESP32-C3 boards this project's already
-using) and `thingstudio/debug` (prints to the console) -- press/release a
-button on GPIO1 and the LED should mirror it with a debug line per
-transition, debounced.
+was built this session. `thingstudio/interrupt` (pin 1, both edges) fans
+out to `thingstudio/gpio_out` (pin 12, the onboard LED on the LuatOS
+CORE-ESP32-C3 boards this project's already using) and
+`thingstudio/debug` (prints to the console) -- press/release a button on
+GPIO1 and the LED should mirror it with a debug line per transition.
 
 Pin **1**, not 4 -- deliberately clear of `test/hil/pin-map.md`'s already-
 wired GPIO4/witness-GPIO5 pair (the automated HIL check's own interrupt
@@ -114,8 +113,8 @@ real thing (below): parsed through the actual `parseFlowFile` logic
 valid and every referenced node type has a real canvas factory; and
 compiled through the actual `compile()` + registry once (before the
 `edges`/`layout` rewrite, same node config) to confirm the generated code
-is correct -- fan-out, debounce cooldown, both sinks fault-boundary-
-wrapped. Not run on real hardware -- that's this experiment.
+is correct -- fan-out, both sinks fault-boundary-wrapped. Not run on real
+hardware -- that's this experiment.
 
 **Two real prerequisites before deploying this, not polish:**
 
@@ -178,7 +177,7 @@ but it hasn't been redeployed and re-confirmed on real hardware since.
 ## Loading and deploying via the browser (the intended path now)
 
 Open the editor (`npm run dev` in `editor/`), click "Open Flow", pick
-`interrupt-basic.flow.json`. Pin/edge/debounce are editable in the
+`interrupt-basic.flow.json`. Pin and edge are editable in the
 property panel once the interrupt node is selected. Deploy as normal.
 
 ## Verifying a flow file without a browser

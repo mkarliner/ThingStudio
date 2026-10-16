@@ -253,6 +253,10 @@ export interface NodeDescriptor {
   type: string;
   /** Where the node sits in a flow: source (no input), transform (one in, one out), sink (one in, none out). */
   kind: NodeKind;
+  /** A `source` that waits on an external event rather than polling: its codegen (or `.node.py`, for a package)
+   * provides a wait + build step instead of a poll interval. Core packages need this on the canonical descriptor
+   * to be event sources (the custom `.node.json` already carries it). Added 2026-10-16. */
+  eventSource?: boolean;
   /** The short canvas/palette key (e.g. "gpio_out"), distinct from `kind` above and from the full `type`.
    * "custom" for every loaded custom type, whose real id is `type`. Keys palette styling and NODE_FACTORIES.
    *

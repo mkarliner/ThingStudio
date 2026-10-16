@@ -11,7 +11,7 @@
 //   - debug:        fullMessage                              (node-library/debug.ts -- opt-in, default false, added 2026-09-09)
 //   - gpio_out:     pin                                       (node-library/gpio-out.ts)
 //   - timer:        intervalMs                                (node-library/timer.ts)
-//   - interrupt:    pin, edge, debounce, debounceMs           (node-library/interrupt.ts)
+//   - interrupt:    pin, edge                                 (node-library/core-packages/interrupt.ts)
 //   - eswitch:      pin, lopen, debounceMs                     (node-library/eswitch.ts, 2026-09-17)
 //   - ebutton:      pin, suppress, senseMode, debounceMs, longPressMs, doubleClickMs (node-library/ebutton.ts, 2026-09-17)
 //   - wifi_status:  pollMs, wifiConfigId                       (node-library/wifi-status.ts -- the flow's ONLY node with its own wifiConfigId, 2026-09-04, see that file's header)
@@ -148,7 +148,7 @@ import { functionNode } from "../../node-library/function-node.js";
 import { descriptor as debugCoreDescriptor } from "../../node-library/core-packages/debug.js";
 import { descriptor as gpioOutCoreDescriptor } from "../../node-library/core-packages/gpio-out.js";
 import { timerNode } from "../../node-library/timer.js";
-import { interruptNode } from "../../node-library/interrupt.js";
+import { descriptor as interruptCoreDescriptor } from "../../node-library/core-packages/interrupt.js";
 import { eswitchNode } from "../../node-library/eswitch.js";
 import { ebuttonNode } from "../../node-library/ebutton.js";
 import { adcNode } from "../../node-library/adc.js";
@@ -466,7 +466,7 @@ export class MqttPublishNode extends buildDescriptorNodeClass(mqttPublishNode) {
 
 export class MqttSubscribeNode extends buildDescriptorNodeClass(mqttSubscribeNode) {}
 
-export class InterruptNode extends buildDescriptorNodeClass(interruptNode) {}
+export class InterruptNode extends buildDescriptorNodeClass(interruptCoreDescriptor) {}
 
 export class EswitchNode extends buildDescriptorNodeClass(eswitchNode) {}
 

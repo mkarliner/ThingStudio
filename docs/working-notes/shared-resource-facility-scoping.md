@@ -145,26 +145,27 @@ recipe: `filter`, `journal`, `wifi_gate`, `http_response`.
   separate call.
 - **Still built-in, not converted:** the rest of the hardware family. Their `spi`/`pin` resources are expressible;
   converting them is per-node work, and two are blocked on facility gaps, not effort:
-  - **Converted 2026-10-16 after `bme280`:** `pwm_out` and `neopixel` — both exercise the `pin` resource (direction
-    + a role/use text; `neopixel` also a derived `{pin} neopixel` claim). The `pin` kind is no longer unit-test-only.
+  - **Converted 2026-10-16 after `bme280`:** `pwm_out`, `neopixel` and `interrupt` — all exercise the `pin`
+    resource (direction + a role/use text; `neopixel`/`interrupt` also a derived `{pin} ...` claim). `interrupt`
+    needed two things first: its `debounce`/`debounceMs` removed (Mike's call — `eswitch`/`ebutton` own debounce),
+    and `eventSource` added to the canonical `NodeDescriptor` (it existed only on the custom descriptor, so a core
+    package couldn't be an event source). Both landed.
   - **Blocked:** `adc` needs a node-specific compile-time context query (its ESP32 ADC2-vs-WiFi guard reads
     `ctx.findNodesOfType`), which the package format can't express yet. `encoder` needs a claim on a *pin pair*
     (`GPIO x,y encoder`), expressible only via `{property}` interpolation of both pins — TODO/adjust the shape
     before converting.
   - **Complex, not yet attempted:** `display_i2c`/`touch_i2c` (i2c resource + touch-panel config) and
     `display_spi` (spi resource + many pins + viper codegen).
-  - **`interrupt` is blocked on a package-format gap.** Its debounce drops a wake with a bare `continue` in
-    `buildMsg` (the built-in's event-source contract allows it). A package event source is
-    `waitStatement` + `buildMsg: msg = await emit(props)` (`custom-node.ts`), and `compile.ts`'s event-source
-    path has **no `msg is None` guard** (unlike the polled-source and transform paths) — so a package `emit`
-    returning `None` would pass `None` straight to the children. Porting `interrupt` needs a "drop this wake"
-    convention for package event sources (make `emit`'s `None` skip `chainBody`, mirroring the polled-source
-    guard). A small compiler change; scope before doing.
   - **`eswitch`/`ebutton` are portable in principle** (no wake-drop needed: `wait` can stash the `WaitAny` winner
     in a `nonlocal`, `emit` reads it), but their driver is deduped at compile time (a fixed-name `_eswitch_<pin>`
     statement keyed `eswitch-<pin>`). A package would build one driver per instance; to keep one driver per pin,
     wrap the driver in `runtime.shared(...)` — a node-specific choice to make when converting, not a facility
     change. Deferred to a follow-up rather than rushed.
+  - **Latent format gap, not currently blocking anything:** a package event source can't drop a wake — its
+    `buildMsg` is `msg = await emit(props)` and `compile.ts`'s event-source path has no `msg is None` guard (the
+    polled-source and transform paths do). `interrupt` no longer needs it (debounce is gone), but any future
+    event-source package that wants to swallow a firing (e.g. an adc bounds filter) would. A small compiler
+    change when a real node needs it.
 - **Pure-software nodes flipped the same session** (the settled recipe, no facility needed): `filter`,
   `journal`, `http_response` are core packages now (`core-packages/{filter,journal,http-response}.ts`; the TS
   files deleted). The accepted difference repeats: a package's per-instance closure holds state/helpers rather
