@@ -245,3 +245,11 @@ the msg is open.
   `format` for `payload` (unix, time, time_seconds, time_12h, date, date_iso, iso) and every format as a named
   field. No blinking colon. `clock` removed. Detail: `outstanding-items/ntp-node-replaces-clock.md`.
 
+- **2026-10-15 (Mike): custom GUI is GUI-subsystem work, not node-format work.** The GUI subsystem is orthogonal
+  to the flow programming paradigm, and a widget manifests in the flow only partially (value in / event out) so the
+  flow can interact with it; in time the GUI gets its own management editor. So the three custom-GUI requirements
+  Mike named -- style an existing widget, write a new widget, and (eventually) a drag-and-drop layout editor that
+  shows the layout more than it renders widgets -- belong to the GUI subsystem's own model/editor, not the flow's
+  node/package format. A custom node can already carry the flow-side sliver (a value-in/event-out node, via
+  `ports`/`eventSource`); the widget's drawing, styling and layout slot are GUI records. Node-format parity
+  therefore treats GUI as out of scope by architecture, not by cost: `node-context-parity-scoping.md` §4(g).

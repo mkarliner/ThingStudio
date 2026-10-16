@@ -89,9 +89,11 @@ never executes package code — stays.
 3. ~~Unify the two node-class builders (`buildDescriptorNodeClass` + `CustomNode`).~~ **Done 2026-10-15
    (same session)** — one `DescriptorNode` base now backs both; `AnyThingstudioNode` collapses to it. See
    `decisions/node-authoring.md` (2026-10-15, "one node class").
-4. **Phase 2 — context parity (the real work).** Expose what built-in codegen reads as package-visible
-   facilities: config singletons + credential-by-name, `findNodesOfType`/`findConfigsOfType`, wired-ness,
-   `screens`, `target`/board. Close each against a concrete built-in (the "no loss" test).
+4. **Phase 2 — context parity (the real work).** Scoped 2026-10-15: `node-context-parity-scoping.md`. Expose
+   what built-in codegen reads as package-visible data: a singleton `configRef`, resource claims + pin checks,
+   wired-ness, and (pending Mike's answers) credential-by-name, target, flow-node queries. The mechanism is
+   new serializable field kinds resolved by the generic codegen (the `CodegenContext` already exists). Starts
+   with the `i2c` reference built-in. **Four open questions for Mike are in §8 of that note.**
 5. **Phase 3 — capability parity:** dynamic ports (the `dynamicOutputs` data exists built-in-side — put it in
    the custom schema and build dynamic ports for a custom node), multi-output sources, resource claims + a real
    checker, presets, native/viper code.

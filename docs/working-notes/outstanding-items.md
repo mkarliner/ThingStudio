@@ -67,6 +67,10 @@ not here.
   Intrinsics), GUI view, `screens` section, unknown/stale value states; widgets limited to label, value,
   button, status. Supersedes the `[POST-MVP]` templating item under "Network / config nodes".
   Design: `decisions/gui-layout.md`, `gui-layout-widget-system-scoping.md`.
+  **Custom GUI (authoring/styling widgets) is GUI-line work, not node-format work** (2026-10-15): the GUI
+  subsystem is orthogonal to the flow paradigm; a widget manifests in the flow only partially (value in /
+  event out), and "style an existing widget", "write a new widget" and the eventual drag-and-drop layout
+  editor belong to this subsystem's own (future) editing model. See `node-context-parity-scoping.md` §4(g).
 - **[LAUNCH]** **Freenove FNK0104S board support -- built 2026-10-08, hardware checks owed.** Board
   definition `freenove-s3-4in`, ST7796 in `display_spi`, full colour, landscape; install docs name the
   `SPIRAM_OCT` S3 build. Replaces the FNK0104B (2026-10-09, `decisions/launch-scope.md`); ILI9341 is no longer
@@ -343,7 +347,8 @@ not here.
   schema — multi-output sources, resource claims, presets, native code), and the Node-RED location model
   (built-ins as packages).
   **Next-session handoff:** `node-format-parity-briefing.md` (the mechanism in recon form, the roadmap,
-  constraints, git state).
+  constraints, git state). **Phase 2 scoped 2026-10-15:** `node-context-parity-scoping.md` (what "context
+  parity" means, the facility inventory, the proposed field-kind mechanism, the open questions for Mike).
 
 - **[P3]** **Deploy the runtime itself from the browser editor, not just compiled flows.** Confirmed untracked
   anywhere until 2026-09-12. Today, `test-flows/deploy_runtime.py` is a standalone `mpremote`-based script pushing
