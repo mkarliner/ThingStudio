@@ -820,3 +820,18 @@ describe("pin fields: direction opt-in and named pins", () => {
     expect((result.statements ?? []).map((s) => s.code).join("\n")).toContain('"scl": "X1"');
   });
 });
+
+describe("select option values", () => {
+  it("inlines a numeric option value as a number (a core descriptor allows it)", () => {
+    // A custom .node.json may only use string option values, but a built-in/core descriptor allows numbers
+    // (canonical PropertyFieldOption) -- e.g. bme280's I2C address. The generic codegen must handle both.
+    const descriptor = {
+      type: "custom/addr", kind: "sink", label: "addr",
+      ports: { inputs: [{ name: "msg", type: "any" }] },
+      properties: [{ name: "addr", label: "addr", kind: "select", default: 118, options: [{ value: 118, label: "0x76" }, { value: 119, label: "0x77" }] }],
+    } as unknown as Parameters<typeof buildCustomNodeDefinition>[0];
+    const def = buildCustomNodeDefinition(descriptor, "async def run(msg, properties):\n    pass\n");
+    const result = def.codegenSink!(node(1, { addr: 118 }), freshCtx());
+    expect((result.statements ?? []).map((s) => s.code).join("\n")).toContain('"addr": 118');
+  });
+});

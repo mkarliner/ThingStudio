@@ -195,3 +195,18 @@ with the node's palette id) if the churn proves annoying.
 `nodeId` field for "DEBUG node=<id>"; the catalog filters it like the other internal fields. A widely-used sink,
 so this was a good stress test: only the tests asserting the built-in's exact generated function name (`_debug`)
 needed a one-word regex relaxation; the behaviour tests (running the generated flow) passed unchanged.
+
+## 16. bme280 blocked: a shared-resource facility is needed first
+
+Attempting `bme280` surfaced the real next gap. Its codegen calls `resolveI2cBus` (i2c-shared.ts), which does
+three things a package cannot reproduce from descriptor data today: compile-time validation (a missing bus, or a
+bus config with no SCL/SDA pin, is a `CompileError`), detection of two in-use configs claiming the same bus, and
+compile-time dedup of the shared bus setup statement (so a display and a sensor emit one `machine.I2C`). A
+package would build the bus with `runtime.shared('i2c', ...)` itself -- one `Pin`/object on the device, but two
+setup statements and none of those three compile-time checks. So `bme280` stays a built-in until the package
+format gains a **shared-resource / bus facility** (a descriptor-declared shared bus that the generic codegen
+validates, claims and dedups). That is a phase-3 capability, not a per-node hand-port.
+
+(The numeric-select fix that this attempt produced is kept: the generic codegen now inlines a numeric `select`
+option value as a number, matching the canonical `PropertyFieldOption`. A custom `.node.json` still only uses
+string option values.)

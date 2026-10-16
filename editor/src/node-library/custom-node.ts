@@ -559,12 +559,15 @@ function pyPropertiesLiteral(descriptor: { properties?: PropertyFieldDescriptor[
       case "boolean":
         literal = pyBoolLiteral(raw, fieldLabel);
         break;
-      case "select":
-        if (typeof raw !== "string" || !f.options!.some((o) => o.value === raw)) {
+      case "select": {
+        // A select's option `value` may be a number (e.g. an I2C address); inlined as a number then.
+        const match = (f.options ?? []).find((o) => o.value === raw);
+        if (match === undefined) {
           throw new CompileError(`${fieldLabel} value ${JSON.stringify(raw)} is not one of the declared options`);
         }
-        literal = pyStringLiteral(raw);
+        literal = typeof match.value === "number" ? String(match.value) : pyStringLiteral(match.value);
         break;
+      }
       case "configRef": {
         if (f.singleton) {
           literal = singletonConfigLiteral(f, fieldLabel, ctx);

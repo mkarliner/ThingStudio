@@ -827,3 +827,10 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   output. Being the most-used sink, it was a good stress test: behaviour tests passed unchanged, only assertions
   of the built-in's exact generated function name needed relaxing. Four built-ins are now packages (i2c, delay,
   gpio_out, debug).
+
+- **2026-10-15, same session — `bme280` deferred; it needs a shared-resource facility (phase 3).** Flipping
+  `bme280` would lose `resolveI2cBus`'s compile-time bus validation, same-bus conflict detection, and shared-bus
+  setup dedup -- a package can share the bus on-device via `runtime.shared('i2c', ...)` but cannot reproduce the
+  compile-time checks from descriptor data. So `bme280` (and the other i2c/hardware-family nodes) stay built-in
+  until the format gains a descriptor-declared shared-resource/bus facility. The attempt did produce a small
+  framework fix, kept: the generic codegen now inlines a numeric `select` option value as a number.
