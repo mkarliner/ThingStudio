@@ -14,7 +14,7 @@ import { ebuttonNode } from "./ebutton.js";
 import { eswitchNode } from "./eswitch.js";
 import { adcNode } from "./adc.js";
 import { encoderNode } from "./encoder.js";
-import { neopixelNode } from "./neopixel.js";
+import { descriptor as neopixelCoreDescriptor, python as neopixelCorePython } from "./core-packages/neopixel.js";
 import { functionNode } from "./function-node.js";
 import { descriptor as gpioOutCoreDescriptor, python as gpioOutCorePython } from "./core-packages/gpio-out.js";
 import { httpInNode } from "./http-in.js";
@@ -24,7 +24,7 @@ import { injectNode } from "./inject.js";
 import { interruptNode } from "./interrupt.js";
 import { mqttPublishNode } from "./mqtt-publish.js";
 import { mqttSubscribeNode } from "./mqtt-subscribe.js";
-import { pwmOutNode } from "./pwm-out.js";
+import { descriptor as pwmOutCoreDescriptor, python as pwmOutCorePython } from "./core-packages/pwm-out.js";
 import { startupNode } from "./startup.js";
 import { timerNode } from "./timer.js";
 import { udpReceiveNode } from "./udp-receive.js";
@@ -90,10 +90,10 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     ebuttonNode,
     adcNode,
     encoderNode,
-    neopixelNode,
+    buildCoreNodeDefinition(neopixelCoreDescriptor, neopixelCorePython),
     displaySpiNode,
     displayI2cNode,
-    pwmOutNode,
+    buildCoreNodeDefinition(pwmOutCoreDescriptor, pwmOutCorePython),
     timerNode,
     wifiStatusNode,
     wifiGateNode,

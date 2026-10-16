@@ -1,4 +1,4 @@
-// Tier 1 GPIO/timer node: pwm_out (editor/src/node-library/pwm-out.ts).
+// Tier 1 GPIO/timer node: pwm_out, a core package now (editor/src/node-library/core-packages/pwm-out.ts).
 // Unlike gpio_in/timer (both repeating sources), pwm_out is a sink --
 // driven once per incoming message the same way gpio_out is, so this
 // runs through the full compiler + a manual (one-shot) inject source,
@@ -13,8 +13,11 @@ import { describe, expect, it } from "vitest";
 import { compile } from "../src/compiler/compile.js";
 import { CompileError } from "../src/compiler/errors.js";
 import type { GraphData } from "../src/compiler/graph.js";
+import { descriptor as pwmOutDescriptor, python as pwmOutPython } from "../src/node-library/core-packages/pwm-out.js";
+import { buildCoreNodeDefinition } from "../src/node-library/custom-node.js";
 import { buildRegistry } from "../src/node-library/registry.js";
-import { pwmOutNode } from "../src/node-library/pwm-out.js";
+
+const pwmOutNode = buildCoreNodeDefinition(pwmOutDescriptor, pwmOutPython);
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const registry = buildRegistry();
@@ -79,7 +82,7 @@ describe("thingstudio/pwm_out node", () => {
   });
 
   it("rejects a non-positive freq", () => {
-    expect(() => compile(graphWith("1.0", { pin: 12, freq: 0 }), registry)).toThrow(/positive number/);
+    expect(() => compile(graphWith("1.0", { pin: 12, freq: 0 }), registry)).toThrow(/below its minimum, 1/);
   });
 
   // Canvas presence given 2026-09-06 (outstanding-items/canvas-presence-

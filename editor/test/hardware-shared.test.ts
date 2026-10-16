@@ -17,7 +17,9 @@ import { buildCoreNodeDefinition } from "../src/node-library/custom-node.js";
 
 const gpioOutNode = buildCoreNodeDefinition(gpioOutDescriptor, gpioOutPython);
 import { i2cBusFromPins } from "../src/node-library/i2c-shared.js";
-import { neopixelNode } from "../src/node-library/neopixel.js";
+import { descriptor as neopixelDescriptor, python as neopixelPython } from "../src/node-library/core-packages/neopixel.js";
+
+const neopixelNode = buildCoreNodeDefinition(neopixelDescriptor, neopixelPython);
 
 /** A ctx with compile.ts's claim rule, so node codegen hooks can be run one after another. */
 function claimingCtx(): CodegenContext {

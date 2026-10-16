@@ -153,7 +153,7 @@ import { eswitchNode } from "../../node-library/eswitch.js";
 import { ebuttonNode } from "../../node-library/ebutton.js";
 import { adcNode } from "../../node-library/adc.js";
 import { encoderNode } from "../../node-library/encoder.js";
-import { neopixelNode } from "../../node-library/neopixel.js";
+import { descriptor as neopixelCoreDescriptor } from "../../node-library/core-packages/neopixel.js";
 import { wifiStatusNode } from "../../node-library/wifi-status.js";
 import { wifiGateNode } from "../../node-library/wifi-gate.js";
 import { udpSendNode } from "../../node-library/udp-send.js";
@@ -172,7 +172,7 @@ import { guiBarNode, guiTrendNode, guiButtonNode, guiLabelNode, guiLedNode, guiM
 import { descriptor as i2cCoreDescriptor } from "../../node-library/core-packages/i2c.js";
 import { mqttPublishNode } from "../../node-library/mqtt-publish.js";
 import { mqttSubscribeNode } from "../../node-library/mqtt-subscribe.js";
-import { pwmOutNode } from "../../node-library/pwm-out.js";
+import { descriptor as pwmOutCoreDescriptor } from "../../node-library/core-packages/pwm-out.js";
 import { displaySpiNode } from "../../node-library/display-spi.js";
 import { displayI2cNode } from "../../node-library/display-i2c.js";
 import { resolvePortType, resolveOutputCount, type PortDefinition } from "../../compiler/node-definition.js";
@@ -440,7 +440,7 @@ export class GpioOutNode extends buildDescriptorNodeClass(gpioOutCoreDescriptor)
 // Sink kind, one input -- same single-port shape as GpioOutNode just
 // above, `duty` named for what it actually carries (pwm-out.ts's own
 // header explains the naming choice).
-export class PwmOutNode extends buildDescriptorNodeClass(pwmOutNode) {}
+export class PwmOutNode extends buildDescriptorNodeClass(pwmOutCoreDescriptor) {}
 
 export class TimerNode extends buildDescriptorNodeClass(timerNode) {}
 
@@ -476,7 +476,7 @@ export class AdcNode extends buildDescriptorNodeClass(adcNode) {}
 
 export class EncoderNode extends buildDescriptorNodeClass(encoderNode) {}
 
-export class NeopixelNode extends buildDescriptorNodeClass(neopixelNode) {}
+export class NeopixelNode extends buildDescriptorNodeClass(neopixelCoreDescriptor) {}
 
 export class FilterNode extends buildDescriptorNodeClass(filterCoreDescriptor) {}
 

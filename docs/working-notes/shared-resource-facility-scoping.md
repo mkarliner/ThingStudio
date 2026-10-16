@@ -143,10 +143,17 @@ recipe: `filter`, `journal`, `wifi_gate`, `http_response`.
   singleton shares the object); the shared-bus test now asserts the shared key/signature, not one `machine.I2C(`.
 - **Not in `custom-node.schema.json`** — core-only, as agreed. Exposing the vocabulary to custom packages is a
   separate call.
-- **Still built-in, not converted:** the rest of the hardware family (`adc`, `encoder`, `neopixel`, `eswitch`,
-  `ebutton`, `interrupt`, `touch_i2c`, `display_i2c`, `display_spi`). Their `spi`/`pin` resources are now
-  expressible; converting them is per-node work. `display_i2c`/`touch_i2c` additionally need the `i2c` resource
-  and touch-panel handling.
+- **Still built-in, not converted:** the rest of the hardware family. Their `spi`/`pin` resources are expressible;
+  converting them is per-node work, and two are blocked on facility gaps, not effort:
+  - **Converted 2026-10-16 after `bme280`:** `pwm_out` and `neopixel` — both exercise the `pin` resource (direction
+    + a role/use text; `neopixel` also a derived `{pin} neopixel` claim). The `pin` kind is no longer unit-test-only.
+  - **Blocked:** `adc` needs a node-specific compile-time context query (its ESP32 ADC2-vs-WiFi guard reads
+    `ctx.findNodesOfType`), which the package format can't express yet. `encoder` needs a claim on a *pin pair*
+    (`GPIO x,y encoder`), expressible only via `{property}` interpolation of both pins — TODO/adjust the shape
+    before converting.
+  - **Complex, not yet attempted:** `display_i2c`/`touch_i2c` (i2c resource + touch-panel config) and
+    `display_spi` (spi resource + many pins + viper codegen).
+  - Also unconverted: `interrupt`, `eswitch`, `ebutton` (pin input + a derived device claim; event sources).
 - **Pure-software nodes flipped the same session** (the settled recipe, no facility needed): `filter`,
   `journal`, `http_response` are core packages now (`core-packages/{filter,journal,http-response}.ts`; the TS
   files deleted). The accepted difference repeats: a package's per-instance closure holds state/helpers rather
