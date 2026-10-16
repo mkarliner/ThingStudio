@@ -168,3 +168,11 @@ compile-time, because conditionally-required fields aren't expressible yet (trac
 
 Next: the per-node port of the other leaf built-ins (the "generator" is a hand-port with TS as reference), then
 the remaining flow-dependent ones as the format grows. `function`/`gui_*` stay built-in-only.
+
+## 13. Second leaf node: delay
+
+`thingstudio/delay` is now a core package too (`core-packages/delay.ts`, `delay.ts` deleted) -- a trivial
+transform, so it also proves the simplest case: a `.node.py` that just uses `asyncio` (already a generated-flow
+global) with no setup. Its `delayMs` `min` is enforced at compile time by the generic codegen. The pattern per
+node: write the descriptor + `.node.py`, flip `registry.ts` and the editor class, delete the TS node, retarget its
+test.

@@ -3,7 +3,7 @@ import type { NodeDefinition } from "../compiler/node-definition.js";
 import { debugNode } from "./debug.js";
 import { displayI2cNode } from "./display-i2c.js";
 import { displaySpiNode } from "./display-spi.js";
-import { delayNode } from "./delay.js";
+import { descriptor as delayCoreDescriptor, python as delayCorePython } from "./core-packages/delay.js";
 import { filterNode } from "./filter.js";
 import { journalNode } from "./journal.js";
 import { bme280Node } from "./bme280.js";
@@ -105,7 +105,8 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     udpSendNode,
     udpReceiveNode,
     ntpNode,
-    delayNode,
+    // A core package (phase 4): descriptor + .node.py, no TypeScript hook. See core-packages/delay.ts.
+    buildCoreNodeDefinition(delayCoreDescriptor, delayCorePython),
     filterNode,
     journalNode,
     bme280Node,

@@ -799,3 +799,8 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   `presetType` (custom-node presets already worked via the schema's `presetType`; the examples just weren't using
   it), and their pins are `pin` fields, so `scl`/`sda` accept a named pin on a pyboard. Their `.node.py` uses the
   pin value directly (no `int()`), so a named pin passes through to `machine.Pin`.
+
+- **2026-10-15, same session — second leaf node flipped (`delay`).** `thingstudio/delay` is a core package now
+  (`core-packages/delay.ts`; `delay.ts` deleted), the simplest case (a `.node.py` using the generated flow's
+  `asyncio` global, no setup). The per-node recipe is settled: descriptor + `.node.py`, flip `registry.ts` and the
+  editor class, delete the TS node, retarget its test. Next leaf nodes follow the same path.

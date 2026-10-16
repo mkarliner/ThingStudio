@@ -161,7 +161,7 @@ import { udpReceiveNode } from "../../node-library/udp-receive.js";
 import { httpRequestNode } from "../../node-library/http-request.js";
 import { httpInNode } from "../../node-library/http-in.js";
 import { httpResponseNode } from "../../node-library/http-response.js";
-import { delayNode } from "../../node-library/delay.js";
+import { descriptor as delayCoreDescriptor } from "../../node-library/core-packages/delay.js";
 import { filterNode } from "../../node-library/filter.js";
 import { journalNode } from "../../node-library/journal.js";
 import { ntpNode } from "../../node-library/ntp.js";
@@ -423,7 +423,7 @@ function buildDescriptorNodeClass(descriptor: NodeDescriptor) {
 // The class name is kept because tests and AnyThingstudioNode reference it.
 export class DebugNode extends buildDescriptorNodeClass(debugNode) {}
 
-export class DelayNode extends buildDescriptorNodeClass(delayNode) {}
+export class DelayNode extends buildDescriptorNodeClass(delayCoreDescriptor) {}
 
 export class InjectNode extends buildDescriptorNodeClass(injectNode) {}
 

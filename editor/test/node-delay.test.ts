@@ -16,10 +16,13 @@ import { describe, expect, it } from "vitest";
 import { CompileError } from "../src/compiler/errors.js";
 import type { GraphNode } from "../src/compiler/graph.js";
 import type { CodegenContext } from "../src/compiler/node-definition.js";
-import { delayNode } from "../src/node-library/delay.js";
+import { descriptor, python } from "../src/node-library/core-packages/delay.js";
+import { buildCoreNodeDefinition } from "../src/node-library/custom-node.js";
 
 const execFileAsync = promisify(execFile);
 const __dirname = dirname(fileURLToPath(import.meta.url));
+
+const delay = buildCoreNodeDefinition(descriptor, python);
 
 const ctx: CodegenContext = {
   uniqueName: (() => {
@@ -55,7 +58,7 @@ function indent(code: string, spaces: number): string {
  * `runSend` uses, adapted for a transform's return value instead of a
  * sink's side effect. */
 async function runDelay(properties: Record<string, unknown>, payload: unknown): Promise<{ elapsedMs: number; payload: unknown; topic: unknown }> {
-  const result = delayNode.codegenTransform!(node(properties), ctx);
+  const result = delay.codegenTransform!(node(properties), ctx);
   const lines = [
     "import runtime",
     "import json",
@@ -104,27 +107,27 @@ describe("thingstudio/delay node", () => {
   });
 
   it("defaults delayMs to 1000ms when not configured", () => {
-    const result = delayNode.codegenTransform!(node({}), ctx);
-    expect(result.functionBody).toContain("asyncio.sleep_ms(1000)");
+    const result = delay.codegenTransform!(node({}), ctx);
+    expect((result.statements ?? []).map((s) => s.code).join("\n")).toContain('"delayMs": 1000');
   });
 
   it("rejects a non-positive delayMs", () => {
-    expect(() => delayNode.codegenTransform!(node({ delayMs: 0 }), ctx)).toThrow(CompileError);
-    expect(() => delayNode.codegenTransform!(node({ delayMs: -5 }), ctx)).toThrow(/positive number/);
+    expect(() => delay.codegenTransform!(node({ delayMs: 0 }), ctx)).toThrow(CompileError);
+    expect(() => delay.codegenTransform!(node({ delayMs: -5 }), ctx)).toThrow(/below its minimum, 1/);
   });
 
   it("rejects a non-numeric delayMs", () => {
-    expect(() => delayNode.codegenTransform!(node({ delayMs: "soon" }), ctx)).toThrow(/positive number/);
+    expect(() => delay.codegenTransform!(node({ delayMs: "soon" }), ctx)).toThrow(/must be a finite number/);
   });
 
   it("two delay node instances get independent function names", () => {
-    const a = delayNode.codegenTransform!(node({ delayMs: 100 }), ctx);
-    const b = delayNode.codegenTransform!(node({ delayMs: 200 }), ctx);
+    const a = delay.codegenTransform!(node({ delayMs: 100 }), ctx);
+    const b = delay.codegenTransform!(node({ delayMs: 200 }), ctx);
     expect(a.functionName).not.toBe(b.functionName);
   });
 
   it("declares an input and output msg port (transform kind, matching function-node.ts's shape)", () => {
-    expect(delayNode.ports?.inputs).toEqual([{ name: "msg", type: "any" }]);
-    expect(delayNode.ports?.outputs).toEqual([{ name: "msg", type: "any" }]);
+    expect(delay.ports?.inputs).toEqual([{ name: "msg", type: "any" }]);
+    expect(delay.ports?.outputs).toEqual([{ name: "msg", type: "any" }]);
   });
 });
