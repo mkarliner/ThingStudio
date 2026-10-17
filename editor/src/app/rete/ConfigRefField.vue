@@ -89,7 +89,7 @@
 -->
 <template>
   <div class="config-ref-field">
-    <label>{{ fieldLabel }}
+    <label class="ref-line"><span class="ref-name">{{ fieldLabel }}</span>
       <div class="config-ref-row">
         <select :value="effectiveValue ?? ''" @change="onSelect(($event.target as HTMLSelectElement).value)">
           <option value="" disabled>select {{ descriptor.label }}...</option>
@@ -462,6 +462,16 @@ watch(
 <style scoped>
 .config-ref-field {
   margin-bottom: 8px;
+}
+.ref-line {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  column-gap: 8px;
+  align-items: center;
+}
+.ref-name {
+  color: #bbb;
+  overflow-wrap: anywhere;
 }
 .config-ref-row {
   display: flex;
