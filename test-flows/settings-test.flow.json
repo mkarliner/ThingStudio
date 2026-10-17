@@ -1,0 +1,103 @@
+{
+  "formatVersion": 1,
+  "flowName": "settings-test",
+  "nodes": [
+    {
+      "id": "setinc00001",
+      "type": "thingstudio/inject",
+      "properties": { "payloadType": "number", "payloadValue": "1" }
+    },
+    {
+      "id": "setincfn0001",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "# Add one to the saved count. Click again after a reboot: it continues.\nn = settings.get('count', 0) + 1\nsettings.set('count', n)\nmsg['payload'] = n\nreturn msg",
+        "outputCount": 1
+      }
+    },
+    {
+      "id": "setincdbg001",
+      "type": "thingstudio/debug",
+      "properties": { "fullMessage": false }
+    },
+    {
+      "id": "setread00001",
+      "type": "thingstudio/inject",
+      "properties": { "payloadType": "number", "payloadValue": "1" }
+    },
+    {
+      "id": "setreadfn001",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "# Read the saved count and the stored keys. Payload says 'not set' until you click increment.\nmsg['payload'] = settings.get('count', 'not set')\nmsg['keys'] = settings.keys()\nreturn msg",
+        "outputCount": 1
+      }
+    },
+    {
+      "id": "setreaddbg001",
+      "type": "thingstudio/debug",
+      "properties": { "fullMessage": true }
+    },
+    {
+      "id": "setreset0001",
+      "type": "thingstudio/inject",
+      "properties": { "payloadType": "number", "payloadValue": "1" }
+    },
+    {
+      "id": "setresetfn01",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "# Delete the saved count. The next read shows the default.\nsettings.delete('count')\nmsg['payload'] = settings.get('count', 'cleared')\nreturn msg",
+        "outputCount": 1
+      }
+    },
+    {
+      "id": "setresetdbg1",
+      "type": "thingstudio/debug",
+      "properties": { "fullMessage": false }
+    },
+    {
+      "id": "setbad000001",
+      "type": "thingstudio/inject",
+      "properties": { "payloadType": "number", "payloadValue": "1" }
+    },
+    {
+      "id": "setbadfn0001",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "# Expected to fail: bytes are not JSON, so set() raises SettingsError.\n# The console shows NODE_ERROR naming this node; the debug node gets nothing.\nsettings.set('bad', b'bytes')\nmsg['payload'] = 'unreachable'\nreturn msg",
+        "outputCount": 1
+      }
+    },
+    {
+      "id": "setbaddbg001",
+      "type": "thingstudio/debug",
+      "properties": { "fullMessage": false }
+    }
+  ],
+  "edges": [
+    ["setinc00001", 0, "setincfn0001", 0],
+    ["setincfn0001", 0, "setincdbg001", 0],
+    ["setread00001", 0, "setreadfn001", 0],
+    ["setreadfn001", 0, "setreaddbg001", 0],
+    ["setreset0001", 0, "setresetfn01", 0],
+    ["setresetfn01", 0, "setresetdbg1", 0],
+    ["setbad000001", 0, "setbadfn0001", 0],
+    ["setbadfn0001", 0, "setbaddbg001", 0]
+  ],
+  "layout": {
+    "setinc00001": { "pos": [60, 100] },
+    "setincfn0001": { "pos": [320, 100] },
+    "setincdbg001": { "pos": [600, 100] },
+    "setread00001": { "pos": [60, 240] },
+    "setreadfn001": { "pos": [320, 240] },
+    "setreaddbg001": { "pos": [600, 240] },
+    "setreset0001": { "pos": [60, 380] },
+    "setresetfn01": { "pos": [320, 380] },
+    "setresetdbg1": { "pos": [600, 380] },
+    "setbad000001": { "pos": [60, 520] },
+    "setbadfn0001": { "pos": [320, 520] },
+    "setbaddbg001": { "pos": [600, 520] }
+  },
+  "configs": []
+}

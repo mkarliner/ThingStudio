@@ -1,0 +1,57 @@
+{
+  "formatVersion": 1,
+  "flowName": "settings-test-other-flow",
+  "nodes": [
+    {
+      "id": "othset000001",
+      "type": "thingstudio/inject",
+      "properties": { "payloadType": "number", "payloadValue": "1" }
+    },
+    {
+      "id": "othsetfn0001",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "# Write this flow's own count. It must not change settings-test's count.\nsettings.set('count', 100)\nmsg['payload'] = settings.get('count')\nreturn msg",
+        "outputCount": 1
+      }
+    },
+    {
+      "id": "othsetdbg001",
+      "type": "thingstudio/debug",
+      "properties": { "fullMessage": false }
+    },
+    {
+      "id": "othread00001",
+      "type": "thingstudio/inject",
+      "properties": { "payloadType": "number", "payloadValue": "1" }
+    },
+    {
+      "id": "othreadfn001",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "# Reads this flow's namespace. After deploying this flow it should say 'not set',\n# even if settings-test has a count -- the values are namespaced by flow name.\nmsg['payload'] = settings.get('count', 'not set')\nmsg['keys'] = settings.keys()\nreturn msg",
+        "outputCount": 1
+      }
+    },
+    {
+      "id": "othreaddbg01",
+      "type": "thingstudio/debug",
+      "properties": { "fullMessage": true }
+    }
+  ],
+  "edges": [
+    ["othset000001", 0, "othsetfn0001", 0],
+    ["othsetfn0001", 0, "othsetdbg001", 0],
+    ["othread00001", 0, "othreadfn001", 0],
+    ["othreadfn001", 0, "othreaddbg01", 0]
+  ],
+  "layout": {
+    "othset000001": { "pos": [60, 100] },
+    "othsetfn0001": { "pos": [320, 100] },
+    "othsetdbg001": { "pos": [600, 100] },
+    "othread00001": { "pos": [60, 240] },
+    "othreadfn001": { "pos": [320, 240] },
+    "othreaddbg01": { "pos": [600, 240] }
+  },
+  "configs": []
+}

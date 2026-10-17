@@ -160,7 +160,29 @@ def shared(kind, key, signature=None, factory=None):
 # runtime.settings.get/set/delete/keys runs under this fixture. No flash, no
 # namespaces, no persistence -- this fixture has no listener and no test here
 # asserts on those; the real store is covered by device-runtime/test/
-# test_device_settings.py under the MicroPython unix port.
+# test_device_settings.py under the MicroPython unix port. The value rules are
+# mirrored so a flow that stores bytes fails here the same way it does on a
+# board (the settings-test flow's "bad value" button relies on it).
+class SettingsError(Exception):
+    pass
+
+
+def _settings_json_value(value):
+    if value is None or isinstance(value, bool):
+        return True
+    if isinstance(value, int):
+        return True
+    if isinstance(value, float):
+        return value == value and value not in (float("inf"), float("-inf"))
+    if isinstance(value, str):
+        return True
+    if isinstance(value, list):
+        return all(_settings_json_value(item) for item in value)
+    if isinstance(value, dict):
+        return all(isinstance(key, str) and _settings_json_value(item) for key, item in value.items())
+    return False
+
+
 class _SettingsStore:
     def __init__(self):
         self._d = {}
@@ -169,6 +191,10 @@ class _SettingsStore:
         return self._d.get(key, default)
 
     def set(self, key, value):
+        if not isinstance(key, str) or not key:
+            raise SettingsError("settings key must be a non-empty string, got %r" % (key,))
+        if not _settings_json_value(value):
+            raise SettingsError("settings value for %r is not JSON-native: %r" % (key, value))
         self._d[key] = value
 
     def delete(self, key):
