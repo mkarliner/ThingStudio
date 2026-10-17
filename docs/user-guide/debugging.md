@@ -50,7 +50,8 @@ settings.clear_all()       # clear every flow's values
 ```
 
 Use these if a saved value is wrong, or a flow you no longer deploy left values behind. Clearing takes effect
-immediately; the next read returns the default.
+immediately; the next read returns the default. **Tools → Clear device settings…** does the same from the editor:
+choose the current flow, or every flow.
 
 For MicroPython's own `>>>` prompt, click **Stop flow & open prompt**. The flow and the runtime stop; nothing is
 deleted. What you type in the box now goes to that prompt, and Deploy is off. Click **Restart Thingstudio** to start

@@ -96,3 +96,9 @@ fields then list the chip's own pins rather than take a number. See
 
 On the nRF52840, SPI 0 and 1 share hardware with I2C 0 and 1, so a flow using both would fail on the board.
 Thingstudio offers SPI on buses 2 and 3 only. See [Boards and processors](boards.md#built-in-processors).
+
+## Why did my saved settings reset after I renamed the flow?
+
+Saved values are kept per flow name. Renaming the flow makes it a new name to the board, so its values start from
+the defaults. The old values are still on the board: rename the flow back to use them again, or clear them from the
+[command box](debugging.md#commands-and-the-python-prompt).

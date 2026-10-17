@@ -382,7 +382,7 @@ not here.
   of the existing wire protocol, and its tie-in to the device-runtime version-bump discipline in `CLAUDE.md`.
   ([detail](outstanding-items/deploy-runtime-from-editor.md))
 - **[P2]** **Device settings store — persistent key/value for application values (a GUI colour scheme, units
-  kg/lbs) — primitive + runtime API landed 2026-10-17; editor clear action and function-node local still open.**
+  kg/lbs) — landed 2026-10-17 (primitive, runtime API, editor clear action, function-node local).**
   Raised by Mike in the context-model session as the second of three use cases (node state, application settings,
   share-between-nodes); his call the same session was **settings-first**, ahead of the volatile context model.
   The motivating case is a GUI settings page, but **the page is an app example, not the deliverable** — no
@@ -392,8 +392,8 @@ not here.
   flow's values survive a reboot/redeploy while a different flow is isolated; nothing is cleared on deploy.
   Stored in `_settings.json` on `board_fs.under_root()`, on the `board_settings.py` atomic-write pattern; a
   corrupt file is moved aside and started empty, so settings cannot brick a board. Cleanup has two designed
-  paths: an editor "Clear device settings…" action over `EXEC` (not built yet), and a device-only console/REPL
-  path (`settings.clear`/`clear_all`, works today) for a disconnected board. No editor read/set at runtime, so
+  paths: an editor "Clear device settings…" action over `EXEC` (built), and a device-only console/REPL path
+  (`settings.clear`/`clear_all`, built) for a disconnected board. No editor read/set at runtime, so
   `STATE_*` stays reserved. Distinct from the §5 node-state store (node-ID keyed, POST-MVP) and from the
   volatile context model (sibling, follows this).
   ([`device-settings-store-scoping.md`](device-settings-store-scoping.md))

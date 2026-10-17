@@ -69,7 +69,7 @@ Each change below edits the flow you built. Deploy after each one.
     ```
 
 - **Keep your own state.** Replace the function's code with this. `context` stores a value between messages, private
-  to this function node. See [Context and flow variables](nodes/function.md#context-and-flow-variables).
+  to this function node. See [Context, flow and settings](nodes/function.md#context-flow-and-settings).
 
     ```python
     on = not context.get('on', False)

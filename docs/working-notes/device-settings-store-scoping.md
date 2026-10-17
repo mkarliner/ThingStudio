@@ -273,6 +273,6 @@ sets the namespace on DEPLOY and boot-time resume (before `import _flow`, so a s
 one) and exposes the store to the console as `settings`; runtime major bumped to 11.0.0, and
 `EDITOR_TARGET_VERSION` with it.
 
-Still open: the editor's "Clear device settings…" action (§10.1) and the function-node `settings` local (§15 Q1).
-The console/REPL path (§10.2) works today.
+Also landed: the editor's "Clear device settings…" action (§10.1) and the function-node `settings` local (§15 Q1).
+Both recovery paths now exist.
 

@@ -31,18 +31,24 @@
 //     variable-set.ts), not a second, disconnected flow-scope store. A
 //     function node's `flow.get('x')`/`flow.set('x', ...)` and a
 //     variable_get/variable_set node named "x" interoperate directly.
+//   - `settings`: the persistent device store (`runtime.settings`,
+//     device_settings.py), namespaced by the deployed flow's name and
+//     saved on the board, so it survives a reboot. Not a third in-RAM
+//     scope -- it is the device settings store, exposed here for
+//     convenience. Use it for values a user changes (units, a colour
+//     scheme), not per-message state.
 //
-// Both scopes are exposed as a tiny `_Store` wrapper (get/set methods,
-// matching Node-RED's own context/flow API shape) around a plain dict --
-// declared once (deduped by `key`, same pattern every other shared-setup
-// node in this library uses) regardless of how many function nodes are
-// in the flow. `context`/`flow` are bound as ordinary local names at the
-// top of the generated function body -- a plain read of the module-level
-// `_Store` instance, no `global` declaration needed, since the function
-// body never rebinds the module-level name itself, only calls methods on
-// it (same reasoning variable-set.ts's `_flow_vars[key] = value` already
-// relies on: mutating what a global name points to needs no `global`
-// keyword, only rebinding the name itself does).
+// The two in-RAM scopes are exposed as a tiny `_Store` wrapper (get/set
+// methods, matching Node-RED's own context/flow API shape) around a plain
+// dict -- declared once (deduped by `key`, same pattern every other
+// shared-setup node in this library uses) regardless of how many function
+// nodes are in the flow. `context`/`flow`/`settings` are bound as ordinary
+// local names at the top of the generated function body -- `context`/`flow`
+// are plain reads of the module-level `_Store` instances (no `global`
+// declaration needed, since the function body never rebinds the module-level
+// name itself, only calls methods on it -- same reasoning variable-set.ts's
+// `_flow_vars[key] = value` already relies on), and `settings` is
+// `runtime.settings`.
 
 import { CompileError } from "../compiler/errors.js";
 import type { GraphNode } from "../compiler/graph.js";
@@ -98,7 +104,8 @@ export const functionNode: NodeDefinition = {
   width: 100,
   description:
     "The body of a MicroPython function: `msg` in, return the message, None, or a list with one entry per " +
-    "output. `context` (this node only) and `flow` (shared flow-wide) hold state between messages.",
+    "output. `context` (this node only) and `flow` (shared flow-wide) hold state between messages; `settings` " +
+    "is saved on the board and survives a reboot.",
   // `any` in, `any` out -- the flow author's code can do anything to
   // `msg.payload` (verbatim user code, per this file's own header), so
   // there's no narrower static type to declare here. This is also what
@@ -160,7 +167,7 @@ export const functionNode: NodeDefinition = {
         { key: contextVar, code: `${contextVar} = _Store({})` },
       ],
       functionName: ctx.uniqueName("function"),
-      functionBody: `context = ${contextVar}\nflow = _flow_ctx\n${userCode}`,
+      functionBody: `context = ${contextVar}\nflow = _flow_ctx\nsettings = runtime.settings\n${userCode}`,
     };
   },
 };

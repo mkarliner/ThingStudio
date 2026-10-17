@@ -237,6 +237,7 @@
           <button id="btnBoardSettings" role="menuitem" disabled hidden title="The board's network name and WiFi password. Change these over USB.">Board settings…</button>
           <button id="btnInstallRuntime" role="menuitem" title="Install the Thingstudio runtime on the board in the selected port. The board needs MicroPython first. Resets the board; reconnect afterwards.">Install runtime…</button>
           <button id="btnRemoveFlow" role="menuitem" title="Delete the saved flow from the board in the selected port, even one that crashes it or won't let go. Keeps retrying while you press reset.">Remove flow…</button>
+          <button id="btnClearSettings" role="menuitem" disabled title="Delete stored application values from the board. Values are kept per flow and survive reboots; clearing is permanent.">Clear device settings…</button>
           <button id="btnRestartSoft" role="menuitem" disabled title="Restart MicroPython on the board: the flow stops and starts again with clean memory. USB stays connected.">Restart board (soft)</button>
           <button id="btnRestartHard" role="menuitem" disabled title="Reset the whole chip, like its reset button. Frees all memory. A board with native USB (Pico, ESP32-S2/S3/C3) disconnects: click Connect again.">Reset board (hard)</button>
           <hr />
@@ -326,6 +327,18 @@
     <div class="dialog-buttons">
       <button value="cancel" formnovalidate>Cancel</button>
       <button id="bsSave" value="save" class="primary">Save to board</button>
+    </div>
+  </form>
+</dialog>
+<dialog id="clearSettingsDialog">
+  <form method="dialog">
+    <h2>Clear device settings</h2>
+    <p id="clearSettingsText"></p>
+    <p>Stored values are kept per flow and survive reboots. Clearing is permanent.</p>
+    <div class="dialog-buttons">
+      <button value="cancel" formnovalidate>Cancel</button>
+      <button id="clearSettingsFlow" value="flow">This flow</button>
+      <button value="all">All flows</button>
     </div>
   </form>
 </dialog>

@@ -2914,6 +2914,7 @@ function updateBoardToolsUi(): void {
   el<HTMLButtonElement>("btnStopToPrompt").disabled = !connected;
   el<HTMLButtonElement>("btnRestartSoft").disabled = !connected || boardRestarting;
   el<HTMLButtonElement>("btnRestartHard").disabled = !connected || boardAtPrompt || boardRestarting;
+  el<HTMLButtonElement>("btnClearSettings").disabled = !connected || boardAtPrompt;
   el<HTMLButtonElement>("btnStopToPrompt").hidden = boardAtPrompt;
   el<HTMLButtonElement>("btnResume").hidden = !boardAtPrompt;
   el<HTMLInputElement>("cmdInput").placeholder = boardAtPrompt
@@ -3096,3 +3097,29 @@ el("btnRemoveFlow").addEventListener("click", exclusiveBoardJob(async () => {
   }
   logLine('[remove flow OK] The saved flow is gone and the board has restarted without it. Click "Connect".', "ok");
 }));
+
+el("btnClearSettings").addEventListener("click", () => {
+  const dialog = el<HTMLDialogElement>("clearSettingsDialog");
+  const flowName = lastHello?.currentFlowName ?? null;
+  el("clearSettingsText").textContent = flowName
+    ? `The board is running "${flowName}". Clear that flow's values, or every flow's?`
+    : "No flow is running. Only clearing every flow's values is available.";
+  el<HTMLButtonElement>("clearSettingsFlow").disabled = !flowName;
+  dialog.returnValue = "";
+  dialog.showModal();
+});
+
+el("clearSettingsDialog").addEventListener("close", () => {
+  const choice = el<HTMLDialogElement>("clearSettingsDialog").returnValue;
+  if (choice !== "flow" && choice !== "all") return;
+  // The listener preloads the store as `settings` (listener.py's _exec_globals). EXEC has no
+  // reply, so the command prints a marker that shows in the console.
+  const code =
+    choice === "flow"
+      ? "settings.clear(); print('SETTINGS_CLEARED current flow')"
+      : "settings.clear_all(); print('SETTINGS_CLEARED all flows')";
+  void transport.send({ type: "EXEC", code }).then(
+    () => logLine(`[clear settings] requested: ${choice === "flow" ? "this flow" : "all flows"}`, ""),
+    (err) => logLine(`[clear settings failed] ${err instanceof Error ? err.message : String(err)}`, "err"),
+  );
+});

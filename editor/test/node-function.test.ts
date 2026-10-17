@@ -103,7 +103,7 @@ function runCallsForNodes(nodeCodes: string[], callsPerNode: number): string[] {
   const ctx = freshCtx();
   const results = nodeCodes.map((code, i) => functionNode.codegenTransform!(node(i + 1, code), ctx));
 
-  const lines: string[] = [];
+  const lines: string[] = ["import runtime"];
   const seenStatementKeys = new Set<string>();
   for (const r of results) {
     for (const stmt of r.statements ?? []) {
@@ -243,6 +243,26 @@ describe("thingstudio/function node -- flow scope (shared with variable_get/vari
     const { source } = compile(graph, registry);
     expect(source.match(/^_flow_vars = \{\}$/gm)?.length).toBe(1);
     expect(source.match(/^class _Store:$/gm)?.length).toBe(1);
+  });
+});
+
+describe("thingstudio/function node -- settings scope (persistent device store)", () => {
+  it("binds settings to runtime.settings", () => {
+    const graph: GraphData = {
+      nodes: [
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
+        { id: "2", type: "thingstudio/function", properties: { code: "settings.set('count', 7)\nmsg['payload'] = settings.get('count')\nreturn msg" } },
+        { id: "3", type: "thingstudio/debug", properties: {} },
+      ],
+      links: [
+        [1, "1", 0, "2", 0, "bool"],
+        [2, "2", 0, "3", 0, "any"],
+      ],
+    };
+    const { source } = compile(graph, registry);
+    const output = runGenerated(source);
+    const line = output.split("\n").find((l) => l.includes("node=3"));
+    expect(line).toContain("payload=7");
   });
 });
 

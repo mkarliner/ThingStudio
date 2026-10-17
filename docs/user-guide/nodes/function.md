@@ -28,13 +28,16 @@ else:
 
 ## Behavior
 
-### Context and flow variables
+### Context, flow and settings
 
-Two ways to keep state across messages, both available as plain objects inside your code:
+Three ways to keep state across messages, all available as plain objects inside your code:
 
 - **`context`** — private to this one `function` node. Use it for a counter or running total only this node needs.
 - **`flow`** — shared across the whole flow. `flow.set('name', value)` / `flow.get('name')` works from any function
   node, and reads/writes the same store a `variable_get`/`variable_set` node uses by name.
+- **`settings`** — saved on the board and survives a reboot. Use it for a value the user changes, such as units or a
+  colour scheme. It is namespaced by the flow's name, so a different flow cannot read or overwrite it.
+  `settings.get('units', 'kg')` / `settings.set('units', 'lbs')`.
 
 ```python
 count = context.get('count', 0) + 1
