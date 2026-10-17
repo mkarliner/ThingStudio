@@ -193,9 +193,6 @@ Type `thingstudio/gui_screen`, kind source, palette group GUI.
 - Outputs: frame (bytes)
 - Properties (name, type, default):
     - `name`, string, default `"screen"`
-    - `width`, number, default `320` — the panel's own width in pixels, whatever the orientation; must match the display it is wired to
-    - `height`, number, default `240` — the panel's own height in pixels, whatever the orientation; must match the display it is wired to
-    - `frameFormat`, string, default `"gs4"` — rgb565, gs4, gs2 or mono; must match the display
     - `minInterval`, number, default `200` — least milliseconds between screen updates
     - `wrap`, boolean, default `true` — whether next/prev wrap around at the ends of the pages
     - `touchPanelConfigId`, string, default `""`, the id of a `thingstudio/config/touch-panel` config — the touch-panel config to read touches from; empty for none

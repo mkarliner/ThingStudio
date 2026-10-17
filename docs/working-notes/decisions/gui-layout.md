@@ -253,3 +253,13 @@ the msg is open.
   node/package format. A custom node can already carry the flow-side sliver (a value-in/event-out node, via
   `ports`/`eventSource`); the widget's drawing, styling and layout slot are GUI records. Node-format parity
   therefore treats GUI as out of scope by architecture, not by cost: `node-context-parity-scoping.md` §4(g).
+
+- 2026-10-17 (Mike): **the wired display owns the gui screen's size and frame format, not just its orientation.**
+  Mike saw while building a GUI that the screen's `width`/`height`/`frameFormat` had drifted from the display's —
+  two settings to keep equal by hand, with a compile check to catch a mistake. Now a `gui_screen` takes width,
+  height and frame format from the `display_spi` it is wired to (`gui.ts` `screenSize`); its own
+  `width`/`height`/`frameFormat` are hidden fallback fields, used only while no display is wired (so a screen
+  compiles during layout), and shown nowhere. The old "screen and display must agree on size" check is gone — a
+  mismatch is now impossible, because the screen has no size of its own to disagree with. Orientation was already
+  the display's (2026-10-09). So: on a GUI, set the size, frame format and rotation once, on the display. Docs
+  updated (`gui.md`, `display-spi.md`); the screen's three fields no longer appear in the catalog.

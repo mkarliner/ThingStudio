@@ -364,7 +364,7 @@ describe("touch buttons", () => {
     expect(src({ text: "", label: "Fire!" })).toContain('tsgui_button.make(font_body20, "Fire!")');
   });
 
-  describe("a screen and its display agree on size", () => {
+  describe("a screen follows its wired display", () => {
     const withDisplay = (screenW: number, screenH: number, display: Record<string, unknown>): GraphData => {
       const g = buttonFlow({ mode: "momentary" }, { wiredOut: true });
       g.nodes = g.nodes.filter((n) => n.id !== "frame_fn");
@@ -377,13 +377,14 @@ describe("touch buttons", () => {
       g.links.push([9, "screen", 0, "disp", 0, "bytes"]);
       return g;
     };
-    it("an oriented display wants the screen at the panel's own size, and says so", () => {
-      expect(() => compile(withDisplay(320, 240, { orientation: "90" }), buildRegistry())).toThrow(/is 320x240 but .* shows 480x320: set the screen's width and height to 320x480/);
-      expect(() => compile(withDisplay(320, 480, { orientation: "90" }), buildRegistry())).not.toThrow();
+    it("takes the display's panel size and frame format, not its own", () => {
+      // The screen's own width/height/format (set to 320x240/rgb565 above) are ignored once a display is wired.
+      const { source } = compile(withDisplay(320, 240, {}), buildRegistry());
+      expect(source).toMatch(/BandSurface\("screen", 320, 480, framebuf\.RGB565,/);
     });
-    it("without an orientation the two sizes must simply match", () => {
-      expect(() => compile(withDisplay(320, 240, {}), buildRegistry())).toThrow(/set the screen's width and height to 320x480/);
-      expect(() => compile(withDisplay(320, 480, {}), buildRegistry())).not.toThrow();
+    it("uses the display's turned size when the display has an orientation", () => {
+      const { source } = compile(withDisplay(320, 240, { orientation: "90" }), buildRegistry());
+      expect(source).toMatch(/BandSurface\("screen", 480, 320, framebuf\.RGB565,/);
     });
   });
 

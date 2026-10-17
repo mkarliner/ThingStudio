@@ -6,8 +6,9 @@ property panel: see [Laying out pages](#laying-out-pages).
 ## The nodes
 
 - **gui screen** — one per display. Sends the screen each time it changes, in strips of about 5 KB, so
-  a whole frame never has to fit in memory at once. Wire it to a [display spi](display-spi.md) node with
-  the same width, height and frame format. To use touch, pick a [touch panel](touch-panel.md) in its properties.
+  a whole frame never has to fit in memory at once. Wire it to a [display spi](display-spi.md) node: the screen
+  takes its width, height and frame format from that display, so set them once on the display. To use touch, pick a
+  [touch panel](touch-panel.md) in its properties.
 - **gui readout** — shows `msg.payload` as a number with units. Set the lowest and highest value it will
   show, and how many decimals. Its space is sized for that range.
 - **gui label** — shows `msg.payload` as text.
@@ -82,7 +83,7 @@ Unwired, the toggle keeps its own state and starts as set by *starts on*.
 
 ## Color
 
-Set the gui screen's frame format to `rgb565` for full color, with the same format on the display. White text,
+Set the display's frame format to `rgb565` for full color. White text,
 gray for stale values, and a green accent for bars and lights that are on. Grays use less memory and send faster,
 so use them on boards with little RAM.
 
@@ -98,8 +99,8 @@ Keshikan (SIL Open Font License 1.1); see
 
 On the display node, set **orientation** to 0, 90, 180 or 270 (the picture turned clockwise). It is one setting
 on each display, so a display can't have two. Set the display's width and height to the panel's own size, and its
-rotation to how the panel is mounted (0 to 3). The gui screen wired to that display turns its size to
-match and its touch axes follow, so set the screen's width and height to the panel's own size too. An orientation
+rotation to how the panel is mounted (0 to 3). The gui screen wired to that display takes the display's size and
+turns its layout to match, and its touch axes follow. An orientation
 can't be combined with a panel offset (`xstart`/`ystart`, or the 135x240 panel). `xstart`/`ystart` of `-1` mean
 "no offset" and are the right values with an orientation. At 90 or 270 the usable picture is the panel turned:
 480 wide by 320 high on a 320x480 panel.

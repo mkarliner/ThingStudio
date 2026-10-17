@@ -14,7 +14,7 @@ load it again on this or another **display spi** node instead of retyping every 
 - **frame format** — `rgb565` (default, full color, `width * height * 2` bytes), or an indexed format: `gs4`
   (4-bit, a quarter the memory), `gs2` (2-bit, an eighth), or `mono` (1-bit, a sixteenth). Switch away from
   `rgb565` if a full buffer won't fit in memory; the lower the depth, the smaller the buffer, at the cost of fewer
-  colors.
+  colors. The gui screen wired to the display uses this format.
 - **palette** — 16 RGB565 colors, used by every indexed format (`gs4` reads all 16, `gs2` only the first 4, `mono`
   only the first 2). Shown as swatches under frame format when an indexed format is picked; click one to change it,
   or **reset** for the built-in colors. Colors are rounded to the nearest the panel can show.
@@ -24,7 +24,7 @@ load it again on this or another **display spi** node instead of retyping every 
 - **sck / mosi / dc pins** — required GPIO pins, checked against your [board](../boards.md).
 - **cs / reset / backlight pins** — optional GPIO pins (−1 for "not wired"). Some boards tie reset or CS high in
   hardware, or have no backlight control at all.
-- **width / height** — panel resolution in pixels.
+- **width / height** — panel resolution in pixels. The gui screen wired to the display takes this size.
 - **orientation** — off by default. Set it to 0, 90, 180 or 270 to turn the picture clockwise; the gui screen wired
   to the display and its touch follow. With an orientation, set width and height to the panel's own size, `rotation`
   to how the panel is mounted (0 to 3), and `xstart`/`ystart` to `-1`. See

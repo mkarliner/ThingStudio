@@ -117,7 +117,8 @@ multiple displays architected from the start; page navigation first-class, modal
 (no penalty for GUI-less flows, small OLED GUI must work); no custom firmware -- Python on stock `framebuf` plus
 viper, nano-gui spike next. Then (2026-10-07): no round dials; a trend widget fed by cascaded journal nodes,
 one per time scale (RRDtool model). Then (2026-10-09): buttons get their own output, modes and a controlled state, via two-faced nodes in the compiler; the touch panel is a config node; then the button rework hardware pass: toggle revert settled, text confirms a toggle, flow label and board label, rows share their width, a widget on several pages, the navigator hidden, touch-panel presets. Then (2026-10-15): custom GUI (styling/writing widgets, the layout editor) is GUI-subsystem
-work, not flow/node-format work. 32 entries: `docs/working-notes/decisions/gui-layout.md`.
+work, not flow/node-format work. Then (2026-10-17): the wired display owns the gui screen's size and frame format,
+not just its orientation (one place to set them). 33 entries: `docs/working-notes/decisions/gui-layout.md`.
 
 ## Session sequencing
 

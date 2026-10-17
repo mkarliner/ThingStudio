@@ -42,6 +42,10 @@ import { compileScreens, GUI_BUTTON, GUI_SCREEN, GUI_MODAL, isWidgetType, modalN
 export type GuiFrameFormat = "gs4" | "gs2" | "mono" | "rgb565";
 const FRAMEBUF_FORMAT: Record<GuiFrameFormat, string> = { gs4: "GS4_HMSB", gs2: "GS2_HMSB", mono: "MONO_HMSB", rgb565: "RGB565" };
 
+const DISPLAY_SPI_TYPE = "thingstudio/display_spi";
+/** A screen not yet wired to a display uses these, so it still compiles while being laid out. */
+const SCREEN_FALLBACK = { width: 320, height: 240, format: "gs4" as GuiFrameFormat };
+
 /** Rows per strip: as many as fit in about 5 KB, at least 1, at most the whole screen. */
 export function bandRowsFor(width: number, height: number, format: GuiFrameFormat): number {
   return Math.max(1, Math.min(height, Math.floor(5120 / frameBytes(width, 1, format))));
@@ -70,35 +74,40 @@ export function frameBytes(width: number, height: number, format: GuiFrameFormat
   }
 }
 
+/** The wired display owns the panel size and the frame format; the screen follows it, so there is one place to
+ * set them. Orientation is the display's setting too (resolveOrientation finds it via the same wire). A screen not
+ * yet wired to a display uses a default size and warns, so laying out before wiring still compiles. */
 function screenSize(node: GraphNode, ctx: CodegenContext): ScreenSize & { format: GuiFrameFormat } {
-  let width = Math.round(Number(node.properties.width ?? 320));
-  let height = Math.round(Number(node.properties.height ?? 240));
-  if (!(width > 0 && height > 0)) throw new CompileError(`GUI screen ${nodeLabel(node)}: width and height must be positive, got ${String(node.properties.width)}x${String(node.properties.height)}`);
-  // With an orientation config, width/height are the panel's own size and the picture is laid out turned.
+  const display = ctx.findWiredTargets?.(node.id).find((n) => n.type === DISPLAY_SPI_TYPE);
+  let width: number;
+  let height: number;
+  let format: GuiFrameFormat;
+  if (display) {
+    width = Math.round(Number(display.properties.width ?? SCREEN_FALLBACK.width));
+    height = Math.round(Number(display.properties.height ?? SCREEN_FALLBACK.height));
+    format = String(display.properties.frameFormat ?? SCREEN_FALLBACK.format) as GuiFrameFormat;
+    if (!(width > 0 && height > 0)) {
+      throw new CompileError(
+        `GUI screen ${nodeLabel(node)}: the display it is wired to (${nodeLabel(display)}) has no size (${String(display.properties.width)}x${String(display.properties.height)})`,
+      );
+    }
+  } else {
+    // Not wired to a display yet (still being laid out): fall back to the screen's own hidden size/format,
+    // seeded from the defaults, so a screen compiles while it is being built.
+    width = Math.round(Number(node.properties.width ?? SCREEN_FALLBACK.width));
+    height = Math.round(Number(node.properties.height ?? SCREEN_FALLBACK.height));
+    format = String(node.properties.frameFormat ?? SCREEN_FALLBACK.format) as GuiFrameFormat;
+    if (!(width > 0 && height > 0)) {
+      throw new CompileError(`GUI screen ${nodeLabel(node)}: width and height must be positive, got ${String(node.properties.width)}x${String(node.properties.height)}`);
+    }
+  }
+  // With an orientation the display holds the panel's own size and the picture is laid out turned.
   const angle = resolveOrientation(ctx, node, `GUI screen ${nodeLabel(node)}`);
   if (angle !== null) ({ width, height } = turnedSize(width, height, angle));
-  const format = String(node.properties.frameFormat ?? "gs4") as GuiFrameFormat;
-  if (!(format in FRAMEBUF_FORMAT)) throw new CompileError(`GUI screen ${nodeLabel(node)}: frameFormat must be one of ${Object.keys(FRAMEBUF_FORMAT).join(", ")}`);
+  if (!(format in FRAMEBUF_FORMAT)) {
+    throw new CompileError(`GUI screen ${nodeLabel(node)}: the display's frameFormat "${format}" must be one of ${Object.keys(FRAMEBUF_FORMAT).join(", ")}`);
+  }
   return { width, height, format };
-}
-
-/** A screen and the SPI display it is wired to must agree on the picture's size, or the display reads the frames at
- * the wrong width and shows scrambled rows. With an orientation, both nodes hold the panel's own size. */
-function checkDisplaySize(node: GraphNode, ctx: CodegenContext, width: number, height: number): void {
-  const display = ctx.findWiredTargets?.(node.id).find((n) => n.type === "thingstudio/display_spi");
-  if (!display) return;
-  const dw = Math.round(Number(display.properties.width));
-  const dh = Math.round(Number(display.properties.height));
-  if (!(dw > 0 && dh > 0)) return;
-  const angle = resolveOrientation(ctx, display, "display_spi");
-  const want = angle === null ? { width: dw, height: dh } : turnedSize(dw, dh, angle);
-  if (want.width === width && want.height === height) return;
-  const screenW = Math.round(Number(node.properties.width));
-  const screenH = Math.round(Number(node.properties.height));
-  const fix = angle === null ? `${want.width}x${want.height}` : `${dw}x${dh}, the panel's own size, since the display's orientation is ${angle}`;
-  throw new CompileError(
-    `GUI screen ${nodeLabel(node)} is ${screenW}x${screenH} but the display it is wired to (${nodeLabel(display)}) shows ${want.width}x${want.height}: set the screen's width and height to ${fix}`,
-  );
 }
 
 const compiled = new WeakMap<CodegenContext, CompiledScreens>();
@@ -224,19 +233,22 @@ export const guiScreenNode: NodeDefinition = {
   width: 110,
   screenOutline: true,
   description:
-    "Rotation is set on the display this screen is wired to; with one set, width and height here are the panel's " +
-    "own size. Sends a frame each time the screen changes. Wire it to a display node with the same size and frame " +
-    "format.",
+    "One per display: takes its size (the panel's own width and height) and frame format from the display this " +
+    "screen is wired to, so set them once on the display, not here. Rotation is the display's setting too. Sends a " +
+    "frame each time the screen changes. Wire it to a display node.",
   ports: { outputs: [{ name: "frame", type: "bytes" }] },
   properties: [
     { name: "name", label: "name", kind: "text", default: "screen" },
-    { name: "width", label: "width (px)", kind: "number", default: 320, min: 1 },
-    { name: "height", label: "height (px)", kind: "number", default: 240, min: 1 },
+    // Fallback size/format for a screen not yet wired to a display; the wired display wins. Hidden: set once on
+    // the display, not shown on the screen.
+    { name: "width", label: "width (px)", kind: "number", default: 320, min: 1, hidden: true },
+    { name: "height", label: "height (px)", kind: "number", default: 240, min: 1, hidden: true },
     {
       name: "frameFormat",
       label: "frame format",
       kind: "select",
       default: "gs4",
+      hidden: true,
       options: [
         { value: "gs4", label: "gs4 (16 greys)" },
         { value: "gs2", label: "gs2 (4 greys)" },
@@ -250,7 +262,6 @@ export const guiScreenNode: NodeDefinition = {
   ],
   codegenEventSource(node: GraphNode, ctx: CodegenContext): EventSourceCodegenResult {
     const { width, height, format } = screenSize(node, ctx);
-    checkDisplaySize(node, ctx, width, height);
     const core = coreBlock(ctx);
     const c = screensFor(ctx);
     const surface = c.surfaces.find((s) => s.screen === node.id);
