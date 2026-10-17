@@ -96,3 +96,9 @@ fields then list the chip's own pins rather than take a number. See
 
 On the nRF52840, SPI 0 and 1 share hardware with I2C 0 and 1, so a flow using both would fail on the board.
 Thingstudio offers SPI on buses 2 and 3 only. See [Boards and processors](boards.md#built-in-processors).
+
+## Why doesn't my Uno TFT shield work on a Wemos D1 R32?
+
+The D1 R32 puts the shield's A2, A3 and A4 on GPIO 35, 34 and 36, which are input only on an ESP32. A parallel
+TFT shield drives its RS, CS and RST lines from those pins, so it can't start. Wire GPIO 15 to A2 (RS), GPIO 33
+to A3 (CS) and GPIO 32 to A4 (RST), then set those pins in the display node.

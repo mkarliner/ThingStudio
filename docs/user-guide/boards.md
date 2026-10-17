@@ -68,6 +68,7 @@ In the properties panel, a pin field shows the board's name for that pin, such a
 | Freenove ESP32-S3 Display 4.0" (FNK0104S, ST7796) | ESP32-S3 | Pick by hand. Display and touch pins are labelled. 320x480, SPI bus 1. Rotation 1 is portrait. For landscape, set the display's `orientation` to 90 (or 270 for the other way up) and keep the screen and display at 320x480. Display and touch (FT6336U) work. |
 | Pyboard v1.0 | STM32F405 | Pins are named `X1`–`X22` and `Y1`–`Y12`. The four onboard LEDs are on `A13`, `A14`, `A15` and `B4` (labelled `LED_RED`–`LED_BLUE`); the user switch `SW` is on `X17`. |
 | Seeed XIAO nRF52840 (Sense) | nRF52840 | Pins `D0`–`D10` are labelled. RGB LED on 26, 30 and 6, on when the pin is 0. GPIO 20–25 go to the flash chip. Battery, IMU and microphone pins are labelled; IMU and microphone are on the Sense only. No WiFi. |
+| Wemos D1 R32 | ESP32 | Pick by hand. Pins carry their Arduino names, `D0`–`D13` and `A0`–`A5`. A2–A5 are input only. LED on A0 (GPIO 2). |
 
 ## Built-in processors
 
@@ -132,6 +133,8 @@ The fields are:
 | `headerOrder` | `"down"` if the right-hand row is numbered top to bottom, like the left. Leave it out for a header numbered down the left and back up the right, like the Pico's. |
 | `usb` | Where the USB connector is, with pin 1 at the top left: `"top"` or `"bottom"`. Shown on the **Pins…** page. Needs `header`. |
 | `header` | What each physical pin carries: a pin (a GPIO number, or a named pin), or a label such as `"GND"` or `"3V3"`. Shown on the **Pins…** page. For example `{ "1": 0, "3": "GND", "40": "VBUS" }`. A string that's one of the board's pins is that pin; any other string is a label. |
+
+Naming a pin in `pins` turns off the processor's warning for it, on the grounds that the board uses it on purpose. If the warning still matters, such as a strapping pin on a shield header, repeat it in the board's `avoid`.
 
 Numbers in `header` are physical pin numbers, as printed on the board or its datasheet. A header numbered 1 to N
 is drawn in two columns, like the Pico's. For a board with several connectors, name the pins `"P3-1"` and so on.

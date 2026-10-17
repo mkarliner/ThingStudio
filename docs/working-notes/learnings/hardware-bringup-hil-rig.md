@@ -187,3 +187,22 @@ Status: detail file, split out of `learnings.md` on 2026-09-06 to keep that inde
   only a power cycle got through. Install now does what Remove flow already did: STOP_TO_PROMPT from the editor
   when the board is answering, then `board_recovery.catch_prompt` (repeated Ctrl-C, reopen on re-enumeration,
   "press reset or unplug and replug" status) before raw REPL.
+
+- **Wemos D1 R32: an Uno TFT shield's control lines land on input-only pins.** 2026-10-16, writing the RM68090
+  custom node. A2/A3/A4 (the MCUFRIEND shield's LCD_RS, LCD_CS, LCD_RST) are GPIO 35/34/36 on the D1 R32,
+  input only, so the shield can't start unmodified. The usual mod wires GPIO 15/33/32 to them (TFT_eSPI's
+  ESP32 8-bit parallel setup, Setup14, uses those pins). Data D0-D7 are GPIO 12, 13, 26, 25, 17, 16, 27, 14;
+  D0 on GPIO 12 is a strapping pin. User-facing: `docs/user-guide/faq.md`.
+- **Labelling a pin in a board file silences the processor's `avoid` warning for it.** 2026-10-16:
+  `target.ts` drops a processor avoid for any pin the board names in `pins`, unless the board's own `avoid`
+  repeats it. The D1 R32 board labels every Uno header pin, which silently removed the GPIO 2/5/12 strapping
+  warnings; the board file restates them. Now in `docs/user-guide/boards.md` (Adding a board).
+- **RM68090 node: wrong GPIO enable-register addresses, hidden by a simulator that shared them.** 2026-10-17,
+  first deploy on Mike's D1 R32: `no reply from the panel (ID 0x0000)` with good wiring. The ID read used
+  0x3FF44024 to release D0-D7 (that's GPIO_ENABLE_W1TS, so the ESP32 kept driving the bus and read back its own
+  0x00) and 0x3FF44020 to restore (GPIO_ENABLE_REG itself, which switched off every other output). Correct:
+  W1TS 0x3FF44024, W1TC 0x3FF44028 (ESP-IDF `soc/esp32/register/soc/gpio_reg.h`). The host simulator passed
+  because it took its addresses from the same assumption as the code. It now takes them from gpio_reg.h,
+  models output-enable (a driven pin reads back its own level), and fails on any write to an unknown
+  register; it reproduces the field error on the old code. Rule of thumb: a test double's hardware facts come
+  from an independent source, never from the code under test.

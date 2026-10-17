@@ -17,6 +17,7 @@ been deployed and run on that hardware. Pin details for boards and processors ar
 | Freenove ESP32-S3 Display 4.0" (FNK0104S) | ESP32-S3 | Yes, with the display and touch |
 | Pyboard v1.0 | STM32F405 | Untested |
 | Seeed XIAO nRF52840 (Sense) | nRF52840 | Untested |
+| Wemos D1 R32 | ESP32 | Yes, with an RM68090 parallel TFT shield (rewired, custom node) |
 
 ## Processors without a board definition
 

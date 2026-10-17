@@ -71,7 +71,9 @@ all, CYD's `display_spi` pins silently failing at 40MHz SPI (a real hard crash, 
 error -- needs `baudrate` capped around 27MHz on this pin assignment), and a fast-timer-driven flow
 that repeatedly allocates and discards a large buffer fragmenting a classic ESP32's heap into a
 `MemoryError` within about a second regardless of total free RAM (fix: a persistent, in-place-mutated
-buffer via a function node's `context` store, not a bigger heap). 12 entries:
+buffer via a function node's `context` store, not a bigger heap), the Wemos D1 R32 putting an Uno TFT shield's
+control lines on input-only pins, board pin labels silencing processor `avoid` warnings, and a simulator that shared the code's wrong
+register addresses. 15 entries:
 `docs/working-notes/learnings/hardware-bringup-hil-rig.md`.
 
 ## Editor / build tooling
@@ -104,7 +106,7 @@ The cloud session's own staged mirror of the repo can be a partial snapshot — 
 
 ## Custom node authoring
 
-A custom node's top-level code runs inside a generated per-instance wrapper, not true module scope — `nonlocal`, not `global`, for persistent state. 1 entry: `docs/working-notes/learnings/custom-node-authoring.md`.
+A custom node's top-level code runs inside a generated per-instance wrapper, not true module scope — `nonlocal`, not `global`, for persistent state; `@micropython.viper` works there but can't read the wrapper's variables. 2 entries: `docs/working-notes/learnings/custom-node-authoring.md`.
 
 ## Reusable patterns worth remembering
 
