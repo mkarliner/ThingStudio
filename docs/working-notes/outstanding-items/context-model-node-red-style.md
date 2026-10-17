@@ -56,6 +56,19 @@ today, proposes the scope set (node + flow, `global` reserved), a runtime-owned 
 one-way-door calls, and the no-code-path options -- and ends with the open questions for Mike. The reference material
 above stays as the source for it. Nothing is built and the open questions are still open (proposes, does not commit).
 
+## Sequenced after the device settings store, 2026-10-17 (Mike's call)
+
+Mike split out a third use case in the same session -- **application settings** (a GUI colour scheme, units kg/lbs),
+device-scoped and persistent -- and called **settings-first**: it lands as the pre-MVP piece and this volatile model
+follows. `device-settings-store-scoping.md` is that sibling. Two consequences for this file:
+
+- **`STATE_*` is settled:** the settings store needs no editor read/set at runtime, so persistence is device-internal
+  and the wire stays untouched. Q6 in `context-model-scoping.md` §12 is answered.
+- **§5's "reserve `global`" reasoning is superseded:** the distinction is **durability** -- the settings store is
+  flash-backed, where `_flow_vars` is RAM only. It is namespaced by `flowName`, so the same flow's values survive a
+  reboot/redeploy and a different flow is isolated. Its file-backed primitive is what this model's future
+  device/persistent scope reuses.
+
 
 ## Scope split, 2026-09-06 (Mike's call)
 

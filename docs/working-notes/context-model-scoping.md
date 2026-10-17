@@ -196,3 +196,23 @@ Land the volatile model against the runtime-owned shape: the `runtime` store acc
 only), migrate `function` codegen and the `variable_*` nodes onto it, update `interfaces/runtime-api/` + conformance,
 bump the runtime major, and verify targets 1 and 2 above still pass. §8's node decision can follow once answered;
 nothing in the store API forecloses any of its three options.
+
+## Addendum, 2026-10-17: settings first; durability, not scope, is the axis
+
+Same session, Mike stated the three use cases this model was being scoped against: (1) state on a node (the blink
+function node, a filter/average node), (2) **application settings** (a GUI colour scheme, units kg/lbs), (3) sharing
+data between nodes. Case 2 is a different rung: flash-backed, **persistent**, and namespaced by `flowName` so a
+different flow cannot collide with it.
+
+His call: **the device settings store lands first** (`device-settings-store-scoping.md`), and this volatile model
+follows. Two corrections to this note:
+
+- **§5's "defer `global`" is superseded.** The distinction that matters here is **durability**, not scope:
+  `_flow_vars` is in RAM and cannot survive a power cycle; the settings store is a file on flash, namespaced by
+  `flowName`, so the same flow's values survive a reboot/redeploy and a different flow is isolated. Its file-backed
+  primitive is what this model's future device/persistent scope should reuse -- one primitive, not two.
+- **§12 Q6 is answered.** The settings store needs no editor read/set at runtime, so persistence is device-internal;
+  `STATE_*` stays reserved and the wire protocol is untouched.
+
+The open questions that remain for this model are 1–5; Q3 (the no-code path) is still the one that decides whether
+`variable_get`/`variable_set` are ported at all.

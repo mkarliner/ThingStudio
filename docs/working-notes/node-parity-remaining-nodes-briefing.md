@@ -74,8 +74,10 @@ Residue (built-in-only by design, not goals): **`function`** (verbatim user code
 
 ## Suggested next-session order
 
-1. **`timer` + `variable-set`** — cheap, no blockers; keep the recipe warm. (Regenerate the catalog only if a
-   field changed — both likely unchanged.)
+1. **`timer`** — cheap, no blockers; keep the recipe warm. (Regenerate the catalog only if a
+   field changed — likely unchanged.) **`variable-set` is no longer on this list:** its fate is the context model's
+   no-code-path question (Q3), still open, and that model now follows the device settings store
+   (`device-settings-store-scoping.md`, `context-model-scoping.md` §12/§13).
 2. **Scope the flow-context API for the network family** (one capability, 8 nodes). This is the highest-leverage
    next step and needs Mike's call on the surface (what a descriptor may ask about the flow) and a SPEC update.
 3. **A data form for property-dependent port types** (unblocks `inject`/`startup`/`variable-get`).

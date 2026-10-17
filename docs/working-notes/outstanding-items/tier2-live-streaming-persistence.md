@@ -25,3 +25,17 @@ with stored state still on flash. **2026-09-06, Mike's call when prioritizing:**
 first (node/flow/global scope, a generic setting mechanism); this item plugs in a flash-backed storage backend
 underneath the same API once it exists, Node-RED's own `contextStorage` pattern (`memory` vs `localfilesystem` as
 interchangeable backends) is the model for how the two fit together without needing to be built as one item.
+
+## Split again, 2026-10-17: application settings move out, pre-MVP
+
+Mike's three use cases in the context-model session separated **device-scoped persistent application values** (a GUI
+colour scheme, units kg/lbs) from this item's **node/runtime state** (a calibration constant, a running average).
+The persistent values are now their own pre-MVP item -- `device-settings-store-scoping.md`: a small runtime-owned,
+file-backed key/value store any node can reach, app-chosen keys within a `flowName` namespace, only the values the
+app actually wrote. Same-flow redeploys survive; a different flow is isolated by the namespace. The motivating GUI
+settings page is an app example, not a deliverable. The primitive is intended to be shared with this item later, so
+there is still one persistence mechanism, not two.
+
+This item's remaining scope is unchanged: node-ID-keyed runtime state that survives a redeploy by default, with a
+per-node opt-out. Still POST-MVP, still needs the design questions above answered (storage format, opt-out
+semantics, what happens when a node is deleted with state on flash).
