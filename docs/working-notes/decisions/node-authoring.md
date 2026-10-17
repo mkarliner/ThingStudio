@@ -870,3 +870,10 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   core-only (`resources` is not in the custom schema; `lessThan` is canonical for now). `eswitch`, `ebutton`,
   `interrupt`, `pwm_out`, `neopixel` joined the package set; `adc`/`encoder`/the display nodes remain (a hard-coded
   context query, a pin-pair claim, and larger codegen respectively).
+- **2026-10-16, same session — `encoder` flipped, with two agreed deviations.** `encoder` is a core package now.
+  Its `vmin`/`vmax`/`mod` change from blank-default number fields to `text` fields with `integer`+`optional`
+  (blank -> `None`), since the format has no optional-number field (and a blank number inlines as 0); the panel
+  widget becomes a text box. Its "start value outside vmin/vmax" compile check is dropped: the vendored `Encoder`
+  clamps the start value itself, so on-device behaviour is unchanged. Its same-pin guard survives without a new
+  capability — the two pins are claimed with distinct use texts, so `pinX == pinY` is an ordinary claim conflict.
+  With this, the whole GPIO/pin cluster is package-based except `adc` (blocked on a node-specific context query).

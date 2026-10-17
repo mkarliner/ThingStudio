@@ -11,11 +11,12 @@ import type { CodegenContext } from "../src/compiler/node-definition.js";
 import { buildRegistry } from "../src/node-library/registry.js";
 import { adcNode } from "../src/node-library/adc.js";
 import { displaySpiNode } from "../src/node-library/display-spi.js";
-import { encoderNode } from "../src/node-library/encoder.js";
+import { descriptor as encoderDescriptor, python as encoderPython } from "../src/node-library/core-packages/encoder.js";
 import { descriptor as gpioOutDescriptor, python as gpioOutPython } from "../src/node-library/core-packages/gpio-out.js";
 import { buildCoreNodeDefinition } from "../src/node-library/custom-node.js";
 
 const gpioOutNode = buildCoreNodeDefinition(gpioOutDescriptor, gpioOutPython);
+const encoderNode = buildCoreNodeDefinition(encoderDescriptor, encoderPython);
 import { i2cBusFromPins } from "../src/node-library/i2c-shared.js";
 import { descriptor as neopixelDescriptor, python as neopixelPython } from "../src/node-library/core-packages/neopixel.js";
 
@@ -112,7 +113,7 @@ describe("hardware resources are keyed singletons", () => {
     const ctx = claimingCtx();
     const enc = (id: string, props: Record<string, unknown> = {}): GraphNode => ({ id, type: "thingstudio/encoder", properties: { pinX: 10, pinY: 11, ...props } });
     encoderNode.codegenEventSource!(enc("e1", { div: 4 }), ctx);
-    expect(() => encoderNode.codegenEventSource!(enc("e2", { div: 2 }), ctx)).toThrow(/GPIO 10,11 encoder: encoder e2/);
+    expect(() => encoderNode.codegenEventSource!(enc("e2", { div: 2 }), ctx)).toThrow(/10,11 encoder: encoder e2/);
   });
 
   it("two neopixel nodes on the same pin must agree on count and order", () => {

@@ -156,10 +156,15 @@ recipe: `filter`, `journal`, `wifi_gate`, `http_response`.
     below another property — ebutton's `doubleClickMs` < `longPressMs`, a vendored-driver constraint with no other
     way to express it). The driver is a keyed singleton via `runtime.shared('eswitch'|'ebutton', pin, ...)`; the
     per-instance `WaitAny` stays per instance.
+  - **Converted 2026-10-16:** `encoder` (the `pin` resource, twice). Two agreed deviations: its
+    `vmin`/`vmax`/`mod` are `text` fields with `integer`+`optional` (blank -> None) rather than number fields
+    (the format has no optional-number field, and a blank number inlines as 0); and the "start value outside
+    vmin/vmax" compile check is dropped (the vendored Encoder clamps the start value, so on-device behaviour is
+    unchanged). The same-pin guard survives without a new capability: the two pins are claimed with distinct use
+    texts, so `pinX == pinY` is a claim conflict. The driver is a keyed singleton via
+    `runtime.shared('encoder', (x, y), ...)`.
   - **Blocked:** `adc` needs a node-specific compile-time context query (its ESP32 ADC2-vs-WiFi guard reads
-    `ctx.findNodesOfType`), which the package format can't express yet. `encoder` needs a claim on a *pin pair*
-    (`GPIO x,y encoder`), expressible only via `{property}` interpolation of both pins — TODO/adjust the shape
-    before converting.
+    `ctx.findNodesOfType`), which the package format can't express yet.
   - **Complex, not yet attempted:** `display_i2c`/`touch_i2c` (i2c resource + touch-panel config) and
     `display_spi` (spi resource + many pins + viper codegen).
   - **Latent format gap, not currently blocking anything:** a package event source can't drop a wake — its
