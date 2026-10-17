@@ -99,7 +99,7 @@
 - [Writing custom nodes](https://docs.thingstudio.net/custom-nodes/): A custom node is two files sharing a base name: <name>.node.json (the descriptor) and <name>.node.py (the behavior), placed in the backend's ~/.thingstudio/cus…
 - [Writing flows with an AI assistant](https://docs.thingstudio.net/ai-authoring/): This page is for an AI assistant (or a person) writing a Thingstudio flow file or a custom node in the user's folder, without the editor.
 - [Check a flow without the editor](https://docs.thingstudio.net/check-a-flow/): thingstudio-compile compiles and checks a flow file from the command line, with the same errors the editor gives.
-- [Command line](https://docs.thingstudio.net/command-line/): Options for starting Thingstudio, and a way to install the runtime without the editor.
+- [Command line](https://docs.thingstudio.net/command-line/): Options for starting Thingstudio, a way to install the runtime and run flows without the editor, and a check for a flow file.
 - [Node catalog](https://docs.thingstudio.net/nodes-catalog/): Every node a flow file can use: its type id, its ports with their payload types, and its properties with the default the editor gives a new node.
 
 ## Troubleshooting

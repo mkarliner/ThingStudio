@@ -2710,6 +2710,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#deploy-and-run-a-flow-without-the-editor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deploy and run a flow without the editor
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2917,6 +2928,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#deploy-and-run-a-flow-without-the-editor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deploy and run a flow without the editor
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2938,8 +2960,8 @@
 
 
 <h1 id="command-line">Command line</h1>
-<p>Options for starting Thingstudio, and a way to install the runtime without the editor. To check a flow file from
-the command line, see <a href="../check-a-flow/">Check a flow without the editor</a>.</p>
+<p>Options for starting Thingstudio, a way to install the runtime and run flows without the editor, and a check for a
+flow file. To check a flow file from the command line, see <a href="../check-a-flow/">Check a flow without the editor</a>.</p>
 <h2 id="starting-options">Starting options</h2>
 <p>Add these after <code>thingstudio</code> (or <code>thingstudio-backend</code>, from source). <code>thingstudio --help</code> lists them all.</p>
 <table>
@@ -2976,6 +2998,30 @@ the command line, see <a href="../check-a-flow/">Check a flow without the editor
 python3<span class="w"> </span>test-flows/deploy_runtime.py<span class="w"> </span>--port<span class="w"> </span>PORT
 </code></pre></div>
 <p><code>PORT</code> is the board's port, as shown in the editor's port list. When it finishes, click <strong>Connect</strong> in the editor.</p>
+<p><code>device_cli.py runtime install</code> does the same thing and resets the board afterwards; see below.</p>
+<h2 id="deploy-and-run-a-flow-without-the-editor">Deploy and run a flow without the editor</h2>
+<p><code>device_cli.py</code> is a small command line for a board on USB serial. It does what the editor does, without a browser:
+find the board, check the runtime, deploy a flow, fire inject nodes, run console commands and watch the output.</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>test-flows/device_cli.py<span class="w"> </span>list<span class="w">          </span><span class="c1"># USB serial ports</span>
+python3<span class="w"> </span>test-flows/device_cli.py<span class="w"> </span>hello<span class="w">         </span><span class="c1"># runtime version, chip, running flow</span>
+python3<span class="w"> </span>test-flows/device_cli.py<span class="w"> </span>flow<span class="w"> </span>deploy<span class="w"> </span>my-flow.flow.json<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--mpy-cross<span class="w"> </span>~/mpy-src/mpy-cross/build/mpy-cross
+python3<span class="w"> </span>test-flows/device_cli.py<span class="w"> </span>trigger<span class="w"> </span>inject0001
+python3<span class="w"> </span>test-flows/device_cli.py<span class="w"> </span><span class="nb">exec</span><span class="w"> </span><span class="s2">"settings.namespaces()"</span>
+python3<span class="w"> </span>test-flows/device_cli.py<span class="w"> </span>watch
+</code></pre></div>
+<ul>
+<li>If there is one USB serial port, <code>--port</code> is not needed. Use <code>--port</code> or <code>THINGSTUDIO_PORT</code> otherwise.</li>
+<li><code>flow deploy</code> compiles the <code>.flow.json</code> with the same compiler as the editor, then deploys it. It takes the flow
+  name from the file's own <code>flowName</code>. That name is also the <code>settings</code> namespace, so check it is what you expect.</li>
+<li><code>--trigger NODE_ID</code> (repeatable) fires inject or startup nodes after deploy, for testing without clicking.</li>
+<li><code>--json</code> prints one JSON object per line, for scripts.</li>
+<li>Disconnect in the editor first: only one program can hold the serial port.</li>
+<li><code>flow deploy</code> needs a native <code>mpy-cross</code>. The build recipe is in <code>device-runtime/test/README.md</code>, or set
+  <code>THINGSTUDIO_MPY_CROSS</code> to one you already have.</li>
+</ul>
+<p><code>python3 test-flows/device_cli.py &lt;command&gt; --help</code> lists every option. <code>test-flows/README.md</code> has ready-made test
+flows and their expected output.</p>
 
 
 

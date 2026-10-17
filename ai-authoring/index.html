@@ -3138,8 +3138,9 @@
 <h1 id="writing-flows-with-an-ai-assistant">Writing flows with an AI assistant</h1>
 <p>This page is for an AI assistant (or a person) writing a Thingstudio flow file or a custom node in the user's folder,
 without the editor. It is complete on its own, with two companions: the generated <a href="../nodes-catalog/">node catalog</a>, and
-the <code>thingstudio-compile</code> command (<a href="../check-a-flow/">Check a flow without the editor</a>). The whole docs set is also
-one file at <code>/llms-full.txt</code> on the docs site, with an index at <code>/llms.txt</code>.</p>
+the <code>thingstudio-compile</code> command (<a href="../check-a-flow/">Check a flow without the editor</a>). With a board attached,
+<code>device_cli.py</code> deploys and runs the flow (<a href="../command-line/#deploy-and-run-a-flow-without-the-editor">Command line</a>).
+The whole docs set is also one file at <code>/llms-full.txt</code> on the docs site, with an index at <code>/llms.txt</code>.</p>
 <h2 id="setting-up-your-assistant">Setting up your assistant</h2>
 <p>Paste this into the assistant's standing instructions (a project's instructions, <code>AGENTS.md</code>, <code>CLAUDE.md</code>, or a custom
 GPT/Gem), so it reads this page before it writes a flow:</p>
@@ -3148,7 +3149,8 @@ https://docs.thingstudio.net/ai-authoring/ (the whole docs set is one file at ht
 Write the flow as a .flow.json file, run the thingstudio-compile check with --board for my board,
 fix every error until it prints OK, then tell me: the board id you checked against, which credential
 names I must create, what you assumed about wiring, and what you could not check.
-Never say a flow works on the board; say it passes the check. No HTTPS in http_request.
+Never say a flow works on the board unless you deployed it there and saw its output; otherwise say it
+passes the check. No HTTPS in http_request.
 </code></pre></div>
 <p>Claude users can instead save the same text as a skill. The check needs Node and the built <code>thingstudio-compile.mjs</code>.</p>
 <h2 id="the-loop">The loop</h2>
@@ -3158,10 +3160,14 @@ Never say a flow works on the board; say it passes the check. No HTTPS in http_r
    <code>board:lolin-s2-mini</code>, <code>board:pico</code>, <code>board:pico-2</code> and <code>board:pico-w</code>, or <code>processor:esp32</code>, <code>esp32-c3</code>, <code>esp32-s2</code>,
    <code>esp32-s3</code>, <code>rp2040</code>, <code>rp2350</code> for a bare chip; <code>--list-boards</code> shows the current list). Read every error: it names the node and
    says what is wrong. Fix them all and run it again until it prints <code>OK</code>.</li>
-<li>Tell the user to open the file in the editor (<strong>File → Open</strong>), choose the board, and deploy.</li>
+<li>Tell the user to open the file in the editor (<strong>File → Open</strong>), choose the board, and deploy. If a board is
+   attached and the user asks you to test it, deploy it with
+   <a href="../command-line/#deploy-and-run-a-flow-without-the-editor"><code>device_cli.py</code></a> instead, and report what the board
+   printed. That result is for that board only.</li>
 </ol>
 <p>The check is the same compile the editor runs, so a flow that passes it opens and compiles in the editor. It can't
-check credentials, custom node packages or the hardware. Don't claim a flow works on the board; say it passes the check.</p>
+check credentials, custom node packages or the hardware. Don't claim a flow works on a board unless you deployed it
+there and saw it run; otherwise say it passes the check.</p>
 <h2 id="the-flow-file">The flow file</h2>
 <p>A JSON object. These keys matter:</p>
 <table>

@@ -616,6 +616,9 @@ The toolbar runs left to right in the order you work: the flow, the board, then 
 canvas, or click it. Type in the filter box to find one. [Custom nodes](custom-nodes.md) appear in the group they
 name, or in **General**.
 
+Click a group's name to fold or open it. Only **General** starts open. The editor remembers which groups you
+opened, in this browser. While you type in the filter box, every group with a match opens.
+
 ## Canvas
 
 The canvas is where you build the flow. The tabs above it, **Sheets of this flow**, spread one flow across several
@@ -1244,23 +1247,27 @@ How a flow is saved, opened, deployed and disconnected.
 
 ## Save and open
 
-Flows save to a file you choose, via your browser's own save dialog. **File → Save…** writes the current canvas —
-node types and properties, wiring, canvas layout, and config nodes, each kept in its own section — to a `.flow.json`
-file wherever you point it, so it can live inside a project's git repo like any other file you're tracking.
+A flow is saved in a `.flow.json` file you choose, so it can live in a project's git repo like any other file. The
+file holds the nodes and their properties, the wiring, the canvas layout and the config nodes.
 
-**File → Open…** opens the matching native dialog to load one back, canvas layout included. Thingstudio keeps no
-list of saved flows; the file lives wherever you saved it, so browsing and deleting it is your OS's or git's job,
-the same as any other document.
+- **File → Save** (⌘S, or Ctrl+S on Windows and Linux) writes to the flow's file. A new flow has no file yet, so the
+  first Save asks where, like Save As. The file's name shows next to the flow name.
+- **File → Save As…** (⇧⌘S, or Ctrl+Shift+S) always asks where, and that file becomes the flow's file.
+- **File → Open…** (⌘O, or Ctrl+O) loads a flow file. Save then writes back to it.
+- **Open recent**, in the File menu, lists the last 8 files you opened or saved, newest first, with each one's flow
+  name. After a reload the browser asks once for permission to use the file again. A file that has moved or been
+  deleted is taken off the list. **Clear recent files** forgets the list, not the files.
+- **File → New flow** starts an empty flow with no file.
+
+If the file has changed on disk since you opened or last saved it, for example after a `git checkout`, Save asks
+before overwriting it. Say no and use Save As to keep both.
+
+The recent list is kept in your browser, so another browser or a private window has its own. Safari and Firefox
+can't save back to a file: there, Save and Save As download the flow, Open uploads one, and there's no recent list.
 
 **The flow name** field is saved inside the file itself and is sent with every deploy, so a connected board's
-identity is visible in the console instead of a bare deployment id. It also suggests a filename for the save dialog
-(spaces and punctuation become dashes), but you can type over that suggestion freely; nothing enforces a match
-between the two.
-
-In Chrome or Edge this is the real OS file dialog each time — Save and Open don't remember the last file you picked,
-so you choose a target on every save (the browser's own dialog handles confirming an overwrite if you pick a file
-that already exists). Safari and Firefox don't support this file-picker API, so there **File → Save…** falls back to
-a plain browser download and **File → Open…** to a plain file-upload picker.
+identity is visible in the console instead of a bare deployment id. It also suggests a filename for Save As (spaces
+and punctuation become dashes), but you can type over that suggestion freely.
 
 Custom node packages and saved credentials live in `~/.thingstudio/custom-nodes/` and `~/.thingstudio/credentials/`.
 They're shared across flows rather than tied to one project, unlike a flow itself — a saved credential referenced by
@@ -1392,6 +1399,7 @@ been deployed and run on that hardware. Pin details for boards and processors ar
 | Freenove ESP32-S3 Display 4.0" (FNK0104S) | ESP32-S3 | Yes, with the display and touch |
 | Pyboard v1.0 | STM32F405 | Untested |
 | Seeed XIAO nRF52840 (Sense) | nRF52840 | Untested |
+| Wemos D1 R32 | ESP32 | Yes, with an RM68090 parallel TFT shield (rewired, custom node) |
 
 ## Processors without a board definition
 
@@ -1533,6 +1541,7 @@ In the properties panel, a pin field shows the board's name for that pin, such a
 | Freenove ESP32-S3 Display 4.0" (FNK0104S, ST7796) | ESP32-S3 | Pick by hand. Display and touch pins are labelled. 320x480, SPI bus 1. Rotation 1 is portrait. For landscape, set the display's `orientation` to 90 (or 270 for the other way up) and keep the screen and display at 320x480. Display and touch (FT6336U) work. |
 | Pyboard v1.0 | STM32F405 | Pins are named `X1`–`X22` and `Y1`–`Y12`. The four onboard LEDs are on `A13`, `A14`, `A15` and `B4` (labelled `LED_RED`–`LED_BLUE`); the user switch `SW` is on `X17`. |
 | Seeed XIAO nRF52840 (Sense) | nRF52840 | Pins `D0`–`D10` are labelled. RGB LED on 26, 30 and 6, on when the pin is 0. GPIO 20–25 go to the flash chip. Battery, IMU and microphone pins are labelled; IMU and microphone are on the Sense only. No WiFi. |
+| Wemos D1 R32 | ESP32 | Pick by hand. Pins carry their Arduino names, `D0`–`D13` and `A0`–`A5`. A2–A5 are input only. LED on A0 (GPIO 2). |
 
 ## Built-in processors
 
@@ -1597,6 +1606,8 @@ The fields are:
 | `headerOrder` | `"down"` if the right-hand row is numbered top to bottom, like the left. Leave it out for a header numbered down the left and back up the right, like the Pico's. |
 | `usb` | Where the USB connector is, with pin 1 at the top left: `"top"` or `"bottom"`. Shown on the **Pins…** page. Needs `header`. |
 | `header` | What each physical pin carries: a pin (a GPIO number, or a named pin), or a label such as `"GND"` or `"3V3"`. Shown on the **Pins…** page. For example `{ "1": 0, "3": "GND", "40": "VBUS" }`. A string that's one of the board's pins is that pin; any other string is a label. |
+
+Naming a pin in `pins` turns off the processor's warning for it, on the grounds that the board uses it on purpose. If the warning still matters, such as a strapping pin on a shield header, repeat it in the board's `avoid`.
 
 Numbers in `header` are physical pin numbers, as printed on the board or its datasheet. A header numbered 1 to N
 is drawn in two columns, like the Pico's. For a board with several connectors, name the pins `"P3-1"` and so on.
@@ -3664,8 +3675,9 @@ Source: https://docs.thingstudio.net/ai-authoring/
 
 This page is for an AI assistant (or a person) writing a Thingstudio flow file or a custom node in the user's folder,
 without the editor. It is complete on its own, with two companions: the generated [node catalog](nodes-catalog.md), and
-the `thingstudio-compile` command ([Check a flow without the editor](check-a-flow.md)). The whole docs set is also
-one file at `/llms-full.txt` on the docs site, with an index at `/llms.txt`.
+the `thingstudio-compile` command ([Check a flow without the editor](check-a-flow.md)). With a board attached,
+`device_cli.py` deploys and runs the flow ([Command line](command-line.md#deploy-and-run-a-flow-without-the-editor)).
+The whole docs set is also one file at `/llms-full.txt` on the docs site, with an index at `/llms.txt`.
 
 ## Setting up your assistant
 
@@ -3678,7 +3690,8 @@ https://docs.thingstudio.net/ai-authoring/ (the whole docs set is one file at ht
 Write the flow as a .flow.json file, run the thingstudio-compile check with --board for my board,
 fix every error until it prints OK, then tell me: the board id you checked against, which credential
 names I must create, what you assumed about wiring, and what you could not check.
-Never say a flow works on the board; say it passes the check. No HTTPS in http_request.
+Never say a flow works on the board unless you deployed it there and saw its output; otherwise say it
+passes the check. No HTTPS in http_request.
 ```
 
 Claude users can instead save the same text as a skill. The check needs Node and the built `thingstudio-compile.mjs`.
@@ -3690,10 +3703,14 @@ Claude users can instead save the same text as a skill. The check needs Node and
    `board:lolin-s2-mini`, `board:pico`, `board:pico-2` and `board:pico-w`, or `processor:esp32`, `esp32-c3`, `esp32-s2`,
    `esp32-s3`, `rp2040`, `rp2350` for a bare chip; `--list-boards` shows the current list). Read every error: it names the node and
    says what is wrong. Fix them all and run it again until it prints `OK`.
-3. Tell the user to open the file in the editor (**File → Open**), choose the board, and deploy.
+3. Tell the user to open the file in the editor (**File → Open**), choose the board, and deploy. If a board is
+   attached and the user asks you to test it, deploy it with
+   [`device_cli.py`](command-line.md#deploy-and-run-a-flow-without-the-editor) instead, and report what the board
+   printed. That result is for that board only.
 
 The check is the same compile the editor runs, so a flow that passes it opens and compiles in the editor. It can't
-check credentials, custom node packages or the hardware. Don't claim a flow works on the board; say it passes the check.
+check credentials, custom node packages or the hardware. Don't claim a flow works on a board unless you deployed it
+there and saw it run; otherwise say it passes the check.
 
 ## The flow file
 
@@ -3972,7 +3989,9 @@ The exit code is 0 for a valid flow, 1 for a flow with errors, and 2 for a bad c
 - **WiFi and MQTT credentials.** The secrets are in the backend, so the check uses stand-in values and says so in a
   note. A missing credential shows up when you open the flow in the editor.
 - **Custom node packages.** A flow that uses one fails with "unknown node type".
-- **A real board.** It can't tell you the display is wired right, or that the memory is enough. Deploy does that.
+- **A real board.** It can't tell you the display is wired right, or that the memory is enough. Deploy does that;
+  [Command line](command-line.md#deploy-and-run-a-flow-without-the-editor) can deploy and run a flow without the
+  editor.
 
 
 ---
@@ -3981,8 +4000,8 @@ Source: https://docs.thingstudio.net/command-line/
 
 # Command line
 
-Options for starting Thingstudio, and a way to install the runtime without the editor. To check a flow file from
-the command line, see [Check a flow without the editor](check-a-flow.md).
+Options for starting Thingstudio, a way to install the runtime and run flows without the editor, and a check for a
+flow file. To check a flow file from the command line, see [Check a flow without the editor](check-a-flow.md).
 
 ## Starting options
 
@@ -4008,6 +4027,35 @@ python3 test-flows/deploy_runtime.py --port PORT
 ```
 
 `PORT` is the board's port, as shown in the editor's port list. When it finishes, click **Connect** in the editor.
+
+`device_cli.py runtime install` does the same thing and resets the board afterwards; see below.
+
+## Deploy and run a flow without the editor
+
+`device_cli.py` is a small command line for a board on USB serial. It does what the editor does, without a browser:
+find the board, check the runtime, deploy a flow, fire inject nodes, run console commands and watch the output.
+
+```sh
+python3 test-flows/device_cli.py list          # USB serial ports
+python3 test-flows/device_cli.py hello         # runtime version, chip, running flow
+python3 test-flows/device_cli.py flow deploy my-flow.flow.json \
+    --mpy-cross ~/mpy-src/mpy-cross/build/mpy-cross
+python3 test-flows/device_cli.py trigger inject0001
+python3 test-flows/device_cli.py exec "settings.namespaces()"
+python3 test-flows/device_cli.py watch
+```
+
+- If there is one USB serial port, `--port` is not needed. Use `--port` or `THINGSTUDIO_PORT` otherwise.
+- `flow deploy` compiles the `.flow.json` with the same compiler as the editor, then deploys it. It takes the flow
+  name from the file's own `flowName`. That name is also the `settings` namespace, so check it is what you expect.
+- `--trigger NODE_ID` (repeatable) fires inject or startup nodes after deploy, for testing without clicking.
+- `--json` prints one JSON object per line, for scripts.
+- Disconnect in the editor first: only one program can hold the serial port.
+- `flow deploy` needs a native `mpy-cross`. The build recipe is in `device-runtime/test/README.md`, or set
+  `THINGSTUDIO_MPY_CROSS` to one you already have.
+
+`python3 test-flows/device_cli.py <command> --help` lists every option. `test-flows/README.md` has ready-made test
+flows and their expected output.
 
 
 ---
@@ -4894,3 +4942,9 @@ Thingstudio offers SPI on buses 2 and 3 only. See [Boards and processors](boards
 Saved values are kept per flow name. Renaming the flow makes it a new name to the board, so its values start from
 the defaults. The old values are still on the board: rename the flow back to use them again, or clear them from the
 [command box](debugging.md#commands-and-the-python-prompt).
+
+## Why doesn't my Uno TFT shield work on a Wemos D1 R32?
+
+The D1 R32 puts the shield's A2, A3 and A4 on GPIO 35, 34 and 36, which are input only on an ESP32. A parallel
+TFT shield drives its RS, CS and RST lines from those pins, so it can't start. Wire GPIO 15 to A2 (RS), GPIO 33
+to A3 (CS) and GPIO 32 to A4 (RST), then set those pins in the display node.

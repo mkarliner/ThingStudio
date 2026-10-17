@@ -3187,6 +3187,11 @@ see <a href="#adding-a-processor">Adding a processor</a>.</p>
 <td>nRF52840</td>
 <td>Pins <code>D0</code>–<code>D10</code> are labelled. RGB LED on 26, 30 and 6, on when the pin is 0. GPIO 20–25 go to the flash chip. Battery, IMU and microphone pins are labelled; IMU and microphone are on the Sense only. No WiFi.</td>
 </tr>
+<tr>
+<td>Wemos D1 R32</td>
+<td>ESP32</td>
+<td>Pick by hand. Pins carry their Arduino names, <code>D0</code>–<code>D13</code> and <code>A0</code>–<code>A5</code>. A2–A5 are input only. LED on A0 (GPIO 2).</td>
+</tr>
 </tbody>
 </table>
 <h2 id="built-in-processors">Built-in processors</h2>
@@ -3328,6 +3333,7 @@ version of Thingstudio doesn't update a file you already have, so delete a file 
 </tr>
 </tbody>
 </table>
+<p>Naming a pin in <code>pins</code> turns off the processor's warning for it, on the grounds that the board uses it on purpose. If the warning still matters, such as a strapping pin on a shield header, repeat it in the board's <code>avoid</code>.</p>
 <p>Numbers in <code>header</code> are physical pin numbers, as printed on the board or its datasheet. A header numbered 1 to N
 is drawn in two columns, like the Pico's. For a board with several connectors, name the pins <code>"P3-1"</code> and so on.</p>
 <p>Pin lists take numbers and ranges: <code>[0, 2, "4-7"]</code>. In <code>reserved</code> and <code>avoid</code>, the key is a pin or a range: <code>{ "6-11": "Wired to the flash chip." }</code>. A processor whose pins are named uses the names in the same places: see <a href="#pins-that-arent-numbers">Pins that aren't numbers</a>.</p>
