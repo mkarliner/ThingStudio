@@ -174,8 +174,15 @@ recipe: `filter`, `journal`, `wifi_gate`, `http_response`.
   - **Complex, not yet attempted:** the two remaining nodes each need a decision, not just a port:
     - `touch_i2c` needs the touch-panel config resolved *through* its own `i2cConfigId` (a nested config
       reference): a package's `configRef` inlines one level, so its Python would get the bus *id string*, not the
-      resolved bus dict. Either nested config resolution in the generic codegen, or an Option-1-style touch-panel
-      resource that emits the bus object. Plus the panel's single-use cross-node check and the reset-pin claim.
+      resolved bus dict. Transitive `configRef` resolution was the proposed fix but is **not a small change**: the
+      compiler can't see a config's field kinds — they live in `app/rete/config-types.ts`, behind the layering
+      boundary (`app/` is top-layer; `compiler/` and `node-library/` must not import it) — and
+      `ctx.resolveConfig()` returns only properties, not the config's type, so the codegen can't even tell that
+      `i2cConfigId` is a `configRef`. The real options are (a) a facility extension passing a resource-built object
+      into a package (Option-1 style), (b) move config-type field metadata to a shared module and thread the
+      config's type through the codegen context, or (c) a small resource-declared rule naming the nested field to
+      resolve. Plus the panel's single-use cross-node check and the reset-pin claim. All real design work for a
+      low-value node (raw touch input); deferred.
     - `display_spi` is large and hardware-critical: much of its codegen is **compile-time geometry** — the
       oriented MADCTL bit search (`orientation-shared.ts` `orientedMadctl`, over MicroPython's own bit orders),
       the turned panel size, per-format strides, and the `@micropython.viper` expansion loops — which a static

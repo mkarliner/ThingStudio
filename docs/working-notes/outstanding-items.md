@@ -361,13 +361,17 @@ not here.
   (`shared-resource-facility-scoping.md`): a `NodeDescriptor.resources` array (core-only; `resource-check.ts`)
   restores the compile-time bus/pin validate-and-claim checks a package lost, and `bme280` is a core package now.
   `filter`, `journal`, `http_response` flipped the same session; `wifi_gate` is deliberately deferred (it needs
-  flow-query context parity — see the scoping note §9).   `pwm_out`, `neopixel`, `interrupt`, `eswitch`, `ebutton` and `encoder` followed (the `pin` resource;
-  `interrupt` also needed `eventSource` on the canonical descriptor and lost its debounce; eswitch/ebutton needed
+  flow-query context parity — see the scoping note §9). `pwm_out`, `neopixel`, `interrupt`, `eswitch`, `ebutton`
+  and `encoder` followed (the `pin` resource; `interrupt` also needed `eventSource` on the canonical descriptor and
+  lost its debounce; eswitch/ebutton needed
   `pullProperty` and `lessThan`; encoder's vmin/vmax/mod became optional text fields and its value-bounds check was
   dropped — the driver clamps). `display_i2c` followed too (the `i2c` resource, plus an i2c `fallback` and `hidden`
-  fields for its legacy node-level bus pins). Remaining: `adc` is blocked on a node-specific context query (its
-  ADC2-vs-WiFi guard); `touch_i2c` and `display_spi` (SPI + viper codegen) are the remainder. See
-  `shared-resource-facility-scoping.md` §9.
+  fields for its legacy node-level bus pins). **Remaining four are design/verification projects, not quick ports:**
+  `touch_i2c` needs the touch-panel config resolved through its nested `i2cConfigId` (transitive `configRef` isn't
+  a small change — config field kinds live in `app/rete/config-types.ts`, behind the layering boundary, and
+  `ctx.resolveConfig()` returns no type); `display_spi` is large and hardware-critical (compile-time MADCTL/stride
+  geometry + viper loops to reimplement at runtime); `adc` needs a node-specific context query (ADC2-vs-WiFi);
+  `wifi_gate` needs flow-query parity. See `shared-resource-facility-scoping.md` §9.
 
 - **[P3]** **Deploy the runtime itself from the browser editor, not just compiled flows.** Confirmed untracked
   anywhere until 2026-09-12. Today, `test-flows/deploy_runtime.py` is a standalone `mpremote`-based script pushing
