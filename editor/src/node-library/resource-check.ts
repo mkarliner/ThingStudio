@@ -23,7 +23,7 @@ import type { CodegenContext, PinResourceSpec, ResourceSpec, SpiResourceSpec } f
 import { pinLabel, type PinId } from "../definitions/definitions.js";
 import { checkPin, checkSpi } from "../definitions/pin-check.js";
 import { claimResource, pullText, sharedSpi, type Pull } from "./hardware-shared.js";
-import { resolveI2cBus } from "./i2c-shared.js";
+import { resolveI2cBus, i2cBusFromPins } from "./i2c-shared.js";
 
 /** The descriptor fields `checkResources` reads -- `NodeDescriptor` and the package-codegen wrapper's narrower
  * `PackageDescriptor` both satisfy it. */
@@ -89,8 +89,21 @@ export function checkResources(ctx: CodegenContext, node: GraphNode, descriptor:
   for (const spec of specs) {
     if (spec.kind === "i2c") {
       // resolveI2cBus() validates, claims both pins and refuses two in-use configs on one bus; the setup
-      // statement it returns is unused here (the package's Python fetches the shared bus itself).
-      resolveI2cBus(ctx, what, node.properties[spec.config]);
+      // statement it returns is unused here (the package's Python fetches the shared bus itself). A config-less
+      // node with legacy bus pins on it falls back to those (display_i2c's pre-config flows).
+      const id = node.properties[spec.config];
+      const fb = spec.fallback;
+      const hasLegacyPins = fb !== undefined && (node.properties[fb.scl] !== undefined || node.properties[fb.sda] !== undefined);
+      if ((typeof id !== "string" || id === "") && hasLegacyPins) {
+        i2cBusFromPins(ctx, {
+          bus: node.properties[fb!.bus] ?? 0,
+          scl: node.properties[fb!.scl],
+          sda: node.properties[fb!.sda],
+          freq: node.properties[fb!.freq] ?? 400000,
+        });
+      } else {
+        resolveI2cBus(ctx, what, id);
+      }
     } else if (spec.kind === "spi") {
       checkSpiResource(ctx, node, what, spec);
     } else {

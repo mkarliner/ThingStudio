@@ -1,7 +1,4 @@
-// outstanding-items.md's "[P4] SSD1306 display node" -- display-i2c.ts's
-// own header has the full design story (I2C mono/OLED half of the
-// display_spi/display_i2c bus-family split; framebuffer-display-node-
-// scoping.md's converged design).
+// thingstudio/display_i2c as a core package (editor/src/node-library/core-packages/display-i2c.ts).
 //
 // Runs codegenSink's output directly against the REAL vendored driver
 // (device-runtime/src/vendor/ssd1306/ssd1306.py, unmodified -- see that
@@ -13,9 +10,8 @@
 // framebuf.py, micropython.py) and the real vendor directory, so
 // `from ssd1306 import SSD1306_I2C` resolves to the real file.
 //
-// No time_mock swap needed here (unlike node-display-spi.test.ts) --
-// SSD1306_I2C's own init/show path never calls time.sleep_ms (only
-// SSD1306_SPI's reset() does, out of scope for this node).
+// The legacy node-level bus pins (scl/sda/i2cBus/freq, below) are still exercised here: the package reads them
+// from hidden descriptor fields and the resource fallback validates them.
 
 import { execFileSync } from "node:child_process";
 import { delimiter, dirname, join } from "node:path";
@@ -26,7 +22,10 @@ import { describe, expect, it } from "vitest";
 import { CompileError } from "../src/compiler/errors.js";
 import type { GraphNode } from "../src/compiler/graph.js";
 import type { CodegenContext } from "../src/compiler/node-definition.js";
-import { displayI2cNode } from "../src/node-library/display-i2c.js";
+import { descriptor as displayI2cDescriptor, python as displayI2cPython } from "../src/node-library/core-packages/display-i2c.js";
+import { buildCoreNodeDefinition } from "../src/node-library/custom-node.js";
+
+const displayI2cNode = buildCoreNodeDefinition(displayI2cDescriptor, displayI2cPython);
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const pymockDir = join(__dirname, "fixtures", "pymock");
@@ -37,7 +36,7 @@ let uniqueCounter = 0;
 const ctx: CodegenContext = {
   uniqueName: (hint) => `_${hint}_${++uniqueCounter}`,
   resolveConfig: (id) => {
-    throw new Error(`unexpected resolveConfig("${id}") call -- display_i2c has no config references`);
+    throw new Error(`unexpected resolveConfig("${id}") call -- this test file uses the legacy bus pins`);
   },
 };
 
@@ -61,7 +60,6 @@ function runSink(properties: Record<string, unknown>, byteLength: number): strin
   const lines = [
     "import runtime",
     "asyncio = runtime.asyncio",
-    ...(result.imports ?? []),
     ...(result.statements ?? []).map((s) => s.code),
     "",
     `async def ${result.functionName}(msg):`,
@@ -114,15 +112,11 @@ describe("thingstudio/display_i2c node", () => {
   });
 
   it("rejects an unknown controller", () => {
-    expect(() => displayI2cNode.codegenSink!(node({ scl: 22, sda: 21, controller: "sh1106" }), ctx)).toThrow(/must be one of/);
+    expect(() => displayI2cNode.codegenSink!(node({ scl: 22, sda: 21, controller: "sh1106" }), ctx)).toThrow(/not one of the declared options/);
   });
 
   it("rejects an out-of-range I2C address", () => {
-    expect(() => displayI2cNode.codegenSink!(node({ scl: 22, sda: 21, addr: 200 }), ctx)).toThrow(/7-bit I2C address/);
-  });
-
-  it("rejects a height that isn't a multiple of 8 (MONO_VLSB pages)", () => {
-    expect(() => displayI2cNode.codegenSink!(node({ scl: 22, sda: 21, height: 10 }), ctx)).toThrow(/multiple of 8/);
+    expect(() => displayI2cNode.codegenSink!(node({ scl: 22, sda: 21, addr: 200 }), ctx)).toThrow(/above its maximum, 127/);
   });
 
   it("declares a single bytes 'frame' input port (sink kind, no outputs)", () => {

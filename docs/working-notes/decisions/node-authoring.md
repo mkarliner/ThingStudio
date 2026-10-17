@@ -877,3 +877,9 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   clamps the start value itself, so on-device behaviour is unchanged. Its same-pin guard survives without a new
   capability — the two pins are claimed with distinct use texts, so `pinX == pinY` is an ordinary claim conflict.
   With this, the whole GPIO/pin cluster is package-based except `adc` (blocked on a node-specific context query).
+- **2026-10-16, same session — `display_i2c` flipped; i2c resource `fallback` and per-field `hidden`.** Both
+  approved. `I2cResourceSpec.fallback` names node properties to build the bus from when the config id is empty, so a
+  flow saved before the shared bus config (2026-09-26) still compiles. `PropertyFieldDescriptor.hidden` lets the
+  package's Python read a legacy property (display_i2c's `i2cBus`/`scl`/`sda`/`freq`) that the panel and catalog
+  omit. Agreed deviation: display_i2c's "height a multiple of 8" compile check is dropped (the generated buffer
+  length check keeps things consistent; a non-multiple height is treated as the floor page count, no crash).

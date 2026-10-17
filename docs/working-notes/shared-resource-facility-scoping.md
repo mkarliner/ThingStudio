@@ -165,7 +165,13 @@ recipe: `filter`, `journal`, `wifi_gate`, `http_response`.
     `runtime.shared('encoder', (x, y), ...)`.
   - **Blocked:** `adc` needs a node-specific compile-time context query (its ESP32 ADC2-vs-WiFi guard reads
     `ctx.findNodesOfType`), which the package format can't express yet.
-  - **Complex, not yet attempted:** `display_i2c`/`touch_i2c` (i2c resource + touch-panel config) and
+  - **Converted 2026-10-16:** `display_i2c` (the `i2c` resource). Needed two more small canonical additions
+    (approved): an i2c resource **`fallback`** (build the bus from named node properties when the config id is
+    empty — display_i2c's pre-config flows) and a per-field **`hidden`** (the package's Python reads the legacy
+    `i2cBus`/`scl`/`sda`/`freq` properties, the panel/catalog don't show them). Also an agreed deviation: the
+    "height a multiple of 8" compile check is dropped (the generated length check keeps the buffer consistent; a
+    non-multiple height is treated as the floor page count, no crash). The bus is `runtime.shared('i2c', ...)`.
+  - **Complex, not yet attempted:** `touch_i2c` (i2c resource + the touch-panel config's single-use check) and
     `display_spi` (spi resource + many pins + viper codegen).
   - **Latent format gap, not currently blocking anything:** a package event source can't drop a wake — its
     `buildMsg` is `msg = await emit(props)` and `compile.ts`'s event-source path has no `msg is None` guard (the

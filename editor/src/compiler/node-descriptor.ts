@@ -173,6 +173,9 @@ export interface PropertyFieldDescriptor {
   /** On a numeric field: the field's value must be less than the named property's value, checked at compile
    * time (e.g. ebutton's double-click must be shorter than its long-press). Added 2026-10-16, core-only. */
   lessThan?: string;
+  /** A field the package's Python reads but the property panel (and catalog) does not show -- for a legacy
+   * property kept only for compile compatibility (display_i2c's node-level bus pins). Added 2026-10-16. */
+  hidden?: boolean;
   /** On a `pin` field: whether the pin is driven or read, so the compiler can check it against the board
    * (`checkPin`) and claim it as a resource. Defaults to "input". */
   pinUse?: "input" | "output";
@@ -219,6 +222,9 @@ export interface I2cResourceSpec {
   kind: "i2c";
   /** The `configRef` property naming the flow's I2C bus config. */
   config: string;
+  /** Legacy fallback: when the config id is empty but these node properties are set, the bus is built from
+   * them instead (display_i2c's pre-config flows). Property names, not values. Added 2026-10-16. */
+  fallback?: { bus: string; scl: string; sda: string; freq: string };
 }
 
 /** An SPI bus resolved from node properties: `checkPin` on SCK/MOSI, `checkSpi` against the board, and the

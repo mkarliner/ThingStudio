@@ -364,8 +364,9 @@ not here.
   flow-query context parity — see the scoping note §9).   `pwm_out`, `neopixel`, `interrupt`, `eswitch`, `ebutton` and `encoder` followed (the `pin` resource;
   `interrupt` also needed `eventSource` on the canonical descriptor and lost its debounce; eswitch/ebutton needed
   `pullProperty` and `lessThan`; encoder's vmin/vmax/mod became optional text fields and its value-bounds check was
-  dropped — the driver clamps). Remaining: `adc` is blocked on a node-specific context query (its ADC2-vs-WiFi
-  guard); `display_i2c`/`touch_i2c`/`display_spi` are the complex remainder. See
+  dropped — the driver clamps). `display_i2c` followed too (the `i2c` resource, plus an i2c `fallback` and `hidden`
+  fields for its legacy node-level bus pins). Remaining: `adc` is blocked on a node-specific context query (its
+  ADC2-vs-WiFi guard); `touch_i2c` and `display_spi` (SPI + viper codegen) are the remainder. See
   `shared-resource-facility-scoping.md` §9.
 
 - **[P3]** **Deploy the runtime itself from the browser editor, not just compiled flows.** Confirmed untracked

@@ -96,7 +96,8 @@ for custom nodes (2026-10-15).
 A **`resources`** array declares shared hardware a core package touches, so the generic package codegen runs the
 same compile-time checks a built-in's own codegen did (`editor/src/node-library/resource-check.ts`): an `i2c` bus
 (from a `configRef` field) is validated against the board, its SCL/SDA pins claimed, and two in-use configs on one
-bus number refused; an `spi` bus (from `bus`/`sck`/`mosi`/`baudrate` properties) is `checkSpi`'d and its bus/pins
+bus number refused — with an optional `fallback` naming node properties to build the bus from when the config is
+empty (display_i2c's pre-config flows); an `spi` bus (from `bus`/`sck`/`mosi`/`baudrate` properties) is `checkSpi`'d and its bus/pins
 claimed; a `pin` is direction/pull-checked and claimed with a role/use text, plus an optional derived device claim
 for two devices on one pin. A pin resource's pull is either a fixed `pull` (`"none"`/`"up"`/`"down"`) or a
 `pullProperty` naming a property that holds it (eswitch/ebutton's configurable pull). The package's own `.node.py`
@@ -112,7 +113,9 @@ field only when `properties[field]` equals/notEquals/is in/compares against a va
 the field re-resolves the node's port sockets — for a port whose
 `type` is a function of properties, e.g. inject/startup's output tracking `payloadType`). A numeric field may also
 carry **`lessThan`** (the name of another property it must be below, checked at compile time — e.g. ebutton's
-`doubleClickMs` less than `longPressMs`); core-only, added 2026-10-16.
+`doubleClickMs` less than `longPressMs`); core-only, added 2026-10-16. A field may also be **`hidden`** (a core
+package reads it, but the property panel and catalog omit it — used for a legacy property kept only for compile
+compatibility, e.g. display_i2c's node-level bus pins); core-only, added 2026-10-16.
 
 **Worked example** — the built-in `debug` node's descriptor (its codegen hook omitted):
 

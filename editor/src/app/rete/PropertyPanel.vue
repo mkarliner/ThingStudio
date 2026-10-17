@@ -145,7 +145,7 @@
           @applied="touch"
         />
         <p v-if="nodeDescriptor.description" class="hint">{{ nodeDescriptor.description }}</p>
-        <template v-for="f in nodeDescriptor.properties ?? []" :key="f.name ?? f.label">
+        <template v-for="f in (nodeDescriptor.properties ?? []).filter((p) => !p.hidden)" :key="f.name ?? f.label">
           <template v-if="!f.visibleWhen || evaluatePredicate(f.visibleWhen, nodeProperties)">
             <PinField
               v-if="f.kind === 'pin'"

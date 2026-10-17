@@ -151,12 +151,9 @@ describe("shared I2C bus", () => {
   it("a display and a sensor on one bus share one bus object at runtime", () => {
     const graph: GraphData = { nodes: [bmeNode, displayNode], links: [[1, "b1", 0, "d1", 0, "any"]], configs: [BUS0] } as GraphData;
     const { source } = compile(graph, buildRegistry());
-    // display_i2c (still a built-in) emits the shared setup statement; bme280 (now a package) fetches the same
-    // runtime.shared singleton from inside its closure -- one bus object on the device, two text occurrences
-    // (the accepted package-vs-built-in difference, builtins-as-packages-scoping.md §14).
-    expect(source).toContain(
-      "_i2c_bus_0 = runtime.shared('i2c', 0, (22, 21, 100000), lambda: machine.I2C(0, scl=machine.Pin(22), sda=machine.Pin(21), freq=100000))",
-    );
+    // display_i2c and bme280 are both packages now: each fetches the same runtime.shared('i2c', bus, ...)
+    // singleton from inside its own closure -- one bus object on the device, two text occurrences.
+    expect(source.match(/runtime\.shared\('i2c', _bus_num,/g)?.length).toBe(2);
     expect(source).toContain("runtime.shared('i2c', _bus_num, (_bus['scl'], _bus['sda'], _bus['freq'])");
   });
 

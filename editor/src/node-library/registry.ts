@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import type { NodeDefinition } from "../compiler/node-definition.js";
 import { descriptor as debugCoreDescriptor, python as debugCorePython } from "./core-packages/debug.js";
-import { displayI2cNode } from "./display-i2c.js";
+import { descriptor as displayI2cCoreDescriptor, python as displayI2cCorePython } from "./core-packages/display-i2c.js";
 import { displaySpiNode } from "./display-spi.js";
 import { descriptor as delayCoreDescriptor, python as delayCorePython } from "./core-packages/delay.js";
 import { descriptor as filterCoreDescriptor, python as filterCorePython } from "./core-packages/filter.js";
@@ -92,7 +92,7 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     buildCoreNodeDefinition(encoderCoreDescriptor, encoderCorePython),
     buildCoreNodeDefinition(neopixelCoreDescriptor, neopixelCorePython),
     displaySpiNode,
-    displayI2cNode,
+    buildCoreNodeDefinition(displayI2cCoreDescriptor, displayI2cCorePython),
     buildCoreNodeDefinition(pwmOutCoreDescriptor, pwmOutCorePython),
     timerNode,
     wifiStatusNode,

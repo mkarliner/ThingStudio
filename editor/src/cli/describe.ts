@@ -155,8 +155,8 @@ export function buildCatalog(): Catalog {
     const def = registry.get(node.nodeType);
     const style = paletteStyleFor(kind);
     seen.add(node.nodeType);
-    // Internal plumbing fields (a package's nodeId) don't belong in the catalog users read.
-    const internal = new Set((def?.properties ?? []).filter((f) => f.kind === "nodeId").map((f) => f.name));
+    // Internal plumbing fields (a package's nodeId) and hidden legacy fields don't belong in the catalog users read.
+    const internal = new Set((def?.properties ?? []).filter((f) => f.kind === "nodeId" || f.hidden).map((f) => f.name));
     const properties = Object.entries(node.properties)
       .filter(([name]) => !internal.has(name))
       .map(([name, value]): PropertyInfo => {
