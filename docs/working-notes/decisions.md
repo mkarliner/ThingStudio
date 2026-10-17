@@ -99,8 +99,9 @@ three indexed depths end to end. `startup` node start reason (2026-09-25); `bme2
 eswitch/ebutton off `topic` — ebutton `payload` = event, eswitch `payload` = bool (2026-10-11); a user must be
 able to view any built-in's generated Python and copy it as the basis for their own node (2026-10-15); the
 end state is built-in/custom parity (the Node-RED model), with a data-equivalent and one-vocabulary rule
-binding new node work (2026-10-15).
-23 entries: `docs/working-notes/decisions/node-authoring.md`.
+binding new node work (2026-10-15); and the general extensibility principle -- "everything is a plugin", a lens
+for new work and review, with named exceptions (2026-10-17).
+24 entries: `docs/working-notes/decisions/node-authoring.md`.
 
 ## GUI layout / widget system
 

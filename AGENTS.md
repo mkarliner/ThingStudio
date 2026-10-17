@@ -71,6 +71,16 @@ releases page) alongside it as an equal choice, and say how to read the script b
 
 ## Any work that impacts the user experience should update the user documentation to reflect that.
 
+## Read the user manual before the code
+
+When a question is "how does X work" or "how do I use X", read the user-facing docs first — `docs/user-guide/`
+(including the node pages and the FAQ/debugging pages), the READMEs, the walkthroughs — before reading the
+implementation. The docs are the intended, user-facing picture of the system; the code is the fallback for the
+parts they don't cover, or to confirm a specific behavior the docs state. Reading the code first tends to produce
+an answer in implementation terms the user doesn't have, and to describe behavior the docs were deliberately
+written not to promise. If the docs and the code disagree, that is a documentation bug — fix the docs in the same
+change, don't quietly trust the code. Mike, 2026-10-17.
+
 ## Console messages: terse
 
 People skim the console, so a long message gets skipped. One line: what happened, then what to do, in
@@ -116,6 +126,27 @@ a corner:
   `NodeDescriptor`; never a parallel vocabulary that can drift.
 
 Full reasoning, rules and the phased roadmap: `docs/working-notes/decisions/node-authoring.md` (2026-10-15).
+
+## Everything is a plugin
+
+Default to making new functionality something a user can extend the same way they extend custom nodes and board
+definitions, rather than something only the core can provide. Before building a feature into the core, ask "could a
+third party add this the way they add a custom node or a board definition, without a core change?" Where the answer
+is cheap to make yes, do so. The node-level forms of this are already rules (the data-equivalent and
+one-vocabulary rules above; `decisions/node-authoring.md`). The lens applies to review as much as to new work: if
+an existing feature is hard-wired into the core that a package or a descriptor could carry, name it and propose the
+extension point.
+
+This is a default and a direction of travel, not a mandate to build a plugin framework for every new line.
+Reasonable exceptions, each decided and stated rather than left implicit:
+
+- editor-executed stranger code stays out -- the editor never runs package code
+  (`custom-node-authoring-scoping.md` Decision 5);
+- `function` (verbatim user code) and the `gui_*` family are the named built-in-only residue;
+- where an extension point would cost more than the feature it generalizes, or would foreclose a settled
+  interface, the core-only path is fine -- say why in the change and in the relevant `decisions/` note.
+
+Mike, 2026-10-17.
 
 ## Architecture first at subsystem interfaces: MVP-ready is not tester-ready
 

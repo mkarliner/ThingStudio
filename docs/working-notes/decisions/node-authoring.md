@@ -883,3 +883,12 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   package's Python read a legacy property (display_i2c's `i2cBus`/`scl`/`sda`/`freq`) that the panel and catalog
   omit. Agreed deviation: display_i2c's "height a multiple of 8" compile check is dropped (the generated buffer
   length check keeps things consistent; a non-multiple height is treated as the floor page count, no crash).
+- **2026-10-17 — "Everything is a plugin": new functionality is user-extensible by default.** Mike's rule: when
+  building new functionality or reviewing old, the default is that it should be available for users to extend the
+  same way they extend custom nodes and board definitions; make reasonable, stated decisions where that isn't
+  advisable. The node-level machinery (the canonical `NodeDescriptor`, descriptor-driven `buildDescriptorNodeClass`,
+  custom `.node.json` packages, board/processor descriptor files) is the existing form; this generalizes it to a
+  lens over the whole codebase (a new transport, controller, config type, credential source). Recorded in
+  `AGENTS.md` ("Everything is a plugin"), next to the data-equivalent and one-vocabulary rules. Named exceptions:
+  editor-executed stranger code stays out; `function`/`gui_*` residue; and an extension point that costs more than
+  the feature it generalizes or forecloses a settled interface is a fine core-only call, said so in the change.
