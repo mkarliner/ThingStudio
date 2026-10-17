@@ -3276,6 +3276,13 @@ console. The up and down arrows bring back earlier commands.</p>
 </code></pre></div>
 <p>Commands run alongside your flow, and variables you set stay for the next command. A command that takes time, such
 as a <code>sleep</code> or a loop, holds up the flow until it finishes.</p>
+<p>The stored application values are available as <code>settings</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="n">settings</span><span class="o">.</span><span class="n">namespaces</span><span class="p">()</span>      <span class="c1"># each flow's name and how many values it holds</span>
+<span class="n">settings</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>           <span class="c1"># clear the current flow's values</span>
+<span class="n">settings</span><span class="o">.</span><span class="n">clear_all</span><span class="p">()</span>       <span class="c1"># clear every flow's values</span>
+</code></pre></div>
+<p>Use these if a saved value is wrong, or a flow you no longer deploy left values behind. Clearing takes effect
+immediately; the next read returns the default.</p>
 <p>For MicroPython's own <code>&gt;&gt;&gt;</code> prompt, click <strong>Stop flow &amp; open prompt</strong>. The flow and the runtime stop; nothing is
 deleted. What you type in the box now goes to that prompt, and Deploy is off. Click <strong>Restart Thingstudio</strong> to start
 the runtime and the saved flow again.</p>
