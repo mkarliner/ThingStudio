@@ -73,6 +73,16 @@
   .menu-list > button:hover:not(:disabled), .menu-list > button:focus-visible, .menu-list > .menu-link:hover,
     .menu-list > .menu-link:focus-visible { background: var(--bg); outline: none; }
   .menu-list > hr { border: none; border-top: 1px solid var(--border); margin: 4px 2px; width: auto; }
+  .menu-list > hr[hidden], .menu-row[hidden] { display: none; }
+  /* Save / Save As / Open Recent (2026-10-17): a shortcut on the right of its item; a recent file's flow name
+     dimmed beside its file name; the flow's own file next to the flow name in the toolbar. */
+  .menu-list > button:not([hidden]) { display: flex; align-items: baseline; gap: 16px; }
+  .menu-key { margin-left: auto; color: var(--dim); font-size: 11px; }
+  .recent-item span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .recent-flow { margin-left: auto; color: var(--dim); font-size: 11px; white-space: nowrap; overflow: hidden;
+    text-overflow: ellipsis; max-width: 45%; }
+  .flow-file { font-size: 11px; color: var(--dim); max-width: 180px; overflow: hidden; text-overflow: ellipsis;
+    white-space: nowrap; }
   .menu-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 10px;
     font-size: 12px; color: var(--dim); white-space: nowrap; }
   .menu-button[aria-expanded="true"] { border-color: var(--accent); }
@@ -185,13 +195,19 @@
     <div class="tb-group">
       <div class="menu">
         <button class="menu-button" aria-haspopup="menu" aria-expanded="false">File ▾</button>
-        <div class="menu-list" role="menu" hidden>
+        <div id="fileMenuList" class="menu-list" role="menu" hidden>
           <button id="clear-canvas" role="menuitem" title="Start a new, empty flow: removes every node, pane and setting">New flow</button>
-          <button id="btnOpenFlow" role="menuitem" title="Open a flow file, via the OS's own open dialog">Open…</button>
-          <button id="btnSaveFlow" role="menuitem" title="Save this flow to a file you choose, via the OS's own save dialog">Save…</button>
+          <button id="btnOpenFlow" role="menuitem" title="Open a flow file, via the OS's own open dialog">Open…<span class="menu-key" data-key="O"></span></button>
+          <button id="btnSaveFlow" role="menuitem" title="Save to this flow's file. A flow that has no file yet asks where, like Save As.">Save<span class="menu-key" data-key="S"></span></button>
+          <button id="btnSaveFlowAs" role="menuitem" title="Save this flow to a file you choose, via the OS's own save dialog">Save As…<span class="menu-key" data-key="S" data-shift="1"></span></button>
+          <hr id="recentSep" />
+          <div id="recentHeading" class="menu-row">Open recent</div>
+          <!-- main.ts inserts the recent files here, before Clear. -->
+          <button id="btnClearRecent" role="menuitem" title="Forget the recent files in this browser. The files themselves are untouched." hidden>Clear recent files</button>
         </div>
       </div>
       <input id="flowNameInput" type="text" placeholder="untitled flow" title="This flow's name -- saved in the flow file, sent with every deploy so you can tell which flow a connected board is running" />
+      <span id="flowFileName" class="flow-file" hidden></span>
       <!-- flowSelect/btnRefreshFlows/btnDeleteFlow: backend-managed flow storage, 2026-09-08 for less
            than a day (main.ts's header has the story) -- hidden, not removed, same git-reversible
            posture as connModeSelect below. Flow save/open go through the OS's native file dialog

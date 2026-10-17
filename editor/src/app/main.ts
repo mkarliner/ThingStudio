@@ -185,7 +185,8 @@ import { DEFAULT_BACKEND_WS_URL, backendHttpBaseUrl, initialBackendWsUrl, slugif
 // filename, even though nothing here treats it as an actual storage key
 // anymore. AdminApiError and the flow CRUD functions aren't imported --
 // nothing in this file calls them; see the header comment above.
-import { saveFlowFileToDisk, openFlowFileFromDisk } from "../flow-file/file-io.js";
+import { saveFlowFileAs, openFlowFileFromDisk, writeFlowFile, readFlowFile, currentLastModified, supportsFileHandles, FilePermissionError, type FlowFileRef } from "../flow-file/file-io.js";
+import { addRecent, removeRecent, loadRecents, storeRecents, type RecentFile } from "../flow-file/recent-files.js";
 
 const el = <T extends HTMLElement = HTMLElement>(id: string): T => document.getElementById(id) as T;
 
@@ -265,6 +266,9 @@ el("clear-canvas").addEventListener("click", async () => {
   setScreens({});
   el<HTMLTextAreaElement>("flowNotes").value = "";
   el<HTMLInputElement>("flowNameInput").value = "";
+  // A new flow has no file yet: the next Save asks where (2026-10-17).
+  currentFile = null;
+  showCurrentFile();
 });
 
 // Delete-node/delete-wire (2026-09-08, outstanding-items.md "UI / editor"
@@ -653,45 +657,188 @@ async function applyFlowFile(file: FlowFile): Promise<void> {
   placeCount = file.nodes.length;
 }
 
-// Save/open use the OS's own native file dialog (flow-file/file-io.ts),
-// same as any other desktop editing program -- see this file's header for
-// the 2026-09-08 back-and-forth on why. No refresh/list/delete concept
-// here at all: the OS's own Open dialog IS the browsing UI, and deleting a
-// file you picked yourself is Finder's/git's job, not this editor's.
+// Save / Save As / Open / Open Recent (Mike, 2026-10-17; before that, Save always asked where). The OS's
+// own file dialog still does the choosing (flow-file/file-io.ts; decisions/backend.md 2026-09-08, "just like
+// saving a file from any other editing program"), but the flow now remembers the file it came from or was
+// last saved to, so Save writes straight back to it, like any desktop editor. Recent files are file handles
+// kept in this browser's IndexedDB (flow-file/recent-files.ts), never on the backend. Safari and Firefox have
+// no file handles: Save downloads, and there is no recent list.
 
-el("btnSaveFlow").addEventListener("click", async () => {
+let currentFile: FlowFileRef | null = null;
+let recentFiles: RecentFile[] = [];
+
+function currentFlowText(): string {
+  const { nodes, edges } = extractCanvasSnapshot();
+  return serializeFlowFileText(buildFlowFile(nodes, edges, extractConfigsSnapshot(), currentFlowNameInput(), panesStore.value, screensStore.value, el<HTMLTextAreaElement>("flowNotes").value));
+}
+
+function suggestedFileName(): string {
+  return `${slugifyFlowName(currentFlowNameInput())}.flow.json`;
+}
+
+/** The file name next to the flow name: where Save will write. Hidden for a flow with no file yet. */
+function showCurrentFile(): void {
+  const label = el("flowFileName");
+  label.hidden = currentFile === null;
+  label.textContent = currentFile ? currentFile.handle.name : "";
+  label.title = currentFile ? `Save writes to ${currentFile.handle.name}. File → Save As… saves somewhere else.` : "";
+}
+
+/** Makes `ref` the flow's file and puts it at the top of the recent files. */
+async function rememberFile(ref: FlowFileRef): Promise<void> {
+  currentFile = ref;
+  showCurrentFile();
+  recentFiles = await addRecent(recentFiles, { handle: ref.handle, name: ref.handle.name, flowName: currentFlowNameInput(), at: Date.now() });
+  await storeRecents(recentFiles);
+  renderRecentFiles();
+}
+
+function renderRecentFiles(): void {
+  const list = el("fileMenuList");
+  for (const old of Array.from(list.querySelectorAll(".recent-item"))) old.remove();
+  const clear = el<HTMLButtonElement>("btnClearRecent");
+  const supported = supportsFileHandles();
+  el("recentSep").hidden = !supported;
+  el("recentHeading").hidden = !supported;
+  el("recentHeading").textContent = recentFiles.length > 0 ? "Open recent" : "No recent files";
+  clear.hidden = !supported || recentFiles.length === 0;
+  if (!supported) return;
+  for (const r of recentFiles) {
+    const b = document.createElement("button");
+    b.className = "recent-item";
+    b.setAttribute("role", "menuitem");
+    b.title = `${r.flowName}, last opened or saved ${new Date(r.at).toLocaleString()}`;
+    const name = document.createElement("span");
+    name.textContent = r.name;
+    b.append(name);
+    if (r.flowName && r.flowName !== DEFAULT_FLOW_NAME) {
+      const flow = document.createElement("span");
+      flow.className = "recent-flow";
+      flow.textContent = r.flowName;
+      b.append(flow);
+    }
+    b.addEventListener("click", () => void openRecentFile(r));
+    list.insertBefore(b, clear);
+  }
+}
+
+/** One console line for a file operation that failed, naming the file and what to do. */
+function fileErrorText(err: unknown, fileName: string | null): string {
+  const where = fileName ?? "the file";
+  if (err instanceof FilePermissionError) return `${err.message}. Allow it when the browser asks, or use Save As.`;
+  if (err instanceof FlowFileError) return `invalid flow file: ${err.message}`;
+  if (err instanceof Error && err.name === "NotFoundError") return `${where} has moved or been deleted. Use Save As.`;
+  if (err instanceof Error && err.name === "NotAllowedError") return `no permission to use ${where}. Allow it when the browser asks, or use Save As.`;
+  return err instanceof Error ? err.message : String(err);
+}
+
+async function saveFlowAs(): Promise<void> {
   try {
-    const { nodes, edges } = extractCanvasSnapshot();
-    const flowDisplayName = currentFlowNameInput();
-    const text = serializeFlowFileText(buildFlowFile(nodes, edges, extractConfigsSnapshot(), flowDisplayName, panesStore.value, screensStore.value, el<HTMLTextAreaElement>("flowNotes").value));
-    // Suggested filename only -- the picker lets the user type over it
-    // freely, same as any "Save As" dialog; nothing here treats this as a
-    // storage key the way the brief backend-exclusive period did.
-    const suggestedName = `${slugifyFlowName(flowDisplayName)}.flow.json`;
-    const saved = await saveFlowFileToDisk(text, suggestedName);
-    if (saved) logLine("[flow saved]", "ok");
+    const result = await saveFlowFileAs(currentFlowText(), suggestedFileName());
+    if (result === null) return; // cancelled
+    if (result === "downloaded") {
+      logLine("[flow saved -- downloaded]", "ok");
+      return;
+    }
+    await rememberFile(result);
+    logLine(`[flow saved to ${result.handle.name}]`, "ok");
   } catch (err) {
-    logLine(`[save failed] ${err instanceof Error ? err.message : String(err)}`, "err");
+    logLine(`[save failed] ${fileErrorText(err, null)}`, "err");
+  }
+}
+
+async function saveFlow(): Promise<void> {
+  if (!currentFile) return saveFlowAs();
+  const file = currentFile;
+  try {
+    // Something else (a git checkout, another editor) changed the file since we last read or wrote it.
+    const onDisk = await currentLastModified(file.handle);
+    if (onDisk !== null && onDisk !== file.lastModified && !window.confirm(`${file.handle.name} has changed on disk since you opened or last saved it. Overwrite it?`)) {
+      logLine(`[save cancelled] ${file.handle.name} was left as it is on disk. Use Save As to keep both.`, "");
+      return;
+    }
+    await rememberFile(await writeFlowFile(file.handle, currentFlowText()));
+    logLine(`[flow saved to ${file.handle.name}]`, "ok");
+  } catch (err) {
+    logLine(`[save failed] ${fileErrorText(err, file.handle.name)}`, "err");
+  }
+}
+
+/** Loads a flow file's text onto the canvas; `ref` (when the browser gave a handle) becomes the flow's file. */
+async function loadFlowText(text: string, ref: FlowFileRef | null): Promise<void> {
+  const file = parseFlowFile(text); // before touching the canvas, so an invalid file changes nothing
+  await applyFlowFile(file);
+  // Mirrors the file's own saved name into the input -- shows "" (the
+  // placeholder) rather than literally re-typing DEFAULT_FLOW_NAME for
+  // an older file that never had one, same reasoning clear-canvas's own
+  // reset uses.
+  el<HTMLInputElement>("flowNameInput").value = file.flowName === DEFAULT_FLOW_NAME ? "" : file.flowName;
+  currentFile = null;
+  if (ref) await rememberFile(ref);
+  else showCurrentFile();
+  logLine(`[flow loaded -- ${file.nodes.length} node(s)${ref ? ` from ${ref.handle.name}` : ""}]`, "ok");
+  refreshPreview();
+}
+
+async function openFlow(): Promise<void> {
+  try {
+    const opened = await openFlowFileFromDisk();
+    if (opened === null) return; // user cancelled the picker
+    await loadFlowText(opened.text, opened.ref);
+  } catch (err) {
+    logLine(`[load failed] ${fileErrorText(err, null)}`, "err");
+  }
+}
+
+async function openRecentFile(r: RecentFile): Promise<void> {
+  try {
+    const { text, ref } = await readFlowFile(r.handle);
+    await loadFlowText(text, ref);
+  } catch (err) {
+    if (err instanceof Error && err.name === "NotFoundError") {
+      recentFiles = await removeRecent(recentFiles, r.handle);
+      await storeRecents(recentFiles);
+      renderRecentFiles();
+      logLine(`[load failed] ${r.name} has moved or been deleted, so it's off the recent list. Use Open… to find it.`, "err");
+      return;
+    }
+    logLine(`[load failed] ${fileErrorText(err, r.name)}`, "err");
+  }
+}
+
+el("btnSaveFlow").addEventListener("click", () => void saveFlow());
+el("btnSaveFlowAs").addEventListener("click", () => void saveFlowAs());
+el("btnOpenFlow").addEventListener("click", () => void openFlow());
+el("btnClearRecent").addEventListener("click", async () => {
+  recentFiles = [];
+  await storeRecents(recentFiles);
+  renderRecentFiles();
+});
+
+// ⌘S / Ctrl-S saves, with Shift saves as, ⌘O / Ctrl-O opens -- even from a text field, as in any editor
+// (a property typed into a field is already in the flow: the panel writes on every keystroke).
+const IS_MAC = /Mac|iPhone|iPad/.test(navigator.platform);
+for (const k of Array.from(document.querySelectorAll<HTMLElement>(".menu-key"))) {
+  const key = k.dataset.key ?? "";
+  k.textContent = IS_MAC ? `${k.dataset.shift ? "⇧" : ""}⌘${key}` : `Ctrl+${k.dataset.shift ? "Shift+" : ""}${key}`;
+}
+document.addEventListener("keydown", (e) => {
+  if (!(IS_MAC ? e.metaKey : e.ctrlKey) || e.altKey) return;
+  const key = e.key.toLowerCase();
+  if (key === "s") {
+    e.preventDefault();
+    void (e.shiftKey ? saveFlowAs() : saveFlow());
+  } else if (key === "o" && !e.shiftKey) {
+    e.preventDefault();
+    void openFlow();
   }
 });
 
-el("btnOpenFlow").addEventListener("click", async () => {
-  try {
-    const text = await openFlowFileFromDisk();
-    if (text === null) return; // user cancelled the picker
-    const file = parseFlowFile(text);
-    await applyFlowFile(file);
-    // Mirrors the file's own saved name into the input -- shows "" (the
-    // placeholder) rather than literally re-typing DEFAULT_FLOW_NAME for
-    // an older file that never had one, same reasoning clear-canvas's own
-    // reset uses.
-    el<HTMLInputElement>("flowNameInput").value = file.flowName === DEFAULT_FLOW_NAME ? "" : file.flowName;
-    logLine(`[flow loaded -- ${file.nodes.length} node(s)]`, "ok");
-    refreshPreview();
-  } catch (err) {
-    const message = err instanceof FlowFileError ? `invalid flow file: ${err.message}` : err instanceof Error ? err.message : String(err);
-    logLine(`[load failed] ${message}`, "err");
-  }
+showCurrentFile();
+renderRecentFiles();
+void loadRecents().then((list) => {
+  recentFiles = list;
+  renderRecentFiles();
 });
 
 // ---------------------------------------------------------------------

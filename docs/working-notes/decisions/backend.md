@@ -131,3 +131,10 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
   supported board is USB; macOS's Bluetooth/debug-console ports have none), a previous selection kept if
   still present, exactly one USB device pre-selected, never a guess between several. Under the Vite dev
   server with no backend running, the list says "(backend not running)" and the console says how to start it.
+- **2026-10-17 -- Save, Save As and Open Recent (Mike's ask).** Still the OS's native dialog and no backend
+  involvement (the 2026-09-08 entry above); the editor now keeps the File System Access API handle it gets from
+  Open, Save As or a recent file, so Save writes back to it without a dialog, as any desktop editor does. Recent
+  files are those handles in the browser's IndexedDB (`flow-file/recent-files.ts`, last 8), so they are per
+  browser; after a reload the browser re-asks permission on first use. Save asks before overwriting a file whose
+  `lastModified` changed since the editor last read or wrote it (a `git checkout`, another editor). Safari/Firefox
+  have no handles: Save downloads, no recent list. `editor/src/app/main.ts`, `flow-file/file-io.ts`.
