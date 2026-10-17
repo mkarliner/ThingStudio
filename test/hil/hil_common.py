@@ -42,8 +42,11 @@ class DutLink:
     WebSerialTransport, kept separate rather than shared since this script
     runs under plain CPython, not a browser."""
 
-    def __init__(self, port_path, timeout_s=8):
-        self.ser = serial.Serial(port_path, BAUD_RATE, timeout=timeout_s)
+    def __init__(self, port_path, timeout_s=8, exclusive=False):
+        # exclusive=True (POSIX) makes a second program fail to open rather than interleave bytes
+        # with this one -- without it Linux happily lets two readers split the same stream.
+        kwargs = {"exclusive": True} if exclusive and os.name == "posix" else {}
+        self.ser = serial.Serial(port_path, BAUD_RATE, timeout=timeout_s, **kwargs)
         self.decoder = protocol.ProtocolStreamDecoder()
 
     def send_message(self, message):
@@ -113,12 +116,19 @@ class WitnessLink:
 
 
 def compile_flow(mpy_cross, tmpdir, name, source):
-    py_path = os.path.join(tmpdir, name + ".py")
-    mpy_path = os.path.join(tmpdir, name + ".mpy")
-    with open(py_path, "w") as f:
+    """Compile `source` to bytecode.
+
+    Runs mpy-cross with *relative* file names from inside tmpdir. mpy-cross embeds the
+    source path in the .mpy, so compiling an absolute path in a random temp directory made
+    the same library hash differently on every deploy -- every deploy then re-sent every
+    dependency. A relative name keeps the bytes (and therefore dependency_hash) stable.
+    """
+    py_name = name + ".py"
+    mpy_name = name + ".mpy"
+    with open(os.path.join(tmpdir, py_name), "w") as f:
         f.write(source)
-    subprocess.run([mpy_cross, "-o", mpy_path, py_path], check=True, capture_output=True)
-    with open(mpy_path, "rb") as f:
+    subprocess.run([mpy_cross, "-o", mpy_name, py_name], cwd=tmpdir, check=True, capture_output=True)
+    with open(os.path.join(tmpdir, mpy_name), "rb") as f:
         return f.read()
 
 
@@ -179,8 +189,9 @@ def dependency_hash(files):
     return h.hexdigest()[:16]
 
 
-def install_dependencies(dut, mpy_cross, tmpdir, source):
-    """Compiles and DEP_PUTs every library `source` imports. Returns {name: hash} for DEPLOY."""
+def install_dependencies(dut, mpy_cross, tmpdir, source, log=print):
+    """Compiles and DEP_PUTs every library `source` imports. Returns {name: hash} for DEPLOY.
+    `log` lets a caller route the per-library line into its own output (the device CLI's --json)."""
     vendor = os.path.join(SRC_DIR, "vendor")
     required = {}
     for dep in needed_dependencies(source):
@@ -210,12 +221,12 @@ def install_dependencies(dut, mpy_cross, tmpdir, source):
                                    description="DEP_RESULT for %s" % dep["name"])
         if not res["ok"]:
             raise RuntimeError("installing %s failed: %s %s" % (dep["name"], res.get("code"), res.get("error")))
-        print("Installed library %s (%s)" % (dep["name"], digest))
+        log("Installed library %s (%s)" % (dep["name"], digest))
         required[dep["name"]] = digest
     return required
 
 
-def deploy_message(dut, mpy_cross, tmpdir, source, bytecode):
+def deploy_message(dut, mpy_cross, tmpdir, source, bytecode, log=print):
     """A DEPLOY for `source`'s bytecode, after installing the libraries it imports."""
     return {"type": "DEPLOY", "bytecode": bytecode, "staticData": b"",
-            "dependencies": install_dependencies(dut, mpy_cross, tmpdir, source)}
+            "dependencies": install_dependencies(dut, mpy_cross, tmpdir, source, log=log)}

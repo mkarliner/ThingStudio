@@ -2,8 +2,9 @@
 
 This page is for an AI assistant (or a person) writing a Thingstudio flow file or a custom node in the user's folder,
 without the editor. It is complete on its own, with two companions: the generated [node catalog](nodes-catalog.md), and
-the `thingstudio-compile` command ([Check a flow without the editor](check-a-flow.md)). The whole docs set is also
-one file at `/llms-full.txt` on the docs site, with an index at `/llms.txt`.
+the `thingstudio-compile` command ([Check a flow without the editor](check-a-flow.md)). With a board attached,
+`device_cli.py` deploys and runs the flow ([Command line](command-line.md#deploy-and-run-a-flow-without-the-editor)).
+The whole docs set is also one file at `/llms-full.txt` on the docs site, with an index at `/llms.txt`.
 
 ## Setting up your assistant
 
@@ -16,7 +17,8 @@ https://docs.thingstudio.net/ai-authoring/ (the whole docs set is one file at ht
 Write the flow as a .flow.json file, run the thingstudio-compile check with --board for my board,
 fix every error until it prints OK, then tell me: the board id you checked against, which credential
 names I must create, what you assumed about wiring, and what you could not check.
-Never say a flow works on the board; say it passes the check. No HTTPS in http_request.
+Never say a flow works on the board unless you deployed it there and saw its output; otherwise say it
+passes the check. No HTTPS in http_request.
 ```
 
 Claude users can instead save the same text as a skill. The check needs Node and the built `thingstudio-compile.mjs`.
@@ -28,10 +30,14 @@ Claude users can instead save the same text as a skill. The check needs Node and
    `board:lolin-s2-mini`, `board:pico`, `board:pico-2` and `board:pico-w`, or `processor:esp32`, `esp32-c3`, `esp32-s2`,
    `esp32-s3`, `rp2040`, `rp2350` for a bare chip; `--list-boards` shows the current list). Read every error: it names the node and
    says what is wrong. Fix them all and run it again until it prints `OK`.
-3. Tell the user to open the file in the editor (**File → Open**), choose the board, and deploy.
+3. Tell the user to open the file in the editor (**File → Open**), choose the board, and deploy. If a board is
+   attached and the user asks you to test it, deploy it with
+   [`device_cli.py`](command-line.md#deploy-and-run-a-flow-without-the-editor) instead, and report what the board
+   printed. That result is for that board only.
 
 The check is the same compile the editor runs, so a flow that passes it opens and compiles in the editor. It can't
-check credentials, custom node packages or the hardware. Don't claim a flow works on the board; say it passes the check.
+check credentials, custom node packages or the hardware. Don't claim a flow works on a board unless you deployed it
+there and saw it run; otherwise say it passes the check.
 
 ## The flow file
 

@@ -34,6 +34,20 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dut-port", required=True)
     parser.add_argument("--mpy-cross", required=True, help="path to a native mpy-cross build (device-runtime/test/README.md)")
+    parser.add_argument(
+        "--flow-name",
+        help="the flow file's own name, sent as DEPLOY.flowName. The editor always sends this; without it the board "
+        "stores the flow under an empty name, so runtime.settings values written by this deploy are not the same "
+        "namespace the editor would use (see docs/working-in-the-editor.md's flow name).",
+    )
+    parser.add_argument(
+        "--trigger",
+        action="append",
+        default=[],
+        metavar="NODE_ID",
+        help="after DEPLOY, send a TRIGGER for this inject/startup node id (repeatable, 2s apart) -- lets a manual "
+        "test flow be driven without clicking in the editor.",
+    )
     parser.add_argument("py_path", help="already-compiled flow source (see test-flows/README.md)")
     args = parser.parse_args()
 
@@ -54,17 +68,29 @@ def main():
                 print("No fresh HELLO seen in 8s -- continuing anyway (the DUT may already be running from a prior boot); DEPLOY still works without one, per main.ts's own soft-on-absence gate.")
 
             print("Sending DEPLOY (%d bytes bytecode)..." % len(bytecode))
-            dut.send_message(deploy_message(dut, args.mpy_cross, tmpdir, source, bytecode))
+            message = deploy_message(dut, args.mpy_cross, tmpdir, source, bytecode)
+            if args.flow_name:
+                message["flowName"] = args.flow_name
+            else:
+                print(
+                    "WARN: no --flow-name given. The board will store this flow's runtime.settings under an empty "
+                    "name, so values written by an editor deploy (which sends the flow name) will not be visible here."
+                )
+            dut.send_message(message)
             dut.wait_for_message(lambda m: m["type"] == "DEPLOY_ACK", timeout_s=8, description="DEPLOY_ACK")
             print("DEPLOY_ACK received. Flow is running. Watching for NODE_ERROR / console output -- Ctrl-C to stop.")
 
-            deadline = time.time() + 1.5
-            while time.time() < deadline:
-                line = dut.read_line()
-                if line is not None and not line.startswith("F64:"):
-                    print("[console] %s" % line)
+            # Short read timeout so scheduled TRIGGERs go out promptly even when the console is quiet.
+            dut.ser.timeout = 0.25
+            pending = list(args.trigger)
+            next_trigger_at = time.time() + 1.5
 
             while True:
+                if pending and time.time() >= next_trigger_at:
+                    node_id = pending.pop(0)
+                    print("Sending TRIGGER %s" % node_id)
+                    dut.send_message({"type": "TRIGGER", "nodeId": node_id})
+                    next_trigger_at = time.time() + 2.0
                 line = dut.read_line()
                 if line is None:
                     continue

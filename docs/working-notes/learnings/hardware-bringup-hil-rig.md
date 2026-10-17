@@ -187,3 +187,20 @@ Status: detail file, split out of `learnings.md` on 2026-09-06 to keep that inde
   only a power cycle got through. Install now does what Remove flow already did: STOP_TO_PROMPT from the editor
   when the board is answering, then `board_recovery.catch_prompt` (repeated Ctrl-C, reopen on re-enumeration,
   "press reset or unplug and replug" status) before raw REPL.
+
+- **`test-flows/deploy_runtime.py` was broken for ten days and nothing caught it.** 2026-10-17, the settings-store
+  hardware pass: every run died with `NameError: name 'mpremote' is not defined` at the first copy. Commit d1332e3
+  (flow dependencies, 2026-10-07) deleted the `mpremote()` and `_runtime_build_sha()` helpers while refactoring the
+  vendor-library push, but left both call sites in place, so no board could be bootstrapped with the documented
+  command. It is host tooling with no test and no CI run, so only a real hardware session found it. Restored both
+  helpers. Worth a smoke run (`--help` does not execute them; a real port does) after refactoring a deploy script,
+  and worth remembering that `py_compile` would not have caught this either -- the module parses.
+  `deploy_runtime.py`.
+
+- **A host deploy that omits `flowName` writes settings under `""`, not the flow's name.** 2026-10-17, same pass.
+  `hil_common.deploy_message()` builds `{bytecode, staticData, dependencies}` and never sets `flowName`, even though
+  the listener uses it as the `device_settings` namespace and the editor always sends it. Deploying `settings-test`
+  through `deploy_flow.py` therefore stored values under `""` while an editor deploy of the same file used
+  `"settings-test"` -- the two saw different values and the isolation test silently proved nothing. `deploy_flow.py`
+  now takes `--flow-name` and warns loudly without it. Any host tool that sends DEPLOY must send the flow's name.
+  `test-flows/deploy_flow.py`, `interfaces/protocol/SPEC.md`.

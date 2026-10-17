@@ -346,3 +346,11 @@ Writing `device_settings.prune()` with `keep = set(keep)` failed under the unix 
 CPython `set(iterable)` form. Build a membership dict instead (`for name in keep: wanted[name] = True`), and avoid
 `set([...])` comparisons in tests -- use `sorted(list)` or a dict. Caught by `test_device_settings.py`'s prune
 case, not by inspection.
+
+- **mpy-cross embeds the source *path* in the `.mpy`, so the same library compiles to different bytes from a
+  different directory.** 2026-10-17, while building the device CLI: `hil_common.compile_flow()` wrote each
+  dependency to a random temporary directory and compiled it by absolute path, so `dependency_hash()` -- a hash of
+  the `.mpy` bytes -- changed on every deploy. Every deploy then looked like a new library to the board despite
+  identical source. Compiling with a relative file name and `cwd=tmpdir` makes the bytes stable
+  (`device-runtime/test`'s own suite and the editor's WASM path already use stable names). If a dependency hash
+  changes without a source change, suspect the path in the `.mpy`, not a real change.

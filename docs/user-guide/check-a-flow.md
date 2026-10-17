@@ -64,4 +64,6 @@ The exit code is 0 for a valid flow, 1 for a flow with errors, and 2 for a bad c
 - **WiFi and MQTT credentials.** The secrets are in the backend, so the check uses stand-in values and says so in a
   note. A missing credential shows up when you open the flow in the editor.
 - **Custom node packages.** A flow that uses one fails with "unknown node type".
-- **A real board.** It can't tell you the display is wired right, or that the memory is enough. Deploy does that.
+- **A real board.** It can't tell you the display is wired right, or that the memory is enough. Deploy does that;
+  [Command line](command-line.md#deploy-and-run-a-flow-without-the-editor) can deploy and run a flow without the
+  editor.

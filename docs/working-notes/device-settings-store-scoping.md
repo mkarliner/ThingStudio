@@ -276,3 +276,35 @@ one) and exposes the store to the console as `settings`; runtime major bumped to
 Also landed: the editor's "Clear device settings…" action (§10.1) and the function-node `settings` local (§15 Q1).
 Both recovery paths now exist.
 
+
+## Hardware verification, 2026-10-17: both test flows pass on a real board
+
+ESP32-C3 (`ESP32C3 module with ESP32-C3`), runtime 11.0.0, deployed over USB serial with
+`test-flows/settings-test.flow.json` and `settings-test-other-flow.flow.json` (test-flows/README.md
+has the inject-by-inject expectations). Acceptance targets 1-5, 7 and 8 pass:
+
+- get/default (`'not set'`, `keys() == []`), set, increment, delete, then default again.
+- an unencodable value (`b'bytes'`) raises `SettingsError` naming the key, and the console shows
+  `NODE_ERROR node=setbadfn0001` -- the chain's debug node receives nothing, as intended.
+- values survive a same-name redeploy and a soft reboot (`count == 2` after both).
+- a different flow reads `'not set'` and writes its own `100`; returning to the first flow still reads
+  `2`. `namespaces()` shows both names with one key each.
+- corrupt file: moved to `_settings.json.corrupt`, store starts empty, including when the corrupt file
+  is present at boot -- `LISTENER_READY` and the persisted flow resume normally.
+- malformed namespace (`"bad": 5`) is dropped with a logged `SETTINGS_ERR`; the good namespace loads.
+- `clear()` (current flow, the editor's "This flow" command), `clear_all()` (all namespaces and the
+  `.corrupt` copy), and `prune([...])` all behave as specified.
+- write failure was simulated by making `_save` raise `OSError(28)`: the caller gets
+  `SettingsError could not save settings key 'x' ...` and nothing is written. A genuine full-flash /
+  read-only-filesystem failure was not induced on this board.
+
+Two host-tool defects surfaced and were fixed in the same change:
+
+- `test-flows/deploy_runtime.py` could not run at all (helpers deleted in d1332e3, call sites left);
+  restored. Without it the board could not be moved from 10.0.0 to 11.0.0.
+- `deploy_flow.py`/`hil_common.deploy_message()` never sent `flowName`, so a host deploy was
+  namespaced under `""`, not the flow's name. `deploy_flow.py` now takes `--flow-name` and warns
+  without it, and `--trigger` to drive manual injects headlessly.
+
+Not a settings defect, still open: the debug `NODE_ERROR` line appears on the console; the editor's
+console filter/rendering of it was not checked from a browser this session.

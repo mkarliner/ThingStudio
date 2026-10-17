@@ -10,6 +10,24 @@ flow-file.ts`, wired into the browser's "Open Flow"/"Save Flow" buttons in
 `main.ts`). Files here use that real format directly, and can be loaded
 straight into the editor.
 
+## Headless board control (`device_cli.py`)
+
+`device_cli.py` is the short path for a hands-on session without a browser: `list`, `hello`,
+`runtime install`, `flow deploy` (compiles a `FlowFile` with the editor's own compiler, then
+deploys), `trigger`, `exec`, `restart`, `stop`, `watch`. If there is one USB serial port, none of
+these need `--port`.
+
+```sh
+python3 test-flows/device_cli.py list
+python3 test-flows/device_cli.py hello
+python3 test-flows/device_cli.py flow deploy test-flows/settings-test.flow.json \
+  --mpy-cross /path/to/mpy-cross --trigger setread00001
+```
+
+`--help` on any command lists its options; `--json` gives machine-readable output. The
+`deploy_runtime.py` and `deploy_flow.py` sections below still describe the lower-level tools it
+wraps.
+
 `interrupt-basic.flow.json` uses `FlowFile`'s real shape
 (`editor/src/flow-file/flow-file.ts`): `formatVersion` (must be `1`),
 `nodes` (`{ id, type, properties }[]`), `edges`
@@ -231,8 +249,13 @@ consumed already-compiled Python, never the JSON directly. Reuses
 `test/hil/hil_common.py`'s `DutLink`/`compile_flow`, same §13 protocol
 handling every `test/hil/` script uses, just without a witness board or
 pass/fail assertions. Sends `DEPLOY`, waits for `DEPLOY_ACK`, then prints
-console output and any `NODE_ERROR` until you Ctrl-C. `--mpy-cross` needs
-a native build -- `device-runtime/test/README.md` has the recipe.
+console output and any `NODE_ERROR` until you Ctrl-C. Pass
+`--flow-name <name>` whenever the flow is compared with an editor deploy or
+uses `runtime.settings`: the listener namespaces settings by it, and a
+deploy without it stores them under `""`. `--trigger <node-id>` (repeatable)
+fires an inject node after deploy, so a click-driven test flow can run
+headlessly. `--mpy-cross` needs a native build -- `device-runtime/test/README.md`
+has the recipe.
 
 ## `udp-echo-tester.flow.json`
 
@@ -785,3 +808,43 @@ quadrature knob: each settled turn prints the value and the `delta`.
 The `neopixel` node: `timer 500 ms -> function -> neopixel` (pin 13, 8 pixels, GRB). The timer's
 count is scaled into a 24-bit colour each tick, so a WS2812 strip of 8 pixels cycles through colours. Change
 `count`/`order`/`pin` for your strip.
+
+## `settings-test.flow.json` / `settings-test-other-flow.flow.json`
+
+Hands-on test for the persistent settings store (`runtime.settings` / `settings` in a function node,
+`docs/working-notes/device-settings-store-scoping.md`). Both flows are four/five independent
+`inject -> function -> debug` chains, so every click prints one line.
+
+`settings-test` (`flowName: "settings-test"`):
+
+| Inject node | What it does | Expected debug line |
+|---|---|---|
+| `setread00001` | reads `count` (default `'not set'`) and `settings.keys()` | `payload='not set'`, `keys: []` on a fresh namespace |
+| `setinc00001` | `count + 1`, saves it | `payload=1`, `2`, … (continues after a reboot) |
+| `setreset0001` | deletes `count` | `payload='cleared'` |
+| `setbad000001` | `settings.set('bad', b'bytes')` -- bytes are not JSON | `NODE_ERROR` on the console naming `setbadfn0001`; this chain's debug node gets nothing |
+
+`settings-test-other-flow` (`flowName: "settings-test-other-flow"`) reads and writes its own `count`.
+It must show `'not set'` and its own `100`, never the first flow's value, and going back to
+`settings-test` must still show the first flow's count.
+
+**In the editor:** Open Flow, load one file, Deploy, then click each inject node on the canvas. Only
+one flow is on the board at a time, so to test isolation deploy the other file and come back.
+
+**Headless, no browser:**
+
+```sh
+python3 test-flows/device_cli.py flow deploy test-flows/settings-test.flow.json \
+  --mpy-cross /path/to/mpy-cross \
+  --trigger setread00001 --trigger setinc00001 --trigger setread00001
+```
+
+`device_cli.py` compiles the flow with the editor's own compiler and takes the flow name from the
+file's `flowName`. That name is the settings namespace; the editor sends the same one. The lower-level
+`deploy_flow.py` path is still described below, but it needs `--flow-name` explicitly.
+
+**Verified on real hardware, 2026-10-17 (ESP32-C3, runtime 11.0.0):** read/default, set, increment,
+delete, `keys()`, unencodable-value `NODE_ERROR`, survival across a same-name redeploy, survival
+across a soft reboot, per-flow isolation in both directions, `clear()`/`clear_all()`/`prune()`,
+corrupt-file move-aside (including a corrupt file present at boot), and a simulated write failure
+attributing `SettingsError` to the key. A real full-flash write failure was not induced.
