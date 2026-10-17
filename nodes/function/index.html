@@ -1564,10 +1564,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#context-and-flow-variables" class="md-nav__link">
+  <a href="#context-flow-and-settings" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Context and flow variables
+        Context, flow and settings
       
     </span>
   </a>
@@ -2960,10 +2960,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#context-and-flow-variables" class="md-nav__link">
+  <a href="#context-flow-and-settings" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Context and flow variables
+        Context, flow and settings
       
     </span>
   </a>
@@ -3019,12 +3019,15 @@
   extras.</li>
 </ul>
 <h2 id="behavior">Behavior</h2>
-<h3 id="context-and-flow-variables">Context and flow variables</h3>
-<p>Two ways to keep state across messages, both available as plain objects inside your code:</p>
+<h3 id="context-flow-and-settings">Context, flow and settings</h3>
+<p>Three ways to keep state across messages, all available as plain objects inside your code:</p>
 <ul>
 <li><strong><code>context</code></strong> — private to this one <code>function</code> node. Use it for a counter or running total only this node needs.</li>
 <li><strong><code>flow</code></strong> — shared across the whole flow. <code>flow.set('name', value)</code> / <code>flow.get('name')</code> works from any function
   node, and reads/writes the same store a <code>variable_get</code>/<code>variable_set</code> node uses by name.</li>
+<li><strong><code>settings</code></strong> — saved on the board and survives a reboot. Use it for a value the user changes, such as units or a
+  colour scheme. It is namespaced by the flow's name, so a different flow cannot read or overwrite it.
+  <code>settings.get('units', 'kg')</code> / <code>settings.set('units', 'lbs')</code>.</li>
 </ul>
 <div class="highlight"><pre><span></span><code><span class="n">count</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'count'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
 <span class="n">context</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'count'</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span>

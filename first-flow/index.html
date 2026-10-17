@@ -3078,7 +3078,7 @@ and stay on.</p>
 </li>
 <li>
 <p><strong>Keep your own state.</strong> Replace the function's code with this. <code>context</code> stores a value between messages, private
-  to this function node. See <a href="../nodes/function/#context-and-flow-variables">Context and flow variables</a>.</p>
+  to this function node. See <a href="../nodes/function/#context-flow-and-settings">Context, flow and settings</a>.</p>
 <div class="highlight"><pre><span></span><code><span class="n">on</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'on'</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 <span class="n">context</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'on'</span><span class="p">,</span> <span class="n">on</span><span class="p">)</span>
 <span class="n">msg</span><span class="p">[</span><span class="s1">'payload'</span><span class="p">]</span> <span class="o">=</span> <span class="n">on</span>

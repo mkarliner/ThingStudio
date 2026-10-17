@@ -897,7 +897,7 @@ Each change below edits the flow you built. Deploy after each one.
     ```
 
 - **Keep your own state.** Replace the function's code with this. `context` stores a value between messages, private
-  to this function node. See [Context and flow variables](nodes/function.md#context-and-flow-variables).
+  to this function node. See [Context, flow and settings](nodes/function.md#context-flow-and-settings).
 
     ```python
     on = not context.get('on', False)
@@ -2011,13 +2011,16 @@ else:
 
 ## Behavior
 
-### Context and flow variables
+### Context, flow and settings
 
-Two ways to keep state across messages, both available as plain objects inside your code:
+Three ways to keep state across messages, all available as plain objects inside your code:
 
 - **`context`** — private to this one `function` node. Use it for a counter or running total only this node needs.
 - **`flow`** — shared across the whole flow. `flow.set('name', value)` / `flow.get('name')` works from any function
   node, and reads/writes the same store a `variable_get`/`variable_set` node uses by name.
+- **`settings`** — saved on the board and survives a reboot. Use it for a value the user changes, such as units or a
+  colour scheme. It is namespaced by the flow's name, so a different flow cannot read or overwrite it.
+  `settings.get('units', 'kg')` / `settings.set('units', 'lbs')`.
 
 ```python
 count = context.get('count', 0) + 1
@@ -4617,7 +4620,8 @@ settings.clear_all()       # clear every flow's values
 ```
 
 Use these if a saved value is wrong, or a flow you no longer deploy left values behind. Clearing takes effect
-immediately; the next read returns the default.
+immediately; the next read returns the default. **Tools → Clear device settings…** does the same from the editor:
+choose the current flow, or every flow.
 
 For MicroPython's own `>>>` prompt, click **Stop flow & open prompt**. The flow and the runtime stop; nothing is
 deleted. What you type in the box now goes to that prompt, and Deploy is off. Click **Restart Thingstudio** to start
@@ -4884,3 +4888,9 @@ fields then list the chip's own pins rather than take a number. See
 
 On the nRF52840, SPI 0 and 1 share hardware with I2C 0 and 1, so a flow using both would fail on the board.
 Thingstudio offers SPI on buses 2 and 3 only. See [Boards and processors](boards.md#built-in-processors).
+
+## Why did my saved settings reset after I renamed the flow?
+
+Saved values are kept per flow name. Renaming the flow makes it a new name to the board, so its values start from
+the defaults. The old values are still on the board: rename the flow back to use them again, or clear them from the
+[command box](debugging.md#commands-and-the-python-prompt).
