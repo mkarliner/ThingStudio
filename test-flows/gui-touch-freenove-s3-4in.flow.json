@@ -76,9 +76,6 @@
       "type": "thingstudio/gui_screen",
       "properties": {
         "name": "tft",
-        "width": 320,
-        "height": 480,
-        "frameFormat": "rgb565",
         "minInterval": 200,
         "wrap": true,
         "touchPanelConfigId": "cfg-touch-panel"

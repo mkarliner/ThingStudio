@@ -48,9 +48,6 @@
       "type": "thingstudio/gui_screen",
       "properties": {
         "name": "tft",
-        "width": 240,
-        "height": 320,
-        "frameFormat": "rgb565",
         "minInterval": 200,
         "wrap": true
       }
