@@ -25,6 +25,7 @@ part of the contract.
 | `start_reason` | attribute | codegen | — | Why the flow started ("deploy", "power_on", "hard_reset", "soft_reset", "watchdog", ...). Generated startup code reads it with `getattr`, so it is tolerant of older runtimes. |
 | `_report_error` | function | codegen | `_report_error(node_id, exc)` | Reports a fault without raising, so a transform can keep running. Underscored but codegen-facing (the `filter` node calls it). |
 | `shared` | function | codegen, user | `shared(kind, key, signature=None, factory=None)` | The keyed hardware singleton (Peter Hinch's functor_singleton, keyed). First caller builds with `factory()`; later callers get the same object. A different `signature` raises naming both. No factory only fetches (raises `KeyError` if unbuilt). |
+| `settings` | attribute | codegen, user | — | The device settings store (`device_settings.py`): a persistent, flow-name-namespaced key/value for application values. `get(key, default=None)`, `set(key, value)`, `delete(key)`, `keys()`. |
 | `fire_trigger` | function | listener | `fire_trigger(node_id)` | Fires a source node's live-trigger event. Called by the listener on a `TRIGGER` message; an unknown id is logged and ignored, never fatal. |
 | `cancel_running` | function | listener | `async cancel_running()` | Cancels the flow's tasks, clears triggers and singletons, then runs cleanups. Called by the listener on redeploy. |
 | `on_node_error` | attribute | listener | hook | Set by the listener: `on_node_error(node_id, exception_type, exception_message)`. Must never raise. |
@@ -41,6 +42,16 @@ flow keeps running. A `CancelledError` (a redeploy) propagates untouched — it 
 - `codegen, user` — also documented for hand-written node Python (`docs/user-guide/custom-nodes.md`).
 - `listener` — the device listener only; not generated code.
 - `internal` — private.
+
+**Device settings store (`settings`).** A persistent, device-wide key/value store for application values (a
+GUI settings page's colour scheme, units). Values are namespaced by the deployed flow's `flowName`, so the
+same flow keeps its values across a reboot or redeploy, and a different flow cannot read or overwrite them.
+`get(key, default=None)`, `set(key, value)`, `delete(key)` and `keys()` operate on the current namespace.
+A missing key returns `default`; `set` raises `SettingsError` (with the key in the message) on a full/read-only
+filesystem or an unencodable value. A corrupt file is moved aside and the store starts empty, so a bad
+settings file can never prevent boot. Maintenance — `namespaces()`, `clear()`, `clear_all()`, `prune()` — is
+reachable from the console as `settings` and is not part of the node-facing surface. Full design:
+`docs/working-notes/device-settings-store-scoping.md`.
 
 ## 2. The module manifest
 

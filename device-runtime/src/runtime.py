@@ -94,6 +94,20 @@
 import uasyncio as asyncio
 from messages import NODE_STATUS_STATES
 
+# The persistent application-values store (device_settings.py), exposed to
+# generated code and node packages as `runtime.settings`. Deliberately a
+# separate module: it is a plain file-backed KV with no scheduler/protocol
+# dependency, so it can be imported and tested on its own. Guarded so a
+# partially-upgraded board (the module not yet pushed) still boots -- the
+# runtime API surface is `settings`, which is then None rather than missing.
+settings = None
+try:
+    import device_settings
+except ImportError:
+    pass
+else:
+    settings = device_settings
+
 _tasks = []  # tasks spawned by the deployed flow -- tracked so a redeploy
              # can cancel exactly these, same bookkeeping as pocs/poc-a and pocs/poc-d.
 

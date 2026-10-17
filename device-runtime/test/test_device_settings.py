@@ -206,6 +206,17 @@ def test_write_failure_is_an_attributed_settings_error():
         ds._PATH, ds._CORRUPT = old_path, old_corrupt
 
 
+def test_runtime_exposes_the_same_store():
+    # The runtime API's `settings` attribute is this module (runtime.py imports it), so a node's
+    # `runtime.settings.get(...)` reaches the same data and namespace.
+    import runtime
+
+    assert runtime.settings is ds
+    _fresh()
+    runtime.settings.set("theme", "dark")
+    assert runtime.settings.get("theme") == "dark"
+
+
 minitest.run(
     [
         test_fresh_reads_default_and_no_keys,
@@ -222,5 +233,6 @@ minitest.run(
         test_clear_all_removes_corrupt_copy,
         test_prune_keeps_only_named_namespaces,
         test_write_failure_is_an_attributed_settings_error,
+        test_runtime_exposes_the_same_store,
     ]
 )

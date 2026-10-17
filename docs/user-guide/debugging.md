@@ -41,6 +41,17 @@ os.listdir()
 Commands run alongside your flow, and variables you set stay for the next command. A command that takes time, such
 as a `sleep` or a loop, holds up the flow until it finishes.
 
+The stored application values are available as `settings`:
+
+```python
+settings.namespaces()      # each flow's name and how many values it holds
+settings.clear()           # clear the current flow's values
+settings.clear_all()       # clear every flow's values
+```
+
+Use these if a saved value is wrong, or a flow you no longer deploy left values behind. Clearing takes effect
+immediately; the next read returns the default.
+
 For MicroPython's own `>>>` prompt, click **Stop flow & open prompt**. The flow and the runtime stop; nothing is
 deleted. What you type in the box now goes to that prompt, and Deploy is off. Click **Restart Thingstudio** to start
 the runtime and the saved flow again.

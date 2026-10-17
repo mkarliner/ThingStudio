@@ -5,6 +5,7 @@
     { "name": "asyncio",            "kind": "attribute", "caller": ["codegen"],         "note": "generated code does `asyncio = runtime.asyncio`, then uses asyncio.sleep_ms" },
     { "name": "spawn",              "kind": "function",  "caller": ["codegen"],         "signature": "spawn(coro, node_id=None)" },
     { "name": "shared",             "kind": "function",  "caller": ["codegen", "user"], "signature": "shared(kind, key, signature=None, factory=None)" },
+    { "name": "settings",           "kind": "attribute", "caller": ["codegen", "user"], "note": "the device settings store (device_settings.py): get/set/delete/keys on the current flow's namespace" },
     { "name": "NodeError",          "kind": "class",     "caller": ["codegen"],         "signature": "NodeError(node_id, orig)" },
     { "name": "register_cleanup",   "kind": "function",  "caller": ["codegen", "user"], "signature": "register_cleanup(key, fn)" },
     { "name": "register_trigger",   "kind": "function",  "caller": ["codegen"],         "signature": "register_trigger(node_id, event)" },

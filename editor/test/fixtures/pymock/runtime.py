@@ -155,6 +155,32 @@ def shared(kind, key, signature=None, factory=None):
     return obj
 
 
+# settings added 2026-10-17 (device settings store): an in-memory stand-in for
+# device-runtime/src/device_settings.py, so generated/package code that calls
+# runtime.settings.get/set/delete/keys runs under this fixture. No flash, no
+# namespaces, no persistence -- this fixture has no listener and no test here
+# asserts on those; the real store is covered by device-runtime/test/
+# test_device_settings.py under the MicroPython unix port.
+class _SettingsStore:
+    def __init__(self):
+        self._d = {}
+
+    def get(self, key, default=None):
+        return self._d.get(key, default)
+
+    def set(self, key, value):
+        self._d[key] = value
+
+    def delete(self, key):
+        self._d.pop(key, None)
+
+    def keys(self):
+        return list(self._d.keys())
+
+
+settings = _SettingsStore()
+
+
 async def _guarded(coro, fallback_node_id):
     try:
         await coro

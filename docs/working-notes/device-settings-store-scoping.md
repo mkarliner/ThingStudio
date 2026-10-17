@@ -261,14 +261,18 @@ JSON-native values, corrupt→moved-aside, attributed errors), the listener wiri
 deploy/resume, console global), its runtime API entry + conformance, and the docs. No node type, no GUI work.
 Verify targets 1–8, with target 8 on a board with no editor attached.
 
-## Progress, 2026-10-17: primitive built, interface step pending
+## Progress, 2026-10-17: primitive and runtime API landed
 
 `device-runtime/src/device_settings.py` and `device-runtime/test/test_device_settings.py` are written and pass
-14/14 under the MicroPython unix port; the rest of the device-runtime suite (including the listener integration
-test) still passes.
+15/15 under the MicroPython unix port; the rest of the device-runtime suite (including the listener integration
+test) passes, as do the editor conformance test and the full editor suite.
 
-Deliberately **not** wired yet: the module is not in `runtime_manifest.py`'s `CORE_FILES`, not exposed on
-`runtime`, and the listener does not call `set_namespace`. So it is not pushed to a board, nothing generated
-references it, and **no version bump has been made**. Those are the interface-touching parts (runtime API +
-conformance), which need Mike's explicit OK.
+Wired this session: `device_settings.py` in `runtime_manifest.py`'s `CORE_FILES`; `runtime.settings` in
+`interfaces/runtime-api/` (`SPEC.md` + `api.json` + the pymock fixture + both conformance tests); the listener
+sets the namespace on DEPLOY and boot-time resume (before `import _flow`, so a setup statement reads the right
+one) and exposes the store to the console as `settings`; runtime major bumped to 11.0.0, and
+`EDITOR_TARGET_VERSION` with it.
+
+Still open: the editor's "Clear device settings…" action (§10.1) and the function-node `settings` local (§15 Q1).
+The console/REPL path (§10.2) works today.
 

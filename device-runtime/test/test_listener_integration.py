@@ -92,6 +92,7 @@ class ListenerProcess:
         self.tmpdir = tmpdir
         env = dict(os.environ)
         env["THINGSTUDIO_BOARD_SETTINGS_PATH"] = os.path.join(tmpdir, "_board.json")
+        env["THINGSTUDIO_SETTINGS_PATH"] = os.path.join(tmpdir, "_settings.json")
         env.update(extra_env or {})
         env["THINGSTUDIO_BOOT_DELAY_S"] = "0.1"
         env["THINGSTUDIO_FLOW_PATH"] = os.path.join(tmpdir, "_flow.mpy")

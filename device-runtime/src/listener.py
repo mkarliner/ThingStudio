@@ -105,6 +105,14 @@ try:
 except ImportError:
     board_fs = None
 
+# Persistent application values (device_settings.py): a general, flowName-namespaced key/value store.
+# Ships in CORE_FILES; missing on a board bootstrapped before this existed, so the feature is simply
+# unavailable rather than a boot failure (same contract as wifi_provision/deps above).
+try:
+    import device_settings
+except ImportError:
+    device_settings = None
+
 
 def _under_root(name):
     """The device path for `name` (a bare file name like "_flow.mpy"), built on the board's
@@ -169,7 +177,7 @@ F64_PREFIX = "F64:"
 _HEARTBEAT_PIN = 10
 _HEARTBEAT_PERIOD_MS = 200
 
-_RUNTIME_VERSION = {"major": 10, "minor": 1, "patch": 0}  # 10.1.0 2026-10-14: persisted paths follow the board's filesystem root (board_fs.py), so the stm32/pyboard port (mounted at /flash, not /) can write its flow/state -- minor: no codegen change; 10.0.0 2026-10-11: new adc/encoder/neopixel nodes (vendored AADC/Encoder flow deps) -- codegen-visible, so major. 9.2.0 2026-10-08: a MemoryError receiving a message answers DEPLOY_ERROR instead of leaving the editor to time out -- minor: no codegen change; 9.1.0 2026-10-08: the WiFi watcher no longer starts the WiFi driver for a flow that doesn't use the network (it ate ESP-IDF memory, and failed noisily on a full CYD) -- minor: nothing generated depends on it; 9.0.0 2026-10-07: DEP_ACK per DEP_PUT piece (unpaced pieces overflowed a USB-UART board's receive buffer), RESTART; 8.0.0 2026-10-07: libraries sent in 1 KB pieces (DEP_PUT) plus DEP_COMMIT -- one big DEP_PUT failed with MemoryError on a fragmented ESP32 heap; 7.0.0 2026-10-07: flow dependencies (DEP_PUT, DEPLOY.dependencies, libraries in /lib instead of every board getting every library); 6.0.0 2026-09-26: vendored bme280_float.py and runtime.shared() (bme280/I2C flows use both, so an older board fails them); 5.1.0 2026-09-25: runtime.start_reason, ESP-IDF heap in HELLO/DEPLOY_ACK -- minor only: startup codegen reads start_reason with getattr, so its flows still run on 5.0.0; 5.0.0 same day: mqtt_as active(True) only when inactive (4.0.0 same day: vendored mqtt_as wifi_connect() guard -- MQTT codegen now joins WiFi first on ESP32 (3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS; 2.0.0 was 2026-09-23: EXEC, STOP_TO_PROMPT, safe mode; 1.0.0 was 2026-09-10: NODE_STATUS)
+_RUNTIME_VERSION = {"major": 11, "minor": 0, "patch": 0}  # 11.0.0 2026-10-17: runtime.settings (device_settings.py, a flowName-namespaced persistent KV), codegen-visible -> major; 10.1.0 2026-10-14: persisted paths follow the board's filesystem root (board_fs.py), so the stm32/pyboard port (mounted at /flash, not /) can write its flow/state -- minor: no codegen change; 10.0.0 2026-10-11: new adc/encoder/neopixel nodes (vendored AADC/Encoder flow deps) -- codegen-visible, so major. 9.2.0 2026-10-08: a MemoryError receiving a message answers DEPLOY_ERROR instead of leaving the editor to time out -- minor: no codegen change; 9.1.0 2026-10-08: the WiFi watcher no longer starts the WiFi driver for a flow that doesn't use the network (it ate ESP-IDF memory, and failed noisily on a full CYD) -- minor: nothing generated depends on it; 9.0.0 2026-10-07: DEP_ACK per DEP_PUT piece (unpaced pieces overflowed a USB-UART board's receive buffer), RESTART; 8.0.0 2026-10-07: libraries sent in 1 KB pieces (DEP_PUT) plus DEP_COMMIT -- one big DEP_PUT failed with MemoryError on a fragmented ESP32 heap; 7.0.0 2026-10-07: flow dependencies (DEP_PUT, DEPLOY.dependencies, libraries in /lib instead of every board getting every library); 6.0.0 2026-09-26: vendored bme280_float.py and runtime.shared() (bme280/I2C flows use both, so an older board fails them); 5.1.0 2026-09-25: runtime.start_reason, ESP-IDF heap in HELLO/DEPLOY_ACK -- minor only: startup codegen reads start_reason with getattr, so its flows still run on 5.0.0; 5.0.0 same day: mqtt_as active(True) only when inactive (4.0.0 same day: vendored mqtt_as wifi_connect() guard -- MQTT codegen now joins WiFi first on ESP32 (3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS; 2.0.0 was 2026-09-23: EXEC, STOP_TO_PROMPT, safe mode; 1.0.0 was 2026-09-10: NODE_STATUS)
 # (runtime.report_status) is a hard dependency of wifi-status.ts's/mqtt-shared.ts's codegen now -- an editor
 # with this change targeting a pre-2026-09-10 runtime would crash on deploy (AttributeError: report_status),
 # not degrade gracefully. See CLAUDE.md's "Device-runtime version bump discipline" -- decideDeploy() only
@@ -276,6 +284,23 @@ def _set_current_flow(flow_name, deploy_id):
     global _current_flow_name, _current_flow_deploy_id
     _current_flow_name = flow_name
     _current_flow_deploy_id = deploy_id
+
+
+def _set_settings_namespace(flow_name):
+    """Point the settings store at the flow that is about to start.
+
+    Called immediately before `import _flow` on both start paths (a live
+    DEPLOY and boot-time resume), not from _set_current_flow: during a
+    deploy the current flow is reset to None before the new module imports,
+    so setting it there would leave the namespace empty while the flow's own
+    top-level code runs. Best-effort -- a settings problem must never fail a
+    deploy whose bytecode has already been written."""
+    if device_settings is None:
+        return
+    try:
+        device_settings.set_namespace(flow_name)
+    except Exception as e:  # noqa: BLE001 -- see docstring
+        print("SETTINGS_WARN could not set the settings namespace: %r" % (e,))
 
 
 def _persist_flow_meta(flow_name, deploy_id):
@@ -686,6 +711,7 @@ async def _handle_deploy(msg):
         if "_flow" in sys.modules:
             del sys.modules["_flow"]
         runtime.start_reason = "deploy"  # read by the startup node (startup.ts)
+        _set_settings_namespace(msg["flowName"])
         import _flow  # noqa: F401 -- executes _flow's top-level code, which calls runtime.spawn(...)
         _leave_safe_mode()
         _set_current_flow(msg["flowName"], msg["deployId"])
@@ -754,9 +780,11 @@ def _resume_flow():
         print("LISTENER_BOOT no persisted flow at %s -- nothing to resume" % _FLOW_PATH)
         return
     try:
+        flow_name, deploy_id = _read_flow_meta()
+        _set_settings_namespace(flow_name)
         runtime.start_reason = _boot_reason()  # read by the startup node (startup.ts)
         import _flow  # noqa: F401 -- see _handle_deploy's own note: executes _flow's top-level code, which calls runtime.spawn(...)
-        _set_current_flow(*_read_flow_meta())
+        _set_current_flow(flow_name, deploy_id)
         print("LISTENER_BOOT resumed persisted flow from %s" % _FLOW_PATH)
     except Exception as e:  # noqa: BLE001 -- a corrupt/incompatible persisted flow must degrade to "didn't resume", never crash boot
         print("LISTENER_BOOT_ERR could not resume persisted flow: %r" % (e,))
@@ -772,6 +800,13 @@ for _mod_name in ("gc", "os", "sys", "time", "machine"):
         _exec_globals[_mod_name] = __import__(_mod_name)
     except ImportError:
         pass
+
+# The persistent settings store, as `settings`, so the device-only recovery
+# path needs no import line: settings.namespaces(), settings.clear(),
+# settings.clear_all(), settings.prune([...]). See
+# docs/working-notes/device-settings-store-scoping.md §10.2.
+if device_settings is not None:
+    _exec_globals["settings"] = device_settings
 
 
 def _handle_exec(code):

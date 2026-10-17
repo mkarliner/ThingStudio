@@ -301,6 +301,28 @@ async def run(msg, properties):
 redeployed flow can leave the old socket open and fail with
 `EADDRINUSE` on the next deploy.
 
+### Persisting values
+
+`runtime.settings` keeps a value across reboots and redeploys of the same flow. Use it for an application
+setting a user changes on the device — units, a colour scheme — not for per-message state, which belongs in a
+closure local.
+
+```python
+async def run(msg, properties):
+    units = runtime.settings.get('units', 'kg')   # the default is yours, not the store's
+    runtime.settings.set('units', msg['payload'])
+    msg['payload'] = units
+    return msg
+```
+
+Values are namespaced by the deployed flow's name, so a different flow cannot read or overwrite them. Renaming
+the flow starts a fresh namespace. A missing key returns your default. `set` raises `SettingsError` if the board
+cannot save (full or read-only flash) — let it surface as a node error rather than assuming the write worked.
+`delete(key)` and `keys()` round out the surface.
+
+The store is a plain key/value; it does not know what a value means. Save only what the user changed, and supply
+the default at the read. To clear stored values, see [debugging](debugging.md#commands-and-the-python-prompt).
+
 ### Event-driven sources
 
 A `source` that reacts to something other than the clock sets `"eventSource": true` and defines a
