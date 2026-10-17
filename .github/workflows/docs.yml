@@ -24,6 +24,8 @@ on:
       - "tools/screenshots.py"
       - "tools/build_llms_txt.py"
       - "tools/mkdocs_llms_hook.py"
+      # The editor stamps the release version from here into its toolbar, so a version bump changes the screenshots.
+      - "backend/pyproject.toml"
   workflow_dispatch: {}
 
 permissions:
