@@ -260,3 +260,15 @@ Land the primitive: `device_settings.py` (file-backed, `flowName`-namespaced, `g
 JSON-native values, corrupt→moved-aside, attributed errors), the listener wiring (namespace on
 deploy/resume, console global), its runtime API entry + conformance, and the docs. No node type, no GUI work.
 Verify targets 1–8, with target 8 on a board with no editor attached.
+
+## Progress, 2026-10-17: primitive built, interface step pending
+
+`device-runtime/src/device_settings.py` and `device-runtime/test/test_device_settings.py` are written and pass
+14/14 under the MicroPython unix port; the rest of the device-runtime suite (including the listener integration
+test) still passes.
+
+Deliberately **not** wired yet: the module is not in `runtime_manifest.py`'s `CORE_FILES`, not exposed on
+`runtime`, and the listener does not call `set_namespace`. So it is not pushed to a board, nothing generated
+references it, and **no version bump has been made**. Those are the interface-touching parts (runtime API +
+conformance), which need Mike's explicit OK.
+
