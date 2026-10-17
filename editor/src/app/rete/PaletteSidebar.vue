@@ -75,9 +75,19 @@
       <input v-model="filter" class="palette-filter" type="text" placeholder="filter nodes" />
 
       <template v-for="group in groupedRows" :key="group.name">
-        <div class="palette-category">{{ group.name }}</div>
+        <!-- Foldable group heading (2026-10-17). While filtering, every group with a match shows open. -->
         <button
-          v-for="row in group.rows"
+          class="palette-category"
+          :aria-expanded="!shownFolded(group.name)"
+          :title="shownFolded(group.name) ? `Show the ${group.name} nodes` : `Hide the ${group.name} nodes`"
+          @click="toggleGroup(group.name)"
+        >
+          <span class="palette-chevron">{{ shownFolded(group.name) ? "▸" : "▾" }}</span>
+          <span>{{ group.name }}</span>
+          <span v-if="shownFolded(group.name)" class="palette-count">{{ group.rows.length }}</span>
+        </button>
+        <button
+          v-for="row in shownFolded(group.name) ? [] : group.rows"
           :key="row.key"
           class="palette-row"
           :class="{ 'is-unmet': row.unmet.length > 0 }"
@@ -109,6 +119,7 @@ import { paletteStyleFor, builtinDescriptors } from "./node-descriptors";
 import { customNodePackages, customNodesVersion } from "./custom-nodes-store";
 import { activeTarget } from "./store";
 import { buildRegistry } from "../../node-library/registry";
+import { isFolded, parseFolds, toggleFold, PALETTE_FOLDS_KEY, type FoldState } from "./palette-folds";
 
 const emit = defineEmits<{
   add: [kind: NodeKind];
@@ -145,6 +156,33 @@ function unmetCapabilities(capabilities: readonly string[] | undefined): string[
 const collapsed = ref(false);
 
 const filter = ref("");
+
+// Folded groups (Mike, 2026-10-17): all but "general" start folded; what the user opens or folds is kept
+// across restarts in localStorage (palette-folds.ts). Storage that throws (blocked, private mode) just
+// means the defaults every time.
+function readFolds(): FoldState {
+  try {
+    return parseFolds(localStorage.getItem(PALETTE_FOLDS_KEY));
+  } catch {
+    return {};
+  }
+}
+const folds = ref<FoldState>(readFolds());
+
+/** Folded as shown: a filter in use opens every group so its matches are visible. */
+function shownFolded(group: string): boolean {
+  return filter.value.trim() === "" && isFolded(folds.value, group);
+}
+
+function toggleGroup(group: string): void {
+  if (filter.value.trim() !== "") return; // everything is open while filtering; the stored state stays as it was
+  folds.value = toggleFold(folds.value, group);
+  try {
+    localStorage.setItem(PALETTE_FOLDS_KEY, JSON.stringify(folds.value));
+  } catch {
+    // not stored: the fold still applies for this session
+  }
+}
 
 // One row shape for both built-in and custom nodes, so groupedRows below
 // can merge them into the same section headers instead of rendering two
@@ -321,11 +359,33 @@ function onRowDragStart(event: DragEvent, row: PaletteRow): void {
   margin-bottom: 10px;
 }
 .palette-category {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  background: none;
+  border: none;
+  font-family: inherit;
   font-size: 10px;
   color: #777;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  padding: 0 2px 4px;
+  padding: 4px 2px;
+  margin-bottom: 2px;
+  cursor: pointer;
+  text-align: left;
+}
+.palette-category:hover {
+  color: #bbb;
+}
+.palette-chevron {
+  flex: 0 0 10px;
+  font-size: 9px;
+}
+.palette-count {
+  margin-left: auto;
+  color: #555;
+  letter-spacing: 0;
 }
 .palette-row {
   display: flex;

@@ -34,7 +34,7 @@
 -->
 <template>
   <div class="credential-ref-field">
-    <label>{{ fieldLabel }}
+    <label class="ref-line"><span class="ref-name">{{ fieldLabel }}</span>
       <div class="credential-ref-row">
         <select :value="modelValue ?? ''" @change="onSelect(($event.target as HTMLSelectElement).value)" :disabled="loading">
           <option value="" disabled>{{ loading ? "loading..." : `select ${descriptor.label}...` }}</option>
@@ -187,6 +187,16 @@ watch(
 <style scoped>
 .credential-ref-field {
   margin-bottom: 8px;
+}
+.ref-line {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  column-gap: 8px;
+  align-items: center;
+}
+.ref-name {
+  color: #bbb;
+  overflow-wrap: anywhere;
 }
 .credential-ref-row {
   display: flex;

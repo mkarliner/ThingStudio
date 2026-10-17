@@ -42,7 +42,7 @@
 -->
 <template>
   <div class="preset-ref-field">
-    <label>{{ label }}
+    <label class="ref-line"><span class="ref-name">{{ label }}</span>
       <div class="preset-ref-row">
         <select :value="selectedName" @change="onSelect(($event.target as HTMLSelectElement).value)" :disabled="loading">
           <option value="" disabled>{{ loading ? "loading..." : "load preset..." }}</option>
@@ -195,6 +195,16 @@ async function confirmSave(): Promise<void> {
 <style scoped>
 .preset-ref-field {
   margin-bottom: 8px;
+}
+.ref-line {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  column-gap: 8px;
+  align-items: center;
+}
+.ref-name {
+  color: #bbb;
+  overflow-wrap: anywhere;
 }
 .preset-ref-row {
   display: flex;

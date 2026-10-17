@@ -29,6 +29,9 @@ The toolbar runs left to right in the order you work: the flow, the board, then 
 canvas, or click it. Type in the filter box to find one. [Custom nodes](custom-nodes.md) appear in the group they
 name, or in **General**.
 
+Click a group's name to fold or open it. Only **General** starts open. The editor remembers which groups you
+opened, in this browser. While you type in the filter box, every group with a match opens.
+
 ## Canvas
 
 The canvas is where you build the flow. The tabs above it, **Sheets of this flow**, spread one flow across several

@@ -15,3 +15,9 @@ Status: detail file, split out of `learnings.md` on 2026-09-06 to keep that inde
   `custom-node.ts`'s header comment and in `docs/user-guide/custom-nodes.md` (its own
   dedicated section) given the project's fault-handling-first priority.
   `custom-node-authoring-scoping.md`.
+
+- **`@micropython.viper` inside a custom node: works, but can't read the wrapper's variables.** 2026-10-16,
+  the RM68090 node. A viper function defined in `.node.py` compiles (mpy-cross `-march=xtensawin`) and runs as a
+  nested function of the per-instance wrapper, but viper code can't read enclosing variables (no closures), so
+  every value goes in as an argument or a literal: the node's GPIO register addresses are literals inside its
+  viper functions. `const()` likewise only optimises at true module scope; plain names in the wrapper.

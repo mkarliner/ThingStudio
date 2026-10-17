@@ -4,23 +4,27 @@ How a flow is saved, opened, deployed and disconnected.
 
 ## Save and open
 
-Flows save to a file you choose, via your browser's own save dialog. **File → Save…** writes the current canvas —
-node types and properties, wiring, canvas layout, and config nodes, each kept in its own section — to a `.flow.json`
-file wherever you point it, so it can live inside a project's git repo like any other file you're tracking.
+A flow is saved in a `.flow.json` file you choose, so it can live in a project's git repo like any other file. The
+file holds the nodes and their properties, the wiring, the canvas layout and the config nodes.
 
-**File → Open…** opens the matching native dialog to load one back, canvas layout included. Thingstudio keeps no
-list of saved flows; the file lives wherever you saved it, so browsing and deleting it is your OS's or git's job,
-the same as any other document.
+- **File → Save** (⌘S, or Ctrl+S on Windows and Linux) writes to the flow's file. A new flow has no file yet, so the
+  first Save asks where, like Save As. The file's name shows next to the flow name.
+- **File → Save As…** (⇧⌘S, or Ctrl+Shift+S) always asks where, and that file becomes the flow's file.
+- **File → Open…** (⌘O, or Ctrl+O) loads a flow file. Save then writes back to it.
+- **Open recent**, in the File menu, lists the last 8 files you opened or saved, newest first, with each one's flow
+  name. After a reload the browser asks once for permission to use the file again. A file that has moved or been
+  deleted is taken off the list. **Clear recent files** forgets the list, not the files.
+- **File → New flow** starts an empty flow with no file.
+
+If the file has changed on disk since you opened or last saved it, for example after a `git checkout`, Save asks
+before overwriting it. Say no and use Save As to keep both.
+
+The recent list is kept in your browser, so another browser or a private window has its own. Safari and Firefox
+can't save back to a file: there, Save and Save As download the flow, Open uploads one, and there's no recent list.
 
 **The flow name** field is saved inside the file itself and is sent with every deploy, so a connected board's
-identity is visible in the console instead of a bare deployment id. It also suggests a filename for the save dialog
-(spaces and punctuation become dashes), but you can type over that suggestion freely; nothing enforces a match
-between the two.
-
-In Chrome or Edge this is the real OS file dialog each time — Save and Open don't remember the last file you picked,
-so you choose a target on every save (the browser's own dialog handles confirming an overwrite if you pick a file
-that already exists). Safari and Firefox don't support this file-picker API, so there **File → Save…** falls back to
-a plain browser download and **File → Open…** to a plain file-upload picker.
+identity is visible in the console instead of a bare deployment id. It also suggests a filename for Save As (spaces
+and punctuation become dashes), but you can type over that suggestion freely.
 
 Custom node packages and saved credentials live in `~/.thingstudio/custom-nodes/` and `~/.thingstudio/credentials/`.
 They're shared across flows rather than tied to one project, unlike a flow itself — a saved credential referenced by

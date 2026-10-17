@@ -1,0 +1,181 @@
+{
+  "formatVersion": 1,
+  "flowName": "rm68090-d1-r32-test",
+  "nodes": [
+    {
+      "id": "3",
+      "type": "tft/rm68090",
+      "properties": {
+        "rotation": "0",
+        "frameFormat": "gs4",
+        "palette": "0000 ffff f800 07e0 001f ffe0 07ff f81f 8410 4208 c618 fd20 8000 0400 0010 0410",
+        "colorOrder": "bgr",
+        "invertColors": false,
+        "checkId": true,
+        "d0": 12,
+        "d1": 13,
+        "d2": 26,
+        "d3": 25,
+        "d4": 17,
+        "d5": 16,
+        "d6": 27,
+        "d7": 14,
+        "wr": 4,
+        "rd": 2,
+        "rs": 15,
+        "cs": 33,
+        "rst": 32
+      }
+    },
+    {
+      "id": "3305b2666200ca52",
+      "type": "thingstudio/gui_led",
+      "properties": {
+        "name": "",
+        "staleAfter": 0
+      }
+    },
+    {
+      "id": "4e6631a4dc9c2577",
+      "type": "thingstudio/gui_label",
+      "properties": {
+        "name": "asdfdfs",
+        "maxChars": 8,
+        "staleAfter": 0,
+        "label": "dfa"
+      }
+    },
+    {
+      "id": "b9505b780e9820d0",
+      "type": "thingstudio/inject",
+      "properties": {
+        "payloadType": "string",
+        "payloadValue": "asdfsafs",
+        "label": "asdf"
+      }
+    },
+    {
+      "id": "ce327430a2f97f9e",
+      "type": "thingstudio/gui_screen",
+      "properties": {
+        "name": "screen",
+        "width": 240,
+        "height": 320,
+        "frameFormat": "gs4",
+        "minInterval": 200,
+        "wrap": true,
+        "touchPanelConfigId": ""
+      }
+    }
+  ],
+  "edges": [
+    [
+      "b9505b780e9820d0",
+      0,
+      "3305b2666200ca52",
+      0
+    ],
+    [
+      "b9505b780e9820d0",
+      0,
+      "4e6631a4dc9c2577",
+      0
+    ],
+    [
+      "ce327430a2f97f9e",
+      0,
+      "3",
+      0
+    ]
+  ],
+  "layout": {
+    "3": {
+      "pos": [
+        234.71906615518373,
+        204.3734149993486
+      ],
+      "size": [
+        128,
+        34
+      ]
+    },
+    "3305b2666200ca52": {
+      "pos": [
+        181.7320030481983,
+        583.1495241205645
+      ],
+      "size": [
+        90,
+        34
+      ]
+    },
+    "4e6631a4dc9c2577": {
+      "pos": [
+        241.55283164426993,
+        388.5039342618533
+      ],
+      "size": [
+        100,
+        34
+      ]
+    },
+    "b9505b780e9820d0": {
+      "pos": [
+        0.7934448079406762,
+        392.8621209426572
+      ],
+      "size": [
+        96,
+        34
+      ]
+    },
+    "ce327430a2f97f9e": {
+      "pos": [
+        -38.77588079814599,
+        248.06214582906387
+      ],
+      "size": [
+        110,
+        34
+      ]
+    }
+  },
+  "configs": [],
+  "panes": [
+    {
+      "id": "pane-1",
+      "name": "Flow 01"
+    }
+  ],
+  "paneOf": {
+    "3": "pane-1",
+    "3305b2666200ca52": "pane-1",
+    "4e6631a4dc9c2577": "pane-1",
+    "b9505b780e9820d0": "pane-1",
+    "ce327430a2f97f9e": "pane-1"
+  },
+  "screens": {
+    "ce327430a2f97f9e": {
+      "pages": [
+        {
+          "name": "main",
+          "root": {
+            "kind": "column",
+            "gap": 6,
+            "padding": 4,
+            "children": [
+              {
+                "kind": "widget",
+                "node": "4e6631a4dc9c2577"
+              },
+              {
+                "kind": "widget",
+                "node": "3305b2666200ca52"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

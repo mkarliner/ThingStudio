@@ -132,7 +132,7 @@
         {{ displayTitle }} <span class="node-id">#{{ node.id.slice(0, 6) }}</span>
       </h3>
       <!-- Every node can carry its own title for the canvas (a "label" property); blank shows the kind. -->
-      <label>flow label (the title on the canvas) <input type="text" v-model="node.properties.label" :placeholder="node.label" @input="touch" /></label>
+      <label class="prop-row"><span class="prop-name" title="The title on the canvas">flow label</span><input type="text" v-model="node.properties.label" :placeholder="node.label" @input="touch" /></label>
 
       <!-- Every node is descriptor-driven now (built-in or custom): the one generic branch renders its
            property schema. -->
@@ -173,14 +173,15 @@
               :model-value="(fieldValue(f) as string) || undefined"
               @update:model-value="(name) => setField(f, name)"
             />
-            <label v-else-if="f.kind === 'boolean'" class="checkbox-label">
-              <input type="checkbox" v-model="nodeProperties[f.name!]" @change="onFieldChange(f)" />
-              {{ f.label }}
+            <label v-else-if="f.kind === 'boolean'" class="prop-row">
+              <span class="prop-name">{{ f.label }}</span>
+              <input type="checkbox" class="prop-check" v-model="nodeProperties[f.name!]" @change="onFieldChange(f)" />
             </label>
             <p v-else-if="f.kind === 'target'" class="hint">{{ f.label }} — the board/processor this flow targets, resolved when the flow is compiled.</p>
             <template v-else-if="f.kind === 'nodeId'"></template>
-            <label v-else>
-              {{ f.label }}
+            <!-- Name and value side by side; a textarea (code, long text) keeps its own full-width line. -->
+            <label v-else :class="f.kind === 'textarea' ? 'prop-stacked' : 'prop-row'">
+              <span class="prop-name">{{ f.label }}</span>
               <select v-if="f.kind === 'select'" v-model="nodeProperties[f.name!]" @change="onFieldChange(f)">
                 <option v-for="opt in f.options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
               </select>
@@ -365,9 +366,33 @@ function setDynamicOutputCount(count: number): void {
   color: #777;
   font-weight: normal;
 }
-.property-panel label {
+/* Only this panel's own stacked fields: a bare `label` selector would also reach the root <label> of
+   PinField (scoped styles apply to a child's root element) and stack its name above its value. */
+.property-panel label.prop-stacked {
   display: block;
   margin-bottom: 8px;
+}
+/* One field per line, name on the left and its value on the right (Mike, 2026-10-17). The same
+   columns are repeated in PinField, ConfigRefField, CredentialRefField and PresetRefField, whose
+   styles are scoped, so every row of a sheet lines up. */
+.property-panel label.prop-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  column-gap: 8px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.prop-name {
+  color: #bbb;
+  overflow-wrap: anywhere;
+}
+.property-panel .prop-row input,
+.property-panel .prop-row select {
+  margin-top: 0;
+}
+.property-panel .prop-row input.prop-check {
+  width: auto;
+  justify-self: start;
 }
 .property-panel input,
 .property-panel select,
@@ -398,5 +423,6 @@ function setDynamicOutputCount(count: number): void {
 }
 .hint {
   color: #888;
+  margin: -2px 0 8px;
 }
 </style>

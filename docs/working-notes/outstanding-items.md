@@ -837,3 +837,11 @@ ambiguous."
   runtime writes its files under `/`, but the stm32 port mounts its filesystem at `/flash`. Beyond that fix, STM32
   pins are named (`X1`), not numbered, so the pin model needs a decision first. `-march` for STM32F4 is fixed.
   ([detail](outstanding-items/stm32-pyboard-support.md))
+
+## Added 2026-10-17
+
+- **A custom display node can't drive a gui screen's size, format, orientation or touch.** The screen only follows
+  a wired `display_spi` (found by type in three places); wired to the RM68090 custom node it falls back to a hidden
+  320x240 gs4, so a portrait RM68090 fails at start. Build after PR #1 merges: an optional `display` descriptor key
+  (a descriptor change, so confirm with Mike first). [implementation note](custom-display-node-scoping.md)
+

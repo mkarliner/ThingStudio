@@ -16,7 +16,7 @@
 -->
 <template>
   <label class="pin-field">
-    {{ label }}
+    <span class="pin-name">{{ label }}</span>
     <select v-if="mode === 'named'" :value="encodedValue" @change="onSelect">
       <option v-if="optional" value="">&mdash; not wired &mdash;</option>
       <option v-if="offListValue !== null" :value="offListValue">{{ offListText }}</option>
@@ -158,15 +158,22 @@ function onText(event: Event): void {
 
 <style scoped>
 .pin-field {
-  display: block;
-  margin-bottom: 8px;
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  column-gap: 8px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.pin-name {
+  color: #bbb;
+  overflow-wrap: anywhere;
 }
 .pin-field input,
 .pin-field select {
   display: block;
   width: 100%;
   box-sizing: border-box;
-  margin-top: 3px;
+  margin-top: 0;
   background: #1b1b1b;
   border: 1px solid #444;
   color: #eee;
@@ -174,6 +181,7 @@ function onText(event: Event): void {
   font-family: inherit;
 }
 .pin-hint {
+  grid-column: 2;
   display: block;
   margin-top: 2px;
   font-size: 11px;

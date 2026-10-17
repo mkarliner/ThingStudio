@@ -102,3 +102,9 @@ Thingstudio offers SPI on buses 2 and 3 only. See [Boards and processors](boards
 Saved values are kept per flow name. Renaming the flow makes it a new name to the board, so its values start from
 the defaults. The old values are still on the board: rename the flow back to use them again, or clear them from the
 [command box](debugging.md#commands-and-the-python-prompt).
+
+## Why doesn't my Uno TFT shield work on a Wemos D1 R32?
+
+The D1 R32 puts the shield's A2, A3 and A4 on GPIO 35, 34 and 36, which are input only on an ESP32. A parallel
+TFT shield drives its RS, CS and RST lines from those pins, so it can't start. Wire GPIO 15 to A2 (RS), GPIO 33
+to A3 (CS) and GPIO 32 to A4 (RST), then set those pins in the display node.
