@@ -133,7 +133,7 @@ Default to making new functionality something a user can extend the same way the
 definitions, rather than something only the core can provide. Before building a feature into the core, ask "could a
 third party add this the way they add a custom node or a board definition, without a core change?" Where the answer
 is cheap to make yes, do so. The node-level forms of this are already rules (the data-equivalent and
-one-vocabulary rules above; `decisions/node-authoring.md`). The lens applies to review as much as to new work: if
+one-vocabulary rules above; `decisions/node-authoring.md`). The lens applies to review as much to old as to new work: if
 an existing feature is hard-wired into the core that a package or a descriptor could carry, name it and propose the
 extension point.
 
