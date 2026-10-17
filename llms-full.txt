@@ -2444,16 +2444,18 @@ Fires immediately when a GPIO pin changes state — genuinely event-driven, not 
 
 - **pin** — GPIO pin number. Checked against your [board](../boards.md).
 - **edge** — `rising`, `falling`, or `both`.
-- **debounce** — on by default. Ignores further transitions within the debounce window after an accepted one.
-- **debounce (ms)** — the debounce window, shown when debounce is on. Default 50ms.
 
 ## Behavior
 
-The payload is the pin's level (`true`/`false`) at the moment the node wakes, not a record of every intermediate change — a burst of bounces inside the debounce window collapses into one report of the settled state.
+The payload is the pin's level (`true`/`false`) at the moment the node wakes — a level, not a record of every
+intermediate change.
 
 No internal pull resistor is configured. Wire an external pull resistor, or use a button module with one built in.
 
-Two `interrupt` nodes on the same pin must have the same edge and debounce settings, or the compile stops. See
+For a debounced switch or button, use [eswitch](eswitch.md) or [ebutton](ebutton.md) — they ignore contact bounce.
+`interrupt` is the raw edge node.
+
+Two `interrupt` nodes on the same pin must have the same edge, or the compile stops. See
 [Hardware is shared](index.md#hardware-is-shared).
 
 
@@ -2702,7 +2704,7 @@ load it again on this or another **display spi** node instead of retyping every 
 - **frame format** — `rgb565` (default, full color, `width * height * 2` bytes), or an indexed format: `gs4`
   (4-bit, a quarter the memory), `gs2` (2-bit, an eighth), or `mono` (1-bit, a sixteenth). Switch away from
   `rgb565` if a full buffer won't fit in memory; the lower the depth, the smaller the buffer, at the cost of fewer
-  colors.
+  colors. The gui screen wired to the display uses this format.
 - **palette** — 16 RGB565 colors, used by every indexed format (`gs4` reads all 16, `gs2` only the first 4, `mono`
   only the first 2). Shown as swatches under frame format when an indexed format is picked; click one to change it,
   or **reset** for the built-in colors. Colors are rounded to the nearest the panel can show.
@@ -2712,7 +2714,7 @@ load it again on this or another **display spi** node instead of retyping every 
 - **sck / mosi / dc pins** — required GPIO pins, checked against your [board](../boards.md).
 - **cs / reset / backlight pins** — optional GPIO pins (−1 for "not wired"). Some boards tie reset or CS high in
   hardware, or have no backlight control at all.
-- **width / height** — panel resolution in pixels.
+- **width / height** — panel resolution in pixels. The gui screen wired to the display takes this size.
 - **orientation** — off by default. Set it to 0, 90, 180 or 270 to turn the picture clockwise; the gui screen wired
   to the display and its touch follow. With an orientation, set width and height to the panel's own size, `rotation`
   to how the panel is mounted (0 to 3), and `xstart`/`ystart` to `-1`. See
@@ -3049,8 +3051,9 @@ property panel: see [Laying out pages](#laying-out-pages).
 ## The nodes
 
 - **gui screen** — one per display. Sends the screen each time it changes, in strips of about 5 KB, so
-  a whole frame never has to fit in memory at once. Wire it to a [display spi](display-spi.md) node with
-  the same width, height and frame format. To use touch, pick a [touch panel](touch-panel.md) in its properties.
+  a whole frame never has to fit in memory at once. Wire it to a [display spi](display-spi.md) node: the screen
+  takes its width, height and frame format from that display, so set them once on the display. To use touch, pick a
+  [touch panel](touch-panel.md) in its properties.
 - **gui readout** — shows `msg.payload` as a number with units. Set the lowest and highest value it will
   show, and how many decimals. Its space is sized for that range.
 - **gui label** — shows `msg.payload` as text.
@@ -3125,7 +3128,7 @@ Unwired, the toggle keeps its own state and starts as set by *starts on*.
 
 ## Color
 
-Set the gui screen's frame format to `rgb565` for full color, with the same format on the display. White text,
+Set the display's frame format to `rgb565` for full color. White text,
 gray for stale values, and a green accent for bars and lights that are on. Grays use less memory and send faster,
 so use them on boards with little RAM.
 
@@ -3141,8 +3144,8 @@ Keshikan (SIL Open Font License 1.1); see
 
 On the display node, set **orientation** to 0, 90, 180 or 270 (the picture turned clockwise). It is one setting
 on each display, so a display can't have two. Set the display's width and height to the panel's own size, and its
-rotation to how the panel is mounted (0 to 3). The gui screen wired to that display turns its size to
-match and its touch axes follow, so set the screen's width and height to the panel's own size too. An orientation
+rotation to how the panel is mounted (0 to 3). The gui screen wired to that display takes the display's size and
+turns its layout to match, and its touch axes follow. An orientation
 can't be combined with a panel offset (`xstart`/`ystart`, or the 135x240 panel). `xstart`/`ystart` of `-1` mean
 "no offset" and are the right values with an orientation. At 90 or 270 the usable picture is the panel turned:
 480 wide by 320 high on a 320x480 panel.
@@ -4181,9 +4184,6 @@ Type `thingstudio/gui_screen`, kind source, palette group GUI.
 - Outputs: frame (bytes)
 - Properties (name, type, default):
     - `name`, string, default `"screen"`
-    - `width`, number, default `320` — the panel's own width in pixels, whatever the orientation; must match the display it is wired to
-    - `height`, number, default `240` — the panel's own height in pixels, whatever the orientation; must match the display it is wired to
-    - `frameFormat`, string, default `"gs4"` — rgb565, gs4, gs2 or mono; must match the display
     - `minInterval`, number, default `200` — least milliseconds between screen updates
     - `wrap`, boolean, default `true` — whether next/prev wrap around at the ends of the pages
     - `touchPanelConfigId`, string, default `""`, the id of a `thingstudio/config/touch-panel` config — the touch-panel config to read touches from; empty for none
@@ -4346,8 +4346,6 @@ Type `thingstudio/interrupt`, kind source, palette group hardware.
 - Properties (name, type, default):
     - `pin`, number, default `4`
     - `edge`, string, default `"rising"`
-    - `debounce`, boolean, default `true`
-    - `debounceMs`, number, default `50`
 
 ### neopixel
 

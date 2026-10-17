@@ -2945,13 +2945,14 @@
 <ul>
 <li><strong>pin</strong> — GPIO pin number. Checked against your <a href="../../boards/">board</a>.</li>
 <li><strong>edge</strong> — <code>rising</code>, <code>falling</code>, or <code>both</code>.</li>
-<li><strong>debounce</strong> — on by default. Ignores further transitions within the debounce window after an accepted one.</li>
-<li><strong>debounce (ms)</strong> — the debounce window, shown when debounce is on. Default 50ms.</li>
 </ul>
 <h2 id="behavior">Behavior</h2>
-<p>The payload is the pin's level (<code>true</code>/<code>false</code>) at the moment the node wakes, not a record of every intermediate change — a burst of bounces inside the debounce window collapses into one report of the settled state.</p>
+<p>The payload is the pin's level (<code>true</code>/<code>false</code>) at the moment the node wakes — a level, not a record of every
+intermediate change.</p>
 <p>No internal pull resistor is configured. Wire an external pull resistor, or use a button module with one built in.</p>
-<p>Two <code>interrupt</code> nodes on the same pin must have the same edge and debounce settings, or the compile stops. See
+<p>For a debounced switch or button, use <a href="../eswitch/">eswitch</a> or <a href="../ebutton/">ebutton</a> — they ignore contact bounce.
+<code>interrupt</code> is the raw edge node.</p>
+<p>Two <code>interrupt</code> nodes on the same pin must have the same edge, or the compile stops. See
 <a href="../#hardware-is-shared">Hardware is shared</a>.</p>
 
 
