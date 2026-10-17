@@ -49,10 +49,12 @@ context system (https://nodered.org/docs/user-guide/context) as the reference.
   2026-09-06 hide -- whatever gets built here can reuse, replace, or sit alongside them; nothing about the hide
   forecloses either direction.
 
-## Not scoped
+## Scoped 2026-10-17
 
-Everything above is reference material and open questions, not a plan. Needs its own scoping pass before any of it
-gets built -- same bar as any other new-node-type work in this project.
+`context-model-scoping.md` (working-notes root) is the scoping pass this file called for: it inventories what exists
+today, proposes the scope set (node + flow, `global` reserved), a runtime-owned store mechanism, the keying and
+one-way-door calls, and the no-code-path options -- and ends with the open questions for Mike. The reference material
+above stays as the source for it. Nothing is built and the open questions are still open (proposes, does not commit).
 
 
 ## Scope split, 2026-09-06 (Mike's call)
