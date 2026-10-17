@@ -171,8 +171,16 @@ recipe: `filter`, `journal`, `wifi_gate`, `http_response`.
     `i2cBus`/`scl`/`sda`/`freq` properties, the panel/catalog don't show them). Also an agreed deviation: the
     "height a multiple of 8" compile check is dropped (the generated length check keeps the buffer consistent; a
     non-multiple height is treated as the floor page count, no crash). The bus is `runtime.shared('i2c', ...)`.
-  - **Complex, not yet attempted:** `touch_i2c` (i2c resource + the touch-panel config's single-use check) and
-    `display_spi` (spi resource + many pins + viper codegen).
+  - **Complex, not yet attempted:** the two remaining nodes each need a decision, not just a port:
+    - `touch_i2c` needs the touch-panel config resolved *through* its own `i2cConfigId` (a nested config
+      reference): a package's `configRef` inlines one level, so its Python would get the bus *id string*, not the
+      resolved bus dict. Either nested config resolution in the generic codegen, or an Option-1-style touch-panel
+      resource that emits the bus object. Plus the panel's single-use cross-node check and the reset-pin claim.
+    - `display_spi` is large and hardware-critical: much of its codegen is **compile-time geometry** — the
+      oriented MADCTL bit search (`orientation-shared.ts` `orientedMadctl`, over MicroPython's own bit orders),
+      the turned panel size, per-format strides, and the `@micropython.viper` expansion loops — which a static
+      `.node.py` would have to reimplement at runtime. Feasible, but a real hand-port with the viper/driver path
+      only verifiable off-device (the existing `node-display-spi.test.ts` against the real vendored driver).
   - **Latent format gap, not currently blocking anything:** a package event source can't drop a wake — its
     `buildMsg` is `msg = await emit(props)` and `compile.ts`'s event-source path has no `msg is None` guard (the
     polled-source and transform paths do). `interrupt` no longer needs it (debounce is gone), but any future
