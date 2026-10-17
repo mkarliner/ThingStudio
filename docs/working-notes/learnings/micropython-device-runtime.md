@@ -338,3 +338,11 @@ Running the `ntp` node's generated helpers on the MicroPython unix port gave `un
 (`1792069509.24`): the unix port's `time.time()` returns a float, while ESP32 and RP2 return an int. CPython tests
 with `time_mock` (which returns whatever the test sets) can't see this. Fix in `ntp.ts`: `int(time.time())`. Any
 generated code that sends `time.time()` on a port typed `int` should do the same.
+
+## This build's `set()` rejects a single iterable argument, 2026-10-17
+
+Writing `device_settings.prune()` with `keep = set(keep)` failed under the unix port with
+`TypeError: set() takes 2 positional arguments but 1 were given`. This minimal build's `set` does not accept the
+CPython `set(iterable)` form. Build a membership dict instead (`for name in keep: wanted[name] = True`), and avoid
+`set([...])` comparisons in tests -- use `sorted(list)` or a dict. Caught by `test_device_settings.py`'s prune
+case, not by inspection.
