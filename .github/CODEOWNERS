@@ -14,6 +14,10 @@
 /editor/test/runtime-api-conformance.test.ts     @mkarliner
 /editor/test/node-descriptor-schema.test.ts      @mkarliner
 /editor/test/board-descriptor-schema.test.ts     @mkarliner
+/editor/test/compile-context.test.ts              @mkarliner
+/editor/test/compile-hook.test.ts                 @mkarliner
+/editor/test/compile-hooks.test.ts                @mkarliner
+/editor/test/compile-hooked-package.test.ts       @mkarliner
 /editor/test/module-boundaries.test.ts           @mkarliner
 /backend/test/test_conformance.py                @mkarliner
 /device-runtime/test/test_conformance.py         @mkarliner

@@ -158,11 +158,12 @@ This is a deliberate reopening of Decision 5's scope, not a quiet change. The ma
    not exist in JS-hosted WASM**: a runaway hook can only be stopped by terminating a worker, which makes the call
    (and `compile()`) async. Recommendation: go, amended to async `compile()` + a persistent hook worker with a
    wall-clock budget; browser shim and worker cold-start still to measure. If async is rejected, option 2.
-2. **Decide the async API** (Mike): async `compile()` with worker termination, or fall back to option 2.
+2. **Async containment — accepted 2026-10-18.** Refined in implementation: an async pre-pass runs the hooks in a
+   worker and passes validated results to the synchronous `compile()`; `compile()` itself does not change shape.
 3. **Measure the browser path**: a WASI preview1 shim in the editor, same size/latency numbers, before committing.
 4. **Draft the context spec** (`interfaces/node-compile-context/`) — first draft written 2026-10-18
    (`SPEC.md` + `api.json`), pending Mike's review. It defines the `<name>.compile.py` hook, the context (node, flow,
-   referenced configs, target), the validated result (properties, claims, warnings, errors, setupKey), limits and
+   referenced configs, target), the validated result (properties, claims, warnings, errors), limits and
    fault behaviour.
 5. **First real target**: `wifi_status` (the hardest case in `node-context-parity-scoping.md` §7) or one network
    node, plus `adc`. Show "no loss" against the built-in.
@@ -186,8 +187,9 @@ core-only vocabulary into `custom-node.schema.json`. **Not held:** the port-type
 Mike approved option 3 as the direction, with these amendments (all from the architecture review session):
 
 1. **Spike-gated (spike run 2026-10-18; async accepted the same day).** Interpreter cost is fine; synchronous
-   budgeting is unavailable, so containment is async `compile()` + a persistent worker terminated on timeout —
-   **Mike accepted that** on 2026-10-18. Remaining: the browser-shim measurement and the context spec. If the
+   budgeting is unavailable, so containment is a worker terminated on timeout. **Mike accepted that** on
+   2026-10-18; the implementation refined it to an async pre-pass feeding the synchronous `compile()` (the hook
+   result is data). Remaining: the worker runner and the context spec. If the
    browser path fails, option 2 is still the fallback for the network family, with the honest statement that parity
    then stays partial.
 2. **Data is the default; the hook is the escape hatch.** Hooks do not remove the need for declarative shapes — the

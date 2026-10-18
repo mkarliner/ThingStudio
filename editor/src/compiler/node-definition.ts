@@ -114,9 +114,26 @@ export interface SinkCodegenResult extends SetupCode {
   functionBody: string;
 }
 
+/** A hardware claim a package compile hook asked for; the core validates it as data. */
+export interface CompileHookClaim {
+  readonly resource: string;
+  readonly use: string;
+}
+
+/** A validated package compile-hook result (interfaces/node-compile-context/SPEC.md, draft). */
+export interface CompileHookResult {
+  readonly properties: Record<string, unknown>;
+  readonly claims: CompileHookClaim[];
+  readonly warnings: string[];
+  readonly errors: string[];
+}
+
 /** Passed to every codegen hook so multiple instances of the same node type never collide on generated names. */
 export interface CodegenContext {
   uniqueName(hint: string): string;
+  /** The validated result of this node's package compile hook, when the async pre-pass ran one. Absent
+   * for built-ins and for packages without a hook. */
+  hookResult?(nodeId: string): CompileHookResult | undefined;
   /**
    * Resolves a config node's `properties` by its string ID (config-node-
    * and-palette-implementation-briefing.md). Throws `CompileError`
@@ -196,6 +213,10 @@ export interface CodegenContext {
  * here instead of their own hardcoded copies.
  */
 export interface NodeDefinition extends NodeDescriptor {
+  /** Optional compile-time half for a package (`<name>.compile.py`): the sandboxed MicroPython source a
+   * pre-pass runs before this node is generated (interfaces/node-compile-context/SPEC.md, draft). A built-in's
+   * TypeScript hooks are the same role, executed in-process. */
+  compileHook?: string;
   codegenSource?(node: GraphNode, ctx: CodegenContext): SourceCodegenResult;
   /**
    * Alternative to codegenSource for kind "source" nodes that wait on an

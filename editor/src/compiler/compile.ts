@@ -56,7 +56,7 @@
 
 import { CompileError } from "./errors.js";
 import type { GraphConfigNode, GraphData, GraphLink, GraphNode } from "./graph.js";
-import type { CodegenContext, NodeDefinition, SinkCodegenResult, TransformCodegenResult } from "./node-definition.js";
+import type { CodegenContext, CompileHookResult, NodeDefinition, SinkCodegenResult, TransformCodegenResult } from "./node-definition.js";
 import { resolveOutputCount } from "./node-descriptor.js";
 import { checkCapabilities } from "../definitions/capability-check.js";
 import type { Target } from "../definitions/target.js";
@@ -84,6 +84,11 @@ export interface CompileResult {
 export interface CompileOptions {
   /** Processor/board to check pins against (definitions/target.ts). Absent = none known. */
   target?: Target | null;
+  /** Validated package compile-hook results, keyed by node id -- produced by the async pre-pass
+   * (node-library/compile-hooks.ts) before the synchronous compile. */
+  hookResults?: ReadonlyMap<string, CompileHookResult>;
+  /** Warnings from that pre-pass, already attributed to their nodes. */
+  hookWarnings?: readonly string[];
 }
 
 export function compile(graphData: GraphData, registry: Map<string, NodeDefinition>, options: CompileOptions = {}): CompileResult {
@@ -223,10 +228,13 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
   // --- codegen ---
 
   const usedNames = new Set<string>();
-  const warnings = new Set<string>();
+  const warnings = new Set<string>(options.hookWarnings ?? []);
   const claims = new Map<string, { use: string; who: string }>(); // hardware resource -> first claim (hardware-shared.ts)
   const ctx: CodegenContext = {
     target: options.target ?? null,
+    hookResult(nodeId: string): CompileHookResult | undefined {
+      return options.hookResults?.get(nodeId);
+    },
     warn(message: string): void {
       warnings.add(message);
     },

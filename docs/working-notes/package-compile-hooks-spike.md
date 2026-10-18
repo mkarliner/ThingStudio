@@ -46,11 +46,11 @@ Two ways to keep it synchronous, both worse:
   WASI variant. The project's `mpy-cross-wasm` deliberately uses stock MicroPython; a fork breaks that.
 - **Accept no budget.** Against the fault-handling priority: one malicious or buggy package hangs the editor tab.
 
-**Recommended amendment:** async `compile()`, hooks run in a persistent worker (browser Web Worker,
-`worker_threads` in the CLI), a per-hook wall-clock budget (~1 s) and a per-compile budget, terminate and recreate
-the worker on expiry, and report a `CompileError` naming the package. Worker termination measured clean (~4 ms).
-The cost is the async ripple through `compile()`'s callers (app, CLI, dev tools, ~100 test call sites) — mechanical,
-but it must be an explicit decision, not slipped in.
+**Recommended amendment:** hooks run in a persistent worker (browser Web Worker, `worker_threads` in the CLI) in an
+async pre-pass, with a per-hook wall-clock budget (~1 s) and a per-compile budget; terminate and recreate the worker
+on expiry; report a `CompileError` naming the package. The pre-pass keeps `compile()` synchronous, so the async
+ripple is confined to the two call sites that already await I/O. Mike accepted this on 2026-10-18; worker
+termination measured clean (~4 ms).
 
 ## 3. What the spike did not settle
 

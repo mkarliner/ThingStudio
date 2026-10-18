@@ -708,10 +708,22 @@ function packageCodegen(descriptor: PackageDescriptor, pythonSource: string): Pi
     // Validate and claim any shared hardware resource the descriptor declares, before the properties literal is
     // built -- the same checks a built-in's own codegen did, now for a package (resource-check.ts).
     checkResources(ctx, node, descriptor);
+    // A package compile hook's claims are the same kind of data the descriptor's `resources` carry, validated
+    // through the same claim machinery (interfaces/node-compile-context/SPEC.md).
+    const hook = ctx.hookResult?.(node.id);
+    for (const claim of hook?.claims ?? []) {
+      if (ctx.claimResource) ctx.claimResource(claim.resource, claim.use, node.id);
+    }
     const propsVar = ctx.uniqueName(`${hint}_props`);
     const setupFn = ctx.uniqueName(`${hint}_setup`);
     const vars = entries.map((name) => ctx.uniqueName(`${hint}_${name}`));
-    const propsLiteral = pyPropertiesLiteral(descriptor, node, node.properties, `node ${node.id} (${descriptor.type})`, ctx);
+    const declaredProps = pyPropertiesLiteral(descriptor, node, node.properties, `node ${node.id} (${descriptor.type})`, ctx);
+    // Hook-added properties may name fields the descriptor does not declare (a package's Python reads them by
+    // key), and override a declared field's resolved value. They were validated as JSON data before compile.
+    const propsLiteral =
+      hook && Object.keys(hook.properties).length > 0
+        ? `{**${declaredProps}, **${pyValueLiteral(hook.properties, `node ${node.id} (${descriptor.type})`)}}`
+        : declaredProps;
     const indented = pythonSource
       .split("\n")
       .map((line) => (line.length ? "    " + line : line))

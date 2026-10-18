@@ -27,15 +27,17 @@ def compile(ctx, properties):
 ```
 
 - `ctx` is this spec's context dict (JSON-shaped).
-- `properties` is the node's properties after the descriptor's field resolution (`configRef`, pins, `target`,
-  `nodeId`), i.e. the same dict its `.node.py` will receive, before the hook's own additions.
+- `properties` is the node's raw stored properties (what the flow file holds), not the descriptor-resolved
+  values: config references arrive by id in `ctx.referencedConfigs`, and the hook resolves what it needs itself.
 - The result is a dict, or `None` (nothing to add). Never Python source.
 - The hook may `import` only the sandbox's built-in modules (`json`, `math`, `re`, `binascii`, `sys`). There is no
   filesystem, network, environment, clock or randomness: `open` and the `os` file functions are unavailable.
 - Hooks are deterministic: the same context and properties must produce the same result.
 
-The core runs the hook once per node instance during a compile, after all data-driven field resolution and before
-the `.node.py` is wrapped into generated code. A package without the file behaves exactly as today.
+The core runs the hook once per node instance in an **async pre-pass before the synchronous compile** (a
+containment requirement: a runaway hook is stopped by terminating its worker, which cannot happen inside the
+synchronous compiler). The validated results are passed into the compile, which merges them as data. A package
+without the file behaves exactly as today.
 
 ## 2. The context
 
@@ -79,8 +81,7 @@ non-GUI nodes use. `findWiredTargets` (used only by the GUI, out of node-format 
   "properties": {"madctl": 96, "stride": 320},
   "claims": [{"resource": "GPIO 22", "use": "I2C0 SCL"}],
   "warnings": ["this board has no PSRAM, the buffer is capped at 16 KB"],
-  "errors": ["pin 35 is input-only on the ESP32"],
-  "setupKey": "display-spi-0"
+  "errors": ["pin 35 is input-only on the ESP32"]
 }
 ```
 
@@ -90,7 +91,6 @@ non-GUI nodes use. `findWiredTargets` (used only by the GUI, out of node-format 
 | `claims` | list of `{resource, use}` | Hardware claims, validated by the same `resource-check.ts` rules as descriptor `resources`. `who` is the node id. |
 | `warnings` | list of strings | Shown in the compile warnings, attributed to the node. |
 | `errors` | list of strings | Any entry turns the compile into a `CompileError` naming the node and the messages. |
-| `setupKey` | string | Optional setup-dedup key: node instances returning the same key emit setup once (the first instance wins). The hook is responsible for the setup being identical. |
 
 Unknown keys are an error, not ignored — the one-vocabulary rule. A malformed result (wrong type, non-JSON-safe
 value, too large) is a `CompileError`, and no part of it is applied.
@@ -102,7 +102,6 @@ value, too large) is a `CompileError`, and no part of it is applied.
 | `properties` serialized size | 64 KB |
 | `claims` | 64 |
 | `warnings` / `errors` | 32 each |
-| `setupKey` | 64 characters |
 | Wall clock per hook | 1 s |
 | Wall clock per compile (all hooks) | 5 s |
 
@@ -165,7 +164,8 @@ of the parity goal (`reviews/2026-10-18-node-parity-architecture.md` §7).
 
 ## 8. Conformance
 
-Vectors live in `interfaces/node-compile-context/vectors/` and are run by
-`editor/test/node-compile-context-conformance.test.ts` (to be added with the first implementation). A vector is a
-context, a hook body, and either the expected result or the expected error. The conformance test must cover: the
-worked example above, a malformed result, an `errors` entry, a timeout, and a version mismatch.
+`editor/test/compile-context.test.ts`, `compile-hook.test.ts`, `compile-hooks.test.ts` and
+`compile-hooked-package.test.ts` cover the context shape, result validation/limits (asserted against `api.json`),
+the pre-pass and the compile integration. Real-interpreter vectors under `interfaces/node-compile-context/vectors/`
+are added with the worker runner; they must include the worked example above, a malformed result, an `errors` entry,
+a timeout and a version mismatch.

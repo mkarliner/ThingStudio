@@ -25,7 +25,8 @@ with permission."**
    `editor/test/protocol-conformance.test.ts`, `device-runtime/test/test_conformance.py`,
    `backend/test/test_conformance.py`. Runtime API: `editor/test/runtime-api-conformance.test.ts`,
    `device-runtime/test/test_runtime_api.py`. Node descriptor: `editor/test/node-descriptor-schema.test.ts`. Board
-   descriptor: `editor/test/board-descriptor-schema.test.ts`.
+   descriptor: `editor/test/board-descriptor-schema.test.ts`. Node compile context:
+   `editor/test/{compile-context,compile-hook,compile-hooks,compile-hooked-package}.test.ts`.
 3. **Do not change the interface** (an id, field, framing rule, descriptor shape, or API signature — adding or
    removing one) **without Mike's explicit permission in the session.** Adding conformance vectors and fixing an
    implementation that has drifted is allowed; moving the contract under boards and saved flows already in the
