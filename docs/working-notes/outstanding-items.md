@@ -346,6 +346,10 @@ not here.
   capability parity (dynamic ports — the data `dynamicOutputs` exists but is not yet in the custom
   schema — multi-output sources, resource claims, presets, native code), and the Node-RED location model
   (built-ins as packages).
+  **2026-10-18 architecture review:** the vocabulary approach makes the core grow per node and leaves custom
+  nodes behind core packages (`reviews/2026-10-18-node-parity-architecture.md`). Proposed fix, awaiting Mike's
+  call: a sandboxed compile hook for packages (`package-compile-hooks-scoping.md`). Until decided, hold the
+  flow-query vocabulary, the port-type data form, and promoting core-only vocabulary to the custom schema.
   **Context parity phase 2a landed 2026-10-15:** a custom `configRef` may be `singleton` (the flow's one
   config of that type, via `findConfigsOfType`); custom `pin` fields take `pinUse`/`pinPull` and are now
   board-checked and claimed as hardware resources; a `target` field kind exposes the board/processor
