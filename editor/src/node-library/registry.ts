@@ -26,7 +26,7 @@ import { mqttPublishNode } from "./mqtt-publish.js";
 import { mqttSubscribeNode } from "./mqtt-subscribe.js";
 import { descriptor as pwmOutCoreDescriptor, python as pwmOutCorePython } from "./core-packages/pwm-out.js";
 import { startupNode } from "./startup.js";
-import { timerNode } from "./timer.js";
+import { descriptor as timerCoreDescriptor, python as timerCorePython } from "./core-packages/timer.js";
 import { udpReceiveNode } from "./udp-receive.js";
 import { udpSendNode } from "./udp-send.js";
 import { ntpNode } from "./ntp.js";
@@ -94,7 +94,7 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     displaySpiNode,
     buildCoreNodeDefinition(displayI2cCoreDescriptor, displayI2cCorePython),
     buildCoreNodeDefinition(pwmOutCoreDescriptor, pwmOutCorePython),
-    timerNode,
+    buildCoreNodeDefinition(timerCoreDescriptor, timerCorePython),
     wifiStatusNode,
     wifiGateNode,
     httpRequestNode,

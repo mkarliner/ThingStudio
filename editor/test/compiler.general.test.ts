@@ -107,7 +107,7 @@ describe("general compiler: shapes POC-D's hardcoded compiler could never accept
     // `async def` (see compile.ts's header comment on why).
     expect(source).toMatch(/if msg is not None:\n\s+try:\n\s+await _\w*gpio_out\w*\(msg\)/);
     const lines = source.split("\n");
-    const buildMsgLine = lines.find((l) => l.includes("msg = {'payload'"));
+    const buildMsgLine = lines.find((l) => l.includes("msg = await") && l.includes("timer_emit"));
     const sleepLine = lines.find((l) => l.includes("asyncio.sleep_ms"));
     expect(buildMsgLine).toBeDefined();
     expect(sleepLine).toBeDefined();

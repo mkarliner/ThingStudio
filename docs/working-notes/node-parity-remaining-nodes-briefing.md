@@ -43,8 +43,11 @@ and the security posture are decided — don't re-litigate.
 ## Remaining built-ins, by blocker
 
 Portable now (no blocker — do these first):
-- **`timer`** — a repeat source, no shared context.
-- **`variable-set`** — a plain `any`-in/out transform (`_flow_vars` store).
+- ~~`timer`~~ — **done 2026-10-18** (`core-packages/timer.ts`; counter lives in the setup closure). No catalog
+  change.
+- **`variable-set`** — a plain `any`-in/out transform (`_flow_vars` store). **Not on the portable list any
+  more:** its fate is the context model's no-code-path question (Q3), still open; that model now follows the
+  device settings store (`device-settings-store-scoping.md`, `context-model-scoping.md` §12/§13).
 
 Blocked on a **data form for a property-dependent port type** (the data-equivalent rule; `PortType`-as-function is
 the last built-in-only corner besides `dynamicOutputs`):
@@ -74,10 +77,10 @@ Residue (built-in-only by design, not goals): **`function`** (verbatim user code
 
 ## Suggested next-session order
 
-1. **`timer`** — cheap, no blockers; keep the recipe warm. (Regenerate the catalog only if a
-   field changed — likely unchanged.) **`variable-set` is no longer on this list:** its fate is the context model's
-   no-code-path question (Q3), still open, and that model now follows the device settings store
-   (`device-settings-store-scoping.md`, `context-model-scoping.md` §12/§13).
+1. ~~**`timer`** — done 2026-10-18.~~ (Regenerate the catalog only if a field changed — it didn't.)
+   **`variable-set` is no longer on this list:** its fate is the context model's no-code-path question (Q3), still
+   open, and that model now follows the device settings store (`device-settings-store-scoping.md`,
+   `context-model-scoping.md` §12/§13).
 2. **On hold (2026-10-18):** don't build this until Mike decides on `package-compile-hooks-scoping.md`, which
    would make it unnecessary (`reviews/2026-10-18-node-parity-architecture.md`).
    **Scope the flow-context API for the network family** (one capability, 8 nodes). This is the highest-leverage

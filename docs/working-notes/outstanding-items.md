@@ -370,12 +370,13 @@ not here.
   lost its debounce; eswitch/ebutton needed
   `pullProperty` and `lessThan`; encoder's vmin/vmax/mod became optional text fields and its value-bounds check was
   dropped — the driver clamps). `display_i2c` followed too (the `i2c` resource, plus an i2c `fallback` and `hidden`
-  fields for its legacy node-level bus pins). **Remaining four are design/verification projects, not quick ports:**
+  fields for its legacy node-level bus pins). `timer` flipped 2026-10-18 (descriptor unchanged; no catalog change).
+  **The remaining ones are design/verification projects, not quick ports:**
   `touch_i2c` needs the touch-panel config resolved through its nested `i2cConfigId` (transitive `configRef` isn't
   a small change — config field kinds live in `app/rete/config-types.ts`, behind the layering boundary, and
   `ctx.resolveConfig()` returns no type); `display_spi` is large and hardware-critical (compile-time MADCTL/stride
   geometry + viper loops to reimplement at runtime); `adc` needs a node-specific context query (ADC2-vs-WiFi);
-  `wifi_gate` needs flow-query parity. See `shared-resource-facility-scoping.md` §9.
+  `wifi_gate` (and the rest of the network family) needs flow-query parity. See `shared-resource-facility-scoping.md` §9.
 
 - **[P3]** **Deploy the runtime itself from the browser editor, not just compiled flows.** Confirmed untracked
   anywhere until 2026-09-12. Today, `test-flows/deploy_runtime.py` is a standalone `mpremote`-based script pushing

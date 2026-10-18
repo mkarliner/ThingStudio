@@ -10,7 +10,7 @@
 //   - function:     code                                     (node-library/function-node.ts)
 //   - debug:        fullMessage                              (node-library/debug.ts -- opt-in, default false, added 2026-09-09)
 //   - gpio_out:     pin                                       (node-library/gpio-out.ts)
-//   - timer:        intervalMs                                (node-library/timer.ts)
+//   - timer:        intervalMs                                (node-library/core-packages/timer.ts)
 //   - interrupt:    pin, edge                                 (node-library/core-packages/interrupt.ts)
 //   - eswitch:      pin, pull, lopen, debounceMs                     (node-library/core-packages/eswitch.ts)
 //   - ebutton:      pin, pull, suppress, senseMode, debounceMs, longPressMs, doubleClickMs (node-library/core-packages/ebutton.ts)
@@ -147,7 +147,7 @@ import { startupNode } from "../../node-library/startup.js";
 import { functionNode } from "../../node-library/function-node.js";
 import { descriptor as debugCoreDescriptor } from "../../node-library/core-packages/debug.js";
 import { descriptor as gpioOutCoreDescriptor } from "../../node-library/core-packages/gpio-out.js";
-import { timerNode } from "../../node-library/timer.js";
+import { descriptor as timerCoreDescriptor } from "../../node-library/core-packages/timer.js";
 import { descriptor as interruptCoreDescriptor } from "../../node-library/core-packages/interrupt.js";
 import { descriptor as eswitchCoreDescriptor } from "../../node-library/core-packages/eswitch.js";
 import { descriptor as ebuttonCoreDescriptor } from "../../node-library/core-packages/ebutton.js";
@@ -442,7 +442,7 @@ export class GpioOutNode extends buildDescriptorNodeClass(gpioOutCoreDescriptor)
 // header explains the naming choice).
 export class PwmOutNode extends buildDescriptorNodeClass(pwmOutCoreDescriptor) {}
 
-export class TimerNode extends buildDescriptorNodeClass(timerNode) {}
+export class TimerNode extends buildDescriptorNodeClass(timerCoreDescriptor) {}
 
 export class TouchI2cNode extends buildDescriptorNodeClass(touchI2cNode) {}
 

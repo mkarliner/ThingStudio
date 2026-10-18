@@ -892,3 +892,10 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   `AGENTS.md` ("Everything is a plugin"), next to the data-equivalent and one-vocabulary rules. Named exceptions:
   editor-executed stranger code stays out; `function`/`gui_*` residue; and an extension point that costs more than
   the feature it generalizes or forecloses a settled interface is a fine core-only call, said so in the change.
+- **2026-10-18 — `timer` flipped (the last blocker-free built-in).** `thingstudio/timer` is a core package now
+  (`core-packages/timer.ts`; `timer.ts` deleted). Its descriptor is unchanged, so the catalog and user doc did not
+  move. The counter that used to be a module-level `timer_count` with `global` inside the inlined coroutine is now
+  `_count` in the package's per-instance setup closure (`nonlocal` in `emit`), which removes the `global` workaround
+  entirely; the generic package codegen reads the same `intervalMs` field for `repeatMs`. No new descriptor
+  capability was needed. Remaining built-ins are all blocked (a port type that depends on a property, flow-query
+  context, or a hardware-specific design task) — see `node-parity-remaining-nodes-briefing.md`.
