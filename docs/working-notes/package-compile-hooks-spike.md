@@ -80,3 +80,17 @@ and a worker-termination test. The only external artifact was the wheel
 `micropython_wasm-0.1a2-py3-none-any.whl` from PyPI; nothing was added to the repo. Re-run by downloading that
 wheel, extracting `micropython_wasm/artifacts/micropython-wasi.wasm`, and instantiating it with `node:wasi`
 (stub the `micropython_wasm.host_call`/`host_result_cap` imports).
+
+## 6. Implementation landing (2026-10-18)
+
+- **Vendored** the spike artifact as `micropython-wasi/micropython-wasi.wasm` (SHA-256 and wheel provenance in its
+  README; copy in `editor/public/vendor/`), with a `docs/third-party-licenses.md` entry.
+- **`editor/src/compile-hook/wasi.ts`** — the pure-JS shim, no `node:wasi`.
+- **`editor/src/compile-hook/run-hook.ts`** — wrapper script (base64 context/properties, sentinel-marked JSON
+  result), executed by `runHookOnce`. Tested against the real artifact: the worked example, raw properties, a
+  raised exception, print noise, a malformed return and a syntax error.
+- **`node-library/compile-context.ts`, `compile-hook.ts`, `compile-hooks.ts`** — context builder, result validator
+  (limits asserted against `api.json`) and the async pre-pass. `compile()` consumes validated results and stays
+  synchronous.
+- **Still open:** the worker wrapper (wall-clock containment), loading `<name>.compile.py` through the backend and
+  custom-node loader, wiring the pre-pass into `main.ts`/the CLI, and real-interpreter conformance vectors.
