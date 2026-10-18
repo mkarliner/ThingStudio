@@ -129,7 +129,10 @@ Option 3, scoped and spiked **before** building the flow-query vocabulary for th
 permanent interface. Option 2 is the fallback if the sandbox cost proves too high. Meanwhile:
 
 - `timer` is unaffected: convert it.
-- Hold the flow-query vocabulary and the property-dependent port-type data form until this is decided.
+- Hold the flow-query vocabulary until this is decided.
+- The property-dependent port-type data form is **not** held (Mike's amendment, 2026-10-18): it is bounded, inherently
+  editor-side, and a poor fit for a compile hook; it stays vocabulary as an explicit exception. The editor-side
+  `ports()` step is deferred.
 - Keep the core-only vocabulary core-only; don't promote it to the custom schema until the hook question is settled,
   since a hook would make some of it redundant for users.
 
@@ -140,3 +143,11 @@ permanent interface. Option 2 is the fallback if the sandbox cost proves too hig
 2. Which test is parity measured by: "no loss", or "no loss of on-device behaviour"?
 3. Should the compile context (today's `CodegenContext`) become a published, versioned interface under
    `interfaces/`, used by built-ins and packages alike?
+
+## 10. Outcome (2026-10-18)
+
+Mike agreed with the diagnosis and the recommendation. Option 3 is the intended direction, gated on the spike;
+the amendments agreed with the approval are recorded in `../package-compile-hooks-scoping.md` §10 — data remains
+the default and the hook the escape hatch, built-ins adopt the published context via an adapter, the port-type data
+form stays vocabulary (not held), the parity test is restated as "no loss of on-device behaviour", output limits join
+the hook's security design, and `wifi_status` is the first target.

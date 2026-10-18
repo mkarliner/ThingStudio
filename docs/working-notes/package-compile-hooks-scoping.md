@@ -1,7 +1,10 @@
 # Package compile hooks (a sandboxed compile-time half for packages) -- scoping
 
-2026-10-18. **Status: proposal** -- not a decision. Needs Mike's call: it reopens the scope of Decision 5
-(`custom-node-authoring-scoping.md`) and adds a cross-subsystem interface (`AGENTS.md`, "Interface specs").
+2026-10-18. **Status: direction approved 2026-10-18, gated on the spike (§8).** Mike's call after
+`reviews/2026-10-18-node-parity-architecture.md`: option 3 is the intended direction, contingent on a timeboxed
+interpreter spike with explicit go/no-go criteria; option 2 is the fallback if it fails. This reopens the scope of
+Decision 5 (`custom-node-authoring-scoping.md`) and adds a cross-subsystem interface (`AGENTS.md`, "Interface
+specs") — approved. The amendments agreed with the approval are recorded in §10.
 
 Read first: `reviews/2026-10-18-node-parity-architecture.md` (the findings this answers),
 `node-context-parity-scoping.md` (the vocabulary approach, §1/§3/§5), `builtins-as-packages-scoping.md` (option A,
@@ -107,6 +110,8 @@ trust (design doc §9). The residual risks to design for:
   more; keep the host surface to `ctx` only.
 - **Secret leakage through output**: covered by redaction plus the existing rule that secrets land in generated
   Python only via the node's own config references.
+- **Output size** (added 2026-10-18): cap the returned `properties` blob and statement/claim counts, so a hook
+  cannot exhaust editor memory even without an infinite loop. Same "validate the output as data" rule, with limits.
 
 This is a deliberate reopening of Decision 5's scope, not a quiet change. The marketplace/sandboxing trigger Decision
 5 names (installing third-party packages) is unchanged by this proposal and still a separate call.
@@ -168,3 +173,29 @@ promoting core-only vocabulary into `custom-node.schema.json`.
   every caller of `compile()` then changes).
 - Docs: `docs/user-guide/custom-nodes.md`, the flow-author skill, `decisions/node-authoring.md` once decided.
 - No device-runtime change, no wire-protocol change, no runtime version bump.
+
+## 10. Decisions agreed 2026-10-18
+
+Mike approved option 3 as the direction, with these amendments (all from the architecture review session):
+
+1. **Spike-gated.** No hook machinery lands before §8's spike reports size, load time, call latency, and whether a
+   synchronous instruction-budgeted call is viable. If it isn't, option 2 is the fallback for the network family,
+   with the honest statement that parity then stays partial.
+2. **Data is the default; the hook is the escape hatch.** Hooks do not remove the need for declarative shapes — the
+   palette, property panel, catalog, AI authoring and static analysis all read data. A new capability is data unless
+   it genuinely cannot be expressed as data, and that exception is stated in the change.
+3. **Built-ins adopt the published context too (open question 3: yes).** A TypeScript adapter rather than a rewrite
+   of the 15 existing core packages. If only packages use the spec, two vocabularies return — the one-vocabulary
+   rule.
+4. **The property-dependent port type stays vocabulary (open question 4: no editor-side `ports()` for now).** A port
+   type that follows a property is bounded (three nodes), inherently editor-side, and a poor fit for a compile hook
+   running on every keystroke. Added as an explicit exception to the hook direction. The editor-side `ports()` step
+   is deferred until a real need beyond those three nodes appears.
+5. **Parity test restated (review open question 2):** no loss of **on-device behaviour**; a compile-time check may
+   move or be dropped only when that move is recorded in the conversion note. "No loss" as originally stated is
+   retired.
+6. **`ts_wifi` is orthogonal** to the hook decision: a package still needs the on-device WiFi bring-up with
+   `deferToMqtt` semantics, whether the credentials come from vocabulary or a hook. Approved as a flow dependency;
+   it lands with the network flips.
+7. **`wifi_status` is the first "no loss" target**, not the last: it is the hardest network case, so success there
+   validates the model.

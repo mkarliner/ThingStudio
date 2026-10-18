@@ -899,3 +899,15 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   entirely; the generic package codegen reads the same `intervalMs` field for `repeatMs`. No new descriptor
   capability was needed. Remaining built-ins are all blocked (a port type that depends on a property, flow-query
   context, or a hardware-specific design task) — see `node-parity-remaining-nodes-briefing.md`.
+- **2026-10-18 — parity architecture: a sandboxed package compile hook, spike-gated.** Mike accepted
+  `reviews/2026-10-18-node-parity-architecture.md` and `package-compile-hooks-scoping.md`: the descriptor-vocabulary
+  route (fifteen additions in three days, several for one node) is not how the remaining built-ins convert. A package
+  may ship `<name>.compile.py` run at compile time in a capability-free WASM interpreter, returning only validated
+  data (properties, claims, warnings/errors, a setup-dedup key — never Python source); the compile context becomes a
+  published interface under `interfaces/`, and built-ins adopt it through a TypeScript adapter rather than being
+  rewritten. Gated on a timeboxed spike (interpreter size, load time, per-call latency, synchronous budget); a
+  runtime flow manifest is the fallback if it fails. Agreed amendments (`package-compile-hooks-scoping.md` §10): data
+  stays the default and the hook the escape hatch; the property-dependent port type stays vocabulary (explicit
+  exception, editor-side `ports()` deferred); the parity test is restated as "no loss of on-device behaviour", with
+  moved/dropped compile checks recorded; output size caps; `wifi_status` is the first "no loss" target. Flow-query
+  vocabulary is held until the spike reports; core-only vocabulary stays core-only until the hook question settles.

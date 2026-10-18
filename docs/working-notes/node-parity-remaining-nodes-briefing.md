@@ -56,10 +56,10 @@ the last built-in-only corner besides `dynamicOutputs`):
 
 Blocked on **flow-query context parity** (they derive WiFi from the flow — `resolveFlowWifiCredentials` /
 `flowHasMqttNodes`, not from their own properties): **`http-in`**, **`http-request`**, **`mqtt-publish`**,
-**`mqtt-subscribe`**, **`ntp`**, **`udp-send`**, **`udp-receive`**, **`wifi-gate`**. This is one capability, not
-eight ports: a way for a package to ask the compiler about the flow (the flow's WiFi config / whether the flow has
-mqtt nodes) — a context API addition, needs Mike's OK and a SPEC (`interfaces/node-descriptor/`) update. `wifi-gate`
-also needs the `deferToMqtt` wifi-setup dedup (the WiFi-flapping-bug fix).
+**`mqtt-subscribe`**, **`ntp`**, **`udp-send`**, **`udp-receive`**, **`wifi-gate`**. Scoped 2026-10-18 in
+`network-family-flow-context-scoping.md`: WiFi credentials already arrive via a singleton `configRef`; the real gaps
+are a `hasNode` presence field, a shared device-side WiFi bring-up library, and (for `http-in` only) a
+`nodesOfType` sibling scan plus a runtime.shared server/queue. Needs Mike's OK on those forms.
 
 Hardware, each its own design/verification task (see `shared-resource-facility-scoping.md` §9):
 - **`touch-i2c`** — nested config (`touch-panel` → `i2cConfigId`); not a small change (config field kinds live in
@@ -81,12 +81,16 @@ Residue (built-in-only by design, not goals): **`function`** (verbatim user code
    **`variable-set` is no longer on this list:** its fate is the context model's no-code-path question (Q3), still
    open, and that model now follows the device settings store (`device-settings-store-scoping.md`,
    `context-model-scoping.md` §12/§13).
-2. **On hold (2026-10-18):** don't build this until Mike decides on `package-compile-hooks-scoping.md`, which
-   would make it unnecessary (`reviews/2026-10-18-node-parity-architecture.md`).
-   **Scope the flow-context API for the network family** (one capability, 8 nodes). This is the highest-leverage
-   next step and needs Mike's call on the surface (what a descriptor may ask about the flow) and a SPEC update.
-3. **A data form for property-dependent port types** (unblocks `inject`/`startup`/`variable-get`).
-4. Then the hardware remainder (`touch-i2c`, `display-spi`, `adc`) as separate, ideally hardware-verified tasks.
+2. **Spike the package compile hook (2026-10-18 decision).** `package-compile-hooks-scoping.md` §8 step 1: load a
+   MicroPython WASM interpreter in the editor and the CLI, call a hook synchronously with a budget, measure size and
+   latency, and decide go/no-go against option 2 (runtime flow manifest). Agreed amendments in its §10. Everything
+   below in the network family waits on this.
+3. **Flow-context vocabulary for the network family — held, not dropped.** `network-family-flow-context-scoping.md`
+   is the inventory; if the spike says go, most of it is replaced by the hook (`wifi_status` is the first target).
+   If no-go, the `hasNode`/`nodesOfType` forms in that note are the fallback.
+4. **A data form for property-dependent port types** (unblocks `inject`/`startup`/`variable_get`). **Not held**
+   (Mike, 2026-10-18): bounded, editor-side, a poor fit for a hook — an explicit exception to the hook direction.
+5. Then the hardware remainder (`touch-i2c`, `display-spi`, `adc`) as separate, ideally hardware-verified tasks.
 
 ## Constraints and gotchas
 
