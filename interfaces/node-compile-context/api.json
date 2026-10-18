@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "hook": {
+    "file": "<name>.compile.py",
+    "entry": "compile(ctx, properties)"
+  },
+  "context": {
+    "version": "integer",
+    "node": {
+      "id": "string",
+      "type": "string",
+      "properties": "object",
+      "wired": { "inputs": "bool[]", "outputs": "bool[]" }
+    },
+    "flow": {
+      "nodes": [{ "id": "string", "type": "string", "properties": "object" }],
+      "configs": [{ "id": "string", "type": "string", "properties": "object" }]
+    },
+    "secretPolicy": "flow.nodes and flow.configs carry non-secret properties only; referencedConfigs carries the resolved secrets for this node's configRef fields",
+    "referencedConfigs": "object: config id -> resolved properties, secrets included",
+    "target": "object | null: { boardId, boardName, processorId, processorName, label, capabilities }"
+  },
+  "result": {
+    "properties": "object (JSON-safe)",
+    "claims": [{ "resource": "string", "use": "string" }],
+    "warnings": "string[]",
+    "errors": "string[]",
+    "setupKey": "string"
+  },
+  "limits": {
+    "properties_bytes": 65536,
+    "claims": 64,
+    "warnings": 32,
+    "errors": 32,
+    "setup_key_chars": 64,
+    "hook_wall_ms": 1000,
+    "compile_wall_ms": 5000
+  }
+}

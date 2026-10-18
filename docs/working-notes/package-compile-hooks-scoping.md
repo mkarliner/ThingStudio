@@ -160,8 +160,10 @@ This is a deliberate reopening of Decision 5's scope, not a quiet change. The ma
    wall-clock budget; browser shim and worker cold-start still to measure. If async is rejected, option 2.
 2. **Decide the async API** (Mike): async `compile()` with worker termination, or fall back to option 2.
 3. **Measure the browser path**: a WASI preview1 shim in the editor, same size/latency numbers, before committing.
-4. **Draft the context spec** (`interfaces/node-compile-context/`), from the `CodegenContext` inventory, with
-   conformance vectors.
+4. **Draft the context spec** (`interfaces/node-compile-context/`) — first draft written 2026-10-18
+   (`SPEC.md` + `api.json`), pending Mike's review. It defines the `<name>.compile.py` hook, the context (node, flow,
+   referenced configs, target), the validated result (properties, claims, warnings, errors, setupKey), limits and
+   fault behaviour.
 5. **First real target**: `wifi_status` (the hardest case in `node-context-parity-scoping.md` §7) or one network
    node, plus `adc`. Show "no loss" against the built-in.
 6. Then the rest of the network family, `touch_i2c`, `display_spi`, and the question of built-ins adopting the spec.

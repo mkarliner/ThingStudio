@@ -14,6 +14,7 @@ with permission."**
 | Wire protocol (editor ↔ backend ↔ device) | shipped | [`protocol/`](protocol/README.md) |
 | Device runtime API + dependency manifest (generated code ↔ device) | shipped | [`runtime-api/SPEC.md`](runtime-api/SPEC.md) |
 | Node descriptor (built-in + custom node format) | shipped, known divergence | [`node-descriptor/SPEC.md`](node-descriptor/SPEC.md) |
+| Node compile context (package compile-time hook) | **draft, pending review** | [`node-compile-context/SPEC.md`](node-compile-context/SPEC.md) |
 | Board / processor descriptor (`~/.thingstudio/{boards,processors}/*.json`) | shipped | [`board-descriptor/SPEC.md`](board-descriptor/SPEC.md) |
 
 ## How to work with one
