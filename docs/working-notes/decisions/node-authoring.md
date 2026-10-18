@@ -911,3 +911,7 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   exception, editor-side `ports()` deferred); the parity test is restated as "no loss of on-device behaviour", with
   moved/dropped compile checks recorded; output size caps; `wifi_status` is the first "no loss" target. Flow-query
   vocabulary is held until the spike reports; core-only vocabulary stays core-only until the hook question settles.
+  **Spike (same day, `package-compile-hooks-spike.md`):** interpreter size and per-call cost are acceptable
+  (371 KB raw, ~5–10 ms per hook), but JS-hosted WASM has no synchronous fuel/timeout — the only containment is
+  worker termination, so the hook (and `compile()`) must be async. Awaiting Mike's decision on the async API; the
+  browser WASI shim is also unmeasured.

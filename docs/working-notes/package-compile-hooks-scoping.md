@@ -153,16 +153,21 @@ This is a deliberate reopening of Decision 5's scope, not a quiet change. The ma
 
 ## 8. Suggested sequence, if approved
 
-1. **Spike** the interpreter: MicroPython WASM loaded in the editor and the CLI, a hook called synchronously with a
-   budget, size and per-call latency measured. Go/no-go on option 3 versus option 2.
-2. **Draft the context spec** (`interfaces/node-compile-context/`), from the `CodegenContext` inventory, with
+1. **Spike the interpreter — done 2026-10-18, `package-compile-hooks-spike.md`.** Size 371 KB raw / 164 KB gzip;
+   ~5–10 ms per hook with a fresh instance; hook body ~0.1–2.4 ms. **The synchronous budget the note assumed does
+   not exist in JS-hosted WASM**: a runaway hook can only be stopped by terminating a worker, which makes the call
+   (and `compile()`) async. Recommendation: go, amended to async `compile()` + a persistent hook worker with a
+   wall-clock budget; browser shim and worker cold-start still to measure. If async is rejected, option 2.
+2. **Decide the async API** (Mike): async `compile()` with worker termination, or fall back to option 2.
+3. **Measure the browser path**: a WASI preview1 shim in the editor, same size/latency numbers, before committing.
+4. **Draft the context spec** (`interfaces/node-compile-context/`), from the `CodegenContext` inventory, with
    conformance vectors.
-3. **First real target**: `wifi_status` (the hardest case in `node-context-parity-scoping.md` §7) or one network
+5. **First real target**: `wifi_status` (the hardest case in `node-context-parity-scoping.md` §7) or one network
    node, plus `adc`. Show "no loss" against the built-in.
-4. Then the rest of the network family, `touch_i2c`, `display_spi`, and the question of built-ins adopting the spec.
+6. Then the rest of the network family, `touch_i2c`, `display_spi`, and the question of built-ins adopting the spec.
 
-Unaffected meanwhile: convert `timer`. Held until decided: the flow-query vocabulary, the port-type data form, and
-promoting core-only vocabulary into `custom-node.schema.json`.
+Unaffected meanwhile: convert `timer` (done). Held until decided: the flow-query vocabulary and promoting
+core-only vocabulary into `custom-node.schema.json`. **Not held:** the port-type data form (§10 item 4), `ts_wifi`.
 
 ## 9. Blast radius
 
@@ -178,9 +183,11 @@ promoting core-only vocabulary into `custom-node.schema.json`.
 
 Mike approved option 3 as the direction, with these amendments (all from the architecture review session):
 
-1. **Spike-gated.** No hook machinery lands before §8's spike reports size, load time, call latency, and whether a
-   synchronous instruction-budgeted call is viable. If it isn't, option 2 is the fallback for the network family,
-   with the honest statement that parity then stays partial.
+1. **Spike-gated (spike run 2026-10-18).** No hook machinery lands before the spike reports. It now has
+   (`package-compile-hooks-spike.md`): interpreter cost is fine, but synchronous budgeting is unavailable, so the
+   remaining gate is Mike's call on **async `compile()` + worker termination**, plus a browser-shim measurement. If
+   async is rejected, option 2 is the fallback for the network family, with the honest statement that parity then
+   stays partial.
 2. **Data is the default; the hook is the escape hatch.** Hooks do not remove the need for declarative shapes — the
    palette, property panel, catalog, AI authoring and static analysis all read data. A new capability is data unless
    it genuinely cannot be expressed as data, and that exception is stated in the change.

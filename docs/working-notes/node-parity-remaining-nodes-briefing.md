@@ -81,13 +81,13 @@ Residue (built-in-only by design, not goals): **`function`** (verbatim user code
    **`variable-set` is no longer on this list:** its fate is the context model's no-code-path question (Q3), still
    open, and that model now follows the device settings store (`device-settings-store-scoping.md`,
    `context-model-scoping.md` §12/§13).
-2. **Spike the package compile hook (2026-10-18 decision).** `package-compile-hooks-scoping.md` §8 step 1: load a
-   MicroPython WASM interpreter in the editor and the CLI, call a hook synchronously with a budget, measure size and
-   latency, and decide go/no-go against option 2 (runtime flow manifest). Agreed amendments in its §10. Everything
-   below in the network family waits on this.
+2. **Package compile hook: spike done 2026-10-18** (`package-compile-hooks-spike.md`). Interpreter cost is
+   acceptable (371 KB raw, ~5–10 ms/hook), but JS-hosted WASM has no synchronous budget: containment needs a
+   worker terminated on timeout, so `compile()` becomes async. **Next decision is Mike's: accept async
+   `compile()` + worker, or fall back to option 2.** Browser shim measurement still to do.
 3. **Flow-context vocabulary for the network family — held, not dropped.** `network-family-flow-context-scoping.md`
-   is the inventory; if the spike says go, most of it is replaced by the hook (`wifi_status` is the first target).
-   If no-go, the `hasNode`/`nodesOfType` forms in that note are the fallback.
+   is the inventory; if the hook goes ahead, most of it is replaced by the hook (`wifi_status` is the first target).
+   If not, the `hasNode`/`nodesOfType` forms in that note are the fallback.
 4. **A data form for property-dependent port types** (unblocks `inject`/`startup`/`variable_get`). **Not held**
    (Mike, 2026-10-18): bounded, editor-side, a poor fit for a hook — an explicit exception to the hook direction.
 5. Then the hardware remainder (`touch-i2c`, `display-spi`, `adc`) as separate, ideally hardware-verified tasks.

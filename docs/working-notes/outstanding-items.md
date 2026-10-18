@@ -350,9 +350,12 @@ not here.
   nodes behind core packages (`reviews/2026-10-18-node-parity-architecture.md`). **Decided the same day:** a
   sandboxed compile hook for packages (`package-compile-hooks-scoping.md`) is the intended direction, gated on a
   timeboxed interpreter spike (its §10 has the agreed amendments; option 2, a runtime flow manifest, is the
-  fallback). Until the spike reports, hold the flow-query vocabulary (`hasNode`/`nodesOfType`) and promoting
-  core-only vocabulary to the custom schema. **Not held:** the property-dependent port-type data form (bounded,
-  editor-side, an explicit exception) and `ts_wifi` (orthogonal to the hook).
+  fallback). **Spike ran 2026-10-18** (`package-compile-hooks-spike.md`): interpreter cost is fine (371 KB raw,
+  ~5–10 ms/hook) but synchronous budgeting is unavailable in JS-hosted WASM — containment needs a worker terminated
+  on timeout, so `compile()` becomes async. Awaiting Mike's call on the async API (and a browser-shim measurement).
+  Until then, hold the flow-query vocabulary (`hasNode`/`nodesOfType`) and promoting core-only vocabulary to the
+  custom schema. **Not held:** the property-dependent port-type data form (bounded, editor-side, an explicit
+  exception) and `ts_wifi` (orthogonal to the hook).
   **Context parity phase 2a landed 2026-10-15:** a custom `configRef` may be `singleton` (the flow's one
   config of that type, via `findConfigsOfType`); custom `pin` fields take `pinUse`/`pinPull` and are now
   board-checked and claimed as hardware resources; a `target` field kind exposes the board/processor
