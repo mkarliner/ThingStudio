@@ -352,7 +352,8 @@ not here.
   timeboxed interpreter spike (its §10 has the agreed amendments; option 2, a runtime flow manifest, is the
   fallback). **Spike ran 2026-10-18** (`package-compile-hooks-spike.md`): interpreter cost is fine (371 KB raw,
   ~5–10 ms/hook) but synchronous budgeting is unavailable in JS-hosted WASM — containment needs a worker terminated
-  on timeout, so `compile()` becomes async. Awaiting Mike's call on the async API (and a browser-shim measurement).
+  on timeout, so `compile()` becomes async. **Mike accepted async `compile()` + a persistent worker on
+  2026-10-18.** Awaiting the browser-shim measurement, then the context spec.
   Until then, hold the flow-query vocabulary (`hasNode`/`nodesOfType`) and promoting core-only vocabulary to the
   custom schema. **Not held:** the property-dependent port-type data form (bounded, editor-side, an explicit
   exception) and `ts_wifi` (orthogonal to the hook).

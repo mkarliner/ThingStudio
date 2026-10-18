@@ -183,11 +183,11 @@ core-only vocabulary into `custom-node.schema.json`. **Not held:** the port-type
 
 Mike approved option 3 as the direction, with these amendments (all from the architecture review session):
 
-1. **Spike-gated (spike run 2026-10-18).** No hook machinery lands before the spike reports. It now has
-   (`package-compile-hooks-spike.md`): interpreter cost is fine, but synchronous budgeting is unavailable, so the
-   remaining gate is Mike's call on **async `compile()` + worker termination**, plus a browser-shim measurement. If
-   async is rejected, option 2 is the fallback for the network family, with the honest statement that parity then
-   stays partial.
+1. **Spike-gated (spike run 2026-10-18; async accepted the same day).** Interpreter cost is fine; synchronous
+   budgeting is unavailable, so containment is async `compile()` + a persistent worker terminated on timeout —
+   **Mike accepted that** on 2026-10-18. Remaining: the browser-shim measurement and the context spec. If the
+   browser path fails, option 2 is still the fallback for the network family, with the honest statement that parity
+   then stays partial.
 2. **Data is the default; the hook is the escape hatch.** Hooks do not remove the need for declarative shapes — the
    palette, property panel, catalog, AI authoring and static analysis all read data. A new capability is data unless
    it genuinely cannot be expressed as data, and that exception is stated in the change.

@@ -83,8 +83,8 @@ Residue (built-in-only by design, not goals): **`function`** (verbatim user code
    `context-model-scoping.md` §12/§13).
 2. **Package compile hook: spike done 2026-10-18** (`package-compile-hooks-spike.md`). Interpreter cost is
    acceptable (371 KB raw, ~5–10 ms/hook), but JS-hosted WASM has no synchronous budget: containment needs a
-   worker terminated on timeout, so `compile()` becomes async. **Next decision is Mike's: accept async
-   `compile()` + worker, or fall back to option 2.** Browser shim measurement still to do.
+   worker terminated on timeout, so `compile()` becomes async. **Accepted by Mike 2026-10-18:** async
+   `compile()` + a persistent worker. Next: the browser WASI-shim measurement, then the context spec.
 3. **Flow-context vocabulary for the network family — held, not dropped.** `network-family-flow-context-scoping.md`
    is the inventory; if the hook goes ahead, most of it is replaced by the hook (`wifi_status` is the first target).
    If not, the `hasNode`/`nodesOfType` forms in that note are the fallback.

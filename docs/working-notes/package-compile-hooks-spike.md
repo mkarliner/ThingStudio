@@ -17,6 +17,13 @@ x86-64 Linux, against a prebuilt artifact (see §5); the browser is not yet meas
 | Realistic hook, 200-node/10-config flow (16.5 KB ctx JSON) | 7.9 ms instantiate + 2.4 ms run |
 | Infinite loop, synchronous | never returns (no in-process interrupt exists) |
 | Infinite loop, worker + `terminate()` after 500 ms | terminated in ~3.8 ms |
+| Pure-JS WASI shim (no `node:wasi`) | 3.6 KB source; instantiate 1.7 ms, run 0.12 ms |
+| Worker start (shim + wasm, Node) | ~35 ms; terminate ~0.2 ms |
+
+The pure-JS shim is the browser proxy: it implements only the Preview1 calls the module imports, using `DataView`,
+`TextEncoder` and the standard `WebAssembly` API — no Node APIs. It replaces `node:wasi` and is faster (instantiate
+1.7 ms vs 2.9–3.6 ms). This materially de-risks the browser path: the editor needs a fetch, the standard
+`WebAssembly.instantiate` call and the shim, nothing platform-specific.
 
 The hook used in the realistic runs parses the context JSON, finds the WiFi config, computes `deferToMqtt` from the
 node list, and prints a JSON result — the shape a network-family hook needs.
@@ -47,8 +54,9 @@ but it must be an explicit decision, not slipped in.
 
 ## 3. What the spike did not settle
 
-- **The browser.** Node's `node:wasi` is a lower bound. A browser needs a WASI preview1 shim (extra bundle,
-  compatibility risk). Measure the shim's size and the same latency numbers in the editor before committing.
+- **The browser.** The pure-JS shim runs the module without `node:wasi`, so the browser path needs only standard
+  WebAssembly + fetch; actual browser timing (expected in the same range) and CSP/WASM-instantiation rules still
+  need checking when the editor is wired.
 - **Worker cold-start latency.** Not measured precisely; a persistent warm worker avoids paying it per hook, but the
   first compile in a session does.
 - **The artifact's provenance.** The tested wasm came from `micropython-wasm` 0.1a2 (Apache-2.0, built from
@@ -60,10 +68,10 @@ but it must be an explicit decision, not slipped in.
 
 ## 4. Recommendation
 
-**Go**, subject to the browser measurement and to Mike accepting async `compile()`. The interpreter cost is not the
-problem; DoS containment is, and the worker-termination answer is acceptable if the async ripple is accepted.
-If async `compile()` is rejected, the fallback is option 2 (runtime flow manifest) for the network family, not a
-synchronous hook.
+**Go**, subject to a real-browser check when the editor is wired. The interpreter cost is not the problem; DoS
+containment is, and the worker-termination answer is acceptable now that async `compile()` is accepted (Mike,
+2026-10-18). If the browser path fails, the fallback is option 2 (runtime flow manifest) for the network family, not
+a synchronous hook.
 
 ## 5. Reproducing
 
