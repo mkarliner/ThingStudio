@@ -914,5 +914,6 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   **Spike (same day, `package-compile-hooks-spike.md`):** interpreter size and per-call cost are acceptable
   (371 KB raw, ~5–10 ms per hook), but JS-hosted WASM has no synchronous fuel/timeout — the only containment is
   worker termination. **Mike accepted the async containment on 2026-10-18**; the implementation refined it to an
-  async hook pre-pass feeding the still-synchronous `compile()` (less churn, same containment). Next: the worker
-  runner and the context spec.
+  async hook pre-pass feeding the still-synchronous `compile()` (less churn, same containment). The worker runner,
+  the backend/loader's optional `compile` file and the `main.ts` wiring landed the same day; next is the first real
+  package (`wifi_status`).

@@ -353,8 +353,9 @@ not here.
   fallback). **Spike ran 2026-10-18** (`package-compile-hooks-spike.md`): interpreter cost is fine (371 KB raw,
   ~5–10 ms/hook) but synchronous budgeting is unavailable in JS-hosted WASM — containment needs a worker terminated
   on timeout. **Mike accepted the async containment on 2026-10-18**; implemented as an async pre-pass feeding the
-  synchronous `compile()`. Context building, result validation, the pre-pass, compile integration and the vendored WASI interpreter
-  landed; the worker runner and package-file loading remain.
+  synchronous `compile()`. Context building, result validation, the pre-pass, compile integration, the vendored WASI
+  interpreter, the worker runner, backend/loader support and `main.ts` wiring all landed. Next: the first real
+  package (`wifi_status`), a browser pass and conformance vectors; the CLI has no custom-node loading yet.
   Until then, hold the flow-query vocabulary (`hasNode`/`nodesOfType`) and promoting core-only vocabulary to the
   custom schema. **Not held:** the property-dependent port-type data form (bounded, editor-side, an explicit
   exception) and `ts_wifi` (orthogonal to the hook).

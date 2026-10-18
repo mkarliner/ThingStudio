@@ -36,7 +36,7 @@ function transform(type: string): string {
 
 /** A fake backend holding `files`: package name -> descriptor text and implementation. */
 function fakeBackend(
-  files: Record<string, { descriptor: string; implementation?: string } | Error>,
+  files: Record<string, { descriptor: string; implementation?: string; compile?: string } | Error>,
   extraPackages: CustomNodeListing["packages"] = [],
 ): CustomNodeSource {
   const names = Object.keys(files);
@@ -46,12 +46,25 @@ function fakeBackend(
       const f = files[name];
       if (f === undefined) throw new Error(`no package named ${name}`);
       if (f instanceof Error) throw f;
-      return { descriptor: f.descriptor, implementation: f.implementation ?? RUN };
+      return { descriptor: f.descriptor, implementation: f.implementation ?? RUN, compile: f.compile };
     },
   };
 }
 
 describe("loadAllCustomNodes", () => {
+  it("carries a package's optional compile hook through to the loaded definition", async () => {
+    const hook = "def compile(ctx, properties):\n    return {'properties': {}}\n";
+    const result = await loadAllCustomNodes(fakeBackend({ hooked: { descriptor: transform("my/hooked"), compile: hook } }));
+    expect(result.loaded.map((p) => p.compileHook)).toEqual([hook]);
+    replaceAllCustomNodePackages(result.loaded, []);
+    const def = getCustomNodePackage("my/hooked");
+    expect(def?.compileHook).toBe(hook);
+    const registry = mergeCustomNodeRegistry(buildRegistry(), [
+      { ...buildCustomNodeDefinition(def!.descriptor, def!.pythonSource), compileHook: def!.compileHook },
+    ]);
+    expect(registry.get("my/hooked")?.compileHook).toBe(hook);
+  });
+
   it("loads every good package and skips each bad one, naming its file", async () => {
     const result = await loadAllCustomNodes(
       fakeBackend({

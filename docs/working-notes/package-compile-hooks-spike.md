@@ -92,5 +92,9 @@ wheel, extracting `micropython_wasm/artifacts/micropython-wasi.wasm`, and instan
 - **`node-library/compile-context.ts`, `compile-hook.ts`, `compile-hooks.ts`** — context builder, result validator
   (limits asserted against `api.json`) and the async pre-pass. `compile()` consumes validated results and stays
   synchronous.
-- **Still open:** the worker wrapper (wall-clock containment), loading `<name>.compile.py` through the backend and
-  custom-node loader, wiring the pre-pass into `main.ts`/the CLI, and real-interpreter conformance vectors.
+- **Worker + wiring landed the same day** (`compile-hook/runner.ts`, `hook-worker.ts`): a persistent browser Worker,
+  1 s per-hook budget, terminate-and-recreate on expiry; the backend serves `<name>.compile.py` (optional `compile`
+  field), the loader carries it into the definition, and `main.ts` runs the pre-pass before every preview/deploy.
+  The editor bundle emits a 4 KB worker chunk; `dist/vendor/` carries the wasm.
+- **Still open:** the CLI has no custom-node loading at all, so no hook path there yet; a real-browser run; and the
+  interpreter conformance vectors (§8).

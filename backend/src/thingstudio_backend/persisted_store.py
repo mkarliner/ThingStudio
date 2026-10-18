@@ -159,6 +159,9 @@ class PersistedStoreNotFoundError(PersistedStoreError):
 class CustomNodePackage:
     descriptor: str
     implementation: str
+    # Optional compile-time half (<name>.compile.py), opaque Python like the implementation. None when the
+    # package ships no hook.
+    compile: str | None = None
 
 
 @dataclass(frozen=True)
@@ -367,6 +370,13 @@ class PersistedStore:
             raise PersistedStoreNotFoundError(f"NODE_ERROR: no saved custom node named {name!r}") from exc
         except OSError as exc:
             raise PersistedStoreError(f"NODE_ERROR: failed reading custom node {name!r}: {exc}") from exc
+        compile_path = folder / f"{name}.compile.py"
+        compile_source: str | None = None
+        if compile_path.is_file():
+            try:
+                compile_source = compile_path.read_text(encoding="utf-8")
+            except OSError as exc:
+                raise PersistedStoreError(f"NODE_ERROR: failed reading custom node {name!r} compile hook: {exc}") from exc
         try:
             implementation = impl_path.read_text(encoding="utf-8")
         except FileNotFoundError as exc:
@@ -380,23 +390,26 @@ class PersistedStore:
             ) from exc
         except OSError as exc:
             raise PersistedStoreError(f"NODE_ERROR: failed reading custom node {name!r}: {exc}") from exc
-        return CustomNodePackage(descriptor=descriptor, implementation=implementation)
+        return CustomNodePackage(descriptor=descriptor, implementation=implementation, compile=compile_source)
 
-    def write_custom_node(self, name: str, descriptor: str, implementation: str) -> None:
+    def write_custom_node(self, name: str, descriptor: str, implementation: str, compile: str | None = None) -> None:
         _validate_name(name, kind="custom node")
         _validate_json_text(descriptor, what=f"custom node {name!r} descriptor")
-        # implementation is opaque Python source text -- never parsed,
+        # implementation/compile are opaque Python source text -- never parsed,
         # never executed here (see header); no validation beyond "is a
         # string", already enforced by the HTTP layer before this is called.
         _atomic_write(self.custom_nodes_dir / f"{name}.node.json", descriptor)
         _atomic_write(self.custom_nodes_dir / f"{name}.node.py", implementation)
+        if compile is not None:
+            _atomic_write(self.custom_nodes_dir / f"{name}.compile.py", compile)
 
     def delete_custom_node(self, name: str) -> None:
         _validate_name(name, kind="custom node")
         descriptor_path = self.custom_nodes_dir / f"{name}.node.json"
         impl_path = self.custom_nodes_dir / f"{name}.node.py"
+        compile_path = self.custom_nodes_dir / f"{name}.compile.py"
         found = False
-        for path in (descriptor_path, impl_path):
+        for path in (descriptor_path, impl_path, compile_path):
             try:
                 path.unlink()
                 found = True

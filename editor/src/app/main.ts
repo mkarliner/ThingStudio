@@ -113,6 +113,8 @@ import { compile } from "../compiler/compile.js";
 import type { NodeLineRange } from "../compiler/compile.js";
 import { WIFI_CONFIG_TYPE, computeWifiProvisionMarker, normalizeWifiConfigs } from "../node-library/wifi-status.js";
 import { buildRegistry } from "../node-library/registry.js";
+import { runCompileHooks } from "../node-library/compile-hooks.js";
+import { browserHookWorkerFactory, createWorkerHookRunner } from "../compile-hook/runner.js";
 import { mergeCustomNodeRegistry } from "../node-library/custom-node.js";
 import { WebSerialTransport, type WebSerialPort, type DeviceTransport, type TransportEvents } from "../protocol/transport.js";
 import { BackendTransport, InstallRuntimeError, NetworkConnectError, type NetworkBoardInfo, type SerialPortInfo } from "../protocol/backend-transport.js";
@@ -441,17 +443,19 @@ function extractCanvasSnapshot(): { nodes: CanvasNodeSnapshot[]; edges: FlowFile
  * than silently dropping data for a type this function doesn't
  * understand -- CLAUDE.md's fault-handling priority: fail open into "saved
  * something reasonable," not into "silently lost a field." */
+function visibleConfigProperties(type: string, properties: Record<string, unknown>): Record<string, unknown> {
+  const descriptor = CONFIG_TYPES[type];
+  if (!descriptor) return properties;
+  const allowedNames = new Set(descriptor.fields.map((f) => f.name));
+  const filtered: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(properties)) {
+    if (allowedNames.has(key)) filtered[key] = value;
+  }
+  return filtered;
+}
+
 function extractConfigsSnapshot(): FlowFileConfig[] {
-  return [...configsStore.value.values()].map((c) => {
-    const descriptor = CONFIG_TYPES[c.type];
-    if (!descriptor) return { id: c.id, type: c.type, properties: c.properties };
-    const allowedNames = new Set(descriptor.fields.map((f) => f.name));
-    const filtered: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(c.properties)) {
-      if (allowedNames.has(key)) filtered[key] = value;
-    }
-    return { id: c.id, type: c.type, properties: filtered };
-  });
+  return [...configsStore.value.values()].map((c) => ({ id: c.id, type: c.type, properties: visibleConfigProperties(c.type, c.properties) }));
 }
 
 /** The reverse direction: after a flow loads, every WiFi/MQTT-broker
@@ -777,7 +781,7 @@ async function loadFlowText(text: string, ref: FlowFileRef | null): Promise<void
   if (ref) await rememberFile(ref);
   else showCurrentFile();
   logLine(`[flow loaded -- ${file.nodes.length} node(s)${ref ? ` from ${ref.handle.name}` : ""}]`, "ok");
-  refreshPreview();
+  void refreshPreview();
 }
 
 async function openFlow(): Promise<void> {
@@ -1054,6 +1058,12 @@ function compileToMpy(source: string, march: string | null): Uint8Array {
 // built-in-only base, not the registry actually passed to compile().
 const builtInRegistry = buildRegistry();
 
+// Package compile hooks run in a browser Worker (compile-hook/runner.ts); the worker is created lazily on
+// the first hooked package, so flows without one never load the interpreter. A hook that exceeds its
+// wall-clock budget has its worker terminated and replaced.
+const compileHookWasmUrl = new URL("vendor/micropython-wasi/micropython-wasi.wasm", document.baseURI).href;
+const compileHookRunner = createWorkerHookRunner({ createWorker: browserHookWorkerFactory(), wasmUrl: compileHookWasmUrl });
+
 // Node-ID line ranges from the most recent successful compile -- stashed
 // here rather than threaded through refreshPreview()'s return value so the
 // Deploy handler's mpy-cross error path (which runs after Deploy's own
@@ -1086,7 +1096,7 @@ setGuiNodeLister(() =>
   }),
 );
 
-function currentSource(): string {
+async function currentSource(): Promise<string> {
   const graphData = { ...toGraphData(reteEditor, [...configsStore.value.values()]), screens: screensStore.value };
   // mergeCustomNodeRegistry throws (CustomNodeDescriptorError) if two
   // loaded custom packages collide on the same type id -- allowed to
@@ -1100,16 +1110,24 @@ function currentSource(): string {
   for (const n of graphData.nodes) {
     if (!registry.has(n.type)) throw new Error(`${missingNodeTypeMessage(n.type)} (node ${n.id})`);
   }
-  const { source, nodeLineRanges, warnings } = compile(graphData, registry, { target: activeTarget.value });
+  const hooks = await runCompileHooks(graphData, registry, compileHookRunner, {
+    target: activeTarget.value,
+    redactConfig: (c) => visibleConfigProperties(c.type, c.properties),
+  });
+  const { source, nodeLineRanges, warnings } = compile(graphData, registry, {
+    target: activeTarget.value,
+    hookResults: hooks.results,
+    hookWarnings: hooks.warnings,
+  });
   lastNodeLineRanges = nodeLineRanges;
   lastCompileWarnings = warnings;
   lastWifiProvision = computeWifiProvisionMarker(graphData);
   return source;
 }
 
-function refreshPreview(): { source: string } | { error: string } {
+async function refreshPreview(): Promise<{ source: string } | { error: string }> {
   try {
-    const source = currentSource();
+    const source = await currentSource();
     // Warnings go after the source, as comments, so line numbers in the preview still match
     // the compiled source's own.
     el("source-preview").textContent =
@@ -1288,14 +1306,14 @@ reteEditor.addPipe((context) => {
   if (context.type === "nodecreated" || context.type === "noderemoved" || context.type === "connectioncreated" || context.type === "connectionremoved" || context.type === "cleared") {
     deployedClean = false;
     updateDeployButtonEnabled();
-    refreshPreview();
+    void refreshPreview();
   }
   return context;
 });
 watch(propertyVersion, () => {
   deployedClean = false;
   updateDeployButtonEnabled();
-  refreshPreview();
+  void refreshPreview();
 });
 // A config changed (picked, created, or its credential swapped): fetch any newly chosen credential's
 // values, then recompile the preview. updateConfig() bumps configsVersion again, but the second pass
@@ -1304,9 +1322,9 @@ watch(configsVersion, async () => {
   await resolveConfigCredentials(true);
   deployedClean = false;
   updateDeployButtonEnabled();
-  refreshPreview();
+  void refreshPreview();
 });
-refreshPreview();
+void refreshPreview();
 
 // ---------------------------------------------------------------------
 // WebSerial connect / deploy -- real §13 protocol via transport.ts, no
@@ -1732,7 +1750,7 @@ function updateActiveTarget(): TargetResolution {
       ? "Thingstudio doesn't know this board. Shows what it reports and what to add."
       : "Pick a board in the Board menu, or connect one, to see its pins.";
   updateNativeArchLabel();
-  refreshPreview();
+  void refreshPreview();
   return resolution;
 }
 
@@ -1906,7 +1924,7 @@ async function loadCustomNodes(explicit = false): Promise<void> {
       ...result.problems.map((p) => ({ text: `[custom nodes] ${p.file} is not loaded: ${p.message}`, cls: "err" as const })),
     ];
     // What was loaded is part of the report, so an edited .node.json or .node.py counts as a change too.
-    const report = JSON.stringify([lines, result.loaded.map((p) => [p.descriptor, p.pythonSource])]);
+    const report = JSON.stringify([lines, result.loaded.map((p) => [p.descriptor, p.pythonSource, p.compileHook ?? null])]);
     const quiet = !explicit && lastCustomNodesReport === "" && result.loaded.length === 0 && result.problems.length === 0;
     if ((explicit || report !== lastCustomNodesReport) && !quiet) for (const l of lines) logLine(l.text, l.cls);
     const previous = lastCustomNodesReport;
@@ -1918,7 +1936,7 @@ async function loadCustomNodes(explicit = false): Promise<void> {
         deployedClean = false;
         updateDeployButtonEnabled();
       }
-      refreshPreview();
+      void refreshPreview();
     }
   } finally {
     customNodesLoading = false;
@@ -2883,7 +2901,7 @@ el("btnDeploy").addEventListener("click", async () => {
     await loadUserDefinitions();
     await resolveConfigCredentials();
     logTargetResolution(updateActiveTarget());
-    const preview = refreshPreview();
+    const preview = await refreshPreview();
     if ("error" in preview) {
       logLine(`[compile error] ${preview.error}`, "err");
       return;

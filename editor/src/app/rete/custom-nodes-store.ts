@@ -29,6 +29,8 @@ import type { NodeDefinition } from "../../compiler/node-definition.js";
 export interface CustomNodePackage {
   descriptor: CustomNodeDescriptor;
   pythonSource: string;
+  /** Optional compile-time hook source (<name>.compile.py). */
+  compileHook?: string;
 }
 
 export const customNodePackages = ref<Map<string, CustomNodePackage>>(new Map());
@@ -45,11 +47,11 @@ function bumpCustomNodesVersion(): void {
  * different package claiming an already-used type id is far more likely
  * a mistake (two packages, same type by accident) than an intentional
  * replace, so this stays strict by default. */
-export function registerCustomNodePackage(descriptor: CustomNodeDescriptor, pythonSource: string): void {
+export function registerCustomNodePackage(descriptor: CustomNodeDescriptor, pythonSource: string, compileHook?: string): void {
   if (customNodePackages.value.has(descriptor.type)) {
     throw new CustomNodeDescriptorError(`a custom node type "${descriptor.type}" is already loaded this session -- reload it via replaceCustomNodePackage if you meant to update it`);
   }
-  customNodePackages.value.set(descriptor.type, { descriptor, pythonSource });
+  customNodePackages.value.set(descriptor.type, { descriptor, pythonSource, ...(compileHook ? { compileHook } : {}) });
   bumpCustomNodesVersion();
 }
 
@@ -60,8 +62,8 @@ export function registerCustomNodePackage(descriptor: CustomNodeDescriptor, pyth
  * -- registerCustomNodePackage()'s stricter collision check exists for
  * callers that specifically want to guarantee they're not clobbering an
  * existing type. */
-export function loadOrReplaceCustomNodePackage(descriptor: CustomNodeDescriptor, pythonSource: string): void {
-  customNodePackages.value.set(descriptor.type, { descriptor, pythonSource });
+export function loadOrReplaceCustomNodePackage(descriptor: CustomNodeDescriptor, pythonSource: string, compileHook?: string): void {
+  customNodePackages.value.set(descriptor.type, { descriptor, pythonSource, ...(compileHook ? { compileHook } : {}) });
   bumpCustomNodesVersion();
 }
 
@@ -70,10 +72,12 @@ export function loadOrReplaceCustomNodePackage(descriptor: CustomNodeDescriptor,
  * that type already on the canvas stays there and fails to compile, naming the type. `problems` are
  * kept by claimed type so opening a flow that uses one can say which file failed (main.ts). */
 export function replaceAllCustomNodePackages(
-  packages: { descriptor: CustomNodeDescriptor; pythonSource: string; file: string }[],
+  packages: { descriptor: CustomNodeDescriptor; pythonSource: string; compileHook?: string; file: string }[],
   problems: { file: string; type?: string; message: string }[],
 ): void {
-  customNodePackages.value = new Map(packages.map((p) => [p.descriptor.type, { descriptor: p.descriptor, pythonSource: p.pythonSource }]));
+  customNodePackages.value = new Map(
+    packages.map((p) => [p.descriptor.type, { descriptor: p.descriptor, pythonSource: p.pythonSource, ...(p.compileHook ? { compileHook: p.compileHook } : {}) }]),
+  );
   customNodeFiles.clear();
   for (const p of packages) customNodeFiles.set(p.descriptor.type, p.file);
   failedCustomNodeTypes.clear();
@@ -100,7 +104,11 @@ export function getCustomNodePackage(type: string): CustomNodePackage | undefine
  * main.ts's currentSource() merges into the built-in registry
  * (registry.ts's buildRegistry()) for every compile. */
 export function listCustomNodeDefinitions(): NodeDefinition[] {
-  return listCustomNodePackages().map((pkg) => buildCustomNodeDefinition(pkg.descriptor, pkg.pythonSource));
+  return listCustomNodePackages().map((pkg) => {
+    const def = buildCustomNodeDefinition(pkg.descriptor, pkg.pythonSource);
+    if (pkg.compileHook !== undefined) def.compileHook = pkg.compileHook;
+    return def;
+  });
 }
 
 /** Why a node type isn't available, for a flow that uses it: a custom type whose package failed to

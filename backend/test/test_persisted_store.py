@@ -120,6 +120,17 @@ def test_write_then_read_custom_node_round_trips(tmp_path) -> None:
     assert store.list_custom_nodes() == ["blink"]
 
 
+def test_custom_node_compile_hook_round_trips_and_is_deleted(tmp_path) -> None:
+    store = _store(tmp_path)
+    hook = "def compile(ctx, properties):\n    return {'properties': {}}\n"
+    store.write_custom_node("hooked", "{}", "pass", hook)
+    assert store.read_custom_node("hooked").compile == hook
+    hook_path = store.custom_nodes_dir / "hooked.compile.py"
+    assert hook_path.is_file()
+    store.delete_custom_node("hooked")
+    assert not hook_path.exists()
+
+
 def test_read_missing_custom_node_raises_not_found(tmp_path) -> None:
     store = _store(tmp_path)
     with pytest.raises(PersistedStoreNotFoundError):

@@ -115,13 +115,35 @@ async def test_put_then_get_custom_node_round_trips(tmp_path) -> None:
 
         get_resp = await client.get("/api/custom-nodes/blink")
         assert get_resp.status == 200
-        assert await get_resp.json() == payload
+        assert await get_resp.json() == {**payload, "compile": None}
 
         list_resp = await client.get("/api/custom-nodes")
         body = await list_resp.json()
         assert body["customNodes"] == ["blink"]
         # Each package's descriptor file, for messages that name it.
         assert body["packages"] == [{"name": "blink", "file": str(tmp_path / ".thingstudio" / "custom-nodes" / "blink.node.json")}]
+
+
+@pytest.mark.asyncio
+async def test_put_then_get_custom_node_with_compile_hook(tmp_path) -> None:
+    hook = "def compile(ctx, properties):\n    return {'properties': {}}\n"
+    payload = {"descriptor": '{"kind": "sink"}', "implementation": "pass", "compile": hook}
+    async with _client(tmp_path) as client:
+        put_resp = await client.put("/api/custom-nodes/hooked", json=payload)
+        assert put_resp.status == 200
+        get_resp = await client.get("/api/custom-nodes/hooked")
+        assert get_resp.status == 200
+        assert (await get_resp.json())["compile"] == hook
+        assert (tmp_path / ".thingstudio" / "custom-nodes" / "hooked.compile.py").is_file()
+        await client.delete("/api/custom-nodes/hooked")
+        assert not (tmp_path / ".thingstudio" / "custom-nodes" / "hooked.compile.py").exists()
+
+
+@pytest.mark.asyncio
+async def test_put_custom_node_non_string_compile_is_400(tmp_path) -> None:
+    async with _client(tmp_path) as client:
+        resp = await client.put("/api/custom-nodes/bad", json={"descriptor": "{}", "implementation": "pass", "compile": 3})
+        assert resp.status == 400
 
 
 @pytest.mark.asyncio

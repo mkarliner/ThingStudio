@@ -169,6 +169,8 @@ export async function deleteFlow(wsUrl: string, name: string): Promise<void> {
 export interface CustomNodePackageText {
   descriptor: string;
   implementation: string;
+  /** Optional compile-time hook source (<name>.compile.py); null/absent for a package without one. */
+  compile?: string | null;
 }
 
 export async function listCustomNodes(wsUrl: string): Promise<string[]> {
@@ -190,8 +192,8 @@ export async function listCustomNodePackages(wsUrl: string): Promise<{ names: st
 export async function readCustomNode(wsUrl: string, name: string): Promise<CustomNodePackageText> {
   const res = await request(wsUrl, `/api/custom-nodes/${encodeURIComponent(name)}`);
   if (!res.ok) throw new AdminApiError(`load custom node "${name}" failed: ${await parseErrorBody(res)}`);
-  const body = (await res.json()) as { descriptor: string; implementation: string };
-  return { descriptor: body.descriptor, implementation: body.implementation };
+  const body = (await res.json()) as { descriptor: string; implementation: string; compile?: string | null };
+  return { descriptor: body.descriptor, implementation: body.implementation, compile: body.compile ?? null };
 }
 
 // write/delete for custom nodes are provided for parity with admin_api.py's

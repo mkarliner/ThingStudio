@@ -115,7 +115,7 @@ def make_admin_routes(store: PersistedStore) -> list[web.RouteDef]:
             package = store.read_custom_node(name)
         except PersistedStoreError as exc:
             return _error_response(exc)
-        return web.json_response({"descriptor": package.descriptor, "implementation": package.implementation})
+        return web.json_response({"descriptor": package.descriptor, "implementation": package.implementation, "compile": package.compile})
 
     async def put_custom_node(request: web.Request) -> web.Response:
         name = request.match_info["name"]
@@ -131,8 +131,14 @@ def make_admin_routes(store: PersistedStore) -> list[web.RouteDef]:
                 {"error": "NODE_ERROR: request body must be a JSON object with string \"descriptor\" and \"implementation\" fields"},
                 status=400,
             )
+        compile_source = body.get("compile")
+        if compile_source is not None and not isinstance(compile_source, str):
+            return web.json_response(
+                {"error": "NODE_ERROR: \"compile\" must be a string when present (the <name>.compile.py source)"},
+                status=400,
+            )
         try:
-            store.write_custom_node(name, body["descriptor"], body["implementation"])
+            store.write_custom_node(name, body["descriptor"], body["implementation"], compile_source)
         except PersistedStoreError as exc:
             return _error_response(exc)
         return web.json_response({"ok": True})

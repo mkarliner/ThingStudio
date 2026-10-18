@@ -163,8 +163,15 @@ describe("listCustomNodes / readCustomNode / writeCustomNode / deleteCustomNode"
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ descriptor: '{"type":"custom/dht22"}', implementation: "def read(): pass" }));
     vi.stubGlobal("fetch", fetchMock);
     const pkg = await readCustomNode("ws://127.0.0.1:8765/ws", "dht22");
-    expect(pkg).toEqual({ descriptor: '{"type":"custom/dht22"}', implementation: "def read(): pass" });
+    expect(pkg).toEqual({ descriptor: '{"type":"custom/dht22"}', implementation: "def read(): pass", compile: null });
     expect(fetchMock).toHaveBeenCalledWith("http://127.0.0.1:8765/api/custom-nodes/dht22", undefined);
+  });
+
+  it("readCustomNode carries the compile hook when present", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ descriptor: "{}", implementation: "pass", compile: "def compile(ctx, p):\n    return {}\n" }));
+    vi.stubGlobal("fetch", fetchMock);
+    const pkg = await readCustomNode("ws://127.0.0.1:8765/ws", "hooked");
+    expect(pkg.compile).toBe("def compile(ctx, p):\n    return {}\n");
   });
 
   it("writeCustomNode PUTs a JSON body with descriptor and implementation fields", async () => {

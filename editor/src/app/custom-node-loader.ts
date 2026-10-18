@@ -32,12 +32,14 @@ export interface CustomNodeListing {
 /** The backend calls the loader needs. main.ts passes admin-api-client.ts's functions. */
 export interface CustomNodeSource {
   list(): Promise<CustomNodeListing>;
-  read(name: string): Promise<{ descriptor: string; implementation: string }>;
+  read(name: string): Promise<{ descriptor: string; implementation: string; compile?: string | null }>;
 }
 
 export interface LoadedCustomNode {
   descriptor: CustomNodeDescriptor;
   pythonSource: string;
+  /** The package's optional compile-time hook (<name>.compile.py), when it ships one. */
+  compileHook?: string;
   file: string;
 }
 
@@ -81,7 +83,7 @@ export async function loadAllCustomNodes(source: CustomNodeSource): Promise<Cust
   const fileOfType = new Map<string, string>();
   for (const name of listing.names) {
     const file = fileOf.get(name) ?? `${name}.node.json`;
-    let text: { descriptor: string; implementation: string };
+    let text: { descriptor: string; implementation: string; compile?: string | null };
     try {
       text = await source.read(name);
     } catch (err) {
@@ -109,7 +111,7 @@ export async function loadAllCustomNodes(source: CustomNodeSource): Promise<Cust
       continue;
     }
     fileOfType.set(descriptor.type, file);
-    loaded.push({ descriptor, pythonSource: text.implementation, file });
+    loaded.push({ descriptor, pythonSource: text.implementation, ...(text.compile ? { compileHook: text.compile } : {}), file });
   }
   return { loaded, problems };
 }
