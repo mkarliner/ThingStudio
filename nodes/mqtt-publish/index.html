@@ -2949,7 +2949,7 @@
 <li><strong>broker</strong> — which MQTT broker config to use (see <a href="../../working-in-the-editor/#config-nodes">Editor in depth</a>). Required — won't compile without one.</li>
 </ul>
 <h2 id="behavior">Behavior</h2>
-<p>Uses the flow's WiFi network (the WiFi config in the flow, shared by every WiFi node; this node has no WiFi property of its own) and its own broker config for the MQTT connection. In a flow with MQTT nodes, MQTT manages the WiFi connection. An "unmanaged" WiFi config isn't accepted here: this node manages its own WiFi reconnection, so it needs a real network to connect to. The payload is sent as bytes (a string is UTF-8 encoded, other types are converted).</p>
+<p>Uses the flow's WiFi network (the WiFi config in the flow, shared by every WiFi node; the node's WiFi field selects that same network) and its own broker config for the MQTT connection. Nodes on the same broker share one connection. In a flow with MQTT nodes, MQTT manages the WiFi connection. An "unmanaged" WiFi config isn't accepted here: this node manages its own WiFi reconnection, so it needs a real network to connect to. The payload is sent as bytes (a string is UTF-8 encoded, other types are converted).</p>
 <p>Shows a connection-status dot on the canvas (see <a href="../../working-in-the-editor/#node-status">Editor in depth</a>) once
 connected to a device. It reports its own broker connection state, even when it shares that broker with an
 <code>mqtt subscribe</code> node. The node opens its broker connection only when there's actually something to publish, so the
