@@ -157,7 +157,7 @@ import { descriptor as neopixelCoreDescriptor } from "../../node-library/core-pa
 import { descriptor as wifiStatusCoreDescriptor } from "../../node-library/core-packages/wifi-status.js";
 import { descriptor as wifiGateCoreDescriptor } from "../../node-library/core-packages/wifi-gate.js";
 import { descriptor as udpSendCoreDescriptor } from "../../node-library/core-packages/udp-send.js";
-import { udpReceiveNode } from "../../node-library/udp-receive.js";
+import { descriptor as udpReceiveCoreDescriptor } from "../../node-library/core-packages/udp-receive.js";
 import { httpRequestNode } from "../../node-library/http-request.js";
 import { httpInNode } from "../../node-library/http-in.js";
 import { descriptor as httpResponseCoreDescriptor } from "../../node-library/core-packages/http-response.js";
@@ -454,7 +454,7 @@ export class NtpNode extends buildDescriptorNodeClass(ntpNode) {}
 
 export class UdpSendNode extends buildDescriptorNodeClass(udpSendCoreDescriptor) {}
 
-export class UdpReceiveNode extends buildDescriptorNodeClass(udpReceiveNode) {}
+export class UdpReceiveNode extends buildDescriptorNodeClass(udpReceiveCoreDescriptor) {}
 
 export class HttpRequestNode extends buildDescriptorNodeClass(httpRequestNode) {}
 

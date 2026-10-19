@@ -28,7 +28,7 @@ import { mqttSubscribeNode } from "./mqtt-subscribe.js";
 import { descriptor as pwmOutCoreDescriptor, python as pwmOutCorePython } from "./core-packages/pwm-out.js";
 import { startupNode } from "./startup.js";
 import { descriptor as timerCoreDescriptor, python as timerCorePython } from "./core-packages/timer.js";
-import { udpReceiveNode } from "./udp-receive.js";
+import { descriptor as udpReceiveCoreDescriptor, python as udpReceiveCorePython, compileHook as udpReceiveCompileHook } from "./core-packages/udp-receive.js";
 import { descriptor as udpSendCoreDescriptor, python as udpSendCorePython, compileHook as udpSendCompileHook } from "./core-packages/udp-send.js";
 import { ntpNode } from "./ntp.js";
 import { variableGetNode } from "./variable-get.js";
@@ -109,7 +109,7 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     mqttPublishNode,
     mqttSubscribeNode,
     corePackage(udpSendCoreDescriptor, udpSendCorePython, udpSendCompileHook),
-    udpReceiveNode,
+    corePackage(udpReceiveCoreDescriptor, udpReceiveCorePython, udpReceiveCompileHook),
     ntpNode,
     // A core package (phase 4): descriptor + .node.py, no TypeScript hook. See core-packages/delay.ts.
     buildCoreNodeDefinition(delayCoreDescriptor, delayCorePython),

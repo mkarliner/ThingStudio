@@ -6,6 +6,7 @@ Listens on a UDP port and emits one message per datagram received.
 
 - **port** — local port to listen on (1–65535).
 - **poll interval (ms)** — internal receive polling cadence. Default 20ms; rarely needs changing.
+- **WiFi** — the flow's WiFi network. Every WiFi node in a flow shares this one setting.
 
 ## Behavior
 

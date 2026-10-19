@@ -463,6 +463,7 @@ Type `thingstudio/udp_receive`, kind source, palette group network.
 - Properties (name, type, default):
     - `port`, number, default `9998`
     - `pollMs`, number, default `20`
+    - `wifiConfigId`, string, default `""`, the id of a `thingstudio/config/wifi` config
 
 ### udp send
 

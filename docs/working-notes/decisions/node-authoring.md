@@ -923,6 +923,7 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   **`wifi_gate` followed the same day**, the second network package: same hook derivation (minus the poll
   interval) and the same shared bring-up; its transform checks the live `_sta.isconnected()`. The rest of the
   **`udp-send` followed** (same hook, shared socket via `runtime.shared`, the built-in's bounded non-blocking
-  send kept). The rest of the family exposed two package-format gaps: `ntp` is two-faced (sink + event source) and the package format cannot
+  send kept), then **`udp-receive`** (a per-port socket via `runtime.shared`, the 10 ms loop yield as
+  `intervalMs`, `pollMs` only the EAGAIN retry). The rest of the family exposed two package-format gaps: `ntp` is two-faced (sink + event source) and the package format cannot
   declare both; `mqtt-publish`/`mqtt-subscribe` need one client shared across instances, which per-instance setup
   cannot express without a shared device library.
