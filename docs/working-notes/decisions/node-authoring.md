@@ -920,3 +920,5 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   and the shared `ts_wifi` flow dependency (`device-runtime/src/vendor/thingstudio_wifi/`) makes the bring-up
   idempotent across packages and built-ins (the old compile-time "wifi-sta" dedup couldn't cross that boundary).
   Built-in network nodes now emit `ts_wifi.ensure_station(...)` too, so a mixed flow brings WiFi up once.
+  **`wifi_gate` followed the same day**, the second network package: same hook derivation (minus the poll
+  interval) and the same shared bring-up; its transform checks the live `_sta.isconnected()`.

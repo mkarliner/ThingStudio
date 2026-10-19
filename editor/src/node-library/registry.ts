@@ -33,7 +33,7 @@ import { udpSendNode } from "./udp-send.js";
 import { ntpNode } from "./ntp.js";
 import { variableGetNode } from "./variable-get.js";
 import { variableSetNode } from "./variable-set.js";
-import { wifiGateNode } from "./wifi-gate.js";
+import { descriptor as wifiGateCoreDescriptor, python as wifiGateCorePython, compileHook as wifiGateCompileHook } from "./core-packages/wifi-gate.js";
 import { descriptor as wifiStatusCoreDescriptor, python as wifiStatusCorePython, compileHook as wifiStatusCompileHook } from "./core-packages/wifi-status.js";
 import { GUI_NODES } from "./gui.js";
 
@@ -102,7 +102,7 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     buildCoreNodeDefinition(pwmOutCoreDescriptor, pwmOutCorePython),
     buildCoreNodeDefinition(timerCoreDescriptor, timerCorePython),
     corePackage(wifiStatusCoreDescriptor, wifiStatusCorePython, wifiStatusCompileHook),
-    wifiGateNode,
+    corePackage(wifiGateCoreDescriptor, wifiGateCorePython, wifiGateCompileHook),
     httpRequestNode,
     httpInNode,
     buildCoreNodeDefinition(httpResponseCoreDescriptor, httpResponseCorePython),

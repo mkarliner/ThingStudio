@@ -4,7 +4,7 @@ Passes a message through unchanged if the WiFi station is currently connected, o
 
 ## Properties
 
-None.
+- **WiFi** — the flow's WiFi network. Every WiFi node in a flow shares this one setting.
 
 ## Behavior
 

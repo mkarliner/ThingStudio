@@ -481,7 +481,8 @@ Type `thingstudio/wifi_gate`, kind transform, palette group network.
 
 - Inputs: msg (any)
 - Outputs: msg (any)
-- Properties: none
+- Properties (name, type, default):
+    - `wifiConfigId`, string, default `""`, the id of a `thingstudio/config/wifi` config
 
 ### wifi status
 

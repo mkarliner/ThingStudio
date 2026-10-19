@@ -355,9 +355,9 @@ not here.
   on timeout. **Mike accepted the async containment on 2026-10-18**; implemented as an async pre-pass feeding the
   synchronous `compile()`. Context building, result validation, the pre-pass, compile integration, the vendored WASI
   interpreter, the worker runner, backend/loader support and `main.ts` wiring all landed. Next: the first real
-  package: **`wifi_status` flipped 2026-10-19** with the `ts_wifi` shared bring-up library (first "no loss"
-  target); the remaining eight network nodes use the same hook. Still open: a browser pass, conformance vectors,
-  and CLI custom-node loading.
+  package: **`wifi_status` and `wifi_gate` flipped 2026-10-19** with the `ts_wifi` shared bring-up library; the
+  remaining seven network nodes use the same hook. Still open: a browser pass, conformance vectors, and CLI
+  custom-node loading.
   Until then, hold the flow-query vocabulary (`hasNode`/`nodesOfType`) and promoting core-only vocabulary to the
   custom schema. **Not held:** the property-dependent port-type data form (bounded, editor-side, an explicit
   exception) and `ts_wifi` (orthogonal to the hook).

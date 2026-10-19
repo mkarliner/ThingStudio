@@ -155,7 +155,7 @@ import { adcNode } from "../../node-library/adc.js";
 import { descriptor as encoderCoreDescriptor } from "../../node-library/core-packages/encoder.js";
 import { descriptor as neopixelCoreDescriptor } from "../../node-library/core-packages/neopixel.js";
 import { descriptor as wifiStatusCoreDescriptor } from "../../node-library/core-packages/wifi-status.js";
-import { wifiGateNode } from "../../node-library/wifi-gate.js";
+import { descriptor as wifiGateCoreDescriptor } from "../../node-library/core-packages/wifi-gate.js";
 import { udpSendNode } from "../../node-library/udp-send.js";
 import { udpReceiveNode } from "../../node-library/udp-receive.js";
 import { httpRequestNode } from "../../node-library/http-request.js";
@@ -484,7 +484,7 @@ export class JournalNode extends buildDescriptorNodeClass(journalCoreDescriptor)
 
 export class WifiStatusNode extends buildDescriptorNodeClass(wifiStatusCoreDescriptor) {}
 
-export class WifiGateNode extends buildDescriptorNodeClass(wifiGateNode) {}
+export class WifiGateNode extends buildDescriptorNodeClass(wifiGateCoreDescriptor) {}
 
 export class DisplaySpiNode extends buildDescriptorNodeClass(displaySpiNode) {}
 
