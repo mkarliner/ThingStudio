@@ -133,9 +133,11 @@ const unmanaged = () => [wifiConfig({ security: "unmanaged" })];
 describe("thingstudio/wifi_status package", () => {
   describe("the compile hook", () => {
     it("resolves the flow's WiFi config and defers to mqtt when an mqtt node is present", async () => {
-      const g = graph({ pollMs: 1000 }, [wifiConfig({ ssid: "net", password: "pw" })], [
-        { id: "m1", type: "thingstudio/mqtt_publish", properties: {} },
-      ]);
+      const g = graph(
+        { pollMs: 1000 },
+        [wifiConfig({ ssid: "net", password: "pw" }), { id: "b1", type: "thingstudio/config/mqtt-broker", properties: { broker: "b", port: 1883 } }],
+        [{ id: "m1", type: "thingstudio/mqtt_publish", properties: { topic: "t", brokerConfigId: "b1" } }],
+      );
       const { hooks } = await codegen(g);
       expect(hooks.results.get("1")!.properties).toEqual({
         ssid: "net",
@@ -258,9 +260,11 @@ describe("thingstudio/wifi_status package", () => {
     });
 
     it("defers the connection to mqtt_as when the flow has mqtt nodes (no join off ESP32)", async () => {
-      const g = graph({ pollMs: 1000 }, [wifiConfig({ ssid: "net", password: "pw" })], [
-        { id: "m1", type: "thingstudio/mqtt_publish", properties: {} },
-      ]);
+      const g = graph(
+        { pollMs: 1000 },
+        [wifiConfig({ ssid: "net", password: "pw" }), { id: "b1", type: "thingstudio/config/mqtt-broker", properties: { broker: "b", port: 1883 } }],
+        [{ id: "m1", type: "thingstudio/mqtt_publish", properties: { topic: "t", brokerConfigId: "b1" } }],
+      );
       const { raw } = await runTwice(g);
       // pymock reports sys.platform != "esp32", so the ESP32-only first join is skipped entirely.
       expect(raw).not.toContain("WLAN_CONNECT");

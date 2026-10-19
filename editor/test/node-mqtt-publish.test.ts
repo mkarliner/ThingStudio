@@ -1,388 +1,159 @@
-// Tier 1 network node: mqtt_publish (editor/src/node-library/mqtt-publish.ts).
-// A sink triggered by a one-shot ("manual") inject, so unlike
-// node-wifi-status.test.ts/node-mqtt-subscribe.test.ts this runs fine
-// through the full compile() + runGenerated path (same pattern as
-// node-boolean.test.ts) -- no repeating loop involved. Asserts against
-// pymock's mqtt_as.py fixture (PUBLISHED list + printed MQTT_* lines),
-// not a real broker -- see node-http-request.test.ts for the real-local-
-// server approach used where the node's own I/O logic (not just its
-// config wiring) needs exercising; mqtt_as itself is the vendored,
-// already-proven-elsewhere library here, so this test's job is "does the
-// generated code call it correctly," not "does MQTT actually work."
-//
-// Config nodes (config-node-and-palette-implementation-briefing.md):
-// updated 2026-08-21 for the wifiConfigId behavior change -- see
-// mqtt-shared.ts's own header. Same fake-resolveConfig-via-local-map
-// pattern node-udp-send.test.ts uses, EXCEPT there's no "unmanaged1"
-// stand-in default here: mqtt_publish rejects "unmanaged" outright (see
-// mqtt-shared.ts's header for why), so the default seeded WiFi config
-// ("wifi1") always carries a real ssid/password.
-//
-// Updated again the same day for the broker-config behavior change (Mike's
-// own follow-up request, same session): `broker`/`port` moved out of the
-// node's own properties into a second referenced config,
-// `thingstudio/config/mqtt-broker`, via `brokerConfigId` -- default seeded
-// as "broker1". Unlike the fixed "wifi1" WiFi config (every test wants the
-// same credentials), most tests here DO care about the broker's own
-// broker/port value, so `configsWith()` below reseeds "broker1" fresh per
-// call rather than reusing one fixed default the way DEFAULT_WIFI_CONFIG
-// does.
+// mqtt_publish as a core package with a compile hook (2026-10-19): the hook validates topic/qos and derives the
+// flow's WiFi + referenced broker config; the Python publishes through the shared ts_mqtt client. Behaviour tests
+// run the generated flow against pymock's mqtt_as fixture (connect/publish are recorded and printed); validation
+// tests run the real WASI hook.
 
-import { flowWifiConfigsFrom } from "./flow-wifi-helper.js";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { beforeEach, describe, expect, it } from "vitest";
-import { CompileError } from "../src/compiler/errors.js";
-import type { GraphData } from "../src/compiler/graph.js";
+import { describe, expect, it } from "vitest";
+import type { GraphConfigNode, GraphData } from "../src/compiler/graph.js";
+import { runHookOnce } from "../src/compile-hook/run-hook.js";
+import { runCompileHooks } from "../src/node-library/compile-hooks.js";
 import { buildRegistry } from "../src/node-library/registry.js";
 import { compileWithHooks } from "./compile-with-hooks.js";
-import { mqttPublishNode } from "../src/node-library/mqtt-publish.js";
-import type { CodegenContext } from "../src/compiler/node-definition.js";
-import type { GraphNode } from "../src/compiler/graph.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const registry = buildRegistry();
+const wasmBytes = new Uint8Array(readFileSync(join(__dirname, "../../micropython-wasi/micropython-wasi.wasm")));
+const runner = { run: (src: string, ctx: unknown, props: Record<string, unknown>) => runHookOnce({ wasmBytes, hookSource: src, context: ctx, properties: props }) };
+const TYPE = "thingstudio/mqtt_publish";
 
-const fakeConfigs = new Map<string, Record<string, unknown>>();
-function setConfig(id: string, properties: Record<string, unknown>): void {
-  fakeConfigs.set(id, properties);
-}
-
-// Synthetic wifi_status node(s), 2026-09-04 -- see node-udp-send.test.ts's
-// own comment on this exact mechanism (identical reasoning): mqtt_publish
-// no longer carries its own wifiConfigId (mqtt-shared.ts's header),
-// deriving instead from the flow's own wifi_status node. `node()` below
-// still accepts `wifiConfigId` as a convenience for this file's existing
-// call sites.
-let wifiStatusNodes: GraphNode[] = [];
-
-const ctx: CodegenContext = {
-  uniqueName: (hint) => `_${hint}`,
-  resolveConfig: (id) => {
-    const cfg = fakeConfigs.get(id);
-    if (!cfg) throw new CompileError(`referenced config "${id}" not found`);
-    return cfg;
-  },
-  findNodesOfType: (type) => (type === "thingstudio/wifi_status" ? wifiStatusNodes : []),
-  findConfigsOfType: (type: string) => (type === "thingstudio/config/wifi" ? flowWifiConfigsFrom(wifiStatusNodes, (id) => fakeConfigs.get(id)) : []),
-};
-
-/** Finds the actual MQTTClient-construction statement among a codegen
- * result's `statements`. Looked up by content rather than a fixed index --
- * even though it's the only statement this node type contributes today
- * (the WiFi-reconnect race fix moved inline into
- * mqttEnsureConnectedSnippet()'s own function body 2026-09-04, mqtt-shared.ts,
- * so it's no longer a separate statement ahead of this one) -- so this
- * stays correct regardless of what gets added ahead of it in the future. */
-function mqttClientSetupCode(result: { statements?: { key: string; code: string }[] }): string {
-  const stmt = result.statements?.find((s) => s.code.includes("mqtt_as.MQTTClient("));
-  if (!stmt) throw new Error("no MQTTClient setup statement found in codegen result");
-  return stmt.code;
-}
-
-const DEFAULT_WIFI_CONFIG = { id: "wifi1", type: "thingstudio/config/wifi", properties: { ssid: "MyNet", password: "hunter2" } };
-
-function configsWith(brokerProps: Record<string, unknown>): NonNullable<GraphData["configs"]> {
-  return [DEFAULT_WIFI_CONFIG, { id: "broker1", type: "thingstudio/config/mqtt-broker", properties: brokerProps }];
-}
-
-beforeEach(() => {
-  fakeConfigs.clear();
-  setConfig("wifi1", { ssid: "MyNet", password: "hunter2" });
-  setConfig("broker1", { broker: "b", port: 1883, username: "", password: "" });
-  // Default: matches the pre-2026-09-04 default wifiConfigId every test
-  // below already passes via node()'s convenience param -- see that
-  // function.
-  wifiStatusNodes = [{ id: "wifi_status_1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "wifi1" } }];
+const WIFI = (properties: Record<string, unknown> = { ssid: "MyNet", password: "hunter2" }, id = "wifi1"): GraphConfigNode => ({
+  id,
+  type: "thingstudio/config/wifi",
+  properties,
+});
+const BROKER = (properties: Record<string, unknown> = { broker: "test.broker.local", port: 1883 }, id = "broker1"): GraphConfigNode => ({
+  id,
+  type: "thingstudio/config/mqtt-broker",
+  properties,
 });
 
-function node(properties: Record<string, unknown>): GraphNode {
-  const { wifiConfigId, ...rest } = properties;
-  if (typeof wifiConfigId === "string") {
-    wifiStatusNodes = [{ id: "wifi_status_1", type: "thingstudio/wifi_status", properties: { wifiConfigId } }];
-  }
-  return { id: "1", type: "thingstudio/mqtt_publish", properties: rest };
-}
-
-function runGenerated(source: string): string {
-  const dir = mkdtempSync(join(tmpdir(), "thingstudio-compile-"));
-  const scriptPath = join(dir, "_flow.py");
-  writeFileSync(scriptPath, source);
-  const pymockDir = join(__dirname, "fixtures", "pymock");
-  return execFileSync("python3", [scriptPath], {
-    env: { ...process.env, PYTHONPATH: pymockDir },
-    encoding: "utf8",
-  });
-}
-
-function graphWith(mqttProps: Record<string, unknown>, brokerProps: Record<string, unknown>): GraphData {
+function graphWith(props: Record<string, unknown>, configs: GraphConfigNode[] = [WIFI(), BROKER()]): GraphData {
   return {
     nodes: [
       { id: "1", type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "42.5", repeat: "manual" } },
-      { id: "2", type: "thingstudio/mqtt_publish", properties: { ...mqttProps, brokerConfigId: "broker1" } },
-      // 2026-09-04: mqtt_publish no longer has its own wifiConfigId -- this
-      // wifi_status node is the flow's sole source of WiFi credentials now
-      // (mqtt-shared.ts's header).
-      { id: "3", type: "thingstudio/wifi_status", properties: { pollMs: 5000, wifiConfigId: "wifi1" } },
+      { id: "2", type: TYPE, properties: { ...props, brokerConfigId: props.brokerConfigId ?? "broker1" } },
     ],
     links: [[1, "1", 0, "2", 0, "string"]],
-    configs: configsWith(brokerProps),
+    configs,
   };
 }
 
-describe("thingstudio/mqtt_publish node", () => {
+async function hookError(g: GraphData): Promise<string | undefined> {
+  try {
+    await runCompileHooks(g, buildRegistry(), runner);
+    return undefined;
+  } catch (err) {
+    return err instanceof Error ? err.message : String(err);
+  }
+}
+
+function runGenerated(source: string): string {
+  const dir = mkdtempSync(join(tmpdir(), "thingstudio-mqttpub-"));
+  const scriptPath = join(dir, "_flow.py");
+  writeFileSync(scriptPath, source);
+  return execFileSync("python3", [scriptPath], {
+    env: { ...process.env, PYTHONPATH: join(__dirname, "fixtures", "pymock") },
+    encoding: "utf8",
+    timeout: 15_000,
+  });
+}
+
+describe("thingstudio/mqtt_publish package", () => {
   it("connects once and publishes the inbound payload to the configured topic", async () => {
-    const { source } = await compileWithHooks(graphWith({ topic: "sensors/temp" }, { broker: "test.broker.local", port: 1883 }), registry);
+    const { source } = await compileWithHooks(graphWith({ topic: "sensors/temp" }), buildRegistry());
     const output = runGenerated(source);
     expect(output).toContain("MQTT_CONNECT server=test.broker.local port=1883");
     expect(output).toContain("MQTT_PUBLISH topic='sensors/temp' payload=b'42.5' retain=False qos=0");
   });
 
-  it("reports NODE_STATUS state=connected under its own node id after connecting (2026-09-10)", async () => {
-    const { source } = await compileWithHooks(graphWith({ topic: "sensors/temp" }, { broker: "test.broker.local", port: 1883 }), registry);
+  it("reports NODE_STATUS connected under its own node id after connecting", async () => {
+    const { source } = await compileWithHooks(graphWith({ topic: "t" }), buildRegistry());
     const output = runGenerated(source);
-    // graphWith()'s mqtt_publish node is id "2" (this file's own comment on graphWith).
     expect(output).toContain("NODE_STATUS node=2 state=connected text=None");
   });
 
-  it("two mqtt_publish nodes on the same broker each report status under their OWN node id, not the shared broker's", async () => {
+  it("two mqtt_publish nodes on the same broker share one client", async () => {
     const graph: GraphData = {
       nodes: [
         { id: "1", type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "a", repeat: "manual" } },
-        { id: "2", type: "thingstudio/mqtt_publish", properties: { topic: "t1", brokerConfigId: "broker1" } },
+        { id: "2", type: TYPE, properties: { topic: "t1", brokerConfigId: "broker1" } },
         { id: "3", type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "b", repeat: "manual" } },
-        { id: "4", type: "thingstudio/mqtt_publish", properties: { topic: "t2", brokerConfigId: "broker1" } },
-        { id: "5", type: "thingstudio/wifi_status", properties: { pollMs: 5000, wifiConfigId: "wifi1" } },
+        { id: "4", type: TYPE, properties: { topic: "t2", brokerConfigId: "broker1" } },
       ],
       links: [
         [1, "1", 0, "2", 0, "string"],
         [2, "3", 0, "4", 0, "string"],
       ],
-      configs: configsWith({ broker: "b", port: 1883 }),
+      configs: [WIFI(), BROKER({ broker: "b", port: 1883 })],
     };
-    const { source } = await compileWithHooks(graph, registry);
+    const { source } = await compileWithHooks(graph, buildRegistry());
     const output = runGenerated(source);
-    // Only the FIRST caller through the shared client's double-checked
-    // lock actually runs .connect() -- but mqttEnsureConnectedSnippet's
-    // ground-truth isconnected() diff (mqtt-shared.ts, corrected
-    // 2026-09-10) runs unconditionally after that block, for every
-    // caller, so the SECOND node still gets its own 'connected' report
-    // under its own id even though it never itself touched .connect().
-    // A first cut of this feature only reported from inside the
-    // connect-only branch, so node 4 never reported at all here -- a real
-    // bug, caught by Mike on real hardware
-    // (outstanding-items/node-status-indicators.md, 2026-09-10) -- this
-    // test's own expectation below reflects the corrected behavior, not
-    // the original (wrong) one.
-    //
-    // Filtered to node 2/4 specifically, not every "NODE_STATUS" line in
-    // the output -- this graph also carries the mandatory `wifi_status`
-    // node (id "5", every mqtt_publish flow needs one), which reports its
-    // OWN connection status independently (wifi-status.ts's own
-    // report_status() call, unrelated to this test's actual concern).
-    const statusLines = output.split("\n").filter((line) => /^NODE_STATUS node=[24] /.test(line));
-    expect(statusLines).toHaveLength(2);
-    expect(statusLines).toContain("NODE_STATUS node=2 state=connected text=None");
-    expect(statusLines).toContain("NODE_STATUS node=4 state=connected text=None");
+    expect(output.match(/MQTT_CONNECT /g)?.length).toBe(1);
+    expect(output).toContain("MQTT_PUBLISH topic='t1'");
+    expect(output).toContain("MQTT_PUBLISH topic='t2'");
   });
 
   it("publishes with retain=True and qos=1 when configured", async () => {
-    const { source } = await compileWithHooks(graphWith({ topic: "t", retain: true, qos: 1 }, { broker: "b", port: 1883 }), registry);
-    const output = runGenerated(source);
-    expect(output).toContain("retain=True qos=1");
+    const { source } = await compileWithHooks(graphWith({ topic: "t", retain: true, qos: 1 }), buildRegistry());
+    expect(runGenerated(source)).toContain("retain=True qos=1");
   });
 
-  it("two mqtt_publish nodes on the same broker share one client (setup dedup)", async () => {
-    const graph: GraphData = {
-      nodes: [
-        { id: "1", type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "a", repeat: "manual" } },
-        { id: "2", type: "thingstudio/mqtt_publish", properties: { topic: "t1", brokerConfigId: "broker1" } },
-        { id: "3", type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "b", repeat: "manual" } },
-        { id: "4", type: "thingstudio/mqtt_publish", properties: { topic: "t2", brokerConfigId: "broker1" } },
-        { id: "5", type: "thingstudio/wifi_status", properties: { pollMs: 5000, wifiConfigId: "wifi1" } },
-      ],
-      links: [
-        [1, "1", 0, "2", 0, "string"],
-        [2, "3", 0, "4", 0, "string"],
-      ],
-      configs: configsWith({ broker: "b", port: 1883 }),
-    };
-    const { source } = await compileWithHooks(graph, registry);
-    expect(source.match(/mqtt_as\.MQTTClient\(/g)?.length).toBe(1);
-    const output = runGenerated(source);
-    expect(output).toContain("MQTT_PUBLISH topic='t1'");
-    expect(output).toContain("MQTT_PUBLISH topic='t2'");
-  });
-
-  it("rejects a missing brokerConfigId", () => {
-    expect(() => mqttPublishNode.codegenSink!(node({ topic: "t", wifiConfigId: "wifi1" }), ctx)).toThrow(CompileError);
-    expect(() => mqttPublishNode.codegenSink!(node({ topic: "t", wifiConfigId: "wifi1" }), ctx)).toThrow(/requires an MQTT broker config/);
-  });
-
-  it("rejects a referenced broker config with no broker hostname", () => {
-    setConfig("noHost", { port: 1883 });
-    expect(() => mqttPublishNode.codegenSink!(node({ topic: "t", wifiConfigId: "wifi1", brokerConfigId: "noHost" }), ctx)).toThrow(
-      /no "broker" hostname\/IP set/,
+  it("resolves the broker config's username/password and the WiFi ssid/password into the generated client", async () => {
+    const { source } = await compileWithHooks(
+      graphWith({ topic: "t" }, [WIFI({ ssid: "RealNet", password: "realpw" }), BROKER({ broker: "b", port: 1883, username: "flowuser", password: "brokerpw" })]),
+      buildRegistry(),
     );
+    expect(source).toContain("ensure_client(");
+    expect(source).toContain('"ssid": "RealNet"');
+    expect(source).toContain('"wifiPassword": "realpw"');
+    expect(source).toContain('"username": "flowuser"');
+    expect(source).toContain('"brokerPassword": "brokerpw"');
   });
 
-  it("rejects a referenced broker config with an invalid port", () => {
-    setConfig("badPort", { broker: "b", port: 0 });
-    setConfig("badPort2", { broker: "b", port: 70000 });
-    expect(() => mqttPublishNode.codegenSink!(node({ topic: "t", wifiConfigId: "wifi1", brokerConfigId: "badPort" }), ctx)).toThrow(/invalid port/);
-    expect(() => mqttPublishNode.codegenSink!(node({ topic: "t", wifiConfigId: "wifi1", brokerConfigId: "badPort2" }), ctx)).toThrow(/invalid port/);
+  it("rejects a missing brokerConfigId", async () => {
+    const err = await hookError(graphWith({ topic: "t", brokerConfigId: "" }));
+    expect(err).toMatch(/requires an MQTT broker config/);
   });
 
-  it("resolves the broker config's username/password into the client setup code", () => {
-    setConfig("authed", { broker: "b", port: 1883, username: "flowuser", password: "brokerpw" });
-    const result = mqttPublishNode.codegenSink!(node({ topic: "t", wifiConfigId: "wifi1", brokerConfigId: "authed" }), ctx);
-    expect(mqttClientSetupCode(result)).toContain('"flowuser"');
-    expect(mqttClientSetupCode(result)).toContain('"brokerpw"');
+  it("rejects a referenced broker config with no broker hostname", async () => {
+    expect(await hookError(graphWith({ topic: "t" }, [WIFI(), BROKER({ port: 1883 })]))).toMatch(/no "broker" hostname\/IP set/);
   });
 
-  it("defaults broker username/password to empty when the referenced config omits them", () => {
-    const result = mqttPublishNode.codegenSink!(node({ topic: "t", wifiConfigId: "wifi1", brokerConfigId: "broker1" }), ctx);
-    expect(mqttClientSetupCode(result)).toContain("_cfg['user'] = \"\"");
-    expect(mqttClientSetupCode(result)).toContain("_cfg['password'] = \"\"");
+  it("rejects a referenced broker config with an invalid port", async () => {
+    expect(await hookError(graphWith({ topic: "t" }, [WIFI(), BROKER({ broker: "b", port: 70000 })]))).toMatch(/invalid port/);
   });
 
-  it("raises a CompileError referencing the missing id when brokerConfigId doesn't resolve", () => {
-    expect(() => mqttPublishNode.codegenSink!(node({ topic: "t", wifiConfigId: "wifi1", brokerConfigId: "nope" }), ctx)).toThrow(
-      /referenced config "nope" not found/,
-    );
+  it("rejects a missing topic", async () => {
+    expect(await hookError(graphWith({}))).toMatch(/non-empty "topic"/);
   });
 
-  it("rejects a flow with no wifi_status node (2026-09-04: no wifiConfigId of its own any more)", () => {
-    wifiStatusNodes = [];
-    expect(() => mqttPublishNode.codegenSink!(node({ topic: "t", brokerConfigId: "broker1" }), ctx)).toThrow(CompileError);
-    expect(() => mqttPublishNode.codegenSink!(node({ topic: "t", brokerConfigId: "broker1" }), ctx)).toThrow(/needs a WiFi network/);
+  it("rejects an unsupported qos", async () => {
+    expect(await hookError(graphWith({ topic: "t", qos: 2 }))).toMatch(/must be 0 or 1/);
   });
 
-  it("rejects a flow with two WiFi configs (one radio, so one WiFi config per flow)", () => {
-    wifiStatusNodes = [
-      { id: "w1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "wifi1" } },
-      { id: "w2", type: "thingstudio/wifi_status", properties: { wifiConfigId: "wifi1_other" } },
-    ];
-    expect(() => mqttPublishNode.codegenSink!(node({ topic: "t", brokerConfigId: "broker1" }), ctx)).toThrow(/a flow can only have one/);
+  it("rejects a flow with no WiFi config", async () => {
+    expect(await hookError(graphWith({ topic: "t" }, [BROKER()]))).toMatch(/needs a WiFi network/);
   });
 
-  it("rejects a missing topic", () => {
-    expect(() => mqttPublishNode.codegenSink!(node({ wifiConfigId: "wifi1", brokerConfigId: "broker1" }), ctx)).toThrow(/non-empty "topic"/);
+  it("rejects a flow with two WiFi configs", async () => {
+    expect(await hookError(graphWith({ topic: "t" }, [WIFI(), WIFI({ ssid: "Other", password: "x" }, "wifi2"), BROKER()]))).toMatch(/a flow can only have one/);
   });
 
-  it("rejects an unsupported qos", () => {
-    expect(() => mqttPublishNode.codegenSink!(node({ topic: "t", wifiConfigId: "wifi1", brokerConfigId: "broker1", qos: 2 }), ctx)).toThrow(
-      /must be 0 or 1/,
-    );
+  it("rejects WiFi security 'unmanaged' -- mqtt_as always needs real credentials", async () => {
+    expect(await hookError(graphWith({ topic: "t" }, [WIFI({ security: "unmanaged" }), BROKER()]))).toMatch(/security "unmanaged"/);
   });
 
-  it("defaults port to 1883 (from the broker config's own default) and qos to 0", () => {
-    const result = mqttPublishNode.codegenSink!(node({ topic: "t", wifiConfigId: "wifi1", brokerConfigId: "broker1" }), ctx);
-    expect(mqttClientSetupCode(result)).toContain("_cfg['port'] = 1883");
-    expect(result.functionBody).toContain("qos=0");
+  it("rejects security 'password' with an empty password", async () => {
+    expect(await hookError(graphWith({ topic: "t" }, [WIFI({ ssid: "MyNet", password: "" }), BROKER()]))).toMatch(/has no password but security is "password"/);
   });
 
-  it("rejects a referenced WiFi config with security 'unmanaged' -- mqtt_as always needs real credentials", () => {
-    setConfig("unmanaged1", { security: "unmanaged" });
-    expect(() =>
-      mqttPublishNode.codegenSink!(node({ topic: "t", wifiConfigId: "unmanaged1", brokerConfigId: "broker1" }), ctx),
-    ).toThrow(/security "unmanaged", which isn't supported here/);
-  });
-
-  it("rejects a referenced WiFi config with security 'password' (the default) and an empty password", () => {
-    setConfig("nopw", { ssid: "MyNet", password: "" });
-    expect(() => mqttPublishNode.codegenSink!(node({ topic: "t", wifiConfigId: "nopw", brokerConfigId: "broker1" }), ctx)).toThrow(
-      /has no password but security is "password"/,
-    );
-  });
-
-  it("resolves the WiFi config's ssid/password into the client setup code", () => {
-    setConfig("wifi2", { ssid: "RealNet", password: "realpw" });
-    const result = mqttPublishNode.codegenSink!(node({ topic: "t", wifiConfigId: "wifi2", brokerConfigId: "broker1" }), ctx);
-    expect(mqttClientSetupCode(result)).toContain('"RealNet"');
-    expect(mqttClientSetupCode(result)).toContain('"realpw"');
-  });
-
-  // The "connect wifi, connect mqtt, then do mqtt things" ordering
-  // question: within one node's own function body this is trivially true
-  // (ordinary sequential Python), but the interesting case is TWO
-  // independently-triggered chains sharing one broker client, both
-  // reaching mqttEnsureConnectedSnippet's "not connected yet" check
-  // before either has actually finished connecting. Every other test in
-  // this file only proves "already connected, skip" (pymock's spawn()
-  // runs each spawned chain to completion via its own asyncio.run() call
-  // before the next one starts -- see that fixture's own header -- so
-  // two chains never actually race there). This test bypasses compile()/
-  // spawn() entirely and drives both function bodies through a REAL
-  // concurrent asyncio.gather(), with an artificial delay inside
-  // connect() (pymock's MQTTClient.CONNECT_DELAY_S) long enough to give
-  // a genuine window for both coroutines to reach the "not connected"
-  // check before either has set the flag -- proving the
-  // mqttEnsureConnectedSnippet double-checked-lock actually serializes
-  // real contention, not just reasoned about on paper.
-  it("two chains racing to connect the same client only actually connect once", () => {
-    // A real dedup'd ctx (matching compile.ts's own uniqueName logic), not
-    // the fixed `(hint) => "_"+hint` used elsewhere in this file -- that
-    // fixed version is fine when only one codegen call ever happens per
-    // test, but here TWO codegenSink calls need genuinely distinct
-    // function names, exactly as real compilation would produce. Using
-    // the fixed version here silently caused the second `async def`
-    // to redefine (shadow) the first at module scope -- caught by this
-    // test's own first run, not assumed safe.
-    const used = new Set<string>();
-    const ctxShared: CodegenContext = {
-      uniqueName(hint: string): string {
-        let candidate = `_${hint}`;
-        let i = 1;
-        while (used.has(candidate)) candidate = `_${hint}_${i++}`;
-        used.add(candidate);
-        return candidate;
-      },
-      resolveConfig: (id) => {
-        const cfg = fakeConfigs.get(id);
-        if (!cfg) throw new CompileError(`referenced config "${id}" not found`);
-        return cfg;
-      },
-      findNodesOfType: (type) => (type === "thingstudio/wifi_status" ? wifiStatusNodes : []),
-      findConfigsOfType: (type: string) => (type === "thingstudio/config/wifi" ? flowWifiConfigsFrom(wifiStatusNodes, (id) => fakeConfigs.get(id)) : []),
-    };
-    const cfg = { topic: "t1", wifiConfigId: "wifi1", brokerConfigId: "broker1" };
-    const resultA = mqttPublishNode.codegenSink!(node(cfg), ctxShared);
-    const resultB = mqttPublishNode.codegenSink!(node({ ...cfg, topic: "t2" }), ctxShared);
-    // Both nodes target the same broker/port, so both proposed statements
-    // (the WiFi-reconnect precheck plus the client setup, mqtt-shared.ts)
-    // are byte-identical -- emit each once, exactly like compile.ts's
-    // mergeSetup dedup would.
-    expect(resultA.statements?.map((s) => s.code)).toEqual(resultB.statements?.map((s) => s.code));
-
-    const lines = [
-      "import asyncio",
-      "import runtime", // this test bypasses compile() (see its own comment above), which normally adds this -- mqttEnsureConnectedSnippet()'s runtime.report_status() call needs it here too (2026-09-10)
-      ...(resultA.imports ?? []),
-      ...(resultA.statements ?? []).map((s) => s.code),
-      "",
-      `async def ${resultA.functionName}(msg):`,
-      ...resultA.functionBody.split("\n").map((l) => `    ${l}`),
-      "",
-      `async def ${resultB.functionName}(msg):`,
-      ...resultB.functionBody.split("\n").map((l) => `    ${l}`),
-      "",
-      "async def _main():",
-      "    mqtt_as.MQTTClient.CONNECT_DELAY_S = 0.05",
-      `    await asyncio.gather(${resultA.functionName}({'payload': 'a', 'topic': ''}), ${resultB.functionName}({'payload': 'b', 'topic': ''}))`,
-      "    print('CONNECT_CALLS', mqtt_as.CLIENTS[-1].connect_calls)",
-      "",
-      "asyncio.run(_main())",
-    ];
-    const output = runGenerated(lines.join("\n"));
-    expect(output).toContain("CONNECT_CALLS 1");
-    // Both still actually published -- the second chain wasn't dropped or
-    // errored while waiting on the lock, just delayed until connect()
-    // (started by the first chain) finished.
-    expect(output).toContain("MQTT_PUBLISH topic='t1'");
-    expect(output).toContain("MQTT_PUBLISH topic='t2'");
+  it("defaults the port to 1883 and qos to 0", async () => {
+    const { source } = await compileWithHooks(graphWith({ topic: "t" }, [WIFI(), BROKER({ broker: "b" })]), buildRegistry());
+    expect(source).toContain('"port": 1883');
+    expect(source).toContain('"qos": 0');
   });
 });

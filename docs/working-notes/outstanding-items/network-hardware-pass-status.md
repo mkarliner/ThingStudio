@@ -44,3 +44,28 @@ Two follow-ups were recorded from the same run:
 
 The broker was not probe-able from the host machine (`.22:1883` resets on any bytes, MQTT or TLS) but worked from
 the board, so broker reachability must be checked from the board or its console, not by connecting from the host.
+
+**Update, 2026-10-19 (later): `mqtt_publish`/`mqtt_subscribe` converted to packages on `ts_mqtt`.** The last
+network nodes now build on `device-runtime/src/vendor/thingstudio_mqtt/`, the shared-client answer to the
+cross-instance setup problem: one client per broker (keyed by host:port), a per-node subscription registry (each
+message routed by wildcard match, UNSUBSCRIBE only when the last node lets go, resubscribe from the current set
+after a reconnect), the old codegen's connect/retry/status text, and redeploy cleanup. All six network nodes are
+packages now.
+
+The first 600s soak found a real regression in the new client: `ensure_connected()` called `client.connect()`
+whenever `isconnected()` was false, racing mqtt_as's own `_keep_connected()`. On the C3 that produced
+`wifi:sta is connecting, cannot set config` and a connected/disconnected cycle every ~18s. Fixed by connecting
+once and leaving reconnection to mqtt_as; `ensure_connected()` only observes and resubscribes when the link
+returns. Re-run at 608s: `wifi_status` connected once, no disconnect, publish/subscribe throughout. The incident is
+in `learnings/micropython-device-runtime.md` ("Never reconnect a client that mqtt_as is already reconnecting").
+
+Two harness issues surfaced in the same pass, both fixed/recorded:
+
+- `device_cli.py`'s `wait_for()` discarded console lines while waiting for `DEPLOY_ACK`. The flow starts before the
+  ACK, so `wifi_status`'s one-time `payload=True` could be lost and a clean soak read as a failure. It now prints
+  console lines as they arrive during the wait.
+- Installing a library while the previous flow is still running can miss `DEP_ACK` or corrupt a line
+  (`bad base64`, then a deploy ACK timeout) on the CH343 USB-UART C3 board. Retrying passes, since installed
+  pieces stay installed; deploying a quiet flow first avoids it. `network-packages-pass.md` records this.
+
+The full five-flow pass re-ran after the fix at 40s per flow: all five PASS, with the MQTT flow first.

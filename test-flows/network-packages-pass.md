@@ -86,6 +86,10 @@ Two things to know when repeating it:
 - **A large HTTP page fails with `MemoryError`.** The http flow passes on a small page; a 56 KB page needed one
   56 KB allocation, which the C3 did not have. Keep `--http-url` pointed at a small response, or expect
   `NODE_ERROR ... type=MemoryError`. See `docs/working-notes/outstanding-items/http-response-size-limit.md`.
+- **Installing a new library can fail on a busy board.** If deploy stops with `bad base64` or `timed out waiting
+  for DEP_ACK` while the previous flow is still printing, deploy once more: the library transfer is not
+  flow-controlled, and the retry passes because the earlier attempt installed the pieces it did get. Deploying a
+  quiet flow first, then the MQTT flow, avoids it.
 
 ## If something fails
 

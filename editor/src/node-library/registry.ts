@@ -23,8 +23,8 @@ import { descriptor as httpRequestCoreDescriptor, python as httpRequestCorePytho
 import { descriptor as httpResponseCoreDescriptor, python as httpResponseCorePython } from "./core-packages/http-response.js";
 import { injectNode } from "./inject.js";
 import { descriptor as interruptCoreDescriptor, python as interruptCorePython } from "./core-packages/interrupt.js";
-import { mqttPublishNode } from "./mqtt-publish.js";
-import { mqttSubscribeNode } from "./mqtt-subscribe.js";
+import { descriptor as mqttPublishCoreDescriptor, python as mqttPublishCorePython, compileHook as mqttPublishCompileHook } from "./core-packages/mqtt-publish.js";
+import { descriptor as mqttSubscribeCoreDescriptor, python as mqttSubscribeCorePython, compileHook as mqttSubscribeCompileHook } from "./core-packages/mqtt-subscribe.js";
 import { descriptor as pwmOutCoreDescriptor, python as pwmOutCorePython } from "./core-packages/pwm-out.js";
 import { startupNode } from "./startup.js";
 import { descriptor as timerCoreDescriptor, python as timerCorePython } from "./core-packages/timer.js";
@@ -106,8 +106,8 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     corePackage(httpRequestCoreDescriptor, httpRequestCorePython, httpRequestCompileHook),
     httpInNode,
     buildCoreNodeDefinition(httpResponseCoreDescriptor, httpResponseCorePython),
-    mqttPublishNode,
-    mqttSubscribeNode,
+    corePackage(mqttPublishCoreDescriptor, mqttPublishCorePython, mqttPublishCompileHook),
+    corePackage(mqttSubscribeCoreDescriptor, mqttSubscribeCorePython, mqttSubscribeCompileHook),
     corePackage(udpSendCoreDescriptor, udpSendCorePython, udpSendCompileHook),
     corePackage(udpReceiveCoreDescriptor, udpReceiveCorePython, udpReceiveCompileHook),
     corePackage(ntpCoreDescriptor, ntpCorePython, ntpCompileHook),

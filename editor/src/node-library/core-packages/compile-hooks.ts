@@ -30,3 +30,50 @@ export const WIFI_DERIVATION = `def _ts_wifi(ctx):
     mqtt = any(n['type'] in ('thingstudio/mqtt_publish', 'thingstudio/mqtt_subscribe') for n in ctx['flow']['nodes'])
     return {'ssid': ssid, 'password': password, 'security': security, 'deferToMqtt': mqtt}, None
 `;
+
+/**
+ * MQTT derivation for mqtt_publish/mqtt_subscribe (2026-10-19, ts_mqtt). Resolves the referenced broker config and
+ * combines it with the flow's WiFi settings into the keys the package Python and ts_mqtt read. `label` is the node
+ * type, so an error says which node rejected it (the package hook has no other place to name it).
+ *
+ * The WiFi password is renamed to `wifiPassword`: a broker password is a separate secret on the same node, and both
+ * were called `password` before the hook flattened them into one dict.
+ */
+export const MQTT_DERIVATION = `${WIFI_DERIVATION}
+def _ts_mqtt_broker(ctx, properties, label):
+    broker_id = str(properties.get('brokerConfigId') or '')
+    if not broker_id:
+        return None, label + ' requires an MQTT broker config (properties.brokerConfigId) -- reference one, or create a new one from the property panel'
+    cfg = (ctx.get('referencedConfigs') or {}).get(broker_id)
+    if cfg is None:
+        return None, 'could not resolve the MQTT broker config -- reopen the flow in the editor'
+    broker = str(cfg.get('broker') or '').strip()
+    if not broker:
+        return None, label + "'s referenced broker config has no \\"broker\\" hostname/IP set"
+    try:
+        port = int(cfg.get('port') or 1883)
+    except (TypeError, ValueError):
+        port = 0
+    if port < 1 or port > 65535:
+        return None, label + "'s referenced broker config has an invalid port -- must be 1-65535"
+    return {
+        'broker': broker,
+        'port': port,
+        'username': str(cfg.get('username') or ''),
+        'brokerPassword': str(cfg.get('password') or ''),
+    }, None
+
+def _ts_mqtt(ctx, properties, label):
+    wifi, err = _ts_wifi(ctx)
+    if err:
+        return None, err
+    if wifi['security'] == 'unmanaged':
+        return None, label + "'s WiFi config has security \\"unmanaged\\", which is not supported here -- mqtt_as manages its own WiFi connection and needs real credentials to do so"
+    broker, err = _ts_mqtt_broker(ctx, properties, label)
+    if err:
+        return None, err
+    settings = dict(wifi)
+    settings['wifiPassword'] = settings.pop('password')
+    settings.update(broker)
+    return settings, None
+`;

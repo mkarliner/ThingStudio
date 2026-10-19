@@ -171,13 +171,18 @@ def drain(dut, seconds, json_mode):
             handle_line(line, dut, json_mode)
 
 
-def wait_for(dut, predicate, timeout_s, description):
+def wait_for(dut, predicate, timeout_s, description, on_console=None):
     end = time.time() + timeout_s
     while time.time() < end:
         line = dut.read_line()
         if line is None:
             continue
         if not line.startswith("F64:"):
+            # Console output can arrive before the awaited message (the flow starts, then
+            # DEPLOY_ACK is sent). Dropping it here lost one-time lines such as wifi_status's
+            # first connected report, so the network pass saw a soak failure the board never had.
+            if on_console is not None:
+                on_console(line)
             continue
         try:
             frame = base64.b64decode(line[len("F64:"):])
@@ -479,7 +484,10 @@ def cmd_flow_deploy(args):
             emit("status", args.json, text="deploying %d bytes (%s)" % (
                 len(bytecode), "flow %r" % flow_name if flow_name else "unnamed"))
             dut.send_message(message)
-            ack = wait_for(dut, lambda m: m["type"] == "DEPLOY_ACK", 20, "DEPLOY_ACK")
+            ack = wait_for(
+                dut, lambda m: m["type"] == "DEPLOY_ACK", 20, "DEPLOY_ACK",
+                on_console=lambda line: handle_line(line, dut, args.json),
+            )
 
         if ack.get("ok") is False:
             emit("message", args.json, message=ack)

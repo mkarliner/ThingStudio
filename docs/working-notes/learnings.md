@@ -76,8 +76,9 @@ widgets by 1px, and the stm32 port mounting its filesystem at `/flash` (not `/`)
 runtime path, and the unix port's `time.time()` being a float, and this build's `set()` rejecting a single iterable
 argument (use a membership dict), mpy-cross embedding the source path in the `.mpy` (so compiling the same source
 from a different directory changes its bytes and any hash of them), sequential deploys on an ESP32-C3 leaving too
-little contiguous IDF heap for the next deploy (reset, 40s per flow), and a large HTTP response being one allocation
-(56 KB failed on a C3, 48 bytes passed). 28 entries:
+little contiguous IDF heap for the next deploy (reset, 40s per flow), a large HTTP response being one allocation
+(56 KB failed on a C3, 48 bytes passed), and never calling `connect()` again while mqtt_as owns reconnection.
+29 entries:
 `docs/working-notes/learnings/micropython-device-runtime.md`.
 
 ## Hardware bring-up / HIL rig

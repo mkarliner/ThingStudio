@@ -46,7 +46,7 @@ async function codegen(g: GraphData) {
     uniqueName: (hint: string) => `_${hint}`,
     hookResult: (id: string) => hooks.results.get(id),
     resolveConfig: () => ({}),
-    findConfigsOfType: (type: string) => (type === WIFI ? (g.configs ?? []) : []),
+    findConfigsOfType: (type: string) => (g.configs ?? []).filter((c) => c.type === type),
   };
   return def.codegenTransform!(g.nodes[0]!, ctx);
 }
@@ -126,7 +126,10 @@ describe("thingstudio/wifi_gate package", () => {
 
   it("defers to mqtt_as when the flow has an mqtt node", async () => {
     const result = await codegen(
-      graph([wifi({ ssid: "MyNet", password: "pw" })], [{ id: "m1", type: "thingstudio/mqtt_publish", properties: {} }]),
+      graph(
+        [wifi({ ssid: "MyNet", password: "pw" }), { id: "b1", type: "thingstudio/config/mqtt-broker", properties: { broker: "b", port: 1883 } }],
+        [{ id: "m1", type: "thingstudio/mqtt_publish", properties: { topic: "t", brokerConfigId: "b1" } }],
+      ),
     );
     const generated = (result.statements ?? []).map((s) => s.code).join("\n");
     expect(generated).toContain('"deferToMqtt": True');

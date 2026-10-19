@@ -58,6 +58,9 @@ DEPENDENCIES: list[dict] = [
     # Thingstudio's own shared WiFi station bring-up (2026-10-19): one idempotent call for built-in network
     # nodes and packages, replacing the compiler-side "wifi-sta" statement dedup across that boundary.
     {"name": "ts_wifi", "files": [("thingstudio_wifi/ts_wifi.py", "ts_wifi.py")], "requires": []},
+    # Thingstudio's shared MQTT client (2026-10-19): one client per broker, per-node subscription registry, and
+    # reconnection/resubscribe for the mqtt_publish/mqtt_subscribe packages.
+    {"name": "ts_mqtt", "files": [("thingstudio_mqtt/ts_mqtt.py", "ts_mqtt.py")], "requires": ["mqtt_as"]},
     # FT6336U capacitive touch controller (Thingstudio's own small driver).
     {"name": "ft6336u", "files": [("ft6336u/ft6336u.py", "ft6336u.py")], "requires": []},
     # Thingstudio's own GUI subsystem (gui-layout-widget-system-scoping.md, phase 4): a library, not part of the

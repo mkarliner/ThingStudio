@@ -47,7 +47,7 @@ async function codegen(g: GraphData) {
     uniqueName: (hint: string) => `_${hint}`,
     hookResult: (id: string) => hooks.results.get(id),
     resolveConfig: () => ({}),
-    findConfigsOfType: (type: string) => (type === WIFI ? (g.configs ?? []) : []),
+    findConfigsOfType: (type: string) => (g.configs ?? []).filter((c) => c.type === type),
   };
   return def.codegenSink!(g.nodes[0]!, ctx);
 }
@@ -185,10 +185,13 @@ describe("thingstudio/udp_send package", () => {
     const g: GraphData = {
       nodes: [
         { id: "1", type: TYPE, properties: { host: "h", port: 1 } },
-        { id: "2", type: "thingstudio/mqtt_publish", properties: {} },
+        { id: "2", type: "thingstudio/mqtt_publish", properties: { topic: "t", brokerConfigId: "b1" } },
       ],
       links: [],
-      configs: [wifi({ ssid: "MyNet", password: "hunter2" })],
+      configs: [
+        wifi({ ssid: "MyNet", password: "hunter2" }),
+        { id: "b1", type: "thingstudio/config/mqtt-broker", properties: { broker: "b", port: 1883 } },
+      ],
     };
     const result = await codegen(g);
     const generated = (result.statements ?? []).map((s) => s.code).join("\n");

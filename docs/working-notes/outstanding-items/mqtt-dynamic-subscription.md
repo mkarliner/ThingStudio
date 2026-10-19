@@ -1,8 +1,8 @@
 # MQTT dynamic subscription (subscribe/unsubscribe at run time)
 
 Added 2026-10-19, from Mike's question "on mqtt -- how do I unsubscribe?" and the reviewer's answer
-(`reviews/2026-10-19-reply-review-and-smoke-test.md` follow-up, same session). **Status: requirement, not scoped
-or built.** Priority is Mike's call.
+(`reviews/2026-10-19-reply-review-and-smoke-test.md` follow-up, same session). **Status: the shared library half
+landed 2026-10-19 (`ts_mqtt`, below); the node's input face is not built.** Priority is Mike's call.
 
 ## Today
 
@@ -23,7 +23,7 @@ time. Check Node-RED's current docs for the exact action set and `msg.topic` for
 The vendored `mqtt_as` already has `unsubscribe(topic)` (`device-runtime/src/vendor/mqtt_as/__init__.py`), so no
 board-side capability is missing.
 
-## Design requirements (bind `ts_mqtt`, which is being designed now)
+## Design requirements (implemented in `ts_mqtt`, 2026-10-19)
 
 These matter even before dynamic subscription is built, because retrofitting them into a shared client is harder
 than designing them in. See `network-package-gaps-briefing.md` item 2.

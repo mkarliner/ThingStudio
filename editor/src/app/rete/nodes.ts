@@ -170,8 +170,8 @@ import { touchI2cNode } from "../../node-library/touch-i2c.js";
 import type { NodeDescriptor } from "../../compiler/node-definition.js";
 import { guiBarNode, guiTrendNode, guiButtonNode, guiLabelNode, guiLedNode, guiModalNode, guiNavigatorNode, guiReadoutNode, guiScreenNode } from "../../node-library/gui.js";
 import { descriptor as i2cCoreDescriptor } from "../../node-library/core-packages/i2c.js";
-import { mqttPublishNode } from "../../node-library/mqtt-publish.js";
-import { mqttSubscribeNode } from "../../node-library/mqtt-subscribe.js";
+import { descriptor as mqttPublishCoreDescriptor } from "../../node-library/core-packages/mqtt-publish.js";
+import { descriptor as mqttSubscribeCoreDescriptor } from "../../node-library/core-packages/mqtt-subscribe.js";
 import { descriptor as pwmOutCoreDescriptor } from "../../node-library/core-packages/pwm-out.js";
 import { displaySpiNode } from "../../node-library/display-spi.js";
 import { descriptor as displayI2cCoreDescriptor } from "../../node-library/core-packages/display-i2c.js";
@@ -462,9 +462,9 @@ export class HttpInNode extends buildDescriptorNodeClass(httpInNode) {}
 
 export class HttpResponseNode extends buildDescriptorNodeClass(httpResponseCoreDescriptor) {}
 
-export class MqttPublishNode extends buildDescriptorNodeClass(mqttPublishNode) {}
+export class MqttPublishNode extends buildDescriptorNodeClass(mqttPublishCoreDescriptor) {}
 
-export class MqttSubscribeNode extends buildDescriptorNodeClass(mqttSubscribeNode) {}
+export class MqttSubscribeNode extends buildDescriptorNodeClass(mqttSubscribeCoreDescriptor) {}
 
 export class InterruptNode extends buildDescriptorNodeClass(interruptCoreDescriptor) {}
 

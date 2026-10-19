@@ -101,5 +101,9 @@ class MQTTClient:
         self.subscriptions.append((topic, qos))
         print("MQTT_SUBSCRIBE topic=%r qos=%s" % (topic, qos))
 
+    async def unsubscribe(self, topic):
+        self.subscriptions = [s for s in self.subscriptions if s[0] != topic]
+        print("MQTT_UNSUBSCRIBE topic=%r" % (topic,))
+
     def isconnected(self):
         return self.connected

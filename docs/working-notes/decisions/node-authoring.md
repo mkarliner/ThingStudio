@@ -930,11 +930,12 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   send kept), then **`udp-receive`** (a per-port socket via `runtime.shared`, the 10 ms loop yield as
   `intervalMs`, `pollMs` only the EAGAIN retry), and **`http-request`** (URL/method/timeout validated in the hook,
   the bounded async client unchanged). With that, every network package that can be expressed today is converted;
-  `ntp` (two-faced), `mqtt-publish`/`mqtt-subscribe` (shared client) and `http-in` (sibling scan + server) remain.
-  Two package-format gaps came out of the rest: `ntp` is two-faced (sink + event source) and the package format
-  cannot declare both; `mqtt-publish`/`mqtt-subscribe` need one client shared across instances, which per-instance
-  setup cannot express without a shared device library (now also required by `mqtt-dynamic-subscription.md`'s
-  per-node subscription registry).
+  `ntp` (two-faced) followed the same day, and **`mqtt-publish`/`mqtt-subscribe` landed 2026-10-19 on `ts_mqtt`**
+  (`device-runtime/src/vendor/thingstudio_mqtt/`), the shared-library answer to cross-instance setup: one client per
+  broker, a per-node subscription registry (routing, last-node unsubscribe, resubscribe on reconnect), and the
+  connect/retry/status code the old codegen emitted. **`http-in` (sibling scan + server) is the last one left.**
+  The two package-format gaps that came out of the rest were closed as they were reached: two-faced packages
+  (sink + event source) and the shared device library.
 
 - **2026-10-19 — two-faced packages (sink + event source).** A `sink` may now set `eventSource: true`, declaring
   one input and one output; `.node.py` defines `run(msg, properties)` for the input face and `wait(properties)` /

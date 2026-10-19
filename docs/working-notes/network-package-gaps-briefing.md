@@ -45,7 +45,9 @@ Options: (a) allow a package to declare both a sink/transform hook and an event-
 already supports two-faced `NodeDefinition`s); (b) split `ntp` into two nodes. (a) is the parity-preserving option;
 needs a descriptor/schema addition and Mike's OK.
 
-**2. `mqtt-publish` / `mqtt-subscribe` — shared client across instances.**
+**2. `mqtt-publish` / `mqtt-subscribe` — shared client across instances. DONE 2026-10-19:** converted on the new
+`ts_mqtt` library (`device-runtime/src/vendor/thingstudio_mqtt/`), which is option (a) below plus the per-node
+subscription registry dynamic subscription required.
 Both nodes share one `mqtt_as.MQTTClient` per broker, built once by compile-time setup dedup with module-level
 variables, plus `runtime.register_cleanup`. A package's per-instance setup cannot express that.
 Options: (a) a shared device library (`ts_mqtt`, the `ts_wifi` pattern) with `ensure_client(broker, port, ...)`

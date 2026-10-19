@@ -13,9 +13,11 @@ import {
 import { compile } from "../src/compiler/compile.js";
 import type { GraphData } from "../src/compiler/graph.js";
 import { buildRegistry } from "../src/node-library/registry.js";
+import { compileWithHooks } from "./compile-with-hooks.js";
 
 const LIST: DependencyInfo[] = [
   { name: "mqtt_as", requires: [], files: [{ name: "mqtt_as.py", source: "" }] },
+  { name: "ts_mqtt", requires: ["mqtt_as"], files: [{ name: "ts_mqtt.py", source: "" }] },
   { name: "delay_ms", requires: [], files: [{ name: "delay_ms.py", source: "" }] },
   { name: "events", requires: ["delay_ms"], files: [{ name: "events.py", source: "" }] },
   { name: "st7789py", requires: [], files: [{ name: "st7789py.py", source: "" }] },
@@ -102,7 +104,7 @@ describe("librariesToSend", () => {
 });
 
 describe("real compiled flows", () => {
-  it("an MQTT publish flow's generated code imports mqtt_as, and nothing else from the list", () => {
+  it("an MQTT publish flow's generated code imports ts_mqtt, and ts_mqtt brings mqtt_as", async () => {
     const graph: GraphData = {
       nodes: [
         { id: "1", type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "x" } },
@@ -114,8 +116,8 @@ describe("real compiled flows", () => {
         { id: "b1", type: "thingstudio/config/mqtt-broker", properties: { broker: "broker.local", port: 1883 } },
       ],
     };
-    const source = compile(graph, buildRegistry()).source;
-    expect(resolveDependencies(findImportedModules(source), LIST).map((d) => d.name)).toEqual(["mqtt_as"]);
+    const { source } = await compileWithHooks(graph, buildRegistry());
+    expect(resolveDependencies(findImportedModules(source), LIST).map((d) => d.name)).toEqual(["ts_mqtt", "mqtt_as"]);
   });
 
   it("a function node's own import is found too", () => {

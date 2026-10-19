@@ -275,6 +275,13 @@ UART input buffer and bytes were lost mid-line. Native-USB boards (Pico W, ESP32
 CDC applies backpressure. Fix: the board answers each piece (`DEP_ACK`) and the sender waits for it. Any bulk
 transfer to a board should be paced by a reply, not just kept small.
 
+2026-10-19, same class on an ESP32-C3 board that also uses a USB-UART bridge (CH343, not native USB): while the
+previous WiFi/MQTT flow was still running and printing, a dependency install reported `incorrect padding` and then
+`timed out waiting for DEP_ACK`, and the following DEPLOY missed its ACK. The pacing is in place; the flow's own
+WiFi/MQTT work can still delay the ACK past the host's wait. Deploying a quiet flow first (or simply retrying, since
+the installed pieces stay installed) clears it. Stop the old flow before a dependency install when the board is
+busy, rather than treating the first failure as a compile error.
+
 ## font_to_py's height isn't the size you ask for, 2026-10-07
 
 `font_to_py <font> 16` gave Atkinson Hyperlegible a 17px line height; 48 gave 47px. The size argument is a
@@ -362,6 +369,17 @@ After five `device_cli.py flow deploy` runs, HELLO on an ESP32-C3 showed `freeId
 reset restored roughly 37 KB of free IDF heap and the same flow deployed and ran a 600s soak. The same five flows
 also failed at 20s per flow and passed at 40s. Before a hardware pass on a C3: reset the board, and give each flow
 at least 40s. This is the heap-fragmentation effect recorded above, measured on the deploy path itself.
+
+## Never reconnect a client that `mqtt_as` is already reconnecting, 2026-10-19
+
+First cut of `ts_mqtt`'s `ensure_connected()` called `client.connect()` whenever `isconnected()` was false, so a
+subscribe node's one-second wait loop raced mqtt_as's own `_keep_connected()` reconnect. On an ESP32-C3 that produced
+`E (...) wifi:sta is connecting, cannot set config` followed by a connected/disconnected cycle every ~18s for the
+whole 600s soak -- the exact flapping the network pass exists to catch, introduced by the new code rather than the
+WiFi stack. The old generated code only ever connected once, which is why it never showed this. Rule: after the first
+successful connect, leave reconnection to mqtt_as; `ensure_connected()` only observes `isconnected()`, reports the
+state, and resubscribes the registry when the link returns. `ts-mqtt.test.ts` pins "a link blip does not call
+connect() again".
 
 ## A large HTTP response is one allocation, 2026-10-19
 

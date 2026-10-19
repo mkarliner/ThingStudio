@@ -431,6 +431,7 @@ Type `thingstudio/mqtt_publish`, kind sink, palette group network.
     - `retain`, boolean, default `false`
     - `qos`, number, default `0` — 0 or 1
     - `brokerConfigId`, string, default `""`, the id of a `thingstudio/config/mqtt-broker` config
+    - `wifiConfigId`, string, default `""`, the id of a `thingstudio/config/wifi` config
 
 ### mqtt subscribe
 
@@ -442,6 +443,7 @@ Type `thingstudio/mqtt_subscribe`, kind source, palette group network.
     - `topic`, string, default `""`
     - `qos`, number, default `0`
     - `brokerConfigId`, string, default `""`, the id of a `thingstudio/config/mqtt-broker` config
+    - `wifiConfigId`, string, default `""`, the id of a `thingstudio/config/wifi` config
 
 ### ntp
 

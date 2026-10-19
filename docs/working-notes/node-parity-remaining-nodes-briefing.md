@@ -61,10 +61,11 @@ library. The rest of the network family splits by the capability each still need
   `udp-receive`, plus `wifi_status`/`wifi_gate` — the same hook pattern throughout.
 - **`ntp` — flipped 2026-10-19.** Two-faced package: `run` pokes the clock, `wait`/`emit` send after a sync; the
   hook validates the server/offset/DST/format and derives WiFi.
-- **`mqtt-publish` / `mqtt-subscribe` — blocked on cross-instance shared setup.** One `MQTTClient` is shared by
-  every node on the same broker (compile-time key dedup + module variables). A package's per-instance setup
-  cannot express that; it needs a shared device library (the `ts_wifi` pattern) or a designed `runtime.shared`
-  client with its own lifecycle.
+- **`mqtt-publish` / `mqtt-subscribe` — flipped 2026-10-19 on `ts_mqtt`.** The shared client is now a device
+  library (`device-runtime/src/vendor/thingstudio_mqtt/`), the `ts_wifi` pattern: one client per broker, keyed by
+  host:port, with a per-node subscription registry (routing, last-node unsubscribe, resubscribe after reconnect),
+  the connect/retry/status code the old codegen emitted, and redeploy cleanup. Hardware-passed on ESP32-C3 (30 s
+  and a 600 s soak) against a real broker.
 - **`http-in` — the sibling scan** (`nodesOfType`) plus one shared server per port.
 
 Hardware, each its own design/verification task (see `shared-resource-facility-scoping.md` §9):
