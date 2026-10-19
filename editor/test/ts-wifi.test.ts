@@ -3,6 +3,7 @@
 // connect, unmanaged, defer-to-mqtt (with the ESP32-only first join), and idempotence.
 
 import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -22,6 +23,12 @@ function run(body: string): string {
 }
 
 describe("ts_wifi.ensure_station", () => {
+  it("the pymock fixture is a byte-identical copy of the vendored library", () => {
+    const fixture = readFileSync(join(__dirname, "fixtures", "pymock", "ts_wifi.py"));
+    const vendor = readFileSync(join(__dirname, "../../device-runtime/src/vendor/thingstudio_wifi/ts_wifi.py"));
+    expect(fixture.equals(vendor)).toBe(true);
+  });
+
   it("connects with the supplied credentials", () => {
     const out = run('import ts_wifi\nsta = ts_wifi.ensure_station("net", "pw")\nprint("OK", sta.isconnected() or "pending")\n');
     expect(out).toContain("WLAN_ACTIVE STA_IF True");
@@ -34,7 +41,7 @@ describe("ts_wifi.ensure_station", () => {
     expect(out).not.toContain("WLAN_CONNECT");
   });
 
-  it("does not connect for an open network with no password", () => {
+  it("connects with an empty password for an open network", () => {
     const out = run('import ts_wifi\nts_wifi.ensure_station("guest", "", "open")\n');
     expect(out).toContain("WLAN_CONNECT STA_IF guest");
   });

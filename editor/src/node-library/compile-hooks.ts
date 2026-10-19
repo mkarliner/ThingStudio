@@ -14,7 +14,7 @@ import type { GraphConfigNode, GraphData, GraphNode } from "../compiler/graph.js
 import type { NodeDefinition } from "../compiler/node-definition.js";
 import type { Target } from "../definitions/target.js";
 import { buildCompileContext, type CompileContext } from "./compile-context.js";
-import { throwIfHookErrors, validateCompileHookResult } from "./compile-hook.js";
+import { COMPILE_HOOK_LIMITS, throwIfHookErrors, validateCompileHookResult } from "./compile-hook.js";
 import type { CompileHookResult } from "../compiler/node-definition.js";
 
 /** Runs one hook. `hookSource` is the package's `.compile.py` text; the implementation is a sandboxed
@@ -26,6 +26,9 @@ export interface CompileHookRunner {
 export interface RunCompileHooksOptions {
   readonly target?: Target | null;
   readonly redactConfig?: (config: GraphConfigNode) => Record<string, unknown>;
+  /** Wall clock for all hooks in one pre-pass (SPEC.md, 5 s). A hook that has already started is allowed to
+   * finish (its own 1 s budget bounds it); the pre-pass stops before starting the next one. */
+  readonly compileTimeoutMs?: number;
 }
 
 export interface CompileHooksOutcome {
@@ -52,10 +55,15 @@ export async function runCompileHooks(
 ): Promise<CompileHooksOutcome> {
   const results = new Map<string, CompileHookResult>();
   const warnings: string[] = [];
+  const started = Date.now();
+  const budget = options.compileTimeoutMs ?? COMPILE_HOOK_LIMITS.compileWallMs;
   for (const node of graphData.nodes) {
     const def = registry.get(node.type);
     if (!def || def.compileHook === undefined) continue;
     const label = packageLabel(node);
+    if (Date.now() - started >= budget) {
+      throw new CompileError(`${label}: package compile hooks exceeded the ${budget} ms compile budget`);
+    }
     const ctx = buildCompileContext({ graphData, node, descriptor: def, target: options.target, redactConfig: options.redactConfig });
     let raw: unknown;
     try {
@@ -87,10 +95,15 @@ export function runCompileHooksSync(
 ): CompileHooksOutcome {
   const results = new Map<string, CompileHookResult>();
   const warnings: string[] = [];
+  const started = Date.now();
+  const budget = options.compileTimeoutMs ?? COMPILE_HOOK_LIMITS.compileWallMs;
   for (const node of graphData.nodes) {
     const def = registry.get(node.type);
     if (!def || def.compileHook === undefined) continue;
     const label = packageLabel(node);
+    if (Date.now() - started >= budget) {
+      throw new CompileError(`${label}: package compile hooks exceeded the ${budget} ms compile budget`);
+    }
     const ctx = buildCompileContext({ graphData, node, descriptor: def, target: options.target, redactConfig: options.redactConfig });
     let raw: unknown;
     try {

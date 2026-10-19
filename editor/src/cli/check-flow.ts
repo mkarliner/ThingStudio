@@ -28,6 +28,7 @@ import { resolveTarget, type Target } from "../definitions/target.js";
 import { parseFlowFile, FlowFileError, type FlowFile } from "../flow-file/flow-file.js";
 import { buildRegistry } from "../node-library/registry.js";
 import { runCompileHooksSync } from "../node-library/compile-hooks.js";
+import { visibleConfigProperties } from "../app/rete/config-types.js";
 import { runHookOnceSync } from "../compile-hook/run-hook.js";
 import { readFileSync } from "node:fs";
 import { NODE_FACTORIES, type DescriptorNode } from "../app/rete/nodes.js";
@@ -214,7 +215,10 @@ export function checkFlowText(text: string, options: CheckOptions = {}): CheckRe
   if (configs.length > 0) graph.configs = configs;
 
   try {
-    const hooks = runCompileHooksSync(graph, registry, syncHookRunner);
+    const hooks = runCompileHooksSync(graph, registry, syncHookRunner, {
+      target,
+      redactConfig: (c) => visibleConfigProperties(c.type, c.properties),
+    });
     const r = compile(graph, registry, { target, hookResults: hooks.results, hookWarnings: hooks.warnings });
     return {
       ok: true,

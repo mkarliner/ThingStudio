@@ -903,7 +903,7 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   `reviews/2026-10-18-node-parity-architecture.md` and `package-compile-hooks-scoping.md`: the descriptor-vocabulary
   route (fifteen additions in three days, several for one node) is not how the remaining built-ins convert. A package
   may ship `<name>.compile.py` run at compile time in a capability-free WASM interpreter, returning only validated
-  data (properties, claims, warnings/errors, a setup-dedup key — never Python source); the compile context becomes a
+  data (properties, claims, warnings/errors — never Python source); the compile context becomes a
   published interface under `interfaces/`, and built-ins adopt it through a TypeScript adapter rather than being
   rewritten. Gated on a timeboxed spike (interpreter size, load time, per-call latency, synchronous budget); a
   runtime flow manifest is the fallback if it fails. Agreed amendments (`package-compile-hooks-scoping.md` §10): data
@@ -920,12 +920,18 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   and the shared `ts_wifi` flow dependency (`device-runtime/src/vendor/thingstudio_wifi/`) makes the bring-up
   idempotent across packages and built-ins (the old compile-time "wifi-sta" dedup couldn't cross that boundary).
   Built-in network nodes now emit `ts_wifi.ensure_station(...)` too, so a mixed flow brings WiFi up once.
+  **Recorded 2026-10-19:** the optional setup-dedup key from the scoping note (§3) is dropped; per-instance setup
+  is stateful, so cross-instance sharing is a shared device library (`ts_wifi`, next `ts_mqtt`) or
+  `runtime.shared`, never a deduped setup statement. Core packages' hooks are Python through the same sandbox;
+  TypeScript hooks are the named residue (`function`, `gui_*`).
   **`wifi_gate` followed the same day**, the second network package: same hook derivation (minus the poll
   interval) and the same shared bring-up; its transform checks the live `_sta.isconnected()`. The rest of the
   **`udp-send` followed** (same hook, shared socket via `runtime.shared`, the built-in's bounded non-blocking
   send kept), then **`udp-receive`** (a per-port socket via `runtime.shared`, the 10 ms loop yield as
   `intervalMs`, `pollMs` only the EAGAIN retry), and **`http-request`** (URL/method/timeout validated in the hook,
   the bounded async client unchanged). With that, every network package that can be expressed today is converted;
-  `ntp` (two-faced), `mqtt-publish`/`mqtt-subscribe` (shared client) and `http-in` (sibling scan + server) remain. The rest of the family exposed two package-format gaps: `ntp` is two-faced (sink + event source) and the package format cannot
-  declare both; `mqtt-publish`/`mqtt-subscribe` need one client shared across instances, which per-instance setup
-  cannot express without a shared device library.
+  `ntp` (two-faced), `mqtt-publish`/`mqtt-subscribe` (shared client) and `http-in` (sibling scan + server) remain.
+  Two package-format gaps came out of the rest: `ntp` is two-faced (sink + event source) and the package format
+  cannot declare both; `mqtt-publish`/`mqtt-subscribe` need one client shared across instances, which per-instance
+  setup cannot express without a shared device library (now also required by `mqtt-dynamic-subscription.md`'s
+  per-node subscription registry).

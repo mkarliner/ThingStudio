@@ -161,7 +161,7 @@ import { resolveOutputCount } from "../compiler/node-descriptor.js";
 import { DRAG_MIME, CUSTOM_DRAG_MIME, type NodeKind } from "./rete/palette.js";
 import { toGraphData, socketIndex } from "./rete/graph-adapter.js";
 import { screens as screensStore, setScreens, setGuiNodeLister } from "./rete/screens-store.js";
-import { CONFIG_TYPES } from "./rete/config-types.js";
+import { visibleConfigProperties } from "./rete/config-types.js";
 import { propertyVersion, configsVersion, configs as configsStore, replaceAllConfigs, clearConfigs, backendWsUrl, fireInjectNode, updateConfig, activeTarget } from "./rete/store.js";
 import { getCustomNodePackage, listCustomNodeDefinitions, missingNodeTypeMessage, replaceAllCustomNodePackages } from "./rete/custom-nodes-store.js";
 import { loadAllCustomNodes } from "./custom-node-loader.js";
@@ -444,17 +444,6 @@ function extractCanvasSnapshot(): { nodes: CanvasNodeSnapshot[]; edges: FlowFile
  * than silently dropping data for a type this function doesn't
  * understand -- CLAUDE.md's fault-handling priority: fail open into "saved
  * something reasonable," not into "silently lost a field." */
-function visibleConfigProperties(type: string, properties: Record<string, unknown>): Record<string, unknown> {
-  const descriptor = CONFIG_TYPES[type];
-  if (!descriptor) return properties;
-  const allowedNames = new Set(descriptor.fields.map((f) => f.name));
-  const filtered: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(properties)) {
-    if (allowedNames.has(key)) filtered[key] = value;
-  }
-  return filtered;
-}
-
 function extractConfigsSnapshot(): FlowFileConfig[] {
   return [...configsStore.value.values()].map((c) => ({ id: c.id, type: c.type, properties: visibleConfigProperties(c.type, c.properties) }));
 }

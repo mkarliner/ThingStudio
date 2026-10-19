@@ -136,6 +136,20 @@ export interface ConfigTypeDescriptor {
   presetType?: string;
 }
 
+/** The config properties a flow file may hold (and a compile hook may see in flow.configs): only the fields the
+ * config type declares, never resolved secrets. Shared by the save path and the hook-context redaction so the two
+ * cannot disagree. */
+export function visibleConfigProperties(type: string, properties: Record<string, unknown>): Record<string, unknown> {
+  const descriptor = CONFIG_TYPES[type];
+  if (!descriptor) return properties;
+  const allowed = new Set(descriptor.fields.map((f) => f.name));
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(properties)) {
+    if (allowed.has(key)) out[key] = value;
+  }
+  return out;
+}
+
 export const CONFIG_TYPES: Record<string, ConfigTypeDescriptor> = {
   "thingstudio/config/wifi": {
     type: "thingstudio/config/wifi",

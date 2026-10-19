@@ -52,6 +52,18 @@ describe("runCompileHooks", () => {
     expect(seen).toEqual([null, null]);
   });
 
+  it("stops the pre-pass when the compile budget is exceeded, naming the next node", async () => {
+    const runner: CompileHookRunner = {
+      async run() {
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        return null;
+      },
+    };
+    await expect(runCompileHooks(graph, registry, runner, { compileTimeoutMs: 10 })).rejects.toThrow(
+      /custom\/hooked \(node c\): package compile hooks exceeded the 10 ms compile budget/,
+    );
+  });
+
   it("collects warnings, attributed to the node", async () => {
     const out = await runCompileHooks(graph, registry, {
       async run(_s, ctx) {

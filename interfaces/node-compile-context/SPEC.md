@@ -65,7 +65,7 @@ without the file behaves exactly as today.
 | Field | Meaning |
 |---|---|
 | `version` | Context version. A hook that needs a newer one should say so in an error rather than guessing. |
-| `node` | This instance: `id`, `type`, resolved `properties`, and `wired`. `wired.inputs`/`wired.outputs` are booleans positionally matching the descriptor's ports. |
+| `node` | This instance: `id`, `type`, raw stored `properties` (as §1), and `wired`. `wired.inputs`/`wired.outputs` are booleans positionally matching the descriptor's ports. |
 | `flow.nodes` | Every node in the flow, in graph order: `id`, `type`, **non-secret** `properties`. |
 | `flow.configs` | Every config: `id`, `type`, **non-secret** `properties` (`credentialName`, not the secret). |
 | `referencedConfigs` | The configs this node's `configRef` fields point at, with their resolved secrets — the same values the node already receives on the board today. |
@@ -103,7 +103,7 @@ value, too large) is a `CompileError`, and no part of it is applied.
 | `claims` | 64 |
 | `warnings` / `errors` | 32 each |
 | Wall clock per hook | 1 s |
-| Wall clock per compile (all hooks) | 5 s |
+| Wall clock per compile (all hooks) | 5 s, enforced across the pre-pass: a started hook may finish, the next does not start |
 
 Exceeding a limit is a compile error naming the package and the limit. The wall clock is enforced by terminating
 the hook worker, not by trusting the hook.
@@ -126,11 +126,14 @@ A network package's hook derives WiFi from the flow instead of asking for new vo
 
 ```python
 def compile(ctx, properties):
-    wifi = None
+    # flow.configs is redacted; the full (secret-bearing) properties of the configs this node references are in
+    # referencedConfigs. Find the flow's WiFi config id, then look it up there.
+    wifi_id = None
     for config in ctx['flow']['configs']:
         if config['type'] == 'thingstudio/config/wifi':
-            wifi = config['properties']
+            wifi_id = config['id']
             break
+    wifi = (ctx.get('referencedConfigs') or {}).get(wifi_id) if wifi_id else None
     if wifi is None:
         return {'errors': ['no WiFi config in this flow']}
 

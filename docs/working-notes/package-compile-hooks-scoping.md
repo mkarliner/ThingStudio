@@ -81,7 +81,7 @@ and `thingstudio-compile`), alongside the existing `mpy-cross` WASM. It never re
   `display_spi`'s MADCTL/stride, or the flow's WiFi credentials for a network node)
 - resource claims, checked by the existing `claimResource`/pin-check machinery
 - warnings and errors, surfaced as `CompileResult.warnings` and `CompileError` naming the node
-- optionally a setup-dedup key, so two instances sharing a resource emit setup once
+- optionally a setup-dedup key, so two instances sharing a resource emit setup once — **dropped**, see §10.8
 
 The hook never returns Python source: the core keeps sole ownership of the generated code's shape, and the
 `properties` dict stays the one delivery vehicle, as today.
@@ -196,9 +196,10 @@ Mike approved option 3 as the direction, with these amendments (all from the arc
 2. **Data is the default; the hook is the escape hatch.** Hooks do not remove the need for declarative shapes — the
    palette, property panel, catalog, AI authoring and static analysis all read data. A new capability is data unless
    it genuinely cannot be expressed as data, and that exception is stated in the change.
-3. **Built-ins adopt the published context too (open question 3: yes).** A TypeScript adapter rather than a rewrite
-   of the 15 existing core packages. If only packages use the spec, two vocabularies return — the one-vocabulary
-   rule.
+3. **Built-ins adopt the published context too (open question 3: yes), as Python hooks.** Corrected 2026-10-19:
+   core packages' hooks are Python and run through the same sandbox as a user's, which exercises the user path and
+   makes "copy a built-in" include its hook. TypeScript codegen hooks remain only for the named residue
+   (`function`, `gui_*`); a further exception is recorded when it is made, not left as an open category.
 4. **The property-dependent port type stays vocabulary (open question 4: no editor-side `ports()` for now).** A port
    type that follows a property is bounded (three nodes), inherently editor-side, and a poor fit for a compile hook
    running on every keystroke. Added as an explicit exception to the hook direction. The editor-side `ports()` step
@@ -211,3 +212,7 @@ Mike approved option 3 as the direction, with these amendments (all from the arc
    it lands with the network flips.
 7. **`wifi_status` is the first "no loss" target**, not the last: it is the hardest network case, so success there
    validates the model.
+8. **The setup-dedup key is dropped, deliberately (recorded 2026-10-19).** §3 offered an optional setup key so two
+   instances could emit one setup statement. Per-instance setup is stateful (counters, closures), so deduping it
+   would share state; cross-instance sharing belongs to a shared device library — `ts_wifi` for the station
+   bring-up, `ts_mqtt` for the MQTT client — or to `runtime.shared` for an object. No setupKey field.

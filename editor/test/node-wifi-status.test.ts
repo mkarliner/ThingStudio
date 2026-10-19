@@ -315,3 +315,99 @@ describe("thingstudio/wifi_status package", () => {
     });
   });
 });
+
+describe("computeWifiProvisionMarker", () => {
+  it("returns null when there is no wifi_status node at all", () => {
+    expect(computeWifiProvisionMarker({ nodes: [] })).toBeNull();
+  });
+
+  it("returns null when the flow has two WiFi configs (ambiguous, left to compile()'s own CompileError)", () => {
+    const graph = {
+      nodes: [{ id: "1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "w1" } }],
+      configs: [
+        { id: "w1", type: "thingstudio/config/wifi", properties: { security: "unmanaged" } },
+        { id: "w2", type: "thingstudio/config/wifi", properties: { security: "unmanaged" } },
+      ],
+    };
+    expect(computeWifiProvisionMarker(graph)).toBeNull();
+  });
+
+  it("uses the flow's WiFi config with no wifi_status node, when another node needs WiFi", () => {
+    const graph = {
+      nodes: [{ id: "1", type: "thingstudio/udp_send", properties: {} }],
+      configs: [{ id: "w1", type: "thingstudio/config/wifi", properties: { security: "unmanaged" } }],
+    };
+    expect(computeWifiProvisionMarker(graph)).toEqual({ selfProvision: true, allowReprovision: false });
+  });
+
+  it("returns null when no node in the flow uses WiFi, even with an unmanaged WiFi config left over", () => {
+    const graph = {
+      nodes: [{ id: "1", type: "thingstudio/debug", properties: {} }],
+      configs: [{ id: "w1", type: "thingstudio/config/wifi", properties: { security: "unmanaged" } }],
+    };
+    expect(computeWifiProvisionMarker(graph)).toBeNull();
+  });
+
+  it('returns null when the resolved config\'s security is not "unmanaged"', () => {
+    const graph = {
+      nodes: [{ id: "1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "w1" } }],
+      configs: [{ id: "w1", type: "thingstudio/config/wifi", properties: { security: "password", ssid: "home", password: "x" } }],
+    };
+    expect(computeWifiProvisionMarker(graph)).toBeNull();
+  });
+
+  it("returns selfProvision:true, allowReprovision:false for an unmanaged config with the fallback off", () => {
+    const graph = {
+      nodes: [{ id: "1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "w1" } }],
+      configs: [{ id: "w1", type: "thingstudio/config/wifi", properties: { security: "unmanaged", allowReprovisioning: false } }],
+    };
+    expect(computeWifiProvisionMarker(graph)).toEqual({ selfProvision: true, allowReprovision: false });
+  });
+
+  it("carries allowReprovision:true through when the config's own field is set", () => {
+    const graph = {
+      nodes: [{ id: "1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "w1" } }],
+      configs: [{ id: "w1", type: "thingstudio/config/wifi", properties: { security: "unmanaged", allowReprovisioning: true } }],
+    };
+    expect(computeWifiProvisionMarker(graph)).toEqual({ selfProvision: true, allowReprovision: true });
+  });
+
+  it("returns null when wifiConfigId doesn't resolve to any config (dangling reference)", () => {
+    const graph = {
+      nodes: [{ id: "1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "no-such-config" } }],
+      configs: [],
+    };
+    expect(computeWifiProvisionMarker(graph)).toBeNull();
+  });
+});
+
+describe("wifi_status NODE_STATUS (report_status)", () => {
+  const connectedPreamble =
+    "network.WLAN.CONNECTED = True\nnetwork.WLAN.IFCONFIG = ('192.168.1.42', '255.255.255.0', '192.168.1.1', '8.8.8.8')";
+
+  it("reports state connected with the IP as text", async () => {
+    const { raw } = await runTwice(graph({ pollMs: 1000 }, unmanaged()), { initial: connectedPreamble });
+    expect(raw).toContain("NODE_STATUS node=1 state=connected text=192.168.1.42");
+  });
+
+  it("reports state disconnected with no text", async () => {
+    const { raw } = await runTwice(graph({ pollMs: 1000 }, unmanaged()), { initial: "network.WLAN.CONNECTED = False" });
+    expect(raw).toContain("NODE_STATUS node=1 state=disconnected text=None");
+  });
+
+  it("does not report again on a poll with no change", async () => {
+    const { raw } = await runTwice(graph({ pollMs: 1000 }, unmanaged()), { initial: "network.WLAN.CONNECTED = False" });
+    expect(raw.split("\n").filter((l) => l.startsWith("NODE_STATUS"))).toHaveLength(1);
+  });
+
+  it("reports again when the gateway changes while connected (the documented harmless redundancy)", async () => {
+    const { raw } = await runTwice(graph({ pollMs: 1000 }, unmanaged()), {
+      initial: connectedPreamble,
+      between: "network.WLAN.IFCONFIG = ('192.168.1.42', '255.255.255.0', '192.168.1.254', '8.8.8.8')",
+    });
+    const lines = raw.split("\n").filter((l) => l.startsWith("NODE_STATUS"));
+    expect(lines).toHaveLength(2);
+    expect(lines[0]).toBe("NODE_STATUS node=1 state=connected text=192.168.1.42");
+    expect(lines[1]).toBe("NODE_STATUS node=1 state=connected text=192.168.1.42");
+  });
+});
