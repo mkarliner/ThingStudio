@@ -356,7 +356,9 @@ not here.
   synchronous `compile()`. Context building, result validation, the pre-pass, compile integration, the vendored WASI
   interpreter, the worker runner, backend/loader support and `main.ts` wiring all landed. Next: the first real
   package: **`wifi_status` and `wifi_gate` flipped 2026-10-19** with the `ts_wifi` shared bring-up library; the
-  remaining seven network nodes use the same hook. Still open: a browser pass, conformance vectors, and CLI
+  remaining network nodes split: `http-request`/`udp-send`/`udp-receive` use the same hook; `ntp` is blocked on a
+  two-faced package format; `mqtt-publish`/`mqtt-subscribe` need cross-instance shared client setup; `http-in`
+  needs a sibling scan and a per-port shared server. Still open: a browser pass, conformance vectors, and CLI
   custom-node loading.
   Until then, hold the flow-query vocabulary (`hasNode`/`nodesOfType`) and promoting core-only vocabulary to the
   custom schema. **Not held:** the property-dependent port-type data form (bounded, editor-side, an explicit

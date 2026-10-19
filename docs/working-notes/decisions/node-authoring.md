@@ -921,4 +921,7 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   idempotent across packages and built-ins (the old compile-time "wifi-sta" dedup couldn't cross that boundary).
   Built-in network nodes now emit `ts_wifi.ensure_station(...)` too, so a mixed flow brings WiFi up once.
   **`wifi_gate` followed the same day**, the second network package: same hook derivation (minus the poll
-  interval) and the same shared bring-up; its transform checks the live `_sta.isconnected()`.
+  interval) and the same shared bring-up; its transform checks the live `_sta.isconnected()`. The rest of the
+  family exposed two package-format gaps: `ntp` is two-faced (sink + event source) and the package format cannot
+  declare both; `mqtt-publish`/`mqtt-subscribe` need one client shared across instances, which per-instance setup
+  cannot express without a shared device library.

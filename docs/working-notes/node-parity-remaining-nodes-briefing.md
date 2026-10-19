@@ -54,11 +54,18 @@ the last built-in-only corner besides `dynamicOutputs`):
 - **`inject`**, **`startup`** (their single output tracks `payloadType`), **`variable-get`** (`outputs[0].type` is a
   function of `payloadType`).
 
-Blocked on **flow-query context parity**: **`http-in`**, **`http-request`**, **`mqtt-publish`**,
-**`mqtt-subscribe`**, **`ntp`**, **`udp-send`**, **`udp-receive`**. **`wifi_status` and `wifi_gate` flipped
-2026-10-19** with package compile hooks + the `ts_wifi` shared bring-up library; the rest use the same hook
-(`ctx.flow` for mqtt presence, `referencedConfigs` for WiFi). `http-in` still needs the `nodesOfType` sibling scan
-plus a runtime.shared server/queue.
+**`wifi_status` and `wifi_gate` flipped 2026-10-19** with package compile hooks + the `ts_wifi` shared bring-up
+library. The rest of the network family splits by the capability each still needs:
+
+- **Portable with the same hook** (`ctx.flow` for mqtt presence, `referencedConfigs` for WiFi):
+  **`http-request`**, **`udp-send`**, **`udp-receive`**.
+- **`ntp` — blocked on a two-faced package.** It is a sink that also defines `codegenEventSource` (`ntp.ts`), and
+  the package format has no way to declare both faces. Needs a package-format addition or a split node.
+- **`mqtt-publish` / `mqtt-subscribe` — blocked on cross-instance shared setup.** One `MQTTClient` is shared by
+  every node on the same broker (compile-time key dedup + module variables). A package's per-instance setup
+  cannot express that; it needs a shared device library (the `ts_wifi` pattern) or a designed `runtime.shared`
+  client with its own lifecycle.
+- **`http-in` — the sibling scan** (`nodesOfType`) plus one shared server per port.
 
 Hardware, each its own design/verification task (see `shared-resource-facility-scoping.md` §9):
 - **`touch-i2c`** — nested config (`touch-panel` → `i2cConfigId`); not a small change (config field kinds live in
