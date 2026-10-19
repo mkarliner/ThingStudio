@@ -114,6 +114,7 @@ import type { NodeLineRange } from "../compiler/compile.js";
 import { WIFI_CONFIG_TYPE, computeWifiProvisionMarker, normalizeWifiConfigs } from "../node-library/wifi-status.js";
 import { buildRegistry } from "../node-library/registry.js";
 import { runCompileHooks } from "../node-library/compile-hooks.js";
+import { createPreviewQueue } from "./preview-queue.js";
 import { browserHookWorkerFactory, createWorkerHookRunner } from "../compile-hook/runner.js";
 import { mergeCustomNodeRegistry } from "../node-library/custom-node.js";
 import { WebSerialTransport, type WebSerialPort, type DeviceTransport, type TransportEvents } from "../protocol/transport.js";
@@ -1125,7 +1126,22 @@ async function currentSource(): Promise<string> {
   return source;
 }
 
-async function refreshPreview(): Promise<{ source: string } | { error: string }> {
+type PreviewResult = { source: string } | { error: string };
+
+// Compiles run one at a time, and only the newest queued preview runs (reviews 2026-10-19 findings 7/8). Deploy
+// uses now(), which waits its turn but is never coalesced away.
+const previewQueue = createPreviewQueue<PreviewResult>(() => refreshPreviewImpl());
+
+function refreshPreview(): Promise<PreviewResult> {
+  return previewQueue.latest();
+}
+
+/** Deploy's compile: serialised with previews, never coalesced away. */
+function refreshPreviewNow(): Promise<PreviewResult> {
+  return previewQueue.now();
+}
+
+async function refreshPreviewImpl(): Promise<PreviewResult> {
   try {
     const source = await currentSource();
     // Warnings go after the source, as comments, so line numbers in the preview still match
@@ -2901,7 +2917,7 @@ el("btnDeploy").addEventListener("click", async () => {
     await loadUserDefinitions();
     await resolveConfigCredentials();
     logTargetResolution(updateActiveTarget());
-    const preview = await refreshPreview();
+    const preview = await refreshPreviewNow();
     if ("error" in preview) {
       logLine(`[compile error] ${preview.error}`, "err");
       return;

@@ -161,8 +161,12 @@ def run(smoke: Smoke) -> None:
     text, secs = smoke.settle(page, hook_error)
     smoke.report("runaway", secs is not None and "timed out" in text and "smoke/spin" in text,
                  f"{'%.2fs' % secs if secs is not None else 'no result'}; {headline(text)}")
+    # The runaway error is still on screen while the good flow loads. Wait for the preview to CHANGE, not merely
+    # to look like a final answer -- otherwise the stale error satisfies "hook_error" at 0.00 s and the case cannot
+    # tell recovery from never compiling.
+    stale = smoke.preview(page)
     smoke.open_flow(page, hooked)
-    text, secs = smoke.settle(page, lambda t: compiled_wifi(t) or hook_error(t))
+    text, secs = smoke.settle(page, lambda t: t != stale and (compiled_wifi(t) or hook_error(t)))
     waited = "%.2fs" % secs if secs is not None else "no result"
     smoke.report("recovery", compiled_wifi(text), f"{waited}; {headline(text)}")
     page.close()
