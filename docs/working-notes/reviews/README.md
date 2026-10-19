@@ -9,3 +9,5 @@ it reviewed has moved on; write a new one and link back.
 
 - `2026-10-18-node-parity-architecture.md` -- node-format parity (built-in vs custom nodes) as of v0.3.0: progress,
   and why the descriptor-vocabulary approach works against the extensibility goal.
+- `2026-10-19-compile-hooks-response.md` -- review of the compile-hook implementation and the network conversions
+  that answered the 2026-10-18 review: direction confirmed, robustness/test-evidence findings.
