@@ -35,7 +35,7 @@
     },
     "properties": { "type": "array", "items": { "$ref": "#/$defs/propertyField" } },
     "requires": { "$ref": "#/$defs/requires" },
-    "eventSource": { "type": "boolean", "description": "A source that waits on an external event: .node.py must also define 'async def wait(properties)'. No intervalMs needed. Only valid with kind 'source'." }
+    "eventSource": { "type": "boolean", "description": "A source that waits on an external event (.node.py defines wait and emit; no intervalMs), or a two-faced sink (.node.py defines run plus wait and emit; one input and one output port). Not valid on a transform." }
   },
   "$defs": {
     "requires": {

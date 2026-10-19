@@ -395,8 +395,12 @@ export function validateCustomNodeDescriptor(raw: unknown): CustomNodeDescriptor
   if (kind === "source" && outputs.length !== 1) {
     fail(`kind "source" must declare exactly 1 output port, got ${outputs.length}`);
   }
-  if (kind === "sink" && outputs.length !== 0) {
+  if (kind === "sink" && obj.eventSource !== true && outputs.length !== 0) {
     fail(`kind "sink" must declare exactly 0 output ports, got ${outputs.length}`);
+  }
+  // A two-faced sink is a sink on its input side and an event source on its output side.
+  if (kind === "sink" && obj.eventSource === true && outputs.length !== 1) {
+    fail(`a two-faced "sink" (eventSource: true) must declare exactly 1 output port, got ${outputs.length}`);
   }
   if (kind === "transform" && outputs.length < 1) {
     fail(`kind "transform" must declare at least 1 output port, got ${outputs.length}`);
@@ -415,7 +419,9 @@ export function validateCustomNodeDescriptor(raw: unknown): CustomNodeDescriptor
   if (obj.eventSource !== undefined && typeof obj.eventSource !== "boolean") {
     fail('"eventSource" must be a boolean when present');
   }
-  if (isEventSource && kind !== "source") fail('"eventSource" is only valid on a "source" node');
+  if (isEventSource && kind === "transform") {
+    fail('"eventSource" is not valid on a "transform" node -- use a "source", or a two-faced "sink" (run + wait/emit)');
+  }
 
   // A polled source drives its own loop via a declared numeric `intervalMs` property (scoping note,
   // Decision 3). An event source (2026-10-15) waits on `wait(properties)` instead, so it needs no
@@ -697,6 +703,9 @@ type PackageDescriptor = {
  * define; a typo or the wrong kind's function name surfaces as a NameError at deploy time, not caught statically
  * here (no Python parser). See docs/user-guide/custom-nodes.md's "if something goes wrong" section.
  */
+type PackageSetup = { vars: string[]; propsVar: string; statements: { key: string; code: string }[] };
+const setupCache = new WeakMap<CodegenContext, Map<string, PackageSetup>>();
+
 function packageCodegen(descriptor: PackageDescriptor, pythonSource: string, compileHook?: string): Pick<NodeDefinition, "codegenSource" | "codegenEventSource" | "codegenTransform" | "codegenSink"> {
   const entryPointName = descriptor.kind === "source" ? "emit" : "run";
   const hint = identifierHint(descriptor.type);
@@ -742,6 +751,22 @@ function packageCodegen(descriptor: PackageDescriptor, pythonSource: string, com
     return { vars, propsVar, statements: [{ key: setupFn, code }] };
   }
 
+  /** Two-faced packages call this from both faces; the cache is what makes both share one closure (and therefore
+   * one set of `nonlocal` state), rather than emitting two setups with different variables. */
+  function cachedSetup(node: GraphNode, ctx: CodegenContext, entries: string[]): PackageSetup {
+    let perCtx = setupCache.get(ctx);
+    if (perCtx === undefined) {
+      perCtx = new Map();
+      setupCache.set(ctx, perCtx);
+    }
+    const key = `${node.id}|${entries.join(",")}`;
+    const existing = perCtx.get(key);
+    if (existing !== undefined) return existing;
+    const made = emitSetup(node, ctx, entries);
+    perCtx.set(key, made);
+    return made;
+  }
+
   const hooks: Pick<NodeDefinition, "codegenSource" | "codegenEventSource" | "codegenTransform" | "codegenSink"> = {};
   if (descriptor.kind === "source" && descriptor.eventSource) {
     // Event source: `wait(properties)` is awaited each loop iteration, then `emit(properties)` builds the
@@ -765,6 +790,22 @@ function packageCodegen(descriptor: PackageDescriptor, pythonSource: string, com
     hooks.codegenTransform = (node: GraphNode, ctx: CodegenContext): TransformCodegenResult => {
       const { vars, propsVar, statements } = emitSetup(node, ctx, [entryPointName]);
       return { statements, functionName: ctx.uniqueName(`${hint}_call`), functionBody: `return await ${vars[0]!}(msg, ${propsVar})` };
+    };
+  } else if (descriptor.eventSource) {
+    // Two-faced sink: the input face is `run(msg, properties)`, the output face `wait(properties)` then
+    // `emit(properties)`, all from the same per-instance closure so they can share state.
+    const entries = ["run", "wait", "emit"];
+    hooks.codegenSink = (node: GraphNode, ctx: CodegenContext): SinkCodegenResult => {
+      const built = cachedSetup(node, ctx, entries);
+      return { statements: built.statements, functionName: ctx.uniqueName(`${hint}_call`), functionBody: `await ${built.vars[0]!}(msg, ${built.propsVar})` };
+    };
+    hooks.codegenEventSource = (node: GraphNode, ctx: CodegenContext): EventSourceCodegenResult => {
+      const built = cachedSetup(node, ctx, entries);
+      return {
+        statements: built.statements,
+        waitStatement: `await ${built.vars[1]!}(${built.propsVar})`,
+        buildMsg: `msg = await ${built.vars[2]!}(${built.propsVar})`,
+      };
     };
   } else {
     hooks.codegenSink = (node: GraphNode, ctx: CodegenContext): SinkCodegenResult => {

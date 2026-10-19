@@ -157,10 +157,18 @@ describe("validateCustomNodeDescriptor", () => {
     ).toThrow(/intervalMs/);
   });
 
-  it("accepts an eventSource source with no intervalMs, but only on a source", () => {
+  it("accepts an eventSource source with no intervalMs; a sink may be two-faced; a transform may not", () => {
     const eventSrc = { type: "custom/watcher", kind: "source", label: "watcher", eventSource: true, ports: { outputs: [{ name: "msg", type: "any" }] } };
     expect(validateCustomNodeDescriptor(eventSrc).eventSource).toBe(true);
-    expect(() => validateCustomNodeDescriptor({ ...eventSrc, kind: "transform", ports: { inputs: [{ name: "msg", type: "any" }], outputs: [{ name: "msg", type: "any" }] } })).toThrow(/only valid on a "source"/);
+    const twoFaced = {
+      type: "custom/watcher",
+      kind: "sink",
+      label: "watcher",
+      eventSource: true,
+      ports: { inputs: [{ name: "msg", type: "any" }], outputs: [{ name: "msg", type: "any" }] },
+    };
+    expect(validateCustomNodeDescriptor(twoFaced).eventSource).toBe(true);
+    expect(() => validateCustomNodeDescriptor({ ...eventSrc, kind: "transform", ports: { inputs: [{ name: "msg", type: "any" }], outputs: [{ name: "msg", type: "any" }] } })).toThrow(/not valid on a "transform"/);
     expect(() => validateCustomNodeDescriptor({ ...eventSrc, eventSource: "yes" })).toThrow(/must be a boolean/);
   });
 
@@ -685,6 +693,50 @@ describe("buildCustomNodeDefinition -- event source", () => {
     expect(result.waitStatement).toMatch(/await .*_wait\(/);
     // The pin is board-checked and claimed (phase 2a), so an IRQ package shares/conflicts like a built-in.
     expect(claims).toEqual(["GPIO 11|input, no pull"]);
+  });
+});
+
+describe("buildCustomNodeDefinition -- two-faced sink", () => {
+  const descriptor = validateCustomNodeDescriptor({
+    type: "custom/twoway",
+    kind: "sink",
+    label: "twoway",
+    eventSource: true,
+    ports: { inputs: [{ name: "msg", type: "any" }], outputs: [{ name: "msg", type: "number" }] },
+  });
+  const source = [
+    "_seen = 0",
+    "",
+    "async def run(msg, properties):",
+    "    nonlocal _seen",
+    "    _seen += 1",
+    "",
+    "async def wait(properties):",
+    "    pass",
+    "",
+    "async def emit(properties):",
+    "    nonlocal _seen",
+    "    return {'payload': _seen, 'topic': ''}",
+  ].join("\n");
+
+  it("builds both faces from one closure", () => {
+    const def = buildCustomNodeDefinition(descriptor, source);
+    expect(def.codegenSink).toBeTypeOf("function");
+    expect(def.codegenEventSource).toBeTypeOf("function");
+    const ctx = freshCtx();
+    const sink = def.codegenSink!(node(1, {}), ctx);
+    const event = def.codegenEventSource!(node(1, {}), ctx);
+    expect(sink.statements).toHaveLength(1);
+    expect(event.statements).toBe(sink.statements); // cached: one setup, one set of state
+    const body = [
+      "msg = {'payload': 1, 'topic': ''}",
+      sink.functionBody,
+      event.waitStatement,
+      event.buildMsg,
+      "print(msg['payload'])",
+    ].join("\n");
+    const output = runPython(sink.statements ?? [], body);
+    expect(output.trim()).toBe("1"); // run() incremented the state emit() reads
   });
 });
 
