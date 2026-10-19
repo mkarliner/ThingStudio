@@ -11,3 +11,6 @@ it reviewed has moved on; write a new one and link back.
   and why the descriptor-vocabulary approach works against the extensibility goal.
 - `2026-10-19-compile-hooks-response.md` -- review of the compile-hook implementation and the network conversions
   that answered the 2026-10-18 review: direction confirmed, robustness/test-evidence findings.
+- `2026-10-19-compile-hooks-response-reply.md` -- the author's response to that review, for a further cycle:
+  per-finding agreement, the 7/8 single-flight proposal, the interpreter plan, and the proposed order. A response,
+  not a review.
