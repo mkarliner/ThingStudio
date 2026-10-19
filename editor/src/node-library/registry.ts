@@ -19,7 +19,7 @@ import { descriptor as neopixelCoreDescriptor, python as neopixelCorePython } fr
 import { functionNode } from "./function-node.js";
 import { descriptor as gpioOutCoreDescriptor, python as gpioOutCorePython } from "./core-packages/gpio-out.js";
 import { httpInNode } from "./http-in.js";
-import { httpRequestNode } from "./http-request.js";
+import { descriptor as httpRequestCoreDescriptor, python as httpRequestCorePython, compileHook as httpRequestCompileHook } from "./core-packages/http-request.js";
 import { descriptor as httpResponseCoreDescriptor, python as httpResponseCorePython } from "./core-packages/http-response.js";
 import { injectNode } from "./inject.js";
 import { descriptor as interruptCoreDescriptor, python as interruptCorePython } from "./core-packages/interrupt.js";
@@ -103,7 +103,7 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     buildCoreNodeDefinition(timerCoreDescriptor, timerCorePython),
     corePackage(wifiStatusCoreDescriptor, wifiStatusCorePython, wifiStatusCompileHook),
     corePackage(wifiGateCoreDescriptor, wifiGateCorePython, wifiGateCompileHook),
-    httpRequestNode,
+    corePackage(httpRequestCoreDescriptor, httpRequestCorePython, httpRequestCompileHook),
     httpInNode,
     buildCoreNodeDefinition(httpResponseCoreDescriptor, httpResponseCorePython),
     mqttPublishNode,

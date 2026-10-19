@@ -30,7 +30,6 @@
 // the extra `status` property can be inspected -- debug.ts only ever
 // prints `payload`.
 
-import { flowWifiConfigsFrom } from "./flow-wifi-helper.js";
 import { execFile } from "node:child_process";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import http from "node:http";
@@ -40,48 +39,49 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { CompileError } from "../src/compiler/errors.js";
-import type { GraphNode } from "../src/compiler/graph.js";
+import { readFileSync } from "node:fs";
+import type { GraphConfigNode, GraphData } from "../src/compiler/graph.js";
 import type { CodegenContext } from "../src/compiler/node-definition.js";
-import { httpRequestNode } from "../src/node-library/http-request.js";
+import { runHookOnce } from "../src/compile-hook/run-hook.js";
+import { runCompileHooks } from "../src/node-library/compile-hooks.js";
+import { buildRegistry } from "../src/node-library/registry.js";
 
-const execFileAsync = promisify(execFile);
 const __dirname = dirname(fileURLToPath(import.meta.url));
-// 2026-09-04: http_request now derives its WiFi credentials from the
-// flow's own wifi_status node (wifi-status.ts's resolveFlowWifiCredentials,
-// via the new ctx.findNodesOfType() -- see that file's header for the bug
-// this fixes). resolveConfig itself still isn't exercised directly by
-// this node's OWN codegen (it has no config reference of its own -- the
-// lookup happens through the synthesized wifi_status node's properties,
-// resolved by resolveFlowWifiCredentials internally against ITS
-// wifiConfigId), so it stays a throwing stub, matching every other node
-// test file's convention for "this path shouldn't be hit."
-const fakeWifiConfigs = new Map<string, Record<string, unknown>>();
-let wifiStatusNodes: GraphNode[] = [];
-const ctx: CodegenContext = {
-  uniqueName: (hint) => `_${hint}`,
-  resolveConfig: (id) => {
-    const cfg = fakeWifiConfigs.get(id);
-    if (!cfg) throw new Error(`unexpected resolveConfig("${id}") call -- this test file's ctx only stubs wifi configs (see wifiStatusNodes)`);
-    return cfg;
-  },
-  findNodesOfType: (type) => (type === "thingstudio/wifi_status" ? wifiStatusNodes : []),
-  findConfigsOfType: (type: string) => (type === "thingstudio/config/wifi" ? flowWifiConfigsFrom(wifiStatusNodes, (id) => fakeWifiConfigs.get(id)) : []),
+const execFileAsync = promisify(execFile);
+const wasmBytes = new Uint8Array(readFileSync(join(__dirname, "../../micropython-wasi/micropython-wasi.wasm")));
+const runner = {
+  run: (src: string, ctx: unknown, props: Record<string, unknown>) => runHookOnce({ wasmBytes, hookSource: src, context: ctx, properties: props }),
 };
+const TYPE = "thingstudio/http_request";
+const WIFI = "thingstudio/config/wifi";
 
-beforeEach(() => {
-  fakeWifiConfigs.clear();
-  fakeWifiConfigs.set("unmanaged1", { security: "unmanaged" });
-  // Default: one wifi_status node, riding on an externally-managed
-  // connection -- matches this node's own old "open"/no-validation
-  // default closely enough that every pre-existing test below (which
-  // only cares about http behavior, not WiFi credentials) keeps passing
-  // unmodified.
-  wifiStatusNodes = [{ id: "wifi_status_1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "unmanaged1" } }];
-});
+const wifi = (properties: Record<string, unknown>, id = "w1"): GraphConfigNode => ({ id, type: WIFI, properties });
+const unmanaged = () => [wifi({ security: "unmanaged" })];
 
-function node(properties: Record<string, unknown>): GraphNode {
-  return { id: "1", type: "thingstudio/http_request", properties };
+function graph(properties: Record<string, unknown>, configs: GraphConfigNode[] = []): GraphData {
+  return { nodes: [{ id: "1", type: TYPE, properties }], links: [], ...(configs.length ? { configs } : {}) };
+}
+
+async function hookError(g: GraphData): Promise<string | undefined> {
+  try {
+    await runCompileHooks(g, buildRegistry(), runner);
+    return undefined;
+  } catch (err) {
+    return err instanceof Error ? err.message : String(err);
+  }
+}
+
+async function codegen(g: GraphData) {
+  const registry = buildRegistry();
+  const hooks = await runCompileHooks(g, registry, runner);
+  const def = registry.get(TYPE)!;
+  const ctx: CodegenContext = {
+    uniqueName: (hint: string) => `_${hint}`,
+    hookResult: (id: string) => hooks.results.get(id),
+    resolveConfig: () => ({}),
+    findConfigsOfType: (type: string) => (type === WIFI ? (g.configs ?? []) : []),
+  };
+  return def.codegenTransform!(g.nodes[0]!, ctx);
 }
 
 function indent(code: string, spaces: number): string {
@@ -100,8 +100,8 @@ function indent(code: string, spaces: number): string {
  * statement's imports. Async (execFile, not execFileSync) so Node's event
  * loop -- and this file's in-process http.Server -- keeps running while
  * python3 does (see header comment for why that matters here). */
-async function runRequest(properties: Record<string, unknown>, initialPayload: unknown = null): Promise<string> {
-  const result = httpRequestNode.codegenTransform!(node(properties), ctx);
+async function runRequest(properties: Record<string, unknown>, initialPayload: unknown = null, configs = unmanaged()): Promise<string> {
+  const result = await codegen(graph(properties, configs));
   const lines = [
     "import asyncio",
     ...(result.imports ?? []),
@@ -205,85 +205,57 @@ describe("thingstudio/http_request node", () => {
     await expect(runRequest({ url: `${baseUrl}/`, method: "GET", timeoutMs: 300 })).rejects.toThrow();
   });
 
-  it("rejects a non-http:// url", () => {
-    expect(() => httpRequestNode.codegenTransform!(node({ url: "https://example.com/", method: "GET" }), ctx)).toThrow(CompileError);
-    expect(() => httpRequestNode.codegenTransform!(node({ url: "https://example.com/", method: "GET" }), ctx)).toThrow(/https\/TLS/);
+  it("rejects a non-http:// url", async () => {
+    expect(await hookError(graph({ url: "https://example.com/", method: "GET" }))).toMatch(/https\/TLS/);
   });
 
-  it("rejects an unsupported method", () => {
-    expect(() => httpRequestNode.codegenTransform!(node({ url: "http://x/", method: "DELETE" }), ctx)).toThrow(/must be "GET" or "POST"/);
+  it("rejects an unsupported method", async () => {
+    expect(await hookError(graph({ url: "http://x/", method: "DELETE" }))).toMatch(/must be "GET" or "POST"/);
   });
 
-  it("rejects a non-positive timeoutMs", () => {
-    expect(() => httpRequestNode.codegenTransform!(node({ url: "http://x/", method: "GET", timeoutMs: 0 }), ctx)).toThrow(/positive number/);
+  it("rejects a non-positive timeoutMs", async () => {
+    expect(await hookError(graph({ url: "http://x/", method: "GET", timeoutMs: 0 }))).toMatch(/positive number/);
   });
 
-  it("defaults method to GET and timeoutMs to 5000 when not configured", () => {
-    const result = httpRequestNode.codegenTransform!(node({ url: "http://x/" }), ctx);
-    expect(result.functionBody).toContain('"GET"');
-    // timeoutMs 5000 -> 5000/1000 = 5 (a whole-number seconds value prints
-    // as "5" in JS, not "5.0" -- asyncio.wait_for accepts an int timeout
-    // identically to a float one, so this isn't a functional gap, just
-    // matching what the codegen actually emits).
-    expect(result.functionBody).toMatch(/,\s*5\)/);
+  it("defaults method to GET, timeout to 5 s, port to 80 and path to /", async () => {
+    const result = await codegen(graph({ url: "http://x/" }, unmanaged()));
+    const generated = (result.statements ?? []).map((s) => s.code).join("\n");
+    expect(generated).toContain('"method": "GET"');
+    expect(generated).toContain('"timeoutS": 5');
+    expect(generated).toContain('"port": 80');
+    expect(generated).toContain('"path": "/"');
   });
 
-  it("parses host/port/path out of the configured url", () => {
-    const result = httpRequestNode.codegenTransform!(node({ url: "http://example.local:8080/api/data" }), ctx);
-    expect(result.functionBody).toContain('"example.local"');
-    expect(result.functionBody).toContain("8080");
-    expect(result.functionBody).toContain('"/api/data"');
+  it("parses host/port/path out of the configured url", async () => {
+    const result = await codegen(graph({ url: "http://example.local:8080/api/data" }, unmanaged()));
+    const generated = (result.statements ?? []).map((s) => s.code).join("\n");
+    expect(generated).toContain('"host": "example.local"');
+    expect(generated).toContain('"port": 8080');
+    expect(generated).toContain('"path": "/api/data"');
   });
 
-  it("defaults path to / when the url has none", () => {
-    const result = httpRequestNode.codegenTransform!(node({ url: "http://example.local" }), ctx);
-    expect(result.functionBody).toContain('"/"');
+  it("refuses a flow with no WiFi config", async () => {
+    expect(await hookError(graph({ url: "http://example.local" }))).toMatch(/needs a WiFi network/);
   });
 
-  it("throws a CompileError when the flow has no wifi_status node (2026-09-04: no ssid/password properties of its own any more)", () => {
-    wifiStatusNodes = [];
-    expect(() => httpRequestNode.codegenTransform!(node({ url: "http://example.local" }), ctx)).toThrow(CompileError);
-    expect(() => httpRequestNode.codegenTransform!(node({ url: "http://example.local" }), ctx)).toThrow(/http_request needs a WiFi network/);
+  it("refuses two WiFi configs", async () => {
+    expect(await hookError(graph({ url: "http://example.local" }, [wifi({ ssid: "a" }, "w1"), wifi({ ssid: "b" }, "w2")]))).toMatch(/2 WiFi configs/);
   });
 
-  it("rejects a flow with two WiFi configs (one radio, so one WiFi config per flow)", () => {
-    wifiStatusNodes = [
-      { id: "w1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "unmanaged1" } },
-      { id: "w2", type: "thingstudio/wifi_status", properties: { wifiConfigId: "unmanaged1_other" } },
-    ];
-    expect(() => httpRequestNode.codegenTransform!(node({ url: "http://example.local" }), ctx)).toThrow(/a flow can only have one/);
+  it("derives ssid/password/security from the flow's WiFi config", async () => {
+    const result = await codegen(graph({ url: "http://example.local" }, [wifi({ ssid: "MyNet", password: "hunter2" })]));
+    const generated = (result.statements ?? []).map((s) => s.code).join("\n");
+    expect(generated).toContain('"ssid": "MyNet"');
+    expect(generated).toContain("ts_wifi.ensure_station(");
   });
 
-  it("derives ssid/password/security from the flow's wifi_status node instead of properties of its own", () => {
-    fakeWifiConfigs.set("wifi1", { ssid: "MyNet", password: "hunter2" });
-    wifiStatusNodes = [{ id: "wifi_status_1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "wifi1" } }];
-    const result = httpRequestNode.codegenTransform!(node({ url: "http://example.local" }), ctx);
-    expect(result.statements?.[0]?.code).toContain('"MyNet"');
-    expect(result.statements?.[0]?.code).toContain("ts_wifi.ensure_station(");
+  it("declares an input and output msg port", async () => {
+    const def = buildRegistry().get(TYPE)!;
+    expect(def.ports?.inputs).toEqual([{ name: "msg", type: "any" }]);
+    expect(def.ports?.outputs).toEqual([{ name: "msg", type: "any" }]);
   });
 
-  // Canvas presence (2026-09-05, outstanding-items/http-request-config-
-  // node-gap.md, canvas-presence-gaps.md): registered ports, matching the
-  // pattern every other now-canvas-wired network node type's own test file
-  // asserts (e.g. node-udp-send.test.ts doesn't need this because a sink's
-  // single input is implicit in its own test names, but a transform's pair
-  // is worth asserting explicitly, matching function-node.ts's own shape).
-  it("declares an input and output msg port (transform kind, canvas presence 2026-09-05)", () => {
-    expect(httpRequestNode.ports?.inputs).toEqual([{ name: "msg", type: "any" }]);
-    expect(httpRequestNode.ports?.outputs).toEqual([{ name: "msg", type: "any" }]);
-  });
-
-  // Loud network errors (2026-09-05, redeploy-cleanup-and-network-fault-
-  // detection-briefing.md's Problem 2a): a real ECONNREFUSED against a
-  // closed local port -- not the "server never responds" timeout case
-  // above, a different OSError subclass entirely -- should surface with
-  // this request's own host:port folded into the message, same pattern
-  // node-udp-send.test.ts's own Problem 2a test asserts.
-  it("re-raises a connection failure with the target host:port folded into the message (Problem 2a)", async () => {
-    // 0 lets the OS pick a port, so binding-then-immediately-closing it
-    // reliably yields a real "nothing is listening here" port rather than
-    // a hardcoded number that might collide with something else running
-    // on the test machine.
+  it("re-raises a connection failure with the target host:port folded into the message", async () => {
     const closedServer = http.createServer();
     await new Promise<void>((resolve) => closedServer.listen(0, "127.0.0.1", resolve));
     const closedPort = (closedServer.address() as AddressInfo).port;

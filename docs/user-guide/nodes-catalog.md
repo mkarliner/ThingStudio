@@ -410,6 +410,7 @@ Type `thingstudio/http_request`, kind transform, palette group network.
     - `url`, string, default `""`
     - `method`, string, default `"GET"`
     - `timeoutMs`, number, default `5000`
+    - `wifiConfigId`, string, default `""`, the id of a `thingstudio/config/wifi` config
 
 ### http response
 

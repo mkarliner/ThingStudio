@@ -158,7 +158,7 @@ import { descriptor as wifiStatusCoreDescriptor } from "../../node-library/core-
 import { descriptor as wifiGateCoreDescriptor } from "../../node-library/core-packages/wifi-gate.js";
 import { descriptor as udpSendCoreDescriptor } from "../../node-library/core-packages/udp-send.js";
 import { descriptor as udpReceiveCoreDescriptor } from "../../node-library/core-packages/udp-receive.js";
-import { httpRequestNode } from "../../node-library/http-request.js";
+import { descriptor as httpRequestCoreDescriptor } from "../../node-library/core-packages/http-request.js";
 import { httpInNode } from "../../node-library/http-in.js";
 import { descriptor as httpResponseCoreDescriptor } from "../../node-library/core-packages/http-response.js";
 import { descriptor as delayCoreDescriptor } from "../../node-library/core-packages/delay.js";
@@ -456,7 +456,7 @@ export class UdpSendNode extends buildDescriptorNodeClass(udpSendCoreDescriptor)
 
 export class UdpReceiveNode extends buildDescriptorNodeClass(udpReceiveCoreDescriptor) {}
 
-export class HttpRequestNode extends buildDescriptorNodeClass(httpRequestNode) {}
+export class HttpRequestNode extends buildDescriptorNodeClass(httpRequestCoreDescriptor) {}
 
 export class HttpInNode extends buildDescriptorNodeClass(httpInNode) {}
 

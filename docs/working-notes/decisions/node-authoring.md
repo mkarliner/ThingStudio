@@ -924,6 +924,8 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   interval) and the same shared bring-up; its transform checks the live `_sta.isconnected()`. The rest of the
   **`udp-send` followed** (same hook, shared socket via `runtime.shared`, the built-in's bounded non-blocking
   send kept), then **`udp-receive`** (a per-port socket via `runtime.shared`, the 10 ms loop yield as
-  `intervalMs`, `pollMs` only the EAGAIN retry). The rest of the family exposed two package-format gaps: `ntp` is two-faced (sink + event source) and the package format cannot
+  `intervalMs`, `pollMs` only the EAGAIN retry), and **`http-request`** (URL/method/timeout validated in the hook,
+  the bounded async client unchanged). With that, every network package that can be expressed today is converted;
+  `ntp` (two-faced), `mqtt-publish`/`mqtt-subscribe` (shared client) and `http-in` (sibling scan + server) remain. The rest of the family exposed two package-format gaps: `ntp` is two-faced (sink + event source) and the package format cannot
   declare both; `mqtt-publish`/`mqtt-subscribe` need one client shared across instances, which per-instance setup
   cannot express without a shared device library.

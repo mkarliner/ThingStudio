@@ -57,8 +57,8 @@ the last built-in-only corner besides `dynamicOutputs`):
 **`wifi_status` and `wifi_gate` flipped 2026-10-19** with package compile hooks + the `ts_wifi` shared bring-up
 library. The rest of the network family splits by the capability each still needs:
 
-- **Portable with the same hook** (`ctx.flow` for mqtt presence, `referencedConfigs` for WiFi):
-  **`http-request`**. (`udp-send` and `udp-receive` flipped 2026-10-19 too.)
+- **Portable ones all flipped 2026-10-19:** `http-request` (URL/method/timeout validated in the hook), `udp-send`,
+  `udp-receive`, plus `wifi_status`/`wifi_gate` — the same hook pattern throughout.
 - **`ntp` — blocked on a two-faced package.** It is a sink that also defines `codegenEventSource` (`ntp.ts`), and
   the package format has no way to declare both faces. Needs a package-format addition or a split node.
 - **`mqtt-publish` / `mqtt-subscribe` — blocked on cross-instance shared setup.** One `MQTTClient` is shared by

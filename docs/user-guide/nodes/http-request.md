@@ -7,6 +7,7 @@ Makes one HTTP request per incoming message and returns the response.
 - **url** — `http://host[:port]/path`. **HTTPS isn't supported.**
 - **method** — `GET` or `POST`. No other methods are supported.
 - **timeout (ms)** — how long to wait for the whole request/response exchange. Default 5000ms.
+- **WiFi** — the flow's WiFi network. Every WiFi node in a flow shares this one setting.
 
 ## Behavior
 
