@@ -27,6 +27,9 @@ import { BUILTIN_DEFINITION_FILES } from "../definitions/builtin.js";
 import { resolveTarget, type Target } from "../definitions/target.js";
 import { parseFlowFile, FlowFileError, type FlowFile } from "../flow-file/flow-file.js";
 import { buildRegistry } from "../node-library/registry.js";
+import { runCompileHooksSync } from "../node-library/compile-hooks.js";
+import { runHookOnceSync } from "../compile-hook/run-hook.js";
+import { readFileSync } from "node:fs";
 import { NODE_FACTORIES, type DescriptorNode } from "../app/rete/nodes.js";
 import { ClassicPreset } from "rete";
 import { type ThingstudioSocket } from "../app/rete/sockets.js";
@@ -69,6 +72,28 @@ export function boardChoices(): string[] {
 }
 
 const registry = buildRegistry();
+
+let hookWasm: Uint8Array | null = null;
+function hookWasmBytes(): Uint8Array {
+  if (hookWasm) return hookWasm;
+  // Source tree (src/cli) and bundled CLI (dist-cli) sit one and two levels below editor/.
+  for (const url of [
+    new URL("../../public/vendor/micropython-wasi/micropython-wasi.wasm", import.meta.url),
+    new URL("../public/vendor/micropython-wasi/micropython-wasi.wasm", import.meta.url),
+  ]) {
+    try {
+      hookWasm = new Uint8Array(readFileSync(url));
+      return hookWasm;
+    } catch {
+      // try the next layout
+    }
+  }
+  throw new Error("could not find micropython-wasi.wasm (expected in editor/public/vendor/micropython-wasi/) -- needed for a package compile hook");
+}
+const syncHookRunner = {
+  runSync: (hookSource: string, ctx: Parameters<typeof runHookOnceSync>[0]["context"], properties: Record<string, unknown>) =>
+    runHookOnceSync({ wasmBytes: hookWasmBytes(), hookSource, context: ctx, properties }),
+};
 
 type ReteNode = ClassicPreset.Node & { properties: Record<string, unknown> };
 
@@ -189,7 +214,8 @@ export function checkFlowText(text: string, options: CheckOptions = {}): CheckRe
   if (configs.length > 0) graph.configs = configs;
 
   try {
-    const r = compile(graph, registry, { target });
+    const hooks = runCompileHooksSync(graph, registry, syncHookRunner);
+    const r = compile(graph, registry, { target, hookResults: hooks.results, hookWarnings: hooks.warnings });
     return {
       ok: true,
       errors: [],

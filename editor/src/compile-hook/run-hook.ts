@@ -9,7 +9,7 @@
 // NO TIMEOUT HERE. This blocks the caller until the hook finishes; the worker that hosts it enforces the
 // wall-clock budget by terminating. Tests call this directly (trusted hooks only).
 
-import { runWasi } from "./wasi.js";
+import { runWasi, runWasiSync, type WasiRunResult } from "./wasi.js";
 
 const OK = "__TS_HOOK_OK__";
 const ERR = "__TS_HOOK_ERROR__";
@@ -57,15 +57,11 @@ function lastLine(output: string, marker: string): string | null {
   return lines.length > 0 ? lines[lines.length - 1]!.slice(marker.length) : null;
 }
 
-/** Runs the hook and returns its parsed JSON result. Throws an Error (with the interpreter's output) on a
- * hook exception, a syntax error, or output that is not the expected marker. */
-export async function runHookOnce(request: HookRunRequest): Promise<unknown> {
-  const code = wrapperScript(
-    request.hookSource,
-    toBase64(JSON.stringify(request.context)),
-    toBase64(JSON.stringify(request.properties)),
-  );
-  const run = await runWasi(request.wasmBytes, ["micropython", "-c", code]);
+function codeFor(request: HookRunRequest): string {
+  return wrapperScript(request.hookSource, toBase64(JSON.stringify(request.context)), toBase64(JSON.stringify(request.properties)));
+}
+
+function parse(run: WasiRunResult): unknown {
   const output = `${run.stdout}\n${run.stderr}`;
 
   const ok = lastLine(run.stdout, OK);
@@ -93,4 +89,17 @@ export async function runHookOnce(request: HookRunRequest): Promise<unknown> {
       ? `compile hook interpreter exited with code ${run.exitCode}${excerpt ? `:\n${excerpt}` : ""}`
       : `compile hook produced no result${excerpt ? `:\n${excerpt}` : ""}`,
   );
+}
+
+/** Runs the hook and returns its parsed JSON result. Throws an Error (with the interpreter's output) on a
+ * hook exception, a syntax error, or output that is not the expected marker. */
+export async function runHookOnce(request: HookRunRequest): Promise<unknown> {
+  const run = await runWasi(request.wasmBytes, ["micropython", "-c", codeFor(request)]);
+  return parse(run);
+}
+
+/** Synchronous variant for the CLI's synchronous check path. No containment (see wasi.ts). */
+export function runHookOnceSync(request: HookRunRequest): unknown {
+  const run = runWasiSync(request.wasmBytes, ["micropython", "-c", codeFor(request)]);
+  return parse(run);
 }

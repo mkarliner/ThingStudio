@@ -127,7 +127,7 @@ export const mqttPublishNode: NodeDefinition = {
       // with no event loop yet; inlined into a coroutine now, it uses
       // asyncio.sleep_ms() instead, see that file's header).
       imports: ["import mqtt_as", "import network", "import sys", "import time"],
-      statements: [wifiSetupStatement(cfg.ssid, cfg.wifiPassword, "open", true), mqttSetupStatement(cfg), mqttNodeStatusSetupStatement(node.id)],
+      statements: [wifiSetupStatement(cfg.ssid, cfg.wifiPassword, cfg.wifiSecurity, true), mqttSetupStatement(cfg), mqttNodeStatusSetupStatement(node.id)],
       functionName: ctx.uniqueName("mqtt_publish"),
       functionBody,
     };

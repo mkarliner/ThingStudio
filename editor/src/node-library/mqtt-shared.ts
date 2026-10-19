@@ -207,13 +207,15 @@
 import { CompileError } from "../compiler/errors.js";
 import type { CodegenContext } from "../compiler/node-definition.js";
 import { pyStringLiteral } from "./py-literals.js";
-import { resolveFlowWifiCredentials } from "./wifi-status.js";
+import { resolveFlowWifiCredentials, type WifiSecurity } from "./wifi-status.js";
 
 export interface MqttBrokerConfig {
   broker: string;
   port: number;
   ssid: string;
   wifiPassword: string;
+  /** The flow WiFi config's real security value, so the shared ts_wifi call matches what wifi_status passes. */
+  wifiSecurity: WifiSecurity;
   username: string;
   password: string;
 }
@@ -336,7 +338,7 @@ export function parseMqttBrokerProps(properties: Record<string, unknown>, ctx: C
       `${context}'s WiFi config for ssid "${ssid}" has no password but security is "password" -- set a password, or choose "open" if this network intentionally has none`,
     );
   }
-  return { broker, port, ssid, wifiPassword, username, password };
+  return { broker, port, ssid, wifiPassword, wifiSecurity: resolved.security, username, password };
 }
 
 /** Module-scope statement that constructs the shared MQTTClient for this

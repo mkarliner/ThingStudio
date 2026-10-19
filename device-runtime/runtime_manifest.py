@@ -55,6 +55,9 @@ DEPENDENCIES: list[dict] = [
     {"name": "st7796py", "files": [("st7796py/st7796py.py", "st7796py.py")], "requires": ["st7789py"]},
     {"name": "ssd1306", "files": [("ssd1306/ssd1306.py", "ssd1306.py")], "requires": []},
     {"name": "bme280_float", "files": [("bme280/bme280_float.py", "bme280_float.py")], "requires": []},
+    # Thingstudio's own shared WiFi station bring-up (2026-10-19): one idempotent call for built-in network
+    # nodes and packages, replacing the compiler-side "wifi-sta" statement dedup across that boundary.
+    {"name": "ts_wifi", "files": [("thingstudio_wifi/ts_wifi.py", "ts_wifi.py")], "requires": []},
     # FT6336U capacitive touch controller (Thingstudio's own small driver).
     {"name": "ft6336u", "files": [("ft6336u/ft6336u.py", "ft6336u.py")], "requires": []},
     # Thingstudio's own GUI subsystem (gui-layout-widget-system-scoping.md, phase 4): a library, not part of the

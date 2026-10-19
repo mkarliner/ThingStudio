@@ -664,8 +664,8 @@ function targetLiteral(ctx: CodegenContext): string {
  * properties (not the Python literal above) since compile.ts's
  * SourceCodegenResult.repeatMs is a JS number, not generated code. */
 function resolveIntervalMs(descriptor: { properties?: PropertyFieldDescriptor[] }, rawProperties: Record<string, unknown>, contextLabel: string): number {
-  const field = descriptor.properties!.find((p) => p.name === "intervalMs")!;
-  const raw = "intervalMs" in rawProperties ? rawProperties.intervalMs : field.default;
+  const field = descriptor.properties?.find((p) => p.name === "intervalMs");
+  const raw = "intervalMs" in rawProperties ? rawProperties.intervalMs : field?.default;
   const n = Number(raw);
   if (!Number.isFinite(n) || n <= 0) {
     throw new CompileError(`${contextLabel} "intervalMs" must be a positive number, got ${JSON.stringify(raw)}`);
@@ -686,6 +686,7 @@ type PackageDescriptor = {
   properties?: PropertyFieldDescriptor[];
   eventSource?: boolean;
   resources?: readonly ResourceSpec[];
+  compileHook?: string;
 };
 
 /**
@@ -696,7 +697,7 @@ type PackageDescriptor = {
  * define; a typo or the wrong kind's function name surfaces as a NameError at deploy time, not caught statically
  * here (no Python parser). See docs/user-guide/custom-nodes.md's "if something goes wrong" section.
  */
-function packageCodegen(descriptor: PackageDescriptor, pythonSource: string): Pick<NodeDefinition, "codegenSource" | "codegenEventSource" | "codegenTransform" | "codegenSink"> {
+function packageCodegen(descriptor: PackageDescriptor, pythonSource: string, compileHook?: string): Pick<NodeDefinition, "codegenSource" | "codegenEventSource" | "codegenTransform" | "codegenSink"> {
   const entryPointName = descriptor.kind === "source" ? "emit" : "run";
   const hint = identifierHint(descriptor.type);
 
@@ -711,6 +712,9 @@ function packageCodegen(descriptor: PackageDescriptor, pythonSource: string): Pi
     // A package compile hook's claims are the same kind of data the descriptor's `resources` carry, validated
     // through the same claim machinery (interfaces/node-compile-context/SPEC.md).
     const hook = ctx.hookResult?.(node.id);
+    if (compileHook !== undefined && hook === undefined) {
+      throw new CompileError(`${descriptor.type} (node ${node.id}) has a compile hook that was not run -- compile through the async hook pre-pass first`);
+    }
     for (const claim of hook?.claims ?? []) {
       if (ctx.claimResource) ctx.claimResource(claim.resource, claim.use, node.id);
     }
@@ -750,7 +754,11 @@ function packageCodegen(descriptor: PackageDescriptor, pythonSource: string): Pi
   } else if (descriptor.kind === "source") {
     hooks.codegenSource = (node: GraphNode, ctx: CodegenContext): SourceCodegenResult => {
       const { vars, propsVar, statements } = emitSetup(node, ctx, [entryPointName]);
-      const repeatMs = resolveIntervalMs(descriptor, node.properties, `node ${node.id} (${descriptor.type})`);
+      // A hook may compute the poll interval (e.g. wifi_status's pollMs -> intervalMs); use the merged
+      // properties so the hook can be the one mapping its own field onto the format's interval.
+      const hookProps = ctx.hookResult?.(node.id)?.properties;
+      const intervalProps = hookProps ? { ...node.properties, ...hookProps } : node.properties;
+      const repeatMs = resolveIntervalMs(descriptor, intervalProps, `node ${node.id} (${descriptor.type})`);
       return { statements, buildMsg: `msg = await ${vars[0]!}(${propsVar})`, repeatMs };
     };
   } else if (descriptor.kind === "transform") {
@@ -788,8 +796,10 @@ export function buildCustomNodeDefinition(descriptor: CustomNodeDescriptor, pyth
  * buildCustomNodeDefinition, every descriptor field is kept. A core package uses the reserved `thingstudio/`
  * namespace, so it is built directly (never through validateCustomNodeDescriptor).
  */
-export function buildCoreNodeDefinition(descriptor: NodeDescriptor, pythonSource: string): NodeDefinition {
-  return { ...descriptor, ...packageCodegen(descriptor, pythonSource) };
+export function buildCoreNodeDefinition(descriptor: NodeDescriptor, pythonSource: string, compileHook?: string): NodeDefinition {
+  const def: NodeDefinition = { ...descriptor, ...packageCodegen(descriptor, pythonSource, compileHook) };
+  if (compileHook !== undefined) def.compileHook = compileHook;
+  return def;
 }
 
 /**

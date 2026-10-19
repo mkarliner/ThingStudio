@@ -154,7 +154,7 @@ import { descriptor as ebuttonCoreDescriptor } from "../../node-library/core-pac
 import { adcNode } from "../../node-library/adc.js";
 import { descriptor as encoderCoreDescriptor } from "../../node-library/core-packages/encoder.js";
 import { descriptor as neopixelCoreDescriptor } from "../../node-library/core-packages/neopixel.js";
-import { wifiStatusNode } from "../../node-library/wifi-status.js";
+import { descriptor as wifiStatusCoreDescriptor } from "../../node-library/core-packages/wifi-status.js";
 import { wifiGateNode } from "../../node-library/wifi-gate.js";
 import { udpSendNode } from "../../node-library/udp-send.js";
 import { udpReceiveNode } from "../../node-library/udp-receive.js";
@@ -482,7 +482,7 @@ export class FilterNode extends buildDescriptorNodeClass(filterCoreDescriptor) {
 
 export class JournalNode extends buildDescriptorNodeClass(journalCoreDescriptor) {}
 
-export class WifiStatusNode extends buildDescriptorNodeClass(wifiStatusNode) {}
+export class WifiStatusNode extends buildDescriptorNodeClass(wifiStatusCoreDescriptor) {}
 
 export class WifiGateNode extends buildDescriptorNodeClass(wifiGateNode) {}
 

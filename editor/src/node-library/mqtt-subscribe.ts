@@ -152,7 +152,7 @@ export const mqttSubscribeNode: NodeDefinition = {
       // asyncio.sleep_ms() instead, see that file's header).
       imports: ["import mqtt_as", "import network", "import sys", "import time"],
       statements: [
-        wifiSetupStatement(cfg.ssid, cfg.wifiPassword, "open", true),
+        wifiSetupStatement(cfg.ssid, cfg.wifiPassword, cfg.wifiSecurity, true),
         mqttSetupStatement(cfg),
         mqttNodeStatusSetupStatement(node.id),
         { key: readyVar, code: `${readyVar} = False` },

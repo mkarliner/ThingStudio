@@ -11,15 +11,17 @@ import { buildRegistry } from "../src/node-library/registry.js";
 import { mqttEnsureConnectedSnippet, mqttSetupStatement } from "../src/node-library/mqtt-shared.js";
 import { wifiSetupStatement } from "../src/node-library/wifi-status.js";
 
-const cfg = { broker: "broker.local", port: 1883, ssid: "net", wifiPassword: "pw", username: "", password: "" };
+const cfg = { broker: "broker.local", port: 1883, ssid: "net", wifiPassword: "pw", wifiSecurity: "password" as const, username: "", password: "" };
 const lines = mqttEnsureConnectedSnippet(cfg, "n1").split("\n");
 const at = (text: string) => lines.findIndex((l) => l.includes(text));
 
 describe("ESP32 + MQTT WiFi join", () => {
   it("joins at flow start on ESP32 when MQTT owns the connection", () => {
     const code = wifiSetupStatement("net", "pw", "password", true).code;
-    expect(code).toContain('if sys.platform == "esp32" and not _wifi_sta.isconnected():');
-    expect(code).toContain('_wifi_sta.connect("net", "pw")');
+    // The ESP32-only first join moved into the shared ts_wifi library (device-runtime/src/vendor/
+    // thingstudio_wifi/ts_wifi.py), which both built-ins and packages call.
+    expect(code).toContain('ts_wifi.ensure_station("net", "pw", "password", True)');
+    expect(code).toContain("# WiFi connection managed by mqtt_as");
   });
 
   it("the MQTT connect path only waits: no connect() or disconnect() of its own", () => {
@@ -58,6 +60,6 @@ describe("ESP32 + MQTT WiFi join", () => {
         { id: "b1", type: "thingstudio/config/mqtt-broker", properties: { broker: "broker.local", port: 1883 } },
       ],
     };
-    expect(compile(graph, buildRegistry()).source).toContain('_wifi_sta.connect("HomeNet", "secret12")');
+    expect(compile(graph, buildRegistry()).source).toContain('ts_wifi.ensure_station("HomeNet", "secret12", "password", True)');
   });
 });

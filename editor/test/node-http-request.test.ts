@@ -259,7 +259,7 @@ describe("thingstudio/http_request node", () => {
     wifiStatusNodes = [{ id: "wifi_status_1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "wifi1" } }];
     const result = httpRequestNode.codegenTransform!(node({ url: "http://example.local" }), ctx);
     expect(result.statements?.[0]?.code).toContain('"MyNet"');
-    expect(result.statements?.[0]?.code).toContain(".connect(");
+    expect(result.statements?.[0]?.code).toContain("ts_wifi.ensure_station(");
   });
 
   // Canvas presence (2026-09-05, outstanding-items/http-request-config-

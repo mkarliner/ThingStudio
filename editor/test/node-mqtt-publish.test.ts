@@ -35,10 +35,10 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { beforeEach, describe, expect, it } from "vitest";
-import { compile } from "../src/compiler/compile.js";
 import { CompileError } from "../src/compiler/errors.js";
 import type { GraphData } from "../src/compiler/graph.js";
 import { buildRegistry } from "../src/node-library/registry.js";
+import { compileWithHooks } from "./compile-with-hooks.js";
 import { mqttPublishNode } from "../src/node-library/mqtt-publish.js";
 import type { CodegenContext } from "../src/compiler/node-definition.js";
 import type { GraphNode } from "../src/compiler/graph.js";
@@ -134,21 +134,21 @@ function graphWith(mqttProps: Record<string, unknown>, brokerProps: Record<strin
 }
 
 describe("thingstudio/mqtt_publish node", () => {
-  it("connects once and publishes the inbound payload to the configured topic", () => {
-    const { source } = compile(graphWith({ topic: "sensors/temp" }, { broker: "test.broker.local", port: 1883 }), registry);
+  it("connects once and publishes the inbound payload to the configured topic", async () => {
+    const { source } = await compileWithHooks(graphWith({ topic: "sensors/temp" }, { broker: "test.broker.local", port: 1883 }), registry);
     const output = runGenerated(source);
     expect(output).toContain("MQTT_CONNECT server=test.broker.local port=1883");
     expect(output).toContain("MQTT_PUBLISH topic='sensors/temp' payload=b'42.5' retain=False qos=0");
   });
 
-  it("reports NODE_STATUS state=connected under its own node id after connecting (2026-09-10)", () => {
-    const { source } = compile(graphWith({ topic: "sensors/temp" }, { broker: "test.broker.local", port: 1883 }), registry);
+  it("reports NODE_STATUS state=connected under its own node id after connecting (2026-09-10)", async () => {
+    const { source } = await compileWithHooks(graphWith({ topic: "sensors/temp" }, { broker: "test.broker.local", port: 1883 }), registry);
     const output = runGenerated(source);
     // graphWith()'s mqtt_publish node is id "2" (this file's own comment on graphWith).
     expect(output).toContain("NODE_STATUS node=2 state=connected text=None");
   });
 
-  it("two mqtt_publish nodes on the same broker each report status under their OWN node id, not the shared broker's", () => {
+  it("two mqtt_publish nodes on the same broker each report status under their OWN node id, not the shared broker's", async () => {
     const graph: GraphData = {
       nodes: [
         { id: "1", type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "a", repeat: "manual" } },
@@ -163,7 +163,7 @@ describe("thingstudio/mqtt_publish node", () => {
       ],
       configs: configsWith({ broker: "b", port: 1883 }),
     };
-    const { source } = compile(graph, registry);
+    const { source } = await compileWithHooks(graph, registry);
     const output = runGenerated(source);
     // Only the FIRST caller through the shared client's double-checked
     // lock actually runs .connect() -- but mqttEnsureConnectedSnippet's
@@ -189,13 +189,13 @@ describe("thingstudio/mqtt_publish node", () => {
     expect(statusLines).toContain("NODE_STATUS node=4 state=connected text=None");
   });
 
-  it("publishes with retain=True and qos=1 when configured", () => {
-    const { source } = compile(graphWith({ topic: "t", retain: true, qos: 1 }, { broker: "b", port: 1883 }), registry);
+  it("publishes with retain=True and qos=1 when configured", async () => {
+    const { source } = await compileWithHooks(graphWith({ topic: "t", retain: true, qos: 1 }, { broker: "b", port: 1883 }), registry);
     const output = runGenerated(source);
     expect(output).toContain("retain=True qos=1");
   });
 
-  it("two mqtt_publish nodes on the same broker share one client (setup dedup)", () => {
+  it("two mqtt_publish nodes on the same broker share one client (setup dedup)", async () => {
     const graph: GraphData = {
       nodes: [
         { id: "1", type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "a", repeat: "manual" } },
@@ -210,7 +210,7 @@ describe("thingstudio/mqtt_publish node", () => {
       ],
       configs: configsWith({ broker: "b", port: 1883 }),
     };
-    const { source } = compile(graph, registry);
+    const { source } = await compileWithHooks(graph, registry);
     expect(source.match(/mqtt_as\.MQTTClient\(/g)?.length).toBe(1);
     const output = runGenerated(source);
     expect(output).toContain("MQTT_PUBLISH topic='t1'");

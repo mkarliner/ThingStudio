@@ -152,14 +152,7 @@ function makeImports(args: readonly string[], host: Host): WebAssembly.Imports {
   };
 }
 
-/** Instantiate the module and run `args`. No timeout: the caller's worker owns that. */
-export async function runWasi(wasmBytes: Uint8Array, args: readonly string[]): Promise<WasiRunResult> {
-  const host = {} as Host & { streams?: { stdout: string; stderr: string } };
-  const imports = makeImports(args, host);
-  const copy = new Uint8Array(wasmBytes.length);
-  copy.set(wasmBytes);
-  const module = await WebAssembly.compile(copy.buffer);
-  const instance = await WebAssembly.instantiate(module, imports);
+function finish(host: Host & { streams?: { stdout: string; stderr: string } }, instance: WebAssembly.Instance): WasiRunResult {
   host.memory = instance.exports.memory as WebAssembly.Memory;
   let exitCode = 0;
   try {
@@ -170,4 +163,24 @@ export async function runWasi(wasmBytes: Uint8Array, args: readonly string[]): P
     else throw err;
   }
   return { stdout: host.streams?.stdout ?? "", stderr: host.streams?.stderr ?? "", exitCode };
+}
+
+/** Instantiate the module and run `args`. No timeout: the caller's worker owns that. */
+export async function runWasi(wasmBytes: Uint8Array, args: readonly string[]): Promise<WasiRunResult> {
+  const copy = new Uint8Array(wasmBytes.length);
+  copy.set(wasmBytes);
+  const host = {} as Host & { streams?: { stdout: string; stderr: string } };
+  const module = await WebAssembly.compile(copy.buffer);
+  const instance = await WebAssembly.instantiate(module, makeImports(args, host));
+  return finish(host, instance);
+}
+
+/** Synchronous variant for the CLI, where check-flow is synchronous and has no worker. Containment: none --
+ * a runaway hook hangs the command (Ctrl-C is the escape), unlike the editor's worker. */
+export function runWasiSync(wasmBytes: Uint8Array, args: readonly string[]): WasiRunResult {
+  const copy = new Uint8Array(wasmBytes.length);
+  copy.set(wasmBytes);
+  const host = {} as Host & { streams?: { stdout: string; stderr: string } };
+  const instance = new WebAssembly.Instance(new WebAssembly.Module(copy.buffer), makeImports(args, host));
+  return finish(host, instance);
 }

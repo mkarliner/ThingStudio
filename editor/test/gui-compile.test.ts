@@ -16,6 +16,7 @@ import type { GraphData, GraphNode } from "../src/compiler/graph.js";
 import type { ScreensSection } from "../src/gui/screens.js";
 import { bandRowsFor, frameBytes } from "../src/node-library/gui.js";
 import { buildRegistry } from "../src/node-library/registry.js";
+import { compileWithHooks } from "./compile-with-hooks.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const RUNTIME = join(__dirname, "..", "..", "device-runtime", "src");
@@ -441,7 +442,7 @@ describe.each(["gui-hero-cyd.flow.json", "gui-hero-cyd-dummy.flow.json", "gui-he
       c.type === "thingstudio/config/mqtt-broker" ? { ...c, properties: { ...c.properties, broker: "broker.test", port: 1883 } }
       : c.type === "thingstudio/config/wifi" ? { ...c, properties: { ...c.properties, ssid: "net", password: "pw" } }
       : c);
-    const r = compile({ nodes: f.nodes, links, configs, screens: f.screens }, buildRegistry());
+    const r = await compileWithHooks({ nodes: f.nodes, links, configs, screens: f.screens }, buildRegistry());
     expect(r.warnings.filter((w) => w.includes("widget") || w.includes("GUI"))).toEqual([]);
     expect(r.source).toContain("_gui.add_surface");
   });

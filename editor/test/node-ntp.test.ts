@@ -246,7 +246,7 @@ describe("ntp node: compiling", () => {
     expect(r.source).toContain("_ntp_n1 = _Ntp(\"n1\", \"pool.ntp.org\", 0, True)");
     expect(r.source).toContain("_ntp_n1.poke()");
     expect(r.source).toContain("await _ntp_n1.wait()");
-    expect(r.source).toContain("_wifi_sta.connect(");
+    expect(r.source).toContain("ts_wifi.ensure_station(");
     expect(r.source.match(/class _Ntp/g)).toHaveLength(1);
     expect(r.warnings).toEqual([]);
   });

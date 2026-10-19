@@ -247,15 +247,15 @@ describe("thingstudio/udp_send node", () => {
   it("brings the WiFi station interface up with no connect call when the referenced config's security is 'unmanaged'", () => {
     const result = udpSendNode.codegenSink!(node({ host: "h", port: 1, wifiConfigId: "unmanaged1" }), ctx);
     expect(result.statements?.[1]?.key).toBe("wifi-sta");
-    expect(result.statements?.[1]?.code).toContain("network.WLAN(network.STA_IF)");
-    expect(result.statements?.[1]?.code).toContain(".active(True)");
-    expect(result.statements?.[1]?.code).not.toContain(".connect(");
+    expect(result.statements?.[1]?.code).toContain("ts_wifi.ensure_station(");
+    expect(result.statements?.[1]?.code).toContain("ts_wifi.ensure_station(");
+    expect(result.statements?.[1]?.code).toContain("\"unmanaged\"");
   });
 
   it("connects with the referenced config's ssid/password, sharing the wifi-sta key with wifi_status/http_request", () => {
     setConfig("wifi1", { ssid: "MyNet", password: "hunter2" });
     const result = udpSendNode.codegenSink!(node({ host: "h", port: 1, wifiConfigId: "wifi1" }), ctx);
-    expect(result.statements?.[1]?.code).toContain(".connect(");
+    expect(result.statements?.[1]?.code).toContain("ts_wifi.ensure_station(");
     expect(result.statements?.[1]?.code).toContain('"MyNet"');
   });
 

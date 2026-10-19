@@ -54,12 +54,11 @@ the last built-in-only corner besides `dynamicOutputs`):
 - **`inject`**, **`startup`** (their single output tracks `payloadType`), **`variable-get`** (`outputs[0].type` is a
   function of `payloadType`).
 
-Blocked on **flow-query context parity** (they derive WiFi from the flow — `resolveFlowWifiCredentials` /
-`flowHasMqttNodes`, not from their own properties): **`http-in`**, **`http-request`**, **`mqtt-publish`**,
-**`mqtt-subscribe`**, **`ntp`**, **`udp-send`**, **`udp-receive`**, **`wifi-gate`**. Scoped 2026-10-18 in
-`network-family-flow-context-scoping.md`: WiFi credentials already arrive via a singleton `configRef`; the real gaps
-are a `hasNode` presence field, a shared device-side WiFi bring-up library, and (for `http-in` only) a
-`nodesOfType` sibling scan plus a runtime.shared server/queue. Needs Mike's OK on those forms.
+Blocked on **flow-query context parity**: **`http-in`**, **`http-request`**, **`mqtt-publish`**,
+**`mqtt-subscribe`**, **`ntp`**, **`udp-send`**, **`udp-receive`**, **`wifi-gate`**. **`wifi_status` flipped
+2026-10-19** with a package compile hook + the `ts_wifi` shared bring-up library (the first "no loss" target); the
+remaining eight use the same hook (`ctx.flow` for mqtt presence, `referencedConfigs` for WiFi). `http-in` still
+needs the `nodesOfType` sibling scan + a runtime.shared server/queue.
 
 Hardware, each its own design/verification task (see `shared-resource-facility-scoping.md` §9):
 - **`touch-i2c`** — nested config (`touch-panel` → `i2cConfigId`); not a small change (config field kinds live in

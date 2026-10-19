@@ -64,6 +64,7 @@ import { CompileError } from "../src/compiler/errors.js";
 import type { GraphData, GraphNode } from "../src/compiler/graph.js";
 import type { CodegenContext } from "../src/compiler/node-definition.js";
 import { buildRegistry } from "../src/node-library/registry.js";
+import { compileWithHooks } from "./compile-with-hooks.js";
 import { udpReceiveNode } from "../src/node-library/udp-receive.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -278,7 +279,7 @@ describe("thingstudio/udp_receive node", () => {
     expect(() => udpReceiveNode.codegenSource!(node({ port: 4242 }), ctx)).toThrow(/udp_receive needs a WiFi network/);
   });
 
-  it("rejects a flow with two WiFi configs (one radio, so one WiFi config per flow)", () => {
+  it("rejects a flow with two WiFi configs (one radio, so one WiFi config per flow)", async () => {
     wifiStatusNodes = [
       { id: "w1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "unmanaged1" } },
       { id: "w2", type: "thingstudio/wifi_status", properties: { wifiConfigId: "unmanaged1_other" } },
@@ -296,14 +297,14 @@ describe("thingstudio/udp_receive node", () => {
   it("brings the WiFi station interface up with no connect call when the referenced config's security is 'unmanaged'", () => {
     const result = udpReceiveNode.codegenSource!(node({ port: 4242, wifiConfigId: "unmanaged1" }), ctx);
     expect(result.statements?.[1]?.key).toBe("wifi-sta");
-    expect(result.statements?.[1]?.code).toContain("network.WLAN(network.STA_IF)");
-    expect(result.statements?.[1]?.code).not.toContain(".connect(");
+    expect(result.statements?.[1]?.code).toContain("ts_wifi.ensure_station(");
+    expect(result.statements?.[1]?.code).toContain("\"unmanaged\"");
   });
 
   it("connects with the referenced config's ssid/password, sharing the wifi-sta key with wifi_status/http_request/udp_send", () => {
     setConfig("wifi1", { ssid: "MyNet", password: "hunter2" });
     const result = udpReceiveNode.codegenSource!(node({ port: 4242, wifiConfigId: "wifi1" }), ctx);
-    expect(result.statements?.[1]?.code).toContain(".connect(");
+    expect(result.statements?.[1]?.code).toContain("ts_wifi.ensure_station(");
     expect(result.statements?.[1]?.code).toContain('"MyNet"');
   });
 
@@ -316,7 +317,7 @@ describe("thingstudio/udp_receive node", () => {
     expect(() => udpReceiveNode.codegenSource!(node({ port: 4242, wifiConfigId: "nope" }), ctx)).toThrow(/referenced config "nope" not found/);
   });
 
-  it("compiles into a full flow with the expected structure (source text only)", () => {
+  it("compiles into a full flow with the expected structure (source text only)", async () => {
     const graph: GraphData = {
       nodes: [
         { id: "1", type: "thingstudio/udp_receive", properties: { port: 4242 } },
@@ -329,7 +330,7 @@ describe("thingstudio/udp_receive node", () => {
       links: [[1, "1", 0, "2", 0, "bytes"]],
       configs: [{ id: "unmanaged1", type: "thingstudio/config/wifi", properties: { security: "unmanaged" } }],
     };
-    const { source } = compile(graph, buildRegistry());
+    const { source } = await compileWithHooks(graph, buildRegistry());
     expect(source).toContain("socket.socket(socket.AF_INET, socket.SOCK_DGRAM)");
     expect(source).toContain("recvfrom(1472)");
     expect(source).toContain("while True:");
@@ -339,7 +340,7 @@ describe("thingstudio/udp_receive node", () => {
     expect(source).toMatch(/await asyncio\.sleep_ms\(10\)\s*$/m);
   });
 
-  it("derives its WiFi credentials from the flow's one wifi_status node -- no wifiConfigId of its own any more (2026-09-04 fix)", () => {
+  it("derives its WiFi credentials from the flow's one wifi_status node -- no wifiConfigId of its own any more (2026-09-04 fix)", async () => {
     const graph: GraphData = {
       nodes: [
         { id: "1", type: "thingstudio/udp_receive", properties: { port: 4242 } },
@@ -349,12 +350,10 @@ describe("thingstudio/udp_receive node", () => {
       links: [[1, "1", 0, "2", 0, "bytes"]],
       configs: [{ id: "wifi1", type: "thingstudio/config/wifi", properties: { ssid: "SharedNet", password: "sharedpw" } }],
     };
-    const { source } = compile(graph, buildRegistry());
-    // Exactly one wifi-sta setup statement -- udp_receive has no config
-    // reference of its own to disagree with wifi_status's any more, so
-    // there's only ever one credential source to dedup onto in the first
-    // place (this file's own header, the bug this replaced).
-    expect(source.match(/_wifi_sta = network\.WLAN/g)?.length).toBe(1);
+    const { source } = await compileWithHooks(graph, buildRegistry());
+    // Two calls now: one from udp_receive's built-in setup, one from wifi_status's package. ts_wifi makes the
+    // second a no-op; the old compile-time "wifi-sta" dedup only worked between built-ins.
+    expect(source.match(/ts_wifi\.ensure_station\(/g)?.length).toBe(2);
     expect(source).toContain('"SharedNet"');
   });
 
@@ -370,7 +369,7 @@ describe("thingstudio/udp_receive node", () => {
     expect(() => compile(graph, buildRegistry())).toThrow(/udp_receive needs a WiFi network/);
   });
 
-  it("rejects a flow with two WiFi configs (one radio, so one WiFi config per flow)", () => {
+  it("rejects a flow with two WiFi configs (one radio, so one WiFi config per flow)", async () => {
     const graph: GraphData = {
       nodes: [
         { id: "1", type: "thingstudio/udp_receive", properties: { port: 4242 } },
@@ -386,7 +385,7 @@ describe("thingstudio/udp_receive node", () => {
         { id: "wifi1_other", type: "thingstudio/config/wifi", properties: { ssid: "OtherNet", password: "otherpw" } },
       ],
     };
-    expect(() => compile(graph, buildRegistry())).toThrow(/a flow can only have one/);
+    await expect(compileWithHooks(graph, buildRegistry())).rejects.toThrow(/a flow can only have one/);
   });
 
   it("compiles with no wifi_status node: the flow's one WiFi config is enough (2026-09-25 singleton)", () => {
@@ -401,7 +400,7 @@ describe("thingstudio/udp_receive node", () => {
     expect(compile(graph, buildRegistry()).source).toContain('"SharedNet"');
   });
 
-  it("allows two wifi_status nodes -- they share the flow's one WiFi config", () => {
+  it("allows two wifi_status nodes -- they share the flow's one WiFi config", async () => {
     const graph: GraphData = {
       nodes: [
         { id: "1", type: "thingstudio/udp_receive", properties: { port: 4242 } },
@@ -412,6 +411,6 @@ describe("thingstudio/udp_receive node", () => {
       links: [[1, "1", 0, "2", 0, "bytes"]],
       configs: [{ id: "wifi1", type: "thingstudio/config/wifi", properties: { ssid: "SharedNet", password: "sharedpw" } }],
     };
-    expect(() => compile(graph, buildRegistry())).not.toThrow();
+    await expect(compileWithHooks(graph, buildRegistry())).resolves.toBeDefined();
   });
 });

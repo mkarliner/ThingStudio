@@ -71,3 +71,38 @@ export async function runCompileHooks(
   }
   return { results, warnings };
 }
+
+/** A synchronous runner for callers with no event loop to wait on (the CLI's check path). */
+export interface SyncCompileHookRunner {
+  runSync(hookSource: string, ctx: CompileContext, properties: Record<string, unknown>, label: string): unknown;
+}
+
+/** The same pre-pass as runCompileHooks, synchronously. No containment: the synchronous interpreter cannot
+ * be interrupted, so a runaway hook hangs the caller (the CLI; Ctrl-C). The editor always uses the worker. */
+export function runCompileHooksSync(
+  graphData: GraphData,
+  registry: ReadonlyMap<string, NodeDefinition>,
+  runner: SyncCompileHookRunner,
+  options: RunCompileHooksOptions = {},
+): CompileHooksOutcome {
+  const results = new Map<string, CompileHookResult>();
+  const warnings: string[] = [];
+  for (const node of graphData.nodes) {
+    const def = registry.get(node.type);
+    if (!def || def.compileHook === undefined) continue;
+    const label = packageLabel(node);
+    const ctx = buildCompileContext({ graphData, node, descriptor: def, target: options.target, redactConfig: options.redactConfig });
+    let raw: unknown;
+    try {
+      raw = runner.runSync(def.compileHook, ctx, { ...node.properties }, label);
+    } catch (err) {
+      if (err instanceof CompileError) throw err;
+      throw new CompileError(`${label}: compile hook failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
+    const result = validateCompileHookResult(raw, label);
+    throwIfHookErrors(result, label);
+    for (const warning of result.warnings) warnings.push(`${label}: ${warning}`);
+    results.set(node.id, result);
+  }
+  return { results, warnings };
+}

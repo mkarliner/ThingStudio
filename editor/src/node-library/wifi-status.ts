@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 // editor/src/node-library/wifi-status.ts
 //
+// The node itself moved to core-packages/wifi-status.ts (2026-10-19, with a package compile hook); this file is
+// now the shared WiFi helpers the still-built-in network nodes and the editor use:
+// resolveFlowWifiCredentials(), wifiSetupStatement(), normalizeWifiConfigs(), computeWifiProvisionMarker().
+// wifiSetupStatement() emits a call to the ts_wifi flow dependency, the same idempotent bring-up the package uses.
+//
 // Tier 1 network batch (mvp-feature-priorities.md item 4). Polling source,
 // same mechanism as gpio-in.ts -- network.WLAN(STA_IF).isconnected() is a
 // cheap, non-blocking status read (the radio-level connect/disconnect
@@ -165,8 +170,7 @@
 
 import { CompileError } from "../compiler/errors.js";
 import type { GraphNode } from "../compiler/graph.js";
-import type { CodegenContext, SourceCodegenResult } from "../compiler/node-definition.js";
-import type { NodeDefinition } from "../compiler/node-definition.js";
+import type { CodegenContext } from "../compiler/node-definition.js";
 import { pyStringLiteral } from "./py-literals.js";
 
 /** The `thingstudio/config/wifi` config type's own `security` values
@@ -375,202 +379,29 @@ export function flowHasMqttNodes(ctx: CodegenContext): boolean {
  * property panel needed) already answers "why is there no connect() call
  * here." */
 export function wifiSetupStatement(ssid: unknown, password: unknown, security: WifiSecurity = "password", deferToMqtt = false): { key: string; code: string } {
-  const lines = ["_wifi_sta = network.WLAN(network.STA_IF)", "_wifi_sta.active(True)"];
-  if (deferToMqtt) {
-    lines.push("# WiFi connection managed by mqtt_as -- this flow has an mqtt_publish/mqtt_subscribe node, which owns its own connect/reconnect (wifi-status.ts's flowHasMqttNodes())");
-    // EXPERIMENT 2026-09-25: except the first join on ESP32, which happens here at flow start, exactly as a
-    // flow without MQTT does. On the ESP32-C3 bench the same connect() run later, inside the flow's MQTT
-    // coroutine, sat at "connecting" for 15 s and failed with 202; at import it joins. mqtt_as's vendored
-    // wifi_connect() skips its own connect() once this has joined, and still owns reconnecting.
-    // mqtt-publish.ts/mqtt-subscribe.ts contribute this statement too, so it exists without a wifi_status node.
-    const ssidStr = typeof ssid === "string" ? ssid.trim() : "";
-    if (ssidStr && security !== "unmanaged") {
-      const pwStr = typeof password === "string" ? password : "";
-      lines.push(
-        "import sys",
-        `if sys.platform == "esp32" and not _wifi_sta.isconnected():`,
-        `    _wifi_sta.connect(${pyStringLiteral(ssidStr)}, ${pyStringLiteral(pwStr)})`,
-      );
-    }
-    return { key: WIFI_SETUP_KEY, code: lines.join("\n") };
-  }
-  if (security === "unmanaged") {
-    return { key: WIFI_SETUP_KEY, code: lines.join("\n") };
-  }
   const ssidStr = typeof ssid === "string" ? ssid.trim() : "";
-  if (!ssidStr) {
-    // Used to skip the connect() call silently, which left a flow that compiles and deploys fine
-    // but never joins WiFi (2026-09-24, real ESP32-C3). An SSID is required unless "unmanaged".
+  // A non-deferring flow with no network name used to compile and deploy but never join (2026-09-24); keep
+  // refusing it. The deferring case intentionally skips this check, as before -- mqtt-shared.ts validates
+  // its own credentials separately.
+  if (!deferToMqtt && security !== "unmanaged" && !ssidStr) {
     throw new CompileError(
       `the WiFi config has no network name (SSID) -- pick a saved WiFi credential on the wifi_status node, or set security to "unmanaged" if the board should get its WiFi details another way`,
     );
   }
-  {
-    const pwStr = typeof password === "string" ? password : "";
-    if (security === "password" && !pwStr) {
-      throw new CompileError(
-        `WiFi config for ssid "${ssidStr}" has no password but security is "password" -- set a password, or choose "open" if this network intentionally has none`,
-      );
-    }
-    lines.push(`if not _wifi_sta.isconnected():`, `    _wifi_sta.connect(${pyStringLiteral(ssidStr)}, ${pyStringLiteral(pwStr)})`);
+  const pwStr = typeof password === "string" ? password : "";
+  if (!deferToMqtt && security === "password" && ssidStr && !pwStr) {
+    throw new CompileError(
+      `WiFi config for ssid "${ssidStr}" has no password but security is "password" -- set a password, or choose "open" if this network intentionally has none`,
+    );
   }
-  return { key: WIFI_SETUP_KEY, code: lines.join("\n") };
+  const comment = deferToMqtt
+    ? "\n# WiFi connection managed by mqtt_as -- this flow has an mqtt node, which owns connect/reconnect"
+    : "";
+  return {
+    key: WIFI_SETUP_KEY,
+    code:
+      `import ts_wifi\n` +
+      `_wifi_sta = ts_wifi.ensure_station(${pyStringLiteral(ssidStr)}, ${pyStringLiteral(pwStr)}, ${pyStringLiteral(security)}, ${deferToMqtt ? "True" : "False"})` +
+      comment,
+  };
 }
-
-export const wifiStatusNode: NodeDefinition = {
-  type: "thingstudio/wifi_status",
-  kind: "source",
-  // Descriptor metadata (compiler/node-descriptor.ts) -- migrated onto the canonical descriptor.
-  paletteId: "wifi_status",
-  label: "wifi status",
-  group: "network",
-  priority: 10,
-  color: "#1f6e6e",
-  bgcolor: "#123f3f",
-  icon: "◉",
-  width: 120,
-  description:
-    "One WiFi network per flow: every WiFi node shares this setting. Pick \"unmanaged\" if the board joins WiFi " +
-    "some other way (e.g. its setup AP).",
-  // `msg`'s payload is always bool (buildMsg's `_wifi_connected` below) --
-  // `ip` is envelope metadata alongside payload, not the typed payload
-  // itself, same "only the payload gets a socket type" treatment
-  // gpio_out's `signal` input already gets (wire-type-system-scoping.md).
-  ports: {
-    outputs: [{ name: "msg", type: "bool" }],
-  },
-  properties: [
-    { name: "pollMs", label: "poll interval (ms)", kind: "number", default: 5000, min: 1 },
-    { name: "wifiConfigId", label: "WiFi", kind: "configRef", configType: "thingstudio/config/wifi", default: "" },
-  ],
-  codegenSource(node: GraphNode, ctx: CodegenContext): SourceCodegenResult {
-    const pollMs = Math.round(Number(node.properties.pollMs ?? 5000));
-    if (!Number.isFinite(pollMs) || pollMs <= 0) {
-      throw new CompileError(`wifi_status pollMs "${String(node.properties.pollMs)}" must be a positive number`);
-    }
-
-    const { ssid, password, security } = resolveFlowWifiCredentials(ctx, "wifi_status");
-
-    // Mike's ask, 2026-09-02 (outstanding-items/wifi-status-emit-on-change.md):
-    // emit only when connection state actually changes, not on every poll.
-    // Per-INSTANCE, not per-broker/shared -- two wifi_status nodes (rare,
-    // but not rejected) each need their own "last reported state," matching
-    // mqtt-subscribe.ts's `readyVar` precedent (ctx.uniqueName's result is
-    // already flow-wide-unique, so it doubles safely as the setup-statement
-    // dedup key too). Tracks (connected, ip, subnet, gateway, dns) as a
-    // tuple, not just the bool -- any network-identity field changing while
-    // still connected (DHCP lease renewal, most commonly a new `ip`, but a
-    // new `gateway`/`dns` is equally a real change) is worth re-emitting,
-    // not just the connected/disconnected transition. `rssi` is
-    // deliberately excluded from this tuple -- see this file's 2026-09-09
-    // header note for why.
-    const lastVar = ctx.uniqueName("wifi_status_last");
-
-    // Defer connection ownership to mqtt_as when the flow has any mqtt
-    // node, 2026-09-11 (Mike's real-hardware finding -- outstanding-items/
-    // node-status-indicators.md): mqtt_publish/mqtt_subscribe already
-    // derive their WiFi credentials from THIS node's own resolved config
-    // (resolveFlowWifiCredentials above), but that was only ever a
-    // credentials fix (2026-09-04, this file's header) -- it left TWO
-    // independent code paths still each free to bring the shared physical
-    // STA_IF up: this node's own one-shot `.connect()` in
-    // wifiSetupStatement() below, and mqtt_as's own internal
-    // wifi_connect()/`_keep_connected()` (mqtt-shared.ts's header, and the
-    // vendored mqtt_as/__init__.py). mqtt_as's own background watchdog
-    // polls isconnected() roughly every second once connected and will
-    // proactively call `.disconnect()`+reconnect on its own if it ever
-    // perceives the link as down -- on real hardware this showed up as
-    // WiFi visibly cycling up/down with no actual signal problem, first
-    // reported by Mike once the status-indicator feature made it possible
-    // to actually SEE it happening on the canvas (it isn't new; there was
-    // just no way to observe it before).
-    //
-    // Fix: `wifiSetupStatement()`'s own `deferToMqtt` parameter (see that
-    // function's header for why this is a SEPARATE parameter from
-    // `security`, not an overload of `"unmanaged"` -- Mike's own explicit
-    // call, after a first cut of this fix piggybacked on `security:
-    // "unmanaged"` and he flagged that as confusing for a future
-    // maintainer reading generated code or this property panel: no way to
-    // tell "I set this" from "the compiler decided this"). Doesn't weaken
-    // credential validation: mqtt-shared.ts's own parseMqttBrokerProps
-    // independently resolves and validates the SAME underlying config's
-    // real ssid/password (and separately rejects an actually-`"unmanaged"`
-    // -configured WiFi config outright when mqtt nodes are present) --
-    // `deferToMqtt` only ever affects whether THIS node's own setup
-    // statement issues a redundant `.connect()` call, never what
-    // credentials mqtt_as itself connects with. Everything else about
-    // this node is unaffected: still polls and reports real
-    // connected/disconnected state every cycle, same as always -- it just
-    // never tries to be the one bringing the link up when mqtt_as is
-    // already doing that job. Compile-time, not a runtime flag -- no new
-    // state to carry onto the device.
-    //
-    // Whether this fully explains the observed flapping (versus just
-    // removing the startup race a second independent `.connect()` call
-    // could cause) is still being confirmed on real hardware -- worth
-    // real-device re-verification before this is called done, same as
-    // everything else pending Mike's hardware pass in this file's own
-    // outstanding-items entry.
-
-    return {
-      imports: ["import network"],
-      statements: [wifiSetupStatement(ssid, password, security, flowHasMqttNodes(ctx)), { key: lastVar, code: `${lastVar} = None` }],
-      // ifconfig()/status('rssi') are only read when isconnected() already
-      // said yes -- ifconfig() itself would raise/return a stale address
-      // on some ports while disconnected, same reasoning that already
-      // applied to 'ip' alone before this node reported the rest of the
-      // tuple too.
-      //
-      // `${lastVar}` starts as `None` (statement above), which never equals
-      // a real state tuple -- so the very first poll always reports, same
-      // as before this change, then only reports again on an actual
-      // change. `compile.ts`'s source-loop assembly wraps the downstream
-      // chain in `if msg is not None:` and keeps the `asyncio.sleep_ms`
-      // yield unconditional either way, so a skipped cycle here never
-      // turns into a busy-loop.
-      buildMsg:
-        `global ${lastVar}\n` +
-        "_wifi_connected = bool(_wifi_sta.isconnected())\n" +
-        "if _wifi_connected:\n" +
-        "    _wifi_ifcfg = _wifi_sta.ifconfig()\n" +
-        "    _wifi_ip = _wifi_ifcfg[0]\n" +
-        "    _wifi_subnet = _wifi_ifcfg[1]\n" +
-        "    _wifi_gateway = _wifi_ifcfg[2]\n" +
-        "    _wifi_dns = _wifi_ifcfg[3]\n" +
-        "    try:\n" +
-        "        _wifi_rssi = _wifi_sta.status('rssi')\n" +
-        "    except (OSError, AttributeError):\n" +
-        "        _wifi_rssi = None\n" +
-        "else:\n" +
-        "    _wifi_ip = ''\n" +
-        "    _wifi_subnet = ''\n" +
-        "    _wifi_gateway = ''\n" +
-        "    _wifi_dns = ''\n" +
-        "    _wifi_rssi = None\n" +
-        "_wifi_state = (_wifi_connected, _wifi_ip, _wifi_subnet, _wifi_gateway, _wifi_dns)\n" +
-        `if _wifi_state == ${lastVar}:\n` +
-        "    msg = None\n" +
-        "else:\n" +
-        `    ${lastVar} = _wifi_state\n` +
-        "    msg = {'payload': _wifi_connected, 'topic': '', 'ip': _wifi_ip, 'subnet': _wifi_subnet, 'gateway': _wifi_gateway, 'dns': _wifi_dns, 'rssi': _wifi_rssi}\n" +
-        // NODE_STATUS push (connection-status-indicator feature,
-        // outstanding-items/node-status-indicators.md, added 2026-09-10)
-        // -- alongside `msg`, not instead of it (NodeStatusMessage's own
-        // doc comment in messages.ts). Piggybacks on the SAME "state
-        // changed" branch `msg` already uses rather than tracking its own
-        // separate last-reported-status var: the only cost is a
-        // functionally-redundant identical report_status call on a
-        // gateway/subnet/dns-only change while staying connected (rare --
-        // a DHCP lease renewal, not a routine poll) since that still
-        // takes this branch -- harmless (the editor's own `status` field
-        // just gets set to the same value again, nodes.ts) and far
-        // simpler than a second per-instance tracking var for a case
-        // this rare. `text` carries the IP address when connected (only
-        // supplementary detail worth surfacing here -- `state` alone
-        // already says connected/disconnected), absent when not
-        // (messages.ts's "absent, not null" convention for this field).
-        `    runtime.report_status(${JSON.stringify(String(node.id))}, 'connected' if _wifi_connected else 'disconnected', _wifi_ip if _wifi_connected else None)`,
-      repeatMs: pollMs,
-    };
-  },
-};

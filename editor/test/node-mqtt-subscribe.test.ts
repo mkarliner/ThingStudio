@@ -35,6 +35,7 @@ import { CompileError } from "../src/compiler/errors.js";
 import type { GraphData, GraphNode } from "../src/compiler/graph.js";
 import type { CodegenContext } from "../src/compiler/node-definition.js";
 import { buildRegistry } from "../src/node-library/registry.js";
+import { compileWithHooks } from "./compile-with-hooks.js";
 import { mqttSubscribeNode } from "../src/node-library/mqtt-subscribe.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -241,7 +242,7 @@ describe("thingstudio/mqtt_subscribe node", () => {
     expect(mqttClientSetupCode(result)).toContain('"realpw"');
   });
 
-  it("compiles into a full flow with the expected structure (source text only -- not executed, see header)", () => {
+  it("compiles into a full flow with the expected structure (source text only -- not executed, see header)", async () => {
     const graph: GraphData = {
       nodes: [
         { id: "1", type: "thingstudio/mqtt_subscribe", properties: { ...BASE, topic: "sensors/temp" } },
@@ -255,13 +256,13 @@ describe("thingstudio/mqtt_subscribe node", () => {
       links: [[1, "1", 0, "2", 0, "any"]],
       configs: configsWith({ broker: "b", port: 1883 }),
     };
-    const { source } = compile(graph, buildRegistry());
+    const { source } = await compileWithHooks(graph, buildRegistry());
     expect(source).toContain("mqtt_as.MQTTClient(");
     expect(source).toContain("while True:");
     expect(source).toMatch(/runtime\.spawn\(/);
   });
 
-  it("two mqtt_subscribe nodes on the same broker share one client but subscribe independently", () => {
+  it("two mqtt_subscribe nodes on the same broker share one client but subscribe independently", async () => {
     const graph: GraphData = {
       nodes: [
         { id: "1", type: "thingstudio/mqtt_subscribe", properties: { ...BASE, topic: "t1" } },
@@ -271,7 +272,7 @@ describe("thingstudio/mqtt_subscribe node", () => {
       links: [],
       configs: configsWith({ broker: "b", port: 1883 }),
     };
-    const { source } = compile(graph, buildRegistry());
+    const { source } = await compileWithHooks(graph, buildRegistry());
     expect(source.match(/mqtt_as\.MQTTClient\(/g)?.length).toBe(1);
     // pyStringLiteral (used for the .subscribe() topic argument) is
     // JSON.stringify-based -- double-quoted output.
@@ -279,7 +280,7 @@ describe("thingstudio/mqtt_subscribe node", () => {
     expect(source).toContain('"t2"');
   });
 
-  it("mqtt_publish and mqtt_subscribe on the same broker share one client", () => {
+  it("mqtt_publish and mqtt_subscribe on the same broker share one client", async () => {
     const graph: GraphData = {
       nodes: [
         { id: "1", type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "x", repeat: "manual" } },
@@ -290,7 +291,7 @@ describe("thingstudio/mqtt_subscribe node", () => {
       links: [[1, "1", 0, "2", 0, "string"]],
       configs: configsWith({ broker: "shared.broker", port: 1883 }),
     };
-    const { source } = compile(graph, buildRegistry());
+    const { source } = await compileWithHooks(graph, buildRegistry());
     expect(source.match(/mqtt_as\.MQTTClient\(/g)?.length).toBe(1);
     expect(source).toContain("queue_len'] = 20");
   });

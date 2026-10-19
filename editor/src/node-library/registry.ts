@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import type { NodeDefinition } from "../compiler/node-definition.js";
+import type { NodeDescriptor } from "../compiler/node-descriptor.js";
 import { descriptor as debugCoreDescriptor, python as debugCorePython } from "./core-packages/debug.js";
 import { descriptor as displayI2cCoreDescriptor, python as displayI2cCorePython } from "./core-packages/display-i2c.js";
 import { displaySpiNode } from "./display-spi.js";
@@ -33,7 +34,7 @@ import { ntpNode } from "./ntp.js";
 import { variableGetNode } from "./variable-get.js";
 import { variableSetNode } from "./variable-set.js";
 import { wifiGateNode } from "./wifi-gate.js";
-import { wifiStatusNode } from "./wifi-status.js";
+import { descriptor as wifiStatusCoreDescriptor, python as wifiStatusCorePython, compileHook as wifiStatusCompileHook } from "./core-packages/wifi-status.js";
 import { GUI_NODES } from "./gui.js";
 
 /**
@@ -75,6 +76,11 @@ import { GUI_NODES } from "./gui.js";
  * a reset that resumes the saved flow -- see startup.ts's header. Its
  * source file landed 2026-09-17 but was never registered until now.
  */
+/** A core package that also ships a compile hook (interfaces/node-compile-context/). */
+function corePackage(descriptor: NodeDescriptor, python: string, compileHook?: string): NodeDefinition {
+  return buildCoreNodeDefinition(descriptor, python, compileHook);
+}
+
 export function buildRegistry(): Map<string, NodeDefinition> {
   const registry = new Map<string, NodeDefinition>();
   for (const def of [
@@ -95,7 +101,7 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     buildCoreNodeDefinition(displayI2cCoreDescriptor, displayI2cCorePython),
     buildCoreNodeDefinition(pwmOutCoreDescriptor, pwmOutCorePython),
     buildCoreNodeDefinition(timerCoreDescriptor, timerCorePython),
-    wifiStatusNode,
+    corePackage(wifiStatusCoreDescriptor, wifiStatusCorePython, wifiStatusCompileHook),
     wifiGateNode,
     httpRequestNode,
     httpInNode,

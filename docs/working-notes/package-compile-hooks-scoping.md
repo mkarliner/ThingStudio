@@ -165,8 +165,9 @@ This is a deliberate reopening of Decision 5's scope, not a quiet change. The ma
    (`SPEC.md` + `api.json`), pending Mike's review. It defines the `<name>.compile.py` hook, the context (node, flow,
    referenced configs, target), the validated result (properties, claims, warnings, errors), limits and
    fault behaviour.
-5. **First real target**: `wifi_status` (the hardest case in `node-context-parity-scoping.md` §7) or one network
-   node, plus `adc`. Show "no loss" against the built-in.
+5. **First real target — done 2026-10-19:** `wifi_status` is a core package with a hook, plus `ts_wifi` for the
+   shared, idempotent bring-up. The remaining network nodes can use the same hook; `http-in` still needs a sibling
+   scan and a shared server/queue.
 6. Then the rest of the network family, `touch_i2c`, `display_spi`, and the question of built-ins adopting the spec.
 
 Unaffected meanwhile: convert `timer` (done). Held until decided: the flow-query vocabulary and promoting

@@ -371,6 +371,40 @@ async def emit(properties):
 Keep any state the two share at the top of the file (both functions come from one per-instance
 closure, so `nonlocal` works across them).
 
+## Compile time: `<name>.compile.py`
+
+A package can also include an optional compile-time hook, `<name>.compile.py`, defining one function:
+
+```python
+def compile(ctx, properties):
+    return {"properties": {...}, "errors": [...]}
+```
+
+It runs in the editor when the flow is compiled — never on the board. `properties` is what the flow file holds
+for this node; `ctx` describes the flow:
+
+- `ctx["node"]` — this instance: `id`, `type`, `properties`, and `wired` (a boolean per input/output).
+- `ctx["flow"]["nodes"]` / `["configs"]` — every node and config, with non-secret properties only.
+- `ctx["referencedConfigs"]` — the full properties (including credentials) of the configs this node's `configRef`
+  fields point at.
+- `ctx["target"]` — the board/processor being compiled for, or `None`.
+
+Return a dict (or `None`). Everything is optional:
+
+| Key | Meaning |
+|---|---|
+| `properties` | Extra values merged into what `.node.py` receives. Keys your descriptor doesn't declare are allowed. |
+| `claims` | `[{"resource": "GPIO 22", "use": "my device"}]`, checked like a `pin` field. |
+| `warnings` | Strings shown in the compile warnings. |
+| `errors` | Strings that stop the compile, naming the node. |
+
+The hook is sandboxed: no files, network, clock or randomness. Its result is data only — it cannot return Python
+or change the generated code's shape. Limits: 64 KB of properties, 64 claims, 32 warnings and 32 errors, and one
+second per hook; a hook that runs too long is stopped.
+
+`wifi status` is an example: its hook derives the flow's WiFi config and whether an MQTT node is present, so its
+Python never asks you for the network twice.
+
 ## Errors
 
 **Load time** — a malformed `.node.json` is rejected immediately, with
