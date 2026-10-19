@@ -2946,6 +2946,7 @@
 <li><strong>host</strong> — destination hostname or IP.</li>
 <li><strong>port</strong> — destination port (1–65535).</li>
 <li><strong>timeout (ms)</strong> — how long to wait before giving up on the send. Default 2000ms.</li>
+<li><strong>WiFi</strong> — the flow's WiFi network. Every WiFi node in a flow shares this one setting.</li>
 </ul>
 <h2 id="behavior">Behavior</h2>
 <p>Uses the flow's WiFi network (its <strong>WiFi</strong> field, shared by every WiFi node). The payload is sent as bytes (a string is UTF-8 encoded, other types are converted); nothing about its content is validated.</p>

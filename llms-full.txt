@@ -2209,7 +2209,7 @@ Passes a message through unchanged if the WiFi station is currently connected, o
 
 ## Properties
 
-None.
+- **WiFi** — the flow's WiFi network. Every WiFi node in a flow shares this one setting.
 
 ## Behavior
 
@@ -2290,6 +2290,7 @@ Listens on a UDP port and emits one message per datagram received.
 
 - **port** — local port to listen on (1–65535).
 - **poll interval (ms)** — internal receive polling cadence. Default 20ms; rarely needs changing.
+- **WiFi** — the flow's WiFi network. Every WiFi node in a flow shares this one setting.
 
 ## Behavior
 
@@ -2334,6 +2335,7 @@ Makes one HTTP request per incoming message and returns the response.
 - **url** — `http://host[:port]/path`. **HTTPS isn't supported.**
 - **method** — `GET` or `POST`. No other methods are supported.
 - **timeout (ms)** — how long to wait for the whole request/response exchange. Default 5000ms.
+- **WiFi** — the flow's WiFi network. Every WiFi node in a flow shares this one setting.
 
 ## Behavior
 
@@ -2413,6 +2415,7 @@ Sends a message's payload as a UDP datagram to a fixed host and port.
 - **host** — destination hostname or IP.
 - **port** — destination port (1–65535).
 - **timeout (ms)** — how long to wait before giving up on the send. Default 2000ms.
+- **WiFi** — the flow's WiFi network. Every WiFi node in a flow shares this one setting.
 
 ## Behavior
 
@@ -3638,6 +3641,40 @@ async def emit(properties):
 Keep any state the two share at the top of the file (both functions come from one per-instance
 closure, so `nonlocal` works across them).
 
+## Compile time: `<name>.compile.py`
+
+A package can also include an optional compile-time hook, `<name>.compile.py`, defining one function:
+
+```python
+def compile(ctx, properties):
+    return {"properties": {...}, "errors": [...]}
+```
+
+It runs in the editor when the flow is compiled — never on the board. `properties` is what the flow file holds
+for this node; `ctx` describes the flow:
+
+- `ctx["node"]` — this instance: `id`, `type`, `properties`, and `wired` (a boolean per input/output).
+- `ctx["flow"]["nodes"]` / `["configs"]` — every node and config, with non-secret properties only.
+- `ctx["referencedConfigs"]` — the full properties (including credentials) of the configs this node's `configRef`
+  fields point at.
+- `ctx["target"]` — the board/processor being compiled for, or `None`.
+
+Return a dict (or `None`). Everything is optional:
+
+| Key | Meaning |
+|---|---|
+| `properties` | Extra values merged into what `.node.py` receives. Keys your descriptor doesn't declare are allowed. |
+| `claims` | `[{"resource": "GPIO 22", "use": "my device"}]`, checked like a `pin` field. |
+| `warnings` | Strings shown in the compile warnings. |
+| `errors` | Strings that stop the compile, naming the node. |
+
+The hook is sandboxed: no files, network, clock or randomness. Its result is data only — it cannot return Python
+or change the generated code's shape. Limits: 64 KB of properties, 64 claims, 32 warnings and 32 errors, and one
+second per hook; a hook that runs too long is stopped.
+
+`wifi status` is an example: its hook derives the flow's WiFi config and whether an MQTT node is present, so its
+Python never asks you for the network twice.
+
 ## Errors
 
 **Load time** — a malformed `.node.json` is rejected immediately, with
@@ -4474,6 +4511,7 @@ Type `thingstudio/http_request`, kind transform, palette group network.
     - `url`, string, default `""`
     - `method`, string, default `"GET"`
     - `timeoutMs`, number, default `5000`
+    - `wifiConfigId`, string, default `""`, the id of a `thingstudio/config/wifi` config
 
 ### http response
 
@@ -4527,6 +4565,7 @@ Type `thingstudio/udp_receive`, kind source, palette group network.
 - Properties (name, type, default):
     - `port`, number, default `9998`
     - `pollMs`, number, default `20`
+    - `wifiConfigId`, string, default `""`, the id of a `thingstudio/config/wifi` config
 
 ### udp send
 
@@ -4538,6 +4577,7 @@ Type `thingstudio/udp_send`, kind sink, palette group network.
     - `host`, string, default `""`
     - `port`, number, default `9999`
     - `timeoutMs`, number, default `2000`
+    - `wifiConfigId`, string, default `""`, the id of a `thingstudio/config/wifi` config
 
 ### wifi gate
 
@@ -4545,7 +4585,8 @@ Type `thingstudio/wifi_gate`, kind transform, palette group network.
 
 - Inputs: msg (any)
 - Outputs: msg (any)
-- Properties: none
+- Properties (name, type, default):
+    - `wifiConfigId`, string, default `""`, the id of a `thingstudio/config/wifi` config
 
 ### wifi status
 

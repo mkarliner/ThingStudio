@@ -2942,7 +2942,9 @@
 <h1 id="wifi-gate">wifi gate</h1>
 <p>Passes a message through unchanged if the WiFi station is currently connected, or drops it if it isn't.</p>
 <h2 id="properties">Properties</h2>
-<p>None.</p>
+<ul>
+<li><strong>WiFi</strong> — the flow's WiFi network. Every WiFi node in a flow shares this one setting.</li>
+</ul>
 <h2 id="behavior">Behavior</h2>
 <p>A <code>transform</code>, like <code>function</code> or <code>delay</code> — one input, one output, same <code>msg</code> in and out unchanged when the WiFi link is up. When the link is down, the message is dropped: nothing propagates past this node, the same way a <code>function</code> node's <code>return None</code> stops a message.</p>
 <p>Uses the flow's WiFi network (its <strong>WiFi</strong> field, shared by every WiFi node).</p>

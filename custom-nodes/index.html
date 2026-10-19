@@ -2721,6 +2721,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#compile-time-namecompilepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compile time: &lt;name&gt;.compile.py
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#errors" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3128,6 +3139,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#compile-time-namecompilepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compile time: &lt;name&gt;.compile.py
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#errors" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3458,6 +3480,52 @@ register the handler:</p>
 <code>ThreadSafeEvent</code>, which survives the hard-IRQ context.</p>
 <p>Keep any state the two share at the top of the file (both functions come from one per-instance
 closure, so <code>nonlocal</code> works across them).</p>
+<h2 id="compile-time-namecompilepy">Compile time: <code>&lt;name&gt;.compile.py</code></h2>
+<p>A package can also include an optional compile-time hook, <code>&lt;name&gt;.compile.py</code>, defining one function:</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">compile</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">properties</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"properties"</span><span class="p">:</span> <span class="p">{</span><span class="o">...</span><span class="p">},</span> <span class="s2">"errors"</span><span class="p">:</span> <span class="p">[</span><span class="o">...</span><span class="p">]}</span>
+</code></pre></div>
+<p>It runs in the editor when the flow is compiled — never on the board. <code>properties</code> is what the flow file holds
+for this node; <code>ctx</code> describes the flow:</p>
+<ul>
+<li><code>ctx["node"]</code> — this instance: <code>id</code>, <code>type</code>, <code>properties</code>, and <code>wired</code> (a boolean per input/output).</li>
+<li><code>ctx["flow"]["nodes"]</code> / <code>["configs"]</code> — every node and config, with non-secret properties only.</li>
+<li><code>ctx["referencedConfigs"]</code> — the full properties (including credentials) of the configs this node's <code>configRef</code>
+  fields point at.</li>
+<li><code>ctx["target"]</code> — the board/processor being compiled for, or <code>None</code>.</li>
+</ul>
+<p>Return a dict (or <code>None</code>). Everything is optional:</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>properties</code></td>
+<td>Extra values merged into what <code>.node.py</code> receives. Keys your descriptor doesn't declare are allowed.</td>
+</tr>
+<tr>
+<td><code>claims</code></td>
+<td><code>[{"resource": "GPIO 22", "use": "my device"}]</code>, checked like a <code>pin</code> field.</td>
+</tr>
+<tr>
+<td><code>warnings</code></td>
+<td>Strings shown in the compile warnings.</td>
+</tr>
+<tr>
+<td><code>errors</code></td>
+<td>Strings that stop the compile, naming the node.</td>
+</tr>
+</tbody>
+</table>
+<p>The hook is sandboxed: no files, network, clock or randomness. Its result is data only — it cannot return Python
+or change the generated code's shape. Limits: 64 KB of properties, 64 claims, 32 warnings and 32 errors, and one
+second per hook; a hook that runs too long is stopped.</p>
+<p><code>wifi status</code> is an example: its hook derives the flow's WiFi config and whether an MQTT node is present, so its
+Python never asks you for the network twice.</p>
 <h2 id="errors">Errors</h2>
 <p><strong>Load time</strong> — a malformed <code>.node.json</code> is rejected immediately, with
 a message naming what's wrong: bad <code>type</code>, wrong port count, missing

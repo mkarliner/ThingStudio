@@ -2946,6 +2946,7 @@
 <li><strong>url</strong> — <code>http://host[:port]/path</code>. <strong>HTTPS isn't supported.</strong></li>
 <li><strong>method</strong> — <code>GET</code> or <code>POST</code>. No other methods are supported.</li>
 <li><strong>timeout (ms)</strong> — how long to wait for the whole request/response exchange. Default 5000ms.</li>
+<li><strong>WiFi</strong> — the flow's WiFi network. Every WiFi node in a flow shares this one setting.</li>
 </ul>
 <h2 id="behavior">Behavior</h2>
 <p>For a <code>POST</code>, the incoming message's payload becomes the request body (a string is UTF-8 encoded; other types are converted). The first request goes out when the first message arrives, so a timer's first tick (one full interval after start) is the first request. The response comes back as the message's payload (the decoded body, as a string) and a <code>status</code> field (the HTTP status code).</p>

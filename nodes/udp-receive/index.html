@@ -2945,6 +2945,7 @@
 <ul>
 <li><strong>port</strong> — local port to listen on (1–65535).</li>
 <li><strong>poll interval (ms)</strong> — internal receive polling cadence. Default 20ms; rarely needs changing.</li>
+<li><strong>WiFi</strong> — the flow's WiFi network. Every WiFi node in a flow shares this one setting.</li>
 </ul>
 <h2 id="behavior">Behavior</h2>
 <p>Uses the flow's WiFi network (its <strong>WiFi</strong> field, shared by every WiFi node). The payload is the raw bytes received, unparsed — decode it yourself in a <code>function</code> node if you're expecting text or a structured format. <code>host</code> and <code>port</code> fields on the message carry the sender's address, alongside the payload.</p>
