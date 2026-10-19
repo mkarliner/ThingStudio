@@ -2715,6 +2715,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#two-faced-nodes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Two-faced nodes
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3133,6 +3144,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#two-faced-nodes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Two-faced nodes
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3480,6 +3502,23 @@ register the handler:</p>
 <code>ThreadSafeEvent</code>, which survives the hard-IRQ context.</p>
 <p>Keep any state the two share at the top of the file (both functions come from one per-instance
 closure, so <code>nonlocal</code> works across them).</p>
+<h3 id="two-faced-nodes">Two-faced nodes</h3>
+<p>A <code>sink</code> with <code>"eventSource": true</code> both consumes and produces: one input, one output, and three functions in
+<code>.node.py</code>. <code>run(msg, properties)</code> handles the input; <code>wait(properties)</code> then <code>emit(properties)</code> produce the
+output. All three come from the same per-instance closure, so they share state through <code>nonlocal</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"custom/gateway"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sink"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"gateway"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"eventSource"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"ports"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"inputs"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"msg"</span><span class="p">,</span><span class="w"> </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"any"</span><span class="w"> </span><span class="p">}],</span>
+<span class="w">    </span><span class="nt">"outputs"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"msg"</span><span class="p">,</span><span class="w"> </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="w"> </span><span class="p">}]</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Use it when the node has to react to messages and also act on its own (a clock that echoes a message and then
+ticks, or a subscription you can change at run time). A <code>transform</code> cannot be two-faced.</p>
 <h2 id="compile-time-namecompilepy">Compile time: <code>&lt;name&gt;.compile.py</code></h2>
 <p>A package can also include an optional compile-time hook, <code>&lt;name&gt;.compile.py</code>, defining one function:</p>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">compile</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">properties</span><span class="p">):</span>

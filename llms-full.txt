@@ -3641,6 +3641,28 @@ async def emit(properties):
 Keep any state the two share at the top of the file (both functions come from one per-instance
 closure, so `nonlocal` works across them).
 
+### Two-faced nodes
+
+A `sink` with `"eventSource": true` both consumes and produces: one input, one output, and three functions in
+`.node.py`. `run(msg, properties)` handles the input; `wait(properties)` then `emit(properties)` produce the
+output. All three come from the same per-instance closure, so they share state through `nonlocal`.
+
+```json
+{
+  "type": "custom/gateway",
+  "kind": "sink",
+  "label": "gateway",
+  "eventSource": true,
+  "ports": {
+    "inputs": [{ "name": "msg", "type": "any" }],
+    "outputs": [{ "name": "msg", "type": "string" }]
+  }
+}
+```
+
+Use it when the node has to react to messages and also act on its own (a clock that echoes a message and then
+ticks, or a subscription you can change at run time). A `transform` cannot be two-faced.
+
 ## Compile time: `<name>.compile.py`
 
 A package can also include an optional compile-time hook, `<name>.compile.py`, defining one function:
