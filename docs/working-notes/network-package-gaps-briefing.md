@@ -52,6 +52,11 @@ Options: (a) a shared device library (`ts_mqtt`, the `ts_wifi` pattern) with `en
 keyed by broker and its own cleanup; (b) a designed `runtime.shared` client with lifecycle rules. (a) is the closer
 match and reuses the proven pattern; it moves the ~100 lines of connection/status code out of `mqtt-shared.ts` into
 a vendored library that built-ins and packages both call.
+**Requirement added 2026-10-19 (Mike), binding whichever option is chosen:** design the shared client for run-time
+subscribe/unsubscribe even though dynamic subscription isn't built yet -- subscriptions tracked per node (a broker
+UNSUBSCRIBE only when the last node lets go), resubscribe on reconnect from the *current* set, incoming messages
+routed per node by wildcard match, and room for a "subscribed" signal a publish can wait on (the suspected boot race,
+`outstanding-items/mqtt-pubsub-boot-race.md`). Full list: `outstanding-items/mqtt-dynamic-subscription.md`.
 
 **3. `http-in` — sibling scan and a shared server.**
 Builds the route table from every `http_in` node (`findNodesOfType` plus each node's properties), rejects duplicate
