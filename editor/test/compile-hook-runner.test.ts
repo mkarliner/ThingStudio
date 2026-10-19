@@ -13,6 +13,7 @@ class FakeWorker implements HookWorkerHandle {
   terminated = false;
   sent: Record<string, unknown>[] = [];
   private handler?: (m: unknown) => void;
+  private errorHandler?: (e: unknown) => void;
   constructor(private readonly respond: Responder) {}
   postMessage(message: unknown): void {
     const msg = message as Record<string, unknown>;
@@ -22,6 +23,12 @@ class FakeWorker implements HookWorkerHandle {
   onMessage(handler: (message: unknown) => void): void {
     this.handler = handler;
     handler({ type: "ready" });
+  }
+  onError(handler: (error: unknown) => void): void {
+    this.errorHandler = handler;
+  }
+  fail(error: unknown): void {
+    this.errorHandler?.(error);
   }
   terminate(): void {
     this.terminated = true;
@@ -88,6 +95,44 @@ describe("createWorkerHookRunner", () => {
     }
   });
 
+  it("a worker that never becomes ready times out instead of hanging", async () => {
+    vi.useFakeTimers();
+    try {
+      const handle: HookWorkerHandle = {
+        postMessage: () => {},
+        onMessage: () => {},
+        onError: () => {},
+        terminate: vi.fn(),
+      };
+      const runner = createWorkerHookRunner({ createWorker: () => handle, initTimeoutMs: 100 });
+      const run = runner.run("hook", context, {}, "x");
+      const assertion = expect(run).rejects.toThrow(/did not start within 100 ms/);
+      await vi.advanceTimersByTimeAsync(100);
+      await assertion;
+      expect(handle.terminate).toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("a worker script load error rejects the run instead of hanging", async () => {
+    let fail: ((e: unknown) => void) | undefined;
+    const handle: HookWorkerHandle = {
+      postMessage: () => {},
+      onMessage: () => {},
+      onError: (handler) => {
+        fail = handler;
+      },
+      terminate: vi.fn(),
+    };
+    const runner = createWorkerHookRunner({ createWorker: () => handle });
+    const run = runner.run("hook", context, {}, "x");
+    const assertion = expect(run).rejects.toThrow(/failed to start: script load failed/);
+    fail?.(new Error("script load failed"));
+    await assertion;
+    expect(handle.terminate).toHaveBeenCalled();
+  });
+
   it("an interpreter that fails to load rejects the run instead of hanging", async () => {
     const runner = createWorkerHookRunner({
       createWorker: (url) => {
@@ -95,6 +140,7 @@ describe("createWorkerHookRunner", () => {
         const handle: HookWorkerHandle = {
           postMessage: () => {},
           onMessage: (handler) => handler({ type: "init-error", error: `could not load ${url}` }),
+          onError: () => {},
           terminate: () => {},
         };
         return handle;

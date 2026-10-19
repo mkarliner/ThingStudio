@@ -15,6 +15,8 @@ export interface HookWorkerHandle {
   postMessage(message: unknown): void;
   /** Called once; the runner routes every message from this worker through it. */
   onMessage(handler: (message: unknown) => void): void;
+  /** Called once; worker script load errors, CSP refusals and message-deserialisation failures. */
+  onError(handler: (error: unknown) => void): void;
   terminate(): void;
 }
 
@@ -32,6 +34,9 @@ export interface WorkerHookRunnerOptions {
   readonly wasmUrl?: string;
   /** Per hook, milliseconds (interfaces/node-compile-context/SPEC.md, 1 s). */
   readonly timeoutMs?: number;
+  /** How long the worker may take to load its script and the wasm before the compile fails. Separate from the
+   * per-hook budget: a fetch/compile of the interpreter is not the hook's time. */
+  readonly initTimeoutMs?: number;
   readonly createWorker: HookWorkerFactory;
 }
 
@@ -42,6 +47,7 @@ function isRecord(v: unknown): v is Record<string, unknown> {
 export function createWorkerHookRunner(options: WorkerHookRunnerOptions): CompileHookRunner {
   const wasmUrl = options.wasmUrl ?? DEFAULT_HOOK_WASM_URL;
   const timeoutMs = options.timeoutMs ?? 1000;
+  const initTimeoutMs = options.initTimeoutMs ?? 10000;
   let nextId = 1;
   let worker: HookWorkerHandle | null = null;
   let ready: Promise<void> | null = null;
@@ -67,14 +73,27 @@ export function createWorkerHookRunner(options: WorkerHookRunnerOptions): Compil
     worker = options.createWorker(wasmUrl);
     const current = worker;
     ready = new Promise<void>((resolve, reject) => {
+      const initTimer = setTimeout(() => {
+        reject(new Error(`compile-hook worker did not start within ${initTimeoutMs} ms`));
+        // The worker is stuck loading (a stalled fetch, a blocked script); it cannot be recovered in place.
+        discardWorker(`compile-hook worker did not start within ${initTimeoutMs} ms`);
+      }, initTimeoutMs);
+      current.onError((error) => {
+        clearTimeout(initTimer);
+        reject(new Error(`compile-hook worker failed to start: ${error instanceof Error ? error.message : String(error)}`));
+        discardWorker("compile-hook worker failed to start");
+      });
       current.onMessage((message) => {
         if (!isRecord(message)) return;
         if (message.type === "ready") {
+          clearTimeout(initTimer);
           resolve();
           return;
         }
         if (message.type === "init-error") {
+          clearTimeout(initTimer);
           reject(new Error(String(message.error ?? "compile-hook interpreter failed to load")));
+          discardWorker("compile-hook interpreter failed to load");
           return;
         }
         if (message.type === "result" && typeof message.id === "number") {
@@ -124,6 +143,13 @@ export function browserHookWorkerFactory(): HookWorkerFactory {
       postMessage: (m) => worker.postMessage(m),
       onMessage: (handler) => {
         worker.onmessage = (event: MessageEvent) => handler(event.data);
+      },
+      onError: (handler) => {
+        worker.onerror = (event: ErrorEvent) => {
+          const text = event.message || (event.filename ? `${event.filename}: load failed` : "worker script failed to load");
+          handler(new Error(text));
+        };
+        worker.onmessageerror = (event: MessageEvent) => handler(new Error(`compile-hook worker message failed to deserialise: ${String(event.data)}`));
       },
       terminate: () => worker.terminate(),
     };
