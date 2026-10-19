@@ -156,7 +156,7 @@ import { descriptor as encoderCoreDescriptor } from "../../node-library/core-pac
 import { descriptor as neopixelCoreDescriptor } from "../../node-library/core-packages/neopixel.js";
 import { descriptor as wifiStatusCoreDescriptor } from "../../node-library/core-packages/wifi-status.js";
 import { descriptor as wifiGateCoreDescriptor } from "../../node-library/core-packages/wifi-gate.js";
-import { udpSendNode } from "../../node-library/udp-send.js";
+import { descriptor as udpSendCoreDescriptor } from "../../node-library/core-packages/udp-send.js";
 import { udpReceiveNode } from "../../node-library/udp-receive.js";
 import { httpRequestNode } from "../../node-library/http-request.js";
 import { httpInNode } from "../../node-library/http-in.js";
@@ -452,7 +452,7 @@ export class Bme280Node extends buildDescriptorNodeClass(bme280CoreDescriptor) {
 
 export class NtpNode extends buildDescriptorNodeClass(ntpNode) {}
 
-export class UdpSendNode extends buildDescriptorNodeClass(udpSendNode) {}
+export class UdpSendNode extends buildDescriptorNodeClass(udpSendCoreDescriptor) {}
 
 export class UdpReceiveNode extends buildDescriptorNodeClass(udpReceiveNode) {}
 

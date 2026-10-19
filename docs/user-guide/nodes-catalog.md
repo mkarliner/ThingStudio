@@ -474,6 +474,7 @@ Type `thingstudio/udp_send`, kind sink, palette group network.
     - `host`, string, default `""`
     - `port`, number, default `9999`
     - `timeoutMs`, number, default `2000`
+    - `wifiConfigId`, string, default `""`, the id of a `thingstudio/config/wifi` config
 
 ### wifi gate
 

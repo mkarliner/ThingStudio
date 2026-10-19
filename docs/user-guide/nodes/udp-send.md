@@ -7,6 +7,7 @@ Sends a message's payload as a UDP datagram to a fixed host and port.
 - **host** — destination hostname or IP.
 - **port** — destination port (1–65535).
 - **timeout (ms)** — how long to wait before giving up on the send. Default 2000ms.
+- **WiFi** — the flow's WiFi network. Every WiFi node in a flow shares this one setting.
 
 ## Behavior
 

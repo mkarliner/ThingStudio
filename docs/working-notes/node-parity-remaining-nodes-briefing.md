@@ -58,7 +58,7 @@ the last built-in-only corner besides `dynamicOutputs`):
 library. The rest of the network family splits by the capability each still needs:
 
 - **Portable with the same hook** (`ctx.flow` for mqtt presence, `referencedConfigs` for WiFi):
-  **`http-request`**, **`udp-send`**, **`udp-receive`**.
+  **`http-request`**, **`udp-receive`**. (`udp-send` flipped 2026-10-19 too.)
 - **`ntp` — blocked on a two-faced package.** It is a sink that also defines `codegenEventSource` (`ntp.ts`), and
   the package format has no way to declare both faces. Needs a package-format addition or a split node.
 - **`mqtt-publish` / `mqtt-subscribe` — blocked on cross-instance shared setup.** One `MQTTClient` is shared by
