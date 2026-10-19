@@ -2344,7 +2344,7 @@ For a `POST`, the incoming message's payload becomes the request body (a string 
 
 **When it goes wrong.** A response with any status (404, 500, ...) is still sent on, with `status` set to that number (an integer), so test `msg['status'] == 200` yourself. If the connection fails, the request times out or the reply can't be read, nothing is sent on: the node raises an error that shows in the debug log, and the next message tries again. To act on a failure, add a [timer](timer.md)-driven check or watch the log; there is no failure output.
 
-A few real limitations worth knowing: no HTTPS/TLS, no chunked transfer-encoding (the server needs to send `Content-Length`), no redirect following, and the response body must be valid UTF-8 — anything else raises rather than silently mangling it. Uses the flow's WiFi network (its **WiFi** field, shared by every WiFi node).
+A few real limitations worth knowing: no HTTPS/TLS, no chunked transfer-encoding (the server needs to send `Content-Length`), no redirect following, and the response body must be valid UTF-8 — anything else raises rather than silently mangling it. The whole body is read into memory at once, so a response larger than the board's largest free block fails with `MemoryError`; request a smaller response or use a board with PSRAM. Uses the flow's WiFi network (its **WiFi** field, shared by every WiFi node).
 
 
 ---
@@ -4934,6 +4934,13 @@ Free memory is in pieces. A big buffer needs one piece that size, and after a wh
 one. A 240x320 frame in 16 grays is 38,400 bytes. The [GUI nodes](nodes/gui.md) avoid this by drawing the
 screen in strips. If your own `function` node builds a full frame, draw it in strips too, or restart
 the board before deploying.
+
+## Why does http request fail with "MemoryError" fetching a page?
+
+The node reads the whole response body into memory at once. A page larger than the largest free block fails, even
+when the console shows more free memory than the page size. A 56 KB page on an ESP32-C3 failed with
+`MemoryError allocating 56722 bytes`; a 48-byte page worked. Point the node at a smaller response, or use a board
+with PSRAM for large pages.
 
 ## My ESP32-S3 board has PSRAM, but the console shows only about 120 KB free. Why?
 

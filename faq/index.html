@@ -2863,6 +2863,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#why-does-http-request-fail-with-memoryerror-fetching-a-page" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why does http request fail with "MemoryError" fetching a page?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#my-esp32-s3-board-has-psram-but-the-console-shows-only-about-120-kb-free-why" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3092,6 +3103,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#why-does-http-request-fail-with-memoryerror-fetching-a-page" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why does http request fail with "MemoryError" fetching a page?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#my-esp32-s3-board-has-psram-but-the-console-shows-only-about-120-kb-free-why" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3307,6 +3329,11 @@ and uses its RAM. So a 264 KB Pico W leaves more for your flow than a 400 KB ESP
 one. A 240x320 frame in 16 grays is 38,400 bytes. The <a href="../nodes/gui/">GUI nodes</a> avoid this by drawing the
 screen in strips. If your own <code>function</code> node builds a full frame, draw it in strips too, or restart
 the board before deploying.</p>
+<h2 id="why-does-http-request-fail-with-memoryerror-fetching-a-page">Why does http request fail with "MemoryError" fetching a page?</h2>
+<p>The node reads the whole response body into memory at once. A page larger than the largest free block fails, even
+when the console shows more free memory than the page size. A 56 KB page on an ESP32-C3 failed with
+<code>MemoryError allocating 56722 bytes</code>; a 48-byte page worked. Point the node at a smaller response, or use a board
+with PSRAM for large pages.</p>
 <h2 id="my-esp32-s3-board-has-psram-but-the-console-shows-only-about-120-kb-free-why">My ESP32-S3 board has PSRAM, but the console shows only about 120 KB free. Why?</h2>
 <p>The firmware doesn't use the PSRAM. The generic ESP32-S3 build leaves it off. Flash the build for boards with
 octal PSRAM (the <code>SPIRAM_OCT</code> variant) from <a href="https://micropython.org/download/ESP32_GENERIC_S3/">micropython.org/download</a>.
