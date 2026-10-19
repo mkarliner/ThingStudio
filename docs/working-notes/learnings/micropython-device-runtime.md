@@ -354,3 +354,19 @@ case, not by inspection.
   identical source. Compiling with a relative file name and `cwd=tmpdir` makes the bytes stable
   (`device-runtime/test`'s own suite and the editor's WASM path already use stable names). If a dependency hash
   changes without a source change, suspect the path in the `.mpy`, not a real change.
+
+## Sequential deploys on an ESP32-C3 can starve the next one, 2026-10-19
+
+After five `device_cli.py flow deploy` runs, HELLO on an ESP32-C3 showed `freeIdfHeapBytes: 8668` and
+`largestIdfHeapBlockBytes: 5632`; the next deploy then timed out after 20s waiting for `DEPLOY_ACK`. A DTR/RTS hard
+reset restored roughly 37 KB of free IDF heap and the same flow deployed and ran a 600s soak. The same five flows
+also failed at 20s per flow and passed at 40s. Before a hardware pass on a C3: reset the board, and give each flow
+at least 40s. This is the heap-fragmentation effect recorded above, measured on the deploy path itself.
+
+## A large HTTP response is one allocation, 2026-10-19
+
+`http_request` reads the body with `readexactly(content_length)` (or accumulates 512-byte reads when there is no
+`Content-Length`), so a page larger than the largest free block fails with `MemoryError` even when `freeRamBytes`
+is larger than the page. A 56,722-byte response failed on a C3 reporting 41,120 free RAM; a 48-byte page worked.
+`run()` catches `OSError` only, so the error surfaces as a bare `MemoryError` with no http attribution. Backlog:
+`docs/working-notes/outstanding-items/http-response-size-limit.md`.

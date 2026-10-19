@@ -34,6 +34,9 @@ python3 test-flows/network-packages-pass.py \
 - `--seconds 15` per flow by default; use `--seconds 60` for a longer MQTT soak.
 - `--keep DIR` keeps the generated flow files. **They contain the WiFi/broker credentials you passed**, so keep
   them out of git.
+- **Reset the board before the run, and use `--seconds 40` on an ESP32-C3.** After a few deploys the board's largest
+  free IDF heap block drops to a few KB; the next deploy can then miss `DEPLOY_ACK` within the CLI's 20s wait. A
+  DTR/RTS reset restores it. Use 40s per flow so the first MQTT connect and the NTP sync have room.
 
 The script generates the flows in a temporary folder, deploys each with `device_cli.py flow deploy`, reads the
 console, and prints one PASS/FAIL per flow. It fails a flow if the console shows `NODE_ERROR`, a traceback, a
@@ -68,6 +71,21 @@ Watch for:
 
 If it flaps, capture the full console and the broker log, and note the board and MicroPython version. That is the
 regression this pass exists to catch.
+
+## First run, 2026-10-19
+
+Ran clean on an ESP32-C3 (runtime 11.0.0) after all six network nodes were converted to core packages: all five
+flows passed at 40s each, and the MQTT soak passed at 605.6s with `wifi_status` connected once and no disconnect.
+Broker was a LAN MQTT server at `192.168.10.22:1883` with a username and password.
+
+Two things to know when repeating it:
+
+- **Check the broker from the board, not the host.** That broker resets any connection from a desktop but accepts
+  the board; a host-side `mosquitto_pub` probe would have read as "broker down". Deploy the mqtt flow and read its
+  console instead.
+- **A large HTTP page fails with `MemoryError`.** The http flow passes on a small page; a 56 KB page needed one
+  56 KB allocation, which the C3 did not have. Keep `--http-url` pointed at a small response, or expect
+  `NODE_ERROR ... type=MemoryError`. See `docs/working-notes/outstanding-items/http-response-size-limit.md`.
 
 ## If something fails
 

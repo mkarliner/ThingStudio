@@ -30,6 +30,13 @@ one. A 240x320 frame in 16 grays is 38,400 bytes. The [GUI nodes](nodes/gui.md) 
 screen in strips. If your own `function` node builds a full frame, draw it in strips too, or restart
 the board before deploying.
 
+## Why does http request fail with "MemoryError" fetching a page?
+
+The node reads the whole response body into memory at once. A page larger than the largest free block fails, even
+when the console shows more free memory than the page size. A 56 KB page on an ESP32-C3 failed with
+`MemoryError allocating 56722 bytes`; a 48-byte page worked. Point the node at a smaller response, or use a board
+with PSRAM for large pages.
+
 ## My ESP32-S3 board has PSRAM, but the console shows only about 120 KB free. Why?
 
 The firmware doesn't use the PSRAM. The generic ESP32-S3 build leaves it off. Flash the build for boards with
