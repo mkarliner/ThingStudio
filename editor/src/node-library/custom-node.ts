@@ -733,10 +733,10 @@ function packageCodegen(descriptor: PackageDescriptor, pythonSource: string, com
     const declaredProps = pyPropertiesLiteral(descriptor, node, node.properties, `node ${node.id} (${descriptor.type})`, ctx);
     // Hook-added properties may name fields the descriptor does not declare (a package's Python reads them by
     // key), and override a declared field's resolved value. They were validated as JSON data before compile.
-    const propsLiteral =
-      hook && Object.keys(hook.properties).length > 0
-        ? `{**${declaredProps}, **${pyValueLiteral(hook.properties, `node ${node.id} (${descriptor.type})`)}}`
-        : declaredProps;
+    //
+    // Do NOT emit `{**a, **b}`: MicroPython does not support PEP 448 unpacking in a dict display, so that compiled
+    // in CPython tests and failed mpy-cross on the device. A plain dict + update() is portable.
+    const hookProps = hook && Object.keys(hook.properties).length > 0 ? pyValueLiteral(hook.properties, `node ${node.id} (${descriptor.type})`) : null;
     const indented = pythonSource
       .split("\n")
       .map((line) => (line.length ? "    " + line : line))
@@ -745,7 +745,8 @@ function packageCodegen(descriptor: PackageDescriptor, pythonSource: string, com
       `def ${setupFn}(properties):`,
       indented,
       `    return ${entries.join(", ")}`,
-      `${propsVar} = ${propsLiteral}`,
+      `${propsVar} = ${declaredProps}`,
+      ...(hookProps === null ? [] : [`${propsVar}.update(${hookProps})`]),
       `${vars.join(", ")} = ${setupFn}(${propsVar})`,
     ].join("\n");
     return { vars, propsVar, statements: [{ key: setupFn, code }] };

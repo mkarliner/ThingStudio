@@ -21,3 +21,11 @@ Status: detail file, split out of `learnings.md` on 2026-09-06 to keep that inde
   nested function of the per-instance wrapper, but viper code can't read enclosing variables (no closures), so
   every value goes in as an argument or a literal: the node's GPIO register addresses are literals inside its
   viper functions. `const()` likewise only optimises at true module scope; plain names in the wrapper.
+- **MicroPython has no PEP 448 dict unpacking — `{**a, **b}` fails at mpy-cross, though CPython runs it.** 2026-10-19,
+  the compile-hook property merge. The generated package setup used `{**declared, **hookProperties}` to override
+  fields; every pymock test (CPython) passed and the flow compiled in the CLI with `--no-syntax`. Compiling a
+  generated hardware-pass flow with mpy-cross rejected it: `SyntaxError` on that line. MicroPython supports
+  `dict.update()` but not multiple unpacking in a display. Fixed in `custom-node.ts` by emitting
+  `_props = {...}` then `_props.update({...})`. The general lesson: pymock runs CPython, so a syntax or stdlib
+  feature MicroPython lacks only surfaces through mpy-cross or a board. The hardware-pass script's flows go
+  through the CLI's real syntax check for this reason.

@@ -107,7 +107,7 @@ The cloud session's own staged mirror of the repo can be a partial snapshot — 
 
 ## Custom node authoring
 
-A custom node's top-level code runs inside a generated per-instance wrapper, not true module scope — `nonlocal`, not `global`, for persistent state; `@micropython.viper` works there but can't read the wrapper's variables. 2 entries: `docs/working-notes/learnings/custom-node-authoring.md`.
+A custom node's top-level code runs inside a generated per-instance wrapper, not true module scope — `nonlocal`, not `global`, for persistent state; `@micropython.viper` works there but can't read the wrapper's variables; MicroPython has no PEP 448 dict unpacking (`{**a, **b}`), which CPython-based pymock tests do not catch. 3 entries: `docs/working-notes/learnings/custom-node-authoring.md`.
 
 ## Reusable patterns worth remembering
 

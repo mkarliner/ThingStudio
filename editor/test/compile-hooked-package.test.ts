@@ -58,7 +58,7 @@ describe("compile() with package hook results", () => {
     const results = new Map([["h1", hookResult({ properties: { value: 7 } })]]);
     const { source } = compile(graph(), registry(), { hookResults: results });
     expect(source).toContain('"value": 7');
-    expect(source).toContain('*{"value": 7}');
+    expect(source).toContain(".update({\"value\": 7})");
   });
 
   it("applies hook claims through the same resource-claim machinery", () => {

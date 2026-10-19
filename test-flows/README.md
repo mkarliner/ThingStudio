@@ -10,6 +10,12 @@ flow-file.ts`, wired into the browser's "Open Flow"/"Save Flow" buttons in
 `main.ts`). Files here use that real format directly, and can be loaded
 straight into the editor.
 
+## Network packages hardware pass (2026-10-19)
+
+`network-packages-pass.py` (guide: `network-packages-pass.md`) generates and deploys the network flows, then
+checks the console: `mqtt`, `ntp`, `http`, `udp`, `gate`. It exists because every WiFi node's generated setup moved
+to `ts_wifi` and the network nodes are packages; the ESP32 + MQTT path is the one to soak.
+
 ## Headless board control (`device_cli.py`)
 
 `device_cli.py` is the short path for a hands-on session without a browser: `list`, `hello`,
