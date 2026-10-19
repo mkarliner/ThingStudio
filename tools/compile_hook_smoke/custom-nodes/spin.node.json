@@ -1,0 +1,3 @@
+{ "type": "smoke/spin", "kind": "transform", "label": "spin", "group": "examples",
+  "ports": { "inputs": [{ "name": "msg", "type": "any" }], "outputs": [{ "name": "msg", "type": "any" }] },
+  "properties": [] }

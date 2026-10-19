@@ -1,0 +1,70 @@
+{
+  "formatVersion": 1,
+  "flowName": "spin",
+  "nodes": [
+    {
+      "id": "t1",
+      "type": "thingstudio/timer",
+      "properties": {
+        "intervalMs": 500
+      }
+    },
+    {
+      "id": "s1",
+      "type": "smoke/spin",
+      "properties": {}
+    },
+    {
+      "id": "d1",
+      "type": "thingstudio/debug",
+      "properties": {}
+    }
+  ],
+  "edges": [
+    [
+      "t1",
+      0,
+      "s1",
+      0
+    ],
+    [
+      "s1",
+      0,
+      "d1",
+      0
+    ]
+  ],
+  "layout": {
+    "t1": {
+      "pos": [
+        100,
+        200
+      ],
+      "size": [
+        100,
+        34
+      ]
+    },
+    "s1": {
+      "pos": [
+        300,
+        200
+      ],
+      "size": [
+        100,
+        34
+      ]
+    },
+    "d1": {
+      "pos": [
+        500,
+        200
+      ],
+      "size": [
+        100,
+        34
+      ]
+    }
+  },
+  "configs": []
+}

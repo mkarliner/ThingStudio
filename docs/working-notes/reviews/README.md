@@ -14,3 +14,6 @@ it reviewed has moved on; write a new one and link back.
 - `2026-10-19-compile-hooks-response-reply.md` -- the author's response to that review, for a further cycle:
   per-finding agreement, the 7/8 single-flight proposal, the interpreter plan, and the proposed order. A response,
   not a review.
+- `2026-10-19-reply-review-and-smoke-test.md` -- review of that reply, the browser smoke test
+  (`tools/compile_hook_smoke.py`) and its results, the "two compilers" concern, and recommendations for the remaining
+  blocked nodes (two-faced `ntp`, the shared MQTT client, `http_in`, and the rest).
