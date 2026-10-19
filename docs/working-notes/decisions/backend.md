@@ -138,3 +138,8 @@ Status: detail file, split out of `decisions.md` on 2026-09-06 to keep that inde
   browser; after a reload the browser re-asks permission on first use. Save asks before overwriting a file whose
   `lastModified` changed since the editor last read or wrote it (a `git checkout`, another editor). Safari/Firefox
   have no handles: Save downloads, no recent list. `editor/src/app/main.ts`, `flow-file/file-io.ts`.
+- **2026-10-19 -- Backend on a different machine: deferred, requirement kept (Mike).** Planned since the start and
+  about to be tested; Mike deferred both the test and the implementation. The requirement is recorded in
+  `docs/security-policy.md` §5: posture-2 auth (password, signed `HttpOnly` cookie, TLS, fail-closed start-up),
+  CORS as an allowlist, and the editor-machine/backend-machine split as a boundary. Until then the only supported
+  split is an SSH tunnel or VPN to the loopback-bound backend; the loopback refusal stays, including for tests.

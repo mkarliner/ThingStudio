@@ -7,7 +7,8 @@ Orientation for anyone (human or AI) picking this project up: `docs/thingstudio-
 `docs/working-notes/` is active planning. Read the design doc in full before proposing architecture changes.
 Adding or changing a built-in node: `docs/node-conventions.md` (message envelope, codegen patterns, ports, naming,
 fault handling, docs/catalog/tests, vendoring). Cross-subsystem interface specs live in `interfaces/` (wire protocol
-first; see its `README.md`).
+first; see its `README.md`). Before any change, check the table at the top of `docs/security-policy.md`: it says
+in a few lines whether the change has security implications and which section to read.
 
 ## Message shape: the `msg`/`payload` convention
 
