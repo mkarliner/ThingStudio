@@ -4,66 +4,57 @@
 // the status dot and console get, and every format. The compile tests go through the real compiler.
 
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { compile } from "../src/compiler/compile.js";
-import { CompileError } from "../src/compiler/errors.js";
-import type { GraphData, GraphNode } from "../src/compiler/graph.js";
-import type { CodegenContext } from "../src/compiler/node-definition.js";
+import type { GraphConfigNode, GraphData } from "../src/compiler/graph.js";
 import { buildRegistry } from "../src/node-library/registry.js";
-import { ntpNode } from "../src/node-library/ntp.js";
+
+import { NTP_HELPERS } from "../src/node-library/core-packages/ntp.js";
+import { runCompileHooksSync } from "../src/node-library/compile-hooks.js";
+import { runHookOnceSync } from "../src/compile-hook/run-hook.js";
+import { compileWithHooks } from "./compile-with-hooks.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const WIFI = { id: "w1", type: "thingstudio/config/wifi", properties: { ssid: "HomeNet", password: "pw", security: "password" } };
 
-function freshCtx(): CodegenContext {
-  const used = new Set<string>();
-  return {
-    uniqueName(hint: string): string {
-      let candidate = `_${hint}`;
-      let i = 1;
-      while (used.has(candidate)) candidate = `_${hint}_${i++}`;
-      used.add(candidate);
-      return candidate;
-    },
-    resolveConfig(id: string): Record<string, unknown> {
-      if (id === WIFI.id) return WIFI.properties;
-      throw new Error(`unexpected resolveConfig("${id}")`);
-    },
-    findConfigsOfType: (type: string) => (type === WIFI.type ? [WIFI] : []),
-    findNodesOfType: () => [],
-  };
+const wasmBytes = new Uint8Array(readFileSync(join(__dirname, "../../micropython-wasi/micropython-wasi.wasm")));
+const syncRunner = {
+  runSync: (hookSource: string, ctx: Parameters<typeof runHookOnceSync>[0]["context"], properties: Record<string, unknown>) =>
+    runHookOnceSync({ wasmBytes, hookSource, context: ctx, properties }),
+};
+
+/** The hook's validated/normalized properties for one node (server, offsetSeconds, dstIsEu, format, WiFi). */
+function cfg(properties: Record<string, unknown>, configs: GraphConfigNode[] = [WIFI]): Record<string, unknown> {
+  const g: GraphData = { nodes: [{ id: "n1", type: "thingstudio/ntp", properties }], links: [], configs };
+  const hooks = runCompileHooksSync(g, buildRegistry(), syncRunner);
+  return hooks.results.get("n1")!.properties;
 }
 
-const node = (properties: Record<string, unknown>): GraphNode => ({ id: "n1", type: "thingstudio/ntp", properties });
 const indent = (code: string) => code.split("\n").map((l) => (l.length ? "    " + l : l)).join("\n");
 
 /** Runs `body` (Python, inside an async main) after the node's setup code. `N` is the node's _Ntp instance;
  * `ntp(y,m,d,h,mi,s)` sets what the NTP server answers, `at(...)` moves the board's clock. Returns stdout lines. */
 function run(properties: Record<string, unknown>, body: string[]): string[] {
-  const r = ntpNode.codegenEventSource!(node(properties), freshCtx());
-  const statements = (r.statements ?? []).filter((s) => s.key !== "wifi-sta");
-  const instance = statements.find((s) => s.key.startsWith("_ntp_"))!.key;
+  const c = cfg(properties);
   const lines = [
     "import sys, calendar",
     "import time_mock",
     'sys.modules["time"] = time_mock',
+    "import time",
     "import runtime, network, ntptime",
     "asyncio = runtime.asyncio",
-    ...(r.imports ?? []),
-    ...statements.map((s) => s.code),
-    `N = ${instance}`,
+    NTP_HELPERS,
+    `N = _Ntp("n1", ${JSON.stringify(String(c.server))}, ${Number(c.offsetSeconds)}, ${c.dstIsEu ? "True" : "False"})`,
     "def ntp(*a):",
     "    ntptime.NTP.EPOCH = calendar.timegm(a)",
     "def at(*a):",
     "    time_mock.CLOCK.epoch = calendar.timegm(a)",
     "async def wait_sent():",
-    `    ${r.waitStatement}`,
-    `    ${r.buildMsg}`,
-    "    return msg",
+    "    await N.wait()",
+    `    return N.msg(${JSON.stringify(String(c.format))})`,
     "async def _main():",
     indent(body.join("\n")),
     "asyncio.run(_main())",
@@ -241,32 +232,40 @@ describe("ntp node: compiling", () => {
     ...extra,
   });
 
-  it("compiles a timer -> ntp -> debug flow, joining WiFi", () => {
-    const r = compile(flow([WIFI]), registry);
-    expect(r.source).toContain("_ntp_n1 = _Ntp(\"n1\", \"pool.ntp.org\", 0, True)");
-    expect(r.source).toContain("_ntp_n1.poke()");
-    expect(r.source).toContain("await _ntp_n1.wait()");
-    expect(r.source).toContain("ts_wifi.ensure_station(");
-    expect(r.source.match(/class _Ntp/g)).toHaveLength(1);
+  it("compiles a timer -> ntp -> debug flow, joining WiFi", async () => {
+    const r = await compileWithHooks(flow([WIFI]), registry);
+    expect(r.source).toContain('class _Ntp');
+    expect(r.source).toContain('ts_wifi.ensure_station(');
+    expect(r.source).toMatch(/async def run\(msg, properties\):/);
+    expect(r.source).toMatch(/async def wait\(properties\):/);
+    expect(r.source).toMatch(/async def emit\(properties\):/);
+    expect(r.source.match(/class _Ntp/g)).toHaveLength(1); // one closure, one helper class
     expect(r.warnings).toEqual([]);
   });
 
-  it("refuses a flow with no WiFi config", () => {
-    expect(() => compile(flow([]), registry)).toThrow(/ntp node needs a WiFi network/);
+  it("refuses a flow with no WiFi config", async () => {
+    await expect(compileWithHooks(flow([]), registry)).rejects.toThrow(/needs a WiFi network/);
   });
 
-  it("compiles with nothing wired in (sends after each sync), warns with nothing wired out", () => {
+  it("compiles with nothing wired in, and warns when nothing is wired out", async () => {
     const alone: GraphData = { nodes: [{ id: "n1", type: "thingstudio/ntp", properties: {} }], links: [], configs: [WIFI] };
-    const r = compile(alone, registry);
-    expect(r.warnings).toEqual(["ntp node n1 sends the time nowhere: wire its output to something."]);
+    const r = await compileWithHooks(alone, registry);
+    expect(r.warnings).toEqual(["thingstudio/ntp (node n1): sends the time nowhere: wire its output to something"]);
   });
 
   it("validates its properties", () => {
-    const bad = (p: Record<string, unknown>) => () => ntpNode.codegenSink!(node(p), freshCtx());
-    expect(bad({ utcOffset: 15 })).toThrow(CompileError);
-    expect(bad({ utcOffset: "x" })).toThrow(/UTC offset "x"/);
-    expect(bad({ dst: "us" })).toThrow(/eu or none/);
-    expect(bad({ server: "a b;c" })).toThrow(/NTP server/);
-    expect(bad({ format: "rfc822" })).toThrow(/format "rfc822" must be one of unix, time/);
+    const bad = (p: Record<string, unknown>): string => {
+      try {
+        cfg(p);
+        return "";
+      } catch (err) {
+        return err instanceof Error ? err.message : String(err);
+      }
+    };
+    expect(bad({ utcOffset: 15 })).toMatch(/UTC offset must be hours from -12 to 14/);
+    expect(bad({ utcOffset: "x" })).toMatch(/offset must be a number/);
+    expect(bad({ dst: "us" })).toMatch(/eu or none/);
+    expect(bad({ server: "a b;c" })).toMatch(/NTP server|ntp server/);
+    expect(bad({ format: "rfc822" })).toMatch(/not recognised/);
   });
 });

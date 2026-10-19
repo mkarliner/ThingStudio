@@ -9,7 +9,8 @@ Sets the board's clock from the internet and sends the time, as text for a displ
 - **daylight saving** — **UK / EU: automatic** adds an hour from 01:00 UTC on the last Sunday of March to 01:00 UTC
   on the last Sunday of October. **none** leaves the offset alone. For other countries' rules, set the offset
   yourself.
-- **format** — what goes in `payload`. Each message also carries every format as a field of the same name:
+- **format** — what goes in `payload`. Each message also carries every format as a field of the same name.
+- **WiFi** — the flow's WiFi network, shared by every WiFi node.
 
 | format | `payload` |
 | --- | --- |

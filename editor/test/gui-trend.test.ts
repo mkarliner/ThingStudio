@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { compile } from "../src/compiler/compile.js";
+import { compileWithHooks } from "./compile-with-hooks.js";
 import { parseFlowFile } from "../src/flow-file/flow-file.js";
 import { trendNatural, widgetNatural } from "../src/gui/widgets.js";
 import { buildRegistry } from "../src/node-library/registry.js";
@@ -16,7 +16,7 @@ function load() {
   return parseFlowFile(readFileSync(join(__dirname, "..", "..", "test-flows", "gui-headliner-sensor-freenove-s3-4in.flow.json"), "utf8"));
 }
 
-function compileFlow(mutate?: (f: ReturnType<typeof load>) => void) {
+async function compileFlow(mutate?: (f: ReturnType<typeof load>) => void) {
   const f = load();
   mutate?.(f);
   const links = f.edges.map((e, i) => [i, e[0], e[1], e[2], e[3], "any"] as [number, string, number, string, number, string]);
@@ -25,7 +25,7 @@ function compileFlow(mutate?: (f: ReturnType<typeof load>) => void) {
     c.type === "thingstudio/config/mqtt-broker" ? { ...c, properties: { ...c.properties, broker: "broker.test", port: 1883 } }
     : c.type === "thingstudio/config/wifi" ? { ...c, properties: { ...c.properties, ssid: "net", password: "pw" } }
     : c);
-  return compile({ nodes: f.nodes, links, configs, screens: f.screens }, buildRegistry());
+  return compileWithHooks({ nodes: f.nodes, links, configs, screens: f.screens }, buildRegistry());
 }
 
 describe("trend widget", () => {
@@ -35,26 +35,26 @@ describe("trend widget", () => {
     expect(widgetNatural("trend", { columns: 10, col_width: 2, height: 20 })).toEqual({ width: 24, height: 20 });
   });
 
-  it("compiles to a tsgui_trend draw with its range and column width, and ships that library", () => {
-    const { source } = compileFlow();
+  it("compiles to a tsgui_trend draw with its range and column width, and ships that library", async () => {
+    const { source } = await compileFlow();
     expect(source).toContain('_gui.widget("n22-ttrend1", tsgui_trend.make(15, 30, 3), 30000)');
     expect(source).toContain("import tsgui_trend");
   });
 
-  it("refuses a range with the top at or below the bottom, naming the widget", () => {
-    expect(() =>
+  it("refuses a range with the top at or below the bottom, naming the widget", async () => {
+    await expect(
       compileFlow((f) => {
         const n = f.nodes.find((x) => x.id === "n22-ttrend1")!;
         n.properties.lo = 30;
         n.properties.hi = 30;
       }),
-    ).toThrow(/range low 30 must be below high 30/);
+    ).rejects.toThrow(/range low 30 must be below high 30/);
   });
 });
 
 describe("journal in a flow", () => {
-  it("compiles one ring per journal, each journal carrying its own class", () => {
-    const { source } = compileFlow();
+  it("compiles one ring per journal, each journal carrying its own class", async () => {
+    const { source } = await compileFlow();
     // journal is a core package now: each instance is its own closure, so the class is defined per instance
     // (three journals here). Behaviour is identical (builtins-as-packages-scoping.md §14).
     expect(source.match(/class _Journal/g)?.length).toBe(3);
@@ -64,16 +64,16 @@ describe("journal in a flow", () => {
     expect(source).toContain('"stepSeconds": 60');
   });
 
-  it("the headliner also publishes each reading over MQTT", () => {
-    const { source } = compileFlow();
+  it("the headliner also publishes each reading over MQTT", async () => {
+    const { source } = await compileFlow();
     for (const t of ["temperature", "humidity", "pressure"]) expect(source).toContain(`thingstudio/headliner/${t}`);
   });
 
-  it("a flow with a bad journal property says which one", () => {
-    expect(() =>
+  it("a flow with a bad journal property says which one", async () => {
+    await expect(
       compileFlow((f) => {
         f.nodes.find((x) => x.id === "n20-tj1")!.properties.rows = 0;
       }),
-    ).toThrow(/property "rows" 0 is below its minimum, 1/);
+    ).rejects.toThrow(/property "rows" 0 is below its minimum, 1/);
   });
 });

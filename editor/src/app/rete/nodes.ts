@@ -164,7 +164,7 @@ import { descriptor as httpResponseCoreDescriptor } from "../../node-library/cor
 import { descriptor as delayCoreDescriptor } from "../../node-library/core-packages/delay.js";
 import { descriptor as filterCoreDescriptor } from "../../node-library/core-packages/filter.js";
 import { descriptor as journalCoreDescriptor } from "../../node-library/core-packages/journal.js";
-import { ntpNode } from "../../node-library/ntp.js";
+import { descriptor as ntpCoreDescriptor } from "../../node-library/core-packages/ntp.js";
 import { descriptor as bme280CoreDescriptor } from "../../node-library/core-packages/bme280.js";
 import { touchI2cNode } from "../../node-library/touch-i2c.js";
 import type { NodeDescriptor } from "../../compiler/node-definition.js";
@@ -450,7 +450,7 @@ export class I2cNode extends buildDescriptorNodeClass(i2cCoreDescriptor) {}
 
 export class Bme280Node extends buildDescriptorNodeClass(bme280CoreDescriptor) {}
 
-export class NtpNode extends buildDescriptorNodeClass(ntpNode) {}
+export class NtpNode extends buildDescriptorNodeClass(ntpCoreDescriptor) {}
 
 export class UdpSendNode extends buildDescriptorNodeClass(udpSendCoreDescriptor) {}
 

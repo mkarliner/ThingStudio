@@ -59,8 +59,8 @@ library. The rest of the network family splits by the capability each still need
 
 - **Portable ones all flipped 2026-10-19:** `http-request` (URL/method/timeout validated in the hook), `udp-send`,
   `udp-receive`, plus `wifi_status`/`wifi_gate` — the same hook pattern throughout.
-- **`ntp` — two-faced; the package format now supports it (2026-10-19).** A sink may set `eventSource: true` and
-  define `run`/`wait`/`emit` from one closure. The port itself is the remaining work.
+- **`ntp` — flipped 2026-10-19.** Two-faced package: `run` pokes the clock, `wait`/`emit` send after a sync; the
+  hook validates the server/offset/DST/format and derives WiFi.
 - **`mqtt-publish` / `mqtt-subscribe` — blocked on cross-instance shared setup.** One `MQTTClient` is shared by
   every node on the same broker (compile-time key dedup + module variables). A package's per-instance setup
   cannot express that; it needs a shared device library (the `ts_wifi` pattern) or a designed `runtime.shared`

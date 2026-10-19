@@ -942,4 +942,5 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   Not valid on a `transform`. Added to the canonical descriptor, the custom schema and the SPEC; the generic
   package codegen caches the setup per node/context so both faces emit one closure, not two. This unblocks `ntp`
   and the future dynamic `mqtt_subscribe` (see `outstanding-items/mqtt-dynamic-subscription.md`). Approved with
-  "continue" after the 2026-10-19 review recommended it; additive, saved flows unaffected.
+  "continue" after the 2026-10-19 review recommended it; additive, saved flows unaffected. **`ntp` flipped the same
+  day**, the first two-faced package: `run` pokes the clock, `wait`/`emit` send after a sync, one closure.

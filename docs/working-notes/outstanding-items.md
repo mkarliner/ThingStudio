@@ -361,7 +361,7 @@ not here.
   synchronous `compile()`. Context building, result validation, the pre-pass, compile integration, the vendored WASI
   interpreter, the worker runner, backend/loader support and `main.ts` wiring all landed. Next: the first real
   package: **`wifi_status` and `wifi_gate` flipped 2026-10-19** with the `ts_wifi` shared bring-up library; the
-  remaining network nodes split: `http-request`/`udp-send`/`udp-receive` all flipped too; `ntp` is unblocked (two-faced packages landed 2026-10-19); `mqtt-publish`/`mqtt-subscribe` need cross-instance shared client setup; `http-in`
+  remaining network nodes split: `http-request`/`udp-send`/`udp-receive` all flipped too; `ntp` flipped 2026-10-19 (two-faced packages landed the same day); `mqtt-publish`/`mqtt-subscribe` need cross-instance shared client setup; `http-in`
   needs a sibling scan and a per-port shared server. Still open: a browser pass, conformance vectors, and CLI
   custom-node loading.
   Until then, hold the flow-query vocabulary (`hasNode`/`nodesOfType`) and promoting core-only vocabulary to the
