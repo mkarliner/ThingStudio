@@ -4539,6 +4539,7 @@ Type `thingstudio/http_in`, kind source, palette group network.
     - `path`, string, default `"/"`
     - `method`, string, default `"GET"`
     - `responseTimeoutMs`, number, default `10000`
+    - `wifiConfigId`, string, default `""`, the id of a `thingstudio/config/wifi` config
 
 ### http request
 
