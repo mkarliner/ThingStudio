@@ -69,6 +69,7 @@ import type {
   NodeKind,
   PayloadType,
   PortDefinition,
+  PortTypeFromProperty,
   PropertyFieldDescriptor,
   ResourceSpec,
   SinkCodegenResult,
@@ -98,7 +99,7 @@ export class CustomNodeDescriptorError extends Error {}
 
 export interface CustomNodePort {
   name: string;
-  type: PayloadType;
+  type: PayloadType | PortTypeFromProperty;
 }
 
 export interface CustomNodePropertyOption {
@@ -220,10 +221,34 @@ function validatePort(raw: unknown, where: string): CustomNodePort {
   const name = requireString(rec, "name");
   if (!IDENTIFIER_RE.test(name)) fail(`${where}.name "${name}" must be a valid identifier (letters/digits/underscore, not starting with a digit)`);
   const type = rec.type;
-  if (typeof type !== "string" || !PAYLOAD_TYPES.includes(type as PayloadType)) {
-    fail(`${where}.type must be one of ${PAYLOAD_TYPES.join(", ")}, got ${JSON.stringify(type)}`);
+  if (typeof type === "string") {
+    if (!PAYLOAD_TYPES.includes(type as PayloadType)) {
+      fail(`${where}.type must be one of ${PAYLOAD_TYPES.join(", ")}, or {property, map, default}, got ${JSON.stringify(type)}`);
+    }
+    return { name, type: type as PayloadType };
   }
-  return { name, type: type as PayloadType };
+  if (typeof type !== "object" || type === null || Array.isArray(type)) {
+    fail(`${where}.type must be one of ${PAYLOAD_TYPES.join(", ")}, or {property, map, default}, got ${JSON.stringify(type)}`);
+  }
+  const data = type as Record<string, unknown>;
+  const property = requireString(data, "property");
+  const mapRaw = data.map;
+  if (typeof mapRaw !== "object" || mapRaw === null || Array.isArray(mapRaw)) {
+    fail(`${where}.type.map must be an object of option value -> payload type`);
+  }
+  const map: Record<string, PayloadType> = {};
+  for (const [key, value] of Object.entries(mapRaw as Record<string, unknown>)) {
+    if (typeof value !== "string" || !PAYLOAD_TYPES.includes(value as PayloadType)) {
+      fail(`${where}.type.map["${key}"] must be one of ${PAYLOAD_TYPES.join(", ")}`);
+    }
+    map[key] = value as PayloadType;
+  }
+  if (Object.keys(map).length === 0) fail(`${where}.type.map must not be empty`);
+  const fallback = data.default;
+  if (typeof fallback !== "string" || !PAYLOAD_TYPES.includes(fallback as PayloadType)) {
+    fail(`${where}.type.default must be one of ${PAYLOAD_TYPES.join(", ")}`);
+  }
+  return { name, type: { property, map, default: fallback as PayloadType } };
 }
 
 function validatePredicate(raw: unknown, where: string): FieldPredicate {
@@ -413,6 +438,25 @@ export function validateCustomNodeDescriptor(raw: unknown): CustomNodeDescriptor
   for (const p of properties) {
     if (names.has(p.name)) fail(`duplicate property name "${p.name}"`);
     names.add(p.name);
+  }
+
+  // A data-form port type must read a declared select property, and every map key must be one of its options --
+  // otherwise the canvas could silently show a type the property can never select.
+  for (const port of [...inputs, ...outputs]) {
+    const type = port.type;
+    if (typeof type === "string") continue;
+    const field = properties.find((p) => p.name === type.property);
+    if (field === undefined) {
+      fail(`port "${port.name}" type reads property "${type.property}", which the descriptor does not declare`);
+    }
+    if (field.kind !== "select" || field.options === undefined) {
+      fail(`port "${port.name}" type property "${field.name}" must be a select with options`);
+    }
+    for (const key of Object.keys(type.map)) {
+      if (!field.options.some((o) => String(o.value) === key)) {
+        fail(`port "${port.name}" type maps option "${key}", which property "${field.name}" does not offer`);
+      }
+    }
   }
 
   const isEventSource = obj.eventSource === true;

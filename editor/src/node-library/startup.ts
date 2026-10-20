@@ -32,17 +32,13 @@
 // why this was a minor runtime bump, not a major one.
 
 import type { GraphNode } from "../compiler/graph.js";
-import type { CodegenContext, PayloadType, SourceCodegenResult } from "../compiler/node-definition.js";
+import type { CodegenContext, SourceCodegenResult } from "../compiler/node-definition.js";
 import type { NodeDefinition } from "../compiler/node-definition.js";
 import { pyPayloadLiteral } from "./py-literals.js";
+import { STARTUP_PAYLOAD_TYPE_PORT } from "./port-type-data.js";
 
 /** Python expression for why the flow started (see this file's header). */
 const START_REASON_EXPR = "getattr(runtime, 'start_reason', 'unknown')";
-
-function startupOutputType(payloadType: unknown): PayloadType {
-  if (payloadType === "reason") return "string";
-  return (payloadType as PayloadType | undefined) ?? "bool";
-}
 
 export const startupNode: NodeDefinition = {
   type: "thingstudio/startup",
@@ -62,7 +58,7 @@ export const startupNode: NodeDefinition = {
   // Same dynamic-output-type pattern as inject's own single port (see that
   // file's header comment) -- output type tracks `payloadType` exactly.
   ports: {
-    outputs: [{ name: "msg", type: (properties) => startupOutputType(properties.payloadType) }],
+    outputs: [{ name: "msg", type: STARTUP_PAYLOAD_TYPE_PORT }],
   },
   properties: [
     {

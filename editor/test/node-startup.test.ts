@@ -16,6 +16,7 @@ import { compile } from "../src/compiler/compile.js";
 import { CompileError } from "../src/compiler/errors.js";
 import type { GraphData, GraphNode } from "../src/compiler/graph.js";
 import type { CodegenContext } from "../src/compiler/node-definition.js";
+import { resolvePortType } from "../src/compiler/node-definition.js";
 import { buildRegistry } from "../src/node-library/registry.js";
 import { startupNode } from "../src/node-library/startup.js";
 
@@ -81,8 +82,7 @@ describe("thingstudio/startup node", () => {
 
   it("payload type 'reason' sends the start reason as the payload, with a string output port", () => {
     expect(runBuildMsg({ payloadType: "reason" }, "payload", "deploy").trim()).toBe("deploy");
-    const type = startupNode.ports!.outputs![0]!.type;
-    expect(typeof type === "function" ? type({ payloadType: "reason" }) : type).toBe("string");
+    expect(resolvePortType(startupNode.ports!.outputs![0]!, { payloadType: "reason" })).toBe("string");
   });
 
   it("falls back to 'unknown' on a runtime older than 5.1.0, which has no start_reason", () => {

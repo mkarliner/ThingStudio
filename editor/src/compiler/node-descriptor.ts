@@ -24,10 +24,20 @@ export type NodeKind = "source" | "transform" | "sink";
 export type PayloadType = "int" | "number" | "bool" | "string" | "bytes" | "any";
 
 // A port's type is usually fixed, but not always -- inject's single output is `bool`/`number`/
-// `string` depending on its own `payloadType` property, the one node whose port type isn't static.
-// A function taking the node's resolved `properties` covers that case without a second, parallel
-// mechanism for "ports that can retype" -- see resolvePortType below.
-export type PortType = PayloadType | ((properties: Record<string, unknown>) => PayloadType);
+// `string` depending on its own `payloadType` property. The data form below covers that case: it is
+// serializable, so a custom `.node.json` and a built-in descriptor express it the same way (the
+// project's data-equivalent rule). The old JS-function form was removed 2026-10-20 when the last
+// three users (inject, startup, variable_get) moved to this form.
+export interface PortTypeFromProperty {
+  /** The node property whose value selects the type. */
+  readonly property: string;
+  /** Property value -> payload type. */
+  readonly map: Readonly<Record<string, PayloadType>>;
+  /** Used when the property is missing or has no mapping. */
+  readonly default: PayloadType;
+}
+
+export type PortType = PayloadType | PortTypeFromProperty;
 
 export interface PortDefinition {
   /** Must match the port's key in the node's own descriptor/class exactly. */
@@ -36,9 +46,12 @@ export interface PortDefinition {
 }
 
 /** Resolves a possibly-dynamic PortDefinition against one node instance's current properties. The one
- * place `typeof type === "function"` gets checked -- callers never branch on that themselves. */
+ * place the data form gets interpreted -- callers never branch on that themselves. */
 export function resolvePortType(port: PortDefinition, properties: Record<string, unknown>): PayloadType {
-  return typeof port.type === "function" ? port.type(properties) : port.type;
+  const type = port.type;
+  if (typeof type === "string") return type;
+  const mapped = type.map[String(properties[type.property])];
+  return mapped ?? type.default;
 }
 
 // The property-panel field vocabulary. The first four (text/number/boolean/select) are the

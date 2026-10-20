@@ -20,8 +20,11 @@ describe("custom node descriptor schema conformance", () => {
     expect(schema.properties.kind.enum).toEqual([...NODE_KINDS]);
   });
 
-  it("port type enum matches the validator", () => {
-    expect(schema.$defs.port.properties.type.enum).toEqual([...PAYLOAD_TYPES]);
+  it("port type data form matches the validator", () => {
+    const type = schema.$defs.port.properties.type;
+    expect(type.oneOf[0].enum).toEqual([...PAYLOAD_TYPES]);
+    expect(type.oneOf[1].properties.default.enum).toEqual([...PAYLOAD_TYPES]);
+    expect(type.oneOf[1].properties.map.additionalProperties.enum).toEqual([...PAYLOAD_TYPES]);
   });
 
   it("property kind enum matches the validator", () => {

@@ -110,12 +110,24 @@ no property. Used for a `configRef` to a flow-singleton config (e.g. the WiFi pi
 node). Fields may also carry `optional`, `min`/`max`/`step` (`step` may be the literal `"any"` for
 arbitrary fractional values), `help`, `placeholder`, `visibleWhen` (a serializable conditional: show the
 field only when `properties[field]` equals/notEquals/is in/compares against a value), and `retype` (changing
-the field re-resolves the node's port sockets — for a port whose
-`type` is a function of properties, e.g. inject/startup's output tracking `payloadType`). A numeric field may also
+the field re-resolves the node's port sockets — for a data-form port type, e.g. inject/startup's output tracking
+`payloadType`). A numeric field may also
 carry **`lessThan`** (the name of another property it must be below, checked at compile time — e.g. ebutton's
 `doubleClickMs` less than `longPressMs`); core-only, added 2026-10-16. A field may also be **`hidden`** (a core
 package reads it, but the property panel and catalog omit it — used for a legacy property kept only for compile
 compatibility, e.g. display_i2c's node-level bus pins); core-only, added 2026-10-16.
+
+A port's `type` is either a payload type (`"any"`, `"string"`, ...) or a **data form** that follows a select
+property:
+
+```json
+{"property": "payloadType", "map": {"bool": "bool", "number": "number", "string": "string"}, "default": "bool"}
+```
+
+The value of `property` picks the wire type; an unset or unmapped value uses `default`. The form is serializable,
+so a built-in descriptor and a custom `.node.json` express it the same way — the project's data-equivalent rule.
+The JS-function form was removed 2026-10-20 with the last three users (inject, startup, variable_get). A custom
+descriptor's data form must name a declared `select` property, and every map key must be one of its options.
 
 **Worked example** — the built-in `debug` node's descriptor (its codegen hook omitted):
 

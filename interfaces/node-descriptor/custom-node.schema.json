@@ -56,7 +56,22 @@
       "required": ["name", "type"],
       "properties": {
         "name": { "type": "string", "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$", "description": "Port key, a Python identifier." },
-        "type": { "enum": ["int", "number", "bool", "string", "bytes", "any"], "description": "Wire type, checked when wires are drawn." }
+        "type": {
+          "oneOf": [
+            { "enum": ["int", "number", "bool", "string", "bytes", "any"], "description": "Wire type, checked when wires are drawn." },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["property", "map", "default"],
+              "description": "A wire type that follows a select property on the node (e.g. payloadType).",
+              "properties": {
+                "property": { "type": "string", "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$", "description": "Name of a declared select property." },
+                "map": { "type": "object", "minProperties": 1, "additionalProperties": { "enum": ["int", "number", "bool", "string", "bytes", "any"] }, "description": "Option value -> wire type." },
+                "default": { "enum": ["int", "number", "bool", "string", "bytes", "any"], "description": "Used when the property is unset or has no mapping." }
+              }
+            }
+          ]
+        }
       }
     },
     "propertyField": {

@@ -59,8 +59,9 @@
 // nothing at all until a user clicks one.
 
 import type { GraphNode } from "../compiler/graph.js";
-import type { CodegenContext, EventSourceCodegenResult, NodeDefinition, PayloadType } from "../compiler/node-definition.js";
+import type { CodegenContext, EventSourceCodegenResult, NodeDefinition } from "../compiler/node-definition.js";
 import { pyPayloadLiteral } from "./py-literals.js";
+import { PAYLOAD_TYPE_PORT } from "./port-type-data.js";
 
 export const injectNode: NodeDefinition = {
   type: "thingstudio/inject",
@@ -82,7 +83,7 @@ export const injectNode: NodeDefinition = {
   // Falls back to "bool" for an unset/unrecognized value, matching
   // codegenEventSource's own `?? "bool"` default.
   ports: {
-    outputs: [{ name: "msg", type: (properties) => (properties.payloadType as PayloadType | undefined) ?? "bool" }],
+    outputs: [{ name: "msg", type: PAYLOAD_TYPE_PORT }],
   },
   properties: [
     {

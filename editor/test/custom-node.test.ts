@@ -22,7 +22,7 @@ import { describe, expect, it } from "vitest";
 import { compile } from "../src/compiler/compile.js";
 import { CompileError } from "../src/compiler/errors.js";
 import type { GraphData, GraphNode } from "../src/compiler/graph.js";
-import { evaluatePredicate } from "../src/compiler/node-descriptor.js";
+import { evaluatePredicate, resolvePortType } from "../src/compiler/node-descriptor.js";
 import type { CodegenContext } from "../src/compiler/node-definition.js";
 import type { Target } from "../src/definitions/target.js";
 import { buildRegistry } from "../src/node-library/registry.js";
@@ -885,5 +885,66 @@ describe("select option values", () => {
     const def = buildCustomNodeDefinition(descriptor, "async def run(msg, properties):\n    pass\n");
     const result = def.codegenSink!(node(1, { addr: 118 }), freshCtx());
     expect((result.statements ?? []).map((s) => s.code).join("\n")).toContain('"addr": 118');
+  });
+});
+
+describe("validateCustomNodeDescriptor: property-dependent port types", () => {
+  const DATA_PORT_RAW = {
+    type: "custom/typed",
+    kind: "source",
+    eventSource: true,
+    label: "typed",
+    ports: {
+      outputs: [
+        { name: "msg", type: { property: "payloadType", map: { bool: "bool", number: "number" }, default: "bool" } },
+      ],
+    },
+    properties: [
+      {
+        name: "payloadType",
+        label: "payload type",
+        kind: "select",
+        default: "bool",
+        options: [
+          { value: "bool", label: "Bool" },
+          { value: "number", label: "Number" },
+        ],
+      },
+    ],
+  };
+
+  it("accepts the data form and resolves it against the instance's property", () => {
+    const d = validateCustomNodeDescriptor(DATA_PORT_RAW);
+    const port = d.ports!.outputs![0]!;
+    expect(port.type).toEqual({ property: "payloadType", map: { bool: "bool", number: "number" }, default: "bool" });
+    expect(resolvePortType(port, { payloadType: "number" })).toBe("number");
+    expect(resolvePortType(port, {})).toBe("bool");
+  });
+
+  it("rejects a map key the select property does not offer", () => {
+    const raw = structuredClone(DATA_PORT_RAW) as any;
+    raw.ports.outputs[0]!.type.map = { string: "string" };
+    expect(() => validateCustomNodeDescriptor(raw)).toThrow(/does not offer/);
+  });
+
+  it("rejects a property the descriptor does not declare", () => {
+    const raw = structuredClone(DATA_PORT_RAW);
+    raw.ports.outputs[0]!.type.property = "missing";
+    expect(() => validateCustomNodeDescriptor(raw)).toThrow(/does not declare/);
+  });
+
+  it("rejects a type property that is not a select", () => {
+    const raw = structuredClone(DATA_PORT_RAW);
+    raw.properties[0]!.kind = "text";
+    expect(() => validateCustomNodeDescriptor(raw)).toThrow(/must be a select/);
+  });
+
+  it("rejects an unknown payload type in the map or default", () => {
+    const badMap = structuredClone(DATA_PORT_RAW) as any;
+    badMap.ports.outputs[0]!.type.map = { bool: "text" };
+    expect(() => validateCustomNodeDescriptor(badMap)).toThrow(/map\["bool"\]/);
+    const badDefault = structuredClone(DATA_PORT_RAW) as any;
+    badDefault.ports.outputs[0]!.type.default = "text";
+    expect(() => validateCustomNodeDescriptor(badDefault)).toThrow(/default must be one of/);
   });
 });

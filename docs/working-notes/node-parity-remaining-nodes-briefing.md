@@ -100,8 +100,8 @@ Residue (built-in-only by design, not goals): **`function`** (verbatim user code
 3. **Flow-context vocabulary for the network family — held, not dropped.** `network-family-flow-context-scoping.md`
    is the inventory; if the hook goes ahead, most of it is replaced by the hook (`wifi_status` is the first target).
    If not, the `hasNode`/`nodesOfType` forms in that note are the fallback.
-4. **A data form for property-dependent port types** (unblocks `inject`/`startup`/`variable_get`). **Not held**
-   (Mike, 2026-10-18): bounded, editor-side, a poor fit for a hook — an explicit exception to the hook direction.
+4. ~~**A data form for property-dependent port types**~~ — **landed 2026-10-20**. `inject`/`startup` use it;
+   `variable_get` too, but its package conversion waits on the shared flow-vars store with `variable_set`.
 5. Then the hardware remainder (`touch-i2c`, `display-spi`, `adc`) as separate, ideally hardware-verified tasks.
 
 ## Constraints and gotchas

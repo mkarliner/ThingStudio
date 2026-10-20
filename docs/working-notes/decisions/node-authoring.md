@@ -938,6 +938,12 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   The two package-format gaps that came out of the rest were closed as they were reached: two-faced packages
   (sink + event source) and the shared device library.
 
+- **2026-10-20 — property-dependent port type is data now.** A port's `type` may be
+  `{property, map, default}`; the JS-function form is removed. It is in the canonical `NodeDescriptor` and
+  `custom-node.schema.json`, and the custom validator checks that the property is a declared `select` and that
+  every map key is one of its options. `inject`/`startup`/`variable_get` use it. This closes the last named
+  data-equivalent corner (with `dynamicOutputs` already data). `variable_get`'s package conversion still waits on
+  a shared flow-vars store with `variable_set` (the context-model Q3).
 - **2026-10-19 — two-faced packages (sink + event source).** A `sink` may now set `eventSource: true`, declaring
   one input and one output; `.node.py` defines `run(msg, properties)` for the input face and `wait(properties)` /
   `emit(properties)` for the output face, all from the same per-instance closure (so `nonlocal` state is shared).

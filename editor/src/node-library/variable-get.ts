@@ -23,16 +23,17 @@
 
 import { CompileError } from "../compiler/errors.js";
 import type { GraphNode } from "../compiler/graph.js";
-import type { CodegenContext, NodeDefinition, PayloadType, TransformCodegenResult } from "../compiler/node-definition.js";
+import type { CodegenContext, NodeDefinition, TransformCodegenResult } from "../compiler/node-definition.js";
 import { pyPayloadLiteral, pyStringLiteral } from "./py-literals.js";
 import { FLOW_VARS_DICT } from "./variable-set.js";
+import { PAYLOAD_TYPE_PORT } from "./port-type-data.js";
 
 export const variableGetNode: NodeDefinition = {
   type: "thingstudio/variable_get",
   kind: "transform",
   ports: {
     inputs: [{ name: "msg", type: "any" }],
-    outputs: [{ name: "msg", type: (properties) => (properties.payloadType as PayloadType | undefined) ?? "bool" }],
+    outputs: [{ name: "msg", type: PAYLOAD_TYPE_PORT }],
   },
   codegenTransform(node: GraphNode, ctx: CodegenContext): TransformCodegenResult {
     const name = String(node.properties.name ?? "").trim();

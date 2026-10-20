@@ -20,6 +20,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { compile } from "../src/compiler/compile.js";
 import { CompileError } from "../src/compiler/errors.js";
+import { resolvePortType } from "../src/compiler/node-definition.js";
 import type { GraphData } from "../src/compiler/graph.js";
 import { buildRegistry } from "../src/node-library/registry.js";
 import { variableGetNode } from "../src/node-library/variable-get.js";
@@ -145,12 +146,8 @@ describe("thingstudio/variable_get and thingstudio/variable_set", () => {
     const outputs = variableGetNode.ports?.outputs;
     expect(outputs).toHaveLength(1);
     expect(outputs?.[0]?.name).toBe("msg");
-    const resolve = outputs?.[0]?.type;
-    expect(typeof resolve).toBe("function");
-    if (typeof resolve === "function") {
-      expect(resolve({})).toBe("bool"); // default when unconfigured
-      expect(resolve({ payloadType: "number" })).toBe("number");
-    }
+    expect(resolvePortType(outputs![0]!, {})).toBe("bool"); // default when unconfigured
+    expect(resolvePortType(outputs![0]!, { payloadType: "number" })).toBe("number");
   });
 
   it("variable_set declares matching any input and output ports", () => {
