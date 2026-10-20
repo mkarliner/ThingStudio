@@ -435,13 +435,14 @@ Type `thingstudio/mqtt_publish`, kind sink, palette group network.
 
 ### mqtt subscribe
 
-Type `thingstudio/mqtt_subscribe`, kind source, palette group network.
+Type `thingstudio/mqtt_subscribe`, kind sink, palette group network.
 
-- Inputs: none
+- Inputs: msg (any)
 - Outputs: msg (any)
 - Properties (name, type, default):
     - `topic`, string, default `""`
     - `qos`, number, default `0`
+    - `dynamic`, boolean, default `false`
     - `brokerConfigId`, string, default `""`, the id of a `thingstudio/config/mqtt-broker` config
     - `wifiConfigId`, string, default `""`, the id of a `thingstudio/config/wifi` config
 

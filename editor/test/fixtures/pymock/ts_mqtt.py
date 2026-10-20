@@ -231,8 +231,9 @@ class _Client:
         if topics is not None:
             topics.discard(topic)
         holders = self.subs.get(topic)
-        if holders is not None:
-            holders.discard(node_id)
+        if holders is None:
+            return
+        holders.discard(node_id)
         if not holders:
             self.subs.pop(topic, None)
             self.qos.pop(topic, None)

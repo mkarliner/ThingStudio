@@ -185,12 +185,10 @@ not here.
   after the power cycle, and keep the first console lines after reconnecting.
 
 - **[P4]** **Suspected: `mqtt_publish`/`mqtt_subscribe` sharing one broker client have no publish-after-subscribe-confirmed ordering guarantee at flow boot -- likely (co-)cause of a real silent-failure hardware test, 2026-09-02, unconfirmed pending a targeted fix+retest.** ([detail](outstanding-items/mqtt-pubsub-boot-race.md))
-- **[P3]** **MQTT dynamic subscription (subscribe/unsubscribe at run time) -- new item, 2026-10-19.** Today a
-  subscription lasts the flow's life; unsubscribing means deleting the node and redeploying. Node-RED's `mqtt in` has
-  a dynamic mode (`msg.action` subscribe/unsubscribe). Not built; priority is Mike's call. `ts_mqtt` landed
-  2026-10-19 with the required per-node registry: routing, last-node unsubscribe, resubscribe after reconnect.
-  The node still needs its input face (`msg.action`), which is the remaining work.
-  ([detail](outstanding-items/mqtt-dynamic-subscription.md))
+- **[P3]** **MQTT dynamic subscription (subscribe/unsubscribe at run time) -- built 2026-10-20.** `mqtt_subscribe`
+  is two-faced and takes `msg.action` subscribe/unsubscribe with a string or list `msg.topic`; `ts_mqtt` supplies
+  the per-node registry (routing, last-node unsubscribe, resubscribe after reconnect). `connect`/`disconnect` are
+  deliberately excluded. ([detail](outstanding-items/mqtt-dynamic-subscription.md))
 - **[P4]** **MQTTS (MQTT over TLS) — not built, deferred on Mike's explicit call (2026-08-21).** Vendored `mqtt_as`'s `config` dict already has unused `ssl`/`ssl_params` keys; checked against the one-way-door principle before deferring — a config's `properties` is a plain JSON blob, so this isn't a one-way door. Nothing reserved. ([detail](outstanding-items/mqtts-tls-deferred.md))
 - **[POST-MVP]** **TCP send / TCP listen-receive — never built; deferred past MVP (Mike, 2026-09-26).** `udp-tcp-nodes-implementation-briefing.md` scoped four node types; only UDP send/receive landed. TCP send needs a lazy-expiry connection cache; TCP listen-receive needs a callback-to-coroutine bridge design. Tracked in `mvp-feature-priorities.md` Tier 1 item 5 point 3. ([detail](outstanding-items/tcp-send-listen-receive.md))
 - **[P3]** **I2C/SPI sensor nodes — BME280/BMP280 built 2026-09-26** (on Pico hardware; TCS34725/MPU-9250 go through the generic `i2c` node until a tutorial needs a dedicated one). Was: not started at all. Tier 1 item 3, gated on having actual sensor hardware on hand. Also carries an unresolved fault-handling question (stuck I2C device hang) Mike flagged 2026-08-16, and gates on the I2C/SPI slave-mode witness-rig spike. ([detail](outstanding-items/i2c-spi-sensor-nodes.md))

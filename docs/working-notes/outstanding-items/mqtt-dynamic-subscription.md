@@ -1,8 +1,9 @@
 # MQTT dynamic subscription (subscribe/unsubscribe at run time)
 
 Added 2026-10-19, from Mike's question "on mqtt -- how do I unsubscribe?" and the reviewer's answer
-(`reviews/2026-10-19-reply-review-and-smoke-test.md` follow-up, same session). **Status: the shared library half
-landed 2026-10-19 (`ts_mqtt`, below); the node's input face is not built.** Priority is Mike's call.
+(`reviews/2026-10-19-reply-review-and-smoke-test.md` follow-up, same session). **Status: built 2026-10-20** --
+`ts_mqtt` landed the per-node registry on 2026-10-19, and `mqtt_subscribe` is now a two-faced package whose input
+face takes the actions below.
 
 ## Today
 
@@ -42,11 +43,15 @@ than designing them in. See `network-package-gaps-briefing.md` item 2.
    broker before a sibling's SUBSCRIBE) is best fixed in the same registry, by letting a publish wait for pending
    subscriptions on the same client. Not required by this item, but don't design it out.
 
-## Node shape when built
+## What landed, 2026-10-20
 
-Dynamic subscription makes `mqtt_subscribe` **two-faced**: an input face that takes action messages and an output
-face that emits received messages. That is the same capability as `ntp` needs -- `eventSource: true` on a `sink` in
-the package format (`reviews/2026-10-19-reply-review-and-smoke-test.md` §4). If that lands first, dynamic
-subscription is a small addition to the `mqtt_subscribe` package. Likely a property (Node-RED's "dynamic
-subscription" choice) that switches the input on; with it off, the node behaves exactly as today, so saved flows
-are unaffected.
+`mqtt_subscribe` is a two-faced package: `kind: "sink"` + `eventSource: true`, with an input and an output. A
+**dynamic subscription** boolean property (default off) gates the input face; off is exactly the old behaviour, and
+the port is simply unwired in saved flows. `msg.action` is `subscribe` or `unsubscribe`, `msg.topic` a string or
+list. `connect`/`disconnect` are deliberately not supported -- `ts_mqtt` has no disconnect that leaves WiFi alone --
+and any other action raises a clear error. The configured topic is subscribed at start; an action changes the set.
+Unsubscribing the configured topic lasts until the next reload.
+
+The input face reports an error when dynamic subscription is off, when the action is unknown, or when a topic is
+missing. Sibling nodes are independent: `ts_mqtt` only sends the broker an UNSUBSCRIBE when the last node on a topic
+lets go.

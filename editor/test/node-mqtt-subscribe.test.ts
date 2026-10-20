@@ -151,6 +151,25 @@ describe("thingstudio/mqtt_subscribe package", () => {
     expect(await hookError(graphWith({ topic: "t" }, [WIFI({ ssid: "MyNet", password: "" }), BROKER()]))).toMatch(/has no password but security is "password"/);
   });
 
+  it("compiles with an input wire as a two-faced node", async () => {
+    const graph: GraphData = {
+      nodes: [
+        { id: "1", type: "thingstudio/inject", properties: { payloadType: "string", payloadValue: "x", repeat: "manual" } },
+        { id: "2", type: TYPE, properties: { topic: "a", dynamic: true, brokerConfigId: "broker1" } },
+        { id: "3", type: "thingstudio/debug", properties: {} },
+      ],
+      links: [
+        [1, "1", 0, "2", 0, "any"],
+        [2, "2", 0, "3", 0, "any"],
+      ],
+      configs: [WIFI(), BROKER()],
+    };
+    const { source } = await compileWithHooks(graph, buildRegistry());
+    expect(source).toContain("await _broker.wait_message(");
+    expect(source).toContain("while True:");
+    expect(source).toContain("_mqtt_subscribe_call");
+  });
+
   it("compiles into a full flow as an event source", async () => {
     const graph: GraphData = {
       nodes: [
@@ -164,5 +183,102 @@ describe("thingstudio/mqtt_subscribe package", () => {
     expect(source).toContain("ts_mqtt.ensure_client(");
     expect(source).toContain("await _broker.wait_message(");
     expect(source).toContain("while True:");
+  });
+});
+
+// --- dynamic subscription (input face), 2026-10-20 ---------------------------------------------------------
+
+async function sinkScript(messages: Record<string, unknown>[], dynamic = true): Promise<string> {
+  const g = graphWith({ topic: "a", dynamic });
+  const registry = buildRegistry();
+  const hooks = await runCompileHooks(g, registry, runner);
+  const def = registry.get(TYPE)!;
+  const ctx: CodegenContext = {
+    uniqueName: (hint: string) => `_${hint}`,
+    hookResult: (id: string) => hooks.results.get(id),
+    resolveConfig: () => ({}),
+    findConfigsOfType: (type: string) => (g.configs ?? []).filter((c) => c.type === type),
+  };
+  const result = def.codegenSink!(g.nodes[0]!, ctx);
+  const calls: string[] = [];
+  messages.forEach((m, i) => {
+    calls.push(
+      "    try:",
+      `        await ${result.functionName}(${JSON.stringify(m)})`,
+      `        print('OK${i}', mqtt_as.CLIENTS[-1].subscriptions)`,
+      "    except Exception as e:",
+      `        print('ERR${i}', type(e).__name__, e)`,
+    );
+  });
+  const lines = [
+    "import runtime",
+    "asyncio = runtime.asyncio",
+    "import mqtt_as",
+    ...(result.imports ?? []),
+    ...(result.statements ?? []).map((s) => s.code),
+    "",
+    `async def ${result.functionName}(msg):`,
+    ...result.functionBody.split("\n").map((l) => `    ${l}`),
+    "",
+    "async def _main():",
+    ...calls,
+    "",
+    "asyncio.run(_main())",
+  ];
+  const dir = mkdtempSync(join(tmpdir(), "thingstudio-mqttdyn-"));
+  const scriptPath = join(dir, "_snippet.py");
+  writeFileSync(scriptPath, lines.join("\n"));
+  return execFileSync("python3", [scriptPath], {
+    env: { ...process.env, PYTHONPATH: join(__dirname, "fixtures", "pymock") },
+    encoding: "utf8",
+    timeout: 15_000,
+  });
+}
+
+describe("thingstudio/mqtt_subscribe dynamic subscription", () => {
+  it("has an input and an output and a dynamic property", () => {
+    const def = buildRegistry().get(TYPE)!;
+    expect(def.kind).toBe("sink");
+    expect(def.codegenEventSource).toBeDefined();
+    expect(def.ports?.inputs).toEqual([{ name: "msg", type: "any" }]);
+    expect(def.ports?.outputs).toEqual([{ name: "msg", type: "any" }]);
+    expect(def.properties?.some((p) => p.name === "dynamic")).toBe(true);
+  });
+
+  it("subscribes to a topic from an action message", async () => {
+    const out = await sinkScript([{ action: "subscribe", topic: "b" }]);
+    expect(out).toContain("MQTT_SUBSCRIBE topic='b'");
+    expect(out).toContain("OK0 [('b', 0)]");
+  });
+
+  it("subscribes to a list of topics", async () => {
+    const out = await sinkScript([{ action: "subscribe", topic: ["b", "c"] }]);
+    expect(out).toContain("MQTT_SUBSCRIBE topic='b'");
+    expect(out).toContain("MQTT_SUBSCRIBE topic='c'");
+  });
+
+  it("unsubscribes from a topic", async () => {
+    const out = await sinkScript([
+      { action: "subscribe", topic: "b" },
+      { action: "unsubscribe", topic: "b" },
+    ]);
+    expect(out).toContain("OK0 [('b', 0)]");
+    expect(out).toContain("OK1 []");
+    expect(out.match(/MQTT_UNSUBSCRIBE/g)?.length).toBe(1);
+  });
+
+  it("reports an unknown action", async () => {
+    const out = await sinkScript([{ action: "connect", topic: "b" }]);
+    expect(out).toContain("unknown action 'connect'");
+  });
+
+  it("reports a missing topic", async () => {
+    const out = await sinkScript([{ action: "subscribe" }]);
+    expect(out).toContain("needs a topic");
+  });
+
+  it("reports that dynamic subscription is off", async () => {
+    const out = await sinkScript([{ action: "subscribe", topic: "b" }], false);
+    expect(out).toContain("dynamic subscription is off");
   });
 });
