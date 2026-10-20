@@ -4514,13 +4514,14 @@ checked when the flow is compiled, and the error says what is allowed. See <a hr
 </li>
 </ul>
 <h3 id="mqtt-subscribe">mqtt subscribe</h3>
-<p>Type <code>thingstudio/mqtt_subscribe</code>, kind source, palette group network.</p>
+<p>Type <code>thingstudio/mqtt_subscribe</code>, kind sink, palette group network.</p>
 <ul>
-<li>Inputs: none</li>
+<li>Inputs: msg (any)</li>
 <li>Outputs: msg (any)</li>
 <li>Properties (name, type, default):<ul>
 <li><code>topic</code>, string, default <code>""</code></li>
 <li><code>qos</code>, number, default <code>0</code></li>
+<li><code>dynamic</code>, boolean, default <code>false</code></li>
 <li><code>brokerConfigId</code>, string, default <code>""</code>, the id of a <code>thingstudio/config/mqtt-broker</code> config</li>
 <li><code>wifiConfigId</code>, string, default <code>""</code>, the id of a <code>thingstudio/config/wifi</code> config</li>
 </ul>

@@ -2940,16 +2940,29 @@
 
 
 <h1 id="mqtt-subscribe">mqtt subscribe</h1>
-<p>Emits one message per incoming message on a subscribed MQTT topic.</p>
+<p>Emits one message per incoming message on a subscribed MQTT topic. With dynamic subscription on, its input changes
+the subscriptions while the flow runs.</p>
 <h2 id="properties">Properties</h2>
 <ul>
 <li><strong>topic</strong> — the topic to subscribe to. Required.</li>
 <li><strong>QoS</strong> — <code>0</code> or <code>1</code>. QoS 2 isn't supported.</li>
+<li><strong>dynamic subscription</strong> — accept subscribe/unsubscribe messages on the input (see below). Off by default.</li>
 <li><strong>broker</strong> — which MQTT broker config to use (see <a href="../../working-in-the-editor/#config-nodes">Editor in depth</a>). Required — won't compile without one.</li>
 </ul>
 <h2 id="behavior">Behavior</h2>
+<p>The node subscribes to <strong>topic</strong> when the flow starts, and keeps it subscribed.</p>
 <p>Uses the flow's WiFi network and its own broker config, same as <strong>mqtt publish</strong>. An "unmanaged" WiFi config isn't accepted here, for the same reason.</p>
 <p>The message carries the payload (decoded as text when possible, raw bytes otherwise), the actual topic it arrived on, and whether the broker sent it as a retained message.</p>
+<p><strong>Dynamic subscription.</strong> With it on, an input message changes what the node listens to:</p>
+<ul>
+<li><code>msg.action</code> is <code>subscribe</code> or <code>unsubscribe</code>.</li>
+<li><code>msg.topic</code> is a topic string or a list of them.</li>
+</ul>
+<p><code>unsubscribe</code> stops the node receiving that topic. Two nodes subscribed to the same topic are independent: one
+unsubscribing doesn't stop the other. The configured <strong>topic</strong> is subscribed at start, so turning dynamic
+subscription on doesn't interrupt anything; an <code>unsubscribe</code> for it takes effect until the next reload.</p>
+<p>With dynamic subscription off, a message on the input raises an error rather than being ignored. An unknown action,
+or an action without a topic, raises an error too.</p>
 <p>A subscription isn't guaranteed to be fully confirmed before an <strong>mqtt publish</strong> node on the same broker sends its first message. This is usually not an issue, but an early publish can go unheard by a subscriber that was still connecting.</p>
 <p>Shows a connection-status dot on the canvas (see <a href="../../working-in-the-editor/#node-status">Editor in depth</a>) once connected to a device, same as <strong>mqtt publish</strong>.</p>
 
