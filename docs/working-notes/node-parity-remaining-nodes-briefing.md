@@ -66,7 +66,9 @@ library. The rest of the network family splits by the capability each still need
   host:port, with a per-node subscription registry (routing, last-node unsubscribe, resubscribe after reconnect),
   the connect/retry/status code the old codegen emitted, and redeploy cleanup. Hardware-passed on ESP32-C3 (30 s
   and a 600 s soak) against a real broker.
-- **`http-in` — the sibling scan** (`nodesOfType`) plus one shared server per port.
+- **`http-in` — flipped 2026-10-20.** `ctx.nodesOfType` (new compile-context field) gives the hook the sibling
+  set, so the route table and duplicate detection stay compile-time; `ts_http_server`, shared through
+  `runtime.shared`, runs one server per port with a request queue per node. Hardware re-checked on the C3.
 
 Hardware, each its own design/verification task (see `shared-resource-facility-scoping.md` §9):
 - **`touch-i2c`** — nested config (`touch-panel` → `i2cConfigId`); not a small change (config field kinds live in

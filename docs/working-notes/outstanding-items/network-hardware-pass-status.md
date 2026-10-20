@@ -69,3 +69,8 @@ Two harness issues surfaced in the same pass, both fixed/recorded:
   pieces stay installed; deploying a quiet flow first avoids it. `network-packages-pass.md` records this.
 
 The full five-flow pass re-ran after the fix at 40s per flow: all five PASS, with the MQTT flow first.
+
+**Update, 2026-10-20: `http_in`/`http_response` re-checked after the package conversion.** The flow (http_in on
+8081, a function setting 201/"ok", http_response) deployed on the ESP32-C3 and `curl http://192.168.10.242:8081/status`
+returned `201` / `ok`; an unknown path returned 404. The server is now `ts_http_server`, shared per port through
+`runtime.shared`, with the route table built in the hook from the new `ctx.nodesOfType`.

@@ -80,6 +80,11 @@ describe("buildCompileContext", () => {
     expect(ctx.flow.nodes[0]).not.toHaveProperty("wired");
   });
 
+  it("lists only this node's own type in nodesOfType, including itself", () => {
+    const ctx = buildCompileContext({ graphData: graph, node: graph.nodes[0]!, descriptor, target });
+    expect(ctx.nodesOfType).toEqual([{ id: "s1", type: "custom/sensor", properties: { bus: "bus1", net: "ignored" } }]);
+  });
+
   it("resolves a named configRef and a singleton config into referencedConfigs", () => {
     const ctx = buildCompileContext({ graphData: graph, node: graph.nodes[0]!, descriptor, target });
     expect(ctx.referencedConfigs).toEqual({

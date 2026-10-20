@@ -60,7 +60,9 @@ UNSUBSCRIBE only when the last node lets go), resubscribe on reconnect from the 
 routed per node by wildcard match, and room for a "subscribed" signal a publish can wait on (the suspected boot race,
 `outstanding-items/mqtt-pubsub-boot-race.md`). Full list: `outstanding-items/mqtt-dynamic-subscription.md`.
 
-**3. `http-in` — sibling scan and a shared server.**
+**3. `http-in` — sibling scan and a shared server. DONE 2026-10-20:** `ctx.nodesOfType` (added to the compile
+context) gives the hook the full route table and keeps duplicate `(method, path)` a compile error; one
+`ts_http_server.Server` per port is shared through `runtime.shared`, with a queue per node.
 Builds the route table from every `http_in` node (`findNodesOfType` plus each node's properties), rejects duplicate
 `(method, path)` per port, and shares one server setup per port.
 Options: (a) a `nodesOfType` field kind (inline `[{id, properties}]`) + `runtime.shared('http_server', port, ...)`
@@ -88,7 +90,7 @@ route validation. Decide before building.
 1. Decide the shared-client design (`ts_mqtt`) and flip `mqtt-publish` / `mqtt-subscribe`; they are the highest-use
    network nodes and the `ts_wifi` pattern is proven.
 2. Decide two-faced packages and flip `ntp`.
-3. Decide the `http-in` design; it is the only node needing sibling data.
+3. ~~Decide the `http-in` design; it is the only node needing sibling data.~~ Done 2026-10-20.
 4. Then the real-browser and hardware passes, and the conformance vectors.
 
 ## Constraints and gotchas

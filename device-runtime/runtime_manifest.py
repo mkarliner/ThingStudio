@@ -61,6 +61,9 @@ DEPENDENCIES: list[dict] = [
     # Thingstudio's shared MQTT client (2026-10-19): one client per broker, per-node subscription registry, and
     # reconnection/resubscribe for the mqtt_publish/mqtt_subscribe packages.
     {"name": "ts_mqtt", "files": [("thingstudio_mqtt/ts_mqtt.py", "ts_mqtt.py")], "requires": ["mqtt_as"]},
+    # Thingstudio's shared HTTP server (2026-10-20): one server per port for the http_in package, with per-node
+    # queues and the compile-time route table.
+    {"name": "ts_http_server", "files": [("thingstudio_http/ts_http_server.py", "ts_http_server.py")], "requires": []},
     # FT6336U capacitive touch controller (Thingstudio's own small driver).
     {"name": "ft6336u", "files": [("ft6336u/ft6336u.py", "ft6336u.py")], "requires": []},
     # Thingstudio's own GUI subsystem (gui-layout-widget-system-scoping.md, phase 4): a library, not part of the

@@ -933,7 +933,8 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   `ntp` (two-faced) followed the same day, and **`mqtt-publish`/`mqtt-subscribe` landed 2026-10-19 on `ts_mqtt`**
   (`device-runtime/src/vendor/thingstudio_mqtt/`), the shared-library answer to cross-instance setup: one client per
   broker, a per-node subscription registry (routing, last-node unsubscribe, resubscribe on reconnect), and the
-  connect/retry/status code the old codegen emitted. **`http-in` (sibling scan + server) is the last one left.**
+  connect/retry/status code the old codegen emitted. **`http-in` followed 2026-10-20** via the new
+  `ctx.nodesOfType` and the shared `ts_http_server`, so every network node is a package now.
   The two package-format gaps that came out of the rest were closed as they were reached: two-faced packages
   (sink + event source) and the shared device library.
 

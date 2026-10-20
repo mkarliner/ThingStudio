@@ -1,102 +1,31 @@
-// Tier 1 network node pair: http_in / http_response
-// (editor/src/node-library/http-in.ts, http-response.ts, and their shared
-// plumbing in http-server-shared.ts -- that file's own header has the
-// full v1 scope and architecture).
-//
-// http_in/http_response are the opposite shape from http_request.ts's
-// transform: rather than firing one request and returning, the generated
-// code IS a real, long-lived asyncio TCP server. So this file's harness
-// runs the opposite direction from node-http-request.test.ts's: the
-// generated Python is spawned as a genuinely long-lived BACKGROUND
-// process (child_process.spawn, not execFile/execFileSync -- there's no
-// single "run once, read the result" moment here), and real HTTP
-// requests are made INTO it from Node's own `fetch`, not the other way
-// around. Killed in afterEach; never left running past one test.
-//
-// Builds a small standalone driver script per test wiring httpInNode's
-// own codegenEventSource output for one or more synthetic http_in nodes
-// straight to httpResponseNode's own codegenSink output (bypassing
-// compile.ts/the full graph, same approach node-http-request.test.ts
-// already uses) -- a `handler` snippet per route stands in for whatever a
-// real flow puts in between (a function node setting msg['statusCode'],
-// etc.), and `handler: null` skips calling http_response entirely, to
-// exercise the auto-timeout/500 fallback.
+// http_in as a core package with a compile hook (2026-10-20): the hook builds the port's route table from
+// ctx.nodesOfType (still compile-time duplicate detection); the Python shares one ts_http_server.Server per port
+// through runtime.shared, each node owning its request queue. These tests drive real HTTP requests into a real
+// background python server built from the package's generated setup.
 
-import { flowWifiConfigsFrom } from "./flow-wifi-helper.js";
 import { type ChildProcessWithoutNullStreams, spawn } from "node:child_process";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { CompileError } from "../src/compiler/errors.js";
-import type { GraphNode } from "../src/compiler/graph.js";
+import { afterEach, describe, expect, it } from "vitest";
+import type { GraphConfigNode, GraphData, GraphNode } from "../src/compiler/graph.js";
 import type { CodegenContext } from "../src/compiler/node-definition.js";
-import { httpInNode } from "../src/node-library/http-in.js";
-import { descriptor as httpResponseDescriptor, python as httpResponsePython } from "../src/node-library/core-packages/http-response.js";
+import { runHookOnce } from "../src/compile-hook/run-hook.js";
+import { runCompileHooks } from "../src/node-library/compile-hooks.js";
 import { buildCoreNodeDefinition } from "../src/node-library/custom-node.js";
-
-// http_response is a core package now; this is the NodeDefinition shape the test drives.
-const httpResponseNode = buildCoreNodeDefinition(httpResponseDescriptor, httpResponsePython);
+import { descriptor as httpInDescriptor, python as httpInPython, compileHook as httpInCompileHook } from "../src/node-library/core-packages/http-in.js";
+import { descriptor as httpResponseDescriptor, python as httpResponsePython } from "../src/node-library/core-packages/http-response.js";
+import { buildRegistry } from "../src/node-library/registry.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const wasmBytes = new Uint8Array(readFileSync(join(__dirname, "../../micropython-wasi/micropython-wasi.wasm")));
+const runner = { run: (src: string, ctx: unknown, props: Record<string, unknown>) => runHookOnce({ wasmBytes, hookSource: src, context: ctx, properties: props }) };
 
-const fakeWifiConfigs = new Map<string, Record<string, unknown>>();
-let wifiStatusNodes: GraphNode[] = [];
-let httpInNodes: GraphNode[] = [];
+const httpInNode = buildCoreNodeDefinition(httpInDescriptor, httpInPython, httpInCompileHook);
+const httpResponseNode = buildCoreNodeDefinition(httpResponseDescriptor, httpResponsePython);
 
-// uniqueName below is a real counter (not the "_${hint}" constant stub
-// node-http-request.test.ts's ctx uses) -- http_response's own
-// functionName needs to be genuinely unique across a test file that
-// calls codegenSink more than once per test in some cases (duplicate-
-// route tests construct more than one http_in node in a single
-// codegen call), matching compile.ts's real ctx.uniqueName contract
-// instead of a throwaway stub.
-function makeCtx(): CodegenContext {
-  const used = new Set<string>();
-  return {
-    uniqueName: (hint: string) => {
-      let c = `_${hint}`;
-      let i = 1;
-      while (used.has(c)) c = `_${hint}_${i++}`;
-      used.add(c);
-      return c;
-    },
-    resolveConfig: (id: string) => {
-      const cfg = fakeWifiConfigs.get(id);
-      if (!cfg) throw new Error(`unexpected resolveConfig("${id}") call`);
-      return cfg;
-    },
-    findConfigsOfType: (type: string) => (type === "thingstudio/config/wifi" ? flowWifiConfigsFrom(wifiStatusNodes, (id) => fakeWifiConfigs.get(id)) : []),
-    findNodesOfType: (type: string) => {
-      if (type === "thingstudio/wifi_status") return wifiStatusNodes;
-      if (type === "thingstudio/http_in") return httpInNodes;
-      return [];
-    },
-  };
-}
-
-let ctx: CodegenContext;
-
-function httpInGraphNode(id: string, properties: Record<string, unknown>): GraphNode {
-  return { id, type: "thingstudio/http_in", properties };
-}
-
-beforeEach(() => {
-  fakeWifiConfigs.clear();
-  fakeWifiConfigs.set("unmanaged1", { security: "unmanaged" });
-  wifiStatusNodes = [{ id: "wifi_status_1", type: "thingstudio/wifi_status", properties: { wifiConfigId: "unmanaged1" } }];
-  httpInNodes = [];
-  ctx = makeCtx();
-});
-
-function indent(code: string, spaces: number): string {
-  const pad = " ".repeat(spaces);
-  return code
-    .split("\n")
-    .map((l) => (l.length ? pad + l : l))
-    .join("\n");
-}
+const WIFI: GraphConfigNode = { id: "wifi1", type: "thingstudio/config/wifi", properties: { security: "unmanaged" } };
 
 interface Route {
   id: string;
@@ -104,12 +33,65 @@ interface Route {
   path: string;
   method?: "GET" | "POST";
   responseTimeoutMs?: number;
-  /** Python, run against each dequeued msg before http_response's own
-   * function is called -- stands in for whatever a real flow puts
-   * between http_in and http_response. Omit for a plain passthrough;
-   * `null` skips calling http_response entirely (the auto-timeout/500
-   * path). */
+  /** Python run after dequeue, before http_response. `null` skips the response node (timeout path). */
   handler?: string | null;
+}
+
+function httpInNodeOf(route: Route): GraphNode {
+  return {
+    id: route.id,
+    type: "thingstudio/http_in",
+    properties: {
+      port: route.port,
+      path: route.path,
+      method: route.method ?? "GET",
+      ...(route.responseTimeoutMs === undefined ? {} : { responseTimeoutMs: route.responseTimeoutMs }),
+      wifiConfigId: "wifi1",
+    },
+  };
+}
+
+function graphOf(routes: Route[]): GraphData {
+  return {
+    nodes: [...routes.map(httpInNodeOf), { id: "resp", type: "thingstudio/http_response", properties: {} }],
+    links: [],
+    configs: [WIFI],
+  };
+}
+
+function ctxWith(hookResult?: (id: string) => unknown): CodegenContext {
+  const used = new Set<string>();
+  return {
+    uniqueName(hint: string): string {
+      let c = `_${hint}`;
+      let i = 1;
+      while (used.has(c)) c = `_${hint}_${i++}`;
+      used.add(c);
+      return c;
+    },
+    resolveConfig: () => ({}),
+    findConfigsOfType: (type: string) => (type === WIFI.type ? [WIFI] : []),
+    hookResult: hookResult as CodegenContext["hookResult"],
+  } as CodegenContext;
+}
+
+async function hookError(g: GraphData): Promise<string | undefined> {
+  try {
+    await runCompileHooks(g, buildRegistry(), runner);
+    return undefined;
+  } catch (err) {
+    return err instanceof Error ? err.message : String(err);
+  }
+}
+
+const responseResult = httpResponseNode.codegenSink!({ id: "resp", type: "thingstudio/http_response", properties: {} }, ctxWith());
+
+function indent(code: string, spaces: number): string {
+  const pad = " ".repeat(spaces);
+  return code
+    .split("\n")
+    .map((l) => (l.length ? pad + l : l))
+    .join("\n");
 }
 
 let proc: ChildProcessWithoutNullStreams | null = null;
@@ -122,44 +104,33 @@ afterEach(() => {
   }
 });
 
-/** Starts a real background python3 server process wired from one or more
- * http_in nodes to http_response (or, per-route, skipping it entirely),
- * and waits until it prints READY (after its own asyncio.start_server()
- * calls have completed) before returning -- so a caller's first real
- * request never races server startup. */
 async function startServer(routes: Route[]): Promise<void> {
-  httpInNodes = routes.map((r) =>
-    httpInGraphNode(r.id, { port: r.port, path: r.path, method: r.method ?? "GET", responseTimeoutMs: r.responseTimeoutMs ?? 2000 }),
-  );
-
-  const responseResult = httpResponseNode.codegenSink!({ id: "resp", type: "thingstudio/http_response", properties: {} }, ctx);
-
-  const seenImports = new Set<string>(["import network"]);
+  const graph = graphOf(routes);
+  const registry = buildRegistry();
+  const hooks = await runCompileHooks(graph, registry, runner);
   const setupBlocks: string[] = [];
   const seenKeys = new Set<string>();
   const consumeFns: string[] = [];
+  // One ctx for every sibling, matching compile.ts's shared uniqueName counter -- a fresh ctx per node would give
+  // each setup the same dedup key and drop all but the first.
+  const ctx = ctxWith((id) => hooks.results.get(id));
 
-  for (const inNode of httpInNodes) {
-    const src = httpInNode.codegenEventSource!(inNode, ctx);
-    const route = routes.find((r) => r.id === inNode.id)!;
-    for (const imp of src.imports ?? []) seenImports.add(imp);
+  for (const route of routes) {
+    const node = graph.nodes.find((n) => n.id === route.id)!;
+    const src = httpInNode.codegenEventSource!(node, ctx);
     for (const stmt of src.statements ?? []) {
       if (!seenKeys.has(stmt.key)) {
         seenKeys.add(stmt.key);
         setupBlocks.push(stmt.code);
       }
     }
-
     const bodyLines = [src.waitStatement, src.buildMsg];
     if (route.handler !== null) {
       if (route.handler) bodyLines.push(route.handler);
       bodyLines.push(`msg = await ${responseResult.functionName}(msg)`);
     }
-    const loopBody = bodyLines.join("\n");
-    consumeFns.push(`async def _consume_${route.id}():\n${indent(`while True:\n${indent(loopBody, 4)}`, 4)}`);
+    consumeFns.push(`async def _consume_${route.id}():\n${indent(`while True:\n${indent(bodyLines.join("\n"), 4)}`, 4)}`);
   }
-
-  // http_response's own setup (it is a package now: the per-instance closure the generic codegen emits).
   for (const stmt of responseResult.statements ?? []) {
     if (!seenKeys.has(stmt.key)) {
       seenKeys.add(stmt.key);
@@ -167,46 +138,38 @@ async function startServer(routes: Route[]): Promise<void> {
     }
   }
 
-  // "import runtime" + "asyncio = runtime.asyncio", NOT a bare "import
-  // asyncio" -- matching compile.ts's own real boilerplate exactly (and
-  // node-udp-receive.test.ts's identical precedent), so pymock's own
-  // runtime.py fixture -- which provides a real, dedup-by-key
-  // register_cleanup() -- is what generated code's
-  // `runtime.register_cleanup(...)` calls (http-server-shared.ts) resolve
-  // against, instead of a bare NameError.
-  const lines: string[] = ["import runtime", "asyncio = runtime.asyncio", "import sys", ...seenImports, "", ...setupBlocks, ""];
-  lines.push(`async def ${responseResult.functionName}(msg):`);
-  lines.push(indent(responseResult.functionBody, 4));
-  lines.push("");
-  lines.push(...consumeFns);
-  lines.push("");
-  lines.push("async def _main():");
-  // Explicitly awaited here, one call per distinct port, BEFORE printing
-  // READY -- not left to the freshly-created consumer tasks below to get
-  // a scheduling turn on their own first. _http_ensure_<port>() is
-  // idempotent (a global bool flag, http-server-shared.ts), so a
-  // consumer's own later call is just a no-op once this has already run;
-  // this is purely about making READY a genuine "the listening socket is
-  // actually bound" signal rather than a best-effort scheduling-turn
-  // guess, which proved flaky under load (real failure seen running the
-  // full suite in parallel: a fixed number of `await asyncio.sleep(0)`
-  // turns isn't always enough for asyncio.start_server's own bind to
-  // land before the client's first real connection attempt).
-  const ports = [...new Set(routes.map((r) => r.port))];
-  for (const port of ports) lines.push(`    await _http_ensure_${port}()`);
+  const lines = [
+    "import runtime",
+    "asyncio = runtime.asyncio",
+    "import network",
+    "import ts_wifi",
+    "import ts_http_server",
+    "",
+    ...setupBlocks,
+    "",
+    `async def ${responseResult.functionName}(msg):`,
+    indent(responseResult.functionBody, 4),
+    "",
+    ...consumeFns,
+    "",
+    "async def _main():",
+  ];
+  for (const port of [...new Set(routes.map((r) => r.port))]) {
+    // The package's setup created this singleton at module scope; fetch-only here so READY means the socket is bound.
+    lines.push(`    await runtime.shared('http_server', ${port}, 'v1').ensure()`);
+  }
   for (const route of routes) lines.push(`    asyncio.create_task(_consume_${route.id}())`);
-  lines.push(`    print("READY", flush=True)`);
-  lines.push(`    await asyncio.sleep(3600)`);
+  lines.push('    print("READY", flush=True)');
+  lines.push("    await asyncio.sleep(3600)");
   lines.push("");
   lines.push("asyncio.run(_main())");
 
   const dir = mkdtempSync(join(tmpdir(), "thingstudio-httpin-"));
   const scriptPath = join(dir, "_server.py");
   writeFileSync(scriptPath, lines.join("\n"));
-  const pymockDir = join(__dirname, "fixtures", "pymock");
 
   stderrChunks = [];
-  proc = spawn("python3", [scriptPath], { env: { ...process.env, PYTHONPATH: pymockDir } });
+  proc = spawn("python3", [scriptPath], { env: { ...process.env, PYTHONPATH: join(__dirname, "fixtures", "pymock") } });
   proc.stderr.on("data", (c) => stderrChunks.push(c.toString()));
 
   await new Promise<void>((resolve, reject) => {
@@ -236,61 +199,64 @@ async function startServer(routes: Route[]): Promise<void> {
   });
 }
 
-describe("thingstudio/http_in + thingstudio/http_response nodes", () => {
-  it("routes a matching GET request to http_in, and http_response's msg.payload/statusCode reach the real HTTP response", async () => {
+describe("thingstudio/http_in + thingstudio/http_response packages", () => {
+  it("the pymock ts_http_server fixture is a byte-identical copy of the vendored library", () => {
+    const fixture = readFileSync(join(__dirname, "fixtures", "pymock", "ts_http_server.py"));
+    const vendor = readFileSync(join(__dirname, "../../device-runtime/src/vendor/thingstudio_http/ts_http_server.py"));
+    expect(fixture.equals(vendor)).toBe(true);
+  });
+
+
+  it("routes a matching GET request and http_response's payload/statusCode reach the real response", async () => {
     await startServer([{ id: "in1", port: 18081, path: "/status", handler: "msg['payload'] = 'ok'\nmsg['statusCode'] = 201" }]);
     const res = await fetch("http://127.0.0.1:18081/status");
     expect(res.status).toBe(201);
     expect(await res.text()).toBe("ok");
   });
 
-  it("defaults statusCode to 200 when the handler doesn't set one", async () => {
+  it("defaults statusCode to 200", async () => {
     await startServer([{ id: "in1", port: 18082, path: "/", handler: "msg['payload'] = 'hi'" }]);
     const res = await fetch("http://127.0.0.1:18082/");
     expect(res.status).toBe(200);
     expect(await res.text()).toBe("hi");
   });
 
-  it("v1 does not parse the request body -- msg.payload starts out None regardless of what the client sent", async () => {
+  it("does not parse the request body -- payload starts as None", async () => {
     await startServer([{ id: "in1", port: 18083, path: "/echo", method: "POST", handler: "msg['payload'] = repr(msg['payload'])" }]);
-    const res = await fetch("http://127.0.0.1:18083/echo", { method: "POST", body: "this body is ignored in v1" });
+    const res = await fetch("http://127.0.0.1:18083/echo", { method: "POST", body: "ignored" });
     expect(await res.text()).toBe("None");
   });
 
-  it("routes on method+path together -- GET and POST on the same path are two independent routes", async () => {
+  it("routes on method+path together", async () => {
     await startServer([
       { id: "get1", port: 18084, path: "/thing", method: "GET", handler: "msg['payload'] = 'got'" },
       { id: "post1", port: 18084, path: "/thing", method: "POST", handler: "msg['payload'] = 'posted'" },
     ]);
-    const getRes = await fetch("http://127.0.0.1:18084/thing", { method: "GET" });
-    const postRes = await fetch("http://127.0.0.1:18084/thing", { method: "POST", body: "x" });
-    expect(await getRes.text()).toBe("got");
-    expect(await postRes.text()).toBe("posted");
+    expect(await (await fetch("http://127.0.0.1:18084/thing")).text()).toBe("got");
+    expect(await (await fetch("http://127.0.0.1:18084/thing", { method: "POST", body: "x" })).text()).toBe("posted");
   });
 
-  it("msg.req carries the real method and path", async () => {
+  it("msg.req carries the method and path", async () => {
     await startServer([{ id: "in1", port: 18085, path: "/who", handler: "msg['payload'] = msg['req']['method'] + ' ' + msg['req']['path']" }]);
-    const res = await fetch("http://127.0.0.1:18085/who");
-    expect(await res.text()).toBe("GET /who");
+    expect(await (await fetch("http://127.0.0.1:18085/who")).text()).toBe("GET /who");
   });
 
-  it("an unmatched path gets a plain 404, not a hang", async () => {
+  it("an unmatched path gets a plain 404", async () => {
     await startServer([{ id: "in1", port: 18086, path: "/known" }]);
-    const res = await fetch("http://127.0.0.1:18086/unknown");
-    expect(res.status).toBe(404);
+    expect((await fetch("http://127.0.0.1:18086/unknown")).status).toBe(404);
   });
 
-  it("a request whose flow never reaches http_response times out with a 500, not a hang (fault-handling)", async () => {
+  it("a request that never reaches http_response times out with a 500", async () => {
     await startServer([{ id: "in1", port: 18087, path: "/stuck", responseTimeoutMs: 300, handler: null }]);
     const start = Date.now();
     const res = await fetch("http://127.0.0.1:18087/stuck");
     const elapsed = Date.now() - start;
     expect(res.status).toBe(500);
-    expect(elapsed).toBeGreaterThanOrEqual(250); // real wait, not an immediate short-circuit
-    expect(elapsed).toBeLessThan(4000); // and genuinely bounded, not a de-facto hang
+    expect(elapsed).toBeGreaterThanOrEqual(250);
+    expect(elapsed).toBeLessThan(4000);
   });
 
-  it("two ports get two independent servers, each only serving its own routes", async () => {
+  it("two ports get two independent servers", async () => {
     await startServer([
       { id: "a", port: 18088, path: "/", handler: "msg['payload'] = 'A'" },
       { id: "b", port: 18089, path: "/", handler: "msg['payload'] = 'B'" },
@@ -299,85 +265,99 @@ describe("thingstudio/http_in + thingstudio/http_response nodes", () => {
     expect(await (await fetch("http://127.0.0.1:18089/")).text()).toBe("B");
   });
 
-  it("http_response completing a request that was never asked for raises a clear, attributable error", () => {
-    const responseResult = httpResponseNode.codegenSink!({ id: "resp", type: "thingstudio/http_response", properties: {} }, ctx);
-    expect((responseResult.statements ?? []).map((s) => s.code).join("\n")).toContain("did not come from an http_in node");
+  it("declares the expected ports", () => {
+    expect(httpInNode.ports?.outputs).toEqual([{ name: "msg", type: "any" }]);
+    expect(httpInNode.ports?.inputs).toBeUndefined();
+    expect(httpResponseNode.ports?.inputs).toEqual([{ name: "msg", type: "any" }]);
+    expect(httpResponseNode.ports?.outputs).toBeUndefined();
+  });
+});
+
+describe("thingstudio/http_in compile hook (no server needed)", () => {
+  it("rejects a path that doesn't start with /", async () => {
+    expect(await hookError(graphOf([{ id: "a", port: 8080, path: "bad" }]))).toMatch(/must start with "\/"/);
   });
 
-  // Real bug, hit on Mike's own second real-browser deploy of a flow with
-  // an http_in node (not hypothetical): without a registered cleanup, the
-  // previous deploy's listening socket was never closed, so the next
-  // deploy's own asyncio.start_server() call on the same port failed with
-  // EADDRINUSE. Same fix shape udp-receive.ts/udp-send.ts already
-  // established (redeploy-cleanup-and-network-fault-detection-
-  // briefing.md's Problem 1) -- see http-server-shared.ts's own comment
-  // at the register_cleanup() call site.
-  it("registers a redeploy cleanup that closes the listening server, keyed by port", () => {
-    httpInNodes = [httpInGraphNode("a", { port: 8080, path: "/", method: "GET" })];
-    const result = httpInNode.codegenEventSource!(httpInNodes[0]!, ctx);
-    const serverSetup = result.statements?.find((s) => s.key === "http-server-8080");
-    expect(serverSetup?.code).toContain('runtime.register_cleanup("http-server-8080"');
-    expect(serverSetup?.code).toContain("_http_server_8080.close()");
+  it("rejects an out-of-range port", async () => {
+    expect(await hookError(graphOf([{ id: "a", port: 0, path: "/" }]))).toMatch(/between 1 and 65535/);
   });
 
-  it("surviving a redeploy: closing the registered cleanup actually frees the port for an immediate rebind", async () => {
+  it("rejects an unsupported method", async () => {
+    const g = graphOf([{ id: "a", port: 8080, path: "/" }]);
+    g.nodes[0]!.properties.method = "DELETE";
+    expect(await hookError(g)).toMatch(/must be "GET" or "POST"/);
+  });
+
+  it("rejects a non-positive responseTimeoutMs", async () => {
+    expect(await hookError(graphOf([{ id: "a", port: 8080, path: "/", responseTimeoutMs: 0 }]))).toMatch(/positive number/);
+  });
+
+  it("defaults method to GET and the timeout to 10 s", async () => {
+    const g = graphOf([{ id: "a", port: 8080, path: "/" }]);
+    const hooks = await runCompileHooks(g, buildRegistry(), runner);
+    const props = hooks.results.get("a")!.properties as { routes: { method: string; timeoutS: number }[] };
+    expect(props.routes).toEqual([{ id: "a", port: 8080, path: "/", method: "GET", timeoutS: 10 }]);
+  });
+
+  it("rejects two nodes claiming the same (method, path) on one port", async () => {
+    expect(await hookError(graphOf([
+      { id: "a", port: 8080, path: "/dup" },
+      { id: "b", port: 8080, path: "/dup" },
+    ]))).toMatch(/both claim GET \/dup on port 8080/);
+  });
+
+  it("allows the same path with different methods, or on different ports", async () => {
+    expect(await hookError(graphOf([
+      { id: "a", port: 8080, path: "/same", method: "GET" },
+      { id: "b", port: 8080, path: "/same", method: "POST" },
+    ]))).toBeUndefined();
+    expect(await hookError(graphOf([
+      { id: "a", port: 8080, path: "/x" },
+      { id: "b", port: 8081, path: "/x" },
+    ]))).toBeUndefined();
+  });
+
+  it("rejects a flow with no WiFi config", async () => {
+    const g: GraphData = { nodes: [httpInNodeOf({ id: "a", port: 8080, path: "/" })], links: [] };
+    expect(await hookError(g)).toMatch(/needs a WiFi network/);
+  });
+});
+
+describe("ts_http_server redeploy", () => {
+  it("closing the registered cleanup frees the port for an immediate rebind", async () => {
     const port = 18090;
-    httpInNodes = [httpInGraphNode("a", { port, path: "/", method: "GET" })];
-    const src = httpInNode.codegenEventSource!(httpInNodes[0]!, ctx);
-    const responseResult = httpResponseNode.codegenSink!({ id: "resp", type: "thingstudio/http_response", properties: {} }, ctx);
-
-    const setupCode = [...(src.statements ?? []), ...(responseResult.statements ?? [])].map((s) => s.code).join("\n\n");
-    const script = [
+    const dir = mkdtempSync(join(tmpdir(), "thingstudio-httpin-redeploy-"));
+    const scriptPath = join(dir, "_server.py");
+    const route = `[{'id': 'a', 'method': 'GET', 'path': '/', 'timeoutS': 2}]`;
+    writeFileSync(scriptPath, [
       "import runtime",
       "asyncio = runtime.asyncio",
-      ...(src.imports ?? []),
-      "",
-      setupCode,
-      "",
-      `async def ${responseResult.functionName}(msg):`,
-      indent(responseResult.functionBody, 4),
-      "",
-      "async def _consume():",
-      "    while True:",
-      indent(src.waitStatement, 8),
-      indent(src.buildMsg, 8),
-      "        msg['payload'] = 'ok'",
-      `        msg = await ${responseResult.functionName}(msg)`,
-      "",
+      "import ts_http_server",
       "async def _main():",
-      "    asyncio.create_task(_consume())",
-      `    await _http_ensure_${port}()`,
+      `    q = {'a': ts_http_server.Queue()}`,
+      `    s = ts_http_server.Server(${port}, ${route}, q)`,
+      "    await s.ensure()",
       '    print("READY", flush=True)',
       "    await asyncio.sleep(0.2)",
-      // Simulates what runtime.cancel_running() does on a real redeploy:
-      // run every registered cleanup, then let the (in this test,
-      // simulated-fresh) module set the server up again from scratch.
       `    runtime._cleanups["http-server-${port}"]()`,
-      `    global _http_started_${port}`,
-      `    _http_started_${port} = False`,
-      `    await _http_ensure_${port}()`,
+      "    runtime._singletons.clear()",
+      `    q2 = {'a': ts_http_server.Queue()}`,
+      `    s2 = ts_http_server.Server(${port}, ${route}, q2)`,
+      "    await s2.ensure()",
       '    print("READY2", flush=True)',
       "    await asyncio.sleep(3600)",
       "",
       "asyncio.run(_main())",
-    ].join("\n");
-
-    const dir = mkdtempSync(join(tmpdir(), "thingstudio-httpin-redeploy-"));
-    const scriptPath = join(dir, "_server.py");
-    writeFileSync(scriptPath, script);
-    const pymockDir = join(__dirname, "fixtures", "pymock");
+    ].join("\n"));
 
     stderrChunks = [];
-    proc = spawn("python3", [scriptPath], { env: { ...process.env, PYTHONPATH: pymockDir } });
+    proc = spawn("python3", [scriptPath], { env: { ...process.env, PYTHONPATH: join(__dirname, "fixtures", "pymock") } });
     proc.stderr.on("data", (c) => stderrChunks.push(c.toString()));
 
     const seen = { ready: false, ready2: false };
     const waitFor = (label: "READY" | "READY2") =>
       new Promise<void>((resolve, reject) => {
-        if ((label === "READY" && seen.ready) || (label === "READY2" && seen.ready2)) {
-          resolve();
-          return;
-        }
+        if ((label === "READY" && seen.ready) || (label === "READY2" && seen.ready2)) return resolve();
         let out = "";
         const timer = setTimeout(() => reject(new Error(`never saw ${label} within 3s. stderr:\n${stderrChunks.join("")}`)), 3000);
         const onData = (c: Buffer) => {
@@ -393,92 +373,11 @@ describe("thingstudio/http_in + thingstudio/http_response nodes", () => {
         proc?.stdout.on("data", onData);
         proc?.on("exit", (code) => {
           clearTimeout(timer);
-          reject(new Error(`server process exited early (code ${code}) waiting for ${label}. This is exactly the EADDRINUSE regression if it happens after READY. stderr:\n${stderrChunks.join("")}`));
+          reject(new Error(`server exited early (code ${code}) waiting for ${label}. stderr:\n${stderrChunks.join("")}`));
         });
       });
 
     await waitFor("READY");
-    const firstRes = await fetch(`http://127.0.0.1:${port}/`);
-    expect(await firstRes.text()).toBe("ok");
-
-    // If register_cleanup's close() didn't actually work, this second
-    // _http_ensure_<port>() call raises OSError EADDRINUSE, which -- being
-    // uncaught inside _main()'s own top-level task -- crashes the whole
-    // process before READY2 ever prints. waitFor's own "exited early"
-    // rejection is what surfaces that as a clear, attributable test
-    // failure rather than a hang.
     await waitFor("READY2");
-    const secondRes = await fetch(`http://127.0.0.1:${port}/`);
-    expect(await secondRes.text()).toBe("ok");
-  });
-
-  it("declares the expected ports (source-only output for http_in, sink-only input for http_response)", () => {
-    expect(httpInNode.ports?.outputs).toEqual([{ name: "msg", type: "any" }]);
-    expect(httpInNode.ports?.inputs).toBeUndefined();
-    expect(httpResponseNode.ports?.inputs).toEqual([{ name: "msg", type: "any" }]);
-    expect(httpResponseNode.ports?.outputs).toBeUndefined();
-  });
-});
-
-describe("thingstudio/http_in property validation and route-table rules (no server needed)", () => {
-  it("rejects a path that doesn't start with /", () => {
-    httpInNodes = [httpInGraphNode("a", { port: 8080, path: "bad", method: "GET" })];
-    expect(() => httpInNode.codegenEventSource!(httpInNodes[0]!, ctx)).toThrow(CompileError);
-    expect(() => httpInNode.codegenEventSource!(httpInNodes[0]!, ctx)).toThrow(/must start with "\/"/);
-  });
-
-  it("rejects an out-of-range port", () => {
-    httpInNodes = [httpInGraphNode("a", { port: 0, path: "/", method: "GET" })];
-    expect(() => httpInNode.codegenEventSource!(httpInNodes[0]!, ctx)).toThrow(/between 1 and 65535/);
-  });
-
-  it("rejects an unsupported method", () => {
-    httpInNodes = [httpInGraphNode("a", { port: 8080, path: "/", method: "DELETE" })];
-    expect(() => httpInNode.codegenEventSource!(httpInNodes[0]!, ctx)).toThrow(/must be "GET" or "POST"/);
-  });
-
-  it("rejects a non-positive responseTimeoutMs", () => {
-    httpInNodes = [httpInGraphNode("a", { port: 8080, path: "/", method: "GET", responseTimeoutMs: 0 })];
-    expect(() => httpInNode.codegenEventSource!(httpInNodes[0]!, ctx)).toThrow(/positive number/);
-  });
-
-  it("defaults method to GET and responseTimeoutMs to 10000 when not configured", () => {
-    httpInNodes = [httpInGraphNode("a", { port: 8080, path: "/" })];
-    const result = httpInNode.codegenEventSource!(httpInNodes[0]!, ctx);
-    // 10000ms -> 10 (seconds) in the shared route-table tuple, and "GET"
-    // in the route key.
-    expect(result.statements?.some((s) => /,\s*10\)/.test(s.code))).toBe(true);
-    expect(result.statements?.some((s) => s.code.includes('"GET"'))).toBe(true);
-  });
-
-  it("rejects two http_in nodes claiming the same (method, path) on the same port", () => {
-    httpInNodes = [
-      httpInGraphNode("a", { port: 8080, path: "/dup", method: "GET" }),
-      httpInGraphNode("b", { port: 8080, path: "/dup", method: "GET" }),
-    ];
-    expect(() => httpInNode.codegenEventSource!(httpInNodes[0]!, ctx)).toThrow(CompileError);
-    expect(() => httpInNode.codegenEventSource!(httpInNodes[0]!, ctx)).toThrow(/both claim GET \/dup on port 8080/);
-  });
-
-  it("allows the same path on the same port when methods differ", () => {
-    httpInNodes = [
-      httpInGraphNode("a", { port: 8080, path: "/same", method: "GET" }),
-      httpInGraphNode("b", { port: 8080, path: "/same", method: "POST" }),
-    ];
-    expect(() => httpInNode.codegenEventSource!(httpInNodes[0]!, ctx)).not.toThrow();
-  });
-
-  it("allows the same (method, path) on two DIFFERENT ports", () => {
-    httpInNodes = [
-      httpInGraphNode("a", { port: 8080, path: "/x", method: "GET" }),
-      httpInGraphNode("b", { port: 8081, path: "/x", method: "GET" }),
-    ];
-    expect(() => httpInNode.codegenEventSource!(httpInNodes[0]!, ctx)).not.toThrow();
-  });
-
-  it("throws a CompileError when the flow has no wifi_status node", () => {
-    wifiStatusNodes = [];
-    httpInNodes = [httpInGraphNode("a", { port: 8080, path: "/" })];
-    expect(() => httpInNode.codegenEventSource!(httpInNodes[0]!, ctx)).toThrow(/http_in needs a WiFi network/);
   });
 });

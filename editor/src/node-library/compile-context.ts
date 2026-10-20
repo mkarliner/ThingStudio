@@ -54,6 +54,9 @@ export interface CompileContext {
   readonly version: number;
   readonly node: CompileContextNode;
   readonly flow: { readonly nodes: CompileFlowNode[]; readonly configs: CompileContextConfig[] };
+  /** Every node of the same type as `node`, including this instance: id + non-secret properties, no wiring.
+   * Added 2026-10-20 for http_in's route table, so a package can validate the set before deploy. */
+  readonly nodesOfType: CompileFlowNode[];
   readonly referencedConfigs: Record<string, Record<string, unknown>>;
   readonly target: CompileContextTarget | null;
 }
@@ -131,6 +134,9 @@ export function buildCompileContext(options: BuildCompileContextOptions): Compil
       })),
       configs: configs.map((c) => ({ id: c.id, type: c.type, properties: redact(c) })),
     },
+    nodesOfType: graphData.nodes
+      .filter((n) => n.type === node.type)
+      .map((n) => ({ id: n.id, type: n.type, properties: { ...n.properties } })),
     referencedConfigs: referencedConfigs(descriptor, node, configs),
     target: targetFor(target),
   };

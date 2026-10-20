@@ -31,6 +31,13 @@
         }
       ]
     },
+    "nodesOfType": [
+      {
+        "id": "string",
+        "type": "string",
+        "properties": "object"
+      }
+    ],
     "secretPolicy": "flow.nodes and flow.configs carry non-secret properties only; referencedConfigs carries the resolved secrets for this node's configRef fields",
     "referencedConfigs": "object: config id -> resolved properties, secrets included",
     "target": "object | null: { boardId, boardName, processorId, processorName, label, capabilities }"

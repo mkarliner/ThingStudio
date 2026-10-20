@@ -54,6 +54,7 @@ without the file behaves exactly as today.
     "nodes": [{"id": "b3f1…", "type": "custom/dht22", "properties": {"bus": "c1"}}],
     "configs": [{"id": "c1", "type": "thingstudio/config/i2c-bus", "properties": {"bus": 0, "scl": 22, "sda": 21}}]
   },
+  "nodesOfType": [{"id": "b3f1…", "type": "custom/dht22", "properties": {"bus": "c1"}}],
   "referencedConfigs": {
     "c1": {"bus": 0, "scl": 22, "sda": 21}
   },
@@ -68,6 +69,7 @@ without the file behaves exactly as today.
 | `node` | This instance: `id`, `type`, raw stored `properties` (as §1), and `wired`. `wired.inputs`/`wired.outputs` are booleans positionally matching the descriptor's ports. |
 | `flow.nodes` | Every node in the flow, in graph order: `id`, `type`, **non-secret** `properties`. |
 | `flow.configs` | Every config: `id`, `type`, **non-secret** `properties` (`credentialName`, not the secret). |
+| `nodesOfType` | Every node of this node's own `type`, in graph order, **including this instance**: `id`, `type`, **non-secret** `properties`, no `wired`. Added 2026-10-20 so a hook can validate a set it shares with its siblings (http_in's route table); it cannot see other node types. |
 | `referencedConfigs` | The configs this node's `configRef` fields point at, with their resolved secrets — the same values the node already receives on the board today. |
 | `target` | The board/processor compiled for, or `null` when none is known. Same fields as a `target` property field, plus nothing board-specific beyond `capabilities`. |
 
