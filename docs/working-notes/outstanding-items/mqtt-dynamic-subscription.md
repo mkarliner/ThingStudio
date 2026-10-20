@@ -55,3 +55,9 @@ Unsubscribing the configured topic lasts until the next reload.
 The input face reports an error when dynamic subscription is off, when the action is unknown, or when a topic is
 missing. Sibling nodes are independent: `ts_mqtt` only sends the broker an UNSUBSCRIBE when the last node on a topic
 lets go.
+
+**Hardware check, 2026-10-20 (ESP32-C3, `.22` broker):** flow with `mqtt_subscribe` on `dyn/a` (dynamic on), a
+2s timer publishing to `dyn/b`, and inject/function pairs sending the actions. The initial `dyn/a` subscription
+received nothing; an action `{subscribe, dyn/b}` made the `dyn/b` publishes arrive; an action
+`{unsubscribe, dyn/b}` stopped them (two messages already in flight/queued at the action were delivered, then
+20s quiet). Sibling independence is covered by `ts-mqtt.test.ts`.
