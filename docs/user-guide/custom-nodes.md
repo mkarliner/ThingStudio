@@ -54,8 +54,8 @@ reserved for built-in nodes.
 
 - `source` — generates messages on its own. 0 input ports, 1 output
   port. Must declare a numeric `intervalMs` property (below) — unless
-  `eventSource` is true (below), in which case it waits on an event
-  instead.
+  `eventSource` is true (it waits on an event) or `runOnce` is true (it
+  runs once at flow start).
 - `transform` — one message in, one or more out. 1 input port, 1+ output
   ports.
 - `sink` — consumes a message, produces nothing. 1 input port, 0 output
@@ -93,6 +93,15 @@ that group.
 `type` is one of `int`, `number`, `bool`, `string`, `bytes`, `any` — the
 same types built-in nodes use, with the same wire-compatibility checks.
 Use `any` when unsure.
+
+A port type can follow a select property instead of being fixed:
+
+```json
+{ "name": "msg", "type": { "property": "payloadType", "map": { "bool": "bool", "number": "number" }, "default": "bool" } }
+```
+
+The value of `property` picks the wire type; an unset or unmapped value uses `default`. The property must be a
+`select` field, and every key in `map` must be one of its options.
 
 A `transform` may declare more than one output. Return a list to route
 messages across them, Node-RED style (e.g. `return [msg, None]` sends to
@@ -142,8 +151,8 @@ the node is selected:
   `{ "field": "mode", "equals": "deadband" }`. Operators: `equals`,
   `notEquals`, `in` (an array), `gt`, `gte`, `lt`, `lte`.
 
-A `source` node must declare a numeric property named `intervalMs` — it
-sets the poll interval.
+A polled `source` node must declare a numeric property named `intervalMs` — it
+sets the poll interval. An `eventSource` or `runOnce` source does not need one.
 
 ## The behavior: `<name>.node.py`
 
@@ -340,7 +349,7 @@ until your event fires; then `emit` builds the message. No `intervalMs` is neede
 }
 ```
 
-A hardware interrupt (`machine.Pin.irq`) is the usual reason to use this. Bridge it into `asyncio`
+A hardware interrupt (`machine.Pin.irq`) is the usual reason to use `eventSource`. Bridge it into `asyncio`
 with the vendored `ThreadSafeEvent` — its `set()` is the one call safe in a hard-IRQ handler — and
 register the handler:
 
@@ -370,6 +379,21 @@ async def emit(properties):
 
 Keep any state the two share at the top of the file (both functions come from one per-instance
 closure, so `nonlocal` works across them).
+
+### Run-once sources
+
+A source that runs once, at flow start, sets `"runOnce": true` instead. It defines only `emit`; Thingstudio calls
+it once, with no `intervalMs` and no `wait`.
+
+```json
+{
+  "type": "custom/boot",
+  "kind": "source",
+  "label": "boot",
+  "runOnce": true,
+  "ports": { "outputs": [{ "name": "msg", "type": "string" }] }
+}
+```
 
 ### Two-faced nodes
 
@@ -407,6 +431,8 @@ for this node; `ctx` describes the flow:
 
 - `ctx["node"]` — this instance: `id`, `type`, `properties`, and `wired` (a boolean per input/output).
 - `ctx["flow"]["nodes"]` / `["configs"]` — every node and config, with non-secret properties only.
+- `ctx["nodesOfType"]` — every node of this node's type in the flow, including this one: `id`, `type`, and
+  non-secret `properties`. Use it when the nodes share a decision (for example, a port's set of routes).
 - `ctx["referencedConfigs"]` — the full properties (including credentials) of the configs this node's `configRef`
   fields point at.
 - `ctx["target"]` — the board/processor being compiled for, or `None`.
