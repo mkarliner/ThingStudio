@@ -2956,7 +2956,7 @@ the subscriptions while the flow runs.</p>
 <p><strong>Dynamic subscription.</strong> With it on, an input message changes what the node listens to:</p>
 <ul>
 <li><code>msg.action</code> is <code>subscribe</code> or <code>unsubscribe</code>.</li>
-<li><code>msg.topic</code> is a topic string or a list of them.</li>
+<li><code>msg.topic</code> is a topic string, a <code>{topic, qos}</code> object, or a list of either.</li>
 </ul>
 <p><code>unsubscribe</code> stops the node receiving that topic. Two nodes subscribed to the same topic are independent: one
 unsubscribing doesn't stop the other. The configured <strong>topic</strong> is subscribed at start, so turning dynamic
