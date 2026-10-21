@@ -74,7 +74,8 @@ nodes each need their own design/verification task (see `shared-resource-facilit
 - **`display_spi` — flipped 2026-10-21.** The hook computes the turned size/MADCTL and frame geometry; the Python
   builds the shared SPI/pins and driver and keeps the hand-written viper gs4/gs2/mono expansion loops (nested viper
   functions were confirmed on the S3). Optional pins got a core-only `optional` pin-resource flag. Hardware:
-  Freenove (ST7796, GS4 pattern); the CYD's ST7789 path was validated with the previous TS node before the swap.
+  Freenove (ST7796, GS4 pattern rendered correctly, confirmed by Mike); the CYD's ST7789 path was validated with
+  the previous TS node before the swap and needs a re-check on the package.
   With this, every non-residue built-in is a package: `function` and the `gui_*` family are the named residue, and
   `variable_get`/`variable_set` were replaced by `change`.
 - **`adc`** — a node-specific compile-time context query (its ESP32 ADC2-vs-WiFi guard reads `findNodesOfType`).
