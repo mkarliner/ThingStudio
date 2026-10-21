@@ -62,7 +62,8 @@ Every network node is a package. Remaining built-ins, by blocker:
   and run in `editor/test/compile-context-vectors.test.ts` (2026-10-21). The browser smoke test
   (`tools/compile_hook_smoke.py`) could not run in the sandbox -- Chromium's renderer closes on the editor page
   even with the sysroot's libraries -- so it still needs a machine with a working headless browser. The mainline
-  `ports/webassembly` interpreter spike is still before a release.
+  `ports/webassembly` spike is done (`webassembly-mainline-spike.md`): it works, but is 3.7x larger and loads
+  asynchronously, so the vendored WASI artifact stays for the release; the pinned rebuild (stage 1) is still owed.
 - **CLI custom-node loading** still does not exist, so the CLI has no hook path for user packages.
 - **Dynamic subscription follow-ups**: Node-RED's `msg.topic: true` "all topics" form is not implemented (string and
   list are), and `connect`/`disconnect` are excluded.

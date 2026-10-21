@@ -378,7 +378,11 @@ not here.
   function nodes already use. **Compile-context conformance vectors landed 2026-10-21**
   (`interfaces/node-compile-context/vectors/`, run by `editor/test/compile-context-vectors.test.ts`). Still open: a
   browser pass (the sandbox's Chromium renderer closes on the editor page; needs a working headless browser) and
-  CLI custom-node loading.
+  CLI custom-node loading. **Mainline `ports/webassembly` spike done 2026-10-21**
+  (`webassembly-mainline-spike.md`): it builds and runs hooks, but costs 3.7x the size and loads asynchronously,
+  which the CLI's synchronous hook path cannot use. Recommendation: keep the vendored WASI artifact for the
+  release and do the pinned rebuild (stage 1) instead, which is still owed -- wasi-sdk/Binaryen are not installed
+  in the sandbox.
   Until then, hold the flow-query vocabulary (`hasNode`/`nodesOfType`) and promoting core-only vocabulary to the
   custom schema. **Not held:** the property-dependent port-type data form (bounded, editor-side, an explicit
   exception) and `ts_wifi` (orthogonal to the hook).
