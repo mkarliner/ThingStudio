@@ -469,7 +469,7 @@ def cmd_flow_deploy(args):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             try:
-                bytecode = compile_flow(mpy_cross, tmpdir, "flow", source)
+                bytecode = compile_flow(mpy_cross, tmpdir, "flow", source, arch)
                 message = deploy_message(
                     dut, mpy_cross, tmpdir, source, bytecode,
                     log=lambda text: emit("status", args.json, text=text),

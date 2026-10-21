@@ -115,7 +115,7 @@ class WitnessLink:
         self.ser.close()
 
 
-def compile_flow(mpy_cross, tmpdir, name, source):
+def compile_flow(mpy_cross, tmpdir, name, source, arch=None):
     """Compile `source` to bytecode.
 
     Runs mpy-cross with *relative* file names from inside tmpdir. mpy-cross embeds the
@@ -127,7 +127,11 @@ def compile_flow(mpy_cross, tmpdir, name, source):
     mpy_name = name + ".mpy"
     with open(os.path.join(tmpdir, py_name), "w") as f:
         f.write(source)
-    subprocess.run([mpy_cross, "-o", mpy_name, py_name], cwd=tmpdir, check=True, capture_output=True)
+    command = [mpy_cross]
+    if arch:
+        command.append("-march=" + arch)
+    command += ["-o", mpy_name, py_name]
+    subprocess.run(command, cwd=tmpdir, check=True, capture_output=True)
     with open(os.path.join(tmpdir, mpy_name), "rb") as f:
         return f.read()
 
