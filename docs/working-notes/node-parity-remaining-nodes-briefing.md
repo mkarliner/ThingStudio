@@ -66,11 +66,11 @@ Hardware: `adc` flipped 2026-10-21 (AADC over the shared ADC; the ADC2+WiFi refu
 resource checked by the generic codegen; an event-source `emit` returning None now skips downstream, which adc uses
 after a read error). Hardware-checked on the C3 (floating pin readings emitted every 2s). The remaining hardware
 nodes each need their own design/verification task (see `shared-resource-facility-scoping.md` §9):
-- **`touch-i2c`** — nested config (`touch-panel` → `i2cConfigId`); not a small change (config field kinds live in
-  `app/rete/config-types.ts`, behind the layering boundary; `ctx.resolveConfig()` returns no type). Options: a
-  facility extension passing a resource-built object into a package (Option 1), moving config-type metadata to a
-  shared module + threading the type through the codegen context, or a resource-declared rule naming the nested
-  field. Plus the panel single-use check and reset-pin claim.
+- **`touch_i2c` — flipped 2026-10-21.** The I2C resource spec gained a `nestedField` (the bus id lives in the touch
+  panel config's `i2cConfigId`), so the generic codegen still does the board checks and claims; the hook resolves
+  the panel/bus, enforces the one-panel-one-user rule, claims the optional reset pin and types the panel values.
+  Hardware-checked on the Freenove (FT6336U): down/up coordinates through a full drag. (`docs/working-notes/
+  decisions/node-authoring.md`.)
 - **`display-spi`** — large and hardware-critical: compile-time MADCTL/stride geometry + the `@micropython.viper`
   expansion loops must become runtime Python. Do it only with a real-hardware pass; consider whether the geometry
   belongs in a small facility instead. **The existing TS node was validated on the CYD on 2026-10-21** with

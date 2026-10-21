@@ -238,6 +238,9 @@ export interface I2cResourceSpec {
   /** Legacy fallback: when the config id is empty but these node properties are set, the bus is built from
    * them instead (display_i2c's pre-config flows). Property names, not values. Added 2026-10-16. */
   fallback?: { bus: string; scl: string; sda: string; freq: string };
+  /** When set, the bus config id comes from this property of the config named by `config` (a nested configRef,
+   * e.g. a touch panel's `i2cConfigId`). Core-only, added 2026-10-21 for touch_i2c. */
+  nestedField?: string;
 }
 
 /** An SPI bus resolved from node properties: `checkPin` on SCK/MOSI, `checkSpi` against the board, and the

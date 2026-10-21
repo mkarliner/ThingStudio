@@ -938,6 +938,11 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   The two package-format gaps that came out of the rest were closed as they were reached: two-faced packages
   (sink + event source) and the shared device library.
 
+- **2026-10-21 — touch_i2c is a package; I2C resources can follow a nested config.** `I2cResourceSpec.nestedField`
+  names a property of the config a node references (a touch panel's `i2cConfigId`), so the generic resource codegen
+  still validates and claims the bus with the real target while a package hook gets the values for its Python. The
+  package hook also enforces one panel user per config and claims the optional reset pin; the Python shares the bus
+  and pin through `runtime.shared`. Hardware-checked on the Freenove's FT6336U.
 - **2026-10-21 (later) — variable_get is a package; the flow-vars store is runtime.shared.** `variable_set`
   (still built-in) and function nodes' `flow` scope now set up `_flow_vars` with
   `runtime.shared('flow_vars', 'v1', 'v1', lambda: {})`; the `variable_get` package reads the same singleton. The

@@ -114,7 +114,12 @@ export function checkResources(ctx: CodegenContext, node: GraphNode, descriptor:
       // resolveI2cBus() validates, claims both pins and refuses two in-use configs on one bus; the setup
       // statement it returns is unused here (the package's Python fetches the shared bus itself). A config-less
       // node with legacy bus pins on it falls back to those (display_i2c's pre-config flows).
-      const id = node.properties[spec.config];
+      let id = node.properties[spec.config];
+      if (spec.nestedField !== undefined) {
+        const parent = typeof id === "string" && id !== "" ? ctx.resolveConfig(id) : undefined;
+        const nested = parent?.[spec.nestedField];
+        id = typeof nested === "string" ? nested : "";
+      }
       const fb = spec.fallback;
       const hasLegacyPins = fb !== undefined && (node.properties[fb.scl] !== undefined || node.properties[fb.sda] !== undefined);
       if ((typeof id !== "string" || id === "") && hasLegacyPins) {

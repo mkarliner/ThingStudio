@@ -167,7 +167,7 @@ import { descriptor as filterCoreDescriptor } from "../../node-library/core-pack
 import { descriptor as journalCoreDescriptor } from "../../node-library/core-packages/journal.js";
 import { descriptor as ntpCoreDescriptor } from "../../node-library/core-packages/ntp.js";
 import { descriptor as bme280CoreDescriptor } from "../../node-library/core-packages/bme280.js";
-import { touchI2cNode } from "../../node-library/touch-i2c.js";
+import { descriptor as touchI2cCoreDescriptor } from "../../node-library/core-packages/touch-i2c.js";
 import type { NodeDescriptor } from "../../compiler/node-definition.js";
 import { guiBarNode, guiTrendNode, guiButtonNode, guiLabelNode, guiLedNode, guiModalNode, guiNavigatorNode, guiReadoutNode, guiScreenNode } from "../../node-library/gui.js";
 import { descriptor as i2cCoreDescriptor } from "../../node-library/core-packages/i2c.js";
@@ -447,7 +447,7 @@ export class PwmOutNode extends buildDescriptorNodeClass(pwmOutCoreDescriptor) {
 
 export class TimerNode extends buildDescriptorNodeClass(timerCoreDescriptor) {}
 
-export class TouchI2cNode extends buildDescriptorNodeClass(touchI2cNode) {}
+export class TouchI2cNode extends buildDescriptorNodeClass(touchI2cCoreDescriptor) {}
 
 export class I2cNode extends buildDescriptorNodeClass(i2cCoreDescriptor) {}
 

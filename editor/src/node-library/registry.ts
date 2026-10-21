@@ -9,7 +9,7 @@ import { descriptor as delayCoreDescriptor, python as delayCorePython } from "./
 import { descriptor as filterCoreDescriptor, python as filterCorePython } from "./core-packages/filter.js";
 import { descriptor as journalCoreDescriptor, python as journalCorePython } from "./core-packages/journal.js";
 import { descriptor as bme280CoreDescriptor, python as bme280CorePython } from "./core-packages/bme280.js";
-import { touchI2cNode } from "./touch-i2c.js";
+import { descriptor as touchI2cCoreDescriptor, python as touchI2cCorePython, compileHook as touchI2cCompileHook } from "./core-packages/touch-i2c.js";
 import { buildCoreNodeDefinition } from "./custom-node.js";
 import { descriptor as i2cCoreDescriptor, python as i2cCorePython } from "./core-packages/i2c.js";
 import { descriptor as eswitchCoreDescriptor, python as eswitchCorePython } from "./core-packages/eswitch.js";
@@ -114,7 +114,7 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     buildCoreNodeDefinition(filterCoreDescriptor, filterCorePython),
     buildCoreNodeDefinition(journalCoreDescriptor, journalCorePython),
     buildCoreNodeDefinition(bme280CoreDescriptor, bme280CorePython),
-    touchI2cNode,
+    corePackage(touchI2cCoreDescriptor, touchI2cCorePython, touchI2cCompileHook),
     // i2c is a core package now (node-format-parity phase 4, option A) -- built from its descriptor + .node.py,
     // not a TypeScript codegen hook. See node-library/core-packages/i2c.ts.
     buildCoreNodeDefinition(i2cCoreDescriptor, i2cCorePython),
