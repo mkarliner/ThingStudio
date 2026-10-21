@@ -22,9 +22,9 @@ export const descriptor: NodeDescriptor = {
   icon: "◷",
   width: 84,
   description:
-    "Sends the time after each sync, and for each message in once synced: wire a timer in (1 s with seconds) for " +
-    "a clock that ticks. Format picks the payload; every message also has all the formats as fields. The offset is " +
-    "for standard time; UK / EU adds the summer hour itself.",
+    "Sets the board's clock from the internet and sends the time. Sends once after each sync, and again for each " +
+    "message that arrives. For a clock that ticks, wire a timer in: every second if the format shows seconds, " +
+    "otherwise every few seconds. Nothing is sent before the first sync.",
   allowUnwired: true,
   ports: {
     inputs: [{ name: "msg", type: "any" }],
@@ -32,7 +32,7 @@ export const descriptor: NodeDescriptor = {
   },
   properties: [
     { name: "server", label: "NTP server", kind: "text", default: "pool.ntp.org" },
-    { name: "utcOffset", label: "UTC offset (hours)", kind: "number", default: 0, min: -12, max: 14, step: 0.5 },
+    { name: "utcOffset", label: "UTC offset (hours)", kind: "number", default: 0, min: -12, max: 14, step: 0.5, help: "Your standard time, e.g. 1 for central Europe. Daylight saving adds the summer hour." },
     {
       name: "dst",
       label: "daylight saving",
@@ -57,8 +57,9 @@ export const descriptor: NodeDescriptor = {
         { value: "iso", label: "ISO date and time" },
         { value: "unix", label: "Unix time (seconds)" },
       ],
+      help: "What goes in msg.payload. Every message also carries each format as a field of the same name.",
     },
-    { name: "wifiConfigId", label: "WiFi", kind: "configRef", configType: "thingstudio/config/wifi", singleton: true, default: "" },
+    { name: "wifiConfigId", label: "WiFi", kind: "configRef", configType: "thingstudio/config/wifi", singleton: true, default: "", help: "One WiFi network per flow: every WiFi node shares this setting." },
     { name: "nodeId", label: "node id", kind: "nodeId", default: "" },
   ],
 };
