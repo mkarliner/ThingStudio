@@ -2729,6 +2729,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#change" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        change
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#debug" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3221,17 +3232,6 @@
         
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#compile-only-types" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Compile-only types
-      
-    </span>
-  </a>
   
 </li>
       
@@ -3466,6 +3466,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#change" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        change
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#debug" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3962,17 +3973,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#compile-only-types" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Compile-only types
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#config-nodes" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4061,6 +4061,21 @@ the editor gives a new node. A property a flow file leaves out gets this default
 checked when the flow is compiled, and the error says what is allowed. See <a href="../check-a-flow/">Check a flow without the editor</a>.</p>
 <p>Ports are numbered from 0 in a flow file's <code>edges</code>: <code>[fromNodeId, outputNumber, toNodeId, inputNumber]</code>, in the order listed here.</p>
 <h2 id="general">general</h2>
+<h3 id="change">change</h3>
+<p>Type <code>thingstudio/change</code>, kind transform, palette group general.</p>
+<ul>
+<li>Inputs: msg (any)</li>
+<li>Outputs: msg (any)</li>
+<li>Properties (name, type, default):<ul>
+<li><code>operation</code>, string, default <code>"set"</code></li>
+<li><code>scope</code>, string, default <code>"msg"</code></li>
+<li><code>property</code>, string, default <code>"payload"</code></li>
+<li><code>valueFrom</code>, string, default <code>"literal"</code></li>
+<li><code>valueType</code>, string, default <code>"string"</code></li>
+<li><code>value</code>, string, default <code>""</code></li>
+</ul>
+</li>
+</ul>
 <h3 id="debug">debug</h3>
 <p>Type <code>thingstudio/debug</code>, kind sink, palette group general.</p>
 <ul>
@@ -4588,8 +4603,6 @@ checked when the flow is compiled, and the error says what is allowed. See <a hr
 </ul>
 </li>
 </ul>
-<h2 id="compile-only-types">Compile-only types</h2>
-<p>The compiler accepts these but the canvas has no node for them: <code>thingstudio/variable_get</code>, <code>thingstudio/variable_set</code>.</p>
 <h2 id="config-nodes">Config nodes</h2>
 <p>A config node is listed under <code>configs</code> in a flow file as <code>{id, type, properties}</code>. A node names it by id in a property such as <code>i2cConfigId</code>. Credentials are saved by name (<code>credentialName</code>), never as secrets in the file.</p>
 <h3 id="i2c-bus">I2C bus</h3>

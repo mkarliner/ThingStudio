@@ -3024,7 +3024,7 @@
 <ul>
 <li><strong><code>context</code></strong> — private to this one <code>function</code> node. Use it for a counter or running total only this node needs.</li>
 <li><strong><code>flow</code></strong> — shared across the whole flow. <code>flow.set('name', value)</code> / <code>flow.get('name')</code> works from any function
-  node, and reads/writes the same store a <code>variable_get</code>/<code>variable_set</code> node uses by name.</li>
+  node, and reads/writes the same store a <a href="../change/">change</a> node uses by name.</li>
 <li><strong><code>settings</code></strong> — saved on the board and survives a reboot. Use it for a value the user changes, such as units or a
   colour scheme. It is namespaced by the flow's name, so a different flow cannot read or overwrite it.
   <code>settings.get('units', 'kg')</code> / <code>settings.set('units', 'lbs')</code>.</li>
