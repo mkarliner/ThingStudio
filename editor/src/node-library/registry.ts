@@ -14,7 +14,7 @@ import { buildCoreNodeDefinition } from "./custom-node.js";
 import { descriptor as i2cCoreDescriptor, python as i2cCorePython } from "./core-packages/i2c.js";
 import { descriptor as eswitchCoreDescriptor, python as eswitchCorePython } from "./core-packages/eswitch.js";
 import { descriptor as ebuttonCoreDescriptor, python as ebuttonCorePython } from "./core-packages/ebutton.js";
-import { adcNode } from "./adc.js";
+import { descriptor as adcCoreDescriptor, python as adcCorePython, compileHook as adcCompileHook } from "./core-packages/adc.js";
 import { descriptor as encoderCoreDescriptor, python as encoderCorePython } from "./core-packages/encoder.js";
 import { descriptor as neopixelCoreDescriptor, python as neopixelCorePython } from "./core-packages/neopixel.js";
 import { functionNode } from "./function-node.js";
@@ -91,7 +91,7 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     buildCoreNodeDefinition(interruptCoreDescriptor, interruptCorePython),
     buildCoreNodeDefinition(eswitchCoreDescriptor, eswitchCorePython),
     buildCoreNodeDefinition(ebuttonCoreDescriptor, ebuttonCorePython),
-    adcNode,
+    corePackage(adcCoreDescriptor, adcCorePython, adcCompileHook),
     buildCoreNodeDefinition(encoderCoreDescriptor, encoderCorePython),
     buildCoreNodeDefinition(neopixelCoreDescriptor, neopixelCorePython),
     displaySpiNode,

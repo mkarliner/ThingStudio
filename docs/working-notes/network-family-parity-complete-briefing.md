@@ -50,8 +50,8 @@ Every network node is a package. Remaining built-ins, by blocker:
   `runtime.shared('flow_vars')`, node context stays function-code only.
 - **`variable-set`**: its fate is the context model's no-code-path question (Q3), still open.
 - **Hardware remainder**, each its own design/verification task: `touch_i2c` (nested config, panel single-use,
-  reset pin), `display_spi` (compile-time geometry/viper loops must become runtime Python), `adc` (ESP32 ADC2-vs-
-  WiFi guard reads siblings).
+  reset pin) and `display_spi` (compile-time geometry/viper loops must become runtime Python). **`adc` flipped
+  2026-10-21**, hardware-checked on the C3.
 - **Residue, built-in-only by design**: `function` (verbatim code) and the `gui_*` family.
 
 ## Open items worth picking up

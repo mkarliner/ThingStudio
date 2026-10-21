@@ -63,6 +63,23 @@ function defaultPinUse(direction: "input" | "output" | "bidirectional", pull: Pu
   return direction === "output" ? "output" : `input, ${pullText(pull)}`;
 }
 
+const WIFI_NODE_TYPES = [
+  "thingstudio/wifi_status",
+  "thingstudio/wifi_gate",
+  "thingstudio/mqtt_publish",
+  "thingstudio/mqtt_subscribe",
+  "thingstudio/http_request",
+  "thingstudio/http_in",
+  "thingstudio/http_response",
+  "thingstudio/udp_send",
+  "thingstudio/udp_receive",
+];
+
+function flowUsesWifi(ctx: CodegenContext): boolean {
+  if (!ctx.findNodesOfType) return false;
+  return WIFI_NODE_TYPES.some((t) => (ctx.findNodesOfType!(t)?.length ?? 0) > 0);
+}
+
 function checkPinResource(ctx: CodegenContext, node: GraphNode, what: string, spec: PinResourceSpec): void {
   const rawPull = spec.pullProperty ? node.properties[spec.pullProperty] : spec.pull;
   const pull: Pull = rawPull === undefined || rawPull === null || rawPull === "" ? "none" : (String(rawPull) as Pull);
@@ -72,6 +89,12 @@ function checkPinResource(ctx: CodegenContext, node: GraphNode, what: string, sp
   const pin = checkPin(ctx, `${what} pin`, node.properties[spec.property], spec.direction, {
     pull: spec.direction === "input" && pull !== "none",
   });
+  if (spec.noAdc2WithWifi && ctx.target?.processor.adc2.has(pin) && flowUsesWifi(ctx)) {
+    throw new CompileError(
+      `${what} pin ${pin} is an ADC2 pin on ${ctx.target.label} and the flow uses WiFi, which makes ADC2 unusable. ` +
+        `Use an ADC1 pin, or drop the flow's network nodes.`,
+    );
+  }
   claimResource(ctx, pinLabel(pin), interpolate(spec.use ?? defaultPinUse(spec.direction, pull), node, pin), node);
   if (spec.claim) {
     claimResource(ctx, interpolate(spec.claim.resource, node, pin), interpolate(spec.claim.use, node, pin), node);

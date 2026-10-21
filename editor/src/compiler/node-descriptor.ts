@@ -269,6 +269,9 @@ export interface PinResourceSpec {
   /** A second, derived claim for a device on the pin (its own settings), so two devices with different settings
    * on one pin conflict. `{pin}`/`{property}` interpolated. */
   claim?: { resource: string; use: string };
+  /** Refuse this pin when it is a processor ADC2 pin and the flow uses WiFi (classic ESP32: ADC2 is unusable
+   * while the radio is up). Core-only, added 2026-10-21 for the adc package. */
+  noAdc2WithWifi?: boolean;
 }
 
 /** The canonical node descriptor: plain data only, plus (on a built-in's NodeDefinition) the codegen

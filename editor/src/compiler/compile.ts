@@ -460,7 +460,9 @@ export function compile(graphData: GraphData, registry: Map<string, NodeDefiniti
       const src = sourceDef.codegenEventSource(source, ctx);
       mergeSetup(src, imports, setupStatements);
       const bodyLines = [src.waitStatement, src.buildMsg];
-      if (chainBody) bodyLines.push(chainBody);
+      // An event source's emit may return None to skip downstream for this wake (adc does after a read error),
+      // matching the polled source's own guard below.
+      if (chainBody) bodyLines.push(`if msg is not None:\n${indent(chainBody, 4)}`);
       loopBody = `while True:\n${indent(bodyLines.join("\n"), 4)}`;
     } else if (sourceDef.codegenSource) {
       const src = sourceDef.codegenSource(source, ctx);

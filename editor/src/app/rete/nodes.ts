@@ -151,7 +151,7 @@ import { descriptor as timerCoreDescriptor } from "../../node-library/core-packa
 import { descriptor as interruptCoreDescriptor } from "../../node-library/core-packages/interrupt.js";
 import { descriptor as eswitchCoreDescriptor } from "../../node-library/core-packages/eswitch.js";
 import { descriptor as ebuttonCoreDescriptor } from "../../node-library/core-packages/ebutton.js";
-import { adcNode } from "../../node-library/adc.js";
+import { descriptor as adcCoreDescriptor } from "../../node-library/core-packages/adc.js";
 import { descriptor as encoderCoreDescriptor } from "../../node-library/core-packages/encoder.js";
 import { descriptor as neopixelCoreDescriptor } from "../../node-library/core-packages/neopixel.js";
 import { descriptor as wifiStatusCoreDescriptor } from "../../node-library/core-packages/wifi-status.js";
@@ -475,7 +475,7 @@ export class EswitchNode extends buildDescriptorNodeClass(eswitchCoreDescriptor)
 
 export class EbuttonNode extends buildDescriptorNodeClass(ebuttonCoreDescriptor) {}
 
-export class AdcNode extends buildDescriptorNodeClass(adcNode) {}
+export class AdcNode extends buildDescriptorNodeClass(adcCoreDescriptor) {}
 
 export class EncoderNode extends buildDescriptorNodeClass(encoderCoreDescriptor) {}
 

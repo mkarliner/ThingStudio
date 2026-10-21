@@ -62,7 +62,10 @@ library. The rest of the network family splits by the capability each still need
   set, so the route table and duplicate detection stay compile-time; `ts_http_server`, shared through
   `runtime.shared`, runs one server per port with a request queue per node. Hardware re-checked on the C3.
 
-Hardware, each its own design/verification task (see `shared-resource-facility-scoping.md` §9):
+Hardware: `adc` flipped 2026-10-21 (AADC over the shared ADC; the ADC2+WiFi refusal is a `noAdc2WithWifi` pin
+resource checked by the generic codegen; an event-source `emit` returning None now skips downstream, which adc uses
+after a read error). Hardware-checked on the C3 (floating pin readings emitted every 2s). The remaining hardware
+nodes each need their own design/verification task (see `shared-resource-facility-scoping.md` §9):
 - **`touch-i2c`** — nested config (`touch-panel` → `i2cConfigId`); not a small change (config field kinds live in
   `app/rete/config-types.ts`, behind the layering boundary; `ctx.resolveConfig()` returns no type). Options: a
   facility extension passing a resource-built object into a package (Option 1), moving config-type metadata to a
