@@ -120,13 +120,29 @@ async def run(msg, properties):
     if topic is None or topic == '':
         raise OSError("mqtt_subscribe: an action message needs a topic")
     topics = topic if isinstance(topic, (list, tuple)) else [topic]
+    parsed = []
+    for entry in topics:
+        if isinstance(entry, dict):
+            name = entry.get('topic')
+            try:
+                entry_qos = int(entry.get('qos', _qos))
+            except (TypeError, ValueError):
+                entry_qos = -1
+            if entry_qos not in (0, 1):
+                raise OSError("mqtt_subscribe: topic %r has qos %r -- use 0 or 1" % (name, entry.get('qos')))
+        else:
+            name = entry
+            entry_qos = _qos
+        if name is None or name == '':
+            raise OSError("mqtt_subscribe: an action message needs a topic")
+        parsed.append((str(name), entry_qos))
     await _broker.ensure_connected(_node_id)
     if action == 'subscribe':
-        for name in topics:
-            await _broker.subscribe(_node_id, str(name), _qos)
+        for name, entry_qos in parsed:
+            await _broker.subscribe(_node_id, name, entry_qos)
     elif action == 'unsubscribe':
-        for name in topics:
-            await _broker.unsubscribe(_node_id, str(name))
+        for name, _entry_qos in parsed:
+            await _broker.unsubscribe(_node_id, name)
     else:
         raise OSError("mqtt_subscribe: unknown action %r -- use subscribe or unsubscribe" % (action,))
 

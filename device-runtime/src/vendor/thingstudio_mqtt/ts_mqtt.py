@@ -214,10 +214,11 @@ class _Client:
             self.events[node_id] = asyncio.Event()
         self.node_topics.setdefault(node_id, set()).add(topic)
         first = topic not in self.subs
+        previous_qos = self.qos.get(topic, 0)
         self.subs.setdefault(topic, set()).add(node_id)
-        if qos > self.qos.get(topic, 0):
+        if qos > previous_qos:
             self.qos[topic] = qos
-        if first:
+        if first or qos > previous_qos:
             try:
                 await self.client.subscribe(topic, self.qos.get(topic, 0))
             except OSError as e:

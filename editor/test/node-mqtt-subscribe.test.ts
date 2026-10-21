@@ -257,6 +257,17 @@ describe("thingstudio/mqtt_subscribe dynamic subscription", () => {
     expect(out).toContain("MQTT_SUBSCRIBE topic='c'");
   });
 
+  it("accepts a {topic, qos} object and a list mixing forms", async () => {
+    const out = await sinkScript([{ action: "subscribe", topic: [{ topic: "b", qos: 1 }, "c"] }]);
+    expect(out).toContain("MQTT_SUBSCRIBE topic='b' qos=1");
+    expect(out).toContain("MQTT_SUBSCRIBE topic='c' qos=0");
+  });
+
+  it("reports a {topic, qos} entry with no topic", async () => {
+    const out = await sinkScript([{ action: "subscribe", topic: { qos: 1 } }]);
+    expect(out).toContain("needs a topic");
+  });
+
   it("unsubscribes from a topic", async () => {
     const out = await sinkScript([
       { action: "subscribe", topic: "b" },

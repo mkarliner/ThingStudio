@@ -21,7 +21,7 @@ The message carries the payload (decoded as text when possible, raw bytes otherw
 **Dynamic subscription.** With it on, an input message changes what the node listens to:
 
 - `msg.action` is `subscribe` or `unsubscribe`.
-- `msg.topic` is a topic string or a list of them.
+- `msg.topic` is a topic string, a `{topic, qos}` object, or a list of either.
 
 `unsubscribe` stops the node receiving that topic. Two nodes subscribed to the same topic are independent: one
 unsubscribing doesn't stop the other. The configured **topic** is subscribed at start, so turning dynamic

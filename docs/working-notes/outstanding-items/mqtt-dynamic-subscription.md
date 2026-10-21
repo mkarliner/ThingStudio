@@ -17,9 +17,10 @@ the vendored `mqtt_as` config), so the broker drops the subscription. Filtering 
 ## The gap
 
 Node-RED's `mqtt in` node has a "dynamic subscription" mode: the node gains an input, and messages with
-`msg.action` (`subscribe`, `unsubscribe`, `connect`, `disconnect`) and `msg.topic` change what it listens to at run
-time. Check Node-RED's current docs for the exact action set and `msg.topic` forms (a string, a list, `true` for
-"all") before building; mimic it as far as is reasonable (the project's Node-RED rule).
+`msg.action` (`connect`, `disconnect`, `getSubscriptions`, `subscribe`, `unsubscribe`) and `msg.topic` change what it
+listens to at run time. Current Node-RED docs: for subscribe/unsubscribe, `msg.topic` is a string, a
+`{topic, qos}` object, or an array of either; there is no `true` form. Mimic it as far as is reasonable (the
+project's Node-RED rule).
 
 The vendored `mqtt_as` already has `unsubscribe(topic)` (`device-runtime/src/vendor/mqtt_as/__init__.py`), so no
 board-side capability is missing.
@@ -47,9 +48,11 @@ than designing them in. See `network-package-gaps-briefing.md` item 2.
 
 `mqtt_subscribe` is a two-faced package: `kind: "sink"` + `eventSource: true`, with an input and an output. A
 **dynamic subscription** boolean property (default off) gates the input face; off is exactly the old behaviour, and
-the port is simply unwired in saved flows. `msg.action` is `subscribe` or `unsubscribe`, `msg.topic` a string or
-list. `connect`/`disconnect` are deliberately not supported -- `ts_mqtt` has no disconnect that leaves WiFi alone --
-and any other action raises a clear error. The configured topic is subscribed at start; an action changes the set.
+the port is simply unwired in saved flows. `msg.action` is `subscribe` or `unsubscribe`, `msg.topic` a string, a
+`{topic, qos}` object, or a list of either. `connect`/`disconnect`/`getSubscriptions` are deliberately not supported
+yet -- `ts_mqtt` has no disconnect that leaves WiFi alone, and the output face would need a way to carry a
+subscription list -- and any other action raises a clear error. The configured topic is subscribed at start; an
+action changes the set.
 Unsubscribing the configured topic lasts until the next reload.
 
 The input face reports an error when dynamic subscription is off, when the action is unknown, or when a topic is

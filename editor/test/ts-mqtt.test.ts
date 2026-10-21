@@ -85,6 +85,20 @@ describe("ts_mqtt library", () => {
     expect(out).toContain("N2B EMPTY");
   });
 
+  it("resubscribes at a higher qos when a second node asks for one", () => {
+    const out = run(
+      PRELUDE +
+        "c = " + CLIENT +
+        "async def _main():\n" +
+        "    await c.ensure_connected('n1')\n" +
+        "    await c.subscribe('n1', 't', 0)\n" +
+        "    await c.subscribe('n2', 't', 1)\n" +
+        "    print('SUBS', c.client.subscriptions)\n" +
+        "asyncio.run(_main())\n",
+    );
+    expect(out).toContain("SUBS [('t', 0), ('t', 1)]");
+  });
+
   it("sends the broker an UNSUBSCRIBE only when the last node lets go of a topic", () => {
     const out = run(
       PRELUDE +
