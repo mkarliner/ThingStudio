@@ -378,13 +378,13 @@ describe("touch buttons", () => {
       g.links.push([9, "screen", 0, "disp", 0, "bytes"]);
       return g;
     };
-    it("takes the display's panel size and frame format, not its own", () => {
+    it("takes the display's panel size and frame format, not its own", async () => {
       // The screen's own width/height/format (set to 320x240/rgb565 above) are ignored once a display is wired.
-      const { source } = compile(withDisplay(320, 240, {}), buildRegistry());
+      const { source } = await compileWithHooks(withDisplay(320, 240, {}), buildRegistry());
       expect(source).toMatch(/BandSurface\("screen", 320, 480, framebuf\.RGB565,/);
     });
-    it("uses the display's turned size when the display has an orientation", () => {
-      const { source } = compile(withDisplay(320, 240, { orientation: "90" }), buildRegistry());
+    it("uses the display's turned size when the display has an orientation", async () => {
+      const { source } = await compileWithHooks(withDisplay(320, 240, { orientation: "90" }), buildRegistry());
       expect(source).toMatch(/BandSurface\("screen", 480, 320, framebuf\.RGB565,/);
     });
   });

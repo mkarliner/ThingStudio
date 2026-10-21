@@ -49,9 +49,9 @@ Every network node is a package. Remaining built-ins, by blocker:
   **`change`** node (2026-10-21), which replaces and removes `variable_get`/`variable_set`; the flow store is
   `runtime.shared('flow_vars')`, node context stays function-code only.
 - **`variable-set`**: its fate is the context model's no-code-path question (Q3), still open.
-- **Hardware remainder:** **`adc` flipped 2026-10-21** (C3) and **`touch_i2c` flipped 2026-10-21** (Freenove,
-  FT6336U, nested I2C resource). Only **`display_spi`** remains: compile-time geometry/viper loops must become
-  runtime Python, with the CYD/Freenove as the hardware pass.
+- **Hardware remainder:** **`adc`** (C3), **`touch_i2c`** (Freenove FT6336U, nested I2C resource) and
+  **`display_spi`** (Freenove ST7796 gs4; viper loops kept, optional pin resources) all flipped 2026-10-21.
+  Every non-residue built-in is a package now; `function` and `gui_*` are the named residue.
 - **Residue, built-in-only by design**: `function` (verbatim code) and the `gui_*` family.
 
 ## Open items worth picking up

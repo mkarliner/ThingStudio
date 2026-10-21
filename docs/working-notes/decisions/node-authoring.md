@@ -938,6 +938,10 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   The two package-format gaps that came out of the rest were closed as they were reached: two-faced packages
   (sink + event source) and the shared device library.
 
+- **2026-10-21 (later) — display_spi is a package.** The hook computes the turned size, MADCTL and frame geometry;
+  the Python keeps the hand-written viper gs4/gs2/mono expansion loops (nested viper functions are supported on the
+  S3). Optional pins got a core-only `PinResourceSpec.optional` flag. Hardware: Freenove ST7796 gs4 pattern.
+  With this, every non-residue built-in is a package (`function` and `gui_*` are the named residue).
 - **2026-10-21 — touch_i2c is a package; I2C resources can follow a nested config.** `I2cResourceSpec.nestedField`
   names a property of the config a node references (a touch panel's `i2cConfigId`), so the generic resource codegen
   still validates and claims the bus with the real target while a package hook gets the values for its Python. The

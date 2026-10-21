@@ -81,6 +81,10 @@ function flowUsesWifi(ctx: CodegenContext): boolean {
 }
 
 function checkPinResource(ctx: CodegenContext, node: GraphNode, what: string, spec: PinResourceSpec): void {
+  if (spec.optional) {
+    const raw = node.properties[spec.property];
+    if (raw === undefined || raw === null || raw === "" || Number(raw) < 0) return;
+  }
   const rawPull = spec.pullProperty ? node.properties[spec.pullProperty] : spec.pull;
   const pull: Pull = rawPull === undefined || rawPull === null || rawPull === "" ? "none" : (String(rawPull) as Pull);
   if (pull !== "none" && pull !== "up" && pull !== "down") {

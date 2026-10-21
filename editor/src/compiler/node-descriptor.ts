@@ -275,6 +275,9 @@ export interface PinResourceSpec {
   /** Refuse this pin when it is a processor ADC2 pin and the flow uses WiFi (classic ESP32: ADC2 is unusable
    * while the radio is up). Core-only, added 2026-10-21 for the adc package. */
   noAdc2WithWifi?: boolean;
+  /** The pin may be left unset or -1 ("not wired"); then neither checked nor claimed. Added 2026-10-21 for
+   * display_spi's cs/reset/backlight. */
+  optional?: boolean;
 }
 
 /** The canonical node descriptor: plain data only, plus (on a built-in's NodeDefinition) the codegen

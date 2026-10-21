@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { formatRgb565, hexToRgb565, rgb565ToHex } from "../src/app/rete/rgb565.js";
-import { DEFAULT_PALETTE_GS4 } from "../src/node-library/display-spi.js";
+import { DEFAULT_PALETTE_GS4 } from "../src/node-library/core-packages/display-spi.js";
 
 describe("rgb565 helpers", () => {
   it("maps the extremes and primaries exactly", () => {

@@ -174,7 +174,7 @@ import { descriptor as i2cCoreDescriptor } from "../../node-library/core-package
 import { descriptor as mqttPublishCoreDescriptor } from "../../node-library/core-packages/mqtt-publish.js";
 import { descriptor as mqttSubscribeCoreDescriptor } from "../../node-library/core-packages/mqtt-subscribe.js";
 import { descriptor as pwmOutCoreDescriptor } from "../../node-library/core-packages/pwm-out.js";
-import { displaySpiNode } from "../../node-library/display-spi.js";
+import { descriptor as displaySpiCoreDescriptor } from "../../node-library/core-packages/display-spi.js";
 import { descriptor as displayI2cCoreDescriptor } from "../../node-library/core-packages/display-i2c.js";
 import { resolvePortType, resolveOutputCount, type PortDefinition } from "../../compiler/node-definition.js";
 import type { CustomNodeDescriptor } from "../../node-library/custom-node.js";
@@ -489,7 +489,7 @@ export class WifiStatusNode extends buildDescriptorNodeClass(wifiStatusCoreDescr
 
 export class WifiGateNode extends buildDescriptorNodeClass(wifiGateCoreDescriptor) {}
 
-export class DisplaySpiNode extends buildDescriptorNodeClass(displaySpiNode) {}
+export class DisplaySpiNode extends buildDescriptorNodeClass(displaySpiCoreDescriptor) {}
 
 export class DisplayI2cNode extends buildDescriptorNodeClass(displayI2cCoreDescriptor) {}
 

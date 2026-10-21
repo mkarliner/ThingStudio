@@ -71,12 +71,12 @@ nodes each need their own design/verification task (see `shared-resource-facilit
   the panel/bus, enforces the one-panel-one-user rule, claims the optional reset pin and types the panel values.
   Hardware-checked on the Freenove (FT6336U): down/up coordinates through a full drag. (`docs/working-notes/
   decisions/node-authoring.md`.)
-- **`display-spi`** — large and hardware-critical: compile-time MADCTL/stride geometry + the `@micropython.viper`
-  expansion loops must become runtime Python. Do it only with a real-hardware pass; consider whether the geometry
-  belongs in a small facility instead. **The existing TS node was validated on the CYD on 2026-10-21** with
-  `test-flows/display-spi-gs4-cyd-test.flow.json` (the 240x320 pattern rendered correctly), so the conversion's
-  reference behavior is confirmed; the conversion itself is still to do. The CYD's touch is XPT2046 (SPI), so
-  `touch_i2c` still needs I2C touch hardware.
+- **`display_spi` — flipped 2026-10-21.** The hook computes the turned size/MADCTL and frame geometry; the Python
+  builds the shared SPI/pins and driver and keeps the hand-written viper gs4/gs2/mono expansion loops (nested viper
+  functions were confirmed on the S3). Optional pins got a core-only `optional` pin-resource flag. Hardware:
+  Freenove (ST7796, GS4 pattern); the CYD's ST7789 path was validated with the previous TS node before the swap.
+  With this, every non-residue built-in is a package: `function` and the `gui_*` family are the named residue, and
+  `variable_get`/`variable_set` were replaced by `change`.
 - **`adc`** — a node-specific compile-time context query (its ESP32 ADC2-vs-WiFi guard reads `findNodesOfType`).
 
 Residue (built-in-only by design, not goals): **`function`** (verbatim user code) and the **`gui_*`** family (the

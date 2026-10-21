@@ -10,12 +10,13 @@ import type { GraphData, GraphNode } from "../src/compiler/graph.js";
 import type { CodegenContext } from "../src/compiler/node-definition.js";
 import { buildRegistry } from "../src/node-library/registry.js";
 import { descriptor as adcDescriptor, python as adcPython } from "../src/node-library/core-packages/adc.js";
-import { displaySpiNode } from "../src/node-library/display-spi.js";
+import { descriptor as displaySpiDescriptor, python as displaySpiPython } from "../src/node-library/core-packages/display-spi.js";
 import { descriptor as encoderDescriptor, python as encoderPython } from "../src/node-library/core-packages/encoder.js";
 import { descriptor as gpioOutDescriptor, python as gpioOutPython } from "../src/node-library/core-packages/gpio-out.js";
 import { buildCoreNodeDefinition } from "../src/node-library/custom-node.js";
 
 const adcNode = buildCoreNodeDefinition(adcDescriptor, adcPython);
+const displaySpiNode = buildCoreNodeDefinition(displaySpiDescriptor, displaySpiPython);
 
 const gpioOutNode = buildCoreNodeDefinition(gpioOutDescriptor, gpioOutPython);
 const encoderNode = buildCoreNodeDefinition(encoderDescriptor, encoderPython);
@@ -92,9 +93,12 @@ describe("hardware resources are keyed singletons", () => {
   it("two displays share an SPI bus only at the same pins and speed", () => {
     const ctx = claimingCtx();
     const first = displaySpiNode.codegenSink!(display("d1"), ctx);
-    expect(first.statements!.map((s) => s.code).join("\n")).toContain(
-      "_spi_bus_1 = runtime.shared('spi', 1, (12, 11, 40000000), lambda: machine.SPI(1, baudrate=40000000",
-    );
+    const code = first.statements!.map((s) => s.code).join("\n");
+    expect(code).toContain("runtime.shared(");
+    expect(code).toContain('"spiBus": 1');
+    expect(code).toContain('"sck": 12');
+    expect(code).toContain('"mosi": 11');
+    expect(code).toContain('"baudrate": 40000000');
     expect(() => displaySpiNode.codegenSink!(display("d2", { dc: 4, cs: 5, backlight: -1 }), ctx)).not.toThrow();
     expect(() => displaySpiNode.codegenSink!(display("d3", { dc: 6, cs: 7, backlight: -1, baudrate: 20000000 }), ctx)).toThrow(/SPI bus 1: display_spi d3/);
   });

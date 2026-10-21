@@ -288,7 +288,7 @@ Type `thingstudio/display_spi`, kind sink, palette group hardware.
     - `backlight`, number, default `-1` — GPIO, or -1 for none
     - `width`, number, default `135` — the panel's own width in pixels
     - `height`, number, default `240` — the panel's own height in pixels
-    - `rotation`, number, default `0` — how the panel is mounted, 0 to 7 (MADCTL); with an orientation, 0 to 3 only
+    - `rotation`, number, default `1` — how the panel is mounted, 0 to 7 (MADCTL); with an orientation, 0 to 3 only
     - `colorOrder`, string, default `"bgr"`
     - `invertColors`, boolean, default `false`
     - `dataLatchOrder`, boolean, default `true`

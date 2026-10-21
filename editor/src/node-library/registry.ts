@@ -3,7 +3,7 @@ import type { NodeDefinition } from "../compiler/node-definition.js";
 import type { NodeDescriptor } from "../compiler/node-descriptor.js";
 import { descriptor as debugCoreDescriptor, python as debugCorePython } from "./core-packages/debug.js";
 import { descriptor as displayI2cCoreDescriptor, python as displayI2cCorePython } from "./core-packages/display-i2c.js";
-import { displaySpiNode } from "./display-spi.js";
+import { descriptor as displaySpiCoreDescriptor, python as displaySpiCorePython, compileHook as displaySpiCompileHook } from "./core-packages/display-spi.js";
 import { descriptor as changeCoreDescriptor, python as changeCorePython, compileHook as changeCompileHook } from "./core-packages/change.js";
 import { descriptor as delayCoreDescriptor, python as delayCorePython } from "./core-packages/delay.js";
 import { descriptor as filterCoreDescriptor, python as filterCorePython } from "./core-packages/filter.js";
@@ -94,7 +94,7 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     corePackage(adcCoreDescriptor, adcCorePython, adcCompileHook),
     buildCoreNodeDefinition(encoderCoreDescriptor, encoderCorePython),
     buildCoreNodeDefinition(neopixelCoreDescriptor, neopixelCorePython),
-    displaySpiNode,
+    corePackage(displaySpiCoreDescriptor, displaySpiCorePython, displaySpiCompileHook),
     buildCoreNodeDefinition(displayI2cCoreDescriptor, displayI2cCorePython),
     buildCoreNodeDefinition(pwmOutCoreDescriptor, pwmOutCorePython),
     buildCoreNodeDefinition(timerCoreDescriptor, timerCorePython),
