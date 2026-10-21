@@ -2254,8 +2254,6 @@ Sets the board's clock from the internet and sends the time, as text for a displ
 | `iso` | `2026-10-14T14:05:09+01:00` |
 | `unix` | `1791983109`, an int: seconds since 1970 UTC, whatever the offset |
 
-- **WiFi** — the flow's WiFi network, shared by every WiFi node.
-
 ## Wiring
 
 - **Input** — any message asks for the time now. Wire a [timer](timer.md) in for a clock that ticks: 1 second with
