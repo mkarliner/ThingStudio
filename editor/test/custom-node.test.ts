@@ -948,3 +948,25 @@ describe("validateCustomNodeDescriptor: property-dependent port types", () => {
     expect(() => validateCustomNodeDescriptor(badDefault)).toThrow(/default must be one of/);
   });
 });
+
+describe("validateCustomNodeDescriptor: runOnce sources", () => {
+  const RUN_ONCE_RAW = {
+    type: "custom/once",
+    kind: "source",
+    label: "once",
+    runOnce: true,
+    ports: { outputs: [{ name: "msg", type: "any" }] },
+  };
+
+  it("accepts a source with runOnce and no intervalMs", () => {
+    expect(validateCustomNodeDescriptor(RUN_ONCE_RAW).runOnce).toBe(true);
+  });
+
+  it("rejects runOnce on a non-source", () => {
+    expect(() => validateCustomNodeDescriptor({ ...RUN_ONCE_RAW, kind: "transform", ports: { inputs: [{ name: "msg", type: "any" }], outputs: [{ name: "msg", type: "any" }] } })).toThrow(/only valid on a "source"/);
+  });
+
+  it("rejects runOnce together with eventSource", () => {
+    expect(() => validateCustomNodeDescriptor({ ...RUN_ONCE_RAW, eventSource: true })).toThrow(/mutually exclusive/);
+  });
+});

@@ -44,9 +44,9 @@ before the ACK, so `wifi_status`'s one-time `payload=True` could be dropped and 
 
 Every network node is a package. Remaining built-ins, by blocker:
 
-- **Property-dependent port types** — the data form landed 2026-10-20 (`{property, map, default}`), and
-  `inject`/`startup`/`variable_get` use it. Their package conversion, and a shared flow-vars store with
-  `variable_set`, remain.
+- **Property-dependent port types** — the data form landed 2026-10-20 (`{property, map, default}`);
+  **`inject` and `startup` are packages** (2026-10-21, hardware-checked). `variable_get` still waits on a shared
+  flow-vars store with `variable_set`.
 - **`variable-set`**: its fate is the context model's no-code-path question (Q3), still open.
 - **Hardware remainder**, each its own design/verification task: `touch_i2c` (nested config, panel single-use,
   reset pin), `display_spi` (compile-time geometry/viper loops must become runtime Python), `adc` (ESP32 ADC2-vs-
@@ -82,6 +82,6 @@ Every network node is a package. Remaining built-ins, by blocker:
 
 ## Suggested next order
 
-1. ~~The property-dependent port-type data form.~~ Done 2026-10-20.
+1. ~~The property-dependent port-type data form; `inject`/`startup` packages.~~ Done 2026-10-20/21.
 2. Browser smoke test + conformance vectors (release gates).
 3. `http_in`/dynamic-subscription follow-ups as Mike prioritises them, then the hardware remainder.

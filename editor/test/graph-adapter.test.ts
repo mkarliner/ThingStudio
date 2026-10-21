@@ -101,7 +101,7 @@ describe("graph-adapter: Rete NodeEditor -> compiler GraphData", () => {
       // nodes.ts's own header note) -- InjectNode's real properties object
       // no longer has it at all, so toGraphData()'s pass-through here
       // reflects that directly.
-      { id: inject.id, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true" } },
+      { id: inject.id, type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", nodeId: "" } },
       { id: gpio.id, type: "thingstudio/gpio_out", properties: { pin: 12 } },
     ]);
   });

@@ -938,6 +938,11 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   The two package-format gaps that came out of the rest were closed as they were reached: two-faced packages
   (sink + event source) and the shared device library.
 
+- **2026-10-21 — inject and startup are packages.** Both use the data-form port type; their payload typing is at
+  run time (not a hook), so flows with inject still compile through the plain compiler -- inject is the fixture
+  most node tests use. A bad number is a `NODE_ERROR` at run time rather than a `CompileError`. `startup` is a
+  run-once source via the new `runOnce` descriptor flag; a custom package can use it too. `variable_get` remains
+  the one property-dependent node not converted, waiting on a shared flow-vars store with `variable_set`.
 - **2026-10-20 — property-dependent port type is data now.** A port's `type` may be
   `{property, map, default}`; the JS-function form is removed. It is in the canonical `NodeDescriptor` and
   `custom-node.schema.json`, and the custom validator checks that the property is a declared `select` and that

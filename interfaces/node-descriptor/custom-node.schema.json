@@ -35,7 +35,8 @@
     },
     "properties": { "type": "array", "items": { "$ref": "#/$defs/propertyField" } },
     "requires": { "$ref": "#/$defs/requires" },
-    "eventSource": { "type": "boolean", "description": "A source that waits on an external event (.node.py defines wait and emit; no intervalMs), or a two-faced sink (.node.py defines run plus wait and emit; one input and one output port). Not valid on a transform." }
+    "eventSource": { "type": "boolean", "description": "A source that waits on an external event (.node.py defines wait and emit; no intervalMs), or a two-faced sink (.node.py defines run plus wait and emit; one input and one output port). Not valid on a transform." },
+    "runOnce": { "type": "boolean", "description": "A polled source that runs its emit once at flow start (no intervalMs). Sources only, and mutually exclusive with eventSource." }
   },
   "$defs": {
     "requires": {

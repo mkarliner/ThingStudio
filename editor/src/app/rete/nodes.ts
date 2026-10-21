@@ -142,8 +142,8 @@
 import { ClassicPreset } from "rete";
 import { socketForPayloadType } from "./sockets";
 import type { NodeKind } from "./palette";
-import { injectNode } from "../../node-library/inject.js";
-import { startupNode } from "../../node-library/startup.js";
+import { descriptor as injectCoreDescriptor } from "../../node-library/core-packages/inject.js";
+import { descriptor as startupCoreDescriptor } from "../../node-library/core-packages/startup.js";
 import { functionNode } from "../../node-library/function-node.js";
 import { descriptor as debugCoreDescriptor } from "../../node-library/core-packages/debug.js";
 import { descriptor as gpioOutCoreDescriptor } from "../../node-library/core-packages/gpio-out.js";
@@ -425,11 +425,11 @@ export class DebugNode extends buildDescriptorNodeClass(debugCoreDescriptor) {}
 
 export class DelayNode extends buildDescriptorNodeClass(delayCoreDescriptor) {}
 
-export class InjectNode extends buildDescriptorNodeClass(injectNode) {}
+export class InjectNode extends buildDescriptorNodeClass(injectCoreDescriptor) {}
 
 export class FunctionNode extends buildDescriptorNodeClass(functionNode) {}
 
-export class StartupNode extends buildDescriptorNodeClass(startupNode) {}
+export class StartupNode extends buildDescriptorNodeClass(startupCoreDescriptor) {}
 
 export class GpioOutNode extends buildDescriptorNodeClass(gpioOutCoreDescriptor) {}
 

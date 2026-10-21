@@ -282,6 +282,9 @@ export interface NodeDescriptor {
    * provides a wait + build step instead of a poll interval. Core packages need this on the canonical descriptor
    * to be event sources (the custom `.node.json` already carries it). Added 2026-10-16. */
   eventSource?: boolean;
+  /** A polled `source` that runs its emit once at flow start instead of on an interval (startup). Data, so a
+   * custom package can use it too. Mutually exclusive with eventSource. Added 2026-10-21. */
+  runOnce?: boolean;
   /** The short canvas/palette key (e.g. "gpio_out"), distinct from `kind` above and from the full `type`.
    * "custom" for every loaded custom type, whose real id is `type`. Keys palette styling and NODE_FACTORIES.
    *

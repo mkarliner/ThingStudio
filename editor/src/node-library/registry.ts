@@ -21,12 +21,12 @@ import { descriptor as gpioOutCoreDescriptor, python as gpioOutCorePython } from
 import { descriptor as httpInCoreDescriptor, python as httpInCorePython, compileHook as httpInCompileHook } from "./core-packages/http-in.js";
 import { descriptor as httpRequestCoreDescriptor, python as httpRequestCorePython, compileHook as httpRequestCompileHook } from "./core-packages/http-request.js";
 import { descriptor as httpResponseCoreDescriptor, python as httpResponseCorePython } from "./core-packages/http-response.js";
-import { injectNode } from "./inject.js";
+import { descriptor as injectCoreDescriptor, python as injectCorePython } from "./core-packages/inject.js";
 import { descriptor as interruptCoreDescriptor, python as interruptCorePython } from "./core-packages/interrupt.js";
 import { descriptor as mqttPublishCoreDescriptor, python as mqttPublishCorePython, compileHook as mqttPublishCompileHook } from "./core-packages/mqtt-publish.js";
 import { descriptor as mqttSubscribeCoreDescriptor, python as mqttSubscribeCorePython, compileHook as mqttSubscribeCompileHook } from "./core-packages/mqtt-subscribe.js";
 import { descriptor as pwmOutCoreDescriptor, python as pwmOutCorePython } from "./core-packages/pwm-out.js";
-import { startupNode } from "./startup.js";
+import { descriptor as startupCoreDescriptor, python as startupCorePython } from "./core-packages/startup.js";
 import { descriptor as timerCoreDescriptor, python as timerCorePython } from "./core-packages/timer.js";
 import { descriptor as udpReceiveCoreDescriptor, python as udpReceiveCorePython, compileHook as udpReceiveCompileHook } from "./core-packages/udp-receive.js";
 import { descriptor as udpSendCoreDescriptor, python as udpSendCorePython, compileHook as udpSendCompileHook } from "./core-packages/udp-send.js";
@@ -84,8 +84,8 @@ function corePackage(descriptor: NodeDescriptor, python: string, compileHook?: s
 export function buildRegistry(): Map<string, NodeDefinition> {
   const registry = new Map<string, NodeDefinition>();
   for (const def of [
-    injectNode,
-    startupNode,
+    buildCoreNodeDefinition(injectCoreDescriptor, injectCorePython),
+    buildCoreNodeDefinition(startupCoreDescriptor, startupCorePython),
     functionNode,
     buildCoreNodeDefinition(gpioOutCoreDescriptor, gpioOutCorePython),
     variableGetNode,

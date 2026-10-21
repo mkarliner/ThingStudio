@@ -200,6 +200,9 @@ export interface CustomNodeDescriptor {
    * `async def wait(properties)` (awaited each loop iteration), then the usual `async def emit(properties)`
    * builds the message. No `intervalMs` needed. Added 2026-10-15 (format parity). */
   eventSource?: boolean;
+  /** A polled `source` that runs its emit once at flow start, with no `intervalMs`. Mutually exclusive with
+   * `eventSource`; sources only. Added 2026-10-21 (startup as a package). */
+  runOnce?: boolean;
 }
 
 const IDENTIFIER_RE = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
@@ -466,18 +469,22 @@ export function validateCustomNodeDescriptor(raw: unknown): CustomNodeDescriptor
   if (isEventSource && kind === "transform") {
     fail('"eventSource" is not valid on a "transform" node -- use a "source", or a two-faced "sink" (run + wait/emit)');
   }
+  const runOnce = obj.runOnce === true;
+  if (obj.runOnce !== undefined && typeof obj.runOnce !== "boolean") fail('"runOnce" must be a boolean when present');
+  if (runOnce && kind !== "source") fail('"runOnce" is only valid on a "source" node');
+  if (runOnce && isEventSource) fail('"runOnce" and "eventSource" are mutually exclusive');
 
   // A polled source drives its own loop via a declared numeric `intervalMs` property (scoping note,
   // Decision 3). An event source (2026-10-15) waits on `wait(properties)` instead, so it needs no
   // interval.
-  if (kind === "source" && !isEventSource) {
+  if (kind === "source" && !isEventSource && !runOnce) {
     const interval = properties.find((p) => p.name === "intervalMs");
     if (!interval || interval.kind !== "number") {
       fail('a "source" custom node must declare a "properties" entry named "intervalMs" with kind "number" (drives the poll interval; see docs/custom-nodes.md) -- or set "eventSource": true and define wait()');
     }
   }
 
-  const descriptor: CustomNodeDescriptor = { type, kind: kind as NodeKind, label, ports: { inputs, outputs }, properties };
+  const descriptor: CustomNodeDescriptor = { type, kind: kind as NodeKind, label, ports: { inputs, outputs }, properties, ...(runOnce ? { runOnce: true } : {}), ...(isEventSource ? { eventSource: true } : {}) };
   if (isEventSource) descriptor.eventSource = true;
   if (obj.description !== undefined) descriptor.description = obj.description as string;
   if (obj.title !== undefined) descriptor.title = obj.title as string;
@@ -735,6 +742,7 @@ type PackageDescriptor = {
   paletteId?: string;
   properties?: PropertyFieldDescriptor[];
   eventSource?: boolean;
+  runOnce?: boolean;
   resources?: readonly ResourceSpec[];
   compileHook?: string;
 };
@@ -828,7 +836,7 @@ function packageCodegen(descriptor: PackageDescriptor, pythonSource: string, com
       // properties so the hook can be the one mapping its own field onto the format's interval.
       const hookProps = ctx.hookResult?.(node.id)?.properties;
       const intervalProps = hookProps ? { ...node.properties, ...hookProps } : node.properties;
-      const repeatMs = resolveIntervalMs(descriptor, intervalProps, `node ${node.id} (${descriptor.type})`);
+      const repeatMs = descriptor.runOnce ? 0 : resolveIntervalMs(descriptor, intervalProps, `node ${node.id} (${descriptor.type})`);
       return { statements, buildMsg: `msg = await ${vars[0]!}(${propsVar})`, repeatMs };
     };
   } else if (descriptor.kind === "transform") {

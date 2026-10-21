@@ -48,6 +48,7 @@ carry these keys.
 | `type` | string | yes | `namespace/name`, e.g. `thingstudio/debug` or `custom/dht22`. |
 | `kind` | `"source"` \| `"transform"` \| `"sink"` | yes | Where the node sits in a flow. |
 | `eventSource` | boolean | no | A source that waits on an external event rather than polling (`wait`/`emit`, no poll interval), **or a `sink` that is two-faced**: its input face is `run`, its output face is `wait`/`emit`, from one per-instance closure (2026-10-19). Not valid on a `transform`. See §3. |
+| `runOnce` | boolean | no | A polled `source` that runs its emit once at flow start, with no `intervalMs` (startup). Sources only, and mutually exclusive with `eventSource`. Added 2026-10-21. |
 | `paletteId` | string | built-in, yes | The short canvas/palette key (e.g. `debug`), distinct from `kind`. `"custom"` for a custom node. |
 | `label` | string | yes | Name on the canvas and in the palette. |
 | `group` | string | no | Palette section. Default `"general"`. |
