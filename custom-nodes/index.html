@@ -2716,6 +2716,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#run-once-sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run-once sources
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#two-faced-nodes" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3145,6 +3156,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#run-once-sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run-once sources
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#two-faced-nodes" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3257,8 +3279,8 @@ reserved for built-in nodes.</p>
 <ul>
 <li><code>source</code> — generates messages on its own. 0 input ports, 1 output
   port. Must declare a numeric <code>intervalMs</code> property (below) — unless
-  <code>eventSource</code> is true (below), in which case it waits on an event
-  instead.</li>
+  <code>eventSource</code> is true (it waits on an event) or <code>runOnce</code> is true (it
+  runs once at flow start).</li>
 <li><code>transform</code> — one message in, one or more out. 1 input port, 1+ output
   ports.</li>
 <li><code>sink</code> — consumes a message, produces nothing. 1 input port, 0 output
@@ -3287,6 +3309,11 @@ that group.</p>
 <code>type</code> is one of <code>int</code>, <code>number</code>, <code>bool</code>, <code>string</code>, <code>bytes</code>, <code>any</code> — the
 same types built-in nodes use, with the same wire-compatibility checks.
 Use <code>any</code> when unsure.</p>
+<p>A port type can follow a select property instead of being fixed:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"msg"</span><span class="p">,</span><span class="w"> </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"property"</span><span class="p">:</span><span class="w"> </span><span class="s2">"payloadType"</span><span class="p">,</span><span class="w"> </span><span class="nt">"map"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"bool"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bool"</span><span class="p">,</span><span class="w"> </span><span class="nt">"number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"number"</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bool"</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<p>The value of <code>property</code> picks the wire type; an unset or unmapped value uses <code>default</code>. The property must be a
+<code>select</code> field, and every key in <code>map</code> must be one of its options.</p>
 <p>A <code>transform</code> may declare more than one output. Return a list to route
 messages across them, Node-RED style (e.g. <code>return [msg, None]</code> sends to
 output 1 only). A <code>source</code> has one output; a <code>sink</code> none.</p>
@@ -3332,8 +3359,8 @@ the node is selected:</p>
   <code>{ "field": "mode", "equals": "deadband" }</code>. Operators: <code>equals</code>,
   <code>notEquals</code>, <code>in</code> (an array), <code>gt</code>, <code>gte</code>, <code>lt</code>, <code>lte</code>.</li>
 </ul>
-<p>A <code>source</code> node must declare a numeric property named <code>intervalMs</code> — it
-sets the poll interval.</p>
+<p>A polled <code>source</code> node must declare a numeric property named <code>intervalMs</code> — it
+sets the poll interval. An <code>eventSource</code> or <code>runOnce</code> source does not need one.</p>
 <h2 id="the-behavior-namenodepy">The behavior: <code>&lt;name&gt;.node.py</code></h2>
 <p>Ordinary MicroPython. Define exactly one top-level function, named for
 your node's <code>kind</code>:</p>
@@ -3476,7 +3503,7 @@ until your event fires; then <code>emit</code> builds the message. No <code>inte
 <span class="w">  </span><span class="nt">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pin"</span><span class="p">,</span><span class="w"> </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pin"</span><span class="p">,</span><span class="w"> </span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pin"</span><span class="p">,</span><span class="w"> </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="mi">11</span><span class="p">,</span><span class="w"> </span><span class="nt">"pinUse"</span><span class="p">:</span><span class="w"> </span><span class="s2">"input"</span><span class="w"> </span><span class="p">}]</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>A hardware interrupt (<code>machine.Pin.irq</code>) is the usual reason to use this. Bridge it into <code>asyncio</code>
+<p>A hardware interrupt (<code>machine.Pin.irq</code>) is the usual reason to use <code>eventSource</code>. Bridge it into <code>asyncio</code>
 with the vendored <code>ThreadSafeEvent</code> — its <code>set()</code> is the one call safe in a hard-IRQ handler — and
 register the handler:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">machine</span>
@@ -3502,6 +3529,17 @@ register the handler:</p>
 <code>ThreadSafeEvent</code>, which survives the hard-IRQ context.</p>
 <p>Keep any state the two share at the top of the file (both functions come from one per-instance
 closure, so <code>nonlocal</code> works across them).</p>
+<h3 id="run-once-sources">Run-once sources</h3>
+<p>A source that runs once, at flow start, sets <code>"runOnce": true</code> instead. It defines only <code>emit</code>; Thingstudio calls
+it once, with no <code>intervalMs</code> and no <code>wait</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"custom/boot"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"source"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boot"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"runOnce"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"ports"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"outputs"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"msg"</span><span class="p">,</span><span class="w"> </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="w"> </span><span class="p">}]</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
 <h3 id="two-faced-nodes">Two-faced nodes</h3>
 <p>A <code>sink</code> with <code>"eventSource": true</code> both consumes and produces: one input, one output, and three functions in
 <code>.node.py</code>. <code>run(msg, properties)</code> handles the input; <code>wait(properties)</code> then <code>emit(properties)</code> produce the
@@ -3529,6 +3567,8 @@ for this node; <code>ctx</code> describes the flow:</p>
 <ul>
 <li><code>ctx["node"]</code> — this instance: <code>id</code>, <code>type</code>, <code>properties</code>, and <code>wired</code> (a boolean per input/output).</li>
 <li><code>ctx["flow"]["nodes"]</code> / <code>["configs"]</code> — every node and config, with non-secret properties only.</li>
+<li><code>ctx["nodesOfType"]</code> — every node of this node's type in the flow, including this one: <code>id</code>, <code>type</code>, and
+  non-secret <code>properties</code>. Use it when the nodes share a decision (for example, a port's set of routes).</li>
 <li><code>ctx["referencedConfigs"]</code> — the full properties (including credentials) of the configs this node's <code>configRef</code>
   fields point at.</li>
 <li><code>ctx["target"]</code> — the board/processor being compiled for, or <code>None</code>.</li>
