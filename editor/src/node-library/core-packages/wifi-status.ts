@@ -25,8 +25,8 @@ export const descriptor: NodeDescriptor = {
   icon: "◉",
   width: 120,
   description:
-    "One WiFi network per flow: every WiFi node shares this setting. Pick \"unmanaged\" if the board joins WiFi " +
-    "some other way (e.g. its setup AP).",
+    "Reports the board's WiFi connection state. With no other WiFi node in the flow, it also brings the " +
+    "connection up.",
   ports: {
     outputs: [{ name: "msg", type: "bool" }],
   },
@@ -34,7 +34,7 @@ export const descriptor: NodeDescriptor = {
     { name: "pollMs", label: "poll interval (ms)", kind: "number", default: 5000, min: 1 },
     // The flow's one WiFi config; the hook resolves it from referencedConfigs (the built-in always used the
     // flow singleton, ignoring the stored id).
-    { name: "wifiConfigId", label: "WiFi", kind: "configRef", configType: "thingstudio/config/wifi", singleton: true, default: "" },
+    { name: "wifiConfigId", label: "WiFi", kind: "configRef", configType: "thingstudio/config/wifi", singleton: true, default: "", help: "One WiFi network per flow: every WiFi node shares this setting. Pick \"unmanaged\" if the board joins WiFi some other way (e.g. its setup AP)." },
     { name: "nodeId", label: "node id", kind: "nodeId", default: "" },
   ],
 };

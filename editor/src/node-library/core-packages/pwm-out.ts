@@ -19,6 +19,7 @@ export const descriptor: NodeDescriptor = {
   bgcolor: "#12334a",
   icon: "∿",
   width: 104,
+  description: "Drives a PWM signal on a pin, for dimming an LED or setting a motor's speed.",
   ports: {
     inputs: [{ name: "duty", type: "number" }],
   },

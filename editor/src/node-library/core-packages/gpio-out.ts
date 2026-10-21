@@ -18,6 +18,7 @@ export const descriptor: NodeDescriptor = {
   bgcolor: "#3f1f1f",
   icon: "■",
   width: 104,
+  description: "Sets a pin high or low from each message.",
   ports: {
     inputs: [{ name: "signal", type: "bool" }],
   },

@@ -21,7 +21,7 @@ export const descriptor: NodeDescriptor = {
   bgcolor: "#1f3f1f",
   icon: "▶",
   width: 96,
-  description: "Click this node on the canvas while connected to fire it once.",
+  description: "Sends one message with a fixed payload when you click its ▶ on the canvas while connected to a board.",
   ports: {
     outputs: [{ name: "msg", type: PAYLOAD_TYPE_PORT }],
   },

@@ -24,9 +24,8 @@ export const descriptor: NodeDescriptor = {
   icon: "↙",
   width: 120,
   description:
-    "Exact path match only -- no \":name\" path parameters yet. Fires once per matching inbound request; pair with " +
-    "an http_response node to actually reply (a request that never reaches one times out with a 500). One WiFi " +
-    "network per flow: every WiFi node shares this setting.",
+    "Sends a message for each request to this path (exact match). The flow must reach an http response node, or " +
+    "the request times out with a 500.",
   ports: {
     outputs: [{ name: "msg", type: "any" }],
   },
@@ -44,7 +43,7 @@ export const descriptor: NodeDescriptor = {
       ],
     },
     { name: "responseTimeoutMs", label: "response timeout (ms)", kind: "number", default: 10000, min: 1 },
-    { name: "wifiConfigId", label: "WiFi", kind: "configRef", configType: "thingstudio/config/wifi", singleton: true, default: "" },
+    { name: "wifiConfigId", label: "WiFi", kind: "configRef", configType: "thingstudio/config/wifi", singleton: true, default: "", help: "One WiFi network per flow: every WiFi node shares this setting." },
     { name: "nodeId", label: "node id", kind: "nodeId", default: "" },
   ],
 };

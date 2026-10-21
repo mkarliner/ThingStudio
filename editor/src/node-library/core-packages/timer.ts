@@ -19,6 +19,7 @@ export const descriptor: NodeDescriptor = {
   bgcolor: "#331f3f",
   icon: "◷",
   width: 84,
+  description: "Sends an increasing count at a fixed interval.",
   // The counter is a genuine Python int -- `int`, not `number`, is the precise type; `int -> number`
   // widening (bucket 2, sockets.ts) still feeds a `number`-typed input with no friction.
   ports: {

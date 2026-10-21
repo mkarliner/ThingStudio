@@ -17,7 +17,7 @@ export const descriptor: NodeDescriptor = {
   bgcolor: "#1f2c3f",
   icon: "≡",
   width: 84,
-  description: "Prints a message to the device console.",
+  description: "Prints msg.payload to the console, so you can see what's flowing through a wire.",
   ports: {
     inputs: [{ name: "msg", type: "any" }],
   },

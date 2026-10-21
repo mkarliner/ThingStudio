@@ -20,8 +20,8 @@ export const descriptor: NodeDescriptor = {
   icon: "✦",
   width: 110,
   description:
-    "WS2812/NeoPixel strip (built-in neopixel module). Payload is a 24-bit colour 0xRRGGBB for the whole strip, a " +
-    "list of colours for one per pixel, or {index, colour} for one pixel. RGBW strips take 0xWWRRGGBB.",
+    "Drives a WS2812 / NeoPixel strip. Payload is a colour 0xRRGGBB for the whole strip, a list of colours for " +
+    "one per pixel, or {index, colour} for one pixel. RGBW strips take 0xWWRRGGBB.",
   ports: {
     inputs: [{ name: "msg", type: "any" }],
   },

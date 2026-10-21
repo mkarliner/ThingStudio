@@ -26,10 +26,8 @@ export const descriptor: NodeDescriptor = {
   icon: "⇩",
   width: 132,
   description:
-    "Broker config required -- won't compile without one. One WiFi network per flow: every WiFi node shares this " +
-    "setting. In a flow with MQTT nodes, MQTT manages the WiFi connection, so \"unmanaged\" isn't accepted. " +
-    "Dynamic subscription: with it on, an input message {action: subscribe|unsubscribe, topic} changes what this " +
-    "node listens to at run time.",
+    "Sends a message for each one arriving on the subscribed topic. With dynamic subscription on, an input " +
+    "message {action: subscribe or unsubscribe, topic} changes what this node listens to.",
   ports: {
     inputs: [{ name: "msg", type: "any" }],
     outputs: [{ name: "msg", type: "any" }],
@@ -48,7 +46,7 @@ export const descriptor: NodeDescriptor = {
     },
     { name: "dynamic", label: "dynamic subscription", kind: "boolean", default: false },
     { name: "brokerConfigId", label: "MQTT Broker", kind: "configRef", configType: "thingstudio/config/mqtt-broker", default: "" },
-    { name: "wifiConfigId", label: "WiFi", kind: "configRef", configType: "thingstudio/config/wifi", singleton: true, default: "" },
+    { name: "wifiConfigId", label: "WiFi", kind: "configRef", configType: "thingstudio/config/wifi", singleton: true, default: "", help: "One WiFi network per flow: every WiFi node shares this setting. With MQTT nodes in the flow, MQTT manages the connection, so \"unmanaged\" isn't accepted." },
     { name: "nodeId", label: "node id", kind: "nodeId", default: "" },
   ],
 };

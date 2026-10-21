@@ -23,9 +23,8 @@ export const descriptor: NodeDescriptor = {
   icon: "⚡",
   width: 104,
   description:
-    "Event-driven (machine.Pin.irq()), not polled. No internal pull configured -- wire an external pull resistor " +
-    "(or a button module with one built in), see test-flows/README.md. For a debounced switch or button, use " +
-    "eswitch/ebutton instead.",
+    "Sends a message the moment a pin changes state. Needs an external pull resistor. For a button or switch, use " +
+    "ebutton or eswitch, which debounce it.",
   ports: {
     outputs: [{ name: "msg", type: "bool" }],
   },

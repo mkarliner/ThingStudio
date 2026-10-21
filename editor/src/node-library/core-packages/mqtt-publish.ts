@@ -19,9 +19,7 @@ export const descriptor: NodeDescriptor = {
   bgcolor: "#4a1f3a",
   icon: "⇧",
   width: 128,
-  description:
-    "Broker config required -- won't compile without one. One WiFi network per flow: every WiFi node shares this " +
-    "setting. In a flow with MQTT nodes, MQTT manages the WiFi connection, so \"unmanaged\" isn't accepted.",
+  description: "Publishes msg.payload to an MQTT topic on the chosen broker.",
   ports: {
     inputs: [{ name: "msg", type: "any" }],
   },
@@ -39,7 +37,7 @@ export const descriptor: NodeDescriptor = {
       ],
     },
     { name: "brokerConfigId", label: "MQTT Broker", kind: "configRef", configType: "thingstudio/config/mqtt-broker", default: "" },
-    { name: "wifiConfigId", label: "WiFi", kind: "configRef", configType: "thingstudio/config/wifi", singleton: true, default: "" },
+    { name: "wifiConfigId", label: "WiFi", kind: "configRef", configType: "thingstudio/config/wifi", singleton: true, default: "", help: "One WiFi network per flow: every WiFi node shares this setting. With MQTT nodes in the flow, MQTT manages the connection, so \"unmanaged\" isn't accepted." },
     { name: "nodeId", label: "node id", kind: "nodeId", default: "" },
   ],
 };

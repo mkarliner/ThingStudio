@@ -20,14 +20,14 @@ export const descriptor: NodeDescriptor = {
   icon: "∼",
   width: 110,
   description:
-    "AADC (awaitable). Payload is a dict: raw (0-65535), volts, percent. On ESP32 an ADC2 pin can't be used while " +
-    "WiFi is up, so Deploy refuses one when the flow uses the network. poll 0 sends only on a bounds crossing.",
+    "Reads an analog pin and sends {raw, volts, percent} when the reading crosses the bounds, and at each poll if " +
+    "poll is set. raw runs from 0 to 65535.",
   resources: [{ kind: "pin", property: "pin", direction: "input", use: "ADC input", noAdc2WithWifi: true }],
   ports: {
     outputs: [{ name: "msg", type: "any" }],
   },
   properties: [
-    { name: "pin", label: "pin", kind: "pin", default: 34 },
+    { name: "pin", label: "pin", kind: "pin", default: 34, help: "On ESP32, an ADC2 pin can't be used in a flow with WiFi: Deploy refuses it." },
     {
       name: "mode",
       label: "mode",
@@ -51,7 +51,7 @@ export const descriptor: NodeDescriptor = {
         { value: "inside", label: "inside -- fire when it returns to them" },
       ],
     },
-    { name: "pollMs", label: "poll (ms)", kind: "number", default: 0, min: 0 },
+    { name: "pollMs", label: "poll (ms)", kind: "number", default: 0, min: 0, help: "0 sends only when the reading crosses the bounds." },
     { name: "nodeId", label: "node id", kind: "nodeId", default: "" },
   ],
 };

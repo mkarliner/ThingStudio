@@ -18,6 +18,7 @@ export const descriptor: NodeDescriptor = {
   bgcolor: "#2a2a3f",
   icon: "⌛",
   width: 100,
+  description: "Passes each message on unchanged, after waiting the delay.",
   ports: {
     inputs: [{ name: "msg", type: "any" }],
     outputs: [{ name: "msg", type: "any" }],

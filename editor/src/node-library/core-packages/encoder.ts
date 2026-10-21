@@ -27,8 +27,8 @@ export const descriptor: NodeDescriptor = {
   icon: "⟳",
   width: 110,
   description:
-    "Quadrature encoder (Hinch's Encoder). Payload is the value; delta is the change since the last message. div is " +
-    "the pulses per detent (4 or 2 for a mechanical click); lowest/highest/wrap blank for none.",
+    "Reads a rotary encoder and sends its value each time it turns. msg.delta is the change since the last " +
+    "message.",
   ports: {
     outputs: [{ name: "msg", type: "number" }],
   },
@@ -49,7 +49,7 @@ export const descriptor: NodeDescriptor = {
   properties: [
     { name: "pinX", label: "pin x", kind: "pin", default: 10 },
     { name: "pinY", label: "pin y", kind: "pin", default: 11 },
-    { name: "div", label: "divide by (div)", kind: "number", default: 1, min: 1 },
+    { name: "div", label: "divide by (div)", kind: "number", default: 1, min: 1, help: "Pulses per detent: 4 or 2 for a knob that clicks." },
     { name: "value", label: "start value", kind: "number", default: 0 },
     { name: "vmin", label: "lowest (blank for none)", kind: "text", default: "", integer: true, optional: true },
     { name: "vmax", label: "highest (blank for none)", kind: "text", default: "", integer: true, optional: true },

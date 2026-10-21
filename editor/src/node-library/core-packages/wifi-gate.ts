@@ -22,10 +22,7 @@ export const descriptor: NodeDescriptor = {
   bgcolor: "#123f2a",
   icon: "⊘",
   width: 110,
-  description:
-    "Passes the message through unchanged if the WiFi station link is currently up, or drops it (same as a function " +
-    "node's own \"return null\") if it isn't. Checks the live link state at message-arrival-time, not wifi_status's " +
-    "own emitted messages. One WiFi network per flow: every WiFi node shares this setting.",
+  description: "Passes a message on unchanged if WiFi is connected when it arrives, and drops it if not.",
   ports: {
     inputs: [{ name: "msg", type: "any" }],
     outputs: [{ name: "msg", type: "any" }],
@@ -33,7 +30,7 @@ export const descriptor: NodeDescriptor = {
   properties: [
     // The flow's one WiFi config. Named + singleton so the hook receives it in referencedConfigs (the built-in
     // used an info-only picker and derived the same singleton internally).
-    { name: "wifiConfigId", label: "WiFi", kind: "configRef", configType: "thingstudio/config/wifi", singleton: true, default: "" },
+    { name: "wifiConfigId", label: "WiFi", kind: "configRef", configType: "thingstudio/config/wifi", singleton: true, default: "", help: "One WiFi network per flow: every WiFi node shares this setting." },
   ],
 };
 

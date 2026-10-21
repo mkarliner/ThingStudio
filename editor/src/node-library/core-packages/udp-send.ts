@@ -19,7 +19,7 @@ export const descriptor: NodeDescriptor = {
   bgcolor: "#1f2e4a",
   icon: "↑",
   width: 110,
-  description: "One WiFi network per flow: every WiFi node shares this setting.",
+  description: "Sends msg.payload as a UDP datagram to a fixed host and port.",
   ports: {
     inputs: [{ name: "msg", type: "any" }],
   },
@@ -27,7 +27,7 @@ export const descriptor: NodeDescriptor = {
     { name: "host", label: "host", kind: "text", default: "" },
     { name: "port", label: "port", kind: "number", default: 9999, min: 1, max: 65535 },
     { name: "timeoutMs", label: "timeout (ms)", kind: "number", default: 2000, min: 1 },
-    { name: "wifiConfigId", label: "WiFi", kind: "configRef", configType: "thingstudio/config/wifi", singleton: true, default: "" },
+    { name: "wifiConfigId", label: "WiFi", kind: "configRef", configType: "thingstudio/config/wifi", singleton: true, default: "", help: "One WiFi network per flow: every WiFi node shares this setting." },
   ],
 };
 

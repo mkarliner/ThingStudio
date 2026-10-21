@@ -24,6 +24,8 @@ export const descriptor: NodeDescriptor = {
   bgcolor: "#1f3f2c",
   icon: "▽",
   width: 100,
+  description:
+    "Passes a message on only when it's worth sending, and drops the rest. Messages that pass are unchanged.",
   ports: {
     inputs: [{ name: "msg", type: "any" }],
     outputs: [{ name: "msg", type: "any" }],

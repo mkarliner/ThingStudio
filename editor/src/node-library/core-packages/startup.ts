@@ -21,8 +21,9 @@ export const descriptor: NodeDescriptor = {
   icon: "⏻",
   width: 104,
   description:
-    "Sends this once each time the flow starts: after Deploy, and after the board resets or powers up. msg.reason " +
-    "says which.",
+    "Sends one message when the flow starts: after Deploy, and each time the board restarts, even with the editor " +
+    "closed. Use it for setup, such as putting an output in a known state. msg.reason says why the flow started: " +
+    "deploy, power on, the reset button, a software reboot, a watchdog reset or waking from deep sleep.",
   ports: {
     outputs: [{ name: "msg", type: STARTUP_PAYLOAD_TYPE_PORT }],
   },

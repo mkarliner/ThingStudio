@@ -23,10 +23,8 @@ export const descriptor: NodeDescriptor = {
   width: 128,
   presetType: "display_i2c",
   description:
-    "One input: msg.payload must already be a MONO_VLSB-encoded framebuf.FrameBuffer buffer, width * (height / 8) " +
-    "bytes -- build it upstream. Wrong-length input raises a NODE_ERROR rather than silently corrupting the " +
-    "display's internal buffer indexing. The I2C bus holds the pins and clock, shared with every other I2C node on " +
-    "the same bus.",
+    "Shows a frame on an I2C mono OLED. msg.payload is a MONO_VLSB framebuffer of width × height/8 bytes, built " +
+    "upstream.",
   ports: {
     inputs: [{ name: "frame", type: "bytes" }],
   },

@@ -19,14 +19,14 @@ export const descriptor: NodeDescriptor = {
   bgcolor: "#1f4a3a",
   icon: "↓",
   width: 110,
-  description: "One WiFi network per flow: every WiFi node shares this setting.",
+  description: "Listens on a UDP port and sends one message per datagram received.",
   ports: {
     outputs: [{ name: "msg", type: "bytes" }],
   },
   properties: [
     { name: "port", label: "port", kind: "number", default: 9998, min: 1, max: 65535 },
     { name: "pollMs", label: "poll interval (ms)", kind: "number", default: 20, min: 1 },
-    { name: "wifiConfigId", label: "WiFi", kind: "configRef", configType: "thingstudio/config/wifi", singleton: true, default: "" },
+    { name: "wifiConfigId", label: "WiFi", kind: "configRef", configType: "thingstudio/config/wifi", singleton: true, default: "", help: "One WiFi network per flow: every WiFi node shares this setting." },
   ],
 };
 

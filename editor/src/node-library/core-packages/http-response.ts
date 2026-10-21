@@ -19,8 +19,8 @@ export const descriptor: NodeDescriptor = {
   icon: "↗",
   width: 130,
   description:
-    "No properties -- reads msg.statusCode (default 200) and msg.payload (the response body) at runtime, Node-RED's " +
-    "own field names. Must fire on a msg that originally came from an http_in node.",
+    "Replies to a request that came from an http in node: msg.payload is the body, msg.statusCode the status (200 " +
+    "if unset).",
   ports: {
     inputs: [{ name: "msg", type: "any" }],
   },

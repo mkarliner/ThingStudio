@@ -19,7 +19,7 @@ export const descriptor: NodeDescriptor = {
   bgcolor: "#4a3a1f",
   icon: "⇄",
   width: 130,
-  description: "http:// only -- no TLS/HTTPS in v1. One WiFi network per flow: every WiFi node shares this setting.",
+  description: "Makes one HTTP request per message and sends the response on. http:// only, not https://.",
   ports: {
     inputs: [{ name: "msg", type: "any" }],
     outputs: [{ name: "msg", type: "any" }],
@@ -37,7 +37,7 @@ export const descriptor: NodeDescriptor = {
       ],
     },
     { name: "timeoutMs", label: "timeout (ms)", kind: "number", default: 5000, min: 1 },
-    { name: "wifiConfigId", label: "WiFi", kind: "configRef", configType: "thingstudio/config/wifi", singleton: true, default: "" },
+    { name: "wifiConfigId", label: "WiFi", kind: "configRef", configType: "thingstudio/config/wifi", singleton: true, default: "", help: "One WiFi network per flow: every WiFi node shares this setting." },
   ],
 };
 

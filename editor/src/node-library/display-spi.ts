@@ -530,22 +530,8 @@ export const displaySpiNode: NodeDefinition = {
   width: 128,
   presetType: "display_spi",
   description:
-    "One input: msg.payload must already be a framebuf.FrameBuffer buffer matching frame format above -- RGB565 " +
-    "(width * height * 2 bytes) by default, or an indexed format: GS4 4-bit (framebuf.GS4_HMSB, a quarter the " +
-    "memory, palette indices 0-15), GS2 2-bit (framebuf.GS2_HMSB, an eighth, indices 0-3), or Mono 1-bit " +
-    "(framebuf.MONO_HMSB -- not MONO_VLSB/MONO_HLSB, see this node's own docs page for why -- a sixteenth, indices " +
-    "0-1). Build the source buffer upstream with a function node using framebuf.FrameBuffer, or a future " +
-    "graphics-framework node. Note: MicroPython's framebuf.RGB565 stores each pixel in CPU-native (little-endian) " +
-    "byte order, but SPI TFT controllers including this one expect big-endian pixel bytes on the wire -- byte-swap " +
-    "an RGB565 buffer (swap each pair of bytes) before sending, or colors come out wrong (e.g. green renders as " +
-    "red); indexed modes don't need this, the palette is defined in real RGB565 order already. Wrong-length input " +
-    "raises a NODE_ERROR rather than corrupting the panel silently. Pins vary board to board -- there's no sensible " +
-    "default for more than one board, so set them from your board's pinout. -1 on cs/reset/backlight means that pin " +
-    "isn't wired (some boards tie reset/cs high or omit backlight control entirely). -1 on xstart/ystart (the " +
-    "default) lets the vendored st7789py_mpy driver's own built-in offset table handle 240x240 and 135x240 panels " +
-    "(TiDAL's own panel needs xstart=52, ystart=40 -- the driver applies this automatically at -1); any other " +
-    "resolution needs xstart/ystart set explicitly or the driver raises a clear error at flow-boot time. Indexed " +
-    "modes use the palette swatches under frame format: GS2 reads the first 4 colors, Mono the first 2.",
+    "Shows a frame on an SPI colour TFT. msg.payload is a framebuffer in the frame format below, usually from a " +
+    "gui screen. Set the pins from your board's pinout.",
   ports: {
     inputs: [{ name: "frame", type: "bytes" }],
   },
@@ -587,6 +573,7 @@ export const displaySpiNode: NodeDefinition = {
         { value: "gs2", label: "GS2 2-bit indexed (1/8 the memory, 4-color palette)" },
         { value: "mono", label: "Mono 1-bit indexed (1/16 the memory, 2-color palette)" },
       ],
+      help: "Byte-swap an RGB565 buffer before sending it, or colours come out wrong. Indexed formats use the palette below.",
     },
     { name: "palette", label: "palette", kind: "palette", default: [...DEFAULT_PALETTE_GS4] },
     { name: "spiBus", label: "SPI bus", kind: "number", default: 2, min: 0 },
