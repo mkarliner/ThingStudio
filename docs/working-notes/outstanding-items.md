@@ -381,8 +381,8 @@ not here.
   CLI custom-node loading. **Mainline `ports/webassembly` spike done 2026-10-21**
   (`webassembly-mainline-spike.md`): it builds and runs hooks, but costs 3.7x the size and loads asynchronously,
   which the CLI's synchronous hook path cannot use. Recommendation: keep the vendored WASI artifact for the
-  release and do the pinned rebuild (stage 1) instead, which is still owed -- wasi-sdk/Binaryen are not installed
-  in the sandbox.
+  release; **stage 1 is done 2026-10-21** -- rebuilt from `3f6d144cb` with wasi-sdk 25.0 + Binaryen 123, build
+  script, usercmodule, README hashes and a CI hash check added (`micropython-wasi/README.md`).
   Until then, hold the flow-query vocabulary (`hasNode`/`nodesOfType`) and promoting core-only vocabulary to the
   custom schema. **Not held:** the property-dependent port-type data form (bounded, editor-side, an explicit
   exception) and `ts_wifi` (orthogonal to the hook).

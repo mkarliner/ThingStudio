@@ -17,20 +17,31 @@ per node at compile time) but it is the reason this lives as a pinned vendored a
 
 ## Provenance
 
-- Source artifact: the `micropython-wasm` 0.1a2 wheel from PyPI (Apache-2.0 package), file
-  `micropython_wasm/artifacts/micropython-wasi.wasm`.
-- Wheel SHA-256: `a57989e2b56e9603438b98c55bb7edc6f275366a37a43dcd25952d465e01dc19`
-- WASM SHA-256: `1c054a4d21d4a6589bc568821ebf562889988ddaaf8a17a2e2985a56cf228051`
-- Reported by the artifact: `MicroPython v1.27.0-preview.225.g3f6d144cb8 on 2026-06-02; linux [Clang 19.1.5]`.
-  The `g3f6d144cb8` suffix is the MicroPython source commit; the build was made from
-  `pull/13676/head` by upstream's `scripts/build_micropython_wasi.py`.
-- The artifact was **not rebuilt here** — it is copied byte-for-byte from the wheel, the same
-  hash-recorded manual-vendoring discipline as `mpy-cross-wasm/`. Upstream's build recipe: wasi-sdk 25,
-  `make -C mpy-cross`, `make -C ports/unix submodules`, `make -C ports/unix VARIANT=wasi`, then a Binaryen
-  `wasm-opt --translate-to-exnref` postprocess (upstream notes that the full spill-pointers pipeline fails).
+Built here from the pinned MicroPython commit `3f6d144cb` (PR #13676 head, 2025-09-30) with:
 
-A rebuild is due when Thingstudio's target MicroPython version moves, alongside the same review that updates
-`mpy-cross-wasm/`. Rebuild from a **pinned MicroPython commit**, not the moving PR head.
+- **wasi-sdk 25.0** (`clang 19.1.5-wasi-sdk`), pinned by the variant's `WASI_SDK` path.
+- **Binaryen version_123** (`wasm-opt`), for the `--translate-to-exnref` postprocess. The build's own
+  `--spill-pointers` pipeline fails, as upstream documents, so the artifact is the translated raw link.
+- The `micropython-wasm` host usercmodule, vendored under `tools/micropython-wasi-usercmodule/` (Apache-2.0), so the
+  host imports match the wheel's build.
+
+Artifact SHA-256: `49e76057f67398ef8c78c42fb065fba1d07e436a992557381cfddb5b57375987` (370,907 bytes).
+
+Rebuild:
+
+```sh
+export PATH="/path/to/binaryen-version_123/bin:$PATH"
+python3 tools/build_micropython_wasi.py --wasi-sdk /path/to/wasi-sdk-25.0-x86_64-linux
+```
+
+The script checks out the pinned commit, builds `mpy-cross` and `ports/unix` with `VARIANT=wasi`, runs the
+exception-handling translation, and copies the result to both this folder and
+`editor/public/vendor/micropython-wasi/`.
+
+This artifact replaces the previous byte-for-byte copy of the `micropython-wasm` 0.1a2 wheel
+(SHA-256 `1c054a4d21d4a6589bc568821ebf562889988ddaaf8a17a2e2985a56cf228051`). It is the same size, but not
+byte-identical: the toolchain patch versions and the build paths differ. The hash above is authoritative now; the
+editor and this folder are checked equal by `editor/test/micropython-wasi-artifact.test.ts`.
 
 ## Licence
 

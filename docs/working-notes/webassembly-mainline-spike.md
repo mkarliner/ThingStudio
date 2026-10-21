@@ -1,8 +1,9 @@
 # Spike: mainline `ports/webassembly` as the compile-hook interpreter
 
-Status: spike done, 2026-10-21. Recommendation: **do not switch before the release**; keep the pinned vendored WASI
-artifact, and do the pinned rebuild (stage 1) as the safety step. Revisit after the CLI is async or a synchronous
-Emscripten build is validated.
+Status: spike done, 2026-10-21. Recommendation: **do not switch before the release**; keep the pinned WASI artifact.
+**Stage 1 is now done:** it was rebuilt here from `3f6d144cb` with wasi-sdk 25.0 + Binaryen 123
+(`tools/build_micropython_wasi.py`), SHA-256 `49e76057…`; see `micropython-wasi/README.md`. Revisit after the CLI is
+async or a synchronous Emscripten build is validated.
 
 ## Why
 
