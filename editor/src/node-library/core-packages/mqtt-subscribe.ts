@@ -26,8 +26,9 @@ export const descriptor: NodeDescriptor = {
   icon: "⇩",
   width: 132,
   description:
-    "Sends a message for each one arriving on the subscribed topic. With dynamic subscription on, an input " +
-    "message {action: subscribe or unsubscribe, topic} changes what this node listens to.",
+    "Subscribes to an MQTT topic and sends on everything the broker delivers for it. msg.payload is the content " +
+    "(text if it decodes, otherwise bytes), msg.topic the topic it arrived on, and msg.retained whether the " +
+    "broker held it as a retained message.",
   ports: {
     inputs: [{ name: "msg", type: "any" }],
     outputs: [{ name: "msg", type: "any" }],
@@ -44,7 +45,7 @@ export const descriptor: NodeDescriptor = {
         { value: 1, label: "1" },
       ],
     },
-    { name: "dynamic", label: "dynamic subscription", kind: "boolean", default: false },
+    { name: "dynamic", label: "dynamic subscription", kind: "boolean", default: false, help: "Lets an input message change the subscription while the flow runs: msg.action is subscribe or unsubscribe, msg.topic the topic." },
     { name: "brokerConfigId", label: "MQTT Broker", kind: "configRef", configType: "thingstudio/config/mqtt-broker", default: "" },
     { name: "wifiConfigId", label: "WiFi", kind: "configRef", configType: "thingstudio/config/wifi", singleton: true, default: "", help: "One WiFi network per flow: every WiFi node shares this setting. With MQTT nodes in the flow, MQTT manages the connection, so \"unmanaged\" isn't accepted." },
     { name: "nodeId", label: "node id", kind: "nodeId", default: "" },
