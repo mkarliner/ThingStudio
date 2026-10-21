@@ -1,0 +1,7 @@
+{
+  "name": "errors-entry",
+  "hook": "def compile(ctx, properties):\n    return {'errors': ['pin 35 is input-only on the ESP32']}\n",
+  "context": { "version": 1, "node": { "id": "n1", "type": "custom/x", "properties": {}, "wired": { "inputs": [], "outputs": [true] } }, "flow": { "nodes": [], "configs": [] }, "nodesOfType": [], "referencedConfigs": {}, "target": null },
+  "properties": {},
+  "expect": { "errors": ["pin 35 is input-only on the ESP32"] }
+}

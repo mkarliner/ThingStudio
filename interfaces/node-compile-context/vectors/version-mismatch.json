@@ -1,0 +1,7 @@
+{
+  "name": "newer-context",
+  "hook": "def compile(ctx, properties):\n    if ctx.get('version', 0) > 1:\n        return {'errors': ['needs a newer Thingstudio (compile context v%d, this editor has v1)' % ctx['version']]}\n    return {'properties': {}}\n",
+  "context": { "version": 2, "node": { "id": "n1", "type": "custom/x", "properties": {}, "wired": { "inputs": [], "outputs": [true] } }, "flow": { "nodes": [], "configs": [] }, "nodesOfType": [], "referencedConfigs": {}, "target": null },
+  "properties": {},
+  "expect": { "errors": ["needs a newer Thingstudio (compile context v2, this editor has v1)"] }
+}

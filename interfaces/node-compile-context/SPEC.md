@@ -171,6 +171,8 @@ of the parity goal (`reviews/2026-10-18-node-parity-architecture.md` §7).
 
 `editor/test/compile-context.test.ts`, `compile-hook.test.ts`, `compile-hooks.test.ts` and
 `compile-hooked-package.test.ts` cover the context shape, result validation/limits (asserted against `api.json`),
-the pre-pass and the compile integration. Real-interpreter vectors under `interfaces/node-compile-context/vectors/`
-are added with the worker runner; they must include the worked example above, a malformed result, an `errors` entry,
-a timeout and a version mismatch.
+the pre-pass and the compile integration. Real-interpreter vectors live under
+`interfaces/node-compile-context/vectors/` and run in `editor/test/compile-context-vectors.test.ts`: the worked
+example above, a malformed result, an `errors` entry, a raised hook and a newer-version context. The timeout vector
+is containment, not result data -- the WASI runner has no budget by design -- and is exercised by
+`editor/test/compile-hook-runner.test.ts` (the worker's 1 s termination) and the browser smoke test's `runaway` case.

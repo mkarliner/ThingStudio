@@ -58,9 +58,11 @@ Every network node is a package. Remaining built-ins, by blocker:
 - **HTTP response size** (`outstanding-items/http-response-size-limit.md`): the whole body is one allocation; a
   56 KB page failed on the C3 with `MemoryError`. Decision needed: catch it and raise a clear error (recommended),
   add a size limit, or stream. User docs already state the limit.
-- **Release gates**: browser smoke test for the compile-hook worker (`tools/compile_hook_smoke.py`), compile-context
-  conformance vectors under `interfaces/node-compile-context/vectors/`, and the mainline `ports/webassembly`
-  interpreter spike before a release.
+- **Release gates**: compile-context conformance vectors now live under `interfaces/node-compile-context/vectors/`
+  and run in `editor/test/compile-context-vectors.test.ts` (2026-10-21). The browser smoke test
+  (`tools/compile_hook_smoke.py`) could not run in the sandbox -- Chromium's renderer closes on the editor page
+  even with the sysroot's libraries -- so it still needs a machine with a working headless browser. The mainline
+  `ports/webassembly` interpreter spike is still before a release.
 - **CLI custom-node loading** still does not exist, so the CLI has no hook path for user packages.
 - **Dynamic subscription follow-ups**: Node-RED's `msg.topic: true` "all topics" form is not implemented (string and
   list are), and `connect`/`disconnect` are excluded.

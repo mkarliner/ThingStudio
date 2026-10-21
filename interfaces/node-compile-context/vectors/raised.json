@@ -1,0 +1,7 @@
+{
+  "name": "hook-raises",
+  "hook": "def compile(ctx, properties):\n    raise ValueError('pin 35 is input-only')\n",
+  "context": { "version": 1, "node": { "id": "n1", "type": "custom/x", "properties": {}, "wired": { "inputs": [], "outputs": [true] } }, "flow": { "nodes": [], "configs": [] }, "nodesOfType": [], "referencedConfigs": {}, "target": null },
+  "properties": {},
+  "expect": { "raised": "compile hook raised ValueError: pin 35 is input-only" }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "worked-example",
+  "hook": "def compile(ctx, properties):\n    wifi = None\n    for config in ctx['flow']['configs']:\n        if config['type'] == 'thingstudio/config/wifi':\n            wifi = (ctx.get('referencedConfigs') or {}).get(config['id'])\n            break\n    if wifi is None:\n        return {'errors': ['no WiFi config in this flow']}\n    mqtt = any(n['type'].startswith('thingstudio/mqtt_') for n in ctx['flow']['nodes'])\n    return {'properties': {'ssid': wifi.get('ssid', ''), 'deferToMqtt': mqtt}, 'warnings': ['derived']}\n",
+  "context": {
+    "version": 1,
+    "node": { "id": "n1", "type": "custom/wifi", "properties": {}, "wired": { "inputs": [], "outputs": [true] } },
+    "flow": {
+      "nodes": [
+        { "id": "n1", "type": "custom/wifi", "properties": {} },
+        { "id": "m1", "type": "thingstudio/mqtt_publish", "properties": {} }
+      ],
+      "configs": [{ "id": "w1", "type": "thingstudio/config/wifi", "properties": { "ssid": "net" } }]
+    },
+    "nodesOfType": [{ "id": "n1", "type": "custom/wifi", "properties": {} }],
+    "referencedConfigs": { "w1": { "ssid": "net", "password": "pw", "security": "password" } },
+    "target": null
+  },
+  "properties": {},
+  "expect": { "properties": { "ssid": "net", "deferToMqtt": true }, "warnings": ["derived"] }
+}

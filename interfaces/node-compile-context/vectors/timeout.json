@@ -1,0 +1,8 @@
+{
+  "name": "runaway-hook",
+  "runner": "worker",
+  "hook": "def compile(ctx, properties):\n    while True:\n        pass\n",
+  "context": { "version": 1, "node": { "id": "n1", "type": "custom/x", "properties": {}, "wired": { "inputs": [], "outputs": [true] } }, "flow": { "nodes": [], "configs": [] }, "nodesOfType": [], "referencedConfigs": {}, "target": null },
+  "properties": {},
+  "expect": { "timeout_ms": 1000 }
+}
