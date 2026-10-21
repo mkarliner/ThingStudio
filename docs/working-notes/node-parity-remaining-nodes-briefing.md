@@ -73,7 +73,10 @@ nodes each need their own design/verification task (see `shared-resource-facilit
   field. Plus the panel single-use check and reset-pin claim.
 - **`display-spi`** — large and hardware-critical: compile-time MADCTL/stride geometry + the `@micropython.viper`
   expansion loops must become runtime Python. Do it only with a real-hardware pass; consider whether the geometry
-  belongs in a small facility instead.
+  belongs in a small facility instead. **The existing TS node was validated on the CYD on 2026-10-21** with
+  `test-flows/display-spi-gs4-cyd-test.flow.json` (the 240x320 pattern rendered correctly), so the conversion's
+  reference behavior is confirmed; the conversion itself is still to do. The CYD's touch is XPT2046 (SPI), so
+  `touch_i2c` still needs I2C touch hardware.
 - **`adc`** — a node-specific compile-time context query (its ESP32 ADC2-vs-WiFi guard reads `findNodesOfType`).
 
 Residue (built-in-only by design, not goals): **`function`** (verbatim user code) and the **`gui_*`** family (the
