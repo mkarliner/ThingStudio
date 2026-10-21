@@ -17,6 +17,8 @@ Cases (each prints PASS or FAIL; the exit status is 1 if any fail):
 Usage:  python tools/compile_hook_smoke.py [--static-dir editor/dist] [--chromium /path/to/chrome] [--wait 12]
 Needs:  a built editor (cd editor && npm run build), the backend installed (pip install ./backend), and
         pip install -r docs/screenshots/requirements.txt && playwright install chromium
+        On a minimal Linux with no system fonts, Chromium aborts on the editor page -- point FONTCONFIG_FILE at a
+        fonts.conf listing a TTF (the repo's tools/fonts/ works); see learnings/headless-browser-testing.md.
 Review: docs/working-notes/reviews/2026-10-19-reply-review-and-smoke-test.md
 """
 

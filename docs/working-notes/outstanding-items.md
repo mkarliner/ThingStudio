@@ -376,9 +376,9 @@ not here.
   property-dependent port-type data form landed 2026-10-20 and **`inject`/`startup` are packages 2026-10-21**.
   `variable_get` followed 2026-10-21 on the shared `runtime.shared('flow_vars')` store, which `variable_set` and
   function nodes already use. **Compile-context conformance vectors landed 2026-10-21**
-  (`interfaces/node-compile-context/vectors/`, run by `editor/test/compile-context-vectors.test.ts`). Still open: a
-  browser pass (the sandbox's Chromium renderer closes on the editor page; needs a working headless browser) and
-  CLI custom-node loading. **Mainline `ports/webassembly` spike done 2026-10-21**
+  (`interfaces/node-compile-context/vectors/`, run by `editor/test/compile-context-vectors.test.ts`), and the
+  **browser smoke test passed all six cases** the same day (the earlier renderer crash was missing system fonts;
+  `FONTCONFIG_FILE` fixes it). Still open: CLI custom-node loading. **Mainline `ports/webassembly` spike done 2026-10-21**
   (`webassembly-mainline-spike.md`): it builds and runs hooks, but costs 3.7x the size and loads asynchronously,
   which the CLI's synchronous hook path cannot use. Recommendation: keep the vendored WASI artifact for the
   release; **stage 1 is done 2026-10-21** -- rebuilt from `3f6d144cb` with wasi-sdk 25.0 + Binaryen 123, build

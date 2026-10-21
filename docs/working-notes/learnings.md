@@ -81,6 +81,11 @@ little contiguous IDF heap for the next deploy (reset, 40s per flow), a large HT
 29 entries:
 `docs/working-notes/learnings/micropython-device-runtime.md`.
 
+## Headless browser testing
+
+Chromium aborts on the editor page on a machine with no fonts at all; point `FONTCONFIG_FILE` at a fonts.conf
+listing a TTF. 1 entry: `docs/working-notes/learnings/headless-browser-testing.md`.
+
 ## Hardware bring-up / HIL rig
 
 Witness-rig wiring gotchas (floating pins, long patch wires, first-`.irq()` `MemoryError`),

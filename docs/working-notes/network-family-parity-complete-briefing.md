@@ -60,8 +60,8 @@ Every network node is a package. Remaining built-ins, by blocker:
   add a size limit, or stream. User docs already state the limit.
 - **Release gates**: compile-context conformance vectors now live under `interfaces/node-compile-context/vectors/`
   and run in `editor/test/compile-context-vectors.test.ts` (2026-10-21). The browser smoke test
-  (`tools/compile_hook_smoke.py`) could not run in the sandbox -- Chromium's renderer closes on the editor page
-  even with the sysroot's libraries -- so it still needs a machine with a working headless browser. The mainline
+  (`tools/compile_hook_smoke.py`) **passed all six cases** on 2026-10-21; the earlier renderer crash was missing
+  system fonts, fixed by pointing `FONTCONFIG_FILE` at a fonts.conf listing a TTF. The mainline
   `ports/webassembly` spike is done (`webassembly-mainline-spike.md`): it works, but is 3.7x larger and loads
   asynchronously, so the WASI artifact stays for the release; **stage 1 is done** -- rebuilt from `3f6d144cb` with
   pinned wasi-sdk 25.0 + Binaryen 123, with a build script, vendored usercmodule and a hash test.
