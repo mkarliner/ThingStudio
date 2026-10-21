@@ -33,10 +33,12 @@ import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, NodeDefinition, TransformCodegenResult } from "../compiler/node-definition.js";
 import { pyStringLiteral } from "./py-literals.js";
 
-/** Shared with variable-get.ts -- must match exactly. Deduped as a setup
- * statement keyed by "flow-vars-dict" regardless of which node type (or
- * how many instances of either) compiles first. */
+/** Shared with variable-get.ts and function-node.ts -- must match exactly. Deduped as a setup
+ * statement keyed by "flow-vars-dict" regardless of which node type (or how many instances of either)
+ * compiles first. Backed by runtime.shared since 2026-10-21 so a package (variable_get) can reach the
+ * same dict; the runtime clears its singletons on redeploy, which is the old in-RAM reset. */
 export const FLOW_VARS_DICT = "_flow_vars";
+export const FLOW_VARS_SETUP = `${FLOW_VARS_DICT} = runtime.shared('flow_vars', 'v1', 'v1', lambda: {})`;
 
 // **Given canvas presence, 2026-09-06** (outstanding-items/canvas-
 // presence-gaps.md) -- was registry-only since introduction. `any` in,
@@ -55,7 +57,7 @@ export const variableSetNode: NodeDefinition = {
     if (!name) throw new CompileError("variable_set node's name is empty");
 
     return {
-      statements: [{ key: "flow-vars-dict", code: `${FLOW_VARS_DICT} = {}` }],
+      statements: [{ key: "flow-vars-dict", code: FLOW_VARS_SETUP }],
       functionName: ctx.uniqueName("variable_set"),
       functionBody: `${FLOW_VARS_DICT}[${pyStringLiteral(name)}] = msg.get('payload')\nreturn msg`,
     };

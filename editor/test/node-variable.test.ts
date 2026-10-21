@@ -18,13 +18,12 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { compile } from "../src/compiler/compile.js";
 import { CompileError } from "../src/compiler/errors.js";
 import { resolvePortType } from "../src/compiler/node-definition.js";
 import type { GraphData } from "../src/compiler/graph.js";
 import { buildRegistry } from "../src/node-library/registry.js";
-import { variableGetNode } from "../src/node-library/variable-get.js";
 import { variableSetNode } from "../src/node-library/variable-set.js";
+import { compileWithHooks } from "./compile-with-hooks.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const registry = buildRegistry();
@@ -62,14 +61,14 @@ function crossChainGraph(setValue: string): GraphData {
 }
 
 describe("thingstudio/variable_get and thingstudio/variable_set", () => {
-  it("a value set by one chain is read by variable_get in a later independent chain", () => {
-    const { source } = compile(crossChainGraph("42"), registry);
+  it("a value set by one chain is read by variable_get in a later independent chain", async () => {
+    const { source } = await compileWithHooks(crossChainGraph("42"), registry);
     const output = runGenerated(source);
     const getChainLine = output.split("\n").find((l) => l.includes("node=6"));
     expect(getChainLine).toContain("payload=42");
   });
 
-  it("variable_get falls back to its configured default when nothing has been set yet", () => {
+  it("variable_get falls back to its configured default when nothing has been set yet", async () => {
     const graph: GraphData = {
       nodes: [
         { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
@@ -81,16 +80,16 @@ describe("thingstudio/variable_get and thingstudio/variable_set", () => {
         [2, "2", 0, "3", 0, "number"],
       ],
     };
-    const { source } = compile(graph, registry);
+    const { source } = await compileWithHooks(graph, registry);
     expect(runGenerated(source)).toContain("payload=99");
   });
 
-  it("the shared store dict is declared exactly once even with both a set and a get node in the flow", () => {
-    const { source } = compile(crossChainGraph("1"), registry);
-    expect(source.match(/^_flow_vars = \{\}$/gm)?.length).toBe(1);
+  it("the shared store dict is declared exactly once even with both a set and a get node in the flow", async () => {
+    const { source } = await compileWithHooks(crossChainGraph("1"), registry);
+    expect(source.match(/_flow_vars = runtime\.shared\('flow_vars', 'v1', 'v1', lambda: \{\}\)/g)?.length).toBe(1);
   });
 
-  it("two different variable names don't collide in the shared store", () => {
+  it("two different variable names don't collide in the shared store", async () => {
     const graph: GraphData = {
       nodes: [
         { id: "1", type: "thingstudio/inject", properties: { payloadType: "number", payloadValue: "1", repeat: "manual" } },
@@ -108,13 +107,13 @@ describe("thingstudio/variable_get and thingstudio/variable_set", () => {
         [4, "6", 0, "7", 0, "number"],
       ],
     };
-    const { source } = compile(graph, registry);
+    const { source } = await compileWithHooks(graph, registry);
     const output = runGenerated(source);
     const getLine = output.split("\n").find((l) => l.includes("node=7"));
     expect(getLine).toContain("payload=1"); // "a", not "b"'s 2
   });
 
-  it("rejects an empty variable_set name", () => {
+  it("rejects an empty variable_set name", async () => {
     const graph: GraphData = {
       nodes: [
         { id: "1", type: "thingstudio/inject", properties: { payloadType: "number", payloadValue: "1", repeat: "manual" } },
@@ -122,11 +121,11 @@ describe("thingstudio/variable_get and thingstudio/variable_set", () => {
       ],
       links: [[1, "1", 0, "2", 0, "number"]],
     };
-    expect(() => compile(graph, registry)).toThrow(CompileError);
-    expect(() => compile(graph, registry)).toThrow(/empty/);
+    await expect(compileWithHooks(graph, registry)).rejects.toThrow(CompileError);
+    await expect(compileWithHooks(graph, registry)).rejects.toThrow(/empty/);
   });
 
-  it("rejects an empty variable_get name", () => {
+  it("rejects an empty variable_get name", async () => {
     const graph: GraphData = {
       nodes: [
         { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
@@ -134,14 +133,15 @@ describe("thingstudio/variable_get and thingstudio/variable_set", () => {
       ],
       links: [[1, "1", 0, "2", 0, "bool"]],
     };
-    expect(() => compile(graph, registry)).toThrow(/empty/);
+    await expect(compileWithHooks(graph, registry)).rejects.toThrow(/empty/);
   });
 
   // Canvas presence given 2026-09-06 (outstanding-items/canvas-presence-
   // gaps.md) -- confirms the ports declarations exist and, for
   // variable_get, retype correctly with payloadType (nodes.ts's
   // VariableGetNode.retypeOutput() reads these same declarations).
-  it("variable_get declares an any input and a payloadType-dependent output", () => {
+  it("variable_get declares an any input and a payloadType-dependent output", async () => {
+    const variableGetNode = registry.get("thingstudio/variable_get")!;
     expect(variableGetNode.ports?.inputs).toEqual([{ name: "msg", type: "any" }]);
     const outputs = variableGetNode.ports?.outputs;
     expect(outputs).toHaveLength(1);
@@ -150,7 +150,7 @@ describe("thingstudio/variable_get and thingstudio/variable_set", () => {
     expect(resolvePortType(outputs![0]!, { payloadType: "number" })).toBe("number");
   });
 
-  it("variable_set declares matching any input and output ports", () => {
+  it("variable_set declares matching any input and output ports", async () => {
     expect(variableSetNode.ports?.inputs).toEqual([{ name: "msg", type: "any" }]);
     expect(variableSetNode.ports?.outputs).toEqual([{ name: "msg", type: "any" }]);
   });

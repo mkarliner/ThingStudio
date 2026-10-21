@@ -938,6 +938,12 @@ only on change. Board-to-board messaging over I2C was split off as a separate PO
   The two package-format gaps that came out of the rest were closed as they were reached: two-faced packages
   (sink + event source) and the shared device library.
 
+- **2026-10-21 (later) — variable_get is a package; the flow-vars store is runtime.shared.** `variable_set`
+  (still built-in) and function nodes' `flow` scope now set up `_flow_vars` with
+  `runtime.shared('flow_vars', 'v1', 'v1', lambda: {})`; the `variable_get` package reads the same singleton. The
+  runtime clears its singletons on redeploy, matching the old in-RAM reset. `variable_get` has a hook for its
+  typed default and empty-name check; inject/startup deliberately do not (so the plain compiler keeps handling
+  the flows that use them as fixtures).
 - **2026-10-21 — inject and startup are packages.** Both use the data-form port type; their payload typing is at
   run time (not a hook), so flows with inject still compile through the plain compiler -- inject is the fixture
   most node tests use. A bad number is a `NODE_ERROR` at run time rather than a `CompileError`. `startup` is a

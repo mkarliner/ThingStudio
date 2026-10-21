@@ -33,6 +33,7 @@ import type { GraphData, GraphNode } from "../src/compiler/graph.js";
 import type { CodegenContext } from "../src/compiler/node-definition.js";
 import { dedent, functionNode } from "../src/node-library/function-node.js";
 import { buildRegistry } from "../src/node-library/registry.js";
+import { compileWithHooks } from "./compile-with-hooks.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const registry = buildRegistry();
@@ -205,7 +206,7 @@ describe("thingstudio/function node -- flow scope (shared with variable_get/vari
     expect(line).toContain("payload=42");
   });
 
-  it("a value written by a function node's flow.set is read back by variable_get in a separate chain", () => {
+  it("a value written by a function node's flow.set is read back by variable_get in a separate chain", async () => {
     const graph: GraphData = {
       nodes: [
         { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
@@ -222,7 +223,7 @@ describe("thingstudio/function node -- flow scope (shared with variable_get/vari
         [4, "5", 0, "6", 0, "number"],
       ],
     };
-    const { source } = compile(graph, registry);
+    const { source } = await compileWithHooks(graph, registry);
     const output = runGenerated(source);
     const line = output.split("\n").find((l) => l.includes("node=6"));
     expect(line).toContain("payload=7");
@@ -241,7 +242,7 @@ describe("thingstudio/function node -- flow scope (shared with variable_get/vari
       ],
     };
     const { source } = compile(graph, registry);
-    expect(source.match(/^_flow_vars = \{\}$/gm)?.length).toBe(1);
+    expect(source.match(/_flow_vars = runtime\.shared\('flow_vars', 'v1', 'v1', lambda: \{\}\)/g)?.length).toBe(1);
     expect(source.match(/^class _Store:$/gm)?.length).toBe(1);
   });
 });

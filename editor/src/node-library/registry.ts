@@ -31,7 +31,7 @@ import { descriptor as timerCoreDescriptor, python as timerCorePython } from "./
 import { descriptor as udpReceiveCoreDescriptor, python as udpReceiveCorePython, compileHook as udpReceiveCompileHook } from "./core-packages/udp-receive.js";
 import { descriptor as udpSendCoreDescriptor, python as udpSendCorePython, compileHook as udpSendCompileHook } from "./core-packages/udp-send.js";
 import { descriptor as ntpCoreDescriptor, python as ntpCorePython, compileHook as ntpCompileHook } from "./core-packages/ntp.js";
-import { variableGetNode } from "./variable-get.js";
+import { descriptor as variableGetCoreDescriptor, python as variableGetCorePython, compileHook as variableGetCompileHook } from "./core-packages/variable-get.js";
 import { variableSetNode } from "./variable-set.js";
 import { descriptor as wifiGateCoreDescriptor, python as wifiGateCorePython, compileHook as wifiGateCompileHook } from "./core-packages/wifi-gate.js";
 import { descriptor as wifiStatusCoreDescriptor, python as wifiStatusCorePython, compileHook as wifiStatusCompileHook } from "./core-packages/wifi-status.js";
@@ -88,7 +88,7 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     buildCoreNodeDefinition(startupCoreDescriptor, startupCorePython),
     functionNode,
     buildCoreNodeDefinition(gpioOutCoreDescriptor, gpioOutCorePython),
-    variableGetNode,
+    corePackage(variableGetCoreDescriptor, variableGetCorePython, variableGetCompileHook),
     variableSetNode,
     buildCoreNodeDefinition(debugCoreDescriptor, debugCorePython),
     buildCoreNodeDefinition(interruptCoreDescriptor, interruptCorePython),

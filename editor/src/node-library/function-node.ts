@@ -53,7 +53,7 @@
 import { CompileError } from "../compiler/errors.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, NodeDefinition, TransformCodegenResult } from "../compiler/node-definition.js";
-import { FLOW_VARS_DICT } from "./variable-set.js";
+import { FLOW_VARS_DICT, FLOW_VARS_SETUP } from "./variable-set.js";
 
 const CONTEXT_STORE_CLASS = `class _Store:
     def __init__(self, d):
@@ -162,7 +162,7 @@ export const functionNode: NodeDefinition = {
     return {
       statements: [
         { key: "context-store-class", code: CONTEXT_STORE_CLASS },
-        { key: "flow-vars-dict", code: `${FLOW_VARS_DICT} = {}` },
+        { key: "flow-vars-dict", code: FLOW_VARS_SETUP },
         { key: "flow-context-obj", code: `_flow_ctx = _Store(${FLOW_VARS_DICT})` },
         { key: contextVar, code: `${contextVar} = _Store({})` },
       ],

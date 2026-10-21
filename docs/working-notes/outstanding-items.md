@@ -374,8 +374,8 @@ not here.
   (two-faced packages landed the same day); `mqtt-publish`/`mqtt-subscribe` flipped 2026-10-19 on the new `ts_mqtt`
   shared client; `http-in` followed 2026-10-20 on `ctx.nodesOfType` + the shared `ts_http_server`; the
   property-dependent port-type data form landed 2026-10-20 and **`inject`/`startup` are packages 2026-10-21**.
-  `variable_get` waits on a shared flow-vars store with `variable_set`. Still open: a browser pass, conformance
-  vectors, and CLI custom-node loading.
+  `variable_get` followed 2026-10-21 on the shared `runtime.shared('flow_vars')` store, which `variable_set` and
+  function nodes already use. Still open: a browser pass, conformance vectors, and CLI custom-node loading.
   Until then, hold the flow-query vocabulary (`hasNode`/`nodesOfType`) and promoting core-only vocabulary to the
   custom schema. **Not held:** the property-dependent port-type data form (bounded, editor-side, an explicit
   exception) and `ts_wifi` (orthogonal to the hook).
