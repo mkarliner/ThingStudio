@@ -4,6 +4,7 @@ import type { NodeDescriptor } from "../compiler/node-descriptor.js";
 import { descriptor as debugCoreDescriptor, python as debugCorePython } from "./core-packages/debug.js";
 import { descriptor as displayI2cCoreDescriptor, python as displayI2cCorePython } from "./core-packages/display-i2c.js";
 import { displaySpiNode } from "./display-spi.js";
+import { descriptor as changeCoreDescriptor, python as changeCorePython, compileHook as changeCompileHook } from "./core-packages/change.js";
 import { descriptor as delayCoreDescriptor, python as delayCorePython } from "./core-packages/delay.js";
 import { descriptor as filterCoreDescriptor, python as filterCorePython } from "./core-packages/filter.js";
 import { descriptor as journalCoreDescriptor, python as journalCorePython } from "./core-packages/journal.js";
@@ -31,8 +32,6 @@ import { descriptor as timerCoreDescriptor, python as timerCorePython } from "./
 import { descriptor as udpReceiveCoreDescriptor, python as udpReceiveCorePython, compileHook as udpReceiveCompileHook } from "./core-packages/udp-receive.js";
 import { descriptor as udpSendCoreDescriptor, python as udpSendCorePython, compileHook as udpSendCompileHook } from "./core-packages/udp-send.js";
 import { descriptor as ntpCoreDescriptor, python as ntpCorePython, compileHook as ntpCompileHook } from "./core-packages/ntp.js";
-import { descriptor as variableGetCoreDescriptor, python as variableGetCorePython, compileHook as variableGetCompileHook } from "./core-packages/variable-get.js";
-import { variableSetNode } from "./variable-set.js";
 import { descriptor as wifiGateCoreDescriptor, python as wifiGateCorePython, compileHook as wifiGateCompileHook } from "./core-packages/wifi-gate.js";
 import { descriptor as wifiStatusCoreDescriptor, python as wifiStatusCorePython, compileHook as wifiStatusCompileHook } from "./core-packages/wifi-status.js";
 import { GUI_NODES } from "./gui.js";
@@ -88,8 +87,6 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     buildCoreNodeDefinition(startupCoreDescriptor, startupCorePython),
     functionNode,
     buildCoreNodeDefinition(gpioOutCoreDescriptor, gpioOutCorePython),
-    corePackage(variableGetCoreDescriptor, variableGetCorePython, variableGetCompileHook),
-    variableSetNode,
     buildCoreNodeDefinition(debugCoreDescriptor, debugCorePython),
     buildCoreNodeDefinition(interruptCoreDescriptor, interruptCorePython),
     buildCoreNodeDefinition(eswitchCoreDescriptor, eswitchCorePython),
@@ -112,6 +109,7 @@ export function buildRegistry(): Map<string, NodeDefinition> {
     corePackage(udpReceiveCoreDescriptor, udpReceiveCorePython, udpReceiveCompileHook),
     corePackage(ntpCoreDescriptor, ntpCorePython, ntpCompileHook),
     // A core package (phase 4): descriptor + .node.py, no TypeScript hook. See core-packages/delay.ts.
+    corePackage(changeCoreDescriptor, changeCorePython, changeCompileHook),
     buildCoreNodeDefinition(delayCoreDescriptor, delayCorePython),
     buildCoreNodeDefinition(filterCoreDescriptor, filterCorePython),
     buildCoreNodeDefinition(journalCoreDescriptor, journalCorePython),

@@ -140,6 +140,11 @@ What replaces the hidden `variable_get`/`variable_set`? Three live options:
 This decides the fate of the two hidden nodes **and** the parity briefing's "portable `variable_set`" item. It is a
 product call — **Mike's** — not something this note should pre-decide.
 
+**Decided 2026-10-21, Mike: (b), with no legacy constraint.** The generic `change` node is built (one rule per
+node: set/delete a msg property or flow variable; literal or msg/flow source). Node context stays function-code
+only for now — a one-rule node cannot read its own context. `variable_get`/`variable_set` are removed; Mike
+confirmed no other user has TypeScript-era flows. See `decisions/context-model.md`.
+
 ## 9. Fault handling and one-way doors
 
 - **Resolution shape:** `get` with a default; a missing key is not an error (matches `_Store` and Node-RED).

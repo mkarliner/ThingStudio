@@ -193,9 +193,8 @@ The current node library (registry in `editor/src/node-library/registry.ts`, ~37
 - **Network**: `wifi_status`, `wifi_gate`, `http_request`, `http_in`/`http_response` (exact-path-match v1
   server), `mqtt_publish`/`mqtt_subscribe` (vendored `mqtt_as`), `udp_send`/`udp_receive`, `ntp` (sets the RTC, sends the time). TCP send/listen-
   receive were scoped but **never built** — deferred (§10).
-- **Logic/state**: `function` (runs actual precompiled MicroPython, single or multiple outputs), `variable_get`/
-  `variable_set` (in-RAM `_flow_vars` store; the dedicated canvas nodes are hidden pending a Node-RED-style
-  context model), `filter` (change-only/rate-limiting event compression), `journal` (ring-buffer time series for
+- **Logic/state**: `function` (runs actual precompiled MicroPython, single or multiple outputs), `change` (the
+  no-code path: set/delete a msg property or flow variable in the in-RAM flow store), `filter` (change-only/rate-limiting event compression), `journal` (ring-buffer time series for
   the trend widget), `debug` (prints to the device console), `inject`.
 - No dedicated boolean/arithmetic/comparator/ADC node: those reduce to a one-line function-node body
   (`payload > threshold`, `machine.ADC(pin).read_u16()`). Mike's 2026-08-21 call on that held.
@@ -335,7 +334,7 @@ Mike-prioritized): Home Assistant auto-discovery (proposed first post-launch); a
 backed state store** (`STATE_READ`/`STATE_WRITE` — deferred design work, §5); **wire-level live value
 streaming** (`VALUE_STREAM`); MQTTS (MQTT over TLS); incremental flow updates; BLE transport; per-device config
 override; TCP send/listen-receive nodes (scoped, never built); OTA-capable ESP32 partitions (deferred: no field
-devices yet); device-side watchdog; a Node-RED-style context model for `variable_get`/`variable_set`; parallel
+devices yet); device-side watchdog; a Node-RED-style context model beyond the v1 `change` node; parallel
 multicore support; `touch_spi` for classic CYDs; GT911/CST820 touch controllers; install-MicroPython-from-the-
 editor (deferred: too many firmware variants).
 

@@ -183,11 +183,11 @@ describe("thingstudio/function node -- context scope", () => {
 });
 
 describe("thingstudio/function node -- flow scope (shared with variable_get/variable_set)", () => {
-  it("a value written by variable_set is read by a function node's flow.get in a separate chain", () => {
+  it("a value written by a change node is read by a function node's flow.get in a separate chain", async () => {
     const graph: GraphData = {
       nodes: [
         { id: "1", type: "thingstudio/inject", properties: { payloadType: "number", payloadValue: "42", repeat: "manual" } },
-        { id: "2", type: "thingstudio/variable_set", properties: { name: "counter" } },
+        { id: "2", type: "thingstudio/change", properties: { operation: "set", scope: "flow", property: "counter", valueFrom: "msg", value: "payload" } },
         { id: "3", type: "thingstudio/debug", properties: {} },
         { id: "4", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
         { id: "5", type: "thingstudio/function", properties: { code: "msg['payload'] = flow.get('counter')\nreturn msg" } },
@@ -200,20 +200,20 @@ describe("thingstudio/function node -- flow scope (shared with variable_get/vari
         [4, "5", 0, "6", 0, "any"],
       ],
     };
-    const { source } = compile(graph, registry);
+    const { source } = await compileWithHooks(graph, registry);
     const output = runGenerated(source);
     const line = output.split("\n").find((l) => l.includes("node=6"));
     expect(line).toContain("payload=42");
   });
 
-  it("a value written by a function node's flow.set is read back by variable_get in a separate chain", async () => {
+  it("a value written by a function node's flow.set is read back by a change node in a separate chain", async () => {
     const graph: GraphData = {
       nodes: [
         { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
         { id: "2", type: "thingstudio/function", properties: { code: "flow.set('x', 7)\nreturn msg" } },
         { id: "3", type: "thingstudio/debug", properties: {} },
         { id: "4", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
-        { id: "5", type: "thingstudio/variable_get", properties: { name: "x", payloadType: "number", default: "-1" } },
+        { id: "5", type: "thingstudio/change", properties: { operation: "set", scope: "msg", property: "payload", valueFrom: "flow", value: "x" } },
         { id: "6", type: "thingstudio/debug", properties: {} },
       ],
       links: [
@@ -229,19 +229,19 @@ describe("thingstudio/function node -- flow scope (shared with variable_get/vari
     expect(line).toContain("payload=7");
   });
 
-  it("the shared _flow_vars dict and _Store class are each declared exactly once with both function and variable nodes present", () => {
+  it("the shared _flow_vars dict and _Store class are each declared exactly once with both function and change nodes present", async () => {
     const graph: GraphData = {
       nodes: [
         { id: "1", type: "thingstudio/inject", properties: { payloadType: "bool", payloadValue: "true", repeat: "manual" } },
         { id: "2", type: "thingstudio/function", properties: { code: "flow.set('x', 1)\nreturn msg" } },
-        { id: "3", type: "thingstudio/variable_set", properties: { name: "y" } },
+        { id: "3", type: "thingstudio/change", properties: { operation: "set", scope: "flow", property: "y", valueFrom: "msg", value: "payload" } },
       ],
       links: [
         [1, "1", 0, "2", 0, "bool"],
         [2, "2", 0, "3", 0, "bool"],
       ],
     };
-    const { source } = compile(graph, registry);
+    const { source } = await compileWithHooks(graph, registry);
     expect(source.match(/_flow_vars = runtime\.shared\('flow_vars', 'v1', 'v1', lambda: \{\}\)/g)?.length).toBe(1);
     expect(source.match(/^class _Store:$/gm)?.length).toBe(1);
   });

@@ -162,6 +162,7 @@ import { descriptor as httpRequestCoreDescriptor } from "../../node-library/core
 import { descriptor as httpInCoreDescriptor } from "../../node-library/core-packages/http-in.js";
 import { descriptor as httpResponseCoreDescriptor } from "../../node-library/core-packages/http-response.js";
 import { descriptor as delayCoreDescriptor } from "../../node-library/core-packages/delay.js";
+import { descriptor as changeCoreDescriptor } from "../../node-library/core-packages/change.js";
 import { descriptor as filterCoreDescriptor } from "../../node-library/core-packages/filter.js";
 import { descriptor as journalCoreDescriptor } from "../../node-library/core-packages/journal.js";
 import { descriptor as ntpCoreDescriptor } from "../../node-library/core-packages/ntp.js";
@@ -425,6 +426,8 @@ export class DebugNode extends buildDescriptorNodeClass(debugCoreDescriptor) {}
 
 export class DelayNode extends buildDescriptorNodeClass(delayCoreDescriptor) {}
 
+export class ChangeNode extends buildDescriptorNodeClass(changeCoreDescriptor) {}
+
 export class InjectNode extends buildDescriptorNodeClass(injectCoreDescriptor) {}
 
 export class FunctionNode extends buildDescriptorNodeClass(functionNode) {}
@@ -580,6 +583,7 @@ export const NODE_FACTORIES: Record<NodeKind, () => AnyThingstudioNode> = {
   mqtt_publish: () => new MqttPublishNode(),
   mqtt_subscribe: () => new MqttSubscribeNode(),
   delay: () => new DelayNode(),
+  change: () => new ChangeNode(),
   filter: () => new FilterNode(),
   bme280: () => new Bme280Node(),
   touch_i2c: () => new TouchI2cNode(),

@@ -1,5 +1,8 @@
 # Context model — do it Node-RED-style, volatile (in-RAM) scope only
 
+**Status: resolved 2026-10-21** -- Q3 chose the generic `change` node (option b); v1 is one rule per node over msg
+properties and flow variables. Node context remains function-code only. See `decisions/context-model.md`.
+
 Status: **[P2]**, scope narrowed 2026-09-06 during Mike's priority pass -- deliberately volatile-only for now. Follow-up to `canvas-presence-gaps.md`'s same-day reversal of
 `variable_get`/`variable_set` canvas presence.
 

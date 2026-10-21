@@ -45,8 +45,9 @@ before the ACK, so `wifi_status`'s one-time `payload=True` could be dropped and 
 Every network node is a package. Remaining built-ins, by blocker:
 
 - **Property-dependent port types** — the data form landed 2026-10-20 (`{property, map, default}`);
-  **`inject`, `startup` and `variable_get` are packages** (2026-10-21, hardware-checked); the flow-vars store is
-  `runtime.shared('flow_vars')`. `variable_set` stays built-in pending the context-model Q3.
+  **`inject` and `startup` are packages** (2026-10-21, hardware-checked). The context-model Q3 chose the generic
+  **`change`** node (2026-10-21), which replaces and removes `variable_get`/`variable_set`; the flow store is
+  `runtime.shared('flow_vars')`, node context stays function-code only.
 - **`variable-set`**: its fate is the context model's no-code-path question (Q3), still open.
 - **Hardware remainder**, each its own design/verification task: `touch_i2c` (nested config, panel single-use,
   reset pin), `display_spi` (compile-time geometry/viper loops must become runtime Python), `adc` (ESP32 ADC2-vs-

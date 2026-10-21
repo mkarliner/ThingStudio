@@ -46,8 +46,8 @@ describe("node catalog", () => {
     expect(catalog.configs.map((c) => c.type)).toEqual(expect.arrayContaining(["thingstudio/config/wifi", "thingstudio/config/i2c-bus", "thingstudio/config/touch-panel", "thingstudio/config/mqtt-broker"]));
   });
 
-  it("lists the types the canvas has no node for, so the page doesn't hide them", () => {
-    expect(catalog.compileOnly).toEqual(expect.arrayContaining(["thingstudio/variable_get", "thingstudio/variable_set"]));
+  it("lists no compile-only types any more -- every registered type has a canvas node", () => {
+    expect(catalog.compileOnly).toEqual([]);
   });
 
   it("every hand-written property note names a property that exists", () => {

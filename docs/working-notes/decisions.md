@@ -249,3 +249,10 @@ A board gets only the libraries its flow uses, installed by Deploy through the l
 after a successful deploy (2026-10-07). Replaces "selective vendor push". Built the same day, runtime 7.0.0,
 hardware-checked on Pico W and an upgraded ESP32; libraries now sent in 1 KB pieces (runtime 8.0.0). 5 entries:
 `docs/working-notes/decisions/flow-dependencies.md`.
+
+## Context model
+
+The runtime context/flow store: `change` is the no-code path (set/delete a msg property or flow variable, one rule
+per node), chosen over reviving the narrow `variable_get`/`variable_set` pair or function-code-only
+(2026-10-21); node context remains function-code only in v1. 1 entry: `docs/working-notes/decisions/context-model.md`.
+

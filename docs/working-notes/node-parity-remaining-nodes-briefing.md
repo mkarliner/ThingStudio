@@ -42,17 +42,9 @@ and the security posture are decided — don't re-litigate.
 
 ## Remaining built-ins, by blocker
 
-Portable now (no blocker — do these first):
-- ~~`timer`~~ — **done 2026-10-18** (`core-packages/timer.ts`; counter lives in the setup closure). No catalog
-  change.
-- **`variable-set`** — a plain `any`-in/out transform (`_flow_vars` store). **Not on the portable list any
-  more:** its fate is the context model's no-code-path question (Q3), still open; that model now follows the
-  device settings store (`device-settings-store-scoping.md`, `context-model-scoping.md` §12/§13).
-
-Blocked on a **data form for a property-dependent port type** (the data-equivalent rule; `PortType`-as-function is
-the last built-in-only corner besides `dynamicOutputs`):
-- **`inject`**, **`startup`** (their single output tracks `payloadType`), **`variable-get`** (`outputs[0].type` is a
-  function of `payloadType`).
+Portable now: **none left.** `timer` (2026-10-18), `inject`/`startup` (2026-10-21) are packages; the
+property-dependent port-type data form landed 2026-10-20. `variable_get`/`variable_set` were **replaced by the
+generic `change` node** on 2026-10-21 (Q3 = option b) and removed; node context stays function-code only in v1.
 
 **`wifi_status` and `wifi_gate` flipped 2026-10-19** with package compile hooks + the `ts_wifi` shared bring-up
 library. The rest of the network family splits by the capability each still needs:

@@ -10,6 +10,20 @@ Ports are numbered from 0 in a flow file's `edges`: `[fromNodeId, outputNumber, 
 
 ## general
 
+### change
+
+Type `thingstudio/change`, kind transform, palette group general.
+
+- Inputs: msg (any)
+- Outputs: msg (any)
+- Properties (name, type, default):
+    - `operation`, string, default `"set"`
+    - `scope`, string, default `"msg"`
+    - `property`, string, default `"payload"`
+    - `valueFrom`, string, default `"literal"`
+    - `valueType`, string, default `"string"`
+    - `value`, string, default `""`
+
 ### debug
 
 Type `thingstudio/debug`, kind sink, palette group general.
@@ -501,10 +515,6 @@ Type `thingstudio/wifi_status`, kind source, palette group network.
 - Properties (name, type, default):
     - `pollMs`, number, default `5000`
     - `wifiConfigId`, string, default `""`, the id of a `thingstudio/config/wifi` config
-
-## Compile-only types
-
-The compiler accepts these but the canvas has no node for them: `thingstudio/variable_get`, `thingstudio/variable_set`.
 
 ## Config nodes
 

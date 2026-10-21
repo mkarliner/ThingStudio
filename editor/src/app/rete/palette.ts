@@ -107,6 +107,7 @@ export type NodeKind =
   | "mqtt_subscribe"
   | "delay"
   | "filter"
+  | "change"
   | "bme280"
   | "touch_i2c"
   | "i2c"

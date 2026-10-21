@@ -53,7 +53,7 @@
 import { CompileError } from "../compiler/errors.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type { CodegenContext, NodeDefinition, TransformCodegenResult } from "../compiler/node-definition.js";
-import { FLOW_VARS_DICT, FLOW_VARS_SETUP } from "./variable-set.js";
+import { FLOW_VARS_DICT, FLOW_VARS_SETUP } from "./flow-vars.js";
 
 const CONTEXT_STORE_CLASS = `class _Store:
     def __init__(self, d):

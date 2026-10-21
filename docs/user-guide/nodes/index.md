@@ -32,6 +32,7 @@ See [flows, nodes and messages](../background/flows-and-nodes.md) for how they f
 | draw on a display | [display spi](display-spi.md), [display i2c](display-i2c.md) |
 | show readings as pages on a display | [GUI nodes](gui.md) |
 | change a message, or decide where it goes | [function](function.md) |
+| set or clear a value between messages | [change](change.md) |
 | send only changes, or limit the rate | [filter](filter.md) |
 | keep a number's history and show its trend | [journal](journal.md) |
 | show the time of day | [ntp](ntp.md) |
@@ -56,6 +57,7 @@ Nodes that don't need a network or hardware:
 | [function](function.md) | transform | Runs your own MicroPython on each message. |
 | [delay](delay.md) | transform | Passes each message on after a set wait. |
 | [filter](filter.md) | transform | Passes a message on only if it changed enough, or enough time has passed. |
+| [change](change.md) | transform | Sets or deletes one message property or flow variable. |
 | [journal](journal.md) | transform | Keeps the recent history of a number as average, min and max rows, for a trend. |
 | [debug](debug.md) | sink | Prints a message to the editor's console. |
 
