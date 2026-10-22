@@ -31,6 +31,15 @@ path works, they're load-bearing. This is already the working convention this pr
 work (§5's fault isolation, the wire protocol's adversarial framing tests, bounded timeouts on network I/O) — worth
 stating explicitly so it's applied consistently to new work too, not just re-derived per feature.
 
+**Corollary, 2026-10-22: one deterministic path, not a recovery chain.** When a failure shows up, the first
+question is "what is the limit?", not "what retry gets around it?". Adding a fallback per observed error — free
+this, retry that, restart, try again — produces a system whose states nobody can describe: it *appears* to work,
+failures move rather than disappear, and the operator cannot tell what happened. Prefer one sequence decided before
+anything is sent, with each step a named state and one clear failure per step; if the board or platform cannot do
+the thing, say so in one line up front. Mike's words, after an afternoon of exactly that chain: *"we're spent hours
+on this… it falls squarely on 'fail well, not work badly'."* Full incident: `docs/working-notes/decisions/
+classic-esp32-firmware.md` (deploy over a running flow, 2026-10-22).
+
 **Corollary, 2026-09-06: don't chase every board's idiosyncrasies — make the failure legible instead.** The
 board/platform landscape (ESP32/ESP-IDF, RP2040/RP2350's cyw43, and whatever comes after) is wide, and each one's
 WiFi/network stack has its own timing and failure modes — a general-purpose fix aimed at holding across all of

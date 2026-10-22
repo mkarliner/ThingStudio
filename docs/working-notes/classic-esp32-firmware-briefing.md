@@ -170,7 +170,43 @@ What this means for testing: "frozen image boots and runs a flow" and "the runti
 without reflashing" are two different checks, and a board that has had an install can only show the
 second. Reflash before measuring the first.
 
+## Deploying over a running flow: where this stands (2026-10-22, evening)
+
+This is the open problem, written down rather than worked around further.
+
+**The fact.** A classic ESP32 running a GUI flow cannot reliably accept another flow. The board has to receive the
+new flow and then start it, and after a GUI flow has run the MicroPython heap (a split heap: `gc.mem_free()` sums
+several regions) has no block big enough for either step. Measured: 116 KB free, a 9,538-byte allocation failed; then
+chunked pieces transferred fine, and starting the flow failed allocating **376 bytes**.
+
+**What was tried, in order** (each one a local answer to the previous error, which is the pattern to avoid):
+
+1. free the running flow before the retry — freed RAM, not contiguity;
+2. drop the flow module and the flow's library modules — 50 → 116 KB free, still no 10 KB block;
+3. clear the flow and soft-restart the board, then deploy — worked sometimes, hid a board limit behind a restart;
+4. send the flow in 1 KB pieces (`FLOW_PUT`/`FLOW_COMMIT`, runtime 11.3.0) — the *transfer* works, the *start* still
+   fails on a fragmented heap.
+
+Steps 1-3 were removed again. Step 4 stays: it is the right shape for the transfer and fixes a real class of failure.
+
+**What "fail well" looks like here** — the sequence to design next session, not to patch in:
+
+- **One deterministic deploy sequence.** Deploy = "stop the flow, free, receive, start", decided before anything is
+  sent, on every board. Not "send, fail, recover". The board is in a named state at each step, and the editor knows
+  which one before it starts.
+- **A stop action that keeps the listener.** Today the choices are Remove flow… (deletes it) or Stop flow & open
+  prompt (ends Thingstudio, needs a reset), so there is no way to say "stop the flow, stay connected, keep the saved
+  flow". Deploy needs that state.
+- **One refusal if it cannot fit**, before transferring anything: the board reports what it can take, the editor
+  refuses in one line with the single action. No 45-second resend-and-fail.
+- **Then re-test the five-cycle gate.** It is still not passed: the gate has never seen a clean A ↔ B cycle on this
+  board.
+
+Until then, the user-facing answer is `Tools → Remove flow…`, `Tools → Restart board (soft)`, deploy
+(`docs/user-guide/debugging.md`).
+
 ## Remaining risks
+
 
 1. **Only the idle baseline is measured.** The image boots and reports a healthy heap, but the GUI
    flow has not run on it yet. If it still fails, the next lever is Deploy skipping fewer libraries

@@ -87,5 +87,15 @@ otherwise.
 
 The editor-side workaround tried first and then removed — free the flow, retry, then clear the flow and restart the
 board — is gone. It was an escalating recovery chain hiding a board limit, which is the "work badly" the project's
-fault-handling rule exists to avoid; the chunked messages remove the failure instead, and a deploy that still fails
-now says why in one line.
+fault-handling rule exists to avoid.
+
+**Status after testing the chunked path (2026-10-22 evening): the transfer works, the start does not.** Pieces
+arrived and were acknowledged one by one; the commit then failed starting the flow, `MemoryError` allocating **376
+bytes**, with the running GUI flow's memory freed but the heap fragmented. So chunking fixed the right thing and the
+deploy-under-load problem is still open — it is not an allocation-size problem, it is that the board cannot hold a
+running GUI flow and take another one in the same session.
+
+Mike's call on the pattern, worth carrying further than this feature: *"we're spent hours on this… it falls squarely
+on 'fail well, not work badly'."* A recovery step was added for each failure observed, and the design never stated
+the limit. The sequence to build instead is in the briefing: one deterministic deploy (stop, free, receive, start),
+a stop action that keeps the listener, and one refusal before anything is sent when it cannot fit.

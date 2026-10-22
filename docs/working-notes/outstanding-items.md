@@ -83,6 +83,13 @@ not here.
   custom images, classic ESP32 first, with the packaging/hosting/flashing docs. Briefing:
   `classic-esp32-firmware-briefing.md`; `decisions/gui-layout.md` (2026-10-09 gate, 2026-10-22 result),
   `decisions/classic-esp32-firmware.md`, `frozen-firmware-spike-briefing.md`.
+- **[LAUNCH]** **Deploy over a running GUI flow: design the deterministic sequence — 2026-10-22.** Still open, and
+  the reason the five-cycle gate has not passed. Facts and what was tried (and removed) are in
+  `classic-esp32-firmware-briefing.md`; `decisions/classic-esp32-firmware.md` carries the "fail well, not work
+  badly" note. Shape to build: one deploy sequence decided before anything is sent (stop the flow, free, receive,
+  start), a "stop the flow, keep Thingstudio" action (today only Remove flow… or Stop flow & open prompt exist),
+  and a single refusal before transfer when the board cannot fit it. Chunked transfer (`FLOW_PUT`/`FLOW_COMMIT`,
+  runtime 11.3.0) already works and stays.
 - **[LAUNCH]** **Classic-ESP32 custom image: built and booting — 2026-10-22.** Inputs in
   `firmware/classic-esp32/` (stage from `runtime_manifest.py`, frozen manifest including the port's own
   `_boot`/`flashbdev`/`inisetup`, single-app partition table, build/install scripts, `_deps.json` generator using
