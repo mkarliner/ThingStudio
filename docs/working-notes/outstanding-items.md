@@ -77,9 +77,11 @@ not here.
   launch work. Hardware-checked 2026-10-10 with `test-flows/gui-orientation-test-freenove-s3-4in.flow.json`: touch lands right at 90, 180 and 270, and
   the press highlight holds and releases (hold, slide off). Orientation 0 is the unturned picture the earlier hero/touch flows already used.
   `st7796py`'s README updated 2026-10-10 (confirmed on Mike's panel only).
-- **[LAUNCH]** **CYD gate for custom firmware images.** Run the gate in `decisions/gui-layout.md` (2026-10-09)
-  on a classic CYD. Pass: custom images are post-MVP. Fail: build a small set of custom images (classic ESP32
-  first) with the packaging, hosting and flashing-docs work that brings. `frozen-firmware-spike-briefing.md`.
+- **[LAUNCH]** **CYD gate for custom firmware images — FAILED on the first cycle, 2026-10-22.** Deploying the
+  hero GUI flow after a fresh runtime install hit `MemoryError allocating 13317 bytes` and no `DEPLOY_ACK` (a
+  clean idle rerun is owed once the CYD's CH340 port is stable). Per the gate, the MVP ships a small set of
+  custom images, classic ESP32 first, with the packaging/hosting/flashing docs. `decisions/gui-layout.md`
+  (2026-10-09 gate, 2026-10-22 result), `frozen-firmware-spike-briefing.md`.
 - **[LAUNCH]** **Button rework -- built and hardware-checked 2026-10-09.** Two-faced nodes in the compiler;
   button output, modes and controlled toggle; modal close reason; touch panel config node (with presets) polled by
   the gui screen; `gui_touch` removed (`decisions/gui-layout.md` 2026-10-09, `gui-button-rework-briefing.md`).

@@ -139,6 +139,12 @@ the msg is open.
   resets and no reboots beyond what Deploy does. Stock firmware passes: custom images are post-MVP. It fails:
   the MVP ships a small set of custom images, classic ESP32 first. Mike expects the latter. Replaces the
   2026-10-08 "optional firmware tier is post-MVP" above.
+  **Result, 2026-10-22: failed on the first cycle.** After a fresh runtime install, deploying the hero GUI flow
+  (`gui-hero-cyd-dummy`) over the running display flow hit `LISTENER_ERR dispatch MemoryError (allocating 13317
+  bytes)` and never produced `DEPLOY_ACK`. That is harsher than the gate's clean-start intent because a display
+  flow was already resident; a clean idle rerun is owed once the CYD's CH340 port is stable again. On this
+  evidence the gate is treated as **failed**, so the MVP ships a small set of custom firmware images, classic
+  ESP32 first.
 - 2026-10-09 (Mike's direction; details recommended, not decided): **buttons get their own output; touch
   plumbing leaves the canvas.** Mike: a button "floating in the air doesn't look right"; GUI-only plumbing
   shouldn't be visible; `touch_i2c` is for non-GUI uses. Recommended shape:
