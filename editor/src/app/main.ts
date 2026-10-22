@@ -3005,14 +3005,6 @@ el("btnDeploy").addEventListener("click", async () => {
     //   2. if that still doesn't fit -- a GUI flow leaves the MicroPython heap too fragmented for the
     //      DEPLOY body even with 116 KB free -- clear the flow from the board and soft-restart it, so
     //      the next attempt runs on a fresh heap. Costs one restart, replaces Remove flow + Reset board.
-    const CLEAR_FLOW_CODE = [
-      "import os, board_fs",
-      "for _n in ('_flow.mpy', '_flow_static.bin', '_flow_meta.json'):",
-      "    try:",
-      "        os.remove(board_fs.under_root(_n))",
-      "    except OSError:",
-      "        pass",
-    ].join("\n");
 
     /** Ask for HELLO and wait for one; used to know the board is ready (and how much memory it has). */
     const awaitHello = async (why: string): Promise<void> => {
@@ -3113,17 +3105,6 @@ el("btnDeploy").addEventListener("click", async () => {
         // so asking too early reported the *old* figures (CYD, 2026-10-22).
         await new Promise((resolve) => setTimeout(resolve, 900));
         await awaitHello("board now");
-        result = await attemptDeploy();
-      }
-      if (result.type === "DEPLOY_ERROR" && result.code === "MemoryError") {
-        // Still no room: the heap is too fragmented for the DEPLOY body even though the flow is stopped.
-        // Clear the flow and restart, so the deploy lands on a heap that has never held a GUI flow.
-        logLine("[deploy] still no room; clearing the flow and restarting the board", "");
-        await transport.send({ type: "EXEC", code: CLEAR_FLOW_CODE });
-        await new Promise((resolve) => setTimeout(resolve, 300));
-        await transport.send({ type: "RESTART", hard: false }); // soft: the interpreter restarts, USB stays connected
-        await new Promise((resolve) => setTimeout(resolve, 2500));
-        await awaitHello("board after restart");
         result = await attemptDeploy();
       }
       if (result.type === "HELLO") {
