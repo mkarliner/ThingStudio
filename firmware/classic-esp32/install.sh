@@ -37,7 +37,11 @@ if [ -z "$IMG" ]; then
 fi
 [ -f "$IMG" ] || die "no such image: $IMG"
 [ -f "$HERE/out/_deps.json" ] || die "missing $HERE/out/_deps.json -- build.sh writes it next to the image"
-command -v esptool >/dev/null || die "esptool not found on PATH"
+# `esptool.py` is the name pip gives the 3.x/4.x console script, and what macOS and most
+# developer machines have; esptool 5 installs `esptool` instead with no `esptool.py` alias. Use
+# whichever exists rather than making the user care which version they installed.
+ESPTOOL="$(command -v esptool.py || command -v esptool || true)"
+[ -n "$ESPTOOL" ] || die "esptool not found on PATH (pip install esptool)"
 command -v mpremote >/dev/null || die "mpremote not found on PATH (pip install mpremote)"
 
 if [ -f "$IMG.sha256" ]; then
@@ -97,8 +101,8 @@ wait_port || die "port $PORT never opened -- unplug and replug the board, then r
 # The size must match board/partitions.csv's vfs entry.
 FS_OFFSET=0x310000
 FS_SIZE=0xF0000
-esptool --chip esp32 --port "$PORT" --after no_reset erase_region "$FS_OFFSET" "$FS_SIZE"
-esptool --chip esp32 --port "$PORT" --after no_reset write_flash 0x0 "$IMG"
+"$ESPTOOL" --chip esp32 --port "$PORT" --after no_reset erase_region "$FS_OFFSET" "$FS_SIZE"
+"$ESPTOOL" --chip esp32 --port "$PORT" --after no_reset write_flash 0x0 "$IMG"
 
 echo "install: waiting for the board to restart and settle"
 wait_port || die "port $PORT did not come back after flashing -- unplug and replug the board"

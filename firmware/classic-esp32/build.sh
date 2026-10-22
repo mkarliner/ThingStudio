@@ -38,7 +38,8 @@ die() { echo "build: $*" >&2; exit 1; }
 [ -n "$MICROPY_DIR" ] || die "set MICROPY_DIR to a MicroPython checkout at $MPY_VERSION"
 [ -f "$MICROPY_DIR/tools/manifestfile.py" ] || die "$MICROPY_DIR doesn't look like a MicroPython checkout"
 [ -d "$MICROPY_DIR/ports/esp32" ] || die "$MICROPY_DIR has no ports/esp32"
-command -v esptool >/dev/null || die "esptool not found on PATH"
+ESPTOOL="$(command -v esptool.py || command -v esptool || true)"
+[ -n "$ESPTOOL" ] || die "esptool not found on PATH (pip install esptool)"
 command -v node >/dev/null || die "node not found on PATH (gen_deps_index.mjs compiles with the editor's mpy-cross)"
 [ -n "${IDF_PATH:-}" ] || die "IDF_PATH is not set -- source the ESP-IDF export script for v5.4 first"
 [ -x "$IDF_PATH/tools/idf.py" ] || [ -f "$IDF_PATH/tools/idf.py" ] || die "no idf.py under IDF_PATH=$IDF_PATH"
@@ -87,7 +88,7 @@ PY
 SHA="$(git -C "$REPO" rev-parse --short=7 HEAD 2>/dev/null || echo unknown)"
 IMG="$OUT/thingstudio-classic-esp32-$VERSION-$SHA.bin"
 
-( cd "$MICROPY_DIR/ports/esp32/build-$BOARD" && esptool --chip esp32 merge_bin -o "$IMG" @flash_args )
+( cd "$MICROPY_DIR/ports/esp32/build-$BOARD" && "$ESPTOOL" --chip esp32 merge_bin -o "$IMG" @flash_args )
 
 ( cd "$OUT" && sha256sum "$(basename "$IMG")" > "$(basename "$IMG").sha256" )
 
