@@ -2863,6 +2863,39 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#why-doesnt-deploy-clear-the-old-flow-or-retry-when-the-board-runs-out-of-memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why doesn't Deploy clear the old flow or retry when the board runs out of memory?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-isnt-a-soft-restart-enough-after-too-full-to-receive-the-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why isn't a soft restart enough after "too full to receive the flow"?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-is-deploy-sending-the-flow-in-pieces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why is Deploy sending the flow in pieces?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#why-does-http-request-fail-with-memoryerror-fetching-a-page" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3103,6 +3136,39 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#why-doesnt-deploy-clear-the-old-flow-or-retry-when-the-board-runs-out-of-memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why doesn't Deploy clear the old flow or retry when the board runs out of memory?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-isnt-a-soft-restart-enough-after-too-full-to-receive-the-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why isn't a soft restart enough after "too full to receive the flow"?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-is-deploy-sending-the-flow-in-pieces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why is Deploy sending the flow in pieces?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#why-does-http-request-fail-with-memoryerror-fetching-a-page" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3329,6 +3395,23 @@ and uses its RAM. So a 264 KB Pico W leaves more for your flow than a 400 KB ESP
 one. A 240x320 frame in 16 grays is 38,400 bytes. The <a href="../nodes/gui/">GUI nodes</a> avoid this by drawing the
 screen in strips. If your own <code>function</code> node builds a full frame, draw it in strips too, or restart
 the board before deploying.</p>
+<h2 id="why-doesnt-deploy-clear-the-old-flow-or-retry-when-the-board-runs-out-of-memory">Why doesn't Deploy clear the old flow or retry when the board runs out of memory?</h2>
+<p>Because a repair nobody asked for hides the limit. The editor used to stop the running flow and retry when a
+deploy didn't fit; the retry then failed a step later, and the board was left stopped without anyone deciding
+that. Now a deploy that doesn't fit fails once, with the board's free-memory figure, and the console says what
+to do. The steps are yours to take: <strong>Tools → Remove flow…</strong>, <strong>power cycle the board</strong> (unplug and replug the
+USB cable, or <strong>Tools → Reset board (hard)</strong>), then deploy. See
+<a href="../debugging/#memoryerror-or-a-library-that-wont-load">MemoryError or a library that won't load</a>.</p>
+<h2 id="why-isnt-a-soft-restart-enough-after-too-full-to-receive-the-flow">Why isn't a soft restart enough after "too full to receive the flow"?</h2>
+<p>Because a soft restart reuses the same heap. It restarts the interpreter, so the flow's own objects go away, but
+the heap regions MicroPython took as it grew stay where they were, and memory taken from the chip is not given
+back. A board that couldn't find one big block before the soft restart still can't after it. Only cutting power
+to the chip rebuilds the heap from scratch — hence the power cycle in the recipe above.</p>
+<h2 id="why-is-deploy-sending-the-flow-in-pieces">Why is Deploy sending the flow in pieces?</h2>
+<p>Some boards (classic ESP32 with no PSRAM) can't take a whole flow in one message once a display flow has run:
+the memory is free but in pieces too small for one message. Deploy sends the flow in 5 KB pieces instead, each
+confirmed before the next. Larger pieces keep a deploy quick; a board that can't take 5 KB has a memory problem
+worth seeing rather than one to work around.</p>
 <h2 id="why-does-http-request-fail-with-memoryerror-fetching-a-page">Why does http request fail with "MemoryError" fetching a page?</h2>
 <p>The node reads the whole response body into memory at once. A page larger than the largest free block fails, even
 when the console shows more free memory than the page size. A 56 KB page on an ESP32-C3 failed with
