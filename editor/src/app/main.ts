@@ -2833,18 +2833,37 @@ async function installFlowDependencies(source: string): Promise<Record<string, s
     // One piece at a time, each confirmed: a board behind a USB-UART bridge (CYD) has no flow control,
     // and pieces sent back to back overran its input and arrived garbled (2026-10-07).
     for (const piece of pieces) {
-      const ackP = waitForMessage(
-        (m) => m.type === "DEP_ACK" && m.name === name && m.file === piece.file && m.offset === piece.offset,
-        PIECE_TIMEOUT_MS,
-      );
-      await transport.send(piece);
-      let ack: Message;
-      try {
-        ack = await ackP;
-      } catch (err) {
-        const why = err instanceof Error && err.message.startsWith("timeout")
-          ? `no reply to library ${name} (${piece.file} byte ${piece.offset}) in ${PIECE_TIMEOUT_MS / 1000}s`
-          : `board stopped answering during library ${name} (${err instanceof Error ? err.message : String(err)})`;
+      // A USB-UART board has no flow control, and a piece can reach it with bytes missing -- the board
+      // then drops the line ("LISTENER_ERR bad base64 ... recovering") and the deploy would hang until
+      // the timeout. Resending is safe: DEP_PUT is addressed by (name, file, offset) and rewrites from
+      // that offset, so a duplicate piece is the same bytes in the same place. Two extra tries turn a
+      // dropped line into a slower deploy instead of a failed one (seen on the CYD, 2026-10-22).
+      let ack: Message | null = null;
+      let lastErr: unknown = null;
+      for (let attempt = 0; attempt <= PIECE_RETRIES; attempt += 1) {
+        const ackP = waitForMessage(
+          (m) => m.type === "DEP_ACK" && m.name === name && m.file === piece.file && m.offset === piece.offset,
+          PIECE_TIMEOUT_MS,
+        );
+        await transport.send(piece);
+        try {
+          ack = await ackP;
+          break;
+        } catch (err) {
+          lastErr = err;
+          ack = null;
+          if (attempt < PIECE_RETRIES) {
+            logLine(
+              `[libraries] no reply to ${piece.file} byte ${piece.offset}, resending (${attempt + 1}/${PIECE_RETRIES})`,
+              "err",
+            );
+          }
+        }
+      }
+      if (ack === null) {
+        const why = lastErr instanceof Error && lastErr.message.startsWith("timeout")
+          ? `no reply to library ${name} (${piece.file} byte ${piece.offset}) in ${PIECE_TIMEOUT_MS / 1000}s after ${PIECE_RETRIES + 1} tries`
+          : `board stopped answering during library ${name} (${lastErr instanceof Error ? lastErr.message : String(lastErr)})`;
         logLine(`[deploy failed] ${why}, flow unchanged`, "err");
         boardDependencies = null;
         return null;
@@ -2879,6 +2898,7 @@ async function installFlowDependencies(source: string): Promise<Record<string, s
 }
 
 const PIECE_TIMEOUT_MS = 10000; // one 1 KB piece: write to flash and answer
+const PIECE_RETRIES = 2; // resends of a piece that got no answer (a dropped line, see below)
 const DEPLOY_TIMEOUT_MS = 30000; // comfortably exceeds listener.py's own READ_TIMEOUT_S=8 across a few internal phases
 
 el("btnDeploy").addEventListener("click", async () => {
