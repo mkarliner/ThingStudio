@@ -240,6 +240,35 @@ def test_deploy_too_big_for_memory_is_answered_not_timed_out():
             listener.close()
 
 
+def test_receive_oom_stops_the_running_flow_so_a_retry_fits():
+    # 11.2.0 (2026-10-22, CYD): a DEPLOY that can't be received used to leave the running flow holding the
+    # memory, so the editor's retry hit the same wall and the only way through was Remove flow + a manual
+    # reset. The listener now stops the running flow a moment after answering DEPLOY_ERROR.
+    with tempfile.TemporaryDirectory() as tmpdir:
+        small = _compile_flow(tmpdir, "flow_small", "print('SMALL_FLOW_RAN')\n")
+        listener = ListenerProcess(tmpdir, mp_args=("-X", "heapsize=200k"))
+        try:
+            listener.wait_for(lambda l: l == "LISTENER_READY", description="LISTENER_READY")
+            listener.send_message({"type": "DEPLOY", "bytecode": small, "staticData": b""})
+            listener.wait_for(lambda l: l == "SMALL_FLOW_RAN", description="the first flow running")
+
+            listener.send_message({"type": "DEPLOY", "bytecode": small, "staticData": b"x" * 60000})
+            line = listener.wait_for(
+                lambda l: l.startswith(F64_PREFIX) and _decode_f64_line(l)["type"] == "DEPLOY_ERROR",
+                timeout=15,
+                description="DEPLOY_ERROR for the deploy that didn't fit",
+            )
+            assert _decode_f64_line(line)["code"] == "MemoryError", line
+            listener.wait_for(lambda l: l.startswith("LISTENER_FREED"), timeout=15,
+                              description="the running flow being stopped to make room")
+
+            # The retry an editor would send now fits, and the listener is still healthy.
+            listener.send_message({"type": "DEPLOY", "bytecode": small, "staticData": b""})
+            listener.wait_for(lambda l: l == "SMALL_FLOW_RAN", description="the retried deploy running")
+        finally:
+            listener.close()
+
+
 def test_node_error_reported_end_to_end():
     # The whole point of this task: a real compiled flow, deployed over
     # the real protocol, whose node raises -- confirm NODE_ERROR actually
@@ -1171,6 +1200,7 @@ TESTS = [
     test_flow_that_kills_the_board_while_starting_keeps_its_identity_after_reboot,
     test_soft_restart_stops_the_flow_and_ends_the_interpreter,
     test_deploy_too_big_for_memory_is_answered_not_timed_out,
+    test_receive_oom_stops_the_running_flow_so_a_retry_fits,
 ]
 
 

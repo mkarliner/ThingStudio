@@ -1400,7 +1400,7 @@ function cancelAllWaits(reason: string): void {
 // bump-discipline rule), so this is the level that actually stops an
 // unsafe DEPLOY rather than letting it crash on the device.
 // 2.0.0 (2026-09-23): EXEC, STOP_TO_PROMPT, safe mode. Must match listener.py's _RUNTIME_VERSION.
-const EDITOR_TARGET_VERSION: ProtocolVersion = { major: 11, minor: 1, patch: 1 }; // 11.1.1 2026-10-22: frozen libraries stay in the board's index (remove_unused) -- patch, no codegen change; 11.1.0 2026-10-22: /lib ahead of frozen modules on sys.path (pushed library still overrides a custom image) -- minor, no codegen change; 11.0.0 2026-10-17: runtime.settings (device_settings.py), codegen-visible -> major; 10.1.0 2026-10-14: persisted paths follow the board's filesystem root (stm32/pyboard /flash) -- minor, no codegen change. 10.0.0 2026-10-11: new adc/encoder/neopixel nodes (vendored AADC/Encoder flow deps), codegen-visible -> major. 9.2.0 2026-10-08: DEPLOY_ERROR when the board has no room to receive a flow (minor, no codegen change); 9.1.0 2026-10-08: WiFi watcher leaves WiFi off unless wanted (minor, no codegen change); 9.0.0 2026-10-07: DEP_ACK per piece, so a USB-UART board isn't overrun; 8.0.0 2026-10-07: libraries sent in 1 KB pieces + DEP_COMMIT (a whole-library DEP_PUT hit MemoryError on a fragmented ESP32 heap); 7.0.0 2026-10-07: flow dependencies (DEP_PUT, DEPLOY.dependencies; libraries in /lib, installed per flow); 6.0.0 2026-09-26: bme280 driver on the board; 5.1.0 2026-09-25: startup reason (getattr, so 5.0.0 still runs it), ESP-IDF heap fields; 5.0.0 2026-09-25: mqtt_as active(True) guard; 4.0.0 2026-09-25: mqtt_as guard, ESP32 MQTT joins WiFi first; 3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS
+const EDITOR_TARGET_VERSION: ProtocolVersion = { major: 11, minor: 2, patch: 0 }; // 11.2.0 2026-10-22: the board stops a running flow it cannot receive a DEPLOY over, and the editor retries once -- minor, no codegen change; 11.1.1 2026-10-22: frozen libraries stay in the board's index (remove_unused) -- patch, no codegen change; 11.1.0 2026-10-22: /lib ahead of frozen modules on sys.path (pushed library still overrides a custom image) -- minor, no codegen change; 11.0.0 2026-10-17: runtime.settings (device_settings.py), codegen-visible -> major; 10.1.0 2026-10-14: persisted paths follow the board's filesystem root (stm32/pyboard /flash) -- minor, no codegen change. 10.0.0 2026-10-11: new adc/encoder/neopixel nodes (vendored AADC/Encoder flow deps), codegen-visible -> major. 9.2.0 2026-10-08: DEPLOY_ERROR when the board has no room to receive a flow (minor, no codegen change); 9.1.0 2026-10-08: WiFi watcher leaves WiFi off unless wanted (minor, no codegen change); 9.0.0 2026-10-07: DEP_ACK per piece, so a USB-UART board isn't overrun; 8.0.0 2026-10-07: libraries sent in 1 KB pieces + DEP_COMMIT (a whole-library DEP_PUT hit MemoryError on a fragmented ESP32 heap); 7.0.0 2026-10-07: flow dependencies (DEP_PUT, DEPLOY.dependencies; libraries in /lib, installed per flow); 6.0.0 2026-09-26: bme280 driver on the board; 5.1.0 2026-09-25: startup reason (getattr, so 5.0.0 still runs it), ESP-IDF heap fields; 5.0.0 2026-09-25: mqtt_as active(True) guard; 4.0.0 2026-09-25: mqtt_as guard, ESP32 MQTT joins WiFi first; 3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS
 
 // This editor's own device-runtime/src git SHA, injected at build/dev-
 // server-start time by vite.config.ts's `define` (see that file,
@@ -2997,23 +2997,34 @@ el("btnDeploy").addEventListener("click", async () => {
     // A HELLO in place of the ack means the board restarted mid-deploy (2026-10-07, CYD: an ESP32 abort()
     // while the new flow started). It answers the deploy as well as an ack does: it says what's running.
     // Not while a HELLO_REQUEST is unanswered: that HELLO is probably its reply, not a restart.
-    const ackP = waitForMessage(
-      (m) => m.type === "DEPLOY_ACK" || m.type === "DEPLOY_ERROR" || (m.type === "HELLO" && helloRequestsPending === 0),
-      DEPLOY_TIMEOUT_MS,
-    );
-    // lastWifiProvision was computed alongside this same compile, by the currentSource() call
-    // refreshPreview() (above) just made -- see that field's own doc comment.
-    await transport.send({
-      type: "DEPLOY",
-      bytecode: mpyBytes,
-      staticData: new Uint8Array(0),
-      flowName,
-      deployId,
-      wifiProvision: lastWifiProvision,
-      dependencies,
-    });
+    // One helper so a MemoryError answer can be retried: the board stops the running flow when it has
+    // no room to receive a DEPLOY (11.2.0), and the retry then fits. A GUI flow moving over a running
+    // GUI flow is the case (CYD, 2026-10-22).
+    const attemptDeploy = async (): Promise<Message> => {
+      const ackP = waitForMessage(
+        (m) => m.type === "DEPLOY_ACK" || m.type === "DEPLOY_ERROR" || (m.type === "HELLO" && helloRequestsPending === 0),
+        DEPLOY_TIMEOUT_MS,
+      );
+      // lastWifiProvision was computed alongside this same compile, by the currentSource() call
+      // refreshPreview() (above) just made -- see that field's own doc comment.
+      await transport.send({
+        type: "DEPLOY",
+        bytecode: mpyBytes,
+        staticData: new Uint8Array(0),
+        flowName,
+        deployId,
+        wifiProvision: lastWifiProvision,
+        dependencies,
+      });
+      return await ackP;
+    };
     try {
-      const result = await ackP;
+      let result = await attemptDeploy();
+      if (result.type === "DEPLOY_ERROR" && result.code === "MemoryError") {
+        logLine("[deploy] board had no room; it has stopped the running flow, retrying", "");
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        result = await attemptDeploy();
+      }
       if (result.type === "HELLO") {
         const running = result.currentFlowDeployId === deployId;
         logAdvice(
