@@ -11,10 +11,14 @@
 #
 # Two things about the USB link that cost real time to find (CYD's CH340 on a VM, 2026-10-22):
 #   - esptool's own reset at the end of a command can make the bridge re-enumerate, and the port then
-#     fails every open with EIO until it is replugged. So: `--after no-reset` everywhere, and one
+#     fails every open with EIO until it is replugged. So: `--after no_reset` everywhere, and one
 #     explicit reset of our own once the flashing is done.
 #   - The port also drops between commands for no reason we control. Every step therefore retries
 #     the open instead of failing the whole install.
+#   - esptool's spellings differ by version: 4.x/5.x accept `--after no-reset` and `erase-region`,
+#     3.x only the underscore forms. The underscore forms (`no_reset`, `erase_region`, `write_flash`)
+#     are the ones every version accepts, so they are what this script uses -- 5.x prints a
+#     deprecation warning for them and works (macOS's default esptool.py is a 3.x, 2026-10-22).
 
 set -euo pipefail
 
@@ -37,7 +41,13 @@ command -v esptool >/dev/null || die "esptool not found on PATH"
 command -v mpremote >/dev/null || die "mpremote not found on PATH (pip install mpremote)"
 
 if [ -f "$IMG.sha256" ]; then
-    ( cd "$(dirname "$IMG")" && sha256sum --check "$(basename "$IMG").sha256" ) || die "checksum mismatch for $IMG"
+    # macOS ships `shasum`, not `sha256sum` (the build's file format works with both).
+    ( cd "$(dirname "$IMG")" && {
+        if command -v sha256sum >/dev/null; then sha256sum --check "$(basename "$IMG").sha256"
+        elif command -v shasum >/dev/null; then shasum -a 256 -c "$(basename "$IMG").sha256"
+        else echo "install: no sha256sum/shasum -- skipping the checksum check" >&2
+        fi
+    } ) || die "checksum mismatch for $IMG"
 fi
 
 # The port comes and goes; wait for it rather than failing an install halfway through.
@@ -87,8 +97,8 @@ wait_port || die "port $PORT never opened -- unplug and replug the board, then r
 # The size must match board/partitions.csv's vfs entry.
 FS_OFFSET=0x310000
 FS_SIZE=0xF0000
-esptool --chip esp32 --port "$PORT" --after no-reset erase-region "$FS_OFFSET" "$FS_SIZE"
-esptool --chip esp32 --port "$PORT" --after no-reset write_flash 0x0 "$IMG"
+esptool --chip esp32 --port "$PORT" --after no_reset erase_region "$FS_OFFSET" "$FS_SIZE"
+esptool --chip esp32 --port "$PORT" --after no_reset write_flash 0x0 "$IMG"
 
 echo "install: waiting for the board to restart and settle"
 wait_port || die "port $PORT did not come back after flashing -- unplug and replug the board"

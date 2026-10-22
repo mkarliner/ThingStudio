@@ -37,8 +37,11 @@ Output in `out/`: one merged image, its `.sha256`, and `_deps.json`.
 ## Install
 
 ```sh
-PORT=/dev/ttyUSB0 firmware/classic-esp32/install.sh
+PORT=/dev/ttyUSB0 firmware/classic-esp32/install.sh        # Linux
+PORT=/dev/cu.usbserial-14420 firmware/classic-esp32/install.sh   # macOS: your own port from ls /dev/cu.*
 ```
+
+Needs `esptool`, `mpremote` and `pyserial` (`pip install esptool mpremote pyserial`).
 
 That flashes the image at offset 0 and writes two files that stay on the filesystem:
 `/main.py` (a three-line boot script importing the frozen listener) and `/lib/_deps.json` (the
@@ -50,9 +53,13 @@ If you prefer to see the commands, they are `esptool write_flash 0x0 <image>` an
 
 ## What is verified
 
-Only the CYD so far, and only what the five-cycle gate measured. The acceptance is the GUI gate in
-the briefing, not this README. Panel drivers for ST7789, ST7796 and the FT6336U touch controller are
-frozen in; an ILI9341 CYD batch needs different drivers, which this image does not carry.
+Only the CYD so far: the image builds and boots on its own, `HELLO` lists every frozen library, a GUI
+flow runs where stock MicroPython hit `MemoryError`, and Deploy skips the frozen libraries. What is
+**not** verified: deploying one GUI flow over another on this board. That is a board limit, not a
+firmware one — a running display flow leaves the split heap without a block big enough for the next
+flow, so the answer is `Tools → Remove flow…`, power cycle, deploy
+(`docs/user-guide/debugging.md`). Panel drivers for ST7789, ST7796 and the FT6336U touch controller
+are frozen in; an ILI9341 CYD batch needs different drivers, which this image does not carry.
 
 Flash layout is a single 3 MB app slot (see `board/partitions.csv`); there is no OTA slot. Moving to
 OTA later costs one reflash, which is how the image is installed anyway.

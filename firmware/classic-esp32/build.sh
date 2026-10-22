@@ -18,8 +18,9 @@
 #   thingstudio-classic-esp32-<version>.sha256
 #   _deps.json                                goes to /lib/_deps.json (install.sh does it)
 #
-# What this does NOT verify: the image on hardware. The five-cycle GUI gate in
-# docs/working-notes/classic-esp32-firmware-briefing.md is the acceptance, not this script.
+# What this does NOT verify: the image on hardware. (The five-cycle GUI gate that used to be the
+# acceptance was retired 2026-10-22 -- decisions/gui-layout.md; what matters now is a deploy over a
+# stopped flow, docs/working-notes/outstanding-items.md.)
 
 set -euo pipefail
 
