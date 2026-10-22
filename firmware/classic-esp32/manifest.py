@@ -13,6 +13,12 @@
 
 import os
 
+# The port's own frozen modules first: _boot.py, flashbdev.py, inisetup.py. Without these there is
+# nothing at boot to mount or format the filesystem, so "/" simply doesn't exist ("could not find
+# module '_boot.py'", os.mkdir -> ENODEV) -- a manifest *replaces* the port default, it doesn't add
+# to it.
+include("$(PORT_DIR)/boards/manifest.py")
+
 _stage = os.environ.get("THINGSTUDIO_FROZEN_STAGE")
 if not _stage:
     _stage = os.path.join(manifest_path, "build", "stage")

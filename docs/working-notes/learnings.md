@@ -102,7 +102,10 @@ that repeatedly allocates and discards a large buffer fragmenting a classic ESP3
 buffer via a function node's `context` store, not a bigger heap), the Wemos D1 R32 putting an Uno TFT shield's
 control lines on input-only pins, board pin labels silencing processor `avoid` warnings, a simulator that shared
 the code's wrong register addresses, a broken `deploy_runtime.py` that no test caught, and a host deploy that
-omitted `flowName` (silently writing settings under the wrong namespace). 17 entries:
+omitted `flowName` (silently writing settings under the wrong namespace), and the first custom-image
+flash onto a CYD: a plain `write_flash 0x0` leaves the old filesystem partition in place (erase it
+explicitly), and a CH340 on a VM loses the port on some closes (EIO until replugged -- do the whole job
+in one session, never a probe that opens and closes). 18 entries:
 `docs/working-notes/learnings/hardware-bringup-hil-rig.md`.
 
 ## Editor / build tooling

@@ -223,3 +223,23 @@ Status: detail file, split out of `learnings.md` on 2026-09-06 to keep that inde
   models output-enable (a driven pin reads back its own level), and fails on any write to an unknown
   register; it reproduces the field error on the old code. Rule of thumb: a test double's hardware facts come
   from an independent source, never from the code under test.
+
+## A USB-UART bridge on a VM drops the port on close; an old filesystem survives a flash, 2026-10-22
+
+First flash of the custom classic-ESP32 image onto the CYD, on a VMware guest with the board's CH340.
+
+- **The filesystem partition outlives a plain `write_flash 0x0 image.bin`.** The image's app ends at
+  0x310000, so whatever filesystem the previous firmware left at 0x310000 is still there afterwards. In a
+  different format, MicroPython sees a non-blank boot sector and loops on "The filesystem appears to be
+  corrupted"; with an image missing `_boot.py` (see
+  `learnings/micropython-device-runtime.md`), `os.mkdir` simply answers ENODEV. Erase the region as part of
+  the install (`esptool erase-region 0x310000 0xF0000`), sized from the partition table rather than guessed.
+- **A close/reopen of the port can be fatal here**: the next `open()` returns EIO even though `lsusb` still
+  lists the CH340, and only an unplug/replug clears it. So: never write an "is it alive?" probe that opens and
+  closes the port (that is how this was first mistaken for a permissions problem), and do the whole job in one
+  open instead of one process per command -- `mpremote` per command is exactly that pattern. `--after no-reset`
+  on esptool avoids triggering it with the bridge's re-enumeration, but the board then sits in the ROM
+  bootloader, where no REPL will answer: pulse RTS/DTR before talking to it.
+
+Firmware side: `firmware/classic-esp32/install.sh`. The one-session provisioner used here is throwaway, not
+committed -- if this VM stays in the loop, `install.sh` should grow the same single-open behaviour.

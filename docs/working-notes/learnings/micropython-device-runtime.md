@@ -307,6 +307,19 @@ Frozen modules run from flash and never touch the heap, so they would avoid both
 `frozen-firmware-spike-briefing.md`. Note `gc` has no largest-free-block call; use `micropython.mem_info()`
 (`max free sz`, in 16-byte blocks) or bisect with `bytearray(n)`. User-facing: `docs/user-guide/debugging.md`.
 
+## A FROZEN_MANIFEST replaces the port's manifest; it does not add to it, 2026-10-22
+
+The first classic-ESP32 image booted with no filesystem at all: `listdir("/")` empty, `os.mkdir`
+answering ENODEV, and the console printing `could not find module '_boot.py'` on every reboot. The
+cause was `FROZEN_MANIFEST` pointing at our own manifest: the port's default
+(`ports/esp32/boards/manifest.py`, which freezes `_boot.py`, `flashbdev.py`, `inisetup.py`, `webref`
+and friends) is then **not** used, and nothing at boot mounts or formats the "vfs" partition. The fix
+is one line at the top of our manifest: `include("$(PORT_DIR)/boards/manifest.py")`.
+
+Two symptoms worth recognising next time: `import flashbdev` failing with `ImportError` on a running
+board, and the REPL's soft-reboot line `could not find module '_boot.py'`. Either means the image is
+missing the port's own frozen modules, not that the partition table is wrong.
+
 ## Frozen modules: `.frozen` precedes `/lib`, and a frozen module can't be the boot script, 2026-10-22
 
 Two facts that shaped the custom classic-ESP32 image

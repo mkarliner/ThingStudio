@@ -132,15 +132,40 @@ which the docs must say.
 - **Panel variants**: only Mike's CYD is confirmed ST7789; an ILI9341 batch needs a different driver,
   which this image does not carry. Say so in the docs.
 
+## First hardware state (2026-10-22)
+
+Built with ESP-IDF v5.5.1 and MicroPython v1.28.0; 1.69 MB merged image, app inside the 3 MB slot.
+Flashed to the CYD and booting: `LISTENER_READY`, `chipType "Thingstudio classic ESP32 (generic) with
+ESP32"`, runtime 11.1.0, `HELLO` reporting all 34 frozen libraries in `dependencies` (so Deploy will
+skip them) and `runtimeBuild` null as expected.
+
+Idle, no flow:
+
+| | custom image |
+|---|---|
+| free RAM (`gc.mem_free`) | 149,408 |
+| free IDF heap | 140,088 |
+| largest IDF heap block | 110,592 |
+| free flash | 946,176 |
+
+That is the S0 row. S1-S5 and the five-cycle gate still need the editor: deploy the hero GUI flow,
+watch the console line for "already on the board" (that is the Deploy-skips-frozen path working) and
+`/lib` staying empty, then flip between two flows five times without touching the board.
+
 ## Remaining risks
 
-1. **The build is unproven.** No stage of it has run on hardware or in CI yet; the first build will
-   find its own problems (freeze paths, board-directory cmake, size).
-2. **Image size vs the 3 MB slot** — if it overflows, drop fonts or `ssd1306`; measure before deciding.
+1. **Only the idle baseline is measured.** The image boots and reports a healthy heap, but the GUI
+   flow has not run on it yet. If it still fails, the next lever is Deploy skipping fewer libraries
+   than expected (a hash mismatch) rather than the frozen set being wrong.
+2. **Image size vs the 3 MB slot** — 1.69 MB total today, so there is room; if it overflows later,
+   drop fonts or `ssd1306`.
 3. **`mpy-cross` drift** — the image's index hashes must match the editor's; a drift costs the
    saving, not correctness (see above), but it is worth a check in the docs' troubleshooting page.
 4. **`runtimeBuild` is `null`** on these boards by construction; a user comparing build SHAs sees
    "can't confirm" rather than a mismatch.
+5. **The install path is one machine deep.** `install.sh` works here, but a VM's USB bridge can drop
+   the port between commands (`learnings/hardware-bringup-hil-rig.md`); a second machine should
+   confirm it before the docs page is written.
 
 ## Suggested order
 

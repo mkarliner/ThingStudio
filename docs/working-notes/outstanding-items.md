@@ -83,13 +83,14 @@ not here.
   custom images, classic ESP32 first, with the packaging/hosting/flashing docs. Briefing:
   `classic-esp32-firmware-briefing.md`; `decisions/gui-layout.md` (2026-10-09 gate, 2026-10-22 result),
   `decisions/classic-esp32-firmware.md`, `frozen-firmware-spike-briefing.md`.
-- **[LAUNCH]** **Classic-ESP32 custom image: build, flash, measure — scaffolded 2026-10-22, never built.** Inputs
-  are in `firmware/classic-esp32/` (stage from `runtime_manifest.py`, frozen manifest, single-app partition table,
-  build/install scripts, `_deps.json` generator using the editor's mpy-cross and hash scheme,
-  `.github/workflows/firmware.yml`); `deps.ensure_on_path()` now puts `/lib` before `.frozen` (runtime 11.1.0,
-  unix-port test passing). Owed, in order: the clean CYD gate rerun, a first build (developer machine or CI — the
-  sandbox has no ESP-IDF), flash, S0-S5 numbers, then the five-cycle gate. Then the user-facing firmware page
-  (what it is, what a flash erases, flashing per OS, back to stock).
+- **[LAUNCH]** **Classic-ESP32 custom image: built and booting — 2026-10-22.** Inputs in
+  `firmware/classic-esp32/` (stage from `runtime_manifest.py`, frozen manifest including the port's own
+  `_boot`/`flashbdev`/`inisetup`, single-app partition table, build/install scripts, `_deps.json` generator using
+  the editor's mpy-cross and hash scheme, `.github/workflows/firmware.yml`); `deps.ensure_on_path()` puts `/lib`
+  before `.frozen` (runtime 11.1.0). Built against ESP-IDF v5.5.1 / MicroPython v1.28.0: 1.69 MB image, flashed
+  to the CYD, `LISTENER_READY`, HELLO listing all 34 frozen libraries, idle free RAM 149 KB / IDF 140 KB /
+  largest block 110 KB (the S0 row in `classic-esp32-firmware-briefing.md`). Owed: deploy the hero GUI flow and
+  watch Deploy skip the frozen libraries, then the five-cycle gate (S1-S5), then the user-facing firmware page.
 - **[LAUNCH]** **Button rework -- built and hardware-checked 2026-10-09.** Two-faced nodes in the compiler;
   button output, modes and controlled toggle; modal close reason; touch panel config node (with presets) polled by
   the gui screen; `gui_touch` removed (`decisions/gui-layout.md` 2026-10-09, `gui-button-rework-briefing.md`).
