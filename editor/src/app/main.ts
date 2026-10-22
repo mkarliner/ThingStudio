@@ -3021,8 +3021,26 @@ el("btnDeploy").addEventListener("click", async () => {
     try {
       let result = await attemptDeploy();
       if (result.type === "DEPLOY_ERROR" && result.code === "MemoryError") {
-        logLine("[deploy] board had no room; it has stopped the running flow, retrying", "");
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        logLine("[deploy] board had no room; it has stopped the running flow, waiting for it to settle", "");
+        // Wait for a HELLO rather than a fixed delay: it both lets the board finish draining the tail of
+        // the line it couldn't take (it arrives as stray lines otherwise) and tells us the memory really
+        // is free before the retry goes out. 2026-10-22: the first version retried after 1.5 s and the
+        // retry hit the same wall.
+        try {
+          const helloP = waitForMessage((m) => m.type === "HELLO", 8000);
+          helloRequestsPending += 1;
+          try {
+            await transport.send({ type: "HELLO_REQUEST" });
+            const hello = await helloP;
+            if (hello.type === "HELLO") {
+              logLine(`[deploy] board now ${formatMemoryLine(hello).replace(/^\[memory\] /, "")}`, "");
+            }
+          } finally {
+            helloRequestsPending -= 1;
+          }
+        } catch {
+          logLine("[deploy] no answer after freeing the flow; trying the deploy anyway", "err");
+        }
         result = await attemptDeploy();
       }
       if (result.type === "HELLO") {
