@@ -67,3 +67,25 @@ infrastructure with its own key custody and access controls.
 
 `deps.ensure_on_path()`'s order change is 11.1.0 (minor): it is a behavior change to a pushed file,
 but no codegen depends on it, and a 11.0 `.py` on the board runs 11.1 flows unchanged.
+
+## Chunked deploy (2026-10-22, after the first hardware session)
+
+The original design assumed a Deploy over a running flow just works; on the CYD it did not. Two device facts settled
+it:
+
+- **A whole `DEPLOY` needs one contiguous block the size of the message** (~1.3× the bytecode, base64-inflated).
+  ESP32 MicroPython runs on a **split heap** (`MICROPY_GC_SPLIT_HEAP`), so `gc.mem_free()` sums several regions and
+  116 KB "free" can still mean no 10 KB block. A 9,537-byte flow could not be deployed over a running GUI flow, and
+  freeing the flow first did not help: stopping it freed RAM (50 → 116 KB) but left the heap too fragmented.
+- **Failing was silent**, too: the allocation failed during CBOR decode, which no path answered, so the editor sat
+  out its 30 s timeout.
+
+Decision (Mike, same day): the flow goes in pieces, `FLOW_PUT` / `FLOW_COMMIT` / `FLOW_ACK` (ids 21–23, runtime
+11.3.0), the same treatment `DEP_PUT`/`DEP_COMMIT` gave libraries in 8.0.0. Every allocation is one 1 KB piece, so it
+fits wherever there is room. `DEPLOY` stays valid; the editor uses the chunked messages on 11.3.0+ and falls back
+otherwise.
+
+The editor-side workaround tried first and then removed — free the flow, retry, then clear the flow and restart the
+board — is gone. It was an escalating recovery chain hiding a board limit, which is the "work badly" the project's
+fault-handling rule exists to avoid; the chunked messages remove the failure instead, and a deploy that still fails
+now says why in one line.
