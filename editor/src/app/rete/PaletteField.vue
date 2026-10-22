@@ -31,7 +31,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { DEFAULT_PALETTE_GS4, PALETTE_ENTRIES_USED } from "../../node-library/display-spi";
+import { DEFAULT_PALETTE_GS4, PALETTE_ENTRIES_USED } from "../../node-library/core-packages/display-spi";
 import { formatRgb565, hexToRgb565, rgb565ToHex } from "./rgb565";
 
 const props = defineProps<{ properties: Record<string, unknown> }>();

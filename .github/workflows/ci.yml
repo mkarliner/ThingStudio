@@ -26,6 +26,10 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npx tsc --noEmit
       - run: npm test
+      # The real bundle, not just the typecheck: tsc does not look inside .vue files, so a stale import
+      # path or a missing re-export there only shows up here or at release time (2026-10-22: the
+      # display_spi palette editor's import broke the build for a day with every check green).
+      - run: npm run build
 
   # The installers: install.sh's lint, and install.ps1's tests (packaging/test/, runnable on Linux with the
   # Windows-only steps stood in). The real installs run in release.yml against the built bundles.

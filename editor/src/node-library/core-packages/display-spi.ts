@@ -10,6 +10,11 @@ import type { NodeDescriptor } from "../../compiler/node-descriptor.js";
 
 export const DEFAULT_PALETTE_GS4: readonly number[] = [0x0000, 0xffff, 0xf800, 0x07e0, 0x001f, 0xffe0, 0x07ff, 0xf81f, 0x8410, 0x4208, 0xc618, 0xfd20, 0x8000, 0x0400, 0x0010, 0x0410];
 
+// How many entries of the 16-entry palette each indexed format actually reads, for the palette editor
+// (PaletteField.vue greys out the rest) and to mirror the hook's own `ENTRIES_USED` below -- keep the
+// two in step; the Python trims with it.
+export const PALETTE_ENTRIES_USED = { gs4: 16, gs2: 4, mono: 2 } as const;
+
 export const descriptor: NodeDescriptor = {
   type: "thingstudio/display_spi",
   kind: "sink",
