@@ -2997,9 +2997,39 @@ el("btnDeploy").addEventListener("click", async () => {
     // A HELLO in place of the ack means the board restarted mid-deploy (2026-10-07, CYD: an ESP32 abort()
     // while the new flow started). It answers the deploy as well as an ack does: it says what's running.
     // Not while a HELLO_REQUEST is unanswered: that HELLO is probably its reply, not a restart.
-    // One helper so a MemoryError answer can be retried: the board stops the running flow when it has
-    // no room to receive a DEPLOY (11.2.0), and the retry then fits. A GUI flow moving over a running
-    // GUI flow is the case (CYD, 2026-10-22).
+    //
+    // Recovery from "no room to receive the flow" escalates, both steps automatic (CYD, 2026-10-22):
+    //   1. the board stops the running flow when it answers DEPLOY_ERROR MemoryError (runtime 11.2.0+),
+    //      then this retries once the board says it has the memory back;
+    //   2. if that still doesn't fit -- a GUI flow leaves the MicroPython heap too fragmented for the
+    //      DEPLOY body even with 116 KB free -- clear the flow from the board and soft-restart it, so
+    //      the next attempt runs on a fresh heap. Costs one restart, replaces Remove flow + Reset board.
+    const CLEAR_FLOW_CODE = [
+      "import os, board_fs",
+      "for _n in ('_flow.mpy', '_flow_static.bin', '_flow_meta.json'):",
+      "    try:",
+      "        os.remove(board_fs.under_root(_n))",
+      "    except OSError:",
+      "        pass",
+    ].join("\n");
+
+    /** Ask for HELLO and wait for one; used to know the board is ready (and how much memory it has). */
+    const awaitHello = async (why: string): Promise<void> => {
+      try {
+        const helloP = waitForMessage((m) => m.type === "HELLO", 10000);
+        helloRequestsPending += 1;
+        try {
+          await transport.send({ type: "HELLO_REQUEST" });
+          const hello = await helloP;
+          if (hello.type === "HELLO") logLine(`[deploy] ${why} ${formatMemoryLine(hello).replace(/^\[memory\] /, "")}`, "");
+        } finally {
+          helloRequestsPending -= 1;
+        }
+      } catch {
+        logLine(`[deploy] no answer after ${why}; trying the deploy anyway`, "err");
+      }
+    };
+
     const attemptDeploy = async (): Promise<Message> => {
       const ackP = waitForMessage(
         (m) => m.type === "DEPLOY_ACK" || m.type === "DEPLOY_ERROR" || (m.type === "HELLO" && helloRequestsPending === 0),
@@ -3022,29 +3052,21 @@ el("btnDeploy").addEventListener("click", async () => {
       let result = await attemptDeploy();
       if (result.type === "DEPLOY_ERROR" && result.code === "MemoryError") {
         logLine("[deploy] board had no room; it has stopped the running flow, waiting for it to settle", "");
-        // Wait for a HELLO rather than a fixed delay: it both lets the board finish draining the tail of
-        // the line it couldn't take (it arrives as stray lines otherwise) and tells us the memory really
-        // is free before the retry goes out. 2026-10-22: the first version retried after 1.5 s and the
-        // retry hit the same wall.
-        try {
-          // The board frees the flow a moment after answering (200 ms), and its HELLO answers immediately
-          // -- asking too early reported the *old* figures and the retry went out against a full board
-          // (CYD, 2026-10-22). Wait past that, then ask.
-          await new Promise((resolve) => setTimeout(resolve, 900));
-          const helloP = waitForMessage((m) => m.type === "HELLO", 8000);
-          helloRequestsPending += 1;
-          try {
-            await transport.send({ type: "HELLO_REQUEST" });
-            const hello = await helloP;
-            if (hello.type === "HELLO") {
-              logLine(`[deploy] board now ${formatMemoryLine(hello).replace(/^\[memory\] /, "")}`, "");
-            }
-          } finally {
-            helloRequestsPending -= 1;
-          }
-        } catch {
-          logLine("[deploy] no answer after freeing the flow; trying the deploy anyway", "err");
-        }
+        // Wait before asking: the board frees 200 ms after answering, and its HELLO answers immediately,
+        // so asking too early reported the *old* figures (CYD, 2026-10-22).
+        await new Promise((resolve) => setTimeout(resolve, 900));
+        await awaitHello("board now");
+        result = await attemptDeploy();
+      }
+      if (result.type === "DEPLOY_ERROR" && result.code === "MemoryError") {
+        // Still no room: the heap is too fragmented for the DEPLOY body even though the flow is stopped.
+        // Clear the flow and restart, so the deploy lands on a heap that has never held a GUI flow.
+        logLine("[deploy] still no room; clearing the flow and restarting the board", "");
+        await transport.send({ type: "EXEC", code: CLEAR_FLOW_CODE });
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        await transport.send({ type: "RESTART", hard: false }); // soft: the interpreter restarts, USB stays connected
+        await new Promise((resolve) => setTimeout(resolve, 2500));
+        await awaitHello("board after restart");
         result = await attemptDeploy();
       }
       if (result.type === "HELLO") {
