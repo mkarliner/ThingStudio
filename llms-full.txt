@@ -4864,8 +4864,10 @@ shows free RAM. The free RAM is in pieces, and the library needs one large piece
 flow has run. Use **Tools → Reset board (hard)**, then deploy again. See the [FAQ](faq.md) for why an ESP32 has
 little room.
 
-If Deploy says the board is **too full to receive the flow**, the running flow is using the memory. Use
-**Tools → Remove flow…**, then **Tools → Reset board (hard)**, then deploy.
+If Deploy says the board is **too full to receive the flow**, the running flow is using the memory. The editor stops
+the running flow and tries again -- the console shows `board had no room; it has stopped the running flow` and then a
+`LISTENER_FREED` line from the board, and the second try normally goes through. Only if that second try fails does the
+console ask you to use **Tools → Remove flow…**, then **Tools → Reset board (hard)**, then deploy.
 
 ## WiFi Internal State Error on deploy
 
