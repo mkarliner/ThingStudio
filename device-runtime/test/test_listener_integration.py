@@ -259,8 +259,13 @@ def test_receive_oom_stops_the_running_flow_so_a_retry_fits():
                 description="DEPLOY_ERROR for the deploy that didn't fit",
             )
             assert _decode_f64_line(line)["code"] == "MemoryError", line
-            listener.wait_for(lambda l: l.startswith("LISTENER_FREED"), timeout=15,
-                              description="the running flow being stopped to make room")
+            freed = listener.wait_for(lambda l: l.startswith("LISTENER_FREED"), timeout=15,
+                                      description="the running flow being stopped to make room")
+            # Cancelling the tasks isn't enough: the flow module's globals hold the memory (a GUI
+            # flow's framebuffer), so the module has to go too.
+            listener.send_message({"type": "EXEC", "code": "print('FLOW_MODULE_GONE' if '_flow' not in sys.modules else 'FLOW_MODULE_STILL_THERE')"})
+            listener.wait_for(lambda l: l == "FLOW_MODULE_GONE", timeout=10,
+                              description="the flow module dropped after the free")
 
             # The retry an editor would send now fits, and the listener is still healthy.
             listener.send_message({"type": "DEPLOY", "bytecode": small, "staticData": b""})

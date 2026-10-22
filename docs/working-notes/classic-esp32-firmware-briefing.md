@@ -152,6 +152,24 @@ That is the S0 row. S1-S5 and the five-cycle gate still need the editor: deploy 
 watch the console line for "already on the board" (that is the Deploy-skips-frozen path working) and
 `/lib` staying empty, then flip between two flows five times without touching the board.
 
+## Frozen runtime vs a pushed one (why "Install runtime" matters here)
+
+The image's runtime is only what runs **as long as nobody installs the runtime over it**. An install
+pushes `CORE_FILES` into the board's root, and root comes before `.frozen` on `sys.path`, so the pushed
+copy wins — that is the intended update path (a runtime bump is a push, not a reflash), and it is also
+why a board that has had an install no longer runs its frozen runtime. The frozen copy stays in flash
+and is simply shadowed.
+
+For a shipped image the two versions match, so nothing asks for an install and the frozen runtime is
+what runs. During development they drift every time the runtime version is bumped — which is exactly
+what happened on 2026-10-22: the image froze 11.1.0, the editor moved to 11.1.1 and then 11.2.x, and
+each install put the new runtime in root. The board then reports a matching `runtimeBuild` (the pushed
+copy carries the marker) and `HELLO` looks identical either way.
+
+What this means for testing: "frozen image boots and runs a flow" and "the runtime can be updated
+without reflashing" are two different checks, and a board that has had an install can only show the
+second. Reflash before measuring the first.
+
 ## Remaining risks
 
 1. **Only the idle baseline is measured.** The image boots and reports a healthy heap, but the GUI

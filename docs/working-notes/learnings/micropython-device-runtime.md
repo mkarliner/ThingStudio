@@ -307,6 +307,25 @@ Frozen modules run from flash and never touch the heap, so they would avoid both
 `frozen-firmware-spike-briefing.md`. Note `gc` has no largest-free-block call; use `micropython.mem_info()`
 (`max free sz`, in 16-byte blocks) or bisect with `bytearray(n)`. User-facing: `docs/user-guide/debugging.md`.
 
+## Redeploy over a running GUI flow: stopping the flow isn't freeing it, 2026-10-22
+
+Deploying a GUI flow while another GUI flow runs on a CYD failed every time with
+`MemoryError ... allocating 13309 bytes` — the DEPLOY message (9.5 KB of bytecode, 12.7 KB base64) had
+to be received while the running flow held its framebuffer. Two device-side facts matter:
+
+- **`runtime.cancel_running()` stops tasks, it does not reclaim the flow's memory.** The framebuffer and
+  screen objects live in the flow module's own globals (`sys.modules['_flow']`), so free RAM barely
+  moved: 50 KB before the free, 49 KB after. The deploy path releases them by deleting the module just
+  before `import _flow`; any other path that needs the memory has to do the same. After that the retry
+  fits.
+- **The editor must wait past the board's own free before retrying.** The board answers `DEPLOY_ERROR`
+  immediately and frees 200 ms later; a HELLO asked for straight after the error reports the *old*
+  numbers, so gating the retry on it proves nothing. The editor now waits, then asks, and logs the
+  figures it got.
+
+Both are easy to get wrong in a way that looks like "not enough memory": three separate retries failed
+before the log showed free RAM unchanged across `LISTENER_FREED`. When a free is claimed, measure it.
+
 ## A FROZEN_MANIFEST replaces the port's manifest; it does not add to it, 2026-10-22
 
 The first classic-ESP32 image booted with no filesystem at all: `listdir("/")` empty, `os.mkdir`
