@@ -72,23 +72,13 @@ except OSError as e:
     return 1
 }
 
-# One hard reset of our own: DTR/RTS pulse, the same wiring esptool's reset uses. Done after flashing
-# so the board leaves the bootloader, and instead of asking esptool to do it (see the header).
+# One hard reset of our own, done after flashing so the board leaves the bootloader (see the header
+# for why esptool isn't asked to do it in the flash command itself). esptool's `run` exits the
+# bootloader and starts the application -- the same RTS/DTR pulse, without needing pyserial in the
+# system python3 (macOS: pipx installs a tool's dependencies into its own venv, so `import serial`
+# there fails even when mpremote works; both esptool and mpremote are already required).
 reset_board() {
-    python3 - "$PORT" <<'PY'
-import sys, time
-import serial
-
-port = sys.argv[1]
-s = serial.Serial(port, 115200, timeout=0.2)
-# CH340 wired the ESP32 way: RTS -> EN, DTR -> GPIO0. Assert EN, release, let it boot.
-s.setDTR(False)
-s.setRTS(True)
-time.sleep(0.15)
-s.setRTS(False)
-time.sleep(0.15)
-s.close()
-PY
+    "$ESPTOOL" --chip esp32 --port "$PORT" run >/dev/null 2>&1
 }
 
 echo "install: flashing $IMG to $PORT (this erases the board's flows and settings)"
@@ -106,7 +96,7 @@ FS_SIZE=0xF0000
 
 echo "install: waiting for the board to restart and settle"
 wait_port || die "port $PORT did not come back after flashing -- unplug and replug the board"
-reset_board || die "couldn't reset the board over $PORT"
+reset_board || die "could not restart the board over $PORT -- unplug and replug it, then write /main.py and /lib/_deps.json by hand (README, Install)"
 sleep 2
 
 echo "install: writing boot script and library inventory"

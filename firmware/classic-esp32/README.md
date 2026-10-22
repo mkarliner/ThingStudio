@@ -41,7 +41,9 @@ PORT=/dev/ttyUSB0 firmware/classic-esp32/install.sh        # Linux
 PORT=/dev/cu.usbserial-14420 firmware/classic-esp32/install.sh   # macOS: your own port from ls /dev/cu.*
 ```
 
-Needs `esptool` (3.x installs it as `esptool.py`, 5.x as `esptool`; the script uses either), `mpremote` and `pyserial` (`pip install esptool mpremote pyserial`).
+Needs `esptool` (3.x installs it as `esptool.py`, 5.x as `esptool`; the script uses either) and
+`mpremote` (`pip install esptool mpremote`). `mpremote` pulls in `pyserial` for itself; the script
+does not need it in the system Python.
 
 That flashes the image at offset 0 and writes two files that stay on the filesystem:
 `/main.py` (a three-line boot script importing the frozen listener) and `/lib/_deps.json` (the
