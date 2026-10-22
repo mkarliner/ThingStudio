@@ -96,9 +96,19 @@ def check_file_name(dep_name, file_name):
 
 
 def ensure_on_path():
-    """Most ports put /lib on sys.path already; a port that doesn't still finds dependencies."""
-    if LIB_DIR not in sys.path:
-        sys.path.append(LIB_DIR)
+    """LIB_DIR goes first, ahead of any frozen modules and ahead of the board's own /lib entry.
+
+    Most ports put /lib on sys.path already, and MicroPython puts `.frozen` before it. That order
+    is wrong for us once a custom firmware image freezes libraries: a Deploy that pushes a newer
+    copy into LIB_DIR must win, and appending here (or leaving the port's own entry in place) leaves
+    the frozen copy loading instead -- a pushed update silently doing nothing. Position 0 also
+    beats a port that adds /lib later than this call.
+
+    Idempotent: a second call removes the earlier entry rather than accumulating duplicates.
+    """
+    while LIB_DIR in sys.path:
+        sys.path.remove(LIB_DIR)
+    sys.path.insert(0, LIB_DIR)
 
 
 def _ensure_dir():

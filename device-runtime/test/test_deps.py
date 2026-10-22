@@ -214,6 +214,43 @@ def test_ensure_on_path_once():
     assert sys.path.count(_DIR) == 1, sys.path
 
 
+def test_index_entry_with_no_files_reads_as_installed():
+    """A custom firmware image freezes libraries into flash and ships an index entry for each with no
+    files (2026-10-22, firmware/classic-esp32/gen_deps_index.mjs): the bytes are frozen code, not
+    files on the filesystem. That must read as installed -- a Deploy that looks for the files and
+    calls the install incomplete would refuse every flow on such an image."""
+    _fresh()
+    deps._ensure_dir()
+    deps._write_index({"mqtt_as": {"hash": "h", "files": []}})
+    assert deps.missing({"mqtt_as": "h"}) == [], deps.missing({"mqtt_as": "h"})
+    assert deps.inventory() == {"mqtt_as": "h"}
+    # The same entry at a different hash is still missing: an editor that compiled differently gets
+    # to push its own copy, which then wins on the path.
+    assert deps.missing({"mqtt_as": "other"}) != []
+
+
+def test_lib_dir_beats_ahead_of_path_entries():
+    """A custom firmware image freezes libraries ahead of /lib on sys.path (2026-10-22). A pushed
+    copy must still win, or a library update through Deploy silently does nothing."""
+    _fresh()
+    shadow = "/tmp/ts_deps_test_shadow"
+    try:
+        os.mkdir(shadow)
+    except OSError:
+        pass
+    with open(shadow + "/shadowed_mod.py", "w") as f:
+        f.write("VALUE = 'frozen'\n")
+    deps.put("shadowed", "h", [("shadowed_mod.py", b"VALUE = 'pushed'\n")])
+
+    sys.path.insert(0, shadow)  # the image's order: something frozen/first wins today
+    deps.ensure_on_path()
+    import shadowed_mod
+
+    assert shadowed_mod.VALUE == "pushed", shadowed_mod.VALUE
+    assert sys.path[0] == _DIR, sys.path
+    sys.path.remove(shadow)
+
+
 minitest.run(
     [
         test_lib_dir_comes_from_env,
@@ -233,5 +270,7 @@ minitest.run(
         test_index_with_wrong_shapes_is_filtered,
         test_forget_modules_drops_dependency_modules_only,
         test_ensure_on_path_once,
+        test_lib_dir_beats_ahead_of_path_entries,
+        test_index_entry_with_no_files_reads_as_installed,
     ]
 )
