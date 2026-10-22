@@ -250,6 +250,13 @@ after a successful deploy (2026-10-07). Replaces "selective vendor push". Built 
 hardware-checked on Pico W and an upgraded ESP32; libraries now sent in 1 KB pieces (runtime 8.0.0). 5 entries:
 `docs/working-notes/decisions/flow-dependencies.md`.
 
+## Flow authoring / layout
+
+A flow this project authors reads left to right: sources at the left edge, every wire to a node further right,
+branches stacked in their column -- a flow that wraps back to the left edge looks like a rats nest (2026-10-22).
+`test-flows/relayout.py` does it, `editor/test/flow-layout.test.ts` enforces it for shipped flows, and a user's own
+flow is never repositioned. 1 entry: `docs/working-notes/decisions/flow-authoring.md`.
+
 ## Context model
 
 The runtime context/flow store: `change` is the no-code path (set/delete a msg property or flow variable, one rule

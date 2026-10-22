@@ -270,6 +270,16 @@ Code's own sandbox rules (`CLAUDE.md`) exists for, so — unlike `npm`/`vitest`/
 directly from the agent sandbox or a device-bridge session. Do this whenever a change touches `device-runtime/src` in
 a way that could actually run, not just `py_compile` it and call it verified.
 
+## Authored flows read left to right
+
+When you write or generate a flow file — `test-flows/`, an example in the docs, anything handed to someone to open —
+lay it out left to right: sources at the left edge, every wire going to a node further right, branches stacked
+vertically within their column. A flow that wraps back to the left edge on its second row reads as a rats nest even
+when the graph itself is fine, and it is the person reading it who pays. `python3 test-flows/relayout.py <flow.json>`
+does the layout, `--check` reports wires that go backwards, and `editor/test/flow-layout.test.ts` fails the build for
+a shipped flow with a leftward wire. This is about flows we author: a user's own flow keeps whatever layout they put
+it in, and the editor never repositions nodes on load. Mike, 2026-10-22.
+
 ## Third-party software tracking
 
 `docs/third-party-licenses.md` is the running ledger of every third-party dependency in use — runtime/platform
