@@ -80,8 +80,9 @@ not here.
 - **[LAUNCH]** **CYD gate for custom firmware images — FAILED on the first cycle, 2026-10-22.** Deploying the
   hero GUI flow after a fresh runtime install hit `MemoryError allocating 13317 bytes` and no `DEPLOY_ACK` (a
   clean idle rerun is owed once the CYD's CH340 port is stable). Per the gate, the MVP ships a small set of
-  custom images, classic ESP32 first, with the packaging/hosting/flashing docs. `decisions/gui-layout.md`
-  (2026-10-09 gate, 2026-10-22 result), `frozen-firmware-spike-briefing.md`.
+  custom images, classic ESP32 first, with the packaging/hosting/flashing docs. Briefing:
+  `custom-firmware-cyd-briefing.md`; `decisions/gui-layout.md` (2026-10-09 gate, 2026-10-22 result),
+  `frozen-firmware-spike-briefing.md`.
 - **[LAUNCH]** **Button rework -- built and hardware-checked 2026-10-09.** Two-faced nodes in the compiler;
   button output, modes and controlled toggle; modal close reason; touch panel config node (with presets) polled by
   the gui screen; `gui_touch` removed (`decisions/gui-layout.md` 2026-10-09, `gui-button-rework-briefing.md`).
