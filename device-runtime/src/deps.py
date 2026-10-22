@@ -326,6 +326,12 @@ def remove_unused(required):
     for name in list(index):
         if name in required:
             continue
+        if not index[name].get("files"):
+            # A library frozen into the firmware image (2026-10-22): the modules live in flash, not on
+            # the filesystem, so there is nothing to delete -- and dropping the entry would make the
+            # next Deploy push a copy into /lib over the frozen one, which is exactly the heap saving
+            # the image exists for.
+            continue
         ok = True
         for file_name in index[name]["files"]:
             if file_name in keep_files:

@@ -229,6 +229,23 @@ def test_index_entry_with_no_files_reads_as_installed():
     assert deps.missing({"mqtt_as": "other"}) != []
 
 
+def test_remove_unused_keeps_frozen_entries():
+    """remove_unused is about files. A frozen library has none, and dropping its entry would make the
+    next Deploy push a copy into /lib over the frozen one (found on hardware, 2026-10-22: the first
+    GUI deploy pruned 20 frozen libraries out of the index)."""
+    _fresh()
+    deps._ensure_dir()
+    deps._write_index({
+        "mqtt_as": {"hash": "a", "files": []},
+        "events": {"hash": "b", "files": ["events.mpy"]},
+    })
+    with open(_DIR + "/events.mpy", "wb") as f:
+        f.write(b"x")
+    removed = deps.remove_unused({})
+    assert removed == ["events"], removed
+    assert deps.inventory() == {"mqtt_as": "a"}, deps.inventory()
+
+
 def test_lib_dir_beats_ahead_of_path_entries():
     """A custom firmware image freezes libraries ahead of /lib on sys.path (2026-10-22). A pushed
     copy must still win, or a library update through Deploy silently does nothing."""
@@ -272,5 +289,6 @@ minitest.run(
         test_ensure_on_path_once,
         test_lib_dir_beats_ahead_of_path_entries,
         test_index_entry_with_no_files_reads_as_installed,
+        test_remove_unused_keeps_frozen_entries,
     ]
 )
