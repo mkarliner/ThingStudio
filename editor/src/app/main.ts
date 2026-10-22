@@ -1400,7 +1400,7 @@ function cancelAllWaits(reason: string): void {
 // bump-discipline rule), so this is the level that actually stops an
 // unsafe DEPLOY rather than letting it crash on the device.
 // 2.0.0 (2026-09-23): EXEC, STOP_TO_PROMPT, safe mode. Must match listener.py's _RUNTIME_VERSION.
-const EDITOR_TARGET_VERSION: ProtocolVersion = { major: 11, minor: 2, patch: 2 }; // 11.2.2 2026-10-22: the board also drops the flow's library modules when freeing for a retried deploy (the GUI framebuffer lives in their module globals). 11.2.1 2026-10-22: board drops the flow module when freeing for a retried deploy (a GUI framebuffer lives there); wait past its own free before the HELLO that gates the retry. 11.2.0 2026-10-22: the board stops a running flow it cannot receive a DEPLOY over, and the editor retries once -- minor, no codegen change; 11.1.1 2026-10-22: frozen libraries stay in the board's index (remove_unused) -- patch, no codegen change; 11.1.0 2026-10-22: /lib ahead of frozen modules on sys.path (pushed library still overrides a custom image) -- minor, no codegen change; 11.0.0 2026-10-17: runtime.settings (device_settings.py), codegen-visible -> major; 10.1.0 2026-10-14: persisted paths follow the board's filesystem root (stm32/pyboard /flash) -- minor, no codegen change. 10.0.0 2026-10-11: new adc/encoder/neopixel nodes (vendored AADC/Encoder flow deps), codegen-visible -> major. 9.2.0 2026-10-08: DEPLOY_ERROR when the board has no room to receive a flow (minor, no codegen change); 9.1.0 2026-10-08: WiFi watcher leaves WiFi off unless wanted (minor, no codegen change); 9.0.0 2026-10-07: DEP_ACK per piece, so a USB-UART board isn't overrun; 8.0.0 2026-10-07: libraries sent in 1 KB pieces + DEP_COMMIT (a whole-library DEP_PUT hit MemoryError on a fragmented ESP32 heap); 7.0.0 2026-10-07: flow dependencies (DEP_PUT, DEPLOY.dependencies; libraries in /lib, installed per flow); 6.0.0 2026-09-26: bme280 driver on the board; 5.1.0 2026-09-25: startup reason (getattr, so 5.0.0 still runs it), ESP-IDF heap fields; 5.0.0 2026-09-25: mqtt_as active(True) guard; 4.0.0 2026-09-25: mqtt_as guard, ESP32 MQTT joins WiFi first; 3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS
+const EDITOR_TARGET_VERSION: ProtocolVersion = { major: 11, minor: 3, patch: 0 }; // 11.3.0 2026-10-22: chunked deploy (FLOW_PUT/FLOW_COMMIT) when the board has it -- a whole DEPLOY needs one contiguous block a split heap may not have. 11.2.2 2026-10-22: the board also drops the flow's library modules when freeing for a retried deploy (the GUI framebuffer lives in their module globals). 11.2.1 2026-10-22: board drops the flow module when freeing for a retried deploy (a GUI framebuffer lives there); wait past its own free before the HELLO that gates the retry. 11.2.0 2026-10-22: the board stops a running flow it cannot receive a DEPLOY over, and the editor retries once -- minor, no codegen change; 11.1.1 2026-10-22: frozen libraries stay in the board's index (remove_unused) -- patch, no codegen change; 11.1.0 2026-10-22: /lib ahead of frozen modules on sys.path (pushed library still overrides a custom image) -- minor, no codegen change; 11.0.0 2026-10-17: runtime.settings (device_settings.py), codegen-visible -> major; 10.1.0 2026-10-14: persisted paths follow the board's filesystem root (stm32/pyboard /flash) -- minor, no codegen change. 10.0.0 2026-10-11: new adc/encoder/neopixel nodes (vendored AADC/Encoder flow deps), codegen-visible -> major. 9.2.0 2026-10-08: DEPLOY_ERROR when the board has no room to receive a flow (minor, no codegen change); 9.1.0 2026-10-08: WiFi watcher leaves WiFi off unless wanted (minor, no codegen change); 9.0.0 2026-10-07: DEP_ACK per piece, so a USB-UART board isn't overrun; 8.0.0 2026-10-07: libraries sent in 1 KB pieces + DEP_COMMIT (a whole-library DEP_PUT hit MemoryError on a fragmented ESP32 heap); 7.0.0 2026-10-07: flow dependencies (DEP_PUT, DEPLOY.dependencies; libraries in /lib, installed per flow); 6.0.0 2026-09-26: bme280 driver on the board; 5.1.0 2026-09-25: startup reason (getattr, so 5.0.0 still runs it), ESP-IDF heap fields; 5.0.0 2026-09-25: mqtt_as active(True) guard; 4.0.0 2026-09-25: mqtt_as guard, ESP32 MQTT joins WiFi first; 3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS
 
 // This editor's own device-runtime/src git SHA, injected at build/dev-
 // server-start time by vite.config.ts's `define` (see that file,
@@ -2899,6 +2899,7 @@ async function installFlowDependencies(source: string): Promise<Record<string, s
 
 const PIECE_TIMEOUT_MS = 10000; // one 1 KB piece: write to flash and answer
 const PIECE_RETRIES = 2; // resends of a piece that got no answer (a dropped line, see below)
+const FLOW_PIECE_BYTES = 1024; // one FLOW_PUT piece: small enough to fit wherever a split heap has room
 const DEPLOY_TIMEOUT_MS = 30000; // comfortably exceeds listener.py's own READ_TIMEOUT_S=8 across a few internal phases
 
 el("btnDeploy").addEventListener("click", async () => {
@@ -3030,6 +3031,45 @@ el("btnDeploy").addEventListener("click", async () => {
       }
     };
 
+    // Chunked deploy (runtime 11.3.0+): the flow goes in 1 KB pieces, each answered. A whole DEPLOY needs one
+    // contiguous block the size of the message, which a split heap on a classic ESP32 may not have even with
+    // 100 KB free -- the reason a 9.5 KB flow could not be deployed over a running GUI flow (2026-10-22).
+    const chunkedDeploy = (): boolean => {
+      const v = lastHello?.runtimeVersion ?? null;
+      return v !== null && (v.major > 11 || (v.major === 11 && v.minor >= 3));
+    };
+
+    /** All the pieces, each paced by its own FLOW_ACK. Returns a DEPLOY_ERROR to report, or null when done. */
+    const sendFlowPieces = async (): Promise<Message | null> => {
+      const total = mpyBytes.length;
+      for (let offset = 0; offset < total; offset += FLOW_PIECE_BYTES) {
+        const data = mpyBytes.subarray(offset, Math.min(offset + FLOW_PIECE_BYTES, total));
+        let ack: Message | null = null;
+        for (let attempt = 0; attempt <= PIECE_RETRIES; attempt += 1) {
+          const ackP = waitForMessage((m) => m.type === "FLOW_ACK" && m.offset === offset, PIECE_TIMEOUT_MS);
+          await transport.send({ type: "FLOW_PUT", offset, total, data });
+          try {
+            ack = await ackP;
+            break;
+          } catch (err) {
+            if (attempt < PIECE_RETRIES) {
+              logLine(`[deploy] no reply to flow byte ${offset}, resending (${attempt + 1}/${PIECE_RETRIES})`, "err");
+            } else {
+              return {
+                type: "DEPLOY_ERROR",
+                code: "Timeout",
+                message: `no reply to flow byte ${offset} after ${PIECE_RETRIES + 1} tries`,
+              };
+            }
+          }
+        }
+        if (ack !== null && ack.type === "FLOW_ACK" && !ack.ok) {
+          return { type: "DEPLOY_ERROR", code: ack.code ?? "BadPiece", message: ack.error ?? "the board refused a flow piece" };
+        }
+      }
+      return null;
+    };
+
     const attemptDeploy = async (): Promise<Message> => {
       const ackP = waitForMessage(
         (m) => m.type === "DEPLOY_ACK" || m.type === "DEPLOY_ERROR" || (m.type === "HELLO" && helloRequestsPending === 0),
@@ -3037,15 +3077,32 @@ el("btnDeploy").addEventListener("click", async () => {
       );
       // lastWifiProvision was computed alongside this same compile, by the currentSource() call
       // refreshPreview() (above) just made -- see that field's own doc comment.
-      await transport.send({
-        type: "DEPLOY",
-        bytecode: mpyBytes,
-        staticData: new Uint8Array(0),
-        flowName,
-        deployId,
-        wifiProvision: lastWifiProvision,
-        dependencies,
-      });
+      if (chunkedDeploy()) {
+        const failed = await sendFlowPieces();
+        if (failed !== null) {
+          ackP.catch(() => {}); // the ack we never wait for must not become an unhandled rejection
+          return failed;
+        }
+        await transport.send({
+          type: "FLOW_COMMIT",
+          total: mpyBytes.length,
+          flowName,
+          deployId,
+          wifiProvision: lastWifiProvision,
+          dependencies,
+          staticData: new Uint8Array(0),
+        });
+      } else {
+        await transport.send({
+          type: "DEPLOY",
+          bytecode: mpyBytes,
+          staticData: new Uint8Array(0),
+          flowName,
+          deployId,
+          wifiProvision: lastWifiProvision,
+          dependencies,
+        });
+      }
       return await ackP;
     };
     try {

@@ -187,6 +187,49 @@ export function decodeMessageBody(typeId: number, body: Uint8Array): Message {
         freeFlashBytes: expectOptionalNonNegativeInt(obj, "freeFlashBytes", name),
       };
     }
+    case "FLOW_PUT":
+      return {
+        type: "FLOW_PUT",
+        offset: expectNonNegativeInt(obj, "offset", name),
+        total: expectNonNegativeInt(obj, "total", name),
+        data: expectBytes(obj, "data", name),
+      };
+    case "FLOW_ACK": {
+      const ok = requirePresent(obj, "ok", name);
+      if (typeof ok !== "boolean") fail(name, `field "ok" must be a bool, got ${typeof ok}`);
+      return {
+        type: "FLOW_ACK",
+        offset: expectNonNegativeInt(obj, "offset", name),
+        ok,
+        code: expectOptionalString(obj, "code", name),
+        error: expectOptionalString(obj, "error", name),
+      };
+    }
+    case "FLOW_COMMIT": {
+      const prov = obj["wifiProvision"];
+      let wifiProvision: { selfProvision: boolean; allowReprovision: boolean } | null = null;
+      if (prov !== undefined && prov !== null) {
+        if (typeof prov !== "object" || Array.isArray(prov)) fail(name, 'field "wifiProvision" must be a map');
+        const rec = prov as Record<string, unknown>;
+        wifiProvision = {
+          selfProvision: expectOptionalBool(rec, "selfProvision", name) ?? false,
+          allowReprovision: expectOptionalBool(rec, "allowReprovision", name) ?? false,
+        };
+      }
+      const staticData = obj["staticData"];
+      if (staticData !== undefined && staticData !== null && !(staticData instanceof Uint8Array)) {
+        fail(name, 'field "staticData" must be bytes');
+      }
+      return {
+        type: "FLOW_COMMIT",
+        total: expectNonNegativeInt(obj, "total", name),
+        flowName: expectOptionalString(obj, "flowName", name),
+        deployId: expectOptionalString(obj, "deployId", name),
+        wifiProvision,
+        dependencies: expectOptionalStringMap(obj, "dependencies", name),
+        staticData: (staticData as Uint8Array | null | undefined) ?? null,
+      };
+    }
     case "DEP_ACK": {
       const ok = requirePresent(obj, "ok", name);
       if (typeof ok !== "boolean") fail(name, `field "ok" must be a bool, got ${typeof ok}`);

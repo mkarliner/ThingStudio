@@ -99,6 +99,13 @@ export const MessageType = {
   // Added 2026-10-07 (runtime 9.0.0): device -> editor, the answer to each DEP_PUT. The editor sends the
   // next piece only after this, so a board behind a USB-UART bridge (no flow control) is never overrun.
   DEP_ACK: 20,
+  // Added 2026-10-22: DEPLOY in pieces. A whole DEPLOY needs one contiguous block the size of the message,
+  // and a split heap (ESP32 MicroPython) can be full of holes at 100 KB free -- a 9.5 KB flow could not be
+  // deployed over a running GUI flow. Same treatment DEP_PUT/DEP_COMMIT gave libraries in 8.0.0. The editor
+  // uses these when the board's runtime is 11.3.0 or newer and DEPLOY otherwise.
+  FLOW_PUT: 21,
+  FLOW_COMMIT: 22,
+  FLOW_ACK: 23,
 } as const;
 
 export type MessageTypeId = (typeof MessageType)[keyof typeof MessageType];
@@ -438,6 +445,39 @@ export interface DepAckMessage {
   readonly error: string | null;
 }
 
+/** Editor -> device (chunked deploy, 2026-10-22): one piece of the flow's bytecode, written to a
+ * temporary file on the board. Answered by FLOW_ACK; the editor sends the next piece only after that.
+ * `offset` must equal the bytes already sent. */
+export interface FlowPutMessage {
+  readonly type: "FLOW_PUT";
+  readonly offset: number;
+  readonly total: number;
+  readonly data: Uint8Array;
+}
+
+/** Device -> editor: the answer to one FLOW_PUT. When !ok, `code`/`error` say why (BadPiece,
+ * WriteFailed) and the editor stops sending. */
+export interface FlowAckMessage {
+  readonly type: "FLOW_ACK";
+  readonly offset: number;
+  readonly ok: boolean;
+  readonly code: string | null;
+  readonly error: string | null;
+}
+
+/** Editor -> device: every piece has been sent. The board moves the flow into place, starts it, and
+ * answers DEPLOY_ACK or DEPLOY_ERROR -- the same answer DEPLOY gives. `total` lets the board check that
+ * everything arrived. */
+export interface FlowCommitMessage {
+  readonly type: "FLOW_COMMIT";
+  readonly total: number;
+  readonly flowName: string | null;
+  readonly deployId: string | null;
+  readonly wifiProvision: { selfProvision: boolean; allowReprovision: boolean } | null;
+  readonly dependencies: Readonly<Record<string, string>> | null;
+  readonly staticData: Uint8Array | null;
+}
+
 /** Editor -> device: restart the board. `hard` false: soft reset (interpreter only, USB stays up);
  * true: full chip reset (native-USB boards disconnect). */
 export interface RestartMessage {
@@ -465,7 +505,10 @@ export type Message =
   | DepResultMessage
   | DepCommitMessage
   | RestartMessage
-  | DepAckMessage;
+  | DepAckMessage
+  | FlowPutMessage
+  | FlowAckMessage
+  | FlowCommitMessage;
 
 export const MESSAGE_TYPE_BY_NAME: Record<Message["type"], MessageTypeId> = {
   HELLO: MessageType.HELLO,
@@ -488,6 +531,9 @@ export const MESSAGE_TYPE_BY_NAME: Record<Message["type"], MessageTypeId> = {
   DEP_COMMIT: MessageType.DEP_COMMIT,
   RESTART: MessageType.RESTART,
   DEP_ACK: MessageType.DEP_ACK,
+  FLOW_PUT: MessageType.FLOW_PUT,
+  FLOW_COMMIT: MessageType.FLOW_COMMIT,
+  FLOW_ACK: MessageType.FLOW_ACK,
 };
 
 export const MESSAGE_NAME_BY_TYPE: Record<MessageTypeId, Message["type"]> = {
@@ -511,4 +557,7 @@ export const MESSAGE_NAME_BY_TYPE: Record<MessageTypeId, Message["type"]> = {
   [MessageType.DEP_COMMIT]: "DEP_COMMIT",
   [MessageType.RESTART]: "RESTART",
   [MessageType.DEP_ACK]: "DEP_ACK",
+  [MessageType.FLOW_PUT]: "FLOW_PUT",
+  [MessageType.FLOW_COMMIT]: "FLOW_COMMIT",
+  [MessageType.FLOW_ACK]: "FLOW_ACK",
 };

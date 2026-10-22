@@ -247,6 +247,50 @@ A map, not a list, because the device codec has no arrays.
 | `code` | string | optional |
 | `error` | string | optional |
 
+### FLOW_PUT — → device
+One piece of the next flow's bytecode, for a board that cannot take the whole `DEPLOY` in one message.
+
+| Field | Type | |
+|---|---|---|
+| `offset` | uint | required |
+| `total` | uint | required |
+| `data` | bytes | required |
+
+### FLOW_ACK — ← device
+Answer to one `FLOW_PUT`. The editor sends the next piece only after this.
+
+| Field | Type | |
+|---|---|---|
+| `offset` | uint | required |
+| `ok` | bool | required |
+| `code` | string | optional |
+| `error` | string | optional |
+
+### FLOW_COMMIT — → device
+Every piece has been sent: save the flow, start it, answer `DEPLOY_ACK` or `DEPLOY_ERROR`.
+
+| Field | Type | |
+|---|---|---|
+| `total` | uint | required |
+| `flowName` | string | optional |
+| `deployId` | string | optional |
+| `wifiProvision` | map | optional |
+| `dependencies` | map string→string | optional |
+| `staticData` | bytes | optional (empty today) |
+
+### Chunked deploy (2026-10-22)
+
+`DEPLOY` carries the whole flow in one message, so the board needs one contiguous block the size of that message
+(~1.3× the bytecode, base64-inflated). A classic ESP32 runs MicroPython on a **split heap**
+(`MICROPY_GC_SPLIT_HEAP`): `gc.mem_free()` sums several regions, and after a display flow has run no single region
+may hold a 10 KB block even with 100 KB free — the reason a 9.5 KB flow could not be deployed over a running GUI
+flow.
+
+`FLOW_PUT` pieces plus `FLOW_COMMIT` are the same treatment `DEP_PUT`/`DEP_COMMIT` gave libraries in runtime 8.0.0:
+every allocation is one piece (1 KB in the editor), which fits wherever there is room. `DEPLOY` stays in the spec and
+stays valid; an editor uses the chunked messages when the board's `runtimeVersion` is 11.3.0 or newer, and `DEPLOY`
+otherwise.
+
 ## 6. Auth and version negotiation
 
 Authentication is at the **session** level, not per message. The WiFi transport authenticates the session

@@ -16,6 +16,7 @@
 #   NODE_ERROR=6 STATE_READ=7 STATE_WRITE=8 TRIGGER=9 HELLO_REQUEST=10
 #   NODE_STATUS=11 EXEC=12 STOP_TO_PROMPT=13 SET_BOARD_SETTINGS=14
 #   BOARD_SETTINGS_RESULT=15 DEP_PUT=16 DEP_RESULT=17 DEP_COMMIT=18 RESTART=19 DEP_ACK=20
+#   FLOW_PUT=21 FLOW_COMMIT=22 FLOW_ACK=23
 #
 # NODE_STATUS (2026-09-10, outstanding-items/node-status-indicators.md):
 # device -> editor, a lightweight per-node connection-status push,
@@ -96,6 +97,13 @@ MessageType = {
     # only after this, so a board behind a USB-UART bridge (no flow control; CYD) never gets bytes faster
     # than it can take them -- unpaced pieces overflowed its receive buffer while it wrote to flash.
     "DEP_ACK": 20,
+    # Added 2026-10-22 (a 9.5 KB flow could not be deployed over a running GUI flow on a classic ESP32: the
+    # board's MicroPython heap is a split heap, so "100 KB free" can mean no single block big enough for one
+    # DEPLOY message). FLOW_PUT/FLOW_COMMIT are DEPLOY in pieces, the same treatment DEP_PUT/DEP_COMMIT gave
+    # libraries in 8.0.0; FLOW_ACK paces the sender, like DEP_ACK. DEPLOY stays valid for older boards.
+    "FLOW_PUT": 21,
+    "FLOW_COMMIT": 22,
+    "FLOW_ACK": 23,
 }
 
 MESSAGE_NAME_BY_TYPE = {v: k for k, v in MessageType.items()}
@@ -274,6 +282,26 @@ def _expect_optional_wifi_provision(obj, key, name):
     }
 
 
+def _expect_optional_map(obj, key, name):
+    """Any map, or absent/None -- FLOW_COMMIT's wifiProvision, whose own shape DEPLOY's validator decides."""
+    v = obj.get(key)
+    if v is None:
+        return None
+    if not isinstance(v, dict):
+        _fail(name, 'field "%s" must be a map or absent/None, got %r' % (key, type(v)))
+    return v
+
+
+def _expect_optional_bytes(obj, key, name):
+    """bytes, or absent/None -- FLOW_COMMIT's staticData (empty today)."""
+    v = obj.get(key)
+    if v is None:
+        return None
+    if not isinstance(v, (bytes, bytearray)):
+        _fail(name, 'field "%s" must be bytes or absent/None, got %r' % (key, type(v)))
+    return v
+
+
 def _expect_optional_string_map(obj, key, name):
     """{str: str} or absent/None (absent means {}) -- the dependency inventory (HELLO) and the
     dependencies a flow needs (DEPLOY). A sender predating flow dependencies never sends either."""
@@ -320,6 +348,40 @@ def _validate_dep_ack(obj, name):
     return {
         "name": _expect_string(obj, "name", name),
         "file": _expect_string(obj, "file", name),
+        "offset": _expect_non_negative_int(obj, "offset", name),
+        "ok": ok,
+        "code": _expect_optional_string(obj, "code", name),
+        "error": _expect_optional_string(obj, "error", name),
+    }
+
+
+def _validate_flow_put(obj, name):
+    return {
+        "offset": _expect_non_negative_int(obj, "offset", name),
+        "total": _expect_non_negative_int(obj, "total", name),
+        "data": _expect_bytes(obj, "data", name),
+    }
+
+
+def _validate_flow_commit(obj, name):
+    fields = {
+        "total": _expect_non_negative_int(obj, "total", name),
+        "flowName": _expect_optional_string(obj, "flowName", name),
+        "deployId": _expect_optional_string(obj, "deployId", name),
+        "wifiProvision": _expect_optional_map(obj, "wifiProvision", name),
+        "dependencies": _expect_optional_string_map(obj, "dependencies", name),
+        "staticData": _expect_optional_bytes(obj, "staticData", name),
+    }
+    # Kept with explicit None, not dropped: the conformance vectors carry the same keys, and every
+    # other optional-field message here decodes the same way (DEP_ACK's code/error, DEPLOY's flowName).
+    return fields
+
+
+def _validate_flow_ack(obj, name):
+    ok = _require_present(obj, "ok", name)
+    if not isinstance(ok, bool):
+        _fail(name, 'field "ok" must be a bool, got %r' % (type(ok),))
+    return {
         "offset": _expect_non_negative_int(obj, "offset", name),
         "ok": ok,
         "code": _expect_optional_string(obj, "code", name),
@@ -526,4 +588,7 @@ _VALIDATORS = {
     "DEP_COMMIT": _validate_dep_commit,
     "RESTART": _validate_restart,
     "DEP_ACK": _validate_dep_ack,
+    "FLOW_PUT": _validate_flow_put,
+    "FLOW_COMMIT": _validate_flow_commit,
+    "FLOW_ACK": _validate_flow_ack,
 }

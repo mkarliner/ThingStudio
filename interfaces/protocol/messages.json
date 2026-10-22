@@ -30,6 +30,9 @@
     { "id": 17, "name": "DEP_RESULT",            "direction": "device->editor", "summary": "answer to DEP_COMMIT" },
     { "id": 18, "name": "DEP_COMMIT",            "direction": "editor->device", "summary": "every piece of a library has been sent; install it" },
     { "id": 19, "name": "RESTART",               "direction": "editor->device", "summary": "restart the board (hard=false soft reset, hard=true full chip reset)" },
-    { "id": 20, "name": "DEP_ACK",               "direction": "device->editor", "summary": "answer to one DEP_PUT piece (paces the sender)" }
+    { "id": 20, "name": "DEP_ACK",               "direction": "device->editor", "summary": "answer to one DEP_PUT piece (paces the sender)" },
+    { "id": 21, "name": "FLOW_PUT",              "direction": "editor->device", "summary": "one piece of the next flow's bytecode (chunked DEPLOY; answered by FLOW_ACK)" },
+    { "id": 22, "name": "FLOW_COMMIT",           "direction": "editor->device", "summary": "every piece of the flow has been sent; save it, start it, answer DEPLOY_ACK or DEPLOY_ERROR" },
+    { "id": 23, "name": "FLOW_ACK",              "direction": "device->editor", "summary": "answer to one FLOW_PUT piece (paces the sender)" }
   ]
 }

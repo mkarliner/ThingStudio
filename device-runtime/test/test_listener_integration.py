@@ -240,6 +240,59 @@ def test_deploy_too_big_for_memory_is_answered_not_timed_out():
             listener.close()
 
 
+def test_chunked_deploy_runs_the_flow():
+    # 2026-10-22: FLOW_PUT/FLOW_COMMIT, so a flow can be deployed in pieces when a whole DEPLOY needs one
+    # contiguous block the board's split heap doesn't have.
+    with tempfile.TemporaryDirectory() as tmpdir:
+        flow = _compile_flow(tmpdir, "flow_chunked", "print('CHUNKED_FLOW_RAN')\n")
+        listener = ListenerProcess(tmpdir)
+        try:
+            listener.wait_for(lambda l: l == "LISTENER_READY", description="LISTENER_READY")
+            offset = 0
+            while offset < len(flow):
+                piece = flow[offset : offset + 512]
+                listener.send_message({"type": "FLOW_PUT", "offset": offset, "total": len(flow), "data": piece})
+                listener.wait_for(
+                    lambda l, o=offset: l.startswith(F64_PREFIX)
+                    and _decode_f64_line(l)["type"] == "FLOW_ACK"
+                    and _decode_f64_line(l)["offset"] == o
+                    and _decode_f64_line(l)["ok"],
+                    timeout=10,
+                    description="FLOW_ACK for the piece at %d" % offset,
+                )
+                offset += len(piece)
+            listener.send_message({"type": "FLOW_COMMIT", "total": len(flow), "flowName": "chunked", "deployId": "d1"})
+            listener.wait_for(lambda l: l == "CHUNKED_FLOW_RAN", timeout=15, description="the chunked flow running")
+            ack = listener.wait_for(
+                lambda l: l.startswith(F64_PREFIX) and _decode_f64_line(l)["type"] == "DEPLOY_ACK",
+                timeout=10,
+                description="DEPLOY_ACK for the chunked deploy",
+            )
+            assert ack
+        finally:
+            listener.close()
+
+
+def test_chunked_deploy_refuses_an_incomplete_flow():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        flow = _compile_flow(tmpdir, "flow_chunked_short", "print('SHOULD_NOT_RUN')\n")
+        listener = ListenerProcess(tmpdir)
+        try:
+            listener.wait_for(lambda l: l == "LISTENER_READY", description="LISTENER_READY")
+            # total says more than is ever sent, so the commit has to notice it is short (the compiled
+            # flow can be smaller than 100 bytes, which made the first version of this test send it whole).
+            listener.send_message({"type": "FLOW_PUT", "offset": 0, "total": len(flow) + 1000, "data": flow})
+            listener.send_message({"type": "FLOW_COMMIT", "total": len(flow) + 1000, "flowName": "short", "deployId": "d2"})
+            line = listener.wait_for(
+                lambda l: l.startswith(F64_PREFIX) and _decode_f64_line(l)["type"] == "DEPLOY_ERROR",
+                timeout=10,
+                description="DEPLOY_ERROR for an incomplete flow",
+            )
+            assert _decode_f64_line(line)["code"] == "Incomplete", line
+        finally:
+            listener.close()
+
+
 def test_receive_oom_stops_the_running_flow_so_a_retry_fits():
     # 11.2.0 (2026-10-22, CYD): a DEPLOY that can't be received used to leave the running flow holding the
     # memory, so the editor's retry hit the same wall and the only way through was Remove flow + a manual
@@ -1205,6 +1258,8 @@ TESTS = [
     test_flow_that_kills_the_board_while_starting_keeps_its_identity_after_reboot,
     test_soft_restart_stops_the_flow_and_ends_the_interpreter,
     test_deploy_too_big_for_memory_is_answered_not_timed_out,
+    test_chunked_deploy_runs_the_flow,
+    test_chunked_deploy_refuses_an_incomplete_flow,
     test_receive_oom_stops_the_running_flow_so_a_retry_fits,
 ]
 

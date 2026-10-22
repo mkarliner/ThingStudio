@@ -307,6 +307,23 @@ Frozen modules run from flash and never touch the heap, so they would avoid both
 `frozen-firmware-spike-briefing.md`. Note `gc` has no largest-free-block call; use `micropython.mem_info()`
 (`max free sz`, in 16-byte blocks) or bisect with `bytearray(n)`. User-facing: `docs/user-guide/debugging.md`.
 
+## ESP32 MicroPython uses a split heap: "116 KB free" is not a 116 KB block, 2026-10-22
+
+`ports/esp32/mpconfigport.h` sets `MICROPY_GC_SPLIT_HEAP (1)` and `MICROPY_GC_SPLIT_HEAP_AUTO (1)`. The heap is
+several regions carved out of ESP-IDF memory as it becomes available, and `gc.mem_free()` **sums them**. Ask for one
+big block and it must fit inside a single region.
+
+The CYD showed it: 116 KB free, and a 9,538-byte allocation still failed — with IDF heap down to 12 KB free, the
+regions were small. Worse, it varies with history: a 16 KB probe succeeded 40 seconds earlier on the same board.
+
+Consequences worth remembering:
+
+- A "free RAM" figure says nothing about whether a particular message will fit. For a fit check, try the allocation
+  (the listener's `LISTENER_FREED` probe does exactly that).
+- The fix for a big payload is pieces, not more free space — which is why libraries went to 1 KB `DEP_PUT` pieces and
+  why the flow bytecode now does the same (`FLOW_PUT`/`FLOW_COMMIT`, runtime 11.3.0).
+- A soft reset (or a reflash) is the only way to get a fresh heap; freeing objects scatters it further.
+
 ## Redeploy over a running GUI flow: stopping the flow isn't freeing it, 2026-10-22
 
 Deploying a GUI flow while another GUI flow runs on a CYD failed every time with

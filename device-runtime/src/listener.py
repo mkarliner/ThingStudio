@@ -154,12 +154,18 @@ except (AttributeError, ValueError):
 # real host filesystem root, which a test must never write to. Real
 # hardware never sets these env vars, so this is a no-op there.
 _FLOW_PATH = _under_root("_flow.mpy")
+_flow_put_received = 0
 _STATIC_DATA_PATH = _under_root("_flow_static.bin")
 try:
     _FLOW_PATH = os.getenv("THINGSTUDIO_FLOW_PATH", _FLOW_PATH)
     _STATIC_DATA_PATH = os.getenv("THINGSTUDIO_STATIC_DATA_PATH", _STATIC_DATA_PATH)
 except AttributeError:
     pass
+
+# Chunked deploy (2026-10-22): FLOW_PUT pieces are written here and moved into place on FLOW_COMMIT, so a
+# half-sent flow never becomes the running one. Derived AFTER the env override above -- a rename across
+# filesystems is EXDEV, which is exactly what a temp path left pointing at the unit's own directory did.
+_FLOW_TMP_PATH = _FLOW_PATH + ".tmp"
 
 # Matches harness.py's READ_TIMEOUT_S -- see that file's own comment on why
 # a single readline() wait (not a multiple of it) is what app.js's/the
@@ -177,7 +183,7 @@ F64_PREFIX = "F64:"
 _HEARTBEAT_PIN = 10
 _HEARTBEAT_PERIOD_MS = 200
 
-_RUNTIME_VERSION = {"major": 11, "minor": 2, "patch": 2}  # 11.2.2 2026-10-22: freeing a flow for a retried DEPLOY also drops the flow's library modules -- thingstudio_gui/tsgui_* keep the framebuffer in module globals, which left only 73 KB free and the retry still failing. Patch: no codegen change. 11.2.1 2026-10-22: freeing the running flow for a retried DEPLOY also drops the _flow module, which is where a GUI flow's framebuffer lives -- cancelling tasks alone reclaimed almost nothing. Patch: no codegen change. 11.2.0 2026-10-22: when a message cannot be received for lack of memory, the listener stops the running flow so the editor's retried DEPLOY fits (a GUI flow replacing a running GUI flow) -- minor: no codegen change. 11.1.1 2026-10-22: remove_unused keeps frozen libraries in the index (their modules are in flash, not files) -- it was pruning them, so the next Deploy pushed copies over them and lost the heap saving. Patch: no codegen change. 11.1.0 2026-10-22: /lib goes ahead of frozen modules on sys.path (deps.py), so a pushed library still overrides a custom firmware image's frozen copy -- minor: no codegen change; 11.0.0 2026-10-17: runtime.settings (device_settings.py, a flowName-namespaced persistent KV), codegen-visible -> major; 10.1.0 2026-10-14: persisted paths follow the board's filesystem root (board_fs.py), so the stm32/pyboard port (mounted at /flash, not /) can write its flow/state -- minor: no codegen change; 10.0.0 2026-10-11: new adc/encoder/neopixel nodes (vendored AADC/Encoder flow deps) -- codegen-visible, so major. 9.2.0 2026-10-08: a MemoryError receiving a message answers DEPLOY_ERROR instead of leaving the editor to time out -- minor: no codegen change; 9.1.0 2026-10-08: the WiFi watcher no longer starts the WiFi driver for a flow that doesn't use the network (it ate ESP-IDF memory, and failed noisily on a full CYD) -- minor: nothing generated depends on it; 9.0.0 2026-10-07: DEP_ACK per DEP_PUT piece (unpaced pieces overflowed a USB-UART board's receive buffer), RESTART; 8.0.0 2026-10-07: libraries sent in 1 KB pieces (DEP_PUT) plus DEP_COMMIT -- one big DEP_PUT failed with MemoryError on a fragmented ESP32 heap; 7.0.0 2026-10-07: flow dependencies (DEP_PUT, DEPLOY.dependencies, libraries in /lib instead of every board getting every library); 6.0.0 2026-09-26: vendored bme280_float.py and runtime.shared() (bme280/I2C flows use both, so an older board fails them); 5.1.0 2026-09-25: runtime.start_reason, ESP-IDF heap in HELLO/DEPLOY_ACK -- minor only: startup codegen reads start_reason with getattr, so its flows still run on 5.0.0; 5.0.0 same day: mqtt_as active(True) only when inactive (4.0.0 same day: vendored mqtt_as wifi_connect() guard -- MQTT codegen now joins WiFi first on ESP32 (3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS; 2.0.0 was 2026-09-23: EXEC, STOP_TO_PROMPT, safe mode; 1.0.0 was 2026-09-10: NODE_STATUS)
+_RUNTIME_VERSION = {"major": 11, "minor": 3, "patch": 0}  # 11.3.0 2026-10-22: chunked deploy (FLOW_PUT/FLOW_COMMIT/FLOW_ACK) -- a whole DEPLOY needs one contiguous block the size of the message and a split heap may not have it; a decode MemoryError now answers DEPLOY_ERROR instead of hanging the editor. Minor: no codegen change; the old DEPLOY still works. 11.2.2 2026-10-22: freeing a flow for a retried DEPLOY also drops the flow's library modules -- thingstudio_gui/tsgui_* keep the framebuffer in module globals, which left only 73 KB free and the retry still failing. Patch: no codegen change. 11.2.1 2026-10-22: freeing the running flow for a retried DEPLOY also drops the _flow module, which is where a GUI flow's framebuffer lives -- cancelling tasks alone reclaimed almost nothing. Patch: no codegen change. 11.2.0 2026-10-22: when a message cannot be received for lack of memory, the listener stops the running flow so the editor's retried DEPLOY fits (a GUI flow replacing a running GUI flow) -- minor: no codegen change. 11.1.1 2026-10-22: remove_unused keeps frozen libraries in the index (their modules are in flash, not files) -- it was pruning them, so the next Deploy pushed copies over them and lost the heap saving. Patch: no codegen change. 11.1.0 2026-10-22: /lib goes ahead of frozen modules on sys.path (deps.py), so a pushed library still overrides a custom firmware image's frozen copy -- minor: no codegen change; 11.0.0 2026-10-17: runtime.settings (device_settings.py, a flowName-namespaced persistent KV), codegen-visible -> major; 10.1.0 2026-10-14: persisted paths follow the board's filesystem root (board_fs.py), so the stm32/pyboard port (mounted at /flash, not /) can write its flow/state -- minor: no codegen change; 10.0.0 2026-10-11: new adc/encoder/neopixel nodes (vendored AADC/Encoder flow deps) -- codegen-visible, so major. 9.2.0 2026-10-08: a MemoryError receiving a message answers DEPLOY_ERROR instead of leaving the editor to time out -- minor: no codegen change; 9.1.0 2026-10-08: the WiFi watcher no longer starts the WiFi driver for a flow that doesn't use the network (it ate ESP-IDF memory, and failed noisily on a full CYD) -- minor: nothing generated depends on it; 9.0.0 2026-10-07: DEP_ACK per DEP_PUT piece (unpaced pieces overflowed a USB-UART board's receive buffer), RESTART; 8.0.0 2026-10-07: libraries sent in 1 KB pieces (DEP_PUT) plus DEP_COMMIT -- one big DEP_PUT failed with MemoryError on a fragmented ESP32 heap; 7.0.0 2026-10-07: flow dependencies (DEP_PUT, DEPLOY.dependencies, libraries in /lib instead of every board getting every library); 6.0.0 2026-09-26: vendored bme280_float.py and runtime.shared() (bme280/I2C flows use both, so an older board fails them); 5.1.0 2026-09-25: runtime.start_reason, ESP-IDF heap in HELLO/DEPLOY_ACK -- minor only: startup codegen reads start_reason with getattr, so its flows still run on 5.0.0; 5.0.0 same day: mqtt_as active(True) only when inactive (4.0.0 same day: vendored mqtt_as wifi_connect() guard -- MQTT codegen now joins WiFi first on ESP32 (3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS; 2.0.0 was 2026-09-23: EXEC, STOP_TO_PROMPT, safe mode; 1.0.0 was 2026-09-10: NODE_STATUS)
 # (runtime.report_status) is a hard dependency of wifi-status.ts's/mqtt-shared.ts's codegen now -- an editor
 # with this change targeting a pre-2026-09-10 runtime would crash on deploy (AttributeError: report_status),
 # not degrade gracefully. See CLAUDE.md's "Device-runtime version bump discipline" -- decideDeploy() only
@@ -696,7 +702,68 @@ def _handle_dep_commit(msg):
     _send_message_safe({"type": "DEP_RESULT", "name": name, "ok": True, "freeFlashBytes": _free_flash_bytes()})
 
 
+def _handle_flow_put(msg):
+    """FLOW_PUT (2026-10-22): one piece of the next flow's bytecode, appended to the temporary flow file.
+
+    Same shape and same reason as _handle_dep_put: the board decodes each message whole, and a split heap
+    can have plenty free without one block the size of a whole DEPLOY. Answered always, so the editor can
+    pace itself; a bad piece is refused by offset, which names the fault."""
+    global _flow_put_received
+    offset = msg["offset"]
+    total = msg["total"]
+    data = msg["data"]
+    ack = {"type": "FLOW_ACK", "offset": offset, "ok": True}
+    if offset != _flow_put_received or offset > total:
+        ack.update(ok=False, code="BadPiece",
+                   error="piece at byte %d, expected %d of %d" % (offset, _flow_put_received, total))
+        _send_message_safe(ack)
+        return
+    try:
+        if offset == 0:
+            with open(_FLOW_TMP_PATH, "wb") as f:
+                f.write(data)
+        else:
+            with open(_FLOW_TMP_PATH, "r+b") as f:
+                f.seek(offset)
+                f.write(data)
+    except Exception as e:  # noqa: BLE001 -- a write failure is answered, never raised
+        ack.update(ok=False, code="WriteFailed", error=str(e))
+        _send_message_safe(ack)
+        return
+    _flow_put_received = offset + len(data)
+    _send_message_safe(ack)
+
+
+async def _handle_flow_commit(msg):
+    """FLOW_COMMIT (2026-10-22): every piece arrived, so move the flow into place and start it.
+
+    Answers DEPLOY_ACK/DEPLOY_ERROR exactly like DEPLOY, because it is the same operation once the bytes
+    are on flash."""
+    global _flow_put_received
+    total = msg["total"]
+    if _flow_put_received != total:
+        _send_message_safe({"type": "DEPLOY_ERROR", "code": "Incomplete",
+                            "message": "the flow arrived incomplete (%d of %d bytes)" % (_flow_put_received, total)})
+        return
+    try:
+        try:
+            os.remove(_FLOW_PATH)
+        except OSError:
+            pass  # no previous flow
+        os.rename(_FLOW_TMP_PATH, _FLOW_PATH)
+    except Exception as e:  # noqa: BLE001
+        _flow_put_received = 0
+        _send_message_safe({"type": "DEPLOY_ERROR", "code": "WriteFailed", "message": "could not save the flow: %r" % (e,)})
+        return
+    await _deploy_flow(msg, flow_on_disk=True)
+
+
 async def _handle_deploy(msg):
+    """DEPLOY: the whole flow in one message (see _deploy_flow)."""
+    return await _deploy_flow(msg)
+
+
+async def _deploy_flow(msg, flow_on_disk=False):
     """Writes the deployed flow's bytecode (and, if present, static data)
     to the filesystem and imports it, same overall shape as
     harness.py's _deploy_mpy -- cancel what's running, write, import,
@@ -742,10 +809,13 @@ async def _handle_deploy(msg):
     _set_current_flow(None, None)
     gc.collect()
     before_ram = gc.mem_free()
+    global _flow_put_received
     try:
-        with open(_FLOW_PATH, "wb") as f:
-            f.write(msg["bytecode"])
-        if msg["staticData"]:
+        if not flow_on_disk:  # a FLOW_COMMIT already moved the pieces into place
+            with open(_FLOW_PATH, "wb") as f:
+                f.write(msg["bytecode"])
+        _flow_put_received = 0
+        if msg.get("staticData"):
             with open(_STATIC_DATA_PATH, "wb") as f:
                 f.write(msg["staticData"])
         # Saved with the flow file, before importing it (2026-10-07): a flow that hard-crashes the board
@@ -993,12 +1063,22 @@ async def _dispatch_locked(result, source):
         # in a row: log and move on, never raise past this function.
         print("LISTENER_ERR protocol %r -- recovering, not crashing" % (result["error"],))
         _note_unreadable(result["error"])
+        # A MemoryError while decoding is the board short of room, not corrupt input (2026-10-22): the
+        # editor is waiting for an answer to its DEPLOY and would otherwise sit out its whole timeout
+        # while the console showed one line.
+        if "MemoryError" in repr(result["error"]):
+            _send_message_safe({"type": "DEPLOY_ERROR", "code": "MemoryError",
+                                "message": "no room to decode the message; the board has too little contiguous memory"})
         return
 
     msg = result["message"]
     msg_type = msg["type"]
     if msg_type == "DEPLOY":
         await _handle_deploy(msg)
+    elif msg_type == "FLOW_PUT":
+        _handle_flow_put(msg)
+    elif msg_type == "FLOW_COMMIT":
+        await _handle_flow_commit(msg)
     elif msg_type == "DEP_PUT":
         _handle_dep_put(msg)
     elif msg_type == "DEP_COMMIT":
