@@ -4864,17 +4864,15 @@ shows free RAM. The free RAM is in pieces, and the library needs one large piece
 flow has run. Use **Tools → Reset board (hard)**, then deploy again. See the [FAQ](faq.md) for why an ESP32 has
 little room.
 
-If Deploy says the board is **too full to receive the flow**, the running flow is using the memory. The editor handles
-it in two steps, and neither needs anything from you:
+If Deploy says **too full to receive the flow**, or a deploy starts and then fails with `MemoryError`, the running
+flow is holding the memory and the board has no single block big enough to take the new one. This happens on ESP32
+boards without PSRAM once a display flow has run.
 
-1. It asks the board to stop the running flow and tries again. The console shows `board had no room; it has stopped the
-   running flow` and a `LISTENER_FREED` line from the board.
-2. If the flow still doesn't fit — after a GUI flow has run, the board's memory is too fragmented for the deploy — the
-   editor clears the flow from the board, restarts it, and deploys onto a fresh start. The flow you have open is
-   unaffected; the board is without a flow for a few seconds.
+What works today: **Tools → Remove flow…**, then **Tools → Restart board (soft)**, then deploy.
+Removing the flow means nothing is resumed at start-up, so the board comes back with the whole heap free.
 
-Only if both steps fail does the console ask you to use **Tools → Remove flow…**, then **Tools → Reset board (hard)**,
-then deploy.
+There is no "stop the flow, keep Thingstudio running" action yet, and nothing the editor does automatically. If
+that is what you need regularly, it is worth saying so — it is a design gap, not a setting.
 
 ## WiFi Internal State Error on deploy
 
