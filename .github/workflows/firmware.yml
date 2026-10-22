@@ -24,7 +24,7 @@ env:
   MPY_VERSION: v1.28.0
   # ESP-IDF version MicroPython's esp32 port expects for this tag. Checked against ports/esp32's
   # idf requirements at build time by the toolchain container's own idf.py.
-  IDF_IMAGE: espressif/idf:v5.4
+  IDF_IMAGE: espressif/idf:v5.5.1
 
 jobs:
   image:

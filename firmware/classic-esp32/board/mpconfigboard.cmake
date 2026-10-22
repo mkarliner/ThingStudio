@@ -11,3 +11,9 @@ set(SDKCONFIG_DEFAULTS
     boards/sdkconfig.ble
     ${CMAKE_CURRENT_LIST_DIR}/sdkconfig.board
 )
+
+# The frozen set. build.sh copies manifest.py next to this file, so the path resolves inside the
+# port's board directory. Setting it here rather than passing FROZEN_MANIFEST on the make command
+# line matters: a command-line variable propagates into the recursive mpy-cross build, which then
+# tries to freeze modules into mpy-cross itself and fails ("assert mod_defs").
+set(MICROPY_FROZEN_MANIFEST ${CMAKE_CURRENT_LIST_DIR}/manifest.py)

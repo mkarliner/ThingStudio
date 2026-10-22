@@ -98,7 +98,8 @@ which the docs must say.
 ## Build and distribution
 
 1. **Pin MicroPython** (`v1.28.0`, what the CYD reports) and the ESP-IDF container
-   (`espressif/idf:v5.4`); build from a tag, not master.
+   (`espressif/idf:v5.5.1`, the newest tag MicroPython v1.28.0 tests against);
+   build from a tag, not master.
 2. A custom board directory (`firmware/classic-esp32/board/`) on `BOARD=thingstudio_classic_esp32`:
    stock `sdkconfig.base` + BLE, 4 MB flash, size-optimised, our single-app partition table.
 3. Build on a developer machine or `.github/workflows/firmware.yml`; the sandbox cannot build ESP32

@@ -62,11 +62,16 @@ make -C "$MICROPY_DIR/mpy-cross" -j"$(getconf _NPROCESSORS_ONLN 2>/dev/null || e
 
 rm -rf "${MICROPY_DIR:?}/ports/esp32/boards/$BOARD"
 cp -r "$HERE/board" "$MICROPY_DIR/ports/esp32/boards/$BOARD"
+# The board's cmake points at this; keeping it inside the copied directory is what lets the path
+# resolve without a command-line FROZEN_MANIFEST (see mpconfigboard.cmake on why that matters).
+cp "$HERE/manifest.py" "$MICROPY_DIR/ports/esp32/boards/$BOARD/manifest.py"
 
+# No BUILD= on this command line: make propagates command-line variables into the recursive
+# mpy-cross build, which would then share the ESP32 build's directory and qstr tables ("MP_QSTR_asm_thumb
+# undeclared"). The port's own default build directory keeps the two separate.
+rm -rf "$MICROPY_DIR/ports/esp32/build-$BOARD"
 THINGSTUDIO_FROZEN_STAGE="$STAGE" make -C "$MICROPY_DIR/ports/esp32" \
     BOARD="$BOARD" \
-    FROZEN_MANIFEST="$HERE/manifest.py" \
-    BUILD="$OUT/build" \
     -j"$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)"
 
 # 4. One merged image: bootloader + partition table + app, at the offsets ESP-IDF recorded in the
@@ -81,7 +86,7 @@ PY
 SHA="$(git -C "$REPO" rev-parse --short=7 HEAD 2>/dev/null || echo unknown)"
 IMG="$OUT/thingstudio-classic-esp32-$VERSION-$SHA.bin"
 
-( cd "$OUT/build" && esptool --chip esp32 merge_bin -o "$IMG" @flash_args )
+( cd "$MICROPY_DIR/ports/esp32/build-$BOARD" && esptool --chip esp32 merge_bin -o "$IMG" @flash_args )
 
 ( cd "$OUT" && sha256sum "$(basename "$IMG")" > "$(basename "$IMG").sha256" )
 
