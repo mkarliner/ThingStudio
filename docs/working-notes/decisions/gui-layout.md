@@ -145,6 +145,14 @@ the msg is open.
   flow was already resident; a clean idle rerun is owed once the CYD's CH340 port is stable again. On this
   evidence the gate is treated as **failed**, so the MVP ships a small set of custom firmware images, classic
   ESP32 first.
+  **Gate retired, 2026-10-22 evening (Mike):** "the 5 cycle gate can go, at least on small memory boards." It
+  set a bar the platform cannot meet in its current shape — five deploys in one powered session, with a display
+  flow resident and no reset — and the retries that tried to get there were what produced the recovery chain this
+  project has now banned. The gate's intent survives as the rule for deploys: stop the flow first, one sequence,
+  start the new one, and only a power cycle when the board cannot fit a flow at all. Acceptance for the MVP is a
+  deploy that works over a *stopped* flow (tracked in `outstanding-items.md`) plus the documented power-cycle path
+  when even that can't fit; the custom image still ships for classic ESP32 (the reason it was decided), but no
+  longer waits on a five-cycle run.
 - 2026-10-09 (Mike's direction; details recommended, not decided): **buttons get their own output; touch
   plumbing leaves the canvas.** Mike: a button "floating in the air doesn't look right"; GUI-only plumbing
   shouldn't be visible; `touch_i2c` is for non-GUI uses. Recommended shape:

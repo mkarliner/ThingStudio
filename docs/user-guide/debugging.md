@@ -129,11 +129,23 @@ If Deploy says **too full to receive the flow**, or a deploy starts and then fai
 flow is holding the memory and the board has no single block big enough to take the new one. This happens on ESP32
 boards without PSRAM once a display flow has run.
 
-What works today: **Tools → Remove flow…**, then **Tools → Restart board (soft)**, then deploy.
-Removing the flow means nothing is resumed at start-up, so the board comes back with the whole heap free.
+**The way out is to remove the flow and power cycle the board, then deploy:**
 
-There is no "stop the flow, keep Thingstudio running" action yet, and nothing the editor does automatically. If
-that is what you need regularly, it is worth saying so — it is a design gap, not a setting.
+1. **Tools → Remove flow…** — so nothing is resumed at start-up.
+2. **Power cycle the board** — unplug its USB cable and plug it back in, or **Tools → Reset board (hard)**.
+3. Deploy.
+
+Removing the flow alone doesn't help: the running flow keeps its memory until the chip restarts. A soft restart
+doesn't help either — it restarts the interpreter over the same heap regions and gives no chip memory back. Only a
+full power cycle gives the board a clean heap, which is why the recipe above is the one that works.
+
+Deploy does not try to fix this for you: it reports the failure and stops, because freeing or restarting on your
+behalf would leave the board in a state you didn't choose. When the board looks short of memory before a deploy
+starts, the console says so in one line (`only 19 KB free on the board, this flow is 10 KB -- it may not fit`) and
+deploys anyway. That figure is total free memory, not the largest free block, so it is a hint rather than a verdict.
+
+There is no "stop the flow, keep Thingstudio running" action yet. If that is what you need regularly, it is worth
+saying so — it is a design gap, not a setting.
 
 ## WiFi Internal State Error on deploy
 
@@ -195,18 +207,22 @@ the list and deploy again.
 ## Restarting the board
 
 A board can run short of memory after several deploys, or after a flow that uses a lot of it, such as a display.
-The console suggests a restart when a deploy fails with `MemoryError`, the board restarts while starting a flow, or an
-ESP32 has too little memory left for WiFi.
+The console suggests a restart when a deploy fails with `MemoryError`, the board restarts while starting a flow, or
+an ESP32 has too little memory left for WiFi.
 
 The Tools menu has two restarts:
 
-- **Tools → Restart board (soft)** restarts MicroPython. The saved flow starts again with clean memory. USB stays
-  connected.
+- **Tools → Restart board (soft)** restarts MicroPython. The saved flow starts again with a clean interpreter: the
+  flow's own objects are gone, but the heap regions are the same ones and memory MicroPython took from the chip is
+  not returned. USB stays connected.
 - **Tools → Reset board (hard)** resets the whole chip, like its reset button, and frees all memory. A board with
   native USB (Pico, ESP32-S2, S3 and C3) disconnects; click **Connect** when it's back.
 
-Try the soft restart first after a `MemoryError`. When an ESP32 is short of memory for WiFi, only the hard reset
-gives it back. The console says which to use. Deploy is off until the board is back, which can take several seconds.
+A soft restart is enough to clear a flow's own leftovers, such as a big buffer a faulty node left behind. It is not
+enough for a board that cannot fit a *deploy*: nothing short of a full power cycle gives the memory back in one
+piece, so that case is Remove flow…, power cycle, deploy (above). When an ESP32 is short of memory for WiFi, only
+the hard reset helps either. The console says which to use. Deploy is off until the board is back, which can take
+several seconds.
 
 ## Board stuck restarting
 

@@ -93,9 +93,10 @@ export function librariesToSend(needed: Readonly<Record<string, string>>, invent
     .filter((name) => inventory === null || inventory[name] !== needed[name]);
 }
 
-/** Size of one DEP_PUT piece. Small on purpose: the board decodes each message whole, and a fragmented
- * heap (a display flow's framebuffer on a classic ESP32, 2026-10-07) may not have one large block. */
-export const LIBRARY_PIECE_BYTES = 1024;
+/** Size of one DEP_PUT piece. 5 KB: deploys should be quick, and a board that cannot take a 5 KB block has a
+ * memory problem worth seeing rather than one to hide behind smaller pieces (Mike, 2026-10-22). Pieces are
+ * still small enough that a fragmented heap can usually find room. */
+export const LIBRARY_PIECE_BYTES = 5120;
 
 /** The DEP_PUT pieces for one library's compiled files, in order, then its DEP_COMMIT. */
 export function libraryMessages(

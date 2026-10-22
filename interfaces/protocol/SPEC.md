@@ -287,9 +287,18 @@ may hold a 10 KB block even with 100 KB free — the reason a 9.5 KB flow could 
 flow.
 
 `FLOW_PUT` pieces plus `FLOW_COMMIT` are the same treatment `DEP_PUT`/`DEP_COMMIT` gave libraries in runtime 8.0.0:
-every allocation is one piece (1 KB in the editor), which fits wherever there is room. `DEPLOY` stays in the spec and
-stays valid; an editor uses the chunked messages when the board's `runtimeVersion` is 11.3.0 or newer, and `DEPLOY`
-otherwise.
+every allocation is one piece, which fits wherever there is room. The message carries no piece size — that is the
+sender's choice. The editor sends **5 KB** pieces (12.0.0): big enough that a deploy is not slow, small enough that a
+fragmented heap can usually find room. A board that cannot take 5 KB has a memory problem worth seeing, so the
+editor does not shrink around it. This editor always uses the chunked messages — there is no whole-`DEPLOY` fallback,
+because that path needs the one contiguous block chunking exists to avoid. `DEPLOY` stays valid in the spec for older
+editors, and a board that predates 11.3.0 is refused by the major-version gate before anything is sent rather than
+failing mid-transfer.
+
+**Nothing is repaired automatically.** When a flow cannot be received or cannot start, the board answers
+`DEPLOY_ERROR` with the error and its free-memory figure and changes nothing — it does not stop the running flow, free
+memory or restart to make a retry fit. The editor reports that one failure with what the user can do. A deploy is a
+fixed sequence, not a search (see `AGENTS.md`, "one deterministic path, not a recovery chain").
 
 ## 6. Auth and version negotiation
 

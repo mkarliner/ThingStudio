@@ -83,13 +83,18 @@ not here.
   custom images, classic ESP32 first, with the packaging/hosting/flashing docs. Briefing:
   `classic-esp32-firmware-briefing.md`; `decisions/gui-layout.md` (2026-10-09 gate, 2026-10-22 result),
   `decisions/classic-esp32-firmware.md`, `frozen-firmware-spike-briefing.md`.
-- **[LAUNCH]** **Deploy over a running GUI flow: design the deterministic sequence — 2026-10-22.** Still open, and
-  the reason the five-cycle gate has not passed. Facts and what was tried (and removed) are in
-  `classic-esp32-firmware-briefing.md`; `decisions/classic-esp32-firmware.md` carries the "fail well, not work
-  badly" note. Shape to build: one deploy sequence decided before anything is sent (stop the flow, free, receive,
-  start), a "stop the flow, keep Thingstudio" action (today only Remove flow… or Stop flow & open prompt exist),
-  and a single refusal before transfer when the board cannot fit it. Chunked transfer (`FLOW_PUT`/`FLOW_COMMIT`,
-  runtime 11.3.0) already works and stays.
+- **[LAUNCH]** **Deploy over a running GUI flow: stop the flow first — 2026-10-22.** The sequence is settled (Mike:
+  "stop the flow first, anything else is nonsense"): stop, then receive, then start, one path with no retries. Still
+  open: whether stopping is *enough* — a stopped flow gave 50 → 116 KB free and still no block for the flow (a
+  376-byte start failure), and a soft restart keeps the same heap regions, so the board may need a power cycle in
+  the same sequence. Measure that on the CYD before building on it. Also missing: a "stop the flow, keep Thingstudio"
+  action (today only Remove flow… or Stop flow & open prompt exist). Done already (runtime 12.0.0): the automatic
+  recovery chain is gone (no stop-for-retry, no module dropping, no editor retry), a failed deploy reports the
+  board's free-memory figure with the power-cycle recipe, and the pre-deploy memory check warns instead of refusing.
+  Chunked transfer (`FLOW_PUT`/`FLOW_COMMIT`) stays, in 5 KB pieces.
+  **The five-cycle gate is retired** (Mike, 2026-10-22): it required five deploys in one powered session with a
+  display flow resident, which this hardware does not do; `decisions/gui-layout.md` carries the call and what
+  replaces it.
 - **[LAUNCH]** **Classic-ESP32 custom image: built and booting — 2026-10-22.** Inputs in
   `firmware/classic-esp32/` (stage from `runtime_manifest.py`, frozen manifest including the port's own
   `_boot`/`flashbdev`/`inisetup`, single-app partition table, build/install scripts, `_deps.json` generator using
@@ -97,7 +102,7 @@ not here.
   before `.frozen` (runtime 11.1.0). Built against ESP-IDF v5.5.1 / MicroPython v1.28.0: 1.69 MB image, flashed
   to the CYD, `LISTENER_READY`, HELLO listing all 34 frozen libraries, idle free RAM 149 KB / IDF 140 KB /
   largest block 110 KB (the S0 row in `classic-esp32-firmware-briefing.md`). Owed: deploy the hero GUI flow and
-  watch Deploy skip the frozen libraries, then the five-cycle gate (S1-S5), then the user-facing firmware page.
+  watch Deploy skip the frozen libraries, rebuild at 12.0.0, then the user-facing firmware page.
 - **[LAUNCH]** **Button rework -- built and hardware-checked 2026-10-09.** Two-faced nodes in the compiler;
   button output, modes and controlled toggle; modal close reason; touch panel config node (with presets) polled by
   the gui screen; `gui_touch` removed (`decisions/gui-layout.md` 2026-10-09, `gui-button-rework-briefing.md`).

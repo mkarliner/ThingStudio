@@ -269,6 +269,9 @@ One optional, generic classic-ESP32 image (4 MB, no PSRAM) with the runtime and 
 first verified; stock MicroPython stays the default; `/lib` goes ahead of `.frozen` so a pushed library still
 wins; the image ships `/lib/_deps.json` hashed the editor's way, so Deploy skips what is frozen with no `HELLO`
 change; single 3 MB app slot, no OTA; docs + `esptool` install, checksums plus a rebuildable image, no signing
-yet; build inputs in this repo, artifacts as release assets (2026-10-22). 1 entry:
+yet; build inputs in this repo, artifacts as release assets (2026-10-22); a deploy that cannot fit fails once with
+the board's figures and no automatic recovery — piece size is 5 KB, and the editor warns about low memory instead of
+refusing; the image stays **optional, not the recommended route** for the moment, and the five-cycle gate is retired
+(2026-10-22, second and third passes). 1 entry:
 `docs/working-notes/decisions/classic-esp32-firmware.md`.
 

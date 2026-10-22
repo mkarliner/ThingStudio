@@ -31,14 +31,35 @@ path works, they're load-bearing. This is already the working convention this pr
 work (§5's fault isolation, the wire protocol's adversarial framing tests, bounded timeouts on network I/O) — worth
 stating explicitly so it's applied consistently to new work too, not just re-derived per feature.
 
-**Corollary, 2026-10-22: one deterministic path, not a recovery chain.** When a failure shows up, the first
-question is "what is the limit?", not "what retry gets around it?". Adding a fallback per observed error — free
-this, retry that, restart, try again — produces a system whose states nobody can describe: it *appears* to work,
-failures move rather than disappear, and the operator cannot tell what happened. Prefer one sequence decided before
-anything is sent, with each step a named state and one clear failure per step; if the board or platform cannot do
-the thing, say so in one line up front. Mike's words, after an afternoon of exactly that chain: *"we're spent hours
+**Corollary, 2026-10-22: one deterministic path, not a recovery chain — fail well, not work badly.** When a failure
+shows up, the first question is "what is the limit?", not "what retry gets around it?". Adding a fallback per observed
+error — free this, retry that, restart, try again — produces a system whose states nobody can describe: it *appears*
+to work, failures move rather than disappear, and the operator cannot tell what happened. Prefer one sequence decided
+before anything is sent, with each step a named state and one clear failure per step; if the board or platform cannot
+do the thing, say so in one line up front. Mike's words, after an afternoon of exactly that chain: *"we're spent hours
 on this… it falls squarely on 'fail well, not work badly'."* Full incident: `docs/working-notes/decisions/
 classic-esp32-firmware.md` (deploy over a running flow, 2026-10-22).
+
+The operative half — what a failure looks like when a session is tempted to repair it (restated by Mike the same
+evening, after the first version of this rule still shipped three automatic repairs):
+
+- **No automatic recovery inside a user action.** If a deploy does not fit, it fails once, says so, and stops. Do not
+  free memory, stop what the user is running, drop modules, restart, retry, or escalate on their behalf. A repair
+  nobody asked for hides the limit and lands the user in a state they did not choose.
+- **Warn on a prediction; refuse only on a fact.** A version mismatch or an unreadable flow is a fact — refuse.
+  A memory estimate is not: the user may know the board better than the figure does. Say what you expect ("this may
+  not fit"), then do as asked.
+- **Every failure line carries three things**: what happened, the figure that names it (bytes free, message size,
+  host:port, the node), and the one or two things the user can do next. Nothing the editor could have done itself.
+- **Prefer the honest size to the safe size.** Shrinking work into ever-smaller pieces to dodge a limit makes the
+  product slow and the limit invisible. Pick the size that makes the operation quick; a board that cannot take it has
+  a problem worth seeing.
+- **A retransmit is not a repair.** Resending an unacknowledged piece, or a bounded timeout that gives up and
+  reports, stays: those are named states of one path. A retransmit that renegotiates the plan (smaller piece, freed
+  memory, different flow) is the chain this rule forbids.
+
+Mike on the second half: *"Don't be too clever… you can warn about limited memory, but the user may know better…
+if it fails, say so clearly with some suggestions about what to do, remove any attempts at automatic fixes."*
 
 **Corollary, 2026-09-06: don't chase every board's idiosyncrasies — make the failure legible instead.** The
 board/platform landscape (ESP32/ESP-IDF, RP2040/RP2350's cyw43, and whatever comes after) is wide, and each one's

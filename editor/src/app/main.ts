@@ -153,7 +153,7 @@ import type { BoardSettingsResultMessage, HelloMessage, Message, NodeStatusMessa
 import { checkRuntimeBuild, decideDeploy } from "../protocol/version.js";
 import { explainDeployImportError, networkWarningBeforeDeploy } from "./import-error-help.js";
 import { editorVersionLabel, editorVersionLine } from "./editor-version.js";
-import { RESTART_HINT, deployMemoryAdvice, looksLikeOutOfMemory, lowMemoryWarningBeforeDeploy } from "./memory-advice.js";
+import { DEPLOY_MEMORY_HINT, deployMemoryAdvice, looksLikeOutOfMemory, lowFlowMemoryWarning, lowMemoryWarningBeforeDeploy } from "./memory-advice.js";
 import { dependencyHash, findImportedModules, librariesToSend, libraryMessages, resolveDependencies, type DependencyInfo } from "../compiler/flow-dependencies.js";
 import { createThingstudioEditor, type ThingstudioEditor } from "./rete/editor-setup.js";
 import { NODE_FACTORIES, CustomNode, type AnyThingstudioNode } from "./rete/nodes.js";
@@ -1400,7 +1400,7 @@ function cancelAllWaits(reason: string): void {
 // bump-discipline rule), so this is the level that actually stops an
 // unsafe DEPLOY rather than letting it crash on the device.
 // 2.0.0 (2026-09-23): EXEC, STOP_TO_PROMPT, safe mode. Must match listener.py's _RUNTIME_VERSION.
-const EDITOR_TARGET_VERSION: ProtocolVersion = { major: 11, minor: 3, patch: 0 }; // 11.3.0 2026-10-22: chunked deploy (FLOW_PUT/FLOW_COMMIT) when the board has it -- a whole DEPLOY needs one contiguous block a split heap may not have. 11.2.2 2026-10-22: the board also drops the flow's library modules when freeing for a retried deploy (the GUI framebuffer lives in their module globals). 11.2.1 2026-10-22: board drops the flow module when freeing for a retried deploy (a GUI framebuffer lives there); wait past its own free before the HELLO that gates the retry. 11.2.0 2026-10-22: the board stops a running flow it cannot receive a DEPLOY over, and the editor retries once -- minor, no codegen change; 11.1.1 2026-10-22: frozen libraries stay in the board's index (remove_unused) -- patch, no codegen change; 11.1.0 2026-10-22: /lib ahead of frozen modules on sys.path (pushed library still overrides a custom image) -- minor, no codegen change; 11.0.0 2026-10-17: runtime.settings (device_settings.py), codegen-visible -> major; 10.1.0 2026-10-14: persisted paths follow the board's filesystem root (stm32/pyboard /flash) -- minor, no codegen change. 10.0.0 2026-10-11: new adc/encoder/neopixel nodes (vendored AADC/Encoder flow deps), codegen-visible -> major. 9.2.0 2026-10-08: DEPLOY_ERROR when the board has no room to receive a flow (minor, no codegen change); 9.1.0 2026-10-08: WiFi watcher leaves WiFi off unless wanted (minor, no codegen change); 9.0.0 2026-10-07: DEP_ACK per piece, so a USB-UART board isn't overrun; 8.0.0 2026-10-07: libraries sent in 1 KB pieces + DEP_COMMIT (a whole-library DEP_PUT hit MemoryError on a fragmented ESP32 heap); 7.0.0 2026-10-07: flow dependencies (DEP_PUT, DEPLOY.dependencies; libraries in /lib, installed per flow); 6.0.0 2026-09-26: bme280 driver on the board; 5.1.0 2026-09-25: startup reason (getattr, so 5.0.0 still runs it), ESP-IDF heap fields; 5.0.0 2026-09-25: mqtt_as active(True) guard; 4.0.0 2026-09-25: mqtt_as guard, ESP32 MQTT joins WiFi first; 3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS
+const EDITOR_TARGET_VERSION: ProtocolVersion = { major: 12, minor: 0, patch: 0 }; // 12.0.0 2026-10-22: deploy pieces are 5 KB (a 1 KB piece made deploys slow; a board that cannot take 5 KB is worth seeing, not hiding) and the editor no longer runs a recovery chain when a deploy doesn't fit -- the board's DEPLOY_ERROR is reported once with advice. Major: an 11.3 board may refuse a 5 KB piece, so decideDeploy must refuse up front instead of failing mid-transfer. 11.3.0 2026-10-22: chunked deploy (FLOW_PUT/FLOW_COMMIT) when the board has it -- a whole DEPLOY needs one contiguous block a split heap may not have; 11.2.0 2026-10-22: the board stopped a running flow it could not receive a DEPLOY over and the editor retried once (removed again in 12.0.0); 11.1.1 2026-10-22: frozen libraries stay in the board's index (remove_unused) -- patch, no codegen change; 11.1.0 2026-10-22: /lib ahead of frozen modules on sys.path (pushed library still overrides a custom image) -- minor, no codegen change; 11.0.0 2026-10-17: runtime.settings (device_settings.py), codegen-visible -> major; 10.1.0 2026-10-14: persisted paths follow the board's filesystem root (stm32/pyboard /flash) -- minor, no codegen change. 10.0.0 2026-10-11: new adc/encoder/neopixel nodes (vendored AADC/Encoder flow deps), codegen-visible -> major. 9.2.0 2026-10-08: DEPLOY_ERROR when the board has no room to receive a flow (minor, no codegen change); 9.1.0 2026-10-08: WiFi watcher leaves WiFi off unless wanted (minor, no codegen change); 9.0.0 2026-10-07: DEP_ACK per piece, so a USB-UART board isn't overrun; 8.0.0 2026-10-07: libraries sent in 1 KB pieces + DEP_COMMIT (a whole-library DEP_PUT hit MemoryError on a fragmented ESP32 heap); 7.0.0 2026-10-07: flow dependencies (DEP_PUT, DEPLOY.dependencies; libraries in /lib, installed per flow); 6.0.0 2026-09-26: bme280 driver on the board; 5.1.0 2026-09-25: startup reason (getattr, so 5.0.0 still runs it), ESP-IDF heap fields; 5.0.0 2026-09-25: mqtt_as active(True) guard; 4.0.0 2026-09-25: mqtt_as guard, ESP32 MQTT joins WiFi first; 3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS
 
 // This editor's own device-runtime/src git SHA, injected at build/dev-
 // server-start time by vite.config.ts's `define` (see that file,
@@ -2870,7 +2870,7 @@ async function installFlowDependencies(source: string): Promise<Record<string, s
       }
       if (ack.type === "DEP_ACK" && !ack.ok) {
         logLine(`[deploy failed] library ${name} not accepted, flow unchanged: ${ack.error ?? ack.code ?? "unknown error"}`, "err");
-        if (looksLikeOutOfMemory(ack.error)) logLine(`[deploy failed] board out of memory. ${RESTART_HINT}`, "err");
+        if (looksLikeOutOfMemory(ack.error)) logLine(`[deploy failed] board out of memory. ${DEPLOY_MEMORY_HINT}`, "err");
         boardDependencies = null;
         return null;
       }
@@ -2888,7 +2888,7 @@ async function installFlowDependencies(source: string): Promise<Record<string, s
     }
     if (result.type === "DEP_RESULT" && !result.ok) {
       logLine(`[deploy failed] library ${name} not installed, flow unchanged: ${result.error ?? result.code ?? "unknown error"}`, "err");
-      if (looksLikeOutOfMemory(result.error)) logLine(`[deploy failed] board out of memory. ${RESTART_HINT}`, "err");
+      if (looksLikeOutOfMemory(result.error)) logLine(`[deploy failed] board out of memory. ${DEPLOY_MEMORY_HINT}`, "err");
       boardDependencies = null;
       return null;
     }
@@ -2897,9 +2897,11 @@ async function installFlowDependencies(source: string): Promise<Record<string, s
   return required;
 }
 
-const PIECE_TIMEOUT_MS = 10000; // one 1 KB piece: write to flash and answer
+const PIECE_TIMEOUT_MS = 10000; // one 5 KB piece: write to flash and answer
 const PIECE_RETRIES = 2; // resends of a piece that got no answer (a dropped line, see below)
-const FLOW_PIECE_BYTES = 1024; // one FLOW_PUT piece: small enough to fit wherever a split heap has room
+const FLOW_PIECE_BYTES = 5120; // one FLOW_PUT piece: 5 KB, because deploys should be quick -- a board that
+// cannot take a 5 KB block has a memory problem worth seeing, not one to hide behind smaller pieces (Mike,
+// 2026-10-22)
 const DEPLOY_TIMEOUT_MS = 30000; // comfortably exceeds listener.py's own READ_TIMEOUT_S=8 across a few internal phases
 
 el("btnDeploy").addEventListener("click", async () => {
@@ -2980,6 +2982,10 @@ el("btnDeploy").addEventListener("click", async () => {
       return;
     }
     logLine(`[compiled -- ${mpyBytes.length} bytes of bytecode]`, "");
+    // Small board, big flow: say so once and carry on (see lowFlowMemoryWarning's own note -- a nudge from a
+    // figure that predicts badly, never a gate).
+    const flowMemoryWarning = lowFlowMemoryWarning(lastHello, mpyBytes.length);
+    if (flowMemoryWarning) logLine(`[deploy] ${flowMemoryWarning}`, "");
 
     // Libraries the flow imports go onto the board first (flow dependencies, 2026-10-07). A failure
     // here is logged and leaves the board's current flow untouched.
@@ -2999,37 +3005,18 @@ el("btnDeploy").addEventListener("click", async () => {
     // while the new flow started). It answers the deploy as well as an ack does: it says what's running.
     // Not while a HELLO_REQUEST is unanswered: that HELLO is probably its reply, not a restart.
     //
-    // Recovery from "no room to receive the flow" escalates, both steps automatic (CYD, 2026-10-22):
-    //   1. the board stops the running flow when it answers DEPLOY_ERROR MemoryError (runtime 11.2.0+),
-    //      then this retries once the board says it has the memory back;
-    //   2. if that still doesn't fit -- a GUI flow leaves the MicroPython heap too fragmented for the
-    //      DEPLOY body even with 116 KB free -- clear the flow from the board and soft-restart it, so
-    //      the next attempt runs on a fresh heap. Costs one restart, replaces Remove flow + Reset board.
+    // There is deliberately no recovery sequence here (Mike, 2026-10-22): no retry after a MemoryError, no
+    // stopping the flow for the user, no escalating free-then-restart. Two attempts at exactly that chain
+    // were built and removed -- each fixed the error in front of it and the next one arrived. A deploy that
+    // does not fit says so once, with the board's own figures and what the user can do (memory-advice.ts);
+    // the next move is theirs, and a deploy is a fixed sequence rather than a search.
 
-    /** Ask for HELLO and wait for one; used to know the board is ready (and how much memory it has). */
-    const awaitHello = async (why: string): Promise<void> => {
-      try {
-        const helloP = waitForMessage((m) => m.type === "HELLO", 10000);
-        helloRequestsPending += 1;
-        try {
-          await transport.send({ type: "HELLO_REQUEST" });
-          const hello = await helloP;
-          if (hello.type === "HELLO") logLine(`[deploy] ${why} ${formatMemoryLine(hello).replace(/^\[memory\] /, "")}`, "");
-        } finally {
-          helloRequestsPending -= 1;
-        }
-      } catch {
-        logLine(`[deploy] no answer after ${why}; trying the deploy anyway`, "err");
-      }
-    };
-
-    // Chunked deploy (runtime 11.3.0+): the flow goes in 1 KB pieces, each answered. A whole DEPLOY needs one
+    // Chunked deploy, always: the flow goes in 5 KB pieces, each answered. A whole DEPLOY needs one
     // contiguous block the size of the message, which a split heap on a classic ESP32 may not have even with
     // 100 KB free -- the reason a 9.5 KB flow could not be deployed over a running GUI flow (2026-10-22).
-    const chunkedDeploy = (): boolean => {
-      const v = lastHello?.runtimeVersion ?? null;
-      return v !== null && (v.major > 11 || (v.major === 11 && v.minor >= 3));
-    };
+    // There is no whole-DEPLOY fallback even when no HELLO arrived: that path needs the very block this one
+    // exists to avoid, so it can only fail later and less clearly. Older boards are refused up front by the
+    // version gate above (this editor targets 12.0.0; an 11.x board is a different major).
 
     /** All the pieces, each paced by its own FLOW_ACK. Returns a DEPLOY_ERROR to report, or null when done. */
     const sendFlowPieces = async (): Promise<Message | null> => {
@@ -3069,44 +3056,24 @@ el("btnDeploy").addEventListener("click", async () => {
       );
       // lastWifiProvision was computed alongside this same compile, by the currentSource() call
       // refreshPreview() (above) just made -- see that field's own doc comment.
-      if (chunkedDeploy()) {
-        const failed = await sendFlowPieces();
-        if (failed !== null) {
-          ackP.catch(() => {}); // the ack we never wait for must not become an unhandled rejection
-          return failed;
-        }
-        await transport.send({
-          type: "FLOW_COMMIT",
-          total: mpyBytes.length,
-          flowName,
-          deployId,
-          wifiProvision: lastWifiProvision,
-          dependencies,
-          staticData: new Uint8Array(0),
-        });
-      } else {
-        await transport.send({
-          type: "DEPLOY",
-          bytecode: mpyBytes,
-          staticData: new Uint8Array(0),
-          flowName,
-          deployId,
-          wifiProvision: lastWifiProvision,
-          dependencies,
-        });
+      const failed = await sendFlowPieces();
+      if (failed !== null) {
+        ackP.catch(() => {}); // the ack we never wait for must not become an unhandled rejection
+        return failed;
       }
+      await transport.send({
+        type: "FLOW_COMMIT",
+        total: mpyBytes.length,
+        flowName,
+        deployId,
+        wifiProvision: lastWifiProvision,
+        dependencies,
+        staticData: new Uint8Array(0),
+      });
       return await ackP;
     };
     try {
-      let result = await attemptDeploy();
-      if (result.type === "DEPLOY_ERROR" && result.code === "MemoryError") {
-        logLine("[deploy] board had no room; it has stopped the running flow, waiting for it to settle", "");
-        // Wait before asking: the board frees 200 ms after answering, and its HELLO answers immediately,
-        // so asking too early reported the *old* figures (CYD, 2026-10-22).
-        await new Promise((resolve) => setTimeout(resolve, 900));
-        await awaitHello("board now");
-        result = await attemptDeploy();
-      }
+      const result = await attemptDeploy();
       if (result.type === "HELLO") {
         const running = result.currentFlowDeployId === deployId;
         logAdvice(

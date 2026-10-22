@@ -145,6 +145,11 @@ class ListenerProcess:
                 raise AssertionError("timed out waiting for %s; saw:\n%s" % (description, "\n".join(snapshot)))
             time.sleep(0.05)
 
+    def has_line(self, predicate):
+        """True if any line printed so far matches -- for asserting something did *not* happen."""
+        with self._lock:
+            return any(predicate(line) for line in self._history)
+
     def send_message(self, message):
         frame = protocol.encode_message(message)
         b64 = base64.b64encode(frame).decode("ascii")
@@ -250,7 +255,7 @@ def test_chunked_deploy_runs_the_flow():
             listener.wait_for(lambda l: l == "LISTENER_READY", description="LISTENER_READY")
             offset = 0
             while offset < len(flow):
-                piece = flow[offset : offset + 512]
+                piece = flow[offset : offset + 5120]
                 listener.send_message({"type": "FLOW_PUT", "offset": offset, "total": len(flow), "data": piece})
                 listener.wait_for(
                     lambda l, o=offset: l.startswith(F64_PREFIX)
@@ -293,10 +298,11 @@ def test_chunked_deploy_refuses_an_incomplete_flow():
             listener.close()
 
 
-def test_receive_oom_stops_the_running_flow_so_a_retry_fits():
-    # 11.2.0 (2026-10-22, CYD): a DEPLOY that can't be received used to leave the running flow holding the
-    # memory, so the editor's retry hit the same wall and the only way through was Remove flow + a manual
-    # reset. The listener now stops the running flow a moment after answering DEPLOY_ERROR.
+def test_receive_oom_leaves_the_running_flow_alone():
+    # 12.0.0 (2026-10-22, Mike): the listener stopped the running flow, dropped _flow and forgot library
+    # modules so an editor's retry would fit (11.2.x). That was a recovery chain around a board limit: the
+    # retry still failed, one error later. Now the board answers DEPLOY_ERROR with its own figures and
+    # changes nothing -- what to do next is the editor's advice and the user's decision.
     with tempfile.TemporaryDirectory() as tmpdir:
         small = _compile_flow(tmpdir, "flow_small", "print('SMALL_FLOW_RAN')\n")
         listener = ListenerProcess(tmpdir, mp_args=("-X", "heapsize=200k"))
@@ -312,17 +318,13 @@ def test_receive_oom_stops_the_running_flow_so_a_retry_fits():
                 description="DEPLOY_ERROR for the deploy that didn't fit",
             )
             assert _decode_f64_line(line)["code"] == "MemoryError", line
-            freed = listener.wait_for(lambda l: l.startswith("LISTENER_FREED"), timeout=15,
-                                      description="the running flow being stopped to make room")
-            # Cancelling the tasks isn't enough: the flow module's globals hold the memory (a GUI
-            # flow's framebuffer), so the module has to go too.
-            listener.send_message({"type": "EXEC", "code": "print('FLOW_MODULE_GONE' if '_flow' not in sys.modules else 'FLOW_MODULE_STILL_THERE')"})
-            listener.wait_for(lambda l: l == "FLOW_MODULE_GONE", timeout=10,
-                              description="the flow module dropped after the free")
 
-            # The retry an editor would send now fits, and the listener is still healthy.
-            listener.send_message({"type": "DEPLOY", "bytecode": small, "staticData": b""})
-            listener.wait_for(lambda l: l == "SMALL_FLOW_RAN", description="the retried deploy running")
+            # The running flow is untouched, and no freeing happens behind the user's back.
+            listener.send_message({"type": "EXEC", "code": "print('FLOW_STILL_THERE' if '_flow' in sys.modules else 'FLOW_GONE')"})
+            listener.wait_for(lambda l: l == "FLOW_STILL_THERE", timeout=10,
+                              description="the running flow still loaded after the refused deploy")
+            time.sleep(0.3)  # anything the listener scheduled to free memory would have run by now
+            assert not listener.has_line(lambda l: l.startswith("LISTENER_FREED")), "the listener freed something"
         finally:
             listener.close()
 
@@ -1260,7 +1262,7 @@ TESTS = [
     test_deploy_too_big_for_memory_is_answered_not_timed_out,
     test_chunked_deploy_runs_the_flow,
     test_chunked_deploy_refuses_an_incomplete_flow,
-    test_receive_oom_stops_the_running_flow_so_a_retry_fits,
+    test_receive_oom_leaves_the_running_flow_alone,
 ]
 
 

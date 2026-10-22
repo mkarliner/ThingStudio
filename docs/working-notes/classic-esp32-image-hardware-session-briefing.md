@@ -97,13 +97,31 @@ run to completion.
 2. Add the missing transition — stop the flow but keep the listener and the saved flow — since both the deploy
    sequence and any "your board is too full" advice depend on it.
 3. Move the deploy onto it: refuse early, or stop-and-free first, never "send and recover".
-4. Reflash 11.3.x, do the S0-S5 numbers again on a clean board, then the five-cycle gate.
+4. ~~Reflash 11.3.x, do the S0-S5 numbers again on a clean board, then the five-cycle gate.~~ Superseded — see
+   "Correction, later the same evening" below: the gate is retired, and the open measurement is whether stopping
+   the flow is enough or whether the sequence needs a power cycle.
 5. Only then the user-facing page for the image.
+
+## Correction, later the same evening (2026-10-22)
+
+Mike, after reading this: **"stop the flow first, anything else is nonsense"**, and **the five-cycle gate can go, at
+least on small memory boards**. Consequences, all applied in the code and docs:
+
+- The recovery chain is fully gone (12.0.0): no stop-for-retry, no module dropping, no editor retry. A failed deploy
+  reports the board's free figure and stops.
+- Deploy pieces are 5 KB, not 1 KB — a 1 KB piece made deploys slow; a board that cannot take 5 KB has a problem
+  worth seeing.
+- The memory check warns before a deploy and never refuses.
+- The user-facing answer to "board too full to receive the flow" is now **Remove flow…, power cycle the board (unplug
+  and replug the USB, or Reset board (hard)), deploy** — a soft restart does not do it (same heap regions, no chip
+  memory returned).
+- `decisions/gui-layout.md` records the gate's retirement; `outstanding-items.md` carries the stop-first sequence as
+  the open work.
 
 ## Questions for Mike
 
-- Is a deploy that *restarts the flow* acceptable (i.e. the flow is down for the duration), or must it stay up?
-  That decides whether the sequence can stop-then-receive, or needs the receive side to work with the flow running.
-- Should the editor refuse a deploy it knows cannot fit, rather than attempt it? The two feel different to a user.
+- ~~Is a deploy that restarts the flow acceptable?~~ Answered: yes — stop the flow first, anything else is nonsense.
+- ~~Should the editor refuse a deploy it knows cannot fit?~~ Answered: no — warn, the user may know better.
 - After the gate: does the image stay optional-but-documented, or does the CYD path make it the recommended route
-  for GUI flows on classic ESP32?
+  for GUI flows on classic ESP32? **Answered 2026-10-22: optional for the moment** — not the recommended route,
+  revisited on evidence after the stop-first sequence and a measured reflash.

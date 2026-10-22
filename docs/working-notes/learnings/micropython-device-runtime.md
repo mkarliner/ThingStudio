@@ -319,10 +319,17 @@ regions were small. Worse, it varies with history: a 16 KB probe succeeded 40 se
 Consequences worth remembering:
 
 - A "free RAM" figure says nothing about whether a particular message will fit. For a fit check, try the allocation
-  (the listener's `LISTENER_FREED` probe does exactly that).
-- The fix for a big payload is pieces, not more free space — which is why libraries went to 1 KB `DEP_PUT` pieces and
-  why the flow bytecode now does the same (`FLOW_PUT`/`FLOW_COMMIT`, runtime 11.3.0).
-- A soft reset (or a reflash) is the only way to get a fresh heap; freeing objects scatters it further.
+  (the listener's old `LISTENER_FREED` probe did exactly that; the probe went with the recovery chain in 12.0.0, but
+  the technique is the right one if a fit check is ever needed again).
+- The fix for a big payload is pieces, not more free space — which is why libraries went to `DEP_PUT` pieces and
+  the flow bytecode does the same (`FLOW_PUT`/`FLOW_COMMIT`). Piece size is 5 KB since 12.0.0: 1 KB pieces were
+  correct about the heap and wrong about the wallet — each piece waits for an ack, so hundreds of them make a
+  deploy slow.
+- A soft reset (or a reflash) is the only way to get a fresh interpreter; freeing objects scatters the heap
+  further. It is **not** the way to get a bigger block: `gc_init()` runs again over the same regions, so a
+  fragmented heap stays fragmented. Only a power cycle (a full chip reset) rebuilds the heap from the chip's own
+  memory, which is why the user-facing recipe for "too full to receive the flow" is Remove flow… → power cycle →
+  deploy (`docs/user-guide/debugging.md`, 2026-10-22).
 
 ## Redeploy over a running GUI flow: stopping the flow isn't freeing it, 2026-10-22
 
@@ -342,6 +349,12 @@ to be received while the running flow held its framebuffer. Two device-side fact
 
 Both are easy to get wrong in a way that looks like "not enough memory": three separate retries failed
 before the log showed free RAM unchanged across `LISTENER_FREED`. When a free is claimed, measure it.
+
+**Superseded the same evening (12.0.0).** Both behaviours above were removed: the listener no longer frees anything
+for a retry, and the editor no longer retries. The facts stay true and are the reason the deploy cannot succeed on
+this board while a GUI flow runs — `_deploy_flow` already deletes `_flow` just before `import _flow`, and even then
+the import failed on 376 bytes. What changed is the conclusion: it is a board limit to state and design around, not
+an error to recover from. See `decisions/classic-esp32-firmware.md`, second pass.
 
 ## A FROZEN_MANIFEST replaces the port's manifest; it does not add to it, 2026-10-22
 

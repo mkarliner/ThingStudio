@@ -183,7 +183,7 @@ F64_PREFIX = "F64:"
 _HEARTBEAT_PIN = 10
 _HEARTBEAT_PERIOD_MS = 200
 
-_RUNTIME_VERSION = {"major": 11, "minor": 3, "patch": 0}  # 11.3.0 2026-10-22: chunked deploy (FLOW_PUT/FLOW_COMMIT/FLOW_ACK) -- a whole DEPLOY needs one contiguous block the size of the message and a split heap may not have it; a decode MemoryError now answers DEPLOY_ERROR instead of hanging the editor. Minor: no codegen change; the old DEPLOY still works. 11.2.2 2026-10-22: freeing a flow for a retried DEPLOY also drops the flow's library modules -- thingstudio_gui/tsgui_* keep the framebuffer in module globals, which left only 73 KB free and the retry still failing. Patch: no codegen change. 11.2.1 2026-10-22: freeing the running flow for a retried DEPLOY also drops the _flow module, which is where a GUI flow's framebuffer lives -- cancelling tasks alone reclaimed almost nothing. Patch: no codegen change. 11.2.0 2026-10-22: when a message cannot be received for lack of memory, the listener stops the running flow so the editor's retried DEPLOY fits (a GUI flow replacing a running GUI flow) -- minor: no codegen change. 11.1.1 2026-10-22: remove_unused keeps frozen libraries in the index (their modules are in flash, not files) -- it was pruning them, so the next Deploy pushed copies over them and lost the heap saving. Patch: no codegen change. 11.1.0 2026-10-22: /lib goes ahead of frozen modules on sys.path (deps.py), so a pushed library still overrides a custom firmware image's frozen copy -- minor: no codegen change; 11.0.0 2026-10-17: runtime.settings (device_settings.py, a flowName-namespaced persistent KV), codegen-visible -> major; 10.1.0 2026-10-14: persisted paths follow the board's filesystem root (board_fs.py), so the stm32/pyboard port (mounted at /flash, not /) can write its flow/state -- minor: no codegen change; 10.0.0 2026-10-11: new adc/encoder/neopixel nodes (vendored AADC/Encoder flow deps) -- codegen-visible, so major. 9.2.0 2026-10-08: a MemoryError receiving a message answers DEPLOY_ERROR instead of leaving the editor to time out -- minor: no codegen change; 9.1.0 2026-10-08: the WiFi watcher no longer starts the WiFi driver for a flow that doesn't use the network (it ate ESP-IDF memory, and failed noisily on a full CYD) -- minor: nothing generated depends on it; 9.0.0 2026-10-07: DEP_ACK per DEP_PUT piece (unpaced pieces overflowed a USB-UART board's receive buffer), RESTART; 8.0.0 2026-10-07: libraries sent in 1 KB pieces (DEP_PUT) plus DEP_COMMIT -- one big DEP_PUT failed with MemoryError on a fragmented ESP32 heap; 7.0.0 2026-10-07: flow dependencies (DEP_PUT, DEPLOY.dependencies, libraries in /lib instead of every board getting every library); 6.0.0 2026-09-26: vendored bme280_float.py and runtime.shared() (bme280/I2C flows use both, so an older board fails them); 5.1.0 2026-09-25: runtime.start_reason, ESP-IDF heap in HELLO/DEPLOY_ACK -- minor only: startup codegen reads start_reason with getattr, so its flows still run on 5.0.0; 5.0.0 same day: mqtt_as active(True) only when inactive (4.0.0 same day: vendored mqtt_as wifi_connect() guard -- MQTT codegen now joins WiFi first on ESP32 (3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS; 2.0.0 was 2026-09-23: EXEC, STOP_TO_PROMPT, safe mode; 1.0.0 was 2026-09-10: NODE_STATUS)
+_RUNTIME_VERSION = {"major": 12, "minor": 0, "patch": 0}  # 12.0.0 2026-10-22: no automatic recovery from a deploy that cannot fit -- the listener no longer stops the running flow, drops _flow or forgets library modules to make a retry fit (11.2.0/11.2.1/11.2.2's chain, removed); it answers DEPLOY_ERROR with the free-memory figure and leaves the running flow alone. Major: this pairs with the editor's 5 KB deploy pieces (a split heap that took a 1 KB piece may refuse a 5 KB one), so an old board must be refused up front by decideDeploy rather than fail mid-transfer. 11.3.0 2026-10-22: chunked deploy (FLOW_PUT/FLOW_COMMIT/FLOW_ACK) -- a whole DEPLOY needs one contiguous block the size of the message and a split heap may not have it; a decode MemoryError now answers DEPLOY_ERROR instead of hanging the editor. Minor: no codegen change; the old DEPLOY still works. 11.2.2 2026-10-22: freeing a flow for a retried DEPLOY also drops the flow's library modules -- thingstudio_gui/tsgui_* keep the framebuffer in module globals, which left only 73 KB free and the retry still failing. Patch: no codegen change. 11.2.1 2026-10-22: freeing the running flow for a retried DEPLOY also drops the _flow module, which is where a GUI flow's framebuffer lives -- cancelling tasks alone reclaimed almost nothing. Patch: no codegen change. 11.2.0 2026-10-22: when a message cannot be received for lack of memory, the listener stops the running flow so the editor's retried DEPLOY fits (a GUI flow replacing a running GUI flow) -- minor: no codegen change. 11.1.1 2026-10-22: remove_unused keeps frozen libraries in the index (their modules are in flash, not files) -- it was pruning them, so the next Deploy pushed copies over them and lost the heap saving. Patch: no codegen change. 11.1.0 2026-10-22: /lib goes ahead of frozen modules on sys.path (deps.py), so a pushed library still overrides a custom firmware image's frozen copy -- minor: no codegen change; 11.0.0 2026-10-17: runtime.settings (device_settings.py, a flowName-namespaced persistent KV), codegen-visible -> major; 10.1.0 2026-10-14: persisted paths follow the board's filesystem root (board_fs.py), so the stm32/pyboard port (mounted at /flash, not /) can write its flow/state -- minor: no codegen change; 10.0.0 2026-10-11: new adc/encoder/neopixel nodes (vendored AADC/Encoder flow deps) -- codegen-visible, so major. 9.2.0 2026-10-08: a MemoryError receiving a message answers DEPLOY_ERROR instead of leaving the editor to time out -- minor: no codegen change; 9.1.0 2026-10-08: the WiFi watcher no longer starts the WiFi driver for a flow that doesn't use the network (it ate ESP-IDF memory, and failed noisily on a full CYD) -- minor: nothing generated depends on it; 9.0.0 2026-10-07: DEP_ACK per DEP_PUT piece (unpaced pieces overflowed a USB-UART board's receive buffer), RESTART; 8.0.0 2026-10-07: libraries sent in 1 KB pieces (DEP_PUT) plus DEP_COMMIT -- one big DEP_PUT failed with MemoryError on a fragmented ESP32 heap; 7.0.0 2026-10-07: flow dependencies (DEP_PUT, DEPLOY.dependencies, libraries in /lib instead of every board getting every library); 6.0.0 2026-09-26: vendored bme280_float.py and runtime.shared() (bme280/I2C flows use both, so an older board fails them); 5.1.0 2026-09-25: runtime.start_reason, ESP-IDF heap in HELLO/DEPLOY_ACK -- minor only: startup codegen reads start_reason with getattr, so its flows still run on 5.0.0; 5.0.0 same day: mqtt_as active(True) only when inactive (4.0.0 same day: vendored mqtt_as wifi_connect() guard -- MQTT codegen now joins WiFi first on ESP32 (3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS; 2.0.0 was 2026-09-23: EXEC, STOP_TO_PROMPT, safe mode; 1.0.0 was 2026-09-10: NODE_STATUS)
 # (runtime.report_status) is a hard dependency of wifi-status.ts's/mqtt-shared.ts's codegen now -- an editor
 # with this change targeting a pre-2026-09-10 runtime would crash on deploy (AttributeError: report_status),
 # not degrade gracefully. See CLAUDE.md's "Device-runtime version bump discipline" -- decideDeploy() only
@@ -587,56 +587,18 @@ def _report_receive_oom(e):
     running). The message never reached _handle_deploy, so nothing answered it and the editor waited out its
     30 s timeout. Answer with DEPLOY_ERROR instead; an editor not waiting for one just logs it.
 
-    11.2.0 (2026-10-22): also stop the running flow, a moment later. Without that, the editor's retry meets
-    exactly the same wall -- the flow holding the memory is the one being replaced -- and the only way through
-    was Tools -> Remove flow plus a manual reset. Stopping it costs the flow that was about to be replaced
-    anyway; HELLO then reports no flow running, which is the truth."""
+    Nothing else happens (Mike, 2026-10-22): the listener does not stop the running flow, drop modules or free
+    anything to make a retry fit. Each of those was a local answer to the previous error, and the board still
+    could not start the next flow. The running flow is left alone and the failure says what it was; what to do
+    about it is the editor's advice and the user's call."""
     if not isinstance(e, MemoryError):
         return
     gc.collect()
+    print("LISTENER_ERR no room to receive a message (%d bytes free): the running flow is using the memory"
+          % (gc.mem_free(),))
     _send_message_safe({"type": "DEPLOY_ERROR", "code": "MemoryError",
-                        "message": "no room to receive the flow; the running flow is using the memory"})
-    try:
-        asyncio.create_task(_free_running_flow_for_retry())
-    except Exception as e2:  # noqa: BLE001 -- the report above already went out; never fail here
-        print("LISTENER_WARN could not schedule freeing the running flow: %r" % (e2,))
-
-
-async def _free_running_flow_for_retry():
-    """Give the DEPLOY_ERROR a moment to leave, then free what the retried DEPLOY needs."""
-    await asyncio.sleep_ms(200)
-    try:
-        await runtime.cancel_running()
-    except Exception as e:  # noqa: BLE001 -- a flow that won't stop cleanly must not kill the listener
-        print("LISTENER_WARN could not stop the running flow: %r" % (e,))
-    # Cancelling the tasks stops the flow; it does not release the flow module's own globals (a GUI
-    # flow's framebuffer lives there), and those are most of the memory the retry needs. The deploy
-    # path does this same thing just before `import _flow` -- see _handle_deploy.
-    try:
-        if "_flow" in sys.modules:
-            del sys.modules["_flow"]
-    except Exception as e:  # noqa: BLE001
-        print("LISTENER_WARN could not drop the flow module: %r" % (e,))
-    # The libraries hold the rest: thingstudio_gui/tsgui_* keep the panel and the framebuffer in their
-    # own module globals, so dropping only _flow left 73 KB free on a CYD and the retry still failed
-    # (2026-10-22). They get imported again by the next flow.
-    try:
-        if deps is not None:
-            deps.forget_modules()
-    except Exception as e:  # noqa: BLE001
-        print("LISTENER_WARN could not drop the flow's library modules: %r" % (e,))
-    _set_current_flow(None, None)
-    gc.collect()
-    # What the retry actually needs is one contiguous block, not just total free bytes -- a CYD showed
-    # 73 KB free and still failed a 13 KB allocation. Report both, so the next log says which problem it is.
-    try:
-        probe = bytearray(16384)
-        del probe
-        room = "room for a 16 KB block"
-    except MemoryError:
-        room = "NO room for a 16 KB block"
-    print("LISTENER_FREED stopped the running flow to make room for a retried deploy (%d bytes free, %s)"
-          % (gc.mem_free(), room))
+                        "message": "no room to receive the flow (%d bytes free); the running flow is using the memory"
+                                   % (gc.mem_free(),)})
 
 
 def _handle_dep_put(msg):
@@ -852,7 +814,12 @@ async def _deploy_flow(msg, flow_on_disk=False):
         )
     except Exception as e:  # noqa: BLE001 -- a bad DEPLOY is adversarial-shaped input (design doc §13: DEPLOY_ERROR), never allowed to kill the listener
         print("DEPLOY_ERR %r (before_ram=%d)" % (e, before_ram))
-        _send_message_safe({"type": "DEPLOY_ERROR", "code": type(e).__name__, "message": str(e)})
+        # A MemoryError here is the flow failing to start after its bytes arrived: name the figure, because
+        # "memory allocation failed" alone doesn't say whether the flow is too big or the heap too broken.
+        message = str(e)
+        if isinstance(e, MemoryError):
+            message = "%s (%d bytes free after stopping the previous flow)" % (message, gc.mem_free())
+        _send_message_safe({"type": "DEPLOY_ERROR", "code": type(e).__name__, "message": message})
 
 
 def _resume_flow():

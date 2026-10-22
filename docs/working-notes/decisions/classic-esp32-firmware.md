@@ -13,6 +13,11 @@ replaces the earlier "CYD only" reading (2026-10-22, first draft of the briefing
 come from the editor's board descriptor, so the image carries no board-specific setup and the CYD is
 the board it is *verified* on, not the only board it is for.
 
+**Optional and not the recommended route, for the moment** (Mike, 2026-10-22): the image stays an option a
+user can flash, not the default answer to "GUI flow on a classic ESP32". Revisiting that waits on the stop-first
+deploy sequence and a measured pass on a reflashed board; if it then runs GUI flows that stock cannot, that is the
+case for recommending it — made on evidence, not on the gate.
+
 S2/S3/C3 are out: different silicon or partitions, and the S3's PSRAM removes the need. RP2040/RP2350
 are out for now; the same technique applies when a board needs it.
 
@@ -98,4 +103,48 @@ running GUI flow and take another one in the same session.
 Mike's call on the pattern, worth carrying further than this feature: *"we're spent hours on this… it falls squarely
 on 'fail well, not work badly'."* A recovery step was added for each failure observed, and the design never stated
 the limit. The sequence to build instead is in the briefing: one deterministic deploy (stop, free, receive, start),
-a stop action that keeps the listener, and one refusal before anything is sent when it cannot fit.
+a stop action that keeps the listener, and one failure per step that says what to do.
+
+### Second pass, same evening: no repairs at all (Mike)
+
+The rule was restated with the second half spelled out (*"Don't be too clever… you can warn about limited memory, but
+the user may know better… if it fails, say so clearly with some suggestions about what to do, remove any attempts at
+automatic fixes"*), and the three repairs that were still in the code came out:
+
+- **Piece size 1 KB → 5 KB** (flow pieces and library pieces). Slow deploys are their own bug: a 1 KB piece means
+  hundreds of round trips for one flow, since each waits for an ack. 5 KB is still small enough for a fragmented heap,
+  and a board that cannot take 5 KB has a memory problem worth seeing. Because an 11.3.0 board may refuse a 5 KB
+  piece, this pairs with runtime **12.0.0** and the editor's `EDITOR_TARGET_VERSION` 12.0.0 — `decideDeploy` refuses
+  an older board up front instead of failing mid-transfer.
+- **Listener: no recovery.** `_report_receive_oom` no longer stops the running flow or drops `_flow`/library modules
+  (`_free_running_flow_for_retry`, 11.2.0–11.2.2, deleted). It answers `DEPLOY_ERROR` with the free-memory figure and
+  changes nothing. A failed `import _flow` (the 376-byte case) now carries the free figure in its message.
+- **Editor: no retry.** The wait-900 ms-then-redeploy block is gone. One deploy, one result, advice from
+  `memory-advice.ts`.
+- **Warn, don't refuse.** A new pre-deploy line (`lowFlowMemoryWarning`) says the board may not fit this flow and
+  deploys anyway; refusing on a memory estimate was explicitly rejected, because the user may know the board better
+  than the figure does.
+
+What this does not fix: the board still cannot start a flow it cannot fit. That is the open design work above (a stop
+action, and the sequence decided before anything is sent). Failing well is where this stops for now.
+
+### Third pass: the gate is retired, the sequence is settled (Mike)
+
+Two more calls the same evening:
+
+- **"Stop the flow first, anything else is nonsense."** No negotiation about a deploy that keeps the old flow
+  running while the new one is loaded: the deploy sequence stops the flow, then receives, then starts. The
+  remaining design question is only whether stopping is enough or whether the board needs a power cycle in this
+  session too — and the honest state of that is: unproven. Stopping frees RAM but not a block big enough for the
+  flow (50 → 116 KB free, then a 376-byte failure), and a soft restart keeps the same heap regions and returns no
+  chunk of chip memory. So stopping is necessary and may not be sufficient; measure it on the board before
+  building on it.
+- **The five-cycle gate is retired, at least on small-memory boards** (`decisions/gui-layout.md`, Mike's call). It
+  asked for five deploys in one powered session with a display flow resident and no reset, which is the exact case
+  this hardware does not do, and chasing it is what produced the recovery chain. Its intent survives as the
+  deploy rule above.
+
+**User-facing answer until the sequence exists:** `Tools → Remove flow…`, **power cycle the board** (unplug and
+replug the USB cable, or `Tools → Reset board (hard)`), then deploy. That is a fair thing to tell a user on a
+PSRAM-less ESP32: this class of board never had deploy-over-a-running-app, and the console now says so in one line,
+with the figure that proves it.

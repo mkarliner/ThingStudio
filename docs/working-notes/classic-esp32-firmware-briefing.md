@@ -119,8 +119,10 @@ which the docs must say.
 
 ## Verification
 
-- **Rerun the CYD gate on the custom image** (the acceptance): fresh flash, hero GUI flow ↔ a
-  different flow, five cycles, no manual resets; it must pass where stock failed.
+- ~~**Rerun the CYD gate on the custom image** (the acceptance): fresh flash, hero GUI flow ↔ a different flow, five
+  cycles, no manual resets; it must pass where stock failed.~~ **Retired 2026-10-22 evening (Mike): "the 5 cycle gate
+  can go, at least on small memory boards."** See `decisions/gui-layout.md`; what replaces it is a deploy over a
+  *stopped* flow, plus the documented power-cycle path when even that cannot fit.
 - **Memory**: the spike's S0-S5 table (free, largest block, IDF free/largest) on the custom image;
   compare with the stock failure. Record the numbers.
 - **Deploy-skips-frozen**: after flashing, a GUI flow's console line should name the libraries as
@@ -197,13 +199,15 @@ Steps 1-3 were removed again. Step 4 stays: it is the right shape for the transf
 - **A stop action that keeps the listener.** Today the choices are Remove flow… (deletes it) or Stop flow & open
   prompt (ends Thingstudio, needs a reset), so there is no way to say "stop the flow, stay connected, keep the saved
   flow". Deploy needs that state.
-- **One refusal if it cannot fit**, before transferring anything: the board reports what it can take, the editor
-  refuses in one line with the single action. No 45-second resend-and-fail.
-- **Then re-test the five-cycle gate.** It is still not passed: the gate has never seen a clean A ↔ B cycle on this
-  board.
+- **One warning about memory**, not a refusal: the editor says the flow may not fit (with the board's figure) and
+  deploys anyway — the user may know the board better than the estimate does (Mike, 2026-10-22).
+- ~~**Then re-test the five-cycle gate.**~~ **Retired 2026-10-22 evening** (Mike: "the 5 cycle gate can go, at least
+  on small memory boards"). It asked for five deploys in one powered session with a display flow resident, which
+  this hardware cannot do; chasing it is what produced the recovery chain. `decisions/gui-layout.md` records it.
 
-Until then, the user-facing answer is `Tools → Remove flow…`, `Tools → Restart board (soft)`, deploy
-(`docs/user-guide/debugging.md`).
+Until the sequence exists, the user-facing answer is `Tools → Remove flow…`, **power cycle the board** (unplug and
+replug the USB cable, or `Tools → Reset board (hard)`), then deploy (`docs/user-guide/debugging.md`). A soft restart
+is not part of that answer: it keeps the same heap regions and returns no chip memory.
 
 ## Remaining risks
 
@@ -223,8 +227,8 @@ Until then, the user-facing answer is `Tools → Remove flow…`, `Tools → Res
 
 ## Suggested order
 
-1. Clear the CYD clean-gate rerun (the port was wedged after the failure) and confirm the failure from
-   an idle start. Record the numbers.
+1. Measure the stop-first sequence on the CYD: stop a GUI flow, probe for the largest block, try the start. The
+   numbers decide whether the sequence needs a power cycle in it. (The five-cycle gate that came before this step
+   is retired, 2026-10-22.)
 2. Build the first image (now scripted), flash it, measure S0-S5.
-3. Rerun the five-cycle gate on it.
-4. Then the packaging/flashing docs page and the release asset.
+3. Then the packaging/flashing docs page and the release asset.

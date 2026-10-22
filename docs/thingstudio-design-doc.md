@@ -398,7 +398,7 @@ relays frame bytes verbatim between WebSocket binary messages and `F64:` lines; 
 device's CBOR is hand-rolled (no arrays/tags/indefinite lengths) and editors encode canonically, dropping
 `null` keys — a `None`-encoding bug broke live messages once (2026-09-05); see `learnings/micropython-device-runtime.md`.
 
-Message types, shipped (20; appended, never renumbered):
+Message types, shipped (23; appended, never renumbered):
 
 | Type | Direction | Purpose |
 |---|---|---|
@@ -406,7 +406,8 @@ Message types, shipped (20; appended, never renumbered):
 | `HELLO_REQUEST` | editor → board | ask for a fresh HELLO without resetting |
 | `DEPLOY` | editor → board | full flow: `bytecode` (the compiled `.mpy`), `staticData` (reserved, empty today), `flowName`/`deployId`, optional `wifiProvision` marker, optional `dependencies` map |
 | `DEPLOY_ACK` / `DEPLOY_ERROR` | board → editor | result with memory figures, or a code+message (missing dependency → old flow keeps running) |
-| `DEP_PUT` / `DEP_ACK` / `DEP_COMMIT` / `DEP_RESULT` | both | per-deploy library delivery: libraries split into 1 KB pieces, each acked, then committed into `/lib` |
+| `DEP_PUT` / `DEP_ACK` / `DEP_COMMIT` / `DEP_RESULT` | both | per-deploy library delivery: libraries split into 5 KB pieces, each acked, then committed into `/lib` |
+| `FLOW_PUT` / `FLOW_ACK` / `FLOW_COMMIT` | both | the flow itself in 5 KB pieces, each acked, then started on commit (`DEPLOY` in pieces; every allocation is one piece, which a split ESP32 heap can fit) |
 | `NODE_ERROR` | board → editor | node ID + exception type/message (fault attribution) |
 | `NODE_STATUS` | board → editor | per-node connection/state dot (`connected`/`disconnected`/`connecting`/`error`) |
 | `TRIGGER` | editor → board | live-fire an inject node from the canvas |

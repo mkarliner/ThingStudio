@@ -2,7 +2,7 @@
 // editor/test/memory-advice.test.ts -- when the console suggests restarting the board (2026-10-07).
 
 import { describe, expect, it } from "vitest";
-import { LOW_IDF_HEAP_BYTES, deployMemoryAdvice, looksLikeOutOfMemory, lowMemoryWarningBeforeDeploy } from "../src/app/memory-advice.js";
+import { LOW_IDF_HEAP_BYTES, deployMemoryAdvice, looksLikeOutOfMemory, lowFlowMemoryWarning, lowMemoryWarningBeforeDeploy } from "../src/app/memory-advice.js";
 
 describe("lowMemoryWarningBeforeDeploy", () => {
   it("warns for a networking flow on an ESP32 with little ESP-IDF memory (the CYD's 1 KB case)", () => {
@@ -30,13 +30,29 @@ describe("looksLikeOutOfMemory", () => {
 });
 
 describe("deployMemoryAdvice", () => {
-  it("says to remove the flow when the board had no room to receive it (runtime 9.2.0, CYD)", () => {
-    const a = deployMemoryAdvice("MemoryError", "no room to receive the flow; the running flow is using the memory")!;
+  it("says to remove the flow and power cycle the board (Mike, 2026-10-22)", () => {
+    const a = deployMemoryAdvice("MemoryError", "no room to receive the flow (4120 bytes free); the running flow is using the memory")!;
     expect(a).toContain("Remove flow");
-    expect(a).toContain("Reset board (hard)");
+    expect(a).toContain("power cycle");
+    // A soft restart keeps the same heap regions and gives no chip memory back, so it is not offered.
+    expect(a).not.toContain("Restart board (soft)");
   });
-  it("gives the restart advice for other memory errors, nothing otherwise", () => {
-    expect(deployMemoryAdvice("MemoryError", "memory allocation failed, allocating 38400 bytes")).toContain("Restart board (soft)");
+  it("gives the same recipe for a flow that arrived but couldn't start, nothing otherwise", () => {
+    const a = deployMemoryAdvice("MemoryError", "memory allocation failed, allocating 376 bytes (16904 bytes free after stopping the previous flow)")!;
+    expect(a).toContain("power cycle");
     expect(deployMemoryAdvice("ImportError", "no module named 'foo'")).toBeNull();
+  });
+});
+
+describe("lowFlowMemoryWarning", () => {
+  it("warns when the board's free memory is small next to the flow, and says it deploys anyway", () => {
+    const w = lowFlowMemoryWarning({ freeRamBytes: 20000 }, 9537)!;
+    expect(w).toContain("only 19 KB free");
+    expect(w).toContain("10 KB");
+    expect(w).toContain("Deploying anyway");
+  });
+  it("stays quiet with room, or with no figures", () => {
+    expect(lowFlowMemoryWarning({ freeRamBytes: 149408 }, 9537)).toBeNull();
+    expect(lowFlowMemoryWarning(null, 9537)).toBeNull();
   });
 });

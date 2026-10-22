@@ -102,7 +102,7 @@ export const MessageType = {
   // Added 2026-10-22: DEPLOY in pieces. A whole DEPLOY needs one contiguous block the size of the message,
   // and a split heap (ESP32 MicroPython) can be full of holes at 100 KB free -- a 9.5 KB flow could not be
   // deployed over a running GUI flow. Same treatment DEP_PUT/DEP_COMMIT gave libraries in 8.0.0. The editor
-  // uses these when the board's runtime is 11.3.0 or newer and DEPLOY otherwise.
+  // uses these when the board's runtime is 11.3.0 or newer (12.0.0 for its 5 KB pieces) and DEPLOY otherwise.
   FLOW_PUT: 21,
   FLOW_COMMIT: 22,
   FLOW_ACK: 23,

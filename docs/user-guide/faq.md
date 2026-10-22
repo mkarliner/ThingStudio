@@ -30,7 +30,32 @@ one. A 240x320 frame in 16 grays is 38,400 bytes. The [GUI nodes](nodes/gui.md) 
 screen in strips. If your own `function` node builds a full frame, draw it in strips too, or restart
 the board before deploying.
 
+## Why doesn't Deploy clear the old flow or retry when the board runs out of memory?
+
+Because a repair nobody asked for hides the limit. The editor used to stop the running flow and retry when a
+deploy didn't fit; the retry then failed a step later, and the board was left stopped without anyone deciding
+that. Now a deploy that doesn't fit fails once, with the board's free-memory figure, and the console says what
+to do. The steps are yours to take: **Tools → Remove flow…**, **power cycle the board** (unplug and replug the
+USB cable, or **Tools → Reset board (hard)**), then deploy. See
+[MemoryError or a library that won't load](debugging.md#memoryerror-or-a-library-that-wont-load).
+
+## Why isn't a soft restart enough after "too full to receive the flow"?
+
+Because a soft restart reuses the same heap. It restarts the interpreter, so the flow's own objects go away, but
+the heap regions MicroPython took as it grew stay where they were, and memory taken from the chip is not given
+back. A board that couldn't find one big block before the soft restart still can't after it. Only cutting power
+to the chip rebuilds the heap from scratch — hence the power cycle in the recipe above.
+
+## Why is Deploy sending the flow in pieces?
+
+Some boards (classic ESP32 with no PSRAM) can't take a whole flow in one message once a display flow has run:
+the memory is free but in pieces too small for one message. Deploy sends the flow in 5 KB pieces instead, each
+confirmed before the next. Larger pieces keep a deploy quick; a board that can't take 5 KB has a memory problem
+worth seeing rather than one to work around.
+
 ## Why does http request fail with "MemoryError" fetching a page?
+
+
 
 The node reads the whole response body into memory at once. A page larger than the largest free block fails, even
 when the console shows more free memory than the page size. A 56 KB page on an ESP32-C3 failed with
