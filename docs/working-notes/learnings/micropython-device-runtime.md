@@ -331,6 +331,34 @@ Consequences worth remembering:
   memory, which is why the user-facing recipe for "too full to receive the flow" is Remove flow… → power cycle →
   deploy (`docs/user-guide/debugging.md`, 2026-10-22).
 
+## The ESP32 REPL input buffer is 260 bytes, and the display can outlast it, 2026-10-22
+
+`ports/esp32/mphalport.c` hardcodes `stdin_ringbuf_array[260]` (rp2 makes it a macro,
+`MICROPY_HW_STDIN_BUFFER_LEN`, default 512). The UART interrupt fills that ring; `ringbuf_put()` **drops
+bytes silently** when it is full. At 115200, 260 bytes is 22 ms.
+
+That is shorter than a GUI frame: a full-screen SPI draw blocks the VM for ~30 ms. So while a display flow is
+painting, a long line arriving from the editor loses its middle, and what reaches the CBOR decoder is garbage —
+on the CYD, `MessageDecodeError('unsupported CBOR additional-info value 29 ...')`. The board logs and recovers,
+but the editor was waiting for an acknowledgement of a message that never existed: three 10 s timeouts, then
+"no reply to flow byte 0".
+
+What this rules out and what it leaves:
+
+- **Smaller pieces do not fix it.** Any stall longer than 22 ms loses bytes mid-line, so the probability drops
+  with piece size while the failure stays. That is also what the earlier "resend a dropped library piece"
+  retry was really papering over (1 KB pieces, 2026-10-22).
+- **Pacing does not fix it.** The editor already sends one piece at a time and waits for the ack; the loss is
+  inside a single line, driven by how long the board is busy, not by how fast pieces are sent.
+- **Buffer size does.** `firmware/classic-esp32/patches/0001-esp32-stdin-ringbuf-8192.patch` raises it to
+  8192 (~690 ms of tolerance, covers a 5 KB piece's ~6.9 KB base64 line). 8 KB of static RAM.
+- **A silent drop should not be silent.** Since 12.1.0 an unreadable line answers `FLOW_ACK{ok:false,
+  code:"Garbled"}` for the offset the board has stored, so the editor reports the real problem at once instead
+  of timing out. Nothing else is repaired: the piece is resent (bounded), then reported.
+
+General lesson: when a device drops input without saying so, the host's timeout is the only symptom, and it
+points at the wrong layer. Make the drop visible before making anything bigger.
+
 ## Redeploy over a running GUI flow: stopping the flow isn't freeing it, 2026-10-22
 
 Deploying a GUI flow while another GUI flow runs on a CYD failed every time with

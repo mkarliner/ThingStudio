@@ -148,3 +148,23 @@ Two more calls the same evening:
 replug the USB cable, or `Tools → Reset board (hard)`), then deploy. That is a fair thing to tell a user on a
 PSRAM-less ESP32: this class of board never had deploy-over-a-running-app, and the console now says so in one line,
 with the figure that proves it.
+
+### Fourth pass: the serial link was the limit this time, not the heap (first hardware run of 12.0.0)
+
+12.0.0 went onto the CYD and deployed the hero flow twice, then failed: `MessageDecodeError('unsupported CBOR
+additional-info value 29 ...')` on the first `FLOW_PUT`, twice, then the editor gave up. Not memory — that deploy's
+`DEPLOY_ACK` was 101 KB free.
+
+Cause: `ports/esp32/mphalport.c` hardcodes a **260-byte** REPL input ring buffer (rp2 makes it a macro). At 115200
+that is 22 ms; a GUI flow's full-frame SPI draw blocks the VM for ~30 ms; `ringbuf_put()` drops the bytes in flight
+with no error. A 5 KB piece is a 6.9 KB base64 line, 590 ms of streaming, so it met the draw and lost its middle.
+Smaller pieces only lower the odds (that is what the "resend a dropped piece" retry was really covering for).
+
+Two changes, both narrow:
+
+- **The image patches the buffer to 8192** (`patches/0001-...`, applied by `build.sh`, recorded in
+  `docs/third-party-licenses.md`). Covers a whole 5 KB piece for ~690 ms of stall; 8 KB of static RAM out of 149 KB.
+- **An unreadable line is reported, not silently dropped** (runtime 12.1.0): `FLOW_ACK{ok:false,
+  code:"Garbled"}` for the offset the board has stored. The editor resends that piece (the existing bounded
+  retransmit) and, if it fails again, reports "the board could not read that piece" instead of a 30-second timeout
+  with no explanation. No new recovery: same piece, same count, clearer words.

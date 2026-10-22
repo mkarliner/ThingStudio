@@ -3023,27 +3023,38 @@ el("btnDeploy").addEventListener("click", async () => {
       const total = mpyBytes.length;
       for (let offset = 0; offset < total; offset += FLOW_PIECE_BYTES) {
         const data = mpyBytes.subarray(offset, Math.min(offset + FLOW_PIECE_BYTES, total));
-        let ack: Message | null = null;
         for (let attempt = 0; attempt <= PIECE_RETRIES; attempt += 1) {
           const ackP = waitForMessage((m) => m.type === "FLOW_ACK" && m.offset === offset, PIECE_TIMEOUT_MS);
           await transport.send({ type: "FLOW_PUT", offset, total, data });
+          let ack: Message;
           try {
             ack = await ackP;
-            break;
-          } catch (err) {
+          } catch {
             if (attempt < PIECE_RETRIES) {
               logLine(`[deploy] no reply to flow byte ${offset}, resending (${attempt + 1}/${PIECE_RETRIES})`, "err");
-            } else {
-              return {
-                type: "DEPLOY_ERROR",
-                code: "Timeout",
-                message: `no reply to flow byte ${offset} after ${PIECE_RETRIES + 1} tries`,
-              };
+              continue;
             }
+            return {
+              type: "DEPLOY_ERROR",
+              code: "Timeout",
+              message: `no reply to flow byte ${offset} after ${PIECE_RETRIES + 1} tries`,
+            };
           }
-        }
-        if (ack !== null && ack.type === "FLOW_ACK" && !ack.ok) {
-          return { type: "DEPLOY_ERROR", code: ack.code ?? "BadPiece", message: ack.error ?? "the board refused a flow piece" };
+          if (ack.type === "FLOW_ACK" && !ack.ok) {
+            // A garbled piece is the link losing bytes, not the board refusing the flow: resend it, like a
+            // missing ack -- the same bounded retransmit. The board now says so in one line (runtime 12.1.0)
+            // instead of leaving the editor to sit out its timeout. Any other refusal is final: the board
+            // named a fault a resend cannot fix.
+            if (ack.code === "Garbled" && attempt < PIECE_RETRIES) {
+              logLine(
+                `[deploy] board couldn't read flow byte ${offset} (${ack.error ?? "garbled"}), resending (${attempt + 1}/${PIECE_RETRIES})`,
+                "err",
+              );
+              continue;
+            }
+            return { type: "DEPLOY_ERROR", code: ack.code ?? "BadPiece", message: ack.error ?? "the board refused a flow piece" };
+          }
+          break; // this piece is stored
         }
       }
       return null;

@@ -62,6 +62,20 @@ node "$HERE/gen_deps_index.mjs" "$STAGE" "$OUT/_deps.json"
 #    version won't match the interpreter.
 make -C "$MICROPY_DIR/mpy-cross" -j"$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)"
 
+# 3b. Patches against the pinned port (see patches/README.md). Applied if not already there, and a
+#     failure to apply is fatal: a silently-unpatched tree would build an image that drops bytes on
+#     a long serial line, which is exactly what the patch exists to prevent.
+for p in "$HERE"/patches/*.patch; do
+    [ -f "$p" ] || continue
+    if git -C "$MICROPY_DIR" apply --check --reverse "$p" 2>/dev/null; then
+        echo "build: $(basename "$p") already applied"
+    elif git -C "$MICROPY_DIR" apply "$p"; then
+        echo "build: applied $(basename "$p")"
+    else
+        die "$(basename "$p") does not apply to $MICROPY_DIR -- the MicroPython checkout has moved; refresh the patch"
+    fi
+done
+
 rm -rf "${MICROPY_DIR:?}/ports/esp32/boards/$BOARD"
 cp -r "$HERE/board" "$MICROPY_DIR/ports/esp32/boards/$BOARD"
 # The board's cmake points at this; keeping it inside the copied directory is what lets the path

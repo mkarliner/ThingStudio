@@ -1,0 +1,22 @@
+diff --git a/ports/esp32/mphalport.c b/ports/esp32/mphalport.c
+index a0a3860..dfdf99a 100644
+--- a/ports/esp32/mphalport.c
++++ b/ports/esp32/mphalport.c
+@@ -54,7 +54,16 @@
+ 
+ TaskHandle_t mp_main_task_handle;
+ 
+-static uint8_t stdin_ringbuf_array[260];
++// Thingstudio patch (2026-10-22): the REPL input ring buffer is drained by whoever polls stdin,
++// and a flow drawing to a display blocks the VM for tens of ms. At 115200 the stock 260 bytes
++// overflow after 22 ms, and ringbuf_put() drops bytes silently, so a long incoming line arrives
++// corrupt. 8192 covers a 5 KB deploy piece (~6.9 KB of base64) for ~690 ms of stall. rp2 has this
++// as a macro already; the esp32 port hardcoded it.
++#ifndef MICROPY_HW_STDIN_BUFFER_LEN
++#define MICROPY_HW_STDIN_BUFFER_LEN 8192
++#endif
++
++static uint8_t stdin_ringbuf_array[MICROPY_HW_STDIN_BUFFER_LEN];
+ ringbuf_t stdin_ringbuf = {stdin_ringbuf_array, sizeof(stdin_ringbuf_array), 0, 0};
+ 
+ portMUX_TYPE mp_atomic_mux = portMUX_INITIALIZER_UNLOCKED;

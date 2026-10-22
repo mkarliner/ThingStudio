@@ -278,6 +278,37 @@ def test_chunked_deploy_runs_the_flow():
             listener.close()
 
 
+def test_a_line_the_board_cannot_read_answers_the_deploy_piece():
+    # 12.1.0 (2026-10-22, CYD): a 5 KB FLOW_PUT lost bytes to the port's 260-byte stdin ring buffer while a
+    # display flow was painting, so the line decoded as garbage and the listener said nothing -- the editor
+    # then waited out three 10 s timeouts before reporting a deploy it could have reported at once. Now the
+    # unreadable line answers FLOW_ACK for the offset the board has stored, ok=false, code=Garbled.
+    with tempfile.TemporaryDirectory() as tmpdir:
+        flow = _compile_flow(tmpdir, "flow_garbled", "print('GARBLED_FLOW_RAN')\n")
+        listener = ListenerProcess(tmpdir)
+        try:
+            listener.wait_for(lambda l: l == "LISTENER_READY", description="LISTENER_READY")
+            mark = _history_len(listener)
+            listener.send_raw_line("F64:!!!not base64 at all!!!")
+            ack = _next_message(listener, mark, "FLOW_ACK", "FLOW_ACK for an unreadable line")
+            assert ack["ok"] is False and ack["code"] == "Garbled", ack
+            assert ack["offset"] == 0 and "could not read" in ack["error"], ack
+
+            # The piece after a good first one is answered with the offset the board is waiting for.
+            listener.send_message({"type": "FLOW_PUT", "offset": 0, "total": len(flow) + 10, "data": flow})
+            listener.wait_for(
+                lambda l: l.startswith(F64_PREFIX) and _decode_f64_line(l)["type"] == "FLOW_ACK"
+                and _decode_f64_line(l)["offset"] == 0 and _decode_f64_line(l)["ok"],
+                description="FLOW_ACK for the good piece",
+            )
+            mark = _history_len(listener)
+            listener.send_raw_line("F64:!!!not base64 at all!!!")
+            ack = _next_message(listener, mark, "FLOW_ACK", "FLOW_ACK for the unreadable second line")
+            assert ack["ok"] is False and ack["offset"] == len(flow), ack
+        finally:
+            listener.close()
+
+
 def test_chunked_deploy_refuses_an_incomplete_flow():
     with tempfile.TemporaryDirectory() as tmpdir:
         flow = _compile_flow(tmpdir, "flow_chunked_short", "print('SHOULD_NOT_RUN')\n")
@@ -1262,6 +1293,7 @@ TESTS = [
     test_deploy_too_big_for_memory_is_answered_not_timed_out,
     test_chunked_deploy_runs_the_flow,
     test_chunked_deploy_refuses_an_incomplete_flow,
+    test_a_line_the_board_cannot_read_answers_the_deploy_piece,
     test_receive_oom_leaves_the_running_flow_alone,
 ]
 
