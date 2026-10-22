@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: Apache-2.0
+# firmware/classic-esp32/board/sdkconfig.board -- applied last, so these win over sdkconfig.base.
+
+# 4 MB, the size every classic-ESP32 board this image targets is sold with (the CYD included).
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+CONFIG_ESPTOOLPY_FLASHSIZE="4MB"
+CONFIG_ESPTOOLPY_FLASHMODE_DIO=y
+
+# Our partition table (next to this file). The path is relative to the ESP-IDF project directory,
+# <micropython>/ports/esp32, which is where build.sh copies this board directory.
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="boards/thingstudio_classic_esp32/partitions.csv"
+
+# Frozen bytecode plus the GUI stack makes the app bigger than a stock build; optimise for size,
+# the same trade the stock OTA variant makes.
+CONFIG_COMPILER_OPTIMIZATION_SIZE=y
+CONFIG_COMPILER_OPTIMIZATION_PERF=n
+CONFIG_COMPILER_OPTIMIZATION_CHECKS_SILENT=y

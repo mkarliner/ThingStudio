@@ -307,6 +307,24 @@ Frozen modules run from flash and never touch the heap, so they would avoid both
 `frozen-firmware-spike-briefing.md`. Note `gc` has no largest-free-block call; use `micropython.mem_info()`
 (`max free sz`, in 16-byte blocks) or bisect with `bytearray(n)`. User-facing: `docs/user-guide/debugging.md`.
 
+## Frozen modules: `.frozen` precedes `/lib`, and a frozen module can't be the boot script, 2026-10-22
+
+Two facts that shaped the custom classic-ESP32 image
+(`docs/working-notes/decisions/classic-esp32-firmware.md`):
+
+- **`sys.path` puts `.frozen` before `/lib`** on both the unix and ESP32 ports, so a library pushed into `/lib`
+  does *not* override a frozen copy by default. `deps.ensure_on_path()` appended `/lib`, which would have left
+  the frozen copy winning and a pushed update silently doing nothing. It now inserts at position 0 (runtime
+  11.1.0). Worth remembering for any other "freeze it, keep it updatable" plan: the order is the whole
+  mechanism, and it is not the order you get by default.
+- **A frozen module cannot be the boot script.** MicroPython runs `/main.py` from the filesystem, and frozen
+  code isn't a file, so an image that freezes the listener still needs a tiny `/main.py` doing
+  `import listener; listener.main()` (`firmware/classic-esp32/main.py`).
+
+Also: `HELLO.runtimeBuild` is `null` on such an image -- there is no build-marker file to read. That already
+means "can't confirm" to the editor's check, so it is not a fault, but it will read oddly to anyone comparing
+SHAs.
+
 ## On an ESP32, network.WLAN(STA_IF) starts WiFi, 2026-10-08
 
 Just constructing the station object initialises the WiFi driver and its netif, which takes tens of KB of

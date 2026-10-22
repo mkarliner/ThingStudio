@@ -185,7 +185,11 @@ Gaps:
 - **Python dependencies are version-pinned, not hash-pinned** (`constraints.txt`); development installs use ranges
   (`backend/pyproject.toml`, `aiohttp>=3.9,<4`). Hash pinning (`pip --require-hashes`) for the bundle is the next step.
 - **The docs workflow has `contents: write`** for `gh-deploy`; scope it to the Pages branch if possible.
-- **Release artifacts are not signed** beyond the checksums (macOS signing is conditional on CI secrets).
+- **Release artifacts are not signed** beyond the checksums (macOS signing is conditional on CI secrets). The
+  custom classic-ESP32 firmware image (`firmware/classic-esp32/`) follows the same rule: SHA-256 plus a build
+  script, workflow and pinned MicroPython/ESP-IDF versions, so the image is rebuildable from a known commit -- a
+  checksum detects corruption, not tampering. Signing is deferred to the first OTA-capable firmware release
+  (`docs/working-notes/decisions/classic-esp32-firmware.md`).
 
 ## 4. Secrets
 

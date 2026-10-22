@@ -77,8 +77,10 @@ runtime path, and the unix port's `time.time()` being a float, and this build's 
 argument (use a membership dict), mpy-cross embedding the source path in the `.mpy` (so compiling the same source
 from a different directory changes its bytes and any hash of them), sequential deploys on an ESP32-C3 leaving too
 little contiguous IDF heap for the next deploy (reset, 40s per flow), a large HTTP response being one allocation
-(56 KB failed on a C3, 48 bytes passed), and never calling `connect()` again while mqtt_as owns reconnection.
-29 entries:
+(56 KB failed on a C3, 48 bytes passed), never calling `connect()` again while mqtt_as owns reconnection, and
+the two facts behind a frozen image: `.frozen` precedes `/lib` on `sys.path` (so a pushed library does not
+override a frozen one unless `/lib` is inserted first), and a frozen module cannot be the boot script.
+30 entries:
 `docs/working-notes/learnings/micropython-device-runtime.md`.
 
 ## Headless browser testing

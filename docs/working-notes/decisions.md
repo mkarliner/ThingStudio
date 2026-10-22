@@ -256,3 +256,12 @@ The runtime context/flow store: `change` is the no-code path (set/delete a msg p
 per node), chosen over reviving the narrow `variable_get`/`variable_set` pair or function-code-only
 (2026-10-21); node context remains function-code only in v1. 1 entry: `docs/working-notes/decisions/context-model.md`.
 
+## Custom firmware image (classic ESP32)
+
+One optional, generic classic-ESP32 image (4 MB, no PSRAM) with the runtime and every flow library frozen, CYD
+first verified; stock MicroPython stays the default; `/lib` goes ahead of `.frozen` so a pushed library still
+wins; the image ships `/lib/_deps.json` hashed the editor's way, so Deploy skips what is frozen with no `HELLO`
+change; single 3 MB app slot, no OTA; docs + `esptool` install, checksums plus a rebuildable image, no signing
+yet; build inputs in this repo, artifacts as release assets (2026-10-22). 1 entry:
+`docs/working-notes/decisions/classic-esp32-firmware.md`.
+

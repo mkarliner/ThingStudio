@@ -1,0 +1,106 @@
+name: Firmware
+
+# Builds the classic-ESP32 custom image: MicroPython with Thingstudio's runtime and every flow
+# library frozen in (firmware/classic-esp32/). Scope and reasoning:
+# docs/working-notes/classic-esp32-firmware-briefing.md, decisions/classic-esp32-firmware.md.
+#
+# Manual only, on purpose: this produces a release artifact for one board family, not something every
+# push needs. "Run workflow" builds the image and keeps it as a run artifact. Pushing a tag builds it
+# and attaches the image, its SHA-256 and /lib/_deps.json to the DRAFT release, the same
+# look-before-publishing step release.yml uses.
+#
+# The image is built from the ESP-IDF docker image and MicroPython at a pinned tag, so it is a
+# rebuildable artifact from a known commit -- what the integrity story for these downloads rests on.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write # attaching the image to the draft release; without a tag nothing is written
+
+env:
+  MPY_VERSION: v1.28.0
+  # ESP-IDF version MicroPython's esp32 port expects for this tag. Checked against ports/esp32's
+  # idf requirements at build time by the toolchain container's own idf.py.
+  IDF_IMAGE: espressif/idf:v5.4
+
+jobs:
+  image:
+    name: classic ESP32 image
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      # Cheap guard that needs no toolchain: the frozen set is derived from runtime_manifest.py, and
+      # every library the editor can deploy must survive being staged and compiled. A broken
+      # manifest should fail here, not after a 20-minute build.
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Stage the frozen set and build the library index
+        run: |
+          python3 firmware/classic-esp32/stage.py firmware/classic-esp32/out/stage
+          node firmware/classic-esp32/gen_deps_index.mjs \
+            firmware/classic-esp32/out/stage firmware/classic-esp32/out/_deps.json
+          # Every staged module must also be a module the board would import, i.e. named the way the
+          # runtime names it. A dependency that gained a file but kept an old name shows up here.
+          python3 - <<'PY'
+          import json, os
+          idx = json.load(open("firmware/classic-esp32/out/_deps.json"))
+          staged = {n[:-3] for n in os.listdir("firmware/classic-esp32/out/stage") if n.endswith(".py")}
+          missing = sorted(set(idx) - staged)
+          if missing:
+              raise SystemExit("indexed but not staged: %s" % ", ".join(missing))
+          print("%d libraries staged and indexed" % len(idx))
+          PY
+
+      - name: Check out MicroPython
+        run: |
+          git clone --depth 1 --branch "$MPY_VERSION" https://github.com/micropython/micropython.git
+          make -C micropython/ports/esp32 submodules
+
+      - name: Build the image
+        # Everything runs inside the ESP-IDF container so idf.py, the Xtensa toolchain and the
+        # python packages match what MicroPython's esp32 port expects.
+        run: |
+          docker run --rm \
+            -v "$PWD:/work" -w /work \
+            -e MICROPY_DIR=/work/micropython \
+            "$IDF_IMAGE" \
+            bash -c 'pip install --quiet esptool && firmware/classic-esp32/build.sh'
+
+      - name: Checksums
+        run: |
+          cd firmware/classic-esp32/out
+          sha256sum thingstudio-classic-esp32-*.bin > SHA256SUMS
+          cat SHA256SUMS
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: classic-esp32-image
+          path: |
+            firmware/classic-esp32/out/thingstudio-classic-esp32-*.bin
+            firmware/classic-esp32/out/thingstudio-classic-esp32-*.bin.sha256
+            firmware/classic-esp32/out/SHA256SUMS
+            firmware/classic-esp32/out/_deps.json
+          if-no-files-found: error
+          retention-days: 14
+
+      # Attaching to the draft release, not publishing: same rule as release.yml. Nothing reaches a
+      # user's board without a human looking first.
+      - name: Attach to the draft release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="$GITHUB_REF_NAME"
+          gh release view "$tag" >/dev/null 2>&1 || gh release create "$tag" --draft --title "$tag" || true
+          gh release upload "$tag" firmware/classic-esp32/out/thingstudio-classic-esp32-*.bin \
+            firmware/classic-esp32/out/thingstudio-classic-esp32-*.bin.sha256 \
+            firmware/classic-esp32/out/SHA256SUMS \
+            firmware/classic-esp32/out/_deps.json --clobber

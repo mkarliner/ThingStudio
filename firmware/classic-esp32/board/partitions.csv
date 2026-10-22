@@ -1,0 +1,14 @@
+# Partition table for the Thingstudio classic-ESP32 image (4 MB flash, single app slot).
+#
+# Deliberately *not* the dual-OTA layout: MicroPython's own 4 MiB OTA table gives each app slot
+# 1.5 MB, and this image's frozen set (runtime + every vendored library + all font sizes) is
+# expected to exceed that. Re-partitioning later costs one USB reflash, which is already how the
+# image is installed. See docs/working-notes/decisions/classic-esp32-firmware.md.
+#
+# The 3 MB app slot leaves 960 KB for the filesystem (flows, board settings, /lib). The offset of
+# the partition table itself is fixed by ESP-IDF (0x8000).
+# Name,   Type, SubType, Offset,   Size,     Flags
+nvs,      data, nvs,     0x9000,   0x6000,
+phy_init, data, phy,     0xf000,   0x1000,
+factory,  app,  factory, 0x10000,  0x300000,
+vfs,      data, fat,     0x310000, 0xf0000,

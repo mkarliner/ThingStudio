@@ -38,3 +38,8 @@ backend/src/thingstudio_backend/_assets.tmp/
 # setuptools' in-tree build folder from building a wheel. Can hold files since deleted from _assets/,
 # which would then ship in the next wheel; `make clean` removes it.
 backend/build/
+
+# firmware/classic-esp32/build.sh output (staged frozen set, built image, _deps.json, checksums).
+# The image is a GitHub release asset, never a committed binary (docs/working-notes/decisions/
+# classic-esp32-firmware.md).
+firmware/*/out/

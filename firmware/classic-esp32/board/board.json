@@ -1,0 +1,12 @@
+{
+    "deploy": [
+        "build-thingstudio_classic_esp32.bin"
+    ],
+    "mcu": "esp32",
+    "product": "Thingstudio classic ESP32 image (4 MB, no PSRAM)",
+    "features": [
+        "WiFi",
+        "BLE"
+    ],
+    "vendor": "Thingstudio"
+}

@@ -81,8 +81,15 @@ not here.
   hero GUI flow after a fresh runtime install hit `MemoryError allocating 13317 bytes` and no `DEPLOY_ACK` (a
   clean idle rerun is owed once the CYD's CH340 port is stable). Per the gate, the MVP ships a small set of
   custom images, classic ESP32 first, with the packaging/hosting/flashing docs. Briefing:
-  `custom-firmware-cyd-briefing.md`; `decisions/gui-layout.md` (2026-10-09 gate, 2026-10-22 result),
-  `frozen-firmware-spike-briefing.md`.
+  `classic-esp32-firmware-briefing.md`; `decisions/gui-layout.md` (2026-10-09 gate, 2026-10-22 result),
+  `decisions/classic-esp32-firmware.md`, `frozen-firmware-spike-briefing.md`.
+- **[LAUNCH]** **Classic-ESP32 custom image: build, flash, measure — scaffolded 2026-10-22, never built.** Inputs
+  are in `firmware/classic-esp32/` (stage from `runtime_manifest.py`, frozen manifest, single-app partition table,
+  build/install scripts, `_deps.json` generator using the editor's mpy-cross and hash scheme,
+  `.github/workflows/firmware.yml`); `deps.ensure_on_path()` now puts `/lib` before `.frozen` (runtime 11.1.0,
+  unix-port test passing). Owed, in order: the clean CYD gate rerun, a first build (developer machine or CI — the
+  sandbox has no ESP-IDF), flash, S0-S5 numbers, then the five-cycle gate. Then the user-facing firmware page
+  (what it is, what a flash erases, flashing per OS, back to stock).
 - **[LAUNCH]** **Button rework -- built and hardware-checked 2026-10-09.** Two-faced nodes in the compiler;
   button output, modes and controlled toggle; modal close reason; touch panel config node (with presets) polled by
   the gui screen; `gui_touch` removed (`decisions/gui-layout.md` 2026-10-09, `gui-button-rework-briefing.md`).
@@ -547,6 +554,17 @@ not here.
   **2026-10-14:** the decision-ready note is written (`custom-firmware-tier-note.md`): build post-MVP for
   the classic-ESP32-without-PSRAM / C3 / Pico class only, stock install stays default. It is a device-packaging
   decision and does **not** gate the node-descriptor work (nodes touch only editor files).
+  **2026-10-22:** now MVP and shipped as one generic classic-ESP32 image, CYD first verified
+  (`decisions/classic-esp32-firmware.md`); build inputs are in `firmware/classic-esp32/`, first build owed.
+
+- **[POST-MVP]** **Store the flow JSON on the board, so connecting can load it back.** Mike's intent (2026-10-22):
+  a flow's `.flow.json` optionally kept next to the compiled flow, so a connection loads the current flow into the
+  editor instead of leaving the user to find the file. `HELLO` already reports `currentFlowName` and
+  `currentFlowDeployId` (persisted across reboots, `listener.py` `_persist_flow_meta`), and `deployId` is a fresh
+  UUID, so a local deploy history is a cheaper first step with no protocol change; reading the JSON off the board
+  needs its own request/response message pair, a device-side store, and an editor path for a flow whose custom
+  nodes or configs aren't present locally. Safe to store: `flow.configs` holds `credentialName`, never a secret.
+  Not bundled into the firmware-image work — it is a protocol addition on its own.
 
 - **[P5]** **CI vendor-neutrality — should CI be independent of GitHub specifically?** Mike's raised question (`mikes-questions-and-points.md`, "# CI"). Currently GitHub Actions (`repo-structure-and-conventions.md`). Not revisited. ([detail](outstanding-items/ci-vendor-neutrality.md))
 

@@ -52,6 +52,39 @@ jobs:
       - run: pytest -q
         working-directory: backend
 
+  # The frozen set for the custom classic-ESP32 image is derived from runtime_manifest.py, so it cannot
+  # drift -- but staging it still has to succeed, and every library the editor can deploy has to keep
+  # compiling with the editor's own mpy-cross (the image's /lib/_deps.json hashes must match what the
+  # editor computes, or Deploy pushes copies over the frozen ones). Minutes without a firmware toolchain;
+  # the image build itself is firmware.yml, on demand.
+  firmware-manifest:
+    name: firmware frozen set (stage + _deps.json)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: |
+          python3 firmware/classic-esp32/stage.py firmware/classic-esp32/out/stage
+          node firmware/classic-esp32/gen_deps_index.mjs \
+            firmware/classic-esp32/out/stage firmware/classic-esp32/out/_deps.json
+          python3 - <<'PY'
+          import json, os
+          idx = json.load(open("firmware/classic-esp32/out/_deps.json"))
+          staged = {n[:-3] for n in os.listdir("firmware/classic-esp32/out/stage") if n.endswith(".py")}
+          missing = sorted(set(idx) - staged)
+          if missing:
+              raise SystemExit("indexed but not staged: %s" % ", ".join(missing))
+          for name, entry in idx.items():
+              if entry["files"]:
+                  raise SystemExit("%s: frozen entries must list no files" % name)
+          print("%d libraries staged and indexed" % len(idx))
+          PY
+
   # device-runtime: headless MicroPython unix-port tests -- not added yet.
   # They need a MicroPython build (device-runtime/test/README.md: clone,
   # mpy-cross, ports/unix), which is heavier than the rest of CI; the

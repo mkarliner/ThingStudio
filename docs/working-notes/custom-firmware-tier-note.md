@@ -53,3 +53,9 @@ right firmware. The stock install stays the default route. A cheaper alternative
 font glyph data in a flash file read on demand instead of importing it.
 
 This is a device-packaging decision. It does not gate the node-descriptor work, and nothing about nodes gates it.
+
+**Superseded in part, 2026-10-22:** after the CYD gate failure it is MVP work, not post-MVP, and it is
+one **generic classic-ESP32** image (CYD first verified) rather than a per-class set -- see
+`../decisions/classic-esp32-firmware.md` and `../classic-esp32-firmware-briefing.md`. The C3 and Pico
+are out of the first image. The "report the frozen modules and their hashes in `HELLO`" idea above
+was dropped in favour of a shipped `/lib/_deps.json`; the reasoning is in that decision.

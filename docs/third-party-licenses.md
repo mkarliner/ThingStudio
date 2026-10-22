@@ -37,7 +37,8 @@ added retroactively once code lands on top of them.
 | Component | Role | License | Notes |
 |---|---|---|---|
 | MicroPython (core VM, `uasyncio`, `mpy-cross`) | on-device runtime | MIT | permissive, no concerns |
-| ESP-IDF | ESP32 port substrate | Apache-2.0 | framework itself is Apache-2.0; WiFi/Bluetooth/RF-calibration libraries ship as precompiled binary blobs — redistribution terms are Apache-2.0 (no license *obligation* conflict) but not source-available (design doc §12's caveat) |
+| MicroPython, pinned for the custom ESP32 image | redistributed in `firmware/classic-esp32/`'s image | MIT | v1.28.0 (`mpy-cross` built from the same checkout, so frozen bytecode and the editor's WASM cross-compiler agree). The image is a release asset built by `.github/workflows/firmware.yml` from that tag; the MIT notice travels with it. |
+| ESP-IDF | ESP32 port substrate | Apache-2.0 | framework itself is Apache-2.0; WiFi/Bluetooth/RF-calibration libraries ship as precompiled binary blobs — redistribution terms are Apache-2.0 (no license *obligation* conflict) but not source-available (design doc §12's caveat). The custom image is built in the `espressif/idf:v5.4` container, so the image redistributes those blobs too. |
 | FreeRTOS | RTOS underlying the ESP32 port | MIT | permissive since the v10.4+ relicense |
 | lwIP | TCP/IP stack (ESP-IDF, RP2040 WiFi) | modified BSD | permissive |
 | Raspberry Pi Pico SDK | RP2040/RP2350 port substrate | BSD-3-Clause | permissive |
