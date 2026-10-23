@@ -37,8 +37,9 @@ stock MicroPython runs out of memory loading the display stack.
 Shows what a number can't: which way it is heading. Wire it to the first output of a [journal](journal.md), or to
 any node that sends a list of numbers (a `None` is a gap), such as a spectrum from a function node.
 
-Each bar is a row's average, with a thin line from the row's min to its max. A gap is empty. A wider space shows more
-history: it draws as many bars as fit, newest at the right edge.
+Each bar is a row's average, in the theme's accent colour, with a thin line from the row's min to its max in the
+muted colour — so the range reads as context behind the value. A gap is empty. A wider space shows more history: it
+draws as many bars as fit, newest at the right edge.
 
 - **bottom at / top at** — the range of the bars. Values outside are cut off at the edge. The range is fixed.
 - **columns, column width, height** — the natural size: it is as wide as columns times column width, plus the border.

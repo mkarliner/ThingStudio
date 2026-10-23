@@ -5,6 +5,10 @@
 # It draws what a journal node sends (an object with rows, n, head and the avg/lo/hi rings: each column is a bar
 # up to the average, with a thin line from the row's min to its max), or any plain list of numbers (None is a
 # gap), so a spectrum from a function node draws the same way. A gap (an unknown row, or None) is left empty.
+#
+# Colour (2026-10-23, gui-widget-styles-and-colour-scoping.md "better trend"): the average bar is the accent role and
+# the min-max line is the muted role, so the range reads as context behind the value. The outline stays the
+# foreground. On a theme whose muted role is its foreground, the line is as it was.
 # Unknown (no value yet): a dashed outline. Stale: dim bars, or every other column on mono. It shows the last
 # (width - 4) // col_width rows, so a wider rect shows more history.
 
@@ -99,6 +103,6 @@ def make(lo=0.0, hi=100.0, col_width=3):
                 top = px(hi_v, inner_h)
                 bottom = px(lo_v, inner_h)
                 if top > bottom:
-                    fb.vline(cx + bar_w // 2, base - top, top - bottom + 1, surface.fg)
+                    fb.vline(cx + bar_w // 2, base - top, top - bottom + 1, surface.dim)
 
     return draw

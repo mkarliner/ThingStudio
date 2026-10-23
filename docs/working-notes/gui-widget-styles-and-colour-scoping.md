@@ -94,6 +94,10 @@ colour (or blit with a transparent key).
   starting point, not a limitation.
 - **Order:** step 1 (roles, no visual change) → the theme node and presets → trend → cards.
 
+**Trend's two items are in** (2026-10-23, runtime 13.0.0): the average bar draws in `accent` and the min–max line in
+`muted` (it was the foreground), with a test on a themed surface so the roles, not the defaults, are what is checked.
+No threshold line and no value-in-the-corner, as decided.
+
 **Step 2 is in** (2026-10-23, runtime 13.0.0): the `gui theme` config node with two presets and editable roles; a
 `colour` property kind (`ColorField.vue`); the fold per frame format; and, on indexed formats, the display taking its
 palette from the screen wired to it (`flow.links` in the compile context, `editor/test/display-spi-theme-palette.test.ts`

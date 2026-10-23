@@ -286,12 +286,26 @@ def test_trend_draws_min_max_whiskers_and_plain_lists():
     s = _surface(framebuf.GS4_HMSB, FORMATS[0][1])
     draw(s, rect, _Series(4, [(20, 10, 80)]), gui.KNOWN)
     centre = 40 - 2 - 3 + 1
-    assert s.fb.pixel(centre, 40 - 2 - 28) == s.fg  # a line well above the bar's top (20% of 36 = 7 px)
+    assert s.fb.pixel(centre, 40 - 2 - 28) == s.dim  # min-max line, muted, above the bar's top (20% of 36 = 7 px)
+    assert s.fb.pixel(centre, 0) == s.fg  # the outline stays the foreground
     t = _surface(framebuf.GS4_HMSB, FORMATS[0][1])
     draw(t, rect, [10, None, 90], gui.KNOWN)  # a plain list, None is a gap
     assert _column_has_ink(t, 40 - 2 - 3, 2, 36) and not _column_has_ink(t, 40 - 2 - 6, 2, 36)
 
 
+def test_trend_uses_the_theme_roles_for_bars_and_range():
+    # 2026-10-23, "better trend": the average bar is the accent role, the min-max line the muted role, so a theme
+    # controls both. On the default theme muted is a real shade (6 on gs4), not the foreground.
+    fb = framebuf.FrameBuffer(bytearray(FORMATS[0][1]), W, H, framebuf.GS4_HMSB)
+    s = gui.FrameSurface("t", fb, lambda f: None, {"a": {"parent": None, "widgets": []}}, ["a"],
+                         fmt=framebuf.GS4_HMSB,
+                         theme={"bg": 0, "card": 1, "fg": 15, "muted": 9, "track": 4, "accent": 12,
+                                "on_accent": 0, "ok": 10, "warn": 11, "alarm": 13})
+    draw = trend.make(0, 100, 3)
+    draw(s, (0, 0, 40, 40), _Series(4, [(20, 10, 80)]), gui.KNOWN)
+    centre = 40 - 2 - 3 + 1
+    assert s.fb.pixel(centre, 40 - 2 - 28) == 9  # the min-max line: muted
+    assert s.fb.pixel(centre, 40 - 3) == 12  # the bar above the base: accent
 def test_trend_shows_only_what_fits_and_rejects_a_scalar():
     draw = trend.make(0, 10, 2)
     rect = (0, 0, 14, 20)  # 10 px inside -> 5 columns
@@ -344,5 +358,6 @@ minitest.run(
         test_trend_shows_only_what_fits_and_rejects_a_scalar,
         test_trend_unknown_known_and_stale_look_different_and_stay_inside,
         test_trend_natural_size,
+        test_trend_uses_the_theme_roles_for_bars_and_range,
     ]
 )
