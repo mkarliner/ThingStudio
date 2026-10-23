@@ -2590,6 +2590,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#themes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Themes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#rotating-the-screen" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3079,6 +3090,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#themes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Themes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#rotating-the-screen" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3211,6 +3233,23 @@ so use them on boards with little RAM.</p>
 (221 px) and <code>font_seg748</code> fits <code>14:05:09</code> (254 px). <code>font_seg796</code> is for wider screens. The font is DSEG by
 Keshikan (SIL Open Font License 1.1); see
 <a href="https://github.com/mkarliner/ThingStudio/blob/main/docs/third-party-licenses.md">third-party licenses</a>.</p>
+<h2 id="themes">Themes</h2>
+<p>By default a screen draws in the GUI's own colours. To choose your own, add a <strong>GUI theme</strong> config (+ on the
+gui screen's <strong>theme</strong> property) and name it there: one theme can serve several screens, and a screen with no theme
+keeps the default colours.</p>
+<p>A theme is ten roles, so the widgets stay consistent and one theme works on different panels: <strong>background</strong>, <strong>card</strong>,
+<strong>foreground</strong>, <strong>muted</strong> (stale values), <strong>track</strong> (a bar's empty part), <strong>accent</strong> (bar fill, lights on), <strong>text on
+accent</strong>, <strong>ok</strong>, <strong>warn</strong> and <strong>alarm</strong>. Start from <strong>dark slate</strong> or <strong>light paper</strong> and change any colour; the preset
+is a starting point, not a lock.</p>
+<p>A panel with fewer colours than that folds the roles onto the ones it has, rather than refusing the theme:</p>
+<ul>
+<li>a <strong>gs4</strong> panel (16 colours) gets every role as its own colour;</li>
+<li>a <strong>gs2</strong> panel (4 colours) keeps background, foreground, muted and accent — cards fold to the background, the track
+  to muted, ok/warn/alarm to the foreground;</li>
+<li>a <strong>mono</strong> panel (2 colours) is ink and paper: text, bars and lights are ink, backgrounds are paper.</li>
+</ul>
+<p>Themes apply to full-colour panels for now: a gs2, gs4 or mono screen still draws in its own palette, and Deploy says
+so in the console if a theme is set.</p>
 <h2 id="rotating-the-screen">Rotating the screen</h2>
 <p>On the display node, set <strong>orientation</strong> to 0, 90, 180 or 270 (the picture turned clockwise). It is one setting
 on each display, so a display can't have two. Set the display's width and height to the panel's own size, and its

@@ -3276,6 +3276,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#gui-theme" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GUI theme
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#i2c-bus" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4013,6 +4024,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#gui-theme" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GUI theme
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#i2c-bus" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4303,6 +4325,7 @@ checked when the flow is compiled, and the error says what is allowed. See <a hr
 <li><code>minInterval</code>, number, default <code>200</code> — least milliseconds between screen updates</li>
 <li><code>wrap</code>, boolean, default <code>true</code> — whether next/prev wrap around at the ends of the pages</li>
 <li><code>touchPanelConfigId</code>, string, default <code>""</code>, the id of a <code>thingstudio/config/touch-panel</code> config — the touch-panel config to read touches from; empty for none</li>
+<li><code>themeConfigId</code>, string, default <code>""</code>, the id of a <code>thingstudio/config/gui-theme</code> config</li>
 </ul>
 </li>
 </ul>
@@ -4634,6 +4657,22 @@ checked when the flow is compiled, and the error says what is allowed. See <a hr
 </ul>
 <h2 id="config-nodes">Config nodes</h2>
 <p>A config node is listed under <code>configs</code> in a flow file as <code>{id, type, properties}</code>. A node names it by id in a property such as <code>i2cConfigId</code>. Credentials are saved by name (<code>credentialName</code>), never as secrets in the file.</p>
+<h3 id="gui-theme">GUI theme</h3>
+<p>Type <code>thingstudio/config/gui-theme</code>.</p>
+<ul>
+<li><code>preset</code>, select: one of <code>dark-slate</code>, <code>light-paper</code>, ``; Seeds the colours below when the theme is created. Changing a colour keeps the preset as the starting point.</li>
+<li><code>bg</code>, colour</li>
+<li><code>card</code>, colour</li>
+<li><code>fg</code>, colour</li>
+<li><code>muted</code>, colour</li>
+<li><code>track</code>, colour</li>
+<li><code>accent</code>, colour</li>
+<li><code>on_accent</code>, colour</li>
+<li><code>ok</code>, colour</li>
+<li><code>warn</code>, colour</li>
+<li><code>alarm</code>, colour</li>
+</ul>
+<p>Defaults: <code>{"preset":"dark-slate","bg":4258,"card":8484,"fg":65535,"muted":35953,"track":16904,"accent":16113,"on_accent":2113,"ok":15974,"warn":64608,"alarm":63488}</code></p>
 <h3 id="i2c-bus">I2C bus</h3>
 <p>Type <code>thingstudio/config/i2c-bus</code>.</p>
 <ul>
