@@ -2997,6 +2997,10 @@ used by both a gui screen and a touch node: Deploy stops and names them.</p>
 <h2 id="properties">Properties</h2>
 <ul>
 <li><strong>touch panel</strong> — which <a href="../touch-panel/">touch panel</a> to read. Pick one, or add one with <strong>+</strong>.</li>
+<li><strong>orientation</strong> — the turn of the picture these touches match: 0, 90, 180 or 270 degrees clockwise, the same
+  four angles a display's orientation takes. Set it when the screen is turned and the flow reads touch through this
+  node. Off leaves the panel's own axes alone. A flow with a gui screen sets orientation on the display instead and
+  leaves this off: the screen turns its own touches to match.</li>
 </ul>
 <h2 id="wiring">Wiring</h2>
 <p><strong>Output</strong> — down and up, each with the touch point:</p>
@@ -3004,7 +3008,8 @@ used by both a gui screen and a touch node: Deploy stops and names them.</p>
 <span class="n">msg</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'payload'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'x'</span><span class="p">:</span> <span class="mi">121</span><span class="p">,</span> <span class="s1">'y'</span><span class="p">:</span> <span class="mi">338</span><span class="p">},</span> <span class="s1">'topic'</span><span class="p">:</span> <span class="s1">'up'</span><span class="p">}</span>     <span class="c1"># it lifts, where it was last seen</span>
 </code></pre></div>
 <p>Down and up only: nothing is sent while the finger moves, and only one finger is followed. The coordinates are
-screen pixels; there is nothing to calibrate.</p>
+screen pixels in the turned picture, so they match what the display shows when the orientation is set (and in the
+panel's own axes when it is off). There is nothing to calibrate.</p>
 <h2 id="behavior">Behavior</h2>
 <p>The status dot shows whether the panel is answering (<code>FT6336U</code>, or <code>no reply from FT6336U at 0x38 on I2C bus 0</code>).
 A missing panel sends nothing and is picked up when it appears. A panel that disappears mid-touch still sends its
