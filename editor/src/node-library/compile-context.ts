@@ -57,8 +57,9 @@ export interface CompileContext {
     readonly nodes: CompileFlowNode[];
     readonly configs: CompileContextConfig[];
     /** Every wire as [originId, originSlot, targetId, targetSlot] (SPEC.md, added 2026-10-23): lets a package see
-     * which node is wired to it, not just that one is. */
-    readonly links: GraphData["links"];
+     * which node is wired to it, not just that one is. The graph's own tuples carry a link id first and a sixth
+     * field last (Litegraph's shape), so they are normalised here: a hook should not have to know that. */
+    readonly links: [string, number, string, number][];
   };
   /** Every node of the same type as `node`, including this instance: id + non-secret properties, no wiring.
    * Added 2026-10-20 for http_in's route table, so a package can validate the set before deploy. */
@@ -139,7 +140,7 @@ export function buildCompileContext(options: BuildCompileContextOptions): Compil
         properties: { ...n.properties },
       })),
       configs: configs.map((c) => ({ id: c.id, type: c.type, properties: redact(c) })),
-      links: graphData.links,
+      links: graphData.links.map(([, originId, originSlot, targetId, targetSlot]) => [originId, originSlot, targetId, targetSlot]),
     },
     nodesOfType: graphData.nodes
       .filter((n) => n.type === node.type)

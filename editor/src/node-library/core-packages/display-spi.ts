@@ -257,9 +257,12 @@ def compile(ctx, properties):
         palette = palette[:ENTRIES_USED[fmt]]
         theme, screen_id = _theme_of(ctx, ctx['node']['id'])
         if theme is not None:
-            if raw_palette is not None and list(palette) != list(_theme_palette(dict(_THEME_DEFAULT), fmt)):
-                warnings.append("the theme on the wiring gui screen sets this display's palette; the palette on this "
-                                "display is ignored while that screen is wired to it")
+            # Warn only if this display's palette was actually changed from the shipped default: the default is
+            # what a flow carries without anyone thinking about it, and warning on it would be noise.
+            shipped = list(DEFAULT_PALETTE)[:ENTRIES_USED[fmt]]
+            if raw_palette is not None and [int(v) for v in raw_palette][:ENTRIES_USED[fmt]] != shipped:
+                warnings.append("the theme on the wired gui screen sets this display's palette; the palette set on "
+                                "this display is ignored while that screen is wired to it")
             palette = _theme_palette(theme, fmt)[:ENTRIES_USED[fmt]]
 
     spi_bus, err = _whole(properties, 'spiBus', 2, 0, 'spiBus')

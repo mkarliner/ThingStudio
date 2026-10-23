@@ -37,7 +37,9 @@ function graph(format: string, themeProps: Record<string, unknown> | null): Grap
       { id: "screen1", type: "thingstudio/gui_screen", properties: { themeConfigId: themeProps === null ? "" : "theme1" } },
       { id: "display1", type: "thingstudio/display_spi", properties: { frameFormat: format } },
     ],
-    links: [["screen1", 0, "display1", 0]],
+    // The graph's own link tuples: [linkId, originId, originSlot, targetId, targetSlot, socketType]. The compile
+    // context normalises them to [originId, originSlot, targetId, targetSlot] before a hook sees them.
+    links: [[1, "screen1", 0, "display1", 0, "any"]] as unknown as GraphData["links"],
     configs: [
       { id: "bus0", type: "thingstudio/config/spi-bus", properties: { spiBus: 2 } },
       ...themeConfig,
