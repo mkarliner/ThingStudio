@@ -275,3 +275,9 @@ refusing; the image stays **optional, not the recommended route** for the moment
 (2026-10-22, second and third passes). 1 entry:
 `docs/working-notes/decisions/classic-esp32-firmware.md`.
 
+## MCP server
+
+Build an MCP server that talks to the running backend (check, describe, board info, console, node status, and
+deploy behind a confirmation in the editor), post-MVP; no checker-only wrapper for launch, since the shell command
+already works for the assistants that have a shell. Needs a security design (stdio transport, how it authenticates
+to the backend, prompt injection) before it is built (2026-10-23). 1 entry: `docs/working-notes/decisions/mcp-server.md`.
