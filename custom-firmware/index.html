@@ -3079,7 +3079,13 @@
 <p>A MicroPython image with Thingstudio's runtime and every flow library built in, for classic ESP32 boards with no
 PSRAM. It is what lets those boards run a GUI flow: stock MicroPython runs out of memory loading the display stack.</p>
 <p>The image is optional. Stock MicroPython and the <a href="../installing-runtime/">runtime install</a> work as usual, and nothing
-in the editor changes. Use it when a GUI flow on a 4 MB ESP32 stops with <code>MemoryError</code>.</p>
+in the editor changes. Use it when a flow on a 4 MB ESP32 stops with <code>MemoryError</code> and the steps in
+<a href="../debugging/#memoryerror-or-a-library-that-wont-load">MemoryError or a library that won't load</a> have not helped —
+this is the third of them, "run a firmware image with the libraries built in".</p>
+<p>The technique is not specific to this image or to this chip: freezing the runtime and the flow libraries into
+MicroPython works on any board. This image exists because a classic ESP32 is the board where it changes the most,
+and because building one needs an ESP-IDF toolchain. <code>firmware/classic-esp32/</code> in the repository is a working
+example to copy for another board.</p>
 <h2 id="what-it-changes">What it changes</h2>
 <p>The runtime and the flow libraries are frozen into the firmware, which means MicroPython runs them from flash instead
 of copying them into RAM. On a classic ESP32 that is the difference between a GUI flow starting and failing with
@@ -3103,12 +3109,12 @@ one image serves any classic ESP32 board. It is tested on the CYD.</p>
   C3 or C6, and not for RP2040 or RP2350 boards.</li>
 <li>A USB cable that carries data.</li>
 <li><code>esptool</code> and <code>mpremote</code> on the computer: <code>pip install esptool mpremote</code>.</li>
-<li>Four downloads from the project's releases page: the image, its <code>.sha256</code> file, <code>_deps.json</code> and <code>main.py</code>.</li>
+<li>Four downloads from the project's <a href="https://github.com/mkarliner/ThingStudio/releases/latest">releases page</a>: the image, its <code>.sha256</code> file, <code>_deps.json</code> and <code>main.py</code>.</li>
 </ul>
 <h2 id="install">Install</h2>
 <p>Flashing erases the board: its saved flows, board settings and WiFi credentials are gone afterwards.</p>
 <ol>
-<li>Download the four files from the releases page: the image, its <code>.sha256</code>, <code>_deps.json</code> and <code>main.py</code>. Put them
+<li>Download the four files from the <a href="https://github.com/mkarliner/ThingStudio/releases/latest">releases page</a>: the image, its <code>.sha256</code>, <code>_deps.json</code> and <code>main.py</code>. Put them
    in one folder and go there. Check the image against its checksum:</li>
 </ol>
 <div class="highlight"><pre><span></span><code><span class="nv">IMAGE</span><span class="o">=</span>thingstudio-classic-esp32-12.1.0-8e2f87d.bin

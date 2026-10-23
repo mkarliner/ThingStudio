@@ -2913,6 +2913,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#deploy-failed-a-second-time-is-the-flow-too-big-for-my-board" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deploy failed a second time. Is the flow too big for my board?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#why-is-deploy-sending-the-flow-in-pieces" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3186,6 +3197,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#deploy-failed-a-second-time-is-the-flow-too-big-for-my-board" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deploy failed a second time. Is the flow too big for my board?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#why-is-deploy-sending-the-flow-in-pieces" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3435,6 +3457,18 @@ USB cable, or <strong>Tools → Reset board (hard)</strong>), then deploy. See
 the heap regions MicroPython took as it grew stay where they were, and memory taken from the chip is not given
 back. A board that couldn't find one big block before the soft restart still can't after it. Only cutting power
 to the chip rebuilds the heap from scratch — hence the power cycle in the recipe above.</p>
+<h2 id="deploy-failed-a-second-time-is-the-flow-too-big-for-my-board">Deploy failed a second time. Is the flow too big for my board?</h2>
+<p>Possibly, yes. Work through this in order:</p>
+<ol>
+<li><strong>Tools → Remove flow…</strong>, then <strong>power cycle the board</strong> (unplug and replug the USB cable, or
+   <strong>Tools → Reset board (hard)</strong>), then deploy.</li>
+<li>If it still fails, the flow may be too big for the board. Make it smaller (fewer GUI pages, fewer libraries, a
+   smaller frame), use a board with more memory, or — on a classic ESP32 — run the
+   <a href="../custom-firmware/">custom firmware</a>, which keeps the runtime and the libraries in the firmware.</li>
+</ol>
+<p>Boards with little RAM have a point where a flow simply does not fit. Nothing in the editor can make room the
+board does not have. The console shows how much memory the board had when it failed; see
+<a href="../debugging/#memoryerror-or-a-library-that-wont-load">MemoryError or a library that won't load</a>.</p>
 <h2 id="why-is-deploy-sending-the-flow-in-pieces">Why is Deploy sending the flow in pieces?</h2>
 <p>Some boards (classic ESP32 with no PSRAM) can't take a whole flow in one message once a display flow has run:
 the memory is free but in pieces too small for one message. Deploy sends the flow in 5 KB pieces instead, each

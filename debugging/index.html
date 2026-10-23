@@ -3407,28 +3407,35 @@ different <a href="https://micropython.org/download/">MicroPython build</a>.</p>
 <p>Thingstudio's own libraries, such as the MQTT client and display drivers, are sent by Deploy. See
 <a href="../flow-lifecycle/#libraries">Libraries</a>.</p>
 <h2 id="memoryerror-or-a-library-that-wont-load">MemoryError or a library that won't load</h2>
-<p>On an ESP32 without external RAM (PSRAM), a flow can fail to load with <code>MemoryError</code> even though the <code>[memory]</code> line
-shows free RAM. The free RAM is in pieces, and the library needs one large piece. This is most likely after a display
-flow has run. Use <strong>Tools → Reset board (hard)</strong>, then deploy again. See the <a href="../faq/">FAQ</a> for why an ESP32 has
-little room.</p>
-<p>If Deploy says <strong>too full to receive the flow</strong>, or a deploy starts and then fails with <code>MemoryError</code>, the running
-flow is holding the memory and the board has no single block big enough to take the new one. This happens on ESP32
-boards without PSRAM once a display flow has run.</p>
-<p><strong>The way out is to remove the flow and power cycle the board, then deploy:</strong></p>
+<p>A board can be short of memory while its <code>[memory]</code> line still shows free RAM. The free RAM is in pieces, and a
+flow or a library needs one piece big enough to fit. This is common on boards with little RAM, most of all on an
+ESP32 without PSRAM once a display flow has run.</p>
+<p>When a deploy fails this way, work through these in order:</p>
 <ol>
 <li><strong>Tools → Remove flow…</strong> — so nothing is resumed at start-up.</li>
 <li><strong>Power cycle the board</strong> — unplug its USB cable and plug it back in, or <strong>Tools → Reset board (hard)</strong>.</li>
-<li>Deploy.</li>
+<li>Deploy again.</li>
 </ol>
-<p>Removing the flow alone doesn't help: the running flow keeps its memory until the chip restarts. A soft restart
-doesn't help either — it restarts the interpreter over the same heap regions and gives no chip memory back. Only a
-full power cycle gives the board a clean heap, which is why the recipe above is the one that works.</p>
+<p>Removing the flow alone does not help: the running flow keeps its memory until the chip restarts. A soft restart
+does not help either — it restarts the interpreter over the same heap regions and gives no chip memory back. Only a
+power cycle gives the board a clean heap, which is why it is the step above.</p>
+<p><strong>If it still fails after the power cycle, the flow may be too big for this board.</strong> That is a limit of the board,
+not a fault in the flow. Three things can still work:</p>
+<ul>
+<li><strong>Make the flow smaller.</strong> Fewer pages in the GUI, fewer libraries imported, a smaller frame. The gui screen node
+  sends a frame in strips for this reason; a <code>function</code> node that builds a whole frame at once still needs one big
+  block.</li>
+<li><strong>Use a board with more memory.</strong> Boards with PSRAM have room for flows a board without it cannot start.</li>
+<li><strong>Run a firmware image with the libraries built in.</strong> On a classic ESP32 there is a ready-made one:
+  <a href="../custom-firmware/">Custom firmware for classic ESP32</a>. On other boards the same technique works — freeze the
+  runtime and the flow libraries into MicroPython — if you build your own.</li>
+</ul>
+<p>If none of those is possible, the flow does not fit that board. Nothing in the editor can make room that the board
+does not have.</p>
 <p>Deploy does not try to fix this for you: it reports the failure and stops, because freeing or restarting on your
 behalf would leave the board in a state you didn't choose. When the board looks short of memory before a deploy
 starts, the console says so in one line (<code>only 19 KB free on the board, this flow is 10 KB -- it may not fit</code>) and
 deploys anyway. That figure is total free memory, not the largest free block, so it is a hint rather than a verdict.</p>
-<p>There is no "stop the flow, keep Thingstudio running" action yet. If that is what you need regularly, it is worth
-saying so — it is a design gap, not a setting.</p>
 <h2 id="wifi-internal-state-error-on-deploy">WiFi Internal State Error on deploy</h2>
 <p>On an ESP32, deploying a flow with MQTT nodes can fail with "Wifi Internal State Error". The board is still
 reconnecting to the network the previous flow used, and refuses a new connection until that finishes. The MQTT nodes
