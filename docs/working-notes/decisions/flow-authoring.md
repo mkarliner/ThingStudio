@@ -1,6 +1,7 @@
 # Flow authoring: layout
 
-Status: decision, 2026-10-22 (Mike). Rule in `AGENTS.md`; the tool is `test-flows/relayout.py`; the check is
+Status: decision, 2026-10-22 (Mike); "kept tight" added 2026-10-23 (Mike). Rule in `AGENTS.md`; the tools are
+`thingstudio-compile --layout` / `--relayout` (and the older `test-flows/relayout.py`); the check is
 `editor/test/flow-layout.test.ts`.
 
 ## The rule
@@ -47,3 +48,29 @@ reviewer's mental model of the flow looks like. The hero flows are the ones peop
 
 2026-10-22: hero flows (CYD, CYD dummy, three Freenove variants) plus `gui-touch-*` and `udp-echo-tester` relaid out
 by the tool; the two latter ones had leftward wires and no other change.
+
+## 2026-10-23: kept tight, and checked by the compile command
+
+Mike, on the AI-authoring skill: it "needs to include some rules/guidance on the layout of flows eg: generally left
+to right, kept fairly visually tight". The rules are now written once, in `docs/user-guide/ai-authoring.md#layout`,
+and the skill repeats them.
+
+The numbers come from the flows Mike laid out by hand in the editor (`kitchen-sink`, `bmp280-test-flow`,
+`basic-mqtt`), not from `relayout.py`'s grid: columns about 220 px apart, about 36 px between nodes stacked in a
+column, about 66 px between separate chains. Nodes are 34 px tall and 84-132 px wide, so `relayout.py`'s 170 px row
+pitch left about 136 px of empty space between rows, looser than anything Mike laid out himself.
+
+- `thingstudio-compile --layout` (`editor/src/cli/layout.ts`) reports, as `layout:` warnings: nodes with no
+  position, wires that go backwards or have no room, overlapping nodes, empty bands more than 200 px across or 150 px
+  down, a flow that starts more than 320 px from the origin (the editor does not fit the view on open), and wires a
+  few pixels out of line. The warning thresholds are looser than the target, so a flow laid out by hand in roughly
+  the right shape passes. It is opt-in, so a user's own flow is never judged unless someone asks.
+- `--relayout` lays a flow out per chain (each weakly connected group on its own, stacked), column = longest path
+  from a source, y = average of the feeding nodes pushed down only to clear the node above, so a straight chain is one
+  straight row. Every shipped flow relaid out passes `--layout` (`editor/test/cli-layout.test.ts`).
+- Relaid out on 2026-10-23 because the skill ships them as examples and the skill build refuses an example that fails
+  `--layout`: `basic-http-request`, `bmp280-test-flow` (positions only), and
+  `ai-authoring/climate-two-page-modal-freenove` (four wires ran backwards).
+- `editor/test/flow-layout.test.ts` still checks only direction for `test-flows/`. Other shipped flows (the hero
+  flows on the 260 x 170 grid, the display tests at 300 px pitch) pass that test but would draw `--layout`
+  warnings; they were left alone.

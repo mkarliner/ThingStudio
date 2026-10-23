@@ -6,6 +6,7 @@
 #   make test       editor typecheck + tests, backend tests (make -k test runs all three)
 #   make assets     build, then copy the editor, docs, device runtime and definitions into the
 #                   backend package (backend/src/thingstudio_backend/_assets) for packaging
+#   make skill      build the AI-authoring skill (dist/ai-skill/: a folder and a .zip to upload to Claude)
 #   make clean      remove build output (editor/dist, site, the backend's _assets)
 #   make distclean  also remove editor/node_modules, .venv and the PATH link
 #
@@ -34,7 +35,7 @@ RUNTIME_SHA := $(shell git log -1 --format=%H -- device-runtime/src 2>/dev/null)
 # Plain `make` means `make all`, whatever order the rules below are in.
 .DEFAULT_GOAL := all
 .DELETE_ON_ERROR:
-.PHONY: all editor docs backend assets link run test typecheck test-editor test-backend clean distclean unlink check-node check-python screenshots
+.PHONY: all editor docs backend assets skill link run test typecheck test-editor test-backend clean distclean unlink check-node check-python screenshots
 
 # --- prerequisite checks ------------------------------------------------------------
 # Order-only (| check-...) below, so they run first but never force a rebuild.
@@ -90,6 +91,11 @@ editor/dist/index.html: editor/node_modules/.package-lock.json $(STAMP)/runtime-
 	@find editor/src editor/test -name '*.js' -type f -print -delete | sed 's/^/deleted stray /'
 	cd editor && $(NPM) run build
 	touch $@
+
+# The check command plus docs and examples, for an AI assistant (packaging/ai-skill/build.mjs). Always rebuilt: the
+# build also checks every example it packages, and that is the point of running it.
+skill: editor/node_modules/.package-lock.json | check-node
+	cd editor && $(NPM) run build:skill
 
 # --- backend and docs tooling (one venv) -----------------------------------------
 

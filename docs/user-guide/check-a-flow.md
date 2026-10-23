@@ -45,6 +45,11 @@ The exit code is 0 for a valid flow, 1 for a flow with errors, and 2 for a bad c
 - `--out flow.py` writes the generated MicroPython.
 - `--json` prints the result as JSON: `ok`, `errors`, `warnings`, `notes`, `stats` and the `source`.
 - `--strict` makes warnings fail the check.
+- `--layout` also checks the layout: wires run left to right, nodes are close but don't overlap, and the flow starts
+  on screen. Problems come back as `layout:` warnings (so `--strict` fails on them). The rules are in
+  [Layout](ai-authoring.md#layout).
+- `--relayout` rewrites each file's node positions to follow those rules, then checks it. It changes positions only,
+  and it overwrites the file.
 - `--describe timer` prints a node's type, ports and properties with their defaults. `--describe-all` prints every
   node and config node (add `--json` for JSON). The same list is on the [node catalog](nodes-catalog.md) page,
   generated from the code.

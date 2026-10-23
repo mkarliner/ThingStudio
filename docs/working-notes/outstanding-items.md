@@ -292,6 +292,10 @@ ThingStudioMarketing repo, not here.
   but the stm32 port mounts its filesystem at `/flash`. Beyond that, STM32 pins are named (`X1`), so the pin
   model needs a decision first. `-march` for STM32F4 is fixed.
   ([detail](outstanding-items/stm32-pyboard-support.md))
+- **User-authored GUI widgets -- a must, new item, 2026-10-23 (Mike).** Users must be able to write their own
+  GUI widgets (and style or replace built-in ones). GUI-subsystem work, not node-format work
+  (`decisions/gui-layout.md`, 2026-10-15 and 2026-10-23). Not scoped. Open: launch gate or first post-launch item
+  (Mike's call).
 
 ## Backend / auth
 
@@ -344,6 +348,11 @@ ThingStudioMarketing repo, not here.
 - **[P5]** **CI vendor-neutrality -- should CI be independent of GitHub specifically?** Mike's raised question
   (`mikes-questions-and-points.md`, "# CI"); currently GitHub Actions. Not revisited.
   ([detail](outstanding-items/ci-vendor-neutrality.md))
+- **Architecture and status review -- new item, 2026-10-23** (`reviews/2026-10-23-architecture-and-status.md`).
+  Open work it names: delete the dead TypeScript WiFi helpers in `editor/src/node-library/wifi-status.ts` (no
+  callers left) and fix its header; a single source (or a drift test) for `_RUNTIME_VERSION` and
+  `EDITOR_TARGET_VERSION`; the stale "repo-root `AGENTS.md` is empty" entry and the duplicated 2026-10-17
+  custom-display-node entry here.
 
 ## Already tracked — v2/v3 candidates and open design-doc questions
 

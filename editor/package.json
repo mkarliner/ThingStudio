@@ -10,7 +10,8 @@
     "build": "vite build",
     "test": "vitest run",
     "test:watch": "vitest",
-    "build:cli": "vite build --config vite.cli.config.ts"
+    "build:cli": "vite build --config vite.cli.config.ts",
+    "build:skill": "vite build --config vite.cli.config.ts && node ../packaging/ai-skill/build.mjs"
   },
   "devDependencies": {
     "@types/node": "^26.2.0",

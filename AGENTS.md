@@ -346,11 +346,13 @@ a way that could actually run, not just `py_compile` it and call it verified.
 
 When you write or generate a flow file — `test-flows/`, an example in the docs, anything handed to someone to open —
 lay it out left to right: sources at the left edge, every wire going to a node further right, branches stacked
-vertically within their column. A flow that wraps back to the left edge on its second row reads as a rats nest even
-when the graph itself is fine, and it is the person reading it who pays. `python3 test-flows/relayout.py <flow.json>`
-does the layout, `--check` reports wires that go backwards, and `editor/test/flow-layout.test.ts` fails the build for
-a shipped flow with a leftward wire. This is about flows we author: a user's own flow keeps whatever layout they put
-it in, and the editor never repositions nodes on load. Mike, 2026-10-22.
+vertically within their column, and kept visually tight (columns about 220 px apart, about 36 px between stacked
+nodes, about 66 px between separate chains; full rules in `docs/user-guide/ai-authoring.md#layout`). A flow that
+wraps back to the left edge on its second row reads as a rats nest even when the graph itself is fine, and it is the
+person reading it who pays. `node editor/dist-cli/thingstudio-compile.mjs --relayout <flow.json>` does the layout,
+`--layout` checks it, and `editor/test/flow-layout.test.ts` fails the build for a shipped flow with a leftward wire.
+(`python3 test-flows/relayout.py` still works but uses the older, looser 260 x 170 grid.) This is about flows we author: a user's own flow keeps whatever layout they put
+it in, and the editor never repositions nodes on load. Mike, 2026-10-22; "kept tight", 2026-10-23.
 
 ## Third-party software tracking
 

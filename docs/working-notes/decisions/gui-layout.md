@@ -278,6 +278,11 @@ the msg is open.
   the display's (2026-10-09). So: on a GUI, set the size, frame format and rotation once, on the display. Docs
   updated (`gui.md`, `display-spi.md`); the screen's three fields no longer appear in the catalog.
 
+- **2026-10-23 (Mike): user-authored GUI widgets are a must.** A user must be able to write their own GUI widget
+  (and so style or replace a built-in one), not only use the core set. This builds on the 2026-10-15 entry: the
+  work belongs to the GUI subsystem's own model, not the node/package format. Whether it is a launch gate or the
+  first post-launch GUI work was not stated; ask Mike. Tracked in `outstanding-items.md`, "Added 2026-10-23".
+
 - 2026-10-24 (Mike): **a layout must be able to fill the space left on a page, and page dots belong in a footer.**
   Two rulings from looking at the CYD with cards on it.
   **Filling the page.** The demo's content ended at y=205 of a 320-row screen, so more than a third of the panel
