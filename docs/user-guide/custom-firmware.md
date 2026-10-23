@@ -36,13 +36,13 @@ You need these:
   C3 or C6, and not for RP2040 or RP2350 boards.
 - A USB cable that carries data.
 - `esptool` and `mpremote` on the computer: `pip install esptool mpremote`.
-- Four downloads from the project's releases page: the image, its `.sha256` file, `_deps.json` and `main.py`.
+- Four downloads from the project's [releases page](https://github.com/mkarliner/ThingStudio/releases/latest): the image, its `.sha256` file, `_deps.json` and `main.py`.
 
 ## Install
 
 Flashing erases the board: its saved flows, board settings and WiFi credentials are gone afterwards.
 
-1. Download the four files from the releases page: the image, its `.sha256`, `_deps.json` and `main.py`. Put them
+1. Download the four files from the [releases page](https://github.com/mkarliner/ThingStudio/releases/latest): the image, its `.sha256`, `_deps.json` and `main.py`. Put them
    in one folder and go there. Check the image against its checksum:
 
    ```sh
