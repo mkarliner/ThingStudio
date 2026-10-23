@@ -1742,14 +1742,27 @@ Then deploy the flow. A GUI flow that failed with `MemoryError` on stock MicroPy
 
 ## Memory and the board
 
-The image does not add RAM. A classic ESP32 has about 150 KB free for flows with this image and nothing running, and
-a GUI flow takes most of what it has. Two habits avoid the limits that remain:
+The image does not add RAM. A classic ESP32 has about 140 KB free for flows with this image and nothing running, and
+a GUI flow takes most of what it has. Measured on the CYD (ESP32-D0WD, 4 MB, no PSRAM), in KB:
+
+| Board state | MicroPython free | Largest block | ESP-IDF free | ESP-IDF largest |
+|---|---|---|---|---|
+| Just booted, no flow | 142 | 105 | 129 | 108 |
+| GUI flow running | 108 | 50 | 70 | 52 |
+| GUI flow running, after two more deploys | 120 | 27 | 18 | 14 |
+
+Read the third row before leaning on deploys: each deploy over a running flow leaves the heaps more fragmented, and
+the chip's own heap shrinks as MicroPython takes from it. A GUI flow still starts (a 9.5 KB flow needs far less than
+the 27 KB block), but WiFi draws from that shrinking chip heap, and the console warns when it is low.
+
+Two habits avoid the limits that remain:
 
 - Keep frames small. The gui screen node sends a frame in strips for exactly this reason; a `function` node that
   builds a whole frame as one buffer still needs that buffer to be contiguous.
 - When a deploy fails with `MemoryError`, the console says how much memory the board had. If the board cannot make
   room, [remove the flow and power cycle](debugging.md#memoryerror-or-a-library-that-wont-load) before deploying
-  again. A soft restart does not help: it reuses the same heap.
+  again. A soft restart does not help: it reuses the same heap. A power cycle also returns the chip heap that
+  repeated deploys take.
 
 ## Back to stock MicroPython
 

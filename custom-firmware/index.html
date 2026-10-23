@@ -3138,14 +3138,53 @@ running it: it erases the filesystem partition, and its port name comes from <co
 </ul>
 <p>Then deploy the flow. A GUI flow that failed with <code>MemoryError</code> on stock MicroPython should run.</p>
 <h2 id="memory-and-the-board">Memory and the board</h2>
-<p>The image does not add RAM. A classic ESP32 has about 150 KB free for flows with this image and nothing running, and
-a GUI flow takes most of what it has. Two habits avoid the limits that remain:</p>
+<p>The image does not add RAM. A classic ESP32 has about 140 KB free for flows with this image and nothing running, and
+a GUI flow takes most of what it has. Measured on the CYD (ESP32-D0WD, 4 MB, no PSRAM), in KB:</p>
+<table>
+<thead>
+<tr>
+<th>Board state</th>
+<th>MicroPython free</th>
+<th>Largest block</th>
+<th>ESP-IDF free</th>
+<th>ESP-IDF largest</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Just booted, no flow</td>
+<td>142</td>
+<td>105</td>
+<td>129</td>
+<td>108</td>
+</tr>
+<tr>
+<td>GUI flow running</td>
+<td>108</td>
+<td>50</td>
+<td>70</td>
+<td>52</td>
+</tr>
+<tr>
+<td>GUI flow running, after two more deploys</td>
+<td>120</td>
+<td>27</td>
+<td>18</td>
+<td>14</td>
+</tr>
+</tbody>
+</table>
+<p>Read the third row before leaning on deploys: each deploy over a running flow leaves the heaps more fragmented, and
+the chip's own heap shrinks as MicroPython takes from it. A GUI flow still starts (a 9.5 KB flow needs far less than
+the 27 KB block), but WiFi draws from that shrinking chip heap, and the console warns when it is low.</p>
+<p>Two habits avoid the limits that remain:</p>
 <ul>
 <li>Keep frames small. The gui screen node sends a frame in strips for exactly this reason; a <code>function</code> node that
   builds a whole frame as one buffer still needs that buffer to be contiguous.</li>
 <li>When a deploy fails with <code>MemoryError</code>, the console says how much memory the board had. If the board cannot make
   room, <a href="../debugging/#memoryerror-or-a-library-that-wont-load">remove the flow and power cycle</a> before deploying
-  again. A soft restart does not help: it reuses the same heap.</li>
+  again. A soft restart does not help: it reuses the same heap. A power cycle also returns the chip heap that
+  repeated deploys take.</li>
 </ul>
 <h2 id="back-to-stock-micropython">Back to stock MicroPython</h2>
 <p>Flash a standard MicroPython build for the board, then <a href="../installing-runtime/">install the runtime</a> again. The stock
