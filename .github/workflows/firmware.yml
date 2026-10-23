@@ -13,8 +13,9 @@ name: Firmware
 # rebuildable artifact from a known commit -- what the integrity story for these downloads rests on.
 
 on:
-  push:
-    tags: ["v*"]
+  # Manual only. The image is built locally and attached to a release by hand (Mike, 2026-10-23);
+  # this workflow is not the build path. It has never completed a build -- it stops in the ESP-IDF
+  # container step -- so it no longer runs on a tag, where it only produced a failed run per release.
   workflow_dispatch: {}
 
 permissions:

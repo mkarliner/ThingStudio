@@ -42,11 +42,14 @@ the image from, and a CI build that proves the patch applies in the container.
 
 ## Open, and what the next session should pick up
 
-1. **A release to download the image from.** The firmware page tells people to download the image, `_deps.json` and
-   `main.py` from releases; none exist yet. `.github/workflows/firmware.yml` attaches them to a draft release on a
-   tag, and now includes `main.py`.
-2. **A CI build since `patches/` exists.** The workflow has not run with the patch step; the first tagged build is
-   the proof it applies in the `espressif/idf` container (it fails loudly if the patch stops applying).
+1. **Attach the image to the v0.4.0 draft release by hand.** The firmware page tells people to download the image,
+   `_deps.json` and `main.py` from releases; the Release run made a draft, the image still has to go on it. Use the
+   binary that was tested: `out/thingstudio-classic-esp32-12.1.0-8e2f87d.bin` (sha256 `f931ca3f…7151cead0`), built
+   from `8e2f87d` -- earlier than the tag, so its build stamp differs from the release commit while the code is the
+   same.
+2. **Build path: local, by decision (Mike, 2026-10-23).** `firmware.yml` is not the build path and no longer
+   triggers on tags; it has never completed a build (submodules need `idf.py` from the container, and the container
+   has no node for the index). `decisions/classic-esp32-firmware.md` records it and when to revisit.
 3. **The stop-first sequence** (`outstanding-items.md`): still settled as "stop the flow first", still unbuilt, and
    now only needed for boards *without* the image — on the image a deploy over a running flow works.
 4. **Release of the 8 KB buffer?** Worth offering upstream (rp2 has the macro; esp32 hardcodes the array). Not

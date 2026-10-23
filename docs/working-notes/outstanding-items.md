@@ -111,8 +111,10 @@ not here.
   page is written (`docs/user-guide/custom-firmware.md`); S0/S4/S5 measured on the reflashed 12.1.0 board
   2026-10-23 and in that page (idle 142/105 KB MicroPython, 129/108 KB IDF; GUI flow 108/50 and 70/52; after two more
   deploys 120/27 and 18/14 -- repeated deploys deplete the chip heap); the MQTT stages (S2/S3) were not run and the
-  five-cycle stage is retired. Owed: a CI rebuild of the image now that `build.sh` applies `patches/`, and a real
-  release to download it from.
+  five-cycle stage is retired. **Build path decided (Mike, 2026-10-23): built locally, attached to the release by
+  hand** -- `firmware.yml` is not the build path and no longer triggers on tags
+  (`decisions/classic-esp32-firmware.md`). Owed: attach the tested 12.1.0 image, its `.sha256`, `_deps.json` and
+  `main.py` to the v0.4.0 draft release.
 - **[LAUNCH]** **Button rework -- built and hardware-checked 2026-10-09.** Two-faced nodes in the compiler;
   button output, modes and controlled toggle; modal close reason; touch panel config node (with presets) polled by
   the gui screen; `gui_touch` removed (`decisions/gui-layout.md` 2026-10-09, `gui-button-rework-briefing.md`).

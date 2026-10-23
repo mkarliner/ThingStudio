@@ -41,6 +41,20 @@ are out for now; the same technique applies when a board needs it.
   1.5 MB per slot (MicroPython's own table) and the frozen set is expected to exceed that. Moving to
   OTA later costs one USB reflash, which is already the install path — the one-way door is cheap here.
 
+## How the image is built and published (2026-10-23, Mike)
+
+**Built locally, attached to a release by hand.** The image is produced by `firmware/classic-esp32/build.sh` on a
+machine with ESP-IDF and the Xtensa toolchain, and the person attaching it to the release has flashed and run it on
+a board. That makes the published binary the one that was tested, which matters more here than a build server:
+`.github/workflows/firmware.yml` exists, includes the pinned MicroPython tag and the `espressif/idf` image, and is
+**not** the build path — it has never completed a build (it stops in the container step: the esp32 port fetches its
+submodules through `idf.py`, which is inside the container, and the container also lacks the node the index generator
+needs). It no longer triggers on tags; running it is a manual choice.
+
+Revisit when published images need rebuilding without this VM (a second machine, a maintainer who does not hold the
+toolchain) — then CI has to be designed as the release path rather than patched into one, starting from what it is
+allowed to publish and how the "flashed and run" check is recorded.
+
 ## Install and integrity
 
 `esptool write_flash 0x0 <merged.bin>`, then two `mpremote fs cp` lines for `/main.py` (a frozen
