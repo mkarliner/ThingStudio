@@ -22,7 +22,7 @@
       "type": "thingstudio/gui_readout",
       "properties": {
         "name": "Temperature",
-        "units": "°C",
+        "units": "\u00b0C",
         "decimals": 1,
         "lo": -20,
         "hi": 50,
@@ -284,16 +284,16 @@
       "type": "thingstudio/config/gui-theme",
       "properties": {
         "preset": "dark-slate",
-        "bg": 4258,
-        "card": 8484,
+        "bg": 2116,
+        "card": 26971,
         "fg": 65535,
-        "muted": 35953,
-        "track": 16904,
-        "accent": 16113,
-        "on_accent": 2113,
-        "ok": 15974,
-        "warn": 64608,
-        "alarm": 63488
+        "muted": 46425,
+        "track": 14699,
+        "accent": 1855,
+        "on_accent": 131,
+        "ok": 1838,
+        "warn": 65056,
+        "alarm": 63656
       }
     }
   ],
@@ -348,32 +348,40 @@
                 "card": true
               },
               {
-                "kind": "text",
-                "text": "Temperature",
-                "font": "font_body16"
-              },
-              {
-                "kind": "widget",
-                "node": "n03-temp",
-                "font": "font_digits48",
-                "unitsFont": "font_body24",
-                "alignSelf": "center"
-              },
-              {
-                "kind": "text",
-                "text": "Humidity",
-                "font": "font_body16"
-              },
-              {
-                "kind": "widget",
-                "node": "n04-hum",
-                "font": "font_digits48",
-                "unitsFont": "font_body24",
-                "alignSelf": "center"
-              },
-              {
-                "kind": "spacer",
-                "grow": 1
+                "kind": "column",
+                "card": true,
+                "padding": 6,
+                "gap": 4,
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "Temperature",
+                    "font": "font_body16"
+                  },
+                  {
+                    "kind": "widget",
+                    "node": "n03-temp",
+                    "font": "font_digits48",
+                    "unitsFont": "font_body24",
+                    "alignSelf": "center"
+                  },
+                  {
+                    "kind": "text",
+                    "text": "Humidity",
+                    "font": "font_body16"
+                  },
+                  {
+                    "kind": "widget",
+                    "node": "n04-hum",
+                    "font": "font_digits48",
+                    "unitsFont": "font_body24",
+                    "alignSelf": "center"
+                  },
+                  {
+                    "kind": "spacer",
+                    "grow": 1
+                  }
+                ]
               },
               {
                 "kind": "pagedots",
@@ -404,40 +412,48 @@
                 "card": true
               },
               {
-                "kind": "widget",
-                "node": "n05-press",
-                "font": "font_digits48",
-                "unitsFont": "font_body20",
-                "alignSelf": "center"
-              },
-              {
-                "kind": "widget",
-                "node": "n06-pbar",
-                "height": 16,
-                "alignSelf": "stretch"
-              },
-              {
-                "kind": "row",
-                "alignSelf": "stretch",
-                "justify": "space-between",
+                "kind": "column",
+                "card": true,
+                "padding": 6,
+                "gap": 4,
                 "children": [
                   {
-                    "kind": "text",
-                    "text": "950",
-                    "font": "font_body12"
+                    "kind": "widget",
+                    "node": "n05-press",
+                    "font": "font_digits48",
+                    "unitsFont": "font_body20",
+                    "alignSelf": "center"
                   },
                   {
-                    "kind": "text",
-                    "text": "1050",
-                    "font": "font_body12"
+                    "kind": "widget",
+                    "node": "n06-pbar",
+                    "height": 16,
+                    "alignSelf": "stretch"
+                  },
+                  {
+                    "kind": "row",
+                    "alignSelf": "stretch",
+                    "justify": "space-between",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "950",
+                        "font": "font_body12"
+                      },
+                      {
+                        "kind": "text",
+                        "text": "1050",
+                        "font": "font_body12"
+                      }
+                    ],
+                    "card": true,
+                    "padding": 6
+                  },
+                  {
+                    "kind": "spacer",
+                    "grow": 1
                   }
-                ],
-                "card": true,
-                "padding": 6
-              },
-              {
-                "kind": "spacer",
-                "grow": 1
+                ]
               },
               {
                 "kind": "pagedots",
