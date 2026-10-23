@@ -28,13 +28,80 @@ export const descriptor: NodeDescriptor = {
   },
   properties: [
     { name: "touchPanelConfigId", label: "Touch panel", kind: "configRef", configType: "thingstudio/config/touch-panel", default: "" },
+    {
+      name: "orientation",
+      label: "orientation",
+      kind: "select",
+      default: "",
+      options: [
+        { value: "", label: "off (panel's own axes)" },
+        { value: "0", label: "0 degrees (the panel's own)" },
+        { value: "90", label: "90 degrees clockwise" },
+        { value: "180", label: "180 degrees" },
+        { value: "270", label: "270 degrees clockwise" },
+      ],
+      help:
+        "The turn of the picture this touch matches, for a flow with no gui screen (a gui screen takes it from its " +
+        "display). Same four angles as the display's orientation. Off leaves the coordinates as the panel reports them.",
+    },
     // Hidden: the poll interval comes from the panel config; the hook maps it here for the package source loop.
     { name: "intervalMs", label: "interval", kind: "number", default: 20, hidden: true },
     { name: "nodeId", label: "node id", kind: "nodeId", default: "" },
   ],
 };
 
-export const compileHook = `def _whole(props, name, dflt, low, what):
+export const compileHook = `def _touch_map(flags, point, width, height):
+    # The driver's transform: swap the axes, then flip on the swapped size (ft6336u's own order).
+    x, y = point
+    if flags[0]:
+        x, y = y, x
+        width, height = height, width
+    if flags[1]:
+        x = width - 1 - x
+    if flags[2]:
+        y = height - 1 - y
+    return (x, y)
+
+
+def _to_turned(point, width, height, angle):
+    # The turned picture's pixel at the position of unturned pixel 'point'. Mirrors orientation-shared.ts.
+    x, y = point
+    if angle == 0:
+        return (x, y)
+    if angle == 90:
+        return (y, width - 1 - x)
+    if angle == 180:
+        return (width - 1 - x, height - 1 - y)
+    return (height - 1 - y, x)
+
+
+def _samples(width, height):
+    return [(0, 0), (width - 1, 0), (0, height - 1), (1, 2), (width - 2, 3)]
+
+
+def _oriented_touch(base, angle, width, height):
+    # The flags that give coordinates in the picture turned by 'angle', given the panel's own flags. Brute-forced
+    # over the eight swap/flip combinations rather than a hand-written table, so it cannot disagree with the
+    # mapping it is derived from. editor/test/node-touch-i2c.test.ts checks this against orientedTouch() in
+    # orientation-shared.ts, which is the same algorithm -- the two must agree, and the test says so.
+    if base[0]:
+        turned_width, turned_height = height, width
+    else:
+        turned_width, turned_height = width, height
+    for n in range(8):
+        flags = ((n & 1) != 0, (n & 2) != 0, (n & 4) != 0)
+        ok = True
+        for point in _samples(width, height):
+            want = _to_turned(_touch_map(base, point, width, height), turned_width, turned_height, angle)
+            if _touch_map(flags, point, width, height) != want:
+                ok = False
+                break
+        if ok:
+            return flags
+    return None
+
+
+def _whole(props, name, dflt, low, what):
     raw = props.get(name)
     if raw is None or raw == '':
         raw = dflt
@@ -101,6 +168,21 @@ def compile(ctx, properties):
         except (TypeError, ValueError):
             return {'errors': ['touch panel reset pin "%s" must be a pin number' % rst_raw]}
 
+    base = (panel.get('swapXY') is True, panel.get('flipX') is True, panel.get('flipY') is True)
+    raw_angle = properties.get('orientation')
+    if raw_angle is None or raw_angle == '':
+        flags = base
+    else:
+        try:
+            angle = int(raw_angle)
+        except (TypeError, ValueError):
+            angle = -1
+        if angle not in (0, 90, 180, 270):
+            return {'errors': ['%s orientation "%s" must be 0, 90, 180 or 270' % (ctx['node']['type'], raw_angle)]}
+        flags = _oriented_touch(base, angle, width, height)
+        if flags is None:
+            return {'errors': ['%s: no touch orientation matches a turn of %d degrees' % (ctx['node']['type'], angle)]}
+
     claims = []
     if rst >= 0:
         claims.append({'resource': 'GPIO %d' % rst, 'use': 'output'})
@@ -108,8 +190,8 @@ def compile(ctx, properties):
         'bus': bus.get('bus', 0), 'scl': bus.get('scl'), 'sda': bus.get('sda'),
         'freq': bus.get('freq', 400000), 'address': address, 'rstPin': rst,
         'width': width, 'height': height,
-        'swapXY': panel.get('swapXY') is True, 'flipX': panel.get('flipX') is True,
-        'flipY': panel.get('flipY') is True, 'pollMs': poll, 'intervalMs': poll,
+        'swapXY': flags[0], 'flipX': flags[1], 'flipY': flags[2],
+        'pollMs': poll, 'intervalMs': poll,
         'where': 'FT6336U at 0x%x on I2C bus %s' % (address, bus.get('bus', 0)),
     }, 'claims': claims}
 `;

@@ -15,6 +15,7 @@ import { runCompileHooks } from "../src/node-library/compile-hooks.js";
 import { buildRegistry } from "../src/node-library/registry.js";
 import { I2C_BUS_CONFIG_TYPE } from "../src/node-library/i2c-shared.js";
 import { TOUCH_PANEL_CONFIG_TYPE } from "../src/node-library/touch-panel-shared.js";
+import { orientedTouch } from "../src/node-library/orientation-shared.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const wasmBytes = new Uint8Array(readFileSync(join(__dirname, "../../micropython-wasi/micropython-wasi.wasm")));
@@ -27,13 +28,13 @@ const VENDOR = join(__dirname, "..", "..", "device-runtime", "src", "vendor", "f
 const BUS0 = { id: "bus0", type: I2C_BUS_CONFIG_TYPE, properties: { bus: 0, scl: 15, sda: 16, freq: 400000 } };
 const PANEL_DEFAULTS = { controller: "ft6336u", i2cConfigId: "bus0", address: "0x38", rstPin: "", pollMs: 20, width: 320, height: 480, swapXY: false, flipX: false, flipY: false };
 
-function node(panel = "panel0"): GraphNode {
-  return { id: "t1", type: TYPE, properties: { touchPanelConfigId: panel } };
+function node(panel = "panel0", extra: Record<string, unknown> = {}): GraphNode {
+  return { id: "t1", type: TYPE, properties: { touchPanelConfigId: panel, ...extra } };
 }
 
-function graph(panelProps: Record<string, unknown> = {}, others: GraphData["nodes"] = []): GraphData {
+function graph(panelProps: Record<string, unknown> = {}, others: GraphData["nodes"] = [], nodeProps: Record<string, unknown> = {}): GraphData {
   return {
-    nodes: [node(), ...others],
+    nodes: [node("panel0", nodeProps), ...others],
     links: [],
     configs: [
       BUS0,
@@ -42,9 +43,9 @@ function graph(panelProps: Record<string, unknown> = {}, others: GraphData["node
   };
 }
 
-async function hookError(panelProps: Record<string, unknown> = {}, others: GraphData["nodes"] = [], panel = "panel0"): Promise<string | undefined> {
-  const g = graph(panelProps, others);
-  g.nodes[0] = node(panel);
+async function hookError(panelProps: Record<string, unknown> = {}, others: GraphData["nodes"] = [], panel = "panel0", nodeProps: Record<string, unknown> = {}): Promise<string | undefined> {
+  const g = graph(panelProps, others, nodeProps);
+  g.nodes[0] = node(panel, nodeProps);
   try {
     await runCompileHooks(g, registry, runner);
     return undefined;
@@ -140,6 +141,39 @@ describe("thingstudio/touch_i2c package", () => {
     expect(await hookError({ i2cConfigId: "" })).toMatch(/has no I2C bus/);
     expect(await hookError({ controller: "gt911" })).toMatch(/FT6336U only/);
     expect(await hookError({}, [], "")).toMatch(/has no touch panel/);
+  });
+
+  it("turns coordinates with orientation, matching orientation-shared.ts for every base flag set", async () => {
+    // The hook runs in Python (WASI) and the gui screen's rotation is TS, so the compose step exists twice. This is
+    // the check that the two cannot drift: same angles, same panel flags, same result.
+    const angles = [0, 90, 180, 270] as const;
+    for (const swapXY of [false, true]) {
+      for (const flipX of [false, true]) {
+        for (const flipY of [false, true]) {
+          for (const angle of angles) {
+            const g = graph({ swapXY, flipX, flipY, width: 320, height: 480 }, [], { orientation: String(angle) });
+            const hooks = await runCompileHooks(g, registry, runner);
+            const got = hooks.results.get("t1")?.properties as Record<string, unknown> | undefined;
+            const want = orientedTouch({ swapXY, flipX, flipY }, angle, 320, 480);
+            expect(
+              got && { swapXY: got.swapXY, flipX: got.flipX, flipY: got.flipY },
+              `base ${JSON.stringify({ swapXY, flipX, flipY })} at ${angle} degrees`,
+            ).toEqual(want);
+          }
+        }
+      }
+    }
+  });
+
+  it("leaves the panel's own axes alone with no orientation", async () => {
+    const g = graph({ swapXY: true, flipY: true }, [], { orientation: "" });
+    const hooks = await runCompileHooks(g, registry, runner);
+    const got = hooks.results.get("t1")!.properties as Record<string, unknown>;
+    expect([got.swapXY, got.flipX, got.flipY]).toEqual([true, false, true]);
+  });
+
+  it("rejects an orientation that is not a quarter turn", async () => {
+    expect(await hookError({}, [], "panel0", { orientation: "45" })).toMatch(/must be 0, 90, 180 or 270/);
   });
 
   it("refuses a panel shared with another touch node or a gui screen", async () => {

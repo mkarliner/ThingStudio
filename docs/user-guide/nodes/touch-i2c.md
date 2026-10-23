@@ -9,6 +9,10 @@ used by both a gui screen and a touch node: Deploy stops and names them.
 ## Properties
 
 - **touch panel** — which [touch panel](touch-panel.md) to read. Pick one, or add one with **+**.
+- **orientation** — the turn of the picture these touches match: 0, 90, 180 or 270 degrees clockwise, the same
+  four angles a display's orientation takes. Set it when the screen is turned and the flow reads touch through this
+  node. Off leaves the panel's own axes alone. A flow with a gui screen sets orientation on the display instead and
+  leaves this off: the screen turns its own touches to match.
 
 ## Wiring
 
@@ -20,7 +24,8 @@ msg = {'payload': {'x': 121, 'y': 338}, 'topic': 'up'}     # it lifts, where it 
 ```
 
 Down and up only: nothing is sent while the finger moves, and only one finger is followed. The coordinates are
-screen pixels; there is nothing to calibrate.
+screen pixels in the turned picture, so they match what the display shows when the orientation is set (and in the
+panel's own axes when it is off). There is nothing to calibrate.
 
 ## Behavior
 

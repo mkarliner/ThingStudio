@@ -108,6 +108,9 @@ can't be combined with a panel offset (`xstart`/`ystart`, or the 135x240 panel).
 "no offset" and are the right values with an orientation. At 90 or 270 the usable picture is the panel turned:
 480 wide by 320 high on a 320x480 panel.
 
+A flow that reads touch with a [touch](touch-i2c.md) node instead of a gui screen sets the same angle on the node,
+since there is no display for it to follow.
+
 ## Modals in the flow file
 
 A modal is laid out like a page, but in the screen's `modals` list, next to `pages`. Each entry names the `gui_modal`

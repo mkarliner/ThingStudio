@@ -28,7 +28,8 @@ load it again on this or another **display spi** node instead of retyping every 
 - **orientation** — off by default. Set it to 0, 90, 180 or 270 to turn the picture clockwise; the gui screen wired
   to the display and its touch follow. With an orientation, set width and height to the panel's own size, `rotation`
   to how the panel is mounted (0 to 3), and `xstart`/`ystart` to `-1`. See
-  [Rotating the screen](gui.md#rotating-the-screen).
+  [Rotating the screen](gui.md#rotating-the-screen). A flow that reads touch with a [touch](touch-i2c.md) node
+  rather than a gui screen sets the same angle on that node.
 - **rotation** — 0–7, the panel controller's orientation code. Default `1`.
 - **color order** — `rgb` or `bgr`, matching your panel's own wiring. Default `bgr`.
 - **invert colors** — on or off. Some panels need this flipped to show true colors instead of their negative.

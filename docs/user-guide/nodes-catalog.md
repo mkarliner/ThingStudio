@@ -399,6 +399,7 @@ Type `thingstudio/touch_i2c`, kind source, palette group hardware.
 - Outputs: msg (any)
 - Properties (name, type, default):
     - `touchPanelConfigId`, string, default `""`, the id of a `thingstudio/config/touch-panel` config
+    - `orientation`, string, default `""`
 
 ## network
 
