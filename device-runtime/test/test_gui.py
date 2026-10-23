@@ -318,6 +318,10 @@ def test_a_card_draws_behind_its_container_and_widgets_clear_to_it():
     assert fb.pixel(28, 12) == 5, "the card fills the container's rect"
     assert fb.pixel(5, 5) == 5, "a widget inside the card clears to the card colour"
     assert fb.pixel(0, 0) == 0, "outside the card is the screen background"
+    # Only the corners are rounded: a straight edge is the full width. Insetting the straight middle too
+    # left a bite out of both sides for the card's whole height (the CYD, 2026-10-23).
+    assert fb.pixel(2, 8) == 5 and fb.pixel(29, 8) == 5, "a card's straight side is not inset"
+    assert fb.pixel(2, 2) == 0 and fb.pixel(29, 2) == 0, "a card's corner is rounded"
     assert s.background_for((4, 4, 6, 4)) == 5
     assert s.background_for((0, 0, 2, 2)) == 0
 def test_run_loop_steps_until_cancelled():

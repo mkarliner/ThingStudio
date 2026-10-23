@@ -61,11 +61,13 @@ def make(font, units_font=None, units="", decimals=1, lo=-99, hi=999, gap=4):
         colour = surface.colour_for(state)
         top = y + max(0, (h - nat_h) // 2)
         sx = x + max(0, field - _width(font, s))
-        surface.text(font, s, sx, top, colour, x + min(field, w))
+        bg = surface.background_for(rect)
+        surface.text(font, s, sx, top, colour, x + min(field, w), bg)
         if state == 2 and not surface.shades:
             # Just below the baseline, but never outside the rect (a font with no descent has no room below).
             surface.stale_mark(sx, min(top + font.baseline() + 1, y + h - 1), x + field - sx)
         if units:
-            surface.text(units_font, units, x + field + gap, top + _units_offset(font, units_font), colour, x + w)
+            surface.text(units_font, units, x + field + gap, top + _units_offset(font, units_font), colour,
+                         x + w, bg)
 
     return draw

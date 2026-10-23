@@ -68,7 +68,8 @@ def make(font, text=None, on_text=None, off_text=None):
         tw = _width(font, s)
         tx = x + max(0, (w - tw) // 2)
         ty = y + max(0, (h - font.height()) // 2)
-        surface.text(font, s, tx, ty, colour, x + w)
+        surface.text(font, s, tx, ty, colour, x + w,
+                     surface.fg if pressed else surface.background_for(rect))
         if state == 5:  # failed
             fb.line(x, y, x + w - 1, y + h - 1, surface.fg)
             fb.line(x, y + h - 1, x + w - 1, y, surface.fg)

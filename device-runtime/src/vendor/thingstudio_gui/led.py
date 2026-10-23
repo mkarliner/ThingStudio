@@ -25,7 +25,7 @@ def make(diameter=12):
             for i in range(cx - rr, cx + rr + 1):
                 for j in range(cy - rr, cy + rr + 1):
                     if (i + j) % 3 == 0:
-                        fb.pixel(i, j, surface.background)
+                        fb.pixel(i, j, surface.background_for(rect))
             return
         on = bool(value)
         if state == 2 and not surface.shades:

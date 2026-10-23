@@ -85,11 +85,15 @@ CARD_RADIUS = 4  # corner radius of a card on a container, in pixels
 
 
 def _fill_round(fb, x, y, w, h, rad, c):
-    """A filled rounded rectangle, drawn with fill_rect rows so it clips correctly inside a band."""
+    """A filled rounded rectangle, drawn with fill_rect rows so it clips correctly inside a band.
+
+    The straight middle is the full width -- only the corner rows are inset. (Insetting the middle too
+    left a 4-pixel bite out of both sides for the whole height, which is what the CYD showed on
+    2026-10-23.)"""
     if rad < 1 or w < 2 * rad + 2 or h < 2 * rad + 2:
         fb.fill_rect(x, y, w, h, c)
         return
-    fb.fill_rect(x + rad, y, w - 2 * rad, h, c)
+    fb.fill_rect(x, y + rad, w, h - 2 * rad, c)
     for dy in range(rad):
         yy = rad - dy
         dx = int((rad * rad - yy * yy) ** 0.5 + 0.5)
@@ -260,13 +264,16 @@ class FrameSurface(Surface):
 
     # -- drawing helpers for widgets ------------------------------------------------------------------------
 
-    def text(self, font, s, x, y, colour, right=None):
+    def text(self, font, s, x, y, colour, right=None, bg=None):
         """Draws `s` in `font` (a font_to_py module) with its top-left at x, y. Stops before a glyph that would
         cross `right` (exclusive; default: the frame's edge), so text never paints over a neighbour. Returns
-        the x after the last glyph drawn. The editor measured the same widths (font-metrics.ts)."""
+        the x after the last glyph drawn. The editor measured the same widths (font-metrics.ts).
+
+        `bg` is what the glyph cells clear to -- a widget inside a card passes the card colour, or every glyph
+        would carry a rectangle of screen background (the CYD showed exactly that on 2026-10-23)."""
         fb = self.fb
         pal = self._palette
-        pal.pixel(0, 0, self.background)
+        pal.pixel(0, 0, self.background if bg is None else bg)
         pal.pixel(1, 0, colour)
         limit = right if right is not None else 1 << 15
         for ch in s:

@@ -80,8 +80,11 @@ little contiguous IDF heap for the next deploy (reset, 40s per flow), a large HT
 (56 KB failed on a C3, 48 bytes passed), never calling `connect()` again while mqtt_as owns reconnection, the two
 facts behind a frozen image: `.frozen` precedes `/lib` on `sys.path` (so a pushed library does not
 override a frozen one unless `/lib` is inserted first), and a frozen module cannot be the boot script, plus a
-manifest replacing the port's own frozen set (no filesystem at boot) and `cancel_running()` not freeing the
-flow module's framebuffer, and the split heap (`gc.mem_free()` sums several regions, so a large message can fail at 100 KB free). 32 entries:
+manifest replacing the port's own frozen set (no filesystem at boot), `cancel_running()` not freeing the
+flow module's framebuffer, the split heap (`gc.mem_free()` sums several regions, so a large message can fail at
+100 KB free), and a
+frozen image being a build-time snapshot -- a commit landing after the image was built is silently absent on the
+board, with no error (compare the frozen module at the image's stamped SHA against HEAD first). 33 entries:
 `docs/working-notes/learnings/micropython-device-runtime.md`.
 
 ## Headless browser testing

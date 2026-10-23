@@ -525,3 +525,26 @@ connect() again".
 is larger than the page. A 56,722-byte response failed on a C3 reporting 41,120 free RAM; a 48-byte page worked.
 `run()` catches `OSError` only, so the error surfaces as a bare `MemoryError` with no http attribution. Backlog:
 `docs/working-notes/outstanding-items/http-response-size-limit.md`.
+
+## A frozen image is a build-time snapshot: a commit that lands after the build is silently absent, 2026-10-23
+
+The CYD showed no GUI cards after the card support landed (`a4f1e2f`) and the card flow was deployed, and the
+symptom read as a drawing bug. It was not: the image on the board was built at `19c3dbf`, one commit before
+`a4f1e2f`, and `a4f1e2f` is the commit that added `page_cards()`/`_fill_round()` to the *frozen* `thingstudio_gui`.
+The editor emitted `"cards": [...]` into the page table correctly; the board's library had no code that read the key.
+Frozen means the library comes from the image -- not from `/lib`, and not from the deploy -- so no error appeared
+anywhere, the flow deployed clean, and the panel simply drew the old thing.
+
+Diagnosis order worth keeping: before debugging a device behaviour that the source plainly implements, compare the
+frozen module at the image's *stamped SHA* against HEAD --
+
+```
+git show <image-sha>:device-runtime/src/vendor/thingstudio_gui/gui.py
+```
+
+The image filename carries the SHA (`thingstudio-classic-esp32-<version>-<sha>.bin`). HELLO's `runtimeBuild` is
+diagnostic only and reads `null` when it can't confirm.
+
+The cost of finding this after the fact: a reflash erases flows, WiFi credentials and board settings, so it is a
+full redeploy plus re-entering credentials. Measured on this box -- incremental rebuild off an existing tree took a
+couple of minutes, and flashing 1.7 MB took about 97 s at the install script's baud rate.

@@ -43,7 +43,7 @@ def make(font, text=None, align="left"):
         elif align == "right":
             x += max(0, w - tw)
         ty = y + max(0, (h - font.height()) // 2)
-        end = surface.text(font, s, x, ty, colour, rect[0] + w)
+        end = surface.text(font, s, x, ty, colour, rect[0] + w, surface.background_for(rect))
         if text is None and state == 2 and not surface.shades:
             surface.stale_mark(x, ty + font.height() - 1, end - x)
 
