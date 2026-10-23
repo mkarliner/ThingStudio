@@ -77,12 +77,13 @@ not here.
   launch work. Hardware-checked 2026-10-10 with `test-flows/gui-orientation-test-freenove-s3-4in.flow.json`: touch lands right at 90, 180 and 270, and
   the press highlight holds and releases (hold, slide off). Orientation 0 is the unturned picture the earlier hero/touch flows already used.
   `st7796py`'s README updated 2026-10-10 (confirmed on Mike's panel only).
-- **[LAUNCH]** **CYD gate for custom firmware images — FAILED on the first cycle, 2026-10-22.** Deploying the
-  hero GUI flow after a fresh runtime install hit `MemoryError allocating 13317 bytes` and no `DEPLOY_ACK` (a
-  clean idle rerun is owed once the CYD's CH340 port is stable). Per the gate, the MVP ships a small set of
-  custom images, classic ESP32 first, with the packaging/hosting/flashing docs. Briefing:
-  `classic-esp32-firmware-briefing.md`; `decisions/gui-layout.md` (2026-10-09 gate, 2026-10-22 result),
-  `decisions/classic-esp32-firmware.md`, `frozen-firmware-spike-briefing.md`.
+- **[LAUNCH]** **CYD gate for custom firmware images — closed 2026-10-23: the image runs the hero GUI flow.**
+  The 2026-10-22 failure (`MemoryError allocating 13317 bytes`, no `DEPLOY_ACK`) was stock MicroPython's limit and
+  the 260-byte serial input buffer, both fixed in the image; on 2026-10-23 it installed on the CYD and deployed the
+  hero GUI flow three times over a running flow. The five-cycle gate itself is retired (`decisions/gui-layout.md`);
+  the image's page is written and its memory numbers measured. Remaining: attach the tested image to the v0.4.0
+  release (build path: local, by hand). Briefings: `classic-esp32-firmware-briefing.md`,
+  `classic-esp32-serial-link-briefing.md`; decisions: `decisions/classic-esp32-firmware.md`.
 - **[LAUNCH]** **Deploy over a running GUI flow: stop the flow first — 2026-10-22.** The sequence is settled (Mike:
   "stop the flow first, anything else is nonsense"): stop, then receive, then start, one path with no retries. Still
   open: whether stopping is *enough* — a stopped flow gave 50 → 116 KB free and still no block for the flow (a
