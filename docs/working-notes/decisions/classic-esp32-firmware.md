@@ -45,7 +45,12 @@ are out for now; the same technique applies when a board needs it.
 
 **Built locally, attached to a release by hand.** The image is produced by `firmware/classic-esp32/build.sh` on a
 machine with ESP-IDF and the Xtensa toolchain, and the person attaching it to the release has flashed and run it on
-a board. That makes the published binary the one that was tested, which matters more here than a build server:
+a board. That makes the published binary the one that was tested, which matters more here than a build server. The
+hand-attach is two scripts, not a checklist in someone's head (2026-10-23, after a review of the manual steps found
+five ways to get it wrong): `record-tested.sh` records the sha256 of a binary that ran on a board, and `publish.sh`
+attaches it only if that hash is recorded, the build commit is an ancestor of the tag, the `.sha256` agrees, the
+release is a draft, and every upload reads back with the same hash. The release notes name the image and its tested
+board. `editor/test/firmware-assets.test.ts` keeps the user guide's download name honest against the same record.
 `.github/workflows/firmware.yml` exists, includes the pinned MicroPython tag and the `espressif/idf` image, and is
 **not** the build path — it has never completed a build (it stops in the container step: the esp32 port fetches its
 submodules through `idf.py`, which is inside the container, and the container also lacks the node the index generator

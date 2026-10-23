@@ -53,6 +53,34 @@ credentials.
 If you prefer to see the commands, they are `esptool.py write_flash 0x0 <image>` and two
 `mpremote fs cp` lines -- read `install.sh`, it is short.
 
+## Publishing an image
+
+The image is built here and attached to a release by hand, and the publishing steps are scripted so only a tested
+image can go out (`docs/working-notes/decisions/classic-esp32-firmware.md`).
+
+1. Build (`build.sh`, above) and flash it to a board. Run a flow on it.
+2. Record that it worked:
+
+   ```sh
+   firmware/classic-esp32/record-tested.sh out/thingstudio-classic-esp32-<version>-<sha>.bin \
+       "CYD (ESP32-2432S028)" "what you ran and saw"
+   ```
+
+   That writes `tested.json`, keyed by the image's sha256. Commit it.
+3. Attach it to the release the tag created:
+
+   ```sh
+   firmware/classic-esp32/publish.sh v<version>            # attach and verify, leaves the draft
+   firmware/classic-esp32/publish.sh v<version> --publish  # ... and publish
+   ```
+
+`publish.sh` refuses an image that is not in `tested.json`, one built from a commit the tag does not contain, one
+whose `.sha256` disagrees, a release that is not a draft, and any upload that does not read back with the same hash.
+It also writes the image's name, hash, tested board and date into the release notes. Needs `gh`, logged in.
+
+The user guide names the tested image file, and `editor/test/firmware-assets.test.ts` fails the build if the page
+names one that is not in `tested.json` -- so publishing a new image means updating that line, and the test says so.
+
 ## What is verified
 
 Only the CYD so far: the image builds and boots on its own, `HELLO` lists every frozen library, a GUI

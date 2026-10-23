@@ -1,0 +1,8 @@
+{
+  "f931ca3f4c3da426f3398440526dbf4e643b2d6c5f72aa8440ed31e7151cead0": {
+    "image": "thingstudio-classic-esp32-12.1.0-8e2f87d.bin",
+    "board": "CYD (ESP32-2432S028)",
+    "date": "2026-10-23",
+    "tested": "install clean on macOS, hero GUI flow deployed, Deploy skipping every frozen library, three deploys in a row over the running flow with no garbled pieces"
+  }
+}

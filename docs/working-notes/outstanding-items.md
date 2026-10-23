@@ -114,8 +114,10 @@ not here.
   deploys 120/27 and 18/14 -- repeated deploys deplete the chip heap); the MQTT stages (S2/S3) were not run and the
   five-cycle stage is retired. **Build path decided (Mike, 2026-10-23): built locally, attached to the release by
   hand** -- `firmware.yml` is not the build path and no longer triggers on tags
-  (`decisions/classic-esp32-firmware.md`). Owed: attach the tested 12.1.0 image, its `.sha256`, `_deps.json` and
-  `main.py` to the v0.4.0 draft release.
+  (`decisions/classic-esp32-firmware.md`). Publishing is scripted: `record-tested.sh` records the tested binary's
+  sha256 (`firmware/classic-esp32/tested.json`), `publish.sh <tag>` attaches and verifies the four files and refuses
+  an untested or non-ancestor build, and `editor/test/firmware-assets.test.ts` keeps the user guide's download name
+  in step. Owed: run `publish.sh v0.4.0` (needs `gh`, logged in) and publish the draft.
 - **[LAUNCH]** **Button rework -- built and hardware-checked 2026-10-09.** Two-faced nodes in the compiler;
   button output, modes and controlled toggle; modal close reason; touch panel config node (with presets) polled by
   the gui screen; `gui_touch` removed (`decisions/gui-layout.md` 2026-10-09, `gui-button-rework-briefing.md`).

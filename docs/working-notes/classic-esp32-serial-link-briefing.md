@@ -42,11 +42,11 @@ the image from, and a CI build that proves the patch applies in the container.
 
 ## Open, and what the next session should pick up
 
-1. **Attach the image to the v0.4.0 draft release by hand.** The firmware page tells people to download the image,
+1. **Attach the image to the v0.4.0 draft release.** The firmware page tells people to download the image,
    `_deps.json` and `main.py` from releases; the Release run made a draft, the image still has to go on it. Use the
    binary that was tested: `out/thingstudio-classic-esp32-12.1.0-8e2f87d.bin` (sha256 `f931ca3f…7151cead0`), built
-   from `8e2f87d` -- earlier than the tag, so its build stamp differs from the release commit while the code is the
-   same.
+   from `8e2f87d`. **Now scripted** (see "Publishing, 2026-10-23" below): `firmware/classic-esp32/publish.sh v0.4.0`
+   attaches the four files, verifies them by reading them back, and refuses anything not recorded in `tested.json`.
 2. **Build path: local, by decision (Mike, 2026-10-23).** `firmware.yml` is not the build path and no longer
    triggers on tags; it has never completed a build (submodules need `idf.py` from the container, and the container
    has no node for the index). `decisions/classic-esp32-firmware.md` records it and when to revisit.
@@ -56,6 +56,24 @@ the image from, and a CI build that proves the patch applies in the container.
    required for us.
 5. **The five-cycle curve, if anyone wants it**: I got to three deploys before the port wedged; four to six would
    show where it actually fails. The page does not need it.
+
+## Publishing, 2026-10-23
+
+The manual attach was reviewed and found to have five ways to go wrong (wrong file, stale build, untested binary,
+duplicate assets, the page naming a file that does not exist). The mechanical parts are now scripts; the judgement
+stays with the person who flashed the board.
+
+- `firmware/classic-esp32/tested.json` -- sha256 of an image that was flashed and run, with the board, date and what
+  was verified. Nothing outside this file can be published.
+- `record-tested.sh <image> "<board>" "<what you ran>"` writes that record; it refuses a `.sha256` that disagrees.
+- `publish.sh <tag> [--publish]` attaches the four files to the draft, verifies each by downloading it back, writes
+  the image's name/hash/board/date into the release notes, and refuses: no `gh`, tag not a draft release, hash not
+  recorded as tested, build commit not an ancestor of the tag, stale `.sha256`, missing `_deps.json`/`main.py`.
+- `editor/test/firmware-assets.test.ts` fails if the user guide names an image that is not in `tested.json`, and if
+  the page stops naming one at all.
+
+Not decided yet: a token for `gh` on a machine that is not Mike's, and whether CI should later *verify* (not build)
+that `tested.json` matches a locally built image.
 
 ## Environment left behind (agent VM)
 
