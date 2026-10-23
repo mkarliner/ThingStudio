@@ -29,6 +29,9 @@ property panel: see [Laying out pages](#laying-out-pages).
 Each widget starts as `--` until a value arrives. With **stale after** set, a value that isn't updated in
 time is dimmed (or underlined, on a black-and-white display), so an old reading never looks current.
 
+On a classic ESP32 without PSRAM, a GUI flow needs the [custom firmware for classic ESP32](../custom-firmware.md):
+stock MicroPython runs out of memory loading the display stack.
+
 ## Trend
 
 Shows what a number can't: which way it is heading. Wire it to the first output of a [journal](journal.md), or to

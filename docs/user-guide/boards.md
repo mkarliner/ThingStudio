@@ -12,6 +12,10 @@ Pick the board a flow is for from the **Board** menu in the toolbar. The default
 
 Some boards report only their processor. The CYD, for example, reports itself as a generic ESP32. Pick those boards from the menu by hand. You can also pick a processor without a board, for example **ESP32 (any board)**.
 
+The board menu picks pins, not memory. A classic ESP32 board with no PSRAM can run a GUI flow by flashing the
+[custom firmware for classic ESP32](custom-firmware.md), which carries the runtime and the flow libraries in the
+firmware.
+
 A board picked by hand stays picked when you reconnect. If you then connect a board with a different processor, the menu goes back to **Auto** and the console says so.
 
 If no board is connected and none is picked, pins are only checked against the range 0–48.
