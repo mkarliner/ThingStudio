@@ -60,34 +60,19 @@ jobs:
           PY
 
       - name: Check out MicroPython
-        # Clone only. The port's own submodule fetch goes through idf.py, which exists inside the
-        # ESP-IDF container and not on the runner (that is where this failed on the first tag,
-        # 2026-10-23: "/bin/sh: 1: idf.py: not found" from `make ports/esp32 submodules`).
         run: |
           git clone --depth 1 --branch "$MPY_VERSION" https://github.com/micropython/micropython.git
+          make -C micropython/ports/esp32 submodules
 
       - name: Build the image
-        # Everything that needs the toolchain runs inside the ESP-IDF container so idf.py, the Xtensa
-        # toolchain and the python packages match what MicroPython's esp32 port expects -- including
-        # the submodule fetch, which the port does through idf.py.
+        # Everything runs inside the ESP-IDF container so idf.py, the Xtensa toolchain and the
+        # python packages match what MicroPython's esp32 port expects.
         run: |
           docker run --rm \
             -v "$PWD:/work" -w /work \
             -e MICROPY_DIR=/work/micropython \
-            -e MPY_VERSION="$MPY_VERSION" \
             "$IDF_IMAGE" \
-            bash -c '
-              set -e
-              make -C micropython/ports/esp32 submodules
-              pip install --quiet esptool
-              # build.sh regenerates /lib/_deps.json with the editor's own mpy-cross wrapper, which
-              # runs on node; the ESP-IDF image does not ship it.
-              command -v node >/dev/null || (apt-get update -qq && apt-get install -y -qq nodejs)
-              # The checkout is owned by the runner user and this build runs as root, so git refuses to
-              # apply the firmware patches ("dubious ownership") without this.
-              git config --global --add safe.directory "*"
-              firmware/classic-esp32/build.sh
-            '
+            bash -c 'pip install --quiet esptool && firmware/classic-esp32/build.sh'
 
       - name: Checksums
         run: |
