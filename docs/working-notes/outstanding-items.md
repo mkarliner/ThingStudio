@@ -108,8 +108,11 @@ not here.
   largest block 110 KB (the S0 row in `classic-esp32-firmware-briefing.md`). 12.1.0 image (2026-10-23) adds the
   8 KB REPL input buffer patch and the Garbled answer; install clean on macOS, hero GUI flow deployed, Deploy
   skipping every frozen library, three consecutive deploys over the running flow. Owed: the user-facing firmware
-  page (install, what it changes, what it does not fix), the S0-S5 numbers on the reflashed 12.1.0 board, and a CI
-  rebuild of the image now that `build.sh` applies `patches/`.
+  page is written (`docs/user-guide/custom-firmware.md`); S0/S4/S5 measured on the reflashed 12.1.0 board
+  2026-10-23 and in that page (idle 142/105 KB MicroPython, 129/108 KB IDF; GUI flow 108/50 and 70/52; after two more
+  deploys 120/27 and 18/14 -- repeated deploys deplete the chip heap); the MQTT stages (S2/S3) were not run and the
+  five-cycle stage is retired. Owed: a CI rebuild of the image now that `build.sh` applies `patches/`, and a real
+  release to download it from.
 - **[LAUNCH]** **Button rework -- built and hardware-checked 2026-10-09.** Two-faced nodes in the compiler;
   button output, modes and controlled toggle; modal close reason; touch panel config node (with presets) polled by
   the gui screen; `gui_touch` removed (`decisions/gui-layout.md` 2026-10-09, `gui-button-rework-briefing.md`).

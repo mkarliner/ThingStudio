@@ -363,6 +363,31 @@ points at the wrong layer. Make the drop visible before making anything bigger.
 times in a row over the running flow, no garbled pieces. The 260-byte version failed two out of three at the same
 place.
 
+## Repeated deploys eat the chip's heap, even when they work, 2026-10-23
+
+Measured on the CYD with the 12.1.0 image, one connection, GUI hero flow (9.5 KB of bytecode). Figures are KB,
+MicroPython free / largest block, and ESP-IDF free / largest:
+
+| State | MicroPython | ESP-IDF |
+|---|---|---|
+| Just booted, no flow | 142 / 105 | 129 / 108 |
+| GUI flow running | 108 / 50 | 70 / 52 |
+| After two more deploys over the running flow | 120 / 27 | 18 / 14 |
+
+Two different things are happening, and both matter:
+
+- **The largest MicroPython block falls every deploy** (105 → 50 → 27 KB): the split heap grows and the flow's
+  buffers land in new places. A 9.5 KB flow still starts at 27 KB, which is why repeated deploys work at all.
+- **The chip heap goes down and stays down** (129 → 70 → 18 KB): `MICROPY_GC_SPLIT_HEAP_AUTO` takes blocks from
+  ESP-IDF when MicroPython needs room, and nothing gives them back until a reset. At 18 KB, WiFi may fail to start --
+  that is below `memory-advice.ts`'s 30 KB warning line, which is why the editor says a power cycle is needed rather
+  than a soft restart.
+
+Also worth remembering when measuring this: the probe itself perturbs the numbers. `gc.mem_free()` after a big
+allocation bisect reports a bigger heap than the board had before the probe, because the probe made the heap grow.
+Read the ESP-IDF figures *first*, then bisect for the largest block, and don't compare an idle-boot HELLO (149 KB)
+with a probe's free figure (145 KB) as if they were the same measurement.
+
 ## Redeploy over a running GUI flow: stopping the flow isn't freeing it, 2026-10-22
 
 Deploying a GUI flow while another GUI flow runs on a CYD failed every time with
