@@ -1703,16 +1703,23 @@ You need these:
 
 Flashing erases the board: its saved flows, board settings and WiFi credentials are gone afterwards.
 
-1. Download the four files from the releases page, and check the image against the checksum.
+1. Download the four files from the releases page: the image, its `.sha256`, `_deps.json` and `main.py`. Put them
+   in one folder and go there. Check the image against its checksum:
+
+   ```sh
+   IMAGE=thingstudio-classic-esp32-12.1.0-8e2f87d.bin
+   shasum -a 256 -c "$IMAGE.sha256"      # sha256sum -c on Linux
+   ```
+
 2. Put the board in download mode if your board needs it, then write the image at address 0:
 
    ```sh
-   esptool.py --chip esp32 --port /dev/ttyUSB0 write_flash 0x0 thingstudio-classic-esp32.bin
+   esptool.py --chip esp32 --port /dev/ttyUSB0 write_flash 0x0 "$IMAGE"
    ```
 
    On macOS the port looks like `/dev/cu.usbserial-14420`. On Windows it is `COM3` or similar.
 
-3. Write the three files that live on the filesystem, not in the image:
+3. Write the files that live on the filesystem, not in the image:
 
    ```sh
    mpremote connect /dev/ttyUSB0 fs cp main.py :/main.py

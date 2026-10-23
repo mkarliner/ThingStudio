@@ -3108,14 +3108,20 @@ one image serves any classic ESP32 board. It is tested on the CYD.</p>
 <h2 id="install">Install</h2>
 <p>Flashing erases the board: its saved flows, board settings and WiFi credentials are gone afterwards.</p>
 <ol>
-<li>Download the four files from the releases page, and check the image against the checksum.</li>
+<li>Download the four files from the releases page: the image, its <code>.sha256</code>, <code>_deps.json</code> and <code>main.py</code>. Put them
+   in one folder and go there. Check the image against its checksum:</li>
+</ol>
+<div class="highlight"><pre><span></span><code><span class="nv">IMAGE</span><span class="o">=</span>thingstudio-classic-esp32-12.1.0-8e2f87d.bin
+shasum<span class="w"> </span>-a<span class="w"> </span><span class="m">256</span><span class="w"> </span>-c<span class="w"> </span><span class="s2">"</span><span class="nv">$IMAGE</span><span class="s2">.sha256"</span><span class="w">      </span><span class="c1"># sha256sum -c on Linux</span>
+</code></pre></div>
+<ol>
 <li>Put the board in download mode if your board needs it, then write the image at address 0:</li>
 </ol>
-<div class="highlight"><pre><span></span><code>esptool.py<span class="w"> </span>--chip<span class="w"> </span>esp32<span class="w"> </span>--port<span class="w"> </span>/dev/ttyUSB0<span class="w"> </span>write_flash<span class="w"> </span>0x0<span class="w"> </span>thingstudio-classic-esp32.bin
+<div class="highlight"><pre><span></span><code>esptool.py<span class="w"> </span>--chip<span class="w"> </span>esp32<span class="w"> </span>--port<span class="w"> </span>/dev/ttyUSB0<span class="w"> </span>write_flash<span class="w"> </span>0x0<span class="w"> </span><span class="s2">"</span><span class="nv">$IMAGE</span><span class="s2">"</span>
 </code></pre></div>
 <p>On macOS the port looks like <code>/dev/cu.usbserial-14420</code>. On Windows it is <code>COM3</code> or similar.</p>
 <ol>
-<li>Write the three files that live on the filesystem, not in the image:</li>
+<li>Write the files that live on the filesystem, not in the image:</li>
 </ol>
 <div class="highlight"><pre><span></span><code>mpremote<span class="w"> </span>connect<span class="w"> </span>/dev/ttyUSB0<span class="w"> </span>fs<span class="w"> </span>cp<span class="w"> </span>main.py<span class="w"> </span>:/main.py
 mpremote<span class="w"> </span>connect<span class="w"> </span>/dev/ttyUSB0<span class="w"> </span>fs<span class="w"> </span>mkdir<span class="w"> </span>:/lib
