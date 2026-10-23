@@ -1190,6 +1190,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../custom-firmware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom firmware for classic ESP32
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../wifi-connection/" class="md-nav__link">
         
   
@@ -3131,6 +3159,8 @@ property panel: see <a href="#laying-out-pages">Laying out pages</a>.</p>
 </ul>
 <p>Each widget starts as <code>--</code> until a value arrives. With <strong>stale after</strong> set, a value that isn't updated in
 time is dimmed (or underlined, on a black-and-white display), so an old reading never looks current.</p>
+<p>On a classic ESP32 without PSRAM, a GUI flow needs the <a href="../../custom-firmware/">custom firmware for classic ESP32</a>:
+stock MicroPython runs out of memory loading the display stack.</p>
 <h2 id="trend">Trend</h2>
 <p>Shows what a number can't: which way it is heading. Wire it to the first output of a <a href="../journal/">journal</a>, or to
 any node that sends a list of numbers (a <code>None</code> is a gap), such as a spectrum from a function node.</p>

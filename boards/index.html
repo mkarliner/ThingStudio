@@ -16,7 +16,7 @@
         <link rel="prev" href="../supported-hardware/">
       
       
-        <link rel="next" href="../wifi-connection/">
+        <link rel="next" href="../custom-firmware/">
       
       
         
@@ -1326,6 +1326,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../custom-firmware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom firmware for classic ESP32
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -3098,6 +3126,9 @@
 <h2 id="picking-the-board">Picking the board</h2>
 <p>Pick the board a flow is for from the <strong>Board</strong> menu in the toolbar. The default, <strong>Auto</strong>, uses the connected board. Auto recognises a board by the name MicroPython reports for it, and the menu shows what it found, for example <strong>Auto: LOLIN S2 Mini</strong>.</p>
 <p>Some boards report only their processor. The CYD, for example, reports itself as a generic ESP32. Pick those boards from the menu by hand. You can also pick a processor without a board, for example <strong>ESP32 (any board)</strong>.</p>
+<p>The board menu picks pins, not memory. A classic ESP32 board with no PSRAM can run a GUI flow by flashing the
+<a href="../custom-firmware/">custom firmware for classic ESP32</a>, which carries the runtime and the flow libraries in the
+firmware.</p>
 <p>A board picked by hand stays picked when you reconnect. If you then connect a board with a different processor, the menu goes back to <strong>Auto</strong> and the console says so.</p>
 <p>If no board is connected and none is picked, pins are only checked against the range 0–48.</p>
 <h2 id="seeing-a-boards-pins">Seeing a board's pins</h2>
