@@ -81,6 +81,29 @@ try:
 except ImportError:
     bytearray_at = None
 
+CARD_RADIUS = 4  # corner radius of a card on a container, in pixels
+
+
+def _fill_round(fb, x, y, w, h, rad, c):
+    """A filled rounded rectangle, drawn with fill_rect rows so it clips correctly inside a band."""
+    if rad < 1 or w < 2 * rad + 2 or h < 2 * rad + 2:
+        fb.fill_rect(x, y, w, h, c)
+        return
+    fb.fill_rect(x + rad, y, w - 2 * rad, h, c)
+    for dy in range(rad):
+        yy = rad - dy
+        dx = int((rad * rad - yy * yy) ** 0.5 + 0.5)
+        inset = rad - dx
+        fb.fill_rect(x + inset, y + dy, w - 2 * inset, 1, c)
+        fb.fill_rect(x + inset, y + h - 1 - dy, w - 2 * inset, 1, c)
+
+
+def _inside(rect, outer):
+    x, y, w, h = rect
+    ox, oy, ow, oh = outer
+    return x >= ox and y >= oy and x + w <= ox + ow and y + h <= oy + oh
+
+
 NAV_COMMANDS = ("next", "prev", "back", "home")
 CLOSE_REASONS = ("ack", "timeout", "closed")
 
@@ -221,6 +244,20 @@ class FrameSurface(Surface):
         # A two-pixel palette in the frame's own format: glyph bit 0 -> [0], 1 -> [1] (nano-gui's BoolPalette).
         self._palette = framebuf.FrameBuffer(bytearray(4), 2, 1, self.fmt) if framebuf else None
 
+    # -- cards on containers (2026-10-23) -------------------------------------------------------------------
+
+    def page_cards(self):
+        """The card rects of whatever page or modal is showing: a container with `card` draws behind its children."""
+        entry = self.modals[self.modal[0]] if self.modal else self.pages[self.page]
+        return entry.get("cards") or []
+
+    def background_for(self, rect):
+        """The colour to clear a widget's rect with: the card behind it, or the screen background."""
+        for card in self.page_cards():
+            if _inside(rect, card):
+                return self.theme["card"]
+        return self.background
+
     # -- drawing helpers for widgets ------------------------------------------------------------------------
 
     def text(self, font, s, x, y, colour, right=None):
@@ -259,12 +296,14 @@ class FrameSurface(Surface):
         widgets = self.visible_widgets()
         if self.full:
             fb.fill(self.background)
+            for card in self.page_cards():
+                _fill_round(fb, card[0], card[1], card[2], card[3], CARD_RADIUS, self.theme["card"])
             todo = widgets
         else:
             todo = [(wid, rect) for wid, rect in widgets if wid in self.dirty]
         for wid, rect in todo:
             if not self.full:
-                fb.fill_rect(rect[0], rect[1], rect[2], rect[3], self.background)
+                fb.fill_rect(rect[0], rect[1], rect[2], rect[3], self.background_for(rect))
             self._draw_widget(gui, wid, rect)
         self.push(fb)
 
@@ -275,7 +314,7 @@ class FrameSurface(Surface):
         try:
             w.draw(self, rect, w.value, PRESSED if w.pressed else (FAILED if w.fail_until is not None else w.state))
         except Exception as e:  # noqa: BLE001 -- one widget's bug must not blank the screen
-            fb.fill_rect(x, y, rw, rh, self.background)
+            fb.fill_rect(x, y, rw, rh, self.background_for(rect))
             fb.rect(x, y, rw, rh, self.fg)
             fb.line(x, y, x + rw - 1, y + rh - 1, self.fg)
             fb.line(x, y + rh - 1, x + rw - 1, y, self.fg)
@@ -356,6 +395,9 @@ class BandSurface(FrameSurface):
         fb = self.fb
         fb.y0 = y0
         fb.fill(self.background)
+        for card in self.page_cards():
+            if card[1] < y0 + rows and card[1] + card[3] > y0:
+                _fill_round(fb, card[0], card[1], card[2], card[3], CARD_RADIUS, self.theme["card"])
         for wid, rect in self.visible_widgets():
             if rect[1] < y0 + rows and rect[1] + rect[3] > y0:
                 self._draw_widget(self.gui, wid, rect)

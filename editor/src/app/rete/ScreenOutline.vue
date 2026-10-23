@@ -150,7 +150,25 @@ const TreeRows = defineComponent({
         if (e.kind === "widget" || e.kind === "text") extras.push(field("font", "font", 100, false));
         if (e.kind === "text") extras.push(field("text", "text", 100, false));
         extras.push(field("grow", "grow", 34, true));
-        if (r.container) extras.push(field("gap", "gap", 34, true), field("padding", "padding", 34, true));
+        if (r.container) {
+          extras.push(field("gap", "gap", 34, true), field("padding", "padding", 34, true));
+          // A card: a filled rounded panel in the theme's card colour behind this container's children.
+          const carded = e.card === true;
+          extras.push(h("label", { class: "f", title: "draw a card behind this container" }, [
+            "card",
+            h("input", {
+              type: "checkbox",
+              checked: carded,
+              onChange: (ev: Event) =>
+                emit("op", {
+                  op: "props",
+                  target: p.target,
+                  path: r.path,
+                  props: { card: (ev.target as HTMLInputElement).checked ? true : undefined },
+                }),
+            }),
+          ]));
+        }
         // Add into THIS container: choosing from the dropdown adds at once, at the end of this row/column.
         const addInto = () => {
           const go = (element: ElementSpec) => emit("add", { target: p.target, path: r.path, element });

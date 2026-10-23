@@ -51,6 +51,8 @@ export interface Leaf extends Common {
 
 export interface Container extends Common {
   readonly kind: "row" | "column";
+  /** Draw a card behind the children (screens.ts ContainerSpec.card). */
+  readonly card?: boolean;
   readonly children: readonly LayoutNode[];
   readonly gap?: number;
   readonly padding?: number;

@@ -100,6 +100,39 @@ describe("compiling a GUI flow", () => {
     expect(source.indexOf("_gui = thingstudio_gui.GUI")).toBeLessThan(source.indexOf("_gui.add_surface"));
   });
 
+  it("puts a card on a container into the page table, and nothing where there is none", () => {
+    const g = heroGraph();
+    const screens = g.screens as ScreensSection;
+    const base = screens.screen!;
+    const carded: ScreensSection = {
+      screen: {
+        ...base,
+        pages: [
+          {
+            name: "home",
+            root: {
+              kind: "column",
+              padding: 4,
+              children: [
+                { kind: "column", card: true, padding: 6, children: [{ kind: "widget", node: "temp" }] },
+                { kind: "widget", node: "alive" },
+              ],
+            },
+          },
+        ],
+      },
+    };
+    const { source } = compile({ ...g, screens: carded }, buildRegistry());
+    expect(source).toMatch(/"cards": \[\(\d+, \d+, \d+, \d+\)\]/);
+    // The card is the inner container's rect and is smaller than the page: a widget outside it is not inside.
+    const cardNumbers = (/"cards": \[([^\]]*)\]/.exec(source)?.[1] ?? "").match(/\d+/g) ?? [];
+    expect(cardNumbers).toHaveLength(4);
+    const [x, , w, h] = cardNumbers.map(Number);
+    expect(w).toBeLessThan(320);
+    expect(h).toBeLessThan(240);
+    expect(x).toBeGreaterThanOrEqual(0);
+  });
+
   it("reports layout problems with the widget, page and screen named", () => {
     const g = heroGraph();
     const screens = g.screens as ScreensSection;

@@ -94,6 +94,10 @@ colour (or blit with a transparent key).
   starting point, not a limitation.
 - **Order:** step 1 (roles, no visual change) → the theme node and presets → trend → cards.
 
+**Cards are in** (2026-10-23, runtime 13.0.0): `card` on a container (a checkbox in the layout outline) draws a filled
+rounded panel in the theme's card colour behind its children, and a widget inside one clears to the card colour
+rather than the screen background — including in banded rendering. Earliest visual item of the whole brief.
+
 **Trend's two items are in** (2026-10-23, runtime 13.0.0): the average bar draws in `accent` and the min–max line in
 `muted` (it was the foreground), with a test on a themed surface so the roles, not the defaults, are what is checked.
 No threshold line and no value-in-the-corner, as decided.

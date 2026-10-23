@@ -303,6 +303,23 @@ def test_theme_roles_fold_to_what_the_format_has():
     assert s.theme["card"] == 0 and s.theme["track"] == 6 and s.theme["alarm"] == 15
 
 
+def test_a_card_draws_behind_its_container_and_widgets_clear_to_it():
+    # 2026-10-23, "cards": a container with card=True paints a rounded card behind its children, and a widget
+    # inside it clears to the card colour rather than the screen background.
+    theme = {"bg": 0, "card": 5, "fg": 15, "muted": 6, "track": 3, "accent": 12,
+             "on_accent": 0, "ok": 10, "warn": 11, "alarm": 13}
+    pages = {"p": {"parent": None, "cards": [(2, 2, 28, 12)], "widgets": [("box", (4, 4, 6, 4))]}}
+    g = gui.GUI()
+    g.widget("box", lambda surface, rect, value, state: None)  # draws nothing: its rect shows the card behind it
+    buf, fb = _fb()
+    s = g.add_surface(gui.FrameSurface("tft", fb, lambda f: None, pages, ["p"], fmt=framebuf.GS4_HMSB, theme=theme))
+    g.set_value("box", 1, now=0)
+    g.step(now=10)
+    assert fb.pixel(28, 12) == 5, "the card fills the container's rect"
+    assert fb.pixel(5, 5) == 5, "a widget inside the card clears to the card colour"
+    assert fb.pixel(0, 0) == 0, "outside the card is the screen background"
+    assert s.background_for((4, 4, 6, 4)) == 5
+    assert s.background_for((0, 0, 2, 2)) == 0
 def test_run_loop_steps_until_cancelled():
     try:
         import asyncio
@@ -453,5 +470,6 @@ minitest.run(
         test_tables_are_checked_when_a_surface_is_added,
         test_a_theme_draws_the_same_pixels_as_the_old_colour_tuple,
         test_theme_roles_fold_to_what_the_format_has,
+        test_a_card_draws_behind_its_container_and_widgets_clear_to_it,
     ]
 )

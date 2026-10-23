@@ -344,7 +344,8 @@
                     "node": "n07-alive",
                     "diameter": 14
                   }
-                ]
+                ],
+                "card": true
               },
               {
                 "kind": "text",
@@ -399,7 +400,8 @@
                     "font": "font_body20",
                     "grow": 1
                   }
-                ]
+                ],
+                "card": true
               },
               {
                 "kind": "widget",
@@ -429,7 +431,9 @@
                     "text": "1050",
                     "font": "font_body12"
                   }
-                ]
+                ],
+                "card": true,
+                "padding": 6
               },
               {
                 "kind": "spacer",

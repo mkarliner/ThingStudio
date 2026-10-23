@@ -29,6 +29,9 @@ export interface ContainerSpec extends Placed {
   readonly children: readonly ElementSpec[];
   readonly gap?: number;
   readonly padding?: number;
+  /** Draw a card behind this container's children: a filled rounded rectangle in the theme's card colour
+   * (gui-widget-styles-and-colour-scoping.md, 2026-10-23). Padding keeps the contents off the card's edge. */
+  readonly card?: boolean;
   readonly align?: Align;
   readonly justify?: Justify;
 }
@@ -215,7 +218,7 @@ export function compileScreens(
         case "row":
         case "column": {
           const children = el.children.map((c, i) => toLayout(c, where, `${path}.${i}`, el.kind === "row")).filter((c): c is LayoutNode => c !== null);
-          const c: Container = { kind: el.kind, id: `${screenId}:${path}`, label: `${el.kind} ${path}`, children, gap: el.gap, padding: el.padding, align: el.align, justify: el.justify, ...common };
+          const c: Container = { kind: el.kind, id: `${screenId}:${path}`, label: `${el.kind} ${path}`, children, gap: el.gap, padding: el.padding, align: el.align, justify: el.justify, card: el.card === true, ...common };
           return c;
         }
         case "spacer":
@@ -362,27 +365,32 @@ export function compileScreens(
       return { kind: "leaf", id: node.id, label: `widget ${label}`, natural, ...common };
     };
 
-    const tableFor = (name: string, root: ElementSpec, where: string): [string, Rect][] => {
+    const tableFor = (name: string, root: ElementSpec, where: string): { leaves: [string, Rect][]; cards: Rect[] } => {
       const tree = toLayout(root, where, "root");
-      if (!tree) return [];
+      if (!tree) return { leaves: [], cards: [] };
       const out = layoutPage(tree, size, { display: sname.replace(/"/g, ""), page: name });
       for (const e of out.errors) errors.push(e.message);
       rectsByPage.set(name, out.rects);
-      // Only drawable leaves go in the device table (containers and spacers don't draw).
+      // Only drawable leaves go in the device table (containers draw only when they are a card).
       const leaves: [string, Rect][] = [];
+      const cards: Rect[] = [];
       const collect = (n: LayoutNode): void => {
         if (n.kind === "leaf") {
           if (n.label !== "spacer") leaves.push([n.id, out.rects.get(n.id)!]);
-        } else n.children.forEach(collect);
+        } else {
+          if (n.card) cards.push(out.rects.get(n.id)!);
+          n.children.forEach(collect);
+        }
       };
       collect(tree);
-      return leaves;
+      return { leaves, cards };
     };
 
     const rectPy = ([id, r]: [string, Rect]): string => `(${pyStr(id)}, (${r.x}, ${r.y}, ${r.width}, ${r.height}))`;
+    const rectsPy = (list: Rect[]): string => `[${list.map((r) => `(${r.x}, ${r.y}, ${r.width}, ${r.height})`).join(", ")}]`;
     const pageEntries = spec.pages.map((p) => {
-      const leaves = tableFor(p.name, p.root, `on page "${p.name}" of screen ${sname}`);
-      return `${pyStr(p.name)}: {"parent": ${p.parent === undefined ? "None" : pyStr(p.parent)}, "widgets": [${leaves.map(rectPy).join(", ")}]}`;
+      const table = tableFor(p.name, p.root, `on page "${p.name}" of screen ${sname}`);
+      return `${pyStr(p.name)}: {"parent": ${p.parent === undefined ? "None" : pyStr(p.parent)}, "widgets": [${table.leaves.map(rectPy).join(", ")}], "cards": ${rectsPy(table.cards)}}`;
     });
 
     const modalEntries: string[] = [];
@@ -396,10 +404,10 @@ export function compileScreens(
       const mname = modalName(node);
       if (modalNames.has(mname) || pageNames.has(mname)) errors.push(`screen ${sname}: two pages or modals are called "${mname}"`);
       modalNames.add(mname);
-      const leaves = tableFor(mname, m.root, `in modal "${mname}" of screen ${sname}`);
+      const table = tableFor(mname, m.root, `in modal "${mname}" of screen ${sname}`);
       const priority = Math.round(num(node.properties.priority, 0));
       const timeoutMs = Math.round(num(node.properties.timeout, 0) * 1000);
-      modalEntries.push(`${pyStr(mname)}: {"widgets": [${leaves.map(rectPy).join(", ")}], "priority": ${priority}, "timeout_ms": ${timeoutMs}}`);
+      modalEntries.push(`${pyStr(mname)}: {"widgets": [${table.leaves.map(rectPy).join(", ")}], "cards": ${rectsPy(table.cards)}, "priority": ${priority}, "timeout_ms": ${timeoutMs}}`);
     }
 
     surfaces.push({
