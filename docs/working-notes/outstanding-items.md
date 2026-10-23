@@ -358,6 +358,7 @@ not here.
 
 ## UI / editor
 
+- **GUI widget styles and colour -- new item, 2026-10-23 (Mike: "gui widgets are currently very dull"), not yet prioritised.** Cards on containers, status chips, segmented bars, switch toggles; colour by named roles in a theme on the gui screen, resolved per frame format (RGB565 full colour, gs4/gs2 palette-bounded, mono ink/paper). Scoped in [`gui-widget-styles-and-colour-scoping.md`](gui-widget-styles-and-colour-scoping.md); open questions there.
 - **[POST-MVP]** **Install MicroPython from the editor -- new item, 2026-10-01, from the first newcomer test.**
   Getting MicroPython onto the board took nearly all of the 27-minute run's coaching; everything after it went
   fine. Docs are restructured (`decisions/documentation-process.md`), but the step is still manual. Post-MVP on
