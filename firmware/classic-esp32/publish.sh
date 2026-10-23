@@ -16,7 +16,9 @@
 # tag; the .sha256 beside it disagrees; _deps.json or main.py is missing; an upload does not read
 # back with the same hash.
 #
-# Needs: gh (brew install gh / apt install gh), python3, git, the repository's own history.
+# Needs: gh (brew install gh / apt install gh), authenticated by `gh auth login` or by GH_TOKEN,
+# python3, git, the repository's own history. A fine-grained token needs only Contents: write on this
+# repository; nothing here touches Actions.
 
 set -euo pipefail
 
@@ -35,7 +37,11 @@ case "$PUBLISH" in ""|"--publish") ;; *) die "unknown option $PUBLISH (only --pu
 
 # --- the tool that uploads ---------------------------------------------------------------------
 command -v gh >/dev/null || die "gh not found (brew install gh, or apt install gh)"
-gh auth status >/dev/null 2>&1 || die "gh is not logged in (gh auth login)"
+# One authenticated API call, not `gh auth status`: a fine-grained token cannot enumerate its own
+# scopes, and `gh auth status` reports that as a failure even when the token works (2026-10-23).
+# GH_TOKEN in the environment is honoured by every gh call this script makes.
+gh api user --jq .login >/dev/null 2>&1 \
+    || die "gh can't authenticate: run 'gh auth login', or set GH_TOKEN to a token with Contents: write on this repo"
 command -v python3 >/dev/null || die "python3 not found"
 
 sha_cmd() {
