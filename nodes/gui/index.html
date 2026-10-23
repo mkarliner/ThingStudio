@@ -3186,8 +3186,9 @@ stock MicroPython runs out of memory loading the display stack.</p>
 <h2 id="trend">Trend</h2>
 <p>Shows what a number can't: which way it is heading. Wire it to the first output of a <a href="../journal/">journal</a>, or to
 any node that sends a list of numbers (a <code>None</code> is a gap), such as a spectrum from a function node.</p>
-<p>Each bar is a row's average, with a thin line from the row's min to its max. A gap is empty. A wider space shows more
-history: it draws as many bars as fit, newest at the right edge.</p>
+<p>Each bar is a row's average, in the theme's accent colour, with a thin line from the row's min to its max in the
+muted colour — so the range reads as context behind the value. A gap is empty. A wider space shows more history: it
+draws as many bars as fit, newest at the right edge.</p>
 <ul>
 <li><strong>bottom at / top at</strong> — the range of the bars. Values outside are cut off at the edge. The range is fixed.</li>
 <li><strong>columns, column width, height</strong> — the natural size: it is as wide as columns times column width, plus the border.
