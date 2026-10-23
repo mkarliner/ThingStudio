@@ -80,8 +80,24 @@ Six steps, in order, each small enough to land on its own. Steps 1–3 are the f
 Text drawn on a card needs the card colour behind its glyphs, so `text()` on the surface has to take a background
 colour (or blit with a transparent key).
 
+## Decided, 2026-10-23 (Mike)
+
+- **Fold at low depth.** gs2 and mono fold roles onto what they have rather than refusing a theme it cannot express;
+  the property panel shows the fold, so nobody wonders where their red went.
+- **Cards, not a tile widget.** A card style on containers first; a widget that bundles caption/value/chip/sparkline
+  is not built now (it is the answer to "cards are not enough", which the cards will tell us).
+- **Trend: the first two only** — accent bars and muted min/max ticks. No threshold line, no value-in-the-corner yet.
+- **The theme is a config node**, `thingstudio/config/gui-theme`, referenced by a gui screen the way a touch panel is
+  (one theme serves several screens, and it is copyable between flows). Presets seed the roles and stay editable, so
+  "create your own palette" is the normal case rather than a special one.
+- **Seeding presets: dark slate and light paper.** High contrast and amber wait; with editable roles, a preset is a
+  starting point, not a limitation.
+- **Order:** step 1 (roles, no visual change) → the theme node and presets → trend → cards.
+
+**Step 1 is in** (2026-10-23, runtime 13.0.0): ten roles in `gui.ts` and `thingstudio_gui/gui.py`, a default theme
+equal to the previous four colours, a device test that the theme path draws byte-identical frames to the old
+four-colour tuple, and roles folded per format when no theme is given. A visible change still needs step 2.
+
 ## Open questions for Mike
 
-- Which preset themes ship first?
-- Is a card style on containers enough, or does a tile widget (caption, value, chip, sparkline) also earn its place?
 - Before or after launch? The headliner (Freenove, RGB565) would show it off; steps 1–3 are the minimum.

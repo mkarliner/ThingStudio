@@ -192,20 +192,31 @@ class FrameSurface(Surface):
     """A physical display. `fb` is a framebuf.FrameBuffer in the panel's own format; `push(fb)` sends the
     frame to it. `background` is the fill colour for cleared areas, in that format."""
 
-    def __init__(self, name, fb, push, pages, carousel, modals=None, wrap=True, min_interval_ms=100, fmt=None, colours=None):
+    def __init__(self, name, fb, push, pages, carousel, modals=None, wrap=True, min_interval_ms=100, fmt=None, colours=None,
+                 theme=None):
         Surface.__init__(self, name, pages, carousel, modals, wrap, min_interval_ms)
         self.fb = fb
         self.push = push
         style = _STYLE.get(fmt, (1, 1, 0, False))
         if colours:
-            # (fg, dim, background) or (fg, dim, background, accent): the accent is the colour of a bar's fill
-            # and a light that is on; without one they use the foreground.
-            self.fg, self.dim, self.background = colours[0], colours[1], colours[2]
-            self.accent = colours[3] if len(colours) > 3 else colours[0]
+            # An older editor sends (fg, dim, background) or (fg, dim, background, accent) instead of a theme.
+            theme = {'fg': colours[0], 'muted': colours[1], 'bg': colours[2],
+                     'accent': colours[3] if len(colours) > 3 else colours[0]}
+        if theme is not None:
+            # Roles (2026-10-23, gui-widget-styles-and-colour-scoping.md step 1): widgets draw by role, so one
+            # theme works on every frame format. The roles a format has no room for fall back to the ones it does,
+            # which is the fold: mono has ink and paper, so card is the background and ok/warn/alarm are ink.
+            self.theme = theme
             self.shades = True
         else:
-            self.fg, self.dim, self.background, self.shades = style
-            self.accent = self.fg
+            fg, muted, bg, self.shades = style
+            self.theme = {'fg': fg, 'muted': muted, 'bg': bg, 'accent': fg,
+                          'card': bg, 'track': muted, 'on_accent': bg,
+                          'ok': fg, 'warn': fg, 'alarm': fg}
+        self.fg = self.theme['fg']
+        self.dim = self.theme['muted']
+        self.background = self.theme['bg']
+        self.accent = self.theme.get('accent', self.fg)
         self.fmt = fmt if fmt is not None else (framebuf.MONO_HLSB if framebuf else 0)
         # A two-pixel palette in the frame's own format: glyph bit 0 -> [0], 1 -> [1] (nano-gui's BoolPalette).
         self._palette = framebuf.FrameBuffer(bytearray(4), 2, 1, self.fmt) if framebuf else None
@@ -321,14 +332,14 @@ class BandSurface(FrameSurface):
     banded = True
 
     def __init__(self, name, width, height, fmt, pages, carousel, modals=None, wrap=True, min_interval_ms=100,
-                 band_rows=40, stride=None, colours=None):
+                 band_rows=40, stride=None, colours=None, theme=None):
         self.width = width
         self.height = height
         self.band_rows = max(1, min(band_rows, height))
         self.stride = stride
         self.band_buf = bytearray(stride * self.band_rows)
         fb = _Band(self.band_buf, width, self.band_rows, fmt)
-        FrameSurface.__init__(self, name, fb, None, pages, carousel, modals, wrap, min_interval_ms, fmt, colours)
+        FrameSurface.__init__(self, name, fb, None, pages, carousel, modals, wrap, min_interval_ms, fmt, colours, theme)
         self.gui = None
         self._todo = []
 

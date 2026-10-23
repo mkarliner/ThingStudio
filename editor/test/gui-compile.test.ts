@@ -416,16 +416,21 @@ describe("touch buttons", () => {
 });
 
 describe("a full-colour (RGB565) GUI screen", () => {
-  it("passes byte-swapped colours, so the strips are already in the panel's byte order", () => {
+  it("passes a byte-swapped theme, so the strips are already in the panel's byte order", () => {
     const g = heroGraph();
     const screen = g.nodes.find((n) => n.type === "thingstudio/gui_screen")!;
     screen.properties.frameFormat = "rgb565";
     const { source } = compile(g, buildRegistry());
     expect(source).toMatch(/BandSurface\("screen", 320, 240, framebuf\.RGB565,/);
-    expect(source).toContain(`, ${bandRowsFor(320, 240, "rgb565")}, 640, (0xffff, 0x2c63, 0x0000, 0xf13e))`);
+    expect(source).toContain(`, ${bandRowsFor(320, 240, "rgb565")}, 640, theme=`);
+    // Byte-swapped, and every role named (2026-10-23): 0xffff -> 0xffff, 0x632c -> 0x2c63, 0x3ef1 -> 0xf13e.
+    expect(source).toContain(`'fg': 0xffff`);
+    expect(source).toContain(`'muted': 0x2c63`);
+    expect(source).toContain(`'bg': 0x0000`);
+    expect(source).toContain(`'accent': 0xf13e`);
     expect(bandRowsFor(320, 240, "rgb565")).toBe(8);
   });
-  it("leaves the grey formats without a colours argument", () => {
+  it("leaves the grey formats without a theme argument", () => {
     const { source } = compile(heroGraph(), buildRegistry());
     expect(source).not.toContain("0xf13e");
   });

@@ -54,10 +54,47 @@ export function bandRowsFor(width: number, height: number, format: GuiFrameForma
 /** Colours for a full-colour (RGB565) screen: foreground, dimmed (stale), background, accent (bar fill, light on).
  * Written byte-swapped: framebuf.RGB565 stores a pixel little-endian but an SPI panel wants it big-endian, and
  * drawing the swapped constant puts the right bytes on the wire without touching a single pixel afterwards. */
-export function rgb565Colours(): string {
+/** The roles a widget draws with (2026-10-23, gui-widget-styles-and-colour-scoping.md step 1). One theme is
+ * written once and resolved per frame format: full colour on RGB565, folded to what the palette has room for on
+ * gs4/gs2, ink and paper on mono. Widgets draw by role, never by value, so a widget looks right on every panel. */
+export type ThemeRole = "bg" | "card" | "fg" | "muted" | "track" | "accent" | "on_accent" | "ok" | "warn" | "alarm";
+
+export const THEME_ROLES: readonly ThemeRole[] = [
+  "bg",
+  "card",
+  "fg",
+  "muted",
+  "track",
+  "accent",
+  "on_accent",
+  "ok",
+  "warn",
+  "alarm",
+];
+
+/** Today's colours, now named: the theme the GUI has always drawn with. Step 1 changes no pixels. */
+export function defaultTheme(): Record<ThemeRole, number> {
+  return {
+    bg: 0x0000,
+    card: 0x0000,
+    fg: 0xffff,
+    muted: 0x632c,
+    track: 0x632c,
+    accent: 0x3ef1,
+    on_accent: 0x0000,
+    ok: 0xffff,
+    warn: 0xffff,
+    alarm: 0xffff,
+  };
+}
+
+/** A theme as the Python dict the GUI library takes. RGB565 values are byte-swapped for the panel, as the
+ * four-colour tuple was before it. */
+export function themeLiteral(theme: Record<ThemeRole, number>): string {
   const swap = (c: number) => ((c & 0xff) << 8) | (c >> 8);
   const hex = (c: number) => `0x${swap(c).toString(16).padStart(4, "0")}`;
-  return `(${hex(0xffff)}, ${hex(0x632c)}, ${hex(0x0000)}, ${hex(0x3ef1)})`;
+  const pairs = THEME_ROLES.map((role) => `'${role}': ${hex(theme[role])}`);
+  return `{${pairs.join(", ")}}`;
 }
 
 /** Bytes in one frame, the same formula display_spi checks incoming frames against. */
@@ -278,7 +315,7 @@ export const guiScreenNode: NodeDefinition = {
       ...surface.staticRegistrations,
       `${base}_s = _gui.add_surface(thingstudio_gui.BandSurface(${pyStr(node.id)}, ${width}, ${height}, ${fmt}, ` +
         `${surface.pagesPy}, ${surface.carouselPy}, ${surface.modalsPy}, ${wrap}, ${minInterval}, ${bandRows}, ${stride}` +
-        `${format === "rgb565" ? `, ${rgb565Colours()}` : ""}))`,
+        `${format === "rgb565" ? `, theme=${themeLiteral(defaultTheme())}` : ""}))`,
     ].join("\n");
     const name = typeof node.properties.name === "string" && node.properties.name ? node.properties.name : node.id;
     // The touch panel (config node): the GUI polls it itself, no wire. Its faults show on this node's status.

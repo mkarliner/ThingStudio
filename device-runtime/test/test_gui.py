@@ -272,6 +272,37 @@ def test_tables_are_checked_when_a_surface_is_added():
             raise AssertionError("bad tables accepted: %r %r" % (pages, carousel))
 
 
+def test_a_theme_draws_the_same_pixels_as_the_old_colour_tuple():
+    # 2026-10-23, gui-widget-styles-and-colour-scoping.md step 1: widgets draw by role now. The default theme must
+    # be the colours these widgets already used, or the first step of the styling work would change screens.
+    pages = {"p": {"parent": None, "widgets": [("temp", (0, 0, 8, 8)), ("hum", (8, 0, 8, 8))]}}
+
+    def rendered(**kw):
+        g = gui.GUI()
+        g.widget("temp", _box(0))
+        g.widget("hum", _box(0), 1000)
+        buf, fb = _fb()
+        g.add_surface(gui.FrameSurface("tft", fb, lambda f: None, pages, ["p"], fmt=framebuf.GS4_HMSB, **kw))
+        g.set_value("temp", 7, now=0)
+        g.set_value("hum", 5, now=0)
+        g.step(now=200)  # hum is stale by now: the dim role, which must match too
+        return bytes(buf)
+
+    old = rendered(colours=(15, 6, 0, 3))
+    new = rendered(theme={"fg": 15, "muted": 6, "bg": 0, "accent": 3, "card": 0, "track": 6,
+                          "on_accent": 0, "ok": 15, "warn": 15, "alarm": 15})
+    assert old == new, "a theme with today's colours must draw today's pixels"
+
+
+def test_theme_roles_fold_to_what_the_format_has():
+    # No theme: the format's own defaults, with the roles it has no room for folded onto the ones it has.
+    _, fb = _fb()
+    s = gui.FrameSurface("tft", fb, lambda f: None, {"p": {"parent": None, "widgets": []}}, ["p"],
+                        fmt=framebuf.GS4_HMSB)
+    assert (s.fg, s.dim, s.background, s.accent) == (15, 6, 0, 15)
+    assert s.theme["card"] == 0 and s.theme["track"] == 6 and s.theme["alarm"] == 15
+
+
 def test_run_loop_steps_until_cancelled():
     try:
         import asyncio
@@ -420,5 +451,7 @@ minitest.run(
         test_remote_view_sends_screens_and_changed_values,
         test_value_feed_sees_every_change_on_or_off_screen,
         test_tables_are_checked_when_a_surface_is_added,
+        test_a_theme_draws_the_same_pixels_as_the_old_colour_tuple,
+        test_theme_roles_fold_to_what_the_format_has,
     ]
 )
