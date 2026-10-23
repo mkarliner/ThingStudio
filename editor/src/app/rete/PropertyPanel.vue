@@ -154,6 +154,12 @@
               :model-value="nodeProperties[f.name!]"
               @update:model-value="(v) => setProp(f.name!, v)"
             />
+            <ColorField
+              v-else-if="f.kind === 'colour'"
+              :label="f.label"
+              :model-value="fieldValue(f)"
+              @update:model-value="(v) => setField(f, v)"
+            />
             <PaletteField
               v-else-if="f.kind === 'palette'"
               :properties="nodeProperties"
@@ -211,6 +217,7 @@ import ConfigRefField from "./ConfigRefField.vue";
 import CredentialRefField from "./CredentialRefField.vue";
 import PresetRefField from "./PresetRefField.vue";
 import PaletteField from "./PaletteField.vue";
+import ColorField from "./ColorField.vue";
 import PinField from "./PinField.vue";
 import ScreenOutline from "./ScreenOutline.vue";
 

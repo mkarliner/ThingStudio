@@ -69,12 +69,13 @@ carry these keys.
 
 A property field is `{name, label, kind, default, options?}`. `kind` is shared with config fields
 (`config-types.ts`): `text`, `textarea`, `password`, `number`, `select`, `boolean`, `credential`,
-`configRef`, `pin`, `palette` (the indexed-colour palette editor). `default` seeds a freshly-dropped node. A `select`'s option `value` is a string, or a number for a
+`configRef`, `pin`, `palette` (the indexed-colour palette editor), `colour` (one RGB565 colour picker,
+added 2026-10-23 for the GUI theme's roles). `default` seeds a freshly-dropped node. A `select`'s option `value` is a string, or a number for a
 select over numeric values (e.g. bme280's I2C address). A custom `.node.json` may use the `text`,
 `textarea`, `number`, `boolean`, `select`, `configRef`, `pin`, `target` and `nodeId` kinds, with the same `help`/`placeholder`/
 `min`/`max`/`step`/`optional` field attributes (`textarea` also takes `rows`) and a data-driven
 `visibleWhen` predicate (a `configRef` field also carries `configType`); the remaining kinds
-(`credential`, `palette`) and attributes (`retype`, `placeholderWhen`) are built-in
+(`credential`, `palette`, `colour`) and attributes (`retype`, `placeholderWhen`) are built-in
 editor widgets today.
 
 A `configRef` field may carry **`singleton: true`**: at compile time the flow's *one* config of

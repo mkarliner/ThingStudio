@@ -158,7 +158,11 @@ export function buildCatalog(): Catalog {
       .filter(([name]) => !internal.has(name))
       .map(([name, value]): PropertyInfo => {
         const p: PropertyInfo = { name, type: typeOf(value), default: value };
-        if (CONFIG_BY_PROPERTY[name]) p.configType = CONFIG_BY_PROPERTY[name];
+        // The descriptor is the authority (it carries `configType` for the panel); the map above is the
+        // fallback for node types whose descriptor has not been filled in yet.
+        const declared = (def?.properties ?? []).find((f) => f.name === name)?.configType;
+        if (declared) p.configType = declared;
+        else if (CONFIG_BY_PROPERTY[name]) p.configType = CONFIG_BY_PROPERTY[name];
         const note = PROPERTY_NOTES[`${kind}.${name}`];
         if (note) p.note = note;
         return p;

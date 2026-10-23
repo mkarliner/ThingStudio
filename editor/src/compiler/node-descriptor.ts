@@ -72,7 +72,10 @@ export type PropertyFieldKind =
   | "pin"
   | "target"
   | "nodeId"
-  | "palette";
+  | "palette"
+  /** One RGB565 colour (ColorField.vue). Added 2026-10-23 for the GUI theme's roles; built-in only, like
+   * `palette` and `credential`. */
+  | "colour";
 
 export interface PropertyFieldOption {
   /** A string for most fields; a number for a `select` over numeric values (e.g. bme280's I2C address).

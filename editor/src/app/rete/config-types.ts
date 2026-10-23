@@ -237,6 +237,50 @@ export const CONFIG_TYPES: Record<string, ConfigTypeDescriptor> = {
     defaults: { controller: "ft6336u", i2cConfigId: "", address: "0x38", rstPin: "", pollMs: 20, width: 320, height: 480, swapXY: false, flipX: false, flipY: false },
     summarize: (p) => `${String(p.controller ?? "ft6336u").toUpperCase()} ${String(p.width ?? "?")}x${String(p.height ?? "?")}`,
   },
+  // GUI theme (2026-10-23, gui-widget-styles-and-colour-scoping.md): ten named roles a gui screen draws with, so
+  // one theme works on every frame format. Presets seed the roles and stay editable -- "create your own palette" is
+  // the normal case, not a special one (Mike, 2026-10-23).
+  "thingstudio/config/gui-theme": {
+    type: "thingstudio/config/gui-theme",
+    label: "GUI theme",
+    fields: [
+      {
+        name: "preset",
+        label: "starting point",
+        kind: "select",
+        options: [
+          { value: "dark-slate", label: "dark slate" },
+          { value: "light-paper", label: "light paper" },
+          { value: "", label: "custom (keep what is set)" },
+        ],
+        help: "Seeds the colours below when the theme is created. Changing a colour keeps the preset as the starting point.",
+      },
+      { name: "bg", label: "background", kind: "colour" },
+      { name: "card", label: "card", kind: "colour" },
+      { name: "fg", label: "foreground", kind: "colour" },
+      { name: "muted", label: "muted (stale values)", kind: "colour" },
+      { name: "track", label: "track (bar and cell background)", kind: "colour" },
+      { name: "accent", label: "accent (bars, lights)", kind: "colour" },
+      { name: "on_accent", label: "text on accent", kind: "colour" },
+      { name: "ok", label: "ok", kind: "colour" },
+      { name: "warn", label: "warn", kind: "colour" },
+      { name: "alarm", label: "alarm", kind: "colour" },
+    ],
+    defaults: {
+      preset: "dark-slate",
+      bg: 0x10a2,
+      card: 0x2124,
+      fg: 0xffff,
+      muted: 0x8c71,
+      track: 0x4208,
+      accent: 0x3ef1,
+      on_accent: 0x0841,
+      ok: 0x3e66,
+      warn: 0xfc60,
+      alarm: 0xf800,
+    },
+    summarize: (p) => `${String(p.preset || "custom")} theme`,
+  },
   "thingstudio/config/mqtt-broker": {
     type: "thingstudio/config/mqtt-broker",
     label: "MQTT Broker",

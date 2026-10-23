@@ -210,6 +210,7 @@ Type `thingstudio/gui_screen`, kind source, palette group GUI.
     - `minInterval`, number, default `200` — least milliseconds between screen updates
     - `wrap`, boolean, default `true` — whether next/prev wrap around at the ends of the pages
     - `touchPanelConfigId`, string, default `""`, the id of a `thingstudio/config/touch-panel` config — the touch-panel config to read touches from; empty for none
+    - `themeConfigId`, string, default `""`, the id of a `thingstudio/config/gui-theme` config
 
 ### trend
 
@@ -520,6 +521,24 @@ Type `thingstudio/wifi_status`, kind source, palette group network.
 ## Config nodes
 
 A config node is listed under `configs` in a flow file as `{id, type, properties}`. A node names it by id in a property such as `i2cConfigId`. Credentials are saved by name (`credentialName`), never as secrets in the file.
+
+### GUI theme
+
+Type `thingstudio/config/gui-theme`.
+
+- `preset`, select: one of `dark-slate`, `light-paper`, ``; Seeds the colours below when the theme is created. Changing a colour keeps the preset as the starting point.
+- `bg`, colour
+- `card`, colour
+- `fg`, colour
+- `muted`, colour
+- `track`, colour
+- `accent`, colour
+- `on_accent`, colour
+- `ok`, colour
+- `warn`, colour
+- `alarm`, colour
+
+Defaults: `{"preset":"dark-slate","bg":4258,"card":8484,"fg":65535,"muted":35953,"track":16904,"accent":16113,"on_accent":2113,"ok":15974,"warn":64608,"alarm":63488}`
 
 ### I2C bus
 

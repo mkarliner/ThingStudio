@@ -98,6 +98,27 @@ The `seg7` fonts (`font_seg748`, `font_seg764`, `font_seg796`) have only `0-9 : 
 Keshikan (SIL Open Font License 1.1); see
 [third-party licenses](https://github.com/mkarliner/ThingStudio/blob/main/docs/third-party-licenses.md).
 
+## Themes
+
+By default a screen draws in the GUI's own colours. To choose your own, add a **GUI theme** config (+ on the
+gui screen's **theme** property) and name it there: one theme can serve several screens, and a screen with no theme
+keeps the default colours.
+
+A theme is ten roles, so the widgets stay consistent and one theme works on different panels: **background**, **card**,
+**foreground**, **muted** (stale values), **track** (a bar's empty part), **accent** (bar fill, lights on), **text on
+accent**, **ok**, **warn** and **alarm**. Start from **dark slate** or **light paper** and change any colour; the preset
+is a starting point, not a lock.
+
+A panel with fewer colours than that folds the roles onto the ones it has, rather than refusing the theme:
+
+- a **gs4** panel (16 colours) gets every role as its own colour;
+- a **gs2** panel (4 colours) keeps background, foreground, muted and accent — cards fold to the background, the track
+  to muted, ok/warn/alarm to the foreground;
+- a **mono** panel (2 colours) is ink and paper: text, bars and lights are ink, backgrounds are paper.
+
+Themes apply to full-colour panels for now: a gs2, gs4 or mono screen still draws in its own palette, and Deploy says
+so in the console if a theme is set.
+
 ## Rotating the screen
 
 On the display node, set **orientation** to 0, 90, 180 or 270 (the picture turned clockwise). It is one setting
