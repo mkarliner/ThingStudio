@@ -173,6 +173,62 @@ def _oriented_madctl(base_bits, angle, width, height):
     return None
 
 
+
+# A gui screen's theme owns the palette while it is wired to this display (2026-10-23,
+# gui-widget-styles-and-colour-scoping.md). The fold has to exist in Python too, because this package decides the
+# palette; editor/test/display-spi-theme-palette.test.ts runs the real hook against gui-theme-shared.ts's
+# resolveThemeForFormat() so the two cannot drift.
+_THEME_ROLES = ('bg', 'card', 'fg', 'muted', 'track', 'accent', 'on_accent', 'ok', 'warn', 'alarm')
+_THEME_DEFAULT = {'bg': 0x0000, 'card': 0x0000, 'fg': 0xffff, 'muted': 0x632c, 'track': 0x632c,
+                  'accent': 0x3ef1, 'on_accent': 0x0000, 'ok': 0xffff, 'warn': 0xffff, 'alarm': 0xffff}
+_THEME_PRESETS = {
+    'dark-slate': {'bg': 0x10a2, 'card': 0x2124, 'fg': 0xffff, 'muted': 0x8c71, 'track': 0x4208,
+                   'accent': 0x3ef1, 'on_accent': 0x0841, 'ok': 0x3e66, 'warn': 0xfc60, 'alarm': 0xf800},
+    'light-paper': {'bg': 0xffff, 'card': 0xef5d, 'fg': 0x0841, 'muted': 0x8c71, 'track': 0xce59,
+                    'accent': 0x0250, 'on_accent': 0xffff, 'ok': 0x1c65, 'warn': 0xc400, 'alarm': 0xb000},
+}
+
+
+def _theme_of(ctx, panel_id):
+    """(roles, screen id) of the gui screen wired to this display and using a theme, or (None, None)."""
+    links = ctx['flow'].get('links') or []
+    nodes = ctx['flow'].get('nodes') or []
+    for link in links:
+        if len(link) < 3 or link[2] != panel_id:
+            continue
+        source = None
+        for n in nodes:
+            if n['id'] == link[0]:
+                source = n
+                break
+        if source is None or source['type'] != 'thingstudio/gui_screen':
+            continue
+        theme_id = str((source.get('properties') or {}).get('themeConfigId') or '')
+        if not theme_id:
+            continue
+        for c in ctx['flow'].get('configs') or []:
+            if c['id'] == theme_id and c['type'] == 'thingstudio/config/gui-theme':
+                props = c.get('properties') or {}
+                preset = _THEME_PRESETS.get(str(props.get('preset') or ''))
+                theme = dict(preset) if preset else dict(_THEME_DEFAULT)
+                for role in _THEME_ROLES:
+                    if role in props and props[role] not in (None, ''):
+                        theme[role] = int(props[role])
+                return theme, source['id']
+    return None, None
+
+
+def _theme_palette(theme, fmt):
+    """The palette this format reads, folded from the roles (the same fold as gui-theme-shared.ts)."""
+    if fmt == 'gs4':
+        palette = [theme[role] for role in _THEME_ROLES]
+        while len(palette) < 16:
+            palette.append(0)
+        return palette
+    if fmt == 'gs2':
+        return [theme['bg'], theme['fg'], theme['muted'], theme['accent']]
+    return [theme['bg'], theme['fg']]
+
 def compile(ctx, properties):
     controller = str(properties.get('controller') or 'st7789')
     if controller not in ('st7789', 'st7796'):
@@ -182,6 +238,7 @@ def compile(ctx, properties):
         return {'errors': ['display_spi frameFormat "%s" must be rgb565, gs4, gs2 or mono' % fmt]}
     indexed = fmt != 'rgb565'
     palette = None
+    warnings = []
     if indexed:
         raw_palette = properties.get('palette')
         if raw_palette is None:
@@ -198,6 +255,12 @@ def compile(ctx, properties):
                 return {'errors': ['display_spi palette[%d] "%s" must be an integer 0-65535 (a raw RGB565 value)' % (i, entry)]}
             palette.append(value)
         palette = palette[:ENTRIES_USED[fmt]]
+        theme, screen_id = _theme_of(ctx, ctx['node']['id'])
+        if theme is not None:
+            if raw_palette is not None and list(palette) != list(_theme_palette(dict(_THEME_DEFAULT), fmt)):
+                warnings.append("the theme on the wiring gui screen sets this display's palette; the palette on this "
+                                "display is ignored while that screen is wired to it")
+            palette = _theme_palette(theme, fmt)[:ENTRIES_USED[fmt]]
 
     spi_bus, err = _whole(properties, 'spiBus', 2, 0, 'spiBus')
     if err:
@@ -273,7 +336,7 @@ def compile(ctx, properties):
         'rotation': rotation, 'madctl': madctl, 'invertColors': invert, 'dataLatchOrder': latch,
         'xstart': xstart, 'ystart': ystart, 'stride': stride, 'expected': expected,
         'rowBytes': row_bytes, 'formatNote': fmt_note,
-    }}
+    }, 'warnings': warnings}
 `;
 
 export const python = `import array

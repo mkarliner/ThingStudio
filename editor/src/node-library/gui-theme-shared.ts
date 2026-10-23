@@ -131,9 +131,9 @@ export function resolveThemeForFormat(theme: Theme, format: "rgb565" | "gs4" | "
 }
 
 /** A theme as the Python dict the GUI library takes. RGB565 values are byte-swapped for the panel, as the
- * four-colour tuple was before it. */
-export function themeLiteral(values: Theme): string {
-  const swap = (c: number) => ((c & 0xff) << 8) | (c >> 8);
+ * four-colour tuple was before it; an indexed theme's values are palette indexes and are not swapped. */
+export function themeLiteral(values: Theme, swapBytes: boolean): string {
+  const swap = (c: number) => (swapBytes ? ((c & 0xff) << 8) | (c >> 8) : c);
   const hex = (c: number) => `0x${swap(c).toString(16).padStart(4, "0")}`;
   const pairs = THEME_ROLES.map((role) => `'${role}': ${hex(values[role])}`);
   return `{${pairs.join(", ")}}`;

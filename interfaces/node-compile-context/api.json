@@ -29,7 +29,8 @@
           "type": "string",
           "properties": "object"
         }
-      ]
+      ],
+      "links": "array of [originId, originSlot, targetId, targetSlot]"
     },
     "nodesOfType": [
       {

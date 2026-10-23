@@ -94,6 +94,11 @@ colour (or blit with a transparent key).
   starting point, not a limitation.
 - **Order:** step 1 (roles, no visual change) → the theme node and presets → trend → cards.
 
+**Step 2 is in** (2026-10-23, runtime 13.0.0): the `gui theme` config node with two presets and editable roles; a
+`colour` property kind (`ColorField.vue`); the fold per frame format; and, on indexed formats, the display taking its
+palette from the screen wired to it (`flow.links` in the compile context, `editor/test/display-spi-theme-palette.test.ts`
+pinning the Python fold against `resolveThemeForFormat()`). Next: trend's two items, then cards.
+
 **Step 1 is in** (2026-10-23, runtime 13.0.0): ten roles in `gui.ts` and `thingstudio_gui/gui.py`, a default theme
 equal to the previous four colours, a device test that the theme path draws byte-identical frames to the old
 four-colour tuple, and roles folded per format when no theme is given. A visible change still needs step 2.

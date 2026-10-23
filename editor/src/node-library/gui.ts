@@ -270,12 +270,10 @@ export const guiScreenNode: NodeDefinition = {
     // A theme is optional; without one this resolves to the built-in colours, so existing flows are unchanged.
     const theme = resolveScreenTheme(ctx, node);
     const resolved = resolveThemeForFormat(theme, format);
-    if (format !== "rgb565" && node.properties.themeConfigId && ctx.warn) {
-      ctx.warn(
-        `GUI screen ${nodeLabel(node)}: a theme reaches the full-colour (rgb565) format only for now. ` +
-          `On ${format} the widgets still use role indexes ${JSON.stringify(resolved.values)}.`,
-      );
-    }
+    // A theme is sent for every format once one is chosen: on an indexed format its values are palette indexes,
+    // and the display takes its palette from the same theme (display-spi.ts). Without a theme, the indexed formats
+    // keep the device's own style untouched, which is why existing gs4/gs2/mono flows are unchanged.
+    const emitTheme = format === "rgb565" || (typeof node.properties.themeConfigId === "string" && node.properties.themeConfigId !== "");
     const core = coreBlock(ctx);
     const c = screensFor(ctx);
     const surface = c.surfaces.find((s) => s.screen === node.id);
@@ -292,7 +290,7 @@ export const guiScreenNode: NodeDefinition = {
       ...surface.staticRegistrations,
       `${base}_s = _gui.add_surface(thingstudio_gui.BandSurface(${pyStr(node.id)}, ${width}, ${height}, ${fmt}, ` +
         `${surface.pagesPy}, ${surface.carouselPy}, ${surface.modalsPy}, ${wrap}, ${minInterval}, ${bandRows}, ${stride}` +
-        `${format === "rgb565" ? `, theme=${themeLiteral(resolved.values)}` : ""}))`,
+        `${emitTheme ? `, theme=${themeLiteral(resolved.values, format === "rgb565")}` : ""}))`,
     ].join("\n");
     const name = typeof node.properties.name === "string" && node.properties.name ? node.properties.name : node.id;
     // The touch panel (config node): the GUI polls it itself, no wire. Its faults show on this node's status.

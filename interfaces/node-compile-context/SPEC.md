@@ -52,7 +52,8 @@ without the file behaves exactly as today.
   },
   "flow": {
     "nodes": [{"id": "b3f1…", "type": "custom/dht22", "properties": {"bus": "c1"}}],
-    "configs": [{"id": "c1", "type": "thingstudio/config/i2c-bus", "properties": {"bus": 0, "scl": 22, "sda": 21}}]
+    "configs": [{"id": "c1", "type": "thingstudio/config/i2c-bus", "properties": {"bus": 0, "scl": 22, "sda": 21}}],
+    "links": [["b3f1…", 0, "d1", 0]]
   },
   "nodesOfType": [{"id": "b3f1…", "type": "custom/dht22", "properties": {"bus": "c1"}}],
   "referencedConfigs": {
@@ -69,12 +70,15 @@ without the file behaves exactly as today.
 | `node` | This instance: `id`, `type`, raw stored `properties` (as §1), and `wired`. `wired.inputs`/`wired.outputs` are booleans positionally matching the descriptor's ports. |
 | `flow.nodes` | Every node in the flow, in graph order: `id`, `type`, **non-secret** `properties`. |
 | `flow.configs` | Every config: `id`, `type`, **non-secret** `properties` (`credentialName`, not the secret). |
+| `flow.links` | Every wire: `[originId, originSlot, targetId, targetSlot]`, in flow-file order. Added 2026-10-23 so a package can see *which* node is wired to it, not just *that* one is (the display takes its palette from the gui screen wired to it). Positions only — no port names, no node data. |
 | `nodesOfType` | Every node of this node's own `type`, in graph order, **including this instance**: `id`, `type`, **non-secret** `properties`, no `wired`. Added 2026-10-20 so a hook can validate a set it shares with its siblings (http_in's route table); it cannot see other node types. |
 | `referencedConfigs` | The configs this node's `configRef` fields point at, with their resolved secrets — the same values the node already receives on the board today. |
 | `target` | The board/processor compiled for, or `null` when none is known. Same fields as a `target` property field, plus nothing board-specific beyond `capabilities`. |
 
-Wiring is a boolean per port, not a target id: the first version covers "is this port connected", which is what
-non-GUI nodes use. `findWiredTargets` (used only by the GUI, out of node-format scope) is not in v1.
+`node.wired` is a boolean per port: "is this port connected", which is what most nodes need. `flow.links` is the
+graph itself, for the rarer case where a node needs to know *which* neighbour it has (added 2026-10-23; it is the
+same information the editor's own `findWiredTargets` uses, in data form). Neither carries port names or derived data:
+a hook that needs a neighbour's resolved properties reads them from `flow.nodes` or `flow.configs`.
 
 ## 3. The result
 

@@ -95,10 +95,16 @@ describe("presets and a screen's theme", () => {
     );
   });
 
-  it("writes the theme dict the GUI library takes, byte-swapped", () => {
-    const lit = themeLiteral({ ...defaultTheme(), fg: 0xffff, bg: 0x0000, accent: 0x3ef1 });
+  it("writes the theme dict the GUI library takes, byte-swapped for colour and not for indexes", () => {
+    const lit = themeLiteral({ ...defaultTheme(), fg: 0xffff, bg: 0x0000, accent: 0x3ef1 }, true);
     expect(lit).toContain(`'fg': 0xffff`);
     expect(lit).toContain(`'accent': 0xf13e`);
     expect(buildRegistry().has("thingstudio/gui_screen")).toBe(true);
+  });
+
+  it("does not byte-swap an indexed theme: its values are palette indexes", () => {
+    const gs2 = resolveThemeForFormat(defaultTheme(), "gs2");
+    expect(themeLiteral(gs2.values, false)).toContain(`'fg': 0x0001`);
+    expect(themeLiteral(gs2.values, false)).toContain(`'bg': 0x0`);
   });
 });

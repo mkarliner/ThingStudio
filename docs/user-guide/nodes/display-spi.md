@@ -30,6 +30,8 @@ load it again on this or another **display spi** node instead of retyping every 
   to how the panel is mounted (0 to 3), and `xstart`/`ystart` to `-1`. See
   [Rotating the screen](gui.md#rotating-the-screen). A flow that reads touch with a [touch](touch-i2c.md) node
   rather than a gui screen sets the same angle on that node.
+- **palette** — the colours an indexed frame format uses. While a [gui screen](gui.md#themes) with a theme is wired
+  to this display, the theme supplies the palette and this one is ignored.
 - **rotation** — 0–7, the panel controller's orientation code. Default `1`.
 - **color order** — `rgb` or `bgr`, matching your panel's own wiring. Default `bgr`.
 - **invert colors** — on or off. Some panels need this flipped to show true colors instead of their negative.

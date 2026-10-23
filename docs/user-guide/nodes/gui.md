@@ -116,8 +116,9 @@ A panel with fewer colours than that folds the roles onto the ones it has, rathe
   to muted, ok/warn/alarm to the foreground;
 - a **mono** panel (2 colours) is ink and paper: text, bars and lights are ink, backgrounds are paper.
 
-Themes apply to full-colour panels for now: a gs2, gs4 or mono screen still draws in its own palette, and Deploy says
-so in the console if a theme is set.
+On an indexed panel (gs4, gs2 or mono) the theme also sets the display's palette while a screen is wired to it — one
+theme is the whole colour scheme, not two lists to keep in step. A palette set on the display itself is ignored while a
+themed screen is wired to it, and Deploy says so in the console.
 
 ## Rotating the screen
 
