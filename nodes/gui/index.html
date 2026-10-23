@@ -3248,8 +3248,9 @@ is a starting point, not a lock.</p>
   to muted, ok/warn/alarm to the foreground;</li>
 <li>a <strong>mono</strong> panel (2 colours) is ink and paper: text, bars and lights are ink, backgrounds are paper.</li>
 </ul>
-<p>Themes apply to full-colour panels for now: a gs2, gs4 or mono screen still draws in its own palette, and Deploy says
-so in the console if a theme is set.</p>
+<p>On an indexed panel (gs4, gs2 or mono) the theme also sets the display's palette while a screen is wired to it — one
+theme is the whole colour scheme, not two lists to keep in step. A palette set on the display itself is ignored while a
+themed screen is wired to it, and Deploy says so in the console.</p>
 <h2 id="rotating-the-screen">Rotating the screen</h2>
 <p>On the display node, set <strong>orientation</strong> to 0, 90, 180 or 270 (the picture turned clockwise). It is one setting
 on each display, so a display can't have two. Set the display's width and height to the panel's own size, and its
