@@ -168,3 +168,8 @@ Two changes, both narrow:
   code:"Garbled"}` for the offset the board has stored. The editor resends that piece (the existing bounded
   retransmit) and, if it fails again, reports "the board could not read that piece" instead of a 30-second timeout
   with no explanation. No new recovery: same piece, same count, clearer words.
+
+**Result on hardware (2026-10-23, Mike): install clean, hero GUI flow deployed, and three consecutive deploys over
+the already-running GUI flow.** That settles what the image was for: with the libraries frozen there is heap enough
+to start a second flow, so the "cannot deploy over a running flow" limit is a *stock-runtime* limit, not a board
+one. The stop-first sequence still belongs on the list for boards without the image.

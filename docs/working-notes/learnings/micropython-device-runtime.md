@@ -359,6 +359,10 @@ What this rules out and what it leaves:
 General lesson: when a device drops input without saying so, the host's timeout is the only symptom, and it
 points at the wrong layer. Make the drop visible before making anything bigger.
 
+**Confirmed on hardware, 2026-10-23:** with the 8192-byte buffer in the image, the hero GUI flow deployed three
+times in a row over the running flow, no garbled pieces. The 260-byte version failed two out of three at the same
+place.
+
 ## Redeploy over a running GUI flow: stopping the flow isn't freeing it, 2026-10-22
 
 Deploying a GUI flow while another GUI flow runs on a CYD failed every time with

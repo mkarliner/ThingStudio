@@ -95,14 +95,21 @@ not here.
   **The five-cycle gate is retired** (Mike, 2026-10-22): it required five deploys in one powered session with a
   display flow resident, which this hardware does not do; `decisions/gui-layout.md` carries the call and what
   replaces it.
-- **[LAUNCH]** **Classic-ESP32 custom image: built and booting — 2026-10-22.** Inputs in
+  **On the custom image, it works: 3 consecutive deploys over the running GUI flow, 2026-10-23 (Mike).** So the
+  stop-first sequence is now a *stock-runtime* board problem, not an image one — the image's frozen libraries are
+  what leave enough heap to start a second flow. What remains for that item: the "stop the flow, keep Thingstudio"
+  action and the sequence, for boards without the image (and any board whose typing makes stopping cheap).
+- **[LAUNCH]** **Classic-ESP32 custom image: built, booting, and deploying repeatedly — 2026-10-22/23.** Inputs in
   `firmware/classic-esp32/` (stage from `runtime_manifest.py`, frozen manifest including the port's own
   `_boot`/`flashbdev`/`inisetup`, single-app partition table, build/install scripts, `_deps.json` generator using
   the editor's mpy-cross and hash scheme, `.github/workflows/firmware.yml`); `deps.ensure_on_path()` puts `/lib`
   before `.frozen` (runtime 11.1.0). Built against ESP-IDF v5.5.1 / MicroPython v1.28.0: 1.69 MB image, flashed
   to the CYD, `LISTENER_READY`, HELLO listing all 34 frozen libraries, idle free RAM 149 KB / IDF 140 KB /
-  largest block 110 KB (the S0 row in `classic-esp32-firmware-briefing.md`). Owed: deploy the hero GUI flow and
-  watch Deploy skip the frozen libraries, rebuild at 12.0.0, then the user-facing firmware page.
+  largest block 110 KB (the S0 row in `classic-esp32-firmware-briefing.md`). 12.1.0 image (2026-10-23) adds the
+  8 KB REPL input buffer patch and the Garbled answer; install clean on macOS, hero GUI flow deployed, Deploy
+  skipping every frozen library, three consecutive deploys over the running flow. Owed: the user-facing firmware
+  page (install, what it changes, what it does not fix), the S0-S5 numbers on the reflashed 12.1.0 board, and a CI
+  rebuild of the image now that `build.sh` applies `patches/`.
 - **[LAUNCH]** **Button rework -- built and hardware-checked 2026-10-09.** Two-faced nodes in the compiler;
   button output, modes and controlled toggle; modal close reason; touch panel config node (with presets) polled by
   the gui screen; `gui_touch` removed (`decisions/gui-layout.md` 2026-10-09, `gui-button-rework-briefing.md`).
