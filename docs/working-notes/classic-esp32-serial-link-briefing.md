@@ -50,8 +50,11 @@ the image from, and a CI build that proves the patch applies in the container.
 2. **Build path: local, by decision (Mike, 2026-10-23).** `firmware.yml` is not the build path and no longer
    triggers on tags; it has never completed a build (submodules need `idf.py` from the container, and the container
    has no node for the index). `decisions/classic-esp32-firmware.md` records it and when to revisit.
-3. **The stop-first sequence** (`outstanding-items.md`): still settled as "stop the flow first", still unbuilt, and
-   now only needed for boards *without* the image — on the image a deploy over a running flow works.
+3. **The stop-first sequence is not going to be built** (Mike, 2026-10-23: the hardware measurement is irrelevant).
+   Replaced by guidance that works on every low-memory board: remove the flow, power cycle, deploy; if it still
+   fails, the flow may be too big for the board -- smaller flow, more memory, or a firmware image with the libraries
+   built in. One constant in `memory-advice.ts`, the ladder in `debugging.md`, the question in `faq.md`. No new
+   message, no `HELLO` field, no version bump. See `decisions/classic-esp32-firmware.md`.
 4. **Release of the 8 KB buffer?** Worth offering upstream (rp2 has the macro; esp32 hardcodes the array). Not
    required for us.
 5. **The five-cycle curve, if anyone wants it**: I got to three deploys before the port wedged; four to six would

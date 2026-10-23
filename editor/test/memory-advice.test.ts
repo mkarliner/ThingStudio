@@ -2,7 +2,7 @@
 // editor/test/memory-advice.test.ts -- when the console suggests restarting the board (2026-10-07).
 
 import { describe, expect, it } from "vitest";
-import { LOW_IDF_HEAP_BYTES, deployMemoryAdvice, looksLikeOutOfMemory, lowFlowMemoryWarning, lowMemoryWarningBeforeDeploy } from "../src/app/memory-advice.js";
+import { DEPLOY_MEMORY_DOC, DEPLOY_MEMORY_HINT, LOW_IDF_HEAP_BYTES, deployMemoryAdvice, looksLikeOutOfMemory, lowFlowMemoryWarning, lowMemoryWarningBeforeDeploy } from "../src/app/memory-advice.js";
 
 describe("lowMemoryWarningBeforeDeploy", () => {
   it("warns for a networking flow on an ESP32 with little ESP-IDF memory (the CYD's 1 KB case)", () => {
@@ -30,10 +30,12 @@ describe("looksLikeOutOfMemory", () => {
 });
 
 describe("deployMemoryAdvice", () => {
-  it("says to remove the flow and power cycle the board (Mike, 2026-10-22)", () => {
+  it("gives the ladder: remove the flow, power cycle, and if it still fails the flow may be too big", () => {
     const a = deployMemoryAdvice("MemoryError", "no room to receive the flow (4120 bytes free); the running flow is using the memory")!;
     expect(a).toContain("Remove flow");
     expect(a).toContain("power cycle");
+    // Mike, 2026-10-23: after the power cycle, say the plain thing -- the flow may not fit this board.
+    expect(a).toContain("the flow may be too big for this board");
     // A soft restart keeps the same heap regions and gives no chip memory back, so it is not offered.
     expect(a).not.toContain("Restart board (soft)");
   });
@@ -41,6 +43,11 @@ describe("deployMemoryAdvice", () => {
     const a = deployMemoryAdvice("MemoryError", "memory allocation failed, allocating 376 bytes (16904 bytes free after stopping the previous flow)")!;
     expect(a).toContain("power cycle");
     expect(deployMemoryAdvice("ImportError", "no module named 'foo'")).toBeNull();
+  });
+  it("carries one docs link, to the page that explains what is left (Mike, 2026-10-23)", () => {
+    expect(DEPLOY_MEMORY_DOC.path).toBe("debugging/#memoryerror-or-a-library-that-wont-load");
+    // The console names no firmware image: more images will exist, and the page is where that choice lives.
+    expect(DEPLOY_MEMORY_HINT).not.toMatch(/classic-ESP32|custom firmware/i);
   });
 });
 

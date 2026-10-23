@@ -84,22 +84,16 @@ not here.
   the image's page is written and its memory numbers measured. Remaining: attach the tested image to the v0.4.0
   release (build path: local, by hand). Briefings: `classic-esp32-firmware-briefing.md`,
   `classic-esp32-serial-link-briefing.md`; decisions: `decisions/classic-esp32-firmware.md`.
-- **[LAUNCH]** **Deploy over a running GUI flow: stop the flow first — 2026-10-22.** The sequence is settled (Mike:
-  "stop the flow first, anything else is nonsense"): stop, then receive, then start, one path with no retries. Still
-  open: whether stopping is *enough* — a stopped flow gave 50 → 116 KB free and still no block for the flow (a
-  376-byte start failure), and a soft restart keeps the same heap regions, so the board may need a power cycle in
-  the same sequence. Measure that on the CYD before building on it. Also missing: a "stop the flow, keep Thingstudio"
-  action (today only Remove flow… or Stop flow & open prompt exist). Done already (runtime 12.0.0): the automatic
-  recovery chain is gone (no stop-for-retry, no module dropping, no editor retry), a failed deploy reports the
-  board's free-memory figure with the power-cycle recipe, and the pre-deploy memory check warns instead of refusing.
-  Chunked transfer (`FLOW_PUT`/`FLOW_COMMIT`) stays, in 5 KB pieces.
-  **The five-cycle gate is retired** (Mike, 2026-10-22): it required five deploys in one powered session with a
-  display flow resident, which this hardware does not do; `decisions/gui-layout.md` carries the call and what
-  replaces it.
-  **On the custom image, it works: 3 consecutive deploys over the running GUI flow, 2026-10-23 (Mike).** So the
-  stop-first sequence is now a *stock-runtime* board problem, not an image one — the image's frozen libraries are
-  what leave enough heap to start a second flow. What remains for that item: the "stop the flow, keep Thingstudio"
-  action and the sequence, for boards without the image (and any board whose typing makes stopping cheap).
+- **[LAUNCH]** **Deploy a second time on a low-memory board: guidance, not a sequence — settled 2026-10-23.** Mike's
+  call: the stop-first sequence is not worth building (and its hardware measurement is irrelevant), because the
+  answer a user needs is the same on every low-memory board and fits in one sentence. What ships instead:
+  **Remove flow… → power cycle → deploy**, and if that still fails, **the flow may be too big for this board** — then
+  make it smaller, use a board with more memory, or run a firmware image with the libraries built in (the classic
+  ESP32 image, or the same technique on another board). One constant (`DEPLOY_MEMORY_HINT` in `memory-advice.ts`)
+  serves all three memory failures and carries a docs link; `debugging.md` holds the full ladder, `faq.md` the
+  question, `custom-firmware.md` the third step. No new wire message, no HELLO field, no version bump.
+  Already in place from 12.0.0/12.1.0: no automatic recovery, chunked 5 KB transfer, the Garbled report, and a
+  pre-deploy warning that never refuses.
 - **[LAUNCH]** **Classic-ESP32 custom image: built, booting, and deploying repeatedly — 2026-10-22/23.** Inputs in
   `firmware/classic-esp32/` (stage from `runtime_manifest.py`, frozen manifest including the port's own
   `_boot`/`flashbdev`/`inisetup`, single-app partition table, build/install scripts, `_deps.json` generator using

@@ -4,7 +4,14 @@ A MicroPython image with Thingstudio's runtime and every flow library built in, 
 PSRAM. It is what lets those boards run a GUI flow: stock MicroPython runs out of memory loading the display stack.
 
 The image is optional. Stock MicroPython and the [runtime install](installing-runtime.md) work as usual, and nothing
-in the editor changes. Use it when a GUI flow on a 4 MB ESP32 stops with `MemoryError`.
+in the editor changes. Use it when a flow on a 4 MB ESP32 stops with `MemoryError` and the steps in
+[MemoryError or a library that won't load](debugging.md#memoryerror-or-a-library-that-wont-load) have not helped —
+this is the third of them, "run a firmware image with the libraries built in".
+
+The technique is not specific to this image or to this chip: freezing the runtime and the flow libraries into
+MicroPython works on any board. This image exists because a classic ESP32 is the board where it changes the most,
+and because building one needs an ESP-IDF toolchain. `firmware/classic-esp32/` in the repository is a working
+example to copy for another board.
 
 ## What it changes
 

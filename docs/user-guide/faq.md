@@ -46,6 +46,20 @@ the heap regions MicroPython took as it grew stay where they were, and memory ta
 back. A board that couldn't find one big block before the soft restart still can't after it. Only cutting power
 to the chip rebuilds the heap from scratch — hence the power cycle in the recipe above.
 
+## Deploy failed a second time. Is the flow too big for my board?
+
+Possibly, yes. Work through this in order:
+
+1. **Tools → Remove flow…**, then **power cycle the board** (unplug and replug the USB cable, or
+   **Tools → Reset board (hard)**), then deploy.
+2. If it still fails, the flow may be too big for the board. Make it smaller (fewer GUI pages, fewer libraries, a
+   smaller frame), use a board with more memory, or — on a classic ESP32 — run the
+   [custom firmware](custom-firmware.md), which keeps the runtime and the libraries in the firmware.
+
+Boards with little RAM have a point where a flow simply does not fit. Nothing in the editor can make room the
+board does not have. The console shows how much memory the board had when it failed; see
+[MemoryError or a library that won't load](debugging.md#memoryerror-or-a-library-that-wont-load).
+
 ## Why is Deploy sending the flow in pieces?
 
 Some boards (classic ESP32 with no PSRAM) can't take a whole flow in one message once a display flow has run:

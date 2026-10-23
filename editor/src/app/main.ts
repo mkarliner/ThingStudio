@@ -153,7 +153,7 @@ import type { BoardSettingsResultMessage, HelloMessage, Message, NodeStatusMessa
 import { checkRuntimeBuild, decideDeploy } from "../protocol/version.js";
 import { explainDeployImportError, networkWarningBeforeDeploy } from "./import-error-help.js";
 import { editorVersionLabel, editorVersionLine } from "./editor-version.js";
-import { DEPLOY_MEMORY_HINT, deployMemoryAdvice, looksLikeOutOfMemory, lowFlowMemoryWarning, lowMemoryWarningBeforeDeploy } from "./memory-advice.js";
+import { DEPLOY_MEMORY_DOC, DEPLOY_MEMORY_HINT, deployMemoryAdvice, looksLikeOutOfMemory, lowFlowMemoryWarning, lowMemoryWarningBeforeDeploy } from "./memory-advice.js";
 import { dependencyHash, findImportedModules, librariesToSend, libraryMessages, resolveDependencies, type DependencyInfo } from "../compiler/flow-dependencies.js";
 import { createThingstudioEditor, type ThingstudioEditor } from "./rete/editor-setup.js";
 import { NODE_FACTORIES, CustomNode, type AnyThingstudioNode } from "./rete/nodes.js";
@@ -2870,7 +2870,7 @@ async function installFlowDependencies(source: string): Promise<Record<string, s
       }
       if (ack.type === "DEP_ACK" && !ack.ok) {
         logLine(`[deploy failed] library ${name} not accepted, flow unchanged: ${ack.error ?? ack.code ?? "unknown error"}`, "err");
-        if (looksLikeOutOfMemory(ack.error)) logLine(`[deploy failed] board out of memory. ${DEPLOY_MEMORY_HINT}`, "err");
+        if (looksLikeOutOfMemory(ack.error)) logAdvice("[deploy failed]", memoryAdvice(), "err");
         boardDependencies = null;
         return null;
       }
@@ -2888,13 +2888,19 @@ async function installFlowDependencies(source: string): Promise<Record<string, s
     }
     if (result.type === "DEP_RESULT" && !result.ok) {
       logLine(`[deploy failed] library ${name} not installed, flow unchanged: ${result.error ?? result.code ?? "unknown error"}`, "err");
-      if (looksLikeOutOfMemory(result.error)) logLine(`[deploy failed] board out of memory. ${DEPLOY_MEMORY_HINT}`, "err");
+      if (looksLikeOutOfMemory(result.error)) logAdvice("[deploy failed]", memoryAdvice(), "err");
       boardDependencies = null;
       return null;
     }
     if (boardDependencies !== null) boardDependencies[name] = c.hash;
   }
   return required;
+}
+
+/** The deploy-path memory advice, with its docs link, for the paths that only have an error string to go on
+ * (a library install, or a flow start). DEPLOY_MEMORY_HINT is the single sentence they all show. */
+function memoryAdvice(): Advice {
+  return { text: `board out of memory. ${DEPLOY_MEMORY_HINT}`, doc: DEPLOY_MEMORY_DOC };
 }
 
 const PIECE_TIMEOUT_MS = 10000; // one 5 KB piece: write to flash and answer
@@ -3106,8 +3112,8 @@ el("btnDeploy").addEventListener("click", async () => {
         logLine(`[deploy failed] ${result.code}: ${result.message}`, "err");
         const importAdvice = result.code === "ImportError" ? explainDeployImportError(result.message, libraryModules) : null;
         if (importAdvice) logAdvice("[deploy failed]", importAdvice, "err");
-        const memoryAdvice = deployMemoryAdvice(result.code, result.message);
-        if (memoryAdvice) logLine(`[deploy failed] ${memoryAdvice}`, "err");
+        const deployMemory = deployMemoryAdvice(result.code, result.message);
+        if (deployMemory) logAdvice("[deploy failed]", { text: deployMemory, doc: DEPLOY_MEMORY_DOC }, "err");
         if (result.code === "MissingDependency") {
           // This editor's idea of the board's libraries was wrong (changed by another editor, or a
           // failed write). Forget it, so the next Deploy sends every library the flow needs.

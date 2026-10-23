@@ -16,13 +16,21 @@ import type { HelloMessage } from "../protocol/messages.js";
  * board with WiFi up still has ~35-40 KB here (CYD and ESP32-C3, 2026-09-25 and 2026-10-07). */
 export const LOW_IDF_HEAP_BYTES = 30_000;
 
-/** The one way out of a board that cannot fit the next flow (Mike, 2026-10-22: document "power cycle the
- * board" or equivalent). Freeing the running flow does not return a usable block, and a soft restart restarts
- * the interpreter over the same heap regions without giving ESP-IDF memory back — so the recipe is: drop the
- * saved flow, then cut power to the chip, then deploy. On most boards the USB cable is the power switch;
- * Tools → Reset board (hard) is the same reset without unplugging. */
+/** What to do when a deploy does not fit (Mike, 2026-10-22 and 2026-10-23).
+ *
+ * Freeing the running flow does not return a usable block, and a soft restart restarts the interpreter over
+ * the same heap regions without giving the chip's memory back, so the first step is a power cycle with the
+ * saved flow removed. If it still does not fit after that, the flow is too big for the board -- said plainly,
+ * because that is what it is, and because the user then has real choices (a smaller flow, a board with more
+ * memory, a firmware image with the libraries built in). The last part stays in the docs rather than in this
+ * line: the console says what happened and what to try once, then stops.
+ *
+ * One constant for every memory failure on the deploy path, so the three of them cannot drift apart. */
 export const DEPLOY_MEMORY_HINT =
-  "Tools → Remove flow…, then power cycle the board (unplug its USB cable and plug it back in, or Tools → Reset board (hard)), then deploy.";
+  "Tools → Remove flow…, then power cycle the board (unplug its USB cable and plug it back in, or Tools → Reset board (hard)), then deploy. If it still fails, the flow may be too big for this board.";
+
+/** The docs page that carries the rest: the second step, the custom image, the boards it applies to. */
+export const DEPLOY_MEMORY_DOC = { label: "MemoryError or a library that won't load", path: "debugging/#memoryerror-or-a-library-that-wont-load" };
 
 /** For low ESP-IDF memory: only a full chip reset returns it. */
 export const HARD_RESET_HINT = "Try Tools → Reset board (hard), then deploy.";
@@ -64,12 +72,9 @@ export function lowFlowMemoryWarning(
   );
 }
 
-/** The advice line after a failed deploy's DEPLOY_ERROR, or null when it isn't about memory.
- *
- * Both cases have the same answer now (Mike, 2026-10-22): dropping the saved flow alone doesn't help (the
- * running flow keeps its memory until the chip restarts), freeing it for a retry didn't either, and a soft
- * restart keeps the same heap regions -- so remove the flow and power cycle. Nothing here is done
- * automatically: the line says what happened and what the user can do, and the editor stops there. */
+/** The advice line after a failed deploy's DEPLOY_ERROR, or null when it isn't about memory. Every memory
+ * failure on this path -- a flow the board cannot receive, a flow it cannot start, a library that will not
+ * install -- gets the same sentence and the same docs link (see DEPLOY_MEMORY_HINT). Nothing is repaired. */
 export function deployMemoryAdvice(code: string, message: string): string | null {
   if (!looksLikeOutOfMemory(`${code} ${message}`)) return null;
   return `board out of memory. ${DEPLOY_MEMORY_HINT}`;

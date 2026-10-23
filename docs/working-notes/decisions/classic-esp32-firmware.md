@@ -41,6 +41,27 @@ are out for now; the same technique applies when a board needs it.
   1.5 MB per slot (MicroPython's own table) and the frozen set is expected to exceed that. Moving to
   OTA later costs one USB reflash, which is already the install path — the one-way door is cheap here.
 
+## Deploying a second time: guidance, not a sequence (Mike, 2026-10-23)
+
+The stop-first deploy sequence was settled in principle on 2026-10-22 and never built. Mike's call the next day: **the
+hardware test that would decide it is irrelevant**, because the answer a user needs is the same on every low-memory
+board and does not depend on what the sequence could achieve:
+
+1. **Remove flow…, power cycle the board, deploy again.**
+2. **If it still fails, the flow may be too big for this board.** Say that plainly. Then: make the flow smaller, use a
+   board with more memory, or run a firmware image with the libraries built in (this image, or the same technique on
+   another board). If none of those applies, the flow does not fit — nothing in the editor can make room the board
+   does not have.
+
+So no new wire message, no `HELLO` field, no stop action, no 13.0.0 bump. The failure path stays exactly as 12.x
+left it: one `DEPLOY_ERROR` with the board's figures, one advice line with a docs link, nothing repaired. The advice
+text lives in one constant (`DEPLOY_MEMORY_HINT`) so the three memory failures cannot drift apart, and the ladder is
+written once in `docs/user-guide/debugging.md`, with the question in `faq.md` and the third step on this image's page.
+
+Why this is the "fail well" answer rather than a shrug: a user on a 264 KB board or a 4 MB ESP32 hits the same wall
+for the same reason, and a recovery chain cannot move a wall. Naming the wall and giving three real exits is more use
+than a sequence that works on one board and hides the limit on the others.
+
 ## How the image is built and published (2026-10-23, Mike)
 
 **Built locally, attached to a release by hand.** The image is produced by `firmware/classic-esp32/build.sh` on a

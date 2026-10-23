@@ -120,32 +120,38 @@ Thingstudio's own libraries, such as the MQTT client and display drivers, are se
 
 ## MemoryError or a library that won't load
 
-On an ESP32 without external RAM (PSRAM), a flow can fail to load with `MemoryError` even though the `[memory]` line
-shows free RAM. The free RAM is in pieces, and the library needs one large piece. This is most likely after a display
-flow has run. Use **Tools → Reset board (hard)**, then deploy again. See the [FAQ](faq.md) for why an ESP32 has
-little room.
+A board can be short of memory while its `[memory]` line still shows free RAM. The free RAM is in pieces, and a
+flow or a library needs one piece big enough to fit. This is common on boards with little RAM, most of all on an
+ESP32 without PSRAM once a display flow has run.
 
-If Deploy says **too full to receive the flow**, or a deploy starts and then fails with `MemoryError`, the running
-flow is holding the memory and the board has no single block big enough to take the new one. This happens on ESP32
-boards without PSRAM once a display flow has run.
-
-**The way out is to remove the flow and power cycle the board, then deploy:**
+When a deploy fails this way, work through these in order:
 
 1. **Tools → Remove flow…** — so nothing is resumed at start-up.
 2. **Power cycle the board** — unplug its USB cable and plug it back in, or **Tools → Reset board (hard)**.
-3. Deploy.
+3. Deploy again.
 
-Removing the flow alone doesn't help: the running flow keeps its memory until the chip restarts. A soft restart
-doesn't help either — it restarts the interpreter over the same heap regions and gives no chip memory back. Only a
-full power cycle gives the board a clean heap, which is why the recipe above is the one that works.
+Removing the flow alone does not help: the running flow keeps its memory until the chip restarts. A soft restart
+does not help either — it restarts the interpreter over the same heap regions and gives no chip memory back. Only a
+power cycle gives the board a clean heap, which is why it is the step above.
+
+**If it still fails after the power cycle, the flow may be too big for this board.** That is a limit of the board,
+not a fault in the flow. Three things can still work:
+
+- **Make the flow smaller.** Fewer pages in the GUI, fewer libraries imported, a smaller frame. The gui screen node
+  sends a frame in strips for this reason; a `function` node that builds a whole frame at once still needs one big
+  block.
+- **Use a board with more memory.** Boards with PSRAM have room for flows a board without it cannot start.
+- **Run a firmware image with the libraries built in.** On a classic ESP32 there is a ready-made one:
+  [Custom firmware for classic ESP32](custom-firmware.md). On other boards the same technique works — freeze the
+  runtime and the flow libraries into MicroPython — if you build your own.
+
+If none of those is possible, the flow does not fit that board. Nothing in the editor can make room that the board
+does not have.
 
 Deploy does not try to fix this for you: it reports the failure and stops, because freeing or restarting on your
 behalf would leave the board in a state you didn't choose. When the board looks short of memory before a deploy
 starts, the console says so in one line (`only 19 KB free on the board, this flow is 10 KB -- it may not fit`) and
 deploys anyway. That figure is total free memory, not the largest free block, so it is a hint rather than a verdict.
-
-There is no "stop the flow, keep Thingstudio running" action yet. If that is what you need regularly, it is worth
-saying so — it is a design gap, not a setting.
 
 ## WiFi Internal State Error on deploy
 
