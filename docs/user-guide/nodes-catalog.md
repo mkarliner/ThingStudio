@@ -211,6 +211,17 @@ Type `thingstudio/gui_screen`, kind source, palette group GUI.
     - `wrap`, boolean, default `true` — whether next/prev wrap around at the ends of the pages
     - `touchPanelConfigId`, string, default `""`, the id of a `thingstudio/config/touch-panel` config — the touch-panel config to read touches from; empty for none
     - `themeConfigId`, string, default `""`, the id of a `thingstudio/config/gui-theme` config
+    - `themePreset`, string, default `""`
+    - `bg`, colour, default none
+    - `card`, colour, default none
+    - `fg`, colour, default none
+    - `muted`, colour, default none
+    - `track`, colour, default none
+    - `accent`, colour, default none
+    - `on_accent`, colour, default none
+    - `ok`, colour, default none
+    - `warn`, colour, default none
+    - `alarm`, colour, default none
 
 ### trend
 

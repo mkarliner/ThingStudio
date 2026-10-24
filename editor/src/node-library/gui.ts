@@ -29,7 +29,7 @@ import { placedWidgets } from "../gui/screen-edit.js";
 import { pyPayloadLiteral } from "./py-literals.js";
 import { resolveOrientation, turnedSize } from "./orientation-shared.js";
 import { resolveTouchPanel } from "./touch-panel-shared.js";
-import { GUI_THEME_CONFIG_TYPE, resolveScreenTheme, resolveThemeForFormat, themeLiteral } from "./gui-theme-shared.js";
+import { GUI_THEME_CONFIG_TYPE, hasScreenTheme, resolveScreenTheme, resolveThemeForFormat, themeLiteral, THEME_ROLE_LABELS, THEME_ROLES, themePresetOptions } from "./gui-theme-shared.js";
 import type { GraphNode } from "../compiler/graph.js";
 import type {
   CodegenContext,
@@ -227,6 +227,8 @@ export const guiScreenNode: NodeDefinition = {
   icon: "▣",
   width: 110,
   screenOutline: true,
+  // Save/load a named theme under ~/.thingstudio/presets/gui_theme/ (shares the config's preset type).
+  presetType: "gui_theme",
   description:
     "One per display: takes its size (the panel's own width and height) and frame format from the display this " +
     "screen is wired to, so set them once on the display, not here. Rotation is the display's setting too. Sends a " +
@@ -256,14 +258,25 @@ export const guiScreenNode: NodeDefinition = {
     { name: "touchPanelConfigId", label: "touch panel (blank: no touch)", kind: "configRef", configType: "thingstudio/config/touch-panel", default: "" },
     {
       name: "themeConfigId",
-      label: "theme (blank: default colours)",
+      label: "shared theme config (older flows)",
       kind: "configRef",
       configType: GUI_THEME_CONFIG_TYPE,
       default: "",
       help:
-        "Colours for this screen's widgets. One theme can serve several screens. A panel with a palette " +
-        "(gs4/gs2/mono) keeps its own colours for now; a full-colour panel takes the theme.",
+        "Only used when the theme fields below are empty. Kept so a flow saved with a shared theme still renders; " +
+        "the screen's own colours win.",
     },
+    // The theme lives on the screen (Mike, 2026-10-24: "I think we want them on the screen"): a starting point
+    // and ten role colours, the same fields the shared theme config has, so one screen is one complete look.
+    {
+      name: "themePreset",
+      label: "theme",
+      kind: "select",
+      default: "",
+      options: themePresetOptions(),
+      help: "A starting point for the colours below. Editing a colour makes the theme custom.",
+    },
+    ...THEME_ROLES.map((role) => ({ name: role, label: THEME_ROLE_LABELS[role], kind: "colour" as const })),
   ],
   codegenEventSource(node: GraphNode, ctx: CodegenContext): EventSourceCodegenResult {
     const { width, height, format } = screenSize(node, ctx);
@@ -272,8 +285,10 @@ export const guiScreenNode: NodeDefinition = {
     const resolved = resolveThemeForFormat(theme, format);
     // A theme is sent for every format once one is chosen: on an indexed format its values are palette indexes,
     // and the display takes its palette from the same theme (display-spi.ts). Without a theme, the indexed formats
-    // keep the device's own style untouched, which is why existing gs4/gs2/mono flows are unchanged.
-    const emitTheme = format === "rgb565" || (typeof node.properties.themeConfigId === "string" && node.properties.themeConfigId !== "");
+    // keep the device's own style untouched, which is why existing gs4/gs2/mono flows are unchanged. The screen's
+    // own theme fields are the normal path (2026-10-24); a `themeConfigId` shared config is the older one.
+    const shared = typeof node.properties.themeConfigId === "string" && node.properties.themeConfigId !== "";
+    const emitTheme = format === "rgb565" || hasScreenTheme(node.properties) || shared;
     const core = coreBlock(ctx);
     const c = screensFor(ctx);
     const surface = c.surfaces.find((s) => s.screen === node.id);

@@ -157,7 +157,10 @@ export function buildCatalog(): Catalog {
     const properties = Object.entries(node.properties)
       .filter(([name]) => !internal.has(name))
       .map(([name, value]): PropertyInfo => {
-        const p: PropertyInfo = { name, type: typeOf(value), default: value };
+        const field = (def?.properties ?? []).find((f) => f.name === name);
+        // A colour has no meaningful default in a flow file (absent means "use the theme's role"), and the
+        // factory leaves it undefined; the descriptor's own kind says what it is.
+        const p: PropertyInfo = { name, type: field?.kind === "colour" ? "colour" : typeOf(value), default: value };
         // The descriptor is the authority (it carries `configType` for the panel); the map above is the
         // fallback for node types whose descriptor has not been filled in yet.
         const declared = (def?.properties ?? []).find((f) => f.name === name)?.configType;
@@ -219,7 +222,8 @@ export function renderNode(n: NodeInfo, heading = "###"): string {
     for (const p of n.properties) {
       const cfg = p.configType ? `, the id of a \`${p.configType}\` config` : "";
       const note = p.note ? ` — ${p.note}` : "";
-      lines.push(`    - \`${p.name}\`, ${p.type}, default ${lit(p.default)}${cfg}${note}`);
+      const def = p.default === undefined ? "none" : lit(p.default);
+      lines.push(`    - \`${p.name}\`, ${p.type}, default ${def}${cfg}${note}`);
     }
   }
   return lines.join("\n");

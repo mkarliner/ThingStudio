@@ -30,11 +30,15 @@ const registry = buildRegistry();
 
 const THEME_CONFIG = "thingstudio/config/gui-theme";
 
-function graph(format: string, themeProps: Record<string, unknown> | null): GraphData {
+function graph(format: string, themeProps: Record<string, unknown> | null, screenProps: Record<string, unknown> = {}): GraphData {
   const themeConfig = themeProps === null ? [] : [{ id: "theme1", type: THEME_CONFIG, properties: themeProps }];
   return {
     nodes: [
-      { id: "screen1", type: "thingstudio/gui_screen", properties: { themeConfigId: themeProps === null ? "" : "theme1" } },
+      {
+        id: "screen1",
+        type: "thingstudio/gui_screen",
+        properties: { themeConfigId: themeProps === null ? "" : "theme1", ...screenProps },
+      },
       { id: "display1", type: "thingstudio/display_spi", properties: { frameFormat: format } },
     ],
     // The graph's own link tuples: [linkId, originId, originSlot, targetId, targetSlot, socketType]. The compile
@@ -47,8 +51,8 @@ function graph(format: string, themeProps: Record<string, unknown> | null): Grap
   } as unknown as GraphData;
 }
 
-async function paletteOf(format: string, themeProps: Record<string, unknown> | null): Promise<number[]> {
-  const g = graph(format, themeProps);
+async function paletteOf(format: string, themeProps: Record<string, unknown> | null, screenProps: Record<string, unknown> = {}): Promise<number[]> {
+  const g = graph(format, themeProps, screenProps);
   const hooks = await runCompileHooks(g, registry, runner);
   const display = hooks.results.get("display1");
   return (display?.properties?.palette as number[]) ?? [];
@@ -65,6 +69,16 @@ describe("the display takes its palette from the wired screen's theme", () => {
       });
     }
   }
+
+  it("the screen's own theme reaches the palette", async () => {
+    const want = resolveThemeForFormat(THEME_PRESETS.vivid!.roles, "gs4").palette!;
+    expect(await paletteOf("gs4", null, { themePreset: "vivid" })).toEqual(want);
+  });
+
+  it("the screen's own roles override its starting point in the palette", async () => {
+    const roles: Theme = { ...THEME_PRESETS.vivid!.roles, accent: 0x1234 };
+    expect(await paletteOf("gs2", null, { themePreset: "vivid", accent: 0x1234 })).toEqual(resolveThemeForFormat(roles, "gs2").palette!);
+  });
 
   it("a role edited on the theme reaches the palette", async () => {
     const roles: Theme = { ...THEME_PRESETS["dark-slate"]!.roles, accent: 0x1234 };

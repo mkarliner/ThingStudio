@@ -198,8 +198,19 @@ ${THEME_PRESETS_PY}
 }
 
 
+def _roles_from(props, preset_key):
+    """Roles from form properties: the named starting point's, then any role set on top."""
+    preset = _THEME_PRESETS.get(str(props.get(preset_key) or ''))
+    theme = dict(preset) if preset else dict(_THEME_DEFAULT)
+    for role in _THEME_ROLES:
+        if role in props and props[role] not in (None, ''):
+            theme[role] = int(props[role])
+    return theme
+
+
 def _theme_of(ctx, panel_id):
-    """(roles, screen id) of the gui screen wired to this display and using a theme, or (None, None)."""
+    """(roles, screen id) of the gui screen wired to this display and using a theme, or (None, None). The screen's
+    own themePreset/roles win (2026-10-24); a themeConfigId shared config is the older path."""
     links = ctx['flow'].get('links') or []
     nodes = ctx['flow'].get('nodes') or []
     for link in links:
@@ -212,18 +223,21 @@ def _theme_of(ctx, panel_id):
                 break
         if source is None or source['type'] != 'thingstudio/gui_screen':
             continue
-        theme_id = str((source.get('properties') or {}).get('themeConfigId') or '')
+        props = source.get('properties') or {}
+        own_preset = str(props.get('themePreset') or '')
+        own_roles = False
+        for role in _THEME_ROLES:
+            if role in props and props[role] not in (None, ''):
+                own_roles = True
+                break
+        if own_preset or own_roles:
+            return _roles_from(props, 'themePreset'), source['id']
+        theme_id = str(props.get('themeConfigId') or '')
         if not theme_id:
             continue
         for c in ctx['flow'].get('configs') or []:
             if c['id'] == theme_id and c['type'] == 'thingstudio/config/gui-theme':
-                props = c.get('properties') or {}
-                preset = _THEME_PRESETS.get(str(props.get('preset') or ''))
-                theme = dict(preset) if preset else dict(_THEME_DEFAULT)
-                for role in _THEME_ROLES:
-                    if role in props and props[role] not in (None, ''):
-                        theme[role] = int(props[role])
-                return theme, source['id']
+                return _roles_from(c.get('properties') or {}, 'preset'), source['id']
     return None, None
 
 

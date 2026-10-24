@@ -108,7 +108,7 @@
         "name": "tft",
         "minInterval": 200,
         "wrap": true,
-        "themeConfigId": "theme-dark"
+        "themePreset": "vivid"
       }
     },
     {
@@ -278,15 +278,6 @@
       ]
     }
   },
-  "configs": [
-    {
-      "id": "theme-dark",
-      "type": "thingstudio/config/gui-theme",
-      "properties": {
-        "preset": "vivid"
-      }
-    }
-  ],
   "panes": [
     {
       "id": "pane-1",

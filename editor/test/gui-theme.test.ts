@@ -112,6 +112,24 @@ describe("presets and a screen's theme", () => {
     expect(theme.accent).toBe(0x1234);
   });
 
+  it("reads the theme from the screen's own fields, and they win over a shared config", () => {
+    const ctx = { resolveConfig: () => ({ preset: "light-paper" }) } as unknown as CodegenContext;
+    const theme = resolveScreenTheme(ctx, {
+      id: "s",
+      type: "thingstudio/gui_screen",
+      properties: { themeConfigId: "t1", themePreset: "vivid", accent: 0x1234 },
+    });
+    expect(theme.bg).toBe(THEME_PRESETS.vivid!.roles.bg);
+    expect(theme.accent).toBe(0x1234);
+  });
+
+  it("refuses a starting point it does not know", () => {
+    const ctx = {} as unknown as CodegenContext;
+    expect(() => resolveScreenTheme(ctx, { id: "s", type: "thingstudio/gui_screen", properties: { themePreset: "not-a-preset" } })).toThrow(
+      /unknown starting point/,
+    );
+  });
+
   it("gives a screen with no theme the default", () => {
     const ctx = { resolveConfig: () => { throw new Error("should not be called"); } } as unknown as CodegenContext;
     expect(resolveScreenTheme(ctx, { id: "s", type: "thingstudio/gui_screen", properties: {} })).toEqual(defaultTheme());

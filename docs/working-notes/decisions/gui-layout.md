@@ -329,3 +329,10 @@ the msg is open.
   with the headless `thingstudio-compile` on a machine with no backend and no home directory, so those are the
   portable floor, not the whole set. The `starting point` dropdown stays built-in-only; a user preset is applied,
   not named in the flow, which also keeps the flow independent of local files.
+
+- 2026-10-24 (Mike): **the theme lives on the gui screen, not in a config node.** Choosing a theme should be one
+  step: the screen has a `theme` starting point and the ten role colours, the same fields the config had, and its
+  own save/load preset control (`presetType: "gui_theme"`, `~/.thingstudio/presets/gui_theme/`). The 2026-10-23
+  `gui-theme` config stays as the older/shared path: `themeConfigId` still resolves when the screen's own fields
+  are empty, so a saved flow renders unchanged. The screen's fields win when both are set. Editor-only: the
+  device still receives the same resolved `theme={...}` dict, so there is no runtime bump.

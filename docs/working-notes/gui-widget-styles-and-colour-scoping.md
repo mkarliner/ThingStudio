@@ -114,3 +114,7 @@ four-colour tuple, and roles folded per format when no theme is given. A visible
 ## Open questions for Mike
 
 - Before or after launch? The headliner (Freenove, RGB565) would show it off; steps 1–3 are the minimum.
+
+**Amended 2026-10-24 (Mike): the theme is on the screen.** The screen's own `theme` starting point and role
+colours are the normal path; the `gui-theme` config remains for older flows and for sharing a theme between
+screens. The device contract is unchanged (same resolved `theme={...}` dict). See `decisions/gui-layout.md`.

@@ -38,6 +38,30 @@ export const THEME_ROLES: readonly ThemeRole[] = [
 
 export type Theme = Record<ThemeRole, number>;
 
+/** Field labels for the roles, shared by the theme config node and the gui screen's own theme fields, so the
+ * two cannot drift (the descriptor is one vocabulary, `AGENTS.md`). */
+export const THEME_ROLE_LABELS: Record<ThemeRole, string> = {
+  bg: "background",
+  card: "card",
+  fg: "foreground",
+  muted: "muted (stale values)",
+  track: "track (bar and cell background)",
+  accent: "accent (bars, lights)",
+  on_accent: "text on accent",
+  ok: "ok",
+  warn: "warn",
+  alarm: "alarm",
+};
+
+/** The theme presets as a select's options, plus "custom" (keep what is set). Used by the theme config and the
+ * gui screen's `themePreset` field. */
+export function themePresetOptions(): { value: string; label: string }[] {
+  return [
+    ...Object.entries(THEME_PRESETS).map(([value, preset]) => ({ value, label: preset.label })),
+    { value: "", label: "custom (keep what is set)" },
+  ];
+}
+
 /** The colours the GUI has always drawn with, now named: what a screen with no theme uses. */
 export function defaultTheme(): Theme {
   return {
@@ -155,12 +179,9 @@ export function themeLiteral(values: Theme, swapBytes: boolean): string {
   return `{${pairs.join(", ")}}`;
 }
 
-/** The theme a gui screen uses: its config node's roles over its preset's, or the built-in default. */
-export function resolveScreenTheme(ctx: CodegenContext, screen: GraphNode): Theme {
-  const configId = screen.properties.themeConfigId;
-  if (typeof configId !== "string" || configId === "") return defaultTheme();
-  const props = ctx.resolveConfig(configId);
-  const presetName = typeof props.preset === "string" ? props.preset : "";
+/** Roles and the starting point as a Theme. `where` names the owner in errors ("GUI theme", "GUI screen theme"). */
+function themeFromProps(props: Record<string, unknown>, presetKey: string, where: string): Theme {
+  const presetName = typeof props[presetKey] === "string" ? (props[presetKey] as string) : "";
   const preset = THEME_PRESETS[presetName];
   const theme: Theme = { ...(preset ? preset.roles : defaultTheme()) };
   for (const role of THEME_ROLES) {
@@ -168,9 +189,31 @@ export function resolveScreenTheme(ctx: CodegenContext, screen: GraphNode): Them
     if (raw === undefined || raw === null || raw === "") continue;
     const value = Number(raw);
     if (!Number.isInteger(value) || value < 0 || value > 0xffff) {
-      throw new CompileError(`GUI theme "${role}" must be an RGB565 colour (0-65535), got "${String(raw)}"`);
+      throw new CompileError(`${where} "${role}" must be an RGB565 colour (0-65535), got "${String(raw)}"`);
     }
     theme[role] = value;
   }
   return theme;
+}
+
+/** Whether a gui screen has a theme of its own (a starting point or any role set). */
+export function hasScreenTheme(props: Readonly<Record<string, unknown>>): boolean {
+  const preset = typeof props.themePreset === "string" ? props.themePreset : "";
+  return preset !== "" || THEME_ROLES.some((role) => props[role] !== undefined && props[role] !== null && props[role] !== "");
+}
+
+/** The theme a gui screen uses: its own starting point and roles first (the screen owns its colours), then a
+ * `themeConfigId` config for older flows (a shared theme), then the built-in default. */
+export function resolveScreenTheme(ctx: CodegenContext, screen: GraphNode): Theme {
+  const own = screen.properties;
+  if (hasScreenTheme(own)) {
+    const presetName = typeof own.themePreset === "string" ? own.themePreset : "";
+    if (presetName !== "" && !THEME_PRESETS[presetName]) {
+      throw new CompileError(`GUI screen theme: unknown starting point "${presetName}"`);
+    }
+    return themeFromProps(own, "themePreset", "GUI screen theme");
+  }
+  const configId = own.themeConfigId;
+  if (typeof configId !== "string" || configId === "") return defaultTheme();
+  return themeFromProps(ctx.resolveConfig(configId), "preset", "GUI theme");
 }

@@ -80,6 +80,7 @@
 // against; see credential-types.ts for that store's own field shapes.
 
 import type { PropertyFieldKind } from "../../compiler/node-descriptor.js";
+import { THEME_ROLE_LABELS, THEME_ROLES, themePresetOptions } from "../../node-library/gui-theme-shared.js";
 
 export interface ConfigFieldDescriptor {
   /** Must match the key this field is stored under in a config's own `properties`. */
@@ -252,24 +253,10 @@ export const CONFIG_TYPES: Record<string, ConfigTypeDescriptor> = {
         name: "preset",
         label: "starting point",
         kind: "select",
-        options: [
-          { value: "dark-slate", label: "dark slate" },
-          { value: "light-paper", label: "light paper" },
-          { value: "vivid", label: "vivid" },
-          { value: "", label: "custom (keep what is set)" },
-        ],
+        options: themePresetOptions(),
         help: "Seeds the colours below when the theme is created. Changing a colour keeps the preset as the starting point.",
       },
-      { name: "bg", label: "background", kind: "colour" },
-      { name: "card", label: "card", kind: "colour" },
-      { name: "fg", label: "foreground", kind: "colour" },
-      { name: "muted", label: "muted (stale values)", kind: "colour" },
-      { name: "track", label: "track (bar and cell background)", kind: "colour" },
-      { name: "accent", label: "accent (bars, lights)", kind: "colour" },
-      { name: "on_accent", label: "text on accent", kind: "colour" },
-      { name: "ok", label: "ok", kind: "colour" },
-      { name: "warn", label: "warn", kind: "colour" },
-      { name: "alarm", label: "alarm", kind: "colour" },
+      ...THEME_ROLES.map((role) => ({ name: role, label: THEME_ROLE_LABELS[role], kind: "colour" as const })),
     ],
     defaults: {
       preset: "dark-slate",

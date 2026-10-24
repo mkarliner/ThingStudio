@@ -101,9 +101,10 @@ Keshikan (SIL Open Font License 1.1); see
 
 ## Themes
 
-By default a screen draws in the GUI's own colours. To choose your own, add a **GUI theme** config (+ on the
-gui screen's **theme** property) and name it there: one theme can serve several screens, and a screen with no theme
-keeps the default colours.
+By default a screen draws in the GUI's own colours. To choose your own, select the gui screen and set **theme**
+(a starting point) and any of the role colours in its Properties: the screen owns its look, and a screen with no
+theme keeps the default colours. An older flow may still use a shared **GUI theme** config; the screen's own
+colours win when both are set.
 
 A theme is ten roles, so the widgets stay consistent and one theme works on different panels: **background**, **card**,
 **foreground**, **muted** (stale values), **track** (a bar's empty part), **accent** (bar fill, lights on), **text on
