@@ -122,3 +122,13 @@ the live-mounted `editor/`, per `CLAUDE.md`): 1189 tests pass, `vite build` and 
 
 Raising the floors in `package.json` (not just refreshing the lock) is deliberate: a lock refresh alone would let a
 later resolve pick a vulnerable version again.
+
+**A table embedded in a Python compile hook needs generating from its TypeScript source** (2026-10-24). Adding a
+third GUI theme preset (`vivid`) to `gui-theme-shared.ts` was not enough: `display-spi.ts`'s `compileHook` is a
+Python string that carried its *own* `_THEME_PRESETS` and `_THEME_DEFAULT`, so the hook silently fell back to the
+default colours and the demo's palette came out wrong -- only the compiled Python showed it, and the flow still
+deployed. The existing `display-spi-theme-palette.test.ts` iterated the TypeScript preset table, so it failed as
+soon as it ran; that test is the reason this was caught before hardware. Fixed the cause rather than the symptom:
+the hook's role tuple, default and preset table are now interpolated from `gui-theme-shared.ts` at module load,
+so there is one table. Rule of thumb: anything a `compileHook` string duplicates from TS (role lists, defaults,
+enumerations) should be interpolated, not typed twice, or the two will drift on the next edit.

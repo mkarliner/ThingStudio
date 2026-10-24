@@ -526,7 +526,7 @@ A config node is listed under `configs` in a flow file as `{id, type, properties
 
 Type `thingstudio/config/gui-theme`.
 
-- `preset`, select: one of `dark-slate`, `light-paper`, ``; Seeds the colours below when the theme is created. Changing a colour keeps the preset as the starting point.
+- `preset`, select: one of `dark-slate`, `light-paper`, `vivid`, ``; Seeds the colours below when the theme is created. Changing a colour keeps the preset as the starting point.
 - `bg`, colour
 - `card`, colour
 - `fg`, colour

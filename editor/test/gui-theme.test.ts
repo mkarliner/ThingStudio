@@ -74,6 +74,30 @@ describe("presets and a screen's theme", () => {
     }
   });
 
+  it("the vivid preset carries the CYD card demo's colours", () => {
+    expect(THEME_PRESETS.vivid!.roles).toEqual({
+      bg: 0x0844,
+      card: 0x695b,
+      fg: 0xffff,
+      muted: 0xb559,
+      track: 0x396b,
+      accent: 0x073f,
+      on_accent: 0x0083,
+      ok: 0x072e,
+      warn: 0xfe20,
+      alarm: 0xf8a8,
+    });
+  });
+
+  it("the vivid preset folds to the indexed formats like any other", () => {
+    const gs4 = resolveThemeForFormat(THEME_PRESETS.vivid!.roles, "gs4");
+    expect(gs4.shades).toBe(true);
+    expect(gs4.palette?.slice(0, 3)).toEqual([0x0844, 0x695b, 0xffff]);
+    const mono = resolveThemeForFormat(THEME_PRESETS.vivid!.roles, "mono");
+    expect(mono.shades).toBe(false);
+    expect(mono.palette).toEqual([0x0844, 0xffff]);
+  });
+
   it("reads the screen's theme config, with roles overriding the preset", () => {
     const ctx = {
       resolveConfig: () => ({ preset: "light-paper", accent: 0x1234 }),

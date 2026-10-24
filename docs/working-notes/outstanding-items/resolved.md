@@ -40,6 +40,11 @@ working list the same day, per Mike's call.
   unknown-stale acceptance moves elsewhere is a product call, not made here.
 - **`touch_i2c` node (FT6336U first)** -- built 2026-10-09 (`bc5bc9e`, later a core package); presets and the
   missing-bus error landed after. `touch_spi` is still open.
+- **[LAUNCH-NICE] Vivid theme preset** -- added 2026-10-24 from the CYD card demo: a third `THEME_PRESETS` entry
+  (near-black background, violet cards, cyan accent) beside `dark-slate`/`light-paper`. The demo now sets
+  `"preset": "vivid"` with no role overrides and compiles byte-identically. Adding it exposed a duplicated preset
+  table in `display_spi`'s Python compile hook; the hook now generates its role list, default and presets from
+  `gui-theme-shared.ts`, and the palette test compares every preset and format. No runtime bump.
 - **[LAUNCH-NICE] `adc` node (Hinch's AADC)** -- built and hardware-tested 2026-10-12 (LuatOS ESP32-C3-CORE);
   claims its pin and shares the ADC channel through `runtime.shared('adc', ...)`.
 - **[LAUNCH-NICE] `encoder` node (Hinch's quadrature `Encoder`)** -- built 2026-10-11 and hardware-tested;

@@ -54,7 +54,8 @@ export function defaultTheme(): Theme {
   };
 }
 
-/** The presets themes seed from (Mike, 2026-10-23: dark slate and light paper; the rest wait). Editing a role
+/** The presets themes seed from (Mike, 2026-10-23: dark slate and light paper; vivid added 2026-10-24 from
+ * the CYD card demo, so that demo's colours are a preset rather than a pile of overrides). Editing a role
  * makes the theme custom -- the preset is a starting point, not a lock. */
 export const THEME_PRESETS: Record<string, { label: string; roles: Theme }> = {
   "dark-slate": {
@@ -85,6 +86,21 @@ export const THEME_PRESETS: Record<string, { label: string; roles: Theme }> = {
       ok: 0x1c65,
       warn: 0xc400,
       alarm: 0xb000,
+    },
+  },
+  vivid: {
+    label: "vivid",
+    roles: {
+      bg: 0x0844,
+      card: 0x695b,
+      fg: 0xffff,
+      muted: 0xb559,
+      track: 0x396b,
+      accent: 0x073f,
+      on_accent: 0x0083,
+      ok: 0x072e,
+      warn: 0xfe20,
+      alarm: 0xf8a8,
     },
   },
 };

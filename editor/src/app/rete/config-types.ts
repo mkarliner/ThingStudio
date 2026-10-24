@@ -251,6 +251,7 @@ export const CONFIG_TYPES: Record<string, ConfigTypeDescriptor> = {
         options: [
           { value: "dark-slate", label: "dark slate" },
           { value: "light-paper", label: "light paper" },
+          { value: "vivid", label: "vivid" },
           { value: "", label: "custom (keep what is set)" },
         ],
         help: "Seeds the colours below when the theme is created. Changing a colour keeps the preset as the starting point.",

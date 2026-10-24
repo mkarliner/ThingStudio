@@ -283,17 +283,7 @@
       "id": "theme-dark",
       "type": "thingstudio/config/gui-theme",
       "properties": {
-        "preset": "dark-slate",
-        "bg": 2116,
-        "card": 26971,
-        "fg": 65535,
-        "muted": 46425,
-        "track": 14699,
-        "accent": 1855,
-        "on_accent": 131,
-        "ok": 1838,
-        "warn": 65056,
-        "alarm": 63656
+        "preset": "vivid"
       }
     }
   ],

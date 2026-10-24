@@ -309,3 +309,10 @@ the msg is open.
   about the colour, while the editor's pickers already speak `#rrggbb`. Seed hex for saved colours (accepting the
   old decimal form on load so existing flows keep working), and a picker wherever a colour is still a bare
   number only if it is cheap. Tracked in `outstanding-items.md` ("Colour values in the flow file").
+
+- 2026-10-24 (Mike): **a third theme preset, `vivid`, from the CYD card demo.** The demo's colours were a pile of
+  role overrides on top of `dark-slate`; they are now a preset (near-black background, violet cards, cyan accent),
+  with the demo reduced to `"preset": "vivid"` and its compiled output byte-identical. Adding it exposed a
+  duplicate preset table inside `display_spi`'s Python compile hook, which fell back to the default palette; the
+  hook's role list, default and presets are now generated from `gui-theme-shared.ts`, so a preset cannot be added
+  on one side only (`learnings/editor-build-tooling.md`).

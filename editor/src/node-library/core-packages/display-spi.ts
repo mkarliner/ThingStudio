@@ -7,6 +7,7 @@
 // directly. Full frames and whole-row strips (msg.y) both supported.
 
 import type { NodeDescriptor } from "../../compiler/node-descriptor.js";
+import { THEME_PRESETS, THEME_ROLES, defaultTheme, type Theme } from "../gui-theme-shared.js";
 
 export const DEFAULT_PALETTE_GS4: readonly number[] = [0x0000, 0xffff, 0xf800, 0x07e0, 0x001f, 0xffe0, 0x07ff, 0xf81f, 0x8410, 0x4208, 0xc618, 0xfd20, 0x8000, 0x0400, 0x0010, 0x0410];
 
@@ -109,6 +110,17 @@ export const descriptor: NodeDescriptor = {
   ],
 };
 
+/** A theme as the Python dict the display hook folds. Built from the editor's one table, so a preset added
+ * there cannot be forgotten here -- it was, for `vivid` (2026-10-24): the hook knew only two presets and fell
+ * back to the default colours. The palette test compares every preset against `resolveThemeForFormat()`. */
+function pyTheme(roles: Theme): string {
+  return "{" + THEME_ROLES.map((role) => `'${role}': 0x${roles[role].toString(16).padStart(4, "0")}`).join(", ") + "}";
+}
+const THEME_DEFAULT_PY = pyTheme(defaultTheme());
+const THEME_PRESETS_PY = Object.entries(THEME_PRESETS)
+  .map(([name, preset]) => `    '${name}': ${pyTheme(preset.roles)},`)
+  .join("\n");
+
 export const compileHook = `MADCTL_MY = 0x80
 MADCTL_MX = 0x40
 MADCTL_MV = 0x20
@@ -176,16 +188,13 @@ def _oriented_madctl(base_bits, angle, width, height):
 
 # A gui screen's theme owns the palette while it is wired to this display (2026-10-23,
 # gui-widget-styles-and-colour-scoping.md). The fold has to exist in Python too, because this package decides the
-# palette; editor/test/display-spi-theme-palette.test.ts runs the real hook against gui-theme-shared.ts's
-# resolveThemeForFormat() so the two cannot drift.
-_THEME_ROLES = ('bg', 'card', 'fg', 'muted', 'track', 'accent', 'on_accent', 'ok', 'warn', 'alarm')
-_THEME_DEFAULT = {'bg': 0x0000, 'card': 0x0000, 'fg': 0xffff, 'muted': 0x632c, 'track': 0x632c,
-                  'accent': 0x3ef1, 'on_accent': 0x0000, 'ok': 0xffff, 'warn': 0xffff, 'alarm': 0xffff}
+# palette. The role list, default and preset table are generated from gui-theme-shared.ts above, so there is one
+# source; editor/test/display-spi-theme-palette.test.ts runs the real hook against resolveThemeForFormat() for
+# every preset and format.
+_THEME_ROLES = (${THEME_ROLES.map((role) => `'${role}'`).join(", ")})
+_THEME_DEFAULT = ${THEME_DEFAULT_PY}
 _THEME_PRESETS = {
-    'dark-slate': {'bg': 0x10a2, 'card': 0x2124, 'fg': 0xffff, 'muted': 0x8c71, 'track': 0x4208,
-                   'accent': 0x3ef1, 'on_accent': 0x0841, 'ok': 0x3e66, 'warn': 0xfc60, 'alarm': 0xf800},
-    'light-paper': {'bg': 0xffff, 'card': 0xef5d, 'fg': 0x0841, 'muted': 0x8c71, 'track': 0xce59,
-                    'accent': 0x0250, 'on_accent': 0xffff, 'ok': 0x1c65, 'warn': 0xc400, 'alarm': 0xb000},
+${THEME_PRESETS_PY}
 }
 
 
