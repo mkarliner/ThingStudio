@@ -145,7 +145,7 @@
         />
         <label v-else class="field-row">
           <span class="field-label">{{ f.label }}</span>
-          <select v-if="f.kind === 'select'" v-model="draft[f.name] as any">
+          <select v-if="f.kind === 'select'" v-model="draft[f.name] as any" @change="onFieldSelect(f, draft)">
             <option v-for="opt in f.options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
           </select>
           <input v-else-if="f.kind === 'boolean'" type="checkbox" v-model="draft[f.name] as any" />
@@ -179,7 +179,7 @@
       <template v-for="f in otherFields" :key="f.name">
         <label class="field-row">
           <span class="field-label">{{ f.label }}</span>
-          <select v-if="f.kind === 'select'" v-model="newConfigDraft[f.name] as any">
+          <select v-if="f.kind === 'select'" v-model="newConfigDraft[f.name] as any" @change="onFieldSelect(f, newConfigDraft)">
             <option v-for="opt in f.options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
           </select>
           <input v-else-if="f.kind === 'boolean'" type="checkbox" v-model="newConfigDraft[f.name] as any" />
@@ -204,6 +204,7 @@
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import { backendWsUrl, configs, configsVersion, createConfig, getConfig, listConfigsOfType, nextFreeKey, updateConfig } from "./store";
 import { CONFIG_TYPES } from "./config-types";
+import { applyThemePreset, GUI_THEME_CONFIG_TYPE } from "../../node-library/gui-theme-shared";
 import { CREDENTIAL_TYPES } from "./credential-types";
 import { AdminApiError, listCredentials, putCredential } from "../../flow-file/admin-api-client";
 import CredentialRefField from "./CredentialRefField.vue";
@@ -360,6 +361,14 @@ function openEdit(id: string): void {
   editingId.value = id;
   for (const key of Object.keys(draft)) delete draft[key];
   Object.assign(draft, descriptor.value.defaults, cfg.properties);
+}
+
+/** A theme's starting point replaces the colours. It used to only seed them at creation, so switching from
+ * dark slate to light paper left the old roles in place and nothing changed on the panel (2026-10-24). */
+function onFieldSelect(f: { name: string; kind: string }, target: Record<string, unknown>): void {
+  if (descriptor.value.type === GUI_THEME_CONFIG_TYPE && f.name === "preset") {
+    applyThemePreset(target, "preset", String(target.preset ?? ""));
+  }
 }
 
 // The one field of kind "credential" this config type declares, if any --

@@ -10,6 +10,7 @@ import { describe, expect, it } from "vitest";
 import {
   THEME_PRESETS,
   THEME_ROLES,
+  applyThemePreset,
   defaultTheme,
   resolveScreenTheme,
   resolveThemeForFormat,
@@ -110,6 +111,16 @@ describe("presets and a screen's theme", () => {
     const theme = resolveScreenTheme(ctx, { id: "s", type: "thingstudio/gui_screen", properties: { themeConfigId: "t1" } });
     expect(theme.bg).toBe(THEME_PRESETS["light-paper"]!.roles.bg);
     expect(theme.accent).toBe(0x1234);
+  });
+
+  it("choosing a starting point replaces the colours, and custom keeps them", () => {
+    const props: Record<string, unknown> = { preset: "dark-slate", ...THEME_PRESETS["dark-slate"]!.roles };
+    applyThemePreset(props, "preset", "light-paper");
+    expect(props.preset).toBe("light-paper");
+    for (const role of THEME_ROLES) expect(props[role]).toBe(THEME_PRESETS["light-paper"]!.roles[role]);
+    const before = { ...props };
+    applyThemePreset(props, "preset", "");
+    expect(props).toEqual({ ...before, preset: "" });
   });
 
   it("reads the theme from the screen's own fields, and they win over a shared config", () => {

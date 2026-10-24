@@ -213,6 +213,8 @@ import { DEFAULT_KIND_STYLE, type KindStyle } from "./palette";
 import { paletteStyleFor } from "./node-descriptors";
 import { CustomNode } from "./nodes";
 import { evaluatePredicate, resolveConditionalText, type NodeDescriptor, type PropertyFieldDescriptor } from "../../compiler/node-descriptor";
+import { GUI_SCREEN } from "../../gui/screens";
+import { applyThemePreset } from "../../node-library/gui-theme-shared";
 import ConfigRefField from "./ConfigRefField.vue";
 import CredentialRefField from "./CredentialRefField.vue";
 import PresetRefField from "./PresetRefField.vue";
@@ -295,6 +297,11 @@ function fieldPlaceholder(f: PropertyFieldDescriptor): string | undefined {
  * drives them, re-resolve port sockets when the field affects a port's type, then refresh the panel. */
 function onFieldChange(f: PropertyFieldDescriptor): void {
   if (nodeDescriptor.value?.dynamicOutputs?.property === f.name) setDynamicOutputCount(Number(nodeProperties.value[f.name!]));
+  // A gui screen's theme starting point replaces its colours, the same rule as the theme config form (2026-10-24);
+  // without it, switching preset after editing a colour would leave the old colours and nothing would change.
+  if (f.name === "themePreset" && node.value?.type === GUI_SCREEN) {
+    applyThemePreset(nodeProperties.value, "themePreset", String(nodeProperties.value.themePreset ?? ""));
+  }
   if (f.retype) (node.value as unknown as { retypeOutputs?: () => void } | null)?.retypeOutputs?.();
   touch();
 }

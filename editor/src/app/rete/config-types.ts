@@ -254,7 +254,7 @@ export const CONFIG_TYPES: Record<string, ConfigTypeDescriptor> = {
         label: "starting point",
         kind: "select",
         options: themePresetOptions(),
-        help: "Seeds the colours below when the theme is created. Changing a colour keeps the preset as the starting point.",
+        help: "Choosing a starting point replaces the colours below; editing one makes the theme custom.",
       },
       ...THEME_ROLES.map((role) => ({ name: role, label: THEME_ROLE_LABELS[role], kind: "colour" as const })),
     ],

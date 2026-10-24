@@ -62,6 +62,16 @@ export function themePresetOptions(): { value: string; label: string }[] {
   ];
 }
 
+/** Choosing a starting point replaces the form's colours with its roles (2026-10-24). The field used to only
+ * seed at creation, so switching light paper on an existing theme left dark slate's colours in place and
+ * nothing changed on the panel. An empty name ("custom") keeps the current colours. */
+export function applyThemePreset(props: Record<string, unknown>, presetKey: string, name: string): void {
+  props[presetKey] = name;
+  const preset = THEME_PRESETS[name];
+  if (!preset) return;
+  for (const role of THEME_ROLES) props[role] = preset.roles[role];
+}
+
 /** The colours the GUI has always drawn with, now named: what a screen with no theme uses. */
 export function defaultTheme(): Theme {
   return {

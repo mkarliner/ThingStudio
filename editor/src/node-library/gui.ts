@@ -274,7 +274,7 @@ export const guiScreenNode: NodeDefinition = {
       kind: "select",
       default: "",
       options: themePresetOptions(),
-      help: "A starting point for the colours below. Editing a colour makes the theme custom.",
+      help: "A starting point replaces the colours below; editing a colour makes the theme custom.",
     },
     ...THEME_ROLES.map((role) => ({ name: role, label: THEME_ROLE_LABELS[role], kind: "colour" as const })),
   ],
