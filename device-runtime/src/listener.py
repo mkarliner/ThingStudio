@@ -62,6 +62,8 @@ import uasyncio as asyncio
 import runtime
 import protocol
 import messages
+import transfer
+from errors import UnknownMessageType
 
 try:
     import machine
@@ -154,7 +156,6 @@ except (AttributeError, ValueError):
 # real host filesystem root, which a test must never write to. Real
 # hardware never sets these env vars, so this is a no-op there.
 _FLOW_PATH = _under_root("_flow.mpy")
-_flow_put_received = 0
 _STATIC_DATA_PATH = _under_root("_flow_static.bin")
 try:
     _FLOW_PATH = os.getenv("THINGSTUDIO_FLOW_PATH", _FLOW_PATH)
@@ -166,6 +167,9 @@ except AttributeError:
 # half-sent flow never becomes the running one. Derived AFTER the env override above -- a rename across
 # filesystems is EXDEV, which is exactly what a temp path left pointing at the unit's own directory did.
 _FLOW_TMP_PATH = _FLOW_PATH + ".tmp"
+# The flow arriving in pieces: idle / receiving / failed, SPEC §7.2 (transfer.py). Every FLOW_PUT goes
+# through it; a FLOW_COMMIT or a whole DEPLOY ends it, whatever the outcome.
+_flow_stream = transfer.Stream(_FLOW_TMP_PATH)
 
 # Matches harness.py's READ_TIMEOUT_S -- see that file's own comment on why
 # a single readline() wait (not a multiple of it) is what app.js's/the
@@ -183,7 +187,7 @@ F64_PREFIX = "F64:"
 _HEARTBEAT_PIN = 10
 _HEARTBEAT_PERIOD_MS = 200
 
-_RUNTIME_VERSION = {"major": 13, "minor": 0, "patch": 0}  # 13.0.0 2026-10-23: the GUI draws by theme role (gui-widget-styles-and-colour-scoping.md step 1) -- a flow now passes theme={...} instead of a four-colour tuple, so an older GUI library would reject the generated code: codegen-visible, hence major. Default theme = the colours before it, so no pixels change. 12.1.0 2026-10-22: a line the listener cannot read while a deploy piece is expected answers FLOW_ACK ok=false code=Garbled for the offset it has stored, so the editor reports "the board could not read that piece" instead of waiting out three 10 s timeouts (CYD: 5 KB pieces lost bytes to the port's 260-byte stdin ring buffer while a display flow painted; firmware/classic-esp32/patches). Minor: no codegen change. 12.0.0 2026-10-22: no automatic recovery from a deploy that cannot fit -- the listener no longer stops the running flow, drops _flow or forgets library modules to make a retry fit (11.2.0/11.2.1/11.2.2's chain, removed); it answers DEPLOY_ERROR with the free-memory figure and leaves the running flow alone. Major: this pairs with the editor's 5 KB deploy pieces (a split heap that took a 1 KB piece may refuse a 5 KB one), so an old board must be refused up front by decideDeploy rather than fail mid-transfer. 11.3.0 2026-10-22: chunked deploy (FLOW_PUT/FLOW_COMMIT/FLOW_ACK) -- a whole DEPLOY needs one contiguous block the size of the message and a split heap may not have it; a decode MemoryError now answers DEPLOY_ERROR instead of hanging the editor. Minor: no codegen change; the old DEPLOY still works. 11.2.2 2026-10-22: freeing a flow for a retried DEPLOY also drops the flow's library modules -- thingstudio_gui/tsgui_* keep the framebuffer in module globals, which left only 73 KB free and the retry still failing. Patch: no codegen change. 11.2.1 2026-10-22: freeing the running flow for a retried DEPLOY also drops the _flow module, which is where a GUI flow's framebuffer lives -- cancelling tasks alone reclaimed almost nothing. Patch: no codegen change. 11.2.0 2026-10-22: when a message cannot be received for lack of memory, the listener stops the running flow so the editor's retried DEPLOY fits (a GUI flow replacing a running GUI flow) -- minor: no codegen change. 11.1.1 2026-10-22: remove_unused keeps frozen libraries in the index (their modules are in flash, not files) -- it was pruning them, so the next Deploy pushed copies over them and lost the heap saving. Patch: no codegen change. 11.1.0 2026-10-22: /lib goes ahead of frozen modules on sys.path (deps.py), so a pushed library still overrides a custom firmware image's frozen copy -- minor: no codegen change; 11.0.0 2026-10-17: runtime.settings (device_settings.py, a flowName-namespaced persistent KV), codegen-visible -> major; 10.1.0 2026-10-14: persisted paths follow the board's filesystem root (board_fs.py), so the stm32/pyboard port (mounted at /flash, not /) can write its flow/state -- minor: no codegen change; 10.0.0 2026-10-11: new adc/encoder/neopixel nodes (vendored AADC/Encoder flow deps) -- codegen-visible, so major. 9.2.0 2026-10-08: a MemoryError receiving a message answers DEPLOY_ERROR instead of leaving the editor to time out -- minor: no codegen change; 9.1.0 2026-10-08: the WiFi watcher no longer starts the WiFi driver for a flow that doesn't use the network (it ate ESP-IDF memory, and failed noisily on a full CYD) -- minor: nothing generated depends on it; 9.0.0 2026-10-07: DEP_ACK per DEP_PUT piece (unpaced pieces overflowed a USB-UART board's receive buffer), RESTART; 8.0.0 2026-10-07: libraries sent in 1 KB pieces (DEP_PUT) plus DEP_COMMIT -- one big DEP_PUT failed with MemoryError on a fragmented ESP32 heap; 7.0.0 2026-10-07: flow dependencies (DEP_PUT, DEPLOY.dependencies, libraries in /lib instead of every board getting every library); 6.0.0 2026-09-26: vendored bme280_float.py and runtime.shared() (bme280/I2C flows use both, so an older board fails them); 5.1.0 2026-09-25: runtime.start_reason, ESP-IDF heap in HELLO/DEPLOY_ACK -- minor only: startup codegen reads start_reason with getattr, so its flows still run on 5.0.0; 5.0.0 same day: mqtt_as active(True) only when inactive (4.0.0 same day: vendored mqtt_as wifi_connect() guard -- MQTT codegen now joins WiFi first on ESP32 (3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS; 2.0.0 was 2026-09-23: EXEC, STOP_TO_PROMPT, safe mode; 1.0.0 was 2026-09-10: NODE_STATUS)
+_RUNTIME_VERSION = {"major": 13, "minor": 1, "patch": 0}  # 13.1.0 2026-10-24: piece transfers follow SPEC §7.2's state machine (transfer.py): any FLOW_PUT/DEP_PUT piece may be resent, offset 0 always starts over, a commit ends its streams whatever the outcome, and FLOW_COMMIT checks libraries before replacing the saved flow; an unknown message type is logged, not answered Garbled (protocol audit 2026-10-24). Minor: no codegen change, message shapes unchanged. 13.0.0 2026-10-23: the GUI draws by theme role (gui-widget-styles-and-colour-scoping.md step 1) -- a flow now passes theme={...} instead of a four-colour tuple, so an older GUI library would reject the generated code: codegen-visible, hence major. Default theme = the colours before it, so no pixels change. 12.1.0 2026-10-22: a line the listener cannot read while a deploy piece is expected answers FLOW_ACK ok=false code=Garbled for the offset it has stored, so the editor reports "the board could not read that piece" instead of waiting out three 10 s timeouts (CYD: 5 KB pieces lost bytes to the port's 260-byte stdin ring buffer while a display flow painted; firmware/classic-esp32/patches). Minor: no codegen change. 12.0.0 2026-10-22: no automatic recovery from a deploy that cannot fit -- the listener no longer stops the running flow, drops _flow or forgets library modules to make a retry fit (11.2.0/11.2.1/11.2.2's chain, removed); it answers DEPLOY_ERROR with the free-memory figure and leaves the running flow alone. Major: this pairs with the editor's 5 KB deploy pieces (a split heap that took a 1 KB piece may refuse a 5 KB one), so an old board must be refused up front by decideDeploy rather than fail mid-transfer. 11.3.0 2026-10-22: chunked deploy (FLOW_PUT/FLOW_COMMIT/FLOW_ACK) -- a whole DEPLOY needs one contiguous block the size of the message and a split heap may not have it; a decode MemoryError now answers DEPLOY_ERROR instead of hanging the editor. Minor: no codegen change; the old DEPLOY still works. 11.2.2 2026-10-22: freeing a flow for a retried DEPLOY also drops the flow's library modules -- thingstudio_gui/tsgui_* keep the framebuffer in module globals, which left only 73 KB free and the retry still failing. Patch: no codegen change. 11.2.1 2026-10-22: freeing the running flow for a retried DEPLOY also drops the _flow module, which is where a GUI flow's framebuffer lives -- cancelling tasks alone reclaimed almost nothing. Patch: no codegen change. 11.2.0 2026-10-22: when a message cannot be received for lack of memory, the listener stops the running flow so the editor's retried DEPLOY fits (a GUI flow replacing a running GUI flow) -- minor: no codegen change. 11.1.1 2026-10-22: remove_unused keeps frozen libraries in the index (their modules are in flash, not files) -- it was pruning them, so the next Deploy pushed copies over them and lost the heap saving. Patch: no codegen change. 11.1.0 2026-10-22: /lib goes ahead of frozen modules on sys.path (deps.py), so a pushed library still overrides a custom firmware image's frozen copy -- minor: no codegen change; 11.0.0 2026-10-17: runtime.settings (device_settings.py, a flowName-namespaced persistent KV), codegen-visible -> major; 10.1.0 2026-10-14: persisted paths follow the board's filesystem root (board_fs.py), so the stm32/pyboard port (mounted at /flash, not /) can write its flow/state -- minor: no codegen change; 10.0.0 2026-10-11: new adc/encoder/neopixel nodes (vendored AADC/Encoder flow deps) -- codegen-visible, so major. 9.2.0 2026-10-08: a MemoryError receiving a message answers DEPLOY_ERROR instead of leaving the editor to time out -- minor: no codegen change; 9.1.0 2026-10-08: the WiFi watcher no longer starts the WiFi driver for a flow that doesn't use the network (it ate ESP-IDF memory, and failed noisily on a full CYD) -- minor: nothing generated depends on it; 9.0.0 2026-10-07: DEP_ACK per DEP_PUT piece (unpaced pieces overflowed a USB-UART board's receive buffer), RESTART; 8.0.0 2026-10-07: libraries sent in 1 KB pieces (DEP_PUT) plus DEP_COMMIT -- one big DEP_PUT failed with MemoryError on a fragmented ESP32 heap; 7.0.0 2026-10-07: flow dependencies (DEP_PUT, DEPLOY.dependencies, libraries in /lib instead of every board getting every library); 6.0.0 2026-09-26: vendored bme280_float.py and runtime.shared() (bme280/I2C flows use both, so an older board fails them); 5.1.0 2026-09-25: runtime.start_reason, ESP-IDF heap in HELLO/DEPLOY_ACK -- minor only: startup codegen reads start_reason with getattr, so its flows still run on 5.0.0; 5.0.0 same day: mqtt_as active(True) only when inactive (4.0.0 same day: vendored mqtt_as wifi_connect() guard -- MQTT codegen now joins WiFi first on ESP32 (3.0.0 2026-09-24: WiFi transport, SET_BOARD_SETTINGS; 2.0.0 was 2026-09-23: EXEC, STOP_TO_PROMPT, safe mode; 1.0.0 was 2026-09-10: NODE_STATUS)
 # (runtime.report_status) is a hard dependency of wifi-status.ts's/mqtt-shared.ts's codegen now -- an editor
 # with this change targeting a pre-2026-09-10 runtime would crash on deploy (AttributeError: report_status),
 # not degrade gracefully. See CLAUDE.md's "Device-runtime version bump discipline" -- decideDeploy() only
@@ -567,9 +571,6 @@ def _handle_set_board_settings(msg, source):
     return err
 
 
-# Flow dependencies: errors from DEP_PUT pieces, kept for that library's DEP_COMMIT (each piece's DEP_ACK
-# reports them too).
-_dep_put_errors = {}  # library name -> (code, message)
 # The last message the listener couldn't decode (MemoryError on a fragmented heap, garbled line...).
 # A piece that never decoded can't be attributed to a library, so a failed commit mentions this.
 _last_decode_error = None
@@ -588,7 +589,7 @@ def _note_unreadable(what):
     global _last_decode_error
     _last_decode_error = str(what)[:200]
     try:
-        _send_message_safe({"type": "FLOW_ACK", "offset": _flow_put_received, "ok": False,
+        _send_message_safe({"type": "FLOW_ACK", "offset": _flow_stream.stored_offset(), "ok": False,
                             "code": "Garbled",
                             "error": "the board could not read a line from the editor (%s); the bytes were lost on the way"
                                      % (str(what)[:120],)})
@@ -617,35 +618,33 @@ def _report_receive_oom(e):
 
 
 def _handle_dep_put(msg):
-    """DEP_PUT (flow dependencies, 2026-10-07): one piece of one file of a library, appended to its
-    temporary file in /lib (deps.py). Always answered with DEP_ACK, ok or the error: the editor waits for
-    it before sending the next piece, which paces the transfer (see messages.py's DEP_ACK). A failure is
-    also kept for that library's DEP_COMMIT. Never touches the running flow."""
+    """DEP_PUT (flow dependencies, 2026-10-07): one piece of one file of a library, into its temporary
+    file in /lib. Always answered with DEP_ACK, ok or the error: the editor waits for it before sending
+    the next piece, which paces the transfer. The rules for what a piece does are SPEC §7.2's
+    (deps.put_chunk / transfer.py): any piece may be resent, offset 0 starts the file over. A failure
+    is also remembered for that library's DEP_COMMIT. Never touches the running flow."""
     name = msg["name"]
     ack = {"type": "DEP_ACK", "name": name, "file": msg["file"], "offset": msg["offset"], "ok": True}
     if deps is None:
-        _dep_put_errors[name] = ("Unsupported", "this board's Thingstudio software is incomplete (deps.py missing) -- install the runtime again")
-    if name in _dep_put_errors:
-        code, message = _dep_put_errors[name]
-        ack.update(ok=False, code=code, error=message)
+        ack.update(ok=False, code="Unsupported",
+                   error="this board's Thingstudio software is incomplete (deps.py missing) -- install the runtime again")
         _send_message_safe(ack)
         return
     try:
         deps.put_chunk(name, msg["file"], msg["offset"], msg["total"], msg["data"])
     except deps.DepError as e:
         print("DEP_ERR %s %s" % (e.code, e.message))
-        _dep_put_errors[name] = (e.code, e.message)
         ack.update(ok=False, code=e.code, error=e.message)
     except Exception as e:  # noqa: BLE001 -- adversarial-shaped input, never allowed to kill the listener
         print("DEP_ERR %r" % (e,))
-        _dep_put_errors[name] = (type(e).__name__, "writing %s failed: %r" % (name, e))
         ack.update(ok=False, code=type(e).__name__, error="writing %s failed: %r" % (name, e))
     _send_message_safe(ack)
 
 
 def _handle_dep_commit(msg):
     """DEP_COMMIT: checks a library's pieces all arrived, installs it, and always answers DEP_RESULT --
-    ok, or an error naming the library and what went wrong."""
+    ok, or an error naming the library and what went wrong. Ends the library's streams either way
+    (SPEC §7.3), so the next attempt starts clean."""
     global _last_decode_error
     name = msg["name"]
     files = msg["files"]
@@ -653,14 +652,13 @@ def _handle_dep_commit(msg):
         _send_message_safe({"type": "DEP_RESULT", "name": name, "ok": False, "code": "Unsupported",
                             "error": "this board's Thingstudio software is incomplete (deps.py missing) -- install the runtime again"})
         return
-    failure = _dep_put_errors.pop(name, None)
-    if failure is None:
-        try:
-            deps.commit(name, msg["hash"], files)
-        except deps.DepError as e:
-            failure = (e.code, e.message)
-        except Exception as e:  # noqa: BLE001 -- see _handle_dep_put
-            failure = (type(e).__name__, "installing %s failed: %r" % (name, e))
+    failure = None
+    try:
+        deps.commit(name, msg["hash"], files)
+    except deps.DepError as e:
+        failure = (e.code, e.message)
+    except Exception as e:  # noqa: BLE001 -- see _handle_dep_put
+        failure = (type(e).__name__, "installing %s failed: %r" % (name, e))
     if failure is not None:
         try:
             deps.discard(files)
@@ -680,47 +678,51 @@ def _handle_dep_commit(msg):
 
 
 def _handle_flow_put(msg):
-    """FLOW_PUT (2026-10-22): one piece of the next flow's bytecode, appended to the temporary flow file.
+    """FLOW_PUT (2026-10-22): one piece of the next flow's bytecode, into the temporary flow file.
 
-    Same shape and same reason as _handle_dep_put: the board decodes each message whole, and a split heap
-    can have plenty free without one block the size of a whole DEPLOY. Answered always, so the editor can
-    pace itself; a bad piece is refused by offset, which names the fault."""
-    global _flow_put_received
+    Same reason as library pieces: the board decodes each message whole, and a split heap can have plenty
+    free without one block the size of a whole DEPLOY. Always answered, so the editor can pace itself. What a
+    piece does is SPEC §7.2's table (transfer.py): any piece may be resent, offset 0 starts over."""
     offset = msg["offset"]
-    total = msg["total"]
-    data = msg["data"]
     ack = {"type": "FLOW_ACK", "offset": offset, "ok": True}
-    if offset != _flow_put_received or offset > total:
-        ack.update(ok=False, code="BadPiece",
-                   error="piece at byte %d, expected %d of %d" % (offset, _flow_put_received, total))
-        _send_message_safe(ack)
-        return
-    try:
-        if offset == 0:
-            with open(_FLOW_TMP_PATH, "wb") as f:
-                f.write(data)
-        else:
-            with open(_FLOW_TMP_PATH, "r+b") as f:
-                f.seek(offset)
-                f.write(data)
-    except Exception as e:  # noqa: BLE001 -- a write failure is answered, never raised
-        ack.update(ok=False, code="WriteFailed", error=str(e))
-        _send_message_safe(ack)
-        return
-    _flow_put_received = offset + len(data)
+    problem = _flow_stream.put(offset, msg["total"], msg["data"])
+    if problem is not None:
+        ack.update(ok=False, code=problem[0], error=problem[1])
+        print("FLOW_ERR %s %s" % problem)
     _send_message_safe(ack)
 
 
-async def _handle_flow_commit(msg):
-    """FLOW_COMMIT (2026-10-22): every piece arrived, so move the flow into place and start it.
+def _dependency_problem(required):
+    """None when every library `required` names is installed at that hash, else the DEPLOY_ERROR message.
+    Checked before anything under a real name changes (SPEC §7.3 step 2)."""
+    if required is None:
+        return None
+    if deps is None:
+        return ("this flow needs libraries, but this board's Thingstudio software is incomplete (deps.py missing) "
+                "-- install the runtime again")
+    try:
+        problems = deps.missing(required)
+    except Exception as e:  # noqa: BLE001 -- never let the check itself kill the listener
+        problems = ["couldn't read the board's library index (%r)" % (e,)]
+    if problems:
+        return "the flow needs libraries the board doesn't have: %s" % ("; ".join(problems),)
+    return None
 
-    Answers DEPLOY_ACK/DEPLOY_ERROR exactly like DEPLOY, because it is the same operation once the bytes
-    are on flash."""
-    global _flow_put_received
+
+async def _handle_flow_commit(msg):
+    """FLOW_COMMIT (2026-10-22): SPEC §7.3, in order. Steps 1-3 change nothing under a real name if they fail:
+    the running flow keeps running and the saved flow stays. The flow stream ends here whatever happens."""
     total = msg["total"]
-    if _flow_put_received != total:
-        _send_message_safe({"type": "DEPLOY_ERROR", "code": "Incomplete",
-                            "message": "the flow arrived incomplete (%d of %d bytes)" % (_flow_put_received, total)})
+    if not _flow_stream.complete(total):
+        why = _flow_stream.describe(total)
+        _flow_stream.discard()
+        _send_message_safe({"type": "DEPLOY_ERROR", "code": "Incomplete", "message": "the flow %s" % (why,)})
+        return
+    problem = _dependency_problem(msg.get("dependencies"))
+    if problem is not None:
+        _flow_stream.discard()
+        print("DEPLOY_ERR %s" % (problem,))
+        _send_message_safe({"type": "DEPLOY_ERROR", "code": "MissingDependency", "message": problem})
         return
     try:
         try:
@@ -729,9 +731,10 @@ async def _handle_flow_commit(msg):
             pass  # no previous flow
         os.rename(_FLOW_TMP_PATH, _FLOW_PATH)
     except Exception as e:  # noqa: BLE001
-        _flow_put_received = 0
+        _flow_stream.discard()
         _send_message_safe({"type": "DEPLOY_ERROR", "code": "WriteFailed", "message": "could not save the flow: %r" % (e,)})
         return
+    _flow_stream.finish()
     await _deploy_flow(msg, flow_on_disk=True)
 
 
@@ -757,19 +760,13 @@ async def _deploy_flow(msg, flow_on_disk=False):
     # Flow dependencies (2026-10-07): check every library the flow imports is installed BEFORE
     # touching the running flow, so a missing one is a clear DEPLOY_ERROR naming it, the old flow
     # keeps running, and nothing ever fails with an ImportError from deep inside the new flow.
-    if required is not None:
-        if deps is None:
-            _send_message_safe({"type": "DEPLOY_ERROR", "code": "MissingDependency",
-                                "message": "this flow needs libraries, but this board's Thingstudio software is incomplete (deps.py missing) -- install the runtime again"})
-            return
-        try:
-            problems = deps.missing(required)
-        except Exception as e:  # noqa: BLE001 -- never let the check itself kill the listener
-            problems = ["couldn't read the board's library index (%r)" % (e,)]
-        if problems:
-            print("DEPLOY_ERR missing dependencies: %s" % ("; ".join(problems),))
-            _send_message_safe({"type": "DEPLOY_ERROR", "code": "MissingDependency",
-                                "message": "the flow needs libraries the board doesn't have: %s" % ("; ".join(problems),)})
+    # (A FLOW_COMMIT has already checked, before moving the flow into place; this repeats it for DEPLOY.)
+    if not flow_on_disk:
+        _flow_stream.discard()  # a whole DEPLOY ends any piece-by-piece transfer under way
+        problem = _dependency_problem(required)
+        if problem is not None:
+            print("DEPLOY_ERR %s" % (problem,))
+            _send_message_safe({"type": "DEPLOY_ERROR", "code": "MissingDependency", "message": problem})
             return
     await runtime.cancel_running()
     if deps is not None:
@@ -786,12 +783,10 @@ async def _deploy_flow(msg, flow_on_disk=False):
     _set_current_flow(None, None)
     gc.collect()
     before_ram = gc.mem_free()
-    global _flow_put_received
     try:
         if not flow_on_disk:  # a FLOW_COMMIT already moved the pieces into place
             with open(_FLOW_PATH, "wb") as f:
                 f.write(msg["bytecode"])
-        _flow_put_received = 0
         if msg.get("staticData"):
             with open(_STATIC_DATA_PATH, "wb") as f:
                 f.write(msg["staticData"])
@@ -1038,6 +1033,11 @@ async def _dispatch(result, source="serial"):
 
 
 async def _dispatch_locked(result, source):
+    if "error" in result and isinstance(result["error"], UnknownMessageType):
+        # A whole message of a type this runtime doesn't know (a newer editor): logged, never answered
+        # (SPEC §6, §7.1). Not damage, so not the Garbled answer below.
+        print("LISTENER_IGNORED %s" % (result["error"],))
+        return
     if "error" in result:
         # Adversarial input (framing.FramingError or
         # messages.MessageDecodeError) -- exactly the case the

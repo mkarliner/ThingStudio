@@ -32,3 +32,8 @@ class MessageDecodeError(Exception):
     """A frame that parsed fine but whose body is bad CBOR, or valid CBOR
     with the wrong shape for its declared message type (messages.py).
     Mirrors editor/src/protocol/errors.ts's MessageDecodeError exactly."""
+
+
+class UnknownMessageType(MessageDecodeError):
+    """A whole, well-framed message whose type byte this runtime doesn't know (a newer editor). Not damage:
+    SPEC §6/§7.1 say it is logged and never answered, unlike a line the board couldn't read."""

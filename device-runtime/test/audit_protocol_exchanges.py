@@ -66,6 +66,27 @@ def finding_1_flow_piece_resend():
             listener.close()
 
 
+def finding_1c_deploy_after_refused_commit():
+    """After a commit refused as Incomplete or MissingDependency, the next deploy's first piece is refused."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        flow = T._compile_flow(tmpdir, "f1c", "print('F1C')\n")
+        listener = _boot(tmpdir)
+        try:
+            piece = {"type": "FLOW_PUT", "offset": 0, "total": len(flow), "data": flow}
+            for why, commit in (
+                ("MissingDependency", {"type": "FLOW_COMMIT", "total": len(flow), "flowName": "x", "deployId": "d",
+                                       "dependencies": {"ts_missing": "h"}}),
+                ("Incomplete", {"type": "FLOW_COMMIT", "total": len(flow) + 1, "flowName": "x", "deployId": "d"}),
+            ):
+                _send(listener, piece, "FLOW_ACK")
+                _send(listener, commit, "DEPLOY_ERROR")
+                after = _send(listener, piece, "FLOW_ACK")
+                _report("Finding 1c", not after[-1]["ok"],
+                        "after a commit refused as %s, the next deploy's first piece answered %r" % (why, after[-1].get("code") or "ok"))
+        finally:
+            listener.close()
+
+
 def finding_2_library_piece_resend():
     """A resent DEP_PUT is refused, and the library stays refused for later deploys."""
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -130,6 +151,7 @@ def finding_6_unknown_type_answered_as_garbled():
 if __name__ == "__main__":
     print("Protocol audit 2026-10-24, board-side findings. PRESENT = the fault is still there.")
     finding_1_flow_piece_resend()
+    finding_1c_deploy_after_refused_commit()
     finding_2_library_piece_resend()
     finding_3_refused_flow_replaces_saved_flow()
     finding_6_unknown_type_answered_as_garbled()
