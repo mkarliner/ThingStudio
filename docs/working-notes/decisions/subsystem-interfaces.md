@@ -60,3 +60,24 @@ log's scope boundary, and its maintenance rule. Context: `../architecture-review
   decision (`repo-tooling.md`) stands. The review's position: define the interfaces as artifacts first (this file),
   then split repos only where the lifecycle genuinely differs (`device-runtime`, then `protocol`); a repo boundary
   without a spec artifact is worse than the monorepo. No repo has been split.
+- **2026-10-24 — The wire protocol's conversation layer is specified and tested, not just its messages.** A
+  protocol audit (`reviews/2026-10-24-protocol-audit.md`) found the exchanges lived only in code: board state was
+  loose module globals, editor state was wherever an async function was waiting, and the gaps left a board refusing
+  every deploy after one lost ack or refused commit. Mike: implement it as an explicit state machine. `SPEC.md` §7
+  ("Exchanges") now says who answers what, gives the piece-stream state machine (idle / receiving / failed: any
+  piece may be resent, offset 0 always starts over, a commit ends its streams), the commit order (checks before
+  anything under a real name changes), the editor's waits and resends, and the codes the editor acts on; §4 states
+  that one line holds exactly one frame and is decoded on its own. Implemented as `device-runtime/src/transfer.py`
+  and `editor/src/protocol/transfer.ts`; `interfaces/protocol/vectors/exchanges.json` holds whole conversations
+  that both sides run, so the two can't each pass while disagreeing. One editor at a time is assumed (no request
+  ids). Runtime 13.1.0. `reviews/2026-10-24-protocol-state-machine.md`.
+- **2026-10-24 — The state machines are data, and the data is the ground truth (Mike).** Mike expected a table, not
+  rules written as code: `interfaces/protocol/states.json` defines `board.listener`, `board.stream` and
+  `editor.transfer` (states, events, named guards and actions, ordered transitions, an `illegal` rule).
+  `tools/protocol_states.py` validates it and generates `STATES.md` (diagrams and tables for people) and each
+  side's table; both sides run it with a small interpreter (`device-runtime/src/statemachine.py`,
+  `editor/src/protocol/machine.ts`). Any (state, event) with no row is illegal and raises an alert on the side
+  running the machine: `PROTOCOL_ILLEGAL ...` on the board, `[protocol] illegal ...` in the editor (SPEC §7.6); the
+  exchange vectors say where alerts must and must not happen. Board RAM matters, the editor's code size doesn't:
+  the board's table is a flat tuple of strings, a constant in flash when frozen into a custom image (the intended
+  route for constrained boards).

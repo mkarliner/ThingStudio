@@ -32,6 +32,7 @@ try:
     import board_fs
 except ImportError:
     board_fs = None
+import statemachine
 
 LIB_DIR = board_fs.under_root("lib") if board_fs is not None else "/lib"
 try:
@@ -46,7 +47,8 @@ INDEX_NAME = "_deps.json"
 # on sys.path, so it would never load.
 _RESERVED = (
     "errors", "cbor", "framing", "messages", "protocol", "runtime", "wifi_provision",
-    "board_settings", "board_fs", "net_transport", "listener", "deps", "main", "boot", "_flow",
+    "board_settings", "board_fs", "net_transport", "listener", "deps", "main", "boot", "_flow", "statemachine", "protocol_states",
+    "device_settings",
 )
 
 _SPACE_MARGIN = 4096  # filesystem block overhead and the index rewrite; better to refuse early
@@ -168,44 +170,43 @@ def _free_bytes():
         return None  # unknown (unix port): don't pre-check, rely on the write itself failing
 
 
+# One stream per (library, file) arriving in pieces (SPEC §7.2, statemachine.Stream). A commit removes the
+# library's streams, whatever the outcome; a piece at offset 0 starts its stream over.
+_streams = {}
+
+
 def put_chunk(dep_name, file_name, offset, total, data):
-    """Writes one piece of one file of a dependency to "<file>.tmp" (DEP_PUT). Libraries arrive in
-    small pieces so the board never needs one large block of memory for a whole library -- found on a
+    """DEP_PUT: one piece of one file of a dependency, into "<file>.tmp". Libraries arrive in small
+    pieces so the board never needs one large block of memory for a whole library -- found on a
     classic ESP32 (2026-10-07): with a display flow's framebuffer in RAM, decoding an 11 KB library sent
-    in one message failed with MemoryError. offset 0 starts the file; any other offset must equal what
-    has been written so far (a lost or repeated piece is an error, not a silently corrupt file).
-    Raises DepError."""
+    in one message failed with MemoryError. Follows SPEC §7.2: any piece may be sent again, offset 0
+    starts the file over. Raises DepError."""
     check_name(dep_name)
     check_file_name(dep_name, file_name)
-    if not isinstance(total, int) or total < 0 or not isinstance(offset, int) or offset < 0 or offset + len(data) > total:
-        raise DepError("BadPiece", "%s: piece of %s doesn't fit the file (offset %r, %d bytes, total %r)" % (dep_name, file_name, offset, len(data), total))
-    _ensure_dir()
-    tmp = _path(file_name + ".tmp")
-    if offset == 0:
-        free = _free_bytes()
-        if free is not None and total + _SPACE_MARGIN > free:
-            raise DepError("NoSpace", "no space for %s: %s needs %d bytes, %d free" % (dep_name, file_name, total, free))
-        mode = "wb"
-    else:
-        have = _size(tmp)
-        if have != offset:
-            raise DepError("BadPiece", "%s: %s piece at byte %d, but %s bytes had arrived" % (dep_name, file_name, offset, have))
-        mode = "ab"
-    try:
-        with open(tmp, mode) as f:
-            f.write(data)
-    except OSError as e:
-        _remove(tmp)
-        if e.args and e.args[0] == 28:  # ENOSPC
-            raise DepError("NoSpace", "no space for %s: flash filled while writing %s" % (dep_name, file_name))
-        raise DepError("WriteFailed", "writing %s failed: %r" % (dep_name, e))
+    if not isinstance(total, int) or total < 0 or not isinstance(offset, int) or offset < 0:
+        raise DepError("BadPiece", "%s: piece of %s has a bad offset or size (offset %r, total %r)" % (dep_name, file_name, offset, total))
+    key = (dep_name, file_name)
+    stream = _streams.get(key)
+    if stream is None:
+        def before_start(total, dep_name=dep_name, file_name=file_name):
+            _ensure_dir()
+            free = _free_bytes()
+            if free is not None and total + _SPACE_MARGIN > free:
+                raise statemachine.Failure("NoSpace", "no space for %s: %s needs %d bytes, %d free" % (dep_name, file_name, total, free))
+
+        stream = _streams[key] = statemachine.Stream(_path(file_name + ".tmp"), "library", before_start)
+    problem = stream.put(offset, total, data)
+    if problem is not None:
+        code, message = problem
+        if not message.startswith(dep_name):
+            message = "%s: %s: %s" % (dep_name, file_name, message)
+        raise DepError(code, message)
 
 
-def _size(path):
-    try:
-        return os.stat(path)[6]
-    except OSError:
-        return None
+def _forget(dep_name):
+    """Ends every stream of a library: after its commit, whatever the outcome."""
+    for key in [k for k in _streams if k[0] == dep_name]:
+        del _streams[key]
 
 
 def discard(files):
@@ -218,6 +219,13 @@ def commit(dep_name, dep_hash, files):
     """DEP_COMMIT: files is {file name: expected size}. Checks every file arrived whole, then moves
     them into place and records the dependency. Raises DepError; on failure nothing under a real name
     has changed and the pieces are discarded."""
+    try:
+        _commit(dep_name, dep_hash, files)
+    finally:
+        _forget(dep_name)
+
+
+def _commit(dep_name, dep_hash, files):
     check_name(dep_name)
     if not files:
         raise DepError("BadName", "%s: no files" % (dep_name,))
@@ -226,11 +234,20 @@ def commit(dep_name, dep_hash, files):
     if not isinstance(dep_hash, str) or not dep_hash:
         discard(files)
         raise DepError("BadName", "%s: missing hash" % (dep_name,))
+    # Each file's stream takes the commit (board.stream, SPEC §7.2-7.3). Any that isn't complete makes the whole
+    # library incomplete; every stream ends here either way.
+    problems = []
     for file_name, size in files.items():
-        have = _size(_path(file_name + ".tmp"))
-        if have != size:
-            discard(files)
-            raise DepError("Incomplete", "%s: %s arrived incomplete (%s of %d bytes)" % (dep_name, file_name, 0 if have is None else have, size))
+        stream = _streams.get((dep_name, file_name))
+        if stream is None:
+            problems.append("%s: nothing arrived (0 of %d bytes)" % (file_name, size))
+            continue
+        refused = stream.commit(size)
+        if refused is not None:
+            problems.append("%s: %s" % (file_name, refused[1]))
+    if problems:
+        discard(files)
+        raise DepError("Incomplete", "%s arrived incomplete: %s" % (dep_name, "; ".join(problems)))
 
     index = read_index()
     old = index.get(dep_name)

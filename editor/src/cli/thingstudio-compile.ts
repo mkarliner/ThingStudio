@@ -11,7 +11,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { boardChoices, boardInfo, checkFlowText, type CheckResult } from "./check-flow.js";
+import { boardChoices, boardInfo, checkFlowText, relayoutFlowText, type CheckResult } from "./check-flow.js";
 import { buildCatalog, findNode, renderMarkdown, renderNode } from "./describe.js";
 
 const USAGE = `thingstudio-compile: compile and check a Thingstudio flow file without the editor.
@@ -23,6 +23,8 @@ Options:
   --out <file.py>    Write the generated MicroPython here (one flow only)
   --json             Print the result as JSON (one object per flow, in an array) instead of text
   --strict           Warnings fail the check too
+  --layout           Also check the layout: left to right, tight, nothing overlapping (problems are warnings)
+  --relayout         Rewrite each file's node positions to follow the layout rules, then check it
   --no-syntax        Skip the MicroPython syntax check of the generated code (mpy-cross)
   --arch <march>     mpy-cross -march for that check (default xtensawin)
   --list-boards      Print the values --board takes
@@ -32,7 +34,8 @@ Options:
   --help             This text
 
 Checks: the file parses, every node type exists, every wire is one the editor would accept, the flow compiles
-(pins, properties, GUI layouts), and the generated code is valid MicroPython. It cannot check WiFi or MQTT
+(pins, properties, GUI layouts), and the generated code is valid MicroPython. With --layout, also that the canvas
+reads left to right and is kept tight. It cannot check WiFi or MQTT
 credentials (the secrets live in the backend) or a custom node package.`;
 
 interface Args {
@@ -47,10 +50,12 @@ interface Args {
   describeAll: boolean;
   markdown: boolean;
   arch: string;
+  layout: boolean;
+  relayout: boolean;
 }
 
 function parseArgs(argv: string[]): Args | string {
-  const a: Args = { files: [], json: false, strict: false, syntax: true, describeAll: false, markdown: false, arch: "xtensawin" };
+  const a: Args = { files: [], json: false, strict: false, syntax: true, describeAll: false, markdown: false, arch: "xtensawin", layout: false, relayout: false };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]!;
     const value = (): string | undefined => {
@@ -62,6 +67,8 @@ function parseArgs(argv: string[]): Args | string {
       case "--list-boards": return "boards";
       case "--json": a.json = true; break;
       case "--strict": a.strict = true; break;
+      case "--layout": a.layout = true; break;
+      case "--relayout": a.relayout = true; a.layout = true; break;
       case "--describe-all": a.describeAll = true; break;
       case "--board-info": { const v = value(); if (!v) return "--board-info needs a value (see --list-boards)"; a.boardInfo = v; break; }
       case "--markdown": a.markdown = true; break;
@@ -90,7 +97,13 @@ interface MpyModule {
 async function loadMpyCross(): Promise<((source: string, arch: string) => string | null) | { unavailable: string }> {
   const here = dirname(fileURLToPath(import.meta.url));
   const fromEnv = process.env.THINGSTUDIO_MPY_CROSS_DIR;
-  const candidates = [...(fromEnv ? [join(fromEnv, "mpy-cross.mjs")] : []), join(here, "..", "public", "vendor", "mpy-cross", "mpy-cross.mjs"), join(here, "..", "..", "public", "vendor", "mpy-cross", "mpy-cross.mjs")];
+  // Beside the CLI in a packaged copy (the AI-authoring skill, scripts/vendor/), then the editor's own layouts.
+  const candidates = [
+    ...(fromEnv ? [join(fromEnv, "mpy-cross.mjs")] : []),
+    join(here, "vendor", "mpy-cross", "mpy-cross.mjs"),
+    join(here, "..", "public", "vendor", "mpy-cross", "mpy-cross.mjs"),
+    join(here, "..", "..", "public", "vendor", "mpy-cross", "mpy-cross.mjs"),
+  ];
   const path = candidates.find((p) => existsSync(p));
   if (!path) return { unavailable: "mpy-cross was not found next to the CLI (editor/public/vendor/mpy-cross), so the MicroPython syntax check was skipped." };
   try {
@@ -157,7 +170,17 @@ async function main(): Promise<number> {
       console.error(`thingstudio-compile: cannot read ${file}: ${err instanceof Error ? err.message : String(err)}`);
       return 2;
     }
-    const result = checkFlowText(text, { board: args.board });
+    if (args.relayout) {
+      try {
+        text = relayoutFlowText(text);
+        writeFileSync(resolve(file), text);
+        if (!args.json) console.log(`relaid out ${file}`);
+      } catch (err) {
+        console.error(`thingstudio-compile: cannot relayout ${file}: ${err instanceof Error ? err.message : String(err)}`);
+        return 2;
+      }
+    }
+    const result = checkFlowText(text, { board: args.board, layout: args.layout });
     if (result.ok && mpy) {
       if (typeof mpy === "function") {
         const problem = mpy(result.source!, args.arch);

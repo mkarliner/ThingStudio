@@ -35,10 +35,13 @@ import { NODE_FACTORIES, type DescriptorNode } from "../app/rete/nodes.js";
 import { ClassicPreset } from "rete";
 import { type ThingstudioSocket } from "../app/rete/sockets.js";
 import { resolveOutputCount } from "../compiler/node-descriptor.js";
+import { checkLayout, relayout, type LayoutNode } from "./layout.js";
 
 export interface CheckOptions {
   /** Board menu value: "board:<id>" or "processor:<id>". Absent: no board, pins are checked against the widest range. */
   board?: string;
+  /** Also check the layout (left to right, tight, nothing overlapping); problems come back as warnings. */
+  layout?: boolean;
 }
 
 export interface Problem {
@@ -77,8 +80,10 @@ const registry = buildRegistry();
 let hookWasm: Uint8Array | null = null;
 function hookWasmBytes(): Uint8Array {
   if (hookWasm) return hookWasm;
-  // Source tree (src/cli) and bundled CLI (dist-cli) sit one and two levels below editor/.
+  // Source tree (src/cli) and bundled CLI (dist-cli) sit one and two levels below editor/; a packaged copy (the
+  // AI-authoring skill) carries the file in vendor/ beside the CLI.
   for (const url of [
+    new URL("./vendor/micropython-wasi/micropython-wasi.wasm", import.meta.url),
     new URL("../../public/vendor/micropython-wasi/micropython-wasi.wasm", import.meta.url),
     new URL("../public/vendor/micropython-wasi/micropython-wasi.wasm", import.meta.url),
   ]) {
@@ -138,6 +143,20 @@ function standIn(config: GraphConfigNode, notes: Set<string>): GraphConfigNode {
 }
 
 export function checkFlowText(text: string, options: CheckOptions = {}): CheckResult {
+  const result = checkFlow(text, options);
+  if (options.layout) {
+    // Independent of the compile: a flow that fails to compile can still be laid out badly, and the author fixes both.
+    try {
+      const file = parseFlowFile(text);
+      result.warnings.push(...checkLayout(layoutNodes(file), file.edges, positions(file)));
+    } catch {
+      // Not a flow file: the parse error is already reported.
+    }
+  }
+  return result;
+}
+
+function checkFlow(text: string, options: CheckOptions): CheckResult {
   const errors: Problem[] = [];
   const notes = new Set<string>();
 
@@ -223,7 +242,7 @@ export function checkFlowText(text: string, options: CheckOptions = {}): CheckRe
     return {
       ok: true,
       errors: [],
-      warnings: r.warnings,
+      warnings: [...r.warnings],
       notes: [...notes],
       source: r.source,
       stats: { nodes: nodes.length, wires: links.length, configs: configs.length, bytes: r.source.length },
@@ -233,6 +252,39 @@ export function checkFlowText(text: string, options: CheckOptions = {}): CheckRe
     const m = /\bnode (\S+?)[ ,:)]/.exec(message);
     return { ok: false, errors: [{ message, node: m && nodes.some((n) => n.id === m[1]) ? m[1] : undefined }], warnings: [], notes: [...notes] };
   }
+}
+
+/** Each node with the size the editor draws it at (a node type the canvas has no class for: a custom node's size). */
+function layoutNodes(file: FlowFile): LayoutNode[] {
+  return file.nodes.map((n) => {
+    const built = registry.has(n.type) ? buildNode(n.type, n.properties) : null;
+    const b = built as unknown as { width?: number; height?: number } | null;
+    return { id: n.id, width: b?.width ?? 128, height: b?.height ?? 34 };
+  });
+}
+
+function positions(file: FlowFile): Record<string, [number, number]> {
+  const out: Record<string, [number, number]> = {};
+  for (const [id, entry] of Object.entries(file.layout ?? {})) {
+    const p = entry?.pos;
+    if (Array.isArray(p) && typeof p[0] === "number" && typeof p[1] === "number") out[id] = [p[0], p[1]];
+  }
+  return out;
+}
+
+/**
+ * The flow file's text with every node moved to the layout the rules give (layout.ts). Only positions change:
+ * nodes, wires, configs, screens, panes and any other layout field (a saved size) are kept as they were. Throws a
+ * FlowFileError for a file that is not a flow.
+ */
+export function relayoutFlowText(text: string): string {
+  const file = parseFlowFile(text);
+  const raw = JSON.parse(text) as Record<string, unknown> & { layout?: Record<string, Record<string, unknown>> };
+  const placed = relayout(layoutNodes(file), file.edges);
+  const layout: Record<string, Record<string, unknown>> = {};
+  for (const n of file.nodes) layout[n.id] = { ...(raw.layout?.[n.id] ?? {}), pos: placed[n.id]! };
+  raw.layout = layout;
+  return JSON.stringify(raw, null, 2) + "\n";
 }
 
 function describePort(file: FlowFile, nodeId: string, slot: number, side: "inputs" | "outputs"): string {

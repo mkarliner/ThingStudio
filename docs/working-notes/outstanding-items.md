@@ -218,6 +218,18 @@ ThingStudioMarketing repo, not here.
   loads the current flow. `HELLO` already reports `currentFlowName`/`currentFlowDeployId`; reading the JSON
   back needs a request/response pair, a device-side store and an editor path for missing custom nodes. Safe to
   store: `flow.configs` holds `credentialName`, never a secret.
+- **Protocol: hardware pass for runtime 13.1.0 -- new item, 2026-10-24** (`reviews/2026-10-24-protocol-state-machine.md`). The piece
+  state machine, "one line, one frame" and the commit order are tested on the unix port and by the exchange
+  vectors, not yet on a board. Deploy a GUI flow to the CYD (the USB-UART board that drops bytes) a few times,
+  once with a library, and confirm resends now succeed where they used to end in `BadPiece`.
+- **Protocol: replies carry no request id -- new item, 2026-10-24** (audit finding 5). SPEC §7 now states that one editor at a time is
+  assumed. Fixing it (request ids, or the board refusing a second transfer source mid-deploy) changes the
+  interface: Mike's call.
+- **Protocol: the backend leg isn't specified -- new item, 2026-10-24** (audit finding 8): the WebSocket JSON control messages and the
+  `TSAUTH1` handshake live only in code comments; `interfaces/protocol/SEQUENCES.md` §1-2 draw them as they are.
+- **Device-runtime exchange vectors aren't in CI -- new item, 2026-10-24.** Same gap as the rest of the device suite
+  (`outstanding-items/enforce-interface-conformance-in-ci.md`). `device-runtime/test/test_exchanges.py` needs
+  the MicroPython unix port and `mpy-cross`.
 
 ## UI / editor
 
@@ -300,6 +312,10 @@ ThingStudioMarketing repo, not here.
   but the stm32 port mounts its filesystem at `/flash`. Beyond that, STM32 pins are named (`X1`), so the pin
   model needs a decision first. `-march` for STM32F4 is fixed.
   ([detail](outstanding-items/stm32-pyboard-support.md))
+- **User-authored GUI widgets -- a must, new item, 2026-10-23 (Mike).** Users must be able to write their own
+  GUI widgets (and style or replace built-in ones). GUI-subsystem work, not node-format work
+  (`decisions/gui-layout.md`, 2026-10-15 and 2026-10-23). Not scoped. Open: launch gate or first post-launch item
+  (Mike's call).
 
 ## Backend / auth
 
@@ -352,6 +368,11 @@ ThingStudioMarketing repo, not here.
 - **[P5]** **CI vendor-neutrality -- should CI be independent of GitHub specifically?** Mike's raised question
   (`mikes-questions-and-points.md`, "# CI"); currently GitHub Actions. Not revisited.
   ([detail](outstanding-items/ci-vendor-neutrality.md))
+- **Architecture and status review -- new item, 2026-10-23** (`reviews/2026-10-23-architecture-and-status.md`).
+  Open work it names: delete the dead TypeScript WiFi helpers in `editor/src/node-library/wifi-status.ts` (no
+  callers left) and fix its header; a single source (or a drift test) for `_RUNTIME_VERSION` and
+  `EDITOR_TARGET_VERSION`; the stale "repo-root `AGENTS.md` is empty" entry and the duplicated 2026-10-17
+  custom-display-node entry here.
 
 ## Already tracked — v2/v3 candidates and open design-doc questions
 

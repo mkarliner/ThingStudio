@@ -402,7 +402,8 @@ export interface BoardSettingsResultMessage {
 /** Editor -> device (flow dependencies, 2026-10-07): one piece of one file of a library, written to a
  * temporary file in the board's /lib. Answered by DEP_ACK. Libraries go in small pieces because one large message
  * needs one large block of the board's RAM, which a fragmented heap may not have (found on a classic
- * ESP32 with a display flow running). `offset` must equal the bytes already sent for this file. */
+ * ESP32 with a display flow running). What a piece does is SPEC §7.2: any piece may be resent, offset 0 starts the
+ * file over. Sent by protocol/transfer.ts. */
 export interface DepPutMessage {
   readonly type: "DEP_PUT";
   readonly name: string;
@@ -434,7 +435,7 @@ export interface DepResultMessage {
 }
 
 /** Device -> editor, the answer to one DEP_PUT (runtime 9.0.0). `name`/`file`/`offset` echo the piece.
- * When !ok, `code`/`error` say why (BadPiece, NoSpace, Unreadable...); the editor stops sending. */
+ * When !ok, `code`/`error` say why (SPEC §7.5: BadPiece, NoSpace, BadName, WriteFailed...); the editor stops sending. */
 export interface DepAckMessage {
   readonly type: "DEP_ACK";
   readonly name: string;
@@ -447,7 +448,7 @@ export interface DepAckMessage {
 
 /** Editor -> device (chunked deploy, 2026-10-22): one piece of the flow's bytecode, written to a
  * temporary file on the board. Answered by FLOW_ACK; the editor sends the next piece only after that.
- * `offset` must equal the bytes already sent. */
+ * What a piece does is SPEC §7.2: any piece may be resent, offset 0 starts over. Sent by protocol/transfer.ts. */
 export interface FlowPutMessage {
   readonly type: "FLOW_PUT";
   readonly offset: number;
@@ -455,8 +456,9 @@ export interface FlowPutMessage {
   readonly data: Uint8Array;
 }
 
-/** Device -> editor: the answer to one FLOW_PUT. When !ok, `code`/`error` say why (BadPiece,
- * WriteFailed) and the editor stops sending. */
+/** Device -> editor: the answer to one FLOW_PUT. When !ok, `code`/`error` say why (SPEC §7.5). `Garbled` is
+ * different: the board couldn't read the line the editor sent last (any line, not only a FLOW_PUT), and `offset`
+ * is the flow bytes stored so far (SPEC §7.1); the editor resends that line. Any other code stops the transfer. */
 export interface FlowAckMessage {
   readonly type: "FLOW_ACK";
   readonly offset: number;

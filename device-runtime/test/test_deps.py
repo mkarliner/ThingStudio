@@ -115,9 +115,37 @@ def test_out_of_order_piece_is_refused():
     _fresh()
     deps.put_chunk("a_lib", "a_lib.mpy", 0, 6, b"ABC")
     e = _raises("BadPiece", deps.put_chunk, "a_lib", "a_lib.mpy", 4, 6, b"EF")  # byte 3 never arrived
-    assert "at byte 4" in e.message and "3 bytes had arrived" in e.message, e.message
+    assert "at byte 4" in e.message and "3 of 6" in e.message, e.message
     _raises("BadPiece", deps.put_chunk, "a_lib", "a_lib.mpy", 0, 2, b"ABC")  # longer than total
     _raises("BadPiece", deps.put_chunk, "b_lib", "b_lib.mpy", 2, 6, b"xx")  # no file started
+
+
+def test_resent_piece_is_accepted():
+    # SPEC §7.2 (protocol audit 2026-10-24, finding 2): a piece whose DEP_ACK was lost is sent again.
+    _fresh()
+    deps.put_chunk("a_lib", "a_lib.mpy", 0, 6, b"ABC")
+    deps.put_chunk("a_lib", "a_lib.mpy", 3, 6, b"DEF")
+    deps.put_chunk("a_lib", "a_lib.mpy", 3, 6, b"DEF")
+    deps.commit("a_lib", "h", {"a_lib.mpy": 6})
+    assert _read("a_lib.mpy") == b"ABCDEF"
+
+
+def test_offset_0_starts_a_library_over_after_a_refused_piece():
+    # Finding 2b: a refused piece used to make the library refuse every later piece until a commit.
+    _fresh()
+    deps.put_chunk("a_lib", "a_lib.mpy", 0, 6, b"ABC")
+    _raises("BadPiece", deps.put_chunk, "a_lib", "a_lib.mpy", 5, 6, b"F")
+    deps.put_chunk("a_lib", "a_lib.mpy", 0, 6, b"ABC")
+    deps.put_chunk("a_lib", "a_lib.mpy", 3, 6, b"DEF")
+    deps.commit("a_lib", "h", {"a_lib.mpy": 6})
+    assert deps.inventory() == {"a_lib": "h"}
+
+
+def test_commit_ends_the_streams_whatever_the_outcome():
+    _fresh()
+    deps.put_chunk("a_lib", "a_lib.mpy", 0, 6, b"ABC")
+    _raises("Incomplete", deps.commit, "a_lib", "h", {"a_lib.mpy": 6})
+    _raises("BadPiece", deps.put_chunk, "a_lib", "a_lib.mpy", 3, 6, b"DEF")  # nothing under way any more
 
 
 def test_incomplete_commit_is_refused_and_cleaned_up():
@@ -278,6 +306,9 @@ minitest.run(
         test_bad_names_rejected_before_anything_is_written,
         test_pieces_then_commit,
         test_out_of_order_piece_is_refused,
+        test_resent_piece_is_accepted,
+        test_offset_0_starts_a_library_over_after_a_refused_piece,
+        test_commit_ends_the_streams_whatever_the_outcome,
         test_incomplete_commit_is_refused_and_cleaned_up,
         test_missing_reports_each_problem,
         test_remove_unused_keeps_required,

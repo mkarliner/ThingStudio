@@ -59,3 +59,24 @@ export class ProtocolStreamDecoder {
     return this.#frames.pendingByteCount;
   }
 }
+
+/**
+ * Decodes one transport line's frame on its own (SPEC §4: one line holds exactly one whole frame). A line that
+ * holds anything else -- it ends inside a frame, or has bytes left over -- was damaged on the way, and is one
+ * FramingError rather than bytes kept for "the rest of the frame" (which would make the next, good line read as
+ * its continuation). Protocol audit 2026-10-24.
+ */
+export function decodeLineFrame(frameBytes: Uint8Array): ProtocolDecodeResult {
+  const decoder = new ProtocolStreamDecoder();
+  const results = decoder.push(frameBytes);
+  if (results.length !== 1 || decoder.pendingByteCount > 0) {
+    return {
+      ok: false,
+      error: new FramingError(
+        `a damaged line: ${frameBytes.length} bytes that are not one whole frame ` +
+          `(${results.length} decoded, ${decoder.pendingByteCount} left over)`,
+      ),
+    };
+  }
+  return results[0]!;
+}

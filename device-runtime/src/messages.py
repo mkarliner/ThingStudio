@@ -54,7 +54,7 @@
 # request (no "value" key) and response (with "value") in one shape, and
 # DEPLOY_ACK includes free-space fields even though §13 didn't require them.
 
-from errors import MessageDecodeError
+from errors import MessageDecodeError, UnknownMessageType
 import cbor
 
 MessageType = {
@@ -153,7 +153,7 @@ def decode_message_body(type_id, body):
     parses fine but doesn't have the shape its declared type requires."""
     name = MESSAGE_NAME_BY_TYPE.get(type_id)
     if name is None:
-        raise MessageDecodeError("unknown message type byte: %r" % (type_id,))
+        raise UnknownMessageType("unknown message type byte: %r" % (type_id,))
 
     try:
         raw = cbor.decode(body)

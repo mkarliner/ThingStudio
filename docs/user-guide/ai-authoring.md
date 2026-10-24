@@ -14,22 +14,25 @@ GPT/Gem), so it reads this page before it writes a flow:
 ```text
 When I ask for a Thingstudio flow or custom node, first read the Thingstudio authoring guide:
 https://docs.thingstudio.net/ai-authoring/ (the whole docs set is one file at https://docs.thingstudio.net/llms-full.txt).
-Write the flow as a .flow.json file, run the thingstudio-compile check with --board for my board,
-fix every error until it prints OK, then tell me: the board id you checked against, which credential
+Write the flow as a .flow.json file, run the thingstudio-compile check with --board for my board and
+--layout, fix every error and layout warning until it prints OK, then tell me: the board id you checked against, which credential
 names I must create, what you assumed about wiring, and what you could not check.
 Never say a flow works on the board unless you deployed it there and saw its output; otherwise say it
 passes the check. No HTTPS in http_request.
 ```
 
-Claude users can instead save the same text as a skill. The check needs Node and the built `thingstudio-compile.mjs`.
+Claude users can add the Thingstudio skill instead: `thingstudio-flow-author-<version>.zip`, from the releases page,
+carries this guide, the node catalog, the examples and the check command, so the assistant needs nothing else.
+Upload the zip as a skill in Claude, or unzip it into `~/.claude/skills/` for Claude Code. Use the skill whose
+version matches your editor. Otherwise the check needs Node and the built `thingstudio-compile.mjs`.
 
 ## The loop
 
 1. Write the flow as a `.flow.json` file.
-2. Run `node dist-cli/thingstudio-compile.mjs --board board:lolin-s2-mini my.flow.json` (the board ids are `board:cyd`, `board:freenove-s3-4in`,
+2. Run `node dist-cli/thingstudio-compile.mjs --board board:lolin-s2-mini --layout my.flow.json` (the board ids are `board:cyd`, `board:freenove-s3-4in`,
    `board:lolin-s2-mini`, `board:pico`, `board:pico-2` and `board:pico-w`, or `processor:esp32`, `esp32-c3`, `esp32-s2`,
    `esp32-s3`, `rp2040`, `rp2350` for a bare chip; `--list-boards` shows the current list). Read every error: it names the node and
-   says what is wrong. Fix them all and run it again until it prints `OK`.
+   says what is wrong. Fix them all, and every `layout:` warning, and run it again until it prints `OK`.
 3. Tell the user to open the file in the editor (**File → Open**), choose the board, and deploy. If a board is
    attached and the user asks you to test it, deploy it with
    [`device_cli.py`](command-line.md#deploy-and-run-a-flow-without-the-editor) instead, and report what the board
@@ -58,8 +61,7 @@ A JSON object. These keys matter:
 A property you leave out gets the default listed in the [catalog](nodes-catalog.md). Use the catalog's names and types
 exactly: `intervalMs`, not `interval`. Values and ranges are checked by the compile, which says what is allowed.
 
-Place the nodes left to right, sources on the left and sinks on the right, about 220 px apart, so the user can read
-the flow when they open it.
+Give every node a position, laid out as described in [Layout](#layout).
 
 A complete flow, a blinking LED on a LOLIN S2 Mini (its LED is pin 15):
 
@@ -78,6 +80,27 @@ A complete flow, a blinking LED on a LOLIN S2 Mini (its LED is pin 15):
   "configs": []
 }
 ```
+
+## Layout
+
+The user reads the flow on the editor's canvas, and the editor shows it exactly where the file puts it. It does not
+rearrange the nodes or zoom to fit. Lay it out the way a careful person would:
+
+- **Left to right.** Sources (timers, inputs, subscriptions) on the left, outputs on the right, and every wire running
+  to a node further right. Don't wrap a long chain back to the left edge on a second row.
+- **Columns about 220 px apart**, left edge to left edge. Nodes are 84-132 px wide, so that leaves about 90 px for the
+  wire. Use the same column positions for the whole flow, so columns line up.
+- **Tight rows.** Nodes are 34 px tall (a function node with several outputs is taller). Stack branches in one
+  column about 36 px apart (y about 70 apart), and separate chains about 66 px apart (y about 100 apart).
+- **One chain per job**, stacked top to bottom: inputs and processing first, display or output last. Unwired nodes
+  (GUI buttons that only appear on a screen, for example) go together at the bottom left.
+- **Straight wires.** A node fed by one node sits at that node's y. When one node feeds several, the first sits level
+  with it and the rest stack below; a node fed by several sits level with the first of them, or between them.
+- **Start near (80, 80)**, so the flow is on screen when it opens.
+
+`--layout` checks these rules and reports problems as `layout:` warnings. `--relayout` rewrites the positions to
+follow them, which makes a good first pass for a new flow. When you edit the user's own flow, keep their layout: place
+only the nodes you add, and don't relayout it unless they ask.
 
 ## Which node
 

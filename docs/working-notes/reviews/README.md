@@ -17,3 +17,11 @@ it reviewed has moved on; write a new one and link back.
 - `2026-10-19-reply-review-and-smoke-test.md` -- review of that reply, the browser smoke test
   (`tools/compile_hook_smoke.py`) and its results, the "two compilers" concern, and recommendations for the remaining
   blocked nodes (two-faced `ntp`, the shared MQTT client, `http_in`, and the rest).
+- `2026-10-23-architecture-and-status.md` -- what is still wrong with the architecture (memory on small boards,
+  editor as single point of failure, hand-mirrored versions, the unmerged WASI interpreter, parity leftovers,
+  no user-authored GUI widgets) and overall launch status.
+- `2026-10-24-protocol-audit.md` -- board ↔ editor wire protocol: message layer sound; deploy exchanges can
+  leave the board refusing every deploy, or overwrite the saved flow. Diagrams in
+  `interfaces/protocol/SEQUENCES.md`; re-run with `device-runtime/test/audit_protocol_exchanges.py`.
+- `2026-10-24-protocol-state-machine.md` -- follow-up: the conversation as a specified state machine (SPEC §7),
+  implemented on both sides and checked by shared exchange vectors; what the audit's findings say now.

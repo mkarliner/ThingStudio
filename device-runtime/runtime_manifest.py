@@ -23,7 +23,7 @@ from __future__ import annotations
 # deps.py added 2026-10-07 (flow dependencies).
 # board_fs.py added 2026-10-14 (the filesystem root, so paths work on the stm32 port, which mounts
 # its filesystem at /flash rather than /).
-CORE_FILES: list[str] = ["errors.py", "cbor.py", "framing.py", "messages.py", "protocol.py", "runtime.py", "wifi_provision.py", "board_settings.py", "net_transport.py", "deps.py", "board_fs.py", "device_settings.py"]
+CORE_FILES: list[str] = ["errors.py", "cbor.py", "framing.py", "messages.py", "protocol.py", "runtime.py", "wifi_provision.py", "board_settings.py", "net_transport.py", "protocol_states.py", "statemachine.py", "deps.py", "board_fs.py", "device_settings.py"]
 
 # Installed as main.py so the board boots straight into it.
 LISTENER_FILE: str = "listener.py"

@@ -34,7 +34,7 @@ Top-level platform calls: MicroPython over CircuitPython; Rete.js over Litegraph
 
 ## Subsystem interfaces
 
-The wire protocol made a shared, language-neutral artifact — new top-level `interfaces/` holding cross-subsystem specs, starting with `interfaces/protocol/` (spec + message table + conformance vectors), run by all three implementations; the first concrete interface boundary from the architecture review. Followed by `interfaces/runtime-api/` (the `runtime` module surface generated code calls + the dependency manifest), with conformance keeping the real runtime, the editor's pymock fixture and codegen honest. Wire conformance immediately found, and it's now fixed, a real CBOR-float bug: the device and the editor could not exchange a float in either direction (non-canonical doubles in the hand-rolled `cbor.py`); `VALUE_STREAM` stays reserved, not built (Mike: no live value streaming — real-time flows, no Node-RED equivalent). The node descriptor (built-in + custom) and the board/processor descriptor round out the four v1 interfaces. Boundaries enforced mechanically: a module-boundary test, per-subsystem `AGENTS.md`, `CODEOWNERS`, and interface conformance in CI (backend + editor; device-runtime still owed). `AGENTS.md` gains "architecture first at subsystem interfaces: MVP-ready is not tester-ready" and "interface specs: read before you implement, change only with permission" (echoed in `CLAUDE.md`). Multi-repo decomposition under investigation, not decided (the 2026-08-12 single-monorepo call stands until reversed). 7 entries: `docs/working-notes/decisions/subsystem-interfaces.md`.
+The wire protocol made a shared, language-neutral artifact — new top-level `interfaces/` holding cross-subsystem specs, starting with `interfaces/protocol/` (spec + message table + conformance vectors), run by all three implementations; the first concrete interface boundary from the architecture review. Followed by `interfaces/runtime-api/` (the `runtime` module surface generated code calls + the dependency manifest), with conformance keeping the real runtime, the editor's pymock fixture and codegen honest. Wire conformance immediately found, and it's now fixed, a real CBOR-float bug: the device and the editor could not exchange a float in either direction (non-canonical doubles in the hand-rolled `cbor.py`); `VALUE_STREAM` stays reserved, not built (Mike: no live value streaming — real-time flows, no Node-RED equivalent). The node descriptor (built-in + custom) and the board/processor descriptor round out the four v1 interfaces. Boundaries enforced mechanically: a module-boundary test, per-subsystem `AGENTS.md`, `CODEOWNERS`, and interface conformance in CI (backend + editor; device-runtime still owed). `AGENTS.md` gains "architecture first at subsystem interfaces: MVP-ready is not tester-ready" and "interface specs: read before you implement, change only with permission" (echoed in `CLAUDE.md`). Multi-repo decomposition under investigation, not decided (the 2026-08-12 single-monorepo call stands until reversed). Then (2026-10-24) the conversation layer: SPEC §7 "Exchanges", with the state machines as data (`interfaces/protocol/states.json`, the ground truth, run by both sides; illegal moves raise alerts) and shared exchange vectors. 9 entries: `docs/working-notes/decisions/subsystem-interfaces.md`.
 
 ## Node ↔ board mapping
 
@@ -253,9 +253,11 @@ hardware-checked on Pico W and an upgraded ESP32; libraries now sent in 1 KB pie
 ## Flow authoring / layout
 
 A flow this project authors reads left to right: sources at the left edge, every wire to a node further right,
-branches stacked in their column -- a flow that wraps back to the left edge looks like a rats nest (2026-10-22).
+branches stacked in their column -- a flow that wraps back to the left edge looks like a rats nest (2026-10-22) --
+and kept tight, spacing taken from Mike's hand-laid flows: columns ~220 px, stacked nodes ~36 px apart, chains ~66 px
+(2026-10-23); `thingstudio-compile --layout` checks it and `--relayout` fixes it.
 `test-flows/relayout.py` does it, `editor/test/flow-layout.test.ts` enforces it for shipped flows, and a user's own
-flow is never repositioned. 1 entry: `docs/working-notes/decisions/flow-authoring.md`.
+flow is never repositioned. 2 entries: `docs/working-notes/decisions/flow-authoring.md`.
 
 ## Context model
 

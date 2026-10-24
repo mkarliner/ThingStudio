@@ -44,6 +44,11 @@ MPY_CROSS_BIN=/path/to/mpy-cross \
 python3 test_listener_integration.py
 ```
 
+`test_exchanges.py` runs the same way. It plays every conversation in
+`interfaces/protocol/vectors/exchanges.json` (SPEC §7) against a fresh listener. The editor runs the same file
+in `editor/test/protocol-exchanges.test.ts`. `audit_protocol_exchanges.py` re-checks the 2026-10-24 protocol
+audit's board findings and prints PRESENT or fixed for each.
+
 Skips (exit 0, prints `SKIP: ...`) rather than failing if either env var isn't set — same "honest about what isn't covered here" convention as every prior hardware-adjacent piece of this project, since not every environment running the rest of this suite will have both binaries built.
 
 ## What's covered here vs. what still needs real hardware

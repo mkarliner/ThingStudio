@@ -214,14 +214,22 @@ describe("WebSerialTransport", () => {
     await transport.disconnect();
   });
 
-  it("pendingByteCount reflects a not-yet-newline-terminated partial line", async () => {
+  it("decodes each line on its own: a damaged line is one protocol error and doesn't swallow the next (SPEC §4)", async () => {
     const fake = makeFakePort();
-    const transport = new WebSerialTransport();
+    const messages: Message[] = [];
+    const errors: unknown[] = [];
+    const transport = new WebSerialTransport({ onMessage: (m) => messages.push(m), onProtocolError: (e) => errors.push(e) });
     await transport.connect(fake.port);
 
+    const frame = encodeMessage(HELLO);
+    const damaged = frame.subarray(0, frame.length - 3); // valid base64, but the frame ends early
+    fake.pushFromDevice(`F64:${Buffer.from(damaged).toString("base64")}\n`);
     fake.pushFrameLine(HELLO);
     await flushMicrotasks();
-    expect(transport.pendingByteCount).toBe(0); // fully consumed, no partial §13 frame left buffered
+
+    expect(errors).toHaveLength(1);
+    expect(String(errors[0])).toContain("damaged line");
+    expect(messages).toEqual([HELLO]);
 
     await transport.disconnect();
   });

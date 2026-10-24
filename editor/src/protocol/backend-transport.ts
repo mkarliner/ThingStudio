@@ -41,7 +41,7 @@
 // and is already tested; no reason to hand-roll a second parser for a
 // stream that happens to always arrive in complete units.
 
-import { ProtocolStreamDecoder, encodeMessage } from "./protocol.js";
+import { decodeLineFrame, encodeMessage } from "./protocol.js";
 import type { Message } from "./messages.js";
 import type { DeviceTransport, TransportEvents } from "./transport.js";
 
@@ -136,7 +136,6 @@ export class InstallRuntimeError extends Error {
 
 export class BackendTransport implements DeviceTransport {
   #ws: WebSocket | null = null;
-  #decoder = new ProtocolStreamDecoder();
   #events: TransportEvents;
   #closing = false;
   #connectedPort: string | null = null;
@@ -169,16 +168,6 @@ export class BackendTransport implements DeviceTransport {
     return this.#connectedPort !== null;
   }
 
-  /** Bytes buffered but not yet part of a complete frame -- diagnostic use,
-   * same role as WebSerialTransport's own getter. In practice this should
-   * only ever transiently read nonzero, since each WS binary message is
-   * already one complete frame (this file's header) -- a persistently
-   * nonzero value here would itself be a sign something upstream (the
-   * backend) isn't honoring that contract. */
-  get pendingByteCount(): number {
-    return this.#decoder.pendingByteCount;
-  }
-
   /** Opens the WebSocket to the backend at `wsUrl` (e.g.
    * "ws://127.0.0.1:8765/ws") and resolves once it's actually open --
    * rejects on a connection failure (backend not running, Host-allowlist
@@ -187,7 +176,6 @@ export class BackendTransport implements DeviceTransport {
   async open(wsUrl: string): Promise<void> {
     if (this.#ws) throw new Error("BackendTransport is already open -- call disconnect() first");
     this.#closing = false;
-    this.#decoder.reset();
 
     const ws = this.#wsFactory(wsUrl);
     ws.binaryType = "arraybuffer";
@@ -445,13 +433,13 @@ export class BackendTransport implements DeviceTransport {
       this.#handleControlMessage(ev.data);
       return;
     }
-    const bytes = new Uint8Array(ev.data as ArrayBuffer);
-    for (const result of this.#decoder.push(bytes)) {
-      if (result.ok) {
-        this.#events.onMessage?.(result.message);
-      } else {
-        this.#events.onProtocolError?.(result.error as never);
-      }
+    // The backend sends each line's frame as one WebSocket message (ws_relay.py), so one message is one frame
+    // (SPEC §4), decoded on its own.
+    const result = decodeLineFrame(new Uint8Array(ev.data as ArrayBuffer));
+    if (result.ok) {
+      this.#events.onMessage?.(result.message);
+    } else {
+      this.#events.onProtocolError?.(result.error as never);
     }
   }
 

@@ -1,0 +1,401 @@
+{
+  "formatVersion": 1,
+  "flowName": "kitchen-sink",
+  "nodes": [
+    {
+      "id": "0e6ccd894f09db92",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "if msg['payload'] in ('press', 'release'):\n      msg['payload'] = msg['payload'] == 'press'\n      return msg\nreturn None",
+        "outputCount": 1
+      }
+    },
+    {
+      "id": "22cf106376b052c0",
+      "type": "thingstudio/debug",
+      "properties": {
+        "fullMessage": false
+      }
+    },
+    {
+      "id": "278c9a42c50d7912",
+      "type": "thingstudio/adc",
+      "properties": {
+        "pin": 0,
+        "mode": "relative",
+        "delta": 2000,
+        "lower": 45000,
+        "upper": 46000,
+        "sense": "outside",
+        "pollMs": 0
+      }
+    },
+    {
+      "id": "5d25acd911ff5c4a",
+      "type": "thingstudio/encoder",
+      "properties": {
+        "pinX": 10,
+        "pinY": 11,
+        "div": 1,
+        "value": 0,
+        "vmin": "",
+        "vmax": "",
+        "mod": "",
+        "delay": 100
+      }
+    },
+    {
+      "id": "709611994fed3f7b",
+      "type": "thingstudio/debug",
+      "properties": {
+        "fullMessage": true
+      }
+    },
+    {
+      "id": "737a425960268084",
+      "type": "thingstudio/gpio_out",
+      "properties": {
+        "pin": 12
+      }
+    },
+    {
+      "id": "b0cd2ece2ad3fc47",
+      "type": "thingstudio/ebutton",
+      "properties": {
+        "pin": 3,
+        "suppress": false,
+        "senseMode": "auto",
+        "debounceMs": 50,
+        "longPressMs": 1000,
+        "doubleClickMs": 400,
+        "pull": "up"
+      }
+    },
+    {
+      "id": "b1ink0gpio000003",
+      "type": "thingstudio/gpio_out",
+      "properties": {
+        "pin": 13
+      }
+    },
+    {
+      "id": "b1ink0onoff00002",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "msg['payload'] = msg['payload'] % 2\nreturn msg",
+        "outputCount": 1
+      }
+    },
+    {
+      "id": "b1ink0timer00001",
+      "type": "thingstudio/timer",
+      "properties": {
+        "intervalMs": 500
+      }
+    },
+    {
+      "id": "px-anim",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "# One frame for a single pixel. The BOOT button picks the mode (flow 'mode').\nB = 64       # brightness cap, 0-255\n\nf = context.get('f', 0) + 1\ncontext.set('f', f)\nmode = flow.get('mode', 0)\n\ndef wheel(p):\n    # Colour wheel 0-255 -> (r, g, b): red -> green -> blue -> red.\n    p = p % 256\n    if p < 85:\n        return (255 - p * 3, p * 3, 0)\n    if p < 170:\n        p -= 85\n        return (0, 255 - p * 3, p * 3)\n    p -= 170\n    return (p * 3, 0, 255 - p * 3)\n\ndef pack(rgb, level):\n    # (r, g, b) at level 0-255 of the brightness cap -> 0xRRGGBB\n    r, g, b = rgb\n    k = B * level // 255\n    return ((r * k // 255) << 16) | ((g * k // 255) << 8) | (b * k // 255)\n\nif mode == 0:\n    # Colour cycle: once round the wheel about every 4 seconds.\n    msg['payload'] = pack(wheel(f * 3), 255)\nelif mode == 1:\n    # Breathe: fade up and down, a new colour each breath.\n    t = f % 100\n    level = t * 255 // 50 if t < 50 else (100 - t) * 255 // 50\n    msg['payload'] = pack(wheel((f // 100) * 40), level)\nelse:\n    # Police: two red flashes, two blue flashes.\n    t = f % 20\n    on = t in (0, 2, 10, 12)\n    msg['payload'] = pack((255, 0, 0) if t < 10 else (0, 0, 255), 255 if on else 0)\nreturn msg\n",
+        "outputCount": 1,
+        "label": "animate"
+      }
+    },
+    {
+      "id": "px-boot",
+      "type": "thingstudio/ebutton",
+      "properties": {
+        "pin": 3,
+        "suppress": false,
+        "senseMode": "auto",
+        "debounceMs": 50,
+        "longPressMs": 1000,
+        "doubleClickMs": 400,
+        "pull": "up"
+      }
+    },
+    {
+      "id": "px-next",
+      "type": "thingstudio/function",
+      "properties": {
+        "code": "# BOOT button: each press steps to the next effect.\nif msg['payload'] != 'press':\n    return None\nnames = ['colour cycle', 'breathe', 'police']\nmode = (flow.get('mode', 0) + 1) % len(names)\nflow.set('mode', mode)\nmsg['payload'] = names[mode]\nreturn msg\n",
+        "outputCount": 1,
+        "label": "next effect"
+      }
+    },
+    {
+      "id": "px-pixel",
+      "type": "thingstudio/neopixel",
+      "properties": {
+        "pin": 6,
+        "count": 1,
+        "order": "GRB"
+      }
+    },
+    {
+      "id": "px-show",
+      "type": "thingstudio/debug",
+      "properties": {
+        "fullMessage": false
+      }
+    },
+    {
+      "id": "px-tick",
+      "type": "thingstudio/timer",
+      "properties": {
+        "intervalMs": 40
+      }
+    }
+  ],
+  "edges": [
+    [
+      "0e6ccd894f09db92",
+      0,
+      "737a425960268084",
+      0
+    ],
+    [
+      "278c9a42c50d7912",
+      0,
+      "22cf106376b052c0",
+      0
+    ],
+    [
+      "b0cd2ece2ad3fc47",
+      0,
+      "0e6ccd894f09db92",
+      0
+    ],
+    [
+      "b0cd2ece2ad3fc47",
+      0,
+      "709611994fed3f7b",
+      0
+    ],
+    [
+      "b1ink0onoff00002",
+      0,
+      "b1ink0gpio000003",
+      0
+    ],
+    [
+      "b1ink0timer00001",
+      0,
+      "b1ink0onoff00002",
+      0
+    ],
+    [
+      "px-anim",
+      0,
+      "px-pixel",
+      0
+    ],
+    [
+      "px-boot",
+      0,
+      "px-next",
+      0
+    ],
+    [
+      "px-next",
+      0,
+      "px-show",
+      0
+    ],
+    [
+      "px-tick",
+      0,
+      "px-anim",
+      0
+    ]
+  ],
+  "layout": {
+    "0e6ccd894f09db92": {
+      "pos": [
+        373.47698974609375,
+        406.142578125
+      ],
+      "size": [
+        100,
+        34
+      ]
+    },
+    "22cf106376b052c0": {
+      "pos": [
+        506.1075972494862,
+        513.9709287851847
+      ],
+      "size": [
+        84,
+        34
+      ]
+    },
+    "278c9a42c50d7912": {
+      "pos": [
+        98.81752760029391,
+        516.014479045065
+      ],
+      "size": [
+        110,
+        34
+      ]
+    },
+    "5d25acd911ff5c4a": {
+      "pos": [
+        75.14139321222635,
+        940.3809569700766
+      ],
+      "size": [
+        110,
+        34
+      ]
+    },
+    "709611994fed3f7b": {
+      "pos": [
+        424.84164538460305,
+        321.1053984162932
+      ],
+      "size": [
+        84,
+        34
+      ]
+    },
+    "737a425960268084": {
+      "pos": [
+        547.8926781405428,
+        411.4388619959972
+      ],
+      "size": [
+        104,
+        34
+      ]
+    },
+    "b0cd2ece2ad3fc47": {
+      "pos": [
+        153.07525016463484,
+        424.88425769768224
+      ],
+      "size": [
+        104,
+        34
+      ]
+    },
+    "b1ink0gpio000003": {
+      "pos": [
+        560.2677203295909,
+        200
+      ],
+      "size": [
+        104,
+        34
+      ]
+    },
+    "b1ink0onoff00002": {
+      "pos": [
+        320,
+        200
+      ],
+      "size": [
+        100,
+        34
+      ]
+    },
+    "b1ink0timer00001": {
+      "pos": [
+        80,
+        200
+      ],
+      "size": [
+        84,
+        34
+      ]
+    },
+    "px-anim": {
+      "pos": [
+        300,
+        700
+      ],
+      "size": [
+        100,
+        34
+      ]
+    },
+    "px-boot": {
+      "pos": [
+        80,
+        839.4645593408181
+      ],
+      "size": [
+        104,
+        34
+      ]
+    },
+    "px-next": {
+      "pos": [
+        300,
+        840.2677203295909
+      ],
+      "size": [
+        100,
+        34
+      ]
+    },
+    "px-pixel": {
+      "pos": [
+        520,
+        699.7456665039062
+      ],
+      "size": [
+        110,
+        34
+      ]
+    },
+    "px-show": {
+      "pos": [
+        520,
+        840
+      ],
+      "size": [
+        84,
+        34
+      ]
+    },
+    "px-tick": {
+      "pos": [
+        80,
+        700
+      ],
+      "size": [
+        84,
+        34
+      ]
+    }
+  },
+  "configs": [],
+  "panes": [
+    {
+      "id": "pane-1",
+      "name": "Flow 01"
+    }
+  ],
+  "paneOf": {
+    "0e6ccd894f09db92": "pane-1",
+    "22cf106376b052c0": "pane-1",
+    "278c9a42c50d7912": "pane-1",
+    "5d25acd911ff5c4a": "pane-1",
+    "709611994fed3f7b": "pane-1",
+    "737a425960268084": "pane-1",
+    "b0cd2ece2ad3fc47": "pane-1",
+    "b1ink0gpio000003": "pane-1",
+    "b1ink0onoff00002": "pane-1",
+    "b1ink0timer00001": "pane-1",
+    "px-anim": "pane-1",
+    "px-boot": "pane-1",
+    "px-next": "pane-1",
+    "px-pixel": "pane-1",
+    "px-show": "pane-1",
+    "px-tick": "pane-1"
+  },
+  "notes": "Kitchen sink for the LuatOS ESP32C3-CORE. Blink: timer -> LED D5 (GPIO 13). Button on GPIO 3 lights LED D4 (GPIO 12) while held. adc on GPIO 0 sends readings to debug. Single NeoPixel on GPIO 6 (header pin 22): colour cycle, breathe or police flash; press BOOT (GPIO 9) for the next effect."
+}
