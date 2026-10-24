@@ -3061,6 +3061,11 @@ npm run build:cli
 <li><code>--out flow.py</code> writes the generated MicroPython.</li>
 <li><code>--json</code> prints the result as JSON: <code>ok</code>, <code>errors</code>, <code>warnings</code>, <code>notes</code>, <code>stats</code> and the <code>source</code>.</li>
 <li><code>--strict</code> makes warnings fail the check.</li>
+<li><code>--layout</code> also checks the layout: wires run left to right, nodes are close but don't overlap, and the flow starts
+  on screen. Problems come back as <code>layout:</code> warnings (so <code>--strict</code> fails on them). The rules are in
+  <a href="../ai-authoring/#layout">Layout</a>.</li>
+<li><code>--relayout</code> rewrites each file's node positions to follow those rules, then checks it. It changes positions only,
+  and it overwrites the file.</li>
 <li><code>--describe timer</code> prints a node's type, ports and properties with their defaults. <code>--describe-all</code> prints every
   node and config node (add <code>--json</code> for JSON). The same list is on the <a href="../nodes-catalog/">node catalog</a> page,
   generated from the code.</li>

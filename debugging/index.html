@@ -2943,6 +2943,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#deploy-resends-a-piece-or-fails-part-way" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deploy resends a piece, or fails part-way
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-console-shows-protocol-illegal-or-protocol_illegal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The console shows [protocol] illegal or PROTOCOL_ILLEGAL
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#reading-a-node-error" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3183,6 +3205,28 @@
     <span class="md-ellipsis">
       
         WiFi Internal State Error on deploy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deploy-resends-a-piece-or-fails-part-way" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deploy resends a piece, or fails part-way
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-console-shows-protocol-illegal-or-protocol_illegal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The console shows [protocol] illegal or PROTOCOL_ILLEGAL
       
     </span>
   </a>
@@ -3440,6 +3484,18 @@ deploys anyway. That figure is total free memory, not the largest free block, so
 <p>On an ESP32, deploying a flow with MQTT nodes can fail with "Wifi Internal State Error". The board is still
 reconnecting to the network the previous flow used, and refuses a new connection until that finishes. The MQTT nodes
 retry up to three times. If it still fails, deploy again.</p>
+<h2 id="deploy-resends-a-piece-or-fails-part-way">Deploy resends a piece, or fails part-way</h2>
+<p>Deploy sends the flow, and each library it uses, in pieces, and waits for the board to confirm each one. Over a
+USB-serial chip such as the CYD's, a piece can arrive damaged or its confirmation can get lost. The console then
+shows <code>resending (1/2)</code>, and Deploy carries on. That is normal now and then.</p>
+<p>If a piece still fails after three tries, Deploy stops and says so, and the flow on the board is unchanged. Deploy
+again. If it keeps happening, try another USB cable or port, close anything else using the serial port, or connect
+over WiFi.</p>
+<h2 id="the-console-shows-protocol-illegal-or-protocol_illegal">The console shows <code>[protocol] illegal</code> or <code>PROTOCOL_ILLEGAL</code></h2>
+<p>The editor and the board follow a fixed set of moves when they talk. A line starting <code>[protocol] illegal</code> (from the
+editor) or <code>PROTOCOL_ILLEGAL</code> (from the board) means one of them made a move that isn't in that set. It is a bug in
+Thingstudio, not something you did. Deploy carries on or fails cleanly either way. Please
+<a href="https://github.com/mkarliner/ThingStudio/issues">report it</a> with the console lines around it.</p>
 <h2 id="reading-a-node-error">Reading a node error</h2>
 <p>When a node fails on the board, the console shows a <code>[NODE_ERROR]</code> line naming the node and the error, and the node
 is highlighted on the canvas. Network nodes (<code>udp send</code>, <code>udp receive</code>, <code>http request</code>, <code>mqtt publish</code>,
