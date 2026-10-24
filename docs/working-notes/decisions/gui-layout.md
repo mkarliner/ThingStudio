@@ -303,3 +303,9 @@ the msg is open.
   container properties gained a **fill** checkbox (writes `grow: 1`, clears it when unticked), the CYD theme demo
   uses it on each page's card with the dots in a plain trailing row, and a layout test pins the shape. No
   flow-file field, no compiler or device change, no runtime bump. Confirmed on the CYD's panel the same day.
+
+- 2026-10-24 (Mike): **a colour in the flow file should be at least hex, not decimal.** Reading a theme config
+  (`"bg": 2116, "fg": 65535`) made the point: raw decimal RGB565 is unreadable to a person and says nothing
+  about the colour, while the editor's pickers already speak `#rrggbb`. Seed hex for saved colours (accepting the
+  old decimal form on load so existing flows keep working), and a picker wherever a colour is still a bare
+  number only if it is cheap. Tracked in `outstanding-items.md` ("Colour values in the flow file").

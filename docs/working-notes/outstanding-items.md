@@ -225,6 +225,14 @@ ThingStudioMarketing repo, not here.
   yet prioritised.** Cards on containers, status chips, segmented bars, switch toggles; colour by named roles
   in a theme on the gui screen, resolved per frame format (RGB565, gs4/gs2 palette-bounded, mono ink/paper).
   ([scoping](gui-widget-styles-and-colour-scoping.md))
+- **Colour values in the flow file are raw decimal RGB565 -- save at least hex, and a picker where one is
+  missing -- new item, 2026-10-24 (Mike, reading a theme config: `"bg": 2116, "fg": 65535`).** The GUI theme
+  roles and `display_spi`'s palette are edited with a picker plus a hex field, but the saved `.flow.json` keeps
+  the raw 0-65535 number, so a hand-read or hand-edited file says nothing about the colour. At minimum
+  serialise as hex (`"0xffff"` or `"#ffffff"`), accepting the old decimal form on load so existing flows and
+  test flows keep working; the string form is a flow-file format decision, so settle it before it ships. A
+  picker anywhere a colour is still a bare number follows only if it is cheap -- the two colour editors already
+  have one.
 - **[POST-MVP]** **Install MicroPython from the editor -- new item, 2026-10-01, from the first newcomer test.**
   Getting MicroPython onto the board took most of the 27-minute run. Post-MVP on Mike's call: too many
   variants (BOOTSEL reports only a chip; ESP32 builds vary by PSRAM and USB mode). Revisit only if later
