@@ -82,6 +82,7 @@ def _chip(on_text, off_text, font):
         if state == 0:
             _pill(fb, x, y, w, h, surface.fg, False)
             text, colour = UNKNOWN_TEXT, surface.fg
+            text_bg = bg
         else:
             on = bool(value)
             text = on_text if on else off_text
@@ -92,9 +93,12 @@ def _chip(on_text, off_text, font):
                 colour = surface.colour_for(state)
                 fill = surface.theme.get("track", surface.dim)
             _pill(fb, x, y, w, h, fill, True)
+            # The glyph cells clear to the pill's own fill, not the screen behind it (the CYD showed black
+            # boxes behind the chip's letters, 2026-10-24).
+            text_bg = fill
         tw = _width(font, text)
         tx = x + max(0, (w - tw) // 2)
         ty = y + max(0, (h - font.height()) // 2)
-        surface.text(font, text, tx, ty, colour, x + w, bg)
+        surface.text(font, text, tx, ty, colour, x + w, text_bg)
 
     return draw

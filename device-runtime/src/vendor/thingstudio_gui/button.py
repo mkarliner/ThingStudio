@@ -130,12 +130,17 @@ def _filled(surface, rect, font, s, pressed, state):
     if state == 0:  # unknown
         _pill(fb, x, y, w, h, surface.fg, False)
         colour = surface.fg
+        text_bg = surface.background_for(rect)
     elif pressed:
         _pill(fb, x, y, w, h, surface.fg, True)
         colour = surface.background
+        text_bg = surface.fg
     else:
-        _pill(fb, x, y, w, h, surface.accent_for(state), True)
+        fill = surface.accent_for(state)
+        _pill(fb, x, y, w, h, fill, True)
         colour = surface.theme.get("on_accent", surface.background)
+        # Glyph cells clear to the button's own fill, not the screen behind it.
+        text_bg = fill
     if state == 4:  # pending
         _dashes(fb, x, y, w, h, surface.fg, 1, 1)
     elif state == 5:  # failed
@@ -144,4 +149,4 @@ def _filled(surface, rect, font, s, pressed, state):
     tw = _width(font, s)
     tx = x + max(0, (w - tw) // 2)
     ty = y + max(0, (h - font.height()) // 2)
-    surface.text(font, s, tx, ty, colour, x + w, surface.background_for(rect))
+    surface.text(font, s, tx, ty, colour, x + w, text_bg)

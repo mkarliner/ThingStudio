@@ -48,6 +48,25 @@ def _surface(fmt, size, carousel=("a",)):
     return gui.FrameSurface("t", fb, lambda f: None, pages, list(carousel), fmt=fmt)
 
 
+# Roles as distinct indexes, so fill and ink are never confusable with the screen background.
+_THEME = {"bg": 0, "card": 0, "fg": 1, "muted": 2, "track": 3, "accent": 4, "on_accent": 5,
+          "ok": 1, "warn": 1, "alarm": 1}
+
+
+def _themed_surface(fmt, size, theme=None):
+    fb = framebuf.FrameBuffer(bytearray(size), W, H, fmt)
+    pages = {"a": {"parent": None, "widgets": []}}
+    return gui.FrameSurface("t", fb, lambda f: None, pages, ["a"], fmt=fmt, theme=dict(theme or _THEME))
+
+
+def _bg_in_middle(s, rect):
+    """Pixels of the screen background inside the widget's middle band (glyph cells live there)."""
+    x, y, w, h = rect
+    return sum(1 for j in range(y + h // 3, y + 2 * h // 3)
+               for i in range(x + 4, x + w - 4)
+               if s.fb.pixel(i, j) == s.background)
+
+
 def _pixels_outside(s, rect):
     x, y, w, h = rect
     bad = 0
@@ -413,6 +432,25 @@ def test_a_filled_button_paints_its_accent_background():
     assert pixels["box"] != accent, pixels
 
 
+def test_chip_and_filled_button_clear_text_to_their_own_fill():
+    """The CYD showed black boxes behind the chip's letters: glyph cells cleared to the screen background instead
+    of the pill. Both now pass the fill as the text background."""
+    rect = (0, 0, 44, 18)
+    chip = led.make(14, "chip", "OK", "Off", _font("font_body12"))
+    for value in (True, False):
+        s = _themed_surface(framebuf.GS4_HMSB, FORMATS[0][1])
+        s.fb.fill(0)
+        chip(s, rect, value, gui.KNOWN)
+        assert _bg_in_middle(s, rect) == 0, ("chip", value, _bg_in_middle(s, rect))
+    f = _font("font_body16")
+    brect = (0, 0, 60, 24)
+    filled = button.make(f, "OK", style="filled")
+    s = _themed_surface(framebuf.GS4_HMSB, FORMATS[0][1])
+    s.fb.fill(0)
+    filled(s, brect, None, gui.KNOWN)
+    assert _bg_in_middle(s, brect) == 0, ("filled", _bg_in_middle(s, brect))
+
+
 minitest.run(
     [
         test_a_toggle_shows_on_off_and_its_unknown_pending_and_failed_looks_differ_and_stay_inside,
@@ -435,5 +473,6 @@ minitest.run(
         test_a_segmented_bar_lights_cells_in_proportion,
         test_a_switch_puts_its_knob_on_the_on_side,
         test_a_filled_button_paints_its_accent_background,
+        test_chip_and_filled_button_clear_text_to_their_own_fill,
     ]
 )
