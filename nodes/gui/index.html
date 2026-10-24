@@ -2529,10 +2529,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#trend" class="md-nav__link">
+  <a href="#histogram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Trend
+        Histogram
       
     </span>
   </a>
@@ -3029,10 +3029,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#trend" class="md-nav__link">
+  <a href="#histogram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Trend
+        Histogram
       
     </span>
   </a>
@@ -3168,7 +3168,7 @@ property panel: see <a href="#laying-out-pages">Laying out pages</a>.</p>
 <li><strong>gui label</strong> — shows <code>msg.payload</code> as text.</li>
 <li><strong>gui bar</strong> — a bar that fills between <em>empty at</em> and <em>full at</em>. Its <strong>style</strong> is <em>solid</em> (the outline) or
   <em>segments</em>: a row of cells, lit in the accent colour and unlit in the track, with a cell count to set.</li>
-<li><strong>gui trend</strong> — a moving histogram: a row of bars, oldest on the left, newest on the right. See <a href="#trend">Trend</a>.</li>
+<li><strong>gui histogram</strong> — a moving histogram: a row of bars, oldest on the left, newest on the right. See <a href="#histogram">Histogram</a>.</li>
 <li><strong>gui light</strong> — on when <code>msg.payload</code> is true, off when false. Its <strong>style</strong> is <em>light</em> (the circle) or
   <em>chip</em>: a filled pill showing a short word, with the on and off text both editable ("OK"/"Off").</li>
 <li><strong>gui button</strong> — a touch button. It has an input, which sets what it shows, and an output, which sends when it is
@@ -3186,7 +3186,7 @@ property panel: see <a href="#laying-out-pages">Laying out pages</a>.</p>
 time is dimmed (or underlined, on a black-and-white display), so an old reading never looks current.</p>
 <p>On a classic ESP32 without PSRAM, a GUI flow needs the <a href="../../custom-firmware/">custom firmware for classic ESP32</a>:
 stock MicroPython runs out of memory loading the display stack.</p>
-<h2 id="trend">Trend</h2>
+<h2 id="histogram">Histogram</h2>
 <p>Shows what a number can't: which way it is heading. Wire it to the first output of a <a href="../journal/">journal</a>, or to
 any node that sends a list of numbers (a <code>None</code> is a gap), such as a spectrum from a function node.</p>
 <p>Each bar is a row's average, in the theme's accent colour, with a thin line from the row's min to its max in the

@@ -1085,17 +1085,17 @@ looks different from a steady room.
 
 ## 3. Add the history
 
-A [journal](nodes/journal.md) keeps the recent readings, and a **gui trend** draws them.
+A [journal](nodes/journal.md) keeps the recent readings, and a **gui histogram** draws them.
 
 1. Wire the temperature output to a journal with **seconds per row** `10`, **rows kept** `156` and **rows per
-   roll-up** `6`. Wire its first output to a gui trend. That trend shows the last 26 minutes.
+   roll-up** `6`. Wire its first output to a gui histogram. That histogram shows the last 26 minutes.
 2. Wire the journal's second output, one summary per minute, to a second journal with **seconds per row** `0`. Wire
-   that journal to a second gui trend, which shows the last 2.6 hours.
-3. Wire output 4, the pressure copy, to a journal with **seconds per row** `60`, and that to a third gui trend.
+   that journal to a second gui histogram, which shows the last 2.6 hours.
+3. Wire output 4, the pressure copy, to a journal with **seconds per row** `60`, and that to a third gui histogram.
 
-Each bar is the average of its row, and the thin line runs from the row's min to its max. Set each trend's
+Each bar is the average of its row, and the thin line runs from the row's min to its max. Set each histogram's
 **bottom at** and **top at** to the range you expect, for example 15 to 30 for temperature. See
-[Trend](nodes/gui.md#trend).
+[Histogram](nodes/gui.md#histogram).
 
 ## 4. Add the clock
 
@@ -1125,7 +1125,7 @@ outputs 1 to 3 of the function to them, and pick your MQTT broker and WiFi. See
 
 ## Deploy
 
-Click **Compile → Deploy**. The display lights, the readings appear within 5 seconds, the trends fill as the minutes
+Click **Compile → Deploy**. The display lights, the readings appear within 5 seconds, the histograms fill as the minutes
 pass, and the clock starts once the board has the time.
 
 ## If it doesn't work
@@ -1964,7 +1964,7 @@ See [flows, nodes and messages](../background/flows-and-nodes.md) for how they f
 | change a message, or decide where it goes | [function](function.md) |
 | set or clear a value between messages | [change](change.md) |
 | send only changes, or limit the rate | [filter](filter.md) |
-| keep a number's history and show its trend | [journal](journal.md) |
+| keep a number's history and show its histogram | [journal](journal.md) |
 | show the time of day | [ntp](ntp.md) |
 | wait before passing a message on | [delay](delay.md) |
 | see what's in a message | [debug](debug.md) |
@@ -1988,7 +1988,7 @@ Nodes that don't need a network or hardware:
 | [delay](delay.md) | transform | Passes each message on after a set wait. |
 | [filter](filter.md) | transform | Passes a message on only if it changed enough, or enough time has passed. |
 | [change](change.md) | transform | Sets or deletes one message property or flow variable. |
-| [journal](journal.md) | transform | Keeps the recent history of a number as average, min and max rows, for a trend. |
+| [journal](journal.md) | transform | Keeps the recent history of a number as average, min and max rows, for a histogram. |
 | [debug](debug.md) | sink | Prints a message to the editor's console. |
 
 ## Network
@@ -2249,7 +2249,7 @@ Source: https://docs.thingstudio.net/nodes/journal/
 # journal
 
 Keeps the recent history of a number, as rows of average, minimum and maximum, the way RRDtool and Cacti do. Wire
-it to a [trend](gui.md#trend) to see the history, and to another journal for a longer time scale.
+it to a [histogram](gui.md#histogram) to see the history, and to another journal for a longer time scale.
 
 ## Properties
 
@@ -2265,7 +2265,7 @@ it to a [trend](gui.md#trend) to see the history, and to another journal for a l
 
 - **Input** — `msg.payload` is a number. `None` records a gap. A message that carries `min` and `max` (the
   roll-up of another journal) is folded in with them, so a longer time scale keeps the spikes.
-- **Output 1, series** — sent each time a row is added. The payload is the journal itself, to wire to a trend. It
+- **Output 1, series** — sent each time a row is added. The payload is the journal itself, to wire to a histogram. It
   is the live history, not a copy, so it costs no memory per row.
 - **Output 2, roll-up** — sent every **rows per roll-up** rows: `payload` the average, `min`, `max`, and the
   input's `topic`. Wire it to another journal, a readout or MQTT.
@@ -2275,7 +2275,7 @@ it to a [trend](gui.md#trend) to see the history, and to another journal for a l
 A gap is empty, never a copy of the last value. The history starts empty each time the flow starts.
 
 With **seconds per row** set, a row closes when a message arrives after its time is up, so a sensor that has gone
-quiet adds no gaps until it speaks again. Set the trend's **stale after** to dim it meanwhile. Choose a row longer
+quiet adds no gaps until it speaks again. Set the histogram's **stale after** to dim it meanwhile. Choose a row longer
 than your sensor's interval (10 seconds for a reading every 5): a row that happens to catch no reading is a gap.
 
 A payload that isn't a number is dropped. The first time that happens, the node reports an error; the flow keeps
@@ -2285,10 +2285,10 @@ running.
 
 A sensor reads every 5 seconds.
 
-1. Journal A: rows 156, **seconds per row** 10, **rows per roll-up** 6. Its first output goes to a trend: the
+1. Journal A: rows 156, **seconds per row** 10, **rows per roll-up** 6. Its first output goes to a histogram: the
    last 26 minutes.
 2. Journal B, fed from A's second output: rows 156, **seconds per row** 0. Its first output goes to a second
-   trend: the last 2.6 hours, one bar a minute, each with its min to max line.
+   histogram: the last 2.6 hours, one bar a minute, each with its min to max line.
 
 `test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json` does this with a BME280.
 
@@ -3241,7 +3241,7 @@ property panel: see [Laying out pages](#laying-out-pages).
 - **gui label** — shows `msg.payload` as text.
 - **gui bar** — a bar that fills between *empty at* and *full at*. Its **style** is *solid* (the outline) or
   *segments*: a row of cells, lit in the accent colour and unlit in the track, with a cell count to set.
-- **gui trend** — a moving histogram: a row of bars, oldest on the left, newest on the right. See [Trend](#trend).
+- **gui histogram** — a moving histogram: a row of bars, oldest on the left, newest on the right. See [Histogram](#histogram).
 - **gui light** — on when `msg.payload` is true, off when false. Its **style** is *light* (the circle) or
   *chip*: a filled pill showing a short word, with the on and off text both editable ("OK"/"Off").
 - **gui button** — a touch button. It has an input, which sets what it shows, and an output, which sends when it is
@@ -3261,7 +3261,7 @@ time is dimmed (or underlined, on a black-and-white display), so an old reading 
 On a classic ESP32 without PSRAM, a GUI flow needs the [custom firmware for classic ESP32](../custom-firmware.md):
 stock MicroPython runs out of memory loading the display stack.
 
-## Trend
+## Histogram
 
 Shows what a number can't: which way it is heading. Wire it to the first output of a [journal](journal.md), or to
 any node that sends a list of numbers (a `None` is a gap), such as a spectrum from a function node.
@@ -4086,7 +4086,7 @@ only the nodes you add, and don't relayout it unless they ask.
 | react to a switch or button | `eswitch` (a debounced switch: open and close events); `ebutton` for press, release, long-press and double-click; `interrupt` for raw edges |
 | drive a pin | `gpio_out` (on/off), `pwm_out` |
 | change or route a message | `function`; `filter` to pass only changes; `delay` |
-| keep a number's history | `journal`, shown by a `gui_trend` |
+| keep a number's history | `journal`, shown by a histogram (`gui_trend`) |
 | show the time | `ntp` (two for time and date: `format` `time` and `date`) |
 | talk MQTT / HTTP / UDP | `mqtt_publish`, `mqtt_subscribe`, `http_request`, `http_in` and `http_response`, `udp_send`, `udp_receive` |
 | draw on a screen | `gui_screen` with `gui_*` widgets, wired to `display_spi` |
@@ -4187,7 +4187,7 @@ Rules that cause most failures:
   which an orientation refuses; `-1` is always allowed). At `"90"` or `"270"` the picture is the panel turned, so a
   320 x 480 panel gives 480 wide by 320 high to lay out.
 - A modal is laid out in `screens.<screenId>.modals`, not in `pages`: see the format below.
-- A trend takes a journal's first output, and a journal takes numbers: `sensor → journal → trend`.
+- A histogram (`gui_trend`) takes a journal's first output, and a journal takes numbers: `sensor → journal → histogram`.
 
 A modal (`gui_modal`, with `screen` set to the `gui_screen` node's id) is listed next to `pages`. Its `root` holds what
 it shows, and not the modal node itself:
@@ -4216,7 +4216,7 @@ A button widget takes `font`, `grow` and `alignSelf` like the others. The button
 plug), `gui.md` has the wiring.
 
 Read [GUI nodes](nodes/gui.md) for the details, and copy from `test-flows/`:
-`gui-headliner-sensor-freenove-s3-4in.flow.json` (a sensor display with trends, a clock and MQTT),
+`gui-headliner-sensor-freenove-s3-4in.flow.json` (a sensor display with histograms, a clock and MQTT),
 `gui-touch-freenove-s3-4in.flow.json` (buttons), `gui-orientation-test-freenove-s3-4in.flow.json`.
 
 ## Custom nodes
@@ -4234,7 +4234,7 @@ Python body on its own with sample messages.
 | Publish to MQTT | `basic-mqtt.flow.json` |
 | Call a web service | `basic-http-request.flow.json` |
 | A BME280 reading | `bmp280-test-flow.flow.json` |
-| A sensor on a display, with trends and a clock | `gui-headliner-sensor-freenove-s3-4in.flow.json` |
+| A sensor on a display, with histograms and a clock | `gui-headliner-sensor-freenove-s3-4in.flow.json` |
 | Touch buttons | `gui-touch-freenove-s3-4in.flow.json` |
 
 ## When you hand the flow back
@@ -4623,7 +4623,7 @@ Type `thingstudio/gui_screen`, kind source, palette group GUI.
     - `warn`, colour, default none
     - `alarm`, colour, default none
 
-### trend
+### histogram
 
 Type `thingstudio/gui_trend`, kind sink, palette group GUI.
 

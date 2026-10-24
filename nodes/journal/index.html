@@ -3025,7 +3025,7 @@
 
 <h1 id="journal">journal</h1>
 <p>Keeps the recent history of a number, as rows of average, minimum and maximum, the way RRDtool and Cacti do. Wire
-it to a <a href="../gui/#trend">trend</a> to see the history, and to another journal for a longer time scale.</p>
+it to a <a href="../gui/#histogram">histogram</a> to see the history, and to another journal for a longer time scale.</p>
 <h2 id="properties">Properties</h2>
 <ul>
 <li><strong>rows kept</strong> — how many rows the history holds, 1 to 256. At 12 bytes a row, 156 rows is under 2 KB.</li>
@@ -3040,7 +3040,7 @@ it to a <a href="../gui/#trend">trend</a> to see the history, and to another jou
 <ul>
 <li><strong>Input</strong> — <code>msg.payload</code> is a number. <code>None</code> records a gap. A message that carries <code>min</code> and <code>max</code> (the
   roll-up of another journal) is folded in with them, so a longer time scale keeps the spikes.</li>
-<li><strong>Output 1, series</strong> — sent each time a row is added. The payload is the journal itself, to wire to a trend. It
+<li><strong>Output 1, series</strong> — sent each time a row is added. The payload is the journal itself, to wire to a histogram. It
   is the live history, not a copy, so it costs no memory per row.</li>
 <li><strong>Output 2, roll-up</strong> — sent every <strong>rows per roll-up</strong> rows: <code>payload</code> the average, <code>min</code>, <code>max</code>, and the
   input's <code>topic</code>. Wire it to another journal, a readout or MQTT.</li>
@@ -3048,17 +3048,17 @@ it to a <a href="../gui/#trend">trend</a> to see the history, and to another jou
 <h2 id="behavior">Behavior</h2>
 <p>A gap is empty, never a copy of the last value. The history starts empty each time the flow starts.</p>
 <p>With <strong>seconds per row</strong> set, a row closes when a message arrives after its time is up, so a sensor that has gone
-quiet adds no gaps until it speaks again. Set the trend's <strong>stale after</strong> to dim it meanwhile. Choose a row longer
+quiet adds no gaps until it speaks again. Set the histogram's <strong>stale after</strong> to dim it meanwhile. Choose a row longer
 than your sensor's interval (10 seconds for a reading every 5): a row that happens to catch no reading is a gap.</p>
 <p>A payload that isn't a number is dropped. The first time that happens, the node reports an error; the flow keeps
 running.</p>
 <h3 id="cascading-two-journals">Cascading two journals</h3>
 <p>A sensor reads every 5 seconds.</p>
 <ol>
-<li>Journal A: rows 156, <strong>seconds per row</strong> 10, <strong>rows per roll-up</strong> 6. Its first output goes to a trend: the
+<li>Journal A: rows 156, <strong>seconds per row</strong> 10, <strong>rows per roll-up</strong> 6. Its first output goes to a histogram: the
    last 26 minutes.</li>
 <li>Journal B, fed from A's second output: rows 156, <strong>seconds per row</strong> 0. Its first output goes to a second
-   trend: the last 2.6 hours, one bar a minute, each with its min to max line.</li>
+   histogram: the last 2.6 hours, one bar a minute, each with its min to max line.</li>
 </ol>
 <p><code>test-flows/gui-headliner-sensor-freenove-s3-4in.flow.json</code> does this with a BME280.</p>
 

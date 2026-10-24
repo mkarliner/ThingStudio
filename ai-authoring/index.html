@@ -3341,7 +3341,7 @@ only the nodes you add, and don't relayout it unless they ask.</p>
 </tr>
 <tr>
 <td>keep a number's history</td>
-<td><code>journal</code>, shown by a <code>gui_trend</code></td>
+<td><code>journal</code>, shown by a histogram (<code>gui_trend</code>)</td>
 </tr>
 <tr>
 <td>show the time</td>
@@ -3432,7 +3432,7 @@ for them and says so.</p>
   which an orientation refuses; <code>-1</code> is always allowed). At <code>"90"</code> or <code>"270"</code> the picture is the panel turned, so a
   320 x 480 panel gives 480 wide by 320 high to lay out.</li>
 <li>A modal is laid out in <code>screens.&lt;screenId&gt;.modals</code>, not in <code>pages</code>: see the format below.</li>
-<li>A trend takes a journal's first output, and a journal takes numbers: <code>sensor → journal → trend</code>.</li>
+<li>A histogram (<code>gui_trend</code>) takes a journal's first output, and a journal takes numbers: <code>sensor → journal → histogram</code>.</li>
 </ul>
 <p>A modal (<code>gui_modal</code>, with <code>screen</code> set to the <code>gui_screen</code> node's id) is listed next to <code>pages</code>. Its <code>root</code> holds what
 it shows, and not the modal node itself:</p>
@@ -3474,7 +3474,7 @@ itself; a navigate button with <code>target</code> <code>back</code> acknowledge
 <code>onValue</code>, ...) is on the node: see the <a href="../nodes-catalog/">catalog</a>. For a toggle that follows a real device (a smart
 plug), <code>gui.md</code> has the wiring.</p>
 <p>Read <a href="../nodes/gui/">GUI nodes</a> for the details, and copy from <code>test-flows/</code>:
-<code>gui-headliner-sensor-freenove-s3-4in.flow.json</code> (a sensor display with trends, a clock and MQTT),
+<code>gui-headliner-sensor-freenove-s3-4in.flow.json</code> (a sensor display with histograms, a clock and MQTT),
 <code>gui-touch-freenove-s3-4in.flow.json</code> (buttons), <code>gui-orientation-test-freenove-s3-4in.flow.json</code>.</p>
 <h2 id="custom-nodes">Custom nodes</h2>
 <p>If no node does the job and a function node is not enough, write a custom node: <code>&lt;name&gt;.node.json</code> and
@@ -3507,7 +3507,7 @@ Python body on its own with sample messages.</p>
 <td><code>bmp280-test-flow.flow.json</code></td>
 </tr>
 <tr>
-<td>A sensor on a display, with trends and a clock</td>
+<td>A sensor on a display, with histograms and a clock</td>
 <td><code>gui-headliner-sensor-freenove-s3-4in.flow.json</code></td>
 </tr>
 <tr>

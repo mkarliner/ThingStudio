@@ -3240,17 +3240,17 @@ the pressure, for its journal. Output 5 says the sensor is alive.</p>
 <p>Set <strong>stale after</strong> on the readouts and the light. A reading that stops arriving is then dimmed, so a dead sensor
 looks different from a steady room.</p>
 <h2 id="3-add-the-history">3. Add the history</h2>
-<p>A <a href="../nodes/journal/">journal</a> keeps the recent readings, and a <strong>gui trend</strong> draws them.</p>
+<p>A <a href="../nodes/journal/">journal</a> keeps the recent readings, and a <strong>gui histogram</strong> draws them.</p>
 <ol>
 <li>Wire the temperature output to a journal with <strong>seconds per row</strong> <code>10</code>, <strong>rows kept</strong> <code>156</code> and <strong>rows per
-   roll-up</strong> <code>6</code>. Wire its first output to a gui trend. That trend shows the last 26 minutes.</li>
+   roll-up</strong> <code>6</code>. Wire its first output to a gui histogram. That histogram shows the last 26 minutes.</li>
 <li>Wire the journal's second output, one summary per minute, to a second journal with <strong>seconds per row</strong> <code>0</code>. Wire
-   that journal to a second gui trend, which shows the last 2.6 hours.</li>
-<li>Wire output 4, the pressure copy, to a journal with <strong>seconds per row</strong> <code>60</code>, and that to a third gui trend.</li>
+   that journal to a second gui histogram, which shows the last 2.6 hours.</li>
+<li>Wire output 4, the pressure copy, to a journal with <strong>seconds per row</strong> <code>60</code>, and that to a third gui histogram.</li>
 </ol>
-<p>Each bar is the average of its row, and the thin line runs from the row's min to its max. Set each trend's
+<p>Each bar is the average of its row, and the thin line runs from the row's min to its max. Set each histogram's
 <strong>bottom at</strong> and <strong>top at</strong> to the range you expect, for example 15 to 30 for temperature. See
-<a href="../nodes/gui/#trend">Trend</a>.</p>
+<a href="../nodes/gui/#histogram">Histogram</a>.</p>
 <h2 id="4-add-the-clock">4. Add the clock</h2>
 <ol>
 <li>Drag a <strong>timer</strong> with <strong>interval (ms)</strong> <code>1000</code>, and two <strong>ntp</strong> nodes. Wire the timer to both.</li>
@@ -3272,7 +3272,7 @@ See <a href="../nodes/gui/#the-nodes">GUI nodes</a>.</p>
 outputs 1 to 3 of the function to them, and pick your MQTT broker and WiFi. See
 <a href="../nodes/mqtt-publish/">mqtt publish</a>.</p>
 <h2 id="deploy">Deploy</h2>
-<p>Click <strong>Compile → Deploy</strong>. The display lights, the readings appear within 5 seconds, the trends fill as the minutes
+<p>Click <strong>Compile → Deploy</strong>. The display lights, the readings appear within 5 seconds, the histograms fill as the minutes
 pass, and the clock starts once the board has the time.</p>
 <h2 id="if-it-doesnt-work">If it doesn't work</h2>
 <p>Each symptom below has its own fix:</p>
